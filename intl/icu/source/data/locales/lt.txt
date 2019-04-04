@@ -22,7 +22,6 @@ lt{
     ExemplarCharactersPunctuation{"[\\- ‐ – — , ; \\: ! ? . … “ „ ( ) \\[ \\] \\{ \\}]"}
     MoreInformation{"?"}
     NumberElements{
-        default{"latn"}
         latn{
             miscPatterns{
                 approximately{"~{0}"}
@@ -33,7 +32,6 @@ lt{
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
                 scientificFormat{"#E0"}
             }
@@ -268,12 +266,10 @@ lt{
                 exponential{"×10^"}
                 group{" "}
                 infinity{"∞"}
-                list{";"}
                 minusSign{"−"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -292,7 +288,7 @@ lt{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.44.91"}
+    Version{"2.1.48.42"}
     calendar{
         buddhist{
             eras{
@@ -324,18 +320,10 @@ lt{
                 "{1} {0}",
             }
             availableFormats{
-                Ed{"d, E"}
                 Gy{"U"}
                 GyMMM{"U MMM"}
                 GyMMMEd{"U MMM d, E"}
                 GyMMMd{"U MMM d"}
-                M{"L"}
-                MEd{"MM-dd, E"}
-                MMM{"LLL"}
-                MMMEd{"MMM d, E"}
-                MMMd{"MMM d"}
-                Md{"MM-dd"}
-                d{"d"}
                 y{"U"}
                 yMd{"y-MM-dd"}
                 yyyy{"U"}
@@ -349,24 +337,6 @@ lt{
                 yyyyQQQQ{"U QQQQ"}
             }
             cyclicNameSets{
-                dayParts{
-                    format{
-                        abbreviated{
-                            "zi",
-                            "chou",
-                            "yin",
-                            "mao",
-                            "chen",
-                            "si",
-                            "wu",
-                            "wei",
-                            "shen",
-                            "you",
-                            "xu",
-                            "hai",
-                        }
-                    }
-                }
                 solarTerms{
                     format{
                         abbreviated{
@@ -397,72 +367,6 @@ lt{
                         }
                     }
                 }
-                years{
-                    format{
-                        abbreviated{
-                            "jia-zi",
-                            "yi-chou",
-                            "bing-yin",
-                            "ding-mao",
-                            "wu-chen",
-                            "ji-si",
-                            "geng-wu",
-                            "xin-wei",
-                            "ren-shen",
-                            "gui-you",
-                            "jia-xu",
-                            "yi-hai",
-                            "bing-zi",
-                            "ding-chou",
-                            "wu-yin",
-                            "ji-mao",
-                            "geng-chen",
-                            "xin-si",
-                            "ren-wu",
-                            "gui-wei",
-                            "jia-shen",
-                            "yi-you",
-                            "bing-xu",
-                            "ding-hai",
-                            "wu-zi",
-                            "ji-chou",
-                            "geng-yin",
-                            "xin-mao",
-                            "ren-chen",
-                            "gui-si",
-                            "jia-wu",
-                            "yi-wei",
-                            "bing-shen",
-                            "ding-you",
-                            "wu-xu",
-                            "ji-hai",
-                            "geng-zi",
-                            "xin-chou",
-                            "ren-yin",
-                            "gui-mao",
-                            "jia-chen",
-                            "yi-si",
-                            "bing-wu",
-                            "ding-wei",
-                            "wu-shen",
-                            "ji-you",
-                            "geng-xu",
-                            "xin-hai",
-                            "ren-zi",
-                            "gui-chou",
-                            "jia-yin",
-                            "yi-mao",
-                            "bing-chen",
-                            "ding-si",
-                            "wu-wu",
-                            "ji-wei",
-                            "geng-shen",
-                            "xin-you",
-                            "ren-xu",
-                            "gui-hai",
-                        }
-                    }
-                }
                 zodiacs{
                     format{
                         abbreviated{
@@ -483,15 +387,9 @@ lt{
                 }
             }
             intervalFormats{
-                M{
-                    M{"MM–MM"}
-                }
                 MEd{
                     M{"MM-dd, E–MM-dd, E"}
                     d{"MM-dd, E–MM-dd, E"}
-                }
-                MMM{
-                    M{"LLL–LLL"}
                 }
                 MMMEd{
                     M{"MMM d, E–MMM d, E"}
@@ -499,17 +397,10 @@ lt{
                 }
                 MMMd{
                     M{"MMM d–MMM d"}
-                    d{"MMM d–d"}
                 }
                 Md{
                     M{"MM-dd–MM-dd"}
                     d{"MM-dd–MM-dd"}
-                }
-                d{
-                    d{"d–d"}
-                }
-                y{
-                    y{"U–U"}
                 }
                 yM{
                     M{"y-MM–y-MM"}
@@ -521,7 +412,6 @@ lt{
                     y{"y-MM-dd, E–y-MM-dd, E"}
                 }
                 yMMM{
-                    M{"U MMM–MMM"}
                     y{"U MMM–U MMM"}
                 }
                 yMMMEd{
@@ -530,12 +420,10 @@ lt{
                     y{"U MMM d, E–U MMM d, E"}
                 }
                 yMMMM{
-                    M{"U MMMM–MMMM"}
                     y{"U MMMM–U MMMM"}
                 }
                 yMMMd{
                     M{"U MMM d–MMM d"}
-                    d{"U MMM d–d"}
                     y{"U MMM d–U MMM d"}
                 }
                 yMd{
@@ -631,23 +519,6 @@ lt{
                         "10",
                         "11",
                         "12",
-                    }
-                }
-            }
-            monthPatterns{
-                format{
-                    wide{
-                        leap{"{0}bis"}
-                    }
-                }
-                numeric{
-                    all{
-                        leap{"{0}bis"}
-                    }
-                }
-                stand-alone{
-                    narrow{
-                        leap{"{0}b"}
                     }
                 }
             }
@@ -781,18 +652,10 @@ lt{
                 "{1} {0}",
             }
             availableFormats{
-                Ed{"d, E"}
                 Gy{"U"}
                 GyMMM{"U MMM"}
                 GyMMMEd{"U MMM d, E"}
                 GyMMMd{"U MMM d"}
-                M{"L"}
-                MEd{"MM-dd, E"}
-                MMM{"LLL"}
-                MMMEd{"MMM d, E"}
-                MMMd{"MMM d"}
-                Md{"MM-dd"}
-                d{"d"}
                 y{"U"}
                 yMd{"y-MM-dd"}
                 yyyy{"U"}
@@ -806,24 +669,6 @@ lt{
                 yyyyQQQQ{"U QQQQ"}
             }
             cyclicNameSets{
-                dayParts{
-                    format{
-                        abbreviated{
-                            "zi",
-                            "chou",
-                            "yin",
-                            "mao",
-                            "chen",
-                            "si",
-                            "wu",
-                            "wei",
-                            "shen",
-                            "you",
-                            "xu",
-                            "hai",
-                        }
-                    }
-                }
                 solarTerms{
                     format{
                         abbreviated{
@@ -854,72 +699,6 @@ lt{
                         }
                     }
                 }
-                years{
-                    format{
-                        abbreviated{
-                            "jia-zi",
-                            "yi-chou",
-                            "bing-yin",
-                            "ding-mao",
-                            "wu-chen",
-                            "ji-si",
-                            "geng-wu",
-                            "xin-wei",
-                            "ren-shen",
-                            "gui-you",
-                            "jia-xu",
-                            "yi-hai",
-                            "bing-zi",
-                            "ding-chou",
-                            "wu-yin",
-                            "ji-mao",
-                            "geng-chen",
-                            "xin-si",
-                            "ren-wu",
-                            "gui-wei",
-                            "jia-shen",
-                            "yi-you",
-                            "bing-xu",
-                            "ding-hai",
-                            "wu-zi",
-                            "ji-chou",
-                            "geng-yin",
-                            "xin-mao",
-                            "ren-chen",
-                            "gui-si",
-                            "jia-wu",
-                            "yi-wei",
-                            "bing-shen",
-                            "ding-you",
-                            "wu-xu",
-                            "ji-hai",
-                            "geng-zi",
-                            "xin-chou",
-                            "ren-yin",
-                            "gui-mao",
-                            "jia-chen",
-                            "yi-si",
-                            "bing-wu",
-                            "ding-wei",
-                            "wu-shen",
-                            "ji-you",
-                            "geng-xu",
-                            "xin-hai",
-                            "ren-zi",
-                            "gui-chou",
-                            "jia-yin",
-                            "yi-mao",
-                            "bing-chen",
-                            "ding-si",
-                            "wu-wu",
-                            "ji-wei",
-                            "geng-shen",
-                            "xin-you",
-                            "ren-xu",
-                            "gui-hai",
-                        }
-                    }
-                }
                 zodiacs{
                     format{
                         abbreviated{
@@ -940,15 +719,9 @@ lt{
                 }
             }
             intervalFormats{
-                M{
-                    M{"MM–MM"}
-                }
                 MEd{
                     M{"MM-dd, E–MM-dd, E"}
                     d{"MM-dd, E–MM-dd, E"}
-                }
-                MMM{
-                    M{"LLL–LLL"}
                 }
                 MMMEd{
                     M{"MMM d, E–MMM d, E"}
@@ -956,17 +729,10 @@ lt{
                 }
                 MMMd{
                     M{"MMM d–MMM d"}
-                    d{"MMM d–d"}
                 }
                 Md{
                     M{"MM-dd–MM-dd"}
                     d{"MM-dd–MM-dd"}
-                }
-                d{
-                    d{"d–d"}
-                }
-                y{
-                    y{"U–U"}
                 }
                 yM{
                     M{"y-MM–y-MM"}
@@ -978,7 +744,6 @@ lt{
                     y{"y-MM-dd, E–y-MM-dd, E"}
                 }
                 yMMM{
-                    M{"U MMM–MMM"}
                     y{"U MMM–U MMM"}
                 }
                 yMMMEd{
@@ -987,12 +752,10 @@ lt{
                     y{"U MMM d, E–U MMM d, E"}
                 }
                 yMMMM{
-                    M{"U MMMM–MMMM"}
                     y{"U MMMM–U MMMM"}
                 }
                 yMMMd{
                     M{"U MMM d–MMM d"}
-                    d{"U MMM d–d"}
                     y{"U MMM d–U MMM d"}
                 }
                 yMd{
@@ -1017,20 +780,6 @@ lt{
                         "11",
                         "12",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
                     wide{
                         "1",
                         "2",
@@ -1061,20 +810,6 @@ lt{
                         "11",
                         "12",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
                     wide{
                         "1",
                         "2",
@@ -1088,23 +823,6 @@ lt{
                         "10",
                         "11",
                         "12",
-                    }
-                }
-            }
-            monthPatterns{
-                format{
-                    wide{
-                        leap{"{0}bis"}
-                    }
-                }
-                numeric{
-                    all{
-                        leap{"{0}bis"}
-                    }
-                }
-                stand-alone{
-                    narrow{
-                        leap{"{0}b"}
                     }
                 }
             }
@@ -1221,16 +939,6 @@ lt{
                 }
             }
         }
-        ethiopic-amete-alem{
-            eras{
-                abbreviated{
-                    "ERA0",
-                }
-                wide{
-                    "ERA0",
-                }
-            }
-        }
         generic{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -1292,19 +1000,52 @@ lt{
                 yyyyQQQQ{"y G QQQQ"}
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
                 }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
                 }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
                 }
-                Hv{
-                    H{"HH–HH v"}
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
                 }
                 M{
                     M{"M–M"}
@@ -1334,21 +1075,15 @@ lt{
                 fallback{"{0} – {1}"}
                 h{
                     a{"h a–h a"}
-                    h{"h–h a"}
                 }
                 hm{
                     a{"hh:mm a–hh:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
                 }
                 hmv{
                     a{"hh:mm a–hh:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
                 }
                 hv{
                     a{"h a–h a v"}
-                    h{"h–h a v"}
                 }
                 y{
                     y{"y–y G"}
@@ -1397,7 +1132,7 @@ lt{
                 "popiet",
             }
             AmPmMarkersNarrow{
-                "pr. p.",
+                "pr. p.",
                 "pop.",
             }
             DateTimePatterns{
@@ -1449,10 +1184,10 @@ lt{
                 MMMM{"LLLL"}
                 MMMMEd{"MMMM d 'd'., E"}
                 MMMMW{
-                    few{"MMM W 'sav'."}
-                    many{"MMM W 'sav'."}
-                    one{"MMM W 'sav'."}
-                    other{"MMM W 'sav'."}
+                    few{"MMMM W 'sav'."}
+                    many{"MMMM W 'sav'."}
+                    one{"MMMM W 'sav'."}
+                    other{"MMMM W 'sav'."}
                 }
                 MMMMd{"MMMM d 'd'."}
                 MMMd{"MM-dd"}
@@ -1602,7 +1337,7 @@ lt{
                     }
                     narrow{
                         afternoon1{"diena"}
-                        am{"pr. p."}
+                        am{"pr. p."}
                         evening1{"vakaras"}
                         midnight{"vidurnaktis"}
                         morning1{"rytas"}
@@ -1645,6 +1380,53 @@ lt{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"hh–hh B"}
+                }
+                Bhm{
+                    B{"hh:mm B–hh:mm B"}
+                    h{"hh:mm–hh:mm B"}
+                    m{"hh:mm–hh:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -3691,6 +3473,12 @@ lt{
             start{"{0}, {1}"}
         }
         standard{
+            2{"{0} ir {1}"}
+            end{"{0} ir {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
             2{"{0} ir {1}"}
             end{"{0} ir {1}"}
             middle{"{0}, {1}"}

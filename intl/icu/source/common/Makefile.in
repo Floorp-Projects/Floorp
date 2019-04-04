@@ -88,6 +88,7 @@ ucnv_u7.o ucnv_u8.o ucnv_u16.o ucnv_u32.o ucnvscsu.o ucnvbocu.o \
 ucnv_ext.o ucnvmbcs.o ucnv2022.o ucnvhz.o ucnv_lmb.o ucnvisci.o ucnvdisp.o ucnv_set.o ucnv_ct.o \
 resource.o uresbund.o ures_cnv.o uresdata.o resbund.o resbund_cnv.o \
 ucurr.o \
+localebuilder.o \
 messagepattern.o ucat.o locmap.o uloc.o locid.o locutil.o locavailable.o locdispnames.o locdspnm.o loclikely.o locresdata.o \
 bytestream.o stringpiece.o bytesinkutil.o \
 stringtriebuilder.o bytestriebuilder.o \

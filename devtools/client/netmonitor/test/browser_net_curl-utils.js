@@ -140,13 +140,13 @@ function testRemoveBinaryDataFromMultipartText(data) {
   const EXPECTED_POSIX_RESULT = [
     "$'",
     boundary,
-    "\\r\\n\\r\\n",
+    "\\r\\n",
     "Content-Disposition: form-data; name=\"param1\"",
     "\\r\\n\\r\\n",
     "value1",
     "\\r\\n",
     boundary,
-    "\\r\\n\\r\\n",
+    "\\r\\n",
     "Content-Disposition: form-data; name=\"file\"; filename=\"filename.png\"",
     "\\r\\n",
     "Content-Type: image/png",
@@ -157,21 +157,22 @@ function testRemoveBinaryDataFromMultipartText(data) {
   ].join("");
 
   const EXPECTED_WIN_RESULT = [
-    '"' + boundary + '"^',
-    "\u000d\u000A\u000d\u000A",
-    '"Content-Disposition: form-data; name=""param1"""^',
-    "\u000d\u000A\u000d\u000A",
-    '"value1"^',
-    "\u000d\u000A",
-    '"' + boundary + '"^',
-    "\u000d\u000A\u000d\u000A",
-    '"Content-Disposition: form-data; name=""file""; filename=""filename.png"""^',
-    "\u000d\u000A",
-    '"Content-Type: image/png"^',
-    "\u000d\u000A\u000d\u000A",
-    '"' + boundary + '--"^',
-    "\u000d\u000A",
-    '""',
+    '"',
+    boundary,
+    '"^\u000d\u000A\u000d\u000A"',
+    'Content-Disposition: form-data; name=""param1""',
+    '"^\u000d\u000A\u000d\u000A""^\u000d\u000A\u000d\u000A"',
+    "value1",
+    '"^\u000d\u000A\u000d\u000A"',
+    boundary,
+    '"^\u000d\u000A\u000d\u000A"',
+    'Content-Disposition: form-data; name=""file""; filename=""filename.png""',
+    '"^\u000d\u000A\u000d\u000A"',
+    "Content-Type: image/png",
+    '"^\u000d\u000A\u000d\u000A""^\u000d\u000A\u000d\u000A"',
+    boundary + "--",
+    '"^\u000d\u000A\u000d\u000A"',
+    '"',
   ].join("");
 
   if (Services.appinfo.OS != "WINNT") {
@@ -240,7 +241,7 @@ function testEscapeStringWin() {
 
   const newLines = "line1\r\nline2\r\nline3";
   is(CurlUtils.escapeStringWin(newLines),
-    '"line1"^\u000d\u000A"line2"^\u000d\u000A"line3"',
+    '"line1"^\u000d\u000A\u000d\u000A"line2"^\u000d\u000A\u000d\u000A"line3"',
     "Newlines should be escaped.");
 }
 

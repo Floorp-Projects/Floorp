@@ -25,7 +25,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
-#include "nsIPresShell.h"
 #include "nsIURIContentListener.h"
 #include "nsISHistoryListener.h"
 #include "nsIURI.h"

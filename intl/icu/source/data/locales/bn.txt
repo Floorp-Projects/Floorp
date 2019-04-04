@@ -34,7 +34,6 @@ bn{
                 scientificFormat{"#E0"}
             }
             symbols{
-                decimal{"."}
                 exponential{"E"}
                 group{","}
                 infinity{"∞"}
@@ -44,15 +43,12 @@ bn{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         default{"beng"}
         latn{
             miscPatterns{
-                approximately{"~{0}"}
                 atLeast{"{0}+"}
-                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -77,156 +73,151 @@ bn{
                         other{"0 লাখ"}
                     }
                     1000000{
-                        one{"0 মিলিয়ন"}
-                        other{"0 মিলিয়ন"}
+                        one{"00 লাখ"}
+                        other{"00 লাখ"}
                     }
                     10000000{
-                        one{"00 মিলিয়ন"}
-                        other{"00 মিলিয়ন"}
+                        one{"0 কোটি"}
+                        other{"0 কোটি"}
                     }
                     100000000{
-                        one{"000 মিলিয়ন"}
-                        other{"000 মিলিয়ন"}
+                        one{"00 কোটি"}
+                        other{"00 কোটি"}
                     }
                     1000000000{
-                        one{"0 বিলিয়ন"}
-                        other{"0 বিলিয়ন"}
+                        one{"000 কোটি"}
+                        other{"000 কোটি"}
                     }
                     10000000000{
-                        one{"00 বিলিয়ন"}
-                        other{"00 বিলিয়ন"}
+                        one{"0000 কোটি"}
+                        other{"0000 কোটি"}
                     }
                     100000000000{
-                        one{"000 বিলিয়ন"}
-                        other{"000 বিলিয়ন"}
+                        one{"00000 কোটি"}
+                        other{"00000 কোটি"}
                     }
                     1000000000000{
-                        one{"0 ট্রিলিয়ন"}
-                        other{"0 ট্রিলিয়ন"}
+                        one{"0 লাখ কোটি"}
+                        other{"0 লাখ কোটি"}
                     }
                     10000000000000{
-                        one{"00 ট্রিলিয়ন"}
-                        other{"00 ট্রিলিয়ন"}
+                        one{"00 লাখ কোটি"}
+                        other{"00 লাখ কোটি"}
                     }
                     100000000000000{
-                        one{"000 ট্রিলিয়ন"}
-                        other{"000 ট্রিলিয়ন"}
+                        one{"000 লাখ কোটি"}
+                        other{"000 লাখ কোটি"}
                     }
                 }
             }
             patternsShort{
                 currencyFormat{
                     1000{
-                        one{"0 হাজার¤"}
-                        other{"0 হাজার¤"}
+                        one{"0 হা¤"}
+                        other{"0 হা¤"}
                     }
                     10000{
-                        one{"00 হাজার¤"}
-                        other{"00 হাজার¤"}
+                        one{"00 হা¤"}
+                        other{"00 হা¤"}
                     }
                     100000{
-                        one{"0 লাখ¤"}
-                        other{"0 লাখ¤"}
+                        one{"0 লা¤"}
+                        other{"0 লা¤"}
                     }
                     1000000{
-                        one{"0 লাখ¤"}
-                        other{"0 লাখ¤"}
+                        one{"00 লা¤"}
+                        other{"00 লা¤"}
                     }
                     10000000{
-                        one{"00 কোটি¤"}
-                        other{"00 কোটি¤"}
+                        one{"0 কো¤"}
+                        other{"0 কো¤"}
                     }
                     100000000{
-                        one{"000 কোটি¤"}
-                        other{"000 কোটি¤"}
+                        one{"00 কো¤"}
+                        other{"00 কো¤"}
                     }
                     1000000000{
-                        one{"0 একশো কোটি¤"}
-                        other{"0 একশো কোটি¤"}
+                        one{"000 কো¤"}
+                        other{"000 কো¤"}
                     }
                     10000000000{
-                        one{"00 হাজার কোটি¤"}
-                        other{"00 হাজার কোটি¤"}
+                        one{"0000 কো¤"}
+                        other{"0000 কো¤"}
                     }
                     100000000000{
-                        one{"000 সহস্র কোটি¤"}
-                        other{"000 সহস্র কোটি¤"}
+                        one{"00000 কো¤"}
+                        other{"00000 কো¤"}
                     }
                     1000000000000{
-                        one{"0 দশ সহস্রের ত্রিঘাত¤"}
-                        other{"0 দশ সহস্রের ত্রিঘাত¤"}
+                        one{"0 লা'.'কো'.'¤"}
+                        other{"0 লা'.'কো'.'¤"}
                     }
                     10000000000000{
-                        one{"00 একশো সহস্রের ত্রিঘাত¤"}
-                        other{"00 একশো সহস্রের ত্রিঘাত¤"}
+                        one{"00 লা'.'কো'.'¤"}
+                        other{"00 লা'.'কো'.'¤"}
                     }
                     100000000000000{
-                        one{"000 সহস্র সহস্রের ত্রিঘাত¤"}
-                        other{"000 সহস্র সহস্রের ত্রিঘাত¤"}
+                        one{"000 লা'.'কো'.'¤"}
+                        other{"000 লা'.'কো'.'¤"}
                     }
                 }
                 decimalFormat{
                     1000{
-                        one{"0 হাজার"}
-                        other{"0 হাজার"}
+                        one{"0 হা"}
+                        other{"0 হা"}
                     }
                     10000{
-                        one{"00 হাজার"}
-                        other{"00 হাজার"}
+                        one{"00 হা"}
+                        other{"00 হা"}
                     }
                     100000{
-                        one{"0 লাখ"}
-                        other{"0 লাখ"}
+                        one{"0 লা"}
+                        other{"0 লা"}
                     }
                     1000000{
-                        one{"0M"}
-                        other{"0M"}
+                        one{"00 লা"}
+                        other{"00 লা"}
                     }
                     10000000{
-                        one{"00M"}
-                        other{"00M"}
+                        one{"0 কো"}
+                        other{"0 কো"}
                     }
                     100000000{
-                        one{"000M"}
-                        other{"000M"}
+                        one{"00 কো"}
+                        other{"00 কো"}
                     }
                     1000000000{
-                        one{"0B"}
-                        other{"0B"}
+                        one{"000 কো"}
+                        other{"000 কো"}
                     }
                     10000000000{
-                        one{"00B"}
-                        other{"00B"}
+                        one{"0000 কো"}
+                        other{"0000 কো"}
                     }
                     100000000000{
-                        one{"000B"}
-                        other{"000B"}
+                        one{"00000 কো"}
+                        other{"00000 কো"}
                     }
                     1000000000000{
-                        one{"0T"}
-                        other{"0T"}
+                        one{"0 লা'.'কো'.'"}
+                        other{"0 লা'.'কো'.'"}
                     }
                     10000000000000{
-                        one{"00T"}
-                        other{"00T"}
+                        one{"00 লা'.'কো'.'"}
+                        other{"00 লা'.'কো'.'"}
                     }
                     100000000000000{
-                        one{"000T"}
-                        other{"000T"}
+                        one{"000 লা'.'কো'.'"}
+                        other{"000 লা'.'কো'.'"}
                     }
                 }
             }
             symbols{
-                decimal{"."}
                 exponential{"E"}
-                group{","}
                 infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -247,21 +238,8 @@ bn{
         minimumGroupingDigits{"1"}
         native{"beng"}
     }
-    Version{"2.1.44.91"}
+    Version{"2.1.48.36"}
     calendar{
-        buddhist{
-            eras{
-                abbreviated{
-                    "BE",
-                }
-                narrow{
-                    "BE",
-                }
-                wide{
-                    "BE",
-                }
-            }
-        }
         coptic{
             eras{
                 abbreviated{
@@ -361,7 +339,7 @@ bn{
                         "বাবা",
                         "হাটর",
                         "কিয়াক",
-                        "Toba",
+                        "টোবা",
                         "আমশির",
                         "বারামহাট",
                         "বারামৌডা",
@@ -549,19 +527,52 @@ bn{
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
                 }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
                 }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
+                Gy{
+                    G{"y G – y G"}
+                    y{"y – y G"}
                 }
-                Hv{
-                    H{"HH–HH v"}
+                GyM{
+                    G{"M/y GGGGG – M/y GGGGG"}
+                    M{"M/y – M/y GGGGG"}
+                    y{"M/y – M/y GGGGG"}
+                }
+                GyMEd{
+                    G{"E, M/d/y GGGGG – E, M/d/y GGGGG"}
+                    M{"E, M/d/y – E, M/d/y GGGGG"}
+                    d{"E, M/d/y – E, M/d/y GGGGG"}
+                    y{"E, M/d/y – E, M/d/y GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E, MMM d, y G – E, MMM d, y G"}
+                    M{"E, MMM d – E, MMM d, y G"}
+                    d{"E, MMM d – E, MMM d, y G"}
+                    y{"E, MMM d, y – E, MMM d, y G"}
+                }
+                GyMMMd{
+                    G{"MMM d, y G – MMM d, y G"}
+                    M{"MMM d – MMM d, y G"}
+                    d{"MMM d – d, y G"}
+                    y{"MMM d, y – MMM d, y G"}
+                }
+                GyMd{
+                    G{"M/d/y GGGGG – M/d/y GGGGG"}
+                    M{"M/d/y – M/d/y GGGGG"}
+                    d{"M/d/y – M/d/y GGGGG"}
+                    y{"M/d/y – M/d/y GGGGG"}
                 }
                 M{
                     M{"M–M"}
@@ -589,24 +600,6 @@ bn{
                     d{"d–d"}
                 }
                 fallback{"{0} – {1}"}
-                h{
-                    a{"h a – h a"}
-                    h{"h–h a"}
-                }
-                hm{
-                    a{"h:mm a – h:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
-                }
-                hmv{
-                    a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
-                }
-                hv{
-                    a{"h a – h a v"}
-                    h{"h–h a v"}
-                }
                 y{
                     y{"y–y G"}
                 }
@@ -702,8 +695,8 @@ bn{
                 MMMEd{"E d MMM"}
                 MMMMEd{"E d MMMM"}
                 MMMMW{
-                    one{"MMM এর Wয় সপ্তাহ"}
-                    other{"MMM এর Wয় সপ্তাহ"}
+                    one{"MMMM এর Wয় সপ্তাহ"}
+                    other{"MMMM এর Wয় সপ্তাহ"}
                 }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
@@ -889,6 +882,53 @@ bn{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"y G – y G"}
+                    y{"y – y G"}
+                }
+                GyM{
+                    G{"M/y GGGGG – M/y GGGGG"}
+                    M{"M/y – M/y GGGGG"}
+                    y{"M/y – M/y GGGGG"}
+                }
+                GyMEd{
+                    G{"E, M/d/y GGGGG – E, M/d/y GGGGG"}
+                    M{"E, M/d/y – E, M/d/y GGGGG"}
+                    d{"E, M/d/y – E, M/d/y GGGGG"}
+                    y{"E, M/d/y – E, M/d/y GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E, MMM d, y G – E, MMM d, y G"}
+                    M{"E, MMM d – E, MMM d, y G"}
+                    d{"E, MMM d – E, MMM d, y G"}
+                    y{"E, MMM d, y – E, MMM d, y G"}
+                }
+                GyMMMd{
+                    G{"MMM d, y G – MMM d, y G"}
+                    M{"MMM d – MMM d, y G"}
+                    d{"MMM d – d, y G"}
+                    y{"MMM d, y – MMM d, y G"}
+                }
+                GyMd{
+                    G{"M/d/y GGGGG – M/d/y GGGGG"}
+                    M{"M/d/y – M/d/y GGGGG"}
+                    d{"M/d/y – M/d/y GGGGG"}
+                    y{"M/d/y – M/d/y GGGGG"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -1133,22 +1173,18 @@ bn{
                 "{1} {0}",
             }
             availableFormats{
-                E{"ccc"}
                 Ed{"d E"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM, y G"}
                 GyMMMd{"d MMM, y G"}
-                M{"L"}
                 MEd{"E, d-M"}
-                MMM{"LLL"}
                 MMMEd{"E d MMM"}
                 MMMMEd{"E d MMMM"}
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 MMdd{"dd-MM"}
                 Md{"d/M"}
-                d{"d"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M/y G"}
@@ -1162,32 +1198,7 @@ bn{
                 yyyyQQQ{"QQQ y G"}
                 yyyyQQQQ{"QQQQ y G"}
             }
-            eras{
-                abbreviated{
-                    "AM",
-                }
-                narrow{
-                    "AM",
-                }
-                wide{
-                    "AM",
-                }
-            }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M–M"}
                 }
@@ -1209,28 +1220,6 @@ bn{
                 Md{
                     M{"d/M – d/M"}
                     d{"d/M – d/M"}
-                }
-                d{
-                    d{"d–d"}
-                }
-                fallback{"{0} – {1}"}
-                h{
-                    a{"h a – h a"}
-                    h{"h–h a"}
-                }
-                hm{
-                    a{"h:mm a – h:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
-                }
-                hmv{
-                    a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
-                }
-                hv{
-                    a{"h a – h a v"}
-                    h{"h–h a v"}
                 }
                 y{
                     y{"y–y G"}
@@ -1282,7 +1271,7 @@ bn{
                         "আয়ার",
                         "সিভান",
                         "তামুজ",
-                        "Av",
+                        "অভ",
                         "এলুল",
                         "আডার II",
                     }
@@ -1314,7 +1303,7 @@ bn{
                         "আয়ার",
                         "সিভান",
                         "তামুজ",
-                        "Av",
+                        "অভ",
                         "এলুল",
                         "আডার II",
                     }
@@ -1332,7 +1321,7 @@ bn{
                         "আয়ার",
                         "সিভান",
                         "তামুজ",
-                        "Av",
+                        "অভ",
                         "এলুল",
                         "আডার II",
                     }
@@ -1364,7 +1353,7 @@ bn{
                         "আয়ার",
                         "সিভান",
                         "তামুজ",
-                        "Av",
+                        "অভ",
                         "এলুল",
                         "আডার II",
                     }
@@ -1578,17 +1567,6 @@ bn{
             }
         }
         persian{
-            eras{
-                abbreviated{
-                    "AP",
-                }
-                narrow{
-                    "AP",
-                }
-                wide{
-                    "AP",
-                }
-            }
             monthNames{
                 format{
                     abbreviated{
@@ -2621,6 +2599,12 @@ bn{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-narrow{
+            2{"{0} এবং {1}"}
+            end{"{0} এবং {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard-short{
             2{"{0} এবং {1}"}
             end{"{0} এবং {1}"}
@@ -2676,10 +2660,6 @@ bn{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
-            }
-            stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
             }
         }
     }

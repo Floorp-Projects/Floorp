@@ -2,6 +2,10 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 fr_CA{
     Currencies{
+        AFN{
+            "AFN",
+            "afghani afghan",
+        }
         ARS{
             "ARS",
             "peso argentin",
@@ -14,6 +18,18 @@ fr_CA{
             "AZN",
             "manat azerbaïdjanais",
         }
+        BBD{
+            "BBD",
+            "dollar barbadien",
+        }
+        BDT{
+            "BDT",
+            "taka bangladeshi",
+        }
+        BHD{
+            "BHD",
+            "dinar bahreïni",
+        }
         BMD{
             "BMD",
             "dollar bermudien",
@@ -22,6 +38,10 @@ fr_CA{
             "BND",
             "dollar brunéien",
         }
+        BYR{
+            "BYR",
+            "rouble biélorusse (2000–2016)",
+        }
         BZD{
             "BZD",
             "dollar bélizéen",
@@ -29,6 +49,10 @@ fr_CA{
         CAD{
             "$",
             "dollar canadien",
+        }
+        CHF{
+            "CHF",
+            "franc suisse",
         }
         CLP{
             "CLP",
@@ -42,9 +66,29 @@ fr_CA{
             "COP",
             "peso colombien",
         }
+        CUP{
+            "CUP",
+            "peso cubain",
+        }
         CVE{
             "CVE",
             "escudo cap-verdien",
+        }
+        DKK{
+            "DKK",
+            "couronne danoise",
+        }
+        DZD{
+            "DZD",
+            "dinar algérien",
+        }
+        EGP{
+            "EGP",
+            "livre égyptienne",
+        }
+        EUR{
+            "€",
+            "euro",
         }
         FJD{
             "FJD",
@@ -58,13 +102,29 @@ fr_CA{
             "£",
             "livre sterling",
         }
+        GHS{
+            "GHS",
+            "cédi ghanéen",
+        }
         GIP{
             "GIP",
             "livre de Gibraltar",
         }
+        GMD{
+            "GMD",
+            "dalasi gambien",
+        }
+        GNF{
+            "GNF",
+            "franc guinéen",
+        }
         HKD{
             "$ HK",
             "dollar de Hong Kong",
+        }
+        IDR{
+            "IDR",
+            "roupie indonésienne",
         }
         ILS{
             "ILS",
@@ -78,9 +138,17 @@ fr_CA{
             "IRR",
             "rial iranien",
         }
+        ISK{
+            "ISK",
+            "couronne islandaise",
+        }
         JPY{
             "¥",
             "yen japonais",
+        }
+        KPW{
+            "KPW",
+            "won nord-coréen",
         }
         KRW{
             "KRW",
@@ -94,13 +162,73 @@ fr_CA{
             "LBP",
             "livre libanaise",
         }
+        LKR{
+            "LKR",
+            "roupie srilankaise",
+        }
+        LRD{
+            "LRD",
+            "dollar libérien",
+        }
+        LTL{
+            "LTL",
+            "litas lituanien",
+        }
+        LVL{
+            "LVL",
+            "lats letton",
+        }
+        LYD{
+            "LYD",
+            "dinar libyen",
+        }
+        MAD{
+            "MAD",
+            "dirham marocain",
+        }
+        MMK{
+            "MMK",
+            "kyat myanmarais",
+        }
+        MNT{
+            "MNT",
+            "tugrik mongol",
+        }
+        MOP{
+            "MOP",
+            "pataca macanaise",
+        }
+        MRO{
+            "MRO",
+            "ouguiya mauritanien (1973–2017)",
+        }
+        MVR{
+            "MVR",
+            "rufiyaa maldivien",
+        }
         MXN{
             "MXN",
             "peso mexicain",
         }
+        MYR{
+            "MYR",
+            "ringgit malais",
+        }
         NAD{
             "NAD",
             "dollar namibien",
+        }
+        NGN{
+            "NGN",
+            "naira nigérian",
+        }
+        NOK{
+            "NOK",
+            "couronne norvégienne",
+        }
+        NPR{
+            "NPR",
+            "roupie népalaise",
         }
         NZD{
             "$ NZ",
@@ -118,6 +246,10 @@ fr_CA{
             "PGK",
             "kina papou-néo-guinéen",
         }
+        PKR{
+            "PKR",
+            "roupie pakistanaise",
+        }
         QAR{
             "QAR",
             "riyal du Qatar",
@@ -130,13 +262,49 @@ fr_CA{
             "SBD",
             "dollar des îles Salomon",
         }
+        SDG{
+            "SDG",
+            "livre soudanaise",
+        }
+        SEK{
+            "SEK",
+            "couronne suédoise",
+        }
         SGD{
             "$ SG",
             "dollar de Singapour",
         }
+        SHP{
+            "SHP",
+            "livre de Sainte-Hélène",
+        }
+        SLL{
+            "SLL",
+            "leone sierra-léonais",
+        }
         SRD{
             "SRD",
             "dollar du Suriname",
+        }
+        SSP{
+            "SSP",
+            "livre sud-soudanaise",
+        }
+        STD{
+            "STD",
+            "dobra santoméen (1977–2017)",
+        }
+        THB{
+            "THB",
+            "baht thaïlandais",
+        }
+        TJS{
+            "TJS",
+            "somoni tadjik",
+        }
+        TND{
+            "TND",
+            "dinar tunisien",
         }
         TOP{
             "TOP",
@@ -270,5 +438,5 @@ fr_CA{
             other{"rials yéménites"}
         }
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.47.86"}
 }

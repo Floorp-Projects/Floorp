@@ -1,8 +1,32 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ur_IN{
-    Version{"2.1.43.65"}
+    Version{"2.1.47.71"}
     zoneStrings{
+        "Africa:Accra"{
+            ec{"اکرا"}
+        }
+        "America:Cambridge_Bay"{
+            ec{"کیمبرج بے"}
+        }
+        "America:Glace_Bay"{
+            ec{"گلیس بے"}
+        }
+        "America:Goose_Bay"{
+            ec{"گوس بے"}
+        }
+        "America:Grand_Turk"{
+            ec{"گرینڈ ترک"}
+        }
+        "America:Scoresbysund"{
+            ec{"اتتوققورتورمیت"}
+        }
+        "America:Thule"{
+            ec{"تھولے"}
+        }
+        "Europe:Budapest"{
+            ec{"بوڈاپیسٹ"}
+        }
         "meta:Afghanistan"{
             ls{"افغانستان ٹائم"}
         }

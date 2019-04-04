@@ -64,7 +64,7 @@ class Raptor(object):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, is_release_build=False,
-                 debug_mode=False, activity=None):
+                 debug_mode=False, post_startup_delay=None, activity=None):
 
         # Override the magic --host HOST_IP with the value of the environment variable.
         if host == 'HOST_IP':
@@ -90,7 +90,7 @@ class Raptor(object):
         self.benchmark = None
         self.benchmark_port = 0
         self.gecko_profiler = None
-        self.post_startup_delay = 30000
+        self.post_startup_delay = post_startup_delay
         self.device = None
         self.profile_class = app
         self.firefox_android_apps = ['fennec', 'geckoview', 'refbrow', 'fenix']
@@ -100,7 +100,7 @@ class Raptor(object):
 
         # if running debug-mode reduce the pause after browser startup
         if self.debug_mode:
-            self.post_startup_delay = 3000
+            self.post_startup_delay = min(self.post_startup_delay, 3000)
             self.log.info("debug-mode enabled, reducing post-browser startup pause to %d ms"
                           % self.post_startup_delay)
 
@@ -132,7 +132,7 @@ class Raptor(object):
                         host=self.config['host'],
                         b_port=self.benchmark_port,
                         debug_mode=1 if self.debug_mode else 0,
-                        browser_cycle=test['browser_cycle'])
+                        browser_cycle=test.get('browser_cycle', 1))
 
         self.install_raptor_webext()
 
@@ -323,7 +323,7 @@ class Raptor(object):
 
     def wait_for_test_finish(self, test, timeout):
         # convert timeout to seconds and account for page cycles
-        timeout = int(timeout / 1000) * int(test['page_cycles'])
+        timeout = int(timeout / 1000) * int(test.get('page_cycles', 1))
         # account for the pause the raptor webext runner takes after browser startup
         timeout += (int(self.post_startup_delay / 1000) + 3)
 
@@ -377,10 +377,11 @@ class RaptorDesktop(Raptor):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, is_release_build=False,
-                 debug_mode=False, activity=None):
+                 debug_mode=False, post_startup_delay=None, activity=None):
         Raptor.__init__(self, app, binary, run_local, obj_path, gecko_profile,
                         gecko_profile_interval, gecko_profile_entries, symbols_path,
-                        host, power_test, is_release_build, debug_mode)
+                        host, power_test, is_release_build, debug_mode,
+                        post_startup_delay)
 
     def create_browser_handler(self):
         # create the desktop browser runner
@@ -443,10 +444,11 @@ class RaptorDesktopFirefox(RaptorDesktop):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, is_release_build=False,
-                 debug_mode=False, activity=None):
+                 debug_mode=False, post_startup_delay=None, activity=None):
         RaptorDesktop.__init__(self, app, binary, run_local, obj_path, gecko_profile,
                                gecko_profile_interval, gecko_profile_entries, symbols_path,
-                               host, power_test, is_release_build, debug_mode)
+                               host, power_test, is_release_build, debug_mode,
+                               post_startup_delay)
 
     def disable_non_local_connections(self):
         # For Firefox we need to set MOZ_DISABLE_NONLOCAL_CONNECTIONS=1 env var before startup
@@ -487,10 +489,11 @@ class RaptorDesktopChrome(RaptorDesktop):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, is_release_build=False,
-                 debug_mode=False, activity=None):
+                 debug_mode=False, post_startup_delay=None, activity=None):
         RaptorDesktop.__init__(self, app, binary, run_local, obj_path, gecko_profile,
                                gecko_profile_interval, gecko_profile_entries, symbols_path,
-                               host, power_test, is_release_build, debug_mode)
+                               host, power_test, is_release_build, debug_mode,
+                               post_startup_delay)
 
     def setup_chrome_desktop_for_playback(self):
         # if running a pageload test on google chrome, add the cmd line options
@@ -524,10 +527,10 @@ class RaptorAndroid(Raptor):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
                  symbols_path=None, host=None, power_test=False, is_release_build=False,
-                 debug_mode=False, activity=None):
+                 debug_mode=False, post_startup_delay=None, activity=None):
         Raptor.__init__(self, app, binary, run_local, obj_path, gecko_profile,
                         gecko_profile_interval, gecko_profile_entries, symbols_path, host,
-                        power_test, is_release_build, debug_mode)
+                        power_test, is_release_build, debug_mode, post_startup_delay)
 
         # on android, when creating the browser profile, we want to use a 'firefox' type profile
         self.profile_class = "firefox"
@@ -842,6 +845,7 @@ def main(args=sys.argv[1:]):
                           power_test=args.power_test,
                           is_release_build=args.is_release_build,
                           debug_mode=args.debug_mode,
+                          post_startup_delay=args.post_startup_delay,
                           activity=args.activity)
 
     raptor.create_browser_profile()

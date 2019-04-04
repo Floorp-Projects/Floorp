@@ -1238,10 +1238,8 @@ fi{
         DOP{"DOP"}
         EGP{"EGP"}
         ESP{"ESP"}
-        EUR{"€"}
         FJD{"FJD"}
         FKP{"FKP"}
-        GBP{"£"}
         GEL{"GEL"}
         GIP{"GIP"}
         GNF{"GNF"}
@@ -1256,7 +1254,6 @@ fi{
         INR{"INR"}
         ISK{"ISK"}
         JMD{"JMD"}
-        JPY{"¥"}
         KHR{"KHR"}
         KMF{"KMF"}
         KPW{"KPW"}
@@ -1286,7 +1283,6 @@ fi{
         PLN{"PLN"}
         PYG{"PYG"}
         RON{"RON"}
-        RUB{"₽"}
         RUR{"RUR"}
         RWF{"RWF"}
         SBD{"SBD"}
@@ -1303,7 +1299,6 @@ fi{
         TTD{"TTD"}
         TWD{"TWD"}
         UAH{"UAH"}
-        USD{"$"}
         UYU{"UYU"}
         VEF{"VEF"}
         VND{"VND"}
@@ -2528,5 +2523,5 @@ fi{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.44.91"}
+    Version{"2.1.48.42"}
 }

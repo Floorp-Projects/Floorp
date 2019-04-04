@@ -1,8 +1,8 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 xh{
+    AuxExemplarCharacters{"[]"}
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s t u v w x y z]"}
-    ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
     NumberElements{
         latn{
             patterns{
@@ -20,7 +20,7 @@ xh{
             }
         }
     }
-    Version{"2.1.44.88"}
+    Version{"2.1.48.89"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -66,8 +66,8 @@ xh{
                 MMM{"LLL"}
                 MMMEd{"MMM d, E"}
                 MMMMW{
-                    one{"'week' W 'of' MMM"}
-                    other{"'week' W 'of' MMM"}
+                    one{"'week' W 'of' MMMM"}
+                    other{"'week' W 'of' MMMM"}
                 }
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}

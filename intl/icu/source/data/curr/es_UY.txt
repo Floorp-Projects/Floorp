@@ -16,5 +16,5 @@ es_UY{
             "unidad previsional uruguayo",
         }
     }
-    Version{"2.1.44.79"}
+    Version{"2.1.47.70"}
 }

@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ps{
-    AuxExemplarCharacters{"[\u200C \u200D \u200E\u200F]"}
+    AuxExemplarCharacters{"[\u200C \u200D \u200E\u200F ے]"}
     Ellipsis{
         final{"{0}…"}
         initial{"…{0}"}
@@ -26,21 +26,17 @@ ps{
         arabext{
             patterns{
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
             symbols{
-                decimal{"٫"}
                 exponential{"×۱۰^"}
-                group{"٬"}
                 infinity{"∞"}
-                minusSign{"‎-‎"}
                 nan{"NaN"}
                 perMille{"؉"}
                 percentSign{"٪"}
-                plusSign{"‎+‎"}
                 superscriptingExponent{"×"}
+                timeSeparator{":"}
             }
         }
         default{"arabext"}
@@ -54,7 +50,6 @@ ps{
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -237,7 +232,7 @@ ps{
         minimumGroupingDigits{"1"}
         native{"arabext"}
     }
-    Version{"2.1.43.94"}
+    Version{"2.1.48.17"}
     calendar{
         default{"persian"}
         generic{
@@ -302,6 +297,15 @@ ps{
                 yyyyQQQQ{"G y QQQQ"}
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
                 M{
                     M{"MM–MM"}
                 }
@@ -422,8 +426,8 @@ ps{
                 MMM{"LLL"}
                 MMMEd{"MMM d, E"}
                 MMMMW{
-                    one{"اونۍ W د MMM"}
-                    other{"اونۍ W د MMM"}
+                    one{"اونۍ W د MMMM"}
+                    other{"اونۍ W د MMMM"}
                 }
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
@@ -567,6 +571,53 @@ ps{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -1233,47 +1284,12 @@ ps{
     fields{
         day{
             dn{"ورځ"}
-            relative{
-                "-1"{"yesterday"}
-                "0"{"today"}
-                "1"{"tomorrow"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} d"}
-                    other{"+{0} d"}
-                }
-                past{
-                    one{"-{0} d"}
-                    other{"-{0} d"}
-                }
-            }
         }
         day-narrow{
             dn{"ورځ"}
-            relativeTime{
-                future{
-                    one{"+{0} d"}
-                    other{"+{0} d"}
-                }
-                past{
-                    one{"-{0} d"}
-                    other{"-{0} d"}
-                }
-            }
         }
         day-short{
             dn{"ورځ"}
-            relativeTime{
-                future{
-                    one{"+{0} d"}
-                    other{"+{0} d"}
-                }
-                past{
-                    one{"-{0} d"}
-                    other{"-{0} d"}
-                }
-            }
         }
         dayOfYear{
             dn{"د کال ورځ"}
@@ -1302,623 +1318,50 @@ ps{
         era-short{
             dn{"پېر"}
         }
-        fri{
-            relative{
-                "-1"{"last Friday"}
-                "0"{"this Friday"}
-                "1"{"next Friday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Fridays"}
-                    other{"+{0} Fridays"}
-                }
-                past{
-                    one{"-{0} Fridays"}
-                    other{"-{0} Fridays"}
-                }
-            }
-        }
-        fri-narrow{
-            relative{
-                "-1"{"last Friday"}
-                "0"{"this Friday"}
-                "1"{"next Friday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Fridays"}
-                    other{"+{0} Fridays"}
-                }
-                past{
-                    one{"-{0} Fridays"}
-                    other{"-{0} Fridays"}
-                }
-            }
-        }
-        fri-short{
-            relative{
-                "-1"{"last Friday"}
-                "0"{"this Friday"}
-                "1"{"next Friday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Fridays"}
-                    other{"+{0} Fridays"}
-                }
-                past{
-                    one{"-{0} Fridays"}
-                    other{"-{0} Fridays"}
-                }
-            }
-        }
         hour{
             dn{"ساعت"}
-            relative{
-                "0"{"this hour"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} h"}
-                    other{"+{0} h"}
-                }
-                past{
-                    one{"-{0} h"}
-                    other{"-{0} h"}
-                }
-            }
         }
         hour-narrow{
             dn{"ساعت"}
-            relativeTime{
-                future{
-                    one{"+{0} h"}
-                    other{"+{0} h"}
-                }
-                past{
-                    one{"-{0} h"}
-                    other{"-{0} h"}
-                }
-            }
         }
         hour-short{
             dn{"ساعت"}
-            relativeTime{
-                future{
-                    one{"+{0} h"}
-                    other{"+{0} h"}
-                }
-                past{
-                    one{"-{0} h"}
-                    other{"-{0} h"}
-                }
-            }
         }
         minute{
             dn{"دقيقه"}
-            relative{
-                "0"{"this minute"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} min"}
-                    other{"+{0} min"}
-                }
-                past{
-                    one{"-{0} min"}
-                    other{"-{0} min"}
-                }
-            }
         }
         minute-narrow{
             dn{"دقيقه"}
-            relativeTime{
-                future{
-                    one{"+{0} min"}
-                    other{"+{0} min"}
-                }
-                past{
-                    one{"-{0} min"}
-                    other{"-{0} min"}
-                }
-            }
         }
         minute-short{
             dn{"دقيقه"}
-            relativeTime{
-                future{
-                    one{"+{0} min"}
-                    other{"+{0} min"}
-                }
-                past{
-                    one{"-{0} min"}
-                    other{"-{0} min"}
-                }
-            }
-        }
-        mon{
-            relative{
-                "-1"{"last Monday"}
-                "0"{"this Monday"}
-                "1"{"next Monday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Mondays"}
-                    other{"+{0} Mondays"}
-                }
-                past{
-                    one{"-{0} Mondays"}
-                    other{"-{0} Mondays"}
-                }
-            }
-        }
-        mon-narrow{
-            relative{
-                "-1"{"last Monday"}
-                "0"{"this Monday"}
-                "1"{"next Monday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Mondays"}
-                    other{"+{0} Mondays"}
-                }
-                past{
-                    one{"-{0} Mondays"}
-                    other{"-{0} Mondays"}
-                }
-            }
-        }
-        mon-short{
-            relative{
-                "-1"{"last Monday"}
-                "0"{"this Monday"}
-                "1"{"next Monday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Mondays"}
-                    other{"+{0} Mondays"}
-                }
-                past{
-                    one{"-{0} Mondays"}
-                    other{"-{0} Mondays"}
-                }
-            }
         }
         month{
             dn{"مياشت"}
-            relative{
-                "-1"{"last month"}
-                "0"{"this month"}
-                "1"{"next month"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} m"}
-                    other{"+{0} m"}
-                }
-                past{
-                    one{"-{0} m"}
-                    other{"-{0} m"}
-                }
-            }
         }
         month-narrow{
             dn{"مياشت"}
-            relativeTime{
-                future{
-                    one{"+{0} m"}
-                    other{"+{0} m"}
-                }
-                past{
-                    one{"-{0} m"}
-                    other{"-{0} m"}
-                }
-            }
         }
         month-short{
             dn{"مياشت"}
-            relativeTime{
-                future{
-                    one{"+{0} m"}
-                    other{"+{0} m"}
-                }
-                past{
-                    one{"-{0} m"}
-                    other{"-{0} m"}
-                }
-            }
-        }
-        quarter{
-            dn{"Quarter"}
-            relative{
-                "-1"{"last quarter"}
-                "0"{"this quarter"}
-                "1"{"next quarter"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Q"}
-                    other{"+{0} Q"}
-                }
-                past{
-                    one{"-{0} Q"}
-                    other{"-{0} Q"}
-                }
-            }
-        }
-        quarter-narrow{
-            dn{"Quarter"}
-            relativeTime{
-                future{
-                    one{"+{0} Q"}
-                    other{"+{0} Q"}
-                }
-                past{
-                    one{"-{0} Q"}
-                    other{"-{0} Q"}
-                }
-            }
-        }
-        quarter-short{
-            dn{"Quarter"}
-            relativeTime{
-                future{
-                    one{"+{0} Q"}
-                    other{"+{0} Q"}
-                }
-                past{
-                    one{"-{0} Q"}
-                    other{"-{0} Q"}
-                }
-            }
-        }
-        sat{
-            relative{
-                "-1"{"last Saturday"}
-                "0"{"this Saturday"}
-                "1"{"next Saturday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Saturdays"}
-                    other{"+{0} Saturdays"}
-                }
-                past{
-                    one{"-{0} Saturdays"}
-                    other{"-{0} Saturdays"}
-                }
-            }
-        }
-        sat-narrow{
-            relative{
-                "-1"{"last Saturday"}
-                "0"{"this Saturday"}
-                "1"{"next Saturday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Saturdays"}
-                    other{"+{0} Saturdays"}
-                }
-                past{
-                    one{"-{0} Saturdays"}
-                    other{"-{0} Saturdays"}
-                }
-            }
-        }
-        sat-short{
-            relative{
-                "-1"{"last Saturday"}
-                "0"{"this Saturday"}
-                "1"{"next Saturday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Saturdays"}
-                    other{"+{0} Saturdays"}
-                }
-                past{
-                    one{"-{0} Saturdays"}
-                    other{"-{0} Saturdays"}
-                }
-            }
         }
         second{
             dn{"ثانيه"}
-            relative{
-                "0"{"now"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} s"}
-                    other{"+{0} s"}
-                }
-                past{
-                    one{"-{0} s"}
-                    other{"-{0} s"}
-                }
-            }
         }
         second-narrow{
             dn{"ثانيه"}
-            relativeTime{
-                future{
-                    one{"+{0} s"}
-                    other{"+{0} s"}
-                }
-                past{
-                    one{"-{0} s"}
-                    other{"-{0} s"}
-                }
-            }
         }
         second-short{
             dn{"ثانيه"}
-            relativeTime{
-                future{
-                    one{"+{0} s"}
-                    other{"+{0} s"}
-                }
-                past{
-                    one{"-{0} s"}
-                    other{"-{0} s"}
-                }
-            }
-        }
-        sun{
-            relative{
-                "-1"{"last Sunday"}
-                "0"{"this Sunday"}
-                "1"{"next Sunday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Sundays"}
-                    other{"+{0} Sundays"}
-                }
-                past{
-                    one{"-{0} Sundays"}
-                    other{"-{0} Sundays"}
-                }
-            }
-        }
-        sun-narrow{
-            relative{
-                "-1"{"last Sunday"}
-                "0"{"this Sunday"}
-                "1"{"next Sunday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Sundays"}
-                    other{"+{0} Sundays"}
-                }
-                past{
-                    one{"-{0} Sundays"}
-                    other{"-{0} Sundays"}
-                }
-            }
-        }
-        sun-short{
-            relative{
-                "-1"{"last Sunday"}
-                "0"{"this Sunday"}
-                "1"{"next Sunday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Sundays"}
-                    other{"+{0} Sundays"}
-                }
-                past{
-                    one{"-{0} Sundays"}
-                    other{"-{0} Sundays"}
-                }
-            }
-        }
-        thu{
-            relative{
-                "-1"{"last Thursday"}
-                "0"{"this Thursday"}
-                "1"{"next Thursday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Thursdays"}
-                    other{"+{0} Thursdays"}
-                }
-                past{
-                    one{"-{0} Thursdays"}
-                    other{"-{0} Thursdays"}
-                }
-            }
-        }
-        thu-narrow{
-            relative{
-                "-1"{"last Thursday"}
-                "0"{"this Thursday"}
-                "1"{"next Thursday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Thursdays"}
-                    other{"+{0} Thursdays"}
-                }
-                past{
-                    one{"-{0} Thursdays"}
-                    other{"-{0} Thursdays"}
-                }
-            }
-        }
-        thu-short{
-            relative{
-                "-1"{"last Thursday"}
-                "0"{"this Thursday"}
-                "1"{"next Thursday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Thursdays"}
-                    other{"+{0} Thursdays"}
-                }
-                past{
-                    one{"-{0} Thursdays"}
-                    other{"-{0} Thursdays"}
-                }
-            }
-        }
-        tue{
-            relative{
-                "-1"{"last Tuesday"}
-                "0"{"this Tuesday"}
-                "1"{"next Tuesday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Tuesdays"}
-                    other{"+{0} Tuesdays"}
-                }
-                past{
-                    one{"-{0} Tuesdays"}
-                    other{"-{0} Tuesdays"}
-                }
-            }
-        }
-        tue-narrow{
-            relative{
-                "-1"{"last Tuesday"}
-                "0"{"this Tuesday"}
-                "1"{"next Tuesday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Tuesdays"}
-                    other{"+{0} Tuesdays"}
-                }
-                past{
-                    one{"-{0} Tuesdays"}
-                    other{"-{0} Tuesdays"}
-                }
-            }
-        }
-        tue-short{
-            relative{
-                "-1"{"last Tuesday"}
-                "0"{"this Tuesday"}
-                "1"{"next Tuesday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Tuesdays"}
-                    other{"+{0} Tuesdays"}
-                }
-                past{
-                    one{"-{0} Tuesdays"}
-                    other{"-{0} Tuesdays"}
-                }
-            }
-        }
-        wed{
-            relative{
-                "-1"{"last Wednesday"}
-                "0"{"this Wednesday"}
-                "1"{"next Wednesday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Wednesdays"}
-                    other{"+{0} Wednesdays"}
-                }
-                past{
-                    one{"-{0} Wednesdays"}
-                    other{"-{0} Wednesdays"}
-                }
-            }
-        }
-        wed-narrow{
-            relative{
-                "-1"{"last Wednesday"}
-                "0"{"this Wednesday"}
-                "1"{"next Wednesday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Wednesdays"}
-                    other{"+{0} Wednesdays"}
-                }
-                past{
-                    one{"-{0} Wednesdays"}
-                    other{"-{0} Wednesdays"}
-                }
-            }
-        }
-        wed-short{
-            relative{
-                "-1"{"last Wednesday"}
-                "0"{"this Wednesday"}
-                "1"{"next Wednesday"}
-            }
-            relativeTime{
-                future{
-                    one{"+{0} Wednesdays"}
-                    other{"+{0} Wednesdays"}
-                }
-                past{
-                    one{"-{0} Wednesdays"}
-                    other{"-{0} Wednesdays"}
-                }
-            }
         }
         week{
             dn{"اونۍ"}
-            relative{
-                "-1"{"last week"}
-                "0"{"this week"}
-                "1"{"next week"}
-            }
-            relativePeriod{"the week of {0}"}
-            relativeTime{
-                future{
-                    one{"+{0} w"}
-                    other{"+{0} w"}
-                }
-                past{
-                    one{"-{0} w"}
-                    other{"-{0} w"}
-                }
-            }
         }
         week-narrow{
             dn{"اونۍ"}
-            relativePeriod{"the week of {0}"}
-            relativeTime{
-                future{
-                    one{"+{0} w"}
-                    other{"+{0} w"}
-                }
-                past{
-                    one{"-{0} w"}
-                    other{"-{0} w"}
-                }
-            }
         }
         week-short{
             dn{"اونۍ"}
-            relativePeriod{"the week of {0}"}
-            relativeTime{
-                future{
-                    one{"+{0} w"}
-                    other{"+{0} w"}
-                }
-                past{
-                    one{"-{0} w"}
-                    other{"-{0} w"}
-                }
-            }
         }
         weekOfMonth{
             dn{"د مياشتې اونۍ"}
@@ -2015,22 +1458,22 @@ ps{
         characters{"right-to-left"}
     }
     listPattern{
-        or{
-            2{"{0} or {1}"}
-            end{"{0}, or {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
         standard{
             2{"{0} او {1}"}
             end{"{0}، او {1}"}
             middle{"{0}، {1}"}
             start{"{0}، {1}"}
         }
+        standard-narrow{
+            2{"{0}، {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}، {1}"}
+            start{"{0}, {1}"}
+        }
         standard-short{
             2{"{0} او {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
+            end{"{0}، او {1}"}
+            middle{"{0}، {1}"}
             start{"{0}, {1}"}
         }
         unit{
@@ -2082,10 +1525,6 @@ ps{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
-            }
-            stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
             }
         }
     }

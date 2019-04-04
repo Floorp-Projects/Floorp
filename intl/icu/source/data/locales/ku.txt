@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ku{
-    AuxExemplarCharacters{"[á à ă â å ä ã ā æ é è ĕ ë ē í ì ĭ ï ī ñ ó ò ŏ ô ø ō œ ß ú ù ŭ ū ÿ]"}
+    AuxExemplarCharacters{"[á à ă â å ä ã ā æ è ĕ ë ē é ì ĭ ï ī í ñ ó ò ŏ ô ø ō œ ß ù ŭ ū ú ÿ]"}
     Ellipsis{
         final{"{0}…"}
         initial{"…{0}"}
@@ -21,7 +21,7 @@ ku{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{"≥{0}"}
+                atLeast{"⩾{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -53,7 +53,7 @@ ku{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.44.82"}
+    Version{"2.1.47.83"}
     calendar{
         generic{
             DateTimePatterns{

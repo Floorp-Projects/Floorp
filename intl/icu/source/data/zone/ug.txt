@@ -1,13 +1,37 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ug{
-    Version{"2.1.44.88"}
+    Version{"2.1.47.82"}
     zoneStrings{
+        "Africa:Sao_Tome"{
+            ec{"سان-تومې"}
+        }
+        "America:Asuncion"{
+            ec{"ئاسۇنسىيون"}
+        }
+        "America:Curacao"{
+            ec{"كۇراسو"}
+        }
+        "America:St_Barthelemy"{
+            ec{"ساينىت-بارتھېلەمىي"}
+        }
+        "Antarctica:DumontDUrville"{
+            ec{"دۇمونت دۇرۋىللې"}
+        }
+        "Asia:Saigon"{
+            ec{"خوچىمىن شەھىرى"}
+        }
+        "Etc:Unknown"{
+            ec{"يوچۇن شەھەر"}
+        }
         "Europe:Dublin"{
             ld{"ئىرېلاند يازلىق ۋاقتى"}
         }
         "Europe:London"{
             ld{"ئەنگلىيە يازلىق ۋاقتى"}
+        }
+        "Indian:Reunion"{
+            ec{"رېئونىيون"}
         }
         "meta:Acre"{
             ld{"ئاكرى يازلىق ۋاقتى"}

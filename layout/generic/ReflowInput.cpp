@@ -15,7 +15,6 @@
 #include "nsIContent.h"
 #include "nsGkAtoms.h"
 #include "nsPresContext.h"
-#include "nsIPresShell.h"
 #include "nsFontMetrics.h"
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"

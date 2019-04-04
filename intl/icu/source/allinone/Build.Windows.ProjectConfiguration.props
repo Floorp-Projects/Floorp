@@ -21,12 +21,8 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <PropertyGroup>
-    <!-- This is the version of the MSVC tool-set to use. -->
-    <!-- v140 is the Visual Studio 2015 toolset. -->
-    <!-- v141 is the Visual Studio 2017 toolset. -->
-    <PlatformToolset>v141</PlatformToolset>
-  </PropertyGroup>
+  <!-- The following import will set the PlatformToolset configuration. -->
+  <Import Project="Build.Windows.PlatformToolset.props" />
   <PropertyGroup>
     <!-- This is the default SDK target. -->
     <!-- Note that the Windows 8.1 SDK is backwards compatible down-level to Windows 7, so

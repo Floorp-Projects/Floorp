@@ -1237,7 +1237,6 @@ de{
         DKK{"kr"}
         DOP{"$"}
         EGP{"E£"}
-        ESP{"₧"}
         EUR{"€"}
         FJD{"$"}
         FKP{"Fl£"}
@@ -1285,7 +1284,6 @@ de{
         PYG{"₲"}
         RON{"L"}
         RUB{"₽"}
-        RUR{"р."}
         RWF{"F.Rw"}
         SBD{"$"}
         SEK{"kr"}
@@ -2527,5 +2525,5 @@ de{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.44.91"}
+    Version{"2.1.48.42"}
 }

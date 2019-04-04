@@ -141,6 +141,7 @@ es_MX{
         }
         THB{
             one{"baht tailandés"}
+            other{"bahts tailandeses"}
         }
         TMT{
             other{"manats turcomanos"}
@@ -169,5 +170,5 @@ es_MX{
             other{"kwachas zambianos"}
         }
     }
-    Version{"2.1.44.5"}
+    Version{"2.1.47.96"}
 }

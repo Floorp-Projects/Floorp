@@ -17,6 +17,9 @@
 
 SHELL = @SHELL@
 
+# Instruct Python to never write any byte code to the ICU source tree.
+export PYTHONDONTWRITEBYTECODE = 1
+
 # Standard directories
 
 prefix = @prefix@

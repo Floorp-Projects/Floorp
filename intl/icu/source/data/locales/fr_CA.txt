@@ -3,6 +3,9 @@
 fr_CA{
     NumberElements{
         latn{
+            patterns{
+                decimalFormat{"#,##0.###"}
+            }
             patternsLong{
                 decimalFormat{
                     1000{
@@ -128,10 +131,12 @@ fr_CA{
             }
             symbols{
                 group{" "}
+                minusSign{"-"}
+                plusSign{"+"}
             }
         }
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.47.86"}
     calendar{
         coptic{
             monthNames{
@@ -282,6 +287,51 @@ fr_CA{
                 yyyyMd{"y-MM-dd G"}
             }
             intervalFormats{
+                Bh{
+                    B{"h 'h' B – h 'h' B"}
+                    h{"h – h 'h' B"}
+                }
+                Bhm{
+                    B{"h 'h' mm B – h 'h' mm B"}
+                    h{"h 'h' mm – h 'h' mm B"}
+                    m{"h 'h' mm – h 'h' mm B"}
+                }
+                Gy{
+                    G{"y G – y G"}
+                }
+                GyM{
+                    G{"y-MM GGGGG – y-MM GGGGG"}
+                    M{"y-MM – y-MM GGGGG"}
+                    y{"y-MM – y-MM GGGGG"}
+                }
+                GyMEd{
+                    G{"E y-MM-dd GGGGG – E y-MM-dd GGGGG"}
+                    M{"E y-MM-dd GGGGG – E y-MM-dd GGGGG"}
+                    d{"E y-MM-dd – E y-MM-dd GGGGG"}
+                    y{"E y-MM-dd – E y-MM-dd GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM y – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E d MMM y G – E d MMM y G"}
+                    M{"E d MMM – E d MMM y G"}
+                    d{"E d MMM – E d MMM y G"}
+                    y{"E d MMM y – E d MMM y G"}
+                }
+                GyMMMd{
+                    G{"d MMM y G – d MMM y G"}
+                    M{"d MMM – d MMM y G"}
+                    y{"d MMM y – d MMM y G"}
+                }
+                GyMd{
+                    G{"y-MM-dd GGGGG – y-MM-dd GGGGG"}
+                    M{"y-MM-dd – y-MM-dd GGGGG"}
+                    d{"y-MM-dd – y-MM-dd GGGGG"}
+                    y{"y-MM-dd – y-MM-dd GGGGG"}
+                }
                 MEd{
                     M{"E MM-dd – E MM-dd"}
                     d{"E MM-dd – E MM-dd"}
@@ -366,6 +416,30 @@ fr_CA{
                 yMM{"y-MM"}
                 yMd{"y-MM-dd"}
             }
+            dayNames{
+                format{
+                    narrow{
+                        "D",
+                        "L",
+                        "M",
+                        "M",
+                        "J",
+                        "V",
+                        "S",
+                    }
+                }
+                stand-alone{
+                    narrow{
+                        "D",
+                        "L",
+                        "M",
+                        "M",
+                        "J",
+                        "V",
+                        "S",
+                    }
+                }
+            }
             dayPeriod{
                 format{
                     abbreviated{
@@ -378,9 +452,6 @@ fr_CA{
                     }
                     narrow{
                         afternoon1{"après-midi"}
-                        evening1{"soir"}
-                        midnight{"minuit"}
-                        morning1{"mat."}
                         night1{"mat."}
                         noon{"midi"}
                     }
@@ -389,7 +460,6 @@ fr_CA{
                     abbreviated{
                         afternoon1{"après-midi"}
                         am{"a.m."}
-                        evening1{"soir"}
                         morning1{"mat."}
                         pm{"p.m."}
                     }
@@ -397,7 +467,6 @@ fr_CA{
                         afternoon1{"après-midi"}
                         am{"a.m."}
                         evening1{"soir"}
-                        morning1{"mat."}
                         night1{"mat."}
                         pm{"p.m."}
                     }
@@ -414,6 +483,51 @@ fr_CA{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h 'h' B – h 'h' B"}
+                    h{"h – h 'h' B"}
+                }
+                Bhm{
+                    B{"h 'h' mm B – h 'h' mm B"}
+                    h{"h 'h' mm – h 'h' mm B"}
+                    m{"h 'h' mm – h 'h' mm B"}
+                }
+                Gy{
+                    G{"y G – y G"}
+                }
+                GyM{
+                    G{"y-MM GGGGG – y-MM GGGGG"}
+                    M{"y-MM – y-MM GGGGG"}
+                    y{"y-MM – y-MM GGGGG"}
+                }
+                GyMEd{
+                    G{"E y-MM-dd GGGGG – E y-MM-dd GGGGG"}
+                    M{"E y-MM-dd – E y-MM-dd GGGGG"}
+                    d{"E y-MM-dd – E y-MM-dd GGGGG"}
+                    y{"E y-MM-dd – E y-MM-dd GGGGG"}
+                }
+                GyMMM{
+                    G{"MMM y G – MMM y G"}
+                    M{"MMM y – MMM y G"}
+                    y{"MMM y – MMM y G"}
+                }
+                GyMMMEd{
+                    G{"E d MMM y G – E d MMM y G"}
+                    M{"E d MMM – E d MMM y G"}
+                    d{"E d MMM – E d MMM y G"}
+                    y{"E d MMM y – E d MMM y G"}
+                }
+                GyMMMd{
+                    G{"d MMM y G – d MMM y G"}
+                    M{"d MMM – d MMM y G"}
+                    y{"d MMM y – d MMM y G"}
+                }
+                GyMd{
+                    G{"y-MM-dd GGGGG – y-MM-dd GGGGG"}
+                    M{"y-MM-dd – y-MM-dd GGGGG"}
+                    d{"y-MM-dd – y-MM-dd GGGGG"}
+                    y{"y-MM-dd – y-MM-dd GGGGG"}
+                }
                 H{
                     H{"H 'h' – H 'h'"}
                 }
@@ -601,6 +715,12 @@ fr_CA{
         }
         indian{
             eras{
+                abbreviated{
+                    "Saka",
+                }
+                narrow{
+                    "Saka",
+                }
                 wide{
                     "Saka",
                 }
@@ -770,23 +890,7 @@ fr_CA{
                 "2"{"après-demain"}
             }
         }
-        day-narrow{
-            relative{
-                "-1"{"hier"}
-                "-2"{"avant-hier"}
-                "0"{"aujourd’hui"}
-                "1"{"demain"}
-                "2"{"après-demain"}
-            }
-        }
         day-short{
-            relative{
-                "-1"{"hier"}
-                "-2"{"avant-hier"}
-                "0"{"aujourd’hui"}
-                "1"{"demain"}
-                "2"{"après-demain"}
-            }
             relativeTime{
                 future{
                     other{"dans {0} j"}
@@ -833,14 +937,12 @@ fr_CA{
         quarter-narrow{
             relative{
                 "-1"{"trim. dernier"}
-                "0"{"ce trim."}
                 "1"{"trim.prochain"}
             }
         }
         quarter-short{
             relative{
                 "-1"{"trim. dernier"}
-                "0"{"ce trim."}
                 "1"{"trim. prochain"}
             }
         }

@@ -16,7 +16,7 @@
 	<alias from="in_ID" to="id_ID" />
 	<alias from="iw" to="he" />
 	<alias from="iw_IL" to="he_IL" />
-	<alias from="mo" to="ro_MD" />
+	<alias from="mo" to="ro" />
 	<alias from="no" to="nb" />
 	<alias from="no_NO" to="nb_NO" />
 	<alias from="pa_IN" to="pa_Guru_IN" />

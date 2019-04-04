@@ -1251,7 +1251,6 @@ sv{
         HNL{"L"}
         HRK{"kn"}
         HUF{"Ft"}
-        IDR{"Rp"}
         ILS{"₪"}
         INR{"₹"}
         ISK{"kr"}
@@ -1292,7 +1291,6 @@ sv{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -2526,5 +2524,5 @@ sv{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.43.94"}
+    Version{"2.1.48.90"}
 }

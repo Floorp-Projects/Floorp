@@ -214,7 +214,7 @@ ky{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.48.17"}
     calendar{
         generic{
             DateTimePatterns{
@@ -276,6 +276,15 @@ ky{
                 yyyyQQQQ{"G y-'ж'. QQQQ"}
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -413,8 +422,8 @@ ky{
                 MMM{"LLL"}
                 MMMEd{"d-MMM, E"}
                 MMMMW{
-                    one{"MMM 'айынын' W-'аптасы'"}
-                    other{"MMM 'айынын' W-'аптасы'"}
+                    one{"MMMM 'айынын' W-'аптасы'"}
+                    other{"MMMM 'айынын' W-'аптасы'"}
                 }
                 MMMMd{"d-MMMM"}
                 MMMd{"d-MMM"}
@@ -594,6 +603,15 @@ ky{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -1751,6 +1769,12 @@ ky{
             start{"{0}, {1}"}
         }
         standard{
+            2{"{0} жана {1}"}
+            end{"{0} жана {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
             2{"{0} жана {1}"}
             end{"{0} жана {1}"}
             middle{"{0}, {1}"}

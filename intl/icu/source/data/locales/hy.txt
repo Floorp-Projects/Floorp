@@ -1,7 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 hy{
-    AuxExemplarCharacters{"[]"}
     Ellipsis{
         final{"{0}…"}
         initial{"…{0}"}
@@ -18,7 +17,6 @@ hy{
     ExemplarCharactersPunctuation{"[֊ , ՝ \\: ՜ ՞ . « » ՚ ՛ ՟]"}
     MoreInformation{"?"}
     NumberElements{
-        default{"latn"}
         latn{
             miscPatterns{
                 approximately{"~{0}"}
@@ -29,7 +27,6 @@ hy{
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -193,11 +190,9 @@ hy{
                 group{" "}
                 infinity{"∞"}
                 list{";"}
-                minusSign{"-"}
                 nan{"ՈչԹ"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -213,10 +208,9 @@ hy{
             }
         }
         minimumGroupingDigits{"1"}
-        native{"latn"}
         traditional{"armn"}
     }
-    Version{"2.1.43.50"}
+    Version{"2.1.48.17"}
     calendar{
         generic{
             DateTimePatterns{
@@ -278,6 +272,53 @@ hy{
                 yyyyQQQQ{"G y թ, QQQQ"}
             }
             intervalFormats{
+                Bh{
+                    B{"B h–ից B h-ը"}
+                    h{"B h–ից h-ը"}
+                }
+                Bhm{
+                    B{"B h:mm – B h:mm"}
+                    h{"B h:mm – h:mm"}
+                    m{"B h:mm – h:mm"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 H{
                     H{"H–H"}
                 }
@@ -430,8 +471,8 @@ hy{
                 MMM{"LLL"}
                 MMMEd{"d MMM, E"}
                 MMMMW{
-                    one{"MMM W շաբ"}
-                    other{"MMM W շաբ"}
+                    one{"MMMM W շաբ"}
+                    other{"MMMM W շաբ"}
                 }
                 MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
@@ -615,6 +656,52 @@ hy{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"B h–ից B h-ը"}
+                    h{"B h–ից h-ը"}
+                }
+                Bhm{
+                    B{"B h:mm – B h:mm"}
+                    h{"B h:mm–h:mm"}
+                    m{"B h:mm – h:mm"}
+                }
+                Gy{
+                    y{"G y–y թթ․"}
+                }
+                GyM{
+                    G{"GGGGG MM.y – GGGGG MM.y"}
+                    M{"GGGGG MM.y – MM.y"}
+                    y{"GGGGG MM.y – MM.y"}
+                }
+                GyMEd{
+                    G{"GGGGG ccc, dd.MM.y – GGGGG ccc, dd.MM.y"}
+                    M{"GGGGG ccc, dd.MM.y – ccc, dd.MM.y"}
+                    d{"GGGGG ccc, dd.MM.y – ccc, dd.MM.y"}
+                    y{"GGGGG ccc, dd.MM.y – ccc, dd.MM.y"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y թ. MMM – MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G E, d MMM – G E, d MMM, y թ."}
+                    M{"G E, d MMM y թ. – E, d MMM"}
+                    d{"G E, d MMM – E, d MMM, y թ."}
+                    y{"G E, d MMM y թ. – E, d MMM y թ."}
+                }
+                GyMMMd{
+                    G{"G dd MMM, y թ․ – G dd MMM, y թ."}
+                    M{"G dd MMM – dd MMM, y թ."}
+                    d{"G dd–dd MMM, y թ."}
+                    y{"G dd MMM, y թ․ – G dd MMM, y թ."}
+                }
+                GyMd{
+                    G{"GGGGG dd.MM.y – GGGGG dd.MM.y"}
+                    M{"GGGGG dd.MM.y – dd.MM.y"}
+                    d{"GGGGG dd.MM.y – dd.MM.y"}
+                    y{"GGGGG dd.MM.y – dd.MM.y"}
+                }
                 H{
                     H{"H–H"}
                 }
@@ -1742,6 +1829,12 @@ hy{
             start{"{0}, {1}"}
         }
         standard{
+            2{"{0} և {1}"}
+            end{"{0} և {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
             2{"{0} և {1}"}
             end{"{0} և {1}"}
             middle{"{0}, {1}"}

@@ -188,7 +188,7 @@ kok{
         minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"2.1.44.88"}
+    Version{"2.1.48.4"}
     calendar{
         generic{
             DateTimePatterns{
@@ -369,9 +369,6 @@ kok{
                 MEd{"MM-dd, E"}
                 MMM{"LLL"}
                 MMMEd{"MMM d, E"}
-                MMMMW{
-                    other{"'week' W 'of' MMMM"}
-                }
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
                 Md{"MM-dd"}
@@ -392,9 +389,6 @@ kok{
                 yMd{"y-MM-dd"}
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
-                yw{
-                    other{"'week' w 'of' Y"}
-                }
             }
             dayNames{
                 format{

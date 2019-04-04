@@ -26,5 +26,5 @@ zh_Hans_MO{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.38.39"}
+    Version{"2.1.47.71"}
 }

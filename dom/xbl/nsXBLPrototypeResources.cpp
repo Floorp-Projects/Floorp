@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/Document.h"
 #include "nsIContent.h"
+#include "nsIPresShellInlines.h"
 #include "nsIServiceManager.h"
 #include "nsXBLResourceLoader.h"
 #include "nsXBLPrototypeResources.h"

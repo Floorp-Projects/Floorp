@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sr_Latn_BA{
-    Version{"2.1.44.88"}
+    Version{"2.1.48.77"}
     calendar{
         generic{
             intervalFormats{
@@ -25,9 +25,9 @@ sr_Latn_BA{
             }
             availableFormats{
                 MMMMW{
-                    few{"W. 'sjedmica' 'u' MMM"}
-                    one{"W. 'sjedmica' 'u' MMM"}
-                    other{"W. 'sjedmica' 'u' MMM"}
+                    few{"W. 'sjedmica' 'u' MMMM"}
+                    one{"W. 'sjedmica' 'u' MMMM"}
+                    other{"W. 'sjedmica' 'u' MMMM"}
                 }
                 yw{
                     few{"w. 'sjedmica' 'u' Y."}
@@ -162,6 +162,14 @@ sr_Latn_BA{
                         "dec",
                     }
                 }
+            }
+        }
+    }
+    fields{
+        week{
+            relative{
+                "-1"{"prethodne nedelje"}
+                "1"{"naredne nedelje"}
             }
         }
     }

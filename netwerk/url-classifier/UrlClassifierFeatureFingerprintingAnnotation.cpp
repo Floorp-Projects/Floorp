@@ -122,7 +122,8 @@ UrlClassifierFeatureFingerprintingAnnotation::GetIfNameMatches(
 
 NS_IMETHODIMP
 UrlClassifierFeatureFingerprintingAnnotation::ProcessChannel(
-    nsIChannel* aChannel, const nsACString& aList, bool* aShouldContinue) {
+    nsIChannel* aChannel, const nsTArray<nsCString>& aList,
+    bool* aShouldContinue) {
   NS_ENSURE_ARG_POINTER(aChannel);
   NS_ENSURE_ARG_POINTER(aShouldContinue);
 
@@ -134,10 +135,21 @@ UrlClassifierFeatureFingerprintingAnnotation::ProcessChannel(
        "annotating channel[%p]",
        aChannel));
 
+  static std::vector<UrlClassifierCommon::ClassificationData>
+      sClassificationData = {
+          {NS_LITERAL_CSTRING("content-fingerprinting-track-"),
+           nsIHttpChannel::ClassificationFlags::
+               CLASSIFIED_FINGERPRINTING_CONTENT},
+      };
+
+  uint32_t flags = UrlClassifierCommon::TablesToClassificationFlags(
+      aList, sClassificationData,
+      nsIHttpChannel::ClassificationFlags::CLASSIFIED_FINGERPRINTING);
+
   UrlClassifierCommon::AnnotateChannel(
-      aChannel, AntiTrackingCommon::eFingerprinting,
-      nsIHttpChannel::ClassificationFlags::CLASSIFIED_FINGERPRINTING,
+      aChannel, AntiTrackingCommon::eFingerprinting, flags,
       nsIWebProgressListener::STATE_LOADED_FINGERPRINTING_CONTENT);
+
   return NS_OK;
 }
 

@@ -720,6 +720,9 @@ bool JS::OrdinaryHasInstance(JSContext* cx, HandleObject objArg, HandleValue v,
   /* Step 2. */
   if (obj->is<JSFunction>() && obj->isBoundFunction()) {
     /* Steps 2a-b. */
+    if (!CheckRecursionLimit(cx)) {
+      return false;
+    }
     obj = obj->as<JSFunction>().getBoundFunctionTarget();
     return InstanceofOperator(cx, obj, v, bp);
   }
@@ -1894,7 +1897,7 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
    * Thus 'var x = 42; f = new Function("return x"); print(f())' prints 42,
    * and so would a call to f from another top-level's script or function.
    */
-  RootedAtom anonymousAtom(cx, cx->names().anonymous);
+  HandlePropertyName anonymousAtom = cx->names().anonymous;
 
   // Initialize the function with the default prototype:
   // Leave as nullptr to get the default from clasp for normal functions.

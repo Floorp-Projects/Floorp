@@ -4,8 +4,8 @@ so_DJ{
     Currencies{
         DJF{
             "Fdj",
-            "Faran Jabbuuti",
+            "Faran Jabuuti",
         }
     }
-    Version{"2.1.38.69"}
+    Version{"2.1.47.71"}
 }
