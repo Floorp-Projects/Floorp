@@ -106,6 +106,7 @@ include = [
   "Owned",
   "OwnedOrNull",
   "Strong",
+  "ScrollbarColor",
   "Color",
   "ColorOrAuto",
 ]
@@ -281,4 +282,26 @@ renaming_overrides_prefixing = true
     ptr = nullptr;
     return ret;
   }
+"""
+
+"GenericColor" = """
+  static inline StyleGenericColor FromColor(nscolor);
+  static inline StyleGenericColor Black();
+  static inline StyleGenericColor White();
+  static inline StyleGenericColor Transparent();
+  bool MaybeTransparent() const;
+  /**
+   * Compute the color for this StyleComplexColor, taking into
+   * account the foreground color from the frame's ComputedStyle.
+   */
+  nscolor CalcColor(const nsIFrame*) const;
+  /**
+   * Compute the color for this StyleComplexColor, taking into
+   * account the foreground color the style.
+   */
+  nscolor CalcColor(const ComputedStyle&) const;
+  /**
+   * Compute the color for this StyleComplexColor, making the argument the foreground color.
+   */
+  nscolor CalcColor(nscolor) const;
 """

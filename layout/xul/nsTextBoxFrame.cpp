@@ -393,7 +393,7 @@ void nsTextBoxFrame::DrawText(gfxContext& aRenderingContext,
       if (aOverrideColor) {
         color = *aOverrideColor;
       } else {
-        color = styleText->mTextDecorationColor.CalcColor(context);
+        color = styleText->mTextDecorationColor.CalcColor(*context);
       }
       uint8_t style = styleText->mTextDecorationStyle;
 
