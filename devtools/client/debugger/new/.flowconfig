@@ -1,7 +1,6 @@
 [ignore]
 .*node_modules/.*
 <PROJECT_ROOT>/firefox/.*
-.*mozilla-central/.*
 .*flow-coverage-report/.*
 .*custom_format_broken.json
 .*packages/devtools-reps/src/object-inspector/.*
