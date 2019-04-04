@@ -10,124 +10,41 @@
 #define mozilla_StyleComplexColor_h_
 
 #include "nsColor.h"
-
-class nsIFrame;
+#include "mozilla/ServoStyleConsts.h"
 
 namespace mozilla {
 
-class ComputedStyle;
+using StyleComplexColor = StyleColor;
 
-/**
- * This struct represents a combined color from a numeric color and
- * the current foreground color (currentcolor keyword).
- * Conceptually, the formula is "color * q + currentcolor * p"
- * where p is mFgRatio and q is mBgRatio.
- *
- * It can also represent an "auto" value, which is valid for some
- * properties. See comment of `Tag::eAuto`.
- */
-class StyleComplexColor final {
- public:
-  static StyleComplexColor FromColor(nscolor aColor) {
-    return {aColor, 0, eNumeric};
-  }
-  static StyleComplexColor CurrentColor() {
-    return {NS_RGBA(0, 0, 0, 0), 1, eForeground};
-  }
-  static StyleComplexColor Auto() { return {NS_RGBA(0, 0, 0, 0), 1, eAuto}; }
+template<>
+inline StyleColor StyleColor::FromColor(nscolor aColor) {
+  return StyleColor::Numeric({NS_GET_R(aColor), NS_GET_G(aColor),
+                              NS_GET_B(aColor), NS_GET_A(aColor)});
+}
 
-  static StyleComplexColor Black() {
-    return StyleComplexColor::FromColor(NS_RGB(0, 0, 0));
-  }
-  static StyleComplexColor White() {
-    return StyleComplexColor::FromColor(NS_RGB(255, 255, 255));
-  }
-  static StyleComplexColor Transparent() {
-    return StyleComplexColor::FromColor(NS_RGBA(0, 0, 0, 0));
-  }
+template<>
+inline StyleColor StyleColor::Black() {
+  return FromColor(NS_RGB(0, 0, 0));
+}
 
-  bool IsAuto() const { return mTag == eAuto; }
-  bool IsCurrentColor() const { return mTag == eForeground; }
+template<>
+inline StyleColor StyleColor::White() {
+  return FromColor(NS_RGB(255, 255, 255));
+}
 
-  bool operator==(const StyleComplexColor& aOther) const {
-    if (mTag != aOther.mTag) {
-      return false;
-    }
+template<>
+inline StyleColor StyleColor::Transparent() {
+  return FromColor(NS_RGBA(0, 0, 0, 0));
+}
 
-    switch (mTag) {
-      case eAuto:
-      case eForeground:
-        return true;
-      case eNumeric:
-        return mColor == aOther.mColor;
-      case eComplex:
-        return (mBgRatio == aOther.mBgRatio && mFgRatio == aOther.mFgRatio &&
-                mColor == aOther.mColor);
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unexpected StyleComplexColor type.");
-        return false;
-    }
-  }
+template<>
+nscolor StyleComplexColor::CalcColor(nscolor aForegroundColor) const;
 
-  bool operator!=(const StyleComplexColor& aOther) const {
-    return !(*this == aOther);
-  }
+template<>
+nscolor StyleComplexColor::CalcColor(const ComputedStyle&) const;
 
-  /**
-   * Is it possible that this StyleComplexColor is transparent?
-   */
-  bool MaybeTransparent() const;
-
-  /**
-   * Compute the color for this StyleComplexColor, taking into account
-   * the foreground color, aForegroundColor.
-   */
-  nscolor CalcColor(nscolor aForegroundColor) const;
-
-  /**
-   * Compute the color for this StyleComplexColor, taking into account
-   * the foreground color from aStyle.
-   */
-  nscolor CalcColor(mozilla::ComputedStyle* aStyle) const;
-
-  /**
-   * Compute the color for this StyleComplexColor, taking into account
-   * the foreground color from aFrame's ComputedStyle.
-   */
-  nscolor CalcColor(const nsIFrame* aFrame) const;
-
- private:
-  enum Tag : uint8_t {
-    // This represents a computed-value time auto value. This
-    // indicates that this value should not be interpolatable with
-    // other colors. Other fields represent a currentcolor and
-    // properties can decide whether that should be used.
-    eAuto,
-    // This represents a numeric color; no currentcolor component.
-    eNumeric,
-    // This represents the current foreground color, currentcolor; no
-    // numeric color component.
-    eForeground,
-    // This represents a linear combination of numeric color and the
-    // foreground color: "mColor * mBgRatio + currentcolor *
-    // mFgRatio".
-    eComplex,
-  };
-
-  StyleComplexColor(nscolor aColor, float aFgRatio, Tag aTag)
-      : mColor(aColor),
-        mBgRatio(1.f - aFgRatio),
-        mFgRatio(aFgRatio),
-        mTag(aTag) {
-    MOZ_ASSERT(mTag != eNumeric || aFgRatio == 0.);
-    MOZ_ASSERT(!(mTag == eAuto || mTag == eForeground) || aFgRatio == 1.);
-  }
-
-  nscolor mColor;
-  float mBgRatio;
-  float mFgRatio;
-  Tag mTag;
-};
+template<>
+nscolor StyleComplexColor::CalcColor(const nsIFrame*) const;
 
 }  // namespace mozilla
 
