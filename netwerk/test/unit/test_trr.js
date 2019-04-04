@@ -1,581 +1,445 @@
-Cu.import("resource://gre/modules/NetUtil.jsm");
+"use strict";
 
-var prefs;
-var origin;
-var h2Port;
+const {NetUtil} = ChromeUtils.import("resource://gre/modules/NetUtil.jsm");
 
-var dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
-var threadManager = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThreadManager);
-var mainThread = threadManager.currentThread;
+const dns = Cc["@mozilla.org/network/dns-service;1"].getService(Ci.nsIDNSService);
+const mainThread = Services.tm.currentThread;
 
 const defaultOriginAttributes = {};
+let h2Port = null;
 
-function run_test() {
-  dump ("start!\n");
+add_task(function setup() {
+  dump("start!\n");
 
-  var env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+  let env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
   h2Port = env.get("MOZHTTP2_PORT");
   Assert.notEqual(h2Port, null);
   Assert.notEqual(h2Port, "");
 
   // Set to allow the cert presented by our H2 server
   do_get_profile();
-  prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
 
-  prefs.setBoolPref("network.http.spdy.enabled", true);
-  prefs.setBoolPref("network.http.spdy.enabled.http2", true);
+  Services.prefs.setBoolPref("network.http.spdy.enabled", true);
+  Services.prefs.setBoolPref("network.http.spdy.enabled.http2", true);
   // the TRR server is on 127.0.0.1
-  prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
+  Services.prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
 
   // use the h2 server as DOH provider
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns");
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns`);
   // make all native resolve calls "secretly" resolve localhost instead
-  prefs.setBoolPref("network.dns.native-is-localhost", true);
+  Services.prefs.setBoolPref("network.dns.native-is-localhost", true);
 
   // 0 - off, 1 - race, 2 TRR first, 3 TRR only, 4 shadow
-  prefs.setIntPref("network.trr.mode", 2); // TRR first
-  prefs.setBoolPref("network.trr.wait-for-portal", false);
+  Services.prefs.setIntPref("network.trr.mode", 2); // TRR first
+  Services.prefs.setBoolPref("network.trr.wait-for-portal", false);
   // don't confirm that TRR is working, just go!
-  prefs.setCharPref("network.trr.confirmationNS", "skip");
+  Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
 
   // The moz-http2 cert is for foo.example.com and is signed by http2-ca.pem
   // so add that cert to the trust list as a signing cert.  // the foo.example.com domain name.
   let certdb = Cc["@mozilla.org/security/x509certdb;1"]
       .getService(Ci.nsIX509CertDB);
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
-  do_test_pending();
-  run_dns_tests();
-}
-
-function resetTRRPrefs() {
-  prefs.clearUserPref("network.trr.mode");
-  prefs.clearUserPref("network.trr.uri");
-  prefs.clearUserPref("network.trr.credentials");
-  prefs.clearUserPref("network.trr.wait-for-portal");
-  prefs.clearUserPref("network.trr.allow-rfc1918");
-  prefs.clearUserPref("network.trr.useGET");
-  prefs.clearUserPref("network.trr.confirmationNS");
-  prefs.clearUserPref("network.trr.bootstrapAddress");
-  prefs.clearUserPref("network.trr.blacklist-duration");
-  prefs.clearUserPref("network.trr.request-timeout");
-  prefs.clearUserPref("network.trr.disable-ECS");
-}
-
-registerCleanupFunction(() => {
-  prefs.clearUserPref("network.http.spdy.enabled");
-  prefs.clearUserPref("network.http.spdy.enabled.http2");
-  prefs.clearUserPref("network.dns.localDomains");
-  prefs.clearUserPref("network.dns.native-is-localhost");
-  resetTRRPrefs();
 });
 
-function testsDone()
-{
-  do_test_finished();
-  do_test_finished();
+registerCleanupFunction(() => {
+  Services.prefs.clearUserPref("network.trr.mode");
+  Services.prefs.clearUserPref("network.trr.uri");
+  Services.prefs.clearUserPref("network.trr.credentials");
+  Services.prefs.clearUserPref("network.trr.wait-for-portal");
+  Services.prefs.clearUserPref("network.trr.allow-rfc1918");
+  Services.prefs.clearUserPref("network.trr.useGET");
+  Services.prefs.clearUserPref("network.trr.confirmationNS");
+  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+  Services.prefs.clearUserPref("network.trr.blacklist-duration");
+  Services.prefs.clearUserPref("network.trr.request-timeout");
+  Services.prefs.clearUserPref("network.trr.disable-ECS");
+  Services.prefs.clearUserPref("network.trr.excluded-domains");
+
+  Services.prefs.clearUserPref("network.http.spdy.enabled");
+  Services.prefs.clearUserPref("network.http.spdy.enabled.http2");
+  Services.prefs.clearUserPref("network.dns.localDomains");
+  Services.prefs.clearUserPref("network.dns.native-is-localhost");
+});
+
+class DNSListener {
+  constructor(name, expectedAnswer, expectedSuccess = true) {
+    this.name = name;
+    this.expectedAnswer = expectedAnswer;
+    this.expectedSuccess = expectedSuccess;
+    this.promise = new Promise(resolve => { this.resolve = resolve; });
+    this.request = dns.asyncResolve(name, 0, this, mainThread, defaultOriginAttributes);
+  }
+
+  onLookupComplete(inRequest, inRecord, inStatus) {
+    Assert.ok(inRequest == this.request);
+
+    // If we don't expect success here, just resolve and the caller will
+    // decide what to do with the results.
+    if (!this.expectedSuccess) {
+      this.resolve([inRequest, inRecord, inStatus]);
+      return;
+    }
+
+    Assert.equal(inStatus, Cr.NS_OK);
+    let answer = inRecord.getNextAddrAsString();
+    Assert.equal(answer, this.expectedAnswer);
+    this.resolve([inRequest, inRecord, inStatus]);
+  }
+
+  QueryInterface(aIID) {
+    if (aIID.equals(Ci.nsIDNSListener) ||
+        aIID.equals(Ci.nsISupports)) {
+      return this;
+    }
+    throw Cr.NS_ERROR_NO_INTERFACE;
+  }
+
+  // Implement then so we can await this as a promise.
+  then() {
+    return this.promise.then.apply(this.promise, arguments);
+  }
 }
 
-var test_loops;
-var test_answer="127.0.0.1";
-
-// check that we do lookup the name fine
-var listenerFine = {
-  onLookupComplete: function(inRequest, inRecord, inStatus) {
-    if (inRequest == listen) {
-      Assert.equal(inStatus, Cr.NS_OK);
-      var answer = inRecord.getNextAddrAsString();
-      Assert.equal(answer, test_answer);
-      do_test_finished();
-      run_dns_tests();
-    }
-  },
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIDNSListener) ||
-        aIID.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
-};
-
-// check that the name lookup fails
-var listenerFails = {
-  onLookupComplete: function(inRequest, inRecord, inStatus) {
-    if (inRequest == listen) {
-      Assert.ok(!Components.isSuccessCode(inStatus), `must be failure code: ${inStatus}`);
-      do_test_finished();
-      run_dns_tests();
-    }
-  },
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIDNSListener) ||
-        aIID.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
-};
-
-// check that we do lookup the name fine
-var listenerUntilFine = {
-  onLookupComplete: function(inRequest, inRecord, inStatus) {
-    if ((inRequest == listen) && (inRecord != null)) {
-      var answer = inRecord.getNextAddrAsString();
-      if (answer == test_answer) {
-        Assert.equal(answer, test_answer);
-        dump("Got what we were waiting for!\n");
-      }
-    }
-    else {
-      // not the one we want, try again
-      dump("Waiting for " + test_answer + " but got " + answer + "\n");
-      --test_loops;
-      Assert.ok(test_loops != 0);
-      current_test--;
-    }
-    do_test_finished();
-    run_dns_tests();
-  },
-  QueryInterface: function(aIID) {
-    if (aIID.equals(Ci.nsIDNSListener) ||
-        aIID.equals(Ci.nsISupports)) {
-      return this;
-    }
-    throw Cr.NS_ERROR_NO_INTERFACE;
-  }
-};
-
-var listen;
 
 // verify basic A record
-function test1()
-{
+add_task(async function test1() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 2); // TRR-first
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns");
-  test_answer="127.0.0.1";
-  listen = dns.asyncResolve("bar.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns`);
+
+  await new DNSListener("bar.example.com", "127.0.0.1");
+});
 
 // verify basic A record - without bootstrapping
-function test1b()
-{
+add_task(async function test1b() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns");
-  prefs.clearUserPref("network.trr.bootstrapAddress");
-  prefs.setCharPref("network.dns.localDomains", "foo.example.com");
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("bar.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns`);
+  Services.prefs.clearUserPref("network.trr.bootstrapAddress");
+  Services.prefs.setCharPref("network.dns.localDomains", "foo.example.com");
+
+  await new DNSListener("bar.example.com", "127.0.0.1");
+});
 
 // verify that the name was put in cache - it works with bad DNS URI
-function test2()
-{
+add_task(async function test2() {
   // Don't clear the cache. That is what we're checking.
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  //prefs.clearUserPref("network.trr.bootstrapAddress");
-  //prefs.setCharPref("network.dns.localDomains", "foo.example.com");
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/404");
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("bar.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/404`);
+
+  await new DNSListener("bar.example.com", "127.0.0.1");
+});
 
 // verify working credentials in DOH request
-function test3()
-{
+add_task(async function test3() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-auth");
-  prefs.setCharPref("network.trr.credentials", "user:password");
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("bar.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-auth`);
+  Services.prefs.setCharPref("network.trr.credentials", "user:password");
+
+  await new DNSListener("bar.example.com", "127.0.0.1");
+});
 
 // verify failing credentials in DOH request
-function test4()
-{
+add_task(async function test4() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-auth");
-  prefs.setCharPref("network.trr.credentials", "evil:person");
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("wrong.example.com", 0, listenerFails, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-auth`);
+  Services.prefs.setCharPref("network.trr.credentials", "evil:person");
+
+  let [, , inStatus] = await new DNSListener("wrong.example.com", undefined, false);
+  Assert.ok(!Components.isSuccessCode(inStatus), `${inStatus} should be an error code`);
+});
 
 // verify DOH push, part A
-function test5()
-{
+add_task(async function test5() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-push");
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("first.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-push`);
 
-function test5b()
-{
+  await new DNSListener("first.example.com", "127.0.0.1");
+});
+
+add_task(async function test5b() {
   // At this point the second host name should've been pushed and we can resolve it using
   // cache only. Set back the URI to a path that fails.
   // Don't clear the cache, otherwise we lose the pushed record.
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/404");
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/404`);
   dump("test5b - resolve push.example.now please\n");
-  test_answer = "2018::2018";
-  listen = dns.asyncResolve("push.example.com", 0, listenerUntilFine, mainThread, defaultOriginAttributes);
-}
+
+  await new DNSListener("push.example.com", "2018::2018");
+});
 
 // verify AAAA entry
-function test6()
-{
+add_task(async function test6() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-aaaa");
-  test_answer = "2020:2020::2020";
-  listen = dns.asyncResolve("aaaa.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-aaaa`);
+  await new DNSListener("aaaa.example.com", "2020:2020::2020");
+});
 
 // verify RFC1918 address from the server is rejected
-function test7()
-{
+add_task(async function test7() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-rfc1918");
-  listen = dns.asyncResolve("rfc1918.example.com", 0, listenerFails, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-rfc1918`);
+  let [, , inStatus] = await new DNSListener("rfc1918.example.com", undefined, false);
+  Assert.ok(!Components.isSuccessCode(inStatus), `${inStatus} should be an error code`);
+});
 
 // verify RFC1918 address from the server is fine when told so
-function test8()
-{
+add_task(async function test8() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-rfc1918");
-  prefs.setBoolPref("network.trr.allow-rfc1918", true);
-  test_answer = "192.168.0.1";
-  listen = dns.asyncResolve("rfc1918.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-rfc1918`);
+  Services.prefs.setBoolPref("network.trr.allow-rfc1918", true);
+  await new DNSListener("rfc1918.example.com", "192.168.0.1");
+});
 
 // use GET and disable ECS (makes a larger request)
 // verify URI template cutoff
-function test8b()
-{
+add_task(async function test8b() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-ecs{?dns}");
-  prefs.clearUserPref("network.trr.allow-rfc1918");
-  prefs.setBoolPref("network.trr.useGET", true);
-  prefs.setBoolPref("network.trr.disable-ECS", true);
-  test_answer = "5.5.5.5";
-  listen = dns.asyncResolve("ecs.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-ecs{?dns}`);
+  Services.prefs.clearUserPref("network.trr.allow-rfc1918");
+  Services.prefs.setBoolPref("network.trr.useGET", true);
+  Services.prefs.setBoolPref("network.trr.disable-ECS", true);
+  await new DNSListener("ecs.example.com", "5.5.5.5");
+});
 
 // use GET
-function test9()
-{
+add_task(async function test9() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-get");
-  prefs.clearUserPref("network.trr.allow-rfc1918");
-  prefs.setBoolPref("network.trr.useGET", true);
-  prefs.setBoolPref("network.trr.disable-ECS", false);
-  test_answer = "1.2.3.4";
-  listen = dns.asyncResolve("get.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-get`);
+  Services.prefs.clearUserPref("network.trr.allow-rfc1918");
+  Services.prefs.setBoolPref("network.trr.useGET", true);
+  Services.prefs.setBoolPref("network.trr.disable-ECS", false);
+  await new DNSListener("get.example.com", "1.2.3.4");
+});
 
 // confirmationNS set without confirmed NS yet
 // NOTE: this requires test9 to run before, as the http2 server resets state there
-function test10()
-{
+add_task(async function test10() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.clearUserPref("network.trr.useGET");
-  prefs.clearUserPref("network.trr.disable-ECS");
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-confirm");
-  prefs.setCharPref("network.trr.confirmationNS", "confirm.example.com");
-  test_loops = 100; // set for test10b
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.clearUserPref("network.trr.useGET");
+  Services.prefs.clearUserPref("network.trr.disable-ECS");
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-confirm`);
+  Services.prefs.setCharPref("network.trr.confirmationNS", "confirm.example.com");
+
   try {
-    listen = dns.asyncResolve("wrong.example.com", 0, listenerFails,
-                              mainThread, defaultOriginAttributes);
+    let [, , inStatus] = await new DNSListener("wrong.example.com", undefined, false);
+    Assert.ok(!Components.isSuccessCode(inStatus), `${inStatus} should be an error code`);
   } catch (e) {
-    // NS_ERROR_UNKNOWN_HOST exception is expected
-    do_test_finished();
-    do_timeout(200, run_dns_tests);
-    //run_dns_tests();
+    await new Promise(resolve => do_timeout(200, resolve));
   }
-}
+});
 
 // confirmationNS, retry until the confirmed NS works
-function test10b()
-{
+add_task(async function test10b() {
   dns.clearCache(true);
+  let test_loops = 100;
   print("test confirmationNS, retry until the confirmed NS works");
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
   // same URI as in test10
-  test_answer = "1::ffff"
-  // this test needs to resolve new names in every attempt since the DNS cache
+
+  // this test needs to resolve new names in every attempt since the DNS
   // will keep the negative resolved info
-  try {
-    listen = dns.asyncResolve("10b-" + test_loops + ".example.com", 0, listenerUntilFine,
-                              mainThread, defaultOriginAttributes);
-  } catch(e) {
-    // wait a while and try again
+  while (test_loops > 0) {
+    print(`loops remaining: ${test_loops}`);
+    try {
+      let [, inRecord, inStatus] = await new DNSListener(`10b-${test_loops}.example.com`, undefined, false);
+      if (inRecord) {
+        Assert.equal(inStatus, Cr.NS_OK);
+        break;
+      }
+    } catch (e) {
+      dump(e);
+    }
+
     test_loops--;
-    do_timeout(200, test10b);
+    await new Promise(resolve => do_timeout(0, resolve));
   }
-}
+  Assert.notEqual(test_loops, 0);
+});
+
 // use a slow server and short timeout!
-function test11()
-{
+add_task(async function test11() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.confirmationNS", "skip");
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-750ms");
-  prefs.setIntPref("network.trr.request-timeout", 10);
-  listen = dns.asyncResolve("test11.example.com", 0, listenerFails, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-750ms`);
+  Services.prefs.setIntPref("network.trr.request-timeout", 10);
+  let [, , inStatus] = await new DNSListener("test11.example.com", undefined, false);
+  Assert.ok(!Components.isSuccessCode(inStatus), `${inStatus} should be an error code`);
+});
 
 // gets an NS back from DOH
-function test12()
-{
+add_task(async function test12() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 2); // TRR-first
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-ns");
-  prefs.clearUserPref("network.trr.request-timeout");
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("test12.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-ns`);
+  Services.prefs.clearUserPref("network.trr.request-timeout");
+  await new DNSListener("test12.example.com", "127.0.0.1");
+});
 
 // TRR-first gets a 404 back from DOH
-function test13()
-{
+add_task(async function test13() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 2); // TRR-first
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/404");
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("test13.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/404`);
+  await new DNSListener("test13.example.com", "127.0.0.1");
+});
 
 // TRR-shadow gets a 404 back from DOH
-function test14()
-{
+add_task(async function test14() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 4); // TRR-shadow
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/404");
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("test14.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 4); // TRR-shadow
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/404`);
+  await new DNSListener("test14.example.com", "127.0.0.1");
+});
 
 // TRR-shadow and timed out TRR
-function test15()
-{
+add_task(async function test15() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 4); // TRR-shadow
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-750ms");
-  prefs.setIntPref("network.trr.request-timeout", 10);
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("test15.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 4); // TRR-shadow
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-750ms`);
+  Services.prefs.setIntPref("network.trr.request-timeout", 10);
+  await new DNSListener("test15.example.com", "127.0.0.1");
+});
 
 // TRR-first and timed out TRR
-function test16()
-{
+add_task(async function test16() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 2); // TRR-first
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-750ms");
-  prefs.setIntPref("network.trr.request-timeout", 10);
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("test16.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-750ms`);
+  Services.prefs.setIntPref("network.trr.request-timeout", 10);
+  await new DNSListener("test16.example.com", "127.0.0.1");
+});
 
 // TRR-only and chase CNAME
-function test17()
-{
+add_task(async function test17() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-cname");
-  prefs.clearUserPref("network.trr.request-timeout");
-  test_answer = "99.88.77.66";
-  listen = dns.asyncResolve("cname.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-cname`);
+  Services.prefs.clearUserPref("network.trr.request-timeout");
+  await new DNSListener("cname.example.com", "99.88.77.66");
+});
 
 // TRR-only and a CNAME loop
-function test18()
-{
+add_task(async function test18() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-cname-loop");
-  listen = dns.asyncResolve("test18.example.com", 0, listenerFails, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-cname-loop`);
+  let [, , inStatus] = await new DNSListener("test18.example.com", undefined, false);
+  Assert.ok(!Components.isSuccessCode(inStatus), `${inStatus} should be an error code`);
+});
 
 // TRR-race and a CNAME loop
-function test19()
-{
+add_task(async function test19() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 1); // Race them!
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-cname-loop");
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("test19.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 1); // Race them!
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-cname-loop`);
+  await new DNSListener("test19.example.com", "127.0.0.1");
+});
 
 // TRR-first and a CNAME loop
-function test20()
-{
+add_task(async function test20() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 2); // TRR-first
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-cname-loop");
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("test20.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-cname-loop`);
+  await new DNSListener("test20.example.com", "127.0.0.1");
+});
 
 // TRR-shadow and a CNAME loop
-function test21()
-{
+add_task(async function test21() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 4); // shadow
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-cname-loop");
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("test21.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 4); // shadow
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-cname-loop`);
+  await new DNSListener("test21.example.com", "127.0.0.1");
+});
 
 // verify that basic A record name mismatch gets rejected. Gets the same DOH
 // response back as test1
-function test22()
-{
+add_task(async function test22() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only to avoid native fallback
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns");
-  listen = dns.asyncResolve("mismatch.example.com", 0, listenerFails, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only to avoid native fallback
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns`);
+  let [, , inStatus] = await new DNSListener("mismatch.example.com", undefined, false);
+  Assert.ok(!Components.isSuccessCode(inStatus), `${inStatus} should be an error code`);
+});
 
 // TRR-only, with a CNAME response with a bundled A record for that CNAME!
-function test23()
-{
+add_task(async function test23() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-cname-a");
-  test_answer = "9.8.7.6";
-  listen = dns.asyncResolve("cname-a.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-cname-a`);
+  await new DNSListener("cname-a.example.com", "9.8.7.6");
+});
 
 // TRR-first check that TRR result is used
-function test24()
-{
+add_task(async function test24() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 2); // TRR-first
-  prefs.setCharPref("network.trr.excluded-domains", "");
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-ip");
-  test_answer = "192.192.192.192";
-  listen = dns.asyncResolve("bar.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setIntPref("network.trr.mode", 2); // TRR-first
+  Services.prefs.setCharPref("network.trr.excluded-domains", "");
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-ip`);
+  await new DNSListener("bar.example.com", "192.192.192.192");
+});
 
 // TRR-first check that DNS result is used if domain is part of the excluded-domains pref
-function test24b()
-{
+add_task(async function test24b() {
   dns.clearCache(true);
-  prefs.setCharPref("network.trr.excluded-domains", "bar.example.com");
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("bar.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setCharPref("network.trr.excluded-domains", "bar.example.com");
+  await new DNSListener("bar.example.com", "127.0.0.1");
+});
 
 // TRR-first check that DNS result is used if domain is part of the excluded-domains pref
-function test24c()
-{
+add_task(async function test24c() {
   dns.clearCache(true);
-  prefs.setCharPref("network.trr.excluded-domains", "example.com");
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("bar.example.com", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  Services.prefs.setCharPref("network.trr.excluded-domains", "example.com");
+  await new DNSListener("bar.example.com", "127.0.0.1");
+});
 
 // TRR-only check that localhost doesn't work if not in the excluded-domains list
-function test25()
-{
+add_task(async function test25() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.excluded-domains", "");
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-ip");
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.excluded-domains", "");
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-ip`);
 
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("localhost", 0, listenerFails, mainThread, defaultOriginAttributes);
-}
+  let [, , inStatus] = await new DNSListener("localhost", "127.0.0.1", false);
+  Assert.ok(!Components.isSuccessCode(inStatus), `${inStatus} should be an error code`);
+});
 
-// TRR-only check that localhost goes directly to native lookup when in the excluded-domains 
-function test25b()
-{
+// TRR-only check that localhost goes directly to native lookup when in the excluded-domains
+add_task(async function test25b() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.excluded-domains", "localhost");
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-ip");
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.excluded-domains", "localhost");
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-ip`);
 
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("localhost", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  await new DNSListener("localhost", "127.0.0.1");
+});
 
 // TRR-only check that test.local is resolved via native DNS
-function test25c()
-{
+add_task(async function test25c() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.excluded-domains", "localhost,local");
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-ip");
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.excluded-domains", "localhost,local");
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-ip`);
 
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("test.local", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
+  await new DNSListener("test.local", "127.0.0.1");
+});
 
-function test25d()
-{
+// TRR-only check that .other is resolved via native DNS when the pref is set
+add_task(async function test25d() {
   dns.clearCache(true);
-  prefs.setIntPref("network.trr.mode", 3); // TRR-only
-  prefs.setCharPref("network.trr.excluded-domains", "localhost,local,other");
-  prefs.setCharPref("network.trr.uri", "https://foo.example.com:" + h2Port + "/dns-ip");
+  Services.prefs.setIntPref("network.trr.mode", 3); // TRR-only
+  Services.prefs.setCharPref("network.trr.excluded-domains", "localhost,local,other");
+  Services.prefs.setCharPref("network.trr.uri", `https://foo.example.com:${h2Port}/dns-ip`);
 
-  test_answer = "127.0.0.1";
-  listen = dns.asyncResolve("domain.other", 0, listenerFine, mainThread, defaultOriginAttributes);
-}
-
-var tests = [ test1,
-              test1b,
-              test2,
-              test3,
-              test4,
-              test5,
-              test5b,
-              test6,
-              test7,
-              test8,
-              test8b,
-              test9,
-              test10,
-              test10b,
-              test11,
-              test12,
-              test13,
-              test14,
-              test15,
-              test16,
-              test17,
-              test18,
-              test19,
-              test20,
-              test21,
-              test22,
-              test23,
-              test24,
-              test24b,
-              test24c,
-              test25,
-              test25b,
-              test25c,
-              test25d,
-              testsDone
-            ];
-
-var current_test = 0;
-
-function run_dns_tests()
-{
-  if (current_test < tests.length) {
-    dump(`starting test ${tests[current_test].name}`);
-    do_test_pending();
-    tests[current_test++]();
-  }
-}
+  await new DNSListener("domain.other", "127.0.0.1");
+});
