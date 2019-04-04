@@ -1003,7 +1003,7 @@ bool XPCConvert::NativeInterface2JSObject(JSContext* cx, MutableHandleValue d,
   }
 
   RefPtr<XPCWrappedNative> wrapper;
-  nsresult rv = XPCWrappedNative::GetNewOrUsed(aHelper, xpcscope, iface,
+  nsresult rv = XPCWrappedNative::GetNewOrUsed(cx, aHelper, xpcscope, iface,
                                                getter_AddRefs(wrapper));
   if (NS_FAILED(rv) && pErr) {
     *pErr = rv;

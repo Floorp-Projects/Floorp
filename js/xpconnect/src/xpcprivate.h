@@ -1463,13 +1463,13 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
     return scope ? scope->GetRuntime() : nullptr;
   }
 
-  static nsresult WrapNewGlobal(xpcObjectHelper& nativeHelper,
+  static nsresult WrapNewGlobal(JSContext* cx, xpcObjectHelper& nativeHelper,
                                 nsIPrincipal* principal,
                                 bool initStandardClasses,
                                 JS::RealmOptions& aOptions,
                                 XPCWrappedNative** wrappedGlobal);
 
-  static nsresult GetNewOrUsed(xpcObjectHelper& helper,
+  static nsresult GetNewOrUsed(JSContext* cx, xpcObjectHelper& helper,
                                XPCWrappedNativeScope* Scope,
                                XPCNativeInterface* Interface,
                                XPCWrappedNative** wrapper);
@@ -1493,7 +1493,8 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
 
   inline bool HasInterfaceNoQI(const nsIID& iid);
 
-  XPCWrappedNativeTearOff* FindTearOff(XPCNativeInterface* aInterface,
+  XPCWrappedNativeTearOff* FindTearOff(JSContext* cx,
+                                       XPCNativeInterface* aInterface,
                                        bool needJSObject = false,
                                        nsresult* pError = nullptr);
   XPCWrappedNativeTearOff* FindTearOff(JSContext* cx, const nsIID& iid);
@@ -1560,15 +1561,15 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
     FLAT_JS_OBJECT_VALID = JS_BIT(0)
   };
 
-  bool Init(nsIXPCScriptable* scriptable);
-  bool FinishInit();
+  bool Init(JSContext* cx, nsIXPCScriptable* scriptable);
+  bool FinishInit(JSContext* cx);
 
   bool ExtendSet(JSContext* aCx, XPCNativeInterface* aInterface);
 
-  nsresult InitTearOff(XPCWrappedNativeTearOff* aTearOff,
+  nsresult InitTearOff(JSContext* cx, XPCWrappedNativeTearOff* aTearOff,
                        XPCNativeInterface* aInterface, bool needJSObject);
 
-  bool InitTearOffJSObject(XPCWrappedNativeTearOff* to);
+  bool InitTearOffJSObject(JSContext* cx, XPCWrappedNativeTearOff* to);
 
  public:
   static void GatherScriptable(nsISupports* obj, nsIClassInfo* classInfo,
