@@ -4,6 +4,7 @@ import {OUTGOING_MESSAGE_NAME as AS_GENERAL_OUTGOING_MESSAGE_NAME} from "content
 import {generateMessages} from "./rich-text-strings";
 import {ImpressionsWrapper} from "./components/ImpressionsWrapper/ImpressionsWrapper";
 import {LocalizationProvider} from "fluent-react";
+import {NEWTAB_DARK_THEME} from "content-src/lib/constants";
 import {OnboardingMessage} from "./templates/OnboardingMessage/OnboardingMessage";
 import React from "react";
 import ReactDOM from "react-dom";
@@ -61,11 +62,15 @@ export const ASRouterUtils = {
         return {
           url: endpoint.href,
           snippetId: params.get("snippetId"),
+          theme: this.getPreviewTheme(),
         };
       } catch (e) {}
     }
 
     return null;
+  },
+  getPreviewTheme() {
+    return new URLSearchParams(window.location.href.slice(window.location.href.indexOf("theme"))).get("theme");
   },
 };
 
@@ -183,6 +188,9 @@ export class ASRouterUISurface extends React.PureComponent {
     addLocaleData(global.document.documentElement.lang);
 
     const endpoint = ASRouterUtils.getPreviewEndpoint();
+    if (endpoint && endpoint.theme === "dark") {
+      global.window.dispatchEvent(new CustomEvent("LightweightTheme:Set", {detail: {data: NEWTAB_DARK_THEME}}));
+    }
     ASRouterUtils.addListener(this.onMessageFromParent);
 
     // If we are loading about:welcome we want to trigger the onboarding messages

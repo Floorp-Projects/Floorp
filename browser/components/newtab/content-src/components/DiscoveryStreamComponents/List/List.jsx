@@ -70,7 +70,9 @@ export class ListItem extends React.PureComponent {
           url={this.props.url}
           title={this.props.title}
           source={this.props.source}
-          type={this.props.type} />
+          type={this.props.type}
+          pocket_id={this.props.pocket_id}
+          bookmarkGuid={this.props.bookmarkGuid} />
       </li>
     );
   }
@@ -98,7 +100,9 @@ export function _List(props) {
       title={rec.title}
       context={rec.context}
       type={props.type}
-      url={rec.url} />
+      url={rec.url}
+      pocket_id={rec.pocket_id}
+      bookmarkGuid={rec.bookmarkGuid} />
   ));
   const listStyles = [
     "ds-list",
