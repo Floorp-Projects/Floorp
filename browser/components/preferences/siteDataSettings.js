@@ -62,7 +62,7 @@ let gSiteDataSettings = {
     // Add "Storage" column
     if (site.usage > 0 || site.persisted) {
       let [value, unit] = DownloadUtils.convertByteUnits(site.usage);
-      let strName = site.persisted ? "site-usage-persistent" : "site-usage-pattern";
+      let strName = site.persisted ? "site-storage-persistent" : "site-storage-usage";
       addColumnItem({
         id: strName,
         args: { value, unit },
