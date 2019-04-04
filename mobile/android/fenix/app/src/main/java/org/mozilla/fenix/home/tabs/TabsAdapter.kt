@@ -141,9 +141,11 @@ class TabsAdapter(private val actionEmitter: Observer<TabsAction>) :
     companion object {
         const val tab_url = "url"
         const val tab_selected = "selected"
-        private val availableBackgrounds = listOf(R.drawable.sessions_01, R.drawable.sessions_02,
-            R.drawable.sessions_03, R.drawable.sessions_04, R.drawable.sessions_05, R.drawable.sessions_06,
-            R.drawable.sessions_07, R.drawable.sessions_08)
+        private val availableBackgrounds = listOf(
+            R.drawable.sessions_01, R.drawable.sessions_02,
+            R.drawable.sessions_03, R.drawable.sessions_06,
+            R.drawable.sessions_07, R.drawable.sessions_08
+        )
     }
 }
 
