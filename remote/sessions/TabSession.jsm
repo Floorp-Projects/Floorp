@@ -60,11 +60,7 @@ class TabSession extends Session {
         throw new TypeError("Message missing 'method' field");
       }
 
-      const [domain, command] = Domains.splitMethod(method);
-      if (typeof domain == "undefined" || typeof command == "undefined") {
-        throw new TypeError("'method' field is incorrect and doesn't define a domain " +
-                            "name and method separated by a dot.");
-      }
+      const {domain, command} = Domains.splitMethod(method);
       if (this.domains.has(domain)) {
         await this.execute(id, domain, command, params);
       } else {
