@@ -40,6 +40,14 @@ addon-list .addon.card {
   -moz-user-select: none;
 }
 
+/* Theme preview image. */
+.card-heading-image {
+  width: var(--section-width);
+  /* This is a magic number for the aspect ratio we get from AMO. */
+  height: 89px;
+  object-fit: cover;
+}
+
 .card-heading-icon {
   flex-shrink: 0;
   width: var(--addon-icon-size);
