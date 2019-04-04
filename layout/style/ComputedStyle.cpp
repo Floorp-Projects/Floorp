@@ -278,8 +278,8 @@ static nscolor GetVisitedDependentColorInternal(ComputedStyle* aSc,
 }
 
 static nscolor ExtractColor(const ComputedStyle& aStyle,
-                            const nscolor& aColor) {
-  return aColor;
+                            const StyleRGBA& aColor) {
+  return aColor.ToColor();
 }
 
 static nscolor ExtractColor(const ComputedStyle& aStyle,
