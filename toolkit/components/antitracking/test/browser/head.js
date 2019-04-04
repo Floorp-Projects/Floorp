@@ -284,6 +284,21 @@ this.AntiTracking = {
 
     if (extraPrefs && Array.isArray(extraPrefs) && extraPrefs.length) {
       await SpecialPowers.pushPrefEnv({"set": extraPrefs });
+
+      for (let item of extraPrefs) {
+        // When setting up skip URLs, we need to wait to ensure our prefs
+        // actually take effect.  In order to do this, we set up a skip list
+        // observer and wait until it calls us back.
+        if (item[0] == "urlclassifier.trackingAnnotationSkipURLs") {
+          info("Waiting for the skip list service to initialize...");
+          let classifier = Cc["@mozilla.org/url-classifier/dbservice;1"]
+                             .getService(Ci.nsIURIClassifier);
+          let feature = classifier.getFeatureByName("tracking-annotation");
+          await TestUtils.waitForCondition(() => feature.skipHostList == item[1].toLowerCase(),
+                                           "Skip list service initialized");
+          break;
+        }
+      }
     }
 
     await UrlClassifierTestUtils.addTestTrackers();
