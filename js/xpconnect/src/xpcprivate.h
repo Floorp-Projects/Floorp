@@ -1615,7 +1615,7 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
  public:
   static already_AddRefed<nsXPCWrappedJSClass> GetNewOrUsed(REFNSIID aIID);
 
-  REFNSIID GetIID() const { return mIID; }
+  REFNSIID GetIID() const { return mInfo->IID(); }
   const nsXPTInterfaceInfo* GetInterfaceInfo() const { return mInfo; }
   const char* GetInterfaceName();
 
@@ -1644,7 +1644,7 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
   virtual ~nsXPCWrappedJSClass();
 
   nsXPCWrappedJSClass() = delete;
-  nsXPCWrappedJSClass(REFNSIID aIID, const nsXPTInterfaceInfo* aInfo);
+  nsXPCWrappedJSClass(const nsXPTInterfaceInfo* aInfo);
 
   bool IsReflectable(uint16_t i) const {
     return (bool)(mDescriptors[i / 32] & (1U << (i % 32)));
@@ -1670,7 +1670,6 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
 
  private:
   const nsXPTInterfaceInfo* mInfo;
-  nsIID mIID;
   uint32_t* mDescriptors;
 };
 
