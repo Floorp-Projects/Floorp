@@ -4941,20 +4941,24 @@ static void AssertAboutPageHasCSP(nsIURI* aDocumentURI,
 
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   aPrincipal->GetCsp(getter_AddRefs(csp));
-  nsAutoString parsedPolicyStr;
+  bool foundDefaultSrc = false;
   if (csp) {
     uint32_t policyCount = 0;
     csp->GetPolicyCount(&policyCount);
-    if (policyCount > 0) {
-      csp->GetPolicyString(0, parsedPolicyStr);
+    nsAutoString parsedPolicyStr;
+    for (uint32_t i = 0; i < policyCount; ++i) {
+      csp->GetPolicyString(i, parsedPolicyStr);
+      if (parsedPolicyStr.Find("default-src") >= 0) {
+        foundDefaultSrc = true;
+        break;
+      }
     }
   }
   if (Preferences::GetBool("csp.overrule_about_uris_without_csp_whitelist")) {
-    NS_ASSERTION(parsedPolicyStr.Find("default-src") >= 0,
-                 "about: page must have a CSP");
+    NS_ASSERTION(foundDefaultSrc, "about: page must have a CSP");
     return;
   }
-  MOZ_ASSERT(parsedPolicyStr.Find("default-src") >= 0,
+  MOZ_ASSERT(foundDefaultSrc,
              "about: page must contain a CSP including default-src");
 }
 #endif
