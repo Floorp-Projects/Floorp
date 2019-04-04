@@ -61,8 +61,6 @@ else
     exit 1
 fi
 
-exit 28
-
 # Get token for using GitHub
 python automation/taskcluster/helper/get-secret.py \
     -s project/mobile/github \
