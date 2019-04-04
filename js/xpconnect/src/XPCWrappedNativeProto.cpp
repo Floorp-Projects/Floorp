@@ -111,7 +111,7 @@ XPCWrappedNativeProto* XPCWrappedNativeProto::GetNewOrUsed(
     return proto;
   }
 
-  RefPtr<XPCNativeSet> set = XPCNativeSet::GetNewOrUsed(classInfo);
+  RefPtr<XPCNativeSet> set = XPCNativeSet::GetNewOrUsed(cx, classInfo);
   if (!set) {
     return nullptr;
   }
