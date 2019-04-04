@@ -10,21 +10,8 @@ import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
 import org.mozilla.fenix.mvi.UIComponent
 import org.mozilla.fenix.mvi.ViewState
-import java.net.URL
 
-data class HistoryItem(val id: Int, val url: String, val visitedAt: Long) {
-    val title: String
-        get() = siteTitle()
-
-    @SuppressWarnings("TooGenericExceptionCaught")
-    private fun siteTitle(): String {
-        return try {
-            URL(url).host
-        } catch (e: Exception) {
-            url
-        }
-    }
-}
+data class HistoryItem(val id: Int, val title: String, val url: String, val visitedAt: Long)
 
 @Mockable
 class HistoryComponent(

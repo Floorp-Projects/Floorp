@@ -21,6 +21,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.coroutineScope
+import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
@@ -28,6 +29,7 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
+import java.net.URL
 import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions")
@@ -141,9 +143,25 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
     override fun onBackPressed(): Boolean = (historyComponent.uiView as HistoryUIView).onBackPressed()
 
     private suspend fun reloadData() {
-        val items = requireComponents.core.historyStorage.getDetailedVisits(0)
-            .asReversed()
-            .mapIndexed { id, item -> HistoryItem(id, item.url, item.visitTime) }
+        val allowedVisitTypes = listOf(VisitType.LINK, VisitType.TYPED, VisitType.BOOKMARK)
+        // Until we have proper pagination, only display a limited set of history to avoid blowing up the UI.
+        // See https://github.com/mozilla-mobile/fenix/issues/1393
+        @SuppressWarnings("MagicNumber")
+        val historyCutoffMs = 1000L * 60 * 60 * 24 * 3 // past few days
+        val items = requireComponents.core.historyStorage.getDetailedVisits(
+            System.currentTimeMillis() - historyCutoffMs
+        )
+            // We potentially have a large amount of visits, and multiple processing steps.
+            // Wrapping iterator in a sequence should make this a little more efficient.
+            .asSequence()
+            .sortedByDescending { it.visitTime }
+
+            // Temporary filtering until we can do it at the API level.
+            // See https://github.com/mozilla-mobile/android-components/issues/2643
+            .filter { allowedVisitTypes.contains(it.visitType) }
+
+            .mapIndexed { id, item -> HistoryItem(id, item.title ?: URL(item.url).host, item.url, item.visitTime) }
+            .toList()
 
         coroutineScope {
             launch(Dispatchers.Main) {
