@@ -149,10 +149,11 @@ interface nsISHistory: nsISupports
   void addEntry(in nsISHEntry aEntry, in boolean aPersist);
 
   /**
-   * Sets the toplevel docshell object to which this SHistory object belongs to.
+   * Clear the reference to the toplevel docshell object that this SHistory
+   * object belongs to.
    */
   [noscript, notxpcom]
-  void setRootDocShell(in nsIDocShell rootDocShell);
+  void ClearRootDocShell();
 
   /**
    * Update the index maintained by sessionHistory
