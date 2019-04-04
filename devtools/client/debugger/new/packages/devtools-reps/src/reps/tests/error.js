@@ -541,3 +541,47 @@ describe("Error - renderStacktrace prop", () => {
     expect(renderedComponent).toMatchSnapshot();
   });
 });
+
+describe("Error - Error with V8-like stack", () => {
+  // Test object:
+  // x = new Error("BOOM");
+  // x.stack = "Error: BOOM\ngetAccount@http://moz.com/script.js:1:2";
+  const stub = stubs.get("Error with V8-like stack");
+
+  it("correctly selects Error Rep for Error object", () => {
+    expect(getRep(stub)).toBe(ErrorRep.rep);
+  });
+
+  it("renders with expected text", () => {
+    const renderedComponent = shallow(
+      ErrorRep.rep({
+        object: stub
+      })
+    );
+
+    expect(renderedComponent).toMatchSnapshot();
+    expectActorAttribute(renderedComponent, stub.actor);
+  });
+});
+
+describe("Error - Error with invalid stack", () => {
+  // Test object:
+  // x = new Error("bad stack");
+  // x.stack = "bar\nbaz\nfoo\n\n\n\n\n\n\n";
+  const stub = stubs.get("Error with invalid stack");
+
+  it("correctly selects Error Rep for Error object", () => {
+    expect(getRep(stub)).toBe(ErrorRep.rep);
+  });
+
+  it("renders with expected text", () => {
+    const renderedComponent = shallow(
+      ErrorRep.rep({
+        object: stub
+      })
+    );
+
+    expect(renderedComponent).toMatchSnapshot();
+    expectActorAttribute(renderedComponent, stub.actor);
+  });
+});
