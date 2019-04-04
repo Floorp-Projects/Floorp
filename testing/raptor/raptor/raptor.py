@@ -482,8 +482,6 @@ class RaptorDesktopChrome(RaptorDesktop):
             '--proxy-server=127.0.0.1:8080',
             '--proxy-bypass-list=localhost;127.0.0.1',
             '--ignore-certificate-errors',
-            '--no-default-browser-check',
-            '--use-mock-keychain',
         ]
         if self.config['host'] not in ('localhost', '127.0.0.1'):
             chrome_args[0] = chrome_args[0].replace('127.0.0.1', self.config['host'])
@@ -492,6 +490,9 @@ class RaptorDesktopChrome(RaptorDesktop):
 
     def launch_desktop_browser(self, test):
         self.log.info("starting %s" % self.config['app'])
+        # some chromium-specfic cmd line opts required
+        self.runner.cmdargs.extend(['--use-mock-keychain', '--no-default-browser-check'])
+
         # if running in debug-mode, open the devtools on the raptor test tab
         if self.debug_mode:
             self.runner.cmdargs.extend(['--auto-open-devtools-for-tabs'])
