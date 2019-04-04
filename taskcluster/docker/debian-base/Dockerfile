@@ -31,6 +31,7 @@ CMD ["/bin/bash", "--login"]
 # %ARG DOCKER_IMAGE_PACKAGES
 RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAGES && \
     apt-get update && \
+    apt-get dist-upgrade && \
     apt-get install \
       git \
       less \

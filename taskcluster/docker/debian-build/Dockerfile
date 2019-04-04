@@ -27,6 +27,7 @@ RUN dpkg --add-architecture $ARCH
 # use pkg-config, which is multiarch-aware, but we also need dpkg-dev because
 # of https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=916772.
 RUN apt-get update && \
+    apt-get dist-upgrade && \
     echo path-exclude=/usr/share/doc/*/changelog.Debian* > /etc/dpkg/dpkg.cfg.d/excludes && \
     if grep -q ^7\\. /etc/debian_version; then \
       BACKPORT=/wheezy-backports; \
