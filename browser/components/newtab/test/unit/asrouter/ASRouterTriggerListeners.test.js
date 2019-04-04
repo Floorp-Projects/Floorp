@@ -1,4 +1,5 @@
 import {ASRouterTriggerListeners} from "lib/ASRouterTriggerListeners.jsm";
+import {GlobalOverrider} from "test/unit/utils";
 
 describe("ASRouterTriggerListeners", () => {
   let sandbox;
@@ -82,6 +83,30 @@ describe("ASRouterTriggerListeners", () => {
       frequentVisitsListener.onTabSwitch({target: {ownerGlobal: existingWindow}});
 
       assert.notCalled(stub);
+    });
+    describe("MatchPattern", () => {
+      let globals;
+      beforeEach(() => {
+        globals = new GlobalOverrider();
+        globals.set("MatchPatternSet", sandbox.stub().callsFake(patterns => ({patterns})));
+      });
+      afterEach(() => {
+        globals.restore();
+        frequentVisitsListener.uninit();
+      });
+      it("should create a matchPatternSet", async () => {
+        await frequentVisitsListener.init(_triggerHandler, hosts, ["pattern"]);
+
+        assert.calledOnce(window.MatchPatternSet);
+        assert.calledWithExactly(window.MatchPatternSet, ["pattern"], {ignorePath: true});
+      });
+      it("should allow to add multiple patterns and dedupe", async () => {
+        await frequentVisitsListener.init(_triggerHandler, hosts, ["pattern"]);
+        await frequentVisitsListener.init(_triggerHandler, hosts, ["foo"]);
+
+        assert.calledTwice(window.MatchPatternSet);
+        assert.calledWithExactly(window.MatchPatternSet, new Set(["pattern", "foo"]), {ignorePath: true});
+      });
     });
   });
 
@@ -170,6 +195,7 @@ describe("ASRouterTriggerListeners", () => {
     describe("#onLocationChange", () => {
       afterEach(() => {
         openURLListener.uninit();
+        frequentVisitsListener.uninit();
       });
 
       it("should call the ._triggerHandler with the right arguments", async () => {
@@ -178,10 +204,92 @@ describe("ASRouterTriggerListeners", () => {
 
         const browser = {};
         const webProgress = {isTopLevel: true};
-        const location = "https://www.mozilla.org/something";
-        openURLListener.onLocationChange(browser, webProgress, undefined, {spec: location});
+        const location = "www.mozilla.org";
+        openURLListener.onLocationChange(browser, webProgress, undefined, {host: location});
         assert.calledOnce(newTriggerHandler);
         assert.calledWithExactly(newTriggerHandler, browser, {id: "openURL", param: "www.mozilla.org"});
+      });
+      it("should call triggerHandler for a redirect (openURL + frequentVisits)", async () => {
+        for (let trigger of [openURLListener, frequentVisitsListener]) {
+          const newTriggerHandler = sinon.stub();
+          await trigger.init(newTriggerHandler, hosts);
+
+          const browser = {};
+          const webProgress = {isTopLevel: true};
+          const aLocationURI = {host: "subdomain.mozilla.org", spec: "subdomain.mozilla.org"};
+          const aRequest = {
+            QueryInterface: sandbox.stub().returns({
+              originalURI: {spec: "www.mozilla.org", host: "www.mozilla.org"},
+            }),
+          };
+          trigger.onLocationChange(browser, webProgress, aRequest, aLocationURI);
+          assert.calledOnce(aRequest.QueryInterface);
+          assert.calledOnce(newTriggerHandler);
+        }
+      });
+      it("should call triggerHandler with the right arguments (redirect)", async () => {
+        const newTriggerHandler = sinon.stub();
+        await openURLListener.init(newTriggerHandler, hosts);
+
+        const browser = {};
+        const webProgress = {isTopLevel: true};
+        const aLocationURI = {host: "subdomain.mozilla.org", spec: "subdomain.mozilla.org"};
+        const aRequest = {
+          QueryInterface: sandbox.stub().returns({
+            originalURI: {spec: "www.mozilla.org", host: "www.mozilla.org"},
+          }),
+        };
+        openURLListener.onLocationChange(browser, webProgress, aRequest, aLocationURI);
+        assert.calledWithExactly(newTriggerHandler, browser, {id: "openURL", param: "www.mozilla.org"});
+      });
+      it("should call triggerHandler for a redirect (openURL + frequentVisits)", async () => {
+        for (let trigger of [openURLListener, frequentVisitsListener]) {
+          const newTriggerHandler = sinon.stub();
+          await trigger.init(newTriggerHandler, hosts);
+
+          const browser = {};
+          const webProgress = {isTopLevel: true};
+          const aLocationURI = {host: "subdomain.mozilla.org", spec: "subdomain.mozilla.org"};
+          const aRequest = {
+            QueryInterface: sandbox.stub().returns({
+              originalURI: {spec: "www.mozilla.org", host: "www.mozilla.org"},
+            }),
+          };
+          trigger.onLocationChange(browser, webProgress, aRequest, aLocationURI);
+          assert.calledOnce(aRequest.QueryInterface);
+          assert.calledOnce(newTriggerHandler);
+        }
+      });
+      it("should call triggerHandler with the right arguments (redirect)", async () => {
+        const newTriggerHandler = sinon.stub();
+        await openURLListener.init(newTriggerHandler, hosts);
+
+        const browser = {};
+        const webProgress = {isTopLevel: true};
+        const aLocationURI = {host: "subdomain.mozilla.org", spec: "subdomain.mozilla.org"};
+        const aRequest = {
+          QueryInterface: sandbox.stub().returns({
+            originalURI: {spec: "www.mozilla.org", host: "www.mozilla.org"},
+          }),
+        };
+        openURLListener.onLocationChange(browser, webProgress, aRequest, aLocationURI);
+        assert.calledWithExactly(newTriggerHandler, browser, {id: "openURL", param: "www.mozilla.org"});
+      });
+      it("should fail for subdomains (not redirect)", async () => {
+        const newTriggerHandler = sinon.stub();
+        await openURLListener.init(newTriggerHandler, hosts);
+
+        const browser = {};
+        const webProgress = {isTopLevel: true};
+        const aLocationURI = {host: "subdomain.mozilla.org", spec: "subdomain.mozilla.org"};
+        const aRequest = {
+          QueryInterface: sandbox.stub().returns({
+            originalURI: {spec: "subdomain.mozilla.org", host: "subdomain.mozilla.org"},
+          }),
+        };
+        openURLListener.onLocationChange(browser, webProgress, aRequest, aLocationURI);
+        assert.calledOnce(aRequest.QueryInterface);
+        assert.notCalled(newTriggerHandler);
       });
     });
 

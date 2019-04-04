@@ -34,6 +34,6 @@ describe("<DSLinkMenu>", () => {
     wrapper.find(".context-menu-button").simulate("click", {preventDefault: () => {}});
     const linkMenuProps = wrapper.find(LinkMenu).props();
     assert.deepEqual(linkMenuProps.options,
-      ["OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"]);
+      ["CheckBookmarkOrArchive", "CheckSavedToPocket", "Separator", "OpenInNewWindow", "OpenInPrivateWindow", "Separator", "BlockUrl"]);
   });
 });

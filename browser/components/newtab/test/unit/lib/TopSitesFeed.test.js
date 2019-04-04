@@ -114,6 +114,7 @@ describe("Top Sites Feed", () => {
   });
   afterEach(() => {
     globals.restore();
+    sandbox.restore();
   });
 
   function stubFaviconsToUseScreenshots() {
@@ -382,16 +383,15 @@ describe("Top Sites Feed", () => {
         assert.propertyVal(result[0], "screenshot", "screenshot");
       });
       describe("concurrency", () => {
-        let resolvers;
         beforeEach(() => {
           stubFaviconsToUseScreenshots();
-          resolvers = [];
-          fakeScreenshot.getScreenshotForURL = sandbox.spy(() => new Promise(
-            resolve => resolvers.push(resolve)));
+          fakeScreenshot.getScreenshotForURL = sandbox.stub().resolves(FAKE_SCREENSHOT);
+        });
+        afterEach(() => {
+          sandbox.restore();
         });
 
         const getTwice = () => Promise.all([feed.getLinksWithDefaults(), feed.getLinksWithDefaults()]);
-        const resolveAll = () => resolvers.forEach(resolve => resolve(FAKE_SCREENSHOT));
 
         it("should call the backing data once", async () => {
           await getTwice();
@@ -406,8 +406,6 @@ describe("Top Sites Feed", () => {
         it("should dispatch once per link screenshot fetched", async () => {
           feed._requestRichIcon = sinon.stub();
           await getTwice();
-
-          await resolveAll();
 
           assert.callCount(feed.store.dispatch, FAKE_LINKS.length);
         });
@@ -1096,7 +1094,10 @@ describe("Top Sites Feed", () => {
       feed.store.dispatch = sandbox.stub().callsFake(() => {
         resolvers.shift()();
       });
-      fakeScreenshot.getScreenshotForURL = sandbox.spy();
+      sandbox.stub(feed, "_fetchScreenshot");
+    });
+    afterEach(() => {
+      sandbox.restore();
     });
 
     const forDispatch = action => new Promise(resolve => {

@@ -16,7 +16,8 @@ module.exports = {
     "json", // require("eslint-plugin-json")
     "promise", // require("eslint-plugin-promise")
     "react", // require("eslint-plugin-react")
-    "react-hooks" // require("react-hooks")
+    "react-hooks", // require("react-hooks")
+    "fetch-options", // require("eslint-plugin-fetch-options")
   ],
   "settings": {
     "react": {
@@ -25,11 +26,15 @@ module.exports = {
   },
   "extends": [
     "eslint:recommended",
-    "plugin:mozilla/recommended" // require("eslint-plugin-mozilla")
+    "plugin:mozilla/recommended", // require("eslint-plugin-mozilla")
+    "plugin:mozilla/browser-test",
+    "plugin:mozilla/mochitest-test",
+    "plugin:mozilla/xpcshell-test"
   ],
   "globals": {
     // Remove this when m-c updates their eslint: See https://github.com/mozilla/activity-stream/pull/4219
-    "RPMSendAsyncMessage": true
+    "RPMSendAsyncMessage": true,
+    "NewTabPagePreloading": true,
   },
   "overrides": [{
     // Use a configuration that's more appropriate for JSMs
@@ -46,6 +51,8 @@ module.exports = {
   }],
   "rules": {
     "react-hooks/rules-of-hooks": 2,
+
+    "fetch-options/no-fetch-credentials": 2,
 
     "promise/catch-or-return": 2,
     "promise/param-names": 2,

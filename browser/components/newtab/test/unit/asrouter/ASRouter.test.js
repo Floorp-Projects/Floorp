@@ -5,6 +5,7 @@ import {
   FAKE_LOCAL_MESSAGES,
   FAKE_LOCAL_PROVIDER,
   FAKE_LOCAL_PROVIDERS,
+  FAKE_RECOMMENDATION,
   FAKE_REMOTE_MESSAGES,
   FAKE_REMOTE_PROVIDER,
   FAKE_REMOTE_SETTINGS_PROVIDER,
@@ -23,6 +24,7 @@ const FAKE_PROVIDERS = [FAKE_LOCAL_PROVIDER, FAKE_REMOTE_PROVIDER, FAKE_REMOTE_S
 const ALL_MESSAGE_IDS = [...FAKE_LOCAL_MESSAGES, ...FAKE_REMOTE_MESSAGES].map(message => message.id);
 const FAKE_BUNDLE = [FAKE_LOCAL_MESSAGES[1], FAKE_LOCAL_MESSAGES[2]];
 const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
+const FAKE_RESPONSE_HEADERS = {get() {}};
 
 // Creates a message object that looks like messages returned by
 // RemotePageManager listeners
@@ -93,7 +95,7 @@ describe("ASRouter", () => {
     clock = sandbox.useFakeTimers();
     fetchStub = sandbox.stub(global, "fetch")
       .withArgs("http://fake.com/endpoint")
-      .resolves({ok: true, status: 200, json: () => Promise.resolve({messages: FAKE_REMOTE_MESSAGES})});
+      .resolves({ok: true, status: 200, json: () => Promise.resolve({messages: FAKE_REMOTE_MESSAGES}), headers: FAKE_RESPONSE_HEADERS});
     getStringPrefStub = sandbox.stub(global.Services.prefs, "getStringPref");
 
     fakeAttributionCode = {
@@ -222,7 +224,7 @@ describe("ASRouter", () => {
       assert.calledOnce(channel.sendAsyncMessage);
       assert.deepEqual(channel.sendAsyncMessage.firstCall.args[1], {
         type: "ADMIN_SET_STATE",
-        data: Object.assign({}, Router.state, {providerPrefs: ASRouterPreferences.providers, userPrefs: ASRouterPreferences.getAllUserPreferences(), targetingParameters: {}}),
+        data: Object.assign({}, Router.state, {providerPrefs: ASRouterPreferences.providers, userPrefs: ASRouterPreferences.getAllUserPreferences(), targetingParameters: {}, errors: Router.errors}),
       });
     });
     it("should not send a message on a state change asrouter.devtoolsEnabled pref is on", async () => {
@@ -314,7 +316,7 @@ describe("ASRouter", () => {
       ]);
       fetchStub
         .withArgs("http://fake.com/endpoint")
-        .resolves({ok: true, status: 200, json: () => Promise.resolve({messages: NEW_MESSAGES})});
+        .resolves({ok: true, status: 200, json: () => Promise.resolve({messages: NEW_MESSAGES}), headers: FAKE_RESPONSE_HEADERS});
 
       clock.tick(301);
       await Router.loadMessagesFromAllProviders();
@@ -339,9 +341,9 @@ describe("ASRouter", () => {
 
       assert.calledTwice(ASRouterTriggerListeners.get("openURL").init);
       assert.calledWithExactly(ASRouterTriggerListeners.get("openURL").init,
-        Router._triggerHandler, ["www.mozilla.org", "www.mozilla.com"]);
+        Router._triggerHandler, ["www.mozilla.org", "www.mozilla.com"], undefined);
       assert.calledWithExactly(ASRouterTriggerListeners.get("openURL").init,
-        Router._triggerHandler, ["www.example.com"]);
+        Router._triggerHandler, ["www.example.com"], undefined);
     });
     it("should gracefully handle RemoteSettings blowing up", async () => {
       sandbox.stub(MessageLoaderUtils, "_getRemoteSettingsMessages").rejects("fake error");
@@ -728,7 +730,7 @@ describe("ASRouter", () => {
         assert.calledOnce(msg.target.sendAsyncMessage);
         assert.deepEqual(msg.target.sendAsyncMessage.firstCall.args[1], {
           type: "ADMIN_SET_STATE",
-          data: Object.assign({}, Router.state, {providerPrefs: ASRouterPreferences.providers, userPrefs: ASRouterPreferences.getAllUserPreferences(), targetingParameters: {}}),
+          data: Object.assign({}, Router.state, {providerPrefs: ASRouterPreferences.providers, userPrefs: ASRouterPreferences.getAllUserPreferences(), targetingParameters: {}, errors: Router.errors}),
         });
       });
     });
@@ -890,7 +892,7 @@ describe("ASRouter", () => {
 
         assert.calledOnce(msg.target.browser.ownerGlobal.openLinkIn);
         assert.calledWith(msg.target.browser.ownerGlobal.openLinkIn,
-          "some/url.com", "tabshifted", {"private": false, "triggeringPrincipal": undefined});
+          "some/url.com", "tabshifted", {"private": false, "triggeringPrincipal": undefined, "csp": null});
       });
       it("should call openLinkIn with the correct params on OPEN_ABOUT_PAGE", async () => {
         let [testMessage] = Router.state.messages;
@@ -915,7 +917,7 @@ describe("ASRouter", () => {
 
         assert.calledOnce(msg.target.browser.ownerGlobal.openLinkIn);
         assert.calledWith(msg.target.browser.ownerGlobal.openLinkIn,
-          "some/url", "current", {"private": false, "triggeringPrincipal": undefined});
+          "some/url", "current", {"private": false, "triggeringPrincipal": undefined, "csp": null});
       });
     });
 
@@ -1206,6 +1208,35 @@ describe("ASRouter", () => {
         await Router.onMessage(msg);
         assert.notProperty(Router.state.providerImpressions, "foo");
         assert.notCalled(Router._storage.set);
+      });
+      it("should only send impressions for one message", async () => {
+        const getElementById = sandbox.stub().returns({
+          setAttribute: sandbox.stub(),
+          style: {setProperty: sandbox.stub()},
+          addEventListener: sandbox.stub(),
+        });
+        const data = {param: "mozilla.com"};
+        const target = {
+          sendAsyncMessage: sandbox.stub(),
+          documentURI: {scheme: "https", host: "mozilla.com"},
+        };
+        target.ownerGlobal = {gBrowser: {selectedBrowser: target}, document: {getElementById}, promiseDocumentFlushed: sandbox.stub().resolves([{width: 0}]), setTimeout: sandbox.stub()};
+        const firstMessage = {...FAKE_RECOMMENDATION, id: "first_message"};
+        const secondMessage = {...FAKE_RECOMMENDATION, id: "second_message"};
+        await Router.setState({messages: [firstMessage, secondMessage]});
+        global.DOMLocalization = class DOMLocalization {};
+        sandbox.spy(CFRPageActions, "addRecommendation");
+        sandbox.stub(Router, "addImpression").resolves();
+
+        await Router.setMessageById("first_message", target, false, {data});
+        await Router.setMessageById("second_message", target, false, {data});
+
+        assert.calledTwice(CFRPageActions.addRecommendation);
+        const [firstReturn, secondReturn] = CFRPageActions.addRecommendation.returnValues;
+        assert.isTrue(await firstReturn);
+        // Adding the second message should fail.
+        assert.isFalse(await secondReturn);
+        assert.calledOnce(Router.addImpression);
       });
     });
 

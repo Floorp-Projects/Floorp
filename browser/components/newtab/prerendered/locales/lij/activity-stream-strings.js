@@ -100,7 +100,7 @@ window.gActivityStreamStrings = {
   "section_menu_action_privacy_notice": "Informativa in sciâ privacy",
   "firstrun_title": "Pòrta Firefox con ti",
   "firstrun_content": "Repiggia i teu segnalibbri, stöia, poule segrete e atre inpostaçioin in sce tutti i teu dispoxitivi.",
-  "firstrun_learn_more_link": "Saccine de ciù in sce l'account Firefox",
+  "firstrun_learn_more_link": "Saccine de ciù in sciô conto Firefox",
   "firstrun_form_header": "Scrivi a teu email",
   "firstrun_form_sub_header": "pe continoâ con Firefox Sync.",
   "firstrun_email_input_placeholder": "Email",

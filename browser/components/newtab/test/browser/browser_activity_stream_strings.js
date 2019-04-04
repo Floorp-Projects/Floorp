@@ -9,7 +9,7 @@ const LOCALE_PATH = "resource://activity-stream/prerendered/";
  */
 add_task(async function test_activity_stream_fetch_strings() {
   const file = `${LOCALE_PATH}${aboutNewTabService.activityStreamLocale}/activity-stream-strings.js`;
-  const strings = JSON.parse((await (await fetch(file)).text()).match(/{[^]*}/)[0]);
+  const strings = JSON.parse((await (await fetch(file)).text()).match(/{[^]*}/)[0]); // eslint-disable-line fetch-options/no-fetch-credentials
   const ids = Object.keys(strings);
 
   info(`Got string ids: ${ids}`);
