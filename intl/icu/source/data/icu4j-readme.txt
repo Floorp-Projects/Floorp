@@ -17,9 +17,20 @@ In the following,
         $icu4j_root is the ICU4J root directory
         $jdk_bin is the JDK bin directory (for the jar tool)
 
-1. Download and build ICU4C. For more instructions on downloading and building
-        ICU4C, see the ICU4C readme at:
-        http://source.icu-project.org/repos/icu/trunk/icu4c/readme.html#HowToBuild
+1. *Linux*
+   Download, configure, and build ICU4C. When you configure ICU4C, you must
+   set the environment variable ICU_DATA_BUILDTOOL_OPTS to
+   "--include_uni_core_data" to build additional required ICU4J data:
+
+        ICU_DATA_BUILDTOOL_OPTS=--include_uni_core_data ./runConfigureICU Linux
+   
+   *Windows*
+    - Add ICU_DATA_BUILDTOOL_OPTS as a system environment variable with value "--include_uni_core_data"
+    - Build $icu4c_root\source\allinone\allinone.sln in Visual Studio
+
+   For more instructions on downloading and building ICU4C,
+   see the ICU4C readme at:
+        https://htmlpreview.github.io/?https://github.com/unicode-org/icu/blob/master/icu4c/readme.html#HowToBuild
         (Windows: build as 'x86, Release' otherwise you will have to set 'CFG' differently below.)
 
     *NOTE* You should do a full rebuild after any data changes.
@@ -32,10 +43,10 @@ platform.
 
 *Windows* 
 
-2a. On the command line, cd to $icu4c_root\source\data.
+2a. On Developer Command Prompt for VS, cd to $icu4c_root\source\data.
 
-2b. On the command line,
-        nmake -f makedata.mak ICUMAKE=$icu4c_root\source\data\  CFG=x86\Release JAR="$jdk_bin\jar" ICU4J_ROOT=$icu4j_root  icu4j-data-install
+2b. On Developer Command Prompt for VS,
+        nmake -f makedata.mak ICUMAKE=$icu4c_root\source\data\ CFG=x86\Release JAR="$jdk_bin\jar" ICU4J_ROOT=$icu4j_root icu4j-data-install
 
        Continue with step 3 below, in Java:
 
@@ -65,3 +76,7 @@ icutzdata.jar in $icu4j_root/main/shared/data.
 
         cd $icu4j_root
         ant main
+
+   Run the tests locally and make sure they pass:
+   
+        ant check

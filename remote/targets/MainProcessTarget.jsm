@@ -10,6 +10,8 @@ const {Target} = ChromeUtils.import("chrome://remote/content/targets/Target.jsm"
 const {Session} = ChromeUtils.import("chrome://remote/content/sessions/Session.jsm");
 const {RemoteAgent} = ChromeUtils.import("chrome://remote/content/RemoteAgent.jsm");
 
+const UUIDGen = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+
 /**
  * The main process Target.
  *
@@ -24,9 +26,10 @@ class MainProcessTarget extends Target {
     super(targets, Session);
 
     this.type = "main-process";
+    this.id = UUIDGen.generateUUID().toString().slice(1, -1);
 
     // Define the HTTP path to query this target
-    this.path = "/devtools/browser";
+    this.path = `/devtools/browser/${this.id}`;
   }
 
   get wsDebuggerURL() {
@@ -43,7 +46,7 @@ class MainProcessTarget extends Target {
       description: "Main process target",
       devtoolsFrontendUrl: "",
       faviconUrl: "",
-      id: "main-process",
+      id: this.id,
       title: "Main process target",
       type: this.type,
       url: "",

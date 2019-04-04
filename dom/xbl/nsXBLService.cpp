@@ -16,6 +16,7 @@
 #include "nsIURI.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
+#include "nsIPresShellInlines.h"
 #include "nsString.h"
 #include "plstr.h"
 #include "nsIContent.h"

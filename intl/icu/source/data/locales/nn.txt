@@ -98,7 +98,7 @@ nn{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.43.94"}
+    Version{"2.1.47.82"}
     calendar{
         generic{
             DateTimePatterns{
@@ -305,8 +305,8 @@ nn{
                 MMM{"LLL"}
                 MMMEd{"E d. MMM"}
                 MMMMW{
-                    one{"'veke' W 'i' MMM"}
-                    other{"'veke' W 'i' MMM"}
+                    one{"'veke' W 'i' MMMM"}
+                    other{"'veke' W 'i' MMMM"}
                 }
                 MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}

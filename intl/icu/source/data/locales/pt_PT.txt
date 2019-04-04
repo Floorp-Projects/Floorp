@@ -2,19 +2,25 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pt_PT{
     Ellipsis{
+        final{"{0}…"}
+        initial{"…{0}"}
         medial{"{0}…{1}"}
+        word-initial{"… {0}"}
+        word-medial{"{0} … {1}"}
     }
     ExemplarCharactersNumbers{"[  \\- , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
         "[\\- ‐ – — , ; \\: ! ? . … ' \u0022 “ ” « » ( ) \\[ \\] § @ * / \\& # † ‡ ′ "
         "″]"
     }
+    MoreInformation{"?"}
     NumberElements{
         arab{
             miscPatterns{
                 range{"{0} - {1}"}
             }
         }
+        default{"latn"}
         latn{
             miscPatterns{
                 range{"{0} - {1}"}
@@ -22,6 +28,7 @@ pt_PT{
             patterns{
                 accountingFormat{"#,##0.00 ¤;(#,##0.00 ¤)"}
                 currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
             }
             patternsLong{
                 decimalFormat{
@@ -65,41 +72,53 @@ pt_PT{
             }
             patternsShort{
                 currencyFormat{
+                    1000{
+                        one{"0 mil ¤"}
+                        other{"0 mil ¤"}
+                    }
+                    10000{
+                        one{"00 mil ¤"}
+                        other{"00 mil ¤"}
+                    }
+                    100000{
+                        one{"000 mil ¤"}
+                        other{"000 mil ¤"}
+                    }
                     1000000{
-                        one{"¤0 M"}
-                        other{"¤0 M"}
+                        one{"0 M ¤"}
+                        other{"0 M ¤"}
                     }
                     10000000{
-                        one{"¤00 M"}
-                        other{"¤00 M"}
+                        one{"00 M ¤"}
+                        other{"00 M ¤"}
                     }
                     100000000{
-                        one{"¤000 M"}
-                        other{"¤000 M"}
+                        one{"000 M ¤"}
+                        other{"000 M ¤"}
                     }
                     1000000000{
-                        one{"¤0 mM"}
-                        other{"¤0 mM"}
+                        one{"0 mM ¤"}
+                        other{"0 mM ¤"}
                     }
                     10000000000{
-                        one{"¤00 mM"}
-                        other{"¤00 mM"}
+                        one{"00 mM ¤"}
+                        other{"00 mM ¤"}
                     }
                     100000000000{
-                        one{"¤000 mM"}
-                        other{"¤000 mM"}
+                        one{"000 mM ¤"}
+                        other{"000 mM ¤"}
                     }
                     1000000000000{
-                        one{"¤0 B"}
-                        other{"¤0 B"}
+                        one{"0 B ¤"}
+                        other{"0 B ¤"}
                     }
                     10000000000000{
-                        one{"¤00 B"}
-                        other{"¤00 B"}
+                        one{"00 B ¤"}
+                        other{"00 B ¤"}
                     }
                     100000000000000{
-                        one{"¤000 B"}
-                        other{"¤000 B"}
+                        one{"000 B ¤"}
+                        other{"000 B ¤"}
                     }
                 }
                 decimalFormat{
@@ -143,6 +162,8 @@ pt_PT{
             }
             symbols{
                 group{" "}
+                minusSign{"-"}
+                plusSign{"+"}
             }
         }
         minimalPairs{
@@ -151,8 +172,9 @@ pt_PT{
             }
         }
         minimumGroupingDigits{"2"}
+        native{"latn"}
     }
-    Version{"2.1.44.9"}
+    Version{"2.1.47.89"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -324,8 +346,8 @@ pt_PT{
                 MMMEd{"E, d/MM"}
                 MMMMEd{"ccc, d 'de' MMMM"}
                 MMMMW{
-                    one{"W.'ª' 'semana' 'de' MMM"}
-                    other{"W.'ª' 'semana' 'de' MMM"}
+                    one{"W.'ª' 'semana' 'de' MMMM"}
+                    other{"W.'ª' 'semana' 'de' MMMM"}
                 }
                 MMMd{"d/MM"}
                 Md{"dd/MM"}
@@ -351,6 +373,15 @@ pt_PT{
                         "sexta",
                         "sábado",
                     }
+                    narrow{
+                        "D",
+                        "S",
+                        "T",
+                        "Q",
+                        "Q",
+                        "S",
+                        "S",
+                    }
                 }
                 stand-alone{
                     abbreviated{
@@ -361,6 +392,15 @@ pt_PT{
                         "quinta",
                         "sexta",
                         "sábado",
+                    }
+                    narrow{
+                        "D",
+                        "S",
+                        "T",
+                        "Q",
+                        "Q",
+                        "S",
+                        "S",
                     }
                 }
             }
@@ -462,6 +502,24 @@ pt_PT{
                     d{"d–d 'de' MMM 'de' y"}
                 }
             }
+            monthNames{
+                format{
+                    wide{
+                        "janeiro",
+                        "fevereiro",
+                        "março",
+                        "abril",
+                        "maio",
+                        "junho",
+                        "julho",
+                        "agosto",
+                        "setembro",
+                        "outubro",
+                        "novembro",
+                        "dezembro",
+                    }
+                }
+            }
             quarters{
                 format{
                     wide{
@@ -496,26 +554,6 @@ pt_PT{
                 "{1} 'às' {0}",
                 "{1}, {0}",
                 "{1}, {0}",
-            }
-            monthNames{
-                format{
-                    wide{
-                        "Tishri",
-                        "Heshvan",
-                        "Kislev",
-                        "Tevet",
-                        "Shevat",
-                        "Adar I",
-                        "Adar",
-                        "Nisan",
-                        "Iyar",
-                        "Sivan",
-                        "Tamuz",
-                        "Av",
-                        "Elul",
-                        "Adar II",
-                    }
-                }
             }
         }
         islamic{
@@ -624,10 +662,8 @@ pt_PT{
         }
         day-narrow{
             relative{
-                "-1"{"ontem"}
                 "-2"{"anteontem"}
                 "0"{"hoje"}
-                "1"{"amanhã"}
                 "2"{"depois de amanhã"}
             }
             relativeTime{
@@ -643,10 +679,8 @@ pt_PT{
         }
         day-short{
             relative{
-                "-1"{"ontem"}
                 "-2"{"anteontem"}
                 "0"{"hoje"}
-                "1"{"amanhã"}
                 "2"{"depois de amanhã"}
             }
             relativeTime{
@@ -1139,6 +1173,24 @@ pt_PT{
         }
         zone-short{
             dn{"fuso horário"}
+        }
+    }
+    listPattern{
+        standard{
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit{
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit-narrow{
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        unit-short{
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
     }
 }

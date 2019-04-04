@@ -8,6 +8,7 @@
 #include "nsString.h"
 #include "mozilla/dom/Document.h"
 #include "nsIContent.h"
+#include "nsIPresShellInlines.h"
 #include "nsXBLService.h"
 #include "nsIServiceManager.h"
 #include "nsXBLResourceLoader.h"

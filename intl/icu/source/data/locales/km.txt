@@ -30,7 +30,6 @@ km{
             patterns{
                 accountingFormat{"#,##0.00¤;(#,##0.00¤)"}
                 currencyFormat{"#,##0.00¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -158,11 +157,9 @@ km{
                 group{"."}
                 infinity{"∞"}
                 list{";"}
-                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -175,10 +172,9 @@ km{
                 other{"{0} ថ្ងៃ"}
             }
         }
-        minimumGroupingDigits{"1"}
         native{"khmr"}
     }
-    Version{"2.1.44.88"}
+    Version{"2.1.48.17"}
     calendar{
         generic{
             DateTimePatterns{
@@ -240,6 +236,15 @@ km{
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
                 H{
                     H{"H–H"}
                 }
@@ -392,7 +397,7 @@ km{
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
                 MMMMW{
-                    other{"សប្តាហ៍ទី W នៃខែ MMM"}
+                    other{"សប្តាហ៍ទី W នៃខែ MMMM"}
                 }
                 MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
@@ -575,6 +580,15 @@ km{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
                 H{
                     H{"HH – HH"}
                 }

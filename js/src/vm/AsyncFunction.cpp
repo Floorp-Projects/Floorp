@@ -38,12 +38,12 @@ bool GlobalObject::initAsyncFunction(JSContext* cx,
     return false;
   }
 
-  RootedValue function(cx, global->getConstructor(JSProto_Function));
-  if (!function.toObjectOrNull()) {
+  RootedObject proto(
+      cx, GlobalObject::getOrCreateFunctionConstructor(cx, cx->global()));
+  if (!proto) {
     return false;
   }
-  RootedObject proto(cx, &function.toObject());
-  RootedAtom name(cx, cx->names().AsyncFunction);
+  HandlePropertyName name = cx->names().AsyncFunction;
   RootedObject asyncFunction(
       cx, NewFunctionWithProto(cx, AsyncFunctionConstructor, 1,
                                JSFunction::NATIVE_CTOR, nullptr, name, proto));
@@ -64,11 +64,9 @@ bool GlobalObject::initAsyncFunction(JSContext* cx,
 
 enum class ResumeKind { Normal, Throw };
 
-// Async Functions proposal 2.2 steps 3.f, 3.g.
-// Async Functions proposal 2.2 steps 3.d-e, 3.g.
-// Implemented in js/src/builtin/Promise.cpp
-
-// Async Functions proposal 2.2 steps 3-8, 2.4 steps 2-7, 2.5 steps 2-7.
+// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+// 6.2.3.1.1 Await Fulfilled Functions
+// 6.2.3.1.2 Await Rejected Functions
 static bool AsyncFunctionResume(JSContext* cx,
                                 Handle<AsyncFunctionGeneratorObject*> generator,
                                 ResumeKind kind, HandleValue valueOrReason) {
@@ -78,6 +76,14 @@ static bool AsyncFunctionResume(JSContext* cx,
   // inconsistent state, because we don't have a resume index set and therefore
   // don't know where to resume the async function. Return here in that case.
   if (generator->isClosed()) {
+    return true;
+  }
+
+  // The debugger sets the async function's generator object into the "running"
+  // state while firing debugger events to ensure the debugger can't re-enter
+  // the async function, cf. |AutoSetGeneratorRunning| in Debugger.cpp. Catch
+  // this case here by checking if the generator is already runnning.
+  if (generator->isRunning()) {
     return true;
   }
 
@@ -131,26 +137,19 @@ static bool AsyncFunctionResume(JSContext* cx,
   return true;
 }
 
-// Async Functions proposal 2.3 steps 1-8.
-// Implemented in js/src/builtin/Promise.cpp
-
-// Async Functions proposal 2.4.
+// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+// 6.2.3.1.1 Await Fulfilled Functions
 MOZ_MUST_USE bool js::AsyncFunctionAwaitedFulfilled(
     JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
     HandleValue value) {
-  // Step 1 (implicit).
-
-  // Steps 2-7.
   return AsyncFunctionResume(cx, generator, ResumeKind::Normal, value);
 }
 
-// Async Functions proposal 2.5.
+// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+// 6.2.3.1.2 Await Rejected Functions
 MOZ_MUST_USE bool js::AsyncFunctionAwaitedRejected(
     JSContext* cx, Handle<AsyncFunctionGeneratorObject*> generator,
     HandleValue reason) {
-  // Step 1 (implicit).
-
-  // Step 2-7.
   return AsyncFunctionResume(cx, generator, ResumeKind::Throw, reason);
 }
 

@@ -33,7 +33,6 @@ ru{
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
                 scientificFormat{"#E0"}
             }
@@ -292,7 +291,7 @@ ru{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.45.15"}
+    Version{"2.1.48.42"}
     calendar{
         buddhist{
             eras{
@@ -451,21 +450,6 @@ ru{
                         "мисра",
                         "наси",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                    }
                     wide{
                         "тот",
                         "бабэ",
@@ -497,21 +481,6 @@ ru{
                         "абиб",
                         "мисра",
                         "наси",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
                     }
                     wide{
                         "тот",
@@ -563,21 +532,6 @@ ru{
                         "нахасэ",
                         "эпагомен",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                    }
                     wide{
                         "мескерем",
                         "текемт",
@@ -609,21 +563,6 @@ ru{
                         "хамлэ",
                         "нахасэ",
                         "эпагомен",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
                     }
                     wide{
                         "мескерем",
@@ -703,6 +642,53 @@ ru{
                 yyyyQQQQ{"QQQQ y 'г'. G"}
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
+                Gy{
+                    G{"y 'г'. G – y 'г'. G"}
+                    y{"y–y 'гг'. G"}
+                }
+                GyM{
+                    G{"MM.y G – MM.y G"}
+                    M{"MM.y – MM.y G"}
+                    y{"MM.y – MM.y G"}
+                }
+                GyMEd{
+                    G{"ccc, dd.MM.y G – ccc, dd.MM.y G"}
+                    M{"ccc, dd.MM.y – ccc, dd.MM.y G"}
+                    d{"ccc, dd.MM.y – ccc, dd.MM.y G"}
+                    y{"ccc, dd.MM.y – ccc, dd.MM.y G"}
+                }
+                GyMMM{
+                    G{"LLL y 'г'. G – LLL y 'г'. G"}
+                    M{"LLL – LLL y 'г'. G"}
+                    y{"LLL y – LLL y 'гг'. G"}
+                }
+                GyMMMEd{
+                    G{"ccc, d MMM y 'г'. G – ccc, d MMM y 'г'. G"}
+                    M{"ccc, d MMM – ccc, d MMM y 'г'. G"}
+                    d{"ccc, d MMM – ccc, d MMM y 'г'. G"}
+                    y{"ccc, d MMM y – ccc, d MMM y 'гг'. G"}
+                }
+                GyMMMd{
+                    G{"d MMM y 'г'. G – d MMM y 'г'. G"}
+                    M{"d MMM – d MMM y 'г'. G"}
+                    d{"d–d MMM y 'г'. G"}
+                    y{"d MMM y – d MMM y 'гг'. G"}
+                }
+                GyMd{
+                    G{"dd.MM.y G – dd.MM.y G"}
+                    M{"dd.MM.y – dd.MM.y G"}
+                    d{"dd.MM.y – dd.MM.y G"}
+                    y{"dd.MM.y – dd.MM.y G"}
+                }
                 H{
                     H{"H–H"}
                 }
@@ -1043,6 +1029,10 @@ ru{
                     "до н.э.",
                     "н.э.",
                 }
+                narrow%variant{
+                    "BCE",
+                    "н. э.",
+                }
                 wide{
                     "до Рождества Христова",
                     "от Рождества Христова",
@@ -1053,6 +1043,53 @@ ru{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
+                Gy{
+                    G{"y 'г'. G – y 'г'. G"}
+                    y{"y–y 'гг'. G"}
+                }
+                GyM{
+                    G{"MM.y G – MM.y G"}
+                    M{"MM.y – MM.y G"}
+                    y{"MM.y – MM.y G"}
+                }
+                GyMEd{
+                    G{"ccc, dd.MM.y G – ccc, dd.MM.y G"}
+                    M{"ccc, dd.MM.y – ccc, dd.MM.y G"}
+                    d{"ccc, dd.MM.y – ccc, dd.MM.y G"}
+                    y{"ccc, dd.MM.y – ccc, dd.MM.y G"}
+                }
+                GyMMM{
+                    G{"LLL y 'г'. G – LLL y 'г'. G"}
+                    M{"LLL – LLL y 'г'. G"}
+                    y{"LLL y – LLL y 'гг'. G"}
+                }
+                GyMMMEd{
+                    G{"ccc, d MMM y 'г'. G – ccc, d MMM y 'г'. G"}
+                    M{"ccc, d MMM – ccc, d MMM y 'г'. G"}
+                    d{"ccc, d MMM – ccc, d MMM y 'г'. G"}
+                    y{"ccc, d MMM y – ccc, d MMM y 'гг'. G"}
+                }
+                GyMMMd{
+                    G{"d MMM y 'г'. G – d MMM y 'г'. G"}
+                    M{"d MMM – d MMM y 'г'. G"}
+                    d{"d–d MMM y 'г'. G"}
+                    y{"d MMM y – d MMM y 'гг'. G"}
+                }
+                GyMd{
+                    G{"dd.MM.y G – dd.MM.y G"}
+                    M{"dd.MM.y – dd.MM.y G"}
+                    d{"dd.MM.y – dd.MM.y G"}
+                    y{"dd.MM.y – dd.MM.y G"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -1285,12 +1322,6 @@ ru{
         }
         hebrew{
             eras{
-                abbreviated{
-                    "AM",
-                }
-                narrow{
-                    "AM",
-                }
                 wide{
                     "от сотворения мира",
                 }
@@ -1312,22 +1343,6 @@ ru{
                         "ав",
                         "элул",
                         "адар II",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                        "7",
                     }
                     wide{
                         "тишрей",
@@ -1362,22 +1377,6 @@ ru{
                         "ав",
                         "элул",
                         "адар II",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                        "7",
                     }
                     wide{
                         "тишрей",
@@ -1426,20 +1425,6 @@ ru{
                         "магха",
                         "пхалгуна",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
                     wide{
                         "чайтра",
                         "ваисакха",
@@ -1470,20 +1455,6 @@ ru{
                         "магха",
                         "пхалгуна",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
                     wide{
                         "чайтра",
                         "ваисакха",
@@ -1503,12 +1474,6 @@ ru{
         }
         islamic{
             eras{
-                abbreviated{
-                    "AH",
-                }
-                narrow{
-                    "AH",
-                }
                 wide{
                     "после хиджры",
                 }
@@ -1528,20 +1493,6 @@ ru{
                         "шав.",
                         "зуль-к.",
                         "зуль-х.",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
                     }
                     wide{
                         "мухаррам",
@@ -1572,20 +1523,6 @@ ru{
                         "шав.",
                         "зуль-к.",
                         "зуль-х.",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
                     }
                     wide{
                         "мухаррам",
@@ -1875,20 +1812,6 @@ ru{
                         "бахман",
                         "эсфанд",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
                     wide{
                         "фарвардин",
                         "ордибехешт",
@@ -1918,20 +1841,6 @@ ru{
                         "дей",
                         "бахман",
                         "эсфанд",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
                     }
                     wide{
                         "фарвардин",
@@ -3125,6 +3034,12 @@ ru{
         standard{
             2{"{0} и {1}"}
             end{"{0} и {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
+        standard-narrow{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }

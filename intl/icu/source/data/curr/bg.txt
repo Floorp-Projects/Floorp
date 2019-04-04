@@ -918,14 +918,6 @@ bg{
             "щ.д.",
             "Щатски долар",
         }
-        USN{
-            "USN",
-            "USN",
-        }
-        USS{
-            "USS",
-            "USS",
-        }
         UYI{
             "UYI",
             "Уругвайско песо (индекс на инфлацията)",
@@ -1088,18 +1080,14 @@ bg{
         }
     }
     Currencies%narrow{
-        AOA{"Kz"}
         ARS{"ARS"}
         AUD{"AUD"}
-        BAM{"KM"}
         BBD{"BBD"}
         BDT{"BDT"}
         BMD{"BMD"}
         BND{"BND"}
-        BOB{"Bs"}
         BRL{"BRL"}
         BSD{"BSD"}
-        BWP{"P"}
         BYN{"BYN"}
         BZD{"BZD"}
         CAD{"CAD"}
@@ -1107,84 +1095,43 @@ bg{
         CNY{"CNY"}
         COP{"COP"}
         CRC{"CRC"}
-        CUC{"$"}
         CUP{"CUP"}
-        CZK{"Kč"}
-        DKK{"kr"}
         DOP{"DOP"}
-        EGP{"E£"}
-        EUR{"€"}
         FJD{"FJD"}
-        GBP{"£"}
-        GEL{"₾"}
         GIP{"GIP"}
-        GNF{"FG"}
-        GTQ{"Q"}
         GYD{"GYD"}
         HKD{"HKD"}
-        HNL{"L"}
-        HRK{"kn"}
-        HUF{"Ft"}
-        IDR{"Rp"}
         ILS{"ILS"}
         INR{"INR"}
-        ISK{"kr"}
         JMD{"JMD"}
-        JPY{"¥"}
         KHR{"KHR"}
-        KMF{"CF"}
-        KPW{"₩"}
         KRW{"KRW"}
         KYD{"KYD"}
         KZT{"KZT"}
         LAK{"LAK"}
-        LBP{"L£"}
-        LKR{"Rs"}
         LRD{"LRD"}
-        MGA{"Ar"}
-        MMK{"K"}
         MNT{"MNT"}
-        MUR{"Rs"}
         MXN{"MXN"}
-        MYR{"RM"}
         NAD{"NAD"}
         NGN{"NGN"}
-        NIO{"C$"}
-        NOK{"kr"}
-        NPR{"Rs"}
         NZD{"NZD"}
         PHP{"PHP"}
-        PKR{"Rs"}
-        PLN{"zł"}
         PYG{"PYG"}
         RON{"RON"}
-        RUB{"₽"}
-        RWF{"RF"}
         SBD{"SBD"}
-        SEK{"kr"}
         SGD{"SGD"}
-        SHP{"£"}
         SRD{"SRD"}
         SSP{"SSP"}
         STN{"Db"}
-        SYP{"£"}
-        THB{"฿"}
-        TOP{"T$"}
         TRY{"TRY"}
         TTD{"TTD"}
         TWD{"TWD"}
         UAH{"UAH"}
-        USD{"$"}
         UYU{"UYU"}
-        VEF{"Bs"}
         VND{"VND"}
-        XCD{"$"}
-        ZAR{"R"}
-        ZMW{"ZK"}
     }
     Currencies%variant{
         GEL{"₾"}
-        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -2128,5 +2075,5 @@ bg{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.43.94"}
+    Version{"2.1.48.42"}
 }

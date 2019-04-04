@@ -30,7 +30,6 @@ sk{
             patterns{
                 accountingFormat{"#,##0.00 ¤;(#,##0.00 ¤)"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
                 scientificFormat{"#E0"}
             }
@@ -266,11 +265,9 @@ sk{
                 group{" "}
                 infinity{"∞"}
                 list{";"}
-                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -289,36 +286,9 @@ sk{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.48.42"}
     calendar{
-        buddhist{
-            eras{
-                abbreviated{
-                    "BE",
-                }
-                narrow{
-                    "BE",
-                }
-                wide{
-                    "BE",
-                }
-            }
-        }
         coptic{
-            eras{
-                abbreviated{
-                    "ERA0",
-                    "ERA1",
-                }
-                narrow{
-                    "ERA0",
-                    "ERA1",
-                }
-                wide{
-                    "ERA0",
-                    "ERA1",
-                }
-            }
             monthNames{
                 format{
                     abbreviated{
@@ -387,20 +357,6 @@ sk{
             }
         }
         ethiopic{
-            eras{
-                abbreviated{
-                    "ERA0",
-                    "ERA1",
-                }
-                narrow{
-                    "ERA0",
-                    "ERA1",
-                }
-                wide{
-                    "ERA0",
-                    "ERA1",
-                }
-            }
             monthNames{
                 format{
                     abbreviated{
@@ -532,6 +488,53 @@ sk{
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
+                Gy{
+                    G{"y G – y G"}
+                    y{"y – y G"}
+                }
+                GyM{
+                    G{"M/y GGGGG – M/y GGGGG"}
+                    M{"M/y – M/y GGGGG"}
+                    y{"M/y – M/y GGGGG"}
+                }
+                GyMEd{
+                    G{"E d. M. y GGGGG – E d. M. y GGGGG"}
+                    M{"E d. M. y – E d. M. y GGGGG"}
+                    d{"E d. M. y – E d. M. y GGGGG"}
+                    y{"E d. M. y – E d. M. y GGGGG"}
+                }
+                GyMMM{
+                    G{"LLL y G – LLL y G"}
+                    M{"LLL – LLL y G"}
+                    y{"LLL y – LLL y G"}
+                }
+                GyMMMEd{
+                    G{"E d. M. y G – E d. M. y G"}
+                    M{"E d. M. – E d. M. y G"}
+                    d{"E d. M. – E d. M. y G"}
+                    y{"E d. M. y – E d. M. y G"}
+                }
+                GyMMMd{
+                    G{"d. M. y G – d. M. y G"}
+                    M{"d. M. – d. M. y G"}
+                    d{"d. – d. M. y G"}
+                    y{"d. M. y – d. M. y G"}
+                }
+                GyMd{
+                    G{"d. M. y GGGGG – d. M. y GGGGG"}
+                    M{"d. M. y – d. M. y GGGGG"}
+                    d{"d. M. y – d. M. y GGGGG"}
+                    y{"d. M. y – d. M. y GGGGG"}
+                }
                 H{
                     H{"HH – HH"}
                 }
@@ -590,7 +593,6 @@ sk{
                     m{"h:mm – h:mm a v"}
                 }
                 hv{
-                    a{"h a – h a v"}
                     h{"h – h a v"}
                 }
                 y{
@@ -631,18 +633,6 @@ sk{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersAbbr{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersNarrow{
-                "AM",
-                "PM",
-            }
             DateTimePatterns{
                 "H:mm:ss zzzz",
                 "H:mm:ss z",
@@ -689,10 +679,10 @@ sk{
                 MMMEd{"E d. M."}
                 MMMMEd{"E d. MMMM"}
                 MMMMW{
-                    few{"W. 'týždeň' 'v' MMM"}
-                    many{"W. 'týždeň' 'v' MMM"}
-                    one{"W. 'týždeň' 'v' MMM"}
-                    other{"W. 'týždeň' 'v' MMM"}
+                    few{"W. 'týždeň' 'v' MMMM"}
+                    many{"W. 'týždeň' 'v' MMMM"}
+                    one{"W. 'týždeň' 'v' MMMM"}
+                    other{"W. 'týždeň' 'v' MMMM"}
                 }
                 MMMMd{"d. MMMM"}
                 MMMd{"d. M."}
@@ -886,6 +876,53 @@ sk{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
+                Gy{
+                    G{"y G – y G"}
+                    y{"y – y G"}
+                }
+                GyM{
+                    G{"M/y GGGGG – M/y GGGGG"}
+                    M{"M/y – M/y GGGGG"}
+                    y{"M/y – M/y GGGGG"}
+                }
+                GyMEd{
+                    G{"E d. M. y GGGGG – E d. M. y GGGGG"}
+                    M{"E d. M. y – E d. M. y GGGGG"}
+                    d{"E d. M. y – E d. M. y GGGGG"}
+                    y{"E d. M. y – E d. M. y GGGGG"}
+                }
+                GyMMM{
+                    G{"LLLL y G – LLLL y G"}
+                    M{"LLLL – LLLL y G"}
+                    y{"LLLL y – LLLL y G"}
+                }
+                GyMMMEd{
+                    G{"E d. M. y G – E d. M. y G"}
+                    M{"E d. M. – E d. M. y G"}
+                    d{"E d. M. – E d. M. y G"}
+                    y{"E d. M. y – E d. M. y G"}
+                }
+                GyMMMd{
+                    G{"d. M. y G – d. M. y G"}
+                    M{"d. M. – d. M. y G"}
+                    d{"d. – d. M. y G"}
+                    y{"d. M. y – d. M. y G"}
+                }
+                GyMd{
+                    G{"d. M. y GGGGG – d. M. y GGGGG"}
+                    M{"d. M. y – d. M. y GGGGG"}
+                    d{"d. M. y – d. M. y GGGGG"}
+                    y{"d. M. y – d. M. y GGGGG"}
+                }
                 H{
                     H{"HH – HH"}
                 }
@@ -1117,17 +1154,6 @@ sk{
             }
         }
         hebrew{
-            eras{
-                abbreviated{
-                    "AM",
-                }
-                narrow{
-                    "AM",
-                }
-                wide{
-                    "AM",
-                }
-            }
             monthNames{
                 format{
                     abbreviated{
@@ -1275,17 +1301,6 @@ sk{
             }
         }
         islamic{
-            eras{
-                abbreviated{
-                    "AH",
-                }
-                narrow{
-                    "AH",
-                }
-                wide{
-                    "AH",
-                }
-            }
             monthNames{
                 format{
                     abbreviated{
@@ -1350,17 +1365,6 @@ sk{
             }
         }
         persian{
-            eras{
-                abbreviated{
-                    "AP",
-                }
-                narrow{
-                    "AP",
-                }
-                wide{
-                    "AP",
-                }
-            }
             monthNames{
                 format{
                     abbreviated{
@@ -2567,6 +2571,12 @@ sk{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-narrow{
+            2{"{0} a {1}"}
+            end{"{0} a {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard-short{
             2{"{0} a {1}"}
             end{"{0} a {1}"}
@@ -2622,10 +2632,6 @@ sk{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
-            }
-            stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
             }
         }
     }

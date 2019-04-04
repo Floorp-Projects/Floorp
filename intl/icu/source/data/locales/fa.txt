@@ -5,14 +5,6 @@ fa{
         "[ـ\u200C\u200D\u200E\u200F \u064E \u0650 \u064F \u0652 \u0656 \u0670 إ ك ى ي"
         "]"
     }
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
     ExemplarCharacters{
         "[\u064B \u064D \u064C \u0651 \u0654 آ ا ء أ ؤ ئ ب پ ت ث ج چ ح خ د ذ ر ز ژ س "
         "ش ص ض ط ظ ع غ ف ق ک گ ل م ن و ه ة ی]"
@@ -41,16 +33,12 @@ fa{
         arabext{
             patterns{
                 currencyFormat{"‎¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
             symbols{
-                decimal{"٫"}
                 exponential{"×۱۰^"}
-                group{"٬"}
                 infinity{"∞"}
-                list{"؛"}
                 minusSign{"‎−"}
                 nan{"ناعدد"}
                 perMille{"؉"}
@@ -71,7 +59,6 @@ fa{
             patterns{
                 accountingFormat{"‎¤ #,##0.00;‎(¤ #,##0.00)"}
                 currencyFormat{"‎¤ #,##0.00"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -230,9 +217,7 @@ fa{
                 }
             }
             symbols{
-                decimal{"."}
                 exponential{"E"}
-                group{","}
                 infinity{"∞"}
                 list{";"}
                 minusSign{"‎−"}
@@ -241,7 +226,6 @@ fa{
                 percentSign{"%"}
                 plusSign{"‎+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -256,7 +240,7 @@ fa{
         minimumGroupingDigits{"1"}
         native{"arabext"}
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.48.42"}
     calendar{
         buddhist{
             eras{
@@ -464,10 +448,10 @@ fa{
                 "H:mm:ss (z)",
                 "H:mm:ss",
                 "H:mm",
-                "G EEEE d MMMM y",
-                "G d MMMM y",
-                "G d MMM y",
-                "G d/M/y",
+                "EEEE d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "y/M/d G",
                 "{1}،‏ {0}",
                 "{1}، ساعت {0}",
                 "{1}، ساعت {0}",
@@ -517,13 +501,60 @@ fa{
                 yyyyMEd{"E y/M/d G"}
                 yyyyMMM{"MMM y G"}
                 yyyyMMMEd{"E d MMM y G"}
-                yyyyMMMM{"G y MMMM"}
+                yyyyMMMM{"y MMMM G"}
                 yyyyMMMd{"d MMM y G"}
                 yyyyMd{"y/M/d G"}
                 yyyyQQQ{"QQQQ y G"}
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
+                Bh{
+                    B{"h B تا h B"}
+                    h{"h تا h B"}
+                }
+                Bhm{
+                    B{"h:mm B تا h:mm B"}
+                    h{"h:mm تا h:mm B"}
+                    m{"h:mm تا h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 H{
                     H{"H تا H"}
                 }
@@ -679,8 +710,8 @@ fa{
                 MMMEd{"E d LLL"}
                 MMMMEd{"E d LLLL"}
                 MMMMW{
-                    one{"هفته W از MMM"}
-                    other{"هفته W از MMM"}
+                    one{"هفتۀ W از LLLL"}
+                    other{"هفتۀ W از LLLL"}
                 }
                 MMMMd{"d LLLL"}
                 MMMd{"d LLL"}
@@ -790,59 +821,59 @@ fa{
             dayPeriod{
                 format{
                     abbreviated{
-                        afternoon1{"ب.ظ."}
-                        evening1{"عصر"}
-                        midnight{"نیمه‌شب"}
-                        morning1{"صبح"}
+                        afternoon1{"ظهر"}
+                        afternoon2{"عصر"}
+                        morning1{"بامداد"}
+                        morning2{"صبح"}
                         night1{"شب"}
-                        noon{"ظهر"}
+                        night2{"نیمه‌شب"}
                     }
                     narrow{
-                        afternoon1{"ب.ظ."}
-                        evening1{"ع"}
-                        midnight{"ن"}
-                        morning1{"ص"}
+                        afternoon1{"ظ"}
+                        afternoon2{"ع"}
+                        morning1{"ب"}
+                        morning2{"ص"}
                         night1{"ش"}
-                        noon{"ظ"}
+                        night2{"ن"}
                     }
                     wide{
-                        afternoon1{"بعدازظهر"}
-                        evening1{"عصر"}
-                        midnight{"نیمه‌شب"}
-                        morning1{"صبح"}
+                        afternoon1{"ظهر"}
+                        afternoon2{"عصر"}
+                        morning1{"بامداد"}
+                        morning2{"صبح"}
                         night1{"شب"}
-                        noon{"ظهر"}
+                        night2{"نیمه‌شب"}
                     }
                 }
                 stand-alone{
                     abbreviated{
-                        afternoon1{"بعدازظهر"}
+                        afternoon1{"ظهر"}
+                        afternoon2{"عصر"}
                         am{"ق.ظ."}
-                        evening1{"عصر"}
-                        midnight{"نیمه‌شب"}
-                        morning1{"صبح"}
+                        morning1{"بامداد"}
+                        morning2{"صبح"}
                         night1{"شب"}
-                        noon{"ظهر"}
+                        night2{"نیمه‌شب"}
                         pm{"ب.ظ."}
                     }
                     narrow{
-                        afternoon1{"ب.ظ."}
-                        am{"ق.ظ."}
-                        evening1{"ع"}
-                        midnight{"ن"}
-                        morning1{"ص"}
+                        afternoon1{"ظ"}
+                        afternoon2{"ع"}
+                        am{"ق"}
+                        morning1{"ب"}
+                        morning2{"ص"}
                         night1{"ش"}
-                        noon{"ظ"}
-                        pm{"ب.ظ."}
+                        night2{"ن"}
+                        pm{"ب"}
                     }
                     wide{
-                        afternoon1{"بعدازظهر"}
+                        afternoon1{"ظهر"}
+                        afternoon2{"عصر"}
                         am{"قبل‌ازظهر"}
-                        evening1{"عصر"}
-                        midnight{"نیمه‌شب"}
-                        morning1{"صبح"}
+                        morning1{"بامداد"}
+                        morning2{"صبح"}
                         night1{"شب"}
-                        noon{"ظهر"}
+                        night2{"نیمه‌شب"}
                         pm{"بعدازظهر"}
                     }
                 }
@@ -874,6 +905,53 @@ fa{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B تا h B"}
+                    h{"h تا h B"}
+                }
+                Bhm{
+                    B{"h:mm B تا h:mm B"}
+                    h{"h:mm تا h:mm B"}
+                    m{"h:mm تا h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 H{
                     H{"H تا H"}
                 }
@@ -1332,19 +1410,19 @@ fa{
                 hms{"h:mm:ss a"}
                 ms{"mm:ss"}
                 y{"y G"}
-                yM{"y/M"}
-                yMEd{"E y/M/d"}
+                yM{"y/M G"}
+                yMEd{"E y/M/d G"}
                 yMMM{"MMM y"}
                 yMMMEd{"E d MMM y"}
                 yMMMM{"MMMM y"}
-                yQQQ{"QQQ y"}
-                yQQQQ{"QQQQ y"}
+                yQQQ{"QQQ y G"}
+                yQQQQ{"QQQQ y G"}
                 yyyy{"y G"}
                 yyyyM{"y/M G"}
                 yyyyMEd{"E y/M/d G"}
                 yyyyMMM{"MMM y G"}
                 yyyyMMMEd{"E d MMM y G"}
-                yyyyMMMM{"G y MMMM"}
+                yyyyMMMM{"y MMMM G"}
                 yyyyMMMd{"d MMM y G"}
                 yyyyMd{"y/M/d G"}
                 yyyyQQQ{"QQQ y G"}
@@ -2592,6 +2670,12 @@ fa{
             middle{"{0}،‏ {1}"}
             start{"{0}،‏ {1}"}
         }
+        standard-narrow{
+            2{"{0}، {1}"}
+            end{"{0}، و {1}"}
+            middle{"{0}،‏ {1}"}
+            start{"{0}،‏ {1}"}
+        }
         standard-short{
             2{"{0} و {1}"}
             end{"{0}، و {1}"}
@@ -2647,10 +2731,6 @@ fa{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
-            }
-            stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
             }
         }
     }

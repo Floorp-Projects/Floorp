@@ -9,7 +9,7 @@ en_CA{
             }
         }
     }
-    Version{"2.1.44.88"}
+    Version{"2.1.47.86"}
     calendar{
         chinese{
             DateTimePatterns{
@@ -203,10 +203,6 @@ en_CA{
                 yMMMEd{"E, MMM d, y"}
                 yMMMd{"MMM d, y"}
                 yMd{"y-MM-dd"}
-                yw{
-                    one{"'week' w 'of' Y"}
-                    other{"'week' w 'of' Y"}
-                }
             }
             dayNames{
                 format{
@@ -238,9 +234,11 @@ en_CA{
                     }
                     narrow{
                         afternoon1{"aft"}
+                        am{"a.m."}
                         evening1{"eve"}
                         midnight{"mid"}
                         morning1{"mor"}
+                        pm{"pm"}
                     }
                     wide{
                         am{"a.m."}
@@ -439,23 +437,6 @@ en_CA{
                 }
             }
         }
-        mon-narrow{
-            relative{
-                "-1"{"last Mo"}
-                "0"{"this Mo"}
-                "1"{"next Mo"}
-            }
-            relativeTime{
-                future{
-                    one{"in {0} Mo"}
-                    other{"in {0} Mo’s"}
-                }
-                past{
-                    one{"{0} Mo ago"}
-                    other{"{0} Mo’s ago"}
-                }
-            }
-        }
         mon-short{
             relativeTime{
                 future{
@@ -523,11 +504,9 @@ en_CA{
         sat-narrow{
             relativeTime{
                 future{
-                    one{"in {0} Sa"}
                     other{"in {0} Sa’s"}
                 }
                 past{
-                    one{"{0} Sa ago"}
                     other{"{0} Sa’s ago"}
                 }
             }
@@ -573,11 +552,9 @@ en_CA{
         sun-narrow{
             relativeTime{
                 future{
-                    one{"in {0} Su"}
                     other{"in {0} Su’s"}
                 }
                 past{
-                    one{"{0} Su ago"}
                     other{"{0} Su’s ago"}
                 }
             }
@@ -597,11 +574,9 @@ en_CA{
         thu-narrow{
             relativeTime{
                 future{
-                    one{"in {0} Th"}
                     other{"in {0} Th’s"}
                 }
                 past{
-                    one{"{0} Th ago"}
                     other{"{0} Th’s ago"}
                 }
             }
@@ -621,11 +596,9 @@ en_CA{
         tue-narrow{
             relativeTime{
                 future{
-                    one{"in {0} Tu"}
                     other{"in {0} Tu’s"}
                 }
                 past{
-                    one{"{0} Tu ago"}
                     other{"{0} Tu’s ago"}
                 }
             }
@@ -724,6 +697,16 @@ en_CA{
                     other{"{0} yrs. ago"}
                 }
             }
+        }
+    }
+    listPattern{
+        standard-narrow{
+            2{"{0} and {1}"}
+            end{"{0}, and {1}"}
+        }
+        standard-short{
+            2{"{0} and {1}"}
+            end{"{0}, and {1}"}
         }
     }
 }

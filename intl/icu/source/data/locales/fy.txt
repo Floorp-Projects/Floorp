@@ -155,7 +155,7 @@ fy{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.41.34"}
+    Version{"2.1.47.82"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -944,8 +944,8 @@ fy{
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
                 MMMMW{
-                    one{"'wike' W 'fan' MMM"}
-                    other{"'wike' W 'fan' MMM"}
+                    one{"'wike' W 'fan' MMMM"}
+                    other{"'wike' W 'fan' MMMM"}
                 }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}

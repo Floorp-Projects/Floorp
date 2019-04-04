@@ -32,7 +32,7 @@ zgh{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.43.94"}
+    Version{"2.1.48.4"}
     calendar{
         generic{
             DateTimePatterns{
@@ -120,9 +120,6 @@ zgh{
                 MEd{"MM-dd, E"}
                 MMM{"MMM"}
                 MMMEd{"E d MMM"}
-                MMMMW{
-                    other{"'week' W 'of' MMM"}
-                }
                 MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
@@ -143,9 +140,6 @@ zgh{
                 yMd{"y-MM-dd"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
-                yw{
-                    other{"'week' w 'of' Y"}
-                }
             }
             dayNames{
                 format{

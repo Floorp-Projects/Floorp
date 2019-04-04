@@ -123,11 +123,13 @@ add_test(function test_Domains_clear() {
 });
 
 add_test(function test_Domains_splitMethod() {
-  deepEqual(Domains.splitMethod(""), []);
-  deepEqual(Domains.splitMethod("Foo"), ["Foo"]);
-  deepEqual(Domains.splitMethod("Foo."), ["Foo"]);
-  deepEqual(Domains.splitMethod("Foo.bar"), ["Foo", "bar"]);
-  deepEqual(Domains.splitMethod("Foo.bar.baz"), ["Foo", "bar"]);
+  for (const t of [42, null, true, {}, [], undefined]) {
+    Assert.throws(() => Domains.splitMethod(t), /TypeError/, `${typeof t} throws`);
+  }
+  for (const s of ["", ".", "foo.", ".bar", "foo.bar.baz"]) {
+    Assert.throws(() => Domains.splitMethod(s), /Invalid method format: ".*"/, `"${s}" throws`);
+  }
+  deepEqual(Domains.splitMethod("foo.bar"), {domain: "foo", command: "bar"});
 
   run_next_test();
 });

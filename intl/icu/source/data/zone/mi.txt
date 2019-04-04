@@ -1,10 +1,145 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 mi{
-    Version{"2.1.44.15"}
+    Version{"2.1.47.85"}
     zoneStrings{
+        "America:Araguaina"{
+            ec{"Araguaina"}
+        }
+        "America:Argentina:La_Rioja"{
+            ec{"La Rioja"}
+        }
+        "America:Argentina:Rio_Gallegos"{
+            ec{"Rio Gallegos"}
+        }
+        "America:Argentina:Salta"{
+            ec{"Salta"}
+        }
+        "America:Argentina:San_Juan"{
+            ec{"San Juan"}
+        }
+        "America:Argentina:San_Luis"{
+            ec{"San Luis"}
+        }
+        "America:Argentina:Tucuman"{
+            ec{"Tucuman"}
+        }
+        "America:Argentina:Ushuaia"{
+            ec{"Ushuaia"}
+        }
+        "America:Asuncion"{
+            ec{"Asuncion"}
+        }
+        "America:Bahia"{
+            ec{"Bahia"}
+        }
+        "America:Belem"{
+            ec{"Belem"}
+        }
+        "America:Boa_Vista"{
+            ec{"Boa Vista"}
+        }
+        "America:Bogota"{
+            ec{"Bogota"}
+        }
+        "America:Buenos_Aires"{
+            ec{"Buenos Aires"}
+        }
+        "America:Campo_Grande"{
+            ec{"Campo Grande"}
+        }
+        "America:Caracas"{
+            ec{"Caracas"}
+        }
+        "America:Catamarca"{
+            ec{"Catamarca"}
+        }
+        "America:Cayenne"{
+            ec{"Cayenne"}
+        }
+        "America:Cordoba"{
+            ec{"Cordoba"}
+        }
+        "America:Cuiaba"{
+            ec{"Cuiaba"}
+        }
+        "America:Eirunepe"{
+            ec{"Eirunepe"}
+        }
+        "America:Fortaleza"{
+            ec{"Fortaleza"}
+        }
+        "America:Guayaquil"{
+            ec{"Guayaquil"}
+        }
+        "America:Guyana"{
+            ec{"Guyana"}
+        }
+        "America:Jujuy"{
+            ec{"Jujuy"}
+        }
+        "America:La_Paz"{
+            ec{"La Paz"}
+        }
+        "America:Lima"{
+            ec{"Lima"}
+        }
+        "America:Maceio"{
+            ec{"Maceio"}
+        }
+        "America:Manaus"{
+            ec{"Manaus"}
+        }
+        "America:Mendoza"{
+            ec{"Mendoza"}
+        }
+        "America:Montevideo"{
+            ec{"Montevideo"}
+        }
+        "America:Noronha"{
+            ec{"Noronha"}
+        }
+        "America:Paramaribo"{
+            ec{"Paramaribo"}
+        }
+        "America:Porto_Velho"{
+            ec{"Porto Velho"}
+        }
+        "America:Recife"{
+            ec{"Recife"}
+        }
+        "America:Rio_Branco"{
+            ec{"Rio Branco"}
+        }
+        "America:Santarem"{
+            ec{"Santarem"}
+        }
+        "America:Santiago"{
+            ec{"Santiago"}
+        }
+        "America:Sao_Paulo"{
+            ec{"Sao Paulo"}
+        }
+        "Atlantic:Stanley"{
+            ec{"Stanley"}
+        }
         "Etc:UTC"{
             ls{"Wā Aonui Kōtuitui"}
+        }
+        "Etc:Unknown"{
+            ec{"Tāone Tē Mōhiotia"}
+        }
+        "Pacific:Auckland"{
+            ec{"Tāmaki Makaurau"}
+        }
+        "Pacific:Chatham"{
+            ec{"Rēkohu"}
+        }
+        "Pacific:Easter"{
+            ec{"Easter"}
+        }
+        "Pacific:Galapagos"{
+            ec{"Galapagos"}
         }
         "meta:America_Central"{
             ld{"Wā Awatea Waenga"}

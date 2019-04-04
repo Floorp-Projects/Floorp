@@ -122,10 +122,6 @@ fil{
             "CLP",
             "Piso ng Chile",
         }
-        CNH{
-            "CNH",
-            "CNH",
-        }
         CNY{
             "CN¥",
             "Chinese Yuan",
@@ -696,7 +692,6 @@ fil{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -713,7 +708,6 @@ fil{
         FJD{"$"}
         FKP{"£"}
         GBP{"£"}
-        GEL{"₾"}
         GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
@@ -754,7 +748,6 @@ fil{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
-        RON{"lei"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -763,7 +756,6 @@ fil{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -903,10 +895,6 @@ fil{
         CLP{
             one{"piso ng Chile"}
             other{"piso ng Chile"}
-        }
-        CNH{
-            one{"CNH"}
-            other{"CNH"}
         }
         CNY{
             one{"Chinese yuan"}
@@ -1437,5 +1425,5 @@ fil{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.44.91"}
+    Version{"2.1.48.20"}
 }

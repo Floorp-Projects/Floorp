@@ -4064,17 +4064,16 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
 
   mInitSelectionColorsAndShadow = true;
 
-  if (selectionStatus == nsISelectionController::SELECTION_ON) {
-    // Use ::selection pseudo class.
-    if (RefPtr<ComputedStyle> style = mFrame->ComputeSelectionStyle()) {
-      mSelectionBGColor =
-          style->GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
-      mSelectionTextColor =
-          style->GetVisitedDependentColor(&nsStyleText::mWebkitTextFillColor);
-      mHasSelectionShadow = true;
-      mSelectionShadow = style->StyleText()->mTextShadow;
-      return true;
-    }
+  // Use ::selection pseudo class if applicable.
+  if (RefPtr<ComputedStyle> style =
+          mFrame->ComputeSelectionStyle(selectionStatus)) {
+    mSelectionBGColor =
+        style->GetVisitedDependentColor(&nsStyleBackground::mBackgroundColor);
+    mSelectionTextColor =
+        style->GetVisitedDependentColor(&nsStyleText::mWebkitTextFillColor);
+    mHasSelectionShadow = true;
+    mSelectionShadow = style->StyleText()->mTextShadow;
+    return true;
   }
 
   nscolor selectionBGColor =

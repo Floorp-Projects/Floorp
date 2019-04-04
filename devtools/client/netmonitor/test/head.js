@@ -445,6 +445,7 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
     unicodeUrl);
   const fileToolTip = url === unicodeUrl ?
     url : ORIGINAL_FILE_URL + "\n\n" + DECODED_FILE_URL;
+  const requestedFile = requestItem.urlDetails.baseNameWithQuery;
   const host = getUnicodeHostname(getUrlHost(url));
   const scheme = getUrlScheme(url);
   const {
@@ -472,13 +473,13 @@ function verifyRequestItemTarget(document, requestList, requestItem, method,
 
   if (fuzzyUrl) {
     ok(target.querySelector(".requests-list-file").textContent.startsWith(
-      url), "The displayed file is correct.");
+      requestedFile), "The displayed file is correct.");
     ok(target.querySelector(".requests-list-file").getAttribute("title")
                                                   .startsWith(fileToolTip),
       "The tooltip file is correct.");
   } else {
     is(target.querySelector(".requests-list-file").textContent,
-      url,
+      requestedFile,
       "The displayed file is correct.");
     is(target.querySelector(".requests-list-file").getAttribute("title"),
       fileToolTip, "The tooltip file is correct.");

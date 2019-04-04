@@ -1,10 +1,6 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ia{
-    AuxExemplarCharacters{
-        "[á à ă â å ä ã ā æ ç é è ĕ ê ë ē í ì ĭ î ï ī ñ ó ò ŏ ô ö ø ō œ ú ù ŭ û ü ū ÿ"
-        "]"
-    }
     Ellipsis{
         final{"{0}…"}
         initial{"…{0}"}
@@ -19,7 +15,7 @@ ia{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{"≥{0}"}
+                atLeast{"⩾{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -28,6 +24,160 @@ ia{
                 decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
+            }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        one{"0 mil"}
+                        other{"0 milles"}
+                    }
+                    10000{
+                        one{"00 mil"}
+                        other{"00 milles"}
+                    }
+                    100000{
+                        one{"000 mil"}
+                        other{"000 milles"}
+                    }
+                    1000000{
+                        one{"0 mln"}
+                        other{"0 milliones"}
+                    }
+                    10000000{
+                        one{"00 mln"}
+                        other{"00 milliones"}
+                    }
+                    100000000{
+                        one{"000 mln"}
+                        other{"000 milliones"}
+                    }
+                    1000000000{
+                        one{"0 mld"}
+                        other{"0 milliardos"}
+                    }
+                    10000000000{
+                        one{"00 mld"}
+                        other{"00 milliardos"}
+                    }
+                    100000000000{
+                        one{"000 mld"}
+                        other{"000 milliardos"}
+                    }
+                    1000000000000{
+                        one{"0 bln"}
+                        other{"0 billiones"}
+                    }
+                    10000000000000{
+                        one{"00 bln"}
+                        other{"00 billiones"}
+                    }
+                    100000000000000{
+                        one{"000 bln"}
+                        other{"000 billiones"}
+                    }
+                }
+            }
+            patternsShort{
+                currencyFormat{
+                    1000{
+                        one{"¤ 0 mil"}
+                        other{"¤ 0 mil"}
+                    }
+                    10000{
+                        one{"¤ 00 mil"}
+                        other{"¤ 00 mil"}
+                    }
+                    100000{
+                        one{"¤ 000 mil"}
+                        other{"¤ 000 mil"}
+                    }
+                    1000000{
+                        one{"¤ 0 mln"}
+                        other{"¤ 0 mln"}
+                    }
+                    10000000{
+                        one{"¤ 00 mln"}
+                        other{"¤ 00 mln"}
+                    }
+                    100000000{
+                        one{"¤ 000 mln"}
+                        other{"¤ 000 mln"}
+                    }
+                    1000000000{
+                        one{"¤ 0 mld"}
+                        other{"¤ 0 mld"}
+                    }
+                    10000000000{
+                        one{"¤ 00 mld"}
+                        other{"¤ 00 mld"}
+                    }
+                    100000000000{
+                        one{"¤ 000 mld"}
+                        other{"¤ 000 mld"}
+                    }
+                    1000000000000{
+                        one{"¤ 0 bln"}
+                        other{"¤ 0 bln"}
+                    }
+                    10000000000000{
+                        one{"¤ 00 bln"}
+                        other{"¤ 00 bln"}
+                    }
+                    100000000000000{
+                        one{"¤ 000 bln"}
+                        other{"¤ 000 bln"}
+                    }
+                }
+                decimalFormat{
+                    1000{
+                        one{"0 mil"}
+                        other{"0 mil"}
+                    }
+                    10000{
+                        one{"00 mil"}
+                        other{"00 mil"}
+                    }
+                    100000{
+                        one{"000 mil"}
+                        other{"000 mil"}
+                    }
+                    1000000{
+                        one{"0 mln"}
+                        other{"0 mln"}
+                    }
+                    10000000{
+                        one{"00 mln"}
+                        other{"00 mln"}
+                    }
+                    100000000{
+                        one{"000 mln"}
+                        other{"000 mln"}
+                    }
+                    1000000000{
+                        one{"0 mld"}
+                        other{"0 mld"}
+                    }
+                    10000000000{
+                        one{"00 mld"}
+                        other{"00 mld"}
+                    }
+                    100000000000{
+                        one{"000 mld"}
+                        other{"000 mld"}
+                    }
+                    1000000000000{
+                        one{"0 bln"}
+                        other{"0 bln"}
+                    }
+                    10000000000000{
+                        one{"00 bln"}
+                        other{"00 bln"}
+                    }
+                    100000000000000{
+                        one{"000 bln"}
+                        other{"000 bln"}
+                    }
+                }
             }
             symbols{
                 decimal{","}
@@ -42,15 +192,10 @@ ia{
                 superscriptingExponent{"×"}
             }
         }
-        minimalPairs{
-            ordinal{
-                other{"Prende le 7e exito a dextra."}
-            }
-        }
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.44.15"}
+    Version{"2.1.48.36"}
     calendar{
         generic{
             DateTimePatterns{
@@ -231,6 +376,10 @@ ia{
                 MEd{"E dd-MM"}
                 MMM{"LLL"}
                 MMMEd{"E d MMM"}
+                MMMMW{
+                    one{"'septimana' W 'de' MMMM"}
+                    other{"'septimana' W 'de' MMMM"}
+                }
                 MMMMd{"d 'de' MMMM"}
                 MMMd{"d MMM"}
                 Md{"dd-MM"}
@@ -251,6 +400,10 @@ ia{
                 yMd{"dd-MM-y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ 'de' y"}
+                yw{
+                    one{"'septimana' w 'de' Y"}
+                    other{"'septimana' w 'de' Y"}
+                }
             }
             dayNames{
                 format{
@@ -695,12 +848,42 @@ ia{
                 "0"{"hodie"}
                 "1"{"deman"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} dies"}
+                    other{"in {0} dies"}
+                }
+                past{
+                    one{"{0} dies retro"}
+                    other{"{0} dies retro"}
+                }
+            }
         }
         day-narrow{
             dn{"d."}
+            relativeTime{
+                future{
+                    one{"in {0} dies"}
+                    other{"in {0} dies"}
+                }
+                past{
+                    one{"{0} dies retro"}
+                    other{"{0} dies retro"}
+                }
+            }
         }
         day-short{
             dn{"die"}
+            relativeTime{
+                future{
+                    one{"in {0} dies"}
+                    other{"in {0} dies"}
+                }
+                past{
+                    one{"{0} dies retro"}
+                    other{"{0} dies retro"}
+                }
+            }
         }
         dayOfYear{
             dn{"die del anno"}
@@ -735,12 +918,32 @@ ia{
                 "0"{"iste venerdi"}
                 "1"{"venerdi proxime"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} venerdis"}
+                    other{"in {0} venerdis"}
+                }
+                past{
+                    one{"{0} venerdis retro"}
+                    other{"{0} venerdis retro"}
+                }
+            }
         }
         fri-narrow{
             relative{
                 "-1"{"ven. passate"}
                 "0"{"iste ven."}
                 "1"{"ven. proxime"}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} venerdis"}
+                    other{"in {0} ven."}
+                }
+                past{
+                    one{"{0} venerdis retro"}
+                    other{"{0} ven. retro"}
+                }
             }
         }
         fri-short{
@@ -749,36 +952,116 @@ ia{
                 "0"{"iste ven."}
                 "1"{"ven. proxime"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} venerdis"}
+                    other{"in {0} ven."}
+                }
+                past{
+                    one{"{0} venerdis retro"}
+                    other{"{0} ven. retro"}
+                }
+            }
         }
         hour{
             dn{"hora"}
             relative{
                 "0"{"iste hora"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} horas"}
+                    other{"in {0} horas"}
+                }
+                past{
+                    one{"{0} horas retro"}
+                    other{"{0} horas retro"}
+                }
+            }
         }
         hour-narrow{
             dn{"h."}
+            relativeTime{
+                future{
+                    one{"in {0} horas"}
+                    other{"in {0} hr."}
+                }
+                past{
+                    one{"{0} horas retro"}
+                    other{"{0} hr. retro"}
+                }
+            }
         }
         hour-short{
             dn{"hr."}
+            relativeTime{
+                future{
+                    one{"in {0} horas"}
+                    other{"in {0} hr."}
+                }
+                past{
+                    one{"{0} horas retro"}
+                    other{"{0} hr. retro"}
+                }
+            }
         }
         minute{
             dn{"minuta"}
             relative{
                 "0"{"iste minuta"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} minutas"}
+                    other{"in {0} minutas"}
+                }
+                past{
+                    one{"{0} minutas retro"}
+                    other{"{0} minutas retro"}
+                }
+            }
         }
         minute-narrow{
             dn{"m."}
+            relativeTime{
+                future{
+                    one{"in {0} minutas"}
+                    other{"in {0} min."}
+                }
+                past{
+                    one{"{0} minutas retro"}
+                    other{"{0} min. retro"}
+                }
+            }
         }
         minute-short{
             dn{"min."}
+            relativeTime{
+                future{
+                    one{"in {0} minutas"}
+                    other{"in {0} min."}
+                }
+                past{
+                    one{"{0} minutas retro"}
+                    other{"{0} min. retro"}
+                }
+            }
         }
         mon{
             relative{
                 "-1"{"lunedi passate"}
                 "0"{"iste lunedi"}
                 "1"{"lunedi proxime"}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} lunedis"}
+                    other{"in {0} lunedis"}
+                }
+                past{
+                    one{"{0} lunedis retro"}
+                    other{"{0} lunedis retro"}
+                }
             }
         }
         mon-narrow{
@@ -787,12 +1070,32 @@ ia{
                 "0"{"iste lun."}
                 "1"{"lun. proxime"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} lunedis"}
+                    other{"in {0} lun."}
+                }
+                past{
+                    one{"{0} lunedis retro"}
+                    other{"{0} lun. retro"}
+                }
+            }
         }
         mon-short{
             relative{
                 "-1"{"lun. passate"}
                 "0"{"iste lun."}
                 "1"{"lun. proxime"}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} lunedis"}
+                    other{"in {0} lun."}
+                }
+                past{
+                    one{"{0} lunedis retro"}
+                    other{"{0} lun. retro"}
+                }
             }
         }
         month{
@@ -802,12 +1105,42 @@ ia{
                 "0"{"iste mense"}
                 "1"{"le mense proxime"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} menses"}
+                    other{"in {0} menses"}
+                }
+                past{
+                    one{"{0} menses retro"}
+                    other{"{0} menses retro"}
+                }
+            }
         }
         month-narrow{
             dn{"m."}
+            relativeTime{
+                future{
+                    one{"in {0} menses"}
+                    other{"in {0} mns."}
+                }
+                past{
+                    one{"{0} menses retro"}
+                    other{"{0} mns. retro"}
+                }
+            }
         }
         month-short{
             dn{"mns."}
+            relativeTime{
+                future{
+                    one{"in {0} menses"}
+                    other{"in {0} mns."}
+                }
+                past{
+                    one{"{0} menses retro"}
+                    other{"{0} mns. retro"}
+                }
+            }
         }
         quarter{
             dn{"trimestre"}
@@ -816,18 +1149,58 @@ ia{
                 "0"{"iste trimestre"}
                 "1"{"le trimestre proxime"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} trimestres"}
+                    other{"in {0} trimestres"}
+                }
+                past{
+                    one{"in {0} trimestres"}
+                    other{"in {0} trimestres"}
+                }
+            }
         }
         quarter-narrow{
             dn{"t."}
+            relativeTime{
+                future{
+                    one{"in {0} trimestres"}
+                    other{"in {0} trim."}
+                }
+                past{
+                    one{"in {0} trimestres"}
+                    other{"{0} trim. retro"}
+                }
+            }
         }
         quarter-short{
             dn{"trim."}
+            relativeTime{
+                future{
+                    one{"in {0} trimestres"}
+                    other{"in {0} trim."}
+                }
+                past{
+                    one{"in {0} trimestres"}
+                    other{"{0} trim. retro"}
+                }
+            }
         }
         sat{
             relative{
                 "-1"{"sabbato passate"}
                 "0"{"iste sabbato"}
                 "1"{"sabbato proxime"}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} sabbatos"}
+                    other{"in {0} sabbatos"}
+                }
+                past{
+                    one{"{0} sabbatos retro"}
+                    other{"{0} sabbatos retro"}
+                }
             }
         }
         sat-narrow{
@@ -836,6 +1209,16 @@ ia{
                 "0"{"iste sab."}
                 "1"{"sab. proxime"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} sabbatos"}
+                    other{"in {0} sab."}
+                }
+                past{
+                    one{"{0} sabbatos retro"}
+                    other{"{0} sab. retro"}
+                }
+            }
         }
         sat-short{
             relative{
@@ -843,24 +1226,74 @@ ia{
                 "0"{"iste sab."}
                 "1"{"sab. proxime"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} sabbatos"}
+                    other{"in {0} sab."}
+                }
+                past{
+                    one{"{0} sabbatos retro"}
+                    other{"{0} sab. retro"}
+                }
+            }
         }
         second{
             dn{"secunda"}
             relative{
                 "0"{"ora"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} secundas"}
+                    other{"in {0} secundas"}
+                }
+                past{
+                    one{"{0} secundas retro"}
+                    other{"{0} secundas retro"}
+                }
+            }
         }
         second-narrow{
             dn{"s."}
+            relativeTime{
+                future{
+                    one{"in {0} secundas"}
+                    other{"in {0} sec."}
+                }
+                past{
+                    one{"{0} secundas retro"}
+                    other{"{0} sec. retro"}
+                }
+            }
         }
         second-short{
             dn{"sec."}
+            relativeTime{
+                future{
+                    one{"in {0} secundas"}
+                    other{"in {0} sec."}
+                }
+                past{
+                    one{"{0} secundas retro"}
+                    other{"{0} sec. retro"}
+                }
+            }
         }
         sun{
             relative{
                 "-1"{"dominica passate"}
                 "0"{"iste dominica"}
                 "1"{"dominica proxime"}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} dominicas"}
+                    other{"in {0} dominicas"}
+                }
+                past{
+                    one{"{0} dominicas retro"}
+                    other{"{0} dominicas retro"}
+                }
             }
         }
         sun-narrow{
@@ -869,12 +1302,32 @@ ia{
                 "0"{"iste dom."}
                 "1"{"dom. proxime"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} dominicas"}
+                    other{"in {0} dom."}
+                }
+                past{
+                    one{"{0} dominicas retro"}
+                    other{"{0} dom. retro"}
+                }
+            }
         }
         sun-short{
             relative{
                 "-1"{"dom. passate"}
                 "0"{"iste dom."}
                 "1"{"dom. proxime"}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} dominicas"}
+                    other{"in {0} dom."}
+                }
+                past{
+                    one{"{0} dominicas retro"}
+                    other{"{0} dom. retro"}
+                }
             }
         }
         thu{
@@ -883,12 +1336,32 @@ ia{
                 "0"{"iste jovedi"}
                 "1"{"jovedi proxime"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} jovedis"}
+                    other{"in {0} jovedis"}
+                }
+                past{
+                    one{"{0} jovedis retro"}
+                    other{"{0} jovedis retro"}
+                }
+            }
         }
         thu-narrow{
             relative{
                 "-1"{"jov. passate"}
                 "0"{"iste jov."}
                 "1"{"jov. proxime"}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} jovedis"}
+                    other{"in {0} jov."}
+                }
+                past{
+                    one{"{0} jovedis retro"}
+                    other{"{0} jov. retro"}
+                }
             }
         }
         thu-short{
@@ -897,12 +1370,32 @@ ia{
                 "0"{"iste jov."}
                 "1"{"jov. proxime"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} jovedis"}
+                    other{"in {0} jov."}
+                }
+                past{
+                    one{"{0} jovedis retro"}
+                    other{"{0} jov. retro"}
+                }
+            }
         }
         tue{
             relative{
                 "-1"{"martedi passate"}
                 "0"{"iste martedi"}
                 "1"{"martedi proxime"}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} martedis"}
+                    other{"in {0} martedis"}
+                }
+                past{
+                    one{"{0} martedis retro"}
+                    other{"{0} martedis retro"}
+                }
             }
         }
         tue-narrow{
@@ -911,12 +1404,32 @@ ia{
                 "0"{"iste mar."}
                 "1"{"mar. proxime"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} martedis"}
+                    other{"in {0} mar."}
+                }
+                past{
+                    one{"{0} martedis retro"}
+                    other{"{0} mar. retro"}
+                }
+            }
         }
         tue-short{
             relative{
                 "-1"{"mar. passate"}
                 "0"{"iste mar."}
                 "1"{"mar. proxime"}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} martedis"}
+                    other{"in {0} mar."}
+                }
+                past{
+                    one{"{0} martedis retro"}
+                    other{"{0} mar. retro"}
+                }
             }
         }
         wed{
@@ -925,6 +1438,16 @@ ia{
                 "0"{"iste mercuridi"}
                 "1"{"mercuridi proxime"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} mercuridis"}
+                    other{"in {0} mercuridis"}
+                }
+                past{
+                    one{"{0} mercuridis retro"}
+                    other{"{0} mercuridis retro"}
+                }
+            }
         }
         wed-narrow{
             relative{
@@ -932,12 +1455,32 @@ ia{
                 "0"{"iste mer."}
                 "1"{"mer. proxime"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} mercuridis"}
+                    other{"in {0} mer."}
+                }
+                past{
+                    one{"{0} mercuridis retro"}
+                    other{"{0} mer. retro"}
+                }
+            }
         }
         wed-short{
             relative{
                 "-1"{"mer. passate"}
                 "0"{"iste mer."}
                 "1"{"mer. proxime"}
+            }
+            relativeTime{
+                future{
+                    one{"in {0} mercuridis"}
+                    other{"in {0} mer."}
+                }
+                past{
+                    one{"{0} mercuridis retro"}
+                    other{"{0} mer. retro"}
+                }
             }
         }
         week{
@@ -948,14 +1491,44 @@ ia{
                 "1"{"le septimana proxime"}
             }
             relativePeriod{"le septimana de {0}"}
+            relativeTime{
+                future{
+                    one{"in {0} septimanas"}
+                    other{"in {0} septimanas"}
+                }
+                past{
+                    one{"{0} septimanas retro"}
+                    other{"{0} septimanas retro"}
+                }
+            }
         }
         week-narrow{
             dn{"s."}
             relativePeriod{"le sept. de {0}"}
+            relativeTime{
+                future{
+                    one{"in {0} septimanas"}
+                    other{"in {0} sept."}
+                }
+                past{
+                    one{"{0} septimanas retro"}
+                    other{"{0} sept. retro"}
+                }
+            }
         }
         week-short{
             dn{"sept."}
             relativePeriod{"le sept. de {0}"}
+            relativeTime{
+                future{
+                    one{"in {0} septimanas"}
+                    other{"in {0} sept."}
+                }
+                past{
+                    one{"{0} septimanas retro"}
+                    other{"{0} sept. retro"}
+                }
+            }
         }
         weekOfMonth{
             dn{"septimana del mense"}
@@ -991,12 +1564,42 @@ ia{
                 "0"{"iste anno"}
                 "1"{"le anno proxime"}
             }
+            relativeTime{
+                future{
+                    one{"in {0} annos"}
+                    other{"in {0} annos"}
+                }
+                past{
+                    one{"{0} annos retro"}
+                    other{"{0} annos retro"}
+                }
+            }
         }
         year-narrow{
             dn{"a."}
+            relativeTime{
+                future{
+                    one{"in {0} annos"}
+                    other{"in {0} an."}
+                }
+                past{
+                    one{"{0} annos retro"}
+                    other{"{0} an. retro"}
+                }
+            }
         }
         year-short{
             dn{"an."}
+            relativeTime{
+                future{
+                    one{"in {0} annos"}
+                    other{"in {0} an."}
+                }
+                past{
+                    one{"{0} annos retro"}
+                    other{"{0} an. retro"}
+                }
+            }
         }
         zone{
             dn{"fuso horari"}
