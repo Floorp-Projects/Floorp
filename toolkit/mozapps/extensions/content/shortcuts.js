@@ -20,6 +20,7 @@ const COLLAPSE_OPTIONS = {
 };
 
 let templatesLoaded = false;
+let shortcutKeyMap = new Map();
 const templates = {};
 
 function loadTemplates() {
@@ -155,14 +156,14 @@ function getShortcutValue(shortcut) {
 
 let error;
 
-function setError(input, messageId) {
+function setError(input, messageId, args) {
   if (!error) error = document.querySelector(".error-message");
 
   let {x, y, height} = input.getBoundingClientRect();
   error.style.top = `${y + window.scrollY + height - 5}px`;
   error.style.left = `${x}px`;
   document.l10n.setAttributes(
-    error.querySelector(".error-message-label"), messageId);
+    error.querySelector(".error-message-label"), messageId, args);
   error.style.visibility = "visible";
 }
 
@@ -200,6 +201,31 @@ function getShortcutForEvent(e) {
     .map(([key]) => key)
     .concat(getStringForEvent(e))
     .join("+");
+}
+
+function recordShortcut(shortcut, addonName) {
+  let addons = shortcutKeyMap.get(shortcut);
+  if (addons) {
+    addons.add(addonName);
+  } else {
+    shortcutKeyMap.set(shortcut, new Set([addonName]));
+  }
+}
+
+function removeShortcut(shortcut, addonName) {
+  let addons = shortcutKeyMap.get(shortcut);
+  if (addons) {
+    addons.delete(addonName);
+    if (addons.size === 0) {
+      shortcutKeyMap.delete(shortcut);
+    }
+  }
+}
+
+function getAddonName(shortcut) {
+  let addons = shortcutKeyMap.get(shortcut);
+  // Get the first addon name with given shortcut.
+  return addons.values().next().value;
 }
 
 function onShortcutChange(e) {
@@ -241,9 +267,21 @@ function onShortcutChange(e) {
         break;
       }
 
-      // Update the shortcut if it isn't reserved.
       let addonId = input.closest(".card").getAttribute("addon-id");
       let extension = extensionForAddonId(addonId);
+
+      // Check if shortcut is already assigned.
+      if (shortcutKeyMap.has(shortcutString)) {
+        setError(input, "shortcuts-exists", {addon: getAddonName(shortcutString)});
+        break;
+      } else {
+        // Update the shortcut if it isn't reserved or assigned.
+        let oldShortcut = input.getAttribute("shortcut");
+        let addonName = input.closest(".card").getAttribute("addon-name");
+
+        removeShortcut(oldShortcut, addonName);
+        recordShortcut(shortcutString, addonName);
+      }
 
       // This is async, but we're not awaiting it to keep the handler sync.
       extension.shortcuts.updateCommand({
@@ -295,6 +333,7 @@ async function renderAddons(addons) {
         templates.card.content, true).firstElementChild;
       let icon = AddonManager.getPreferredIconURL(addon, 24, window);
       card.setAttribute("addon-id", addon.id);
+      card.setAttribute("addon-name", addon.name);
       card.querySelector(".addon-icon").src = icon || FALLBACK_ICON;
       card.querySelector(".addon-name").textContent = addon.name;
 
@@ -344,6 +383,7 @@ async function renderAddons(addons) {
         }
 
         card.appendChild(row);
+        recordShortcut(command.shortcut, addon.name);
       }
 
       // Add an expand button, if needed.

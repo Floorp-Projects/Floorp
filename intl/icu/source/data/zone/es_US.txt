@@ -2,10 +2,40 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_US{
     %%Parent{"es_419"}
-    Version{"2.1.43.65"}
+    Version{"2.1.47.86"}
     zoneStrings{
+        "Africa:Accra"{
+            ec{"Acra"}
+        }
+        "America:Fort_Nelson"{
+            ec{"Fort Nelson"}
+        }
+        "America:Nassau"{
+            ec{"Nassau"}
+        }
+        "America:Sao_Paulo"{
+            ec{"São Paulo"}
+        }
+        "America:St_Thomas"{
+            ec{"St. Thomas"}
+        }
+        "Asia:Barnaul"{
+            ec{"Barnaul"}
+        }
+        "Asia:Dushanbe"{
+            ec{"Dusambé"}
+        }
         "Etc:UTC"{
             ls{"hora universal coordinada"}
+        }
+        "Europe:Astrakhan"{
+            ec{"Astrakhan"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirov"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"Ulyanovsk"}
         }
         "Pacific:Honolulu"{
             sd{"HDT"}
@@ -42,12 +72,6 @@ es_US{
         }
         "meta:Apia"{
             ld{"hora de verano de Apia"}
-            lg{"hora de Apia"}
-            ls{"hora estándar de Apia"}
-        }
-        "meta:Argentina_Western"{
-            lg{"hora de Argentina occidental"}
-            ls{"hora estándar de Argentina occidental"}
         }
         "meta:Atlantic"{
             sd{"ADT"}

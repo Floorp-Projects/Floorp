@@ -9,12 +9,13 @@ en_FI{
                 percentFormat{"#,##0 %"}
             }
             symbols{
+                decimal{","}
                 group{" "}
                 timeSeparator{"."}
             }
         }
     }
-    Version{"2.1.38.69"}
+    Version{"2.1.47.69"}
     calendar{
         generic{
             availableFormats{

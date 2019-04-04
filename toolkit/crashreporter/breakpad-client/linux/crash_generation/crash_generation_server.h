@@ -46,11 +46,11 @@ public:
   // than that which creates the CrashGenerationServer.  They must
   // be thread safe.
   typedef void (*OnClientDumpRequestCallback)(void* context,
-                                              const ClientInfo* client_info,
-                                              const string* file_path);
+                                              const ClientInfo& client_info,
+                                              const string& file_path);
 
   typedef void (*OnClientExitingCallback)(void* context,
-                                          const ClientInfo* client_info);
+                                          const ClientInfo& client_info);
 
   // Create an instance with the given parameters.
   //

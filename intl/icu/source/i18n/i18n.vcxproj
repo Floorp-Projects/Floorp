@@ -1,18 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <!-- The following import will include the 'default' configuration options for VS projects. -->
-  <Import Project="..\allinone\Build.Windows.ProjectConfiguration.props" />
-  <!-- The following import will include the library configuration options for VS projects. -->
-  <Import Project="..\allinone\Build.Windows.Library.ProjectConfiguration.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0178B127-6269-407D-B112-93877BB62776}</ProjectGuid>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <!-- The following import will include the 'default' configuration options for VS projects. -->
+  <Import Project="..\allinone\Build.Windows.ProjectConfiguration.props" />
+  <!-- The following import will include the library configuration options for VS projects. -->
+  <Import Project="..\allinone\Build.Windows.Library.ProjectConfiguration.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -95,7 +95,7 @@
       <ProgramDataBaseFileName>.\x86\Release/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin\icuin63.dll</OutputFile>
+      <OutputFile>..\..\bin\icuin64.dll</OutputFile>
       <AdditionalLibraryDirectories>.\..\..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\..\..\lib\icuin.pdb</ProgramDatabaseFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -117,7 +117,7 @@
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin\icuin63d.dll</OutputFile>
+      <OutputFile>..\..\bin\icuin64d.dll</OutputFile>
       <AdditionalLibraryDirectories>.\..\..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\..\..\lib\icuind.pdb</ProgramDatabaseFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -137,7 +137,7 @@
       <ProgramDataBaseFileName>.\x64\Release/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64\icuin63.dll</OutputFile>
+      <OutputFile>..\..\bin64\icuin64.dll</OutputFile>
       <AdditionalLibraryDirectories>.\..\..\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\..\..\lib64\icuin.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64\icuin.lib</ImportLibrary>
@@ -155,7 +155,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64\icuin63d.dll</OutputFile>
+      <OutputFile>..\..\bin64\icuin64d.dll</OutputFile>
       <AdditionalLibraryDirectories>.\..\..\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\..\..\lib64\icuind.pdb</ProgramDatabaseFile>
       <ImportLibrary>..\..\lib64\icuind.lib</ImportLibrary>
@@ -238,6 +238,9 @@
     <ClCompile Include="fmtable.cpp" />
     <ClCompile Include="fmtable_cnv.cpp" />
     <ClCompile Include="format.cpp" />
+    <ClCompile Include="formattedval_iterimpl.cpp" />
+    <ClCompile Include="formattedval_sbimpl.cpp" />
+    <ClCompile Include="formattedvalue.cpp" />
     <ClCompile Include="fphdlimp.cpp" />
     <ClCompile Include="fpositer.cpp" />
     <ClCompile Include="gender.cpp" />
@@ -269,6 +272,7 @@
     <ClCompile Include="number_longnames.cpp" />
     <ClCompile Include="number_modifiers.cpp" />
     <ClCompile Include="number_notation.cpp" />
+    <ClCompile Include="number_output.cpp" />
     <ClCompile Include="number_padding.cpp" />
     <ClCompile Include="number_patternmodifier.cpp" />
     <ClCompile Include="number_patternstring.cpp" />
@@ -557,6 +561,7 @@
     <ClInclude Include="numparse_types.h" />
     <ClInclude Include="numparse_utils.h" />
     <ClInclude Include="numrange_impl.h" />
+    <ClInclude Include="formattedval_impl.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="i18n.rc" />

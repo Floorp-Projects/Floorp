@@ -1,8 +1,20 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 kea{
-    Version{"2.1.43.65"}
+    Version{"2.1.48.9"}
     zoneStrings{
+        "America:Blanc-Sablon"{
+            ec{"Blank-Sablon"}
+        }
+        "America:Indianapolis"{
+            ec{"Indianapolis"}
+        }
+        "Atlantic:Bermuda"{
+            ec{"Bermuda"}
+        }
+        "Etc:Unknown"{
+            ec{"Sidadi Diskonxedu"}
+        }
         "meta:Africa_Central"{
             ls{"Ora di Afrika Sentral"}
         }

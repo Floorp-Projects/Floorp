@@ -7,14 +7,29 @@ en_AU{
         latn{
             symbols{
                 exponential{"e"}
-                timeSeparator{"."}
             }
         }
     }
-    Version{"2.1.44.18"}
+    Version{"2.1.48.43"}
     calendar{
         chinese{
             monthNames{
+                format{
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                        "5",
+                        "6",
+                        "7",
+                        "8",
+                        "9",
+                        "10",
+                        "11",
+                        "12",
+                    }
+                }
                 stand-alone{
                     abbreviated{
                         "Mo1",
@@ -171,6 +186,24 @@ en_AU{
                     }
                 }
             }
+            monthNames{
+                stand-alone{
+                    abbreviated{
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "May",
+                        "Jun",
+                        "Jul",
+                        "Aug",
+                        "Sep",
+                        "Oct",
+                        "Nov",
+                        "Dec",
+                    }
+                }
+            }
         }
         islamic{
             availableFormats{
@@ -198,6 +231,13 @@ en_AU{
                 "1"{"tomorrow"}
             }
         }
+        day-narrow{
+            relativeTime{
+                future{
+                    other{"in {0} days"}
+                }
+            }
+        }
         fri-short{
             relativeTime{
                 future{
@@ -214,11 +254,9 @@ en_AU{
             dn{"h"}
             relativeTime{
                 future{
-                    one{"in {0} hr"}
                     other{"in {0} hrs"}
                 }
                 past{
-                    one{"{0} hr ago"}
                     other{"{0} hrs ago"}
                 }
             }
@@ -227,11 +265,9 @@ en_AU{
             dn{"h"}
             relativeTime{
                 future{
-                    one{"in {0} hr"}
                     other{"in {0} hrs"}
                 }
                 past{
-                    one{"{0} hr ago"}
                     other{"{0} hrs ago"}
                 }
             }
@@ -303,7 +339,6 @@ en_AU{
         quarter-narrow{
             relativeTime{
                 future{
-                    one{"in {0} qtr"}
                     other{"in {0} qtrs"}
                 }
                 past{
@@ -315,7 +350,6 @@ en_AU{
         quarter-short{
             relativeTime{
                 future{
-                    one{"in {0} qtr"}
                     other{"in {0} qtrs"}
                 }
                 past{
@@ -398,6 +432,13 @@ en_AU{
                 }
             }
         }
+        wed-narrow{
+            relativeTime{
+                past{
+                    one{"{0} W ago"}
+                }
+            }
+        }
         wed-short{
             relativeTime{
                 future{
@@ -413,11 +454,9 @@ en_AU{
         week-narrow{
             relativeTime{
                 future{
-                    one{"in {0} wk"}
                     other{"in {0} wks"}
                 }
                 past{
-                    one{"{0} wk ago"}
                     other{"{0} wks ago"}
                 }
             }
@@ -425,11 +464,9 @@ en_AU{
         week-short{
             relativeTime{
                 future{
-                    one{"in {0} wk"}
                     other{"in {0} wks"}
                 }
                 past{
-                    one{"{0} wk ago"}
                     other{"{0} wks ago"}
                 }
             }
@@ -443,11 +480,9 @@ en_AU{
         year-narrow{
             relativeTime{
                 future{
-                    one{"in {0} yr"}
                     other{"in {0} yrs"}
                 }
                 past{
-                    one{"{0} yr ago"}
                     other{"{0} yrs ago"}
                 }
             }
@@ -455,11 +490,9 @@ en_AU{
         year-short{
             relativeTime{
                 future{
-                    one{"in {0} yr"}
                     other{"in {0} yrs"}
                 }
                 past{
-                    one{"{0} yr ago"}
                     other{"{0} yrs ago"}
                 }
             }

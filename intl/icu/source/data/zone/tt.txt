@@ -1,10 +1,13 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 tt{
-    Version{"2.1.44.88"}
+    Version{"2.1.47.85"}
     zoneStrings{
         "Etc:UTC"{
             ls{"Бөтендөнья килештерелгән вакыты"}
+        }
+        "Etc:Unknown"{
+            ec{"билгесез шәһәр"}
         }
         "meta:America_Central"{
             ld{"Төньяк Америка җәйге үзәк вакыты"}

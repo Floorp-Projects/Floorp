@@ -23,6 +23,10 @@ en_IN{
                         one{"¤0L"}
                         other{"¤0L"}
                     }
+                    1000000{
+                        one{"¤00L"}
+                        other{"¤00L"}
+                    }
                     10000000{
                         one{"¤0Cr"}
                         other{"¤0Cr"}
@@ -30,6 +34,10 @@ en_IN{
                     100000000{
                         one{"¤00Cr"}
                         other{"¤00Cr"}
+                    }
+                    1000000000{
+                        one{"¤000Cr"}
+                        other{"¤000Cr"}
                     }
                     10000000000{
                         one{"¤0TCr"}
@@ -39,11 +47,23 @@ en_IN{
                         one{"¤00TCr"}
                         other{"¤00TCr"}
                     }
+                    1000000000000{
+                        one{"¤0LCr"}
+                        other{"¤0LCr"}
+                    }
+                    10000000000000{
+                        one{"¤00LCr"}
+                        other{"¤00LCr"}
+                    }
+                    100000000000000{
+                        one{"¤000LCr"}
+                        other{"¤000LCr"}
+                    }
                 }
             }
         }
     }
-    Version{"2.1.44.18"}
+    Version{"2.1.49.14"}
     calendar{
         generic{
             DateTimePatterns{
@@ -173,22 +193,34 @@ en_IN{
                 yyyyMMMd{"d MMM, y G"}
                 yyyyMd{"d/M/y G"}
             }
+            monthNames{
+                stand-alone{
+                    wide{
+                        "Muharram",
+                        "Safar",
+                        "Rabiʻ I",
+                        "Rabiʻ II",
+                        "Jumada I",
+                        "Jumada II",
+                        "Rajab",
+                        "Shaʻban",
+                        "Ramadan",
+                        "Shawwal",
+                        "Dhuʻl-Qiʻdah",
+                        "Dhuʻl-Hijjah",
+                    }
+                }
+            }
         }
     }
     fields{
         dayperiod{
             dn{"AM/PM"}
         }
-        wed-short{
-            relativeTime{
-                future{
-                    other{"in {0} Wed."}
-                }
-                past{
-                    one{"{0} Wed. ago"}
-                    other{"{0} Wed. ago"}
-                }
-            }
+    }
+    listPattern{
+        standard-narrow{
+            end{"{0}, and {1}"}
         }
     }
 }

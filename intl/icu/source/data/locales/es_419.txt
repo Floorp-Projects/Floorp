@@ -6,6 +6,7 @@ es_419{
             patterns{
                 accountingFormat{"¤#,##0.00"}
                 currencyFormat{"¤#,##0.00"}
+                decimalFormat{"#,##0.###"}
             }
             patternsLong{
                 decimalFormat{
@@ -104,10 +105,12 @@ es_419{
             symbols{
                 decimal{"."}
                 group{","}
+                minusSign{"-"}
+                plusSign{"+"}
             }
         }
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.47.86"}
     calendar{
         coptic{
             monthNames{
@@ -207,6 +210,26 @@ es_419{
                 yyyyQQQ{"QQQ 'de' y G"}
             }
             intervalFormats{
+                Gy{
+                    y{"y–y G"}
+                }
+                GyM{
+                    G{"MM/y GGGGG – MM/y GGGGG"}
+                    M{"MM/y – MM/y GGGGG"}
+                    y{"MM/y – MM/y GGGGG"}
+                }
+                GyMEd{
+                    G{"E dd/MM/y GGGGG – E dd/MM/y GGGGG"}
+                    M{"E dd/MM/y – E dd/MM/y GGGGG"}
+                    d{"E dd/MM/y – E dd/MM/y GGGGG"}
+                    y{"E dd/MM/y – E dd/MM/y GGGGG"}
+                }
+                GyMd{
+                    G{"dd/MM/y GGGGG – dd/MM/y GGGGG"}
+                    M{"dd/MM/y – dd/MM/y GGGGG"}
+                    d{"dd/MM/y – dd/MM/y GGGGG"}
+                    y{"dd/MM/y – dd/MM/y GGGGG"}
+                }
                 MEd{
                     M{"E, d/M–E, d/M"}
                     d{"E, d/M–E, d/M"}
@@ -271,10 +294,6 @@ es_419{
                 yMMMEd{"E, d 'de' MMM 'de' y"}
                 yMMMd{"d 'de' MMMM 'de' y"}
                 yQQQ{"QQQ 'de' y"}
-                yw{
-                    one{"'semana' w 'de' Y"}
-                    other{"'semana' w 'de' Y"}
-                }
             }
             dayNames{
                 format{
@@ -301,6 +320,11 @@ es_419{
                 }
             }
             dayPeriod{
+                format{
+                    wide{
+                        noon{"del mediodía"}
+                    }
+                }
                 stand-alone{
                     abbreviated{
                         am{"a.m."}
@@ -312,11 +336,40 @@ es_419{
                     }
                     wide{
                         am{"a.m."}
+                        morning1{"madrugada"}
                         pm{"p.m."}
                     }
                 }
             }
             intervalFormats{
+                GyM{
+                    G{"MM/y GGGGG – MM/y GGGGG"}
+                    M{"MM/y – MM/y GGGGG"}
+                    y{"MM/y – MM/y GGGGG"}
+                }
+                GyMEd{
+                    G{"E, dd/MM/y GGGGG – E, dd/MM/y GGGGG"}
+                    M{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                    d{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                    y{"E, dd/MM/y – E, dd/MM/y GGGGG"}
+                }
+                GyMMMEd{
+                    G{"E d MMM 'de' y G – E d MMM 'de' y G"}
+                    M{"E d MMM – E d MMM 'de' y G"}
+                    d{"E d MMM – E d MMM 'de' y G"}
+                    y{"E d MMM 'de' y – E d MMM 'de' y G"}
+                }
+                GyMMMd{
+                    G{"d MMM 'de' y G – d MMM 'de' y G"}
+                    M{"d MMM – d MMM 'de' y G"}
+                    d{"d–d MMM 'de' y G"}
+                    y{"d MMM 'de' y – d MMM 'de' y G"}
+                }
+                GyMd{
+                    G{"dd/MM/y GGGGG – dd/MM/y GGGGG"}
+                    M{"dd/MM/y – dd/MM/y GGGGG"}
+                    d{"dd/MM/y – dd/MM/y GGGGG"}
+                }
                 MEd{
                     M{"E, d/M–E, d/M"}
                     d{"E, d/M–E, d/M"}
@@ -462,8 +515,8 @@ es_419{
                         "Iyar",
                         "Sivan",
                         "Tamuz",
-                        "Av",
-                        "Elul",
+                        "av",
+                        "elul",
                         "Adar II",
                     }
                     wide{
@@ -657,6 +710,8 @@ es_419{
         dingbats{"Símbolos y viñetas"}
         downwards_upwards_arrows{"Flechas hacia arriba y hacia abajo"}
         european_scripts{"Símbolos de escritura de Europa"}
+        female{"femenino"}
+        flag{"bandera"}
         flags{"banderas"}
         format{"Formato"}
         format_whitespace{"formato y espacio duro"}
@@ -667,9 +722,11 @@ es_419{
         han_radicals{"Radicales Han"}
         hanzi_simplified{"Hanzi (simplificado)"}
         hanzi_traditional{"Hanzi (tradicional)"}
+        heart{"corazón"}
         historic_scripts{"Símbolos de escritura históricos"}
         ideographic_desc_characters{"Caracteres descriptivos ideográficos"}
         japanese_kana{"Kana japonés"}
+        keycap{"tecla mayus"}
         leftwards_rightwards_arrows{"Flechas hacia la derecha y hacia la izquierda"}
         letterlike_symbols{"símbolos con letras"}
         limited_use{"uso limitado"}
@@ -711,19 +768,8 @@ es_419{
         day{
             relative{
                 "-1"{"ayer"}
-                "-2"{"anteayer"}
                 "0"{"hoy"}
                 "1"{"mañana"}
-                "2"{"pasado mañana"}
-            }
-        }
-        day-narrow{
-            relative{
-                "2"{"pasado mañana"}
-            }
-        }
-        day-short{
-            relative{
                 "2"{"pasado mañana"}
             }
         }
@@ -814,7 +860,6 @@ es_419{
             relativeTime{
                 future{
                     one{"en {0} SA"}
-                    other{"dentro de {0} SA"}
                 }
                 past{
                     one{"hace {0} sábados"}
@@ -898,8 +943,19 @@ es_419{
                 }
             }
         }
+        week{
+            relative{
+                "-1"{"la semana pasada"}
+                "0"{"esta semana"}
+            }
+        }
         week-narrow{
             relativePeriod{"la semana del {0}"}
+            relativeTime{
+                past{
+                    one{"hace {0} sem."}
+                }
+            }
         }
         week-short{
             relativePeriod{"la semana del {0}"}
@@ -919,13 +975,7 @@ es_419{
         weekdayOfMonth-short{
             dn{"día hábil del mes"}
         }
-        year-narrow{
-            relative{
-                "-1"{"el año pasado"}
-                "0"{"este año"}
-            }
-        }
-        year-short{
+        year{
             relative{
                 "-1"{"el año pasado"}
                 "0"{"este año"}

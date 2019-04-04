@@ -44,6 +44,7 @@
 #include "nsTableWrapperFrame.h"
 #include "nsView.h"
 #include "nsViewManager.h"
+#include "nsIPresShellInlines.h"
 #include "nsIScrollableFrame.h"
 #include "nsPresContext.h"
 #include "nsPresContextInlines.h"
@@ -2218,10 +2219,11 @@ Color nsDisplaySelectionOverlay::ComputeColorFromSelectionStyle(
 
 Color nsDisplaySelectionOverlay::ComputeColor() const {
   LookAndFeel::ColorID colorID;
+  if (RefPtr<ComputedStyle> style =
+          mFrame->ComputeSelectionStyle(mSelectionValue)) {
+    return ComputeColorFromSelectionStyle(*style);
+  }
   if (mSelectionValue == nsISelectionController::SELECTION_ON) {
-    if (RefPtr<ComputedStyle> style = mFrame->ComputeSelectionStyle()) {
-      return ComputeColorFromSelectionStyle(*style);
-    }
     colorID = LookAndFeel::eColorID_TextSelectBackground;
   } else if (mSelectionValue == nsISelectionController::SELECTION_ATTENTION) {
     colorID = LookAndFeel::eColorID_TextSelectBackgroundAttention;
@@ -2273,7 +2275,13 @@ static Element* FindElementAncestorForMozSelection(nsIContent* aContent) {
   return aContent ? aContent->AsElement() : nullptr;
 }
 
-already_AddRefed<ComputedStyle> nsIFrame::ComputeSelectionStyle() const {
+already_AddRefed<ComputedStyle> nsIFrame::ComputeSelectionStyle(
+    int16_t aSelectionStatus) const {
+  // Just bail out if not a selection-status that ::selection applies to.
+  if (aSelectionStatus != nsISelectionController::SELECTION_ON &&
+      aSelectionStatus != nsISelectionController::SELECTION_DISABLED) {
+    return nullptr;
+  }
   Element* element = FindElementAncestorForMozSelection(GetContent());
   if (!element) {
     return nullptr;

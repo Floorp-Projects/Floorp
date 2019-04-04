@@ -7,14 +7,12 @@
     <ClCompile>
       <!-- ICU does not use exceptions in library code. -->
       <PreprocessorDefinitions>
+        $(DefineConstants);
         _HAS_EXCEPTIONS=0;
         %(PreprocessorDefinitions)
       </PreprocessorDefinitions>
     </ClCompile>
   </ItemDefinitionGroup>
-  <PropertyGroup>
-    <!-- Disable MSBuild warning about Linker OutputFile. -->
-    <!-- Ex: MSBuild complains that the common project creates "icuuc62.dll" rather than "common.dll". However, this is intentional. -->
-    <MSBuildWarningsAsMessages>MSB8012</MSBuildWarningsAsMessages>
-  </PropertyGroup>
+  <!-- The following import will set various settings for compiler Warnings and Errors. -->
+  <Import Project="Build.Windows.Library.WarningSettings.ProjectConfiguration.props" />
 </Project>

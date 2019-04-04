@@ -62,7 +62,7 @@ se_FI{
             }
         }
     }
-    Version{"2.1.44.88"}
+    Version{"2.1.47.83"}
     calendar{
         generic{
             DateTimePatterns{
@@ -196,9 +196,9 @@ se_FI{
                 MEd{"E d.M"}
                 MMMEd{"E d MMM"}
                 MMMMW{
-                    one{"MMMM':a vahkku' W"}
-                    other{"MMMM':a vahkku' W"}
-                    two{"MMMM':a vahkku' W"}
+                    one{"MMMM:'a' 'vahkku' W"}
+                    other{"MMMM:'a' 'vahkku' W"}
+                    two{"MMMM:'a' 'vahkku' W"}
                 }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}

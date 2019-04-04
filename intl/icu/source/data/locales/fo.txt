@@ -210,7 +210,7 @@ fo{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.41.34"}
+    Version{"2.1.48.9"}
     calendar{
         generic{
             DateTimePatterns{
@@ -432,8 +432,8 @@ fo{
                 MMM{"LLL"}
                 MMMEd{"E d. MMM"}
                 MMMMW{
-                    one{"W. 'vika' 'í' MMM"}
-                    other{"W. 'vika' 'í' MMM"}
+                    one{"W. 'vika' 'í' MMMM"}
+                    other{"W. 'vika' 'í' MMMM"}
                 }
                 MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}

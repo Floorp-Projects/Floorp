@@ -99,6 +99,10 @@ en_AU{
             "UYU",
             "Peso Uruguayo",
         }
+        VES{
+            "VES",
+            "VES",
+        }
         VND{
             "VND",
             "Vietnamese Dong",
@@ -202,6 +206,10 @@ en_AU{
             one{"Venezuelan bolívar"}
             other{"Venezuelan bolívars"}
         }
+        VES{
+            one{"VES"}
+            other{"VES"}
+        }
         VND{
             one{"Vietnamese dong"}
             other{"Vietnamese dongs"}
@@ -210,6 +218,9 @@ en_AU{
             one{"Samoan tala"}
             other{"Samoan talas"}
         }
+        XXX{
+            other{"(unknown currency)"}
+        }
     }
-    Version{"2.1.44.18"}
+    Version{"2.1.48.43"}
 }

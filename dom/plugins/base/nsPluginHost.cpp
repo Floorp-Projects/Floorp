@@ -87,7 +87,6 @@
 #include "nsPluginManifestLineReader.h"
 
 #include "nsIWeakReferenceUtils.h"
-#include "nsIPresShell.h"
 #include "nsPluginNativeWindow.h"
 #include "nsIContentPolicy.h"
 #include "nsContentPolicyUtils.h"

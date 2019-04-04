@@ -98,7 +98,7 @@ smn{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.38.69"}
+    Version{"2.1.47.82"}
     calendar{
         generic{
             DateTimePatterns{
@@ -259,9 +259,9 @@ smn{
                 MMM{"LLL"}
                 MMMEd{"E, MMM d."}
                 MMMMW{
-                    one{"'okko' W, MMM"}
-                    other{"'okko' W, MMM"}
-                    two{"'okko' W, MMM"}
+                    one{"'okko' W, MMMM"}
+                    other{"'okko' W, MMMM"}
+                    two{"'okko' W, MMMM"}
                 }
                 MMMMd{"MMMM d."}
                 MMMd{"MMM d."}

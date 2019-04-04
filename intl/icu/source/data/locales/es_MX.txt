@@ -92,7 +92,7 @@ es_MX{
             }
         }
     }
-    Version{"2.1.44.5"}
+    Version{"2.1.47.96"}
     calendar{
         generic{
             DateTimePatterns{
@@ -115,7 +115,7 @@ es_MX{
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 MMMEd{"E d MMM"}
-                MMMMd{"d 'de' MMM"}
+                MMMMd{"d 'de' MMMM"}
                 MMMd{"d MMM"}
                 h{"hh a"}
                 hm{"hh:mm a"}
@@ -150,12 +150,12 @@ es_MX{
         }
         gregorian{
             AmPmMarkers{
-                "a. m.",
-                "p. m.",
+                "a. m.",
+                "p. m.",
             }
             AmPmMarkersAbbr{
-                "a. m.",
-                "p. m.",
+                "a. m.",
+                "p. m.",
             }
             DateTimePatterns{
                 "H:mm:ss zzzz",
@@ -202,15 +202,6 @@ es_MX{
                         "V",
                         "S",
                     }
-                    short{
-                        "do",
-                        "lu",
-                        "ma",
-                        "mi",
-                        "ju",
-                        "vi",
-                        "sá",
-                    }
                 }
             }
             dayPeriod{
@@ -225,20 +216,37 @@ es_MX{
                 }
                 stand-alone{
                     abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
+                        am{"a. m."}
+                        pm{"p. m."}
                     }
                     narrow{
-                        am{"a. m."}
-                        pm{"p. m."}
+                        am{"a. m."}
+                        pm{"p. m."}
                     }
                     wide{
-                        am{"a. m."}
-                        pm{"p. m."}
+                        am{"a. m."}
+                        pm{"p. m."}
                     }
                 }
             }
             intervalFormats{
+                GyMMM{
+                    G{"MMM 'de' y G – MMM 'de' y G"}
+                    M{"MMM–MMM 'de' y G"}
+                    y{"MMM 'de' y – MMM 'de' y G"}
+                }
+                GyMMMEd{
+                    G{"E d 'de' MMM 'de' y G – E d 'de' MMM 'de' y G"}
+                    M{"E d 'de' MMM – E d 'de' MMM 'de' y G"}
+                    d{"E d 'de' MMM – E d 'de' MMM 'de' y G"}
+                    y{"E d 'de' MMM 'de' y – E d 'de' MMM 'de' y G"}
+                }
+                GyMMMd{
+                    G{"d 'de' MMM 'de' y G – d 'de' MMM 'de' y G"}
+                    M{"d 'de' MMM – d 'de' MMM 'de' y G"}
+                    d{"d–d 'de' MMM 'de' y G"}
+                    y{"d 'de' MMM 'de' y – d 'de' MMM 'de' y G"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -310,24 +318,6 @@ es_MX{
                     M{"d/M/y – d/M/y"}
                     d{"d/M/y – d/M/y"}
                     y{"d/M/y – d/M/y"}
-                }
-            }
-            monthNames{
-                format{
-                    abbreviated{
-                        "ene",
-                        "feb",
-                        "mar",
-                        "abr",
-                        "may",
-                        "jun",
-                        "jul",
-                        "ago",
-                        "sep",
-                        "oct",
-                        "nov",
-                        "dic",
-                    }
                 }
             }
             quarters{
@@ -429,13 +419,13 @@ es_MX{
             dn{"día del a"}
         }
         dayperiod{
-            dn{"a. m./p. m."}
+            dn{"a. m./p. m."}
         }
         dayperiod-narrow{
-            dn{"a. m./p. m."}
+            dn{"a. m./p. m."}
         }
         dayperiod-short{
-            dn{"a. m./p. m."}
+            dn{"a. m./p. m."}
         }
         fri{
             relative{

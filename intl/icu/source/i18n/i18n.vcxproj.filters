@@ -156,6 +156,15 @@
     <ClCompile Include="format.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
+    <ClCompile Include="formattedval_iterimpl.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="formattedval_sbimpl.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
+    <ClCompile Include="formattedvalue.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
     <ClCompile Include="fphdlimp.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
@@ -558,6 +567,9 @@
     <ClCompile Include="number_notation.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
+    <ClCompile Include="number_output.cpp">
+      <Filter>formatting</Filter>
+    </ClCompile>
     <ClCompile Include="number_padding.cpp">
       <Filter>formatting</Filter>
     </ClCompile>
@@ -786,6 +798,9 @@
       <Filter>formatting</Filter>
     </ClInclude>
     <ClInclude Include="ethpccal.h">
+      <Filter>formatting</Filter>
+    </ClInclude>
+    <ClInclude Include="formattedval_impl.h">
       <Filter>formatting</Filter>
     </ClInclude>
     <ClInclude Include="fphdlimp.h">

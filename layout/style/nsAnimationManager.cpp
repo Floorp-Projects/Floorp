@@ -26,8 +26,6 @@
 #include "nsIFrame.h"
 #include "mozilla/dom/Document.h"
 #include "nsDOMMutationObserver.h"
-#include "nsIPresShell.h"
-#include "nsIPresShellInlines.h"
 #include "nsRFPService.h"
 #include <algorithm>  // std::stable_sort
 #include <math.h>

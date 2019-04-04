@@ -100,6 +100,8 @@
 		<include locales="ccp_IN"/>
 		<include locales="ce"/>
 		<include locales="ce_RU"/>
+		<include locales="ceb"/>
+		<include locales="ceb_PH"/>
 		<include locales="cgg"/>
 		<include locales="cgg_UG"/>
 		<include locales="chr"/>
@@ -145,6 +147,7 @@
 		<include locales="en"/>
 		<include locales="en_001"/>
 		<include locales="en_150"/>
+		<include locales="en_AE"/>
 		<include locales="en_AG"/>
 		<include locales="en_AI"/>
 		<include locales="en_AS"/>
@@ -250,6 +253,7 @@
 		<include locales="en_ZM"/>
 		<include locales="en_ZW"/>
 		<include locales="eo"/>
+		<include locales="eo_001"/>
 		<include locales="es"/>
 		<include locales="es_003"/>
 		<include locales="es_419"/>
@@ -292,6 +296,19 @@
 		<include locales="ff"/>
 		<include locales="ff_CM"/>
 		<include locales="ff_GN"/>
+		<include locales="ff_Latn"/>
+		<include locales="ff_Latn_BF"/>
+		<include locales="ff_Latn_CM"/>
+		<include locales="ff_Latn_GH"/>
+		<include locales="ff_Latn_GM"/>
+		<include locales="ff_Latn_GN"/>
+		<include locales="ff_Latn_GW"/>
+		<include locales="ff_Latn_LR"/>
+		<include locales="ff_Latn_MR"/>
+		<include locales="ff_Latn_NE"/>
+		<include locales="ff_Latn_NG"/>
+		<include locales="ff_Latn_SL"/>
+		<include locales="ff_Latn_SN"/>
 		<include locales="ff_MR"/>
 		<include locales="ff_SN"/>
 		<include locales="fi"/>
@@ -575,6 +592,7 @@
 		<include locales="pl_PL"/>
 		<include locales="ps"/>
 		<include locales="ps_AF"/>
+		<include locales="ps_PK"/>
 		<include locales="pt"/>
 		<include locales="pt_AO"/>
 		<include locales="pt_BR"/>
@@ -763,10 +781,10 @@
 		<include locales="yo_BJ"/>
 		<include locales="yo_NG"/>
 		<include locales="yue"/>
- 		<include locales="yue_Hans"/>
- 		<include locales="yue_Hans_CN"/>
- 		<include locales="yue_Hant"/>
- 		<include locales="yue_Hant_HK"/>
+		<include locales="yue_Hans"/>
+		<include locales="yue_Hans_CN"/>
+		<include locales="yue_Hant"/>
+		<include locales="yue_Hant_HK"/>
 		<include locales="zgh"/>
 		<include locales="zgh_MA"/>
 		<include locales="zh"/>

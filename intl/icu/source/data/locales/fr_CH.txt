@@ -4,7 +4,7 @@ fr_CH{
     NumberElements{
         latn{
             patterns{
-                currencyFormat{"#,##0.00 ¤;-#,##0.00 ¤"}
+                currencyFormat{"#,##0.00 ¤"}
                 percentFormat{"#,##0%"}
             }
             symbols{
@@ -12,7 +12,7 @@ fr_CH{
             }
         }
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.48.88"}
     calendar{
         generic{
             DateTimePatterns{

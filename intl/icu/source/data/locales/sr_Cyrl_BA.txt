@@ -1,7 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 sr_Cyrl_BA{
-    Version{"2.1.44.88"}
+    Version{"2.1.47.86"}
     calendar{
         generic{
             intervalFormats{
@@ -25,9 +25,9 @@ sr_Cyrl_BA{
             }
             availableFormats{
                 MMMMW{
-                    few{"W. 'сједмица' 'у' MMM"}
-                    one{"W. 'сједмица' 'у' MMM"}
-                    other{"W. 'сједмица' 'у' MMM"}
+                    few{"W. 'сједмица' 'у' MMMM"}
+                    one{"W. 'сједмица' 'у' MMMM"}
+                    other{"W. 'сједмица' 'у' MMMM"}
                 }
                 yw{
                     few{"w. 'сједмица' 'у' Y."}
@@ -82,24 +82,18 @@ sr_Cyrl_BA{
                     abbreviated{
                         afternoon1{"по под."}
                         evening1{"вече"}
-                        midnight{"поноћ"}
                         morning1{"јутро"}
-                        night1{"ноћу"}
-                        noon{"подне"}
                     }
                     narrow{
                         afternoon1{"по под."}
                         evening1{"вече"}
-                        midnight{"поноћ"}
                         morning1{"јутро"}
                         night1{"ноћ"}
-                        noon{"подне"}
                     }
                 }
                 stand-alone{
                     abbreviated{
                         am{"прије подне"}
-                        pm{"по подне"}
                     }
                     narrow{
                         am{"а"}
@@ -107,7 +101,6 @@ sr_Cyrl_BA{
                     }
                     wide{
                         am{"прије подне"}
-                        pm{"по подне"}
                     }
                 }
             }
@@ -162,6 +155,14 @@ sr_Cyrl_BA{
                         "дец",
                     }
                 }
+            }
+        }
+    }
+    fields{
+        week{
+            relative{
+                "-1"{"претходне недеље"}
+                "1"{"наредне недеље"}
             }
         }
     }

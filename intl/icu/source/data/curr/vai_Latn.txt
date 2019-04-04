@@ -228,5 +228,5 @@ vai_Latn{
             "Zimbhabhuwe Dala",
         }
     }
-    Version{"2.1.39.11"}
+    Version{"2.1.47.82"}
 }

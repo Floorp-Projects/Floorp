@@ -18,6 +18,9 @@
     <ClCompile Include="errmsg.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="filterrb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="genrb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -51,6 +54,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="errmsg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="filterrb.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="genrb.h">

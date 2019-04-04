@@ -274,7 +274,7 @@ CrashGenerationServer::ClientEvent(short revents)
   if (dump_callback_) {
     ClientInfo info(crashing_pid, this);
 
-    dump_callback_(dump_context_, &info, &minidump_filename);
+    dump_callback_(dump_context_, info, minidump_filename);
   }
 
   // Send the done signal to the process: it can exit now.

@@ -11,12 +11,12 @@
  */
 
 /*
- * Created on Thu Jun 21 20:20:37 2018 from UCD data files with version info:
+ * Created on Thu Mar 28 14:15:26 2019 from UCD data files with version info:
  *
 
 # Unicode Character Database
-# Date: 2018-06-04, 17:57:00 GMT [KW]
-# © 2018 Unicode®, Inc.
+# Date: 2019-03-01, 22:17:00 GMT [KW]
+# © 2019 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see http://www.unicode.org/terms_of_use.html
 #
@@ -25,17 +25,17 @@
 # UAX #38, "Unicode Han Database (Unihan)"
 # UAX #44, "Unicode Character Database."
 #
-# The UAXes can be accessed at http://www.unicode.org/versions/Unicode11.0.0/
+# The UAXes can be accessed at http://www.unicode.org/versions/Unicode12.0.0/
 
 This directory contains the final data files
-for the Unicode Character Database, for Version 11.0.0 of the Unicode Standard.
+for the Unicode Character Database, for Version 12.0.0 of the Unicode Standard.
 
 # IdentifierStatus.txt
-# Date: 2018-05-25, 00:12:52 GMT
+# Date: 2019-01-30, 12:52:06 GMT
 
 #
 # Unihan_Variants.txt
-# Date: 2018-05-18 02:15:26 GMT [JHJ]
+# Date: 2018-11-09 21:36:19 GMT [JHJ]
 
 # VerticalOrientation-17.txt
 # Date: 2016-10-20, 07:00:00 GMT [EM, KI, LI]
@@ -46,6 +46,7 @@ for the Unicode Character Database, for Version 11.0.0 of the Unicode Standard.
 
 #ifndef NS_UNICODE_SCRIPT_CODES
 #define NS_UNICODE_SCRIPT_CODES
+
 
 struct nsCharProps2 {
   // Currently only 4 bits are defined here, so 4 more could be added without
@@ -243,8 +244,12 @@ enum class Script : int16_t {
   HANIFI_ROHINGYA = 182,
   SOGDIAN = 183,
   OLD_SOGDIAN = 184,
+  ELYMAIC = 185,
+  NYIAKENG_PUACHUE_HMONG = 186,
+  NANDINAGARI = 187,
+  WANCHO = 188,
 
-  NUM_SCRIPT_CODES = 185,
+  NUM_SCRIPT_CODES = 189,
 
   INVALID = -1
 };

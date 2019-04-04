@@ -9,12 +9,11 @@
 #include "mozilla/dom/MediaList.h"
 
 #include "mozAutoDocUpdate.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/MediaListBinding.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/StyleSheetInlines.h"
-#include "nsPresContext.h"
-#include "nsPresContextInlines.h"
 
 namespace mozilla {
 namespace dom {
@@ -115,8 +114,9 @@ nsresult MediaList::Delete(const nsAString& aOldMedium) {
   return NS_ERROR_DOM_NOT_FOUND_ERR;
 }
 
-bool MediaList::Matches(nsPresContext* aPresContext) const {
-  const RawServoStyleSet* rawSet = aPresContext->StyleSet()->RawSet();
+bool MediaList::Matches(const Document& aDocument) const {
+  const RawServoStyleSet* rawSet =
+    aDocument.StyleSetForPresShellOrMediaQueryEvaluation()->RawSet();
   MOZ_ASSERT(rawSet, "The RawServoStyleSet should be valid!");
   return Servo_MediaList_Matches(mRawList, rawSet);
 }

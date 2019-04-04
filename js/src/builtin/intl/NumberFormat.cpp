@@ -495,6 +495,24 @@ static FieldType GetFieldTypeForNumberField(UNumberFormatFields fieldName,
           "and scientific notation were never requested");
       break;
 
+#ifndef U_HIDE_DRAFT_API
+#  if U_ICU_VERSION_MAJOR_NUM >= 64
+    case UNUM_MEASURE_UNIT_FIELD:
+      MOZ_ASSERT_UNREACHABLE(
+          "unexpected measure unit field found, even though "
+          "we don't use any user-defined patterns that "
+          "would require a measure unit field");
+      break;
+
+    case UNUM_COMPACT_FIELD:
+      MOZ_ASSERT_UNREACHABLE(
+          "unexpected compact field found, even though "
+          "we don't use any user-defined patterns that "
+          "would require a compact number notation");
+      break;
+#  endif
+#endif
+
 #ifndef U_HIDE_DEPRECATED_API
     case UNUM_FIELD_COUNT:
       MOZ_ASSERT_UNREACHABLE(

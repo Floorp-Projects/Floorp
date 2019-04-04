@@ -35,7 +35,6 @@ gd{
                 percentSign{"٪"}
                 plusSign{"؜+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         arabext{
@@ -51,7 +50,6 @@ gd{
                 percentSign{"٪"}
                 plusSign{"‎+‎"}
                 superscriptingExponent{"×"}
-                timeSeparator{"٫"}
             }
         }
         bali{
@@ -67,7 +65,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         beng{
@@ -83,7 +80,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         brah{
@@ -99,7 +95,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         cakm{
@@ -115,7 +110,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         cham{
@@ -131,10 +125,8 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
-        default{"latn"}
         deva{
             symbols{
                 decimal{"."}
@@ -148,7 +140,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         fullwide{
@@ -163,6 +154,158 @@ gd{
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        few{"0 mìltean"}
+                        one{"0 mhìle"}
+                        other{"0 mìle"}
+                        two{"0 mhìle"}
+                    }
+                    10000{
+                        few{"00 mìltean"}
+                        one{"00 mhìle"}
+                        other{"00 mìle"}
+                        two{"00 mhìle"}
+                    }
+                    100000{
+                        few{"000 mìltean"}
+                        one{"000 mhìle"}
+                        other{"000 mìle"}
+                        two{"000 mhìle"}
+                    }
+                    1000000{
+                        few{"0 milleanan"}
+                        one{"0 mhillean"}
+                        other{"0 millean"}
+                        two{"0 mhillean"}
+                    }
+                    10000000{
+                        few{"00 milleanan"}
+                        one{"00 mhillean"}
+                        other{"00 millean"}
+                        two{"00 mhillean"}
+                    }
+                    100000000{
+                        few{"000 milleanan"}
+                        one{"000 mhillean"}
+                        other{"000 millean"}
+                        two{"000 mhillean"}
+                    }
+                    1000000000{
+                        few{"0 billeanan"}
+                        one{"0 bhillean"}
+                        other{"0 billean"}
+                        two{"0 bhillean"}
+                    }
+                    10000000000{
+                        few{"00 billeanan"}
+                        one{"00 bhillean"}
+                        other{"00 billean"}
+                        two{"00 bhillean"}
+                    }
+                    100000000000{
+                        few{"000 billeanan"}
+                        one{"000 bhillean"}
+                        other{"000 billean"}
+                        two{"000 bhillean"}
+                    }
+                    1000000000000{
+                        few{"0 trilleanan"}
+                        one{"0 trillean"}
+                        other{"0 trillean"}
+                        two{"0 thrillean"}
+                    }
+                    10000000000000{
+                        few{"00 trilleanan"}
+                        one{"00 trillean"}
+                        other{"00 trillean"}
+                        two{"00 thrillean"}
+                    }
+                    100000000000000{
+                        few{"000 trilleanan"}
+                        one{"000 trillean"}
+                        other{"000 trillean"}
+                        two{"000 thrillean"}
+                    }
+                }
+            }
+            patternsShort{
+                currencyFormat{
+                    1000{
+                        few{"¤0K"}
+                        one{"¤0K"}
+                        other{"¤0K"}
+                        two{"¤0K"}
+                    }
+                    10000{
+                        few{"¤00K"}
+                        one{"¤00K"}
+                        other{"¤00K"}
+                        two{"¤00K"}
+                    }
+                    100000{
+                        few{"¤000K"}
+                        one{"¤000K"}
+                        other{"¤000K"}
+                        two{"¤000K"}
+                    }
+                    1000000{
+                        few{"¤0M"}
+                        one{"¤0M"}
+                        other{"¤0M"}
+                        two{"¤0M"}
+                    }
+                    10000000{
+                        few{"¤00M"}
+                        one{"¤00M"}
+                        other{"¤00M"}
+                        two{"¤00M"}
+                    }
+                    100000000{
+                        few{"¤000M"}
+                        one{"¤000M"}
+                        other{"¤000M"}
+                        two{"¤000M"}
+                    }
+                    1000000000{
+                        few{"¤0B"}
+                        one{"¤0B"}
+                        other{"¤0B"}
+                        two{"¤0B"}
+                    }
+                    10000000000{
+                        few{"¤00B"}
+                        one{"¤00B"}
+                        other{"¤00B"}
+                        two{"¤00B"}
+                    }
+                    100000000000{
+                        few{"¤000B"}
+                        one{"¤000B"}
+                        other{"¤000B"}
+                        two{"¤000B"}
+                    }
+                    1000000000000{
+                        few{"¤0T"}
+                        one{"¤0T"}
+                        other{"¤0T"}
+                        two{"¤0T"}
+                    }
+                    10000000000000{
+                        few{"¤00T"}
+                        one{"¤00T"}
+                        other{"¤00T"}
+                        two{"¤00T"}
+                    }
+                    100000000000000{
+                        few{"¤000T"}
+                        one{"¤000T"}
+                        other{"¤000T"}
+                        two{"¤000T"}
+                    }
+                }
+            }
             symbols{
                 decimal{"."}
                 exponential{"E"}
@@ -175,7 +318,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         gong{
@@ -191,7 +333,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         gonm{
@@ -207,7 +348,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         gujr{
@@ -223,7 +363,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         guru{
@@ -239,7 +378,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         hanidec{
@@ -255,7 +393,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         java{
@@ -271,7 +408,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         kali{
@@ -287,7 +423,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         khmr{
@@ -303,7 +438,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         knda{
@@ -319,7 +453,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         lana{
@@ -335,7 +468,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         lanatham{
@@ -351,7 +483,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         laoo{
@@ -367,7 +498,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         latn{
@@ -620,7 +750,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         lepc{
@@ -636,7 +765,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         limb{
@@ -652,7 +780,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -663,7 +790,6 @@ gd{
                 two{"{0} dhealbh, {0} mhionaid"}
             }
         }
-        minimumGroupingDigits{"1"}
         mlym{
             symbols{
                 decimal{"."}
@@ -677,7 +803,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         mong{
@@ -693,7 +818,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         mtei{
@@ -709,7 +833,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         mymr{
@@ -725,7 +848,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         mymrshan{
@@ -741,10 +863,8 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
-        native{"latn"}
         nkoo{
             symbols{
                 decimal{"."}
@@ -758,7 +878,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         olck{
@@ -774,7 +893,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         orya{
@@ -790,7 +908,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         osma{
@@ -806,7 +923,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         rohg{
@@ -822,7 +938,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         saur{
@@ -838,7 +953,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         shrd{
@@ -854,7 +968,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         sora{
@@ -870,7 +983,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         sund{
@@ -886,7 +998,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         takr{
@@ -902,7 +1013,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         talu{
@@ -918,7 +1028,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         tamldec{
@@ -934,7 +1043,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         telu{
@@ -950,7 +1058,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         thai{
@@ -966,7 +1073,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         tibt{
@@ -982,7 +1088,6 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         vaii{
@@ -998,11 +1103,10 @@ gd{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
     }
-    Version{"2.1.44.91"}
+    Version{"2.1.48.86"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1859,6 +1963,9 @@ gd{
                 "{1} {0}",
                 "{1} {0}",
             }
+            appendItems{
+                Timezone{"{0} {1}"}
+            }
             availableFormats{
                 Bh{"hB"}
                 Bhm{"h:mmB"}
@@ -1908,6 +2015,53 @@ gd{
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
+                Gy{
+                    G{"y G – y G"}
+                    y{"y – y G"}
+                }
+                GyM{
+                    G{"L/y GGGGG – L/y GGGGG"}
+                    M{"L/y – L/y GGGGG"}
+                    y{"L/y – L/y GGGGG"}
+                }
+                GyMEd{
+                    G{"E, d/M/y GGGGG – E, d/M/y GGGGG"}
+                    M{"E, d/M/y – E, d/M/y GGGGG"}
+                    d{"E, d/M/y – E, d/M/y GGGGG"}
+                    y{"E, d/M/y – E, d/M/y GGGGG"}
+                }
+                GyMMM{
+                    G{"LLL y G – LLL y G"}
+                    M{"LLL – LLL y G"}
+                    y{"LLL y – LLL y G"}
+                }
+                GyMMMEd{
+                    G{"E, d MMM y G – E, d MMM y G"}
+                    M{"E, d MMM – E, d MMM y G"}
+                    d{"E, d MMM – E, d MMM y G"}
+                    y{"E, d MMM y – E, d MMM y G"}
+                }
+                GyMMMd{
+                    G{"d MMM y G – d MMM y G"}
+                    M{"d MMM – d MMM y G"}
+                    d{"d – d MMM y G"}
+                    y{"d MMM y – d MMM y G"}
+                }
+                GyMd{
+                    G{"d/M/y GGGGG – d/M/y GGGGG"}
+                    M{"d/M/y – d/M/y GGGGG"}
+                    d{"d/M/y – d/M/y GGGGG"}
+                    y{"d/M/y – d/M/y GGGGG"}
+                }
                 H{
                     H{"HH – HH"}
                 }
@@ -2203,6 +2357,53 @@ gd{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
+                Gy{
+                    G{"y G – y G"}
+                    y{"y – y G"}
+                }
+                GyM{
+                    G{"L/y GGGGG – L/y GGGGG"}
+                    M{"L/y – L/y GGGGG"}
+                    y{"L/y – L/y GGGGG"}
+                }
+                GyMEd{
+                    G{"E, d/M/y GGGGG – E, d/M/y GGGGG"}
+                    M{"E, d/M/y – E, d/M/y GGGGG"}
+                    d{"E, d/M/y – E, d/M/y GGGGG"}
+                    y{"E, d/M/y – E, d/M/y GGGGG"}
+                }
+                GyMMM{
+                    G{"LLL y G – LLL y G"}
+                    M{"LLL – LLL y G"}
+                    y{"LLL y – LLL y G"}
+                }
+                GyMMMEd{
+                    G{"E, d MMM y G – E, d MMM y G"}
+                    M{"E, d MMM – E, d MMM y G"}
+                    d{"E, d MMM – E, d MMM y G"}
+                    y{"E, d MMM y – E, d MMM y G"}
+                }
+                GyMMMd{
+                    G{"d MMM y G – d MMM y G"}
+                    M{"d MMM – d MMM y G"}
+                    d{"d – d MMM y G"}
+                    y{"d MMM y – d MMM y G"}
+                }
+                GyMd{
+                    G{"d/M/y GGGGG – d/M/y GGGGG"}
+                    M{"d/M/y – d/M/y GGGGG"}
+                    d{"d/M/y – d/M/y GGGGG"}
+                    y{"d/M/y – d/M/y GGGGG"}
+                }
                 H{
                     H{"HH – HH"}
                 }
@@ -3753,9 +3954,13 @@ gd{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-narrow{
+            2{"{0}, {1}"}
+            end{"{0}, {1}"}
+        }
         standard-short{
-            2{"{0} is {1}"}
-            end{"{0} is {1}"}
+            2{"{0} ⁊ {1}"}
+            end{"{0} ⁊ {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
@@ -3808,10 +4013,6 @@ gd{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
-            }
-            stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
             }
         }
     }
