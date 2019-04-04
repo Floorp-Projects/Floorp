@@ -6067,8 +6067,6 @@ pref("dom.datatransfer.mozAtAPIs", false);
 pref("dom.datatransfer.mozAtAPIs", true);
 #endif
 
-// Whether or not Prio is supported on this platform.
-pref("prio.enabled", false);
 // Whether or not the Prio Ping is supported on this platform.
 pref("toolkit.telemetry.prioping.enabled", false);
 

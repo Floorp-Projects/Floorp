@@ -336,11 +336,6 @@ function fakeGzipCompressStringForNextPing(length) {
   };
 }
 
-function fakePrioEncode() {
-  const m = ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", null);
-  m.Policy.prioEncode = (batchID, prioParams) => prioParams;
-}
-
 function fakeIntlReady() {
   const m = ChromeUtils.import("resource://gre/modules/TelemetryEnvironment.jsm", null);
   m.Policy._intlLoaded = true;

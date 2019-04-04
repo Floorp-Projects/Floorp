@@ -669,25 +669,6 @@ Structure:
       ...
     ],
 
-Prio
-----
-This section contains experimental data encoded with a basic version of the Prio system for private aggregation.
-See `the Prio paper <https://crypto.stanford.edu/prio/>`_ and `the libprio Github repo <https://github.com/mozilla/libprio>`_
-for more information.
-
-Prio splits data packets into two "shares", signed for different servers that will do the decryption and
-aggregation. We call these "Server A" and "Server B", represented as `a` and `b` keys in `payload.prio`.
-
-Structure:
-
-.. code-block:: js
-
-    "prio": {
-      a: [...],
-      b: [...]
-    }
-
-
 Version History
 ---------------
 
