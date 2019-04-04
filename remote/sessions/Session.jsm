@@ -61,7 +61,7 @@ class Session {
         throw new TypeError("Message missing 'method' field");
       }
 
-      const [domain, command] = Domains.splitMethod(method);
+      const {domain, command} = Domains.splitMethod(method);
       await this.execute(id, domain, command, params);
     } catch (e) {
       this.onError(id, e);
