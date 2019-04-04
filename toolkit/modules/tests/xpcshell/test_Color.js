@@ -4,7 +4,7 @@ const {Color} = ChromeUtils.import("resource://gre/modules/Color.jsm");
 
 function run_test() {
   testRelativeLuminance();
-  testIsBright();
+  testUseBrightText();
   testContrastRatio();
   testIsContrastRatioAcceptable();
 }
@@ -17,16 +17,15 @@ function testRelativeLuminance() {
   Assert.equal(c.relativeLuminance, 1, "White is quite the luminant one");
 
   c = new Color(142, 42, 142);
-  Assert.equal(c.relativeLuminance, 0.25263952353998204,
-    "This purple is not that luminant");
+  Assert.equal(c.relativeLuminance, 0.09359705837110571, "This purple is not that luminant");
 }
 
-function testIsBright() {
+function testUseBrightText() {
   let c = new Color(0, 0, 0);
-  Assert.equal(c.isBright, 0, "Black is bright");
+  Assert.ok(c.useBrightText, "Black is bright, so bright text should be used here");
 
   c = new Color(255, 255, 255);
-  Assert.equal(c.isBright, 1, "White is bright");
+  Assert.ok(!c.useBrightText, "White is bright, so better not use bright colored text on it");
 }
 
 function testContrastRatio() {
@@ -36,8 +35,8 @@ function testContrastRatio() {
   Assert.equal(c.contrastRatio(c), 1, "Contrast between equals is min");
 
   let c3 = new Color(142, 42, 142);
-  Assert.equal(c.contrastRatio(c3), 6.05279047079964, "Contrast between black and purple");
-  Assert.equal(c2.contrastRatio(c3), 3.469474137806338, "Contrast between white and purple");
+  Assert.equal(c.contrastRatio(c3), 2.871941167422114, "Contrast between black and purple shouldn't be very high");
+  Assert.equal(c2.contrastRatio(c3), 7.312127503938331, "Contrast between white and purple should be high");
 }
 
 function testIsContrastRatioAcceptable() {
@@ -48,6 +47,8 @@ function testIsContrastRatioAcceptable() {
   Assert.equal(c.g, 156, "Greens should match");
   Assert.equal(c.b, 152, "Blues should match");
   Assert.ok(c.isContrastRatioAcceptable(c2), "The blue is high contrast enough");
-  c = new Color(...[35, 65, 100]);
+  c2 = new Color(...[35, 65, 100]);
   Assert.ok(!c.isContrastRatioAcceptable(c2), "The blue is not high contrast enough");
+  // But would it be high contrast enough at a lower conformance level?
+  Assert.ok(c.isContrastRatioAcceptable(c2, "A"), "The blue is high contrast enough when used as large text");
 }
