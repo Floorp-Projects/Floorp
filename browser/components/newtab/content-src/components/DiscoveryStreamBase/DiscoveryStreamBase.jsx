@@ -12,6 +12,7 @@ import {TopSites} from "content-src/components/DiscoveryStreamComponents/TopSite
 
 const ALLOWED_CSS_URL_PREFIXES = ["chrome://", "resource://", "https://img-getpocket.cdn.mozilla.net/"];
 const DUMMY_CSS_SELECTOR = "DUMMY#CSS.SELECTOR";
+let rickRollCache = []; // Cache of random probability values for a spoc position
 
 /**
  * Validate a CSS declaration. The values are assumed to be normalized by CSSOM.
@@ -158,8 +159,15 @@ export class _DiscoveryStreamBase extends React.PureComponent {
     return (<style key={json} data-styles={json} ref={this.onStyleMount} />);
   }
 
+  componentWillReceiveProps(oldProps) {
+    if (this.props.DiscoveryStream.layout !== oldProps.DiscoveryStream.layout) {
+      rickRollCache = [];
+    }
+  }
+
   render() {
-    const {layoutRender} = this.props.DiscoveryStream;
+    // Select layout render data by adding spocs and position to recommendations
+    const layoutRender = selectLayoutRender(this.props.DiscoveryStream, rickRollCache);
     const styles = [];
     const {spocs, feeds} = this.props.DiscoveryStream;
 
@@ -187,13 +195,6 @@ export class _DiscoveryStreamBase extends React.PureComponent {
   }
 }
 
-function transform(state) {
-  return {
-    DiscoveryStream: {
-      ...state.DiscoveryStream,
-      layoutRender: selectLayoutRender(state),
-    },
-  };
-}
-
-export const DiscoveryStreamBase = connect(transform)(_DiscoveryStreamBase);
+export const DiscoveryStreamBase = connect(state => ({
+  DiscoveryStream: state.DiscoveryStream,
+}))(_DiscoveryStreamBase);

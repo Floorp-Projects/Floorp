@@ -58,7 +58,7 @@ window.gActivityStreamStrings = {
   "settings_pane_topsites_header": "Sitios populares",
   "settings_pane_highlights_header": "Destacados",
   "settings_pane_highlights_options_bookmarks": "Marcadores",
-  "settings_pane_snippets_header": "Fragmentos de código",
+  "settings_pane_snippets_header": "Mensajes interactivos",
   "edit_topsites_button_text": "Editar",
   "edit_topsites_edit_button": "Editar este sitio",
   "topsites_form_add_header": "Nuevo sitio popular",
@@ -110,6 +110,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Aviso de privacidad",
   "firstrun_continue_to_login": "Continuar",
   "firstrun_skip_login": "Saltar este paso",
-  "context_menu_title": "Abrir menú",
-  "pocket_learn_more": "Saber más"
+  "context_menu_title": "Abrir menú"
 };

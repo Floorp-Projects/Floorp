@@ -7,7 +7,7 @@ describe("<DiscoveryStreamBase>", () => {
     const discoveryStreamProps = {
       spocs: {loaded: true},
       feeds: {loaded: true},
-      layoutRender: [],
+      layout: [],
     };
 
     const wrapper = shallow(<DiscoveryStreamBase DiscoveryStream={discoveryStreamProps} />);
@@ -18,6 +18,7 @@ describe("<DiscoveryStreamBase>", () => {
     const discoveryStreamProps = {
       spocs: {loaded: false},
       feeds: {loaded: true},
+      layout: [],
     };
 
     const wrapper = shallow(<DiscoveryStreamBase DiscoveryStream={discoveryStreamProps} />);
@@ -28,6 +29,7 @@ describe("<DiscoveryStreamBase>", () => {
     const discoveryStreamProps = {
       spocs: {loaded: true},
       feeds: {loaded: false},
+      layout: [],
     };
 
     const wrapper = shallow(<DiscoveryStreamBase DiscoveryStream={discoveryStreamProps} />);

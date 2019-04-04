@@ -66,7 +66,7 @@ const CFR_MESSAGES = [
         rating: 4.6,
         users: 299019,
         author: "Mozilla",
-        amo_url: "https://addons.mozilla.org/en-US/firefox/addon/facebook-container/",
+        amo_url: "https://addons.mozilla.org/firefox/addon/facebook-container/",
       },
       text: "Stop Facebook from tracking your activity across the web. Use Facebook the way you normally do without annoying ads following you around.",
       buttons: {
@@ -118,7 +118,7 @@ const CFR_MESSAGES = [
         rating: 4.1,
         users: 313474,
         author: "Juan Escobar",
-        amo_url: "https://addons.mozilla.org/en-US/firefox/addon/to-google-translate/",
+        amo_url: "https://addons.mozilla.org/firefox/addon/to-google-translate/",
       },
       text: "Instantly translate any webpage text. Simply highlight the text, right-click to open the context menu, and choose a text or aural translation.",
       buttons: {
@@ -170,7 +170,7 @@ const CFR_MESSAGES = [
         rating: 4.8,
         users: 357328,
         author: "Maxime RF",
-        amo_url: "https://addons.mozilla.org/en-US/firefox/addon/enhancer-for-youtube/",
+        amo_url: "https://addons.mozilla.org/firefox/addon/enhancer-for-youtube/",
       },
       text: "Take control of your YouTube experience. Automatically block annoying ads, set playback speed and volume, remove annotations, and more.",
       buttons: {
@@ -223,7 +223,7 @@ const CFR_MESSAGES = [
         rating: 4.9,
         users: 3095,
         author: "Nick Diedrich",
-        amo_url: "https://addons.mozilla.org/en-US/firefox/addon/wikipedia-context-menu-search/",
+        amo_url: "https://addons.mozilla.org/firefox/addon/wikipedia-context-menu-search/",
       },
       text: "Get to a Wikipedia page fast, from anywhere on the web. Just highlight any webpage text and right-click to open the context menu to start a Wikipedia search.",
       buttons: {
@@ -276,7 +276,7 @@ const CFR_MESSAGES = [
         rating: 4.6,
         users: 258129,
         author: "honestbleeps",
-        amo_url: "https://addons.mozilla.org/en-US/firefox/addon/reddit-enhancement-suite/",
+        amo_url: "https://addons.mozilla.org/firefox/addon/reddit-enhancement-suite/",
       },
       text: "New features include Inline Image Viewer, Never Ending Reddit (never click 'next page' again), Keyboard Navigation, Account Switcher, and User Tagger.",
       buttons: {

@@ -103,7 +103,7 @@ this.PersonalityProvider = class PersonalityProvider {
     const localFilePath = OS.Path.join(PERSONALITY_PROVIDER_DIR, filename);
     const headers = new Headers();
     headers.set("Accept-Encoding", "gzip");
-    const resp = await fetch(remoteFilePath, {headers});
+    const resp = await fetch(remoteFilePath, {headers, credentials: "omit"});
     if (!resp.ok) {
       Cu.reportError(`Failed to fetch ${remoteFilePath}: ${resp.status}`);
       return;

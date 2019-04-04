@@ -131,13 +131,18 @@ BrowserElementParent::DispatchOpenWindowEvent(Element* aOpenerFrameElement,
   detail.mFeatures = aFeatures;
   detail.mFrameElement = aPopupFrameElement;
 
-  AutoJSContext cx;
-  JS::Rooted<JS::Value> val(cx);
-
   nsIGlobalObject* sgo = aPopupFrameElement->OwnerDoc()->GetScopeObject();
   if (!sgo) {
     return BrowserElementParent::OPEN_WINDOW_IGNORED;
   }
+
+  AutoJSAPI jsapi;
+  if (!jsapi.Init(sgo)) {
+    return BrowserElementParent::OPEN_WINDOW_IGNORED;
+  }
+
+  JSContext* cx = jsapi.cx();
+  JS::Rooted<JS::Value> val(cx);
 
   JS::Rooted<JSObject*> global(cx, sgo->GetGlobalJSObject());
   JSAutoRealm ar(cx, global);

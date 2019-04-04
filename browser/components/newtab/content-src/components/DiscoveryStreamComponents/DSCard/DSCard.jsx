@@ -67,7 +67,9 @@ export class DSCard extends React.PureComponent {
           url={this.props.url}
           title={this.props.title}
           source={this.props.source}
-          type={this.props.type} />
+          type={this.props.type}
+          pocket_id={this.props.pocket_id}
+          bookmarkGuid={this.props.bookmarkGuid} />
       </div>
     );
   }

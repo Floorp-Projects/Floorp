@@ -220,7 +220,7 @@ describe("SnippetsProvider", () => {
     });
     it("should log connection errors without throwing", async () => {
       sandbox.stub(global.console, "error");
-      sandbox.stub(global.gSnippetsMap, "connect").returns(() => { throw new Error(); });
+      sandbox.stub(global.gSnippetsMap, "connect").throws();
       await snippets.init();
 
       assert.calledOnce(global.console.error);

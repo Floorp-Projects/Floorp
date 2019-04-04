@@ -5,56 +5,92 @@ const {ASRouterTriggerListeners} =
 const {ASRouter} =
   ChromeUtils.import("resource://activity-stream/lib/ASRouter.jsm");
 
-function trigger_cfr_panel(browser, trigger, action = {type: "FOO"}) { // a fake action type will result in the action being ignored
+const createDummyRecommendation = ({action, category, heading_text}) => ({
+  content: {
+    category,
+    notification_text: "Mochitest",
+    heading_text: heading_text || "Mochitest",
+    info_icon: {
+      label: {attributes: {tooltiptext: "Why am I seeing this"}},
+      sumo_path: "extensionrecommendations",
+    },
+    addon: {
+      id: "addon-id",
+      title: "Addon name",
+      icon: "foo",
+      author: "Author name",
+      amo_url: "https://example.com",
+    },
+    descriptionDetails: {steps: []},
+    text: "Mochitest",
+    buttons: {
+      primary: {
+        label: {
+          value: "OK",
+          attributes: {accesskey: "O"},
+        },
+        action: {
+          type: action.type,
+          data: {},
+        },
+      },
+      secondary: [{
+        label: {
+          value: "Cancel",
+          attributes: {accesskey: "C"},
+        },
+      }, {
+        label: {
+          value: "Cancel 1",
+          attributes: {accesskey: "A"},
+        },
+      }, {
+        label: {
+          value: "Cancel 2",
+          attributes: {accesskey: "B"},
+        },
+      }],
+    },
+  },
+});
+
+function checkCFRFeaturesElements(notification) {
+  Assert.ok(notification.hidden === false, "Panel should be visible");
+  Assert.ok(notification.getAttribute("data-notification-category") === "cfrFeatures", "Panel have corret data attribute");
+  Assert.ok(notification.querySelector("#cfr-notification-footer-pintab-animation-container"), "Pin tab animation exists");
+  Assert.ok(notification.querySelector("#cfr-notification-feature-steps"), "Pin tab steps");
+}
+
+function checkCFRAddonsElements(notification) {
+  Assert.ok(notification.hidden === false, "Panel should be visible");
+  Assert.ok(notification.getAttribute("data-notification-category") === "cfrAddons", "Panel have corret data attribute");
+  Assert.ok(notification.querySelector("#cfr-notification-footer-text-and-addon-info"), "Panel should have addon info container");
+  Assert.ok(notification.querySelector("#cfr-notification-footer-filled-stars"), "Panel should have addon rating info");
+  Assert.ok(notification.querySelector("#cfr-notification-author"), "Panel should have author info");
+}
+
+function clearNotifications() {
+  for (let notification of PopupNotifications._currentNotifications) {
+    notification.remove();
+  }
+
+  // Clicking the primary action also removes the notification
+  Assert.equal(PopupNotifications._currentNotifications.length, 0,
+    "Should have removed the notification");
+}
+
+function trigger_cfr_panel(browser, trigger, {action = {type: "FOO"}, heading_text, category = "cfrAddons"} = {}) { // a fake action type will result in the action being ignored
+  const recommendation = createDummyRecommendation({action, category, heading_text});
+  if (category !== "cfrAddons") {
+    delete recommendation.content.addon;
+  }
+
+  clearNotifications();
+
   return CFRPageActions.addRecommendation(
     browser,
     trigger,
-    {
-      content: {
-        notification_text: "Mochitest",
-        heading_text: "Mochitest",
-        info_icon: {
-          label: {attributes: {tooltiptext: "Why am I seeing this"}},
-          sumo_path: "extensionrecommendations",
-        },
-        addon: {
-          id: "addon-id",
-          title: "Addon name",
-          icon: "foo",
-          author: "Author name",
-          amo_url: "https://example.com",
-        },
-        text: "Mochitest",
-        buttons: {
-          primary: {
-            label: {
-              value: "OK",
-              attributes: {accesskey: "O"},
-            },
-            action: {
-              type: action.type,
-              data: {},
-            },
-          },
-          secondary: [{
-            label: {
-              value: "Cancel",
-              attributes: {accesskey: "C"},
-            },
-          }, {
-            label: {
-              value: "Cancel 1",
-              attributes: {accesskey: "A"},
-            },
-          }, {
-            label: {
-              value: "Cancel 2",
-              attributes: {accesskey: "B"},
-            },
-          }],
-        },
-      },
-    },
+    recommendation,
     // Use the real AS dispatch method to trigger real notifications
     ASRouter.dispatch
   );
@@ -99,13 +135,48 @@ add_task(async function test_cfr_notification_show() {
     "Should have removed the notification");
 });
 
+add_task(async function test_cfr_notification_show() {
+  // addRecommendation checks that scheme starts with http and host matches
+  let browser = gBrowser.selectedBrowser;
+  await BrowserTestUtils.loadURI(browser, "http://example.com/");
+  await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
+
+  let response = await trigger_cfr_panel(browser, "example.com", {heading_text: "First Message"});
+  Assert.ok(response, "Should return true if addRecommendation checks were successful");
+  const showPanel = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+
+  // Try adding another message
+  response = await trigger_cfr_panel(browser, "example.com", {heading_text: "Second Message"});
+  Assert.equal(response, false, "Should return false if second call did not add the message");
+
+  // Open the panel
+  document.getElementById("contextual-feature-recommendation").click();
+  await showPanel;
+
+  Assert.ok(document.getElementById("contextual-feature-recommendation-notification").hidden === false,
+    "Panel should be visible");
+
+  Assert.equal(document.getElementById("cfr-notification-header-label").value, "First Message",
+    "The first message should be visible");
+
+  // Check there is a primary button and click it. It will trigger the callback.
+  Assert.ok(document.getElementById("contextual-feature-recommendation-notification").button);
+  let hidePanel = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
+  document.getElementById("contextual-feature-recommendation-notification").button.click();
+  await hidePanel;
+
+  // Clicking the primary action also removes the notification
+  Assert.equal(PopupNotifications._currentNotifications.length, 0,
+    "Should have removed the notification");
+});
+
 add_task(async function test_cfr_addon_install() {
   // addRecommendation checks that scheme starts with http and host matches
   const browser = gBrowser.selectedBrowser;
   await BrowserTestUtils.loadURI(browser, "http://example.com/");
   await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
 
-  const response = await trigger_cfr_panel(browser, "example.com", {type: "INSTALL_ADDON_FROM_URL"});
+  const response = await trigger_cfr_panel(browser, "example.com", {action: {type: "INSTALL_ADDON_FROM_URL"}});
   Assert.ok(response, "Should return true if addRecommendation checks were successful");
 
   const showPanel = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
@@ -115,6 +186,7 @@ add_task(async function test_cfr_addon_install() {
 
   Assert.ok(document.getElementById("contextual-feature-recommendation-notification").hidden === false,
     "Panel should be visible");
+  checkCFRAddonsElements(document.getElementById("contextual-feature-recommendation-notification"));
 
   // Check there is a primary button and click it. It will trigger the callback.
   Assert.ok(document.getElementById("contextual-feature-recommendation-notification").button);
@@ -129,6 +201,150 @@ add_task(async function test_cfr_addon_install() {
   // running the test multiple times in a row
   Assert.ok(notification.id === "addon-progress-notification" ||
     notification.id === "addon-install-failed-notification", "Should try to install the addon");
+
+  // This removes the `Addon install failure` notifications
+  while (PopupNotifications._currentNotifications.length) {
+    PopupNotifications.remove(PopupNotifications._currentNotifications[0]);
+  }
+  // There should be no more notifications left
+  Assert.equal(PopupNotifications._currentNotifications.length, 0,
+    "Should have removed the notification");
+});
+
+add_task(async function test_cfr_pin_tab_notification_show() {
+  // addRecommendation checks that scheme starts with http and host matches
+  let browser = gBrowser.selectedBrowser;
+  await BrowserTestUtils.loadURI(browser, "http://example.com/");
+  await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
+
+  const response = await trigger_cfr_panel(browser, "example.com", {action: {type: "PIN_CURRENT_TAB"}, category: "cfrFeatures"});
+  Assert.ok(response, "Should return true if addRecommendation checks were successful");
+
+  const showPanel = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+  // Open the panel
+  document.getElementById("contextual-feature-recommendation").click();
+  await showPanel;
+
+  const notification = document.getElementById("contextual-feature-recommendation-notification");
+  checkCFRFeaturesElements(notification);
+
+  // Check there is a primary button and click it. It will trigger the callback.
+  Assert.ok(notification.button);
+  let hidePanel = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
+  document.getElementById("contextual-feature-recommendation-notification").button.click();
+  await hidePanel;
+
+  BrowserTestUtils.waitForCondition(() => gBrowser.selectedTab.pinned, "Primary action should pin tab");
+  Assert.ok(gBrowser.selectedTab.pinned, "Current tab should be pinned");
+  gBrowser.unpinTab(gBrowser.selectedTab);
+
+  // Clicking the primary action also removes the notification
+  Assert.equal(PopupNotifications._currentNotifications.length, 0,
+    "Should have removed the notification");
+});
+
+add_task(async function test_cfr_features_and_addon_show() {
+  // addRecommendation checks that scheme starts with http and host matches
+  let browser = gBrowser.selectedBrowser;
+  await BrowserTestUtils.loadURI(browser, "http://example.com/");
+  await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
+
+  // Trigger Feature CFR
+  let response = await trigger_cfr_panel(browser, "example.com", {action: {type: "PIN_CURRENT_TAB"}, category: "cfrFeatures"});
+  Assert.ok(response, "Should return true if addRecommendation checks were successful");
+
+  let showPanel = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+  // Open the panel
+  document.getElementById("contextual-feature-recommendation").click();
+  await showPanel;
+
+  const notification = document.getElementById("contextual-feature-recommendation-notification");
+  checkCFRFeaturesElements(notification);
+
+  // Check there is a primary button and click it. It will trigger the callback.
+  Assert.ok(notification.button);
+  let hidePanel = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
+  document.getElementById("contextual-feature-recommendation-notification").button.click();
+  await hidePanel;
+
+  // Clicking the primary action also removes the notification
+  Assert.equal(PopupNotifications._currentNotifications.length, 0,
+    "Should have removed the notification");
+
+  // Trigger Addon CFR
+  response = await trigger_cfr_panel(browser, "example.com");
+  Assert.ok(response, "Should return true if addRecommendation checks were successful");
+
+  showPanel = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+  // Open the panel
+  document.getElementById("contextual-feature-recommendation").click();
+  await showPanel;
+
+  Assert.ok(document.getElementById("contextual-feature-recommendation-notification").hidden === false,
+    "Panel should be visible");
+  checkCFRAddonsElements(document.getElementById("contextual-feature-recommendation-notification"));
+
+  // Check there is a primary button and click it. It will trigger the callback.
+  Assert.ok(notification.button);
+  hidePanel = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
+  document.getElementById("contextual-feature-recommendation-notification").button.click();
+  await hidePanel;
+
+  // Clicking the primary action also removes the notification
+  Assert.equal(PopupNotifications._currentNotifications.length, 0,
+    "Should have removed the notification");
+});
+
+add_task(async function test_cfr_addon_and_features_show() {
+  // addRecommendation checks that scheme starts with http and host matches
+  let browser = gBrowser.selectedBrowser;
+  await BrowserTestUtils.loadURI(browser, "http://example.com/");
+  await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
+
+  // Trigger Feature CFR
+  let response = await trigger_cfr_panel(browser, "example.com");
+  Assert.ok(response, "Should return true if addRecommendation checks were successful");
+
+  let showPanel = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+  // Open the panel
+  document.getElementById("contextual-feature-recommendation").click();
+  await showPanel;
+
+  const notification = document.getElementById("contextual-feature-recommendation-notification");
+  checkCFRAddonsElements(notification);
+
+  // Check there is a primary button and click it. It will trigger the callback.
+  Assert.ok(notification.button);
+  let hidePanel = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
+  document.getElementById("contextual-feature-recommendation-notification").button.click();
+  await hidePanel;
+
+  // Clicking the primary action also removes the notification
+  Assert.equal(PopupNotifications._currentNotifications.length, 0,
+    "Should have removed the notification");
+
+  // Trigger Addon CFR
+  response = await trigger_cfr_panel(browser, "example.com", {action: {type: "PIN_CURRENT_TAB"}, category: "cfrFeatures"});
+  Assert.ok(response, "Should return true if addRecommendation checks were successful");
+
+  showPanel = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popupshown");
+  // Open the panel
+  document.getElementById("contextual-feature-recommendation").click();
+  await showPanel;
+
+  Assert.ok(document.getElementById("contextual-feature-recommendation-notification").hidden === false,
+    "Panel should be visible");
+  checkCFRFeaturesElements(document.getElementById("contextual-feature-recommendation-notification"));
+
+  // Check there is a primary button and click it. It will trigger the callback.
+  Assert.ok(notification.button);
+  hidePanel = BrowserTestUtils.waitForEvent(PopupNotifications.panel, "popuphidden");
+  document.getElementById("contextual-feature-recommendation-notification").button.click();
+  await hidePanel;
+
+  // Clicking the primary action also removes the notification
+  Assert.equal(PopupNotifications._currentNotifications.length, 0,
+    "Should have removed the notification");
 });
 
 add_task(async function test_onLocationChange_cb() {
@@ -155,4 +371,31 @@ add_task(async function test_onLocationChange_cb() {
   await BrowserTestUtils.browserLoaded(browser, false, TEST_URL);
 
   Assert.equal(count, 2, "We moved to a new document");
+});
+
+add_task(async function test_matchPattern() {
+  let count = 0;
+  const triggerHandler = () => ++count;
+  ASRouterTriggerListeners.get("frequentVisits").init(triggerHandler, [], ["*://*.example.com/"]);
+
+  const browser = gBrowser.selectedBrowser;
+  await BrowserTestUtils.loadURI(browser, "http://example.com/");
+  await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
+
+  Assert.equal(count, 1, "Registered pattern matched the current location");
+
+  await BrowserTestUtils.loadURI(browser, "about:config");
+  await BrowserTestUtils.browserLoaded(browser, false, "about:config");
+
+  Assert.equal(count, 1, "Navigated to a new page but not a match");
+
+  await BrowserTestUtils.loadURI(browser, "http://example.com/");
+  await BrowserTestUtils.browserLoaded(browser, false, "http://example.com/");
+
+  Assert.equal(count, 1, "Navigated to a location that matches the pattern but within 15 mins");
+
+  await BrowserTestUtils.loadURI(browser, "http://www.example.com/");
+  await BrowserTestUtils.browserLoaded(browser, false, "http://www.example.com/");
+
+  Assert.equal(count, 2, "www.example.com is a different host that also matches the pattern.");
 });

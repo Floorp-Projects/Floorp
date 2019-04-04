@@ -8,14 +8,15 @@ package org.mozilla.geckoview;
 
 import android.app.ActivityManager;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.content.Context;
 import android.os.Process;
 import android.support.annotation.AnyThread;
 import android.support.annotation.NonNull;
@@ -25,20 +26,25 @@ import android.util.Log;
 
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoSystemStateListener;
 import org.mozilla.gecko.GeckoScreenOrientation;
+import org.mozilla.gecko.GeckoSystemStateListener;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.util.BundleEventListener;
+import org.mozilla.gecko.util.DebugConfig;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
+import org.yaml.snakeyaml.error.YAMLException;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 
 public final class GeckoRuntime implements Parcelable {
     private static final String LOGTAG = "GeckoRuntime";
     private static final boolean DEBUG = false;
+
+    private static final String CONFIG_FILE_PATH_TEMPLATE = "/data/local/tmp/%s-geckoview-config.yaml";
 
     /**
      * Intent action sent to the crash handler when a crash is encountered.
@@ -214,6 +220,28 @@ public final class GeckoRuntime implements Parcelable {
         info.extras = settings.getExtras();
         info.flags = flags;
         info.prefs = settings.getPrefsMap();
+
+        String configFilePath = settings.getConfigFilePath();
+        if (configFilePath == null) {
+            // Default to /data/local/tmp/$PACKAGE-geckoview-config.yaml if android:debuggable="true"
+            // and to not read configuration from a file if android:debuggable="false".
+            final ApplicationInfo applicationInfo = context.getApplicationInfo();
+            final boolean isPackageDebuggable = (applicationInfo.flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0;
+            if (isPackageDebuggable) {
+                configFilePath = String.format(CONFIG_FILE_PATH_TEMPLATE, applicationInfo.packageName);
+            }
+        }
+
+        if (configFilePath != null && !configFilePath.isEmpty()) {
+            try {
+                final DebugConfig debugConfig = DebugConfig.fromFile(new File(configFilePath));
+                Log.i(LOGTAG, "Adding debug configuration from: " + configFilePath);
+                debugConfig.mergeIntoInitInfo(info);
+            } catch (YAMLException e) {
+                Log.w(LOGTAG, "Failed to add debug configuration from: " + configFilePath, e);
+            } catch (FileNotFoundException e) {
+            }
+        }
 
         if (!GeckoThread.init(info)) {
             Log.w(LOGTAG, "init failed (could not initiate GeckoThread)");

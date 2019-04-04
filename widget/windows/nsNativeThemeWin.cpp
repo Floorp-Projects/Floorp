@@ -2660,7 +2660,9 @@ nsITheme::Transparency nsNativeThemeWin::GetWidgetTransparency(
   if (IsWidgetScrollbarPart(aAppearance)) {
     ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
     if (ShouldDrawCustomScrollbar(style)) {
-      if (style->StyleUI()->mScrollbarTrackColor.MaybeTransparent()) {
+      auto* ui = style->StyleUI();
+      if (ui->mScrollbarColor.IsAuto() ||
+          ui->mScrollbarColor.AsColors().track.MaybeTransparent()) {
         return eTransparent;
       }
       // DrawCustomScrollbarPart doesn't draw the track background for
@@ -4170,9 +4172,10 @@ nsresult nsNativeThemeWin::DrawCustomScrollbarPart(
       ThebesRect(LayoutDevicePixel::FromAppUnits(aRect, p2a).ToUnknownRect());
 
   const nsStyleUI* ui = aStyle->StyleUI();
-  nscolor trackColor = ui->mScrollbarTrackColor.IsAuto()
-                           ? NS_RGB(240, 240, 240)
-                           : ui->mScrollbarTrackColor.CalcColor(aStyle);
+  auto* customColors =
+      ui->mScrollbarColor.IsAuto() ? nullptr : &ui->mScrollbarColor.AsColors();
+  nscolor trackColor = customColors ? customColors->track.CalcColor(*aStyle)
+                                    : NS_RGB(240, 240, 240);
   switch (aAppearance) {
     case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarVertical:
@@ -4207,9 +4210,8 @@ nsresult nsNativeThemeWin::DrawCustomScrollbarPart(
   switch (aAppearance) {
     case StyleAppearance::ScrollbarthumbVertical:
     case StyleAppearance::ScrollbarthumbHorizontal: {
-      nscolor faceColor = ui->mScrollbarFaceColor.IsAuto()
-                              ? NS_RGB(205, 205, 205)
-                              : ui->mScrollbarFaceColor.CalcColor(aStyle);
+      nscolor faceColor = customColors ? customColors->thumb.CalcColor(*aStyle)
+                                       : NS_RGB(205, 205, 205);
       faceColor = AdjustScrollbarFaceColor(faceColor, eventStates);
       ctx->SetColor(Color::FromABGR(faceColor));
       ctx->Rectangle(bgRect);

@@ -1613,8 +1613,7 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
   NS_IMETHOD DebugDump(int16_t depth) override;
 
  public:
-  static already_AddRefed<nsXPCWrappedJSClass> GetNewOrUsed(JSContext* cx,
-                                                            REFNSIID aIID);
+  static already_AddRefed<nsXPCWrappedJSClass> GetNewOrUsed(REFNSIID aIID);
 
   REFNSIID GetIID() const { return mIID; }
   XPCJSRuntime* GetRuntime() const { return mRuntime; }
@@ -1646,8 +1645,7 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
   virtual ~nsXPCWrappedJSClass();
 
   nsXPCWrappedJSClass() = delete;
-  nsXPCWrappedJSClass(JSContext* cx, REFNSIID aIID,
-                      const nsXPTInterfaceInfo* aInfo);
+  nsXPCWrappedJSClass(REFNSIID aIID, const nsXPTInterfaceInfo* aInfo);
 
   bool IsReflectable(uint16_t i) const {
     return (bool)(mDescriptors[i / 32] & (1U << (i % 32)));

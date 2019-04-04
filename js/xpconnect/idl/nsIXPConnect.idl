@@ -27,7 +27,6 @@ class nsWrapperCache;
 [ptr] native JSScriptPtr(JSScript);
 [ptr] native nsWrapperCachePtr(nsWrapperCache);
       native JSHandleId(JS::Handle<jsid>);
-[ptr] native InterfaceInfoPtr(const nsXPTInterfaceInfo);
 
 /***************************************************************************/
 
@@ -68,7 +67,6 @@ public:
 interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
 {
     /* attribute 'JSObject' inherited from nsIXPConnectJSObjectHolder */
-    readonly attribute InterfaceInfoPtr InterfaceInfo;
     readonly attribute nsIIDPtr         InterfaceIID;
 
     // Returns the global object for our JS object. If this object is a

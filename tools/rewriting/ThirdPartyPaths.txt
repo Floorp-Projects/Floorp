@@ -105,6 +105,8 @@ testing/talos/talos/tests/kraken/
 testing/talos/talos/tests/v8_7/
 testing/web-platform/tests/resources/webidl2/
 testing/web-platform/tests/tools/third_party/
+testing/xpcshell/node-ip/
+testing/xpcshell/dns-packet/
 third_party/
 toolkit/components/jsoncpp/
 toolkit/components/protobuf/

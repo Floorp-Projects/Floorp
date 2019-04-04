@@ -1,5 +1,5 @@
 # TippyTop in Activity Stream
-TippyTop, a collection of icons from the Alexa top sites, provides high quality images for the Top Sites in Activity Stream. The TippyTop manifest is hosted on S3, and then moved to [Remote Settings](https://firefox-source-docs.mozilla.org/services/common/docs/services/RemoteSettings.html) since Firefox 63. In this document, we'll cover how we produce and manage TippyTop manifest for Activity Stream.
+TippyTop, a collection of icons from the Alexa top sites, provides high quality images for the Top Sites in Activity Stream. The TippyTop manifest is hosted on S3, and then moved to [Remote Settings](https://remote-settings.readthedocs.io/en/latest/index.html) since Firefox 63. In this document, we'll cover how we produce and manage TippyTop manifest for Activity Stream.
 
 ## TippyTop manifest production
 TippyTop manifest is produced by [tippy-top-sites](https://github.com/mozilla/tippy-top-sites).
