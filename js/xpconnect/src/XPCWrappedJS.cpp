@@ -586,18 +586,6 @@ nsXPCWrappedJS* nsXPCWrappedJS::FindInherited(REFNSIID aIID) {
 }
 
 NS_IMETHODIMP
-nsXPCWrappedJS::GetInterfaceInfo(const nsXPTInterfaceInfo** infoResult) {
-  MOZ_ASSERT(GetClass(), "wrapper without class");
-  MOZ_ASSERT(GetClass()->GetInterfaceInfo(), "wrapper class without interface");
-
-  // Since failing to get this info will crash some platforms(!), we keep
-  // mClass valid at shutdown time.
-
-  *infoResult = GetClass()->GetInterfaceInfo();
-  return *infoResult ? NS_OK : NS_ERROR_UNEXPECTED;
-}
-
-NS_IMETHODIMP
 nsXPCWrappedJS::CallMethod(uint16_t methodIndex, const nsXPTMethodInfo* info,
                            nsXPTCMiniVariant* params) {
   // Do a release-mode assert against accessing nsXPCWrappedJS off-main-thread.
