@@ -11,20 +11,20 @@ SHistoryListener.prototype = {
     this.last = "newentry";
   },
 
-  OnHistoryGotoIndex(aIndex, aGotoURI) {
+  OnHistoryGotoIndex() {
     this.last = "gotoindex";
   },
 
-  OnHistoryPurge(aNumEntries) {
+  OnHistoryPurge() {
     this.last = "purge";
   },
 
-  OnHistoryReload(aReloadURI, aReloadFlags) {
+  OnHistoryReload() {
     this.last = "reload";
     return this.retval;
   },
 
-  OnHistoryReplaceEntry(aIndex) {},
+  OnHistoryReplaceEntry() {},
 
   QueryInterface: ChromeUtils.generateQI([Ci.nsISHistoryListener,
                                           Ci.nsISupportsWeakReference]),
@@ -65,8 +65,7 @@ let testAPI = {
 
   notifyReload() {
     let history = this.shistory.legacySHistory;
-    let rval =
-      history.notifyOnHistoryReload(content.document.documentURIObject, 0);
+    let rval = history.notifyOnHistoryReload();
     sendAsyncMessage("bug422543:notifyReload:return", { rval });
   },
 
