@@ -808,9 +808,7 @@ nsresult txMozillaXSLTProcessor::SetParameter(const nsAString& aNamespaceURI,
       break;
     }
 
-    default: {
-      return NS_ERROR_FAILURE;
-    }
+    default: { return NS_ERROR_FAILURE; }
   }
 
   int32_t nsId = kNameSpaceID_Unknown;

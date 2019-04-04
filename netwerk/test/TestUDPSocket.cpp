@@ -228,8 +228,7 @@ MulticastTimerCallback::Notify(nsITimer* timer) {
 
 /**** Main ****/
 
-TEST(TestUDPSocket, TestUDPSocketMain)
-{
+TEST(TestUDPSocket, TestUDPSocketMain) {
   nsresult rv;
 
   // Create UDPSocket

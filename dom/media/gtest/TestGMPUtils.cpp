@@ -28,8 +28,7 @@ void TestSplitAt(const char* aInput, const char* aDelims,
   }
 }
 
-TEST(GeckoMediaPlugins, TestSplitAt)
-{
+TEST(GeckoMediaPlugins, TestSplitAt) {
   {
     const char* input = "1,2,3,4";
     const char* delims = ",";
@@ -56,8 +55,7 @@ TEST(GeckoMediaPlugins, TestSplitAt)
   }
 }
 
-TEST(GeckoMediaPlugins, ToHexString)
-{
+TEST(GeckoMediaPlugins, ToHexString) {
   struct Test {
     nsTArray<uint8_t> bytes;
     string hex;

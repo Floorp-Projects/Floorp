@@ -120,18 +120,15 @@ class psm_CertList : public ::testing::Test {
  protected:
   void SetUp() override {
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    ASSERT_TRUE(prefs)
-    << "couldn't get nsIPrefBranch";
+    ASSERT_TRUE(prefs) << "couldn't get nsIPrefBranch";
 
     // When PSM initializes, it attempts to get some localized strings.
     // As a result, Android flips out if this isn't set.
     nsresult rv = prefs->SetBoolPref("intl.locale.matchOS", true);
-    ASSERT_TRUE(NS_SUCCEEDED(rv))
-    << "couldn't set pref 'intl.locale.matchOS'";
+    ASSERT_TRUE(NS_SUCCEEDED(rv)) << "couldn't set pref 'intl.locale.matchOS'";
 
     nsCOMPtr<nsIX509CertDB> certdb(do_GetService(NS_X509CERTDB_CONTRACTID));
-    ASSERT_TRUE(certdb)
-    << "couldn't get certdb";
+    ASSERT_TRUE(certdb) << "couldn't get certdb";
   }
 };
 
@@ -202,24 +199,22 @@ TEST_F(psm_CertList, TestValidSegmenting) {
 
   rv = certList->SegmentCertificateChain(rootCert, intCerts, eeCert);
   ASSERT_EQ(rv, NS_OK) << "Should have segmented OK";
-  ASSERT_TRUE(rootCert)
-  << "Root cert should be filled in";
-  ASSERT_TRUE(eeCert)
-  << "End entity cert should be filled in";
+  ASSERT_TRUE(rootCert) << "Root cert should be filled in";
+  ASSERT_TRUE(eeCert) << "End entity cert should be filled in";
   ASSERT_EQ(CountCertsInList(intCerts), 0)
       << "There should be no intermediates";
 
   bool selfSigned;
   ASSERT_TRUE(NS_SUCCEEDED(rootCert->GetIsSelfSigned(&selfSigned)))
-  << "Getters should work.";
+      << "Getters should work.";
   ASSERT_FALSE(selfSigned)
       << "Roots are self signed, but this was ca-second-intermediate";
 
   nsAutoString rootCn;
   ASSERT_TRUE(NS_SUCCEEDED(rootCert->GetCommonName(rootCn)))
-  << "Getters should work.";
+      << "Getters should work.";
   ASSERT_TRUE(rootCn.EqualsLiteral("ca-second-intermediate"))
-  << "Second Intermediate CN should match";
+      << "Second Intermediate CN should match";
 
   rv = AddCertFromStringToList(kCaIntermediatePem, certList);
   ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
@@ -230,10 +225,8 @@ TEST_F(psm_CertList, TestValidSegmenting) {
   rv = certList->SegmentCertificateChain(rootCert, intCerts, eeCert);
   ASSERT_EQ(rv, NS_OK) << "Should have segmented OK";
 
-  ASSERT_TRUE(rootCert)
-  << "Root cert should be filled in";
-  ASSERT_TRUE(eeCert)
-  << "End entity cert should be filled in";
+  ASSERT_TRUE(rootCert) << "Root cert should be filled in";
+  ASSERT_TRUE(eeCert) << "End entity cert should be filled in";
   ASSERT_EQ(CountCertsInList(intCerts), 1)
       << "There should be one intermediate";
 
@@ -246,28 +239,23 @@ TEST_F(psm_CertList, TestValidSegmenting) {
   rv = certList->SegmentCertificateChain(rootCert, intCerts, eeCert);
   ASSERT_EQ(rv, NS_OK) << "Should have segmented OK";
 
-  ASSERT_TRUE(rootCert)
-  << "Root cert should be filled in";
-  ASSERT_TRUE(eeCert)
-  << "End entity cert should be filled in";
+  ASSERT_TRUE(rootCert) << "Root cert should be filled in";
+  ASSERT_TRUE(eeCert) << "End entity cert should be filled in";
   ASSERT_EQ(CountCertsInList(intCerts), 2)
       << "There should be two intermediates";
 
   ASSERT_TRUE(NS_SUCCEEDED(rootCert->GetIsSelfSigned(&selfSigned)))
-  << "Getters should work.";
-  ASSERT_TRUE(selfSigned)
-  << "Roots are self signed";
+      << "Getters should work.";
+  ASSERT_TRUE(selfSigned) << "Roots are self signed";
 
   ASSERT_TRUE(NS_SUCCEEDED(rootCert->GetCommonName(rootCn)))
-  << "Getters should work.";
-  ASSERT_TRUE(rootCn.EqualsLiteral("ca"))
-  << "Root CN should match";
+      << "Getters should work.";
+  ASSERT_TRUE(rootCn.EqualsLiteral("ca")) << "Root CN should match";
 
   nsAutoString eeCn;
   ASSERT_TRUE(NS_SUCCEEDED(eeCert->GetCommonName(eeCn)))
-  << "Getters should work.";
-  ASSERT_TRUE(eeCn.EqualsLiteral("ee"))
-  << "EE CN should match";
+      << "Getters should work.";
+  ASSERT_TRUE(eeCn.EqualsLiteral("ee")) << "EE CN should match";
 
   rv = intCerts->GetCertList()->ForEachCertificateInChain(
       [](nsCOMPtr<nsIX509Cert> aCert, bool aHasMore, bool& aContinue) {
@@ -425,8 +413,7 @@ TEST_F(psm_CertList, TestGetRootCertificateChainTwo) {
   nsCOMPtr<nsIX509Cert> rootCert;
   rv = certList->GetRootCertificate(rootCert);
   EXPECT_EQ(NS_OK, rv) << "Should have fetched the root OK";
-  ASSERT_TRUE(rootCert)
-  << "Root cert should be filled in";
+  ASSERT_TRUE(rootCert) << "Root cert should be filled in";
 
   bool selfSigned;
   EXPECT_TRUE(NS_SUCCEEDED(rootCert->GetIsSelfSigned(&selfSigned)))
@@ -442,8 +429,7 @@ TEST_F(psm_CertList, TestGetRootCertificateChainTwo) {
   nsCOMPtr<nsIX509Cert> rootCertRepeat;
   rv = certList->GetRootCertificate(rootCertRepeat);
   EXPECT_EQ(NS_OK, rv) << "Should have fetched the root OK the second time";
-  ASSERT_TRUE(rootCertRepeat)
-  << "Root cert should still be filled in";
+  ASSERT_TRUE(rootCertRepeat) << "Root cert should still be filled in";
 
   nsAutoString rootRepeatCn;
   EXPECT_TRUE(NS_SUCCEEDED(rootCertRepeat->GetCommonName(rootRepeatCn)))
@@ -466,8 +452,7 @@ TEST_F(psm_CertList, TestGetRootCertificateChainFour) {
   nsCOMPtr<nsIX509Cert> rootCert;
   rv = certList->GetRootCertificate(rootCert);
   EXPECT_EQ(NS_OK, rv) << "Should have again fetched the root OK";
-  ASSERT_TRUE(rootCert)
-  << "Root cert should be filled in";
+  ASSERT_TRUE(rootCert) << "Root cert should be filled in";
 
   bool selfSigned;
   EXPECT_TRUE(NS_SUCCEEDED(rootCert->GetIsSelfSigned(&selfSigned)))

@@ -298,9 +298,7 @@ bool OmxPromiseLayer::Event(OMX_EVENTTYPE aEvent, OMX_U32 aData1,
       }
       break;
     }
-    default: {
-      return false;
-    }
+    default: { return false; }
   }
   return true;
 }

@@ -15,8 +15,7 @@ using namespace mozilla;
  * mozIStorageStatement API.
  */
 
-TEST(storage_binding_params, ASCIIString)
-{
+TEST(storage_binding_params, ASCIIString) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // Create table with a single string column.
@@ -55,8 +54,7 @@ TEST(storage_binding_params, ASCIIString)
   (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM test"));
 }
 
-TEST(storage_binding_params, CString)
-{
+TEST(storage_binding_params, CString) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // Create table with a single string column.
@@ -99,8 +97,7 @@ TEST(storage_binding_params, CString)
   (void)db->ExecuteSimpleSQL(NS_LITERAL_CSTRING("DELETE FROM test"));
 }
 
-TEST(storage_binding_params, UTFStrings)
-{
+TEST(storage_binding_params, UTFStrings) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // Create table with a single string column.

@@ -1580,7 +1580,7 @@ class NewSdpTest
 
       if (expectSuccess) {
         ASSERT_TRUE(!!mSdp)
-        << "Parse failed on first pass: " << GetParseErrors();
+            << "Parse failed on first pass: " << GetParseErrors();
       }
 
       if (mSdp) {
@@ -1595,9 +1595,9 @@ class NewSdpTest
         // Whether we expected the parse to work or not, it should
         // succeed the second time if it succeeded the first.
         ASSERT_TRUE(!!mSdp)
-        << "Parse failed on second pass, SDP was: " << std::endl
-        << os.str() << std::endl
-        << "Errors were: " << GetParseErrors();
+            << "Parse failed on second pass, SDP was: " << std::endl
+            << os.str() << std::endl
+            << "Errors were: " << GetParseErrors();
 
         // Serialize again and compare
         std::stringstream os2;
@@ -1607,8 +1607,7 @@ class NewSdpTest
     }
 
     if (expectSuccess) {
-      ASSERT_TRUE(!!mSdp)
-      << "Parse failed: " << GetParseErrors();
+      ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
       ASSERT_EQ(0U, mSdpErrorHolder->GetParseErrors().size())
           << "Got unexpected parse errors/warnings: " << GetParseErrors();
     }
@@ -1934,8 +1933,7 @@ TEST_P(NewSdpTest, BasicAudioVideoSdpParse) { ParseSdp(kBasicAudioVideoOffer); }
 
 TEST_P(NewSdpTest, CheckRemoveFmtp) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -1970,8 +1968,7 @@ TEST_P(NewSdpTest, CheckRemoveFmtp) {
 
 TEST_P(NewSdpTest, CheckIceUfrag) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_TRUE(
       mSdp->GetAttributeList().HasAttribute(SdpAttribute::kIceUfragAttribute));
   auto ice_ufrag = mSdp->GetAttributeList().GetIceUfrag();
@@ -1986,8 +1983,7 @@ TEST_P(NewSdpTest, CheckIceUfrag) {
 
 TEST_P(NewSdpTest, CheckIcePwd) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_TRUE(
       mSdp->GetAttributeList().HasAttribute(SdpAttribute::kIcePwdAttribute));
   auto ice_pwd = mSdp->GetAttributeList().GetIcePwd();
@@ -2005,8 +2001,7 @@ TEST_P(NewSdpTest, CheckIcePwd) {
 
 TEST_P(NewSdpTest, CheckIceOptions) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_TRUE(mSdp->GetAttributeList().HasAttribute(
       SdpAttribute::kIceOptionsAttribute));
   auto ice_options = mSdp->GetAttributeList().GetIceOptions();
@@ -2028,8 +2023,7 @@ TEST_P(NewSdpTest, CheckIceOptions) {
 
 TEST_P(NewSdpTest, CheckFingerprint) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_TRUE(mSdp->GetAttributeList().HasAttribute(
       SdpAttribute::kFingerprintAttribute));
   auto fingerprints = mSdp->GetAttributeList().GetFingerprint();
@@ -2085,8 +2079,7 @@ TEST_P(NewSdpTest, CheckFingerprint) {
 
 TEST_P(NewSdpTest, CheckIdentity) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_TRUE(
       mSdp->GetAttributeList().HasAttribute(SdpAttribute::kIdentityAttribute));
   auto identity = mSdp->GetAttributeList().GetIdentity();
@@ -2095,8 +2088,7 @@ TEST_P(NewSdpTest, CheckIdentity) {
 
 TEST_P(NewSdpTest, CheckDtlsMessage) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_TRUE(mSdp->GetAttributeList().HasAttribute(
       SdpAttribute::kDtlsMessageAttribute));
   auto dtls_message = mSdp->GetAttributeList().GetDtlsMessage();
@@ -2108,16 +2100,14 @@ TEST_P(NewSdpTest, CheckDtlsMessage) {
 
 TEST_P(NewSdpTest, CheckNumberOfMediaSections) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 }
 
 TEST_P(NewSdpTest, CheckMlines) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
   ASSERT_EQ(SdpMediaSection::kAudio, mSdp->GetMediaSection(0).GetMediaType())
@@ -2149,8 +2139,7 @@ TEST_P(NewSdpTest, CheckMlines) {
 
 TEST_P(NewSdpTest, CheckSetup) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2168,8 +2157,7 @@ TEST_P(NewSdpTest, CheckSetup) {
 
 TEST_P(NewSdpTest, CheckSsrc) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2197,8 +2185,7 @@ TEST_P(NewSdpTest, CheckSsrc) {
 
 TEST_P(NewSdpTest, CheckRtpmap) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2254,8 +2241,7 @@ static const std::string kAudioWithTelephoneEvent =
 
 TEST_P(NewSdpTest, CheckTelephoneEventNoFmtp) {
   ParseSdp(kAudioWithTelephoneEvent);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2273,8 +2259,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventNoFmtp) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventWithDefaultEvents) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 0-15" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2283,8 +2268,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventWithDefaultEvents) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventWithBadCharacter) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 0-5." CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2293,8 +2277,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventWithBadCharacter) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventIncludingCommas) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 0-15,66,67" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2303,8 +2286,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventIncludingCommas) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventComplexEvents) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 0,1,2-4,5-15,66,67" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2313,8 +2295,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventComplexEvents) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventNoHyphen) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 5,6,7" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2323,8 +2304,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventNoHyphen) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventOnlyZero) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 0" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2333,8 +2313,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventOnlyZero) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventOnlyOne) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 1" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2343,8 +2322,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventOnlyOne) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadThreeDigit) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 123" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2354,8 +2332,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadThreeDigit) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadThreeDigitWithHyphen) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 0-123" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2365,8 +2342,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadThreeDigitWithHyphen) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadLeadingHyphen) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 -12" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2384,8 +2360,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadTrailingHyphenInMiddle) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadLeadingComma) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 ,2,3" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2395,8 +2370,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadLeadingComma) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadMultipleLeadingComma) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 ,,,2,3" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2406,8 +2380,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadMultipleLeadingComma) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadConsecutiveCommas) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 1,,,,,,,,3" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2417,8 +2390,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadConsecutiveCommas) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadTrailingComma) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 1,2,3," CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2428,8 +2400,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadTrailingComma) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadTwoHyphens) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 1-2-3" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2439,8 +2410,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadTwoHyphens) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadSixDigit) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 112233" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2450,8 +2420,7 @@ TEST_P(NewSdpTest, CheckTelephoneEventBadSixDigit) {
 
 TEST_P(NewSdpTest, CheckTelephoneEventBadRangeReversed) {
   ParseSdp(kAudioWithTelephoneEvent + "a=fmtp:101 33-2" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2472,8 +2441,7 @@ static const std::string kVideoWithRedAndUlpfecSdp =
 
 TEST_P(NewSdpTest, CheckRedNoFmtp) {
   ParseSdp(kVideoWithRedAndUlpfecSdp);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2505,8 +2473,7 @@ TEST_P(NewSdpTest, CheckRedEmptyFmtp) {
     }
   }
 
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2524,8 +2491,7 @@ TEST_P(NewSdpTest, CheckRedEmptyFmtp) {
 
 TEST_P(NewSdpTest, CheckRedFmtpWith2Codecs) {
   ParseSdp(kVideoWithRedAndUlpfecSdp + "a=fmtp:122 120/121" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2549,8 +2515,7 @@ TEST_P(NewSdpTest, CheckRedFmtpWith2Codecs) {
 
 TEST_P(NewSdpTest, CheckRedFmtpWith3Codecs) {
   ParseSdp(kVideoWithRedAndUlpfecSdp + "a=fmtp:122 120/121/123" CRLF);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2634,8 +2599,7 @@ const std::string kH264AudioVideoOffer =
 
 TEST_P(NewSdpTest, CheckFormatParameters) {
   ParseSdp(kH264AudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2748,8 +2712,7 @@ TEST_P(NewSdpTest, CheckFlags) {
 
 TEST_P(NewSdpTest, CheckConnectionLines) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2776,8 +2739,7 @@ TEST_P(NewSdpTest, CheckConnectionLines) {
 TEST_P(NewSdpTest, CheckDirections) {
   ParseSdp(kBasicAudioVideoOffer);
 
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(SdpDirectionAttribute::kSendonly,
             mSdp->GetMediaSection(0).GetAttributeList().GetDirection());
   ASSERT_EQ(SdpDirectionAttribute::kRecvonly,
@@ -2788,8 +2750,7 @@ TEST_P(NewSdpTest, CheckDirections) {
 
 TEST_P(NewSdpTest, CheckCandidates) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2965,8 +2926,7 @@ TEST_P(NewSdpTest, CheckRid) {
 
 TEST_P(NewSdpTest, CheckMediaLevelIceUfrag) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -2986,8 +2946,7 @@ TEST_P(NewSdpTest, CheckMediaLevelIceUfrag) {
 
 TEST_P(NewSdpTest, CheckMediaLevelIcePwd) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -3300,8 +3259,7 @@ TEST_P(NewSdpTest, CheckSimulcast) {
 
 TEST_P(NewSdpTest, CheckSctpmap) {
   ParseSdp(kBasicAudioVideoDataOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -3322,8 +3280,7 @@ TEST_P(NewSdpTest, CheckSctpmap) {
 
 TEST_P(NewSdpTest, CheckMaxPtime) {
   ParseSdp(kBasicAudioVideoOffer);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -3792,8 +3749,7 @@ const std::string kMediaLevelDtlsMessage =
 
 TEST_P(NewSdpTest, CheckMediaLevelDtlsMessage) {
   ParseSdp(kMediaLevelDtlsMessage);
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
 
   // dtls-message is not defined for use at the media level; we don't
   // parse it
@@ -3809,8 +3765,7 @@ TEST_P(NewSdpTest, CheckSetPort) {
            "a=sendonly" CRLF,
            false);
 
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
 
   constexpr unsigned int expectedParesPort = 56436;
   unsigned int currentPort = mSdp->GetMediaSection(0).GetPort();
@@ -3827,8 +3782,7 @@ TEST_P(NewSdpTest, CheckAddCodec) {
            "m=video 56436 RTP/SAVPF 120" CRLF "a=rtpmap:120 VP8/90000" CRLF
            "a=sendonly" CRLF);
 
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount());
 
   ASSERT_EQ(1U, mSdp->GetMediaSection(0).GetFormats().size());
@@ -3859,8 +3813,7 @@ TEST_P(NewSdpTest, CheckClearCodecs) {
            "m=video 56436 RTP/SAVPF 120 110" CRLF "a=rtpmap:120 VP8/90000" CRLF
            "a=sendonly" CRLF "a=rtpmap:110 opus/48000/2" CRLF);
 
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount());
 
   ASSERT_EQ(2U, mSdp->GetMediaSection(0).GetFormats().size());
@@ -3878,8 +3831,7 @@ TEST_P(NewSdpTest, CheckClearCodecs) {
 TEST_P(NewSdpTest, CheckAddMediaSection) {
   ParseSdp(kBasicAudioVideoOffer);
 
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(3U, mSdp->GetMediaSectionCount())
       << "Wrong number of media sections";
 
@@ -3954,8 +3906,7 @@ TEST_P(NewSdpTest, CheckAddDataChannel_Draft05) {
            "c=IN IP4 198.51.100.7" CRLF "b=CT:5000" CRLF "t=0 0" CRLF
            "m=application 56436 DTLS/SCTP 5000" CRLF);
 
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount());
 
   auto& mediaSection = mSdp->GetMediaSection(0);
@@ -3989,8 +3940,7 @@ TEST_P(NewSdpTest, CheckAddDataChannel) {
            "c=IN IP4 198.51.100.7" CRLF "b=CT:5000" CRLF "t=0 0" CRLF
            "m=application 56436 UDP/DTLS/SCTP webrtc-datachannel" CRLF);
 
-  ASSERT_TRUE(!!mSdp)
-  << "Parse failed: " << GetParseErrors();
+  ASSERT_TRUE(!!mSdp) << "Parse failed: " << GetParseErrors();
   ASSERT_EQ(1U, mSdp->GetMediaSectionCount());
 
   auto& mediaSection = mSdp->GetMediaSection(0);
@@ -4012,8 +3962,7 @@ TEST_P(NewSdpTest, CheckAddDataChannel) {
   ASSERT_EQ(15000U, mediaSection.GetAttributeList().GetSctpPort());
 }
 
-TEST(NewSdpTestNoFixture, CheckParsingResultComparer)
-{
+TEST(NewSdpTestNoFixture, CheckParsingResultComparer) {
   auto check_comparison = [](const std::string sdp_string) {
     SipccSdpParser sipccParser;
     RsdparsaSdpParser rustParser;
@@ -4073,8 +4022,7 @@ TEST(NewSdpTestNoFixture, CheckParsingResultComparer)
   ASSERT_TRUE(check_comparison(kBasicH264Fmtp2));
 }
 
-TEST(NewSdpTestNoFixture, CheckAttributeTypeSerialize)
-{
+TEST(NewSdpTestNoFixture, CheckAttributeTypeSerialize) {
   for (auto a = static_cast<size_t>(SdpAttribute::kFirstAttribute);
        a <= static_cast<size_t>(SdpAttribute::kLastAttribute); ++a) {
     SdpAttribute::AttributeType type =
@@ -4100,8 +4048,7 @@ static SdpImageattrAttributeList::XYRange ParseXYRange(
   return range;
 }
 
-TEST(NewSdpTestNoFixture, CheckImageattrXYRangeParseValid)
-{
+TEST(NewSdpTestNoFixture, CheckImageattrXYRangeParseValid) {
   {
     SdpImageattrAttributeList::XYRange range(ParseXYRange("640"));
     ASSERT_EQ(1U, range.discreteValues.size());
@@ -4156,8 +4103,7 @@ void ParseInvalid(const std::string& input, size_t last) {
   std::cout << "\"" << input << "\" - " << error << std::endl;
 }
 
-TEST(NewSdpTestNoFixture, CheckImageattrXYRangeParseInvalid)
-{
+TEST(NewSdpTestNoFixture, CheckImageattrXYRangeParseInvalid) {
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[-1", 1);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[-", 1);
   ParseInvalid<SdpImageattrAttributeList::XYRange>("[-v", 1);
@@ -4206,8 +4152,7 @@ static SdpImageattrAttributeList::SRange ParseSRange(const std::string& input) {
   return range;
 }
 
-TEST(NewSdpTestNoFixture, CheckImageattrSRangeParseValid)
-{
+TEST(NewSdpTestNoFixture, CheckImageattrSRangeParseValid) {
   {
     SdpImageattrAttributeList::SRange range(ParseSRange("0.1"));
     ASSERT_EQ(1U, range.discreteValues.size());
@@ -4237,8 +4182,7 @@ TEST(NewSdpTestNoFixture, CheckImageattrSRangeParseValid)
   }
 }
 
-TEST(NewSdpTestNoFixture, CheckImageattrSRangeParseInvalid)
-{
+TEST(NewSdpTestNoFixture, CheckImageattrSRangeParseInvalid) {
   ParseInvalid<SdpImageattrAttributeList::SRange>("", 0);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[", 1);
   ParseInvalid<SdpImageattrAttributeList::SRange>("[v", 1);
@@ -4279,15 +4223,13 @@ static SdpImageattrAttributeList::PRange ParsePRange(const std::string& input) {
   return range;
 }
 
-TEST(NewSdpTestNoFixture, CheckImageattrPRangeParseValid)
-{
+TEST(NewSdpTestNoFixture, CheckImageattrPRangeParseValid) {
   SdpImageattrAttributeList::PRange range(ParsePRange("[0.1000-9.9999]"));
   ASSERT_FLOAT_EQ(0.1f, range.min);
   ASSERT_FLOAT_EQ(9.9999f, range.max);
 }
 
-TEST(NewSdpTestNoFixture, CheckImageattrPRangeParseInvalid)
-{
+TEST(NewSdpTestNoFixture, CheckImageattrPRangeParseInvalid) {
   ParseInvalid<SdpImageattrAttributeList::PRange>("", 0);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[", 1);
   ParseInvalid<SdpImageattrAttributeList::PRange>("[v", 1);
@@ -4325,8 +4267,7 @@ static SdpImageattrAttributeList::Set ParseSet(const std::string& input) {
   return set;
 }
 
-TEST(NewSdpTestNoFixture, CheckImageattrSetParseValid)
-{
+TEST(NewSdpTestNoFixture, CheckImageattrSetParseValid) {
   {
     SdpImageattrAttributeList::Set set(ParseSet("[x=320,y=240]"));
     ASSERT_EQ(1U, set.xRange.discreteValues.size());
@@ -4450,8 +4391,7 @@ TEST(NewSdpTestNoFixture, CheckImageattrSetParseValid)
   }
 }
 
-TEST(NewSdpTestNoFixture, CheckImageattrSetParseInvalid)
-{
+TEST(NewSdpTestNoFixture, CheckImageattrSetParseInvalid) {
   ParseInvalid<SdpImageattrAttributeList::Set>("", 0);
   ParseInvalid<SdpImageattrAttributeList::Set>("x", 0);
   ParseInvalid<SdpImageattrAttributeList::Set>("[", 1);
@@ -4499,8 +4439,7 @@ static SdpImageattrAttributeList::Imageattr ParseImageattr(
   return imageattr;
 }
 
-TEST(NewSdpTestNoFixture, CheckImageattrParseValid)
-{
+TEST(NewSdpTestNoFixture, CheckImageattrParseValid) {
   {
     SdpImageattrAttributeList::Imageattr imageattr(ParseImageattr("* send *"));
     ASSERT_FALSE(imageattr.pt.isSome());
@@ -4632,8 +4571,7 @@ TEST(NewSdpTestNoFixture, CheckImageattrParseValid)
   }
 }
 
-TEST(NewSdpTestNoFixture, CheckImageattrParseInvalid)
-{
+TEST(NewSdpTestNoFixture, CheckImageattrParseInvalid) {
   ParseInvalid<SdpImageattrAttributeList::Imageattr>("", 0);
   ParseInvalid<SdpImageattrAttributeList::Imageattr>(" ", 0);
   ParseInvalid<SdpImageattrAttributeList::Imageattr>("-1", 0);
@@ -4657,8 +4595,7 @@ TEST(NewSdpTestNoFixture, CheckImageattrParseInvalid)
       "* send * recv [x=640,y=480] foobajooba", 28);
 }
 
-TEST(NewSdpTestNoFixture, CheckImageattrXYRangeSerialization)
-{
+TEST(NewSdpTestNoFixture, CheckImageattrXYRangeSerialization) {
   SdpImageattrAttributeList::XYRange range;
   std::stringstream os;
 
@@ -4685,8 +4622,7 @@ TEST(NewSdpTestNoFixture, CheckImageattrXYRangeSerialization)
   ASSERT_EQ("[320,640]", os.str());
 }
 
-TEST(NewSdpTestNoFixture, CheckImageattrSRangeSerialization)
-{
+TEST(NewSdpTestNoFixture, CheckImageattrSRangeSerialization) {
   SdpImageattrAttributeList::SRange range;
   std::ostringstream os;
 
@@ -4708,8 +4644,7 @@ TEST(NewSdpTestNoFixture, CheckImageattrSRangeSerialization)
   ASSERT_EQ("[0.1000,0.5000]", os.str());
 }
 
-TEST(NewSdpTestNoFixture, CheckImageattrPRangeSerialization)
-{
+TEST(NewSdpTestNoFixture, CheckImageattrPRangeSerialization) {
   SdpImageattrAttributeList::PRange range;
   std::ostringstream os;
 
@@ -4719,8 +4654,7 @@ TEST(NewSdpTestNoFixture, CheckImageattrPRangeSerialization)
   ASSERT_EQ("[0.1000-0.9999]", os.str());
 }
 
-TEST(NewSdpTestNoFixture, CheckImageattrSetSerialization)
-{
+TEST(NewSdpTestNoFixture, CheckImageattrSetSerialization) {
   SdpImageattrAttributeList::Set set;
   std::ostringstream os;
 
@@ -4757,8 +4691,7 @@ TEST(NewSdpTestNoFixture, CheckImageattrSetSerialization)
   os.str("");
 }
 
-TEST(NewSdpTestNoFixture, CheckImageattrSerialization)
-{
+TEST(NewSdpTestNoFixture, CheckImageattrSerialization) {
   SdpImageattrAttributeList::Imageattr imageattr;
   std::ostringstream os;
 
@@ -4818,8 +4751,7 @@ TEST(NewSdpTestNoFixture, CheckImageattrSerialization)
   os.str("");
 }
 
-TEST(NewSdpTestNoFixture, CheckSimulcastVersionSerialize)
-{
+TEST(NewSdpTestNoFixture, CheckSimulcastVersionSerialize) {
   std::ostringstream os;
 
   SdpSimulcastAttribute::Version version;
@@ -4850,8 +4782,7 @@ static SdpSimulcastAttribute::Version ParseSimulcastVersion(
   return version;
 }
 
-TEST(NewSdpTestNoFixture, CheckSimulcastVersionValidParse)
-{
+TEST(NewSdpTestNoFixture, CheckSimulcastVersionValidParse) {
   {
     SdpSimulcastAttribute::Version version(ParseSimulcastVersion("1"));
     ASSERT_EQ(1U, version.choices.size());
@@ -4866,8 +4797,7 @@ TEST(NewSdpTestNoFixture, CheckSimulcastVersionValidParse)
   }
 }
 
-TEST(NewSdpTestNoFixture, CheckSimulcastVersionInvalidParse)
-{
+TEST(NewSdpTestNoFixture, CheckSimulcastVersionInvalidParse) {
   ParseInvalid<SdpSimulcastAttribute::Version>("", 0);
   ParseInvalid<SdpSimulcastAttribute::Version>(",", 0);
   ParseInvalid<SdpSimulcastAttribute::Version>(";", 0);
@@ -4878,8 +4808,7 @@ TEST(NewSdpTestNoFixture, CheckSimulcastVersionInvalidParse)
   ParseInvalid<SdpSimulcastAttribute::Version>("8,;", 2);
 }
 
-TEST(NewSdpTestNoFixture, CheckSimulcastVersionsSerialize)
-{
+TEST(NewSdpTestNoFixture, CheckSimulcastVersionsSerialize) {
   std::ostringstream os;
 
   SdpSimulcastAttribute::Versions versions;
@@ -4923,8 +4852,7 @@ static SdpSimulcastAttribute::Versions ParseSimulcastVersions(
   return list;
 }
 
-TEST(NewSdpTestNoFixture, CheckSimulcastVersionsValidParse)
-{
+TEST(NewSdpTestNoFixture, CheckSimulcastVersionsValidParse) {
   {
     SdpSimulcastAttribute::Versions versions(ParseSimulcastVersions("pt=8"));
     ASSERT_EQ(1U, versions.size());
@@ -4961,8 +4889,7 @@ TEST(NewSdpTestNoFixture, CheckSimulcastVersionsValidParse)
   }
 }
 
-TEST(NewSdpTestNoFixture, CheckSimulcastVersionsInvalidParse)
-{
+TEST(NewSdpTestNoFixture, CheckSimulcastVersionsInvalidParse) {
   ParseInvalid<SdpSimulcastAttribute::Versions>("", 0);
   ParseInvalid<SdpSimulcastAttribute::Versions>("x", 1);
   ParseInvalid<SdpSimulcastAttribute::Versions>(";", 1);
@@ -4977,8 +4904,7 @@ TEST(NewSdpTestNoFixture, CheckSimulcastVersionsInvalidParse)
   ParseInvalid<SdpSimulcastAttribute::Versions>("pt=8;;", 5);
 }
 
-TEST(NewSdpTestNoFixture, CheckSimulcastSerialize)
-{
+TEST(NewSdpTestNoFixture, CheckSimulcastSerialize) {
   std::ostringstream os;
 
   SdpSimulcastAttribute simulcast;
@@ -5005,8 +4931,7 @@ static SdpSimulcastAttribute ParseSimulcast(const std::string& input) {
   return simulcast;
 }
 
-TEST(NewSdpTestNoFixture, CheckSimulcastValidParse)
-{
+TEST(NewSdpTestNoFixture, CheckSimulcastValidParse) {
   {
     SdpSimulcastAttribute simulcast(ParseSimulcast(" send pt=8"));
     ASSERT_EQ(1U, simulcast.sendVersions.size());
@@ -5063,8 +4988,7 @@ TEST(NewSdpTestNoFixture, CheckSimulcastValidParse)
   }
 }
 
-TEST(NewSdpTestNoFixture, CheckSimulcastInvalidParse)
-{
+TEST(NewSdpTestNoFixture, CheckSimulcastInvalidParse) {
   ParseInvalid<SdpSimulcastAttribute>("", 0);
   ParseInvalid<SdpSimulcastAttribute>(" ", 1);
   ParseInvalid<SdpSimulcastAttribute>("vcer ", 4);
@@ -5083,8 +5007,7 @@ static SdpRidAttributeList::Rid ParseRid(const std::string& input) {
   return rid;
 }
 
-TEST(NewSdpTestNoFixture, CheckRidValidParse)
-{
+TEST(NewSdpTestNoFixture, CheckRidValidParse) {
   {
     SdpRidAttributeList::Rid rid(ParseRid("1 send"));
     ASSERT_EQ("1", rid.id);
@@ -5369,8 +5292,7 @@ TEST(NewSdpTestNoFixture, CheckRidValidParse)
   }
 }
 
-TEST(NewSdpTestNoFixture, CheckRidInvalidParse)
-{
+TEST(NewSdpTestNoFixture, CheckRidInvalidParse) {
   ParseInvalid<SdpRidAttributeList::Rid>("", 0);
   ParseInvalid<SdpRidAttributeList::Rid>(" ", 0);
   ParseInvalid<SdpRidAttributeList::Rid>("foo", 3);
@@ -5397,8 +5319,7 @@ TEST(NewSdpTestNoFixture, CheckRidInvalidParse)
   ParseInvalid<SdpRidAttributeList::Rid>("foo send depend=1,", 18);
 }
 
-TEST(NewSdpTestNoFixture, CheckRidSerialize)
-{
+TEST(NewSdpTestNoFixture, CheckRidSerialize) {
   {
     SdpRidAttributeList::Rid rid;
     rid.id = "foo";

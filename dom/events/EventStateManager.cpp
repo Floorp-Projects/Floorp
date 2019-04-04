@@ -1296,9 +1296,7 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
       remote->SendPluginEvent(*aEvent->AsPluginEvent());
       return;
     }
-    default: {
-      MOZ_CRASH("Attempt to send non-whitelisted event?");
-    }
+    default: { MOZ_CRASH("Attempt to send non-whitelisted event?"); }
   }
 }
 

@@ -26,8 +26,7 @@ struct TestExpectations {
 
 // ============================= TestDirectives ========================
 
-TEST(SecureContext, IsOriginPotentiallyTrustworthyWithCodeBasePrincipal)
-{
+TEST(SecureContext, IsOriginPotentiallyTrustworthyWithCodeBasePrincipal) {
   // boolean isOriginPotentiallyTrustworthy(in nsIPrincipal aPrincipal);
 
   static const TestExpectations uris[] = {
@@ -69,8 +68,7 @@ TEST(SecureContext, IsOriginPotentiallyTrustworthyWithCodeBasePrincipal)
   }
 }
 
-TEST(SecureContext, IsOriginPotentiallyTrustworthyWithSystemPrincipal)
-{
+TEST(SecureContext, IsOriginPotentiallyTrustworthyWithSystemPrincipal) {
   RefPtr<nsScriptSecurityManager> ssManager =
       nsScriptSecurityManager::GetScriptSecurityManager();
   ASSERT_TRUE(!!ssManager);
@@ -86,8 +84,7 @@ TEST(SecureContext, IsOriginPotentiallyTrustworthyWithSystemPrincipal)
   ASSERT_TRUE(isPotentiallyTrustworthy);
 }
 
-TEST(SecureContext, IsOriginPotentiallyTrustworthyWithNullPrincipal)
-{
+TEST(SecureContext, IsOriginPotentiallyTrustworthyWithNullPrincipal) {
   RefPtr<nsScriptSecurityManager> ssManager =
       nsScriptSecurityManager::GetScriptSecurityManager();
   ASSERT_TRUE(!!ssManager);

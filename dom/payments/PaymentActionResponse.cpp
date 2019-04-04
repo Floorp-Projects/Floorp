@@ -268,9 +268,7 @@ PaymentShowActionResponse::Init(const nsAString& aRequestId,
         }
         break;
       }
-      default: {
-        return NS_ERROR_FAILURE;
-      }
+      default: { return NS_ERROR_FAILURE; }
     }
   }
   mData = aData;

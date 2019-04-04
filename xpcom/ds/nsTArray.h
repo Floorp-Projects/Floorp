@@ -1131,8 +1131,8 @@ class nsTArray_Impl
   // @return       true if the element was found.
   template <class Item, class Comparator>
   bool Contains(const Item& aItem, const Comparator& aComp) const {
-    return ApplyIf(
-        aItem, 0, aComp, []() { return true; }, []() { return false; });
+    return ApplyIf(aItem, 0, aComp, []() { return true; },
+                   []() { return false; });
   }
 
   // Like Contains(), but assumes a sorted array.
@@ -1513,12 +1513,11 @@ class nsTArray_Impl
     ::detail::CompareWrapper<Comparator, Item> comp(aComp);
 
     size_t index;
-    BinarySearchIf(
-        Elements(), 0, Length(),
-        [&](const elem_type& aElement) {
-          return comp.Compare(aElement, aItem) <= 0 ? 1 : -1;
-        },
-        &index);
+    BinarySearchIf(Elements(), 0, Length(),
+                   [&](const elem_type& aElement) {
+                     return comp.Compare(aElement, aItem) <= 0 ? 1 : -1;
+                   },
+                   &index);
     return index;
   }
 

@@ -25,8 +25,7 @@ static nsAutoCString nt(nsAutoCString aDatetime) {
   return datetime;
 }
 
-TEST(DateTimeFormat, FormatPRExplodedTime)
-{
+TEST(DateTimeFormat, FormatPRExplodedTime) {
   PRTime prTime = 0;
   PRExplodedTime prExplodedTime;
   PR_ExplodeTime(prTime, PR_GMTParameters, &prExplodedTime);
@@ -88,8 +87,7 @@ TEST(DateTimeFormat, FormatPRExplodedTime)
                nt(NS_ConvertUTF16toUTF8(formattedTime)).get());
 }
 
-TEST(DateTimeFormat, DateFormatSelectors)
-{
+TEST(DateTimeFormat, DateFormatSelectors) {
   PRTime prTime = 0;
   PRExplodedTime prExplodedTime;
   PR_ExplodeTime(prTime, PR_GMTParameters, &prExplodedTime);
@@ -160,8 +158,7 @@ static nsAutoCString ntd(nsAutoCString aDatetime) {
   return datetime;
 }
 
-TEST(DateTimeFormat, FormatPRExplodedTimeForeign)
-{
+TEST(DateTimeFormat, FormatPRExplodedTimeForeign) {
   PRTime prTime = 0;
   PRExplodedTime prExplodedTime;
   PR_ExplodeTime(prTime, PR_GMTParameters, &prExplodedTime);
@@ -223,8 +220,7 @@ TEST(DateTimeFormat, FormatPRExplodedTimeForeign)
                ntd(NS_ConvertUTF16toUTF8(formattedTime)).get());
 }
 
-TEST(DateTimeFormat, DateFormatSelectorsForeign)
-{
+TEST(DateTimeFormat, DateFormatSelectorsForeign) {
   PRTime prTime = 0;
   PRExplodedTime prExplodedTime;
   PR_ExplodeTime(prTime, PR_GMTParameters, &prExplodedTime);

@@ -25,8 +25,7 @@ struct Foo {
   ~Foo() {}
 };
 
-TEST(WatchManager, Shutdown)
-{
+TEST(WatchManager, Shutdown) {
   RefPtr<TaskQueue> queue =
       new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK));
 

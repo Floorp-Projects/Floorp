@@ -11,8 +11,7 @@
 
 using namespace mozilla::gfx;
 
-TEST(Gfx, ArrayView)
-{
+TEST(Gfx, ArrayView) {
   nsTArray<int> p = {5, 6};
   ArrayView<int> pv(p);
   ASSERT_EQ(pv[1], 6);

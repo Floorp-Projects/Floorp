@@ -420,15 +420,15 @@ nsFilePicker::Open(nsIFilePickerShownCallback *aCallback) {
       if (GTK_IS_DIALOG(file_chooser)) {
         GtkDialog *dialog = GTK_DIALOG(file_chooser);
         GtkContainer *area = GTK_CONTAINER(gtk_dialog_get_content_area(dialog));
-        gtk_container_forall(
-            area,
-            [](GtkWidget *widget, gpointer data) {
-              if (GTK_IS_FILE_CHOOSER_WIDGET(widget)) {
-                auto result = static_cast<GtkFileChooserWidget **>(data);
-                *result = GTK_FILE_CHOOSER_WIDGET(widget);
-              }
-            },
-            &mFileChooserDelegate);
+        gtk_container_forall(area,
+                             [](GtkWidget *widget, gpointer data) {
+                               if (GTK_IS_FILE_CHOOSER_WIDGET(widget)) {
+                                 auto result =
+                                     static_cast<GtkFileChooserWidget **>(data);
+                                 *result = GTK_FILE_CHOOSER_WIDGET(widget);
+                               }
+                             },
+                             &mFileChooserDelegate);
 
         if (mFileChooserDelegate != nullptr) {
           g_object_ref(mFileChooserDelegate);

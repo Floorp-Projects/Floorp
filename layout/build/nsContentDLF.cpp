@@ -150,41 +150,41 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
   // Try html or plaintext; both use the same document CID
   if (IsTypeInList(contentType, gHTMLTypes) ||
       nsContentUtils::IsPlainTextType(contentType)) {
-    return CreateDocument(
-        aCommand, aChannel, aLoadGroup, aContainer,
-        []() -> already_AddRefed<Document> {
-          RefPtr<Document> doc;
-          nsresult rv = NS_NewHTMLDocument(getter_AddRefs(doc));
-          NS_ENSURE_SUCCESS(rv, nullptr);
-          return doc.forget();
-        },
-        aDocListener, aDocViewer);
+    return CreateDocument(aCommand, aChannel, aLoadGroup, aContainer,
+                          []() -> already_AddRefed<Document> {
+                            RefPtr<Document> doc;
+                            nsresult rv =
+                                NS_NewHTMLDocument(getter_AddRefs(doc));
+                            NS_ENSURE_SUCCESS(rv, nullptr);
+                            return doc.forget();
+                          },
+                          aDocListener, aDocViewer);
   }
 
   // Try XML
   if (IsTypeInList(contentType, gXMLTypes)) {
-    return CreateDocument(
-        aCommand, aChannel, aLoadGroup, aContainer,
-        []() -> already_AddRefed<Document> {
-          RefPtr<Document> doc;
-          nsresult rv = NS_NewXMLDocument(getter_AddRefs(doc));
-          NS_ENSURE_SUCCESS(rv, nullptr);
-          return doc.forget();
-        },
-        aDocListener, aDocViewer);
+    return CreateDocument(aCommand, aChannel, aLoadGroup, aContainer,
+                          []() -> already_AddRefed<Document> {
+                            RefPtr<Document> doc;
+                            nsresult rv =
+                                NS_NewXMLDocument(getter_AddRefs(doc));
+                            NS_ENSURE_SUCCESS(rv, nullptr);
+                            return doc.forget();
+                          },
+                          aDocListener, aDocViewer);
   }
 
   // Try SVG
   if (IsTypeInList(contentType, gSVGTypes)) {
-    return CreateDocument(
-        aCommand, aChannel, aLoadGroup, aContainer,
-        []() -> already_AddRefed<Document> {
-          RefPtr<Document> doc;
-          nsresult rv = NS_NewSVGDocument(getter_AddRefs(doc));
-          NS_ENSURE_SUCCESS(rv, nullptr);
-          return doc.forget();
-        },
-        aDocListener, aDocViewer);
+    return CreateDocument(aCommand, aChannel, aLoadGroup, aContainer,
+                          []() -> already_AddRefed<Document> {
+                            RefPtr<Document> doc;
+                            nsresult rv =
+                                NS_NewSVGDocument(getter_AddRefs(doc));
+                            NS_ENSURE_SUCCESS(rv, nullptr);
+                            return doc.forget();
+                          },
+                          aDocListener, aDocViewer);
   }
 
   // Try XUL
@@ -200,28 +200,28 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
   if (mozilla::DecoderTraits::ShouldHandleMediaType(
           contentType.get(),
           /* DecoderDoctorDiagnostics* */ nullptr)) {
-    return CreateDocument(
-        aCommand, aChannel, aLoadGroup, aContainer,
-        []() -> already_AddRefed<Document> {
-          RefPtr<Document> doc;
-          nsresult rv = NS_NewVideoDocument(getter_AddRefs(doc));
-          NS_ENSURE_SUCCESS(rv, nullptr);
-          return doc.forget();
-        },
-        aDocListener, aDocViewer);
+    return CreateDocument(aCommand, aChannel, aLoadGroup, aContainer,
+                          []() -> already_AddRefed<Document> {
+                            RefPtr<Document> doc;
+                            nsresult rv =
+                                NS_NewVideoDocument(getter_AddRefs(doc));
+                            NS_ENSURE_SUCCESS(rv, nullptr);
+                            return doc.forget();
+                          },
+                          aDocListener, aDocViewer);
   }
 
   // Try image types
   if (IsImageContentType(contentType.get())) {
-    return CreateDocument(
-        aCommand, aChannel, aLoadGroup, aContainer,
-        []() -> already_AddRefed<Document> {
-          RefPtr<Document> doc;
-          nsresult rv = NS_NewImageDocument(getter_AddRefs(doc));
-          NS_ENSURE_SUCCESS(rv, nullptr);
-          return doc.forget();
-        },
-        aDocListener, aDocViewer);
+    return CreateDocument(aCommand, aChannel, aLoadGroup, aContainer,
+                          []() -> already_AddRefed<Document> {
+                            RefPtr<Document> doc;
+                            nsresult rv =
+                                NS_NewImageDocument(getter_AddRefs(doc));
+                            NS_ENSURE_SUCCESS(rv, nullptr);
+                            return doc.forget();
+                          },
+                          aDocListener, aDocViewer);
   }
 
   RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
@@ -229,15 +229,15 @@ nsContentDLF::CreateInstance(const char* aCommand, nsIChannel* aChannel,
   // is disabled" placeholder.
   if (pluginHost &&
       pluginHost->HavePluginForType(contentType, nsPluginHost::eExcludeNone)) {
-    return CreateDocument(
-        aCommand, aChannel, aLoadGroup, aContainer,
-        []() -> already_AddRefed<Document> {
-          RefPtr<Document> doc;
-          nsresult rv = NS_NewPluginDocument(getter_AddRefs(doc));
-          NS_ENSURE_SUCCESS(rv, nullptr);
-          return doc.forget();
-        },
-        aDocListener, aDocViewer);
+    return CreateDocument(aCommand, aChannel, aLoadGroup, aContainer,
+                          []() -> already_AddRefed<Document> {
+                            RefPtr<Document> doc;
+                            nsresult rv =
+                                NS_NewPluginDocument(getter_AddRefs(doc));
+                            NS_ENSURE_SUCCESS(rv, nullptr);
+                            return doc.forget();
+                          },
+                          aDocListener, aDocViewer);
   }
 
   // If we get here, then we weren't able to create anything. Sorry!

@@ -140,19 +140,18 @@ auto SingleAllocPolicy::Alloc() -> RefPtr<Promise> {
         RefPtr<Promise> p = self->mPendingPromise.Ensure(__func__);
         GlobalAllocPolicy::Instance(self->mTrack)
             ->Alloc()
-            ->Then(
-                self->mOwnerThread, __func__,
-                [self, localToken = std::move(localToken)](
-                    RefPtr<Token> aToken) mutable {
-                  self->mTokenRequest.Complete();
-                  RefPtr<Token> combinedToken = new AutoDeallocCombinedToken(
-                      localToken.forget(), aToken.forget());
-                  self->mPendingPromise.Resolve(combinedToken, __func__);
-                },
-                [self]() {
-                  self->mTokenRequest.Complete();
-                  self->mPendingPromise.Reject(true, __func__);
-                })
+            ->Then(self->mOwnerThread, __func__,
+                   [self, localToken = std::move(localToken)](
+                       RefPtr<Token> aToken) mutable {
+                     self->mTokenRequest.Complete();
+                     RefPtr<Token> combinedToken = new AutoDeallocCombinedToken(
+                         localToken.forget(), aToken.forget());
+                     self->mPendingPromise.Resolve(combinedToken, __func__);
+                   },
+                   [self]() {
+                     self->mTokenRequest.Complete();
+                     self->mPendingPromise.Reject(true, __func__);
+                   })
             ->Track(self->mTokenRequest);
         return p;
       },
@@ -213,47 +212,47 @@ AllocationWrapper::CreateDecoder(const CreateDecoderParams& aParams,
   RefPtr<AllocateDecoderPromise> p =
       (aPolicy ? aPolicy : GlobalAllocPolicy::Instance(aParams.mType))
           ->Alloc()
-          ->Then(
-              AbstractThread::GetCurrent(), __func__,
-              [=](RefPtr<Token> aToken) {
-                // result may not always be updated by
-                // PDMFactory::CreateDecoder either when the creation
-                // succeeded or failed, as such it must be initialized to a
-                // fatal error by default.
-                MediaResult result =
-                    MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                                nsPrintfCString("error creating %s decoder",
-                                                TrackTypeToStr(type)));
-                RefPtr<PDMFactory> pdm = new PDMFactory();
-                CreateDecoderParams params{*config,
-                                           taskQueue,
-                                           diagnostics,
-                                           imageContainer,
-                                           &result,
-                                           knowsCompositor,
-                                           crashHelper,
-                                           useNullDecoder,
-                                           noWrapper,
-                                           type,
-                                           onWaitingForKeyEvent,
-                                           options,
-                                           rate};
-                RefPtr<MediaDataDecoder> decoder = pdm->CreateDecoder(params);
-                if (decoder) {
-                  RefPtr<AllocationWrapper> wrapper =
-                      new AllocationWrapper(decoder.forget(), aToken.forget());
-                  return AllocateDecoderPromise::CreateAndResolve(wrapper,
+          ->Then(AbstractThread::GetCurrent(), __func__,
+                 [=](RefPtr<Token> aToken) {
+                   // result may not always be updated by
+                   // PDMFactory::CreateDecoder either when the creation
+                   // succeeded or failed, as such it must be initialized to a
+                   // fatal error by default.
+                   MediaResult result =
+                       MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                   nsPrintfCString("error creating %s decoder",
+                                                   TrackTypeToStr(type)));
+                   RefPtr<PDMFactory> pdm = new PDMFactory();
+                   CreateDecoderParams params{*config,
+                                              taskQueue,
+                                              diagnostics,
+                                              imageContainer,
+                                              &result,
+                                              knowsCompositor,
+                                              crashHelper,
+                                              useNullDecoder,
+                                              noWrapper,
+                                              type,
+                                              onWaitingForKeyEvent,
+                                              options,
+                                              rate};
+                   RefPtr<MediaDataDecoder> decoder =
+                       pdm->CreateDecoder(params);
+                   if (decoder) {
+                     RefPtr<AllocationWrapper> wrapper = new AllocationWrapper(
+                         decoder.forget(), aToken.forget());
+                     return AllocateDecoderPromise::CreateAndResolve(wrapper,
+                                                                     __func__);
+                   }
+                   return AllocateDecoderPromise::CreateAndReject(result,
                                                                   __func__);
-                }
-                return AllocateDecoderPromise::CreateAndReject(result,
-                                                               __func__);
-              },
-              []() {
-                return AllocateDecoderPromise::CreateAndReject(
-                    MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                                "Allocation policy expired"),
-                    __func__);
-              });
+                 },
+                 []() {
+                   return AllocateDecoderPromise::CreateAndReject(
+                       MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                                   "Allocation policy expired"),
+                       __func__);
+                 });
   return p;
 }
 

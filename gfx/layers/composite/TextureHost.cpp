@@ -740,9 +740,7 @@ static bool IsCompatibleTextureSource(TextureSource* aTexture,
       return aTexture->GetFormat() == rgb.format() &&
              aTexture->GetSize() == rgb.size();
     }
-    default: {
-      return false;
-    }
+    default: { return false; }
   }
 }
 

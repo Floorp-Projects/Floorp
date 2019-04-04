@@ -4,8 +4,7 @@
 #include "nsIFile.h"
 #include "nsXPCOMCID.h"
 
-TEST(FilePreferencesWin, Normalization)
-{
+TEST(FilePreferencesWin, Normalization) {
   nsAutoString normalized;
 
   mozilla::FilePreferences::testing::NormalizePath(NS_LITERAL_STRING("foo"),
@@ -115,8 +114,7 @@ TEST(FilePreferencesWin, Normalization)
   ASSERT_FALSE(result);
 }
 
-TEST(FilePreferencesWin, AccessUNC)
-{
+TEST(FilePreferencesWin, AccessUNC) {
   nsCOMPtr<nsIFile> lf = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);
 
   nsresult rv;

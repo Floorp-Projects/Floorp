@@ -25,8 +25,7 @@ class nsICOMPtrEqTestFoo : public nsISupports {
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsICOMPtrEqTestFoo, NS_ICOMPTREQTESTFOO_IID)
 
-TEST(COMPtrEq, NullEquality)
-{
+TEST(COMPtrEq, NullEquality) {
   nsCOMPtr<nsICOMPtrEqTestFoo> s;
   nsICOMPtrEqTestFoo* r = nullptr;
   const nsCOMPtr<nsICOMPtrEqTestFoo> sc;
