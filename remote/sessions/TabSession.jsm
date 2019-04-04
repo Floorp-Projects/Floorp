@@ -9,7 +9,25 @@ var EXPORTED_SYMBOLS = ["TabSession"];
 const {Domains} = ChromeUtils.import("chrome://remote/content/domains/Domains.jsm");
 const {Session} = ChromeUtils.import("chrome://remote/content/sessions/Session.jsm");
 
+/**
+ * A session to communicate with a given tab
+ */
 class TabSession extends Session {
+  /**
+   * @param Connection connection
+   *        The connection used to communicate with the server.
+   * @param TabTarget target
+   *        The tab target to which this session communicates with.
+   * @param Number id (optional)
+   *        If this session isn't the default one used for the HTTP endpoint we
+   *        connected to, the session requires an id to distinguish it from the default
+   *        one. This id is used to filter our request, responses and events between
+   *        all active sessions.
+   * @param Session parentSession (optional)
+   *        If this isn't the default session, optional hand over a session to which
+   *        we will forward all request responses and events via
+   *        `Target.receivedMessageFromTarget` events.
+   */
   constructor(connection, target, id, parentSession) {
     super(connection, target, id);
     this.parentSession = parentSession;
