@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGSVGElement_h
 #define mozilla_dom_SVGSVGElement_h
 
-#include "SVGEnum.h"
+#include "SVGAnimatedEnumeration.h"
 #include "SVGViewportElement.h"
 
 nsresult NS_NewSVGSVGElement(
@@ -33,8 +33,8 @@ class SVGView {
  public:
   SVGView();
 
-  mozilla::SVGEnum mZoomAndPan;
-  SVGViewBox mViewBox;
+  SVGAnimatedEnumeration mZoomAndPan;
+  SVGAnimatedViewBox mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
   nsAutoPtr<SVGAnimatedTransformList> mTransforms;
 };
@@ -219,14 +219,14 @@ class SVGSVGElement final : public SVGSVGElementBase {
   }
   virtual float GetCurrentScale() const override { return mCurrentScale; }
 
-  virtual const SVGViewBox& GetViewBoxInternal() const override;
+  virtual const SVGAnimatedViewBox& GetViewBoxInternal() const override;
   virtual SVGAnimatedTransformList* GetTransformInternal() const override;
 
   virtual EnumAttributesInfo GetEnumInfo() override;
 
   enum { ZOOMANDPAN };
-  mozilla::SVGEnum mEnumAttributes[1];
-  static mozilla::SVGEnumMapping sZoomAndPanMap[];
+  SVGAnimatedEnumeration mEnumAttributes[1];
+  static SVGEnumMapping sZoomAndPanMap[];
   static EnumInfo sEnumInfo[1];
 
   // The time container for animations within this SVG document fragment. Set

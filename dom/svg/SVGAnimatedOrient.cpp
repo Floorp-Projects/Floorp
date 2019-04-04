@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SVGOrient.h"
+#include "SVGAnimatedOrient.h"
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Move.h"
@@ -28,12 +28,14 @@ static const nsStaticAtom* const angleUnitMap[] = {
     nullptr, /* SVG_ANGLETYPE_UNSPECIFIED */
     nsGkAtoms::deg, nsGkAtoms::rad, nsGkAtoms::grad};
 
-static SVGAttrTearoffTable<SVGOrient, DOMSVGAnimatedEnumeration>
+static SVGAttrTearoffTable<SVGAnimatedOrient, DOMSVGAnimatedEnumeration>
     sSVGAnimatedEnumTearoffTable;
-static SVGAttrTearoffTable<SVGOrient, DOMSVGAnimatedAngle>
+static SVGAttrTearoffTable<SVGAnimatedOrient, DOMSVGAnimatedAngle>
     sSVGAnimatedAngleTearoffTable;
-static SVGAttrTearoffTable<SVGOrient, DOMSVGAngle> sBaseSVGAngleTearoffTable;
-static SVGAttrTearoffTable<SVGOrient, DOMSVGAngle> sAnimSVGAngleTearoffTable;
+static SVGAttrTearoffTable<SVGAnimatedOrient, DOMSVGAngle>
+    sBaseSVGAngleTearoffTable;
+static SVGAttrTearoffTable<SVGAnimatedOrient, DOMSVGAngle>
+    sAnimSVGAngleTearoffTable;
 
 /* Helper functions */
 
@@ -44,7 +46,7 @@ static SVGAttrTearoffTable<SVGOrient, DOMSVGAngle> sAnimSVGAngleTearoffTable;
 class MOZ_RAII AutoChangeOrientNotifier {
  public:
   explicit AutoChangeOrientNotifier(
-      SVGOrient* aOrient, SVGElement* aSVGElement,
+      SVGAnimatedOrient* aOrient, SVGElement* aSVGElement,
       bool aDoSetAttr = true MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : mOrient(aOrient), mSVGElement(aSVGElement), mDoSetAttr(aDoSetAttr) {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
@@ -66,7 +68,7 @@ class MOZ_RAII AutoChangeOrientNotifier {
   }
 
  private:
-  SVGOrient* const mOrient;
+  SVGAnimatedOrient* const mOrient;
   SVGElement* const mSVGElement;
   nsAttrValue mEmptyOrOldValue;
   bool mDoSetAttr;
@@ -116,8 +118,8 @@ static void GetAngleValueString(nsAString& aValueAsString, float aValue,
 }
 
 /* static */
-bool SVGOrient::GetValueFromString(const nsAString& aString, float& aValue,
-                                   uint16_t* aUnitType) {
+bool SVGAnimatedOrient::GetValueFromString(const nsAString& aString,
+                                           float& aValue, uint16_t* aUnitType) {
   bool success;
   auto token = SVGContentUtils::GetAndEnsureOneToken(aString, success);
 
@@ -138,7 +140,7 @@ bool SVGOrient::GetValueFromString(const nsAString& aString, float& aValue,
 }
 
 /* static */
-float SVGOrient::GetDegreesPerUnit(uint8_t aUnit) {
+float SVGAnimatedOrient::GetDegreesPerUnit(uint8_t aUnit) {
   switch (aUnit) {
     case SVG_ANGLETYPE_UNSPECIFIED:
     case SVG_ANGLETYPE_DEG:
@@ -153,8 +155,8 @@ float SVGOrient::GetDegreesPerUnit(uint8_t aUnit) {
   }
 }
 
-void SVGOrient::SetBaseValueInSpecifiedUnits(float aValue,
-                                             SVGElement* aSVGElement) {
+void SVGAnimatedOrient::SetBaseValueInSpecifiedUnits(float aValue,
+                                                     SVGElement* aSVGElement) {
   if (mBaseVal == aValue && mBaseType == SVG_MARKER_ORIENT_ANGLE) {
     return;
   }
@@ -169,8 +171,8 @@ void SVGOrient::SetBaseValueInSpecifiedUnits(float aValue,
   }
 }
 
-nsresult SVGOrient::ConvertToSpecifiedUnits(uint16_t unitType,
-                                            SVGElement* aSVGElement) {
+nsresult SVGAnimatedOrient::ConvertToSpecifiedUnits(uint16_t unitType,
+                                                    SVGElement* aSVGElement) {
   if (!IsValidAngleUnitType(unitType)) return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 
   if (mBaseValUnit == uint8_t(unitType) &&
@@ -184,9 +186,9 @@ nsresult SVGOrient::ConvertToSpecifiedUnits(uint16_t unitType,
   return NS_OK;
 }
 
-nsresult SVGOrient::NewValueSpecifiedUnits(uint16_t unitType,
-                                           float valueInSpecifiedUnits,
-                                           SVGElement* aSVGElement) {
+nsresult SVGAnimatedOrient::NewValueSpecifiedUnits(uint16_t unitType,
+                                                   float valueInSpecifiedUnits,
+                                                   SVGElement* aSVGElement) {
   NS_ENSURE_FINITE(valueInSpecifiedUnits, NS_ERROR_ILLEGAL_VALUE);
 
   if (!IsValidAngleUnitType(unitType)) return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
@@ -208,7 +210,8 @@ nsresult SVGOrient::NewValueSpecifiedUnits(uint16_t unitType,
   return NS_OK;
 }
 
-already_AddRefed<DOMSVGAngle> SVGOrient::ToDOMBaseVal(SVGElement* aSVGElement) {
+already_AddRefed<DOMSVGAngle> SVGAnimatedOrient::ToDOMBaseVal(
+    SVGElement* aSVGElement) {
   RefPtr<DOMSVGAngle> domBaseVal = sBaseSVGAngleTearoffTable.GetTearoff(this);
   if (!domBaseVal) {
     domBaseVal = new DOMSVGAngle(this, aSVGElement, DOMSVGAngle::BaseValue);
@@ -218,7 +221,8 @@ already_AddRefed<DOMSVGAngle> SVGOrient::ToDOMBaseVal(SVGElement* aSVGElement) {
   return domBaseVal.forget();
 }
 
-already_AddRefed<DOMSVGAngle> SVGOrient::ToDOMAnimVal(SVGElement* aSVGElement) {
+already_AddRefed<DOMSVGAngle> SVGAnimatedOrient::ToDOMAnimVal(
+    SVGElement* aSVGElement) {
   RefPtr<DOMSVGAngle> domAnimVal = sAnimSVGAngleTearoffTable.GetTearoff(this);
   if (!domAnimVal) {
     domAnimVal = new DOMSVGAngle(this, aSVGElement, DOMSVGAngle::AnimValue);
@@ -240,9 +244,9 @@ DOMSVGAngle::~DOMSVGAngle() {
 
 /* Implementation */
 
-nsresult SVGOrient::SetBaseValueString(const nsAString& aValueAsString,
-                                       SVGElement* aSVGElement,
-                                       bool aDoSetAttr) {
+nsresult SVGAnimatedOrient::SetBaseValueString(const nsAString& aValueAsString,
+                                               SVGElement* aSVGElement,
+                                               bool aDoSetAttr) {
   uint8_t type;
   float value;
   uint16_t unitType;
@@ -290,7 +294,7 @@ nsresult SVGOrient::SetBaseValueString(const nsAString& aValueAsString,
   return NS_OK;
 }
 
-void SVGOrient::GetBaseValueString(nsAString& aValueAsString) const {
+void SVGAnimatedOrient::GetBaseValueString(nsAString& aValueAsString) const {
   switch (mBaseType) {
     case SVG_MARKER_ORIENT_AUTO:
       aValueAsString.AssignLiteral("auto");
@@ -302,16 +306,18 @@ void SVGOrient::GetBaseValueString(nsAString& aValueAsString) const {
   GetAngleValueString(aValueAsString, mBaseVal, mBaseValUnit);
 }
 
-void SVGOrient::GetBaseAngleValueString(nsAString& aValueAsString) const {
+void SVGAnimatedOrient::GetBaseAngleValueString(
+    nsAString& aValueAsString) const {
   GetAngleValueString(aValueAsString, mBaseVal, mBaseValUnit);
 }
 
-void SVGOrient::GetAnimAngleValueString(nsAString& aValueAsString) const {
+void SVGAnimatedOrient::GetAnimAngleValueString(
+    nsAString& aValueAsString) const {
   GetAngleValueString(aValueAsString, mAnimVal, mAnimValUnit);
 }
 
-void SVGOrient::SetBaseValue(float aValue, uint8_t aUnit,
-                             SVGElement* aSVGElement, bool aDoSetAttr) {
+void SVGAnimatedOrient::SetBaseValue(float aValue, uint8_t aUnit,
+                                     SVGElement* aSVGElement, bool aDoSetAttr) {
   float valueInSpecifiedUnits = aValue / GetDegreesPerUnit(aUnit);
   if (aUnit == mBaseValUnit && mBaseVal == valueInSpecifiedUnits &&
       mBaseType == SVG_MARKER_ORIENT_ANGLE) {
@@ -330,7 +336,8 @@ void SVGOrient::SetBaseValue(float aValue, uint8_t aUnit,
   }
 }
 
-nsresult SVGOrient::SetBaseType(SVGEnumValue aValue, SVGElement* aSVGElement) {
+nsresult SVGAnimatedOrient::SetBaseType(SVGEnumValue aValue,
+                                        SVGElement* aSVGElement) {
   if (mBaseType == aValue) {
     return NS_OK;
   }
@@ -351,8 +358,8 @@ nsresult SVGOrient::SetBaseType(SVGEnumValue aValue, SVGElement* aSVGElement) {
   return NS_ERROR_DOM_TYPE_ERR;
 }
 
-void SVGOrient::SetAnimValue(float aValue, uint8_t aUnit,
-                             SVGElement* aSVGElement) {
+void SVGAnimatedOrient::SetAnimValue(float aValue, uint8_t aUnit,
+                                     SVGElement* aSVGElement) {
   if (mIsAnimated && mAnimVal == aValue && mAnimValUnit == aUnit &&
       mAnimType == SVG_MARKER_ORIENT_ANGLE) {
     return;
@@ -364,7 +371,8 @@ void SVGOrient::SetAnimValue(float aValue, uint8_t aUnit,
   aSVGElement->DidAnimateOrient();
 }
 
-void SVGOrient::SetAnimType(SVGEnumValue aValue, SVGElement* aSVGElement) {
+void SVGAnimatedOrient::SetAnimType(SVGEnumValue aValue,
+                                    SVGElement* aSVGElement) {
   if (mIsAnimated && mAnimType == aValue) {
     return;
   }
@@ -375,7 +383,7 @@ void SVGOrient::SetAnimType(SVGEnumValue aValue, SVGElement* aSVGElement) {
   aSVGElement->DidAnimateOrient();
 }
 
-already_AddRefed<DOMSVGAnimatedAngle> SVGOrient::ToDOMAnimatedAngle(
+already_AddRefed<DOMSVGAnimatedAngle> SVGAnimatedOrient::ToDOMAnimatedAngle(
     SVGElement* aSVGElement) {
   RefPtr<DOMSVGAnimatedAngle> domAnimatedAngle =
       sSVGAnimatedAngleTearoffTable.GetTearoff(this);
@@ -387,8 +395,8 @@ already_AddRefed<DOMSVGAnimatedAngle> SVGOrient::ToDOMAnimatedAngle(
   return domAnimatedAngle.forget();
 }
 
-already_AddRefed<DOMSVGAnimatedEnumeration> SVGOrient::ToDOMAnimatedEnum(
-    SVGElement* aSVGElement) {
+already_AddRefed<DOMSVGAnimatedEnumeration>
+SVGAnimatedOrient::ToDOMAnimatedEnum(SVGElement* aSVGElement) {
   RefPtr<DOMSVGAnimatedEnumeration> domAnimatedEnum =
       sSVGAnimatedEnumTearoffTable.GetTearoff(this);
   if (!domAnimatedEnum) {
@@ -403,19 +411,19 @@ DOMSVGAnimatedAngle::~DOMSVGAnimatedAngle() {
   sSVGAnimatedAngleTearoffTable.RemoveTearoff(mVal);
 }
 
-SVGOrient::DOMAnimatedEnum::~DOMAnimatedEnum() {
+SVGAnimatedOrient::DOMAnimatedEnum::~DOMAnimatedEnum() {
   sSVGAnimatedEnumTearoffTable.RemoveTearoff(mVal);
 }
 
 // we want to avoid exposing SVG_MARKER_ORIENT_AUTO_START_REVERSE to
 // Web content
-uint16_t SVGOrient::DOMAnimatedEnum::Sanitize(uint16_t aValue) {
+uint16_t SVGAnimatedOrient::DOMAnimatedEnum::Sanitize(uint16_t aValue) {
   return aValue == dom::SVG_MARKER_ORIENT_AUTO_START_REVERSE
              ? dom::SVGMarkerElement_Binding::SVG_MARKER_ORIENT_UNKNOWN
              : aValue;
 }
 
-UniquePtr<SMILAttr> SVGOrient::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<SMILAttr> SVGAnimatedOrient::ToSMILAttr(SVGElement* aSVGElement) {
   if (aSVGElement->NodeInfo()->Equals(nsGkAtoms::marker, kNameSpaceID_SVG)) {
     return MakeUnique<SMILOrient>(this, aSVGElement);
   }
@@ -425,7 +433,7 @@ UniquePtr<SMILAttr> SVGOrient::ToSMILAttr(SVGElement* aSVGElement) {
   return nullptr;
 }
 
-nsresult SVGOrient::SMILOrient::ValueFromString(
+nsresult SVGAnimatedOrient::SMILOrient::ValueFromString(
     const nsAString& aStr, const SVGAnimationElement* /*aSrcElement*/,
     SMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   SMILValue val(&SVGOrientSMILType::sSingleton);
@@ -453,7 +461,7 @@ nsresult SVGOrient::SMILOrient::ValueFromString(
   return NS_OK;
 }
 
-SMILValue SVGOrient::SMILOrient::GetBaseValue() const {
+SMILValue SVGAnimatedOrient::SMILOrient::GetBaseValue() const {
   SMILValue val(&SVGOrientSMILType::sSingleton);
   val.mU.mOrient.mAngle = mOrient->GetBaseValInSpecifiedUnits();
   val.mU.mOrient.mUnit = mOrient->GetBaseValueUnit();
@@ -461,7 +469,7 @@ SMILValue SVGOrient::SMILOrient::GetBaseValue() const {
   return val;
 }
 
-void SVGOrient::SMILOrient::ClearAnimValue() {
+void SVGAnimatedOrient::SMILOrient::ClearAnimValue() {
   if (mOrient->mIsAnimated) {
     mOrient->mIsAnimated = false;
     mOrient->mAnimVal = mOrient->mBaseVal;
@@ -471,7 +479,7 @@ void SVGOrient::SMILOrient::ClearAnimValue() {
   }
 }
 
-nsresult SVGOrient::SMILOrient::SetAnimValue(const SMILValue& aValue) {
+nsresult SVGAnimatedOrient::SMILOrient::SetAnimValue(const SMILValue& aValue) {
   NS_ASSERTION(aValue.mType == &SVGOrientSMILType::sSingleton,
                "Unexpected type to assign animated value");
 

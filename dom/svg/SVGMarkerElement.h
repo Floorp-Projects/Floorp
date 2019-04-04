@@ -10,11 +10,11 @@
 #include "DOMSVGAnimatedAngle.h"
 #include "DOMSVGAnimatedEnumeration.h"
 #include "nsAutoPtr.h"
-#include "SVGAnimatedPreserveAspectRatio.h"
-#include "SVGEnum.h"
+#include "SVGAnimatedEnumeration.h"
 #include "nsSVGLength2.h"
-#include "SVGOrient.h"
-#include "SVGViewBox.h"
+#include "SVGAnimatedOrient.h"
+#include "SVGAnimatedPreserveAspectRatio.h"
+#include "SVGAnimatedViewBox.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/SVGMarkerElementBinding.h"
@@ -79,21 +79,21 @@ class SVGMarkerElement : public SVGMarkerElementBase {
 
   virtual LengthAttributesInfo GetLengthInfo() override;
   virtual EnumAttributesInfo GetEnumInfo() override;
-  virtual SVGOrient* GetOrient() override;
-  virtual SVGViewBox* GetViewBox() override;
+  virtual SVGAnimatedOrient* GetOrient() override;
   virtual SVGAnimatedPreserveAspectRatio* GetPreserveAspectRatio() override;
+  virtual SVGAnimatedViewBox* GetViewBox() override;
 
   enum { REFX, REFY, MARKERWIDTH, MARKERHEIGHT };
   nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
   enum { MARKERUNITS };
-  SVGEnum mEnumAttributes[1];
+  SVGAnimatedEnumeration mEnumAttributes[1];
   static SVGEnumMapping sUnitsMap[];
   static EnumInfo sEnumInfo[1];
 
-  SVGOrient mOrient;
-  SVGViewBox mViewBox;
+  SVGAnimatedOrient mOrient;
+  SVGAnimatedViewBox mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
 
   SVGViewportElement* mCoordCtx;

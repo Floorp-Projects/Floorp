@@ -31,7 +31,7 @@ nsIFrame* NS_NewSVGFilterFrame(nsIPresShell* aPresShell,
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGFilterFrame)
 
 uint16_t nsSVGFilterFrame::GetEnumValue(uint32_t aIndex, nsIContent* aDefault) {
-  SVGEnum& thisEnum =
+  SVGAnimatedEnumeration& thisEnum =
       static_cast<SVGFilterElement*>(GetContent())->mEnumAttributes[aIndex];
 
   if (thisEnum.IsExplicitlySet()) {

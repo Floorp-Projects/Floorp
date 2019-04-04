@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGClipPathElement_h
 #define mozilla_dom_SVGClipPathElement_h
 
-#include "SVGEnum.h"
+#include "SVGAnimatedEnumeration.h"
 #include "mozilla/dom/SVGTransformableElement.h"
 
 class nsSVGClipPathFrame;
@@ -44,7 +44,7 @@ class SVGClipPathElement final : public SVGClipPathElementBase {
 
  protected:
   enum { CLIPPATHUNITS };
-  SVGEnum mEnumAttributes[1];
+  SVGAnimatedEnumeration mEnumAttributes[1];
   static EnumInfo sEnumInfo[1];
 
   virtual EnumAttributesInfo GetEnumInfo() override;

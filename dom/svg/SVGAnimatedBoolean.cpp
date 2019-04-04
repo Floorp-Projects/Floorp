@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SVGBoolean.h"
+#include "SVGAnimatedBoolean.h"
 
 #include "DOMSVGAnimatedBoolean.h"
 #include "nsError.h"
@@ -18,9 +18,9 @@ namespace mozilla {
 
 /* Implementation */
 
-static inline SVGAttrTearoffTable<SVGBoolean, DOMSVGAnimatedBoolean>&
+static inline SVGAttrTearoffTable<SVGAnimatedBoolean, DOMSVGAnimatedBoolean>&
 SVGAnimatedBooleanTearoffTable() {
-  static SVGAttrTearoffTable<SVGBoolean, DOMSVGAnimatedBoolean>
+  static SVGAttrTearoffTable<SVGAnimatedBoolean, DOMSVGAnimatedBoolean>
       sSVGAnimatedBooleanTearoffTable;
   return sSVGAnimatedBooleanTearoffTable;
 }
@@ -49,8 +49,8 @@ static nsresult GetValueFromAtom(const nsAtom* aValueAsAtom, bool* aValue) {
   return NS_ERROR_DOM_SYNTAX_ERR;
 }
 
-nsresult SVGBoolean::SetBaseValueAtom(const nsAtom* aValue,
-                                      SVGElement* aSVGElement) {
+nsresult SVGAnimatedBoolean::SetBaseValueAtom(const nsAtom* aValue,
+                                              SVGElement* aSVGElement) {
   bool val = false;
 
   nsresult rv = GetValueFromAtom(aValue, &val);
@@ -71,11 +71,11 @@ nsresult SVGBoolean::SetBaseValueAtom(const nsAtom* aValue,
   return NS_OK;
 }
 
-nsAtom* SVGBoolean::GetBaseValueAtom() const {
+nsAtom* SVGAnimatedBoolean::GetBaseValueAtom() const {
   return mBaseVal ? nsGkAtoms::_true : nsGkAtoms::_false;
 }
 
-void SVGBoolean::SetBaseValue(bool aValue, SVGElement* aSVGElement) {
+void SVGAnimatedBoolean::SetBaseValue(bool aValue, SVGElement* aSVGElement) {
   if (aValue == mBaseVal) {
     return;
   }
@@ -89,7 +89,7 @@ void SVGBoolean::SetBaseValue(bool aValue, SVGElement* aSVGElement) {
   aSVGElement->DidChangeBoolean(mAttrEnum);
 }
 
-void SVGBoolean::SetAnimValue(bool aValue, SVGElement* aSVGElement) {
+void SVGAnimatedBoolean::SetAnimValue(bool aValue, SVGElement* aSVGElement) {
   if (mIsAnimated && mAnimVal == aValue) {
     return;
   }
@@ -98,8 +98,8 @@ void SVGBoolean::SetAnimValue(bool aValue, SVGElement* aSVGElement) {
   aSVGElement->DidAnimateBoolean(mAttrEnum);
 }
 
-already_AddRefed<DOMSVGAnimatedBoolean> SVGBoolean::ToDOMAnimatedBoolean(
-    SVGElement* aSVGElement) {
+already_AddRefed<DOMSVGAnimatedBoolean>
+SVGAnimatedBoolean::ToDOMAnimatedBoolean(SVGElement* aSVGElement) {
   RefPtr<DOMSVGAnimatedBoolean> domAnimatedBoolean =
       SVGAnimatedBooleanTearoffTable().GetTearoff(this);
   if (!domAnimatedBoolean) {
@@ -114,11 +114,11 @@ DOMSVGAnimatedBoolean::~DOMSVGAnimatedBoolean() {
   SVGAnimatedBooleanTearoffTable().RemoveTearoff(mVal);
 }
 
-UniquePtr<SMILAttr> SVGBoolean::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<SMILAttr> SVGAnimatedBoolean::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILBool>(this, aSVGElement);
 }
 
-nsresult SVGBoolean::SMILBool::ValueFromString(
+nsresult SVGAnimatedBoolean::SMILBool::ValueFromString(
     const nsAString& aStr, const SVGAnimationElement* /*aSrcElement*/,
     SMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   bool value;
@@ -134,13 +134,13 @@ nsresult SVGBoolean::SMILBool::ValueFromString(
   return NS_OK;
 }
 
-SMILValue SVGBoolean::SMILBool::GetBaseValue() const {
+SMILValue SVGAnimatedBoolean::SMILBool::GetBaseValue() const {
   SMILValue val(SMILBoolType::Singleton());
   val.mU.mBool = mVal->mBaseVal;
   return val;
 }
 
-void SVGBoolean::SMILBool::ClearAnimValue() {
+void SVGAnimatedBoolean::SMILBool::ClearAnimValue() {
   if (mVal->mIsAnimated) {
     mVal->mIsAnimated = false;
     mVal->mAnimVal = mVal->mBaseVal;
@@ -148,7 +148,7 @@ void SVGBoolean::SMILBool::ClearAnimValue() {
   }
 }
 
-nsresult SVGBoolean::SMILBool::SetAnimValue(const SMILValue& aValue) {
+nsresult SVGAnimatedBoolean::SMILBool::SetAnimValue(const SMILValue& aValue) {
   NS_ASSERTION(aValue.mType == SMILBoolType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SMILBoolType::Singleton()) {

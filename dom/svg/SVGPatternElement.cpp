@@ -162,7 +162,7 @@ SVGElement::EnumAttributesInfo SVGPatternElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
-SVGViewBox* SVGPatternElement::GetViewBox() { return &mViewBox; }
+SVGAnimatedViewBox* SVGPatternElement::GetViewBox() { return &mViewBox; }
 
 SVGAnimatedPreserveAspectRatio* SVGPatternElement::GetPreserveAspectRatio() {
   return &mPreserveAspectRatio;

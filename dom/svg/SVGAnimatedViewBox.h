@@ -45,7 +45,7 @@ struct SVGViewBoxRect {
   static nsresult FromString(const nsAString& aStr, SVGViewBoxRect* aViewBox);
 };
 
-class SVGViewBox {
+class SVGAnimatedViewBox {
  public:
   typedef mozilla::dom::SVGElement SVGElement;
 
@@ -104,10 +104,10 @@ class SVGViewBox {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMBaseVal)
 
-    DOMBaseVal(SVGViewBox* aVal, SVGElement* aSVGElement)
+    DOMBaseVal(SVGAnimatedViewBox* aVal, SVGElement* aSVGElement)
         : mozilla::dom::SVGIRect(), mVal(aVal), mSVGElement(aSVGElement) {}
 
-    SVGViewBox* mVal;  // kept alive because it belongs to content
+    SVGAnimatedViewBox* mVal;  // kept alive because it belongs to content
     RefPtr<SVGElement> mSVGElement;
 
     float X() const final { return mVal->GetBaseValue().x; }
@@ -133,10 +133,10 @@ class SVGViewBox {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimVal)
 
-    DOMAnimVal(SVGViewBox* aVal, SVGElement* aSVGElement)
+    DOMAnimVal(SVGAnimatedViewBox* aVal, SVGElement* aSVGElement)
         : mozilla::dom::SVGIRect(), mVal(aVal), mSVGElement(aSVGElement) {}
 
-    SVGViewBox* mVal;  // kept alive because it belongs to content
+    SVGAnimatedViewBox* mVal;  // kept alive because it belongs to content
     RefPtr<SVGElement> mSVGElement;
 
     // Script may have modified animation parameters or timeline -- DOM getters
@@ -185,13 +185,13 @@ class SVGViewBox {
 
   struct SMILViewBox : public SMILAttr {
    public:
-    SMILViewBox(SVGViewBox* aVal, SVGElement* aSVGElement)
+    SMILViewBox(SVGAnimatedViewBox* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    SVGViewBox* mVal;
+    SVGAnimatedViewBox* mVal;
     SVGElement* mSVGElement;
 
     // SMILAttr methods
@@ -204,7 +204,7 @@ class SVGViewBox {
     virtual nsresult SetAnimValue(const SMILValue& aValue) override;
   };
 
-  static SVGAttrTearoffTable<SVGViewBox, mozilla::dom::SVGAnimatedRect>
+  static SVGAttrTearoffTable<SVGAnimatedViewBox, mozilla::dom::SVGAnimatedRect>
       sSVGAnimatedRectTearoffTable;
 };
 
