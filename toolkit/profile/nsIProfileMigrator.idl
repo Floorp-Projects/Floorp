@@ -61,7 +61,7 @@ interface nsIProfileMigrator : nsISupports
    * @note The startup code ignores COM exceptions thrown from this method.
    */
   void migrate(in nsIProfileStartup aStartup, in ACString aKey,
-               [optional] in ACString aProfileName);
+               [optional] in AUTF8String aProfileName);
 };
 
 %{C++
