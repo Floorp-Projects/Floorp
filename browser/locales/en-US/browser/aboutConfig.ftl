@@ -8,7 +8,7 @@ about-config-warning-text = Changing these advanced settings can be harmful to t
 about-config-warning-checkbox = Annoy me again, please!
 about-config-warning-button = I accept the risk
 
-about-config-title = about:config
+about-config2-title = Advanced Configurations
 
 about-config-search-input =
     .placeholder = Search
