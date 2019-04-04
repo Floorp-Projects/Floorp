@@ -31,6 +31,7 @@
     <attr name="sessionBackgroundColor" format="reference" />
     <attr name="sessionBorderColor" format="reference" />
     <attr name="deleteColor" format="reference" />
+    <attr name="listDividerColor" format="reference" />
 
     <!-- Search fragment -->
     <attr name="searchBackground" format="reference"/>

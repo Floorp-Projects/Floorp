@@ -32,7 +32,9 @@
                 android:layout_margin="12dp"
                 android:contentDescription="@string/current_session_image"
                 android:paddingBottom="20dp"
-                android:src="@drawable/ic_session_thumbnail_placeholder_blue"
+                android:src="@drawable/ic_session_thumbnail_placeholder_greyscale"
+                android:tint="@color/session_placeholder_blue"
+                android:tintMode="multiply"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -91,7 +93,7 @@
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:background="@color/photonGrey30" />
+        android:background="?attr/listDividerColor" />
 
     <TextView
         android:id="@+id/archive_session_button"

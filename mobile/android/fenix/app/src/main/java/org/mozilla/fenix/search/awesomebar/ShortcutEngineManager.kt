@@ -66,8 +66,6 @@ class ShortcutEngineManager(
 
     private fun showShortcutEnginePicker() {
         with(context) {
-            awesomeBarUIView.search_shortcuts_button.background = getDrawable(R.drawable.search_pill_background)
-
             awesomeBarUIView.search_shortcuts_button.compoundDrawables[0].setTint(ContextCompat.getColor(this,
                 DefaultThemeManager.resolveAttribute(R.attr.pillWrapperBackground, this)))
 
@@ -81,9 +79,6 @@ class ShortcutEngineManager(
 
     private fun hideShortcutEnginePicker() {
         with(context) {
-            awesomeBarUIView.search_shortcuts_button.setBackgroundColor(ContextCompat.getColor(this,
-                DefaultThemeManager.resolveAttribute(R.attr.pillWrapperBackground, this)))
-
             awesomeBarUIView.search_shortcuts_button.compoundDrawables[0].setTint(ContextCompat.getColor(this,
                 DefaultThemeManager.resolveAttribute(R.attr.searchShortcutsTextColor, this)))
 

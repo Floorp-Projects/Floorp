@@ -89,10 +89,17 @@ class AwesomeBarUIView(
 
     init {
         with(container.context) {
+            val draw = getDrawable(R.drawable.ic_link)
+            draw?.setColorFilter(
+                ContextCompat.getColor(
+                    this,
+                    DefaultThemeManager.resolveAttribute(R.attr.searchShortcutsTextColor, this)
+                ), PorterDuff.Mode.SRC_IN
+            )
             clipboardSuggestionProvider = ClipboardSuggestionProvider(
                 this,
                 loadUrlUseCase,
-                getDrawable(R.drawable.ic_link)!!.toBitmap(),
+                draw!!.toBitmap(),
                 getString(R.string.awesomebar_clipboard_title)
             )
 

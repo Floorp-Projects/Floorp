@@ -23,7 +23,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/session_card_padding"
-            android:src="@drawable/ic_session_thumbnail_placeholder_blue"
+            android:src="@drawable/ic_session_thumbnail_placeholder_greyscale"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 

@@ -4,7 +4,8 @@
 
 package org.mozilla.fenix.home.sessions
 
-import android.graphics.PorterDuff
+import android.graphics.Color
+import android.graphics.LightingColorFilter
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -112,10 +113,8 @@ class SessionsAdapter(
         fun bind(session: ArchivedSession) {
             this.session = session
             val color = availableColors[(session.id % availableColors.size).toInt()]
-
-            session_card_thumbnail.setColorFilter(
-                ContextCompat.getColor(itemView.context, color),
-                PorterDuff.Mode.MULTIPLY)
+            session_card_thumbnail.colorFilter =
+                LightingColorFilter(ContextCompat.getColor(itemView.context, color), Color.BLACK)
             session_card_timestamp.text = session.formattedSavedAt
             session_card_titles.text = session.titles
             session_card_extras.text = if (session.extrasLabel > 0) {
@@ -124,9 +123,14 @@ class SessionsAdapter(
         }
 
         companion object {
-            private val availableColors = listOf(
-                R.color.photonBlue40, R.color.photonGreen50, R.color.photonYellow50, R.color.photonOrange50,
-                R.color.photonPurple50, R.color.photonInk70)
+            private val availableColors =
+                listOf(
+                    R.color.session_placeholder_blue,
+                    R.color.session_placeholder_green,
+                    R.color.session_placeholder_orange,
+                    R.color.session_placeholder_purple,
+                    R.color.session_placeholder_pink
+                )
             const val LAYOUT_ID = R.layout.session_item
         }
     }

@@ -13,7 +13,8 @@
         <item name="disabledIconColor">@color/disabled_icons_normal_theme</item>
         <item name="toolbarColor">@color/toolbar_normal_theme</item>
         <item name="colorPrimary">@color/color_primary</item>
-        <item name="colorAccent">@color/session_border_color</item>
+        <!-- Color Accent is used for Settings Category Text Color -->
+        <item name="colorAccent">@color/color_accent_normal_theme</item>
         <item name="android:progressBarStyleHorizontal">@style/progressBarStyleHorizontal</item>
         <item name="primaryTextColor">@color/text_color_normal_theme</item>
         <item name="secondaryTextColor">@color/secondary_text_color_normal_theme</item>
@@ -47,6 +48,7 @@
         <item name="sessionBackgroundColor">@color/sessionBackgroundColor_normal_theme</item>
         <item name="sessionBorderColor">@color/session_border_color</item>
         <item name="deleteColor">@color/delete_color</item>
+        <item name="listDividerColor">@color/list_divider_color_normal_theme</item>
 
         <!-- Search fragment colors -->
         <item name="searchBackground">@color/searchBackground_normal_theme</item>
@@ -111,6 +113,7 @@
         <item name="sessionBackgroundColor">@color/session_list_private_header</item>
         <item name="sessionBorderColor">@color/private_browsing_primary</item>
         <item name="deleteColor">@color/photonRed60</item>
+        <item name="listDividerColor">@color/search_private_background</item>
 
         <!-- Search fragment colors -->
         <item name="searchBackground">@color/private_browsing_bottom_gradient</item>
@@ -151,19 +154,19 @@
 
     <style name="search_pill" parent="Widget.AppCompat.Button.Borderless">
         <item name="android:layout_width">wrap_content</item>
-        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_height">32dp</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:textSize">14sp</item>
         <item name="android:textColor">@color/search_pill_primary</item>
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:singleLine">true</item>
-        <item name="android:padding">8dp</item>
+        <item name="android:paddingStart">8dp</item>
         <item name="android:paddingEnd">16dp</item>
         <item name="android:drawablePadding">8dp</item>
         <item name="android:minWidth">0dp</item>
         <item name="android:minHeight">0dp</item>
-        <item name="android:background">@drawable/search_pill_background</item>
+        <item name="android:background">@drawable/search_pill_drawable_button_background</item>
     </style>
 
     <style name="SitePermissionButton" parent="Widget.AppCompat.Button.Borderless">

@@ -7,6 +7,7 @@
     <color name="color_primary">#544CD9</color>
     <color name="color_primary_dark">#202340</color>
     <color name="color_accent">#D81B60</color>
+    <color name="color_accent_normal_theme">#312a65</color>
 
     <color name="off_white">#f9f9fa</color>
     <color name="secondary_text_color_normal_theme">#6b6b6b</color>
@@ -20,7 +21,14 @@
     <color name="foreground_dark_theme">#32313C</color>
     <color name="home_buttons_dark_theme">#A2A1A5</color>
     <color name="secondaryTextColor_dark_theme">#A4A3AA</color>
+    <color name="accent_bright_dark_theme">#AB71FF</color>
 
+    <!-- Session Placeholder Available Colors -->
+    <color name="session_placeholder_blue">#00B3F4</color>
+    <color name="session_placeholder_orange">#FF8A50</color>
+    <color name="session_placeholder_green">#54FFBD</color>
+    <color name="session_placeholder_purple">@color/accent_bright_dark_theme</color>
+    <color name="session_placeholder_pink">#FF4AA2</color>
     <!-- Normal Theme -->
     <color name="history_header_normal_theme">#696A6A</color>
     <color name="history_title_normal_theme">@color/text_color_normal_theme</color>
@@ -40,6 +48,7 @@
     <color name="privateBrowsingButtonTint_normal_theme">@color/menu_button_tint_normal_theme</color>
     <color name="browserToolbarBackground_normal_theme">@color/off_white</color>
     <color name="unloaded_progress_normal_theme">#E0E0E6</color>
+    <color name="list_divider_color_normal_theme">@color/photonGrey30</color>
 
     <color name="searchBackground_normal_theme">@color/off_white</color>
     <color name="search_stroke_normal">#c5c8d7</color>
