@@ -1825,15 +1825,9 @@ dependencies = [
  "log 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "proc-macro2 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "quote 0.5.2 (registry+https://github.com/rust-lang/crates.io-index)",
-<<<<<<< working copy
- "serde 1.0.80 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_derive 1.0.80 (git+https://github.com/servo/serde?branch=deserialize_from_enums9)",
- "syn 0.15.30 (registry+https://github.com/rust-lang/crates.io-index)",
-=======
  "serde 1.0.88 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.88 (git+https://github.com/servo/serde?branch=deserialize_from_enums10)",
- "syn 0.15.24 (registry+https://github.com/rust-lang/crates.io-index)",
->>>>>>> merge rev
+ "syn 0.15.30 (registry+https://github.com/rust-lang/crates.io-index)",
  "void 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "winapi 0.3.6 (git+https://github.com/froydnj/winapi-rs?branch=aarch64)",
 ]
