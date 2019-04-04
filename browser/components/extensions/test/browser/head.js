@@ -707,8 +707,6 @@ async function getIncognitoWindow(url = "about:privatebrowsing") {
   // Since events will be limited based on incognito, we need a
   // spanning extension to get the tab id so we can test access failure.
 
-  // avoid linting issue with background
-  /* eslint-disable no-use-before-define */
   function background(expectUrl) {
     browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       if (changeInfo.status === "complete" && tab.url === expectUrl) {
@@ -721,16 +719,15 @@ async function getIncognitoWindow(url = "about:privatebrowsing") {
     manifest: {
       "permissions": ["tabs"],
     },
-    background: `(${background})("${url}")`,
+    background: `(${background})(${JSON.stringify(url)})`,
     incognitoOverride: "spanning",
   });
 
   await windowWatcher.startup();
   let data = windowWatcher.awaitMessage("data");
 
-  let win = await BrowserTestUtils.openNewBrowserWindow({private: true, url});
-  let browser = win.getBrowser().selectedBrowser;
-  BrowserTestUtils.loadURI(browser, url);
+  let win = await BrowserTestUtils.openNewBrowserWindow({private: true});
+  BrowserTestUtils.loadURI(win.gBrowser.selectedBrowser, url);
 
   let details = await data;
   await windowWatcher.unload();
