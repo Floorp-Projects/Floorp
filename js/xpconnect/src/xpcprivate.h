@@ -1616,7 +1616,6 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
   static already_AddRefed<nsXPCWrappedJSClass> GetNewOrUsed(REFNSIID aIID);
 
   REFNSIID GetIID() const { return mIID; }
-  XPCJSRuntime* GetRuntime() const { return mRuntime; }
   const nsXPTInterfaceInfo* GetInterfaceInfo() const { return mInfo; }
   const char* GetInterfaceName();
 
@@ -1670,7 +1669,6 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
                         uint8_t n) const;
 
  private:
-  XPCJSRuntime* mRuntime;
   const nsXPTInterfaceInfo* mInfo;
   nsIID mIID;
   uint32_t* mDescriptors;
