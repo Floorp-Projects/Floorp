@@ -392,9 +392,10 @@ Tuple<int32_t, Maybe<WriteState>> nsGIFDecoder2::YieldPixels(
 
 /// Expand the colormap from RGB to Packed ARGB as needed by Cairo.
 /// And apply any LCMS transformation.
-static void ConvertColormap(uint32_t* aColormap, uint32_t aColors) {
+void nsGIFDecoder2::ConvertColormap(uint32_t* aColormap, uint32_t aColors) {
   // Apply CMS transformation if enabled and available
-  if (gfxPlatform::GetCMSMode() == eCMSMode_All) {
+  if (!(GetSurfaceFlags() & SurfaceFlags::NO_COLORSPACE_CONVERSION) &&
+      gfxPlatform::GetCMSMode() == eCMSMode_All) {
     qcms_transform* transform = gfxPlatform::GetCMSRGBTransform();
     if (transform) {
       qcms_transform_data(transform, aColormap, aColormap, aColors);
