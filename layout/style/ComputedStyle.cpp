@@ -283,7 +283,7 @@ static nscolor ExtractColor(const ComputedStyle& aStyle,
 }
 
 static nscolor ExtractColor(const ComputedStyle& aStyle,
-                            const StyleComplexColor& aColor) {
+                            const StyleColor& aColor) {
   return aColor.CalcColor(aStyle);
 }
 

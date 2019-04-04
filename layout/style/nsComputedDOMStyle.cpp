@@ -1041,7 +1041,7 @@ void nsComputedDOMStyle::SetToRGBAColor(nsROCSSPrimitiveValue* aValue,
 }
 
 void nsComputedDOMStyle::SetValueFromComplexColor(
-    nsROCSSPrimitiveValue* aValue, const StyleComplexColor& aColor) {
+    nsROCSSPrimitiveValue* aValue, const mozilla::StyleColor& aColor) {
   SetToRGBAColor(aValue, aColor.CalcColor(*mComputedStyle));
 }
 
@@ -1865,7 +1865,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetScrollbarColor() {
   }
 
   RefPtr<nsDOMCSSValueList> list = GetROCSSValueList(false);
-  auto put = [this, &list](const StyleComplexColor& color) {
+  auto put = [this, &list](const mozilla::StyleColor& color) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
     SetValueFromComplexColor(val, color);
     list->AppendCSSValue(val.forget());
@@ -1999,7 +1999,7 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextDecoration() {
 
   bool isInitialStyle =
       textReset->mTextDecorationStyle == NS_STYLE_TEXT_DECORATION_STYLE_SOLID;
-  StyleComplexColor color = textReset->mTextDecorationColor;
+  const mozilla::StyleColor& color = textReset->mTextDecorationColor;
 
   RefPtr<nsROCSSPrimitiveValue> textDecorationLine = new nsROCSSPrimitiveValue;
 
