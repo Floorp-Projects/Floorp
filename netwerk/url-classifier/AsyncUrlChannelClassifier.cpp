@@ -424,23 +424,17 @@ bool FeatureData::MaybeCompleteClassification(nsIChannel* aChannel) {
     return true;
   }
 
-  nsAutoCString list;
-  list.Assign(mHostInPrefTables[nsIUrlClassifierFeature::blacklist]);
+  nsTArray<nsCString> list;
+  list.AppendElement(mHostInPrefTables[nsIUrlClassifierFeature::blacklist]);
 
   for (TableData* tableData : mBlacklistTables) {
     if (tableData->MatchState() == TableData::eMatch) {
-      if (!list.IsEmpty()) {
-        list.AppendLiteral(",");
-      }
-
-      list.Append(tableData->Table());
+      list.AppendElement(tableData->Table());
     }
   }
 
-  UC_LOG(
-      ("FeatureData::MaybeCompleteClassification[%p] - process channel %p with "
-       "list %s",
-       this, aChannel, list.get()));
+  UC_LOG(("FeatureData::MaybeCompleteClassification[%p] - process channel %p",
+          this, aChannel));
 
   bool shouldContinue = false;
   rv = mFeature->ProcessChannel(aChannel, list, &shouldContinue);

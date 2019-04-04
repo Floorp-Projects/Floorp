@@ -9,6 +9,7 @@
 #include "nsTArrayForwardDeclare.h"
 %}
 [ref] native StringArrayRef(nsTArray<nsCString>);
+[ref] native ConstStringArrayRef(const nsTArray<nsCString>);
 
 interface nsIChannel;
 interface nsIURI;
@@ -62,7 +63,8 @@ interface nsIUrlClassifierFeature : nsISupports
    * tracking-protection cancel the channel, and after that we should stop
    * processing other features.
    */
-  [noscript] boolean processChannel(in nsIChannel aChannel, in ACString aList);
+  [noscript] boolean processChannel(in nsIChannel aChannel,
+                                    in ConstStringArrayRef aList);
 
   /**
    * Features can work with different URLs from a channel (channel url, or
