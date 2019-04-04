@@ -1,5 +1,48 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Error - Error with V8-like stack renders with expected text 1`] = `
+<span
+  className="objectBox-stackTrace"
+  data-link-actor-id="server1.conn1.child1/obj1020"
+>
+  Error: "BOOM"
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  >
+    	
+    <span
+      className="objectBox-stackTrace-fn"
+      key="fn0"
+    >
+      getAccount
+    </span>
+     
+    <span
+      className="objectBox-stackTrace-location"
+      key="location0"
+    >
+      http://moz.com/script.js:1:2
+    </span>
+    
+
+  </span>
+</span>
+`;
+
+exports[`Error - Error with invalid stack renders with expected text 1`] = `
+<span
+  className="objectBox-stackTrace"
+  data-link-actor-id="server1.conn1.child1/obj1020"
+>
+  Error: "bad stack"
+  <span
+    className="objectBox-stackTrace-grid"
+    key="stack"
+  />
+</span>
+`;
+
 exports[`Error - Eval error renders with expected text for an EvalError 1`] = `
 <span
   className="objectBox-stackTrace"
