@@ -291,17 +291,17 @@ renaming_overrides_prefixing = true
   static inline StyleGenericColor Transparent();
   bool MaybeTransparent() const;
   /**
-   * Compute the color for this StyleComplexColor, taking into
-   * account the foreground color from the frame's ComputedStyle.
+   * Compute the final color, taking into account the foreground color from the
+   * frame's ComputedStyle.
    */
   nscolor CalcColor(const nsIFrame*) const;
   /**
-   * Compute the color for this StyleComplexColor, taking into
-   * account the foreground color the style.
+   * Compute the final color, taking into account the foreground color from the
+   * style.
    */
   nscolor CalcColor(const ComputedStyle&) const;
   /**
-   * Compute the color for this StyleComplexColor, making the argument the foreground color.
+   * Compute the final color, making the argument the foreground color.
    */
   nscolor CalcColor(nscolor) const;
 """

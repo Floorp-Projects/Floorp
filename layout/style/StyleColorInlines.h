@@ -4,17 +4,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* represent a color combines a numeric color and currentcolor */
+/* Inline functions for StyleColor (aka values::computed::Color) */
 
-#ifndef mozilla_StyleComplexColor_h_
-#define mozilla_StyleComplexColor_h_
+#ifndef mozilla_StyleColorInlines_h_
+#define mozilla_StyleColorInlines_h_
 
 #include "nsColor.h"
 #include "mozilla/ServoStyleConsts.h"
 
 namespace mozilla {
-
-using StyleComplexColor = StyleColor;
 
 template<>
 inline StyleColor StyleColor::FromColor(nscolor aColor) {
@@ -37,15 +35,15 @@ inline StyleColor StyleColor::Transparent() {
   return FromColor(NS_RGBA(0, 0, 0, 0));
 }
 
-template<>
-nscolor StyleComplexColor::CalcColor(nscolor aForegroundColor) const;
+template <>
+nscolor StyleColor::CalcColor(nscolor aForegroundColor) const;
 
-template<>
-nscolor StyleComplexColor::CalcColor(const ComputedStyle&) const;
+template <>
+nscolor StyleColor::CalcColor(const ComputedStyle&) const;
 
-template<>
-nscolor StyleComplexColor::CalcColor(const nsIFrame*) const;
+template <>
+nscolor StyleColor::CalcColor(const nsIFrame*) const;
 
 }  // namespace mozilla
 
-#endif  // mozilla_StyleComplexColor_h_
+#endif  // mozilla_StyleColor_h_
