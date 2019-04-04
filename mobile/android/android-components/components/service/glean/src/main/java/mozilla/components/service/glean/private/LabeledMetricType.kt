@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean.private
 
+import android.support.annotation.RestrictTo
 import mozilla.components.service.glean.storages.StorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
 import mozilla.components.service.glean.error.ErrorRecording.ErrorType
@@ -22,7 +23,7 @@ import mozilla.components.support.base.log.logger.Logger
  * The |StorageEngineManager.collect| method knows how to pull these special values back out of the
  * individual storage engines and rearrange them correctly in the ping.
  */
-
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 data class LabeledMetricType<T>(
     override val disabled: Boolean,
     override val category: String,

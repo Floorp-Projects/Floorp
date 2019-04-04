@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean.private
 
+import android.support.annotation.RestrictTo
 import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.Dispatchers
 import mozilla.components.service.glean.storages.CountersStorageEngine
@@ -18,6 +19,7 @@ import mozilla.components.support.base.log.logger.Logger
  * The counter API only exposes the [add] method, which takes care of validating the input
  * data and making sure that limits are enforced.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 data class CounterMetricType(
     override val disabled: Boolean,
     override val category: String,

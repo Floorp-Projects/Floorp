@@ -6,6 +6,7 @@ package mozilla.components.service.glean.debug
 
 import android.app.Activity
 import android.os.Bundle
+import android.support.annotation.RestrictTo
 import mozilla.components.service.glean.Glean
 import mozilla.components.support.base.log.logger.Logger
 
@@ -19,6 +20,7 @@ import mozilla.components.support.base.log.logger.Logger
  * See the adb developer docs for more info:
  * https://developer.android.com/studio/command-line/adb#am
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 class GleanDebugActivity : Activity() {
     private val logger = Logger("glean/GleanDebugActivity")
 

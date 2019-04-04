@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean.private
 
+import android.support.annotation.RestrictTo
 import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.Dispatchers
 import mozilla.components.service.glean.storages.StringListsStorageEngine
@@ -18,6 +19,7 @@ import mozilla.components.support.base.log.logger.Logger
  * The string list API exposes the [add] and [set] methods, which take care of validating the input
  * data and making sure that limits are enforced.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 data class StringListMetricType(
     override val disabled: Boolean,
     override val category: String,

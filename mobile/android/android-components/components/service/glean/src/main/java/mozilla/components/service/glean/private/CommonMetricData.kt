@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean.private
 
+import android.support.annotation.RestrictTo
 import mozilla.components.service.glean.Glean
 import mozilla.components.support.base.log.logger.Logger
 
@@ -29,6 +30,7 @@ enum class Lifetime {
  * This defines the common set of data shared across all the different
  * metric types.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 interface CommonMetricData {
     val disabled: Boolean
     val category: String

@@ -5,6 +5,7 @@
 package mozilla.components.service.glean.private
 
 import android.os.SystemClock
+import android.support.annotation.RestrictTo
 import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.Dispatchers
 import mozilla.components.service.glean.storages.EventsStorageEngine
@@ -16,6 +17,7 @@ import mozilla.components.support.base.log.logger.Logger
  * that an [EventMetricType] can accept.
  */
 @Suppress("EmptyClassBlock")
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 enum class NoExtraKeys(val value: Int) {
     // deliberately empty
 }
@@ -29,6 +31,7 @@ enum class NoExtraKeys(val value: Int) {
  * The Events API only exposes the [record] method, which takes care of validating the input
  * data and making sure that limits are enforced.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 data class EventMetricType<ExtraKeysEnum : Enum<ExtraKeysEnum>>(
     override val disabled: Boolean,
     override val category: String,

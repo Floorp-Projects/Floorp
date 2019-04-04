@@ -4,6 +4,7 @@
 
 package mozilla.components.service.glean.private
 
+import android.support.annotation.RestrictTo
 import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.Dispatchers
 import java.util.UUID
@@ -19,6 +20,7 @@ import mozilla.components.support.base.log.logger.Logger
  *
  * The uuid API exposes the [generateAndSet] and [set] methods.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 data class UuidMetricType(
     override val disabled: Boolean,
     override val category: String,
