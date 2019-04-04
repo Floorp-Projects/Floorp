@@ -169,7 +169,7 @@ class TaskBuilder(object):
     def craft_detekt_task(self):
         return self._craft_clean_gradle_task(
             name='detekt',
-            description='Running detekt over all modules',
+            description='Running detekt code quality checks',
             gradle_task='detekt',
             treeherder={
                 'jobKind': 'test',
@@ -185,7 +185,7 @@ class TaskBuilder(object):
     def craft_ktlint_task(self):
         return self._craft_clean_gradle_task(
             name='ktlint',
-            description='Running ktlint over all modules',
+            description='Running ktlint code quality checks',
             gradle_task='ktlint',
             treeherder={
                 'jobKind': 'test',
@@ -200,7 +200,7 @@ class TaskBuilder(object):
     def craft_lint_task(self):
         return self._craft_clean_gradle_task(
             name='lint',
-            description='Running ktlint over all modules',
+            description='Running lint for arm64 release variant',
             gradle_task='lintAarch64GreenfieldRelease',
             treeherder={
                 'jobKind': 'test',
