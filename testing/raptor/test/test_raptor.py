@@ -98,7 +98,7 @@ def test_start_browser(get_binary, app):
     binary = get_binary(app)
     assert binary
 
-    raptor = RaptorDesktopFirefox(app, binary)
+    raptor = RaptorDesktopFirefox(app, binary, post_startup_delay=0)
     raptor.create_browser_profile()
     raptor.create_browser_handler()
     raptor.start_control_server()
@@ -106,7 +106,7 @@ def test_start_browser(get_binary, app):
     test = {}
     test['name'] = 'raptor-{}-tp6'.format(app)
 
-    thread = TestBrowserThread(raptor, test)
+    thread = TestBrowserThread(raptor, test, timeout=0)
     thread.start()
 
     timeout = time.time() + 5  # seconds
