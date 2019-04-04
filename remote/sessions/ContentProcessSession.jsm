@@ -19,13 +19,9 @@ class ContentProcessSession {
     this.domains = new Domains(this, ContentProcessDomains);
     this.messageManager.addMessageListener("remote:request", this);
     this.messageManager.addMessageListener("remote:destroy", this);
-
-    this.destroy = this.destroy.bind(this);
-    this.content.addEventListener("unload", this.destroy);
   }
 
   destroy() {
-    this.content.addEventListener("unload", this.destroy);
     this.messageManager.removeMessageListener("remote:request", this);
     this.messageManager.removeMessageListener("remote:destroy", this);
   }
