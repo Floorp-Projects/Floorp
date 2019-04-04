@@ -13,7 +13,6 @@ import mozilla.components.service.glean.metrics.HistogramType
 import mozilla.components.service.glean.metrics.TimeUnit
 
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.ktx.android.org.json.toList
 import mozilla.components.support.ktx.android.org.json.tryGetInt
 import mozilla.components.support.ktx.android.org.json.tryGetLong
 import mozilla.components.support.ktx.android.org.json.tryGetString
@@ -133,17 +132,14 @@ data class TimingDistributionData(
     val category: String,
     val name: String,
     val bucketCount: Int = DEFAULT_BUCKET_COUNT,
-    val range: List<Long> = listOf(DEFAULT_RANGE_MIN, DEFAULT_RANGE_MAX),
+    val rangeMin: Long = DEFAULT_RANGE_MIN,
+    val rangeMax: Long = DEFAULT_RANGE_MAX,
     val histogramType: HistogramType = HistogramType.Exponential,
     val values: MutableMap<Int, Long> = mutableMapOf(),
     var sum: Long = 0,
     val timeUnit: TimeUnit = TimeUnit.Millisecond
 ) {
     companion object {
-        // These represent the indexes of the min and max of the timing distribution range
-        const val MIN = 0
-        const val MAX = 1
-
         // The following are defaults for a simple timing distribution for the default time unit
         // of millisecond.  The values arrived at were an approximated using existing "_MS"
         // telemetry probes as a guide.
@@ -159,7 +155,7 @@ data class TimingDistributionData(
          * @param json Stringified JSON value representing a [TimingDistributionData] object
          * @return A [TimingDistributionData] or null if unable to rebuild from the string.
          */
-        @Suppress("ReturnCount")
+        @Suppress("ReturnCount", "ComplexMethod")
         internal fun fromJsonString(json: String): TimingDistributionData? {
             val jsonObject: JSONObject
             try {
@@ -176,7 +172,18 @@ data class TimingDistributionData(
             val bucketCount = jsonObject.tryGetInt("bucketCount") ?: return null
             // If 'range' isn't present, JSONException is thrown
             val range = try {
-                jsonObject.getJSONArray("range").toList<Long>()
+                val array = jsonObject.getJSONArray("range")
+                // Range must have exactly 2 values
+                if (array.length() == 2) {
+                    // The getLong() function throws JSONException if we can't convert to a Long, so
+                    // the catch should return null if either value isn't a valid Long
+                    array.getLong(0)
+                    array.getLong(1)
+                    // This returns the JSONArray to the assignment if everything checks out
+                    array
+                } else {
+                    return null
+                }
             } catch (e: org.json.JSONException) {
                 return null
             }
@@ -203,7 +210,8 @@ data class TimingDistributionData(
                 category = category,
                 name = name,
                 bucketCount = bucketCount,
-                range = range,
+                rangeMin = range.getLong(0),
+                rangeMax = range.getLong(1),
                 histogramType = histogramType,
                 values = values,
                 sum = sum,
@@ -248,20 +256,13 @@ data class TimingDistributionData(
      * purposes.
      */
     internal fun toJsonObject(): JSONObject {
-        // Create a map with string keys to match schema for use with "values" and to make valid
-        // JSON since key names can ONLY be strings.
-        val jsonValues = mutableMapOf<String, Long>()
-        values.forEach {
-            jsonValues["${it.key}"] = it.value
-        }
-
         return JSONObject(mapOf(
             "category" to category,
             "name" to name,
             "bucketCount" to bucketCount,
-            "range" to JSONArray(range),
+            "range" to JSONArray(arrayOf(rangeMin, rangeMax)),
             "histogramType" to histogramType.ordinal,
-            "values" to jsonValues,
+            "values" to values.mapKeys { "${it.key}" },
             "sum" to sum,
             "timeUnit" to timeUnit.ordinal
         ))
@@ -277,9 +278,9 @@ data class TimingDistributionData(
         // This algorithm calculates the bucket sizes using a natural log approach to get
         // `bucketCount` number of buckets, exponentially spaced between `range[MIN]` and
         // `range[MAX]`
-        val logMax = Math.log(range[MAX].toDouble())
+        val logMax = Math.log(rangeMax.toDouble())
         val result: MutableList<Long> = mutableListOf()
-        var current = range[MIN]
+        var current = rangeMin
         if (current == 0L) {
             current = 1L
         }

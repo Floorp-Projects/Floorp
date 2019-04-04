@@ -86,6 +86,14 @@ class TimingDistributionsStorageEngineTest {
             "store1#telemetry.invalid_int" to -1,
             "store1#telemetry.invalid_list" to listOf("1", "2", "3"),
             "store1#telemetry.invalid_int_list" to "[1,2,3]",
+            "store1#telemetry.invalid_td_name" to "{\"category\":\"telemetry\",\"bucketCount\":100,\"range\":[0,60000,12],\"histogramType\":1,\"values\":{},\"sum\":0,\"timeUnit\":2}",
+            "store1#telemetry.invalid_td_bucketCount" to "{\"category\":\"telemetry\",\"name\":\"test_timing_distribution\",\"bucketCount\":\"not an int!\",\"range\":[0,60000,12],\"histogramType\":1,\"values\":{},\"sum\":0,\"timeUnit\":2}",
+            "store1#telemetry.invalid_td_range" to "{\"category\":\"telemetry\",\"name\":\"test_timing_distribution\",\"bucketCount\":100,\"range\":[0,60000,12],\"histogramType\":1,\"values\":{},\"sum\":0,\"timeUnit\":2}",
+            "store1#telemetry.invalid_td_range2" to "{\"category\":\"telemetry\",\"name\":\"test_timing_distribution\",\"bucketCount\":100,\"range\":[\"not\",\"numeric\"],\"histogramType\":1,\"values\":{},\"sum\":0,\"timeUnit\":2}",
+            "store1#telemetry.invalid_td_histogramType" to "{\"category\":\"telemetry\",\"name\":\"test_timing_distribution\",\"bucketCount\":100,\"range\":[0,60000,12],\"histogramType\":-1,\"values\":{},\"sum\":0,\"timeUnit\":2}",
+            "store1#telemetry.invalid_td_values" to "{\"category\":\"telemetry\",\"name\":\"test_timing_distribution\",\"bucketCount\":100,\"range\":[0,60000,12],\"histogramType\":1,\"values\":{\"0\": \"nope\"},\"sum\":0,\"timeUnit\":2}",
+            "store1#telemetry.invalid_td_sum" to "{\"category\":\"telemetry\",\"name\":\"test_timing_distribution\",\"bucketCount\":100,\"range\":[0,60000,12],\"histogramType\":1,\"values\":{},\"sum\":\"nope\",\"timeUnit\":2}",
+            "store1#telemetry.invalid_td_timeUnit" to "{\"category\":\"telemetry\",\"name\":\"test_timing_distribution\",\"bucketCount\":100,\"range\":[0,60000,12],\"histogramType\":1,\"values\":{},\"sum\":0,\"timeUnit\":-1}",
             "store1#telemetry.test_timing_distribution" to td.toJsonObject().toString()
         )
 
@@ -320,9 +328,9 @@ class TimingDistributionsStorageEngineTest {
             "test_timing_distribution", jsonTdd.getString("name"))
         val jsonRange = jsonTdd.getJSONArray("range")
         assertEquals("JSON range minimum must match Timing Distribution range minimum",
-            tdd.range[TimingDistributionData.MIN], jsonRange.getLong(TimingDistributionData.MIN))
+            tdd.rangeMin, jsonRange.getLong(0))
         assertEquals("JSON range maximum must match Timing Distribution range maximum",
-            tdd.range[TimingDistributionData.MAX], jsonRange.getLong(TimingDistributionData.MAX))
+            tdd.rangeMax, jsonRange.getLong(1))
         assertEquals("JSON histogram type must match Timing Distribution histogram type",
             tdd.histogramType.ordinal, jsonTdd.getInt("histogramType"))
         val jsonValue = jsonTdd.getJSONObject("values")
