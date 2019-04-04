@@ -1159,28 +1159,6 @@ def build_ship_it_shipped_payload(config, task, task_def):
     }
 
 
-@payload_builder('shipit-started', schema={
-    Required('release-name'): basestring,
-    Required('product'): basestring,
-    Required('branch'): basestring,
-    Required('locales'): basestring,
-})
-def build_ship_it_started_payload(config, task, task_def):
-    worker = task['worker']
-    release_config = get_release_config(config)
-
-    task_def['payload'] = {
-        'release_name': worker['release-name'],
-        'product': worker['product'],
-        'version': release_config['version'],
-        'build_number': release_config['build_number'],
-        'branch': worker['branch'],
-        'revision': get_branch_rev(config),
-        'partials': release_config.get('partial_versions', ""),
-        'l10n_changesets': worker['locales'],
-    }
-
-
 @payload_builder('sign-and-push-addons', schema={
     Required('channel'): Any('listed', 'unlisted'),
     Required('upstream-artifacts'): [{
