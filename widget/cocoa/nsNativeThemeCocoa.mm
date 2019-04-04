@@ -2453,10 +2453,9 @@ nsNativeThemeCocoa::ScrollbarParams nsNativeThemeCocoa::ComputeScrollbarParams(n
     ComputedStyle* style = nsLayoutUtils::StyleForScrollbar(aFrame);
     const nsStyleUI* ui = style->StyleUI();
     if (ui->HasCustomScrollbars()) {
-      const auto& colors = ui->mScrollbarColor.AsColors();
       params.custom = true;
-      params.trackColor = colors.track.CalcColor(*style);
-      params.faceColor = colors.thumb.CalcColor(*style);
+      params.trackColor = ui->mScrollbarTrackColor.CalcColor(style);
+      params.faceColor = ui->mScrollbarFaceColor.CalcColor(style);
     }
   }
   return params;
@@ -4469,8 +4468,8 @@ nsITheme::Transparency nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFram
         return eTransparent;
       }
       const nsStyleUI* ui = nsLayoutUtils::StyleForScrollbar(aFrame)->StyleUI();
-      if (!ui->mScrollbarColor.IsAuto() &&
-          ui->mScrollbarColor.AsColors().track.MaybeTransparent()) {
+      StyleComplexColor trackColor = ui->mScrollbarTrackColor;
+      if (!trackColor.IsAuto() && trackColor.MaybeTransparent()) {
         return eTransparent;
       }
       return eOpaque;

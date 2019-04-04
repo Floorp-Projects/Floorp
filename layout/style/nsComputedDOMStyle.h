@@ -10,7 +10,7 @@
 #define nsComputedDOMStyle_h__
 
 #include "mozilla/Attributes.h"
-#include "mozilla/StyleColorInlines.h"
+#include "mozilla/StyleComplexColor.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/Element.h"
 #include "nsCOMPtr.h"
@@ -370,7 +370,7 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
   /* Helper functions */
   void SetValueFromComplexColor(nsROCSSPrimitiveValue* aValue,
-                                const mozilla::StyleColor& aColor);
+                                const mozilla::StyleComplexColor& aColor);
   void SetValueToPosition(const mozilla::Position& aPosition,
                           nsDOMCSSValueList* aValueList);
   void SetValueToURLValue(const mozilla::css::URLValue* aURL,

@@ -18,9 +18,9 @@
 #include "mozilla/ServoComputedData.h"
 #include "mozilla/ServoTypes.h"
 #include "mozilla/ServoUtils.h"
+#include "mozilla/StyleComplexColor.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSPseudoElements.h"
-#include "nsColor.h"
 
 #include "nsStyleStructFwd.h"
 

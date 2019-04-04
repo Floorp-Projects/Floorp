@@ -2997,7 +2997,7 @@ ImgDrawResult nsTreeBodyFrame::PaintCell(
 
       const nsStyleBorder* borderStyle = lineContext->StyleBorder();
       // Resolve currentcolor values against the treeline context
-      nscolor color = borderStyle->mBorderLeftColor.CalcColor(*lineContext);
+      nscolor color = borderStyle->mBorderLeftColor.CalcColor(lineContext);
       ColorPattern colorPatt(ToDeviceColor(color));
 
       StyleBorderStyle style = borderStyle->GetBorderStyle(eSideLeft);
