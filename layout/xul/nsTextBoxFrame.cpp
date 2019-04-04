@@ -283,7 +283,7 @@ void nsDisplayXULTextBox::Paint(nsDisplayListBuilder* aBuilder,
   nsRect drawRect =
       static_cast<nsTextBoxFrame*>(mFrame)->mTextDrawRect + ToReferenceFrame();
   nsLayoutUtils::PaintTextShadow(mFrame, aCtx, drawRect, GetPaintRect(),
-                                 mFrame->StyleColor()->mColor,
+                                 mFrame->StyleColor()->mColor.ToColor(),
                                  PaintTextShadowCallback, (void*)this);
 
   PaintTextToContext(aCtx, nsPoint(0, 0), nullptr);
@@ -488,7 +488,7 @@ void nsTextBoxFrame::DrawText(gfxContext& aRenderingContext,
 
   CalculateUnderline(refDrawTarget, *fontMet);
 
-  nscolor c = aOverrideColor ? *aOverrideColor : StyleColor()->mColor;
+  nscolor c = aOverrideColor ? *aOverrideColor : StyleColor()->mColor.ToColor();
   ColorPattern color(ToDeviceColor(c));
   aRenderingContext.SetColor(Color::FromABGR(c));
 

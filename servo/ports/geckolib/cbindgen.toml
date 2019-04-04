@@ -310,4 +310,12 @@ renaming_overrides_prefixing = true
    * Compute the final color, making the argument the foreground color.
    */
   nscolor CalcColor(nscolor) const;
+  nscolor CalcColor(const StyleRGBA&) const;
+"""
+
+"RGBA" = """
+  static inline StyleRGBA Transparent();
+  static inline StyleRGBA FromColor(nscolor);
+
+  inline nscolor ToColor() const;
 """
