@@ -20,3 +20,7 @@ export MOZ_TELEMETRY_REPORTING=1
 
 # Package js shell.
 export MOZ_PACKAGE_JSSHELL=1
+
+if [ -n "$MOZ_PGO" ]; then
+    RUSTFLAGS="-Clinker-plugin-lto"
+fi
