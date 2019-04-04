@@ -49,6 +49,7 @@ class Selection;
 }  // namespace dom
 
 class EventDispatchingCallback;
+class GeckoMVMContext;
 class OverflowChangedTracker;
 
 // A set type for tracking visible frames, for use by the visibility code in
@@ -1348,6 +1349,7 @@ class PresShell final : public nsIPresShell,
   TouchManager mTouchManager;
 
   RefPtr<ZoomConstraintsClient> mZoomConstraintsClient;
+  RefPtr<GeckoMVMContext> mMVMContext;
   RefPtr<MobileViewportManager> mMobileViewportManager;
 
   // This timer controls painting suppression.  Until it fires
