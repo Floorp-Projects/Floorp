@@ -85,15 +85,16 @@ void WaitForShutdown(RefPtr<MediaDataEncoder> aEncoder) {
   Maybe<bool> result;
   // media::Await() supports exclusive promises only, but ShutdownPromise is
   // not.
-  aEncoder->Shutdown()->Then(AbstractThread::MainThread(), __func__,
-                             [&result](bool rv) {
-                               EXPECT_TRUE(rv);
-                               result = Some(true);
-                             },
-                             [&result]() {
-                               FAIL() << "Shutdown should never be rejected";
-                               result = Some(false);
-                             });
+  aEncoder->Shutdown()->Then(
+      AbstractThread::MainThread(), __func__,
+      [&result](bool rv) {
+        EXPECT_TRUE(rv);
+        result = Some(true);
+      },
+      [&result]() {
+        FAIL() << "Shutdown should never be rejected";
+        result = Some(false);
+      });
   SpinEventLoopUntil([&result]() { return result; });
 }
 
@@ -115,12 +116,13 @@ static bool EnsureInit(RefPtr<MediaDataEncoder> aEncoder) {
   }
 
   bool succeeded;
-  media::Await(GetMediaThreadPool(MediaThreadType::PLAYBACK), aEncoder->Init(),
-               [&succeeded](TrackInfo::TrackType t) {
-                 EXPECT_EQ(TrackInfo::TrackType::kVideoTrack, t);
-                 succeeded = true;
-               },
-               [&succeeded](MediaResult r) { succeeded = false; });
+  media::Await(
+      GetMediaThreadPool(MediaThreadType::PLAYBACK), aEncoder->Init(),
+      [&succeeded](TrackInfo::TrackType t) {
+        EXPECT_EQ(TrackInfo::TrackType::kVideoTrack, t);
+        succeeded = true;
+      },
+      [&succeeded](MediaResult r) { succeeded = false; });
   return succeeded;
 }
 
@@ -149,13 +151,13 @@ static MediaDataEncoder::EncodedData Encode(
         kImageSize, 0, TimeUnit::FromMicroseconds(i * 30000),
         TimeUnit::FromMicroseconds(30000), img, (i & 0xF) == 0,
         TimeUnit::FromMicroseconds(i * 30000));
-    media::Await(GetMediaThreadPool(MediaThreadType::PLAYBACK),
-                 aEncoder->Encode(frame),
-                 [&output, &succeeded](MediaDataEncoder::EncodedData encoded) {
-                   output.AppendElements(std::move(encoded));
-                   succeeded = true;
-                 },
-                 [&succeeded](MediaResult r) { succeeded = false; });
+    media::Await(
+        GetMediaThreadPool(MediaThreadType::PLAYBACK), aEncoder->Encode(frame),
+        [&output, &succeeded](MediaDataEncoder::EncodedData encoded) {
+          output.AppendElements(std::move(encoded));
+          succeeded = true;
+        },
+        [&succeeded](MediaResult r) { succeeded = false; });
     EXPECT_TRUE(succeeded);
     if (!succeeded) {
       return output;
@@ -177,13 +179,13 @@ static MediaDataEncoder::EncodedData Encode(
   }
 
   if (pending > 0) {
-    media::Await(GetMediaThreadPool(MediaThreadType::PLAYBACK),
-                 aEncoder->Drain(),
-                 [&succeeded](MediaDataEncoder::EncodedData encoded) {
-                   EXPECT_EQ(encoded.Length(), 0UL);
-                   succeeded = true;
-                 },
-                 [&succeeded](MediaResult r) { succeeded = false; });
+    media::Await(
+        GetMediaThreadPool(MediaThreadType::PLAYBACK), aEncoder->Drain(),
+        [&succeeded](MediaDataEncoder::EncodedData encoded) {
+          EXPECT_EQ(encoded.Length(), 0UL);
+          succeeded = true;
+        },
+        [&succeeded](MediaResult r) { succeeded = false; });
     EXPECT_TRUE(succeeded);
   }
 

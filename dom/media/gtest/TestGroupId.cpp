@@ -90,7 +90,8 @@ RefPtr<MediaDevice> MakeSpeakerDevice(const nsString& aName,
 /* Verify that when an audio input device name contains the video input device
  * name the video device group id is updated to become equal to the audio
  * device group id. */
-TEST(TestGroupId, MatchInput_PartOfName) {
+TEST(TestGroupId, MatchInput_PartOfName)
+{
   MediaManager::MediaDeviceSet devices;
 
   devices.AppendElement(
@@ -110,7 +111,8 @@ TEST(TestGroupId, MatchInput_PartOfName) {
 /* Verify that when an audio input device name is the same as the video input
  * device name the video device group id is updated to become equal to the audio
  * device group id. */
-TEST(TestGroupId, MatchInput_FullName) {
+TEST(TestGroupId, MatchInput_FullName)
+{
   MediaManager::MediaDeviceSet devices;
 
   devices.AppendElement(
@@ -128,7 +130,8 @@ TEST(TestGroupId, MatchInput_FullName) {
 
 /* Verify that when an audio input device name does not contain the video input
  * device name the video device group id does not change. */
-TEST(TestGroupId, NoMatchInput) {
+TEST(TestGroupId, NoMatchInput)
+{
   MediaManager::MediaDeviceSet devices;
 
   nsString Cam_Model_GroupId = NS_LITERAL_STRING("Cam-Model-GroupId");
@@ -149,7 +152,8 @@ TEST(TestGroupId, NoMatchInput) {
 /* Verify that when more that one audio input and more than one audio output
  * device name contain the video input device name the video device group id
  * does not change. */
-TEST(TestGroupId, NoMatch_TwoIdenticalDevices) {
+TEST(TestGroupId, NoMatch_TwoIdenticalDevices)
+{
   MediaManager::MediaDeviceSet devices;
 
   nsString Cam_Model_GroupId = NS_LITERAL_STRING("Cam-Model-GroupId");
@@ -184,7 +188,8 @@ TEST(TestGroupId, NoMatch_TwoIdenticalDevices) {
  * input device name the video device group id is not updated by audio input
  * device group id but it continues looking at audio output devices where it
  * finds a match so video input group id is updated by audio output group id. */
-TEST(TestGroupId, Match_TwoIdenticalInputsMatchOutput) {
+TEST(TestGroupId, Match_TwoIdenticalInputsMatchOutput)
+{
   MediaManager::MediaDeviceSet devices;
 
   nsString Cam_Model_GroupId = NS_LITERAL_STRING("Cam-Model-GroupId");
@@ -211,7 +216,8 @@ TEST(TestGroupId, Match_TwoIdenticalInputsMatchOutput) {
 /* Verify that when more that one audio input and more than one audio output
  * device names contain the video input device name the video device group id
  * does not change. */
-TEST(TestGroupId, NoMatch_ThreeIdenticalDevices) {
+TEST(TestGroupId, NoMatch_ThreeIdenticalDevices)
+{
   MediaManager::MediaDeviceSet devices;
 
   nsString Cam_Model_GroupId = NS_LITERAL_STRING("Cam-Model-GroupId");
@@ -251,7 +257,8 @@ TEST(TestGroupId, NoMatch_ThreeIdenticalDevices) {
 /* Verify that when an audio output device name contains the video input device
  * name the video device group id is updated to become equal to the audio
  * device group id. */
-TEST(TestGroupId, MatchOutput) {
+TEST(TestGroupId, MatchOutput)
+{
   MediaManager::MediaDeviceSet devices;
 
   devices.AppendElement(
@@ -274,7 +281,8 @@ TEST(TestGroupId, MatchOutput) {
 /* Verify that when an audio input device name is the same as audio output
  * device and video input device name the video device group id is updated to
  * become equal to the audio input device group id. */
-TEST(TestGroupId, InputOutputSameName) {
+TEST(TestGroupId, InputOutputSameName)
+{
   MediaManager::MediaDeviceSet devices;
 
   devices.AppendElement(
@@ -297,7 +305,8 @@ TEST(TestGroupId, InputOutputSameName) {
 /* Verify that when an audio input device name contains the video input device
  * and the audio input group id is an empty string, the video device group id
  * is updated to become equal to the audio device group id. */
-TEST(TestGroupId, InputEmptyGroupId) {
+TEST(TestGroupId, InputEmptyGroupId)
+{
   MediaManager::MediaDeviceSet devices;
 
   devices.AppendElement(
@@ -316,7 +325,8 @@ TEST(TestGroupId, InputEmptyGroupId) {
 /* Verify that when an audio output device name contains the video input device
  * and the audio output group id is an empty string, the video device group id
  * is updated to become equal to the audio output device group id. */
-TEST(TestGroupId, OutputEmptyGroupId) {
+TEST(TestGroupId, OutputEmptyGroupId)
+{
   MediaManager::MediaDeviceSet devices;
 
   devices.AppendElement(

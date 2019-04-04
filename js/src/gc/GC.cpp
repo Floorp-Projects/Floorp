@@ -7871,7 +7871,8 @@ JS::AutoDisableGenerationalGC::AutoDisableGenerationalGC(JSContext* cx)
 }
 
 JS::AutoDisableGenerationalGC::~AutoDisableGenerationalGC() {
-  if (--cx->generationalDisabled == 0 && cx->runtime()->gc.tunables.gcMaxNurseryBytes() > 0) {
+  if (--cx->generationalDisabled == 0 &&
+      cx->runtime()->gc.tunables.gcMaxNurseryBytes() > 0) {
     cx->nursery().enable();
   }
 }

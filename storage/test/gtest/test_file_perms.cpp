@@ -13,7 +13,8 @@
  * we request they be
  */
 
-TEST(storage_file_perms, Test) {
+TEST(storage_file_perms, Test)
+{
   nsCOMPtr<mozIStorageConnection> db(getDatabase());
   nsCOMPtr<nsIFile> dbFile;
   do_check_success(db->GetDatabaseFile(getter_AddRefs(dbFile)));

@@ -77,7 +77,8 @@ static void ActiveParamsCheck(int aEntries, double aInterval,
   }
 }
 
-TEST(GeckoProfiler, FeaturesAndParams) {
+TEST(GeckoProfiler, FeaturesAndParams)
+{
   InactiveFeaturesAndParamsCheck();
 
   // Try a couple of features and filters.
@@ -195,7 +196,8 @@ TEST(GeckoProfiler, FeaturesAndParams) {
   }
 }
 
-TEST(GeckoProfiler, EnsureStarted) {
+TEST(GeckoProfiler, EnsureStarted)
+{
   InactiveFeaturesAndParamsCheck();
 
   uint32_t features = ProfilerFeature::JS | ProfilerFeature::Threads;
@@ -265,7 +267,8 @@ TEST(GeckoProfiler, EnsureStarted) {
   }
 }
 
-TEST(GeckoProfiler, DifferentThreads) {
+TEST(GeckoProfiler, DifferentThreads)
+{
   InactiveFeaturesAndParamsCheck();
 
   nsCOMPtr<nsIThread> thread;
@@ -337,7 +340,8 @@ TEST(GeckoProfiler, DifferentThreads) {
   thread->Shutdown();
 }
 
-TEST(GeckoProfiler, GetBacktrace) {
+TEST(GeckoProfiler, GetBacktrace)
+{
   ASSERT_TRUE(!profiler_get_backtrace());
 
   {
@@ -383,7 +387,8 @@ TEST(GeckoProfiler, GetBacktrace) {
   ASSERT_TRUE(!profiler_get_backtrace());
 }
 
-TEST(GeckoProfiler, Pause) {
+TEST(GeckoProfiler, Pause)
+{
   uint32_t features = ProfilerFeature::StackWalk;
   const char* filters[] = {"GeckoMain"};
 
@@ -452,7 +457,8 @@ int GTestMarkerPayload::sNumCreated = 0;
 int GTestMarkerPayload::sNumStreamed = 0;
 int GTestMarkerPayload::sNumDestroyed = 0;
 
-TEST(GeckoProfiler, Markers) {
+TEST(GeckoProfiler, Markers)
+{
   uint32_t features = ProfilerFeature::StackWalk;
   const char* filters[] = {"GeckoMain"};
 
@@ -556,7 +562,8 @@ TEST(GeckoProfiler, Markers) {
   ASSERT_TRUE(GTestMarkerPayload::sNumDestroyed == 20);
 }
 
-TEST(GeckoProfiler, DurationLimit) {
+TEST(GeckoProfiler, DurationLimit)
+{
   uint32_t features = ProfilerFeature::StackWalk;
   const char* filters[] = {"GeckoMain"};
 
@@ -592,7 +599,8 @@ TEST(GeckoProfiler, DurationLimit) {
 PROFILER_DEFINE_COUNT_TOTAL(TestCounter, COUNTER_NAME, COUNTER_DESCRIPTION);
 PROFILER_DEFINE_COUNT_TOTAL(TestCounter2, COUNTER_NAME2, COUNTER_DESCRIPTION2);
 
-TEST(GeckoProfiler, Counters) {
+TEST(GeckoProfiler, Counters)
+{
   uint32_t features = ProfilerFeature::Threads;
   const char* filters[] = {"GeckoMain", "Compositor"};
 
@@ -633,7 +641,8 @@ TEST(GeckoProfiler, Counters) {
   profiler_stop();
 }
 
-TEST(GeckoProfiler, Time) {
+TEST(GeckoProfiler, Time)
+{
   uint32_t features = ProfilerFeature::StackWalk;
   const char* filters[] = {"GeckoMain"};
 
@@ -656,7 +665,8 @@ TEST(GeckoProfiler, Time) {
   ASSERT_TRUE(t4 <= t5 && t1 <= t6);
 }
 
-TEST(GeckoProfiler, GetProfile) {
+TEST(GeckoProfiler, GetProfile)
+{
   uint32_t features = ProfilerFeature::StackWalk;
   const char* filters[] = {"GeckoMain"};
 
@@ -694,7 +704,8 @@ static void JSONOutputCheck(const char* aOutput) {
   ASSERT_TRUE(strstr(aOutput, "\"stringTable\""));
 }
 
-TEST(GeckoProfiler, StreamJSONForThisProcess) {
+TEST(GeckoProfiler, StreamJSONForThisProcess)
+{
   uint32_t features = ProfilerFeature::StackWalk;
   const char* filters[] = {"GeckoMain"};
 
@@ -717,7 +728,8 @@ TEST(GeckoProfiler, StreamJSONForThisProcess) {
   ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
 }
 
-TEST(GeckoProfiler, StreamJSONForThisProcessThreaded) {
+TEST(GeckoProfiler, StreamJSONForThisProcessThreaded)
+{
   // Same as the previous test, but calling some things on background threads.
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_NewNamedThread("GeckoProfGTest", getter_AddRefs(thread));
@@ -764,7 +776,8 @@ TEST(GeckoProfiler, StreamJSONForThisProcessThreaded) {
   ASSERT_TRUE(!profiler_stream_json_for_this_process(w));
 }
 
-TEST(GeckoProfiler, ProfilingStack) {
+TEST(GeckoProfiler, ProfilingStack)
+{
   uint32_t features = ProfilerFeature::StackWalk;
   const char* filters[] = {"GeckoMain"};
 
@@ -794,7 +807,8 @@ TEST(GeckoProfiler, ProfilingStack) {
   ASSERT_TRUE(!profiler_get_profile());
 }
 
-TEST(GeckoProfiler, Bug1355807) {
+TEST(GeckoProfiler, Bug1355807)
+{
   uint32_t features = ProfilerFeature::JS;
   const char* manyThreadsFilter[] = {""};
   const char* fewThreadsFilter[] = {"GeckoMain"};
@@ -846,7 +860,8 @@ void DoSuspendAndSample(int aTid, nsIThread* aThread) {
       NS_DISPATCH_SYNC);
 }
 
-TEST(GeckoProfiler, SuspendAndSample) {
+TEST(GeckoProfiler, SuspendAndSample)
+{
   nsCOMPtr<nsIThread> thread;
   nsresult rv = NS_NewNamedThread("GeckoProfGTest", getter_AddRefs(thread));
   ASSERT_TRUE(NS_SUCCEEDED(rv));

@@ -75,15 +75,20 @@ static void TestAudioCompactor(size_t aBytes) {
   EXPECT_LE(slop, maxSlop) << "allowed too much allocation slop";
 }
 
-TEST(Media, AudioCompactor_4000) { TestAudioCompactor(4000); }
+TEST(Media, AudioCompactor_4000)
+{ TestAudioCompactor(4000); }
 
-TEST(Media, AudioCompactor_4096) { TestAudioCompactor(4096); }
+TEST(Media, AudioCompactor_4096)
+{ TestAudioCompactor(4096); }
 
-TEST(Media, AudioCompactor_5000) { TestAudioCompactor(5000); }
+TEST(Media, AudioCompactor_5000)
+{ TestAudioCompactor(5000); }
 
-TEST(Media, AudioCompactor_5256) { TestAudioCompactor(5256); }
+TEST(Media, AudioCompactor_5256)
+{ TestAudioCompactor(5256); }
 
-TEST(Media, AudioCompactor_NativeCopy) {
+TEST(Media, AudioCompactor_NativeCopy)
+{
   const uint32_t channels = 2;
   const size_t srcBytes = 32;
   const uint32_t srcSamples = srcBytes / sizeof(AudioDataValue);

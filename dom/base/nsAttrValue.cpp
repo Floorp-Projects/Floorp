@@ -1645,7 +1645,9 @@ MiscContainer* nsAttrValue::ClearMiscContainer() {
           delete cont->mValue.mIntMargin;
           break;
         }
-        default: { break; }
+        default: {
+          break;
+        }
       }
     }
     ResetMiscAtomOrString();

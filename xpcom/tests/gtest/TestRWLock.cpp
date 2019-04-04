@@ -60,7 +60,8 @@ RWLockRunnable::Run() {
   return NS_OK;
 }
 
-TEST(RWLock, SmokeTest) {
+TEST(RWLock, SmokeTest)
+{
   nsCOMPtr<nsIThread> threads[sNumThreads];
   RWLock rwlock("test lock");
   mozilla::Atomic<size_t> data(0);

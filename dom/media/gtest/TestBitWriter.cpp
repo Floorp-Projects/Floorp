@@ -10,7 +10,8 @@
 
 using namespace mozilla;
 
-TEST(BitWriter, BitWriter) {
+TEST(BitWriter, BitWriter)
+{
   RefPtr<MediaByteBuffer> test = new MediaByteBuffer();
   BitWriter b(test);
   b.WriteBit(false);
@@ -49,7 +50,8 @@ TEST(BitWriter, BitWriter) {
   EXPECT_EQ(length, BitReader::GetBitLength(test));
 }
 
-TEST(BitWriter, SPS) {
+TEST(BitWriter, SPS)
+{
   uint8_t sps_pps[] = {0x01, 0x4d, 0x40, 0x0c, 0xff, 0xe1, 0x00, 0x1b, 0x67,
                        0x4d, 0x40, 0x0c, 0xe8, 0x80, 0x80, 0x9d, 0x80, 0xb5,
                        0x01, 0x01, 0x01, 0x40, 0x00, 0x00, 0x03, 0x00, 0x40,

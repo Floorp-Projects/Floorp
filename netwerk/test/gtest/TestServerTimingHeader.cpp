@@ -34,7 +34,8 @@ void testServerTimingHeader(
   }
 }
 
-TEST(TestServerTimingHeader, HeaderParsing) {
+TEST(TestServerTimingHeader, HeaderParsing)
+{
   // Test cases below are copied from
   // https://cs.chromium.org/chromium/src/third_party/WebKit/Source/platform/network/HTTPParsersTest.cpp
 
