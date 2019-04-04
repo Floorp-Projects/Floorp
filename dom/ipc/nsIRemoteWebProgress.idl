@@ -1,0 +1,30 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsIWebProgress.idl"
+
+[scriptable, uuid(2104bfce-bbbe-4111-aa29-cd7c91d1023b)]
+interface nsIRemoteWebProgress : nsIWebProgress {
+  /**
+   * Initialize the web progress.
+   *
+   * @param aManager The RemoteWebProgressManager for this remote nsIWebProgress.
+   * @param aIsTopLevel Whether or not this is a top-level web progress.
+   */
+  void init(in nsIWebProgress aManager,
+            in boolean aIsTopLevel);
+
+  /**
+   * Update the RemoteWebProgress with values from the content process.
+   *
+   * @param aOuterWindowID The outer window ID.
+   * @param aInnerWindowID The inner window ID.
+   * @param aLoadType The load type.
+   * @param aIsLoadingDocument Whether or not a document is being loaded.
+   */
+  void update(in uint64_t aOuterWindowID,
+              in uint64_t aInnerWindowID,
+              in uint32_t aLoadType,
+              in boolean aIsLoadingDocument);
+};

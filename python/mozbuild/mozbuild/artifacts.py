@@ -730,6 +730,15 @@ class TaskCache(CacheManager):
         # 'mozilla-inbound'
         tree = tree.split('/')[1] if '/' in tree else tree
 
+        # PGO builds are now known as "shippable" for all platforms but Android.
+        # For macOS and linux32 shippable builds are equivalent to opt builds and
+        # replace them on some trees.
+        if not job.startswith('android-'):
+            if job.endswith('-pgo') or job in ('macosx64-opt', 'linux-opt'):
+                tree += '.shippable'
+            if job.endswith('-pgo'):
+                job = job.replace('-pgo', '-opt')
+
         namespace = 'gecko.v2.{tree}.revision.{rev}.{product}.{job}'.format(
             rev=rev,
             tree=tree,

@@ -15,8 +15,8 @@
 #include "nsFrameSelection.h"
 
 #include "nsIAccessibleTypes.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
-#include "nsIPresShell.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/dom/Element.h"
 

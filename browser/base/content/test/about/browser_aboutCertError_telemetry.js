@@ -33,7 +33,7 @@ add_task(async function checkTelemetryClickEvents() {
   Services.telemetry.clearEvents();
   await TestUtils.waitForCondition(() => {
     let events = Services.telemetry.snapshotEvents(
-      Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true).content;
+      Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true).content;
     return !events || !events.length;
   });
 
@@ -64,7 +64,7 @@ add_task(async function checkTelemetryClickEvents() {
 
       let loadEvents = await TestUtils.waitForCondition(() => {
         let events = Services.telemetry.snapshotEvents(
-          Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true).content;
+          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true).content;
         if (events && events.length) {
           events = events.filter(e => e[1] == "security.ui.certerror" && e[2] == "load");
           if (events.length == 1 && events[0][5].is_frame == useFrame.toString()) {
@@ -87,7 +87,7 @@ add_task(async function checkTelemetryClickEvents() {
 
       let clickEvents = await TestUtils.waitForCondition(() => {
         let events = Services.telemetry.snapshotEvents(
-          Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true).content;
+          Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true).content;
         if (events && events.length) {
           events = events.filter(e => e[1] == "security.ui.certerror" && e[2] == "click" && e[3] == object);
           if (events.length == 1 && events[0][5].is_frame == useFrame.toString()) {

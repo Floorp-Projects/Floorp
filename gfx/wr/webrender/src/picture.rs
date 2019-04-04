@@ -2426,17 +2426,17 @@ impl PicturePrimitive {
 
         // Disallow subpixel AA if an intermediate surface is needed.
         // TODO(lsalzman): allow overriding parent if intermediate surface is opaque
-        let allow_subpixel_aa = match self.raster_config {
+        let (allow_subpixel_aa, is_composite, is_passthrough) = match self.raster_config {
             Some(RasterConfig { composite_mode: PictureCompositeMode::TileCache { clear_color, .. }, .. }) => {
                 // If the tile cache has an opaque background, then it's fine to use
                 // subpixel rendering (this is the common case).
-                clear_color.a >= 1.0
+                (clear_color.a >= 1.0, false, false)
             },
             Some(_) => {
-                false
+                (false, true, false)
             }
             None => {
-                true
+                (true, false, true)
             }
         };
         // Still disable subpixel AA if parent forbids it
@@ -2465,7 +2465,8 @@ impl PicturePrimitive {
             pic_index,
             apply_local_clip_rect: self.apply_local_clip_rect,
             allow_subpixel_aa,
-            is_passthrough: self.raster_config.is_none(),
+            is_composite,
+            is_passthrough,
             raster_space: self.requested_raster_space,
             raster_spatial_node_index,
             surface_spatial_node_index,

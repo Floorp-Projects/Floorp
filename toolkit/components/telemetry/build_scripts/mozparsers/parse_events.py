@@ -316,9 +316,9 @@ class EventData:
         """
         rcc = self.dataset_short
         if rcc == 'opt-out':
-            return 'nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT'
+            return 'nsITelemetry::DATASET_ALL_CHANNELS'
         else:
-            return 'nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN'
+            return 'nsITelemetry::DATASET_PRERELEASE_CHANNELS'
 
     @property
     def dataset_short(self):

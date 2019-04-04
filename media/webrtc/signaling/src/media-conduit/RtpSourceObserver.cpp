@@ -19,25 +19,25 @@ double RtpSourceObserver::RtpSourceEntry::ToLinearAudioLevel() const {
 RtpSourceObserver::RtpSourceObserver()
     : mMaxJitterWindow(0), mLevelGuard("RtpSourceObserver::mLevelGuard") {}
 
-void RtpSourceObserver::OnRtpPacket(const webrtc::WebRtcRTPHeader* aHeader,
+
+void RtpSourceObserver::OnRtpPacket(const webrtc::RTPHeader& aHeader,
                                     const int64_t aTimestamp,
                                     const uint32_t aJitter) {
-  auto& header = aHeader->header;
   MutexAutoLock lock(mLevelGuard);
   {
     mMaxJitterWindow =
         std::max(mMaxJitterWindow, static_cast<int64_t>(aJitter) * 2);
     const auto jitterAdjusted = aTimestamp + aJitter;
-    auto& hist = mRtpSources[GetKey(header.ssrc, EntryType::Synchronization)];
+    auto& hist = mRtpSources[GetKey(aHeader.ssrc, EntryType::Synchronization)];
     hist.Prune(aTimestamp);
     // ssrc-audio-level handling
-    hist.Insert(aTimestamp, jitterAdjusted, header.extension.hasAudioLevel,
-                header.extension.audioLevel);
+    hist.Insert(aTimestamp, jitterAdjusted, aHeader.extension.hasAudioLevel,
+                aHeader.extension.audioLevel);
 
     // csrc-audio-level handling
-    const auto& list = header.extension.csrcAudioLevels;
-    for (uint8_t i = 0; i < header.numCSRCs; i++) {
-      const uint32_t& csrc = header.arrOfCSRCs[i];
+    const auto& list = aHeader.extension.csrcAudioLevels;
+    for (uint8_t i = 0; i < aHeader.numCSRCs; i++) {
+      const uint32_t& csrc = aHeader.arrOfCSRCs[i];
       auto& hist = mRtpSources[GetKey(csrc, EntryType::Contributing)];
       hist.Prune(aTimestamp);
       bool hasLevel = i < list.numAudioLevels;

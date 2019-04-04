@@ -356,7 +356,6 @@ class ICScript {
 
 class ICMonitoredStub;
 class ICMonitoredFallbackStub;
-class ICUpdatedStub;
 
 // Constant iterator that traverses arbitrary chains of ICStubs.
 // No requirements are made of the ICStub used to construct this
@@ -622,14 +621,14 @@ class ICStub {
     return reinterpret_cast<ICMonitoredFallbackStub*>(this);
   }
 
-  inline const ICUpdatedStub* toUpdatedStub() const {
+  inline const ICCacheIR_Updated* toUpdatedStub() const {
     MOZ_ASSERT(isUpdated());
-    return reinterpret_cast<const ICUpdatedStub*>(this);
+    return reinterpret_cast<const ICCacheIR_Updated*>(this);
   }
 
-  inline ICUpdatedStub* toUpdatedStub() {
+  inline ICCacheIR_Updated* toUpdatedStub() {
     MOZ_ASSERT(isUpdated());
-    return reinterpret_cast<ICUpdatedStub*>(this);
+    return reinterpret_cast<ICCacheIR_Updated*>(this);
   }
 
 #define KIND_METHODS(kindName)                                    \
@@ -892,22 +891,43 @@ class ICCacheIR_Monitored : public ICMonitoredStub,
   uint8_t* stubDataStart();
 };
 
-// Updated stubs are IC stubs that use a TypeUpdate IC to track
-// the status of heap typesets that need to be updated.
-class ICUpdatedStub : public ICStub {
- protected:
-  static const uint32_t MAX_OPTIMIZED_STUBS = 8;
+class ICCacheIR_Updated : public ICStub,
+                          public ICCacheIR_Trait<ICCacheIR_Updated> {
   uint32_t numOptimizedStubs_;
+
+  GCPtrObjectGroup updateStubGroup_;
+  GCPtrId updateStubId_;
 
   // Pointer to the start of the type updating stub chain.
   ICStub* firstUpdateStub_;
 
-  ICUpdatedStub(Kind kind, JitCode* stubCode)
-      : ICStub(kind, ICStub::Updated, stubCode),
-        numOptimizedStubs_(0),
-        firstUpdateStub_(nullptr) {}
+  static const uint32_t MAX_OPTIMIZED_STUBS = 8;
 
  public:
+  ICCacheIR_Updated(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
+      : ICStub(ICStub::CacheIR_Updated, ICStub::Updated, stubCode),
+        ICCacheIR_Trait(stubInfo),
+        numOptimizedStubs_(0),
+        updateStubGroup_(nullptr),
+        updateStubId_(JSID_EMPTY),
+        firstUpdateStub_(nullptr) {}
+
+  GCPtrObjectGroup& updateStubGroup() { return updateStubGroup_; }
+  GCPtrId& updateStubId() { return updateStubId_; }
+
+  uint8_t* stubDataStart();
+
+  inline ICStub* firstUpdateStub() const { return firstUpdateStub_; }
+
+  static inline size_t offsetOfFirstUpdateStub() {
+    return offsetof(ICCacheIR_Updated, firstUpdateStub_);
+  }
+
+  inline uint32_t numOptimizedStubs() const { return numOptimizedStubs_; }
+
+  void notePreliminaryObject() { extra_ = 1; }
+  bool hasPreliminaryObject() const { return extra_; }
+
   MOZ_MUST_USE bool initUpdatingChain(JSContext* cx, ICStubSpace* space);
 
   MOZ_MUST_USE bool addUpdateStubForValue(JSContext* cx, HandleScript script,
@@ -933,8 +953,6 @@ class ICUpdatedStub : public ICStub {
     numOptimizedStubs_++;
   }
 
-  inline ICStub* firstUpdateStub() const { return firstUpdateStub_; }
-
   void resetUpdateStubChain(Zone* zone);
 
   bool hasTypeUpdateStub(ICStub::Kind kind) {
@@ -949,33 +967,6 @@ class ICUpdatedStub : public ICStub {
 
     return false;
   }
-
-  inline uint32_t numOptimizedStubs() const { return numOptimizedStubs_; }
-
-  static inline size_t offsetOfFirstUpdateStub() {
-    return offsetof(ICUpdatedStub, firstUpdateStub_);
-  }
-};
-
-class ICCacheIR_Updated : public ICUpdatedStub,
-                          public ICCacheIR_Trait<ICCacheIR_Updated> {
-  GCPtrObjectGroup updateStubGroup_;
-  GCPtrId updateStubId_;
-
- public:
-  ICCacheIR_Updated(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
-      : ICUpdatedStub(ICStub::CacheIR_Updated, stubCode),
-        ICCacheIR_Trait(stubInfo),
-        updateStubGroup_(nullptr),
-        updateStubId_(JSID_EMPTY) {}
-
-  GCPtrObjectGroup& updateStubGroup() { return updateStubGroup_; }
-  GCPtrId& updateStubId() { return updateStubId_; }
-
-  void notePreliminaryObject() { extra_ = 1; }
-  bool hasPreliminaryObject() const { return extra_; }
-
-  uint8_t* stubDataStart();
 };
 
 // Base class for stubcode compilers.
@@ -2371,7 +2362,7 @@ void StoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
                        Register scratch, Label* failure);
 
 extern bool DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame,
-                                 ICUpdatedStub* stub, HandleValue objval,
+                                 ICCacheIR_Updated* stub, HandleValue objval,
                                  HandleValue value);
 
 extern bool DoWarmUpCounterFallbackOSR(JSContext* cx, BaselineFrame* frame,

@@ -104,8 +104,12 @@ def main(argv):
                   choices=['automation', 'none'],
                   help='Output format. Either automation or none'
                   ' (default %default).')
-    op.add_option('--args', dest='shell_args', default='',
+    op.add_option('--args', dest='shell_args', metavar='ARGS', default='',
                   help='extra args to pass to the JS shell')
+    op.add_option('--feature-args', dest='feature_args', metavar='ARGS',
+                  default='',
+                  help='even more args to pass to the JS shell '
+                       '(for compatibility with jstests.py)')
     op.add_option('-w', '--write-failures', dest='write_failures',
                   metavar='FILE',
                   help='Write a list of failed tests to [FILE]')
@@ -342,7 +346,7 @@ def main(argv):
     else:
         options.ignore_timeouts = set()
 
-    prefix = [js_shell] + shlex.split(options.shell_args)
+    prefix = [js_shell] + shlex.split(options.shell_args) + shlex.split(options.feature_args)
     prologue = os.path.join(jittests.LIB_DIR, 'prologue.js')
     if options.remote:
         prologue = posixpath.join(options.remote_test_root,

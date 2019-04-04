@@ -31,7 +31,8 @@ const PREF_DISABLE_TEST_BACKOFF = "browser.safebrowsing.provider.test.disableBac
  */
 this.BindToObject = function BindToObject(fn, self, opt_args) {
   var boundargs = fn.boundArgs_ || [];
-  boundargs = boundargs.concat(Array.slice(arguments, 2, arguments.length));
+  boundargs = boundargs.concat(Array.prototype.slice.call(arguments, 2,
+                                                          arguments.length));
 
   if (fn.boundSelf_)
     self = fn.boundSelf_;
@@ -40,7 +41,7 @@ this.BindToObject = function BindToObject(fn, self, opt_args) {
 
   var newfn = function() {
     // Combine the static args and the new args into one big array
-    var args = boundargs.concat(Array.slice(arguments));
+    var args = boundargs.concat(Array.prototype.slice.call(arguments));
     return fn.apply(self, args);
   };
 

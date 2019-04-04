@@ -171,24 +171,6 @@ hb_ot_tag_to_script (hb_tag_t tag)
 
 /* hb_language_t */
 
-static int
-lang_compare_first_component (const void *pa,
-			      const void *pb)
-{
-  const char *a = (const char *) pa;
-  const char *b = (const char *) pb;
-  unsigned int da, db;
-  const char *p;
-
-  p = strchr (a, '-');
-  da = p ? (unsigned int) (p - a) : strlen (a);
-
-  p = strchr (b, '-');
-  db = p ? (unsigned int) (p - b) : strlen (b);
-
-  return strncmp (a, b, MAX (da, db));
-}
-
 static bool
 subtag_matches (const char *lang_str,
 		const char *limit,
@@ -213,10 +195,28 @@ lang_matches (const char *lang_str, const char *spec)
 	 (lang_str[len] == '\0' || lang_str[len] == '-');
 }
 
-typedef struct {
+struct LangTag
+{
   char language[4];
   hb_tag_t tags[HB_OT_MAX_TAGS_PER_LANGUAGE];
-} LangTag;
+
+  int cmp (const char *a) const
+  {
+    const char *b = this->language;
+    unsigned int da, db;
+    const char *p;
+
+    p = strchr (a, '-');
+    da = p ? (unsigned int) (p - a) : strlen (a);
+
+    p = strchr (b, '-');
+    db = p ? (unsigned int) (p - b) : strlen (b);
+
+    return strncmp (a, b, MAX (da, db));
+  }
+  int cmp (const LangTag *that) const
+  { return cmp (that->language); }
+};
 
 #include "hb-ot-tag-table.hh"
 
@@ -263,9 +263,7 @@ hb_ot_tags_from_language (const char   *lang_str,
 	  ISALPHA (s[1]))
 	lang_str = s + 1;
     }
-    lang_tag = (LangTag *) bsearch (lang_str, ot_languages,
-				    ARRAY_LENGTH (ot_languages), sizeof (LangTag),
-				    lang_compare_first_component);
+    lang_tag = hb_sorted_array (ot_languages).bsearch (lang_str);
     if (lang_tag)
     {
       unsigned int i;
@@ -507,7 +505,7 @@ test_langs_sorted ()
 {
   for (unsigned int i = 1; i < ARRAY_LENGTH (ot_languages); i++)
   {
-    int c = lang_compare_first_component (ot_languages[i-1].language, ot_languages[i].language);
+    int c = ot_languages[i].cmp (&ot_languages[i - 1]);
     if (c >= 0)
     {
       fprintf (stderr, "ot_languages not sorted at index %d: %s %d %s\n",

@@ -209,6 +209,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
         // listeners that it added to both.
         this.popup.oneOffSearchButtons.popup = null;
         this.popup.oneOffSearchButtons.textbox = null;
+
+        this.valueFormatter.uninit();
       ]]></destructor>
 
       <field name="valueFormatter" readonly="true">
@@ -1348,18 +1350,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 // recalculate a proper size on reopening. For example, this may
                 // happen when using special OS resize functions like Win+Arrow.
                 this.closePopup();
-
-                // Make sure the host remains visible in the input field
-                // when the window is resized.  We don't want to
-                // hurt resize performance though, so do this only after resize
-                // events have stopped and a small timeout has elapsed.
-                if (this._resizeThrottleTimeout) {
-                  clearTimeout(this._resizeThrottleTimeout);
-                }
-                this._resizeThrottleTimeout = setTimeout(() => {
-                  this._resizeThrottleTimeout = null;
-                  this.valueFormatter.ensureFormattedHostVisible();
-                }, 100);
               }
               break;
           }

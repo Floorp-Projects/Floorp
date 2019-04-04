@@ -26,7 +26,6 @@
 #include "js/Vector.h"
 #include "vm/ArrayObject.h"
 #include "vm/JSAtom.h"
-#include "vm/RegExpConstants.h"
 
 namespace js {
 
@@ -39,6 +38,12 @@ class VectorMatchPairs;
 using RootedRegExpShared = JS::Rooted<RegExpShared*>;
 using HandleRegExpShared = JS::Handle<RegExpShared*>;
 using MutableHandleRegExpShared = JS::MutableHandle<RegExpShared*>;
+
+enum RegExpRunStatus {
+  RegExpRunStatus_Error,
+  RegExpRunStatus_Success,
+  RegExpRunStatus_Success_NotFound
+};
 
 /*
  * A RegExpShared is the compiled representation of a regexp. A RegExpShared is

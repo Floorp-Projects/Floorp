@@ -18,7 +18,6 @@
 #include "nsMenuBarFrame.h"
 #include "nsPopupSetFrame.h"
 #include "nsPIDOMWindow.h"
-#include "nsIPresShell.h"
 #include "nsFrameManager.h"
 #include "mozilla/dom/Document.h"
 #include "nsRect.h"
@@ -51,6 +50,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/KeyboardEvent.h"
@@ -1620,7 +1620,7 @@ void nsMenuPopupFrame::GenerateFrames() {
   mGeneratedChildren = true;
   if (generateFrames) {
     MOZ_ASSERT(PrincipalChildList().IsEmpty());
-    nsCOMPtr<nsIPresShell> presShell = PresContext()->PresShell();
+    RefPtr<mozilla::PresShell> presShell = PresContext()->PresShell();
     presShell->FrameConstructor()->GenerateChildFrames(this);
   }
 }

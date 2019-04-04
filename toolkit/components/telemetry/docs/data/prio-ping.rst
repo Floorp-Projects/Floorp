@@ -47,6 +47,9 @@ prioData
 ~~~~~~~~
 An array of ``encoding``/``prio`` pairs.
 
+Multiple elements of the ``prioData`` array may have the same ``encoding``.
+This is how we encode how many times something happened.
+
 .. _prio-ping.encoding:
 
 encoding

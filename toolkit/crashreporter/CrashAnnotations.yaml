@@ -154,9 +154,9 @@ Bug_1086977:
     loading a facebook plugin.
   type: string
 
-Bug_1537883:
+Bug_1541161:
   description: >
-    Dump JS Stack in case aPrincipal is null within SpeculativeConnect().
+    Dump JS Stack in case loadinfo is null within NewChannelFromURIWithProxyFlagsInternal().
   type: string
 
 BuildID:

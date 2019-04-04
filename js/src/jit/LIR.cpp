@@ -588,7 +588,6 @@ void LNode::dump(GenericPrinter& out) {
       out.printf(")");
     }
 
-#  ifdef JS_JITSPEW
     size_t numSuccessors = NumSuccessors(ins);
     if (numSuccessors > 0) {
       out.printf(" s=(");
@@ -601,7 +600,6 @@ void LNode::dump(GenericPrinter& out) {
       }
       out.printf(")");
     }
-#  endif
   }
 }
 

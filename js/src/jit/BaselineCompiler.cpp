@@ -878,25 +878,30 @@ void BaselineInterpreterCodeGen::pushScriptScopeArg() {
 }
 
 template <>
-void BaselineCompilerCodeGen::pushUint8BytecodeOperandArg() {
+void BaselineCompilerCodeGen::pushUint8BytecodeOperandArg(Register) {
   MOZ_ASSERT(JOF_OPTYPE(JSOp(*handler.pc())) == JOF_UINT8);
   pushArg(Imm32(GET_UINT8(handler.pc())));
 }
 
 template <>
-void BaselineInterpreterCodeGen::pushUint8BytecodeOperandArg() {
-  MOZ_CRASH("NYI: interpreter pushUint8BytecodeOperandArg");
+void BaselineInterpreterCodeGen::pushUint8BytecodeOperandArg(Register scratch) {
+  masm.loadPtr(frame.addressOfInterpreterPC(), scratch);
+  LoadUint8Operand(masm, scratch, scratch);
+  pushArg(scratch);
 }
 
 template <>
-void BaselineCompilerCodeGen::pushUint16BytecodeOperandArg() {
+void BaselineCompilerCodeGen::pushUint16BytecodeOperandArg(Register) {
   MOZ_ASSERT(JOF_OPTYPE(JSOp(*handler.pc())) == JOF_UINT16);
   pushArg(Imm32(GET_UINT16(handler.pc())));
 }
 
 template <>
-void BaselineInterpreterCodeGen::pushUint16BytecodeOperandArg() {
-  MOZ_CRASH("NYI: interpreter pushUint16BytecodeOperandArg");
+void BaselineInterpreterCodeGen::pushUint16BytecodeOperandArg(
+    Register scratch) {
+  masm.loadPtr(frame.addressOfInterpreterPC(), scratch);
+  LoadUint16Operand(masm, scratch, scratch);
+  pushArg(scratch);
 }
 
 template <>
@@ -1905,7 +1910,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_CHECKISOBJ() {
 
   prepareVMCall();
 
-  pushUint8BytecodeOperandArg();
+  pushUint8BytecodeOperandArg(R0.scratchReg());
 
   using Fn = bool (*)(JSContext*, CheckIsObjectKind);
   if (!callVM<Fn, ThrowCheckIsObject>()) {
@@ -1923,7 +1928,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_CHECKISCALLABLE() {
 
   prepareVMCall();
 
-  pushUint8BytecodeOperandArg();
+  pushUint8BytecodeOperandArg(R1.scratchReg());
   pushArg(R0);
 
   using Fn = bool (*)(JSContext*, HandleValue, CheckIsCallableKind);
@@ -2337,7 +2342,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_SETFUNNAME() {
 
   prepareVMCall();
 
-  pushUint8BytecodeOperandArg();
+  pushUint8BytecodeOperandArg(R2.scratchReg());
   pushArg(R1);
   pushArg(R0.scratchReg());
 
@@ -3194,7 +3199,7 @@ void BaselineCompilerCodeGen::getEnvironmentCoordinateObject(Register reg) {
 
 template <>
 void BaselineInterpreterCodeGen::getEnvironmentCoordinateObject(Register reg) {
-  MOZ_CRASH("NYI: interpreter getEnvironmentCoordinateObject");
+  MOZ_CRASH("Shouldn't call this for interpreter");
 }
 
 template <>
@@ -3214,7 +3219,7 @@ Address BaselineCompilerCodeGen::getEnvironmentCoordinateAddressFromObject(
 template <>
 Address BaselineInterpreterCodeGen::getEnvironmentCoordinateAddressFromObject(
     Register objReg, Register reg) {
-  MOZ_CRASH("NYI: interpreter getEnvironmentCoordinateAddressFromObject");
+  MOZ_CRASH("Shouldn't call this for interpreter");
 }
 
 template <typename Handler>
@@ -3224,12 +3229,72 @@ Address BaselineCodeGen<Handler>::getEnvironmentCoordinateAddress(
   return getEnvironmentCoordinateAddressFromObject(reg, reg);
 }
 
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_JSOP_GETALIASEDVAR() {
+// For a JOF_ENVCOORD op load the number of hops from the bytecode and skip this
+// number of environment objects.
+static void LoadAliasedVarEnv(MacroAssembler& masm, Register pc, Register env,
+                              Register scratch) {
+  static_assert(ENVCOORD_HOPS_LEN == 1,
+                "Code assumes number of hops is stored in uint8 operand");
+  LoadUint8Operand(masm, pc, scratch);
+
+  Label top, done;
+  masm.bind(&top);
+  masm.branchTest32(Assembler::Zero, scratch, scratch, &done);
+  {
+    Address nextEnv(env, EnvironmentObject::offsetOfEnclosingEnvironment());
+    masm.unboxObject(nextEnv, env);
+    masm.sub32(Imm32(1), scratch);
+    masm.jump(&top);
+  }
+  masm.bind(&done);
+}
+
+template <>
+void BaselineCompilerCodeGen::emitGetAliasedVar(ValueOperand dest) {
   frame.syncStack(0);
 
   Address address = getEnvironmentCoordinateAddress(R0.scratchReg());
-  masm.loadValue(address, R0);
+  masm.loadValue(address, dest);
+}
+
+template <>
+void BaselineInterpreterCodeGen::emitGetAliasedVar(ValueOperand dest) {
+  Register env = R0.scratchReg();
+  Register scratch = R1.scratchReg();
+
+  // Load the right environment object.
+  masm.loadPtr(frame.addressOfEnvironmentChain(), env);
+  LoadAliasedVarEnv(masm, PCRegAtStart, env, scratch);
+
+  // Load the slot index.
+  static_assert(ENVCOORD_SLOT_LEN == 3,
+                "Code assumes slot is stored in uint24 operand");
+  LoadUint24Operand(masm, PCRegAtStart, ENVCOORD_HOPS_LEN, scratch);
+
+  // Load the Value from a fixed or dynamic slot.
+  // See EnvironmentObject::nonExtensibleIsFixedSlot.
+  Label isDynamic, done;
+  masm.branch32(Assembler::AboveOrEqual, scratch,
+                Imm32(NativeObject::MAX_FIXED_SLOTS), &isDynamic);
+  {
+    uint32_t offset = NativeObject::getFixedSlotOffset(0);
+    masm.loadValue(BaseValueIndex(env, scratch, offset), dest);
+    masm.jump(&done);
+  }
+  masm.bind(&isDynamic);
+  {
+    masm.loadPtr(Address(env, NativeObject::offsetOfSlots()), env);
+
+    // Use an offset to subtract the number of fixed slots.
+    int32_t offset = -int32_t(NativeObject::MAX_FIXED_SLOTS * sizeof(Value));
+    masm.loadValue(BaseValueIndex(env, scratch, offset), dest);
+  }
+  masm.bind(&done);
+}
+
+template <typename Handler>
+bool BaselineCodeGen<Handler>::emit_JSOP_GETALIASEDVAR() {
+  emitGetAliasedVar(R0);
 
   if (handler.maybeIonCompileable()) {
     // No need to monitor types if we know Ion can't compile this script.
@@ -3271,7 +3336,69 @@ bool BaselineCompilerCodeGen::emit_JSOP_SETALIASEDVAR() {
 
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_SETALIASEDVAR() {
-  MOZ_CRASH("NYI: interpreter JSOP_SETALIASEDVAR");
+  AllocatableGeneralRegisterSet regs(GeneralRegisterSet::All());
+  regs.take(BaselineFrameReg);
+  regs.take(R2);
+  MOZ_ASSERT(!regs.has(PCRegAtStart), "R2 contains PCRegAtStart");
+
+  Register env = regs.takeAny();
+  Register scratch1 = regs.takeAny();
+  Register scratch2 = regs.takeAny();
+  Register scratch3 = regs.takeAny();
+
+  // Load the right environment object.
+  masm.loadPtr(frame.addressOfEnvironmentChain(), env);
+  LoadAliasedVarEnv(masm, PCRegAtStart, env, scratch1);
+
+  // Load the slot index.
+  static_assert(ENVCOORD_SLOT_LEN == 3,
+                "Code assumes slot is stored in uint24 operand");
+  LoadUint24Operand(masm, PCRegAtStart, ENVCOORD_HOPS_LEN, scratch1);
+
+  // Store the RHS Value in R2.
+  masm.loadValue(frame.addressOfStackValue(-1), R2);
+
+  // Load a pointer to the fixed or dynamic slot into scratch2. We want to call
+  // guardedCallPreBarrierAnyZone once to avoid code bloat.
+
+  // See EnvironmentObject::nonExtensibleIsFixedSlot.
+  Label isDynamic, done;
+  masm.branch32(Assembler::AboveOrEqual, scratch1,
+                Imm32(NativeObject::MAX_FIXED_SLOTS), &isDynamic);
+  {
+    uint32_t offset = NativeObject::getFixedSlotOffset(0);
+    BaseValueIndex slotAddr(env, scratch1, offset);
+    masm.computeEffectiveAddress(slotAddr, scratch2);
+    masm.jump(&done);
+  }
+  masm.bind(&isDynamic);
+  {
+    masm.loadPtr(Address(env, NativeObject::offsetOfSlots()), scratch2);
+
+    // Use an offset to subtract the number of fixed slots.
+    int32_t offset = -int32_t(NativeObject::MAX_FIXED_SLOTS * sizeof(Value));
+    BaseValueIndex slotAddr(scratch2, scratch1, offset);
+    masm.computeEffectiveAddress(slotAddr, scratch2);
+  }
+  masm.bind(&done);
+
+  // Pre-barrier and store.
+  Address slotAddr(scratch2, 0);
+  masm.guardedCallPreBarrierAnyZone(slotAddr, MIRType::Value, scratch3);
+  masm.storeValue(R2, slotAddr);
+
+  // Post barrier.
+  Label skipBarrier;
+  masm.branchPtrInNurseryChunk(Assembler::Equal, env, scratch1, &skipBarrier);
+  masm.branchValueIsNurseryCell(Assembler::NotEqual, R2, scratch1,
+                                &skipBarrier);
+  {
+    // Post barrier code expects the object in R2.
+    masm.movePtr(env, R2.scratchReg());
+    masm.call(&postBarrierSlot_);
+  }
+  masm.bind(&skipBarrier);
+  return true;
 }
 
 template <typename Handler>
@@ -3841,6 +3968,47 @@ bool BaselineCodeGen<Handler>::emit_JSOP_SETARG() {
 }
 
 template <>
+void BaselineCompilerCodeGen::loadNumFormalArguments(Register dest) {
+  masm.move32(Imm32(handler.function()->nargs()), dest);
+}
+
+template <>
+void BaselineInterpreterCodeGen::loadNumFormalArguments(Register dest) {
+  masm.loadFunctionFromCalleeToken(frame.addressOfCalleeToken(), dest);
+  masm.load16ZeroExtend(Address(dest, JSFunction::offsetOfNargs()), dest);
+}
+
+template <typename Handler>
+void BaselineCodeGen<Handler>::emitPushNonArrowFunctionNewTarget() {
+  // if (isConstructing()) push(argv[Max(numActualArgs, numFormalArgs)])
+  Label notConstructing, done;
+  masm.branchTestPtr(Assembler::Zero, frame.addressOfCalleeToken(),
+                     Imm32(CalleeToken_FunctionConstructing), &notConstructing);
+  {
+    Register argvLen = R0.scratchReg();
+    Register nformals = R1.scratchReg();
+    Address actualArgs(BaselineFrameReg,
+                       BaselineFrame::offsetOfNumActualArgs());
+    masm.loadPtr(actualArgs, argvLen);
+
+    // If argvLen < nformals, set argvlen := nformals.
+    loadNumFormalArguments(nformals);
+    masm.cmp32Move32(Assembler::Below, argvLen, nformals, nformals, argvLen);
+
+    BaseValueIndex newTarget(BaselineFrameReg, argvLen,
+                             BaselineFrame::offsetOfArg(0));
+    masm.loadValue(newTarget, R0);
+    masm.jump(&done);
+  }
+  // else push(undefined)
+  masm.bind(&notConstructing);
+  masm.moveValue(UndefinedValue(), R0);
+
+  masm.bind(&done);
+  frame.push(R0);
+}
+
+template <>
 bool BaselineCompilerCodeGen::emit_JSOP_NEWTARGET() {
   if (handler.script()->isForEval()) {
     frame.pushEvalNewTarget();
@@ -3861,50 +4029,45 @@ bool BaselineCompilerCodeGen::emit_JSOP_NEWTARGET() {
     return true;
   }
 
-  // if (isConstructing()) push(argv[Max(numActualArgs, numFormalArgs)])
-  Label notConstructing, done;
-  masm.branchTestPtr(Assembler::Zero, frame.addressOfCalleeToken(),
-                     Imm32(CalleeToken_FunctionConstructing), &notConstructing);
-
-  Register argvLen = R0.scratchReg();
-
-  Address actualArgs(BaselineFrameReg, BaselineFrame::offsetOfNumActualArgs());
-  masm.loadPtr(actualArgs, argvLen);
-
-  Label useNFormals;
-
-  uint32_t nargs = handler.function()->nargs();
-  masm.branchPtr(Assembler::Below, argvLen, Imm32(nargs), &useNFormals);
-
-  {
-    BaseValueIndex newTarget(BaselineFrameReg, argvLen,
-                             BaselineFrame::offsetOfArg(0));
-    masm.loadValue(newTarget, R0);
-    masm.jump(&done);
-  }
-
-  masm.bind(&useNFormals);
-
-  {
-    Address newTarget(BaselineFrameReg,
-                      BaselineFrame::offsetOfArg(0) + (nargs * sizeof(Value)));
-    masm.loadValue(newTarget, R0);
-    masm.jump(&done);
-  }
-
-  // else push(undefined)
-  masm.bind(&notConstructing);
-  masm.moveValue(UndefinedValue(), R0);
-
-  masm.bind(&done);
-  frame.push(R0);
-
+  emitPushNonArrowFunctionNewTarget();
   return true;
 }
 
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_NEWTARGET() {
-  MOZ_CRASH("NYI: interpreter JSOP_NEWTARGET");
+  Register scratch1 = R0.scratchReg();
+  Register scratch2 = R1.scratchReg();
+
+  Label isFunction, done;
+  masm.loadPtr(frame.addressOfCalleeToken(), scratch1);
+  masm.branchTestPtr(Assembler::Zero, scratch1, Imm32(CalleeTokenScriptBit),
+                     &isFunction);
+  {
+    // Case 1: eval.
+    frame.pushEvalNewTarget();
+    masm.jump(&done);
+  }
+
+  masm.bind(&isFunction);
+
+  Label notArrow;
+  masm.andPtr(Imm32(uint32_t(CalleeTokenMask)), scratch1);
+  masm.branchFunctionKind(Assembler::NotEqual, JSFunction::FunctionKind::Arrow,
+                          scratch1, scratch2, &notArrow);
+  {
+    // Case 2: arrow function.
+    masm.pushValue(
+        Address(scratch1, FunctionExtended::offsetOfArrowNewTargetSlot()));
+    masm.jump(&done);
+  }
+
+  masm.bind(&notArrow);
+
+  // Case 3: non-arrow function.
+  emitPushNonArrowFunctionNewTarget();
+
+  masm.bind(&done);
+  return true;
 }
 
 template <typename Handler>
@@ -3959,7 +4122,11 @@ bool BaselineCompilerCodeGen::emit_JSOP_CHECKLEXICAL() {
 
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_CHECKLEXICAL() {
-  MOZ_CRASH("NYI: interpreter JSOP_CHECKLEXICAL");
+  Register scratch = R0.scratchReg();
+  LoadUint24Operand(masm, PCRegAtStart, 0, scratch);
+  BaseValueIndex addr = ComputeAddressOfLocal(masm, scratch);
+  masm.loadValue(addr, R0);
+  return emitUninitializedLexicalCheck(R0);
 }
 
 template <typename Handler>
@@ -3978,7 +4145,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_INITGLEXICAL() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_CHECKALIASEDLEXICAL() {
   frame.syncStack(0);
-  masm.loadValue(getEnvironmentCoordinateAddress(R0.scratchReg()), R0);
+  emitGetAliasedVar(R0);
   return emitUninitializedLexicalCheck(R0);
 }
 
@@ -4208,7 +4375,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_TYPEOFEXPR() {
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_THROWMSG() {
   prepareVMCall();
-  pushUint16BytecodeOperandArg();
+  pushUint16BytecodeOperandArg(R2.scratchReg());
 
   using Fn = bool (*)(JSContext*, const unsigned);
   return callVM<Fn, js::ThrowMsgOperation>();
@@ -4737,7 +4904,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_ASYNCRESOLVE() {
   masm.unboxObject(frame.addressOfStackValue(-1), R0.scratchReg());
 
   prepareVMCall();
-  pushUint8BytecodeOperandArg();
+  pushUint8BytecodeOperandArg(R2.scratchReg());
   pushArg(R1);
   pushArg(R0.scratchReg());
 
@@ -4997,7 +5164,26 @@ bool BaselineCompilerCodeGen::emit_JSOP_ENVCALLEE() {
 
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_ENVCALLEE() {
-  MOZ_CRASH("NYI: interpreter JSOP_ENVCALLEE");
+  Register numHops = R0.scratchReg();
+  LoadUint8Operand(masm, PCRegAtStart, numHops);
+
+  Register env = R1.scratchReg();
+  masm.loadPtr(frame.addressOfEnvironmentChain(), env);
+
+  // Skip numHops environment objects.
+  Label top, done;
+  masm.bind(&top);
+  masm.branchTest32(Assembler::Zero, numHops, numHops, &done);
+  {
+    Address nextAddr(env, EnvironmentObject::offsetOfEnclosingEnvironment());
+    masm.unboxObject(nextAddr, env);
+    masm.sub32(Imm32(1), numHops);
+    masm.jump(&top);
+  }
+
+  masm.bind(&done);
+  masm.pushValue(Address(env, CallObject::offsetOfCallee()));
+  return true;
 }
 
 template <typename Handler>

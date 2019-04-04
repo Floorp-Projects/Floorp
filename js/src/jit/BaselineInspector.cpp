@@ -81,8 +81,8 @@ static bool GetCacheIRReceiverForNativeReadSlot(ICCacheIR_Monitored* stub,
   }
 
   if (reader.matchOp(CacheOp::GuardShape, objId)) {
-    receiver->shape =
-        stub->stubInfo()->getStubField<Shape*>(stub, reader.stubOffset());
+    receiver->setShape(
+        stub->stubInfo()->getStubField<Shape*>(stub, reader.stubOffset()));
     return reader.matchOpEither(CacheOp::LoadFixedSlotResult,
                                 CacheOp::LoadDynamicSlotResult);
   }
@@ -935,7 +935,8 @@ static bool MatchCacheIRReceiverGuard(CacheIRReader& reader, ICStub* stub,
 
   if (reader.matchOp(CacheOp::GuardShape, objId)) {
     // The first case.
-    receiver->shape = stubInfo->getStubField<Shape*>(stub, reader.stubOffset());
+    receiver->setShape(
+        stubInfo->getStubField<Shape*>(stub, reader.stubOffset()));
     return true;
   }
   return false;
@@ -1010,7 +1011,7 @@ static bool AddCacheIRGlobalGetter(ICCacheIR_Monitored* stub, bool innerized,
                             ->as<JSFunction>();
 
   ReceiverGuard receiver;
-  receiver.shape = globalLexicalShape;
+  receiver.setShape(globalLexicalShape);
   if (!AddReceiver(receiver, receivers)) {
     return false;
   }
@@ -1150,22 +1151,22 @@ static bool AddCacheIRGetPropFunction(
   if (reader.matchOp(CacheOp::CallScriptedGetterResult, objId) ||
       reader.matchOp(CacheOp::CallNativeGetterResult, objId)) {
     // This is an own property getter, the first case.
-    MOZ_ASSERT(receiver.shape);
-    MOZ_ASSERT(!receiver.group);
+    MOZ_ASSERT(receiver.getShape());
+    MOZ_ASSERT(!receiver.getGroup());
 
     size_t offset = reader.stubOffset();
     JSFunction* getter = &stub->stubInfo()
                               ->getStubField<JSObject*>(stub, offset)
                               ->as<JSFunction>();
 
-    if (*commonGetter &&
-        (!*isOwnProperty || *globalShape || *holderShape != receiver.shape)) {
+    if (*commonGetter && (!*isOwnProperty || *globalShape ||
+                          *holderShape != receiver.getShape())) {
       return false;
     }
 
     MOZ_ASSERT_IF(*commonGetter, *commonGetter == getter);
     *holder = nullptr;
-    *holderShape = receiver.shape;
+    *holderShape = receiver.getShape();
     *commonGetter = getter;
     *isOwnProperty = true;
     return true;
@@ -1196,9 +1197,9 @@ static bool AddCacheIRGetPropFunction(
                             ->as<JSFunction>();
 
   Shape* thisGlobalShape = nullptr;
-  if (getter->isNative() && receiver.shape &&
-      (receiver.shape->getObjectClass()->flags & JSCLASS_IS_GLOBAL)) {
-    thisGlobalShape = receiver.shape;
+  if (getter->isNative() && receiver.getShape() &&
+      (receiver.getShape()->getObjectClass()->flags & JSCLASS_IS_GLOBAL)) {
+    thisGlobalShape = receiver.getShape();
   }
 
   if (*commonGetter && (*isOwnProperty || *globalShape != thisGlobalShape ||
@@ -1403,21 +1404,22 @@ static bool AddCacheIRSetPropFunction(
   if (reader.matchOp(CacheOp::CallScriptedSetter, objId) ||
       reader.matchOp(CacheOp::CallNativeSetter, objId)) {
     // This is an own property setter, the first case.
-    MOZ_ASSERT(receiver.shape);
-    MOZ_ASSERT(!receiver.group);
+    MOZ_ASSERT(receiver.getShape());
+    MOZ_ASSERT(!receiver.getGroup());
 
     size_t offset = reader.stubOffset();
     JSFunction* setter = &stub->stubInfo()
                               ->getStubField<JSObject*>(stub, offset)
                               ->as<JSFunction>();
 
-    if (*commonSetter && (!*isOwnProperty || *holderShape != receiver.shape)) {
+    if (*commonSetter &&
+        (!*isOwnProperty || *holderShape != receiver.getShape())) {
       return false;
     }
 
     MOZ_ASSERT_IF(*commonSetter, *commonSetter == setter);
     *holder = nullptr;
-    *holderShape = receiver.shape;
+    *holderShape = receiver.getShape();
     *commonSetter = setter;
     *isOwnProperty = true;
     return true;

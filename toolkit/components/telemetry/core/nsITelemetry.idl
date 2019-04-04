@@ -43,12 +43,12 @@ interface nsITelemetry : nsISupports
 
   /**
    * Dataset types:
-   * DATASET_RELEASE_CHANNEL_OPTOUT - the basic dataset that is on-by-default on all channels
-   * DATASET_RELEASE_CHANNEL_OPTIN - the extended dataset that is opt-in on release,
+   * DATASET_ALL_CHANNELS - the basic dataset that is on-by-default on all channels
+   * DATASET_PRERELEASE_CHANNELS - the extended dataset that is opt-in on release,
    *                                 opt-out on pre-release channels.
    */
-  const unsigned long DATASET_RELEASE_CHANNEL_OPTOUT = 0;
-  const unsigned long DATASET_RELEASE_CHANNEL_OPTIN = 1;
+  const unsigned long DATASET_ALL_CHANNELS = 0;
+  const unsigned long DATASET_PRERELEASE_CHANNELS = 1;
 
 
   /**
@@ -516,7 +516,7 @@ interface nsITelemetry : nsISupports
    *     ...
    *   ]
    *
-   * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
+   * @param aDataset DATASET_ALL_CHANNELS or DATASET_PRERELEASE_CHANNELS.
    * @param [aClear=false] Whether to clear out the events after snapshotting.
    * @param aEventLimit How many events per process to limit the snapshot to contain, all if unspecified.
    *                    Even if aClear, the leftover event records are not cleared.

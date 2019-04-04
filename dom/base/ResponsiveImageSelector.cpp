@@ -9,6 +9,7 @@
 #include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/TextUtils.h"
 #include "nsIURI.h"
+#include "nsIPresShellInlines.h"
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 #include "nsPresContext.h"

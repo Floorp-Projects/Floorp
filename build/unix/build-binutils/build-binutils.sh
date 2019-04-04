@@ -63,7 +63,7 @@ EOF
 
 cd ..
 
-TARGETS="aarch64-unknown-linux-gnu"
+TARGETS="aarch64-linux-gnu"
 
 # Build target-specific GNU as ; build them first so that the few documentation
 # files they install are overwritten by the full binutils build.

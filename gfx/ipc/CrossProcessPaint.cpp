@@ -98,8 +98,8 @@ PaintFragment PaintFragment::Record(nsIDocShell* aDocShell,
 
     RefPtr<gfxContext> thebes = gfxContext::CreateOrNull(dt);
     thebes->SetMatrix(Matrix::Scaling(aScale, aScale));
-    nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
-    Unused << shell->RenderDocument(r, 0, aBackgroundColor, thebes);
+    RefPtr<PresShell> presShell = presContext->PresShell();
+    Unused << presShell->RenderDocument(r, 0, aBackgroundColor, thebes);
   }
 
   ByteBuf recording = ByteBuf((uint8_t*)recorder->mOutputStream.mData,

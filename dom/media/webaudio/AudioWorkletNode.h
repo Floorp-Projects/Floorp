@@ -34,16 +34,22 @@ class AudioWorkletNode : public AudioNode {
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
+  // AudioNode methods
+  uint16_t NumberOfInputs() const override { return mInputCount; }
+  uint16_t NumberOfOutputs() const override { return mOutputCount; }
   const char* NodeType() const override { return "AudioWorkletNode"; }
 
   size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
   size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
 
  private:
-  AudioWorkletNode(AudioContext* aAudioContext, const nsAString& aName);
+  AudioWorkletNode(AudioContext* aAudioContext, const nsAString& aName,
+                   const AudioWorkletNodeOptions& aOptions);
   ~AudioWorkletNode() = default;
 
   nsString mNodeName;
+  uint16_t mInputCount;
+  uint16_t mOutputCount;
 };
 
 }  // namespace dom

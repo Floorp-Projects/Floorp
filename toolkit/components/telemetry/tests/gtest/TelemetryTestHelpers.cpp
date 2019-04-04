@@ -255,7 +255,7 @@ void GetEventSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
 
   JS::RootedValue eventSnapshot(aCx);
   nsresult rv;
-  rv = telemetry->SnapshotEvents(1 /* OPTIN */, false /* clear */,
+  rv = telemetry->SnapshotEvents(1 /* PRERELEASE_CHANNELS */, false /* clear */,
                                  0 /* eventLimit */, aCx, 1 /* argc */,
                                  &eventSnapshot);
   ASSERT_EQ(rv, NS_OK) << "Snapshotting events must not fail.";

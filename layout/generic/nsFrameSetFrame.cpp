@@ -15,6 +15,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/Likely.h"
+#include "mozilla/PresShell.h"
 
 #include "nsGenericHTMLElement.h"
 #include "nsAttrValueInlines.h"
@@ -23,7 +24,6 @@
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsIContentInlines.h"
-#include "nsIPresShell.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsHTMLParts.h"
@@ -203,7 +203,7 @@ void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   }
 
   nsPresContext* presContext = PresContext();
-  nsIPresShell* shell = presContext->PresShell();
+  mozilla::PresShell* presShell = presContext->PresShell();
 
   nsFrameborder frameborder = GetFrameBorder();
   int32_t borderWidth = GetBorderWidth(presContext, false);
@@ -281,12 +281,12 @@ void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
       continue;
     }
 
-    RefPtr<ComputedStyle> kidSC = shell->StyleSet()->ResolveStyleFor(
+    RefPtr<ComputedStyle> kidSC = presShell->StyleSet()->ResolveStyleFor(
         child->AsElement(), LazyComputeBehavior::Allow);
 
     nsIFrame* frame;
     if (child->IsHTMLElement(nsGkAtoms::frameset)) {
-      frame = NS_NewHTMLFramesetFrame(shell, kidSC);
+      frame = NS_NewHTMLFramesetFrame(presShell, kidSC);
 
       nsHTMLFramesetFrame* childFrame = (nsHTMLFramesetFrame*)frame;
       childFrame->SetParentFrameborder(frameborder);
@@ -296,7 +296,7 @@ void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
       mChildBorderColors[mChildCount].Set(childFrame->GetBorderColor());
     } else {  // frame
-      frame = NS_NewSubDocumentFrame(shell, kidSC);
+      frame = NS_NewSubDocumentFrame(presShell, kidSC);
 
       frame->Init(child, this, nullptr);
 
@@ -315,12 +315,12 @@ void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   for (int blankX = mChildCount; blankX < numCells; blankX++) {
     RefPtr<ComputedStyle> pseudoComputedStyle;
     pseudoComputedStyle =
-        shell->StyleSet()->ResolveNonInheritingAnonymousBoxStyle(
+        presShell->StyleSet()->ResolveNonInheritingAnonymousBoxStyle(
             PseudoStyleType::framesetBlank);
 
     // XXX the blank frame is using the content of its parent - at some point it
     // should just have null content, if we support that
-    nsHTMLFramesetBlankFrame* blankFrame = new (shell)
+    nsHTMLFramesetBlankFrame* blankFrame = new (presShell)
         nsHTMLFramesetBlankFrame(pseudoComputedStyle, PresContext());
 
     blankFrame->Init(mContent, this, nullptr);
@@ -762,8 +762,8 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aDesiredSize, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
-  nsIPresShell* shell = aPresContext->PresShell();
-  ServoStyleSet* styleSet = shell->StyleSet();
+  mozilla::PresShell* presShell = aPresContext->PresShell();
+  ServoStyleSet* styleSet = presShell->StyleSet();
 
   GetParent()->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
 
@@ -872,7 +872,7 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
         pseudoComputedStyle = styleSet->ResolveNonInheritingAnonymousBoxStyle(
             PseudoStyleType::horizontalFramesetBorder);
 
-        borderFrame = new (shell) nsHTMLFramesetBorderFrame(
+        borderFrame = new (presShell) nsHTMLFramesetBorderFrame(
             pseudoComputedStyle, PresContext(), borderWidth, false, false);
         borderFrame->Init(mContent, this, nullptr);
         mChildCount++;
@@ -901,7 +901,7 @@ void nsHTMLFramesetFrame::Reflow(nsPresContext* aPresContext,
                 styleSet->ResolveNonInheritingAnonymousBoxStyle(
                     PseudoStyleType::verticalFramesetBorder);
 
-            borderFrame = new (shell) nsHTMLFramesetBorderFrame(
+            borderFrame = new (presShell) nsHTMLFramesetBorderFrame(
                 pseudoComputedStyle, PresContext(), borderWidth, true, false);
             borderFrame->Init(mContent, this, nullptr);
             mChildCount++;

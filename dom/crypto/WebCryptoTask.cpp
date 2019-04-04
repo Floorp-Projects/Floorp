@@ -85,6 +85,7 @@ enum TelemetryAlgorithm {
   TA_PBKDF2 = 21,
   TA_ECDSA = 22,
   TA_HKDF = 23,
+  TA_DH = 24,
 };
 
 // Convenience functions for extracting / converting information
@@ -2883,6 +2884,7 @@ class DeriveDhBitsTask : public ReturnArrayBufferViewTask {
   }
 
   void Init(JSContext* aCx, const ObjectOrString& aAlgorithm, CryptoKey& aKey) {
+    Telemetry::Accumulate(Telemetry::WEBCRYPTO_ALG, TA_DH);
     CHECK_KEY_ALGORITHM(aKey.Algorithm(), WEBCRYPTO_ALG_DH);
 
     // Check that we have a private key.

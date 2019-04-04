@@ -6,22 +6,10 @@
 #include "nsISupports.idl"
 #include "nsIControllerCommandTable.idl"
 
-[scriptable, uuid(47B82B60-A36F-4167-8072-6F421151ED50)]
+[scriptable, builtinclass, uuid(47B82B60-A36F-4167-8072-6F421151ED50)]
 interface nsIControllerContext : nsISupports
 {
-
   /**
-   *  Init the controller, optionally passing a controller
-   *  command table.
-   *
-   * @param aCommandTable  a command table, used internally
-   *                       by this controller. May be null, in
-   *                       which case the controller will create
-   *                       a new, empty table.
-   */
-  void init(in nsIControllerCommandTable aCommandTable);
-
-  /** 
    *  Set a context on this controller, which is passed
    *  to commands to give them some context when they execute.
    *
@@ -31,5 +19,4 @@ interface nsIControllerContext : nsISupports
    *                        or be nulled out.
    */
   void setCommandContext(in nsISupports aCommandContext);
-  
 };

@@ -1673,6 +1673,10 @@ NPObject* PluginModuleChild::NPN_CreateObject(NPP aNPP, NPClass* aClass) {
 NPObject* PluginModuleChild::NPN_RetainObject(NPObject* aNPObj) {
   AssertPluginThread();
 
+  if (NS_WARN_IF(!aNPObj)) {
+    return nullptr;
+  }
+
 #ifdef NS_BUILD_REFCNT_LOGGING
   int32_t refCnt =
 #endif

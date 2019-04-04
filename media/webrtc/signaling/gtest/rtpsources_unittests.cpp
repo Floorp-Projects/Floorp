@@ -238,16 +238,16 @@ class RtpSourcesTest : public ::testing::Test {
   // Observer a header with a single Csrc
   void TestObserveOneCsrc() {
     RtpSourceObserver observer;
-    webrtc::WebRtcRTPHeader header;
+    webrtc::RTPHeader header;
     constexpr unsigned int ssrc = 857265;
     constexpr unsigned int csrc = 3268365;
     constexpr int64_t timestamp = 10000;
     constexpr int64_t jitter = 0;
 
-    header.header.ssrc = ssrc;
-    header.header.numCSRCs = 1;
-    header.header.arrOfCSRCs[0] = csrc;
-    observer.OnRtpPacket(&header, timestamp, jitter);
+    header.ssrc = ssrc;
+    header.numCSRCs = 1;
+    header.arrOfCSRCs[0] = csrc;
+    observer.OnRtpPacket(header, timestamp, jitter);
 
     // One for the SSRC, one for the CSRC
     EXPECT_EQ(observer.mRtpSources.size(), static_cast<size_t>(2));
@@ -274,18 +274,18 @@ class RtpSourcesTest : public ::testing::Test {
   // Observer a header with two CSRCs
   void TestObserveTwoCsrcs() {
     RtpSourceObserver observer;
-    webrtc::WebRtcRTPHeader header;
+    webrtc::RTPHeader header;
     constexpr unsigned int ssrc = 239485;
     constexpr unsigned int csrc0 = 3425;
     constexpr unsigned int csrc1 = 36457;
     constexpr int64_t timestamp = 10000;
     constexpr int64_t jitter = 0;
 
-    header.header.ssrc = ssrc;
-    header.header.numCSRCs = 2;
-    header.header.arrOfCSRCs[0] = csrc0;
-    header.header.arrOfCSRCs[1] = csrc1;
-    observer.OnRtpPacket(&header, timestamp, jitter);
+    header.ssrc = ssrc;
+    header.numCSRCs = 2;
+    header.arrOfCSRCs[0] = csrc0;
+    header.arrOfCSRCs[1] = csrc1;
+    observer.OnRtpPacket(header, timestamp, jitter);
 
     // One for the SSRC, two for the CSRCs
     EXPECT_EQ(observer.mRtpSources.size(), static_cast<size_t>(3));
@@ -318,7 +318,7 @@ class RtpSourcesTest : public ::testing::Test {
   // Observer a header with a CSRC with audio level extension
   void TestObserveCsrcWithAudioLevel() {
     RtpSourceObserver observer;
-    webrtc::WebRtcRTPHeader header;
+    webrtc::RTPHeader header;
   }
 };
 
