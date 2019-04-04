@@ -558,10 +558,6 @@ skip script test262/intl402/Intl/getCanonicalLocales/non-iana-canon.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1508684
 skip script test262/language/expressions/import.meta/syntax/invalid-assignment-target-update-expr.js
 
-# https://github.com/tc39/test262/pull/1995 seemingly needs SpiderMonkey changes
-# before we can run the updated test -- bug 1531091.
-skip script test262/intl402/Collator/missing-unicode-ext-value-defaults-to-true.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #

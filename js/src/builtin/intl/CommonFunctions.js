@@ -648,6 +648,21 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
         // "u-ca-chinese-t-zh-latn" -> "t-zh-latn-u-ca-chinese"
         callFunction(ArraySort, extensions);
 
+        // Canonicalize Unicode locale extension subtag if present.
+        for (var i = 0; i < extensions.length; i++) {
+            var ext = extensions[i];
+            assert(ext === callFunction(std_String_toLowerCase, ext),
+                   "extension subtags must be in lower-case");
+            assert(ext[1] === "-",
+                   "extension subtags start with a singleton");
+
+            if (ext[0] === "u") {
+                var {attributes, keywords} = UnicodeExtensionComponents(ext);
+                extensions[i] = CanonicalizeUnicodeExtension(attributes, keywords);
+                break;
+            }
+        }
+
         canonical += "-" + callFunction(std_Array_join, extensions, "-");
     }
 
@@ -656,6 +671,163 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
         canonical += "-" + privateuse;
 
     return canonical;
+}
+
+/**
+ * Intl.Locale proposal
+ *
+ * UnicodeExtensionComponents( extension )
+ *
+ * Returns the components of |extension| where |extension| is a "Unicode locale
+ * extension sequence" (ECMA-402, 6.2.1) without the starting separator
+ * character.
+ */
+function UnicodeExtensionComponents(extension) {
+    assert(typeof extension === "string", "extension is a String value");
+
+    // Step 1.
+    var attributes = [];
+
+    // Step 2.
+    var keywords = [];
+
+    // Step 3.
+    var isKeyword = false;
+
+    // Step 4.
+    var size = extension.length;
+
+    // Step 5.
+    // |extension| starts with "u-" instead of "-u-" in our implementation, so
+    // we need to initialize |k| with 2 instead of 3.
+    assert(callFunction(std_String_startsWith, extension, "u-"),
+           "extension starts with 'u-'");
+    var k = 2;
+
+    // Step 6.
+    var key, value;
+    while (k < size) {
+        // Step 6.a.
+        var e = callFunction(std_String_indexOf, extension, "-", k);
+
+        // Step 6.b.
+        var len = (e < 0 ? size : e) - k;
+
+        // Step 6.c.
+        var subtag = Substring(extension, k, len);
+
+        // Steps 6.d-e.
+        if (!isKeyword) {
+            // Step 6.d.
+            // NB: Duplicates are handled elsewhere in our implementation.
+            if (len !== 2)
+                _DefineDataProperty(attributes, attributes.length, subtag);
+        } else {
+            // Steps 6.e.i-ii.
+            if (len === 2) {
+                // Step 6.e.i.1.
+                // NB: Duplicates are handled elsewhere in our implementation.
+                _DefineDataProperty(keywords, keywords.length, {key, value});
+            } else {
+                // Step 6.e.ii.1.
+                if (value !== "")
+                    value += "-";
+
+                // Step 6.e.ii.2.
+                value += subtag;
+            }
+        }
+
+        // Step 6.f.
+        if (len === 2) {
+            // Step 6.f.i.
+            isKeyword = true;
+
+            // Step 6.f.ii.
+            key = subtag;
+
+            // Step 6.f.iii.
+            value = "";
+        }
+
+        // Step 6.g.
+        k += len + 1;
+    }
+
+    // Step 7.
+    if (isKeyword) {
+        // Step 7.a.
+        // NB: Duplicates are handled elsewhere in our implementation.
+        _DefineDataProperty(keywords, keywords.length, {key, value});
+    }
+
+    // Step 8.
+    return {attributes, keywords};
+}
+
+/**
+ * CanonicalizeUnicodeExtension( attributes, keywords )
+ *
+ * Canonical form per <https://unicode.org/reports/tr35/#u_Extension>:
+ *
+ * - All attributes are sorted in alphabetical order.
+ * - All keywords are sorted by alphabetical order of keys.
+ * - All keywords are in lowercase.
+ *   - Note: The parser already converted keywords to lowercase.
+ * - All keys and types use the canonical form (from the name attribute;
+ *   see Section 3.6.4 U Extension Data Files).
+ *   - Note: Not yet implemented (bug 1522070).
+ * - Type value "true" is removed.
+ */
+function CanonicalizeUnicodeExtension(attributes, keywords) {
+    assert(attributes.length > 0 || keywords.length > 0,
+           "unexpected empty Unicode locale extension components");
+
+    // All attributes are sorted in alphabetical order.
+    if (attributes.length > 1)
+        callFunction(ArraySort, attributes);
+
+    // All keywords are sorted by alphabetical order of keys.
+    if (keywords.length > 1) {
+        function UnicodeKeySort(left, right) {
+            var leftKey = left.key;
+            var rightKey = right.key;
+            assert(leftKey.length === 2, "left key is a Unicode key");
+            assert(rightKey.length === 2, "right key is a Unicode key");
+
+            // Compare both strings using charCodeAt(), because relational
+            // string comparison always calls into the VM, whereas charCodeAt
+            // can be inlined by Ion.
+            var diff = callFunction(std_String_charCodeAt, leftKey, 0) -
+                       callFunction(std_String_charCodeAt, rightKey, 0);
+            if (diff === 0) {
+                diff = callFunction(std_String_charCodeAt, leftKey, 1) -
+                       callFunction(std_String_charCodeAt, rightKey, 1);
+            }
+            return diff;
+        }
+
+        callFunction(ArraySort, keywords, UnicodeKeySort);
+    }
+
+    var extension = "u";
+
+    // Append all attributes.
+    for (var i = 0; i < attributes.length; i++) {
+        extension += "-" + attributes[i];
+    }
+
+    // Append all keywords.
+    for (var i = 0; i < keywords.length; i++) {
+        var {key, value} = keywords[i];
+        extension += "-" + key;
+
+        // Type value "true" is removed.
+        if (value !== "" && value !== "true")
+            extension += "-" + value;
+    }
+
+    return extension;
 }
 
 /**
@@ -1193,8 +1365,10 @@ function ResolveLocale(availableLocales, requestedLocales, options, relevantExte
 
                     // According to the LDML spec, if there's no type value,
                     // and true is an allowed value, it's used.
-                    if (callFunction(ArrayIndexOf, keyLocaleData, "true") !== -1)
+                    if (callFunction(ArrayIndexOf, keyLocaleData, "true") !== -1) {
                         value = "true";
+                        supportedExtensionAddition = "-" + key;
+                    }
                 }
             }
         }
