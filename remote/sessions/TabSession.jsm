@@ -60,25 +60,25 @@ class TabSession extends Session {
         throw new TypeError("Message missing 'method' field");
       }
 
-      const [domainName, methodName] = Domains.splitMethod(method);
-      if (typeof domainName == "undefined" || typeof methodName == "undefined") {
+      const [domain, command] = Domains.splitMethod(method);
+      if (typeof domain == "undefined" || typeof command == "undefined") {
         throw new TypeError("'method' field is incorrect and doesn't define a domain " +
                             "name and method separated by a dot.");
       }
-      if (this.domains.has(domainName)) {
-        await this.execute(id, domainName, methodName, params);
+      if (this.domains.has(domain)) {
+        await this.execute(id, domain, command, params);
       } else {
-        this.executeInChild(id, domainName, methodName, params);
+        this.executeInChild(id, domain, command, params);
       }
     } catch (e) {
       this.onError(id, e);
     }
   }
 
-  executeInChild(id, domain, method, params) {
+  executeInChild(id, domain, command, params) {
     this.mm.sendAsyncMessage("remote:request", {
       browsingContextId: this.browsingContext.id,
-      request: {id, domain, method, params},
+      request: {id, domain, command, params},
     });
   }
 
