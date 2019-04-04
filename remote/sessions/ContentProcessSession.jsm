@@ -56,15 +56,15 @@ class ContentProcessSession {
     switch (name) {
     case "remote:request":
       try {
-        const {id, domain, method, params} = data.request;
+        const {id, domain, command, params} = data.request;
 
         const inst = this.domains.get(domain);
-        const methodFn = inst[method];
-        if (!methodFn || typeof methodFn != "function") {
-          throw new Error(`Method implementation of ${method} missing`);
+        const func = inst[command];
+        if (!func || typeof func != "function") {
+          throw new Error(`Implementation missing: ${domain}.${command}`);
         }
 
-        const result = await methodFn.call(inst, params);
+        const result = await func.call(inst, params);
 
         this.messageManager.sendAsyncMessage("remote:result", {
           browsingContextId,
