@@ -1212,12 +1212,11 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazilyInternal(
   return computedValues.forget();
 }
 
-bool ServoStyleSet::AppendFontFaceRules(
+void ServoStyleSet::AppendFontFaceRules(
     nsTArray<nsFontFaceRuleContainer>& aArray) {
   // TODO(emilio): Can we make this so this asserts instead?
   UpdateStylistIfNeeded();
   Servo_StyleSet_GetFontFaceRules(mRawSet.get(), &aArray);
-  return true;
 }
 
 const RawServoCounterStyleRule* ServoStyleSet::CounterStyleRuleForName(
@@ -1259,8 +1258,6 @@ void ServoStyleSet::UpdateStylist() {
   }
 
   if (MOZ_UNLIKELY(mStylistState & StylistState::XBLStyleSheetsDirty)) {
-    MOZ_ASSERT(GetPresContext(), "How did they get dirty?");
-
     EnumerateShadowRoots(*mDocument, [&](ShadowRoot& aShadowRoot) {
       if (auto* authorStyles = aShadowRoot.GetServoStyles()) {
         Servo_AuthorStyles_Flush(authorStyles, mRawSet.get());
