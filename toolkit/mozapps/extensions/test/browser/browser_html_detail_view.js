@@ -53,6 +53,21 @@ add_task(async function enableHtmlViews() {
     creator: {name: "I made it"},
     description: "Short description",
     type: "extension",
+  }, {
+    id: "theme1@mochi.test",
+    name: "Test theme",
+    creator: {name: "Artist", url: "http://example.com/artist"},
+    description: "A nice tree",
+    type: "theme",
+    screenshots: [{
+      url: "http://example.com/preview-wide.png",
+      width: 760,
+      height: 92,
+    }, {
+      url: "http://example.com/preview.png",
+      width: 680,
+      height: 92,
+    }],
   }]);
 
   promptService = mockPromptService();
@@ -193,6 +208,12 @@ add_task(async function testFullDetails() {
   // The list card.
   let card = getAddonCard(doc, "addon1@mochi.test");
   ok(!card.hasAttribute("expanded"), "The list card is not expanded");
+
+  // Make sure the preview is hidden.
+  let preview = card.querySelector(".card-heading-image");
+  ok(preview, "There is a preview");
+  is(preview.hidden, true, "The preview is hidden");
+
   let loaded = waitForViewLoad(win);
   card.querySelector('[action="expand"]').click();
   await loaded;
@@ -200,6 +221,11 @@ add_task(async function testFullDetails() {
   // This is now the detail card.
   card = getAddonCard(doc, "addon1@mochi.test");
   ok(card.hasAttribute("expanded"), "The detail card is expanded");
+
+  // Make sure the preview is hidden.
+  preview = card.querySelector(".card-heading-image");
+  ok(preview, "There is a preview");
+  is(preview.hidden, true, "The preview is hidden");
 
   let details = card.querySelector("addon-details");
   let desc = details.querySelector(".addon-detail-description");
@@ -293,11 +319,22 @@ add_task(async function testDefaultTheme() {
   // The list card.
   let card = getAddonCard(doc, "default-theme@mozilla.org");
   ok(!card.hasAttribute("expanded"), "The list card is not expanded");
+
+  // Make sure the preview is hidden.
+  let preview = card.querySelector(".card-heading-image");
+  ok(preview, "There is a preview");
+  is(preview.hidden, true, "The preview is hidden");
   let loaded = waitForViewLoad(win);
   card.querySelector('[action="expand"]').click();
   await loaded;
 
   card = getAddonCard(doc, "default-theme@mozilla.org");
+
+  // Make sure the preview is hidden.
+  preview = card.querySelector(".card-heading-image");
+  ok(preview, "There is a preview");
+  is(preview.hidden, true, "The preview is hidden");
+
   let rows = Array.from(card.querySelectorAll(".addon-detail-row"));
 
   // Author.
@@ -317,6 +354,50 @@ add_task(async function testDefaultTheme() {
   ok(lastUpdated.lastChild.textContent, "There is a date set");
 
   is(rows.length, 0, "There are no more rows");
+
+  await closeView(win);
+});
+
+add_task(async function testStaticTheme() {
+  let win = await loadInitialView("theme");
+  let doc = win.document;
+
+  // The list card.
+  let card = getAddonCard(doc, "theme1@mochi.test");
+  ok(!card.hasAttribute("expanded"), "The list card is not expanded");
+
+  // Make sure the preview is set.
+  let preview = card.querySelector(".card-heading-image");
+  ok(preview, "There is a preview");
+  is(preview.src, "http://example.com/preview.png", "The preview URL is set");
+  is(preview.width, "664", "The width is set");
+  is(preview.height, "89", "The height is set");
+  is(preview.hidden, false, "The preview is visible");
+
+  // Load the detail view.
+  let loaded = waitForViewLoad(win);
+  card.querySelector('[action="expand"]').click();
+  await loaded;
+
+  card = getAddonCard(doc, "theme1@mochi.test");
+
+  // Make sure the preview is still set.
+  preview = card.querySelector(".card-heading-image");
+  ok(preview, "There is a preview");
+  is(preview.src, "http://example.com/preview.png", "The preview URL is set");
+  is(preview.width, "664", "The width is set");
+  is(preview.height, "89", "The height is set");
+  is(preview.hidden, false, "The preview is visible");
+
+  let rows = Array.from(card.querySelectorAll(".addon-detail-row"));
+
+  // Author.
+  let author = rows.shift();
+  checkLabel(author, "author");
+  let text = author.lastChild;
+  is(text.textContent, "Artist", "The author is set");
+
+  is(rows.length, 0, "There was only 1 row");
 
   await closeView(win);
 });
