@@ -981,7 +981,7 @@ Maybe<nsCSSBorderRenderer> nsCSSRendering::CreateBorderRendererForOutline(
   } else {
     innerRect = GetOutlineInnerRect(aForFrame) + aBorderArea.TopLeft();
   }
-  nscoord offset = ourOutline->mOutlineOffset;
+  nscoord offset = ourOutline->mOutlineOffset.ToAppUnits();
   innerRect.Inflate(offset);
   // If the dirty rect is completely inside the border area (e.g., only the
   // content is being painted), then we can skip out now

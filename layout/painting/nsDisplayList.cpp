@@ -4986,7 +4986,7 @@ bool nsDisplayOutline::IsInvisibleInRect(const nsRect& aRect) const {
   nsRect borderBox(ToReferenceFrame(), mFrame->GetSize());
   if (borderBox.Contains(aRect) &&
       !nsLayoutUtils::HasNonZeroCorner(outline->mOutlineRadius)) {
-    if (outline->mOutlineOffset >= 0) {
+    if (outline->mOutlineOffset._0 >= 0.0f) {
       // aRect is entirely inside the border-rect, and the outline isn't
       // rendered inside the border-rect, so the outline is not visible.
       return true;
