@@ -373,9 +373,9 @@ HistoryListener.prototype = {
     }
   },
 
-  OnHistoryGotoIndex(index, gotoURI) {},
-  OnHistoryPurge(numEntries) {},
-  OnHistoryReplaceEntry(index) {},
+  OnHistoryGotoIndex() {},
+  OnHistoryPurge() {},
+  OnHistoryReplaceEntry() {},
 
   // This will be called for a pending tab when loadURI(uri) is called where
   // the given |uri| only differs in the fragment.
@@ -405,7 +405,7 @@ HistoryListener.prototype = {
     this.webNavigation.loadURI(newURI.spec, loadURIOptions);
   },
 
-  OnHistoryReload(reloadURI, reloadFlags) {
+  OnHistoryReload() {
     this.callback();
 
     // Cancel the load.

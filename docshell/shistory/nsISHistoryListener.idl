@@ -40,29 +40,14 @@ interface nsISHistoryListener : nsISupports
   /**
    * Called before the current document is reloaded, for example due to a
    * nsIWebNavigation::reload() call.
-   *
-   * @param aReloadURI    The URI of the document to be reloaded.
-   * @param aReloadFlags  Flags that indicate how the document is to be
-   *                      refreshed. See constants on the nsIWebNavigation
-   *                      interface.
-   * @return              Whether the operation can proceed.
-   *
-   * @see  nsIWebNavigation
    */
-  boolean OnHistoryReload(in nsIURI aReloadURI, in unsigned long aReloadFlags);
+  boolean OnHistoryReload();
 
   /**
    * Called before navigating to a session history entry by index, for example,
    * when nsIWebNavigation::gotoIndex() is called.
-   *
-   * @param aIndex        The index in session history of the entry to be
-   *                      loaded.
-   * @param aGotoURI      The URI of the session history entry to be loaded.
-   *                      It could be null in case of a grouped session history
-   *                      navigation since we have no URI information of entries
-   *                      existing in other partial histories.
    */
-  void OnHistoryGotoIndex(in long aIndex, in nsIURI aGotoURI);
+  void OnHistoryGotoIndex();
 
   /**
    * Called before entries are removed from session history. Entries can be
@@ -71,19 +56,13 @@ interface nsISHistoryListener : nsISupports
    * from history, to erase evidence of prior page loads, etc.
    *
    * To purge documents from session history call nsISHistory::PurgeHistory().
-   *
-   * @param aNumEntries   The number of entries to be removed from session
-   *                      history.
    */
-  void OnHistoryPurge(in long aNumEntries);
+  void OnHistoryPurge();
 
   /**
    * Called before an entry is replaced in the session history. Entries are
    * replaced when navigating away from non-persistent history entries (such as
    * about pages) and when history.replaceState is called.
-   *
-   * @param aIndex        The index in session history of the entry being
-   *                      replaced.
    */
-  void OnHistoryReplaceEntry(in long aIndex);
+  void OnHistoryReplaceEntry();
 };

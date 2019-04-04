@@ -133,11 +133,13 @@ already_AddRefed<nsWebBrowser> nsWebBrowser::Create(
   // registration can go away, and nsDocShellTreeOwner can stop implementing
   // nsIWebProgressListener.
   RefPtr<nsDocShellTreeOwner> docShellTreeOwner = browser->mDocShellTreeOwner;
-  nsCOMPtr<nsISupports> supports = nullptr;
-  Unused << docShellTreeOwner->QueryInterface(
-      NS_GET_IID(nsIWebProgressListener),
-      static_cast<void**>(getter_AddRefs(supports)));
-  Unused << browser->BindListener(supports, NS_GET_IID(nsIWebProgressListener));
+  NS_ASSERTION(
+      browser->mWebProgress,
+      "this should only be called after we've retrieved a progress iface");
+  if (browser->mWebProgress) {
+    Unused << browser->mWebProgress->AddProgressListener(
+        docShellTreeOwner, nsIWebProgress::NOTIFY_ALL);
+  }
 
   nsCOMPtr<nsIBaseWindow> docShellAsWin = browser->mDocShellAsWin;
   NS_ENSURE_SUCCESS(
@@ -256,38 +258,6 @@ nsWebBrowser::GetInterface(const nsIID& aIID, void** aSink) {
 //*****************************************************************************
 // nsWebBrowser::nsIWebBrowser
 //*****************************************************************************
-
-NS_IMETHODIMP
-nsWebBrowser::BindListener(nsISupports* aListener, const nsIID& aIID) {
-  NS_ENSURE_ARG_POINTER(aListener);
-  NS_ASSERTION(
-      mWebProgress,
-      "this should only be called after we've retrieved a progress iface");
-  nsresult rv = NS_OK;
-
-  // register this listener for the specified interface id
-  if (aIID.Equals(NS_GET_IID(nsIWebProgressListener))) {
-    nsCOMPtr<nsIWebProgressListener> listener =
-        do_QueryInterface(aListener, &rv);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    NS_ENSURE_STATE(mWebProgress);
-    rv =
-        mWebProgress->AddProgressListener(listener, nsIWebProgress::NOTIFY_ALL);
-  } else if (aIID.Equals(NS_GET_IID(nsISHistoryListener))) {
-    nsCOMPtr<nsISHistory> shistory(do_GetInterface(mDocShell, &rv));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    nsCOMPtr<nsISHistoryListener> listener(do_QueryInterface(aListener, &rv));
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-    rv = shistory->AddSHistoryListener(listener);
-  }
-  return rv;
-}
 
 NS_IMETHODIMP
 nsWebBrowser::EnableGlobalHistory(bool aEnable) {
