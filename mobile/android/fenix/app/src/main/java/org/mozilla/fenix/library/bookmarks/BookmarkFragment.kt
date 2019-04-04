@@ -24,6 +24,9 @@ import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
+import mozilla.components.concept.sync.AccountObserver
+import mozilla.components.concept.sync.OAuthAccount
+import mozilla.components.concept.sync.Profile
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BrowsingModeManager
@@ -37,10 +40,12 @@ import org.mozilla.fenix.mvi.getManagedEmitter
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import kotlin.coroutines.CoroutineContext
 
-class BookmarkFragment : Fragment(), CoroutineScope, BackHandler {
+@SuppressWarnings("TooManyFunctions")
+class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserver {
 
     private lateinit var job: Job
     private lateinit var bookmarkComponent: BookmarkComponent
+    private lateinit var signInComponent: SignInComponent
     private lateinit var currentRoot: BookmarkNode
 
     override val coroutineContext: CoroutineContext
@@ -49,6 +54,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_bookmark, container, false)
         bookmarkComponent = BookmarkComponent(view.bookmark_layout, ActionBusFactory.get(this))
+        signInComponent = SignInComponent(view.bookmark_layout, ActionBusFactory.get(this))
         return view
     }
 
@@ -61,6 +67,14 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler {
     override fun onResume() {
         super.onResume()
         (activity as AppCompatActivity).supportActionBar?.show()
+        checkIfSignedIn()
+    }
+
+    private fun checkIfSignedIn() {
+        val accountManager = requireComponents.backgroundServices.accountManager
+        accountManager.register(this, owner = this)
+        accountManager.authenticatedAccount()?.let { getManagedEmitter<SignInChange>().onNext(SignInChange.SignedIn) }
+            ?: getManagedEmitter<SignInChange>().onNext(SignInChange.SignedOut)
     }
 
     override fun onDestroy() {
@@ -94,7 +108,11 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler {
                         Navigation.findNavController(requireActivity(), R.id.container).popBackStack()
                     }
                     is BookmarkAction.Edit -> {
-                        ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1238")
+                        Navigation.findNavController(requireActivity(), R.id.container)
+                            .navigate(
+                                BookmarkFragmentDirections
+                                    .actionBookmarkFragmentToBookmarkEditFragment(it.item.guid)
+                            )
                     }
                     is BookmarkAction.Select -> {
                         ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1239")
@@ -131,6 +149,16 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler {
                     }
                 }
             }
+
+        getAutoDisposeObservable<SignInAction>()
+            .subscribe {
+                when (it) {
+                    is SignInAction.ClickedSignIn -> {
+                        requireComponents.services.accountsAuthFeature.beginAuthentication()
+                        (activity as HomeActivity).openToBrowser(null, from = BrowserDirection.FromBookmarks)
+                    }
+                }
+            }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -157,10 +185,25 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler {
             currentRoot = requireComponents.core.bookmarksStorage.getTree(currentGuid) as BookmarkNode
 
             launch(Main) {
+                if (currentGuid != BookmarkRoot.Root.id) (activity as HomeActivity).title = currentRoot.title
                 getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.Change(currentRoot))
             }
         }
     }
 
     override fun onBackPressed(): Boolean = (bookmarkComponent.uiView as BookmarkUIView).onBackPressed()
+
+    override fun onAuthenticated(account: OAuthAccount) {
+        getManagedEmitter<SignInChange>().onNext(SignInChange.SignedIn)
+    }
+
+    override fun onError(error: Exception) {
+    }
+
+    override fun onLoggedOut() {
+        getManagedEmitter<SignInChange>().onNext(SignInChange.SignedOut)
+    }
+
+    override fun onProfileUpdated(profile: Profile) {
+    }
 }

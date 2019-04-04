@@ -285,7 +285,7 @@
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Add folder</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Bookmark created.</string>
+    <string name="bookmark_created_snackbar">Bookmark saved!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">EDIT</string>
 
@@ -303,4 +303,15 @@
     <string name="bookmark_menu_open_in_private_tab_button">Open in private tab</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Delete</string>
+
+    <string name="edit_bookmark_fragment_title">Edit bookmark</string>
+    <string name="sign_in_button">Sign in to see synced bookmarks</string>
+    <string name="bookmark_url_label">URL</string>
+    <string name="bookmark_folder_label">FOLDER</string>
+    <string name="bookmark_name_label">NAME</string>
+    <string name="bookmark_add_folder_fragment_label">Add folder</string>
+    <string name="bookmark_select_folder_fragment_label">Select folder</string>
+    <string name="bookmark_empty_title_error">Must have a title</string>
+    <string name="bookmark_invalid_url_error">Invalid URL</string>
+    <string name="bookmarks_empty_message">No bookmarks here</string>
 </resources>

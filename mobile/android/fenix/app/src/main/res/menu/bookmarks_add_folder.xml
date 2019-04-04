@@ -7,7 +7,7 @@
       xmlns:tools="http://schemas.android.com/tools">
     <item
             android:id="@+id/confirm_add_folder_button"
-            android:icon="@drawable/ic_new"
+            android:icon="@drawable/mozac_ic_check"
             android:iconTint="?attr/iconColor"
             android:title="@string/bookmark_add_folder"
             app:showAsAction="ifRoom"

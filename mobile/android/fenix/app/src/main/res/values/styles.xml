@@ -73,6 +73,10 @@
         <item name="historyURLColor">@color/history_url_normal_theme</item>
         <item name="historyHeader">@color/history_header_normal_theme</item>
 
+        <!-- Bookmark fragment colors -->
+        <item name="bookmarksLabelColor">@color/bookmarks_label_normal_theme</item>
+        <item name="bookmarksEditTextColor">@color/bookmarks_edit_normal_theme</item>
+
         <!-- Library Fragment -->
         <item name="libraryListItemTextColor">@color/library_list_item_text_color_light_mode</item>
     </style>
@@ -137,6 +141,10 @@
         <item name="historyTitleColor">@color/history_title_private_theme</item>
         <item name="historyURLColor">@color/history_url_private_theme</item>
         <item name="historyHeader">@color/history_header_private_theme</item>
+
+        <!-- Bookmark fragment colors -->
+        <item name="bookmarksLabelColor">@color/bookmarks_label_private_theme</item>
+        <item name="bookmarksEditTextColor">@color/bookmarks_edit_private_theme</item>
 
         <!-- Library Fragment -->
         <item name="libraryListItemTextColor">@color/off_white</item>

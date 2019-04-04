@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/bookmark_layout"
@@ -23,7 +27,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintDimensionRatio="1:1"
-        tools:foregroundTint="@android:color/black"
+        android:foregroundTint="?attr/iconColor"
         tools:src="@drawable/ic_folder_icon" />
 
     <TextView
@@ -34,6 +38,7 @@
         android:ellipsize="end"
         android:lines="1"
         android:textSize="16sp"
+        android:textColor="?attr/bookmarksEditTextColor"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@id/bookmark_overflow"
         app:layout_constraintHorizontal_bias="0"
@@ -57,6 +62,7 @@
         android:id="@+id/bookmark_separator"
         android:layout_width="0dp"
         android:layout_height="1dp"
+        android:layout_marginStart="68dp"
         android:layout_marginTop="10dp"
         android:layout_marginBottom="10dp"
         android:importantForAccessibility="no"
@@ -64,7 +70,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/bookmark_overflow"
-        android:background="@android:color/black"
+        android:background="?attr/bookmarksEditTextColor"
         android:visibility="gone"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -79,6 +79,9 @@
         <action
             android:id="@+id/action_browserFragment_to_libraryFragment"
             app:destination="@id/libraryFragment" />
+        <action
+            android:id="@+id/action_browserFragment_to_bookmarkEditFragment"
+            app:destination="@id/bookmarkEditFragment" />
     </fragment>
 
     <fragment
@@ -115,6 +118,56 @@
         <action
             android:id="@+id/action_bookmarkFragment_self"
             app:destination="@id/bookmarkFragment" />
+        <action
+            android:id="@+id/action_bookmarkFragment_to_bookmarkEditFragment"
+            app:destination="@id/bookmarkEditFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/bookmarkEditFragment"
+        android:name="org.mozilla.fenix.library.bookmarks.edit.EditBookmarkFragment"
+        android:label="@string/edit_bookmark_fragment_title"
+        tools:layout="@layout/fragment_edit_bookmark">
+        <argument
+            android:name="guidToEdit"
+            app:argType="string"
+            app:nullable="false"/>
+        <action
+            android:id="@+id/action_bookmarkEditFragment_to_bookmarkSelectFolderFragment"
+            app:destination="@id/bookmarkSelectFolderFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/bookmarkSelectFolderFragment"
+        android:name="org.mozilla.fenix.library.bookmarks.selectfolder.SelectBookmarkFolderFragment"
+        android:label="@string/bookmark_select_folder_fragment_label"
+        tools:layout="@layout/fragment_select_bookmark_folder">
+        <argument
+            android:name="folderGuid"
+            app:argType="string"
+            app:nullable="true"/>
+        <action
+            android:id="@+id/action_bookmarkSelectFolderFragment_self"
+            app:destination="@id/bookmarkSelectFolderFragment" />
+        <action
+            android:id="@+id/action_bookmarkSelectFolderFragment_to_bookmarkAddFolderFragment"
+            app:destination="@id/bookmarkAddFolderFragment" />
+        <argument
+            android:name="visitedAddBookmark"
+            app:argType="boolean"
+            android:defaultValue="false" />
+        <action
+            android:id="@+id/action_bookmarkSelectFolderFragment_to_browserFragment"
+            app:destination="@id/browserFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/bookmarkAddFolderFragment"
+        android:name="org.mozilla.fenix.library.bookmarks.addfolder.AddBookmarkFolderFragment"
+        android:label="@string/bookmark_add_folder_fragment_label">
+        <action
+            android:id="@+id/action_bookmarkAddFolderFragment_to_bookmarkSelectFolderFragment"
+            app:destination="@id/bookmarkSelectFolderFragment" />
     </fragment>
 
     <fragment

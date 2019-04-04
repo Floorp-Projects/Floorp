@@ -7,6 +7,7 @@ private object Versions {
     const val android_gradle_plugin = "3.3.2"
     const val rxAndroid = "2.1.0"
     const val rxKotlin = "2.3.0"
+    const val rxBindings = "3.0.0-alpha2"
     const val anko = "0.10.8"
     const val sentry = "1.7.10"
     const val leakcanary = "1.6.3"
@@ -52,6 +53,7 @@ object Deps {
 
     const val rxKotlin = "io.reactivex.rxjava2:rxkotlin:${Versions.rxKotlin}"
     const val rxAndroid = "io.reactivex.rxjava2:rxandroid:${Versions.rxAndroid}"
+    const val rxBindings = "com.jakewharton.rxbinding3:rxbinding:${Versions.rxBindings}"
 
     const val anko_commons = "org.jetbrains.anko:anko-commons:${Versions.anko}"
     const val anko_sdk = "org.jetbrains.anko:anko-sdk25:${Versions.anko}"
@@ -123,6 +125,7 @@ object Deps {
     const val androidx_appcompat = "androidx.appcompat:appcompat:${Versions.androidx_appcompat}"
     const val androidx_constraintlayout = "androidx.constraintlayout:constraintlayout:${Versions.androidx_constraint_layout}"
     const val androidx_legacy = "androidx.legacy:legacy-support-v4:${Versions.androidx_legacy}"
+    const val androidx_lifecycle_viewmodel_ktx = "androidx.lifecycle:lifecycle-viewmodel-ktx:${Versions.androidx_lifecycle}"
     const val androidx_lifecycle_runtime = "androidx.lifecycle:lifecycle-runtime:${Versions.androidx_lifecycle}"
     const val androidx_preference = "androidx.preference:preference-ktx:${Versions.androidx_preference}"
     const val androidx_safeargs = "androidx.navigation:navigation-safe-args-gradle-plugin:${Versions.androidx_navigation}"

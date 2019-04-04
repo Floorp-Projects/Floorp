@@ -55,6 +55,10 @@
     <attr name="historyTitleColor" format="reference" />
     <attr name="historyHeader" format="reference" />
 
+    <!-- Bookmarks Fragment -->
+    <attr name="bookmarksLabelColor" format="reference" />
+    <attr name="bookmarksEditTextColor" format="reference" />
+
     <!-- Library Fragment -->
     <attr name="libraryListItemTextColor" format="reference" />
 </resources>

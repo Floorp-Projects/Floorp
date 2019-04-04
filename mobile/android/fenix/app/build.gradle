@@ -251,6 +251,11 @@ dependencies {
 
     implementation Deps.rxAndroid
     implementation Deps.rxKotlin
+    implementation Deps.rxBindings
+    implementation Deps.autodispose
+    implementation Deps.autodispose_android
+    implementation Deps.autodispose_android_aac
+
     implementation Deps.anko_commons
     implementation Deps.anko_sdk
     implementation Deps.anko_constraintlayout
@@ -316,6 +321,7 @@ dependencies {
     implementation Deps.androidx_navigation_fragment
     implementation Deps.androidx_navigation_ui
     implementation Deps.androidx_recyclerview
+    implementation Deps.androidx_lifecycle_viewmodel_ktx
 
     implementation Deps.autodispose
 

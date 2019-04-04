@@ -7,6 +7,7 @@ package org.mozilla.fenix.library.bookmarks
 import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
+import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verifySequence
 import io.reactivex.Observer
@@ -27,7 +28,7 @@ internal class BookmarkAdapterTest {
         setRxSchedulers()
         emitter = TestObserver<BookmarkAction>()
         bookmarkAdapter = spyk(
-            BookmarkAdapter(emitter), recordPrivateCalls = true
+            BookmarkAdapter(mockk(), emitter), recordPrivateCalls = true
         )
         every { bookmarkAdapter.notifyDataSetChanged() } just Runs
     }

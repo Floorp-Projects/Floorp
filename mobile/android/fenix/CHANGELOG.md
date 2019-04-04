@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #1195 - Adds telemetry for quick action sheet
 - #627 - Sets engine preferred color scheme based on light/dark theme
 - #904 - Added tab counter in browser toolbar
+- #1312 - Added the ability to edit bookmarks
+- #1236 - Added the ability to create bookmark folders
+- #1237 - Added the ability to delete bookmark folders
+- #1238 - Added the ability to edit bookmark folders
+- #1239 - Added the ability to move bookmark folders
 ### Changed
 - #1429 - Updated site permissions ui for MVP
 ### Removed

@@ -15,6 +15,8 @@
 
     <!-- Bookmarks -->
     <color name="bookmark_favicon_background">#DFDFE3</color>
+    <color name="bookmark_snackbar_background">#2E0EC1</color>
+    <color name="bookmark_selection_appbar_background">#2E0EC1</color>
 
     <!-- Specific colors for dark theme -->
     <color name="background_dark_theme">#1C1B22</color>
@@ -30,6 +32,8 @@
     <color name="session_placeholder_purple">@color/accent_bright_dark_theme</color>
     <color name="session_placeholder_pink">#FF4AA2</color>
     <!-- Normal Theme -->
+    <color name="bookmarks_label_normal_theme">#505263</color>
+    <color name="bookmarks_edit_normal_theme">@color/text_color_normal_theme</color>
     <color name="history_header_normal_theme">#696A6A</color>
     <color name="history_title_normal_theme">@color/text_color_normal_theme</color>
     <color name="history_url_normal_theme">#696A6A</color>
@@ -94,6 +98,8 @@
     <color name="private_browsing_top_gradient">#242251</color>
     <color name="private_browsing_bottom_gradient">#393862</color>
     <color name="search_pill_private_selected_background">#080639</color>
+    <color name="bookmarks_label_private_theme">@color/photonGrey40</color>
+    <color name="bookmarks_edit_private_theme">@color/off_white</color>
     <color name="history_header_private_theme">@color/photonGrey40</color>
     <color name="history_title_private_theme">@color/off_white</color>
     <color name="history_url_private_theme">@color/photonGrey40</color>

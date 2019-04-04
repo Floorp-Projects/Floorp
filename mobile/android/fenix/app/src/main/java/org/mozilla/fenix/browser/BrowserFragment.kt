@@ -48,6 +48,7 @@ import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.FindInPageIntegration
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.components.metrics.Event.BrowserMenuItemTapped.Item
@@ -67,9 +68,9 @@ import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.quickactionsheet.QuickActionAction
 import org.mozilla.fenix.quickactionsheet.QuickActionComponent
+import org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragment
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.utils.Settings
-import org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragment
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
 class BrowserFragment : Fragment(), BackHandler {
@@ -323,24 +324,26 @@ class BrowserFragment : Fragment(), BackHandler {
                         requireComponents.analytics.metrics.track(Event.QuickActionSheetBookmarkTapped)
                         val session = requireComponents.core.sessionManager.selectedSession
                         CoroutineScope(IO).launch {
-                            requireComponents.core.bookmarksStorage
+                            val guid = requireComponents.core.bookmarksStorage
                                 .addItem(BookmarkRoot.Mobile.id, session!!.url, session.title, null)
                             launch(Main) {
-                                val rootView =
-                                    context?.asActivity()?.window?.decorView?.findViewById<View>(android.R.id.content)
-                                rootView?.let { view ->
-                                    Snackbar.make(
-                                        view,
-                                        getString(R.string.bookmark_created_snackbar),
-                                        Snackbar.LENGTH_LONG
-                                    )
-                                        .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
-                                            ItsNotBrokenSnack(
-                                                context!!
-                                            ).showSnackbar(issueNumber = "90")
-                                        }
-                                        .show()
-                                }
+                                context?.asActivity()?.window?.decorView
+                                    ?.findViewById<View>(android.R.id.content)?.let { view ->
+                                FenixSnackbar.make(
+                                    view as ViewGroup,
+                                    Snackbar.LENGTH_LONG
+                                )
+                                    .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
+                                        Navigation.findNavController(requireActivity(), R.id.container)
+                                            .navigate(
+                                                BrowserFragmentDirections
+                                                    .actionBrowserFragmentToBookmarkEditFragment(
+                                                    guid
+                                                )
+                                            )
+                                    }
+                                    .setText(getString(R.string.bookmark_created_snackbar))
+                                }!!.show()
                             }
                         }
                     }

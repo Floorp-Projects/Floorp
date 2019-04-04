@@ -59,6 +59,13 @@
     <!-- Library -->
     <color name="library_list_item_text_color_light_mode">@color/off_white</color>
 
+    <!-- Bookmarks -->
+    <color name="bookmark_favicon_background">#DFDFE3</color>
+    <color name="bookmark_snackbar_background">#2E0EC1</color>
+    <color name="bookmark_selection_appbar_background">#2E0EC1</color>
+    <color name="bookmarks_label_normal_theme">#AFAD9C</color>
+    <color name="bookmarks_edit_normal_theme">@color/off_white</color>
+
     <!-- Search Fragment -->
     <color name="suggestionBackground_normal_theme">@color/accent_bright_dark_theme</color>
     <color name="search_text">@color/off_white</color>

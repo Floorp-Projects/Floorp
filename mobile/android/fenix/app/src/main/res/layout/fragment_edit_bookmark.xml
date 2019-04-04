@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:layout_margin="16dp">
+
+    <TextView
+        android:id="@+id/bookmark_name_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/bookmark_name_label"
+        android:textColor="?attr/bookmarksLabelColor"
+        android:textSize="12sp"
+        android:textAllCaps="true"/>
+
+    <EditText
+        android:id="@+id/bookmark_name_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:textSize="15sp"
+        android:textColor="?attr/bookmarksEditTextColor"
+        tools:text="Internet for people, not profit -- Mozilla"
+        android:inputType="textAutoComplete"/>
+
+    <TextView
+        android:id="@+id/bookmark_url_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/bookmark_url_label"
+        android:textColor="?attr/bookmarksLabelColor"
+        android:textSize="12sp"
+        android:textAllCaps="true"/>
+
+    <EditText
+        android:id="@+id/bookmark_url_edit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:textSize="15sp"
+        android:textColor="?attr/bookmarksEditTextColor"
+        tools:text="https://www.mozilla.org/en-US/"
+        android:inputType="textUri"/>
+
+    <TextView
+        android:id="@+id/bookmark_folder_label"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/bookmark_folder_label"
+        android:textColor="?attr/bookmarksLabelColor"
+        android:textSize="12sp"
+        android:textAllCaps="true"/>
+
+    <TextView
+        android:id="@+id/bookmark_folder_selector"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textSize="16sp"
+        android:textColor="?attr/bookmarksEditTextColor"
+        android:drawableStart="@drawable/ic_folder_icon"
+        android:drawablePadding="10dp"
+        android:drawableTint="?attr/iconColor"
+        tools:text="Mobile Bookmarks"
+        tools:targetApi="m" />
+
+</LinearLayout>
