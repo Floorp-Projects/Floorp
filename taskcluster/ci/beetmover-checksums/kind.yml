@@ -26,10 +26,6 @@ job-template:
                by-platform:
                   android.*: taskcluster/taskgraph/manifests/fennec_nightly_checksums.yml
                   default: taskcluster/taskgraph/manifests/firefox_nightly_checksums.yml
-            try:
-               by-platform:
-                  android.*: taskcluster/taskgraph/manifests/fennec_candidates_checksums.yml
-                  default: taskcluster/taskgraph/manifests/firefox_candidates_checksums.yml
             mozilla-beta:
                by-platform:
                   android.*: taskcluster/taskgraph/manifests/fennec_candidates_checksums.yml
