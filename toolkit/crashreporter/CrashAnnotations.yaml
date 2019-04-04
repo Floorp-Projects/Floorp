@@ -500,6 +500,15 @@ LauncherProcessState:
     mozilla::LauncherRegistryInfo::EnableState enum
   type: integer
 
+LocalStorageShutdownTimeout:
+  description: >
+    This annotation is present if LocalStorage shutdown was not finished in time
+    and the browser was crashed instead of waiting for LocalStorage shutdown to
+    finish. The condition that caused the hang is contained in the annotation.
+  type: string
+  content: false
+  ping: true
+
 LowCommitSpaceEvents:
   description: >
     Number of times the available memory tracker has detected a that
