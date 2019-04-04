@@ -124,12 +124,6 @@ nsJPEGDecoder::~nsJPEGDecoder() {
 
   free(mBackBuffer);
   mBackBuffer = nullptr;
-  if (mTransform) {
-    qcms_transform_release(mTransform);
-  }
-  if (mInProfile) {
-    qcms_profile_release(mInProfile);
-  }
 
   MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
           ("nsJPEGDecoder::~nsJPEGDecoder: Destroying JPEG decoder %p", this));

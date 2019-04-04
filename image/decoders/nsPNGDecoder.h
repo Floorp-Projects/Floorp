@@ -9,7 +9,6 @@
 
 #include "Decoder.h"
 #include "png.h"
-#include "qcms.h"
 #include "StreamingLexer.h"
 #include "SurfacePipe.h"
 
@@ -92,8 +91,6 @@ class nsPNGDecoder : public Decoder {
   nsIntRect mFrameRect;
   uint8_t* mCMSLine;
   uint8_t* interlacebuf;
-  qcms_profile* mInProfile;
-  qcms_transform* mTransform;
   gfx::SurfaceFormat mFormat;
 
   // whether CMS or premultiplied alpha are forced off
