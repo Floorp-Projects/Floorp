@@ -2,14 +2,6 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 hi{
     AuxExemplarCharacters{"[\u200C\u200D]"}
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
     ExemplarCharacters{
         "[\u093C ॐ \u0902 \u0901 ः अ आ इ ई उ ऊ ऋ ऌ ऍ ए ऐ ऑ ओ औ क ख ग घ ङ च छ ज झ ञ ट "
         "ठ ड ढ ण त थ द ध न प फ ब भ म य र ल ळ व श ष स ह ऽ ा ि ी \u0941 \u0942 \u0943 "
@@ -21,9 +13,7 @@ hi{
     }
     ExemplarCharactersNumbers{"[\\- , . % ‰ + 0० 1१ 2२ 3३ 4४ 5५ 6६ 7७ 8८ 9९]"}
     ExemplarCharactersPunctuation{"[\\- , ; \\: ! ? . ‘ ’ “ ” ( ) \\[ \\] \\{ \\} ॰]"}
-    MoreInformation{"?"}
     NumberElements{
-        default{"latn"}
         deva{
             patterns{
                 currencyFormat{"¤#,##,##0.00"}
@@ -32,11 +22,7 @@ hi{
                 scientificFormat{"[#E0]"}
             }
             symbols{
-                decimal{"."}
-                group{","}
-                minusSign{"-"}
                 percentSign{"%"}
-                plusSign{"+"}
             }
         }
         latn{
@@ -208,16 +194,12 @@ hi{
                 }
             }
             symbols{
-                decimal{"."}
                 exponential{"E"}
-                group{","}
                 infinity{"∞"}
                 list{";"}
-                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -238,7 +220,7 @@ hi{
         minimumGroupingDigits{"1"}
         native{"deva"}
     }
-    Version{"2.1.43.50"}
+    Version{"2.1.48.17"}
     calendar{
         ethiopic{
             monthNames{
@@ -278,12 +260,12 @@ hi{
                 "{1}, {0}",
             }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
+                Bh{"B h"}
+                Bhm{"B h:mm"}
+                Bhms{"B h:mm:ss"}
                 E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
+                EBhm{"E B h:mm"}
+                EBhms{"E B h:mm:ss"}
                 EHm{"E HH:mm"}
                 EHms{"E HH:mm:ss"}
                 Ed{"d E"}
@@ -323,6 +305,53 @@ hi{
                 yyyyQQQQ{"QQQQ G y"}
             }
             intervalFormats{
+                Bh{
+                    B{"B h – B h"}
+                    h{"B h–h"}
+                }
+                Bhm{
+                    B{"B h:mm – B h:mm"}
+                    h{"B h:mm–h:mm"}
+                    m{"B h:mm–h:mm"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -420,16 +449,16 @@ hi{
         }
         gregorian{
             AmPmMarkers{
-                "पूर्वाह्न",
-                "अपराह्न",
+                "am",
+                "pm",
             }
             AmPmMarkersAbbr{
-                "पूर्वाह्न",
-                "अपराह्न",
+                "am",
+                "pm",
             }
             AmPmMarkersNarrow{
-                "पू",
-                "अ",
+                "am",
+                "pm",
             }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -476,8 +505,8 @@ hi{
                 MMMEd{"E, d MMM"}
                 MMMMEd{"E, d MMMM"}
                 MMMMW{
-                    one{"MMM का सप्ताह W"}
-                    other{"MMM का सप्ताह W"}
+                    one{"MMMM का सप्ताह W"}
+                    other{"MMMM का सप्ताह W"}
                 }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
@@ -588,21 +617,21 @@ hi{
             dayPeriod{
                 format{
                     abbreviated{
-                        afternoon1{"अपराह्न"}
+                        afternoon1{"दोपहर"}
                         evening1{"शाम"}
                         midnight{"मध्यरात्रि"}
                         morning1{"सुबह"}
                         night1{"रात"}
                     }
                     narrow{
-                        afternoon1{"अपराह्न"}
+                        afternoon1{"दोपहर"}
                         evening1{"शाम"}
                         midnight{"मध्यरात्रि"}
                         morning1{"सुबह"}
                         night1{"रात"}
                     }
                     wide{
-                        afternoon1{"अपराह्न"}
+                        afternoon1{"दोपहर"}
                         evening1{"शाम"}
                         midnight{"मध्यरात्रि"}
                         morning1{"सुबह"}
@@ -612,30 +641,30 @@ hi{
                 stand-alone{
                     abbreviated{
                         afternoon1{"दोपहर"}
-                        am{"पूर्वाह्न"}
+                        am{"am"}
                         evening1{"शाम"}
                         midnight{"मध्यरात्रि"}
                         morning1{"सुबह"}
                         night1{"रात"}
-                        pm{"अपराह्न"}
+                        pm{"pm"}
                     }
                     narrow{
-                        afternoon1{"अपराह्न"}
-                        am{"पू"}
+                        afternoon1{"दोपहर"}
+                        am{"am"}
                         evening1{"शाम"}
                         midnight{"आधी रात"}
                         morning1{"सुबह"}
                         night1{"रात"}
-                        pm{"अ"}
+                        pm{"pm"}
                     }
                     wide{
                         afternoon1{"दोपहर"}
-                        am{"पूर्वाह्न"}
+                        am{"am"}
                         evening1{"शाम"}
                         midnight{"मध्यरात्रि"}
                         morning1{"सुबह"}
                         night1{"रात"}
-                        pm{"अपराह्न"}
+                        pm{"pm"}
                     }
                 }
             }
@@ -658,6 +687,53 @@ hi{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"B h – B h"}
+                    h{"B h–h"}
+                }
+                Bhm{
+                    B{"B h:mm – B h:mm"}
+                    h{"B h:mm–h:mm"}
+                    m{"B h:mm–h:mm"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -1353,12 +1429,6 @@ hi{
         weather{"मौसम"}
         western_asian_scripts{"पश्चिमी एशियाई लिपि"}
         whitespace{"श्वेतरिक्ति"}
-    }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
     }
     fields{
         day{
@@ -2153,32 +2223,18 @@ hi{
         standard{
             2{"{0} और {1}"}
             end{"{0}, और {1}"}
+        }
+        standard-narrow{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} और {1}"}
             end{"{0} और {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit{
             2{"{0} और {1}"}
             end{"{0}, और {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-narrow{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-short{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{
@@ -2211,10 +2267,6 @@ hi{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
-            }
-            stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
             }
         }
     }

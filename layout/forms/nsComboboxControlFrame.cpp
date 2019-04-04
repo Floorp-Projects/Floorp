@@ -17,6 +17,7 @@
 #include "nsCSSAnonBoxes.h"
 #include "nsHTMLParts.h"
 #include "nsIFormControl.h"
+#include "nsIPresShellInlines.h"
 #include "nsNameSpaceManager.h"
 #include "nsListControlFrame.h"
 #include "nsPIDOMWindow.h"

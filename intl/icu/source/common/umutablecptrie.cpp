@@ -18,6 +18,11 @@
 #include "uassert.h"
 #include "ucptrie_impl.h"
 
+// ICU-20235 In case Microsoft math.h has defined this, undefine it.
+#ifdef OVERFLOW
+#undef OVERFLOW
+#endif
+
 U_NAMESPACE_BEGIN
 
 namespace {

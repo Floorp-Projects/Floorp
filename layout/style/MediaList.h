@@ -16,13 +16,14 @@
 
 #include "nsWrapperCache.h"
 
-class nsPresContext;
 class nsMediaQueryResultCacheKey;
 
 namespace mozilla {
 class StyleSheet;
 
 namespace dom {
+
+class Document;
 
 class MediaList final : public nsISupports, public nsWrapperCache {
  public:
@@ -43,7 +44,7 @@ class MediaList final : public nsISupports, public nsWrapperCache {
 
   void GetText(nsAString& aMediaText);
   void SetText(const nsAString& aMediaText);
-  bool Matches(nsPresContext* aPresContext) const;
+  bool Matches(const Document&) const;
 
   void SetStyleSheet(StyleSheet* aSheet);
 

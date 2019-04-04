@@ -157,6 +157,11 @@ numberingSystems:table(nofallback){
             desc{"𖭐𖭑𖭒𖭓𖭔𖭕𖭖𖭗𖭘𖭙"}
             radix:int{10}
         }
+        hmnp{
+            algorithmic:int{0}
+            desc{"𞅀𞅁𞅂𞅃𞅄𞅅𞅆𞅇𞅈𞅉"}
+            radix:int{10}
+        }
         java{
             algorithmic:int{0}
             desc{"꧐꧑꧒꧓꧔꧕꧖꧗꧘꧙"}
@@ -170,6 +175,11 @@ numberingSystems:table(nofallback){
         jpanfin{
             algorithmic:int{1}
             desc{"ja/SpelloutRules/%spellout-cardinal-financial"}
+            radix:int{10}
+        }
+        jpanyear{
+            algorithmic:int{1}
+            desc{"ja/SpelloutRules/%spellout-numbering-year-latn"}
             radix:int{10}
         }
         kali{
@@ -400,6 +410,11 @@ numberingSystems:table(nofallback){
         wara{
             algorithmic:int{0}
             desc{"𑣠𑣡𑣢𑣣𑣤𑣥𑣦𑣧𑣨𑣩"}
+            radix:int{10}
+        }
+        wcho{
+            algorithmic:int{0}
+            desc{"𞋰𞋱𞋲𞋳𞋴𞋵𞋶𞋷𞋸𞋹"}
             radix:int{10}
         }
     }

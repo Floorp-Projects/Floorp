@@ -490,7 +490,7 @@ public:
      * <tt>true</tt> if the specified set is not equal to this set.
      * @stable ICU 2.0
      */
-    UBool operator!=(const UnicodeSet& o) const;
+    inline UBool operator!=(const UnicodeSet& o) const;
 
     /**
      * Returns a copy of this object.  All UnicodeFunctor objects have

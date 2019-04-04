@@ -19,13 +19,9 @@ class ContentProcessSession {
     this.domains = new Domains(this, ContentProcessDomains);
     this.messageManager.addMessageListener("remote:request", this);
     this.messageManager.addMessageListener("remote:destroy", this);
-
-    this.destroy = this.destroy.bind(this);
-    this.content.addEventListener("unload", this.destroy);
   }
 
   destroy() {
-    this.content.addEventListener("unload", this.destroy);
     this.messageManager.removeMessageListener("remote:request", this);
     this.messageManager.removeMessageListener("remote:destroy", this);
   }
@@ -60,15 +56,15 @@ class ContentProcessSession {
     switch (name) {
     case "remote:request":
       try {
-        const {id, domain, method, params} = data.request;
+        const {id, domain, command, params} = data.request;
 
         const inst = this.domains.get(domain);
-        const methodFn = inst[method];
-        if (!methodFn || typeof methodFn != "function") {
-          throw new Error(`Method implementation of ${method} missing`);
+        const func = inst[command];
+        if (!func || typeof func != "function") {
+          throw new Error(`Implementation missing: ${domain}.${command}`);
         }
 
-        const result = await methodFn.call(inst, params);
+        const result = await func.call(inst, params);
 
         this.messageManager.sendAsyncMessage("remote:result", {
           browsingContextId,

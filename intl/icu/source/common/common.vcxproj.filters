@@ -361,6 +361,9 @@
     <ClCompile Include="resource.cpp">
       <Filter>locales &amp; resources</Filter>
     </ClCompile>
+    <ClCompile Include="localebuilder.cpp">
+      <Filter>locales &amp; resources</Filter>
+    </ClCompile>
     <ClCompile Include="caniter.cpp">
       <Filter>normalization</Filter>
     </ClCompile>
@@ -852,6 +855,9 @@
     <ClInclude Include="ucase.h">
       <Filter>properties &amp; sets</Filter>
     </ClInclude>
+    <ClInclude Include="ulayout_props.h">
+      <Filter>properties &amp; sets</Filter>
+    </ClInclude>
     <ClInclude Include="unisetspan.h">
       <Filter>properties &amp; sets</Filter>
     </ClInclude>
@@ -948,6 +954,9 @@
     <ClInclude Include="static_unicode_sets.h">
       <Filter>formatting</Filter>
     </ClInclude>
+    <CustomBuild Include="capi_helper.h">
+      <Filter>data &amp; memory</Filter>
+    </CustomBuild>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="common.rc">
@@ -1221,6 +1230,9 @@
     </CustomBuild>
     <CustomBuild Include="unicode\stringoptions.h">
       <Filter>strings</Filter>
+    </CustomBuild>
+    <CustomBuild Include="unicode\localebuilder.h">
+      <Filter>locales &amp; resources</Filter>
     </CustomBuild>
   </ItemGroup>
 </Project>

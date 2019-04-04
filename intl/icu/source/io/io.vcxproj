@@ -1,18 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <!-- The following import will include the 'default' configuration options for VS projects. -->
-  <Import Project="..\allinone\Build.Windows.ProjectConfiguration.props" />
-  <!-- The following import will include the library configuration options for VS projects. -->
-  <Import Project="..\allinone\Build.Windows.Library.ProjectConfiguration.props" />
   <PropertyGroup Label="Globals">
     <ProjectGuid>{C2B04507-2521-4801-BF0D-5FD79D6D518C}</ProjectGuid>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <!-- The following import will include the 'default' configuration options for VS projects. -->
+  <Import Project="..\allinone\Build.Windows.ProjectConfiguration.props" />
+  <!-- The following import will include the library configuration options for VS projects. -->
+  <Import Project="..\allinone\Build.Windows.Library.ProjectConfiguration.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -77,7 +77,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin\icuio63.dll</OutputFile>
+      <OutputFile>..\..\bin\icuio64.dll</OutputFile>
       <AdditionalDependencies>icuuc.lib;icuin.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\..\..\lib\icuio.pdb</ProgramDatabaseFile>
@@ -102,7 +102,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin\icuio63d.dll</OutputFile>
+      <OutputFile>..\..\bin\icuio64d.dll</OutputFile>
       <AdditionalDependencies>icuucd.lib;icuind.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -127,7 +127,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64\icuio63.dll</OutputFile>
+      <OutputFile>..\..\bin64\icuio64.dll</OutputFile>
       <AdditionalDependencies>icuuc.lib;icuin.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\..\..\lib64\icuio.pdb</ProgramDatabaseFile>
@@ -149,7 +149,7 @@
       <CompileAs>Default</CompileAs>
     </ClCompile>
     <Link>
-      <OutputFile>..\..\bin64\icuio63d.dll</OutputFile>
+      <OutputFile>..\..\bin64\icuio64d.dll</OutputFile>
       <AdditionalDependencies>icuucd.lib;icuind.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\lib64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>

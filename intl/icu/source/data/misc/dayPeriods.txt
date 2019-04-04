@@ -446,20 +446,28 @@ dayPeriods:table(nofallback){
         }
         set111{
             afternoon1{
-                before{"17:00"}
+                before{"13:00"}
                 from{"12:00"}
             }
-            evening1{
+            afternoon2{
                 before{"19:00"}
-                from{"17:00"}
+                from{"13:00"}
             }
             morning1{
+                before{"04:00"}
+                from{"01:00"}
+            }
+            morning2{
                 before{"12:00"}
                 from{"04:00"}
             }
             night1{
-                before{"04:00"}
+                before{"24:00"}
                 from{"19:00"}
+            }
+            night2{
+                before{"01:00"}
+                from{"00:00"}
             }
         }
         set112{
@@ -2273,26 +2281,28 @@ dayPeriods:table(nofallback){
         }
         set43{
             afternoon1{
-                before{"17:00"}
+                before{"13:00"}
                 from{"12:00"}
             }
-            evening1{
+            afternoon2{
                 before{"19:00"}
-                from{"17:00"}
-            }
-            midnight{
-                at{"00:00"}
+                from{"13:00"}
             }
             morning1{
+                before{"04:00"}
+                from{"01:00"}
+            }
+            morning2{
                 before{"12:00"}
                 from{"04:00"}
             }
             night1{
-                before{"04:00"}
+                before{"24:00"}
                 from{"19:00"}
             }
-            noon{
-                at{"12:00"}
+            night2{
+                before{"01:00"}
+                from{"00:00"}
             }
         }
         set44{

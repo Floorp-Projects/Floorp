@@ -61,8 +61,9 @@ UOBJECT_DEFINE_RTTI_IMPLEMENTATION(JapaneseCalendar)
 static const int32_t kGregorianEpoch = 1970;    // used as the default value of EXTENDED_YEAR
 static const char* TENTATIVE_ERA_VAR_NAME = "ICU_ENABLE_TENTATIVE_ERA";
 
-// Initialize global Japanese era data
-static void U_CALLCONV initializeEras(UErrorCode &status) {
+
+// Export the following for use by test code.
+UBool JapaneseCalendar::enableTentativeEra() {
     // Although start date of next Japanese era is planned ahead, a name of
     // new era might not be available. This implementation allows tester to
     // check a new era without era names by settings below (in priority order).
@@ -87,7 +88,13 @@ static void U_CALLCONV initializeEras(UErrorCode &status) {
         includeTentativeEra = TRUE;
     }
 #endif
-    gJapaneseEraRules = EraRules::createInstance("japanese", includeTentativeEra, status);
+    return includeTentativeEra;
+}
+
+
+// Initialize global Japanese era data
+static void U_CALLCONV initializeEras(UErrorCode &status) {
+    gJapaneseEraRules = EraRules::createInstance("japanese", JapaneseCalendar::enableTentativeEra(), status);
     if (U_FAILURE(status)) {
         return;
     }

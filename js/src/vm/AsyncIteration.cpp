@@ -358,6 +358,8 @@ MOZ_MUST_USE bool js::AsyncGeneratorResume(
              "closed generator when resuming async generator");
   MOZ_ASSERT(asyncGenObj->isSuspended(),
              "non-suspended generator when resuming async generator");
+  MOZ_ASSERT(asyncGenObj->isExecuting(),
+             "async generator not set into 'executing' state");
 
   // 25.5.3.5, steps 12-14, 16-20.
   HandlePropertyName funName = completionKind == CompletionKind::Normal
@@ -460,12 +462,12 @@ static const JSFunctionSpec async_generator_methods[] = {
     return false;
   }
 
-  RootedValue function(cx, global->getConstructor(JSProto_Function));
-  if (!function.toObjectOrNull()) {
+  RootedObject proto(
+      cx, GlobalObject::getOrCreateFunctionConstructor(cx, cx->global()));
+  if (!proto) {
     return false;
   }
-  RootedObject proto(cx, &function.toObject());
-  RootedAtom name(cx, cx->names().AsyncGeneratorFunction);
+  HandlePropertyName name = cx->names().AsyncGeneratorFunction;
 
   // 25.3.1 The AsyncGeneratorFunction Constructor
   RootedObject asyncGenFunction(

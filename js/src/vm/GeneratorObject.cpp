@@ -273,12 +273,12 @@ bool GlobalObject::initGenerators(JSContext* cx, Handle<GlobalObject*> global) {
     return false;
   }
 
-  RootedValue function(cx, global->getConstructor(JSProto_Function));
-  if (!function.toObjectOrNull()) {
+  RootedObject proto(
+      cx, GlobalObject::getOrCreateFunctionConstructor(cx, cx->global()));
+  if (!proto) {
     return false;
   }
-  RootedObject proto(cx, &function.toObject());
-  RootedAtom name(cx, cx->names().GeneratorFunction);
+  HandlePropertyName name = cx->names().GeneratorFunction;
   RootedObject genFunction(
       cx, NewFunctionWithProto(cx, Generator, 1, JSFunction::NATIVE_CTOR,
                                nullptr, name, proto, gc::AllocKind::FUNCTION,

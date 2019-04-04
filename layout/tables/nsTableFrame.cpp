@@ -19,6 +19,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
+#include "nsIPresShellInlines.h"
 #include "nsCellMap.h"
 #include "nsTableCellFrame.h"
 #include "nsHTMLParts.h"
