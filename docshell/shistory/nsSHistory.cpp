@@ -568,7 +568,7 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist) {
   }
 
   if (currentTxn && !currentTxn->GetPersist()) {
-    NOTIFY_LISTENERS(OnHistoryReplaceEntry, (mIndex));
+    NOTIFY_LISTENERS(OnHistoryReplaceEntry, ());
     aSHEntry->SetPersist(aPersist);
     mEntries[mIndex] = aSHEntry;
     return NS_OK;
@@ -698,7 +698,7 @@ nsSHistory::PurgeHistory(int32_t aNumEntries) {
 
   aNumEntries = std::min(aNumEntries, Length());
 
-  NOTIFY_LISTENERS(OnHistoryPurge, (aNumEntries));
+  NOTIFY_LISTENERS(OnHistoryPurge, ());
 
   // Remove the first `aNumEntries` entries.
   mEntries.RemoveElementsAt(0, aNumEntries);
@@ -763,7 +763,7 @@ nsSHistory::ReplaceEntry(int32_t aIndex, nsISHEntry* aReplaceEntry) {
 
   aReplaceEntry->SetSHistory(this);
 
-  NOTIFY_LISTENERS(OnHistoryReplaceEntry, (aIndex));
+  NOTIFY_LISTENERS(OnHistoryReplaceEntry, ());
 
   aReplaceEntry->SetPersist(true);
   mEntries[aIndex] = aReplaceEntry;
@@ -772,10 +772,8 @@ nsSHistory::ReplaceEntry(int32_t aIndex, nsISHEntry* aReplaceEntry) {
 }
 
 NS_IMETHODIMP
-nsSHistory::NotifyOnHistoryReload(nsIURI* aReloadURI, uint32_t aReloadFlags,
-                                  bool* aCanReload) {
-  NOTIFY_LISTENERS_CANCELABLE(OnHistoryReload, *aCanReload,
-                              (aReloadURI, aReloadFlags, aCanReload));
+nsSHistory::NotifyOnHistoryReload(bool* aCanReload) {
+  NOTIFY_LISTENERS_CANCELABLE(OnHistoryReload, *aCanReload, (aCanReload));
   return NS_OK;
 }
 
@@ -817,14 +815,8 @@ nsresult nsSHistory::Reload(uint32_t aReloadFlags) {
   }
 
   // We are reloading. Send Reload notifications.
-  // nsDocShellLoadFlagType is not public, where as nsIWebNavigation
-  // is public. So send the reload notifications with the
-  // nsIWebNavigation flags.
   bool canNavigate = true;
-  nsCOMPtr<nsIURI> currentURI;
-  GetCurrentURI(getter_AddRefs(currentURI));
-  NOTIFY_LISTENERS_CANCELABLE(OnHistoryReload, canNavigate,
-                              (currentURI, aReloadFlags, &canNavigate));
+  NOTIFY_LISTENERS_CANCELABLE(OnHistoryReload, canNavigate, (&canNavigate));
   if (!canNavigate) {
     return NS_OK;
   }
@@ -835,9 +827,7 @@ nsresult nsSHistory::Reload(uint32_t aReloadFlags) {
 NS_IMETHODIMP
 nsSHistory::ReloadCurrentEntry() {
   // Notify listeners
-  nsCOMPtr<nsIURI> currentURI;
-  GetCurrentURI(getter_AddRefs(currentURI));
-  NOTIFY_LISTENERS(OnHistoryGotoIndex, (mIndex, currentURI));
+  NOTIFY_LISTENERS(OnHistoryGotoIndex, ());
 
   return LoadEntry(mIndex, LOAD_HISTORY, HIST_CMD_RELOAD);
 }
@@ -1296,20 +1286,6 @@ nsSHistory::UpdateIndex() {
   return NS_OK;
 }
 
-nsresult nsSHistory::GetCurrentURI(nsIURI** aResultURI) {
-  NS_ENSURE_ARG_POINTER(aResultURI);
-  nsresult rv;
-
-  nsCOMPtr<nsISHEntry> currentEntry;
-  rv = GetEntryAtIndex(mIndex, getter_AddRefs(currentEntry));
-  if (NS_FAILED(rv) && !currentEntry) {
-    return rv;
-  }
-  nsCOMPtr<nsIURI> uri = currentEntry->GetURI();
-  uri.forget(aResultURI);
-  return rv;
-}
-
 NS_IMETHODIMP
 nsSHistory::GotoIndex(int32_t aIndex) {
   return LoadEntry(aIndex, LOAD_HISTORY, HIST_CMD_GOTOINDEX);
@@ -1364,7 +1340,7 @@ nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
   // Send appropriate listener notifications.
   if (aHistCmd == HIST_CMD_GOTOINDEX) {
     // We are going somewhere else. This is not reload either
-    NOTIFY_LISTENERS(OnHistoryGotoIndex, (aIndex, nextURI));
+    NOTIFY_LISTENERS(OnHistoryGotoIndex, ());
   }
 
   if (mRequestedIndex == mIndex) {

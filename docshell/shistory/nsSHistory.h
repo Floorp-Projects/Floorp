@@ -63,7 +63,6 @@ class nsSHistory final : public mozilla::LinkedListElement<nsSHistory>,
   NS_DECL_NSISHISTORY
 
   nsresult Reload(uint32_t aReloadFlags);
-  nsresult GetCurrentURI(nsIURI** aResultURI);
 
   // One time initialization method called upon docshell module construction
   static nsresult Startup();
