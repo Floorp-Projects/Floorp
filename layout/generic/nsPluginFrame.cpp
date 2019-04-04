@@ -14,6 +14,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #ifdef XP_WIN
 // This is needed for DoublePassRenderingEvent.
 #  include "mozilla/plugins/PluginMessageUtils.h"
@@ -22,7 +23,6 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
-#include "nsIPresShell.h"
 #include "nsWidgetsCID.h"
 #include "nsView.h"
 #include "nsViewManager.h"

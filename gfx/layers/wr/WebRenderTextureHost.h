@@ -39,6 +39,8 @@ class WebRenderTextureHost : public TextureHost {
 
   virtual gfx::SurfaceFormat GetFormat() const override;
 
+  virtual void NotifyNotUsed() override;
+
   // Return the format used for reading the texture. Some hardware specific
   // textureHosts use their special data representation internally, but we could
   // treat these textureHost as the read-format when we read them.
@@ -61,6 +63,8 @@ class WebRenderTextureHost : public TextureHost {
   virtual WebRenderTextureHost* AsWebRenderTextureHost() override {
     return this;
   }
+
+  virtual void PrepareForUse();
 
   wr::ExternalImageId GetExternalImageKey() { return mExternalImageId; }
 

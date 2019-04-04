@@ -20,7 +20,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsScrollbarButtonFrame.h"
 #include "nsIDOMEventListener.h"
-#include "nsIPresShell.h"
 #include "nsFrameList.h"
 #include "nsHTMLParts.h"
 #include "mozilla/ComputedStyle.h"
@@ -35,6 +34,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/UniquePtr.h"
 #include "nsBindingManager.h"
 

@@ -33,7 +33,7 @@ function assertSearchTelemetryEmpty(search_hist) {
   TelemetryTestUtils.assertKeyedHistogramSum(search_hist, "other-MozSearch.alias", undefined);
 
   // Also check events.
-  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+  let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, false);
   events = (events.parent || []).filter(e => e[1] == "navigation" && e[2] == "search");
   Assert.deepEqual(events, [], "Should not have recorded any navigation search events");
 }

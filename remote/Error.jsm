@@ -31,7 +31,7 @@ class RemoteAgentError extends Error {
 
   notify() {
     Cu.reportError(this);
-    log.error(formatError(this));
+    log.error(this.toString({stack: true}));
   }
 
   toString({stack = false} = {}) {
@@ -56,11 +56,7 @@ class FatalError extends RemoteAgentError {
   }
 
   notify() {
-    log.fatal(this.toString());
-  }
-
-  toString() {
-    return formatError(this, {stack: true});
+    log.fatal(this.toString({stack: true}));
   }
 
   quit(mode = Ci.nsIAppStartup.eForceQuit) {

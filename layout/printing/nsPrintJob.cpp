@@ -2235,11 +2235,8 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
   rv = aPO->mViewManager->Init(printData->mPrintDC);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  UniquePtr<ServoStyleSet> styleSet =
-      mDocViewerPrint->CreateStyleSet(aPO->mDocument);
-
-  aPO->mPresShell = aPO->mDocument->CreatePresShell(
-      aPO->mPresContext, aPO->mViewManager, std::move(styleSet));
+  aPO->mPresShell =
+      aPO->mDocument->CreatePresShell(aPO->mPresContext, aPO->mViewManager);
   if (!aPO->mPresShell) {
     return NS_ERROR_FAILURE;
   }

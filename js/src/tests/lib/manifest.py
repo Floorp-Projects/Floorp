@@ -84,9 +84,10 @@ class XULInfo:
 
 
 class XULInfoTester:
-    def __init__(self, xulinfo, js_bin):
+    def __init__(self, xulinfo, js_bin, js_args):
         self.js_prologue = xulinfo.as_js()
         self.js_bin = js_bin
+        self.js_args = js_args
         # Maps JS expr to evaluation result.
         self.cache = {}
 
@@ -95,7 +96,8 @@ class XULInfoTester:
         ans = self.cache.get(cond, None)
         if ans is None:
             cmd = [
-                self.js_bin,
+                self.js_bin
+            ] + self.js_args + [
                 # run in safe configuration, since it is hard to debug
                 # crashes when running code here. In particular, msan will
                 # error out if the jit is active.

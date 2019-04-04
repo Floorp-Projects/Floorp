@@ -43,6 +43,7 @@
 #if defined(MOZ_WIDGET_ANDROID)
 #  include "mozilla/dom/WindowOrientationObserver.h"
 #endif
+#include "nsBaseCommandController.h"
 #include "nsError.h"
 #include "nsISizeOfEventTarget.h"
 #include "nsDOMJSUtils.h"
@@ -56,7 +57,6 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptTimeoutHandler.h"
 #include "nsITimeoutHandler.h"
-#include "nsIController.h"
 #include "nsISlowScriptDebug.h"
 #include "nsWindowMemoryReporter.h"
 #include "nsWindowSizes.h"
@@ -98,6 +98,7 @@
 #include "mozilla/EventListenerManager.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ProcessHangMonitor.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/ThrottledEventQueue.h"
@@ -123,7 +124,6 @@
 #include "nsIEmbeddingSiteWindow.h"
 #include "nsThreadUtils.h"
 #include "nsILoadContext.h"
-#include "nsIPresShell.h"
 #include "nsIScrollableFrame.h"
 #include "nsView.h"
 #include "nsViewManager.h"
@@ -145,7 +145,6 @@
 #include "nsIContentViewer.h"
 #include "nsIScriptError.h"
 #include "nsIControllers.h"
-#include "nsIControllerContext.h"
 #include "nsGlobalWindowCommands.h"
 #include "nsQueryObject.h"
 #include "nsContentUtils.h"
@@ -3195,22 +3194,15 @@ nsIControllers* nsGlobalWindowOuter::GetControllersOuter(ErrorResult& aError) {
     }
 
     // Add in the default controller
-    nsCOMPtr<nsIController> controller =
+    RefPtr<nsBaseCommandController> commandController =
         nsBaseCommandController::CreateWindowController();
-    if (!controller) {
+    if (!commandController) {
       aError.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
 
-    mControllers->InsertControllerAt(0, controller);
-    nsCOMPtr<nsIControllerContext> controllerContext =
-        do_QueryInterface(controller);
-    if (!controllerContext) {
-      aError.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-
-    controllerContext->SetCommandContext(static_cast<nsIDOMWindow*>(this));
+    mControllers->InsertControllerAt(0, commandController);
+    commandController->SetCommandContext(static_cast<nsIDOMWindow*>(this));
   }
 
   return mControllers;
@@ -6293,17 +6285,18 @@ void nsGlobalWindowOuter::EnterModalState() {
   EventStateManager* activeESM = static_cast<EventStateManager*>(
       EventStateManager::GetActiveEventStateManager());
   if (activeESM && activeESM->GetPresContext()) {
-    nsIPresShell* activeShell = activeESM->GetPresContext()->GetPresShell();
-    if (activeShell && (nsContentUtils::ContentIsCrossDocDescendantOf(
-                            activeShell->GetDocument(), mDoc) ||
-                        nsContentUtils::ContentIsCrossDocDescendantOf(
-                            mDoc, activeShell->GetDocument()))) {
+    PresShell* activePresShell = activeESM->GetPresContext()->GetPresShell();
+    if (activePresShell && (nsContentUtils::ContentIsCrossDocDescendantOf(
+                                activePresShell->GetDocument(), mDoc) ||
+                            nsContentUtils::ContentIsCrossDocDescendantOf(
+                                mDoc, activePresShell->GetDocument()))) {
       EventStateManager::ClearGlobalActiveContent(activeESM);
 
       nsIPresShell::SetCapturingContent(nullptr, 0);
 
-      if (activeShell) {
-        RefPtr<nsFrameSelection> frameSelection = activeShell->FrameSelection();
+      if (activePresShell) {
+        RefPtr<nsFrameSelection> frameSelection =
+            activePresShell->FrameSelection();
         frameSelection->SetDragState(false);
       }
     }

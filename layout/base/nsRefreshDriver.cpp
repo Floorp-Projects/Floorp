@@ -32,6 +32,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerRange.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/FontTableURIProtocolHandler.h"
 #include "nsITimer.h"
 #include "nsLayoutUtils.h"
@@ -1775,7 +1776,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   mSkippedPaints = false;
   mWarningThreshold = 1;
 
-  nsCOMPtr<nsIPresShell> presShell = mPresContext->GetPresShell();
+  RefPtr<PresShell> presShell = mPresContext->GetPresShell();
   if (!presShell ||
       (!HasObservers() && !HasImageRequests() &&
        mVisualViewportResizeEvents.IsEmpty() && mScrollEvents.IsEmpty() &&

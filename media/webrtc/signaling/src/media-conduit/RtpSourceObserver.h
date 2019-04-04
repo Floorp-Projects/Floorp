@@ -27,7 +27,7 @@ class RtpSourceObserver : public webrtc::RtpPacketObserver {
 
   virtual ~RtpSourceObserver(){};
 
-  void OnRtpPacket(const webrtc::WebRtcRTPHeader* aRtpHeader,
+  void OnRtpPacket(const webrtc::RTPHeader& aRtpHeader,
                    const int64_t aTimestamp, const uint32_t aJitter) override;
 
   /* Get the local time in MS from the same clock source that is used

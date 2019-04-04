@@ -65,6 +65,7 @@ struct DefaultJitOptions {
   bool disableCacheIRCalls;
   bool disableSincos;
   bool disableSink;
+  bool disableOptimizationLevels;
   bool forceInlineCaches;
   bool fullDebugChecks;
   bool limitScriptSize;

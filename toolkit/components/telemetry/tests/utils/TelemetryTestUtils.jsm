@@ -60,8 +60,8 @@ var TelemetryTestUtils = {
    * @returns {Object} The snapshotted scalars from the parent process.
    */
   getProcessScalars(aProcessName, aKeyed = false, aClear = false,
-      aChannel = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN) {
-    const extended = aChannel == Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
+      aChannel = Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS) {
+    const extended = aChannel == Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS;
     const currentExtended = Services.telemetry.canRecordExtended;
     Services.telemetry.canRecordExtended = extended;
     const scalars = aKeyed ?
@@ -110,7 +110,7 @@ var TelemetryTestUtils = {
    */
   assertEvents(expectedEvents, filter = {}, {clear = true, process = "parent"} = {}) {
     // Step 0: Snapshot and clear.
-    let snapshots = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, clear);
+    let snapshots = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, clear);
     if (expectedEvents.length === 0 && !(process in snapshots)) {
       // Job's done!
       return;

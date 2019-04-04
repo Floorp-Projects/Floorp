@@ -437,6 +437,8 @@ class SurfaceTextureHost : public TextureHost {
 
   virtual const char* Name() override { return "SurfaceTextureHost"; }
 
+  virtual SurfaceTextureHost* AsSurfaceTextureHost() override { return this; }
+
   virtual void CreateRenderTexture(
       const wr::ExternalImageId& aExternalImageId) override;
 

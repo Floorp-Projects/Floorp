@@ -66,7 +66,7 @@ struct hmtxvmtx
 
 
   bool subset_update_header (hb_subset_plan_t *plan,
-				    unsigned int num_hmetrics) const
+                             unsigned int num_hmetrics) const
   {
     hb_blob_t *src_blob = hb_sanitize_context_t ().reference_table<H> (plan->source, H::tableTag);
     hb_blob_t *dest_blob = hb_blob_copy_writable_or_fail (src_blob);
@@ -93,75 +93,49 @@ struct hmtxvmtx
 
     /* All the trailing glyphs with the same advance can use one LongMetric
      * and just keep LSB */
-    hb_vector_t<hb_codepoint_t> &gids = plan->glyphs;
-    unsigned int num_advances = gids.length;
-    unsigned int last_advance = _mtx.get_advance (gids[num_advances - 1]);
-    while (num_advances > 1 &&
-	   last_advance == _mtx.get_advance (gids[num_advances - 2]))
-    {
-      num_advances--;
-    }
+    unsigned int num_output_glyphs = plan->num_output_glyphs ();
+    unsigned int num_advances = _mtx.num_advances_for_subset (plan);
 
     /* alloc the new table */
     size_t dest_sz = num_advances * 4
-		  + (gids.length - num_advances) * 2;
+		  + (num_output_glyphs - num_advances) * 2;
     void *dest = (void *) malloc (dest_sz);
     if (unlikely (!dest))
     {
       return false;
     }
     DEBUG_MSG(SUBSET, nullptr, "%c%c%c%c in src has %d advances, %d lsbs", HB_UNTAG(T::tableTag), _mtx.num_advances, _mtx.num_metrics - _mtx.num_advances);
-    DEBUG_MSG(SUBSET, nullptr, "%c%c%c%c in dest has %d advances, %d lsbs, %u bytes", HB_UNTAG(T::tableTag), num_advances, gids.length - num_advances, (unsigned int) dest_sz);
+    DEBUG_MSG(SUBSET, nullptr, "%c%c%c%c in dest has %d advances, %d lsbs, %u bytes",
+              HB_UNTAG(T::tableTag), num_advances, num_output_glyphs - num_advances, (unsigned int) dest_sz);
 
-    const char *source_table = hb_blob_get_data (_mtx.table.get_blob (), nullptr);
     // Copy everything over
-    LongMetric * old_metrics = (LongMetric *) source_table;
-    FWORD *lsbs = (FWORD *) (old_metrics + _mtx.num_advances);
     char * dest_pos = (char *) dest;
 
     bool failed = false;
-    for (unsigned int i = 0; i < gids.length; i++)
+    for (unsigned int i = 0; i < num_output_glyphs; i++)
     {
-      /* the last metric or the one for gids[i] */
-      LongMetric *src_metric = old_metrics + MIN ((hb_codepoint_t) _mtx.num_advances - 1, gids[i]);
-      if (gids[i] < _mtx.num_advances)
+      unsigned int side_bearing = 0;
+      unsigned int advance = 0;
+      hb_codepoint_t old_gid;
+      if (plan->old_gid_for_new_gid (i, &old_gid))
       {
-        /* src is a LongMetric */
-        if (i < num_advances)
-        {
-          /* dest is a LongMetric, copy it */
-          *((LongMetric *) dest_pos) = *src_metric;
-        }
-        else
-        {
-          /* dest just sb */
-          *((FWORD *) dest_pos) = src_metric->sb;
-        }
+        // Glyph is not an empty glyph so copy advance and side bearing
+        // from the input font.
+        side_bearing = _mtx.get_side_bearing (old_gid);
+        advance = _mtx.get_advance (old_gid);
+      }
+
+      bool has_advance = i < num_advances;
+      if (has_advance)
+      {
+        ((LongMetric *) dest_pos)->advance.set (advance);
+        ((LongMetric *) dest_pos)->sb.set (side_bearing);
       }
       else
       {
-	if (gids[i] >= _mtx.num_metrics)
-	{
-	  DEBUG_MSG(SUBSET, nullptr, "gid %d is >= number of source metrics %d",
-		    gids[i], _mtx.num_metrics);
-	  failed = true;
-	  break;
-	}
-	FWORD src_sb = *(lsbs + gids[i] - _mtx.num_advances);
-        if (i < num_advances)
-        {
-          /* dest needs a full LongMetric */
-          LongMetric *metric = (LongMetric *)dest_pos;
-          metric->advance = src_metric->advance;
-          metric->sb = src_sb;
-        }
-        else
-        {
-          /* dest just needs an sb */
-          *((FWORD *) dest_pos) = src_sb;
-        }
+        ((FWORD *) dest_pos)->set (side_bearing);
       }
-      dest_pos += (i < num_advances ? 4 : 2);
+      dest_pos += (has_advance ? 4 : 2);
     }
     _mtx.fini ();
 
@@ -187,7 +161,7 @@ struct hmtxvmtx
     friend struct hmtxvmtx;
 
     void init (hb_face_t *face,
-		      unsigned int default_advance_ = 0)
+               unsigned int default_advance_ = 0)
     {
       default_advance = default_advance_ ? default_advance_ : hb_face_get_upem (face);
 
@@ -278,6 +252,32 @@ struct hmtxvmtx
 	advance += (font->num_coords ? var_table->get_advance_var (glyph, font->coords, font->num_coords) : 0); // TODO Optimize?!
       }
       return advance;
+    }
+
+    unsigned int num_advances_for_subset (const hb_subset_plan_t *plan) const
+    {
+      unsigned int num_advances = plan->num_output_glyphs ();
+      unsigned int last_advance = _advance_for_new_gid (plan,
+                                                        num_advances - 1);
+      while (num_advances > 1 &&
+             last_advance == _advance_for_new_gid (plan,
+                                                   num_advances - 2))
+      {
+        num_advances--;
+      }
+
+      return num_advances;
+    }
+
+    private:
+    unsigned int _advance_for_new_gid (const hb_subset_plan_t *plan,
+                                       hb_codepoint_t new_gid) const
+    {
+      hb_codepoint_t old_gid;
+      if (!plan->old_gid_for_new_gid (new_gid, &old_gid))
+        return 0;
+
+      return get_advance (old_gid);
     }
 
     public:

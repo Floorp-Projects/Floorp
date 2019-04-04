@@ -17,6 +17,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/BinarySearch.h"
@@ -39,7 +40,6 @@
 #include "SVGTextFrame.h"
 #include "nsCoord.h"
 #include "gfxContext.h"
-#include "nsIPresShell.h"
 #include "nsTArray.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSFrameConstructor.h"
@@ -4773,7 +4773,7 @@ nsresult nsTextFrame::CharacterDataChanged(
   // dirty bit without bothering to call FrameNeedsReflow again.)
   nsIFrame* lastDirtiedFrameParent = nullptr;
 
-  nsIPresShell* shell = PresContext()->GetPresShell();
+  mozilla::PresShell* presShell = PresContext()->GetPresShell();
   do {
     // textFrame contained deleted text (or the insertion point,
     // if this was a pure insertion).
@@ -4801,8 +4801,8 @@ nsresult nsTextFrame::CharacterDataChanged(
       textFrame->mReflowRequestedForCharDataChange = true;
       if (!areAncestorsAwareOfReflowRequest) {
         // Ask the parent frame to reflow me.
-        shell->FrameNeedsReflow(textFrame, nsIPresShell::eStyleChange,
-                                NS_FRAME_IS_DIRTY);
+        presShell->FrameNeedsReflow(textFrame, nsIPresShell::eStyleChange,
+                                    NS_FRAME_IS_DIRTY);
       } else {
         // We already called FrameNeedsReflow on behalf of an earlier sibling,
         // so we can just mark this frame as dirty and don't need to bother

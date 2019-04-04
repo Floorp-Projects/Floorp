@@ -171,7 +171,7 @@ create_ct_font (CGFontRef cg_font, CGFloat font_size)
   if (CFStringHasPrefix (cg_postscript_name, CFSTR (".SFNSText")) ||
       CFStringHasPrefix (cg_postscript_name, CFSTR (".SFNSDisplay")))
   {
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1080
+#if !(defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE) && MAC_OS_X_VERSION_MIN_REQUIRED < 1080
 # define kCTFontUIFontSystem kCTFontSystemFontType
 # define kCTFontUIFontEmphasizedSystem kCTFontEmphasizedSystemFontType
 #endif
@@ -214,7 +214,7 @@ create_ct_font (CGFontRef cg_font, CGFloat font_size)
   }
 
   CFURLRef original_url = nullptr;
-#if TARGET_OS_OSX && MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+#if !(defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE) && MAC_OS_X_VERSION_MIN_REQUIRED < 1060
   ATSFontRef atsFont;
   FSRef fsref;
   OSStatus status;
@@ -244,7 +244,7 @@ create_ct_font (CGFontRef cg_font, CGFloat font_size)
        * process in Blink. This can be detected by the new file URL location
        * that the newly found font points to. */
       CFURLRef new_url = nullptr;
-#if TARGET_OS_OSX && MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+#if !(defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE) && MAC_OS_X_VERSION_MIN_REQUIRED < 1060
       atsFont = CTFontGetPlatformFont (new_ct_font, NULL);
       status = ATSFontGetFileReference (atsFont, &fsref);
       if (status == noErr)
@@ -711,7 +711,7 @@ resize_and_retry:
 /* What's the iOS equivalent of this check?
  * The symbols was introduced in iOS 7.0.
  * At any rate, our fallback is safe and works fine. */
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1090
+#if !(defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE) && MAC_OS_X_VERSION_MIN_REQUIRED < 1090
 #  define kCTLanguageAttributeName CFSTR ("NSLanguage")
 #endif
         CFStringRef lang = CFStringCreateWithCStringNoCopy (kCFAllocatorDefault,
@@ -783,7 +783,7 @@ resize_and_retry:
 
       int level = HB_DIRECTION_IS_FORWARD (buffer->props.direction) ? 0 : 1;
       CFNumberRef level_number = CFNumberCreate (kCFAllocatorDefault, kCFNumberIntType, &level);
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+#if !(defined(TARGET_OS_IPHONE) && TARGET_OS_IPHONE) && MAC_OS_X_VERSION_MIN_REQUIRED < 1060
       extern const CFStringRef kCTTypesetterOptionForcedEmbeddingLevel;
 #endif
       CFDictionaryRef options = CFDictionaryCreate (kCFAllocatorDefault,

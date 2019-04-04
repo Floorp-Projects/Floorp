@@ -33,8 +33,23 @@
 
 using namespace std;
 
+#if __sparc__
+#include <string.h>
+static inline uint64 UNALIGNED_LOAD64(const char *p) {
+  uint64 val;
+  memcpy(&val, p, sizeof(uint64));
+  return val;
+}
+
+static inline uint32 UNALIGNED_LOAD32(const char *p) {
+  uint32 val;
+  memcpy(&val, p, sizeof(uint32));
+  return val;
+}
+#else
 #define UNALIGNED_LOAD64(p) (*(const uint64*)(p))
 #define UNALIGNED_LOAD32(p) (*(const uint32*)(p))
+#endif
 
 #if !defined(LIKELY)
 #if defined(__GNUC__)

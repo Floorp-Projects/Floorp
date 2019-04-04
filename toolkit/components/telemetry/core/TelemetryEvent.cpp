@@ -320,12 +320,12 @@ unsigned int GetDataset(const StaticMutexAutoLock& lock,
   }
 
   if (!gDynamicEventInfo) {
-    return nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN;
+    return nsITelemetry::DATASET_PRERELEASE_CHANNELS;
   }
 
   return (*gDynamicEventInfo)[eventKey.id].recordOnRelease
-             ? nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT
-             : nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN;
+             ? nsITelemetry::DATASET_ALL_CHANNELS
+             : nsITelemetry::DATASET_PRERELEASE_CHANNELS;
 }
 
 nsCString GetCategory(const StaticMutexAutoLock& lock,

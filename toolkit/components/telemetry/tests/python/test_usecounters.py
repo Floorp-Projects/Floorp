@@ -34,7 +34,7 @@ class TestParser(unittest.TestCase):
                                           strict_type_checks=True)
 
         ParserError.exit_func()
-        self.assertEquals(hist.dataset(), "nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT")
+        self.assertEquals(hist.dataset(), "nsITelemetry::DATASET_ALL_CHANNELS")
 
     def test_usecounter_histogram(self):
         SAMPLE_HISTOGRAM = {

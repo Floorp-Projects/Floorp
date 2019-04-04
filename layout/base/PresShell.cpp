@@ -897,7 +897,6 @@ PresShell::~PresShell() {
   MOZ_ASSERT(mAllocatedPointers.IsEmpty(),
              "Some pres arena objects were not freed");
 
-  mStyleSet = nullptr;
   mFrameManager = nullptr;
   mFrameConstructor = nullptr;
 
@@ -911,8 +910,7 @@ PresShell::~PresShell() {
  * calls AddRef() on us.
  */
 void PresShell::Init(Document* aDocument, nsPresContext* aPresContext,
-                     nsViewManager* aViewManager,
-                     UniquePtr<ServoStyleSet> aStyleSet) {
+                     nsViewManager* aViewManager) {
   MOZ_ASSERT(aDocument, "null ptr");
   MOZ_ASSERT(aPresContext, "null ptr");
   MOZ_ASSERT(aViewManager, "null ptr");
@@ -942,18 +940,9 @@ void PresShell::Init(Document* aDocument, nsPresContext* aPresContext,
 
   // Bind the context to the presentation shell.
   mPresContext = aPresContext;
-  mPresContext->AttachShell(this);
+  mPresContext->AttachPresShell(this);
 
-  // Now we can initialize the style set. Make sure to set the member before
-  // calling Init, since various subroutines need to find the style set off
-  // the PresContext during initialization.
-  mStyleSet = std::move(aStyleSet);
-  mStyleSet->Init(aPresContext);
-
-  // Notify our prescontext that it now has a compatibility mode.  Note that
-  // this MUST happen after we set up our style set but before we create any
-  // frames.
-  mPresContext->CompatibilityModeChanged();
+  mPresContext->DeviceContext()->InitFontCache();
 
   // Add the preference style sheet.
   UpdatePreferenceStyles();
@@ -1276,8 +1265,7 @@ void PresShell::Destroy() {
 
   // release our pref style sheet, if we have one still
   //
-  // FIXME(emilio): Why do we need to do this? The stylist is getting nixed with
-  // us anyway.
+  // TODO(emilio): Should we move the preference sheet tracking to the Document?
   RemovePreferenceStyles();
 
   mIsDestroying = true;
@@ -1310,7 +1298,6 @@ void PresShell::Destroy() {
     mViewManager = nullptr;
   }
 
-  mStyleSet->BeginShutdown();
   nsRefreshDriver* rd = GetPresContext()->RefreshDriver();
 
   // This shell must be removed from the document before the frame
@@ -1361,14 +1348,11 @@ void PresShell::Destroy() {
     weakFrame->Clear(this);
   }
 
-  // Let the style set do its cleanup.
-  mStyleSet->Shutdown();
-
   if (mPresContext) {
     // We hold a reference to the pres context, and it holds a weak link back
     // to us. To avoid the pres context having a dangling reference, set its
     // pres shell to nullptr
-    mPresContext->DetachShell();
+    mPresContext->DetachPresShell();
 
     // Clear the link handler (weak reference) as well
     mPresContext->SetLinkHandler(nullptr);
@@ -1410,8 +1394,8 @@ nsRefreshDriver* nsIPresShell::GetRefreshDriver() const {
 }
 
 void nsIPresShell::SetAuthorStyleDisabled(bool aStyleDisabled) {
-  if (aStyleDisabled != mStyleSet->GetAuthorStyleDisabled()) {
-    mStyleSet->SetAuthorStyleDisabled(aStyleDisabled);
+  if (aStyleDisabled != StyleSet()->GetAuthorStyleDisabled()) {
+    StyleSet()->SetAuthorStyleDisabled(aStyleDisabled);
     ApplicableStylesChanged();
 
     nsCOMPtr<nsIObserverService> observerService =
@@ -1424,7 +1408,7 @@ void nsIPresShell::SetAuthorStyleDisabled(bool aStyleDisabled) {
 }
 
 bool nsIPresShell::GetAuthorStyleDisabled() const {
-  return mStyleSet->GetAuthorStyleDisabled();
+  return StyleSet()->GetAuthorStyleDisabled();
 }
 
 void nsIPresShell::UpdatePreferenceStyles() {
@@ -1463,13 +1447,13 @@ void nsIPresShell::UpdatePreferenceStyles() {
   // it to be modifiable from devtools and similar, see bugs 1239336 and
   // 1436782. I think it conceptually should be a user sheet, and could be
   // without too much trouble I'd think.
-  mStyleSet->AppendStyleSheet(SheetType::Agent, newPrefSheet);
+  StyleSet()->AppendStyleSheet(SheetType::Agent, newPrefSheet);
   mPrefStyleSheet = newPrefSheet;
 }
 
 void nsIPresShell::RemovePreferenceStyles() {
   if (mPrefStyleSheet) {
-    mStyleSet->RemoveStyleSheet(SheetType::Agent, mPrefStyleSheet);
+    StyleSet()->RemoveStyleSheet(SheetType::Agent, mPrefStyleSheet);
     mPrefStyleSheet = nullptr;
   }
 }
@@ -1496,14 +1480,14 @@ void nsIPresShell::AddUserSheet(StyleSheet* aSheet) {
   // Assert that all of userSheets (except for the last, new element) matches up
   // with what's in the style set.
   for (size_t i = 0; i < index; ++i) {
-    MOZ_ASSERT(mStyleSet->StyleSheetAt(SheetType::User, i) == userSheets[i]);
+    MOZ_ASSERT(StyleSet()->StyleSheetAt(SheetType::User, i) == userSheets[i]);
   }
 
-  if (index == static_cast<size_t>(mStyleSet->SheetCount(SheetType::User))) {
-    mStyleSet->AppendStyleSheet(SheetType::User, aSheet);
+  if (index == static_cast<size_t>(StyleSet()->SheetCount(SheetType::User))) {
+    StyleSet()->AppendStyleSheet(SheetType::User, aSheet);
   } else {
-    StyleSheet* ref = mStyleSet->StyleSheetAt(SheetType::User, index);
-    mStyleSet->InsertStyleSheetBefore(SheetType::User, aSheet, ref);
+    StyleSheet* ref = StyleSet()->StyleSheetAt(SheetType::User, index);
+    StyleSet()->InsertStyleSheetBefore(SheetType::User, aSheet, ref);
   }
 
   ApplicableStylesChanged();
@@ -1512,7 +1496,7 @@ void nsIPresShell::AddUserSheet(StyleSheet* aSheet) {
 void nsIPresShell::AddAgentSheet(StyleSheet* aSheet) {
   // Make sure this does what nsDocumentViewer::CreateStyleSet does
   // wrt ordering.
-  mStyleSet->AppendStyleSheet(SheetType::Agent, aSheet);
+  StyleSet()->AppendStyleSheet(SheetType::Agent, aSheet);
   ApplicableStylesChanged();
 }
 
@@ -1521,16 +1505,17 @@ void nsIPresShell::AddAuthorSheet(StyleSheet* aSheet) {
   // ones added with the StyleSheetService.
   StyleSheet* firstAuthorSheet = mDocument->GetFirstAdditionalAuthorSheet();
   if (firstAuthorSheet) {
-    mStyleSet->InsertStyleSheetBefore(SheetType::Doc, aSheet, firstAuthorSheet);
+    StyleSet()->InsertStyleSheetBefore(SheetType::Doc, aSheet,
+                                       firstAuthorSheet);
   } else {
-    mStyleSet->AppendStyleSheet(SheetType::Doc, aSheet);
+    StyleSet()->AppendStyleSheet(SheetType::Doc, aSheet);
   }
 
   ApplicableStylesChanged();
 }
 
 void nsIPresShell::RemoveSheet(SheetType aType, StyleSheet* aSheet) {
-  mStyleSet->RemoveStyleSheet(aType, aSheet);
+  StyleSet()->RemoveStyleSheet(aType, aSheet);
   ApplicableStylesChanged();
 }
 
@@ -4089,7 +4074,7 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
     if (MOZ_LIKELY(!mIsDestroying)) {
       // Now that we have flushed media queries, update the rules before looking
       // up @font-face / @counter-style / @font-feature-values rules.
-      mStyleSet->UpdateStylistIfNeeded();
+      StyleSet()->UpdateStylistIfNeeded();
 
       // Flush any pending update of the user font set, since that could
       // cause style changes (for updating ex/ch units, and to cause a
@@ -4234,7 +4219,7 @@ void PresShell::DocumentStatesChanged(Document* aDocument,
   MOZ_ASSERT(!aStateMask.IsEmpty());
 
   if (mDidInitialize) {
-    mStyleSet->InvalidateStyleForDocumentStateChanges(aStateMask);
+    StyleSet()->InvalidateStyleForDocumentStateChanges(aStateMask);
   }
 
   if (aStateMask.HasState(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
@@ -5080,7 +5065,7 @@ static bool IsTransparentContainerElement(nsPresContext* aPresContext) {
   if (tab) {
     // Check if presShell is the top PresShell. Only the top can
     // influence the canvas background color.
-    nsCOMPtr<nsIPresShell> presShell = aPresContext->GetPresShell();
+    PresShell* presShell = aPresContext->GetPresShell();
     nsCOMPtr<nsIPresShell> topPresShell = tab->GetPresShell();
     if (presShell != topPresShell) {
       tab = nullptr;
@@ -5222,17 +5207,17 @@ float PresShell::GetCumulativeResolution() {
 
 float PresShell::GetCumulativeNonRootScaleResolution() {
   float resolution = 1.0;
-  nsIPresShell* currentShell = this;
-  while (currentShell) {
-    nsPresContext* currentCtx = currentShell->GetPresContext();
+  PresShell* currentPresShell = this;
+  while (currentPresShell) {
+    nsPresContext* currentCtx = currentPresShell->GetPresContext();
     if (currentCtx != currentCtx->GetRootPresContext()) {
-      resolution *= currentShell->GetResolution();
+      resolution *= currentPresShell->GetResolution();
     }
     nsPresContext* parentCtx = currentCtx->GetParentPresContext();
     if (parentCtx) {
-      currentShell = parentCtx->PresShell();
+      currentPresShell = parentCtx->PresShell();
     } else {
-      currentShell = nullptr;
+      currentPresShell = nullptr;
     }
   }
   return resolution;
@@ -5904,7 +5889,7 @@ class nsAutoNotifyDidPaint {
 };
 
 void nsIPresShell::RecordShadowStyleChange(ShadowRoot& aShadowRoot) {
-  mStyleSet->RecordShadowStyleChange(aShadowRoot);
+  StyleSet()->RecordShadowStyleChange(aShadowRoot);
   ApplicableStylesChanged();
 }
 
@@ -6415,7 +6400,6 @@ PresShell* PresShell::GetShellForEventTarget(nsIFrame* aFrame,
 
 /* static */
 PresShell* PresShell::GetShellForTouchEvent(WidgetGUIEvent* aEvent) {
-  PresShell* shell = nullptr;
   switch (aEvent->mMessage) {
     case eTouchMove:
     case eTouchCancel:
@@ -6424,37 +6408,35 @@ PresShell* PresShell::GetShellForTouchEvent(WidgetGUIEvent* aEvent) {
       WidgetTouchEvent* touchEvent = aEvent->AsTouchEvent();
       for (dom::Touch* touch : touchEvent->mTouches) {
         if (!touch) {
-          break;
+          return nullptr;
         }
 
         RefPtr<dom::Touch> oldTouch =
             TouchManager::GetCapturedTouch(touch->Identifier());
         if (!oldTouch) {
-          break;
+          return nullptr;
         }
 
         nsCOMPtr<nsIContent> content = do_QueryInterface(oldTouch->GetTarget());
         if (!content) {
-          break;
+          return nullptr;
         }
 
         nsIFrame* contentFrame = content->GetPrimaryFrame();
         if (!contentFrame) {
-          break;
+          return nullptr;
         }
 
-        shell =
-            static_cast<PresShell*>(contentFrame->PresContext()->PresShell());
-        if (shell) {
-          break;
+        PresShell* presShell = contentFrame->PresContext()->GetPresShell();
+        if (presShell) {
+          return presShell;
         }
       }
-      break;
+      return nullptr;
     }
     default:
-      break;
+      return nullptr;
   }
-  return shell;
 }
 
 nsresult PresShell::HandleEvent(nsIFrame* aFrameForPresShell,
@@ -7153,8 +7135,8 @@ bool PresShell::EventHandler::MaybeHandleEventWithAnotherPresShell(
   }
 
   // We need to handle aGUIEvent with another PresShell.
-  nsCOMPtr<nsIPresShell> shell = frame->PresContext()->GetPresShell();
-  *aRv = shell->HandleEvent(frame, aGUIEvent, true, aEventStatus);
+  RefPtr<PresShell> presShell = frame->PresContext()->PresShell();
+  *aRv = presShell->HandleEvent(frame, aGUIEvent, true, aEventStatus);
   return true;
 }
 
@@ -8798,14 +8780,14 @@ bool PresShell::IsDisplayportSuppressed() {
 
 nsresult PresShell::GetAgentStyleSheets(nsTArray<RefPtr<StyleSheet>>& aSheets) {
   aSheets.Clear();
-  int32_t sheetCount = mStyleSet->SheetCount(SheetType::Agent);
+  int32_t sheetCount = StyleSet()->SheetCount(SheetType::Agent);
 
   if (!aSheets.SetCapacity(sheetCount, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   for (int32_t i = 0; i < sheetCount; ++i) {
-    StyleSheet* sheet = mStyleSet->StyleSheetAt(SheetType::Agent, i);
+    StyleSheet* sheet = StyleSet()->StyleSheetAt(SheetType::Agent, i);
     aSheets.AppendElement(sheet);
   }
 
@@ -8814,15 +8796,15 @@ nsresult PresShell::GetAgentStyleSheets(nsTArray<RefPtr<StyleSheet>>& aSheets) {
 
 nsresult PresShell::SetAgentStyleSheets(
     const nsTArray<RefPtr<StyleSheet>>& aSheets) {
-  return mStyleSet->ReplaceSheets(SheetType::Agent, aSheets);
+  return StyleSet()->ReplaceSheets(SheetType::Agent, aSheets);
 }
 
 nsresult PresShell::AddOverrideStyleSheet(StyleSheet* aSheet) {
-  return mStyleSet->AppendStyleSheet(SheetType::Override, aSheet);
+  return StyleSet()->AppendStyleSheet(SheetType::Override, aSheet);
 }
 
 nsresult PresShell::RemoveOverrideStyleSheet(StyleSheet* aSheet) {
-  return mStyleSet->RemoveStyleSheet(SheetType::Override, aSheet);
+  return StyleSet()->RemoveStyleSheet(SheetType::Override, aSheet);
 }
 
 static void FreezeElement(nsISupports* aSupports, void* /* unused */) {
@@ -9835,42 +9817,6 @@ FindTopFrame(nsIFrame* aRoot)
 
 #ifdef DEBUG
 
-static void CopySheetsIntoClone(ServoStyleSet* aSet, ServoStyleSet* aClone) {
-  int32_t i, n = aSet->SheetCount(SheetType::Override);
-  for (i = 0; i < n; i++) {
-    StyleSheet* ss = aSet->StyleSheetAt(SheetType::Override, i);
-    if (ss) aClone->AppendStyleSheet(SheetType::Override, ss);
-  }
-
-  // The document expects to insert document stylesheets itself
-#  if 0
-  n = aSet->SheetCount(SheetType::Doc);
-  for (i = 0; i < n; i++) {
-    StyleSheet* ss = aSet->StyleSheetAt(SheetType::Doc, i);
-    if (ss)
-      aClone->AddDocStyleSheet(ss, mDocument);
-  }
-#  endif
-
-  n = aSet->SheetCount(SheetType::User);
-  for (i = 0; i < n; i++) {
-    StyleSheet* ss = aSet->StyleSheetAt(SheetType::User, i);
-    if (ss) aClone->AppendStyleSheet(SheetType::User, ss);
-  }
-
-  n = aSet->SheetCount(SheetType::Agent);
-  for (i = 0; i < n; i++) {
-    StyleSheet* ss = aSet->StyleSheetAt(SheetType::Agent, i);
-    if (ss) aClone->AppendStyleSheet(SheetType::Agent, ss);
-  }
-}
-
-UniquePtr<ServoStyleSet> nsIPresShell::CloneStyleSet(ServoStyleSet* aSet) {
-  auto clone = MakeUnique<ServoStyleSet>();
-  CopySheetsIntoClone(aSet, clone.get());
-  return clone;
-}
-
 // After an incremental reflow, we verify the correctness by doing a
 // full reflow into a fresh frame tree.
 bool nsIPresShell::VerifyIncrementalReflow() {
@@ -9917,13 +9863,9 @@ bool nsIPresShell::VerifyIncrementalReflow() {
   // presentation context.
   cx->SetVisibleArea(mPresContext->GetVisibleArea());
 
-  // Create a new presentation shell to view the document. Use the
-  // exact same style information that this document has.
-  UniquePtr<ServoStyleSet> newSet = CloneStyleSet(StyleSet());
-
-  RefPtr<PresShell> presShell =
-      mDocument->CreatePresShell(cx, vm, std::move(newSet));
+  RefPtr<PresShell> presShell = mDocument->CreatePresShell(cx, vm);
   NS_ENSURE_TRUE(presShell, false);
+
   // Note that after we create the shell, we must make sure to destroy it
   presShell->SetVerifyReflowEnable(
       false);  // turn off verify reflow while we're
@@ -10003,9 +9945,9 @@ void PresShell::ListComputedStyles(FILE* out, int32_t aIndent) {
 }
 
 void PresShell::ListStyleSheets(FILE* out, int32_t aIndent) {
-  int32_t sheetCount = mStyleSet->SheetCount(SheetType::Doc);
+  int32_t sheetCount = StyleSet()->SheetCount(SheetType::Doc);
   for (int32_t i = 0; i < sheetCount; ++i) {
-    mStyleSet->StyleSheetAt(SheetType::Doc, i)->List(out, aIndent);
+    StyleSet()->StyleSheetAt(SheetType::Doc, i)->List(out, aIndent);
     fputs("\n", out);
   }
 }
@@ -10611,7 +10553,7 @@ PresShell* PresShell::GetRootPresShell() {
   if (mPresContext) {
     nsPresContext* rootPresContext = mPresContext->GetRootPresContext();
     if (rootPresContext) {
-      return static_cast<PresShell*>(rootPresContext->PresShell());
+      return rootPresContext->PresShell();
     }
   }
   return nullptr;
@@ -10909,10 +10851,6 @@ nsresult nsIPresShell::HasRuleProcessorUsedByMultipleStyleSets(
 
 void nsIPresShell::NotifyStyleSheetServiceSheetAdded(StyleSheet* aSheet,
                                                      uint32_t aSheetType) {
-  if (!mStyleSet) {
-    return;
-  }
-
   switch (aSheetType) {
     case nsIStyleSheetService::AGENT_SHEET:
       AddAgentSheet(aSheet);
@@ -10931,10 +10869,6 @@ void nsIPresShell::NotifyStyleSheetServiceSheetAdded(StyleSheet* aSheet,
 
 void nsIPresShell::NotifyStyleSheetServiceSheetRemoved(StyleSheet* aSheet,
                                                        uint32_t aSheetType) {
-  if (!mStyleSet) {
-    return;
-  }
-
   RemoveSheet(ToSheetType(aSheetType), aSheet);
 }
 
@@ -11030,7 +10964,7 @@ bool PresShell::EventHandler::EventTargetData::MaybeRetargetToActiveDocument(
     return false;
   }
 
-  nsIPresShell* activePresShell = activePresContext->GetPresShell();
+  PresShell* activePresShell = activePresContext->GetPresShell();
   if (!activePresShell) {
     return false;
   }
@@ -11042,8 +10976,7 @@ bool PresShell::EventHandler::EventTargetData::MaybeRetargetToActiveDocument(
     return false;
   }
 
-  SetPresShellAndFrame(static_cast<PresShell*>(activePresShell),
-                       activePresShell->GetRootFrame());
+  SetPresShellAndFrame(activePresShell, activePresShell->GetRootFrame());
   return true;
 }
 

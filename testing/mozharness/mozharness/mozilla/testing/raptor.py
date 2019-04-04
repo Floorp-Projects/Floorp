@@ -206,6 +206,9 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             self.app = self.config.get("app", "firefox")
             self.binary_path = self.config.get("binary_path", None)
 
+            if self.app in ('refbrow', 'fenix'):
+                self.app_name = self.binary_path
+
         self.installer_url = self.config.get("installer_url")
         self.raptor_json_url = self.config.get("raptor_json_url")
         self.raptor_json = self.config.get("raptor_json")

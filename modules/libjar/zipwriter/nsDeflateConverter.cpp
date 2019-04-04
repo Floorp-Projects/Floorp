@@ -157,7 +157,8 @@ nsresult nsDeflateConverter::PushAvailableData(nsIRequest *aRequest,
   MOZ_ASSERT(bytesToWrite <= INT32_MAX);
   nsCOMPtr<nsIInputStream> stream;
   nsresult rv = NS_NewByteInputStream(
-      getter_AddRefs(stream), MakeSpan((char *)mWriteBuffer, bytesToWrite));
+      getter_AddRefs(stream), MakeSpan((char *)mWriteBuffer, bytesToWrite),
+      NS_ASSIGNMENT_DEPEND);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mListener->OnDataAvailable(aRequest, stream, mOffset, bytesToWrite);

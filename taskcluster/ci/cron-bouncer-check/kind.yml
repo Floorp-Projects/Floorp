@@ -36,17 +36,15 @@ jobs:
         run-on-projects: [release]
         run:
             config:
-                by-project:
-                    mozilla-beta:
+                by-release-type:
+                    beta:
                         - releases/bouncer_firefox_beta.py
-                    mozilla-release:
+                    release:
                         - releases/bouncer_firefox_release.py
-                    mozilla-esr60:
+                    esr60:
                         - releases/bouncer_firefox_esr.py
-                    jamun:
-                        - releases/dev_bouncer_firefox_esr.py
                     default:
-                        - releases/dev_bouncer_firefox_beta.py
+                        - releases/bouncer_firefox_beta.py
             product-field:
                 by-project:
                     mozilla-beta: LATEST_FIREFOX_RELEASED_DEVEL_VERSION

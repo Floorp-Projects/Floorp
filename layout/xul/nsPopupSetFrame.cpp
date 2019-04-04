@@ -10,6 +10,7 @@
 #include "nsIContent.h"
 #include "nsPresContext.h"
 #include "mozilla/ComputedStyle.h"
+#include "mozilla/PresShell.h"
 #include "nsBoxLayoutState.h"
 #include "nsIScrollableFrame.h"
 #include "nsIPopupContainer.h"

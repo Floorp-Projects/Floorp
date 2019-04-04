@@ -8,7 +8,7 @@
 
 #include "nscore.h"
 
-class nsIControllerCommandTable;
+class nsControllerCommandTable;
 
 namespace mozilla {
 
@@ -19,9 +19,9 @@ namespace mozilla {
 class EditorController final {
  public:
   static nsresult RegisterEditorCommands(
-      nsIControllerCommandTable* aCommandTable);
+      nsControllerCommandTable* aCommandTable);
   static nsresult RegisterEditingCommands(
-      nsIControllerCommandTable* aCommandTable);
+      nsControllerCommandTable* aCommandTable);
 };
 
 }  // namespace mozilla

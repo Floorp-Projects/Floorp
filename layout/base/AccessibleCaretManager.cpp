@@ -711,7 +711,7 @@ already_AddRefed<nsFrameSelection> AccessibleCaretManager::GetFrameSelection()
   // Prevent us from touching the nsFrameSelection associated with other
   // PresShell.
   RefPtr<nsFrameSelection> fs = focusFrame->GetFrameSelection();
-  if (!fs || fs->GetShell() != mPresShell) {
+  if (!fs || fs->GetPresShell() != mPresShell) {
     return nullptr;
   }
 

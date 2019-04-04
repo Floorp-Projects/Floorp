@@ -45,6 +45,9 @@ class RenderTextureHost {
     return nullptr;
   }
 
+  virtual void PrepareForUse() {}
+  virtual void NotifyNotUsed() {}
+
  protected:
   virtual ~RenderTextureHost();
 

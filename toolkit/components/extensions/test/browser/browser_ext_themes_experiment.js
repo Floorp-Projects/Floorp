@@ -47,32 +47,46 @@ add_task(async function test_experiment_static_theme() {
 
   await extension.startup();
 
-  if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
-    is(root.style.getPropertyValue("--some-color-property"), hexToCSS("#ff00ff"),
-       "Color property should be parsed and set.");
-    ok(root.style.getPropertyValue("--some-image-property").startsWith("url("),
-       "Image property should be parsed.");
-    ok(root.style.getPropertyValue("--some-image-property").endsWith("background.jpg)"),
-       "Image property should be set.");
-    is(root.style.getPropertyValue("--some-random-property"), "no-repeat",
-       "Generic Property should be set.");
-  } else {
-    is(root.style.getPropertyValue("--some-color-property"), "",
-       "Color property should be unset");
-    is(root.style.getPropertyValue("--some-image-property"), "",
-       "Image property should be unset");
-    is(root.style.getPropertyValue("--some-random-property"), "",
-       "Generic Property should be unset.");
-  }
+  const testExperimentApplied = rootEl => {
+    if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
+      is(rootEl.style.getPropertyValue("--some-color-property"), hexToCSS("#ff00ff"),
+         "Color property should be parsed and set.");
+      ok(rootEl.style.getPropertyValue("--some-image-property").startsWith("url("),
+         "Image property should be parsed.");
+      ok(rootEl.style.getPropertyValue("--some-image-property").endsWith("background.jpg)"),
+         "Image property should be set.");
+      is(rootEl.style.getPropertyValue("--some-random-property"), "no-repeat",
+         "Generic Property should be set.");
+    } else {
+      is(rootEl.style.getPropertyValue("--some-color-property"), "",
+         "Color property should be unset");
+      is(rootEl.style.getPropertyValue("--some-image-property"), "",
+         "Image property should be unset");
+      is(rootEl.style.getPropertyValue("--some-random-property"), "",
+         "Generic Property should be unset.");
+    }
+  };
+
+  info("Testing that current window updated with the experiment applied");
+  testExperimentApplied(root);
+
+  info("Testing that new window initialized with the experiment applied");
+  const newWindow = await BrowserTestUtils.openNewBrowserWindow();
+  const newWindowRoot = newWindow.document.documentElement;
+  testExperimentApplied(newWindowRoot);
 
   await extension.unload();
 
-  is(root.style.getPropertyValue("--some-color-property"), "",
-     "Color property should be unset");
-  is(root.style.getPropertyValue("--some-image-property"), "",
-     "Image property should be unset");
-  is(root.style.getPropertyValue("--some-random-property"), "",
-     "Generic Property should be unset.");
+  info("Testing that both windows unapplied the experiment");
+  for (const rootEl of [root, newWindowRoot]) {
+    is(rootEl.style.getPropertyValue("--some-color-property"), "",
+       "Color property should be unset");
+    is(rootEl.style.getPropertyValue("--some-image-property"), "",
+       "Image property should be unset");
+    is(rootEl.style.getPropertyValue("--some-random-property"), "",
+       "Generic Property should be unset.");
+  }
+  await BrowserTestUtils.closeWindow(newWindow);
 });
 
 add_task(async function test_experiment_dynamic_theme() {
@@ -131,63 +145,62 @@ add_task(async function test_experiment_dynamic_theme() {
   extension.sendMessage("update-theme");
   await extension.awaitMessage("theme-updated");
 
-  if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
-    is(root.style.getPropertyValue("--some-color-property"), hexToCSS("#ff00ff"),
-       "Color property should be parsed and set.");
-    ok(root.style.getPropertyValue("--some-image-property").startsWith("url("),
-       "Image property should be parsed.");
-    ok(root.style.getPropertyValue("--some-image-property").endsWith("background.jpg)"),
-       "Image property should be set.");
-    is(root.style.getPropertyValue("--some-random-property"), "no-repeat",
-       "Generic Property should be set.");
-  } else {
-    is(root.style.getPropertyValue("--some-color-property"), "",
-       "Color property should be unset");
-    is(root.style.getPropertyValue("--some-image-property"), "",
-       "Image property should be unset");
-    is(root.style.getPropertyValue("--some-random-property"), "",
-       "Generic Property should be unset.");
-  }
+  const testExperimentApplied = rootEl => {
+    if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
+      is(rootEl.style.getPropertyValue("--some-color-property"), hexToCSS("#ff00ff"),
+         "Color property should be parsed and set.");
+      ok(rootEl.style.getPropertyValue("--some-image-property").startsWith("url("),
+         "Image property should be parsed.");
+      ok(rootEl.style.getPropertyValue("--some-image-property").endsWith("background.jpg)"),
+         "Image property should be set.");
+      is(rootEl.style.getPropertyValue("--some-random-property"), "no-repeat",
+         "Generic Property should be set.");
+    } else {
+      is(rootEl.style.getPropertyValue("--some-color-property"), "",
+         "Color property should be unset");
+      is(rootEl.style.getPropertyValue("--some-image-property"), "",
+         "Image property should be unset");
+      is(rootEl.style.getPropertyValue("--some-random-property"), "",
+         "Generic Property should be unset.");
+    }
+  };
+  testExperimentApplied(root);
+
+  const newWindow = await BrowserTestUtils.openNewBrowserWindow();
+  const newWindowRoot = newWindow.document.documentElement;
+
+  testExperimentApplied(newWindowRoot);
 
   extension.sendMessage("reset-theme");
   await extension.awaitMessage("theme-reset");
 
-  is(root.style.getPropertyValue("--some-color-property"), "",
-     "Color property should be unset");
-  is(root.style.getPropertyValue("--some-image-property"), "",
-     "Image property should be unset");
-  is(root.style.getPropertyValue("--some-random-property"), "",
-     "Generic Property should be unset.");
+  for (const rootEl of [root, newWindowRoot]) {
+    is(rootEl.style.getPropertyValue("--some-color-property"), "",
+       "Color property should be unset");
+    is(rootEl.style.getPropertyValue("--some-image-property"), "",
+       "Image property should be unset");
+    is(rootEl.style.getPropertyValue("--some-random-property"), "",
+       "Generic Property should be unset.");
+  }
 
   extension.sendMessage("update-theme");
   await extension.awaitMessage("theme-updated");
 
-  if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
-    is(root.style.getPropertyValue("--some-color-property"), hexToCSS("#ff00ff"),
-       "Color property should be parsed and set.");
-    ok(root.style.getPropertyValue("--some-image-property").startsWith("url("),
-       "Image property should be parsed.");
-    ok(root.style.getPropertyValue("--some-image-property").endsWith("background.jpg)"),
-       "Image property should be set.");
-    is(root.style.getPropertyValue("--some-random-property"), "no-repeat",
-       "Generic Property should be set.");
-  } else {
-    is(root.style.getPropertyValue("--some-color-property"), "",
-       "Color property should be unset");
-    is(root.style.getPropertyValue("--some-image-property"), "",
-       "Image property should be unset");
-    is(root.style.getPropertyValue("--some-random-property"), "",
-       "Generic Property should be unset.");
-  }
+  testExperimentApplied(root);
+  testExperimentApplied(newWindowRoot);
 
   await extension.unload();
 
-  is(root.style.getPropertyValue("--some-color-property"), "",
-     "Color property should be unset");
-  is(root.style.getPropertyValue("--some-image-property"), "",
-     "Image property should be unset");
-  is(root.style.getPropertyValue("--some-random-property"), "",
-     "Generic Property should be unset.");
+  for (const rootEl of [root, newWindowRoot]) {
+    is(rootEl.style.getPropertyValue("--some-color-property"), "",
+       "Color property should be unset");
+    is(rootEl.style.getPropertyValue("--some-image-property"), "",
+       "Image property should be unset");
+    is(rootEl.style.getPropertyValue("--some-random-property"), "",
+       "Generic Property should be unset.");
+  }
+
+  await BrowserTestUtils.closeWindow(newWindow);
 });
 
 add_task(async function test_experiment_stylesheet() {

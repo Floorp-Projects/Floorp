@@ -181,6 +181,7 @@ pub struct PictureContext {
     pub apply_local_clip_rect: bool,
     pub allow_subpixel_aa: bool,
     pub is_passthrough: bool,
+    pub is_composite: bool,
     pub raster_space: RasterSpace,
     pub surface_spatial_node_index: SpatialNodeIndex,
     pub raster_spatial_node_index: SpatialNodeIndex,

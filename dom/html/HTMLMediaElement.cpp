@@ -56,6 +56,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
@@ -101,7 +102,6 @@
 #include "nsIFrame.h"
 #include "nsIObserverService.h"
 #include "nsIPermissionManager.h"
-#include "nsIPresShell.h"
 #include "nsIRequest.h"
 #include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
@@ -5918,7 +5918,7 @@ void HTMLMediaElement::Invalidate(bool aImageSizeChanged,
     UpdateMediaSize(aNewIntrinsicSize.value());
     if (frame) {
       nsPresContext* presContext = frame->PresContext();
-      nsIPresShell* presShell = presContext->PresShell();
+      PresShell* presShell = presContext->PresShell();
       presShell->FrameNeedsReflow(frame, nsIPresShell::eStyleChange,
                                   NS_FRAME_IS_DIRTY);
     }

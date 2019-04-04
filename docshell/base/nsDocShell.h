@@ -73,7 +73,6 @@ class EventTarget;
 }  // namespace dom
 }  // namespace mozilla
 
-class nsICommandManager;
 class nsIContentViewer;
 class nsIController;
 class nsIDocShellTreeOwner;
@@ -90,6 +89,7 @@ class nsIWebBrowserFind;
 class nsIWidget;
 class nsIReferrerInfo;
 
+class nsCommandManager;
 class nsDocShell;
 class nsDocShellEditorData;
 class nsDOMNavigationTiming;
@@ -954,7 +954,7 @@ class nsDocShell final : public nsDocLoader,
   nsCOMPtr<nsIWidget> mParentWidget;
   RefPtr<mozilla::dom::ChildSHistory> mSessionHistory;
   nsCOMPtr<nsIWebBrowserFind> mFind;
-  nsCOMPtr<nsICommandManager> mCommandManager;
+  RefPtr<nsCommandManager> mCommandManager;
   RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
 
   // Weak reference to our TabChild actor.
