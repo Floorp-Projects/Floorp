@@ -6,7 +6,6 @@ use cow_rc_str::CowRcStr;
 use std::borrow::Cow;
 use tokenizer::Token;
 
-#[macro_export]
 macro_rules! size_of_test {
     ($testname: ident, $t: ty, $expected_size: expr) => {
         #[test]

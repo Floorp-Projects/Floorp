@@ -1,6 +1,9 @@
 Tutorial: Evaluate an Expression When a debugger; Statement Is Executed
 =======================================================================
 
+**NOTE: This tutorial no longer works in current versions of Firefox.**
+Instead, please try the updated and expanded [breakpoint tutorial][tut breakpoint].
+
 This page shows how you can try out the [`Debugger` API][debugger] yourself
 using Firefox's Scratchpad. We use the API to evaluate an expression in the web
 page whenever it executes a JavaScript `debugger;` statement.

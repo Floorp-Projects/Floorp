@@ -66,9 +66,6 @@ user_pref("identity.fxaccounts.migrateToDevEdition", false);
 // Avoid idle-daily notifications, to avoid expensive operations that may
 // cause unexpected test timeouts.
 user_pref("idle.lastDailyNotification", -1);
-// Make tests run consistently on DevEdition (which has a lightweight theme
-// selected by default).
-user_pref("lightweightThemes.selectedThemeID", "");
 user_pref("media.capturestream_hints.enabled", true);
 user_pref("media.gmp-manager.url", "http://127.0.0.1/gmpmanager-dummy/update.xml");
 // Don't block old libavcodec libraries when testing, because our test systems
