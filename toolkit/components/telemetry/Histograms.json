@@ -14606,5 +14606,19 @@
       ],
       "keyed": true,
       "description": "Getting the number of errors in QuotaManager initialization."
+  },
+  "HTTP_TRAFFIC_ANALYSIS": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["gachen@mozilla.com"],
+    "bug_numbers": [1533363],
+    "expires_in_version": "73",
+    "kind": "categorical",
+    "n_values": 8,
+    "labels": [
+      "Connection",
+      "Transaction"
+    ],
+    "keyed": true,
+    "description": "Numbers of HTTP transactions and connections by type. There are some categories separated by keys based on 4 parameters: 1. normal browsing or private browsing 2. first party or third party 3. class of service 4. tracking classification. Available keys are: ['Y=0|NormalFirstParty', 'Y=1|NormalThirdPartyOther', 'Y=2|NormalThirdPartyContentLeader', 'Y=3|NormalThirdPartyContentBackground', 'Y=4|NormalThirdPartyContentOther', 'Y=5|NormalThirdPartyBasicLeader', 'Y=6|NormalThirdPartyBasicBackground', 'Y=7|NormalThirdPartyBasicOther', 'Y=8|NormalThirdPartyFingerprintingLeader', 'Y=9|NormalThirdPartyFingerprintingBackground', 'Y=10|NormalThirdPartyFingerprintingOther', 'Y=11|PrivateFirstParty', 'Y=12|PrivateThirdPartyOther', 'Y=13|PrivateThirdPartyContentLeader', 'Y=14|PrivateThirdPartyContentBackground', 'Y=15|PrivateThirdPartyContentOther', 'Y=16|PrivateThirdPartyBasicLeader', 'Y=17|PrivateThirdPartyBasicBackground', 'Y=18|PrivateThirdPartyBasicOther', 'Y=19|PrivateThirdPartyFingerprintingLeader', 'Y=20|PrivateThirdPartyFingerprintingBackground', 'Y=21|PrivateThirdPartyFingerprintingOther']."
   }
 }
