@@ -734,7 +734,7 @@ FinderHighlighter.prototype = {
     if (!cssColor || !cssColor.length)
       return false;
     cssColor.shift();
-    return new Color(...cssColor).isBright;
+    return !(new Color(...cssColor)).useBrightText;
   },
 
   /**
