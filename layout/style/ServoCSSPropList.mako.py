@@ -76,7 +76,6 @@ LONGHANDS_NOT_SERIALIZED_WITH_SERVO = [
     "column-count",
     "column-gap",
     "column-rule-width",
-    "column-width",
     "display",
     "fill",
     "filter",

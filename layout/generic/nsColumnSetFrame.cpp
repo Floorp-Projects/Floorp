@@ -284,13 +284,9 @@ static nscoord GetColumnGap(nsColumnSetFrame* aFrame,
 }
 
 /* static */
-nscoord nsColumnSetFrame::ClampUsedColumnWidth(
-    const nsStyleCoord& aColumnWidth) {
-  MOZ_ASSERT(aColumnWidth.GetUnit() == eStyleUnit_Coord,
-             "This should only be called when column-width is a <length>!");
-
+nscoord nsColumnSetFrame::ClampUsedColumnWidth(const Length& aColumnWidth) {
   // Per spec, used values will be clamped to a minimum of 1px.
-  return std::max(CSSPixel::ToAppUnits(1), aColumnWidth.GetCoordValue());
+  return std::max(CSSPixel::ToAppUnits(1), aColumnWidth.ToAppUnits());
 }
 
 nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
@@ -341,8 +337,8 @@ nsColumnSetFrame::ReflowConfig nsColumnSetFrame::ChooseColumnStrategy(
   nscoord colISize;
   // In vertical writing-mode, "column-width" (inline size) will actually be
   // physical height, but its CSS name is still column-width.
-  if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
-    colISize = ClampUsedColumnWidth(colStyle->mColumnWidth);
+  if (colStyle->mColumnWidth.IsLength()) {
+    colISize = ClampUsedColumnWidth(colStyle->mColumnWidth.AsLength());
     NS_ASSERTION(colISize >= 0, "negative column width");
     // Reduce column count if necessary to make columns fit in the
     // available width. Compute max number of columns that fit in
@@ -491,8 +487,8 @@ nscoord nsColumnSetFrame::GetMinISize(gfxContext* aRenderingContext) {
   }
   const nsStyleColumn* colStyle = StyleColumn();
   nscoord colISize;
-  if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
-    colISize = ClampUsedColumnWidth(colStyle->mColumnWidth);
+  if (colStyle->mColumnWidth.IsLength()) {
+    colISize = ClampUsedColumnWidth(colStyle->mColumnWidth.AsLength());
     // As available width reduces to zero, we reduce our number of columns
     // to one, and don't enforce the column width, so just return the min
     // of the child's min-width with any specified column width.
@@ -527,8 +523,8 @@ nscoord nsColumnSetFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nscoord colGap = GetColumnGap(this, NS_UNCONSTRAINEDSIZE);
 
   nscoord colISize;
-  if (colStyle->mColumnWidth.GetUnit() == eStyleUnit_Coord) {
-    colISize = ClampUsedColumnWidth(colStyle->mColumnWidth);
+  if (colStyle->mColumnWidth.IsLength()) {
+    colISize = ClampUsedColumnWidth(colStyle->mColumnWidth.AsLength());
   } else if (mFrames.FirstChild() && !StyleDisplay()->IsContainSize()) {
     // We want to ignore this in the case that we're size contained
     // because our children should not contribute to our
