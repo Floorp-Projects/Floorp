@@ -297,6 +297,7 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "nsHTMLTags.h"
+#include "MobileViewportManager.h"
 #include "NodeUbiReporting.h"
 #include "nsICookieService.h"
 #include "mozilla/net/ChannelEventQueue.h"

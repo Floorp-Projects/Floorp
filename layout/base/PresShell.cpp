@@ -10471,6 +10471,10 @@ nsresult PresShell::SetIsActive(bool aIsActive) {
   return rv;
 }
 
+RefPtr<MobileViewportManager> PresShell::GetMobileViewportManager() const {
+  return mMobileViewportManager;
+}
+
 void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
   // Determine if we require a MobileViewportManager. This logic is
   // equivalent to ShouldHandleMetaViewport, which will check gfxPrefs if
