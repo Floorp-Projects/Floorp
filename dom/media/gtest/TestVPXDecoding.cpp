@@ -69,7 +69,8 @@ static const TestFileData testFiles[] = {
     {"test_case_1224363.vp8.ivf", VPX_CODEC_CORRUPT_FRAME},
     {"test_case_1224369.vp8.ivf", VPX_CODEC_CORRUPT_FRAME}};
 
-TEST(libvpx, test_cases) {
+TEST(libvpx, test_cases)
+{
   for (size_t test = 0; test < ArrayLength(testFiles); ++test) {
     nsTArray<uint8_t> data;
     ReadVPXFile(testFiles[test].mFilename, data);

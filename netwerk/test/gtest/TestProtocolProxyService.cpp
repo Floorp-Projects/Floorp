@@ -12,7 +12,8 @@
 namespace mozilla {
 namespace net {
 
-TEST(TestProtocolProxyService, LoadHostFilters) {
+TEST(TestProtocolProxyService, LoadHostFilters)
+{
   nsCOMPtr<nsIProtocolProxyService2> ps =
       do_GetService(NS_PROTOCOLPROXYSERVICE_CID);
   ASSERT_TRUE(ps);

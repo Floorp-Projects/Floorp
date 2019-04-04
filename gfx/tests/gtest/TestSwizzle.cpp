@@ -11,7 +11,8 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-TEST(Moz2D, PremultiplyData) {
+TEST(Moz2D, PremultiplyData)
+{
   const uint8_t in_bgra[5 * 4] = {
       255, 255, 0,   255,  // verify 255 alpha leaves RGB unchanged
       0,   0,   255, 255,
@@ -44,7 +45,8 @@ TEST(Moz2D, PremultiplyData) {
   EXPECT_TRUE(ArrayEqual(out, check_argb));
 }
 
-TEST(Moz2D, UnpremultiplyData) {
+TEST(Moz2D, UnpremultiplyData)
+{
   const uint8_t in_bgra[5 * 4] = {
       255, 255, 0,   255,              // verify 255 alpha leaves RGB unchanged
       0,   0,   255, 255, 0, 0, 0, 0,  // verify 0 alpha leaves RGB at 0
@@ -77,7 +79,8 @@ TEST(Moz2D, UnpremultiplyData) {
   EXPECT_TRUE(ArrayEqual(out, check_argb));
 }
 
-TEST(Moz2D, SwizzleData) {
+TEST(Moz2D, SwizzleData)
+{
   const uint8_t in_bgra[5 * 4] = {
       253, 254, 0, 255, 0, 0, 255, 255, 0, 0, 0, 0, 1, 2, 3, 64, 127, 0, 9, 128,
 

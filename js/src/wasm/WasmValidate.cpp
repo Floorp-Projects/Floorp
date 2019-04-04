@@ -1975,7 +1975,9 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       }
       break;
     }
-    default: { return d.fail("unexpected initializer expression"); }
+    default: {
+      return d.fail("unexpected initializer expression");
+    }
   }
 
   if (expected != init->type()) {

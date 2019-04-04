@@ -41,7 +41,8 @@ class nsRunner final : public nsIRunnable {
 
 NS_IMPL_ISUPPORTS(nsRunner, nsIRunnable)
 
-TEST(Threads, Main) {
+TEST(Threads, Main)
+{
   nsresult rv;
 
   nsCOMPtr<nsIRunnable> event = new nsRunner(0);
@@ -95,7 +96,8 @@ int32_t nsStressRunner::gNum = 0;
 
 NS_IMPL_ISUPPORTS(nsStressRunner, nsIRunnable)
 
-TEST(Threads, Stress) {
+TEST(Threads, Stress)
+{
   const int loops = 1000;
   const int threads = 50;
 
@@ -205,7 +207,8 @@ class SameThreadSentinel : public nsIRunnable {
 
 NS_IMPL_ISUPPORTS(SameThreadSentinel, nsIRunnable)
 
-TEST(Threads, AsyncShutdown) {
+TEST(Threads, AsyncShutdown)
+{
   gAsyncShutdownReadyMonitor = new mozilla::Monitor("gAsyncShutdownReady");
   gBeginAsyncShutdownMonitor = new mozilla::Monitor("gBeginAsyncShutdown");
 
@@ -236,7 +239,8 @@ static void threadProc(void* arg) {
   EXPECT_EQ(PR_JOINABLE_THREAD, PR_GetThreadState(PR_GetCurrentThread()));
 }
 
-TEST(Threads, StressNSPR) {
+TEST(Threads, StressNSPR)
+{
   const int loops = 1000;
   const int threads = 50;
 

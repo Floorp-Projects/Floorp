@@ -728,7 +728,9 @@ already_AddRefed<TextureHost> CreateTextureHostD3D11(
           aFlags, aDesc.get_SurfaceDescriptorDXGIYCbCr());
       break;
     }
-    default: { MOZ_ASSERT_UNREACHABLE("Unsupported SurfaceDescriptor type"); }
+    default: {
+      MOZ_ASSERT_UNREACHABLE("Unsupported SurfaceDescriptor type");
+    }
   }
   return result.forget();
 }
@@ -1044,7 +1046,9 @@ void DXGITextureHostD3D11::PushResourceUpdates(
       (aResources.*method)(aImageKeys[1], descriptor1, aExtID, bufferType, 1);
       break;
     }
-    default: { MOZ_ASSERT_UNREACHABLE("unexpected to be called"); }
+    default: {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    }
   }
 }
 
@@ -1079,7 +1083,9 @@ void DXGITextureHostD3D11::PushDisplayItems(
                              aFilter);
       break;
     }
-    default: { MOZ_ASSERT_UNREACHABLE("unexpected to be called"); }
+    default: {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    }
   }
 }
 

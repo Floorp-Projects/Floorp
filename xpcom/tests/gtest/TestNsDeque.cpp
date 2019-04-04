@@ -59,7 +59,8 @@ class ForEachAdder : public nsDequeFunctor {
 
 using namespace TestNsDeque;
 
-TEST(NsDeque, OriginalTest) {
+TEST(NsDeque, OriginalTest)
+{
   const size_t size = 200;
   int ints[size];
   size_t i = 0;
@@ -136,7 +137,8 @@ TEST(NsDeque, OriginalTest) {
   EXPECT_EQ(0u, theDeque.GetSize()) << "Deque should finish empty.";
 }
 
-TEST(NsDeque, OriginalFlaw) {
+TEST(NsDeque, OriginalFlaw)
+{
   int ints[200];
   int i = 0;
   int temp;
@@ -172,7 +174,8 @@ TEST(NsDeque, OriginalFlaw) {
   }
 }
 
-TEST(NsDeque, TestObjectAt) {
+TEST(NsDeque, TestObjectAt)
+{
   nsDeque d;
   const int count = 10;
   int ints[count];
@@ -194,7 +197,8 @@ TEST(NsDeque, TestObjectAt) {
   }
 }
 
-TEST(NsDeque, TestPushFront) {
+TEST(NsDeque, TestPushFront)
+{
   // PushFront has some interesting corner cases, primarily we're interested in
   // whether:
   // - wrapping around works properly
@@ -248,7 +252,8 @@ static void CheckIfQueueEmpty(nsDeque& d) {
       << "Invalid operation should return nullptr";
 }
 
-TEST(NsDeque, TestEmpty) {
+TEST(NsDeque, TestEmpty)
+{
   // Make sure nsDeque gives sane results if it's empty.
   nsDeque d;
   size_t numberOfEntries = 8;
@@ -270,7 +275,8 @@ TEST(NsDeque, TestEmpty) {
   CheckIfQueueEmpty(d);
 }
 
-TEST(NsDeque, TestEraseMethod) {
+TEST(NsDeque, TestEraseMethod)
+{
   nsDeque d;
   const size_t numberOfEntries = 8;
 
@@ -286,7 +292,8 @@ TEST(NsDeque, TestEraseMethod) {
   CheckIfQueueEmpty(d);
 }
 
-TEST(NsDeque, TestEraseShouldCallDeallocator) {
+TEST(NsDeque, TestEraseShouldCallDeallocator)
+{
   nsDeque d(new Deallocator());
   const size_t NumTestValues = 8;
 
@@ -308,7 +315,8 @@ TEST(NsDeque, TestEraseShouldCallDeallocator) {
   }
 }
 
-TEST(NsDeque, TestForEach) {
+TEST(NsDeque, TestForEach)
+{
   nsDeque d(new Deallocator());
   const size_t NumTestValues = 8;
   int sum = 0;
@@ -328,7 +336,8 @@ TEST(NsDeque, TestForEach) {
   d.Erase();
 }
 
-TEST(NsDeque, TestConstRangeFor) {
+TEST(NsDeque, TestConstRangeFor)
+{
   nsDeque d(new Deallocator());
 
   const size_t NumTestValues = 3;
@@ -350,7 +359,8 @@ TEST(NsDeque, TestConstRangeFor) {
   EXPECT_EQ(1 + 2 + 3, sum) << "Const-range-for should iterate over values";
 }
 
-TEST(NsDeque, TestRangeFor) {
+TEST(NsDeque, TestRangeFor)
+{
   const size_t NumTestValues = 3;
   struct Test {
     size_t runAfterLoopCount;

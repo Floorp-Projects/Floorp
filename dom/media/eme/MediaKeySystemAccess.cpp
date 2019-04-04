@@ -793,7 +793,9 @@ static bool CheckRequirement(const MediaKeysRequirement aRequirement,
       }
       break;
     }
-    default: { return false; }
+    default: {
+      return false;
+    }
   }
 
   // Set the requirement member of accumulated configuration to equal
