@@ -21,7 +21,7 @@ namespace dom {
 
 LSDatabaseChild::LSDatabaseChild(LSDatabase* aDatabase) : mDatabase(aDatabase) {
   AssertIsOnOwningThread();
-  MOZ_DIAGNOSTIC_ASSERT(aDatabase);
+  MOZ_ASSERT(aDatabase);
 
   MOZ_COUNT_CTOR(LSDatabaseChild);
 }
@@ -78,7 +78,7 @@ PBackgroundLSSnapshotChild* LSDatabaseChild::AllocPBackgroundLSSnapshotChild(
 
 bool LSDatabaseChild::DeallocPBackgroundLSSnapshotChild(
     PBackgroundLSSnapshotChild* aActor) {
-  MOZ_DIAGNOSTIC_ASSERT(aActor);
+  MOZ_ASSERT(aActor);
 
   delete aActor;
   return true;
@@ -90,7 +90,7 @@ bool LSDatabaseChild::DeallocPBackgroundLSSnapshotChild(
 
 LSObserverChild::LSObserverChild(LSObserver* aObserver) : mObserver(aObserver) {
   AssertIsOnOwningThread();
-  MOZ_DIAGNOSTIC_ASSERT(aObserver);
+  MOZ_ASSERT(aObserver);
 
   MOZ_COUNT_CTOR(LSObserverChild);
 }
@@ -179,7 +179,7 @@ void LSRequestChild::ActorDestroy(ActorDestroyReason aWhy) {
 mozilla::ipc::IPCResult LSRequestChild::Recv__delete__(
     const LSRequestResponse& aResponse) {
   AssertIsOnOwningThread();
-  MOZ_DIAGNOSTIC_ASSERT(mCallback);
+  MOZ_ASSERT(mCallback);
 
   mCallback->OnResponse(aResponse);
 
@@ -204,7 +204,7 @@ LSSimpleRequestChild::LSSimpleRequestChild(
     LSSimpleRequestChildCallback* aCallback)
     : mCallback(aCallback) {
   AssertIsOnOwningThread();
-  MOZ_DIAGNOSTIC_ASSERT(aCallback);
+  MOZ_ASSERT(aCallback);
 
   MOZ_COUNT_CTOR(LSSimpleRequestChild);
 }
@@ -234,7 +234,7 @@ mozilla::ipc::IPCResult LSSimpleRequestChild::Recv__delete__(
 
 LSSnapshotChild::LSSnapshotChild(LSSnapshot* aSnapshot) : mSnapshot(aSnapshot) {
   AssertIsOnOwningThread();
-  MOZ_DIAGNOSTIC_ASSERT(aSnapshot);
+  MOZ_ASSERT(aSnapshot);
 
   MOZ_COUNT_CTOR(LSSnapshotChild);
 }
