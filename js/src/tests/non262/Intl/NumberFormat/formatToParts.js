@@ -248,13 +248,15 @@ var arPercentFormatter =
   new Intl.NumberFormat("ar-IQ", arPercentOptions);
 
 assertParts(arPercentFormatter, -135.32,
-            [MinusSign("\u{061C}-"),
+            [Literal("\u{061C}"),
+             MinusSign("-"),
              Integer("١٣"),
              Group("٬"),
              Integer("٥٣٢"),
              Decimal("٫"),
              Fraction("٠٠"),
-             PercentSign("٪\u{061C}")]);
+             PercentSign("٪"),
+             Literal("\u{061C}")]);
 
 // Decimals.
 
