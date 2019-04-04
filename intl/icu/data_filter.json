@@ -1,0 +1,44 @@
+{
+    "featureFilters": {
+        "brkitr_dictionaries": {
+            "filterType": "exclude"
+        },
+        "brkitr_rules": {
+            "filterType": "exclude"
+        },
+        "brkitr_tree": {
+            "filterType": "exclude"
+        },
+        "conversion_mappings": {
+            "whitelist": [
+                "ibm-37_P100-1995",
+                "ibm-1047_P100-1995"
+            ]
+        },
+        "lang_tree": {
+            "filterType": "exclude"
+        },
+        "rbnf_tree": {
+            "filterType": "exclude"
+        },
+        "region_tree": {
+            "filterType": "exclude"
+        },
+        "translit": {
+            "filterType": "exclude"
+        },
+        "unit_tree": {
+            "filterType": "exclude"
+        }
+    },
+    "resourceFilters": [
+        {
+            "categories": [
+                "zone_tree"
+            ],
+            "rules": [
+                "-/zoneStrings/*/ec"
+            ]
+        }
+    ]
+}
