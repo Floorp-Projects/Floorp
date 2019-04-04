@@ -30,6 +30,68 @@ namespace mozilla {
 namespace image {
 
 //////////////////////////////////////////////////////////////////////////////
+// ColorManagementFilter
+//////////////////////////////////////////////////////////////////////////////
+
+template <typename Next>
+class ColorManagementFilter;
+
+/**
+ * A configuration struct for ColorManagementFilter.
+ */
+struct ColorManagementConfig {
+  template <typename Next>
+  using Filter = ColorManagementFilter<Next>;
+  qcms_transform* mTransform;
+};
+
+/**
+ * ColorManagementFilter performs color transforms with qcms on rows written
+ * to it.
+ *
+ * The 'Next' template parameter specifies the next filter in the chain.
+ */
+template <typename Next>
+class ColorManagementFilter final : public SurfaceFilter {
+ public:
+  ColorManagementFilter() : mTransform(nullptr) {}
+
+  template <typename... Rest>
+  nsresult Configure(const ColorManagementConfig& aConfig,
+                     const Rest&... aRest) {
+    nsresult rv = mNext.Configure(aRest...);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    if (!aConfig.mTransform) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    mTransform = aConfig.mTransform;
+    ConfigureFilter(mNext.InputSize(), sizeof(uint32_t));
+    return NS_OK;
+  }
+
+  Maybe<SurfaceInvalidRect> TakeInvalidRect() override {
+    return mNext.TakeInvalidRect();
+  }
+
+ protected:
+  uint8_t* DoResetToFirstRow() override { return mNext.ResetToFirstRow(); }
+
+  uint8_t* DoAdvanceRow() override {
+    uint8_t* rowPtr = mNext.CurrentRowPointer();
+    qcms_transform_data(mTransform, rowPtr, rowPtr, mNext.InputSize().width);
+    return mNext.AdvanceRow();
+  }
+
+  Next mNext;  /// The next SurfaceFilter in the chain.
+
+  qcms_transform* mTransform;
+};
+
+//////////////////////////////////////////////////////////////////////////////
 // DeinterlacingFilter
 //////////////////////////////////////////////////////////////////////////////
 
