@@ -288,16 +288,19 @@ class ExtensionStorageLocalIDB extends IndexedDB {
 
     const objectStore = this.objectStore(IDB_DATA_STORENAME, "readwrite");
 
+    let promises = [];
+
     for (let key of keys) {
-      let oldValue = await objectStore.get(key);
-      changes[key] = {oldValue};
-
-      if (oldValue) {
-        changed = true;
-      }
-
-      await objectStore.delete(key);
+      promises.push(objectStore.getKey(key).then(async foundKey => {
+        if (foundKey === key) {
+          changed = true;
+          changes[key] = {oldValue: await objectStore.get(key)};
+          return objectStore.delete(key);
+        }
+      }));
     }
+
+    await Promise.all(promises);
 
     return changed ? changes : null;
   }
