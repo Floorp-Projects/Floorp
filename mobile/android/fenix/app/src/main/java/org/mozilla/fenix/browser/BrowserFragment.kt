@@ -27,6 +27,7 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.browser.session.Session
 import mozilla.components.browser.toolbar.behavior.BrowserToolbarBottomBehavior
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
 import mozilla.components.feature.contextmenu.ContextMenuFeature
@@ -69,6 +70,7 @@ import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.utils.Settings
 import org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragment
 
+@SuppressWarnings("TooManyFunctions", "LargeClass")
 class BrowserFragment : Fragment(), BackHandler {
     private lateinit var toolbarComponent: ToolbarComponent
 
@@ -257,15 +259,13 @@ class BrowserFragment : Fragment(), BackHandler {
             )
         }
         toolbarComponent.getView().setOnSiteSecurityClickedListener {
-            sessionId?.run {
-                val session = requireNotNull(requireContext().components.core.sessionManager.findSessionById(this))
-                val quickSettingsSheet = QuickSettingsSheetDialogFragment.newInstance(
-                    url = session.url,
-                    isSecured = session.securityInfo.secure,
-                    isSiteInExceptionList = false
-                )
-                quickSettingsSheet.show(requireFragmentManager(), QuickSettingsSheetDialogFragment.FRAGMENT_TAG)
-            }
+            val session = getSessionByIdOrUseSelectedSession()
+            val quickSettingsSheet = QuickSettingsSheetDialogFragment.newInstance(
+                url = session.url,
+                isSecured = session.securityInfo.secure,
+                isSiteInExceptionList = false
+            )
+            quickSettingsSheet.show(requireFragmentManager(), QuickSettingsSheetDialogFragment.FRAGMENT_TAG)
         }
     }
 
@@ -452,6 +452,14 @@ class BrowserFragment : Fragment(), BackHandler {
         }
         sitePermissionsFeature.withFeature {
             it.sitePermissionsRules = rules
+        }
+    }
+
+    private fun getSessionByIdOrUseSelectedSession(): Session {
+        return if (sessionId != null) {
+            requireNotNull(requireContext().components.core.sessionManager.findSessionById(requireNotNull(sessionId)))
+        } else {
+            requireContext().components.core.sessionManager.selectedSessionOrThrow
         }
     }
 
