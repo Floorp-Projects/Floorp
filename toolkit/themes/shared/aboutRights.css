@@ -10,6 +10,6 @@
   padding-inline-end: 320px;
 }
 
-body[dir="rtl"] .rights-header{
-   background-position: left center;
+.rights-header:dir(rtl) {
+  background-position: left center;
 }
