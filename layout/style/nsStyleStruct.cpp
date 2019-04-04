@@ -405,7 +405,7 @@ nsChangeHint nsStyleBorder::CalcDifference(
 nsStyleOutline::nsStyleOutline(const Document& aDocument)
     : mOutlineRadius(ZeroBorderRadius()),
       mOutlineWidth(kMediumBorderWidth),
-      mOutlineOffset(0),
+      mOutlineOffset({0.0f}),
       mOutlineColor(StyleColor::CurrentColor()),
       mOutlineStyle(StyleOutlineStyle::BorderStyle(StyleBorderStyle::None)),
       mActualOutlineWidth(0),
