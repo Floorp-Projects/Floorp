@@ -291,6 +291,10 @@ bool StartMacSandbox(MacSandboxInfo const &aInfo, std::string &aErrorMessage) {
     params.push_back(aInfo.shouldLog ? "TRUE" : "FALSE");
     params.push_back("APP_PATH");
     params.push_back(aInfo.appPath.c_str());
+    if (!aInfo.crashServerPort.empty()) {
+      params.push_back("CRASH_PORT");
+      params.push_back(aInfo.crashServerPort.c_str());
+    }
   } else if (aInfo.type == MacSandboxType_Plugin) {
     profile = const_cast<char *>(SandboxPolicyGMP);
     params.push_back("SHOULD_LOG");
