@@ -30,9 +30,7 @@ nsWebPDecoder::nsWebPDecoder(RasterImage* aImage)
       mLength(0),
       mIteratorComplete(false),
       mNeedDemuxer(true),
-      mGotColorProfile(false),
-      mInProfile(nullptr),
-      mTransform(nullptr) {
+      mGotColorProfile(false) {
   MOZ_LOG(sWebPLog, LogLevel::Debug,
           ("[this=%p] nsWebPDecoder::nsWebPDecoder", this));
 }
@@ -43,13 +41,6 @@ nsWebPDecoder::~nsWebPDecoder() {
   if (mDecoder) {
     WebPIDelete(mDecoder);
     WebPFreeDecBuffer(&mBuffer);
-  }
-  if (mInProfile) {
-    // mTransform belongs to us only if mInProfile is non-null
-    if (mTransform) {
-      qcms_transform_release(mTransform);
-    }
-    qcms_profile_release(mInProfile);
   }
 }
 
