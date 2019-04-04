@@ -43,7 +43,7 @@ static bool ToStringGuts(XPCCallContext& ccx) {
   XPCWrappedNative* wrapper = ccx.GetWrapper();
 
   if (wrapper) {
-    sz.reset(wrapper->ToString(ccx.GetTearOff()));
+    sz.reset(wrapper->ToString(ccx, ccx.GetTearOff()));
   } else {
     sz = JS_smprintf("[xpconnect wrapped native prototype]");
   }
@@ -349,7 +349,7 @@ static bool DefinePropertyIfFound(
           break;
         }
 
-        iface2 = XPCNativeInterface::GetNewOrUsed(name.get());
+        iface2 = XPCNativeInterface::GetNewOrUsed(ccx, name.get());
         if (!iface2) {
           break;
         }

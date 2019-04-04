@@ -1055,11 +1055,13 @@ class XPCNativeInterface final {
   NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(XPCNativeInterface,
                                           DestroyInstance(this))
 
-  static already_AddRefed<XPCNativeInterface> GetNewOrUsed(const nsIID* iid);
+  static already_AddRefed<XPCNativeInterface> GetNewOrUsed(JSContext* cx,
+                                                           const nsIID* iid);
   static already_AddRefed<XPCNativeInterface> GetNewOrUsed(
-      const nsXPTInterfaceInfo* info);
-  static already_AddRefed<XPCNativeInterface> GetNewOrUsed(const char* name);
-  static already_AddRefed<XPCNativeInterface> GetISupports();
+      JSContext* cx, const nsXPTInterfaceInfo* info);
+  static already_AddRefed<XPCNativeInterface> GetNewOrUsed(JSContext* cx,
+                                                           const char* name);
+  static already_AddRefed<XPCNativeInterface> GetISupports(JSContext* cx);
 
   inline const nsXPTInterfaceInfo* GetInterfaceInfo() const { return mInfo; }
   inline jsid GetName() const { return mName; }
@@ -1083,7 +1085,7 @@ class XPCNativeInterface final {
 
  protected:
   static already_AddRefed<XPCNativeInterface> NewInstance(
-      const nsXPTInterfaceInfo* aInfo);
+      JSContext* cx, const nsXPTInterfaceInfo* aInfo);
 
   XPCNativeInterface() = delete;
   XPCNativeInterface(const nsXPTInterfaceInfo* aInfo, jsid aName)
@@ -1113,14 +1115,16 @@ class MOZ_STACK_CLASS XPCNativeSetKey final {
  public:
   // This represents an existing set |baseSet|.
   explicit XPCNativeSetKey(XPCNativeSet* baseSet)
-      : mBaseSet(baseSet), mAddition(nullptr) {
+      : mCx(nullptr), mBaseSet(baseSet), mAddition(nullptr) {
     MOZ_ASSERT(baseSet);
   }
 
   // This represents a new set containing only nsISupports and
-  // |addition|.
-  explicit XPCNativeSetKey(XPCNativeInterface* addition)
-      : mBaseSet(nullptr), mAddition(addition) {
+  // |addition|.  This needs a JSContext because it may need to
+  // construct some data structures that need one to construct them.
+  explicit XPCNativeSetKey(JSContext* cx, XPCNativeInterface* addition)
+      : mCx(cx), mBaseSet(nullptr), mAddition(addition) {
+    MOZ_ASSERT(cx);
     MOZ_ASSERT(addition);
   }
 
@@ -1138,6 +1142,7 @@ class MOZ_STACK_CLASS XPCNativeSetKey final {
   // Allow shallow copy
 
  private:
+  JSContext* mCx;
   RefPtr<XPCNativeSet> mBaseSet;
   RefPtr<XPCNativeInterface> mAddition;
 };
@@ -1149,9 +1154,12 @@ class XPCNativeSet final {
  public:
   NS_INLINE_DECL_REFCOUNTING_WITH_DESTROY(XPCNativeSet, DestroyInstance(this))
 
-  static already_AddRefed<XPCNativeSet> GetNewOrUsed(const nsIID* iid);
-  static already_AddRefed<XPCNativeSet> GetNewOrUsed(nsIClassInfo* classInfo);
-  static already_AddRefed<XPCNativeSet> GetNewOrUsed(XPCNativeSetKey* key);
+  static already_AddRefed<XPCNativeSet> GetNewOrUsed(JSContext* cx,
+                                                     const nsIID* iid);
+  static already_AddRefed<XPCNativeSet> GetNewOrUsed(JSContext* cx,
+                                                     nsIClassInfo* classInfo);
+  static already_AddRefed<XPCNativeSet> GetNewOrUsed(JSContext* cx,
+                                                     XPCNativeSetKey* key);
 
   // This generates a union set.
   //
@@ -1161,7 +1169,7 @@ class XPCNativeSet final {
   // |firstSet|, we return |secondSet| without worrying about whether the
   // ordering might differ from |firstSet|.
   static already_AddRefed<XPCNativeSet> GetNewOrUsed(
-      XPCNativeSet* firstSet, XPCNativeSet* secondSet,
+      JSContext* cx, XPCNativeSet* firstSet, XPCNativeSet* secondSet,
       bool preserveFirstSetOrder);
 
   static void ClearCacheEntryForClassInfo(nsIClassInfo* classInfo);
@@ -1200,7 +1208,7 @@ class XPCNativeSet final {
 
  protected:
   static already_AddRefed<XPCNativeSet> NewInstance(
-      nsTArray<RefPtr<XPCNativeInterface>>&& array);
+      JSContext* cx, nsTArray<RefPtr<XPCNativeInterface>>&& array);
   static already_AddRefed<XPCNativeSet> NewInstanceMutate(XPCNativeSetKey* key);
 
   XPCNativeSet() : mMemberCount(0), mInterfaceCount(0) {}
@@ -1488,7 +1496,7 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
   XPCWrappedNativeTearOff* FindTearOff(XPCNativeInterface* aInterface,
                                        bool needJSObject = false,
                                        nsresult* pError = nullptr);
-  XPCWrappedNativeTearOff* FindTearOff(const nsIID& iid);
+  XPCWrappedNativeTearOff* FindTearOff(JSContext* cx, const nsIID& iid);
 
   void Mark() const {}
 
@@ -1521,7 +1529,7 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
 
   // Returns a string that should be freed with js_free, or nullptr on
   // failure.
-  char* ToString(XPCWrappedNativeTearOff* to = nullptr) const;
+  char* ToString(JSContext* cx, XPCWrappedNativeTearOff* to = nullptr) const;
 
   static nsIXPCScriptable* GatherProtoScriptable(nsIClassInfo* classInfo);
 
@@ -1555,7 +1563,7 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
   bool Init(nsIXPCScriptable* scriptable);
   bool FinishInit();
 
-  bool ExtendSet(XPCNativeInterface* aInterface);
+  bool ExtendSet(JSContext* aCx, XPCNativeInterface* aInterface);
 
   nsresult InitTearOff(XPCWrappedNativeTearOff* aTearOff,
                        XPCNativeInterface* aInterface, bool needJSObject);
