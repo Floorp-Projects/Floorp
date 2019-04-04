@@ -48,7 +48,7 @@ fuzzy-if(OSX==1010,0-9,0-1) fuzzy-if(OSX&&skiaContent&&!webrender,0-6,0-1) fuzzy
 == invalidation-2d.html invalidation-2-ref.html
 == invalidation-2e.html invalidation-2-ref.html
 == invalidation-2f.html invalidation-2-ref.html
-fuzzy(0-7,0-2) fuzzy-if(OSX,0-1,0-1) fails-if(isDebugBuild&&!browserIsRemote) fails-if(Android) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) needs-focus == rtl-selection-with-decoration.html rtl-selection-with-decoration-ref.html # Bug 1392106
-fails-if(isDebugBuild&&!browserIsRemote) fails-if(Android) needs-focus == semitransparent-decoration-line.html semitransparent-decoration-line-ref.html
-fuzzy-if(OSX,0-1,0-6) fails-if(isDebugBuild&&!browserIsRemote) fails-if(Android) needs-focus == writing-mode.html writing-mode-ref.html
+fuzzy(0-7,0-2) needs-focus == rtl-selection-with-decoration.html rtl-selection-with-decoration-ref.html
+needs-focus == semitransparent-decoration-line.html semitransparent-decoration-line-ref.html
+fuzzy-if(OSX,0-1,0-6) fuzzy-if(Android,0-188,0-39) needs-focus == writing-mode.html writing-mode-ref.html
 needs-focus == 1478604.html 1478604-ref.html
