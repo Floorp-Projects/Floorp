@@ -18,6 +18,10 @@ job-defaults:
                 default:
                     - marionette/prod_config.py
                     - remove_executables.py
+    run-on-projects:
+        by-test-platform:
+            windows10-aarch64/opt: ['try', 'mozilla-central']
+            default: built-projects
 
 marionette:
     description: "Marionette unittest run"

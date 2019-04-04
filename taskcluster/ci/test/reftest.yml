@@ -10,6 +10,7 @@ job-defaults:
     run-on-projects:
         by-test-platform:
             android-em-4.3-arm7-api-16/opt: ['try']
+            windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
     mozharness:
         script:
