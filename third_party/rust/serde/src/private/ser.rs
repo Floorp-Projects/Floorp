@@ -1,11 +1,3 @@
-// Copyright 2017 Serde Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use lib::*;
 
 use ser::{self, Impossible, Serialize, SerializeMap, SerializeStruct, Serializer};
@@ -409,10 +401,9 @@ mod content {
         }
 
         fn end(mut self) -> Result<M::Ok, M::Error> {
-            try!(
-                self.map
-                    .serialize_value(&Content::TupleStruct(self.name, self.fields))
-            );
+            try!(self
+                .map
+                .serialize_value(&Content::TupleStruct(self.name, self.fields)));
             self.map.end()
         }
     }
@@ -454,10 +445,9 @@ mod content {
         }
 
         fn end(mut self) -> Result<M::Ok, M::Error> {
-            try!(
-                self.map
-                    .serialize_value(&Content::Struct(self.name, self.fields))
-            );
+            try!(self
+                .map
+                .serialize_value(&Content::Struct(self.name, self.fields)));
             self.map.end()
         }
     }
@@ -1328,10 +1318,9 @@ where
     }
 
     fn end(self) -> Result<(), Self::Error> {
-        try!(
-            self.map
-                .serialize_value(&Content::Struct(self.name, self.fields))
-        );
+        try!(self
+            .map
+            .serialize_value(&Content::Struct(self.name, self.fields)));
         Ok(())
     }
 }

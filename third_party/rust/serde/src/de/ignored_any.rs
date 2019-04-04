@@ -1,11 +1,3 @@
-// Copyright 2017 Serde Developers
-//
-// Licensed under the Apache License, Version 2.0 <LICENSE-APACHE or
-// http://www.apache.org/licenses/LICENSE-2.0> or the MIT license
-// <LICENSE-MIT or http://opensource.org/licenses/MIT>, at your
-// option. This file may not be copied, modified, or distributed
-// except according to those terms.
-
 use lib::*;
 
 use de::{Deserialize, Deserializer, Error, MapAccess, SeqAccess, Visitor};
@@ -16,7 +8,7 @@ use de::{Deserialize, Deserializer, Error, MapAccess, SeqAccess, Visitor};
 /// any type, except that it does not store any information about the data that
 /// gets deserialized.
 ///
-/// ```rust
+/// ```edition2018
 /// use std::fmt;
 /// use std::marker::PhantomData;
 ///
@@ -29,7 +21,7 @@ use de::{Deserialize, Deserializer, Error, MapAccess, SeqAccess, Visitor};
 /// ///
 /// /// For example to deserialize only the element at index 3:
 /// ///
-/// /// ```rust
+/// /// ```
 /// /// NthElement::new(3).deserialize(deserializer)
 /// /// ```
 /// pub struct NthElement<T> {
