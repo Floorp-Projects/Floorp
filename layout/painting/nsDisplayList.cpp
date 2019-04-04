@@ -8746,11 +8746,10 @@ void nsDisplayTransform::WriteDebugInfo(std::stringstream& aStream) {
 nsDisplayPerspective::nsDisplayPerspective(nsDisplayListBuilder* aBuilder,
                                            nsIFrame* aFrame,
                                            nsDisplayList* aList)
-    : nsDisplayHitTestInfoItem(aBuilder, aFrame),
-      mList(aBuilder, aFrame, aList, true) {
-  MOZ_ASSERT(mList.GetChildren()->Count() == 1);
-  MOZ_ASSERT(mList.GetChildren()->GetTop()->GetType() ==
-             DisplayItemType::TYPE_TRANSFORM);
+    : nsDisplayHitTestInfoItem(aBuilder, aFrame) {
+  mList.AppendToTop(aList);
+  MOZ_ASSERT(mList.Count() == 1);
+  MOZ_ASSERT(mList.GetTop()->GetType() == DisplayItemType::TYPE_TRANSFORM);
   mAnimatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(
       mFrame->GetContainingBlock(nsIFrame::SKIP_SCROLLED_FRAME));
 }
@@ -8768,7 +8767,7 @@ already_AddRefed<Layer> nsDisplayPerspective::BuildLayer(
   /*
    * ClipListToRange can remove our child after we were created.
    */
-  if (!mList.GetChildren()->GetTop()) {
+  if (!GetChildren()->GetTop()) {
     return nullptr;
   }
 
@@ -8777,7 +8776,7 @@ already_AddRefed<Layer> nsDisplayPerspective::BuildLayer(
    * frame. Append a translation to the reference frame coordinates.
    */
   nsDisplayTransform* transform =
-      static_cast<nsDisplayTransform*>(mList.GetChildren()->GetTop());
+      static_cast<nsDisplayTransform*>(GetChildren()->GetTop());
 
   Point3D newOrigin =
       Point3D(NSAppUnitsToFloatPixels(transform->ToReferenceFrame().x,
@@ -8791,8 +8790,8 @@ already_AddRefed<Layer> nsDisplayPerspective::BuildLayer(
 
   RefPtr<ContainerLayer> container =
       aManager->GetLayerBuilder()->BuildContainerLayerFor(
-          aBuilder, aManager, mFrame, this, mList.GetChildren(),
-          aContainerParameters, &perspectiveMatrix, 0);
+          aBuilder, aManager, mFrame, this, GetChildren(), aContainerParameters,
+          &perspectiveMatrix, 0);
 
   if (!container) {
     return nullptr;
@@ -8815,6 +8814,16 @@ LayerState nsDisplayPerspective::GetLayerState(
   return LAYER_ACTIVE_FORCE;
 }
 
+nsRegion nsDisplayPerspective::GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                                               bool* aSnap) const {
+  if (!GetChildren()->GetTop()) {
+    *aSnap = false;
+    return nsRegion();
+  }
+
+  return GetChildren()->GetTop()->GetOpaqueRegion(aBuilder, aSnap);
+}
+
 bool nsDisplayPerspective::CreateWebRenderCommands(
     mozilla::wr::DisplayListBuilder& aBuilder,
     mozilla::wr::IpcResourceUpdateQueue& aResources,
@@ -8829,7 +8838,7 @@ bool nsDisplayPerspective::CreateWebRenderCommands(
   /*
    * ClipListToRange can remove our child after we were created.
    */
-  if (!mList.GetChildren()->GetTop()) {
+  if (!GetChildren()->GetTop()) {
     return false;
   }
 
@@ -8838,7 +8847,7 @@ bool nsDisplayPerspective::CreateWebRenderCommands(
    * frame. Append a translation to the reference frame coordinates.
    */
   nsDisplayTransform* transform =
-      static_cast<nsDisplayTransform*>(mList.GetChildren()->GetTop());
+      static_cast<nsDisplayTransform*>(GetChildren()->GetTop());
 
   Point3D newOrigin =
       Point3D(NSAppUnitsToFloatPixels(transform->ToReferenceFrame().x,
@@ -8894,8 +8903,10 @@ bool nsDisplayPerspective::CreateWebRenderCommands(
   StackingContextHelper sc(aSc, GetActiveScrolledRoot(), mFrame, this, aBuilder,
                            params);
 
-  return mList.CreateWebRenderCommands(aBuilder, aResources, sc, aManager,
-                                       aDisplayListBuilder);
+  aManager->CommandBuilder().CreateWebRenderCommandsFromDisplayList(
+      GetChildren(), this, aDisplayListBuilder, sc, aBuilder, aResources);
+
+  return true;
 }
 
 nsDisplayItemGeometry* nsCharClipDisplayItem::AllocateGeometry(
