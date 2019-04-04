@@ -94,7 +94,9 @@ CONFIG_PER_BOUNCER_PRODUCT = {
     },
     'stub-installer': {
         'name_postfix': '-stub',
-        'path_template': RELEASES_PATH_TEMPLATE,
+        # We currently have a sole win32 stub installer that is to be used
+        # in all windows platforms to toggle between full installers
+        'path_template': RELEASES_PATH_TEMPLATE.replace('{ftp_platform}', 'win32'),
         'file_names': {
             'win': '{pretty_product}%20Installer.exe',
             'win64': '{pretty_product}%20Installer.exe',
@@ -225,7 +227,7 @@ def craft_paths_per_bouncer_platform(product, bouncer_product, bouncer_platforms
             version=current_version,
             build_number=current_build_number,
             update_folder='update/' if '-mar' in bouncer_product else '',
-            ftp_platform=_craft_ftp_platform(bouncer_platform, file_name),
+            ftp_platform=FTP_PLATFORMS_PER_BOUNCER_PLATFORM[bouncer_platform],
             file=file_name,
         )
 
@@ -236,16 +238,6 @@ def craft_paths_per_bouncer_platform(product, bouncer_product, bouncer_platforms
 
 def _craft_ftp_product(product):
     return 'mobile' if product == 'fennec' else product.lower()
-
-
-def _craft_ftp_platform(bouncer_platform, file_name):
-    ftp_platform = FTP_PLATFORMS_PER_BOUNCER_PLATFORM[bouncer_platform]
-    # We currently have a sole win32 stub installer that is to be used
-    # in both windows platforms to toggle between full installers
-    if 'Installer.exe' in file_name and ftp_platform == 'win64':
-        return 'win32'
-
-    return ftp_platform
 
 
 def _craft_filename_product(product):

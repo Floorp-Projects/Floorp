@@ -32,7 +32,7 @@ jobs:
       shipping-phase: promote
       shipping-product: firefox
       treeherder:
-         platform: linux64/opt
+         platform: firefox-release/opt
          kind: test
          symbol: Rel(FVS)
          tier: 1

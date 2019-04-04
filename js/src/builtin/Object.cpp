@@ -1333,10 +1333,14 @@ static bool TryEnumerableOwnPropertiesNative(JSContext* cx, HandleObject obj,
           kind == EnumerableOwnPropertiesKind::Names) {
         value.setString(str);
       } else if (kind == EnumerableOwnPropertiesKind::Values) {
-        value.set(tobj->getElement(i));
+        if (!tobj->getElement<CanGC>(cx, i, &value)) {
+          return false;
+        }
       } else {
         key.setString(str);
-        value.set(tobj->getElement(i));
+        if (!tobj->getElement<CanGC>(cx, i, &value)) {
+          return false;
+        }
         if (!NewValuePair(cx, key, value, &value)) {
           return false;
         }
@@ -1543,7 +1547,10 @@ static bool EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args) {
     if (obj->is<NativeObject>()) {
       HandleNativeObject nobj = obj.as<NativeObject>();
       if (JSID_IS_INT(id) && nobj->containsDenseElement(JSID_TO_INT(id))) {
-        value = nobj->getDenseOrTypedArrayElement(JSID_TO_INT(id));
+        if (!nobj->getDenseOrTypedArrayElement<CanGC>(cx, JSID_TO_INT(id),
+                                                      &value)) {
+          return false;
+        }
       } else {
         shape = nobj->lookup(cx, id);
         if (!shape || !shape->enumerable()) {

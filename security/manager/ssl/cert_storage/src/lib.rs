@@ -3,7 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 extern crate base64;
+extern crate crossbeam_utils;
 extern crate lmdb;
+extern crate moz_task;
 extern crate nserror;
 extern crate nsstring;
 extern crate rkv;
@@ -13,7 +15,15 @@ extern crate time;
 extern crate xpcom;
 extern crate style;
 
+use crossbeam_utils::atomic::AtomicCell;
+use lmdb::EnvironmentFlags;
+use moz_task::{create_thread, is_main_thread, Task, TaskRunnable};
+use nserror::{
+    nsresult, NS_ERROR_FAILURE, NS_ERROR_NOT_SAME_THREAD, NS_ERROR_NO_AGGREGATION,
+    NS_ERROR_UNEXPECTED, NS_OK,
+};
 use nsstring::{nsACString, nsAString, nsCStr, nsCString, nsString};
+use rkv::{Rkv, SingleStore, StoreOptions, Value};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::ffi::{CStr, CString};
@@ -24,14 +34,13 @@ use std::os::raw::c_char;
 use std::path::PathBuf;
 use std::slice;
 use std::str;
-use std::sync::RwLock;
+use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, SystemTime};
-use style::gecko_bindings::structs::nsresult;
-use xpcom::interfaces::{nsICertStorage, nsIFile, nsIObserver, nsIPrefBranch, nsISupports};
-use xpcom::{nsIID, GetterAddrefs, RefPtr, XpCom};
-
-use lmdb::EnvironmentFlags;
-use rkv::{Rkv, SingleStore, StoreOptions, Value};
+use xpcom::interfaces::{
+    nsICertStorage, nsICertStorageCallback, nsIFile, nsIObserver, nsIPrefBranch, nsISupports,
+    nsIThread,
+};
+use xpcom::{nsIID, GetterAddrefs, RefPtr, ThreadBoundRefPtr, XpCom};
 
 const PREFIX_REV_IS: &str = "is";
 const PREFIX_REV_SPK: &str = "spk";
@@ -465,7 +474,8 @@ fn do_construct_cert_storage(
     let path_buf = get_profile_path()?;
 
     let cert_storage = CertStorage::allocate(InitCertStorage {
-        security_state: RwLock::new(SecurityState::new(path_buf)?),
+        security_state: Arc::new(RwLock::new(SecurityState::new(path_buf)?)),
+        thread: Mutex::new(create_thread("cert_storage")?),
     });
 
     unsafe {
@@ -506,14 +516,96 @@ fn read_int_pref(name: &str) -> Result<i32, SecurityStateError> {
     // supported. No matter, we can just check for failure and ignore
     // any NS_ERROR_UNEXPECTED result.
     let res = unsafe { (*prefs).GetIntPref((&pref_name).as_ptr(), (&mut pref_value) as *mut i32) };
-    if !res.succeeded() {
-        match res.0 {
-            r if r == nsresult::NS_ERROR_UNEXPECTED as u32 => (),
-            _ => return Err(SecurityStateError::from("could not read pref")),
-        }
+    match res {
+        NS_OK => Ok(pref_value),
+        NS_ERROR_UNEXPECTED => Ok(pref_value),
+        _ => Err(SecurityStateError::from("could not read pref")),
     }
-    Ok(pref_value)
 }
+
+// This is a helper for defining a task that will perform a specific action on a background thread.
+// Its arguments are the name of the task and the name of the function in SecurityState to call.
+macro_rules! security_state_task {
+    ($task_name:ident, $security_state_function_name:ident) => {
+        struct $task_name {
+            callback: AtomicCell<Option<ThreadBoundRefPtr<nsICertStorageCallback>>>,
+            security_state: Arc<RwLock<SecurityState>>,
+            argument_a: Vec<u8>,
+            argument_b: Vec<u8>,
+            state: i16,
+            result: AtomicCell<Option<nserror::nsresult>>,
+        }
+        impl $task_name {
+            fn new(
+                callback: &nsICertStorageCallback,
+                security_state: &Arc<RwLock<SecurityState>>,
+                argument_a: Vec<u8>,
+                argument_b: Vec<u8>,
+                state: i16,
+            ) -> $task_name {
+                $task_name {
+                    callback: AtomicCell::new(Some(ThreadBoundRefPtr::new(RefPtr::new(callback)))),
+                    security_state: Arc::clone(security_state),
+                    argument_a,
+                    argument_b,
+                    state,
+                    result: AtomicCell::new(None),
+                }
+            }
+        }
+        impl Task for $task_name {
+            fn run(&self) {
+                let mut ss = match self.security_state.write() {
+                    Ok(ss) => ss,
+                    Err(_) => {
+                        self.result.store(Some(NS_ERROR_FAILURE));
+                        return;
+                    }
+                };
+                // this is a no-op if the DB is already open
+                match ss.open_db() {
+                    Ok(()) => {}
+                    Err(_) => {
+                        self.result.store(Some(NS_ERROR_FAILURE));
+                        return;
+                    }
+                };
+                match ss.$security_state_function_name(
+                    &self.argument_a,
+                    &self.argument_b,
+                    self.state,
+                ) {
+                    Ok(_) => self.result.store(Some(NS_OK)),
+                    Err(_) => self.result.store(Some(NS_ERROR_FAILURE)),
+                };
+            }
+
+            fn done(&self) -> Result<(), nsresult> {
+                let threadbound = self.callback.swap(None).ok_or(NS_ERROR_FAILURE)?;
+                let callback = threadbound.get_ref().ok_or(NS_ERROR_FAILURE)?;
+                let nsrv = match self.result.swap(None) {
+                    Some(result) => unsafe { callback.Done(result) },
+                    None => unsafe { callback.Done(NS_ERROR_FAILURE) },
+                };
+                match nsrv {
+                    NS_OK => Ok(()),
+                    e => Err(e),
+                }
+            }
+        }
+    };
+}
+
+security_state_task!(
+    SetRevocationByIssuerAndSerialTask,
+    set_revocation_by_issuer_and_serial
+);
+security_state_task!(
+    SetRevocationBySubjectAndPubKeyTask,
+    set_revocation_by_subject_and_pub_key
+);
+security_state_task!(SetEnrollmentTask, set_enrollment);
+security_state_task!(SetWhitelistTask, set_whitelist);
 
 #[no_mangle]
 pub extern "C" fn cert_storage_constructor(
@@ -522,14 +614,14 @@ pub extern "C" fn cert_storage_constructor(
     result: *mut *mut xpcom::reexports::libc::c_void,
 ) -> nserror::nsresult {
     if !outer.is_null() {
-        return nserror::NS_ERROR_NO_AGGREGATION;
+        return NS_ERROR_NO_AGGREGATION;
     }
 
     match do_construct_cert_storage(outer, iid, result) {
-        Ok(_) => nserror::NS_OK,
+        Ok(_) => NS_OK,
         Err(_) => {
             // In future: log something so we know what went wrong?
-            nserror::NS_ERROR_FAILURE
+            NS_ERROR_FAILURE
         }
     }
 }
@@ -538,7 +630,7 @@ macro_rules! try_ns {
     ($e:expr) => {
         match $e {
             Ok(value) => value,
-            Err(_) => return nserror::NS_ERROR_FAILURE,
+            Err(_) => return NS_ERROR_FAILURE,
         }
     };
 }
@@ -547,9 +639,17 @@ macro_rules! try_ns {
 #[xpimplements(nsICertStorage, nsIObserver)]
 #[refcnt = "atomic"]
 struct InitCertStorage {
-    security_state: RwLock<SecurityState>,
+    security_state: Arc<RwLock<SecurityState>>,
+    thread: Mutex<RefPtr<nsIThread>>,
 }
 
+/// CertStorage implements the nsICertStorage interface. The actual work is done by the
+/// SecurityState. To handle any threading issues, we have an atomic-refcounted read/write lock on
+/// the one and only SecurityState. So, only one thread can use SecurityState's &mut self functions
+/// at a time, while multiple threads can use &self functions simultaneously (as long as there are
+/// no threads using an &mut self function). The Arc is to allow for the creation of background
+/// tasks that use the SecurityState on the thread owned by CertStorage. This allows us to not block
+/// the main thread.
 #[allow(non_snake_case)]
 impl CertStorage {
     unsafe fn setup_prefs(&self) -> Result<(), SecurityStateError> {
@@ -590,56 +690,83 @@ impl CertStorage {
         issuer: *const nsACString,
         serial: *const nsACString,
         state: i16,
+        callback: *const nsICertStorageCallback,
     ) -> nserror::nsresult {
-        if issuer.is_null() || serial.is_null() {
-            return nserror::NS_ERROR_FAILURE;
+        if !is_main_thread() {
+            return NS_ERROR_NOT_SAME_THREAD;
+        }
+        if issuer.is_null() || serial.is_null() || callback.is_null() {
+            return NS_ERROR_FAILURE;
         }
         let issuer_decoded = try_ns!(base64::decode(&*issuer));
         let serial_decoded = try_ns!(base64::decode(&*serial));
-        let mut ss = try_ns!(self.security_state.write());
-        try_ns!(ss.open_db()); // this is a no-op if the DB is already open
-        match ss.set_revocation_by_issuer_and_serial(&issuer_decoded, &serial_decoded, state) {
-            Ok(_) => nserror::NS_OK,
-            _ => nserror::NS_ERROR_FAILURE,
-        }
+        let task = Box::new(SetRevocationByIssuerAndSerialTask::new(
+            &*callback,
+            &self.security_state,
+            issuer_decoded,
+            serial_decoded,
+            state,
+        ));
+        let thread = try_ns!(self.thread.lock());
+        let runnable = try_ns!(TaskRunnable::new("SetRevocationByIssuerAndSerial", task));
+        try_ns!(runnable.dispatch(&*thread));
+        NS_OK
     }
 
     unsafe fn SetRevocationBySubjectAndPubKey(
         &self,
         subject: *const nsACString,
-        pub_key_base64: *const nsACString,
+        pub_key_hash: *const nsACString,
         state: i16,
+        callback: *const nsICertStorageCallback,
     ) -> nserror::nsresult {
-        if subject.is_null() || pub_key_base64.is_null() {
-            return nserror::NS_ERROR_FAILURE;
+        if !is_main_thread() {
+            return NS_ERROR_NOT_SAME_THREAD;
+        }
+        if subject.is_null() || pub_key_hash.is_null() || callback.is_null() {
+            return NS_ERROR_FAILURE;
         }
         let subject_decoded = try_ns!(base64::decode(&*subject));
-        let pub_key_decoded = try_ns!(base64::decode(&*pub_key_base64));
-        let mut ss = try_ns!(self.security_state.write());
-        try_ns!(ss.open_db()); // this is a no-op if the DB is already open
-        match ss.set_revocation_by_subject_and_pub_key(&subject_decoded, &pub_key_decoded, state) {
-            Ok(_) => nserror::NS_OK,
-            _ => nserror::NS_ERROR_FAILURE,
-        }
-    }
+        let pub_key_hash_decoded = try_ns!(base64::decode(&*pub_key_hash));
+        let task = Box::new(SetRevocationBySubjectAndPubKeyTask::new(
+            &*callback,
+            &self.security_state,
+            subject_decoded,
+            pub_key_hash_decoded,
+            state,
+        ));
+        let thread = try_ns!(self.thread.lock());
+        let runnable = try_ns!(TaskRunnable::new("SetRevocationBySubjectAndPubKey", task));
+        try_ns!(runnable.dispatch(&*thread));
+        NS_OK
+   }
 
     unsafe fn SetEnrollment(
         &self,
         issuer: *const nsACString,
         serial: *const nsACString,
         state: i16,
+        callback: *const nsICertStorageCallback,
     ) -> nserror::nsresult {
-        if issuer.is_null() || serial.is_null() {
-            return nserror::NS_ERROR_FAILURE;
+        if !is_main_thread() {
+            return NS_ERROR_NOT_SAME_THREAD;
+        }
+        if issuer.is_null() || serial.is_null() || callback.is_null() {
+            return NS_ERROR_FAILURE;
         }
         let issuer_decoded = try_ns!(base64::decode(&*issuer));
         let serial_decoded = try_ns!(base64::decode(&*serial));
-        let mut ss = try_ns!(self.security_state.write());
-        try_ns!(ss.open_db()); // this is a no-op if the DB is already open
-        match ss.set_enrollment(&issuer_decoded, &serial_decoded, state) {
-            Ok(_) => nserror::NS_OK,
-            _ => nserror::NS_ERROR_FAILURE,
-        }
+        let task = Box::new(SetEnrollmentTask::new(
+            &*callback,
+            &self.security_state,
+            issuer_decoded,
+            serial_decoded,
+            state,
+        ));
+        let thread = try_ns!(self.thread.lock());
+        let runnable = try_ns!(TaskRunnable::new("SetEnrollment", task));
+        try_ns!(runnable.dispatch(&*thread));
+        NS_OK
     }
 
     unsafe fn SetWhitelist(
@@ -647,18 +774,27 @@ impl CertStorage {
         issuer: *const nsACString,
         serial: *const nsACString,
         state: i16,
+        callback: *const nsICertStorageCallback,
     ) -> nserror::nsresult {
-        if issuer.is_null() || serial.is_null() {
-            return nserror::NS_ERROR_FAILURE;
+        if !is_main_thread() {
+            return NS_ERROR_NOT_SAME_THREAD;
+        }
+        if issuer.is_null() || serial.is_null() || callback.is_null() {
+            return NS_ERROR_FAILURE;
         }
         let issuer_decoded = try_ns!(base64::decode(&*issuer));
         let serial_decoded = try_ns!(base64::decode(&*serial));
-        let mut ss = try_ns!(self.security_state.write());
-        try_ns!(ss.open_db()); // this is a no-op if the DB is already open
-        match ss.set_whitelist(&issuer_decoded, &serial_decoded, state) {
-            Ok(_) => nserror::NS_OK,
-            _ => nserror::NS_ERROR_FAILURE,
-        }
+        let task = Box::new(SetWhitelistTask::new(
+            &*callback,
+            &self.security_state,
+            issuer_decoded,
+            serial_decoded,
+            state,
+        ));
+        let thread = try_ns!(self.thread.lock());
+        let runnable = try_ns!(TaskRunnable::new("SetWhitelist", task));
+        try_ns!(runnable.dispatch(&*thread));
+        NS_OK
     }
 
     unsafe fn GetRevocationState(
@@ -669,8 +805,10 @@ impl CertStorage {
         pub_key_base64: *const nsACString,
         state: *mut i16,
     ) -> nserror::nsresult {
+        // TODO (bug 1541212): We really want to restrict this to non-main-threads only, but we
+        // can't do so until bug 1406854 and bug 1534600 are fixed.
         if issuer.is_null() || serial.is_null() || subject.is_null() || pub_key_base64.is_null() {
-            return nserror::NS_ERROR_FAILURE;
+            return NS_ERROR_FAILURE;
         }
         // TODO (bug 1535752): If we're calling this function when we already have binary data (e.g.
         // in a TrustDomain::GetCertTrust callback), we should be able to pass in the binary data
@@ -708,9 +846,9 @@ impl CertStorage {
         ) {
             Ok(st) => {
                 *state = st;
-                nserror::NS_OK
+                NS_OK
             }
-            _ => nserror::NS_ERROR_FAILURE,
+            _ => NS_ERROR_FAILURE,
         }
     }
 
@@ -720,8 +858,11 @@ impl CertStorage {
         serial: *const nsACString,
         state: *mut i16,
     ) -> nserror::nsresult {
+        if is_main_thread() {
+            return NS_ERROR_NOT_SAME_THREAD;
+        }
         if issuer.is_null() || serial.is_null() {
-            return nserror::NS_ERROR_FAILURE;
+            return NS_ERROR_FAILURE;
         }
         let issuer_decoded = try_ns!(base64::decode(&*issuer));
         let serial_decoded = try_ns!(base64::decode(&*serial));
@@ -742,9 +883,9 @@ impl CertStorage {
         match ss.get_enrollment_state(&issuer_decoded, &serial_decoded) {
             Ok(st) => {
                 *state = st;
-                nserror::NS_OK
+                NS_OK
             }
-            _ => nserror::NS_ERROR_FAILURE,
+            _ => NS_ERROR_FAILURE,
         }
     }
 
@@ -754,8 +895,11 @@ impl CertStorage {
         serial: *const nsACString,
         state: *mut i16,
     ) -> nserror::nsresult {
+        if is_main_thread() {
+            return NS_ERROR_NOT_SAME_THREAD;
+        }
         if issuer.is_null() || serial.is_null() {
-            return nserror::NS_ERROR_FAILURE;
+            return NS_ERROR_FAILURE;
         }
         let issuer_decoded = try_ns!(base64::decode(&*issuer));
         let serial_decoded = try_ns!(base64::decode(&*serial));
@@ -776,9 +920,9 @@ impl CertStorage {
         match ss.get_whitelist_state(&issuer_decoded, &serial_decoded) {
             Ok(st) => {
                 *state = st;
-                nserror::NS_OK
+                NS_OK
             }
-            _ => nserror::NS_ERROR_FAILURE,
+            _ => NS_ERROR_FAILURE,
         }
     }
 
@@ -791,7 +935,7 @@ impl CertStorage {
             Err(_) => false,
         };
 
-        nserror::NS_OK
+        NS_OK
     }
 
     unsafe fn IsWhitelistFresh(&self, fresh: *mut bool) -> nserror::nsresult {
@@ -803,7 +947,7 @@ impl CertStorage {
             Err(_) => false,
         };
 
-        nserror::NS_OK
+        NS_OK
     }
 
     unsafe fn IsEnrollmentFresh(&self, fresh: *mut bool) -> nserror::nsresult {
@@ -815,7 +959,7 @@ impl CertStorage {
             Err(_) => false,
         };
 
-        nserror::NS_OK
+        NS_OK
     }
 
     unsafe fn Observe(
@@ -830,7 +974,7 @@ impl CertStorage {
 
                 let prefs: RefPtr<nsIPrefBranch> = match (*subject).query_interface() {
                     Some(pb) => pb,
-                    _ => return nserror::NS_ERROR_FAILURE,
+                    _ => return NS_ERROR_FAILURE,
                 };
 
                 // Convert our wstring pref_name to a cstring (via nsCString's
@@ -845,7 +989,7 @@ impl CertStorage {
 
                 let pref_name = match CString::new(name_string.as_str_unchecked()) {
                     Ok(n) => n,
-                    _ => return nserror::NS_ERROR_FAILURE,
+                    _ => return NS_ERROR_FAILURE,
                 };
 
                 let res = prefs.GetIntPref((&pref_name).as_ptr(), (&mut pref_value) as *mut i32);
@@ -860,6 +1004,6 @@ impl CertStorage {
             }
             _ => (),
         }
-        nserror::NS_OK
+        NS_OK
     }
 }

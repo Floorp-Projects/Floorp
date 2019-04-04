@@ -726,12 +726,8 @@ nsresult nsDocumentViewer::InitPresentationStuff(bool aDoInitialReflow) {
 
   NS_ASSERTION(!mPresShell, "Someone should have destroyed the presshell!");
 
-  // Create the style set...
-  UniquePtr<ServoStyleSet> styleSet = CreateStyleSet(mDocument);
-
   // Now make the shell for the document
-  mPresShell = mDocument->CreatePresShell(mPresContext, mViewManager,
-                                          std::move(styleSet));
+  mPresShell = mDocument->CreatePresShell(mPresContext, mViewManager);
   if (!mPresShell) {
     return NS_ERROR_FAILURE;
   }
@@ -2291,81 +2287,6 @@ nsDocumentViewer::RequestWindowClose(bool* aCanClose) {
   return NS_OK;
 }
 
-UniquePtr<ServoStyleSet> nsDocumentViewer::CreateStyleSet(Document* aDocument) {
-  // Make sure this does the same thing as PresShell::Add{User,Agent}Sheet wrt
-  // ordering.
-
-  // The document will fill in the document sheets when we create the presshell
-  auto cache = nsLayoutStylesheetCache::Singleton();
-  nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
-
-  MOZ_ASSERT(sheetService,
-             "should never be creating a StyleSet after the style sheet "
-             "service has gone");
-
-  auto styleSet = MakeUnique<ServoStyleSet>();
-
-  // User sheets
-
-  for (StyleSheet* sheet : *sheetService->UserStyleSheets()) {
-    styleSet->AppendStyleSheet(SheetType::User, sheet);
-  }
-
-  StyleSheet* sheet = nsContentUtils::IsInChromeDocshell(aDocument)
-                          ? cache->GetUserChromeSheet()
-                          : cache->GetUserContentSheet();
-
-  if (sheet) {
-    styleSet->AppendStyleSheet(SheetType::User, sheet);
-  }
-
-  // Agent sheets
-
-  styleSet->AppendStyleSheet(SheetType::Agent, cache->UASheet());
-
-  if (MOZ_LIKELY(mDocument->NodeInfoManager()->MathMLEnabled())) {
-    styleSet->AppendStyleSheet(SheetType::Agent, cache->MathMLSheet());
-  }
-
-  if (MOZ_LIKELY(mDocument->NodeInfoManager()->SVGEnabled())) {
-    styleSet->AppendStyleSheet(SheetType::Agent, cache->SVGSheet());
-  }
-
-  styleSet->AppendStyleSheet(SheetType::Agent, cache->HTMLSheet());
-
-  // We don't add quirk.css here; nsPresContext::CompatibilityModeChanged will
-  // append it if needed.
-
-  if (nsLayoutUtils::ShouldUseNoFramesSheet(aDocument)) {
-    styleSet->AppendStyleSheet(SheetType::Agent, cache->NoFramesSheet());
-  }
-
-  if (nsLayoutUtils::ShouldUseNoScriptSheet(aDocument)) {
-    styleSet->AppendStyleSheet(SheetType::Agent, cache->NoScriptSheet());
-  }
-
-  styleSet->AppendStyleSheet(SheetType::Agent, cache->CounterStylesSheet());
-
-  // Load the minimal XUL rules for scrollbars and a few other XUL things
-  // that non-XUL (typically HTML) documents commonly use.
-  styleSet->AppendStyleSheet(SheetType::Agent, cache->MinimalXULSheet());
-
-  // Only load the full XUL sheet if we'll need it.
-  if (aDocument->LoadsFullXULStyleSheetUpFront()) {
-    styleSet->AppendStyleSheet(SheetType::Agent, cache->XULSheet());
-  }
-
-  styleSet->AppendStyleSheet(SheetType::Agent, cache->FormsSheet());
-  styleSet->AppendStyleSheet(SheetType::Agent, cache->ScrollbarsSheet());
-  styleSet->AppendStyleSheet(SheetType::Agent, cache->PluginProblemSheet());
-
-  for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
-    styleSet->AppendStyleSheet(SheetType::Agent, sheet);
-  }
-
-  return styleSet;
-}
-
 NS_IMETHODIMP
 nsDocumentViewer::ClearHistoryEntry() {
   if (mDocument) {
@@ -2828,8 +2749,8 @@ nsDocumentViewer::SetFullZoom(float aFullZoom) {
   if (GetIsPrintPreview()) {
     nsPresContext* pc = GetPresContext();
     NS_ENSURE_TRUE(pc, NS_OK);
-    nsCOMPtr<nsIPresShell> shell = pc->GetPresShell();
-    NS_ENSURE_TRUE(shell, NS_OK);
+    PresShell* presShell = pc->GetPresShell();
+    NS_ENSURE_TRUE(presShell, NS_OK);
 
     if (!mPrintPreviewZoomed) {
       mOriginalPrintPreviewScale = pc->GetPrintPreviewScale();
@@ -2838,13 +2759,13 @@ nsDocumentViewer::SetFullZoom(float aFullZoom) {
 
     mPrintPreviewZoom = aFullZoom;
     pc->SetPrintPreviewScale(aFullZoom * mOriginalPrintPreviewScale);
-    nsIPageSequenceFrame* pf = shell->GetPageSequenceFrame();
+    nsIPageSequenceFrame* pf = presShell->GetPageSequenceFrame();
     if (pf) {
       nsIFrame* f = do_QueryFrame(pf);
-      shell->FrameNeedsReflow(f, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+      presShell->FrameNeedsReflow(f, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
     }
 
-    nsIFrame* rootFrame = shell->GetRootFrame();
+    nsIFrame* rootFrame = presShell->GetRootFrame();
     if (rootFrame) {
       rootFrame->InvalidateFrame();
     }

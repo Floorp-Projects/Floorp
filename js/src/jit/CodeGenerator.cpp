@@ -1416,23 +1416,9 @@ void CodeGenerator::visitTestVAndBranch(LTestVAndBranch* lir) {
 void CodeGenerator::visitFunctionDispatch(LFunctionDispatch* lir) {
   MFunctionDispatch* mir = lir->mir();
   Register input = ToRegister(lir->input());
-  Label* lastLabel;
-  size_t casesWithFallback;
 
-  // Determine if the last case is fallback or an ordinary case.
-  if (!mir->hasFallback()) {
-    MOZ_ASSERT(mir->numCases() > 0);
-    casesWithFallback = mir->numCases();
-    lastLabel = skipTrivialBlocks(mir->getCaseBlock(mir->numCases() - 1))
-                    ->lir()
-                    ->label();
-  } else {
-    casesWithFallback = mir->numCases() + 1;
-    lastLabel = skipTrivialBlocks(mir->getFallback())->lir()->label();
-  }
-
-  // Compare function pointers, except for the last case.
-  for (size_t i = 0; i < casesWithFallback - 1; i++) {
+  // Compare function pointers
+  for (size_t i = 0; i < mir->numCases(); i++) {
     MOZ_ASSERT(i < mir->numCases());
     LBlock* target = skipTrivialBlocks(mir->getCaseBlock(i))->lir();
     if (ObjectGroup* funcGroup = mir->getCaseObjectGroup(i)) {
@@ -1444,8 +1430,14 @@ void CodeGenerator::visitFunctionDispatch(LFunctionDispatch* lir) {
     }
   }
 
-  // Jump to the last case.
-  masm.jump(lastLabel);
+  // If at the end, and we have a fallback, we can jump to the fallback block.
+  if (mir->hasFallback()) {
+    masm.jump(skipTrivialBlocks(mir->getFallback())->lir()->label());
+    return;
+  }
+
+  // Otherwise, crash.
+  masm.assumeUnreachable("Did not match input function!");
 }
 
 void CodeGenerator::visitObjectGroupDispatch(LObjectGroupDispatch* lir) {
@@ -1488,13 +1480,13 @@ void CodeGenerator::visitObjectGroupDispatch(LObjectGroupDispatch* lir) {
 
   if (!mir->hasFallback()) {
     MOZ_ASSERT(lastBranch.isInitialized());
-#ifdef DEBUG
+
     Label ok;
     lastBranch.relink(&ok);
     lastBranch.emit(masm);
     masm.assumeUnreachable("Unexpected ObjectGroup");
     masm.bind(&ok);
-#endif
+
     if (!isNextBlock(lastBlock)) {
       masm.jump(lastBlock->label());
     }
@@ -3940,12 +3932,12 @@ void CodeGenerator::visitStoreSlotV(LStoreSlotV* lir) {
 
 static void GuardReceiver(MacroAssembler& masm, const ReceiverGuard& guard,
                           Register obj, Register scratch, Label* miss) {
-  if (guard.group) {
-    masm.branchTestObjGroup(Assembler::NotEqual, obj, guard.group, scratch, obj,
-                            miss);
+  if (guard.getGroup()) {
+    masm.branchTestObjGroup(Assembler::NotEqual, obj, guard.getGroup(), scratch,
+                            obj, miss);
   } else {
-    masm.branchTestObjShape(Assembler::NotEqual, obj, guard.shape, scratch, obj,
-                            miss);
+    masm.branchTestObjShape(Assembler::NotEqual, obj, guard.getShape(), scratch,
+                            obj, miss);
   }
 }
 
@@ -3963,7 +3955,7 @@ void CodeGenerator::emitGetPropertyPolymorphic(
     masm.comment("GuardReceiver");
     GuardReceiver(masm, receiver, obj, scratch, &next);
 
-    if (receiver.shape) {
+    if (receiver.getShape()) {
       masm.comment("loadTypedOrValue");
       Register target = obj;
 
@@ -4031,7 +4023,7 @@ void CodeGenerator::emitSetPropertyPolymorphic(
     Label next;
     GuardReceiver(masm, receiver, obj, scratch, &next);
 
-    if (receiver.shape) {
+    if (receiver.getShape()) {
       Register target = obj;
 
       Shape* shape = mir->shape(i);
@@ -7586,11 +7578,11 @@ void CodeGenerator::visitTypedArrayElementShift(LTypedArrayElementShift* lir) {
   Register out = ToRegister(lir->output());
 
   static_assert(Scalar::Int8 == 0, "Int8 is the first typed array class");
-  static_assert((Scalar::Uint8Clamped - Scalar::Int8) ==
-                    Scalar::MaxTypedArrayViewType - 1,
-                "Uint8Clamped is the last typed array class");
+  static_assert(
+      (Scalar::BigUint64 - Scalar::Int8) == Scalar::MaxTypedArrayViewType - 1,
+      "BigUint64 is the last typed array class");
 
-  Label zero, one, two, done;
+  Label zero, one, two, three, done;
 
   masm.loadObjClassUnsafe(obj, out);
 
@@ -7611,13 +7603,22 @@ void CodeGenerator::visitTypedArrayElementShift(LTypedArrayElementShift* lir) {
 
   static_assert(ValidateShiftRange(Scalar::Float64, Scalar::Uint8Clamped),
                 "shift amount is three in [Float64, Uint8Clamped)");
-  static_assert(
-      ValidateShiftRange(Scalar::Uint8Clamped, Scalar::MaxTypedArrayViewType),
-      "shift amount is zero in [Uint8Clamped, MaxTypedArrayViewType)");
-  masm.branchPtr(Assembler::AboveOrEqual, out,
+  masm.branchPtr(Assembler::Below, out,
                  ImmPtr(TypedArrayObject::classForType(Scalar::Uint8Clamped)),
+                 &three);
+
+  static_assert(ValidateShiftRange(Scalar::Uint8Clamped, Scalar::BigInt64),
+                "shift amount is zero in [Uint8Clamped, BigInt64)");
+  masm.branchPtr(Assembler::Below, out,
+                 ImmPtr(TypedArrayObject::classForType(Scalar::BigInt64)),
                  &zero);
 
+  static_assert(
+      ValidateShiftRange(Scalar::BigInt64, Scalar::MaxTypedArrayViewType),
+      "shift amount is three in [BigInt64, MaxTypedArrayViewType)");
+  // Fall through for BigInt64 and BigUint64
+
+  masm.bind(&three);
   masm.move32(Imm32(3), out);
   masm.jump(&done);
 
@@ -12981,13 +12982,14 @@ void CodeGenerator::visitIsTypedArray(LIsTypedArray* lir) {
   Label done;
 
   static_assert(Scalar::Int8 == 0, "Int8 is the first typed array class");
-  static_assert((Scalar::Uint8Clamped - Scalar::Int8) ==
-                    Scalar::MaxTypedArrayViewType - 1,
-                "Uint8Clamped is the last typed array class");
   const Class* firstTypedArrayClass =
       TypedArrayObject::classForType(Scalar::Int8);
+
+  static_assert(
+      (Scalar::BigUint64 - Scalar::Int8) == Scalar::MaxTypedArrayViewType - 1,
+      "BigUint64 is the last typed array class");
   const Class* lastTypedArrayClass =
-      TypedArrayObject::classForType(Scalar::Uint8Clamped);
+      TypedArrayObject::classForType(Scalar::BigUint64);
 
   masm.loadObjClassUnsafe(object, output);
   masm.branchPtr(Assembler::Below, output, ImmPtr(firstTypedArrayClass),

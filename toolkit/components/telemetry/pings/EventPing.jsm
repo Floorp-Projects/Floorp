@@ -68,8 +68,8 @@ var TelemetryEventPing = {
   _processStartTimestamp: 0,
 
   get dataset() {
-    return Telemetry.canRecordPrereleaseData ? Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN
-                                             : Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
+    return Telemetry.canRecordPrereleaseData ? Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS
+                                             : Ci.nsITelemetry.DATASET_ALL_CHANNELS;
   },
 
   startup() {

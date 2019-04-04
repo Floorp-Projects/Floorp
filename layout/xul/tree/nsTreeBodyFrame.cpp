@@ -13,6 +13,7 @@
 #include "mozilla/Likely.h"
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/TextEditRules.h"
 
@@ -723,7 +724,7 @@ void nsTreeBodyFrame::CheckOverflow(const ScrollParts& aParts) {
   AutoWeakFrame weakFrame(this);
 
   RefPtr<nsPresContext> presContext = PresContext();
-  nsCOMPtr<nsIPresShell> presShell = presContext->GetPresShell();
+  RefPtr<mozilla::PresShell> presShell = presContext->GetPresShell();
   nsCOMPtr<nsIContent> content = mContent;
 
   if (verticalOverflowChanged) {

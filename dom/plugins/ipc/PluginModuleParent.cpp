@@ -1489,7 +1489,7 @@ NPError PluginModuleParent::NPP_Destroy(NPP instance, NPSavedData** saved) {
   NPError retval = pip->Destroy();
   instance->pdata = nullptr;
 
-  Unused << PluginInstanceParent::Call__delete__(pip);
+  Unused << PluginInstanceParent::Send__delete__(pip);
   return retval;
 }
 

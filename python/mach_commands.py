@@ -109,6 +109,7 @@ class MachCommands(MachCommandBase):
                          jobs=None,
                          python=None,
                          **kwargs):
+        python = python or self.virtualenv_manager.python_path
         self.activate_pipenv(pipfile=None, populate=True, python=python)
 
         if test_objects is None:

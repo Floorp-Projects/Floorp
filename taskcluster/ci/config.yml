@@ -31,6 +31,7 @@ treeherder:
         'R-sw-e10s': 'Reftests with serviceworker redesign and e10s'
         'Rap': 'Raptor performance tests on Firefox'
         'Rap-e10s': 'Raptor performance tests on Firefox with e10s'
+        'Rap-refbrow-e10s': 'Raptor performance tests on the reference browser'
         'Rap-Prof': 'Raptor performance tests on Firefox with Gecko Profiling'
         'Rap-Prof-e10s': 'Raptor performance tests on Firefox with Gecko Profiling'
         'Rap-C': 'Raptor performance tests on Google Chrome'

@@ -1644,8 +1644,6 @@ dnl ========================================================
 
 MOZ_CHECK_ALLOCATOR
 
-AC_CHECK_FUNCS(localeconv)
-
 AC_SUBST(ac_configure_args)
 
 if test -n "$JS_STANDALONE"; then

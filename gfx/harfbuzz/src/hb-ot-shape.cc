@@ -448,6 +448,9 @@ hb_set_unicode_props (hb_buffer_t *buffer)
 static void
 hb_insert_dotted_circle (hb_buffer_t *buffer, hb_font_t *font)
 {
+  if (unlikely (buffer->flags & HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE))
+    return;
+
   if (!(buffer->flags & HB_BUFFER_FLAG_BOT) ||
       buffer->context_len[0] ||
       !_hb_glyph_info_is_unicode_mark (&buffer->info[0]))

@@ -148,7 +148,7 @@ function* runTest() {
       is(res.statusText, "", "wrong status text for " + allowOrigin);
       is(res.responseXML, null, "should have no XML for " + allowOrigin);
       is(res.events.join(","),
-         "opening,rs1,sending,loadstart,rs2,rs4,error,loadend",
+         "opening,rs1,sending,loadstart,rs4,error,loadend",
          "wrong events in test for " + allowOrigin);
       is(res.progressEvents, 0,
          "wrong events in test for " + allowOrigin);

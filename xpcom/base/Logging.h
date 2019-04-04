@@ -168,7 +168,19 @@ class LazyLogModule final {
   explicit constexpr LazyLogModule(const char* aLogName)
       : mLogName(aLogName), mLog(nullptr) {}
 
-  operator LogModule*();
+  operator LogModule*() {
+    // NB: The use of an atomic makes the reading and assignment of mLog
+    //     thread-safe. There is a small chance that mLog will be set more
+    //     than once, but that's okay as it will be set to the same LogModule
+    //     instance each time. Also note LogModule::Get is thread-safe.
+    LogModule* tmp = mLog;
+    if (MOZ_UNLIKELY(!tmp)) {
+      tmp = LogModule::Get(mLogName);
+      mLog = tmp;
+    }
+
+    return tmp;
+  }
 
  private:
   const char* const mLogName;

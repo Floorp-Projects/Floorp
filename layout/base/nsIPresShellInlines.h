@@ -9,6 +9,7 @@
 
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/Element.h"
 
 void nsIPresShell::SetNeedLayoutFlush() {
   mNeedLayoutFlush = true;
@@ -52,6 +53,10 @@ void nsIPresShell::SetNeedThrottledAnimationFlush() {
       presShell->mNeedThrottledAnimationFlush = true;
     }
   }
+}
+
+mozilla::ServoStyleSet* nsIPresShell::StyleSet() const {
+  return mDocument->StyleSetForPresShellOrMediaQueryEvaluation();
 }
 
 namespace mozilla {

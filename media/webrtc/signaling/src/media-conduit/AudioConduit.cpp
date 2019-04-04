@@ -263,7 +263,7 @@ bool WebrtcAudioConduit::InsertDTMFTone(int channel, int eventCode,
   return result != -1;
 }
 
-void WebrtcAudioConduit::OnRtpPacket(const webrtc::WebRtcRTPHeader* aHeader,
+void WebrtcAudioConduit::OnRtpPacket(const webrtc::RTPHeader& aHeader,
                                      const int64_t aTimestamp,
                                      const uint32_t aJitter) {
   ASSERT_ON_THREAD(mStsThread);

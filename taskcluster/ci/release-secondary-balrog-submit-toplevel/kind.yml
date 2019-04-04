@@ -39,7 +39,7 @@ jobs:
          publish-rules: [32]
          rules-to-update: ["firefox-beta-cdntest", "firefox-beta-localtest"]
       treeherder:
-         platform: linux64/opt
+         platform: firefox-release/opt
          symbol: Rel(BPFxRC)
          tier: 1
          kind: build

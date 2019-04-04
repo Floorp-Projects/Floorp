@@ -87,10 +87,6 @@ module.exports = {
   }, {
     // TODO: Bug 1246594. Empty this list once the rule has landed for all dirs
     "files": [
-      "modules/libmar/tests/unit/head_libmar.js",
-      "netwerk/protocol/http/WellKnownOpportunisticUtils.jsm",
-      "netwerk/test/httpserver/httpd.js",
-      "netwerk/test/httpserver/test/**",
       "parser/htmlparser/tests/mochitest/parser_datreader.js",
       "testing/marionette/event.js",
       "testing/mochitest/**",

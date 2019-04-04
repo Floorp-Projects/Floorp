@@ -9,6 +9,7 @@
 #include "nsIServiceManager.h"
 #include "nsResizerFrame.h"
 #include "nsIContent.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Document.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
@@ -65,7 +66,7 @@ nsresult nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
           (aEvent->mClass == eMouseEventClass &&
            aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton)) {
         nsCOMPtr<nsIBaseWindow> window;
-        nsIPresShell* presShell = aPresContext->GetPresShell();
+        mozilla::PresShell* presShell = aPresContext->GetPresShell();
         nsIContent* contentToResize =
             GetContentToResize(presShell, getter_AddRefs(window));
         if (contentToResize) {
@@ -134,7 +135,7 @@ nsresult nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
     case eMouseMove: {
       if (mTrackingMouseMove) {
         nsCOMPtr<nsIBaseWindow> window;
-        nsIPresShell* presShell = aPresContext->GetPresShell();
+        mozilla::PresShell* presShell = aPresContext->GetPresShell();
         nsCOMPtr<nsIContent> contentToResize =
             GetContentToResize(presShell, getter_AddRefs(window));
 
@@ -292,7 +293,7 @@ nsresult nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
     case eMouseDoubleClick:
       if (aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
         nsCOMPtr<nsIBaseWindow> window;
-        nsIPresShell* presShell = aPresContext->GetPresShell();
+        mozilla::PresShell* presShell = aPresContext->GetPresShell();
         nsIContent* contentToResize =
             GetContentToResize(presShell, getter_AddRefs(window));
         if (contentToResize) {

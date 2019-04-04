@@ -11,6 +11,7 @@
 #include "mozilla/HashFunctions.h"       // for HashGeneric
 #include "mozilla/gfx/Logging.h"         // for Log
 #include "mozilla/layers/LayersTypes.h"  // for LayersId
+#include "nsPrintfCString.h"             // for nsPrintfCString
 
 namespace mozilla {
 namespace layers {
@@ -106,8 +107,8 @@ struct ScrollableLayerGuid {
 template <int LogLevel>
 gfx::Log<LogLevel>& operator<<(gfx::Log<LogLevel>& log,
                                const ScrollableLayerGuid& aGuid) {
-  return log << '(' << uint64_t(aGuid.mLayersId) << ',' << aGuid.mPresShellId
-             << ',' << aGuid.mScrollId << ')';
+  return log << nsPrintfCString("(0x%" PRIx64 ", %u, %" PRIu64 ")",
+          uint64_t(aGuid.mLayersId), aGuid.mPresShellId, aGuid.mScrollId).get();
 }
 
 }  // namespace layers

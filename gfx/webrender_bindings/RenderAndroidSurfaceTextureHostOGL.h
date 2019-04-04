@@ -28,14 +28,20 @@ class RenderAndroidSurfaceTextureHostOGL final : public RenderTextureHostOGL {
   virtual gfx::IntSize GetSize(uint8_t aChannelIndex) const override;
   virtual GLuint GetGLHandle(uint8_t aChannelIndex) const override;
 
+  virtual void PrepareForUse() override;
+  virtual void NotifyNotUsed() override;
+
  private:
   virtual ~RenderAndroidSurfaceTextureHostOGL();
   void DeleteTextureHandle();
+  bool EnsureAttachedToGLContext();
 
   const mozilla::java::GeckoSurfaceTexture::GlobalRef mSurfTex;
   const gfx::IntSize mSize;
   // XXX const bool mContinuousUpdate;
   // XXX const bool mIgnoreTransform;
+  bool mIsPrepared;
+  bool mAttachedToGLContext;
 
   RefPtr<gl::GLContext> mGL;
 };

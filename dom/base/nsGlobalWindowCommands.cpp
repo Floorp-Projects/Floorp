@@ -15,8 +15,8 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
 
-#include "nsIControllerCommandTable.h"
-#include "nsICommandParams.h"
+#include "nsControllerCommandTable.h"
+#include "nsCommandParams.h"
 
 #include "nsPIDOMWindow.h"
 #include "nsIPresShell.h"
@@ -1023,28 +1023,28 @@ nsLookUpDictionaryCommand::DoCommandParams(const char *aCommandName,
 #define NS_REGISTER_ONE_COMMAND(_cmdClass, _cmdName)            \
   {                                                             \
     _cmdClass *theCmd = new _cmdClass();                        \
-    rv = inCommandTable->RegisterCommand(                       \
+    rv = aCommandTable->RegisterCommand(                        \
         _cmdName, static_cast<nsIControllerCommand *>(theCmd)); \
   }
 
 #define NS_REGISTER_FIRST_COMMAND(_cmdClass, _cmdName) \
   {                                                    \
     _cmdClass *theCmd = new _cmdClass();               \
-    rv = inCommandTable->RegisterCommand(              \
+    rv = aCommandTable->RegisterCommand(               \
         _cmdName, static_cast<nsIControllerCommand *>(theCmd));
 
 #define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName) \
-  rv = inCommandTable->RegisterCommand(               \
+  rv = aCommandTable->RegisterCommand(                \
       _cmdName, static_cast<nsIControllerCommand *>(theCmd));
 
 #define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)         \
-  rv = inCommandTable->RegisterCommand(                       \
+  rv = aCommandTable->RegisterCommand(                        \
       _cmdName, static_cast<nsIControllerCommand *>(theCmd)); \
   }
 
 // static
 nsresult nsWindowCommandRegistration::RegisterWindowCommands(
-    nsIControllerCommandTable *inCommandTable) {
+    nsControllerCommandTable *aCommandTable) {
   nsresult rv;
 
   // XXX rework the macros to use a loop is possible, reducing code size

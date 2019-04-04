@@ -170,7 +170,7 @@ struct hb_map_t
 
   void clear ()
   {
-    memset (items, 0xFF, ((size_t) mask + 1) * sizeof (item_t));
+    if (items) memset (items, 0xFF, ((size_t) mask + 1) * sizeof (item_t));
     population = occupancy = 0;
   }
 

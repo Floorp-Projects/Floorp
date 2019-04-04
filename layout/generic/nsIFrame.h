@@ -97,7 +97,6 @@
 
 class nsAtom;
 class nsPresContext;
-class nsIPresShell;
 class nsView;
 class nsIWidget;
 class nsISelectionController;
@@ -130,6 +129,7 @@ namespace mozilla {
 
 enum class PseudoStyleType : uint8_t;
 class EventStates;
+class PresShell;
 struct ReflowInput;
 class ReflowOutput;
 class ServoRestyleState;
