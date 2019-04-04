@@ -4,66 +4,57 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGBOOLEAN_H__
-#define __NS_SVGBOOLEAN_H__
+#ifndef __NS_SVGCLASS_H__
+#define __NS_SVGCLASS_H__
 
+#include "nsAutoPtr.h"
+#include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
-#include "mozilla/SMILAttr.h"
-#include "mozilla/AlreadyAddRefed.h"
+#include "nsString.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/SMILAttr.h"
 #include "mozilla/UniquePtr.h"
-
-class nsAtom;
 
 namespace mozilla {
 
 class SMILValue;
 
 namespace dom {
-class DOMSVGAnimatedBoolean;
-class SVGAnimationElement;
+class DOMSVGAnimatedString;
 class SVGElement;
-}  // namespace dom
 
-class SVGBoolean {
+class SVGAnimatedClass {
  public:
   typedef mozilla::dom::SVGElement SVGElement;
 
-  void Init(uint8_t aAttrEnum = 0xff, bool aValue = false) {
-    mAnimVal = mBaseVal = aValue;
-    mAttrEnum = aAttrEnum;
-    mIsAnimated = false;
-  }
+  void Init() { mAnimVal = nullptr; }
 
-  nsresult SetBaseValueAtom(const nsAtom* aValue, SVGElement* aSVGElement);
-  nsAtom* GetBaseValueAtom() const;
+  void SetBaseValue(const nsAString& aValue, SVGElement* aSVGElement,
+                    bool aDoSetAttr);
+  void GetBaseValue(nsAString& aValue, const SVGElement* aSVGElement) const;
 
-  void SetBaseValue(bool aValue, SVGElement* aSVGElement);
-  bool GetBaseValue() const { return mBaseVal; }
+  void SetAnimValue(const nsAString& aValue, SVGElement* aSVGElement);
+  void GetAnimValue(nsAString& aValue, const SVGElement* aSVGElement) const;
+  bool IsAnimated() const { return !!mAnimVal; }
 
-  void SetAnimValue(bool aValue, SVGElement* aSVGElement);
-  bool GetAnimValue() const { return mAnimVal; }
-
-  already_AddRefed<mozilla::dom::DOMSVGAnimatedBoolean> ToDOMAnimatedBoolean(
+  already_AddRefed<mozilla::dom::DOMSVGAnimatedString> ToDOMAnimatedString(
       SVGElement* aSVGElement);
+
   mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
-  bool mAnimVal;
-  bool mBaseVal;
-  bool mIsAnimated;
-  uint8_t mAttrEnum;  // element specified tracking for attribute
+  nsAutoPtr<nsString> mAnimVal;
 
  public:
-  struct SMILBool : public SMILAttr {
+  struct SMILString : public SMILAttr {
    public:
-    SMILBool(SVGBoolean* aVal, SVGElement* aSVGElement)
+    SMILString(SVGAnimatedClass* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    SVGBoolean* mVal;
+    SVGAnimatedClass* mVal;
     SVGElement* mSVGElement;
 
     // SMILAttr methods
@@ -77,6 +68,7 @@ class SVGBoolean {
   };
 };
 
+}  // namespace dom
 }  // namespace mozilla
 
-#endif  //__NS_SVGBOOLEAN_H__
+#endif  //__NS_SVGCLASS_H__

@@ -21,7 +21,7 @@ namespace dom {
 class SVGElement;
 }
 
-class SVGString {
+class SVGAnimatedString {
  public:
   typedef mozilla::dom::SVGElement SVGElement;
 
@@ -59,15 +59,15 @@ class SVGString {
 
  public:
   // DOM wrapper class for the (DOM)SVGAnimatedString interface where the
-  // wrapped class is SVGString.
+  // wrapped class is SVGAnimatedString.
   struct DOMAnimatedString final : public mozilla::dom::DOMSVGAnimatedString {
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMAnimatedString)
 
-    DOMAnimatedString(SVGString* aVal, SVGElement* aSVGElement)
+    DOMAnimatedString(SVGAnimatedString* aVal, SVGElement* aSVGElement)
         : mozilla::dom::DOMSVGAnimatedString(aSVGElement), mVal(aVal) {}
 
-    SVGString* mVal;  // kept alive because it belongs to content
+    SVGAnimatedString* mVal;  // kept alive because it belongs to content
 
     void GetBaseVal(nsAString& aResult) override {
       mVal->GetBaseValue(aResult, mSVGElement);
@@ -87,13 +87,13 @@ class SVGString {
   };
   struct SMILString : public SMILAttr {
    public:
-    SMILString(SVGString* aVal, SVGElement* aSVGElement)
+    SMILString(SVGAnimatedString* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    SVGString* mVal;
+    SVGAnimatedString* mVal;
     SVGElement* mSVGElement;
 
     // SMILAttr methods

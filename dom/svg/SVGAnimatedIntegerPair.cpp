@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SVGIntegerPair.h"
+#include "SVGAnimatedIntegerPair.h"
 
 #include "nsCharSeparatedTokenizer.h"
 #include "nsError.h"
@@ -18,9 +18,11 @@ using namespace mozilla::dom;
 
 namespace mozilla {
 
-static SVGAttrTearoffTable<SVGIntegerPair, SVGIntegerPair::DOMAnimatedInteger>
+static SVGAttrTearoffTable<SVGAnimatedIntegerPair,
+                           SVGAnimatedIntegerPair::DOMAnimatedInteger>
     sSVGFirstAnimatedIntegerTearoffTable;
-static SVGAttrTearoffTable<SVGIntegerPair, SVGIntegerPair::DOMAnimatedInteger>
+static SVGAttrTearoffTable<SVGAnimatedIntegerPair,
+                           SVGAnimatedIntegerPair::DOMAnimatedInteger>
     sSVGSecondAnimatedIntegerTearoffTable;
 
 /* Implementation */
@@ -48,8 +50,8 @@ static nsresult ParseIntegerOptionalInteger(const nsAString& aValue,
   return NS_OK;
 }
 
-nsresult SVGIntegerPair::SetBaseValueString(const nsAString& aValueAsString,
-                                            SVGElement* aSVGElement) {
+nsresult SVGAnimatedIntegerPair::SetBaseValueString(
+    const nsAString& aValueAsString, SVGElement* aSVGElement) {
   int32_t val[2];
 
   nsresult rv = ParseIntegerOptionalInteger(aValueAsString, val);
@@ -74,7 +76,8 @@ nsresult SVGIntegerPair::SetBaseValueString(const nsAString& aValueAsString,
   return NS_OK;
 }
 
-void SVGIntegerPair::GetBaseValueString(nsAString& aValueAsString) const {
+void SVGAnimatedIntegerPair::GetBaseValueString(
+    nsAString& aValueAsString) const {
   aValueAsString.Truncate();
   aValueAsString.AppendInt(mBaseVal[0]);
   if (mBaseVal[0] != mBaseVal[1]) {
@@ -83,8 +86,8 @@ void SVGIntegerPair::GetBaseValueString(nsAString& aValueAsString) const {
   }
 }
 
-void SVGIntegerPair::SetBaseValue(int32_t aValue, PairIndex aPairIndex,
-                                  SVGElement* aSVGElement) {
+void SVGAnimatedIntegerPair::SetBaseValue(int32_t aValue, PairIndex aPairIndex,
+                                          SVGElement* aSVGElement) {
   uint32_t index = (aPairIndex == eFirst ? 0 : 1);
   if (mIsBaseSet && mBaseVal[index] == aValue) {
     return;
@@ -101,8 +104,8 @@ void SVGIntegerPair::SetBaseValue(int32_t aValue, PairIndex aPairIndex,
   aSVGElement->DidChangeIntegerPair(mAttrEnum, emptyOrOldValue);
 }
 
-void SVGIntegerPair::SetBaseValues(int32_t aValue1, int32_t aValue2,
-                                   SVGElement* aSVGElement) {
+void SVGAnimatedIntegerPair::SetBaseValues(int32_t aValue1, int32_t aValue2,
+                                           SVGElement* aSVGElement) {
   if (mIsBaseSet && mBaseVal[0] == aValue1 && mBaseVal[1] == aValue2) {
     return;
   }
@@ -120,8 +123,8 @@ void SVGIntegerPair::SetBaseValues(int32_t aValue1, int32_t aValue2,
   aSVGElement->DidChangeIntegerPair(mAttrEnum, emptyOrOldValue);
 }
 
-void SVGIntegerPair::SetAnimValue(const int32_t aValue[2],
-                                  SVGElement* aSVGElement) {
+void SVGAnimatedIntegerPair::SetAnimValue(const int32_t aValue[2],
+                                          SVGElement* aSVGElement) {
   if (mIsAnimated && mAnimVal[0] == aValue[0] && mAnimVal[1] == aValue[1]) {
     return;
   }
@@ -131,8 +134,9 @@ void SVGIntegerPair::SetAnimValue(const int32_t aValue[2],
   aSVGElement->DidAnimateIntegerPair(mAttrEnum);
 }
 
-already_AddRefed<DOMSVGAnimatedInteger> SVGIntegerPair::ToDOMAnimatedInteger(
-    PairIndex aIndex, SVGElement* aSVGElement) {
+already_AddRefed<DOMSVGAnimatedInteger>
+SVGAnimatedIntegerPair::ToDOMAnimatedInteger(PairIndex aIndex,
+                                             SVGElement* aSVGElement) {
   RefPtr<DOMAnimatedInteger> domAnimatedInteger =
       aIndex == eFirst ? sSVGFirstAnimatedIntegerTearoffTable.GetTearoff(this)
                        : sSVGSecondAnimatedIntegerTearoffTable.GetTearoff(this);
@@ -149,7 +153,7 @@ already_AddRefed<DOMSVGAnimatedInteger> SVGIntegerPair::ToDOMAnimatedInteger(
   return domAnimatedInteger.forget();
 }
 
-SVGIntegerPair::DOMAnimatedInteger::~DOMAnimatedInteger() {
+SVGAnimatedIntegerPair::DOMAnimatedInteger::~DOMAnimatedInteger() {
   if (mIndex == eFirst) {
     sSVGFirstAnimatedIntegerTearoffTable.RemoveTearoff(mVal);
   } else {
@@ -157,11 +161,12 @@ SVGIntegerPair::DOMAnimatedInteger::~DOMAnimatedInteger() {
   }
 }
 
-UniquePtr<SMILAttr> SVGIntegerPair::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<SMILAttr> SVGAnimatedIntegerPair::ToSMILAttr(
+    SVGElement* aSVGElement) {
   return MakeUnique<SMILIntegerPair>(this, aSVGElement);
 }
 
-nsresult SVGIntegerPair::SMILIntegerPair::ValueFromString(
+nsresult SVGAnimatedIntegerPair::SMILIntegerPair::ValueFromString(
     const nsAString& aStr, const dom::SVGAnimationElement* /*aSrcElement*/,
     SMILValue& aValue, bool& aPreventCachingOfSandwich) const {
   int32_t values[2];
@@ -180,14 +185,14 @@ nsresult SVGIntegerPair::SMILIntegerPair::ValueFromString(
   return NS_OK;
 }
 
-SMILValue SVGIntegerPair::SMILIntegerPair::GetBaseValue() const {
+SMILValue SVGAnimatedIntegerPair::SMILIntegerPair::GetBaseValue() const {
   SMILValue val(SVGIntegerPairSMILType::Singleton());
   val.mU.mIntPair[0] = mVal->mBaseVal[0];
   val.mU.mIntPair[1] = mVal->mBaseVal[1];
   return val;
 }
 
-void SVGIntegerPair::SMILIntegerPair::ClearAnimValue() {
+void SVGAnimatedIntegerPair::SMILIntegerPair::ClearAnimValue() {
   if (mVal->mIsAnimated) {
     mVal->mIsAnimated = false;
     mVal->mAnimVal[0] = mVal->mBaseVal[0];
@@ -196,7 +201,7 @@ void SVGIntegerPair::SMILIntegerPair::ClearAnimValue() {
   }
 }
 
-nsresult SVGIntegerPair::SMILIntegerPair::SetAnimValue(
+nsresult SVGAnimatedIntegerPair::SMILIntegerPair::SetAnimValue(
     const SMILValue& aValue) {
   NS_ASSERTION(aValue.mType == SVGIntegerPairSMILType::Singleton(),
                "Unexpected type to assign animated value");

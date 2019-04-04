@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SVGInteger.h"
+#include "SVGAnimatedInteger.h"
 
 #include "nsError.h"
 #include "SMILIntegerType.h"
@@ -18,11 +18,12 @@ namespace mozilla {
 
 /* Implementation */
 
-static SVGAttrTearoffTable<SVGInteger, SVGInteger::DOMAnimatedInteger>
+static SVGAttrTearoffTable<SVGAnimatedInteger,
+                           SVGAnimatedInteger::DOMAnimatedInteger>
     sSVGAnimatedIntegerTearoffTable;
 
-nsresult SVGInteger::SetBaseValueString(const nsAString &aValueAsString,
-                                        SVGElement *aSVGElement) {
+nsresult SVGAnimatedInteger::SetBaseValueString(const nsAString &aValueAsString,
+                                                SVGElement *aSVGElement) {
   bool success;
   auto token = SVGContentUtils::GetAndEnsureOneToken(aValueAsString, success);
 
@@ -46,12 +47,12 @@ nsresult SVGInteger::SetBaseValueString(const nsAString &aValueAsString,
   return NS_OK;
 }
 
-void SVGInteger::GetBaseValueString(nsAString &aValueAsString) {
+void SVGAnimatedInteger::GetBaseValueString(nsAString &aValueAsString) {
   aValueAsString.Truncate();
   aValueAsString.AppendInt(mBaseVal);
 }
 
-void SVGInteger::SetBaseValue(int aValue, SVGElement *aSVGElement) {
+void SVGAnimatedInteger::SetBaseValue(int aValue, SVGElement *aSVGElement) {
   // We can't just rely on SetParsedAttrValue (as called by DidChangeInteger)
   // detecting redundant changes since it will compare false if the existing
   // attribute value has an associated serialized version (a string value) even
@@ -70,7 +71,7 @@ void SVGInteger::SetBaseValue(int aValue, SVGElement *aSVGElement) {
   aSVGElement->DidChangeInteger(mAttrEnum);
 }
 
-void SVGInteger::SetAnimValue(int aValue, SVGElement *aSVGElement) {
+void SVGAnimatedInteger::SetAnimValue(int aValue, SVGElement *aSVGElement) {
   if (mIsAnimated && aValue == mAnimVal) {
     return;
   }
@@ -79,8 +80,8 @@ void SVGInteger::SetAnimValue(int aValue, SVGElement *aSVGElement) {
   aSVGElement->DidAnimateInteger(mAttrEnum);
 }
 
-already_AddRefed<DOMSVGAnimatedInteger> SVGInteger::ToDOMAnimatedInteger(
-    SVGElement *aSVGElement) {
+already_AddRefed<DOMSVGAnimatedInteger>
+SVGAnimatedInteger::ToDOMAnimatedInteger(SVGElement *aSVGElement) {
   RefPtr<DOMAnimatedInteger> domAnimatedInteger =
       sSVGAnimatedIntegerTearoffTable.GetTearoff(this);
   if (!domAnimatedInteger) {
@@ -91,15 +92,15 @@ already_AddRefed<DOMSVGAnimatedInteger> SVGInteger::ToDOMAnimatedInteger(
   return domAnimatedInteger.forget();
 }
 
-SVGInteger::DOMAnimatedInteger::~DOMAnimatedInteger() {
+SVGAnimatedInteger::DOMAnimatedInteger::~DOMAnimatedInteger() {
   sSVGAnimatedIntegerTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<SMILAttr> SVGInteger::ToSMILAttr(SVGElement *aSVGElement) {
+UniquePtr<SMILAttr> SVGAnimatedInteger::ToSMILAttr(SVGElement *aSVGElement) {
   return MakeUnique<SMILInteger>(this, aSVGElement);
 }
 
-nsresult SVGInteger::SMILInteger::ValueFromString(
+nsresult SVGAnimatedInteger::SMILInteger::ValueFromString(
     const nsAString &aStr, const dom::SVGAnimationElement * /*aSrcElement*/,
     SMILValue &aValue, bool &aPreventCachingOfSandwich) const {
   int32_t val;
@@ -115,13 +116,13 @@ nsresult SVGInteger::SMILInteger::ValueFromString(
   return NS_OK;
 }
 
-SMILValue SVGInteger::SMILInteger::GetBaseValue() const {
+SMILValue SVGAnimatedInteger::SMILInteger::GetBaseValue() const {
   SMILValue val(SMILIntegerType::Singleton());
   val.mU.mInt = mVal->mBaseVal;
   return val;
 }
 
-void SVGInteger::SMILInteger::ClearAnimValue() {
+void SVGAnimatedInteger::SMILInteger::ClearAnimValue() {
   if (mVal->mIsAnimated) {
     mVal->mIsAnimated = false;
     mVal->mAnimVal = mVal->mBaseVal;
@@ -129,7 +130,8 @@ void SVGInteger::SMILInteger::ClearAnimValue() {
   }
 }
 
-nsresult SVGInteger::SMILInteger::SetAnimValue(const SMILValue &aValue) {
+nsresult SVGAnimatedInteger::SMILInteger::SetAnimValue(
+    const SMILValue &aValue) {
   NS_ASSERTION(aValue.mType == SMILIntegerType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SMILIntegerType::Singleton()) {
