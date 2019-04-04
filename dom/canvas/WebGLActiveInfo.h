@@ -12,6 +12,7 @@
 #include "nsISupportsImpl.h"  // NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING
 #include "nsString.h"
 #include "nsWrapperCache.h"
+#include "WebGLTypes.h"
 
 namespace mozilla {
 
