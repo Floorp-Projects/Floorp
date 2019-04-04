@@ -24,6 +24,17 @@ job-defaults:
     snapshot: 20171210T214726Z
 
 jobs:
+  deb7-apt:
+    description: "Updated APT for Debian wheezy"
+    treeherder:
+      symbol: Deb7(apt)
+    run:
+      using: debian-package
+      dsc:
+        url: http://snapshot.debian.org/archive/debian/20141023T170002Z/pool/main/a/apt/apt_0.9.7.9%2Bdeb7u7.dsc
+        sha256: 7835d9f97acf8adcad7eee0eca2990eaef72ffe21272302d3c36d8053d6baf82
+      patch: apt-wheezy.diff
+
   deb7-sqlite3:
     description: "SQLite backport for Debian wheezy"
     treeherder:
