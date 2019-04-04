@@ -13,6 +13,7 @@
 from __future__ import print_function
 
 import glob
+import multiprocessing
 import os
 import sets
 import shutil
@@ -217,6 +218,13 @@ def update_data_file(topsrcdir):
                      '-DUCONFIG_NO_BREAK_ITERATION ' +
                      '-DU_CHARSET_IS_UTF8')
     })
+
+    # Exclude data that we currently don't need.
+    #
+    # The file format for ICU's data build tool is described at
+    # <https://github.com/unicode-org/icu/blob/master/docs/userguide/icu_data/buildtool.md>.
+    env["ICU_DATA_FILTER_FILE"] = mozpath.join(topsrcdir, 'intl/icu/data_filter.json')
+
     print('Running ICU configure...')
     if not try_run(
             'icu-configure',
@@ -235,7 +243,12 @@ def update_data_file(topsrcdir):
             env=env):
         return False
     print('Running ICU make...')
-    if not try_run('icu-make', ['make'], cwd=objdir):
+    if not try_run(
+            'icu-make',
+            ['make',
+             '--jobs=%d' % multiprocessing.cpu_count(),
+             '--output-sync'],
+            cwd=objdir):
         return False
     print('Copying ICU data file...')
     tree_data_path = mozpath.join(topsrcdir,
