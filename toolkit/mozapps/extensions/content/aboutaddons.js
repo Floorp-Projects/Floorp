@@ -398,6 +398,38 @@ class AddonCard extends HTMLElement {
     this.addon = addon;
   }
 
+  /**
+   * Determine which screenshot fits best into the given img element. The img
+   * should have a width and height set on it.
+   *
+   * @param {HTMLImageElement} img The <img> the screenshot is being set on.
+   */
+  screenshotForImg(img) {
+    let {addon} = this;
+    if (addon.screenshots && addon.screenshots[0]) {
+      let {width, height} = getComputedStyle(img);
+      let sectionWidth = parseInt(width, 10);
+      let sectionHeight = parseInt(height, 10);
+      let screenshots = addon.screenshots
+        // Only check screenshots with a width and height.
+        .filter(s => s.width && s.height)
+        // Sort the screenshots based how close their dimensions are to the
+        // requested size.
+        .sort((a, b) => {
+          let aCloseness =
+            Math.abs((a.width - sectionWidth) * (a.height - sectionHeight));
+          let bCloseness =
+            Math.abs((b.width - sectionWidth) * (b.height - sectionHeight));
+          if (aCloseness == bCloseness) {
+            return 0;
+          }
+          return aCloseness < bCloseness ? -1 : 1;
+        });
+      return screenshots[0];
+    }
+    return null;
+  }
+
   registerListener() {
     AddonManager.addAddonListener(this);
   }
@@ -433,6 +465,17 @@ class AddonCard extends HTMLElement {
       icon = AddonManager.getPreferredIconURL(addon, 32, window);
     }
     card.querySelector(".addon-icon").src = icon;
+
+    // Update the theme preview.
+    let preview = card.querySelector(".card-heading-image");
+    preview.hidden = true;
+    if (addon.type == "theme") {
+      let screenshot = this.screenshotForImg(preview);
+      if (screenshot) {
+        preview.src = screenshot.url;
+        preview.hidden = false;
+      }
+    }
 
     // Update the name.
     let name = card.querySelector(".addon-name");
