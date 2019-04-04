@@ -838,7 +838,7 @@ class XPCWrappedNativeScope final
   bool AttachComponentsObject(JSContext* aCx);
 
   // Returns the JS object reflection of the Components object.
-  bool GetComponentsJSObject(JS::MutableHandleObject obj);
+  bool GetComponentsJSObject(JSContext* cx, JS::MutableHandleObject obj);
 
   JSObject* GetExpandoChain(JS::HandleObject target);
 
@@ -1856,6 +1856,7 @@ class XPCConvert {
   /**
    * Convert a native nsISupports into a JSObject.
    *
+   * @param cx the JSContext representing the global we want the object in.
    * @param dest [out] the resulting JSObject
    * @param src the native object we're working with
    * @param iid the interface of src that we want (may be null)
@@ -1867,7 +1868,8 @@ class XPCConvert {
    * @param src_is_identity optional performance hint. Set to true only
    *                        if src is the identity pointer.
    */
-  static bool NativeInterface2JSObject(JS::MutableHandleValue dest,
+  static bool NativeInterface2JSObject(JSContext* cx,
+                                       JS::MutableHandleValue dest,
                                        xpcObjectHelper& aHelper,
                                        const nsID* iid, bool allowNativeWrapper,
                                        nsresult* pErr);
