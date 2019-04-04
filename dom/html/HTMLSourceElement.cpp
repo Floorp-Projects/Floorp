@@ -40,8 +40,7 @@ NS_IMPL_ELEMENT_CLONE(HTMLSourceElement)
 
 bool HTMLSourceElement::MatchesCurrentMedia() {
   if (mMediaList) {
-    nsPresContext* pctx = OwnerDoc()->GetPresContext();
-    return pctx && mMediaList->Matches(pctx);
+    return mMediaList->Matches(*OwnerDoc());
   }
 
   // No media specified
@@ -55,10 +54,8 @@ bool HTMLSourceElement::WouldMatchMediaForDocument(const nsAString& aMedia,
     return true;
   }
 
-  nsPresContext* pctx = aDocument->GetPresContext();
-
   RefPtr<MediaList> mediaList = MediaList::Create(aMedia);
-  return pctx && mediaList->Matches(pctx);
+  return mediaList->Matches(*aDocument);
 }
 
 void HTMLSourceElement::UpdateMediaList(const nsAttrValue* aValue) {
