@@ -566,18 +566,17 @@ nsresult InitClassesWithNewWrappedGlobal(JSContext* aJSContext,
 
 }  // namespace xpc
 
-static nsresult NativeInterface2JSObject(HandleObject aScope,
+static nsresult NativeInterface2JSObject(JSContext* aCx, HandleObject aScope,
                                          nsISupports* aCOMObj,
                                          nsWrapperCache* aCache,
                                          const nsIID* aIID, bool aAllowWrapping,
                                          MutableHandleValue aVal) {
-  AutoJSContext cx;
-  JSAutoRealm ar(cx, aScope);
+  JSAutoRealm ar(aCx, aScope);
 
   nsresult rv;
   xpcObjectHelper helper(aCOMObj, aCache);
-  if (!XPCConvert::NativeInterface2JSObject(aVal, helper, aIID, aAllowWrapping,
-                                            &rv)) {
+  if (!XPCConvert::NativeInterface2JSObject(aCx, aVal, helper, aIID,
+                                            aAllowWrapping, &rv)) {
     return rv;
   }
 
@@ -598,8 +597,8 @@ nsXPConnect::WrapNative(JSContext* aJSContext, JSObject* aScopeArg,
 
   RootedObject aScope(aJSContext, aScopeArg);
   RootedValue v(aJSContext);
-  nsresult rv =
-      NativeInterface2JSObject(aScope, aCOMObj, nullptr, &aIID, true, &v);
+  nsresult rv = NativeInterface2JSObject(aJSContext, aScope, aCOMObj, nullptr,
+                                         &aIID, true, &v);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -622,8 +621,8 @@ nsXPConnect::WrapNativeToJSVal(JSContext* aJSContext, JSObject* aScopeArg,
   MOZ_ASSERT(aCOMObj, "bad param");
 
   RootedObject aScope(aJSContext, aScopeArg);
-  return NativeInterface2JSObject(aScope, aCOMObj, aCache, aIID, aAllowWrapping,
-                                  aVal);
+  return NativeInterface2JSObject(aJSContext, aScope, aCOMObj, aCache, aIID,
+                                  aAllowWrapping, aVal);
 }
 
 NS_IMETHODIMP

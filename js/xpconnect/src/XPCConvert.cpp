@@ -380,7 +380,7 @@ bool XPCConvert::NativeData2JS(MutableHandleValue d, const void* s,
       }
 
       xpcObjectHelper helper(iface);
-      return NativeInterface2JSObject(d, helper, iid, true, pErr);
+      return NativeInterface2JSObject(cx, d, helper, iid, true, pErr);
     }
 
     case nsXPTType::T_DOMOBJECT: {
@@ -915,7 +915,7 @@ bool XPCConvert::JSData2Native(JSContext* cx, void* d, HandleValue s,
 
 /***************************************************************************/
 // static
-bool XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
+bool XPCConvert::NativeInterface2JSObject(JSContext* cx, MutableHandleValue d,
                                           xpcObjectHelper& aHelper,
                                           const nsID* iid,
                                           bool allowNativeWrapper,
@@ -939,7 +939,6 @@ bool XPCConvert::NativeInterface2JSObject(MutableHandleValue d,
   // (that means an XPCWrappedNative around an nsXPCWrappedJS). This isn't
   // optimal -- we could detect this and roll the functionality into a
   // single wrapper, but the current solution is good enough for now.
-  AutoJSContext cx;
   XPCWrappedNativeScope* xpcscope = ObjectScope(JS::CurrentGlobalOrNull(cx));
   if (!xpcscope) {
     return false;

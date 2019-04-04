@@ -89,8 +89,8 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JS::Compartment* aCompartment,
   mAllowContentXBLScope = !RemoteXULForbidsXBLScope(aFirstGlobal);
 }
 
-bool XPCWrappedNativeScope::GetComponentsJSObject(JS::MutableHandleObject obj) {
-  AutoJSContext cx;
+bool XPCWrappedNativeScope::GetComponentsJSObject(JSContext* cx,
+                                                  JS::MutableHandleObject obj) {
   if (!mComponents) {
     bool system = AccessCheck::isChrome(mCompartment);
     mComponents =
@@ -99,8 +99,8 @@ bool XPCWrappedNativeScope::GetComponentsJSObject(JS::MutableHandleObject obj) {
 
   RootedValue val(cx);
   xpcObjectHelper helper(mComponents);
-  bool ok = XPCConvert::NativeInterface2JSObject(&val, helper, nullptr, false,
-                                                 nullptr);
+  bool ok = XPCConvert::NativeInterface2JSObject(cx, &val, helper, nullptr,
+                                                 false, nullptr);
   if (NS_WARN_IF(!ok)) {
     return false;
   }
@@ -131,8 +131,8 @@ static bool DefineSubcomponentProperty(JSContext* aCx, HandleObject aGlobal,
                                        unsigned int aStringIndex) {
   RootedValue subcompVal(aCx);
   xpcObjectHelper helper(aSubcomponent);
-  if (!XPCConvert::NativeInterface2JSObject(&subcompVal, helper, aIID, false,
-                                            nullptr))
+  if (!XPCConvert::NativeInterface2JSObject(aCx, &subcompVal, helper, aIID,
+                                            false, nullptr))
     return false;
   if (NS_WARN_IF(!subcompVal.isObject())) {
     return false;
@@ -143,7 +143,7 @@ static bool DefineSubcomponentProperty(JSContext* aCx, HandleObject aGlobal,
 
 bool XPCWrappedNativeScope::AttachComponentsObject(JSContext* aCx) {
   RootedObject components(aCx);
-  if (!GetComponentsJSObject(&components)) {
+  if (!GetComponentsJSObject(aCx, &components)) {
     return false;
   }
 
