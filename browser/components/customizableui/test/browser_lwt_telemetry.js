@@ -8,8 +8,6 @@ add_task(async function testCustomize() {
   let getMoreURL = "about:blank#getMoreThemes";
 
   // Reset the theme prefs to ensure they haven't been messed with.
-  Services.prefs.clearUserPref("lightweightThemes.recommendedThemes");
-  Services.prefs.clearUserPref("lightweightThemes.usedThemes");
   await SpecialPowers.pushPrefEnv({set: [
     ["lightweightThemes.getMoreURL", getMoreURL],
   ]});
@@ -53,10 +51,6 @@ add_task(async function testCustomize() {
     ["link", "customize", "manageThemes"],
     ["link", "customize", "getThemes"],
   ], "The events are recorded correctly");
-
-  // Reset the theme prefs to leave them in a clean state.
-  Services.prefs.clearUserPref("lightweightThemes.recommendedThemes");
-  Services.prefs.clearUserPref("lightweightThemes.usedThemes");
 
   // Wait for customize mode to be re-entered now that the customize tab is
   // active. This is needed for endCustomizing() to work properly.

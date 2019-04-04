@@ -6,7 +6,6 @@
  */
 
 const DEFAULT_THEME = "default-theme@mozilla.org";
-const PREF_LWTHEME_USED_THEMES = "lightweightThemes.usedThemes";
 const COMPACT_LIGHT_ID = "firefox-compact-light@mozilla.org";
 const COMPACT_DARK_ID = "firefox-compact-dark@mozilla.org";
 const {AddonManager} = ChromeUtils.import("resource://gre/modules/AddonManager.jsm");

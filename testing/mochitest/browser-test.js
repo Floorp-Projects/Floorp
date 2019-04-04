@@ -12,6 +12,8 @@ var gSaveInstrumentationData = null;
 var {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+ChromeUtils.defineModuleGetter(this, "AddonManager",
+  "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "ContentSearch",
   "resource:///modules/ContentSearch.jsm");
 
@@ -522,6 +524,7 @@ Tester.prototype = {
   },
 
   async waitForWindowsReady() {
+    await this.setupDefaultTheme();
     await new Promise(resolve => this.waitForGraphicsTestWindowToBeGone(resolve));
     await this.promiseMainWindowReady();
   },
@@ -531,6 +534,13 @@ Tester.prototype = {
       await this.TestUtils.topicObserved("browser-idle-startup-tasks-finished",
                                          subject => subject === window);
     }
+  },
+
+  async setupDefaultTheme() {
+    // Developer Edition enables the wrong theme by default. Make sure
+    // the ordinary default theme is enabled.
+    let theme = await AddonManager.getAddonByID("default-theme@mozilla.org");
+    await theme.enable();
   },
 
   waitForGraphicsTestWindowToBeGone(aCallback) {

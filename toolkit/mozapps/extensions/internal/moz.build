@@ -16,11 +16,7 @@ EXTRA_JS_MODULES.addons += [
     'XPIProvider.jsm',
 ]
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    EXTRA_JS_MODULES.addons += [
-        'LightweightThemePersister.jsm',
-    ]
-else:
+if CONFIG['MOZ_WIDGET_TOOLKIT'] != 'android':
     EXTRA_JS_MODULES.addons += [
         'PluginProvider.jsm',
     ]

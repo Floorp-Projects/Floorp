@@ -43,6 +43,12 @@ add_task(async function setup_to_default_browserish_state() {
 
   await promiseStartupManager();
 
+  if (AppConstants.MOZ_DEV_EDITION) {
+    // Developer Edition selects the wrong theme by default.
+    let defaultTheme = await AddonManager.getAddonByID("default-theme@mozilla.org");
+    await defaultTheme.enable();
+  }
+
   let [ t1, t2, d ] = await promiseAddonsByIDs(THEME_IDS);
   Assert.ok(t1, "Theme addon should exist");
   Assert.equal(t2, null, "Theme addon is not a thing anymore");

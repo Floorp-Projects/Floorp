@@ -6548,11 +6548,6 @@ var Distribution = {
       } catch (e) { /* ignore bad prefs and move on */ }
     }
 
-    // Apply a lightweight theme if necessary
-    if (prefs && prefs["lightweightThemes.selectedThemeID"]) {
-      Services.obs.notifyObservers(null, "lightweight-theme-apply");
-    }
-
     let localizedString = Cc["@mozilla.org/pref-localizedstring;1"].createInstance(Ci.nsIPrefLocalizedString);
     let localizeablePrefs = aData["LocalizablePreferences"];
     for (let key in localizeablePrefs) {
