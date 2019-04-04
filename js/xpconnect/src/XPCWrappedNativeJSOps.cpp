@@ -354,7 +354,8 @@ static bool DefinePropertyIfFound(
           break;
         }
 
-        to = wrapperToReflectInterfaceNames->FindTearOff(iface2, true, &rv);
+        to =
+            wrapperToReflectInterfaceNames->FindTearOff(ccx, iface2, true, &rv);
         if (!to) {
           break;
         }
@@ -421,7 +422,7 @@ static bool DefinePropertyIfFound(
   if (!member) {
     if (wrapperToReflectInterfaceNames) {
       XPCWrappedNativeTearOff* to =
-          wrapperToReflectInterfaceNames->FindTearOff(iface, true);
+          wrapperToReflectInterfaceNames->FindTearOff(ccx, iface, true);
 
       if (!to) {
         return false;
