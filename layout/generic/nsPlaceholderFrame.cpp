@@ -22,6 +22,7 @@
 #include "nsPresContext.h"
 #include "nsIFrameInlines.h"
 #include "nsIContentInlines.h"
+#include "nsIPresShellInlines.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;

@@ -25,7 +25,6 @@
 #include "nsHTMLParts.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsGkAtoms.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "nsPIDOMWindow.h"
 #include "nsDOMString.h"
