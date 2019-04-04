@@ -44,6 +44,9 @@ static constexpr Register CallTempReg3{Registers::invalid_reg};
 static constexpr Register CallTempReg4{Registers::invalid_reg};
 static constexpr Register CallTempReg5{Registers::invalid_reg};
 static constexpr Register InvalidReg{Registers::invalid_reg};
+  static constexpr Register CallTempNonArgRegs[] = {InvalidReg, InvalidReg};
+  static const uint32_t NumCallTempNonArgRegs =
+    mozilla::ArrayLength(CallTempNonArgRegs);
 
 static constexpr Register IntArgReg0{Registers::invalid_reg};
 static constexpr Register IntArgReg1{Registers::invalid_reg};
