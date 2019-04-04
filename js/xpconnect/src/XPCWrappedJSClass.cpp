@@ -123,11 +123,8 @@ already_AddRefed<nsXPCWrappedJSClass> nsXPCWrappedJSClass::GetNewOrUsed(
 
 nsXPCWrappedJSClass::nsXPCWrappedJSClass(REFNSIID aIID,
                                          const nsXPTInterfaceInfo* aInfo)
-    : mRuntime(nsXPConnect::GetRuntimeInstance()),
-      mInfo(aInfo),
-      mIID(aIID),
-      mDescriptors(nullptr) {
-  mRuntime->GetWrappedJSClassMap()->Add(this);
+    : mInfo(aInfo), mIID(aIID), mDescriptors(nullptr) {
+  XPCJSRuntime::Get()->GetWrappedJSClassMap()->Add(this);
 
   uint16_t methodCount = mInfo->MethodCount();
   if (methodCount) {
@@ -152,9 +149,7 @@ nsXPCWrappedJSClass::~nsXPCWrappedJSClass() {
   if (mDescriptors && mDescriptors != &zero_methods_descriptor) {
     delete[] mDescriptors;
   }
-  if (mRuntime) {
-    mRuntime->GetWrappedJSClassMap()->Remove(this);
-  }
+  XPCJSRuntime::Get()->GetWrappedJSClassMap()->Remove(this);
 }
 
 JSObject* nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
@@ -191,7 +186,8 @@ JSObject* nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
   }
 
   // check upfront for the existence of the function property
-  HandleId funid = mRuntime->GetStringID(XPCJSContext::IDX_QUERY_INTERFACE);
+  HandleId funid =
+      XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_QUERY_INTERFACE);
   if (!JS_GetPropertyById(cx, jsobj, funid, &fun) || fun.isPrimitive()) {
     return nullptr;
   }
@@ -845,6 +841,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
   RootedValueVector args(cx);
   AutoScriptEvaluate scriptEval(cx);
 
+  XPCJSRuntime* xpcrt = XPCJSRuntime::Get();
   XPCJSContext* xpccx = ccx.GetContext();
   AutoSavePendingResult apr(xpccx);
 
@@ -954,7 +951,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
 
       if (param.IsIn()) {
         if (!JS_SetPropertyById(cx, out_obj,
-                                mRuntime->GetStringID(XPCJSContext::IDX_VALUE),
+                                xpcrt->GetStringID(XPCJSContext::IDX_VALUE),
                                 val)) {
           goto pre_call_clean_up;
         }
@@ -1049,8 +1046,9 @@ pre_call_clean_up:
     } else {
       RootedObject obj(cx, &argv[i].toObject());
       if (!JS_GetPropertyById(
-              cx, obj, mRuntime->GetStringID(XPCJSContext::IDX_VALUE), &val))
+              cx, obj, xpcrt->GetStringID(XPCJSContext::IDX_VALUE), &val)) {
         break;
+      }
     }
 
     // setup allocator and/or iid
@@ -1090,8 +1088,9 @@ pre_call_clean_up:
       } else {
         RootedObject obj(cx, &argv[i].toObject());
         if (!JS_GetPropertyById(
-                cx, obj, mRuntime->GetStringID(XPCJSContext::IDX_VALUE), &val))
+                cx, obj, xpcrt->GetStringID(XPCJSContext::IDX_VALUE), &val)) {
           break;
+        }
       }
 
       // setup allocator and/or iid
@@ -1155,7 +1154,6 @@ nsXPCWrappedJSClass::DebugDump(int16_t depth) {
     XPC_LOG_ALWAYS(("ConstantCount = %d", mInfo->ConstantCount()));
     XPC_LOG_OUTDENT();
   }
-  XPC_LOG_ALWAYS(("mRuntime @ %p", mRuntime));
   XPC_LOG_ALWAYS(("mDescriptors @ %p count = %d", mDescriptors, methodCount));
   if (depth && mDescriptors && methodCount) {
     depth--;
