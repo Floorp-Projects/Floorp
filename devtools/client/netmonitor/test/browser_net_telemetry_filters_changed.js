@@ -5,7 +5,7 @@
 
 "use strict";
 
-const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
+const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
 
 /**
  * Test the filters_changed telemetry event.
@@ -26,7 +26,7 @@ add_task(async function() {
   Services.telemetry.clearEvents();
 
   // Ensure no events have been logged
-  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
+  const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
   ok(!snapshot.parent, "No events have been logged for the main process");
 
   // Reload to have one request in the list.

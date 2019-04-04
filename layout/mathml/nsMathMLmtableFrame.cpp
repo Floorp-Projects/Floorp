@@ -16,6 +16,7 @@
 #include "nsTableFrame.h"
 #include "celldata.h"
 
+#include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include <algorithm>
 

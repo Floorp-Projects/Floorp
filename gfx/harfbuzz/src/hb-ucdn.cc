@@ -171,6 +171,10 @@ static const hb_script_t ucdn_script_translate[] =
     HB_SCRIPT_MEDEFAIDRIN,
     HB_SCRIPT_OLD_SOGDIAN,
     HB_SCRIPT_SOGDIAN,
+    HB_SCRIPT_ELYMAIC,
+    HB_SCRIPT_NANDINAGARI,
+    HB_SCRIPT_NYIAKENG_PUACHUE_HMONG,
+    HB_SCRIPT_WANCHO,
 };
 
 static hb_unicode_combining_class_t

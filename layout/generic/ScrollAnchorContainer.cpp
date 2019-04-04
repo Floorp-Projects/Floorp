@@ -10,8 +10,14 @@
 #include "mozilla/dom/Text.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/ToString.h"
+#include "nsBlockFrame.h"
 #include "nsGfxScrollFrame.h"
+#include "nsIFrame.h"
+#include "nsIFrameInlines.h"
 #include "nsLayoutUtils.h"
+#include "nsPlaceholderFrame.h"
+
+using namespace mozilla::dom;
 
 #define ANCHOR_LOG(...)
 // #define ANCHOR_LOG(...) printf_stderr("ANCHOR: " __VA_ARGS__)

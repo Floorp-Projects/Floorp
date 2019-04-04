@@ -92,6 +92,8 @@
 #define JS_SCALARTYPEREPR_FLOAT32 6
 #define JS_SCALARTYPEREPR_FLOAT64 7
 #define JS_SCALARTYPEREPR_UINT8_CLAMPED 8
+#define JS_SCALARTYPEREPR_BIGINT64 9
+#define JS_SCALARTYPEREPR_BIGUINT64 10
 
 // These constants are for use exclusively in JS code. In C++ code,
 // prefer ReferenceTypeRepresentation::TYPE_ANY etc, which allows

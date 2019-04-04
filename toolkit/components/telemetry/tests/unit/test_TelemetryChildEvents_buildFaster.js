@@ -27,7 +27,7 @@ function run_child_test() {
 async function waitForContentEvents() {
   await ContentTaskUtils.waitForCondition(() => {
     const snapshot =
-      Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+      Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, false);
     return Object.keys(snapshot).includes("content");
   });
 }
@@ -81,7 +81,7 @@ add_task(async function test_setup() {
   await waitForContentEvents();
 
   let snapshot =
-    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, false);
+    Telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, false);
   Assert.ok(("parent" in snapshot), "Should have parent events in the snapshot.");
   Assert.ok(("content" in snapshot), "Should have content events in the snapshot.");
 

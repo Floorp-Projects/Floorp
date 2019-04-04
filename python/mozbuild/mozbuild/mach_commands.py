@@ -1431,8 +1431,7 @@ class PackageFrontend(MachCommandBase):
                 records[record.filename] = DownloadRecord(
                     url, record.filename, record.size, record.digest,
                     record.algorithm, unpack=record.unpack,
-                    version=record.version, visibility=record.visibility,
-                    setup=record.setup)
+                    version=record.version, visibility=record.visibility)
 
         if from_build:
             if 'MOZ_AUTOMATION' in os.environ:
@@ -1577,7 +1576,7 @@ class PackageFrontend(MachCommandBase):
                     'sha256': h.hexdigest(),
                 }
             if record.unpack and not no_unpack:
-                unpack_file(local, record.setup)
+                unpack_file(local)
                 os.unlink(local)
 
         if not downloaded:
@@ -1724,7 +1723,7 @@ class StaticAnalysis(MachCommandBase):
         if outgoing:
             repo = get_repository_object(self.topsrcdir)
             files = repo.get_outgoing_files()
-            source = self._conv_to_abspath(files)
+            source = map(os.path.abspath, files)
 
         # Split in several chunks to avoid hitting Python's limit of 100 groups in re
         compile_db = json.loads(open(self._compile_db, 'r').read())
@@ -2420,12 +2419,10 @@ class StaticAnalysis(MachCommandBase):
     def clang_format(self, assume_filename, path, commit, output_path=None, output_format='diff', verbose=False, outgoing=False):
         # Run clang-format or clang-format-diff on the local changes
         # or files/directories
-        if path is not None:
-            path = self._conv_to_abspath(path)
-        elif outgoing:
+        if path is None and outgoing:
             repo = get_repository_object(self.topsrcdir)
-            files = repo.get_outgoing_files()
-            path = self._conv_to_abspath(files)
+            path = repo.get_outgoing_files()
+        path = map(os.path.abspath, path)
 
         os.chdir(self.topsrcdir)
 
@@ -2662,13 +2659,6 @@ class StaticAnalysis(MachCommandBase):
         return builder._run_make(directory=self.topobjdir, target='export',
                                  line_handler=None, silent=not verbose,
                                  num_jobs=jobs)
-
-    def _conv_to_abspath(self, paths):
-        # Converts all the paths to absolute pathnames
-        tmp_path = []
-        for f in paths:
-            tmp_path.append(os.path.abspath(f))
-        return tmp_path
 
     def _set_clang_tools_paths(self):
         rc, config, _ = self._get_config_environment()

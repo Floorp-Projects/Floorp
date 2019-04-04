@@ -6,6 +6,10 @@
 #include "nsIControllerCommand.idl"
 #include "nsICommandParams.idl"
 
+%{C++
+class nsControllerCommandTable;
+%}
+
 /**
  * nsIControllerCommandTable
  * 
@@ -18,7 +22,7 @@
  * 
  */
 
-[scriptable, uuid(c847f90e-b8f3-49db-a4df-8867831f2800)]
+[scriptable, builtinclass, uuid(c847f90e-b8f3-49db-a4df-8867831f2800)]
 interface nsIControllerCommandTable : nsISupports
 {
   /**
@@ -87,5 +91,14 @@ interface nsIControllerCommandTable : nsISupports
 
   void getSupportedCommands(out unsigned long count,
                             [array, size_is(count), retval] out string commands);
+
+%{C++
+  /**
+   * In order to avoid circular dependency issues, these methods are defined
+   * in nsControllerCommandTable.h.  Consumers need to #include that header.
+   */
+  inline nsControllerCommandTable* AsControllerCommandTable();
+  inline const nsControllerCommandTable* AsControllerCommandTable() const;
+%}
 };
 

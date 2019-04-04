@@ -22,6 +22,8 @@
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/PaymentRequestParent.h"
 #include "mozilla/dom/BrowserBridgeParent.h"
+#include "mozilla/dom/RemoteWebProgress.h"
+#include "mozilla/dom/RemoteWebProgressRequest.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
@@ -2209,29 +2211,122 @@ mozilla::ipc::IPCResult TabParent::RecvRegisterProtocolHandler(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult TabParent::RecvOnProgressChange(
+    const Maybe<WebProgressData>& aWebProgressData,
+    const RequestData& aRequestData, const int32_t aCurSelfProgress,
+    const int32_t aMaxSelfProgress, const int32_t aCurTotalProgress,
+    const int32_t aMaxTotalProgress) {
+  nsCOMPtr<nsIBrowser> browser =
+      mFrameElement ? mFrameElement->AsBrowser() : nullptr;
+
+  if (!browser) {
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIWebProgress> manager;
+  nsresult rv = browser->GetRemoteWebProgressManager(getter_AddRefs(manager));
+  NS_ENSURE_SUCCESS(rv, IPC_OK());
+
+  nsCOMPtr<nsIWebProgressListener> managerAsListener =
+      do_QueryInterface(manager);
+
+  if (!managerAsListener) {
+    // We are no longer remote, so we cannot propagate this message.
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIWebProgress> webProgress;
+  nsCOMPtr<nsIRequest> request;
+  ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
+                                   webProgress, request);
+
+  Unused << managerAsListener->OnProgressChange(
+      webProgress, request, aCurSelfProgress, aMaxSelfProgress,
+      aCurTotalProgress, aMaxTotalProgress);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult TabParent::RecvOnStatusChange(
+    const Maybe<WebProgressData>& aWebProgressData,
+    const RequestData& aRequestData, const nsresult aStatus,
+    const nsString& aMessage) {
+  nsCOMPtr<nsIBrowser> browser =
+      mFrameElement ? mFrameElement->AsBrowser() : nullptr;
+
+  if (!browser) {
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIWebProgress> manager;
+  nsresult rv = browser->GetRemoteWebProgressManager(getter_AddRefs(manager));
+  NS_ENSURE_SUCCESS(rv, IPC_OK());
+
+  nsCOMPtr<nsIWebProgressListener> managerAsListener =
+      do_QueryInterface(manager);
+
+  if (!managerAsListener) {
+    // We are no longer remote, so we cannot propagate this message.
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsIWebProgress> webProgress;
+  nsCOMPtr<nsIRequest> request;
+  ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
+                                   webProgress, request);
+
+  Unused << managerAsListener->OnStatusChange(webProgress, request, aStatus,
+                                              aMessage.get());
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult TabParent::RecvOnContentBlockingEvent(
     const Maybe<WebProgressData>& aWebProgressData,
     const RequestData& aRequestData, const uint32_t& aEvent) {
   nsCOMPtr<nsIBrowser> browser =
       mFrameElement ? mFrameElement->AsBrowser() : nullptr;
   if (browser) {
-    if (aWebProgressData.isNothing()) {
-      Unused << browser->CallWebProgressContentBlockingEventListeners(
-          false, false, false, 0, 0, aRequestData.requestURI(),
-          aRequestData.originalRequestURI(), aRequestData.matchedList(),
-          aEvent);
-    } else {
-      Unused << browser->CallWebProgressContentBlockingEventListeners(
-          true, aWebProgressData.ref().isTopLevel(),
-          aWebProgressData.ref().isLoadingDocument(),
-          aWebProgressData.ref().loadType(),
-          aWebProgressData.ref().DOMWindowID(), aRequestData.requestURI(),
-          aRequestData.originalRequestURI(), aRequestData.matchedList(),
-          aEvent);
+    nsCOMPtr<nsIWebProgress> manager;
+    nsresult rv = browser->GetRemoteWebProgressManager(getter_AddRefs(manager));
+    NS_ENSURE_SUCCESS(rv, IPC_OK());
+
+    nsCOMPtr<nsIWebProgressListener> managerAsListener =
+        do_QueryInterface(manager);
+    if (!managerAsListener) {
+      // We are no longer remote, so we cannot propagate this message.
+      return IPC_OK();
     }
+
+    nsCOMPtr<nsIWebProgress> webProgress;
+    nsCOMPtr<nsIRequest> request;
+    ReconstructWebProgressAndRequest(manager, aWebProgressData, aRequestData,
+                                     webProgress, request);
+
+    Unused << managerAsListener->OnContentBlockingEvent(webProgress, request,
+                                                        aEvent);
   }
 
   return IPC_OK();
+}
+
+void TabParent::ReconstructWebProgressAndRequest(
+    nsIWebProgress* aManager, const Maybe<WebProgressData>& aWebProgressData,
+    const RequestData& aRequestData, nsCOMPtr<nsIWebProgress>& aOutWebProgress,
+    nsCOMPtr<nsIRequest>& aOutRequest) {
+  if (aWebProgressData) {
+    aOutWebProgress = MakeAndAddRef<RemoteWebProgress>(
+        aManager, aWebProgressData->outerDOMWindowID(),
+        aWebProgressData->innerDOMWindowID(), aWebProgressData->loadType(),
+        aWebProgressData->isLoadingDocument(), aWebProgressData->isTopLevel());
+  } else {
+    aOutWebProgress =
+        MakeAndAddRef<RemoteWebProgress>(aManager, 0, 0, 0, false, false);
+  }
+
+  aOutRequest = MakeAndAddRef<RemoteWebProgressRequest>(
+      aRequestData.requestURI(), aRequestData.originalRequestURI(),
+      aRequestData.matchedList());
 }
 
 bool TabParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent) {

@@ -19,7 +19,6 @@
 #include "nsIFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsIContent.h"
-#include "nsIPresShell.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsBlockFrame.h"
@@ -29,6 +28,7 @@
 #include "nsMenuPopupFrame.h"
 #include "nsTextFragment.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Selection.h"
 #include "nsIBidiKeyboard.h"
@@ -623,8 +623,10 @@ nsresult nsCaret::GetCaretFrameForNodeOffset(
     nsIFrame** aReturnFrame, nsIFrame** aReturnUnadjustedFrame,
     int32_t* aReturnOffset) {
   if (!aFrameSelection) return NS_ERROR_FAILURE;
-  nsIPresShell* presShell = aFrameSelection->GetShell();
-  if (!presShell) return NS_ERROR_FAILURE;
+  PresShell* presShell = aFrameSelection->GetPresShell();
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (!aContentNode || !aContentNode->IsInComposedDoc() ||
       presShell->GetDocument() != aContentNode->GetComposedDoc())

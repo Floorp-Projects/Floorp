@@ -1525,8 +1525,7 @@ static bool GetExistingPropertyValue(JSContext* cx, HandleNativeObject obj,
                                      HandleId id, Handle<PropertyResult> prop,
                                      MutableHandleValue vp) {
   if (prop.isDenseOrTypedArrayElement()) {
-    vp.set(obj->getDenseOrTypedArrayElement(JSID_TO_INT(id)));
-    return true;
+    return obj->getDenseOrTypedArrayElement<CanGC>(cx, JSID_TO_INT(id), vp);
   }
   MOZ_ASSERT(!cx->helperThread());
 
@@ -1979,10 +1978,9 @@ static bool DefineNonexistentProperty(JSContext* cx, HandleNativeObject obj,
       // Steps 1-2 are enforced by the caller.
 
       // Step 3.
-      // We still need to call ToNumber, because of its possible side
-      // effects.
-      double d;
-      if (!ToNumber(cx, v, &d)) {
+      // We still need to call ToNumber or ToBigInt, because of its
+      // possible side effects.
+      if (!obj->as<TypedArrayObject>().convertForSideEffect(cx, v)) {
         return false;
       }
 
@@ -2189,7 +2187,10 @@ bool js::NativeGetOwnPropertyDescriptor(
     desc.setSetter(nullptr);
 
     if (prop.isDenseOrTypedArrayElement()) {
-      desc.value().set(obj->getDenseOrTypedArrayElement(JSID_TO_INT(id)));
+      if (!obj->getDenseOrTypedArrayElement<CanGC>(cx, JSID_TO_INT(id),
+                                                   desc.value())) {
+        return false;
+      }
     } else {
       RootedShape shape(cx, prop.shape());
       if (!NativeGetExistingProperty(cx, obj, obj, shape, desc.value())) {
@@ -2508,8 +2509,8 @@ static MOZ_ALWAYS_INLINE bool NativeGetPropertyInline(
       // Steps 5-8. Special case for dense elements because
       // GetExistingProperty doesn't support those.
       if (prop.isDenseOrTypedArrayElement()) {
-        vp.set(pobj->getDenseOrTypedArrayElement(JSID_TO_INT(id)));
-        return true;
+        return pobj->template getDenseOrTypedArrayElement<allowGC>(
+            cx, JSID_TO_INT(id), vp);
       }
 
       typename MaybeRooted<Shape*, allowGC>::RootType shape(cx, prop.shape());
@@ -2792,42 +2793,6 @@ static bool SetNonexistentProperty(JSContext* cx, HandleNativeObject obj,
   }
 
   return SetPropertyByDefining(cx, id, v, receiver, result);
-}
-
-// ES2019 draft rev e7dc63fb5d1c26beada9ffc12dc78aa6548f1fb5
-// 9.4.5.9 IntegerIndexedElementSet
-static bool SetTypedArrayElement(JSContext* cx, Handle<TypedArrayObject*> obj,
-                                 uint64_t index, HandleValue v,
-                                 ObjectOpResult& result) {
-  // Steps 1-2. Are enforced by the caller.
-
-  // Step 3.
-  double d;
-  if (!ToNumber(cx, v, &d)) {
-    return false;
-  }
-
-  // Step 5.
-  if (obj->hasDetachedBuffer()) {
-    return result.failSoft(JSMSG_TYPED_ARRAY_DETACHED);
-  }
-
-  // Step 6. Right now we only allow integer indexes.
-  // Step 7.
-
-  // Step 8.
-  uint32_t length = obj->length();
-
-  // Step 9.
-  if (index >= length) {
-    return result.failSoft(JSMSG_BAD_INDEX);
-  }
-
-  // Steps 4, 10-15.
-  TypedArrayObject::setElement(*obj, index, d);
-
-  // Step 16.
-  return result.succeed();
 }
 
 // Set an existing own property obj[index] that's a dense element.

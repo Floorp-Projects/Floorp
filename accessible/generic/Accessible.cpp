@@ -44,7 +44,6 @@
 
 #include "nsDeckFrame.h"
 #include "nsLayoutUtils.h"
-#include "nsIPresShell.h"
 #include "nsIStringBundle.h"
 #include "nsPresContext.h"
 #include "nsIFrame.h"
@@ -74,6 +73,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/Unused.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"

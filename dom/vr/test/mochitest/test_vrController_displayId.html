@@ -27,6 +27,7 @@
         async_test(function(t) {
           window.addEventListener("gamepadbuttondown", function(e) {
               assert_equals(e.gamepad.displayId, vrDisplay.displayId, "gamepad.displayId should be equal to vrDisplay.");
+              assert_equals(e.gamepad.id, "Puppet Gamepad", "gamepad.id must be equal to 'Puppet Gamepad'.");
               ++controllerCount;
               if (controllerCount == 2) {
                 t.done();
@@ -42,6 +43,7 @@
             return navigator.getVRDisplays().then((displays) => {
               vrDisplay = displays[0];
               assert_equals(displays.length, 1, "displays.length must be one after attach.");
+              assert_equals(vrDisplay.displayName, "Puppet HMD", "display.displayName must be equal to 'Puppet HMD'.");
               addController();
               addController();
             });

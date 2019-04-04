@@ -48,7 +48,6 @@ class nsBidi;
 class nsIPrintSettings;
 class nsDocShell;
 class nsIDocShell;
-class nsIPresShell;
 class nsITheme;
 class nsIContent;
 class nsIFrame;
@@ -78,6 +77,7 @@ class EffectCompositor;
 class Encoding;
 class EventStateManager;
 class CounterStyleManager;
+class PresShell;
 class RestyleManager;
 namespace layers {
 class ContainerLayer;
@@ -158,20 +158,20 @@ class nsPresContext : public nsISupports,
    * Set and detach presentation shell that this context is bound to.
    * A presentation context may only be bound to a single shell.
    */
-  void AttachShell(nsIPresShell* aShell);
-  void DetachShell();
+  void AttachPresShell(mozilla::PresShell* aPresShell);
+  void DetachPresShell();
 
   nsPresContextType Type() const { return mType; }
 
   /**
    * Get the PresentationShell that this context is bound to.
    */
-  nsIPresShell* PresShell() const {
-    NS_ASSERTION(mShell, "Null pres shell");
-    return mShell;
+  mozilla::PresShell* PresShell() const {
+    NS_ASSERTION(mPresShell, "Null pres shell");
+    return mPresShell;
   }
 
-  nsIPresShell* GetPresShell() const { return mShell; }
+  mozilla::PresShell* GetPresShell() const { return mPresShell; }
 
   void DispatchCharSetChange(NotNull<const Encoding*> aCharSet);
 
@@ -293,11 +293,6 @@ class nsPresContext : public nsISupports,
    * our document's compatibility mode.
    */
   nsCompatibility CompatibilityMode() const;
-
-  /**
-   * Notify the context that the document's compatibility mode has changed
-   */
-  void CompatibilityModeChanged();
 
   /**
    * Access the image animation mode for this context
@@ -1100,9 +1095,9 @@ class nsPresContext : public nsISupports,
   // please make the ownership explicit (pinkerton, scc).
 
   nsPresContextType mType;
-  // the nsPresShell owns a strong reference to the nsPresContext, and is
+  // the PresShell owns a strong reference to the nsPresContext, and is
   // responsible for nulling this pointer before it is destroyed
-  nsIPresShell* MOZ_NON_OWNING_REF mShell;  // [WEAK]
+  mozilla::PresShell* MOZ_NON_OWNING_REF mPresShell;  // [WEAK]
   RefPtr<mozilla::dom::Document> mDocument;
   RefPtr<nsDeviceContext> mDeviceContext;  // [STRONG] could be weak, but
                                            // better safe than sorry.

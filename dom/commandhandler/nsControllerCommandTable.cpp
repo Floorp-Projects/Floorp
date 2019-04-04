@@ -11,8 +11,6 @@
 #include "mozilla/EditorController.h"
 #include "mozilla/HTMLEditorController.h"
 
-nsresult NS_NewControllerCommandTable(nsIControllerCommandTable** aResult);
-
 // this value is used to size the hash table. Just a sensible upper bound
 #define NUM_COMMANDS_LENGTH 32
 
@@ -186,11 +184,11 @@ nsControllerCommandTable::GetSupportedCommands(uint32_t* aCount,
   return NS_OK;
 }
 
-typedef nsresult (*CommandTableRegistrar)(nsIControllerCommandTable*);
+typedef nsresult (*CommandTableRegistrar)(nsControllerCommandTable*);
 
-static already_AddRefed<nsIControllerCommandTable>
+static already_AddRefed<nsControllerCommandTable>
 CreateCommandTableWithCommands(CommandTableRegistrar aRegistrar) {
-  nsCOMPtr<nsIControllerCommandTable> commandTable =
+  RefPtr<nsControllerCommandTable> commandTable =
       new nsControllerCommandTable();
 
   nsresult rv = aRegistrar(commandTable);
@@ -203,48 +201,36 @@ CreateCommandTableWithCommands(CommandTableRegistrar aRegistrar) {
 }
 
 // static
-already_AddRefed<nsIControllerCommandTable>
+already_AddRefed<nsControllerCommandTable>
 nsControllerCommandTable::CreateEditorCommandTable() {
   return CreateCommandTableWithCommands(
       EditorController::RegisterEditorCommands);
 }
 
 // static
-already_AddRefed<nsIControllerCommandTable>
+already_AddRefed<nsControllerCommandTable>
 nsControllerCommandTable::CreateEditingCommandTable() {
   return CreateCommandTableWithCommands(
       EditorController::RegisterEditingCommands);
 }
 
 // static
-already_AddRefed<nsIControllerCommandTable>
+already_AddRefed<nsControllerCommandTable>
 nsControllerCommandTable::CreateHTMLEditorCommandTable() {
   return CreateCommandTableWithCommands(
       HTMLEditorController::RegisterHTMLEditorCommands);
 }
 
 // static
-already_AddRefed<nsIControllerCommandTable>
+already_AddRefed<nsControllerCommandTable>
 nsControllerCommandTable::CreateHTMLEditorDocStateCommandTable() {
   return CreateCommandTableWithCommands(
       HTMLEditorController::RegisterEditorDocStateCommands);
 }
 
 // static
-already_AddRefed<nsIControllerCommandTable>
+already_AddRefed<nsControllerCommandTable>
 nsControllerCommandTable::CreateWindowCommandTable() {
   return CreateCommandTableWithCommands(
       nsWindowCommandRegistration::RegisterWindowCommands);
-}
-
-nsresult NS_NewControllerCommandTable(nsIControllerCommandTable** aResult) {
-  MOZ_ASSERT(aResult != nullptr, "null ptr");
-  if (!aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  nsControllerCommandTable* newCommandTable = new nsControllerCommandTable();
-  NS_ADDREF(newCommandTable);
-  *aResult = newCommandTable;
-  return NS_OK;
 }

@@ -19,9 +19,9 @@
 #include "TreeWalker.h"
 #include "xpcAccessibleDocument.h"
 
+#include "nsCommandManager.h"
 #include "nsContentUtils.h"
 #include "nsIMutableArray.h"
-#include "nsICommandManager.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
 #include "nsPIDOMWindow.h"
@@ -505,7 +505,7 @@ nsresult DocAccessible::AddEventListeners() {
   // We want to add a command observer only if the document is content and has
   // an editor.
   if (docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
-    nsCOMPtr<nsICommandManager> commandManager = docShell->GetCommandManager();
+    RefPtr<nsCommandManager> commandManager = docShell->GetCommandManager();
     if (commandManager)
       commandManager->AddCommandObserver(this, "obs_documentCreated");
   }
@@ -533,8 +533,7 @@ nsresult DocAccessible::RemoveEventListeners() {
 
     if (docShell) {
       if (docShell->ItemType() == nsIDocShellTreeItem::typeContent) {
-        nsCOMPtr<nsICommandManager> commandManager =
-            docShell->GetCommandManager();
+        RefPtr<nsCommandManager> commandManager = docShell->GetCommandManager();
         if (commandManager) {
           commandManager->RemoveCommandObserver(this, "obs_documentCreated");
         }

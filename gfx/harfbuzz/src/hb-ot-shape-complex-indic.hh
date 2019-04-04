@@ -62,17 +62,19 @@ enum indic_category_t {
   OT_Coeng = 14, /* Khmer-style Virama. */
   OT_Repha = 15, /* Atomically-encoded logical or visual repha. */
   OT_Ra = 16,
-  OT_CM = 17,  /* Consonant-Medial; Unused by Indic shaper. */
+  OT_CM = 17,  /* Consonant-Medial. */
   OT_Symbol = 18, /* Avagraha, etc that take marks (SM,A,VD). */
   OT_CS = 19
 };
+
+#define MEDIAL_FLAGS (FLAG (OT_CM))
 
 /* Note:
  *
  * We treat Vowels and placeholders as if they were consonants.  This is safe because Vowels
  * cannot happen in a consonant syllable.  The plus side however is, we can call the
  * consonant syllable logic from the vowel syllable function and get it all right! */
-#define CONSONANT_FLAGS (FLAG (OT_C) | FLAG (OT_CS) | FLAG (OT_Ra) | FLAG (OT_V) | FLAG (OT_PLACEHOLDER) | FLAG (OT_DOTTEDCIRCLE))
+#define CONSONANT_FLAGS (FLAG (OT_C) | FLAG (OT_CS) | FLAG (OT_Ra) | MEDIAL_FLAGS | FLAG (OT_V) | FLAG (OT_PLACEHOLDER) | FLAG (OT_DOTTEDCIRCLE))
 #define JOINER_FLAGS (FLAG (OT_ZWJ) | FLAG (OT_ZWNJ))
 
 
@@ -362,6 +364,7 @@ set_indic_properties (hb_glyph_info_t &info)
   else if (unlikely (u == 0x0AFBu)) cat = OT_N; /* https://github.com/harfbuzz/harfbuzz/issues/552 */
 
   else if (unlikely (u == 0x0980u)) cat = OT_PLACEHOLDER; /* https://github.com/harfbuzz/harfbuzz/issues/538 */
+  else if (unlikely (u == 0x09FCu)) cat = OT_PLACEHOLDER; /* https://github.com/harfbuzz/harfbuzz/pull/1613 */
   else if (unlikely (u == 0x0C80u)) cat = OT_PLACEHOLDER; /* https://github.com/harfbuzz/harfbuzz/pull/623 */
   else if (unlikely (hb_in_range<hb_codepoint_t> (u, 0x2010u, 0x2011u)))
 				    cat = OT_PLACEHOLDER;

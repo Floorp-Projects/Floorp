@@ -198,6 +198,20 @@ fn gnu_i686_pic() {
 }
 
 #[test]
+fn gnu_x86_64_no_plt() {
+    let target = "x86_64-unknown-linux-gnu";
+    let test = Test::gnu();
+    test.gcc()
+        .pic(true)
+        .use_plt(false)
+        .target(&target)
+        .host(&target)
+        .file("foo.c")
+        .compile("foo");
+    test.cmd(0).must_have("-fno-plt");
+}
+
+#[test]
 fn gnu_set_stdlib() {
     let test = Test::gnu();
     test.gcc()

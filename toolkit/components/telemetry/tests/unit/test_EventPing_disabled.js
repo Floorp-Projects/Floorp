@@ -14,7 +14,7 @@ ChromeUtils.import("resource://testing-common/TelemetryArchiveTesting.jsm", this
 ChromeUtils.defineModuleGetter(this, "TelemetryEventPing",
                                "resource://gre/modules/EventPing.jsm");
 
-const OPTIN = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN;
+const PRERELEASE_CHANNELS = Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS;
 
 add_task(async function setup() {
   Services.prefs.setBoolPref(TelemetryUtils.Preferences.EventPingEnabled, false);
@@ -30,6 +30,6 @@ add_task(async function setup() {
 
 add_task(async function test_EventsNotRecorded() {
   Telemetry.recordEvent("telemetry.test", "test1", "object1");
-  let snapshot = Telemetry.snapshotEvents(OPTIN, true);
+  let snapshot = Telemetry.snapshotEvents(PRERELEASE_CHANNELS, true);
   Assert.equal(Object.keys(snapshot).length, 0, "Should not have recorded any events.");
 });

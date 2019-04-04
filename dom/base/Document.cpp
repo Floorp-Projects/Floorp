@@ -45,6 +45,7 @@
 #include "nsIObserver.h"
 #include "nsIBaseWindow.h"
 #include "nsILayoutHistoryState.h"
+#include "nsLayoutStylesheetCache.h"
 #include "mozilla/css/Loader.h"
 #include "mozilla/css/ImageLoader.h"
 #include "nsDocShell.h"
@@ -73,6 +74,7 @@
 #include "mozilla/dom/HTMLSharedElement.h"
 #include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/Performance.h"
+#include "mozilla/dom/TreeOrderedArrayInlines.h"
 #include "mozilla/dom/ServiceWorkerContainer.h"
 #include "mozilla/dom/ScriptLoader.h"
 #include "mozilla/dom/ShadowIncludingTreeIterator.h"
@@ -271,6 +273,7 @@
 #  include "mozilla/dom/XULBroadcastManager.h"
 #  include "mozilla/dom/XULPersist.h"
 #  include "nsIXULWindow.h"
+#  include "nsIChromeRegistry.h"
 #  include "nsXULPrototypeDocument.h"
 #  include "nsXULCommandDispatcher.h"
 #  include "nsXULPopupManager.h"
@@ -381,20 +384,12 @@ void IdentifierMapEntry::Traverse(
 }
 
 bool IdentifierMapEntry::IsEmpty() {
-  return mIdContentList.IsEmpty() && !mNameContentList && !mChangeCallbacks &&
+  return mIdContentList->IsEmpty() && !mNameContentList && !mChangeCallbacks &&
          !mImageElement;
 }
 
 bool IdentifierMapEntry::HasNameElement() const {
   return mNameContentList && mNameContentList->Length() != 0;
-}
-
-Element* IdentifierMapEntry::GetIdElement() {
-  return mIdContentList.SafeElementAt(0);
-}
-
-Element* IdentifierMapEntry::GetImageIdElement() {
-  return mImageElement ? mImageElement.get() : GetIdElement();
 }
 
 void IdentifierMapEntry::AddContentChangeCallback(
@@ -436,47 +431,13 @@ void IdentifierMapEntry::FireChangeCallbacks(Element* aOldElement,
   }
 }
 
-struct PositionComparator {
-  Element* const mElement;
-  explicit PositionComparator(Element* const aElement) : mElement(aElement) {}
-
-  int operator()(void* aElement) const {
-    Element* curElement = static_cast<Element*>(aElement);
-    MOZ_DIAGNOSTIC_ASSERT(mElement != curElement);
-    if (nsContentUtils::PositionIsBefore(mElement, curElement)) {
-      return -1;
-    }
-    return 1;
-  }
-};
-
 void IdentifierMapEntry::AddIdElement(Element* aElement) {
   MOZ_ASSERT(aElement, "Must have element");
-  MOZ_ASSERT(!mIdContentList.Contains(nullptr), "Why is null in our list?");
+  MOZ_ASSERT(!mIdContentList->Contains(nullptr), "Why is null in our list?");
 
-  // Common case
-  if (mIdContentList.IsEmpty()) {
-    mIdContentList.AppendElement(aElement);
-    FireChangeCallbacks(nullptr, aElement);
-    return;
-  }
-
-#ifdef DEBUG
-  Element* currentElement = mIdContentList.ElementAt(0);
-#endif
-
-  // We seem to have multiple content nodes for the same id, or XUL is messing
-  // with us.  Search for the right place to insert the content.
-
-  size_t idx;
-  BinarySearchIf(mIdContentList, 0, mIdContentList.Length(),
-                 PositionComparator(aElement), &idx);
-
-  mIdContentList.InsertElementAt(idx, aElement);
-
-  if (idx == 0) {
-    Element* oldElement = mIdContentList.SafeElementAt(1);
-    NS_ASSERTION(currentElement == oldElement, "How did that happen?");
+  size_t index = mIdContentList.Insert(*aElement);
+  if (index == 0) {
+    Element* oldElement = mIdContentList->SafeElementAt(1);
     FireChangeCallbacks(oldElement, aElement);
   }
 }
@@ -491,15 +452,15 @@ void IdentifierMapEntry::RemoveIdElement(Element* aElement) {
   // Only assert this in HTML documents for now as XUL does all sorts of weird
   // crap.
   NS_ASSERTION(!aElement->OwnerDoc()->IsHTMLDocument() ||
-                   mIdContentList.Contains(aElement),
+                   mIdContentList->Contains(aElement),
                "Removing id entry that doesn't exist");
 
   // XXXbz should this ever Compact() I guess when all the content is gone
   // we'll just get cleaned up in the natural order of things...
-  Element* currentElement = mIdContentList.SafeElementAt(0);
-  mIdContentList.RemoveElement(aElement);
+  Element* currentElement = mIdContentList->SafeElementAt(0);
+  mIdContentList.RemoveElement(*aElement);
   if (currentElement == aElement) {
-    FireChangeCallbacks(currentElement, mIdContentList.SafeElementAt(0));
+    FireChangeCallbacks(currentElement, mIdContentList->SafeElementAt(0));
   }
 }
 
@@ -1261,6 +1222,7 @@ Document::Document(const char* aContentType)
       mInXBLUpdate(false),
       mNeedsReleaseAfterStackRefCntRelease(false),
       mStyleSetFilled(false),
+      mQuirkSheetAdded(false),
       mSSApplicableStateNotificationPending(false),
       mMayHaveTitleElement(false),
       mDOMLoadingSet(false),
@@ -1690,10 +1652,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
     cb.NoteXPCOMChild(ToSupports(tmp));
   }
 
-  for (auto iter = tmp->mIdentifierMap.ConstIter(); !iter.Done(); iter.Next()) {
-    iter.Get()->Traverse(&cb);
-  }
-
   tmp->mExternalResourceMap.Traverse(&cb);
 
   // Traverse all Document pointer members.
@@ -1707,7 +1665,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParser)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScriptGlobalObject)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mListenerManager)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDOMStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheetSetList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mScriptLoader)
 
@@ -1749,7 +1706,6 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrototypeDocument)
 
   // Traverse all our nsCOMArrays.
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mStyleSheets)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPreloadingImages)
 
   for (uint32_t i = 0; i < tmp->mFrameRequestCallbacks.Length(); ++i) {
@@ -1855,8 +1811,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
     tmp->mListenerManager = nullptr;
   }
 
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDOMStyleSheets)
-
   if (tmp->mStyleSheetSetList) {
     tmp->mStyleSheetSetList->Disconnect();
     tmp->mStyleSheetSetList = nullptr;
@@ -1876,7 +1830,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   // assume that *most* cycles you actually want to break somewhere
   // else, and not unlink an awful lot here.
 
-  tmp->mIdentifierMap.Clear();
   tmp->mExpandoAndGeneration.OwnerUnlinked();
 
   if (tmp->mAnimationController) {
@@ -1953,6 +1906,8 @@ nsresult Document::Init() {
   // ::Policy() can *always* return a non null policy
   mFeaturePolicy = new FeaturePolicy(this);
   mFeaturePolicy->SetDefaultOrigin(NodePrincipal());
+
+  mStyleSet = MakeUnique<ServoStyleSet>(*this);
 
   mozilla::HoldJSObjects(this);
 
@@ -2246,15 +2201,12 @@ already_AddRefed<nsIPrincipal> Document::MaybeDowngradePrincipal(
 }
 
 void Document::RemoveDocStyleSheetsFromStyleSets() {
+  MOZ_ASSERT(mStyleSetFilled);
   // The stylesheets should forget us
   for (StyleSheet* sheet : Reversed(mStyleSheets)) {
     sheet->ClearAssociatedDocumentOrShadowRoot();
-
     if (sheet->IsApplicable()) {
-      RefPtr<PresShell> presShell = GetPresShell();
-      if (presShell) {
-        presShell->StyleSet()->RemoveDocStyleSheet(sheet);
-      }
+      mStyleSet->RemoveDocStyleSheet(sheet);
     }
     // XXX Tell observers?
   }
@@ -2265,12 +2217,8 @@ void Document::RemoveStyleSheetsFromStyleSets(
   // The stylesheets should forget us
   for (StyleSheet* sheet : Reversed(aSheets)) {
     sheet->ClearAssociatedDocumentOrShadowRoot();
-
-    if (sheet->IsApplicable()) {
-      RefPtr<PresShell> presShell = GetPresShell();
-      if (presShell) {
-        presShell->StyleSet()->RemoveStyleSheet(aType, sheet);
-      }
+    if (mStyleSetFilled && sheet->IsApplicable()) {
+      mStyleSet->RemoveStyleSheet(aType, sheet);
     }
     // XXX Tell observers?
   }
@@ -2296,8 +2244,6 @@ void Document::ResetStylesheetsToURI(nsIURI* aURI) {
       RemoveStyleSheetsFromStyleSets(*sheetService->AuthorStyleSheets(),
                                      SheetType::Doc);
     }
-
-    mStyleSetFilled = false;
   }
 
   // Release all the sheets
@@ -2322,11 +2268,13 @@ void Document::ResetStylesheetsToURI(nsIURI* aURI) {
     mStyleAttrStyleSheet = new nsHTMLCSSStyleSheet();
   }
 
-  // Now set up our style sets
-  if (PresShell* presShell = GetPresShell()) {
-    FillStyleSet(presShell->StyleSet());
-    if (presShell->StyleSet()->StyleSheetsHaveChanged()) {
-      presShell->ApplicableStylesChanged();
+  if (mStyleSetFilled) {
+    FillStyleSetDocumentSheets();
+
+    if (mStyleSet->StyleSheetsHaveChanged()) {
+      if (PresShell* presShell = GetPresShell()) {
+        presShell->ApplicableStylesChanged();
+      }
     }
   }
 }
@@ -2339,34 +2287,126 @@ static void AppendSheetsToStyleSet(ServoStyleSet* aStyleSet,
   }
 }
 
-void Document::FillStyleSet(ServoStyleSet* aStyleSet) {
-  MOZ_ASSERT(aStyleSet, "Must have a style set");
-  MOZ_ASSERT(aStyleSet->SheetCount(SheetType::Doc) == 0,
-             "Style set already has document sheets?");
+void Document::FillStyleSetUserAndUASheets() {
+  // Make sure this does the same thing as PresShell::Add{User,Agent}Sheet wrt
+  // ordering.
 
+  // The document will fill in the document sheets when we create the presshell
+  auto cache = nsLayoutStylesheetCache::Singleton();
+
+  nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
+  MOZ_ASSERT(sheetService,
+             "should never be creating a StyleSet after the style sheet "
+             "service has gone");
+
+  for (StyleSheet* sheet : *sheetService->UserStyleSheets()) {
+    mStyleSet->AppendStyleSheet(SheetType::User, sheet);
+  }
+
+  StyleSheet* sheet = IsInChromeDocShell() ? cache->GetUserChromeSheet()
+                                           : cache->GetUserContentSheet();
+  if (sheet) {
+    mStyleSet->AppendStyleSheet(SheetType::User, sheet);
+  }
+
+  mStyleSet->AppendStyleSheet(SheetType::Agent, cache->UASheet());
+
+  if (MOZ_LIKELY(NodeInfoManager()->MathMLEnabled())) {
+    mStyleSet->AppendStyleSheet(SheetType::Agent, cache->MathMLSheet());
+  }
+
+  if (MOZ_LIKELY(NodeInfoManager()->SVGEnabled())) {
+    mStyleSet->AppendStyleSheet(SheetType::Agent, cache->SVGSheet());
+  }
+
+  mStyleSet->AppendStyleSheet(SheetType::Agent, cache->HTMLSheet());
+
+  if (nsLayoutUtils::ShouldUseNoFramesSheet(this)) {
+    mStyleSet->AppendStyleSheet(SheetType::Agent, cache->NoFramesSheet());
+  }
+
+  if (nsLayoutUtils::ShouldUseNoScriptSheet(this)) {
+    mStyleSet->AppendStyleSheet(SheetType::Agent, cache->NoScriptSheet());
+  }
+
+  mStyleSet->AppendStyleSheet(SheetType::Agent, cache->CounterStylesSheet());
+
+  // Load the minimal XUL rules for scrollbars and a few other XUL things
+  // that non-XUL (typically HTML) documents commonly use.
+  mStyleSet->AppendStyleSheet(SheetType::Agent, cache->MinimalXULSheet());
+
+  // Only load the full XUL sheet if we'll need it.
+  if (LoadsFullXULStyleSheetUpFront()) {
+    mStyleSet->AppendStyleSheet(SheetType::Agent, cache->XULSheet());
+  }
+
+  MOZ_ASSERT(!mQuirkSheetAdded);
+  if (mCompatMode == eCompatibility_NavQuirks) {
+    mStyleSet->AppendStyleSheet(SheetType::Agent, cache->QuirkSheet());
+    mQuirkSheetAdded = true;
+  }
+
+  mStyleSet->AppendStyleSheet(SheetType::Agent, cache->FormsSheet());
+  mStyleSet->AppendStyleSheet(SheetType::Agent, cache->ScrollbarsSheet());
+  mStyleSet->AppendStyleSheet(SheetType::Agent, cache->PluginProblemSheet());
+
+  for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
+    mStyleSet->AppendStyleSheet(SheetType::Agent, sheet);
+  }
+}
+
+void Document::FillStyleSet() {
   MOZ_ASSERT(!mStyleSetFilled);
+  FillStyleSetUserAndUASheets();
+  FillStyleSetDocumentSheets();
+  mStyleSetFilled = true;
+}
+
+void Document::FillStyleSetDocumentSheets() {
+  MOZ_ASSERT(mStyleSet->SheetCount(SheetType::Doc) == 0,
+             "Style set already has document sheets?");
 
   for (StyleSheet* sheet : Reversed(mStyleSheets)) {
     if (sheet->IsApplicable()) {
-      aStyleSet->AddDocStyleSheet(sheet, this);
+      mStyleSet->AddDocStyleSheet(sheet, this);
     }
   }
 
-  if (nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance()) {
-    nsTArray<RefPtr<StyleSheet>>& sheets = *sheetService->AuthorStyleSheets();
-    for (StyleSheet* sheet : sheets) {
-      aStyleSet->AppendStyleSheet(SheetType::Doc, sheet);
-    }
+  nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
+  for (StyleSheet* sheet : *sheetService->AuthorStyleSheets()) {
+    mStyleSet->AppendStyleSheet(SheetType::Doc, sheet);
   }
 
-  AppendSheetsToStyleSet(aStyleSet, mAdditionalSheets[eAgentSheet],
+  AppendSheetsToStyleSet(mStyleSet.get(), mAdditionalSheets[eAgentSheet],
                          SheetType::Agent);
-  AppendSheetsToStyleSet(aStyleSet, mAdditionalSheets[eUserSheet],
+  AppendSheetsToStyleSet(mStyleSet.get(), mAdditionalSheets[eUserSheet],
                          SheetType::User);
-  AppendSheetsToStyleSet(aStyleSet, mAdditionalSheets[eAuthorSheet],
+  AppendSheetsToStyleSet(mStyleSet.get(), mAdditionalSheets[eAuthorSheet],
                          SheetType::Doc);
+}
 
-  mStyleSetFilled = true;
+void Document::CompatibilityModeChanged() {
+  MOZ_ASSERT(IsHTMLOrXHTML());
+  CSSLoader()->SetCompatibilityMode(mCompatMode);
+  mStyleSet->CompatibilityModeChanged();
+  if (!mStyleSetFilled) {
+    MOZ_ASSERT(!mQuirkSheetAdded);
+    return;
+  }
+  if (mQuirkSheetAdded == NeedsQuirksSheet()) {
+    return;
+  }
+  auto cache = nsLayoutStylesheetCache::Singleton();
+  StyleSheet* sheet = cache->QuirkSheet();
+  if (mQuirkSheetAdded) {
+    mStyleSet->RemoveStyleSheet(SheetType::Agent, sheet);
+  } else {
+    mStyleSet->AppendStyleSheet(SheetType::Agent, sheet);
+  }
+  mQuirkSheetAdded = !mQuirkSheetAdded;
+  if (PresShell* presShell = GetPresShell()) {
+    presShell->ApplicableStylesChanged();
+  }
 }
 
 static void WarnIfSandboxIneffective(nsIDocShell* aDocShell,
@@ -3631,19 +3671,29 @@ static inline void AssertNoStaleServoDataIn(nsINode& aSubtreeRoot) {
 }
 
 already_AddRefed<PresShell> Document::CreatePresShell(
-    nsPresContext* aContext, nsViewManager* aViewManager,
-    UniquePtr<ServoStyleSet> aStyleSet) {
-  NS_ASSERTION(!mPresShell, "We have a presshell already!");
+    nsPresContext* aContext, nsViewManager* aViewManager) {
+  MOZ_ASSERT(!mPresShell, "We have a presshell already!");
 
   NS_ENSURE_FALSE(GetBFCacheEntry(), nullptr);
 
-  FillStyleSet(aStyleSet.get());
   AssertNoStaleServoDataIn(*this);
 
   RefPtr<PresShell> presShell = new PresShell;
   // Note: we don't hold a ref to the shell (it holds a ref to us)
   mPresShell = presShell;
-  presShell->Init(this, aContext, aViewManager, std::move(aStyleSet));
+
+  bool hadStyleSheets = mStyleSetFilled;
+  if (!hadStyleSheets) {
+    FillStyleSet();
+  }
+
+  presShell->Init(this, aContext, aViewManager);
+
+  if (hadStyleSheets) {
+    // Gaining a shell causes changes in how media queries are evaluated, so
+    // invalidate that.
+    aContext->MediaFeatureValuesChanged({MediaFeatureChange::kAllChanges});
+  }
 
   // Make sure to never paint if we belong to an invisible DocShell.
   nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
@@ -3746,6 +3796,8 @@ void Document::DeletePresShell() {
     presContext->RefreshDriver()->CancelPendingFullscreenEvents(this);
   }
 
+  mStyleSet->ShellDetachedFromDocument();
+
   // When our shell goes away, request that all our images be immediately
   // discarded, so we don't carry around decoded image data for a document we
   // no longer intend to paint.
@@ -3760,7 +3812,6 @@ void Document::DeletePresShell() {
   PresShell* oldPresShell = mPresShell;
   mPresShell = nullptr;
   UpdateFrameRequestCallbackSchedulingState(oldPresShell);
-  mStyleSetFilled = false;
 
   ClearStaleServoData();
   AssertNoStaleServoDataIn(*this);
@@ -3954,9 +4005,11 @@ void Document::RemoveChildNode(nsIContent* aKid, bool aNotify) {
 }
 
 void Document::AddStyleSheetToStyleSets(StyleSheet* aSheet) {
-  if (PresShell* presShell = GetPresShell()) {
-    presShell->StyleSet()->AddDocStyleSheet(aSheet, this);
-    presShell->ApplicableStylesChanged();
+  if (mStyleSetFilled) {
+    mStyleSet->AddDocStyleSheet(aSheet, this);
+    if (PresShell* presShell = GetPresShell()) {
+      presShell->ApplicableStylesChanged();
+    }
   }
 }
 
@@ -3994,9 +4047,11 @@ void Document::NotifyStyleSheetRemoved(StyleSheet* aSheet,
 }
 
 void Document::RemoveStyleSheetFromStyleSets(StyleSheet* aSheet) {
-  if (PresShell* presShell = GetPresShell()) {
-    presShell->StyleSet()->RemoveDocStyleSheet(aSheet);
-    presShell->ApplicableStylesChanged();
+  if (mStyleSetFilled) {
+    mStyleSet->RemoveDocStyleSheet(aSheet);
+    if (PresShell* presShell = GetPresShell()) {
+      presShell->ApplicableStylesChanged();
+    }
   }
 }
 
@@ -4176,10 +4231,12 @@ nsresult Document::AddAdditionalStyleSheet(additionalSheetType aType,
 
   mAdditionalSheets[aType].AppendElement(aSheet);
 
-  if (PresShell* presShell = GetPresShell()) {
+  if (mStyleSetFilled) {
     SheetType type = ConvertAdditionalSheetType(aType);
-    presShell->StyleSet()->AppendStyleSheet(type, aSheet);
-    presShell->ApplicableStylesChanged();
+    mStyleSet->AppendStyleSheet(type, aSheet);
+    if (PresShell* presShell = GetPresShell()) {
+      presShell->ApplicableStylesChanged();
+    }
   }
 
   // Passing false, so documet.styleSheets.length will not be affected by
@@ -4201,10 +4258,12 @@ void Document::RemoveAdditionalStyleSheet(additionalSheetType aType,
 
     if (!mIsGoingAway) {
       MOZ_ASSERT(sheetRef->IsApplicable());
-      if (PresShell* presShell = GetPresShell()) {
+      if (mStyleSetFilled) {
         SheetType type = ConvertAdditionalSheetType(aType);
-        presShell->StyleSet()->RemoveStyleSheet(type, sheetRef);
-        presShell->ApplicableStylesChanged();
+        mStyleSet->RemoveStyleSheet(type, sheetRef);
+        if (PresShell* presShell = GetPresShell()) {
+          presShell->ApplicableStylesChanged();
+        }
       }
     }
 
@@ -8542,6 +8601,63 @@ nsresult Document::LoadChromeSheetSync(nsIURI* uri, bool isAgentSheet,
   return CSSLoader()->LoadSheetSync(uri, mode, isAgentSheet, aSheet);
 }
 
+void Document::ResetDocumentDirection() {
+  if (!(nsContentUtils::IsChromeDoc(this) || IsXULDocument())) {
+    return;
+  }
+  DocumentStatesChanged(NS_DOCUMENT_STATE_RTL_LOCALE);
+}
+
+bool Document::IsDocumentRightToLeft() {
+  if (!(nsContentUtils::IsChromeDoc(this) || IsXULDocument())) {
+    return false;
+  }
+  // setting the localedir attribute on the root element forces a
+  // specific direction for the document.
+  Element* element = GetRootElement();
+  if (element) {
+    static Element::AttrValuesArray strings[] = {nsGkAtoms::ltr, nsGkAtoms::rtl,
+                                                 nullptr};
+    switch (element->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::localedir,
+                                     strings, eCaseMatters)) {
+      case 0:
+        return false;
+      case 1:
+        return true;
+      default:
+        break;  // otherwise, not a valid value, so fall through
+    }
+  }
+
+  // otherwise, get the locale from the chrome registry and
+  // look up the intl.uidirection.<locale> preference
+  nsCOMPtr<nsIXULChromeRegistry> reg =
+      mozilla::services::GetXULChromeRegistryService();
+  if (!reg) return false;
+
+  nsAutoCString package;
+  bool isChrome;
+  if (NS_SUCCEEDED(mDocumentURI->SchemeIs("chrome", &isChrome)) && isChrome) {
+    mDocumentURI->GetHostPort(package);
+  } else {
+    // use the 'global' package for about and resource uris.
+    // otherwise, just default to left-to-right.
+    bool isAbout, isResource;
+    if (NS_SUCCEEDED(mDocumentURI->SchemeIs("about", &isAbout)) && isAbout) {
+      package.AssignLiteral("global");
+    } else if (NS_SUCCEEDED(mDocumentURI->SchemeIs("resource", &isResource)) &&
+               isResource) {
+      package.AssignLiteral("global");
+    } else {
+      return false;
+    }
+  }
+
+  bool isRTL = false;
+  reg->IsLocaleRTL(package, &isRTL);
+  return isRTL;
+}
+
 class nsDelayedEventDispatcher : public Runnable {
  public:
   explicit nsDelayedEventDispatcher(nsTArray<nsCOMPtr<Document>>& aDocuments)
@@ -11709,8 +11825,7 @@ void Document::FlushUserFontSet() {
 
   if (gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
     nsTArray<nsFontFaceRuleContainer> rules;
-    PresShell* presShell = GetPresShell();
-    if (presShell && !presShell->StyleSet()->AppendFontFaceRules(rules)) {
+    if (mStyleSetFilled && !mStyleSet->AppendFontFaceRules(rules)) {
       return;
     }
 
@@ -11728,6 +11843,7 @@ void Document::FlushUserFontSet() {
     // reflect that we're modifying @font-face rules.  (However,
     // without a reflow, nothing will happen to start any downloads
     // that are needed.)
+    PresShell* presShell = GetPresShell();
     if (changed && presShell) {
       if (nsPresContext* presContext = presShell->GetPresContext()) {
         presContext->UserFontSetUpdated();

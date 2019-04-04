@@ -20,7 +20,7 @@ const FAKE_INSTALL_TELEMETRY_INFO = {
 };
 
 function getTelemetryEvents(includeMethods = EVENT_METHODS) {
-  const snapshot = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+  const snapshot = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
 
   ok(snapshot.parent && snapshot.parent.length > 0, "Got parent telemetry events in the snapshot");
 
@@ -35,7 +35,7 @@ function getTelemetryEvents(includeMethods = EVENT_METHODS) {
 }
 
 function assertNoTelemetryEvents() {
-  const snapshot = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+  const snapshot = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
 
   if (!snapshot.parent || snapshot.parent.length === 0) {
     ok(true, "Got no parent telemetry events as expected");

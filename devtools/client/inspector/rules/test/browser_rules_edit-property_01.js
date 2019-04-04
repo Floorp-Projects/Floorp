@@ -9,7 +9,7 @@
 // FIXME: some of the inplace-editor focus/blur/commit/revert stuff
 // should be factored out in head.js
 
-const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
+const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
 
 const TEST_URI = `
   <style type="text/css">
@@ -71,7 +71,7 @@ add_task(async function() {
   Services.telemetry.clearEvents();
 
   // Ensure no events have been logged
-  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
+  const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
   ok(!snapshot.parent, "No events have been logged for the main process");
 
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
@@ -137,7 +137,7 @@ async function testEditProperty(view, rule, name, value, isValid) {
 }
 
 function checkResults() {
-  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
+  const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
   const events = snapshot.parent.filter(event => event[1] === "devtools.main" &&
                                                  event[2] === "edit_rule" &&
                                                  event[3] === "ruleview"

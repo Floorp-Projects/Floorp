@@ -865,9 +865,7 @@ nsresult nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
         } else if (aName == nsGkAtoms::localedir) {
           // if the localedir changed on the root element, reset the document
           // direction
-          if (document->IsXULDocument()) {
-            document->AsXULDocument()->ResetDocumentDirection();
-          }
+          document->ResetDocumentDirection();
         } else if (aName == nsGkAtoms::lwtheme ||
                    aName == nsGkAtoms::lwthemetextcolor) {
           // if the lwtheme changed, make sure to reset the document lwtheme
@@ -892,9 +890,7 @@ nsresult nsXULElement::AfterSetAttr(int32_t aNamespaceID, nsAtom* aName,
         if (aName == nsGkAtoms::localedir) {
           // if the localedir changed on the root element, reset the document
           // direction
-          if (doc->IsXULDocument()) {
-            doc->AsXULDocument()->ResetDocumentDirection();
-          }
+          doc->ResetDocumentDirection();
         } else if ((aName == nsGkAtoms::lwtheme ||
                     aName == nsGkAtoms::lwthemetextcolor)) {
           // if the lwtheme changed, make sure to restyle appropriately

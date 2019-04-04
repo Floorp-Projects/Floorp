@@ -13,4 +13,4 @@ load 1503964.html
 
 # last_test_to_unload_testsuite.xul MUST be the last test in the list because it
 # is responsible for shutting down accessibility service affecting later tests.
-load last_test_to_unload_testsuite.xul
+skip-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)&&/^aarch64-msvc/.test(xulRuntime.XPCOMABI)) load last_test_to_unload_testsuite.xul

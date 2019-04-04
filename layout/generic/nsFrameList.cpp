@@ -7,11 +7,11 @@
 #include "nsFrameList.h"
 
 #include "mozilla/ArenaObjectID.h"
+#include "mozilla/PresShell.h"
 #include "nsBidiPresUtils.h"
 #include "nsContainerFrame.h"
 #include "nsGkAtoms.h"
 #include "nsILineIterator.h"
-#include "nsIPresShell.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 

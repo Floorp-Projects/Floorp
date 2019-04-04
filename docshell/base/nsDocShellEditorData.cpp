@@ -58,12 +58,10 @@ bool nsDocShellEditorData::GetEditable() {
   return mMakeEditable || (mHTMLEditor != nullptr);
 }
 
-nsresult nsDocShellEditorData::GetEditingSession(nsIEditingSession** aResult) {
+nsEditingSession* nsDocShellEditorData::GetEditingSession() {
   EnsureEditingSession();
 
-  NS_ADDREF(*aResult = mEditingSession);
-
-  return NS_OK;
+  return mEditingSession.get();
 }
 
 nsresult nsDocShellEditorData::SetHTMLEditor(HTMLEditor* aHTMLEditor) {

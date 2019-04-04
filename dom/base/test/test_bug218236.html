@@ -34,7 +34,7 @@ var url_connection_error = url_200.replace(/^(\w+:\/\/[^/]+?)(:\d+)?\//, "$1:954
 var tests = [
   ["200 OK",                            url_200,                [1, 2, 3, 4, "load"], null],
   ["404 Not Found",                     url_404,                [1, 2, 3, 4, "load"], null],
-  ["connection error",                  url_connection_error,   [1, 2, 4, "error"],   null],
+  ["connection error",                  url_connection_error,   [1, 4, "error"],      null],
   ["abort() call on readyState = 1",    url_200,                [1, 4],               null, doAbort1],
   ["abort() call on readyState = 2",    url_200,                [1, 2, 4],            doAbort2],
 ];

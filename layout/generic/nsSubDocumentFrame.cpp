@@ -1025,7 +1025,7 @@ static void DestroyDisplayItemDataForFrames(nsIFrame* aFrame) {
 static bool BeginSwapDocShellsForDocument(Document* aDocument, void*) {
   MOZ_ASSERT(aDocument, "null document");
 
-  PresShell* presShell = aDocument->GetPresShell();
+  mozilla::PresShell* presShell = aDocument->GetPresShell();
   if (presShell) {
     // Disable painting while the views are detached, see bug 946929.
     presShell->SetNeverPainting(true);

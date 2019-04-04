@@ -316,10 +316,10 @@ class ScalarType:
         """
         rcc = self.dataset_short
         table = {
-            'opt-in': 'OPTIN',
-            'opt-out': 'OPTOUT',
+            'opt-in': 'DATASET_PRERELEASE_CHANNELS',
+            'opt-out': 'DATASET_ALL_CHANNELS',
         }
-        return 'nsITelemetry::DATASET_RELEASE_CHANNEL_' + table[rcc]
+        return 'nsITelemetry::' + table[rcc]
 
     @property
     def dataset_short(self):

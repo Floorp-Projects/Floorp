@@ -37,6 +37,7 @@
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/Selection.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextEditor.h"
 #include "gfxSkipChars.h"
 #include <algorithm>

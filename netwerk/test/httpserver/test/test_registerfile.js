@@ -32,7 +32,7 @@ function run_test() {
 
   try {
     srv.registerFile("/foo", do_get_profile());
-    throw "registerFile succeeded!";
+    throw new Error("registerFile succeeded!");
   } catch (e) {
     isException(e, Cr.NS_ERROR_INVALID_ARG);
   }

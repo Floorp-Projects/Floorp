@@ -50,7 +50,7 @@ const type = "extension";
 
 function assertTelemetryMatches(events) {
   let snapshot = Services.telemetry.snapshotEvents(
-    Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+    Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
 
   if (events.length == 0) {
     ok(!snapshot.parent || snapshot.parent.length == 0, "There are no telemetry events");
@@ -69,6 +69,11 @@ function assertTelemetryMatches(events) {
   // Events are now [method, object, value, extra] as expected.
   Assert.deepEqual(relatedEvents, events, "The events are recorded correctly");
 }
+
+add_task(async function test_setup() {
+  // Clear any previosuly collected telemetry event.
+  Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+});
 
 add_task(async function browseraction_popup_contextmenu() {
   let extension = ExtensionTestUtils.loadExtension(extData);

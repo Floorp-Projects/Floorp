@@ -9,6 +9,10 @@
 
 interface mozIDOMWindowProxy;
 
+%{C++
+class nsCommandManager;
+%}
+
 /*
  * nsICommandManager is an interface used to executing user-level commands,
  * and getting the state of available commands.
@@ -18,9 +22,9 @@ interface mozIDOMWindowProxy;
  * each command, that are passed in via the nsICommandParams, are
  * also documented elsewhere. (Where? Need a good location for this).
  */
- 
- 
-[scriptable, uuid(bb5a1730-d83b-4fa2-831b-35b9d5842e84)]
+
+
+[scriptable, builtinclass, uuid(bb5a1730-d83b-4fa2-831b-35b9d5842e84)]
 interface nsICommandManager : nsISupports
 {
   /*
@@ -78,7 +82,7 @@ interface nsICommandManager : nsISupports
   void        getCommandState(in string aCommandName,
                               in mozIDOMWindowProxy aTargetWindow,
                   /* inout */ in nsICommandParams aCommandParams);
-    
+
   /*
    * Execute the specified command.
    * The command will be executed in aTargetWindow if it is specified.
@@ -93,6 +97,14 @@ interface nsICommandManager : nsISupports
                         in nsICommandParams aCommandParams,
                         in mozIDOMWindowProxy aTargetWindow);
 
+%{C++
+  /**
+   * In order to avoid circular dependency issues, these methods are defined
+   * in nsCommandManager.h.  Consumers need to #include that header.
+   */
+  inline nsCommandManager* AsCommandManager();
+  inline const nsCommandManager* AsCommandManager() const;
+%}
 };
 
 

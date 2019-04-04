@@ -8,7 +8,7 @@
 
 const TEST_URI = "data:text/html;charset=UTF-8," +
   "<p>Switch to inspector on pick</p>";
-const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
+const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
 
 const DATA = [
   {
@@ -58,7 +58,7 @@ add_task(async function() {
   Services.telemetry.clearEvents();
 
   // Ensure no events have been logged
-  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
+  const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
   ok(!snapshot.parent, "No events have been logged for the main process");
 
   const tab = await addTab(TEST_URI);
@@ -89,7 +89,7 @@ async function startPickerAndAssertSwitchToInspector(toolbox) {
 }
 
 function checkResults() {
-  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
+  const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
   const events = snapshot.parent.filter(event => event[1] === "devtools.main" &&
                                                  event[2] === "enter" ||
                                                  event[2] === "exit"

@@ -18,6 +18,7 @@
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/MathAlgorithms.h"
+#include "mozilla/PresShell.h"
 
 #include "BorderConsts.h"
 #include "nsStyleConsts.h"
@@ -26,7 +27,6 @@
 #include "nsIFrameInlines.h"
 #include "nsPoint.h"
 #include "nsRect.h"
-#include "nsIPresShell.h"
 #include "nsFrameManager.h"
 #include "nsGkAtoms.h"
 #include "nsCSSAnonBoxes.h"

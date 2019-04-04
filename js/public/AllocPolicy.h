@@ -25,18 +25,26 @@ enum class AllocFunction { Malloc, Calloc, Realloc };
 
 /* Base class allocation policies providing allocation methods. */
 class AllocPolicyBase {
+  const arena_id_t& arenaId_;
+
+ protected:
+  arena_id_t getArenaId() { return arenaId_; }
+
  public:
+  explicit AllocPolicyBase(const arena_id_t& arenaId = js::MallocArena)
+      : arenaId_(arenaId) {}
+
   template <typename T>
   T* maybe_pod_malloc(size_t numElems) {
-    return js_pod_malloc<T>(numElems);
+    return js_pod_arena_malloc<T>(getArenaId(), numElems);
   }
   template <typename T>
   T* maybe_pod_calloc(size_t numElems) {
-    return js_pod_calloc<T>(numElems);
+    return js_pod_arena_calloc<T>(getArenaId(), numElems);
   }
   template <typename T>
   T* maybe_pod_realloc(T* p, size_t oldSize, size_t newSize) {
-    return js_pod_realloc<T>(p, oldSize, newSize);
+    return js_pod_arena_realloc<T>(getArenaId(), p, oldSize, newSize);
   }
   template <typename T>
   T* pod_malloc(size_t numElems) {
@@ -95,7 +103,9 @@ class TempAllocPolicy : public AllocPolicyBase {
   }
 
  public:
-  MOZ_IMPLICIT TempAllocPolicy(JSContext* cx) : cx_(cx) {}
+  MOZ_IMPLICIT TempAllocPolicy(JSContext* cx,
+                               const arena_id_t& arenaId = js::MallocArena)
+      : AllocPolicyBase(arenaId), cx_(cx) {}
 
   template <typename T>
   T* pod_malloc(size_t numElems) {

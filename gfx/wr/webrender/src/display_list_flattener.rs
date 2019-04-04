@@ -1343,6 +1343,11 @@ impl<'a> DisplayListFlattener<'a> {
             None
         };
 
+        if is_pipeline_root && create_tile_cache {
+            // we don't expect any nested tile-cache-enabled stacking contexts
+            debug_assert!(!self.sc_stack.iter().any(|sc| sc.create_tile_cache));
+        }
+
         // Get the transform-style of the parent stacking context,
         // which determines if we *might* need to draw this on
         // an intermediate surface for plane splitting purposes.

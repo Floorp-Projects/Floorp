@@ -95,6 +95,26 @@ jobs:
       attributes:
          build_platform: win64-shippable
 
+   firefox-win64-aarch64:
+      description: win64-aarch64 update verify
+      shipping-product: firefox
+      worker:
+         env:
+            CHANNEL:
+               by-release-type:
+                  beta: "beta-localtest"
+                  release(-rc)?: "release-localtest"
+                  esr60: "esr-localtest"
+                  nightly: "nightly"
+                  default: "default"
+      treeherder:
+         symbol: UV(UV)
+         platform: windows2012-aarch64/opt
+         kind: test
+         tier: 1
+      attributes:
+         build_platform: win64-aarch64-shippable
+
    firefox-win32:
       description: win32 update verify
       shipping-product: firefox
@@ -176,6 +196,20 @@ jobs:
          tier: 1
       attributes:
          build_platform: win64-devedition-nightly
+
+   devedition-win64-aarch64:
+      description: win64-aarch64 update verify
+      shipping-product: devedition
+      worker:
+         env:
+            CHANNEL: "aurora-localtest"
+      treeherder:
+         symbol: UV(UV)
+         platform: windows2012-aarch64-devedition/opt
+         kind: test
+         tier: 1
+      attributes:
+         build_platform: win64-aarch64-devedition-nightly
 
    devedition-win32:
       description: win32 update verify

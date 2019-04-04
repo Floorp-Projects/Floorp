@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018  Ebrahim Byagowi
+ * Copyright © 2015-2019  Ebrahim Byagowi
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -658,10 +658,10 @@ retry_getglyphs:
    * alignment needed after the WORD array.  sizeof (WORD) == 2. */
   unsigned int glyphs_size = (scratch_size * sizeof (int) - 2)
 			     / (sizeof (WORD) +
-			        sizeof (DWRITE_SHAPING_GLYPH_PROPERTIES) +
-			        sizeof (int) +
-			        sizeof (DWRITE_GLYPH_OFFSET) +
-			        sizeof (uint32_t));
+				sizeof (DWRITE_SHAPING_GLYPH_PROPERTIES) +
+				sizeof (int) +
+				sizeof (DWRITE_GLYPH_OFFSET) +
+				sizeof (uint32_t));
   ALLOCATE_ARRAY (uint32_t, vis_clusters, glyphs_size);
 
 #undef ALLOCATE_ARRAY
@@ -867,4 +867,64 @@ hb_directwrite_shape_experimental_width (hb_font_t          *font,
   buffer->unsafe_to_break_all ();
 
   return res;
+}
+
+struct _hb_directwrite_font_table_context {
+  IDWriteFontFace *face;
+  void *table_context;
+};
+
+static void
+_hb_directwrite_table_data_release (void *data)
+{
+  _hb_directwrite_font_table_context *context = (_hb_directwrite_font_table_context *) data;
+  context->face->ReleaseFontTable (context->table_context);
+  delete context;
+}
+
+static hb_blob_t *
+reference_table (hb_face_t *face HB_UNUSED, hb_tag_t tag, void *user_data)
+{
+  IDWriteFontFace *dw_face = ((IDWriteFontFace *) user_data);
+  const void *data;
+  uint32_t length;
+  void *table_context;
+  BOOL exists;
+  if (!dw_face || FAILED (dw_face->TryGetFontTable (hb_uint32_swap (tag), &data,
+						    &length, &table_context, &exists)))
+    return nullptr;
+
+  if (!data || !exists || !length)
+  {
+    dw_face->ReleaseFontTable (table_context);
+    return nullptr;
+  }
+
+  _hb_directwrite_font_table_context *context = new _hb_directwrite_font_table_context;
+  context->face = dw_face;
+  context->table_context = table_context;
+
+  return hb_blob_create ((const char *) data, length, HB_MEMORY_MODE_READONLY,
+			 context, _hb_directwrite_table_data_release);
+}
+
+static void
+_hb_directwrite_font_release (void *data)
+{
+  if (data)
+    ((IDWriteFontFace *) data)->Release ();
+}
+
+/**
+ * hb_directwrite_face_create:
+ * @font_face:
+ * Since: REPLACEME
+ **/
+hb_face_t *
+hb_directwrite_face_create (IDWriteFontFace *font_face)
+{
+  if (font_face)
+    font_face->AddRef ();
+  return hb_face_create_for_tables (reference_table, font_face,
+				    _hb_directwrite_font_release);
 }

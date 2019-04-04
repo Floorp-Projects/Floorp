@@ -14,9 +14,9 @@
 #ifndef nsBoxLayoutState_h___
 #define nsBoxLayoutState_h___
 
+#include "mozilla/PresShell.h"
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
-#include "nsIPresShell.h"
 
 class gfxContext;
 namespace mozilla {

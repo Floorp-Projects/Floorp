@@ -1244,9 +1244,8 @@ class Document : public nsINode,
    * method is responsible for calling BeginObservingDocument() on the
    * presshell if the presshell should observe document mutations.
    */
-  already_AddRefed<PresShell> CreatePresShell(
-      nsPresContext* aContext, nsViewManager* aViewManager,
-      UniquePtr<ServoStyleSet> aStyleSet);
+  already_AddRefed<PresShell> CreatePresShell(nsPresContext* aContext,
+                                              nsViewManager* aViewManager);
   void DeletePresShell();
 
   PresShell* GetPresShell() const {
@@ -1631,6 +1630,14 @@ class Document : public nsINode,
   // Get the "head" element in the sense of document.head.
   HTMLSharedElement* GetHead();
 
+  ServoStyleSet* StyleSetForPresShellOrMediaQueryEvaluation() const {
+    return mStyleSet.get();
+  }
+
+  // Whether we filled the style set with any style sheet. Only meant to be used
+  // from DocumentOrShadowRoot::Traverse.
+  bool StyleSetFilled() const { return mStyleSetFilled; }
+
   /**
    * Accessors to the collection of stylesheets owned by this document.
    * Style sheets are ordered, most significant last.
@@ -2013,6 +2020,8 @@ class Document : public nsINode,
   // This should only be called by callers whose state is also reflected in the
   // implementation of Document::GetDocumentState.
   void DocumentStatesChanged(EventStates aStateMask);
+
+  void ResetDocumentDirection();
 
   // Observation hooks for style data to propagate notifications
   // to document observers
@@ -2858,7 +2867,7 @@ class Document : public nsINode,
    * pseudoclass so once can know whether a document is expected to be rendered
    * left-to-right or right-to-left.
    */
-  virtual bool IsDocumentRightToLeft() { return false; }
+  bool IsDocumentRightToLeft();
 
   /**
    * Called by Parser for link rel=preconnect
@@ -3784,7 +3793,14 @@ class Document : public nsINode,
   void RemoveStyleSheetsFromStyleSets(
       const nsTArray<RefPtr<StyleSheet>>& aSheets, SheetType aType);
   void ResetStylesheetsToURI(nsIURI* aURI);
-  void FillStyleSet(ServoStyleSet* aStyleSet);
+  void FillStyleSet();
+  void FillStyleSetUserAndUASheets();
+  void FillStyleSetDocumentSheets();
+  void CompatibilityModeChanged();
+  bool NeedsQuirksSheet() const {
+    // SVG documents never load quirk.css.
+    return mCompatMode == eCompatibility_NavQuirks && !IsSVGDocument();
+  }
   void AddStyleSheetToStyleSets(StyleSheet* aSheet);
   void RemoveStyleSheetFromStyleSets(StyleSheet* aSheet);
   void NotifyStyleSheetAdded(StyleSheet* aSheet, bool aDocumentSheet);
@@ -3808,6 +3824,7 @@ class Document : public nsINode,
   // Lazy-initialization to have mDocGroup initialized in prior to the
   // SelectorCaches.
   UniquePtr<SelectorCache> mSelectorCache;
+  UniquePtr<ServoStyleSet> mStyleSet;
 
  protected:
   friend class nsDocumentOnStack;
@@ -4165,9 +4182,11 @@ class Document : public nsINode,
 
   bool mNeedsReleaseAfterStackRefCntRelease : 1;
 
-  // Whether we have filled our pres shell's style set with the document's
-  // additional sheets and sheets from the nsStyleSheetService.
+  // Whether we have filled our style set with all the stylesheets.
   bool mStyleSetFilled : 1;
+
+  // Whether we have a quirks mode stylesheet in the style set.
+  bool mQuirkSheetAdded : 1;
 
   // Keeps track of whether we have a pending
   // 'style-sheet-applicable-state-changed' notification.

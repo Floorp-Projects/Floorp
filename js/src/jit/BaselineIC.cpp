@@ -1040,7 +1040,7 @@ void ICTypeMonitor_Fallback::resetMonitorStubChain(Zone* zone) {
   }
 }
 
-void ICUpdatedStub::resetUpdateStubChain(Zone* zone) {
+void ICCacheIR_Updated::resetUpdateStubChain(Zone* zone) {
   while (!firstUpdateStub_->isTypeUpdate_Fallback()) {
     if (zone->needsIncrementalBarrier()) {
       // We are removing edges from update stubs to gcthings (JitCode).
@@ -1096,7 +1096,7 @@ bool ICMonitoredFallbackStub::addMonitorStubForValue(JSContext* cx,
   return typeMonitorFallback->addMonitorStubForValue(cx, frame, types, val);
 }
 
-bool ICUpdatedStub::initUpdatingChain(JSContext* cx, ICStubSpace* space) {
+bool ICCacheIR_Updated::initUpdatingChain(JSContext* cx, ICStubSpace* space) {
   MOZ_ASSERT(firstUpdateStub_ == nullptr);
 
   FallbackStubAllocator alloc(cx, *space);
@@ -1625,11 +1625,11 @@ bool ICTypeMonitor_AnyValue::Compiler::generateStubCode(MacroAssembler& masm) {
   return true;
 }
 
-bool ICUpdatedStub::addUpdateStubForValue(JSContext* cx,
-                                          HandleScript outerScript,
-                                          HandleObject obj,
-                                          HandleObjectGroup group, HandleId id,
-                                          HandleValue val) {
+bool ICCacheIR_Updated::addUpdateStubForValue(JSContext* cx,
+                                              HandleScript outerScript,
+                                              HandleObject obj,
+                                              HandleObjectGroup group,
+                                              HandleId id, HandleValue val) {
   EnsureTrackPropertyTypes(cx, obj, id);
 
   // Make sure that undefined values are explicitly included in the property
@@ -1770,7 +1770,7 @@ bool ICUpdatedStub::addUpdateStubForValue(JSContext* cx,
 // TypeUpdate_Fallback
 //
 bool DoTypeUpdateFallback(JSContext* cx, BaselineFrame* frame,
-                          ICUpdatedStub* stub, HandleValue objval,
+                          ICCacheIR_Updated* stub, HandleValue objval,
                           HandleValue value) {
   // This can get called from optimized stubs. Therefore it is not allowed to
   // gc.
@@ -2485,6 +2485,9 @@ void StoreToTypedArray(JSContext* cx, MacroAssembler& masm, Scalar::Type type,
     masm.unboxDouble(value, FloatReg0);
     masm.clampDoubleToUint8(FloatReg0, scratch);
     masm.jump(&clamped);
+  } else if (type == Scalar::BigInt64 || type == Scalar::BigUint64) {
+    // FIXME: https://bugzil.la/1536703
+    masm.jump(failure);
   } else {
     Label notInt32;
     masm.branchTestInt32(Assembler::NotEqual, value, &notInt32);

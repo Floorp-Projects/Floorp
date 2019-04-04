@@ -292,7 +292,7 @@ class nsTextInputSelectionImpl final : public nsSupportsWeakReference,
   NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(nsTextInputSelectionImpl,
                                            nsISelectionController)
 
-  nsTextInputSelectionImpl(nsFrameSelection* aSel, nsIPresShell* aShell,
+  nsTextInputSelectionImpl(nsFrameSelection* aSel, PresShell* aPresShell,
                            nsIContent* aLimiter);
 
   void SetScrollableFrame(nsIScrollableFrame* aScrollableFrame);
@@ -362,16 +362,16 @@ NS_IMPL_CYCLE_COLLECTION(nsTextInputSelectionImpl, mFrameSelection, mLimiter)
 // BEGIN nsTextInputSelectionImpl
 
 nsTextInputSelectionImpl::nsTextInputSelectionImpl(nsFrameSelection* aSel,
-                                                   nsIPresShell* aShell,
+                                                   PresShell* aPresShell,
                                                    nsIContent* aLimiter)
     : mScrollFrame(nullptr) {
-  if (aSel && aShell) {
+  if (aSel && aPresShell) {
     mFrameSelection = aSel;  // we are the owner now!
     mLimiter = aLimiter;
     bool accessibleCaretEnabled =
         PresShell::AccessibleCaretEnabled(aLimiter->OwnerDoc()->GetDocShell());
-    mFrameSelection->Init(aShell, mLimiter, accessibleCaretEnabled);
-    mPresShellWeak = do_GetWeakReference(aShell);
+    mFrameSelection->Init(aPresShell, mLimiter, accessibleCaretEnabled);
+    mPresShellWeak = do_GetWeakReference(aPresShell);
   }
 }
 
@@ -1178,14 +1178,14 @@ nsresult nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame) {
   Element* rootNode = aFrame->GetRootNode();
   MOZ_ASSERT(rootNode);
 
-  nsIPresShell* shell = aFrame->PresContext()->GetPresShell();
-  MOZ_ASSERT(shell);
+  PresShell* presShell = aFrame->PresContext()->GetPresShell();
+  MOZ_ASSERT(presShell);
 
   // Create selection
   RefPtr<nsFrameSelection> frameSel = new nsFrameSelection();
 
   // Create a SelectionController
-  mSelCon = new nsTextInputSelectionImpl(frameSel, shell, rootNode);
+  mSelCon = new nsTextInputSelectionImpl(frameSel, presShell, rootNode);
   MOZ_ASSERT(!mTextListener, "Should not overwrite the object");
   mTextListener = new TextInputListener(mTextCtrlElement);
 
@@ -1198,7 +1198,7 @@ nsresult nsTextEditorState::BindToFrame(nsTextControlFrame* aFrame) {
   //      to its internal array.
   Selection* selection = mSelCon->GetSelection(SelectionType::eNormal);
   if (selection) {
-    RefPtr<nsCaret> caret = shell->GetCaret();
+    RefPtr<nsCaret> caret = presShell->GetCaret();
     if (caret) {
       selection->AddSelectionListener(caret);
     }
@@ -1268,7 +1268,7 @@ nsresult nsTextEditorState::PrepareEditor(const nsAString* aValue) {
   // the required machinery to it.
 
   nsPresContext* presContext = mBoundFrame->PresContext();
-  nsIPresShell* shell = presContext->GetPresShell();
+  PresShell* presShell = presContext->GetPresShell();
 
   // Setup the editor flags
   uint32_t editorFlags = nsIPlaintextEditor::eEditorPlaintextMask;
@@ -1331,7 +1331,7 @@ nsresult nsTextEditorState::PrepareEditor(const nsAString* aValue) {
     //       editor's Init() call.
 
     // Get the DOM document
-    nsCOMPtr<Document> doc = shell->GetDocument();
+    nsCOMPtr<Document> doc = presShell->GetDocument();
     if (NS_WARN_IF(!doc)) {
       return NS_ERROR_FAILURE;
     }

@@ -30,6 +30,7 @@
 #include "nsContentUtils.h"
 #include "nsIXPConnect.h"
 #include "nsUnicharUtils.h"
+#include "nsIPresShellInlines.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIScrollable.h"
@@ -77,6 +78,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/NullPrincipal.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/ChromeMessageSender.h"
 #include "mozilla/dom/Element.h"
@@ -963,8 +965,8 @@ void nsFrameLoader::ForceLayoutIfNecessary() {
   // Only force the layout flush if the frameloader hasn't ever been
   // run through layout.
   if (frame->GetStateBits() & NS_FRAME_FIRST_REFLOW) {
-    if (nsCOMPtr<nsIPresShell> shell = presContext->GetPresShell()) {
-      shell->FlushPendingNotifications(FlushType::Layout);
+    if (RefPtr<PresShell> presShell = presContext->GetPresShell()) {
+      presShell->FlushPendingNotifications(FlushType::Layout);
     }
   }
 }

@@ -289,12 +289,8 @@ class BaseBootstrapper(object):
 
     def install_toolchain_static_analysis(self, state_dir, checkout_root, toolchain_job):
         clang_tools_path = os.path.join(state_dir, 'clang-tools')
-        import shutil
-        if os.path.exists(clang_tools_path):
-            shutil.rmtree(clang_tools_path)
-
-        # Re-create the directory for clang_tools
-        os.mkdir(clang_tools_path)
+        if not os.path.exists(clang_tools_path):
+            os.mkdir(clang_tools_path)
         self.install_toolchain_artifact(clang_tools_path, checkout_root, toolchain_job)
 
     def install_toolchain_artifact(self, state_dir, checkout_root, toolchain_job):
@@ -673,7 +669,7 @@ class BaseBootstrapper(object):
             print('Your version of Rust (%s) is new enough.' % version)
             rustup = self.which('rustup', cargo_bin)
             if rustup:
-                self.ensure_rust_targets(rustup)
+                self.ensure_rust_targets(rustup, version)
             return
 
         if version:
@@ -697,7 +693,7 @@ class BaseBootstrapper(object):
             print('Will try to install Rust.')
             self.install_rust()
 
-    def ensure_rust_targets(self, rustup):
+    def ensure_rust_targets(self, rustup, rust_version):
         """Make sure appropriate cross target libraries are installed."""
         target_list = subprocess.check_output([rustup, 'target', 'list'])
         targets = [line.split()[0] for line in target_list.splitlines()
@@ -712,7 +708,11 @@ class BaseBootstrapper(object):
 
         if 'mobile_android' in self.application:
             # Let's add the most common targets.
-            android_targets = ('thumbv7neon-linux-androideabi',
+            if rust_version < '1.33':
+                arm_target = 'armv7-linux-androideabi'
+            else:
+                arm_target = 'thumbv7neon-linux-androideabi'
+            android_targets = (arm_target,
                                'aarch64-linux-android',
                                'i686-linux-android',
                                'x86_64-linux-android', )

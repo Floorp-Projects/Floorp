@@ -602,8 +602,8 @@ TelemetryImpl::GetSnapshotForHistograms(const nsACString& aStoreName,
                                         JS::MutableHandleValue aResult) {
   NS_NAMED_LITERAL_CSTRING(defaultStore, "main");
   unsigned int dataset = mCanRecordExtended
-                             ? nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN
-                             : nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT;
+                             ? nsITelemetry::DATASET_PRERELEASE_CHANNELS
+                             : nsITelemetry::DATASET_ALL_CHANNELS;
   return TelemetryHistogram::CreateHistogramSnapshots(
       aCx, aResult, aStoreName.IsVoid() ? defaultStore : aStoreName, dataset,
       aClearStore, aFilterTest);
@@ -616,8 +616,8 @@ TelemetryImpl::GetSnapshotForKeyedHistograms(const nsACString& aStoreName,
                                              JS::MutableHandleValue aResult) {
   NS_NAMED_LITERAL_CSTRING(defaultStore, "main");
   unsigned int dataset = mCanRecordExtended
-                             ? nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN
-                             : nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT;
+                             ? nsITelemetry::DATASET_PRERELEASE_CHANNELS
+                             : nsITelemetry::DATASET_ALL_CHANNELS;
   return TelemetryHistogram::GetKeyedHistogramSnapshots(
       aCx, aResult, aStoreName.IsVoid() ? defaultStore : aStoreName, dataset,
       aClearStore, aFilterTest);
@@ -630,8 +630,8 @@ TelemetryImpl::GetSnapshotForScalars(const nsACString& aStoreName,
                                      JS::MutableHandleValue aResult) {
   NS_NAMED_LITERAL_CSTRING(defaultStore, "main");
   unsigned int dataset = mCanRecordExtended
-                             ? nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN
-                             : nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT;
+                             ? nsITelemetry::DATASET_PRERELEASE_CHANNELS
+                             : nsITelemetry::DATASET_ALL_CHANNELS;
   return TelemetryScalar::CreateSnapshots(
       dataset, aClearStore, aCx, 1, aResult, aFilterTest,
       aStoreName.IsVoid() ? defaultStore : aStoreName);
@@ -644,8 +644,8 @@ TelemetryImpl::GetSnapshotForKeyedScalars(const nsACString& aStoreName,
                                           JS::MutableHandleValue aResult) {
   NS_NAMED_LITERAL_CSTRING(defaultStore, "main");
   unsigned int dataset = mCanRecordExtended
-                             ? nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN
-                             : nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT;
+                             ? nsITelemetry::DATASET_PRERELEASE_CHANNELS
+                             : nsITelemetry::DATASET_ALL_CHANNELS;
   return TelemetryScalar::CreateKeyedSnapshots(
       dataset, aClearStore, aCx, 1, aResult, aFilterTest,
       aStoreName.IsVoid() ? defaultStore : aStoreName);

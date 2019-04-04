@@ -326,7 +326,7 @@ VRDisplay::VRDisplay(nsPIDOMWindowInner* aWindow, gfx::VRDisplayClient* aClient)
       mShutdown(false) {
   const gfx::VRDisplayInfo& info = aClient->GetDisplayInfo();
   mDisplayId = info.GetDisplayID();
-  mDisplayName = NS_ConvertASCIItoUTF16(info.GetDisplayName());
+  mDisplayName = NS_ConvertUTF8toUTF16(info.GetDisplayName());
   mCapabilities = new VRDisplayCapabilities(aWindow, info.GetCapabilities());
   if (info.GetCapabilities() &
       gfx::VRDisplayCapabilityFlags::Cap_StageParameters) {

@@ -33,6 +33,7 @@
 #include "hb-subset-input.hh"
 
 #include "hb-map.hh"
+#include "hb-set.hh"
 
 struct hb_subset_plan_t
 {
@@ -45,18 +46,51 @@ struct hb_subset_plan_t
   // For each cp that we'd like to retain maps to the corresponding gid.
   hb_set_t *unicodes;
 
-  hb_vector_t<hb_codepoint_t> glyphs;
-  hb_set_t *glyphset;
-
+  // The glyph subset
   hb_map_t *codepoint_to_glyph;
+
+  // Old -> New glyph id mapping
   hb_map_t *glyph_map;
+  hb_map_t *reverse_glyph_map;
 
   // Plan is only good for a specific source/dest so keep them with it
   hb_face_t *source;
   hb_face_t *dest;
 
-  bool new_gid_for_codepoint (hb_codepoint_t codepoint,
-			      hb_codepoint_t *new_gid) const
+  unsigned int _num_output_glyphs;
+  hb_set_t *_glyphset;
+
+ public:
+
+  /*
+   * The set of input glyph ids which will be retained in the subset.
+   */
+  inline const hb_set_t *
+  glyphset () const
+  {
+    return _glyphset;
+  }
+
+  /*
+   * The total number of output glyphs in the final subset.
+   */
+  inline unsigned int
+  num_output_glyphs () const
+  {
+    return _num_output_glyphs;
+  }
+
+  /*
+   * Given an output gid , returns true if that glyph id is an empty
+   * glyph (ie. it's a gid that we are dropping all data for).
+   */
+  inline bool is_empty_glyph (hb_codepoint_t gid) const
+  {
+    return !_glyphset->has (gid);
+  }
+
+  inline bool new_gid_for_codepoint (hb_codepoint_t codepoint,
+                                     hb_codepoint_t *new_gid) const
   {
     hb_codepoint_t old_gid = codepoint_to_glyph->get (codepoint);
     if (old_gid == HB_MAP_VALUE_INVALID)
@@ -65,8 +99,8 @@ struct hb_subset_plan_t
     return new_gid_for_old_gid (old_gid, new_gid);
   }
 
-  bool new_gid_for_old_gid (hb_codepoint_t old_gid,
-			    hb_codepoint_t *new_gid) const
+  inline bool new_gid_for_old_gid (hb_codepoint_t old_gid,
+                                   hb_codepoint_t *new_gid) const
   {
     hb_codepoint_t gid = glyph_map->get (old_gid);
     if (gid == HB_MAP_VALUE_INVALID)
@@ -76,7 +110,18 @@ struct hb_subset_plan_t
     return true;
   }
 
-  bool
+  inline bool old_gid_for_new_gid (hb_codepoint_t  new_gid,
+                                   hb_codepoint_t *old_gid) const
+  {
+    hb_codepoint_t gid = reverse_glyph_map->get (new_gid);
+    if (gid == HB_MAP_VALUE_INVALID)
+      return false;
+
+    *old_gid = gid;
+    return true;
+  }
+
+  inline bool
   add_table (hb_tag_t tag,
 	     hb_blob_t *contents)
   {

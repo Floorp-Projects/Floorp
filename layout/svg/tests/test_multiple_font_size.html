@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1370646">Mozilla Bug 1370646</a>
+
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="100" viewBox="0 0 440 100">
+  <text>
+    <tspan id="a" style="font-size:100px">3</tspan>
+  </text>
+  <text>
+    <tspan id="b" style="font-size:100px">3</tspan>
+    <tspan style="font-size:0.1px">0</tspan>
+  </text>
+</svg>
+
+<script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+
+  let alen = document.getElementById("a").getComputedTextLength(),
+      blen = document.getElementById("b").getComputedTextLength();
+
+  SimpleTest.isfuzzy(alen, blen, 5, "lengths should be close");
+
+  SimpleTest.finish();
+</script>
+

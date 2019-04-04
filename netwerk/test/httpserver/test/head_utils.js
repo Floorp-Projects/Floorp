@@ -98,25 +98,25 @@ function* LineIterator(data) {
  *   an Iterator which returns lines of text
  * @param expectedLines : [string]
  *   an array of the expected lines of text
- * @throws string
- *   an error message if iter doesn't agree with expectedLines
+ * @throws an error message if iter doesn't agree with expectedLines
  */
 function expectLines(iter, expectedLines) {
   var index = 0;
   for (var line of iter) {
     if (expectedLines.length == index)
-      throw "Error: got more than " + expectedLines.length + " expected lines!";
+      throw new Error(`Error: got more than ${expectedLines.length} expected lines!`);
 
     var expected = expectedLines[index++];
     if (expected !== line)
-      throw "Error on line " + index + "!\n" +
-            "  actual: '" + line + "',\n" +
-            "  expect: '" + expected + "'";
+      throw new Error(`Error on line ${index}!
+  actual: '${line}',
+  expect: '${expected}'`);
   }
 
   if (expectedLines.length !== index) {
-    throw "Expected more lines!  Got " + index +
-          ", expected " + expectedLines.length;
+    throw new Error(
+      `Expected more lines!  Got ${index}, expected ${expectedLines.length}`
+    );
   }
 }
 
@@ -351,15 +351,15 @@ function runHttpTests(testArray, done) {
  */
 function RawTest(host, port, data, responseCheck) {
   if (0 > port || 65535 < port || port % 1 !== 0)
-    throw "bad port";
+    throw new Error("bad port");
   if (!(data instanceof Array))
     data = [data];
   if (data.length <= 0)
-    throw "bad data length";
+    throw new Error("bad data length");
 
   // eslint-disable-next-line no-control-regex
   if (!data.every(function(v) { return /^[\x00-\xff]*$/.test(v); }))
-    throw "bad data contained non-byte-valued character";
+    throw new Error("bad data contained non-byte-valued character");
 
   this.host = host;
   this.port = port;

@@ -340,8 +340,8 @@ NPError PluginInstanceChild::InternalGetNPObjectForValue(NPNVariable aValue,
     return result;
   }
 
-  NPObject* object = actor->GetObject(false);
-  if (!actor->GetObject(false)) {
+  NPObject* object;
+  if (!(object = actor->GetObject(false))) {
     return NPERR_GENERIC_ERROR;
   }
 

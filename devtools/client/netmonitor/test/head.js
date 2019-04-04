@@ -852,8 +852,8 @@ function checkTelemetryEvent(expectedEvent, query) {
 }
 
 function queryTelemetryEvents(query) {
-  const OPTOUT = Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTOUT;
-  const snapshot = Services.telemetry.snapshotEvents(OPTOUT, true);
+  const ALL_CHANNELS = Ci.nsITelemetry.DATASET_ALL_CHANNELS;
+  const snapshot = Services.telemetry.snapshotEvents(ALL_CHANNELS, true);
   const category = query.category || "devtools.main";
   const object = query.object || "netmonitor";
 

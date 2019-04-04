@@ -29,7 +29,6 @@
 
 #include "nsError.h"
 #include "nsIBoxObject.h"
-#include "nsIChromeRegistry.h"
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsIContentViewer.h"
@@ -142,10 +141,7 @@ XULDocument::XULDocument(void)
   mAllowXULXBL = eTriTrue;
 }
 
-XULDocument::~XULDocument() {
-  Preferences::UnregisterCallback(XULDocument::DirectionChanged,
-                                  "intl.uidirection", this);
-}
+XULDocument::~XULDocument() {}
 
 }  // namespace dom
 }  // namespace mozilla
@@ -307,68 +303,7 @@ nsresult XULDocument::Init() {
     }
   }
 
-  Preferences::RegisterCallback(XULDocument::DirectionChanged,
-                                "intl.uidirection", this);
-
   return NS_OK;
-}
-
-bool XULDocument::IsDocumentRightToLeft() {
-  // setting the localedir attribute on the root element forces a
-  // specific direction for the document.
-  Element* element = GetRootElement();
-  if (element) {
-    static Element::AttrValuesArray strings[] = {nsGkAtoms::ltr, nsGkAtoms::rtl,
-                                                 nullptr};
-    switch (element->FindAttrValueIn(kNameSpaceID_None, nsGkAtoms::localedir,
-                                     strings, eCaseMatters)) {
-      case 0:
-        return false;
-      case 1:
-        return true;
-      default:
-        break;  // otherwise, not a valid value, so fall through
-    }
-  }
-
-  // otherwise, get the locale from the chrome registry and
-  // look up the intl.uidirection.<locale> preference
-  nsCOMPtr<nsIXULChromeRegistry> reg =
-      mozilla::services::GetXULChromeRegistryService();
-  if (!reg) return false;
-
-  nsAutoCString package;
-  bool isChrome;
-  if (NS_SUCCEEDED(mDocumentURI->SchemeIs("chrome", &isChrome)) && isChrome) {
-    mDocumentURI->GetHostPort(package);
-  } else {
-    // use the 'global' package for about and resource uris.
-    // otherwise, just default to left-to-right.
-    bool isAbout, isResource;
-    if (NS_SUCCEEDED(mDocumentURI->SchemeIs("about", &isAbout)) && isAbout) {
-      package.AssignLiteral("global");
-    } else if (NS_SUCCEEDED(mDocumentURI->SchemeIs("resource", &isResource)) &&
-               isResource) {
-      package.AssignLiteral("global");
-    } else {
-      return false;
-    }
-  }
-
-  bool isRTL = false;
-  reg->IsLocaleRTL(package, &isRTL);
-  return isRTL;
-}
-
-void XULDocument::ResetDocumentDirection() {
-  DocumentStatesChanged(NS_DOCUMENT_STATE_RTL_LOCALE);
-}
-
-void XULDocument::DirectionChanged(const char* aPrefName, XULDocument* aDoc) {
-  // Reset the direction and restyle the document if necessary.
-  if (aDoc) {
-    aDoc->ResetDocumentDirection();
-  }
 }
 
 JSObject* XULDocument::WrapNode(JSContext* aCx,

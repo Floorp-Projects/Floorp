@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /*
- * Base class for all our document implementations.
+ * Entry for the Document or ShadowRoot's identifier map.
  */
 
 #ifndef mozilla_IdentifierMapEntry_h
@@ -15,6 +15,7 @@
 
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Move.h"
+#include "mozilla/dom/TreeOrderedArray.h"
 #include "mozilla/net/ReferrerPolicy.h"
 
 #include "nsCOMPtr.h"
@@ -120,16 +121,21 @@ class IdentifierMapEntry : public PLDHashEntryHdr {
    * Returns the element if we know the element associated with this
    * id. Otherwise returns null.
    */
-  Element* GetIdElement();
+  Element* GetIdElement() { return mIdContentList->SafeElementAt(0); }
+
   /**
    * Returns the list of all elements associated with this id.
    */
   const nsTArray<Element*>& GetIdElements() const { return mIdContentList; }
+
   /**
    * If this entry has a non-null image element set (using SetImageElement),
    * the image element will be returned, otherwise the same as GetIdElement().
    */
-  Element* GetImageIdElement();
+  Element* GetImageIdElement() {
+    return mImageElement ? mImageElement.get() : GetIdElement();
+  }
+
   /**
    * This can fire ID change callbacks.
    */
@@ -192,9 +198,7 @@ class IdentifierMapEntry : public PLDHashEntryHdr {
                            bool aImageOnly = false);
 
   AtomOrString mKey;
-  // empty if there are no elements with this ID.
-  // The elements are stored as weak pointers.
-  AutoTArray<Element*, 1> mIdContentList;
+  dom::TreeOrderedArray<Element> mIdContentList;
   RefPtr<nsBaseContentList> mNameContentList;
   nsAutoPtr<nsTHashtable<ChangeCallbackEntry> > mChangeCallbacks;
   RefPtr<Element> mImageElement;
