@@ -115,9 +115,7 @@ stateloop:
               state = nsHtml5MetaScanner::TAG_OPEN;
               NS_HTML5_BREAK(dataloop);
             }
-            default: {
-              continue;
-            }
+            default: { continue; }
           }
         }
       dataloop_end:;
@@ -620,9 +618,7 @@ stateloop:
               state = nsHtml5MetaScanner::COMMENT_END_DASH;
               NS_HTML5_BREAK(commentloop);
             }
-            default: {
-              continue;
-            }
+            default: { continue; }
           }
         }
       commentloop_end:;
@@ -727,9 +723,7 @@ stateloop:
               state = nsHtml5MetaScanner::DATA;
               NS_HTML5_CONTINUE(stateloop);
             }
-            default: {
-              continue;
-            }
+            default: { continue; }
           }
         }
       }

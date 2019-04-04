@@ -10,8 +10,7 @@
 
 extern "C" nsIObserverService* Rust_ObserveFromRust();
 
-TEST(RustXpcom, ObserverFromRust)
-{
+TEST(RustXpcom, ObserverFromRust) {
   nsCOMPtr<nsIObserverService> rust = Rust_ObserveFromRust();
   nsCOMPtr<nsIObserverService> cpp = mozilla::services::GetObserverService();
   EXPECT_EQ(rust, cpp);
@@ -20,8 +19,7 @@ TEST(RustXpcom, ObserverFromRust)
 extern "C" void Rust_ImplementRunnableInRust(bool* aItWorked,
                                              nsIRunnable** aRunnable);
 
-TEST(RustXpcom, ImplementRunnableInRust)
-{
+TEST(RustXpcom, ImplementRunnableInRust) {
   bool itWorked = false;
   nsCOMPtr<nsIRunnable> runnable;
   Rust_ImplementRunnableInRust(&itWorked, getter_AddRefs(runnable));

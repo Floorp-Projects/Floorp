@@ -93,8 +93,7 @@ static void TestReadNoiseEntries(RefPtr<Classifier> classifier,
   }
 }
 
-TEST(UrlClassifier, ReadNoiseEntriesV4)
-{
+TEST(UrlClassifier, ReadNoiseEntriesV4) {
   RefPtr<Classifier> classifier = GetClassifier();
   _PrefixArray array = {
       GeneratePrefix(_Fragment("bravo.com/"), 5),
@@ -115,8 +114,7 @@ TEST(UrlClassifier, ReadNoiseEntriesV4)
                        _Fragment("gound.com/"));
 }
 
-TEST(UrlClassifier, ReadNoiseEntriesV2)
-{
+TEST(UrlClassifier, ReadNoiseEntriesV2) {
   RefPtr<Classifier> classifier = GetClassifier();
   _PrefixArray array = {
       GeneratePrefix(_Fragment("helloworld.com/"), 4),

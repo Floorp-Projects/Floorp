@@ -11,8 +11,7 @@
 #include "ChunkSet.h"
 #include "mozilla/ArrayUtils.h"
 
-TEST(UrlClassifierChunkSet, Empty)
-{
+TEST(UrlClassifierChunkSet, Empty) {
   mozilla::safebrowsing::ChunkSet chunkSet;
   mozilla::safebrowsing::ChunkSet removeSet;
 
@@ -32,8 +31,7 @@ TEST(UrlClassifierChunkSet, Empty)
   ASSERT_TRUE(chunkSet.Length() == 0);
 }
 
-TEST(UrlClassifierChunkSet, Main)
-{
+TEST(UrlClassifierChunkSet, Main) {
   static int testVals[] = {2, 1, 5, 6, 8, 7, 14, 10, 12, 13};
 
   mozilla::safebrowsing::ChunkSet chunkSet;
@@ -54,8 +52,7 @@ TEST(UrlClassifierChunkSet, Main)
   ASSERT_TRUE(chunkSet.Length() == MOZ_ARRAY_LENGTH(testVals));
 }
 
-TEST(UrlClassifierChunkSet, Merge)
-{
+TEST(UrlClassifierChunkSet, Merge) {
   static int testVals[] = {2, 1, 5, 6, 8, 7, 14, 10, 12, 13};
   static int mergeVals[] = {9, 3, 4, 20, 14, 16};
 
@@ -90,8 +87,7 @@ TEST(UrlClassifierChunkSet, Merge)
   ASSERT_FALSE(chunkSet.Has(19));
 }
 
-TEST(UrlClassifierChunkSet, Merge2)
-{
+TEST(UrlClassifierChunkSet, Merge2) {
   static int testVals[] = {2, 1, 5, 6, 8, 7, 14, 10, 12, 13};
   static int mergeVals[] = {9, 3, 4, 20, 14, 16};
   static int mergeVals2[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11};
@@ -130,8 +126,7 @@ TEST(UrlClassifierChunkSet, Merge2)
   ASSERT_FALSE(chunkSet.Has(19));
 }
 
-TEST(UrlClassifierChunkSet, Stress)
-{
+TEST(UrlClassifierChunkSet, Stress) {
   mozilla::safebrowsing::ChunkSet chunkSet;
   mozilla::safebrowsing::ChunkSet mergeSet;
   std::set<int> refSet;
@@ -215,8 +210,7 @@ TEST(UrlClassifierChunkSet, Stress)
   }
 }
 
-TEST(UrlClassifierChunkSet, RemoveClear)
-{
+TEST(UrlClassifierChunkSet, RemoveClear) {
   static int testVals[] = {2, 1, 5, 6, 8, 7, 14, 10, 12, 13};
   static int mergeVals[] = {3, 4, 9, 16, 20};
 
@@ -250,8 +244,7 @@ TEST(UrlClassifierChunkSet, RemoveClear)
   }
 }
 
-TEST(UrlClassifierChunkSet, Serialize)
-{
+TEST(UrlClassifierChunkSet, Serialize) {
   static int testVals[] = {2, 1, 5, 6, 8, 7, 14, 10, 12, 13};
   static int mergeVals[] = {3, 4, 9, 16, 20};
 

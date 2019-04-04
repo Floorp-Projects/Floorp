@@ -423,8 +423,7 @@ void SandboxBrokerTest::MultiThreadStatWorker() {
   ASSERT_EQ(0, statsyscall("/dev/null", &nullStat)) << "Shouldn't ever fail!";
   ASSERT_EQ(0, statsyscall("/dev/zero", &zeroStat)) << "Shouldn't ever fail!";
   ASSERT_EQ(0, lstatsyscall("/proc/self", &selfStat)) << "Shouldn't ever fail!";
-  ASSERT_TRUE(S_ISLNK(selfStat.st_mode))
-  << "Shouldn't ever fail!";
+  ASSERT_TRUE(S_ISLNK(selfStat.st_mode)) << "Shouldn't ever fail!";
   realNullDev = nullStat.st_rdev;
   realZeroDev = zeroStat.st_rdev;
   realSelfInode = selfStat.st_ino;
@@ -440,8 +439,7 @@ void SandboxBrokerTest::MultiThreadStatWorker() {
         << "Loop " << i << "/" << kNumLoops;
     ASSERT_EQ(realZeroDev, zeroStat.st_rdev)
         << "Loop " << i << "/" << kNumLoops;
-    ASSERT_TRUE(S_ISLNK(selfStat.st_mode))
-    << "Loop " << i << "/" << kNumLoops;
+    ASSERT_TRUE(S_ISLNK(selfStat.st_mode)) << "Loop " << i << "/" << kNumLoops;
     ASSERT_EQ(realSelfInode, selfStat.st_ino)
         << "Loop " << i << "/" << kNumLoops;
   }

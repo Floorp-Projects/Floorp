@@ -1720,14 +1720,13 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
   IPC::Principal ipcPrincipal(principal);
 
   tabChild->SendIndexedDBPermissionRequest(ipcPrincipal)
-      ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
-          [this](const uint32_t& aPermission) {
-            this->AssertIsOnOwningThread();
-            MaybeCollectGarbageOnIPCMessage();
-            this->SendPermissionRetry();
-          },
-          [](const mozilla::ipc::ResponseRejectReason) {});
+      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+             [this](const uint32_t& aPermission) {
+               this->AssertIsOnOwningThread();
+               MaybeCollectGarbageOnIPCMessage();
+               this->SendPermissionRetry();
+             },
+             [](const mozilla::ipc::ResponseRejectReason) {});
 
   return IPC_OK();
 }

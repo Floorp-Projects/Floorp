@@ -56,8 +56,7 @@ NS_IMPL_ISUPPORTS_INHERITED(SeekableLengthInputStream,
 
 // nsIInputStreamLength && nsIAsyncInputStreamLength
 
-TEST(TestNsMIMEInputStream, QIInputStreamLength)
-{
+TEST(TestNsMIMEInputStream, QIInputStreamLength) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -91,8 +90,7 @@ TEST(TestNsMIMEInputStream, QIInputStreamLength)
   }
 }
 
-TEST(TestNsMIMEInputStream, InputStreamLength)
-{
+TEST(TestNsMIMEInputStream, InputStreamLength) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -122,8 +120,7 @@ TEST(TestNsMIMEInputStream, InputStreamLength)
   ASSERT_EQ(buf.Length(), size);
 }
 
-TEST(TestNsMIMEInputStream, NegativeInputStreamLength)
-{
+TEST(TestNsMIMEInputStream, NegativeInputStreamLength) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -153,8 +150,7 @@ TEST(TestNsMIMEInputStream, NegativeInputStreamLength)
   ASSERT_EQ(-1, size);
 }
 
-TEST(TestNsMIMEInputStream, AsyncInputStreamLength)
-{
+TEST(TestNsMIMEInputStream, AsyncInputStreamLength) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -188,8 +184,7 @@ TEST(TestNsMIMEInputStream, AsyncInputStreamLength)
   ASSERT_EQ(buf.Length(), callback->Size());
 }
 
-TEST(TestNsMIMEInputStream, NegativeAsyncInputStreamLength)
-{
+TEST(TestNsMIMEInputStream, NegativeAsyncInputStreamLength) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -223,8 +218,7 @@ TEST(TestNsMIMEInputStream, NegativeAsyncInputStreamLength)
   ASSERT_EQ(-1, callback->Size());
 }
 
-TEST(TestNsMIMEInputStream, AbortLengthCallback)
-{
+TEST(TestNsMIMEInputStream, AbortLengthCallback) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 

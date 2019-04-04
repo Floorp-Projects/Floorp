@@ -61,8 +61,7 @@ static void DoSomethingWithConstTestObjectBaseB(const TestObjectBaseB *aIn) {
   TestObject::last_ptr = static_cast<const void *>(aIn);
 }
 
-TEST(AutoPtr, Assignment)
-{
+TEST(AutoPtr, Assignment) {
   TestObject::destructed = 0;
 
   { nsAutoPtr<TestObject> pobj(new TestObject()); }
@@ -78,8 +77,7 @@ TEST(AutoPtr, Assignment)
   ASSERT_EQ(3, TestObject::destructed);
 }
 
-TEST(AutoPtr, getter_Transfers)
-{
+TEST(AutoPtr, getter_Transfers) {
   TestObject::destructed = 0;
 
   {
@@ -90,8 +88,7 @@ TEST(AutoPtr, getter_Transfers)
   ASSERT_EQ(1, TestObject::destructed);
 }
 
-TEST(AutoPtr, Casting)
-{
+TEST(AutoPtr, Casting) {
   // This comparison is always false, as it should be. The extra parens
   // suppress a -Wunreachable-code warning about printf being unreachable.
   ASSERT_NE(((void *)(TestObject *)0x1000),
@@ -117,8 +114,7 @@ TEST(AutoPtr, Casting)
   }
 }
 
-TEST(AutoPtr, Forget)
-{
+TEST(AutoPtr, Forget) {
   TestObject::destructed = 0;
 
   {
@@ -130,8 +126,7 @@ TEST(AutoPtr, Forget)
   ASSERT_EQ(1, TestObject::destructed);
 }
 
-TEST(AutoPtr, Construction)
-{
+TEST(AutoPtr, Construction) {
   TestObject::destructed = 0;
 
   { nsAutoPtr<TestObject> pobj(new TestObject()); }
@@ -139,8 +134,7 @@ TEST(AutoPtr, Construction)
   ASSERT_EQ(1, TestObject::destructed);
 }
 
-TEST(AutoPtr, ImplicitConversion)
-{
+TEST(AutoPtr, ImplicitConversion) {
   // This test is basically successful if it builds. We add a few assertions
   // to make gtest happy.
   TestObject::destructed = 0;
@@ -178,8 +172,7 @@ TEST(AutoPtr, ImplicitConversion)
   ASSERT_EQ(4, TestObject::destructed);
 }
 
-TEST(AutoPtr, ArrowOperator)
-{
+TEST(AutoPtr, ArrowOperator) {
   // This test is basically successful if it builds. We add a few assertions
   // to make gtest happy.
   TestObject::destructed = 0;

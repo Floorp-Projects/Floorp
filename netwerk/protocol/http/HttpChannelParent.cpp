@@ -659,16 +659,15 @@ bool HttpChannelParent::DoAsyncOpen(
   ++mAsyncOpenBarrier;
   RefPtr<HttpChannelParent> self = this;
   WaitForBgParent()
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [self]() {
-            self->mRequest.Complete();
-            self->TryInvokeAsyncOpen(NS_OK);
-          },
-          [self](nsresult aStatus) {
-            self->mRequest.Complete();
-            self->TryInvokeAsyncOpen(aStatus);
-          })
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [self]() {
+               self->mRequest.Complete();
+               self->TryInvokeAsyncOpen(NS_OK);
+             },
+             [self](nsresult aStatus) {
+               self->mRequest.Complete();
+               self->TryInvokeAsyncOpen(aStatus);
+             })
       ->Track(mRequest);
 
   // The stream, received from the child process, must be cloneable and seekable
@@ -752,13 +751,12 @@ bool HttpChannelParent::ConnectChannel(const uint32_t& registrarId,
   // Waiting for background channel
   RefPtr<HttpChannelParent> self = this;
   WaitForBgParent()
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [self]() { self->mRequest.Complete(); },
-          [self](const nsresult& aResult) {
-            NS_ERROR("failed to establish the background channel");
-            self->mRequest.Complete();
-          })
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [self]() { self->mRequest.Complete(); },
+             [self](const nsresult& aResult) {
+               NS_ERROR("failed to establish the background channel");
+               self->mRequest.Complete();
+             })
       ->Track(mRequest);
   return true;
 }

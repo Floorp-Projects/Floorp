@@ -43,8 +43,7 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-TEST(ImageDownscalingFilter, NoSkia)
-{
+TEST(ImageDownscalingFilter, NoSkia) {
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
   ASSERT_TRUE(bool(decoder));
 

@@ -45,8 +45,7 @@ static void TestMultiWriterQueueST(const int loops) {
   }
 }
 
-TEST(MultiWriterQueue, SingleThreaded)
-{
+TEST(MultiWriterQueue, SingleThreaded) {
   TestMultiWriterQueueST<1>(10);
   TestMultiWriterQueueST<2>(10);
   TestMultiWriterQueueST<4>(10);
@@ -156,8 +155,7 @@ static void TestMultiWriterQueueMT(int aWriterThreads, int aReaderThreads,
       q.AllocatedBuffersStats().mWatermark);
 }
 
-TEST(MultiWriterQueue, MultiWriterSingleReader)
-{
+TEST(MultiWriterQueue, MultiWriterSingleReader) {
   // Small BufferSize, to exercize the buffer management code.
   TestMultiWriterQueueMT<
       MultiWriterQueue<int, 10, MultiWriterQueueReaderLocking_None>>(
@@ -216,8 +214,7 @@ TEST(MultiWriterQueue, MultiWriterSingleReader)
   //   MultiWriterQueueReaderLocking_None>>(64, 2, 2*1024*1024);
 }
 
-TEST(MultiWriterQueue, MultiWriterMultiReader)
-{
+TEST(MultiWriterQueue, MultiWriterMultiReader) {
   static_assert(
       mozilla::IsSame<MultiWriterQueue<int, 10>,
                       MultiWriterQueue<
@@ -346,8 +343,7 @@ struct DequeWrapperMT : DequeWrapperMW {
   }
 };
 
-TEST(MultiWriterQueue, nsDequeBenchmark)
-{
+TEST(MultiWriterQueue, nsDequeBenchmark) {
   TestMultiWriterQueueMT<DequeWrapperST>(1, 0, 2 * 1024 * 1024,
                                          "DequeWrapperST ");
 

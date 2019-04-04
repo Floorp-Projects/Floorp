@@ -845,9 +845,7 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
         }
         break;
       }
-      default: {
-        MOZ_CRASH("unexpected input argument when calling from jit");
-      }
+      default: { MOZ_CRASH("unexpected input argument when calling from jit"); }
     }
   }
 

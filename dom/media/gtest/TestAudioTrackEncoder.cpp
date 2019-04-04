@@ -59,8 +59,7 @@ static bool TestOpusInit(int aChannels, int aSamplingRate) {
   return encoder.TestOpusRawCreation(aChannels, aSamplingRate);
 }
 
-TEST(OpusAudioTrackEncoder, InitRaw)
-{
+TEST(OpusAudioTrackEncoder, InitRaw) {
   // Expect false with 0 or negative channels of input signal.
   EXPECT_FALSE(TestOpusInit(0, 16000));
   EXPECT_FALSE(TestOpusInit(-1, 16000));
@@ -90,8 +89,7 @@ TEST(OpusAudioTrackEncoder, InitRaw)
   EXPECT_FALSE(TestOpusInit(2, 200000));
 }
 
-TEST(OpusAudioTrackEncoder, Init)
-{
+TEST(OpusAudioTrackEncoder, Init) {
   {
     // The encoder does not normally recieve enough info from null data to
     // init. However, multiple attempts to do so, with sufficiently long
@@ -177,8 +175,7 @@ static int TestOpusResampler(int aChannels, int aSamplingRate) {
   return encoder.TestGetOutputSampleRate();
 }
 
-TEST(OpusAudioTrackEncoder, Resample)
-{
+TEST(OpusAudioTrackEncoder, Resample) {
   // Sampling rates of data to be fed to Opus encoder, should remain unchanged
   // if it is one of Opus supported rates (8000, 12000, 16000, 24000 and 48000
   // (kHz)) at initialization.
@@ -193,8 +190,7 @@ TEST(OpusAudioTrackEncoder, Resample)
   EXPECT_TRUE(TestOpusResampler(1, 44100) == 48000);
 }
 
-TEST(OpusAudioTrackEncoder, FetchMetadata)
-{
+TEST(OpusAudioTrackEncoder, FetchMetadata) {
   const int32_t channels = 1;
   const int32_t sampleRate = 44100;
   TestOpusTrackEncoder encoder;
@@ -208,8 +204,7 @@ TEST(OpusAudioTrackEncoder, FetchMetadata)
   EXPECT_EQ(sampleRate, opusMeta->mSamplingFrequency);
 }
 
-TEST(OpusAudioTrackEncoder, FrameEncode)
-{
+TEST(OpusAudioTrackEncoder, FrameEncode) {
   const int32_t channels = 1;
   const int32_t sampleRate = 44100;
   TestOpusTrackEncoder encoder;

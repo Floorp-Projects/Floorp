@@ -204,7 +204,9 @@ LayersBackend LayerManagerMLGPU::GetBackendType() {
 
 void LayerManagerMLGPU::SetRoot(Layer* aLayer) { mRoot = aLayer; }
 
-bool LayerManagerMLGPU::BeginTransaction(const nsCString& aURL) { return true; }
+bool LayerManagerMLGPU::BeginTransaction(const nsCString& aURL) {
+  return true;
+}
 
 void LayerManagerMLGPU::BeginTransactionWithDrawTarget(
     gfx::DrawTarget* aTarget, const gfx::IntRect& aRect) {

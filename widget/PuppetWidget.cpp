@@ -772,14 +772,13 @@ nsresult PuppetWidget::NotifyIMEOfFocusChange(
       IMENotificationRequests(IMENotificationRequests::NOTIFY_ALL);
   RefPtr<PuppetWidget> self = this;
   mTabChild->SendNotifyIMEFocus(mContentCache, aIMENotification)
-      ->Then(
-          mTabChild->TabGroup()->EventTargetFor(TaskCategory::UI), __func__,
-          [self](IMENotificationRequests&& aRequests) {
-            self->mIMENotificationRequestsOfParent = aRequests;
-          },
-          [self](mozilla::ipc::ResponseRejectReason&& aReason) {
-            NS_WARNING("SendNotifyIMEFocus got rejected.");
-          });
+      ->Then(mTabChild->TabGroup()->EventTargetFor(TaskCategory::UI), __func__,
+             [self](IMENotificationRequests&& aRequests) {
+               self->mIMENotificationRequestsOfParent = aRequests;
+             },
+             [self](mozilla::ipc::ResponseRejectReason&& aReason) {
+               NS_WARNING("SendNotifyIMEFocus got rejected.");
+             });
 
   return NS_OK;
 }

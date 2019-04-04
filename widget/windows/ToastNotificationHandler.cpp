@@ -350,7 +350,8 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
       Callback<ToastActivationHandler>([self](IToastNotification* aNotification,
                                               IInspectable* aInspectable) {
         return self->OnActivate(aNotification, aInspectable);
-      }).Get(),
+      })
+          .Get(),
       &mActivatedToken);
   if (NS_WARN_IF(FAILED(hr))) {
     return false;
@@ -360,7 +361,8 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
       Callback<ToastDismissedHandler>([self](IToastNotification* aNotification,
                                              IToastDismissedEventArgs* aArgs) {
         return self->OnDismiss(aNotification, aArgs);
-      }).Get(),
+      })
+          .Get(),
       &mDismissedToken);
   if (NS_WARN_IF(FAILED(hr))) {
     return false;
@@ -370,7 +372,8 @@ bool ToastNotificationHandler::CreateWindowsNotificationFromXml(
       Callback<ToastFailedHandler>([self](IToastNotification* aNotification,
                                           IToastFailedEventArgs* aArgs) {
         return self->OnFail(aNotification, aArgs);
-      }).Get(),
+      })
+          .Get(),
       &mFailedToken);
   if (NS_WARN_IF(FAILED(hr))) {
     return false;

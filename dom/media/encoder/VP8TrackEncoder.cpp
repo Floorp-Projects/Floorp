@@ -233,9 +233,7 @@ nsresult VP8TrackEncoder::GetEncodedPartitions(EncodedFrameContainer& aData) {
                                  pkt->data.frame.sz);
         break;
       }
-      default: {
-        break;
-      }
+      default: { break; }
     }
     // End of frame
     if ((pkt->data.frame.flags & VPX_FRAME_IS_FRAGMENT) == 0) {
