@@ -211,13 +211,13 @@ void nsColumnSetFrame::CreateBorderRenderers(
   if (isVertical) {
     border.SetBorderWidth(eSideTop, ruleWidth);
     border.SetBorderStyle(eSideTop, ruleStyle);
-    border.mBorderTopColor = StyleComplexColor::FromColor(ruleColor);
+    border.mBorderTopColor = StyleColor::FromColor(ruleColor);
     skipSides |= mozilla::eSideBitsLeftRight;
     skipSides |= mozilla::eSideBitsBottom;
   } else {
     border.SetBorderWidth(eSideLeft, ruleWidth);
     border.SetBorderStyle(eSideLeft, ruleStyle);
-    border.mBorderLeftColor = StyleComplexColor::FromColor(ruleColor);
+    border.mBorderLeftColor = StyleColor::FromColor(ruleColor);
     skipSides |= mozilla::eSideBitsTopBottom;
     skipSides |= mozilla::eSideBitsRight;
   }

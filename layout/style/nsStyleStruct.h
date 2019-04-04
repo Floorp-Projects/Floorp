@@ -16,7 +16,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/SheetType.h"
 #include "mozilla/StaticPtr.h"
-#include "mozilla/StyleComplexColor.h"
+#include "mozilla/StyleColorInlines.h"
 #include "mozilla/UniquePtr.h"
 #include "nsColor.h"
 #include "nsCoord.h"
@@ -133,7 +133,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleFont {
 
 struct nsStyleGradientStop {
   nsStyleCoord mLocation;  // percent, coord, calc, none
-  mozilla::StyleComplexColor mColor;
+  mozilla::StyleColor mColor;
   bool mIsInterpolationHint;
 
   // Use ==/!= on nsStyleGradient instead of on the gradient stop.
@@ -686,7 +686,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBackground {
   }
 
   nsStyleImageLayers mImage;
-  mozilla::StyleComplexColor mBackgroundColor;
+  mozilla::StyleColor mBackgroundColor;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin {
@@ -757,7 +757,7 @@ struct nsCSSShadowItem {
   nscoord mRadius;
   nscoord mSpread;
 
-  mozilla::StyleComplexColor mColor;
+  mozilla::StyleColor mColor;
   bool mInset;
 
   nsCSSShadowItem()
@@ -765,7 +765,7 @@ struct nsCSSShadowItem {
         mYOffset(0),
         mRadius(0),
         mSpread(0),
-        mColor(mozilla::StyleComplexColor::CurrentColor()),
+        mColor(mozilla::StyleColor::CurrentColor()),
         mInset(false) {
     MOZ_COUNT_CTOR(nsCSSShadowItem);
   }
@@ -958,12 +958,12 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder {
  public:
   // the colors to use for a simple border.
   // not used for -moz-border-colors
-  mozilla::StyleComplexColor mBorderTopColor;
-  mozilla::StyleComplexColor mBorderRightColor;
-  mozilla::StyleComplexColor mBorderBottomColor;
-  mozilla::StyleComplexColor mBorderLeftColor;
+  mozilla::StyleColor mBorderTopColor;
+  mozilla::StyleColor mBorderRightColor;
+  mozilla::StyleColor mBorderBottomColor;
+  mozilla::StyleColor mBorderLeftColor;
 
-  mozilla::StyleComplexColor& BorderColorFor(mozilla::Side aSide) {
+  mozilla::StyleColor& BorderColorFor(mozilla::Side aSide) {
     switch (aSide) {
       case mozilla::eSideTop:
         return mBorderTopColor;
@@ -978,7 +978,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder {
     return mBorderTopColor;
   }
 
-  const mozilla::StyleComplexColor& BorderColorFor(mozilla::Side aSide) const {
+  const mozilla::StyleColor& BorderColorFor(mozilla::Side aSide) const {
     switch (aSide) {
       case mozilla::eSideTop:
         return mBorderTopColor;
@@ -993,7 +993,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleBorder {
     return mBorderTopColor;
   }
 
-  static mozilla::StyleComplexColor nsStyleBorder::*BorderColorFieldFor(
+  static mozilla::StyleColor nsStyleBorder::*BorderColorFieldFor(
       mozilla::Side aSide) {
     switch (aSide) {
       case mozilla::eSideTop:
@@ -1055,7 +1055,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline {
   // see that field's comment.)
   nscoord mOutlineWidth;
   nscoord mOutlineOffset;
-  mozilla::StyleComplexColor mOutlineColor;
+  mozilla::StyleColor mOutlineColor;
   mozilla::StyleOutlineStyle mOutlineStyle;
 
   nscoord GetOutlineWidth() const { return mActualOutlineWidth; }
@@ -1440,7 +1440,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleTextReset {
   uint8_t mUnicodeBidi;          // NS_STYLE_UNICODE_BIDI_*
   nscoord mInitialLetterSink;    // 0 means normal
   float mInitialLetterSize;      // 0.0f means normal
-  mozilla::StyleComplexColor mTextDecorationColor;
+  mozilla::StyleColor mTextDecorationColor;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
@@ -1473,9 +1473,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleText {
   uint8_t mTextEmphasisPosition;    // NS_STYLE_TEXT_EMPHASIS_POSITION_*
   uint8_t mTextEmphasisStyle;       // NS_STYLE_TEXT_EMPHASIS_STYLE_*
   mozilla::StyleTextRendering mTextRendering;
-  mozilla::StyleComplexColor mTextEmphasisColor;
-  mozilla::StyleComplexColor mWebkitTextFillColor;
-  mozilla::StyleComplexColor mWebkitTextStrokeColor;
+  mozilla::StyleColor mTextEmphasisColor;
+  mozilla::StyleColor mWebkitTextFillColor;
+  mozilla::StyleColor mWebkitTextStrokeColor;
 
   mozilla::StyleNonNegativeLengthOrNumber mMozTabSize;
   mozilla::LengthPercentage mWordSpacing;
@@ -2610,7 +2610,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn {
   uint32_t mColumnCount = kColumnCountAuto;
   nsStyleCoord mColumnWidth;  // coord, auto
 
-  mozilla::StyleComplexColor mColumnRuleColor;
+  mozilla::StyleColor mColumnRuleColor;
   mozilla::StyleBorderStyle mColumnRuleStyle;  // StyleborderStyle::*
   mozilla::StyleColumnFill mColumnFill = mozilla::StyleColumnFill::Balance;
   mozilla::StyleColumnSpan mColumnSpan = mozilla::StyleColumnSpan::None;
@@ -2664,20 +2664,20 @@ class nsStyleSVGPaint {
   nsStyleSVGPaintType Type() const { return mType; }
 
   void SetNone();
-  void SetColor(mozilla::StyleComplexColor aColor);
+  void SetColor(mozilla::StyleColor aColor);
   void SetPaintServer(mozilla::css::URLValue* aPaintServer,
                       nsStyleSVGFallbackType aFallbackType,
-                      mozilla::StyleComplexColor aFallbackColor);
+                      mozilla::StyleColor aFallbackColor);
   void SetPaintServer(mozilla::css::URLValue* aPaintServer) {
     SetPaintServer(aPaintServer, eStyleSVGFallbackType_NotSet,
-                   mozilla::StyleComplexColor::Black());
+                   mozilla::StyleColor::Black());
   }
   void SetContextValue(nsStyleSVGPaintType aType,
                        nsStyleSVGFallbackType aFallbackType,
-                       mozilla::StyleComplexColor aFallbackColor);
+                       mozilla::StyleColor aFallbackColor);
   void SetContextValue(nsStyleSVGPaintType aType) {
     SetContextValue(aType, eStyleSVGFallbackType_NotSet,
-                    mozilla::StyleComplexColor::Black());
+                    mozilla::StyleColor::Black());
   }
 
   nscolor GetColor(mozilla::ComputedStyle* aComputedStyle) const {
@@ -2709,14 +2709,14 @@ class nsStyleSVGPaint {
   void Assign(const nsStyleSVGPaint& aOther);
 
   union ColorOrPaintServer {
-    mozilla::StyleComplexColor mColor;
+    mozilla::StyleColor mColor;
     mozilla::css::URLValue* mPaintServer;
-    explicit ColorOrPaintServer(mozilla::StyleComplexColor c) : mColor(c) {}
+    explicit ColorOrPaintServer(mozilla::StyleColor c) : mColor(c) {}
   };
   ColorOrPaintServer mPaint;
   nsStyleSVGPaintType mType;
   nsStyleSVGFallbackType mFallbackType;
-  mozilla::StyleComplexColor mFallbackColor;
+  mozilla::StyleColor mFallbackColor;
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG {
@@ -2897,9 +2897,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset {
 
   nsStyleImageLayers mMask;
   mozilla::StyleShapeSource mClipPath;
-  mozilla::StyleComplexColor mStopColor;
-  mozilla::StyleComplexColor mFloodColor;
-  mozilla::StyleComplexColor mLightingColor;
+  mozilla::StyleColor mStopColor;
+  mozilla::StyleColor mFloodColor;
+  mozilla::StyleColor mLightingColor;
 
   float mStopOpacity;
   float mFloodOpacity;
