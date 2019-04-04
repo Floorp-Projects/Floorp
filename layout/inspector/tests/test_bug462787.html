@@ -86,6 +86,14 @@ function do_test() {
     ok(true, "Threw");
   }
 
+  try {
+    InspectorUtils.removeContentState(document.documentElement, 3);
+    ok(false, "expected an exception");
+  }
+  catch(e) {
+    ok(true, "Threw");
+  }
+
   SimpleTest.finish();
 }
 
