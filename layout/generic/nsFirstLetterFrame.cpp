@@ -14,6 +14,7 @@
 #include "mozilla/RestyleManager.h"
 #include "mozilla/ServoStyleSet.h"
 #include "nsIContent.h"
+#include "nsIPresShellInlines.h"
 #include "nsLineLayout.h"
 #include "nsGkAtoms.h"
 #include "nsFrameManager.h"

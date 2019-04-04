@@ -15,7 +15,6 @@
 #include "nsGenericHTMLElement.h"
 #include "mozilla/dom/Document.h"
 #include "nsIImageLoadingContent.h"
-#include "nsIPresShell.h"
 #include "nsIServiceManager.h"
 #include "nsIPersistentProperties2.h"
 #include "nsPIDOMWindow.h"

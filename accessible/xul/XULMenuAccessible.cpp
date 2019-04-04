@@ -18,7 +18,6 @@
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIServiceManager.h"
-#include "nsIPresShell.h"
 #include "nsIContent.h"
 #include "nsMenuBarFrame.h"
 #include "nsMenuPopupFrame.h"

@@ -7,7 +7,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "nsCOMPtr.h"
-#include "nsIPresShell.h"
 #include "nsIContent.h"
 #include "nsPresContext.h"
 #include "nsBox.h"
