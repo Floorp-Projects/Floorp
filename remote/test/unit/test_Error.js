@@ -46,15 +46,15 @@ add_test(function test_RemoteAgentError_toString() {
 add_test(function test_RemoteAgentError_format() {
   const {format} = RemoteAgentError;
 
-  equal(format({name: "HippoError"}), "HippoError: ");
-  equal(format({name: "HorseError", message: "neigh"}), "HorseError: neigh:");
+  equal(format({name: "HippoError"}), "HippoError");
+  equal(format({name: "HorseError", message: "neigh"}), "HorseError: neigh");
 
   const dog = {
     name: "DogError",
     message: "woof",
     stack: "  one\ntwo\nthree  ",
   };
-  equal(format(dog), "DogError: woof:");
+  equal(format(dog), "DogError: woof");
   equal(format(dog, {stack: true}),
 `DogError: woof:
 	one
@@ -67,7 +67,7 @@ add_test(function test_RemoteAgentError_format() {
     stack: "four\nfive\nsix",
     cause: dog,
   };
-  equal(format(cat), "CatError: meow:");
+  equal(format(cat), "CatError: meow");
   equal(format(cat, {stack: true}),
 `CatError: meow:
 	four
