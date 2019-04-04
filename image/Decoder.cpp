@@ -44,7 +44,9 @@ class MOZ_STACK_CLASS AutoRecordDecoderTelemetry final {
 };
 
 Decoder::Decoder(RasterImage* aImage)
-    : mImageData(nullptr),
+    : mInProfile(nullptr),
+      mTransform(nullptr),
+      mImageData(nullptr),
       mImageDataLength(0),
       mImage(aImage),
       mFrameRecycler(nullptr),
@@ -71,6 +73,14 @@ Decoder::~Decoder() {
   MOZ_ASSERT(mInvalidRect.IsEmpty() || !mImage,
              "Destroying Decoder without taking all its invalidations");
   mInitialized = false;
+
+  if (mInProfile) {
+    // mTransform belongs to us only if mInProfile is non-null
+    if (mTransform) {
+      qcms_transform_release(mTransform);
+    }
+    qcms_profile_release(mInProfile);
+  }
 
   if (mImage && !NS_IsMainThread()) {
     // Dispatch mImage to main thread to prevent it from being destructed by the

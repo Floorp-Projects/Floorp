@@ -109,8 +109,6 @@ nsPNGDecoder::nsPNGDecoder(RasterImage* aImage)
       mInfo(nullptr),
       mCMSLine(nullptr),
       interlacebuf(nullptr),
-      mInProfile(nullptr),
-      mTransform(nullptr),
       mFormat(SurfaceFormat::UNKNOWN),
       mCMSMode(0),
       mChannels(0),
@@ -129,14 +127,6 @@ nsPNGDecoder::~nsPNGDecoder() {
   }
   if (interlacebuf) {
     free(interlacebuf);
-  }
-  if (mInProfile) {
-    qcms_profile_release(mInProfile);
-
-    // mTransform belongs to us only if mInProfile is non-null
-    if (mTransform) {
-      qcms_transform_release(mTransform);
-    }
   }
 }
 

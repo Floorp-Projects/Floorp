@@ -17,7 +17,6 @@
 
 #include "nsIInputStream.h"
 #include "nsIPipe.h"
-#include "qcms.h"
 
 extern "C" {
 #include "jpeglib.h"
@@ -99,9 +98,6 @@ class nsJPEGDecoder : public Decoder {
 
   JOCTET* mProfile;
   uint32_t mProfileLength;
-
-  qcms_profile* mInProfile;
-  qcms_transform* mTransform;
 
   bool mReading;
 
