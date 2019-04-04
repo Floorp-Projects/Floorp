@@ -13,8 +13,7 @@
 #include "imgFrame.h"
 #include "Orientation.h"
 #include "EXIF.h"
-
-#include "nsIInputStream.h"
+#include "SurfacePipeFactory.h"
 
 #include "nspr.h"
 #include "nsCRT.h"
@@ -37,7 +36,8 @@ extern "C" {
 #  define MOZ_JCS_EXT_NATIVE_ENDIAN_XRGB JCS_EXT_BGRX
 #endif
 
-static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width);
+static void cmyk_convert_bgra(uint32_t* aInput, uint32_t* aOutput,
+                              int32_t aWidth);
 
 using mozilla::gfx::SurfaceFormat;
 
@@ -79,6 +79,7 @@ nsJPEGDecoder::nsJPEGDecoder(RasterImage* aImage,
              Transition::TerminateSuccess()),
       mProfile(nullptr),
       mProfileLength(0),
+      mCMSLine(nullptr),
       mDecodeStyle(aDecodeStyle) {
   this->mErr.pub.error_exit = nullptr;
   this->mErr.pub.emit_message = nullptr;
@@ -108,9 +109,6 @@ nsJPEGDecoder::nsJPEGDecoder(RasterImage* aImage,
   mBackBuffer = nullptr;
   mBackBufferLen = mBackBufferSize = mBackBufferUnreadLen = 0;
 
-  mInProfile = nullptr;
-  mTransform = nullptr;
-
   mCMSMode = 0;
 
   MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
@@ -124,6 +122,8 @@ nsJPEGDecoder::~nsJPEGDecoder() {
 
   free(mBackBuffer);
   mBackBuffer = nullptr;
+
+  delete[] mCMSLine;
 
   MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
           ("nsJPEGDecoder::~nsJPEGDecoder: Destroying JPEG decoder %p", this));
@@ -257,74 +257,60 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
       }
 
       // We're doing a full decode.
-      if (mCMSMode != eCMSMode_Off &&
-          (mInProfile = GetICCProfile(mInfo)) != nullptr) {
-        uint32_t profileSpace = qcms_profile_get_color_space(mInProfile);
-        bool mismatch = false;
+      switch (mInfo.jpeg_color_space) {
+        case JCS_GRAYSCALE:
+        case JCS_RGB:
+        case JCS_YCbCr:
+          // By default, we will output directly to BGRA. If we need to apply
+          // special color transforms, this may change.
+          mInfo.out_color_space = MOZ_JCS_EXT_NATIVE_ENDIAN_XRGB;
+          break;
+        case JCS_CMYK:
+        case JCS_YCCK:
+          // libjpeg can convert from YCCK to CMYK, but not to XRGB.
+          mInfo.out_color_space = JCS_CMYK;
+          break;
+        default:
+          mState = JPEG_ERROR;
+          MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
+                  ("} (unknown colorpsace (3))"));
+          return Transition::TerminateFailure();
+      }
+
+      if (mCMSMode != eCMSMode_Off) {
+        if ((mInProfile = GetICCProfile(mInfo)) != nullptr &&
+            gfxPlatform::GetCMSOutputProfile()) {
+          uint32_t profileSpace = qcms_profile_get_color_space(mInProfile);
 
 #ifdef DEBUG_tor
-        fprintf(stderr, "JPEG profileSpace: 0x%08X\n", profileSpace);
+          fprintf(stderr, "JPEG profileSpace: 0x%08X\n", profileSpace);
 #endif
-        switch (mInfo.jpeg_color_space) {
-          case JCS_GRAYSCALE:
-            if (profileSpace == icSigRgbData) {
-              mInfo.out_color_space = JCS_RGB;
-            } else if (profileSpace != icSigGrayData) {
-              mismatch = true;
-            }
-            break;
-          case JCS_RGB:
-            if (profileSpace != icSigRgbData) {
-              mismatch = true;
-            }
-            break;
-          case JCS_YCbCr:
-            if (profileSpace == icSigRgbData) {
-              mInfo.out_color_space = JCS_RGB;
-            } else {
-              // qcms doesn't support ycbcr
-              mismatch = true;
-            }
-            break;
-          case JCS_CMYK:
-          case JCS_YCCK:
-            // qcms doesn't support cmyk
-            mismatch = true;
-            break;
-          default:
-            mState = JPEG_ERROR;
-            MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-                    ("} (unknown colorpsace (1))"));
-            return Transition::TerminateFailure();
-        }
-
-        if (!mismatch) {
-          qcms_data_type type;
-          switch (mInfo.out_color_space) {
-            case JCS_GRAYSCALE:
-              type = QCMS_DATA_GRAY_8;
-              break;
-            case JCS_RGB:
-              type = QCMS_DATA_RGB_8;
-              break;
-            default:
-              mState = JPEG_ERROR;
-              MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-                      ("} (unknown colorpsace (2))"));
-              return Transition::TerminateFailure();
+          Maybe<qcms_data_type> type;
+          if (profileSpace == icSigRgbData) {
+            // We can always color manage RGB profiles since it happens at the
+            // end of the pipeline.
+            type.emplace(QCMS_DATA_BGRA_8);
+          } else if (profileSpace == icSigGrayData &&
+                     mInfo.jpeg_color_space == JCS_GRAYSCALE) {
+            // We can only color manage gray profiles if the original color
+            // space is grayscale. This means we must downscale after color
+            // management since the downscaler assumes BGRA.
+            mInfo.out_color_space = JCS_GRAYSCALE;
+            type.emplace(QCMS_DATA_GRAY_8);
           }
-#if 0
-        // We don't currently support CMYK profiles. The following
-        // code dealt with lcms types. Add something like this
-        // back when we gain support for CMYK.
 
-        // Adobe Photoshop writes YCCK/CMYK files with inverted data
-        if (mInfo.out_color_space == JCS_CMYK) {
-          type |= FLAVOR_SH(mInfo.saw_Adobe_marker ? 1 : 0);
-        }
+#if 0
+          // We don't currently support CMYK profiles. The following
+          // code dealt with lcms types. Add something like this
+          // back when we gain support for CMYK.
+
+          // Adobe Photoshop writes YCCK/CMYK files with inverted data
+          if (mInfo.out_color_space == JCS_CMYK) {
+            type |= FLAVOR_SH(mInfo.saw_Adobe_marker ? 1 : 0);
+          }
 #endif
 
-          if (gfxPlatform::GetCMSOutputProfile()) {
+          if (type) {
             // Calculate rendering intent.
             int intent = gfxPlatform::GetRenderingIntent();
             if (intent == -1) {
@@ -333,40 +319,24 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
 
             // Create the color management transform.
             mTransform = qcms_transform_create(
-                mInProfile, type, gfxPlatform::GetCMSOutputProfile(),
-                QCMS_DATA_RGB_8, (qcms_intent)intent);
+                mInProfile, *type, gfxPlatform::GetCMSOutputProfile(),
+                QCMS_DATA_BGRA_8, (qcms_intent)intent);
           }
-        } else {
-#ifdef DEBUG_tor
-          fprintf(stderr, "ICM profile colorspace mismatch\n");
-#endif
+        } else if (mCMSMode == eCMSMode_All) {
+          mTransform = gfxPlatform::GetCMSBGRATransform();
         }
       }
 
-      if (!mTransform) {
-        switch (mInfo.jpeg_color_space) {
-          case JCS_GRAYSCALE:
-          case JCS_RGB:
-          case JCS_YCbCr:
-            // if we're not color managing we can decode directly to
-            // MOZ_JCS_EXT_NATIVE_ENDIAN_XRGB
-            if (mCMSMode != eCMSMode_All) {
-              mInfo.out_color_space = MOZ_JCS_EXT_NATIVE_ENDIAN_XRGB;
-              mInfo.out_color_components = 4;
-            } else {
-              mInfo.out_color_space = JCS_RGB;
-            }
-            break;
-          case JCS_CMYK:
-          case JCS_YCCK:
-            // libjpeg can convert from YCCK to CMYK, but not to RGB
-            mInfo.out_color_space = JCS_CMYK;
-            break;
-          default:
-            mState = JPEG_ERROR;
-            MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-                    ("} (unknown colorpsace (3))"));
-            return Transition::TerminateFailure();
+      // We don't want to use the pipe buffers directly because we don't want
+      // any reads on non-BGRA formatted data.
+      if (mInfo.out_color_space == JCS_GRAYSCALE ||
+          mInfo.out_color_space == JCS_CMYK) {
+        mCMSLine = new (std::nothrow) uint32_t[mInfo.image_width];
+        if (!mCMSLine) {
+          mState = JPEG_ERROR;
+          MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
+                  ("} (could allocate buffer for color conversion)"));
+          return Transition::TerminateFailure();
         }
       }
 
@@ -378,25 +348,24 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
       /* Used to set up image size so arrays can be allocated */
       jpeg_calc_output_dimensions(&mInfo);
 
-      MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
-      nsresult rv = AllocateFrame(OutputSize(), SurfaceFormat::B8G8R8X8);
-      if (NS_FAILED(rv)) {
+      // We handle the transform outside the pipeline if we are outputting in
+      // grayscale, because the pipeline wants BGRA pixels, particularly the
+      // downscaling filter, so we can't handle it after downscaling as would
+      // be optimal.
+      qcms_transform* pipeTransform =
+          mInfo.out_color_space != JCS_GRAYSCALE ? mTransform : nullptr;
+
+      Maybe<SurfacePipe> pipe = SurfacePipeFactory::CreateSurfacePipe(
+          this, Size(), OutputSize(), FullFrame(), SurfaceFormat::B8G8R8X8,
+          Nothing(), pipeTransform, SurfacePipeFlags());
+      if (!pipe) {
         mState = JPEG_ERROR;
         MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-                ("} (could not initialize image frame)"));
+                ("} (could not initialize surface pipe)"));
         return Transition::TerminateFailure();
       }
 
-      MOZ_ASSERT(mImageData, "Should have a buffer now");
-
-      if (mDownscaler) {
-        nsresult rv = mDownscaler->BeginFrame(Size(), Nothing(), mImageData,
-                                              /* aHasAlpha = */ false);
-        if (NS_FAILED(rv)) {
-          mState = JPEG_ERROR;
-          return Transition::TerminateFailure();
-        }
-      }
+      mPipe = std::move(*pipe);
 
       MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
               ("        JPEGDecoderAccounting: nsJPEGDecoder::"
@@ -442,20 +411,24 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
                   "nsJPEGDecoder::Write -- "
                   "JPEG_DECOMPRESS_SEQUENTIAL case");
 
-        bool suspend;
-        OutputScanlines(&suspend);
-
-        if (suspend) {
-          MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-                  ("} (I/O suspension after OutputScanlines() - SEQUENTIAL)"));
-          return Transition::ContinueUnbuffered(
-              State::JPEG_DATA);  // I/O suspension
+        switch (OutputScanlines()) {
+          case WriteState::NEED_MORE_DATA:
+            MOZ_LOG(
+                sJPEGDecoderAccountingLog, LogLevel::Debug,
+                ("} (I/O suspension after OutputScanlines() - SEQUENTIAL)"));
+            return Transition::ContinueUnbuffered(
+                State::JPEG_DATA);  // I/O suspension
+          case WriteState::FINISHED:
+            NS_ASSERTION(mInfo.output_scanline == mInfo.output_height,
+                         "We didn't process all of the data!");
+            mState = JPEG_DONE;
+            break;
+          case WriteState::FAILURE:
+            mState = JPEG_ERROR;
+            MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
+                    ("} (Error in pipeline from OutputScalines())"));
+            return Transition::TerminateFailure();
         }
-
-        // If we've completed image output ...
-        NS_ASSERTION(mInfo.output_scanline == mInfo.output_height,
-                     "We didn't process all of the data!");
-        mState = JPEG_DONE;
       }
       MOZ_FALLTHROUGH;  // to decompress progressive JPEG.
     }
@@ -470,7 +443,7 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
           status = jpeg_consume_input(&mInfo);
         } while ((status != JPEG_SUSPENDED) && (status != JPEG_REACHED_EOI));
 
-        for (;;) {
+        while (mState != JPEG_DONE) {
           if (mInfo.output_scanline == 0) {
             int scan = mInfo.input_scan_number;
 
@@ -494,43 +467,45 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
             mInfo.output_scanline = 0;
           }
 
-          bool suspend;
-          OutputScanlines(&suspend);
-
-          if (suspend) {
-            if (mInfo.output_scanline == 0) {
-              // didn't manage to read any lines - flag so we don't call
-              // jpeg_start_output() multiple times for the same scan
-              mInfo.output_scanline = 0xffffff;
-            }
-            MOZ_LOG(
-                sJPEGDecoderAccountingLog, LogLevel::Debug,
-                ("} (I/O suspension after OutputScanlines() - PROGRESSIVE)"));
-            return Transition::ContinueUnbuffered(
-                State::JPEG_DATA);  // I/O suspension
-          }
-
-          if (mInfo.output_scanline == mInfo.output_height) {
-            if (!jpeg_finish_output(&mInfo)) {
+          switch (OutputScanlines()) {
+            case WriteState::NEED_MORE_DATA:
+              if (mInfo.output_scanline == 0) {
+                // didn't manage to read any lines - flag so we don't call
+                // jpeg_start_output() multiple times for the same scan
+                mInfo.output_scanline = 0xffffff;
+              }
               MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
-                      ("} (I/O suspension after jpeg_finish_output() -"
-                       " PROGRESSIVE)"));
+                      ("} (I/O suspension after OutputScanlines() - "
+                       "PROGRESSIVE)"));
               return Transition::ContinueUnbuffered(
                   State::JPEG_DATA);  // I/O suspension
-            }
+            case WriteState::FINISHED:
+              NS_ASSERTION(mInfo.output_scanline == mInfo.output_height,
+                           "We didn't process all of the data!");
 
-            if (jpeg_input_complete(&mInfo) &&
-                (mInfo.input_scan_number == mInfo.output_scan_number))
+              if (!jpeg_finish_output(&mInfo)) {
+                MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
+                        ("} (I/O suspension after jpeg_finish_output() -"
+                         " PROGRESSIVE)"));
+                return Transition::ContinueUnbuffered(
+                    State::JPEG_DATA);  // I/O suspension
+              }
+
+              if (jpeg_input_complete(&mInfo) &&
+                  (mInfo.input_scan_number == mInfo.output_scan_number)) {
+                mState = JPEG_DONE;
+              } else {
+                mInfo.output_scanline = 0;
+                mPipe.ResetToFirstRow();
+              }
               break;
-
-            mInfo.output_scanline = 0;
-            if (mDownscaler) {
-              mDownscaler->ResetForNextProgressivePass();
-            }
+            case WriteState::FAILURE:
+              mState = JPEG_ERROR;
+              MOZ_LOG(sJPEGDecoderAccountingLog, LogLevel::Debug,
+                      ("} (Error in pipeline from OutputScalines())"));
+              return Transition::TerminateFailure();
           }
         }
-
-        mState = JPEG_DONE;
       }
       MOZ_FALLTHROUGH;  // to finish decompressing.
     }
@@ -577,7 +552,7 @@ LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::ReadJPEGData(
 
   MOZ_ASSERT_UNREACHABLE("Escaped the JPEG decoder state machine");
   return Transition::TerminateFailure();
-}
+}  // namespace image
 
 LexerTransition<nsJPEGDecoder::State> nsJPEGDecoder::FinishedJPEGData() {
   // Since we set up an unbuffered read for SIZE_MAX bytes, if we actually read
@@ -612,120 +587,45 @@ void nsJPEGDecoder::NotifyDone() {
   PostDecodeDone();
 }
 
-void nsJPEGDecoder::FinishRow(uint32_t aLastSourceRow) {
-  if (mDownscaler) {
-    mDownscaler->CommitRow();
-    if (mDownscaler->HasInvalidation()) {
-      DownscalerInvalidRect invalidRect = mDownscaler->TakeInvalidRect();
-      PostInvalidation(invalidRect.mOriginalSizeRect,
-                       Some(invalidRect.mTargetSizeRect));
-      MOZ_ASSERT(!mDownscaler->HasInvalidation());
-    }
-  } else if (aLastSourceRow != mInfo.output_scanline) {
-    PostInvalidation(nsIntRect(0, aLastSourceRow, mInfo.output_width,
-                               mInfo.output_scanline - aLastSourceRow));
-  }
-}
-
-void nsJPEGDecoder::OutputScanlines(bool* suspend) {
-  *suspend = false;
-
-  while ((mInfo.output_scanline < mInfo.output_height)) {
-    const uint32_t top = mInfo.output_scanline;
-    uint32_t* imageRow = nullptr;
-    if (mDownscaler) {
-      imageRow = reinterpret_cast<uint32_t*>(mDownscaler->RowBuffer());
-    } else {
-      imageRow = reinterpret_cast<uint32_t*>(mImageData) +
-                 (mInfo.output_scanline * mInfo.output_width);
-    }
-
-    MOZ_ASSERT(imageRow, "Should have a row buffer here");
-
-    if (mInfo.out_color_space == MOZ_JCS_EXT_NATIVE_ENDIAN_XRGB) {
-      // Special case: scanline will be directly converted into packed ARGB
-      if (jpeg_read_scanlines(&mInfo, (JSAMPARRAY)&imageRow, 1) != 1) {
-        *suspend = true;  // suspend
-        break;
-      }
-      FinishRow(top);
-      continue;  // all done for this row!
-    }
-
-    JSAMPROW sampleRow = (JSAMPROW)imageRow;
-    if (mInfo.output_components == 3) {
-      // Put the pixels at end of row to enable in-place expansion
-      sampleRow += mInfo.output_width;
-    }
-
-    // Request one scanline.  Returns 0 or 1 scanlines.
-    if (jpeg_read_scanlines(&mInfo, &sampleRow, 1) != 1) {
-      *suspend = true;  // suspend
-      break;
-    }
-
-    if (mTransform) {
-      JSAMPROW source = sampleRow;
-      if (mInfo.out_color_space == JCS_GRAYSCALE) {
-        // Convert from the 1byte grey pixels at begin of row
-        // to the 3byte RGB byte pixels at 'end' of row
-        sampleRow += mInfo.output_width;
-      }
-      qcms_transform_data(mTransform, source, sampleRow, mInfo.output_width);
-      // Move 3byte RGB data to end of row
-      if (mInfo.out_color_space == JCS_CMYK) {
-        memmove(sampleRow + mInfo.output_width, sampleRow,
-                3 * mInfo.output_width);
-        sampleRow += mInfo.output_width;
-      }
-    } else {
-      if (mInfo.out_color_space == JCS_CMYK) {
-        // Convert from CMYK to RGB
-        // We cannot convert directly to Cairo, as the CMSRGBTransform
-        // may wants to do a RGB transform...
-        // Would be better to have platform CMSenabled transformation
-        // from CMYK to (A)RGB...
-        cmyk_convert_rgb((JSAMPROW)imageRow, mInfo.output_width);
-        sampleRow += mInfo.output_width;
-      }
-      if (mCMSMode == eCMSMode_All) {
-        // No embedded ICC profile - treat as sRGB
-        qcms_transform* transform = gfxPlatform::GetCMSRGBTransform();
-        if (transform) {
-          qcms_transform_data(transform, sampleRow, sampleRow,
-                              mInfo.output_width);
+WriteState nsJPEGDecoder::OutputScanlines() {
+  auto result = mPipe.WritePixelBlocks<uint32_t>(
+      [&](uint32_t* aPixelBlock, int32_t aBlockSize) {
+        JSAMPROW sampleRow = (JSAMPROW)(mCMSLine ? mCMSLine : aPixelBlock);
+        if (jpeg_read_scanlines(&mInfo, &sampleRow, 1) != 1) {
+          return MakeTuple(/* aWritten */ 0, Some(WriteState::NEED_MORE_DATA));
         }
-      }
-    }
 
-    // counter for while() loops below
-    uint32_t idx = mInfo.output_width;
+        switch (mInfo.out_color_space) {
+          default:
+            // Already outputted directly to aPixelBlock as BGRA.
+            MOZ_ASSERT(!mCMSLine);
+            break;
+          case JCS_GRAYSCALE:
+            // The transform here does both color management, and converts the
+            // pixels from grayscale to BGRA. This is why we do it here, instead
+            // of using ColorManagementFilter in the SurfacePipe, because the
+            // other filters (e.g. DownscalingFilter) require BGRA pixels.
+            MOZ_ASSERT(mCMSLine);
+            qcms_transform_data(mTransform, mCMSLine, aPixelBlock,
+                                mInfo.output_width);
+            break;
+          case JCS_CMYK:
+            // Convert from CMYK to BGRA
+            MOZ_ASSERT(mCMSLine);
+            cmyk_convert_bgra(mCMSLine, aPixelBlock, aBlockSize);
+            break;
+        }
 
-    // copy as bytes until source pointer is 32-bit-aligned
-    for (; (NS_PTR_TO_UINT32(sampleRow) & 0x3) && idx; --idx) {
-      *imageRow++ =
-          gfxPackedPixel(0xFF, sampleRow[0], sampleRow[1], sampleRow[2]);
-      sampleRow += 3;
-    }
+        return MakeTuple(aBlockSize, Maybe<WriteState>());
+      });
 
-    // copy pixels in blocks of 4
-    while (idx >= 4) {
-      GFX_BLOCK_RGB_TO_FRGB(sampleRow, imageRow);
-      idx -= 4;
-      sampleRow += 12;
-      imageRow += 4;
-    }
-
-    // copy remaining pixel(s)
-    while (idx--) {
-      // 32-bit read of final pixel will exceed buffer, so read bytes
-      *imageRow++ =
-          gfxPackedPixel(0xFF, sampleRow[0], sampleRow[1], sampleRow[2]);
-      sampleRow += 3;
-    }
-
-    FinishRow(top);
+  Maybe<SurfaceInvalidRect> invalidRect = mPipe.TakeInvalidRect();
+  if (invalidRect) {
+    PostInvalidation(invalidRect->mInputSpaceRect,
+                     Some(invalidRect->mOutputSpaceRect));
   }
+
+  return result;
 }
 
 // Override the standard error method in the IJG JPEG decoder code.
@@ -954,18 +854,16 @@ term_source(j_decompress_ptr jd) {
 ///*************** Inverted CMYK -> RGB conversion *************************
 /// Input is (Inverted) CMYK stored as 4 bytes per pixel.
 /// Output is RGB stored as 3 bytes per pixel.
-/// @param row Points to row buffer containing the CMYK bytes for each pixel
-/// in the row.
-/// @param width Number of pixels in the row.
-static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width) {
-  // Work from end to front to shrink from 4 bytes per pixel to 3
-  JSAMPROW in = row + width * 4;
-  JSAMPROW out = in;
+/// @param aInput Points to row buffer containing the CMYK bytes for each pixel
+///               in the row.
+/// @param aOutput Points to row buffer to write BGRA to.
+/// @param aWidth Number of pixels in the row.
+static void cmyk_convert_bgra(uint32_t* aInput, uint32_t* aOutput,
+                              int32_t aWidth) {
+  uint8_t* input = reinterpret_cast<uint8_t*>(aInput);
+  uint8_t* output = reinterpret_cast<uint8_t*>(aOutput);
 
-  for (uint32_t i = width; i > 0; i--) {
-    in -= 4;
-    out -= 3;
-
+  for (int32_t i = 0; i < aWidth; ++i) {
     // Source is 'Inverted CMYK', output is RGB.
     // See: http://www.easyrgb.com/math.php?MATH=M12#text12
     // Or:  http://www.ilkeratalay.com/colorspacesfaq.php#rgb
@@ -985,12 +883,23 @@ static void cmyk_convert_rgb(JSAMPROW row, JDIMENSION width) {
     // B = 1 - Y => 1 - (1 - iY*iK) => iY*iK
 
     // Convert from Inverted CMYK (0..255) to RGB (0..255)
-    const uint32_t iC = in[0];
-    const uint32_t iM = in[1];
-    const uint32_t iY = in[2];
-    const uint32_t iK = in[3];
-    out[0] = iC * iK / 255;  // Red
-    out[1] = iM * iK / 255;  // Green
-    out[2] = iY * iK / 255;  // Blue
+    const uint32_t iC = input[0];
+    const uint32_t iM = input[1];
+    const uint32_t iY = input[2];
+    const uint32_t iK = input[3];
+#if MOZ_BIG_ENDIAN
+    output[0] = 0xFF;           // Alpha
+    output[1] = iC * iK / 255;  // Red
+    output[2] = iM * iK / 255;  // Green
+    output[3] = iY * iK / 255;  // Blue
+#else
+    output[0] = iY * iK / 255;  // Blue
+    output[1] = iM * iK / 255;  // Green
+    output[2] = iC * iK / 255;  // Red
+    output[3] = 0xFF;           // Alpha
+#endif
+
+    input += 4;
+    output += 4;
   }
 }
