@@ -95,6 +95,7 @@ rusty-enums = [
     "mozilla::StyleClear",
     "mozilla::StyleColumnFill",
     "mozilla::StyleColumnSpan",
+    "mozilla::StyleComplexColor_Tag",
     "mozilla::StyleFloat",
     "mozilla::StyleImageOrientation",
     "mozilla::StyleUserModify",
@@ -458,10 +459,6 @@ cbindgen-types = [
     { gecko = "StyleStrong", servo = "gecko_bindings::sugar::ownership::Strong" },
     { gecko = "StyleGenericFontFamily", servo = "values::computed::font::GenericFontFamily" },
     { gecko = "StyleFontFamilyNameSyntax", servo = "values::computed::font::FontFamilyNameSyntax" },
-    { gecko = "StyleGenericColor", servo = "values::generics::color::Color" },
-    { gecko = "StyleGenericColorOrAuto", servo = "values::generics::color::ColorOrAuto" },
-    { gecko = "StyleGenericScrollbarColor", servo = "values::generics::ui::ScrollbarColor" },
-    { gecko = "StyleRGBA", servo = "cssparser::RGBA" },
 ]
 
 mapped-generic-types = [

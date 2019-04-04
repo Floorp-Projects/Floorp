@@ -634,7 +634,7 @@ ImgDrawResult nsCSSRendering::PaintBorder(
   NS_FOR_CSS_SIDES(side) {
     nscolor color = aComputedStyle->GetVisitedDependentColor(
         nsStyleBorder::BorderColorFieldFor(side));
-    newStyleBorder.BorderColorFor(side) = StyleColor::FromColor(color);
+    newStyleBorder.BorderColorFor(side) = StyleComplexColor::FromColor(color);
   }
   return PaintBorderWithStyleBorder(aPresContext, aRenderingContext, aForFrame,
                                     aDirtyRect, aBorderArea, newStyleBorder,
@@ -660,7 +660,7 @@ Maybe<nsCSSBorderRenderer> nsCSSRendering::CreateBorderRenderer(
   NS_FOR_CSS_SIDES(side) {
     nscolor color = aComputedStyle->GetVisitedDependentColor(
         nsStyleBorder::BorderColorFieldFor(side));
-    newStyleBorder.BorderColorFor(side) = StyleColor::FromColor(color);
+    newStyleBorder.BorderColorFor(side) = StyleComplexColor::FromColor(color);
   }
   return CreateBorderRendererWithStyleBorder(
       aPresContext, aDrawTarget, aForFrame, aDirtyRect, aBorderArea,
@@ -806,7 +806,7 @@ static nsCSSBorderRenderer ConstructBorderRenderer(
   // pull out styles, colors
   NS_FOR_CSS_SIDES(i) {
     borderStyles[i] = aStyleBorder.GetBorderStyle(i);
-    borderColors[i] = aStyleBorder.BorderColorFor(i).CalcColor(*aComputedStyle);
+    borderColors[i] = aStyleBorder.BorderColorFor(i).CalcColor(aComputedStyle);
   }
 
   PrintAsFormatString(
@@ -1946,7 +1946,7 @@ static bool IsOpaqueBorderEdge(const nsStyleBorder& aBorder,
   if (aBorder.mBorderImageSource.GetType() != eStyleImageType_Null)
     return false;
 
-  StyleColor color = aBorder.BorderColorFor(aSide);
+  StyleComplexColor color = aBorder.BorderColorFor(aSide);
   // We don't know the foreground color here, so if it's being used
   // we must assume it might be transparent.
   return !color.MaybeTransparent();
@@ -2290,46 +2290,36 @@ static void DrawBackgroundColor(nsCSSRendering::ImageLayerClipState& aClipState,
   aCtx->Restore();
 }
 
-enum class ScrollbarColorKind {
-  Thumb,
-  Track,
-};
-
 static Maybe<nscolor> CalcScrollbarColor(nsIFrame* aFrame,
-                                         ScrollbarColorKind aKind) {
+                                         StyleComplexColor nsStyleUI::*aColor) {
   ComputedStyle* scrollbarStyle = nsLayoutUtils::StyleForScrollbar(aFrame);
-  const auto& colors = scrollbarStyle->StyleUI()->mScrollbarColor;
-  if (colors.IsAuto()) {
+  auto color = scrollbarStyle->StyleUI()->*aColor;
+  if (color.IsAuto()) {
     return Nothing();
   }
-  const auto& color = aKind == ScrollbarColorKind::Thumb
-                          ? colors.AsColors().thumb
-                          : colors.AsColors().track;
-  return Some(color.CalcColor(*scrollbarStyle));
+  return Some(color.CalcColor(scrollbarStyle));
 }
 
 static nscolor GetBackgroundColor(nsIFrame* aFrame,
                                   ComputedStyle* aComputedStyle) {
+  Maybe<nscolor> overrideColor = Nothing();
   switch (aComputedStyle->StyleDisplay()->mAppearance) {
     case StyleAppearance::ScrollbarthumbVertical:
-    case StyleAppearance::ScrollbarthumbHorizontal: {
-      if (Maybe<nscolor> overrideColor =
-              CalcScrollbarColor(aFrame, ScrollbarColorKind::Thumb)) {
-        return *overrideColor;
-      }
+    case StyleAppearance::ScrollbarthumbHorizontal:
+      overrideColor =
+          CalcScrollbarColor(aFrame, &nsStyleUI::mScrollbarFaceColor);
       break;
-    }
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::ScrollbarHorizontal:
-    case StyleAppearance::Scrollcorner: {
-      if (Maybe<nscolor> overrideColor =
-              CalcScrollbarColor(aFrame, ScrollbarColorKind::Track)) {
-        return *overrideColor;
-      }
+    case StyleAppearance::Scrollcorner:
+      overrideColor =
+          CalcScrollbarColor(aFrame, &nsStyleUI::mScrollbarTrackColor);
       break;
-    }
     default:
       break;
+  }
+  if (overrideColor.isSome()) {
+    return *overrideColor;
   }
   return aComputedStyle->GetVisitedDependentColor(
       &nsStyleBackground::mBackgroundColor);

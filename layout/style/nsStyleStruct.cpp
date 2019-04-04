@@ -259,10 +259,10 @@ nsStyleBorder::nsStyleBorder(const Document& aDocument)
       mBorderImageRepeatV(StyleBorderImageRepeat::Stretch),
       mFloatEdge(StyleFloatEdge::ContentBox),
       mBoxDecorationBreak(StyleBoxDecorationBreak::Slice),
-      mBorderTopColor(StyleColor::CurrentColor()),
-      mBorderRightColor(StyleColor::CurrentColor()),
-      mBorderBottomColor(StyleColor::CurrentColor()),
-      mBorderLeftColor(StyleColor::CurrentColor()),
+      mBorderTopColor(StyleComplexColor::CurrentColor()),
+      mBorderRightColor(StyleComplexColor::CurrentColor()),
+      mBorderBottomColor(StyleComplexColor::CurrentColor()),
+      mBorderLeftColor(StyleComplexColor::CurrentColor()),
       mComputedBorder(0, 0, 0, 0),
       mTwipsPerPixel(TwipsPerPixel(aDocument)) {
   MOZ_COUNT_CTOR(nsStyleBorder);
@@ -406,7 +406,7 @@ nsStyleOutline::nsStyleOutline(const Document& aDocument)
     : mOutlineRadius(ZeroBorderRadius()),
       mOutlineWidth(kMediumBorderWidth),
       mOutlineOffset(0),
-      mOutlineColor(StyleColor::CurrentColor()),
+      mOutlineColor(StyleComplexColor::CurrentColor()),
       mOutlineStyle(StyleOutlineStyle::BorderStyle(StyleBorderStyle::None)),
       mActualOutlineWidth(0),
       mTwipsPerPixel(TwipsPerPixel(aDocument)) {
@@ -589,7 +589,7 @@ nsChangeHint nsStyleXUL::CalcDifference(const nsStyleXUL& aNewData) const {
 
 nsStyleColumn::nsStyleColumn(const Document& aDocument)
     : mColumnWidth(eStyleUnit_Auto),
-      mColumnRuleColor(StyleColor::CurrentColor()),
+      mColumnRuleColor(StyleComplexColor::CurrentColor()),
       mColumnRuleStyle(StyleBorderStyle::None),
       mColumnRuleWidth(kMediumBorderWidth),
       mTwipsPerPixel(TwipsPerPixel(aDocument)) {
@@ -1067,9 +1067,9 @@ void nsStyleFilter::SetDropShadow(nsCSSShadowArray* aDropShadow) {
 //
 nsStyleSVGReset::nsStyleSVGReset(const Document& aDocument)
     : mMask(nsStyleImageLayers::LayerType::Mask),
-      mStopColor(StyleColor::Black()),
-      mFloodColor(StyleColor::Black()),
-      mLightingColor(StyleColor::White()),
+      mStopColor(StyleComplexColor::Black()),
+      mFloodColor(StyleComplexColor::Black()),
+      mLightingColor(StyleComplexColor::White()),
       mStopOpacity(1.0f),
       mFloodOpacity(1.0f),
       mDominantBaseline(NS_STYLE_DOMINANT_BASELINE_AUTO),
@@ -1176,10 +1176,10 @@ bool nsStyleSVGReset::HasMask() const {
 
 // nsStyleSVGPaint implementation
 nsStyleSVGPaint::nsStyleSVGPaint(nsStyleSVGPaintType aType)
-    : mPaint(StyleColor::Black()),
+    : mPaint(StyleComplexColor::Black()),
       mType(aType),
       mFallbackType(eStyleSVGFallbackType_NotSet),
-      mFallbackColor(StyleColor::Black()) {
+      mFallbackColor(StyleComplexColor::Black()) {
   MOZ_ASSERT(aType == nsStyleSVGPaintType(0) ||
              aType == eStyleSVGPaintType_None ||
              aType == eStyleSVGPaintType_Color);
@@ -1197,7 +1197,7 @@ void nsStyleSVGPaint::Reset() {
     case eStyleSVGPaintType_None:
       break;
     case eStyleSVGPaintType_Color:
-      mPaint.mColor = StyleColor::Black();
+      mPaint.mColor = StyleComplexColor::Black();
       break;
     case eStyleSVGPaintType_Server:
       mPaint.mPaintServer->Release();
@@ -1206,7 +1206,7 @@ void nsStyleSVGPaint::Reset() {
     case eStyleSVGPaintType_ContextFill:
     case eStyleSVGPaintType_ContextStroke:
       mFallbackType = eStyleSVGFallbackType_NotSet;
-      mFallbackColor = StyleColor::Black();
+      mFallbackColor = StyleComplexColor::Black();
       break;
   }
   mType = nsStyleSVGPaintType(0);
@@ -1249,7 +1249,7 @@ void nsStyleSVGPaint::SetNone() {
 
 void nsStyleSVGPaint::SetContextValue(nsStyleSVGPaintType aType,
                                       nsStyleSVGFallbackType aFallbackType,
-                                      StyleColor aFallbackColor) {
+                                      StyleComplexColor aFallbackColor) {
   MOZ_ASSERT(aType == eStyleSVGPaintType_ContextFill ||
              aType == eStyleSVGPaintType_ContextStroke);
   Reset();
@@ -1258,7 +1258,7 @@ void nsStyleSVGPaint::SetContextValue(nsStyleSVGPaintType aType,
   mFallbackColor = aFallbackColor;
 }
 
-void nsStyleSVGPaint::SetColor(StyleColor aColor) {
+void nsStyleSVGPaint::SetColor(StyleComplexColor aColor) {
   Reset();
   mType = eStyleSVGPaintType_Color;
   mPaint.mColor = aColor;
@@ -1266,7 +1266,7 @@ void nsStyleSVGPaint::SetColor(StyleColor aColor) {
 
 void nsStyleSVGPaint::SetPaintServer(css::URLValue* aPaintServer,
                                      nsStyleSVGFallbackType aFallbackType,
-                                     StyleColor aFallbackColor) {
+                                     StyleComplexColor aFallbackColor) {
   MOZ_ASSERT(aPaintServer);
   Reset();
   mType = eStyleSVGPaintType_Server;
@@ -2801,7 +2801,7 @@ nsChangeHint nsStyleImageLayers::Layer::CalcDifference(
 
 nsStyleBackground::nsStyleBackground(const Document& aDocument)
     : mImage(nsStyleImageLayers::LayerType::Background),
-      mBackgroundColor(StyleColor::Transparent()) {
+      mBackgroundColor(StyleComplexColor::Transparent()) {
   MOZ_COUNT_CTOR(nsStyleBackground);
 }
 
@@ -2846,8 +2846,9 @@ nscolor nsStyleBackground::BackgroundColor(const nsIFrame* aFrame) const {
   return mBackgroundColor.CalcColor(aFrame);
 }
 
-nscolor nsStyleBackground::BackgroundColor(ComputedStyle* aStyle) const {
-  return mBackgroundColor.CalcColor(*aStyle);
+nscolor nsStyleBackground::BackgroundColor(
+    mozilla::ComputedStyle* aStyle) const {
+  return mBackgroundColor.CalcColor(aStyle);
 }
 
 bool nsStyleBackground::IsTransparent(const nsIFrame* aFrame) const {
@@ -3647,7 +3648,7 @@ nsStyleTextReset::nsStyleTextReset(const Document& aDocument)
       mUnicodeBidi(NS_STYLE_UNICODE_BIDI_NORMAL),
       mInitialLetterSink(0),
       mInitialLetterSize(0.0f),
-      mTextDecorationColor(StyleColor::CurrentColor()) {
+      mTextDecorationColor(StyleComplexColor::CurrentColor()) {
   MOZ_COUNT_CTOR(nsStyleTextReset);
 }
 
@@ -3730,9 +3731,9 @@ nsStyleText::nsStyleText(const Document& aDocument)
           nsLayoutUtils::ControlCharVisibilityDefault()),
       mTextEmphasisStyle(NS_STYLE_TEXT_EMPHASIS_STYLE_NONE),
       mTextRendering(StyleTextRendering::Auto),
-      mTextEmphasisColor(StyleColor::CurrentColor()),
-      mWebkitTextFillColor(StyleColor::CurrentColor()),
-      mWebkitTextStrokeColor(StyleColor::CurrentColor()),
+      mTextEmphasisColor(StyleComplexColor::CurrentColor()),
+      mWebkitTextFillColor(StyleComplexColor::CurrentColor()),
+      mWebkitTextStrokeColor(StyleComplexColor::CurrentColor()),
       mMozTabSize(
           StyleNonNegativeLengthOrNumber::Number(NS_STYLE_TABSIZE_INITIAL)),
       mWordSpacing(LengthPercentage::Zero()),
@@ -3917,8 +3918,9 @@ nsStyleUI::nsStyleUI(const Document& aDocument)
       mUserFocus(StyleUserFocus::None),
       mPointerEvents(NS_STYLE_POINTER_EVENTS_AUTO),
       mCursor(StyleCursorKind::Auto),
-      mCaretColor(StyleColorOrAuto::Auto()),
-      mScrollbarColor(StyleScrollbarColor::Auto()) {
+      mCaretColor(StyleComplexColor::Auto()),
+      mScrollbarFaceColor(StyleComplexColor::Auto()),
+      mScrollbarTrackColor(StyleComplexColor::Auto()) {
   MOZ_COUNT_CTOR(nsStyleUI);
 }
 
@@ -3930,7 +3932,8 @@ nsStyleUI::nsStyleUI(const nsStyleUI& aSource)
       mCursor(aSource.mCursor),
       mCursorImages(aSource.mCursorImages),
       mCaretColor(aSource.mCaretColor),
-      mScrollbarColor(aSource.mScrollbarColor) {
+      mScrollbarFaceColor(aSource.mScrollbarFaceColor),
+      mScrollbarTrackColor(aSource.mScrollbarTrackColor) {
   MOZ_COUNT_CTOR(nsStyleUI);
 }
 
@@ -3992,7 +3995,8 @@ nsChangeHint nsStyleUI::CalcDifference(const nsStyleUI& aNewData) const {
   }
 
   if (mCaretColor != aNewData.mCaretColor ||
-      mScrollbarColor != aNewData.mScrollbarColor) {
+      mScrollbarFaceColor != aNewData.mScrollbarFaceColor ||
+      mScrollbarTrackColor != aNewData.mScrollbarTrackColor) {
     hint |= nsChangeHint_RepaintFrame;
   }
 

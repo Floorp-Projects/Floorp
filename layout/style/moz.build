@@ -108,7 +108,7 @@ EXPORTS.mozilla += [
     'ServoUtils.h',
     'SheetType.h',
     'StyleAnimationValue.h',
-    'StyleColorInlines.h',
+    'StyleComplexColor.h',
     'StyleSheet.h',
     'StyleSheetInfo.h',
     'StyleSheetInlines.h',
@@ -223,7 +223,7 @@ UNIFIED_SOURCES += [
     'ServoStyleSet.cpp',
     'StreamLoader.cpp',
     'StyleAnimationValue.cpp',
-    'StyleColor.cpp',
+    'StyleComplexColor.cpp',
     'StyleSheet.cpp',
     'URLExtraData.cpp',
 ]

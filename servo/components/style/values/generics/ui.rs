@@ -86,8 +86,7 @@ impl<ImageUrl: ToCss, Number: ToCss> ToCss for CursorImage<ImageUrl, Number> {
     ToCss,
     ToShmem,
 )]
-#[repr(C, u8)]
-pub enum GenericScrollbarColor<Color> {
+pub enum ScrollbarColor<Color> {
     /// `auto`
     Auto,
     /// `<color>{2}`
@@ -98,8 +97,6 @@ pub enum GenericScrollbarColor<Color> {
         track: Color,
     },
 }
-
-pub use self::GenericScrollbarColor as ScrollbarColor;
 
 impl<Color> Default for ScrollbarColor<Color> {
     #[inline]
