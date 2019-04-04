@@ -167,7 +167,7 @@ jobs:
     parent: debian9-base
   fetch:
     symbol: I(fetch)
-    parent: debian9-base
+    parent: debian9-raw
   static-analysis-build:
     symbol: I(static-analysis-build)
     parent: android-build
