@@ -67,6 +67,22 @@ async function testCDP() {
   is(attachedEvent.sessionId, sessionId, "attachedToTarget and attachToTarget returns the same session id");
   is(attachedEvent.targetInfo.type, "page", "attachedToTarget creates a tab by default");
 
+  const onResponse = Target.receivedMessageFromTarget();
+  const id = 1;
+  const message = JSON.stringify({
+    id,
+    method: "Page.navigate",
+    params: {
+      url: "data:text/html;charset=utf-8,new-page",
+    },
+  });
+  await Target.sendMessageToTarget({ sessionId, message });
+  const response = await onResponse;
+  is(response.sessionId, sessionId, "The response is from the same session");
+  const responseMessage = JSON.parse(response.message);
+  is(responseMessage.id, id, "The response is from the same session");
+  ok(!!responseMessage.result.frameId, "received the `frameId` out of `Page.navigate` request");
+
   await client.close();
   ok(true, "The client is closed");
 
