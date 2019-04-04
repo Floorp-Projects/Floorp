@@ -34,3 +34,15 @@ export function openElementInInspectorCommand(grip: Grip) {
     return panel.openElementInInspector(grip);
   };
 }
+
+export function highlightDomElement(grip: Grip) {
+  return async ({ panel }: ThunkArgs) => {
+    return panel.highlightDomElement(grip);
+  };
+}
+
+export function unHighlightDomElement(grip: Grip) {
+  return async ({ panel }: ThunkArgs) => {
+    return panel.unHighlightDomElement(grip);
+  };
+}

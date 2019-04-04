@@ -51,7 +51,9 @@ type Props = {
   addExpression: typeof actions.addExpression,
   selectSourceURL: typeof actions.selectSourceURL,
   openLink: typeof actions.openLink,
-  openElementInInspector: typeof actions.openElementInInspectorCommand
+  openElementInInspector: typeof actions.openElementInInspectorCommand,
+  highlightDomElement: typeof actions.highlightDomElement,
+  unHighlightDomElement: typeof actions.unHighlightDomElement
 };
 
 type State = {
@@ -243,7 +245,12 @@ export class Popup extends Component<Props, State> {
   }
 
   renderObjectInspector(roots: Array<Object>) {
-    const { openLink, openElementInInspector } = this.props;
+    const {
+      openLink,
+      openElementInInspector,
+      highlightDomElement,
+      unHighlightDomElement
+    } = this.props;
 
     return (
       <ObjectInspector
@@ -255,6 +262,8 @@ export class Popup extends Component<Props, State> {
         createObjectClient={grip => createObjectClient(grip)}
         onDOMNodeClick={grip => openElementInInspector(grip)}
         onInspectIconClick={grip => openElementInInspector(grip)}
+        onDOMNodeMouseOver={grip => highlightDomElement(grip)}
+        onDOMNodeMouseOut={grip => unHighlightDomElement(grip)}
       />
     );
   }
@@ -332,7 +341,9 @@ const {
   selectSourceURL,
   setPopupObjectProperties,
   openLink,
-  openElementInInspectorCommand
+  openElementInInspectorCommand,
+  highlightDomElement,
+  unHighlightDomElement
 } = actions;
 
 const mapDispatchToProps = {
@@ -340,7 +351,9 @@ const mapDispatchToProps = {
   selectSourceURL,
   setPopupObjectProperties,
   openLink,
-  openElementInInspector: openElementInInspectorCommand
+  openElementInInspector: openElementInInspectorCommand,
+  highlightDomElement,
+  unHighlightDomElement
 };
 
 export default connect(
