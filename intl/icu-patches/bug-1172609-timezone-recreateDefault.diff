@@ -3,7 +3,7 @@
 diff --git a/intl/icu/source/i18n/timezone.cpp b/intl/icu/source/i18n/timezone.cpp
 --- a/intl/icu/source/i18n/timezone.cpp
 +++ b/intl/icu/source/i18n/timezone.cpp
-@@ -108,16 +108,19 @@ static const UChar         WORLD[] = {0x
+@@ -110,16 +110,22 @@ static const UChar         WORLD[] = {0x30, 0x30, 0x31, 0x00}; /* "001" */
  static const UChar         GMT_ID[] = {0x47, 0x4D, 0x54, 0x00}; /* "GMT" */
  static const UChar         UNKNOWN_ZONE_ID[] = {0x45, 0x74, 0x63, 0x2F, 0x55, 0x6E, 0x6B, 0x6E, 0x6F, 0x77, 0x6E, 0x00}; /* "Etc/Unknown" */
  static const int32_t       GMT_ID_LENGTH = 3;
@@ -13,17 +13,20 @@ diff --git a/intl/icu/source/i18n/timezone.cpp b/intl/icu/source/i18n/timezone.c
  static icu::UInitOnce gDefaultZoneInitOnce = U_INITONCE_INITIALIZER;
  
 +// Prevents DEFAULT_ZONE from being deleted while another thread is cloning it.
-+static UMutex gDefaultZoneMutex = U_MUTEX_INITIALIZER;
++static icu::UMutex* defaultZoneMutex() {
++    static icu::UMutex gDefaultZoneMutex = U_MUTEX_INITIALIZER;
++    return &gDefaultZoneMutex;
++}
 +
- static icu::TimeZone* _GMT = NULL;
- static icu::TimeZone* _UNKNOWN_ZONE = NULL;
+ alignas(icu::SimpleTimeZone)
+ static char gRawGMT[sizeof(icu::SimpleTimeZone)];
+ 
+ alignas(icu::SimpleTimeZone)
+ static char gRawUNKNOWN[sizeof(icu::SimpleTimeZone)];
+ 
  static icu::UInitOnce gStaticZonesInitOnce = U_INITONCE_INITIALIZER;
- 
- static char TZDATA_VERSION[16];
- static icu::UInitOnce gTZDataVersionInitOnce = U_INITONCE_INITIALIZER;
- 
- static int32_t* MAP_SYSTEM_ZONES = NULL;
-@@ -554,26 +557,36 @@ static void U_CALLCONV initDefault()
+ static UBool gStaticZonesInitialized = FALSE; // Whether the static zones are initialized and ready to use.
+@@ -566,26 +572,36 @@ static void U_CALLCONV initDefault()
  }
  
  // -------------------------------------
@@ -33,7 +36,7 @@ diff --git a/intl/icu/source/i18n/timezone.cpp b/intl/icu/source/i18n/timezone.c
  {
      umtx_initOnce(gDefaultZoneInitOnce, initDefault);
 +
-+    Mutex mutex_lock(&gDefaultZoneMutex);
++    icu::Mutex mutex_lock(defaultZoneMutex());
      return (DEFAULT_ZONE != NULL) ? DEFAULT_ZONE->clone() : NULL;
  }
  
@@ -51,7 +54,7 @@ diff --git a/intl/icu/source/i18n/timezone.cpp b/intl/icu/source/i18n/timezone.c
  {
      if (zone != NULL)
      {
-+        Mutex mutex_lock(&gDefaultZoneMutex);
++        icu::Mutex mutex_lock(defaultZoneMutex());
          TimeZone *old = DEFAULT_ZONE;
          DEFAULT_ZONE = zone;
          delete old;
@@ -63,11 +66,11 @@ diff --git a/intl/icu/source/i18n/timezone.cpp b/intl/icu/source/i18n/timezone.c
 diff --git a/intl/icu/source/i18n/unicode/timezone.h b/intl/icu/source/i18n/unicode/timezone.h
 --- a/intl/icu/source/i18n/unicode/timezone.h
 +++ b/intl/icu/source/i18n/unicode/timezone.h
-@@ -299,16 +299,19 @@ public:
-      * and made the default.
+@@ -310,16 +310,19 @@ class U_I18N_API TimeZone : public UObject {
       *
       * @return   A default TimeZone. Clients are responsible for deleting the time zone
       *           object returned.
+      * @see getUnknown
       * @stable ICU 2.0
       */
      static TimeZone* U_EXPORT2 createDefault(void);
