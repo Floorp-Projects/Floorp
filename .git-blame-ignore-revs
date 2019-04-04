@@ -1,7 +1,12 @@
+# Bug 1016240 - Exterminate CR+LF line endings. r=briansmith,cpearce,ehsan,gavin
+# https://hg.mozilla.org/mozilla-central/rev/ca251a28d3dd
+741fa39165c4bec22e115d1d501631ae499c4180 # cinnabar
+51ba75d1355026c53c89c0c08bb36cada57d21a5 # gecko-dev
+
 # Bug 1128203 - Reduce indentation from 4 to 2 spaces. rs=dolske DONTBUILD CLOSED TREE
 # https://hg.mozilla.org/mozilla-central/rev/a569f5a4bb6a27f25e99b5b45ee241db2660b7e3
 b8ffa2c11b99bd5762b5ed612acd755b29d1eae6 # cinnabar
-174ae94f90f1b5edc83b737b4006c82bb830db7c # gecko-div
+174ae94f90f1b5edc83b737b4006c82bb830db7c # gecko-dev
 
 # Bug 1204606 - Reformat of dom/media
 # https://hg.mozilla.org/mozilla-central/rev/0ceae9db9ec0be18daa1a279511ad305723185d4
