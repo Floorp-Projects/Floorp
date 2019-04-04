@@ -1836,6 +1836,7 @@ class XPCConvert {
   /**
    * Convert a native object into a JS::Value.
    *
+   * @param cx the JSContext representing the global we want the value in
    * @param d [out] the resulting JS::Value
    * @param s the native object we're working with
    * @param type the type of object that s is
@@ -1845,9 +1846,9 @@ class XPCConvert {
    * @param pErr [out] relevant error code, if any.
    */
 
-  static bool NativeData2JS(JS::MutableHandleValue d, const void* s,
-                            const nsXPTType& type, const nsID* iid,
-                            uint32_t arrlen, nsresult* pErr);
+  static bool NativeData2JS(JSContext* cx, JS::MutableHandleValue d,
+                            const void* s, const nsXPTType& type,
+                            const nsID* iid, uint32_t arrlen, nsresult* pErr);
 
   static bool JSData2Native(JSContext* cx, void* d, JS::HandleValue s,
                             const nsXPTType& type, const nsID* iid,
