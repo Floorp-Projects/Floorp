@@ -217,10 +217,21 @@ void BrowsingContext::Attach(bool aFromIPC) {
 
   children->AppendElement(this);
 
-  // Send attach to our parent if we need to.
-  if (!aFromIPC && XRE_IsContentProcess()) {
-    ContentChild::GetSingleton()->SendAttachBrowsingContext(
-        GetIPCInitializer());
+  if (!aFromIPC) {
+    // Send attach to our parent if we need to.
+    if (XRE_IsContentProcess()) {
+      ContentChild::GetSingleton()->SendAttachBrowsingContext(
+          GetIPCInitializer());
+    } else if (IsContent()) {
+      MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
+      for (auto iter = Group()->ContentParentsIter(); !iter.Done();
+           iter.Next()) {
+        nsRefPtrHashKey<ContentParent>* entry = iter.Get();
+
+        Unused << entry->GetKey()->SendAttachBrowsingContext(
+            GetIPCInitializer());
+      }
+    }
   }
 }
 
