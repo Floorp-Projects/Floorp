@@ -2540,7 +2540,7 @@ var AddonManagerInternal = {
       // precedence.
       // If this add-on is not a webextension or if the application does not
       // implement permission prompts, no confirmation is displayed for
-      // installs created from about:addons (in which case requireConfirm
+      // installs created with mozAddonManager (in which case requireConfirm
       // is false).
       // In the remaining cases, a confirmation prompt is displayed but the
       // application may override it either by implementing the
@@ -2705,12 +2705,7 @@ var AddonManagerInternal = {
           method: "amWebAPI",
         },
       }).then(install => {
-        let requireConfirm = true;
-        if (target.contentDocument &&
-            target.contentDocument.nodePrincipal.isSystemPrincipal) {
-          requireConfirm = false;
-        }
-        AddonManagerInternal.setupPromptHandler(target, null, install, requireConfirm, "AMO");
+        AddonManagerInternal.setupPromptHandler(target, null, install, false, "AMO");
 
         let id = this.nextInstall++;
         let {listener, installPromise} = makeListener(id, target.messageManager);
