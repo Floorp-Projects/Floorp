@@ -10,7 +10,7 @@ add_task(async () => {
 
   writeProfilesIni({
     profiles: [{
-      name: PROFILE_DEFAULT,
+      name: "Foo",
       path: defaultProfile.leafName,
       default: true,
     }],
