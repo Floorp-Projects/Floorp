@@ -2564,16 +2564,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleUI {
 
   mozilla::StyleCursorKind mCursor;
   nsTArray<nsCursorImage> mCursorImages;  // images and coords
-  mozilla::StyleComplexColor mCaretColor;
 
-  mozilla::StyleComplexColor mScrollbarFaceColor;
-  mozilla::StyleComplexColor mScrollbarTrackColor;
+  mozilla::StyleColorOrAuto mCaretColor;
+  mozilla::StyleScrollbarColor mScrollbarColor;
 
   inline uint8_t GetEffectivePointerEvents(nsIFrame* aFrame) const;
 
-  bool HasCustomScrollbars() const {
-    return !mScrollbarFaceColor.IsAuto() || !mScrollbarTrackColor.IsAuto();
-  }
+  bool HasCustomScrollbars() const { return !mScrollbarColor.IsAuto(); }
 };
 
 struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleXUL {
@@ -2685,7 +2682,7 @@ class nsStyleSVGPaint {
 
   nscolor GetColor(mozilla::ComputedStyle* aComputedStyle) const {
     MOZ_ASSERT(mType == eStyleSVGPaintType_Color);
-    return mPaint.mColor.CalcColor(aComputedStyle);
+    return mPaint.mColor.CalcColor(*aComputedStyle);
   }
 
   mozilla::css::URLValue* GetPaintServer() const {
@@ -2699,7 +2696,7 @@ class nsStyleSVGPaint {
     MOZ_ASSERT(mType == eStyleSVGPaintType_Server ||
                mType == eStyleSVGPaintType_ContextFill ||
                mType == eStyleSVGPaintType_ContextStroke);
-    return mFallbackColor.CalcColor(aComputedStyle);
+    return mFallbackColor.CalcColor(*aComputedStyle);
   }
 
   bool operator==(const nsStyleSVGPaint& aOther) const;

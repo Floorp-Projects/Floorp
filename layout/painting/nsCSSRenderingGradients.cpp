@@ -581,7 +581,7 @@ static nsTArray<ColorStop> ComputeColorStops(ComputedStyle* aComputedStyle,
       if (firstUnsetPosition < 0) {
         firstUnsetPosition = i;
       }
-      auto stopColor = stop.mColor.CalcColor(aComputedStyle);
+      auto stopColor = stop.mColor.CalcColor(*aComputedStyle);
       stops.AppendElement(
           ColorStop(0, stop.mIsInterpolationHint, Color::FromABGR(stopColor)));
       continue;
@@ -595,7 +595,7 @@ static nsTArray<ColorStop> ComputeColorStops(ComputedStyle* aComputedStyle,
                                     : stops[i - 1].mPosition;
       position = std::max(position, previousPosition);
     }
-    auto stopColor = stop.mColor.CalcColor(aComputedStyle);
+    auto stopColor = stop.mColor.CalcColor(*aComputedStyle);
     stops.AppendElement(ColorStop(position, stop.mIsInterpolationHint,
                                   Color::FromABGR(stopColor)));
     if (firstUnsetPosition > 0) {
