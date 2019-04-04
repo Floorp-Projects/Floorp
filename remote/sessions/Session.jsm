@@ -14,11 +14,27 @@ const {RemoteAgentError} = ChromeUtils.import("chrome://remote/content/Error.jsm
  * A session represents exactly one client WebSocket connection.
  *
  * Every new WebSocket connections is associated with one session that
- * deals with despatching incoming command requests to the right
+ * deals with dispatching incoming command requests to the right
  * target, sending back responses, and propagating events originating
  * from domains.
+ * Then, some subsequent Sessions may be created over a single WebSocket
+ * connection. In this case, the subsequent session will have an `id`
+ * being passed to their constructor and each packet of these sessions
+ * will have a `sessionId` attribute in order to filter the packets
+ * by session both on client and server side.
  */
 class Session {
+  /**
+   * @param Connection connection
+   *        The connection used to communicate with the server.
+   * @param Target target
+   *        The target to which this session communicates with.
+   * @param Number id (optional)
+   *        If this session isn't the default one used for the HTTP endpoint we
+   *        connected to, the session requires an id to distinguish it from the default
+   *        one. This id is used to filter our request, responses and events between
+   *        all active sessions.
+   */
   constructor(connection, target, id) {
     this.connection = connection;
     this.target = target;
