@@ -102,7 +102,7 @@ class MOZ_STACK_CLASS AutoSavePendingResult {
 
 // static
 already_AddRefed<nsXPCWrappedJSClass> nsXPCWrappedJSClass::GetNewOrUsed(
-    JSContext* cx, REFNSIID aIID) {
+    REFNSIID aIID) {
   XPCJSRuntime* xpcrt = nsXPConnect::GetRuntimeInstance();
   IID2WrappedJSClassMap* map = xpcrt->GetWrappedJSClassMap();
   RefPtr<nsXPCWrappedJSClass> clasp = map->Find(aIID);
@@ -111,7 +111,7 @@ already_AddRefed<nsXPCWrappedJSClass> nsXPCWrappedJSClass::GetNewOrUsed(
     const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByIID(aIID);
     if (info) {
       if (!info->IsBuiltinClass() && nsXPConnect::IsISupportsDescendant(info)) {
-        clasp = new nsXPCWrappedJSClass(cx, aIID, info);
+        clasp = new nsXPCWrappedJSClass(aIID, info);
         if (!clasp->mDescriptors) {
           clasp = nullptr;
         }
@@ -121,7 +121,7 @@ already_AddRefed<nsXPCWrappedJSClass> nsXPCWrappedJSClass::GetNewOrUsed(
   return clasp.forget();
 }
 
-nsXPCWrappedJSClass::nsXPCWrappedJSClass(JSContext* cx, REFNSIID aIID,
+nsXPCWrappedJSClass::nsXPCWrappedJSClass(REFNSIID aIID,
                                          const nsXPTInterfaceInfo* aInfo)
     : mRuntime(nsXPConnect::GetRuntimeInstance()),
       mInfo(aInfo),
