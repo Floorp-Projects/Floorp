@@ -53,7 +53,7 @@ marionette-media:
     treeherder-symbol: MnM
     max-run-time: 5400
     instance-size: default
-    tier: 2
+    tier: 3
     mozharness:
         extra-options:
             - --test-manifest=stream-tests.ini
