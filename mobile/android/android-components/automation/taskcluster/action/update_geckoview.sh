@@ -82,4 +82,4 @@ git push  --no-verify --quiet $URL $BRANCH
 echo "Done ($?)"
 
 echo "Opening pull request"
-./gradlew openPR -Ptitle="GeckoView update ($TIMESTAMP)" -Pbranch="$BRANCH" -PtokenFile="token.properties"
+./gradlew openPR -Ptitle="GeckoView update ($CHANNEL) ($TIMESTAMP)" -Pbranch="$BRANCH" -PtokenFile="token.properties"
