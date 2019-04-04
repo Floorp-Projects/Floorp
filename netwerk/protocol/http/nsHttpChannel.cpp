@@ -2281,6 +2281,16 @@ void nsHttpChannel::ProcessSSLInformation() {
       }
     }
   }
+
+  uint16_t tlsVersion;
+  nsresult rv = securityInfo->GetProtocolVersion(&tlsVersion);
+  if (NS_SUCCEEDED(rv) &&
+      tlsVersion != nsITransportSecurityInfo::TLS_VERSION_1_2 &&
+      tlsVersion != nsITransportSecurityInfo::TLS_VERSION_1_3) {
+    nsString consoleErrorTag = NS_LITERAL_STRING("DeprecatedTLSVersion");
+    nsString consoleErrorCategory = NS_LITERAL_STRING("TLS");
+    Unused << AddSecurityMessage(consoleErrorTag, consoleErrorCategory);
+  }
 }
 
 void nsHttpChannel::ProcessAltService() {
