@@ -100,6 +100,7 @@ const STRICT_TRANSPORT_SECURITY_LEARN_MORE = "https://developer.mozilla.org/docs
 const WEAK_SIGNATURE_ALGORITHM_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Weak_Signature_Algorithm";
 const MIME_TYPE_MISMATCH_LEARN_MORE = "https://developer.mozilla.org/docs/Web/HTTP/Headers/X-Content-Type-Options";
 const SOURCE_MAP_LEARN_MORE = "https://developer.mozilla.org/en-US/docs/Tools/Debugger/Source_map_errors";
+const TLS_LEARN_MORE = "https://blog.mozilla.org/security/2018/10/15/removing-old-versions-of-tls/";
 const ErrorCategories = {
   "Insecure Password Field": INSECURE_PASSWORDS_LEARN_MORE,
   "Mixed Content Message": MIXED_CONTENT_LEARN_MORE,
@@ -110,6 +111,7 @@ const ErrorCategories = {
   "Tracking Protection": TRACKING_PROTECTION_LEARN_MORE,
   "MIMEMISMATCH": MIME_TYPE_MISMATCH_LEARN_MORE,
   "source map": SOURCE_MAP_LEARN_MORE,
+  "TLS": TLS_LEARN_MORE,
 };
 
 const baseCorsErrorUrl = "https://developer.mozilla.org/docs/Web/HTTP/CORS/Errors/";
