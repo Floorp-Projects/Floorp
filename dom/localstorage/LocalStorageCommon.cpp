@@ -47,7 +47,7 @@ bool NextGenLocalStorageEnabled() {
 }
 
 bool CachedNextGenLocalStorageEnabled() {
-  MOZ_DIAGNOSTIC_ASSERT(gNextGenLocalStorageEnabled != -1);
+  MOZ_ASSERT(gNextGenLocalStorageEnabled != -1);
 
   return !!gNextGenLocalStorageEnabled;
 }
