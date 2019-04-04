@@ -7,9 +7,9 @@ package mozilla.components.service.glean.error
 
 import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.Dispatchers
-import mozilla.components.service.glean.metrics.CommonMetricData
-import mozilla.components.service.glean.metrics.CounterMetricType
-import mozilla.components.service.glean.metrics.Lifetime
+import mozilla.components.service.glean.private.CommonMetricData
+import mozilla.components.service.glean.private.CounterMetricType
+import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.storages.CountersStorageEngine
 import mozilla.components.support.base.log.logger.Logger
 

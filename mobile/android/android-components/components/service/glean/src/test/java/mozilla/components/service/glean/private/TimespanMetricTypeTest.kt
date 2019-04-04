@@ -1,4 +1,4 @@
-package mozilla.components.service.glean.metrics
+package mozilla.components.service.glean.private
 
 import mozilla.components.service.glean.error.ErrorRecording.ErrorType
 import mozilla.components.service.glean.error.ErrorRecording.testGetNumRecordedErrors

@@ -18,7 +18,7 @@ import mozilla.components.service.glean.Glean
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.service.glean.utils.getISOTimeString
 import mozilla.components.service.glean.utils.parseISOTimeString
-import mozilla.components.service.glean.metrics.TimeUnit
+import mozilla.components.service.glean.private.TimeUnit
 import java.util.Calendar
 import java.util.Date
 import java.util.concurrent.TimeUnit as AndroidTimeUnit

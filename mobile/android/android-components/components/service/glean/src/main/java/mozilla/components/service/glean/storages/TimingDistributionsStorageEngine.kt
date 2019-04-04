@@ -8,9 +8,9 @@ import android.annotation.SuppressLint
 import android.content.SharedPreferences
 import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.error.ErrorRecording
-import mozilla.components.service.glean.metrics.CommonMetricData
-import mozilla.components.service.glean.metrics.HistogramType
-import mozilla.components.service.glean.metrics.TimeUnit
+import mozilla.components.service.glean.private.CommonMetricData
+import mozilla.components.service.glean.private.HistogramType
+import mozilla.components.service.glean.private.TimeUnit
 
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.org.json.tryGetInt

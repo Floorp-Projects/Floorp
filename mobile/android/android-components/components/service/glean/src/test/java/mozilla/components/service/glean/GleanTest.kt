@@ -15,13 +15,13 @@ import kotlinx.coroutines.ObsoleteCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import mozilla.components.service.glean.GleanMetrics.GleanInternalMetrics
 import mozilla.components.service.glean.config.Configuration
-import mozilla.components.service.glean.metrics.DatetimeMetricType
-import mozilla.components.service.glean.metrics.EventMetricType
-import mozilla.components.service.glean.metrics.Lifetime
-import mozilla.components.service.glean.metrics.NoExtraKeys
-import mozilla.components.service.glean.metrics.StringMetricType
-import mozilla.components.service.glean.metrics.TimeUnit as GleanTimeUnit
-import mozilla.components.service.glean.metrics.UuidMetricType
+import mozilla.components.service.glean.private.DatetimeMetricType
+import mozilla.components.service.glean.private.EventMetricType
+import mozilla.components.service.glean.private.Lifetime
+import mozilla.components.service.glean.private.NoExtraKeys
+import mozilla.components.service.glean.private.StringMetricType
+import mozilla.components.service.glean.private.TimeUnit as GleanTimeUnit
+import mozilla.components.service.glean.private.UuidMetricType
 import mozilla.components.service.glean.storages.StringsStorageEngine
 import mozilla.components.service.glean.scheduler.GleanLifecycleObserver
 import mozilla.components.service.glean.scheduler.PingUploadWorker

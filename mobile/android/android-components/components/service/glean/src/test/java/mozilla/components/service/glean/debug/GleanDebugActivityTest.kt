@@ -17,8 +17,8 @@ import org.robolectric.Robolectric
 import android.content.pm.ActivityInfo
 import android.content.pm.ResolveInfo
 import androidx.work.testing.WorkManagerTestInitHelper
-import mozilla.components.service.glean.metrics.BooleanMetricType
-import mozilla.components.service.glean.metrics.Lifetime
+import mozilla.components.service.glean.private.BooleanMetricType
+import mozilla.components.service.glean.private.Lifetime
 import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.triggerWorkManager
 import mozilla.components.service.glean.TestPingTagClient

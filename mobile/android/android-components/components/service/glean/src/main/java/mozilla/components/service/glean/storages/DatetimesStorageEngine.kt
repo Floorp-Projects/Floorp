@@ -6,8 +6,8 @@ package mozilla.components.service.glean.storages
 
 import android.annotation.SuppressLint
 import android.content.SharedPreferences
-import mozilla.components.service.glean.metrics.CommonMetricData
-import mozilla.components.service.glean.metrics.DatetimeMetricType
+import mozilla.components.service.glean.private.CommonMetricData
+import mozilla.components.service.glean.private.DatetimeMetricType
 import mozilla.components.service.glean.utils.getISOTimeString
 import mozilla.components.service.glean.utils.parseISOTimeString
 import mozilla.components.support.base.log.logger.Logger

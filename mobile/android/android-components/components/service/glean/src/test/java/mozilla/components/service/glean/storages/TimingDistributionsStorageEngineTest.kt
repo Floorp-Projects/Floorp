@@ -8,9 +8,9 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.runBlocking
-import mozilla.components.service.glean.metrics.Lifetime
-import mozilla.components.service.glean.metrics.TimeUnit
-import mozilla.components.service.glean.metrics.TimingDistributionMetricType
+import mozilla.components.service.glean.private.Lifetime
+import mozilla.components.service.glean.private.TimeUnit
+import mozilla.components.service.glean.private.TimingDistributionMetricType
 import mozilla.components.service.glean.error.ErrorRecording
 import mozilla.components.service.glean.resetGlean
 import org.junit.Assert.assertFalse
