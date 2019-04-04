@@ -2,6 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/*
+ * IMPORTANT DEVELOPER'S NOTE:
+ *
+ * Because of how Fenix and &-browser include this file, any time this file
+ * is updated, we need to publish an android-components snapshot immediately
+ * to avoid breaking the build.
+ *
+ * (This comment will become irrelevant when Fenix starts using tagged releases
+ * of android-components rather than tracking snapshots.)
+ */
+
 import org.apache.tools.ant.taskdefs.condition.Os
 import groovy.json.JsonOutput
 
