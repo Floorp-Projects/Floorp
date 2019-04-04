@@ -11827,8 +11827,10 @@ void Document::FlushUserFontSet() {
 
   if (gfxPlatform::GetPlatform()->DownloadableFontsEnabled()) {
     nsTArray<nsFontFaceRuleContainer> rules;
-    if (mStyleSetFilled && !mStyleSet->AppendFontFaceRules(rules)) {
-      return;
+    RefPtr<PresShell> presShell = GetPresShell();
+    if (presShell) {
+      MOZ_ASSERT(mStyleSetFilled);
+      mStyleSet->AppendFontFaceRules(rules);
     }
 
     if (!mFontFaceSet && !rules.IsEmpty()) {
@@ -11845,7 +11847,6 @@ void Document::FlushUserFontSet() {
     // reflect that we're modifying @font-face rules.  (However,
     // without a reflow, nothing will happen to start any downloads
     // that are needed.)
-    PresShell* presShell = GetPresShell();
     if (changed && presShell) {
       if (nsPresContext* presContext = presShell->GetPresContext()) {
         presContext->UserFontSetUpdated();
