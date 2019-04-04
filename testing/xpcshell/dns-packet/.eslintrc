@@ -1,9 +1,0 @@
-root: true
-
-parserOptions:
-  ecmaVersion: 2015
-
-env:
-  node: true
-
-extends: standard
