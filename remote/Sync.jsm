@@ -70,7 +70,7 @@ function EventPromise(listener, type, options = {
 }
 
 function DOMContentLoadedPromise(window, options = {mozSystemGroup: true}) {
-  if (window.document.readyState == "complete") {
+  if (window.document.readyState == "complete" || window.document.readyState == "interactive") {
     return Promise.resolve();
   }
   return new EventPromise(window, "DOMContentLoaded", options);
