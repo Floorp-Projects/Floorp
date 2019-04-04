@@ -38,7 +38,7 @@ TEST_F(TelemetryTestFixture, CombinedStacks) {
     ProcessedStack::Module module = stacks.GetModule(frame.mModIndex);
     nsPrintfCString moduleName("test%hu", frame.mModIndex);
     ASSERT_TRUE(module.mName.Equals(NS_ConvertUTF8toUTF16(moduleName)))
-        << "Module should have expected name";
+    << "Module should have expected name";
   }
 
   for (size_t i = 0; i < kMaxStacksKept; ++i) {

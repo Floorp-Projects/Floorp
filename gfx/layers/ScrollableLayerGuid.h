@@ -108,7 +108,9 @@ template <int LogLevel>
 gfx::Log<LogLevel>& operator<<(gfx::Log<LogLevel>& log,
                                const ScrollableLayerGuid& aGuid) {
   return log << nsPrintfCString("(0x%" PRIx64 ", %u, %" PRIu64 ")",
-          uint64_t(aGuid.mLayersId), aGuid.mPresShellId, aGuid.mScrollId).get();
+                                uint64_t(aGuid.mLayersId), aGuid.mPresShellId,
+                                aGuid.mScrollId)
+                    .get();
 }
 
 }  // namespace layers

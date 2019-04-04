@@ -1098,13 +1098,13 @@ class IceTestPeer : public sigslot::has_slots<> {
     std::vector<NrIceCandidatePair> old_pairs = *new_pairs;
     GetCandidatePairs(stream_index, new_pairs);
     ASSERT_TRUE(CandidatePairsPriorityDescending(*new_pairs))
-        << "New list of "
-           "candidate pairs is either not sorted in priority order, or has "
-           "duplicate priorities.";
+    << "New list of "
+       "candidate pairs is either not sorted in priority order, or has "
+       "duplicate priorities.";
     ASSERT_TRUE(CandidatePairsPriorityDescending(old_pairs))
-        << "Old list of "
-           "candidate pairs is either not sorted in priority order, or has "
-           "duplicate priorities. This indicates some bug in the test case.";
+    << "Old list of "
+       "candidate pairs is either not sorted in priority order, or has "
+       "duplicate priorities. This indicates some bug in the test case.";
     std::vector<NrIceCandidatePair> added_pairs;
     std::vector<NrIceCandidatePair> removed_pairs;
 
@@ -1134,8 +1134,9 @@ class IceTestPeer : public sigslot::has_slots<> {
       DumpCandidatePair(removed_pair);
     }
 
-    ASSERT_TRUE(removed_pairs.empty()) << "At least one candidate pair has "
-                                          "gone missing.";
+    ASSERT_TRUE(removed_pairs.empty())
+    << "At least one candidate pair has "
+       "gone missing.";
   }
 
   void StreamReady(NrIceMediaStream* stream) {
@@ -1220,7 +1221,8 @@ class IceTestPeer : public sigslot::has_slots<> {
 
   void ParseCandidate_s(size_t i, const std::string& candidate) {
     auto media_stream = GetStream_s(i);
-    ASSERT_TRUE(media_stream.get()) << "No such stream " << i;
+    ASSERT_TRUE(media_stream.get())
+    << "No such stream " << i;
     media_stream->ParseTrickleCandidate(candidate, "");
   }
 
@@ -1233,7 +1235,8 @@ class IceTestPeer : public sigslot::has_slots<> {
   void DisableComponent_s(size_t index, int component_id) {
     ASSERT_LT(index, stream_counter_);
     auto stream = GetStream_s(index);
-    ASSERT_TRUE(stream.get()) << "No such stream " << index;
+    ASSERT_TRUE(stream.get())
+    << "No such stream " << index;
     nsresult res = stream->DisableComponent(component_id);
     ASSERT_TRUE(NS_SUCCEEDED(res));
   }
@@ -1249,7 +1252,8 @@ class IceTestPeer : public sigslot::has_slots<> {
                               ConsentStatus status) {
     ASSERT_LT(index, stream_counter_);
     auto stream = GetStream_s(index);
-    ASSERT_TRUE(stream.get()) << "No such stream " << index;
+    ASSERT_TRUE(stream.get())
+    << "No such stream " << index;
     bool can_send;
     struct timeval timestamp;
     nsresult res =
@@ -3844,7 +3848,8 @@ TEST_F(WebRtcIcePacketFilterTest, TestRecvDataPacketWithAPendingAddress) {
   ASSERT_EQ(0, nr_stun_message_destroy(&msg));
 }
 
-TEST(WebRtcIceInternalsTest, TestAddBogusAttribute) {
+TEST(WebRtcIceInternalsTest, TestAddBogusAttribute)
+{
   nr_stun_message* req;
   ASSERT_EQ(0, nr_stun_message_create(&req));
   Data* data;

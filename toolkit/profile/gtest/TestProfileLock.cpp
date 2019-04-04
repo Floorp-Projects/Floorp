@@ -11,7 +11,8 @@
 #include "nsString.h"
 #include "nsDirectoryServiceDefs.h"
 
-TEST(ProfileLock, BasicLock) {
+TEST(ProfileLock, BasicLock)
+{
   char tmpExt[] = "profilebasiclocktest";
 
   nsProfileLock myLock;

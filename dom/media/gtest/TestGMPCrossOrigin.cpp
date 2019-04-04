@@ -198,14 +198,16 @@ void GMPTestRunner::DoTest(
   monitor.AwaitFinished();
 }
 
-TEST(GeckoMediaPlugins, GMPTestCodec) {
+TEST(GeckoMediaPlugins, GMPTestCodec)
+{
   RefPtr<GMPTestRunner> runner = new GMPTestRunner();
   runner->DoTest(&GMPTestRunner::RunTestGMPTestCodec1);
   runner->DoTest(&GMPTestRunner::RunTestGMPTestCodec2);
   runner->DoTest(&GMPTestRunner::RunTestGMPTestCodec3);
 }
 
-TEST(GeckoMediaPlugins, GMPCrossOrigin) {
+TEST(GeckoMediaPlugins, GMPCrossOrigin)
+{
   RefPtr<GMPTestRunner> runner = new GMPTestRunner();
   runner->DoTest(&GMPTestRunner::RunTestGMPCrossOrigin1);
   runner->DoTest(&GMPTestRunner::RunTestGMPCrossOrigin2);

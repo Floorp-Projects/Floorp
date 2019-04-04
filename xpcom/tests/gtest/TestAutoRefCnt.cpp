@@ -47,7 +47,8 @@ Atomic<uint32_t, Relaxed> nsThreadSafeAutoRefCntRunner::sDecToZero(0);
 // want to release the object after last reference gets released. In
 // this pattern, the cache may rely on the balance of increment to one
 // and decrement to zero, so that it can maintain a counter for GC.
-TEST(AutoRefCnt, ThreadSafeAutoRefCntBalance) {
+TEST(AutoRefCnt, ThreadSafeAutoRefCntBalance)
+{
   static const size_t kThreadCount = 4;
   nsCOMPtr<nsIThread> threads[kThreadCount];
   for (size_t i = 0; i < kThreadCount; i++) {

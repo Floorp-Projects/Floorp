@@ -22,7 +22,8 @@ using namespace mozilla;
 
 namespace TestUTF {
 
-TEST(UTF, Valid) {
+TEST(UTF, Valid)
+{
   for (unsigned int i = 0; i < ArrayLength(ValidStrings); ++i) {
     nsDependentCString str8(ValidStrings[i].m8);
     nsDependentString str16(ValidStrings[i].m16);
@@ -43,7 +44,8 @@ TEST(UTF, Valid) {
   }
 }
 
-TEST(UTF, Invalid16) {
+TEST(UTF, Invalid16)
+{
   for (unsigned int i = 0; i < ArrayLength(Invalid16Strings); ++i) {
     nsDependentString str16(Invalid16Strings[i].m16);
     nsDependentCString str8(Invalid16Strings[i].m8);
@@ -58,7 +60,8 @@ TEST(UTF, Invalid16) {
   }
 }
 
-TEST(UTF, Invalid8) {
+TEST(UTF, Invalid8)
+{
   for (unsigned int i = 0; i < ArrayLength(Invalid8Strings); ++i) {
     nsDependentString str16(Invalid8Strings[i].m16);
     nsDependentCString str8(Invalid8Strings[i].m8);
@@ -73,7 +76,8 @@ TEST(UTF, Invalid8) {
   }
 }
 
-TEST(UTF, Malformed8) {
+TEST(UTF, Malformed8)
+{
   for (unsigned int i = 0; i < ArrayLength(Malformed8Strings); ++i) {
     nsDependentString str16(Malformed8Strings[i].m16);
     nsDependentCString str8(Malformed8Strings[i].m8);
@@ -88,7 +92,8 @@ TEST(UTF, Malformed8) {
   }
 }
 
-TEST(UTF, Hash16) {
+TEST(UTF, Hash16)
+{
   for (unsigned int i = 0; i < ArrayLength(ValidStrings); ++i) {
     nsDependentCString str8(ValidStrings[i].m8);
     bool err;
@@ -167,7 +172,8 @@ static void NonASCII16_helper(const size_t aStrSize) {
   }
 }
 
-TEST(UTF, NonASCII16) {
+TEST(UTF, NonASCII16)
+{
   // Test with various string sizes to catch any special casing.
   NonASCII16_helper(1);
   NonASCII16_helper(8);
@@ -176,7 +182,8 @@ TEST(UTF, NonASCII16) {
   NonASCII16_helper(512);
 }
 
-TEST(UTF, UTF8CharEnumerator) {
+TEST(UTF, UTF8CharEnumerator)
+{
   const char* p =
       "\x61\xC0\xC2\xC2\x80\xE0\x80\x80\xE0\xA0\x80\xE1\x80\x80\xED\xBF\xBF\xED"
       "\x9F\xBF\xEE\x80\x80\xEE\x80\xFF\xF0\x90\x80\x80\xF0\x80\x80\x80\xF1\x80"
@@ -229,7 +236,8 @@ TEST(UTF, UTF8CharEnumerator) {
   EXPECT_EQ(p, end);
 }
 
-TEST(UTF, UTF16CharEnumerator) {
+TEST(UTF, UTF16CharEnumerator)
+{
   const char16_t* p = u"\u0061\U0001F4A9";
   const char16_t* end = p + 3;
   EXPECT_EQ(UTF16CharEnumerator::NextChar(&p, end), 0x0061U);

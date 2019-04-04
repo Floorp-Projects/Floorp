@@ -555,12 +555,12 @@ PLDHashEntryHdr* PLDHashTable::Add(const void* aKey,
   // Look for entry after possibly growing, so we don't have to add it,
   // then skip it while growing the table and re-add it after.
   PLDHashNumber keyHash = ComputeKeyHash(aKey);
-  Slot slot = SearchTable<ForAdd>(aKey, keyHash,
-                                  [&](Slot& found) -> Slot { return found; },
-                                  [&]() -> Slot {
-                                    MOZ_CRASH("Nope");
-                                    return Slot(nullptr, nullptr);
-                                  });
+  Slot slot = SearchTable<ForAdd>(
+      aKey, keyHash, [&](Slot& found) -> Slot { return found; },
+      [&]() -> Slot {
+        MOZ_CRASH("Nope");
+        return Slot(nullptr, nullptr);
+      });
   if (!slot.IsLive()) {
     // Initialize the slot, indicating that it's no longer free.
     if (slot.IsRemoved()) {
@@ -606,14 +606,15 @@ void PLDHashTable::Remove(const void* aKey) {
   }
 
   PLDHashNumber keyHash = ComputeKeyHash(aKey);
-  SearchTable<ForSearchOrRemove>(aKey, keyHash,
-                                 [&](Slot& slot) {
-                                   RawRemove(slot);
-                                   ShrinkIfAppropriate();
-                                 },
-                                 [&]() {
-                                   // Do nothing.
-                                 });
+  SearchTable<ForSearchOrRemove>(
+      aKey, keyHash,
+      [&](Slot& slot) {
+        RawRemove(slot);
+        ShrinkIfAppropriate();
+      },
+      [&]() {
+        // Do nothing.
+      });
 }
 
 void PLDHashTable::RemoveEntry(PLDHashEntryHdr* aEntry) {

@@ -20,7 +20,8 @@ int32_t NS_GetUnusedAtomCount(void);
 
 namespace TestAtoms {
 
-TEST(Atoms, Basic) {
+TEST(Atoms, Basic)
+{
   for (unsigned int i = 0; i < ArrayLength(ValidStrings); ++i) {
     nsDependentString str16(ValidStrings[i].m16);
     nsDependentCString str8(ValidStrings[i].m8);
@@ -44,7 +45,8 @@ TEST(Atoms, Basic) {
   }
 }
 
-TEST(Atoms, 16vs8) {
+TEST(Atoms, 16vs8)
+{
   for (unsigned int i = 0; i < ArrayLength(ValidStrings); ++i) {
     RefPtr<nsAtom> atom16 = NS_Atomize(ValidStrings[i].m16);
     RefPtr<nsAtom> atom8 = NS_Atomize(ValidStrings[i].m8);
@@ -52,7 +54,8 @@ TEST(Atoms, 16vs8) {
   }
 }
 
-TEST(Atoms, Null) {
+TEST(Atoms, Null)
+{
   nsAutoString str(NS_LITERAL_STRING("string with a \0 char"));
   nsDependentString strCut(str.get());
 
@@ -67,7 +70,8 @@ TEST(Atoms, Null) {
   EXPECT_TRUE(atomCut->Equals(strCut));
 }
 
-TEST(Atoms, Invalid) {
+TEST(Atoms, Invalid)
+{
   for (unsigned int i = 0; i < ArrayLength(Invalid16Strings); ++i) {
     nsrefcnt count = NS_GetNumberOfAtoms();
 
@@ -125,7 +129,8 @@ static bool isStaticAtom(nsAtom* atom) {
   return rv;
 }
 
-TEST(Atoms, Table) {
+TEST(Atoms, Table)
+{
   nsrefcnt count = NS_GetNumberOfAtoms();
 
   RefPtr<nsAtom> thirdDynamic = NS_Atomize(THIRD_ATOM_STR);
@@ -153,7 +158,8 @@ class nsAtomRunner final : public nsIRunnable {
 
 NS_IMPL_ISUPPORTS(nsAtomRunner, nsIRunnable)
 
-TEST(Atoms, ConcurrentAccessing) {
+TEST(Atoms, ConcurrentAccessing)
+{
   static const size_t kThreadCount = 4;
   // Force a GC before so that we don't have any unused atom.
   NS_GetNumberOfAtoms();

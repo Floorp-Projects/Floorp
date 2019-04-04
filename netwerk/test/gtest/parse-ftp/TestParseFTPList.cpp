@@ -121,7 +121,8 @@ static const char* testFiles[] = {
     "U-WinNT",   "U-wu",         "V-MultiNet", "V-VMS-mix",
 };
 
-TEST(ParseFTPTest, Check) {
+TEST(ParseFTPTest, Check)
+{
   PRStatus result = PR_ParseTimeString(kDefaultTestTime, true, &gTestTime);
   ASSERT_EQ(PR_SUCCESS, result);
 

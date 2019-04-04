@@ -31,7 +31,8 @@ static void gtest_logging_sink_for_LulIntegration(const char* str) {
   }
 }
 
-TEST(LulIntegration, unwind_consistency) {
+TEST(LulIntegration, unwind_consistency)
+{
   // Set up LUL and get it to read unwind info for libxul.so, which is
   // all we care about here, plus (incidentally) practically every
   // other object in the process too.

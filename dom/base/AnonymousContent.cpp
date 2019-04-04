@@ -197,8 +197,7 @@ void AnonymousContent::GetComputedStylePropertyValue(
   aRv = cs->GetPropertyValue(aPropertyName, aResult);
 }
 
-void AnonymousContent::GetTargetIdForEvent(Event& aEvent, DOMString& aResult)
-{
+void AnonymousContent::GetTargetIdForEvent(Event& aEvent, DOMString& aResult) {
   nsCOMPtr<Element> el = do_QueryInterface(aEvent.GetOriginalTarget());
   if (el && el->IsInNativeAnonymousSubtree() && mContentNode->Contains(el)) {
     aResult.SetKnownLiveAtom(el->GetID(), DOMString::eTreatNullAsNull);

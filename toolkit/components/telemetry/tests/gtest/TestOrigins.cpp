@@ -41,13 +41,13 @@ TEST_F(TelemetryTestFixture, RecordOrigin) {
   JS::RootedValue origins(aCx);
   JS::RootedObject snapshotObj(aCx, &originSnapshot.toObject());
   ASSERT_TRUE(JS_GetProperty(aCx, snapshotObj, telemetryTest1.get(), &origins))
-      << "telemetry.test_test1 must be in the snapshot.";
+  << "telemetry.test_test1 must be in the snapshot.";
 
   JS::RootedObject originsObj(aCx, &origins.toObject());
   JS::RootedValue count(aCx);
   ASSERT_TRUE(JS_GetProperty(aCx, originsObj, doubleclick.get(), &count));
   ASSERT_TRUE(count.isInt32() && count.toInt32() == 1)
-      << "Must have recorded the origin exactly once.";
+  << "Must have recorded the origin exactly once.";
 
   // Now test that the snapshot didn't clear things out.
   GetOriginSnapshot(aCx, &originSnapshot);
@@ -79,13 +79,13 @@ TEST_F(TelemetryTestFixture, RecordOriginTwiceAndClear) {
   JS::RootedValue origins(aCx);
   JS::RootedObject snapshotObj(aCx, &originSnapshot.toObject());
   ASSERT_TRUE(JS_GetProperty(aCx, snapshotObj, telemetryTest1.get(), &origins))
-      << "telemetry.test_test1 must be in the snapshot.";
+  << "telemetry.test_test1 must be in the snapshot.";
 
   JS::RootedObject originsObj(aCx, &origins.toObject());
   JS::RootedValue count(aCx);
   ASSERT_TRUE(JS_GetProperty(aCx, originsObj, doubleclick.get(), &count));
   ASSERT_TRUE(count.isInt32() && count.toInt32() == 2)
-      << "Must have recorded the origin exactly twice.";
+  << "Must have recorded the origin exactly twice.";
 
   // Now check that snapshotting with clear actually cleared it.
   GetOriginSnapshot(aCx, &originSnapshot);
@@ -117,13 +117,13 @@ TEST_F(TelemetryTestFixture, RecordUnknownOrigin) {
   JS::RootedValue origins(aCx);
   JS::RootedObject snapshotObj(aCx, &originSnapshot.toObject());
   ASSERT_TRUE(JS_GetProperty(aCx, snapshotObj, telemetryTest1.get(), &origins))
-      << "telemetry.test_test1 must be in the snapshot.";
+  << "telemetry.test_test1 must be in the snapshot.";
 
   JS::RootedObject originsObj(aCx, &origins.toObject());
   JS::RootedValue count(aCx);
   ASSERT_TRUE(JS_GetProperty(aCx, originsObj, "__UNKNOWN__", &count));
   ASSERT_TRUE(count.isInt32() && count.toInt32() == 1)
-      << "Must have recorded the unknown origin exactly once.";
+  << "Must have recorded the unknown origin exactly once.";
 
   // Record a second, different unknown origin and ensure only one is stored.
   Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, unknown2);
@@ -135,13 +135,13 @@ TEST_F(TelemetryTestFixture, RecordUnknownOrigin) {
 
   JS::RootedObject snapshotObj2(aCx, &originSnapshot.toObject());
   ASSERT_TRUE(JS_GetProperty(aCx, snapshotObj2, telemetryTest1.get(), &origins))
-      << "telemetry.test_test1 must be in the snapshot.";
+  << "telemetry.test_test1 must be in the snapshot.";
 
   JS::RootedObject originsObj2(aCx, &origins.toObject());
   JS::RootedValue count2(aCx);
   ASSERT_TRUE(JS_GetProperty(aCx, originsObj2, "__UNKNOWN__", &count2));
   ASSERT_TRUE(count2.isInt32() && count2.toInt32() == 1)
-      << "Must have recorded the unknown origin exactly once.";
+  << "Must have recorded the unknown origin exactly once.";
 }
 
 TEST_F(TelemetryTestFixture, EncodedSnapshot) {
@@ -176,13 +176,13 @@ TEST_F(TelemetryTestFixture, EncodedSnapshot) {
                           secondAStr, secondBStr);
 
   ASSERT_TRUE(aStr != secondAStr)
-      << "aStr (" << NS_ConvertUTF16toUTF8(aStr).get()
-      << ") must not equal secondAStr ("
-      << NS_ConvertUTF16toUTF8(secondAStr).get() << ")";
+  << "aStr (" << NS_ConvertUTF16toUTF8(aStr).get()
+  << ") must not equal secondAStr (" << NS_ConvertUTF16toUTF8(secondAStr).get()
+  << ")";
   ASSERT_TRUE(bStr != secondBStr)
-      << "bStr (" << NS_ConvertUTF16toUTF8(bStr).get()
-      << ") must not equal secondBStr ("
-      << NS_ConvertUTF16toUTF8(secondBStr).get() << ")";
+  << "bStr (" << NS_ConvertUTF16toUTF8(bStr).get()
+  << ") must not equal secondBStr (" << NS_ConvertUTF16toUTF8(secondBStr).get()
+  << ")";
 }
 
 class MockObserver final : public nsIObserver {

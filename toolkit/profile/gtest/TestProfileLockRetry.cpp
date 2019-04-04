@@ -13,7 +13,8 @@
 #include "nsProfileLock.h"
 #include "nsString.h"
 
-TEST(ProfileLock, RetryLock) {
+TEST(ProfileLock, RetryLock)
+{
   char templ[] = "/tmp/profilelocktest.XXXXXX";
   char* tmpdir = mkdtemp(templ);
   ASSERT_NE(tmpdir, nullptr);

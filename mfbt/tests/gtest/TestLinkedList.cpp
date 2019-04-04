@@ -34,7 +34,8 @@ class InheritedPtrClass : public PtrClass {
   virtual ~InheritedPtrClass() { *mInheritedResult = true; }
 };
 
-TEST(LinkedList, AutoCleanLinkedList) {
+TEST(LinkedList, AutoCleanLinkedList)
+{
   bool rv1 = false;
   bool rv2 = false;
   bool rv3 = false;
@@ -59,7 +60,8 @@ class CountedClass final : public LinkedListElement<RefPtr<CountedClass>> {
   ~CountedClass() { EXPECT_TRUE(mCount == 0); }
 };
 
-TEST(LinkedList, AutoCleanLinkedListRefPtr) {
+TEST(LinkedList, AutoCleanLinkedListRefPtr)
+{
   RefPtr<CountedClass> elt1 = new CountedClass;
   CountedClass* elt2 = new CountedClass;
   {

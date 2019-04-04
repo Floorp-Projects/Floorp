@@ -12621,19 +12621,20 @@ already_AddRefed<mozilla::dom::Promise> Document::RequestStorageAccess(
       AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
           NodePrincipal(), inner, AntiTrackingCommon::eStorageAccessAPI,
           performFinalChecks)
-          ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-                 [outer, promise] {
-                   // Step 10. Grant the document access to cookies and store
-                   // that fact for
-                   //          the purposes of future calls to
-                   //          hasStorageAccess() and requestStorageAccess().
-                   outer->SetHasStorageAccess(true);
-                   promise->MaybeResolveWithUndefined();
-                 },
-                 [outer, promise] {
-                   outer->SetHasStorageAccess(false);
-                   promise->MaybeRejectWithUndefined();
-                 });
+          ->Then(
+              GetCurrentThreadSerialEventTarget(), __func__,
+              [outer, promise] {
+                // Step 10. Grant the document access to cookies and store
+                // that fact for
+                //          the purposes of future calls to
+                //          hasStorageAccess() and requestStorageAccess().
+                outer->SetHasStorageAccess(true);
+                promise->MaybeResolveWithUndefined();
+              },
+              [outer, promise] {
+                outer->SetHasStorageAccess(false);
+                promise->MaybeRejectWithUndefined();
+              });
 
       return promise.forget();
     }

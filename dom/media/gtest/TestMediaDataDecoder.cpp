@@ -44,7 +44,8 @@ class BenchmarkRunner {
   RefPtr<Benchmark> mBenchmark;
 };
 
-TEST(MediaDataDecoder, H264) {
+TEST(MediaDataDecoder, H264)
+{
   if (!DecoderTraits::IsMP4SupportedType(
           MediaContainerType(MEDIAMIMETYPE(VIDEO_MP4)),
           /* DecoderDoctorDiagnostics* */ nullptr)) {
@@ -59,7 +60,8 @@ TEST(MediaDataDecoder, H264) {
   }
 }
 
-TEST(MediaDataDecoder, VP9) {
+TEST(MediaDataDecoder, VP9)
+{
   if (!WebMDecoder::IsSupportedType(
           MediaContainerType(MEDIAMIMETYPE(VIDEO_WEBM)))) {
     EXPECT_TRUE(true);

@@ -22,15 +22,16 @@ void ClientOpenWindowOpChild::ActorDestroy(ActorDestroyReason aReason) {
 
 void ClientOpenWindowOpChild::Init(const ClientOpenWindowArgs& aArgs) {
   DoOpenWindow(aArgs)
-      ->Then(SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
-             [this](const ClientOpResult& aResult) {
-               mPromiseRequestHolder.Complete();
-               PClientOpenWindowOpChild::Send__delete__(this, aResult);
-             },
-             [this](nsresult aResult) {
-               mPromiseRequestHolder.Complete();
-               PClientOpenWindowOpChild::Send__delete__(this, aResult);
-             })
+      ->Then(
+          SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
+          [this](const ClientOpResult& aResult) {
+            mPromiseRequestHolder.Complete();
+            PClientOpenWindowOpChild::Send__delete__(this, aResult);
+          },
+          [this](nsresult aResult) {
+            mPromiseRequestHolder.Complete();
+            PClientOpenWindowOpChild::Send__delete__(this, aResult);
+          })
       ->Track(mPromiseRequestHolder);
 }
 
