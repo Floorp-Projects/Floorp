@@ -24,6 +24,21 @@ sys.path.insert(0, mozharness_dir)
 from raptor.raptor import RaptorDesktopFirefox, RaptorDesktopChrome, RaptorAndroid
 
 
+class TestBrowserThread(threading.Thread):
+        def __init__(self, raptor_instance, test, timeout=None):
+            super(TestBrowserThread, self).__init__()
+            self.raptor_instance = raptor_instance
+            self.test = test
+            self.timeout = timeout
+            self.exc = None
+
+        def run(self):
+            try:
+                self.raptor_instance.run_test(self.test, self.timeout)
+            except BaseException:
+                self.exc = sys.exc_info()
+
+
 @pytest.mark.parametrize("raptor_class, app_name", [
                          [RaptorDesktopFirefox, "firefox"],
                          [RaptorDesktopChrome, "chrome"],
@@ -91,7 +106,7 @@ def test_start_browser(get_binary, app):
     test = {}
     test['name'] = 'raptor-{}-tp6'.format(app)
 
-    thread = threading.Thread(target=raptor.run_test, args=(test,))
+    thread = TestBrowserThread(raptor, test)
     thread.start()
 
     timeout = time.time() + 5  # seconds
@@ -107,6 +122,11 @@ def test_start_browser(get_binary, app):
 
     raptor.clean_up()
     thread.join(5)
+
+    if thread.exc is not None:
+        exc, value, tb = thread.exc
+        raise exc, value, tb
+
     assert not raptor.runner.is_running()
     assert raptor.runner.returncode is not None
 
