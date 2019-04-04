@@ -24,7 +24,6 @@
 #include "SandboxPolicyGMP.h"
 #include "SandboxPolicyUtility.h"
 
-
 // XXX There are currently problems with the /usr/include/sandbox.h file on
 // some/all of the Macs in Mozilla's build system. Further,
 // sandbox_init_with_parameters is not included in the header.  For the time

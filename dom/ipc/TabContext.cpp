@@ -219,7 +219,9 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
 
       break;
     }
-    default: { MOZ_CRASH(); }
+    default: {
+      MOZ_CRASH();
+    }
   }
 
   bool rv;

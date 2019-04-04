@@ -655,7 +655,9 @@ void SurfaceTextureHost::PushResourceUpdates(
       (aResources.*method)(aImageKeys[0], descriptor, aExtID, bufferType, 0);
       break;
     }
-    default: { MOZ_ASSERT_UNREACHABLE("unexpected to be called"); }
+    default: {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    }
   }
 }
 
@@ -673,7 +675,9 @@ void SurfaceTextureHost::PushDisplayItems(
                          !(mFlags & TextureFlags::NON_PREMULTIPLIED));
       break;
     }
-    default: { MOZ_ASSERT_UNREACHABLE("unexpected to be called"); }
+    default: {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    }
   }
 }
 

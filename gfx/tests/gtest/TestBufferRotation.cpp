@@ -43,7 +43,8 @@ static bool CheckBuffer(unsigned char* buffer, int bytesPerPixel, int width,
   return true;
 }
 
-TEST(Gfx, BufferUnrotateHorizontal) {
+TEST(Gfx, BufferUnrotateHorizontal)
+{
   const int NUM_OF_TESTS = 8;
   int bytesPerPixelList[2] = {2, 4};
   int width[NUM_OF_TESTS] = {100, 100, 99, 99, 100, 100, 99, 99};
@@ -69,7 +70,8 @@ TEST(Gfx, BufferUnrotateHorizontal) {
   }
 }
 
-TEST(Gfx, BufferUnrotateVertical) {
+TEST(Gfx, BufferUnrotateVertical)
+{
   const int NUM_OF_TESTS = 8;
   int bytesPerPixelList[2] = {2, 4};
   int width[NUM_OF_TESTS] = {100, 100, 99, 99, 100, 100, 99, 99};
@@ -95,7 +97,8 @@ TEST(Gfx, BufferUnrotateVertical) {
   }
 }
 
-TEST(Gfx, BufferUnrotateBoth) {
+TEST(Gfx, BufferUnrotateBoth)
+{
   const int NUM_OF_TESTS = 16;
   int bytesPerPixelList[2] = {2, 4};
   int width[NUM_OF_TESTS] = {100, 100, 99, 99, 100, 100, 99, 99,
@@ -125,7 +128,8 @@ TEST(Gfx, BufferUnrotateBoth) {
   }
 }
 
-TEST(Gfx, BufferUnrotateUneven) {
+TEST(Gfx, BufferUnrotateUneven)
+{
   const int NUM_OF_TESTS = 16;
   int bytesPerPixelList[2] = {2, 4};
   int width[NUM_OF_TESTS] = {10,  100, 99, 39, 100, 40, 99, 39,

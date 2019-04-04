@@ -34,7 +34,7 @@ void IsSequence(std::unique_ptr<int16_t[]> aBuffer, uint32_t aSize,
                 uint32_t aStart = 0) {
   for (uint32_t i = 0; i < aSize; i++) {
     ASSERT_TRUE(aBuffer[i] == static_cast<int64_t>(aStart + i))
-        << "Buffer is not a sequence at offset " << i << std::endl;
+    << "Buffer is not a sequence at offset " << i << std::endl;
   }
   // Buffer is a sequence.
 }
@@ -42,13 +42,14 @@ void IsSequence(std::unique_ptr<int16_t[]> aBuffer, uint32_t aSize,
 void Zero(std::unique_ptr<int16_t[]> aBuffer, uint32_t aSize) {
   for (uint32_t i = 0; i < aSize; i++) {
     ASSERT_TRUE(aBuffer[i] == 0)
-        << "Buffer is not null at offset " << i << std::endl;
+    << "Buffer is not null at offset " << i << std::endl;
   }
 }
 
 double sine(uint32_t aPhase) { return sin(aPhase * 2 * M_PI * 440 / 44100); }
 
-TEST(AudioPacketizer, Test) {
+TEST(AudioPacketizer, Test)
+{
   for (int16_t channels = 1; channels < 2; channels++) {
     // Test that the packetizer returns zero on underrun
     {

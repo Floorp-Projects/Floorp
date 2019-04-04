@@ -43,8 +43,8 @@ const JSClass* getGlobalClass(void) override {
                                                      JS_GlobalObjectTraceHook};
 
   static const JSClass noResolveGlobalClass = {
-    "testSetProperty_InheritedGlobalSetter_noResolveGlobalClass",
-    JSCLASS_GLOBAL_FLAGS, &noResolveGlobalClassOps};
+      "testSetProperty_InheritedGlobalSetter_noResolveGlobalClass",
+      JSCLASS_GLOBAL_FLAGS, &noResolveGlobalClassOps};
 
   return &noResolveGlobalClass;
 }

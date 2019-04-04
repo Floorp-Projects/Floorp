@@ -1573,7 +1573,9 @@ static void LoadExclusive(MacroAssembler& masm,
       }
       break;
     }
-    default: { MOZ_CRASH(); }
+    default: {
+      MOZ_CRASH();
+    }
   }
 }
 

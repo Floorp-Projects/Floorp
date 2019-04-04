@@ -10,7 +10,8 @@
 
 using namespace mozilla::widget;
 
-TEST(GfxWidgets, Split) {
+TEST(GfxWidgets, Split)
+{
   char aStr[8], bStr[8], cStr[8], dStr[8];
 
   ASSERT_TRUE(SplitDriverVersion("33.4.3.22", aStr, bStr, cStr, dStr));
@@ -75,7 +76,8 @@ TEST(GfxWidgets, Split) {
               atoi(dStr) == 0);
 }
 
-TEST(GfxWidgets, Versioning) {
+TEST(GfxWidgets, Versioning)
+{
   ASSERT_TRUE(mozilla::Version("0") < mozilla::Version("41.0a1"));
   ASSERT_TRUE(mozilla::Version("39.0.5b7") < mozilla::Version("41.0a1"));
   ASSERT_TRUE(mozilla::Version("18.0.5b7") < mozilla::Version("18.2"));

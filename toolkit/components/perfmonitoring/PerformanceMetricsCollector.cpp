@@ -259,13 +259,14 @@ PerformanceMetricsCollector::RequestMetricsInternal() {
 
   // collecting the current process PerformanceInfo
   PerformanceInfoPromise::All(NS_GetCurrentThread(), localPromises)
-      ->Then(NS_GetCurrentThread(), __func__,
-             [uuid](const nsTArray<mozilla::dom::PerformanceInfo> aResult) {
-               LOG(("[%s] Local CollectPerformanceInfo promise resolved",
-                    nsIDToCString(uuid).get()));
-               DataReceived(uuid, aResult);
-             },
-             [](const nsresult aResult) {});
+      ->Then(
+          NS_GetCurrentThread(), __func__,
+          [uuid](const nsTArray<mozilla::dom::PerformanceInfo> aResult) {
+            LOG(("[%s] Local CollectPerformanceInfo promise resolved",
+                 nsIDToCString(uuid).get()));
+            DataReceived(uuid, aResult);
+          },
+          [](const nsresult aResult) {});
 
   return promise;
 }
