@@ -32,3 +32,8 @@ typedef uint32_t HashNumber;
 /// <div rustbindgen replaces="JS::detail::MaybeWrapped" />
 template <typename T>
 using replaces_MaybeWrapped = T;
+
+/// <div rustbindgen replaces="JS::MutableHandleIdVector" />
+struct MutableHandleIdVector_Simple {
+    uintptr_t handle_mut;
+};

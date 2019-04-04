@@ -34,12 +34,12 @@ struct ProxyTraps {
                          JS::Handle<JS::PropertyDescriptor> desc,
                          JS::ObjectOpResult& result);
   bool (*ownPropertyKeys)(JSContext* cx, JS::HandleObject proxy,
-                          JS::AutoIdVector& props);
+                          JS::MutableHandleIdVector props);
   bool (*delete_)(JSContext* cx, JS::HandleObject proxy, JS::HandleId id,
                   JS::ObjectOpResult& result);
 
   bool (*enumerate)(JSContext* cx, JS::HandleObject proxy,
-                    JS::AutoIdVector& props);
+                    JS::MutableHandleIdVector props);
 
   bool (*getPrototypeIfOrdinary)(JSContext* cx, JS::HandleObject proxy,
                                  bool* isOrdinary,
@@ -67,7 +67,7 @@ struct ProxyTraps {
   bool (*hasOwn)(JSContext* cx, JS::HandleObject proxy, JS::HandleId id,
                  bool* bp);
   bool (*getOwnEnumerablePropertyKeys)(JSContext* cx, JS::HandleObject proxy,
-                                       JS::AutoIdVector& props);
+                                       JS::MutableHandleIdVector props);
   bool (*nativeCall)(JSContext* cx, JS::IsAcceptableThis test,
                      JS::NativeImpl impl, JS::CallArgs args);
   bool (*hasInstance)(JSContext* cx, JS::HandleObject proxy,
@@ -101,7 +101,7 @@ static int HandlerFamily;
                                                                               \
   /* Standard internal methods. */                                            \
   virtual bool enumerate(JSContext* cx, JS::HandleObject proxy,               \
-                         JS::AutoIdVector& props) const override {            \
+                         JS::MutableHandleIdVector props) const override {    \
     return mTraps.enumerate ? mTraps.enumerate(cx, proxy, props)              \
                             : _base::enumerate(cx, proxy, props);             \
   }                                                                           \
@@ -146,7 +146,7 @@ static int HandlerFamily;
   }                                                                           \
                                                                               \
   virtual bool getOwnEnumerablePropertyKeys(                                  \
-      JSContext* cx, JS::HandleObject proxy, JS::AutoIdVector& props)         \
+      JSContext* cx, JS::HandleObject proxy, JS::MutableHandleIdVector props) \
       const override {                                                        \
     return mTraps.getOwnEnumerablePropertyKeys                                \
                ? mTraps.getOwnEnumerablePropertyKeys(cx, proxy, props)        \
@@ -240,7 +240,7 @@ class WrapperProxyHandler : public js::Wrapper {
   }
 
   virtual bool ownPropertyKeys(JSContext* cx, JS::HandleObject proxy,
-                               JS::AutoIdVector& props) const override {
+                               JS::MutableHandleIdVector props) const override {
     return mTraps.ownPropertyKeys
                ? mTraps.ownPropertyKeys(cx, proxy, props)
                : js::Wrapper::ownPropertyKeys(cx, proxy, props);
@@ -322,7 +322,7 @@ class ForwardingProxyHandler : public js::BaseProxyHandler {
   }
 
   virtual bool ownPropertyKeys(JSContext* cx, JS::HandleObject proxy,
-                               JS::AutoIdVector& props) const override {
+                               JS::MutableHandleIdVector props) const override {
     return mTraps.ownPropertyKeys(cx, proxy, props);
   }
 
@@ -538,20 +538,24 @@ JSObject* UncheckedUnwrapObject(JSObject* obj, bool stopAtOuter) {
   return js::UncheckedUnwrap(obj, stopAtOuter);
 }
 
-JS::AutoIdVector* CreateAutoIdVector(JSContext* cx) {
-  return new JS::AutoIdVector(cx);
+JS::RootedIdVector* CreateRootedIdVector(JSContext* cx) {
+  return new JS::RootedIdVector(cx);
 }
 
-bool AppendToAutoIdVector(JS::AutoIdVector* v, jsid id) {
+bool AppendToRootedIdVector(JS::RootedIdVector* v, jsid id) {
   return v->append(id);
 }
 
-const jsid* SliceAutoIdVector(const JS::AutoIdVector* v, size_t* length) {
+const jsid* SliceRootedIdVector(const JS::RootedIdVector* v, size_t* length) {
   *length = v->length();
   return v->begin();
 }
 
-void DestroyAutoIdVector(JS::AutoIdVector* v) { delete v; }
+void DestroyRootedIdVector(JS::RootedIdVector* v) { delete v; }
+
+JS::MutableHandleIdVector GetMutableHandleIdVector(JS::RootedIdVector* v) {
+  return JS::MutableHandleIdVector(v);
+}
 
 JS::RootedObjectVector* CreateRootedObjectVector(JSContext* aCx) {
   JS::RootedObjectVector* vec = new JS::RootedObjectVector(aCx);
