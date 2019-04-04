@@ -36,7 +36,6 @@ kk{
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -199,13 +198,10 @@ kk{
                 exponential{"E"}
                 group{" "}
                 infinity{"∞"}
-                minusSign{"-"}
                 nan{"сан емес"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -218,10 +214,9 @@ kk{
                 other{"Себетте {0} Х бар. Олар сіздікі ме?"}
             }
         }
-        minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.44.88"}
+    Version{"2.1.48.17"}
     calendar{
         generic{
             DateTimePatterns{
@@ -283,6 +278,53 @@ kk{
                 yyyyQQQQ{"G y 'ж'. QQQQ"}
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y 'ж'. d MMM, E – G y 'ж'. d MMM, E"}
+                    M{"G y 'ж'. d MMM, E – d MMM, E"}
+                    d{"G y 'ж'. d MMM, E – d MMM, E"}
+                    y{"G y 'ж'. d MMM, E – y 'ж'. d MMM, E"}
+                }
+                GyMMMd{
+                    G{"G y 'ж'. d MMM – G y 'ж'. d MMM"}
+                    M{"G y 'ж'. d MMM – d MMM"}
+                    d{"G y 'ж'. d–d MMM"}
+                    y{"G y 'ж'. d MMM – y 'ж'. d MMM"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -431,8 +473,8 @@ kk{
                 MMM{"LLL"}
                 MMMEd{"d MMM, E"}
                 MMMMW{
-                    one{"MMM 'айының' W-'аптасы'"}
-                    other{"MMM 'айының' W-'аптасы'"}
+                    one{"MMMM 'айының' W-'аптасы'"}
+                    other{"MMMM 'айының' W-'аптасы'"}
                 }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
@@ -612,6 +654,53 @@ kk{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm – h:mm B"}
+                    m{"h:mm – h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y 'ж'. d MMM, E – G y 'ж'. d MMM, E"}
+                    M{"G y 'ж'. d MMM, E – d MMM, E"}
+                    d{"G y 'ж'. d MMM, E – d MMM, E"}
+                    y{"G y 'ж'. d MMM, E – y 'ж'. d MMM, E"}
+                }
+                GyMMMd{
+                    G{"G y 'ж'. d MMM – G y 'ж'. d MMM"}
+                    M{"G y 'ж'. d MMM – d MMM"}
+                    d{"G y 'ж'. d–d MMM"}
+                    y{"G y 'ж'. d MMM – y 'ж'. d MMM"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -1744,6 +1833,12 @@ kk{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-narrow{
+            2{"{0} және {1}"}
+            end{"{0}, {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard-short{
             2{"{0} және {1}"}
             end{"{0}, {1}"}
@@ -1773,5 +1868,37 @@ kk{
         UK{"Ағылшын"}
         US{"Америкалық"}
         metric{"Метрлік"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶︓﹕：]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
+                "[\$﹩＄]",
+                "[£₤￡]",
+                "[¥￥]",
+                "[₩￦]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‐‒–⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

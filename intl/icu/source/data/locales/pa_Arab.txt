@@ -9,6 +9,11 @@ pa_Arab{
     }
     ExemplarCharactersNumbers{"[\u200E \\- , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
+        arabext{
+            symbols{
+                timeSeparator{":"}
+            }
+        }
         default{"arabext"}
         latn{
             symbols{
@@ -18,7 +23,7 @@ pa_Arab{
         }
         native{"arabext"}
     }
-    Version{"2.1.38.69"}
+    Version{"2.1.47.82"}
     calendar{
         generic{
             DateTimePatterns{

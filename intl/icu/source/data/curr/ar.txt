@@ -106,6 +106,10 @@ ar{
             "BEL",
             "فرنك بلجيكي مالي",
         }
+        BGL{
+            "BGL",
+            "BGL",
+        }
         BGN{
             "BGN",
             "ليف بلغاري",
@@ -1070,7 +1074,6 @@ ar{
         FKP{"£"}
         GBP{"UK£"}
         GEL{"₾"}
-        GIP{"£"}
         GNF{"FG"}
         GTQ{"Q"}
         GYD{"GY$"}
@@ -1093,14 +1096,12 @@ ar{
         LAK{"₭"}
         LBP{"L£"}
         LKR{"Rs"}
-        LRD{"$"}
         MGA{"Ar"}
         MMK{"K"}
         MNT{"₮"}
         MUR{"Rs"}
         MXN{"MX$"}
         MYR{"RM"}
-        NAD{"$"}
         NGN{"₦"}
         NIO{"C$"}
         NOK{"kr"}
@@ -2453,5 +2454,5 @@ ar{
         two{"{0} {1}"}
         zero{"{0} {1}"}
     }
-    Version{"2.1.43.50"}
+    Version{"2.1.48.22"}
 }

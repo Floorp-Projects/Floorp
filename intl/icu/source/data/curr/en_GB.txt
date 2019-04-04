@@ -9,10 +9,13 @@ en_GB{
         }
     }
     CurrencyPlurals{
+        MGA{
+            one{"Malagasy ariary"}
+        }
         SHP{
             one{"St Helena pound"}
             other{"St Helena pounds"}
         }
     }
-    Version{"2.1.44.18"}
+    Version{"2.1.47.86"}
 }

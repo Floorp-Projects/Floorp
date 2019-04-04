@@ -1076,13 +1076,7 @@ static Loader::MediaMatched MediaListMatches(const MediaList* aMediaList,
     return Loader::MediaMatched::Yes;
   }
 
-  nsPresContext* pc = aDocument->GetPresContext();
-  if (!pc) {
-    // Conservatively assume a match.
-    return Loader::MediaMatched::Yes;
-  }
-
-  if (aMediaList->Matches(pc)) {
+  if (aMediaList->Matches(*aDocument)) {
     return Loader::MediaMatched::Yes;
   }
 

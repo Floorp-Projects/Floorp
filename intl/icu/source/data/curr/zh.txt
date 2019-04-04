@@ -1030,6 +1030,10 @@ zh{
             "UYU",
             "乌拉圭比索",
         }
+        UYW{
+            "UYW",
+            "乌拉圭票面工资指数单位",
+        }
         UZS{
             "UZS",
             "乌兹别克斯坦苏姆",
@@ -1130,9 +1134,17 @@ zh{
             "XRE",
             "RINET 基金",
         }
+        XSU{
+            "XSU",
+            "苏克雷",
+        }
         XTS{
             "XTS",
             "测试货币代码",
+        }
+        XUA{
+            "XUA",
+            "非洲开发银行记账单位",
         }
         XXX{
             "XXX",
@@ -1255,6 +1267,8 @@ zh{
         LBP{"L£"}
         LKR{"Rs"}
         LRD{"$"}
+        LTL{"Lt"}
+        LVL{"Ls"}
         MGA{"Ar"}
         MMK{"K"}
         MNT{"₮"}
@@ -1271,7 +1285,6 @@ zh{
         PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
-        RON{"lei"}
         RUB{"₽"}
         RUR{"р."}
         RWF{"RF"}
@@ -1281,7 +1294,6 @@ zh{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -2058,6 +2070,9 @@ zh{
         UYU{
             other{"乌拉圭比索"}
         }
+        UYW{
+            other{"乌拉圭票面工资指数单位"}
+        }
         UZS{
             other{"乌兹别克斯坦苏姆"}
         }
@@ -2093,6 +2108,12 @@ zh{
         }
         XPF{
             other{"太平洋法郎"}
+        }
+        XSU{
+            other{"苏克雷"}
+        }
+        XUA{
+            other{"非洲开发银行记账单位"}
         }
         XXX{
             other{"（未知货币）"}
@@ -2146,5 +2167,5 @@ zh{
     CurrencyUnitPatterns{
         other{"{0}{1}"}
     }
-    Version{"2.1.44.76"}
+    Version{"2.1.48.42"}
 }

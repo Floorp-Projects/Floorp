@@ -1,16 +1,145 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 se_FI{
-    Version{"2.1.44.88"}
+    Version{"2.1.47.83"}
     zoneStrings{
+        "Africa:Cairo"{
+            ec{"Kairo"}
+        }
+        "America:Danmarkshavn"{
+            ec{"Dánmárkkuhámman"}
+        }
+        "America:North_Dakota:Beulah"{
+            ec{"Beulah, Davvi-Dakota"}
+        }
+        "America:North_Dakota:Center"{
+            ec{"Guovddáš, Davvi-Dakota"}
+        }
+        "America:North_Dakota:New_Salem"{
+            ec{"New Salem, Davvi-Dakota"}
+        }
+        "Asia:Damascus"{
+            ec{"Damaskos"}
+        }
+        "Asia:Irkutsk"{
+            ec{"Irkuck"}
+        }
+        "Asia:Kamchatka"{
+            ec{"Kamčatka"}
+        }
+        "Asia:Krasnoyarsk"{
+            ec{"Krasnojarsk"}
+        }
+        "Asia:Novokuznetsk"{
+            ec{"Novokusneck"}
+        }
+        "Asia:Rangoon"{
+            ec{"Rangoon"}
+        }
+        "Asia:Sakhalin"{
+            ec{"Sahalin"}
+        }
+        "Asia:Tehran"{
+            ec{"Teheran"}
+        }
+        "Asia:Ulaanbaatar"{
+            ec{"Ulan-Bator"}
+        }
+        "Asia:Yakutsk"{
+            ec{"Jakuck"}
+        }
+        "Asia:Yekaterinburg"{
+            ec{"Jekaterinburg"}
+        }
+        "Asia:Yerevan"{
+            ec{"Jerevan"}
+        }
+        "Atlantic:Azores"{
+            ec{"Azorat"}
+        }
+        "Atlantic:Canary"{
+            ec{"Kanária"}
+        }
+        "Atlantic:Cape_Verde"{
+            ec{"Kap Verde"}
+        }
+        "Atlantic:South_Georgia"{
+            ec{"Lulli-Georgia"}
+        }
         "Etc:UTC"{
             ls{"koordinerejuvvon oktasaš áigi"}
+        }
+        "Etc:Unknown"{
+            ec{"Dovdameahttun gávpot"}
+        }
+        "Europe:Athens"{
+            ec{"Athena"}
+        }
+        "Europe:Belgrade"{
+            ec{"Belgrad"}
+        }
+        "Europe:Brussels"{
+            ec{"Brüssel"}
+        }
+        "Europe:Bucharest"{
+            ec{"Bukarest"}
+        }
+        "Europe:Copenhagen"{
+            ec{"København"}
         }
         "Europe:Dublin"{
             ld{"Irlánddalaš dálveáigi"}
         }
+        "Europe:Helsinki"{
+            ec{"Helsset"}
+        }
+        "Europe:Isle_of_Man"{
+            ec{"Mansuolu"}
+        }
+        "Europe:Lisbon"{
+            ec{"Lisboa"}
+        }
         "Europe:London"{
             ld{"Brihtalaš geasseáigi"}
+        }
+        "Europe:Luxembourg"{
+            ec{"Luxenburg"}
+        }
+        "Europe:Moscow"{
+            ec{"Moskva"}
+        }
+        "Europe:Prague"{
+            ec{"Praha"}
+        }
+        "Europe:Rome"{
+            ec{"Roma"}
+        }
+        "Europe:Tirane"{
+            ec{"Tirana"}
+        }
+        "Europe:Ulyanovsk"{
+            ec{"Uljanovsk"}
+        }
+        "Europe:Vienna"{
+            ec{"Wien"}
+        }
+        "Europe:Warsaw"{
+            ec{"Warsawa"}
+        }
+        "Europe:Zurich"{
+            ec{"Zürich"}
+        }
+        "Indian:Christmas"{
+            ec{"Juovlasuolu"}
+        }
+        "Indian:Cocos"{
+            ec{"Kokos"}
+        }
+        "Indian:Maldives"{
+            ec{"Malediivvat"}
+        }
+        "Pacific:Marquesas"{
+            ec{"Marquesasat"}
         }
         "meta:Afghanistan"{
             ls{"Afganisthana áigi"}

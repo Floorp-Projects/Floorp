@@ -27,7 +27,6 @@ da{
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
                 scientificFormat{"#E0"}
             }
@@ -191,11 +190,9 @@ da{
                 group{"."}
                 infinity{"∞"}
                 list{";"}
-                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{"."}
             }
@@ -212,21 +209,8 @@ da{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.48.17"}
     calendar{
-        buddhist{
-            eras{
-                abbreviated{
-                    "BE",
-                }
-                narrow{
-                    "BE",
-                }
-                wide{
-                    "BE",
-                }
-            }
-        }
         coptic{
             eras{
                 abbreviated{
@@ -358,6 +342,15 @@ da{
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h – h B"}
+                }
+                Bhm{
+                    B{"h.mm B – h.mm B"}
+                    h{"h.mm – h.mm B"}
+                    m{"h.mm – h.mm B"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -521,8 +514,8 @@ da{
                 MMMEd{"E d. MMM"}
                 MMMMEd{"E d. MMMM"}
                 MMMMW{
-                    one{"'uge' W 'i' MMM"}
-                    other{"'uge' W 'i' MMM"}
+                    one{"'uge' W 'i' MMMM"}
+                    other{"'uge' W 'i' MMMM"}
                 }
                 MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
@@ -716,6 +709,53 @@ da{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B–h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h.mm B–h.mm B"}
+                    h{"h.mm–h.mm B"}
+                    m{"h.mm–h.mm B"}
+                }
+                Gy{
+                    G{"G y–G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG MM.y–GGGGG MM.y"}
+                    M{"GGGGG MM.y–MM.y"}
+                    y{"GGGGG MM.y–MM.y"}
+                }
+                GyMEd{
+                    G{"GGGGG E dd.MM.y–GGGGG E dd.MM.y"}
+                    M{"GGGGG E dd.MM.y–E dd.MM.y"}
+                    d{"GGGGG E dd.MM.y–E dd.MM.y"}
+                    y{"GGGGG E dd.MM.y–E dd.MM.y"}
+                }
+                GyMMM{
+                    G{"G MMM y–G MMM y"}
+                    M{"G MMM y–MMM"}
+                    y{"G MMM y–MMM y"}
+                }
+                GyMMMEd{
+                    G{"G E d. MMM y–G E d. MMM y"}
+                    M{"G E d. MMM y–E d. MMM"}
+                    d{"G E d. MMM y–E d. MMM"}
+                    y{"G E d. MMM y–E d. MMM y"}
+                }
+                GyMMMd{
+                    G{"G d. MMM y–G d. MMM y"}
+                    M{"G d. MMM y–d. MMM"}
+                    d{"G d.–d. MMM y"}
+                    y{"G d. MMM y–d. MMM y"}
+                }
+                GyMd{
+                    G{"GGGGG dd.MM.y–GGGGG dd.MM.y"}
+                    M{"GGGGG dd.MM.y–dd.MM.y"}
+                    d{"GGGGG dd.MM.y–dd.MM.y"}
+                    y{"GGGGG dd.MM.y–dd.MM.y"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -944,17 +984,6 @@ da{
             }
         }
         hebrew{
-            eras{
-                abbreviated{
-                    "AM",
-                }
-                narrow{
-                    "AM",
-                }
-                wide{
-                    "AM",
-                }
-            }
             monthNames{
                 format{
                     wide{
@@ -970,24 +999,13 @@ da{
                         "sivan",
                         "tamuz",
                         "av",
-                        "Elul",
+                        "elul",
                         "adar II",
                     }
                 }
             }
         }
         indian{
-            eras{
-                abbreviated{
-                    "Saka",
-                }
-                narrow{
-                    "Saka",
-                }
-                wide{
-                    "Saka",
-                }
-            }
             monthNames{
                 format{
                     wide{
@@ -1008,17 +1026,6 @@ da{
             }
         }
         islamic{
-            eras{
-                abbreviated{
-                    "AH",
-                }
-                narrow{
-                    "AH",
-                }
-                wide{
-                    "AH",
-                }
-            }
             monthNames{
                 format{
                     wide{
@@ -1056,17 +1063,6 @@ da{
             }
         }
         persian{
-            eras{
-                abbreviated{
-                    "AP",
-                }
-                narrow{
-                    "AP",
-                }
-                wide{
-                    "AP",
-                }
-            }
             monthNames{
                 format{
                     wide{
@@ -2047,6 +2043,12 @@ da{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-narrow{
+            2{"{0} og {1}"}
+            end{"{0} og {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard-short{
             2{"{0} og {1}"}
             end{"{0} og {1}"}
@@ -2102,10 +2104,6 @@ da{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
-            }
-            stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
             }
         }
     }

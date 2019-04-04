@@ -26,7 +26,8 @@ class UrlClassifierFeatureLoginReputation final
   static already_AddRefed<nsIUrlClassifierFeature> GetIfNameMatches(
       const nsACString& aName);
 
-  NS_IMETHOD ProcessChannel(nsIChannel* aChannel, const nsACString& aList,
+  NS_IMETHOD ProcessChannel(nsIChannel* aChannel,
+                            const nsTArray<nsCString>& aList,
                             bool* aShouldContinue) override;
 
   NS_IMETHOD GetURIByListType(nsIChannel* aChannel,

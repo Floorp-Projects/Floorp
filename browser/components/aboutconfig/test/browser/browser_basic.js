@@ -19,7 +19,7 @@ add_task(async function setup() {
 
 add_task(async function test_load_title() {
   await AboutConfigTest.withNewTab(async function() {
-    Assert.equal(this.document.title, "about:config");
+    Assert.equal(this.document.title, "Advanced Configurations");
   });
 });
 

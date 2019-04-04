@@ -24,7 +24,6 @@
 #include "nsReadableUtils.h"
 #include "nsMathUtils.h"
 #include "nsThreadUtils.h"
-#include "nsIPresShell.h"
 #include "prdtoa.h"
 #include "plstr.h"
 #include "prtime.h"

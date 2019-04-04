@@ -6,7 +6,7 @@
 // Corporation and others.  All Rights Reserved.
 //---------------------------------------------------------
 // Build tool: com.ibm.icu.dev.tool.currency.NumericCodeData
-// Build date: 2018-09-17T17:52:05Z
+// Build date: 2019-03-20T21:22:05Z
 //---------------------------------------------------------
 // >> !!! >>   THIS IS A MACHINE-GENERATED FILE   << !!! <<
 // >> !!! >>>            DO NOT EDIT             <<< !!! <<
@@ -299,7 +299,7 @@ currencyNumericCodes:table(nofallback){
         XXX:int{999}
         YDD:int{720}
         YER:int{886}
-        YUD:int{891}
+        YUD:int{890}
         YUM:int{891}
         YUN:int{890}
         ZAL:int{991}

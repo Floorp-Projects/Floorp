@@ -88,7 +88,11 @@ class RemoteAgentClass {
 
     try {
       this.server._start(port, host);
-      log.info(`Remote debugging agent listening on ${this.scheme}://${this.host}:${this.port}/`);
+
+      // Immediatly instantiate the main process target in order
+      // to be accessible via HTTP endpoint on startup
+      const mainTarget = this.targets.getMainProcessTarget();
+      log.info(`Remote debugging agent listening on ${mainTarget.wsDebuggerURL}`);
     } catch (e) {
       throw new Error(`Unable to start remote agent: ${e.message}`, e);
     }

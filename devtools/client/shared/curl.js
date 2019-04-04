@@ -74,18 +74,25 @@ const Curl = {
 
     // Create post data.
     const postData = [];
-    if (utils.isUrlEncodedRequest(data) ||
-          ["PUT", "POST", "PATCH"].includes(data.method)) {
-      postDataText = data.postDataText;
-      postData.push("--data");
-      postData.push(escapeString(utils.writePostDataTextParams(postDataText)));
-      ignoredHeaders.add("content-length");
-    } else if (multipartRequest) {
+    if (multipartRequest) {
+      // WINDOWS KNOWN LIMITATIONS: Due to the specificity of running curl on
+      // cmd.exe even correctly escaped windows newline \r\n will be
+      // treated by curl as plain local newline. It corresponds in unix
+      // to single \n and that's what curl will send in payload.
+      // It may be particularly hurtful for multipart/form-data payloads
+      // which composed using \n only, not \r\n, may be not parsable for
+      // peers which split parts of multipart payload using \r\n.
       postDataText = data.postDataText;
       postData.push("--data-binary");
       const boundary = utils.getMultipartBoundary(data);
       const text = utils.removeBinaryDataFromMultipartText(postDataText, boundary);
       postData.push(escapeString(text));
+      ignoredHeaders.add("content-length");
+    } else if (utils.isUrlEncodedRequest(data) ||
+          ["PUT", "POST", "PATCH"].includes(data.method)) {
+      postDataText = data.postDataText;
+      postData.push("--data");
+      postData.push(escapeString(utils.writePostDataTextParams(postDataText)));
       ignoredHeaders.add("content-length");
     }
     // curl generates the host header itself based on the given URL
@@ -280,9 +287,9 @@ const CurlUtils = {
           // The header lines and the binary blob is separated by 2 CRLF's.
           // Add only the headers to the result.
           const headers = part.split("\r\n\r\n")[0];
-          result += boundary + "\r\n" + headers + "\r\n\r\n";
+          result += boundary + headers + "\r\n\r\n";
         } else {
-          result += boundary + "\r\n" + part;
+          result += boundary + part;
         }
       }
     }
@@ -387,12 +394,17 @@ const CurlUtils = {
        MS Crt arguments parser won't collapse them.
 
        Replace new line outside of quotes since cmd.exe doesn't let
-       to do it inside.
+       to do it inside. At the same time it gets duplicated,
+       because first newline is consumed by ^.
+       So for quote: `"Text-start\r\ntext-continue"`,
+       we get: `"Text-start"^\r\n\r\n"text-continue"`,
+       where `^\r\n` is just breaking the command, the `\r\n` right
+       after is actual escaped newline.
     */
     return "\"" + str.replace(/"/g, "\"\"")
                      .replace(/%/g, "\"%\"")
                      .replace(/\\/g, "\\\\")
-                     .replace(/[\r\n]+/g, "\"^$&\"") + "\"";
+                     .replace(/[\r\n]{1,2}/g, "\"^$&$&\"") + "\"";
   },
 };
 

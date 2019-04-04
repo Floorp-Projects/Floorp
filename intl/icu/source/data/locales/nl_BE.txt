@@ -1,14 +1,7 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 nl_BE{
-    NumberElements{
-        latn{
-            patterns{
-                currencyFormat{"¤ #,##0.00"}
-            }
-        }
-    }
-    Version{"2.1.43.2"}
+    Version{"2.1.47.71"}
     calendar{
         generic{
             DateTimePatterns{

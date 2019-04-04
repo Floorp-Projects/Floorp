@@ -134,20 +134,21 @@ def write_test_settings_json(args, test_details, oskey):
 
     test_settings['raptor-options']['unit'] = test_details.get("unit", "ms")
 
-    if test_details.get("lower_is_better", "true") == "false":
-        test_settings['raptor-options']['lower_is_better'] = False
-    else:
-        test_settings['raptor-options']['lower_is_better'] = True
+    test_settings['raptor-options']['lower_is_better'] = bool_from_str(
+        test_details.get("lower_is_better", "true"))
 
-    # support optional subtest unit/lower_is_better fields, default to main test values if not set
+    # support optional subtest unit/lower_is_better fields
     val = test_details.get('subtest_unit', test_settings['raptor-options']['unit'])
     test_settings['raptor-options']['subtest_unit'] = val
-    val = test_details.get('subtest_lower_is_better',
-                           test_settings['raptor-options']['lower_is_better'])
-    if val == "false":
-        test_settings['raptor-options']['subtest_lower_is_better'] = False
+    subtest_lower_is_better = test_details.get('subtest_lower_is_better', None)
+
+    if subtest_lower_is_better is None:
+        # default to main test values if not set
+        test_settings['raptor-options']['subtest_lower_is_better'] = (
+            test_settings['raptor-options']['lower_is_better'])
     else:
-        test_settings['raptor-options']['subtest_lower_is_better'] = True
+        test_settings['raptor-options']['subtest_lower_is_better'] = bool_from_str(
+            subtest_lower_is_better)
 
     if test_details.get("alert_threshold", None) is not None:
         test_settings['raptor-options']['alert_threshold'] = float(test_details['alert_threshold'])
@@ -309,3 +310,12 @@ def get_raptor_test_list(args, oskey):
         LOG.critical("abort: specified test name doesn't exist")
 
     return tests_to_run
+
+
+def bool_from_str(boolean_string):
+    if boolean_string == 'true':
+        return True
+    elif boolean_string == 'false':
+        return False
+    else:
+        raise ValueError("Expected either 'true' or 'false'")

@@ -79,25 +79,19 @@ yue_Hans{
     }
     MoreInformation{"？"}
     NumberElements{
-        default{"latn"}
         finance{"hansfin"}
         hanidec{
             patterns{
                 currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
             symbols{
-                decimal{"."}
                 exponential{"E"}
-                group{","}
                 infinity{"∞"}
-                minusSign{"-"}
                 nan{"非数值"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
             }
         }
@@ -111,7 +105,6 @@ yue_Hans{
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -234,16 +227,12 @@ yue_Hans{
                 }
             }
             symbols{
-                decimal{"."}
                 exponential{"E"}
-                group{","}
                 infinity{"∞"}
                 list{";"}
-                minusSign{"-"}
                 nan{"非数值"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -256,11 +245,10 @@ yue_Hans{
                 other{"{0} 本书"}
             }
         }
-        minimumGroupingDigits{"1"}
         native{"hanidec"}
         traditional{"hans"}
     }
-    Version{"2.1.44.91"}
+    Version{"2.1.48.80"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1165,6 +1153,53 @@ yue_Hans{
                 yyyyQQQQ{"Gy年第Q季度"}
             }
             intervalFormats{
+                Bh{
+                    B{"Bh时至Bh时"}
+                    h{"Bh至h时"}
+                }
+                Bhm{
+                    B{"Bh:mm至Bh:mm"}
+                    h{"Bh:mm至h:mm"}
+                    m{"Bh:mm至h:mm"}
+                }
+                Gy{
+                    G{"G y年至G y年"}
+                    y{"G y至y年"}
+                }
+                GyM{
+                    G{"G y/M至G y/M"}
+                    M{"G y/M至y/M"}
+                    y{"G y/M至y/M"}
+                }
+                GyMEd{
+                    G{"G y/M/d（E）至G y/M/d（E）"}
+                    M{"G y/M/d（E）至y/M/d（E）"}
+                    d{"G y/M/d（E）至y/M/d（E）"}
+                    y{"G y/M/d（E）至y/M/d（E）"}
+                }
+                GyMMM{
+                    G{"G y年M月至G y年M月"}
+                    M{"G y年M月至M月"}
+                    y{"G y年M月至y年M月"}
+                }
+                GyMMMEd{
+                    G{"G y年M月d日（E）至G y年M月d日（E）"}
+                    M{"G y年M月d日（E）至M月d日（E）"}
+                    d{"G y年M月d日（E）至M月d日（E）"}
+                    y{"G y年M月d日（E）至y年M月d日（E）"}
+                }
+                GyMMMd{
+                    G{"G y年M月d日至G y年M月d日"}
+                    M{"G y年M月d日至M月d日"}
+                    d{"G y年M月d日至d日"}
+                    y{"G y年M月d日至y年M月d日"}
+                }
+                GyMd{
+                    G{"G y/M/d至G y/M/d"}
+                    M{"G y/M/d至y/M/d"}
+                    d{"G y/M/d至y/M/d"}
+                    y{"G y/M/d至y/M/d"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -1518,6 +1553,15 @@ yue_Hans{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"Bh时至Bh时"}
+                    h{"Bh至h时"}
+                }
+                Bhm{
+                    B{"Bh:mm至Bh:mm"}
+                    h{"Bh:mm至h:mm"}
+                    m{"Bh:mm至h:mm"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -3349,6 +3393,12 @@ yue_Hans{
             middle{"{0}、{1}"}
             start{"{0}、{1}"}
         }
+        standard-narrow{
+            2{"{0}同{1}"}
+            end{"{0}同{1}"}
+            middle{"{0}、{1}"}
+            start{"{0}、{1}"}
+        }
         standard-short{
             2{"{0}同{1}"}
             end{"{0}同{1}"}
@@ -3378,5 +3428,37 @@ yue_Hans{
         UK{"英制"}
         US{"美制"}
         metric{"公制"}
+    }
+    parse{
+        date{
+            lenient{
+                "[\\--/]",
+                "[\\:∶︓﹕：]",
+            }
+        }
+        general{
+            lenient{
+                "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
+                "[\$﹩＄]",
+                "[£₤￡]",
+                "[¥￥]",
+                "[₩￦]",
+                "[₨₹{Rp}{Rs}]",
+            }
+        }
+        number{
+            lenient{
+                "[\\-‐‒–⁻₋−➖﹣－]",
+                "[,،٫、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
+            }
+            stricter{
+                "[,٫︐﹐，]",
+                "[.․﹒．｡]",
+            }
+        }
     }
 }

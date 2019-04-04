@@ -236,7 +236,7 @@ ast{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.44.91"}
+    Version{"2.1.47.82"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -1130,8 +1130,8 @@ ast{
                 MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMW{
-                    one{"'selmana' W 'de' MMM"}
-                    other{"'selmana' W 'de' MMM"}
+                    one{"'selmana' W 'de' MMMM"}
+                    other{"'selmana' W 'de' MMMM"}
                 }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}

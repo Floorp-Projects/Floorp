@@ -39,8 +39,8 @@ class Domain {
 
   // static
 
-  static implements(methodName) {
-    return typeof this.prototype[methodName] == "function";
+  static implements(command) {
+    return command && typeof this.prototype[command] == "function";
   }
 }
 

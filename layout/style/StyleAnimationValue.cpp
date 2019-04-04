@@ -29,6 +29,7 @@
 #include "gfxQuaternion.h"
 #include "mozilla/dom/Document.h"
 #include "nsIFrame.h"
+#include "nsIPresShellInlines.h"
 #include "gfx2DGlue.h"
 #include "mozilla/ComputedStyleInlines.h"
 #include "mozilla/layers/LayersMessages.h"

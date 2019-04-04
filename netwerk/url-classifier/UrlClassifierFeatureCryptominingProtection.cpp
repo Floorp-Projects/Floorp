@@ -139,7 +139,8 @@ UrlClassifierFeatureCryptominingProtection::GetIfNameMatches(
 
 NS_IMETHODIMP
 UrlClassifierFeatureCryptominingProtection::ProcessChannel(
-    nsIChannel* aChannel, const nsACString& aList, bool* aShouldContinue) {
+    nsIChannel* aChannel, const nsTArray<nsCString>& aList,
+    bool* aShouldContinue) {
   NS_ENSURE_ARG_POINTER(aChannel);
   NS_ENSURE_ARG_POINTER(aShouldContinue);
 
@@ -153,8 +154,11 @@ UrlClassifierFeatureCryptominingProtection::ProcessChannel(
     return NS_OK;
   }
 
+  nsAutoCString list;
+  UrlClassifierCommon::TablesToString(aList, list);
+
   UrlClassifierCommon::SetBlockedContent(aChannel, NS_ERROR_CRYPTOMINING_URI,
-                                         aList, EmptyCString(), EmptyCString());
+                                         list, EmptyCString(), EmptyCString());
 
   UC_LOG(
       ("UrlClassifierFeatureCryptominingProtection::ProcessChannel, "

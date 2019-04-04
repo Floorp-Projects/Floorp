@@ -8,7 +8,7 @@ mi{
         default{"latn"}
         latn{
             miscPatterns{
-                atLeast{"≥{0}"}
+                atLeast{"⩾{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -152,7 +152,7 @@ mi{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.44.15"}
+    Version{"2.1.47.85"}
     calendar{
         generic{
             DateTimePatterns{

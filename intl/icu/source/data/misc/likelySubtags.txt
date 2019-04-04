@@ -841,6 +841,7 @@ likelySubtags:table(nofallback){
     mwk{"mwk_Latn_ML"}
     mwr{"mwr_Deva_IN"}
     mwv{"mwv_Latn_ID"}
+    mww{"mww_Hmnp_US"}
     mxc{"mxc_Latn_ZW"}
     mxm{"mxm_Latn_ZZ"}
     my{"my_Mymr_MM"}
@@ -904,6 +905,7 @@ likelySubtags:table(nofallback){
     nnh{"nnh_Latn_CM"}
     nnk{"nnk_Latn_ZZ"}
     nnm{"nnm_Latn_ZZ"}
+    nnp{"nnp_Wcho_IN"}
     no{"no_Latn_NO"}
     nod{"nod_Lana_TH"}
     noe{"noe_Deva_IN"}
@@ -1389,6 +1391,7 @@ likelySubtags:table(nofallback){
     und_EZ{"de_Latn_EZ"}
     und_Egyp{"egy_Egyp_EG"}
     und_Elba{"sq_Elba_AL"}
+    und_Elym{"arc_Elym_IR"}
     und_Ethi{"am_Ethi_ET"}
     und_FI{"fi_Latn_FI"}
     und_FO{"fo_Latn_FO"}
@@ -1437,6 +1440,7 @@ likelySubtags:table(nofallback){
     und_Hira{"ja_Hira_JP"}
     und_Hluw{"hlu_Hluw_TR"}
     und_Hmng{"hnj_Hmng_LA"}
+    und_Hmnp{"mww_Hmnp_US"}
     und_Hung{"hu_Hung_HU"}
     und_IC{"es_Latn_IC"}
     und_ID{"id_Latn_ID"}
@@ -1549,6 +1553,7 @@ likelySubtags:table(nofallback){
     und_NL{"nl_Latn_NL"}
     und_NO{"nb_Latn_NO"}
     und_NP{"ne_Deva_NP"}
+    und_Nand{"sa_Nand_IN"}
     und_Narb{"xna_Narb_SA"}
     und_Nbat{"arc_Nbat_JO"}
     und_Newa{"new_Newa_NP"}
@@ -1667,6 +1672,7 @@ likelySubtags:table(nofallback){
     und_WF{"fr_Latn_WF"}
     und_WS{"sm_Latn_WS"}
     und_Wara{"hoc_Wara_IN"}
+    und_Wcho{"nnp_Wcho_IN"}
     und_XK{"sq_Latn_XK"}
     und_Xpeo{"peo_Xpeo_IR"}
     und_Xsux{"akk_Xsux_IQ"}

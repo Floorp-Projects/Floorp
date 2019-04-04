@@ -1375,6 +1375,16 @@ class UrlbarInput {
   }
 
   _on_keydown(event) {
+    // Due to event deferring, it's possible preventDefault() won't be invoked
+    // soon enough to actually prevent some of the default behaviors, thus we
+    // have to handle the event "twice". This first immediate call passes false
+    // as second argument so that handleKeyNavigation will only simulate the
+    // event handling, without actually executing actions.
+    // TODO (Bug 1541806): improve this handling, maybe by delaying actions
+    // instead of events.
+    if (this.eventBufferer.shouldDeferEvent(event)) {
+      this.controller.handleKeyNavigation(event, false);
+    }
     this._toggleActionOverride(event);
     this.eventBufferer.maybeDeferEvent(event, () => {
       this.controller.handleKeyNavigation(event);

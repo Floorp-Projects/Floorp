@@ -48,7 +48,7 @@ mt{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.43.94"}
+    Version{"2.1.47.72"}
     calendar{
         generic{
             DateTimePatterns{
@@ -85,7 +85,7 @@ mt{
                 yyyyMEd{"GGGGG E, dd-MM-y"}
                 yyyyMMM{"GGGGG MMM y"}
                 yyyyMMMEd{"GGGGG E, dd MMM y"}
-                yyyyMMMM{"GGGGG MMM y"}
+                yyyyMMMM{"GGGGG MMMM y"}
                 yyyyMMMd{"GGGGG dd MMM y"}
                 yyyyMd{"GGGGG dd-MM-y"}
                 yyyyQQQ{"G y QQQ"}

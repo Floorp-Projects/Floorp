@@ -32,7 +32,7 @@ rw{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.44.88"}
+    Version{"2.1.47.82"}
     calendar{
         generic{
             DateTimePatterns{
@@ -103,7 +103,7 @@ rw{
                 MMM{"LLL"}
                 MMMEd{"MMM d, E"}
                 MMMMW{
-                    other{"'week' W 'of' MMM"}
+                    other{"'week' W 'of' MMMM"}
                 }
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}

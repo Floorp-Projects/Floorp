@@ -71,18 +71,25 @@ class UnsupportedError extends RemoteAgentError {}
 class UnknownMethodError extends RemoteAgentError {}
 
 function formatError(error, {stack = false} = {}) {
-  const ls = [];
+  const els = [];
 
-  ls.push(`${error.name}: ${error.message ? `${error.message}:` : ""}`);
+  els.push(error.name);
+  if (error.message) {
+    els.push(": ");
+    els.push(error.message);
+  }
 
   if (stack && error.stack) {
+    els.push(":\n");
+
     const stack = error.stack.trim().split("\n");
-    ls.push(stack.map(line => `\t${line}`).join("\n"));
+    els.push(stack.map(line => `\t${line}`).join("\n"));
 
     if (error.cause) {
-      ls.push("caused by: " + formatError(error.cause, {stack}));
+      els.push("\n");
+      els.push("caused by: " + formatError(error.cause, {stack}));
     }
   }
 
-  return ls.join("\n");
+  return els.join("");
 }

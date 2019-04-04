@@ -57,7 +57,7 @@ ckb{
         minimumGroupingDigits{"1"}
         native{"arab"}
     }
-    Version{"2.1.44.88"}
+    Version{"2.1.47.72"}
     calendar{
         generic{
             DateTimePatterns{
@@ -224,8 +224,8 @@ ckb{
                 MMM{"LLL"}
                 MMMEd{"E، dی MMM"}
                 MMMMW{
-                    one{"هەفتەی W ی MMM"}
-                    other{"هەفتەی W ی MMM"}
+                    one{"هەفتەی W ی MMMM"}
+                    other{"هەفتەی W ی MMMM"}
                 }
                 MMMMd{"MMMM d"}
                 MMMd{"dی MMM"}

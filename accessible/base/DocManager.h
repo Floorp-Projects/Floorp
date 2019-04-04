@@ -12,7 +12,6 @@
 #include "nsRefPtrHashtable.h"
 #include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
-#include "nsIPresShell.h"
 #include "mozilla/StaticPtr.h"
 
 namespace mozilla {

@@ -2,14 +2,6 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 pa{
     AuxExemplarCharacters{"[\u200C\u200D ਃ \u0A02 \u0A01 {ਲ\u0A3C}]"}
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
     ExemplarCharacters{
         "[\u0A71 \u0A70 \u0A3C ੦ ੧ ੨ ੩ ੪ ੫ ੬ ੭ ੮ ੯ ੴ ੳ ਉ ਊ ਓ ਅ ਆ ਐ ਔ ੲ ਇ ਈ ਏ ਸ {ਸ"
         "\u0A3C} ਹ ਕ ਖ {ਖ\u0A3C} ਗ {ਗ\u0A3C} ਘ ਙ ਚ ਛ ਜ {ਜ\u0A3C} ਝ ਞ ਟ ਠ ਡ ਢ ਣ ਤ ਥ ਦ "
@@ -18,7 +10,6 @@ pa{
     }
     ExemplarCharactersNumbers{"[\\- , . % ‰ + 0੦ 1੧ 2੨ 3੩ 4੪ 5੫ 6੬ 7੭ 8੮ 9੯]"}
     ExemplarCharactersPunctuation{"[\\- ‐ – — , ; \\: ! ? . ' ‘ ’ \u0022 “ ” ( ) \\[ \\] / \\& ′ ″]"}
-    MoreInformation{"?"}
     NumberElements{
         arabext{
             patterns{
@@ -28,7 +19,6 @@ pa{
                 scientificFormat{"[#E0]"}
             }
             symbols{
-                decimal{"٫"}
                 exponential{"×۱۰^"}
                 group{","}
                 infinity{"∞"}
@@ -38,10 +28,8 @@ pa{
                 percentSign{"٪"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{"٫"}
             }
         }
-        default{"latn"}
         guru{
             patterns{
                 currencyFormat{"¤ #,##,##0.00"}
@@ -50,23 +38,17 @@ pa{
                 scientificFormat{"[#E0]"}
             }
             symbols{
-                decimal{"."}
                 exponential{"E"}
-                group{","}
                 infinity{"∞"}
-                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
             }
         }
         latn{
             miscPatterns{
-                approximately{"~{0}"}
                 atLeast{"{0}+"}
-                atMost{"≤{0}"}
                 range{"{0}–{1}"}
             }
             patterns{
@@ -231,17 +213,12 @@ pa{
                 }
             }
             symbols{
-                decimal{"."}
                 exponential{"E"}
-                group{","}
                 infinity{"∞"}
-                minusSign{"-"}
                 nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -256,7 +233,7 @@ pa{
         minimumGroupingDigits{"1"}
         native{"guru"}
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.48.20"}
     calendar{
         buddhist{
             DateTimePatterns{
@@ -284,9 +261,6 @@ pa{
                 wide{
                     "ਈਸਵੀ ਪੂਰਵ",
                 }
-            }
-            intervalFormats{
-                fallback{"{0} – {1}"}
             }
         }
         coptic{
@@ -321,21 +295,6 @@ pa{
                         "ਮੈਸਰਾ",
                         "ਨੇਜ਼ੀ",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                    }
                     wide{
                         "ਟੋਉਟ",
                         "ਬਾਬਾ",
@@ -367,21 +326,6 @@ pa{
                         "ਅਪੈਪ",
                         "ਮੈਸਰਾ",
                         "ਨੇਜ਼ੀ",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
                     }
                     wide{
                         "ਟੋਉਟ",
@@ -433,21 +377,6 @@ pa{
                         "ਨੇਹਾਸੇ",
                         "ਪਾਗੂਮੇਨ",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                    }
                     wide{
                         "ਮੇਸਕੇਰੇਮ",
                         "ਟੇਕੇਮਟ",
@@ -480,21 +409,6 @@ pa{
                         "ਨੇਹਾਸੇ",
                         "ਪਾਗੂਮੇਨ",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                    }
                     wide{
                         "ਮੇਸਕੇਰੇਮ",
                         "ਟੇਕੇਮਟ",
@@ -508,21 +422,8 @@ pa{
                         "ਸੀਨ",
                         "ਹਮਲੇ",
                         "ਨੇਹਾਸੇ",
-                        "Pagumen",
+                        "ਪਾਗੂਮੇਨ",
                     }
-                }
-            }
-        }
-        ethiopic-amete-alem{
-            eras{
-                abbreviated{
-                    "ERA0",
-                }
-                narrow{
-                    "ERA0",
-                }
-                wide{
-                    "ERA0",
                 }
             }
         }
@@ -588,19 +489,52 @@ pa{
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
                 }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
                 }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
                 }
-                Hv{
-                    H{"HH–HH v"}
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
                 }
                 M{
                     M{"MM–MM"}
@@ -628,24 +562,6 @@ pa{
                     d{"d – d"}
                 }
                 fallback{"{0} – {1}"}
-                h{
-                    a{"h a – h a"}
-                    h{"h–h a"}
-                }
-                hm{
-                    a{"h:mm a – h:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
-                }
-                hmv{
-                    a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
-                }
-                hv{
-                    a{"h a – h a v"}
-                    h{"h–h a v"}
-                }
                 y{
                     y{"y – y G"}
                 }
@@ -740,8 +656,8 @@ pa{
                 MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMW{
-                    one{"MMM ਦਾ W ਹਫ਼ਤਾ"}
-                    other{"MMM ਦਾ W ਹਫ਼ਤਾ"}
+                    one{"MMMM ਦਾ W ਹਫ਼ਤਾ"}
+                    other{"MMMM ਦਾ W ਹਫ਼ਤਾ"}
                 }
                 MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
@@ -928,6 +844,53 @@ pa{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMMM{
+                    G{"G y MMM – G y MMM"}
+                    M{"G y MMM–MMM"}
+                    y{"G y MMM – y MMM"}
+                }
+                GyMMMEd{
+                    G{"G y MMM d, E – G y MMM d, E"}
+                    M{"G y MMM d, E – MMM d, E"}
+                    d{"G y MMM d, E – MMM d, E"}
+                    y{"G y MMM d, E – y MMM d, E"}
+                }
+                GyMMMd{
+                    G{"G y MMM d – G y MMM d"}
+                    M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
+                    y{"G y MMM d – y MMM d"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -1156,17 +1119,6 @@ pa{
             }
         }
         hebrew{
-            eras{
-                abbreviated{
-                    "AM",
-                }
-                narrow{
-                    "AM",
-                }
-                wide{
-                    "AM",
-                }
-            }
             monthNames{
                 format{
                     abbreviated{
@@ -1184,22 +1136,6 @@ pa{
                         "ਅਵ",
                         "ਏਲੁਲ",
                         "ਅਦਰ II",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                        "7",
                     }
                     wide{
                         "ਤਿਸ਼ਰੀ",
@@ -1231,25 +1167,9 @@ pa{
                         "ਅਇਯਰ",
                         "ਸਿਵਾਨ",
                         "ਤਾਮੁਜ਼",
-                        "Av",
-                        "Elul",
+                        "ਅਵ",
+                        "ਏਲੁਲ",
                         "ਅਦਰ II",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                        "7",
                     }
                     wide{
                         "ਤਿਸ਼ਰੀ",
@@ -1374,20 +1294,6 @@ pa{
             }
         }
         islamic{
-            eras{
-                abbreviated{
-                    "AH",
-                }
-                narrow{
-                    "AH",
-                }
-                wide{
-                    "AH",
-                }
-            }
-            intervalFormats{
-                fallback{"{0} – {1}"}
-            }
             monthNames{
                 format{
                     abbreviated{
@@ -1403,20 +1309,6 @@ pa{
                         "ਸ਼ਅ.",
                         "ਦੂ-ਅਲ-ਕੀ.",
                         "ਦੂ-ਅਲ-ਹਿ.",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
                     }
                     wide{
                         "ਮੁਹੱਰਮ",
@@ -1448,20 +1340,6 @@ pa{
                         "ਦੂ-ਅਲ-ਕੀ.",
                         "ਦੂ-ਅਲ-ਹਿ.",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
                     wide{
                         "ਮੁਹੱਰਮ",
                         "ਸਫਰ",
@@ -1480,17 +1358,6 @@ pa{
             }
         }
         persian{
-            eras{
-                abbreviated{
-                    "AP",
-                }
-                narrow{
-                    "AP",
-                }
-                wide{
-                    "AP",
-                }
-            }
             monthNames{
                 format{
                     abbreviated{
@@ -1506,20 +1373,6 @@ pa{
                         "ਡੇਅ",
                         "ਬਾਹਮਨ",
                         "ਐਸਫੰਡ",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
                     }
                     wide{
                         "ਫਾਰਵਰਡੀਨ",
@@ -1550,20 +1403,6 @@ pa{
                         "ਡੇਅ",
                         "ਬਾਹਮਨ",
                         "ਐਸਫੰਡ",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
                     }
                     wide{
                         "ਫਾਰਵਰਡੀਨ",
@@ -1686,12 +1525,6 @@ pa{
         weather{"ਮੌਸਮ"}
         western_asian_scripts{"ਪੱਛਮੀ ਏਸ਼ੀਆਈ ਲਿਪੀ"}
         whitespace{"ਵ੍ਹਾਈਟ ਸਪੇਸ"}
-    }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
     }
     fields{
         day{
@@ -2545,6 +2378,12 @@ pa{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-narrow{
+            2{"{0} ਅਤੇ {1}"}
+            end{"{0} ਅਤੇ {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard-short{
             2{"{0} ਅਤੇ {1}"}
             end{"{0} ਅਤੇ {1}"}
@@ -2600,10 +2439,6 @@ pa{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
-            }
-            stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
             }
         }
     }

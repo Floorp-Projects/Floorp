@@ -955,7 +955,7 @@ nsresult nsIOService::NewChannelFromURIWithProxyFlagsInternal(
   } else {
     rv = handler->NewChannel(aURI, aLoadInfo, getter_AddRefs(channel));
   }
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) return rv;
 
   // Make sure that all the individual protocolhandlers attach a loadInfo.
   if (aLoadInfo) {
