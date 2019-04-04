@@ -3426,7 +3426,8 @@ void LIRGenerator::visitSinCos(MSinCos* ins) {
              ins->input()->type() == MIRType::Int32);
 
   LSinCos* lir = new (alloc()) LSinCos(useRegisterAtStart(ins->input()),
-                                       tempFixed(CallTempReg0), temp());
+                                       tempFixed(CallTempNonArgRegs[0]),
+                                       tempFixed(CallTempNonArgRegs[1]));
   defineSinCos(lir, ins);
 }
 
