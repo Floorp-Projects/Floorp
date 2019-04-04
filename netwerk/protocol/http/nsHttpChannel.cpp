@@ -125,6 +125,7 @@
 #include "mozilla/net/NeckoChannelParams.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "nsIWebNavigation.h"
+#include "HttpTrafficAnalyzer.h"
 
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracer.h"
@@ -1282,11 +1283,13 @@ nsresult nsHttpChannel::SetupTransaction() {
 
   EnsureTopLevelOuterContentWindowId();
 
+  HttpTrafficCategory category = CreateTrafficCategory();
+
   nsCOMPtr<nsIAsyncInputStream> responseStream;
   rv = mTransaction->Init(
       mCaps, mConnectionInfo, &mRequestHead, mUploadStream, mReqContentLength,
       mUploadStreamHasHeaders, GetCurrentThreadEventTarget(), callbacks, this,
-      mTopLevelOuterContentWindowId, getter_AddRefs(responseStream));
+      mTopLevelOuterContentWindowId, category, getter_AddRefs(responseStream));
   if (NS_FAILED(rv)) {
     mTransaction = nullptr;
     return rv;
@@ -1300,6 +1303,51 @@ nsresult nsHttpChannel::SetupTransaction() {
   rv = nsInputStreamPump::Create(getter_AddRefs(mTransactionPump),
                                  responseStream);
   return rv;
+}
+
+HttpTrafficCategory nsHttpChannel::CreateTrafficCategory() {
+  MOZ_ASSERT(!mFirstPartyClassificationFlags ||
+             !mThirdPartyClassificationFlags);
+
+  if (!StaticPrefs::network_traffic_analyzer_enabled()) {
+    return HttpTrafficCategory::eInvalid;
+  }
+
+  HttpTrafficAnalyzer::ClassOfService cos;
+  {
+    if (mClassOfService & nsIClassOfService::Leader &&
+        mLoadInfo->GetExternalContentPolicyType() ==
+            nsIContentPolicy::TYPE_SCRIPT) {
+      cos = HttpTrafficAnalyzer::ClassOfService::eLeader;
+    } else if (mLoadFlags & nsIRequest::LOAD_BACKGROUND) {
+      cos = HttpTrafficAnalyzer::ClassOfService::eBackground;
+    } else {
+      cos = HttpTrafficAnalyzer::ClassOfService::eOther;
+    }
+  }
+
+  bool isThirdParty = !!mThirdPartyClassificationFlags;
+  HttpTrafficAnalyzer::TrackingClassification tc;
+  {
+    uint32_t flags = isThirdParty ? mThirdPartyClassificationFlags
+                                  : mFirstPartyClassificationFlags;
+
+    using CF = nsIHttpChannel::ClassificationFlags;
+    using TC = HttpTrafficAnalyzer::TrackingClassification;
+
+    if (flags & CF::CLASSIFIED_TRACKING_CONTENT) {
+      tc = TC::eContent;
+    } else if (flags & CF::CLASSIFIED_FINGERPRINTING) {
+      tc = TC::eFingerprinting;
+    } else if (flags & CF::CLASSIFIED_ANY_BASIC_TRACKING) {
+      tc = TC::eBasic;
+    } else {
+      tc = TC::eNone;
+    }
+  }
+
+  return HttpTrafficAnalyzer::CreateTrafficCategory(NS_UsePrivateBrowsing(this),
+                                                    isThirdParty, cos, tc);
 }
 
 enum class Report { Error, Warning };
