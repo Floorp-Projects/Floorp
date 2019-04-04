@@ -196,7 +196,7 @@ nsresult XPCWrappedNative::WrapNewGlobal(xpcObjectHelper& nativeHelper,
 
   // Make a proto.
   XPCWrappedNativeProto* proto = XPCWrappedNativeProto::GetNewOrUsed(
-      scope, nativeHelper.GetClassInfo(), scrProto);
+      cx, scope, nativeHelper.GetClassInfo(), scrProto);
   if (!proto) {
     return NS_ERROR_FAILURE;
   }
@@ -403,7 +403,7 @@ nsresult XPCWrappedNative::GetNewOrUsed(xpcObjectHelper& helper,
   // wrapper is actually created, but before JS code can see it.
 
   if (info && !isClassInfoSingleton) {
-    proto = XPCWrappedNativeProto::GetNewOrUsed(Scope, info, scrProto);
+    proto = XPCWrappedNativeProto::GetNewOrUsed(cx, Scope, info, scrProto);
     if (!proto) {
       return NS_ERROR_FAILURE;
     }

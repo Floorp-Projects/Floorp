@@ -1223,7 +1223,8 @@ class XPCNativeSet final {
 
 class XPCWrappedNativeProto final {
  public:
-  static XPCWrappedNativeProto* GetNewOrUsed(XPCWrappedNativeScope* scope,
+  static XPCWrappedNativeProto* GetNewOrUsed(JSContext* cx,
+                                             XPCWrappedNativeScope* scope,
                                              nsIClassInfo* classInfo,
                                              nsIXPCScriptable* scriptable);
 
@@ -1281,7 +1282,7 @@ class XPCWrappedNativeProto final {
   XPCWrappedNativeProto(XPCWrappedNativeScope* Scope, nsIClassInfo* ClassInfo,
                         already_AddRefed<XPCNativeSet>&& Set);
 
-  bool Init(nsIXPCScriptable* scriptable);
+  bool Init(JSContext* cx, nsIXPCScriptable* scriptable);
 
  private:
 #ifdef DEBUG
