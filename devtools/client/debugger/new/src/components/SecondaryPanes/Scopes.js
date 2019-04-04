@@ -39,6 +39,8 @@ type Props = {
   shouldMapScopes: boolean,
   openLink: typeof actions.openLink,
   openElementInInspector: typeof actions.openElementInInspectorCommand,
+  highlightDomElement: typeof actions.highlightDomElement,
+  unHighlightDomElement: typeof actions.unHighlightDomElement,
   toggleMapScopes: typeof actions.toggleMapScopes
 };
 
@@ -111,6 +113,8 @@ class Scopes extends PureComponent<Props, State> {
       isLoading,
       openLink,
       openElementInInspector,
+      highlightDomElement,
+      unHighlightDomElement,
       shouldMapScopes
     } = this.props;
     const { originalScopes, generatedScopes, showOriginal } = this.state;
@@ -131,6 +135,8 @@ class Scopes extends PureComponent<Props, State> {
             createObjectClient={grip => createObjectClient(grip)}
             onDOMNodeClick={grip => openElementInInspector(grip)}
             onInspectIconClick={grip => openElementInInspector(grip)}
+            onDOMNodeMouseOver={grip => highlightDomElement(grip)}
+            onDOMNodeMouseOut={grip => unHighlightDomElement(grip)}
           />
         </div>
       );
@@ -200,6 +206,8 @@ export default connect(
   {
     openLink: actions.openLink,
     openElementInInspector: actions.openElementInInspectorCommand,
+    highlightDomElement: actions.highlightDomElement,
+    unHighlightDomElement: actions.unHighlightDomElement,
     toggleMapScopes: actions.toggleMapScopes
   }
 )(Scopes);
