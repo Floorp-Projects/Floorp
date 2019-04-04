@@ -6,13 +6,15 @@
 
 #include "nsSimplePageSequenceFrame.h"
 
+#include "mozilla/PresShell.h"
+#include "mozilla/dom/HTMLCanvasElement.h"
+
 #include "DateTimeFormat.h"
 #include "nsCOMPtr.h"
 #include "nsDeviceContext.h"
 #include "nsPresContext.h"
 #include "gfxContext.h"
 #include "nsGkAtoms.h"
-#include "nsIPresShell.h"
 #include "nsIPrintSettings.h"
 #include "nsPageFrame.h"
 #include "nsSubDocumentFrame.h"
@@ -21,7 +23,6 @@
 #include "nsContentUtils.h"
 #include "nsDisplayList.h"
 #include "nsHTMLCanvasFrame.h"
-#include "mozilla/dom/HTMLCanvasElement.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsServiceManagerUtils.h"
 #include <algorithm>

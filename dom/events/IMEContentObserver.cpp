@@ -13,6 +13,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
@@ -24,7 +25,6 @@
 #include "mozilla/dom/Document.h"
 #include "nsIFrame.h"
 #include "nsINode.h"
-#include "nsIPresShell.h"
 #include "nsISelectionController.h"
 #include "nsISupports.h"
 #include "nsIWeakReferenceUtils.h"
@@ -305,7 +305,7 @@ bool IMEContentObserver::InitWithEditor(nsPresContext* aPresContext,
     return false;
   }
 
-  nsIPresShell* presShell = aPresContext->PresShell();
+  PresShell* presShell = aPresContext->GetPresShell();
 
   // get selection and root content
   nsCOMPtr<nsISelectionController> selCon;
@@ -318,7 +318,7 @@ bool IMEContentObserver::InitWithEditor(nsPresContext* aPresContext,
     frame->GetSelectionController(aPresContext, getter_AddRefs(selCon));
   } else {
     // mEditableNode is a document
-    selCon = do_QueryInterface(presShell);
+    selCon = presShell;
   }
 
   if (NS_WARN_IF(!selCon)) {
@@ -1460,7 +1460,7 @@ bool IMEContentObserver::IsReflowLocked() const {
   if (NS_WARN_IF(!presContext)) {
     return false;
   }
-  nsIPresShell* presShell = presContext->GetPresShell();
+  PresShell* presShell = presContext->GetPresShell();
   if (NS_WARN_IF(!presShell)) {
     return false;
   }
@@ -1813,9 +1813,15 @@ void IMEContentObserver::IMENotificationSender::SendFocusSet() {
 
   observer->mIMEHasFocus = true;
   // Initialize selection cache with the first selection data.
+#ifdef XP_MACOSX
+  // We need to flush layout only on macOS because character coordinates are
+  // cached by cocoa with this call, but we don't have a way to update them
+  // after that.  Therefore, we need the latest layout information right now.
+  observer->UpdateSelectionCache(true);
+#else
   // We avoid flushing for focus in the general case.
   observer->UpdateSelectionCache(false);
-
+#endif  // #ifdef XP_MACOSX #else
   MOZ_LOG(sIMECOLog, LogLevel::Info,
           ("0x%p IMEContentObserver::IMENotificationSender::"
            "SendFocusSet(), sending NOTIFY_IME_OF_FOCUS...",

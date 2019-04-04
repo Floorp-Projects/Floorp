@@ -136,7 +136,7 @@ add_task(async function testReportBreakageCancel() {
     reportBreakageButton.click();
     await viewShown;
 
-    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN).parent;
+    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS).parent;
     let clickEvents = events.filter(
       e => e[1] == "security.ui.identitypopup" && e[2] == "click" && e[3] == "report_breakage");
     is(clickEvents.length, 1, "recorded telemetry for the click");

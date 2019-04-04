@@ -1796,7 +1796,7 @@ impl PrimitiveStore {
 
             let (is_passthrough, prim_local_rect) = match prim_instance.kind {
                 PrimitiveInstanceKind::Picture { pic_index, .. } => {
-                    {
+                    let is_composite = {
                         let pic = &self.pictures[pic_index.0];
                         if !pic.is_visible() {
                             continue;
@@ -1806,13 +1806,18 @@ impl PrimitiveStore {
                         // when compositing this surface. Otherwise, push the clip chain from this
                         // picture on to the active stack for any child primitive(s) to include.
                         match pic.raster_config {
-                            Some(_) => {
-                                frame_state.clip_chain_stack.push_surface();
+                            Some(ref rc) => match rc.composite_mode {
+                                PictureCompositeMode::TileCache { ..} => false,
+                                _ => true,
                             }
-                            None => {
-                                frame_state.clip_chain_stack.push_clip(prim_instance.clip_chain_id);
-                            }
+                            None => false,
                         }
+                    };
+
+                    if is_composite {
+                        frame_state.clip_chain_stack.push_surface();
+                    } else {
+                        frame_state.clip_chain_stack.push_clip(prim_instance.clip_chain_id);
                     }
 
                     self.update_visibility(
@@ -1836,13 +1841,10 @@ impl PrimitiveStore {
                     prim_instance.prim_origin = pic.local_rect.origin;
 
                     // Similar to above, pop either the clip chain or root entry off the current clip stack.
-                    match pic.raster_config {
-                        Some(_) => {
-                            frame_state.clip_chain_stack.pop_surface();
-                        }
-                        None => {
-                            frame_state.clip_chain_stack.pop_clip();
-                        }
+                    if is_composite {
+                        frame_state.clip_chain_stack.pop_surface();
+                    } else {
+                        frame_state.clip_chain_stack.pop_clip();
                     }
 
                     (pic.raster_config.is_none(), pic.local_rect)
@@ -2223,16 +2225,15 @@ impl PrimitiveStore {
 
         let is_passthrough = match pic_info {
             Some((pic_context_for_children, mut pic_state_for_children, mut prim_list)) => {
-                // Mark whether this picture has a complex coordinate system.
                 let is_passthrough = pic_context_for_children.is_passthrough;
 
                 // Similar to the logic in the visibility pass, push either the
                 // picture clip chain or a new root, depending on whether this
                 // picture is backed by a surface.
-                if is_passthrough {
-                    frame_state.clip_chain_stack.push_clip(prim_instance.clip_chain_id);
-                } else {
+                if pic_context_for_children.is_composite {
                     frame_state.clip_chain_stack.push_surface();
+                } else {
+                    frame_state.clip_chain_stack.push_clip(prim_instance.clip_chain_id);
                 }
 
                 self.prepare_primitives(
@@ -2246,10 +2247,10 @@ impl PrimitiveStore {
                 );
 
                 // And now undo the clip stack logic above.
-                if is_passthrough {
-                    frame_state.clip_chain_stack.pop_clip();
-                } else {
+                if pic_context_for_children.is_composite {
                     frame_state.clip_chain_stack.pop_surface();
+                } else {
+                    frame_state.clip_chain_stack.pop_clip();
                 }
 
                 // Restore the dependencies (borrow check dance)

@@ -239,7 +239,7 @@ struct would_substitute_feature_t
 			 hb_face_t            *face) const
   {
     for (unsigned int i = 0; i < count; i++)
-      if (hb_ot_layout_lookup_would_substitute_fast (face, lookups[i].index, glyphs, glyphs_count, zero_context))
+      if (hb_ot_layout_lookup_would_substitute (face, lookups[i].index, glyphs, glyphs_count, zero_context))
 	return true;
     return false;
   }
@@ -720,7 +720,7 @@ initial_reordering_consonant_syllable (const hb_ot_shape_plan_t *plan,
     indic_position_t last_pos = POS_START;
     for (unsigned int i = start; i < end; i++)
     {
-      if ((FLAG_UNSAFE (info[i].indic_category()) & (JOINER_FLAGS | FLAG (OT_N) | FLAG (OT_RS) | FLAG (OT_H))))
+      if ((FLAG_UNSAFE (info[i].indic_category()) & (JOINER_FLAGS | FLAG (OT_N) | FLAG (OT_RS) | MEDIAL_FLAGS | FLAG (OT_H))))
       {
 	info[i].indic_position() = last_pos;
 	if (unlikely (info[i].indic_category() == OT_H &&
@@ -965,6 +965,9 @@ insert_dotted_circles (const hb_ot_shape_plan_t *plan HB_UNUSED,
 		       hb_font_t *font,
 		       hb_buffer_t *buffer)
 {
+  if (unlikely (buffer->flags & HB_BUFFER_FLAG_DO_NOT_INSERT_DOTTED_CIRCLE))
+    return;
+
   /* Note: This loop is extra overhead, but should not be measurable.
    * TODO Use a buffer scratch flag to remove the loop. */
   bool has_broken_syllables = false;
@@ -1199,9 +1202,14 @@ final_reordering_syllable (const hb_ot_shape_plan_t *plan,
 	      goto search;
 	    }
 	  }
-	  /* -> If ZWNJ follows this halant, position is moved after it. */
-	  if (info[new_pos + 1].indic_category() == OT_ZWNJ)
-	    new_pos++;
+	  /* -> If ZWNJ follows this halant, position is moved after it.
+	   *
+	   * IMPLEMENTATION NOTES:
+	   *
+	   * This is taken care of by the state-machine. A Halant,ZWNJ is a terminating
+	   * sequence for a consonant syllable; any pre-base matras occurring after it
+	   * will belong to the subsequent syllable.
+	   */
 	}
       }
       else

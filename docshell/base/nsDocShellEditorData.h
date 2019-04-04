@@ -15,7 +15,7 @@
 #include "nsIHTMLDocument.h"
 
 class nsIDocShell;
-class nsIEditingSession;
+class nsEditingSession;
 
 class nsDocShellEditorData {
  public:
@@ -24,7 +24,7 @@ class nsDocShellEditorData {
 
   nsresult MakeEditable(bool aWaitForUriLoad);
   bool GetEditable();
-  nsresult GetEditingSession(nsIEditingSession** aResult);
+  nsEditingSession* GetEditingSession();
   mozilla::HTMLEditor* GetHTMLEditor() const { return mHTMLEditor; }
   nsresult SetHTMLEditor(mozilla::HTMLEditor* aHTMLEditor);
   void TearDownEditor();
@@ -39,7 +39,7 @@ class nsDocShellEditorData {
   nsIDocShell* mDocShell;
 
   // Only present for the content root docShell. Session is owned here.
-  nsCOMPtr<nsIEditingSession> mEditingSession;
+  RefPtr<nsEditingSession> mEditingSession;
 
   // If this frame is editable, store HTML editor here. It's owned here.
   RefPtr<mozilla::HTMLEditor> mHTMLEditor;

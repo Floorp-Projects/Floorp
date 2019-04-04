@@ -33,9 +33,6 @@ var gFrontProgressListener = {
     gFrontNotificationsPos++;
   },
 
-  onStatusChange(aWebProgress, aRequest, aStatus, aMessage) {
-  },
-
   onSecurityChange(aWebProgress, aRequest, aState) {
     if (aRequest &&
         aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank") {
@@ -83,16 +80,6 @@ var gAllProgressListener = {
     ok(gAllNotificationsPos < gAllNotifications.length, "Got an expected notification for the all notifications listener");
     is(state, gAllNotifications[gAllNotificationsPos], "Got a notification for the all notifications listener");
     gAllNotificationsPos++;
-  },
-
-  onStatusChange(aBrowser, aWebProgress, aRequest, aStatus, aMessage) {
-    if (aRequest &&
-        aRequest.QueryInterface(Ci.nsIChannel).originalURI.spec == "about:blank") {
-      // ignore initial about blank
-      return;
-    }
-    var state = "onStatusChange";
-    ok(aBrowser == gTestBrowser, state + " notification came from the correct browser");
   },
 
   onSecurityChange(aBrowser, aWebProgress, aRequest, aState) {

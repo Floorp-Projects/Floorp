@@ -388,6 +388,8 @@ extern JS::BigInt* ParseBigIntLiteral(
     JSContext* cx, const mozilla::Range<const char16_t>& chars);
 
 extern JS::BigInt* ToBigInt(JSContext* cx, JS::Handle<JS::Value> v);
+extern JS::Result<int64_t> ToBigInt64(JSContext* cx, JS::Handle<JS::Value> v);
+extern JS::Result<uint64_t> ToBigUint64(JSContext* cx, JS::Handle<JS::Value> v);
 
 }  // namespace js
 

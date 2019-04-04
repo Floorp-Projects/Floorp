@@ -40,8 +40,7 @@ function assertValidHeader(fieldName, fieldValue, headers) {
 function assertInvalidHeader(fieldName, fieldValue, headers) {
   try {
     headers.setHeader(fieldName, fieldValue, false);
-    throw "Setting (" + fieldName + ", " +
-          fieldValue + ") as header succeeded!";
+    throw new Error(`Setting (${fieldName}, ${fieldValue}) as header succeeded!`);
   } catch (e) {
     if (e.result !== Cr.NS_ERROR_INVALID_ARG)
       do_throw("Unexpected exception thrown: " + e);
@@ -105,7 +104,7 @@ function testGetHeader() {
 
   try {
     headers.getHeader(":");
-    throw "Failed to throw for invalid header";
+    throw new Error("Failed to throw for invalid header");
   } catch (e) {
     if (e.result !== Cr.NS_ERROR_INVALID_ARG)
       do_throw("headers.getHeader(':') must throw invalid arg");
@@ -113,7 +112,7 @@ function testGetHeader() {
 
   try {
     headers.getHeader("valid");
-    throw "header doesn't exist";
+    throw new Error("header doesn't exist");
   } catch (e) {
     if (e.result !== Cr.NS_ERROR_NOT_AVAILABLE)
       do_throw("shouldn't be a header named 'valid' in headers!");
@@ -158,7 +157,7 @@ function testHasHeader() {
 
   try {
     headers.hasHeader(":");
-    throw "failed to throw";
+    throw new Error("failed to throw");
   } catch (e) {
     if (e.result !== Cr.NS_ERROR_INVALID_ARG)
       do_throw(".hasHeader for an invalid name should throw");

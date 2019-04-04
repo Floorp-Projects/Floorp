@@ -383,6 +383,8 @@ void CodeGeneratorX64::wasmStore(const wasm::MemoryAccessDesc& access,
       case Scalar::Float32:
       case Scalar::Float64:
       case Scalar::Uint8Clamped:
+      case Scalar::BigInt64:
+      case Scalar::BigUint64:
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");
     }

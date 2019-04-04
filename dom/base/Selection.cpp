@@ -21,6 +21,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/RangeBoundary.h"
 #include "mozilla/Telemetry.h"
 
@@ -52,7 +53,6 @@
 #include "nsThreadUtils.h"
 
 #include "nsPresContext.h"
-#include "nsIPresShell.h"
 #include "nsCaret.h"
 
 #include "nsITimer.h"
@@ -386,15 +386,15 @@ void printRange(nsRange* aDomRange) {
 void Selection::Stringify(nsAString& aResult, FlushFrames aFlushFrames) {
   if (aFlushFrames == FlushFrames::Yes) {
     // We need FlushType::Frames here to make sure frames have been created for
-    // the selected content.  Use mFrameSelection->GetShell() which returns
+    // the selected content.  Use mFrameSelection->GetPresShell() which returns
     // null if the Selection has been disconnected (the shell is Destroyed).
-    nsCOMPtr<nsIPresShell> shell =
-        mFrameSelection ? mFrameSelection->GetShell() : nullptr;
-    if (!shell) {
+    RefPtr<PresShell> presShell =
+        mFrameSelection ? mFrameSelection->GetPresShell() : nullptr;
+    if (!presShell) {
       aResult.Truncate();
       return;
     }
-    shell->FlushPendingNotifications(FlushType::Frames);
+    presShell->FlushPendingNotifications(FlushType::Frames);
   }
 
   IgnoredErrorResult rv;
@@ -415,13 +415,13 @@ void Selection::ToStringWithFormat(const nsAString& aFormatType,
     return;
   }
 
-  nsIPresShell* shell = GetPresShell();
-  if (!shell) {
+  PresShell* presShell = GetPresShell();
+  if (!presShell) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
-  Document* doc = shell->GetDocument();
+  Document* doc = presShell->GetDocument();
 
   // Flags should always include OutputSelectionOnly if we're coming from here:
   aFlags |= nsIDocumentEncoder::OutputSelectionOnly;
@@ -531,12 +531,12 @@ nsresult Selection::GetTableCellLocationFromRange(
 
   // GetCellLayout depends on current frame, we need flush frame to get
   // nsITableCellLayout
-  nsCOMPtr<nsIPresShell> presShell = mFrameSelection->GetShell();
+  RefPtr<PresShell> presShell = mFrameSelection->GetPresShell();
   if (presShell) {
     presShell->FlushPendingNotifications(FlushType::Frames);
 
     // Since calling FlushPendingNotifications, so check whether disconnected.
-    if (!mFrameSelection || !mFrameSelection->GetShell()) {
+    if (!mFrameSelection || !mFrameSelection->GetPresShell()) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -677,20 +677,16 @@ void Selection::Disconnect() {
 }
 
 Document* Selection::GetParentObject() const {
-  nsIPresShell* shell = GetPresShell();
-  if (shell) {
-    return shell->GetDocument();
-  }
-  return nullptr;
+  PresShell* presShell = GetPresShell();
+  return presShell ? presShell->GetDocument() : nullptr;
 }
 
 DocGroup* Selection::GetDocGroup() const {
-  nsIPresShell* shell = GetPresShell();
-  if (!shell) {
+  PresShell* presShell = GetPresShell();
+  if (!presShell) {
     return nullptr;
   }
-
-  Document* doc = shell->GetDocument();
+  Document* doc = presShell->GetDocument();
   return doc ? doc->GetDocGroup() : nullptr;
 }
 
@@ -1868,7 +1864,7 @@ nsresult Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
   }
 
   nsPresContext* presContext = aFrame->PresContext();
-  nsCOMPtr<nsIPresShell> shell = presContext->PresShell();
+  RefPtr<PresShell> presShell = presContext->PresShell();
   nsRootPresContext* rootPC = presContext->GetRootPresContext();
   if (!rootPC) return NS_OK;
   nsIFrame* rootmostFrame = rootPC->PresShell()->GetRootFrame();
@@ -1881,7 +1877,7 @@ nsresult Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
   bool done = false;
   bool didScroll;
   while (true) {
-    didScroll = shell->ScrollFrameRectIntoView(
+    didScroll = presShell->ScrollFrameRectIntoView(
         aFrame, nsRect(aPoint, nsSize(0, 0)), nsIPresShell::ScrollAxis(),
         nsIPresShell::ScrollAxis(), 0);
     if (!weakFrame || !weakRootFrame) {
@@ -1889,7 +1885,8 @@ nsresult Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
     }
     if (!didScroll && !done) {
       // If aPoint is at the screen edge then try to scroll anyway, once.
-      RefPtr<nsDeviceContext> dx = shell->GetViewManager()->GetDeviceContext();
+      RefPtr<nsDeviceContext> dx =
+          presShell->GetViewManager()->GetDeviceContext();
       nsRect screen;
       dx->GetRect(screen);
       nsPoint screenPoint =
@@ -1916,7 +1913,8 @@ nsresult Selection::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
   // Start the AutoScroll timer if necessary.
   if (didScroll && mAutoScrollTimer) {
     nsPoint presContextPoint =
-        globalPoint - shell->GetRootFrame()->GetOffsetToCrossDoc(rootmostFrame);
+        globalPoint -
+        presShell->GetRootFrame()->GetOffsetToCrossDoc(rootmostFrame);
     mAutoScrollTimer->Start(presContext, presContextPoint);
   }
 
@@ -2860,22 +2858,19 @@ bool Selection::ContainsPoint(const nsPoint& aPoint) {
 }
 
 nsPresContext* Selection::GetPresContext() const {
-  nsIPresShell* shell = GetPresShell();
-  if (!shell) {
-    return nullptr;
-  }
-
-  return shell->GetPresContext();
+  PresShell* presShell = GetPresShell();
+  return presShell ? presShell->GetPresContext() : nullptr;
 }
 
-nsIPresShell* Selection::GetPresShell() const {
-  if (!mFrameSelection) return nullptr;  // nothing to do
-
-  return mFrameSelection->GetShell();
+PresShell* Selection::GetPresShell() const {
+  if (!mFrameSelection) {
+    return nullptr;  // nothing to do
+  }
+  return mFrameSelection->GetPresShell();
 }
 
 Document* Selection::GetDocument() const {
-  nsIPresShell* presShell = GetPresShell();
+  PresShell* presShell = GetPresShell();
   return presShell ? presShell->GetDocument() : nullptr;
 }
 
@@ -3050,7 +3045,7 @@ nsresult Selection::ScrollIntoView(SelectionRegion aRegion,
     return NS_OK;
   }
 
-  nsIPresShell* presShell = mFrameSelection->GetShell();
+  PresShell* presShell = mFrameSelection->GetPresShell();
   if (!presShell || !presShell->GetDocument()) {
     return NS_OK;
   }
@@ -3064,7 +3059,7 @@ nsresult Selection::ScrollIntoView(SelectionRegion aRegion,
   // From this point on, the presShell may get destroyed by the calls below, so
   // hold on to it using a strong reference to ensure the safety of the
   // accesses to frame pointers in the callees.
-  nsCOMPtr<nsIPresShell> kungFuDeathGrip(presShell);
+  RefPtr<PresShell> kungFuDeathGrip(presShell);
 
   // Now that text frame character offsets are always valid (though not
   // necessarily correct), the worst that will happen if we don't flush here
@@ -3075,8 +3070,10 @@ nsresult Selection::ScrollIntoView(SelectionRegion aRegion,
     presShell->GetDocument()->FlushPendingNotifications(FlushType::Layout);
 
     // Reget the presshell, since it might have been Destroy'ed.
-    presShell = mFrameSelection ? mFrameSelection->GetShell() : nullptr;
-    if (!presShell) return NS_OK;
+    presShell = mFrameSelection ? mFrameSelection->GetPresShell() : nullptr;
+    if (!presShell) {
+      return NS_OK;
+    }
   }
 
   //
@@ -3212,9 +3209,9 @@ nsresult Selection::NotifySelectionListeners() {
   }
 
   nsCOMPtr<Document> doc;
-  nsIPresShell* ps = GetPresShell();
-  if (ps) {
-    doc = ps->GetDocument();
+  PresShell* presShell = GetPresShell();
+  if (presShell) {
+    doc = presShell->GetDocument();
   }
 
   // We've notified all selection listeners even when some of them are removed
@@ -3377,10 +3374,11 @@ void Selection::Modify(const nsAString& aAlter, const nsAString& aDirection,
       visual ? nsFrameSelection::eVisual : nsFrameSelection::eLogical);
 
   if (aGranularity.LowerCaseEqualsLiteral("line") && NS_FAILED(rv)) {
-    nsCOMPtr<nsISelectionController> shell =
-        do_QueryInterface(frameSelection->GetShell());
-    if (!shell) return;
-    shell->CompleteMove(forward, extend);
+    RefPtr<PresShell> presShell = frameSelection->GetPresShell();
+    if (!presShell) {
+      return;
+    }
+    presShell->CompleteMove(forward, extend);
   }
 }
 

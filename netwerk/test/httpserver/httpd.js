@@ -1593,7 +1593,7 @@ RequestReader.prototype =
     try {
       metadata._httpVersion = new nsHttpVersion(match[1]);
       if (!metadata._httpVersion.atLeast(nsHttpVersion.HTTP_1_0))
-        throw "unsupported HTTP version";
+        throw new Error("unsupported HTTP version");
     } catch (e) {
       // we support HTTP/1.0 and HTTP/1.1 only
       throw HTTP_501;
@@ -4431,7 +4431,7 @@ function htmlEscape(str) {
 function nsHttpVersion(versionString) {
   var matches = /^(\d+)\.(\d+)$/.exec(versionString);
   if (!matches)
-    throw "Not a valid HTTP version!";
+    throw new Error("Not a valid HTTP version!");
 
   /** The major version number of this, as a number. */
   this.major = parseInt(matches[1], 10);
@@ -4441,7 +4441,7 @@ function nsHttpVersion(versionString) {
 
   if (isNaN(this.major) || isNaN(this.minor) ||
       this.major < 0 || this.minor < 0)
-    throw "Not a valid HTTP version!";
+    throw new Error("Not a valid HTTP version!");
 }
 nsHttpVersion.prototype =
 {

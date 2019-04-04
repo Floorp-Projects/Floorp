@@ -9,7 +9,6 @@
 #include "IMEStateManager.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/EditorBase.h"
@@ -17,6 +16,7 @@
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
@@ -90,7 +90,7 @@ void TextComposition::Destroy() {
 bool TextComposition::IsValidStateForComposition(nsIWidget* aWidget) const {
   return !Destroyed() && aWidget && !aWidget->Destroyed() &&
          mPresContext->GetPresShell() &&
-         !mPresContext->GetPresShell()->IsDestroying();
+         !mPresContext->PresShell()->IsDestroying();
 }
 
 bool TextComposition::MaybeDispatchCompositionUpdate(

@@ -20,7 +20,6 @@ XPIDL_SOURCES += [
     'nsIControllerCommand.idl',
     'nsIControllerCommandTable.idl',
     'nsIControllerContext.idl',
-    'nsPICommandUpdater.idl',
 ]
 
 XPIDL_MODULE = 'commandhandler'

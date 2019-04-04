@@ -55,7 +55,9 @@ struct SelectionCustomColors {
   mozilla::Maybe<nscolor> mAltBackgroundColor;
 };
 
-class nsIPresShell;
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
 
 /** PeekOffsetStruct is used to group various arguments (both input and output)
  *  that are passed to nsFrame::PeekOffset(). See below for the description of
@@ -221,15 +223,15 @@ class nsFrameSelection final {
    * Init will initialize the frame selector with the necessary pres shell to
    * be used by most of the methods
    *
-   * @param aShell is the parameter to be used for most of the other calls for
-   * callbacks etc
+   * @param aPresShell is the parameter to be used for most of the other calls
+   * for callbacks etc
    *
    * @param aLimiter limits the selection to nodes with aLimiter parents
    *
    * @param aAccessibleCaretEnabled true if we should enable the accessible
    * caret.
    */
-  void Init(nsIPresShell* aShell, nsIContent* aLimiter,
+  void Init(mozilla::PresShell* aPresShell, nsIContent* aLimiter,
             bool aAccessibleCaretEnabled);
 
   /**
@@ -713,7 +715,7 @@ class nsFrameSelection final {
   /*unsafe*/
   nsresult DeleteFromDocument();
 
-  nsIPresShell* GetShell() const { return mShell; }
+  mozilla::PresShell* GetPresShell() const { return mPresShell; }
 
   void DisconnectFromPresShell();
   nsresult ClearNormalSelection();
@@ -726,7 +728,7 @@ class nsFrameSelection final {
                      uint32_t aContentEndOffset, CaretAssociateHint aHint,
                      bool aContinueSelection, bool aMultipleSelection);
 
-  void BidiLevelFromMove(nsIPresShell* aPresShell, nsIContent* aNode,
+  void BidiLevelFromMove(mozilla::PresShell* aPresShell, nsIContent* aNode,
                          uint32_t aContentOffset, nsSelectionAmount aAmount,
                          CaretAssociateHint aHint);
   void BidiLevelFromClick(nsIContent* aNewFocus, uint32_t aContentOffset);
@@ -848,7 +850,7 @@ class nsFrameSelection final {
   // Limit selection navigation to a descendant of this node.
   nsCOMPtr<nsIContent> mAncestorLimiter;
 
-  nsIPresShell* mShell = nullptr;
+  mozilla::PresShell* mPresShell = nullptr;
   // Reason for notifications of selection changing.
   int16_t mSelectionChangeReason = nsISelectionListener::NO_REASON;
   // For visual display purposes.

@@ -7,6 +7,7 @@
 #include "nsBidiPresUtils.h"
 
 #include "mozilla/IntegerRange.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Text.h"
 
 #include "gfxContext.h"
@@ -489,7 +490,7 @@ static bool IsBidiLeaf(nsIFrame* aFrame) {
 static nsresult SplitInlineAncestors(nsContainerFrame* aParent,
                                      nsIFrame* aFrame) {
   nsPresContext* presContext = aParent->PresContext();
-  nsIPresShell* presShell = presContext->PresShell();
+  PresShell* presShell = presContext->PresShell();
   nsIFrame* frame = aFrame;
   nsContainerFrame* parent = aParent;
   nsContainerFrame* newParent;
@@ -579,7 +580,7 @@ static nsresult CreateContinuation(nsIFrame* aFrame, nsIFrame** aNewFrame,
   *aNewFrame = nullptr;
 
   nsPresContext* presContext = aFrame->PresContext();
-  nsIPresShell* presShell = presContext->PresShell();
+  PresShell* presShell = presContext->PresShell();
   NS_ASSERTION(presShell,
                "PresShell must be set on PresContext before calling "
                "nsBidiPresUtils::CreateContinuation");

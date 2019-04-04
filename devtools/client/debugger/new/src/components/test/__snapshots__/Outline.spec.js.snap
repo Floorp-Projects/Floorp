@@ -79,7 +79,7 @@ exports[`Outline renders outline renders functions by function class 1`] = `
     <ul
       className="outline-list devtools-monospace"
     >
-      <div
+      <li
         className="outline-list__class"
         key="x_klass"
       >
@@ -118,8 +118,8 @@ exports[`Outline renders outline renders functions by function class 1`] = `
             />
           </li>
         </ul>
-      </div>
-      <div
+      </li>
+      <li
         className="outline-list__class"
         key="a_klass"
       >
@@ -178,7 +178,7 @@ exports[`Outline renders outline renders functions by function class 1`] = `
             />
           </li>
         </ul>
-      </div>
+      </li>
     </ul>
     <div
       className="outline-footer bottom"
@@ -206,7 +206,7 @@ exports[`Outline renders outline renders functions by function class, alphabetic
     <ul
       className="outline-list devtools-monospace"
     >
-      <div
+      <li
         className="outline-list__class"
         key="x_klass"
       >
@@ -245,8 +245,8 @@ exports[`Outline renders outline renders functions by function class, alphabetic
             />
           </li>
         </ul>
-      </div>
-      <div
+      </li>
+      <li
         className="outline-list__class"
         key="a_klass"
       >
@@ -305,7 +305,7 @@ exports[`Outline renders outline renders functions by function class, alphabetic
             />
           </li>
         </ul>
-      </div>
+      </li>
     </ul>
     <div
       className="outline-footer bottom"

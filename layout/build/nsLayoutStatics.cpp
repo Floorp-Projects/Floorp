@@ -81,6 +81,8 @@
 #  include "nsMenuBarListener.h"
 #endif
 
+#include "mozilla/dom/UIDirectionManager.h"
+
 #include "CubebUtils.h"
 #include "WebAudioUtils.h"
 
@@ -265,6 +267,8 @@ nsresult nsLayoutStatics::Initialize() {
   nsMenuBarListener::InitializeStatics();
 #endif
 
+  UIDirectionManager::Initialize();
+
   CacheObserver::Init();
 
   IMEStateManager::Init();
@@ -332,6 +336,7 @@ void nsLayoutStatics::Shutdown() {
 #ifdef MOZ_XUL
   nsXULPopupManager::Shutdown();
 #endif
+  UIDirectionManager::Shutdown();
   StorageObserver::Shutdown();
   txMozillaXSLTProcessor::Shutdown();
   Attr::Shutdown();

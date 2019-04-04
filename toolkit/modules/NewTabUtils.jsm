@@ -1617,7 +1617,7 @@ var Links = {
    * @return The links in the grid.
    */
   getLinks: function Links_getLinks() {
-    let pinnedLinks = Array.slice(PinnedLinks.links);
+    let pinnedLinks = Array.from(PinnedLinks.links);
     let links = this._getMergedProviderLinks();
 
     let sites = new Set();

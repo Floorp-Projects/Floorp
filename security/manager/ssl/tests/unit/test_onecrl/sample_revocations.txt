@@ -19,19 +19,21 @@ Neither is this issuer, though the serial is fine
 dGVzdA==
  in this case, issuer is fine but not the serial
 # Next two entries; we can add valid base-64 encoded data for some basic tests:
-# issuer is "some imaginary issuer" base-64 encoded
-# and serial "serial." base-64 encoded
-c29tZSBpbWFnaW5hcnkgaXNzdWVy
- c2VyaWFsLg==
-# issuer is "another imaginary issuer" base-64 encoded
-# serials are "serial." and "serial2." base-64 encoded
-YW5vdGhlciBpbWFnaW5hcnkgaXNzdWVy
- c2VyaWFsLg==
+# issuer is the base-64 encoded subject DN for the shared Test CA
+# serial is the base-64 encoded integer 42
+MBIxEDAOBgNVBAMMB1Rlc3QgQ0E=
+ Kg==
+# issuer is the base-64 encoded subject DN for the shared Test Intermediate
+# the first serial is the base-64 encoded integer 78
+# the second serial is the base-64 encoded integer 31
+MBwxGjAYBgNVBAMMEVRlc3QgSW50ZXJtZWRpYXRl
+ Tg==
+ Hw==
  c2VyaWFsMi4=
-# subject is "some imaginary subject", base-64 encoded
-# pubKeyHash is the sha256 hash of "some imaginary pubkey" base-64 encoded
-c29tZSBpbWFnaW5hcnkgc3ViamVjdA==
-	blBNgTxORaii2Sqe9bQcYsmfJ3kiXOLiKLzQNJ2wZYE=
+# subject is base-64 encoded subject DN "CN=EE Revoked By Subject and PubKey"
+# pubKeyHash is the base-64 encoded sha256 hash of the shared RSA SPKI
+MCsxKTAnBgNVBAMMIEVFIFJldm9rZWQgQnkgU3ViamVjdCBhbmQgUHViS2V5
+	VCIlmPM9NkgFQtrs4Oa5TeFcDu6MWRTKSNdePEhOgD8
 # and some more data to ensure that mixed items don't cause parsing failure
 a DN
  a serial

@@ -925,6 +925,13 @@ class WorkerPrivate : public RelativeTimeline {
                             nsIEventTarget* aSyncLoopTarget,
                             const MutexAutoLock& aProofOfLock);
 
+  // This method dispatches a simple runnable that starts the shutdown procedure
+  // after a self.close(). This method is called after a ClearMainEventQueue()
+  // to be sure that the canceling runnable is the only one in the queue.  We
+  // need this async operation to be sure that all the current JS code is
+  // executed.
+  void DispatchCancelingRunnable();
+
   class EventTarget;
   friend class EventTarget;
   friend class mozilla::dom::WorkerHolder;
@@ -1073,9 +1080,16 @@ class WorkerPrivate : public RelativeTimeline {
   };
   ThreadBound<WorkerThreadAccessible> mWorkerThreadAccessible;
 
+  uint32_t mPostSyncLoopOperations;
+
+  // List of operations to do at the end of the last sync event loop.
+  enum {
+    ePendingEventQueueClearing = 0x01,
+    eDispatchCancelingRunnable = 0x02,
+  };
+
   bool mParentWindowPaused;
 
-  bool mPendingEventQueueClearing;
   bool mCancelAllPendingRunnables;
   bool mWorkerScriptExecutedSuccessfully;
   bool mFetchHandlerWasAdded;

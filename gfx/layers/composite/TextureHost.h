@@ -57,6 +57,7 @@ class SurfaceDescriptor;
 class HostIPCAllocator;
 class ISurfaceAllocator;
 class MacIOSurfaceTextureHostOGL;
+class SurfaceTextureHost;
 class TextureHostOGL;
 class TextureReadLock;
 class TextureSourceOGL;
@@ -623,6 +624,7 @@ class TextureHost : public AtomicRefCountedWithFinalize<TextureHost> {
     return nullptr;
   }
   virtual WebRenderTextureHost* AsWebRenderTextureHost() { return nullptr; }
+  virtual SurfaceTextureHost* AsSurfaceTextureHost() { return nullptr; }
 
   // Create the corresponding RenderTextureHost type of this texture, and
   // register the RenderTextureHost into render thread.

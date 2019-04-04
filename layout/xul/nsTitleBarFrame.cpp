@@ -17,6 +17,7 @@
 #include "nsDisplayList.h"
 #include "nsContentUtils.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/MouseEventBinding.h"
 
 using namespace mozilla;
@@ -122,7 +123,7 @@ nsresult nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
                             aPresContext->CSSToDevPixelScale();
           menuPopupFrame->MoveTo(RoundedToInt(cssPos), false);
         } else {
-          nsIPresShell* presShell = aPresContext->PresShell();
+          mozilla::PresShell* presShell = aPresContext->PresShell();
           nsPIDOMWindowOuter* window = presShell->GetDocument()->GetWindow();
           if (window) {
             window->MoveBy(nsMoveBy.x, nsMoveBy.y);

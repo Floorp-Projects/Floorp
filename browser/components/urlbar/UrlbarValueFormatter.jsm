@@ -31,6 +31,12 @@ class UrlbarValueFormatter {
     // This is used only as an optimization to avoid removing formatting in
     // the _remove* format methods when no formatting is actually applied.
     this._formattingApplied = false;
+
+    this.window.addEventListener("resize", this);
+  }
+
+  uninit() {
+    this.window.removeEventListener("resize", this);
   }
 
   get inputField() {
@@ -59,7 +65,7 @@ class UrlbarValueFormatter {
       this._formatSearchAlias();
   }
 
-  ensureFormattedHostVisible(urlMetaData) {
+  _ensureFormattedHostVisible(urlMetaData) {
     // Used to avoid re-entrance in the requestAnimationFrame callback.
     let instance = this._formatURLInstance = {};
 
@@ -194,7 +200,7 @@ class UrlbarValueFormatter {
                                         schemeWSlashes.length + "ch");
     }
 
-    this.ensureFormattedHostVisible(urlMetaData);
+    this._ensureFormattedHostVisible(urlMetaData);
 
     if (!UrlbarPrefs.get("formatting.enabled")) {
       return false;
@@ -410,5 +416,35 @@ class UrlbarValueFormatter {
       return null;
     }
     return action.params.alias || null;
+  }
+
+  /**
+   * Passes DOM events to the _on_<event type> methods.
+   * @param {Event} event
+   *   DOM event.
+   */
+  handleEvent(event) {
+    let methodName = "_on_" + event.type;
+    if (methodName in this) {
+      this[methodName](event);
+    } else {
+      throw new Error("Unrecognized UrlbarValueFormatter event: " + event.type);
+    }
+  }
+
+  _on_resize(event) {
+    if (event.target != this.window) {
+      return;
+    }
+    // Make sure the host remains visible in the input field when the window is
+    // resized.  We don't want to hurt resize performance though, so do this
+    // only after resize events have stopped and a small timeout has elapsed.
+    if (this._resizeThrottleTimeout) {
+      this.window.clearTimeout(this._resizeThrottleTimeout);
+    }
+    this._resizeThrottleTimeout = this.window.setTimeout(() => {
+      this._resizeThrottleTimeout = null;
+      this._ensureFormattedHostVisible();
+    }, 100);
   }
 }

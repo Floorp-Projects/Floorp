@@ -105,15 +105,18 @@ hb_vector_size_impl_t const _hb_NullPool[(HB_NULL_POOL_SIZE + sizeof (hb_vector_
 
 /* Generic nul-content Null objects. */
 template <typename Type>
-static inline Type const & Null () {
-  static_assert (hb_null_size (Type) <= HB_NULL_POOL_SIZE, "Increase HB_NULL_POOL_SIZE.");
-  return *reinterpret_cast<Type const *> (_hb_NullPool);
-}
+struct Null {
+  static Type const & get_null ()
+  {
+    static_assert (hb_null_size (Type) <= HB_NULL_POOL_SIZE, "Increase HB_NULL_POOL_SIZE.");
+    return *reinterpret_cast<Type const *> (_hb_NullPool);
+  }
+};
 template <typename QType>
 struct NullHelper
 {
   typedef typename hb_remove_const (typename hb_remove_reference (QType)) Type;
-  static const Type & get_null () { return Null<Type> (); }
+  static const Type & get_null () { return Null<Type>::get_null (); }
 };
 #define Null(Type) NullHelper<Type>::get_null ()
 
@@ -122,9 +125,11 @@ struct NullHelper
 	} /* Close namespace. */ \
 	extern HB_INTERNAL const unsigned char _hb_Null_##Namespace##_##Type[Namespace::Type::null_size]; \
 	template <> \
-	/*static*/ inline const Namespace::Type& Null<Namespace::Type> () { \
-	  return *reinterpret_cast<const Namespace::Type *> (_hb_Null_##Namespace##_##Type); \
-	} \
+	struct Null<Namespace::Type> { \
+	  static Namespace::Type const & get_null () { \
+	    return *reinterpret_cast<const Namespace::Type *> (_hb_Null_##Namespace##_##Type); \
+	  } \
+	}; \
 	namespace Namespace { \
 	static_assert (true, "Just so we take semicolon after.")
 #define DEFINE_NULL_NAMESPACE_BYTES(Namespace, Type) \
@@ -134,10 +139,12 @@ struct NullHelper
 #define DECLARE_NULL_INSTANCE(Type) \
 	extern HB_INTERNAL const Type _hb_Null_##Type; \
 	template <> \
-	/*static*/ inline const Type& Null<Type> () { \
-	  return _hb_Null_##Type; \
-	} \
-static_assert (true, "Just so we take semicolon after.")
+	struct Null<Type> { \
+	  static Type const & get_null () { \
+	    return _hb_Null_##Type; \
+	  } \
+	}; \
+	static_assert (true, "Just so we take semicolon after.")
 #define DEFINE_NULL_INSTANCE(Type) \
 	const Type _hb_Null_##Type
 
