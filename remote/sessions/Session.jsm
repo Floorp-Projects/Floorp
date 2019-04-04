@@ -8,7 +8,7 @@ var EXPORTED_SYMBOLS = ["Session"];
 
 const {ParentProcessDomains} = ChromeUtils.import("chrome://remote/content/domains/ParentProcessDomains.jsm");
 const {Domains} = ChromeUtils.import("chrome://remote/content/domains/Domains.jsm");
-const {formatError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
+const {RemoteAgentError} = ChromeUtils.import("chrome://remote/content/Error.jsm");
 
 /**
  * A session represents exactly one client WebSocket connection.
@@ -71,7 +71,7 @@ class Session {
       id,
       sessionId: this.id,
       error: {
-        message: formatError(error, {stack: true}),
+        message: RemoteAgentError.format(error, {stack: true}),
       },
     });
   }
