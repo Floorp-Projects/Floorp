@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Alert dialog confirmation before download a file, this is the title. -->
+    <string name="mozac_feature_downloads_dialog_title">Download file</string>
+    <!-- Alert dialog confirmation before download a file, this is the positive action. -->
+    <string name="mozac_feature_downloads_dialog_download">Scarica</string>
+    <!-- Alert dialog confirmation before download a file, this is the negative action. -->
+    <string name="mozac_feature_downloads_dialog_cancel">Annulla</string>
+    </resources>
