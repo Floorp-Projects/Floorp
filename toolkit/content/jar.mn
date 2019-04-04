@@ -82,7 +82,7 @@ toolkit.jar:
    content/global/bindings/timekeeper.js       (widgets/timekeeper.js)
    content/global/bindings/timepicker.js       (widgets/timepicker.js)
    content/global/bindings/toolbarbutton.xml   (widgets/toolbarbutton.xml)
-*  content/global/bindings/wizard.xml          (widgets/wizard.xml)
+   content/global/bindings/wizard.xml          (widgets/wizard.xml)
    content/global/elements/autocomplete-popup.js              (widgets/autocomplete-popup.js)
    content/global/elements/autocomplete-richlistitem.js       (widgets/autocomplete-richlistitem.js)
    content/global/elements/browser-custom-element.js          (widgets/browser-custom-element.js)
