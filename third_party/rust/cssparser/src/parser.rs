@@ -421,6 +421,16 @@ impl<'i: 't, 't> Parser<'i, 't> {
         self.new_error(BasicParseErrorKind::UnexpectedToken(token))
     }
 
+    /// Create a new unexpected token or EOF ParseError at the current location
+    #[inline]
+    pub fn new_error_for_next_token<E>(&mut self) -> ParseError<'i, E> {
+        let token = match self.next() {
+            Ok(token) => token.clone(),
+            Err(e) => return e.into()
+        };
+        self.new_error(BasicParseErrorKind::UnexpectedToken(token))
+    }
+
     /// Return the current internal state of the parser (including position within the input).
     ///
     /// This state can later be restored with the `Parser::reset` method.

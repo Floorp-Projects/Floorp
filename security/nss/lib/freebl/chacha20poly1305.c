@@ -157,6 +157,7 @@ ChaCha20Poly1305_DestroyContext(ChaCha20Poly1305Context *ctx, PRBool freeit)
 #endif
 }
 
+#ifndef NSS_DISABLE_CHACHAPOLY
 void
 ChaCha20Xor(uint8_t *output, uint8_t *block, uint32_t len, uint8_t *k,
             uint8_t *nonce, uint32_t ctr)
@@ -167,6 +168,7 @@ ChaCha20Xor(uint8_t *output, uint8_t *block, uint32_t len, uint8_t *k,
         Hacl_Chacha20_chacha20(output, block, len, k, nonce, ctr);
     }
 }
+#endif /* NSS_DISABLE_CHACHAPOLY */
 
 SECStatus
 ChaCha20Poly1305_Seal(const ChaCha20Poly1305Context *ctx, unsigned char *output,
