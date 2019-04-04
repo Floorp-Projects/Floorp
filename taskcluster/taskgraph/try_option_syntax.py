@@ -336,6 +336,9 @@ class TryOptionSyntax(object):
         results = []
         for build in platform_arg.split(','):
             results.append(build)
+            if build in ('macosx64',):
+                results.append('macosx64-shippable')
+                logger.info("adding macosx64-shippable for try syntax using macosx64.")
             if build in RIDEALONG_BUILDS:
                 results.extend(RIDEALONG_BUILDS[build])
                 logger.info("platform %s triggers ridealong builds %s" %
