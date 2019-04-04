@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1553847044919" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1554301860877" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2677,6 +2677,50 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="d78262b0-ecfc-475e-9759-f7319451cb43" id="/^((\{70c2cef0-6cc6-41b8-ad6b-bbd11182a101\})|(\{a0366612-376e-47e3-b5fa-b805c7176088\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="b32b14f5-0024-48fb-a4b6-1496add1dac0" id="/^((\{7dd03112-82a0-4c82-9957-117dedaac14a\})|(\{59fd3cac-1a4d-4f0f-a129-c241b203eb51\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="64fc6369-b504-4920-abab-f2cf3cc5424a" id="/^((\{00f77164-eca9-4353-916d-8ea493a54c8d\})|(\{0716b2a5-8181-45b8-b675-915e38903761\})|(\{26124967-7e32-4577-b998-7296c68d3eb9\})|(\{273052bc-fc67-4fc1-a6fd-e62acc3ddad1\})|(\{4b5f53ac-36ac-4018-80cb-f1106f60ef96\})|(\{61065f61-51aa-462c-aca0-f1addbfa202b\})|(\{63383006-d617-4a00-9ca7-30a6864782ee\})|(\{7629c987-59ea-4e2f-bcde-b55646ecd268\})|(\{78e8c8fa-32ce-432b-9a40-b615bff7cd96\})|(\{8e9c05df-e0f5-479f-abb9-858650cb471e\})|(\{947f1ac0-09f2-4016-a345-dad0d2ee8f57\})|(\{9b9f8124-47bc-4699-8557-45573995b0af\})|(\{ab159932-d1dd-4d16-9332-8302a01e0ced\})|(\{b7340504-f6ba-43cb-8bd6-5ead88d29898\})|(\{bcb9265f-20fd-4311-a33f-212c2d08043a\})|(\{f8701822-2814-4d5d-af01-cf7fde4fd510\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="7c705f73-9d1d-4ee9-ad11-347d18729adb" id="{2256fabf-19f1-4e12-9951-5d126dd9e928}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="c528f48a-9b2c-48ca-8b4a-eac442cc0bd0" id="{91f77263-866e-4acb-a569-f66ac47889f8}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="93dc42cc-4ff3-460d-a8f2-12f1d947b530" id="{a3f765c3-8dde-4467-ad6e-fd70c3333e50}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="5b4e4e75-cc96-4ca9-aa9f-6a2d2f6cd96a" id="{a9c33302-4c97-11e9-9a9d-af400df725e1}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="1809ea7a-8155-4ae7-8c83-ee7c749d30f5" id="{e555c358-121b-13fa-bf23-bb57da32d184}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="9c75fe89-7011-47ad-b213-57f5a81a4c89" id="{03dfffe0-509f-11e9-aa00-e7e13d49f3de}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="9fde5729-9be6-4955-9627-67742c5ed62a" id="sourcegraph-for-firefox@sourcegraph.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="1"/>
+    </emItem>
+    <emItem blockID="aacb25e1-71c5-4bee-ad16-e39e732210ba" id="/^((@searchlock-staging-automation)|(@searchlock-automation)|(@searchlock-fx)|(@searchlock-staging)|(jid1-vRJA7N8VwBoiXw@jetpack))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="04b2954e-4f83-4557-968e-2139a277bf1c" id="/^((\{6ab41e83-2a91-4c2a-babb-86107a1d1f75\})|(\{d84a9d0d-7a31-459e-b45a-2ad111884d1f\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
