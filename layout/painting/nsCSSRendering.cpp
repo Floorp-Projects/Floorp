@@ -634,7 +634,7 @@ ImgDrawResult nsCSSRendering::PaintBorder(
   NS_FOR_CSS_SIDES(side) {
     nscolor color = aComputedStyle->GetVisitedDependentColor(
         nsStyleBorder::BorderColorFieldFor(side));
-    newStyleBorder.BorderColorFor(side) = StyleComplexColor::FromColor(color);
+    newStyleBorder.BorderColorFor(side) = StyleColor::FromColor(color);
   }
   return PaintBorderWithStyleBorder(aPresContext, aRenderingContext, aForFrame,
                                     aDirtyRect, aBorderArea, newStyleBorder,
@@ -660,7 +660,7 @@ Maybe<nsCSSBorderRenderer> nsCSSRendering::CreateBorderRenderer(
   NS_FOR_CSS_SIDES(side) {
     nscolor color = aComputedStyle->GetVisitedDependentColor(
         nsStyleBorder::BorderColorFieldFor(side));
-    newStyleBorder.BorderColorFor(side) = StyleComplexColor::FromColor(color);
+    newStyleBorder.BorderColorFor(side) = StyleColor::FromColor(color);
   }
   return CreateBorderRendererWithStyleBorder(
       aPresContext, aDrawTarget, aForFrame, aDirtyRect, aBorderArea,
@@ -1946,7 +1946,7 @@ static bool IsOpaqueBorderEdge(const nsStyleBorder& aBorder,
   if (aBorder.mBorderImageSource.GetType() != eStyleImageType_Null)
     return false;
 
-  StyleComplexColor color = aBorder.BorderColorFor(aSide);
+  StyleColor color = aBorder.BorderColorFor(aSide);
   // We don't know the foreground color here, so if it's being used
   // we must assume it might be transparent.
   return !color.MaybeTransparent();
