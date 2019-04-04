@@ -82,6 +82,8 @@ include = [
   "LengthPercentageOrAuto",
   "LineHeight",
   "NonNegativeLengthPercentageOrAuto",
+  "LengthOrAuto",
+  "NonNegativeLengthOrAuto",
   "Rect",
   "IntersectionObserverRootMargin",
   "Size",
@@ -199,6 +201,10 @@ renaming_overrides_prefixing = true
   inline float ToPercentage() const;
   inline bool HasPercent() const;
   inline bool HasLengthAndPercentage() const;
+
+  // Just some convenient aliases for LengthOrAuto, to avoid confusing naming.
+  inline bool IsLength() const;
+  inline const StyleLength& AsLength() const;
 """
 
 "GenericSize" = """

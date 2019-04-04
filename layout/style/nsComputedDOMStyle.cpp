@@ -1065,15 +1065,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetColumnCount() {
   return val.forget();
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetColumnWidth() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-
-  // XXX fix the auto case. When we actually have a column frame, I think
-  // we should return the computed column width.
-  SetValueToCoord(val, StyleColumn()->mColumnWidth, true);
-  return val.forget();
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetColumnRuleWidth() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetAppUnits(StyleColumn()->GetComputedColumnRuleWidth());

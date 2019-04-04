@@ -331,7 +331,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
 
   /* Column properties */
   already_AddRefed<CSSValue> DoGetColumnCount();
-  already_AddRefed<CSSValue> DoGetColumnWidth();
   already_AddRefed<CSSValue> DoGetColumnRuleWidth();
 
   /* CSS Transitions */
