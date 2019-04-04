@@ -185,10 +185,32 @@ void nsSHistory::EvictContentViewerForEntry(nsISHEntry* aEntry) {
   }
 }
 
-nsSHistory::nsSHistory()
-    : mIndex(-1), mRequestedIndex(-1), mRootDocShell(nullptr) {
+nsSHistory::nsSHistory(nsDocShell* aRootDocShell)
+    : mIndex(-1), mRequestedIndex(-1), mRootDocShell(aRootDocShell) {
   // Add this new SHistory object to the list
   gSHistoryList.insertBack(this);
+
+  // Init mHistoryTracker on setting mRootDocShell so we can bind its event
+  // target to the tabGroup.
+  nsCOMPtr<nsPIDOMWindowOuter> win = mRootDocShell->GetWindow();
+  if (win) {
+    // Seamonkey moves shistory between <xul:browser>s when restoring a tab.
+    // Let's try not to break our friend too badly...
+    if (mHistoryTracker) {
+      NS_WARNING(
+          "Change the root docshell of a shistory is unsafe and "
+          "potentially problematic.");
+      mHistoryTracker->AgeAllGenerations();
+    }
+
+    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(win);
+
+    mHistoryTracker = mozilla::MakeUnique<HistoryTracker>(
+        this,
+        mozilla::Preferences::GetUint(CONTENT_VIEWER_TIMEOUT_SECONDS,
+                                      CONTENT_VIEWER_TIMEOUT_SECONDS_DEFAULT),
+        global->EventTargetFor(mozilla::TaskCategory::Other));
+  }
 }
 
 nsSHistory::~nsSHistory() {}
@@ -573,6 +595,11 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist) {
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP_(void)
+nsSHistory::ClearRootDocShell() {
+  mRootDocShell = nullptr;
 }
 
 /* Get size of the history list */
@@ -1454,35 +1481,4 @@ nsresult nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
 
   // Time to initiate a document load
   return aFrameDS->LoadURI(loadState);
-}
-
-NS_IMETHODIMP_(void)
-nsSHistory::SetRootDocShell(nsIDocShell* aDocShell) {
-  mRootDocShell = aDocShell;
-
-  // Init mHistoryTracker on setting mRootDocShell so we can bind its event
-  // target to the tabGroup.
-  if (mRootDocShell) {
-    nsCOMPtr<nsPIDOMWindowOuter> win = mRootDocShell->GetWindow();
-    if (!win) {
-      return;
-    }
-
-    // Seamonkey moves shistory between <xul:browser>s when restoring a tab.
-    // Let's try not to break our friend too badly...
-    if (mHistoryTracker) {
-      NS_WARNING(
-          "Change the root docshell of a shistory is unsafe and "
-          "potentially problematic.");
-      mHistoryTracker->AgeAllGenerations();
-    }
-
-    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(win);
-
-    mHistoryTracker = mozilla::MakeUnique<HistoryTracker>(
-        this,
-        mozilla::Preferences::GetUint(CONTENT_VIEWER_TIMEOUT_SECONDS,
-                                      CONTENT_VIEWER_TIMEOUT_SECONDS_DEFAULT),
-        global->EventTargetFor(mozilla::TaskCategory::Other));
-  }
 }

@@ -18,10 +18,7 @@ namespace mozilla {
 namespace dom {
 
 ChildSHistory::ChildSHistory(nsDocShell* aDocShell)
-    : mDocShell(aDocShell), mHistory(new nsSHistory()) {
-  MOZ_ASSERT(mDocShell);
-  mHistory->SetRootDocShell(mDocShell);
-}
+    : mDocShell(aDocShell), mHistory(new nsSHistory(aDocShell)) {}
 
 ChildSHistory::~ChildSHistory() {}
 

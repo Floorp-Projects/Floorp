@@ -58,7 +58,7 @@ class nsSHistory final : public mozilla::LinkedListElement<nsSHistory>,
                                  // whose children will correspond to aEntry
   };
 
-  nsSHistory();
+  explicit nsSHistory(nsDocShell* aRootDocShell);
   NS_DECL_ISUPPORTS
   NS_DECL_NSISHISTORY
 
