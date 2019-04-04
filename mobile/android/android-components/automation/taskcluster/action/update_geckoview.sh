@@ -7,29 +7,61 @@ set -ex
 
 # TODO: This script should only run if there's no PR open already.
 
+CHANNEL=$1
+
 # Setup git
 git config --global user.email "sebastian@mozilla.com"
 git config --global user.name "MickeyMoz"
 
 # Use Gradle plugin to look for new GeckoView version (non major version update!)
-./gradlew updateGVNightlyVersion
+if [ "$CHANNEL" = "nightly" ]
+then
+    ./gradlew updateGVNightlyVersion
+elif [ "$CHANNEL" = "beta" ]
+then
+    ./gradlew updateGVBetaVersion
+elif [ "$CHANNEL" = "release" ]
+then
+    ./gradlew updateGVStableVersion
+else
+    echo "Unknown channel: $CHANNEL"
+    exit 1
+fi
 
 # Timestamp used in branch name and commit
 TIMESTAMP=`date "+%Y%m%d-%H%M%S"`
-BRANCH="GV-$TIMESTAMP"
+BRANCH="GV-$CHANNEL-$TIMESTAMP"
 
 # Create a branch and commit local changes
 git checkout -b $BRANCH
 git add buildSrc/src/main/java/Gecko.kt
 git commit -m \
-	"Update GeckoView ($TIMESTAMP)" \
+	"Update GeckoView ($CHANNEL) ($TIMESTAMP)" \
 	--author="MickeyMoz <sebastian@mozilla.com>" \
-|| { echo "No new GeckoView version available"; exit 0; }
+|| { echo "No new GeckoView version ($CHANNEL) available"; exit 0; }
 
 # Build and test engine component as well as sample browser
-./gradlew browser-engine-gecko-nightly:assemble \
+if [ "$CHANNEL" = "nightly" ]
+then
+    ./gradlew browser-engine-gecko-nightly:assemble \
           browser-engine-gecko-nightly:test \
           sample-browser:assembleGeckoNightlyArm
+elif [ "$CHANNEL" = "beta" ]
+then
+    ./gradlew browser-engine-gecko-beta:assemble \
+          browser-engine-gecko-beta:test \
+          sample-browser:assembleGeckoBetaArm
+elif [ "$CHANNEL" = "release" ]
+then
+    ./gradlew browser-engine-gecko:assemble \
+          browser-engine-gecko:test \
+          sample-browser:assembleGeckoReleaseArm
+else
+    echo "Unknown channel: $CHANNEL"
+    exit 1
+fi
+
+exit 28
 
 # Get token for using GitHub
 python automation/taskcluster/helper/get-secret.py \
