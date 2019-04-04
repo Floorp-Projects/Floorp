@@ -1226,7 +1226,7 @@ nsStyleGradient* Gecko_CreateGradient(uint8_t aShape, uint8_t aSize,
   result->mRadiusY.SetNoneValue();
 
   nsStyleGradientStop dummyStop = {nsStyleCoord(eStyleUnit_None),
-                                   StyleComplexColor::Black(), 0};
+                                   StyleColor::Black(), 0};
 
   for (uint32_t i = 0; i < aStopCount; i++) {
     result->mStops.AppendElement(dummyStop);
