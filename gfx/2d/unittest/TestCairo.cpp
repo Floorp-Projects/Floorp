@@ -27,8 +27,7 @@ static void TryCircle(double centerX, double centerY, double radius) {
   cairo_destroy(cairo);
 }
 
-TEST(Cairo, Simple)
-{
+TEST(Cairo, Simple) {
   TryCircle(0.0, 0.0, 14.0);
   TryCircle(0.0, 1.0, 22.4);
   TryCircle(1.0, 0.0, 1422.4);
@@ -36,8 +35,7 @@ TEST(Cairo, Simple)
   TryCircle(-10.0, 1.0, -2);
 }
 
-TEST(Cairo, Bug825721)
-{
+TEST(Cairo, Bug825721) {
   // OK:
   TryCircle(0.0, 0.0, 8761126469220696064.0);
   TryCircle(0.0, 1.0, 8761126469220696064.0);
@@ -52,8 +50,7 @@ TEST(Cairo, Bug825721)
   TryCircle(0.0, 1.0, 5761126469220696064.0);
 }
 
-TEST(Cairo, Bug1063486)
-{
+TEST(Cairo, Bug1063486) {
   double x1, y1, x2, y2;
   const double epsilon = .01;
 

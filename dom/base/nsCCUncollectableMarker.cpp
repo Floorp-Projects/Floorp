@@ -426,9 +426,7 @@ nsresult nsCCUncollectableMarker::Observe(nsISupports* aSubject,
       xpc_UnmarkSkippableJSHolders();
       break;
     }
-    default: {
-      break;
-    }
+    default: { break; }
   }
 
   return NS_OK;

@@ -11,24 +11,21 @@
 
 using namespace mozilla::intl;
 
-TEST(Intl_Locale_LocaleService, GetAppLocalesAsBCP47)
-{
+TEST(Intl_Locale_LocaleService, GetAppLocalesAsBCP47) {
   nsTArray<nsCString> appLocales;
   LocaleService::GetInstance()->GetAppLocalesAsBCP47(appLocales);
 
   ASSERT_FALSE(appLocales.IsEmpty());
 }
 
-TEST(Intl_Locale_LocaleService, GetAppLocalesAsLangTags)
-{
+TEST(Intl_Locale_LocaleService, GetAppLocalesAsLangTags) {
   nsTArray<nsCString> appLocales;
   LocaleService::GetInstance()->GetAppLocalesAsLangTags(appLocales);
 
   ASSERT_FALSE(appLocales.IsEmpty());
 }
 
-TEST(Intl_Locale_LocaleService, GetAppLocalesAsLangTags_lastIsEnUS)
-{
+TEST(Intl_Locale_LocaleService, GetAppLocalesAsLangTags_lastIsEnUS) {
   nsAutoCString lastFallbackLocale;
   LocaleService::GetInstance()->GetLastFallbackLocale(lastFallbackLocale);
 
@@ -39,8 +36,7 @@ TEST(Intl_Locale_LocaleService, GetAppLocalesAsLangTags_lastIsEnUS)
   ASSERT_TRUE(appLocales[len - 1].Equals(lastFallbackLocale));
 }
 
-TEST(Intl_Locale_LocaleService, GetAppLocaleAsLangTag)
-{
+TEST(Intl_Locale_LocaleService, GetAppLocaleAsLangTag) {
   nsTArray<nsCString> appLocales;
   LocaleService::GetInstance()->GetAppLocalesAsLangTags(appLocales);
 
@@ -50,8 +46,7 @@ TEST(Intl_Locale_LocaleService, GetAppLocaleAsLangTag)
   ASSERT_TRUE(appLocales[0] == locale);
 }
 
-TEST(Intl_Locale_LocaleService, GetRegionalPrefsLocales)
-{
+TEST(Intl_Locale_LocaleService, GetRegionalPrefsLocales) {
   nsTArray<nsCString> rpLocales;
   LocaleService::GetInstance()->GetRegionalPrefsLocales(rpLocales);
 
@@ -59,8 +54,7 @@ TEST(Intl_Locale_LocaleService, GetRegionalPrefsLocales)
   ASSERT_TRUE(len > 0);
 }
 
-TEST(Intl_Locale_LocaleService, GetWebExposedLocales)
-{
+TEST(Intl_Locale_LocaleService, GetWebExposedLocales) {
   const nsTArray<nsCString> spoofLocale{NS_LITERAL_CSTRING("de")};
   LocaleService::GetInstance()->SetAvailableLocales(spoofLocale);
   LocaleService::GetInstance()->SetRequestedLocales(spoofLocale);
@@ -83,8 +77,7 @@ TEST(Intl_Locale_LocaleService, GetWebExposedLocales)
   ASSERT_TRUE(pvLocales[0].Equals(NS_LITERAL_CSTRING("en-US")));
 }
 
-TEST(Intl_Locale_LocaleService, GetRequestedLocales)
-{
+TEST(Intl_Locale_LocaleService, GetRequestedLocales) {
   nsTArray<nsCString> reqLocales;
   LocaleService::GetInstance()->GetRequestedLocales(reqLocales);
 
@@ -92,8 +85,7 @@ TEST(Intl_Locale_LocaleService, GetRequestedLocales)
   ASSERT_TRUE(len > 0);
 }
 
-TEST(Intl_Locale_LocaleService, GetAvailableLocales)
-{
+TEST(Intl_Locale_LocaleService, GetAvailableLocales) {
   nsTArray<nsCString> availableLocales;
   LocaleService::GetInstance()->GetAvailableLocales(availableLocales);
 
@@ -101,8 +93,7 @@ TEST(Intl_Locale_LocaleService, GetAvailableLocales)
   ASSERT_TRUE(len > 0);
 }
 
-TEST(Intl_Locale_LocaleService, GetPackagedLocales)
-{
+TEST(Intl_Locale_LocaleService, GetPackagedLocales) {
   nsTArray<nsCString> packagedLocales;
   LocaleService::GetInstance()->GetPackagedLocales(packagedLocales);
 
@@ -110,8 +101,7 @@ TEST(Intl_Locale_LocaleService, GetPackagedLocales)
   ASSERT_TRUE(len > 0);
 }
 
-TEST(Intl_Locale_LocaleService, GetDefaultLocale)
-{
+TEST(Intl_Locale_LocaleService, GetDefaultLocale) {
   nsAutoCString locStr;
   LocaleService::GetInstance()->GetDefaultLocale(locStr);
 
@@ -119,8 +109,7 @@ TEST(Intl_Locale_LocaleService, GetDefaultLocale)
   ASSERT_TRUE(Locale(locStr).IsWellFormed());
 }
 
-TEST(Intl_Locale_LocaleService, IsAppLocaleRTL)
-{
+TEST(Intl_Locale_LocaleService, IsAppLocaleRTL) {
   // For now we can only test if the method doesn't crash.
   LocaleService::GetInstance()->IsAppLocaleRTL();
   ASSERT_TRUE(true);

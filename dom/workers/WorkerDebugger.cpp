@@ -517,19 +517,18 @@ RefPtr<PerformanceInfoPromise> WorkerDebugger::ReportPerformanceInfo() {
       SystemGroup::AbstractMainThreadFor(TaskCategory::Performance);
 
   return CollectMemoryInfo(top, mainThread)
-      ->Then(
-          mainThread, __func__,
-          [workerRef, url, pid, perfId, windowID, duration, isTopLevel,
-           items](const PerformanceMemoryInfo& aMemoryInfo) {
-            return PerformanceInfoPromise::CreateAndResolve(
-                PerformanceInfo(url, pid, windowID, duration, perfId, true,
-                                isTopLevel, aMemoryInfo, items),
-                __func__);
-          },
-          [workerRef]() {
-            return PerformanceInfoPromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                           __func__);
-          });
+      ->Then(mainThread, __func__,
+             [workerRef, url, pid, perfId, windowID, duration, isTopLevel,
+              items](const PerformanceMemoryInfo& aMemoryInfo) {
+               return PerformanceInfoPromise::CreateAndResolve(
+                   PerformanceInfo(url, pid, windowID, duration, perfId, true,
+                                   isTopLevel, aMemoryInfo, items),
+                   __func__);
+             },
+             [workerRef]() {
+               return PerformanceInfoPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                              __func__);
+             });
 }
 
 }  // namespace dom

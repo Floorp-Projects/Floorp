@@ -80,8 +80,7 @@ void check_transaction(mozIStorageConnection *aDB,
  * Test that executing multiple readonly AsyncStatements doesn't create a
  * transaction.
  */
-TEST(storage_asyncStatementExecution_transaction, MultipleAsyncReadStatements)
-{
+TEST(storage_asyncStatementExecution_transaction, MultipleAsyncReadStatements) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // -- create statements and execute them
@@ -105,8 +104,7 @@ TEST(storage_asyncStatementExecution_transaction, MultipleAsyncReadStatements)
  * Test that executing multiple readonly Statements doesn't create a
  * transaction.
  */
-TEST(storage_asyncStatementExecution_transaction, MultipleReadStatements)
-{
+TEST(storage_asyncStatementExecution_transaction, MultipleReadStatements) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // -- create statements and execute them
@@ -131,8 +129,7 @@ TEST(storage_asyncStatementExecution_transaction, MultipleReadStatements)
  * transaction.
  */
 TEST(storage_asyncStatementExecution_transaction,
-     MultipleAsyncReadWriteStatements)
-{
+     MultipleAsyncReadWriteStatements) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // -- create statements and execute them
@@ -156,8 +153,7 @@ TEST(storage_asyncStatementExecution_transaction,
 /**
  * Test that executing multiple Statements causing writes creates a transaction.
  */
-TEST(storage_asyncStatementExecution_transaction, MultipleReadWriteStatements)
-{
+TEST(storage_asyncStatementExecution_transaction, MultipleReadWriteStatements) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // -- create statements and execute them
@@ -182,8 +178,8 @@ TEST(storage_asyncStatementExecution_transaction, MultipleReadWriteStatements)
  * Test that executing multiple AsyncStatements causing writes creates a
  * single transaction.
  */
-TEST(storage_asyncStatementExecution_transaction, MultipleAsyncWriteStatements)
-{
+TEST(storage_asyncStatementExecution_transaction,
+     MultipleAsyncWriteStatements) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // -- create statements and execute them
@@ -209,8 +205,7 @@ TEST(storage_asyncStatementExecution_transaction, MultipleAsyncWriteStatements)
  * Test that executing multiple Statements causing writes creates a
  * single transaction.
  */
-TEST(storage_asyncStatementExecution_transaction, MultipleWriteStatements)
-{
+TEST(storage_asyncStatementExecution_transaction, MultipleWriteStatements) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // -- create statements and execute them
@@ -236,8 +231,7 @@ TEST(storage_asyncStatementExecution_transaction, MultipleWriteStatements)
  * Test that executing a single read-only AsyncStatement doesn't create a
  * transaction.
  */
-TEST(storage_asyncStatementExecution_transaction, SingleAsyncReadStatement)
-{
+TEST(storage_asyncStatementExecution_transaction, SingleAsyncReadStatement) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // -- create statements and execute them
@@ -256,8 +250,7 @@ TEST(storage_asyncStatementExecution_transaction, SingleAsyncReadStatement)
  * Test that executing a single read-only Statement doesn't create a
  * transaction.
  */
-TEST(storage_asyncStatementExecution_transaction, SingleReadStatement)
-{
+TEST(storage_asyncStatementExecution_transaction, SingleReadStatement) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // -- create statements and execute them
@@ -276,8 +269,7 @@ TEST(storage_asyncStatementExecution_transaction, SingleReadStatement)
  * Test that executing a single AsyncStatement causing writes creates a
  * transaction.
  */
-TEST(storage_asyncStatementExecution_transaction, SingleAsyncWriteStatement)
-{
+TEST(storage_asyncStatementExecution_transaction, SingleAsyncWriteStatement) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // -- create statements and execute them
@@ -296,8 +288,7 @@ TEST(storage_asyncStatementExecution_transaction, SingleAsyncWriteStatement)
 /**
  * Test that executing a single Statement causing writes creates a transaction.
  */
-TEST(storage_asyncStatementExecution_transaction, SingleWriteStatement)
-{
+TEST(storage_asyncStatementExecution_transaction, SingleWriteStatement) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // -- create statements and execute them
@@ -318,8 +309,7 @@ TEST(storage_asyncStatementExecution_transaction, SingleWriteStatement)
  * doesn't create a transaction.
  */
 TEST(storage_asyncStatementExecution_transaction,
-     MultipleParamsAsyncReadStatement)
-{
+     MultipleParamsAsyncReadStatement) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // -- create statements and execute them
@@ -351,8 +341,7 @@ TEST(storage_asyncStatementExecution_transaction,
  * Test that executing a single read-only Statement with multiple params
  * doesn't create a transaction.
  */
-TEST(storage_asyncStatementExecution_transaction, MultipleParamsReadStatement)
-{
+TEST(storage_asyncStatementExecution_transaction, MultipleParamsReadStatement) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // -- create statements and execute them
@@ -384,8 +373,7 @@ TEST(storage_asyncStatementExecution_transaction, MultipleParamsReadStatement)
  * creates a transaction.
  */
 TEST(storage_asyncStatementExecution_transaction,
-     MultipleParamsAsyncWriteStatement)
-{
+     MultipleParamsAsyncWriteStatement) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // -- create a table for writes
@@ -425,8 +413,8 @@ TEST(storage_asyncStatementExecution_transaction,
  * Test that executing a single write Statement with multiple params
  * creates a transaction.
  */
-TEST(storage_asyncStatementExecution_transaction, MultipleParamsWriteStatement)
-{
+TEST(storage_asyncStatementExecution_transaction,
+     MultipleParamsWriteStatement) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // -- create a table for writes

@@ -56,9 +56,7 @@ void txResultRecycler::recycle(txAExprResult* aResult) {
       }
       return;
     }
-    default: {
-      delete aResult;
-    }
+    default: { delete aResult; }
   }
 }
 

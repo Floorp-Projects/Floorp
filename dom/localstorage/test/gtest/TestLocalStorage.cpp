@@ -69,25 +69,21 @@ void CheckGeneratedOriginKey(nsIPrincipal* aPrincipal, const char* aOriginKey) {
 
 }  // namespace
 
-TEST(LocalStorage, OriginKey)
-{
+TEST(LocalStorage, OriginKey) {
   // Check the system principal.
   nsCOMPtr<nsIScriptSecurityManager> secMan =
       nsContentUtils::GetSecurityManager();
-  ASSERT_TRUE(secMan)
-  << "GetSecurityManager() should not fail";
+  ASSERT_TRUE(secMan) << "GetSecurityManager() should not fail";
 
   nsCOMPtr<nsIPrincipal> principal;
   secMan->GetSystemPrincipal(getter_AddRefs(principal));
-  ASSERT_TRUE(principal)
-  << "GetSystemPrincipal() should not fail";
+  ASSERT_TRUE(principal) << "GetSystemPrincipal() should not fail";
 
   CheckGeneratedOriginKey(principal, nullptr);
 
   // Check the null principal.
   principal = NullPrincipal::CreateWithoutOriginAttributes();
-  ASSERT_TRUE(principal)
-  << "CreateWithoutOriginAttributes() should not fail";
+  ASSERT_TRUE(principal) << "CreateWithoutOriginAttributes() should not fail";
 
   CheckGeneratedOriginKey(principal, nullptr);
 
@@ -110,8 +106,7 @@ TEST(LocalStorage, OriginKey)
 
   for (const auto& test : tests) {
     principal = GetCodebasePrincipal(test.mSpec);
-    ASSERT_TRUE(principal)
-    << "GetCodebasePrincipal() should not fail";
+    ASSERT_TRUE(principal) << "GetCodebasePrincipal() should not fail";
 
     CheckGeneratedOriginKey(principal, test.mOriginKey);
   }

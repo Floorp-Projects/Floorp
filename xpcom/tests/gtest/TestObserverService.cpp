@@ -93,8 +93,7 @@ static void TestExpectedCount(nsIObserverService* svc, const char* topic,
   EXPECT_EQ(count, expected);
 }
 
-TEST(ObserverService, Creation)
-{
+TEST(ObserverService, Creation) {
   nsresult rv;
   nsCOMPtr<nsIObserverService> svc =
       do_CreateInstance("@mozilla.org/observer-service;1", &rv);
@@ -103,8 +102,7 @@ TEST(ObserverService, Creation)
   ASSERT_TRUE(svc);
 }
 
-TEST(ObserverService, AddObserver)
-{
+TEST(ObserverService, AddObserver) {
   nsCOMPtr<nsIObserverService> svc =
       do_CreateInstance("@mozilla.org/observer-service;1");
 
@@ -119,8 +117,7 @@ TEST(ObserverService, AddObserver)
   testResult(rv);
 }
 
-TEST(ObserverService, RemoveObserver)
-{
+TEST(ObserverService, RemoveObserver) {
   nsCOMPtr<nsIObserverService> svc =
       do_CreateInstance("@mozilla.org/observer-service;1");
 
@@ -146,8 +143,7 @@ TEST(ObserverService, RemoveObserver)
   ASSERT_TRUE(NS_FAILED(rv));
 }
 
-TEST(ObserverService, EnumerateEmpty)
-{
+TEST(ObserverService, EnumerateEmpty) {
   nsCOMPtr<nsIObserverService> svc =
       do_CreateInstance("@mozilla.org/observer-service;1");
 
@@ -161,8 +157,7 @@ TEST(ObserverService, EnumerateEmpty)
   TestExpectedCount(svc, "A", 0);
 }
 
-TEST(ObserverService, Enumerate)
-{
+TEST(ObserverService, Enumerate) {
   nsCOMPtr<nsIObserverService> svc =
       do_CreateInstance("@mozilla.org/observer-service;1");
 
@@ -185,8 +180,7 @@ TEST(ObserverService, Enumerate)
   TestExpectedCount(svc, "Bar", kBarCount);
 }
 
-TEST(ObserverService, EnumerateWeakRefs)
-{
+TEST(ObserverService, EnumerateWeakRefs) {
   nsCOMPtr<nsIObserverService> svc =
       do_CreateInstance("@mozilla.org/observer-service;1");
 
@@ -224,8 +218,7 @@ TEST(ObserverService, EnumerateWeakRefs)
   TestExpectedCount(svc, "Foo", kFooCount + 2);
 }
 
-TEST(ObserverService, TestNotify)
-{
+TEST(ObserverService, TestNotify) {
   nsCString topicA;
   topicA.Assign("topic-A");
   nsCString topicB;

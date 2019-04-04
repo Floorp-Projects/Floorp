@@ -187,9 +187,7 @@ nsresult txCoreFunctionCall::evaluate(txIEvalContext* aContext,
 
           return NS_OK;
         }
-        default: {
-          MOZ_CRASH("Unexpected mType?!");
-        }
+        default: { MOZ_CRASH("Unexpected mType?!"); }
       }
       MOZ_CRASH("Inner mType switch should have returned!");
     }

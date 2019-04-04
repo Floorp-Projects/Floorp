@@ -93,8 +93,7 @@ class TestNrSocketTest : public MtransportTest {
   void CreatePublicAddrs_s(size_t count, const char *ip_str, int proto) {
     while (count--) {
       auto sock = CreateTestNrSocket_s(ip_str, proto, nullptr);
-      ASSERT_TRUE(sock)
-      << "Failed to create socket";
+      ASSERT_TRUE(sock) << "Failed to create socket";
       public_addrs_.push_back(sock);
     }
   }
@@ -658,8 +657,8 @@ TEST_F(TestNrSocketTest, PortDependentMappingFullCone) {
   ASSERT_TRUE(nr_transport_addr_cmp(&sender_external_address0,
                                     &sender_external_address1,
                                     NR_TRANSPORT_ADDR_CMP_MODE_ALL))
-  << "addr1: " << sender_external_address0.as_string
-  << " addr2: " << sender_external_address1.as_string;
+      << "addr1: " << sender_external_address0.as_string
+      << " addr2: " << sender_external_address1.as_string;
 
   // Verify that return traffic works
   ASSERT_TRUE(CheckConnectivityVia(public_addrs_[1], private_addrs_[0],

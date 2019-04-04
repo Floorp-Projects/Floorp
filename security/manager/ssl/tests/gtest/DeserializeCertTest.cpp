@@ -74,8 +74,7 @@ void deserializeAndVerify(const nsCString &serializedSecInfo,
   }
 }
 
-TEST(psm_DeserializeCert, gecko33)
-{
+TEST(psm_DeserializeCert, gecko33) {
   // clang-format off
   // Gecko 33+ vintage Security info serialized with UUIDs:
   //  - nsISupports  00000000-0000-0000-c000-000000000046
@@ -109,8 +108,7 @@ TEST(psm_DeserializeCert, gecko33)
   deserializeAndVerify(base64Serialization, false);
 }
 
-TEST(psm_DeserializeCert, gecko46)
-{
+TEST(psm_DeserializeCert, gecko46) {
   // clang-format off
   // Gecko 46+ vintage Security info serialized with UUIDs:
   //  - nsISupports  00000000-0000-0000-c000-000000000046
@@ -144,8 +142,7 @@ TEST(psm_DeserializeCert, gecko46)
   deserializeAndVerify(base64Serialization, false);
 }
 
-TEST(psm_DeserializeCert, preSSLStatusConsolidation)
-{
+TEST(psm_DeserializeCert, preSSLStatusConsolidation) {
   // clang-format off
   // Generated using serialized output of test "good.include-subdomains.pinning.example.com"
   // in security/manager/ssl/tests/unit/test_cert_chains.js
@@ -193,8 +190,7 @@ TEST(psm_DeserializeCert, preSSLStatusConsolidation)
   deserializeAndVerify(base64Serialization, false);
 }
 
-TEST(psm_DeserializeCert, preSSLStatusConsolidationFailedCertChain)
-{
+TEST(psm_DeserializeCert, preSSLStatusConsolidationFailedCertChain) {
   // clang-format off
   // Generated using serialized output of test "expired.example.com"
   // in security/manager/ssl/tests/unit/test_cert_chains.js
