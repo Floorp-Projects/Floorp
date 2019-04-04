@@ -6,7 +6,7 @@ package org.mozilla.fenix.library.history
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.core.widget.NestedScrollView
+import android.widget.LinearLayout
 import androidx.recyclerview.widget.LinearLayoutManager
 import io.reactivex.Observable
 import io.reactivex.Observer
@@ -27,7 +27,7 @@ class HistoryUIView(
     var mode: HistoryState.Mode = HistoryState.Mode.Normal
         private set
 
-    override val view: NestedScrollView = LayoutInflater.from(container.context)
+    override val view: LinearLayout = LayoutInflater.from(container.context)
         .inflate(R.layout.component_history, container, true)
         .findViewById(R.id.history_wrapper)
 
