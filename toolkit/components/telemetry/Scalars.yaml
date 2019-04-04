@@ -2698,49 +2698,6 @@ script.preloader:
       - 'main'
       - 'content'
 
-networking:
-  data_transferred:
-    bug_numbers:
-      - 1533363
-    description: >
-      How many bytes of HTTP data transferred by type, there are some categories
-      separated by keys based on 4 parameters:
-        1. normal browsing or private browsing
-        2. first party or third party
-        3. class of service
-        4. tracking classification
-
-      Available keys are:
-        Y=0|NormalFirstParty
-        Y=1|NormalThirdPartyOther
-        Y=2|NormalThirdPartyContentLeader
-        Y=3|NormalThirdPartyContentBackground
-        Y=4|NormalThirdPartyContentOther
-        Y=5|NormalThirdPartyBasicLeader
-        Y=6|NormalThirdPartyBasicBackground
-        Y=7|NormalThirdPartyBasicOther
-        Y=8|NormalThirdPartyFingerprintingLeader
-        Y=9|NormalThirdPartyFingerprintingBackground
-        Y=10|NormalThirdPartyFingerprintingOther
-        Y=11|PrivateFirstParty
-        Y=12|PrivateThirdPartyOther
-        Y=13|PrivateThirdPartyContentLeader
-        Y=14|PrivateThirdPartyContentBackground
-        Y=15|PrivateThirdPartyContentOther
-        Y=16|PrivateThirdPartyBasicLeader
-        Y=17|PrivateThirdPartyBasicBackground
-        Y=18|PrivateThirdPartyBasicOther
-        Y=19|PrivateThirdPartyFingerprintingLeader
-        Y=20|PrivateThirdPartyFingerprintingBackground
-        Y=21|PrivateThirdPartyFingerprintingOther
-    expires: "73"
-    keyed: true
-    kind: uint
-    notification_emails:
-      - gachen@mozilla.com
-    record_in_processes:
-      - 'main'
-
 # The following section is for probes testing the Telemetry system. They will not be
 # submitted in pings and are only used for testing.
 telemetry.test:
