@@ -13,7 +13,6 @@
 #include "nsGkAtoms.h"
 #include "mozilla/dom/SVGSVGElement.h"
 #include "mozilla/dom/Document.h"
-#include "nsIPresShell.h"
 #include "mozilla/dom/Element.h"
 #include "nsContentUtils.h"
 #include "nsIURI.h"

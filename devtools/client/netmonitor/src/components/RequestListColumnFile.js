@@ -36,6 +36,7 @@ class RequestListColumnFile extends Component {
       originalFileURL);
     const DECODED_FILE_URL = L10N.getFormatStr("netRequest.decodedFileURL.tooltip",
       decodedFileURL);
+    const requestedFile = urlDetails.baseNameWithQuery;
     const fileToolTip = originalFileURL === decodedFileURL ?
       originalFileURL : ORIGINAL_FILE_URL + "\n\n" + DECODED_FILE_URL;
 
@@ -44,7 +45,7 @@ class RequestListColumnFile extends Component {
         className: "requests-list-column requests-list-file",
         title: fileToolTip,
       },
-        originalFileURL
+        requestedFile
       )
     );
   }

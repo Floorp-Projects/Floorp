@@ -120,7 +120,8 @@ UrlClassifierFeatureCryptominingAnnotation::GetIfNameMatches(
 
 NS_IMETHODIMP
 UrlClassifierFeatureCryptominingAnnotation::ProcessChannel(
-    nsIChannel* aChannel, const nsACString& aList, bool* aShouldContinue) {
+    nsIChannel* aChannel, const nsTArray<nsCString>& aList,
+    bool* aShouldContinue) {
   NS_ENSURE_ARG_POINTER(aChannel);
   NS_ENSURE_ARG_POINTER(aShouldContinue);
 
@@ -132,9 +133,19 @@ UrlClassifierFeatureCryptominingAnnotation::ProcessChannel(
        "channel[%p]",
        aChannel));
 
+  static std::vector<UrlClassifierCommon::ClassificationData>
+      sClassificationData = {
+          {NS_LITERAL_CSTRING("content-cryptomining-track-"),
+           nsIHttpChannel::ClassificationFlags::
+               CLASSIFIED_CRYPTOMINING_CONTENT},
+      };
+
+  uint32_t flags = UrlClassifierCommon::TablesToClassificationFlags(
+      aList, sClassificationData,
+      nsIHttpChannel::ClassificationFlags::CLASSIFIED_CRYPTOMINING);
+
   UrlClassifierCommon::AnnotateChannel(
-      aChannel, AntiTrackingCommon::eCryptomining,
-      nsIHttpChannel::ClassificationFlags::CLASSIFIED_CRYPTOMINING,
+      aChannel, AntiTrackingCommon::eCryptomining, flags,
       nsIWebProgressListener::STATE_LOADED_CRYPTOMINING_CONTENT);
   return NS_OK;
 }

@@ -1150,3 +1150,237 @@ win64-aarch64-devedition-nightly/opt:
         - win64-cbindgen
         - win64-nasm
         - win64-node
+
+
+win32-gcp/debug:
+    description: "Win32 Debug - built on GCP"
+    index:
+        product: firefox
+        job-name: win32-gcp-debug
+    attributes:
+        enable-full-crashsymbols: true
+    treeherder:
+        platform: windows2012-32/debug
+        symbol: Bg
+        tier: 3
+    worker-type: releng-hardware/gecko-{level}-b-win2012-gamma
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+            PERFHERDER_EXTRA_OPTIONS: gcp
+    run:
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        secrets: true
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_base_win32.py
+            - builds/taskcluster_sub_win32/debug.py
+        mozconfig-variant: debug
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+        - win64-rust-size
+        - win64-cbindgen
+        - win64-sccache
+        - win64-nasm
+        - win64-node
+
+win32-gcp/opt:
+    description: "Win32 Opt - built on GCP"
+    index:
+        product: firefox
+        job-name: win32-gcp-opt
+    attributes:
+        enable-full-crashsymbols: true
+    treeherder:
+        platform: windows2012-32/opt
+        symbol: Bg
+        tier: 3
+    worker-type: releng-hardware/gecko-{level}-b-win2012-gamma
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+            PERFHERDER_EXTRA_OPTIONS: gcp
+    run:
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        secrets: true
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_base_win32.py
+        extra-config:
+            stage_platform: win32
+    run-on-projects: ['mozilla-central', 'try']
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+        - win64-rust-size
+        - win64-cbindgen
+        - win64-sccache
+        - win64-nasm
+        - win64-node
+
+win32-gcp-shippable/opt:
+    description: "Win32 Opt Shippable - built on GCP"
+    index:
+        product: firefox
+        job-name: win32-gcp-opt
+        type: shippable
+    attributes:
+        shippable: true
+        enable-full-crashsymbols: true
+    stub-installer:
+        by-project:
+            default: false
+            mozilla-central: true
+            try: true
+            mozilla-beta: true
+            mozilla-release: true
+    shipping-phase: build
+    shipping-product: firefox
+    treeherder:
+        platform: windows2012-32-shippable/opt
+        symbol: Bg
+        tier: 3
+    worker-type: releng-hardware/gecko-{level}-b-win2012-gamma
+    worker:
+        max-run-time: 10800
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win32/releng.manifest"
+            PERFHERDER_EXTRA_OPTIONS: gcp
+    run:
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        secrets: true
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_base_win32.py
+            - taskcluster_nightly.py
+        extra-config:
+            stage_platform: win32
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+        - win64-rust-size
+        - win64-cbindgen
+        - win64-nasm
+        - win64-node
+
+win64-gcp/debug:
+    description: "Win64 Debug - built on GCP"
+    index:
+        product: firefox
+        job-name: win64-gcp-debug
+    attributes:
+        enable-full-crashsymbols: true
+    treeherder:
+        platform: windows2012-64/debug
+        symbol: Bg
+        tier: 3
+    worker-type: releng-hardware/gecko-{level}-b-win2012-gamma
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+            PERFHERDER_EXTRA_OPTIONS: gcp
+    run:
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        secrets: true
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_base_win64.py
+            - builds/taskcluster_sub_win64/debug.py
+        mozconfig-variant: debug
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+        - win64-rust-size
+        - win64-cbindgen
+        - win64-sccache
+        - win64-nasm
+        - win64-node
+
+win64-gcp/opt:
+    description: "Win64 Opt - built on GCP"
+    index:
+        product: firefox
+        job-name: win64-gcp-opt
+    attributes:
+        enable-full-crashsymbols: true
+    treeherder:
+        platform: windows2012-64/opt
+        symbol: Bg
+        tier: 3
+    worker-type: releng-hardware/gecko-{level}-b-win2012-gamma
+    worker:
+        max-run-time: 7200
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+            PERFHERDER_EXTRA_OPTIONS: gcp
+    run:
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        secrets: true
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_base_win64.py
+        extra-config:
+            stage_platform: win64
+    run-on-projects: ['mozilla-central', 'try']
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+        - win64-rust-size
+        - win64-cbindgen
+        - win64-sccache
+        - win64-nasm
+        - win64-node
+
+win64-gcp-shippable/opt:
+    description: "Win64 Shippable - built on GCP"
+    index:
+        product: firefox
+        job-name: win64-gcp-opt
+        type: shippable
+    attributes:
+        shippable: true
+        enable-full-crashsymbols: true
+    shipping-phase: build
+    shipping-product: firefox
+    treeherder:
+        platform: windows2012-64-shippable/opt
+        symbol: Bg
+        tier: 3
+    worker-type: releng-hardware/gecko-{level}-b-win2012-gamma
+    worker:
+        max-run-time: 10800
+        env:
+            TOOLTOOL_MANIFEST: "browser/config/tooltool-manifests/win64/releng.manifest"
+            PERFHERDER_EXTRA_OPTIONS: gcp
+    run:
+        options: [append-env-variables-from-configs]
+        script: mozharness/scripts/fx_desktop_build.py
+        secrets: true
+        config:
+            - builds/releng_base_firefox.py
+            - builds/taskcluster_base_windows.py
+            - builds/taskcluster_base_win64.py
+            - taskcluster_nightly.py
+        extra-config:
+            stage_platform: win64
+    toolchains:
+        - win64-clang-cl
+        - win64-rust
+        - win64-rust-size
+        - win64-cbindgen
+        - win64-nasm
+        - win64-node

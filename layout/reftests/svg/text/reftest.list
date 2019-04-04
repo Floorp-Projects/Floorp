@@ -196,10 +196,10 @@ needs-focus == deselectAll.svg deselectAll-ref.svg
 fuzzy-if(skiaContent,0-1,0-250) needs-focus == selectSubString.svg selectSubString-ref.svg
 fuzzy-if(skiaContent,0-1,0-600) needs-focus == selectSubString-2.svg selectSubString-2-ref.svg
 fuzzy-if(skiaContent,0-1,0-250) needs-focus == selectSubString-3.svg selectSubString-3-ref.svg
-random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(webrender,1-1,237-237) needs-focus fuzzy-if(webrender&&!gtkWidget,127-148,221-254) == simple-selection.svg simple-selection-ref.html # Bug 1392106
-fuzzy-if(skiaContent,0-1,0-100) fuzzy-if(webrender,1-1,575-575) needs-focus fuzzy-if(webrender&&!gtkWidget,134-148,261-318) == simple-bidi-selection.svg simple-bidi-selection-ref.html
-fuzzy-if(skiaContent,0-1,0-50) fuzzy-if(webrender,1-1,237-237) needs-focus fuzzy-if(webrender&&!gtkWidget,127-148,221-254) == simple-fill-color-selection.svg simple-fill-color-selection-ref.html
-fuzzy-if(skiaContent,0-1,0-150) fuzzy-if(webrender,1-1,222-222) needs-focus fuzzy-if(webrender&&!gtkWidget,127-148,221-254) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == simple-underline-selection.svg simple-underline-selection-ref.html # Bug 1392106
-fuzzy-if(skiaContent,0-1,0-300) fuzzy-if(webrender,1-1,934-934) needs-focus fuzzy-if(webrender&&!gtkWidget,134-152,432-501) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == multiple-text-selection.svg multiple-text-selection-ref.html # Bug 1392106
+random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fuzzy-if(webrender,1-1,237-237) needs-focus fuzzy-if(webrender&&!gtkWidget,127-148,221-254) fails-if(Android) == simple-selection.svg simple-selection-ref.html # Bug 1392106 # Bug 1541500
+fuzzy-if(skiaContent,0-1,0-100) fuzzy-if(webrender,1-1,575-575) needs-focus fuzzy-if(webrender&&!gtkWidget,134-148,261-318) fails-if(Android) == simple-bidi-selection.svg simple-bidi-selection-ref.html # Bug 1541500
+fuzzy-if(skiaContent,0-1,0-50) fuzzy-if(webrender,1-1,237-237) needs-focus fuzzy-if(webrender&&!gtkWidget,127-148,221-254) fails-if(Android) == simple-fill-color-selection.svg simple-fill-color-selection-ref.html # Bug 1541500
+fuzzy-if(skiaContent,0-1,0-150) fuzzy-if(webrender,1-1,222-222) needs-focus fuzzy-if(webrender&&!gtkWidget,127-148,221-254) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(Android) == simple-underline-selection.svg simple-underline-selection-ref.html # Bug 1392106 # Bug 1541500
+fuzzy-if(skiaContent,0-1,0-300) fuzzy-if(webrender,1-1,934-934) needs-focus fuzzy-if(webrender&&!gtkWidget,134-152,432-501) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) fails-if(Android) == multiple-text-selection.svg multiple-text-selection-ref.html # Bug 1392106 # Bug 1541500
 needs-focus == multiple-chunks-selection.svg multiple-chunks-selection-ref.svg
 fuzzy-if(skiaContent,0-1,0-200) needs-focus == textpath-selection.svg textpath-selection-ref.svg

@@ -1,19 +1,16 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_BE{
-    %%Parent{"en_001"}
+    %%Parent{"en_150"}
     NumberElements{
         latn{
-            patterns{
-                currencyFormat{"#,##0.00 ¤"}
-            }
             symbols{
                 decimal{","}
                 group{"."}
             }
         }
     }
-    Version{"2.1.44.18"}
+    Version{"2.1.47.86"}
     calendar{
         generic{
             DateTimePatterns{

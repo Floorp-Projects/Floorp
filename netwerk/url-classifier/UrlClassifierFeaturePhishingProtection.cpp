@@ -109,9 +109,9 @@ UrlClassifierFeaturePhishingProtection::GetIfNameMatches(
 }
 
 NS_IMETHODIMP
-UrlClassifierFeaturePhishingProtection::ProcessChannel(nsIChannel* aChannel,
-                                                       const nsACString& aList,
-                                                       bool* aShouldContinue) {
+UrlClassifierFeaturePhishingProtection::ProcessChannel(
+    nsIChannel* aChannel, const nsTArray<nsCString>& aList,
+    bool* aShouldContinue) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

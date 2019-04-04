@@ -2422,7 +2422,9 @@ class StaticAnalysis(MachCommandBase):
         if path is None and outgoing:
             repo = get_repository_object(self.topsrcdir)
             path = repo.get_outgoing_files()
-        path = map(os.path.abspath, path)
+
+        if path:
+            path = map(os.path.abspath, path)
 
         os.chdir(self.topsrcdir)
 

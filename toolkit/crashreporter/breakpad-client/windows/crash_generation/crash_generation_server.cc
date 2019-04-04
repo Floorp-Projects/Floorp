@@ -853,7 +853,7 @@ void CrashGenerationServer::HandleClientProcessExit(ClientInfo* client_info) {
   client_info->UnregisterDumpRequestWaitAndBlockUntilNoPending();
 
   if (exit_callback_) {
-    exit_callback_(exit_context_, client_info);
+    exit_callback_(exit_context_, *client_info);
   }
 
   // Start a new scope to release lock automatically.
@@ -890,8 +890,7 @@ void CrashGenerationServer::HandleDumpRequest(const ClientInfo& client_info) {
   }
 
   if (dump_callback_ && execute_callback) {
-    std::wstring* ptr_dump_path = (dump_path == L"") ? NULL : &dump_path;
-    dump_callback_(dump_context_, &client_info, ptr_dump_path);
+    dump_callback_(dump_context_, client_info, dump_path);
   }
 
   SetEvent(client_info.dump_generated_handle());

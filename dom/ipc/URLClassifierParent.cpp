@@ -92,7 +92,7 @@ class IPCFeature final : public nsIUrlClassifierFeature {
   }
 
   NS_IMETHOD
-  ProcessChannel(nsIChannel* aChannel, const nsACString& aList,
+  ProcessChannel(nsIChannel* aChannel, const nsTArray<nsCString>& aList,
                  bool* aShouldContinue) override {
     NS_ENSURE_ARG_POINTER(aShouldContinue);
     *aShouldContinue = true;

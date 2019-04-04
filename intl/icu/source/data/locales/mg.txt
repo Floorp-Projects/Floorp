@@ -33,7 +33,7 @@ mg{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.43.94"}
+    Version{"2.1.48.4"}
     calendar{
         generic{
             DateTimePatterns{
@@ -133,10 +133,6 @@ mg{
                 MMM{"MMM"}
                 MMMEd{"E d MMM"}
                 MMMMEd{"E d MMMM"}
-                MMMMW{
-                    one{"'week' W 'of' MMM"}
-                    other{"'week' W 'of' MMM"}
-                }
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 MMd{"d/MM"}
@@ -160,10 +156,6 @@ mg{
                 yMd{"y-MM-dd"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
-                yw{
-                    one{"'week' w 'of' Y"}
-                    other{"'week' w 'of' Y"}
-                }
             }
             dayNames{
                 format{

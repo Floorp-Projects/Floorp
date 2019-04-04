@@ -672,7 +672,6 @@ gu{
         BRL{"R$"}
         BSD{"$"}
         BWP{"P"}
-        BYN{"р."}
         BZD{"$"}
         CAD{"$"}
         CLP{"$"}
@@ -712,7 +711,6 @@ gu{
         KZT{"₸"}
         LAK{"₭"}
         LBP{"L£"}
-        LKR{"Rs"}
         LRD{"$"}
         MGA{"Ar"}
         MMK{"K"}
@@ -724,13 +722,10 @@ gu{
         NGN{"₦"}
         NIO{"C$"}
         NOK{"kr"}
-        NPR{"Rs"}
         NZD{"$"}
         PHP{"₱"}
-        PKR{"Rs"}
         PLN{"zł"}
         PYG{"₲"}
-        RON{"lei"}
         RUB{"₽"}
         RWF{"RF"}
         SBD{"$"}
@@ -739,7 +734,6 @@ gu{
         SHP{"£"}
         SRD{"$"}
         SSP{"£"}
-        STN{"Db"}
         SYP{"£"}
         THB{"฿"}
         TOP{"T$"}
@@ -1413,5 +1407,5 @@ gu{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.44.2"}
+    Version{"2.1.48.42"}
 }

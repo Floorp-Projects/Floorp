@@ -12,5 +12,5 @@ es_CO{
             "dólar estadounidense",
         }
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.47.70"}
 }

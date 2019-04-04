@@ -9,9 +9,28 @@ var EXPORTED_SYMBOLS = ["TabSession"];
 const {Domains} = ChromeUtils.import("chrome://remote/content/domains/Domains.jsm");
 const {Session} = ChromeUtils.import("chrome://remote/content/sessions/Session.jsm");
 
+/**
+ * A session to communicate with a given tab
+ */
 class TabSession extends Session {
-  constructor(connection, target, id) {
+  /**
+   * @param Connection connection
+   *        The connection used to communicate with the server.
+   * @param TabTarget target
+   *        The tab target to which this session communicates with.
+   * @param Number id (optional)
+   *        If this session isn't the default one used for the HTTP endpoint we
+   *        connected to, the session requires an id to distinguish it from the default
+   *        one. This id is used to filter our request, responses and events between
+   *        all active sessions.
+   * @param Session parentSession (optional)
+   *        If this isn't the default session, optional hand over a session to which
+   *        we will forward all request responses and events via
+   *        `Target.receivedMessageFromTarget` events.
+   */
+  constructor(connection, target, id, parentSession) {
     super(connection, target, id);
+    this.parentSession = parentSession;
 
     this.mm.addMessageListener("remote:event", this);
     this.mm.addMessageListener("remote:result", this);
@@ -41,26 +60,51 @@ class TabSession extends Session {
         throw new TypeError("Message missing 'method' field");
       }
 
-      const [domainName, methodName] = Domains.splitMethod(method);
-      if (typeof domainName == "undefined" || typeof methodName == "undefined") {
-        throw new TypeError("'method' field is incorrect and doesn't define a domain " +
-                            "name and method separated by a dot.");
-      }
-      if (this.domains.has(domainName)) {
-        await this.execute(id, domainName, methodName, params);
+      const {domain, command} = Domains.splitMethod(method);
+      if (this.domains.has(domain)) {
+        await this.execute(id, domain, command, params);
       } else {
-        this.executeInChild(id, domainName, methodName, params);
+        this.executeInChild(id, domain, command, params);
       }
     } catch (e) {
       this.onError(id, e);
     }
   }
 
-  executeInChild(id, domain, method, params) {
+  executeInChild(id, domain, command, params) {
     this.mm.sendAsyncMessage("remote:request", {
       browsingContextId: this.browsingContext.id,
-      request: {id, domain, method, params},
+      request: {id, domain, command, params},
     });
+  }
+
+  onResult(id, result) {
+    super.onResult(id, result);
+
+    // When `Target.sendMessageToTarget` is used, we should forward the responses
+    // to the parent session from which we called `sendMessageToTarget`.
+    if (this.parentSession) {
+      this.parentSession.onEvent("Target.receivedMessageFromTarget", {
+        sessionId: this.id,
+        message: JSON.stringify({ id, result }),
+      });
+    }
+  }
+
+  onEvent(eventName, params) {
+    super.onEvent(eventName, params);
+
+    // When `Target.sendMessageToTarget` is used, we should forward the responses
+    // to the parent session from which we called `sendMessageToTarget`.
+    if (this.parentSession) {
+      this.parentSession.onEvent("Target.receivedMessageFromTarget", {
+        sessionId: this.id,
+        message: JSON.stringify({
+          method: eventName,
+          params,
+        }),
+      });
+    }
   }
 
   get mm() {

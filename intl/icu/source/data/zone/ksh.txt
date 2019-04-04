@@ -1,13 +1,283 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 ksh{
-    Version{"2.1.41.34"}
+    Version{"2.1.47.82"}
     zoneStrings{
+        "Africa:Cairo"{
+            ec{"Kaijro"}
+        }
+        "Africa:Lagos"{
+            ec{"Laajos"}
+        }
+        "Africa:Windhoek"{
+            ec{"Windhuk"}
+        }
+        "America:Costa_Rica"{
+            ec{"Koßtaricka"}
+        }
+        "America:Guayaquil"{
+            ec{"Juayaquil"}
+        }
+        "America:Indiana:Knox"{
+            ec{"Knox en Indiana"}
+        }
+        "America:Indiana:Marengo"{
+            ec{"Marengo en Indiana"}
+        }
+        "America:Indiana:Petersburg"{
+            ec{"Petersburg en Indiana"}
+        }
+        "America:Indiana:Tell_City"{
+            ec{"Tell City en Indiana"}
+        }
+        "America:Indiana:Vevay"{
+            ec{"Vevay en Indiana"}
+        }
+        "America:Indiana:Vincennes"{
+            ec{"Vincennes en Indiana"}
+        }
+        "America:Indiana:Winamac"{
+            ec{"Winamac en Indiana"}
+        }
+        "America:Kentucky:Monticello"{
+            ec{"Monticello en Kentucky"}
+        }
+        "America:Mexico_City"{
+            ec{"Schtadt Mexiko"}
+        }
+        "America:North_Dakota:Beulah"{
+            ec{"Beulah en Nood Dakota"}
+        }
+        "America:North_Dakota:Center"{
+            ec{"Zenter en Nood Dakota"}
+        }
+        "America:North_Dakota:New_Salem"{
+            ec{"Neu Salem en Nood Dakota"}
+        }
+        "America:St_Barthelemy"{
+            ec{"Zint Barthélemy"}
+        }
+        "America:St_Johns"{
+            ec{"Zint John’s"}
+        }
+        "America:St_Kitts"{
+            ec{"Zint Kitts"}
+        }
+        "America:St_Lucia"{
+            ec{"Santa Lutschiija"}
+        }
+        "America:St_Thomas"{
+            ec{"Zint Thomas"}
+        }
+        "America:St_Vincent"{
+            ec{"Zint Vintschänt"}
+        }
+        "America:Yakutat"{
+            ec{"Jakutat"}
+        }
+        "Antarctica:DumontDUrville"{
+            ec{"Dumont-d’Urville-Schtazjohn"}
+        }
+        "Antarctica:Syowa"{
+            ec{"Schoowa-Schtazjohn op dä Ensel Onjul"}
+        }
+        "Antarctica:Vostok"{
+            ec{"Wostok"}
+        }
+        "Asia:Aqtobe"{
+            ec{"Aqtöbe"}
+        }
+        "Asia:Ashgabat"{
+            ec{"Asshgabat"}
+        }
+        "Asia:Baghdad"{
+            ec{"Bagdad"}
+        }
+        "Asia:Bishkek"{
+            ec{"Bischkek"}
+        }
+        "Asia:Damascus"{
+            ec{"Damaskus"}
+        }
+        "Asia:Dushanbe"{
+            ec{"Duschanbe"}
+        }
+        "Asia:Gaza"{
+            ec{"Jaasa"}
+        }
+        "Asia:Hong_Kong"{
+            ec{"Hongkong"}
+        }
+        "Asia:Kamchatka"{
+            ec{"Kamschattka"}
+        }
+        "Asia:Krasnoyarsk"{
+            ec{"Krasnojarsk"}
+        }
+        "Asia:Nicosia"{
+            ec{"Nikosija"}
+        }
+        "Asia:Phnom_Penh"{
+            ec{"Pnom Penh"}
+        }
+        "Asia:Qyzylorda"{
+            ec{"Qysylorda"}
+        }
+        "Asia:Rangoon"{
+            ec{"Ranjun"}
+        }
+        "Asia:Riyadh"{
+            ec{"Rijad"}
+        }
+        "Asia:Saigon"{
+            ec{"Sigong (Ho-Tschi-Minh-Schtadt)"}
+        }
+        "Asia:Shanghai"{
+            ec{"Schanghai"}
+        }
+        "Asia:Singapore"{
+            ec{"Singjapuur"}
+        }
+        "Asia:Tashkent"{
+            ec{"Taschkent"}
+        }
+        "Asia:Tbilisi"{
+            ec{"Tiblis"}
+        }
+        "Asia:Ulaanbaatar"{
+            ec{"Ulan Bator"}
+        }
+        "Asia:Urumqi"{
+            ec{"Urrumptschi"}
+        }
+        "Asia:Vladivostok"{
+            ec{"Wladiwostok"}
+        }
+        "Asia:Yakutsk"{
+            ec{"Jakutsk"}
+        }
+        "Asia:Yekaterinburg"{
+            ec{"Jekaterinburg"}
+        }
+        "Asia:Yerevan"{
+            ec{"Eriwan"}
+        }
+        "Atlantic:Azores"{
+            ec{"Azoore"}
+        }
+        "Atlantic:Canary"{
+            ec{"Kannaare"}
+        }
+        "Atlantic:Cape_Verde"{
+            ec{"Kap Verde"}
+        }
+        "Atlantic:Faeroe"{
+            ec{"Färör"}
+        }
+        "Atlantic:St_Helena"{
+            ec{"Zint Helena"}
+        }
+        "Etc:Unknown"{
+            ec{"- weße mer nit -"}
+        }
+        "Europe:Athens"{
+            ec{"Athen"}
+        }
+        "Europe:Belgrade"{
+            ec{"Beljrad"}
+        }
+        "Europe:Brussels"{
+            ec{"Brüssel"}
+        }
+        "Europe:Bucharest"{
+            ec{"Bukarest"}
+        }
+        "Europe:Copenhagen"{
+            ec{"Kopenharen"}
+        }
         "Europe:Dublin"{
             ld{"Irland sing Summerzick"}
         }
+        "Europe:Gibraltar"{
+            ec{"Jibraltaa"}
+        }
+        "Europe:Guernsey"{
+            ec{"Jöönsei"}
+        }
+        "Europe:Isle_of_Man"{
+            ec{"Ensel Män"}
+        }
+        "Europe:Istanbul"{
+            ec{"Istambul"}
+        }
+        "Europe:Jersey"{
+            ec{"Jöösei"}
+        }
+        "Europe:Kaliningrad"{
+            ec{"Kalinninjraad"}
+        }
+        "Europe:Lisbon"{
+            ec{"Lissabon"}
+        }
         "Europe:London"{
             ld{"Jrußbretannije sing Summerzick"}
+        }
+        "Europe:Luxembourg"{
+            ec{"Luxembursch"}
+        }
+        "Europe:Moscow"{
+            ec{"Moskau"}
+        }
+        "Europe:Prague"{
+            ec{"Prag"}
+        }
+        "Europe:Riga"{
+            ec{"Riija"}
+        }
+        "Europe:Rome"{
+            ec{"Rom"}
+        }
+        "Europe:Tirane"{
+            ec{"Tiraana"}
+        }
+        "Europe:Uzhgorod"{
+            ec{"Uschjorod"}
+        }
+        "Europe:Vatican"{
+            ec{"der Vatikahn"}
+        }
+        "Europe:Vienna"{
+            ec{"Wien"}
+        }
+        "Europe:Volgograd"{
+            ec{"Woljojrad"}
+        }
+        "Europe:Warsaw"{
+            ec{"Warschau"}
+        }
+        "Europe:Zagreb"{
+            ec{"Sagreb"}
+        }
+        "Europe:Zaporozhye"{
+            ec{"Saporischschja"}
+        }
+        "Europe:Zurich"{
+            ec{"Züresch"}
+        }
+        "Indian:Maldives"{
+            ec{"Malldive"}
+        }
+        "Pacific:Galapagos"{
+            ec{"Jalappajos"}
+        }
+        "Pacific:Guam"{
+            ec{"Juam"}
+        }
+        "Pacific:Honolulu"{
+            ec{"Honululu"}
+        }
+        "Pacific:Pitcairn"{
+            ec{"Pitkern"}
         }
         "meta:Africa_Central"{
             ls{"Zentraal-Affrekaanesche Zigg"}

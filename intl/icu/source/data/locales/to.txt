@@ -28,7 +28,6 @@ to{
                 plusSign{"‏+"}
             }
         }
-        default{"latn"}
         latn{
             miscPatterns{
                 atLeast{"{0}+"}
@@ -152,7 +151,6 @@ to{
                 percentSign{"%"}
                 plusSign{"+"}
                 superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -163,10 +161,8 @@ to{
                 other{"Ngaahi ʻaho ʻe {0}"}
             }
         }
-        minimumGroupingDigits{"1"}
-        native{"latn"}
     }
-    Version{"2.1.44.88"}
+    Version{"2.1.47.82"}
     calendar{
         generic{
             DateTimePatterns{
@@ -1336,20 +1332,5 @@ to{
         UK{"fakapilitānia"}
         US{"fakaʻamelika"}
         metric{"fakamita"}
-    }
-    parse{
-        general{
-            lenient{
-                "[.․。︒﹒．｡]",
-                "['ʼ՚᾽᾿’＇]",
-                "[%٪﹪％]",
-                "[؉‰]",
-                "[\$﹩＄]",
-                "[£₤￡]",
-                "[¥￥]",
-                "[₩￦]",
-                "[₨₹{Rp}{Rs}]",
-            }
-        }
     }
 }

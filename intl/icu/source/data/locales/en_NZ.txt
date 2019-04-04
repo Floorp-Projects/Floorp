@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 en_NZ{
     %%Parent{"en_001"}
-    Version{"2.1.44.88"}
+    Version{"2.1.47.86"}
     calendar{
         generic{
             DateTimePatterns{
@@ -72,10 +72,6 @@ en_NZ{
             availableFormats{
                 Md{"d/M"}
                 yMd{"d/MM/y"}
-                yw{
-                    one{"'week' w 'of' Y"}
-                    other{"'week' w 'of' Y"}
-                }
             }
             intervalFormats{
                 MEd{

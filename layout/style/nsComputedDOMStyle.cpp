@@ -18,6 +18,7 @@
 #include "nsError.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
+#include "nsIPresShellInlines.h"
 #include "mozilla/ComputedStyle.h"
 #include "nsIScrollableFrame.h"
 #include "nsContentUtils.h"

@@ -30,7 +30,6 @@ lv{
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
             }
@@ -229,12 +228,9 @@ lv{
                 exponential{"E"}
                 group{" "}
                 infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
                 nan{"NS"}
                 perMille{"‰"}
                 percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"×"}
                 timeSeparator{":"}
             }
@@ -252,7 +248,7 @@ lv{
         minimumGroupingDigits{"2"}
         native{"latn"}
     }
-    Version{"2.1.44.91"}
+    Version{"2.1.48.43"}
     calendar{
         buddhist{
             eras{
@@ -492,19 +488,35 @@ lv{
                 yyyyQQQQ{"y. 'gada' QQQQ G"}
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
                 }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
                 }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
                 }
-                Hv{
-                    H{"HH–HH v"}
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
                 }
                 M{
                     M{"MM–MM"}
@@ -532,24 +544,6 @@ lv{
                     d{"d.–d."}
                 }
                 fallback{"{0}–{1}"}
-                h{
-                    a{"h a – h a"}
-                    h{"h–h a"}
-                }
-                hm{
-                    a{"h:mm a – h:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
-                }
-                hmv{
-                    a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
-                }
-                hv{
-                    a{"h a – h a v"}
-                    h{"h–h a v"}
-                }
                 y{
                     y{"y.–y. G"}
                 }
@@ -645,9 +639,9 @@ lv{
                 MMMEd{"E, d. MMM"}
                 MMMMEd{"E, d. MMMM"}
                 MMMMW{
-                    one{"MMM W. 'nedēļa'"}
-                    other{"MMM W. 'nedēļa'"}
-                    zero{"MMM W. 'nedēļa'"}
+                    one{"MMMM W. 'nedēļa'"}
+                    other{"MMMM W. 'nedēļa'"}
+                    zero{"MMMM W. 'nedēļa'"}
                 }
                 MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
@@ -829,6 +823,36 @@ lv{
                 }
             }
             intervalFormats{
+                Bh{
+                    B{"h B – h B"}
+                    h{"h–h B"}
+                }
+                Bhm{
+                    B{"h:mm B – h:mm B"}
+                    h{"h:mm–h:mm B"}
+                    m{"h:mm–h:mm B"}
+                }
+                Gy{
+                    G{"G y – G y"}
+                    y{"G y–y"}
+                }
+                GyM{
+                    G{"GGGGG y-MM – GGGGG y-MM"}
+                    M{"GGGGG y-MM – y-MM"}
+                    y{"GGGGG y-MM – y-MM"}
+                }
+                GyMEd{
+                    G{"GGGGG y-MM-dd, E – GGGGG y-MM-dd, E"}
+                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
+                }
+                GyMd{
+                    G{"GGGGG y-MM-dd – GGGGG y-MM-dd"}
+                    M{"GGGGG y-MM-dd – y-MM-dd"}
+                    d{"GGGGG y-MM-dd – y-MM-dd"}
+                    y{"GGGGG y-MM-dd – y-MM-dd"}
+                }
                 H{
                     H{"HH–HH"}
                 }
@@ -1058,12 +1082,6 @@ lv{
         }
         hebrew{
             eras{
-                abbreviated{
-                    "AM",
-                }
-                narrow{
-                    "AM",
-                }
                 wide{
                     "kopš pasaules radīšanas",
                 }
@@ -1140,17 +1158,6 @@ lv{
             }
         }
         indian{
-            eras{
-                abbreviated{
-                    "Saka",
-                }
-                narrow{
-                    "Saka",
-                }
-                wide{
-                    "Saka",
-                }
-            }
             monthNames{
                 format{
                     abbreviated{
@@ -1216,12 +1223,6 @@ lv{
         }
         islamic{
             eras{
-                abbreviated{
-                    "AH",
-                }
-                narrow{
-                    "AH",
-                }
                 wide{
                     "pēc hidžras",
                 }
@@ -2323,6 +2324,12 @@ lv{
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
+        standard-narrow{
+            2{"{0} un {1}"}
+            end{"{0} un {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
+        }
         standard-short{
             2{"{0} un {1}"}
             end{"{0} un {1}"}
@@ -2378,10 +2385,6 @@ lv{
                 "[\\-‒⁻₋−➖﹣－]",
                 "[,،٫、︐︑﹐﹑，､]",
                 "[+⁺₊➕﬩﹢＋]",
-            }
-            stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
             }
         }
     }

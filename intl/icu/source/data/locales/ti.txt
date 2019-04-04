@@ -202,7 +202,7 @@ ti{
         native{"latn"}
         traditional{"ethi"}
     }
-    Version{"2.1.44.88"}
+    Version{"2.1.47.82"}
     calendar{
         generic{
             DateTimePatterns{
@@ -285,8 +285,8 @@ ti{
                 MMM{"LLL"}
                 MMMEd{"MMM d, E"}
                 MMMMW{
-                    one{"ሰሙን W ናይ MMM"}
-                    other{"ሰሙን W ናይ MMM"}
+                    one{"ሰሙን W ናይ MMMM"}
+                    other{"ሰሙን W ናይ MMMM"}
                 }
                 MMMMd{"MMMM d"}
                 MMMMdd{"dd MMMM"}

@@ -2,10 +2,67 @@
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_MX{
     %%Parent{"es_419"}
-    Version{"2.1.44.5"}
+    Version{"2.1.47.96"}
     zoneStrings{
+        "Africa:Accra"{
+            ec{"Acra"}
+        }
+        "Africa:Bujumbura"{
+            ec{"Buyumbura"}
+        }
+        "Africa:Conakry"{
+            ec{"Conakri"}
+        }
+        "Africa:Dar_es_Salaam"{
+            ec{"Dar es-Salaam"}
+        }
+        "Africa:Khartoum"{
+            ec{"Jartum"}
+        }
+        "America:Fort_Nelson"{
+            ec{"Fort Nelson"}
+        }
+        "America:Nassau"{
+            ec{"Nassau"}
+        }
+        "America:Rio_Branco"{
+            ec{"Rio Branco"}
+        }
+        "America:Sao_Paulo"{
+            ec{"São Paulo"}
+        }
+        "America:St_Thomas"{
+            ec{"St. Thomas"}
+        }
+        "Asia:Almaty"{
+            ec{"Almatý"}
+        }
+        "Asia:Aqtobe"{
+            ec{"Aktobé"}
+        }
+        "Asia:Atyrau"{
+            ec{"Atirau"}
+        }
+        "Asia:Dushanbe"{
+            ec{"Dusambé"}
+        }
+        "Asia:Pyongyang"{
+            ec{"Piongyang"}
+        }
+        "Asia:Qatar"{
+            ec{"Qatar"}
+        }
         "Etc:UTC"{
             ls{"Tiempo Universal Coordinado"}
+        }
+        "Europe:Kirov"{
+            ec{"Kirov"}
+        }
+        "Pacific:Honolulu"{
+            ec{"Honolulu"}
+        }
+        "Pacific:Wake"{
+            ec{"Wake"}
         }
         "meta:Apia"{
             ld{"hora de verano de Apia"}

@@ -295,26 +295,32 @@ class GlobalObject : public NativeObject {
 
   static NativeObject* getOrCreateObjectPrototype(
       JSContext* cx, Handle<GlobalObject*> global) {
-    if (global->functionObjectClassesInitialized()) {
-      return &global->getPrototype(JSProto_Object)
-                  .toObject()
-                  .as<NativeObject>();
-    }
-    if (!ensureConstructor(cx, global, JSProto_Object)) {
-      return nullptr;
+    if (!global->functionObjectClassesInitialized()) {
+      if (!ensureConstructor(cx, global, JSProto_Object)) {
+        return nullptr;
+      }
     }
     return &global->getPrototype(JSProto_Object).toObject().as<NativeObject>();
   }
 
+  static NativeObject* getOrCreateFunctionConstructor(
+      JSContext* cx, Handle<GlobalObject*> global) {
+    if (!global->functionObjectClassesInitialized()) {
+      if (!ensureConstructor(cx, global, JSProto_Object)) {
+        return nullptr;
+      }
+    }
+    return &global->getConstructor(JSProto_Function)
+                .toObject()
+                .as<NativeObject>();
+  }
+
   static NativeObject* getOrCreateFunctionPrototype(
       JSContext* cx, Handle<GlobalObject*> global) {
-    if (global->functionObjectClassesInitialized()) {
-      return &global->getPrototype(JSProto_Function)
-                  .toObject()
-                  .as<NativeObject>();
-    }
-    if (!ensureConstructor(cx, global, JSProto_Object)) {
-      return nullptr;
+    if (!global->functionObjectClassesInitialized()) {
+      if (!ensureConstructor(cx, global, JSProto_Object)) {
+        return nullptr;
+      }
     }
     return &global->getPrototype(JSProto_Function)
                 .toObject()

@@ -156,7 +156,7 @@ se{
                 infinity{"∞"}
                 list{";"}
                 minusSign{"−"}
-                nan{"¤¤¤"}
+                nan{"NaN"}
                 perMille{"‰"}
                 percentSign{"%"}
                 plusSign{"+"}
@@ -166,7 +166,7 @@ se{
         }
         minimumGroupingDigits{"1"}
     }
-    Version{"2.1.43.94"}
+    Version{"2.1.48.4"}
     calendar{
         gregorian{
             AmPmMarkers{
@@ -219,11 +219,6 @@ se{
                 MEd{"MM-dd, E"}
                 MMM{"LLL"}
                 MMMEd{"MMM d, E"}
-                MMMMW{
-                    one{"'week' W 'of' MMM"}
-                    other{"'week' W 'of' MMM"}
-                    two{"'week' W 'of' MMM"}
-                }
                 MMMMd{"MMMM d"}
                 MMMd{"MMM d"}
                 Md{"MM-dd"}
@@ -244,11 +239,6 @@ se{
                 yMd{"y-MM-dd"}
                 yQQQ{"y QQQ"}
                 yQQQQ{"y QQQQ"}
-                yw{
-                    one{"'week' w 'of' Y"}
-                    other{"'week' w 'of' Y"}
-                    two{"'week' w 'of' Y"}
-                }
             }
             dayNames{
                 format{

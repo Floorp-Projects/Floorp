@@ -267,10 +267,6 @@ zh_Hant{
             "CNH",
             "人民幣（離岸）",
         }
-        CNX{
-            "CNX",
-            "CNX",
-        }
         CNY{
             "CN¥",
             "人民幣",
@@ -1212,6 +1208,9 @@ zh_Hant{
             "辛巴威元 (2008)",
         }
     }
+    Currencies%formal{
+        TWD{"NT$"}
+    }
     Currencies%narrow{
         AOA{"Kz"}
         ARS{"$"}
@@ -1238,7 +1237,6 @@ zh_Hant{
         DKK{"kr"}
         DOP{"$"}
         EGP{"E£"}
-        ESP{"₧"}
         EUR{"€"}
         FJD{"$"}
         FKP{"£"}
@@ -1268,6 +1266,8 @@ zh_Hant{
         LBP{"L£"}
         LKR{"Rs"}
         LRD{"$"}
+        LTL{"Lt"}
+        LVL{"Ls"}
         MGA{"Ar"}
         MMK{"K"}
         MNT{"₮"}
@@ -1286,7 +1286,6 @@ zh_Hant{
         PYG{"₲"}
         RON{"L"}
         RUB{"₽"}
-        RUR{"р."}
         RWF{"RF"}
         SBD{"$"}
         SEK{"kr"}
@@ -1300,7 +1299,6 @@ zh_Hant{
         TOP{"T$"}
         TRY{"₺"}
         TTD{"$"}
-        TWD{"$"}
         UAH{"₴"}
         USD{"$"}
         UYU{"$"}
@@ -2222,5 +2220,5 @@ zh_Hant{
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }
-    Version{"2.1.44.91"}
+    Version{"2.1.48.42"}
 }

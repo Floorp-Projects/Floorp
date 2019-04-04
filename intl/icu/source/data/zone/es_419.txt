@@ -1,10 +1,34 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 es_419{
-    Version{"2.1.43.65"}
+    Version{"2.1.47.86"}
     zoneStrings{
+        "Africa:Accra"{
+            ec{"Accra"}
+        }
+        "America:Fort_Nelson"{
+            ec{"Fuerte Nelson"}
+        }
+        "America:Nassau"{
+            ec{"Nasáu"}
+        }
+        "America:Sao_Paulo"{
+            ec{"San Pablo"}
+        }
+        "America:St_Thomas"{
+            ec{"Santo Tomás"}
+        }
+        "Asia:Dushanbe"{
+            ec{"Duchanbé"}
+        }
         "Etc:UTC"{
             ls{"Hora Universal Coordinada"}
+        }
+        "Europe:Busingen"{
+            ec{"Büsingen"}
+        }
+        "Pacific:Wake"{
+            ec{"Isla Wake"}
         }
         "meta:America_Mountain"{
             ld{"hora de verano de la montaña"}

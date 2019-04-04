@@ -1,17 +1,10 @@
 ﻿// © 2016 and later: Unicode, Inc. and others.
 // License & terms of use: http://www.unicode.org/copyright.html#License
 tt{
-    AuxExemplarCharacters{"[ғ қ ӯ]"}
     ExemplarCharacters{
-        "[а ә б в г д е ё ж җ з и й к л м н ң о ө п р с т у ү ф х һ ц ч ш щ ъ ы ь э ю"
-        " я]"
+        "[а ә б в г д е ё ж җ з и й к л м н о ө п р с т у ү ф х һ ц ч ш щ ъ ы ь э ю я"
+        "]"
     }
-    ExemplarCharactersIndex{
-        "[А Ә Б В Г Д Е Ё Ж Җ З И Й К Л М Н Ң О Ө П Р С Т У Ү Ф Х Һ Ц Ч Ш Щ Ъ Ы Ь Э Ю"
-        " Я]"
-    }
-    ExemplarCharactersNumbers{"[  \\- , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
-    ExemplarCharactersPunctuation{"[\\- ‐ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # ′ ″]"}
     NumberElements{
         default{"latn"}
         latn{
@@ -42,7 +35,7 @@ tt{
         minimumGroupingDigits{"1"}
         native{"latn"}
     }
-    Version{"2.1.44.88"}
+    Version{"2.1.47.85"}
     calendar{
         generic{
             DateTimePatterns{

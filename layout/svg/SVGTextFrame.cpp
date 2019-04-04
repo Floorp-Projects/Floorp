@@ -3487,7 +3487,7 @@ void SVGTextFrame::ReflowSVG() {
     }
     if (nsSVGUtils::HasStroke(run.mFrame)) {
       runFlags |=
-          TextRenderedRun::eIncludeFill | TextRenderedRun::eIncludeTextShadow;
+          TextRenderedRun::eIncludeStroke | TextRenderedRun::eIncludeTextShadow;
     }
     // Our "visual" overflow rect needs to be valid for building display lists
     // for hit testing, which means that for certain values of 'pointer-events'

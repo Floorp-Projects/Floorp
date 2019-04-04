@@ -644,104 +644,36 @@ be{
         }
     }
     Currencies%narrow{
-        AOA{"Kz"}
-        ARS{"$"}
         AUD{"A$"}
-        BAM{"KM"}
         BBD{"Bds$"}
-        BDT{"৳"}
         BMD{"BD$"}
-        BND{"$"}
-        BOB{"Bs"}
-        BRL{"R$"}
         BSD{"B$"}
-        BWP{"P"}
         BYN{"Br"}
         BZD{"BZ$"}
         CAD{"CA$"}
-        CLP{"$"}
-        CNY{"¥"}
-        COP{"$"}
-        CRC{"₡"}
         CUC{"CUC$"}
         CUP{"$MN"}
-        CZK{"Kč"}
-        DKK{"kr"}
         DOP{"RD$"}
-        EGP{"E£"}
-        EUR{"€"}
         FJD{"FJ$"}
         FKP{"FK£"}
-        GBP{"£"}
-        GEL{"₾"}
-        GIP{"£"}
-        GNF{"FG"}
-        GTQ{"Q"}
         GYD{"G$"}
-        HKD{"$"}
-        HNL{"L"}
-        HRK{"kn"}
-        HUF{"Ft"}
-        IDR{"Rp"}
-        ILS{"₪"}
-        INR{"₹"}
         ISK{"Íkr"}
         JMD{"J$"}
-        JPY{"¥"}
-        KHR{"៛"}
-        KMF{"CF"}
-        KPW{"₩"}
-        KRW{"₩"}
         KYD{"CI$"}
-        KZT{"₸"}
-        LAK{"₭"}
-        LBP{"L£"}
-        LKR{"Rs"}
         LRD{"L$"}
-        MGA{"Ar"}
-        MMK{"K"}
-        MNT{"₮"}
-        MUR{"Rs"}
         MXN{"MX$"}
-        MYR{"RM"}
         NAD{"N$"}
-        NGN{"₦"}
-        NIO{"C$"}
-        NOK{"kr"}
-        NPR{"Rs"}
         NZD{"NZ$"}
-        PHP{"₱"}
-        PKR{"Rs"}
-        PLN{"zł"}
-        PYG{"₲"}
-        RON{"lei"}
         RUB{"руб."}
-        RWF{"RF"}
         SBD{"SI$"}
-        SEK{"kr"}
         SGD{"S$"}
-        SHP{"£"}
-        SRD{"$"}
-        SSP{"£"}
         STN{"Db"}
-        SYP{"£"}
-        THB{"฿"}
-        TOP{"T$"}
-        TRY{"₺"}
         TTD{"TT$"}
-        TWD{"$"}
-        UAH{"₴"}
-        USD{"$"}
         UYU{"$U"}
-        VEF{"Bs"}
-        VND{"₫"}
         XCD{"EC$"}
-        ZAR{"R"}
-        ZMW{"ZK"}
     }
     Currencies%variant{
         GEL{"₾"}
-        TRY{"TL"}
     }
     CurrencyPlurals{
         AED{
@@ -1711,5 +1643,5 @@ be{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.43.65"}
+    Version{"2.1.48.17"}
 }

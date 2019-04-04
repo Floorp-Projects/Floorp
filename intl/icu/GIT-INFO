@@ -1,14 +1,5 @@
-commit f3fa0d604ef6527a01dab96f4bfa3c5290127337
-Author: Markus Scherer <markus.icu@gmail.com>
-Date:   Fri Nov 9 12:54:22 2018 -0800
+commit 2f2aec5f91cffe49b7526d9b0d18a9acbdd0cc89
+Author: yumaoka <y.umaoka@gmail.com>
+Date:   Mon Mar 25 16:18:16 2019 -0400
 
-    ICU-20250 make UnicodeSet(intprop=value) faster
-    - fastpath for UnicodeSet.add(new last range)
-    - fewer UnicodeSet memory allocations:
-      initial internal list array, exponential array growth,
-      allocate strings list/set only when first one is added
-    - faster CodePointTrie.getRange(): fewer calls to filter function
-    - revert UnicodeSet(intprop=value) from trie ranges to range starts + lookup
-    - cache per-int-prop range starts: fewer lookups
-    
-    (cherry picked from commit 98f9170004c29388d756a8a283573164a7a26bef)
+    ICU-20439 Update ICU4J API change report for 64.1 GA.

@@ -9,19 +9,10 @@ ku{
         TRY{
             "₺",
             "TRY",
-            {
-                "¤#,##0.00",
-                ",",
-                ".",
-            }
         }
     }
     Currencies%narrow{
         EUR{"€"}
-        TRY{"₺"}
-    }
-    Currencies%variant{
-        TRY{"TL"}
     }
     CurrencyPlurals{
         EUR{
@@ -33,5 +24,5 @@ ku{
         one{"{0} {1}"}
         other{"{0} {1}"}
     }
-    Version{"2.1.44.82"}
+    Version{"2.1.47.83"}
 }

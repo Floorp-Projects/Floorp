@@ -54,11 +54,11 @@ class CrashGenerationServer {
                                             const ClientInfo* client_info);
 
   typedef void (*OnClientDumpRequestCallback)(void* context,
-                                              const ClientInfo* client_info,
-                                              const std::wstring* file_path);
+                                              const ClientInfo& client_info,
+                                              const std::wstring& file_path);
 
   typedef void (*OnClientExitedCallback)(void* context,
-                                         const ClientInfo* client_info);
+                                         const ClientInfo& client_info);
 
   typedef void (*OnClientUploadRequestCallback)(void* context,
                                                 const DWORD crash_id);

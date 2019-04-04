@@ -90,42 +90,22 @@ class Domains {
     this.instances.clear();
   }
 
-  /** Splits a method name, e.g. "Browser.getVersion", into two components. */
-  static splitMethod(method) {
-    return split(method, ".", 1);
+  /**
+   * Splits a method, e.g. "Browser.getVersion",
+   * into domain ("Browser") and command ("getVersion") components.
+   */
+  static splitMethod(s) {
+    const ss = s.split(".");
+    if (ss.length != 2 || ss[0].length == 0 || ss[1].length == 0) {
+      throw new TypeError(`Invalid method format: "${s}"`);
+    }
+    return {
+      domain: ss[0],
+      command: ss[1],
+    };
   }
 }
 
 function isConstructor(obj) {
   return !!obj.prototype && !!obj.prototype.constructor.name;
-}
-
-// Split s by sep, returning list of substrings.
-// If max is given, at most max splits are done.
-// If max is 0, there is no limit on the number of splits.
-function split(s, sep, max = 0) {
-  if (typeof s != "string" ||
-      typeof sep != "string" ||
-      typeof max != "number") {
-    throw new TypeError();
-  }
-  if (!Number.isInteger(max) || max < 0) {
-    throw new RangeError();
-  }
-
-  const rv = [];
-  let i = 0;
-
-  while (rv.length < max) {
-    const si = s.indexOf(sep, i);
-    if (!si) {
-      break;
-    }
-
-    rv.push(s.substring(i, si));
-    i = si + sep.length;
-  }
-
-  rv.push(s.substring(i));
-  return rv;
 }
