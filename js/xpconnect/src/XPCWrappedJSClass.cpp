@@ -136,7 +136,7 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(const nsXPTInterfaceInfo* aInfo)
       }
 
       for (i = 0; i < methodCount; i++) {
-        SetReflectable(i, XPCConvert::IsMethodReflectable(mInfo->Method(i)));
+        SetReflectable(i, mInfo->Method(i).IsReflectable());
       }
     }
   } else {
