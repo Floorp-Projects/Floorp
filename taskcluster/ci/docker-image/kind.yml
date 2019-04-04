@@ -51,6 +51,7 @@ jobs:
     definition: debian-base
     parent: debian7-raw
     packages:
+      - deb7-apt
       - deb7-gdb
       - deb7-git
       - deb7-make

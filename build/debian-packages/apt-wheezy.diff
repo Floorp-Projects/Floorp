@@ -1,0 +1,31 @@
+diff -Nru apt-0.9.7.9+deb7u7/apt-pkg/acquire-method.cc apt-0.9.7.9+deb7u8/apt-pkg/acquire-method.cc
+--- apt-0.9.7.9+deb7u7/apt-pkg/acquire-method.cc	2013-03-01 19:51:21.000000000 +0900
++++ apt-0.9.7.9+deb7u8/apt-pkg/acquire-method.cc	2019-01-23 05:51:06.000000000 +0900
+@@ -416,6 +416,12 @@
+  * the worker will enqueue again later on to the right queue */
+ void pkgAcqMethod::Redirect(const string &NewURI)
+ {
++   if (NewURI.find_first_not_of(" !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~") != std::string::npos)
++   {
++      _error->Error("SECURITY: URL redirect target contains control characters, rejecting.");
++      Fail();
++      return;
++   }
+    std::cout << "103 Redirect\nURI: " << Queue->Uri << "\n"
+ 	     << "New-URI: " << NewURI << "\n"
+ 	     << "\n" << std::flush;
+diff -Nru apt-0.9.7.9+deb7u7/debian/changelog apt-0.9.7.9+deb7u8/debian/changelog
+--- apt-0.9.7.9+deb7u7/debian/changelog	2014-10-17 16:13:17.000000000 +0900
++++ apt-0.9.7.9+deb7u8/debian/changelog	2019-01-23 05:55:19.000000000 +0900
+@@ -1,3 +1,11 @@
++apt (0.9.7.9.deb7u8) wheezy-security; urgency=high
++
++  * CVE-2019-3462: Fix a content injection vulnerability that could be
++    exploited to inject arbitrary .deb or other files into a signed
++    repository via injected redirect headers.
++
++ -- Chris Lamb <lamby@debian.org>  Tue, 22 Jan 2019 20:51:26 +0000
++
+ apt (0.9.7.9+deb7u7) stable; urgency=medium
+ 
+   [ David Kalnischkies ]
