@@ -75,7 +75,7 @@ class Feature {
       entries.push(entry);
     }
 
-    let entriesAsString = entries.join(",");
+    let entriesAsString = entries.join(",").toLowerCase();
     if (observer) {
       observer.onSkipListUpdate(entriesAsString);
     } else {
