@@ -140,12 +140,15 @@ class GeckoViewContentChild extends GeckoViewChildModule {
   }
 
   toScrollBehavior(aBehavior) {
-    if (aBehavior === SCROLL_BEHAVIOR_SMOOTH) {
-      return "smooth";
-    } else if (aBehavior === SCROLL_BEHAVIOR_AUTO) {
-      return "auto";
+    if (!content) {
+      return 0;
     }
-    return "smooth";
+    if (aBehavior === SCROLL_BEHAVIOR_SMOOTH) {
+      return content.windowUtils.SCROLL_MODE_SMOOTH;
+    } else if (aBehavior === SCROLL_BEHAVIOR_AUTO) {
+      return content.windowUtils.SCROLL_MODE_INSTANT;
+    }
+    return content.windowUtils.SCROLL_MODE_SMOOTH;
   }
 
   receiveMessage(aMsg) {
@@ -265,18 +268,23 @@ class GeckoViewContentChild extends GeckoViewChildModule {
             docShell, "geckoview-content-global-transferred");
         break;
       case "GeckoView:ScrollBy":
-        content.scrollBy({
-          top: this.toPixels(aMsg.data.heightValue, aMsg.data.heightType),
-          left: this.toPixels(aMsg.data.widthValue, aMsg.data.widthType),
-          behavior: this.toScrollBehavior(aMsg.data.behavior),
-        });
+        let x = {};
+        let y = {};
+        content.windowUtils.getVisualViewportOffset(x, y);
+        content.windowUtils.scrollToVisual(
+          x.value + this.toPixels(aMsg.data.widthValue, aMsg.data.widthType),
+          y.value + this.toPixels(aMsg.data.heightValue, aMsg.data.heightType),
+          content.windowUtils.UPDATE_TYPE_MAIN_THREAD,
+          this.toScrollBehavior(aMsg.data.behavior)
+        );
         break;
       case "GeckoView:ScrollTo":
-        content.scrollTo({
-          top: this.toPixels(aMsg.data.heightValue, aMsg.data.heightType),
-          left: this.toPixels(aMsg.data.widthValue, aMsg.data.widthType),
-          behavior: this.toScrollBehavior(aMsg.data.behavior),
-        });
+        content.windowUtils.scrollToVisual(
+          this.toPixels(aMsg.data.widthValue, aMsg.data.widthType),
+          this.toPixels(aMsg.data.heightValue, aMsg.data.heightType),
+          content.windowUtils.UPDATE_TYPE_MAIN_THREAD,
+          this.toScrollBehavior(aMsg.data.behavior)
+        );
         break;
     }
   }
