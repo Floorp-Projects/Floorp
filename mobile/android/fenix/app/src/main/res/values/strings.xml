@@ -3,8 +3,7 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <!-- Name of the application -->
-    <string name="app_name">Fenix</string>
+
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
@@ -125,8 +124,6 @@
     <string name="preferences_language">Language</string>
     <!-- Preference for data choices -->
     <string name="preferences_data_choices">Data choices</string>
-    <!-- Preference for developers -->
-    <string name="preference_leakcanary">LeakCanary</string>
     <!-- Preference category for developer tools -->
     <string name="developer_tools_category">Developer tools</string>
     <!-- Preference for developers -->
@@ -147,11 +144,11 @@
     <string name="preferences_sign_out">Sign out</string>
     <!-- Label indicating that sync is in progress -->
     <string name="sync_syncing">Syncing</string>
-    <!-- Label summary indicating that sync failed along with a date stamp showing last time it succeeded -->
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
     <string name="sync_failed_summary">Sync failed. Last success: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_failed_never_synced_summary">Sync failed. Last synced: never</string>
-    <!-- Label summary  with a date stamp showing last time synced -->
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
     <string name="sync_last_synced_summary">Last synced: %s</string>
     <!-- Label summary showing never synced -->
     <string name="sync_never_synced_summary">Last synced: never</string>
@@ -163,8 +160,8 @@
     <string name="preferences_crash_reporter">Crash reporter</string>
     <!-- Preference switch for Mozilla location service -->
     <string name="preferences_mozilla_location_service">Mozilla location service</string>
-    <!-- Preference switch for app health report. -->
-    <string name="preferences_fenix_health_report">Fenix health report</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">%s health report</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
@@ -177,15 +174,16 @@
     <string name="preference_follow_device_theme">Follow device theme</string>
 
     <!-- Quick Action Sheet -->
-    <!-- Option in Quick Action Sheet in the browser to share the current page -->
+    <!-- Button in the browser chrome to share the current page -->
     <string name="quick_action_share">Share</string>
-    <!-- Option in Quick Action Sheet in the browser to download the current page -->
+    <!-- Button in the browser chrome to download the current page -->
     <string name="quick_action_download">Download</string>
-    <!-- Option in Quick Action Sheet in the browser to bookmark the current page -->
+    <!-- Button in the browser chrome in the browser to bookmark the current page -->
     <string name="quick_action_bookmark">Bookmark</string>
-    <!-- Option in Quick Action Sheet in the browser to put the the current page in reader mode -->
+    <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
     <string name="quick_action_read">Read</string>
-    <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle -->
+    <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
+        with shortcuts to commonly used actions such as Share, Bookmark etc.. -->
     <string name="quick_action_sheet_handle">Quick actions</string>
 
     <!-- Library -->
@@ -211,7 +209,8 @@
     <string name="content_description_history_menu">History item menu</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Close</string>
-    <!-- About content. Sentences are separated by two new lines -->
+    <!-- About content. Sentences are separated by two new lines. The first and second parameters are the name of the
+        application. (For example: Fenix) -->
     <string name="about_content">
         %1$s puts you in control.
         \n\n%1$s is produced by Mozilla.
@@ -266,7 +265,7 @@
     <string name="full_screen_notification">Entering full screen mode</string>
 
     <!-- Crashes -->
-    <!-- Title text displayed on the tab crash page -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title">Sorry. %1$s can’t get that tab back</string>
     <!-- Description text displayed on the tab crash page -->
     <string name="tab_crash_description">You can attempt to restore or close this tab below.</string>

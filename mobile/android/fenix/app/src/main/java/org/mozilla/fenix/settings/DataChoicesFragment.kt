@@ -30,6 +30,11 @@ class DataChoicesFragment : PreferenceFragmentCompat() {
                 }
             }
         }
+
+        findPreference<SwitchPreference>(getString(R.string.pref_key_fenix_health_report))?.apply {
+            val appName = getString(R.string.app_name)
+            title = getString(R.string.preferences_fenix_health_report, appName)
+        }
     }
 
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {

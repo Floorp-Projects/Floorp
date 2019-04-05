@@ -45,18 +45,20 @@
     <string name="phone_feature_blocked_by_android_explanation"><![CDATA[
         To allow it: <br/><br/> 1. Go to Android Settings <br/><br/>2. Tap <b>Permissions</b> <br/><br/> 3. Toggle <b>%1$s</b> to ON
         ]]></string>
-    <!--Label that indicates that this option it the recommended one-->
+    <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Recommended</string>
-    <!--Button label that take the user to the Android App setting -->
+    <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Go to Settings</string>
 
-    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet-->
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
     <string name="quick_settings_sheet">Quick settings sheet</string>
 
-    <!--Label that indicates a site is using a secure connection-->
+    <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection">Secure Connection</string>
-    <!--Label that indicates a site is using a insecure connection-->
+    <!-- Label that indicates a site is using a insecure connection -->
     <string name="quick_settings_sheet_insecure_connection">Insecure Connection</string>
-    <!--button that allows editing site permissions settings-->
+    <!-- button that allows editing site permissions settings -->
     <string name="quick_settings_sheet_manage_site_permissions">Manage site permissions</string>
 </resources>
