@@ -18,6 +18,8 @@ job-defaults:
         docker-image: {in-tree: "update-verify"}
     run:
         sparse-profile: mozharness
+        extra-config:
+            bouncer_prefix: "https://download.mozilla.org/"
     attributes:
         build_platform: linux64
         build_type: opt
