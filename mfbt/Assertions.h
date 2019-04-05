@@ -691,6 +691,31 @@ struct AssertionConditionType {
     } while (false)
 #endif
 
+/*
+ * MOZ_DIAGNOSTIC_ALWAYS_TRUE is like MOZ_ALWAYS_TRUE, but using
+ * MOZ_DIAGNOSTIC_ASSERT as the underlying assert.
+ *
+ * See the block comment for MOZ_DIAGNOSTIC_ASSERT above for more details on how
+ * diagnostic assertions work and how to use them.
+ */
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+#  define MOZ_DIAGNOSTIC_ALWAYS_TRUE(expr)   \
+    do {                                     \
+      if ((expr)) {                          \
+        /* Do nothing. */                    \
+      } else {                               \
+        MOZ_DIAGNOSTIC_ASSERT(false, #expr); \
+      }                                      \
+    } while (false)
+#else
+#  define MOZ_DIAGNOSTIC_ALWAYS_TRUE(expr) \
+    do {                                   \
+      if ((expr)) {                        \
+        /* Silence MOZ_MUST_USE. */        \
+      }                                    \
+    } while (false)
+#endif
+
 #undef MOZ_DUMP_ASSERTION_STACK
 #undef MOZ_CRASH_CRASHREPORT
 
