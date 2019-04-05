@@ -4,10 +4,13 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 package org.mozilla.fenix.components
 
+import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import android.view.LayoutInflater
+import android.widget.TextView.AUTO_SIZE_TEXT_TYPE_UNIFORM
+import androidx.core.widget.TextViewCompat
 import kotlinx.android.synthetic.main.fenix_snackbar.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
@@ -22,6 +25,8 @@ class FenixSnackbar private constructor(
     init {
         view.background = null
         content.snackbar_btn.increaseTapArea(16)
+
+        TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(content.snackbar_text, 12, 18, 1, TypedValue.COMPLEX_UNIT_SP)
     }
 
     fun setText(text: String) = this.apply {

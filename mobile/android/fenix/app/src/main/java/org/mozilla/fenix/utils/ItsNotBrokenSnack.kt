@@ -6,9 +6,11 @@ package org.mozilla.fenix.utils
 
 import android.content.Context
 import android.view.View
+import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 
@@ -16,22 +18,15 @@ class ItsNotBrokenSnack(val context: Context) {
 
     fun showSnackbar(issueNumber: String) {
         val rootView =
-            context.asActivity()?.window?.decorView?.findViewById<View>(android.R.id.content)
-        rootView?.let {
-            Snackbar.make(rootView, message.replace("%", issueNumber), Snackbar.LENGTH_SHORT)
-                .apply {
-                    setAction("Add Tab to Issue") {
-                        context.components.useCases.tabsUseCases.addTab
-                            .invoke(issues + issueNumber)
-                    }.setActionTextColor(
-                        ContextCompat.getColor(
-                            context,
-                            R.color.accent_bright_dark_theme
-                        )
-                    )
-                    show()
-                }
-        }
+            context.asActivity()?.window?.decorView?.findViewById<View>(android.R.id.content) as ViewGroup
+
+        FenixSnackbar.make(rootView, Snackbar.LENGTH_SHORT)
+            .setText(message.replace("%", issueNumber))
+            .setAction("Add Tab to Issue") {
+                context.components.useCases.tabsUseCases.addTab
+                    .invoke(issues + issueNumber)
+            }
+            .show()
     }
 
     companion object {
