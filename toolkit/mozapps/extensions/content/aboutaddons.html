@@ -7,6 +7,7 @@
     <link rel="localization" href="branding/brand.ftl"/>
     <link rel="localization" href="toolkit/about/aboutAddons.ftl"/>
 
+    <script type="application/javascript" src="chrome://global/content/contentAreaUtils.js"></script>
     <script type="application/javascript" src="chrome://mozapps/content/extensions/aboutaddons.js"></script>
   </head>
   <body>
@@ -15,19 +16,58 @@
 
     <template name="card">
       <div class="card addon">
-        <img class="card-heading-icon addon-icon"/>
-        <div class="card-contents">
-          <span class="addon-name"></span>
-          <span class="addon-description"></span>
+        <div class="addon-card-collapsed">
+          <img class="card-heading-icon addon-icon"/>
+          <div class="card-contents">
+            <span class="addon-name"></span>
+            <span class="addon-description"></span>
+          </div>
+          <div class="more-options-menu">
+            <button class="ghost-button" action="more-options"></button>
+            <panel-list>
+              <panel-item action="toggle-disabled"></panel-item>
+              <panel-item data-l10n-id="remove-addon-button" action="remove"></panel-item>
+              <panel-item-separator></panel-item-separator>
+              <panel-item data-l10n-id="expand-addon-button" action="expand"></panel-item>
+            </panel-list>
+          </div>
         </div>
-        <div class="more-options-menu">
-          <button class="ghost-button" action="more-options"></button>
-          <panel-list>
-            <panel-item action="toggle-disabled"></panel-item>
-            <panel-item data-l10n-id="remove-addon-button" action="remove"></panel-item>
-            <panel-item-separator></panel-item-separator>
-            <panel-item data-l10n-id="expand-addon-button" action="expand"></panel-item>
-          </panel-list>
+      </div>
+    </template>
+
+    <template name="addon-details">
+      <div class="addon-detail-description"></div>
+      <div class="addon-detail-contribute">
+        <label data-l10n-id="detail-contributions-description"></label>
+        <button
+          class="addon-detail-contribute-button"
+          action="contribute"
+          data-l10n-id="detail-contributions-button"
+          data-l10n-attrs="accesskey">
+        </button>
+      </div>
+      <div class="addon-detail-row addon-detail-row-author">
+        <label data-l10n-id="addon-detail-author-label"></label>
+      </div>
+      <div class="addon-detail-row addon-detail-row-version">
+        <label data-l10n-id="addon-detail-version-label"></label>
+      </div>
+      <div class="addon-detail-row addon-detail-row-lastUpdated">
+        <label data-l10n-id="addon-detail-last-updated-label"></label>
+      </div>
+      <div class="addon-detail-row addon-detail-row-homepage">
+        <label data-l10n-id="addon-detail-homepage-label"></label>
+        <a target="_blank"></a>
+      </div>
+      <div class="addon-detail-row addon-detail-row-rating">
+        <label data-l10n-id="addon-detail-rating-label"></label>
+        <div class="addon-detail-rating">
+          <span class="addon-detail-rating-star"></span>
+          <span class="addon-detail-rating-star"></span>
+          <span class="addon-detail-rating-star"></span>
+          <span class="addon-detail-rating-star"></span>
+          <span class="addon-detail-rating-star"></span>
+          <a target="_blank"></a>
         </div>
       </div>
     </template>
