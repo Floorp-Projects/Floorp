@@ -12,3 +12,4 @@ The source of an [Icon](../index.md).
 |---|---|
 | [GENERATOR](-g-e-n-e-r-a-t-o-r.md) | This icon was generated. |
 | [DOWNLOAD](-d-o-w-n-l-o-a-d.md) | This icon was downloaded. |
+| [INLINE](-i-n-l-i-n-e.md) | This icon was inlined in the document. |

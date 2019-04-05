@@ -70,6 +70,7 @@
 | [mozilla.components.feature.pwa](mozilla.components.feature.pwa/index.md) |  |
 | [mozilla.components.feature.pwa.ext](mozilla.components.feature.pwa.ext/index.md) |  |
 | [mozilla.components.feature.qr](mozilla.components.feature.qr/index.md) |  |
+| [mozilla.components.feature.readerview](mozilla.components.feature.readerview/index.md) |  |
 | [mozilla.components.feature.search](mozilla.components.feature.search/index.md) |  |
 | [mozilla.components.feature.session](mozilla.components.feature.session/index.md) |  |
 | [mozilla.components.feature.session.bundling](mozilla.components.feature.session.bundling/index.md) |  |

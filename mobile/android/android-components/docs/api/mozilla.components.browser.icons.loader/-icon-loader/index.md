@@ -22,4 +22,5 @@ A loader that can load an icon from an [IconRequest.Resource](../../mozilla.comp
 
 | Name | Summary |
 |---|---|
+| [DataUriIconLoader](../-data-uri-icon-loader/index.md) | `class DataUriIconLoader : `[`IconLoader`](./index.md)<br>An [IconLoader](./index.md) implementation that will base64 decode the image bytes from a data:image uri. |
 | [HttpIconLoader](../-http-icon-loader/index.md) | `class HttpIconLoader : `[`IconLoader`](./index.md)<br>[IconLoader](./index.md) implementation that will try to download the icon for resources that point to an http(s) URL. |

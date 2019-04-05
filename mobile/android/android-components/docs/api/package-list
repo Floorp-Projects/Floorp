@@ -142,6 +142,7 @@ mozilla.components.feature.prompts
 mozilla.components.feature.pwa
 mozilla.components.feature.pwa.ext
 mozilla.components.feature.qr
+mozilla.components.feature.readerview
 mozilla.components.feature.search
 mozilla.components.feature.session
 mozilla.components.feature.session.bundling

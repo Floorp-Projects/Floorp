@@ -103,6 +103,7 @@
 | [mozilla.components.browser.session.tab.CustomTabConfig](../mozilla.components.browser.session.tab/-custom-tab-config/index.md) | Holds configuration data for a Custom Tab. Use [createFromIntent](../mozilla.components.browser.session.tab/-custom-tab-config/create-from-intent.md) to create instances. |
 | [mozilla.components.browser.session.tab.CustomTabMenuItem](../mozilla.components.browser.session.tab/-custom-tab-menu-item/index.md) |  |
 | [mozilla.components.feature.customtabs.CustomTabsToolbarFeature](../mozilla.components.feature.customtabs/-custom-tabs-toolbar-feature/index.md) | Initializes and resets the Toolbar for a Custom Tab based on the CustomTabConfig. |
+| [mozilla.components.browser.icons.loader.DataUriIconLoader](../mozilla.components.browser.icons.loader/-data-uri-icon-loader/index.md) | An [IconLoader](../mozilla.components.browser.icons.loader/-icon-loader/index.md) implementation that will base64 decode the image bytes from a data:image uri. |
 | [mozilla.components.service.glean.metrics.DatetimeMetricType](../mozilla.components.service.glean.metrics/-datetime-metric-type/index.md) | This implements the developer facing API for recording datetime metrics. |
 | [mozilla.components.browser.icons.generator.DefaultIconGenerator](../mozilla.components.browser.icons.generator/-default-icon-generator/index.md) | [IconGenerator](../mozilla.components.browser.icons.generator/-icon-generator/index.md) implementation that will generate an icon with a background color, rounded corners and a letter representing the URL. |
 | [org.mozilla.telemetry.measurement.DefaultSearchMeasurement](../org.mozilla.telemetry.measurement/-default-search-measurement/index.md) |  |
@@ -282,6 +283,7 @@
 | [mozilla.components.feature.prompts.OnNeedToRequestPermissions](../mozilla.components.feature.prompts/-on-need-to-request-permissions.md) |  |
 | [mozilla.components.feature.qr.OnNeedToRequestPermissions](../mozilla.components.feature.qr/-on-need-to-request-permissions.md) |  |
 | [mozilla.components.feature.sitepermissions.OnNeedToRequestPermissions](../mozilla.components.feature.sitepermissions/-on-need-to-request-permissions.md) |  |
+| [mozilla.components.feature.readerview.OnReaderViewAvailableChange](../mozilla.components.feature.readerview/-on-reader-view-available-change.md) |  |
 | [mozilla.components.feature.qr.OnScanResult](../mozilla.components.feature.qr/-on-scan-result.md) |  |
 | [mozilla.components.ui.autocomplete.OnSearchStateChangeListener](../mozilla.components.ui.autocomplete/-on-search-state-change-listener.md) |  |
 | [mozilla.components.ui.autocomplete.OnSelectionChangedListener](../mozilla.components.ui.autocomplete/-on-selection-changed-listener.md) |  |
@@ -318,6 +320,7 @@
 | [mozilla.components.concept.push.PushType](../mozilla.components.concept.push/-push-type/index.md) | The different kinds of push messages. |
 | [mozilla.components.feature.qr.QrFeature](../mozilla.components.feature.qr/-qr-feature/index.md) | Feature implementation that provides QR scanning functionality via the [QrFragment](../mozilla.components.feature.qr/-qr-fragment/index.md). |
 | [mozilla.components.feature.qr.QrFragment](../mozilla.components.feature.qr/-qr-fragment/index.md) | A [Fragment](#) that displays a QR scanner. |
+| [mozilla.components.feature.readerview.ReaderViewFeature](../mozilla.components.feature.readerview/-reader-view-feature/index.md) | Feature implementation that provides a reader view for the selected session. This feature is implemented as a web extension and needs to be installed prior to use see [ReaderViewFeature.install](../mozilla.components.feature.readerview/-reader-view-feature/install.md). |
 | [mozilla.components.service.glean.storages.RecordedEventData](../mozilla.components.service.glean.storages/-recorded-event-data/index.md) |  |
 | [mozilla.components.service.glean.storages.RecordedExperimentData](../mozilla.components.service.glean.storages/-recorded-experiment-data/index.md) |  |
 | [mozilla.components.concept.fetch.Request](../mozilla.components.concept.fetch/-request/index.md) | The [Request](../mozilla.components.concept.fetch/-request/index.md) data class represents a resource request to be send by a [Client](../mozilla.components.concept.fetch/-client/index.md). |

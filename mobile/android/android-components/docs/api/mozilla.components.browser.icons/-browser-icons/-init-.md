@@ -3,7 +3,8 @@
 # &lt;init&gt;
 
 `BrowserIcons(context: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, httpClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)`, generator: `[`IconGenerator`](../../mozilla.components.browser.icons.generator/-icon-generator/index.md)` = DefaultIconGenerator(context), loaders: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`IconLoader`](../../mozilla.components.browser.icons.loader/-icon-loader/index.md)`> = listOf(
-        HttpIconLoader(httpClient)
+        HttpIconLoader(httpClient),
+        DataUriIconLoader()
     ), decoders: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`IconDecoder`](../../mozilla.components.browser.icons.decoder/-icon-decoder/index.md)`> = listOf(
         AndroidIconDecoder(),
         ICOIconDecoder()

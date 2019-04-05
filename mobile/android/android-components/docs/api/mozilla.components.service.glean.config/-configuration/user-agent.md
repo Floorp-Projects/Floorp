@@ -2,10 +2,10 @@
 
 # userAgent
 
-`val userAgent: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/config/Configuration.kt#L28)
+`val userAgent: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/config/Configuration.kt#L31)
 
-the user agent used when sending pings
+the user agent used when sending pings, only to be used internally.
 
 ### Property
 
-`userAgent` - the user agent used when sending pings
+`userAgent` - the user agent used when sending pings, only to be used internally.
