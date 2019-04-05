@@ -1054,7 +1054,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleOutline {
   // style struct resolution reasons that we do nsStyleBorder::mBorder;
   // see that field's comment.)
   nscoord mOutlineWidth;
-  nscoord mOutlineOffset;
+  mozilla::Length mOutlineOffset;
   mozilla::StyleColor mOutlineColor;
   mozilla::StyleOutlineStyle mOutlineStyle;
 
@@ -2608,7 +2608,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn {
   static const uint32_t kColumnCountAuto = 0;
 
   uint32_t mColumnCount = kColumnCountAuto;
-  nsStyleCoord mColumnWidth;  // coord, auto
+  mozilla::NonNegativeLengthOrAuto mColumnWidth;
 
   mozilla::StyleColor mColumnRuleColor;
   mozilla::StyleBorderStyle mColumnRuleStyle;  // StyleborderStyle::*
@@ -2620,8 +2620,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColumn {
   }
 
   bool IsColumnContainerStyle() const {
-    return (mColumnCount != kColumnCountAuto ||
-            mColumnWidth.GetUnit() != eStyleUnit_Auto);
+    return mColumnCount != kColumnCountAuto || !mColumnWidth.IsAuto();
   }
 
   bool IsColumnSpanStyle() const {

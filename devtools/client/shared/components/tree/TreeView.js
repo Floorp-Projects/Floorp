@@ -127,6 +127,8 @@ define(function(require, exports, module) {
         onSort: PropTypes.func,
         // Custom row click callback
         onClickRow: PropTypes.func,
+        // Row context menu event handler
+        onContextMenuRow: PropTypes.func,
         // Tree context menu event handler
         onContextMenuTree: PropTypes.func,
         // A header is displayed if set to true
@@ -368,6 +370,13 @@ define(function(require, exports, module) {
       this.selectRow(event.currentTarget);
     }
 
+    onContextMenu(member, event) {
+      const onContextMenuRow = this.props.onContextMenuRow;
+      if (onContextMenuRow) {
+        onContextMenuRow.call(this, member, event);
+      }
+    }
+
     getSelectedRow() {
       if (!this.state.selected || this.rows.length === 0) {
         return null;
@@ -539,6 +548,7 @@ define(function(require, exports, module) {
           id: member.path,
           ref: row => row && this.rows.push(row),
           onClick: this.onClickRow.bind(this, member.path),
+          onContextMenu: this.onContextMenu.bind(this, member),
         });
 
         // Render single row.

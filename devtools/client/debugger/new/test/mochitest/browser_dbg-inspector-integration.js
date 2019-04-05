@@ -17,13 +17,28 @@ function waitForInspectorPanelChange(dbg) {
 }
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-script-switching.html");
+  // Ensures the end panel is wide enough to show the inspector icon
+  await pushPref("devtools.debugger.end-panel-size", 600);
 
-  await addExpression(dbg, "window.document.body.firstChild");
+  const dbg = await initDebugger("doc-script-switching.html");
+  const { toolbox } = dbg;
+
+  await addExpression(dbg, "window.document.querySelector('button')");
 
   await waitForElement(dbg, "openInspector");
-  findElement(dbg, "openInspector").click();
 
+  const inspectorNode = findElement(dbg, "openInspector");
+
+  // Ensure hovering over button highlights the node in content pane
+  const view = inspectorNode.ownerDocument.defaultView;
+  const onNodeHighlight = toolbox.target.once("inspector")
+    .then(inspector => inspector.highlighter.once("node-highlight"));
+  EventUtils.synthesizeMouseAtCenter(inspectorNode, {type: "mousemove"}, view);
+  const nodeFront = await onNodeHighlight;
+  is(nodeFront.displayName, "button", "The correct node was highlighted");
+
+  // Ensure panel changes when button is clicked
+  inspectorNode.click();
   await waitForInspectorPanelChange(dbg);
 });
 

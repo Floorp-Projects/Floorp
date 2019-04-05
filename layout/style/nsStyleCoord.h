@@ -44,6 +44,10 @@ using LengthPercentageOrAuto = StyleLengthPercentageOrAuto;
 using NonNegativeLengthPercentage = StyleNonNegativeLengthPercentage;
 using NonNegativeLengthPercentageOrAuto =
     StyleNonNegativeLengthPercentageOrAuto;
+using Length = StyleLength;
+using LengthOrAuto = StyleLengthOrAuto;
+using NonNegativeLength = StyleNonNegativeLength;
+using NonNegativeLengthOrAuto = StyleNonNegativeLengthOrAuto;
 using BorderRadius = StyleBorderRadius;
 
 bool StyleCSSPixelLength::IsZero() const { return _0 == 0.0f; }
@@ -192,6 +196,16 @@ nscoord LengthPercentage::Resolve(nscoord aPercentageBasis,
 IMPL_LENGTHPERCENTAGE_FORWARDS(LengthPercentageOrAuto)
 IMPL_LENGTHPERCENTAGE_FORWARDS(StyleSize)
 IMPL_LENGTHPERCENTAGE_FORWARDS(StyleMaxSize)
+
+template <>
+inline bool LengthOrAuto::IsLength() const {
+  return IsLengthPercentage();
+}
+
+template <>
+inline const Length& LengthOrAuto::AsLength() const {
+  return AsLengthPercentage();
+}
 
 template <>
 inline bool StyleFlexBasis::IsAuto() const {
