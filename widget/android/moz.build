@@ -68,6 +68,10 @@ UNIFIED_SOURCES += [
     'WebExecutorSupport.cpp',
 ]
 
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 # The recursive make backend treats the first output specially: it's passed as
