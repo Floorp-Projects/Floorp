@@ -373,7 +373,15 @@ impl ToComputedValue for Color {
     type ComputedValue = ComputedColor;
 
     fn to_computed_value(&self, context: &Context) -> ComputedColor {
-        self.to_computed_color(Some(context)).unwrap()
+        let result = self.to_computed_color(Some(context)).unwrap();
+        if !result.is_numeric() {
+            if let Some(longhand) = context.for_non_inherited_property {
+                if longhand.stores_complex_colors_lossily() {
+                    context.rule_cache_conditions.borrow_mut().set_uncacheable();
+                }
+            }
+        }
+        result
     }
 
     fn from_computed_value(computed: &ComputedColor) -> Self {
@@ -385,33 +393,37 @@ impl ToComputedValue for Color {
     }
 }
 
-/// Specified color value for `-moz-font-smoothing-background-color`.
-///
-/// This property does not support `currentcolor`. We could drop it at
-/// parse-time, but it's not exposed to the web so it doesn't really matter.
-///
-/// We resolve it to `transparent` instead.
+/// Specified color value, but resolved to just RGBA for computed value
+/// with value from color property at the same context.
 #[derive(Clone, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToCss, ToShmem)]
-pub struct MozFontSmoothingBackgroundColor(pub Color);
+pub struct RGBAColor(pub Color);
 
-impl Parse for MozFontSmoothingBackgroundColor {
+impl Parse for RGBAColor {
     fn parse<'i, 't>(
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<Self, ParseError<'i>> {
-        Color::parse(context, input).map(MozFontSmoothingBackgroundColor)
+        Color::parse(context, input).map(RGBAColor)
     }
 }
 
-impl ToComputedValue for MozFontSmoothingBackgroundColor {
+impl ToComputedValue for RGBAColor {
     type ComputedValue = RGBA;
 
     fn to_computed_value(&self, context: &Context) -> RGBA {
-        self.0.to_computed_value(context).to_rgba(RGBA::transparent())
+        self.0
+            .to_computed_value(context)
+            .to_rgba(context.style().get_color().clone_color())
     }
 
     fn from_computed_value(computed: &RGBA) -> Self {
-        MozFontSmoothingBackgroundColor(Color::rgba(*computed))
+        RGBAColor(Color::rgba(*computed))
+    }
+}
+
+impl From<Color> for RGBAColor {
+    fn from(color: Color) -> RGBAColor {
+        RGBAColor(color)
     }
 }
 

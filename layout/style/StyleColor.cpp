@@ -15,21 +15,21 @@ namespace mozilla {
 
 // Blend one RGBA color with another based on a given ratios.
 // It is a linear combination of each channel with alpha premultipled.
-static nscolor LinearBlendColors(const StyleRGBA& aBg, float aBgRatio,
-                                 const StyleRGBA& aFg, float aFgRatio) {
+static nscolor LinearBlendColors(nscolor aBg, float aBgRatio, nscolor aFg,
+                                 float aFgRatio) {
   constexpr float kFactor = 1.0f / 255.0f;
 
   float p1 = aBgRatio;
-  float a1 = kFactor * aBg.alpha;
-  float r1 = a1 * aBg.red;
-  float g1 = a1 * aBg.green;
-  float b1 = a1 * aBg.blue;
+  float a1 = kFactor * NS_GET_A(aBg);
+  float r1 = a1 * NS_GET_R(aBg);
+  float g1 = a1 * NS_GET_G(aBg);
+  float b1 = a1 * NS_GET_B(aBg);
 
   float p2 = aFgRatio;
-  float a2 = kFactor * aFg.alpha;
-  float r2 = a2 * aFg.red;
-  float g2 = a2 * aFg.green;
-  float b2 = a2 * aFg.blue;
+  float a2 = kFactor * NS_GET_A(aFg);
+  float r2 = a2 * NS_GET_R(aFg);
+  float g2 = a2 * NS_GET_G(aFg);
+  float b2 = a2 * NS_GET_B(aFg);
 
   float a = p1 * a1 + p2 * a2;
   if (a <= 0.f) {
@@ -55,22 +55,21 @@ bool StyleColor::MaybeTransparent() const {
   return !IsNumeric() || AsNumeric().alpha != 255;
 }
 
-template <>
-nscolor StyleColor::CalcColor(nscolor aColor) const {
-  return CalcColor(StyleRGBA::FromColor(aColor));
+static nscolor RGBAToNSColor(const StyleRGBA& aRGBA) {
+  return NS_RGBA(aRGBA.red, aRGBA.green, aRGBA.blue, aRGBA.alpha);
 }
 
 template <>
-nscolor StyleColor::CalcColor(const StyleRGBA& aForegroundColor) const {
+nscolor StyleColor::CalcColor(nscolor aForegroundColor) const {
   if (IsNumeric()) {
-    return AsNumeric().ToColor();
+    return RGBAToNSColor(AsNumeric());
   }
   if (IsCurrentColor()) {
-    return aForegroundColor.ToColor();
+    return aForegroundColor;
   }
   MOZ_ASSERT(IsComplex());
   const auto& complex = AsComplex();
-  return LinearBlendColors(complex.color, complex.ratios.bg,
+  return LinearBlendColors(RGBAToNSColor(complex.color), complex.ratios.bg,
                            aForegroundColor, complex.ratios.fg);
 }
 
@@ -80,9 +79,11 @@ nscolor StyleColor::CalcColor(const ComputedStyle& aStyle) const {
   // can skip resolving StyleColor().
   // TODO(djg): Is this optimization worth it?
   if (IsNumeric()) {
-    return AsNumeric().ToColor();
+    return RGBAToNSColor(AsNumeric());
   }
-  return CalcColor(aStyle.StyleColor()->mColor);
+
+  auto fgColor = aStyle.StyleColor()->mColor;
+  return CalcColor(fgColor);
 }
 
 template <>

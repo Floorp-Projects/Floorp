@@ -1672,9 +1672,8 @@ nsChangeHint nsStyleTableBorder::CalcDifference(
 // nsStyleColor
 //
 
-static StyleRGBA DefaultColor(const Document& aDocument) {
-  return
-    StyleRGBA::FromColor(PreferenceSheet::PrefsFor(aDocument).mDefaultColor);
+static nscolor DefaultColor(const Document& aDocument) {
+  return PreferenceSheet::PrefsFor(aDocument).mDefaultColor;
 }
 
 nsStyleColor::nsStyleColor(const Document& aDocument)
