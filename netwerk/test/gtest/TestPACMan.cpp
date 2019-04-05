@@ -78,8 +78,6 @@ static const mozilla::Module::ContractIDEntry kSysDHCPClientContracts[] = {
 static const mozilla::Module kSysDHCPClientModule = {
     mozilla::Module::kVersion, kSysDHCPClientCIDs, kSysDHCPClientContracts};
 
-NSMODULE_DEFN(nsDHCPClientModule) = &kSysDHCPClientModule;
-
 void SetOptionResult(const char* result) { WPADOptionResult.Assign(result); }
 
 class ProcessPendingEventsAction final : public Runnable {
