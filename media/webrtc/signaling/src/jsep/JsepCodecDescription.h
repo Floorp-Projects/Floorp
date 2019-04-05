@@ -68,15 +68,16 @@ class JsepCodecDescription {
   }
 
   virtual bool Negotiate(const std::string& pt,
-                         const SdpMediaSection& remoteMsection) {
-    mDefaultPt = pt;
+                         const SdpMediaSection& remoteMsection, bool isOffer) {
+    if (mDirection == sdp::kSend || isOffer) {
+      mDefaultPt = pt;
+    }
     return true;
   }
 
   virtual void AddToMediaSection(SdpMediaSection& msection) const {
     if (mEnabled && msection.GetMediaType() == mType) {
-      // Both send and recv codec will have the same pt, so don't add twice
-      if (!msection.HasFormat(mDefaultPt)) {
+      if (mDirection == sdp::kRecv) {
         msection.AddCodec(mDefaultPt, mName, mClock, mChannels);
       }
 
@@ -167,9 +168,9 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
     }
   }
 
-  bool Negotiate(const std::string& pt,
-                 const SdpMediaSection& remoteMsection) override {
-    JsepCodecDescription::Negotiate(pt, remoteMsection);
+  bool Negotiate(const std::string& pt, const SdpMediaSection& remoteMsection,
+                 bool isOffer) override {
+    JsepCodecDescription::Negotiate(pt, remoteMsection, isOffer);
     if (mName == "opus" && mDirection == sdp::kSend) {
       SdpFmtpAttributeList::OpusParameters opusParams(
           GetOpusParameters(mDefaultPt, remoteMsection));
@@ -404,8 +405,9 @@ class JsepVideoCodecDescription : public JsepCodecDescription {
   }
 
   virtual bool Negotiate(const std::string& pt,
-                         const SdpMediaSection& remoteMsection) override {
-    JsepCodecDescription::Negotiate(pt, remoteMsection);
+                         const SdpMediaSection& remoteMsection,
+                         bool isOffer) override {
+    JsepCodecDescription::Negotiate(pt, remoteMsection, isOffer);
     if (mName == "H264") {
       SdpFmtpAttributeList::H264Parameters h264Params(
           GetH264Parameters(mDefaultPt, remoteMsection));
@@ -727,7 +729,7 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
 
   virtual void AddToMediaSection(SdpMediaSection& msection) const override {
     if (mEnabled && msection.GetMediaType() == mType) {
-      if (msection.GetFormats().empty()) {
+      if (mDirection == sdp::kRecv) {
         msection.AddDataChannel(mName, mLocalPort, mChannels,
                                 mLocalMaxMessageSize);
       }
@@ -736,9 +738,9 @@ class JsepApplicationCodecDescription : public JsepCodecDescription {
     }
   }
 
-  bool Negotiate(const std::string& pt,
-                 const SdpMediaSection& remoteMsection) override {
-    JsepCodecDescription::Negotiate(pt, remoteMsection);
+  bool Negotiate(const std::string& pt, const SdpMediaSection& remoteMsection,
+                 bool isOffer) override {
+    JsepCodecDescription::Negotiate(pt, remoteMsection, isOffer);
 
     uint32_t message_size;
     mRemoteMMSSet = remoteMsection.GetMaxMessageSize(&message_size);
