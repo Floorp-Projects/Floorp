@@ -9,12 +9,10 @@ import android.view.View
 import android.view.ViewGroup
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import android.view.LayoutInflater
-import android.widget.TextView.AUTO_SIZE_TEXT_TYPE_UNIFORM
 import androidx.core.widget.TextViewCompat
 import kotlinx.android.synthetic.main.fenix_snackbar.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
-
 
 class FenixSnackbar private constructor(
     parent: ViewGroup,
@@ -24,9 +22,15 @@ class FenixSnackbar private constructor(
 
     init {
         view.background = null
-        content.snackbar_btn.increaseTapArea(16)
+        content.snackbar_btn.increaseTapArea(increaseTouchableAreaBy)
 
-        TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(content.snackbar_text, 12, 18, 1, TypedValue.COMPLEX_UNIT_SP)
+        TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(
+            content.snackbar_text,
+            minTextSize,
+            maxTextSize,
+            stepGranularity,
+            TypedValue.COMPLEX_UNIT_SP
+        )
     }
 
     fun setText(text: String) = this.apply {
@@ -45,6 +49,11 @@ class FenixSnackbar private constructor(
     }
 
     companion object {
+        private const val minTextSize = 12
+        private const val maxTextSize = 18
+        private const val increaseTouchableAreaBy = 16
+        private const val stepGranularity = 1
+
         fun make(parent: ViewGroup, duration: Int): FenixSnackbar {
             val inflater = LayoutInflater.from(parent.context)
             val content = inflater.inflate(R.layout.fenix_snackbar, parent, false)
@@ -60,25 +69,30 @@ class FenixSnackbar private constructor(
     }
 }
 
-private class FenixSnackbarCallback (
+private class FenixSnackbarCallback(
     private val content: View
-) : com.google.android.material.snackbar.ContentViewCallback  {
+) : com.google.android.material.snackbar.ContentViewCallback {
 
     override fun animateContentIn(delay: Int, duration: Int) {
-        content.scaleY = 0f
+        content.scaleY = minScaleY
         content.animate().apply {
-            scaleY(1f)
+            scaleY(maxScaleY)
             setDuration(duration.toLong())
             startDelay = delay.toLong()
         }
     }
 
     override fun animateContentOut(delay: Int, duration: Int) {
-        content.scaleY = 1f
+        content.scaleY = maxScaleY
         content.animate().apply {
-            scaleY(0f)
+            scaleY(minScaleY)
             setDuration(duration.toLong())
             startDelay = delay.toLong()
         }
+    }
+
+    companion object {
+        private const val minScaleY = 0f
+        private const val maxScaleY = 1f
     }
 }

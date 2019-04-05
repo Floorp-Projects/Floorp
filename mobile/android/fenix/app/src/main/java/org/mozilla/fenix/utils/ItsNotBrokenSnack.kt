@@ -7,9 +7,7 @@ package org.mozilla.fenix.utils
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import com.google.android.material.snackbar.Snackbar
-import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
