@@ -14,6 +14,7 @@
 
 // Interpolated UV coordinates to sample.
 varying vec2 vUv;
+varying vec2 vLocalPos;
 
 // X = layer index to sample, Y = flag to allow perspective interpolation of UV.
 flat varying vec2 vLayerAndPerspective;
@@ -52,6 +53,7 @@ void brush_vs(
     vUv = uv / texture_size * mix(vi.world_pos.w, 1.0, perspective_interpolate);
     vLayerAndPerspective = vec2(res.layer, perspective_interpolate);
     vUvClipBounds = vec4(uv0, uv1) / texture_size.xyxy;
+    vLocalPos = vi.local_pos;
 
     float lumR = 0.2126;
     float lumG = 0.7152;
@@ -268,7 +270,8 @@ Fragment brush_fs() {
 
     // Fail-safe to ensure that we don't sample outside the rendered
     // portion of a blend source.
-    alpha *= point_inside_rect(uv, vUvClipBounds.xy, vUvClipBounds.zw);
+    alpha *= min(point_inside_rect(uv, vUvClipBounds.xy, vUvClipBounds.zw),
+                 init_transform_fs(vLocalPos));
 
     // Pre-multiply the alpha into the output value.
     return Fragment(alpha * vec4(color, 1.0));
