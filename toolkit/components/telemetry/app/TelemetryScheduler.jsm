@@ -66,10 +66,6 @@ var TelemetryScheduler = {
   _lastDailyPingTime: 0,
   _lastSessionCheckpointTime: 0,
 
-  // For sanity checking.
-  _lastAdhocPingTime: 0,
-  _lastTickTime: 0,
-
   _log: null,
 
   // The timer which drives the scheduler.
@@ -311,8 +307,6 @@ var TelemetryScheduler = {
     let nowDate = Policy.now();
     let now = nowDate.getTime();
 
-    this._lastTickTime = now;
-
     // Check if the daily ping is due.
     const shouldSendDaily = this._isDailyPingDue(nowDate);
 
@@ -349,7 +343,6 @@ var TelemetryScheduler = {
 
     this._log.trace("reschedulePings - reason: " + reason);
     let now = Policy.now();
-    this._lastAdhocPingTime = now.getTime();
     if (reason == REASON_ENVIRONMENT_CHANGE) {
       // We just generated an environment-changed ping, save it as an aborted session and
       // update the schedules.
