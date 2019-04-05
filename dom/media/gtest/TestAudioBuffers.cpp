@@ -42,8 +42,8 @@ void test_for_number_of_channels(const uint32_t channels) {
 
   for (uint32_t i = 0; i < samples; i++) {
     ASSERT_TRUE(fromCallback[i] == 1.0)
-        << "Difference at " << i << " (" << fromCallback[i] << " != " << 1.0
-        << ")\n";
+    << "Difference at " << i << " (" << fromCallback[i] << " != " << 1.0
+    << ")\n";
   }
 
   ASSERT_TRUE(b.Fill(other.data(), FRAMES) == 128);
@@ -51,7 +51,8 @@ void test_for_number_of_channels(const uint32_t channels) {
   ASSERT_TRUE(b.Empty(mBuffer) == 0);
 }
 
-TEST(AudioBuffers, Test) {
+TEST(AudioBuffers, Test)
+{
   for (uint32_t ch = 1; ch <= 8; ++ch) {
     test_for_number_of_channels(ch);
   }

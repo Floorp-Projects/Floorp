@@ -86,7 +86,8 @@ void RunOnTaskQueue(TaskQueue* aQueue, FunctionType aFun) {
     return TestPromise::CreateAndReject(0, __func__); \
   }
 
-TEST(MozPromise, BasicResolve) {
+TEST(MozPromise, BasicResolve)
+{
   AutoTaskQueue atq;
   RefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue]() -> void {
@@ -101,7 +102,8 @@ TEST(MozPromise, BasicResolve) {
   });
 }
 
-TEST(MozPromise, BasicReject) {
+TEST(MozPromise, BasicReject)
+{
   AutoTaskQueue atq;
   RefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue]() -> void {
@@ -113,7 +115,8 @@ TEST(MozPromise, BasicReject) {
   });
 }
 
-TEST(MozPromise, BasicResolveOrRejectResolved) {
+TEST(MozPromise, BasicResolveOrRejectResolved)
+{
   AutoTaskQueue atq;
   RefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue]() -> void {
@@ -130,7 +133,8 @@ TEST(MozPromise, BasicResolveOrRejectResolved) {
   });
 }
 
-TEST(MozPromise, BasicResolveOrRejectRejected) {
+TEST(MozPromise, BasicResolveOrRejectRejected)
+{
   AutoTaskQueue atq;
   RefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue]() -> void {
@@ -147,7 +151,8 @@ TEST(MozPromise, BasicResolveOrRejectRejected) {
   });
 }
 
-TEST(MozPromise, AsyncResolve) {
+TEST(MozPromise, AsyncResolve)
+{
   AutoTaskQueue atq;
   RefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue]() -> void {
@@ -182,7 +187,8 @@ TEST(MozPromise, AsyncResolve) {
   });
 }
 
-TEST(MozPromise, CompletionPromises) {
+TEST(MozPromise, CompletionPromises)
+{
   bool invokedPass = false;
   AutoTaskQueue atq;
   RefPtr<TaskQueue> queue = atq.Queue();
@@ -228,7 +234,8 @@ TEST(MozPromise, CompletionPromises) {
   });
 }
 
-TEST(MozPromise, PromiseAllResolve) {
+TEST(MozPromise, PromiseAllResolve)
+{
   AutoTaskQueue atq;
   RefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue]() -> void {
@@ -251,7 +258,8 @@ TEST(MozPromise, PromiseAllResolve) {
   });
 }
 
-TEST(MozPromise, PromiseAllReject) {
+TEST(MozPromise, PromiseAllReject)
+{
   AutoTaskQueue atq;
   RefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue]() -> void {
@@ -274,7 +282,8 @@ TEST(MozPromise, PromiseAllReject) {
 
 // Test we don't hit the assertions in MozPromise when exercising promise
 // chaining upon task queue shutdown.
-TEST(MozPromise, Chaining) {
+TEST(MozPromise, Chaining)
+{
   // We declare this variable before |atq| to ensure
   // the destructor is run after |holder.Disconnect()|.
   MozPromiseRequestHolder<TestPromise> holder;
@@ -314,7 +323,8 @@ TEST(MozPromise, Chaining) {
   });
 }
 
-TEST(MozPromise, ResolveOrRejectValue) {
+TEST(MozPromise, ResolveOrRejectValue)
+{
   using MyPromise = MozPromise<UniquePtr<int>, bool, false>;
   using RRValue = MyPromise::ResolveOrRejectValue;
 
@@ -336,7 +346,8 @@ TEST(MozPromise, ResolveOrRejectValue) {
   EXPECT_EQ(val.ResolveValue().get(), nullptr);
 }
 
-TEST(MozPromise, MoveOnlyType) {
+TEST(MozPromise, MoveOnlyType)
+{
   using MyPromise = MozPromise<UniquePtr<int>, bool, true>;
   using RRValue = MyPromise::ResolveOrRejectValue;
 
@@ -365,7 +376,8 @@ TEST(MozPromise, MoveOnlyType) {
       });
 }
 
-TEST(MozPromise, HeterogeneousChaining) {
+TEST(MozPromise, HeterogeneousChaining)
+{
   using Promise1 = MozPromise<UniquePtr<char>, bool, true>;
   using Promise2 = MozPromise<UniquePtr<int>, bool, true>;
   using RRValue1 = Promise1::ResolveOrRejectValue;
@@ -418,7 +430,8 @@ TEST(MozPromise, HeterogeneousChaining) {
       });
 }
 
-TEST(MozPromise, XPCOMEventTarget) {
+TEST(MozPromise, XPCOMEventTarget)
+{
   TestPromise::CreateAndResolve(42, __func__)
       ->Then(
           GetCurrentThreadSerialEventTarget(), __func__,
@@ -429,7 +442,8 @@ TEST(MozPromise, XPCOMEventTarget) {
   NS_ProcessPendingEvents(nullptr);
 }
 
-TEST(MozPromise, MessageLoopEventTarget) {
+TEST(MozPromise, MessageLoopEventTarget)
+{
   TestPromise::CreateAndResolve(42, __func__)
       ->Then(
           MessageLoop::current()->SerialEventTarget(), __func__,

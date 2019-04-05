@@ -720,7 +720,8 @@ class LabData : public SimpleImage<float> {
 /*
  * From RGB24.
  */
-TEST(ImageBitmapColorUtils, RGB24ToBGR24_) {
+TEST(ImageBitmapColorUtils, RGB24ToBGR24_)
+{
   const RGB24Data srcData;
   const BGR24Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,
@@ -745,7 +746,8 @@ TEST(ImageBitmapColorUtils, RGB24ToBGR24_) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGB24ToRGBA32) {
+TEST(ImageBitmapColorUtils, RGB24ToRGBA32)
+{
   const RGB24Data srcData;
   const RGBA32Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,
@@ -773,7 +775,8 @@ TEST(ImageBitmapColorUtils, RGB24ToRGBA32) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGB24ToBGRA32) {
+TEST(ImageBitmapColorUtils, RGB24ToBGRA32)
+{
   const RGB24Data srcData;
   const BGRA32Data dstData;
 
@@ -845,7 +848,8 @@ TEST(ImageBitmapColorUtils, RGB24ToBGRA32) {
 //    gbaPixel[0], rgbaPixel[1], rgbaPixel[2], rgbaPixel[3]);
 //}
 
-TEST(ImageBitmapColorUtils, RGB24ToYUV444P) {
+TEST(ImageBitmapColorUtils, RGB24ToYUV444P)
+{
   const RGB24Data srcData;
   const YUV444PData dstData;
 
@@ -872,7 +876,8 @@ TEST(ImageBitmapColorUtils, RGB24ToYUV444P) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGB24ToYUV422P) {
+TEST(ImageBitmapColorUtils, RGB24ToYUV422P)
+{
   const RGB24Data srcData;
   const YUV422PData dstData;
 
@@ -904,7 +909,8 @@ TEST(ImageBitmapColorUtils, RGB24ToYUV422P) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGB24ToYUV420P) {
+TEST(ImageBitmapColorUtils, RGB24ToYUV420P)
+{
   const RGB24Data srcData;
   const YUV420PData dstData;
 
@@ -937,7 +943,8 @@ TEST(ImageBitmapColorUtils, RGB24ToYUV420P) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGB24ToNV12) {
+TEST(ImageBitmapColorUtils, RGB24ToNV12)
+{
   const RGB24Data srcData;
   const NV12Data dstData;
 
@@ -968,7 +975,8 @@ TEST(ImageBitmapColorUtils, RGB24ToNV12) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGB24ToNV21) {
+TEST(ImageBitmapColorUtils, RGB24ToNV21)
+{
   const RGB24Data srcData;
   const NV21Data dstData;
 
@@ -999,7 +1007,8 @@ TEST(ImageBitmapColorUtils, RGB24ToNV21) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGB24ToHSV) {
+TEST(ImageBitmapColorUtils, RGB24ToHSV)
+{
   const RGB24Data srcData;
   const HSVData dstData;
 
@@ -1022,7 +1031,8 @@ TEST(ImageBitmapColorUtils, RGB24ToHSV) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGB24ToLab) {
+TEST(ImageBitmapColorUtils, RGB24ToLab)
+{
   const RGB24Data srcData;
   const LabData dstData;
 
@@ -1045,7 +1055,8 @@ TEST(ImageBitmapColorUtils, RGB24ToLab) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGB24ToGray8) {
+TEST(ImageBitmapColorUtils, RGB24ToGray8)
+{
   const RGB24Data srcData;
   const GrayData dstData;
 
@@ -1068,7 +1079,8 @@ TEST(ImageBitmapColorUtils, RGB24ToGray8) {
  * From BGR24.
  */
 
-TEST(ImageBitmapColorUtils, BGR24ToRGB24_) {
+TEST(ImageBitmapColorUtils, BGR24ToRGB24_)
+{
   const BGR24Data srcData;
   const RGB24Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,
@@ -1093,7 +1105,8 @@ TEST(ImageBitmapColorUtils, BGR24ToRGB24_) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGR24ToRGBA32) {
+TEST(ImageBitmapColorUtils, BGR24ToRGBA32)
+{
   const BGR24Data srcData;
   const RGBA32Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,
@@ -1121,7 +1134,8 @@ TEST(ImageBitmapColorUtils, BGR24ToRGBA32) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGR24ToBGRA32) {
+TEST(ImageBitmapColorUtils, BGR24ToBGRA32)
+{
   const BGR24Data srcData;
   const BGRA32Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,
@@ -1149,7 +1163,8 @@ TEST(ImageBitmapColorUtils, BGR24ToBGRA32) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGR24ToYUV444P) {
+TEST(ImageBitmapColorUtils, BGR24ToYUV444P)
+{
   const BGR24Data srcData;
   const YUV444PData dstData;
 
@@ -1176,7 +1191,8 @@ TEST(ImageBitmapColorUtils, BGR24ToYUV444P) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGR24ToYUV422P) {
+TEST(ImageBitmapColorUtils, BGR24ToYUV422P)
+{
   const BGR24Data srcData;
   const YUV422PData dstData;
 
@@ -1208,7 +1224,8 @@ TEST(ImageBitmapColorUtils, BGR24ToYUV422P) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGR24ToYUV420P) {
+TEST(ImageBitmapColorUtils, BGR24ToYUV420P)
+{
   const BGR24Data srcData;
   const YUV420PData dstData;
 
@@ -1241,7 +1258,8 @@ TEST(ImageBitmapColorUtils, BGR24ToYUV420P) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGR24ToNV12) {
+TEST(ImageBitmapColorUtils, BGR24ToNV12)
+{
   const BGR24Data srcData;
   const NV12Data dstData;
 
@@ -1272,7 +1290,8 @@ TEST(ImageBitmapColorUtils, BGR24ToNV12) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGR24ToNV21) {
+TEST(ImageBitmapColorUtils, BGR24ToNV21)
+{
   const BGR24Data srcData;
   const NV21Data dstData;
 
@@ -1303,7 +1322,8 @@ TEST(ImageBitmapColorUtils, BGR24ToNV21) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGR24ToHSV) {
+TEST(ImageBitmapColorUtils, BGR24ToHSV)
+{
   const BGR24Data srcData;
   const HSVData dstData;
 
@@ -1326,7 +1346,8 @@ TEST(ImageBitmapColorUtils, BGR24ToHSV) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGR24ToLab) {
+TEST(ImageBitmapColorUtils, BGR24ToLab)
+{
   const BGR24Data srcData;
   const LabData dstData;
 
@@ -1349,7 +1370,8 @@ TEST(ImageBitmapColorUtils, BGR24ToLab) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGR24ToGray8) {
+TEST(ImageBitmapColorUtils, BGR24ToGray8)
+{
   const BGR24Data srcData;
   const GrayData dstData;
 
@@ -1371,7 +1393,8 @@ TEST(ImageBitmapColorUtils, BGR24ToGray8) {
 /*
  * From RGBA32.
  */
-TEST(ImageBitmapColorUtils, RGBA32ToRGB24) {
+TEST(ImageBitmapColorUtils, RGBA32ToRGB24)
+{
   const RGBA32Data srcData;
   const RGB24Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,
@@ -1396,7 +1419,8 @@ TEST(ImageBitmapColorUtils, RGBA32ToRGB24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGBA32ToBGR24) {
+TEST(ImageBitmapColorUtils, RGBA32ToBGR24)
+{
   const RGBA32Data srcData;
   const BGR24Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,
@@ -1421,7 +1445,8 @@ TEST(ImageBitmapColorUtils, RGBA32ToBGR24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGBA32ToYUV444P) {
+TEST(ImageBitmapColorUtils, RGBA32ToYUV444P)
+{
   const RGBA32Data srcData;
   const YUV444PData dstData;
 
@@ -1448,7 +1473,8 @@ TEST(ImageBitmapColorUtils, RGBA32ToYUV444P) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGBA32ToYUV422P) {
+TEST(ImageBitmapColorUtils, RGBA32ToYUV422P)
+{
   const RGBA32Data srcData;
   const YUV422PData dstData;
 
@@ -1480,7 +1506,8 @@ TEST(ImageBitmapColorUtils, RGBA32ToYUV422P) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGBA32ToYUV420P) {
+TEST(ImageBitmapColorUtils, RGBA32ToYUV420P)
+{
   const RGBA32Data srcData;
   const YUV420PData dstData;
 
@@ -1513,7 +1540,8 @@ TEST(ImageBitmapColorUtils, RGBA32ToYUV420P) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGBA32ToNV12) {
+TEST(ImageBitmapColorUtils, RGBA32ToNV12)
+{
   const RGBA32Data srcData;
   const NV12Data dstData;
 
@@ -1544,7 +1572,8 @@ TEST(ImageBitmapColorUtils, RGBA32ToNV12) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGBA32ToNV21) {
+TEST(ImageBitmapColorUtils, RGBA32ToNV21)
+{
   const RGBA32Data srcData;
   const NV21Data dstData;
 
@@ -1575,7 +1604,8 @@ TEST(ImageBitmapColorUtils, RGBA32ToNV21) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGBA32ToHSV) {
+TEST(ImageBitmapColorUtils, RGBA32ToHSV)
+{
   const RGBA32Data srcData;
   const HSVData dstData;
 
@@ -1598,7 +1628,8 @@ TEST(ImageBitmapColorUtils, RGBA32ToHSV) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGBA32ToLab) {
+TEST(ImageBitmapColorUtils, RGBA32ToLab)
+{
   const RGBA32Data srcData;
   const LabData dstData;
 
@@ -1621,7 +1652,8 @@ TEST(ImageBitmapColorUtils, RGBA32ToLab) {
   }
 }
 
-TEST(ImageBitmapColorUtils, RGBA32ToGray8) {
+TEST(ImageBitmapColorUtils, RGBA32ToGray8)
+{
   const RGBA32Data srcData;
   const GrayData dstData;
 
@@ -1643,7 +1675,8 @@ TEST(ImageBitmapColorUtils, RGBA32ToGray8) {
 /*
  * From BGRA32.
  */
-TEST(ImageBitmapColorUtils, BGRA32ToRGB24) {
+TEST(ImageBitmapColorUtils, BGRA32ToRGB24)
+{
   const BGRA32Data srcData;
   const RGB24Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,
@@ -1668,7 +1701,8 @@ TEST(ImageBitmapColorUtils, BGRA32ToRGB24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGRA32ToBGR24) {
+TEST(ImageBitmapColorUtils, BGRA32ToBGR24)
+{
   const BGRA32Data srcData;
   const BGR24Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,
@@ -1693,7 +1727,8 @@ TEST(ImageBitmapColorUtils, BGRA32ToBGR24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGRA32ToYUV444P) {
+TEST(ImageBitmapColorUtils, BGRA32ToYUV444P)
+{
   const BGRA32Data srcData;
   const YUV444PData dstData;
 
@@ -1720,7 +1755,8 @@ TEST(ImageBitmapColorUtils, BGRA32ToYUV444P) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGRA32ToYUV422P) {
+TEST(ImageBitmapColorUtils, BGRA32ToYUV422P)
+{
   const BGRA32Data srcData;
   const YUV422PData dstData;
 
@@ -1752,7 +1788,8 @@ TEST(ImageBitmapColorUtils, BGRA32ToYUV422P) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGRA32ToYUV420P) {
+TEST(ImageBitmapColorUtils, BGRA32ToYUV420P)
+{
   const BGRA32Data srcData;
   const YUV420PData dstData;
 
@@ -1785,7 +1822,8 @@ TEST(ImageBitmapColorUtils, BGRA32ToYUV420P) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGRA32ToNV12) {
+TEST(ImageBitmapColorUtils, BGRA32ToNV12)
+{
   const BGRA32Data srcData;
   const NV12Data dstData;
 
@@ -1816,7 +1854,8 @@ TEST(ImageBitmapColorUtils, BGRA32ToNV12) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGRA32ToNV21) {
+TEST(ImageBitmapColorUtils, BGRA32ToNV21)
+{
   const BGRA32Data srcData;
   const NV21Data dstData;
 
@@ -1847,7 +1886,8 @@ TEST(ImageBitmapColorUtils, BGRA32ToNV21) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGRA32ToHSV) {
+TEST(ImageBitmapColorUtils, BGRA32ToHSV)
+{
   const BGRA32Data srcData;
   const HSVData dstData;
 
@@ -1870,7 +1910,8 @@ TEST(ImageBitmapColorUtils, BGRA32ToHSV) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGRA32ToLab) {
+TEST(ImageBitmapColorUtils, BGRA32ToLab)
+{
   const BGRA32Data srcData;
   const LabData dstData;
 
@@ -1893,7 +1934,8 @@ TEST(ImageBitmapColorUtils, BGRA32ToLab) {
   }
 }
 
-TEST(ImageBitmapColorUtils, BGRA32ToGray8) {
+TEST(ImageBitmapColorUtils, BGRA32ToGray8)
+{
   const BGRA32Data srcData;
   const GrayData dstData;
 
@@ -1915,7 +1957,8 @@ TEST(ImageBitmapColorUtils, BGRA32ToGray8) {
 /*
  * From YUV444P.
  */
-TEST(ImageBitmapColorUtils, YUV444PToRGB24) {
+TEST(ImageBitmapColorUtils, YUV444PToRGB24)
+{
   const YUV444PData srcData;
   const RGBA32DataFromYUV444PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight, 3);
@@ -1941,7 +1984,8 @@ TEST(ImageBitmapColorUtils, YUV444PToRGB24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, YUV444PToBGR24) {
+TEST(ImageBitmapColorUtils, YUV444PToBGR24)
+{
   const YUV444PData srcData;
   const RGBA32DataFromYUV444PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight, 3);
@@ -1967,7 +2011,8 @@ TEST(ImageBitmapColorUtils, YUV444PToBGR24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, YUV444PToRGBA32) {
+TEST(ImageBitmapColorUtils, YUV444PToRGBA32)
+{
   const YUV444PData srcData;
   const RGBA32DataFromYUV444PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight,
@@ -1997,7 +2042,8 @@ TEST(ImageBitmapColorUtils, YUV444PToRGBA32) {
   }
 }
 
-TEST(ImageBitmapColorUtils, YUV444PToBGRA32) {
+TEST(ImageBitmapColorUtils, YUV444PToBGRA32)
+{
   const YUV444PData srcData;
   const RGBA32DataFromYUV444PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight,
@@ -2027,7 +2073,8 @@ TEST(ImageBitmapColorUtils, YUV444PToBGRA32) {
   }
 }
 
-TEST(ImageBitmapColorUtils, YUV444PToGray8) {
+TEST(ImageBitmapColorUtils, YUV444PToGray8)
+{
   const YUV444PData srcData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight, 1);
 
@@ -2049,7 +2096,8 @@ TEST(ImageBitmapColorUtils, YUV444PToGray8) {
 /*
  * From YUV422P.
  */
-TEST(ImageBitmapColorUtils, YUV422PToRGB24) {
+TEST(ImageBitmapColorUtils, YUV422PToRGB24)
+{
   const YUV422PData srcData;
   const RGBA32DataFromYUV422PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight, 3);
@@ -2075,7 +2123,8 @@ TEST(ImageBitmapColorUtils, YUV422PToRGB24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, YUV422PToBGR24) {
+TEST(ImageBitmapColorUtils, YUV422PToBGR24)
+{
   const YUV422PData srcData;
   const RGBA32DataFromYUV422PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight, 3);
@@ -2101,7 +2150,8 @@ TEST(ImageBitmapColorUtils, YUV422PToBGR24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, YUV422PToRGBA32) {
+TEST(ImageBitmapColorUtils, YUV422PToRGBA32)
+{
   const YUV422PData srcData;
   const RGBA32DataFromYUV422PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight,
@@ -2131,7 +2181,8 @@ TEST(ImageBitmapColorUtils, YUV422PToRGBA32) {
   }
 }
 
-TEST(ImageBitmapColorUtils, YUV422PToBGRA32) {
+TEST(ImageBitmapColorUtils, YUV422PToBGRA32)
+{
   const YUV422PData srcData;
   const RGBA32DataFromYUV422PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight,
@@ -2161,7 +2212,8 @@ TEST(ImageBitmapColorUtils, YUV422PToBGRA32) {
   }
 }
 
-TEST(ImageBitmapColorUtils, YUV422PToGray8) {
+TEST(ImageBitmapColorUtils, YUV422PToGray8)
+{
   const YUV422PData srcData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight, 1);
 
@@ -2183,7 +2235,8 @@ TEST(ImageBitmapColorUtils, YUV422PToGray8) {
 /*
  * From YUV420P.
  */
-TEST(ImageBitmapColorUtils, YUV420PToRGB24) {
+TEST(ImageBitmapColorUtils, YUV420PToRGB24)
+{
   const YUV420PData srcData;
   const RGBA32DataFromYUV420PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight, 3);
@@ -2209,7 +2262,8 @@ TEST(ImageBitmapColorUtils, YUV420PToRGB24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, YUV420PToBGR24) {
+TEST(ImageBitmapColorUtils, YUV420PToBGR24)
+{
   const YUV420PData srcData;
   const RGBA32DataFromYUV420PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight, 3);
@@ -2235,7 +2289,8 @@ TEST(ImageBitmapColorUtils, YUV420PToBGR24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, YUV420PToRGBA32) {
+TEST(ImageBitmapColorUtils, YUV420PToRGBA32)
+{
   const YUV420PData srcData;
   const RGBA32DataFromYUV420PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight,
@@ -2265,7 +2320,8 @@ TEST(ImageBitmapColorUtils, YUV420PToRGBA32) {
   }
 }
 
-TEST(ImageBitmapColorUtils, YUV420PToBGRA32) {
+TEST(ImageBitmapColorUtils, YUV420PToBGRA32)
+{
   const YUV420PData srcData;
   const RGBA32DataFromYUV420PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight,
@@ -2295,7 +2351,8 @@ TEST(ImageBitmapColorUtils, YUV420PToBGRA32) {
   }
 }
 
-TEST(ImageBitmapColorUtils, YUV420PToGray8) {
+TEST(ImageBitmapColorUtils, YUV420PToGray8)
+{
   const YUV420PData srcData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight, 1);
 
@@ -2317,7 +2374,8 @@ TEST(ImageBitmapColorUtils, YUV420PToGray8) {
 /*
  * From NV12.
  */
-TEST(ImageBitmapColorUtils, NV12ToRGB24) {
+TEST(ImageBitmapColorUtils, NV12ToRGB24)
+{
   const NV12Data srcData;
   const RGBA32DataFromYUV420PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight, 3);
@@ -2342,7 +2400,8 @@ TEST(ImageBitmapColorUtils, NV12ToRGB24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, NV12ToBGR24) {
+TEST(ImageBitmapColorUtils, NV12ToBGR24)
+{
   const NV12Data srcData;
   const RGBA32DataFromYUV420PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight, 3);
@@ -2367,7 +2426,8 @@ TEST(ImageBitmapColorUtils, NV12ToBGR24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, NV12ToRGBA32) {
+TEST(ImageBitmapColorUtils, NV12ToRGBA32)
+{
   const NV12Data srcData;
   const RGBA32DataFromYUV420PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight,
@@ -2396,7 +2456,8 @@ TEST(ImageBitmapColorUtils, NV12ToRGBA32) {
   }
 }
 
-TEST(ImageBitmapColorUtils, NV12ToBGRA32) {
+TEST(ImageBitmapColorUtils, NV12ToBGRA32)
+{
   const NV12Data srcData;
   const RGBA32DataFromYUV420PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight,
@@ -2425,7 +2486,8 @@ TEST(ImageBitmapColorUtils, NV12ToBGRA32) {
   }
 }
 
-TEST(ImageBitmapColorUtils, NV12ToGray8) {
+TEST(ImageBitmapColorUtils, NV12ToGray8)
+{
   const NV12Data srcData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight, 1);
 
@@ -2446,7 +2508,8 @@ TEST(ImageBitmapColorUtils, NV12ToGray8) {
 /*
  * From NV21.
  */
-TEST(ImageBitmapColorUtils, NV21ToRGB24) {
+TEST(ImageBitmapColorUtils, NV21ToRGB24)
+{
   const NV21Data srcData;
   const RGBA32DataFromYUV420PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight, 3);
@@ -2471,7 +2534,8 @@ TEST(ImageBitmapColorUtils, NV21ToRGB24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, NV21ToBGR24) {
+TEST(ImageBitmapColorUtils, NV21ToBGR24)
+{
   const NV21Data srcData;
   const RGBA32DataFromYUV420PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight, 3);
@@ -2496,7 +2560,8 @@ TEST(ImageBitmapColorUtils, NV21ToBGR24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, NV21ToRGBA32) {
+TEST(ImageBitmapColorUtils, NV21ToRGBA32)
+{
   const NV21Data srcData;
   const RGBA32DataFromYUV420PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight,
@@ -2525,7 +2590,8 @@ TEST(ImageBitmapColorUtils, NV21ToRGBA32) {
   }
 }
 
-TEST(ImageBitmapColorUtils, NV21ToBGRA32) {
+TEST(ImageBitmapColorUtils, NV21ToBGRA32)
+{
   const NV21Data srcData;
   const RGBA32DataFromYUV420PData dstData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight,
@@ -2554,7 +2620,8 @@ TEST(ImageBitmapColorUtils, NV21ToBGRA32) {
   }
 }
 
-TEST(ImageBitmapColorUtils, NV21ToGray8) {
+TEST(ImageBitmapColorUtils, NV21ToGray8)
+{
   const NV21Data srcData;
   SimpleImage<uint8_t> result_(srcData.mYWidth, srcData.mYHeight, 1);
 
@@ -2575,7 +2642,8 @@ TEST(ImageBitmapColorUtils, NV21ToGray8) {
 /*
  * From HSV.
  */
-TEST(ImageBitmapColorUtils, HSVToRGB24) {
+TEST(ImageBitmapColorUtils, HSVToRGB24)
+{
   const HSVData srcData;
   const RGB24Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,
@@ -2596,7 +2664,8 @@ TEST(ImageBitmapColorUtils, HSVToRGB24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, HSVToBGR24) {
+TEST(ImageBitmapColorUtils, HSVToBGR24)
+{
   const HSVData srcData;
   const BGR24Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,
@@ -2617,7 +2686,8 @@ TEST(ImageBitmapColorUtils, HSVToBGR24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, HSVToRGBA32) {
+TEST(ImageBitmapColorUtils, HSVToRGBA32)
+{
   const HSVData srcData;
   const RGBA32Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,
@@ -2638,7 +2708,8 @@ TEST(ImageBitmapColorUtils, HSVToRGBA32) {
   }
 }
 
-TEST(ImageBitmapColorUtils, HSVToBGRA32) {
+TEST(ImageBitmapColorUtils, HSVToBGRA32)
+{
   const HSVData srcData;
   const BGRA32Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,
@@ -2662,7 +2733,8 @@ TEST(ImageBitmapColorUtils, HSVToBGRA32) {
 /*
  * From Lab.
  */
-TEST(ImageBitmapColorUtils, LabToRGB24) {
+TEST(ImageBitmapColorUtils, LabToRGB24)
+{
   const LabData srcData;
   const RGB24Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,
@@ -2685,7 +2757,8 @@ TEST(ImageBitmapColorUtils, LabToRGB24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, LabToBGR24) {
+TEST(ImageBitmapColorUtils, LabToBGR24)
+{
   const LabData srcData;
   const BGR24Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,
@@ -2708,7 +2781,8 @@ TEST(ImageBitmapColorUtils, LabToBGR24) {
   }
 }
 
-TEST(ImageBitmapColorUtils, LabToRGBA32) {
+TEST(ImageBitmapColorUtils, LabToRGBA32)
+{
   const LabData srcData;
   const RGBA32Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,
@@ -2731,7 +2805,8 @@ TEST(ImageBitmapColorUtils, LabToRGBA32) {
   }
 }
 
-TEST(ImageBitmapColorUtils, LabToBGRA32) {
+TEST(ImageBitmapColorUtils, LabToBGRA32)
+{
   const LabData srcData;
   const BGRA32Data dstData;
   SimpleImage<uint8_t> result_(srcData.mWidth, srcData.mHeight,

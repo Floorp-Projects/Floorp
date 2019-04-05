@@ -93,7 +93,8 @@ class TestNrSocketTest : public MtransportTest {
   void CreatePublicAddrs_s(size_t count, const char *ip_str, int proto) {
     while (count--) {
       auto sock = CreateTestNrSocket_s(ip_str, proto, nullptr);
-      ASSERT_TRUE(sock) << "Failed to create socket";
+      ASSERT_TRUE(sock)
+      << "Failed to create socket";
       public_addrs_.push_back(sock);
     }
   }
@@ -530,8 +531,8 @@ TEST_F(TestNrSocketTest, FullConeOnePinhole) {
   ASSERT_FALSE(nr_transport_addr_cmp(&sender_external_address,
                                      &sender_external_address2,
                                      NR_TRANSPORT_ADDR_CMP_MODE_ALL))
-      << "addr1: " << sender_external_address.as_string
-      << " addr2: " << sender_external_address2.as_string;
+  << "addr1: " << sender_external_address.as_string
+  << " addr2: " << sender_external_address2.as_string;
 }
 
 // OS 10.6 doesn't seem to allow us to open ports on 127.0.0.2, and while linux
@@ -575,8 +576,8 @@ TEST_F(TestNrSocketTest, DISABLED_AddressRestrictedCone) {
   ASSERT_FALSE(nr_transport_addr_cmp(&sender_external_address,
                                      &sender_external_address2,
                                      NR_TRANSPORT_ADDR_CMP_MODE_ALL))
-      << "addr1: " << sender_external_address.as_string
-      << " addr2: " << sender_external_address2.as_string;
+  << "addr1: " << sender_external_address.as_string
+  << " addr2: " << sender_external_address2.as_string;
 
   // Verify that the other public IP can now use the pinhole
   ASSERT_TRUE(CheckConnectivityVia(public_addrs_[1], private_addrs_[0],
@@ -589,8 +590,8 @@ TEST_F(TestNrSocketTest, DISABLED_AddressRestrictedCone) {
   ASSERT_FALSE(nr_transport_addr_cmp(&sender_external_address,
                                      &sender_external_address3,
                                      NR_TRANSPORT_ADDR_CMP_MODE_ALL))
-      << "addr1: " << sender_external_address.as_string
-      << " addr2: " << sender_external_address3.as_string;
+  << "addr1: " << sender_external_address.as_string
+  << " addr2: " << sender_external_address3.as_string;
 
   // Verify that the other public IP can now use the pinhole
   ASSERT_TRUE(CheckConnectivityVia(public_addrs_[2], private_addrs_[0],
@@ -623,8 +624,8 @@ TEST_F(TestNrSocketTest, RestrictedCone) {
   ASSERT_FALSE(nr_transport_addr_cmp(&sender_external_address,
                                      &sender_external_address2,
                                      NR_TRANSPORT_ADDR_CMP_MODE_ALL))
-      << "addr1: " << sender_external_address.as_string
-      << " addr2: " << sender_external_address2.as_string;
+  << "addr1: " << sender_external_address.as_string
+  << " addr2: " << sender_external_address2.as_string;
 
   // Verify that the other public IP can now use the pinhole
   ASSERT_TRUE(CheckConnectivityVia(public_addrs_[1], private_addrs_[0],
@@ -657,8 +658,8 @@ TEST_F(TestNrSocketTest, PortDependentMappingFullCone) {
   ASSERT_TRUE(nr_transport_addr_cmp(&sender_external_address0,
                                     &sender_external_address1,
                                     NR_TRANSPORT_ADDR_CMP_MODE_ALL))
-      << "addr1: " << sender_external_address0.as_string
-      << " addr2: " << sender_external_address1.as_string;
+  << "addr1: " << sender_external_address0.as_string
+  << " addr2: " << sender_external_address1.as_string;
 
   // Verify that return traffic works
   ASSERT_TRUE(CheckConnectivityVia(public_addrs_[1], private_addrs_[0],

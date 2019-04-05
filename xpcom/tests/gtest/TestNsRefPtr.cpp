@@ -192,7 +192,8 @@ void Bar::VirtualConstMemberFunction(int aArg1, int* aArgPtr,
 
 using namespace TestNsRefPtr;
 
-TEST(nsRefPtr, AddRefAndRelease) {
+TEST(nsRefPtr, AddRefAndRelease)
+{
   Foo::total_constructions_ = 0;
   Foo::total_destructions_ = 0;
 
@@ -239,7 +240,8 @@ TEST(nsRefPtr, AddRefAndRelease) {
   }
 }
 
-TEST(nsRefPtr, VirtualDestructor) {
+TEST(nsRefPtr, VirtualDestructor)
+{
   Bar::total_destructions_ = 0;
 
   {
@@ -250,7 +252,8 @@ TEST(nsRefPtr, VirtualDestructor) {
   ASSERT_EQ(Bar::total_destructions_, 1);
 }
 
-TEST(nsRefPtr, Equality) {
+TEST(nsRefPtr, Equality)
+{
   Foo::total_constructions_ = 0;
   Foo::total_destructions_ = 0;
 
@@ -287,7 +290,8 @@ TEST(nsRefPtr, Equality) {
   ASSERT_EQ(Foo::total_destructions_, 2);
 }
 
-TEST(nsRefPtr, AddRefHelpers) {
+TEST(nsRefPtr, AddRefHelpers)
+{
   Foo::total_addrefs_ = 0;
 
   {
@@ -319,7 +323,8 @@ TEST(nsRefPtr, AddRefHelpers) {
   }
 }
 
-TEST(nsRefPtr, QueryInterface) {
+TEST(nsRefPtr, QueryInterface)
+{
   Foo::total_queries_ = 0;
   Bar::total_queries_ = 0;
 
@@ -392,7 +397,8 @@ static void AnFooPtrPtrContext(Foo**) {}
 static void AVoidPtrPtrContext(void**) {}
 }  // namespace TestNsRefPtr
 
-TEST(nsRefPtr, RefPtrCompilationTests) {
+TEST(nsRefPtr, RefPtrCompilationTests)
+{
   {
     RefPtr<Foo> fooP;
 

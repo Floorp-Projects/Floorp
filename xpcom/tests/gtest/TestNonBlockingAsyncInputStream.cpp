@@ -7,7 +7,8 @@
 #include "nsStringStream.h"
 #include "Helpers.h"
 
-TEST(TestNonBlockingAsyncInputStream, Simple) {
+TEST(TestNonBlockingAsyncInputStream, Simple)
+{
   nsCString data;
   data.Assign("Hello world!");
 
@@ -69,7 +70,8 @@ static nsresult ReadSegmentsFunction(nsIInputStream* aInStr, void* aClosure,
   return NS_OK;
 }
 
-TEST(TestNonBlockingAsyncInputStream, ReadSegments) {
+TEST(TestNonBlockingAsyncInputStream, ReadSegments)
+{
   nsCString data;
   data.Assign("Hello world!");
 
@@ -94,7 +96,8 @@ TEST(TestNonBlockingAsyncInputStream, ReadSegments) {
   ASSERT_TRUE(data.Equals(nsCString(buffer, read)));
 }
 
-TEST(TestNonBlockingAsyncInputStream, AsyncWait_Simple) {
+TEST(TestNonBlockingAsyncInputStream, AsyncWait_Simple)
+{
   nsCString data;
   data.Assign("Hello world!");
 
@@ -138,8 +141,8 @@ TEST(TestNonBlockingAsyncInputStream, AsyncWait_Simple) {
   ASSERT_TRUE(data.Equals(nsCString(buffer, read)));
 }
 
-TEST(TestNonBlockingAsyncInputStream,
-     AsyncWait_ClosureOnly_withoutEventTarget) {
+TEST(TestNonBlockingAsyncInputStream, AsyncWait_ClosureOnly_withoutEventTarget)
+{
   nsCString data;
   data.Assign("Hello world!");
 
@@ -166,7 +169,8 @@ TEST(TestNonBlockingAsyncInputStream,
   ASSERT_TRUE(cb->Called());
 }
 
-TEST(TestNonBlockingAsyncInputStream, AsyncWait_ClosureOnly_withEventTarget) {
+TEST(TestNonBlockingAsyncInputStream, AsyncWait_ClosureOnly_withEventTarget)
+{
   nsCString data;
   data.Assign("Hello world!");
 
@@ -197,7 +201,8 @@ TEST(TestNonBlockingAsyncInputStream, AsyncWait_ClosureOnly_withEventTarget) {
   ASSERT_TRUE(cb->Called());
 }
 
-TEST(TestNonBlockingAsyncInputStream, Helper) {
+TEST(TestNonBlockingAsyncInputStream, Helper)
+{
   nsCString data;
   data.Assign("Hello world!");
 
@@ -314,7 +319,8 @@ NS_INTERFACE_MAP_BEGIN(QIInputStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
-TEST(TestNonBlockingAsyncInputStream, QI) {
+TEST(TestNonBlockingAsyncInputStream, QI)
+{
   // Let's test ::Create() returning error.
 
   nsCOMPtr<nsIAsyncInputStream> async;
