@@ -719,7 +719,6 @@ void ParsedHeaderValueList::ParseNameAndValue(const char *input,
                            *valueEnd != ';' && *valueEnd != ',';
          valueEnd++)
       ;
-    input = valueEnd;
     if (!allowInvalidValue) {
       for (const char *c = valueStart; c < valueEnd; c++) {
         if (!IsTokenSymbol(*c)) {
