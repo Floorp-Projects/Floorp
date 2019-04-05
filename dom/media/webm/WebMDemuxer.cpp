@@ -1093,12 +1093,6 @@ RefPtr<WebMTrackDemuxer::SamplesPromise> WebMTrackDemuxer::GetSamples(
     if (NS_FAILED(rv)) {
       break;
     }
-    // Ignore empty samples.
-    if (sample->Size() == 0) {
-      WEBM_DEBUG(
-          "0 sized sample encountered while getting samples, skipping it");
-      continue;
-    }
     if (mNeedKeyframe && !sample->mKeyframe) {
       continue;
     }
