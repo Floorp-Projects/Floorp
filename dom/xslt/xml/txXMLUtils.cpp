@@ -130,9 +130,7 @@ void XMLUtils::normalizePIValue(nsAString& piValue) {
         }
         break;
       }
-      default: {
-        break;
-      }
+      default: { break; }
     }
     piValue.Append(ch);
     prevCh = ch;

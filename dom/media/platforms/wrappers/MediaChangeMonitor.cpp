@@ -475,36 +475,35 @@ MediaResult MediaChangeMonitor::CreateDecoderAndInit(MediaRawData* aSample) {
     RefPtr<MediaChangeMonitor> self = this;
     RefPtr<MediaRawData> sample = aSample;
     mDecoder->Init()
-        ->Then(
-            mTaskQueue, __func__,
-            [self, sample, this](const TrackType aTrackType) {
-              mInitPromiseRequest.Complete();
-              mConversionRequired = Some(mDecoder->NeedsConversion());
-              mCanRecycleDecoder = Some(CanRecycleDecoder());
+        ->Then(mTaskQueue, __func__,
+               [self, sample, this](const TrackType aTrackType) {
+                 mInitPromiseRequest.Complete();
+                 mConversionRequired = Some(mDecoder->NeedsConversion());
+                 mCanRecycleDecoder = Some(CanRecycleDecoder());
 
-              if (!mFlushPromise.IsEmpty()) {
-                // A Flush is pending, abort the current operation.
-                mFlushPromise.Resolve(true, __func__);
-                return;
-              }
+                 if (!mFlushPromise.IsEmpty()) {
+                   // A Flush is pending, abort the current operation.
+                   mFlushPromise.Resolve(true, __func__);
+                   return;
+                 }
 
-              DecodeFirstSample(sample);
-            },
-            [self, this](const MediaResult& aError) {
-              mInitPromiseRequest.Complete();
+                 DecodeFirstSample(sample);
+               },
+               [self, this](const MediaResult& aError) {
+                 mInitPromiseRequest.Complete();
 
-              if (!mFlushPromise.IsEmpty()) {
-                // A Flush is pending, abort the current operation.
-                mFlushPromise.Reject(aError, __func__);
-                return;
-              }
+                 if (!mFlushPromise.IsEmpty()) {
+                   // A Flush is pending, abort the current operation.
+                   mFlushPromise.Reject(aError, __func__);
+                   return;
+                 }
 
-              mDecodePromise.Reject(
-                  MediaResult(
-                      NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                      RESULT_DETAIL("Unable to initialize H264 decoder")),
-                  __func__);
-            })
+                 mDecodePromise.Reject(
+                     MediaResult(
+                         NS_ERROR_DOM_MEDIA_FATAL_ERR,
+                         RESULT_DETAIL("Unable to initialize H264 decoder")),
+                     __func__);
+               })
         ->Track(mInitPromiseRequest);
     return NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER;
   }
@@ -545,18 +544,17 @@ void MediaChangeMonitor::DecodeFirstSample(MediaRawData* aSample) {
 
   RefPtr<MediaChangeMonitor> self = this;
   mDecoder->Decode(aSample)
-      ->Then(
-          mTaskQueue, __func__,
-          [self, this](MediaDataDecoder::DecodedData&& aResults) {
-            mDecodePromiseRequest.Complete();
-            mPendingFrames.AppendElements(std::move(aResults));
-            mDecodePromise.Resolve(std::move(mPendingFrames), __func__);
-            mPendingFrames = DecodedData();
-          },
-          [self, this](const MediaResult& aError) {
-            mDecodePromiseRequest.Complete();
-            mDecodePromise.Reject(aError, __func__);
-          })
+      ->Then(mTaskQueue, __func__,
+             [self, this](MediaDataDecoder::DecodedData&& aResults) {
+               mDecodePromiseRequest.Complete();
+               mPendingFrames.AppendElements(std::move(aResults));
+               mDecodePromise.Resolve(std::move(mPendingFrames), __func__);
+               mPendingFrames = DecodedData();
+             },
+             [self, this](const MediaResult& aError) {
+               mDecodePromiseRequest.Complete();
+               mDecodePromise.Reject(aError, __func__);
+             })
       ->Track(mDecodePromiseRequest);
 }
 
@@ -591,33 +589,32 @@ void MediaChangeMonitor::DrainThenFlushDecoder(MediaRawData* aPendingSample) {
   RefPtr<MediaRawData> sample = aPendingSample;
   RefPtr<MediaChangeMonitor> self = this;
   mDecoder->Drain()
-      ->Then(
-          mTaskQueue, __func__,
-          [self, sample, this](MediaDataDecoder::DecodedData&& aResults) {
-            mDrainRequest.Complete();
-            if (!mFlushPromise.IsEmpty()) {
-              // A Flush is pending, abort the current operation.
-              mFlushPromise.Resolve(true, __func__);
-              return;
-            }
-            if (aResults.Length() > 0) {
-              mPendingFrames.AppendElements(std::move(aResults));
-              DrainThenFlushDecoder(sample);
-              return;
-            }
-            // We've completed the draining operation, we can now flush the
-            // decoder.
-            FlushThenShutdownDecoder(sample);
-          },
-          [self, this](const MediaResult& aError) {
-            mDrainRequest.Complete();
-            if (!mFlushPromise.IsEmpty()) {
-              // A Flush is pending, abort the current operation.
-              mFlushPromise.Reject(aError, __func__);
-              return;
-            }
-            mDecodePromise.Reject(aError, __func__);
-          })
+      ->Then(mTaskQueue, __func__,
+             [self, sample, this](MediaDataDecoder::DecodedData&& aResults) {
+               mDrainRequest.Complete();
+               if (!mFlushPromise.IsEmpty()) {
+                 // A Flush is pending, abort the current operation.
+                 mFlushPromise.Resolve(true, __func__);
+                 return;
+               }
+               if (aResults.Length() > 0) {
+                 mPendingFrames.AppendElements(std::move(aResults));
+                 DrainThenFlushDecoder(sample);
+                 return;
+               }
+               // We've completed the draining operation, we can now flush the
+               // decoder.
+               FlushThenShutdownDecoder(sample);
+             },
+             [self, this](const MediaResult& aError) {
+               mDrainRequest.Complete();
+               if (!mFlushPromise.IsEmpty()) {
+                 // A Flush is pending, abort the current operation.
+                 mFlushPromise.Reject(aError, __func__);
+                 return;
+               }
+               mDecodePromise.Reject(aError, __func__);
+             })
       ->Track(mDrainRequest);
 }
 
@@ -628,53 +625,51 @@ void MediaChangeMonitor::FlushThenShutdownDecoder(
   RefPtr<MediaRawData> sample = aPendingSample;
   RefPtr<MediaChangeMonitor> self = this;
   mDecoder->Flush()
-      ->Then(
-          mTaskQueue, __func__,
-          [self, sample, this]() {
-            mFlushRequest.Complete();
+      ->Then(mTaskQueue, __func__,
+             [self, sample, this]() {
+               mFlushRequest.Complete();
 
-            if (!mFlushPromise.IsEmpty()) {
-              // A Flush is pending, abort the current operation.
-              mFlushPromise.Resolve(true, __func__);
-              return;
-            }
+               if (!mFlushPromise.IsEmpty()) {
+                 // A Flush is pending, abort the current operation.
+                 mFlushPromise.Resolve(true, __func__);
+                 return;
+               }
 
-            mShutdownPromise = ShutdownDecoder();
-            mShutdownPromise
-                ->Then(
-                    mTaskQueue, __func__,
-                    [self, sample, this]() {
-                      mShutdownRequest.Complete();
-                      mShutdownPromise = nullptr;
+               mShutdownPromise = ShutdownDecoder();
+               mShutdownPromise
+                   ->Then(mTaskQueue, __func__,
+                          [self, sample, this]() {
+                            mShutdownRequest.Complete();
+                            mShutdownPromise = nullptr;
 
-                      if (!mFlushPromise.IsEmpty()) {
-                        // A Flush is pending, abort the current
-                        // operation.
-                        mFlushPromise.Resolve(true, __func__);
-                        return;
-                      }
+                            if (!mFlushPromise.IsEmpty()) {
+                              // A Flush is pending, abort the current
+                              // operation.
+                              mFlushPromise.Resolve(true, __func__);
+                              return;
+                            }
 
-                      MediaResult rv = CreateDecoderAndInit(sample);
-                      if (rv == NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER) {
-                        // All good so far, will continue later.
-                        return;
-                      }
-                      MOZ_ASSERT(NS_FAILED(rv));
-                      mDecodePromise.Reject(rv, __func__);
-                      return;
-                    },
-                    [] { MOZ_CRASH("Can't reach here'"); })
-                ->Track(mShutdownRequest);
-          },
-          [self, this](const MediaResult& aError) {
-            mFlushRequest.Complete();
-            if (!mFlushPromise.IsEmpty()) {
-              // A Flush is pending, abort the current operation.
-              mFlushPromise.Reject(aError, __func__);
-              return;
-            }
-            mDecodePromise.Reject(aError, __func__);
-          })
+                            MediaResult rv = CreateDecoderAndInit(sample);
+                            if (rv == NS_ERROR_DOM_MEDIA_INITIALIZING_DECODER) {
+                              // All good so far, will continue later.
+                              return;
+                            }
+                            MOZ_ASSERT(NS_FAILED(rv));
+                            mDecodePromise.Reject(rv, __func__);
+                            return;
+                          },
+                          [] { MOZ_CRASH("Can't reach here'"); })
+                   ->Track(mShutdownRequest);
+             },
+             [self, this](const MediaResult& aError) {
+               mFlushRequest.Complete();
+               if (!mFlushPromise.IsEmpty()) {
+                 // A Flush is pending, abort the current operation.
+                 mFlushPromise.Reject(aError, __func__);
+                 return;
+               }
+               mDecodePromise.Reject(aError, __func__);
+             })
       ->Track(mFlushRequest);
 }
 

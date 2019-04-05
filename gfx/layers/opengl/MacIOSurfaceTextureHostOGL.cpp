@@ -193,9 +193,7 @@ void MacIOSurfaceTextureHostOGL::PushResourceUpdates(
       (aResources.*method)(aImageKeys[1], descriptor1, aExtID, bufferType, 1);
       break;
     }
-    default: {
-      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-    }
+    default: { MOZ_ASSERT_UNREACHABLE("unexpected to be called"); }
   }
 }
 
@@ -235,9 +233,7 @@ void MacIOSurfaceTextureHostOGL::PushDisplayItems(
                              aFilter);
       break;
     }
-    default: {
-      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-    }
+    default: { MOZ_ASSERT_UNREACHABLE("unexpected to be called"); }
   }
 }
 

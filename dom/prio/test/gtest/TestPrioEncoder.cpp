@@ -14,8 +14,7 @@
 
 #include "mprio.h"
 
-TEST(PrioEncoder, BadPublicKeys)
-{
+TEST(PrioEncoder, BadPublicKeys) {
   mozilla::dom::AutoJSAPI jsAPI;
   ASSERT_TRUE(jsAPI.Init(xpc::PrivilegedJunkScope()));
   JSContext* cx = jsAPI.cx();
@@ -47,8 +46,7 @@ TEST(PrioEncoder, BadPublicKeys)
   rv = mozilla::ErrorResult();
 }
 
-TEST(PrioEncoder, BooleanLimitExceeded)
-{
+TEST(PrioEncoder, BooleanLimitExceeded) {
   mozilla::dom::AutoJSAPI jsAPI;
   ASSERT_TRUE(jsAPI.Init(xpc::PrivilegedJunkScope()));
   JSContext* cx = jsAPI.cx();
@@ -83,8 +81,7 @@ TEST(PrioEncoder, BooleanLimitExceeded)
   rv = mozilla::ErrorResult();
 }
 
-TEST(PrioEncoder, VerifyFull)
-{
+TEST(PrioEncoder, VerifyFull) {
   SECStatus prioRv = SECSuccess;
 
   PublicKey pkA = nullptr;

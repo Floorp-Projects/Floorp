@@ -22,13 +22,13 @@ void CheckUintScalar(const char* aName, JSContext* aCx,
   JS::RootedValue value(aCx);
   JS::RootedObject scalarObj(aCx, &aSnapshot.toObject());
   ASSERT_TRUE(JS_GetProperty(aCx, scalarObj, aName, &value))
-  << "The test scalar must be reported.";
+      << "The test scalar must be reported.";
   JS_GetProperty(aCx, scalarObj, aName, &value);
 
   ASSERT_TRUE(value.isInt32())
-  << "The scalar value must be of the correct type.";
+      << "The scalar value must be of the correct type.";
   ASSERT_TRUE(value.toInt32() >= 0)
-  << "The uint scalar type must contain a value >= 0.";
+      << "The uint scalar type must contain a value >= 0.";
   ASSERT_EQ(static_cast<uint32_t>(value.toInt32()), expectedValue)
       << "The scalar value must match the expected value.";
 }
@@ -39,9 +39,9 @@ void CheckBoolScalar(const char* aName, JSContext* aCx,
   JS::RootedValue value(aCx);
   JS::RootedObject scalarObj(aCx, &aSnapshot.toObject());
   ASSERT_TRUE(JS_GetProperty(aCx, scalarObj, aName, &value))
-  << "The test scalar must be reported.";
+      << "The test scalar must be reported.";
   ASSERT_TRUE(value.isBoolean())
-  << "The scalar value must be of the correct type.";
+      << "The scalar value must be of the correct type.";
   ASSERT_EQ(static_cast<bool>(value.toBoolean()), expectedValue)
       << "The scalar value must match the expected value.";
 }
@@ -52,16 +52,15 @@ void CheckStringScalar(const char* aName, JSContext* aCx,
   JS::RootedValue value(aCx);
   JS::RootedObject scalarObj(aCx, &aSnapshot.toObject());
   ASSERT_TRUE(JS_GetProperty(aCx, scalarObj, aName, &value))
-  << "The test scalar must be reported.";
+      << "The test scalar must be reported.";
   ASSERT_TRUE(value.isString())
-  << "The scalar value must be of the correct type.";
+      << "The scalar value must be of the correct type.";
 
   bool sameString;
   ASSERT_TRUE(
       JS_StringEqualsAscii(aCx, value.toString(), expectedValue, &sameString))
-  << "JS String comparison failed";
-  ASSERT_TRUE(sameString)
-  << "The scalar value must match the expected string";
+      << "JS String comparison failed";
+  ASSERT_TRUE(sameString) << "The scalar value must match the expected string";
 }
 
 void CheckKeyedUintScalar(const char* aName, const char* aKey, JSContext* aCx,
@@ -70,7 +69,7 @@ void CheckKeyedUintScalar(const char* aName, const char* aKey, JSContext* aCx,
   JS::RootedObject scalarObj(aCx, &aSnapshot.toObject());
   // Get the aName keyed scalar object from the scalars snapshot.
   ASSERT_TRUE(JS_GetProperty(aCx, scalarObj, aName, &keyedScalar))
-  << "The keyed scalar must be reported.";
+      << "The keyed scalar must be reported.";
 
   CheckUintScalar(aKey, aCx, keyedScalar, expectedValue);
 }
@@ -81,7 +80,7 @@ void CheckKeyedBoolScalar(const char* aName, const char* aKey, JSContext* aCx,
   JS::RootedObject scalarObj(aCx, &aSnapshot.toObject());
   // Get the aName keyed scalar object from the scalars snapshot.
   ASSERT_TRUE(JS_GetProperty(aCx, scalarObj, aName, &keyedScalar))
-  << "The keyed scalar must be reported.";
+      << "The keyed scalar must be reported.";
 
   CheckBoolScalar(aKey, aCx, keyedScalar, expectedValue);
 }
@@ -93,12 +92,12 @@ void CheckNumberOfProperties(const char* aName, JSContext* aCx,
   JS::RootedObject scalarObj(aCx, &aSnapshot.toObject());
   // Get the aName keyed scalar object from the scalars snapshot.
   ASSERT_TRUE(JS_GetProperty(aCx, scalarObj, aName, &keyedScalar))
-  << "The keyed scalar must be reported.";
+      << "The keyed scalar must be reported.";
 
   JS::RootedObject keyedScalarObj(aCx, &keyedScalar.toObject());
   JS::Rooted<JS::IdVector> ids(aCx, JS::IdVector(aCx));
   ASSERT_TRUE(JS_Enumerate(aCx, keyedScalarObj, &ids))
-  << "We must be able to get keyed scalar members.";
+      << "We must be able to get keyed scalar members.";
 
   ASSERT_EQ(expectedNumProperties, ids.length())
       << "The scalar must report the expected number of properties.";
@@ -178,8 +177,7 @@ void GetOriginSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
   nsresult rv;
   rv = telemetry->GetOriginSnapshot(aClear, aCx, &originSnapshot);
   ASSERT_EQ(rv, NS_OK) << "Snapshotting origin data must not fail.";
-  ASSERT_TRUE(originSnapshot.isObject())
-  << "The snapshot must be an object.";
+  ASSERT_TRUE(originSnapshot.isObject()) << "The snapshot must be an object.";
 
   aResult.set(originSnapshot);
 }
@@ -210,11 +208,11 @@ void GetEncodedOriginStrings(JSContext* aCx, const nsCString& encoding,
   JS::RootedObject prioDataObj(aCx, &snapshot.toObject());
   bool isArray = false;
   ASSERT_TRUE(JS_IsArrayObject(aCx, prioDataObj, &isArray) && isArray)
-  << "The metric's origins must be in an array.";
+      << "The metric's origins must be in an array.";
 
   uint32_t length = 0;
   ASSERT_TRUE(JS_GetArrayLength(aCx, prioDataObj, &length) && length == 1)
-  << "Length of returned array must be 1.";
+      << "Length of returned array must be 1.";
 
   JS::RootedValue arrayItem(aCx);
   ASSERT_TRUE(JS_GetElement(aCx, prioDataObj, 0, &arrayItem));
@@ -229,8 +227,8 @@ void GetEncodedOriginStrings(JSContext* aCx, const nsCString& encoding,
   nsAutoJSString jsStr;
   ASSERT_TRUE(jsStr.init(aCx, encodingVal));
   ASSERT_TRUE(NS_ConvertUTF16toUTF8(jsStr) == encoding)
-  << "Actual 'encoding' (" << NS_ConvertUTF16toUTF8(jsStr).get()
-  << ") must match expected (" << encoding.get();
+      << "Actual 'encoding' (" << NS_ConvertUTF16toUTF8(jsStr).get()
+      << ") must match expected (" << encoding.get();
 
   JS::RootedValue prioVal(aCx);
   ASSERT_TRUE(JS_GetProperty(aCx, arrayItemObj, "prio", &prioVal));
@@ -261,8 +259,7 @@ void GetEventSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
                                  0 /* eventLimit */, aCx, 1 /* argc */,
                                  &eventSnapshot);
   ASSERT_EQ(rv, NS_OK) << "Snapshotting events must not fail.";
-  ASSERT_TRUE(eventSnapshot.isObject())
-  << "The snapshot must be an object.";
+  ASSERT_TRUE(eventSnapshot.isObject()) << "The snapshot must be an object.";
 
   JS::RootedValue processEvents(aCx);
   JS::RootedObject eventObj(aCx, &eventSnapshot.toObject());
@@ -295,8 +292,7 @@ void GetScalarsSnapshot(bool aKeyed, JSContext* aCx,
 
   // Validate the snapshot.
   ASSERT_EQ(rv, NS_OK) << "Creating a snapshot of the data must not fail.";
-  ASSERT_TRUE(scalarsSnapshot.isObject())
-  << "The snapshot must be an object.";
+  ASSERT_TRUE(scalarsSnapshot.isObject()) << "The snapshot must be an object.";
 
   JS::RootedValue processScalars(aCx);
   JS::RootedObject scalarObj(aCx, &scalarsSnapshot.toObject());
@@ -323,7 +319,7 @@ void GetAndClearHistogram(JSContext* cx, nsCOMPtr<nsITelemetry> mTelemetry,
   JS::RootedValue rval(cx);
   ASSERT_TRUE(JS_CallFunctionName(cx, testHistogramObj, "clear",
                                   JS::HandleValueArray::empty(), &rval))
-  << "Cannot clear histogram";
+      << "Cannot clear histogram";
 }
 
 void GetProperty(JSContext* cx, const char* name, JS::HandleValue valueIn,
@@ -331,7 +327,7 @@ void GetProperty(JSContext* cx, const char* name, JS::HandleValue valueIn,
   JS::RootedValue property(cx);
   JS::RootedObject valueInObj(cx, &valueIn.toObject());
   ASSERT_TRUE(JS_GetProperty(cx, valueInObj, name, &property))
-  << "Cannot get property '" << name << "'";
+      << "Cannot get property '" << name << "'";
   valueOut.set(property);
 }
 
@@ -340,7 +336,7 @@ void GetElement(JSContext* cx, uint32_t index, JS::HandleValue valueIn,
   JS::RootedValue element(cx);
   JS::RootedObject valueInObj(cx, &valueIn.toObject());
   ASSERT_TRUE(JS_GetElement(cx, valueInObj, index, &element))
-  << "Cannot get element at index '" << index << "'";
+      << "Cannot get element at index '" << index << "'";
   valueOut.set(element);
 }
 

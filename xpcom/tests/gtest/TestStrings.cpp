@@ -1304,8 +1304,7 @@ static void test_parse_string_helper2(const char* str, char separator,
   test_parse_string_helper(str, separator, 2, s1, s2);
 }
 
-TEST(String, parse_string)
-{
+TEST(String, parse_string) {
   test_parse_string_helper1("foo, bar", '_', "foo, bar");
   test_parse_string_helper2("foo, bar", ',', "foo", " bar");
   test_parse_string_helper2("foo, bar ", ' ', "foo,", "bar");
@@ -1323,8 +1322,7 @@ static void test_strip_chars_helper(const char16_t* str, const char16_t* strip,
   EXPECT_TRUE(data.Equals(result));
 }
 
-TEST(String, strip_chars)
-{
+TEST(String, strip_chars) {
   test_strip_chars_helper(u"foo \r \nbar", u" \n\r",
                           NS_LITERAL_STRING("foobar"));
   test_strip_chars_helper(u"\r\nfoo\r\n", u" \n\r", NS_LITERAL_STRING("foo"));

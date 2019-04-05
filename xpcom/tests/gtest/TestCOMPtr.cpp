@@ -182,8 +182,7 @@ static void AnISupportsPtrPtrContext(nsISupports**) {}
 
 using namespace TestCOMPtr;
 
-TEST(COMPtr, Bloat_Raw_Unsafe)
-{
+TEST(COMPtr, Bloat_Raw_Unsafe) {
   // ER: I'm not sure what this is testing...
   IBar* barP = 0;
   nsresult rv = CreateIBar(reinterpret_cast<void**>(&barP));
@@ -199,8 +198,7 @@ TEST(COMPtr, Bloat_Raw_Unsafe)
   NS_RELEASE(barP);
 }
 
-TEST(COMPtr, Bloat_Smart)
-{
+TEST(COMPtr, Bloat_Smart) {
   // ER: I'm not sure what this is testing...
   nsCOMPtr<IBar> barP;
   nsresult rv = CreateIBar(getter_AddRefs(barP));
@@ -212,8 +210,7 @@ TEST(COMPtr, Bloat_Smart)
   ASSERT_TRUE(fooP);
 }
 
-TEST(COMPtr, AddRefAndRelease)
-{
+TEST(COMPtr, AddRefAndRelease) {
   IFoo::total_constructions_ = 0;
   IFoo::total_destructions_ = 0;
   IBar::total_destructions_ = 0;
@@ -263,8 +260,7 @@ TEST(COMPtr, AddRefAndRelease)
   ASSERT_EQ(IBar::total_destructions_, 1);
 }
 
-TEST(COMPtr, Comparison)
-{
+TEST(COMPtr, Comparison) {
   IFoo::total_constructions_ = 0;
   IFoo::total_destructions_ = 0;
 
@@ -299,8 +295,7 @@ TEST(COMPtr, Comparison)
   ASSERT_EQ(IFoo::total_destructions_, 2);
 }
 
-TEST(COMPtr, DontAddRef)
-{
+TEST(COMPtr, DontAddRef) {
   {
     auto* raw_foo1p = new IFoo;
     raw_foo1p->AddRef();
@@ -319,8 +314,7 @@ TEST(COMPtr, DontAddRef)
   }
 }
 
-TEST(COMPtr, AssignmentHelpers)
-{
+TEST(COMPtr, AssignmentHelpers) {
   IFoo::total_constructions_ = 0;
   IFoo::total_destructions_ = 0;
 
@@ -381,8 +375,7 @@ TEST(COMPtr, AssignmentHelpers)
   ASSERT_EQ(IFoo::total_destructions_, 5);
 }
 
-TEST(COMPtr, QueryInterface)
-{
+TEST(COMPtr, QueryInterface) {
   IFoo::total_queries_ = 0;
   IBar::total_queries_ = 0;
 
@@ -414,8 +407,7 @@ TEST(COMPtr, QueryInterface)
   }
 }
 
-TEST(COMPtr, GetterConversions)
-{
+TEST(COMPtr, GetterConversions) {
   // This is just a compilation test. We add a few asserts to keep gtest happy.
   {
     nsCOMPtr<IFoo> fooP;

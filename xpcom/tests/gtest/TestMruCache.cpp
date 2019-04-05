@@ -55,8 +55,7 @@ static nsCString MakeStringKey(char aKey) {
   return key;
 }
 
-TEST(MruCache, TestNullChecker)
-{
+TEST(MruCache, TestNullChecker) {
   using mozilla::detail::EmptyChecker;
 
   {
@@ -85,8 +84,7 @@ TEST(MruCache, TestNullChecker)
   }
 }
 
-TEST(MruCache, TestEmptyCache)
-{
+TEST(MruCache, TestEmptyCache) {
   {
     // Test a basic empty cache.
     IntMap mru;
@@ -128,8 +126,7 @@ TEST(MruCache, TestEmptyCache)
   }
 }
 
-TEST(MruCache, TestPut)
-{
+TEST(MruCache, TestPut) {
   IntMap mru;
 
   // Fill it up.
@@ -147,8 +144,7 @@ TEST(MruCache, TestPut)
   }
 }
 
-TEST(MruCache, TestPutConvertable)
-{
+TEST(MruCache, TestPutConvertable) {
   UintPtrMap mru;
 
   // Fill it up.
@@ -167,8 +163,7 @@ TEST(MruCache, TestPutConvertable)
   }
 }
 
-TEST(MruCache, TestOverwriting)
-{
+TEST(MruCache, TestOverwriting) {
   // Test overwrting
   IntMap mru;
 
@@ -187,8 +182,7 @@ TEST(MruCache, TestOverwriting)
   }
 }
 
-TEST(MruCache, TestRemove)
-{
+TEST(MruCache, TestRemove) {
   {
     IntMap mru;
 
@@ -259,8 +253,7 @@ TEST(MruCache, TestRemove)
   }
 }
 
-TEST(MruCache, TestClear)
-{
+TEST(MruCache, TestClear) {
   IntMap mru;
 
   // Fill it up.
@@ -280,8 +273,7 @@ TEST(MruCache, TestClear)
   }
 }
 
-TEST(MruCache, TestLookupMissingAndSet)
-{
+TEST(MruCache, TestLookupMissingAndSet) {
   IntMap mru;
 
   // Value not found.
@@ -314,8 +306,7 @@ TEST(MruCache, TestLookupMissingAndSet)
   EXPECT_EQ(p.Data(), 2);
 }
 
-TEST(MruCache, TestLookupAndOverwrite)
-{
+TEST(MruCache, TestLookupAndOverwrite) {
   IntMap mru;
 
   // Set 1.
@@ -340,8 +331,7 @@ TEST(MruCache, TestLookupAndOverwrite)
   EXPECT_EQ(p.Data(), 32);
 }
 
-TEST(MruCache, TestLookupAndRemove)
-{
+TEST(MruCache, TestLookupAndRemove) {
   IntMap mru;
 
   // Set 1.
@@ -359,8 +349,7 @@ TEST(MruCache, TestLookupAndRemove)
   EXPECT_FALSE(p);
 }
 
-TEST(MruCache, TestLookupNotMatchedAndRemove)
-{
+TEST(MruCache, TestLookupNotMatchedAndRemove) {
   IntMap mru;
 
   // Set 1.
@@ -379,8 +368,7 @@ TEST(MruCache, TestLookupNotMatchedAndRemove)
   EXPECT_EQ(p.Data(), 1);
 }
 
-TEST(MruCache, TestLookupAndSetWithMove)
-{
+TEST(MruCache, TestLookupAndSetWithMove) {
   StringStructMap mru;
 
   const nsCString key = MakeStringKey((char)1);

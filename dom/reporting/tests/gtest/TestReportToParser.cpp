@@ -12,8 +12,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-TEST(ReportToParser, Basic)
-{
+TEST(ReportToParser, Basic) {
   nsCOMPtr<nsIURI> uri;
 
   nsresult rv = NS_NewURI(getter_AddRefs(uri), "https://example.com");

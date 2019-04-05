@@ -10,8 +10,7 @@
 
 using namespace mozilla;
 
-TEST(MediaMIMETypes, IsMediaMIMEType)
-{
+TEST(MediaMIMETypes, IsMediaMIMEType) {
   EXPECT_TRUE(IsMediaMIMEType(AUDIO_MP4));
   EXPECT_TRUE(IsMediaMIMEType(VIDEO_MP4));
   EXPECT_TRUE(IsMediaMIMEType("application/x-mp4"));
@@ -26,8 +25,7 @@ TEST(MediaMIMETypes, IsMediaMIMEType)
   EXPECT_FALSE(IsMediaMIMEType("Video/mp4"));
 }
 
-TEST(StringListRange, MakeStringListRange)
-{
+TEST(StringListRange, MakeStringListRange) {
   static const struct {
     const char* mList;
     const char* mExpectedSkipEmpties;
@@ -77,8 +75,7 @@ TEST(StringListRange, MakeStringListRange)
   }
 }
 
-TEST(StringListRange, StringListContains)
-{
+TEST(StringListRange, StringListContains) {
   static const struct {
     const char* mList;
     const char* mItemToSearch;

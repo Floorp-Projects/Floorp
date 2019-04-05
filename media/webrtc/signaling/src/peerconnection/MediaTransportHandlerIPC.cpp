@@ -291,18 +291,17 @@ MediaTransportHandlerIPC::GetIceStats(
         }
         RefPtr<StatsPromise> promise =
             mChild->SendGetIceStats(aTransportId, aNow, *aReport)
-                ->Then(
-                    GetMainThreadSerialEventTarget(), __func__,
-                    [](const dom::MovableRTCStatsReportInternal& aReport) {
-                      std::unique_ptr<dom::RTCStatsReportInternal> report(
-                          new dom::RTCStatsReportInternal(aReport));
-                      return StatsPromise::CreateAndResolve(std::move(report),
-                                                            __func__);
-                    },
-                    [](ipc::ResponseRejectReason aReason) {
-                      return StatsPromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                           __func__);
-                    });
+                ->Then(GetMainThreadSerialEventTarget(), __func__,
+                       [](const dom::MovableRTCStatsReportInternal& aReport) {
+                         std::unique_ptr<dom::RTCStatsReportInternal> report(
+                             new dom::RTCStatsReportInternal(aReport));
+                         return StatsPromise::CreateAndResolve(
+                             std::move(report), __func__);
+                       },
+                       [](ipc::ResponseRejectReason aReason) {
+                         return StatsPromise::CreateAndReject(NS_ERROR_FAILURE,
+                                                              __func__);
+                       });
         return promise;
       },
       [](const nsCString& aError) {

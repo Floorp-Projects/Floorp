@@ -603,16 +603,15 @@ RefPtr<ClientOpPromise> ClientSource::Claim(const ClientClaimArgs& aArgs) {
   auto holder = MakeRefPtr<DOMMozPromiseRequestHolder<GenericPromise>>(global);
 
   innerPromise
-      ->Then(
-          mEventTarget, __func__,
-          [outerPromise, holder](bool aResult) {
-            holder->Complete();
-            outerPromise->Resolve(NS_OK, __func__);
-          },
-          [outerPromise, holder](nsresult aResult) {
-            holder->Complete();
-            outerPromise->Reject(aResult, __func__);
-          })
+      ->Then(mEventTarget, __func__,
+             [outerPromise, holder](bool aResult) {
+               holder->Complete();
+               outerPromise->Resolve(NS_OK, __func__);
+             },
+             [outerPromise, holder](nsresult aResult) {
+               holder->Complete();
+               outerPromise->Reject(aResult, __func__);
+             })
       ->Track(*holder);
 
   return outerPromise.forget();

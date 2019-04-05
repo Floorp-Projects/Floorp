@@ -2096,9 +2096,7 @@ bool TypedArrayObject::getElementPure(uint32_t index, Value* vp) {
 }
 
 /* static */
-bool TypedArrayObject::getElements(JSContext* cx,
-                                   Handle<TypedArrayObject*> tarray,
-                                   Value* vp) {
+bool TypedArrayObject::getElements(JSContext* cx, Handle<TypedArrayObject*> tarray, Value* vp) {
   uint32_t length = tarray->length();
   MOZ_ASSERT_IF(length > 0, !tarray->hasDetachedBuffer());
 

@@ -6112,9 +6112,7 @@ void MacroAssemblerARM::wasmUnalignedLoadImpl(
     }
     case Scalar::Int8:
     case Scalar::Uint8:
-    default: {
-      MOZ_CRASH("Bad type");
-    }
+    default: { MOZ_CRASH("Bad type"); }
   }
 
   asMasm().memoryBarrierAfter(access.sync());

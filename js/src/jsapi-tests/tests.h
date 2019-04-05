@@ -19,7 +19,7 @@
 #include "gc/GC.h"
 #include "js/AllocPolicy.h"
 #include "js/CharacterEncoding.h"
-#include "js/Equality.h"     // JS::SameValue
+#include "js/Equality.h"  // JS::SameValue
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "js/Vector.h"
 #include "vm/JSContext.h"

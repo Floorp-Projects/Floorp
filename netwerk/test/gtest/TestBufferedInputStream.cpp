@@ -21,8 +21,7 @@ already_AddRefed<nsBufferedInputStream> CreateStream(uint32_t aSize,
 }
 
 // Simple reading.
-TEST(TestBufferedInputStream, SimpleRead)
-{
+TEST(TestBufferedInputStream, SimpleRead) {
   const size_t kBufSize = 10;
 
   nsCString buf;
@@ -40,8 +39,7 @@ TEST(TestBufferedInputStream, SimpleRead)
 }
 
 // Simple segment reading.
-TEST(TestBufferedInputStream, SimpleReadSegments)
-{
+TEST(TestBufferedInputStream, SimpleReadSegments) {
   const size_t kBufSize = 10;
 
   nsCString buf;
@@ -56,8 +54,7 @@ TEST(TestBufferedInputStream, SimpleReadSegments)
 }
 
 // AsyncWait - sync
-TEST(TestBufferedInputStream, AsyncWait_sync)
-{
+TEST(TestBufferedInputStream, AsyncWait_sync) {
   const size_t kBufSize = 10;
 
   nsCString buf;
@@ -72,8 +69,7 @@ TEST(TestBufferedInputStream, AsyncWait_sync)
 }
 
 // AsyncWait - async
-TEST(TestBufferedInputStream, AsyncWait_async)
-{
+TEST(TestBufferedInputStream, AsyncWait_async) {
   const size_t kBufSize = 10;
 
   nsCString buf;
@@ -92,8 +88,7 @@ TEST(TestBufferedInputStream, AsyncWait_async)
 }
 
 // AsyncWait - sync - closureOnly
-TEST(TestBufferedInputStream, AsyncWait_sync_closureOnly)
-{
+TEST(TestBufferedInputStream, AsyncWait_sync_closureOnly) {
   const size_t kBufSize = 10;
 
   nsCString buf;
@@ -112,8 +107,7 @@ TEST(TestBufferedInputStream, AsyncWait_sync_closureOnly)
 }
 
 // AsyncWait - async
-TEST(TestBufferedInputStream, AsyncWait_async_closureOnly)
-{
+TEST(TestBufferedInputStream, AsyncWait_async_closureOnly) {
   const size_t kBufSize = 10;
 
   nsCString buf;

@@ -51,7 +51,8 @@ void OnPrefChange(const char* aPrefName, void*) {
 void UIDirectionManager::Initialize() {
   DebugOnly<nsresult> rv =
       Preferences::RegisterCallback(OnPrefChange, "intl.uidirection");
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "Failed to observe \"intl.uidirection\"");
+  MOZ_ASSERT(NS_SUCCEEDED(rv),
+             "Failed to observe \"intl.uidirection\"");
 }
 
 /* static */

@@ -302,10 +302,9 @@ void WaitForLoad(const ClientOpenWindowArgs& aArgs,
   }
 
   // Hold the listener alive until the promise settles
-  ref->Then(
-      aOuterWindow->EventTargetFor(TaskCategory::Other), __func__,
-      [listener](const ClientOpResult& aResult) {},
-      [listener](nsresult aResult) {});
+  ref->Then(aOuterWindow->EventTargetFor(TaskCategory::Other), __func__,
+            [listener](const ClientOpResult& aResult) {},
+            [listener](nsresult aResult) {});
 }
 
 #ifdef MOZ_WIDGET_ANDROID

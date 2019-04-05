@@ -884,14 +884,13 @@ class MediaRecorder::Session : public PrincipalChangeObserver<MediaStreamTrack>,
           }
           gSessions.Clear();
           ShutdownPromise::All(GetCurrentThreadSerialEventTarget(), promises)
-              ->Then(
-                  GetCurrentThreadSerialEventTarget(), __func__,
-                  [ticket]() mutable {
-                    MOZ_ASSERT(gSessions.Count() == 0);
-                    // Unblock shutdown
-                    ticket = nullptr;
-                  },
-                  []() { MOZ_CRASH("Not reached"); });
+              ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+                     [ticket]() mutable {
+                       MOZ_ASSERT(gSessions.Count() == 0);
+                       // Unblock shutdown
+                       ticket = nullptr;
+                     },
+                     []() { MOZ_CRASH("Not reached"); });
           return NS_OK;
         }
       };
@@ -1715,16 +1714,15 @@ RefPtr<MediaRecorder::SizeOfPromise> MediaRecorder::SizeOfExcludingThis(
   }
 
   SizeOfPromise::All(GetCurrentThreadSerialEventTarget(), promises)
-      ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
-          [holder](const nsTArray<size_t>& sizes) {
-            size_t total = 0;
-            for (const size_t& size : sizes) {
-              total += size;
-            }
-            holder->Resolve(total, __func__);
-          },
-          []() { MOZ_CRASH("Unexpected reject"); });
+      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+             [holder](const nsTArray<size_t>& sizes) {
+               size_t total = 0;
+               for (const size_t& size : sizes) {
+                 total += size;
+               }
+               holder->Resolve(total, __func__);
+             },
+             []() { MOZ_CRASH("Unexpected reject"); });
 
   return promise;
 }

@@ -137,8 +137,7 @@ static SlicedInputStream* CreateNonSeekableStreams(uint32_t aSize,
 }
 
 // Same start, same length.
-TEST(TestSlicedInputStream, Simple)
-{
+TEST(TestSlicedInputStream, Simple) {
   const size_t kBufSize = 4096;
 
   nsCString buf;
@@ -157,8 +156,7 @@ TEST(TestSlicedInputStream, Simple)
 }
 
 // Simple sliced stream - seekable
-TEST(TestSlicedInputStream, Sliced)
-{
+TEST(TestSlicedInputStream, Sliced) {
   const size_t kBufSize = 4096;
 
   nsCString buf;
@@ -176,8 +174,7 @@ TEST(TestSlicedInputStream, Sliced)
 }
 
 // Simple sliced stream - non seekable
-TEST(TestSlicedInputStream, SlicedNoSeek)
-{
+TEST(TestSlicedInputStream, SlicedNoSeek) {
   const size_t kBufSize = 4096;
 
   nsCString buf;
@@ -196,8 +193,7 @@ TEST(TestSlicedInputStream, SlicedNoSeek)
 }
 
 // Big inputStream - seekable
-TEST(TestSlicedInputStream, BigSliced)
-{
+TEST(TestSlicedInputStream, BigSliced) {
   const size_t kBufSize = 4096 * 40;
 
   nsCString buf;
@@ -217,8 +213,7 @@ TEST(TestSlicedInputStream, BigSliced)
 }
 
 // Big inputStream - non seekable
-TEST(TestSlicedInputStream, BigSlicedNoSeek)
-{
+TEST(TestSlicedInputStream, BigSlicedNoSeek) {
   const size_t kBufSize = 4096 * 40;
 
   nsCString buf;
@@ -238,8 +233,7 @@ TEST(TestSlicedInputStream, BigSlicedNoSeek)
 }
 
 // Available size.
-TEST(TestSlicedInputStream, Available)
-{
+TEST(TestSlicedInputStream, Available) {
   nsCString buf;
   RefPtr<SlicedInputStream> sis =
       CreateNonSeekableStreams(500000, 4, 400000, buf);
@@ -271,8 +265,7 @@ TEST(TestSlicedInputStream, Available)
 }
 
 // What if start is > then the size of the buffer?
-TEST(TestSlicedInputStream, StartBiggerThan)
-{
+TEST(TestSlicedInputStream, StartBiggerThan) {
   nsCString buf;
   RefPtr<SlicedInputStream> sis = CreateNonSeekableStreams(500, 4000, 1, buf);
 
@@ -287,8 +280,7 @@ TEST(TestSlicedInputStream, StartBiggerThan)
 }
 
 // What if the length is > than the size of the buffer?
-TEST(TestSlicedInputStream, LengthBiggerThan)
-{
+TEST(TestSlicedInputStream, LengthBiggerThan) {
   nsCString buf;
   RefPtr<SlicedInputStream> sis = CreateNonSeekableStreams(500, 0, 500000, buf);
 
@@ -303,8 +295,7 @@ TEST(TestSlicedInputStream, LengthBiggerThan)
 }
 
 // What if the length is 0?
-TEST(TestSlicedInputStream, Length0)
-{
+TEST(TestSlicedInputStream, Length0) {
   nsCString buf;
   RefPtr<SlicedInputStream> sis = CreateNonSeekableStreams(500, 0, 0, buf);
 
@@ -319,8 +310,7 @@ TEST(TestSlicedInputStream, Length0)
 }
 
 // Seek test NS_SEEK_SET
-TEST(TestSlicedInputStream, Seek_SET)
-{
+TEST(TestSlicedInputStream, Seek_SET) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -345,8 +335,7 @@ TEST(TestSlicedInputStream, Seek_SET)
 }
 
 // Seek test NS_SEEK_CUR
-TEST(TestSlicedInputStream, Seek_CUR)
-{
+TEST(TestSlicedInputStream, Seek_CUR) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -378,8 +367,7 @@ TEST(TestSlicedInputStream, Seek_CUR)
 }
 
 // Seek test NS_SEEK_END - length > real one
-TEST(TestSlicedInputStream, Seek_END_Bigger)
-{
+TEST(TestSlicedInputStream, Seek_END_Bigger) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -417,8 +405,7 @@ TEST(TestSlicedInputStream, Seek_END_Bigger)
 }
 
 // Seek test NS_SEEK_END - length < real one
-TEST(TestSlicedInputStream, Seek_END_Lower)
-{
+TEST(TestSlicedInputStream, Seek_END_Lower) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -444,8 +431,7 @@ TEST(TestSlicedInputStream, Seek_END_Lower)
 }
 
 // Check the nsIAsyncInputStream interface
-TEST(TestSlicedInputStream, NoAsyncInputStream)
-{
+TEST(TestSlicedInputStream, NoAsyncInputStream) {
   const size_t kBufSize = 4096;
 
   nsCString buf;
@@ -457,8 +443,7 @@ TEST(TestSlicedInputStream, NoAsyncInputStream)
   ASSERT_TRUE(!async);
 }
 
-TEST(TestSlicedInputStream, AsyncInputStream)
-{
+TEST(TestSlicedInputStream, AsyncInputStream) {
   nsCOMPtr<nsIAsyncInputStream> reader;
   nsCOMPtr<nsIAsyncOutputStream> writer;
 
@@ -505,8 +490,7 @@ TEST(TestSlicedInputStream, AsyncInputStream)
   testing::ConsumeAndValidateStream(async, inputData);
 }
 
-TEST(TestSlicedInputStream, QIInputStreamLength)
-{
+TEST(TestSlicedInputStream, QIInputStreamLength) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -531,8 +515,7 @@ TEST(TestSlicedInputStream, QIInputStreamLength)
   }
 }
 
-TEST(TestSlicedInputStream, InputStreamLength)
-{
+TEST(TestSlicedInputStream, InputStreamLength) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -553,8 +536,7 @@ TEST(TestSlicedInputStream, InputStreamLength)
   ASSERT_EQ(5, size);
 }
 
-TEST(TestSlicedInputStream, NegativeInputStreamLength)
-{
+TEST(TestSlicedInputStream, NegativeInputStreamLength) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -575,8 +557,7 @@ TEST(TestSlicedInputStream, NegativeInputStreamLength)
   ASSERT_EQ(-1, size);
 }
 
-TEST(TestSlicedInputStream, AsyncInputStreamLength)
-{
+TEST(TestSlicedInputStream, AsyncInputStreamLength) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -601,8 +582,7 @@ TEST(TestSlicedInputStream, AsyncInputStreamLength)
   ASSERT_EQ(5, callback->Size());
 }
 
-TEST(TestSlicedInputStream, NegativeAsyncInputStreamLength)
-{
+TEST(TestSlicedInputStream, NegativeAsyncInputStreamLength) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -627,8 +607,7 @@ TEST(TestSlicedInputStream, NegativeAsyncInputStreamLength)
   ASSERT_EQ(-1, callback->Size());
 }
 
-TEST(TestSlicedInputStream, AbortLengthCallback)
-{
+TEST(TestSlicedInputStream, AbortLengthCallback) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 

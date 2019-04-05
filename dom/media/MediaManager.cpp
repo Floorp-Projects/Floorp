@@ -3139,46 +3139,46 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
                 MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
                 __func__);
           })
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [aWindowId, originKey, aVideoInputEnumType, aAudioInputEnumType,
-           aVideoInputType, aAudioInputType, aOutDevices](bool) {
-            // Only run if window is still on our active list.
-            MediaManager* mgr = MediaManager::GetIfExists();
-            if (!mgr || !mgr->IsWindowStillActive(aWindowId)) {
-              return MgrPromise::CreateAndReject(
-                  MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
-                  __func__);
-            }
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [aWindowId, originKey, aVideoInputEnumType, aAudioInputEnumType,
+              aVideoInputType, aAudioInputType, aOutDevices](bool) {
+               // Only run if window is still on our active list.
+               MediaManager* mgr = MediaManager::GetIfExists();
+               if (!mgr || !mgr->IsWindowStillActive(aWindowId)) {
+                 return MgrPromise::CreateAndReject(
+                     MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
+                     __func__);
+               }
 
-            // If we fetched any real cameras or mics, remove the
-            // "default" part of their IDs.
-            if (aVideoInputType == MediaSourceEnum::Camera &&
-                aAudioInputType == MediaSourceEnum::Microphone &&
-                (aVideoInputEnumType != DeviceEnumerationType::Fake ||
-                 aAudioInputEnumType != DeviceEnumerationType::Fake)) {
-              mgr->mDeviceIDs.Clear();
-              for (auto& device : *aOutDevices) {
-                nsString id;
-                device->GetId(id);
-                id.ReplaceSubstring(NS_LITERAL_STRING("default: "),
-                                    NS_LITERAL_STRING(""));
-                if (!mgr->mDeviceIDs.Contains(id)) {
-                  mgr->mDeviceIDs.AppendElement(id);
-                }
-              }
-            }
-            if (!mgr->IsWindowStillActive(aWindowId)) {
-              return MgrPromise::CreateAndReject(
-                  MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
-                  __func__);
-            }
-            MediaManager::AnonymizeDevices(*aOutDevices, *originKey, aWindowId);
-            return MgrPromise::CreateAndResolve(false, __func__);
-          },
-          [](RefPtr<MediaMgrError>&& aError) {
-            return MgrPromise::CreateAndReject(std::move(aError), __func__);
-          });
+               // If we fetched any real cameras or mics, remove the
+               // "default" part of their IDs.
+               if (aVideoInputType == MediaSourceEnum::Camera &&
+                   aAudioInputType == MediaSourceEnum::Microphone &&
+                   (aVideoInputEnumType != DeviceEnumerationType::Fake ||
+                    aAudioInputEnumType != DeviceEnumerationType::Fake)) {
+                 mgr->mDeviceIDs.Clear();
+                 for (auto& device : *aOutDevices) {
+                   nsString id;
+                   device->GetId(id);
+                   id.ReplaceSubstring(NS_LITERAL_STRING("default: "),
+                                       NS_LITERAL_STRING(""));
+                   if (!mgr->mDeviceIDs.Contains(id)) {
+                     mgr->mDeviceIDs.AppendElement(id);
+                   }
+                 }
+               }
+               if (!mgr->IsWindowStillActive(aWindowId)) {
+                 return MgrPromise::CreateAndReject(
+                     MakeRefPtr<MediaMgrError>(MediaMgrError::Name::AbortError),
+                     __func__);
+               }
+               MediaManager::AnonymizeDevices(*aOutDevices, *originKey,
+                                              aWindowId);
+               return MgrPromise::CreateAndResolve(false, __func__);
+             },
+             [](RefPtr<MediaMgrError>&& aError) {
+               return MgrPromise::CreateAndReject(std::move(aError), __func__);
+             });
 }
 
 RefPtr<MediaManager::DevicesPromise> MediaManager::EnumerateDevices(
@@ -3250,21 +3250,21 @@ RefPtr<MediaManager::DevicesPromise> MediaManager::EnumerateDevices(
                               MediaSourceEnum::Microphone, audioOutputType,
                               videoEnumerationType, audioEnumerationType, false,
                               devices)
-      ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
-          [windowListener, sourceListener, devices](bool) {
-            DebugOnly<bool> rv = windowListener->Remove(sourceListener);
-            MOZ_ASSERT(rv);
-            return DevicesPromise::CreateAndResolve(devices, __func__);
-          },
-          [windowListener, sourceListener](RefPtr<MediaMgrError>&& aError) {
-            // This may fail, if a new doc has been set the OnNavigation
-            // method should have removed all previous active listeners.
-            // Attempt to clean it here, just in case, but ignore the return
-            // value.
-            Unused << windowListener->Remove(sourceListener);
-            return DevicesPromise::CreateAndReject(std::move(aError), __func__);
-          });
+      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+             [windowListener, sourceListener, devices](bool) {
+               DebugOnly<bool> rv = windowListener->Remove(sourceListener);
+               MOZ_ASSERT(rv);
+               return DevicesPromise::CreateAndResolve(devices, __func__);
+             },
+             [windowListener, sourceListener](RefPtr<MediaMgrError>&& aError) {
+               // This may fail, if a new doc has been set the OnNavigation
+               // method should have removed all previous active listeners.
+               // Attempt to clean it here, just in case, but ignore the return
+               // value.
+               Unused << windowListener->Remove(sourceListener);
+               return DevicesPromise::CreateAndReject(std::move(aError),
+                                                      __func__);
+             });
 }
 
 RefPtr<SinkInfoPromise> MediaManager::GetSinkDevice(nsPIDOMWindowInner* aWindow,
@@ -3298,32 +3298,31 @@ RefPtr<SinkInfoPromise> MediaManager::GetSinkDevice(nsPIDOMWindowInner* aWindow,
                               MediaSourceEnum::Other, MediaSinkEnum::Speaker,
                               DeviceEnumerationType::Normal,
                               DeviceEnumerationType::Normal, true, devices)
-      ->Then(
-          GetCurrentThreadSerialEventTarget(), __func__,
-          [aDeviceId, isSecure, devices](bool) {
-            for (RefPtr<MediaDevice>& device : *devices) {
-              if (aDeviceId.IsEmpty() && device->mSinkInfo->Preferred()) {
-                return SinkInfoPromise::CreateAndResolve(device->mSinkInfo,
-                                                         __func__);
-              }
-              if (device->mID.Equals(aDeviceId)) {
-                // TODO: Check if the application is authorized to play audio
-                // through this device (Bug 1493982).
-                if (isSecure || device->mSinkInfo->Preferred()) {
-                  return SinkInfoPromise::CreateAndResolve(device->mSinkInfo,
-                                                           __func__);
-                }
-                return SinkInfoPromise::CreateAndReject(
-                    NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR, __func__);
-              }
-            }
-            return SinkInfoPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
-                                                    __func__);
-          },
-          [](RefPtr<MediaMgrError>&& aError) {
-            return SinkInfoPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
-                                                    __func__);
-          });
+      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
+             [aDeviceId, isSecure, devices](bool) {
+               for (RefPtr<MediaDevice>& device : *devices) {
+                 if (aDeviceId.IsEmpty() && device->mSinkInfo->Preferred()) {
+                   return SinkInfoPromise::CreateAndResolve(device->mSinkInfo,
+                                                            __func__);
+                 }
+                 if (device->mID.Equals(aDeviceId)) {
+                   // TODO: Check if the application is authorized to play audio
+                   // through this device (Bug 1493982).
+                   if (isSecure || device->mSinkInfo->Preferred()) {
+                     return SinkInfoPromise::CreateAndResolve(device->mSinkInfo,
+                                                              __func__);
+                   }
+                   return SinkInfoPromise::CreateAndReject(
+                       NS_ERROR_DOM_MEDIA_NOT_ALLOWED_ERR, __func__);
+                 }
+               }
+               return SinkInfoPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                                       __func__);
+             },
+             [](RefPtr<MediaMgrError>&& aError) {
+               return SinkInfoPromise::CreateAndReject(NS_ERROR_NOT_AVAILABLE,
+                                                       __func__);
+             });
 }
 
 /*
@@ -4175,50 +4174,49 @@ SourceListener::InitializeAsync() {
                LOG("started all sources");
                aHolder.Resolve(true, __func__);
              })
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [self = RefPtr<SourceListener>(this), this]() {
-            if (mStopped) {
-              // We were shut down during the async init
-              return SourceListenerPromise::CreateAndResolve(true, __func__);
-            }
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [self = RefPtr<SourceListener>(this), this]() {
+               if (mStopped) {
+                 // We were shut down during the async init
+                 return SourceListenerPromise::CreateAndResolve(true, __func__);
+               }
 
-            for (DeviceState* state :
-                 {mAudioDeviceState.get(), mVideoDeviceState.get()}) {
-              if (!state) {
-                continue;
-              }
-              MOZ_DIAGNOSTIC_ASSERT(!state->mTrackEnabled);
-              MOZ_DIAGNOSTIC_ASSERT(!state->mDeviceEnabled);
-              MOZ_DIAGNOSTIC_ASSERT(!state->mStopped);
+               for (DeviceState* state :
+                    {mAudioDeviceState.get(), mVideoDeviceState.get()}) {
+                 if (!state) {
+                   continue;
+                 }
+                 MOZ_DIAGNOSTIC_ASSERT(!state->mTrackEnabled);
+                 MOZ_DIAGNOSTIC_ASSERT(!state->mDeviceEnabled);
+                 MOZ_DIAGNOSTIC_ASSERT(!state->mStopped);
 
-              state->mDeviceEnabled = true;
-              state->mTrackEnabled = true;
-              state->mTrackEnabledTime = TimeStamp::Now();
-            }
-            return SourceListenerPromise::CreateAndResolve(true, __func__);
-          },
-          [self = RefPtr<SourceListener>(this),
-           this](RefPtr<MediaMgrError>&& aResult) {
-            if (mStopped) {
-              return SourceListenerPromise::CreateAndReject(std::move(aResult),
-                                                            __func__);
-            }
+                 state->mDeviceEnabled = true;
+                 state->mTrackEnabled = true;
+                 state->mTrackEnabledTime = TimeStamp::Now();
+               }
+               return SourceListenerPromise::CreateAndResolve(true, __func__);
+             },
+             [self = RefPtr<SourceListener>(this),
+              this](RefPtr<MediaMgrError>&& aResult) {
+               if (mStopped) {
+                 return SourceListenerPromise::CreateAndReject(
+                     std::move(aResult), __func__);
+               }
 
-            for (DeviceState* state :
-                 {mAudioDeviceState.get(), mVideoDeviceState.get()}) {
-              if (!state) {
-                continue;
-              }
-              MOZ_DIAGNOSTIC_ASSERT(!state->mTrackEnabled);
-              MOZ_DIAGNOSTIC_ASSERT(!state->mDeviceEnabled);
-              MOZ_DIAGNOSTIC_ASSERT(!state->mStopped);
+               for (DeviceState* state :
+                    {mAudioDeviceState.get(), mVideoDeviceState.get()}) {
+                 if (!state) {
+                   continue;
+                 }
+                 MOZ_DIAGNOSTIC_ASSERT(!state->mTrackEnabled);
+                 MOZ_DIAGNOSTIC_ASSERT(!state->mDeviceEnabled);
+                 MOZ_DIAGNOSTIC_ASSERT(!state->mStopped);
 
-              state->mStopped = true;
-            }
-            return SourceListenerPromise::CreateAndReject(std::move(aResult),
-                                                          __func__);
-          });
+                 state->mStopped = true;
+               }
+               return SourceListenerPromise::CreateAndReject(std::move(aResult),
+                                                             __func__);
+             });
 }
 
 void SourceListener::Stop() {

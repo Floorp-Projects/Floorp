@@ -66,8 +66,7 @@ static inline void TestThree(size_t size) {
   ASSERT_NO_FATAL_FAILURE(TestOne(size + 1));
 }
 
-TEST(Jemalloc, UsableSizeInAdvance)
-{
+TEST(Jemalloc, UsableSizeInAdvance) {
   /*
    * Test every size up to a certain point, then (N-1, N, N+1) triplets for a
    * various sizes beyond that.
@@ -98,8 +97,7 @@ bool InfoEqFreedPage(jemalloc_ptr_info_t& aInfo, void* aAddr,
          aInfo.size == aPageSize;
 }
 
-TEST(Jemalloc, PtrInfo)
-{
+TEST(Jemalloc, PtrInfo) {
   // Some things might be running in other threads, so ensure our assumptions
   // (e.g. about isFreedSmall and isFreedPage ratios below) are not altered by
   // other threads.
@@ -255,8 +253,7 @@ TEST(Jemalloc, PtrInfo)
 size_t sSizes[] = {1,      42,      79,      918,     1.5_KiB,
                    73_KiB, 129_KiB, 1.1_MiB, 2.6_MiB, 5.1_MiB};
 
-TEST(Jemalloc, Arenas)
-{
+TEST(Jemalloc, Arenas) {
   arena_id_t arena = moz_create_arena();
   ASSERT_TRUE(arena != 0);
   void* ptr = moz_arena_malloc(arena, 42);
@@ -388,8 +385,7 @@ static bool CanReallocInPlace(size_t aFromSize, size_t aToSize,
   return false;
 }
 
-TEST(Jemalloc, InPlace)
-{
+TEST(Jemalloc, InPlace) {
   jemalloc_stats_t stats;
   jemalloc_stats(&stats);
 
@@ -421,8 +417,7 @@ TEST(Jemalloc, InPlace)
 // Bug 1474254: disable this test for windows ccov builds because it leads to
 // timeout.
 #if !defined(XP_WIN) || !defined(MOZ_CODE_COVERAGE)
-TEST(Jemalloc, JunkPoison)
-{
+TEST(Jemalloc, JunkPoison) {
   jemalloc_stats_t stats;
   jemalloc_stats(&stats);
 

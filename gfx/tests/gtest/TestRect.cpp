@@ -552,8 +552,7 @@ static void TestIntersectionLogical(nscoord x1, nscoord y1, nscoord w1,
                                 isNonEmpty);
 }
 
-TEST(Gfx, Logical)
-{
+TEST(Gfx, Logical) {
   TestIntersectionLogical(578, 0, 2650, 1152, 1036, 0, 2312, 1, 1036, 0, 2192,
                           1, true);
   TestIntersectionLogical(0, 0, 1000, 1000, 500, 500, 1000, 1000, 500, 500, 500,
@@ -564,8 +563,7 @@ TEST(Gfx, Logical)
                           false);
 }
 
-TEST(Gfx, nsRect)
-{
+TEST(Gfx, nsRect) {
   TestConstructors<nsRect>();
   TestEqualityOperator<nsRect>();
   TestContainment<nsRect>();
@@ -577,8 +575,7 @@ TEST(Gfx, nsRect)
   TestSwap<nsRect>();
 }
 
-TEST(Gfx, nsIntRect)
-{
+TEST(Gfx, nsIntRect) {
   TestConstructors<nsIntRect>();
   TestEqualityOperator<nsIntRect>();
   TestContainment<nsIntRect>();
@@ -590,8 +587,7 @@ TEST(Gfx, nsIntRect)
   TestSwap<nsIntRect>();
 }
 
-TEST(Gfx, gfxRect)
-{
+TEST(Gfx, gfxRect) {
   TestConstructors<gfxRect>();
   // Skip TestEqualityOperator<gfxRect>(); as gfxRect::operator== is private
   TestContainment<gfxRect>();
@@ -624,8 +620,7 @@ static void TestMoveInsideAndClamp(IntRect aSrc, IntRect aTarget,
       << absExpected << " AbsActual " << absResult;
 }
 
-TEST(Gfx, MoveInsideAndClamp)
-{
+TEST(Gfx, MoveInsideAndClamp) {
   TestMoveInsideAndClamp(IntRect(0, 0, 10, 10), IntRect(1, -1, 10, 10),
                          IntRect(1, -1, 10, 10));
   TestMoveInsideAndClamp(IntRect(0, 0, 10, 10), IntRect(-1, -1, 12, 5),
