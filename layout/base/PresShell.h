@@ -9,7 +9,6 @@
 #ifndef mozilla_PresShell_h
 #define mozilla_PresShell_h
 
-#include "MobileViewportManager.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/HTMLDocumentBinding.h"
@@ -40,6 +39,7 @@ struct RangePaintInfo;
 
 class nsPresShellEventCB;
 class AutoPointerEventTargetUpdater;
+class MobileViewportManager;
 
 namespace mozilla {
 
@@ -49,6 +49,7 @@ class Selection;
 }  // namespace dom
 
 class EventDispatchingCallback;
+class GeckoMVMContext;
 class OverflowChangedTracker;
 
 // A set type for tracking visible frames, for use by the visibility code in
@@ -295,9 +296,7 @@ class PresShell final : public nsIPresShell,
     return (mMobileViewportManager != nullptr);
   }
 
-  RefPtr<MobileViewportManager> GetMobileViewportManager() const override {
-    return mMobileViewportManager;
-  }
+  RefPtr<MobileViewportManager> GetMobileViewportManager() const override;
 
   void UpdateViewportOverridden(bool aAfterInitialization) override;
 
@@ -1350,6 +1349,7 @@ class PresShell final : public nsIPresShell,
   TouchManager mTouchManager;
 
   RefPtr<ZoomConstraintsClient> mZoomConstraintsClient;
+  RefPtr<GeckoMVMContext> mMVMContext;
   RefPtr<MobileViewportManager> mMobileViewportManager;
 
   // This timer controls painting suppression.  Until it fires

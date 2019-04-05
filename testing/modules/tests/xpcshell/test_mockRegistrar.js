@@ -3,42 +3,39 @@
 
 const {MockRegistrar} = ChromeUtils.import("resource://testing-common/MockRegistrar.jsm");
 
-function userInfo(username) {
-  this.username = username;
+function platformInfo(injectedValue) {
+  this.platformVersion = injectedValue;
 }
 
-userInfo.prototype = {
-  fullname: "fullname",
-  emailAddress: "emailAddress",
-  domain: "domain",
-  QueryInterface: ChromeUtils.generateQI([Ci.nsIUserInfo]),
+platformInfo.prototype = {
+  platformVersion: "some version",
+  platformBuildID: "some id",
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIPlatformInfo]),
 };
 
 add_test(function test_register() {
-  let localUserInfo = {
-    fullname: "fullname",
-    username: "localusername",
-    emailAddress: "emailAddress",
-    domain: "domain",
-    QueryInterface: ChromeUtils.generateQI([Ci.nsIUserInfo]),
+  let localPlatformInfo = {
+    platformVersion: "local version",
+    platformBuildID: "local id",
+    QueryInterface: ChromeUtils.generateQI([Ci.nsIPlatformInfo]),
   };
 
-  MockRegistrar.register("@mozilla.org/userinfo;1", localUserInfo);
-  Assert.equal(Cc["@mozilla.org/userinfo;1"].createInstance(Ci.nsIUserInfo).username, "localusername");
+  MockRegistrar.register("@mozilla.org/xre/app-info;1", localPlatformInfo);
+  Assert.equal(Cc["@mozilla.org/xre/app-info;1"].createInstance(Ci.nsIPlatformInfo).platformVersion, "local version");
   run_next_test();
 });
 
 add_test(function test_register_with_arguments() {
-  MockRegistrar.register("@mozilla.org/userinfo;1", userInfo, ["username"]);
-  Assert.equal(Cc["@mozilla.org/userinfo;1"].createInstance(Ci.nsIUserInfo).username, "username");
+  MockRegistrar.register("@mozilla.org/xre/app-info;1", platformInfo, ["override"]);
+  Assert.equal(Cc["@mozilla.org/xre/app-info;1"].createInstance(Ci.nsIPlatformInfo).platformVersion, "override");
   run_next_test();
 });
 
 add_test(function test_register_twice() {
-  MockRegistrar.register("@mozilla.org/userinfo;1", userInfo, ["originalname"]);
-  Assert.equal(Cc["@mozilla.org/userinfo;1"].createInstance(Ci.nsIUserInfo).username, "originalname");
+  MockRegistrar.register("@mozilla.org/xre/app-info;1", platformInfo, ["override"]);
+  Assert.equal(Cc["@mozilla.org/xre/app-info;1"].createInstance(Ci.nsIPlatformInfo).platformVersion, "override");
 
-  MockRegistrar.register("@mozilla.org/userinfo;1", userInfo, ["newname"]);
-  Assert.equal(Cc["@mozilla.org/userinfo;1"].createInstance(Ci.nsIUserInfo).username, "newname");
+  MockRegistrar.register("@mozilla.org/xre/app-info;1", platformInfo, ["override again"]);
+  Assert.equal(Cc["@mozilla.org/xre/app-info;1"].createInstance(Ci.nsIPlatformInfo).platformVersion, "override again");
   run_next_test();
 });
