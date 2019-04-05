@@ -62,7 +62,26 @@ class JSONExperimentParserTest {
 
     @Test
     fun fromJson() {
-        val json = """{"buckets":{"min":0,"max":20},"name":"sample-name","match":{"regions":["US"],"appId":"sample-appId","lang":"es|en"},"description":"sample-description","id":"sample-id","last_modified":1526991669}"""
+        val json = """
+            {
+              "buckets": {
+                "min": 0,
+                "max": 20
+              },
+              "name": "sample-name",
+              "match": {
+                "regions": [
+                  "US"
+                ],
+                "appId": "sample-appId",
+                "lang": "es|en"
+              },
+              "description": "sample-description",
+              "id": "sample-id",
+              "last_modified": 1526991669
+            }
+        """.trimIndent()
+
         val expectedExperiment = Experiment("sample-id",
             "sample-name",
             "sample-description",
@@ -74,22 +93,72 @@ class JSONExperimentParserTest {
 
     @Test
     fun fromJsonNonPresentValues() {
-        val json = """{"id":"id","name":"name"}"""
+        val json = """
+            {
+                "id": "id",
+                "name": "name"
+            }
+        """.trimIndent()
         assertEquals(Experiment("id", "name"), JSONExperimentParser().fromJson(JSONObject(json)))
     }
 
     @Test
     fun fromJsonNullValues() {
-        val json = """{"buckets":null,"name":"sample-name","match":null,"description":null,"id":"sample-id","last_modified":null}"""
+        val json = """
+            {
+              "buckets": null,
+              "name": "sample-name",
+              "match": null,
+              "description": null,
+              "id": "sample-id",
+              "last_modified": null
+            }
+        """.trimIndent()
         assertEquals(Experiment("sample-id", "sample-name"), JSONExperimentParser().fromJson(JSONObject(json)))
-        val emptyObjects = """{"id":"sample-id","name":"sample-name","buckets":{"min":null,"max":null},"match":{"lang":null,"appId":null,"region":null}}"""
+
+        val emptyObjects = """
+            {
+              "id": "sample-id",
+              "name": "sample-name",
+              "buckets": {
+                "min": null,
+                "max": null
+              },
+              "match": {
+                "lang": null,
+                "appId": null,
+                "region": null
+              }
+            }
+        """.trimIndent()
         assertEquals(Experiment("sample-id", name = "sample-name", bucket = Experiment.Bucket(), match = Experiment.Matcher()),
             JSONExperimentParser().fromJson(JSONObject(emptyObjects)))
     }
 
     @Test
     fun payloadFromJson() {
-        val json = """{"buckets":null,"name":null,"match":null,"description":null,"id":"sample-id","last_modified":null,"values":{"a":"a","b":3,"c":3.5,"d":true,"e":[1,2,3,4]}}"""
+        val json = """
+            {
+              "buckets": null,
+              "name": null,
+              "match": null,
+              "description": null,
+              "id": "sample-id",
+              "last_modified": null,
+              "values": {
+                "a": "a",
+                "b": 3,
+                "c": 3.5,
+                "d": true,
+                "e": [
+                  1,
+                  2,
+                  3,
+                  4
+                ]
+              }
+            }
+        """.trimIndent()
         val experiment = JSONExperimentParser().fromJson(JSONObject(json))
         assertEquals("a", experiment.payload?.get("a"))
         assertEquals(3, experiment.payload?.get("b"))

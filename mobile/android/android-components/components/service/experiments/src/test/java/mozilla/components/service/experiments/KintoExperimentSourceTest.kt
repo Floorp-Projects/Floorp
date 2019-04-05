@@ -25,10 +25,15 @@ class KintoExperimentSourceTest {
     @Test
     fun noExperiments() {
         val httpClient = mock(Client::class.java)
-
         val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records"
+        val json = """
+            {
+                "data": []
+            }
+        """.trimIndent()
+
         `when`(httpClient.fetch(any()))
-            .thenReturn(Response(url, 200, MutableHeaders(), Response.Body("""{"data":[]}""".byteInputStream())))
+            .thenReturn(Response(url, 200, MutableHeaders(), Response.Body(json.byteInputStream())))
         val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
         val result = experimentSource.getExperiments(ExperimentsSnapshot(listOf(), null))
         assertEquals(0, result.experiments.size)
@@ -40,11 +45,34 @@ class KintoExperimentSourceTest {
         val httpClient = mock(Client::class.java)
 
         val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records"
+        val json = """
+            {
+                "data":[
+                    {
+                        "name": "first-name",
+                        "match": {
+                            "lang": "eng",
+                            "appId": "first-appId",
+                            "regions": []
+                        },
+                        "schema": 1523549592861,
+                        "buckets": {
+                            "max": "100",
+                            "min": "0"
+                        },
+                        "description": "first-description",
+                        "id": "first-id",
+                        "last_modified": 1523549895713
+                    }
+                ]
+            }
+        """.trimIndent()
+
         `when`(httpClient.fetch(any())).thenReturn(
             Response(url,
                 200,
                 MutableHeaders(),
-                Response.Body("""{"data":[{"name":"first-name","match":{"lang":"eng","appId":"first-appId",regions:[]},"schema":1523549592861,"buckets":{"max":"100","min":"0"},"description":"first-description", "id":"first-id","last_modified":1523549895713}]}""".byteInputStream())))
+                Response.Body(json.byteInputStream())))
 
         val expectedExperiment = Experiment("first-id",
             "first-name",
@@ -65,11 +93,34 @@ class KintoExperimentSourceTest {
     fun getExperimentsDiffAdd() {
         val httpClient = mock(Client::class.java)
         val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549890000"
+        val json = """
+            {
+                "data": [
+                    {
+                        "name": "first-name",
+                        "match": {
+                            "lang": "eng",
+                            "appId": "first-appId",
+                            "regions": []
+                        },
+                        "schema": 1523549592861,
+                        "buckets": {
+                            "max": "100",
+                            "min": "0"
+                        },
+                        "description": "first-description",
+                        "id": "first-id",
+                        "last_modified": 1523549895713
+                    }
+                ]
+            }
+        """.trimIndent()
+
         `when`(httpClient.fetch(any())).thenReturn(
             Response(url,
                 200,
                 MutableHeaders(),
-                Response.Body("""{"data":[{"name":"first-name","match":{"lang":"eng","appId":"first-appId",regions:[]},"schema":1523549592861,"buckets":{"max":"100","min":"0"},"description":"first-description", "id":"first-id","last_modified":1523549895713}]}""".byteInputStream())))
+                Response.Body(json.byteInputStream())))
 
         val kintoExperiment = Experiment("first-id",
             "first-name",
@@ -114,22 +165,40 @@ class KintoExperimentSourceTest {
             Experiment.Bucket(10, 5),
             1523549890000)
 
+        val json = """
+            {
+                "data": [
+                    {
+                        "deleted": true,
+                        "id": "id",
+                        "last_modified": 1523549899999
+                    }
+                ]
+            }
+        """.trimIndent()
+
         `when`(httpClient.fetch(any())).thenReturn(
                 Response("$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549890000",
                         200,
                         MutableHeaders(),
-                        Response.Body("""{"data":[{"deleted":true,"id":"id","last_modified":1523549899999}]}""".byteInputStream())))
+                        Response.Body(json.byteInputStream())))
 
         val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
         val kintoExperiments = experimentSource.getExperiments(ExperimentsSnapshot(listOf(storageExperiment, secondExperiment), 1523549890000))
         assertEquals(1, kintoExperiments.experiments.size)
         assertEquals(1523549899999, kintoExperiments.lastModified)
 
+        val json2 = """
+            {
+                "data": []
+            }
+        """.trimIndent()
+
         `when`(httpClient.fetch(any())).thenReturn(
                 Response("$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549899999",
                         200,
                         MutableHeaders(),
-                        Response.Body("""{"data":[]}""".byteInputStream())))
+                        Response.Body(json2.byteInputStream())))
 
         val experimentsResult = experimentSource.getExperiments(ExperimentsSnapshot(kintoExperiments.experiments, 1523549899999))
         assertEquals(1, experimentsResult.experiments.size)
@@ -140,11 +209,35 @@ class KintoExperimentSourceTest {
     fun getExperimentsDiffUpdate() {
         val httpClient = mock(Client::class.java)
         val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549800000"
+
+        val json = """
+            {
+                "data": [
+                    {
+                        "name": "first-name",
+                        "match": {
+                            "lang": "eng",
+                            "appId": "first-appId",
+                            "regions": []
+                        },
+                        "schema": 1523549592861,
+                        "buckets": {
+                            "max": "100",
+                            "min": "0"
+                        },
+                        "description": "first-description",
+                        "id": "first-id",
+                        "last_modified": 1523549895713
+                    }
+                ]
+            }
+        """.trimIndent()
+
         `when`(httpClient.fetch(any())).thenReturn(
             Response(url,
                 200,
                 MutableHeaders(),
-                Response.Body("""{"data":[{"name":"first-name","match":{"lang":"eng","appId":"first-appId",regions:[]},"schema":1523549592861,"buckets":{"max":"100","min":"0"},"description":"first-description", "id":"first-id","last_modified":1523549895713}]}""".byteInputStream())))
+                Response.Body(json.byteInputStream())))
 
         val kintoExperiment = Experiment("first-id",
             "first-name",
@@ -173,11 +266,18 @@ class KintoExperimentSourceTest {
     fun getExperimentsEmptyDiff() {
         val httpClient = mock(Client::class.java)
         val url = "$baseUrl/buckets/$bucketName/collections/$collectionName/records?_since=1523549895713"
+
+        val json = """
+            {
+                "data": []
+            }
+        """.trimIndent()
+
         `when`(httpClient.fetch(any())).thenReturn(
             Response(url,
                 200,
                 MutableHeaders(),
-                Response.Body("""{"data":[]}""".byteInputStream())))
+                Response.Body(json.byteInputStream())))
 
         val storageExperiment = Experiment("first-id",
             "first-name",

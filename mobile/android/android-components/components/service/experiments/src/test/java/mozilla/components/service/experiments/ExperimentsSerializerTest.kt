@@ -13,46 +13,46 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 val experimentsJson = """
-                              {
-                                  "experiments": [
-                                      {
-                                          "buckets":{
-                                              "min":0,
-                                              "max":100
-                                          },
-                                          "name":"first",
-                                          "match":{
-                                              "regions": [
-                                                  "esp"
-                                              ],
-                                              "appId":"^org.mozilla.firefox_beta${'$'}",
-                                              "lang":"eng|es|deu|fra"
-                                          },
-                                          "description":"Description",
-                                          "id":"experiment-id",
-                                          "last_modified":1523549895713
-                                      },
-                                      {
-                                          "buckets":{
-                                              "min":5,
-                                              "max":10
-                                          },
-                                          "name":"second",
-                                          "match":{
-                                              "regions": [
-                                                  "deu"
-                                              ],
-                                              "appId":"^org.mozilla.firefox${'$'}",
-                                              "lang":"es|deu"
-                                          },
-                                          "description":"SecondDescription",
-                                          "id":"experiment-2-id",
-                                          "last_modified":1523549895749
-                                      }
-                                  ],
-                                  "last_modified": 1523549895749
-                              }
-                              """
+{
+  "experiments": [
+      {
+          "buckets":{
+              "min":0,
+              "max":100
+          },
+          "name":"first",
+          "match":{
+              "regions": [
+                  "esp"
+              ],
+              "appId":"^org.mozilla.firefox_beta${'$'}",
+              "lang":"eng|es|deu|fra"
+          },
+          "description":"Description",
+          "id":"experiment-id",
+          "last_modified":1523549895713
+      },
+      {
+          "buckets":{
+              "min":5,
+              "max":10
+          },
+          "name":"second",
+          "match":{
+              "regions": [
+                  "deu"
+              ],
+              "appId":"^org.mozilla.firefox${'$'}",
+              "lang":"es|deu"
+          },
+          "description":"SecondDescription",
+          "id":"experiment-2-id",
+          "last_modified":1523549895749
+      }
+  ],
+  "last_modified": 1523549895749
+}
+"""
 
 @RunWith(RobolectricTestRunner::class)
 class ExperimentsSerializerTest {

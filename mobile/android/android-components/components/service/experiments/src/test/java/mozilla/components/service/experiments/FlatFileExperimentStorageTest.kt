@@ -97,8 +97,33 @@ class FlatFileExperimentStorageTest {
     @Test
     fun retrieve() {
         val file = File(RuntimeEnvironment.application.filesDir, "experiments.json")
+        val json = """
+            {
+              "experiments": [
+                {
+                  "name": "sample-name",
+                  "match": {
+                    "lang": "es|en",
+                    "appId": "sample-appId",
+                    "regions": [
+                      "US"
+                    ]
+                  },
+                  "buckets": {
+                    "max": 20,
+                    "min": 0
+                  },
+                  "description": "sample-description",
+                  "id": "sample-id",
+                  "last_modified": 1526991669
+                }
+              ],
+              "last_modified": 1526991669
+            }
+        """.trimIndent()
+
         file.writer().use {
-            it.write("""{"experiments":[{"name":"sample-name","match":{"lang":"es|en","appId":"sample-appId","regions":["US"]},"buckets":{"max":20,"min":0},"description":"sample-description","id":"sample-id","last_modified":1526991669}],"last_modified":1526991669}""")
+            it.write(json)
         }
         val experimentsResult = FlatFileExperimentStorage(file).retrieve()
         val experiments = experimentsResult.experiments
