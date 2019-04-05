@@ -404,36 +404,6 @@ ARCHIVE_FILES = {
             'base': 'testing',
             'pattern': 'mozharness/**',
         },
-        {
-            'source': buildconfig.topsrcdir,
-            'base': 'testing/mozbase/manifestparser',
-            'pattern': 'manifestparser/**',
-            'dest': 'mozharness',
-        },
-        {
-            'source': buildconfig.topsrcdir,
-            'base': 'testing/mozbase/mozfile',
-            'pattern': 'mozfile/**',
-            'dest': 'mozharness',
-        },
-        {
-            'source': buildconfig.topsrcdir,
-            'base': 'testing/mozbase/mozinfo',
-            'pattern': 'mozinfo/**',
-            'dest': 'mozharness',
-        },
-        {
-            'source': buildconfig.topsrcdir,
-            'base': 'testing/mozbase/mozprocess',
-            'pattern': 'mozprocess/**',
-            'dest': 'mozharness',
-        },
-        {
-            'source': buildconfig.topsrcdir,
-            'base': 'third_party/python/six',
-            'pattern': 'six.py',
-            'dest': 'mozharness',
-        },
     ],
     'reftest': [
         {
