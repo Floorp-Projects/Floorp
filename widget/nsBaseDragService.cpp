@@ -205,23 +205,6 @@ nsBaseDragService::InvokeDragSession(
     nsContentPolicyType aContentPolicyType = nsIContentPolicy::TYPE_OTHER) {
   AUTO_PROFILER_LABEL("nsBaseDragService::InvokeDragSession", OTHER);
 
-  // If you're hitting this, a test is causing the browser to attempt to enter
-  // the drag-drop native nested event loop, which will put the browser in a
-  // state that won't run tests properly until there's manual intervention
-  // to exit the drag-drop loop (either by moving the mouse or hitting escape),
-  // which can't be done from script since we're in the nested loop.
-  //
-  // The best way to avoid this is to catch the dragstart event on the item
-  // being dragged, and then to call preventDefault() and stopPropagating() on
-  // it. Alternatively, use EventUtils.synthesizeDragStart, which will do this
-  // for you.
-  if (XRE_IsParentProcess()) {
-    MOZ_ASSERT(
-        !xpc::IsInAutomation(),
-        "About to start drag-drop native loop on which will prevent later "
-        "tests from running properly.");
-  }
-
   NS_ENSURE_TRUE(aDOMNode, NS_ERROR_INVALID_ARG);
   NS_ENSURE_TRUE(mSuppressLevel == 0, NS_ERROR_FAILURE);
 
