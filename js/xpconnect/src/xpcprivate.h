@@ -1838,8 +1838,6 @@ class XPCWrappedJSIterator final : public nsISimpleEnumerator {
 // class here just for static methods
 class XPCConvert {
  public:
-  static bool IsMethodReflectable(const nsXPTMethodInfo& info);
-
   /**
    * Convert a native object into a JS::Value.
    *
