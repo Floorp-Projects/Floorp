@@ -192,7 +192,7 @@ bool WebrtcAudioConduit::GetRTCPReceiverReport(uint32_t* jitterMs,
                                                uint32_t* packetsReceived,
                                                uint64_t* bytesReceived,
                                                uint32_t* cumulativeLost,
-                                               int32_t* rttMs) {
+                                               Maybe<double>* aOutRttSec) {
   ASSERT_ON_THREAD(mStsThread);
   double fractionLost = 0.0;
   int64_t timestampTmp = 0;
@@ -203,22 +203,30 @@ bool WebrtcAudioConduit::GetRTCPReceiverReport(uint32_t* jitterMs,
         &timestampTmp, jitterMs, cumulativeLost, packetsReceived, bytesReceived,
         &fractionLost, &rttMsTmp);
   }
-  auto stats = mCall->Call()->GetStats();
-  int64_t rtt = stats.rtt_ms;
+
+  const auto stats = mCall->Call()->GetStats();
+  const auto rtt = stats.rtt_ms;
+  if (rtt > static_cast<decltype(stats.rtt_ms)>(INT32_MAX)) {
+    // If we get a bogus RTT we will keep using the previous RTT
 #ifdef DEBUG
-  if (rtt > INT32_MAX) {
     CSFLogError(LOGTAG,
-                "%s for VideoConduit:%p RTT is larger than the"
+                "%s for AudioConduit:%p RTT is larger than the"
                 " maximum size of an RTCP RTT.",
                 __FUNCTION__, this);
-  }
 #endif
-  if (rtt > 0) {
-    *rttMs = rtt;
   } else {
-    *rttMs = 0;
+    if (mRttSec && rtt < 0) {
+      CSFLogError(LOGTAG,
+                  "%s for AudioConduit:%p RTT returned an error after "
+                  " previously succeeding.",
+                  __FUNCTION__, this);
+      mRttSec = Nothing();
+    }
+    if (rtt >= 0) {
+      mRttSec = Some(static_cast<DOMHighResTimeStamp>(rtt) / 1000.0);
+    }
   }
-
+  *aOutRttSec = mRttSec;
   return res;
 }
 

@@ -236,7 +236,7 @@ class MediaSessionConduit {
                                      uint32_t* packetsReceived,
                                      uint64_t* bytesReceived,
                                      uint32_t* cumulativeLost,
-                                     int32_t* rttMs) = 0;
+                                     Maybe<double>* aOutRttMs) = 0;
   virtual bool GetRTCPSenderReport(unsigned int* packetsSent,
                                    uint64_t* bytesSent) = 0;
 
