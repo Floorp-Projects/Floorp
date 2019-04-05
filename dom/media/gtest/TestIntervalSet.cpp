@@ -28,8 +28,7 @@ media::IntervalSet<uint8_t> CreateByteIntervalSet(int32_t aStart,
   return test;
 }
 
-TEST(IntervalSet, Constructors)
-{
+TEST(IntervalSet, Constructors) {
   const int32_t start = 1;
   const int32_t end = 2;
   const int32_t fuzz = 0;
@@ -74,8 +73,7 @@ media::TimeIntervals CreateTimeIntervals(int32_t aStart, int32_t aEnd) {
   return test;
 }
 
-TEST(IntervalSet, TimeIntervalsConstructors)
-{
+TEST(IntervalSet, TimeIntervalsConstructors) {
   const auto start = media::TimeUnit::FromMicroseconds(1);
   const auto end = media::TimeUnit::FromMicroseconds(2);
   const media::TimeUnit fuzz;
@@ -110,14 +108,12 @@ TEST(IntervalSet, TimeIntervalsConstructors)
   EXPECT_EQ(0u, i0.Length());  // Constructing with an empty time interval.
 }
 
-TEST(IntervalSet, Length)
-{
+TEST(IntervalSet, Length) {
   IntInterval i(15, 25);
   EXPECT_EQ(10, i.Length());
 }
 
-TEST(IntervalSet, Intersects)
-{
+TEST(IntervalSet, Intersects) {
   EXPECT_TRUE(IntInterval(1, 5).Intersects(IntInterval(3, 4)));
   EXPECT_TRUE(IntInterval(1, 5).Intersects(IntInterval(3, 7)));
   EXPECT_TRUE(IntInterval(1, 5).Intersects(IntInterval(-1, 3)));
@@ -133,8 +129,7 @@ TEST(IntervalSet, Intersects)
   EXPECT_FALSE(IntInterval(1, 1).Intersects(IntInterval(2, 2)));
 }
 
-TEST(IntervalSet, Intersection)
-{
+TEST(IntervalSet, Intersection) {
   IntInterval i0(10, 20);
   IntInterval i1(15, 25);
   IntInterval i = i0.Intersection(i1);
@@ -150,8 +145,7 @@ TEST(IntervalSet, Intersection)
   EXPECT_TRUE(k.IsEmpty());
 }
 
-TEST(IntervalSet, Equals)
-{
+TEST(IntervalSet, Equals) {
   IntInterval i0(10, 20);
   IntInterval i1(10, 20);
   EXPECT_EQ(i0, i1);
@@ -163,8 +157,7 @@ TEST(IntervalSet, Equals)
   EXPECT_NE(i0, i2);
 }
 
-TEST(IntervalSet, IntersectionIntervalSet)
-{
+TEST(IntervalSet, IntersectionIntervalSet) {
   IntIntervals i0;
   i0 += IntInterval(5, 10);
   i0 += IntInterval(20, 25);
@@ -239,8 +232,7 @@ static void GeneratePermutations(const IntIntervals& aI1,
   } while (std::next_permutation(comb1.begin(), comb1.end()));
 }
 
-TEST(IntervalSet, IntersectionNormalizedIntervalSet)
-{
+TEST(IntervalSet, IntersectionNormalizedIntervalSet) {
   IntIntervals i0;
   i0 += IntInterval(5, 10);
   i0 += IntInterval(20, 25);
@@ -255,8 +247,7 @@ TEST(IntervalSet, IntersectionNormalizedIntervalSet)
   GeneratePermutations(i0, i1);
 }
 
-TEST(IntervalSet, IntersectionUnorderedNonNormalizedIntervalSet)
-{
+TEST(IntervalSet, IntersectionUnorderedNonNormalizedIntervalSet) {
   IntIntervals i0;
   i0 += IntInterval(5, 10);
   i0 += IntInterval(8, 25);
@@ -271,8 +262,7 @@ TEST(IntervalSet, IntersectionUnorderedNonNormalizedIntervalSet)
   GeneratePermutations(i0, i1);
 }
 
-TEST(IntervalSet, IntersectionNonNormalizedInterval)
-{
+TEST(IntervalSet, IntersectionNonNormalizedInterval) {
   IntIntervals i0;
   i0 += IntInterval(5, 10);
   i0 += IntInterval(8, 25);
@@ -285,8 +275,7 @@ TEST(IntervalSet, IntersectionNonNormalizedInterval)
   EXPECT_EQ(i0[0].mEnd, i1.mEnd);
 }
 
-TEST(IntervalSet, IntersectionUnorderedNonNormalizedInterval)
-{
+TEST(IntervalSet, IntersectionUnorderedNonNormalizedInterval) {
   IntIntervals i0;
   i0 += IntInterval(1, 3);
   i0 += IntInterval(1, 10);
@@ -309,8 +298,7 @@ static IntIntervals Duplicate(const IntIntervals& aValue) {
   return value;
 }
 
-TEST(IntervalSet, Normalize)
-{
+TEST(IntervalSet, Normalize) {
   IntIntervals i;
   // Test IntervalSet<T> + Interval<T> operator.
   i = i + IntInterval(20, 30);
@@ -344,8 +332,7 @@ TEST(IntervalSet, Normalize)
   EXPECT_EQ(1u, ti.Length());
 }
 
-TEST(IntervalSet, ContainValue)
-{
+TEST(IntervalSet, ContainValue) {
   IntIntervals i0;
   i0 += IntInterval(0, 10);
   i0 += IntInterval(15, 20);
@@ -356,8 +343,7 @@ TEST(IntervalSet, ContainValue)
   EXPECT_FALSE(i0.Contains(25));
 }
 
-TEST(IntervalSet, ContainValueWithFuzz)
-{
+TEST(IntervalSet, ContainValueWithFuzz) {
   IntIntervals i0;
   i0 += IntInterval(0, 10);
   i0 += IntInterval(15, 20, 1);
@@ -369,8 +355,7 @@ TEST(IntervalSet, ContainValueWithFuzz)
   EXPECT_FALSE(i0.Contains(25));
 }
 
-TEST(IntervalSet, ContainInterval)
-{
+TEST(IntervalSet, ContainInterval) {
   IntIntervals i0;
   i0 += IntInterval(0, 10);
   i0 += IntInterval(15, 20);
@@ -385,8 +370,7 @@ TEST(IntervalSet, ContainInterval)
   EXPECT_FALSE(i0.Contains(IntInterval(30, 55)));
 }
 
-TEST(IntervalSet, ContainIntervalWithFuzz)
-{
+TEST(IntervalSet, ContainIntervalWithFuzz) {
   IntIntervals i0;
   i0 += IntInterval(0, 10);
   i0 += IntInterval(15, 20);
@@ -410,8 +394,7 @@ TEST(IntervalSet, ContainIntervalWithFuzz)
   EXPECT_TRUE(i1.Contains(IntInterval(15, 21)));
 }
 
-TEST(IntervalSet, Span)
-{
+TEST(IntervalSet, Span) {
   IntInterval i0(0, 10);
   IntInterval i1(20, 30);
   IntInterval i{i0.Span(i1)};
@@ -420,8 +403,7 @@ TEST(IntervalSet, Span)
   EXPECT_EQ(i.mEnd, 30);
 }
 
-TEST(IntervalSet, Union)
-{
+TEST(IntervalSet, Union) {
   IntIntervals i0;
   i0 += IntInterval(5, 10);
   i0 += IntInterval(20, 25);
@@ -447,8 +429,7 @@ TEST(IntervalSet, Union)
   EXPECT_EQ(60, i[2].mEnd);
 }
 
-TEST(IntervalSet, UnionNotOrdered)
-{
+TEST(IntervalSet, UnionNotOrdered) {
   IntIntervals i0;
   i0 += IntInterval(20, 25);
   i0 += IntInterval(40, 60);
@@ -474,8 +455,7 @@ TEST(IntervalSet, UnionNotOrdered)
   EXPECT_EQ(60, i[2].mEnd);
 }
 
-TEST(IntervalSet, NormalizeFuzz)
-{
+TEST(IntervalSet, NormalizeFuzz) {
   IntIntervals i0;
   i0 += IntInterval(11, 25, 0);
   i0 += IntInterval(5, 10, 1);
@@ -490,8 +470,7 @@ TEST(IntervalSet, NormalizeFuzz)
   EXPECT_EQ(60, i0[1].mEnd);
 }
 
-TEST(IntervalSet, UnionFuzz)
-{
+TEST(IntervalSet, UnionFuzz) {
   IntIntervals i0;
   i0 += IntInterval(5, 10, 1);
   i0 += IntInterval(11, 25, 0);
@@ -526,16 +505,14 @@ TEST(IntervalSet, UnionFuzz)
   EXPECT_EQ(60, i[1].mEnd);
 }
 
-TEST(IntervalSet, Contiguous)
-{
+TEST(IntervalSet, Contiguous) {
   EXPECT_FALSE(IntInterval(5, 10).Contiguous(IntInterval(11, 25)));
   EXPECT_TRUE(IntInterval(5, 10).Contiguous(IntInterval(10, 25)));
   EXPECT_TRUE(IntInterval(5, 10, 1).Contiguous(IntInterval(11, 25)));
   EXPECT_TRUE(IntInterval(5, 10).Contiguous(IntInterval(11, 25, 1)));
 }
 
-TEST(IntervalSet, TimeRangesSeconds)
-{
+TEST(IntervalSet, TimeRangesSeconds) {
   media::TimeIntervals i0;
   i0 += media::TimeInterval(media::TimeUnit::FromSeconds(20),
                             media::TimeUnit::FromSeconds(25));
@@ -580,8 +557,7 @@ static void CheckTimeRanges(dom::TimeRanges* aTr,
   }
 }
 
-TEST(IntervalSet, TimeRangesConversion)
-{
+TEST(IntervalSet, TimeRangesConversion) {
   RefPtr<dom::TimeRanges> tr = new dom::TimeRanges();
   tr->Add(20, 25);
   tr->Add(40, 60);
@@ -599,8 +575,7 @@ TEST(IntervalSet, TimeRangesConversion)
   CheckTimeRanges(tr2, i1);
 }
 
-TEST(IntervalSet, TimeRangesMicroseconds)
-{
+TEST(IntervalSet, TimeRangesMicroseconds) {
   media::TimeIntervals i0;
 
   i0 += media::TimeInterval(media::TimeUnit::FromMicroseconds(20),
@@ -686,8 +661,7 @@ class Foo {
   int32_t mArg3;
 };
 
-TEST(IntervalSet, FooIntervalSet)
-{
+TEST(IntervalSet, FooIntervalSet) {
   media::Interval<Foo<int>> i(Foo<int>(), Foo<int>(4, 5, 6));
   media::IntervalSet<Foo<int>> is;
   is += i;
@@ -700,8 +674,7 @@ TEST(IntervalSet, FooIntervalSet)
   EXPECT_EQ(Foo<int>(4, 5, 6), is[0].mEnd);
 }
 
-TEST(IntervalSet, StaticAssert)
-{
+TEST(IntervalSet, StaticAssert) {
   media::Interval<int> i;
 
   static_assert(
@@ -714,8 +687,7 @@ TEST(IntervalSet, StaticAssert)
                 "Must use copy constructor");
 }
 
-TEST(IntervalSet, Substraction)
-{
+TEST(IntervalSet, Substraction) {
   IntIntervals i0;
   i0 += IntInterval(5, 10);
   i0 += IntInterval(20, 25);

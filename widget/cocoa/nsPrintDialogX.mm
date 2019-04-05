@@ -51,7 +51,8 @@ nsPrintDialogServiceX::Show(nsPIDOMWindowOuter* aParent, nsIPrintSettings* aSett
   // from prefs. Reading printer-specific prefs requires the printer
   // name to be set.
   settingsX->SetPrinterNameFromPrintInfo();
-  printSettingsSvc->InitPrintSettingsFromPrefs(settingsX, true, nsIPrintSettings::kInitSaveAll);
+  printSettingsSvc->InitPrintSettingsFromPrefs(settingsX, true,
+                                               nsIPrintSettings::kInitSaveAll);
   // Set the print job title
   char16_t** docTitles;
   uint32_t titleCount;

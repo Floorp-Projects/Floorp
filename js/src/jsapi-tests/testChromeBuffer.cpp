@@ -10,9 +10,9 @@
 
 static TestJSPrincipals system_principals(1);
 
-static const JSClass global_class = {"global",
-                                     JSCLASS_IS_GLOBAL | JSCLASS_GLOBAL_FLAGS,
-                                     &JS::DefaultGlobalClassOps};
+static const JSClass global_class = {
+    "global", JSCLASS_IS_GLOBAL | JSCLASS_GLOBAL_FLAGS,
+    &JS::DefaultGlobalClassOps};
 
 static JS::PersistentRootedObject trusted_glob;
 static JS::PersistentRootedObject trusted_fun;

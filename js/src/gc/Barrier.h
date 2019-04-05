@@ -977,6 +977,7 @@ struct DefaultHasher<js::ReadBarriered<T>> : js::ReadBarrieredHasher<T> {};
 
 namespace js {
 
+
 class ArrayObject;
 class DebugEnvironmentProxy;
 class GlobalObject;

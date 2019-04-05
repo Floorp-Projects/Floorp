@@ -328,9 +328,7 @@ void ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
         readFormatGFX = SurfaceFormat::R5G6B5_UINT16;
         break;
       }
-      default: {
-        MOZ_CRASH("GFX: Bad read format, read format.");
-      }
+      default: { MOZ_CRASH("GFX: Bad read format, read format."); }
     }
 
     switch (readType) {
@@ -349,9 +347,7 @@ void ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
         readAlignment = 2;
         break;
       }
-      default: {
-        MOZ_CRASH("GFX: Bad read type, read type.");
-      }
+      default: { MOZ_CRASH("GFX: Bad read type, read type."); }
     }
 
     int32_t stride = dest->GetSize().width * BytesPerPixel(readFormatGFX);

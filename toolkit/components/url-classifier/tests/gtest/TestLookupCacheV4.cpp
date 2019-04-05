@@ -32,18 +32,20 @@ void TestHasPrefix(const _Fragment& aFragment, bool aExpectedHas,
   });
 }
 
-TEST(UrlClassifierLookupCacheV4, HasComplete)
-{ TestHasPrefix(_Fragment("bravo.com/"), true, true); }
+TEST(UrlClassifierLookupCacheV4, HasComplete) {
+  TestHasPrefix(_Fragment("bravo.com/"), true, true);
+}
 
-TEST(UrlClassifierLookupCacheV4, HasPrefix)
-{ TestHasPrefix(_Fragment("browsing.com/"), true, false); }
+TEST(UrlClassifierLookupCacheV4, HasPrefix) {
+  TestHasPrefix(_Fragment("browsing.com/"), true, false);
+}
 
-TEST(UrlClassifierLookupCacheV4, Nomatch)
-{ TestHasPrefix(_Fragment("nomatch.com/"), false, false); }
+TEST(UrlClassifierLookupCacheV4, Nomatch) {
+  TestHasPrefix(_Fragment("nomatch.com/"), false, false);
+}
 
 // Test an existing .pset should be removed after .vlpset is written
-TEST(UrlClassifierLookupCacheV4, RemoveOldPset)
-{
+TEST(UrlClassifierLookupCacheV4, RemoveOldPset) {
   nsCOMPtr<nsIFile> oldPsetFile;
   NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                          getter_AddRefs(oldPsetFile));
@@ -88,8 +90,7 @@ TEST(UrlClassifierLookupCacheV4, RemoveOldPset)
 }
 
 // Test the legacy load
-TEST(UrlClassifierLookupCacheV4, LoadOldPset)
-{
+TEST(UrlClassifierLookupCacheV4, LoadOldPset) {
   nsCOMPtr<nsIFile> oldPsetFile;
 
   _PrefixArray array = {GeneratePrefix(_Fragment("entry.com/"), 4)};

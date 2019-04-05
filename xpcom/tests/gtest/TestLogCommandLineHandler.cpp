@@ -21,8 +21,7 @@ constexpr size_t array_size(T (&)[N]) {
   return N;
 }
 
-TEST(LogCommandLineHandler, Empty)
-{
+TEST(LogCommandLineHandler, Empty) {
   bool callbackInvoked = false;
   auto callback = [&](nsACString const& env) mutable {
     callbackInvoked = true;
@@ -36,8 +35,7 @@ TEST(LogCommandLineHandler, Empty)
   EXPECT_FALSE(callbackInvoked);
 }
 
-TEST(LogCommandLineHandler, MOZ_LOG_regular)
-{
+TEST(LogCommandLineHandler, MOZ_LOG_regular) {
   nsTArray<nsCString> results;
 
   auto callback = [&](nsACString const& env) mutable {
@@ -70,8 +68,7 @@ TEST(LogCommandLineHandler, MOZ_LOG_regular)
   EXPECT_TRUE(NS_LITERAL_CSTRING("MOZ_LOG=modules").Equals(results[0]));
 }
 
-TEST(LogCommandLineHandler, MOZ_LOG_and_FILE_regular)
-{
+TEST(LogCommandLineHandler, MOZ_LOG_and_FILE_regular) {
   nsTArray<nsCString> results;
 
   auto callback = [&](nsACString const& env) mutable {
@@ -117,8 +114,7 @@ TEST(LogCommandLineHandler, MOZ_LOG_and_FILE_regular)
   EXPECT_TRUE(NS_LITERAL_CSTRING("MOZ_LOG_FILE=file").Equals(results[1]));
 }
 
-TEST(LogCommandLineHandler, MOZ_LOG_fuzzy)
-{
+TEST(LogCommandLineHandler, MOZ_LOG_fuzzy) {
   nsTArray<nsCString> results;
 
   auto callback = [&](nsACString const& env) mutable {
@@ -151,8 +147,7 @@ TEST(LogCommandLineHandler, MOZ_LOG_fuzzy)
   EXPECT_TRUE(results.Length() == 0);
 }
 
-TEST(LogCommandLineHandler, MOZ_LOG_overlapping)
-{
+TEST(LogCommandLineHandler, MOZ_LOG_overlapping) {
   nsTArray<nsCString> results;
 
   auto callback = [&](nsACString const& env) mutable {

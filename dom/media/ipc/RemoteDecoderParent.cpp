@@ -41,22 +41,21 @@ void RemoteDecoderParent::Destroy() {
 mozilla::ipc::IPCResult RemoteDecoderParent::RecvInit() {
   MOZ_ASSERT(OnManagerThread());
   RefPtr<RemoteDecoderParent> self = this;
-  mDecoder->Init()->Then(
-      mManagerTaskQueue, __func__,
-      [self](TrackInfo::TrackType aTrack) {
-        MOZ_ASSERT(aTrack == TrackInfo::kAudioTrack ||
-                   aTrack == TrackInfo::kVideoTrack);
-        if (self->mDecoder) {
-          Unused << self->SendInitComplete(aTrack,
-                                           self->mDecoder->GetDescriptionName(),
-                                           self->mDecoder->NeedsConversion());
-        }
-      },
-      [self](MediaResult aReason) {
-        if (!self->mDestroyed) {
-          Unused << self->SendInitFailed(aReason);
-        }
-      });
+  mDecoder->Init()->Then(mManagerTaskQueue, __func__,
+                         [self](TrackInfo::TrackType aTrack) {
+                           MOZ_ASSERT(aTrack == TrackInfo::kAudioTrack ||
+                                      aTrack == TrackInfo::kVideoTrack);
+                           if (self->mDecoder) {
+                             Unused << self->SendInitComplete(
+                                 aTrack, self->mDecoder->GetDescriptionName(),
+                                 self->mDecoder->NeedsConversion());
+                           }
+                         },
+                         [self](MediaResult aReason) {
+                           if (!self->mDestroyed) {
+                             Unused << self->SendInitFailed(aReason);
+                           }
+                         });
   return IPC_OK();
 }
 

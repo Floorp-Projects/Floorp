@@ -143,9 +143,7 @@ void PaymentMethodChangeEvent::GetMethodDetails(
       aRetVal.set(&value.toObject());
       break;
     }
-    default: {
-      break;
-    }
+    default: { break; }
   }
 }
 

@@ -14,8 +14,7 @@
 
 using namespace mozilla;
 
-TEST(TestInputStreamLengthHelper, NonLengthStream)
-{
+TEST(TestInputStreamLengthHelper, NonLengthStream) {
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -92,8 +91,7 @@ NS_INTERFACE_MAP_BEGIN(LengthStream)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIInputStream)
 NS_INTERFACE_MAP_END
 
-TEST(TestInputStreamLengthHelper, LengthStream)
-{
+TEST(TestInputStreamLengthHelper, LengthStream) {
   nsCOMPtr<nsIInputStream> stream = new LengthStream(42, NS_OK, 0, false);
 
   bool called = false;
@@ -105,8 +103,7 @@ TEST(TestInputStreamLengthHelper, LengthStream)
   MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return called; }));
 }
 
-TEST(TestInputStreamLengthHelper, InvalidLengthStream)
-{
+TEST(TestInputStreamLengthHelper, InvalidLengthStream) {
   nsCOMPtr<nsIInputStream> stream =
       new LengthStream(42, NS_ERROR_NOT_AVAILABLE, 0, false);
 
@@ -119,8 +116,7 @@ TEST(TestInputStreamLengthHelper, InvalidLengthStream)
   MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return called; }));
 }
 
-TEST(TestInputStreamLengthHelper, AsyncLengthStream)
-{
+TEST(TestInputStreamLengthHelper, AsyncLengthStream) {
   nsCOMPtr<nsIInputStream> stream =
       new LengthStream(22, NS_BASE_STREAM_WOULD_BLOCK, 123, true);
 
@@ -133,8 +129,7 @@ TEST(TestInputStreamLengthHelper, AsyncLengthStream)
   MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return called; }));
 }
 
-TEST(TestInputStreamLengthHelper, FallbackLengthStream)
-{
+TEST(TestInputStreamLengthHelper, FallbackLengthStream) {
   nsCOMPtr<nsIInputStream> stream =
       new LengthStream(-1, NS_BASE_STREAM_WOULD_BLOCK, 123, false);
 

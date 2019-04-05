@@ -42,7 +42,8 @@ class AutoMemMap {
   // Unix-like systems, this is identical to the above init() method. On
   // Windows, the FileDescriptor must be a handle for a file mapping,
   // rather than a file descriptor.
-  Result<Ok, nsresult> initWithHandle(const FileDescriptor& file, size_t size,
+  Result<Ok, nsresult> initWithHandle(const FileDescriptor& file,
+                                      size_t size,
                                       PRFileMapProtect prot = PR_PROT_READONLY);
 
   void reset();

@@ -11,8 +11,7 @@
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/SimpleGlobalObject.h"
 
-TEST(DOM_Base_ContentUtils, StringifyJSON_EmptyValue)
-{
+TEST(DOM_Base_ContentUtils, StringifyJSON_EmptyValue) {
   JSObject* globalObject = mozilla::dom::SimpleGlobalObject::Create(
       mozilla::dom::SimpleGlobalObject::GlobalType::BindingDetail);
   mozilla::dom::AutoJSAPI jsAPI;
@@ -26,8 +25,7 @@ TEST(DOM_Base_ContentUtils, StringifyJSON_EmptyValue)
   ASSERT_TRUE(serializedValue.EqualsLiteral("null"));
 }
 
-TEST(DOM_Base_ContentUtils, StringifyJSON_Object)
-{
+TEST(DOM_Base_ContentUtils, StringifyJSON_Object) {
   JSObject* globalObject = mozilla::dom::SimpleGlobalObject::Create(
       mozilla::dom::SimpleGlobalObject::GlobalType::BindingDetail);
   mozilla::dom::AutoJSAPI jsAPI;

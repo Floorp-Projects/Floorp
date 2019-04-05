@@ -402,8 +402,8 @@ void WebGLContext::VertexAttribAnyPointer(bool isFuncInt, GLuint index,
   }
 
   WebGLVertexAttribData& vd = mBoundVertexArray->mAttribs[index];
-  vd.VertexAttribPointer(isFuncInt, buffer, AutoAssertCast(size), type,
-                         normalized, stride, byteOffset);
+  vd.VertexAttribPointer(isFuncInt, buffer, AutoAssertCast(size), type, normalized, stride,
+                         byteOffset);
   mBoundVertexArray->InvalidateCaches();
 }
 

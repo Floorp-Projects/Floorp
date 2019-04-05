@@ -47,8 +47,7 @@ class TestEvent final : public Runnable, nsIRunnablePriority {
 
 NS_IMPL_ISUPPORTS_INHERITED(TestEvent, Runnable, nsIRunnablePriority)
 
-TEST(EventPriorities, IdleAfterNormal)
-{
+TEST(EventPriorities, IdleAfterNormal) {
   int normalRan = 0, idleRan = 0;
 
   RefPtr<TestEvent> evNormal =
@@ -67,8 +66,7 @@ TEST(EventPriorities, IdleAfterNormal)
       SpinEventLoopUntil([&]() { return normalRan == 3 && idleRan == 3; }));
 }
 
-TEST(EventPriorities, InterleaveHighNormal)
-{
+TEST(EventPriorities, InterleaveHighNormal) {
   int normalRan = 0, highRan = 0;
 
   RefPtr<TestEvent> evNormal = new TestEvent(

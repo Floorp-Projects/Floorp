@@ -148,8 +148,7 @@ static bool TestIterator() {
   return true;
 }
 
-TEST(Gfx, gfxSkipChars)
-{
+TEST(Gfx, gfxSkipChars) {
   TestConstructor();
   TestLength();
   TestIterator();

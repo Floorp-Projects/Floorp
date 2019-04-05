@@ -143,21 +143,20 @@ RefPtr<PerformanceInfoPromise> DocGroup::ReportPerformanceInfo() {
   RefPtr<DocGroup> self = this;
 
   return CollectMemoryInfo(top, mainThread)
-      ->Then(
-          mainThread, __func__,
-          [self, host, pid, windowID, duration, isTopLevel,
-           items](const PerformanceMemoryInfo& aMemoryInfo) {
-            PerformanceInfo info =
-                PerformanceInfo(host, pid, windowID, duration,
-                                self->mPerformanceCounter->GetID(), false,
-                                isTopLevel, aMemoryInfo, items);
+      ->Then(mainThread, __func__,
+             [self, host, pid, windowID, duration, isTopLevel,
+              items](const PerformanceMemoryInfo& aMemoryInfo) {
+               PerformanceInfo info =
+                   PerformanceInfo(host, pid, windowID, duration,
+                                   self->mPerformanceCounter->GetID(), false,
+                                   isTopLevel, aMemoryInfo, items);
 
-            return PerformanceInfoPromise::CreateAndResolve(std::move(info),
-                                                            __func__);
-          },
-          [self](const nsresult rv) {
-            return PerformanceInfoPromise::CreateAndReject(rv, __func__);
-          });
+               return PerformanceInfoPromise::CreateAndResolve(std::move(info),
+                                                               __func__);
+             },
+             [self](const nsresult rv) {
+               return PerformanceInfoPromise::CreateAndReject(rv, __func__);
+             });
 }
 
 nsresult DocGroup::Dispatch(TaskCategory aCategory,

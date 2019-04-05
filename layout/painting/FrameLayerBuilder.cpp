@@ -4859,8 +4859,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       nsIntRegion itemVisibleRegion = itemVisibleRect;
       nsRegion tightBounds = item->GetTightBounds(mBuilder, &snap);
       if (!tightBounds.IsEmpty()) {
-        itemVisibleRegion.AndWith(
-            ScaleRegionToOutsidePixels(tightBounds, snap));
+        itemVisibleRegion.AndWith(ScaleRegionToOutsidePixels(tightBounds, snap));
       }
 
       ContainerLayer* oldContainer = ownLayer->GetParent();

@@ -1576,19 +1576,19 @@ bool js::str_normalize(JSContext* cx, unsigned argc, Value* vp) {
     PodCopy(chars.begin(), srcChars.begin().get(), spanLength);
   }
 
-  int32_t size = intl::CallICU(
-      cx,
-      [normalizer, &srcChars, spanLength](UChar* chars, uint32_t size,
-                                          UErrorCode* status) {
-        mozilla::RangedPtr<const char16_t> remainingStart =
-            srcChars.begin() + spanLength;
-        size_t remainingLength = srcChars.length() - spanLength;
+  int32_t size =
+      intl::CallICU(cx,
+                    [normalizer, &srcChars, spanLength](
+                        UChar* chars, uint32_t size, UErrorCode* status) {
+                      mozilla::RangedPtr<const char16_t> remainingStart =
+                          srcChars.begin() + spanLength;
+                      size_t remainingLength = srcChars.length() - spanLength;
 
-        return unorm2_normalizeSecondAndAppend(normalizer, chars, spanLength,
-                                               size, remainingStart.get(),
-                                               remainingLength, status);
-      },
-      chars);
+                      return unorm2_normalizeSecondAndAppend(
+                          normalizer, chars, spanLength, size,
+                          remainingStart.get(), remainingLength, status);
+                    },
+                    chars);
   if (size < 0) {
     return false;
   }

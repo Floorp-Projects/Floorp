@@ -1179,8 +1179,7 @@ void quick_test(TestTransactionFactory *factory) {
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 }
 
-TEST(TestTXMgr, SimpleTest)
-{
+TEST(TestTXMgr, SimpleTest) {
   /*******************************************************************
    *
    * Initialize globals for test.
@@ -1202,8 +1201,7 @@ TEST(TestTXMgr, SimpleTest)
   quick_test(&factory);
 }
 
-TEST(TestTXMgr, AggregationTest)
-{
+TEST(TestTXMgr, AggregationTest) {
   /*******************************************************************
    *
    * Initialize globals for test.
@@ -1808,8 +1806,7 @@ void quick_batch_test(TestTransactionFactory *factory) {
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 }
 
-TEST(TestTXMgr, SimpleBatchTest)
-{
+TEST(TestTXMgr, SimpleBatchTest) {
   /*******************************************************************
    *
    * Initialize globals for test.
@@ -1830,8 +1827,7 @@ TEST(TestTXMgr, SimpleBatchTest)
   quick_batch_test(&factory);
 }
 
-TEST(TestTXMgr, AggregationBatchTest)
-{
+TEST(TestTXMgr, AggregationBatchTest) {
   /*******************************************************************
    *
    * Initialize globals for test.
@@ -1923,8 +1919,7 @@ void stress_test(TestTransactionFactory *factory, int32_t iterations) {
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 }
 
-TEST(TestTXMgr, SimpleStressTest)
-{
+TEST(TestTXMgr, SimpleStressTest) {
   /*******************************************************************
    *
    * Initialize globals for test.
@@ -1954,8 +1949,7 @@ TEST(TestTXMgr, SimpleStressTest)
   stress_test(&factory, iterations);
 }
 
-TEST(TestTXMgr, AggregationStressTest)
-{
+TEST(TestTXMgr, AggregationStressTest) {
   /*******************************************************************
    *
    * Initialize globals for test.
@@ -1985,8 +1979,7 @@ TEST(TestTXMgr, AggregationStressTest)
   stress_test(&factory, iterations);
 }
 
-TEST(TestTXMgr, AggregationBatchStressTest)
-{
+TEST(TestTXMgr, AggregationBatchStressTest) {
   /*******************************************************************
    *
    * Initialize globals for test.

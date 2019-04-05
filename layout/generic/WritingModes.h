@@ -362,9 +362,8 @@ class WritingMode {
     if (IsBlock(aSide)) {
       static_assert(eOrientationMask == 0x01 && eBlockFlowMask == 0x04,
                     "unexpected mask values");
-      const auto wm =
-          static_cast<uint8_t>(((mWritingMode & eBlockFlowMask) >> 1) |
-                               (mWritingMode & eOrientationMask));
+      const auto wm = static_cast<uint8_t>(((mWritingMode & eBlockFlowMask) >> 1) |
+                                           (mWritingMode & eOrientationMask));
       return PhysicalSideForBlockAxis(wm, GetEdge(aSide));
     }
 

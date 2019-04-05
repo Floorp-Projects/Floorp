@@ -34,8 +34,7 @@ class nsAutoRefTraits<TestObjectA> : public nsPointerRefTraits<TestObjectA> {
 
 int nsAutoRefTraits<TestObjectA>::mTotalRefsCnt = 0;
 
-TEST(AutoRef, Assignment)
-{
+TEST(AutoRef, Assignment) {
   {
     nsCountedRef<TestObjectA> a(new TestObjectA());
     ASSERT_EQ(a->mRefCnt, 1);

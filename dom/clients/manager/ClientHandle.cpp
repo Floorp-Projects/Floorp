@@ -110,14 +110,13 @@ RefPtr<GenericPromise> ClientHandle::Control(
   MOZ_RELEASE_ASSERT(ClientMatchPrincipalInfo(mClientInfo.PrincipalInfo(),
                                               aServiceWorker.PrincipalInfo()));
 
-  StartOp(
-      ClientControlledArgs(aServiceWorker.ToIPC()),
-      [outerPromise](const ClientOpResult& aResult) {
-        outerPromise->Resolve(true, __func__);
-      },
-      [outerPromise](const ClientOpResult& aResult) {
-        outerPromise->Reject(aResult.get_nsresult(), __func__);
-      });
+  StartOp(ClientControlledArgs(aServiceWorker.ToIPC()),
+          [outerPromise](const ClientOpResult& aResult) {
+            outerPromise->Resolve(true, __func__);
+          },
+          [outerPromise](const ClientOpResult& aResult) {
+            outerPromise->Reject(aResult.get_nsresult(), __func__);
+          });
 
   return outerPromise.forget();
 }
@@ -126,15 +125,14 @@ RefPtr<ClientStatePromise> ClientHandle::Focus() {
   RefPtr<ClientStatePromise::Private> outerPromise =
       new ClientStatePromise::Private(__func__);
 
-  StartOp(
-      ClientFocusArgs(),
-      [outerPromise](const ClientOpResult& aResult) {
-        outerPromise->Resolve(
-            ClientState::FromIPC(aResult.get_IPCClientState()), __func__);
-      },
-      [outerPromise](const ClientOpResult& aResult) {
-        outerPromise->Reject(aResult.get_nsresult(), __func__);
-      });
+  StartOp(ClientFocusArgs(),
+          [outerPromise](const ClientOpResult& aResult) {
+            outerPromise->Resolve(
+                ClientState::FromIPC(aResult.get_IPCClientState()), __func__);
+          },
+          [outerPromise](const ClientOpResult& aResult) {
+            outerPromise->Reject(aResult.get_nsresult(), __func__);
+          });
 
   return outerPromise.forget();
 }
@@ -158,14 +156,13 @@ RefPtr<GenericPromise> ClientHandle::PostMessage(
   RefPtr<GenericPromise::Private> outerPromise =
       new GenericPromise::Private(__func__);
 
-  StartOp(
-      args,
-      [outerPromise](const ClientOpResult& aResult) {
-        outerPromise->Resolve(true, __func__);
-      },
-      [outerPromise](const ClientOpResult& aResult) {
-        outerPromise->Reject(aResult.get_nsresult(), __func__);
-      });
+  StartOp(args,
+          [outerPromise](const ClientOpResult& aResult) {
+            outerPromise->Resolve(true, __func__);
+          },
+          [outerPromise](const ClientOpResult& aResult) {
+            outerPromise->Reject(aResult.get_nsresult(), __func__);
+          });
 
   return outerPromise.forget();
 }

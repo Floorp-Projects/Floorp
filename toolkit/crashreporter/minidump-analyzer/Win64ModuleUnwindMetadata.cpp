@@ -184,9 +184,7 @@ bool ModuleUnwindParser::GenerateCFIForFunction(
           rip_offset += 80;
           break;
         }
-        default: {
-          return false;
-        }
+        default: { return false; }
       }
     }
 

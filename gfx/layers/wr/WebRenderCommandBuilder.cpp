@@ -245,9 +245,7 @@ static bool IsContainerLayerItem(nsDisplayItem* aItem) {
     case DisplayItemType::TYPE_PERSPECTIVE: {
       return true;
     }
-    default: {
-      return false;
-    }
+    default: { return false; }
   }
 }
 

@@ -3225,9 +3225,7 @@ class BaseCompiler final : public BaseCompilerInterface {
           stackMapGenerator_.memRefsOnStk++;
           break;
         }
-        default: {
-          break;
-        }
+        default: { break; }
       }
     }
   }
@@ -3765,9 +3763,7 @@ class BaseCompiler final : public BaseCompilerInterface {
                    k == Stk::MemRef || k == Stk::LocalRef);
         return Some(AnyReg(popRef(joinRegPtr_)));
       }
-      default: {
-        MOZ_CRASH("Compiler bug: unexpected expression type");
-      }
+      default: { MOZ_CRASH("Compiler bug: unexpected expression type"); }
     }
   }
 
@@ -5570,9 +5566,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         masm.wasmAtomicFetchOp(access, op, rv, srcAddr, temps[0], rd);
 #endif
         break;
-      default: {
-        MOZ_CRASH("Bad type for atomic operation");
-      }
+      default: { MOZ_CRASH("Bad type for atomic operation"); }
     }
   }
 
@@ -7979,9 +7973,7 @@ void BaseCompiler::emitBranchSetup(BranchState* b) {
           pop2xF64(&b->f64.lhs, &b->f64.rhs);
           break;
         }
-        default: {
-          MOZ_CRASH("Unexpected type for LatentOp::Compare");
-        }
+        default: { MOZ_CRASH("Unexpected type for LatentOp::Compare"); }
       }
       break;
     }
@@ -8001,9 +7993,7 @@ void BaseCompiler::emitBranchSetup(BranchState* b) {
           b->i64.imm = 0;
           break;
         }
-        default: {
-          MOZ_CRASH("Unexpected type for LatentOp::Eqz");
-        }
+        default: { MOZ_CRASH("Unexpected type for LatentOp::Eqz"); }
       }
       break;
     }
@@ -8048,9 +8038,7 @@ void BaseCompiler::emitBranchPerform(BranchState* b) {
       freeF64(b->f64.rhs);
       break;
     }
-    default: {
-      MOZ_CRASH("Unexpected type for LatentOp::Compare");
-    }
+    default: { MOZ_CRASH("Unexpected type for LatentOp::Compare"); }
   }
   resetLatentOp();
 }
@@ -8525,9 +8513,7 @@ void BaseCompiler::doReturn(ExprType type, bool popStack) {
       freeRef(rv);
       break;
     }
-    default: {
-      MOZ_CRASH("Function return type");
-    }
+    default: { MOZ_CRASH("Function return type"); }
   }
 }
 
@@ -9608,9 +9594,7 @@ bool BaseCompiler::emitSelect() {
       pushRef(r);
       break;
     }
-    default: {
-      MOZ_CRASH("select type");
-    }
+    default: { MOZ_CRASH("select type"); }
   }
 
   return true;
@@ -10530,9 +10514,7 @@ bool BaseCompiler::emitStructNew() {
       }
       case ValType::NullRef:
         MOZ_CRASH("NullRef not expressible");
-      default: {
-        MOZ_CRASH("Unexpected field type");
-      }
+      default: { MOZ_CRASH("Unexpected field type"); }
     }
   }
 
@@ -10606,9 +10588,7 @@ bool BaseCompiler::emitStructGet() {
     case ValType::NullRef: {
       MOZ_CRASH("NullRef not expressible");
     }
-    default: {
-      MOZ_CRASH("Unexpected field type");
-    }
+    default: { MOZ_CRASH("Unexpected field type"); }
   }
 
   freeRef(rp);
@@ -10714,9 +10694,7 @@ bool BaseCompiler::emitStructSet() {
     case ValType::NullRef: {
       MOZ_CRASH("NullRef not expressible");
     }
-    default: {
-      MOZ_CRASH("Unexpected field type");
-    }
+    default: { MOZ_CRASH("Unexpected field type"); }
   }
 
   freeRef(rp);

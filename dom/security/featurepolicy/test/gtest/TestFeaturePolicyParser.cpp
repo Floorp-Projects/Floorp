@@ -32,8 +32,7 @@ void CheckParser(const nsAString& aInput, bool aExpectedResults,
   parsedFeatures.SwapElements(aParsedFeatures);
 }
 
-TEST(FeaturePolicyParser, Basic)
-{
+TEST(FeaturePolicyParser, Basic) {
   nsCOMPtr<nsIPrincipal> selfPrincipal =
       mozilla::BasePrincipal::CreateCodebasePrincipal(URL_SELF);
   nsCOMPtr<nsIPrincipal> exampleComPrincipal =

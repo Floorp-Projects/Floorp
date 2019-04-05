@@ -53,8 +53,7 @@ static nsString GetFullPath(const char16_t* leaf) {
   return ret;
 }
 
-TEST(TestDllBlocklist, BlockDllByName)
-{
+TEST(TestDllBlocklist, BlockDllByName) {
   sDllWasBlocked = false;
   sDllWasLoaded = false;
   DllBlocklist_SetDllLoadHook(DllLoadHook);
@@ -79,8 +78,7 @@ TEST(TestDllBlocklist, BlockDllByName)
   }
 }
 
-TEST(TestDllBlocklist, BlockDllByVersion)
-{
+TEST(TestDllBlocklist, BlockDllByVersion) {
   sDllWasBlocked = false;
   sDllWasLoaded = false;
   DllBlocklist_SetDllLoadHook(DllLoadHook);
@@ -103,8 +101,7 @@ TEST(TestDllBlocklist, BlockDllByVersion)
   }
 }
 
-TEST(TestDllBlocklist, AllowDllByVersion)
-{
+TEST(TestDllBlocklist, AllowDllByVersion) {
   sDllWasBlocked = false;
   sDllWasLoaded = false;
   DllBlocklist_SetDllLoadHook(DllLoadHook);
@@ -127,8 +124,7 @@ TEST(TestDllBlocklist, AllowDllByVersion)
   }
 }
 
-TEST(TestDllBlocklist, BlocklistIntegrity)
-{
+TEST(TestDllBlocklist, BlocklistIntegrity) {
   auto msg = DllBlocklist_TestBlocklistIntegrity();
   EXPECT_FALSE(msg) << msg;
 }
