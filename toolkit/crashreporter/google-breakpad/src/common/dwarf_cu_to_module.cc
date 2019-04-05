@@ -1237,6 +1237,47 @@ vector<Module::Line> MergeLines(const vector<Module::Line>& inlines,
 
   return merged_lines;
 }
+
+// After merging the line information, we may have adjacent lines that belong
+// to the same file and line number.  (The compiler shouldn't be producing
+// such line records on its own.)  Let's merge adjacent lines where possible
+// to make symbol files smaller.
+void CollapseAdjacentLines(vector<Module::Line>& lines) {
+  if (lines.empty()) {
+    return;
+  }
+
+  auto merging_into = lines.begin();
+  auto next = merging_into + 1;
+  const auto end = lines.end();
+
+  while (next != end) {
+    // The next record might be able to be merged.
+    if ((merging_into->address + merging_into->size) == next->address &&
+        merging_into->file == next->file &&
+        merging_into->number == next->number) {
+      merging_into->size = next->address + next->size - merging_into->address;
+      ++next;
+      continue;
+    }
+
+    // We've merged all we can into this record.  Move on.
+    ++merging_into;
+
+    // next now points at the most recent record that wasn't able to be
+    // merged with a previous record.  We may still have more records to
+    // consider, and if merging_into and next have become discontiguous,
+    // we need to copy things around.
+    if (next != end) {
+      if (next != merging_into) {
+        *merging_into = std::move(*next);
+      }
+      ++next;
+    }
+  }
+
+  lines.erase(merging_into + 1, end);
+}
 }
 
 void DwarfCUToModule::AssignLinesToFunctions(const LineToModuleHandler::FileMap &files) {
@@ -1280,6 +1321,9 @@ void DwarfCUToModule::AssignLinesToFunctions(const LineToModuleHandler::FileMap 
 
   if (!inlines.empty()) {
     vector<Module::Line> merged_lines = MergeLines(inlines, lines_);
+
+    CollapseAdjacentLines(merged_lines);
+
     lines_ = std::move(merged_lines);
   }
 
