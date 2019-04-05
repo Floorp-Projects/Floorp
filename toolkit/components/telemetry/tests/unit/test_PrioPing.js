@@ -80,22 +80,13 @@ add_task(async function test_limit_reached() {
 });
 
 add_task(async function test_periodic() {
-  // First fake a "max"-reason ping to allow us to control when the timer fires.
-  let fireTimerNow;
-  fakePolicy(callback => fireTimerNow = callback, pass, (type, payload, options) => {
+  fakePolicy(pass, pass, (type, payload, options) => {
     checkPingStructure(type, payload, options);
-
-    // And now, set up the actual test:
-    fakePolicy(pass, pass, (type2, payload2, options2) => {
-      checkPingStructure(type2, payload2, options2);
-      Assert.equal(payload2.reason, TelemetryPrioPing.Reason.PERIODIC, "Sent with periodic reason.");
-    }, fakeSnapshot);
-
-    // Now fire the timer. This is re-entrant, which is weird, but then
-    // so is this test.
-    fireTimerNow();
+    Assert.equal(payload.reason, TelemetryPrioPing.Reason.PERIODIC, "Sent with periodic reason.");
   }, fakeSnapshot);
-  Services.obs.notifyObservers(null, "origin-telemetry-storage-limit-reached");
+
+  // This is normally triggered by the scheduler once a day
+  TelemetryPrioPing.periodicPing();
 });
 
 add_task(async function test_shutdown() {
