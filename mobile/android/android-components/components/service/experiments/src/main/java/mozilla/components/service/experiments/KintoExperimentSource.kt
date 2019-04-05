@@ -23,13 +23,13 @@ internal class KintoExperimentSource(
     private val baseUrl: String,
     private val bucketName: String,
     private val collectionName: String,
-    httpClient: Client,
+    private val httpClient: Client,
     private val validateSignature: Boolean = false
-) : ExperimentSource {
+) {
     private val kintoClient = KintoClient(httpClient, baseUrl, bucketName, collectionName)
     private val signatureVerifier = SignatureVerifier(httpClient, kintoClient)
 
-    override fun getExperiments(snapshot: ExperimentsSnapshot): ExperimentsSnapshot {
+    fun getExperiments(snapshot: ExperimentsSnapshot): ExperimentsSnapshot {
         val experimentsDiff = getExperimentsDiff(snapshot)
         val updatedSnapshot = mergeExperimentsFromDiff(experimentsDiff, snapshot)
         if (validateSignature &&

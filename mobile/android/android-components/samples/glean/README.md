@@ -2,7 +2,7 @@
 
 ![](src/main/res/mipmap-xhdpi/ic_launcher.png)
 
-A simple app showcasing Glean, the mobile telemetry SDK.
+A simple app showcasing Glean, the mobile telemetry SDK & the Experiments library.
 
 ## Concepts
 
@@ -11,6 +11,7 @@ The main concepts shown in the sample app are:
 * Usage of the `metrics.yaml` file.
 * Integration between Glean and the application's build process to generate the specific metrics API.
 * Usage of the generated specific metrics API.
+* Integration of the Experiments library.
 
 ## License
 

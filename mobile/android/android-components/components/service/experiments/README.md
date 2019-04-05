@@ -12,137 +12,44 @@ Use Gradle to download the library from [maven.mozilla.org](https://maven.mozill
 implementation "org.mozilla.components:service-experiments:{latest-version}"
 ```
 
-### Creating an Experiments instance
-In order to use the library, first you have to create a new `Experiments` instance. You do this once per app launch 
-(typically in your `Application` class `onCreate` method). You simply have to instantiate the `Experiments` class and
-provide the `ExperimentStorage` and `ExperimentSource` implementations, like this:
+### Initializing the Experiments library
+In order to use the library, first you have to initialize it by calling `Experiments.initialize()`. You do this once per app launch 
+(typically in your `Application` class `onCreate` method). You simply have to call `Experiments.initialize()` and
+provide the `applicationContext` (and optionally a `Configuration` object), like this:
 
 ```Kotlin
 class SampleApp : Application() {
-    lateinit var experiments: Experiments
-
     override fun onCreate() {
-        experiments = Experiments(
-            experimentSource,
-            experimentStorage
+        // Glean needs to be initialized first.
+        Glean.initialize(/* ... */)
+        Experiments.initialize(
+            applicationContext,
+            configuration // This is optional, e.g. for overriding the fetch client.
         )
     }
 }
 ```
 
-#### Using Kinto as experiment source
-Experiments includes a default source implementation for a Kinto backend, which you can use like this:
+Note that this library depends on the Glean library, which has to be initialized first. See the [Glean README](../glean/README.md) for more details.
 
-```Kotlin
-// Specify which HTTP (Fetch) client to use
-val httpClient = GeckoViewFetchClient(context)
+### Updating of experiments
 
-val experiments = Experiments(
-    KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient),
-    experimentStorage
-)
-```
-
-#### Using a JSON file as experiment storage
-Experiments includes support for flat JSON files as storage mechanism out of the box:
-
-```Kotlin
-val experiments = Experiments(
-    experimentSource,
-    FlatFileExperimentStorage(File(context.filesDir, "experiments.json"))
-)
-```
-
-### Fetching experiments from disk
-After instantiating `Experiments`, in order to load the list of already downloaded
-experiments from disk, you need to call the `loadExperiments` method (don't call it
-on the UI thread, this example uses a coroutine):
-
-```Kotlin
-launch(CommonPool) {
-    experiments.loadExperiments()
-}
-```
-
-### Updating experiment list
-Experiments provides two ways of updating the downloaded experiment list from the server: the first one is to directly
-call `updateExperiments` on a `Experiments` instance, which forces experiments to be updated immediately and synchronously
-(do not call this on the main thread), like this:
-
-```Kotlin
-experiments.updateExperiments()
-```
-
-The second one is to use the provided `JobScheduler`-based scheduler, like this:
-```Kotlin
-val scheduler = JobSchedulerSyncScheduler(context)
-scheduler.schedule(EXPERIMENTS_JOB_ID, ComponentName(this, ExperimentsSyncService::class.java))
-```
-
-Where `ExperimentsSyncService` is a subclass of `SyncJob` you create like this, providing the `Experiments` instance via the
-`getExperiments` method:
-
-```Kotlin
-class ExperimentsSyncService : SyncJob() {
-    override fun getExperiments(): Experiments {
-        return experiments
-    }
-}
-```
-
-And then you have to register it on the manifest, just like any other `JobService`:
-
-```xml
-<service android:name=".ExperimentsSyncService"
-         android:exported="false"
-         android:permission="android.permission.BIND_JOB_SERVICE">
-```
+The library updates it's list of experiments automatically and async from Kinto on startup. As this is asynchronous, it will not have immediate effect.
 
 ### Checking if a user is part of an experiment
-In order to check if a user is part of a specific experiment, Experiments provides two APIs: a Kotlin-friendly
-`withExperiment` API and a more Java-like `isInExperiment`. In both cases you pass an instance of `ExperimentDescriptor`
-with the name of the experiment you want to check:
+In order to check if a user is part of a specific experiment, `Experiments` provides two APIs: a Kotlin-friendly
+`withExperiment` API and a more Java-like `isInExperiment`. In both cases you pass the id of the experiment you want to check:
 
 ```Kotlin
-val descriptor = ExperimentDescriptor("first-experiment-name")
-experiments.withExperiment(descriptor) {
+Experiments.withExperiment("first-experiment-name") {
     someButton.setBackgroundColor(Color.RED)
 }
 
-otherButton.isEnabled = experiments.isInExperiment(descriptor)
-```
-
-### Getting experiment metadata
-Experiments allows experiments to carry associated metadata, which can be retrieved using the Kotlin-friendly 
-`withExperiment` API or the more Java-like `getExperiment` API, like this:
-
-```Kotlin
-val descriptor = ExperimentDescriptor("first-experiment-name")
-experiments.withExperiment(descriptor) {
-    toolbar.setColor(Color.parseColor(it.payload?.get("color") as String))
-}
-textView.setText(experiments.getExperiment(descriptor)?.payload?.get("message"))
-```
-
-### Setting override values
-Experiments allows you to force activate / deactivate a specific experiment via `setOverride`, you
-simply have to pass true to activate it, false to deactivate:
-
-```Kotlin
-val descriptor = ExperimentDescriptor("first-experiment-name")
-experiments.setOverride(context, descriptor, true)
-```
-
-You can also clear an override for an experiment or all overrides:
-
-```Kotlin
-val descriptor = ExperimentDescriptor("first-experiment-name")
-experiments.clearOverride(context, descriptor)
-experiments.clearAllOverrides(context)
+otherButton.isEnabled = Experiments.isInExperiment("first-experiment-name")
 ```
 
 ### Filters
-Experiments allows you to specify the following filters:
+`Experiments` allows you to specify the following filters:
 - Buckets: Every user is in one of 100 buckets (0-99). For every experiment you can set up a min and max value (0 <= min <= max <= 100). The bounds are [min, max).
     - Both max and min are optional. For example, specifying only min = 0 or only max = 100 includes all users
     - 0-100 includes all users (as opposed to 0-99)
@@ -155,67 +62,8 @@ Experiments allows you to specify the following filters:
 - lang (regex): language, pulled from the default locale
 - device (regex): Android device name
 - manufacturer (regex): Android device manufacturer
-- region: custom region, different from the one from the default locale (like a GeoIP, or something similar).
-- release channel: release channel of the app (alpha, beta, etc)
-
-For region and release channel to work you must provide a `ValuesProvider` implementation when creating the `Experiments` instance, as detailed below
-
-### Specifying custom values for filters
-Additionally, Experiments allows you to specify a custom `ValuesProvider` object in order to return a custom region,
-different from the one of the current locale (perhaps doing a GeoIP or something like that), or the app
-relase channel (alpha, beta, etc). It also allows you to override the values for other experiment properties
-(such as the appId, country, etc):
-
-```Kotlin
-val experiments = Experiments(
-    experimentSource,
-    experimentStorage,
-    object : ValuesProvider {
-        override fun getRegion() {
-            return custom_region
-        }
-
-        override fun getReleaseChannel() {
-            return app_channel
-        }
-    }
-)
-```
-
-### Creating a custom experiment source
-You can create a custom experiment source simply by implementing the `ExperimentSource` interface:
-
-```Kotlin
-class MyExperimentSource : ExperimentSource {
-    override fun getExperiments(snapshot: ExperimentsSnapshot): ExperimentsSnapshot {
-        // ...
-        return updatedSnapshot
-    }
-}
-```
-
-The `getExperiments` method takes an `ExperimentsSnapshot` object, which contains the list of already downloaded experiments and 
-a last_modified date, and returns another `ExperimentsSnapshot` object with the updated list of experiments.
-
-As the `getExperiments` receives the list of experiments from storage and a last_modified date, it allows you
-to do diff requests, if your storage mechanism supports it (like Kinto does).
-
-### Creating a custom experiment storage
-You can create a custom experiment storage simply by implementing the `ExperimentStorage` interface, overriding
-the save and retrieve methods, which use `ExperimentsSnapshot` objects with the list of experiments and a last_modified date:
-
-```Kotlin
-class MyExperimentStorage : ExperimentStorage {
-    override fun save(snapshot: ExperimentsSnapshot) {
-        // save snapshot to disk
-    }
-
-    override fun retrieve(): ExperimentsSnapshot {
-        // load snapshot from disk
-        return snapshot
-    }
-}
-```
+- *(TBD: region: custom region, different from the one from the default locale (like a GeoIP, or something similar).)*
+- *(TBD: release channel: release channel of the app (alpha, beta, etc))*
 
 ### Experiments format for Kinto
 The provided implementation for Kinto expects the experiments in the following JSON format:

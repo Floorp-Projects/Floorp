@@ -116,7 +116,7 @@ open class GleanInternalAPI internal constructor () {
     /**
      * Returns true if the Glean library has been initialized.
      */
-    internal fun isInitialized(): Boolean {
+    fun isInitialized(): Boolean {
         return initialized
     }
 

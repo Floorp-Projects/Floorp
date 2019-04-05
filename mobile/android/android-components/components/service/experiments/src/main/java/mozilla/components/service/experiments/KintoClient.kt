@@ -8,6 +8,7 @@ import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.isSuccess
+import mozilla.components.support.base.log.logger.Logger
 import java.io.IOException
 
 /**
@@ -26,6 +27,8 @@ internal class KintoClient(
     private val collectionName: String,
     private val headers: Map<String, String>? = null
 ) {
+    private val logger: Logger = Logger(LOG_TAG)
+
     /**
      * Returns all records from the collection
      *
@@ -63,11 +66,16 @@ internal class KintoClient(
             }
 
             val request = Request(url, headers = headers, useCaches = false)
+
+            logger.info("Fetching experiments from $url")
             val response = httpClient.fetch(request)
             if (!response.isSuccess) {
+                logger.error("Error fetching experiments, status code ${response.status} for $url")
                 throw ExperimentDownloadException("Status code: ${response.status}")
             }
-            return response.body.string()
+            val body = response.body.string()
+            logger.debug("Fetched experiments from $url:\n$body")
+            return body
         } catch (e: IOException) {
             throw ExperimentDownloadException(e)
         } catch (e: ArrayIndexOutOfBoundsException) {
@@ -80,4 +88,8 @@ internal class KintoClient(
 
     private fun recordsUrl() = "${collectionUrl()}/records"
     private fun collectionUrl() = "$baseUrl/buckets/$bucketName/collections/$collectionName"
+
+    companion object {
+        private const val LOG_TAG = "experiments"
+    }
 }

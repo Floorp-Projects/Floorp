@@ -15,10 +15,10 @@ import java.io.IOException
  *
  * @param file file where to store experiments
  */
-internal class FlatFileExperimentStorage(file: File) : ExperimentStorage {
+internal class FlatFileExperimentStorage(file: File) {
     private val atomicFile: AtomicFile = AtomicFile(file)
 
-    override fun retrieve(): ExperimentsSnapshot {
+    fun retrieve(): ExperimentsSnapshot {
         return try {
             val experimentsJson = String(atomicFile.readFully())
             ExperimentsSerializer().fromJson(experimentsJson)
@@ -31,7 +31,7 @@ internal class FlatFileExperimentStorage(file: File) : ExperimentStorage {
         }
     }
 
-    override fun save(snapshot: ExperimentsSnapshot) {
+    fun save(snapshot: ExperimentsSnapshot) {
         val experimentsJson = ExperimentsSerializer().toJson(snapshot)
 
         val stream = atomicFile.startWrite()

@@ -6,9 +6,9 @@ package mozilla.components.service.experiments
 
 import android.content.Context
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.service.glean.Glean
 import android.support.annotation.VisibleForTesting
-import mozilla.components.concept.fetch.Client
-import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
+import mozilla.components.service.glean.GleanInternalAPI
 import java.io.File
 
 /**
@@ -22,7 +22,7 @@ import java.io.File
 open class ExperimentsInternalAPI internal constructor() {
     private val logger: Logger = Logger(LOG_TAG)
 
-    @Volatile private var experimentsResult: ExperimentsSnapshot = ExperimentsSnapshot(listOf(), null)
+    @Volatile internal var experimentsResult: ExperimentsSnapshot = ExperimentsSnapshot(listOf(), null)
     private var experimentsLoaded: Boolean = false
     private var evaluator: ExperimentEvaluator = ExperimentEvaluator(ValuesProvider())
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
@@ -32,12 +32,11 @@ open class ExperimentsInternalAPI internal constructor() {
             evaluator = ExperimentEvaluator(field)
         }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal var source: ExperimentSource? = null
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal var storage: ExperimentStorage? = null
+    private lateinit var storage: FlatFileExperimentStorage
+    private lateinit var updater: ExperimentsUpdater
 
-    private var isInitialized = false
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var isInitialized = false
 
     /**
      * Initialize the experiments library.
@@ -49,48 +48,55 @@ open class ExperimentsInternalAPI internal constructor() {
      */
     fun initialize(
         applicationContext: Context,
-        fetchClient: Client = HttpURLConnectionClient()
+        configuration: Configuration = Configuration()
     ) {
         if (isInitialized) {
             logger.error("Experiments library should not be initialized multiple times")
             return
         }
 
+        // Any code below might trigger recording into Glean, so make sure Glean is initialized.
+        if (!getGlean().isInitialized()) {
+            logger.error("Glean library must be initialized first")
+            return
+        }
+
         experimentsResult = ExperimentsSnapshot(listOf(), null)
         experimentsLoaded = false
 
-        if (source == null) {
-            source = KintoExperimentSource(
-                EXPERIMENTS_BASE_URL,
-                EXPERIMENTS_BUCKET_NAME,
-                EXPERIMENTS_COLLECTION_NAME,
-                fetchClient
-            )
-        }
-        if (storage == null) {
-            storage = FlatFileExperimentStorage(
-                File(applicationContext.getDir(EXPERIMENTS_DATA_DIR, Context.MODE_PRIVATE),
-                    EXPERIMENTS_JSON_FILENAME)
-            )
-        }
+        storage = getExperimentsStorage(applicationContext)
 
         isInitialized = true
+
+        // Load cached experiments from storage. After this, experiments status
+        // is available.
+        loadExperiments()
+
+        // We now have the last known experiment state loaded for product code
+        // that needs to check it early in startup.
+        // Next we need to update the experiments list from the server async,
+        // without blocking the app launch and schedule future periodic
+        // updates.
+        updater = getExperimentsUpdater(applicationContext)
+        updater.initialize(configuration)
     }
 
-    /**
-     * Reset the library in tests.
-     */
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    internal fun testReset() {
-        experimentsResult = ExperimentsSnapshot(listOf(), null)
-        experimentsLoaded = false
-        evaluator = ExperimentEvaluator(ValuesProvider())
-        valuesProvider = ValuesProvider()
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getGlean(): GleanInternalAPI {
+        return Glean
+    }
 
-        source = null
-        storage = null
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getExperimentsUpdater(context: Context): ExperimentsUpdater {
+        return ExperimentsUpdater(context, this)
+    }
 
-        isInitialized = false
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getExperimentsStorage(context: Context): FlatFileExperimentStorage {
+        return FlatFileExperimentStorage(
+                File(context.getDir(EXPERIMENTS_DATA_DIR, Context.MODE_PRIVATE),
+                    EXPERIMENTS_JSON_FILENAME)
+        )
     }
 
     /**
@@ -105,34 +111,21 @@ open class ExperimentsInternalAPI internal constructor() {
      */
     @Synchronized
     internal fun loadExperiments() {
-        storage?.let {
-            experimentsResult = it.retrieve()
-            experimentsLoaded = true
-        } ?: logger.error("No storage specified")
+        experimentsResult = storage.retrieve()
+        experimentsLoaded = true
     }
 
     /**
      * Requests new experiments from the server and
      * saves them to local storage
      */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     @Synchronized
-    internal fun updateExperiments(): Boolean {
-        if (!experimentsLoaded) {
-            loadExperiments()
-        }
+    internal fun onExperimentsUpdated(serverState: ExperimentsSnapshot) {
+        assert(experimentsLoaded) { "Experiments should have been loaded." }
 
-        return try {
-            source?.let {
-                val serverExperiments = it.getExperiments(experimentsResult)
-                experimentsResult = serverExperiments
-                storage?.save(serverExperiments)
-            } ?: logger.error("No source available")
-            true
-        } catch (e: ExperimentDownloadException) {
-            // Keep using the local experiments
-            logger.error(e.message, e)
-            false
-        }
+        experimentsResult = serverState
+        storage.save(serverState)
     }
 
     /**
@@ -284,10 +277,6 @@ open class ExperimentsInternalAPI internal constructor() {
         private const val EXPERIMENTS_DATA_DIR = "experiments-service"
 
         private const val EXPERIMENTS_JSON_FILENAME = "experiments.json"
-        private const val EXPERIMENTS_BASE_URL = "https://settings.prod.mozaws.net/v1"
-        private const val EXPERIMENTS_BUCKET_NAME = "<TODO>"
-        private const val EXPERIMENTS_COLLECTION_NAME = "<TODO>"
-        // E.g.: https://firefox.settings.services.mozilla.com/v1/buckets/fennec/collections/experiments/records
     }
 }
 

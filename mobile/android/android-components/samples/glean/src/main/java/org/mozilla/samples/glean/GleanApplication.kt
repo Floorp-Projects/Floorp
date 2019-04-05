@@ -6,6 +6,7 @@ package org.mozilla.samples.glean
 
 import android.app.Application
 import mozilla.components.service.glean.Glean
+import mozilla.components.service.experiments.Experiments
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import org.mozilla.samples.glean.GleanMetrics.Basic
@@ -22,6 +23,9 @@ class GleanApplication : Application() {
         // Initialize the Glean library. Ideally, this is the first thing that
         // must be done right after enabling logging.
         Glean.initialize(applicationContext)
+        // Initialize the Experiments library right afterwards. Experiments can
+        // not be activated before this, so it's important to do this early.
+        Experiments.initialize(applicationContext)
 
         Test.testTimespan.start()
 
