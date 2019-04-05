@@ -13,4 +13,5 @@
     app:browserToolbarClearColor="?attr/browserToolbarIcons"
     app:browserToolbarInsecureColor="?attr/browserToolbarIcons"
     app:browserToolbarMenuColor="?attr/browserToolbarIcons"
+    app:browserToolbarProgressBarGravity="top"
     app:browserToolbarSecureColor="?attr/browserToolbarIcons" />
