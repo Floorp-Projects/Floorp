@@ -37,9 +37,15 @@ inline bool JS::Realm::globalIsAboutToBeFinalized() {
          js::gc::IsAboutToBeFinalizedUnbarriered(global_.unsafeGet());
 }
 
-inline bool JS::Realm::hasLiveGlobal() {
+inline bool JS::Realm::hasLiveGlobal() const {
   js::GlobalObject* global = unsafeUnbarrieredMaybeGlobal();
   return global && !js::gc::IsAboutToBeFinalizedUnbarriered(&global);
+}
+
+inline bool JS::Realm::marked() const {
+  // Preserve this Realm if it has a live global or if it has been entered (to
+  // ensure we don't destroy the Realm while we're allocating its global).
+  return hasLiveGlobal() || hasBeenEnteredIgnoringJit();
 }
 
 /* static */ inline js::ObjectRealm& js::ObjectRealm::get(const JSObject* obj) {
