@@ -5,7 +5,6 @@ ChromeUtils.defineModuleGetter(this, "Preferences",
 
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PBM_PREF = "privacy.trackingprotection.pbmode.enabled";
-const TP_LIST_PREF = "urlclassifier.trackingTable";
 const NCB_PREF = "network.cookie.cookieBehavior";
 const CAT_PREF = "browser.contentblocking.category";
 const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
@@ -144,7 +143,6 @@ add_task(async function testContentBlockingMainCategory() {
 // Tests that the content blocking "Standard" category radio sets the prefs to their default values.
 add_task(async function testContentBlockingStandardCategory() {
   let prefs = {
-    [TP_LIST_PREF]: null,
     [TP_PREF]: null,
     [TP_PBM_PREF]: null,
     [NCB_PREF]: null,
@@ -168,7 +166,6 @@ add_task(async function testContentBlockingStandardCategory() {
     }
   }
 
-  Services.prefs.setStringPref(TP_LIST_PREF, "test-track-simple,base-track-digest256,content-track-digest256");
   Services.prefs.setBoolPref(TP_PREF, true);
   Services.prefs.setBoolPref(TP_PBM_PREF, false);
   Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
@@ -220,7 +217,6 @@ add_task(async function testContentBlockingStrictCategory() {
   Services.prefs.setBoolPref(TP_PREF, false);
   Services.prefs.setBoolPref(TP_PBM_PREF, false);
   Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_LIMIT_FOREIGN);
-  Services.prefs.setStringPref(TP_LIST_PREF, "test-track-simple,base-track-digest256,content-track-digest256");
 
   await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
   let doc = gBrowser.contentDocument;
@@ -235,7 +231,6 @@ add_task(async function testContentBlockingStrictCategory() {
   is(Services.prefs.getBoolPref(TP_PREF), true, `${TP_PREF} has been set to true`);
   is(Services.prefs.getBoolPref(TP_PBM_PREF), true, `${TP_PBM_PREF} has been set to true`);
   is(Services.prefs.getIntPref(NCB_PREF), Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER, `${NCB_PREF} has been set to ${Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER}`);
-  ok(!Services.prefs.prefHasUserValue(TP_LIST_PREF), `reset the pref ${TP_LIST_PREF}`);
   ok(!Services.prefs.prefHasUserValue(FP_PREF), `reset the pref ${FP_PREF}`);
   ok(!Services.prefs.prefHasUserValue(CM_PREF), `reset the pref ${CM_PREF}`);
 
@@ -244,7 +239,7 @@ add_task(async function testContentBlockingStrictCategory() {
 
 // Tests that the content blocking "Custom" category behaves as expected.
 add_task(async function testContentBlockingCustomCategory() {
-  let prefs = [TP_LIST_PREF, TP_PREF, TP_PBM_PREF, NCB_PREF, FP_PREF, CM_PREF];
+  let prefs = [TP_PREF, TP_PBM_PREF, NCB_PREF, FP_PREF, CM_PREF];
 
   await openPreferencesViaOpenPreferencesAPI("privacy", {leaveOpen: true});
   let doc = gBrowser.contentDocument;
