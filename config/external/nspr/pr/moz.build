@@ -76,6 +76,9 @@ elif CONFIG['OS_TARGET'] == 'SunOS':
         SOURCES += ['/nsprpub/pr/src/md/unix/os_SunOS_x86_64.s']
     elif CONFIG['CPU_ARCH'] == 'x86':
         SOURCES += ['/nsprpub/pr/src/md/unix/os_SunOS_x86.s']
+    elif CONFIG['CPU_ARCH'] == 'sparc64':
+        ASFLAGS += ['-x', 'assembler-with-cpp', '-D_ASM']
+        SOURCES += ['/nsprpub/pr/src/md/unix/os_SunOS_sparcv9.s']
 elif CONFIG['OS_TARGET'] == 'WINNT':
     OS_LIBS += [
         'advapi32',
