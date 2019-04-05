@@ -4860,42 +4860,6 @@ JS_PUBLIC_API void JS_ReportErrorNumberUCArray(JSContext* cx,
                            errorNumber, args);
 }
 
-JS_PUBLIC_API bool JS_ReportWarningASCII(JSContext* cx, const char* format,
-                                         ...) {
-  va_list ap;
-  bool ok;
-
-  AssertHeapIsIdle();
-  va_start(ap, format);
-  ok = ReportErrorVA(cx, JSREPORT_WARNING, format, ArgumentsAreASCII, ap);
-  va_end(ap);
-  return ok;
-}
-
-JS_PUBLIC_API bool JS_ReportWarningLatin1(JSContext* cx, const char* format,
-                                          ...) {
-  va_list ap;
-  bool ok;
-
-  AssertHeapIsIdle();
-  va_start(ap, format);
-  ok = ReportErrorVA(cx, JSREPORT_WARNING, format, ArgumentsAreLatin1, ap);
-  va_end(ap);
-  return ok;
-}
-
-JS_PUBLIC_API bool JS_ReportWarningUTF8(JSContext* cx, const char* format,
-                                        ...) {
-  va_list ap;
-  bool ok;
-
-  AssertHeapIsIdle();
-  va_start(ap, format);
-  ok = ReportErrorVA(cx, JSREPORT_WARNING, format, ArgumentsAreUTF8, ap);
-  va_end(ap);
-  return ok;
-}
-
 JS_PUBLIC_API bool JS_ReportErrorFlagsAndNumberASCII(
     JSContext* cx, unsigned flags, JSErrorCallback errorCallback, void* userRef,
     const unsigned errorNumber, ...) {
@@ -4960,17 +4924,6 @@ JS_PUBLIC_API void JS_ReportOutOfMemory(JSContext* cx) {
 
 JS_PUBLIC_API void JS_ReportAllocationOverflow(JSContext* cx) {
   ReportAllocationOverflow(cx);
-}
-
-JS_PUBLIC_API JS::WarningReporter JS::GetWarningReporter(JSContext* cx) {
-  return cx->runtime()->warningReporter;
-}
-
-JS_PUBLIC_API JS::WarningReporter JS::SetWarningReporter(
-    JSContext* cx, JS::WarningReporter reporter) {
-  WarningReporter older = cx->runtime()->warningReporter;
-  cx->runtime()->warningReporter = reporter;
-  return older;
 }
 
 /************************************************************************/

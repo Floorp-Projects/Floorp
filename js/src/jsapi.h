@@ -2652,24 +2652,6 @@ extern JS_PUBLIC_API void JS_ReportErrorNumberUCArray(
     JSContext* cx, JSErrorCallback errorCallback, void* userRef,
     const unsigned errorNumber, const char16_t** args);
 
-/**
- * As above, but report a warning instead (JSREPORT_IS_WARNING(report.flags)).
- * Return true if there was no error trying to issue the warning, and if the
- * warning was not converted into an error due to the JSOPTION_WERROR option
- * being set, false otherwise.
- */
-extern JS_PUBLIC_API bool JS_ReportWarningASCII(JSContext* cx,
-                                                const char* format, ...)
-    MOZ_FORMAT_PRINTF(2, 3);
-
-extern JS_PUBLIC_API bool JS_ReportWarningLatin1(JSContext* cx,
-                                                 const char* format, ...)
-    MOZ_FORMAT_PRINTF(2, 3);
-
-extern JS_PUBLIC_API bool JS_ReportWarningUTF8(JSContext* cx,
-                                               const char* format, ...)
-    MOZ_FORMAT_PRINTF(2, 3);
-
 extern JS_PUBLIC_API bool JS_ReportErrorFlagsAndNumberASCII(
     JSContext* cx, unsigned flags, JSErrorCallback errorCallback, void* userRef,
     const unsigned errorNumber, ...);
@@ -2697,33 +2679,6 @@ extern MOZ_COLD JS_PUBLIC_API void JS_ReportOutOfMemory(JSContext* cx);
 extern JS_PUBLIC_API void JS_ReportAllocationOverflow(JSContext* cx);
 
 namespace JS {
-
-using WarningReporter = void (*)(JSContext* cx, JSErrorReport* report);
-
-extern JS_PUBLIC_API WarningReporter
-SetWarningReporter(JSContext* cx, WarningReporter reporter);
-
-extern JS_PUBLIC_API WarningReporter GetWarningReporter(JSContext* cx);
-
-// Suppress the Warning Reporter callback temporarily.
-class MOZ_RAII JS_PUBLIC_API AutoSuppressWarningReporter {
-  JSContext* context_;
-  WarningReporter prevReporter_;
-
- public:
-  explicit AutoSuppressWarningReporter(JSContext* cx) : context_(cx) {
-    prevReporter_ = SetWarningReporter(context_, nullptr);
-  }
-
-  ~AutoSuppressWarningReporter() {
-#ifdef DEBUG
-    WarningReporter reporter =
-#endif
-        SetWarningReporter(context_, prevReporter_);
-    MOZ_ASSERT(reporter == nullptr, "Unexpected WarningReporter active");
-    SetWarningReporter(context_, prevReporter_);
-  }
-};
 
 extern JS_PUBLIC_API bool CreateError(
     JSContext* cx, JSExnType type, HandleObject stack, HandleString fileName,

@@ -22,6 +22,7 @@
 #include "js/Equality.h"     // JS::SameValue
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
 #include "js/Vector.h"
+#include "js/Warnings.h"  // JS::SetWarningReporter
 #include "vm/JSContext.h"
 
 /* Note: Aborts on OOM. */
