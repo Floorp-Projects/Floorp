@@ -77,43 +77,49 @@ class Breakpoints extends Component<Props> {
 
   renderBreakpoints() {
     const { breakpointSources, selectedSource } = this.props;
+    if (!breakpointSources.length) {
+      return null;
+    }
+
     const sources = [
       ...breakpointSources.map(({ source, breakpoints }) => source)
     ];
 
-    return [
-      ...breakpointSources.map(({ source, breakpoints, i }) => {
-        const path = getDisplayPath(source, sources);
-        const sortedBreakpoints = sortSelectedBreakpoints(
-          breakpoints,
-          selectedSource
-        );
+    return (
+      <div className="pane breakpoints-list">
+        {breakpointSources.map(({ source, breakpoints, i }) => {
+          const path = getDisplayPath(source, sources);
+          const sortedBreakpoints = sortSelectedBreakpoints(
+            breakpoints,
+            selectedSource
+          );
 
-        return [
-          <BreakpointHeading
-            source={source}
-            sources={sources}
-            path={path}
-            key={source.url}
-          />,
-          ...sortedBreakpoints.map(breakpoint => (
-            <Breakpoint
-              breakpoint={breakpoint}
+          return [
+            <BreakpointHeading
               source={source}
-              selectedSource={selectedSource}
-              key={makeBreakpointId(
-                getSelectedLocation(breakpoint, selectedSource)
-              )}
-            />
-          ))
-        ];
-      })
-    ];
+              sources={sources}
+              path={path}
+              key={source.url}
+            />,
+            ...sortedBreakpoints.map(breakpoint => (
+              <Breakpoint
+                breakpoint={breakpoint}
+                source={source}
+                selectedSource={selectedSource}
+                key={makeBreakpointId(
+                  getSelectedLocation(breakpoint, selectedSource)
+                )}
+              />
+            ))
+          ];
+        })}
+      </div>
+    );
   }
 
   render() {
     return (
-      <div className="pane breakpoints-list">
+      <div>
         {this.renderExceptionsOptions()}
         {this.renderBreakpoints()}
       </div>
