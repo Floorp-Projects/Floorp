@@ -10,7 +10,7 @@ import json
 import os
 import taskcluster
 
-from lib.util import convert_camel_case_into_kebab_case
+from lib.util import convert_camel_case_into_kebab_case, lower_case_first_letter
 
 DEFAULT_EXPIRES_IN = '1 year'
 _OFFICIAL_REPO_URL = 'https://github.com/mozilla-mobile/fenix'
@@ -22,12 +22,7 @@ class TaskBuilder(object):
         task_id,
         repo_url,
         git_ref,
-        short_head_branch,
-        commit,
-        owner,
-        source,
-        scheduler_id,
-        date_string,
+        short_head_branch, commit, owner, source, scheduler_id, date_string,
         tasks_priority='lowest',
         trust_level=1
     ):
@@ -39,6 +34,7 @@ class TaskBuilder(object):
         self.owner = owner
         self.source = source
         self.scheduler_id = scheduler_id
+        self.trust_level = trust_level
         self.tasks_priority = tasks_priority
         self.date = arrow.get(date_string)
         self.trust_level = trust_level
@@ -111,7 +107,6 @@ class TaskBuilder(object):
             description='Building and testing variant {}'.format(variant),
             gradle_task='assemble{}'.format(variant.capitalize()),
             artifacts=_craft_artifacts_from_variant(variant),
-            routes=self._craft_branch_routes(variant),
             treeherder={
                 'groupSymbol': _craft_treeherder_group_symbol_from_variant(variant),
                 'jobKind': 'build',
@@ -138,33 +133,6 @@ class TaskBuilder(object):
                 'tier': 1,
             },
         )
-
-    def _craft_branch_routes(self, variant):
-        routes = []
-
-        if self.repo_url == _OFFICIAL_REPO_URL and self.short_head_branch == 'master':
-            architecture, build_type, product = \
-                _get_architecture_and_build_type_and_product_from_variant(variant)
-            product = convert_camel_case_into_kebab_case(product)
-            postfix = convert_camel_case_into_kebab_case('{}-{}'.format(architecture, build_type))
-
-            routes = [
-                'index.project.mobile.fenix.branch.{}.revision.{}.{}.{}'.format(
-                    self.short_head_branch, self.commit, product, postfix
-                ),
-                'index.project.mobile.fenix.branch.{}.latest.{}.{}'.format(
-                    self.short_head_branch, product, postfix
-                ),
-                'index.project.mobile.fenix.branch.{}.pushdate.{}.{}.{}.revision.{}.{}.{}'.format(
-                    self.short_head_branch, self.date.year, self.date.month, self.date.day,
-                    self.commit, product, postfix
-                ),
-                'index.project.mobile.fenix.branch.{}.pushdate.{}.{}.{}.latest.{}.{}'.format(
-                    self.short_head_branch, self.date.year, self.date.month, self.date.day,
-                    product, postfix
-                ),
-            ]
-        return routes
 
     def craft_detekt_task(self):
         return self._craft_clean_gradle_task(
@@ -251,14 +219,12 @@ class TaskBuilder(object):
         scopes = [] if scopes is None else scopes
         routes = [] if routes is None else routes
 
-        checkout_command = (
-            "export TERM=dumb && "
-            "git fetch {} {} --tags && "
-            "git config advice.detachedHead false && "
-            "git checkout {}".format(
-                self.repo_url, self.git_ref, self.commit
-            )
-        )
+        checkout_command = ' && '.join([
+            "export TERM=dumb",
+            "git fetch {} {}".format(self.repo_url, self.git_ref),
+            "git config advice.detachedHead false",
+            "git checkout FETCH_HEAD",
+        ])
 
         command = '{} && {}'.format(checkout_command, command)
 
@@ -290,6 +256,32 @@ class TaskBuilder(object):
             name,
             description,
             payload,
+            treeherder=treeherder,
+        )
+
+    def _craft_signing_task(self, name, description, signing_type, assemble_task_id, apk_paths, routes, treeherder):
+        signing_format = "autograph_apk"
+        payload = {
+            'upstreamArtifacts': [{
+                'paths': apk_paths,
+                'formats': [signing_format],
+                'taskId': assemble_task_id,
+                'taskType': 'build'
+            }]
+        }
+
+        return self._craft_default_task_definition(
+            worker_type='mobile-signing-dep-v1' if signing_format == 'dep' else 'mobile-signing-v1',
+            provisioner_id='scriptworker-prov-v1',
+            dependencies=[assemble_task_id],
+            routes=routes,
+            scopes=[
+                "project:mobile:fenix:releng:signing:format:{}".format(signing_format),
+                "project:mobile:fenix:releng:signing:cert:{}".format(signing_type),
+            ],
+            name=name,
+            description=description,
+            payload=payload,
             treeherder=treeherder,
         )
 
@@ -332,19 +324,49 @@ class TaskBuilder(object):
             },
         }
 
-    def craft_signing_task(
-        self, build_task_id, apks, is_staging=True,
+    def craft_master_commit_signing_task(
+        self, assemble_task_id, variant
     ):
-        signing_format = 'autograph_apk'
-        payload = {
-            "upstreamArtifacts": [{
-                "paths": apks,
-                "formats": [signing_format],
-                "taskId": build_task_id,
-                "taskType": "build",
-            }],
-        }
+        architecture, build_type, product = _get_architecture_and_build_type_and_product_from_variant(variant)
+        product = convert_camel_case_into_kebab_case(product)
+        postfix = convert_camel_case_into_kebab_case('{}-{}'.format(architecture, build_type))
+        routes = [
+            'index.project.mobile.fenix.branch.master.revision.{}.{}.{}'.format(
+                self.commit, product, postfix
+            ),
+            'index.project.mobile.fenix.branch.master.latest.{}.{}'.format(
+                product, postfix
+            ),
+            'index.project.mobile.fenix.branch.master.pushdate.{}.{}.{}.revision.{}.{}.{}'.format(
+                self.date.year, self.date.month, self.date.day, self.commit,
+                product, postfix
+            ),
+            'index.project.mobile.fenix.branch.master.pushdate.{}.{}.{}.latest.{}.{}'.format(
+                self.date.year, self.date.month, self.date.day, product, postfix
+            ),
+        ]
 
+        return self._craft_signing_task(
+            name='sign: {}'.format(variant),
+            description='Dep-signing variant {}'.format(variant),
+            signing_type="dep-signing",
+            assemble_task_id=assemble_task_id,
+            apk_paths=["public/target.apk"],
+            routes=routes,
+            treeherder={
+                'groupSymbol': _craft_treeherder_group_symbol_from_variant(variant),
+                'jobKind': 'other',
+                'machine': {
+                    'platform': _craft_treeherder_platform_from_variant(variant),
+                },
+                'symbol': 'As',
+                'tier': 1,
+            },
+        )
+
+    def craft_nightly_signing_task(
+        self, build_task_id, apk_paths, is_staging=True,
+    ):
         index_release = 'staging-signed-nightly' if is_staging else 'signed-nightly'
         routes = [
             "index.project.mobile.fenix.{}.nightly.{}.{}.{}.latest".format(
@@ -356,20 +378,13 @@ class TaskBuilder(object):
             "index.project.mobile.fenix.{}.nightly.latest".format(index_release),
         ]
 
-        return self._craft_default_task_definition(
-            worker_type='mobile-signing-dep-v1' if is_staging else 'mobile-signing-v1',
-            provisioner_id='scriptworker-prov-v1',
-            dependencies=[build_task_id],
-            routes=routes,
-            scopes=[
-                "project:mobile:fenix:releng:signing:format:{}".format(signing_format),
-                "project:mobile:fenix:releng:signing:cert:{}".format(
-                    'dep-signing' if is_staging else 'release-signing'
-                )
-            ],
+        return self._craft_signing_task(
             name="Signing task",
             description="Sign release builds of Fenix",
-            payload=payload,
+            signing_type="dep-signing" if is_staging else "release-signing",
+            assemble_task_id=build_task_id,
+            apk_paths=apk_paths,
+            routes=routes,
             treeherder={
                 'jobKind': 'other',
                 'machine': {
@@ -447,8 +462,8 @@ def _craft_apk_full_path_from_variant(variant):
     )
 
     short_variant = variant[:-len(build_type)]
-    postfix = '-unsigned' if build_type == 'release' else ''
-    product = '{}{}'.format(product[0].lower(), product[1:])
+    postfix = '-unsigned' if build_type.startswith('release') else ''
+    product = lower_case_first_letter(product)
 
     return '/opt/fenix/app/build/outputs/apk/{short_variant}/{build_type}/app-{architecture}-{product}-{build_type}{postfix}.apk'.format(     # noqa: E501
         architecture=architecture,
@@ -479,7 +494,7 @@ def _get_architecture_and_build_type_and_product_from_variant(variant):
 
     for supported_build_type in _SUPPORTED_BUILD_TYPES:
         if variant.endswith(supported_build_type):
-            build_type = supported_build_type.lower()
+            build_type = lower_case_first_letter(supported_build_type)
             break
     else:
         raise ValueError(
@@ -528,4 +543,5 @@ def schedule_task_graph(ordered_groups_of_tasks):
                 # allows to have the full definition. This is needed to make Chain of Trust happy
                 'task': queue.task(task_id),
             }
+
     return full_task_graph

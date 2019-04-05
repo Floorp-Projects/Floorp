@@ -8,6 +8,7 @@ import subprocess
 
 
 def from_gradle():
+    print('Fetching build variants from gradle')
     process = subprocess.Popen([
         "./gradlew", "--no-daemon", "--quiet", "printBuildVariants"
     ], stdout=subprocess.PIPE)
@@ -21,4 +22,8 @@ def from_gradle():
     variants_json = variants_line.split(' ', 1)[1]
     variants = json.loads(variants_json)
 
+    if len(variants) == 0:
+        raise RuntimeError('Expected at least one build variant from gradle')
+
+    print("Got variants: " + ' '.join(variants))
     return variants

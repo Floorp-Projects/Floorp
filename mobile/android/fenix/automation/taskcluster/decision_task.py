@@ -13,7 +13,7 @@ import os
 import taskcluster
 
 from lib import build_variants
-from lib.tasks import TaskBuilder, schedule_task_graph
+from lib.tasks import TaskBuilder, schedule_task_graph, _get_architecture_and_build_type_and_product_from_variant
 from lib.chain_of_trust import (
     populate_chain_of_trust_task_graph,
     populate_chain_of_trust_required_but_unused_files
@@ -42,26 +42,30 @@ BUILDER = TaskBuilder(
 )
 
 
-def pr_or_push():
-    if SKIP_TASKS_TRIGGER in PR_TITLE:
+def pr_or_push(is_master_push):
+    if not is_master_push and SKIP_TASKS_TRIGGER in PR_TITLE:
         print("Pull request title contains", SKIP_TASKS_TRIGGER)
         print("Exit")
         return {}
 
-    print("Fetching build variants from gradle")
-    variants = build_variants.from_gradle()
-
-    if len(variants) == 0:
-        raise ValueError("Could not get build variants from gradle")
-
-    print("Got variants: {}".format(' '.join(variants)))
-
     build_tasks = {}
+    signing_tasks = {}
     other_tasks = {}
 
-    for variant in variants:
-        build_tasks[taskcluster.slugId()] = BUILDER.craft_assemble_task(variant)
+    for variant in build_variants.from_gradle():
+        assemble_task_id = taskcluster.slugId()
+        build_tasks[assemble_task_id] = BUILDER.craft_assemble_task(variant)
         build_tasks[taskcluster.slugId()] = BUILDER.craft_test_task(variant)
+
+        arch, build_type, _ = _get_architecture_and_build_type_and_product_from_variant(variant)
+        # autophone only supports arm and aarch64, so only sign/perftest those builds
+        if (
+            build_type == 'releaseRaptor' and
+            arch in ('arm', 'aarch64') and
+            is_master_push
+        ):
+            signing_tasks[taskcluster.slugId()] = BUILDER.craft_master_commit_signing_task(assemble_task_id, variant)
+            # raptor task will be added in follow-up
 
     for craft_function in (
         BUILDER.craft_detekt_task,
@@ -71,12 +75,13 @@ def pr_or_push():
     ):
         other_tasks[taskcluster.slugId()] = craft_function()
 
-    return (build_tasks, other_tasks)
+    return (build_tasks, signing_tasks, other_tasks)
 
 
 def nightly(track):
     is_staging = track == 'staging-nightly'
     architectures = ['x86', 'arm', 'aarch64']
+    apk_paths = ["public/target.{}.apk".format(arch) for arch in architectures]
 
     build_tasks = {}
     signing_tasks = {}
@@ -85,19 +90,18 @@ def nightly(track):
     build_task_id = taskcluster.slugId()
     build_tasks[build_task_id] = BUILDER.craft_assemble_release_task(architectures, is_staging)
 
-    artifacts = ["public/target.{}.apk".format(arch) for arch in architectures]
     signing_task_id = taskcluster.slugId()
-    signing_tasks[signing_task_id] = BUILDER.craft_signing_task(
+    signing_tasks[signing_task_id] = BUILDER.craft_nightly_signing_task(
         build_task_id,
-        apks=artifacts,
+        apk_paths=apk_paths,
         is_staging=is_staging,
     )
 
     push_task_id = taskcluster.slugId()
     push_tasks[push_task_id] = BUILDER.craft_push_task(
         signing_task_id,
-        apks=artifacts,
-        is_staging=is_staging
+        apks=apk_paths,
+        is_staging=is_staging,
     )
 
     return (build_tasks, signing_tasks, push_tasks)
@@ -110,7 +114,8 @@ if __name__ == "__main__":
 
     subparsers = parser.add_subparsers(dest='command')
 
-    subparsers.add_parser('pr-or-push')
+    subparsers.add_parser('pull-request')
+    subparsers.add_parser('push')
     release_parser = subparsers.add_parser('release')
 
     release_parser.add_argument('--nightly', action="store_true", default=False)
@@ -121,9 +126,12 @@ if __name__ == "__main__":
     result = parser.parse_args()
 
     command = result.command
+    taskcluster_queue = taskcluster.Queue({'baseUrl': 'http://taskcluster/queue/v1'})
 
-    if command == 'pr-or-push':
-        ordered_groups_of_tasks = pr_or_push()
+    if command == 'pull-request':
+        ordered_groups_of_tasks = pr_or_push(False)
+    elif command == 'push':
+        ordered_groups_of_tasks = pr_or_push(True)
     elif command == 'release':
         ordered_groups_of_tasks = nightly(result.track)
     else:

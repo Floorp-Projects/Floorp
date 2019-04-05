@@ -12,7 +12,7 @@ def populate_chain_of_trust_required_but_unused_files():
 
 
 def populate_chain_of_trust_task_graph(full_task_graph):
-    # taskgraph must follow the format:
+    # full_task_graph must follow the format:
     # {
     #    task_id: full_task_definition
     # }
