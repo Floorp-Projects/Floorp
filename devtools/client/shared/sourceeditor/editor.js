@@ -129,7 +129,11 @@ function Editor(config) {
     matchBrackets: true,
     extraKeys: {},
     indentWithTabs: useTabs,
-    inputStyle: "textarea",
+    inputStyle: "accessibleTextArea",
+    // This is set to the biggest value for setTimeout (See https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/setTimeout#Maximum_delay_value)
+    // This is because codeMirror queries the underlying textArea for some things that
+    // can't be retrieved with events in some browser (but we're fine in Firefox).
+    pollInterval: Math.pow(2, 31) - 1,
     styleActiveLine: true,
     autoCloseBrackets: "()[]{}''\"\"``",
     autoCloseEnabled: useAutoClose,
