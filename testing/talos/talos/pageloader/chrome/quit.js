@@ -65,7 +65,7 @@ function goQuitApplication() {
   try {
     Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
   } catch (ex) {
-    throw ("goQuitApplication: " + ex);
+    throw new Error("goQuitApplication: " + ex);
   }
 
   return true;

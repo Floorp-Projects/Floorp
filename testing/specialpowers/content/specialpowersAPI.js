@@ -142,7 +142,7 @@ function wrapPrivileged(obj) {
 
   // No double wrapping.
   if (isWrapper(obj))
-    throw "Trying to double-wrap object!";
+    throw new Error("Trying to double-wrap object!");
 
   let dummy;
   if (typeof obj === "function")
@@ -163,7 +163,7 @@ function unwrapPrivileged(x) {
 
   // If we have a wrappable type, make sure it's wrapped.
   if (!isWrapper(x))
-    throw "Trying to unwrap a non-wrapped object!";
+    throw new Error("Trying to unwrap a non-wrapped object!");
 
   var obj = x.SpecialPowers_wrappedObject;
   // unwrapped.
@@ -249,7 +249,7 @@ SpecialPowersHandler.prototype = {
   },
 
   defineProperty(target, prop, descriptor) {
-    throw "Can't call defineProperty on SpecialPowers wrapped object";
+    throw new Error("Can't call defineProperty on SpecialPowers wrapped object");
   },
 
   getOwnPropertyDescriptor(target, prop) {
@@ -312,7 +312,7 @@ SpecialPowersHandler.prototype = {
   },
 
   preventExtensions(target) {
-    throw "Can't call preventExtensions on SpecialPowers wrapped object";
+    throw new Error("Can't call preventExtensions on SpecialPowers wrapped object");
   },
 };
 
@@ -408,7 +408,7 @@ function wrapCallbackObject(obj) {
 
 function setWrapped(obj, prop, val) {
   if (!isWrapper(obj))
-    throw "You only need to use this for SpecialPowers wrapped objects";
+    throw new Error("You only need to use this for SpecialPowers wrapped objects");
 
   obj = unwrapPrivileged(obj);
   return Reflect.set(obj, prop, val);
@@ -642,7 +642,7 @@ SpecialPowersAPI.prototype = {
   importInMainProcess(importString) {
     var message = this._sendSyncMessage("SPImportInMainProcess", importString)[0];
     if (message.hadError) {
-      throw "SpecialPowers.importInMainProcess failed with error " + message.errorMessage;
+      throw new Error("SpecialPowers.importInMainProcess failed with error " + message.errorMessage);
     }
   },
 
@@ -1395,7 +1395,7 @@ SpecialPowersAPI.prototype = {
     };
     let val = this._sendSyncMessage("SPPrefService", msg);
     if (val == null || val[0] == null) {
-      throw "Error getting pref '" + prefName + "'";
+      throw new Error(`Error getting pref '${prefName}'`);
     }
     return val[0];
   },

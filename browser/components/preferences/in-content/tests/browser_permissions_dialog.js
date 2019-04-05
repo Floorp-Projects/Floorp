@@ -55,7 +55,7 @@ add_task(async function addPermission() {
   Assert.equal(richlistbox.itemCount, 1);
   checkPermissionItem(URL, Services.perms.ALLOW_ACTION);
 
-  SitePermissions.remove(URL, "desktop-notification");
+  SitePermissions.remove(URI, "desktop-notification");
 });
 
 add_task(async function observePermissionChange() {
@@ -66,7 +66,7 @@ add_task(async function observePermissionChange() {
 
   checkPermissionItem(URL, Services.perms.DENY_ACTION);
 
-  SitePermissions.remove(URL, "desktop-notification");
+  SitePermissions.remove(URI, "desktop-notification");
 });
 
 add_task(async function observePermissionDelete() {

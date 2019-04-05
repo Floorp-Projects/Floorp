@@ -18,11 +18,11 @@ function createXpiDataUri(base, files, callbacks) {
     r.open("GET", url, false);
     r.requestType = "arraybuffer";
     r.overrideMimeType("text/plain; charset=x-user-defined");
-    try { r.send(); } catch (e) { throw "FileNotRetrieved: " + url + " - " + e; }
+    try { r.send(); } catch (e) { throw new Error(`FileNotRetrieved: ${url} - ${e}`); }
     // For 'file://' Firefox sets status=0 on success or throws otherwise
     // In Firefox 34-ish onwards, success status is 200.
     if (!(r.readyState == 4 && (r.status == 0 || r.status == 200)))
-      throw ("FileNotRetrieved: " + url + " - " + r.status + " " + r.statusText);
+      throw new Error(`FileNotRetrieved: ${url} - ${r.status} ${r.statusText}`);
 
     return r.response;
   }

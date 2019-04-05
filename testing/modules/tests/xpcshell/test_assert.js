@@ -190,7 +190,7 @@ function run_test() {
   try {
     assert.throws(
       function() {
-        throw ({});
+        throw new Error({});
       },
       Array
     );
@@ -293,7 +293,7 @@ function run_test() {
   equal(new ns.Assert.AssertionError({
     actual: {
       toJSON() {
-        throw "bam!";
+        throw new Error("bam!");
       },
     },
     expected: "foo",

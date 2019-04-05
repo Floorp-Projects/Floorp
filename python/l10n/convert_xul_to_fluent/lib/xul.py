@@ -3,6 +3,7 @@ import re
 
 tag_re = r'<([a-z]+[^>/]*)(/?>)([^<]*)(?:</[a-z]+>)?'
 attr_re = r'\s+([a-z]+)="([\&\;\.a-zA-Z0-9]+)"'
+prefix = ""
 
 messages = {}
 
@@ -17,6 +18,7 @@ def convert_camel_case(name):
 
 
 def construct_l10n_id(val, attrs):
+    global prefix
     id = None
     if val:
         id = val[1:-1]
@@ -30,6 +32,8 @@ def construct_l10n_id(val, attrs):
             id = core
     id = id.replace('.', '-')
     id = convert_camel_case(id)
+    if prefix:
+        id = "{}-{}".format(prefix, id)
     return id
 
 
@@ -82,9 +86,11 @@ def tagrepl(m):
     return tag
 
 
-def collect_messages(xul_source):
+def collect_messages(xul_source, in_prefix):
     global messages
+    global prefix
     messages = {}
+    prefix = in_prefix
 
     new_source = re.sub(tag_re, tagrepl, xul_source)
     return (new_source, messages)

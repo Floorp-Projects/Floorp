@@ -10,21 +10,11 @@ var EXPORTED_SYMBOLS = ["ForgetAboutSite"];
 
 var ForgetAboutSite = {
   async removeDataFromDomain(aDomain) {
-    let promises = [];
-    let errorCount = 0;
-
-    ["http://", "https://"].forEach(scheme => {
-      promises.push(new Promise(resolve => {
-        Services.clearData.deleteDataFromHost(aDomain, true /* user request */,
-                                              Ci.nsIClearDataService.CLEAR_FORGET_ABOUT_SITE,
-                                              value => {
-          errorCount += bitCounting(value);
-          resolve();
-        });
-      }));
+    let errorCount = await new Promise(resolve => {
+      Services.clearData.deleteDataFromHost(aDomain, true /* user request */,
+                                            Ci.nsIClearDataService.CLEAR_FORGET_ABOUT_SITE,
+                                            errorCode => resolve(bitCounting(errorCode)));
     });
-
-    await Promise.all(promises);
 
     if (errorCount !== 0) {
       throw new Error(`There were a total of ${errorCount} errors during removal`);
