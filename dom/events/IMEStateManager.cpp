@@ -20,6 +20,7 @@
 #include "mozilla/Unused.h"
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/HTMLFormElement.h"
+#include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/TabParent.h"
 
@@ -28,6 +29,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
+#include "nsFocusManager.h"
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
 #include "nsIForm.h"
@@ -1179,6 +1181,123 @@ void IMEStateManager::SetInputContextForChildProcess(
   SetInputContext(widget, aInputContext, aAction);
 }
 
+static bool IsNextFocusableElementTextOrNumberControl(Element* aInputContent) {
+  nsFocusManager* fm = nsFocusManager::GetFocusManager();
+  if (!fm) {
+    return false;
+  }
+  nsCOMPtr<nsIContent> nextContent;
+  nsresult rv = fm->DetermineElementToMoveFocus(
+      aInputContent->OwnerDoc()->GetWindow(), aInputContent,
+      nsIFocusManager::MOVEFOCUS_FORWARD, true, getter_AddRefs(nextContent));
+  if (NS_WARN_IF(NS_FAILED(rv)) || !nextContent) {
+    return false;
+  }
+  nextContent = nextContent->FindFirstNonChromeOnlyAccessContent();
+  nsCOMPtr<nsIFormControl> nextControl = do_QueryInterface(nextContent);
+  if (!nextControl || !nextControl->IsTextOrNumberControl(false)) {
+    return false;
+  }
+
+  // XXX We don't consider next element is date/time control yet.
+  nsGenericHTMLElement* nextElement =
+      nsGenericHTMLElement::FromNodeOrNull(nextContent);
+  if (!nextElement) {
+    return false;
+  }
+  bool focusable = false;
+  nextElement->IsHTMLFocusable(false, &focusable, nullptr);
+  if (!focusable) {
+    return false;
+  }
+
+  // Check readonly attribute.
+  if (nextElement->IsHTMLElement(nsGkAtoms::textarea)) {
+    HTMLTextAreaElement* textAreaElement =
+        HTMLTextAreaElement::FromNodeOrNull(nextElement);
+    return !textAreaElement->ReadOnly();
+  }
+
+  // If neither textarea nor input, what element type?
+  MOZ_DIAGNOSTIC_ASSERT(nextElement->IsHTMLElement(nsGkAtoms::input));
+
+  HTMLInputElement* inputElement =
+      HTMLInputElement::FromNodeOrNull(nextElement);
+  return !inputElement->ReadOnly();
+}
+
+static void GetActionHint(nsIContent& aContent, nsAString& aActionHint) {
+  aContent.AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::moz_action_hint,
+                                aActionHint);
+
+  if (!aActionHint.IsEmpty()) {
+    return;
+  }
+
+  // Get the input content corresponding to the focused node,
+  // which may be an anonymous child of the input content.
+  nsIContent* inputContent = aContent.FindFirstNonChromeOnlyAccessContent();
+  if (!inputContent->IsHTMLElement(nsGkAtoms::input)) {
+    return;
+  }
+
+  // If we don't have an action hint and
+  // return won't submit the form, use "next".
+  bool willSubmit = false;
+  bool isLastElement = false;
+  nsCOMPtr<nsIFormControl> control(do_QueryInterface(inputContent));
+  Element* formElement = nullptr;
+  if (control) {
+    formElement = control->GetFormElement();
+    // is this a form and does it have a default submit element?
+    if (formElement) {
+      HTMLFormElement* htmlForm = nullptr;
+      if (formElement->IsHTMLElement(nsGkAtoms::form)) {
+        htmlForm = HTMLFormElement::FromNodeOrNull(formElement);
+        if (htmlForm->IsLastActiveElement(control)) {
+          isLastElement = true;
+        }
+      }
+
+      nsCOMPtr<nsIForm> form = do_QueryInterface(formElement);
+      if (form && form->GetDefaultSubmitElement()) {
+        willSubmit = true;
+        // is this an html form...
+      } else if (htmlForm) {
+        // ... and does it only have a single text input element ?
+        if (!htmlForm->ImplicitSubmissionIsDisabled() ||
+            // ... or is this the last non-disabled element?
+            isLastElement) {
+          willSubmit = true;
+        }
+      }
+    }
+
+    if (!isLastElement && formElement) {
+      // If next tabbable content in form is text control, hint should be "next"
+      // even there is submit in form.
+      if (IsNextFocusableElementTextOrNumberControl(
+              inputContent->AsElement())) {
+        // This is focusable text control
+        // XXX What good hint for read only field?
+        aActionHint.AssignLiteral("next");
+        return;
+      }
+    }
+  }
+
+  if (!willSubmit) {
+    return;
+  }
+
+  if (control->ControlType() == NS_FORM_INPUT_SEARCH) {
+    aActionHint.AssignLiteral("search");
+    return;
+  }
+
+  aActionHint.AssignLiteral("go");
+}
+
 // static
 void IMEStateManager::SetIMEState(const IMEState& aState,
                                   nsPresContext* aPresContext,
@@ -1245,46 +1364,7 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
       }
     }
 
-    aContent->AsElement()->GetAttr(
-        kNameSpaceID_None, nsGkAtoms::moz_action_hint, context.mActionHint);
-
-    // Get the input content corresponding to the focused node,
-    // which may be an anonymous child of the input content.
-    nsIContent* inputContent = aContent->FindFirstNonChromeOnlyAccessContent();
-
-    // If we don't have an action hint and
-    // return won't submit the form, use "next".
-    if (context.mActionHint.IsEmpty() &&
-        inputContent->IsHTMLElement(nsGkAtoms::input)) {
-      bool willSubmit = false;
-      nsCOMPtr<nsIFormControl> control(do_QueryInterface(inputContent));
-      mozilla::dom::Element* formElement = nullptr;
-      nsCOMPtr<nsIForm> form;
-      if (control) {
-        formElement = control->GetFormElement();
-        // is this a form and does it have a default submit element?
-        if ((form = do_QueryInterface(formElement)) &&
-            form->GetDefaultSubmitElement()) {
-          willSubmit = true;
-          // is this an html form...
-        } else if (formElement && formElement->IsHTMLElement(nsGkAtoms::form)) {
-          dom::HTMLFormElement* htmlForm =
-              static_cast<dom::HTMLFormElement*>(formElement);
-          // ... and does it only have a single text input element ?
-          if (!htmlForm->ImplicitSubmissionIsDisabled() ||
-              // ... or is this the last non-disabled element?
-              htmlForm->IsLastActiveElement(control)) {
-            willSubmit = true;
-          }
-        }
-      }
-      context.mActionHint.Assign(
-          willSubmit
-              ? (control->ControlType() == NS_FORM_INPUT_SEARCH
-                     ? NS_LITERAL_STRING("search")
-                     : NS_LITERAL_STRING("go"))
-              : (formElement ? NS_LITERAL_STRING("next") : EmptyString()));
-    }
+    GetActionHint(*aContent, context.mActionHint);
   }
 
   // XXX I think that we should use nsContentUtils::IsCallerChrome() instead

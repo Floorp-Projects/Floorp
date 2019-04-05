@@ -1467,6 +1467,11 @@ interface nsIDOMWindowUtils : nsISupports {
   readonly attribute AString focusedInputType;
 
   /**
+   * Get the action hint of the currently focused html input, if any.
+   */
+  readonly attribute AString focusedActionHint;
+
+  /**
    * Find the view ID for a given element. This is the reverse of
    * findElementWithViewId().
    */
