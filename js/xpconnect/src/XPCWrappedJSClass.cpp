@@ -111,7 +111,7 @@ already_AddRefed<nsXPCWrappedJSClass> nsXPCWrappedJSClass::GetNewOrUsed(
     const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByIID(aIID);
     if (info) {
       if (!info->IsBuiltinClass() && nsXPConnect::IsISupportsDescendant(info)) {
-        clasp = new nsXPCWrappedJSClass(aIID, info);
+        clasp = new nsXPCWrappedJSClass(info);
         if (!clasp->mDescriptors) {
           clasp = nullptr;
         }
@@ -121,9 +121,8 @@ already_AddRefed<nsXPCWrappedJSClass> nsXPCWrappedJSClass::GetNewOrUsed(
   return clasp.forget();
 }
 
-nsXPCWrappedJSClass::nsXPCWrappedJSClass(REFNSIID aIID,
-                                         const nsXPTInterfaceInfo* aInfo)
-    : mInfo(aInfo), mIID(aIID), mDescriptors(nullptr) {
+nsXPCWrappedJSClass::nsXPCWrappedJSClass(const nsXPTInterfaceInfo* aInfo)
+    : mInfo(aInfo), mDescriptors(nullptr) {
   XPCJSRuntime::Get()->GetWrappedJSClassMap()->Add(this);
 
   uint16_t methodCount = mInfo->MethodCount();
@@ -1139,7 +1138,7 @@ nsXPCWrappedJSClass::DebugDump(int16_t depth) {
   XPC_LOG_INDENT();
   const char* name = mInfo->Name();
   XPC_LOG_ALWAYS(("interface name is %s", name));
-  char* iid = mIID.ToString();
+  char* iid = mInfo->IID().ToString();
   XPC_LOG_ALWAYS(("IID number is %s", iid ? iid : "invalid"));
   if (iid) {
     free(iid);
