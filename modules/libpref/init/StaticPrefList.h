@@ -1987,6 +1987,12 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+VARCACHE_PREF(
+  "network.delay.tracking.load",
+   network_delay_tracking_load,
+   uint32_t, 0
+)
+
 //---------------------------------------------------------------------------
 // ContentSessionStore prefs
 //---------------------------------------------------------------------------
