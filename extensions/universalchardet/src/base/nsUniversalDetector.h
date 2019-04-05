@@ -8,8 +8,6 @@
 
 class nsCharSetProber;
 
-#define NUM_OF_CHARSET_PROBERS 3
-
 typedef enum { ePureAscii = 0, eEscAscii = 1, eHighbyte = 2 } nsInputState;
 
 class nsUniversalDetector {
@@ -32,7 +30,7 @@ class nsUniversalDetector {
   int32_t mBestGuess;
   uint32_t mLanguageFilter;
 
-  nsCharSetProber* mCharSetProbers[NUM_OF_CHARSET_PROBERS];
+  nsCharSetProber* mMultibyteProber;
   nsCharSetProber* mEscCharSetProber;
 };
 
