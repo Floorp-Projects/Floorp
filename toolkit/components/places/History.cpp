@@ -1445,6 +1445,16 @@ History::History()
       mObservers(VISIT_OBSERVERS_INITIAL_CACHE_LENGTH),
       mRecentlyVisitedURIs(RECENTLY_VISITED_URIS_SIZE) {
   NS_ASSERTION(!gService, "Ruh-roh!  This service has already been created!");
+  if (XRE_IsParentProcess()) {
+    nsCOMPtr<nsIProperties> dirsvc = services::GetDirectoryService();
+    bool haveProfile = false;
+    MOZ_RELEASE_ASSERT(
+        dirsvc &&
+            NS_SUCCEEDED(
+                dirsvc->Has(NS_APP_USER_PROFILE_50_DIR, &haveProfile)) &&
+            haveProfile,
+        "Can't construct history service if there is no profile.");
+  }
   gService = this;
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();

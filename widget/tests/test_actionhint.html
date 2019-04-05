@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Tests for action hint that is used by software keyboard</title>
+<script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+<script type="application/javascript" src="/tests/SimpleTest/SpecialPowers.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<div>
+<form><input type="text" id="a1"><input type="text" id="a2"><input type="submit"></form>
+<form><input type="search" id="b1"><input type="submit"></form>
+<form><input type="text" id="c1"></form>
+<form><input type="text" id="d1"><textarea></textarea><input type="submit"></form>
+<form><input type="text" id="e1"><input type="number"><input type="submit"></form>
+<form><input type="text" id="f1"><input type="date"><input type="submit"></form>
+<form><input type="text" id="g1"><input type="radio"><input type="submit"></form>
+<form><input type="text" id="h1"><input type="text" readonly><input type="submit"></form>
+<form><input type="text" id="i1"><input type="text" disabled><input type="submit"></form>
+<input type="text" id="j1"><input type="text"><input type="button">
+<form><input type="text" id="k1"><a href="#foo">foo</a><input type="text"><input type="submit"></form>
+</div>
+<pre id="test">
+<script class=testbody" type="application/javascript">
+SimpleTest.waitForExplicitFinish();
+
+SimpleTest.waitForFocus(() => {
+  const tests = [
+    { id: "a1", hint: "next", desc: "next element is type=text" },
+    { id: "a2", hint: "go", desc: "next element is type=submit" },
+    { id: "b1", hint: "search", desc: "current is type=search" },
+    { id: "c1", hint: "go", desc: "only this element" },
+    { id: "d1", hint: "next", desc: "next element is textarea" },
+    { id: "e1", hint: "next", desc: "next element is type=number" },
+    { id: "h1", hint: "go", desc: "next element is readonly" },
+    // XXX Feel free to change this result if you get some bugs reports
+    { id: "i1", hint: "go", desc: "next element is disabled" },
+    { id: "j1", hint: "", desc: "no form element" },
+  ];
+
+  const todo_tests = [
+    { id: "f1", hint: "next", desc: "next element is type=date" },
+    { id: "k1", hint: "", desc: "next is anchor link" },
+  ];
+
+  for (let test of tests) {
+    document.getElementById(test.id).focus();
+    is(SpecialPowers.DOMWindowUtils.focusedActionHint, test.hint, test.desc);
+  }
+
+  for (let test of todo_tests) {
+    document.getElementById(test.id).focus();
+    todo_is(SpecialPowers.DOMWindowUtils.focusedActionHint, test.hint, test.desc);
+  }
+
+  SimpleTest.finish();
+});
+</script>
+</pre>
+</body>
+</html>
