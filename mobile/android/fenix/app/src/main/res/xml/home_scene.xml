@@ -104,6 +104,7 @@
         <Constraint
             android:id="@+id/menuButton"
             android:alpha="0"
+            android:visibility="gone"
             android:layout_marginTop="16dp"
             android:translationY="-10dp"
             android:layout_height="@dimen/glyph_button_height"
@@ -114,6 +115,7 @@
         <Constraint
             android:id="@+id/privateBrowsingButton"
             android:alpha="0"
+            android:visibility="gone"
             android:translationY="-10dp"
             android:layout_height="@dimen/glyph_button_height"
             android:layout_width="@dimen/glyph_button_height"
