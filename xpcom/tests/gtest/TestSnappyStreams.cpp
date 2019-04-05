@@ -98,53 +98,56 @@ static void TestUncompressCorrupt(const char* aCorruptData,
 
 }  // namespace
 
-TEST(SnappyStream, Compress_32k) { TestCompress(32 * 1024); }
+TEST(SnappyStream, Compress_32k)
+{ TestCompress(32 * 1024); }
 
-TEST(SnappyStream, Compress_64k) { TestCompress(64 * 1024); }
+TEST(SnappyStream, Compress_64k)
+{ TestCompress(64 * 1024); }
 
-TEST(SnappyStream, Compress_128k) { TestCompress(128 * 1024); }
+TEST(SnappyStream, Compress_128k)
+{ TestCompress(128 * 1024); }
 
-TEST(SnappyStream, CompressUncompress_0) { TestCompressUncompress(0); }
+TEST(SnappyStream, CompressUncompress_0)
+{ TestCompressUncompress(0); }
 
-TEST(SnappyStream, CompressUncompress_1) { TestCompressUncompress(1); }
+TEST(SnappyStream, CompressUncompress_1)
+{ TestCompressUncompress(1); }
 
-TEST(SnappyStream, CompressUncompress_32) { TestCompressUncompress(32); }
+TEST(SnappyStream, CompressUncompress_32)
+{ TestCompressUncompress(32); }
 
-TEST(SnappyStream, CompressUncompress_1k) { TestCompressUncompress(1024); }
+TEST(SnappyStream, CompressUncompress_1k)
+{ TestCompressUncompress(1024); }
 
-TEST(SnappyStream, CompressUncompress_32k) {
-  TestCompressUncompress(32 * 1024);
-}
+TEST(SnappyStream, CompressUncompress_32k)
+{ TestCompressUncompress(32 * 1024); }
 
-TEST(SnappyStream, CompressUncompress_64k) {
-  TestCompressUncompress(64 * 1024);
-}
+TEST(SnappyStream, CompressUncompress_64k)
+{ TestCompressUncompress(64 * 1024); }
 
-TEST(SnappyStream, CompressUncompress_128k) {
-  TestCompressUncompress(128 * 1024);
-}
+TEST(SnappyStream, CompressUncompress_128k)
+{ TestCompressUncompress(128 * 1024); }
 
 // Test buffers that are not exactly power-of-2 in length to try to
 // exercise more edge cases.  The number 13 is arbitrary.
 
-TEST(SnappyStream, CompressUncompress_256k_less_13) {
-  TestCompressUncompress((256 * 1024) - 13);
-}
+TEST(SnappyStream, CompressUncompress_256k_less_13)
+{ TestCompressUncompress((256 * 1024) - 13); }
 
-TEST(SnappyStream, CompressUncompress_256k) {
-  TestCompressUncompress(256 * 1024);
-}
+TEST(SnappyStream, CompressUncompress_256k)
+{ TestCompressUncompress(256 * 1024); }
 
-TEST(SnappyStream, CompressUncompress_256k_plus_13) {
-  TestCompressUncompress((256 * 1024) + 13);
-}
+TEST(SnappyStream, CompressUncompress_256k_plus_13)
+{ TestCompressUncompress((256 * 1024) + 13); }
 
-TEST(SnappyStream, UncompressCorruptStreamIdentifier) {
+TEST(SnappyStream, UncompressCorruptStreamIdentifier)
+{
   static const char data[] = "This is not a valid compressed stream";
   TestUncompressCorrupt(data, strlen(data));
 }
 
-TEST(SnappyStream, UncompressCorruptCompressedDataLength) {
+TEST(SnappyStream, UncompressCorruptCompressedDataLength)
+{
   static const char data[] =
       "\xff\x06\x00\x00sNaPpY"  // stream identifier
       "\x00\x99\x00\x00This is not a valid compressed stream";
@@ -152,7 +155,8 @@ TEST(SnappyStream, UncompressCorruptCompressedDataLength) {
   TestUncompressCorrupt(data, dataLength);
 }
 
-TEST(SnappyStream, UncompressCorruptCompressedDataContent) {
+TEST(SnappyStream, UncompressCorruptCompressedDataContent)
+{
   static const char data[] =
       "\xff\x06\x00\x00sNaPpY"  // stream identifier
       "\x00\x25\x00\x00This is not a valid compressed stream";

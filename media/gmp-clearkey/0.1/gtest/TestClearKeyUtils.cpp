@@ -65,7 +65,8 @@ const B64Test tests[] = {
     {"_", {}, false},  // 1 character is too few.
 };
 
-TEST(ClearKey, DecodeBase64) {
+TEST(ClearKey, DecodeBase64)
+{
   for (const B64Test& test : tests) {
     vector<uint8_t> v;
     bool rv = DecodeBase64(string(test.b64), v);

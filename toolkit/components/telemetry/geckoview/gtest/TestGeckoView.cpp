@@ -230,12 +230,12 @@ TEST_F(TelemetryGeckoViewFixture, ClearPersistenceFiles) {
   bool fileExists = false;
   CheckPersistenceFileExists(fileExists);
   ASSERT_FALSE(fileExists)
-      << "No persisted measurements must exist on the disk";
+  << "No persisted measurements must exist on the disk";
 
   WritePersistenceFile(nsDependentCString(kSampleData));
   CheckPersistenceFileExists(fileExists);
   ASSERT_TRUE(fileExists)
-      << "We should have written the test persistence file to disk";
+  << "We should have written the test persistence file to disk";
 
   // Init the persistence: this will trigger the measurements to be written
   // to disk off-the-main thread.
@@ -245,7 +245,7 @@ TEST_F(TelemetryGeckoViewFixture, ClearPersistenceFiles) {
 
   CheckPersistenceFileExists(fileExists);
   ASSERT_FALSE(fileExists)
-      << "ClearPersistenceData must remove the persistence file";
+  << "ClearPersistenceData must remove the persistence file";
 }
 
 /**
@@ -257,7 +257,7 @@ TEST_F(TelemetryGeckoViewFixture, CheckDataLoadedTopic) {
   bool fileExists = false;
   CheckPersistenceFileExists(fileExists);
   ASSERT_FALSE(fileExists)
-      << "No persisted measurements must exist on the disk";
+  << "No persisted measurements must exist on the disk";
 
   // Check that the data loaded topic is notified after attempting the load
   // if no measurement file exists.
@@ -270,7 +270,7 @@ TEST_F(TelemetryGeckoViewFixture, CheckDataLoadedTopic) {
   WritePersistenceFile(nsDependentCString(kSampleData));
   CheckPersistenceFileExists(fileExists);
   ASSERT_TRUE(fileExists)
-      << "The persisted measurements must exist on the disk";
+  << "The persisted measurements must exist on the disk";
 
   // Check that the data loaded topic is triggered when the measurement file
   // exists.
@@ -294,7 +294,7 @@ TEST_F(TelemetryGeckoViewFixture, PersistScalars) {
   bool fileExists = false;
   CheckPersistenceFileExists(fileExists);
   ASSERT_FALSE(fileExists)
-      << "No persisted measurements must exist on the disk";
+  << "No persisted measurements must exist on the disk";
 
   RefPtr<DataLoadedObserver> loadingFinished = new DataLoadedObserver();
 
@@ -321,7 +321,7 @@ TEST_F(TelemetryGeckoViewFixture, PersistScalars) {
 
   CheckPersistenceFileExists(fileExists);
   ASSERT_TRUE(fileExists)
-      << "The persisted measurements must exist on the disk";
+  << "The persisted measurements must exist on the disk";
 
   // Clear the in-memory scalars again. They will be restored from the disk.
   Unused << mTelemetry->ClearScalars();
@@ -364,7 +364,7 @@ TEST_F(TelemetryGeckoViewFixture, PersistHistograms) {
   bool fileExists = false;
   CheckPersistenceFileExists(fileExists);
   ASSERT_FALSE(fileExists)
-      << "No persisted measurements must exist on the disk";
+  << "No persisted measurements must exist on the disk";
 
   RefPtr<DataLoadedObserver> loadingFinished = new DataLoadedObserver();
 
@@ -392,7 +392,7 @@ TEST_F(TelemetryGeckoViewFixture, PersistHistograms) {
 
   CheckPersistenceFileExists(fileExists);
   ASSERT_TRUE(fileExists)
-      << "The persisted measurements must exist on the disk";
+  << "The persisted measurements must exist on the disk";
 
   // Clear the in-memory histograms again. They will be restored from the disk.
   GetAndClearHistogram(cx.GetJSContext(), mTelemetry,
@@ -438,7 +438,7 @@ TEST_F(TelemetryGeckoViewFixture, PersistHistograms) {
   JS::RootedValue expectedKeyData(cx.GetJSContext());
   GetProperty(cx.GetJSContext(), "gv_key", histogram, &expectedKeyData);
   ASSERT_FALSE(expectedKeyData.isUndefined())
-      << "Cannot find the expected key in the keyed histogram data";
+  << "Cannot find the expected key in the keyed histogram data";
   GetProperty(cx.GetJSContext(), "sum", expectedKeyData, &sum);
   JS::ToUint32(cx.GetJSContext(), sum, &uSum);
   ASSERT_EQ(uSum, kExpectedKeyedSum)
@@ -496,7 +496,7 @@ TEST_F(TelemetryGeckoViewFixture, EmptyPendingOperations) {
   GetScalarsSnapshot(false, cx.GetJSContext(), &scalarsSnapshot);
 
   ASSERT_TRUE(scalarsSnapshot.isUndefined())
-      << "Scalars snapshot should not contain any data.";
+  << "Scalars snapshot should not contain any data.";
 }
 
 TEST_F(TelemetryGeckoViewFixture, SimpleAppendOperation) {

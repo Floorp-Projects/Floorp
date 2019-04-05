@@ -29,7 +29,8 @@ static unsigned char* createAllGB() {
   return buff;
 }
 
-TEST(GfxQcms, Identity) {
+TEST(GfxQcms, Identity)
+{
   // XXX: This means that we can't have qcms v2 unit test
   //      without changing the qcms API.
   qcms_enable_iccv4();
@@ -60,7 +61,8 @@ TEST(GfxQcms, Identity) {
   free(data_out);
 }
 
-TEST(GfxQcms, LutInverseCrash) {
+TEST(GfxQcms, LutInverseCrash)
+{
   uint16_t lutTable1[] = {
       0x0000, 0x0000, 0x0000, 0x8000, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
       0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
@@ -103,7 +105,8 @@ TEST(GfxQcms, LutInverseCrash) {
                        (int)mozilla::ArrayLength(lutTable2));
 }
 
-TEST(GfxQcms, LutInverse) {
+TEST(GfxQcms, LutInverse)
+{
   // mimic sRGB_v4_ICC mBA Output
   //
   //       XXXX
@@ -144,7 +147,8 @@ TEST(GfxQcms, LutInverse) {
   EXPECT_LT(value, 201 * 256);
 }
 
-TEST(GfxQcms, LutInverseNonMonotonic) {
+TEST(GfxQcms, LutInverseNonMonotonic)
+{
   // Make sure we behave sanely for non monotic functions
   //   X  X  X
   //  X  X  X

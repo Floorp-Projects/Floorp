@@ -213,7 +213,8 @@ void TestTextureClientYCbCr(TextureClient* client, PlanarYCbCrData& ycbcrData) {
 }  // namespace layers
 }  // namespace mozilla
 
-TEST(Layers, TextureSerialization) {
+TEST(Layers, TextureSerialization)
+{
   // the test is run on all the following image formats
   gfxImageFormat formats[3] = {
       SurfaceFormat::A8R8G8B8_UINT32,
@@ -242,7 +243,8 @@ TEST(Layers, TextureSerialization) {
   }
 }
 
-TEST(Layers, TextureYCbCrSerialization) {
+TEST(Layers, TextureYCbCrSerialization)
+{
   RefPtr<gfxImageSurface> ySurface =
       new gfxImageSurface(IntSize(400, 300), SurfaceFormat::A8);
   RefPtr<gfxImageSurface> cbSurface =

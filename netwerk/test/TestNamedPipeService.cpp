@@ -251,7 +251,8 @@ static nsresult CreateNamedPipe(LPHANDLE aServer, LPHANDLE aClient) {
   return NS_OK;
 }
 
-TEST(TestNamedPipeService, Test) {
+TEST(TestNamedPipeService, Test)
+{
   nsCOMPtr<nsINamedPipeService> svc = net::NamedPipeService::GetOrCreate();
 
   HANDLE readPipe, writePipe;

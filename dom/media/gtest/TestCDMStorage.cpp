@@ -1030,54 +1030,64 @@ class CDMStorageTest {
   UniquePtr<CallbackProxy> mCallback;
 };  // class CDMStorageTest
 
-TEST(GeckoMediaPlugins, CDMStorageGetNodeId) {
+TEST(GeckoMediaPlugins, CDMStorageGetNodeId)
+{
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestGetNodeId);
 }
 
-TEST(GeckoMediaPlugins, CDMStorageBasic) {
+TEST(GeckoMediaPlugins, CDMStorageBasic)
+{
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestBasicStorage);
 }
 
-TEST(GeckoMediaPlugins, CDMStorageForgetThisSite) {
+TEST(GeckoMediaPlugins, CDMStorageForgetThisSite)
+{
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestForgetThisSite);
 }
 
-TEST(GeckoMediaPlugins, CDMStorageClearRecentHistory1) {
+TEST(GeckoMediaPlugins, CDMStorageClearRecentHistory1)
+{
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestClearRecentHistory1);
 }
 
-TEST(GeckoMediaPlugins, CDMStorageClearRecentHistory2) {
+TEST(GeckoMediaPlugins, CDMStorageClearRecentHistory2)
+{
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestClearRecentHistory2);
 }
 
-TEST(GeckoMediaPlugins, CDMStorageClearRecentHistory3) {
+TEST(GeckoMediaPlugins, CDMStorageClearRecentHistory3)
+{
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestClearRecentHistory3);
 }
 
-TEST(GeckoMediaPlugins, CDMStorageCrossOrigin) {
+TEST(GeckoMediaPlugins, CDMStorageCrossOrigin)
+{
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestCrossOriginStorage);
 }
 
-TEST(GeckoMediaPlugins, CDMStoragePrivateBrowsing) {
+TEST(GeckoMediaPlugins, CDMStoragePrivateBrowsing)
+{
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestPBStorage);
 }
 
 #if defined(XP_WIN)
-TEST(GeckoMediaPlugins, GMPOutputProtection) {
+TEST(GeckoMediaPlugins, GMPOutputProtection)
+{
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestOutputProtection);
 }
 #endif
 
-TEST(GeckoMediaPlugins, CDMStorageLongRecordNames) {
+TEST(GeckoMediaPlugins, CDMStorageLongRecordNames)
+{
   RefPtr<CDMStorageTest> runner = new CDMStorageTest();
   runner->DoTest(&CDMStorageTest::TestLongRecordNames);
 }

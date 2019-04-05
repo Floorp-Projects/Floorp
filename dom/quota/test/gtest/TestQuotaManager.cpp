@@ -27,7 +27,8 @@ void CheckOriginScopeMatchesOrigin(const OriginScope& aOriginScope,
 
 }  // namespace
 
-TEST(QuotaManager, OriginScope) {
+TEST(QuotaManager, OriginScope)
+{
   OriginScope originScope;
 
   // Sanity checks.
