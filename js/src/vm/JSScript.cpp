@@ -4583,9 +4583,9 @@ void JSScript::traceChildren(JSTracer* trc) {
     TraceManuallyBarrieredEdge(trc, &lazyScript, "lazyScript");
   }
 
-  if (trc->isMarkingTracer()) {
-    realm()->mark();
-  }
+  JSObject* global = realm()->unsafeUnbarrieredMaybeGlobal();
+  MOZ_ASSERT(global);
+  TraceManuallyBarrieredEdge(trc, &global, "script_global");
 
   jit::TraceJitScripts(trc, this);
 
