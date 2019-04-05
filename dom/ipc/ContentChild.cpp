@@ -1819,6 +1819,14 @@ mozilla::ipc::IPCResult ContentChild::RecvPBrowserConstructor(
   }
 
   auto tabChild = static_cast<TabChild*>(aActor);
+  if (!tabChild->mTabGroup) {
+    tabChild->mTabGroup = TabGroup::GetFromActor(tabChild);
+
+    if (!tabChild->mTabGroup) {
+      tabChild->mTabGroup = new TabGroup();
+      MOZ_DIAGNOSTIC_ASSERT(aSameTabGroupAs != 0);
+    }
+  }
 
   if (NS_WARN_IF(NS_FAILED(tabChild->Init(/* aOpener */ nullptr)))) {
     return IPC_FAIL(tabChild, "TabChild::Init failed");
