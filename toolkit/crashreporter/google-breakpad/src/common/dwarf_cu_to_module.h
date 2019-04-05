@@ -298,6 +298,7 @@ class DwarfCUToModule: public dwarf2reader::RootDIEHandler {
   class FuncHandler;
   class InlinedSubroutineHandler;
   class NamedScopeHandler;
+  class LexicalBlockHandler;
 
   // A map from section offsets to specifications.
   typedef map<uint64, Specification> SpecificationByOffset;
