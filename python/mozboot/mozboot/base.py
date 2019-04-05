@@ -708,7 +708,7 @@ class BaseBootstrapper(object):
 
         if 'mobile_android' in self.application:
             # Let's add the most common targets.
-            if rust_version < '1.33':
+            if rust_version < LooseVersion('1.33'):
                 arm_target = 'armv7-linux-androideabi'
             else:
                 arm_target = 'thumbv7neon-linux-androideabi'
