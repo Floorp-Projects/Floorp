@@ -412,6 +412,18 @@ public final class CodecProxy {
         return true;
     }
 
+    // Dispose Sample objects without sending requests to remote codec.
+    // Native callbacks use this method instead of releaseOutput() to save
+    // unnecessary IPC calls when recycling samples that have been released by
+    // release() or flush().
+    @WrapForJNI
+    public void disposeOutput(final Sample sample) {
+        if (mOutputSurface != null) {
+            mSurfaceOutputs.remove(sample);
+        }
+        sample.dispose();
+    }
+
     /* package */ void reportError(final boolean fatal) {
         mCallbacks.reportError(fatal);
     }
