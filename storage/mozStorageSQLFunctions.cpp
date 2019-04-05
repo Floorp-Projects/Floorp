@@ -347,10 +347,7 @@ void utf16LengthFunction(sqlite3_context *aCtx, int aArgc,
                          sqlite3_value **aArgv) {
   NS_ASSERTION(1 == aArgc, "Invalid number of arguments!");
 
-  nsDependentString data(
-      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[0])));
-
-  int len = data.Length();
+  int len = ::sqlite3_value_bytes16(aArgv[0]) / sizeof(char16_t);
 
   // Set the result.
   ::sqlite3_result_int(aCtx, len);
