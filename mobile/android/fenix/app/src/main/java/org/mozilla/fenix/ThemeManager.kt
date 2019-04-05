@@ -75,14 +75,7 @@ class DefaultThemeManager : ThemeManager {
                         context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
                     when (currentNightMode) {
                         Configuration.UI_MODE_NIGHT_NO -> {
-                            window.decorView.systemUiVisibility =
-                                window.decorView.systemUiVisibility or
-                                        View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
-                                        View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-                            if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.O) {
-                                // API level can display handle light navigation bar color
-                                updateNavigationBar(onHomeScreen, window, context)
-                            }
+                            updateLightNavigationBar(onHomeScreen, window, context)
                         }
                         Configuration.UI_MODE_NIGHT_YES -> {
                             window.decorView.systemUiVisibility =
@@ -93,14 +86,7 @@ class DefaultThemeManager : ThemeManager {
                         }
                         Configuration.UI_MODE_NIGHT_UNDEFINED -> {
                             // We assume light here per Android doc's recommendation
-                            window.decorView.systemUiVisibility =
-                                window.decorView.systemUiVisibility or
-                                        View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
-                                        View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
-                            if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.O) {
-                                // API level can display handle light navigation bar color
-                                updateNavigationBar(onHomeScreen, window, context)
-                            }
+                            updateLightNavigationBar(onHomeScreen, window, context)
                         }
                     }
                 }
@@ -110,6 +96,21 @@ class DefaultThemeManager : ThemeManager {
                             View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR.inv()
                     updateNavigationBar(onHomeScreen, window, context)
                 }
+            }
+        }
+
+        private fun updateLightNavigationBar(onHomeScreen: Boolean, window: Window, context: Context) {
+            if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.O) {
+                // API level can display handle light navigation bar color
+                updateNavigationBar(onHomeScreen, window, context)
+                window.decorView.systemUiVisibility =
+                    window.decorView.systemUiVisibility or
+                            View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or
+                            View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
+            } else {
+                window.decorView.systemUiVisibility =
+                    window.decorView.systemUiVisibility or
+                            View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
             }
         }
 
