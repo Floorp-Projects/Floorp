@@ -153,15 +153,16 @@ TEST(MP4Demuxer, Seek) {
     binding->mVideoTrack =
         binding->mDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
     binding->CheckTrackSamples(binding->mVideoTrack)
-        ->Then(binding->mTaskQueue, __func__,
-               [binding]() {
-                 binding->CheckTrackKeyFrame(binding->mVideoTrack)
-                     ->Then(
-                         binding->mTaskQueue, __func__,
-                         [binding]() { binding->mTaskQueue->BeginShutdown(); },
-                         DO_FAIL);
-               },
-               DO_FAIL);
+        ->Then(
+            binding->mTaskQueue, __func__,
+            [binding]() {
+              binding->CheckTrackKeyFrame(binding->mVideoTrack)
+                  ->Then(
+                      binding->mTaskQueue, __func__,
+                      [binding]() { binding->mTaskQueue->BeginShutdown(); },
+                      DO_FAIL);
+            },
+            DO_FAIL);
   });
 }
 
@@ -318,17 +319,17 @@ TEST(MP4Demuxer, CENCFragVideo) {
     binding->mVideoTrack =
         binding->mDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
     binding->CheckTrackSamples(binding->mVideoTrack)
-        ->Then(binding->mTaskQueue, __func__,
-               [binding, video]() {
-                 for (uint32_t i = 0; i < binding->mSamples.Length(); i++) {
-                   nsCString text =
-                       ToCryptoString(binding->mSamples[i]->mCrypto);
-                   EXPECT_STREQ(video[i++], text.get());
-                 }
-                 EXPECT_EQ(ArrayLength(video), binding->mSamples.Length());
-                 binding->mTaskQueue->BeginShutdown();
-               },
-               DO_FAIL);
+        ->Then(
+            binding->mTaskQueue, __func__,
+            [binding, video]() {
+              for (uint32_t i = 0; i < binding->mSamples.Length(); i++) {
+                nsCString text = ToCryptoString(binding->mSamples[i]->mCrypto);
+                EXPECT_STREQ(video[i++], text.get());
+              }
+              EXPECT_EQ(ArrayLength(video), binding->mSamples.Length());
+              binding->mTaskQueue->BeginShutdown();
+            },
+            DO_FAIL);
   });
 }
 
@@ -531,18 +532,18 @@ TEST(MP4Demuxer, CENCFragAudio) {
     binding->mAudioTrack =
         binding->mDemuxer->GetTrackDemuxer(TrackInfo::kAudioTrack, 0);
     binding->CheckTrackSamples(binding->mAudioTrack)
-        ->Then(binding->mTaskQueue, __func__,
-               [binding, audio]() {
-                 EXPECT_TRUE(binding->mSamples.Length() > 1);
-                 for (uint32_t i = 0; i < binding->mSamples.Length(); i++) {
-                   nsCString text =
-                       ToCryptoString(binding->mSamples[i]->mCrypto);
-                   EXPECT_STREQ(audio[i++], text.get());
-                 }
-                 EXPECT_EQ(ArrayLength(audio), binding->mSamples.Length());
-                 binding->mTaskQueue->BeginShutdown();
-               },
-               DO_FAIL);
+        ->Then(
+            binding->mTaskQueue, __func__,
+            [binding, audio]() {
+              EXPECT_TRUE(binding->mSamples.Length() > 1);
+              for (uint32_t i = 0; i < binding->mSamples.Length(); i++) {
+                nsCString text = ToCryptoString(binding->mSamples[i]->mCrypto);
+                EXPECT_STREQ(audio[i++], text.get());
+              }
+              EXPECT_EQ(ArrayLength(audio), binding->mSamples.Length());
+              binding->mTaskQueue->BeginShutdown();
+            },
+            DO_FAIL);
   });
 }
 

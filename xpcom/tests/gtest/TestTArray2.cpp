@@ -82,34 +82,42 @@ static bool test_basic_array(ElementType* data, size_t dataLen,
   if (ary.Length() != (oldLen - 1)) return false;
   if (!(ary == ary)) return false;
 
-  if (ary.ApplyIf(extra, []() { return true; }, []() { return false; }))
+  if (ary.ApplyIf(
+          extra, []() { return true; }, []() { return false; }))
     return false;
-  if (ary.ApplyIf(extra, [](size_t) { return true; }, []() { return false; }))
+  if (ary.ApplyIf(
+          extra, [](size_t) { return true; }, []() { return false; }))
     return false;
   // On a non-const array, ApplyIf's first lambda may use either const or non-
   // const element types.
-  if (ary.ApplyIf(extra, [](ElementType&) { return true; },
-                  []() { return false; }))
+  if (ary.ApplyIf(
+          extra, [](ElementType&) { return true; }, []() { return false; }))
     return false;
-  if (ary.ApplyIf(extra, [](const ElementType&) { return true; },
-                  []() { return false; }))
+  if (ary.ApplyIf(
+          extra, [](const ElementType&) { return true; },
+          []() { return false; }))
     return false;
-  if (ary.ApplyIf(extra, [](size_t, ElementType&) { return true; },
-                  []() { return false; }))
+  if (ary.ApplyIf(
+          extra, [](size_t, ElementType&) { return true; },
+          []() { return false; }))
     return false;
-  if (ary.ApplyIf(extra, [](size_t, const ElementType&) { return true; },
-                  []() { return false; }))
+  if (ary.ApplyIf(
+          extra, [](size_t, const ElementType&) { return true; },
+          []() { return false; }))
     return false;
 
-  if (cary.ApplyIf(extra, []() { return true; }, []() { return false; }))
-    if (cary.ApplyIf(extra, [](size_t) { return true; },
-                     []() { return false; }))
+  if (cary.ApplyIf(
+          extra, []() { return true; }, []() { return false; }))
+    if (cary.ApplyIf(
+            extra, [](size_t) { return true; }, []() { return false; }))
       // On a const array, ApplyIf's first lambda must only use const element
       // types.
-      if (cary.ApplyIf(extra, [](const ElementType&) { return true; },
-                       []() { return false; }))
-        if (cary.ApplyIf(extra, [](size_t, const ElementType&) { return true; },
-                         []() { return false; }))
+      if (cary.ApplyIf(
+              extra, [](const ElementType&) { return true; },
+              []() { return false; }))
+        if (cary.ApplyIf(
+                extra, [](size_t, const ElementType&) { return true; },
+                []() { return false; }))
           return false;
 
   size_t index = ary.Length() / 2;
@@ -121,17 +129,19 @@ static bool test_basic_array(ElementType* data, size_t dataLen,
   // ensure proper searching
   if (ary.IndexOf(extra) > ary.LastIndexOf(extra)) return false;
   if (ary.IndexOf(extra, index) != ary.LastIndexOf(extra, index)) return false;
-  if (!ary.ApplyIf(extra,
-                   [&](size_t i, const ElementType& e) {
-                     return i == index && e == extra;
-                   },
-                   []() { return false; }))
+  if (!ary.ApplyIf(
+          extra,
+          [&](size_t i, const ElementType& e) {
+            return i == index && e == extra;
+          },
+          []() { return false; }))
     return false;
-  if (!cary.ApplyIf(extra,
-                    [&](size_t i, const ElementType& e) {
-                      return i == index && e == extra;
-                    },
-                    []() { return false; }))
+  if (!cary.ApplyIf(
+          extra,
+          [&](size_t i, const ElementType& e) {
+            return i == index && e == extra;
+          },
+          []() { return false; }))
     return false;
 
   nsTArray<ElementType> copy(ary);
@@ -148,9 +158,11 @@ static bool test_basic_array(ElementType* data, size_t dataLen,
   ary.Clear();
   if (ary.IndexOf(extra) != ary.NoIndex) return false;
   if (ary.LastIndexOf(extra) != ary.NoIndex) return false;
-  if (ary.ApplyIf(extra, []() { return true; }, []() { return false; }))
+  if (ary.ApplyIf(
+          extra, []() { return true; }, []() { return false; }))
     return false;
-  if (cary.ApplyIf(extra, []() { return true; }, []() { return false; }))
+  if (cary.ApplyIf(
+          extra, []() { return true; }, []() { return false; }))
     return false;
 
   ary.Clear();
@@ -487,9 +499,9 @@ TEST(TArray, test_comptr_array) {
   }
 
   ASSERT_EQ(fileArray.IndexOf(kNames[1], 0, nsFileNameComparator()), size_t(1));
-  ASSERT_TRUE(fileArray.ApplyIf(kNames[1], 0, nsFileNameComparator(),
-                                [](size_t i) { return i == 1; },
-                                []() { return false; }));
+  ASSERT_TRUE(fileArray.ApplyIf(
+      kNames[1], 0, nsFileNameComparator(), [](size_t i) { return i == 1; },
+      []() { return false; }));
 
   // It's unclear what 'operator<' means for nsCOMPtr, but whatever...
   ASSERT_TRUE(
@@ -631,8 +643,8 @@ TEST(TArray, test_indexof) {
   // we should not find the 5!
   auto no_index = array.NoIndex;  // Fixes gtest compilation error.
   ASSERT_EQ(array.IndexOf(5, 1), no_index);
-  ASSERT_FALSE(
-      array.ApplyIf(5, 1, []() { return true; }, []() { return false; }));
+  ASSERT_FALSE(array.ApplyIf(
+      5, 1, []() { return true; }, []() { return false; }));
 }
 
 //----
