@@ -847,7 +847,7 @@ def should_use_artifact_map(platform, project):
         'firefox-source',
         'firefox-release',
     ]
-    projects = ['try', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
+    projects = ['mozilla-central', 'mozilla-beta', 'mozilla-release']
     if any([pl == platform for pl in platforms]) and any([pj == project for pj in projects]):
         return True
 
