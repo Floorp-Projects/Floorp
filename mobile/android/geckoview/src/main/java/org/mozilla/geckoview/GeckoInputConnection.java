@@ -228,6 +228,22 @@ import java.lang.reflect.Proxy;
     }
 
     @Override
+    public boolean performEditorAction(final int editorAction) {
+        if (editorAction == EditorInfo.IME_ACTION_PREVIOUS) {
+            // This action is [Previous] key on FireTV's keyboard.
+            // [Previous] closes software keyboard, and don't generate any keyboard event.
+            getView().post(new Runnable() {
+                @Override
+                public void run() {
+                    getInputDelegate().hideSoftInput(mSession);
+                }
+            });
+            return true;
+        }
+        return super.performEditorAction(editorAction);
+    }
+
+    @Override
     public ExtractedText getExtractedText(final ExtractedTextRequest req, final int flags) {
         if (req == null)
             return null;
