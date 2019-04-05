@@ -107,18 +107,18 @@ class DenormalDisabler {
   inline int getStatusWord() {
     int result;
 #    if defined(__aarch64__)
-    asm volatile("mrs %x[result], FPCR" : [result] "=r"(result));
+    asm volatile("mrs %x[result], FPCR" : [ result ] "=r"(result));
 #    else
-    asm volatile("vmrs %[result], FPSCR" : [result] "=r"(result));
+    asm volatile("vmrs %[result], FPSCR" : [ result ] "=r"(result));
 #    endif
     return result;
   }
 
   inline void setStatusWord(int a) {
 #    if defined(__aarch64__)
-    asm volatile("msr FPCR, %x[src]" : : [src] "r"(a));
+    asm volatile("msr FPCR, %x[src]" : : [ src ] "r"(a));
 #    else
-    asm volatile("vmsr FPSCR, %[src]" : : [src] "r"(a));
+    asm volatile("vmsr FPSCR, %[src]" : : [ src ] "r"(a));
 #    endif
   }
 

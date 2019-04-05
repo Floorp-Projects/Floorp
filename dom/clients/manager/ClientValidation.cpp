@@ -58,7 +58,9 @@ bool ClientIsValidPrincipalInfo(const PrincipalInfo& aPrincipalInfo) {
       // cases in the future.
       return specOrigin == originOrigin;
     }
-    default: { break; }
+    default: {
+      break;
+    }
   }
 
   // Windows and workers should not have expanded URLs, etc.
@@ -144,7 +146,9 @@ bool ClientIsValidCreationURL(const PrincipalInfo& aPrincipalInfo,
       // queries anyway.
       return true;
     }
-    default: { break; }
+    default: {
+      break;
+    }
   }
 
   // Clients (windows/workers) should never have an expanded principal type.

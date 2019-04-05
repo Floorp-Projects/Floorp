@@ -80,10 +80,11 @@ TEST(ObserverArray, Tests) {
 
   // Removals + Appends
   static int test14Expected[] = {4, 6, 7};
-  DO_TEST(ForwardIterator, test14Expected, if (count == 1) {
-    arr.RemoveElementAt(1);
-    arr.AppendElement(7);
-  });
+  DO_TEST(
+      ForwardIterator, test14Expected, if (count == 1) {
+        arr.RemoveElementAt(1);
+        arr.AppendElement(7);
+      });
   DO_TEST(ForwardIterator, test14Expected, {/* nothing */});
 
   arr.AppendElement(2);
@@ -91,10 +92,11 @@ TEST(ObserverArray, Tests) {
   DO_TEST(ForwardIterator, test16Expected, {/* nothing */});
 
   static int test17Expected[] = {4, 7, 2};
-  DO_TEST(EndLimitedIterator, test17Expected, if (count == 1) {
-    arr.RemoveElementAt(1);
-    arr.AppendElement(8);
-  });
+  DO_TEST(
+      EndLimitedIterator, test17Expected, if (count == 1) {
+        arr.RemoveElementAt(1);
+        arr.AppendElement(8);
+      });
 
   static int test18Expected[] = {4, 7, 2, 8};
   DO_TEST(ForwardIterator, test18Expected, {/* nothing */});
@@ -107,8 +109,9 @@ TEST(ObserverArray, Tests) {
   arr.PrependElementUnlessExists(7);
   DO_TEST(ForwardIterator, test19Expected, {/* nothing */});
 
-  DO_TEST(ForwardIterator, test19Expected,
-          if (count == 1) { arr.PrependElementUnlessExists(9); });
+  DO_TEST(
+      ForwardIterator, test19Expected,
+      if (count == 1) { arr.PrependElementUnlessExists(9); });
 
   static int test22Expected[] = {9, 3, 4, 7, 2, 8};
   DO_TEST(ForwardIterator, test22Expected, {});
