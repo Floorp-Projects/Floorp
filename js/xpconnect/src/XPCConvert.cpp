@@ -47,6 +47,25 @@ using namespace JS;
 
 /***********************************************************/
 
+// static
+bool XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info) {
+  if (info.IsNotXPCOM() || info.IsHidden()) {
+    return false;
+  }
+
+  for (int i = info.GetParamCount() - 1; i >= 0; i--) {
+    const nsXPTParamInfo& param = info.GetParam(i);
+    const nsXPTType& type = param.GetType();
+
+    // Reflected methods can't use native types. All native types end up
+    // getting tagged as void*, so this check is easy.
+    if (type.Tag() == nsXPTType::T_VOID) {
+      return false;
+    }
+  }
+  return true;
+}
+
 static JSObject* UnwrapNativeCPOW(nsISupports* wrapper) {
   nsCOMPtr<nsIXPConnectWrappedJS> underware = do_QueryInterface(wrapper);
   if (underware) {

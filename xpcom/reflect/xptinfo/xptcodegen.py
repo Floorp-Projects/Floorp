@@ -79,7 +79,8 @@ nsXPTMethodInfo = mkstruct(
     "mNumParams",
     "mGetter",
     "mSetter",
-    "mReflectable",
+    "mNotXPCOM",
+    "mHidden",
     "mOptArgc",
     "mContext",
     "mHasRetval",
@@ -274,10 +275,6 @@ def link_to_cpp(interfaces, fd):
         tag = type['tag']
         d1 = d2 = 0
 
-        # TD_VOID is used for types that can't be represented in JS, so they
-        # should not be represented in the XPT info.
-        assert tag != 'TD_VOID'
-
         if tag == 'TD_LEGACY_ARRAY':
             d1 = type['size_is']
             d2 = lower_extra_type(type['element'])
@@ -319,28 +316,13 @@ def link_to_cpp(interfaces, fd):
                              optional='optional' in param['flags'])
         ))
 
-    def is_method_reflectable(method):
-        if 'notxpcom' in method['flags'] or 'hidden' in method['flags']:
-            return False
-
-        for param in method['params']:
-            # Reflected methods can't use native types. All native types end up
-            # getting tagged as void*, so this check is easy.
-            if param['type']['tag'] == 'TD_VOID':
-                return False
-
-        return True
-
     def lower_method(method, ifacename):
         methodname = "%s::%s" % (ifacename, method['name'])
 
         isSymbol = 'symbol' in method['flags']
-        reflectable = is_method_reflectable(method)
 
-        if not reflectable:
-            # Hide the parameters of methods that can't be called from JS to
-            # reduce the size of the file.
-            paramidx = name = numparams = 0
+        if 'notxpcom' in method['flags'] or 'hidden' in method['flags']:
+            paramidx = name = numparams = 0  # hide parameters
         else:
             if isSymbol:
                 name = lower_symbol(method['name'])
@@ -360,6 +342,8 @@ def link_to_cpp(interfaces, fd):
         methods.append(nsXPTMethodInfo(
             "%d = %s" % (len(methods), methodname),
 
+            # If our method is hidden, we can save some memory by not
+            # generating parameter info about it.
             mName=name,
             mParams=paramidx,
             mNumParams=numparams,
@@ -367,7 +351,8 @@ def link_to_cpp(interfaces, fd):
             # Flags
             mGetter='getter' in method['flags'],
             mSetter='setter' in method['flags'],
-            mReflectable=reflectable,
+            mNotXPCOM='notxpcom' in method['flags'],
+            mHidden='hidden' in method['flags'],
             mOptArgc='optargc' in method['flags'],
             mContext='jscontext' in method['flags'],
             mHasRetval='hasretval' in method['flags'],
