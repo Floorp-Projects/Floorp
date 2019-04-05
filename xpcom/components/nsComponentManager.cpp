@@ -361,9 +361,6 @@ extern const mozilla::Module kKeyValueModule;
 extern const mozilla::Module kXREModule;
 extern const mozilla::Module kEmbeddingModule;
 #if defined(XP_WIN)
-extern const mozilla::Module kSysProxyModule;
-#endif
-#if defined(XP_WIN)
 namespace mozilla {
 namespace toolkit {
 namespace system {
@@ -468,9 +465,6 @@ nsresult nsComponentManagerImpl::Init() {
   RegisterModule(&kKeyValueModule);
   RegisterModule(&kXREModule);
   RegisterModule(&kEmbeddingModule);
-#if defined(XP_WIN)
-  RegisterModule(&kSysProxyModule);
-#endif
 #if defined(XP_WIN)
   RegisterModule(&mozilla::toolkit::system::windowsDHCPClient::kSysDHCPClientModule);
 #endif
