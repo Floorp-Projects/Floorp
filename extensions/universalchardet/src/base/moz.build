@@ -11,7 +11,6 @@ UNIFIED_SOURCES += [
     'nsEscCharsetProber.cpp',
     'nsEscSM.cpp',
     'nsEUCJPProber.cpp',
-    'nsLatin1Prober.cpp',
     'nsMBCSGroupProber.cpp',
     'nsMBCSSM.cpp',
     'nsSJISProber.cpp',
