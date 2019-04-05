@@ -1179,7 +1179,7 @@ var Impl = {
 
     this._lastEnvironmentChangeDate = now;
     let payload = this.getSessionPayload(REASON_ENVIRONMENT_CHANGE, true);
-    TelemetryScheduler.reschedulePings(REASON_ENVIRONMENT_CHANGE, payload);
+    TelemetryScheduler.rescheduleDailyPing(payload);
 
     let options = {
       addClientId: true,
