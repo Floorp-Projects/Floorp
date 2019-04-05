@@ -53,6 +53,7 @@ open class HomeActivity : AppCompatActivity() {
 
         setTheme(themeManager.currentTheme)
         DefaultThemeManager.applyStatusBarTheme(window, themeManager, this)
+        components.core.setEnginePreferredColorScheme()
 
         browsingModeManager = DefaultBrowsingModeManager(this)
 

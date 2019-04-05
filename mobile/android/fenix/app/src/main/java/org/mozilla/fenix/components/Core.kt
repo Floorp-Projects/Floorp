@@ -6,6 +6,7 @@ package org.mozilla.fenix.components
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.content.res.Configuration
 import android.os.Bundle
 import android.preference.PreferenceManager
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +22,7 @@ import mozilla.components.browser.storage.sync.PlacesHistoryStorage
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
+import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.session.bundling.SessionBundleStorage
@@ -149,6 +151,21 @@ class Core(private val context: Context) {
             normalMode && !privateMode -> TrackingProtectionPolicy.all().forRegularSessionsOnly()
             !normalMode && privateMode -> TrackingProtectionPolicy.all().forPrivateSessionsOnly()
             else -> TrackingProtectionPolicy.none()
+        }
+    }
+
+    /**
+     * Sets Preferred Color scheme based on Dark/Light Theme Settings or Current Configuration
+     */
+    fun setEnginePreferredColorScheme() {
+        val inDark =
+            (context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+                    Configuration.UI_MODE_NIGHT_YES
+        engine.settings.preferredColorScheme = when {
+            Settings.getInstance(context).shouldUseDarkTheme -> PreferredColorScheme.Dark
+            Settings.getInstance(context).shouldUseLightTheme -> PreferredColorScheme.Light
+            inDark -> PreferredColorScheme.Dark
+            else -> PreferredColorScheme.Light
         }
     }
 
