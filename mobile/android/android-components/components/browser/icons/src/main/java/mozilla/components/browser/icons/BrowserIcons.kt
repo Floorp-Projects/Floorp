@@ -19,6 +19,7 @@ import mozilla.components.browser.icons.generator.IconGenerator
 import mozilla.components.browser.icons.loader.DataUriIconLoader
 import mozilla.components.browser.icons.loader.HttpIconLoader
 import mozilla.components.browser.icons.loader.IconLoader
+import mozilla.components.browser.icons.pipeline.IconResourceComparator
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.concept.fetch.Client
@@ -91,9 +92,7 @@ class BrowserIcons(
 }
 
 private fun load(request: IconRequest, loaders: List<IconLoader>): Pair<ByteArray, Icon.Source>? {
-    // We are just looping over the resources here. We need to rank them first to try the best icon first.
-    // https://github.com/mozilla-mobile/android-components/issues/2048
-    request.resources.forEach { resource ->
+    request.resources.toMutableList().sortedWith(IconResourceComparator).forEach { resource ->
         loaders.forEach { loader ->
             val data = loader.load(request, resource)
             if (data != null) {
