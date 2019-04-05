@@ -10,7 +10,8 @@
 
 using namespace mozilla;
 
-TEST(TestFilePreferencesUnix, Parsing) {
+TEST(TestFilePreferencesUnix, Parsing)
+{
 #define kBlacklisted "/tmp/blacklisted"
 #define kBlacklistedDir "/tmp/blacklisted/"
 #define kBlacklistedFile "/tmp/blacklisted/file"
@@ -66,7 +67,8 @@ TEST(TestFilePreferencesUnix, Parsing) {
             false);
 }
 
-TEST(TestFilePreferencesUnix, Simple) {
+TEST(TestFilePreferencesUnix, Simple)
+{
   nsAutoCString tempPath;
 
   // This is the directory we will blacklist

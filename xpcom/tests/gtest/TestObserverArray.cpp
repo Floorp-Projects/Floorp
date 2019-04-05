@@ -24,12 +24,13 @@ typedef nsTObserverArray<int> IntArray;
           << "During test " << testNum << " at position " << count - 1;  \
     }                                                                    \
     ASSERT_FALSE(iter.HasMore())                                         \
-        << "During test " << testNum << ", iterator ran over";           \
+    << "During test " << testNum << ", iterator ran over";               \
     ASSERT_EQ(count, ArrayLength(_exp))                                  \
         << "During test " << testNum << ", iterator finished too early"; \
   } while (0)
 
-TEST(ObserverArray, Tests) {
+TEST(ObserverArray, Tests)
+{
   IntArray arr;
   arr.AppendElement(3);
   arr.AppendElement(4);

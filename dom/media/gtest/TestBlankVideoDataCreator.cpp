@@ -8,7 +8,8 @@
 
 using namespace mozilla;
 
-TEST(BlankVideoDataCreator, ShouldNotOverflow) {
+TEST(BlankVideoDataCreator, ShouldNotOverflow)
+{
   RefPtr<MediaRawData> mrd = new MediaRawData();
   const uint32_t width = 1;
   const uint32_t height = 1;
@@ -17,7 +18,8 @@ TEST(BlankVideoDataCreator, ShouldNotOverflow) {
   EXPECT_NE(data.get(), nullptr);
 }
 
-TEST(BlankVideoDataCreator, ShouldOverflow) {
+TEST(BlankVideoDataCreator, ShouldOverflow)
+{
   RefPtr<MediaRawData> mrd = new MediaRawData();
   const uint32_t width = UINT_MAX;
   const uint32_t height = UINT_MAX;

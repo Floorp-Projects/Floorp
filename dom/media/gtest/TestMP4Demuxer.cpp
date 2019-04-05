@@ -146,7 +146,8 @@ class MP4DemuxerBinding {
   virtual ~MP4DemuxerBinding() {}
 };
 
-TEST(MP4Demuxer, Seek) {
+TEST(MP4Demuxer, Seek)
+{
   RefPtr<MP4DemuxerBinding> binding = new MP4DemuxerBinding();
 
   binding->RunTestAndWait([binding]() {
@@ -188,7 +189,8 @@ static nsCString ToCryptoString(const CryptoSample& aCrypto) {
   return res;
 }
 
-TEST(MP4Demuxer, CENCFragVideo) {
+TEST(MP4Demuxer, CENCFragVideo)
+{
   const char* video[] = {
       "16 7e571d037e571d037e571d037e571d03 00000000000000000000000000000000 "
       "5,684 5,16980",
@@ -333,7 +335,8 @@ TEST(MP4Demuxer, CENCFragVideo) {
   });
 }
 
-TEST(MP4Demuxer, CENCFragAudio) {
+TEST(MP4Demuxer, CENCFragAudio)
+{
   const char* audio[] = {
       "16 7e571d047e571d047e571d047e571d04 00000000000000000000000000000000 "
       "0,281",
@@ -547,7 +550,8 @@ TEST(MP4Demuxer, CENCFragAudio) {
   });
 }
 
-TEST(MP4Demuxer, GetNextKeyframe) {
+TEST(MP4Demuxer, GetNextKeyframe)
+{
   RefPtr<MP4DemuxerBinding> binding = new MP4DemuxerBinding("gizmo-frag.mp4");
 
   binding->RunTestAndWait([binding]() {
@@ -576,7 +580,8 @@ TEST(MP4Demuxer, GetNextKeyframe) {
   });
 }
 
-TEST(MP4Demuxer, ZeroInLastMoov) {
+TEST(MP4Demuxer, ZeroInLastMoov)
+{
   RefPtr<MP4DemuxerBinding> binding =
       new MP4DemuxerBinding("short-zero-in-moov.mp4");
   binding->RunTestAndWait([binding]() {
@@ -585,7 +590,8 @@ TEST(MP4Demuxer, ZeroInLastMoov) {
   });
 }
 
-TEST(MP4Demuxer, ZeroInMoovQuickTime) {
+TEST(MP4Demuxer, ZeroInMoovQuickTime)
+{
   RefPtr<MP4DemuxerBinding> binding =
       new MP4DemuxerBinding("short-zero-inband.mov");
   binding->RunTestAndWait([binding]() {
@@ -594,7 +600,8 @@ TEST(MP4Demuxer, ZeroInMoovQuickTime) {
   });
 }
 
-TEST(MP4Demuxer, IgnoreMinus1Duration) {
+TEST(MP4Demuxer, IgnoreMinus1Duration)
+{
   RefPtr<MP4DemuxerBinding> binding =
       new MP4DemuxerBinding("negative_duration.mp4");
   binding->RunTestAndWait([binding]() {

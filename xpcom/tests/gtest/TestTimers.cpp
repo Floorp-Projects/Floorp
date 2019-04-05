@@ -94,7 +94,8 @@ class TimerCallback final : public nsITimerCallback {
 
 NS_IMPL_ISUPPORTS(TimerCallback, nsITimerCallback)
 
-TEST(Timers, TargetedTimers) {
+TEST(Timers, TargetedTimers)
+{
   AutoCreateAndDestroyReentrantMonitor newMon;
   ASSERT_TRUE(newMon);
 
@@ -121,7 +122,8 @@ TEST(Timers, TargetedTimers) {
   ASSERT_EQ(notifiedThread, testThread);
 }
 
-TEST(Timers, TimerWithStoppedTarget) {
+TEST(Timers, TimerWithStoppedTarget)
+{
   AutoTestThread testThread;
   ASSERT_TRUE(testThread);
 
@@ -232,7 +234,8 @@ class FindExpirationTimeState final {
   }
 };
 
-TEST(Timers, FindExpirationTime) {
+TEST(Timers, FindExpirationTime)
+{
   {
     FindExpirationTimeState state;
     // 0 low priority timers
@@ -601,7 +604,8 @@ class FuzzTestThreadState final : public nsITimerCallback {
 
 NS_IMPL_ISUPPORTS(FuzzTestThreadState, nsITimerCallback)
 
-TEST(Timers, FuzzTestTimers) {
+TEST(Timers, FuzzTestTimers)
+{
   static const size_t kNumThreads(10);
   AutoTestThread threads[kNumThreads];
   RefPtr<FuzzTestThreadState> threadStates[kNumThreads];

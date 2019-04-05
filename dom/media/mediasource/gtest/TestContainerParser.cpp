@@ -12,7 +12,8 @@
 
 using namespace mozilla;
 
-TEST(ContainerParser, MIMETypes) {
+TEST(ContainerParser, MIMETypes)
+{
   const char* containerTypes[] = {"video/webm", "audio/webm", "video/mp4",
                                   "audio/mp4", "audio/aac"};
   nsAutoPtr<ContainerParser> parser;
@@ -32,7 +33,8 @@ already_AddRefed<MediaByteBuffer> make_adts_header() {
   return buffer.forget();
 }
 
-TEST(ContainerParser, ADTSHeader) {
+TEST(ContainerParser, ADTSHeader)
+{
   nsAutoPtr<ContainerParser> parser;
   parser = ContainerParser::CreateForMIMEType(
       MediaContainerType(MEDIAMIMETYPE("audio/aac")));
@@ -97,7 +99,8 @@ TEST(ContainerParser, ADTSHeader) {
   EXPECT_EQ(parser->MediaSegmentRange(), MediaByteRange());
 }
 
-TEST(ContainerParser, ADTSBlankMedia) {
+TEST(ContainerParser, ADTSBlankMedia)
+{
   nsAutoPtr<ContainerParser> parser;
   parser = ContainerParser::CreateForMIMEType(
       MediaContainerType(MEDIAMIMETYPE("audio/aac")));

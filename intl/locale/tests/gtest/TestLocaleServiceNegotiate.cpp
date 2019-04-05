@@ -9,7 +9,8 @@
 
 using namespace mozilla::intl;
 
-TEST(Intl_Locale_LocaleService, Negotiate) {
+TEST(Intl_Locale_LocaleService, Negotiate)
+{
   nsTArray<nsCString> requestedLocales;
   nsTArray<nsCString> availableLocales;
   nsTArray<nsCString> supportedLocales;
@@ -30,7 +31,8 @@ TEST(Intl_Locale_LocaleService, Negotiate) {
   ASSERT_TRUE(supportedLocales[1].EqualsLiteral("en-US"));
 }
 
-TEST(Intl_Locale_LocaleService, UseLSDefaultLocale) {
+TEST(Intl_Locale_LocaleService, UseLSDefaultLocale)
+{
   nsTArray<nsCString> requestedLocales;
   nsTArray<nsCString> availableLocales;
   nsTArray<nsCString> supportedLocales;

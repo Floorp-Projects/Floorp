@@ -79,7 +79,8 @@ static const nsTArray<int>& FakeHugeArray() {
 }
 #endif
 
-TEST(TArray, AppendElementsRvalue) {
+TEST(TArray, AppendElementsRvalue)
+{
   nsTArray<int> array;
 
   nsTArray<int> temp(DummyArray());
@@ -96,7 +97,8 @@ TEST(TArray, AppendElementsRvalue) {
   ASSERT_TRUE(temp.IsEmpty());
 }
 
-TEST(TArray, Assign) {
+TEST(TArray, Assign)
+{
   nsTArray<int> array;
   array.Assign(DummyArray());
   ASSERT_EQ(DummyArray(), array);
@@ -114,7 +116,8 @@ TEST(TArray, Assign) {
   ASSERT_EQ(DummyArray(), array2);
 }
 
-TEST(TArray, AssignmentOperatorSelfAssignment) {
+TEST(TArray, AssignmentOperatorSelfAssignment)
+{
   nsTArray<int> array;
   array = DummyArray();
 
@@ -132,7 +135,8 @@ TEST(TArray, AssignmentOperatorSelfAssignment) {
 #endif
 }
 
-TEST(TArray, CopyOverlappingForwards) {
+TEST(TArray, CopyOverlappingForwards)
+{
   const size_t rangeLength = 8;
   const size_t initialLength = 2 * rangeLength;
   uint32_t destructionCounters[initialLength];
@@ -159,7 +163,8 @@ TEST(TArray, CopyOverlappingForwards) {
 
 // The code to copy overlapping regions had a bug in that it wouldn't correctly
 // destroy all over the source elements being copied.
-TEST(TArray, CopyOverlappingBackwards) {
+TEST(TArray, CopyOverlappingBackwards)
+{
   const size_t rangeLength = 8;
   const size_t initialLength = 2 * rangeLength;
   uint32_t destructionCounters[initialLength];
@@ -191,7 +196,8 @@ TEST(TArray, CopyOverlappingBackwards) {
   }
 }
 
-TEST(TArray, UnorderedRemoveElements) {
+TEST(TArray, UnorderedRemoveElements)
+{
   // When removing an element from the end of the array, it can be removed in
   // place, by destroying it and decrementing the length.
   //
@@ -310,7 +316,8 @@ TEST(TArray, UnorderedRemoveElements) {
   }
 }
 
-TEST(TArray, RemoveFromEnd) {
+TEST(TArray, RemoveFromEnd)
+{
   {
     nsTArray<int> array{1, 2, 3, 4};
     ASSERT_EQ(array.PopLastElement(), 4);

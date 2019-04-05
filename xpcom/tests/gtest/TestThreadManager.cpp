@@ -71,7 +71,8 @@ class CountRunnable final : public Runnable {
   Atomic<uint32_t>& mCounter;
 };
 
-TEST(ThreadManager, SpinEventLoopUntilSuccess) {
+TEST(ThreadManager, SpinEventLoopUntilSuccess)
+{
   const uint32_t kRunnablesToDispatch = 100;
   nsresult rv;
   mozilla::Atomic<uint32_t> count(0);
@@ -117,7 +118,8 @@ class ErrorCondition final : public nsINestedEventLoopCondition {
 
 NS_IMPL_ISUPPORTS(ErrorCondition, nsINestedEventLoopCondition)
 
-TEST(ThreadManager, SpinEventLoopUntilError) {
+TEST(ThreadManager, SpinEventLoopUntilError)
+{
   const uint32_t kRunnablesToDispatch = 100;
   nsresult rv;
   mozilla::Atomic<uint32_t> count(0);
