@@ -19,7 +19,6 @@ fi
 
 # Inputs, with defaults
 
-: GECKO_PATH                    ${GECKO_PATH}
 : MOZHARNESS_PATH               ${MOZHARNESS_PATH}
 : MOZHARNESS_URL                ${MOZHARNESS_URL}
 : MOZHARNESS_SCRIPT             ${MOZHARNESS_SCRIPT}
@@ -184,20 +183,16 @@ if [ -n "$MOZHARNESS_OPTIONS" ]; then
     done
 fi
 
-# Use |mach python| if a source checkout exists so in-tree packages are
-# available.
-[[ -d "${GECKO_PATH}" ]] && python="${GECKO_PATH}/mach python" || python="python2.7"
-
-# Save the computed mozharness command to a binary which is useful for
-# interactive mode.
 mozharness_bin="$HOME/bin/run-mozharness"
 mkdir -p $(dirname $mozharness_bin)
 
+# Save the computed mozharness command to a binary which is useful
+# for interactive mode.
 echo -e "#!/usr/bin/env bash
 # Some mozharness scripts assume base_work_dir is in
 # the current working directory, see bug 1279237
 cd "$WORKSPACE"
-cmd=\"${python} ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} ${config_cmds} ${options} ${@} \${@}\"
+cmd=\"python2.7 ${MOZHARNESS_PATH}/scripts/${MOZHARNESS_SCRIPT} ${config_cmds} ${options} ${@} \${@}\"
 echo \"Running: \${cmd}\"
 exec \${cmd}" > ${mozharness_bin}
 chmod +x ${mozharness_bin}
