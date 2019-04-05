@@ -22,7 +22,7 @@ class FenixSnackbar private constructor(
 
     init {
         view.background = null
-        content.snackbar_btn.increaseTapArea(increaseTouchableAreaBy)
+        content.snackbar_btn.increaseTapArea(actionButtonIncreaseDps)
 
         TextViewCompat.setAutoSizeTextTypeUniformWithConfiguration(
             content.snackbar_text,
@@ -51,20 +51,17 @@ class FenixSnackbar private constructor(
     companion object {
         private const val minTextSize = 12
         private const val maxTextSize = 18
-        private const val increaseTouchableAreaBy = 16
+        private const val actionButtonIncreaseDps = 16
         private const val stepGranularity = 1
 
         fun make(parent: ViewGroup, duration: Int): FenixSnackbar {
             val inflater = LayoutInflater.from(parent.context)
             val content = inflater.inflate(R.layout.fenix_snackbar, parent, false)
 
-            // create snackbar with custom view
             val callback = FenixSnackbarCallback(content)
-            val fenixSnackbar = FenixSnackbar(parent, content, callback)
-
-            // set snackbar duration
-            fenixSnackbar.duration = duration
-            return fenixSnackbar
+            return FenixSnackbar(parent, content, callback).also {
+                it.duration = duration
+            }
         }
     }
 }
