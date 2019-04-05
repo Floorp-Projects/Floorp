@@ -35,10 +35,6 @@ const HIGHLIGHTER_STYLES_SHEET = `data:text/css;charset=utf-8,
   text-shadow: none !important;
 }`;
 
-const nsIAccessibleEvent = Ci.nsIAccessibleEvent;
-const nsIAccessibleStateChangeEvent = Ci.nsIAccessibleStateChangeEvent;
-const nsIAccessibleRole = Ci.nsIAccessibleRole;
-
 const {
   EVENT_TEXT_CHANGED,
   EVENT_TEXT_INSERTED,
@@ -55,56 +51,56 @@ const {
   EVENT_STATE_CHANGE,
   EVENT_TEXT_ATTRIBUTE_CHANGED,
   EVENT_VALUE_CHANGE,
-} = nsIAccessibleEvent;
+} = Ci.nsIAccessibleEvent;
 
 // TODO: We do not need this once bug 1422913 is fixed. We also would not need
 // to fire a name change event for an accessible that has an updated subtree and
 // that has its name calculated from the said subtree.
 const NAME_FROM_SUBTREE_RULE_ROLES = new Set([
-  nsIAccessibleRole.ROLE_BUTTONDROPDOWN,
-  nsIAccessibleRole.ROLE_BUTTONDROPDOWNGRID,
-  nsIAccessibleRole.ROLE_BUTTONMENU,
-  nsIAccessibleRole.ROLE_CELL,
-  nsIAccessibleRole.ROLE_CHECKBUTTON,
-  nsIAccessibleRole.ROLE_CHECK_MENU_ITEM,
-  nsIAccessibleRole.ROLE_CHECK_RICH_OPTION,
-  nsIAccessibleRole.ROLE_COLUMN,
-  nsIAccessibleRole.ROLE_COLUMNHEADER,
-  nsIAccessibleRole.ROLE_COMBOBOX_OPTION,
-  nsIAccessibleRole.ROLE_DEFINITION,
-  nsIAccessibleRole.ROLE_GRID_CELL,
-  nsIAccessibleRole.ROLE_HEADING,
-  nsIAccessibleRole.ROLE_HELPBALLOON,
-  nsIAccessibleRole.ROLE_HTML_CONTAINER,
-  nsIAccessibleRole.ROLE_KEY,
-  nsIAccessibleRole.ROLE_LABEL,
-  nsIAccessibleRole.ROLE_LINK,
-  nsIAccessibleRole.ROLE_LISTITEM,
-  nsIAccessibleRole.ROLE_MATHML_IDENTIFIER,
-  nsIAccessibleRole.ROLE_MATHML_NUMBER,
-  nsIAccessibleRole.ROLE_MATHML_OPERATOR,
-  nsIAccessibleRole.ROLE_MATHML_TEXT,
-  nsIAccessibleRole.ROLE_MATHML_STRING_LITERAL,
-  nsIAccessibleRole.ROLE_MATHML_GLYPH,
-  nsIAccessibleRole.ROLE_MENUITEM,
-  nsIAccessibleRole.ROLE_OPTION,
-  nsIAccessibleRole.ROLE_OUTLINEITEM,
-  nsIAccessibleRole.ROLE_PAGETAB,
-  nsIAccessibleRole.ROLE_PARENT_MENUITEM,
-  nsIAccessibleRole.ROLE_PUSHBUTTON,
-  nsIAccessibleRole.ROLE_RADIOBUTTON,
-  nsIAccessibleRole.ROLE_RADIO_MENU_ITEM,
-  nsIAccessibleRole.ROLE_RICH_OPTION,
-  nsIAccessibleRole.ROLE_ROW,
-  nsIAccessibleRole.ROLE_ROWHEADER,
-  nsIAccessibleRole.ROLE_SUMMARY,
-  nsIAccessibleRole.ROLE_SWITCH,
-  nsIAccessibleRole.ROLE_TABLE_COLUMN_HEADER,
-  nsIAccessibleRole.ROLE_TABLE_ROW_HEADER,
-  nsIAccessibleRole.ROLE_TEAR_OFF_MENU_ITEM,
-  nsIAccessibleRole.ROLE_TERM,
-  nsIAccessibleRole.ROLE_TOGGLE_BUTTON,
-  nsIAccessibleRole.ROLE_TOOLTIP,
+  Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWN,
+  Ci.nsIAccessibleRole.ROLE_BUTTONDROPDOWNGRID,
+  Ci.nsIAccessibleRole.ROLE_BUTTONMENU,
+  Ci.nsIAccessibleRole.ROLE_CELL,
+  Ci.nsIAccessibleRole.ROLE_CHECKBUTTON,
+  Ci.nsIAccessibleRole.ROLE_CHECK_MENU_ITEM,
+  Ci.nsIAccessibleRole.ROLE_CHECK_RICH_OPTION,
+  Ci.nsIAccessibleRole.ROLE_COLUMN,
+  Ci.nsIAccessibleRole.ROLE_COLUMNHEADER,
+  Ci.nsIAccessibleRole.ROLE_COMBOBOX_OPTION,
+  Ci.nsIAccessibleRole.ROLE_DEFINITION,
+  Ci.nsIAccessibleRole.ROLE_GRID_CELL,
+  Ci.nsIAccessibleRole.ROLE_HEADING,
+  Ci.nsIAccessibleRole.ROLE_HELPBALLOON,
+  Ci.nsIAccessibleRole.ROLE_HTML_CONTAINER,
+  Ci.nsIAccessibleRole.ROLE_KEY,
+  Ci.nsIAccessibleRole.ROLE_LABEL,
+  Ci.nsIAccessibleRole.ROLE_LINK,
+  Ci.nsIAccessibleRole.ROLE_LISTITEM,
+  Ci.nsIAccessibleRole.ROLE_MATHML_IDENTIFIER,
+  Ci.nsIAccessibleRole.ROLE_MATHML_NUMBER,
+  Ci.nsIAccessibleRole.ROLE_MATHML_OPERATOR,
+  Ci.nsIAccessibleRole.ROLE_MATHML_TEXT,
+  Ci.nsIAccessibleRole.ROLE_MATHML_STRING_LITERAL,
+  Ci.nsIAccessibleRole.ROLE_MATHML_GLYPH,
+  Ci.nsIAccessibleRole.ROLE_MENUITEM,
+  Ci.nsIAccessibleRole.ROLE_OPTION,
+  Ci.nsIAccessibleRole.ROLE_OUTLINEITEM,
+  Ci.nsIAccessibleRole.ROLE_PAGETAB,
+  Ci.nsIAccessibleRole.ROLE_PARENT_MENUITEM,
+  Ci.nsIAccessibleRole.ROLE_PUSHBUTTON,
+  Ci.nsIAccessibleRole.ROLE_RADIOBUTTON,
+  Ci.nsIAccessibleRole.ROLE_RADIO_MENU_ITEM,
+  Ci.nsIAccessibleRole.ROLE_RICH_OPTION,
+  Ci.nsIAccessibleRole.ROLE_ROW,
+  Ci.nsIAccessibleRole.ROLE_ROWHEADER,
+  Ci.nsIAccessibleRole.ROLE_SUMMARY,
+  Ci.nsIAccessibleRole.ROLE_SWITCH,
+  Ci.nsIAccessibleRole.ROLE_TABLE_COLUMN_HEADER,
+  Ci.nsIAccessibleRole.ROLE_TABLE_ROW_HEADER,
+  Ci.nsIAccessibleRole.ROLE_TEAR_OFF_MENU_ITEM,
+  Ci.nsIAccessibleRole.ROLE_TERM,
+  Ci.nsIAccessibleRole.ROLE_TOGGLE_BUTTON,
+  Ci.nsIAccessibleRole.ROLE_TOOLTIP,
 ]);
 
 const IS_OSX = Services.appinfo.OS === "Darwin";
@@ -378,11 +374,11 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
   /**
    * Accessible event observer function.
    *
-   * @param {nsIAccessibleEvent} subject
+   * @param {Ci.nsIAccessibleEvent} subject
    *                                      accessible event object.
    */
   observe(subject) {
-    const event = subject.QueryInterface(nsIAccessibleEvent);
+    const event = subject.QueryInterface(Ci.nsIAccessibleEvent);
     const rawAccessible = event.accessible;
     const accessible = this.getRef(rawAccessible);
 
@@ -398,7 +394,8 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
 
     switch (event.eventType) {
       case EVENT_STATE_CHANGE:
-        const { state, isEnabled } = event.QueryInterface(nsIAccessibleStateChangeEvent);
+        const { state, isEnabled } =
+          event.QueryInterface(Ci.nsIAccessibleStateChangeEvent);
         const isBusy = state & Ci.nsIAccessibleStates.STATE_BUSY;
         if (accessible) {
           // Only propagate state change events for active accessibles.
