@@ -5034,9 +5034,7 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame,
     if (!target.IsNull()) return target;
   }
 
-  nsIFrame* kid = aFrame->PrincipalChildList().FirstChild();
-
-  if (kid) {
+  if (nsIFrame* kid = aFrame->PrincipalChildList().FirstChild()) {
     // Go through all the child frames to find the closest one
     nsIFrame::FrameWithDistance closest = {nullptr, nscoord_MAX, nscoord_MAX};
     for (; kid; kid = kid->GetNextSibling()) {
@@ -5050,7 +5048,12 @@ static FrameTarget GetSelectionClosestFrame(nsIFrame* aFrame,
       return GetSelectionClosestFrameForChild(closest.mFrame, aPoint, aFlags);
     }
   }
-  return FrameTarget(aFrame, false, false);
+
+  // Use frame edge for grid, flex and tables, but not replaced frames like
+  // images.
+  bool useFrameEdge = !aFrame->StyleDisplay()->IsInlineInsideStyle() &&
+                      !aFrame->IsFrameOfType(nsIFrame::eReplaced);
+  return FrameTarget(aFrame, useFrameEdge, false);
 }
 
 static nsIFrame::ContentOffsets OffsetsForSingleFrame(nsIFrame* aFrame,

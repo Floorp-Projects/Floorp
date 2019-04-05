@@ -75,7 +75,9 @@ EXPORTS += [
 EXPORTS.mozilla += [
     'AccessibleCaretEventHub.h',
     'ArenaObjectID.h',
+    'GeckoMVMContext.h',
     'GeometryUtils.h',
+    'MVMContext.h',
     'OverflowChangedTracker.h',
     'PresShell.h',
     'RestyleManager.h',
@@ -89,6 +91,7 @@ UNIFIED_SOURCES += [
     'AccessibleCaret.cpp',
     'AccessibleCaretEventHub.cpp',
     'AccessibleCaretManager.cpp',
+    'GeckoMVMContext.cpp',
     'GeometryUtils.cpp',
     'LayoutLogging.cpp',
     'MobileViewportManager.cpp',

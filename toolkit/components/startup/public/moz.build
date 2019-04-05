@@ -6,7 +6,6 @@
 
 XPIDL_SOURCES += [
     'nsIAppStartup.idl',
-    'nsIUserInfo.idl',
 ]
 
 XPIDL_MODULE = 'appstartup'

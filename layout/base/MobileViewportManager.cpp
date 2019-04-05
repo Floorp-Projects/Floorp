@@ -33,33 +33,18 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
 
-MobileViewportManager::MobileViewportManager(nsIPresShell* aPresShell,
-                                             Document* aDocument)
-    : mDocument(aDocument),
-      mPresShell(aPresShell),
-      mIsFirstPaint(false),
-      mPainted(false) {
-  MOZ_ASSERT(mPresShell);
-  MOZ_ASSERT(mDocument);
+MobileViewportManager::MobileViewportManager(MVMContext* aContext)
+    : mContext(aContext), mIsFirstPaint(false), mPainted(false) {
+  MOZ_ASSERT(mContext);
 
-  MVM_LOG("%p: creating with presShell %p document %p\n", this, mPresShell,
-          aDocument);
+  MVM_LOG("%p: creating with context %p\n", this, mContext);
 
-  if (nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow()) {
-    mEventTarget = window->GetChromeEventHandler();
-  }
-  if (mEventTarget) {
-    mEventTarget->AddEventListener(DOM_META_ADDED, this, false);
-    mEventTarget->AddEventListener(DOM_META_CHANGED, this, false);
-    mEventTarget->AddEventListener(FULL_ZOOM_CHANGE, this, false);
-    mEventTarget->AddEventListener(LOAD, this, true);
-  }
+  mContext->AddEventListener(DOM_META_ADDED, this, false);
+  mContext->AddEventListener(DOM_META_CHANGED, this, false);
+  mContext->AddEventListener(FULL_ZOOM_CHANGE, this, false);
+  mContext->AddEventListener(LOAD, this, true);
 
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-  if (observerService) {
-    observerService->AddObserver(this, BEFORE_FIRST_PAINT.Data(), false);
-  }
+  mContext->AddObserver(this, BEFORE_FIRST_PAINT.Data(), false);
 }
 
 MobileViewportManager::~MobileViewportManager() {}
@@ -67,22 +52,15 @@ MobileViewportManager::~MobileViewportManager() {}
 void MobileViewportManager::Destroy() {
   MVM_LOG("%p: destroying\n", this);
 
-  if (mEventTarget) {
-    mEventTarget->RemoveEventListener(DOM_META_ADDED, this, false);
-    mEventTarget->RemoveEventListener(DOM_META_CHANGED, this, false);
-    mEventTarget->RemoveEventListener(FULL_ZOOM_CHANGE, this, false);
-    mEventTarget->RemoveEventListener(LOAD, this, true);
-    mEventTarget = nullptr;
-  }
+  mContext->RemoveEventListener(DOM_META_ADDED, this, false);
+  mContext->RemoveEventListener(DOM_META_CHANGED, this, false);
+  mContext->RemoveEventListener(FULL_ZOOM_CHANGE, this, false);
+  mContext->RemoveEventListener(LOAD, this, true);
 
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-  if (observerService) {
-    observerService->RemoveObserver(this, BEFORE_FIRST_PAINT.Data());
-  }
+  mContext->RemoveObserver(this, BEFORE_FIRST_PAINT.Data());
 
-  mDocument = nullptr;
-  mPresShell = nullptr;
+  mContext->Destroy();
+  mContext = nullptr;
 }
 
 void MobileViewportManager::SetRestoreResolution(
@@ -98,17 +76,15 @@ void MobileViewportManager::SetRestoreResolution(float aResolution) {
 }
 
 float MobileViewportManager::ComputeIntrinsicResolution() const {
-  if (!mDocument || !mPresShell) {
+  if (!mContext) {
     return 1.f;
   }
 
   ScreenIntSize displaySize = ViewAs<ScreenPixel>(
       mDisplaySize, PixelCastJustification::LayoutDeviceIsScreenForBounds);
-  CSSToScreenScale intrinsicScale =
-      ComputeIntrinsicScale(mDocument->GetViewportInfo(displaySize),
-                            displaySize, mMobileViewportSize);
-  CSSToLayoutDeviceScale cssToDev =
-      mPresShell->GetPresContext()->CSSToDevPixelScale();
+  CSSToScreenScale intrinsicScale = ComputeIntrinsicScale(
+      mContext->GetViewportInfo(displaySize), displaySize, mMobileViewportSize);
+  CSSToLayoutDeviceScale cssToDev = mContext->CSSToDevPixelScale();
   return (intrinsicScale / cssToDev).scale;
 }
 
@@ -131,14 +107,14 @@ void MobileViewportManager::RequestReflow(bool aForceAdjustResolution) {
 void MobileViewportManager::ResolutionUpdated() {
   MVM_LOG("%p: resolution updated\n", this);
 
-  if (!mPresShell) {
+  if (!mContext) {
     return;
   }
 
   if (!mPainted) {
     // Save the value, so our default zoom calculation
     // can take it into account later on.
-    SetRestoreResolution(mPresShell->GetResolution());
+    SetRestoreResolution(mContext->GetResolution());
   }
   RefreshVisualViewportSize();
 }
@@ -170,11 +146,11 @@ MobileViewportManager::HandleEvent(dom::Event* event) {
 NS_IMETHODIMP
 MobileViewportManager::Observe(nsISupports* aSubject, const char* aTopic,
                                const char16_t* aData) {
-  if (!mDocument) {
+  if (!mContext) {
     return NS_OK;
   }
 
-  if (SameCOMIdentity(aSubject, ToSupports(mDocument)) &&
+  if (mContext->SubjectMatchesDocument(aSubject) &&
       BEFORE_FIRST_PAINT.EqualsASCII(aTopic)) {
     MVM_LOG("%p: got a before-first-paint event\n", this);
     if (!mPainted) {
@@ -237,13 +213,12 @@ void MobileViewportManager::UpdateResolution(
     const nsViewportInfo& aViewportInfo, const ScreenIntSize& aDisplaySize,
     const CSSSize& aViewportOrContentSize,
     const Maybe<float>& aDisplayWidthChangeRatio, UpdateType aType) {
-  if (!mPresShell || !mDocument) {
+  if (!mContext) {
     return;
   }
 
-  CSSToLayoutDeviceScale cssToDev =
-      mPresShell->GetPresContext()->CSSToDevPixelScale();
-  LayoutDeviceToLayerScale res(mPresShell->GetResolution());
+  CSSToLayoutDeviceScale cssToDev = mContext->CSSToDevPixelScale();
+  LayoutDeviceToLayerScale res(mContext->GetResolution());
   CSSToScreenScale zoom = ResolutionToZoom(res, cssToDev);
   Maybe<CSSToScreenScale> newZoom;
 
@@ -261,7 +236,7 @@ void MobileViewportManager::UpdateResolution(
             ResolutionToZoom(restoreResolution, cssToDev);
         if (mRestoreDisplaySize) {
           CSSSize prevViewport =
-              mDocument->GetViewportInfo(mRestoreDisplaySize.value()).GetSize();
+              mContext->GetViewportInfo(mRestoreDisplaySize.value()).GetSize();
           float restoreDisplayWidthChangeRatio =
               (mRestoreDisplaySize.value().width > 0)
                   ? (float)compositionSize.width /
@@ -329,13 +304,9 @@ void MobileViewportManager::UpdateResolution(
         // choosing zoom clamping points based on the content size of the
         // scrollable rect, which might different from aViewportOrContentSize.
         CSSSize contentSize = aViewportOrContentSize;
-        nsIScrollableFrame* rootScrollableFrame =
-            mPresShell->GetRootScrollFrameAsScrollable();
-        if (rootScrollableFrame) {
-          nsRect scrollableRect =
-              nsLayoutUtils::CalculateScrollableRectForFrame(
-                  rootScrollableFrame, nullptr);
-          contentSize = CSSSize::FromAppUnits(scrollableRect.Size());
+        if (Maybe<CSSRect> scrollableRect =
+                mContext->CalculateScrollableRectForRSF()) {
+          contentSize = scrollableRect->Size();
         }
 
         // We scale the sizes, though we only care about the scaled widths.
@@ -393,7 +364,7 @@ void MobileViewportManager::UpdateResolution(
     // We try to scale down the contents only IF the document has no
     // initial-scale AND IF it's not restored documents AND IF the resolution
     // has never been changed by APZ.
-    if (!mRestoreResolution && !mPresShell->IsResolutionUpdatedByApz() &&
+    if (!mRestoreResolution && !mContext->IsResolutionUpdatedByApz() &&
         !aViewportInfo.IsDefaultZoomValid()) {
       if (zoom != intrinsicScale) {
         newZoom = Some(intrinsicScale);
@@ -423,8 +394,7 @@ void MobileViewportManager::UpdateResolution(
   if (newZoom) {
     LayoutDeviceToLayerScale resolution = ZoomToResolution(*newZoom, cssToDev);
     MVM_LOG("%p: setting resolution %f\n", this, resolution.scale);
-    mPresShell->SetResolutionAndScaleTo(
-        resolution.scale, nsIPresShell::ChangeOrigin::eMainThread);
+    mContext->SetResolutionAndScaleTo(resolution.scale);
 
     MVM_LOG("%p: New zoom is %f\n", this, newZoom->scale);
     return;
@@ -439,16 +409,13 @@ void MobileViewportManager::UpdateResolution(
 
 ScreenIntSize MobileViewportManager::GetCompositionSize(
     const ScreenIntSize& aDisplaySize) const {
-  if (!mPresShell) {
+  if (!mContext) {
     return ScreenIntSize();
   }
 
   ScreenIntSize compositionSize(aDisplaySize);
   ScreenMargin scrollbars =
-      LayoutDeviceMargin::FromAppUnits(
-          nsLayoutUtils::ScrollbarAreaToExcludeFromCompositionBoundsFor(
-              mPresShell->GetRootScrollFrame()),
-          mPresShell->GetPresContext()->AppUnitsPerDevPixel())
+      mContext->ScrollbarAreaToExcludeFromCompositionBounds()
       // Scrollbars are not subject to resolution scaling, so LD pixels =
       // Screen pixels for them.
       * LayoutDeviceToScreenScale(1.0f);
@@ -461,7 +428,7 @@ ScreenIntSize MobileViewportManager::GetCompositionSize(
 
 void MobileViewportManager::UpdateVisualViewportSize(
     const ScreenIntSize& aDisplaySize, const CSSToScreenScale& aZoom) {
-  if (!mPresShell) {
+  if (!mContext) {
     return;
   }
 
@@ -469,51 +436,29 @@ void MobileViewportManager::UpdateVisualViewportSize(
 
   CSSSize compSize = compositionSize / aZoom;
   MVM_LOG("%p: Setting VVPS %s\n", this, Stringify(compSize).c_str());
-  nsLayoutUtils::SetVisualViewportSize(mPresShell, compSize);
+  mContext->SetVisualViewportSize(compSize);
 }
 
 void MobileViewportManager::UpdateDisplayPortMargins() {
-  if (!mPresShell) {
+  if (!mContext) {
     return;
   }
-
-  if (nsIFrame* root = mPresShell->GetRootScrollFrame()) {
-    bool hasDisplayPort = nsLayoutUtils::HasDisplayPort(root->GetContent());
-    bool hasResolution = mPresShell->GetResolution() != 1.0f;
-    if (!hasDisplayPort && !hasResolution) {
-      // We only want to update the displayport if there is one already, or
-      // add one if there's a resolution on the document (see bug 1225508
-      // comment 1).
-      return;
-    }
-    nsRect displayportBase = nsRect(
-        nsPoint(0, 0), nsLayoutUtils::CalculateCompositionSizeForFrame(root));
-    // We only create MobileViewportManager for root content documents. If that
-    // ever changes we'd need to limit the size of this displayport base rect
-    // because non-toplevel documents have no limit on their size.
-    MOZ_ASSERT(mPresShell->GetPresContext()->IsRootContentDocument());
-    nsLayoutUtils::SetDisplayPortBaseIfNotSet(root->GetContent(),
-                                              displayportBase);
-    nsIScrollableFrame* scrollable = do_QueryFrame(root);
-    nsLayoutUtils::CalculateAndSetDisplayPortMargins(
-        scrollable, nsLayoutUtils::RepaintMode::DoNotRepaint);
-  }
+  mContext->UpdateDisplayPortMargins();
 }
 
 void MobileViewportManager::RefreshVisualViewportSize() {
   // This function is a subset of RefreshViewportSize, and only updates the
   // visual viewport size.
 
-  if (!mPresShell) {
+  if (!mContext) {
     return;
   }
 
   ScreenIntSize displaySize = ViewAs<ScreenPixel>(
       mDisplaySize, PixelCastJustification::LayoutDeviceIsScreenForBounds);
 
-  CSSToLayoutDeviceScale cssToDev =
-      mPresShell->GetPresContext()->CSSToDevPixelScale();
-  LayoutDeviceToLayerScale res(mPresShell->GetResolution());
+  CSSToLayoutDeviceScale cssToDev = mContext->CSSToDevPixelScale();
+  LayoutDeviceToLayerScale res(mContext->GetResolution());
   CSSToScreenScale zoom = ViewTargetAs<ScreenPixel>(
       cssToDev * res / ParentLayerToLayerScale(1),
       PixelCastJustification::ScreenIsParentLayerForRoot);
@@ -536,20 +481,19 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
   // complicated logic in UpdateResolution to ensure we only do the resolution
   // update in the right scenarios.
 
-  if (!mPresShell || !mDocument) {
+  if (!mContext) {
     return;
   }
 
   Maybe<float> displayWidthChangeRatio;
-  LayoutDeviceIntSize newDisplaySize;
-  if (nsLayoutUtils::GetContentViewerSize(mPresShell->GetPresContext(),
-                                          newDisplaySize)) {
+  if (Maybe<LayoutDeviceIntSize> newDisplaySize =
+          mContext->GetContentViewerSize()) {
     // See the comment in UpdateResolution for why we're doing this.
     if (mDisplaySize.width > 0) {
       if (aForceAdjustResolution ||
-          mDisplaySize.width != newDisplaySize.width) {
+          mDisplaySize.width != newDisplaySize->width) {
         displayWidthChangeRatio =
-            Some((float)newDisplaySize.width / (float)mDisplaySize.width);
+            Some((float)newDisplaySize->width / (float)mDisplaySize.width);
       }
     } else if (aForceAdjustResolution) {
       displayWidthChangeRatio = Some(1.0f);
@@ -557,7 +501,7 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
 
     MVM_LOG("%p: Display width change ratio is %f\n", this,
             displayWidthChangeRatio.valueOr(0.0f));
-    mDisplaySize = newDisplaySize;
+    mDisplaySize = *newDisplaySize;
   }
 
   MVM_LOG("%p: Computing CSS viewport using %d,%d\n", this, mDisplaySize.width,
@@ -569,7 +513,7 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
 
   ScreenIntSize displaySize = ViewAs<ScreenPixel>(
       mDisplaySize, PixelCastJustification::LayoutDeviceIsScreenForBounds);
-  nsViewportInfo viewportInfo = mDocument->GetViewportInfo(displaySize);
+  nsViewportInfo viewportInfo = mContext->GetViewportInfo(displaySize);
 
   CSSSize viewport = viewportInfo.GetSize();
   MVM_LOG("%p: Computed CSS viewport %s\n", this, Stringify(viewport).c_str());
@@ -584,8 +528,7 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
   MVM_LOG("%p: Updating properties because %d || %d\n", this, mIsFirstPaint,
           mMobileViewportSize != viewport);
 
-  if (aForceAdjustResolution ||
-      nsLayoutUtils::AllowZoomingForDocument(mDocument)) {
+  if (aForceAdjustResolution || mContext->AllowZoomingForDocument()) {
     UpdateResolution(viewportInfo, displaySize, viewport,
                      displayWidthChangeRatio, UpdateType::ViewportSize);
   } else {
@@ -605,11 +548,7 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
   RefPtr<MobileViewportManager> strongThis(this);
 
   // Kick off a reflow.
-  mPresShell->ResizeReflowIgnoreOverride(
-      nsPresContext::CSSPixelsToAppUnits(viewport.width),
-      nsPresContext::CSSPixelsToAppUnits(viewport.height),
-      nsPresContext::CSSPixelsToAppUnits(oldSize.width),
-      nsPresContext::CSSPixelsToAppUnits(oldSize.height));
+  mContext->Reflow(viewport, oldSize);
 
   // We are going to fit the content to the display width if the initial-scale
   // is not specied and if the content is still wider than the display width.
@@ -620,24 +559,20 @@ void MobileViewportManager::RefreshViewportSize(bool aForceAdjustResolution) {
 
 void MobileViewportManager::ShrinkToDisplaySizeIfNeeded(
     nsViewportInfo& aViewportInfo, const ScreenIntSize& aDisplaySize) {
-  if (!mPresShell) {
+  if (!mContext) {
     return;
   }
 
-  if (!nsLayoutUtils::AllowZoomingForDocument(mDocument)) {
+  if (!mContext->AllowZoomingForDocument()) {
     // If zoom is disabled, we don't scale down wider contents to fit them
     // into device screen because users won't be able to zoom out the tiny
     // contents.
     return;
   }
 
-  nsIScrollableFrame* rootScrollableFrame =
-      mPresShell->GetRootScrollFrameAsScrollable();
-  if (rootScrollableFrame) {
-    nsRect scrollableRect = nsLayoutUtils::CalculateScrollableRectForFrame(
-        rootScrollableFrame, nullptr);
-    CSSSize contentSize = CSSSize::FromAppUnits(scrollableRect.Size());
-    UpdateResolution(aViewportInfo, aDisplaySize, contentSize, Nothing(),
-                     UpdateType::ContentSize);
+  if (Maybe<CSSRect> scrollableRect =
+          mContext->CalculateScrollableRectForRSF()) {
+    UpdateResolution(aViewportInfo, aDisplaySize, scrollableRect->Size(),
+                     Nothing(), UpdateType::ContentSize);
   }
 }
