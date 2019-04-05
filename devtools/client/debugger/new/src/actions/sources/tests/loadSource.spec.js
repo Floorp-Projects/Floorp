@@ -85,8 +85,15 @@ describe("loadSourceText", () => {
     };
     await dispatch(actions.addBreakpoint(location, {}));
 
+    const breakpoint = getBreakpointsList(getState())[0];
+
+    expect(breakpoint.text).toBe("");
+    expect(breakpoint.originalText).toBe("");
+
+    await dispatch(actions.loadSourceText({ source: fooOrigSource }));
+
     const breakpoint1 = getBreakpointsList(getState())[0];
-    expect(breakpoint1.text).toBe("var fooGen = 42;");
+    expect(breakpoint1.text).toBe("");
     expect(breakpoint1.originalText).toBe("var fooOrig = 42;");
 
     await dispatch(actions.loadSourceText({ source: fooGenSource }));
