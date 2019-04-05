@@ -351,7 +351,7 @@ nsComponentManagerImpl::nsComponentManagerImpl()
       mStatus(NOT_INITIALIZED) {}
 
 extern const mozilla::Module kNeckoModule;
-#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
+#if defined(XP_WIN)
 extern const mozilla::Module kSpeechSynthModule;
 #endif
 extern const mozilla::Module kPowerManagerModule;
@@ -462,7 +462,7 @@ nsresult nsComponentManagerImpl::Init() {
 
   RegisterModule(&kXPCOMModule);
   RegisterModule(&kNeckoModule);
-#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
+#if defined(XP_WIN)
   RegisterModule(&kSpeechSynthModule);
 #endif
   RegisterModule(&kPowerManagerModule);
