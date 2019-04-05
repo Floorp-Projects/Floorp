@@ -779,7 +779,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "ba4894ecf85f"
+        "revision": "f00a7111c2cc"
     },
     "hy-AM": {
         "platforms": [
@@ -1651,7 +1651,7 @@
             "win64-aarch64-devedition",
             "win64-devedition"
         ],
-        "revision": "e6637f13c0ab"
+        "revision": "184f9b714e46"
     },
     "zh-TW": {
         "platforms": [
