@@ -29,7 +29,7 @@
     "mochir": "yarn mochi -- --repeat 10 --",
     "mochih": "yarn mochi -- --headless --",
     "mochici": "mochii --mc ./firefox --ci --default-test-path devtools/client/debugger/new --headless --",
-    "test": "jest",
+    "test": "TZ=Africa/Nairobi jest",
     "test:watch": "jest --watch",
     "test:coverage": "yarn test --coverage",
     "test:all": "yarn test; yarn lint; yarn flow",
