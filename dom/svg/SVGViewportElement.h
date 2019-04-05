@@ -11,14 +11,14 @@
 #include "mozilla/dom/FromParser.h"
 #include "nsAutoPtr.h"
 #include "nsIContentInlines.h"
+#include "SVGAnimatedEnumeration.h"
+#include "nsSVGLength2.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
-#include "SVGEnum.h"
+#include "SVGAnimatedViewBox.h"
 #include "SVGGraphicsElement.h"
 #include "SVGImageContext.h"
-#include "nsSVGLength2.h"
 #include "nsISVGPoint.h"
 #include "SVGPreserveAspectRatio.h"
-#include "SVGViewBox.h"
 
 class nsSVGOuterSVGFrame;
 class nsSVGViewportFrame;
@@ -126,7 +126,7 @@ class SVGViewportElement : public SVGGraphicsElement {
   // WebIDL
   already_AddRefed<SVGAnimatedRect> ViewBox();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
-  virtual SVGViewBox* GetViewBox() override;
+  virtual SVGAnimatedViewBox* GetViewBox() override;
 
  protected:
   // implementation helpers:
@@ -178,11 +178,13 @@ class SVGViewportElement : public SVGGraphicsElement {
 
   virtual SVGAnimatedPreserveAspectRatio* GetPreserveAspectRatio() override;
 
-  virtual const SVGViewBox& GetViewBoxInternal() const { return mViewBox; }
+  virtual const SVGAnimatedViewBox& GetViewBoxInternal() const {
+    return mViewBox;
+  }
   virtual SVGAnimatedTransformList* GetTransformInternal() const {
     return mTransforms;
   }
-  SVGViewBox mViewBox;
+  SVGAnimatedViewBox mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;
 
   // The size of the rectangular SVG viewport into which we render. This is

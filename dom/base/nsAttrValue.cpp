@@ -400,11 +400,12 @@ void nsAttrValue::SetToSerialized(const nsAttrValue& aOther) {
   }
 }
 
-void nsAttrValue::SetTo(const SVGOrient& aValue, const nsAString* aSerialized) {
+void nsAttrValue::SetTo(const SVGAnimatedOrient& aValue,
+                        const nsAString* aSerialized) {
   SetSVGType(eSVGOrient, &aValue, aSerialized);
 }
 
-void nsAttrValue::SetTo(const SVGIntegerPair& aValue,
+void nsAttrValue::SetTo(const SVGAnimatedIntegerPair& aValue,
                         const nsAString* aSerialized) {
   SetSVGType(eSVGIntegerPair, &aValue, aSerialized);
 }
@@ -434,7 +435,7 @@ void nsAttrValue::SetTo(const SVGNumberList& aValue,
   SetSVGType(eSVGNumberList, &aValue, aSerialized);
 }
 
-void nsAttrValue::SetTo(const SVGNumberPair& aValue,
+void nsAttrValue::SetTo(const SVGAnimatedNumberPair& aValue,
                         const nsAString* aSerialized) {
   SetSVGType(eSVGNumberPair, &aValue, aSerialized);
 }
@@ -484,7 +485,7 @@ void nsAttrValue::SetTo(const SVGTransformList& aValue,
   SetSVGType(eSVGTransformList, &aValue, aSerialized);
 }
 
-void nsAttrValue::SetTo(const SVGViewBox& aValue,
+void nsAttrValue::SetTo(const SVGAnimatedViewBox& aValue,
                         const nsAString* aSerialized) {
   SetSVGType(eSVGViewBox, &aValue, aSerialized);
 }
@@ -566,13 +567,13 @@ void nsAttrValue::ToString(nsAString& aResult) const {
       break;
     }
     case eSVGIntegerPair: {
-      SVGAttrValueWrapper::ToString(GetMiscContainer()->mValue.mSVGIntegerPair,
-                                    aResult);
+      SVGAttrValueWrapper::ToString(
+          GetMiscContainer()->mValue.mSVGAnimatedIntegerPair, aResult);
       break;
     }
     case eSVGOrient: {
-      SVGAttrValueWrapper::ToString(GetMiscContainer()->mValue.mSVGOrient,
-                                    aResult);
+      SVGAttrValueWrapper::ToString(
+          GetMiscContainer()->mValue.mSVGAnimatedOrient, aResult);
       break;
     }
     case eSVGLength: {
@@ -591,8 +592,8 @@ void nsAttrValue::ToString(nsAString& aResult) const {
       break;
     }
     case eSVGNumberPair: {
-      SVGAttrValueWrapper::ToString(GetMiscContainer()->mValue.mSVGNumberPair,
-                                    aResult);
+      SVGAttrValueWrapper::ToString(
+          GetMiscContainer()->mValue.mSVGAnimatedNumberPair, aResult);
       break;
     }
     case eSVGPathData: {
@@ -607,7 +608,7 @@ void nsAttrValue::ToString(nsAString& aResult) const {
     }
     case eSVGPreserveAspectRatio: {
       SVGAttrValueWrapper::ToString(
-          GetMiscContainer()->mValue.mSVGPreserveAspectRatio, aResult);
+          GetMiscContainer()->mValue.mSVGAnimatedPreserveAspectRatio, aResult);
       break;
     }
     case eSVGStringList: {
@@ -621,8 +622,8 @@ void nsAttrValue::ToString(nsAString& aResult) const {
       break;
     }
     case eSVGViewBox: {
-      SVGAttrValueWrapper::ToString(GetMiscContainer()->mValue.mSVGViewBox,
-                                    aResult);
+      SVGAttrValueWrapper::ToString(
+          GetMiscContainer()->mValue.mSVGAnimatedViewBox, aResult);
       break;
     }
     default: {

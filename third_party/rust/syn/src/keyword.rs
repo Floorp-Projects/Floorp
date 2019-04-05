@@ -29,7 +29,7 @@
 /// [Peeking]: parse/struct.ParseBuffer.html#method.peek
 /// [Parsing]: parse/struct.ParseBuffer.html#method.parse
 /// [Printing]: https://docs.rs/quote/0.6/quote/trait.ToTokens.html
-/// [`Span`]: struct.Span.html
+/// [`Span`]: https://docs.rs/proc-macro2/0.4/proc_macro2/struct.Span.html
 ///
 /// # Example
 ///
@@ -89,6 +89,7 @@
 #[macro_export(local_inner_macros)]
 macro_rules! custom_keyword {
     ($ident:ident) => {
+        #[allow(non_camel_case_types)]
         pub struct $ident {
             pub span: $crate::export::Span,
         }

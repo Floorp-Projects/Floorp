@@ -2958,6 +2958,29 @@ void ClientValidationPrefChangedCallback(const char* aPrefName,
   gClientValidation = Preferences::GetBool(aPrefName, kDefaultClientValidation);
 }
 
+template <typename P>
+void RequestAllowToCloseIf(P aPredicate) {
+  AssertIsOnBackgroundThread();
+
+  if (!gLiveDatabases) {
+    return;
+  }
+
+  nsTArray<RefPtr<Database>> databases;
+
+  for (Database* database : *gLiveDatabases) {
+    if (aPredicate(database)) {
+      databases.AppendElement(database);
+    }
+  }
+
+  for (Database* database : databases) {
+    database->RequestAllowToClose();
+  }
+
+  databases.Clear();
+}
+
 }  // namespace
 
 /*******************************************************************************
@@ -5127,8 +5150,9 @@ void Database::RequestAllowToClose() {
   // child actor. Except the case when the actor was already destroyed.
   if (mActorDestroyed) {
     MOZ_ASSERT(mAllowedToClose);
-  } else {
-    Unused << SendRequestAllowToClose();
+  } else if (NS_WARN_IF(!SendRequestAllowToClose())) {
+    // Allow to close immediately if sending failed.
+    AllowToClose();
   }
 }
 
@@ -7997,29 +8021,21 @@ void QuotaClient::AbortOperations(const nsACString& aOrigin) {
     }
   }
 
-  if (gLiveDatabases) {
-    for (Database* database : *gLiveDatabases) {
-      if (aOrigin.IsVoid() || database->Origin() == aOrigin) {
-        // TODO: This just allows the database to close, but we can actually
-        //       set a flag to abort any existing operations, so we can
-        //       eventually close faster.
-
-        database->RequestAllowToClose();
-      }
-    }
+  if (aOrigin.IsVoid()) {
+    RequestAllowToCloseIf([](const Database* const) { return true; });
+  } else {
+    RequestAllowToCloseIf([&aOrigin](const Database* const aDatabase) {
+      return aDatabase->Origin() == aOrigin;
+    });
   }
 }
 
 void QuotaClient::AbortOperationsForProcess(ContentParentId aContentParentId) {
   AssertIsOnBackgroundThread();
 
-  if (gLiveDatabases) {
-    for (Database* database : *gLiveDatabases) {
-      if (database->IsOwnedByProcess(aContentParentId)) {
-        database->RequestAllowToClose();
-      }
-    }
-  }
+  RequestAllowToCloseIf([aContentParentId](const Database* const aDatabase) {
+    return aDatabase->IsOwnedByProcess(aContentParentId);
+  });
 }
 
 void QuotaClient::StartIdleMaintenance() { AssertIsOnBackgroundThread(); }
@@ -8045,11 +8061,7 @@ void QuotaClient::ShutdownWorkThreads() {
     gPreparedDatastores = nullptr;
   }
 
-  if (gLiveDatabases) {
-    for (Database* database : *gLiveDatabases) {
-      database->RequestAllowToClose();
-    }
-  }
+  RequestAllowToCloseIf([](const Database* const) { return true; });
 
   if (gPreparedObsevers) {
     gPreparedObsevers->Clear();

@@ -1,4 +1,5 @@
 use std::fmt;
+use std::hash::{Hash, Hasher};
 
 use proc_macro2::{Span, TokenStream};
 use quote::ToTokens;
@@ -9,7 +10,7 @@ use {FromMeta, Result};
 /// A wrapper for an `Ident` which also keeps the value as a string.
 ///
 /// This struct can be used to perform string comparisons and operations.
-#[derive(Clone, Hash, PartialOrd, Ord)]
+#[derive(Clone, PartialOrd, Ord)]
 pub struct IdentString {
     ident: Ident,
     string: String,
@@ -101,6 +102,12 @@ impl PartialEq<String> for IdentString {
 impl<'a> PartialEq<&'a str> for IdentString {
     fn eq(&self, rhs: &&str) -> bool {
         self.as_str() == *rhs
+    }
+}
+
+impl Hash for IdentString {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.ident.hash(state);
     }
 }
 

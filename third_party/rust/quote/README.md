@@ -38,18 +38,11 @@ first support for procedural macros in Rust 1.15.0.*
 quote = "0.6"
 ```
 
-```rust
-#[macro_use]
-extern crate quote;
-```
-
 ## Syntax
 
 The quote crate provides a [`quote!`] macro within which you can write Rust code
 that gets packaged into a [`TokenStream`] and can be treated as data. You should
-think of `TokenStream` as representing a fragment of Rust source code. This type
-can be returned directly back to the compiler by a procedural macro to get
-compiled into the caller's crate.
+think of `TokenStream` as representing a fragment of Rust source code.
 
 [`TokenStream`]: https://docs.rs/proc-macro2/0.4/proc_macro2/struct.TokenStream.html
 
@@ -64,7 +57,7 @@ most Rust primitive types as well as most of the syntax tree types from [`syn`].
 let tokens = quote! {
     struct SerializeWith #generics #where_clause {
         value: &'a #field_ty,
-        phantom: ::std::marker::PhantomData<#item_ty>,
+        phantom: core::marker::PhantomData<#item_ty>,
     }
 
     impl #generics serde::Serialize for SerializeWith #generics #where_clause {
@@ -78,7 +71,7 @@ let tokens = quote! {
 
     SerializeWith {
         value: #value,
-        phantom: ::std::marker::PhantomData::<#item_ty>,
+        phantom: core::marker::PhantomData::<#item_ty>,
     }
 };
 ```
@@ -99,6 +92,107 @@ a pre-existing iterator.
 Note that there is a difference between `#(#var ,)*` and `#(#var),*`—the latter
 does not produce a trailing comma. This matches the behavior of delimiters in
 `macro_rules!`.
+
+## Returning tokens to the compiler
+
+The `quote!` macro evaluates to an expression of type
+`proc_macro2::TokenStream`. Meanwhile Rust procedural macros are expected to
+return the type `proc_macro::TokenStream`.
+
+The difference between the two types is that `proc_macro` types are entirely
+specific to procedural macros and cannot ever exist in code outside of a
+procedural macro, while `proc_macro2` types may exist anywhere including tests
+and non-macro code like main.rs and build.rs. This is why even the procedural
+macro ecosystem is largely built around `proc_macro2`, because that ensures the
+libraries are unit testable and accessible in non-macro contexts.
+
+There is a [`From`]-conversion in both directions so returning the output of
+`quote!` from a procedural macro usually looks like `tokens.into()` or
+`proc_macro::TokenStream::from(tokens)`.
+
+[`From`]: https://doc.rust-lang.org/std/convert/trait.From.html
+
+## Examples
+
+### Combining quoted fragments
+
+Usually you don't end up constructing an entire final `TokenStream` in one
+piece. Different parts may come from different helper functions. The tokens
+produced by `quote!` themselves implement `ToTokens` and so can be interpolated
+into later `quote!` invocations to build up a final result.
+
+```rust
+let type_definition = quote! {...};
+let methods = quote! {...};
+
+let tokens = quote! {
+    #type_definition
+    #methods
+};
+```
+
+### Constructing identifiers
+
+Suppose we have an identifier `ident` which came from somewhere in a macro
+input and we need to modify it in some way for the macro output. Let's consider
+prepending the identifier with an underscore.
+
+Simply interpolating the identifier next to an underscore will not have the
+behavior of concatenating them. The underscore and the identifier will continue
+to be two separate tokens as if you had written `_ x`.
+
+```rust
+// incorrect
+quote! {
+    let mut _#ident = 0;
+}
+```
+
+The solution is to perform token-level manipulations using the APIs provided by
+Syn and proc-macro2.
+
+```rust
+let concatenated = format!("_{}", ident);
+let varname = syn::Ident::new(&concatenated, ident.span());
+quote! {
+    let mut #varname = 0;
+}
+```
+
+### Making method calls
+
+Let's say our macro requires some type specified in the macro input to have a
+constructor called `new`. We have the type in a variable called `field_type` of
+type `syn::Type` and want to invoke the constructor.
+
+```rust
+// incorrect
+quote! {
+    let value = #field_type::new();
+}
+```
+
+This works only sometimes. If `field_type` is `String`, the expanded code
+contains `String::new()` which is fine. But if `field_type` is something like
+`Vec<i32>` then the expanded code is `Vec<i32>::new()` which is invalid syntax.
+Ordinarily in handwritten Rust we would write `Vec::<i32>::new()` but for macros
+often the following is more convenient.
+
+```rust
+quote! {
+    let value = <#field_type>::new();
+}
+```
+
+This expands to `<Vec<i32>>::new()` which behaves correctly.
+
+A similar pattern is appropriate for trait methods.
+
+```rust
+quote! {
+    let value = <#field_type as core::default::Default>::default();
+}
+```
 
 ## Hygiene
 

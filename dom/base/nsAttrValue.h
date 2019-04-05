@@ -151,25 +151,27 @@ class nsAttrValue {
              const nsAString* aSerialized);
   void SetTo(nsIURI* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
-  void SetTo(const mozilla::SVGOrient& aValue, const nsAString* aSerialized);
-  void SetTo(const mozilla::SVGIntegerPair& aValue,
+  void SetTo(const mozilla::SVGAnimatedIntegerPair& aValue,
              const nsAString* aSerialized);
   void SetTo(const nsSVGLength2& aValue, const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGAnimatedNumberPair& aValue,
+             const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGAnimatedOrient& aValue,
+             const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGAnimatedPreserveAspectRatio& aValue,
+             const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGAnimatedViewBox& aValue,
+             const nsAString* aSerialized);
   void SetTo(const mozilla::SVGLengthList& aValue,
              const nsAString* aSerialized);
   void SetTo(const mozilla::SVGNumberList& aValue,
              const nsAString* aSerialized);
-  void SetTo(const mozilla::SVGNumberPair& aValue,
-             const nsAString* aSerialized);
   void SetTo(const mozilla::SVGPathData& aValue, const nsAString* aSerialized);
   void SetTo(const mozilla::SVGPointList& aValue, const nsAString* aSerialized);
-  void SetTo(const mozilla::SVGAnimatedPreserveAspectRatio& aValue,
-             const nsAString* aSerialized);
   void SetTo(const mozilla::SVGStringList& aValue,
              const nsAString* aSerialized);
   void SetTo(const mozilla::SVGTransformList& aValue,
              const nsAString* aSerialized);
-  void SetTo(const mozilla::SVGViewBox& aValue, const nsAString* aSerialized);
 
   /**
    * Sets this object with the string or atom representation of aValue.

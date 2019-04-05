@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFEBlendElement_h
 #define mozilla_dom_SVGFEBlendElement_h
 
-#include "SVGEnum.h"
+#include "SVGAnimatedEnumeration.h"
 #include "SVGFilters.h"
 
 nsresult NS_NewSVGFEBlendElement(
@@ -36,7 +36,7 @@ class SVGFEBlendElement : public SVGFEBlendElementBase {
       nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
   virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
                                          nsAtom* aAttribute) const override;
-  virtual SVGString& GetResultImageName() override {
+  virtual SVGAnimatedString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
   virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
@@ -53,12 +53,12 @@ class SVGFEBlendElement : public SVGFEBlendElementBase {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { MODE };
-  SVGEnum mEnumAttributes[1];
+  SVGAnimatedEnumeration mEnumAttributes[1];
   static SVGEnumMapping sModeMap[];
   static EnumInfo sEnumInfo[1];
 
   enum { RESULT, IN1, IN2 };
-  SVGString mStringAttributes[3];
+  SVGAnimatedString mStringAttributes[3];
   static StringInfo sStringInfo[3];
 };
 

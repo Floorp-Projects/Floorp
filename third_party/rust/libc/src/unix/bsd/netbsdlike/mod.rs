@@ -11,8 +11,18 @@ pub type clockid_t = ::c_int;
 pub type id_t = ::uint32_t;
 pub type sem_t = *mut sem;
 
+#[cfg_attr(feature = "extra_traits", derive(Debug))]
 pub enum timezone {}
+impl ::Copy for timezone {}
+impl ::Clone for timezone {
+    fn clone(&self) -> timezone { *self }
+}
+#[cfg_attr(feature = "extra_traits", derive(Debug))]
 pub enum sem {}
+impl ::Copy for sem {}
+impl ::Clone for sem {
+    fn clone(&self) -> sem { *self }
+}
 
 s! {
     pub struct sigaction {
@@ -25,14 +35,6 @@ s! {
         pub ss_sp: *mut ::c_void,
         pub ss_size: ::size_t,
         pub ss_flags: ::c_int,
-    }
-
-    pub struct sockaddr_in {
-        pub sin_len: u8,
-        pub sin_family: ::sa_family_t,
-        pub sin_port: ::in_port_t,
-        pub sin_addr: ::in_addr,
-        pub sin_zero: [::int8_t; 8],
     }
 
     pub struct in6_pktinfo {
@@ -314,6 +316,17 @@ pub const POSIX_MADV_DONTNEED : ::c_int = 4;
 pub const PTHREAD_CREATE_JOINABLE : ::c_int = 0;
 pub const PTHREAD_CREATE_DETACHED : ::c_int = 1;
 
+pub const PT_TRACE_ME: ::c_int = 0;
+pub const PT_READ_I: ::c_int = 1;
+pub const PT_READ_D: ::c_int = 2;
+pub const PT_WRITE_I: ::c_int = 4;
+pub const PT_WRITE_D: ::c_int = 5;
+pub const PT_CONTINUE: ::c_int = 7;
+pub const PT_KILL: ::c_int = 8;
+pub const PT_ATTACH: ::c_int = 9;
+pub const PT_DETACH: ::c_int = 10;
+pub const PT_IO: ::c_int = 11;
+
 // http://man.openbsd.org/OpenBSD-current/man2/clock_getres.2
 // The man page says clock_gettime(3) can accept various values as clockid_t but
 // http://fxr.watson.org/fxr/source/kern/kern_time.c?v=OPENBSD;im=excerpts#L161
@@ -419,8 +432,8 @@ pub const IP_ADD_MEMBERSHIP: ::c_int = 12;
 pub const IP_DROP_MEMBERSHIP: ::c_int = 13;
 pub const IPV6_RECVPKTINFO: ::c_int = 36;
 pub const IPV6_PKTINFO: ::c_int = 46;
-
-pub const TCP_NODELAY:    ::c_int = 0x01;
+pub const IPV6_RECVTCLASS: ::c_int = 57;
+pub const IPV6_TCLASS: ::c_int = 61;
 
 pub const SOL_SOCKET: ::c_int = 0xffff;
 pub const SO_DEBUG: ::c_int = 0x01;
@@ -569,22 +582,28 @@ pub const TIOCM_DSR: ::c_int = 0o0400;
 pub const TIOCM_CD: ::c_int = TIOCM_CAR;
 pub const TIOCM_RI: ::c_int = TIOCM_RNG;
 
-f! {
-    pub fn WSTOPSIG(status: ::c_int) -> ::c_int {
-        status >> 8
-    }
+// Flags for chflags(2)
+pub const UF_SETTABLE:      ::c_ulong = 0x0000ffff;
+pub const UF_NODUMP:        ::c_ulong = 0x00000001;
+pub const UF_IMMUTABLE:     ::c_ulong = 0x00000002;
+pub const UF_APPEND:        ::c_ulong = 0x00000004;
+pub const UF_OPAQUE:        ::c_ulong = 0x00000008;
+pub const SF_SETTABLE:      ::c_ulong = 0xffff0000;
+pub const SF_ARCHIVED:      ::c_ulong = 0x00010000;
+pub const SF_IMMUTABLE:     ::c_ulong = 0x00020000;
+pub const SF_APPEND:        ::c_ulong = 0x00040000;
 
-    pub fn WIFSIGNALED(status: ::c_int) -> bool {
-        (status & 0o177) != 0o177 && (status & 0o177) != 0
-    }
-
-    pub fn WIFSTOPPED(status: ::c_int) -> bool {
-        (status & 0o177) == 0o177
-    }
-}
+pub const TIMER_ABSTIME: ::c_int = 1;
 
 #[link(name = "util")]
 extern {
+    pub fn sem_destroy(sem: *mut sem_t) -> ::c_int;
+    pub fn sem_init(sem: *mut sem_t,
+                    pshared: ::c_int,
+                    value: ::c_uint)
+                    -> ::c_int;
+
+    pub fn daemon(nochdir: ::c_int, noclose: ::c_int) -> ::c_int;
     pub fn mincore(addr: *mut ::c_void, len: ::size_t,
                    vec: *mut ::c_char) -> ::c_int;
     #[cfg_attr(target_os = "netbsd", link_name = "__clock_getres50")]
@@ -647,11 +666,9 @@ extern {
                         groups: *mut ::gid_t,
                         ngroups: *mut ::c_int) -> ::c_int;
     pub fn initgroups(name: *const ::c_char, basegid: ::gid_t) -> ::c_int;
-    pub fn fexecve(fd: ::c_int, argv: *const *const ::c_char,
-                   envp: *const *const ::c_char)
-                   -> ::c_int;
     pub fn getdomainname(name: *mut ::c_char, len: ::size_t) -> ::c_int;
     pub fn setdomainname(name: *const ::c_char, len: ::size_t) -> ::c_int;
+    pub fn uname(buf: *mut ::utsname) -> ::c_int;
 }
 
 cfg_if! {

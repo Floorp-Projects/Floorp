@@ -51,15 +51,6 @@ s! {
         __private: [u64; 32],
     }
 
-    pub struct ucontext_t {
-        pub uc_flags: ::c_ulong,
-        pub uc_link: *mut ucontext_t,
-        pub uc_stack: ::stack_t,
-        pub uc_mcontext: mcontext_t,
-        pub uc_sigmask: ::sigset_t,
-        __private: [u8; 512],
-    }
-
     pub struct ipc_perm {
         pub __ipc_perm_key: ::key_t,
         pub uid: ::uid_t,
@@ -70,6 +61,62 @@ s! {
         pub __seq: ::c_int,
         __unused1: ::c_long,
         __unused2: ::c_long
+    }
+}
+
+s_no_extra_traits!{
+    pub struct ucontext_t {
+        pub uc_flags: ::c_ulong,
+        pub uc_link: *mut ucontext_t,
+        pub uc_stack: ::stack_t,
+        pub uc_mcontext: mcontext_t,
+        pub uc_sigmask: ::sigset_t,
+        __private: [u8; 512],
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "extra_traits")] {
+        impl PartialEq for ucontext_t {
+            fn eq(&self, other: &ucontext_t) -> bool {
+                self.uc_flags == other.uc_flags
+                    && self.uc_link == other.uc_link
+                    && self.uc_stack == other.uc_stack
+                    && self.uc_mcontext == other.uc_mcontext
+                    && self.uc_sigmask == other.uc_sigmask
+                    && self
+                    .__private
+                    .iter()
+                    .zip(other.__private.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+
+        impl Eq for ucontext_t {}
+
+        impl ::fmt::Debug for ucontext_t {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("ucontext_t")
+                    .field("uc_flags", &self.uc_flags)
+                    .field("uc_link", &self.uc_link)
+                    .field("uc_stack", &self.uc_stack)
+                    .field("uc_mcontext", &self.uc_mcontext)
+                    .field("uc_sigmask", &self.uc_sigmask)
+                // Ignore __private field
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for ucontext_t {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.uc_flags.hash(state);
+                self.uc_link.hash(state);
+                self.uc_stack.hash(state);
+                self.uc_mcontext.hash(state);
+                self.uc_sigmask.hash(state);
+                self.__private.hash(state);
+            }
+        }
     }
 }
 
