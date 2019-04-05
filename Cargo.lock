@@ -444,6 +444,7 @@ dependencies = [
  "rkv 0.9.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "sha2 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "style 0.0.1",
+ "thin-vec 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "time 0.1.40 (registry+https://github.com/rust-lang/crates.io-index)",
  "xpcom 0.1.0",
 ]
