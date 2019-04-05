@@ -54,11 +54,11 @@ High-level components for building browser(-like) apps.
 
 * 🔵 [**Domains**](components/browser/domains/README.md) Localized and customizable domain lists for auto-completion in browsers.
 
-* 🔴 [**Engine-Gecko**](components/browser/engine-gecko/README.md) - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView) (Release channel).
+* ⚪ [**Engine-Gecko**](components/browser/engine-gecko/README.md) - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView) (Release channel).
 
-* 🔴 [**Engine-Gecko-Beta**](components/browser/engine-gecko-beta/README.md) - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView) (Beta channel).
+* ⚪ [**Engine-Gecko-Beta**](components/browser/engine-gecko-beta/README.md) - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView) (Beta channel).
 
-* 🔴 [**Engine-Gecko-Nightly**](components/browser/engine-gecko-nightly/README.md) - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView) (Nightly channel).
+* ⚪ [**Engine-Gecko-Nightly**](components/browser/engine-gecko-nightly/README.md) - *Engine* implementation based on [GeckoView](https://wiki.mozilla.org/Mobile/GeckoView) (Nightly channel).
 
 * 🔴 [**Engine-Servo**](components/browser/engine-servo/README.md) - *Engine* implementation based on the [Servo Browser Engine](https://servo.org/).
 
@@ -68,7 +68,7 @@ High-level components for building browser(-like) apps.
 
 * 🔴 [**Icons**](components/browser/icons/README.md) - A component for loading and storing website icons (like [Favicons](https://en.wikipedia.org/wiki/Favicon)).
 
-* 🔴 [**Menu**](components/browser/menu/README.md) - A generic menu with customizable items primarily for browser toolbars.
+* ⚪ [**Menu**](components/browser/menu/README.md) - A generic menu with customizable items primarily for browser toolbars.
 
 * 🔵 [**Search**](components/browser/search/README.md) - Search plugins and companion code to load, parse and use them.
 
@@ -76,7 +76,7 @@ High-level components for building browser(-like) apps.
 
 * 🔴 [**Storage-Memory**](components/browser/storage-memory/README.md) - An in-memory implementation of browser storage.
 
-* 🔴 [**Storage-Sync**](components/browser/storage-sync/README.md) - A syncable implementation of browser storage backed by [application-services' Places lib](https://github.com/mozilla/application-services).
+* ⚪ [**Storage-Sync**](components/browser/storage-sync/README.md) - A syncable implementation of browser storage backed by [application-services' Places lib](https://github.com/mozilla/application-services).
 
 * 🔴 [**Tabstray**](components/browser/tabstray/README.md) - A customizable tabs tray for browsers.
 
@@ -86,7 +86,7 @@ High-level components for building browser(-like) apps.
 
 _API contracts and abstraction layers for browser components._
 
-* 🔴 [**Awesomebar**](components/concept/awesomebar/README.md) - An abstract definition of an awesome bar component.
+* ⚪ [**Awesomebar**](components/concept/awesomebar/README.md) - An abstract definition of an awesome bar component.
 
 * ⚪ [**Engine**](components/concept/engine/README.md) - Abstraction layer that allows hiding the actual browser engine implementation.
 
@@ -94,7 +94,7 @@ _API contracts and abstraction layers for browser components._
 
 * 🔴 [**Push**](components/concept/push/README.md) - An abstract definition of a push service component.
 
-* 🔴 [**Storage**](components/concept/storage/README.md) - Abstract definition of a browser storage component.
+* ⚪ [**Storage**](components/concept/storage/README.md) - Abstract definition of a browser storage component.
 
 * 🔴 [**Tabstray**](components/concept/tabstray/README.md) - Abstract definition of a tabs tray component.
 
@@ -134,9 +134,9 @@ _Combined components to implement feature-specific use cases._
 
 * 🔴 [**Toolbar**](components/feature/toolbar/README.md) - A component that connects a (concept) toolbar implementation with the browser session module.
 
-* 🔴 [**Prompts**](components/feature/prompts/README.md) - A component that will handle all the common prompt dialogs from web content.
+* ⚪ [**Prompts**](components/feature/prompts/README.md) - A component that will handle all the common prompt dialogs from web content.
 
-* 🔴 [**Find In Page**](components/feature/findinpage/README.md) - A component that provides an UI widget for [find in page functionality](https://support.mozilla.org/en-US/kb/search-contents-current-page-text-or-links).
+* ⚪ [**Find In Page**](components/feature/findinpage/README.md) - A component that provides an UI widget for [find in page functionality](https://support.mozilla.org/en-US/kb/search-contents-current-page-text-or-links).
 
 * 🔴 [**Site Permissions**](components/feature/sitepermissions/README.md) - A feature for showing site permission request prompts.
 
@@ -194,7 +194,7 @@ _Supporting components with generic helper code._
 
 * ⚪ [**Crash**](components/lib/crash/README.md) - A generic crash reporter component that can report crashes to multiple services.
 
-* 🔴 [**Dataprotect**](components/lib/dataprotect/README.md) - A component using AndroidKeyStore to protect user data.
+* 🔵 [**Dataprotect**](components/lib/dataprotect/README.md) - A component using AndroidKeyStore to protect user data.
 
 * ⚪ [**Fetch-HttpURLConnection**](components/lib/fetch-httpurlconnection/README.md) - A [concept-fetch](concept/fetch/README.md) implementation using [HttpURLConnection](https://developer.android.com/reference/java/net/HttpURLConnection.html).
 
