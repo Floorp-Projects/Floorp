@@ -153,9 +153,12 @@ body.dark > .container > .content blockquote {
 
 /*======= Article content =======*/
 
+.content {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
 .moz-reader-content {
-  margin-left: -20px;
-  margin-right: -20px;
   font-size: 1em;
 }
 

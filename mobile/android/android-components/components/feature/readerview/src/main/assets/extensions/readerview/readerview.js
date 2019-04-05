@@ -27,16 +27,20 @@ class ReaderView {
   show({fontSize = 4, fontType = "sans-serif", colorScheme = "light"} = {}) {
     var documentClone = document.cloneNode(true);
     var result = new Readability(documentClone).parse();
+    result.language = document.documentElement.lang;
+
     var article = Object.assign(
       result,
       {url: location.hostname},
       {readingTime: this.getReadingTime(result.length, result.language)},
-      {byline: this.getByline()}
+      {byline: this.getByline()},
+      {dir: this.getTextDirection(result)}
     );
+
     document.body.outerHTML = this.createHtml(article);
     this.setFontSize(fontSize);
-    this.setFontType(fontType)
-    this.setColorScheme(colorScheme)
+    this.setFontType(fontType);
+    this.setColorScheme(colorScheme);
   }
 
   hide() {
@@ -116,7 +120,7 @@ class ReaderView {
   createHtml(article) {
     return `
       <body>
-        <div id="readerview" class="container">
+        <div id="readerview" class="container" dir=${article.dir}>
           <div class="header reader-header">
             <a class="domain reader-domain">${article.url}</a>
             <div class="domain-border"></div>
@@ -238,6 +242,22 @@ class ReaderView {
      });
 
      return values["dc:creator"] || values["dcterm:creator"] || values["author"] || "";
+   }
+
+   /**
+    * Attempts to read the optional text direction from the article and uses
+    * language mapping to detect rtl, if missing.
+    */
+   getTextDirection(article) {
+     if (article.dir) {
+       return article.dir
+     }
+
+     if (["ar", "fa", "he", "ug", "ur"].includes(article.language)) {
+       return "rtl";
+     }
+
+     return "ltr";
    }
 }
 
