@@ -335,7 +335,7 @@ describe("test String with URL", () => {
 
   it("renders successive cropped URLs with cropped elements between", () => {
     const text =
-      "- http://example.fr test http://example.fr test http://example.us -";
+      "- http://example.fr test http://example.es test http://example.us -";
     const openLink = jest.fn();
     const element = renderRep(text, {
       openLink,
@@ -381,6 +381,30 @@ describe("test String with URL", () => {
     const linkFr = element.find("a").at(0);
     expect(linkFr.prop("href")).toBe("http://example.fr");
     expect(linkFr.prop("title")).toBe("http://example.fr");
+  });
+
+  it("renders URLs without unrelated characters", () => {
+    const text =
+      "global(http://example.com) and local(http://example.us)" +
+      " and maybe https://example.fr, https://example.es?";
+    const openLink = jest.fn();
+    const element = renderRep(text, {
+      openLink,
+      useQuotes: false
+    });
+
+    expect(element.text()).toEqual(text);
+    const linkCom = element.find("a").at(0);
+    expect(linkCom.prop("href")).toBe("http://example.com");
+
+    const linkUs = element.find("a").at(1);
+    expect(linkUs.prop("href")).toBe("http://example.us");
+
+    const linkFr = element.find("a").at(2);
+    expect(linkFr.prop("href")).toBe("https://example.fr");
+
+    const linkEs = element.find("a").at(3);
+    expect(linkEs.prop("href")).toBe("https://example.es");
   });
 
   it("does not render a link if the URL has no scheme", () => {
