@@ -151,6 +151,23 @@ class nsFocusManager final : public nsIFocusManager,
       nsPIDOMWindowOuter** aFocusedWindow);
 
   /**
+   * Helper function for MoveFocus which determines the next element
+   * to move the focus to and returns it in aNextContent.
+   *
+   * aWindow is the window to adjust the focus within, and aStart is
+   * the element to start navigation from. For tab key navigation,
+   * this should be the currently focused element.
+   *
+   * aType is the type passed to MoveFocus. If aNoParentTraversal is set,
+   * navigation is not done to parent documents and iteration returns to the
+   * beginning (or end) of the starting document.
+   */
+  nsresult DetermineElementToMoveFocus(nsPIDOMWindowOuter* aWindow,
+                                       nsIContent* aStart, int32_t aType,
+                                       bool aNoParentTraversal,
+                                       nsIContent** aNextContent);
+
+  /**
    * Returns the content node that focus will be redirected to if aContent was
    * focused. This is used for the special case of certain XUL elements such
    * as textboxes or input number which redirect focus to an anonymous child.
@@ -402,23 +419,6 @@ class nsFocusManager final : public nsIFocusManager,
   nsresult GetSelectionLocation(Document* aDocument, nsIPresShell* aPresShell,
                                 nsIContent** aStartContent,
                                 nsIContent** aEndContent);
-
-  /**
-   * Helper function for MoveFocus which determines the next element
-   * to move the focus to and returns it in aNextContent.
-   *
-   * aWindow is the window to adjust the focus within, and aStart is
-   * the element to start navigation from. For tab key navigation,
-   * this should be the currently focused element.
-   *
-   * aType is the type passed to MoveFocus. If aNoParentTraversal is set,
-   * navigation is not done to parent documents and iteration returns to the
-   * beginning (or end) of the starting document.
-   */
-  nsresult DetermineElementToMoveFocus(nsPIDOMWindowOuter* aWindow,
-                                       nsIContent* aStart, int32_t aType,
-                                       bool aNoParentTraversal,
-                                       nsIContent** aNextContent);
 
   /**
    * Retrieve the next tabbable element in scope owned by aOwner, using

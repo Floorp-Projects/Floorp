@@ -1621,7 +1621,8 @@ bool HTMLFormElement::IsLastActiveElement(
   MOZ_ASSERT(aControl, "Unexpected call");
 
   for (auto* element : Reversed(mControls->mElements)) {
-    if (element->IsSingleLineTextOrNumberControl(false) &&
+    // XXX How about date/time control?
+    if (element->IsTextOrNumberControl(false) &&
         !element->IsDisabled()) {
       return element == aControl;
     }
