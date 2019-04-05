@@ -70,21 +70,11 @@ Push.prototype = {
         ));
       };
 
-      let permission = Ci.nsIPermissionManager.UNKNOWN_ACTION;
-      try {
-        permission = this._testPermission();
-      } catch (e) {
-        permissionDenied();
-        return;
+      if (Services.prefs.getBoolPref("dom.push.testing.ignorePermission", false)) {
+        resolve();
       }
 
-      if (permission == Ci.nsIPermissionManager.ALLOW_ACTION) {
-        resolve();
-      } else if (permission == Ci.nsIPermissionManager.DENY_ACTION) {
-        permissionDenied();
-      } else {
-        this._requestPermission(isHandlingUserInput, resolve, permissionDenied);
-      }
+      this._requestPermission(isHandlingUserInput, resolve, permissionDenied);
     });
   },
 

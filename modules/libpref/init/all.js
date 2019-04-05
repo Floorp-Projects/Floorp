@@ -5581,7 +5581,7 @@ pref("network.trr.custom_uri", "");
 // On Android, the captive portal is handled by the OS itself
 pref("network.trr.wait-for-portal", false);
 #else
-pref("network.trr.wait-for-portal", true);
+pref("network.trr.wait-for-portal", false);
 #endif
 // Allow RFC1918 address in responses?
 pref("network.trr.allow-rfc1918", false);

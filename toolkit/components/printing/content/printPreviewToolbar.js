@@ -14,59 +14,63 @@ customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends 
   }
   connectedCallback() {
     window.addEventListener("unload", this.disconnectedCallback, { once: true });
+
+    MozXULElement.insertFTLIfNeeded("toolkit/printing/printPreview.ftl");
     this.appendChild(MozXULElement.parseXULToFragment(`
-      <button id="print-preview-print" label="&print.label;" accesskey="&print.accesskey;" oncommand="this.parentNode.print();"/>
-      <button id="print-preview-pageSetup" label="&pageSetup.label;" accesskey="&pageSetup.accesskey;" oncommand="this.parentNode.doPageSetup();"/>
+      <button id="print-preview-print" oncommand="this.parentNode.print();" data-l10n-id="printpreview-print"/>
+      <button id="print-preview-pageSetup" oncommand="this.parentNode.doPageSetup();" data-l10n-id="printpreview-page-setup"/>
       <vbox align="center" pack="center">
-        <label value="&page.label;" accesskey="&page.accesskey;" control="print-preview-pageNumber"/>
+        <label control="print-preview-pageNumber" data-l10n-id="printpreview-page"/>
       </vbox>
-      <toolbarbutton id="print-preview-navigateHome" class="print-preview-navigate-button tabbable" oncommand="parentNode.navigate(0, 0, 'home');" tooltiptext="&homearrow.tooltip;"/>
-      <toolbarbutton id="print-preview-navigatePrevious" class="print-preview-navigate-button tabbable" oncommand="parentNode.navigate(-1, 0, 0);" tooltiptext="&previousarrow.tooltip;"/>
+      <toolbarbutton id="print-preview-navigateHome" class="print-preview-navigate-button tabbable" oncommand="parentNode.navigate(0, 0, 'home');" data-l10n-id="printpreview-homearrow"/>
+      <toolbarbutton id="print-preview-navigatePrevious" class="print-preview-navigate-button tabbable" oncommand="parentNode.navigate(-1, 0, 0);" data-l10n-id="printpreview-previousarrow"/>
       <hbox align="center" pack="center">
         <html:input id="print-preview-pageNumber" hidespinbuttons="true" type="number" value="1" min="1"/>
-        <label value="&of.label;"/>
+        <label data-l10n-id="printpreview-of"/>
         <label id="print-preview-totalPages" value="1"/>
       </hbox>
-      <toolbarbutton id="print-preview-navigateNext" class="print-preview-navigate-button tabbable" oncommand="parentNode.navigate(1, 0, 0);" tooltiptext="&nextarrow.tooltip;"/>
-      <toolbarbutton id="print-preview-navigateEnd" class="print-preview-navigate-button tabbable" oncommand="parentNode.navigate(0, 0, 'end');" tooltiptext="&endarrow.tooltip;"/>
+      <toolbarbutton id="print-preview-navigateNext" class="print-preview-navigate-button tabbable" oncommand="parentNode.navigate(1, 0, 0);" data-l10n-id="printpreview-nextarrow"/>
+      <toolbarbutton id="print-preview-navigateEnd" class="print-preview-navigate-button tabbable" oncommand="parentNode.navigate(0, 0, 'end');" data-l10n-id="printpreview-endarrow"/>
       <toolbarseparator class="toolbarseparator-primary"/>
       <vbox align="center" pack="center">
-        <label id="print-preview-scale-label" value="&scale.label;" accesskey="&scale.accesskey;" control="print-preview-scale"/>
+        <label id="print-preview-scale-label" control="print-preview-scale" data-l10n-id="printpreview-scale"/>
       </vbox>
       <hbox align="center" pack="center">
         <menulist id="print-preview-scale" crop="none" oncommand="parentNode.parentNode.scale(this.selectedItem.value);">
           <menupopup>
-            <menuitem value="0.3" label="&p30.label;"/>
-            <menuitem value="0.4" label="&p40.label;"/>
-            <menuitem value="0.5" label="&p50.label;"/>
-            <menuitem value="0.6" label="&p60.label;"/>
-            <menuitem value="0.7" label="&p70.label;"/>
-            <menuitem value="0.8" label="&p80.label;"/>
-            <menuitem value="0.9" label="&p90.label;"/>
-            <menuitem value="1" label="&p100.label;"/>
-            <menuitem value="1.25" label="&p125.label;"/>
-            <menuitem value="1.5" label="&p150.label;"/>
-            <menuitem value="1.75" label="&p175.label;"/>
-            <menuitem value="2" label="&p200.label;"/>
+            <menuitem value="0.3" />
+            <menuitem value="0.4" />
+            <menuitem value="0.5" />
+            <menuitem value="0.6" />
+            <menuitem value="0.7" />
+            <menuitem value="0.8" />
+            <menuitem value="0.9" />
+            <menuitem value="1" />
+            <menuitem value="1.25" />
+            <menuitem value="1.5" />
+            <menuitem value="1.75" />
+            <menuitem value="2" />
             <menuseparator/>
-            <menuitem flex="1" value="ShrinkToFit" label="&ShrinkToFit.label;"/>
-            <menuitem value="Custom" label="&Custom.label;"/>
+            <menuitem flex="1" value="ShrinkToFit" data-l10n-id="printpreview-shrink-to-fit"/>
+            <menuitem value="Custom" data-l10n-id="printpreview-custom"/>
           </menupopup>
         </menulist>
       </hbox>
       <toolbarseparator class="toolbarseparator-primary"/>
       <hbox align="center" pack="center">
-        <toolbarbutton id="print-preview-portrait-button" label="&portrait.label;" checked="true" accesskey="&portrait.accesskey;" type="radio" group="orient" class="tabbable" oncommand="parentNode.parentNode.orient('portrait');"/>
-        <toolbarbutton id="print-preview-landscape-button" label="&landscape.label;" accesskey="&landscape.accesskey;" type="radio" group="orient" class="tabbable" oncommand="parentNode.parentNode.orient('landscape');"/>
+        <toolbarbutton id="print-preview-portrait-button" checked="true" type="radio" group="orient" class="tabbable" oncommand="parentNode.parentNode.orient('portrait');" data-l10n-id="printpreview-portrait"/>
+        <toolbarbutton id="print-preview-landscape-button" type="radio" group="orient" class="tabbable" oncommand="parentNode.parentNode.orient('landscape');" data-l10n-id="printpreview-landscape"/>
       </hbox>
       <toolbarseparator class="toolbarseparator-primary"/>
-      <checkbox id="print-preview-simplify" label="&simplifyPage.label;" checked="false" disabled="true" accesskey="&simplifyPage.accesskey;" tooltiptext-disabled="&simplifyPage.disabled.tooltip;" tooltiptext-enabled="&simplifyPage.enabled.tooltip;" oncommand="this.parentNode.simplify();"/>
+      <checkbox id="print-preview-simplify" checked="false" disabled="true" oncommand="this.parentNode.simplify();" data-l10n-id="printpreview-simplify-page-checkbox"/>
       <toolbarseparator class="toolbarseparator-primary"/>
-      <button label="&close.label;" accesskey="&close.accesskey;" oncommand="PrintUtils.exitPrintPreview();"/>
-      <data id="print-preview-prompt-title" value="&customPrompt.title;"/>
-    `, [
-      "chrome://global/locale/printPreview.dtd",
-    ]));
+      <button id="print-preview-toolbar-close-button" oncommand="PrintUtils.exitPrintPreview();" data-l10n-id="printpreview-close"/>
+      <data id="print-preview-prompt-title" data-l10n-id="printpreview-custom-prompt"/>
+        `)
+    );
+
+
+
 
     this.mPrintButton = document.getElementById("print-preview-print");
 
@@ -108,6 +112,16 @@ customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends 
       this.navigate(0, Number(this.mPageTextBox.value), 0);
     };
     this.mPageTextBox.addEventListener("change", this.mOnPageTextBoxChange);
+
+
+    let dropdown = document.getElementById("print-preview-scale").menupopup;
+    for (let menuitem of dropdown.children) {
+      let value = menuitem.getAttribute("value");
+      if (!isNaN(parseFloat(value))) {
+        document.l10n.setAttributes(menuitem, "printpreview-percentage-value",
+            {"percent": Math.round(parseFloat(value) * 100)});
+      }
+    }
   }
 
   initialize(aPPBrowser) {
@@ -128,10 +142,10 @@ customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends 
     let useCompatCharacters = AppConstants.isPlatformAndVersionAtMost("win", "6.1");
     let leftEnd = useCompatCharacters ? "\u23EA" : "\u23EE";
     let rightEnd = useCompatCharacters ? "\u23E9" : "\u23ED";
-    this.mNavigateHomeButton.label = ltr ? leftEnd : rightEnd;
-    this.mNavigatePreviousButton.label = ltr ? "\u25C2" : "\u25B8";
-    this.mNavigateNextButton.label = ltr ? "\u25B8" : "\u25C2";
-    this.mNavigateEndButton.label = ltr ? rightEnd : leftEnd;
+    document.l10n.setAttributes(this.mNavigateHomeButton, "printpreview-homearrow", {"arrow": (ltr ? leftEnd : rightEnd)});
+    document.l10n.setAttributes(this.mNavigatePreviousButton, "printpreview-previousarrow", {"arrow": (ltr ? "\u25C2" : "\u25B8")});
+    document.l10n.setAttributes(this.mNavigateNextButton, "printpreview-nextarrow", {"arrow": (ltr ? "\u25B8" : "\u25C2")});
+    document.l10n.setAttributes(this.mNavigateEndButton, "printpreview-endarrow", {"arrow": (ltr ? rightEnd : leftEnd)});
   }
 
   destroy() {
@@ -293,15 +307,13 @@ customElements.define("printpreview-toolbar", class PrintPreviewToolbar extends 
   enableSimplifyPage() {
     this.mSimplifyPageNotAllowed = false;
     this.mSimplifyPageCheckbox.disabled = false;
-    this.mSimplifyPageCheckbox.setAttribute("tooltiptext",
-      this.mSimplifyPageCheckbox.getAttribute("tooltiptext-enabled"));
+    document.l10n.setAttributes(this.mSimplifyPageCheckbox, "printpreview-simplify-page-checkbox-enabled");
   }
 
   disableSimplifyPage() {
     this.mSimplifyPageNotAllowed = true;
     this.mSimplifyPageCheckbox.disabled = true;
-    this.mSimplifyPageCheckbox.setAttribute("tooltiptext",
-      this.mSimplifyPageCheckbox.getAttribute("tooltiptext-disabled"));
+    document.l10n.setAttributes(this.mSimplifyPageCheckbox, "printpreview-simplify-page-checkbox");
   }
 
   updateToolbar() {
