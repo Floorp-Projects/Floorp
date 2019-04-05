@@ -468,9 +468,7 @@ static const Module::CIDEntry kLocalCertServiceCIDs[] = {
 static const Module::ContractIDEntry kLocalCertServiceContracts[] = {
     {LOCALCERTSERVICE_CONTRACTID, &kLOCALCERTSERVICE_CID}, {nullptr}};
 
-static const Module kLocalCertServiceModule = {
+extern const Module kLocalCertServiceModule = {
     Module::kVersion, kLocalCertServiceCIDs, kLocalCertServiceContracts};
-
-NSMODULE_DEFN(LocalCertServiceModule) = &kLocalCertServiceModule;
 
 }  // namespace mozilla

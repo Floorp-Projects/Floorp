@@ -214,73 +214,6 @@ def is_libxul(binary):
     return 'xul' in basename
 
 
-def check_nsmodules(target, binary):
-    if target is HOST or not is_libxul(binary):
-        raise Skip()
-    symbols = []
-    for sym in iter_symbols(binary):
-        if sym['addr'] == 0:
-            continue
-        name = sym['name']
-        # NSModules symbols end with _NSModule or _NSModuleE when C++-mangled.
-        if name.endswith(('_NSModule', '_NSModuleE')):
-            # We don't have a valid size in the symbol list for macho and coff.
-            # Use our guesstimate.
-            size = sym['size'] or GUESSED_NSMODULE_SIZE
-            symbols.append((sym['addr'], size, name))
-        elif name in ('__start_kPStaticModules', '__stop_kPStaticModules'):
-            # For coff, these symbols have a size.
-            if get_type(binary) not in (ELF, MACHO):
-                size = GUESSED_NSMODULE_SIZE
-            else:
-                size = 0
-            symbols.append((sym['addr'], size, name))
-    if not symbols:
-        raise RuntimeError('Could not find NSModules')
-
-    def print_symbols(symbols):
-        for addr, size, sym in symbols:
-            print('%x %d %s' % (addr, size, sym))
-
-    symbols = sorted(symbols)
-    next_addr = None
-    # MSVC linker, when doing incremental linking, adds padding when
-    # merging sections. Allow there to be more space between the NSModule
-    # symbols, as long as they are in the right order.
-    test_msvc = (buildconfig.substs.get('CC_TYPE') == 'clang-cl' and \
-        buildconfig.substs.get('DEVELOPER_OPTIONS'))
-    test_clang = (buildconfig.substs.get('CC_TYPE') == 'clang' and \
-        buildconfig.substs.get('OS_ARCH') == 'WINNT')
-    if test_msvc or test_clang:
-        sym_cmp = lambda guessed, actual: guessed <= actual
-    else:
-        sym_cmp = lambda guessed, actual: guessed == actual
-
-    for addr, size, sym in symbols:
-        if next_addr is not None and not sym_cmp(next_addr, addr):
-            print_symbols(symbols)
-            raise RuntimeError('NSModules are not adjacent')
-        next_addr = addr + size
-
-    # The mac linker doesn't emit the start/stop symbols in the symbol table.
-    # We'll just assume it did the job correctly.
-    if get_type(binary) == MACHO:
-        return
-
-    first = symbols[0][2]
-    last = symbols[-1][2]
-    # On some platforms, there are extra underscores on symbol names.
-    if first.lstrip('_') != 'start_kPStaticModules' or \
-            last.lstrip('_') != 'stop_kPStaticModules':
-        print_symbols(symbols)
-        syms = set(sym for add, size, sym in symbols)
-        if 'start_kPStaticModules' not in syms:
-            raise RuntimeError('Could not find start_kPStaticModules symbol')
-        if 'stop_kPStaticModules' not in syms:
-            raise RuntimeError('Could not find stop_kPStaticModules symbol')
-        raise RuntimeError('NSModules are not ordered appropriately')
-
-
 def check_pt_load(target, binary):
     if target is HOST or get_type(binary) != ELF or not is_libxul(binary):
         raise Skip()
@@ -370,8 +303,6 @@ def checks(target, binary):
         checks.append(check_textrel)
         checks.append(check_pt_load)
         checks.append(check_mozglue_order)
-
-    checks.append(check_nsmodules)
 
     retcode = 0
     basename = os.path.basename(binary)

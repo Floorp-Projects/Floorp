@@ -46,12 +46,11 @@ static void UnloadOSXSpeechSynthesizerModule() {
   OSXSpeechSynthesizerService::Shutdown();
 }
 
-static const mozilla::Module kModule = {mozilla::Module::kVersion,
-                                        kCIDs,
-                                        kContracts,
-                                        kCategories,
-                                        nullptr,
-                                        nullptr,
-                                        UnloadOSXSpeechSynthesizerModule};
-
-NSMODULE_DEFN(osxsynth) = &kModule;
+extern const mozilla::Module kSpeechSynthModule = {
+    mozilla::Module::kVersion,
+    kCIDs,
+    kContracts,
+    kCategories,
+    nullptr,
+    nullptr,
+    UnloadOSXSpeechSynthesizerModule};

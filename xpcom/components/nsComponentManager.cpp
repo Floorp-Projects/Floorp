@@ -346,87 +346,48 @@ nsComponentManagerImpl::nsComponentManagerImpl()
       mLock("nsComponentManagerImpl.mLock"),
       mStatus(NOT_INITIALIZED) {}
 
-static nsTArray<const mozilla::Module*>* sExtraStaticModules;
-
-/* NSMODULE_DEFN places NSModules in specific sections, as per Module.h.
- * The linker will group them all together, and we use tricks below to
- * find the start and end of the grouped list of NSModules.
- *
- * On Windows, all the symbols in the .kPStaticModules* sections are
- * grouped together, by lexical order of the section names. The NSModules
- * themselves are in .kPStaticModules$M. We use the section name
- * .kPStaticModules$A to add an empty entry that will be the first,
- * and the section name .kPStaticModules$Z for another empty entry that
- * will be the last. We make both null pointers, and skip them in the
- * AllStaticModules range-iterator.
- *
- * On ELF (Linux, BSDs, ...), as well as Mingw builds, the linker itself
- * provides symbols for the beginning and end of the consolidated section,
- * but it only does so for sections that can be represented as C identifiers,
- * so the section is named `kPStaticModules` rather than `.kPStaticModules`.
- *
- * We also use a linker script with BFD ld so that the sections end up
- * folded into the .data.rel.ro section, but that actually breaks the above
- * described behavior, so the linker script contains an additional trick
- * to still provide the __start and __stop symbols (the linker script
- * doesn't work with gold or lld).
- *
- * On Darwin, a similar setup is available through the use of some
- * synthesized symbols (section$...).
- *
- * On all platforms, the __stop_kPStaticModules symbol is past all NSModule
- * pointers.
- * On Windows, the __start_kPStaticModules symbol points to an empty pointer
- * preceding the first NSModule pointer. On other platforms, it points to the
- * first NSModule pointer.
- */
-
-// Dummy class to define a range-iterator for the static modules.
-class AllStaticModules {};
-
-#if defined(_MSC_VER) || (defined(__clang__) && defined(__MINGW32__))
-
-#  pragma section(".kPStaticModules$A", read)
-NSMODULE_ASAN_BLACKLIST __declspec(allocate(".kPStaticModules$A"),
-                                   dllexport) extern mozilla::Module
-    const* const __start_kPStaticModules = nullptr;
-
-mozilla::Module const* const* begin(AllStaticModules& _) {
-  return &__start_kPStaticModules + 1;
+extern const mozilla::Module kNeckoModule;
+extern const mozilla::Module kParserModule;
+#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_ANDROID)
+extern const mozilla::Module kSpeechSynthModule;
+#endif
+extern const mozilla::Module kPowerManagerModule;
+extern const mozilla::Module kContentProcessWidgetModule;
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_UIKIT)
+extern const mozilla::Module kWidgetModule;
+#endif
+extern const mozilla::Module kLayoutModule;
+namespace mozilla {
+extern const mozilla::Module kLocalCertServiceModule;
 }
-
-#  pragma section(".kPStaticModules$Z", read)
-NSMODULE_ASAN_BLACKLIST __declspec(allocate(".kPStaticModules$Z"),
-                                   dllexport) extern mozilla::Module
-    const* const __stop_kPStaticModules = nullptr;
-
-#else
-
-#  if defined(__ELF__) || (defined(_WIN32) && defined(__GNUC__))
-
-extern "C" mozilla::Module const* const __start_kPStaticModules;
-extern "C" mozilla::Module const* const __stop_kPStaticModules;
-
-#  elif defined(__MACH__)
-
-extern mozilla::Module const* const __start_kPStaticModules __asm(
-    "section$start$__DATA$.kPStaticModules");
-extern mozilla::Module const* const __stop_kPStaticModules __asm(
-    "section$end$__DATA$.kPStaticModules");
-
-#  else
-#    error Do not know how to find NSModules.
-#  endif
-
-static mozilla::Module const* const* begin(AllStaticModules& _) {
-  return &__start_kPStaticModules;
+extern const mozilla::Module kKeyValueModule;
+extern const mozilla::Module kXREModule;
+extern const mozilla::Module kEmbeddingModule;
+#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_ANDROID)
+extern const mozilla::Module kSysProxyModule;
+#endif
+#if defined(XP_WIN)
+namespace mozilla {
+namespace toolkit {
+namespace system {
+namespace windowsDHCPClient {
+extern const mozilla::Module kSysDHCPClientModule;
 }
-
+}  // namespace system
+}  // namespace toolkit
+}  // namespace mozilla
+#endif
+#if defined(MOZ_WIDGET_ANDROID)
+extern const mozilla::Module kBrowserModule;
+#endif
+#if defined(MOZ_LAYOUT_DEBUGGER) && !defined(MOZ_WIDGET_ANDROID)
+extern const mozilla::Module kLayoutDebugModule;
+#endif
+#if defined(MOZ_CODE_COVERAGE)
+extern const mozilla::Module kCodeCoverageModule;
 #endif
 
-static mozilla::Module const* const* end(AllStaticModules& _) {
-  return &__stop_kPStaticModules;
-}
+static nsTArray<const mozilla::Module*>* sExtraStaticModules;
 
 /* static */
 void nsComponentManagerImpl::InitializeStaticModules() {
@@ -486,13 +447,36 @@ nsresult nsComponentManagerImpl::Init() {
   nsCategoryManager::GetSingleton()->SuppressNotifications(true);
 
   RegisterModule(&kXPCOMModule);
-
-  for (auto module : AllStaticModules()) {
-    if (module) {  // On local Windows builds, the list may contain null
-                   // pointers from padding.
-      RegisterModule(module);
-    }
-  }
+  RegisterModule(&kNeckoModule);
+  RegisterModule(&kParserModule);
+#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_ANDROID)
+  RegisterModule(&kSpeechSynthModule);
+#endif
+  RegisterModule(&kPowerManagerModule);
+  RegisterModule(&kContentProcessWidgetModule);
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_UIKIT)
+  RegisterModule(&kWidgetModule);
+#endif
+  RegisterModule(&kLayoutModule);
+  RegisterModule(&mozilla::kLocalCertServiceModule);
+  RegisterModule(&kKeyValueModule);
+  RegisterModule(&kXREModule);
+  RegisterModule(&kEmbeddingModule);
+#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_ANDROID)
+  RegisterModule(&kSysProxyModule);
+#endif
+#if defined(XP_WIN)
+  RegisterModule(&mozilla::toolkit::system::windowsDHCPClient::kSysDHCPClientModule);
+#endif
+#if defined(MOZ_WIDGET_ANDROID)
+  RegisterModule(&kBrowserModule);
+#endif
+#if defined(MOZ_LAYOUT_DEBUGGER) && !defined(MOZ_WIDGET_ANDROID)
+  RegisterModule(&kLayoutDebugModule);
+#endif
+#if defined(MOZ_CODE_COVERAGE)
+  RegisterModule(&kCodeCoverageModule);
+#endif
 
   for (uint32_t i = 0; i < sExtraStaticModules->Length(); ++i) {
     RegisterModule((*sExtraStaticModules)[i]);

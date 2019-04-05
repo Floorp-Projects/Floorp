@@ -349,7 +349,7 @@ void nsNetShutdown() {
   gDataSniffers = nullptr;
 }
 
-static const mozilla::Module kNeckoModule = {
+extern const mozilla::Module kNeckoModule = {
     mozilla::Module::kVersion,
     nullptr,
     nullptr,
@@ -358,5 +358,3 @@ static const mozilla::Module kNeckoModule = {
     nullptr,
     nullptr,
     mozilla::Module::ALLOW_IN_SOCKET_PROCESS};
-
-NSMODULE_DEFN(necko) = &kNeckoModule;

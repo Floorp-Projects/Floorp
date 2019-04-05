@@ -92,10 +92,8 @@ static const mozilla::Module::CIDEntry kSysDHCPClientCIDs[] = {
 static const mozilla::Module::ContractIDEntry kSysDHCPClientContracts[] = {
     {NS_DHCPCLIENT_CONTRACTID, &kNS_WINDOWSDHCPCLIENTSERVICE_CID}, {nullptr}};
 
-static const mozilla::Module kSysDHCPClientModule = {
+extern const mozilla::Module kSysDHCPClientModule = {
     mozilla::Module::kVersion, kSysDHCPClientCIDs, kSysDHCPClientContracts};
-
-NSMODULE_DEFN(nsDHCPClientModule) = &kSysDHCPClientModule;
 
 }  // namespace windowsDHCPClient
 }  // namespace system

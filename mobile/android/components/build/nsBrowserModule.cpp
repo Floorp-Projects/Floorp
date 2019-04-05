@@ -47,7 +47,5 @@ static const mozilla::Module::ContractIDEntry kBrowserContracts[] = {
 #endif
     {nullptr}};
 
-static const mozilla::Module kBrowserModule = {mozilla::Module::kVersion,
+extern const mozilla::Module kBrowserModule = {mozilla::Module::kVersion,
                                                kBrowserCIDs, kBrowserContracts};
-
-NSMODULE_DEFN(nsBrowserCompsModule) = &kBrowserModule;

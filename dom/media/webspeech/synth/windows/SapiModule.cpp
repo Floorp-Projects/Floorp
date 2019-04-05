@@ -39,8 +39,6 @@ static const mozilla::Module::CategoryEntry kCategories[] = {
 
 static void UnloadSapiModule() { SapiService::Shutdown(); }
 
-static const mozilla::Module kModule = {
+extern const mozilla::Module kSpeechSynthModule = {
     mozilla::Module::kVersion, kCIDs, kContracts, kCategories, nullptr, nullptr,
     UnloadSapiModule};
-
-NSMODULE_DEFN(synthsapi) = &kModule;
