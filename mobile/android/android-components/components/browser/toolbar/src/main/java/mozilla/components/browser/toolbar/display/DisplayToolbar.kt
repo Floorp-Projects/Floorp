@@ -436,7 +436,7 @@ internal class DisplayToolbar(
     companion object {
         internal const val URL_FADING_EDGE_SIZE_DP = 24
 
-        private const val BOTTOM_PROGRESS_BAR = 0
+        const val BOTTOM_PROGRESS_BAR = 0
         private const val TOP_PROGRESS_BAR = 1
         private const val ICON_PADDING_DP = 16
         private const val MENU_PADDING_DP = 16

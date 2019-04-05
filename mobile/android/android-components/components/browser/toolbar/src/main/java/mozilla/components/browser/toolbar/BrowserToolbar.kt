@@ -27,6 +27,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.toolbar.display.DisplayToolbar
+import mozilla.components.browser.toolbar.display.DisplayToolbar.Companion.BOTTOM_PROGRESS_BAR
 import mozilla.components.browser.toolbar.edit.EditToolbar
 import mozilla.components.concept.toolbar.AutocompleteDelegate
 import mozilla.components.concept.toolbar.AutocompleteResult
@@ -316,7 +317,7 @@ class BrowserToolbar @JvmOverloads constructor(
             attrs?.let {
                 progressBarGravity = getInt(
                     R.styleable.BrowserToolbar_browserToolbarProgressBarGravity,
-                    0
+                    BOTTOM_PROGRESS_BAR
                 )
                 hintColor = getColor(
                     R.styleable.BrowserToolbar_browserToolbarHintColor,
