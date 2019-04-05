@@ -76,4 +76,7 @@ LOCAL_INCLUDES += [
 if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     CXXFLAGS += CONFIG['TK_CFLAGS']
 
+if CONFIG['MOZ_LAYOUT_DEBUGGER']:
+    DEFINES['MOZ_LAYOUT_DEBUGGER'] = True
+
 include('/ipc/chromium/chromium-config.mozbuild')

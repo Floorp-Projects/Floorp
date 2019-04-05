@@ -61,7 +61,5 @@ static const mozilla::Module::ContractIDEntry kWidgetContracts[] = {
      Module::CONTENT_PROCESS_ONLY},
     {nullptr}};
 
-static const mozilla::Module kWidgetModule = {mozilla::Module::kVersion,
-                                              kWidgetCIDs, kWidgetContracts};
-
-NSMODULE_DEFN(nsContentProcessWidgetModule) = &kWidgetModule;
+extern const mozilla::Module kContentProcessWidgetModule = {
+    mozilla::Module::kVersion, kWidgetCIDs, kWidgetContracts};

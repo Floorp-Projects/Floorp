@@ -38,7 +38,7 @@ static const mozilla::Module::CategoryEntry kCategories[] = {
      ANDROIDSPEECHSERVICE_CONTRACTID},
     {nullptr}};
 
-static const mozilla::Module kModule = {
+extern const mozilla::Module kSpeechSynthModule = {
     mozilla::Module::kVersion,
     kCIDs,
     kContracts,
@@ -47,5 +47,3 @@ static const mozilla::Module kModule = {
     nullptr,
     nullptr,
 };
-
-NSMODULE_DEFN(androidspeechsynth) = &kModule;

@@ -35,8 +35,6 @@ static const mozilla::Module::CategoryEntry kLayoutDebugCategories[] = {
      "@mozilla.org/commandlinehandler/general-startup;1?type=layoutdebug"},
     {nullptr}};
 
-static const mozilla::Module kLayoutDebugModule = {
+extern const mozilla::Module kLayoutDebugModule = {
     mozilla::Module::kVersion, kLayoutDebugCIDs, kLayoutDebugContracts,
     kLayoutDebugCategories};
-
-NSMODULE_DEFN(nsLayoutDebugModule) = &kLayoutDebugModule;
