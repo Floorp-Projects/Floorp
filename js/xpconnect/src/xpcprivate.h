@@ -1615,7 +1615,8 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
  public:
   static already_AddRefed<nsXPCWrappedJSClass> GetNewOrUsed(REFNSIID aIID);
 
-  REFNSIID GetIID() const { return mInfo->IID(); }
+  REFNSIID GetIID() const { return mIID; }
+  XPCJSRuntime* GetRuntime() const { return mRuntime; }
   const nsXPTInterfaceInfo* GetInterfaceInfo() const { return mInfo; }
   const char* GetInterfaceName();
 
@@ -1644,7 +1645,17 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
   virtual ~nsXPCWrappedJSClass();
 
   nsXPCWrappedJSClass() = delete;
-  nsXPCWrappedJSClass(const nsXPTInterfaceInfo* aInfo);
+  nsXPCWrappedJSClass(REFNSIID aIID, const nsXPTInterfaceInfo* aInfo);
+
+  bool IsReflectable(uint16_t i) const {
+    return (bool)(mDescriptors[i / 32] & (1U << (i % 32)));
+  }
+  void SetReflectable(uint16_t i, bool b) {
+    if (b)
+      mDescriptors[i / 32] |= (1U << (i % 32));
+    else
+      mDescriptors[i / 32] &= ~(1U << (i % 32));
+  }
 
   bool GetArraySizeFromParam(const nsXPTMethodInfo* method,
                              const nsXPTType& type, nsXPTCMiniVariant* params,
@@ -1659,7 +1670,10 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
                         uint8_t n) const;
 
  private:
+  XPCJSRuntime* mRuntime;
   const nsXPTInterfaceInfo* mInfo;
+  nsIID mIID;
+  uint32_t* mDescriptors;
 };
 
 /*************************/
@@ -1817,6 +1831,8 @@ class XPCWrappedJSIterator final : public nsISimpleEnumerator {
 // class here just for static methods
 class XPCConvert {
  public:
+  static bool IsMethodReflectable(const nsXPTMethodInfo& info);
+
   /**
    * Convert a native object into a JS::Value.
    *
