@@ -41,6 +41,8 @@ class QuickActionComponent(
 data class QuickActionState(val readable: Boolean) : ViewState
 
 sealed class QuickActionAction : Action {
+    object Opened : QuickActionAction()
+    object Closed : QuickActionAction()
     object SharePressed : QuickActionAction()
     object DownloadsPressed : QuickActionAction()
     object BookmarkPressed : QuickActionAction()

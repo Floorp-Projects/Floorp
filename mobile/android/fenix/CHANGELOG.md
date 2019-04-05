@@ -13,5 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #1036 - Adds telemetry for Find in Page
 - #1049 - Add style for progress bar with gradient drawable
 - #1165 - Added doorhanger to the toolbar
+- #1195 - Adds telemetry for quick action sheet
 ### Changed
 ### Removed

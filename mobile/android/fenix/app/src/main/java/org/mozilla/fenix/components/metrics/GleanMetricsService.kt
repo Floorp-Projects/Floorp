@@ -12,6 +12,7 @@ import org.mozilla.fenix.GleanMetrics.CrashReporter
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.FindInPage
 import org.mozilla.fenix.GleanMetrics.ContextMenu
+import org.mozilla.fenix.GleanMetrics.QuickActionSheet
 import org.mozilla.fenix.GleanMetrics.Metrics
 import org.mozilla.fenix.utils.Settings
 
@@ -83,6 +84,24 @@ private val Event.wrapper
         is Event.BrowserMenuItemTapped -> EventWrapper(
             { Events.browserMenuAction },
             { Events.browserMenuActionKeys.valueOf(it) }
+        )
+        is Event.QuickActionSheetOpened -> EventWrapper<NoExtraKeys>(
+            { QuickActionSheet.opened.record(it) }
+        )
+        is Event.QuickActionSheetClosed -> EventWrapper<NoExtraKeys>(
+            { QuickActionSheet.closed.record(it) }
+        )
+        is Event.QuickActionSheetShareTapped -> EventWrapper<NoExtraKeys>(
+            { QuickActionSheet.shareTapped.record(it) }
+        )
+        is Event.QuickActionSheetBookmarkTapped -> EventWrapper<NoExtraKeys>(
+            { QuickActionSheet.bookmarkTapped.record(it) }
+        )
+        is Event.QuickActionSheetDownloadTapped -> EventWrapper<NoExtraKeys>(
+            { QuickActionSheet.downloadTapped.record(it) }
+        )
+        is Event.QuickActionSheetReadTapped -> EventWrapper<NoExtraKeys>(
+            { QuickActionSheet.readTapped.record(it) }
         )
 
         // Don't track other events with Glean

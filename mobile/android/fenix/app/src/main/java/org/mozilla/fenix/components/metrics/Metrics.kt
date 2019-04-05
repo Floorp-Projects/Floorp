@@ -10,9 +10,6 @@ import mozilla.components.support.base.facts.Facts
 import org.mozilla.fenix.BuildConfig
 
 sealed class Event {
-    object AddBookmark : Event()
-    object RemoveBookmark : Event()
-    object OpenedBookmark : Event()
 
     data class OpenedApp(val source: Source) : Event() {
         enum class Source { APP_ICON, LINK, CUSTOM_TAB }
@@ -49,6 +46,15 @@ sealed class Event {
     object DarkModeEnabled : Event()
     object SearchShortcutMenuOpened : Event()
     object SearchShortcutMenuClosed : Event()
+    object AddBookmark : Event()
+    object RemoveBookmark : Event()
+    object OpenedBookmark : Event()
+    object QuickActionSheetOpened : Event()
+    object QuickActionSheetClosed : Event()
+    object QuickActionSheetShareTapped : Event()
+    object QuickActionSheetBookmarkTapped : Event()
+    object QuickActionSheetDownloadTapped : Event()
+    object QuickActionSheetReadTapped : Event()
 
     // Interaction Events
     data class SearchBarTapped(val source: Source) : Event() {

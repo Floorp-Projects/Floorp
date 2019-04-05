@@ -274,6 +274,7 @@ class BrowserFragment : Fragment(), BackHandler {
         (activity as AppCompatActivity).supportActionBar?.hide()
     }
 
+    @Suppress("ComplexMethod")
     override fun onStart() {
         super.onStart()
         getAutoDisposeObservable<SearchAction>()
@@ -302,14 +303,23 @@ class BrowserFragment : Fragment(), BackHandler {
         getAutoDisposeObservable<QuickActionAction>()
             .subscribe {
                 when (it) {
+                    is QuickActionAction.Opened -> {
+                        requireComponents.analytics.metrics.track(Event.QuickActionSheetOpened)
+                    }
+                    is QuickActionAction.Closed -> {
+                        requireComponents.analytics.metrics.track(Event.QuickActionSheetClosed)
+                    }
                     is QuickActionAction.SharePressed -> {
+                        requireComponents.analytics.metrics.track(Event.QuickActionSheetShareTapped)
                         requireComponents.core.sessionManager
                             .selectedSession?.url?.apply { requireContext().share(this) }
                     }
                     is QuickActionAction.DownloadsPressed -> {
+                        requireComponents.analytics.metrics.track(Event.QuickActionSheetDownloadTapped)
                         ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "348")
                     }
                     is QuickActionAction.BookmarkPressed -> {
+                        requireComponents.analytics.metrics.track(Event.QuickActionSheetBookmarkTapped)
                         val session = requireComponents.core.sessionManager.selectedSession
                         CoroutineScope(IO).launch {
                             requireComponents.core.bookmarksStorage
@@ -334,6 +344,7 @@ class BrowserFragment : Fragment(), BackHandler {
                         }
                     }
                     is QuickActionAction.ReadPressed -> {
+                        requireComponents.analytics.metrics.track(Event.QuickActionSheetReadTapped)
                         ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "908")
                     }
                 }
