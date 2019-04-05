@@ -517,6 +517,8 @@ const listeners = {
     "FormValidation:HidePopup": ["FormValidationHandler"],
     "PictureInPicture:Request": ["PictureInPicture"],
     "PictureInPicture:Close": ["PictureInPicture"],
+    "PictureInPicture:Playing": ["PictureInPicture"],
+    "PictureInPicture:Paused": ["PictureInPicture"],
     "Prompt:Open": ["RemotePrompt"],
     "Reader:FaviconRequest": ["ReaderParent"],
     "Reader:UpdateReaderButton": ["ReaderParent"],

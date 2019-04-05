@@ -99,6 +99,21 @@ DebuggerPanel.prototype = {
     return Promise.all([onNodeFrontSet, onInspectorUpdated]);
   },
 
+  highlightDomElement: async function(grip) {
+    await this.toolbox.initInspector();
+    if (!this.toolbox.highlighter) {
+      return null;
+    }
+    const nodeFront = await this.toolbox.walker.gripToNodeFront(grip);
+    return this.toolbox.highlighter.highlight(nodeFront);
+  },
+
+  unHighlightDomElement: function() {
+    return this.toolbox.highlighter
+      ? this.toolbox.highlighter.unhighlight(false)
+      : null;
+  },
+
   getFrames: function() {
     const thread = this._selectors.getCurrentThread(this._getState());
     const frames = this._selectors.getFrames(this._getState(), thread);

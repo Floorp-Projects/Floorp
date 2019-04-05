@@ -612,9 +612,9 @@ description#identity-popup-content-verifier,
 
 /* Show the right action buttons depending on content state */
 /* Offer to temporarily add an exception in private mode. */
-#main-window:not([privatebrowsingmode]) #identity-popup-content-blocking-content[blocking]:not([hasException]) > #tracking-action-unblock,
+:root:not([privatebrowsingmode]) #identity-popup-content-blocking-content[blocking]:not([hasException]) > #tracking-action-unblock,
 /* Offer to permanently add an exception in normal mode. */
-#main-window[privatebrowsingmode] #identity-popup-content-blocking-content[blocking]:not([hasException]) > #tracking-action-unblock-private,
+:root[privatebrowsingmode] #identity-popup-content-blocking-content[blocking]:not([hasException]) > #tracking-action-unblock-private,
 /* If there's an exception just offer to remove the exception again. */
 #identity-popup-content-blocking-content[hasException] > #tracking-action-block {
   display: -moz-box;

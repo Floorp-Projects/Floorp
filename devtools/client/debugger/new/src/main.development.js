@@ -25,6 +25,10 @@ bootstrap(React, ReactDOM).then(connection => {
     openWorkerToolbox: worker => alert(worker.url),
     openElementInInspector: grip =>
       alert(`Opening node in Inspector: ${grip.class}`),
-    openConsoleAndEvaluate: input => alert(`console.log: ${input}`)
+    openConsoleAndEvaluate: input => alert(`console.log: ${input}`),
+    highlightDomElement: (grip: Object) =>
+      console.log("highlighting dom element"),
+    unHighlightDomElement: (grip: Object) =>
+      console.log("unhighlighting dom element")
   });
 });

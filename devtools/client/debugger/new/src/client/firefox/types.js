@@ -364,5 +364,7 @@ export type Panel = {|
   openLink: (url: string) => void,
   openWorkerToolbox: (worker: Worker) => void,
   openElementInInspector: (grip: Object) => void,
-  openConsoleAndEvaluate: (input: string) => void
+  openConsoleAndEvaluate: (input: string) => void,
+  highlightDomElement: (grip: Object) => void,
+  unHighlightDomElement: (grip: Object) => void
 |};

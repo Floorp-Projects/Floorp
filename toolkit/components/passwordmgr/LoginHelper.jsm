@@ -60,18 +60,12 @@ var LoginHelper = {
       return this.debug ? "Debug" : "Warn";
     };
 
-    let logger;
-    function getConsole() {
-      if (!logger) {
-        // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
-        let consoleOptions = {
-          maxLogLevel: getMaxLogLevel(),
-          prefix: aLogPrefix,
-        };
-        logger = console.createInstance(consoleOptions);
-      }
-      return logger;
-    }
+    // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
+    let consoleOptions = {
+      maxLogLevel: getMaxLogLevel(),
+      prefix: aLogPrefix,
+    };
+    let logger = console.createInstance(consoleOptions);
 
     // Watch for pref changes and update this.debug and the maxLogLevel for created loggers
     Services.prefs.addObserver("signon.debug", () => {
@@ -81,26 +75,7 @@ var LoginHelper = {
       }
     });
 
-    return {
-      log: (...args) => {
-        if (this.debug) {
-          getConsole().log(...args);
-        }
-      },
-      error: (...args) => {
-        getConsole().error(...args);
-      },
-      debug: (...args) => {
-        if (this.debug) {
-          getConsole().debug(...args);
-        }
-      },
-      warn: (...args) => {
-        if (this.debug) {
-          getConsole().warn(...args);
-        }
-      },
-    };
+    return logger;
   },
 
   /**
