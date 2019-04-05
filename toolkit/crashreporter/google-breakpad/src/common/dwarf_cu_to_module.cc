@@ -125,6 +125,20 @@ struct DwarfCUToModule::FilePrivate {
   SpecificationByOffset specifications;
 
   AbstractOriginByOffset origins;
+
+  struct InlinedSubroutineRange {
+    InlinedSubroutineRange(Module::Range range, uint64 call_file,
+                           uint64 call_line)
+      : range_(range), call_file_(call_file), call_line_(call_line) {}
+
+    Module::Range range_;
+    uint64 call_file_, call_line_;
+  };
+
+  // A collection of address ranges with the file and line that they
+  // correspond to. We'll use this information to replace the precise line
+  // information gathered from .debug_line.
+  vector<InlinedSubroutineRange> inlined_ranges;
 };
 
 DwarfCUToModule::FileContext::FileContext(const string &filename,
@@ -455,6 +469,104 @@ string DwarfCUToModule::GenericDIEHandler::ComputeQualifiedName() {
   return return_value;
 }
 
+// A handler class for DW_TAG_inlined_subroutine DIEs.
+class DwarfCUToModule::InlinedSubroutineHandler: public GenericDIEHandler {
+ public:
+  InlinedSubroutineHandler(CUContext *cu_context, DIEContext *parent_context,
+                           uint64 offset)
+    : GenericDIEHandler(cu_context, parent_context, offset),
+      low_pc_(0), high_pc_(0), high_pc_form_(dwarf2reader::DW_FORM_addr),
+      ranges_(0), call_file_(0), call_file_set_(false), call_line_(0),
+      call_line_set_(false) {}
+
+  void ProcessAttributeUnsigned(enum DwarfAttribute attr,
+                                enum DwarfForm form,
+                                uint64 data);
+
+  bool EndAttributes();
+
+ private:
+  uint64 low_pc_, high_pc_; // DW_AT_low_pc, DW_AT_high_pc
+  DwarfForm high_pc_form_; // DW_AT_high_pc can be length or address.
+  uint64 ranges_; // DW_AT_ranges
+  uint64 call_file_; // DW_AT_call_file
+  bool call_file_set_;
+  uint64 call_line_; // DW_AT_call_line
+  bool call_line_set_;
+};
+
+void DwarfCUToModule::InlinedSubroutineHandler::ProcessAttributeUnsigned(
+    enum DwarfAttribute attr,
+    enum DwarfForm form,
+    uint64 data) {
+  switch (attr) {
+    case dwarf2reader::DW_AT_low_pc:      low_pc_  = data; break;
+    case dwarf2reader::DW_AT_high_pc:
+      high_pc_form_ = form;
+      high_pc_ = data;
+      break;
+    case dwarf2reader::DW_AT_ranges:
+      ranges_ = data;
+      break;
+    case dwarf2reader::DW_AT_call_file:
+      call_file_ = data;
+      call_file_set_ = true;
+      break;
+    case dwarf2reader::DW_AT_call_line:
+      call_line_ = data;
+      call_line_set_ = true;
+      break;
+
+    default:
+      GenericDIEHandler::ProcessAttributeUnsigned(attr, form, data);
+      break;
+  }
+}
+
+bool DwarfCUToModule::InlinedSubroutineHandler::EndAttributes() {
+  // DW_TAG_inlined_subroutine child DIEs are only information about formal
+  // parameters and any subroutines that were further inlined, which we're
+  // not particularly concerned about.
+  const bool ignore_children = false;
+
+  // If we didn't find complete information about what file and line we were
+  // inlined from, then there's no point in computing anything.
+  if (!call_file_set_ || !call_line_set_) {
+    return ignore_children;
+  }
+
+  vector<Module::Range> ranges;
+
+  if (!ranges_) {
+    // Make high_pc_ an address, if it isn't already.
+    if (high_pc_form_ != dwarf2reader::DW_FORM_addr &&
+        high_pc_form_ != dwarf2reader::DW_FORM_GNU_addr_index) {
+      high_pc_ += low_pc_;
+    }
+
+    Module::Range range(low_pc_, high_pc_ - low_pc_);
+    ranges.push_back(range);
+  } else {
+    RangesHandler *ranges_handler = cu_context_->ranges_handler;
+
+    if (ranges_handler) {
+      if (!ranges_handler->ReadRanges(ranges_, cu_context_->low_pc, &ranges)) {
+        ranges.clear();
+        cu_context_->reporter->MalformedRangeList(ranges_);
+      }
+    } else {
+      cu_context_->reporter->MissingRanges();
+    }
+  }
+
+  for (const auto& range : ranges) {
+    FilePrivate::InlinedSubroutineRange inline_range(range, call_file_, call_line_);
+    cu_context_->file_context->file_private_->inlined_ranges.push_back(inline_range);
+  }
+
+  return ignore_children;
+}
+
 // A handler class for DW_TAG_subprogram DIEs.
 class DwarfCUToModule::FuncHandler: public GenericDIEHandler {
  public:
@@ -475,6 +587,8 @@ class DwarfCUToModule::FuncHandler: public GenericDIEHandler {
 
   bool EndAttributes();
   void Finish();
+
+  DIEHandler *FindChildHandler(uint64 offset, enum DwarfTag tag);
 
  private:
   // The fully-qualified name, as derived from name_attribute_,
@@ -623,6 +737,18 @@ void DwarfCUToModule::FuncHandler::Finish() {
   } else if (inline_) {
     AbstractOrigin origin(name_);
     cu_context_->file_context->file_private_->origins[offset_] = origin;
+  }
+}
+
+dwarf2reader::DIEHandler *DwarfCUToModule::FuncHandler::FindChildHandler(
+    uint64 offset,
+    enum DwarfTag tag) {
+  switch (tag) {
+    case dwarf2reader::DW_TAG_inlined_subroutine:
+      return new InlinedSubroutineHandler(cu_context_, parent_context_, offset);
+
+    default:
+      return NULL;
   }
 }
 
