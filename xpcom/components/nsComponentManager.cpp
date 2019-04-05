@@ -360,7 +360,7 @@ extern const mozilla::Module kLayoutModule;
 extern const mozilla::Module kKeyValueModule;
 extern const mozilla::Module kXREModule;
 extern const mozilla::Module kEmbeddingModule;
-#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_ANDROID)
+#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
 extern const mozilla::Module kSysProxyModule;
 #endif
 #if defined(XP_WIN)
@@ -468,7 +468,7 @@ nsresult nsComponentManagerImpl::Init() {
   RegisterModule(&kKeyValueModule);
   RegisterModule(&kXREModule);
   RegisterModule(&kEmbeddingModule);
-#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_ANDROID)
+#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA)
   RegisterModule(&kSysProxyModule);
 #endif
 #if defined(XP_WIN)
