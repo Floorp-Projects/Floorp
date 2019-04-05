@@ -7412,22 +7412,6 @@
     "kind": "count",
     "description": "Count of exceptions in TelemetrySession.getSessionPayload()."
   },
-  "TELEMETRY_SCHEDULER_TICK_EXCEPTION": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["telemetry-client-dev@mozilla.com"],
-    "bug_numbers": [1250640],
-    "expires_in_version": "53",
-    "kind": "count",
-    "description": "Count of exceptions during executing the TelemetrySession scheduler tick logic."
-  },
-  "TELEMETRY_SCHEDULER_WAKEUP": {
-    "record_in_processes": ["main"],
-    "alert_emails": ["telemetry-client-dev@mozilla.com"],
-    "bug_numbers": [1250640],
-    "expires_in_version": "53",
-    "kind": "count",
-    "description": "Count of TelemetrySession scheduler ticks that were delayed long enough to suspect sleep."
-  },
   "TELEMETRY_EVENT_PING_SENT": {
     "record_in_processes": ["main"],
     "alert_emails": ["telemetry-client-dev@mozilla.com", "chutten@mozilla.com"],
