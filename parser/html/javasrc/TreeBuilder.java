@@ -1728,7 +1728,7 @@ public abstract class TreeBuilder<T> implements TokenHandler,
                                 errHtmlStartTagInForeignContext(name);
                                 if (!fragment) {
                                     while (!isSpecialParentInForeign(stack[currentPtr])) {
-                                        pop();
+                                        popForeign(-1, -1);
                                     }
                                     continue starttagloop;
                                 } // else fall thru
