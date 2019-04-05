@@ -44,6 +44,7 @@
 #include "js/Date.h"
 #include "js/PropertySpec.h"
 #include "js/StableStringChars.h"
+#include "js/Warnings.h"  // JS::{,Set}WarningReporter
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
 #include "vm/ArgumentsObject.h"

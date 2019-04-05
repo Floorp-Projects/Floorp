@@ -261,7 +261,7 @@ class JSErrorReport : public JSErrorBase {
  * JSErrorReport flag values.  These may be freely composed.
  */
 #define JSREPORT_ERROR 0x0     /* pseudo-flag for default case */
-#define JSREPORT_WARNING 0x1   /* reported via JS_ReportWarning */
+#define JSREPORT_WARNING 0x1   /* reported via JS::Warn* */
 #define JSREPORT_EXCEPTION 0x2 /* exception was thrown */
 #define JSREPORT_STRICT 0x4    /* error or warning due to strict option */
 

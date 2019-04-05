@@ -41,6 +41,7 @@
 #include "js/UniquePtr.h"
 #include "js/Utility.h"
 #include "js/Vector.h"
+#include "js/Warnings.h"  // JS::WarningReporter
 #include "threading/Thread.h"
 #include "vm/Caches.h"
 #include "vm/CodeCoverage.h"

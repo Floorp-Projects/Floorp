@@ -104,6 +104,7 @@
 #include "js/StableStringChars.h"
 #include "js/StructuredClone.h"
 #include "js/SweepingAPI.h"
+#include "js/Warnings.h"  // JS::SetWarningReporter
 #include "js/Wrapper.h"
 #include "perf/jsperf.h"
 #include "shell/jsoptparse.h"
