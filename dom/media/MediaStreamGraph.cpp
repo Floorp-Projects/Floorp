@@ -3288,9 +3288,16 @@ MediaStreamGraph* MediaStreamGraph::CreateNonRealtimeInstance(
     TrackRate aSampleRate, nsPIDOMWindowInner* aWindow) {
   MOZ_ASSERT(NS_IsMainThread(), "Main thread only");
 
+  AbstractThread* mainThread = AbstractThread::MainThread();
+  // aWindow can be null when the document is being unlinked, so this works when
+  // with a generic main thread if that's the case.
+  if (aWindow) {
+    mainThread =
+        aWindow->AsGlobal()->AbstractMainThreadFor(TaskCategory::Other);
+  }
+
   MediaStreamGraphImpl* graph = new MediaStreamGraphImpl(
-      OFFLINE_THREAD_DRIVER, DIRECT_DRIVER, aSampleRate,
-      aWindow->AsGlobal()->AbstractMainThreadFor(TaskCategory::Other));
+      OFFLINE_THREAD_DRIVER, DIRECT_DRIVER, aSampleRate, mainThread);
 
   LOG(LogLevel::Debug, ("Starting up Offline MediaStreamGraph %p", graph));
 
