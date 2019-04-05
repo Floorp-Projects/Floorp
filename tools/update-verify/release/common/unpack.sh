@@ -20,7 +20,7 @@ unpack_build () {
     mkdir -p $dir_name
     pushd $dir_name > /dev/null
     case $unpack_platform in
-        Darwin_*)
+        mac|mac64|mac-ppc|Darwin_ppc-gcc|Darwin_Universal-gcc3|Darwin_x86_64-gcc3|Darwin_x86-gcc3-u-ppc-i386|Darwin_x86-gcc3-u-i386-x86_64|Darwin_x86_64-gcc3-u-i386-x86_64)
             os=`uname`
             # How we unpack a dmg differs depending on which platform we're on.
             if [[ "$os" == "Darwin" ]]
@@ -52,7 +52,7 @@ unpack_build () {
             fi
             update_settings_file="${appdir}/update-settings.ini"
             ;;
-        WINNT_*)
+        win32|win64|WINNT_x86-msvc|WINNT_x86-msvc-x86|WINNT_x86-msvc-x64|WINNT_x86_64-msvc|WINNT_x86_64-msvc-x64)
             7z x ../"$pkg_file" > /dev/null
             if [ -d localized ]
             then
@@ -80,7 +80,7 @@ unpack_build () {
             fi
             update_settings_file='bin/update-settings.ini'
             ;;
-        Linux_*)
+        linux-i686|linux-x86_64|linux|linux64|Linux_x86-gcc|Linux_x86-gcc3|Linux_x86_64-gcc3)
             if `echo $pkg_file | grep -q "tar.gz"`
             then
                 tar xfz ../"$pkg_file" > /dev/null
@@ -93,9 +93,6 @@ unpack_build () {
             fi
             update_settings_file=`echo $product | tr '[A-Z]' '[a-z]'`'/update-settings.ini'
             ;;
-        *)
-	    echo "Unknown platform to unpack: $unpack_platform"
-	    exit 1
     esac
 
     if [ ! -z $unpack_jars ]; then
