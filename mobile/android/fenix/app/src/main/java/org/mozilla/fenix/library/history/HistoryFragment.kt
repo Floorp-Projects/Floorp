@@ -13,7 +13,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.navigation.NavOptions
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_history.view.*
 import kotlinx.coroutines.CoroutineScope
@@ -23,6 +22,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.coroutineScope
 import mozilla.components.concept.storage.VisitType
 import mozilla.components.support.base.feature.BackHandler
+import org.mozilla.fenix.BrowserDirection
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
@@ -64,14 +65,7 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
     }
 
     private fun selectItem(item: HistoryItem) {
-        Navigation.findNavController(requireActivity(), R.id.container).apply {
-            navigate(
-                HistoryFragmentDirections.actionGlobalBrowser(null),
-                NavOptions.Builder().setPopUpTo(R.id.homeFragment, false).build()
-            )
-        }
-
-        requireComponents.useCases.sessionUseCases.loadUrl.invoke(item.url)
+        (activity as HomeActivity).openToBrowserAndLoad(item.url, from = BrowserDirection.FromHistory)
     }
 
     override fun onDestroy() {

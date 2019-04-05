@@ -29,6 +29,7 @@ import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.HomeFragmentDirections
 import org.mozilla.fenix.library.bookmarks.BookmarkFragmentDirections
+import org.mozilla.fenix.library.history.HistoryFragmentDirections
 import org.mozilla.fenix.search.SearchFragmentDirections
 import org.mozilla.fenix.settings.SettingsFragmentDirections
 
@@ -168,6 +169,8 @@ open class HomeActivity : AppCompatActivity() {
                 SettingsFragmentDirections.actionSettingsFragmentToBrowserFragment(sessionId)
             BrowserDirection.FromBookmarks ->
                 BookmarkFragmentDirections.actionBookmarkFragmentToBrowserFragment(sessionId)
+            BrowserDirection.FromHistory ->
+                HistoryFragmentDirections.actionHistoryFragmentToBrowserFragment(sessionId)
         }
 
         navHost.navController.navigate(directions)
@@ -204,5 +207,5 @@ open class HomeActivity : AppCompatActivity() {
 }
 
 enum class BrowserDirection {
-    FromGlobal, FromHome, FromSearch, FromSettings, FromBookmarks
+    FromGlobal, FromHome, FromSearch, FromSettings, FromBookmarks, FromHistory
 }

@@ -98,7 +98,9 @@
         android:id="@+id/historyFragment"
         android:name="org.mozilla.fenix.library.history.HistoryFragment"
         android:label="@string/library_history"
-        tools:layout="@layout/fragment_history" />
+        tools:layout="@layout/fragment_history" >
+        <action android:id="@+id/action_historyFragment_to_browserFragment" app:destination="@id/browserFragment"/>
+    </fragment>
 
     <fragment
         android:id="@+id/bookmarkFragment"

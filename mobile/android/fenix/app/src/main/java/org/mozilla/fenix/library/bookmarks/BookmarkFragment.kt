@@ -25,6 +25,7 @@ import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.base.feature.BackHandler
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -80,18 +81,8 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler {
                     is BookmarkAction.Open -> {
                         if (it.item.type == BookmarkNodeType.ITEM) {
                             it.item.url?.let { url ->
-                                val activity = requireActivity() as HomeActivity
-                                Navigation.findNavController(activity, R.id.container)
-                                    .navigate(BookmarkFragmentDirections.actionBookmarkFragmentToBrowserFragment(null))
-                                if (activity.browsingModeManager.isPrivate) {
-                                    requireComponents.useCases.tabsUseCases.addPrivateTab.invoke(url)
-                                    activity.browsingModeManager.mode =
-                                        BrowsingModeManager.Mode.Private
-                                } else {
-                                    requireComponents.useCases.sessionUseCases.loadUrl.invoke(url)
-                                    activity.browsingModeManager.mode =
-                                        BrowsingModeManager.Mode.Normal
-                                }
+                                (activity as HomeActivity)
+                                    .openToBrowserAndLoad(url, from = BrowserDirection.FromBookmarks)
                             }
                         }
                     }
