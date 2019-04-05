@@ -232,6 +232,7 @@ html|*#webRTC-previewVideo {
   list-style-image: url("chrome://browser/skin/drm-icon.svg");
 }
 
+.notification-anchor-icon[animate=true],
 #eme-notification-icon[firstplay=true] {
   animation: emeTeachingMoment 0.2s linear 0s 5 normal;
 }
