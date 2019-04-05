@@ -14,7 +14,8 @@ import sys
 # default migration directions
 data = {
     'migration': 'python/l10n/fluent_migrations',
-    'description': 'Migrate l10n strings'
+    'description': 'Migrate l10n strings',
+    'prefix': ''
 }
 
 
@@ -36,6 +37,8 @@ def parse_inputs():
                         help='string enclosed in quotes')
     parser.add_argument('--dry-run', action='store_true',
                         help='Tell if running dry run or not')
+    parser.add_argument('--prefix', type=str,
+                        help='a keyword string to be added to all l10n ids')
 
     parsed_args = parser.parse_args(sys_args)
 
@@ -46,6 +49,7 @@ def parse_inputs():
     data['mozilla-central'] = parsed_args.mozilla_central
     data['dtd'] = parsed_args.dtd.split(',')
     data['dry-run'] = parsed_args.dry_run
+    data['prefix'] = parsed_args.prefix
     data['recipe'] = "bug_{}_{}.py".format(data['bug_id'],
                                            data['xul'].split('/')[-1].split('.')[0])
 
@@ -67,7 +71,7 @@ def main():
     print(s)
 
     print('======== OUTPUT ========')
-    (new_xul, messages) = collect_messages(s)
+    (new_xul, messages) = collect_messages(s, data['prefix'])
     print(new_xul)
     if not dry_run:
         write_file(data['xul'], new_xul, data['mozilla-central'])

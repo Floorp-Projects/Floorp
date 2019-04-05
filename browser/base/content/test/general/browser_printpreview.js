@@ -21,7 +21,9 @@ function tidyUp() {
   finish();
 }
 
-function testClosePrintPreviewWithAccessKey() {
+async function testClosePrintPreviewWithAccessKey() {
+  let closeButton = document.getElementById("print-preview-toolbar-close-button");
+  await TestUtils.waitForCondition(() => closeButton.hasAttribute("accesskey"));
   EventUtils.synthesizeKey("c", {altKey: true});
   checkPrintPreviewClosed(function(aSucceeded) {
     ok(aSucceeded,
