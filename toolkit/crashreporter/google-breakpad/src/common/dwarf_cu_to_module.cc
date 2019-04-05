@@ -1095,9 +1095,113 @@ inline bool within(const T &item, Module::Address address) {
   // start of ITEM, or if it falls after ITEM's end.
   return address - item.address < item.size;
 }
+
+// LINES contains all the information that we have read from .debug_line.
+// INLINES contains synthesized line information gathered from
+// DW_TAG_inlined_subroutine DIEs.  We're going to merge the two such that
+// we have:
+//
+// 1. Lines from INLINES; and
+// 2. Lines from LINES that don't overlap lines from INLINES.
+//
+// since the coarser-grained information from INLINES is generally what you
+// want when getting stack traces.
+vector<Module::Line> MergeLines(const vector<Module::Line>& inlines,
+                                const vector<Module::Line>& lines) {
+  vector<Module::Line> merged_lines;
+  vector<Module::Line>::const_iterator orig_lines = lines.begin();
+  vector<Module::Line>::const_iterator inline_lines = inlines.begin();
+  vector<Module::Line>::const_iterator orig_end = lines.end();
+  vector<Module::Line>::const_iterator inline_end = inlines.end();
+
+  while (true) {
+    if (orig_lines == orig_end) {
+      break;
+    }
+
+    if (inline_lines == inline_end) {
+      merged_lines.push_back(*orig_lines);
+      ++orig_lines;
+      continue;
+    }
+
+    // We are going to make the simplifying assumption that an inline line
+    // will *always* start at the exact position of some original line.
+    // This assumption significantly reduces the number of cases we have
+    // to consider.
+
+    // If we haven't caught up to where the inline lines are, keep going.
+    if (orig_lines->address < inline_lines->address) {
+      merged_lines.push_back(*orig_lines);
+      ++orig_lines;
+      continue;
+    }
+
+    // We found some overlap!  See how far we can go, and merge the inline
+    // line into our list.
+    if (orig_lines->address == inline_lines->address) {
+      auto start = orig_lines + 1;
+      while ((start->address - inline_lines->address) < inline_lines->size
+             && start != orig_end) {
+        ++start;
+      }
+
+      // start now points just beyond the range covered by *inline_lines.
+      // But we might have encountered a case like:
+      //
+      // | OL1 | OL2 | OL3 | ... | OLN      | ...
+      // | IL1                      | <gap> | IL2 ...
+      //
+      // where the end of the inline line splits the last original line that
+      // we've seen in two.  This case seems like a bug in the debug
+      // information, but we have to deal with it intelligently.  There are
+      // several options available:
+      //
+      // 1. Split OLN into two parts: the part covered by IL1 and the part
+      //    not covered.  Merge IL1 and then merge the latter part.
+      // 2. Extend IL1 to cover the entirety of OLN, and merge IL1.
+      //
+      // Note that due to our simplifying assumption that any inline lines
+      // start exactly on some original line, we do not have to consider
+      // the case:
+      //
+      // | OL1 | OL2 | OL3 | ... | OLN      | ...
+      // | IL1                      | IL2 ...
+      //
+      // where two inline lines overlap the range of one original line.
+      //
+      // The conservative solution is option 1, which preserves as much of
+      // the original information as possible.  Let's go with that.
+      merged_lines.push_back(*inline_lines);
+      auto overlapped = start - 1;
+      if (within(*overlapped, inline_lines->address + inline_lines->size)) {
+        // Create a line that covers the rest of the space and merge that.
+        Module::Line rest;
+        rest.address = inline_lines->address + inline_lines->size;
+        rest.size = overlapped->address + overlapped->size - rest.address;
+        rest.file = overlapped->file;
+        rest.number = overlapped->number;
+        merged_lines.push_back(rest);
+      }
+
+      ++inline_lines;
+      orig_lines = start;
+      continue;
+    }
+
+    // This case is weird: we have inlined lines that exist prior to any
+    // lines recorded in our debug information.  Just skip them.
+    if (orig_lines->address > inline_lines->address) {
+      ++inline_lines;
+      continue;
+    }
+  }
+
+  return merged_lines;
+}
 }
 
-void DwarfCUToModule::AssignLinesToFunctions() {
+void DwarfCUToModule::AssignLinesToFunctions(const LineToModuleHandler::FileMap &files) {
   vector<Module::Function *> *functions = &cu_context_->functions;
   WarningReporter *reporter = cu_context_->reporter;
 
@@ -1116,6 +1220,30 @@ void DwarfCUToModule::AssignLinesToFunctions() {
   std::sort(functions->begin(), functions->end(),
             Module::Function::CompareByAddress);
   std::sort(lines_.begin(), lines_.end(), Module::Line::CompareByAddress);
+
+  // Prepare a sorted list of lines containing inlined subroutines.
+  vector<Module::Line> inlines;
+
+  for (const auto& range : cu_context_->file_context->file_private_->inlined_ranges) {
+    auto f = files.find(range.call_file_);
+    if (f == files.end()) {
+      // Uh, that's weird.  Skip this?
+      continue;
+    }
+
+    Module::Line line;
+    line.address = range.range_.address;
+    line.size = range.range_.size;
+    line.number = range.call_line_;
+    line.file = f->second;
+    inlines.push_back(line);
+  }
+  std::sort(inlines.begin(), inlines.end(), Module::Line::CompareByAddress);
+
+  if (!inlines.empty()) {
+    vector<Module::Line> merged_lines = MergeLines(inlines, lines_);
+    lines_ = std::move(merged_lines);
+  }
 
   // The last line that we used any piece of.  We use this only for
   // generating warnings.
@@ -1308,7 +1436,7 @@ void DwarfCUToModule::Finish() {
   vector<Module::Function *> *functions = &cu_context_->functions;
 
   // Dole out lines to the appropriate functions.
-  AssignLinesToFunctions();
+  AssignLinesToFunctions(files);
 
   // Add our functions, which now have source lines assigned to them,
   // to module_.
