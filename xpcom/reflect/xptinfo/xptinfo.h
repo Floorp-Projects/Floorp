@@ -415,8 +415,7 @@ static_assert(sizeof(nsXPTParamInfo) == 3, "wrong size");
 struct nsXPTMethodInfo {
   bool IsGetter() const { return mGetter; }
   bool IsSetter() const { return mSetter; }
-  bool IsNotXPCOM() const { return mNotXPCOM; }
-  bool IsHidden() const { return mHidden; }
+  bool IsReflectable() const { return mReflectable; }
   bool IsSymbol() const { return mIsSymbol; }
   bool WantsOptArgc() const { return mOptArgc; }
   bool WantsContext() const { return mContext; }
@@ -482,8 +481,7 @@ struct nsXPTMethodInfo {
 
   uint8_t mGetter : 1;
   uint8_t mSetter : 1;
-  uint8_t mNotXPCOM : 1;
-  uint8_t mHidden : 1;
+  uint8_t mReflectable : 1;
   uint8_t mOptArgc : 1;
   uint8_t mContext : 1;
   uint8_t mHasRetval : 1;
