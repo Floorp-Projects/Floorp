@@ -1179,6 +1179,56 @@ void IMEStateManager::SetInputContextForChildProcess(
   SetInputContext(widget, aInputContext, aAction);
 }
 
+static void GetActionHint(nsIContent& aContent, nsAString& aActionHint) {
+  aContent.AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::moz_action_hint,
+                                aActionHint);
+
+  if (!aActionHint.IsEmpty()) {
+    return;
+  }
+
+  // Get the input content corresponding to the focused node,
+  // which may be an anonymous child of the input content.
+  nsIContent* inputContent = aContent.FindFirstNonChromeOnlyAccessContent();
+  if (!inputContent->IsHTMLElement(nsGkAtoms::input)) {
+    return;
+  }
+
+  // If we don't have an action hint and
+  // return won't submit the form, use "next".
+  bool willSubmit = false;
+  nsCOMPtr<nsIFormControl> control(do_QueryInterface(inputContent));
+  Element* formElement = nullptr;
+  nsCOMPtr<nsIForm> form;
+  if (control) {
+    formElement = control->GetFormElement();
+    // is this a form and does it have a default submit element?
+    if ((form = do_QueryInterface(formElement)) &&
+        form->GetDefaultSubmitElement()) {
+      willSubmit = true;
+      // is this an html form...
+    } else if (formElement && formElement->IsHTMLElement(nsGkAtoms::form)) {
+      HTMLFormElement* htmlForm = static_cast<HTMLFormElement*>(formElement);
+      // ... and does it only have a single text input element ?
+      if (!htmlForm->ImplicitSubmissionIsDisabled() ||
+          // ... or is this the last non-disabled element?
+          htmlForm->IsLastActiveElement(control)) {
+        willSubmit = true;
+      }
+    }
+  }
+
+  if (willSubmit) {
+    if (control->ControlType() == NS_FORM_INPUT_SEARCH) {
+      aActionHint.AssignLiteral("search");
+    } else {
+      aActionHint.AssignLiteral("go");
+    }
+  } else if (formElement) {
+    aActionHint.AssignLiteral("next");
+  }
+}
+
 // static
 void IMEStateManager::SetIMEState(const IMEState& aState,
                                   nsPresContext* aPresContext,
@@ -1245,46 +1295,7 @@ void IMEStateManager::SetIMEState(const IMEState& aState,
       }
     }
 
-    aContent->AsElement()->GetAttr(
-        kNameSpaceID_None, nsGkAtoms::moz_action_hint, context.mActionHint);
-
-    // Get the input content corresponding to the focused node,
-    // which may be an anonymous child of the input content.
-    nsIContent* inputContent = aContent->FindFirstNonChromeOnlyAccessContent();
-
-    // If we don't have an action hint and
-    // return won't submit the form, use "next".
-    if (context.mActionHint.IsEmpty() &&
-        inputContent->IsHTMLElement(nsGkAtoms::input)) {
-      bool willSubmit = false;
-      nsCOMPtr<nsIFormControl> control(do_QueryInterface(inputContent));
-      mozilla::dom::Element* formElement = nullptr;
-      nsCOMPtr<nsIForm> form;
-      if (control) {
-        formElement = control->GetFormElement();
-        // is this a form and does it have a default submit element?
-        if ((form = do_QueryInterface(formElement)) &&
-            form->GetDefaultSubmitElement()) {
-          willSubmit = true;
-          // is this an html form...
-        } else if (formElement && formElement->IsHTMLElement(nsGkAtoms::form)) {
-          dom::HTMLFormElement* htmlForm =
-              static_cast<dom::HTMLFormElement*>(formElement);
-          // ... and does it only have a single text input element ?
-          if (!htmlForm->ImplicitSubmissionIsDisabled() ||
-              // ... or is this the last non-disabled element?
-              htmlForm->IsLastActiveElement(control)) {
-            willSubmit = true;
-          }
-        }
-      }
-      context.mActionHint.Assign(
-          willSubmit
-              ? (control->ControlType() == NS_FORM_INPUT_SEARCH
-                     ? NS_LITERAL_STRING("search")
-                     : NS_LITERAL_STRING("go"))
-              : (formElement ? NS_LITERAL_STRING("next") : EmptyString()));
-    }
+    GetActionHint(*aContent, context.mActionHint);
   }
 
   // XXX I think that we should use nsContentUtils::IsCallerChrome() instead
