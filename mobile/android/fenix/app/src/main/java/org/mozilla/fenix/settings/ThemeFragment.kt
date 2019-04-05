@@ -42,22 +42,21 @@ class ThemeFragment : PreferenceFragmentCompat() {
 
     private fun setupRadioGroups() {
         radioLightTheme.addToRadioGroup(radioDarkTheme)
-        radioLightTheme.addToRadioGroup(radioAutoBatteryTheme)
 
         radioDarkTheme.addToRadioGroup(radioLightTheme)
-        radioDarkTheme.addToRadioGroup(radioAutoBatteryTheme)
-
-        radioAutoBatteryTheme.addToRadioGroup(radioLightTheme)
-        radioAutoBatteryTheme.addToRadioGroup(radioDarkTheme)
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
             radioLightTheme.addToRadioGroup(radioFollowDeviceTheme)
             radioDarkTheme.addToRadioGroup(radioFollowDeviceTheme)
-            radioAutoBatteryTheme.addToRadioGroup(radioFollowDeviceTheme)
 
             radioFollowDeviceTheme.addToRadioGroup(radioDarkTheme)
             radioFollowDeviceTheme.addToRadioGroup(radioLightTheme)
-            radioFollowDeviceTheme.addToRadioGroup(radioAutoBatteryTheme)
+        } else {
+            radioLightTheme.addToRadioGroup(radioAutoBatteryTheme)
+            radioDarkTheme.addToRadioGroup(radioAutoBatteryTheme)
+
+            radioAutoBatteryTheme.addToRadioGroup(radioLightTheme)
+            radioAutoBatteryTheme.addToRadioGroup(radioDarkTheme)
         }
     }
 

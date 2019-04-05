@@ -152,12 +152,14 @@ open class FenixApplication : Application() {
                     AppCompatDelegate.MODE_NIGHT_YES
                 )
             }
-            Settings.getInstance(this).shouldUseAutoBatteryTheme -> {
+            android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.P &&
+                    Settings.getInstance(this).shouldUseAutoBatteryTheme -> {
                 AppCompatDelegate.setDefaultNightMode(
                     AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY
                 )
             }
-            Settings.getInstance(this).shouldFollowDeviceTheme -> {
+            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P &&
+                    Settings.getInstance(this).shouldFollowDeviceTheme -> {
                 AppCompatDelegate.setDefaultNightMode(
                     AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
                 )

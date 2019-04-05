@@ -5,4 +5,5 @@
 <resources>
     <bool name="theme_is_light">true</bool>
     <bool name="API28">false</bool>
+    <bool name="underAPI28">true</bool>
 </resources>

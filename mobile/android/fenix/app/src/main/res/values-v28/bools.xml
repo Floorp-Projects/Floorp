@@ -4,4 +4,5 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
     <bool name="API28">true</bool>
+    <bool name="underAPI28">false</bool>
 </resources>
