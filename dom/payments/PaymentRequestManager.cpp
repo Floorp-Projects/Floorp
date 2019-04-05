@@ -264,7 +264,9 @@ void ConvertResponseData(const IPCPaymentResponseData& aIPCData,
       aData = bData;
       break;
     }
-    default: { break; }
+    default: {
+      break;
+    }
   }
 }
 
@@ -301,7 +303,9 @@ void ConvertMethodChangeDetails(const IPCMethodChangeDetails& aIPCDetails,
       aDetails = bDetails;
       break;
     }
-    default: { break; }
+    default: {
+      break;
+    }
   }
 }
 }  // end of namespace
@@ -681,7 +685,9 @@ nsresult PaymentRequestManager::RespondPayment(
       NotifyRequestDone(aRequest);
       break;
     }
-    default: { return NS_ERROR_FAILURE; }
+    default: {
+      return NS_ERROR_FAILURE;
+    }
   }
   return NS_OK;
 }

@@ -91,12 +91,13 @@ TEST(MozPromise, BasicResolve) {
   RefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue]() -> void {
     TestPromise::CreateAndResolve(42, __func__)
-        ->Then(queue, __func__,
-               [queue](int aResolveValue) -> void {
-                 EXPECT_EQ(aResolveValue, 42);
-                 queue->BeginShutdown();
-               },
-               DO_FAIL);
+        ->Then(
+            queue, __func__,
+            [queue](int aResolveValue) -> void {
+              EXPECT_EQ(aResolveValue, 42);
+              queue->BeginShutdown();
+            },
+            DO_FAIL);
   });
 }
 
@@ -168,15 +169,16 @@ TEST(MozPromise, AsyncResolve) {
     ref = c.get();
     Unused << queue->Dispatch(ref.forget());
 
-    p->Then(queue, __func__,
-            [queue, a, b, c](int aResolveValue) -> void {
-              EXPECT_EQ(aResolveValue, 42);
-              a->Cancel();
-              b->Cancel();
-              c->Cancel();
-              queue->BeginShutdown();
-            },
-            DO_FAIL);
+    p->Then(
+        queue, __func__,
+        [queue, a, b, c](int aResolveValue) -> void {
+          EXPECT_EQ(aResolveValue, 42);
+          a->Cancel();
+          b->Cancel();
+          c->Cancel();
+          queue->BeginShutdown();
+        },
+        DO_FAIL);
   });
 }
 
@@ -186,33 +188,37 @@ TEST(MozPromise, CompletionPromises) {
   RefPtr<TaskQueue> queue = atq.Queue();
   RunOnTaskQueue(queue, [queue, &invokedPass]() -> void {
     TestPromise::CreateAndResolve(40, __func__)
-        ->Then(queue, __func__,
-               [](int aVal) -> RefPtr<TestPromise> {
-                 return TestPromise::CreateAndResolve(aVal + 10, __func__);
-               },
-               DO_FAIL)
-        ->Then(queue, __func__,
-               [&invokedPass](int aVal) {
-                 invokedPass = true;
-                 return TestPromise::CreateAndResolve(aVal, __func__);
-               },
-               DO_FAIL)
-        ->Then(queue, __func__,
-               [queue](int aVal) -> RefPtr<TestPromise> {
-                 RefPtr<TestPromise::Private> p =
-                     new TestPromise::Private(__func__);
-                 nsCOMPtr<nsIRunnable> resolver = new DelayedResolveOrReject(
-                     queue, p, RRValue::MakeResolve(aVal - 8), 10);
-                 Unused << queue->Dispatch(resolver.forget());
-                 return RefPtr<TestPromise>(p);
-               },
-               DO_FAIL)
-        ->Then(queue, __func__,
-               [](int aVal) -> RefPtr<TestPromise> {
-                 return TestPromise::CreateAndReject(double(aVal - 42) + 42.0,
-                                                     __func__);
-               },
-               DO_FAIL)
+        ->Then(
+            queue, __func__,
+            [](int aVal) -> RefPtr<TestPromise> {
+              return TestPromise::CreateAndResolve(aVal + 10, __func__);
+            },
+            DO_FAIL)
+        ->Then(
+            queue, __func__,
+            [&invokedPass](int aVal) {
+              invokedPass = true;
+              return TestPromise::CreateAndResolve(aVal, __func__);
+            },
+            DO_FAIL)
+        ->Then(
+            queue, __func__,
+            [queue](int aVal) -> RefPtr<TestPromise> {
+              RefPtr<TestPromise::Private> p =
+                  new TestPromise::Private(__func__);
+              nsCOMPtr<nsIRunnable> resolver = new DelayedResolveOrReject(
+                  queue, p, RRValue::MakeResolve(aVal - 8), 10);
+              Unused << queue->Dispatch(resolver.forget());
+              return RefPtr<TestPromise>(p);
+            },
+            DO_FAIL)
+        ->Then(
+            queue, __func__,
+            [](int aVal) -> RefPtr<TestPromise> {
+              return TestPromise::CreateAndReject(double(aVal - 42) + 42.0,
+                                                  __func__);
+            },
+            DO_FAIL)
         ->Then(queue, __func__, DO_FAIL,
                [queue, &invokedPass](double aVal) -> void {
                  EXPECT_EQ(aVal, 42.0);
@@ -232,15 +238,16 @@ TEST(MozPromise, PromiseAllResolve) {
     promises.AppendElement(TestPromise::CreateAndResolve(42, __func__));
 
     TestPromise::All(queue, promises)
-        ->Then(queue, __func__,
-               [queue](const nsTArray<int>& aResolveValues) -> void {
-                 EXPECT_EQ(aResolveValues.Length(), 3UL);
-                 EXPECT_EQ(aResolveValues[0], 22);
-                 EXPECT_EQ(aResolveValues[1], 32);
-                 EXPECT_EQ(aResolveValues[2], 42);
-                 queue->BeginShutdown();
-               },
-               []() { EXPECT_TRUE(false); });
+        ->Then(
+            queue, __func__,
+            [queue](const nsTArray<int>& aResolveValues) -> void {
+              EXPECT_EQ(aResolveValues.Length(), 3UL);
+              EXPECT_EQ(aResolveValues[0], 22);
+              EXPECT_EQ(aResolveValues[1], 32);
+              EXPECT_EQ(aResolveValues[2], 42);
+              queue->BeginShutdown();
+            },
+            []() { EXPECT_TRUE(false); });
   });
 }
 
@@ -256,11 +263,12 @@ TEST(MozPromise, PromiseAllReject) {
     promises.AppendElement(TestPromise::CreateAndReject(52.0, __func__));
 
     TestPromise::All(queue, promises)
-        ->Then(queue, __func__, []() { EXPECT_TRUE(false); },
-               [queue](float aRejectValue) -> void {
-                 EXPECT_EQ(aRejectValue, 32.0);
-                 queue->BeginShutdown();
-               });
+        ->Then(
+            queue, __func__, []() { EXPECT_TRUE(false); },
+            [queue](float aRejectValue) -> void {
+              EXPECT_EQ(aRejectValue, 32.0);
+              queue->BeginShutdown();
+            });
   });
 }
 
@@ -278,27 +286,31 @@ TEST(MozPromise, Chaining) {
     auto p = TestPromise::CreateAndResolve(42, __func__);
     const size_t kIterations = 100;
     for (size_t i = 0; i < kIterations; ++i) {
-      p = p->Then(queue, __func__,
-                  [](int aVal) {
-                    EXPECT_EQ(aVal, 42);
-                    return TestPromise::CreateAndResolve(aVal, __func__);
-                  },
-                  [](double aVal) {
-                    return TestPromise::CreateAndReject(aVal, __func__);
-                  });
+      p = p->Then(
+          queue, __func__,
+          [](int aVal) {
+            EXPECT_EQ(aVal, 42);
+            return TestPromise::CreateAndResolve(aVal, __func__);
+          },
+          [](double aVal) {
+            return TestPromise::CreateAndReject(aVal, __func__);
+          });
 
       if (i == kIterations / 2) {
-        p->Then(queue, __func__,
-                [queue, &holder]() {
-                  holder.Disconnect();
-                  queue->BeginShutdown();
-                },
-                DO_FAIL);
+        p->Then(
+            queue, __func__,
+            [queue, &holder]() {
+              holder.Disconnect();
+              queue->BeginShutdown();
+            },
+            DO_FAIL);
       }
     }
     // We will hit the assertion if we don't disconnect the leaf Request
     // in the promise chain.
-    p->Then(queue, __func__, []() {}, []() {})->Track(holder);
+    p->Then(
+         queue, __func__, []() {}, []() {})
+        ->Track(holder);
   });
 }
 
@@ -332,8 +344,9 @@ TEST(MozPromise, MoveOnlyType) {
   RefPtr<TaskQueue> queue = atq.Queue();
 
   MyPromise::CreateAndResolve(MakeUnique<int>(87), __func__)
-      ->Then(queue, __func__, [](UniquePtr<int> aVal) { EXPECT_EQ(87, *aVal); },
-             []() { EXPECT_TRUE(false); });
+      ->Then(
+          queue, __func__, [](UniquePtr<int> aVal) { EXPECT_EQ(87, *aVal); },
+          []() { EXPECT_TRUE(false); });
 
   MyPromise::CreateAndResolve(MakeUnique<int>(87), __func__)
       ->Then(queue, __func__, [queue](RRValue&& aVal) {
@@ -380,16 +393,18 @@ TEST(MozPromise, HeterogeneousChaining) {
   });
 
   Promise1::CreateAndResolve(MakeUnique<char>(87), __func__)
-      ->Then(queue, __func__,
-             [](UniquePtr<char> aVal) {
-               EXPECT_EQ(87, *aVal);
-               return Promise2::CreateAndResolve(MakeUnique<int>(94), __func__);
-             },
-             []() {
-               return Promise2::CreateAndResolve(MakeUnique<int>(95), __func__);
-             })
-      ->Then(queue, __func__, [](UniquePtr<int> aVal) { EXPECT_EQ(94, *aVal); },
-             []() { EXPECT_FALSE(true); });
+      ->Then(
+          queue, __func__,
+          [](UniquePtr<char> aVal) {
+            EXPECT_EQ(87, *aVal);
+            return Promise2::CreateAndResolve(MakeUnique<int>(94), __func__);
+          },
+          []() {
+            return Promise2::CreateAndResolve(MakeUnique<int>(95), __func__);
+          })
+      ->Then(
+          queue, __func__, [](UniquePtr<int> aVal) { EXPECT_EQ(94, *aVal); },
+          []() { EXPECT_FALSE(true); });
 
   Promise1::CreateAndResolve(MakeUnique<char>(87), __func__)
       ->Then(queue, __func__,
@@ -405,9 +420,10 @@ TEST(MozPromise, HeterogeneousChaining) {
 
 TEST(MozPromise, XPCOMEventTarget) {
   TestPromise::CreateAndResolve(42, __func__)
-      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-             [](int aResolveValue) -> void { EXPECT_EQ(aResolveValue, 42); },
-             DO_FAIL);
+      ->Then(
+          GetCurrentThreadSerialEventTarget(), __func__,
+          [](int aResolveValue) -> void { EXPECT_EQ(aResolveValue, 42); },
+          DO_FAIL);
 
   // Spin the event loop.
   NS_ProcessPendingEvents(nullptr);
@@ -415,9 +431,10 @@ TEST(MozPromise, XPCOMEventTarget) {
 
 TEST(MozPromise, MessageLoopEventTarget) {
   TestPromise::CreateAndResolve(42, __func__)
-      ->Then(MessageLoop::current()->SerialEventTarget(), __func__,
-             [](int aResolveValue) -> void { EXPECT_EQ(aResolveValue, 42); },
-             DO_FAIL);
+      ->Then(
+          MessageLoop::current()->SerialEventTarget(), __func__,
+          [](int aResolveValue) -> void { EXPECT_EQ(aResolveValue, 42); },
+          DO_FAIL);
 
   // Spin the event loop.
   NS_ProcessPendingEvents(nullptr);

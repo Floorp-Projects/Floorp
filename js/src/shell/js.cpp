@@ -6784,7 +6784,9 @@ static bool GetSharedObject(JSContext* cx, unsigned argc, Value* vp) {
         }
         break;
       }
-      default: { MOZ_CRASH(); }
+      default: {
+        MOZ_CRASH();
+      }
     }
   }
 

@@ -239,7 +239,7 @@ class ExecutableAllocator {
         "jr.hb  $ra \n"
         "move   $ra, %[tmp] \n"
         ".set   pop\n"
-        : [tmp] "=&r"(tmp));
+        : [ tmp ] "=&r"(tmp));
 #  elif defined(__GNUC__)
     intptr_t end = reinterpret_cast<intptr_t>(code) + size;
     __builtin___clear_cache(reinterpret_cast<char*>(code),

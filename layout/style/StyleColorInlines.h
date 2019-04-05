@@ -14,23 +14,23 @@
 
 namespace mozilla {
 
-template<>
+template <>
 inline StyleColor StyleColor::FromColor(nscolor aColor) {
-  return StyleColor::Numeric({NS_GET_R(aColor), NS_GET_G(aColor),
-                              NS_GET_B(aColor), NS_GET_A(aColor)});
+  return StyleColor::Numeric(
+      {NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor), NS_GET_A(aColor)});
 }
 
-template<>
+template <>
 inline StyleColor StyleColor::Black() {
   return FromColor(NS_RGB(0, 0, 0));
 }
 
-template<>
+template <>
 inline StyleColor StyleColor::White() {
   return FromColor(NS_RGB(255, 255, 255));
 }
 
-template<>
+template <>
 inline StyleColor StyleColor::Transparent() {
   return FromColor(NS_RGBA(0, 0, 0, 0));
 }

@@ -5602,7 +5602,9 @@ bool QuotaManager::IsPrincipalInfoValid(const PrincipalInfo& aPrincipalInfo) {
       return true;
     }
 
-    default: { break; }
+    default: {
+      break;
+    }
   }
 
   // Null and expanded principals are not acceptable.
@@ -5643,7 +5645,9 @@ void QuotaManager::GetInfoFromValidatedPrincipalInfo(
       return;
     }
 
-    default: { break; }
+    default: {
+      break;
+    }
   }
 
   MOZ_CRASH("Should never get here!");
@@ -8237,7 +8241,9 @@ bool PrincipalVerifier::IsPrincipalInfoValid(
       return true;
     }
 
-    default: { break; }
+    default: {
+      break;
+    }
   }
 
   // Null and expanded principals are not acceptable.
