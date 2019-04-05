@@ -427,7 +427,7 @@ def generate_beetmover_upstream_artifacts(config, job, platform, locale=None, de
         project=config.params['project'],
         platform=platform
     )
-    map_config = cached_load_yaml(job['attributes']['artifact_map'])
+    map_config = deepcopy(cached_load_yaml(job['attributes']['artifact_map']))
     upstream_artifacts = list()
 
     if not locale:
@@ -497,7 +497,7 @@ def generate_beetmover_compressed_upstream_artifacts(job, dependencies=None):
         list: A list of dictionaries conforming to the upstream_artifacts spec.
     """
     base_artifact_prefix = get_artifact_prefix(job)
-    map_config = cached_load_yaml(job['attributes']['artifact_map'])
+    map_config = deepcopy(cached_load_yaml(job['attributes']['artifact_map']))
     upstream_artifacts = list()
 
     if not dependencies:
@@ -554,7 +554,7 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
         project=config.params['project'],
         platform=platform
     )
-    map_config = cached_load_yaml(job['attributes']['artifact_map'])
+    map_config = deepcopy(cached_load_yaml(job['attributes']['artifact_map']))
     base_artifact_prefix = map_config.get('base_artifact_prefix', get_artifact_prefix(job))
 
     artifacts = list()
@@ -694,7 +694,7 @@ def generate_beetmover_partials_artifact_map(config, job, partials_info, **kwarg
         project=config.params['project'],
         platform=platform
     )
-    map_config = cached_load_yaml(job['attributes']['artifact_map'])
+    map_config = deepcopy(cached_load_yaml(job['attributes']['artifact_map']))
     base_artifact_prefix = map_config.get('base_artifact_prefix', get_artifact_prefix(job))
 
     artifacts = list()
