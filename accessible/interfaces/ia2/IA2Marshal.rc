@@ -3,3 +3,4 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 1 typelib IA2Typelib.tlb
+2 24 IA2Marshal.dll.manifest
