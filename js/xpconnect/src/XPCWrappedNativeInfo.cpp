@@ -280,7 +280,7 @@ already_AddRefed<XPCNativeInterface> XPCNativeInterface::NewInstance(
       continue;
     }
 
-    if (!info.IsReflectable()) {
+    if (!XPCConvert::IsMethodReflectable(info)) {
       continue;
     }
 
