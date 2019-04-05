@@ -139,6 +139,7 @@ class JsepTrack {
       mActive = rhs.mActive;
       mRemoteSetSendBit = rhs.mRemoteSetSendBit;
 
+      mPrototypeCodecs.clear();
       for (const auto& codec : rhs.mPrototypeCodecs) {
         mPrototypeCodecs.emplace_back(codec->Clone());
       }
@@ -246,8 +247,6 @@ class JsepTrack {
   static void GetPayloadTypes(
       const std::vector<UniquePtr<JsepCodecDescription>>& codecs,
       std::vector<uint16_t>* pts);
-  static void EnsurePayloadTypeIsUnique(std::set<uint16_t>* uniquePayloadTypes,
-                                        JsepCodecDescription* codec);
   void AddToMsection(const std::vector<UniquePtr<JsepCodecDescription>>& codecs,
                      bool encodeTrackId, SdpMediaSection* msection);
   void GetRids(const SdpMediaSection& msection, sdp::Direction direction,
@@ -257,13 +256,8 @@ class JsepTrack {
       const std::vector<UniquePtr<JsepCodecDescription>>& negotiatedCodecs,
       JsepTrackNegotiatedDetails* details);
 
-  // |formatChanges| is set on completion of offer/answer, and records how the
-  // formats in |codecs| were changed, which is used by |Negotiate| to update
-  // |mPrototypeCodecs|.
-  virtual void NegotiateCodecs(
-      const SdpMediaSection& remote,
-      std::vector<UniquePtr<JsepCodecDescription>>* codecs,
-      std::map<std::string, std::string>* formatChanges = nullptr) const;
+  virtual std::vector<UniquePtr<JsepCodecDescription>> NegotiateCodecs(
+      const SdpMediaSection& remote, bool isOffer);
 
   JsConstraints* FindConstraints(
       const std::string& rid,
