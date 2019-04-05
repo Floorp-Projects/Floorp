@@ -15,7 +15,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.constraintlayout.motion.widget.MotionLayout
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.navigation.Navigation
@@ -138,34 +137,6 @@ class HomeFragment : Fragment(), CoroutineScope {
 
             requireComponents.analytics.metrics.track(Event.SearchBarTapped(Event.SearchBarTapped.Source.HOME))
         }
-
-        // There is currently an issue with visibility changes in ConstraintLayout 2.0.0-alpha3
-        // https://issuetracker.google.com/issues/122090772
-        // For now we're going to manually implement KeyTriggers.
-        view.homeLayout.setTransitionListener(object : MotionLayout.TransitionListener {
-            private val firstKeyTrigger = KeyTrigger(
-                firstKeyTriggerFrame,
-                { view.toolbar_wrapper.transitionToDark() },
-                { view.toolbar_wrapper.transitionToLight() }
-            )
-            private val secondKeyTrigger = KeyTrigger(
-                secondKeyTriggerFrame,
-                { view.toolbar_wrapper.transitionToDarkNoBorder() },
-                { view.toolbar_wrapper.transitionToDarkFromNoBorder() }
-            )
-
-            override fun onTransitionChange(
-                motionLayout: MotionLayout?,
-                startId: Int,
-                endId: Int,
-                progress: Float
-            ) {
-                firstKeyTrigger.conditionallyFire(progress)
-                secondKeyTrigger.conditionallyFire(progress)
-            }
-
-            override fun onTransitionCompleted(p0: MotionLayout?, p1: Int) { }
-        })
 
         val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
 

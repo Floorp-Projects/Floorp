@@ -73,6 +73,6 @@ class SearchView(context: Context, attrs: AttributeSet) : FrameLayout(context, a
     }
 
     companion object {
-        const val transitionDurationMs = 500
+        const val transitionDurationMs = 200
     }
 }
