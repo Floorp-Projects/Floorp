@@ -33,7 +33,6 @@ jobs:
         index:
             product: firefox
             job-name: firefox-bouncer-check
-        run-on-projects: [release]
         run:
             config:
                 by-release-type:
