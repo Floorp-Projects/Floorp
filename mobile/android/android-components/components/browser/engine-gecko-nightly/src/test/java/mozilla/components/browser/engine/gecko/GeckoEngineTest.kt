@@ -6,9 +6,11 @@ package mozilla.components.browser.engine.gecko
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
+import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.webextension.WebExtension
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
@@ -69,6 +71,7 @@ class GeckoEngineTest {
         `when`(runtimeSettings.webFontsEnabled).thenReturn(true)
         `when`(runtimeSettings.automaticFontSizeAdjustment).thenReturn(true)
         `when`(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
+        `when`(runtimeSettings.preferredColorScheme).thenReturn(GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM)
         `when`(runtime.settings).thenReturn(runtimeSettings)
         val engine = GeckoEngine(context, runtime = runtime, defaultSettings = defaultSettings)
 
@@ -91,6 +94,10 @@ class GeckoEngineTest {
         assertFalse(engine.settings.testingModeEnabled)
         engine.settings.testingModeEnabled = true
         assertTrue(engine.settings.testingModeEnabled)
+
+        assertEquals(PreferredColorScheme.System, engine.settings.preferredColorScheme)
+        engine.settings.preferredColorScheme = PreferredColorScheme.Dark
+        verify(runtimeSettings).preferredColorScheme = PreferredColorScheme.Dark.toGeckoValue()
 
         // Specifying no ua-string default should result in GeckoView's default.
         assertEquals(GeckoSession.getDefaultUserAgent(), engine.settings.userAgentString)
@@ -131,14 +138,17 @@ class GeckoEngineTest {
         `when`(runtime.settings).thenReturn(runtimeSettings)
         `when`(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
 
-        val engine = GeckoEngine(context, DefaultSettings(
+        val engine = GeckoEngine(context,
+            DefaultSettings(
                 trackingProtectionPolicy = TrackingProtectionPolicy.all(),
                 javascriptEnabled = false,
                 webFontsEnabled = false,
                 automaticFontSizeAdjustment = false,
                 remoteDebuggingEnabled = true,
                 testingModeEnabled = true,
-                userAgentString = "test-ua"), runtime)
+                userAgentString = "test-ua",
+                preferredColorScheme = PreferredColorScheme.Light
+            ), runtime)
 
         verify(runtimeSettings).javaScriptEnabled = false
         verify(runtimeSettings).webFontsEnabled = false
@@ -154,6 +164,7 @@ class GeckoEngineTest {
         ).categories, contentBlockingSettings.categories)
         assertTrue(engine.settings.testingModeEnabled)
         assertEquals("test-ua", engine.settings.userAgentString)
+        assertEquals(PreferredColorScheme.Light, engine.settings.preferredColorScheme)
     }
 
     @Test

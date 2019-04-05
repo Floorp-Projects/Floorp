@@ -6,6 +6,7 @@ package mozilla.components.concept.engine
 
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.request.RequestInterceptor
 import mozilla.components.support.test.expectException
 import mozilla.components.support.test.mock
@@ -62,6 +63,8 @@ class SettingsTest {
             { settings.remoteDebuggingEnabled = false },
             { settings.supportMultipleWindows },
             { settings.supportMultipleWindows = false },
+            { settings.preferredColorScheme },
+            { settings.preferredColorScheme = PreferredColorScheme.System },
             { settings.testingModeEnabled },
             { settings.testingModeEnabled = false }
         )
@@ -95,6 +98,7 @@ class SettingsTest {
         assertTrue(settings.horizontalScrollBarEnabled)
         assertFalse(settings.remoteDebuggingEnabled)
         assertFalse(settings.supportMultipleWindows)
+        assertEquals(PreferredColorScheme.System, settings.preferredColorScheme)
         assertFalse(settings.testingModeEnabled)
 
         val interceptor: RequestInterceptor = mock()
@@ -121,6 +125,7 @@ class SettingsTest {
             horizontalScrollBarEnabled = false,
             remoteDebuggingEnabled = true,
             supportMultipleWindows = true,
+            preferredColorScheme = PreferredColorScheme.Dark,
             testingModeEnabled = true)
 
         assertFalse(defaultSettings.domStorageEnabled)
@@ -143,6 +148,7 @@ class SettingsTest {
         assertFalse(defaultSettings.horizontalScrollBarEnabled)
         assertTrue(defaultSettings.remoteDebuggingEnabled)
         assertTrue(defaultSettings.supportMultipleWindows)
+        assertEquals(PreferredColorScheme.Dark, defaultSettings.preferredColorScheme)
         assertTrue(defaultSettings.testingModeEnabled)
     }
 }

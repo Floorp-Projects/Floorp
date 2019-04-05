@@ -6,6 +6,7 @@ package mozilla.components.concept.engine
 
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.request.RequestInterceptor
 import kotlin.reflect.KProperty
 
@@ -123,6 +124,12 @@ abstract class Settings {
      * Setting to control whether or not testing mode is enabled.
      */
     open var testingModeEnabled: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to alert the content that the user prefers a particular theme. This affects the
+     * [@media(prefers-color-scheme)] query.
+     */
+    open var preferredColorScheme: PreferredColorScheme by UnsupportedSetting()
 }
 
 /**
@@ -149,6 +156,7 @@ data class DefaultSettings(
     override var horizontalScrollBarEnabled: Boolean = true,
     override var remoteDebuggingEnabled: Boolean = false,
     override var supportMultipleWindows: Boolean = false,
+    override var preferredColorScheme: PreferredColorScheme = PreferredColorScheme.System,
     override var testingModeEnabled: Boolean = false
 ) : Settings()
 

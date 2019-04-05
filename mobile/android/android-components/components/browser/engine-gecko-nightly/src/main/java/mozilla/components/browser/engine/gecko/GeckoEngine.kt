@@ -6,6 +6,8 @@ package mozilla.components.browser.engine.gecko
 
 import android.content.Context
 import android.util.AttributeSet
+import mozilla.components.browser.engine.gecko.mediaquery.from
+import mozilla.components.browser.engine.gecko.mediaquery.toGeckoValue
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
@@ -13,6 +15,7 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
+import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.webextension.WebExtension
 import org.json.JSONObject
 import org.mozilla.geckoview.GeckoResult
@@ -135,6 +138,10 @@ class GeckoEngine(
         override var userAgentString: String?
             get() = defaultSettings?.userAgentString ?: GeckoSession.getDefaultUserAgent()
             set(value) { defaultSettings?.userAgentString = value }
+
+        override var preferredColorScheme: PreferredColorScheme
+            get() = PreferredColorScheme.from(runtime.settings.preferredColorScheme)
+            set(value) { runtime.settings.preferredColorScheme = value.toGeckoValue() }
     }.apply {
         defaultSettings?.let {
             this.javascriptEnabled = it.javascriptEnabled
@@ -144,6 +151,7 @@ class GeckoEngine(
             this.remoteDebuggingEnabled = it.remoteDebuggingEnabled
             this.testingModeEnabled = it.testingModeEnabled
             this.userAgentString = it.userAgentString
+            this.preferredColorScheme = it.preferredColorScheme
         }
     }
 }
