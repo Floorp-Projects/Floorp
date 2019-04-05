@@ -49,7 +49,9 @@ export function getLocationWithoutColumn(location: SourceLocation) {
   return `${sourceId}:${line}`;
 }
 
-export function makePendingLocationId(location: SourceLocation) {
+type AnySourceLocation = SourceLocation | PendingLocation;
+
+export function makePendingLocationId(location: AnySourceLocation) {
   assertPendingLocation(location);
   const { sourceUrl, line, column } = location;
   const sourceUrlString = sourceUrl || "";
