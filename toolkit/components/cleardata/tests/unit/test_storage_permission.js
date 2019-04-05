@@ -7,8 +7,6 @@
 
 "use strict";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 // Test that only the storageAccessAPI gets removed.
 add_task(async function test_removing_storage_permission() {
   const uri = Services.io.newURI("https://example.net");

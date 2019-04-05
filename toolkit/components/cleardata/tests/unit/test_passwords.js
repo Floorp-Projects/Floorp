@@ -6,7 +6,6 @@
 
 const URL = "http://example.com";
 
-const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {LoginTestUtils} = ChromeUtils.import("resource://testing-common/LoginTestUtils.jsm");
 
 add_task(async function test_principal_downloads() {
