@@ -2,14 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const nsICommandLineHandler          = Ci.nsICommandLineHandler;
-const nsIWindowWatcher               = Ci.nsIWindowWatcher;
-
 function RecordingCmdLineHandler() {}
 RecordingCmdLineHandler.prototype =
 {
     /* nsISupports */
-    QueryInterface: ChromeUtils.generateQI([nsICommandLineHandler]),
+    QueryInterface: ChromeUtils.generateQI([Ci.nsICommandLineHandler]),
 
     /* nsICommandLineHandler */
     handle : function handler_handle(cmdLine) {
@@ -53,7 +50,7 @@ RecordingCmdLineHandler.prototype =
         branch.setBoolPref("gfx.2d.recording", true);
 
         var wwatch = Cc["@mozilla.org/embedcomp/window-watcher;1"]
-                       .getService(nsIWindowWatcher);
+                       .getService(Ci.nsIWindowWatcher);
         wwatch.openWindow(null, "chrome://recording/content/recording.xul", "_blank",
                           "chrome,dialog=no,all", args);
         cmdLine.preventDefault = true;
