@@ -108,7 +108,8 @@ class nsWebBrowser final : public nsIWebBrowser,
   static already_AddRefed<nsWebBrowser> Create(
       nsIWebBrowserChrome* aContainerWindow, nsIWidget* aParentWidget,
       const mozilla::OriginAttributes& aOriginAttributes,
-      mozilla::dom::BrowsingContext* aBrowsingContext);
+      mozilla::dom::BrowsingContext* aBrowsingContext,
+      bool aDisableHistory = false);
 
  protected:
   virtual ~nsWebBrowser();
