@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
 var EXPORTED_SYMBOLS = [
@@ -8,8 +12,6 @@ const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm")
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {ContentTask} = ChromeUtils.import("resource://testing-common/ContentTask.jsm");
 const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
-
-const {Sanitizer} = ChromeUtils.import("resource:///modules/Sanitizer.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "swm",
                                    "@mozilla.org/serviceworkers/manager;1",
@@ -97,6 +99,7 @@ var SiteDataTestUtils = {
     // Register a dummy ServiceWorker.
     return BrowserTestUtils.withNewTab(uri.prePath, async function(browser) {
       return ContentTask.spawn(browser, {path}, async ({path: p}) => {
+        // eslint-disable-next-line no-undef
         let r = await content.navigator.serviceWorker.register(p);
         return new Promise(resolve => {
           let worker = r.installing;
@@ -107,6 +110,41 @@ var SiteDataTestUtils = {
           });
         });
       });
+    });
+  },
+
+  _getCacheStorage(where, lci) {
+    switch (where) {
+      case "disk": return Services.cache2.diskCacheStorage(lci, false);
+      case "memory": return Services.cache2.memoryCacheStorage(lci);
+      case "appcache": return Services.cache2.appCacheStorage(lci, null);
+      case "pin": return Services.cache2.pinningCacheStorage(lci);
+    }
+    return null;
+  },
+
+  hasCacheEntry(path, where, lci = Services.loadContextInfo.default) {
+    let storage = this._getCacheStorage(where, lci);
+    return storage.exists(Services.io.newURI(path), "");
+  },
+
+  addCacheEntry(path, where, lci = Services.loadContextInfo.default) {
+    return new Promise(resolve => {
+      function CacheListener() { }
+      CacheListener.prototype = {
+        QueryInterface: ChromeUtils.generateQI(["nsICacheEntryOpenCallback"]),
+
+        onCacheEntryCheck(entry, appCache) {
+          return Ci.nsICacheEntryOpenCallback.ENTRY_WANTED;
+        },
+
+        onCacheEntryAvailable(entry, isnew, appCache, status) {
+          resolve();
+        },
+      };
+
+      let storage = this._getCacheStorage(where, lci);
+      storage.asyncOpenURI(Services.io.newURI(path), "", Ci.nsICacheStorage.OPEN_NORMALLY, new CacheListener());
     });
   },
 
@@ -145,6 +183,16 @@ var SiteDataTestUtils = {
    * Cleans up all site data.
    */
   clear() {
-    return Sanitizer.sanitize(["cookies", "cache", "siteSettings", "offlineApps"]);
+    return new Promise(resolve => {
+      Services.clearData.deleteData(
+        Ci.nsIClearDataService.CLEAR_COOKIES |
+        Ci.nsIClearDataService.CLEAR_ALL_CACHES |
+        Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES |
+        Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
+        Ci.nsIClearDataService.CLEAR_PREDICTOR_NETWORK_DATA |
+        Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
+        Ci.nsIClearDataService.CLEAR_EME |
+        Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS, resolve);
+    });
   },
 };
