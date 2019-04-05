@@ -87,7 +87,6 @@ module.exports = {
   }, {
     // TODO: Bug 1246594. Empty this list once the rule has landed for all dirs
     "files": [
-      "parser/htmlparser/tests/mochitest/parser_datreader.js",
       "testing/marionette/event.js",
       "testing/mochitest/**",
       "testing/modules/tests/xpcshell/test_assert.js",
