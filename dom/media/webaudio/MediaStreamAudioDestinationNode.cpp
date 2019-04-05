@@ -71,10 +71,18 @@ MediaStreamAudioDestinationNode::MediaStreamAudioDestinationNode(
                 ChannelInterpretation::Speakers),
       mDOMStream(DOMAudioNodeMediaStream::CreateTrackUnionStreamAsInput(
           GetOwner(), this, aContext->Graph())) {
-  // Ensure an audio track with the correct ID is exposed to JS
-  Document* doc = aContext->GetParentObject()->GetExtantDoc();
+  // Ensure an audio track with the correct ID is exposed to JS. If we can't get
+  // a principal here because the document is not available, pass in a null
+  // principal. This happens in edge cases when the document is being unloaded
+  // and it does not matter too much to have something working as long as it's
+  // not dangerous.
+  nsCOMPtr<nsIPrincipal> principal = nullptr;
+  if (aContext->GetParentObject()) {
+    Document* doc = aContext->GetParentObject()->GetExtantDoc();
+    principal = doc->NodePrincipal();
+  }
   RefPtr<MediaStreamTrackSource> source =
-      new AudioDestinationTrackSource(this, doc->NodePrincipal());
+      new AudioDestinationTrackSource(this, principal);
   RefPtr<MediaStreamTrack> track = mDOMStream->CreateDOMTrack(
       AudioNodeStream::AUDIO_TRACK, MediaSegment::AUDIO, source,
       MediaTrackConstraints());
