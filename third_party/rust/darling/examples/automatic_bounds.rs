@@ -68,7 +68,8 @@ fn main() {
             Div(String)
         }
     "#,
-    ).unwrap();
+    )
+    .unwrap();
 
     let parsed: SpeakingOptions<Phoneme, Volume> =
         FromDeriveInput::from_derive_input(&derive_input).unwrap();

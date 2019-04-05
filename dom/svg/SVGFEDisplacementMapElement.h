@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFEDisplacementMapElement_h
 #define mozilla_dom_SVGFEDisplacementMapElement_h
 
-#include "SVGEnum.h"
+#include "SVGAnimatedEnumeration.h"
 #include "SVGFilters.h"
 
 nsresult NS_NewSVGFEDisplacementMapElement(
@@ -36,7 +36,7 @@ class SVGFEDisplacementMapElement : public SVGFEDisplacementMapElementBase {
       nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
   virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
                                          nsAtom* aAttribute) const override;
-  virtual SVGString& GetResultImageName() override {
+  virtual SVGAnimatedString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
   virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
@@ -74,12 +74,12 @@ class SVGFEDisplacementMapElement : public SVGFEDisplacementMapElementBase {
   static NumberInfo sNumberInfo[1];
 
   enum { CHANNEL_X, CHANNEL_Y };
-  SVGEnum mEnumAttributes[2];
+  SVGAnimatedEnumeration mEnumAttributes[2];
   static SVGEnumMapping sChannelMap[];
   static EnumInfo sEnumInfo[2];
 
   enum { RESULT, IN1, IN2 };
-  SVGString mStringAttributes[3];
+  SVGAnimatedString mStringAttributes[3];
   static StringInfo sStringInfo[3];
 };
 

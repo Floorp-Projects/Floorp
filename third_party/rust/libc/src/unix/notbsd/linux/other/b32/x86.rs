@@ -31,22 +31,6 @@ s! {
         pub st_space: [::c_long; 20],
     }
 
-    pub struct user_fpxregs_struct {
-        pub cwd: ::c_ushort,
-        pub swd: ::c_ushort,
-        pub twd: ::c_ushort,
-        pub fop: ::c_ushort,
-        pub fip: ::c_long,
-        pub fcs: ::c_long,
-        pub foo: ::c_long,
-        pub fos: ::c_long,
-        pub mxcsr: ::c_long,
-        __reserved: ::c_long,
-        pub st_space: [::c_long; 32],
-        pub xmm_space: [::c_long; 32],
-        padding: [::c_long; 56],
-    }
-
     pub struct user_regs_struct {
         pub ebx: ::c_long,
         pub ecx: ::c_long,
@@ -90,15 +74,6 @@ s! {
         pub fpregs: *mut _libc_fpstate,
         pub oldmask: ::c_ulong,
         pub cr2: ::c_ulong,
-    }
-
-    pub struct ucontext_t {
-        pub uc_flags: ::c_ulong,
-        pub uc_link: *mut ucontext_t,
-        pub uc_stack: ::stack_t,
-        pub uc_mcontext: mcontext_t,
-        pub uc_sigmask: ::sigset_t,
-        __private: [u8; 112],
     }
 
     pub struct ipc_perm {
@@ -210,6 +185,132 @@ s! {
         pub c_cc: [::cc_t; 19],
         pub c_ispeed: ::speed_t,
         pub c_ospeed: ::speed_t,
+    }
+}
+
+s_no_extra_traits!{
+    pub struct user_fpxregs_struct {
+        pub cwd: ::c_ushort,
+        pub swd: ::c_ushort,
+        pub twd: ::c_ushort,
+        pub fop: ::c_ushort,
+        pub fip: ::c_long,
+        pub fcs: ::c_long,
+        pub foo: ::c_long,
+        pub fos: ::c_long,
+        pub mxcsr: ::c_long,
+        __reserved: ::c_long,
+        pub st_space: [::c_long; 32],
+        pub xmm_space: [::c_long; 32],
+        padding: [::c_long; 56],
+    }
+
+    pub struct ucontext_t {
+        pub uc_flags: ::c_ulong,
+        pub uc_link: *mut ucontext_t,
+        pub uc_stack: ::stack_t,
+        pub uc_mcontext: mcontext_t,
+        pub uc_sigmask: ::sigset_t,
+        __private: [u8; 112],
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "extra_traits")] {
+        impl PartialEq for user_fpxregs_struct {
+            fn eq(&self, other: &user_fpxregs_struct) -> bool {
+                self.cwd == other.cwd
+                    && self.swd == other.swd
+                    && self.twd == other.twd
+                    && self.fop == other.fop
+                    && self.fip == other.fip
+                    && self.fcs == other.fcs
+                    && self.foo == other.foo
+                    && self.fos == other.fos
+                    && self.mxcsr == other.mxcsr
+                // Ignore __reserved field
+                    && self.st_space == other.st_space
+                    && self.xmm_space == other.xmm_space
+                // Ignore padding field
+            }
+        }
+
+        impl Eq for user_fpxregs_struct {}
+
+        impl ::fmt::Debug for user_fpxregs_struct {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("user_fpxregs_struct")
+                    .field("cwd", &self.cwd)
+                    .field("swd", &self.swd)
+                    .field("twd", &self.twd)
+                    .field("fop", &self.fop)
+                    .field("fip", &self.fip)
+                    .field("fcs", &self.fcs)
+                    .field("foo", &self.foo)
+                    .field("fos", &self.fos)
+                    .field("mxcsr", &self.mxcsr)
+                // Ignore __reserved field
+                    .field("st_space", &self.st_space)
+                    .field("xmm_space", &self.xmm_space)
+                // Ignore padding field
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for user_fpxregs_struct {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.cwd.hash(state);
+                self.swd.hash(state);
+                self.twd.hash(state);
+                self.fop.hash(state);
+                self.fip.hash(state);
+                self.fcs.hash(state);
+                self.foo.hash(state);
+                self.fos.hash(state);
+                self.mxcsr.hash(state);
+                // Ignore __reserved field
+                self.st_space.hash(state);
+                self.xmm_space.hash(state);
+                // Ignore padding field
+            }
+        }
+
+        impl PartialEq for ucontext_t {
+            fn eq(&self, other: &ucontext_t) -> bool {
+                self.uc_flags == other.uc_flags
+                    && self.uc_link == other.uc_link
+                    && self.uc_stack == other.uc_stack
+                    && self.uc_mcontext == other.uc_mcontext
+                    && self.uc_sigmask == other.uc_sigmask
+                // Ignore __private field
+            }
+        }
+
+        impl Eq for ucontext_t {}
+
+        impl ::fmt::Debug for ucontext_t {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("ucontext_t")
+                    .field("uc_flags", &self.uc_flags)
+                    .field("uc_link", &self.uc_link)
+                    .field("uc_stack", &self.uc_stack)
+                    .field("uc_mcontext", &self.uc_mcontext)
+                    .field("uc_sigmask", &self.uc_sigmask)
+                // Ignore __private field
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for ucontext_t {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.uc_flags.hash(state);
+                self.uc_link.hash(state);
+                self.uc_stack.hash(state);
+                self.uc_mcontext.hash(state);
+                self.uc_sigmask.hash(state);
+                // Ignore __private field
+            }
+        }
     }
 }
 
@@ -757,6 +858,27 @@ pub const CS: ::c_int = 13;
 pub const EFL: ::c_int = 14;
 pub const UESP: ::c_int = 15;
 pub const SS: ::c_int = 16;
+
+// offsets in mcontext_t.gregs from sys/ucontext.h
+pub const REG_GS: ::c_int = 0;
+pub const REG_FS: ::c_int = 1;
+pub const REG_ES: ::c_int = 2;
+pub const REG_DS: ::c_int = 3;
+pub const REG_EDI: ::c_int = 4;
+pub const REG_ESI: ::c_int = 5;
+pub const REG_EBP: ::c_int = 6;
+pub const REG_ESP: ::c_int = 7;
+pub const REG_EBX: ::c_int = 8;
+pub const REG_EDX: ::c_int = 9;
+pub const REG_ECX: ::c_int = 10;
+pub const REG_EAX: ::c_int = 11;
+pub const REG_TRAPNO: ::c_int = 12;
+pub const REG_ERR: ::c_int = 13;
+pub const REG_EIP: ::c_int = 14;
+pub const REG_CS: ::c_int = 15;
+pub const REG_EFL: ::c_int = 16;
+pub const REG_UESP: ::c_int = 17;
+pub const REG_SS: ::c_int = 18;
 
 extern {
     pub fn getcontext(ucp: *mut ucontext_t) -> ::c_int;

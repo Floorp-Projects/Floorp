@@ -11,10 +11,10 @@
 #include "mozilla/dom/SVGElement.h"
 #include "FilterSupport.h"
 #include "nsImageLoadingContent.h"
+#include "SVGAnimatedString.h"
 #include "nsSVGLength2.h"
-#include "SVGString.h"
 #include "nsSVGNumber2.h"
-#include "SVGNumberPair.h"
+#include "SVGAnimatedNumberPair.h"
 
 class nsSVGFilterInstance;
 
@@ -22,10 +22,10 @@ namespace mozilla {
 namespace dom {
 
 struct SVGStringInfo {
-  SVGStringInfo(const SVGString* aString, SVGElement* aElement)
+  SVGStringInfo(const SVGAnimatedString* aString, SVGElement* aElement)
       : mString(aString), mElement(aElement) {}
 
-  const SVGString* mString;
+  const SVGAnimatedString* mString;
   SVGElement* mElement;
 };
 
@@ -95,7 +95,7 @@ class SVGFE : public SVGFEBase {
     return !(aFlags & ~eFILTER);
   }
 
-  virtual SVGString& GetResultImageName() = 0;
+  virtual SVGAnimatedString& GetResultImageName() = 0;
   // Return a list of all image names used as sources. Default is to
   // return no sources.
   virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources);
@@ -146,7 +146,7 @@ class SVGFE : public SVGFEBase {
   virtual LengthAttributesInfo GetLengthInfo() override;
 
   Size GetKernelUnitLength(nsSVGFilterInstance* aInstance,
-                           SVGNumberPair* aKernelUnitLength);
+                           SVGAnimatedNumberPair* aKernelUnitLength);
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   nsSVGLength2 mLengthAttributes[4];
@@ -192,7 +192,7 @@ class SVGFELightingElement : public SVGFELightingElementBase {
 
   virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
                                          nsAtom* aAttribute) const override;
-  virtual SVGString& GetResultImageName() override {
+  virtual SVGAnimatedString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
   virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
@@ -225,11 +225,11 @@ class SVGFELightingElement : public SVGFELightingElementBase {
   static NumberInfo sNumberInfo[4];
 
   enum { KERNEL_UNIT_LENGTH };
-  SVGNumberPair mNumberPairAttributes[1];
+  SVGAnimatedNumberPair mNumberPairAttributes[1];
   static NumberPairInfo sNumberPairInfo[1];
 
   enum { RESULT, IN1 };
-  SVGString mStringAttributes[2];
+  SVGAnimatedString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 };
 

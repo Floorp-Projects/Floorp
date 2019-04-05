@@ -13,7 +13,7 @@
 #include "mozilla/SMILParserUtils.h"
 #include "nsAttrValue.h"
 #include "nsAttrValueInlines.h"
-#include "SVGOrient.h"
+#include "SVGAnimatedOrient.h"
 #include "SVGMotionSMILPathUtils.h"
 #include "SVGMotionSMILType.h"
 #include "SVGPathDataParser.h"
@@ -391,7 +391,8 @@ nsresult SVGMotionSMILAnimationFunction::SetRotate(const nsAString& aRotate,
     mRotateType = eRotateType_Explicit;
 
     uint16_t angleUnit;
-    if (!SVGOrient::GetValueFromString(aRotate, mRotateAngle, &angleUnit)) {
+    if (!SVGAnimatedOrient::GetValueFromString(aRotate, mRotateAngle,
+                                               &angleUnit)) {
       mRotateAngle = 0.0f;  // set default rotate angle
       // XXX report to console?
       return NS_ERROR_DOM_SYNTAX_ERR;
@@ -399,8 +400,8 @@ nsresult SVGMotionSMILAnimationFunction::SetRotate(const nsAString& aRotate,
 
     // Convert to radian units, if we're not already in radians.
     if (angleUnit != SVG_ANGLETYPE_RAD) {
-      mRotateAngle *= SVGOrient::GetDegreesPerUnit(angleUnit) /
-                      SVGOrient::GetDegreesPerUnit(SVG_ANGLETYPE_RAD);
+      mRotateAngle *= SVGAnimatedOrient::GetDegreesPerUnit(angleUnit) /
+                      SVGAnimatedOrient::GetDegreesPerUnit(SVG_ANGLETYPE_RAD);
     }
   }
   return NS_OK;

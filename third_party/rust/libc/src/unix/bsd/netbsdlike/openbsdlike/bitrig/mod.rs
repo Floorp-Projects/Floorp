@@ -1,6 +1,21 @@
 pub type c_char = i8;
 
 s! {
+    pub struct glob_t {
+        pub gl_pathc:   ::c_int,
+        pub gl_matchc:  ::c_int,
+        pub gl_offs:    ::c_int,
+        pub gl_flags:   ::c_int,
+        pub gl_pathv:   *mut *mut ::c_char,
+        __unused1: *mut ::c_void,
+        __unused2: *mut ::c_void,
+        __unused3: *mut ::c_void,
+        __unused4: *mut ::c_void,
+        __unused5: *mut ::c_void,
+        __unused6: *mut ::c_void,
+        __unused7: *mut ::c_void,
+    }
+
     pub struct lconv {
         pub decimal_point: *mut ::c_char,
         pub thousands_sep: *mut ::c_char,
@@ -83,7 +98,10 @@ pub const IFF_LINK1: ::c_int = 0x2000; // per link layer defined bit
 pub const IFF_LINK2: ::c_int = 0x4000; // per link layer defined bit
 pub const IFF_MULTICAST: ::c_int = 0x8000; // supports multicast
 
+pub const PTHREAD_STACK_MIN : ::size_t = 2048;
 pub const SIGSTKSZ : ::size_t = 40960;
+
+pub const PT_FIRSTMACH: ::c_int = 32;
 
 extern {
     pub fn nl_langinfo_l(item: ::nl_item, locale: ::locale_t) -> *mut ::c_char;

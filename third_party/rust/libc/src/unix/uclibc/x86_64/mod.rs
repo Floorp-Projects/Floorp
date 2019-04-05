@@ -1,5 +1,4 @@
 //! Definitions for uclibc on 64bit systems
-//!
 pub type blkcnt_t = i64;
 pub type blksize_t = i64;
 pub type clock_t = i64;
@@ -20,25 +19,7 @@ pub type suseconds_t = ::c_long;
 pub type time_t = ::c_int;
 pub type wchar_t = ::c_int;
 
-pub type nfds_t = ::c_ulong;
-
 s! {
-    pub struct dirent {
-        pub d_ino: ::ino64_t,
-        pub d_off: ::off64_t,
-        pub d_reclen: u16,
-        pub d_type: u8,
-        pub d_name: [::c_char; 256],
-    }
-
-    pub struct dirent64 {
-        pub d_ino: ::ino64_t,
-        pub d_off: ::off64_t,
-        pub d_reclen: u16,
-        pub d_type: u8,
-        pub d_name: [::c_char; 256],
-    }
-
     pub struct ipc_perm {
         pub __key: ::key_t,
         pub uid: ::uid_t,
@@ -133,7 +114,7 @@ s! {
 //
 //    pub struct in6_addr {
 //        pub s6_addr: [u8; 16],
-//        #[cfg(not(feature = "align"))]
+//        #[cfg(not(libc_align))]
 //        __align: [u32; 0],
 //    }
 
@@ -205,111 +186,6 @@ s! {
         pub c_cc: [::cc_t; ::NCCS],
     }
 
-    #[cfg_attr(all(feature = "align", target_pointer_width = "32"),
-               repr(align(4)))]
-    #[cfg_attr(all(feature = "align", target_pointer_width = "64"),
-               repr(align(8)))]
-    pub struct sem_t { // ToDo
-        #[cfg(target_pointer_width = "32")]
-        __size: [::c_char; 16],
-        #[cfg(target_pointer_width = "64")]
-        __size: [::c_char; 32],
-        #[cfg(not(feature = "align"))]
-        __align: [::c_long; 0],
-    }
-
-    #[cfg_attr(all(feature = "align",
-                   target_pointer_width = "32",
-                   any(target_arch = "mips",
-                       target_arch = "arm",
-                       target_arch = "powerpc")),
-               repr(align(4)))]
-    #[cfg_attr(all(feature = "align",
-                   any(target_pointer_width = "64",
-                       not(any(target_arch = "mips",
-                               target_arch = "arm",
-                               target_arch = "powerpc")))),
-               repr(align(8)))]
-    pub struct pthread_mutex_t { // ToDo
-        #[cfg(all(not(feature = "align"),
-                  any(target_arch = "mips",
-                      target_arch = "arm",
-                      target_arch = "powerpc")))]
-        __align: [::c_long; 0],
-        #[cfg(not(any(feature = "align",
-                      target_arch = "mips",
-                      target_arch = "arm",
-                      target_arch = "powerpc")))]
-        __align: [::c_longlong; 0],
-        size: [u8; __SIZEOF_PTHREAD_MUTEX_T],
-    }
-
-    #[cfg_attr(all(feature = "align",
-                   any(target_pointer_width = "32",
-                       target_arch = "x86_64", target_arch = "powerpc64",
-                       target_arch = "mips64", target_arch = "s390x",
-                       target_arch = "sparc64")),
-               repr(align(4)))]
-    #[cfg_attr(all(feature = "align",
-                   not(any(target_pointer_width = "32",
-                           target_arch = "x86_64", target_arch = "powerpc64",
-                           target_arch = "mips64", target_arch = "s390x",
-                           target_arch = "sparc64"))),
-               repr(align(8)))]
-    pub struct pthread_mutexattr_t { // ToDo
-        #[cfg(all(not(feature = "align"),
-                  any(target_arch = "x86_64", target_arch = "powerpc64",
-                      target_arch = "mips64", target_arch = "s390x",
-                      target_arch = "sparc64")))]
-        __align: [::c_int; 0],
-        #[cfg(all(not(feature = "align"),
-                  not(any(target_arch = "x86_64", target_arch = "powerpc64",
-                          target_arch = "mips64", target_arch = "s390x",
-                          target_arch = "sparc64"))))]
-        __align: [::c_long; 0],
-        size: [u8; __SIZEOF_PTHREAD_MUTEXATTR_T],
-    }
-
-    #[cfg_attr(feature = "align", repr(align(8)))]
-    pub struct pthread_cond_t { // ToDo
-        #[cfg(not(feature = "align"))]
-        __align: [::c_longlong; 0],
-        size: [u8; __SIZEOF_PTHREAD_COND_T],
-    }
-
-    #[cfg_attr(feature = "align", repr(align(4)))]
-    pub struct pthread_condattr_t { // ToDo
-        #[cfg(not(feature = "align"))]
-        __align: [::c_int; 0],
-        size: [u8; __SIZEOF_PTHREAD_CONDATTR_T],
-    }
-
-    #[cfg_attr(all(feature = "align",
-                   target_pointer_width = "32",
-                   any(target_arch = "mips",
-                       target_arch = "arm",
-                       target_arch = "powerpc")),
-               repr(align(4)))]
-    #[cfg_attr(all(feature = "align",
-                   any(target_pointer_width = "64",
-                       not(any(target_arch = "mips",
-                               target_arch = "arm",
-                               target_arch = "powerpc")))),
-               repr(align(8)))]
-    pub struct pthread_rwlock_t { // ToDo
-        #[cfg(all(not(feature = "align"),
-                  any(target_arch = "mips",
-                      target_arch = "arm",
-                      target_arch = "powerpc")))]
-        __align: [::c_long; 0],
-        #[cfg(not(any(feature = "align",
-                      target_arch = "mips",
-                      target_arch = "arm",
-                      target_arch = "powerpc")))]
-        __align: [::c_longlong; 0],
-        size: [u8; __SIZEOF_PTHREAD_RWLOCK_T],
-    }
-
     pub struct sigset_t { // ToDo
         __val: [::c_ulong; 16],
     }
@@ -360,6 +236,25 @@ s! {
     }
 }
 
+s_no_extra_traits! {
+    #[allow(missing_debug_implementations)]
+    pub struct dirent {
+        pub d_ino: ::ino64_t,
+        pub d_off: ::off64_t,
+        pub d_reclen: u16,
+        pub d_type: u8,
+        pub d_name: [::c_char; 256],
+    }
+    #[allow(missing_debug_implementations)]
+    pub struct dirent64 {
+        pub d_ino: ::ino64_t,
+        pub d_off: ::off64_t,
+        pub d_reclen: u16,
+        pub d_type: u8,
+        pub d_name: [::c_char; 256],
+    }
+}
+
 // constants
 pub const EADDRINUSE: ::c_int = 98; // Address already in use
 pub const EADDRNOTAVAIL: ::c_int = 99; // Cannot assign requested address
@@ -380,7 +275,6 @@ pub const O_NONBLOCK: ::c_int = 04000;
 pub const O_TRUNC: ::c_int = 01000;
 pub const NCCS: usize = 32;
 pub const SIG_SETMASK: ::c_int = 2; // Set the set of blocked signals
-pub const PTHREAD_STACK_MIN: usize = 16384;
 pub const __SIZEOF_PTHREAD_MUTEX_T: usize = 40;
 pub const __SIZEOF_PTHREAD_MUTEXATTR_T: usize = 4;
 pub const SO_BROADCAST: ::c_int = 6;
@@ -391,18 +285,10 @@ pub const SOL_SOCKET: ::c_int = 1;
 pub const SO_RCVTIMEO: ::c_int = 20;
 pub const SO_REUSEADDR: ::c_int = 2;
 pub const SO_SNDTIMEO: ::c_int = 21;
-pub const PTHREAD_MUTEX_NORMAL: ::c_int = 0;
-pub const PTHREAD_MUTEX_RECURSIVE: ::c_int = 1;
-pub const PTHREAD_MUTEX_ERRORCHECK: ::c_int = 2;
-pub const PTHREAD_MUTEX_DEFAULT: ::c_int = PTHREAD_MUTEX_NORMAL;
 pub const RLIM_INFINITY: u64 = 0xffffffffffffffff;
 pub const __SIZEOF_PTHREAD_COND_T: usize = 48;
 pub const __SIZEOF_PTHREAD_CONDATTR_T: usize = 4;
 pub const __SIZEOF_PTHREAD_RWLOCK_T: usize = 56;
-
-extern {
-    pub fn memalign(align: ::size_t, size: ::size_t) -> *mut ::c_void;
-}
 
 cfg_if! {
     if #[cfg(target_os = "l4re")] {
@@ -414,3 +300,13 @@ cfg_if! {
     }
 }
 
+cfg_if! {
+    if #[cfg(libc_align)] {
+        #[macro_use]
+        mod align;
+    } else {
+        #[macro_use]
+        mod no_align;
+    }
+}
+expand_align!();

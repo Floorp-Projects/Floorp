@@ -6,7 +6,7 @@
 
 #include "DOMSVGAnimatedAngle.h"
 
-#include "SVGOrient.h"
+#include "SVGAnimatedOrient.h"
 #include "mozilla/dom/SVGAnimatedAngleBinding.h"
 
 using namespace mozilla;

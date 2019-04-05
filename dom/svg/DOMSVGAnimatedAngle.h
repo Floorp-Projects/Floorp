@@ -13,7 +13,7 @@
 
 namespace mozilla {
 
-class SVGOrient;
+class SVGAnimatedOrient;
 
 namespace dom {
 
@@ -24,7 +24,7 @@ class DOMSVGAnimatedAngle final : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGAnimatedAngle)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGAnimatedAngle)
 
-  DOMSVGAnimatedAngle(SVGOrient* aVal, SVGElement* aSVGElement)
+  DOMSVGAnimatedAngle(SVGAnimatedOrient* aVal, SVGElement* aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
 
   // WebIDL
@@ -37,7 +37,7 @@ class DOMSVGAnimatedAngle final : public nsWrapperCache {
  protected:
   ~DOMSVGAnimatedAngle();
 
-  SVGOrient* mVal;  // kept alive because it belongs to content
+  SVGAnimatedOrient* mVal;  // kept alive because it belongs to content
   RefPtr<SVGElement> mSVGElement;
 };
 

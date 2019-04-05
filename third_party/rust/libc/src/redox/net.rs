@@ -9,20 +9,13 @@ s! {
         pub s_addr: in_addr_t,
     }
 
-    #[cfg_attr(feature = "align", repr(align(4)))]
-    pub struct in6_addr {
-        pub s6_addr: [u8; 16],
-        #[cfg(not(feature = "align"))]
-        __align: [u32; 0],
-    }
-
     pub struct ip_mreq {
         pub imr_multiaddr: in_addr,
         pub imr_interface: in_addr,
     }
 
     pub struct ipv6_mreq {
-        pub ipv6mr_multiaddr: in6_addr,
+        pub ipv6mr_multiaddr: ::in6_addr,
         pub ipv6mr_interface: ::c_uint,
     }
 

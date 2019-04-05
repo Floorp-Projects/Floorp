@@ -3,9 +3,35 @@
 //! More functions and definitions can be found in the more specific modules
 //! according to the platform in question.
 
-use dox::{mem, Option};
-
 // PUB_TYPE
+
+pub type int8_t = i8;
+pub type int16_t = i16;
+pub type int32_t = i32;
+pub type int64_t = i64;
+pub type uint8_t = u8;
+pub type uint16_t = u16;
+pub type uint32_t = u32;
+pub type uint64_t = u64;
+
+pub type c_schar = i8;
+pub type c_uchar = u8;
+pub type c_short = i16;
+pub type c_ushort = u16;
+pub type c_int = i32;
+pub type c_uint = u32;
+pub type c_float = f32;
+pub type c_double = f64;
+pub type c_longlong = i64;
+pub type c_ulonglong = u64;
+pub type intmax_t = i64;
+pub type uintmax_t = u64;
+
+pub type size_t = usize;
+pub type ptrdiff_t = isize;
+pub type intptr_t = isize;
+pub type uintptr_t = usize;
+pub type ssize_t = isize;
 
 pub type pid_t = i32;
 pub type uid_t = u32;
@@ -72,10 +98,30 @@ pub type c_ulong = u64;
 
 // FIXME: why are these uninhabited types? that seems... wrong?
 // Presumably these should be `()` or an `extern type` (when that stabilizes).
+#[cfg_attr(feature = "extra_traits", derive(Debug))]
 pub enum timezone {}
+impl ::Copy for timezone {}
+impl ::Clone for timezone {
+    fn clone(&self) -> timezone { *self }
+}
+#[cfg_attr(feature = "extra_traits", derive(Debug))]
 pub enum DIR {}
+impl ::Copy for DIR {}
+impl ::Clone for DIR {
+    fn clone(&self) -> DIR { *self }
+}
+#[cfg_attr(feature = "extra_traits", derive(Debug))]
 pub enum locale_t {}
+impl ::Copy for locale_t {}
+impl ::Clone for locale_t {
+    fn clone(&self) -> locale_t { *self }
+}
+#[cfg_attr(feature = "extra_traits", derive(Debug))]
 pub enum fpos64_t {} // TODO: fill this out with a struct
+impl ::Copy for fpos64_t {}
+impl ::Clone for fpos64_t {
+    fn clone(&self) -> fpos64_t { *self }
+}
 
 // PUB_STRUCT
 
@@ -97,16 +143,13 @@ s! {
         pub tv_usec: suseconds_t,
     }
 
-    // linux x32 compatibility
-    // See https://sourceware.org/bugzilla/show_bug.cgi?id=16437
     pub struct timespec {
         pub tv_sec: time_t,
-        #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
-        pub tv_nsec: i64,
-        #[cfg(not(all(target_arch = "x86_64", target_pointer_width = "32")))]
         pub tv_nsec: ::c_long,
     }
 
+    // FIXME: the rlimit and rusage related functions and types don't exist
+    // within zircon. Are there reasons for keeping them around?
     pub struct rlimit {
         pub rlim_cur: rlim_t,
         pub rlim_max: rlim_t,
@@ -157,20 +200,14 @@ s! {
         pub ru_nivcsw: c_long,
         #[cfg(all(target_arch = "x86_64", target_pointer_width = "32"))]
         __pad14: u32,
-
-        #[cfg(any(target_env = "musl", target_os = "emscripten"))]
-        __reserved: [c_long; 16],
     }
 
     pub struct in_addr {
         pub s_addr: in_addr_t,
     }
 
-    #[cfg_attr(feature = "align", repr(align(4)))]
     pub struct in6_addr {
         pub s6_addr: [u8; 16],
-        #[cfg(not(feature = "align"))]
-        __align: [u32; 0],
     }
 
     pub struct ip_mreq {
@@ -180,9 +217,6 @@ s! {
 
     pub struct ipv6_mreq {
         pub ipv6mr_multiaddr: in6_addr,
-        #[cfg(target_os = "android")]
-        pub ipv6mr_interface: ::c_int,
-        #[cfg(not(target_os = "android"))]
         pub ipv6mr_interface: ::c_uint,
     }
 
@@ -273,7 +307,7 @@ s! {
         pub sa_sigaction: ::sighandler_t,
         pub sa_mask: ::sigset_t,
         pub sa_flags: ::c_int,
-        pub sa_restorer: ::dox::Option<extern fn()>,
+        pub sa_restorer: ::Option<extern fn()>,
     }
 
     pub struct termios {
@@ -293,23 +327,6 @@ s! {
         pub l_start: ::off_t,
         pub l_len: ::off_t,
         pub l_pid: ::pid_t,
-    }
-
-    pub struct sysinfo {
-        pub uptime: ::c_ulong,
-        pub loads: [::c_ulong; 3],
-        pub totalram: ::c_ulong,
-        pub freeram: ::c_ulong,
-        pub sharedram: ::c_ulong,
-        pub bufferram: ::c_ulong,
-        pub totalswap: ::c_ulong,
-        pub freeswap: ::c_ulong,
-        pub procs: ::c_ushort,
-        pub pad: ::c_ushort,
-        pub totalhigh: ::c_ulong,
-        pub freehigh: ::c_ulong,
-        pub mem_unit: ::c_uint,
-        pub __reserved: [::c_char; 256],
     }
 
     pub struct ucred {
@@ -336,17 +353,6 @@ s! {
         pub sin6_flowinfo: u32,
         pub sin6_addr: ::in6_addr,
         pub sin6_scope_id: u32,
-    }
-
-    pub struct sockaddr_un {
-        pub sun_family: sa_family_t,
-        pub sun_path: [::c_char; 108]
-    }
-
-    pub struct sockaddr_storage {
-        pub ss_family: sa_family_t,
-        __ss_align: ::size_t,
-        __ss_pad2: [u8; 128 - 2 * 8],
     }
 
     pub struct addrinfo {
@@ -400,13 +406,9 @@ s! {
 
     pub struct sched_param {
         pub sched_priority: ::c_int,
-        #[cfg(target_env = "musl")]
         pub sched_ss_low_priority: ::c_int,
-        #[cfg(target_env = "musl")]
         pub sched_ss_repl_period: ::timespec,
-        #[cfg(target_env = "musl")]
         pub sched_ss_init_budget: ::timespec,
-        #[cfg(target_env = "musl")]
         pub sched_ss_max_repl: ::c_int,
     }
 
@@ -417,23 +419,9 @@ s! {
         pub dli_saddr: *mut ::c_void,
     }
 
-    #[cfg_attr(any(all(target_arch = "x86",
-                       not(target_env = "musl"),
-                       not(target_os = "android")),
-                   target_arch = "x86_64"),
-               repr(packed))]
     pub struct epoll_event {
         pub events: ::uint32_t,
         pub u64: ::uint64_t,
-    }
-
-    pub struct utsname {
-        pub sysname: [::c_char; 65],
-        pub nodename: [::c_char; 65],
-        pub release: [::c_char; 65],
-        pub version: [::c_char; 65],
-        pub machine: [::c_char; 65],
-        pub domainname: [::c_char; 65]
     }
 
     pub struct lconv {
@@ -467,29 +455,9 @@ s! {
         pub sigev_value: ::sigval,
         pub sigev_signo: ::c_int,
         pub sigev_notify: ::c_int,
-        // Actually a union.  We only expose sigev_notify_thread_id because it's
-        // the most useful member
-        pub sigev_notify_thread_id: ::c_int,
-        #[cfg(target_pointer_width = "64")]
-        __unused1: [::c_int; 11],
-        #[cfg(target_pointer_width = "32")]
-        __unused1: [::c_int; 12]
-    }
-
-    pub struct dirent {
-        pub d_ino: ::ino_t,
-        pub d_off: ::off_t,
-        pub d_reclen: ::c_ushort,
-        pub d_type: ::c_uchar,
-        pub d_name: [::c_char; 256],
-    }
-
-    pub struct dirent64 {
-        pub d_ino: ::ino64_t,
-        pub d_off: ::off64_t,
-        pub d_reclen: ::c_ushort,
-        pub d_type: ::c_uchar,
-        pub d_name: [::c_char; 256],
+        pub sigev_notify_function: fn(::sigval),
+        pub sigev_notify_attributes: *mut pthread_attr_t,
+        pub __pad: [::c_char; 56 - 3 * 8 /* 8 == sizeof(long) */],
     }
 
     pub struct rlimit64 {
@@ -518,146 +486,6 @@ s! {
         pub ifa_netmask: *mut ::sockaddr,
         pub ifa_ifu: *mut ::sockaddr, // FIXME This should be a union
         pub ifa_data: *mut ::c_void
-    }
-
-    #[cfg_attr(all(feature = "align",
-                   target_pointer_width = "32",
-                   any(target_arch = "mips",
-                       target_arch = "arm",
-                       target_arch = "powerpc",
-                       target_arch = "x86_64")),
-               repr(align(4)))]
-    #[cfg_attr(all(feature = "align",
-                   any(target_pointer_width = "64",
-                       not(any(target_arch = "mips",
-                               target_arch = "arm",
-                               target_arch = "powerpc",
-                               target_arch = "x86_64")))),
-               repr(align(8)))]
-    pub struct pthread_mutex_t {
-        #[cfg(all(not(feature = "align"),
-                  any(target_arch = "mips",
-                      target_arch = "arm",
-                      target_arch = "powerpc",
-                      all(target_arch = "x86_64",
-                          target_pointer_width = "32"))))]
-        __align: [::c_long; 0],
-        #[cfg(not(any(feature = "align",
-                      target_arch = "mips",
-                      target_arch = "arm",
-                      target_arch = "powerpc",
-                      all(target_arch = "x86_64",
-                          target_pointer_width = "32"))))]
-        __align: [::c_longlong; 0],
-        size: [u8; __SIZEOF_PTHREAD_MUTEX_T],
-    }
-
-    #[cfg_attr(all(feature = "align",
-                   target_pointer_width = "32",
-                   any(target_arch = "mips",
-                       target_arch = "arm",
-                       target_arch = "powerpc",
-                       target_arch = "x86_64")),
-               repr(align(4)))]
-    #[cfg_attr(all(feature = "align",
-                   any(target_pointer_width = "64",
-                       not(any(target_arch = "mips",
-                               target_arch = "arm",
-                               target_arch = "powerpc",
-                               target_arch = "x86_64")))),
-               repr(align(8)))]
-    pub struct pthread_rwlock_t {
-        #[cfg(all(not(feature = "align"),
-                  any(target_arch = "mips",
-                      target_arch = "arm",
-                      target_arch = "powerpc",
-                      all(target_arch = "x86_64",
-                          target_pointer_width = "32"))))]
-        __align: [::c_long; 0],
-        #[cfg(not(any(feature = "align",
-                      target_arch = "mips",
-                      target_arch = "arm",
-                      target_arch = "powerpc",
-                      all(target_arch = "x86_64",
-                          target_pointer_width = "32"))))]
-        __align: [::c_longlong; 0],
-        size: [u8; __SIZEOF_PTHREAD_RWLOCK_T],
-    }
-
-    #[cfg_attr(all(feature = "align",
-                   any(target_pointer_width = "32",
-                       target_arch = "x86_64", target_arch = "powerpc64",
-                       target_arch = "mips64", target_arch = "s390x",
-                       target_arch = "sparc64",
-                       all(target_arch = "aarch64", target_env = "musl"))),
-               repr(align(4)))]
-    #[cfg_attr(all(feature = "align",
-                   not(any(target_pointer_width = "32",
-                           target_arch = "x86_64", target_arch = "powerpc64",
-                           target_arch = "mips64", target_arch = "s390x",
-                           target_arch = "sparc64",
-                           all(target_arch = "aarch64", target_env = "musl")))),
-               repr(align(8)))]
-    pub struct pthread_mutexattr_t {
-        #[cfg(all(not(features = "align"),
-                  any(target_arch = "x86_64", target_arch = "powerpc64",
-                      target_arch = "mips64", target_arch = "s390x",
-                      target_arch = "sparc64",
-                      all(target_arch = "aarch64", target_env = "musl"))))]
-        __align: [::c_int; 0],
-        #[cfg(all(not(features = "align"),
-                  not(any(target_arch = "x86_64", target_arch = "powerpc64",
-                          target_arch = "mips64", target_arch = "s390x",
-                          target_arch = "sparc64",
-                          all(target_arch = "aarch64", target_env = "musl")))))]
-        __align: [::c_long; 0],
-        size: [u8; __SIZEOF_PTHREAD_MUTEXATTR_T],
-    }
-
-    #[cfg_attr(all(feature = "align",
-                   any(target_env = "musl", target_pointer_width = "32")),
-               repr(align(4)))]
-    #[cfg_attr(all(feature = "align",
-                   not(target_env = "musl"),
-                   target_pointer_width = "64"),
-               repr(align(8)))]
-    pub struct pthread_rwlockattr_t {
-        #[cfg(all(not(feature = "align"), target_env = "musl"))]
-        __align: [::c_int; 0],
-        #[cfg(all(not(feature = "align"), not(target_env = "musl")))]
-        __align: [::c_long; 0],
-        size: [u8; __SIZEOF_PTHREAD_RWLOCKATTR_T],
-    }
-
-    #[cfg_attr(all(feature = "align",
-                   target_env = "musl",
-                   target_pointer_width = "32"),
-               repr(align(4)))]
-    #[cfg_attr(all(feature = "align",
-                   target_env = "musl",
-                   target_pointer_width = "64"),
-               repr(align(8)))]
-    #[cfg_attr(all(feature = "align",
-                   not(target_env = "musl"),
-                   target_arch = "x86"),
-               repr(align(4)))]
-    #[cfg_attr(all(feature = "align",
-                   not(target_env = "musl"),
-                   not(target_arch = "x86")),
-               repr(align(8)))]
-    pub struct pthread_cond_t {
-        #[cfg(all(not(feature = "align"), target_env = "musl"))]
-        __align: [*const ::c_void; 0],
-        #[cfg(not(any(feature = "align", target_env = "musl")))]
-        __align: [::c_longlong; 0],
-        size: [u8; __SIZEOF_PTHREAD_COND_T],
-    }
-
-    #[cfg_attr(feature = "align", repr(align(4)))]
-    pub struct pthread_condattr_t {
-        #[cfg(not(feature = "align"))]
-        __align: [::c_int; 0],
-        size: [u8; __SIZEOF_PTHREAD_CONDATTR_T],
     }
 
     pub struct passwd {
@@ -731,7 +559,12 @@ s! {
         pub ssi_utime: ::uint64_t,
         pub ssi_stime: ::uint64_t,
         pub ssi_addr: ::uint64_t,
-        _pad: [::uint8_t; 48],
+        pub ssi_addr_lsb: ::uint16_t,
+        _pad2: ::uint16_t,
+        pub ssi_syscall: ::int32_t,
+        pub ssi_call_addr: ::uint64_t,
+        pub ssi_arch: ::uint32_t,
+        _pad: [::uint8_t; 28],
     }
 
     pub struct itimerspec {
@@ -1088,7 +921,306 @@ s! {
     }
 }
 
+s_no_extra_traits! {
+    pub struct sysinfo {
+        pub uptime: ::c_ulong,
+        pub loads: [::c_ulong; 3],
+        pub totalram: ::c_ulong,
+        pub freeram: ::c_ulong,
+        pub sharedram: ::c_ulong,
+        pub bufferram: ::c_ulong,
+        pub totalswap: ::c_ulong,
+        pub freeswap: ::c_ulong,
+        pub procs: ::c_ushort,
+        pub pad: ::c_ushort,
+        pub totalhigh: ::c_ulong,
+        pub freehigh: ::c_ulong,
+        pub mem_unit: ::c_uint,
+        pub __reserved: [::c_char; 256],
+    }
+
+    pub struct sockaddr_un {
+        pub sun_family: sa_family_t,
+        pub sun_path: [::c_char; 108]
+    }
+
+    pub struct sockaddr_storage {
+        pub ss_family: sa_family_t,
+        __ss_align: ::size_t,
+        __ss_pad2: [u8; 128 - 2 * 8],
+    }
+
+    pub struct utsname {
+        pub sysname: [::c_char; 65],
+        pub nodename: [::c_char; 65],
+        pub release: [::c_char; 65],
+        pub version: [::c_char; 65],
+        pub machine: [::c_char; 65],
+        pub domainname: [::c_char; 65]
+    }
+
+    pub struct dirent {
+        pub d_ino: ::ino_t,
+        pub d_off: ::off_t,
+        pub d_reclen: ::c_ushort,
+        pub d_type: ::c_uchar,
+        pub d_name: [::c_char; 256],
+    }
+
+    pub struct dirent64 {
+        pub d_ino: ::ino64_t,
+        pub d_off: ::off64_t,
+        pub d_reclen: ::c_ushort,
+        pub d_type: ::c_uchar,
+        pub d_name: [::c_char; 256],
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "extra_traits")] {
+        impl PartialEq for sysinfo {
+            fn eq(&self, other: &sysinfo) -> bool {
+                self.uptime == other.uptime
+                    && self.loads == other.loads
+                    && self.totalram == other.totalram
+                    && self.freeram == other.freeram
+                    && self.sharedram == other.sharedram
+                    && self.bufferram == other.bufferram
+                    && self.totalswap == other.totalswap
+                    && self.freeswap == other.freeswap
+                    && self.procs == other.procs
+                    && self.pad == other.pad
+                    && self.totalhigh == other.totalhigh
+                    && self.freehigh == other.freehigh
+                    && self.mem_unit == other.mem_unit
+                    && self
+                        .__reserved
+                        .iter()
+                        .zip(other.__reserved.iter())
+                        .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for sysinfo {}
+        impl ::fmt::Debug for sysinfo {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sysinfo")
+                    .field("uptime", &self.uptime)
+                    .field("loads", &self.loads)
+                    .field("totalram", &self.totalram)
+                    .field("freeram", &self.freeram)
+                    .field("sharedram", &self.sharedram)
+                    .field("bufferram", &self.bufferram)
+                    .field("totalswap", &self.totalswap)
+                    .field("freeswap", &self.freeswap)
+                    .field("procs", &self.procs)
+                    .field("pad", &self.pad)
+                    .field("totalhigh", &self.totalhigh)
+                    .field("freehigh", &self.freehigh)
+                    .field("mem_unit", &self.mem_unit)
+                    // FIXME: .field("__reserved", &self.__reserved)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for sysinfo {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.uptime.hash(state);
+                self.loads.hash(state);
+                self.totalram.hash(state);
+                self.freeram.hash(state);
+                self.sharedram.hash(state);
+                self.bufferram.hash(state);
+                self.totalswap.hash(state);
+                self.freeswap.hash(state);
+                self.procs.hash(state);
+                self.pad.hash(state);
+                self.totalhigh.hash(state);
+                self.freehigh.hash(state);
+                self.mem_unit.hash(state);
+                self.__reserved.hash(state);
+            }
+        }
+
+        impl PartialEq for sockaddr_un {
+            fn eq(&self, other: &sockaddr_un) -> bool {
+                self.sun_family == other.sun_family
+                    && self
+                    .sun_path
+                    .iter()
+                    .zip(other.sun_path.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for sockaddr_un {}
+        impl ::fmt::Debug for sockaddr_un {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sockaddr_un")
+                    .field("sun_family", &self.sun_family)
+                    // FIXME: .field("sun_path", &self.sun_path)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for sockaddr_un {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.sun_family.hash(state);
+                self.sun_path.hash(state);
+            }
+        }
+
+        impl PartialEq for sockaddr_storage {
+            fn eq(&self, other: &sockaddr_storage) -> bool {
+                self.ss_family == other.ss_family
+                    && self.__ss_align == other.__ss_align
+                    && self
+                    .__ss_pad2
+                    .iter()
+                    .zip(other.__ss_pad2.iter())
+                    .all(|(a, b)| a == b)
+            }
+        }
+        impl Eq for sockaddr_storage {}
+        impl ::fmt::Debug for sockaddr_storage {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sockaddr_storage")
+                    .field("ss_family", &self.ss_family)
+                    .field("__ss_align", &self.__ss_align)
+                    // FIXME: .field("__ss_pad2", &self.__ss_pad2)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for sockaddr_storage {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.ss_family.hash(state);
+                self.__ss_align.hash(state);
+                self.__ss_pad2.hash(state);
+            }
+        }
+
+        impl PartialEq for utsname {
+            fn eq(&self, other: &utsname) -> bool {
+                self.sysname
+                    .iter()
+                    .zip(other.sysname.iter())
+                    .all(|(a,b)| a == b)
+                    && self
+                    .nodename
+                    .iter()
+                    .zip(other.nodename.iter())
+                    .all(|(a,b)| a == b)
+                    && self
+                    .release
+                    .iter()
+                    .zip(other.release.iter())
+                    .all(|(a,b)| a == b)
+                    && self
+                    .version
+                    .iter()
+                    .zip(other.version.iter())
+                    .all(|(a,b)| a == b)
+                    && self
+                    .machine
+                    .iter()
+                    .zip(other.machine.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for utsname {}
+        impl ::fmt::Debug for utsname {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("utsname")
+                    // FIXME: .field("sysname", &self.sysname)
+                    // FIXME: .field("nodename", &self.nodename)
+                    // FIXME: .field("release", &self.release)
+                    // FIXME: .field("version", &self.version)
+                    // FIXME: .field("machine", &self.machine)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for utsname {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.sysname.hash(state);
+                self.nodename.hash(state);
+                self.release.hash(state);
+                self.version.hash(state);
+                self.machine.hash(state);
+            }
+        }
+
+        impl PartialEq for dirent {
+            fn eq(&self, other: &dirent) -> bool {
+                self.d_ino == other.d_ino
+                    && self.d_off == other.d_off
+                    && self.d_reclen == other.d_reclen
+                    && self.d_type == other.d_type
+                    && self
+                    .d_name
+                    .iter()
+                    .zip(other.d_name.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for dirent {}
+        impl ::fmt::Debug for dirent {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("dirent")
+                    .field("d_ino", &self.d_ino)
+                    .field("d_off", &self.d_off)
+                    .field("d_reclen", &self.d_reclen)
+                    .field("d_type", &self.d_type)
+                    // FIXME: .field("d_name", &self.d_name)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for dirent {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.d_ino.hash(state);
+                self.d_off.hash(state);
+                self.d_reclen.hash(state);
+                self.d_type.hash(state);
+                self.d_name.hash(state);
+            }
+        }
+
+        impl PartialEq for dirent64 {
+            fn eq(&self, other: &dirent64) -> bool {
+                self.d_ino == other.d_ino
+                    && self.d_off == other.d_off
+                    && self.d_reclen == other.d_reclen
+                    && self.d_type == other.d_type
+                    && self
+                    .d_name
+                    .iter()
+                    .zip(other.d_name.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for dirent64 {}
+        impl ::fmt::Debug for dirent64 {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("dirent64")
+                    .field("d_ino", &self.d_ino)
+                    .field("d_off", &self.d_off)
+                    .field("d_reclen", &self.d_reclen)
+                    .field("d_type", &self.d_type)
+                    // FIXME: .field("d_name", &self.d_name)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for dirent64 {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.d_ino.hash(state);
+                self.d_off.hash(state);
+                self.d_reclen.hash(state);
+                self.d_type.hash(state);
+                self.d_name.hash(state);
+            }
+        }
+    }
+}
+
 // PUB_CONST
+
+pub const INT_MIN: c_int = -2147483648;
+pub const INT_MAX: c_int = 2147483647;
 
 pub const SIG_DFL: sighandler_t = 0 as sighandler_t;
 pub const SIG_IGN: sighandler_t = 1 as sighandler_t;
@@ -1711,7 +1843,7 @@ pub const WEXITED: ::c_int = 0x00000004;
 pub const WCONTINUED: ::c_int = 0x00000008;
 pub const WNOWAIT: ::c_int = 0x01000000;
 
-// Options set using PTRACE_SETOPTIONS.
+// ::Options set using PTRACE_SETOPTIONS.
 pub const PTRACE_O_TRACESYSGOOD: ::c_int = 0x00000001;
 pub const PTRACE_O_TRACEFORK: ::c_int = 0x00000002;
 pub const PTRACE_O_TRACEVFORK: ::c_int = 0x00000004;
@@ -2930,20 +3062,20 @@ cfg_if! {
 f! {
     pub fn FD_CLR(fd: ::c_int, set: *mut fd_set) -> () {
         let fd = fd as usize;
-        let size = mem::size_of_val(&(*set).fds_bits[0]) * 8;
+        let size = ::mem::size_of_val(&(*set).fds_bits[0]) * 8;
         (*set).fds_bits[fd / size] &= !(1 << (fd % size));
         return
     }
 
     pub fn FD_ISSET(fd: ::c_int, set: *mut fd_set) -> bool {
         let fd = fd as usize;
-        let size = mem::size_of_val(&(*set).fds_bits[0]) * 8;
+        let size = ::mem::size_of_val(&(*set).fds_bits[0]) * 8;
         return ((*set).fds_bits[fd / size] & (1 << (fd % size))) != 0
     }
 
     pub fn FD_SET(fd: ::c_int, set: *mut fd_set) -> () {
         let fd = fd as usize;
-        let size = mem::size_of_val(&(*set).fds_bits[0]) * 8;
+        let size = ::mem::size_of_val(&(*set).fds_bits[0]) * 8;
         (*set).fds_bits[fd / size] |= 1 << (fd % size);
         return
     }
@@ -2997,21 +3129,23 @@ f! {
     }
 
     pub fn CPU_SET(cpu: usize, cpuset: &mut cpu_set_t) -> () {
-        let size_in_bits = 8 * mem::size_of_val(&cpuset.bits[0]); // 32, 64 etc
+        let size_in_bits
+            = 8 * ::mem::size_of_val(&cpuset.bits[0]); // 32, 64 etc
         let (idx, offset) = (cpu / size_in_bits, cpu % size_in_bits);
         cpuset.bits[idx] |= 1 << offset;
         ()
     }
 
     pub fn CPU_CLR(cpu: usize, cpuset: &mut cpu_set_t) -> () {
-        let size_in_bits = 8 * mem::size_of_val(&cpuset.bits[0]); // 32, 64 etc
+        let size_in_bits
+            = 8 * ::mem::size_of_val(&cpuset.bits[0]); // 32, 64 etc
         let (idx, offset) = (cpu / size_in_bits, cpu % size_in_bits);
         cpuset.bits[idx] &= !(1 << offset);
         ()
     }
 
     pub fn CPU_ISSET(cpu: usize, cpuset: &cpu_set_t) -> bool {
-        let size_in_bits = 8 * mem::size_of_val(&cpuset.bits[0]);
+        let size_in_bits = 8 * ::mem::size_of_val(&cpuset.bits[0]);
         let (idx, offset) = (cpu / size_in_bits, cpu % size_in_bits);
         0 != (cpuset.bits[idx] & (1 << offset))
     }
@@ -3052,7 +3186,120 @@ f! {
 #[link(name = "fdio")]
 extern {}
 
+#[cfg_attr(feature = "extra_traits", derive(Debug))]
+pub enum FILE {}
+impl ::Copy for FILE {}
+impl ::Clone for FILE {
+    fn clone(&self) -> FILE { *self }
+}
+#[cfg_attr(feature = "extra_traits", derive(Debug))]
+pub enum fpos_t {} // TODO: fill this out with a struct
+impl ::Copy for fpos_t {}
+impl ::Clone for fpos_t {
+    fn clone(&self) -> fpos_t { *self }
+}
+
 extern {
+    pub fn isalnum(c: c_int) -> c_int;
+    pub fn isalpha(c: c_int) -> c_int;
+    pub fn iscntrl(c: c_int) -> c_int;
+    pub fn isdigit(c: c_int) -> c_int;
+    pub fn isgraph(c: c_int) -> c_int;
+    pub fn islower(c: c_int) -> c_int;
+    pub fn isprint(c: c_int) -> c_int;
+    pub fn ispunct(c: c_int) -> c_int;
+    pub fn isspace(c: c_int) -> c_int;
+    pub fn isupper(c: c_int) -> c_int;
+    pub fn isxdigit(c: c_int) -> c_int;
+    pub fn tolower(c: c_int) -> c_int;
+    pub fn toupper(c: c_int) -> c_int;
+    pub fn fopen(filename: *const c_char, mode: *const c_char) -> *mut FILE;
+    pub fn freopen(filename: *const c_char, mode: *const c_char,
+                   file: *mut FILE) -> *mut FILE;
+    pub fn fflush(file: *mut FILE) -> c_int;
+    pub fn fclose(file: *mut FILE) -> c_int;
+    pub fn remove(filename: *const c_char) -> c_int;
+    pub fn rename(oldname: *const c_char, newname: *const c_char) -> c_int;
+    pub fn tmpfile() -> *mut FILE;
+    pub fn setvbuf(stream: *mut FILE, buffer: *mut c_char, mode: c_int,
+                   size: size_t) -> c_int;
+    pub fn setbuf(stream: *mut FILE, buf: *mut c_char);
+    pub fn getchar() -> c_int;
+    pub fn putchar(c: c_int) -> c_int;
+    pub fn fgetc(stream: *mut FILE) -> c_int;
+    pub fn fgets(buf: *mut c_char, n: c_int, stream: *mut FILE) -> *mut c_char;
+    pub fn fputc(c: c_int, stream: *mut FILE) -> c_int;
+    pub fn fputs(s: *const c_char, stream: *mut FILE) -> c_int;
+    pub fn puts(s: *const c_char) -> c_int;
+    pub fn ungetc(c: c_int, stream: *mut FILE) -> c_int;
+    pub fn fread(ptr: *mut c_void, size: size_t, nobj: size_t,
+                 stream: *mut FILE) -> size_t;
+    pub fn fwrite(ptr: *const c_void, size: size_t, nobj: size_t,
+                  stream: *mut FILE) -> size_t;
+    pub fn fseek(stream: *mut FILE, offset: c_long, whence: c_int) -> c_int;
+    pub fn ftell(stream: *mut FILE) -> c_long;
+    pub fn rewind(stream: *mut FILE);
+    pub fn fgetpos(stream: *mut FILE, ptr: *mut fpos_t) -> c_int;
+    pub fn fsetpos(stream: *mut FILE, ptr: *const fpos_t) -> c_int;
+    pub fn feof(stream: *mut FILE) -> c_int;
+    pub fn ferror(stream: *mut FILE) -> c_int;
+    pub fn perror(s: *const c_char);
+    pub fn atoi(s: *const c_char) -> c_int;
+    pub fn strtod(s: *const c_char, endp: *mut *mut c_char) -> c_double;
+    pub fn strtol(s: *const c_char, endp: *mut *mut c_char,
+                  base: c_int) -> c_long;
+    pub fn strtoul(s: *const c_char, endp: *mut *mut c_char,
+                   base: c_int) -> c_ulong;
+    pub fn calloc(nobj: size_t, size: size_t) -> *mut c_void;
+    pub fn malloc(size: size_t) -> *mut c_void;
+    pub fn realloc(p: *mut c_void, size: size_t) -> *mut c_void;
+    pub fn free(p: *mut c_void);
+    pub fn abort() -> !;
+    pub fn exit(status: c_int) -> !;
+    pub fn _exit(status: c_int) -> !;
+    pub fn atexit(cb: extern fn()) -> c_int;
+    pub fn system(s: *const c_char) -> c_int;
+    pub fn getenv(s: *const c_char) -> *mut c_char;
+
+    pub fn strcpy(dst: *mut c_char, src: *const c_char) -> *mut c_char;
+    pub fn strncpy(dst: *mut c_char, src: *const c_char,
+                   n: size_t) -> *mut c_char;
+    pub fn strcat(s: *mut c_char, ct: *const c_char) -> *mut c_char;
+    pub fn strncat(s: *mut c_char, ct: *const c_char,
+                   n: size_t) -> *mut c_char;
+    pub fn strcmp(cs: *const c_char, ct: *const c_char) -> c_int;
+    pub fn strncmp(cs: *const c_char, ct: *const c_char, n: size_t) -> c_int;
+    pub fn strcoll(cs: *const c_char, ct: *const c_char) -> c_int;
+    pub fn strchr(cs: *const c_char, c: c_int) -> *mut c_char;
+    pub fn strrchr(cs: *const c_char, c: c_int) -> *mut c_char;
+    pub fn strspn(cs: *const c_char, ct: *const c_char) -> size_t;
+    pub fn strcspn(cs: *const c_char, ct: *const c_char) -> size_t;
+    pub fn strdup(cs: *const c_char) -> *mut c_char;
+    pub fn strpbrk(cs: *const c_char, ct: *const c_char) -> *mut c_char;
+    pub fn strstr(cs: *const c_char, ct: *const c_char) -> *mut c_char;
+    pub fn strlen(cs: *const c_char) -> size_t;
+    pub fn strnlen(cs: *const c_char, maxlen: size_t) -> size_t;
+    pub fn strerror(n: c_int) -> *mut c_char;
+    pub fn strtok(s: *mut c_char, t: *const c_char) -> *mut c_char;
+    pub fn strxfrm(s: *mut c_char, ct: *const c_char, n: size_t) -> size_t;
+    pub fn wcslen(buf: *const wchar_t) -> size_t;
+    pub fn wcstombs(dest: *mut c_char, src: *const wchar_t,
+                    n: size_t) -> ::size_t;
+
+    pub fn memchr(cx: *const c_void, c: c_int, n: size_t) -> *mut c_void;
+    pub fn memcmp(cx: *const c_void, ct: *const c_void, n: size_t) -> c_int;
+    pub fn memcpy(dest: *mut c_void, src: *const c_void,
+                  n: size_t) -> *mut c_void;
+    pub fn memmove(dest: *mut c_void, src: *const c_void,
+                   n: size_t) -> *mut c_void;
+    pub fn memset(dest: *mut c_void, c: c_int, n: size_t) -> *mut c_void;
+
+    pub fn abs(i: c_int) -> c_int;
+    pub fn atof(s: *const c_char) -> c_double;
+    pub fn labs(i: c_long) -> c_long;
+    pub fn rand() -> c_int;
+    pub fn srand(seed: c_uint);
+
     pub fn getpwnam(name: *const ::c_char) -> *mut passwd;
     pub fn getpwuid(uid: ::uid_t) -> *mut passwd;
 
@@ -3192,6 +3439,7 @@ extern {
                 -> ::ssize_t;
     pub fn rmdir(path: *const c_char) -> ::c_int;
     pub fn seteuid(uid: uid_t) -> ::c_int;
+    pub fn setegid(gid: gid_t) -> ::c_int;
     pub fn setgid(gid: gid_t) -> ::c_int;
     pub fn setpgid(pid: pid_t, pgid: pid_t) -> ::c_int;
     pub fn setsid() -> pid_t;
@@ -3277,7 +3525,7 @@ extern {
     pub fn pthread_detach(thread: ::pthread_t) -> ::c_int;
     pub fn sched_yield() -> ::c_int;
     pub fn pthread_key_create(key: *mut pthread_key_t,
-                              dtor: Option<unsafe extern fn(*mut ::c_void)>)
+                              dtor: ::Option<unsafe extern fn(*mut ::c_void)>)
                               -> ::c_int;
     pub fn pthread_key_delete(key: pthread_key_t) -> ::c_int;
     pub fn pthread_getspecific(key: pthread_key_t) -> *mut ::c_void;
@@ -3782,7 +4030,7 @@ extern {
 
     pub fn glob(pattern: *const c_char,
                 flags: ::c_int,
-                errfunc: Option<extern fn(epath: *const c_char,
+                errfunc: ::Option<extern fn(epath: *const c_char,
                                           errno: ::c_int) -> ::c_int>,
                 pglob: *mut ::glob_t) -> ::c_int;
     pub fn globfree(pglob: *mut ::glob_t);
@@ -3955,9 +4203,9 @@ extern {
                       result: *mut *mut passwd) -> ::c_int;
     pub fn sigwait(set: *const sigset_t,
                    sig: *mut ::c_int) -> ::c_int;
-    pub fn pthread_atfork(prepare: Option<unsafe extern fn()>,
-                          parent: Option<unsafe extern fn()>,
-                          child: Option<unsafe extern fn()>) -> ::c_int;
+    pub fn pthread_atfork(prepare: ::Option<unsafe extern fn()>,
+                          parent: ::Option<unsafe extern fn()>,
+                          child: ::Option<unsafe extern fn()>) -> ::c_int;
     pub fn getgrgid(gid: ::gid_t) -> *mut ::group;
     pub fn getgrouplist(user: *const ::c_char,
                         group: ::gid_t,
@@ -3974,7 +4222,7 @@ extern {
                           f: extern fn(*mut ::c_void) -> *mut ::c_void,
                           value: *mut ::c_void) -> ::c_int;
     pub fn dl_iterate_phdr(
-        callback: Option<unsafe extern fn(
+        callback: ::Option<unsafe extern fn(
             info: *mut ::dl_phdr_info,
             size: ::size_t,
             data: *mut ::c_void
@@ -3987,13 +4235,41 @@ cfg_if! {
     if #[cfg(target_arch = "aarch64")] {
         mod aarch64;
         pub use self::aarch64::*;
-    } else if #[cfg(any(target_arch = "powerpc64"))] {
-        mod powerpc64;
-        pub use self::powerpc64::*;
     } else if #[cfg(any(target_arch = "x86_64"))] {
         mod x86_64;
         pub use self::x86_64::*;
     } else {
         // Unknown target_arch
+    }
+}
+
+cfg_if! {
+    if #[cfg(libc_align)] {
+        #[macro_use]
+        mod align;
+    } else {
+        #[macro_use]
+        mod no_align;
+    }
+}
+expand_align!();
+
+cfg_if! {
+    if #[cfg(libc_core_cvoid)] {
+        pub use ::ffi::c_void;
+    } else {
+        // Use repr(u8) as LLVM expects `void*` to be the same as `i8*` to help
+        // enable more optimization opportunities around it recognizing things
+        // like malloc/free.
+        #[repr(u8)]
+        #[allow(missing_copy_implementations)]
+        #[allow(missing_debug_implementations)]
+        pub enum c_void {
+            // Two dummy variants so the #[repr] attribute can be used.
+            #[doc(hidden)]
+            __variant1,
+            #[doc(hidden)]
+            __variant2,
+        }
     }
 }

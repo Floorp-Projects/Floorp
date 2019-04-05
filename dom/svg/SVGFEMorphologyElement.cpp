@@ -53,12 +53,12 @@ already_AddRefed<DOMSVGAnimatedEnumeration> SVGFEMorphologyElement::Operator() {
 
 already_AddRefed<DOMSVGAnimatedNumber> SVGFEMorphologyElement::RadiusX() {
   return mNumberPairAttributes[RADIUS].ToDOMAnimatedNumber(
-      SVGNumberPair::eFirst, this);
+      SVGAnimatedNumberPair::eFirst, this);
 }
 
 already_AddRefed<DOMSVGAnimatedNumber> SVGFEMorphologyElement::RadiusY() {
   return mNumberPairAttributes[RADIUS].ToDOMAnimatedNumber(
-      SVGNumberPair::eSecond, this);
+      SVGAnimatedNumberPair::eSecond, this);
 }
 
 void SVGFEMorphologyElement::SetRadius(float rx, float ry) {
@@ -80,11 +80,11 @@ void SVGFEMorphologyElement::GetRXY(int32_t* aRX, int32_t* aRY,
   // issues.
   *aRX = NSToIntCeil(aInstance.GetPrimitiveNumber(
                          SVGContentUtils::X, &mNumberPairAttributes[RADIUS],
-                         SVGNumberPair::eFirst) -
+                         SVGAnimatedNumberPair::eFirst) -
                      MORPHOLOGY_EPSILON);
   *aRY = NSToIntCeil(aInstance.GetPrimitiveNumber(
                          SVGContentUtils::Y, &mNumberPairAttributes[RADIUS],
-                         SVGNumberPair::eSecond) -
+                         SVGAnimatedNumberPair::eSecond) -
                      MORPHOLOGY_EPSILON);
 }
 
