@@ -1,6 +1,8 @@
+use std::borrow::Cow;
+
 use syn;
 
-use ast::{Fields, Style};
+use ast::Fields;
 use codegen;
 use options::{Core, InputField, ParseAttribute};
 use {Error, FromMeta, Result};
@@ -11,6 +13,8 @@ pub struct InputVariant {
     attr_name: Option<String>,
     data: Fields<InputField>,
     skip: bool,
+    /// Whether or not unknown fields are acceptable in this
+    allow_unknown_fields: Option<bool>,
 }
 
 impl InputVariant {
@@ -18,11 +22,13 @@ impl InputVariant {
         codegen::Variant {
             ty_ident,
             variant_ident: &self.ident,
-            name_in_attr: self.attr_name
-                .clone()
-                .unwrap_or_else(|| self.ident.to_string()),
+            name_in_attr: self
+                .attr_name
+                .as_ref()
+                .map_or_else(|| Cow::Owned(self.ident.to_string()), Cow::Borrowed),
             data: self.data.as_ref().map(InputField::as_codegen_field),
             skip: self.skip,
+            allow_unknown_fields: self.allow_unknown_fields.unwrap_or_default(),
         }
     }
 
@@ -32,20 +38,19 @@ impl InputVariant {
             attr_name: Default::default(),
             data: Fields::empty_from(&v.fields),
             skip: Default::default(),
-        }).parse_attributes(&v.attrs)?;
+            allow_unknown_fields: None,
+        })
+        .parse_attributes(&v.attrs)?;
 
-        starter.data = match v.fields {
-            syn::Fields::Unit => Style::Unit.into(),
+        starter.data.fields = match v.fields {
+            syn::Fields::Unit => vec![],
             syn::Fields::Unnamed(ref fields) => {
                 let mut items = Vec::with_capacity(fields.unnamed.len());
                 for item in &fields.unnamed {
                     items.push(InputField::from_field(item, parent)?);
                 }
 
-                Fields {
-                    style: v.fields.clone().into(),
-                    fields: items,
-                }
+                items
             }
             syn::Fields::Named(ref fields) => {
                 let mut items = Vec::with_capacity(fields.named.len());
@@ -53,10 +58,7 @@ impl InputVariant {
                     items.push(InputField::from_field(item, parent)?);
                 }
 
-                Fields {
-                    style: v.fields.clone().into(),
-                    fields: items,
-                }
+                items
             }
         };
 
@@ -70,6 +72,10 @@ impl InputVariant {
     fn with_inherited(mut self, parent: &Core) -> Self {
         if self.attr_name.is_none() {
             self.attr_name = Some(parent.rename_rule.apply_to_variant(self.ident.to_string()));
+        }
+
+        if self.allow_unknown_fields.is_none() {
+            self.allow_unknown_fields = Some(parent.allow_unknown_fields.is_some());
         }
 
         self
@@ -88,7 +94,7 @@ impl ParseAttribute for InputVariant {
                 self.skip = FromMeta::from_meta(mi)?;
                 Ok(())
             }
-            n => Err(Error::unknown_field(n)),
+            n => Err(Error::unknown_field(n).with_span(mi)),
         }
     }
 }

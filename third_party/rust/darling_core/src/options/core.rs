@@ -4,6 +4,7 @@ use syn;
 use ast::{Data, Fields, Style};
 use codegen;
 use options::{DefaultExpression, InputField, InputVariant, ParseAttribute, ParseData};
+use util::Flag;
 use {Error, FromMeta, Result};
 
 /// A struct or enum which should have `FromMeta` or `FromDeriveInput` implementations
@@ -33,6 +34,9 @@ pub struct Core {
 
     /// The custom bound to apply to the generated impl
     pub bound: Option<Vec<syn::WherePredicate>>,
+
+    /// Whether or not unknown fields should produce an error at compilation time.
+    pub allow_unknown_fields: Flag,
 }
 
 impl Core {
@@ -52,6 +56,7 @@ impl Core {
             },
             map: Default::default(),
             bound: Default::default(),
+            allow_unknown_fields: Default::default(),
         }
     }
 
@@ -70,7 +75,7 @@ impl ParseAttribute for Core {
         match mi.name().to_string().as_str() {
             "default" => {
                 if self.default.is_some() {
-                    Err(Error::duplicate_field("default"))
+                    Err(Error::duplicate_field("default").with_span(mi))
                 } else {
                     self.default = FromMeta::from_meta(mi)?;
                     Ok(())
@@ -84,7 +89,7 @@ impl ParseAttribute for Core {
             }
             "map" => {
                 if self.map.is_some() {
-                    Err(Error::duplicate_field("map"))
+                    Err(Error::duplicate_field("map").with_span(mi))
                 } else {
                     self.map = FromMeta::from_meta(mi)?;
                     Ok(())
@@ -94,7 +99,15 @@ impl ParseAttribute for Core {
                 self.bound = FromMeta::from_meta(mi)?;
                 Ok(())
             }
-            n => Err(Error::unknown_field(n.as_ref())),
+            "allow_unknown_fields" => {
+                if self.allow_unknown_fields.is_some() {
+                    Err(Error::duplicate_field("allow_unknown_fields").with_span(mi))
+                } else {
+                    self.allow_unknown_fields = FromMeta::from_meta(mi)?;
+                    Ok(())
+                }
+            }
+            n => Err(Error::unknown_field(n).with_span(mi)),
         }
     }
 }
@@ -133,13 +146,15 @@ impl<'a> From<&'a Core> for codegen::TraitImpl<'a> {
         codegen::TraitImpl {
             ident: &v.ident,
             generics: &v.generics,
-            data: v.data
+            data: v
+                .data
                 .as_ref()
                 .map_struct_fields(InputField::as_codegen_field)
                 .map_enum_variants(|variant| variant.as_codegen_variant(&v.ident)),
             default: v.as_codegen_default(),
             map: v.map.as_ref(),
             bound: v.bound.as_ref().map(|i| i.as_slice()),
+            allow_unknown_fields: v.allow_unknown_fields.into(),
         }
     }
 }

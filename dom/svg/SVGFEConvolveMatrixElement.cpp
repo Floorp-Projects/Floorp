@@ -68,12 +68,12 @@ already_AddRefed<DOMSVGAnimatedString> SVGFEConvolveMatrixElement::In1() {
 
 already_AddRefed<DOMSVGAnimatedInteger> SVGFEConvolveMatrixElement::OrderX() {
   return mIntegerPairAttributes[ORDER].ToDOMAnimatedInteger(
-      SVGIntegerPair::eFirst, this);
+      SVGAnimatedIntegerPair::eFirst, this);
 }
 
 already_AddRefed<DOMSVGAnimatedInteger> SVGFEConvolveMatrixElement::OrderY() {
   return mIntegerPairAttributes[ORDER].ToDOMAnimatedInteger(
-      SVGIntegerPair::eSecond, this);
+      SVGAnimatedIntegerPair::eSecond, this);
 }
 
 already_AddRefed<DOMSVGAnimatedNumberList>
@@ -111,13 +111,13 @@ already_AddRefed<DOMSVGAnimatedNumber> SVGFEConvolveMatrixElement::Bias() {
 already_AddRefed<DOMSVGAnimatedNumber>
 SVGFEConvolveMatrixElement::KernelUnitLengthX() {
   return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(
-      SVGNumberPair::eFirst, this);
+      SVGAnimatedNumberPair::eFirst, this);
 }
 
 already_AddRefed<DOMSVGAnimatedNumber>
 SVGFEConvolveMatrixElement::KernelUnitLengthY() {
   return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(
-      SVGNumberPair::eSecond, this);
+      SVGAnimatedNumberPair::eSecond, this);
 }
 
 void SVGFEConvolveMatrixElement::GetSourceImageNames(
@@ -135,10 +135,10 @@ FilterPrimitiveDescription SVGFEConvolveMatrixElement::GetPrimitiveDescription(
       mNumberListAttributes[KERNELMATRIX].GetAnimValue();
   uint32_t kmLength = kernelMatrix.Length();
 
-  int32_t orderX =
-      mIntegerPairAttributes[ORDER].GetAnimValue(SVGIntegerPair::eFirst);
-  int32_t orderY =
-      mIntegerPairAttributes[ORDER].GetAnimValue(SVGIntegerPair::eSecond);
+  int32_t orderX = mIntegerPairAttributes[ORDER].GetAnimValue(
+      SVGAnimatedIntegerPair::eFirst);
+  int32_t orderY = mIntegerPairAttributes[ORDER].GetAnimValue(
+      SVGAnimatedIntegerPair::eSecond);
 
   if (orderX <= 0 || orderY <= 0 ||
       static_cast<uint32_t>(orderX * orderY) != kmLength) {
