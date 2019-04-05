@@ -16,7 +16,7 @@
  * the "fp" registers are stored in fprData. Each array has 8 regs
  * but first reg in gprData is a placeholder for 'self'.
  */
-extern "C" nsresult
+extern "C" nsresult ATTRIBUTE_USED
 PrepareAndDispatch(nsXPTCStubBase* self, uint32_t methodIndex, uint64_t* args,
                    uint64_t *gprData, double *fprData)
 {

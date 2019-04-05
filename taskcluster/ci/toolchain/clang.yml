@@ -24,6 +24,21 @@ linux64-clang-4.0:
     toolchains:
         - linux64-gcc-6
 
+linux64-clang-7:
+    description: "Clang 7 toolchain build"
+    treeherder:
+        symbol: TL(clang7)
+    run:
+        using: toolchain-script
+        script: build-clang-7-linux.sh
+        resources:
+            - 'build/build-clang/build-clang.py'
+            - 'build/build-clang/clang-7-linux64.json'
+            - 'taskcluster/scripts/misc/tooltool-download.sh'
+        toolchain-artifact: public/build/clang.tar.xz
+    toolchains:
+        - linux64-gcc-6
+
 linux64-clang-8:
     description: "Clang 8 toolchain build"
     treeherder:

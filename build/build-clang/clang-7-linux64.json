@@ -1,0 +1,25 @@
+{
+    "llvm_revision": "349247",
+    "stages": "3",
+    "build_libcxx": true,
+    "build_type": "Release",
+    "assertions": false,
+    "llvm_repo": "https://llvm.org/svn/llvm-project/llvm/tags/RELEASE_701/final",
+    "clang_repo": "https://llvm.org/svn/llvm-project/cfe/tags/RELEASE_701/final",
+    "lld_repo": "https://llvm.org/svn/llvm-project/lld/tags/RELEASE_701/final",
+    "compiler_repo": "https://llvm.org/svn/llvm-project/compiler-rt/tags/RELEASE_701/final",
+    "libcxx_repo": "https://llvm.org/svn/llvm-project/libcxx/tags/RELEASE_701/final",
+    "libcxxabi_repo": "https://llvm.org/svn/llvm-project/libcxxabi/tags/RELEASE_701/final",
+    "python_path": "/usr/bin/python2.7",
+    "gcc_dir": "/builds/worker/workspace/build/src/gcc",
+    "cc": "/builds/worker/workspace/build/src/gcc/bin/gcc",
+    "cxx": "/builds/worker/workspace/build/src/gcc/bin/g++",
+    "as": "/builds/worker/workspace/build/src/gcc/bin/gcc",
+    "patches": [
+      "static-llvm-symbolizer.patch",
+      "find_symbolizer_linux.patch",
+      "rename_gcov_flush_7.patch",
+      "r350774.patch",
+      "android-mangling-error.patch"
+    ]
+}

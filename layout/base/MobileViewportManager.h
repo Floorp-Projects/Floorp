@@ -8,6 +8,7 @@
 #define MobileViewportManager_h_
 
 #include "mozilla/Maybe.h"
+#include "mozilla/MVMContext.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
 #include "nsIObserver.h"
@@ -17,6 +18,7 @@ class nsIPresShell;
 class nsViewportInfo;
 
 namespace mozilla {
+class MVMContext;
 namespace dom {
 class Document;
 class EventTarget;
@@ -30,8 +32,7 @@ class MobileViewportManager final : public nsIDOMEventListener,
   NS_DECL_NSIDOMEVENTLISTENER
   NS_DECL_NSIOBSERVER
 
-  MobileViewportManager(nsIPresShell* aPresShell,
-                        mozilla::dom::Document* aDocument);
+  explicit MobileViewportManager(mozilla::MVMContext* aContext);
   void Destroy();
 
   /* Provide a resolution to use during the first paint instead of the default
@@ -140,10 +141,7 @@ class MobileViewportManager final : public nsIDOMEventListener,
   mozilla::ScreenIntSize GetCompositionSize(
       const mozilla::ScreenIntSize& aDisplaySize) const;
 
-  RefPtr<mozilla::dom::Document> mDocument;
-  // raw ref since the presShell owns this
-  nsIPresShell* MOZ_NON_OWNING_REF mPresShell;
-  nsCOMPtr<mozilla::dom::EventTarget> mEventTarget;
+  RefPtr<mozilla::MVMContext> mContext;
   bool mIsFirstPaint;
   bool mPainted;
   mozilla::LayoutDeviceIntSize mDisplaySize;

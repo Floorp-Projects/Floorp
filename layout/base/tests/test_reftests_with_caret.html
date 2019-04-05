@@ -111,6 +111,16 @@ var tests = [
     [ 'bug613807-1.html' , 'bug613807-1-ref.html' ] ,
     [ 'bug1082486-1.html', 'bug1082486-1-ref.html'] ,
     [ 'bug1082486-2.html', 'bug1082486-2-ref.html'] ,
+    // The following test cases uses mouse events. We need to make
+    // AccessibleCaret unhide for them.
+    function() {SpecialPowers.pushPrefEnv({'set': [['layout.accessiblecaret.hide_carets_for_mouse_input', false]]}, nextTest);} ,
+    [ 'bug1516963-1.html', 'bug1516963-1-ref.html'] ,
+    [ 'bug1516963-2.html', 'bug1516963-2-ref.html'] ,
+    [ 'bug1516963-3.html', 'bug1516963-3-ref.html'] ,
+    [ 'bug1516963-4.html', 'bug1516963-4-ref.html'] ,
+    [ 'bug1516963-5.html', 'bug1516963-5-ref.html'] ,
+    [ 'bug1516963-6.html', 'bug1516963-6-ref.html'] ,
+    function() {SpecialPowers.pushPrefEnv({'clear': [['layout.accessiblecaret.hide_carets_for_mouse_input']]}, nextTest);} ,
     // The following test cases are all involving with one sending
     // synthesizeKey(), the other without. They fail when accessiblecaret
     // is enabled. Test them with the preference off.

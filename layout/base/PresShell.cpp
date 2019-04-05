@@ -16,6 +16,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
+#include "mozilla/GeckoMVMContext.h"
 #include "mozilla/IMEStateManager.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/dom/TabChild.h"
@@ -1177,6 +1178,7 @@ void PresShell::Destroy() {
   if (mMobileViewportManager) {
     mMobileViewportManager->Destroy();
     mMobileViewportManager = nullptr;
+    mMVMContext = nullptr;
   }
 
 #ifdef ACCESSIBILITY
@@ -10471,6 +10473,10 @@ nsresult PresShell::SetIsActive(bool aIsActive) {
   return rv;
 }
 
+RefPtr<MobileViewportManager> PresShell::GetMobileViewportManager() const {
+  return mMobileViewportManager;
+}
+
 void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
   // Determine if we require a MobileViewportManager. This logic is
   // equivalent to ShouldHandleMetaViewport, which will check gfxPrefs if
@@ -10485,7 +10491,8 @@ void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
 
   if (needMVM) {
     if (mPresContext->IsRootContentDocument()) {
-      mMobileViewportManager = new MobileViewportManager(this, mDocument);
+      mMVMContext = new GeckoMVMContext(mDocument, this);
+      mMobileViewportManager = new MobileViewportManager(mMVMContext);
 
       if (aAfterInitialization) {
         // Setting the initial viewport will trigger a reflow.
@@ -10510,6 +10517,7 @@ void PresShell::UpdateViewportOverridden(bool aAfterInitialization) {
 
   oldMVM->Destroy();
   oldMVM = nullptr;
+  mMVMContext = nullptr;
 
   if (aAfterInitialization) {
     // Force a reflow to our correct size by going back to the docShell

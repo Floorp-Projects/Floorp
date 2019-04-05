@@ -17,19 +17,15 @@ function AboutCompat() {
 AboutCompat.prototype = {
   QueryInterface: ChromeUtils.generateQI([Ci.nsIAboutModule]),
   getURIFlags() {
-    return Ci.nsIAboutModule.ALLOW_SCRIPT |
-           Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD;
+    return Ci.nsIAboutModule.URI_MUST_LOAD_IN_EXTENSION_PROCESS;
   },
 
   newChannel(aURI, aLoadInfo) {
     const uri = Services.io.newURI(this.chromeURL);
-    aLoadInfo.resultPrincipalURI = uri;
     const channel = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
     channel.originalURI = aURI;
 
-    if (this.uriFlags & Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT) {
-      channel.owner = null;
-    }
+    channel.owner = Services.scriptSecurityManager.createCodebasePrincipal(uri, aLoadInfo.originAttributes);
     return channel;
   },
 };

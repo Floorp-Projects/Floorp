@@ -18,20 +18,6 @@ UNIFIED_SOURCES += [
     'StartupTimeline.cpp',
 ]
 
-if CONFIG['OS_ARCH'] == 'WINNT':
-    # This file cannot be built in unified mode because of name clashes with Windows headers.
-    SOURCES += [
-        'nsUserInfoWin.cpp',
-    ]
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
-    UNIFIED_SOURCES += [
-        'nsUserInfoMac.mm',
-    ]
-else:
-    UNIFIED_SOURCES += [
-        'nsUserInfoUnix.cpp',
-    ]
-
 FINAL_LIBRARY = 'xul'
 
 with Files('**'):
