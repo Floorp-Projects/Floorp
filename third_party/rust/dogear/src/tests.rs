@@ -20,7 +20,10 @@ use crate::driver::Driver;
 use crate::error::{ErrorKind, Result};
 use crate::guid::{Guid, ROOT_GUID, UNFILED_GUID};
 use crate::merge::{Merger, StructureCounts};
-use crate::tree::{Builder, Content, IntoTree, Item, Kind, Tree, Validity};
+use crate::tree::{
+    Builder, Content, DivergedParent, DivergedParentGuid, IntoTree, Item, Kind, Problem, Problems,
+    Tree, Validity,
+};
 
 #[derive(Debug)]
 struct Node {
@@ -2566,4 +2569,177 @@ fn cycle() {
         ErrorKind::Cycle(guid) => assert_eq!(guid, &Guid::from("folderAAAAAA")),
         err => assert!(false, "Wrong error kind for cycle: {:?}", err),
     }
+}
+
+#[test]
+fn reupload_replace() {
+    before_each();
+
+    let mut local_tree = nodes!({
+        ("menu________", Folder, {
+            ("bookmarkAAAA", Bookmark)
+        }),
+        ("toolbar_____", Folder, {
+            ("folderBBBBBB", Folder, {
+                ("bookmarkCCCC", Bookmark[validity = Validity::Replace])
+            }),
+            ("folderDDDDDD", Folder, {
+                ("bookmarkEEEE", Bookmark[validity = Validity::Replace])
+            })
+        }),
+        ("unfiled_____", Folder),
+        ("mobile______", Folder, {
+            ("bookmarkFFFF", Bookmark[validity = Validity::Replace]),
+            ("folderGGGGGG", Folder),
+            ("bookmarkHHHH", Bookmark[validity = Validity::Replace])
+        })
+    })
+    .into_tree()
+    .unwrap();
+    local_tree.note_deleted("bookmarkIIII".into());
+
+    let mut remote_tree = nodes!({
+        ("menu________", Folder, {
+            ("bookmarkAAAA", Bookmark[validity = Validity::Replace])
+        }),
+        ("toolbar_____", Folder, {
+            ("bookmarkJJJJ", Bookmark[validity = Validity::Replace]),
+            ("folderBBBBBB", Folder, {
+                ("bookmarkCCCC", Bookmark[validity = Validity::Replace])
+            }),
+            ("folderDDDDDD", Folder)
+        }),
+        ("unfiled_____", Folder, {
+            ("bookmarkKKKK", Bookmark[validity = Validity::Reupload])
+        }),
+        ("mobile______", Folder, {
+            ("bookmarkFFFF", Bookmark),
+            ("folderGGGGGG", Folder, {
+                ("bookmarkIIII", Bookmark[validity = Validity::Replace])
+            })
+        })
+    })
+    .into_tree()
+    .unwrap();
+    remote_tree.note_deleted("bookmarkEEEE".into());
+
+    let mut merger = Merger::new(&local_tree, &remote_tree);
+    let merged_root = merger.merge().unwrap();
+    assert!(merger.subsumes(&local_tree));
+    assert!(merger.subsumes(&remote_tree));
+
+    let expected_tree = nodes!({
+        ("menu________", Folder, {
+            // A is invalid remotely and valid locally, so replace.
+            ("bookmarkAAAA", Bookmark[needs_merge = true])
+        }),
+        // Toolbar has new children.
+        ("toolbar_____", Folder[needs_merge = true], {
+            // B has new children.
+            ("folderBBBBBB", Folder[needs_merge = true]),
+            ("folderDDDDDD", Folder)
+        }),
+        ("unfiled_____", Folder, {
+            // K was flagged for reupload.
+           ("bookmarkKKKK", Bookmark[needs_merge = true])
+        }),
+        ("mobile______", Folder, {
+            // F is invalid locally, so replace with remote. This isn't
+            // possible in Firefox Desktop or Rust Places, where the local
+            // tree is always valid, but we handle it for symmetry.
+            ("bookmarkFFFF", Bookmark),
+            ("folderGGGGGG", Folder[needs_merge = true])
+        })
+    })
+    .into_tree()
+    .unwrap();
+    let expected_deletions = vec![
+        // C is invalid on both sides, so we need to upload a tombstone.
+        ("bookmarkCCCC", true),
+        // E is invalid locally and deleted remotely, so doesn't need a
+        // tombstone.
+        ("bookmarkEEEE", false),
+        // H is invalid locally and doesn't exist remotely, so doesn't need a
+        // tombstone.
+        ("bookmarkHHHH", false),
+        // I is deleted locally and invalid remotely, so needs a tombstone.
+        ("bookmarkIIII", true),
+        // J doesn't exist locally and invalid remotely, so needs a tombstone.
+        ("bookmarkJJJJ", true),
+    ];
+    let expected_telem = StructureCounts {
+        merged_nodes: 10,
+        // C is double-counted: it's deleted on both sides, so
+        // `merged_deletions` is 6, even though we only have 5 expected
+        // deletions.
+        merged_deletions: 6,
+        ..StructureCounts::default()
+    };
+
+    let merged_tree = merged_root.into_tree().unwrap();
+    assert_eq!(merged_tree, expected_tree);
+
+    let mut deletions = merger
+        .deletions()
+        .map(|d| (d.guid.as_ref(), d.should_upload_tombstone))
+        .collect::<Vec<(&str, bool)>>();
+    deletions.sort_by(|a, b| a.0.cmp(&b.0));
+    assert_eq!(deletions, expected_deletions);
+
+    assert_eq!(merger.counts(), &expected_telem);
+}
+
+#[test]
+fn problems() {
+    let mut problems = Problems::default();
+
+    problems
+        .note(&"bookmarkAAAA".into(), Problem::Orphan)
+        .note(
+            &"menu________".into(),
+            Problem::MisparentedRoot(vec![DivergedParent::ByChildren("unfiled_____".into())]),
+        )
+        .note(&"toolbar_____".into(), Problem::MisparentedRoot(Vec::new()))
+        .note(
+            &"bookmarkBBBB".into(),
+            Problem::DivergedParents(vec![
+                DivergedParent::ByChildren("folderCCCCCC".into()),
+                DivergedParentGuid::Folder("folderDDDDDD".into()).into(),
+            ]),
+        )
+        .note(
+            &"bookmarkEEEE".into(),
+            Problem::DivergedParents(vec![
+                DivergedParent::ByChildren("folderFFFFFF".into()),
+                DivergedParentGuid::NonFolder("bookmarkGGGG".into()).into(),
+            ]),
+        )
+        .note(
+            &"bookmarkHHHH".into(),
+            Problem::DivergedParents(vec![
+                DivergedParent::ByChildren("folderIIIIII".into()),
+                DivergedParent::ByChildren("folderJJJJJJ".into()),
+                DivergedParentGuid::Missing("folderKKKKKK".into()).into(),
+            ]),
+        )
+        .note(&"bookmarkLLLL".into(), Problem::DivergedParents(Vec::new()));
+
+    let mut summary = problems.summarize().collect::<Vec<_>>();
+    summary.sort_by(|a, b| a.guid().cmp(b.guid()));
+    assert_eq!(
+        summary
+            .into_iter()
+            .map(|s| s.to_string())
+            .collect::<Vec<String>>(),
+        &[
+            "bookmarkAAAA is an orphan",
+            "bookmarkBBBB is in children of folderCCCCCC and has parent folderDDDDDD",
+            "bookmarkEEEE is in children of folderFFFFFF and has non-folder parent bookmarkGGGG",
+            "bookmarkHHHH is in children of folderIIIIII, is in children of folderJJJJJJ, and has \
+             nonexistent parent folderKKKKKK",
+            "bookmarkLLLL has diverged parents",
+            "menu________ is a user content root, but is in children of unfiled_____",
+            "toolbar_____ is a user content root",
+        ]
+    );
 }
