@@ -2,7 +2,6 @@ const CAT_PREF = "browser.contentblocking.category";
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TP_PB_PREF = "privacy.trackingprotection.pbmode.enabled";
 const TPC_PREF = "network.cookie.cookieBehavior";
-const TT_PREF = "urlclassifier.trackingTable";
 const CM_PREF = "privacy.trackingprotection.cryptomining.enabled";
 const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
 
@@ -12,7 +11,6 @@ registerCleanupFunction(function() {
   Services.prefs.clearUserPref(TP_PREF);
   Services.prefs.clearUserPref(TP_PB_PREF);
   Services.prefs.clearUserPref(TPC_PREF);
-  Services.prefs.clearUserPref(TT_PREF);
   Services.prefs.clearUserPref(CAT_PREF);
   Services.prefs.clearUserPref(CM_PREF);
   Services.prefs.clearUserPref(FP_PREF);
