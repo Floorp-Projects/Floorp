@@ -79,7 +79,6 @@
             style="@style/search_pill"
             android:layout_marginEnd="8dp"
             android:drawableStart="@drawable/ic_qr"
-            android:textColor="?attr/searchShortcutsTextColor"
             android:textOff="@string/search_scan_button"
             android:textOn="@string/search_scan_button" />
 
@@ -87,7 +86,6 @@
             android:id="@+id/search_shortcuts_button"
             style="@style/search_pill"
             android:drawableStart="@drawable/ic_search"
-            android:textColor="?attr/searchShortcutsTextColor"
             android:textOff="@string/search_shortcuts_button"
             android:textOn="@string/search_shortcuts_button" />
     </LinearLayout>

@@ -2,7 +2,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="NormalThemeBase" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:statusBarColor">@color/status_bar_color_normal_theme</item>
@@ -157,7 +157,8 @@
         <item name="android:layout_height">32dp</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:textSize">14sp</item>
-        <item name="android:textColor">@color/search_pill_primary</item>
+        <item name="android:textColor">@color/toggle_text_color</item>
+        <item name="android:drawableTint" tools:targetApi="m">@color/toggle_text_color</item>
         <item name="android:layout_gravity">center_vertical</item>
         <item name="android:gravity">center_vertical</item>
         <item name="android:singleLine">true</item>

@@ -10,7 +10,6 @@ import androidx.navigation.Navigation
 import io.reactivex.Observer
 import kotlinx.android.synthetic.main.fragment_search.*
 import mozilla.components.browser.search.SearchEngine
-import org.jetbrains.anko.textColor
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.search.SearchFragmentDirections
@@ -66,11 +65,14 @@ class ShortcutEngineManager(
 
     private fun showShortcutEnginePicker() {
         with(context) {
-            awesomeBarUIView.search_shortcuts_button.compoundDrawables[0].setTint(ContextCompat.getColor(this,
-                DefaultThemeManager.resolveAttribute(R.attr.pillWrapperBackground, this)))
+            awesomeBarUIView.search_shortcuts_button?.isChecked = true
 
-            awesomeBarUIView.search_shortcuts_button.textColor = ContextCompat.getColor(this,
-                DefaultThemeManager.resolveAttribute(R.attr.pillWrapperBackground, this))
+            awesomeBarUIView.search_shortcuts_button.compoundDrawables[0]?.setTint(
+                ContextCompat.getColor(
+                    this,
+                    DefaultThemeManager.resolveAttribute(R.attr.pillWrapperBackground, this)
+                )
+            )
 
             awesomeBarUIView.view.removeAllProviders()
             awesomeBarUIView.view.addProviders(shortcutsEnginePickerProvider!!)
@@ -79,11 +81,13 @@ class ShortcutEngineManager(
 
     private fun hideShortcutEnginePicker() {
         with(context) {
-            awesomeBarUIView.search_shortcuts_button.compoundDrawables[0].setTint(ContextCompat.getColor(this,
-                DefaultThemeManager.resolveAttribute(R.attr.searchShortcutsTextColor, this)))
-
-            awesomeBarUIView.search_shortcuts_button.textColor = ContextCompat.getColor(this,
-                DefaultThemeManager.resolveAttribute(R.attr.searchShortcutsTextColor, this))
+            awesomeBarUIView.search_shortcuts_button?.isChecked = false
+            awesomeBarUIView.search_shortcuts_button.compoundDrawables[0]?.setTint(
+                ContextCompat.getColor(
+                    this,
+                    DefaultThemeManager.resolveAttribute(R.attr.searchShortcutsTextColor, this)
+                )
+            )
 
             awesomeBarUIView.view.removeProviders(shortcutsEnginePickerProvider!!)
         }
