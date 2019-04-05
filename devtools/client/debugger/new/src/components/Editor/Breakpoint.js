@@ -7,7 +7,7 @@
 import React, { PureComponent } from "react";
 import ReactDOM from "react-dom";
 import classnames from "classnames";
-import Svg from "../shared/Svg";
+import BreakpointSvg from "../shared/BreakpointSvg";
 
 import { getDocument, toEditorLine } from "../../utils/editor";
 import { getSelectedLocation } from "../../utils/source-maps";
@@ -20,7 +20,7 @@ import type { EditorItemActions } from "./menus/editor";
 import type { Source, Breakpoint as BreakpointType } from "../../types";
 
 const breakpointSvg = document.createElement("div");
-ReactDOM.render(<Svg name="breakpoint" />, breakpointSvg);
+ReactDOM.render(<BreakpointSvg column={false} />, breakpointSvg);
 
 type Props = {
   breakpoint: BreakpointType,
