@@ -132,4 +132,6 @@
     <color name="quick_action_pull_tab">#2915141A</color>
     <color name="quick_action_background_normal_theme">@color/toolbar_normal_theme</color>
     <color name="quick_action_background_private_theme">@color/toolbar_dark_mode</color>
+
+    <color name="fenix_snackbar_background">#232749</color>
 </resources>
