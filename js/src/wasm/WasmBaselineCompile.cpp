@@ -1515,7 +1515,9 @@ class BaseStackFrame final : public BaseStackFrameAllocator {
     Local(MIRType type, int32_t offs) : type(type), offs(offs) {}
   };
 
-  using LocalVector = Vector<Local, 8, SystemAllocPolicy>;
+  // Profiling shows that the number of parameters and locals frequently
+  // touches or exceeds 8.  So 16 seems like a reasonable starting point.
+  using LocalVector = Vector<Local, 16, SystemAllocPolicy>;
 
   // Initialize `localInfo` based on the types of `locals` and `args`.
   bool setupLocals(const ValTypeVector& locals, const ValTypeVector& args,
