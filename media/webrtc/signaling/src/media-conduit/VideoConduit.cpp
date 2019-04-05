@@ -185,26 +185,34 @@ void WebrtcVideoConduit::CallStatistics::Update(
     const webrtc::Call::Stats& aStats) {
   ASSERT_ON_THREAD(mStatsThread);
 
-  int64_t rtt = aStats.rtt_ms;
+  const auto rtt = aStats.rtt_ms;
+  if (rtt > static_cast<decltype(aStats.rtt_ms)>(INT32_MAX)) {
+    // If we get a bogus RTT we will keep using the previous RTT
 #ifdef DEBUG
-  if (rtt > INT32_MAX) {
     CSFLogError(LOGTAG,
                 "%s for VideoConduit:%p RTT is larger than the"
                 " maximum size of an RTCP RTT.",
                 __FUNCTION__, this);
-  }
 #endif
-  if (rtt > 0) {
-    mRttMs = rtt;
+    mRttSec = Nothing();
   } else {
-    mRttMs = 0;
+    if (mRttSec && rtt < 0) {
+      CSFLogError(LOGTAG,
+                  "%s for VideoConduit:%p RTT returned an error after "
+                  " previously succeeding.",
+                  __FUNCTION__, this);
+      mRttSec = Nothing();
+    }
+    if (rtt >= 0) {
+      mRttSec = Some(static_cast<DOMHighResTimeStamp>(rtt) / 1000.0);
+    }
   }
 }
 
-int32_t WebrtcVideoConduit::CallStatistics::RttMs() const {
+Maybe<DOMHighResTimeStamp> WebrtcVideoConduit::CallStatistics::RttSec() const {
   ASSERT_ON_THREAD(mStatsThread);
 
-  return mRttMs;
+  return mRttSec;
 }
 
 void WebrtcVideoConduit::StreamStatistics::Update(
@@ -1185,10 +1193,11 @@ bool WebrtcVideoConduit::GetRTCPReceiverReport(uint32_t* jitterMs,
                                                uint32_t* packetsReceived,
                                                uint64_t* bytesReceived,
                                                uint32_t* cumulativeLost,
-                                               int32_t* rttMs) {
+                                               Maybe<double>* aOutRttSec) {
   ASSERT_ON_THREAD(mStsThread);
 
   CSFLogVerbose(LOGTAG, "%s for VideoConduit:%p", __FUNCTION__, this);
+  aOutRttSec->reset();
   if (!mSendStreamStats.Active()) {
     return false;
   }
@@ -1199,7 +1208,7 @@ bool WebrtcVideoConduit::GetRTCPReceiverReport(uint32_t* jitterMs,
   *packetsReceived = mSendStreamStats.PacketsReceived();
   *bytesReceived = mSendStreamStats.BytesReceived();
   *cumulativeLost = mSendStreamStats.PacketsLost();
-  *rttMs = mCallStats.RttMs();
+  *aOutRttSec = mCallStats.RttSec();
   return true;
 }
 

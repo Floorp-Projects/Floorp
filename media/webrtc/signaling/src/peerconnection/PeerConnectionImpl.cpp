@@ -2771,7 +2771,7 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
           uint32_t packetsReceived;
           uint64_t bytesReceived;
           uint32_t packetsLost;
-          int32_t rtt;
+          Maybe<double> rtt;
           if (mp.Conduit()->GetRTCPReceiverReport(&jitterMs, &packetsReceived,
                                                   &bytesReceived, &packetsLost,
                                                   &rtt)) {
@@ -2790,9 +2790,7 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
             s.mPacketsReceived.Construct(packetsReceived);
             s.mBytesReceived.Construct(bytesReceived);
             s.mPacketsLost.Construct(packetsLost);
-            if (rtt > 0) {  // RTT is not reported when it is zero
-              s.mRoundTripTime.Construct(static_cast<double>(rtt) / 1000);
-            }
+            rtt.apply([&s](auto r) { s.mRoundTripTime.Construct(r); });
             query->report->mRemoteInboundRtpStreamStats.Value().AppendElement(
                 s, fallible);
           }
