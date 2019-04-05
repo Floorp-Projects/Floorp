@@ -700,9 +700,13 @@ void nsFilterInstance::BuildSourceImage(DrawTarget* aDest,
     return;
   }
 
-  RefPtr<DrawTarget> offscreenDT = aDest->CreateSimilarDrawTargetForFilter(
-      neededRect.Size(), SurfaceFormat::B8G8R8A8, aFilter, aSource, aSourceRect,
+  RefPtr<DrawTarget> offscreenDT;
+  SurfaceFormat format = SurfaceFormat::B8G8R8A8;
+  if (aDest->CanCreateSimilarDrawTarget(neededRect.Size(), format)) {
+    offscreenDT = aDest->CreateSimilarDrawTargetForFilter(
+      neededRect.Size(), format, aFilter, aSource, aSourceRect,
       Point(0, 0));
+  }
   if (!offscreenDT || !offscreenDT->IsValid()) {
     return;
   }
