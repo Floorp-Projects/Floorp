@@ -6,7 +6,7 @@
 
 // This is loaded into all XUL windows. Wrap in a block to prevent
 // leaking to window scope.
-{
+(() => {
 class MozRadiogroup extends MozElements.BaseControl {
   constructor() {
     super();
@@ -115,7 +115,17 @@ class MozRadiogroup extends MozElements.BaseControl {
       return;
     }
 
+    // When this is called via `connectedCallback` there are two main variations:
+    //   1) The radiogroup and radio children are defined in markup.
+    //   2) We are appending a DocumentFragment
+    // In both cases, the <radiogroup> connectedCallback fires first. But in (2),
+    // the children <radio>s won't be upgraded yet, so r.control will be undefined.
+    // To avoid churn in this case where we would have to reinitialize the list as each
+    // child radio gets upgraded as a result of init(), ignore the resulting calls
+    // to radioAttached.
+    this.ignoreRadioChildConstruction = true;
     this.init();
+    this.ignoreRadioChildConstruction = false;
     if (!this.value) {
       this.selectedIndex = 0;
     }
@@ -142,20 +152,32 @@ class MozRadiogroup extends MozElements.BaseControl {
   }
 
   /**
-   * Called when a new <radio> gets added and XBL construction happens on
-   * it. Sometimes the XBL construction happens after the <radiogroup> has
-   * already been added to the DOM. This can happen due to asynchronous XBL
-   * construction (see Bug 1496137), or just due to normal DOM appending after
-   * the <radiogroup> is created. When this happens, reinitialize the UI if
-   * necessary to make sure the state is consistent.
+   * Called when a new <radio> gets added to an already connected radiogroup.
+   * This can happen due to DOM getting appended after the <radiogroup> is created.
+   * When this happens, reinitialize the UI if necessary to make sure the state is
+   * consistent.
    *
    * @param {DOMNode} child
    *                  The <radio> element that got added
    */
-  radioChildConstructed(child) {
+  radioAttached(child) {
+    if (this.ignoreRadioChildConstruction) {
+      return;
+    }
     if (!this._radioChildren || !this._radioChildren.includes(child)) {
       this.init();
     }
+  }
+
+  /**
+   * Called when a new <radio> gets removed from a radio group.
+   *
+   * @param {DOMNode} child
+   *                  The <radio> element that got removed
+   */
+  radioUnattached(child) {
+    // Just invalidate the cache, next time it's fetched it'll get rebuilt.
+    this._radioChildren = null;
   }
 
   set value(val) {
@@ -348,24 +370,25 @@ class MozRadiogroup extends MozElements.BaseControl {
     if (this._radioChildren)
       return this._radioChildren;
 
-    var radioChildren = [];
-
+    let radioChildren = [];
     if (this.hasChildNodes()) {
-      return this._radioChildren = [...this.querySelectorAll("radio")]
-        .filter(r => r.control == this);
-    }
-
-    // We don't have child nodes.
-    const XUL_NS = "http://www.mozilla.org/keymaster/" +
-      "gatekeeper/there.is.only.xul";
-
-    var elems = this.ownerDocument.getElementsByAttribute("group", this.id);
-    for (var i = 0; i < elems.length; i++) {
-      if ((elems[i].namespaceURI == XUL_NS) &&
-        (elems[i].localName == "radio")) {
-        radioChildren.push(elems[i]);
+      for (let radio of this.querySelectorAll("radio")) {
+        customElements.upgrade(radio);
+        if (radio.control == this) {
+          radioChildren.push(radio);
+        }
+      }
+    } else {
+      const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+      for (let radio of this.ownerDocument.getElementsByAttribute("group", this.id)) {
+        if ((radio.namespaceURI == XUL_NS) &&
+            (radio.localName == "radio")) {
+          customElements.upgrade(radio);
+          radioChildren.push(radio);
+        }
       }
     }
+
     return this._radioChildren = radioChildren;
   }
 
@@ -393,4 +416,109 @@ MozXULElement.implementCustomInterface(MozRadiogroup, [
 ]);
 
 customElements.define("radiogroup", MozRadiogroup);
+
+let gRadioFrag = null;
+function getRadioFragment() {
+  if (!gRadioFrag) {
+    gRadioFrag = MozXULElement.parseXULToFragment(`
+    <image class="radio-check"></image>
+    <hbox class="radio-label-box" align="center" flex="1">
+      <image class="radio-icon"></image>
+      <label class="radio-label" flex="1"></label>
+    </hbox>
+    `);
+  }
+  return document.importNode(gRadioFrag, true);
 }
+
+class MozRadio extends MozElements.BaseText {
+  static get inheritedAttributes() {
+    return {
+      ".radio-check": "disabled,selected",
+      ".radio-label": "text=label,accesskey,crop",
+      ".radio-icon": "src",
+    };
+  }
+
+  constructor() {
+    super();
+    this.addEventListener("click", (event) => {
+      if (!this.disabled)
+        this.control.selectedItem = this;
+    });
+
+    this.addEventListener("mousedown", (event) => {
+      if (!this.disabled)
+        this.control.focusedItem = this;
+    });
+  }
+
+  connectedCallback() {
+    if (this.delayConnectedCallback()) {
+      return;
+    }
+
+    if (!this.connectedOnce) {
+      this.connectedOnce = true;
+      // If the caller didn't provide custom content then append the default:
+      if (!this.firstElementChild) {
+        this.appendChild(getRadioFragment());
+        this.initializeAttributeInheritance();
+      }
+    }
+
+    var control = this._control = this.control;
+    if (control) {
+      control.radioAttached(this);
+    }
+  }
+
+  disconnectedCallback() {
+    if (this.control) {
+      this.control.radioUnattached(this);
+    }
+    this._control = null;
+  }
+
+  set value(val) {
+    this.setAttribute("value", val);
+  }
+
+  get value() {
+    return this.getAttribute("value");
+  }
+
+  get selected() {
+    return this.hasAttribute("selected");
+  }
+
+  get radioGroup() {
+    return this.control;
+  }
+
+  get control() {
+    if (this._control) {
+      return this._control;
+    }
+
+    var radiogroup = this.closest("radiogroup");
+    if (radiogroup) {
+      return radiogroup;
+    }
+
+    var group = this.getAttribute("group");
+    if (!group) {
+      return null;
+    }
+
+    var parent = this.ownerDocument.getElementById(group);
+    if (!parent || parent.localName != "radiogroup") {
+      parent = null;
+    }
+    return parent;
+  }
+}
+
+MozXULElement.implementCustomInterface(MozRadio, [Ci.nsIDOMXULSelectControlItemElement]);
+customElements.define("radio", MozRadio);
+})();
