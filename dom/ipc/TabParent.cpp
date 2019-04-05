@@ -158,8 +158,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TabParent)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITabParent)
 NS_INTERFACE_MAP_END
-NS_IMPL_CYCLE_COLLECTION(TabParent, mFrameElement, mBrowserDOMWindow,
-                         mLoadContext, mFrameLoader, mBrowsingContext)
+NS_IMPL_CYCLE_COLLECTION(TabParent, mFrameElement, mBrowserDOMWindow, mLoadContext, mFrameLoader, mBrowsingContext)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(TabParent)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(TabParent)
 
@@ -3048,19 +3047,18 @@ TabParent::GetContentBlockingLog(Promise** aPromise) {
   copy.forget(aPromise);
 
   auto cblPromise = SendGetContentBlockingLog();
-  cblPromise->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [jsPromise](Tuple<nsCString, bool>&& aResult) {
-        if (Get<1>(aResult)) {
-          NS_ConvertUTF8toUTF16 utf16(Get<0>(aResult));
-          jsPromise->MaybeResolve(std::move(utf16));
-        } else {
-          jsPromise->MaybeRejectWithUndefined();
-        }
-      },
-      [jsPromise](ResponseRejectReason&& aReason) {
-        jsPromise->MaybeRejectWithUndefined();
-      });
+  cblPromise->Then(GetMainThreadSerialEventTarget(), __func__,
+                   [jsPromise](Tuple<nsCString, bool>&& aResult) {
+                     if (Get<1>(aResult)) {
+                       NS_ConvertUTF8toUTF16 utf16(Get<0>(aResult));
+                       jsPromise->MaybeResolve(std::move(utf16));
+                     } else {
+                       jsPromise->MaybeRejectWithUndefined();
+                     }
+                   },
+                   [jsPromise](ResponseRejectReason&& aReason) {
+                     jsPromise->MaybeRejectWithUndefined();
+                   });
 
   return NS_OK;
 }
@@ -3160,14 +3158,13 @@ void TabParent::RequestRootPaint(gfx::CrossProcessPaint* aPaint, IntRect aRect,
 
   RefPtr<gfx::CrossProcessPaint> paint(aPaint);
   TabId tabId(GetTabId());
-  promise->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [paint, tabId](PaintFragment&& aFragment) {
-        paint->ReceiveFragment(tabId, std::move(aFragment));
-      },
-      [paint, tabId](ResponseRejectReason&& aReason) {
-        paint->LostFragment(tabId);
-      });
+  promise->Then(GetMainThreadSerialEventTarget(), __func__,
+                [paint, tabId](PaintFragment&& aFragment) {
+                  paint->ReceiveFragment(tabId, std::move(aFragment));
+                },
+                [paint, tabId](ResponseRejectReason&& aReason) {
+                  paint->LostFragment(tabId);
+                });
 }
 
 void TabParent::RequestSubPaint(gfx::CrossProcessPaint* aPaint, float aScale,
@@ -3176,14 +3173,13 @@ void TabParent::RequestSubPaint(gfx::CrossProcessPaint* aPaint, float aScale,
 
   RefPtr<gfx::CrossProcessPaint> paint(aPaint);
   TabId tabId(GetTabId());
-  promise->Then(
-      GetMainThreadSerialEventTarget(), __func__,
-      [paint, tabId](PaintFragment&& aFragment) {
-        paint->ReceiveFragment(tabId, std::move(aFragment));
-      },
-      [paint, tabId](ResponseRejectReason&& aReason) {
-        paint->LostFragment(tabId);
-      });
+  promise->Then(GetMainThreadSerialEventTarget(), __func__,
+                [paint, tabId](PaintFragment&& aFragment) {
+                  paint->ReceiveFragment(tabId, std::move(aFragment));
+                },
+                [paint, tabId](ResponseRejectReason&& aReason) {
+                  paint->LostFragment(tabId);
+                });
 }
 
 mozilla::ipc::IPCResult TabParent::RecvPaintWhileInterruptingJSNoOp(

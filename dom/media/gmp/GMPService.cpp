@@ -355,25 +355,24 @@ GeckoMediaPluginService::GetDecryptingGMPVideoDecoder(
   RefPtr<GMPCrashHelper> helper(aHelper);
   GetContentParent(aHelper, aNodeId, NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
                    *aTags)
-      ->Then(
-          thread, __func__,
-          [rawCallback, helper,
-           aDecryptorId](RefPtr<GMPContentParent::CloseBlocker> wrapper) {
-            RefPtr<GMPContentParent> parent = wrapper->mParent;
-            UniquePtr<GetGMPVideoDecoderCallback> callback(rawCallback);
-            GMPVideoDecoderParent* actor = nullptr;
-            GMPVideoHostImpl* host = nullptr;
-            if (parent && NS_SUCCEEDED(parent->GetGMPVideoDecoder(
-                              &actor, aDecryptorId))) {
-              host = &(actor->Host());
-              actor->SetCrashHelper(helper);
-            }
-            callback->Done(actor, host);
-          },
-          [rawCallback] {
-            UniquePtr<GetGMPVideoDecoderCallback> callback(rawCallback);
-            callback->Done(nullptr, nullptr);
-          });
+      ->Then(thread, __func__,
+             [rawCallback, helper,
+              aDecryptorId](RefPtr<GMPContentParent::CloseBlocker> wrapper) {
+               RefPtr<GMPContentParent> parent = wrapper->mParent;
+               UniquePtr<GetGMPVideoDecoderCallback> callback(rawCallback);
+               GMPVideoDecoderParent* actor = nullptr;
+               GMPVideoHostImpl* host = nullptr;
+               if (parent && NS_SUCCEEDED(parent->GetGMPVideoDecoder(
+                                 &actor, aDecryptorId))) {
+                 host = &(actor->Host());
+                 actor->SetCrashHelper(helper);
+               }
+               callback->Done(actor, host);
+             },
+             [rawCallback] {
+               UniquePtr<GetGMPVideoDecoderCallback> callback(rawCallback);
+               callback->Done(nullptr, nullptr);
+             });
 
   return NS_OK;
 }
@@ -396,24 +395,23 @@ GeckoMediaPluginService::GetGMPVideoEncoder(
   RefPtr<GMPCrashHelper> helper(aHelper);
   GetContentParent(aHelper, aNodeId, NS_LITERAL_CSTRING(GMP_API_VIDEO_ENCODER),
                    *aTags)
-      ->Then(
-          thread, __func__,
-          [rawCallback,
-           helper](RefPtr<GMPContentParent::CloseBlocker> wrapper) {
-            RefPtr<GMPContentParent> parent = wrapper->mParent;
-            UniquePtr<GetGMPVideoEncoderCallback> callback(rawCallback);
-            GMPVideoEncoderParent* actor = nullptr;
-            GMPVideoHostImpl* host = nullptr;
-            if (parent && NS_SUCCEEDED(parent->GetGMPVideoEncoder(&actor))) {
-              host = &(actor->Host());
-              actor->SetCrashHelper(helper);
-            }
-            callback->Done(actor, host);
-          },
-          [rawCallback] {
-            UniquePtr<GetGMPVideoEncoderCallback> callback(rawCallback);
-            callback->Done(nullptr, nullptr);
-          });
+      ->Then(thread, __func__,
+             [rawCallback,
+              helper](RefPtr<GMPContentParent::CloseBlocker> wrapper) {
+               RefPtr<GMPContentParent> parent = wrapper->mParent;
+               UniquePtr<GetGMPVideoEncoderCallback> callback(rawCallback);
+               GMPVideoEncoderParent* actor = nullptr;
+               GMPVideoHostImpl* host = nullptr;
+               if (parent && NS_SUCCEEDED(parent->GetGMPVideoEncoder(&actor))) {
+                 host = &(actor->Host());
+                 actor->SetCrashHelper(helper);
+               }
+               callback->Done(actor, host);
+             },
+             [rawCallback] {
+               UniquePtr<GetGMPVideoEncoderCallback> callback(rawCallback);
+               callback->Done(nullptr, nullptr);
+             });
 
   return NS_OK;
 }

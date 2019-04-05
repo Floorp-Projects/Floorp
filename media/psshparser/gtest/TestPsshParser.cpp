@@ -125,8 +125,7 @@ const uint8_t g2xGoogleWPTCencInitData[] = {
     // clang-format on
 };
 
-TEST(PsshParser, ParseCencInitData)
-{
+TEST(PsshParser, ParseCencInitData) {
   std::vector<std::vector<uint8_t>> keyIds;
   bool rv;
 

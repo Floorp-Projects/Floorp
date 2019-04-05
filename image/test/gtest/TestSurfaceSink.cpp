@@ -84,8 +84,7 @@ void CheckIterativeWrite(Decoder* aDecoder, SurfaceSink* aSink,
                         [&] { CheckGeneratedImage(aDecoder, aOutputRect); });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkInitialization)
-{
+TEST(ImageSurfaceSink, SurfaceSinkInitialization) {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
     // Check initial state.
     EXPECT_FALSE(aSink->IsSurfaceFinished());
@@ -101,15 +100,13 @@ TEST(ImageSurfaceSink, SurfaceSinkInitialization)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkWritePixels)
-{
+TEST(ImageSurfaceSink, SurfaceSinkWritePixels) {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
     CheckWritePixels(aDecoder, aSink);
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkWritePixelsFinish)
-{
+TEST(ImageSurfaceSink, SurfaceSinkWritePixelsFinish) {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
     // Write nothing into the surface; just finish immediately.
     uint32_t count = 0;
@@ -140,8 +137,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWritePixelsFinish)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkWritePixelsEarlyExit)
-{
+TEST(ImageSurfaceSink, SurfaceSinkWritePixelsEarlyExit) {
   auto checkEarlyExit = [](Decoder* aDecoder, SurfaceSink* aSink,
                            WriteState aState) {
     // Write half a row of green pixels and then exit early with |aState|. If
@@ -214,8 +210,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWritePixelsEarlyExit)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkWritePixelsToRow)
-{
+TEST(ImageSurfaceSink, SurfaceSinkWritePixelsToRow) {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
     // Write the first 99 rows of our 100x100 surface and verify that even
     // though our lambda will yield pixels forever, only one row is written per
@@ -273,8 +268,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWritePixelsToRow)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkWritePixelsToRowEarlyExit)
-{
+TEST(ImageSurfaceSink, SurfaceSinkWritePixelsToRowEarlyExit) {
   auto checkEarlyExit = [](Decoder* aDecoder, SurfaceSink* aSink,
                            WriteState aState) {
     // Write half a row of green pixels and then exit early with |aState|. If
@@ -345,8 +339,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWritePixelsToRowEarlyExit)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkWriteBuffer)
-{
+TEST(ImageSurfaceSink, SurfaceSinkWriteBuffer) {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
     // Create a green buffer the same size as one row of the surface (which is
     // 100x100), containing 60 pixels of green in the middle and 20 transparent
@@ -361,8 +354,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWriteBuffer)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkWriteBufferPartialRow)
-{
+TEST(ImageSurfaceSink, SurfaceSinkWriteBufferPartialRow) {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
     // Create a buffer the same size as one row of the surface, containing all
     // green pixels.
@@ -378,8 +370,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWriteBufferPartialRow)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkWriteBufferPartialRowStartColOverflow)
-{
+TEST(ImageSurfaceSink, SurfaceSinkWriteBufferPartialRowStartColOverflow) {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
     // Create a buffer the same size as one row of the surface, containing all
     // green pixels.
@@ -411,8 +402,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWriteBufferPartialRowStartColOverflow)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkWriteBufferPartialRowBufferOverflow)
-{
+TEST(ImageSurfaceSink, SurfaceSinkWriteBufferPartialRowBufferOverflow) {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
     // Create a buffer twice as large as a row of the surface. The first half
     // (which is as large as a row of the image) will contain green pixels,
@@ -448,8 +438,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWriteBufferPartialRowBufferOverflow)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkWriteBufferFromNullSource)
-{
+TEST(ImageSurfaceSink, SurfaceSinkWriteBufferFromNullSource) {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
     // Calling WriteBuffer() with a null pointer should fail without making any
     // changes to the surface.
@@ -466,8 +455,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWriteBufferFromNullSource)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkWriteEmptyRow)
-{
+TEST(ImageSurfaceSink, SurfaceSinkWriteEmptyRow) {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
     {
       // Write an empty row to each row of the surface. We check that the
@@ -537,8 +525,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWriteEmptyRow)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkWriteUnsafeComputedRow)
-{
+TEST(ImageSurfaceSink, SurfaceSinkWriteUnsafeComputedRow) {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
     // Create a green buffer the same size as one row of the surface.
     uint32_t buffer[100];
@@ -560,8 +547,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWriteUnsafeComputedRow)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkWritePixelBlocks)
-{
+TEST(ImageSurfaceSink, SurfaceSinkWritePixelBlocks) {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
     // Create a green buffer the same size as one row of the surface (which is
     // 100x100), containing 60 pixels of green in the middle and 20 transparent
@@ -607,8 +593,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWritePixelBlocks)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkWritePixelBlocksPartialRow)
-{
+TEST(ImageSurfaceSink, SurfaceSinkWritePixelBlocksPartialRow) {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
     // Create a green buffer the same size as one row of the surface (which is
     // 100x100), containing 60 pixels of green in the middle and 20 transparent
@@ -700,8 +685,7 @@ TEST(ImageSurfaceSink, SurfaceSinkWritePixelBlocksPartialRow)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkProgressivePasses)
-{
+TEST(ImageSurfaceSink, SurfaceSinkProgressivePasses) {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
     {
       // Fill the image with a first pass of red.
@@ -752,8 +736,7 @@ TEST(ImageSurfaceSink, SurfaceSinkProgressivePasses)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkInvalidRect)
-{
+TEST(ImageSurfaceSink, SurfaceSinkInvalidRect) {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
     {
       // Write one row.
@@ -876,8 +859,7 @@ TEST(ImageSurfaceSink, SurfaceSinkInvalidRect)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkFlipVertically)
-{
+TEST(ImageSurfaceSink, SurfaceSinkFlipVertically) {
   WithSurfaceSink<Orient::FLIP_VERTICALLY>([](Decoder* aDecoder,
                                               SurfaceSink* aSink) {
     {

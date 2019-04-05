@@ -230,9 +230,7 @@ bool CompositableParentManager::ReceiveCompositableUpdate(
       }
       break;
     }
-    default: {
-      MOZ_ASSERT(false, "bad type");
-    }
+    default: { MOZ_ASSERT(false, "bad type"); }
   }
 
   return true;
@@ -249,9 +247,7 @@ void CompositableParentManager::DestroyActor(const OpDestroy& aOp) {
       ReleaseCompositable(aOp.get_CompositableHandle());
       break;
     }
-    default: {
-      MOZ_ASSERT(false, "unsupported type");
-    }
+    default: { MOZ_ASSERT(false, "unsupported type"); }
   }
 }
 

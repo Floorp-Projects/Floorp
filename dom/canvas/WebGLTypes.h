@@ -60,14 +60,14 @@ inline void* calloc(const ForbidNarrowing<size_t> n,
 
 namespace detail {
 
-template <typename From>
+template<typename From>
 class AutoAssertCastT final {
   const From mVal;
 
- public:
-  explicit AutoAssertCastT(const From val) : mVal(val) {}
+public:
+  explicit AutoAssertCastT(const From val) : mVal(val) { }
 
-  template <typename To>
+  template<typename To>
   operator To() const {
     return AssertedCast<To>(mVal);
   }
@@ -75,7 +75,7 @@ class AutoAssertCastT final {
 
 }  // namespace detail
 
-template <typename From>
+template<typename From>
 inline auto AutoAssertCast(const From val) {
   return detail::AutoAssertCastT<From>(val);
 }

@@ -9,8 +9,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests
 
-TEST(storage_true_async, TrueAsyncStatement)
-{
+TEST(storage_true_async, TrueAsyncStatement) {
   HookSqliteMutex hook;
 
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
@@ -68,8 +67,7 @@ TEST(storage_true_async, TrueAsyncStatement)
  * Test that cancellation before a statement is run successfully stops the
  * statement from executing.
  */
-TEST(storage_true_async, AsyncCancellation)
-{
+TEST(storage_true_async, AsyncCancellation) {
   HookSqliteMutex hook;
 
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
@@ -138,8 +136,7 @@ TEST(storage_true_async, AsyncCancellation)
  *  finalization rather than trying to finalize it on the main thread
  *  (and thereby running afoul of our mutex use detector).
  */
-TEST(storage_true_async, AsyncDestructorFinalizesOnAsyncThread)
-{
+TEST(storage_true_async, AsyncDestructorFinalizesOnAsyncThread) {
   HookSqliteMutex hook;
 
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());

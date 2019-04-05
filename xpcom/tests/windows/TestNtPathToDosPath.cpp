@@ -112,8 +112,7 @@ bool TestNtPathToDosPath(const wchar_t* aNtPath,
                                  aExpectedDosPath);
 }
 
-TEST(NtPathToDosPath, Tests)
-{
+TEST(NtPathToDosPath, Tests) {
   nsAutoString cDrive;
   ASSERT_TRUE(DriveToNtPath(L'C', cDrive));
 

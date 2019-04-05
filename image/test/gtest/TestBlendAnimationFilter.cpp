@@ -71,15 +71,13 @@ void AssertConfiguringBlendAnimationFilterFails(const IntRect& aFrameRect,
   AssertConfiguringPipelineFails(decoder, blendAnim, surfaceSink);
 }
 
-TEST(ImageBlendAnimationFilter, BlendFailsForNegativeFrameRect)
-{
+TEST(ImageBlendAnimationFilter, BlendFailsForNegativeFrameRect) {
   // A negative frame rect size is disallowed.
   AssertConfiguringBlendAnimationFilterFails(
       IntRect(IntPoint(0, 0), IntSize(-1, -1)), IntSize(100, 100));
 }
 
-TEST(ImageBlendAnimationFilter, WriteFullFirstFrame)
-{
+TEST(ImageBlendAnimationFilter, WriteFullFirstFrame) {
   RefPtr<Decoder> decoder = CreateTrivialBlendingDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
@@ -94,8 +92,7 @@ TEST(ImageBlendAnimationFilter, WriteFullFirstFrame)
   EXPECT_EQ(IntRect(0, 0, 100, 100), frame0->GetDirtyRect());
 }
 
-TEST(ImageBlendAnimationFilter, WritePartialFirstFrame)
-{
+TEST(ImageBlendAnimationFilter, WritePartialFirstFrame) {
   RefPtr<Decoder> decoder = CreateTrivialBlendingDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
@@ -167,14 +164,15 @@ static void TestWithBlendAnimationFilterClear(BlendMethod aBlendMethod) {
   EXPECT_TRUE(RowsAreSolidColor(surface, 70, 30, BGRAColor::Green()));
 }
 
-TEST(ImageBlendAnimationFilter, ClearWithOver)
-{ TestWithBlendAnimationFilterClear(BlendMethod::OVER); }
+TEST(ImageBlendAnimationFilter, ClearWithOver) {
+  TestWithBlendAnimationFilterClear(BlendMethod::OVER);
+}
 
-TEST(ImageBlendAnimationFilter, ClearWithSource)
-{ TestWithBlendAnimationFilterClear(BlendMethod::SOURCE); }
+TEST(ImageBlendAnimationFilter, ClearWithSource) {
+  TestWithBlendAnimationFilterClear(BlendMethod::SOURCE);
+}
 
-TEST(ImageBlendAnimationFilter, KeepWithSource)
-{
+TEST(ImageBlendAnimationFilter, KeepWithSource) {
   RefPtr<Decoder> decoder = CreateTrivialBlendingDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
@@ -210,8 +208,7 @@ TEST(ImageBlendAnimationFilter, KeepWithSource)
   EXPECT_TRUE(RowsAreSolidColor(surface, 60, 40, BGRAColor::Green()));
 }
 
-TEST(ImageBlendAnimationFilter, KeepWithOver)
-{
+TEST(ImageBlendAnimationFilter, KeepWithOver) {
   RefPtr<Decoder> decoder = CreateTrivialBlendingDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
@@ -253,8 +250,7 @@ TEST(ImageBlendAnimationFilter, KeepWithOver)
   EXPECT_TRUE(RowsAreSolidColor(surface, 60, 40, frameColor0));
 }
 
-TEST(ImageBlendAnimationFilter, RestorePreviousWithOver)
-{
+TEST(ImageBlendAnimationFilter, RestorePreviousWithOver) {
   RefPtr<Decoder> decoder = CreateTrivialBlendingDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
@@ -309,8 +305,7 @@ TEST(ImageBlendAnimationFilter, RestorePreviousWithOver)
   EXPECT_TRUE(RowsAreSolidColor(surface, 60, 40, frameColor0));
 }
 
-TEST(ImageBlendAnimationFilter, RestorePreviousWithSource)
-{
+TEST(ImageBlendAnimationFilter, RestorePreviousWithSource) {
   RefPtr<Decoder> decoder = CreateTrivialBlendingDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
@@ -361,8 +356,7 @@ TEST(ImageBlendAnimationFilter, RestorePreviousWithSource)
   EXPECT_TRUE(RowsAreSolidColor(surface, 60, 40, frameColor0));
 }
 
-TEST(ImageBlendAnimationFilter, RestorePreviousClearWithSource)
-{
+TEST(ImageBlendAnimationFilter, RestorePreviousClearWithSource) {
   RefPtr<Decoder> decoder = CreateTrivialBlendingDecoder();
   ASSERT_TRUE(decoder != nullptr);
 
@@ -427,8 +421,7 @@ TEST(ImageBlendAnimationFilter, RestorePreviousClearWithSource)
   EXPECT_TRUE(RowsAreSolidColor(surface, 60, 40, frameColor0));
 }
 
-TEST(ImageBlendAnimationFilter, PartialOverlapFrameRect)
-{
+TEST(ImageBlendAnimationFilter, PartialOverlapFrameRect) {
   RefPtr<Decoder> decoder = CreateTrivialBlendingDecoder();
   ASSERT_TRUE(decoder != nullptr);
 

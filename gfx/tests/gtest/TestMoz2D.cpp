@@ -10,8 +10,7 @@
 #include "TestScaling.h"
 #include "TestBugs.h"
 
-TEST(Moz2D, Bugs)
-{
+TEST(Moz2D, Bugs) {
   TestBugs* test = new TestBugs();
   int failures = 0;
   test->RunTests(&failures);
@@ -20,8 +19,7 @@ TEST(Moz2D, Bugs)
   ASSERT_EQ(failures, 0);
 }
 
-TEST(Moz2D, Point)
-{
+TEST(Moz2D, Point) {
   TestBase* test = new TestPoint();
   int failures = 0;
   test->RunTests(&failures);
@@ -30,8 +28,7 @@ TEST(Moz2D, Point)
   ASSERT_EQ(failures, 0);
 }
 
-TEST(Moz2D, Scaling)
-{
+TEST(Moz2D, Scaling) {
   TestBase* test = new TestScaling();
   int failures = 0;
   test->RunTests(&failures);

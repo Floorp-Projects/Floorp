@@ -17,20 +17,17 @@ static void TestSuffix(const OriginAttributes& attrs) {
   EXPECT_EQ(attrs, attrsFromSuffix);
 }
 
-TEST(OriginAttributes, Suffix_default)
-{
+TEST(OriginAttributes, Suffix_default) {
   OriginAttributes attrs;
   TestSuffix(attrs);
 }
 
-TEST(OriginAttributes, Suffix_appId_inIsolatedMozBrowser)
-{
+TEST(OriginAttributes, Suffix_appId_inIsolatedMozBrowser) {
   OriginAttributes attrs(1, true);
   TestSuffix(attrs);
 }
 
-TEST(OriginAttributes, Suffix_maxAppId_inIsolatedMozBrowser)
-{
+TEST(OriginAttributes, Suffix_maxAppId_inIsolatedMozBrowser) {
   OriginAttributes attrs(4294967295, true);
   TestSuffix(attrs);
 }

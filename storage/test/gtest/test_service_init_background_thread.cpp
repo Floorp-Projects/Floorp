@@ -40,8 +40,7 @@ class ServiceInitializer : public mozilla::Runnable {
 // all non-death tests. By merely using a "DeathTest" suffix here this becomes
 // a death test -- even though it doesn't use any of the normal death test
 // features -- which ensures this is the first storage test to run.
-TEST(storage_service_init_background_thread_DeathTest, Test)
-{
+TEST(storage_service_init_background_thread_DeathTest, Test) {
   nsCOMPtr<nsIRunnable> event = new ServiceInitializer();
   do_check_true(event);
 

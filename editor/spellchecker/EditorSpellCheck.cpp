@@ -806,33 +806,32 @@ nsresult EditorSpellCheck::DictionaryFetched(DictionaryFetcher* aFetcher) {
       RefPtr<EditorSpellCheck> self = this;
       RefPtr<DictionaryFetcher> fetcher = aFetcher;
       mSpellChecker->SetCurrentDictionaryFromList(tryDictList)
-          ->Then(
-              GetMainThreadSerialEventTarget(), __func__,
-              [self, fetcher]() {
+          ->Then(GetMainThreadSerialEventTarget(), __func__,
+                 [self, fetcher]() {
 #ifdef DEBUG_DICT
-                printf("***** Assigned from content preferences |%s|\n",
-                       NS_ConvertUTF16toUTF8(dictName).get());
+                   printf("***** Assigned from content preferences |%s|\n",
+                          NS_ConvertUTF16toUTF8(dictName).get());
 #endif
-                // We take an early exit here, so let's not forget to clear
-                // the word list.
-                self->DeleteSuggestedWordList();
+                   // We take an early exit here, so let's not forget to clear
+                   // the word list.
+                   self->DeleteSuggestedWordList();
 
-                self->EndUpdateDictionary();
-                if (fetcher->mCallback) {
-                  fetcher->mCallback->EditorSpellCheckDone();
-                }
-              },
-              [self, fetcher](nsresult aError) {
-                if (aError == NS_ERROR_ABORT) {
-                  return;
-                }
-                // May be dictionary was uninstalled ?
-                // Clear the content preference and continue.
-                ClearCurrentDictionary(self->mEditor);
+                   self->EndUpdateDictionary();
+                   if (fetcher->mCallback) {
+                     fetcher->mCallback->EditorSpellCheckDone();
+                   }
+                 },
+                 [self, fetcher](nsresult aError) {
+                   if (aError == NS_ERROR_ABORT) {
+                     return;
+                   }
+                   // May be dictionary was uninstalled ?
+                   // Clear the content preference and continue.
+                   ClearCurrentDictionary(self->mEditor);
 
-                // Priority 2 or later will handled by the following
-                self->SetFallbackDictionary(fetcher);
-              });
+                   // Priority 2 or later will handled by the following
+                   self->SetFallbackDictionary(fetcher);
+                 });
       return NS_OK;
     }
   }

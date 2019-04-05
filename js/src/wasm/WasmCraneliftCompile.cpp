@@ -159,9 +159,7 @@ static bool GenerateCraneliftCode(WasmMacroAssembler& masm,
         masm.append(SymbolicAccess(CodeOffset(offset.value()), sym));
         break;
       }
-      default: {
-        MOZ_CRASH("unknown cranelift metadata kind");
-      }
+      default: { MOZ_CRASH("unknown cranelift metadata kind"); }
     }
   }
 

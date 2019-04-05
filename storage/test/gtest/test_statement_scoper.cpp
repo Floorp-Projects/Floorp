@@ -12,8 +12,7 @@
  * This file test our statement scoper in mozStorageHelper.h.
  */
 
-TEST(storage_statement_scoper, automatic_reset)
-{
+TEST(storage_statement_scoper, automatic_reset) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // Need to create a table to populate sqlite_master with an entry.
@@ -48,8 +47,7 @@ TEST(storage_statement_scoper, automatic_reset)
   do_check_true(state == mozIStorageStatement::MOZ_STORAGE_STATEMENT_READY);
 }
 
-TEST(storage_statement_scoper, Abandon)
-{
+TEST(storage_statement_scoper, Abandon) {
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // Need to create a table to populate sqlite_master with an entry.

@@ -66,9 +66,7 @@ mozilla::ipc::IPCResult PaymentRequestParent::RecvRequestPayment(
       mRequestId = request.requestId();
       break;
     }
-    default: {
-      return IPC_FAIL(this, "Unknown PaymentRequest action type");
-    }
+    default: { return IPC_FAIL(this, "Unknown PaymentRequest action type"); }
   }
   nsCOMPtr<nsIPaymentRequestService> service =
       do_GetService(NS_PAYMENT_REQUEST_SERVICE_CONTRACT_ID);
@@ -178,9 +176,7 @@ nsresult PaymentRequestParent::RespondPayment(
       }
       break;
     }
-    default: {
-      return NS_ERROR_FAILURE;
-    }
+    default: { return NS_ERROR_FAILURE; }
   }
   return NS_OK;
 }
@@ -314,9 +310,7 @@ nsresult PaymentRequestParent::ChangePaymentMethod(
         ipcChangeDetails = ipcBasicCardDetails;
         break;
       }
-      default: {
-        return NS_ERROR_FAILURE;
-      }
+      default: { return NS_ERROR_FAILURE; }
     }
   }
   if (!SendChangePaymentMethod(requestId, methodName, ipcChangeDetails)) {
@@ -460,9 +454,7 @@ nsresult PaymentRequestParent::SerializeResponseData(
       aIPCData = data;
       break;
     }
-    default: {
-      return NS_ERROR_FAILURE;
-    }
+    default: { return NS_ERROR_FAILURE; }
   }
   return NS_OK;
 }

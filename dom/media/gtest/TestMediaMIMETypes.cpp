@@ -9,8 +9,7 @@
 
 using namespace mozilla;
 
-TEST(MediaMIMETypes, DependentMIMEType)
-{
+TEST(MediaMIMETypes, DependentMIMEType) {
   static const struct {
     const char* mString;
     DependentMediaMIMEType mDependentMediaMIMEType;
@@ -28,8 +27,7 @@ TEST(MediaMIMETypes, DependentMIMEType)
   }
 }
 
-TEST(MediaMIMETypes, MakeMediaMIMEType_bad)
-{
+TEST(MediaMIMETypes, MakeMediaMIMEType_bad) {
   static const char* tests[] = {"",       " ",   "/",    "audio",
                                 "audio/", "mp4", "/mp4", "a/b"};
 
@@ -40,8 +38,7 @@ TEST(MediaMIMETypes, MakeMediaMIMEType_bad)
   }
 }
 
-TEST(MediaMIMETypes, MediaMIMEType)
-{
+TEST(MediaMIMETypes, MediaMIMEType) {
   static const struct {
     const char* mTypeString;
     const char* mAsString;
@@ -81,8 +78,7 @@ TEST(MediaMIMETypes, MediaMIMEType)
   }
 }
 
-TEST(MediaMIMETypes, MediaCodecs)
-{
+TEST(MediaMIMETypes, MediaCodecs) {
   MediaCodecs empty("");
   EXPECT_TRUE(empty.IsEmpty());
   EXPECT_TRUE(empty.AsString().EqualsLiteral(""));
@@ -156,8 +152,7 @@ TEST(MediaMIMETypes, MediaCodecs)
   EXPECT_FALSE(one.ContainsAll(two));
 }
 
-TEST(MediaMIMETypes, MakeMediaExtendedMIMEType_bad)
-{
+TEST(MediaMIMETypes, MakeMediaExtendedMIMEType_bad) {
   static const char* tests[] = {"",       " ",   "/",    "audio",
                                 "audio/", "mp4", "/mp4", "a/b"};
 
@@ -168,8 +163,7 @@ TEST(MediaMIMETypes, MakeMediaExtendedMIMEType_bad)
   }
 }
 
-TEST(MediaMIMETypes, MediaExtendedMIMEType)
-{
+TEST(MediaMIMETypes, MediaExtendedMIMEType) {
   // Some generic tests first.
   static const struct {
     const char* mTypeString;

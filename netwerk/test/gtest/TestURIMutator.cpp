@@ -6,8 +6,7 @@
 #include "nsThreadPool.h"
 #include "nsNetUtil.h"
 
-TEST(TestURIMutator, Mutator)
-{
+TEST(TestURIMutator, Mutator) {
   nsAutoCString out;
 
   // This test instantiates a new nsStandardURL::Mutator (via contractID)
@@ -103,8 +102,7 @@ TEST(TestURIMutator, Mutator)
 
 extern MOZ_THREAD_LOCAL(uint32_t) gTlsURLRecursionCount;
 
-TEST(TestURIMutator, NS_NewURIOnAnyThread)
-{
+TEST(TestURIMutator, NS_NewURIOnAnyThread) {
   nsCOMPtr<nsIThreadPool> pool = new nsThreadPool();
   pool->SetThreadLimit(60);
 

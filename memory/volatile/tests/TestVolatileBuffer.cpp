@@ -18,14 +18,11 @@
 
 using namespace mozilla;
 
-TEST(VolatileBufferTest, HeapVolatileBuffersWork)
-{
+TEST(VolatileBufferTest, HeapVolatileBuffersWork) {
   RefPtr<VolatileBuffer> heapbuf = new VolatileBuffer();
 
-  ASSERT_TRUE(heapbuf)
-  << "Failed to create VolatileBuffer";
-  ASSERT_TRUE(heapbuf->Init(512))
-  << "Failed to initialize VolatileBuffer";
+  ASSERT_TRUE(heapbuf) << "Failed to create VolatileBuffer";
+  ASSERT_TRUE(heapbuf->Init(512)) << "Failed to initialize VolatileBuffer";
 
   VolatileBufferPtr<char> ptr(heapbuf);
 
@@ -34,14 +31,11 @@ TEST(VolatileBufferTest, HeapVolatileBuffersWork)
   EXPECT_TRUE(ptr) << "Couldn't get pointer from VolatileBufferPtr";
 }
 
-TEST(VolatileBufferTest, RealVolatileBuffersWork)
-{
+TEST(VolatileBufferTest, RealVolatileBuffersWork) {
   RefPtr<VolatileBuffer> buf = new VolatileBuffer();
 
-  ASSERT_TRUE(buf)
-  << "Failed to create VolatileBuffer";
-  ASSERT_TRUE(buf->Init(16384))
-  << "Failed to initialize VolatileBuffer";
+  ASSERT_TRUE(buf) << "Failed to create VolatileBuffer";
+  ASSERT_TRUE(buf->Init(16384)) << "Failed to initialize VolatileBuffer";
 
   const char teststr[] = "foobar";
 
@@ -57,8 +51,7 @@ TEST(VolatileBufferTest, RealVolatileBuffersWork)
 
       EXPECT_FALSE(ptr.WasBufferPurged())
           << "Failed to lock buffer again while currently locked";
-      ASSERT_TRUE(ptr2)
-      << "Didn't get a pointer on the second lock";
+      ASSERT_TRUE(ptr2) << "Didn't get a pointer on the second lock";
 
       strcpy(ptr2, teststr);
     }

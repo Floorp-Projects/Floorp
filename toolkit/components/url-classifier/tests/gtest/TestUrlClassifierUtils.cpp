@@ -29,8 +29,7 @@ void TestUnescapeHelper(const char* in, const char* expected) {
 }
 
 // Make sure Unescape from nsEncode.h's unescape does what the server does.
-TEST(UrlClassifierUtils, Unescape)
-{
+TEST(UrlClassifierUtils, Unescape) {
   // test empty string
   TestUnescapeHelper("\0", "\0");
 
@@ -81,8 +80,7 @@ void TestEncodeHelper(const char* in, const char* expected) {
   CheckEquals(strExp, out);
 }
 
-TEST(UrlClassifierUtils, Enc)
-{
+TEST(UrlClassifierUtils, Enc) {
   // Test empty string
   TestEncodeHelper("", "");
 
@@ -121,8 +119,7 @@ void TestCanonicalizeHelper(const char* in, const char* expected) {
   CheckEquals(strExp, out);
 }
 
-TEST(UrlClassifierUtils, Canonicalize)
-{
+TEST(UrlClassifierUtils, Canonicalize) {
   // Test repeated %-decoding. Note: %25 --> %, %32 --> 2, %35 --> 5
   TestCanonicalizeHelper("%25", "%25");
   TestCanonicalizeHelper("%25%32%35", "%25");
@@ -155,8 +152,7 @@ void TestParseIPAddressHelper(const char* in, const char* expected) {
   CheckEquals(strExp, out);
 }
 
-TEST(UrlClassifierUtils, ParseIPAddress)
-{
+TEST(UrlClassifierUtils, ParseIPAddress) {
   TestParseIPAddressHelper("123.123.0.0.1", "");
   TestParseIPAddressHelper("255.0.0.1", "255.0.0.1");
   TestParseIPAddressHelper("12.0x12.01234", "12.18.2.156");
@@ -185,8 +181,7 @@ void TestCanonicalNumHelper(const char* in, uint32_t bytes, bool allowOctal,
   CheckEquals(strExp, out);
 }
 
-TEST(UrlClassifierUtils, CanonicalNum)
-{
+TEST(UrlClassifierUtils, CanonicalNum) {
   TestCanonicalNumHelper("", 1, true, "");
   TestCanonicalNumHelper("10", 0, true, "");
   TestCanonicalNumHelper("45", 1, true, "45");
@@ -209,8 +204,7 @@ void TestHostnameHelper(const char* in, const char* expected) {
   CheckEquals(strExp, out);
 }
 
-TEST(UrlClassifierUtils, Hostname)
-{
+TEST(UrlClassifierUtils, Hostname) {
   TestHostnameHelper("abcd123;[]", "abcd123;[]");
   TestHostnameHelper("abc.123", "abc.123");
   TestHostnameHelper("abc..123", "abc.123");
@@ -233,8 +227,7 @@ TEST(UrlClassifierUtils, Hostname)
   TestHostnameHelper("%00", "%00");
 }
 
-TEST(UrlClassifierUtils, LongHostname)
-{
+TEST(UrlClassifierUtils, LongHostname) {
   static const int kTestSize = 1024 * 150;
   char* str = static_cast<char*>(malloc(kTestSize + 1));
   memset(str, 'x', kTestSize);

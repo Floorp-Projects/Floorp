@@ -104,8 +104,7 @@ nsresult nsTestComFactory::CreateInstance(nsISupports *aOuter,
   return res;
 }
 
-TEST(TestCOM, WindowsInterop)
-{
+TEST(TestCOM, WindowsInterop) {
   nsTestComFactory *inst = new nsTestComFactory();
 
   // Test we can QI nsIFactory to an IClassFactory.

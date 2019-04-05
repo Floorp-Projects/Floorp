@@ -733,9 +733,9 @@ nsresult nsSystemInfo::Init() {
 #ifdef XP_WIN
   // IsWow64Process2 is only available on Windows 10+, so we have to dynamically
   // check for its existence.
-  typedef BOOL(WINAPI * LPFN_IWP2)(HANDLE, USHORT*, USHORT*);
-  LPFN_IWP2 iwp2 = reinterpret_cast<LPFN_IWP2>(
-      GetProcAddress(GetModuleHandle(L"kernel32"), "IsWow64Process2"));
+  typedef BOOL(WINAPI* LPFN_IWP2)(HANDLE, USHORT*, USHORT*);
+  LPFN_IWP2 iwp2 = reinterpret_cast<LPFN_IWP2>(GetProcAddress(
+      GetModuleHandle(L"kernel32"), "IsWow64Process2"));
   BOOL isWow64 = false;
   USHORT processMachine = IMAGE_FILE_MACHINE_UNKNOWN;
   USHORT nativeMachine = IMAGE_FILE_MACHINE_UNKNOWN;

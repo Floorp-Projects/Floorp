@@ -1553,16 +1553,15 @@ PeerConnectionImpl::GetStats(MediaStreamTrack* aSelector) {
   PC_AUTO_ENTER_API_CALL(true);
 
   GetStats(aSelector, false)
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [handle = mHandle](UniquePtr<RTCStatsQuery>&& aQuery) {
-            DeliverStatsReportToPCObserver_m(
-                handle, NS_OK, nsAutoPtr<RTCStatsQuery>(aQuery.release()));
-          },
-          [handle = mHandle](nsresult aError) {
-            DeliverStatsReportToPCObserver_m(handle, aError,
-                                             nsAutoPtr<RTCStatsQuery>());
-          });
+      ->Then(GetMainThreadSerialEventTarget(), __func__,
+             [handle = mHandle](UniquePtr<RTCStatsQuery>&& aQuery) {
+               DeliverStatsReportToPCObserver_m(
+                   handle, NS_OK, nsAutoPtr<RTCStatsQuery>(aQuery.release()));
+             },
+             [handle = mHandle](nsresult aError) {
+               DeliverStatsReportToPCObserver_m(handle, aError,
+                                                nsAutoPtr<RTCStatsQuery>());
+             });
 
   return NS_OK;
 }

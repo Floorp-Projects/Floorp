@@ -183,12 +183,11 @@ nsStaticAtom* nsLanguageAtomService::GetUncachedLanguageGroup(
       } else {
         size_t foundIndex;
         const nsCString& script = loc.GetScript();
-        if (BinarySearchIf(
-                kScriptLangGroup, 0, ArrayLength(kScriptLangGroup),
-                [script](const auto& entry) -> int {
-                  return script.Compare(entry.mTag);
-                },
-                &foundIndex)) {
+        if (BinarySearchIf(kScriptLangGroup, 0, ArrayLength(kScriptLangGroup),
+                           [script](const auto& entry) -> int {
+                             return script.Compare(entry.mTag);
+                           },
+                           &foundIndex)) {
           return kScriptLangGroup[foundIndex].mAtom;
         }
       }

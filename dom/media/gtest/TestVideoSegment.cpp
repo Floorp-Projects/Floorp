@@ -13,8 +13,7 @@ class Image;
 }  // namespace layer
 }  // namespace mozilla
 
-TEST(VideoSegment, TestAppendFrameForceBlack)
-{
+TEST(VideoSegment, TestAppendFrameForceBlack) {
   RefPtr<layers::Image> testImage = nullptr;
 
   VideoSegment segment;
@@ -29,8 +28,7 @@ TEST(VideoSegment, TestAppendFrameForceBlack)
   }
 }
 
-TEST(VideoSegment, TestAppendFrameNotForceBlack)
-{
+TEST(VideoSegment, TestAppendFrameNotForceBlack) {
   RefPtr<layers::Image> testImage = nullptr;
 
   VideoSegment segment;

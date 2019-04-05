@@ -494,9 +494,7 @@ class FunctionCompiler {
         ins = MSignExtendInt64::New(alloc(), op, mode);
         break;
       }
-      default: {
-        MOZ_CRASH("Bad sign extension");
-      }
+      default: { MOZ_CRASH("Bad sign extension"); }
     }
     curBlock_->add(ins);
     return ins;
@@ -2938,8 +2936,7 @@ static bool EmitMemOrTableCopy(FunctionCompiler& f, bool isMem) {
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  const SymbolicAddressSignature& callee =
-      isMem ? SASigMemCopy : SASigTableCopy;
+  const SymbolicAddressSignature& callee = isMem ? SASigMemCopy : SASigTableCopy;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;
@@ -3085,8 +3082,7 @@ static bool EmitMemOrTableInit(FunctionCompiler& f, bool isMem) {
 
   uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode();
 
-  const SymbolicAddressSignature& callee =
-      isMem ? SASigMemInit : SASigTableInit;
+  const SymbolicAddressSignature& callee = isMem ? SASigMemInit : SASigTableInit;
   CallCompileState args;
   if (!f.passInstance(callee.argTypes[0], &args)) {
     return false;

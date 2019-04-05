@@ -103,8 +103,7 @@ static void Enqueue(nsIEventTarget* target, function<void()>&& aCallable) {
 
 using namespace TestThrottledEventQueue;
 
-TEST(ThrottledEventQueue, RunnableQueue)
-{
+TEST(ThrottledEventQueue, RunnableQueue) {
   string log;
 
   RefPtr<RunnableQueue> queue = MakeRefPtr<RunnableQueue>();
@@ -117,8 +116,7 @@ TEST(ThrottledEventQueue, RunnableQueue)
   ASSERT_EQ(log, "abc");
 }
 
-TEST(ThrottledEventQueue, SimpleDispatch)
-{
+TEST(ThrottledEventQueue, SimpleDispatch) {
   string log;
 
   auto base = MakeRefPtr<RunnableQueue>();
@@ -132,8 +130,7 @@ TEST(ThrottledEventQueue, SimpleDispatch)
   ASSERT_TRUE(throttled->IsEmpty());
 }
 
-TEST(ThrottledEventQueue, MixedDispatch)
-{
+TEST(ThrottledEventQueue, MixedDispatch) {
   string log;
 
   auto base = MakeRefPtr<RunnableQueue>();
@@ -177,8 +174,7 @@ TEST(ThrottledEventQueue, MixedDispatch)
   ASSERT_TRUE(throttled->IsEmpty());
 }
 
-TEST(ThrottledEventQueue, EnqueueFromRun)
-{
+TEST(ThrottledEventQueue, EnqueueFromRun) {
   string log;
 
   auto base = MakeRefPtr<RunnableQueue>();
@@ -202,8 +198,7 @@ TEST(ThrottledEventQueue, EnqueueFromRun)
   ASSERT_TRUE(throttled->IsEmpty());
 }
 
-TEST(ThrottledEventQueue, RunFromRun)
-{
+TEST(ThrottledEventQueue, RunFromRun) {
   string log;
 
   auto base = MakeRefPtr<RunnableQueue>();
@@ -228,8 +223,7 @@ TEST(ThrottledEventQueue, RunFromRun)
   ASSERT_TRUE(throttled->IsEmpty());
 }
 
-TEST(ThrottledEventQueue, DropWhileRunning)
-{
+TEST(ThrottledEventQueue, DropWhileRunning) {
   string log;
 
   auto base = MakeRefPtr<RunnableQueue>();
@@ -245,8 +239,7 @@ TEST(ThrottledEventQueue, DropWhileRunning)
   ASSERT_EQ(log, "a");
 }
 
-TEST(ThrottledEventQueue, AwaitIdle)
-{
+TEST(ThrottledEventQueue, AwaitIdle) {
   Mutex mutex("TEQ AwaitIdle");
   CondVar cond(mutex, "TEQ AwaitIdle");
 
@@ -301,8 +294,7 @@ TEST(ThrottledEventQueue, AwaitIdle)
   ASSERT_TRUE(NS_SUCCEEDED(thread->Shutdown()));
 }
 
-TEST(ThrottledEventQueue, AwaitIdleMixed)
-{
+TEST(ThrottledEventQueue, AwaitIdleMixed) {
   // Create a separate thread that waits for the queue to become idle, and
   // then takes observable action.
   nsCOMPtr<nsIThread> thread;
@@ -392,8 +384,7 @@ TEST(ThrottledEventQueue, AwaitIdleMixed)
   ASSERT_TRUE(NS_SUCCEEDED(thread->Shutdown()));
 }
 
-TEST(ThrottledEventQueue, SimplePauseResume)
-{
+TEST(ThrottledEventQueue, SimplePauseResume) {
   string log;
 
   auto base = MakeRefPtr<RunnableQueue>();
@@ -427,8 +418,7 @@ TEST(ThrottledEventQueue, SimplePauseResume)
   ASSERT_TRUE(throttled->IsEmpty());
 }
 
-TEST(ThrottledEventQueue, MixedPauseResume)
-{
+TEST(ThrottledEventQueue, MixedPauseResume) {
   string log;
 
   auto base = MakeRefPtr<RunnableQueue>();
@@ -467,8 +457,7 @@ TEST(ThrottledEventQueue, MixedPauseResume)
   ASSERT_TRUE(throttled->IsEmpty());
 }
 
-TEST(ThrottledEventQueue, AwaitIdlePaused)
-{
+TEST(ThrottledEventQueue, AwaitIdlePaused) {
   Mutex mutex("AwaitIdlePaused");
   CondVar cond(mutex, "AwaitIdlePaused");
 
@@ -540,8 +529,7 @@ TEST(ThrottledEventQueue, AwaitIdlePaused)
   ASSERT_TRUE(NS_SUCCEEDED(thread->Shutdown()));
 }
 
-TEST(ThrottledEventQueue, ExecutorTransitions)
-{
+TEST(ThrottledEventQueue, ExecutorTransitions) {
   string log;
 
   auto base = MakeRefPtr<RunnableQueue>();

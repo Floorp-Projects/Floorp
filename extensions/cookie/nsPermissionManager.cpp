@@ -3430,13 +3430,12 @@ nsPermissionManager::WhenPermissionsAvailable(nsIPrincipal* aPrincipal,
 
   RefPtr<nsIRunnable> runnable = aRunnable;
   GenericPromise::All(thread, promises)
-      ->Then(
-          thread, __func__, [runnable]() { runnable->Run(); },
-          []() {
-            NS_WARNING(
-                "nsPermissionManager permission promise rejected. We're "
-                "probably shutting down.");
-          });
+      ->Then(thread, __func__, [runnable]() { runnable->Run(); },
+             []() {
+               NS_WARNING(
+                   "nsPermissionManager permission promise rejected. We're "
+                   "probably shutting down.");
+             });
   return NS_OK;
 }
 

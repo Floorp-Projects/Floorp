@@ -39,8 +39,7 @@ void AssertConfiguringRemoveFrameRectFilterFails(const IntSize& aSize,
       SurfaceConfig{decoder, aSize, SurfaceFormat::B8G8R8A8, false});
 }
 
-TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_0_0_100_100)
-{
+TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_0_0_100_100) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(0, 0, 100, 100),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -51,8 +50,7 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_0_0_100_100)
       });
 }
 
-TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_0_0_0_0)
-{
+TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_0_0_0_0) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(0, 0, 0, 0),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -64,8 +62,7 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_0_0_0_0)
       });
 }
 
-TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus50_50_0_0)
-{
+TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus50_50_0_0) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(-50, 50, 0, 0),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -77,8 +74,7 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus50_50_0_0)
       });
 }
 
-TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_50_Minus50_0_0)
-{
+TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_50_Minus50_0_0) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(50, -50, 0, 0),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -90,8 +86,7 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_50_Minus50_0_0)
       });
 }
 
-TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_150_50_0_0)
-{
+TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_150_50_0_0) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(150, 50, 0, 0),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -103,8 +98,7 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_150_50_0_0)
       });
 }
 
-TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_50_150_0_0)
-{
+TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_50_150_0_0) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(50, 150, 0, 0),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -116,8 +110,7 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_50_150_0_0)
       });
 }
 
-TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_200_200_100_100)
-{
+TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_200_200_100_100) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(200, 200, 100, 100),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -132,8 +125,7 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_200_200_100_100)
       });
 }
 
-TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus200_25_100_100)
-{
+TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus200_25_100_100) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(-200, 25, 100, 100),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -148,8 +140,7 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus200_25_100_100)
       });
 }
 
-TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_25_Minus200_100_100)
-{
+TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_25_Minus200_100_100) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(25, -200, 100, 100),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -164,8 +155,7 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_25_Minus200_100_100)
       });
 }
 
-TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_200_25_100_100)
-{
+TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_200_25_100_100) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(200, 25, 100, 100),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -180,8 +170,7 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_200_25_100_100)
       });
 }
 
-TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_25_200_100_100)
-{
+TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_25_200_100_100) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(25, 200, 100, 100),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -197,8 +186,7 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_25_200_100_100)
 }
 
 TEST(ImageRemoveFrameRectFilter,
-     WritePixels100_100_to_Minus200_Minus200_100_100)
-{
+     WritePixels100_100_to_Minus200_Minus200_100_100) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(-200, -200, 100, 100),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -210,8 +198,8 @@ TEST(ImageRemoveFrameRectFilter,
       });
 }
 
-TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus50_Minus50_100_100)
-{
+TEST(ImageRemoveFrameRectFilter,
+     WritePixels100_100_to_Minus50_Minus50_100_100) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(-50, -50, 100, 100),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -223,8 +211,7 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus50_Minus50_100_100)
       });
 }
 
-TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus50_25_100_50)
-{
+TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus50_25_100_50) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(-50, 25, 100, 50),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -236,8 +223,7 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus50_25_100_50)
       });
 }
 
-TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_25_Minus50_50_100)
-{
+TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_25_Minus50_50_100) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(25, -50, 50, 100),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -249,8 +235,7 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_25_Minus50_50_100)
       });
 }
 
-TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_50_25_100_50)
-{
+TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_50_25_100_50) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(50, 25, 100, 50),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -263,8 +248,7 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_50_25_100_50)
       });
 }
 
-TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_25_50_50_100)
-{
+TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_25_50_50_100) {
   WithRemoveFrameRectFilter(
       IntSize(100, 100), IntRect(25, 50, 50, 100),
       [](Decoder* aDecoder, SurfaceFilter* aFilter) {
@@ -280,31 +264,27 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_25_50_50_100)
       });
 }
 
-TEST(ImageRemoveFrameRectFilter, RemoveFrameRectFailsFor0_0_to_0_0_100_100)
-{
+TEST(ImageRemoveFrameRectFilter, RemoveFrameRectFailsFor0_0_to_0_0_100_100) {
   // A zero-size image is disallowed.
   AssertConfiguringRemoveFrameRectFilterFails(IntSize(0, 0),
                                               IntRect(0, 0, 100, 100));
 }
 
 TEST(ImageRemoveFrameRectFilter,
-     RemoveFrameRectFailsForMinus1_Minus1_to_0_0_100_100)
-{
+     RemoveFrameRectFailsForMinus1_Minus1_to_0_0_100_100) {
   // A negative-size image is disallowed.
   AssertConfiguringRemoveFrameRectFilterFails(IntSize(-1, -1),
                                               IntRect(0, 0, 100, 100));
 }
 
-TEST(ImageRemoveFrameRectFilter, RemoveFrameRectFailsFor100_100_to_0_0_0_0)
-{
+TEST(ImageRemoveFrameRectFilter, RemoveFrameRectFailsFor100_100_to_0_0_0_0) {
   // A zero size frame rect is disallowed.
   AssertConfiguringRemoveFrameRectFilterFails(IntSize(100, 100),
                                               IntRect(0, 0, -1, -1));
 }
 
 TEST(ImageRemoveFrameRectFilter,
-     RemoveFrameRectFailsFor100_100_to_0_0_Minus1_Minus1)
-{
+     RemoveFrameRectFailsFor100_100_to_0_0_Minus1_Minus1) {
   // A negative size frame rect is disallowed.
   AssertConfiguringRemoveFrameRectFilterFails(IntSize(100, 100),
                                               IntRect(0, 0, -1, -1));

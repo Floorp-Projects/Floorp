@@ -19,6 +19,7 @@ double RtpSourceObserver::RtpSourceEntry::ToLinearAudioLevel() const {
 RtpSourceObserver::RtpSourceObserver()
     : mMaxJitterWindow(0), mLevelGuard("RtpSourceObserver::mLevelGuard") {}
 
+
 void RtpSourceObserver::OnRtpPacket(const webrtc::RTPHeader& aHeader,
                                     const int64_t aTimestamp,
                                     const uint32_t aJitter) {

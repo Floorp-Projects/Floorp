@@ -180,12 +180,11 @@ void FakeInputStream::CheckTest(nsACString& aResult) {
 
 void FakeInputStream::CheckTest(nsAString& aResult) {
   ASSERT_TRUE(aResult.EqualsASCII(mTest->mResult))
-  << "Actual:   " << aResult.BeginReading() << std::endl
-  << "Expected: " << mTest->mResult;
+      << "Actual:   " << aResult.BeginReading() << std::endl
+      << "Expected: " << mTest->mResult;
 }
 
-TEST(Base64, StreamEncoder)
-{
+TEST(Base64, StreamEncoder) {
   nsCOMPtr<nsIScriptableBase64Encoder> encoder =
       do_CreateInstance("@mozilla.org/scriptablebase64encoder;1");
   ASSERT_TRUE(encoder);
@@ -224,8 +223,7 @@ static EncodeDecodeTestCase sRFC4648TestCases[] = {
     {"foobar", "Zm9vYmFy"},
 };
 
-TEST(Base64, RFC4648Encoding)
-{
+TEST(Base64, RFC4648Encoding) {
   for (auto& testcase : sRFC4648TestCases) {
     nsDependentCString in(testcase.mInput);
     nsAutoCString out;
@@ -243,8 +241,7 @@ TEST(Base64, RFC4648Encoding)
   }
 }
 
-TEST(Base64, RFC4648Decoding)
-{
+TEST(Base64, RFC4648Decoding) {
   for (auto& testcase : sRFC4648TestCases) {
     nsDependentCString out(testcase.mOutput);
     nsAutoCString in;
@@ -262,8 +259,7 @@ TEST(Base64, RFC4648Decoding)
   }
 }
 
-TEST(Base64, RFC4648DecodingRawPointers)
-{
+TEST(Base64, RFC4648DecodingRawPointers) {
   for (auto& testcase : sRFC4648TestCases) {
     size_t outputLength = strlen(testcase.mOutput);
     size_t inputLength = strlen(testcase.mInput);
@@ -293,8 +289,7 @@ static EncodeDecodeTestCase sNonASCIITestCases[] = {
     {"\xff\xff\xff\xff", "/////w=="},
 };
 
-TEST(Base64, NonASCIIEncoding)
-{
+TEST(Base64, NonASCIIEncoding) {
   for (auto& testcase : sNonASCIITestCases) {
     nsDependentCString in(testcase.mInput);
     nsAutoCString out;
@@ -304,8 +299,7 @@ TEST(Base64, NonASCIIEncoding)
   }
 }
 
-TEST(Base64, NonASCIIEncodingWideString)
-{
+TEST(Base64, NonASCIIEncodingWideString) {
   for (auto& testcase : sNonASCIITestCases) {
     nsAutoString in, out;
     // XXX Handles Latin1 despite the name
@@ -316,8 +310,7 @@ TEST(Base64, NonASCIIEncodingWideString)
   }
 }
 
-TEST(Base64, NonASCIIDecoding)
-{
+TEST(Base64, NonASCIIDecoding) {
   for (auto& testcase : sNonASCIITestCases) {
     nsDependentCString out(testcase.mOutput);
     nsAutoCString in;
@@ -327,8 +320,7 @@ TEST(Base64, NonASCIIDecoding)
   }
 }
 
-TEST(Base64, NonASCIIDecodingWideString)
-{
+TEST(Base64, NonASCIIDecodingWideString) {
   for (auto& testcase : sNonASCIITestCases) {
     nsAutoString in, out;
     // XXX Handles Latin1 despite the name
@@ -346,8 +338,7 @@ TEST(Base64, NonASCIIDecodingWideString)
 
 // For historical reasons, our wide string base64 encode routines mask off
 // the high bits of non-latin1 wide strings.
-TEST(Base64, EncodeNon8BitWideString)
-{
+TEST(Base64, EncodeNon8BitWideString) {
   {
     const nsAutoString non8Bit(u"\x1ff");
     nsAutoString out;
@@ -366,8 +357,7 @@ TEST(Base64, EncodeNon8BitWideString)
 
 // For historical reasons, our wide string base64 decode routines mask off
 // the high bits of non-latin1 wide strings.
-TEST(Base64, DecodeNon8BitWideString)
-{
+TEST(Base64, DecodeNon8BitWideString) {
   {
     // This would be "/w==" in a nsCString
     const nsAutoString non8Bit(u"\x12f\x177==");
@@ -388,8 +378,7 @@ TEST(Base64, DecodeNon8BitWideString)
   }
 }
 
-TEST(Base64, TruncateOnInvalidDecodeCString)
-{
+TEST(Base64, TruncateOnInvalidDecodeCString) {
   NS_NAMED_LITERAL_CSTRING(invalid, "@@==");
   nsAutoCString out("I should be truncated!");
   nsresult rv = mozilla::Base64Decode(invalid, out);
@@ -397,8 +386,7 @@ TEST(Base64, TruncateOnInvalidDecodeCString)
   ASSERT_EQ(out.Length(), 0u);
 }
 
-TEST(Base64, TruncateOnInvalidDecodeWideString)
-{
+TEST(Base64, TruncateOnInvalidDecodeWideString) {
   NS_NAMED_LITERAL_STRING(invalid, "@@==");
   nsAutoString out(u"I should be truncated!");
   nsresult rv = mozilla::Base64Decode(invalid, out);

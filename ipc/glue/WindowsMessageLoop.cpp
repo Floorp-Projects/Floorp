@@ -148,9 +148,7 @@ void CALLBACK WinEventHook(HWINEVENTHOOK aWinEventHook, DWORD aEvent,
       }
       break;
     }
-    default: {
-      return;
-    }
+    default: { return; }
   }
 }
 
@@ -796,7 +794,8 @@ static void StopNeutering() {
 
 NeuteredWindowRegion::NeuteredWindowRegion(
     bool aDoNeuter MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
-    : mNeuteredByThis(!gWindowHook && aDoNeuter &&
+    : mNeuteredByThis(!gWindowHook &&
+                      aDoNeuter &&
                       XRE_UseNativeEventProcessing()) {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   if (mNeuteredByThis) {

@@ -105,8 +105,7 @@ class GMPRemoveTest : public nsIObserver, public GMPVideoDecoderCallbackProxy {
 /*
  * Simple test that the plugin is deleted when forcibly removed and deleted.
  */
-TEST(GeckoMediaPlugins, RemoveAndDeleteForcedSimple)
-{
+TEST(GeckoMediaPlugins, RemoveAndDeleteForcedSimple) {
   RefPtr<GMPRemoveTest> test(new GMPRemoveTest());
 
   test->Setup();
@@ -117,8 +116,7 @@ TEST(GeckoMediaPlugins, RemoveAndDeleteForcedSimple)
 /*
  * Simple test that the plugin is deleted when deferred deletion is allowed.
  */
-TEST(GeckoMediaPlugins, RemoveAndDeleteDeferredSimple)
-{
+TEST(GeckoMediaPlugins, RemoveAndDeleteDeferredSimple) {
   RefPtr<GMPRemoveTest> test(new GMPRemoveTest());
 
   test->Setup();
@@ -130,8 +128,7 @@ TEST(GeckoMediaPlugins, RemoveAndDeleteDeferredSimple)
  * Test that the plugin is unavailable immediately after a forced
  * RemoveAndDelete, and that the plugin is deleted afterwards.
  */
-TEST(GeckoMediaPlugins, RemoveAndDeleteForcedInUse)
-{
+TEST(GeckoMediaPlugins, RemoveAndDeleteForcedInUse) {
   RefPtr<GMPRemoveTest> test(new GMPRemoveTest());
 
   test->Setup();
@@ -155,8 +152,7 @@ TEST(GeckoMediaPlugins, RemoveAndDeleteForcedInUse)
  * Test that the plugin is still usable after a deferred RemoveAndDelete, and
  * that the plugin is deleted afterwards.
  */
-TEST(GeckoMediaPlugins, RemoveAndDeleteDeferredInUse)
-{
+TEST(GeckoMediaPlugins, RemoveAndDeleteDeferredInUse) {
   RefPtr<GMPRemoveTest> test(new GMPRemoveTest());
 
   test->Setup();

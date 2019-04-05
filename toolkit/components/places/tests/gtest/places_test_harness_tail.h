@@ -60,8 +60,7 @@ void disable_idle_service() {
   idle->SetDisabled(true);
 }
 
-TEST(IHistory, Test)
-{
+TEST(IHistory, Test) {
   RefPtr<WaitForConnectionClosed> spinClose = new WaitForConnectionClosed();
 
   // Tinderboxes are constantly on idle.  Since idle tasks can interact with

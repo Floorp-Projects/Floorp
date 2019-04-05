@@ -107,8 +107,7 @@ static void CheckCompatibilityWithBasicCompositor(
   }
 }
 
-TEST(Gfx, TestTextureCompatibility)
-{
+TEST(Gfx, TestTextureCompatibility) {
   nsTArray<LayersBackend> backendHints;
   RefPtr<TestSurfaceAllocator> deallocator = new TestSurfaceAllocator();
 

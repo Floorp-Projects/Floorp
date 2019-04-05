@@ -962,7 +962,7 @@ MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGB565, WebGLTexelPremultiplicationOp::None, uint8_t,
      uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst) {
   *dst = uint16_t(((src[0] & 0xF8) << 8) | ((src[1] & 0xFC) << 3) |
-                  ((src[2] & 0xF8) >> 3));
+          ((src[2] & 0xF8) >> 3));
 }
 
 template <>
@@ -974,8 +974,7 @@ pack<WebGLTexelFormat::RGB565, WebGLTexelPremultiplicationOp::Premultiply,
   uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
   uint8_t srcG = static_cast<uint8_t>(src[1] * scaleFactor);
   uint8_t srcB = static_cast<uint8_t>(src[2] * scaleFactor);
-  *dst = uint16_t(((srcR & 0xF8) << 8) | ((srcG & 0xFC) << 3) |
-                  ((srcB & 0xF8) >> 3));
+  *dst = uint16_t(((srcR & 0xF8) << 8) | ((srcG & 0xFC) << 3) | ((srcB & 0xF8) >> 3));
 }
 
 // FIXME: this routine is lossy and must be removed.
@@ -988,8 +987,7 @@ pack<WebGLTexelFormat::RGB565, WebGLTexelPremultiplicationOp::Unpremultiply,
   uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
   uint8_t srcG = static_cast<uint8_t>(src[1] * scaleFactor);
   uint8_t srcB = static_cast<uint8_t>(src[2] * scaleFactor);
-  *dst = uint16_t(((srcR & 0xF8) << 8) | ((srcG & 0xFC) << 3) |
-                  ((srcB & 0xF8) >> 3));
+  *dst = uint16_t(((srcR & 0xF8) << 8) | ((srcG & 0xFC) << 3) | ((srcB & 0xF8) >> 3));
 }
 
 template <>
@@ -1123,8 +1121,8 @@ template <>
 MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGBA4444, WebGLTexelPremultiplicationOp::None, uint8_t,
      uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst) {
-  *dst = uint16_t(((src[0] & 0xF0) << 8) | ((src[1] & 0xF0) << 4) |
-                  (src[2] & 0xF0) | (src[3] >> 4));
+  *dst = uint16_t(((src[0] & 0xF0) << 8) | ((src[1] & 0xF0) << 4) | (src[2] & 0xF0) |
+          (src[3] >> 4));
 }
 
 template <>
@@ -1137,7 +1135,7 @@ pack<WebGLTexelFormat::RGBA4444, WebGLTexelPremultiplicationOp::Premultiply,
   uint8_t srcG = static_cast<uint8_t>(src[1] * scaleFactor);
   uint8_t srcB = static_cast<uint8_t>(src[2] * scaleFactor);
   *dst = uint16_t(((srcR & 0xF0) << 8) | ((srcG & 0xF0) << 4) | (srcB & 0xF0) |
-                  (src[3] >> 4));
+          (src[3] >> 4));
 }
 
 // FIXME: this routine is lossy and must be removed.
@@ -1151,7 +1149,7 @@ pack<WebGLTexelFormat::RGBA4444, WebGLTexelPremultiplicationOp::Unpremultiply,
   uint8_t srcG = static_cast<uint8_t>(src[1] * scaleFactor);
   uint8_t srcB = static_cast<uint8_t>(src[2] * scaleFactor);
   *dst = uint16_t(((srcR & 0xF0) << 8) | ((srcG & 0xF0) << 4) | (srcB & 0xF0) |
-                  (src[3] >> 4));
+          (src[3] >> 4));
 }
 
 template <>
@@ -1159,7 +1157,7 @@ MOZ_ALWAYS_INLINE void
 pack<WebGLTexelFormat::RGBA5551, WebGLTexelPremultiplicationOp::None, uint8_t,
      uint16_t>(const uint8_t* __restrict src, uint16_t* __restrict dst) {
   *dst = uint16_t(((src[0] & 0xF8) << 8) | ((src[1] & 0xF8) << 3) |
-                  ((src[2] & 0xF8) >> 2) | (src[3] >> 7));
+          ((src[2] & 0xF8) >> 2) | (src[3] >> 7));
 }
 
 template <>
@@ -1171,8 +1169,8 @@ pack<WebGLTexelFormat::RGBA5551, WebGLTexelPremultiplicationOp::Premultiply,
   uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
   uint8_t srcG = static_cast<uint8_t>(src[1] * scaleFactor);
   uint8_t srcB = static_cast<uint8_t>(src[2] * scaleFactor);
-  *dst = uint16_t(((srcR & 0xF8) << 8) | ((srcG & 0xF8) << 3) |
-                  ((srcB & 0xF8) >> 2) | (src[3] >> 7));
+  *dst = uint16_t(((srcR & 0xF8) << 8) | ((srcG & 0xF8) << 3) | ((srcB & 0xF8) >> 2) |
+          (src[3] >> 7));
 }
 
 // FIXME: this routine is lossy and must be removed.
@@ -1185,8 +1183,8 @@ pack<WebGLTexelFormat::RGBA5551, WebGLTexelPremultiplicationOp::Unpremultiply,
   uint8_t srcR = static_cast<uint8_t>(src[0] * scaleFactor);
   uint8_t srcG = static_cast<uint8_t>(src[1] * scaleFactor);
   uint8_t srcB = static_cast<uint8_t>(src[2] * scaleFactor);
-  *dst = uint16_t(((srcR & 0xF8) << 8) | ((srcG & 0xF8) << 3) |
-                  ((srcB & 0xF8) >> 2) | (src[3] >> 7));
+  *dst = uint16_t(((srcR & 0xF8) << 8) | ((srcG & 0xF8) << 3) | ((srcB & 0xF8) >> 2) |
+          (src[3] >> 7));
 }
 
 template <>
