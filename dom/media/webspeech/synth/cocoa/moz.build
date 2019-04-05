@@ -5,8 +5,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
-  'OSXSpeechSynthesizerModule.cpp',
-  'OSXSpeechSynthesizerService.mm'
+    'OSXSpeechSynthesizerService.mm',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 FINAL_LIBRARY = 'xul'

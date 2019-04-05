@@ -25,7 +25,6 @@ class OSXSpeechSynthesizerService final : public nsISpeechService,
 
   static OSXSpeechSynthesizerService* GetInstance();
   static already_AddRefed<OSXSpeechSynthesizerService> GetInstanceForService();
-  static void Shutdown();
 
  private:
   OSXSpeechSynthesizerService();
