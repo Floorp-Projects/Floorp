@@ -6625,14 +6625,35 @@ nsresult nsHttpChannel::BeginConnect() {
   RefPtr<nsHttpChannel> self = this;
   bool willCallback = NS_SUCCEEDED(
       AsyncUrlChannelClassifier::CheckChannel(this, [self]() -> void {
-        nsresult rv = self->BeginConnectActual();
-        if (NS_FAILED(rv)) {
-          // Since this error is thrown asynchronously so that the caller
-          // of BeginConnect() will not do clean up for us. We have to do
-          // it on our own.
-          self->CloseCacheEntry(false);
-          Unused << self->AsyncAbort(rv);
+        auto nextFunc = [self]() -> void {
+          nsresult rv = self->BeginConnectActual();
+          if (NS_FAILED(rv)) {
+            // Since this error is thrown asynchronously so that the caller
+            // of BeginConnect() will not do clean up for us. We have to do
+            // it on our own.
+            self->CloseCacheEntry(false);
+            Unused << self->AsyncAbort(rv);
+          }
+        };
+
+        uint32_t delayMillisec = StaticPrefs::network_delay_tracking_load();
+        if (self->IsThirdPartyTrackingResource() && delayMillisec) {
+          nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction(
+              "nsHttpChannel::BeginConnect-delayed", nextFunc);
+          nsresult rv = NS_DelayedDispatchToCurrentThread(runnable.forget(),
+                                                          delayMillisec);
+          if (NS_SUCCEEDED(rv)) {
+            LOG(
+                ("nsHttpChannel::BeginConnect delaying 3rd-party tracking "
+                 "resource for %u ms [this=%p]",
+                 delayMillisec, self.get()));
+            return;
+          }
+          LOG(("nsHttpChannel::BeginConnect unable to delay loading. [this=%p]",
+               self.get()));
         }
+
+        nextFunc();
       }));
 
   if (!willCallback) {
