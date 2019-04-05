@@ -2017,6 +2017,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
     // (But please audit all callers before changing.)
   }
 
+  bool IsInlineInsideStyle() const {
+    return mozilla::StyleDisplay::Inline == mDisplay ||
+           mozilla::StyleDisplay::Ruby == mDisplay ||
+           mozilla::StyleDisplay::RubyBase == mDisplay ||
+           mozilla::StyleDisplay::RubyBaseContainer == mDisplay ||
+           mozilla::StyleDisplay::RubyText == mDisplay ||
+           mozilla::StyleDisplay::RubyTextContainer == mDisplay ||
+           mozilla::StyleDisplay::Contents == mDisplay;
+  }
+
   bool IsBlockOutsideStyle() const {
     return mozilla::StyleDisplay::Block == mDisplay ||
            mozilla::StyleDisplay::Flex == mDisplay ||

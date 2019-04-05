@@ -1,0 +1,30 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+  <title>Bug 1516963: Test AccessibleCaret doesn't show when clicking on an empty grid container.</title>
+  <script src="/tests/SimpleTest/EventUtils.js"></script>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style>
+  #container {
+    display: grid;
+    border: 1px solid blue;
+    width: 100px;
+    height: 100px;
+    background-color: yellow;
+  }
+  </style>
+  <script>
+  document.addEventListener("selectionchange", () => {
+    ok(window.getSelection().isCollapsed, "The selection should be collapsed!");
+  });
+
+  function click() {
+    let container = document.getElementById("container");
+    synthesizeMouseAtCenter(container, {});
+    setTimeout(() => { document.documentElement.removeAttribute("class"); });
+  }
+  </script>
+  <body onload="SimpleTest.waitForFocus(click);">
+    <div id="container"></div>
+  </body>
+</html>
