@@ -506,6 +506,13 @@ class BrowserToolbar @JvmOverloads constructor(
         displayToolbar.menuBuilder = menuBuilder
     }
 
+    /**
+     * Set a LongClickListener to the urlView of the toolbar.
+     */
+    fun setOnUrlLongClickListener(handler: ((View) -> Boolean)?) {
+        displayToolbar.setOnUrlLongClickListener(handler)
+    }
+
     internal fun onUrlEntered(url: String) {
         if (urlCommitListener?.invoke(url) != false) {
             // Return to display mode if there's no urlCommitListener or if it returned true. This lets

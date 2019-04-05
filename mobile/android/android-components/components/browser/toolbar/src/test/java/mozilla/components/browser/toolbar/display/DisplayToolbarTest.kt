@@ -628,6 +628,44 @@ class DisplayToolbarTest {
     }
 
     @Test
+    fun `urlView delegates long click when set`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(context, toolbar)
+
+        var longUrlClicked = false
+
+        displayToolbar.setOnUrlLongClickListener {
+            longUrlClicked = true
+            false
+        }
+
+        assertFalse(longUrlClicked)
+        displayToolbar.urlView.performLongClick()
+        assertTrue(longUrlClicked)
+    }
+
+    @Test
+    fun `urlView longClickListener can be unset`() {
+        val toolbar = mock(BrowserToolbar::class.java)
+        val displayToolbar = DisplayToolbar(context, toolbar)
+
+        var longClicked = false
+        displayToolbar.setOnUrlLongClickListener {
+            longClicked = true
+            true
+        }
+
+        displayToolbar.urlView.performLongClick()
+        assertTrue(longClicked)
+        longClicked = false
+
+        displayToolbar.setOnUrlLongClickListener(null)
+        displayToolbar.urlView.performLongClick()
+
+        assertFalse(longClicked)
+    }
+
+    @Test
     fun `iconView changes image resource when site security changes`() {
         val toolbar = mock(BrowserToolbar::class.java)
         val displayToolbar = DisplayToolbar(RuntimeEnvironment.application, toolbar)

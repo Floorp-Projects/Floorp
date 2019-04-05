@@ -504,6 +504,27 @@ class BrowserToolbarTest {
     }
 
     @Test
+    fun `onUrlLongClick is forwarded to the display toolbar`() {
+        val toolbar = BrowserToolbar(context)
+
+        var hasBeenLongClicked = false
+
+        toolbar.setOnUrlLongClickListener {
+            hasBeenLongClicked = true
+            true
+        }
+
+        toolbar.displayToolbar.urlView.performLongClick()
+        assertTrue(hasBeenLongClicked)
+
+        hasBeenLongClicked = false
+        toolbar.setOnUrlLongClickListener(null)
+        toolbar.displayToolbar.urlView.performLongClick()
+
+        assertFalse(hasBeenLongClicked)
+    }
+
+    @Test
     fun `layout of children will factor in padding`() {
         val toolbar = BrowserToolbar(context)
         toolbar.setPadding(50, 20, 60, 15)

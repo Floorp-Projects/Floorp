@@ -23,6 +23,7 @@ permalink: /changelog/
 
 * **browser-toolbar**
    * Adds `browserToolbarProgressBarGravity` attr with options `top` and `bottom` (default).
+   * Adds the ability to long click the urlView
 
 # 0.49.0
 

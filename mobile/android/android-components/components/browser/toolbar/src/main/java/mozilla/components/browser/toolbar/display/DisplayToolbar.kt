@@ -284,6 +284,13 @@ internal class DisplayToolbar(
         invalidateActions(navigationActions + pageActions + browserActions)
     }
 
+    /**
+     * Set a LongClickListener to the urlView of the toolbar.
+     */
+    internal fun setOnUrlLongClickListener(handler: ((View) -> Boolean)?) {
+        urlView.setOnLongClickListener(handler)
+    }
+
     // We measure the views manually to avoid overhead by using complex ViewGroup implementations
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         // This toolbar is using the full size provided by the parent
