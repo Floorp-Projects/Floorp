@@ -201,20 +201,20 @@ Result NSSCertDBTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
   if (mCertDBTrustType == trustSSL) {
     int16_t revocationState;
 
-    nsAutoCString encIssuer;
-    nsAutoCString encSerial;
-    nsAutoCString encSubject;
-    nsAutoCString encPubKey;
+    nsTArray<uint8_t> issuerBytes;
+    nsTArray<uint8_t> serialBytes;
+    nsTArray<uint8_t> subjectBytes;
+    nsTArray<uint8_t> pubKeyBytes;
 
-    nsresult nsrv = BuildRevocationCheckStrings(
-        candidateCert.get(), encIssuer, encSerial, encSubject, encPubKey);
+    nsresult nsrv = BuildRevocationCheckArrays(
+        candidateCert, issuerBytes, serialBytes, subjectBytes, pubKeyBytes);
 
     if (NS_FAILED(nsrv)) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }
 
-    nsrv = mCertBlocklist->GetRevocationState(encIssuer, encSerial, encSubject,
-                                              encPubKey, &revocationState);
+    nsrv = mCertBlocklist->GetRevocationState(
+        issuerBytes, serialBytes, subjectBytes, pubKeyBytes, &revocationState);
     if (NS_FAILED(nsrv)) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }
@@ -1249,41 +1249,35 @@ nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
   return NS_ERROR_FAILURE;
 }
 
-nsresult BuildRevocationCheckStrings(const CERTCertificate* cert,
-                                     /*out*/ nsCString& encIssuer,
-                                     /*out*/ nsCString& encSerial,
-                                     /*out*/ nsCString& encSubject,
-                                     /*out*/ nsCString& encPubKey) {
-  // Convert issuer, serial, subject and pubKey data to Base64 encoded DER
-  nsDependentCSubstring issuerString(
-      BitwiseCast<char*, uint8_t*>(cert->derIssuer.data), cert->derIssuer.len);
-  nsDependentCSubstring serialString(
-      BitwiseCast<char*, uint8_t*>(cert->serialNumber.data),
-      cert->serialNumber.len);
-  nsDependentCSubstring subjectString(
-      BitwiseCast<char*, uint8_t*>(cert->derSubject.data),
-      cert->derSubject.len);
-  nsDependentCSubstring pubKeyString(
-      BitwiseCast<char*, uint8_t*>(cert->derPublicKey.data),
-      cert->derPublicKey.len);
-
-  nsresult rv = Base64Encode(issuerString, encIssuer);
-  if (NS_FAILED(rv)) {
-    return rv;
+nsresult BuildRevocationCheckArrays(const UniqueCERTCertificate& cert,
+                                    /*out*/ nsTArray<uint8_t>& issuerBytes,
+                                    /*out*/ nsTArray<uint8_t>& serialBytes,
+                                    /*out*/ nsTArray<uint8_t>& subjectBytes,
+                                    /*out*/ nsTArray<uint8_t>& pubKeyBytes) {
+  issuerBytes.Clear();
+  if (!issuerBytes.AppendElements(
+          BitwiseCast<char*, uint8_t*>(cert->derIssuer.data),
+          cert->derIssuer.len)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-  rv = Base64Encode(serialString, encSerial);
-  if (NS_FAILED(rv)) {
-    return rv;
+  serialBytes.Clear();
+  if (!serialBytes.AppendElements(
+          BitwiseCast<char*, uint8_t*>(cert->serialNumber.data),
+          cert->serialNumber.len)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-  rv = Base64Encode(subjectString, encSubject);
-  if (NS_FAILED(rv)) {
-    return rv;
+  subjectBytes.Clear();
+  if (!subjectBytes.AppendElements(
+          BitwiseCast<char*, uint8_t*>(cert->derSubject.data),
+          cert->derSubject.len)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-  rv = Base64Encode(pubKeyString, encPubKey);
-  if (NS_FAILED(rv)) {
-    return rv;
+  pubKeyBytes.Clear();
+  if (!pubKeyBytes.AppendElements(
+          BitwiseCast<char*, uint8_t*>(cert->derPublicKey.data),
+          cert->derPublicKey.len)) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
-
   return NS_OK;
 }
 
