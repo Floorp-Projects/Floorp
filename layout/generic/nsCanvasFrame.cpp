@@ -635,8 +635,13 @@ void nsCanvasFrame::PaintFocus(DrawTarget* aDrawTarget, nsPoint aPt) {
   // for HTML documents?
   nsIFrame* root = mFrames.FirstChild();
   const nsStyleColor* color = root ? root->StyleColor() : StyleColor();
+  if (!color) {
+    NS_ERROR("current color cannot be found");
+    return;
+  }
+
   nsCSSRendering::PaintFocus(PresContext(), aDrawTarget, focusRect,
-                             color->mColor.ToColor());
+                             color->mColor);
 }
 
 /* virtual */

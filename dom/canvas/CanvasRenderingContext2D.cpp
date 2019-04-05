@@ -1001,7 +1001,7 @@ bool CanvasRenderingContext2D::ParseColor(const nsAString& aString,
     RefPtr<ComputedStyle> canvasStyle =
         nsComputedDOMStyle::GetComputedStyle(mCanvasElement, nullptr);
     if (canvasStyle) {
-      *aColor = canvasStyle->StyleColor()->mColor.ToColor();
+      *aColor = canvasStyle->StyleColor()->mColor;
     }
     // Beware that the presShell could be gone here.
   }
