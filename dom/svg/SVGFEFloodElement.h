@@ -36,7 +36,7 @@ class SVGFEFloodElement : public SVGFEFloodElementBase {
       nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
       const nsTArray<bool>& aInputsAreTainted,
       nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
-  virtual SVGString& GetResultImageName() override {
+  virtual SVGAnimatedString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
 
@@ -51,7 +51,7 @@ class SVGFEFloodElement : public SVGFEFloodElementBase {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { RESULT };
-  SVGString mStringAttributes[1];
+  SVGAnimatedString mStringAttributes[1];
   static StringInfo sStringInfo[1];
 };
 

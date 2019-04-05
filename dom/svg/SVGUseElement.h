@@ -14,7 +14,7 @@
 #include "nsCOMPtr.h"
 #include "nsStubMutationObserver.h"
 #include "nsSVGLength2.h"
-#include "SVGString.h"
+#include "SVGAnimatedString.h"
 #include "nsTArray.h"
 
 class nsIContent;
@@ -144,7 +144,7 @@ class SVGUseElement final : public SVGUseElementBase,
   static LengthInfo sLengthInfo[4];
 
   enum { HREF, XLINK_HREF };
-  SVGString mStringAttributes[2];
+  SVGAnimatedString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 
   RefPtr<SVGUseElement> mOriginal;  // if we've been cloned, our "real" copy

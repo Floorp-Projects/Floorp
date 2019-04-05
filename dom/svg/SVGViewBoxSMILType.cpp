@@ -8,7 +8,7 @@
 
 #include "mozilla/SMILValue.h"
 #include "nsDebug.h"
-#include "SVGViewBox.h"
+#include "SVGAnimatedViewBox.h"
 #include <math.h>
 
 namespace mozilla {

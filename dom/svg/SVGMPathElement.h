@@ -8,9 +8,9 @@
 #define mozilla_dom_SVGMPathElement_h
 
 #include "mozilla/dom/IDTracker.h"
-#include "SVGElement.h"
+#include "mozilla/dom/SVGElement.h"
 #include "nsStubMutationObserver.h"
-#include "SVGString.h"
+#include "SVGAnimatedString.h"
 
 nsresult NS_NewSVGMPathElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -110,7 +110,7 @@ class SVGMPathElement final : public SVGMPathElementBase,
   void NotifyParentOfMpathChange(nsIContent* aParent);
 
   enum { HREF, XLINK_HREF };
-  SVGString mStringAttributes[2];
+  SVGAnimatedString mStringAttributes[2];
   static StringInfo sStringInfo[2];
   PathElementTracker mPathTracker;
 };

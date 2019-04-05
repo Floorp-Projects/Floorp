@@ -165,9 +165,9 @@ SVGElement::EnumAttributesInfo SVGMarkerElement::GetEnumInfo() {
   return EnumAttributesInfo(mEnumAttributes, sEnumInfo, ArrayLength(sEnumInfo));
 }
 
-SVGOrient* SVGMarkerElement::GetOrient() { return &mOrient; }
+SVGAnimatedOrient* SVGMarkerElement::GetOrient() { return &mOrient; }
 
-SVGViewBox* SVGMarkerElement::GetViewBox() { return &mViewBox; }
+SVGAnimatedViewBox* SVGMarkerElement::GetViewBox() { return &mViewBox; }
 
 SVGAnimatedPreserveAspectRatio* SVGMarkerElement::GetPreserveAspectRatio() {
   return &mPreserveAspectRatio;

@@ -247,6 +247,7 @@ pub const ERFKILL: ::c_int = 134;
 
 pub const SOL_SOCKET: ::c_int = 0xffff;
 
+pub const SO_PASSCRED: ::c_int = 2;
 pub const SO_REUSEADDR: ::c_int = 4;
 pub const SO_BINDTODEVICE: ::c_int = 0x000d;
 pub const SO_TIMESTAMP: ::c_int = 0x001d;
@@ -304,6 +305,10 @@ pub const F_GETOWN: ::c_int = 5;
 pub const F_SETOWN: ::c_int = 6;
 pub const F_SETLK: ::c_int = 8;
 pub const F_SETLKW: ::c_int = 9;
+
+pub const F_RDLCK: ::c_int = 1;
+pub const F_WRLCK: ::c_int = 2;
+pub const F_UNLCK: ::c_int = 3;
 
 pub const SFD_NONBLOCK: ::c_int = 0x4000;
 

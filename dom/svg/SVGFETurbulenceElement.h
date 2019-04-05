@@ -7,11 +7,11 @@
 #ifndef mozilla_dom_SVGFETurbulenceElement_h
 #define mozilla_dom_SVGFETurbulenceElement_h
 
-#include "SVGEnum.h"
-#include "SVGFilters.h"
+#include "SVGAnimatedEnumeration.h"
+#include "SVGAnimatedInteger.h"
 #include "nsSVGNumber2.h"
-#include "SVGInteger.h"
-#include "SVGString.h"
+#include "SVGAnimatedString.h"
+#include "SVGFilters.h"
 
 nsresult NS_NewSVGFETurbulenceElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -42,7 +42,7 @@ class SVGFETurbulenceElement : public SVGFETurbulenceElementBase {
       nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
   virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
                                          nsAtom* aAttribute) const override;
-  virtual SVGString& GetResultImageName() override {
+  virtual SVGAnimatedString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
 
@@ -68,21 +68,21 @@ class SVGFETurbulenceElement : public SVGFETurbulenceElementBase {
   static NumberInfo sNumberInfo[1];
 
   enum { BASE_FREQ };
-  SVGNumberPair mNumberPairAttributes[1];
+  SVGAnimatedNumberPair mNumberPairAttributes[1];
   static NumberPairInfo sNumberPairInfo[1];
 
   enum { OCTAVES };
-  SVGInteger mIntegerAttributes[1];
+  SVGAnimatedInteger mIntegerAttributes[1];
   static IntegerInfo sIntegerInfo[1];
 
   enum { TYPE, STITCHTILES };
-  SVGEnum mEnumAttributes[2];
+  SVGAnimatedEnumeration mEnumAttributes[2];
   static SVGEnumMapping sTypeMap[];
   static SVGEnumMapping sStitchTilesMap[];
   static EnumInfo sEnumInfo[2];
 
   enum { RESULT };
-  SVGString mStringAttributes[1];
+  SVGAnimatedString mStringAttributes[1];
   static StringInfo sStringInfo[1];
 };
 

@@ -8,9 +8,9 @@
 #define __NS_SVGGRADIENTELEMENT_H__
 
 #include "nsAutoPtr.h"
-#include "SVGEnum.h"
+#include "SVGAnimatedEnumeration.h"
 #include "nsSVGLength2.h"
-#include "SVGString.h"
+#include "SVGAnimatedString.h"
 #include "SVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGElement.h"
 
@@ -64,12 +64,12 @@ class SVGGradientElement : public SVGGradientElementBase {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { GRADIENTUNITS, SPREADMETHOD };
-  SVGEnum mEnumAttributes[2];
+  SVGAnimatedEnumeration mEnumAttributes[2];
   static SVGEnumMapping sSpreadMethodMap[];
   static EnumInfo sEnumInfo[2];
 
   enum { HREF, XLINK_HREF };
-  SVGString mStringAttributes[2];
+  SVGAnimatedString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 
   // SVGGradientElement values

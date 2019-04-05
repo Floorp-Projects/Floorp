@@ -27,6 +27,7 @@ s! {
 }
 
 #[cfg(target_os = "l4re")]
+#[allow(missing_debug_implementations)]
 pub struct pthread_attr_t {
     pub __detachstate: ::c_int,
     pub __schedpolicy: ::c_int,

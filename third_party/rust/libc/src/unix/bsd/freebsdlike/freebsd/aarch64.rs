@@ -1,3 +1,4 @@
+pub type c_char = u8;
 pub type c_long = i64;
 pub type c_ulong = u64;
 pub type time_t = i64;
@@ -26,6 +27,17 @@ s! {
         pub st_lspare: ::int32_t,
         pub st_birthtime: ::time_t,
         pub st_birthtime_nsec: ::c_long,
+    }
+}
+
+// should be pub(crate), but that requires Rust 1.18.0
+cfg_if! {
+    if #[cfg(libc_const_size_of)] {
+        #[doc(hidden)]
+        pub const _ALIGNBYTES: usize = ::mem::size_of::<::c_longlong>() - 1;
+    } else {
+        #[doc(hidden)]
+        pub const _ALIGNBYTES: usize = 8 - 1;
     }
 }
 

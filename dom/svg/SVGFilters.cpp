@@ -14,11 +14,11 @@
 #include "nsCOMPtr.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
-#include "SVGEnum.h"
+#include "SVGAnimatedEnumeration.h"
+#include "SVGAnimatedNumberPair.h"
+#include "SVGAnimatedString.h"
 #include "nsSVGFilterInstance.h"
 #include "SVGNumberList.h"
-#include "SVGNumberPair.h"
-#include "SVGString.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/SVGContentUtils.h"
@@ -144,15 +144,15 @@ bool SVGFE::HasValidDimensions() const {
 }
 
 Size SVGFE::GetKernelUnitLength(nsSVGFilterInstance* aInstance,
-                                SVGNumberPair* aKernelUnitLength) {
+                                SVGAnimatedNumberPair* aKernelUnitLength) {
   if (!aKernelUnitLength->IsExplicitlySet()) {
     return Size(1, 1);
   }
 
   float kernelX = aInstance->GetPrimitiveNumber(
-      SVGContentUtils::X, aKernelUnitLength, SVGNumberPair::eFirst);
+      SVGContentUtils::X, aKernelUnitLength, SVGAnimatedNumberPair::eFirst);
   float kernelY = aInstance->GetPrimitiveNumber(
-      SVGContentUtils::Y, aKernelUnitLength, SVGNumberPair::eSecond);
+      SVGContentUtils::Y, aKernelUnitLength, SVGAnimatedNumberPair::eSecond);
   return Size(kernelX, kernelY);
 }
 

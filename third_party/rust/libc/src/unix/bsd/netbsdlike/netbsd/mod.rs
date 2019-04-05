@@ -1,6 +1,3 @@
-use dox::mem;
-
-pub type c_char = i8;
 pub type clock_t = ::c_uint;
 pub type suseconds_t = ::c_int;
 pub type dev_t = u64;
@@ -9,6 +6,8 @@ pub type fsblkcnt_t = ::uint64_t;
 pub type fsfilcnt_t = ::uint64_t;
 pub type idtype_t = ::c_int;
 pub type mqd_t = ::c_int;
+type __pthread_spin_t = __cpu_simple_lock_nv_t;
+pub type vm_size_t = ::uintptr_t;
 
 s! {
     pub struct aiocb {
@@ -22,14 +21,6 @@ s! {
         _state: ::c_int,
         _errno: ::c_int,
         _retval: ::ssize_t
-    }
-
-    pub struct dirent {
-        pub d_fileno: ::ino_t,
-        pub d_reclen: u16,
-        pub d_namlen: u16,
-        pub d_type: u8,
-        pub d_name: [::c_char; 512],
     }
 
     pub struct glob_t {
@@ -91,41 +82,7 @@ s! {
         pub st_spare: [::uint32_t; 2],
     }
 
-    pub struct statvfs {
-        pub f_flag: ::c_ulong,
-        pub f_bsize: ::c_ulong,
-        pub f_frsize: ::c_ulong,
-        pub f_iosize: ::c_ulong,
-
-        pub f_blocks: ::fsblkcnt_t,
-        pub f_bfree: ::fsblkcnt_t,
-        pub f_bavail: ::fsblkcnt_t,
-        pub f_bresvd: ::fsblkcnt_t,
-
-        pub f_files: ::fsfilcnt_t,
-        pub f_ffree: ::fsfilcnt_t,
-        pub f_favail: ::fsfilcnt_t,
-        pub f_fresvd: ::fsfilcnt_t,
-
-        pub f_syncreads: ::uint64_t,
-        pub f_syncwrites: ::uint64_t,
-
-        pub f_asyncreads: ::uint64_t,
-        pub f_asyncwrites: ::uint64_t,
-
-        pub f_fsidx: ::fsid_t,
-        pub f_fsid: ::c_ulong,
-        pub f_namemax: ::c_ulong,
-        pub f_owner: ::uid_t,
-
-        pub f_spare: [::uint32_t; 4],
-
-        pub f_fstypename: [::c_char; 32],
-        pub f_mntonname: [::c_char; 1024],
-        pub f_mntfromname: [::c_char; 1024],
-    }
-
-    pub struct addrinfo {
+     pub struct addrinfo {
         pub ai_flags: ::c_int,
         pub ai_family: ::c_int,
         pub ai_socktype: ::c_int,
@@ -134,14 +91,6 @@ s! {
         pub ai_canonname: *mut ::c_char,
         pub ai_addr: *mut ::sockaddr,
         pub ai_next: *mut ::addrinfo,
-    }
-
-    pub struct sockaddr_storage {
-        pub ss_len: u8,
-        pub ss_family: ::sa_family_t,
-        __ss_pad1: [u8; 6],
-        __ss_pad2: i64,
-        __ss_pad3: [u8; 112],
     }
 
     pub struct siginfo_t {
@@ -161,9 +110,14 @@ s! {
 
     pub struct pthread_mutex_t {
         ptm_magic: ::c_uint,
-        ptm_errorcheck: ::c_uchar,
+        ptm_errorcheck: __pthread_spin_t,
+        #[cfg(any(target_arch = "sparc", target_arch = "sparc64",
+                  target_arch = "x86", target_arch = "x86_64"))]
         ptm_pad1: [u8; 3],
-        ptm_interlock: ::c_uchar,
+        // actually a union with a non-unused, 0-initialized field
+        ptm_unused: __pthread_spin_t,
+        #[cfg(any(target_arch = "sparc", target_arch = "sparc64",
+                  target_arch = "x86", target_arch = "x86_64"))]
         ptm_pad2: [u8; 3],
         ptm_owner: ::pthread_t,
         ptm_waiters: *mut u8,
@@ -183,7 +137,7 @@ s! {
 
     pub struct pthread_cond_t {
         ptc_magic: ::c_uint,
-        ptc_lock: ::c_uchar,
+        ptc_lock: __pthread_spin_t,
         ptc_waiters_first: *mut u8,
         ptc_waiters_last: *mut u8,
         ptc_mutex: *mut ::pthread_mutex_t,
@@ -197,7 +151,7 @@ s! {
 
     pub struct pthread_rwlock_t {
         ptr_magic: ::c_uint,
-        ptr_interlock: ::c_uchar,
+        ptr_interlock: __pthread_spin_t,
         ptr_rblocked_first: *mut u8,
         ptr_rblocked_last: *mut u8,
         ptr_wblocked_first: *mut u8,
@@ -314,6 +268,13 @@ s! {
         pub sdl_data: [::c_char; 12],
     }
 
+    pub struct mmsghdr {
+        pub msg_hdr: ::msghdr,
+        pub msg_len: ::c_uint,
+    }
+}
+
+s_no_extra_traits! {
     pub struct in_pktinfo {
         pub ipi_addr: ::in_addr,
         pub ipi_ifindex: ::c_uint,
@@ -327,6 +288,377 @@ s! {
         pub ar_pln: u8,
         pub ar_op: u16,
     }
+
+    #[repr(packed)]
+    pub struct in_addr {
+        pub s_addr: ::in_addr_t,
+    }
+
+    pub struct ip_mreq {
+        pub imr_multiaddr: in_addr,
+        pub imr_interface: in_addr,
+    }
+
+    pub struct sockaddr_in {
+        pub sin_len: u8,
+        pub sin_family: ::sa_family_t,
+        pub sin_port: ::in_port_t,
+        pub sin_addr: ::in_addr,
+        pub sin_zero: [::int8_t; 8],
+    }
+
+    pub struct dirent {
+        pub d_fileno: ::ino_t,
+        pub d_reclen: u16,
+        pub d_namlen: u16,
+        pub d_type: u8,
+        pub d_name: [::c_char; 512],
+    }
+
+    pub struct statvfs {
+        pub f_flag: ::c_ulong,
+        pub f_bsize: ::c_ulong,
+        pub f_frsize: ::c_ulong,
+        pub f_iosize: ::c_ulong,
+
+        pub f_blocks: ::fsblkcnt_t,
+        pub f_bfree: ::fsblkcnt_t,
+        pub f_bavail: ::fsblkcnt_t,
+        pub f_bresvd: ::fsblkcnt_t,
+
+        pub f_files: ::fsfilcnt_t,
+        pub f_ffree: ::fsfilcnt_t,
+        pub f_favail: ::fsfilcnt_t,
+        pub f_fresvd: ::fsfilcnt_t,
+
+        pub f_syncreads: ::uint64_t,
+        pub f_syncwrites: ::uint64_t,
+
+        pub f_asyncreads: ::uint64_t,
+        pub f_asyncwrites: ::uint64_t,
+
+        pub f_fsidx: ::fsid_t,
+        pub f_fsid: ::c_ulong,
+        pub f_namemax: ::c_ulong,
+        pub f_owner: ::uid_t,
+
+        pub f_spare: [::uint32_t; 4],
+
+        pub f_fstypename: [::c_char; 32],
+        pub f_mntonname: [::c_char; 1024],
+        pub f_mntfromname: [::c_char; 1024],
+    }
+
+    pub struct sockaddr_storage {
+        pub ss_len: u8,
+        pub ss_family: ::sa_family_t,
+        __ss_pad1: [u8; 6],
+        __ss_pad2: i64,
+        __ss_pad3: [u8; 112],
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "extra_traits")] {
+        impl PartialEq for in_pktinfo {
+            fn eq(&self, other: &in_pktinfo) -> bool {
+                self.ipi_addr == other.ipi_addr
+                    && self.ipi_ifindex == other.ipi_ifindex
+            }
+        }
+        impl Eq for in_pktinfo {}
+        impl ::fmt::Debug for in_pktinfo {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("in_pktinfo")
+                    .field("ipi_addr", &self.ipi_addr)
+                    .field("ipi_ifindex", &self.ipi_ifindex)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for in_pktinfo {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.ipi_addr.hash(state);
+                self.ipi_ifindex.hash(state);
+            }
+        }
+
+        impl PartialEq for arphdr {
+            fn eq(&self, other: &arphdr) -> bool {
+                self.ar_hrd == other.ar_hrd
+                    && self.ar_pro == other.ar_pro
+                    && self.ar_hln == other.ar_hln
+                    && self.ar_pln == other.ar_pln
+                    && self.ar_op == other.ar_op
+            }
+        }
+        impl Eq for arphdr {}
+        impl ::fmt::Debug for arphdr {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                let ar_hrd = self.ar_hrd;
+                let ar_pro = self.ar_pro;
+                let ar_op = self.ar_op;
+                f.debug_struct("arphdr")
+                    .field("ar_hrd", &ar_hrd)
+                    .field("ar_pro", &ar_pro)
+                    .field("ar_hln", &self.ar_hln)
+                    .field("ar_pln", &self.ar_pln)
+                    .field("ar_op", &ar_op)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for arphdr {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                let ar_hrd = self.ar_hrd;
+                let ar_pro = self.ar_pro;
+                let ar_op = self.ar_op;
+                ar_hrd.hash(state);
+                ar_pro.hash(state);
+                self.ar_hln.hash(state);
+                self.ar_pln.hash(state);
+                ar_op.hash(state);
+            }
+        }
+
+        impl PartialEq for in_addr {
+            fn eq(&self, other: &in_addr) -> bool {
+                self.s_addr == other.s_addr
+            }
+        }
+        impl Eq for in_addr {}
+        impl ::fmt::Debug for in_addr {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                let s_addr = self.s_addr;
+                f.debug_struct("in_addr")
+                    .field("s_addr", &s_addr)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for in_addr {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                let s_addr = self.s_addr;
+                s_addr.hash(state);
+            }
+        }
+
+        impl PartialEq for ip_mreq {
+            fn eq(&self, other: &ip_mreq) -> bool {
+                self.imr_multiaddr == other.imr_multiaddr
+                    && self.imr_interface == other.imr_interface
+            }
+        }
+        impl Eq for ip_mreq {}
+        impl ::fmt::Debug for ip_mreq {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("ip_mreq")
+                    .field("imr_multiaddr", &self.imr_multiaddr)
+                    .field("imr_interface", &self.imr_interface)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for ip_mreq {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.imr_multiaddr.hash(state);
+                self.imr_interface.hash(state);
+            }
+        }
+
+        impl PartialEq for sockaddr_in {
+            fn eq(&self, other: &sockaddr_in) -> bool {
+                self.sin_len == other.sin_len
+                    && self.sin_family == other.sin_family
+                    && self.sin_port == other.sin_port
+                    && self.sin_addr == other.sin_addr
+                    && self.sin_zero == other.sin_zero
+            }
+        }
+        impl Eq for sockaddr_in {}
+        impl ::fmt::Debug for sockaddr_in {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sockaddr_in")
+                    .field("sin_len", &self.sin_len)
+                    .field("sin_family", &self.sin_family)
+                    .field("sin_port", &self.sin_port)
+                    .field("sin_addr", &self.sin_addr)
+                    .field("sin_zero", &self.sin_zero)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for sockaddr_in {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.sin_len.hash(state);
+                self.sin_family.hash(state);
+                self.sin_port.hash(state);
+                self.sin_addr.hash(state);
+                self.sin_zero.hash(state);
+            }
+        }
+
+        impl PartialEq for dirent {
+            fn eq(&self, other: &dirent) -> bool {
+                self.d_fileno == other.d_fileno
+                    && self.d_reclen == other.d_reclen
+                    && self.d_namlen == other.d_namlen
+                    && self.d_type == other.d_type
+                    && self
+                    .d_name
+                    .iter()
+                    .zip(other.d_name.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for dirent {}
+        impl ::fmt::Debug for dirent {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("dirent")
+                    .field("d_fileno", &self.d_fileno)
+                    .field("d_reclen", &self.d_reclen)
+                    .field("d_namlen", &self.d_namlen)
+                    .field("d_type", &self.d_type)
+                    // FIXME: .field("d_name", &self.d_name)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for dirent {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.d_fileno.hash(state);
+                self.d_reclen.hash(state);
+                self.d_namlen.hash(state);
+                self.d_type.hash(state);
+                self.d_name.hash(state);
+            }
+        }
+
+        impl PartialEq for statvfs {
+            fn eq(&self, other: &statvfs) -> bool {
+                self.f_flag == other.f_flag
+                    && self.f_bsize == other.f_bsize
+                    && self.f_frsize == other.f_frsize
+                    && self.f_iosize == other.f_iosize
+                    && self.f_blocks == other.f_blocks
+                    && self.f_bfree == other.f_bfree
+                    && self.f_bavail == other.f_bavail
+                    && self.f_bresvd == other.f_bresvd
+                    && self.f_files == other.f_files
+                    && self.f_ffree == other.f_ffree
+                    && self.f_favail == other.f_favail
+                    && self.f_fresvd == other.f_fresvd
+                    && self.f_syncreads == other.f_syncreads
+                    && self.f_syncwrites == other.f_syncwrites
+                    && self.f_asyncreads == other.f_asyncreads
+                    && self.f_asyncwrites == other.f_asyncwrites
+                    && self.f_fsidx == other.f_fsidx
+                    && self.f_fsid == other.f_fsid
+                    && self.f_namemax == other.f_namemax
+                    && self.f_owner == other.f_owner
+                    && self.f_spare == other.f_spare
+                    && self.f_fstypename == other.f_fstypename
+                    && self
+                    .f_mntonname
+                    .iter()
+                    .zip(other.f_mntonname.iter())
+                    .all(|(a,b)| a == b)
+                    && self
+                    .f_mntfromname
+                    .iter()
+                    .zip(other.f_mntfromname.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for statvfs {}
+        impl ::fmt::Debug for statvfs {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("statvfs")
+                    .field("f_flag", &self.f_flag)
+                    .field("f_bsize", &self.f_bsize)
+                    .field("f_frsize", &self.f_frsize)
+                    .field("f_iosize", &self.f_iosize)
+                    .field("f_blocks", &self.f_blocks)
+                    .field("f_bfree", &self.f_bfree)
+                    .field("f_bavail", &self.f_bavail)
+                    .field("f_bresvd", &self.f_bresvd)
+                    .field("f_files", &self.f_files)
+                    .field("f_ffree", &self.f_ffree)
+                    .field("f_favail", &self.f_favail)
+                    .field("f_fresvd", &self.f_fresvd)
+                    .field("f_syncreads", &self.f_syncreads)
+                    .field("f_syncwrites", &self.f_syncwrites)
+                    .field("f_asyncreads", &self.f_asyncreads)
+                    .field("f_asyncwrites", &self.f_asyncwrites)
+                    .field("f_fsidx", &self.f_fsidx)
+                    .field("f_fsid", &self.f_fsid)
+                    .field("f_namemax", &self.f_namemax)
+                    .field("f_owner", &self.f_owner)
+                    .field("f_spare", &self.f_spare)
+                    .field("f_fstypename", &self.f_fstypename)
+                    // FIXME: .field("f_mntonname", &self.f_mntonname)
+                    // FIXME: .field("f_mntfromname", &self.f_mntfromname)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for statvfs {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.f_flag.hash(state);
+                self.f_bsize.hash(state);
+                self.f_frsize.hash(state);
+                self.f_iosize.hash(state);
+                self.f_blocks.hash(state);
+                self.f_bfree.hash(state);
+                self.f_bavail.hash(state);
+                self.f_bresvd.hash(state);
+                self.f_files.hash(state);
+                self.f_ffree.hash(state);
+                self.f_favail.hash(state);
+                self.f_fresvd.hash(state);
+                self.f_syncreads.hash(state);
+                self.f_syncwrites.hash(state);
+                self.f_asyncreads.hash(state);
+                self.f_asyncwrites.hash(state);
+                self.f_fsidx.hash(state);
+                self.f_fsid.hash(state);
+                self.f_namemax.hash(state);
+                self.f_owner.hash(state);
+                self.f_spare.hash(state);
+                self.f_fstypename.hash(state);
+                self.f_mntonname.hash(state);
+                self.f_mntfromname.hash(state);
+            }
+        }
+
+        impl PartialEq for sockaddr_storage {
+            fn eq(&self, other: &sockaddr_storage) -> bool {
+                self.ss_len == other.ss_len
+                    && self.ss_family == other.ss_family
+                    && self.__ss_pad1 == other.__ss_pad1
+                    && self.__ss_pad2 == other.__ss_pad2
+                    && self
+                    .__ss_pad3
+                    .iter()
+                    .zip(other.__ss_pad3.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for sockaddr_storage {}
+        impl ::fmt::Debug for sockaddr_storage {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sockaddr_storage")
+                    .field("ss_len", &self.ss_len)
+                    .field("ss_family", &self.ss_family)
+                    .field("__ss_pad1", &self.__ss_pad1)
+                    .field("__ss_pad2", &self.__ss_pad2)
+                    // FIXME: .field("__ss_pad3", &self.__ss_pad3)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for sockaddr_storage {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.ss_len.hash(state);
+                self.ss_family.hash(state);
+                self.__ss_pad1.hash(state);
+                self.__ss_pad2.hash(state);
+                self.__ss_pad3.hash(state);
+            }
+        }
+    }
 }
 
 pub const AT_FDCWD: ::c_int = -100;
@@ -334,6 +666,9 @@ pub const AT_EACCESS: ::c_int = 0x100;
 pub const AT_SYMLINK_NOFOLLOW: ::c_int = 0x200;
 pub const AT_SYMLINK_FOLLOW: ::c_int = 0x400;
 pub const AT_REMOVEDIR: ::c_int = 0x800;
+
+pub const EXTATTR_NAMESPACE_USER: ::c_int = 1;
+pub const EXTATTR_NAMESPACE_SYSTEM: ::c_int = 2;
 
 pub const LC_COLLATE_MASK: ::c_int = (1 << ::LC_COLLATE);
 pub const LC_CTYPE_MASK: ::c_int = (1 << ::LC_CTYPE);
@@ -385,6 +720,9 @@ pub const F_GETNOSIGPIPE: ::c_int = 13;
 pub const F_SETNOSIGPIPE: ::c_int = 14;
 pub const F_MAXFD: ::c_int = 11;
 
+pub const IP_RECVDSTADDR: ::c_int = 7;
+pub const IP_SENDSRCADDR: ::c_int = IP_RECVDSTADDR;
+pub const IP_RECVIF: ::c_int = 20;
 pub const IP_PKTINFO: ::c_int = 25;
 pub const IP_RECVPKTINFO: ::c_int = 26;
 pub const IPV6_JOIN_GROUP: ::c_int = 12;
@@ -394,6 +732,9 @@ pub const TCP_KEEPIDLE:  ::c_int = 3;
 pub const TCP_KEEPINTVL: ::c_int = 5;
 pub const TCP_KEEPCNT:   ::c_int = 6;
 pub const TCP_KEEPINIT:  ::c_int = 7;
+pub const TCP_INFO:      ::c_int = 9;
+pub const TCP_MD5SIG:    ::c_int = 0x10;
+pub const TCP_CONGCTL:   ::c_int = 0x20;
 
 pub const SOCK_CONN_DGRAM: ::c_int = 6;
 pub const SOCK_DCCP: ::c_int = SOCK_CONN_DGRAM;
@@ -512,15 +853,16 @@ pub const AF_BLUETOOTH: ::c_int = 31;
 pub const AF_IEEE80211: ::c_int = 32;
 pub const AF_MPLS: ::c_int = 33;
 pub const AF_ROUTE: ::c_int = 34;
-pub const AF_MAX: ::c_int = 35;
+pub const AF_MAX: ::c_int = 36;
 
 pub const NET_MAXID: ::c_int = AF_MAX;
 pub const NET_RT_DUMP: ::c_int = 1;
 pub const NET_RT_FLAGS: ::c_int = 2;
-pub const NET_RT_OOIFLIST: ::c_int = 3;
-pub const NET_RT_OIFLIST: ::c_int = 4;
-pub const NET_RT_IFLIST: ::c_int = 5;
-pub const NET_RT_MAXID: ::c_int = 6;
+pub const NET_RT_OOOIFLIST: ::c_int = 3;
+pub const NET_RT_OOIFLIST: ::c_int = 4;
+pub const NET_RT_OIFLIST: ::c_int = 5;
+pub const NET_RT_IFLIST: ::c_int = 6;
+pub const NET_RT_MAXID: ::c_int = 7;
 
 pub const PF_OROUTE: ::c_int = AF_OROUTE;
 pub const PF_ARP: ::c_int = AF_ARP;
@@ -693,17 +1035,33 @@ pub const FD_SETSIZE: usize = 0x100;
 
 pub const ST_NOSUID: ::c_ulong = 8;
 
-pub const PTHREAD_MUTEX_INITIALIZER: pthread_mutex_t = pthread_mutex_t {
-    ptm_magic: 0x33330003,
-    ptm_errorcheck: 0,
-    ptm_interlock: 0,
-    ptm_waiters: 0 as *mut _,
-    ptm_owner: 0,
-    ptm_pad1: [0; 3],
-    ptm_pad2: [0; 3],
-    ptm_recursed: 0,
-    ptm_spare2: 0 as *mut _,
-};
+cfg_if! {
+    if #[cfg(any(target_arch = "sparc", target_arch = "sparc64",
+                 target_arch = "x86", target_arch = "x86_64"))] {
+        pub const PTHREAD_MUTEX_INITIALIZER: pthread_mutex_t = pthread_mutex_t {
+            ptm_magic: 0x33330003,
+            ptm_errorcheck: 0,
+            ptm_pad1: [0; 3],
+            ptm_unused: 0,
+            ptm_pad2: [0; 3],
+            ptm_waiters: 0 as *mut _,
+            ptm_owner: 0,
+            ptm_recursed: 0,
+            ptm_spare2: 0 as *mut _,
+        };
+    } else {
+        pub const PTHREAD_MUTEX_INITIALIZER: pthread_mutex_t = pthread_mutex_t {
+            ptm_magic: 0x33330003,
+            ptm_errorcheck: 0,
+            ptm_unused: 0,
+            ptm_waiters: 0 as *mut _,
+            ptm_owner: 0,
+            ptm_recursed: 0,
+            ptm_spare2: 0 as *mut _,
+        };
+    }
+}
+
 pub const PTHREAD_COND_INITIALIZER: pthread_cond_t = pthread_cond_t {
     ptc_magic: 0x55550005,
     ptc_lock: 0,
@@ -968,12 +1326,88 @@ pub const CHWFLOW: ::tcflag_t = ::MDMBUF | ::CRTSCTS | ::CDTRCTS;
 pub const SOCK_CLOEXEC: ::c_int = 0x10000000;
 pub const SOCK_NONBLOCK: ::c_int = 0x20000000;
 
+pub const FIONCLEX: ::c_ulong = 0x20006602;
+// Uncomment on next NetBSD release
+// pub const FIOSEEKDATA: ::c_ulong = 0xc0086661;
+// pub const FIOSEEKHOLE: ::c_ulong = 0xc0086662;
+pub const FIONREAD: ::c_ulong = 0x4004667f;
+pub const FIOASYNC: ::c_ulong = 0x8004667d;
+pub const FIOSETOWN: ::c_ulong = 0x8004667c;
+pub const FIOGETOWN: ::c_ulong = 0x4004667b;
+pub const OFIOGETBMAP: ::c_ulong = 0xc004667a;
+pub const FIOGETBMAP: ::c_ulong = 0xc008667a;
+pub const FIONWRITE: ::c_ulong = 0x40046679;
+pub const FIONSPACE: ::c_ulong = 0x40046678;
+pub const FIBMAP: ::c_ulong = 0xc008667a;
+
 pub const SIGSTKSZ : ::size_t = 40960;
 
-// dirfd() is a macro on netbsd to access
-// the first field of the struct where dirp points to:
-// http://cvsweb.netbsd.org/bsdweb.cgi/src/include/dirent.h?rev=1.36
+pub const PT_DUMPCORE: ::c_int = 12;
+pub const PT_LWPINFO: ::c_int = 13;
+pub const PT_SYSCALL: ::c_int = 14;
+pub const PT_SYSCALLEMU: ::c_int = 15;
+pub const PT_SET_EVENT_MASK: ::c_int = 16;
+pub const PT_GET_EVENT_MASK: ::c_int = 17;
+pub const PT_GET_PROCESS_STATE: ::c_int = 18;
+pub const PT_FIRSTMACH: ::c_int = 32;
+
+// Flags for chflags(2)
+pub const SF_SNAPSHOT:  ::c_ulong = 0x00200000;
+pub const SF_LOG:       ::c_ulong = 0x00400000;
+pub const SF_SNAPINVAL: ::c_ulong = 0x00800000;
+
+fn _ALIGN(p: usize) -> usize {
+    (p + _ALIGNBYTES) & !_ALIGNBYTES
+}
+
 f! {
+    pub fn CMSG_DATA(cmsg: *const ::cmsghdr) -> *mut ::c_uchar {
+        (cmsg as *mut ::c_uchar)
+            .offset(_ALIGN(::mem::size_of::<::cmsghdr>()) as isize)
+    }
+
+    pub fn CMSG_LEN(length: ::c_uint) -> ::c_uint {
+        _ALIGN(::mem::size_of::<::cmsghdr>()) as ::c_uint + length
+    }
+
+    pub fn CMSG_NXTHDR(mhdr: *const ::msghdr, cmsg: *const ::cmsghdr)
+        -> *mut ::cmsghdr
+    {
+        if cmsg.is_null() {
+            return ::CMSG_FIRSTHDR(mhdr);
+        };
+        let next = cmsg as usize + _ALIGN((*cmsg).cmsg_len as usize)
+            + _ALIGN(::mem::size_of::<::cmsghdr>());
+        let max = (*mhdr).msg_control as usize
+            + (*mhdr).msg_controllen as usize;
+        if next > max {
+            0 as *mut ::cmsghdr
+        } else {
+            (cmsg as usize + _ALIGN((*cmsg).cmsg_len as usize))
+                as *mut ::cmsghdr
+        }
+    }
+
+    pub fn CMSG_SPACE(length: ::c_uint) -> ::c_uint {
+        (_ALIGN(::mem::size_of::<::cmsghdr>()) + _ALIGN(length as usize))
+            as ::c_uint
+    }
+
+    pub fn WSTOPSIG(status: ::c_int) -> ::c_int {
+        status >> 8
+    }
+
+    pub fn WIFSIGNALED(status: ::c_int) -> bool {
+        (status & 0o177) != 0o177 && (status & 0o177) != 0
+    }
+
+    pub fn WIFSTOPPED(status: ::c_int) -> bool {
+        (status & 0o177) == 0o177
+    }
+
+    // dirfd() is a macro on netbsd to access
+    // the first field of the struct where dirp points to:
+    // http://cvsweb.netbsd.org/bsdweb.cgi/src/include/dirent.h?rev=1.36
     pub fn dirfd(dirp: *mut ::DIR) -> ::c_int {
         *(dirp as *const ::c_int)
     }
@@ -988,10 +1422,11 @@ f! {
         } else {
             0
         };
-        mem::size_of::<sockcred>() + mem::size_of::<::gid_t>() * ngrps
+        ::mem::size_of::<sockcred>() + ::mem::size_of::<::gid_t>() * ngrps
     }
 }
 
+#[link(name = "rt")]
 extern {
     pub fn aio_read(aiocbp: *mut aiocb) -> ::c_int;
     pub fn aio_write(aiocbp: *mut aiocb) -> ::c_int;
@@ -1004,7 +1439,58 @@ extern {
     pub fn aio_cancel(fd: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
     pub fn lio_listio(mode: ::c_int, aiocb_list: *const *mut aiocb,
                       nitems: ::c_int, sevp: *mut sigevent) -> ::c_int;
+}
 
+extern {
+    pub fn chflags(path: *const ::c_char, flags: ::c_ulong) -> ::c_int;
+    pub fn fchflags(fd: ::c_int, flags: ::c_ulong) -> ::c_int;
+    pub fn lchflags(path: *const ::c_char, flags: ::c_ulong) -> ::c_int;
+
+    pub fn extattr_delete_fd(fd: ::c_int,
+                             attrnamespace: ::c_int,
+                             attrname: *const ::c_char) -> ::c_int;
+    pub fn extattr_delete_file(path: *const ::c_char,
+                               attrnamespace: ::c_int,
+                               attrname: *const ::c_char) -> ::c_int;
+    pub fn extattr_delete_link(path: *const ::c_char,
+                               attrnamespace: ::c_int,
+                               attrname: *const ::c_char) -> ::c_int;
+    pub fn extattr_get_fd(fd: ::c_int,
+                          attrnamespace: ::c_int,
+                          attrname: *const ::c_char,
+                          data: *mut ::c_void,
+                          nbytes: ::size_t) -> ::ssize_t;
+    pub fn extattr_get_file(path: *const ::c_char,
+                            attrnamespace: ::c_int,
+                            attrname: *const ::c_char,
+                            data: *mut ::c_void,
+                            nbytes: ::size_t) -> ::ssize_t;
+    pub fn extattr_get_link(path: *const ::c_char,
+                            attrnamespace: ::c_int,
+                            attrname: *const ::c_char,
+                            data: *mut ::c_void,
+                            nbytes: ::size_t) -> ::ssize_t;
+    pub fn extattr_namespace_to_string(attrnamespace: ::c_int,
+                                       string: *mut *mut ::c_char) -> ::c_int;
+    pub fn extattr_set_fd(fd: ::c_int,
+                          attrnamespace: ::c_int,
+                          attrname: *const ::c_char,
+                          data: *const ::c_void,
+                          nbytes: ::size_t) -> ::c_int;
+    pub fn extattr_set_file(path: *const ::c_char,
+                            attrnamespace: ::c_int,
+                            attrname: *const ::c_char,
+                            data: *const ::c_void,
+                            nbytes: ::size_t) -> ::c_int;
+    pub fn extattr_set_link(path: *const ::c_char,
+                            attrnamespace: ::c_int,
+                            attrname: *const ::c_char,
+                            data: *const ::c_void,
+                            nbytes: ::size_t) -> ::c_int;
+    pub fn extattr_string_to_namespace(string: *const ::c_char,
+                                       attrnamespace: *mut ::c_int) -> ::c_int;
+
+    #[link_name = "__lutimes50"]
     pub fn lutimes(file: *const ::c_char, times: *const ::timeval) -> ::c_int;
     pub fn getnameinfo(sa: *const ::sockaddr,
                        salen: ::socklen_t,
@@ -1056,11 +1542,13 @@ extern {
     pub fn mq_setattr(mqd: ::mqd_t,
                       newattr: *const ::mq_attr,
                       oldattr: *mut ::mq_attr) -> ::c_int;
+    #[link_name = "__mq_timedreceive50"]
     pub fn mq_timedreceive(mqd: ::mqd_t,
                            msg_ptr: *mut ::c_char,
                            msg_len: ::size_t,
                            msq_prio: *mut ::c_uint,
                            abs_timeout: *const ::timespec) -> ::ssize_t;
+    #[link_name = "__mq_timedsend50"]
     pub fn mq_timedsend(mqd: ::mqd_t,
                         msg_ptr: *const ::c_char,
                         msg_len: ::size_t,
@@ -1095,6 +1583,13 @@ extern {
                      base: ::locale_t) -> ::locale_t;
     #[link_name = "__settimeofday50"]
     pub fn settimeofday(tv: *const ::timeval, tz: *const ::c_void) -> ::c_int;
+
+    pub fn dup3(src: ::c_int, dst: ::c_int, flags: ::c_int) -> ::c_int;
+
+    pub fn sendmmsg(sockfd: ::c_int, msgvec: *mut ::mmsghdr, vlen: ::c_uint,
+                    flags: ::c_int) -> ::c_int;
+    pub fn recvmmsg(sockfd: ::c_int, msgvec: *mut ::mmsghdr, vlen: ::c_uint,
+                    flags: ::c_int, timeout: *mut ::timespec) -> ::c_int;
 }
 
 #[link(name = "util")]
@@ -1110,5 +1605,26 @@ extern {
                       result: *mut *mut ::group) -> ::c_int;
 }
 
-mod other;
-pub use self::other::*;
+cfg_if! {
+    if #[cfg(target_arch = "aarch64")] {
+        mod aarch64;
+        pub use self::aarch64::*;
+    } else if #[cfg(target_arch = "arm")] {
+        mod arm;
+        pub use self::arm::*;
+    } else if #[cfg(target_arch = "powerpc")] {
+        mod powerpc;
+        pub use self::powerpc::*;
+    } else if #[cfg(target_arch = "sparc64")] {
+        mod sparc64;
+        pub use self::sparc64::*;
+    } else if #[cfg(target_arch = "x86_64")] {
+        mod x86_64;
+        pub use self::x86_64::*;
+    } else if #[cfg(target_arch = "x86")] {
+        mod x86;
+        pub use self::x86::*;
+    } else {
+        // Unknown target_arch
+    }
+}

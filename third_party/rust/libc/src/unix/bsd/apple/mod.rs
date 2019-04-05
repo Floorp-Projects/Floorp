@@ -1,7 +1,6 @@
 //! Apple (ios/darwin)-specific definitions
 //!
 //! This covers *-apple-* triples currently
-
 pub type c_char = i8;
 pub type clock_t = c_ulong;
 pub type time_t = c_long;
@@ -32,10 +31,21 @@ pub type posix_spawnattr_t = *mut ::c_void;
 pub type posix_spawn_file_actions_t = *mut ::c_void;
 pub type key_t = ::c_int;
 pub type shmatt_t = ::c_ushort;
+pub type vm_size_t = ::uintptr_t;
 
+#[cfg_attr(feature = "extra_traits", derive(Debug))]
 pub enum timezone {}
+impl ::Copy for timezone {}
+impl ::Clone for timezone {
+    fn clone(&self) -> timezone { *self }
+}
 
 s! {
+    pub struct ip_mreq {
+        pub imr_multiaddr: in_addr,
+        pub imr_interface: in_addr,
+    }
+
     pub struct aiocb {
         pub aio_fildes: ::c_int,
         pub aio_offset: ::off_t,
@@ -44,17 +54,6 @@ s! {
         pub aio_reqprio: ::c_int,
         pub aio_sigevent: sigevent,
         pub aio_lio_opcode: ::c_int
-    }
-
-    pub struct utmpx {
-        pub ut_user: [::c_char; _UTX_USERSIZE],
-        pub ut_id: [::c_char; _UTX_IDSIZE],
-        pub ut_line: [::c_char; _UTX_LINESIZE],
-        pub ut_pid: ::pid_t,
-        pub ut_type: ::c_short,
-        pub ut_tv: ::timeval,
-        pub ut_host: [::c_char; _UTX_HOSTSIZE],
-        ut_pad: [::uint32_t; 16],
     }
 
     pub struct glob_t {
@@ -71,14 +70,6 @@ s! {
         __unused6: *mut ::c_void,
         __unused7: *mut ::c_void,
         __unused8: *mut ::c_void,
-    }
-
-    pub struct sockaddr_storage {
-        pub ss_len: u8,
-        pub ss_family: ::sa_family_t,
-        __ss_pad1: [u8; 6],
-        __ss_align: i64,
-        __ss_pad2: [u8; 112],
     }
 
     pub struct addrinfo {
@@ -122,38 +113,14 @@ s! {
         pub st_qspare: [::int64_t; 2],
     }
 
-    pub struct dirent {
-        pub d_ino: u64,
-        pub d_seekoff: u64,
-        pub d_reclen: u16,
-        pub d_namlen: u16,
-        pub d_type: u8,
-        pub d_name: [::c_char; 1024],
-    }
-
-    pub struct pthread_mutex_t {
-        __sig: ::c_long,
-        __opaque: [u8; __PTHREAD_MUTEX_SIZE__],
-    }
-
     pub struct pthread_mutexattr_t {
         __sig: ::c_long,
         __opaque: [u8; 8],
     }
 
-    pub struct pthread_cond_t {
-        __sig: ::c_long,
-        __opaque: [u8; __PTHREAD_COND_SIZE__],
-    }
-
     pub struct pthread_condattr_t {
         __sig: ::c_long,
         __opaque: [u8; __PTHREAD_CONDATTR_SIZE__],
-    }
-
-    pub struct pthread_rwlock_t {
-        __sig: ::c_long,
-        __opaque: [u8; __PTHREAD_RWLOCK_SIZE__],
     }
 
     pub struct pthread_rwlockattr_t {
@@ -173,6 +140,7 @@ s! {
     }
 
     pub struct sigaction {
+        // FIXME: this field is actually a union
         pub sa_sigaction: ::sighandler_t,
         pub sa_mask: sigset_t,
         pub sa_flags: ::c_int,
@@ -224,35 +192,6 @@ s! {
         pub sin_port: ::in_port_t,
         pub sin_addr: ::in_addr,
         pub sin_zero: [::c_char; 8],
-    }
-
-    pub struct statfs {
-        pub f_bsize: ::uint32_t,
-        pub f_iosize: ::int32_t,
-        pub f_blocks: ::uint64_t,
-        pub f_bfree: ::uint64_t,
-        pub f_bavail: ::uint64_t,
-        pub f_files: ::uint64_t,
-        pub f_ffree: ::uint64_t,
-        pub f_fsid: ::fsid_t,
-        pub f_owner: ::uid_t,
-        pub f_type: ::uint32_t,
-        pub f_flags: ::uint32_t,
-        pub f_fssubtype: ::uint32_t,
-        pub f_fstypename: [::c_char; 16],
-        pub f_mntonname: [::c_char; 1024],
-        pub f_mntfromname: [::c_char; 1024],
-        pub f_reserved: [::uint32_t; 8],
-    }
-
-    #[cfg_attr(feature = "stdbuild", repr(packed(4)))]
-    pub struct kevent {
-        pub ident: ::uintptr_t,
-        pub filter: ::int16_t,
-        pub flags: ::uint16_t,
-        pub fflags: ::uint32_t,
-        pub data: ::intptr_t,
-        pub udata: *mut ::c_void,
     }
 
     pub struct kevent64_s {
@@ -399,20 +338,6 @@ s! {
         pub ptinfo: proc_taskinfo,
     }
 
-    pub struct proc_threadinfo {
-        pub pth_user_time: u64,
-        pub pth_system_time: u64,
-        pub pth_cpu_usage: i32,
-        pub pth_policy: i32,
-        pub pth_run_state: i32,
-        pub pth_flags: i32,
-        pub pth_sleep_time: i32,
-        pub pth_curpri: i32,
-        pub pth_priority: i32,
-        pub pth_maxpriority: i32,
-        pub pth_name: [::c_char; MAXTHREADNAMESIZE],
-    }
-
     pub struct xsw_usage {
         pub xsu_total: u64,
         pub xsu_avail: u64,
@@ -535,7 +460,54 @@ s! {
         pub _key: ::key_t,
     }
 
-    #[cfg_attr(feature = "stdbuild", repr(packed(4)))]
+    // sys/sem.h
+
+    pub struct sembuf {
+        pub sem_num: ::c_ushort,
+        pub sem_op: ::c_short,
+        pub sem_flg: ::c_short,
+    }
+
+    // sys/shm.h
+
+    pub struct arphdr {
+        pub ar_hrd: u16,
+        pub ar_pro: u16,
+        pub ar_hln: u8,
+        pub ar_pln: u8,
+        pub ar_op: u16,
+    }
+
+    pub struct in_addr {
+        pub s_addr: ::in_addr_t,
+    }
+}
+
+s_no_extra_traits!{
+    #[cfg_attr(libc_packedN, repr(packed(4)))]
+    pub struct kevent {
+        pub ident: ::uintptr_t,
+        pub filter: ::int16_t,
+        pub flags: ::uint16_t,
+        pub fflags: ::uint32_t,
+        pub data: ::intptr_t,
+        pub udata: *mut ::c_void,
+    }
+
+    #[cfg_attr(libc_packedN, repr(packed(4)))]
+    pub struct semid_ds {
+        // Note the manpage shows different types than the system header.
+        pub sem_perm: ipc_perm,
+        pub sem_base: ::int32_t,
+        pub sem_nsems: ::c_ushort,
+        pub sem_otime: ::time_t,
+        pub sem_pad1: ::int32_t,
+        pub sem_ctime: ::time_t,
+        pub sem_pad2: ::int32_t,
+        pub sem_pad3: [::int32_t; 4],
+    }
+
+    #[cfg_attr(libc_packedN, repr(packed(4)))]
     pub struct shmid_ds {
         pub shm_perm: ipc_perm,
         pub shm_segsz: ::size_t,
@@ -547,15 +519,630 @@ s! {
         pub shm_ctime: ::time_t,  // FIXME: 64-bit wrong align => wrong offset
         // FIXME: 64-bit wrong align => wrong offset:
         pub shm_internal: *mut ::c_void,
-
     }
 
-    pub struct arphdr {
-        pub ar_hrd: u16,
-        pub ar_pro: u16,
-        pub ar_hln: u8,
-        pub ar_pln: u8,
-        pub ar_op: u16,
+    pub struct proc_threadinfo {
+        pub pth_user_time: u64,
+        pub pth_system_time: u64,
+        pub pth_cpu_usage: i32,
+        pub pth_policy: i32,
+        pub pth_run_state: i32,
+        pub pth_flags: i32,
+        pub pth_sleep_time: i32,
+        pub pth_curpri: i32,
+        pub pth_priority: i32,
+        pub pth_maxpriority: i32,
+        pub pth_name: [::c_char; MAXTHREADNAMESIZE],
+    }
+
+    pub struct statfs {
+        pub f_bsize: ::uint32_t,
+        pub f_iosize: ::int32_t,
+        pub f_blocks: ::uint64_t,
+        pub f_bfree: ::uint64_t,
+        pub f_bavail: ::uint64_t,
+        pub f_files: ::uint64_t,
+        pub f_ffree: ::uint64_t,
+        pub f_fsid: ::fsid_t,
+        pub f_owner: ::uid_t,
+        pub f_type: ::uint32_t,
+        pub f_flags: ::uint32_t,
+        pub f_fssubtype: ::uint32_t,
+        pub f_fstypename: [::c_char; 16],
+        pub f_mntonname: [::c_char; 1024],
+        pub f_mntfromname: [::c_char; 1024],
+        pub f_reserved: [::uint32_t; 8],
+    }
+
+    pub struct dirent {
+        pub d_ino: u64,
+        pub d_seekoff: u64,
+        pub d_reclen: u16,
+        pub d_namlen: u16,
+        pub d_type: u8,
+        pub d_name: [::c_char; 1024],
+    }
+
+    pub struct pthread_rwlock_t {
+        __sig: ::c_long,
+        __opaque: [u8; __PTHREAD_RWLOCK_SIZE__],
+    }
+
+    pub struct pthread_mutex_t {
+        __sig: ::c_long,
+        __opaque: [u8; __PTHREAD_MUTEX_SIZE__],
+    }
+
+    pub struct pthread_cond_t {
+        __sig: ::c_long,
+        __opaque: [u8; __PTHREAD_COND_SIZE__],
+    }
+
+    pub struct sockaddr_storage {
+        pub ss_len: u8,
+        pub ss_family: ::sa_family_t,
+        __ss_pad1: [u8; 6],
+        __ss_align: i64,
+        __ss_pad2: [u8; 112],
+    }
+
+    pub struct utmpx {
+        pub ut_user: [::c_char; _UTX_USERSIZE],
+        pub ut_id: [::c_char; _UTX_IDSIZE],
+        pub ut_line: [::c_char; _UTX_LINESIZE],
+        pub ut_pid: ::pid_t,
+        pub ut_type: ::c_short,
+        pub ut_tv: ::timeval,
+        pub ut_host: [::c_char; _UTX_HOSTSIZE],
+        ut_pad: [::uint32_t; 16],
+    }
+}
+
+cfg_if! {
+    if #[cfg(libc_union)] {
+        s_no_extra_traits! {
+            pub union semun {
+                pub val: ::c_int,
+                pub buf: *mut semid_ds,
+                pub array: *mut ::c_ushort,
+            }
+        }
+
+        cfg_if! {
+            if #[cfg(feature = "extra_traits")] {
+                impl PartialEq for semun {
+                    fn eq(&self, other: &semun) -> bool {
+                        unsafe { self.val == other.val }
+                    }
+                }
+                impl Eq for semun {}
+                impl ::fmt::Debug for semun {
+                    fn fmt(&self, f: &mut ::fmt::Formatter)
+                           -> ::fmt::Result {
+                        f.debug_struct("semun")
+                            .field("val", unsafe { &self.val })
+                            .finish()
+                    }
+                }
+                impl ::hash::Hash for semun {
+                    fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                        unsafe { self.val.hash(state) };
+                    }
+                }
+            }
+        }
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "extra_traits")] {
+        impl PartialEq for kevent {
+            fn eq(&self, other: &kevent) -> bool {
+                self.ident == other.ident
+                    && self.filter == other.filter
+                    && self.flags == other.flags
+                    && self.fflags == other.fflags
+                    && self.data == other.data
+                    && self.udata == other.udata
+            }
+        }
+        impl Eq for kevent {}
+        impl ::fmt::Debug for kevent {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                let ident = self.ident;
+                let filter = self.filter;
+                let flags = self.flags;
+                let fflags = self.fflags;
+                let data = self.data;
+                let udata = self.udata;
+                f.debug_struct("kevent")
+                    .field("ident", &ident)
+                    .field("filter", &filter)
+                    .field("flags", &flags)
+                    .field("fflags", &fflags)
+                    .field("data", &data)
+                    .field("udata", &udata)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for kevent {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                let ident = self.ident;
+                let filter = self.filter;
+                let flags = self.flags;
+                let fflags = self.fflags;
+                let data = self.data;
+                let udata = self.udata;
+                ident.hash(state);
+                filter.hash(state);
+                flags.hash(state);
+                fflags.hash(state);
+                data.hash(state);
+                udata.hash(state);
+            }
+        }
+
+        impl PartialEq for semid_ds {
+            fn eq(&self, other: &semid_ds) -> bool {
+                let sem_perm = self.sem_perm;
+                let sem_pad3 = self.sem_pad3;
+                let other_sem_perm = other.sem_perm;
+                let other_sem_pad3 = other.sem_pad3;
+                sem_perm == other_sem_perm
+                    && self.sem_base == other.sem_base
+                    && self.sem_nsems == other.sem_nsems
+                    && self.sem_otime == other.sem_otime
+                    && self.sem_pad1 == other.sem_pad1
+                    && self.sem_ctime == other.sem_ctime
+                    && self.sem_pad2 == other.sem_pad2
+                    && sem_pad3 == other_sem_pad3
+            }
+        }
+        impl Eq for semid_ds {}
+        impl ::fmt::Debug for semid_ds {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                let sem_perm = self.sem_perm;
+                let sem_base = self.sem_base;
+                let sem_nsems = self.sem_nsems;
+                let sem_otime = self.sem_otime;
+                let sem_pad1 = self.sem_pad1;
+                let sem_ctime = self.sem_ctime;
+                let sem_pad2 = self.sem_pad2;
+                let sem_pad3 = self.sem_pad3;
+                f.debug_struct("semid_ds")
+                    .field("sem_perm", &sem_perm)
+                    .field("sem_base", &sem_base)
+                    .field("sem_nsems", &sem_nsems)
+                    .field("sem_otime", &sem_otime)
+                    .field("sem_pad1", &sem_pad1)
+                    .field("sem_ctime", &sem_ctime)
+                    .field("sem_pad2", &sem_pad2)
+                    .field("sem_pad3", &sem_pad3)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for semid_ds {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                let sem_perm = self.sem_perm;
+                let sem_base = self.sem_base;
+                let sem_nsems = self.sem_nsems;
+                let sem_otime = self.sem_otime;
+                let sem_pad1 = self.sem_pad1;
+                let sem_ctime = self.sem_ctime;
+                let sem_pad2 = self.sem_pad2;
+                let sem_pad3 = self.sem_pad3;
+                sem_perm.hash(state);
+                sem_base.hash(state);
+                sem_nsems.hash(state);
+                sem_otime.hash(state);
+                sem_pad1.hash(state);
+                sem_ctime.hash(state);
+                sem_pad2.hash(state);
+                sem_pad3.hash(state);
+            }
+        }
+
+        impl PartialEq for shmid_ds {
+            fn eq(&self, other: &shmid_ds) -> bool {
+                let shm_perm = self.shm_perm;
+                let other_shm_perm = other.shm_perm;
+                shm_perm == other_shm_perm
+                    && self.shm_segsz == other.shm_segsz
+                    && self.shm_lpid == other.shm_lpid
+                    && self.shm_cpid == other.shm_cpid
+                    && self.shm_nattch == other.shm_nattch
+                    && self.shm_atime == other.shm_atime
+                    && self.shm_dtime == other.shm_dtime
+                    && self.shm_ctime == other.shm_ctime
+                    && self.shm_internal == other.shm_internal
+            }
+        }
+        impl Eq for shmid_ds {}
+        impl ::fmt::Debug for shmid_ds {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                let shm_perm = self.shm_perm;
+                let shm_segsz = self.shm_segsz;
+                let shm_lpid = self.shm_lpid;
+                let shm_cpid = self.shm_cpid;
+                let shm_nattch = self.shm_nattch;
+                let shm_atime = self.shm_atime;
+                let shm_dtime = self.shm_dtime;
+                let shm_ctime = self.shm_ctime;
+                let shm_internal = self.shm_internal;
+                f.debug_struct("shmid_ds")
+                    .field("shm_perm", &shm_perm)
+                    .field("shm_segsz", &shm_segsz)
+                    .field("shm_lpid", &shm_lpid)
+                    .field("shm_cpid", &shm_cpid)
+                    .field("shm_nattch", &shm_nattch)
+                    .field("shm_atime", &shm_atime)
+                    .field("shm_dtime", &shm_dtime)
+                    .field("shm_ctime", &shm_ctime)
+                    .field("shm_internal", &shm_internal)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for shmid_ds {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                let shm_perm = self.shm_perm;
+                let shm_segsz = self.shm_segsz;
+                let shm_lpid = self.shm_lpid;
+                let shm_cpid = self.shm_cpid;
+                let shm_nattch = self.shm_nattch;
+                let shm_atime = self.shm_atime;
+                let shm_dtime = self.shm_dtime;
+                let shm_ctime = self.shm_ctime;
+                let shm_internal = self.shm_internal;
+                shm_perm.hash(state);
+                shm_segsz.hash(state);
+                shm_lpid.hash(state);
+                shm_cpid.hash(state);
+                shm_nattch.hash(state);
+                shm_atime.hash(state);
+                shm_dtime.hash(state);
+                shm_ctime.hash(state);
+                shm_internal.hash(state);
+            }
+        }
+
+        impl PartialEq for proc_threadinfo {
+            fn eq(&self, other: &proc_threadinfo) -> bool {
+                self.pth_user_time == other.pth_user_time
+                    && self.pth_system_time == other.pth_system_time
+                    && self.pth_cpu_usage == other.pth_cpu_usage
+                    && self.pth_policy == other.pth_policy
+                    && self.pth_run_state == other.pth_run_state
+                    && self.pth_flags == other.pth_flags
+                    && self.pth_sleep_time == other.pth_sleep_time
+                    && self.pth_curpri == other.pth_curpri
+                    && self.pth_priority == other.pth_priority
+                    && self.pth_maxpriority == other.pth_maxpriority
+                    && self.pth_name
+                           .iter()
+                           .zip(other.pth_name.iter())
+                           .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for proc_threadinfo {}
+        impl ::fmt::Debug for proc_threadinfo {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("proc_threadinfo")
+                    .field("pth_user_time", &self.pth_user_time)
+                    .field("pth_system_time", &self.pth_system_time)
+                    .field("pth_cpu_usage", &self.pth_cpu_usage)
+                    .field("pth_policy", &self.pth_policy)
+                    .field("pth_run_state", &self.pth_run_state)
+                    .field("pth_flags", &self.pth_flags)
+                    .field("pth_sleep_time", &self.pth_sleep_time)
+                    .field("pth_curpri", &self.pth_curpri)
+                    .field("pth_priority", &self.pth_priority)
+                    .field("pth_maxpriority", &self.pth_maxpriority)
+                      // FIXME: .field("pth_name", &self.pth_name)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for proc_threadinfo {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.pth_user_time.hash(state);
+                self.pth_system_time.hash(state);
+                self.pth_cpu_usage.hash(state);
+                self.pth_policy.hash(state);
+                self.pth_run_state.hash(state);
+                self.pth_flags.hash(state);
+                self.pth_sleep_time.hash(state);
+                self.pth_curpri.hash(state);
+                self.pth_priority.hash(state);
+                self.pth_maxpriority.hash(state);
+                self.pth_name.hash(state);
+            }
+        }
+
+        impl PartialEq for statfs {
+            fn eq(&self, other: &statfs) -> bool {
+                self.f_bsize == other.f_bsize
+                    && self.f_iosize == other.f_iosize
+                    && self.f_blocks == other.f_blocks
+                    && self.f_bfree == other.f_bfree
+                    && self.f_bavail == other.f_bavail
+                    && self.f_files == other.f_files
+                    && self.f_ffree == other.f_ffree
+                    && self.f_fsid == other.f_fsid
+                    && self.f_owner == other.f_owner
+                    && self.f_flags == other.f_flags
+                    && self.f_fssubtype == other.f_fssubtype
+                    && self.f_fstypename == other.f_fstypename
+                    && self.f_type == other.f_type
+                    && self
+                    .f_mntonname
+                    .iter()
+                    .zip(other.f_mntonname.iter())
+                    .all(|(a,b)| a == b)
+                    && self
+                    .f_mntfromname
+                    .iter()
+                    .zip(other.f_mntfromname.iter())
+                    .all(|(a,b)| a == b)
+                    && self.f_reserved == other.f_reserved
+            }
+        }
+
+        impl Eq for statfs {}
+        impl ::fmt::Debug for statfs {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("statfs")
+                    .field("f_bsize", &self.f_bsize)
+                    .field("f_iosize", &self.f_iosize)
+                    .field("f_blocks", &self.f_blocks)
+                    .field("f_bfree", &self.f_bfree)
+                    .field("f_bavail", &self.f_bavail)
+                    .field("f_files", &self.f_files)
+                    .field("f_ffree", &self.f_ffree)
+                    .field("f_fsid", &self.f_fsid)
+                    .field("f_owner", &self.f_owner)
+                    .field("f_flags", &self.f_flags)
+                    .field("f_fssubtype", &self.f_fssubtype)
+                    .field("f_fstypename", &self.f_fstypename)
+                    .field("f_type", &self.f_type)
+                // FIXME: .field("f_mntonname", &self.f_mntonname)
+                // FIXME: .field("f_mntfromname", &self.f_mntfromname)
+                    .field("f_reserved", &self.f_reserved)
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for statfs {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.f_bsize.hash(state);
+                self.f_iosize.hash(state);
+                self.f_blocks.hash(state);
+                self.f_bfree.hash(state);
+                self.f_bavail.hash(state);
+                self.f_files.hash(state);
+                self.f_ffree.hash(state);
+                self.f_fsid.hash(state);
+                self.f_owner.hash(state);
+                self.f_flags.hash(state);
+                self.f_fssubtype.hash(state);
+                self.f_fstypename.hash(state);
+                self.f_type.hash(state);
+                self.f_mntonname.hash(state);
+                self.f_mntfromname.hash(state);
+                self.f_reserved.hash(state);
+            }
+        }
+
+        impl PartialEq for dirent {
+            fn eq(&self, other: &dirent) -> bool {
+                self.d_ino == other.d_ino
+                    && self.d_seekoff == other.d_seekoff
+                    && self.d_reclen == other.d_reclen
+                    && self.d_namlen == other.d_namlen
+                    && self.d_type == other.d_type
+                    && self
+                    .d_name
+                    .iter()
+                    .zip(other.d_name.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for dirent {}
+        impl ::fmt::Debug for dirent {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("dirent")
+                    .field("d_ino", &self.d_ino)
+                    .field("d_seekoff", &self.d_seekoff)
+                    .field("d_reclen", &self.d_reclen)
+                    .field("d_namlen", &self.d_namlen)
+                    .field("d_type", &self.d_type)
+                    // FIXME: .field("d_name", &self.d_name)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for dirent {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.d_ino.hash(state);
+                self.d_seekoff.hash(state);
+                self.d_reclen.hash(state);
+                self.d_namlen.hash(state);
+                self.d_type.hash(state);
+                self.d_name.hash(state);
+            }
+        }
+        impl PartialEq for pthread_rwlock_t {
+            fn eq(&self, other: &pthread_rwlock_t) -> bool {
+                self.__sig == other.__sig
+                    && self.
+                    __opaque
+                    .iter()
+                    .zip(other.__opaque.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for pthread_rwlock_t {}
+        impl ::fmt::Debug for pthread_rwlock_t {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("pthread_rwlock_t")
+                    .field("__sig", &self.__sig)
+                    // FIXME: .field("__opaque", &self.__opaque)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for pthread_rwlock_t {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.__sig.hash(state);
+                self.__opaque.hash(state);
+            }
+        }
+
+        impl PartialEq for pthread_mutex_t {
+            fn eq(&self, other: &pthread_mutex_t) -> bool {
+                self.__sig == other.__sig
+                    && self.
+                    __opaque
+                    .iter()
+                    .zip(other.__opaque.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+
+        impl Eq for pthread_mutex_t {}
+
+        impl ::fmt::Debug for pthread_mutex_t {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("pthread_mutex_t")
+                    .field("__sig", &self.__sig)
+                    // FIXME: .field("__opaque", &self.__opaque)
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for pthread_mutex_t {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.__sig.hash(state);
+                self.__opaque.hash(state);
+            }
+        }
+
+        impl PartialEq for pthread_cond_t {
+            fn eq(&self, other: &pthread_cond_t) -> bool {
+                self.__sig == other.__sig
+                    && self.
+                    __opaque
+                    .iter()
+                    .zip(other.__opaque.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+
+        impl Eq for pthread_cond_t {}
+
+        impl ::fmt::Debug for pthread_cond_t {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("pthread_cond_t")
+                    .field("__sig", &self.__sig)
+                    // FIXME: .field("__opaque", &self.__opaque)
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for pthread_cond_t {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.__sig.hash(state);
+                self.__opaque.hash(state);
+            }
+        }
+
+        impl PartialEq for sockaddr_storage {
+            fn eq(&self, other: &sockaddr_storage) -> bool {
+                self.ss_len == other.ss_len
+                    && self.ss_family == other.ss_family
+                    && self
+                    .__ss_pad1
+                    .iter()
+                    .zip(other.__ss_pad1.iter())
+                    .all(|(a, b)| a == b)
+                    && self.__ss_align == other.__ss_align
+                    && self
+                    .__ss_pad2
+                    .iter()
+                    .zip(other.__ss_pad2.iter())
+                    .all(|(a, b)| a == b)
+            }
+        }
+
+        impl Eq for sockaddr_storage {}
+
+        impl ::fmt::Debug for sockaddr_storage {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sockaddr_storage")
+                    .field("ss_len", &self.ss_len)
+                    .field("ss_family", &self.ss_family)
+                    .field("__ss_pad1", &self.__ss_pad1)
+                    .field("__ss_align", &self.__ss_align)
+                    // FIXME: .field("__ss_pad2", &self.__ss_pad2)
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for sockaddr_storage {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.ss_len.hash(state);
+                self.ss_family.hash(state);
+                self.__ss_pad1.hash(state);
+                self.__ss_align.hash(state);
+                self.__ss_pad2.hash(state);
+            }
+        }
+
+        impl PartialEq for utmpx {
+            fn eq(&self, other: &utmpx) -> bool {
+                self.ut_user
+                    .iter()
+                    .zip(other.ut_user.iter())
+                    .all(|(a,b)| a == b)
+                    && self.ut_id == other.ut_id
+                    && self.ut_line == other.ut_line
+                    && self.ut_pid == other.ut_pid
+                    && self.ut_type == other.ut_type
+                    && self.ut_tv == other.ut_tv
+                    && self
+                    .ut_host
+                    .iter()
+                    .zip(other.ut_host.iter())
+                    .all(|(a,b)| a == b)
+                    && self.ut_pad == other.ut_pad
+            }
+        }
+
+        impl Eq for utmpx {}
+
+        impl ::fmt::Debug for utmpx {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("utmpx")
+                    // FIXME: .field("ut_user", &self.ut_user)
+                    .field("ut_id", &self.ut_id)
+                    .field("ut_line", &self.ut_line)
+                    .field("ut_pid", &self.ut_pid)
+                    .field("ut_type", &self.ut_type)
+                    .field("ut_tv", &self.ut_tv)
+                    // FIXME: .field("ut_host", &self.ut_host)
+                    .field("ut_pad", &self.ut_pad)
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for utmpx {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.ut_user.hash(state);
+                self.ut_id.hash(state);
+                self.ut_line.hash(state);
+                self.ut_pid.hash(state);
+                self.ut_type.hash(state);
+                self.ut_tv.hash(state);
+                self.ut_host.hash(state);
+                self.ut_pad.hash(state);
+            }
+        }
     }
 }
 
@@ -747,11 +1334,32 @@ pub const PROT_READ: ::c_int = 1;
 pub const PROT_WRITE: ::c_int = 2;
 pub const PROT_EXEC: ::c_int = 4;
 
+pub const PT_TRACE_ME: ::c_int = 0;
+pub const PT_READ_I: ::c_int = 1;
+pub const PT_READ_D: ::c_int = 2;
+pub const PT_READ_U: ::c_int = 3;
+pub const PT_WRITE_I: ::c_int = 4;
+pub const PT_WRITE_D: ::c_int = 5;
+pub const PT_WRITE_U: ::c_int = 6;
+pub const PT_CONTINUE: ::c_int = 7;
+pub const PT_KILL: ::c_int = 8;
+pub const PT_STEP: ::c_int = 9;
+pub const PT_ATTACH: ::c_int = 10;
+pub const PT_DETACH: ::c_int = 11;
+pub const PT_SIGEXC: ::c_int = 12;
+pub const PT_THUPDATE: ::c_int = 13;
+pub const PT_ATTACHEXC: ::c_int = 14;
+
+pub const PT_FORCEQUOTA: ::c_int = 30;
+pub const PT_DENY_ATTACH: ::c_int = 31;
+pub const PT_FIRSTMACH: ::c_int = 32;
+
 pub const MAP_FILE: ::c_int = 0x0000;
 pub const MAP_SHARED: ::c_int = 0x0001;
 pub const MAP_PRIVATE: ::c_int = 0x0002;
 pub const MAP_FIXED: ::c_int = 0x0010;
 pub const MAP_ANON: ::c_int = 0x1000;
+pub const MAP_ANONYMOUS: ::c_int = MAP_ANON;
 
 pub const VM_FLAGS_FIXED: ::c_int = 0x0000;
 pub const VM_FLAGS_ANYWHERE: ::c_int = 0x0001;
@@ -765,8 +1373,8 @@ pub const VM_FLAGS_SUPERPAGE_MASK: ::c_int = 0x70000;
 pub const VM_FLAGS_RETURN_DATA_ADDR: ::c_int = 0x100000;
 pub const VM_FLAGS_RETURN_4K_DATA_ADDR: ::c_int = 0x800000;
 pub const VM_FLAGS_ALIAS_MASK: ::c_int = 0xFF000000;
-pub const VM_FLAGS_USER_ALLOCATE: ::c_int = 0xff07401b;
-pub const VM_FLAGS_USER_MAP: ::c_int = 0xff97401b;
+pub const VM_FLAGS_USER_ALLOCATE: ::c_int = 0xff07401f;
+pub const VM_FLAGS_USER_MAP: ::c_int = 0xff97401f;
 pub const VM_FLAGS_USER_REMAP: ::c_int = VM_FLAGS_FIXED | VM_FLAGS_ANYWHERE |
                                         VM_FLAGS_RANDOM_ADDR |
                                         VM_FLAGS_OVERWRITE |
@@ -1520,15 +2128,21 @@ pub const SOCK_RDM: ::c_int = 4;
 pub const SOCK_SEQPACKET: ::c_int = 5;
 pub const IP_TTL: ::c_int = 4;
 pub const IP_HDRINCL: ::c_int = 2;
+pub const IP_RECVDSTADDR: ::c_int = 7;
 pub const IP_ADD_MEMBERSHIP: ::c_int = 12;
 pub const IP_DROP_MEMBERSHIP: ::c_int = 13;
+pub const IP_RECVIF: ::c_int = 20;
 pub const IP_PKTINFO: ::c_int = 26;
+pub const IP_RECVTOS: ::c_int = 27;
 pub const IPV6_JOIN_GROUP: ::c_int = 12;
 pub const IPV6_LEAVE_GROUP: ::c_int = 13;
+pub const IPV6_RECVTCLASS: ::c_int = 35;
+pub const IPV6_TCLASS: ::c_int = 36;
 pub const IPV6_PKTINFO: ::c_int = 46;
 pub const IPV6_RECVPKTINFO: ::c_int = 61;
 
-pub const TCP_NODELAY: ::c_int = 0x01;
+pub const TCP_NOPUSH: ::c_int = 4;
+pub const TCP_NOOPT: ::c_int = 8;
 pub const TCP_KEEPALIVE: ::c_int = 0x10;
 
 pub const SOL_LOCAL: ::c_int = 0;
@@ -1805,12 +2419,14 @@ pub const NOTE_NONE: ::uint32_t = 0x00000080;
 pub const NOTE_EXIT: ::uint32_t = 0x80000000;
 pub const NOTE_FORK: ::uint32_t = 0x40000000;
 pub const NOTE_EXEC: ::uint32_t = 0x20000000;
+#[deprecated(since="0.2.49", note="Deprecated since MacOSX 10.9")]
 pub const NOTE_REAP: ::uint32_t = 0x10000000;
 pub const NOTE_SIGNAL: ::uint32_t = 0x08000000;
 pub const NOTE_EXITSTATUS: ::uint32_t = 0x04000000;
 pub const NOTE_EXIT_DETAIL: ::uint32_t = 0x02000000;
 pub const NOTE_PDATAMASK: ::uint32_t = 0x000fffff;
 pub const NOTE_PCTRLMASK: ::uint32_t = 0xfff00000;
+#[deprecated(since="0.2.49", note="Deprecated since MacOSX 10.9")]
 pub const NOTE_EXIT_REPARENTED: ::uint32_t = 0x00080000;
 pub const NOTE_EXIT_DETAIL_MASK: ::uint32_t = 0x00070000;
 pub const NOTE_EXIT_DECRYPTFAIL: ::uint32_t = 0x00010000;
@@ -1863,6 +2479,13 @@ pub const IUTF8: ::tcflag_t = 0x00004000;
 pub const CRTSCTS: ::tcflag_t = 0x00030000;
 
 pub const NI_MAXHOST: ::socklen_t = 1025;
+pub const NI_MAXSERV: ::socklen_t = 32;
+pub const NI_NOFQDN: ::c_int = 0x00000001;
+pub const NI_NUMERICHOST: ::c_int = 0x00000002;
+pub const NI_NAMEREQD: ::c_int = 0x00000004;
+pub const NI_NUMERICSERV: ::c_int = 0x00000008;
+pub const NI_NUMERICSCOPE: ::c_int = 0x00000100;
+pub const NI_DGRAM: ::c_int = 0x00000010;
 
 pub const Q_GETQUOTA: ::c_int = 0x300;
 pub const Q_SETQUOTA: ::c_int = 0x400;
@@ -2009,7 +2632,9 @@ pub const KERN_KDSETRTCDEC: ::c_int = 15;
 pub const KERN_KDGETENTROPY: ::c_int = 16;
 pub const KERN_KDWRITETR: ::c_int = 17;
 pub const KERN_KDWRITEMAP: ::c_int = 18;
+#[deprecated(since = "0.2.49", note ="Removed in MacOSX 10.12")]
 pub const KERN_KDENABLE_BG_TRACE: ::c_int = 19;
+#[deprecated(since = "0.2.49", note ="Removed in MacOSX 10.12")]
 pub const KERN_KDDISABLE_BG_TRACE: ::c_int = 20;
 pub const KERN_KDREADCURTHRMAP: ::c_int = 21;
 pub const KERN_KDSET_TYPEFILTER: ::c_int = 22;
@@ -2095,6 +2720,19 @@ pub const PRIO_DARWIN_BG: ::c_int = 0x1000;
 pub const PRIO_DARWIN_NONUI: ::c_int = 0x1001;
 
 pub const SEM_FAILED: *mut sem_t = -1isize as *mut ::sem_t;
+
+pub const AI_PASSIVE: ::c_int = 0x00000001;
+pub const AI_CANONNAME: ::c_int = 0x00000002;
+pub const AI_NUMERICHOST: ::c_int = 0x00000004;
+pub const AI_NUMERICSERV: ::c_int = 0x00001000;
+pub const AI_MASK: ::c_int = AI_PASSIVE | AI_CANONNAME | AI_NUMERICHOST |
+                             AI_NUMERICSERV | AI_ADDRCONFIG;
+pub const AI_ALL: ::c_int = 0x00000100;
+pub const AI_V4MAPPED_CFG: ::c_int = 0x00000200;
+pub const AI_ADDRCONFIG: ::c_int = 0x00000400;
+pub const AI_V4MAPPED: ::c_int = 0x00000800;
+pub const AI_DEFAULT: ::c_int = AI_V4MAPPED_CFG | AI_ADDRCONFIG;
+pub const AI_UNUSABLE: ::c_int = 0x10000000;
 
 pub const SIGEV_NONE: ::c_int = 0;
 pub const SIGEV_SIGNAL: ::c_int = 1;
@@ -2275,6 +2913,17 @@ pub const IPC_R: ::c_int = 0x100;
 pub const IPC_W: ::c_int = 0x80;
 pub const IPC_M: ::c_int = 0x1000;
 
+// sys/sem.h
+pub const SEM_UNDO: ::c_int = 0o10000;
+
+pub const GETNCNT: ::c_int = 3;
+pub const GETPID: ::c_int = 4;
+pub const GETVAL: ::c_int = 5;
+pub const GETALL: ::c_int = 6;
+pub const GETZCNT: ::c_int = 7;
+pub const SETVAL: ::c_int = 8;
+pub const SETALL: ::c_int = 9;
+
 // sys/shm.h
 pub const SHM_RDONLY: ::c_int = 0x1000;
 pub const SHM_RND: ::c_int = 0x2000;
@@ -2282,7 +2931,67 @@ pub const SHMLBA: ::c_int = 4096;
 pub const SHM_R: ::c_int = IPC_R;
 pub const SHM_W: ::c_int = IPC_W;
 
+// Flags for chflags(2)
+pub const UF_SETTABLE:      ::c_uint = 0x0000ffff;
+pub const UF_NODUMP:        ::c_uint = 0x00000001;
+pub const UF_IMMUTABLE:     ::c_uint = 0x00000002;
+pub const UF_APPEND:        ::c_uint = 0x00000004;
+pub const UF_OPAQUE:        ::c_uint = 0x00000008;
+pub const UF_COMPRESSED:    ::c_uint = 0x00000020;
+pub const UF_TRACKED:       ::c_uint = 0x00000040;
+pub const SF_SETTABLE:      ::c_uint = 0xffff0000;
+pub const SF_ARCHIVED:      ::c_uint = 0x00010000;
+pub const SF_IMMUTABLE:     ::c_uint = 0x00020000;
+pub const SF_APPEND:        ::c_uint = 0x00040000;
+pub const UF_HIDDEN:        ::c_uint = 0x00008000;
+
+cfg_if! {
+    if #[cfg(libc_const_size_of)] {
+        fn __DARWIN_ALIGN32(p: usize) -> usize {
+            const __DARWIN_ALIGNBYTES32: usize = ::mem::size_of::<u32>() - 1;
+            p + __DARWIN_ALIGNBYTES32 & !__DARWIN_ALIGNBYTES32
+        }
+    } else {
+        fn __DARWIN_ALIGN32(p: usize) -> usize {
+            let __DARWIN_ALIGNBYTES32: usize = ::mem::size_of::<u32>() - 1;
+            p + __DARWIN_ALIGNBYTES32 & !__DARWIN_ALIGNBYTES32
+        }
+    }
+}
+
 f! {
+    pub fn CMSG_NXTHDR(mhdr: *const ::msghdr,
+                       cmsg: *const ::cmsghdr) -> *mut ::cmsghdr {
+        if cmsg.is_null() {
+            return ::CMSG_FIRSTHDR(mhdr);
+        };
+        let cmsg_len = (*cmsg).cmsg_len as usize;
+        let next = cmsg as usize + __DARWIN_ALIGN32(cmsg_len as usize);
+        let max = (*mhdr).msg_control as usize
+                   + (*mhdr).msg_controllen as usize;
+        if next + __DARWIN_ALIGN32(::mem::size_of::<::cmsghdr>()) > max {
+            0 as *mut ::cmsghdr
+        } else {
+            next as *mut ::cmsghdr
+        }
+    }
+
+    pub fn CMSG_DATA(cmsg: *const ::cmsghdr) -> *mut ::c_uchar {
+        (cmsg as *mut ::c_uchar)
+            .offset(__DARWIN_ALIGN32(::mem::size_of::<::cmsghdr>()) as isize)
+    }
+
+    pub fn CMSG_SPACE(length: ::c_uint) -> ::c_uint {
+        (__DARWIN_ALIGN32(::mem::size_of::<::cmsghdr>())
+            + __DARWIN_ALIGN32(length as usize))
+            as ::c_uint
+    }
+
+    pub fn CMSG_LEN(length: ::c_uint) -> ::c_uint {
+        (__DARWIN_ALIGN32(::mem::size_of::<::cmsghdr>()) + length as usize)
+            as ::c_uint
+    }
+
     pub fn WSTOPSIG(status: ::c_int) -> ::c_int {
         status >> 8
     }
@@ -2305,6 +3014,16 @@ f! {
 }
 
 extern {
+    #[deprecated(since="0.2.49", note="Deprecated in MacOSX 10.5")]
+    #[link_name = "daemon$1050"]
+    pub fn daemon(nochdir: ::c_int, noclose: ::c_int) -> ::c_int;
+    #[deprecated(since="0.2.49", note="Deprecated in MacOSX 10.10")]
+    pub fn sem_destroy(sem: *mut sem_t) -> ::c_int;
+    #[deprecated(since="0.2.49", note="Deprecated in MacOSX 10.10")]
+    pub fn sem_init(sem: *mut sem_t,
+                    pshared: ::c_int,
+                    value: ::c_uint)
+                    -> ::c_int;
     pub fn aio_read(aiocbp: *mut aiocb) -> ::c_int;
     pub fn aio_write(aiocbp: *mut aiocb) -> ::c_int;
     pub fn aio_fsync(op: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
@@ -2315,6 +3034,8 @@ extern {
     pub fn aio_suspend(aiocb_list: *const *const aiocb, nitems: ::c_int,
                        timeout: *const ::timespec) -> ::c_int;
     pub fn aio_cancel(fd: ::c_int, aiocbp: *mut aiocb) -> ::c_int;
+    pub fn chflags(path: *const ::c_char, flags: ::c_uint) -> ::c_int;
+    pub fn fchflags(fd: ::c_int, flags: ::c_uint) -> ::c_int;
     pub fn clock_getres(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
     pub fn clock_gettime(clk_id: ::clockid_t, tp: *mut ::timespec) -> ::c_int;
     pub fn lio_listio(mode: ::c_int, aiocb_list: *const *mut aiocb,
@@ -2349,7 +3070,15 @@ extern {
                link_name = "mprotect$UNIX2003")]
     pub fn mprotect(addr: *mut ::c_void, len: ::size_t, prot: ::c_int)
                     -> ::c_int;
+    pub fn semget(key: key_t, nsems: ::c_int, semflg: ::c_int) -> ::c_int;
+    #[cfg_attr(all(target_os = "macos", target_arch = "x86"),
+               link_name = "semctl$UNIX2003")]
+    pub fn semctl(semid: ::c_int,
+                  semnum: ::c_int,
+                  cmd: ::c_int, ...) -> ::c_int;
+    pub fn semop(semid: ::c_int, sops: *mut sembuf, nsops: ::size_t) -> ::c_int;
     pub fn shm_open(name: *const ::c_char, oflag: ::c_int, ...) -> ::c_int;
+    pub fn ftok(pathname : *const c_char, proj_id : ::c_int) -> key_t;
     pub fn shmat(shmid: ::c_int, shmaddr: *const ::c_void,
                  shmflg: ::c_int) -> *mut ::c_void;
     pub fn shmdt(shmaddr: *const ::c_void) -> ::c_int;
@@ -2427,6 +3156,9 @@ extern {
                     len: *mut ::off_t,
                     hdtr: *mut ::sf_hdtr,
                     flags: ::c_int) -> ::c_int;
+    pub fn futimens(fd: ::c_int, times: *const ::timespec) -> ::c_int;
+    pub fn utimensat(dirfd: ::c_int, path: *const ::c_char,
+                     times: *const ::timespec, flag: ::c_int) -> ::c_int;
     pub fn openpty(amaster: *mut ::c_int,
                    aslave: *mut ::c_int,
                    name: *mut ::c_char,
@@ -2545,6 +3277,7 @@ extern {
         fd: ::c_int,
         newfd: ::c_int,
     ) -> ::c_int;
+    pub fn uname(buf: *mut ::utsname) -> ::c_int;
 }
 
 cfg_if! {
