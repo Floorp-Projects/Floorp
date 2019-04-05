@@ -15,7 +15,7 @@
 #include "gfxFontVariations.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/RefPtr.h"  // for RefPtr
-#include "mozilla/StyleColorInlines.h" // for StyleRGBA
+#include "nsColor.h"         // for nsColor and NS_RGBA
 #include "nsCoord.h"         // for nscoord
 #include "nsTArray.h"        // for nsTArray
 
@@ -51,8 +51,7 @@ struct nsFont {
 
   // The estimated background color behind the text. Enables a special
   // rendering mode when NS_GET_A(.) > 0. Only used for text in the chrome.
-  mozilla::StyleRGBA fontSmoothingBackgroundColor =
-      mozilla::StyleRGBA::Transparent();
+  nscolor fontSmoothingBackgroundColor = NS_RGBA(0, 0, 0, 0);
 
   // Language system tag, to override document language;
   // this is an OpenType "language system" tag represented as a 32-bit integer

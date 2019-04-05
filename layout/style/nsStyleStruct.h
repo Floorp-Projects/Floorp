@@ -466,9 +466,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleColor {
 
   // Don't add ANY members to this struct!  We can achieve caching in the rule
   // tree (rather than the style tree) by letting color stay by itself! -dwh
-  //
-  // FIXME(emilio): Not sure having color in its own struct is worth it anymore.
-  mozilla::StyleRGBA mColor;
+  nscolor mColor;
 };
 
 struct nsStyleImageLayers {

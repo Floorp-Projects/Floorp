@@ -461,8 +461,17 @@ static void SetAnimatable(nsCSSPropertyID aProperty,
     case eCSSProperty_background_color: {
       // We don't support color animation on the compositor yet so that we can
       // resolve currentColor at this moment.
-      nscolor foreground =
-          aFrame->Style()->GetVisitedDependentColor(&nsStyleColor::mColor);
+      nscolor foreground;
+      if (aFrame->Style()->RelevantLinkVisited()) {
+        if (ComputedStyle* styleIfVisited =
+                aFrame->Style()->GetStyleIfVisited()) {
+          foreground = styleIfVisited->StyleColor()->mColor;
+        } else {
+          foreground = aFrame->Style()->StyleColor()->mColor;
+        }
+      } else {
+        foreground = aFrame->Style()->StyleColor()->mColor;
+      }
       aAnimatable = aAnimationValue.GetColor(foreground);
       break;
     }

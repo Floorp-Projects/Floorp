@@ -327,9 +327,6 @@ class gfxUtils {
 };
 
 namespace mozilla {
-
-struct StyleRGBA;
-
 namespace gfx {
 
 /**
@@ -340,7 +337,6 @@ namespace gfx {
  * applicable).
  */
 Color ToDeviceColor(Color aColor);
-Color ToDeviceColor(const StyleRGBA& aColor);
 Color ToDeviceColor(nscolor aColor);
 
 /**
