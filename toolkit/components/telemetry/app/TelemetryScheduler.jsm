@@ -19,8 +19,6 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   idleService: ["@mozilla.org/widget/idleservice;1", "nsIIdleService"],
 });
 
-const REASON_ENVIRONMENT_CHANGE = "environment-change";
-
 const MIN_SUBSESSION_LENGTH_MS = Services.prefs.getIntPref("toolkit.telemetry.minSubsessionLength", 5 * 60) * 1000;
 
 const LOGGER_NAME = "Toolkit.Telemetry";
@@ -331,29 +329,31 @@ var TelemetryScheduler = {
   },
 
   /**
-   * Update the scheduled pings if some other ping was sent.
-   * @param {String} reason The reason of the ping that was sent.
-   * @param {Object} [competingPayload=null] The payload of the ping that was sent.
+   * Re-schedule the daily ping if some other equivalent ping was sent.
+   *
+   * This is only called from TelemetrySession when a main ping with reason 'environment-change'
+   * is sent.
+   *
+   * @param {Object} [payload] The payload of the ping that was sent,
+   *                           to be stored as an aborted-session ping.
    */
-  reschedulePings(reason, competingPayload = null) {
+  rescheduleDailyPing(payload) {
     if (this._shuttingDown) {
-      this._log.error("reschedulePings - already shutdown");
+      this._log.error("rescheduleDailyPing - already shutdown");
       return;
     }
 
-    this._log.trace("reschedulePings - reason: " + reason);
+    this._log.trace("rescheduleDailyPing");
     let now = Policy.now();
-    if (reason == REASON_ENVIRONMENT_CHANGE) {
-      // We just generated an environment-changed ping, save it as an aborted session and
-      // update the schedules.
-      this._saveAbortedPing(now.getTime(), competingPayload);
-      // If we're close to midnight, skip today's daily ping and reschedule it for tomorrow.
-      let nearestMidnight = TelemetryUtils.getNearestMidnight(now, SCHEDULER_MIDNIGHT_TOLERANCE_MS);
-      if (nearestMidnight) {
-        this._lastDailyPingTime = now.getTime();
-      }
-    }
 
-    this._rescheduleTimeout();
+    // We just generated an environment-changed ping, save it as an aborted session and
+    // update the schedules.
+    this._saveAbortedPing(now.getTime(), payload);
+
+    // If we're close to midnight, skip today's daily ping and reschedule it for tomorrow.
+    let nearestMidnight = TelemetryUtils.getNearestMidnight(now, SCHEDULER_MIDNIGHT_TOLERANCE_MS);
+    if (nearestMidnight) {
+      this._lastDailyPingTime = now.getTime();
+    }
   },
 };
