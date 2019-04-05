@@ -602,7 +602,7 @@ import java.lang.reflect.Proxy;
             case KeyEvent.KEYCODE_ENTER:
                 if ((event.getFlags() & KeyEvent.FLAG_EDITOR_ACTION) != 0 &&
                         mIMEActionHint.equalsIgnoreCase("next")) {
-                    return new KeyEvent(event.getAction(), KeyEvent.KEYCODE_TAB);
+                    return new KeyEvent(event.getDownTime(), event.getEventTime(), event.getAction(), KeyEvent.KEYCODE_TAB, 0);
                 }
                 break;
         }
