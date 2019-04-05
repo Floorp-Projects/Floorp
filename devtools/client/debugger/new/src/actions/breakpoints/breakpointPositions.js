@@ -10,7 +10,6 @@ import { uniqBy, zip } from "lodash";
 import {
   getSource,
   getSourceFromId,
-  getGeneratedSourceById,
   hasBreakpointPositions,
   getBreakpointPositionsForSource
 } from "../../selectors";
@@ -141,8 +140,13 @@ export const setBreakpointPositions: MemoizedAction<
   getValue: ({ sourceId }, { getState }) =>
     getBreakpointPositionsForSource(getState(), sourceId),
   createKey({ sourceId }, { getState }) {
-    const generatedSource = getGeneratedSourceById(getState(), sourceId);
-    const actors = generatedSource.actors.map(({ actor }) => actor);
+    const generatedSource = getSource(
+      getState(),
+      isOriginalId(sourceId) ? originalToGeneratedId(sourceId) : sourceId
+    );
+    const actors = generatedSource
+      ? generatedSource.actors.map(({ actor }) => actor)
+      : [];
     return [sourceId, ...actors].join(":");
   },
   action: ({ sourceId }, thunkArgs) =>
