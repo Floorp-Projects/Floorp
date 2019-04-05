@@ -9158,13 +9158,6 @@ react-immutable-proptypes@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/react-immutable-proptypes/-/react-immutable-proptypes-2.1.0.tgz#023d6f39bb15c97c071e9e60d00d136eac5fa0b4"
 
-react-inlinesvg@^0.8.1:
-  version "0.8.1"
-  resolved "https://registry.yarnpkg.com/react-inlinesvg/-/react-inlinesvg-0.8.1.tgz#d981da38985d2cd0b83628eaf918ca4834f02b5d"
-  dependencies:
-    httpplease "^0.16.4"
-    once "^1.4.0"
-
 react-inspector@^2.2.2:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/react-inspector/-/react-inspector-2.3.0.tgz#fc9c1d38ab687fc0d190dcaf133ae40158968fc8"

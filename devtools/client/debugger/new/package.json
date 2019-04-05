@@ -72,7 +72,6 @@
     "react-aria-components": "^0.0.4",
     "react-dom": "16.4.1",
     "react-immutable-proptypes": "^2.1.0",
-    "react-inlinesvg": "^0.8.1",
     "react-redux": "^5.0.7",
     "react-transition-group": "^2.2.1",
     "reselect": "^4.0.0",
