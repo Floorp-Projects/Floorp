@@ -23,6 +23,7 @@ internal class EngineObserver(val session: Session) : EngineSession.Observer {
         session.url = url
         session.searchTerms = ""
         session.title = ""
+        session.icon = null
 
         session.contentPermissionRequest.consume {
             it.reject()

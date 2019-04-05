@@ -71,6 +71,7 @@ class Session(
         fun onMediaRemoved(session: Session, media: List<Media>, removed: Media) = Unit
         fun onMediaAdded(session: Session, media: List<Media>, added: Media) = Unit
         fun onCrashStateChanged(session: Session, crashed: Boolean) = Unit
+        fun onIconChanged(session: Session, icon: Bitmap?) = Unit
     }
 
     /**
@@ -299,6 +300,13 @@ class Session(
     }
 
     /**
+     * An icon for the currently visible page.
+     */
+    var icon: Bitmap? by Delegates.observable<Bitmap?>(null) { _, old, new ->
+        notifyObservers(old, new) { onIconChanged(this@Session, new) }
+    }
+
+    /**
      * [Consumable] permission request from web content. A [PermissionRequest]
      * must be consumed i.e. either [PermissionRequest.grant] or
      * [PermissionRequest.reject] must be called. A content permission request
@@ -367,9 +375,9 @@ class Session(
     fun isCustomTabSession() = customTabConfig != null
 
     /**
-     * Helper method to notify observers.
+     * Helper method to notify observers only if a value changed.
      */
-    private fun notifyObservers(old: Any, new: Any, block: Observer.() -> Unit) {
+    private fun notifyObservers(old: Any?, new: Any?, block: Observer.() -> Unit) {
         if (old != new) {
             notifyObservers(block)
         }

@@ -609,6 +609,7 @@ class SessionTest {
         defaultObserver.onWebAppManifestChanged(session, mock())
         defaultObserver.onMediaAdded(session, emptyList(), mock())
         defaultObserver.onMediaRemoved(session, emptyList(), mock())
+        defaultObserver.onIconChanged(session, mock())
     }
 
     @Test
@@ -906,5 +907,30 @@ class SessionTest {
         session.crashed = false
         assertFalse(session.crashed)
         assertFalse(observedCrashState!!)
+    }
+
+    @Test
+    fun `Observer is notified when icon is added and removed`() {
+        var notifiedIcon: Bitmap? = null
+
+        val session = Session("https://www.mozilla.org")
+        session.register(object : Session.Observer {
+            override fun onIconChanged(session: Session, icon: Bitmap?) {
+                notifiedIcon = icon
+            }
+        })
+
+        val bitmapMock: Bitmap = mock()
+        session.icon = bitmapMock
+
+        assertEquals(bitmapMock, notifiedIcon)
+
+        session.icon = null
+
+        assertNull(notifiedIcon)
+
+        session.icon = bitmapMock
+
+        assertEquals(bitmapMock, notifiedIcon)
     }
 }

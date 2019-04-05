@@ -22,6 +22,8 @@ import mozilla.components.support.test.mock
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.mockito.Mockito.mock
@@ -387,5 +389,19 @@ class EngineObserverTest {
 
         observer.onCrashStateChange(true)
         assertTrue(session.crashed)
+    }
+
+    @Test
+    fun `onLocationChange clears icon`() {
+        val session = Session("https://www.mozilla.org")
+        session.icon = mock()
+
+        val observer = EngineObserver(session)
+
+        assertNotNull(session.icon)
+
+        observer.onLocationChange("https://www.firefox.com")
+
+        assertNull(session.icon)
     }
 }
