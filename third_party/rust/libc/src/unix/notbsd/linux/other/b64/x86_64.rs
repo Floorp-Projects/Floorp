@@ -112,20 +112,6 @@ s! {
         __private: [u64; 12],
     }
 
-    pub struct user_fpregs_struct {
-        pub cwd: ::c_ushort,
-        pub swd: ::c_ushort,
-        pub ftw: ::c_ushort,
-        pub fop: ::c_ushort,
-        pub rip: ::c_ulonglong,
-        pub rdp: ::c_ulonglong,
-        pub mxcsr: ::c_uint,
-        pub mxcr_mask: ::c_uint,
-        pub st_space: [::c_uint; 32],
-        pub xmm_space: [::c_uint; 64],
-        padding: [::c_uint; 24],
-    }
-
     pub struct user_regs_struct {
         pub r15: ::c_ulonglong,
         pub r14: ::c_ulonglong,
@@ -184,15 +170,6 @@ s! {
         __private: [u64; 8],
     }
 
-    pub struct ucontext_t {
-        pub uc_flags: ::c_ulong,
-        pub uc_link: *mut ucontext_t,
-        pub uc_stack: ::stack_t,
-        pub uc_mcontext: mcontext_t,
-        pub uc_sigmask: ::sigset_t,
-        __private: [u8; 512],
-    }
-
     pub struct ipc_perm {
         pub __key: ::key_t,
         pub uid: ::uid_t,
@@ -229,6 +206,126 @@ s! {
         pub c_cc: [::cc_t; 19],
         pub c_ispeed: ::speed_t,
         pub c_ospeed: ::speed_t,
+    }
+}
+
+s_no_extra_traits! {
+    pub struct user_fpregs_struct {
+        pub cwd: ::c_ushort,
+        pub swd: ::c_ushort,
+        pub ftw: ::c_ushort,
+        pub fop: ::c_ushort,
+        pub rip: ::c_ulonglong,
+        pub rdp: ::c_ulonglong,
+        pub mxcsr: ::c_uint,
+        pub mxcr_mask: ::c_uint,
+        pub st_space: [::c_uint; 32],
+        pub xmm_space: [::c_uint; 64],
+        padding: [::c_uint; 24],
+    }
+
+    pub struct ucontext_t {
+        pub uc_flags: ::c_ulong,
+        pub uc_link: *mut ucontext_t,
+        pub uc_stack: ::stack_t,
+        pub uc_mcontext: mcontext_t,
+        pub uc_sigmask: ::sigset_t,
+        __private: [u8; 512],
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "extra_traits")] {
+        impl PartialEq for user_fpregs_struct {
+            fn eq(&self, other: &user_fpregs_struct) -> bool {
+                self.cwd == other.cwd
+                    && self.swd == other.swd
+                    && self.ftw == other.ftw
+                    && self.fop == other.fop
+                    && self.rip == other.rip
+                    && self.rdp == other.rdp
+                    && self.mxcsr == other.mxcsr
+                    && self.mxcr_mask == other.mxcr_mask
+                    && self.st_space == other.st_space
+                    && self
+                    .xmm_space
+                    .iter()
+                    .zip(other.xmm_space.iter())
+                    .all(|(a,b)| a == b)
+                // Ignore padding field
+            }
+        }
+
+        impl Eq for user_fpregs_struct {}
+
+        impl ::fmt::Debug for user_fpregs_struct {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("user_fpregs_struct")
+                    .field("cwd", &self.cwd)
+                    .field("ftw", &self.ftw)
+                    .field("fop", &self.fop)
+                    .field("rip", &self.rip)
+                    .field("rdp", &self.rdp)
+                    .field("mxcsr", &self.mxcsr)
+                    .field("mxcr_mask", &self.mxcr_mask)
+                    .field("st_space", &self.st_space)
+                // FIXME: .field("xmm_space", &self.xmm_space)
+                // Ignore padding field
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for user_fpregs_struct {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.cwd.hash(state);
+                self.ftw.hash(state);
+                self.fop.hash(state);
+                self.rip.hash(state);
+                self.rdp.hash(state);
+                self.mxcsr.hash(state);
+                self.mxcr_mask.hash(state);
+                self.st_space.hash(state);
+                self.xmm_space.hash(state);
+                // Ignore padding field
+            }
+        }
+
+        impl PartialEq for ucontext_t {
+            fn eq(&self, other: &ucontext_t) -> bool {
+                self.uc_flags == other.uc_flags
+                    && self.uc_link == other.uc_link
+                    && self.uc_stack == other.uc_stack
+                    && self.uc_mcontext == other.uc_mcontext
+                    && self.uc_sigmask == other.uc_sigmask
+                // Ignore __private field
+            }
+        }
+
+        impl Eq for ucontext_t {}
+
+        impl ::fmt::Debug for ucontext_t {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("ucontext_t")
+                    .field("uc_flags", &self.uc_flags)
+                    .field("uc_link", &self.uc_link)
+                    .field("uc_stack", &self.uc_stack)
+                    .field("uc_mcontext", &self.uc_mcontext)
+                    .field("uc_sigmask", &self.uc_sigmask)
+                // Ignore __private field
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for ucontext_t {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.uc_flags.hash(state);
+                self.uc_link.hash(state);
+                self.uc_stack.hash(state);
+                self.uc_mcontext.hash(state);
+                self.uc_sigmask.hash(state);
+                // Ignore __private field
+            }
+        }
     }
 }
 
@@ -371,8 +468,6 @@ pub const SO_PASSSEC: ::c_int = 34;
 pub const SO_TIMESTAMPNS: ::c_int = 35;
 pub const SCM_TIMESTAMPNS: ::c_int = SO_TIMESTAMPNS;
 pub const SO_MARK: ::c_int = 36;
-pub const SO_TIMESTAMPING: ::c_int = 37;
-pub const SCM_TIMESTAMPING: ::c_int = SO_TIMESTAMPING;
 pub const SO_PROTOCOL: ::c_int = 38;
 pub const SO_DOMAIN: ::c_int = 39;
 pub const SO_RXQ_OVFL: ::c_int = 40;
@@ -645,6 +740,31 @@ pub const DS: ::c_int = 23;
 pub const ES: ::c_int = 24;
 pub const FS: ::c_int = 25;
 pub const GS: ::c_int = 26;
+
+// offsets in mcontext_t.gregs from sys/ucontext.h
+pub const REG_R8: ::c_int = 0;
+pub const REG_R9: ::c_int = 1;
+pub const REG_R10: ::c_int = 2;
+pub const REG_R11: ::c_int = 3;
+pub const REG_R12: ::c_int = 4;
+pub const REG_R13: ::c_int = 5;
+pub const REG_R14: ::c_int = 6;
+pub const REG_R15: ::c_int = 7;
+pub const REG_RDI: ::c_int = 8;
+pub const REG_RSI: ::c_int = 9;
+pub const REG_RBP: ::c_int = 10;
+pub const REG_RBX: ::c_int = 11;
+pub const REG_RDX: ::c_int = 12;
+pub const REG_RAX: ::c_int = 13;
+pub const REG_RCX: ::c_int = 14;
+pub const REG_RSP: ::c_int = 15;
+pub const REG_RIP: ::c_int = 16;
+pub const REG_EFL: ::c_int = 17;
+pub const REG_CSGSFS: ::c_int = 18;
+pub const REG_ERR: ::c_int = 19;
+pub const REG_TRAPNO: ::c_int = 20;
+pub const REG_OLDMASK: ::c_int = 21;
+pub const REG_CR2: ::c_int = 22;
 
 extern {
     pub fn getcontext(ucp: *mut ucontext_t) -> ::c_int;

@@ -1,6 +1,8 @@
+use proc_macro2::TokenStream;
+use quote::ToTokens;
 use syn::{self, Ident};
 
-use codegen;
+use codegen::FromDeriveInputImpl;
 use options::{OuterFrom, ParseAttribute, ParseData, Shape};
 use {FromMeta, Result};
 
@@ -27,8 +29,9 @@ impl FdiOptions {
             generics: Default::default(),
             data: Default::default(),
             supports: Default::default(),
-        }).parse_attributes(&di.attrs)?
-            .parse_body(&di.data)
+        })
+        .parse_attributes(&di.attrs)?
+        .parse_body(&di.data)
     }
 }
 
@@ -74,9 +77,9 @@ impl ParseData for FdiOptions {
     }
 }
 
-impl<'a> From<&'a FdiOptions> for codegen::FromDeriveInputImpl<'a> {
+impl<'a> From<&'a FdiOptions> for FromDeriveInputImpl<'a> {
     fn from(v: &'a FdiOptions) -> Self {
-        codegen::FromDeriveInputImpl {
+        FromDeriveInputImpl {
             base: (&v.base.container).into(),
             attr_names: &v.base.attr_names,
             from_ident: v.base.from_ident,
@@ -88,5 +91,11 @@ impl<'a> From<&'a FdiOptions> for codegen::FromDeriveInputImpl<'a> {
             forward_attrs: v.base.forward_attrs.as_ref(),
             supports: v.supports.as_ref(),
         }
+    }
+}
+
+impl ToTokens for FdiOptions {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        FromDeriveInputImpl::from(self).to_tokens(tokens)
     }
 }

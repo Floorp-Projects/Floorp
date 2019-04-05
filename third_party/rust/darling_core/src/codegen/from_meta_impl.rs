@@ -19,7 +19,7 @@ impl<'a> ToTokens for FromMetaImpl<'a> {
                 let ty_ident = base.ident;
                 quote!(
                     fn from_word() -> ::darling::Result<Self> {
-                        Ok(#ty_ident)
+                        ::darling::export::Ok(#ty_ident)
                     }
                 )
             }
@@ -29,12 +29,13 @@ impl<'a> ToTokens for FromMetaImpl<'a> {
                 ref fields,
                 style: Style::Tuple,
                 ..
-            }) if fields.len() == 1 =>
-            {
+            }) if fields.len() == 1 => {
                 let ty_ident = base.ident;
                 quote!(
                     fn from_meta(__item: &::syn::Meta) -> ::darling::Result<Self> {
-                        Ok(#ty_ident(::darling::FromMeta::from_meta(__item)?))
+                        ::darling::FromMeta::from_meta(__item)
+                            .map_err(|e| e.with_span(&__item))
+                            .map(#ty_ident)
                     }
                 )
             }
@@ -79,6 +80,17 @@ impl<'a> ToTokens for FromMetaImpl<'a> {
                 let unit_arms = variants.iter().map(Variant::as_unit_match_arm);
                 let struct_arms = variants.iter().map(Variant::as_data_match_arm);
 
+                let unknown_variant_err = if !variants.is_empty() {
+                    let names = variants.iter().map(Variant::as_name);
+                    quote! {
+                        unknown_field_with_alts(__other, &[#(#names),*])
+                    }
+                } else {
+                    quote! {
+                        unknown_field(__other)
+                    }
+                };
+
                 quote!(
                     fn from_list(__outer: &[::syn::NestedMeta]) -> ::darling::Result<Self> {
                         // An enum must have exactly one value inside the parentheses if it's not a unit
@@ -89,7 +101,7 @@ impl<'a> ToTokens for FromMetaImpl<'a> {
                                 if let ::syn::NestedMeta::Meta(ref __nested) = __outer[0] {
                                     match __nested.name().to_string().as_ref() {
                                         #(#struct_arms)*
-                                        __other => ::darling::export::Err(::darling::Error::unknown_value(__other))
+                                        __other => ::darling::export::Err(::darling::Error::#unknown_variant_err.with_span(__nested))
                                     }
                                 } else {
                                     ::darling::export::Err(::darling::Error::unsupported_format("literal"))

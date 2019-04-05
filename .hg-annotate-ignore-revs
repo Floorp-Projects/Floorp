@@ -1,3 +1,4 @@
+ca251a28d3ddae784436d28829fb019025f4b127 - Birunthan Mohanathas - Bug 1016240 - Exterminate CR+LF line endings. r=briansmith,cpearce,ehsan,gavin
 a569f5a4bb6a27f25e99b5b45ee241db2660b7e3 - Paolo Amadini - Bug 1128203 -  Reduce indentation from 4 to 2 spaces. rs=dolske DONTBUILD CLOSED TREE
 0ceae9db9ec0be18daa1a279511ad305723185d4 - Sylvestre Ledru - Bug 1204606 - Reformat of dom/media. r=jya
 dcfc73c043c01c3185631262605e3511bebe4cca - Mark Banner - Bug 1309842 - Fix eslint/espree parsing errors for ignored directories in browser/. r=jaws

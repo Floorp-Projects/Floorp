@@ -64,7 +64,8 @@ impl ToTokens for MyInputReceiver {
         } = *self;
 
         let (imp, ty, wher) = generics.split_for_impl();
-        let fields = data.as_ref()
+        let fields = data
+            .as_ref()
             .take_struct()
             .expect("Should never be enum")
             .fields;

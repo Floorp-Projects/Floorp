@@ -428,7 +428,7 @@ gfxMatrix nsSVGClipPathFrame::GetClipPathTransform(nsIFrame* aClippedFrame) {
 
   gfxMatrix tm = content->PrependLocalTransformsTo(gfxMatrix());
 
-  SVGEnum* clipPathUnits =
+  SVGAnimatedEnumeration* clipPathUnits =
       &content->mEnumAttributes[SVGClipPathElement::CLIPPATHUNITS];
 
   uint32_t flags = nsSVGUtils::eBBoxIncludeFillGeometry |

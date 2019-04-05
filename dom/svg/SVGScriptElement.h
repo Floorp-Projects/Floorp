@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_SVGScriptElement_h
 #define mozilla_dom_SVGScriptElement_h
 
-#include "SVGElement.h"
-#include "SVGString.h"
+#include "SVGAnimatedString.h"
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/dom/ScriptElement.h"
+#include "mozilla/dom/SVGElement.h"
 
 nsresult NS_NewSVGScriptElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
@@ -81,7 +81,7 @@ class SVGScriptElement final : public SVGScriptElementBase,
   virtual bool GetAsyncState() override { return false; }
 
   enum { HREF, XLINK_HREF };
-  SVGString mStringAttributes[2];
+  SVGAnimatedString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 };
 

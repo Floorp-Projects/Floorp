@@ -7,9 +7,9 @@
 #ifndef mozilla_dom_SVGFEGaussianBlurElement_h
 #define mozilla_dom_SVGFEGaussianBlurElement_h
 
+#include "SVGAnimatedNumberPair.h"
+#include "SVGAnimatedString.h"
 #include "SVGFilters.h"
-#include "SVGNumberPair.h"
-#include "SVGString.h"
 
 nsresult NS_NewSVGFEGaussianBlurElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -38,7 +38,7 @@ class SVGFEGaussianBlurElement : public SVGFEGaussianBlurElementBase {
       nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
   virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
                                          nsAtom* aAttribute) const override;
-  virtual SVGString& GetResultImageName() override {
+  virtual SVGAnimatedString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
   virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
@@ -56,11 +56,11 @@ class SVGFEGaussianBlurElement : public SVGFEGaussianBlurElementBase {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { STD_DEV };
-  SVGNumberPair mNumberPairAttributes[1];
+  SVGAnimatedNumberPair mNumberPairAttributes[1];
   static NumberPairInfo sNumberPairInfo[1];
 
   enum { RESULT, IN1 };
-  SVGString mStringAttributes[2];
+  SVGAnimatedString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 };
 

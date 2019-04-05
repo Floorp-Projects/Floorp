@@ -137,7 +137,7 @@ fn fail() {
     fail("r#_");
 }
 
-#[cfg(procmacro2_semver_exempt)]
+#[cfg(span_locations)]
 #[test]
 fn span_test() {
     use proc_macro2::TokenTree;
@@ -193,7 +193,7 @@ testing 123
 }
 
 #[cfg(procmacro2_semver_exempt)]
-#[cfg(not(feature = "nightly"))]
+#[cfg(not(nightly))]
 #[test]
 fn default_span() {
     let start = Span::call_site().start();
@@ -329,7 +329,6 @@ fn test_debug_ident() {
 }
 
 #[test]
-#[cfg(not(feature = "nightly"))]
 fn test_debug_tokenstream() {
     let tts = TokenStream::from_str("[a + 1]").unwrap();
 

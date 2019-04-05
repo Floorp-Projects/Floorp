@@ -1,5 +1,7 @@
+use std::borrow::Cow;
+
 use proc_macro2::TokenStream;
-use quote::{TokenStreamExt, ToTokens};
+use quote::{ToTokens, TokenStreamExt};
 use syn::Ident;
 
 use ast::Fields;
@@ -7,11 +9,11 @@ use codegen::error::{ErrorCheck, ErrorDeclaration};
 use codegen::{Field, FieldsGen};
 use usage::{self, IdentRefSet, IdentSet, UsesTypeParams};
 
-/// An enum variant.
+/// A variant of the enum which is deriving `FromMeta`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Variant<'a> {
     /// The name which will appear in code passed to the `FromMeta` input.
-    pub name_in_attr: String,
+    pub name_in_attr: Cow<'a, String>,
 
     /// The name of the variant which will be returned for a given `name_in_attr`.
     pub variant_ident: &'a Ident,
@@ -23,9 +25,15 @@ pub struct Variant<'a> {
 
     /// Whether or not the variant should be skipped in the generated code.
     pub skip: bool,
+
+    pub allow_unknown_fields: bool,
 }
 
 impl<'a> Variant<'a> {
+    pub fn as_name(&'a self) -> &'a str {
+        &self.name_in_attr
+    }
+
     pub fn as_unit_match_arm(&'a self) -> UnitMatchArm<'a> {
         UnitMatchArm(self)
     }
@@ -45,6 +53,9 @@ impl<'a> UsesTypeParams for Variant<'a> {
     }
 }
 
+/// Code generator for an enum variant in a unit match position.
+/// This is placed in generated `from_string` calls for the parent enum.
+/// Value-carrying variants wrapped in this type will emit code to produce an "unsupported format" error.
 pub struct UnitMatchArm<'a>(&'a Variant<'a>);
 
 impl<'a> ToTokens for UnitMatchArm<'a> {
@@ -72,6 +83,9 @@ impl<'a> ToTokens for UnitMatchArm<'a> {
     }
 }
 
+/// Code generator for an enum variant in a data-carrying match position.
+/// This is placed in generated `from_list` calls for the parent enum.
+/// Unit variants wrapped in this type will emit code to produce an "unsupported format" error.
 pub struct DataMatchArm<'a>(&'a Variant<'a>);
 
 impl<'a> ToTokens for DataMatchArm<'a> {
@@ -94,10 +108,10 @@ impl<'a> ToTokens for DataMatchArm<'a> {
             return;
         }
 
-        let vdg = FieldsGen(&val.data);
+        let vdg = FieldsGen::new(&val.data, val.allow_unknown_fields);
 
         if val.data.is_struct() {
-            let declare_errors = ErrorDeclaration::new();
+            let declare_errors = ErrorDeclaration::default();
             let check_errors = ErrorCheck::with_location(&name_in_attr);
             let require_fields = vdg.require_fields();
             let decls = vdg.declarations();

@@ -173,6 +173,9 @@ PdfDataListener.prototype = {
     }
     return combinedArray;
   },
+  get isDone() {
+    return !!this.isDataReady;
+  },
   finish: function PdfDataListener_finish() {
     this.isDataReady = true;
     if (this.oncompleteCallback) {
@@ -606,14 +609,16 @@ class RangedChromeActions extends ChromeActions {
   }
 
   initPassiveLoading() {
-    var data;
+    let data, done;
     if (!this.streamingEnabled) {
       this.originalRequest.cancel(Cr.NS_BINDING_ABORTED);
       this.originalRequest = null;
       data = this.dataListener.readData();
+      done = this.dataListener.isDone;
       this.dataListener = null;
     } else {
       data = this.dataListener.readData();
+      done = this.dataListener.isDone;
 
       this.dataListener.onprogress = (loaded, total) => {
         this.domWindow.postMessage({
@@ -624,6 +629,11 @@ class RangedChromeActions extends ChromeActions {
         }, PDF_VIEWER_ORIGIN);
       };
       this.dataListener.oncomplete = () => {
+        if (!done && this.dataListener.isDone) {
+          this.domWindow.postMessage({
+            pdfjsLoadAction: "progressiveDone",
+          }, PDF_VIEWER_ORIGIN);
+        }
         this.dataListener = null;
       };
     }
@@ -635,6 +645,7 @@ class RangedChromeActions extends ChromeActions {
       pdfUrl: this.pdfUrl,
       length: this.contentLength,
       data,
+      done,
     }, PDF_VIEWER_ORIGIN);
 
     return true;

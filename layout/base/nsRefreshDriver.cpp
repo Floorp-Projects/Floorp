@@ -29,6 +29,7 @@
 
 #include "mozilla/AnimationEventDispatcher.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/IntegerRange.h"
@@ -1496,7 +1497,7 @@ struct DocumentFrameCallbacks {
   explicit DocumentFrameCallbacks(Document* aDocument) : mDocument(aDocument) {}
 
   RefPtr<Document> mDocument;
-  Document::FrameRequestCallbackList mCallbacks;
+  nsTArray<Document::FrameRequest> mCallbacks;
 };
 
 static nsDocShell* GetDocShell(nsPresContext* aPresContext) {
@@ -1688,7 +1689,14 @@ void nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime) {
         // else window is partially torn down already
       }
       for (auto& callback : docCallbacks.mCallbacks) {
-        callback->Call(timeStamp);
+        if (docCallbacks.mDocument->IsCanceledFrameRequestCallback(
+                callback.mHandle)) {
+          continue;
+        }
+        // MOZ_KnownLive is OK, because the stack array frameRequestCallbacks
+        // keeps callback alive and the mCallback strong reference can't be
+        // mutated by the call.
+        MOZ_KnownLive(callback.mCallback)->Call(timeStamp);
       }
     }
   }
