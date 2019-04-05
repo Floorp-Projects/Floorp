@@ -33,7 +33,7 @@ talos-bcv:
         by-test-platform:
             .*-qr/.*: []  # this test is not useful with webrender
             (?:windows10-64|windows7-32|linux64)/opt: ['mozilla-central', 'try']
-            macosx64/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     tier:
         by-test-platform:
@@ -51,7 +51,7 @@ talos-chrome:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1200
     mozharness:
@@ -67,7 +67,7 @@ talos-damp:
         by-test-platform:
             linux64-ccov/.*: ['try']  # Bug 1407593
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
         extra-options:
@@ -80,7 +80,7 @@ talos-dromaeojs:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 2100
     mozharness:
@@ -95,7 +95,7 @@ talos-flex:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-central', 'try']
     max-run-time: 1800
     mozharness:
@@ -109,7 +109,7 @@ talos-g1:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time:
         by-test-platform:
@@ -126,7 +126,7 @@ talos-g3:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 900
     mozharness:
@@ -141,7 +141,7 @@ talos-g4:
         by-test-platform:
             windows10-64-ux/opt: ['try', 'mozilla-central']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time:
         by-test-platform:
@@ -158,7 +158,7 @@ talos-g5:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
         extra-options:
@@ -175,7 +175,7 @@ talos-h1:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
         extra-options:
@@ -192,7 +192,7 @@ talos-h2:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time:
         by-test-platform:
@@ -209,7 +209,7 @@ talos-motionmark:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-central', 'try']
     max-run-time: 3600
     tier:
@@ -228,7 +228,7 @@ talos-other:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1500
     mozharness:
@@ -242,7 +242,7 @@ talos-sessionrestore-many-windows:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-central', 'try']
     max-run-time: 1500
     mozharness:
@@ -256,7 +256,7 @@ talos-perf-reftest:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['trunk', 'try']
     max-run-time: 1200
     mozharness:
@@ -270,7 +270,7 @@ talos-perf-reftest-singletons:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['trunk', 'try']
     max-run-time: 1200
     mozharness:
@@ -284,7 +284,7 @@ talos-speedometer:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1500
     mozharness:
@@ -298,7 +298,7 @@ talos-svgr:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1800
     mozharness:
@@ -312,7 +312,7 @@ talos-tp5o:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     max-run-time: 1800
     mozharness:
@@ -326,7 +326,7 @@ talos-tp6:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['trunk', 'try']
     max-run-time: 1200
     mozharness:
@@ -341,7 +341,7 @@ talos-tp6-stylo-threads:
     run-on-projects:
         by-test-platform:
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
         extra-options:
@@ -356,7 +356,7 @@ talos-tabswitch:
         by-test-platform:
             linux64-ccov/.*: ['try']  # Bug 1407593
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
-            macosx64(?:-qr)?/opt: ['mozilla-central', 'try']
+            macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
     mozharness:
         extra-options:
