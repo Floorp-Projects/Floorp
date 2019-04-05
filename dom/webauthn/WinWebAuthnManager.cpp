@@ -629,6 +629,10 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
     keyHandle.AppendElements(pWebAuthNAssertion->Credential.pbId,
                              pWebAuthNAssertion->Credential.cbId);
 
+    nsTArray<uint8_t> userHandle;
+    userHandle.AppendElements(pWebAuthNAssertion->pbUserId,
+                              pWebAuthNAssertion->cbUserId);
+
     nsTArray<uint8_t> authenticatorData;
     authenticatorData.AppendElements(pWebAuthNAssertion->pbAuthenticatorData,
                                      pWebAuthNAssertion->cbAuthenticatorData);
@@ -641,7 +645,7 @@ void WinWebAuthnManager::Sign(PWebAuthnTransactionParent* aTransactionParent,
 
     WebAuthnGetAssertionResult result(aInfo.ClientDataJSON(), keyHandle,
                                       signature, authenticatorData, extensions,
-                                      signature);
+                                      signature, userHandle);
 
     Unused << mTransactionParent->SendConfirmSign(aTransactionId, result);
     ClearTransaction();

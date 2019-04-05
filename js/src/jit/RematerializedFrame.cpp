@@ -85,21 +85,22 @@ RematerializedFrame* RematerializedFrame::New(JSContext* cx, uint8_t* top,
 /* static */
 bool RematerializedFrame::RematerializeInlineFrames(
     JSContext* cx, uint8_t* top, InlineFrameIterator& iter,
-    MaybeReadFallback& fallback, GCVector<RematerializedFrame*>& frames) {
-  Rooted<GCVector<RematerializedFrame*>> tempFrames(
-      cx, GCVector<RematerializedFrame*>(cx));
+    MaybeReadFallback& fallback, RematerializedFrameVector& frames) {
+  Rooted<RematerializedFrameVector> tempFrames(cx,
+                                               RematerializedFrameVector(cx));
   if (!tempFrames.resize(iter.frameCount())) {
     return false;
   }
 
   while (true) {
     size_t frameNo = iter.frameNo();
-    tempFrames[frameNo].set(RematerializedFrame::New(cx, top, iter, fallback));
+    tempFrames[frameNo].reset(
+        RematerializedFrame::New(cx, top, iter, fallback));
     if (!tempFrames[frameNo]) {
       return false;
     }
     if (tempFrames[frameNo]->environmentChain()) {
-      if (!EnsureHasEnvironmentObjects(cx, tempFrames[frameNo].get())) {
+      if (!EnsureHasEnvironmentObjects(cx, tempFrames[frameNo].get().get())) {
         return false;
       }
     }
@@ -112,17 +113,6 @@ bool RematerializedFrame::RematerializeInlineFrames(
 
   frames = std::move(tempFrames.get());
   return true;
-}
-
-/* static */
-void RematerializedFrame::FreeInVector(GCVector<RematerializedFrame*>& frames) {
-  for (size_t i = 0; i < frames.length(); i++) {
-    RematerializedFrame* f = frames[i];
-    MOZ_ASSERT(!Debugger::inFrameMaps(f));
-    f->RematerializedFrame::~RematerializedFrame();
-    js_free(f);
-  }
-  frames.clear();
 }
 
 CallObject& RematerializedFrame::callObj() const {

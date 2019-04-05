@@ -54,7 +54,7 @@
               <separator/>
               <checkbox id="shrinkToFit"
                         data-l10n-id="shrink-to-fit"
-                        oncommand="gDialog.scalingInput.disabled=gDialog.scalingLabel.disabled=this.checked"/>
+                        oncommand="gDialog.scalingInput.disabled = gDialog.scalingLabel.disabled = this.checked"/>
             </hbox>
           </vbox>
         </groupbox>

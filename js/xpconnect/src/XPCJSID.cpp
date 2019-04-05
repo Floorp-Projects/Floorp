@@ -430,7 +430,7 @@ nsresult HasInstance(JSContext* cx, HandleObject objArg, const nsID* iid,
   // preserve that behavior. This is just a compatibility hack, so we don't
   // really care if it fails.
   if (IS_WN_REFLECTOR(obj)) {
-    (void)XPCWrappedNative::Get(obj)->FindTearOff(*iid);
+    (void)XPCWrappedNative::Get(obj)->FindTearOff(cx, *iid);
   }
 
   return NS_OK;

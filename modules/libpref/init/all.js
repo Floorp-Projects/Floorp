@@ -446,6 +446,9 @@ pref("media.peerconnection.sdp.rust.compare", false);
 #endif
 
 pref("media.videocontrols.picture-in-picture.enabled", false);
+pref("media.videocontrols.picture-in-picture.video-toggle.enabled", false);
+pref("media.videocontrols.picture-in-picture.video-toggle.flyout-enabled", false);
+pref("media.videocontrols.picture-in-picture.video-toggle.flyout-wait-ms", 5000);
 
 pref("media.webrtc.debug.trace_mask", 0);
 pref("media.webrtc.debug.multi_log", false);
@@ -1413,8 +1416,10 @@ pref("privacy.popups.maxReported", 100);
 // send "do not track" HTTP header, disabled by default
 pref("privacy.donottrackheader.enabled",    false);
 // Enforce tracking protection in all modes
+// In Firefox Desktop this pref is set by browser.contentblocking.features.[standard, strict] see firefox.js for details.
 pref("privacy.trackingprotection.enabled",  false);
 // Enforce tracking protection in Private Browsing mode
+// In Firefox Desktop this pref is set by browser.contentblocking.features.[standard, strict] see firefox.js for details.
 pref("privacy.trackingprotection.pbmode.enabled",  true);
 // First Party Isolation (double keying), disabled by default
 pref("privacy.firstparty.isolate",                        false);

@@ -1757,8 +1757,7 @@ extern JS_PUBLIC_API bool IsSetObject(JSContext* cx, JS::HandleObject obj,
  * Assign 'undefined' to all of the object's non-reserved slots. Note: this is
  * done for all slots, regardless of the associated property descriptor.
  */
-JS_PUBLIC_API void JS_SetAllNonReservedSlotsToUndefined(JSContext* cx,
-                                                        JSObject* objArg);
+JS_PUBLIC_API void JS_SetAllNonReservedSlotsToUndefined(JS::HandleObject obj);
 
 extern JS_PUBLIC_API JS::Value JS_GetReservedSlot(JSObject* obj,
                                                   uint32_t index);

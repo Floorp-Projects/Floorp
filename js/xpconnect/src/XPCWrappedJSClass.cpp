@@ -640,7 +640,7 @@ nsresult nsXPCWrappedJSClass::CheckForException(
   /* JS might throw an expection whether the reporter was called or not */
   if (is_js_exception) {
     if (!xpc_exception) {
-      XPCConvert::JSValToXPCException(&js_exception, anInterfaceName,
+      XPCConvert::JSValToXPCException(cx, &js_exception, anInterfaceName,
                                       aPropertyName,
                                       getter_AddRefs(xpc_exception));
     }
@@ -939,8 +939,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
           !GetArraySizeFromParam(info, type, nativeParams, &array_count))
         goto pre_call_clean_up;
 
-      if (!XPCConvert::NativeData2JS(&val, pv, type, &param_iid, array_count,
-                                     nullptr))
+      if (!XPCConvert::NativeData2JS(cx, &val, pv, type, &param_iid,
+                                     array_count, nullptr))
         goto pre_call_clean_up;
     }
 
