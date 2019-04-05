@@ -327,16 +327,10 @@ XPCShellEnvironment::~XPCShellEnvironment() {
     if (!jsapi.Init(GetGlobalObject())) {
       return;
     }
-    JSContext *cx = jsapi.cx();
-    Rooted<JSObject *> global(cx, GetGlobalObject());
-
-    {
-      JSAutoRealm ar(cx, global);
-      JS_SetAllNonReservedSlotsToUndefined(cx, global);
-    }
+    JS_SetAllNonReservedSlotsToUndefined(mGlobalHolder);
     mGlobalHolder.reset();
 
-    JS_GC(cx);
+    JS_GC(jsapi.cx());
   }
 }
 

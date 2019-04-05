@@ -137,14 +137,13 @@ class Editor extends PureComponent<Props, State> {
     this.setText(nextProps, editor);
     this.setSize(nextProps, editor);
     this.scrollToLocation(nextProps, editor);
+    endOperation();
 
     if (this.props.selectedSource != nextProps.selectedSource) {
       this.props.updateViewport();
       resizeBreakpointGutter(editor.codeMirror);
       resizeToggleButton(editor.codeMirror);
     }
-
-    endOperation();
   }
 
   setupEditor() {

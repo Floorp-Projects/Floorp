@@ -48,8 +48,7 @@ XPCWrappedNativeProto::~XPCWrappedNativeProto() {
   DeferredFinalize(mClassInfo.forget().take());
 }
 
-bool XPCWrappedNativeProto::Init(nsIXPCScriptable* scriptable) {
-  AutoJSContext cx;
+bool XPCWrappedNativeProto::Init(JSContext* cx, nsIXPCScriptable* scriptable) {
   mScriptable = scriptable;
 
   JS::RootedObject proto(cx, JS::GetRealmObjectPrototype(cx));
@@ -98,9 +97,8 @@ void XPCWrappedNativeProto::SystemIsBeingShutDown() {
 
 // static
 XPCWrappedNativeProto* XPCWrappedNativeProto::GetNewOrUsed(
-    XPCWrappedNativeScope* scope, nsIClassInfo* classInfo,
+    JSContext* cx, XPCWrappedNativeScope* scope, nsIClassInfo* classInfo,
     nsIXPCScriptable* scriptable) {
-  AutoJSContext cx;
   MOZ_ASSERT(scope, "bad param");
   MOZ_ASSERT(classInfo, "bad param");
 
@@ -113,14 +111,14 @@ XPCWrappedNativeProto* XPCWrappedNativeProto::GetNewOrUsed(
     return proto;
   }
 
-  RefPtr<XPCNativeSet> set = XPCNativeSet::GetNewOrUsed(classInfo);
+  RefPtr<XPCNativeSet> set = XPCNativeSet::GetNewOrUsed(cx, classInfo);
   if (!set) {
     return nullptr;
   }
 
   proto = new XPCWrappedNativeProto(scope, classInfo, set.forget());
 
-  if (!proto || !proto->Init(scriptable)) {
+  if (!proto || !proto->Init(cx, scriptable)) {
     delete proto.get();
     return nullptr;
   }

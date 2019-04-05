@@ -783,14 +783,15 @@ var gViewController = {
 
     this.viewObjects.discover = gDiscoverView;
     this.viewObjects.legacy = gLegacyView;
-    this.viewObjects.detail = gDetailView;
     this.viewObjects.updates = gUpdatesView;
     this.viewObjects.shortcuts = gShortcutsView;
 
     if (useHtmlViews) {
       this.viewObjects.list = htmlView("list");
+      this.viewObjects.detail = htmlView("detail");
     } else {
       this.viewObjects.list = gListView;
+      this.viewObjects.detail = gDetailView;
     }
 
     for (let type in this.viewObjects) {
@@ -3884,6 +3885,16 @@ var gBrowser = {
   }, true);
 }
 
+const htmlViewOpts = {
+  loadViewFn(type, param) {
+    let viewId = `addons://${type}`;
+    if (param) {
+      viewId += "/" + encodeURIComponent(param);
+    }
+    gViewController.loadView(viewId);
+  },
+};
+
 // View wrappers for the HTML version of about:addons. These delegate to an
 // HTML browser that renders the actual views.
 let htmlBrowser;
@@ -3896,7 +3907,7 @@ function getHtmlBrowser() {
     });
     htmlBrowserLoaded = new Promise(
       resolve => htmlBrowser.addEventListener("load", resolve, {once: true})
-    ).then(() => htmlBrowser.contentWindow.initialize());
+    ).then(() => htmlBrowser.contentWindow.initialize(htmlViewOpts));
   }
   return htmlBrowser;
 }
@@ -3904,7 +3915,7 @@ function getHtmlBrowser() {
 function htmlView(type) {
   return {
     node: null,
-    isRoot: true,
+    isRoot: type != "detail",
 
     initialize() {
       this.node = getHtmlBrowser();

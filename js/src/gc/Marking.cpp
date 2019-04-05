@@ -1408,10 +1408,7 @@ void js::ObjectGroup::traceChildren(JSTracer* trc) {
     TraceEdge(trc, &proto(), "group_proto");
   }
 
-  if (trc->isMarkingTracer()) {
-    realm()->mark();
-  }
-
+  // Note: the realm's global can be nullptr if we GC while creating the global.
   if (JSObject* global = realm()->unsafeUnbarrieredMaybeGlobal()) {
     TraceManuallyBarrieredEdge(trc, &global, "group_global");
   }
@@ -1447,8 +1444,7 @@ void js::GCMarker::lazilyMarkChildren(ObjectGroup* group) {
     traverseEdge(group, group->proto().toObject());
   }
 
-  group->realm()->mark();
-
+  // Note: the realm's global can be nullptr if we GC while creating the global.
   if (GlobalObject* global = group->realm()->unsafeUnbarrieredMaybeGlobal()) {
     traverseEdge(group, static_cast<JSObject*>(global));
   }

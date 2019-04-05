@@ -2,22 +2,6 @@
 
 let promptService;
 
-let gManagerWindow;
-let gCategoryUtilities;
-
-async function loadInitialView(type) {
-  gManagerWindow = await open_manager(null);
-  gCategoryUtilities = new CategoryUtilities(gManagerWindow);
-  await gCategoryUtilities.openType(type);
-
-  let browser = gManagerWindow.document.getElementById("html-view-browser");
-  return browser.contentWindow;
-}
-
-function closeView() {
-  return close_manager(gManagerWindow);
-}
-
 const SECTION_INDEXES = {
   enabled: 0,
   disabled: 1,

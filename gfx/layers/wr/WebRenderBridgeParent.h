@@ -71,11 +71,13 @@ class WebRenderBridgeParent final
 
   bool CloneWebRenderAPIs(nsTArray<RefPtr<wr::WebRenderAPI>>& aOutAPIs) {
     for (auto& api : mApis) {
-      RefPtr<wr::WebRenderAPI> clone = api->Clone();
-      if (!clone) {
-        return false;
+      if (api) {
+        RefPtr<wr::WebRenderAPI> clone = api->Clone();
+        if (!clone) {
+          return false;
+        }
+        aOutAPIs.AppendElement(clone);
       }
-      aOutAPIs.AppendElement(clone);
     }
     return true;
   }
@@ -83,10 +85,10 @@ class WebRenderBridgeParent final
       const ScreenPoint& aPoint);
   already_AddRefed<wr::WebRenderAPI> GetWebRenderAPI(
       wr::RenderRoot aRenderRoot) {
-    if ((size_t)aRenderRoot >= mApis.Length()) {
+    if (aRenderRoot > wr::kHighestRenderRoot) {
       return nullptr;
     }
-    return do_AddRef(mApis[(int)aRenderRoot]);
+    return do_AddRef(mApis[aRenderRoot]);
   }
   AsyncImagePipelineManager* AsyncImageManager() { return mAsyncImageManager; }
   CompositorVsyncScheduler* CompositorScheduler() {
@@ -273,10 +275,10 @@ class WebRenderBridgeParent final
 
   wr::WebRenderAPI* Api(wr::RenderRoot aRenderRoot) {
     if (IsRootWebRenderBridgeParent()) {
-      return mApis[(size_t)aRenderRoot];
+      return mApis[aRenderRoot];
     } else {
       MOZ_ASSERT(aRenderRoot == wr::RenderRoot::Default);
-      return mApis[(size_t)mRenderRoot];
+      return mApis[mRenderRoot];
     }
   }
 
@@ -435,7 +437,14 @@ class WebRenderBridgeParent final
   CompositorBridgeParentBase* MOZ_NON_OWNING_REF mCompositorBridge;
   wr::PipelineId mPipelineId;
   RefPtr<widget::CompositorWidget> mWidget;
-  nsTArray<RefPtr<wr::WebRenderAPI>> mApis;
+  // The RenderRootArray means there will always be a fixed number of apis,
+  // one for each RenderRoot, even if renderroot splitting isn't enabled.
+  // In this case, the unused apis will be nullptrs. Also, if this is not
+  // the root WebRenderBridgeParent, there should only be one api in this
+  // list. We avoid using a dynamically sized array for this because we
+  // need to be able to null these out in a thread-safe way from
+  // ClearResources, and there's no way to do that with an nsTArray.
+  wr::RenderRootArray<RefPtr<wr::WebRenderAPI>> mApis;
   RefPtr<AsyncImagePipelineManager> mAsyncImageManager;
   RefPtr<CompositorVsyncScheduler> mCompositorScheduler;
   RefPtr<CompositorAnimationStorage> mAnimStorage;

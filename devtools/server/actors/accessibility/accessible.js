@@ -12,13 +12,12 @@ loader.lazyRequireGetter(this, "getContrastRatioFor", "devtools/server/actors/ac
 loader.lazyRequireGetter(this, "isDefunct", "devtools/server/actors/utils/accessibility", true);
 loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
 
-const nsIAccessibleRelation = Ci.nsIAccessibleRelation;
 const RELATIONS_TO_IGNORE = new Set([
-  nsIAccessibleRelation.RELATION_CONTAINING_APPLICATION,
-  nsIAccessibleRelation.RELATION_CONTAINING_TAB_PANE,
-  nsIAccessibleRelation.RELATION_CONTAINING_WINDOW,
-  nsIAccessibleRelation.RELATION_PARENT_WINDOW_OF,
-  nsIAccessibleRelation.RELATION_SUBWINDOW_OF,
+  Ci.nsIAccessibleRelation.RELATION_CONTAINING_APPLICATION,
+  Ci.nsIAccessibleRelation.RELATION_CONTAINING_TAB_PANE,
+  Ci.nsIAccessibleRelation.RELATION_CONTAINING_WINDOW,
+  Ci.nsIAccessibleRelation.RELATION_PARENT_WINDOW_OF,
+  Ci.nsIAccessibleRelation.RELATION_SUBWINDOW_OF,
 ]);
 
 const nsIAccessibleRole = Ci.nsIAccessibleRole;
@@ -312,7 +311,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     }
 
     const relations =
-      [...this.rawAccessible.getRelations().enumerate(nsIAccessibleRelation)];
+      [...this.rawAccessible.getRelations().enumerate(Ci.nsIAccessibleRelation)];
     if (relations.length === 0) {
       return relationObjects;
     }

@@ -9,10 +9,11 @@
 add_task(async function() {
   const dbg = await initDebugger("doc-audiocontext.html");
 
-  invokeInTab("myFunction");
-  invokeInTab("suspendAC");
+  await invokeInTab("myFunction");
+  await invokeInTab("suspendAC");
   invokeInTab("debuggerStatement");
   await waitForPaused(dbg);
-  invokeInTab("checkACState");
+  await resume(dbg);
+  await invokeInTab("checkACState");
   ok(true, "No AudioContext state transition are caused by the debugger")
 });

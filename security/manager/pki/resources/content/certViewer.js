@@ -12,17 +12,6 @@
  *           The cert to view, queryable to nsIX509Cert.
  */
 
-const nsIX509Cert = Ci.nsIX509Cert;
-const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
-const nsIX509CertDB = Ci.nsIX509CertDB;
-const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
-const nsIPK11TokenDB = Ci.nsIPK11TokenDB;
-const nsIASN1Object = Ci.nsIASN1Object;
-const nsIASN1Sequence = Ci.nsIASN1Sequence;
-const nsIASN1PrintableItem = Ci.nsIASN1PrintableItem;
-const nsIASN1Tree = Ci.nsIASN1Tree;
-const nsASN1Tree = "@mozilla.org/security/nsASN1Tree;1";
-
 /**
  * Fills out the "Certificate Hierarchy" tree of the cert viewer "Details" tab.
  *
@@ -196,7 +185,7 @@ function addTreeItemToTreeChild(treeChild, label, value, addTwistie) {
 
 function displaySelected() {
   var asn1Tree = document.getElementById("prettyDumpTree")
-          .view.QueryInterface(nsIASN1Tree);
+          .view.QueryInterface(Ci.nsIASN1Tree);
   var items = asn1Tree.selection;
   var certDumpVal = document.getElementById("certDumpVal");
   if (items.currentIndex != -1) {
@@ -208,8 +197,8 @@ function displaySelected() {
 }
 
 function BuildPrettyPrint(cert) {
-  var certDumpTree = Cc[nsASN1Tree].
-                          createInstance(nsIASN1Tree);
+  var certDumpTree = Cc["@mozilla.org/security/nsASN1Tree;1"].
+                          createInstance(Ci.nsIASN1Tree);
   certDumpTree.loadASN1Structure(cert.ASN1Structure);
   document.getElementById("prettyDumpTree").view = certDumpTree;
 }
@@ -246,14 +235,14 @@ function DisplayGeneralDataFromCert(cert) {
 
 function updateCertDump() {
   var asn1Tree = document.getElementById("prettyDumpTree")
-          .view.QueryInterface(nsIASN1Tree);
+          .view.QueryInterface(Ci.nsIASN1Tree);
 
   var tree = document.getElementById("treesetDump");
   if (tree.currentIndex >= 0) {
     var item = tree.view.getItemAtIndex(tree.currentIndex);
     var dbKey = item.firstChild.firstChild.getAttribute("display");
     //  Get the cert from the cert database
-    var certdb = Cc[nsX509CertDB].getService(nsIX509CertDB);
+    var certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509CertDB);
     var cert = certdb.findCertByDBKey(dbKey);
     asn1Tree.loadASN1Structure(cert.ASN1Structure);
   }
@@ -277,7 +266,7 @@ function getCurrentCert() {
   if (realIndex >= 0) {
     var item = tree.view.getItemAtIndex(realIndex);
     var dbKey = item.firstChild.firstChild.getAttribute("display");
-    var certdb = Cc[nsX509CertDB].getService(nsIX509CertDB);
+    var certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(Ci.nsIX509CertDB);
     var cert = certdb.findCertByDBKey(dbKey);
     return cert;
   }

@@ -30,7 +30,7 @@
   <hbox id="customization-footer">
     <checkbox id="customization-titlebar-visibility-checkbox" class="customizationmode-checkbox"
               label="&customizeMode.titlebar;"
-#NB: because oncommand fires after click, by the time we've fired, the checkbox binding
+# NB: because oncommand fires after click, by the time we've fired, the checkbox binding
 #    will already have switched the button's state, so this is correct:
               oncommand="gCustomizeMode.toggleTitlebar(this.checked)"/>
     <checkbox id="customization-extra-drag-space-checkbox" class="customizationmode-checkbox"

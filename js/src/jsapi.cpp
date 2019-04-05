@@ -2972,13 +2972,7 @@ JS_PUBLIC_API bool JS::ObjectToCompletePropertyDescriptor(
   return true;
 }
 
-JS_PUBLIC_API void JS_SetAllNonReservedSlotsToUndefined(JSContext* cx,
-                                                        JSObject* objArg) {
-  RootedObject obj(cx, objArg);
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  cx->check(obj);
-
+JS_PUBLIC_API void JS_SetAllNonReservedSlotsToUndefined(JS::HandleObject obj) {
   if (!obj->isNative()) {
     return;
   }
