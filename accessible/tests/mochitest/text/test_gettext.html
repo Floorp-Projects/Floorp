@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Get text between offsets tests</title>
+  <meta charset="utf-8">
   <link rel="stylesheet" type="text/css"
         href="chrome://mochikit/content/tests/SimpleTest/test.css" />
 
@@ -64,6 +65,22 @@
       testText(IDs, 0, 19, "oneword\n\ntwo words\n");
       testText(IDs, 0, -1, "oneword\n\ntwo words\n");
 
+      // ////////////////////////////////////////////////////////////////////////
+      //
+      // CSS text-transform
+      //
+      // Content with `text-transform:uppercase | lowercase | capitalize` returns
+      // the transformed content.
+      //
+      testText(["d4a"], 0, -1, "HELLO MY FRIEND");
+      testText(["d4b"], 0, -1, "hello my friend");
+      testText(["d4c"], 0, -1, "Hello My Friend");
+
+      // `text-transform: full-width | full-size-kana` should not be reflected in
+      // a11y, see https://bugzilla.mozilla.org/show_bug.cgi?id=1541668.
+      testText(["d5a"], 0, -1, "hello my friend", kTodo);
+      testText(["d5b"], 0, -1, "ゕゖヵヶ", kTodo);
+
       SimpleTest.finish();
     }
 
@@ -106,6 +123,13 @@ two words
 two words
 </textarea>
   </pre>
+
+  <div id="d4a" style="text-transform:uppercase">Hello My Friend</div>
+  <div id="d4b" style="text-transform:lowercase">Hello My Friend</div>
+  <div id="d4c" style="text-transform:capitalize">hello my friend</div>
+
+  <div id="d5a" style="text-transform:full-width">hello my friend</div>
+  <div id="d5b" style="text-transform:full-size-kana">ゕゖヵヶ</div>
 
 </body>
 </html>
