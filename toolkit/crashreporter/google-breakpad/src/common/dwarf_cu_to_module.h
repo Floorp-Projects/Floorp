@@ -315,7 +315,7 @@ class DwarfCUToModule: public dwarf2reader::RootDIEHandler {
   // functions in functions_.  (DWARF line information maps an entire
   // compilation unit at a time, and gives no indication of which
   // lines belong to which functions, beyond their addresses.)
-  void AssignLinesToFunctions();
+  void AssignLinesToFunctions(const LineToModuleHandler::FileMap &files);
 
   // The only reason cu_context_ and child_context_ are pointers is
   // that we want to keep their definitions private to
