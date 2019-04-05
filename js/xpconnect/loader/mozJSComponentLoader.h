@@ -146,14 +146,12 @@ class mozJSComponentLoader final {
       getfactoryobj = nullptr;
 
       if (obj) {
-        mozilla::AutoJSContext cx;
-        JSAutoRealm ar(cx, obj);
-
         if (JS_HasExtensibleLexicalEnvironment(obj)) {
-          JS_SetAllNonReservedSlotsToUndefined(
-              cx, JS_ExtensibleLexicalEnvironment(obj));
+          JS::RootedObject lexicalEnv(mozilla::dom::RootingCx(),
+                                      JS_ExtensibleLexicalEnvironment(obj));
+          JS_SetAllNonReservedSlotsToUndefined(lexicalEnv);
         }
-        JS_SetAllNonReservedSlotsToUndefined(cx, obj);
+        JS_SetAllNonReservedSlotsToUndefined(obj);
         obj = nullptr;
         thisObjectKey = nullptr;
       }

@@ -131,11 +131,6 @@
   margin-inline-end: 28px;
 }
 
-#contentBlockingCategories[fallback-ui] .default-content-blocking-ui,
-#contentBlockingCategories:not([fallback-ui]) .fallback-content-blocking-ui {
-  display: none;
-}
-
 .arrowhead {
   -moz-appearance: none;
   border: none;
@@ -240,13 +235,13 @@
   margin-top: 18px;
 }
 
-.extra-information-label:last-child {
-  margin-bottom: 18px;
-}
-
 .content-blocking-category.expanded .content-blocking-extra-information,
 .content-blocking-category.selected .content-blocking-extra-information {
   visibility: visible;
+}
+
+.content-blocking-extra-information > .indent {
+  margin-bottom: 18px;
 }
 
 .content-blocking-extra-information > .custom-option {
@@ -260,7 +255,7 @@
   margin: 10px 0;
 }
 
-.content-blocking-warning + .content-blocking-warning {
+.content-blocking-warning:not([hidden]) + .content-blocking-warning {
   margin-top: 0;
 }
 
@@ -271,6 +266,16 @@
 
 .content-blocking-cookies-image {
   list-style-image: url("chrome://browser/skin/controlcenter/3rdpartycookies-disabled.svg");
+  margin-inline-end: 5px;
+}
+
+.content-blocking-cryptominers-image {
+  list-style-image: url("chrome://browser/skin/controlcenter/cryptominers-disabled.svg");
+  margin-inline-end: 5px;
+}
+
+.content-blocking-fingerprinters-image {
+  list-style-image: url("chrome://browser/skin/controlcenter/fingerprinters-disabled.svg");
   margin-inline-end: 5px;
 }
 

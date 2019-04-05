@@ -30,18 +30,12 @@ from mozproxy import mozharness_dir
 
 LOG = get_proxy_logger(component="mozproxy")
 
+# running locally via mach
+TOOLTOOL_PATHS = [os.path.join(mozharness_dir, "external_tools", "tooltool.py")]
+
 if "MOZ_UPLOAD_DIR" in os.environ:
-    TOOLTOOL_PATH = os.path.join(
-        os.environ["MOZ_UPLOAD_DIR"],
-        "..",
-        "..",
-        "mozharness",
-        "external_tools",
-        "tooltool.py",
-    )
-else:
-    # running locally via mach
-    TOOLTOOL_PATH = os.path.join(mozharness_dir, "external_tools", "tooltool.py")
+    TOOLTOOL_PATHS.append(os.path.join(
+        os.environ["MOZ_UPLOAD_DIR"], "..", "..", "mozharness", "external_tools", "tooltool.py"))
 
 
 def transform_platform(str_to_transform, config_platform, config_processor=None):
@@ -78,8 +72,18 @@ def tooltool_download(manifest, run_local, raptor_dir):
     def outputHandler(line):
         LOG.info(line)
 
+    tooltool_path = None
+
+    for path in TOOLTOOL_PATHS:
+        if os.path.exists(os.path.dirname(path)):
+            tooltool_path = path
+            break
+
+    if tooltool_path is None:
+        raise Exception("Could not find tooltool path!")
+
     if run_local:
-        command = [sys.executable, TOOLTOOL_PATH, "fetch", "-o", "-m", manifest]
+        command = [sys.executable, tooltool_path, "fetch", "-o", "-m", manifest]
     else:
         # Attempt to determine the tooltool cache path:
         #  - TOOLTOOLCACHE is used by Raptor tests
@@ -97,7 +101,7 @@ def tooltool_download(manifest, run_local, raptor_dir):
 
         command = [
             sys.executable,
-            TOOLTOOL_PATH,
+            tooltool_path,
             "fetch",
             "-o",
             "-m",

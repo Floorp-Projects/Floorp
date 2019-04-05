@@ -4220,7 +4220,6 @@ bool GCRuntime::prepareZonesForCollection(JS::GCReason reason,
     c->gcState.maybeAlive = false;
     c->gcState.hasEnteredRealm = false;
     for (RealmsInCompartmentIter r(c); !r.done(); r.next()) {
-      r->unmark();
       if (r->shouldTraceGlobal() || !r->zone()->isGCScheduled()) {
         c->gcState.maybeAlive = true;
       }

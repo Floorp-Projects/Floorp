@@ -259,9 +259,10 @@ static LanguageSpecificCasingBehavior GetCasingFor(const nsAtom* aLang) {
 
 bool nsCaseTransformTextRunFactory::TransformString(
     const nsAString& aString, nsString& aConvertedString, bool aAllUppercase,
-    const nsAtom* aLanguage, nsTArray<bool>& aCharsToMergeArray,
-    nsTArray<bool>& aDeletedCharsArray, const nsTransformedTextRun* aTextRun,
-    uint32_t aOffsetInTextRun, nsTArray<uint8_t>* aCanBreakBeforeArray,
+    bool aCaseTransformsOnly, const nsAtom* aLanguage,
+    nsTArray<bool>& aCharsToMergeArray, nsTArray<bool>& aDeletedCharsArray,
+    const nsTransformedTextRun* aTextRun, uint32_t aOffsetInTextRun,
+    nsTArray<uint8_t>* aCanBreakBeforeArray,
     nsTArray<RefPtr<nsTransformedCharStyle>>* aStyleArray) {
   bool auxiliaryOutputArrays = aCanBreakBeforeArray && aStyleArray;
   MOZ_ASSERT(!auxiliaryOutputArrays || aTextRun,
@@ -575,7 +576,9 @@ bool nsCaseTransformTextRunFactory::TransformString(
         break;
 
       case NS_STYLE_TEXT_TRANSFORM_FULL_WIDTH:
-        ch = mozilla::unicode::GetFullWidth(ch);
+        if (!aCaseTransformsOnly) {
+          ch = mozilla::unicode::GetFullWidth(ch);
+        }
         break;
 
       case NS_STYLE_TEXT_TRANSFORM_FULL_SIZE_KANA: {
@@ -612,10 +615,12 @@ bool nsCaseTransformTextRunFactory::TransformString(
             0xFF71, 0xFF72, 0xFF73, 0xFF74, 0xFF75, 0xFF94, 0xFF95, 0xFF96, 0xFF82};
         // clang-format on
 
-        size_t index;
-        const uint16_t len = MOZ_ARRAY_LENGTH(kSmallKanas);
-        if (mozilla::BinarySearch(kSmallKanas, 0, len, ch, &index)) {
-          ch = kFullSizeKanas[index];
+        if (!aCaseTransformsOnly) {
+          size_t index;
+          const uint16_t len = MOZ_ARRAY_LENGTH(kSmallKanas);
+          if (mozilla::BinarySearch(kSmallKanas, 0, len, ch, &index)) {
+            ch = kFullSizeKanas[index];
+          }
         }
         break;
       }
@@ -679,10 +684,10 @@ void nsCaseTransformTextRunFactory::RebuildTextRun(
   AutoTArray<uint8_t, 50> canBreakBeforeArray;
   AutoTArray<RefPtr<nsTransformedCharStyle>, 50> styleArray;
 
-  bool mergeNeeded =
-      TransformString(aTextRun->mString, convertedString, mAllUppercase,
-                      nullptr, charsToMergeArray, deletedCharsArray, aTextRun,
-                      0, &canBreakBeforeArray, &styleArray);
+  bool mergeNeeded = TransformString(
+      aTextRun->mString, convertedString, mAllUppercase,
+      /* aCaseTransformsOnly = */ false, nullptr, charsToMergeArray,
+      deletedCharsArray, aTextRun, 0, &canBreakBeforeArray, &styleArray);
 
   gfx::ShapedTextFlags flags;
   gfxTextRunFactory::Parameters innerParams =

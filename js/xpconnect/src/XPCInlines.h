@@ -201,7 +201,7 @@ inline size_t XPCNativeInterface::OffsetOfMembers() {
 
 inline XPCNativeSetKey::XPCNativeSetKey(XPCNativeSet* baseSet,
                                         XPCNativeInterface* addition)
-    : mBaseSet(baseSet), mAddition(addition) {
+    : mCx(nullptr), mBaseSet(baseSet), mAddition(addition) {
   MOZ_ASSERT(mBaseSet);
   MOZ_ASSERT(mAddition);
   MOZ_ASSERT(!mBaseSet->HasInterface(mAddition));

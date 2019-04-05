@@ -6,6 +6,7 @@
 
 const {Utils: WebConsoleUtils} = require("devtools/client/webconsole/utils");
 const Services = require("Services");
+const { debounce } = require("devtools/shared/debounce");
 
 loader.lazyServiceGetter(this, "clipboardHelper",
                          "@mozilla.org/widget/clipboardhelper;1",
@@ -77,6 +78,7 @@ class JSTerm extends Component {
       updateHistoryPosition: PropTypes.func.isRequired,
       // Update autocomplete popup state.
       autocompleteUpdate: PropTypes.func.isRequired,
+      autocompleteClear: PropTypes.func.isRequired,
       // Data to be displayed in the autocomplete popup.
       autocompleteData: PropTypes.object.isRequired,
       // Is the input in editor mode.
@@ -100,6 +102,11 @@ class JSTerm extends Component {
     this._blurEventHandler = this._blurEventHandler.bind(this);
     this.onContextMenu = this.onContextMenu.bind(this);
     this.imperativeUpdate = this.imperativeUpdate.bind(this);
+
+    // We debounce the autocompleteUpdate so we don't send too many requests to the server
+    // as the user is typing.
+    // The delay should be small enough to be unnoticed by the user.
+    this.autocompleteUpdate = debounce(this.props.autocompleteUpdate, 75, this);
 
     /**
      * Last input value.
@@ -808,7 +815,7 @@ class JSTerm extends Component {
     if (this.lastInputValue !== value) {
       this.resizeInput();
       if (this.props.autocomplete) {
-        this.props.autocompleteUpdate();
+        this.autocompleteUpdate();
       }
       this.lastInputValue = value;
     }
@@ -1347,7 +1354,7 @@ class JSTerm extends Component {
       }
     }
 
-    this.clearCompletion();
+    this.props.autocompleteClear();
 
     if (completionText) {
       this.insertStringAtCursor(completionText, numberOfCharsToReplaceCharsBeforeCursor);
@@ -1630,7 +1637,7 @@ function mapDispatchToProps(dispatch) {
     updateHistoryPosition: (direction, expression) =>
       dispatch(historyActions.updateHistoryPosition(direction, expression)),
     autocompleteUpdate: force => dispatch(autocompleteActions.autocompleteUpdate(force)),
-    autocompleteBailOut: () => dispatch(autocompleteActions.autocompleteBailOut()),
+    autocompleteClear: () => dispatch(autocompleteActions.autocompleteClear()),
   };
 }
 

@@ -3220,7 +3220,8 @@ bool gfxFont::InitFakeSmallCapsRun(DrawTarget* aDrawTarget,
           AutoTArray<bool, 50> deletedCharsArray;
 
           bool mergeNeeded = nsCaseTransformTextRunFactory::TransformString(
-              origString, convertedString, true,
+              origString, convertedString, /* aAllUppercase = */ true,
+              /* aCaseTransformsOnly = */ false,
               mStyle.explicitLanguage ? mStyle.language.get() : nullptr,
               charsToMergeArray, deletedCharsArray);
 

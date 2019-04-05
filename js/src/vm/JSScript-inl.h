@@ -117,10 +117,11 @@ inline js::RegExpObject* JSScript::getRegExp(jsbytecode* pc) {
 
 inline js::GlobalObject& JSScript::global() const {
   /*
-   * A JSScript always marks its realm's global (via bindings) so we can
-   * assert that maybeGlobal is non-null here.
+   * A JSScript always marks its realm's global so we can assert it's non-null
+   * here. We don't need a read barrier here for the same reason
+   * JSObject::nonCCWGlobal doesn't need one.
    */
-  return *realm()->maybeGlobal();
+  return *realm()->unsafeUnbarrieredMaybeGlobal();
 }
 
 inline bool JSScript::hasGlobal(const js::GlobalObject* global) const {

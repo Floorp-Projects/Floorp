@@ -185,8 +185,12 @@ def write_histogram_static_asserts(output, histograms):
         'exponential': static_asserts_for_exponential,
     }
 
+    target_os = buildconfig.substs["OS_TARGET"]
     for histogram in histograms:
         kind = histogram.kind()
+        if not histogram.record_on_os(target_os):
+            continue
+
         if kind not in table:
             raise Exception('Unknown kind "%s" for histogram "%s".' % (kind, histogram.name()))
         fn = table[kind]

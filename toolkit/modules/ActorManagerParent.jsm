@@ -231,6 +231,16 @@ let ACTORS = {
     },
   },
 
+  PictureInPictureToggle: {
+    child: {
+      allFrames: true,
+      module: "resource://gre/actors/PictureInPictureChild.jsm",
+      events: {
+        "canplay": {capture: true, mozSystemGroup: true},
+      },
+    },
+  },
+
   PopupBlocking: {
     child: {
       module: "resource://gre/actors/PopupBlockingChild.jsm",

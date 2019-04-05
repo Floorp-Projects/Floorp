@@ -6,10 +6,6 @@ var gBrowser;
 var gProgressListener;
 var gDebugger;
 
-const nsILayoutDebuggingTools = Ci.nsILayoutDebuggingTools;
-const nsIDocShell = Ci.nsIDocShell;
-const nsIWebProgressListener = Ci.nsIWebProgressListener;
-
 const NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID = "@mozilla.org/layout-debug/layout-debuggingtools;1";
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
@@ -41,18 +37,18 @@ nsLDBBrowserContentListener.prototype = {
   // nsIWebProgressListener implementation
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
     {
-      if (!(aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) ||
+      if (!(aStateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK) ||
           aWebProgress != gBrowser.webProgress)
         return;
 
-      if (aStateFlags & nsIWebProgressListener.STATE_START) {
+      if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
         this.setButtonEnabled(this.mStopButton, true);
         this.setButtonEnabled(this.mForwardButton, gBrowser.canGoForward);
         this.setButtonEnabled(this.mBackButton, gBrowser.canGoBack);
         this.mStatusText.value = "loading...";
         this.mLoading = true;
 
-      } else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
+      } else if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
         this.setButtonEnabled(this.mStopButton, false);
         this.mStatusText.value = this.mURLBar.value + " loaded";
         this.mLoading = false;
@@ -112,7 +108,7 @@ function OnLDBLoad()
   gBrowser.addProgressListener(gProgressListener);
 
   gDebugger = Cc[NS_LAYOUT_DEBUGGINGTOOLS_CONTRACTID].
-                  createInstance(nsILayoutDebuggingTools);
+                  createInstance(Ci.nsILayoutDebuggingTools);
 
   if (window.arguments && window.arguments[0]) {
     gBrowser.loadURI(window.arguments[0], {
@@ -162,13 +158,12 @@ function toggle(menuitem)
 
 function openFile()
 {
-  var nsIFilePicker = Ci.nsIFilePicker;
   var fp = Cc["@mozilla.org/filepicker;1"]
-        .createInstance(nsIFilePicker);
-  fp.init(window, "Select a File", nsIFilePicker.modeOpen);
-  fp.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterAll);
+        .createInstance(Ci.nsIFilePicker);
+  fp.init(window, "Select a File", Ci.nsIFilePicker.modeOpen);
+  fp.appendFilters(Ci.nsIFilePicker.filterHTML | Ci.nsIFilePicker.filterAll);
   fp.open(rv => {
-    if (rv == nsIFilePicker.returnOK && fp.fileURL.spec &&
+    if (rv == Ci.nsIFilePicker.returnOK && fp.fileURL.spec &&
         fp.fileURL.spec.length > 0) {
       gBrowser.loadURI(fp.fileURL.spec, {
         triggeringPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),

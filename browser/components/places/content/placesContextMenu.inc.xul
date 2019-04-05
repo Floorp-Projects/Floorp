@@ -1,7 +1,7 @@
 <menupopup id="placesContext"
            onpopupshowing="this._view = PlacesUIUtils.getViewForNode(document.popupNode);
                            if (!PlacesUIUtils.openInTabClosesMenu) {
-                             document.getElementById ('placesContext_open:newtab')
+                             document.getElementById('placesContext_open:newtab')
                              .setAttribute('closemenu', 'single');
                            }
                            return this._view.buildContextMenu(this);"

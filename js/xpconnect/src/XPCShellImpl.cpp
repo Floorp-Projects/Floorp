@@ -1397,9 +1397,9 @@ int XRE_XPCShellMain(int argc, char** argv, char** envp,
       }
 
       JS_DropPrincipals(cx, gJSPrincipals);
-      JS_SetAllNonReservedSlotsToUndefined(cx, glob);
-      JS_SetAllNonReservedSlotsToUndefined(cx,
-                                           JS_GlobalLexicalEnvironment(glob));
+      JS_SetAllNonReservedSlotsToUndefined(glob);
+      JS::RootedObject lexicalEnv(cx, JS_GlobalLexicalEnvironment(glob));
+      JS_SetAllNonReservedSlotsToUndefined(lexicalEnv);
       JS_GC(cx);
     }
     JS_GC(cx);

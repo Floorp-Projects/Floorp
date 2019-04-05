@@ -25,9 +25,6 @@ function setText(id, value) {
   element.appendChild(document.createTextNode(value));
 }
 
-const nsICertificateDialogs = Ci.nsICertificateDialogs;
-const nsCertificateDialogs = "@mozilla.org/nsCertificateDialogs;1";
-
 function viewCertHelper(parent, cert) {
   if (!cert) {
     return;

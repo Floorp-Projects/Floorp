@@ -11,7 +11,6 @@ var gChecking;
 var gBroken;
 var gNeedReset;
 var gSecHistogram;
-var gNsISecTel;
 
 const {PrivateBrowsingUtils} = ChromeUtils.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 
@@ -19,7 +18,6 @@ function initExceptionDialog() {
   gNeedReset = false;
   gDialog = document.documentElement;
   gSecHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
-  gNsISecTel = Ci.nsISecurityUITelemetry;
   let warningText = document.getElementById("warningText");
   document.l10n.setAttributes(warningText, "add-exception-branded-warning");
   let confirmButton = gDialog.getButton("extra1");
@@ -191,7 +189,7 @@ function updateCertStatus() {
   var shortDesc3, longDesc3;
   var use2 = false;
   var use3 = false;
-  let bucketId = gNsISecTel.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_BASE;
+  let bucketId = Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_BASE;
   let l10nUpdatedElements = [];
   if (gCert) {
     if (gBroken) {
@@ -203,13 +201,13 @@ function updateCertStatus() {
       var utl = "add-exception-unverified-or-bad-signature-long";
       var use1 = false;
       if (gSecInfo.isDomainMismatch) {
-        bucketId += gNsISecTel.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_FLAG_DOMAIN;
+        bucketId += Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_FLAG_DOMAIN;
         use1 = true;
         shortDesc = mms;
         longDesc  = mml;
       }
       if (gSecInfo.isNotValidAtThisTime) {
-        bucketId += gNsISecTel.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_FLAG_TIME;
+        bucketId += Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_FLAG_TIME;
         if (!use1) {
           use1 = true;
           shortDesc = exs;
@@ -222,7 +220,7 @@ function updateCertStatus() {
       }
       if (gSecInfo.isUntrusted) {
         bucketId +=
-          gNsISecTel.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_FLAG_UNTRUSTED;
+          Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_ADD_EXCEPTION_FLAG_UNTRUSTED;
         if (!use1) {
           use1 = true;
           shortDesc = uts;
@@ -318,7 +316,7 @@ function updateCertStatus() {
  * Handle user request to display certificate details
  */
 function viewCertButtonClick() {
-  gSecHistogram.add(gNsISecTel.WARNING_BAD_CERT_TOP_CLICK_VIEW_CERT);
+  gSecHistogram.add(Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_CLICK_VIEW_CERT);
   if (gCert) {
     viewCertHelper(this, gCert);
   }
@@ -336,28 +334,28 @@ function addException() {
                           .getService(Ci.nsICertOverrideService);
   var flags = 0;
   let confirmBucketId =
-        gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_BASE;
+        Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_BASE;
   if (gSecInfo.isUntrusted) {
     flags |= overrideService.ERROR_UNTRUSTED;
     confirmBucketId +=
-        gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_UNTRUSTED;
+        Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_UNTRUSTED;
   }
   if (gSecInfo.isDomainMismatch) {
     flags |= overrideService.ERROR_MISMATCH;
     confirmBucketId +=
-           gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_DOMAIN;
+           Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_DOMAIN;
   }
   if (gSecInfo.isNotValidAtThisTime) {
     flags |= overrideService.ERROR_TIME;
     confirmBucketId +=
-           gNsISecTel.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_TIME;
+           Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_CONFIRM_ADD_EXCEPTION_FLAG_TIME;
   }
 
   var permanentCheckbox = document.getElementById("permanent");
   var shouldStorePermanently = permanentCheckbox.checked &&
                                !inPrivateBrowsingMode();
   if (!permanentCheckbox.checked) {
-    gSecHistogram.add(gNsISecTel.WARNING_BAD_CERT_TOP_DONT_REMEMBER_EXCEPTION);
+    gSecHistogram.add(Ci.nsISecurityUITelemetry.WARNING_BAD_CERT_TOP_DONT_REMEMBER_EXCEPTION);
   }
 
   gSecHistogram.add(confirmBucketId);

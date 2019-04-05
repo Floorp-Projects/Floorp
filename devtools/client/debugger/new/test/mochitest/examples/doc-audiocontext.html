@@ -15,10 +15,8 @@
 <button id="check" onclick="checkACState()">check ac state</button>
 <script type="text/javascript">
 var ac = null;
-var suspend_called = false;
-function suspendAC() {
-  suspend_called = true;
-  ac.suspend();
+async function suspendAC() {
+  await ac.suspend();
 }
 
 function debuggerStatement() {
@@ -31,17 +29,20 @@ function checkACState() {
   }
 }
 
-function myFunction() {
-  ac = new AudioContext();
-  function statechange_suspend() {
-    ac.onstatechange = statechange_fail;
-  }
-  function statechange_fail() {
-    throw "No state change should occur when paused in the debugger.";
-  }
-  ac.onstatechange = function() {
-    ac.onstatechange = statechange_suspend;
-  }
+async function myFunction() {
+  await new Promise((resolve) => {
+    ac = new AudioContext();
+    function statechange_suspend() {
+      ac.onstatechange = statechange_fail;
+    }
+    function statechange_fail() {
+      throw "No state change should occur when paused in the debugger.";
+    }
+    ac.onstatechange = function() {
+      ac.onstatechange = statechange_suspend;
+      resolve();
+    }
+  });
 }
 </script>
 </body>

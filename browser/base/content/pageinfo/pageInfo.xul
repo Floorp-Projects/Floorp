@@ -164,7 +164,7 @@
     <!-- Media information -->
     <vbox id="mediaPanel">
       <tree id="imagetree" onselect="onImageSelect();" contextmenu="picontext"
-            ondragstart="onBeginLinkDrag(event,'image-address','image-alt')">
+            ondragstart="onBeginLinkDrag(event, 'image-address', 'image-alt')">
         <treecols>
           <treecol primary="true" persist="width" flex="10"
                         width="10" id="image-address" data-l10n-id="media-address"

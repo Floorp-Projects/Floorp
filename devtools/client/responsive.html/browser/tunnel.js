@@ -417,6 +417,8 @@ MessageManagerTunnel.prototype = {
     "SessionStore:flush",
     "SessionStore:restoreHistory",
     "SessionStore:restoreTabContent",
+    // Messages sent from viewZoomOverlay.js.
+    "FullZoom",
   ],
 
   INNER_TO_OUTER_MESSAGES: [

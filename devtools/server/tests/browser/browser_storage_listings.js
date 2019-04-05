@@ -602,6 +602,8 @@ var testIDBEntries = async function(index, hosts, indexedDBActor) {
 };
 
 add_task(async function() {
+  await SpecialPowers.pushPrefEnv({set: [["privacy.documentCookies.maxage", 0]]});
+
   const { target, front } =
     await openTabAndSetupStorage(MAIN_DOMAIN + "storage-listings.html");
 

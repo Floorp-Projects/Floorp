@@ -301,7 +301,7 @@ void WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
   // to do this cleverly in the common case to avoid too much overhead.
   XPCWrappedNative* newwn = XPCWrappedNative::Get(obj);
   RefPtr<XPCNativeSet> unionSet =
-      XPCNativeSet::GetNewOrUsed(newwn->GetSet(), wn->GetSet(), false);
+      XPCNativeSet::GetNewOrUsed(cx, newwn->GetSet(), wn->GetSet(), false);
   if (!unionSet) {
     return;
   }

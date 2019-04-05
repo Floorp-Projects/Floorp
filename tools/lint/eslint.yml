@@ -4,7 +4,7 @@ eslint:
     # ESLint infra handles its own path filtering, so just include cwd
     include: ['.']
     exclude: []
-    extensions: ['js', 'jsm', 'jsx', 'xml', 'html', 'xhtml']
+    extensions: ['js', 'jsm', 'jsx', 'xml', 'xul', 'html', 'xhtml']
     support-files:
         - '**/.eslintrc.js'
         - '.eslintignore'

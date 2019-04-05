@@ -202,6 +202,7 @@ Var ArchToInstall
 !define NONADMIN_ELEVATE
 
 !define CONFIG_INI "config.ini"
+!define PARTNER_INI "$EXEDIR\partner.ini"
 
 !ifndef FILE_SHARE_READ
   !define FILE_SHARE_READ 1
@@ -907,19 +908,10 @@ FunctionEnd
 
 Function StartDownload
   ${NSD_KillTimer} StartDownload
-  ${If} $ArchToInstall == ${ARCH_AMD64}
-    InetBgDL::Get "${URLStubDownloadAMD64}${URLStubDownloadAppend}" \
-                  "$PLUGINSDIR\download.exe" \
-                  /CONNECTTIMEOUT 120 /RECEIVETIMEOUT 120 /END
-  ${ElseIf} $ArchToInstall == ${ARCH_AARCH64}
-    InetBgDL::Get "${URLStubDownloadAArch64}${URLStubDownloadAppend}" \
-                  "$PLUGINSDIR\download.exe" \
-                  /CONNECTTIMEOUT 120 /RECEIVETIMEOUT 120 /END
-  ${Else}
-    InetBgDL::Get "${URLStubDownloadX86}${URLStubDownloadAppend}" \
-                  "$PLUGINSDIR\download.exe" \
-                  /CONNECTTIMEOUT 120 /RECEIVETIMEOUT 120 /END
-  ${EndIf}
+  Call GetDownloadURL
+  Pop $0
+  InetBgDL::Get "$0" "$PLUGINSDIR\download.exe" \
+                /CONNECTTIMEOUT 120 /RECEIVETIMEOUT 120 /END
   StrCpy $4 ""
   ${NSD_CreateTimer} OnDownload ${DownloadIntervalMS}
   ${If} ${FileExists} "$INSTDIR\${TO_BE_DELETED}"
@@ -1965,13 +1957,15 @@ FunctionEnd
 ; 2) An amount of RAM strictly greater than RAM_NEEDED_FOR_64BIT
 ; 3) No third-party products installed that cause issues with the 64-bit build.
 ;    Currently this includes Lenovo OneKey Theater and Lenovo Energy Management.
+; We also make sure that the partner.ini file contains a download URL for the
+; selected architecture, when a partner.ini file eixsts.
 ; If any of those checks fail, the 32-bit x86 build is selected.
 Function GetArchToInstall
   StrCpy $ArchToInstall ${ARCH_X86}
 
   ${If} ${IsNativeARM64}
     StrCpy $ArchToInstall ${ARCH_AARCH64}
-    Return
+    GoTo downloadUrlCheck
   ${EndIf}
 
   ${IfNot} ${IsNativeAMD64}
@@ -1997,6 +1991,59 @@ Function GetArchToInstall
   ${EndIf}
 
   StrCpy $ArchToInstall ${ARCH_AMD64}
+
+  downloadUrlCheck:
+  ; If we've selected an architecture that doesn't have a download URL in the
+  ; partner.ini, but there is a URL there for 32-bit x86, then fall back to
+  ; 32-bit x86 on the theory that we should never use a non-partner build if
+  ; we are configured as a partner installer, even if the only build that's
+  ; provided is suboptimal for the machine. If there isn't even an x86 URL,
+  ; then we won't force x86 and GetDownloadURL will stick with the built-in URL.
+  ClearErrors
+  ReadINIStr $1 "${PARTNER_INI}" "DownloadURL" "X86"
+  ${IfNot} ${Errors}
+    ${If} $ArchToInstall == ${ARCH_AMD64}
+      ReadINIStr $1 "${PARTNER_INI}" "DownloadURL" "AMD64"
+      ${If} ${Errors}
+        StrCpy $ArchToInstall ${ARCH_X86}
+      ${EndIf}
+    ${ElseIf} $ArchToInstall == ${ARCH_AARCH64}
+      ReadINIStr $1 "${PARTNER_INI}" "DownloadURL" "AArch64"
+      ${If} ${Errors}
+        StrCpy $ArchToInstall ${ARCH_X86}
+      ${EndIf}
+    ${EndIf}
+  ${EndIf}
+FunctionEnd
+
+Function GetDownloadURL
+  Push $0
+  Push $1
+
+  ; Start with the appropriate URL from our built-in branding info.
+  ${If} $ArchToInstall == ${ARCH_AMD64}
+    StrCpy $0 "${URLStubDownloadAMD64}${URLStubDownloadAppend}"
+  ${ElseIf} $ArchToInstall == ${ARCH_AARCH64}
+    StrCpy $0 "${URLStubDownloadAArch64}${URLStubDownloadAppend}"
+  ${Else}
+    StrCpy $0 "${URLStubDownloadX86}${URLStubDownloadAppend}"
+  ${EndIf}
+
+  ; If we have a partner.ini file then use the URL from there instead.
+  ClearErrors
+  ${If} $ArchToInstall == ${ARCH_AMD64}
+    ReadINIStr $1 "${PARTNER_INI}" "DownloadURL" "AMD64"
+  ${ElseIf} $ArchToInstall == ${ARCH_AARCH64}
+    ReadINIStr $1 "${PARTNER_INI}" "DownloadURL" "AArch64"
+  ${Else}
+    ReadINIStr $1 "${PARTNER_INI}" "DownloadURL" "X86"
+  ${EndIf}
+  ${IfNot} ${Errors}
+    StrCpy $0 "$1"
+  ${EndIf}
+
+  Pop $1
+  Exch $0
 FunctionEnd
 
 Section

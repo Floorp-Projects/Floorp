@@ -950,15 +950,11 @@ void mozJSComponentLoader::UnloadModules() {
   mInitialized = false;
 
   if (mLoaderGlobal) {
-    dom::AutoJSAPI jsapi;
-    jsapi.Init();
-    JSContext* cx = jsapi.cx();
-    RootedObject global(cx, mLoaderGlobal);
-    JSAutoRealm ar(cx, global);
-    MOZ_ASSERT(JS_HasExtensibleLexicalEnvironment(global));
-    JS_SetAllNonReservedSlotsToUndefined(
-        cx, JS_ExtensibleLexicalEnvironment(global));
-    JS_SetAllNonReservedSlotsToUndefined(cx, global);
+    MOZ_ASSERT(JS_HasExtensibleLexicalEnvironment(mLoaderGlobal));
+    JS::RootedObject lexicalEnv(dom::RootingCx(),
+                                JS_ExtensibleLexicalEnvironment(mLoaderGlobal));
+    JS_SetAllNonReservedSlotsToUndefined(lexicalEnv);
+    JS_SetAllNonReservedSlotsToUndefined(mLoaderGlobal);
     mLoaderGlobal = nullptr;
   }
 

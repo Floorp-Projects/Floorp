@@ -16,6 +16,7 @@ module.exports = [{
     "./codemirror/addon/edit/matchbrackets.js",
     "./codemirror/addon/edit/closebrackets.js",
     "./codemirror/addon/comment/comment.js",
+    "./codemirror/addon/accessibleTextarea.js",
     "./codemirror/mode/javascript/javascript.js",
     "./codemirror/mode/xml/xml.js",
     "./codemirror/mode/css/css.js",

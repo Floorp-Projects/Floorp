@@ -105,6 +105,7 @@ EXTRA_JS_MODULES += [
     'app/TelemetryController.jsm',
     'app/TelemetryEnvironment.jsm',
     'app/TelemetryReportingPolicy.jsm',
+    'app/TelemetryScheduler.jsm',
     'app/TelemetrySend.jsm',
     'app/TelemetryStorage.jsm',
     'app/TelemetryTimestamps.jsm',

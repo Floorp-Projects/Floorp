@@ -18,6 +18,11 @@ ChromeUtils.defineModuleGetter(this, "EcosystemTelemetry",
 const WEAVE_EVENT = "weave:service:login:change";
 const TEST_PING_TYPE = "test-ping-type";
 
+function fakeIdleNotification(topic) {
+  let scheduler = ChromeUtils.import("resource://gre/modules/TelemetryScheduler.jsm", null);
+  return scheduler.TelemetryScheduler.observe(null, topic, null);
+}
+
 function checkPingStructure(ping, type, reason) {
   Assert.equal(ping.type, type, "Should be an ecosystem ping.");
 
@@ -182,4 +187,60 @@ add_task({
 
   // Reset policy.
   fakeFxaUid(originalFxaUid);
+});
+
+// Test that a periodic ping is triggered by the scheduler at midnight
+//
+// Based on `test_TelemetrySession#test_DailyDueAndIdle`.
+add_task({
+  skip_if: () => gIsAndroid,
+}, async function test_periodic_ping() {
+  await TelemetryStorage.testClearPendingPings();
+  PingServer.clearRequests();
+
+  const pingType = "pre-account";
+
+  let receivedPing = null;
+  // Register a ping handler that will assert when receiving multiple ecosystem pings.
+  // We can ignore other pings, such as the periodic ping.
+  PingServer.registerPingHandler(req => {
+    const ping = decodeRequestPayload(req);
+    if (ping.type == pingType) {
+      Assert.ok(!receivedPing, "Telemetry must only send one periodic ecosystem ping.");
+      receivedPing = ping;
+    }
+  });
+
+  // Faking scheduler timer has to happen before resetting TelemetryController
+  // to be effective.
+  let schedulerTickCallback = null;
+  let now = new Date(2040, 1, 1, 0, 0, 0);
+  fakeNow(now);
+  // Fake scheduler functions to control periodic collection flow in tests.
+  fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
+  await TelemetryController.testReset();
+
+  Preferences.set(TelemetryUtils.Preferences.EcosystemTelemetryEnabled, true);
+  EcosystemTelemetry.testReset();
+
+  // Trigger the periodic ecosystem ping.
+  let firstPeriodicDue = new Date(2040, 1, 2, 0, 0, 0);
+  fakeNow(firstPeriodicDue);
+
+  // Run a scheduler tick: it should trigger the periodic ping.
+  Assert.ok(!!schedulerTickCallback);
+  let tickPromise = schedulerTickCallback();
+
+  // Send an idle and then an active user notification.
+  fakeIdleNotification("idle");
+  fakeIdleNotification("active");
+
+  // Wait on the tick promise.
+  await tickPromise;
+
+  await TelemetrySend.testWaitOnOutgoingPings();
+
+  // Decode the ping contained in the request and check that's a periodic ping.
+  Assert.ok(receivedPing, "Telemetry must send one ecosystem periodic ping.");
+  checkPingStructure(receivedPing, pingType, "periodic");
 });

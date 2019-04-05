@@ -24,15 +24,10 @@ XPCOMUtils.defineLazyServiceGetters(this, {
   Telemetry: ["@mozilla.org/base/telemetry;1", "nsITelemetry"],
 });
 
-const {setTimeout, clearTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const {TelemetryUtils} = ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const Utils = TelemetryUtils;
-
-const MILLISECONDS_PER_HOUR = 60 * 60 * 1000;
-
-const DEFAULT_PING_FREQUENCY_HOURS = 24;
 
 const LOGGER_NAME = "Toolkit.Telemetry";
 const LOGGER_PREFIX = "TelemetryPrioPing";
@@ -43,8 +38,6 @@ const PRIO_LIMIT_REACHED_TOPIC = "origin-telemetry-storage-limit-reached";
 const PRIO_PING_VERSION = "1";
 
 var Policy = {
-  setTimeout: (callback, delayMs) => setTimeout(callback, delayMs),
-  clearTimeout: (id) => clearTimeout(id),
   sendPing: (type, payload, options) => TelemetryController.submitExternalPing(type, payload, options),
   getEncodedOriginSnapshot: async (aClear) => Telemetry.getEncodedOriginSnapshot(aClear),
 };
@@ -70,11 +63,6 @@ var TelemetryPrioPing = {
     this._log.trace("Starting up.");
 
     Services.obs.addObserver(this, PRIO_LIMIT_REACHED_TOPIC);
-
-    XPCOMUtils.defineLazyPreferenceGetter(this, "pingFrequency",
-                                          Utils.Preferences.PrioPingFrequency,
-                                          DEFAULT_PING_FREQUENCY_HOURS);
-    this._startTimer();
   },
 
   async shutdown() {
@@ -85,7 +73,6 @@ var TelemetryPrioPing = {
     } catch (ex) {}
 
     await this._submitPing(this.Reason.SHUTDOWN);
-    this._clearTimer();
   },
 
   observe(aSubject, aTopic, aData) {
@@ -97,17 +84,9 @@ var TelemetryPrioPing = {
     }
   },
 
-  _startTimer(delay = this.pingFrequency * MILLISECONDS_PER_HOUR, reason = this.Reason.PERIODIC, discardLeftovers = false) {
-    this._clearTimer();
-    this._timeoutId =
-      Policy.setTimeout(() => TelemetryPrioPing._submitPing(reason), delay);
-  },
-
-  _clearTimer() {
-    if (this._timeoutId) {
-      Policy.clearTimeout(this._timeoutId);
-      this._timeoutId = null;
-    }
+  periodicPing() {
+    this._log.trace("periodic ping triggered");
+    this._submitPing(this.Reason.PERIODIC);
   },
 
   /**
@@ -117,10 +96,6 @@ var TelemetryPrioPing = {
    */
   async _submitPing(reason) {
     this._log.trace("_submitPing");
-
-    if (reason !== this.Reason.SHUTDOWN) {
-      this._startTimer();
-    }
 
     let snapshot = await Policy.getEncodedOriginSnapshot(true /* clear */);
 
@@ -153,7 +128,6 @@ var TelemetryPrioPing = {
    * Test-only, restore to initial state.
    */
   testReset() {
-    this._clearTimer();
     this._testing = true;
   },
 

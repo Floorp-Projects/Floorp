@@ -9,6 +9,7 @@ import copy
 import logging
 import re
 import shlex
+from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -302,6 +303,21 @@ class TryOptionSyntax(object):
         self.artifact = options['artifact']
         self.include_nightly = options['include_nightly']
 
+        self.test_tiers = self.generate_test_tiers(full_task_graph)
+
+    def generate_test_tiers(self, full_task_graph):
+        retval = defaultdict(set)
+        for t in full_task_graph.tasks.itervalues():
+            if t.attributes.get('kind') == 'test':
+                try:
+                    tier = t.task['extra']['treeherder']['tier']
+                    name = t.attributes.get('unittest_try_name')
+                    retval[name].add(tier)
+                except KeyError:
+                    pass
+
+        return retval
+
     def parse_jobs(self, jobs_arg):
         if not jobs_arg or jobs_arg == ['none']:
             return []  # default is `-j none`
@@ -582,10 +598,27 @@ class TryOptionSyntax(object):
                 return False
             if 'only_chunks' in test and attr('test_chunk') not in test['only_chunks']:
                 return False
+            tier = task.task['extra']['treeherder']['tier']
             if 'platforms' in test:
                 platform = attr('test_platform', '').split('/')[0]
                 # Platforms can be forced by syntax like "-u xpcshell[Windows 8]"
                 return platform in test['platforms']
+            elif tier != 1:
+                # Require tier 2/3 tests to be specifically enabled if there
+                # are other platforms that run this test suite as tier 1
+                name = attr('unittest_try_name')
+                test_tiers = self.test_tiers.get(name)
+                if 1 not in test_tiers:
+                    logger.debug("not skipping tier {} test without explicit inclusion: {}; "
+                                 "it is configured to run on tiers {}"
+                                 .format(tier, task.label, test_tiers))
+                    return True
+                else:
+                    logger.debug(
+                        "skipping mixed tier {} (of {}) test without explicit inclusion: {}"
+                        .format(tier, test_tiers, task.label))
+                    return False
+
             elif run_by_default:
                 return check_run_on_projects()
             else:

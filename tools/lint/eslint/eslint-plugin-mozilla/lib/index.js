@@ -29,6 +29,7 @@ module.exports = {
   },
   processors: {
     ".xml": require("../lib/processors/xbl-bindings"),
+    ".xul": require("../lib/processors/xul"),
   },
   rules: {
     "avoid-Date-timing": require("../lib/rules/avoid-Date-timing"),

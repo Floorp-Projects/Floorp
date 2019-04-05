@@ -30,7 +30,7 @@ The ping is submitted at least once a day for sessions that last longer than 24h
 The ping is immediately sent if the ``prioData`` array has 10 elements.
 The ping is submitted on shutdown.
 
-Whether the ping is enabled, the 10-element limit, and the once-a-day frequency are controlled by :doc:`preferences <../internals/preferences>`.
+Whether the ping is enabled and the 10-element limit are controlled by :doc:`preferences <../internals/preferences>`.
 
 Field details
 -------------

@@ -1396,10 +1396,6 @@ bool JSContext::inAtomsZone() const { return zone_->isAtomsZone(); }
 void JSContext::trace(JSTracer* trc) {
   cycleDetectorVector().trace(trc);
   geckoProfiler().trace(trc);
-
-  if (trc->isMarkingTracer() && realm_) {
-    realm_->mark();
-  }
 }
 
 void* JSContext::stackLimitAddressForJitCode(JS::StackKind kind) {

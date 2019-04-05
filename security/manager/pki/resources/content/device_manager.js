@@ -6,22 +6,12 @@
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const nsIPKCS11Slot = Ci.nsIPKCS11Slot;
-const nsIPKCS11Module = Ci.nsIPKCS11Module;
-const nsPKCS11ModuleDB = "@mozilla.org/security/pkcs11moduledb;1";
-const nsIPKCS11ModuleDB = Ci.nsIPKCS11ModuleDB;
-const nsIPK11Token = Ci.nsIPK11Token;
-const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
-const nsIPK11TokenDB = Ci.nsIPK11TokenDB;
-const nsIDialogParamBlock = Ci.nsIDialogParamBlock;
-const nsDialogParamBlock = "@mozilla.org/embedcomp/dialogparam;1";
-
 var secmoddb;
 var skip_enable_buttons = false;
 
 /* Do the initial load of all PKCS# modules and list them. */
 function LoadModules() {
-  secmoddb = Cc[nsPKCS11ModuleDB].getService(nsIPKCS11ModuleDB);
+  secmoddb = Cc["@mozilla.org/security/pkcs11moduledb;1"].getService(Ci.nsIPKCS11ModuleDB);
   RefreshDeviceList();
 }
 
@@ -192,24 +182,24 @@ function showSlotInfo() {
   var present = true;
   ClearInfoList();
   switch (selected_slot.status) {
-   case nsIPKCS11Slot.SLOT_DISABLED:
+   case Ci.nsIPKCS11Slot.SLOT_DISABLED:
      AddInfoRow("devinfo-status", {l10nID: "devinfo-status-disabled"}, "tok_status");
      present = false;
      break;
-   case nsIPKCS11Slot.SLOT_NOT_PRESENT:
+   case Ci.nsIPKCS11Slot.SLOT_NOT_PRESENT:
      AddInfoRow("devinfo-status", {l10nID: "devinfo-status-not-present"}, "tok_status");
      present = false;
      break;
-   case nsIPKCS11Slot.SLOT_UNINITIALIZED:
+   case Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED:
      AddInfoRow("devinfo-status", {l10nID: "devinfo-status-uninitialized"}, "tok_status");
      break;
-   case nsIPKCS11Slot.SLOT_NOT_LOGGED_IN:
+   case Ci.nsIPKCS11Slot.SLOT_NOT_LOGGED_IN:
      AddInfoRow("devinfo-status", {l10nID: "devinfo-status-not-logged-in"}, "tok_status");
      break;
-   case nsIPKCS11Slot.SLOT_LOGGED_IN:
+   case Ci.nsIPKCS11Slot.SLOT_LOGGED_IN:
      AddInfoRow("devinfo-status", {l10nID: "devinfo-status-logged-in"}, "tok_status");
      break;
-   case nsIPKCS11Slot.SLOT_READY:
+   case Ci.nsIPKCS11Slot.SLOT_READY:
      AddInfoRow("devinfo-status", {l10nID: "devinfo-status-ready"}, "tok_status");
      break;
    default:
@@ -321,8 +311,8 @@ async function doUnload() {
 
 function changePassword() {
   getSelectedItem();
-  let params = Cc[nsDialogParamBlock]
-                 .createInstance(nsIDialogParamBlock);
+  let params = Cc["@mozilla.org/embedcomp/dialogparam;1"]
+                 .createInstance(Ci.nsIDialogParamBlock);
   let objects = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
   objects.appendElement(selected_slot.getToken());
   params.objects = objects;
@@ -349,7 +339,7 @@ function toggleFIPS() {
     // In FIPS mode the password must be non-empty.
     // This is different from what we allow in NON-Fips mode.
 
-    var tokendb = Cc[nsPK11TokenDB].getService(nsIPK11TokenDB);
+    var tokendb = Cc["@mozilla.org/security/pk11tokendb;1"].getService(Ci.nsIPK11TokenDB);
     var internal_token = tokendb.getInternalKeyToken(); // nsIPK11Token
     if (!internal_token.hasPassword) {
       // Token has either no or an empty password.

@@ -83,8 +83,8 @@ function fakeGenerateUUID(sessionFunc, subsessionFunc) {
 }
 
 function fakeIdleNotification(topic) {
-  let session = ChromeUtils.import("resource://gre/modules/TelemetrySession.jsm", null);
-  return session.TelemetryScheduler.observe(null, topic, null);
+  let scheduler = ChromeUtils.import("resource://gre/modules/TelemetryScheduler.jsm", null);
+  return scheduler.TelemetryScheduler.observe(null, topic, null);
 }
 
 function setupTestData() {
