@@ -267,7 +267,5 @@ static const mozilla::Module::ContractIDEntry kSysProxyContracts[] = {
     {NS_SYSTEMPROXYSETTINGS_CONTRACTID, &kNS_WINDOWSSYSTEMPROXYSERVICE_CID},
     {nullptr}};
 
-static const mozilla::Module kSysProxyModule = {
+extern const mozilla::Module kSysProxyModule = {
     mozilla::Module::kVersion, kSysProxyCIDs, kSysProxyContracts};
-
-NSMODULE_DEFN(nsWindowsProxyModule) = &kSysProxyModule;
