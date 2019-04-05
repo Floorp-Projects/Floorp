@@ -2386,8 +2386,7 @@ window._gBrowser = {
         t.owner = ownerTab;
       }
 
-      // Ensure we have an index if one was not provided. _insertTabAt
-      // will do some additional validation.
+      // Ensure we have an index if one was not provided.
       if (typeof index != "number") {
         // Move the new tab after another tab if needed.
         if (!bulkOrderedOpen &&
@@ -2412,19 +2411,20 @@ window._gBrowser = {
             this._lastRelatedTabMap.set(openerTab, t);
           }
         } else {
-          // This is intentionally past bounds, see the comment below on insertBefore.
-          index = this.tabs.length;
+          index = Infinity;
         }
       }
-      // Ensure position respectes tab pinned state.
+      // Ensure index is within bounds.
       if (pinned) {
+        index = Math.max(index, 0);
         index = Math.min(index, this._numPinnedTabs);
       } else {
         index = Math.max(index, this._numPinnedTabs);
+        index = Math.min(index, this.tabs.length);
       }
 
-      // use .item() instead of [] because dragging to the end of the strip goes out of
-      // bounds: .item() returns null (so it acts like appendChild), but [] throws
+      // Use .item() instead of [] because we need .item() to return null in
+      // order to append the tab at the end in case index == tabs.length.
       let tabAfter = this.tabs.item(index);
       this.tabContainer.insertBefore(t, tabAfter);
       if (tabAfter) {
