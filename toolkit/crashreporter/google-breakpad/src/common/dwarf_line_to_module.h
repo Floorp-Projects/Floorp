@@ -113,6 +113,8 @@ namespace google_breakpad {
 // - If a line starts immediately after an omitted line, omit it too.
 class DwarfLineToModule: public dwarf2reader::LineInfoHandler {
  public:
+  typedef std::map<uint32, Module::File *> FileTable;
+
   // As the DWARF line info parser passes us line records, add source
   // files to MODULE, and add all lines to the end of LINES. LINES
   // need not be empty. If the parser hands us a zero-length line, we
@@ -121,16 +123,17 @@ class DwarfLineToModule: public dwarf2reader::LineInfoHandler {
   // sort out which lines belong to which functions; we don't add them
   // to any particular function in MODULE ourselves.
   DwarfLineToModule(Module *module, const string& compilation_dir,
-                    vector<Module::Line> *lines)
+                    vector<Module::Line> *lines, FileTable *files)
       : module_(module),
         compilation_dir_(compilation_dir),
         lines_(lines),
         highest_file_number_(-1),
         omitted_line_end_(0),
         warned_bad_file_number_(false),
-        warned_bad_directory_number_(false) { }
+        warned_bad_directory_number_(false),
+        out_files_(files) { }
   
-  ~DwarfLineToModule() { }
+  ~DwarfLineToModule();
 
   void DefineDir(const string &name, uint32 dir_num);
   void DefineFile(const string &name, int32 file_num,
@@ -142,8 +145,6 @@ class DwarfLineToModule: public dwarf2reader::LineInfoHandler {
  private:
 
   typedef std::map<uint32, string> DirectoryTable;
-  typedef std::map<uint32, Module::File *> FileTable;
-
   // The module we're contributing debugging info to. Owned by our
   // client.
   Module *module_;
@@ -181,6 +182,8 @@ class DwarfLineToModule: public dwarf2reader::LineInfoHandler {
   // True if we've warned about:
   bool warned_bad_file_number_; // bad file numbers
   bool warned_bad_directory_number_; // bad directory numbers
+
+  FileTable* out_files_;
 };
 
 } // namespace google_breakpad

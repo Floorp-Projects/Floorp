@@ -893,7 +893,8 @@ void DwarfCUToModule::SetLanguage(DwarfLanguage language) {
   }
 }
 
-void DwarfCUToModule::ReadSourceLines(uint64 offset) {
+void DwarfCUToModule::ReadSourceLines(uint64 offset,
+                                      LineToModuleHandler::FileMap *files) {
   const dwarf2reader::SectionMap &section_map
       = cu_context_->file_context->section_map();
   dwarf2reader::SectionMap::const_iterator map_entry
@@ -913,7 +914,7 @@ void DwarfCUToModule::ReadSourceLines(uint64 offset) {
     return;
   }
   line_reader_->ReadProgram(section_start + offset, section_length - offset,
-                            cu_context_->file_context->module_, &lines_);
+                            cu_context_->file_context->module_, &lines_, files);
 }
 
 namespace {
@@ -1174,8 +1175,9 @@ void DwarfCUToModule::Finish() {
     return;
 
   // Read source line info, if we have any.
+  LineToModuleHandler::FileMap files;
   if (has_source_line_info_)
-    ReadSourceLines(source_line_offset_);
+    ReadSourceLines(source_line_offset_, &files);
 
   vector<Module::Function *> *functions = &cu_context_->functions;
 
