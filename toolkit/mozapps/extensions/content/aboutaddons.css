@@ -1,5 +1,6 @@
 :root {
   --section-width: 664px;
+  --addon-icon-size: 32px;
 }
 
 #main {
@@ -25,17 +26,24 @@
 
 .addon.card {
   margin-bottom: 16px;
-  display: flex;
 }
 
 .addon.card:hover {
   box-shadow: var(--card-shadow);
 }
 
+.addon-card-collapsed {
+  display: flex;
+}
+
+addon-list .addon.card {
+  -moz-user-select: none;
+}
+
 .card-heading-icon {
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
+  width: var(--addon-icon-size);
+  height: var(--addon-icon-size);
   margin-inline-end: 16px;
 }
 
@@ -53,7 +61,9 @@
   font-size: 16px;
   font-weight: 600;
   color: var(--grey-90);
-  line-height: 1;
+  line-height: 22px;
+  /* Subtract the top line-height so the text and icon align at the top. */
+  margin-top: -3px;
 }
 
 .addon-description {
@@ -63,11 +73,111 @@
   font-weight: 400;
 }
 
+/* Prevent the content from wrapping unless expanded. */
+addon-card:not([expanded]) .card-contents {
+  /* Card padding times 4: 2 times for card, 1 between icon and content,
+   * 1 for the ... button. */
+  width: calc(var(--section-width) - var(--card-padding) * 4 - var(--addon-icon-size));
+  white-space: nowrap;
+}
+
+/* Ellipsize if the content is too long. */
+addon-card:not([expanded]) .addon-name,
+addon-card:not([expanded]) .addon-description {
+  text-overflow: ellipsis;
+  overflow-x: hidden;
+}
+
 .more-options-menu {
   position: relative;
   /* Add some negative margin to account for the button's padding */
   margin-top: -10px;
   margin-inline-end: -8px;
+}
+
+addon-details {
+  color: var(--grey-60);
+}
+
+.addon-detail-description {
+  margin: 16px 0;
+}
+
+.addon-detail-contribute {
+  padding: var(--card-padding);
+  border: 1px solid var(--grey-90-a20);
+  border-radius: var(--panel-border-radius);
+  margin-bottom: var(--card-padding);
+  display: flex;
+  flex-direction: column;
+}
+
+.addon-detail-contribute > label {
+  font-style: italic;
+}
+
+.addon-detail-contribute-button {
+  -moz-context-properties: fill;
+  fill: currentColor;
+  background-image: url("chrome://global/skin/icons/heart.svg");
+  background-repeat: no-repeat;
+  background-position: 8px;
+  padding-inline-start: 28px;
+  margin-top: var(--card-padding);
+  margin-bottom: 0;
+  align-self: flex-end;
+}
+
+.addon-detail-row {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--grey-90-a20);
+  margin: 0 calc(var(--card-padding) * -1);
+  padding: var(--card-padding);
+}
+
+.addon-detail-row:last-of-type {
+  padding-bottom: 0;
+}
+
+.addon-detail-row {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.addon-detail-rating {
+  display: flex;
+}
+
+.addon-detail-rating-star {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: url("chrome://browser/skin/bookmark-hollow.svg");
+}
+
+.addon-detail-rating-star[fill="full"] {
+  background: url("chrome://browser/skin/bookmark.svg");
+}
+
+.addon-detail-rating-star[fill="half"] {
+  background: url("chrome://browser/skin/bookmark.svg");
+  width: 8px;
+  margin-inline-end: 8px;
+}
+
+.addon-detail-rating-star[fill="half"]::after {
+  content: "";
+  display: inline-block;
+  background: url("chrome://browser/skin/bookmark-hollow.svg");
+  background-position: 8px;
+  width: 8px;
+  height: 16px;
+  margin-left: 8px;
+}
+
+.addon-detail-rating > a {
+  margin-inline-start: 8px;
 }
 
 button[action="more-options"] {
