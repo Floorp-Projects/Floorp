@@ -35,7 +35,7 @@ enum StructureChange {
 }
 
 /// Records structure change counters for telemetry.
-#[derive(Clone, Copy, Default, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Default, Debug, Eq, Hash, PartialEq)]
 pub struct StructureCounts {
     /// Remote non-folder change wins over local deletion.
     pub remote_revives: usize,
@@ -59,7 +59,7 @@ pub struct StructureCounts {
 type MatchingDupes<'t> = (HashMap<Guid, Node<'t>>, HashMap<Guid, Node<'t>>);
 
 /// Represents an accepted local or remote deletion.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Deletion<'t> {
     pub guid: &'t Guid,
     pub local_level: i64,
@@ -886,7 +886,33 @@ impl<'t, D: Driver> Merger<'t, D> {
         match (local_node.needs_merge, remote_node.needs_merge) {
             (true, true) => {
                 // The item changed locally and remotely.
-                let newer_side = if local_node.age < remote_node.age {
+                let item = if local_node.is_user_content_root() {
+                    // For roots, we always prefer the local side for item
+                    // changes, like the title (bug 1432614).
+                    ConflictResolution::Local
+                } else {
+                    // For other items, we check the validity to decide
+                    // which side to take.
+                    match remote_node.validity {
+                        Validity::Valid | Validity::Reupload => {
+                            // If the remote item is valid, or valid but needs
+                            // reupload, compare timestamps to decide which side is
+                            // newer.
+                            if local_node.age < remote_node.age {
+                                ConflictResolution::Local
+                            } else {
+                                ConflictResolution::Remote
+                            }
+                        }
+                        // If the remote item must be replaced, take the local
+                        // side. This _loses remote changes_, but we can't
+                        // apply those changes, anyway.
+                        Validity::Replace => ConflictResolution::Local,
+                    }
+                };
+                // For children, it's easier: we always use the newer side, even
+                // if we're taking local changes for the item.
+                let children = if local_node.age < remote_node.age {
                     // The local change is newer, so merge local children first,
                     // followed by remaining unmerged remote children.
                     ConflictResolution::Local
@@ -895,16 +921,7 @@ impl<'t, D: Driver> Merger<'t, D> {
                     // children first, then remaining local children.
                     ConflictResolution::Remote
                 };
-                if local_node.is_user_content_root() {
-                    // For roots, we always prefer the local side for item
-                    // changes, like the title (bug 1432614), but prefer the
-                    // newer side for children.
-                    (ConflictResolution::Local, newer_side)
-                } else {
-                    // For all other items, we prefer the newer side for the
-                    // item and children.
-                    (newer_side, newer_side)
-                }
+                (item, children)
             }
 
             (true, false) => {
@@ -916,15 +933,20 @@ impl<'t, D: Driver> Merger<'t, D> {
 
             (false, true) => {
                 // The item changed remotely, but not locally.
-                if local_node.is_user_content_root() {
-                    // For roots, we ignore remote item changes, but prefer
-                    // the remote side for children.
-                    (ConflictResolution::Unchanged, ConflictResolution::Remote)
+                let item = if local_node.is_user_content_root() {
+                    // For roots, we ignore remote item changes.
+                    ConflictResolution::Unchanged
                 } else {
-                    // For other items, we prefer the remote side for the item
-                    // and children.
-                    (ConflictResolution::Remote, ConflictResolution::Remote)
-                }
+                    match remote_node.validity {
+                        Validity::Valid | Validity::Reupload => ConflictResolution::Remote,
+                        // And, for invalid remote items, we must reupload the
+                        // local side. This _loses remote changes_, but we can't
+                        // apply those changes, anyway.
+                        Validity::Replace => ConflictResolution::Local,
+                    }
+                };
+                // For children, we always use the remote side.
+                (item, ConflictResolution::Remote)
             }
 
             (false, false) => {
@@ -984,57 +1006,25 @@ impl<'t, D: Driver> Merger<'t, D> {
         remote_parent_node: Node<'t>,
         remote_node: Node<'t>,
     ) -> Result<StructureChange> {
-        if remote_node.is_user_content_root() {
-            if let Some(local_node) = self.local_tree.node_for_guid(&remote_node.guid) {
-                let local_parent_node = local_node
-                    .parent()
-                    .expect("Can't check for structure changes without local parent");
-                if remote_parent_node.guid != local_parent_node.guid {
-                    return Ok(StructureChange::Moved);
-                }
-                return Ok(StructureChange::Unchanged);
-            }
-            return Ok(StructureChange::Unchanged);
-        }
-
         if !remote_node_is_syncable(&remote_node) {
             // If the remote node is known to be non-syncable, we unconditionally
-            // delete it from the server, even if it's syncable locally.
-            self.delete_remotely.insert(remote_node.guid.clone());
-            if remote_node.is_folder() {
-                // If the remote node is a folder, we also need to walk its descendants
-                // and reparent any syncable descendants, and descendants that only
-                // exist remotely, to the merged node.
-                self.relocate_remote_orphans_to_merged_node(merged_node, remote_node)?;
-            }
-            self.structure_counts.merged_deletions += 1;
-            return Ok(StructureChange::Deleted);
+            // delete it, even if it's syncable or moved locally.
+            return self.delete_remote_node(merged_node, remote_node);
         }
 
         if !self.local_tree.is_deleted(&remote_node.guid) {
             if let Some(local_node) = self.local_tree.node_for_guid(&remote_node.guid) {
                 if !local_node.is_syncable() {
-                    // The remote node is syncable, but the local node is non-syncable.
-                    // For consistency with Desktop, we unconditionally delete the
-                    // node from the server.
-                    self.delete_remotely.insert(remote_node.guid.clone());
-                    if remote_node.is_folder() {
-                        self.relocate_remote_orphans_to_merged_node(merged_node, remote_node)?;
-                    }
-                    self.structure_counts.merged_deletions += 1;
-                    return Ok(StructureChange::Deleted);
+                    // The remote node is syncable, but the local node is
+                    // non-syncable. Unconditionally delete it.
+                    return self.delete_remote_node(merged_node, remote_node);
                 }
                 if local_node.validity == Validity::Replace
                     && remote_node.validity == Validity::Replace
                 {
-                    // The nodes are invalid on both sides, so we can't apply or reupload
-                    // a valid copy. Delete the item from the server.
-                    self.delete_remotely.insert(remote_node.guid.clone());
-                    if remote_node.is_folder() {
-                        self.relocate_remote_orphans_to_merged_node(merged_node, remote_node)?;
-                    }
-                    self.structure_counts.merged_deletions += 1;
-                    return Ok(StructureChange::Deleted);
+                    // The nodes are invalid on both sides, so we can't apply
+                    // or reupload a valid copy. Delete it.
+                    return self.delete_remote_node(merged_node, remote_node);
                 }
                 let local_parent_node = local_node
                     .parent()
@@ -1043,20 +1033,24 @@ impl<'t, D: Driver> Merger<'t, D> {
                     return Ok(StructureChange::Moved);
                 }
                 return Ok(StructureChange::Unchanged);
-            } else {
-                return Ok(StructureChange::Unchanged);
             }
+            if remote_node.validity == Validity::Replace {
+                // The remote node is invalid and doesn't exist locally, so we
+                // can't reupload a valid copy. We must delete it.
+                return self.delete_remote_node(merged_node, remote_node);
+            }
+            return Ok(StructureChange::Unchanged);
         }
 
         if remote_node.validity == Validity::Replace {
-            // If the remote node is invalid, and deleted locally, unconditionally
-            // delete the item from the server.
-            self.delete_remotely.insert(remote_node.guid.clone());
-            if remote_node.is_folder() {
-                self.relocate_remote_orphans_to_merged_node(merged_node, remote_node)?;
-            }
-            self.structure_counts.merged_deletions += 1;
-            return Ok(StructureChange::Deleted);
+            // The remote node is invalid and deleted locally, so we can't
+            // reupload a valid copy. Delete it.
+            return self.delete_remote_node(merged_node, remote_node);
+        }
+
+        if remote_node.is_user_content_root() {
+            // If the remote node is a content root, don't delete it locally.
+            return Ok(StructureChange::Unchanged);
         }
 
         if remote_node.needs_merge {
@@ -1094,12 +1088,7 @@ impl<'t, D: Driver> Merger<'t, D> {
 
         // Take the local deletion and relocate any new remote descendants to the
         // merged node.
-        self.delete_remotely.insert(remote_node.guid.clone());
-        if remote_node.is_folder() {
-            self.relocate_remote_orphans_to_merged_node(merged_node, remote_node)?;
-        }
-        self.structure_counts.merged_deletions += 1;
-        Ok(StructureChange::Deleted)
+        self.delete_remote_node(merged_node, remote_node)
     }
 
     /// Checks if a local node is remotely moved or deleted, and reparents any
@@ -1113,55 +1102,28 @@ impl<'t, D: Driver> Merger<'t, D> {
         local_parent_node: Node<'t>,
         local_node: Node<'t>,
     ) -> Result<StructureChange> {
-        if local_node.is_user_content_root() {
-            if let Some(remote_node) = self.remote_tree.node_for_guid(&local_node.guid) {
-                let remote_parent_node = remote_node
-                    .parent()
-                    .expect("Can't check for structure changes without remote parent");
-                if remote_parent_node.guid != local_parent_node.guid {
-                    return Ok(StructureChange::Moved);
-                }
-                return Ok(StructureChange::Unchanged);
-            }
-            return Ok(StructureChange::Unchanged);
-        }
-
         if !local_node.is_syncable() {
             // If the local node is known to be non-syncable, we unconditionally
-            // delete it from the local tree, even if it's syncable remotely.
-            self.delete_locally.insert(local_node.guid.clone());
-            if local_node.is_folder() {
-                self.relocate_local_orphans_to_merged_node(merged_node, local_node)?;
-            }
-            self.structure_counts.merged_deletions += 1;
-            return Ok(StructureChange::Deleted);
+            // delete it, even if it's syncable or moved remotely.
+            return self.delete_local_node(merged_node, local_node);
         }
 
         if !self.remote_tree.is_deleted(&local_node.guid) {
             if let Some(remote_node) = self.remote_tree.node_for_guid(&local_node.guid) {
                 if !remote_node_is_syncable(&remote_node) {
-                    // The local node is syncable, but the remote node is non-syncable.
-                    // This can happen if we applied an orphaned left pane query in a
-                    // previous sync, and later saw the left pane root on the server.
-                    // Since we now have the complete subtree, we can remove the item.
-                    self.delete_locally.insert(local_node.guid.clone());
-                    if remote_node.is_folder() {
-                        self.relocate_local_orphans_to_merged_node(merged_node, local_node)?;
-                    }
-                    self.structure_counts.merged_deletions += 1;
-                    return Ok(StructureChange::Deleted);
+                    // The local node is syncable, but the remote node is not.
+                    // This can happen if we applied an orphaned left pane
+                    // query in a previous sync, and later saw the left pane
+                    // root on the server. Since we now have the complete
+                    // subtree, we can remove it.
+                    return self.delete_local_node(merged_node, local_node);
                 }
                 if remote_node.validity == Validity::Replace
                     && local_node.validity == Validity::Replace
                 {
-                    // The nodes are invalid on both sides, so we can't apply or reupload
-                    // a valid copy. Delete the item from Places.
-                    self.delete_locally.insert(local_node.guid.clone());
-                    if local_node.is_folder() {
-                        self.relocate_local_orphans_to_merged_node(merged_node, local_node)?;
-                    }
-                    self.structure_counts.merged_deletions += 1;
-                    return Ok(StructureChange::Deleted);
+                    // The nodes are invalid on both sides, so we can't replace
+                    // the local copy with a remote one. Delete it.
+                    return self.delete_local_node(merged_node, local_node);
                 }
                 // Otherwise, either both nodes are valid; or the remote node
                 // is invalid but the local node is valid, so we can reupload a
@@ -1174,20 +1136,27 @@ impl<'t, D: Driver> Merger<'t, D> {
                 }
                 return Ok(StructureChange::Unchanged);
             }
+            if local_node.validity == Validity::Replace {
+                // The local node is invalid and doesn't exist remotely, so
+                // we can't replace the local copy. Delete it.
+                return self.delete_local_node(merged_node, local_node);
+            }
             return Ok(StructureChange::Unchanged);
         }
 
         if local_node.validity == Validity::Replace {
-            // If the local node is invalid, and deleted remotely, unconditionally
-            // delete the item from Places.
-            self.delete_locally.insert(local_node.guid.clone());
-            if local_node.is_folder() {
-                self.relocate_local_orphans_to_merged_node(merged_node, local_node)?;
-            }
-            self.structure_counts.merged_deletions += 1;
-            return Ok(StructureChange::Deleted);
+            // The local node is invalid and deleted remotely, so we can't
+            // replace the local copy. Delete it.
+            return self.delete_local_node(merged_node, local_node);
         }
 
+        if local_node.is_user_content_root() {
+            // If the local node is a content root, don't delete it remotely.
+            return Ok(StructureChange::Unchanged);
+        }
+
+        // See `check_for_local_structure_change_of_remote_node` for an
+        // explanation of how we decide to take or ignore a deletion.
         if local_node.needs_merge {
             if !local_node.is_folder() {
                 trace!(
@@ -1214,26 +1183,21 @@ impl<'t, D: Driver> Merger<'t, D> {
 
         // Take the remote deletion and relocate any new local descendants to the
         // merged node.
-        self.delete_locally.insert(local_node.guid.clone());
-        if local_node.is_folder() {
-            self.relocate_local_orphans_to_merged_node(merged_node, local_node)?;
-        }
-        self.structure_counts.merged_deletions += 1;
-        Ok(StructureChange::Deleted)
+        self.delete_local_node(merged_node, local_node)
     }
 
-    /// Takes a local deletion for a remote node by marking the node as deleted,
-    /// and relocating all remote descendants that aren't also locally deleted
-    /// to the closest surviving ancestor. We do this to avoid data loss if
-    /// the user adds a bookmark to a folder on another device, and deletes
-    /// that folder locally.
+    /// Marks a remote node as deleted, and relocates all remote descendants
+    /// that aren't also locally deleted to the merged node. This avoids data
+    /// loss if the user adds a bookmark to a folder on another device, and
+    /// deletes that folder locally.
     ///
-    /// This is the inverse of `relocate_local_orphans_to_merged_node`.
-    fn relocate_remote_orphans_to_merged_node(
+    /// This is the inverse of `delete_local_node`.
+    fn delete_remote_node(
         &mut self,
         merged_node: &mut MergedNode<'t>,
         remote_node: Node<'t>,
-    ) -> Result<()> {
+    ) -> Result<StructureChange> {
+        self.delete_remotely.insert(remote_node.guid.clone());
         for remote_child_node in remote_node.children() {
             if self.merged_guids.contains(&remote_child_node.guid) {
                 trace!(
@@ -1277,19 +1241,20 @@ impl<'t, D: Driver> Merger<'t, D> {
                 }
             }
         }
-        Ok(())
+        self.structure_counts.merged_deletions += 1;
+        Ok(StructureChange::Deleted)
     }
 
-    /// Takes a remote deletion for a local node by marking the node as deleted,
-    /// and relocating all local descendants that aren't also remotely deleted
-    /// to the closest surviving ancestor.
+    /// Marks a local node as deleted, and relocates all local descendants
+    /// that aren't also remotely deleted to the merged node.
     ///
-    /// This is the inverse of `relocate_remote_orphans_to_merged_node`.
-    fn relocate_local_orphans_to_merged_node(
+    /// This is the inverse of `delete_remote_node`.
+    fn delete_local_node(
         &mut self,
         merged_node: &mut MergedNode<'t>,
         local_node: Node<'t>,
-    ) -> Result<()> {
+    ) -> Result<StructureChange> {
+        self.delete_locally.insert(local_node.guid.clone());
         for local_child_node in local_node.children() {
             if self.merged_guids.contains(&local_child_node.guid) {
                 trace!(
@@ -1333,7 +1298,8 @@ impl<'t, D: Driver> Merger<'t, D> {
                 }
             }
         }
-        Ok(())
+        self.structure_counts.merged_deletions += 1;
+        Ok(StructureChange::Deleted)
     }
 
     /// Finds all children of a local folder with similar content as children of
