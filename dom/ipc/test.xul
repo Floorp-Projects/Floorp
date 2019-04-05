@@ -250,7 +250,7 @@
   </toolbar>
   <toolbar>
     <label value="Eval script in chrome context"/>
-    <textbox flex="1"/><button label="run" oncommand="eval(this.previousSibling.value);"/>
+    <textbox flex="1"/><button label="run" oncommand="eval(this.previousSibling.value); // eslint-disable-line no-eval"/>
   </toolbar>
 
   <browser type="content" src="http://www.google.com/" flex="1" id="page" remote="true"/>

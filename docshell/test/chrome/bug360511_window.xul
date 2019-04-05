@@ -5,7 +5,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         width="600"
         height="600"
-        onload="setTimeout(nextTest,0);"
+        onload="setTimeout(nextTest, 0);"
         title="bug 360511 test">
 
   <script type="application/javascript" src= "chrome://mochikit/content/chrome-harness.js" />

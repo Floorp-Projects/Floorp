@@ -10,7 +10,7 @@
              accesskey="&editBookmarkOverlay.name.accesskey;"
              control="editBMPanel_namePicker"/>
       <textbox id="editBMPanel_namePicker"
-               onchange="gEditItemOverlay.onNamePickerChange().catch(Components.utils.reportError);"/>
+               onchange="gEditItemOverlay.onNamePickerChange().catch(Cu.reportError);"/>
     </vbox>
 
     <vbox id="editBMPanel_locationRow"
@@ -31,7 +31,7 @@
         <menulist id="editBMPanel_folderMenuList"
                   class="folder-icon panel-button"
                   flex="1"
-                  oncommand="gEditItemOverlay.onFolderMenuListCommand(event).catch(Components.utils.reportError);">
+                  oncommand="gEditItemOverlay.onFolderMenuListCommand(event).catch(Cu.reportError);">
           <menupopup>
             <!-- Static item for special folders -->
             <menuitem id="editBMPanel_toolbarFolderItem"
@@ -63,7 +63,7 @@
         <button label="&editBookmarkOverlay.newFolderButton.label;"
                 id="editBMPanel_newFolderButton"
                 accesskey="&editBookmarkOverlay.newFolderButton.accesskey;"
-                oncommand="gEditItemOverlay.newFolder().catch(Components.utils.reportError);"/>
+                oncommand="gEditItemOverlay.newFolder().catch(Cu.reportError);"/>
       </hbox>
     </vbox>
 
