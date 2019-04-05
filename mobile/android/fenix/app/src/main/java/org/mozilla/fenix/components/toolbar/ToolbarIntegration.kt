@@ -5,8 +5,6 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.content.Context
-import android.graphics.PorterDuff
-import androidx.core.content.ContextCompat
 import androidx.navigation.Navigation
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteProvider
 import mozilla.components.browser.session.SessionManager
@@ -16,8 +14,6 @@ import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.feature.toolbar.ToolbarAutocompleteFeature
 import mozilla.components.feature.toolbar.ToolbarPresenter
 import mozilla.components.support.base.feature.LifecycleAwareFeature
-import org.mozilla.fenix.DefaultThemeManager
-import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserFragmentDirections
 import org.mozilla.fenix.ext.components
 
@@ -35,29 +31,21 @@ class ToolbarIntegration(
         toolbar.setMenuBuilder(toolbarMenu.menuBuilder)
         toolbar.private = isPrivate
 
-        val tabsIcon = context.getDrawable(R.drawable.ic_tabs)
-        tabsIcon?.setColorFilter(
-            ContextCompat.getColor(
-                context,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarIcons, context)
-            ), PorterDuff.Mode.SRC_IN
-        )
-        tabsIcon?.let {
-            val home = BrowserToolbar.Button(
-                it,
-                context.getString(R.string.browser_tabs_button),
-                visible = {
-                    sessionId == null ||
-                            sessionManager.runWithSession(sessionId) {
-                                it.isCustomTabSession().not()
-                            }
-                }
-            ) {
-                Navigation.findNavController(toolbar)
-                    .navigate(BrowserFragmentDirections.actionBrowserFragmentToHomeFragment())
-            }
+        run {
+            sessionManager.runWithSession(sessionId) {
+                it.isCustomTabSession()
+            }.also { isCustomTab ->
+                if (isCustomTab) return@run
 
-            toolbar.addBrowserAction(home)
+                val tabsAction = TabCounterToolbarButton(
+                    sessionManager,
+                    showTabs = {
+                        Navigation.findNavController(toolbar)
+                            .navigate(BrowserFragmentDirections.actionBrowserFragmentToHomeFragment())
+                    }
+                )
+                toolbar.addBrowserAction(tabsAction)
+            }
         }
 
         ToolbarAutocompleteFeature(toolbar).apply {
