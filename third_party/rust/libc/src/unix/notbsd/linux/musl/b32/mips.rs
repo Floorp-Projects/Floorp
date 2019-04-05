@@ -478,6 +478,9 @@ pub const TIOCMSET: ::c_int = 0x741A;
 pub const FIONREAD: ::c_int = 0x467F;
 pub const TIOCCONS: ::c_int = 0x80047478;
 
+pub const TIOCGRS485: ::c_int = 0x4020542E;
+pub const TIOCSRS485: ::c_int = 0xC020542F;
+
 pub const POLLWRNORM: ::c_short = 0x4;
 pub const POLLWRBAND: ::c_short = 0x100;
 

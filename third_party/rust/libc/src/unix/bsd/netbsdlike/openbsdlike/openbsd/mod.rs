@@ -1,4 +1,19 @@
 s! {
+    pub struct glob_t {
+        pub gl_pathc:   ::size_t,
+        pub gl_matchc:  ::size_t,
+        pub gl_offs:    ::size_t,
+        pub gl_flags:   ::c_int,
+        pub gl_pathv:   *mut *mut ::c_char,
+        __unused1: *mut ::c_void,
+        __unused2: *mut ::c_void,
+        __unused3: *mut ::c_void,
+        __unused4: *mut ::c_void,
+        __unused5: *mut ::c_void,
+        __unused6: *mut ::c_void,
+        __unused7: *mut ::c_void,
+    }
+
     pub struct lconv {
         pub decimal_point: *mut ::c_char,
         pub thousands_sep: *mut ::c_char,
@@ -24,42 +39,6 @@ s! {
         pub int_n_sep_by_space: ::c_char,
         pub int_p_sign_posn: ::c_char,
         pub int_n_sign_posn: ::c_char,
-    }
-
-    pub struct statfs {
-        pub f_flags: ::uint32_t,
-        pub f_bsize: ::uint32_t,
-        pub f_iosize: ::uint32_t,
-        pub f_blocks: ::uint64_t,
-        pub f_bfree: ::uint64_t,
-        pub f_bavail: ::int64_t,
-        pub f_files: ::uint64_t,
-        pub f_ffree: ::uint64_t,
-        pub f_favail: ::int64_t,
-        pub f_syncwrites: ::uint64_t,
-        pub f_syncreads: ::uint64_t,
-        pub f_asyncwrites: ::uint64_t,
-        pub f_asyncreads: ::uint64_t,
-        pub f_fsid: ::fsid_t,
-        pub f_namemax: ::uint32_t,
-        pub f_owner: ::uid_t,
-        pub f_ctime: ::uint64_t,
-        pub f_fstypename: [::c_char; 16],
-        pub f_mntonname: [::c_char; 90],
-        pub f_mntfromname: [::c_char; 90],
-        pub f_mntfromspec: [::c_char; 90],
-        pub mount_info: mount_info,
-    }
-
-    pub union mount_info {
-        pub ufs_args: ufs_args,
-        pub mfs_args: mfs_args,
-        pub nfs_args: nfs_args,
-        pub iso_args: iso_args,
-        pub msdosfs_args: msdosfs_args,
-        pub ntfs_args: ntfs_args,
-        pub tmpfs_args: tmpfs_args,
-        align: [::c_char; 160],
     }
 
     pub struct ufs_args {
@@ -165,6 +144,184 @@ s! {
     }
 }
 
+s_no_extra_traits! {
+    pub union mount_info {
+        pub ufs_args: ufs_args,
+        pub mfs_args: mfs_args,
+        pub nfs_args: nfs_args,
+        pub iso_args: iso_args,
+        pub msdosfs_args: msdosfs_args,
+        pub ntfs_args: ntfs_args,
+        pub tmpfs_args: tmpfs_args,
+        align: [::c_char; 160],
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "extra_traits")] {
+        impl PartialEq for mount_info {
+            fn eq(&self, other: &mount_info) -> bool {
+                unsafe {
+                    self.align
+                        .iter()
+                        .zip(other.align.iter())
+                        .all(|(a,b)| a == b)
+                }
+            }
+        }
+
+        impl Eq for mount_info { }
+
+        impl ::fmt::Debug for mount_info {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("mount_info")
+                // FIXME: .field("align", &self.align)
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for mount_info {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                unsafe { self.align.hash(state) };
+            }
+        }
+    }
+}
+
+cfg_if! {
+    if #[cfg(libc_union)] {
+        s_no_extra_traits! {
+            // This type uses the union mount_info:
+            pub struct statfs {
+                pub f_flags: ::uint32_t,
+                pub f_bsize: ::uint32_t,
+                pub f_iosize: ::uint32_t,
+                pub f_blocks: ::uint64_t,
+                pub f_bfree: ::uint64_t,
+                pub f_bavail: ::int64_t,
+                pub f_files: ::uint64_t,
+                pub f_ffree: ::uint64_t,
+                pub f_favail: ::int64_t,
+                pub f_syncwrites: ::uint64_t,
+                pub f_syncreads: ::uint64_t,
+                pub f_asyncwrites: ::uint64_t,
+                pub f_asyncreads: ::uint64_t,
+                pub f_fsid: ::fsid_t,
+                pub f_namemax: ::uint32_t,
+                pub f_owner: ::uid_t,
+                pub f_ctime: ::uint64_t,
+                pub f_fstypename: [::c_char; 16],
+                pub f_mntonname: [::c_char; 90],
+                pub f_mntfromname: [::c_char; 90],
+                pub f_mntfromspec: [::c_char; 90],
+                pub mount_info: mount_info,
+            }
+        }
+
+        cfg_if! {
+            if #[cfg(feature = "extra_traits")] {
+                impl PartialEq for statfs {
+                    fn eq(&self, other: &statfs) -> bool {
+                        self.f_flags == other.f_flags
+                            && self.f_bsize == other.f_bsize
+                            && self.f_iosize == other.f_iosize
+                            && self.f_blocks == other.f_blocks
+                            && self.f_bfree == other.f_bfree
+                            && self.f_bavail == other.f_bavail
+                            && self.f_files == other.f_files
+                            && self.f_ffree == other.f_ffree
+                            && self.f_favail == other.f_favail
+                            && self.f_syncwrites == other.f_syncwrites
+                            && self.f_syncreads == other.f_syncreads
+                            && self.f_asyncwrites == other.f_asyncwrites
+                            && self.f_asyncreads == other.f_asyncreads
+                            && self.f_fsid == other.f_fsid
+                            && self.f_namemax == other.f_namemax
+                            && self.f_owner == other.f_owner
+                            && self.f_ctime == other.f_ctime
+                            && self.f_fstypename
+                            .iter()
+                            .zip(other.f_fstypename.iter())
+                            .all(|(a,b)| a == b)
+                            && self.f_mntonname
+                            .iter()
+                            .zip(other.f_mntonname.iter())
+                            .all(|(a,b)| a == b)
+                            && self.f_mntfromname
+                            .iter()
+                            .zip(other.f_mntfromname.iter())
+                            .all(|(a,b)| a == b)
+                            && self.f_mntfromspec
+                            .iter()
+                            .zip(other.f_mntfromspec.iter())
+                            .all(|(a,b)| a == b)
+                            && self.mount_info == other.mount_info
+                    }
+                }
+
+                impl Eq for statfs { }
+
+                impl ::fmt::Debug for statfs {
+                    fn fmt(&self, f: &mut ::fmt::Formatter)
+                           -> ::fmt::Result {
+                        f.debug_struct("statfs")
+                            .field("f_flags", &self.f_flags)
+                            .field("f_bsize", &self.f_bsize)
+                            .field("f_iosize", &self.f_iosize)
+                            .field("f_blocks", &self.f_blocks)
+                            .field("f_bfree", &self.f_bfree)
+                            .field("f_bavail", &self.f_bavail)
+                            .field("f_files", &self.f_files)
+                            .field("f_ffree", &self.f_ffree)
+                            .field("f_favail", &self.f_favail)
+                            .field("f_syncwrites", &self.f_syncwrites)
+                            .field("f_syncreads", &self.f_syncreads)
+                            .field("f_asyncwrites", &self.f_asyncwrites)
+                            .field("f_asyncreads", &self.f_asyncreads)
+                            .field("f_fsid", &self.f_fsid)
+                            .field("f_namemax", &self.f_namemax)
+                            .field("f_owner", &self.f_owner)
+                            .field("f_ctime", &self.f_ctime)
+                        // FIXME: .field("f_fstypename", &self.f_fstypename)
+                        // FIXME: .field("f_mntonname", &self.f_mntonname)
+                        // FIXME: .field("f_mntfromname", &self.f_mntfromname)
+                        // FIXME: .field("f_mntfromspec", &self.f_mntfromspec)
+                            .field("mount_info", &self.mount_info)
+                            .finish()
+                    }
+                }
+
+                impl ::hash::Hash for statfs {
+                    fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                        self.f_flags.hash(state);
+                        self.f_bsize.hash(state);
+                        self.f_iosize.hash(state);
+                        self.f_blocks.hash(state);
+                        self.f_bfree.hash(state);
+                        self.f_bavail.hash(state);
+                        self.f_files.hash(state);
+                        self.f_ffree.hash(state);
+                        self.f_favail.hash(state);
+                        self.f_syncwrites.hash(state);
+                        self.f_syncreads.hash(state);
+                        self.f_asyncwrites.hash(state);
+                        self.f_asyncreads.hash(state);
+                        self.f_fsid.hash(state);
+                        self.f_namemax.hash(state);
+                        self.f_owner.hash(state);
+                        self.f_ctime.hash(state);
+                        self.f_fstypename.hash(state);
+                        self.f_mntonname.hash(state);
+                        self.f_mntfromname.hash(state);
+                        self.f_mntfromspec.hash(state);
+                        self.mount_info.hash(state);
+                    }
+                }
+            }
+        }
+    }
+}
+
 //https://github.com/openbsd/src/blob/master/sys/sys/mount.h
 pub const ISOFSMNT_NORRIP: ::c_int = 0x1; // disable Rock Ridge Ext
 pub const ISOFSMNT_GENS: ::c_int = 0x2; // enable generation numbers
@@ -246,7 +403,60 @@ pub const IFF_LINK1: ::c_int = 0x2000; // per link layer defined bit
 pub const IFF_LINK2: ::c_int = 0x4000; // per link layer defined bit
 pub const IFF_MULTICAST: ::c_int = 0x8000; // supports multicast
 
+pub const PTHREAD_STACK_MIN : ::size_t = 4096;
 pub const SIGSTKSZ : ::size_t = 28672;
+
+pub const PT_FIRSTMACH: ::c_int = 32;
+
+fn _ALIGN(p: usize) -> usize {
+    (p + _ALIGNBYTES) & !_ALIGNBYTES
+}
+
+f! {
+    pub fn CMSG_DATA(cmsg: *const ::cmsghdr) -> *mut ::c_uchar {
+        (cmsg as *mut ::c_uchar)
+            .offset(_ALIGN(::mem::size_of::<::cmsghdr>()) as isize)
+    }
+
+    pub fn CMSG_LEN(length: ::c_uint) -> ::c_uint {
+        _ALIGN(::mem::size_of::<::cmsghdr>()) as ::c_uint + length
+    }
+
+    pub fn CMSG_NXTHDR(mhdr: *const ::msghdr, cmsg: *const ::cmsghdr)
+        -> *mut ::cmsghdr
+    {
+        if cmsg.is_null() {
+            return ::CMSG_FIRSTHDR(mhdr);
+        };
+        let next = cmsg as usize + _ALIGN((*cmsg).cmsg_len as usize)
+            + _ALIGN(::mem::size_of::<::cmsghdr>());
+        let max = (*mhdr).msg_control as usize
+            + (*mhdr).msg_controllen as usize;
+        if next > max {
+            0 as *mut ::cmsghdr
+        } else {
+            (cmsg as usize + _ALIGN((*cmsg).cmsg_len as usize))
+                as *mut ::cmsghdr
+        }
+    }
+
+    pub fn CMSG_SPACE(length: ::c_uint) -> ::c_uint {
+        (_ALIGN(::mem::size_of::<::cmsghdr>()) + _ALIGN(length as usize))
+            as ::c_uint
+    }
+
+    pub fn WSTOPSIG(status: ::c_int) -> ::c_int {
+        status >> 8
+    }
+
+    pub fn WIFSIGNALED(status: ::c_int) -> bool {
+        (status & 0o177) != 0o177 && (status & 0o177) != 0
+    }
+
+    pub fn WIFSTOPPED(status: ::c_int) -> bool {
+        (status & 0o177) == 0o177
+    }
+}
 
 extern {
     pub fn accept4(s: ::c_int, addr: *mut ::sockaddr,
@@ -258,9 +468,17 @@ extern {
     pub fn strtonum(nptr: *const ::c_char, minval: ::c_longlong,
                     maxval: ::c_longlong,
                     errstr: *mut *const ::c_char) -> ::c_longlong;
+    pub fn dup3(src: ::c_int, dst: ::c_int, flags: ::c_int) -> ::c_int;
+}
 
-    pub fn statfs(path: *const ::c_char, buf: *mut statfs) -> ::c_int;
-    pub fn fstatfs(fd: ::c_int, buf: *mut statfs) -> ::c_int;
+cfg_if! {
+    if #[cfg(libc_union)] {
+        extern {
+            // these functions use statfs which uses the union mount_info:
+            pub fn statfs(path: *const ::c_char, buf: *mut statfs) -> ::c_int;
+            pub fn fstatfs(fd: ::c_int, buf: *mut statfs) -> ::c_int;
+        }
+    }
 }
 
 cfg_if! {

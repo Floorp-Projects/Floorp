@@ -16,7 +16,7 @@ s! {
         pub sa_flags: ::c_uint,
         pub sa_sigaction: ::sighandler_t,
         pub sa_mask: ::sigset_t,
-        pub sa_restorer: ::dox::Option<extern fn()>,
+        pub sa_restorer: ::Option<extern fn()>,
     }
 
     pub struct rlimit64 {
@@ -32,25 +32,6 @@ s! {
         pub sched_policy: ::int32_t,
         pub sched_priority: ::int32_t,
         __reserved: [::c_char; 16],
-    }
-
-    pub struct pthread_mutex_t {
-        value: ::c_int,
-        __reserved: [::c_char; 36],
-    }
-
-    pub struct pthread_cond_t {
-        value: ::c_int,
-        __reserved: [::c_char; 44],
-    }
-
-    pub struct pthread_rwlock_t {
-        numLocks: ::c_int,
-        writerThreadId: ::c_int,
-        pendingReaders: ::c_int,
-        pendingWriters: ::c_int,
-        attr: i32,
-        __reserved: [::c_char; 36],
     }
 
     pub struct passwd {
@@ -123,6 +104,130 @@ s! {
         pub f_flag: ::c_ulong,
         pub f_namemax: ::c_ulong,
         __f_spare: [::c_int; 6],
+    }
+}
+
+s_no_extra_traits!{
+    pub struct pthread_mutex_t {
+        value: ::c_int,
+        __reserved: [::c_char; 36],
+    }
+
+    pub struct pthread_cond_t {
+        value: ::c_int,
+        __reserved: [::c_char; 44],
+    }
+
+    pub struct pthread_rwlock_t {
+        numLocks: ::c_int,
+        writerThreadId: ::c_int,
+        pendingReaders: ::c_int,
+        pendingWriters: ::c_int,
+        attr: i32,
+        __reserved: [::c_char; 36],
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "extra_traits")] {
+        impl PartialEq for pthread_mutex_t {
+            fn eq(&self, other: &pthread_mutex_t) -> bool {
+                self.value == other.value
+                    && self
+                    .__reserved
+                    .iter()
+                    .zip(other.__reserved.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+
+        impl Eq for pthread_mutex_t {}
+
+        impl ::fmt::Debug for pthread_mutex_t {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("pthread_mutex_t")
+                    .field("value", &self.value)
+                    // FIXME: .field("__reserved", &self.__reserved)
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for pthread_mutex_t {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.value.hash(state);
+                self.__reserved.hash(state);
+            }
+        }
+
+        impl PartialEq for pthread_cond_t {
+            fn eq(&self, other: &pthread_cond_t) -> bool {
+                self.value == other.value
+                    && self
+                    .__reserved
+                    .iter()
+                    .zip(other.__reserved.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+
+        impl Eq for pthread_cond_t {}
+
+        impl ::fmt::Debug for pthread_cond_t {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("pthread_cond_t")
+                    .field("value", &self.value)
+                    // FIXME: .field("__reserved", &self.__reserved)
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for pthread_cond_t {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.value.hash(state);
+                self.__reserved.hash(state);
+            }
+        }
+
+        impl PartialEq for pthread_rwlock_t {
+            fn eq(&self, other: &pthread_rwlock_t) -> bool {
+                self.numLocks == other.numLocks
+                    && self.writerThreadId == other.writerThreadId
+                    && self.pendingReaders == other.pendingReaders
+                    && self.pendingWriters == other.pendingWriters
+                    && self.attr == other.attr
+                    && self
+                    .__reserved
+                    .iter()
+                    .zip(other.__reserved.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+
+        impl Eq for pthread_rwlock_t {}
+
+        impl ::fmt::Debug for pthread_rwlock_t {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("pthread_rwlock_t")
+                    .field("numLocks", &self.numLocks)
+                    .field("writerThreadId", &self.writerThreadId)
+                    .field("pendingReaders", &self.pendingReaders)
+                    .field("pendingWriters", &self.pendingWriters)
+                    .field("attr", &self.attr)
+                    // FIXME: .field("__reserved", &self.__reserved)
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for pthread_rwlock_t {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.numLocks.hash(state);
+                self.writerThreadId.hash(state);
+                self.pendingReaders.hash(state);
+                self.pendingWriters.hash(state);
+                self.attr.hash(state);
+                self.__reserved.hash(state);
+            }
+        }
     }
 }
 
