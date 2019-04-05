@@ -567,6 +567,36 @@ bool DwarfCUToModule::InlinedSubroutineHandler::EndAttributes() {
   return ignore_children;
 }
 
+// A handler class for DW_TAG_lexical_block DIEs.
+class DwarfCUToModule::LexicalBlockHandler: public GenericDIEHandler {
+ public:
+  LexicalBlockHandler(CUContext *cu_context, DIEContext *parent_context,
+                      uint64 offset)
+      : GenericDIEHandler(cu_context, parent_context, offset) {}
+
+  bool EndAttributes();
+
+  DIEHandler* FindChildHandler(uint64 offset, enum DwarfTag tag);
+};
+
+
+bool DwarfCUToModule::LexicalBlockHandler::EndAttributes() {
+  // Parse child DIEs if possible.
+  return true;
+}
+
+dwarf2reader::DIEHandler* DwarfCUToModule::LexicalBlockHandler::FindChildHandler(
+    uint64 offset,
+    enum DwarfTag tag) {
+  switch (tag) {
+    case dwarf2reader::DW_TAG_inlined_subroutine:
+      return new InlinedSubroutineHandler(cu_context_, parent_context_, offset);
+
+    default:
+      return NULL;
+  }
+}
+
 // A handler class for DW_TAG_subprogram DIEs.
 class DwarfCUToModule::FuncHandler: public GenericDIEHandler {
  public:
@@ -746,6 +776,14 @@ dwarf2reader::DIEHandler *DwarfCUToModule::FuncHandler::FindChildHandler(
   switch (tag) {
     case dwarf2reader::DW_TAG_inlined_subroutine:
       return new InlinedSubroutineHandler(cu_context_, parent_context_, offset);
+
+      // Compilers will sometimes give DW_TAG_subprogram DIEs
+      // DW_TAG_lexical_block children DIEs, which then in turn contain
+      // DW_TAG_inlined_subroutine DIEs.  We want to parse those
+      // grandchildren as though they belonged to the original
+      // DW_TAG_subprogram DIE.
+    case dwarf2reader::DW_TAG_lexical_block:
+      return new LexicalBlockHandler(cu_context_, parent_context_, offset);
 
     default:
       return NULL;
