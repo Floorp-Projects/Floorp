@@ -305,6 +305,12 @@ class UrlbarController {
         }
         event.preventDefault();
         break;
+      case KeyEvent.DOM_VK_LEFT:
+      case KeyEvent.DOM_VK_RIGHT:
+      case KeyEvent.DOM_VK_HOME:
+      case KeyEvent.DOM_VK_END:
+        this.view.removeAccessibleFocus();
+        break;
       case KeyEvent.DOM_VK_DELETE:
       case KeyEvent.DOM_VK_BACK_SPACE:
         if (event.shiftKey && this.view.isOpen && this._handleDeleteEntry()) {
