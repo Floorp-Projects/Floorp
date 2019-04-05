@@ -105,7 +105,11 @@ class Module;
 class Instance;
 class Table;
 
-typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
+// Uint32Vector has initial size 8 on the basis that the dominant use cases
+// (line numbers and control stacks) tend to have a small but nonzero number
+// of elements.
+typedef Vector<uint32_t, 8, SystemAllocPolicy> Uint32Vector;
+
 typedef Vector<uint8_t, 0, SystemAllocPolicy> Bytes;
 typedef UniquePtr<Bytes> UniqueBytes;
 typedef UniquePtr<const Bytes> UniqueConstBytes;
@@ -451,7 +455,10 @@ class ValType {
   bool operator!=(Code that) const { return !(*this == that); }
 };
 
-typedef Vector<ValType, 8, SystemAllocPolicy> ValTypeVector;
+// The dominant use of this data type is for locals and args, and profiling
+// with ZenGarden and Tanks suggests an initial size of 16 minimises heap
+// allocation, both in terms of blocks and bytes.
+typedef Vector<ValType, 16, SystemAllocPolicy> ValTypeVector;
 
 // ValType utilities
 
