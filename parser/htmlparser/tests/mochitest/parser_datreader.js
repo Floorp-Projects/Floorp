@@ -43,7 +43,7 @@ function parseTestcase(testcase) {
     if (line == "#data")
       break;
     log(lines);
-    throw "Unknown test format.";
+    throw new Error("Unknown test format.");
   }
 
   var input = [];
