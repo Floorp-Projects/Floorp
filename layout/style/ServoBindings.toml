@@ -348,7 +348,12 @@ opaque-types = [
     "RefPtr_Proxy_member_function",
     "nsAutoPtr_Proxy",
     "nsAutoPtr_Proxy_member_function",
+    "mozilla::detail::HashTable", # <- We should be able to remove this and
+                                  # HashSet below once
+                                  # https://github.com/rust-lang/rust-bindgen/pull/1515
+                                  # is available
     "mozilla::detail::PointerType",
+    "mozilla::HashSet",
     "mozilla::Pair",
     "mozilla::Pair_Base",
     "mozilla::SeenPtrs",
