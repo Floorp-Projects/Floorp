@@ -29,6 +29,8 @@ function URLFetcher(url, timeout) {
   xhr.channel.loadFlags |= Ci.nsIRequest.INHIBIT_CACHING;
   // Prevent privacy leaks
   xhr.channel.loadFlags |= Ci.nsIRequest.LOAD_ANONYMOUS;
+  // Use the system's resolver for this check
+  xhr.channel.loadFlags |= Ci.nsIRequest.LOAD_DISABLE_TRR;
   // The Cache-Control header is only interpreted by proxies and the
   // final destination. It does not help if a resource is already
   // cached locally.
