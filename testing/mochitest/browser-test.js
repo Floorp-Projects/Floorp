@@ -1089,7 +1089,7 @@ Tester.prototype = {
       if (this.currentTest.scope.__tasks) {
         // This test consists of tasks, added via the `add_task()` API.
         if ("test" in this.currentTest.scope) {
-          throw "Cannot run both a add_task test and a normal test at the same time.";
+          throw new Error("Cannot run both a add_task test and a normal test at the same time.");
         }
         let PromiseTestUtils = this.PromiseTestUtils;
 
@@ -1145,7 +1145,7 @@ Tester.prototype = {
       } else if (typeof scope.test == "function") {
         scope.test();
       } else {
-        throw "This test didn't call add_task, nor did it define a generatorTest() function, nor did it define a test() function, so we don't know how to run it.";
+        throw new Error("This test didn't call add_task, nor did it define a generatorTest() function, nor did it define a test() function, so we don't know how to run it.");
       }
     } catch (ex) {
       if (!this.SimpleTest.isIgnoringAllUncaughtExceptions()) {
@@ -1396,7 +1396,7 @@ function testScope(aTester, aTest, expected) {
     }
     if (typeof(min) != "number" || typeof(max) != "number" ||
         min < 0 || max < min) {
-      throw "bad parameter to expectAssertions";
+      throw new Error("bad parameter to expectAssertions");
     }
     self.__expectedMinAsserts = min;
     self.__expectedMaxAsserts = max;
