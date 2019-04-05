@@ -3184,12 +3184,10 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
       // see if we have a crashreporter-override.ini in the application
       // directory
       nsCOMPtr<nsIFile> overrideini;
-      bool exists;
       if (NS_SUCCEEDED(
               mDirProvider.GetAppDir()->Clone(getter_AddRefs(overrideini))) &&
           NS_SUCCEEDED(overrideini->AppendNative(
-              NS_LITERAL_CSTRING("crashreporter-override.ini"))) &&
-          NS_SUCCEEDED(overrideini->Exists(&exists)) && exists) {
+              NS_LITERAL_CSTRING("crashreporter-override.ini")))) {
 #ifdef XP_WIN
         nsAutoString overridePathW;
         overrideini->GetPath(overridePathW);
