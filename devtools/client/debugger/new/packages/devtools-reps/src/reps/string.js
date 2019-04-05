@@ -33,7 +33,8 @@ StringRep.propTypes = {
   object: PropTypes.object.isRequired,
   openLink: PropTypes.func,
   className: PropTypes.string,
-  title: PropTypes.string
+  title: PropTypes.string,
+  isInContentPage: PropTypes.bool
 };
 
 function StringRep(props) {
@@ -46,7 +47,8 @@ function StringRep(props) {
     escapeWhitespace = true,
     member,
     openLink,
-    title
+    title,
+    isInContentPage
   } = props;
 
   let text = object;
@@ -89,7 +91,12 @@ function StringRep(props) {
     if (containsURL(text)) {
       return span(
         config,
-        ...getLinkifiedElements(text, shouldCrop && cropLimit, openLink)
+        ...getLinkifiedElements(
+          text,
+          shouldCrop && cropLimit,
+          openLink,
+          isInContentPage
+        )
       );
     }
 
@@ -168,9 +175,11 @@ function maybeCropString(opts, text) {
  * @param {String} text: The actual string to linkify.
  * @param {Integer | null} cropLimit
  * @param {Function} openLink: Function handling the link opening.
+ * @param {Boolean} isInContentPage: pass true if the reps is rendered in
+ *                                   the content page (e.g. in JSONViewer).
  * @returns {Array<String|ReactElement>}
  */
-function getLinkifiedElements(text, cropLimit, openLink) {
+function getLinkifiedElements(text, cropLimit, openLink, isInContentPage) {
   const halfLimit = Math.ceil((cropLimit - ELLIPSIS.length) / 2);
   const startCropIndex = cropLimit ? halfLimit : null;
   const endCropIndex = cropLimit ? text.length - halfLimit : null;
@@ -210,6 +219,11 @@ function getLinkifiedElements(text, cropLimit, openLink) {
               className: "url",
               title: token,
               draggable: false,
+              // Because we don't want the link to be open in the current
+              // panel's frame, we only render the href attribute if `openLink`
+              // exists (so we can preventDefault) or if the reps will be
+              // displayed in content page (e.g. in the JSONViewer).
+              href: openLink || isInContentPage ? token : null,
               onClick: openLink
                 ? e => {
                     e.preventDefault();
