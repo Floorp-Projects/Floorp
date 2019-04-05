@@ -58,6 +58,8 @@ class VRDisplayHost {
   bool CheckClearDisplayInfoDirty();
   void SetGroupMask(uint32_t aGroupMask);
   bool GetIsConnected();
+  void ShutdownSubmitThread();
+
 
   class AutoRestoreRenderState {
    public:
