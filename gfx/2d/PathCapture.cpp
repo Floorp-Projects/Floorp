@@ -104,7 +104,7 @@ already_AddRefed<PathBuilder> PathCapture::TransformedCopyToBuilder(
         }
         void LineTo(const Point &aPoint) {
           PathOp newPathOp;
-          newPathOp.mType = PathOp::OP_BEZIERTO;
+          newPathOp.mType = PathOp::OP_LINETO;
           newPathOp.mP1 = mTransform->TransformPoint(aPoint);
           mVector->push_back(newPathOp);
         }
