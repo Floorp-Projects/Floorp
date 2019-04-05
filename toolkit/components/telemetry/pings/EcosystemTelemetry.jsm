@@ -122,8 +122,6 @@ var EcosystemTelemetry = {
     Services.obs.addObserver(this, "weave:service:ready");
     // FxA/Sync - done, uid might be available
     Services.obs.addObserver(this, "weave:service:login:change");
-    // Get informed roughly every 24h when idle
-    Services.obs.addObserver(this, "idle-daily");
   },
 
   _removeObservers() {
@@ -133,7 +131,6 @@ var EcosystemTelemetry = {
       Services.obs.removeObserver(this, ONLOGOUT_NOTIFICATION);
       Services.obs.removeObserver(this, "weave:service:ready");
       Services.obs.removeObserver(this, "weave:service:login:change");
-      Services.obs.removeObserver(this, "idle-daily");
     } catch (ex) {}
   },
 
@@ -180,14 +177,11 @@ var EcosystemTelemetry = {
           this._pingType = this.PingType.PRE;
         }
         break;
-
-      case "idle-daily":
-        this.periodicPing();
-        break;
     }
   },
 
   periodicPing() {
+    this._log.trace("periodic ping triggered");
     this._submitPing(this._pingType, this.Reason.PERIODIC);
   },
 

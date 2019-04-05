@@ -78,7 +78,7 @@ reason
 ~~~~~~
 The ``reason`` field contains the information about why the "pre-account" ping was submitted:
 
-* ``periodic`` - Sent roughly every 24 hours during idle periods
+* ``periodic`` - Sent roughly every 24 hours
 * ``shutdown`` - Sent on shutdown
 * ``login`` - Sent when a user logs in
 * ``logout`` - Sent when the user logs out
@@ -101,7 +101,7 @@ Without an account
 ~~~~~~~~~~~~~~~~~~
 
 A *pre-account* ping is submitted.
-This ping is submitted roughly every 24 hours during idle periods with reason *periodic*.
+This ping is submitted roughly every 24 hours with reason *periodic*.
 On shutdown this ping is submitted with reason *shutdown*.
 
 When a user logs into Firefox Accounts, this ping is submitted with reason *login*.
@@ -115,5 +115,5 @@ With an account
    Not yet implemented. See `Bug 1530654 <https://bugzilla.mozilla.org/show_bug.cgi?id=1530654>`_.
 
 A *post-account* ping is submitted.
-This ping is submitted roughly every 24 hours during idle periods with reason *periodic*.
+This ping is submitted roughly every 24 hours with reason *periodic*.
 On shutdown this ping is submitted with reason *shutdown*.
