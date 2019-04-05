@@ -495,8 +495,7 @@ nsAppShellService::CreateWindowlessBrowser(bool aIsChrome,
    * an associated doc shell, which is what we're interested in.
    */
   nsCOMPtr<nsIWebBrowser> browser =
-      nsWebBrowser::Create(stub, widget, OriginAttributes(), browsingContext,
-                           true /* disable history */);
+      nsWebBrowser::Create(stub, widget, OriginAttributes(), browsingContext);
 
   if (NS_WARN_IF(!browser)) {
     NS_ERROR("Couldn't create instance of nsWebBrowser!");
