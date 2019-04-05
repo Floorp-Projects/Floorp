@@ -3929,9 +3929,10 @@ eslint-plugin-mozilla@1.1.1:
     ini-parser "0.0.2"
     sax "1.2.4"
 
-eslint-plugin-mozilla@1.1.2:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-mozilla/-/eslint-plugin-mozilla-1.1.2.tgz#9591385d96fec9141d84ca16cbd408b193bf7dee"
+eslint-plugin-mozilla@1.1.3:
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-mozilla/-/eslint-plugin-mozilla-1.1.3.tgz#412da74dc772f61c0c6ec0cccb925ec19680a011"
+  integrity sha512-XFR4pby4G99bgArNbBCzG8mlpO8Zuqd+FC1MJChL0druU8W7sBru2n2A7NuD/0KuamSZDpACefruzPP3KezymQ==
   dependencies:
     htmlparser2 "3.10.0"
     ini-parser "0.0.2"

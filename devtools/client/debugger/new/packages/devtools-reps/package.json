@@ -46,7 +46,7 @@
     "enzyme-adapter-react-16": "^1.1.1",
     "enzyme-to-json": "^3.3.1",
     "eslint": "^5.0.0",
-    "eslint-plugin-mozilla": "1.1.2",
+    "eslint-plugin-mozilla": "1.1.3",
     "fs-extra": "^7.0.0",
     "immutable": "^3.8.2",
     "postcss-url-mapper": "^1.2.0",
