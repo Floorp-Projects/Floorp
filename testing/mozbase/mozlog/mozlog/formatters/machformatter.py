@@ -15,7 +15,7 @@ import six
 from functools import reduce
 
 color_dict = {
-    'log_test_status_fail': 'yellow',
+    'log_test_status_fail': 'red',
     'log_process_output': 'blue',
     'log_test_status_pass': 'green',
     'log_test_status_unexpected_fail': 'red',
@@ -23,6 +23,7 @@ color_dict = {
     'action': 'yellow',
     'pid': 'cyan',
     'heading': 'bold_yellow',
+    'sub_heading': 'yellow',
     'error': 'red',
     'warning': 'yellow',
     'bold': 'bold',
@@ -142,7 +143,7 @@ class MachFormatter(base.BaseFormatter):
                 color = self.color_formatter.log_test_status_fail
                 status = "EXPECTED-%s" % status
         else:
-            color = self.color_formatter.log_test_status_pass
+            color = self.color_formatter.log_test_status_fail
             if status in ("PASS", "OK"):
                 status = "UNEXPECTED-%s" % status
         return color(status)
@@ -166,8 +167,8 @@ class MachFormatter(base.BaseFormatter):
 
         rv = [
             "",
-            self.color_formatter.log_test_status_fail(suite),
-            self.color_formatter.log_test_status_fail(
+            self.color_formatter.sub_heading(suite),
+            self.color_formatter.sub_heading(
                 "~" * len(suite))]
 
         # Format check counts
@@ -269,7 +270,7 @@ class MachFormatter(base.BaseFormatter):
         if "expected" not in data and not bool(subtests['unexpected']):
             color = self.color_formatter.log_test_status_pass
         else:
-            color = self.color_formatter.log_test_status_pass
+            color = self.color_formatter.log_test_status_unexpected_fail("UNEXPECTED-FAIL")
 
         action = color(data['action'].upper())
         rv = "%s: %s" % (action, rv)
@@ -343,7 +344,7 @@ class MachFormatter(base.BaseFormatter):
         # data["bytes"] will include any expected leaks, so it can be off
         # by a few thousand bytes.
         failure = data["bytes"] > data["threshold"]
-        status = self.color_formatter.log_test_status_pass(
+        status = self.color_formatter.log_test_status_unexpected_fail(
             "UNEXPECTED-FAIL") if failure else self.color_formatter.log_test_status_fail("FAIL")
         return "%s %s\n" % (status, message)
 
@@ -371,7 +372,7 @@ class MachFormatter(base.BaseFormatter):
         else:
             expected = "%i" % data["min_expected"]
 
-        action = self.color_formatter.log_test_status_pass("ASSERT")
+        action = self.color_formatter.log_test_status_fail("ASSERT")
         return "%s: Assertion count %i, expected %s assertions\n" % (
             action, data["count"], expected)
 
