@@ -29,49 +29,13 @@ s! {
         pub tv_usec: ::int32_t,
     }
 
-    pub struct utmpx {
-        pub ut_type: ::c_short,
-        pub ut_pid: ::pid_t,
-        pub ut_line: [::c_char; __UT_LINESIZE],
-        pub ut_id: [::c_char; 4],
-
-        pub ut_user: [::c_char; __UT_NAMESIZE],
-        pub ut_host: [::c_char; __UT_HOSTSIZE],
-        pub ut_exit: __exit_status,
-
-        #[cfg(any(target_arch = "aarch64",
-                  target_arch = "sparc64",
-                  all(target_pointer_width = "32",
-                      not(target_arch = "x86_64"))))]
-        pub ut_session: ::c_long,
-        #[cfg(any(target_arch = "aarch64",
-                  target_arch = "sparc64",
-                  all(target_pointer_width = "32",
-                      not(target_arch = "x86_64"))))]
-        pub ut_tv: ::timeval,
-
-        #[cfg(not(any(target_arch = "aarch64",
-                      target_arch = "sparc64",
-                      all(target_pointer_width = "32",
-                          not(target_arch = "x86_64")))))]
-        pub ut_session: ::int32_t,
-        #[cfg(not(any(target_arch = "aarch64",
-                      target_arch = "sparc64",
-                      all(target_pointer_width = "32",
-                          not(target_arch = "x86_64")))))]
-        pub ut_tv: __timeval,
-
-        pub ut_addr_v6: [::int32_t; 4],
-        __glibc_reserved: [::c_char; 20],
-    }
-
     pub struct sigaction {
         pub sa_sigaction: ::sighandler_t,
         pub sa_mask: ::sigset_t,
         #[cfg(target_arch = "sparc64")]
         __reserved0: ::c_int,
         pub sa_flags: ::c_int,
-        pub sa_restorer: ::dox::Option<extern fn()>,
+        pub sa_restorer: ::Option<extern fn()>,
     }
 
     pub struct stack_t {
@@ -157,20 +121,6 @@ s! {
         pub l_pid: ::pid_t,
     }
 
-    // FIXME this is actually a union
-    #[cfg_attr(all(feature = "align", target_pointer_width = "32"),
-               repr(align(4)))]
-    #[cfg_attr(all(feature = "align", target_pointer_width = "64"),
-               repr(align(8)))]
-    pub struct sem_t {
-        #[cfg(target_pointer_width = "32")]
-        __size: [::c_char; 16],
-        #[cfg(target_pointer_width = "64")]
-        __size: [::c_char; 32],
-        #[cfg(not(feature = "align"))]
-        __align: [::c_long; 0],
-    }
-
     pub struct mallinfo {
         pub arena: ::c_int,
         pub ordblks: ::c_int,
@@ -244,6 +194,104 @@ s! {
     }
 }
 
+s_no_extra_traits! {
+    pub struct utmpx {
+        pub ut_type: ::c_short,
+        pub ut_pid: ::pid_t,
+        pub ut_line: [::c_char; __UT_LINESIZE],
+        pub ut_id: [::c_char; 4],
+
+        pub ut_user: [::c_char; __UT_NAMESIZE],
+        pub ut_host: [::c_char; __UT_HOSTSIZE],
+        pub ut_exit: __exit_status,
+
+        #[cfg(any(target_arch = "aarch64",
+                  target_arch = "sparc64",
+                  all(target_pointer_width = "32",
+                      not(target_arch = "x86_64"))))]
+        pub ut_session: ::c_long,
+        #[cfg(any(target_arch = "aarch64",
+                  target_arch = "sparc64",
+                  all(target_pointer_width = "32",
+                      not(target_arch = "x86_64"))))]
+        pub ut_tv: ::timeval,
+
+        #[cfg(not(any(target_arch = "aarch64",
+                      target_arch = "sparc64",
+                      all(target_pointer_width = "32",
+                          not(target_arch = "x86_64")))))]
+        pub ut_session: ::int32_t,
+        #[cfg(not(any(target_arch = "aarch64",
+                      target_arch = "sparc64",
+                      all(target_pointer_width = "32",
+                          not(target_arch = "x86_64")))))]
+        pub ut_tv: __timeval,
+
+        pub ut_addr_v6: [::int32_t; 4],
+        __glibc_reserved: [::c_char; 20],
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "extra_traits")] {
+        impl PartialEq for utmpx {
+            fn eq(&self, other: &utmpx) -> bool {
+                self.ut_type == other.ut_type
+                    && self.ut_pid == other.ut_pid
+                    && self.ut_line == other.ut_line
+                    && self.ut_id == other.ut_id
+                    && self.ut_user == other.ut_user
+                    && self
+                    .ut_host
+                    .iter()
+                    .zip(other.ut_host.iter())
+                    .all(|(a,b)| a == b)
+                    && self.ut_exit == other.ut_exit
+                    && self.ut_session == other.ut_session
+                    && self.ut_tv == other.ut_tv
+                    && self.ut_addr_v6 == other.ut_addr_v6
+                    && self.__glibc_reserved == other.__glibc_reserved
+            }
+        }
+
+        impl Eq for utmpx {}
+
+        impl ::fmt::Debug for utmpx {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("utmpx")
+                    .field("ut_type", &self.ut_type)
+                    .field("ut_pid", &self.ut_pid)
+                    .field("ut_line", &self.ut_line)
+                    .field("ut_id", &self.ut_id)
+                    .field("ut_user", &self.ut_user)
+                // FIXME: .field("ut_host", &self.ut_host)
+                    .field("ut_exit", &self.ut_exit)
+                    .field("ut_session", &self.ut_session)
+                    .field("ut_tv", &self.ut_tv)
+                    .field("ut_addr_v6", &self.ut_addr_v6)
+                    .field("__glibc_reserved", &self.__glibc_reserved)
+                    .finish()
+            }
+        }
+
+        impl ::hash::Hash for utmpx {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.ut_type.hash(state);
+                self.ut_pid.hash(state);
+                self.ut_line.hash(state);
+                self.ut_id.hash(state);
+                self.ut_user.hash(state);
+                self.ut_host.hash(state);
+                self.ut_exit.hash(state);
+                self.ut_session.hash(state);
+                self.ut_tv.hash(state);
+                self.ut_addr_v6.hash(state);
+                self.__glibc_reserved.hash(state);
+            }
+        }
+    }
+}
+
 pub const __UT_LINESIZE: usize = 32;
 pub const __UT_NAMESIZE: usize = 32;
 pub const __UT_HOSTSIZE: usize = 256;
@@ -269,13 +317,12 @@ pub const SOCK_NONBLOCK: ::c_int = O_NONBLOCK;
 
 pub const SOL_RXRPC: ::c_int = 272;
 pub const SOL_PPPOL2TP: ::c_int = 273;
-pub const SOL_BLUETOOTH: ::c_int = 274;
 pub const SOL_PNPIPE: ::c_int = 275;
 pub const SOL_RDS: ::c_int = 276;
 pub const SOL_IUCV: ::c_int = 277;
 pub const SOL_CAIF: ::c_int = 278;
-pub const SOL_ALG: ::c_int = 279;
 pub const SOL_NFC: ::c_int = 280;
+pub const SOL_XDP: ::c_int = 283;
 
 pub const MSG_TRYHARD: ::c_int = 4;
 
@@ -623,8 +670,7 @@ pub const NFPROTO_NETDEV: ::c_int = 5;
 
 // linux/netfilter/nf_tables.h
 cfg_if!{
-    if #[cfg(any(target_arch = "arm", target_arch = "powerpc",
-                 target_arch = "powerpc64", target_arch = "aarch64"))] {
+    if #[cfg(any(target_arch = "arm", target_arch = "aarch64"))] {
         pub const NFT_TABLE_MAXNAMELEN: ::c_int = 32;
         pub const NFT_CHAIN_MAXNAMELEN: ::c_int = 32;
         pub const NFT_SET_MAXNAMELEN: ::c_int = 32;
@@ -824,6 +870,19 @@ pub const NFT_TRACETYPE_RULE: ::c_int = 3;
 pub const NFT_NG_INCREMENTAL: ::c_int = 0;
 pub const NFT_NG_RANDOM: ::c_int = 1;
 
+pub const M_MXFAST: ::c_int = 1;
+pub const M_NLBLKS: ::c_int = 2;
+pub const M_GRAIN: ::c_int = 3;
+pub const M_KEEP: ::c_int = 4;
+pub const M_TRIM_THRESHOLD: ::c_int = -1;
+pub const M_TOP_PAD: ::c_int = -2;
+pub const M_MMAP_THRESHOLD: ::c_int = -3;
+pub const M_MMAP_MAX: ::c_int = -4;
+pub const M_CHECK_ACTION: ::c_int = -5;
+pub const M_PERTURB: ::c_int = -6;
+pub const M_ARENA_TEST: ::c_int = -7;
+pub const M_ARENA_MAX: ::c_int = -8;
+
 #[doc(hidden)]
 pub const AF_MAX: ::c_int = 42;
 #[doc(hidden)]
@@ -856,6 +915,7 @@ extern {
     pub fn setutxent();
     pub fn endutxent();
     pub fn getpt() -> ::c_int;
+    pub fn mallopt(param: ::c_int, value: ::c_int) -> ::c_int;
 }
 
 #[link(name = "util")]
@@ -865,7 +925,7 @@ extern {
                      sz: ::c_int) -> ::c_int;
     pub fn glob64(pattern: *const ::c_char,
                   flags: ::c_int,
-                  errfunc: ::dox::Option<extern fn(epath: *const ::c_char,
+                  errfunc: ::Option<extern fn(epath: *const ::c_char,
                                                    errno: ::c_int)
                                                    -> ::c_int>,
                   pglob: *mut glob64_t) -> ::c_int;
@@ -923,5 +983,15 @@ cfg_if! {
         pub use self::b64::*;
     } else {
         // Unknown target_arch
+    }
+}
+
+cfg_if! {
+    if #[cfg(libc_align)] {
+        mod align;
+        pub use self::align::*;
+    } else {
+        mod no_align;
+        pub use self::no_align::*;
     }
 }

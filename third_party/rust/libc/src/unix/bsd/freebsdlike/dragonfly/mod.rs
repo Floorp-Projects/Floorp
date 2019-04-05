@@ -1,3 +1,4 @@
+pub type c_char = i8;
 pub type clock_t = u64;
 pub type ino_t = u64;
 pub type lwpid_t = i32;
@@ -15,32 +16,20 @@ pub type uuid_t = ::uuid;
 pub type fsblkcnt_t = u64;
 pub type fsfilcnt_t = u64;
 
+pub type mqd_t = ::c_int;
 pub type sem_t = *mut sem;
 
+#[cfg_attr(feature = "extra_traits", derive(Debug))]
 pub enum sem {}
+impl ::Copy for sem {}
+impl ::Clone for sem {
+    fn clone(&self) -> sem { *self }
+}
 
 s! {
-
     pub struct exit_status {
         pub e_termination: u16,
         pub e_exit: u16
-    }
-
-    pub struct utmpx {
-        pub ut_name: [::c_char; 32],
-        pub ut_id: [::c_char; 4],
-
-        pub ut_line: [::c_char; 32],
-        pub ut_host: [::c_char; 256],
-
-        pub ut_unused: [u8; 16],
-        pub ut_session: u16,
-        pub ut_type: u16,
-        pub ut_pid: ::pid_t,
-        ut_exit: exit_status,
-        ut_ss: ::sockaddr_storage,
-        pub ut_tv: ::timeval,
-        pub ut_unused2: [u8; 16],
     }
 
     pub struct aiocb {
@@ -53,15 +42,6 @@ s! {
         pub aio_reqprio: ::c_int,
         _aio_val: ::c_int,
         _aio_err: ::c_int
-    }
-
-    pub struct dirent {
-        pub d_fileno: ::ino_t,
-        pub d_namlen: u16,
-        pub d_type: u8,
-        __unused1: u8,
-        __unused2: u32,
-        pub d_name: [::c_char; 256],
     }
 
     pub struct uuid {
@@ -113,27 +93,6 @@ s! {
         pub f_asyncwrites: u64,
         pub f_fsid_uuid: ::uuid_t,
         pub f_uid_uuid: ::uuid_t,
-    }
-
-    pub struct statfs {
-        pub f_bsize: ::c_long,
-        pub f_iosize: ::c_long,
-        pub f_blocks: ::c_long,
-        pub f_bfree: ::c_long,
-        pub f_bavail: ::c_long,
-        pub f_files: ::c_long,
-        pub f_ffree: ::c_long,
-        pub f_fsid: ::fsid_t,
-        pub f_owner: ::uid_t,
-        pub f_type: ::int32_t,
-        pub f_flags: ::int32_t,
-        pub f_syncwrites: ::c_long,
-        pub f_asyncwrites: ::c_long,
-        pub f_fstypename: [::c_char; 16],
-        pub f_mntonname: [::c_char; 90],
-        pub f_syncreads: ::c_long,
-        pub f_asyncreads: ::c_long,
-        pub f_mntfromname: [::c_char; 90],
     }
 
     pub struct stat {
@@ -210,6 +169,236 @@ s! {
         pub sdl_rcf: ::c_ushort,
         pub sdl_route: [::c_ushort; 16],
     }
+
+    pub struct stack_t {
+        pub ss_sp: *mut ::c_char,
+        pub ss_size: ::size_t,
+        pub ss_flags: ::c_int,
+    }
+}
+
+s_no_extra_traits! {
+    pub struct utmpx {
+        pub ut_name: [::c_char; 32],
+        pub ut_id: [::c_char; 4],
+
+        pub ut_line: [::c_char; 32],
+        pub ut_host: [::c_char; 256],
+
+        pub ut_unused: [u8; 16],
+        pub ut_session: u16,
+        pub ut_type: u16,
+        pub ut_pid: ::pid_t,
+        ut_exit: exit_status,
+        ut_ss: ::sockaddr_storage,
+        pub ut_tv: ::timeval,
+        pub ut_unused2: [u8; 16],
+    }
+
+    pub struct dirent {
+        pub d_fileno: ::ino_t,
+        pub d_namlen: u16,
+        pub d_type: u8,
+        __unused1: u8,
+        __unused2: u32,
+        pub d_name: [::c_char; 256],
+    }
+
+    pub struct statfs {
+        pub f_bsize: ::c_long,
+        pub f_iosize: ::c_long,
+        pub f_blocks: ::c_long,
+        pub f_bfree: ::c_long,
+        pub f_bavail: ::c_long,
+        pub f_files: ::c_long,
+        pub f_ffree: ::c_long,
+        pub f_fsid: ::fsid_t,
+        pub f_owner: ::uid_t,
+        pub f_type: ::int32_t,
+        pub f_flags: ::int32_t,
+        pub f_syncwrites: ::c_long,
+        pub f_asyncwrites: ::c_long,
+        pub f_fstypename: [::c_char; 16],
+        pub f_mntonname: [::c_char; 90],
+        pub f_syncreads: ::c_long,
+        pub f_asyncreads: ::c_long,
+        pub f_mntfromname: [::c_char; 90],
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "extra_traits")] {
+        impl PartialEq for utmpx {
+            fn eq(&self, other: &utmpx) -> bool {
+                self.ut_name == other.ut_name
+                    && self.ut_id == other.ut_id
+                    && self.ut_line == other.ut_line
+                    && self
+                    .ut_host
+                    .iter()
+                    .zip(other.ut_host.iter())
+                    .all(|(a,b)| a == b)
+                    && self.ut_unused == other.ut_unused
+                    && self.ut_session == other.ut_session
+                    && self.ut_type == other.ut_type
+                    && self.ut_pid == other.ut_pid
+                    && self.ut_exit == other.ut_exit
+                    && self.ut_ss == other.ut_ss
+                    && self.ut_tv == other.ut_tv
+                    && self.ut_unused2 == other.ut_unused2
+            }
+        }
+        impl Eq for utmpx {}
+        impl ::fmt::Debug for utmpx {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("utmpx")
+                    .field("ut_name", &self.ut_name)
+                    .field("ut_id", &self.ut_id)
+                    .field("ut_line", &self.ut_line)
+                    // FIXME: .field("ut_host", &self.ut_host)
+                    .field("ut_unused", &self.ut_unused)
+                    .field("ut_session", &self.ut_session)
+                    .field("ut_type", &self.ut_type)
+                    .field("ut_pid", &self.ut_pid)
+                    .field("ut_exit", &self.ut_exit)
+                    .field("ut_ss", &self.ut_ss)
+                    .field("ut_tv", &self.ut_tv)
+                    .field("ut_unused2", &self.ut_unused2)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for utmpx {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.ut_name.hash(state);
+                self.ut_id.hash(state);
+                self.ut_line.hash(state);
+                self.ut_host.hash(state);
+                self.ut_unused.hash(state);
+                self.ut_session.hash(state);
+                self.ut_type.hash(state);
+                self.ut_pid.hash(state);
+                self.ut_exit.hash(state);
+                self.ut_ss.hash(state);
+                self.ut_tv.hash(state);
+                self.ut_unused2.hash(state);
+            }
+        }
+
+        impl PartialEq for dirent {
+            fn eq(&self, other: &dirent) -> bool {
+                self.d_fileno == other.d_fileno
+                    && self.d_namlen == other.d_namlen
+                    && self.d_type == other.d_type
+                    // Ignore __unused1
+                    // Ignore __unused2
+                    && self
+                    .d_name
+                    .iter()
+                    .zip(other.d_name.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for dirent {}
+        impl ::fmt::Debug for dirent {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("dirent")
+                    .field("d_fileno", &self.d_fileno)
+                    .field("d_namlen", &self.d_namlen)
+                    .field("d_type", &self.d_type)
+                    // Ignore __unused1
+                    // Ignore __unused2
+                    // FIXME: .field("d_name", &self.d_name)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for dirent {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.d_fileno.hash(state);
+                self.d_namlen.hash(state);
+                self.d_type.hash(state);
+                    // Ignore __unused1
+                    // Ignore __unused2
+                self.d_name.hash(state);
+            }
+        }
+
+        impl PartialEq for statfs {
+            fn eq(&self, other: &statfs) -> bool {
+                self.f_bsize == other.f_bsize
+                    && self.f_iosize == other.f_iosize
+                    && self.f_blocks == other.f_blocks
+                    && self.f_bfree == other.f_bfree
+                    && self.f_bavail == other.f_bavail
+                    && self.f_files == other.f_files
+                    && self.f_ffree == other.f_ffree
+                    && self.f_fsid == other.f_fsid
+                    && self.f_owner == other.f_owner
+                    && self.f_type == other.f_type
+                    && self.f_flags == other.f_flags
+                    && self.f_syncwrites == other.f_syncwrites
+                    && self.f_asyncwrites == other.f_asyncwrites
+                    && self.f_fstypename == other.f_fstypename
+                    && self
+                    .f_mntonname
+                    .iter()
+                    .zip(other.f_mntonname.iter())
+                    .all(|(a,b)| a == b)
+                    && self.f_syncreads == other.f_syncreads
+                    && self.f_asyncreads == other.f_asyncreads
+                    && self
+                    .f_mntfromname
+                    .iter()
+                    .zip(other.f_mntfromname.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for statfs {}
+        impl ::fmt::Debug for statfs {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("statfs")
+                    .field("f_bsize", &self.f_bsize)
+                    .field("f_iosize", &self.f_iosize)
+                    .field("f_blocks", &self.f_blocks)
+                    .field("f_bfree", &self.f_bfree)
+                    .field("f_bavail", &self.f_bavail)
+                    .field("f_files", &self.f_files)
+                    .field("f_ffree", &self.f_ffree)
+                    .field("f_fsid", &self.f_fsid)
+                    .field("f_owner", &self.f_owner)
+                    .field("f_type", &self.f_type)
+                    .field("f_flags", &self.f_flags)
+                    .field("f_syncwrites", &self.f_syncwrites)
+                    .field("f_asyncwrites", &self.f_asyncwrites)
+                    // FIXME: .field("f_mntonname", &self.f_mntonname)
+                    .field("f_syncreads", &self.f_syncreads)
+                    .field("f_asyncreads", &self.f_asyncreads)
+                    // FIXME: .field("f_mntfromname", &self.f_mntfromname)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for statfs {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.f_bsize.hash(state);
+                self.f_iosize.hash(state);
+                self.f_blocks.hash(state);
+                self.f_bfree.hash(state);
+                self.f_bavail.hash(state);
+                self.f_files.hash(state);
+                self.f_ffree.hash(state);
+                self.f_fsid.hash(state);
+                self.f_owner.hash(state);
+                self.f_type.hash(state);
+                self.f_flags.hash(state);
+                self.f_syncwrites.hash(state);
+                self.f_asyncwrites.hash(state);
+                self.f_fstypename.hash(state);
+                self.f_mntonname.hash(state);
+                self.f_syncreads.hash(state);
+                self.f_asyncreads.hash(state);
+                self.f_mntfromname.hash(state);
+            }
+        }
+    }
 }
 
 pub const RAND_MAX: ::c_int = 0x7fff_ffff;
@@ -222,6 +411,8 @@ pub const O_DIRECTORY: ::c_int = 0x08000000;
 pub const F_GETLK: ::c_int = 7;
 pub const F_SETLK: ::c_int = 8;
 pub const F_SETLKW: ::c_int = 9;
+pub const ENOMEDIUM: ::c_int = 93;
+pub const EASYNC: ::c_int = 99;
 pub const ELAST: ::c_int = 99;
 pub const RLIMIT_POSIXLOCKS: ::c_int = 11;
 pub const RLIM_NLIMITS: ::rlim_t = 12;
@@ -428,6 +619,8 @@ pub const NOTE_CHILD: ::uint32_t = 0x00000004;
 
 pub const SO_SNDSPACE: ::c_int = 0x100a;
 pub const SO_CPUHINT: ::c_int = 0x1030;
+
+pub const PT_FIRSTMACH: ::c_int = 32;
 
 // https://github.com/DragonFlyBSD/DragonFlyBSD/blob/master/sys/net/if.h#L101
 pub const IFF_UP: ::c_int = 0x1; // interface is up
@@ -680,6 +873,11 @@ pub const IPPROTO_DONE: ::c_int = 257;
 /// Used by RSS: the layer3 protocol is unknown
 pub const IPPROTO_UNKNOWN: ::c_int = 258;
 
+// sys/netinet/tcp.h
+pub const TCP_SIGNATURE_ENABLE:   ::c_int = 16;
+pub const TCP_KEEPINIT:   ::c_int = 32;
+pub const TCP_FASTKEEP:   ::c_int = 128;
+
 pub const AF_BLUETOOTH: ::c_int = 33;
 pub const AF_MPLS: ::c_int = 34;
 pub const AF_IEEE80211: ::c_int = 35;
@@ -765,6 +963,50 @@ pub const RTP_PRIO_NORMAL: ::c_ushort = 1;
 pub const RTP_PRIO_IDLE: ::c_ushort = 2;
 pub const RTP_PRIO_THREAD: ::c_ushort = 3;
 
+// Flags for chflags(2)
+pub const UF_NOHISTORY: ::c_ulong = 0x00000040;
+pub const UF_CACHE:     ::c_ulong = 0x00000080;
+pub const UF_XLINK:     ::c_ulong = 0x00000100;
+pub const SF_NOHISTORY: ::c_ulong = 0x00400000;
+pub const SF_CACHE:     ::c_ulong = 0x00800000;
+pub const SF_XLINK:     ::c_ulong = 0x01000000;
+
+fn _CMSG_ALIGN(n: usize) -> usize {
+    (n + 3) & !3
+}
+
+f! {
+    pub fn CMSG_DATA(cmsg: *const ::cmsghdr) -> *mut ::c_uchar {
+        (cmsg as *mut ::c_uchar)
+            .offset(_CMSG_ALIGN(::mem::size_of::<::cmsghdr>()) as isize)
+    }
+
+    pub fn CMSG_LEN(length: ::c_uint) -> ::c_uint {
+        (_CMSG_ALIGN(::mem::size_of::<::cmsghdr>()) + length as usize)
+            as ::c_uint
+    }
+
+    pub fn CMSG_NXTHDR(mhdr: *const ::msghdr, cmsg: *const ::cmsghdr)
+        -> *mut ::cmsghdr
+    {
+        let next = cmsg as usize + _CMSG_ALIGN((*cmsg).cmsg_len as usize)
+            + _CMSG_ALIGN(::mem::size_of::<::cmsghdr>());
+        let max = (*mhdr).msg_control as usize
+            + (*mhdr).msg_controllen as usize;
+        if next <= max {
+            (cmsg as usize + _CMSG_ALIGN((*cmsg).cmsg_len as usize))
+                as *mut ::cmsghdr
+        } else {
+            0 as *mut ::cmsghdr
+        }
+    }
+
+    pub fn CMSG_SPACE(length: ::c_uint) -> ::c_uint {
+        (_CMSG_ALIGN(::mem::size_of::<::cmsghdr>()) +
+            _CMSG_ALIGN(length as usize)) as ::c_uint
+    }
+}
+
 extern {
     pub fn mprotect(addr: *mut ::c_void, len: ::size_t, prot: ::c_int)
                     -> ::c_int;
@@ -784,4 +1026,5 @@ extern {
 
     pub fn statfs(path: *const ::c_char, buf: *mut statfs) -> ::c_int;
     pub fn fstatfs(fd: ::c_int, buf: *mut statfs) -> ::c_int;
+    pub fn uname(buf: *mut ::utsname) -> ::c_int;
 }

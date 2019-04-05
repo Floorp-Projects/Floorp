@@ -19,8 +19,6 @@
 pub type c_long = i64;
 pub type c_ulong = u64;
 
-pub type uid_t = u16;
-pub type gid_t = u16;
 pub type speed_t = ::c_uint;
 pub type mode_t = u32;
 pub type dev_t = i16;
@@ -49,7 +47,336 @@ pub type pthread_mutexattr_t = usize;
 pub type pthread_rwlock_t = usize;
 pub type pthread_rwlockattr_t = usize;
 
+s_no_extra_traits! {
+    pub struct dirent {
+        pub d_ino: ::c_long,
+        pub d_off: off_t,
+        pub d_reclen: u16,
+        pub d_name: [::c_char; 256],
+    }
+
+    // Dummy
+    pub struct sockaddr_un {
+        pub sun_family: sa_family_t,
+        pub sun_path: [::c_char; 108],
+    }
+
+    pub struct sockaddr {
+        pub sa_len: u8,
+        pub sa_family: sa_family_t,
+        pub sa_data: [::c_char; 14],
+    }
+
+    pub struct sockaddr_in {
+        pub sin_len: u8,
+        pub sin_family: sa_family_t,
+        pub sin_port: ::in_port_t,
+        pub sin_addr: ::in_addr,
+        pub sin_zero: [::c_char; 8],
+    }
+
+    pub struct fd_set {
+        fds_bits: [::c_ulong; FD_SETSIZE / ULONG_SIZE],
+    }
+
+    pub struct sockaddr_storage {
+        pub s2_len: u8,
+        pub ss_family: sa_family_t,
+        pub s2_data1: [::c_char; 2],
+        pub s2_data2: [u32; 3],
+        pub s2_data3: [u32; 3],
+    }
+
+    pub struct stat {
+        pub st_dev: ::dev_t,
+        pub st_ino: ::ino_t,
+        pub st_mode: ::mode_t,
+        pub st_nlink: ::nlink_t,
+        pub st_uid: ::uid_t,
+        pub st_gid: ::gid_t,
+        pub st_rdev: dev_t,
+        pub st_size: off_t,
+        pub st_atime: time_t,
+        pub st_atime_nsec: ::c_long,
+        pub st_mtime: time_t,
+        pub st_mtime_nsec: ::c_long,
+        pub st_ctime: time_t,
+        pub st_ctime_nsec: ::c_long,
+        pub st_blksize: blksize_t,
+        pub st_blocks: blkcnt_t,
+        pub st_spare4: [::c_long; 2],
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "extra_traits")] {
+        impl PartialEq for dirent {
+            fn eq(&self, other: &dirent) -> bool {
+                self.d_ino == other.d_ino
+                    && self.d_off == other.d_off
+                    && self.d_reclen == other.d_reclen
+                    && self
+                    .d_name
+                    .iter()
+                    .zip(other.d_name.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for dirent {}
+        impl ::fmt::Debug for dirent {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("dirent")
+                    .field("d_ino", &self.d_ino)
+                    .field("d_off", &self.d_off)
+                    .field("d_reclen", &self.d_reclen)
+                    // FIXME: .field("d_name", &self.d_name)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for dirent {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.d_ino.hash(state);
+                self.d_off.hash(state);
+                self.d_reclen.hash(state);
+                self.d_name.hash(state);
+            }
+        }
+
+        impl PartialEq for sockaddr_un {
+            fn eq(&self, other: &sockaddr_un) -> bool {
+                self.sun_family == other.sun_family
+                    && self
+                    .sun_path
+                    .iter()
+                    .zip(other.sun_path.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for sockaddr_un {}
+        impl ::fmt::Debug for sockaddr_un {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sockaddr_un")
+                    .field("sun_family", &self.sun_family)
+                    // FIXME: .field("sun_path", &self.sun_path)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for sockaddr_un {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.sun_family.hash(state);
+                self.sun_path.hash(state);
+            }
+        }
+
+        impl PartialEq for sockaddr {
+            fn eq(&self, other: &sockaddr) -> bool {
+                self.sa_len == other.sa_len
+                    && self.sa_family == other.sa_family
+                    && self
+                    .sa_data
+                    .iter()
+                    .zip(other.sa_data.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for sockaddr {}
+        impl ::fmt::Debug for sockaddr {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sockaddr")
+                    .field("sa_len", &self.sa_len)
+                    .field("sa_family", &self.sa_family)
+                    // FIXME: .field("sa_data", &self.sa_data)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for sockaddr {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.sa_len.hash(state);
+                self.sa_family.hash(state);
+                self.sa_data.hash(state);
+            }
+        }
+
+        impl PartialEq for sockaddr_in {
+            fn eq(&self, other: &sockaddr_in) -> bool {
+                self.sin_len == other.sin_len
+                    && self.sin_family == other.sin_family
+                    && self.sin_port == other.sin_port
+                    && self.sin_addr == other.sin_addr
+                    && self
+                    .sin_zero
+                    .iter()
+                    .zip(other.sin_zero.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for sockaddr_in {}
+        impl ::fmt::Debug for sockaddr_in {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sockaddr_in")
+                    .field("sin_len", &self.sin_len)
+                    .field("sin_family", &self.sin_family)
+                    .field("sin_port", &self.sin_port)
+                    .field("sin_addr", &self.sin_addr)
+                    // FIXME: .field("sin_zero", &self.sin_zero)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for sockaddr_in {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.sin_len.hash(state);
+                self.sin_family.hash(state);
+                self.sin_port.hash(state);
+                self.sin_addr.hash(state);
+                self.sin_zero.hash(state);
+            }
+        }
+
+        impl PartialEq for fd_set {
+            fn eq(&self, other: &fd_set) -> bool {
+                self.fds_bits
+                    .iter()
+                    .zip(other.fds_bits.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for fd_set {}
+        impl ::fmt::Debug for fd_set {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("fd_set")
+                    // FIXME: .field("fds_bits", &self.fds_bits)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for fd_set {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.fds_bits.hash(state);
+            }
+        }
+
+        impl PartialEq for sockaddr_storage {
+            fn eq(&self, other: &sockaddr_storage) -> bool {
+                self.s2_len == other.s2_len
+                    && self.ss_family == other.ss_family
+                    && self.s2_data1
+                    .iter()
+                    .zip(other.s2_data1.iter())
+                    .all(|(a,b)| a == b)
+                    && self.s2_data2
+                    .iter()
+                    .zip(other.s2_data2.iter())
+                    .all(|(a,b)| a == b)
+                    && self.s2_data3
+                    .iter()
+                    .zip(other.s2_data3.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for sockaddr_storage {}
+        impl ::fmt::Debug for sockaddr_storage {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("sockaddr_storage")
+                    .field("s2_len", &self.s2_len)
+                    .field("ss_family", &self.ss_family)
+                    // FIXME: .field("s2_data1", &self.s2_data1)
+                    // FIXME: .field("s2_data2", &self.s2_data2)
+                    // FIXME: .field("s2_data3", &self.s2_data3)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for sockaddr_storage {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.s2_len.hash(state);
+                self.ss_family.hash(state);
+                self.s2_data1.hash(state);
+                self.s2_data2.hash(state);
+                self.s2_data3.hash(state);
+            }
+        }
+
+        impl PartialEq for stat {
+            fn eq(&self, other: &stat) -> bool {
+                self.st_dev == other.st_dev
+                    && self.st_ino == other.st_ino
+                    && self.st_mode == other.st_mode
+                    && self.st_nlink == other.st_nlink
+                    && self.st_uid == other.st_uid
+                    && self.st_gid == other.st_gid
+                    && self.st_rdev == other.st_rdev
+                    && self.st_size == other.st_size
+                    && self.st_atime == other.st_atime
+                    && self.st_atime_nsec == other.st_atime_nsec
+                    && self.st_mtime == other.st_mtime
+                    && self.st_mtime_nsec == other.st_mtime_nsec
+                    && self.st_ctime == other.st_ctime
+                    && self.st_ctime_nsec == other.st_ctime_nsec
+                    && self.st_blksize == other.st_blksize
+                    && self.st_blocks == other.st_blocks
+                    && self
+                    .st_spare4
+                    .iter()
+                    .zip(other.st_spare4.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for stat {}
+        impl ::fmt::Debug for stat {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("stat")
+                    .field("st_dev", &self.st_dev)
+                    .field("st_ino", &self.st_ino)
+                    .field("st_mode", &self.st_mode)
+                    .field("st_nlink", &self.st_nlink)
+                    .field("st_uid", &self.st_uid)
+                    .field("st_gid", &self.st_gid)
+                    .field("st_rdev", &self.st_rdev)
+                    .field("st_size", &self.st_size)
+                    .field("st_atime", &self.st_atime)
+                    .field("st_atime_nsec", &self.st_atime_nsec)
+                    .field("st_mtime", &self.st_mtime)
+                    .field("st_mtime_nsec", &self.st_mtime_nsec)
+                    .field("st_ctime", &self.st_ctime)
+                    .field("st_ctime_nsec", &self.st_ctime_nsec)
+                    .field("st_blksize", &self.st_blksize)
+                    .field("st_blocks", &self.st_blocks)
+                    // FIXME: .field("st_spare4", &self.st_spare4)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for stat {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.st_dev.hash(state);
+                self.st_ino.hash(state);
+                self.st_mode.hash(state);
+                self.st_nlink.hash(state);
+                self.st_uid.hash(state);
+                self.st_gid.hash(state);
+                self.st_rdev.hash(state);
+                self.st_size.hash(state);
+                self.st_atime.hash(state);
+                self.st_atime_nsec.hash(state);
+                self.st_mtime.hash(state);
+                self.st_mtime_nsec.hash(state);
+                self.st_ctime.hash(state);
+                self.st_ctime_nsec.hash(state);
+                self.st_blksize.hash(state);
+                self.st_blocks.hash(state);
+                self.st_spare4.hash(state);
+            }
+        }
+    }
+}
+
 s! {
+    pub struct in_addr {
+        pub s_addr: ::in_addr_t,
+    }
+
+    pub struct ip_mreq {
+        pub imr_multiaddr: in_addr,
+        pub imr_interface: in_addr,
+    }
+
     pub struct addrinfo {
         pub ai_flags: ::c_int,
         pub ai_family: ::c_int,
@@ -61,18 +388,7 @@ s! {
         pub ai_next: *mut addrinfo,
     }
 
-    pub struct dirent {
-        pub d_ino: ::c_long,
-        pub d_off: off_t,
-        pub d_reclen: u16,
-        pub d_name: [::c_char; 256],
-    }
-
     pub struct Dl_info {}
-
-    pub struct fd_set {
-        fds_bits: [::c_ulong; FD_SETSIZE / ULONG_SIZE],
-    }
 
     pub struct lconv {
         pub decimal_point: *mut ::c_char,
@@ -132,20 +448,6 @@ s! {
         pub sa_handler: usize,
     }
 
-    pub struct sockaddr {
-        pub sa_len: u8,
-        pub sa_family: sa_family_t,
-        pub sa_data: [::c_char; 14],
-    }
-
-    pub struct sockaddr_in {
-        pub sin_len: u8,
-        pub sin_family: sa_family_t,
-        pub sin_port: ::in_port_t,
-        pub sin_addr: ::in_addr,
-        pub sin_zero: [::c_char; 8],
-    }
-
     pub struct sockaddr_in6 {
         pub sin6_len: u8,
         pub sin6_family: sa_family_t,
@@ -153,40 +455,6 @@ s! {
         pub sin6_flowinfo: u32,
         pub sin6_addr: ::in6_addr,
         pub sin6_scope_id: u32,
-    }
-
-    pub struct sockaddr_storage {
-        pub s2_len: u8,
-        pub ss_family: sa_family_t,
-        pub s2_data1: [::c_char; 2],
-        pub s2_data2: [u32; 3],
-        pub s2_data3: [u32; 3],
-    }
-
-    // Dummy
-    pub struct sockaddr_un {
-        pub sun_family: sa_family_t,
-        pub sun_path: [::c_char; 108],
-    }
-
-    pub struct stat {
-        pub st_dev: ::dev_t,
-        pub st_ino: ::ino_t,
-        pub st_mode: ::mode_t,
-        pub st_nlink: ::nlink_t,
-        pub st_uid: ::uid_t,
-        pub st_gid: ::gid_t,
-        pub st_rdev: dev_t,
-        pub st_size: off_t,
-        pub st_atime: time_t,
-        pub st_atime_nsec: ::c_long,
-        pub st_mtime: time_t,
-        pub st_mtime_nsec: ::c_long,
-        pub st_ctime: time_t,
-        pub st_ctime_nsec: ::c_long,
-        pub st_blksize: blksize_t,
-        pub st_blocks: blkcnt_t,
-        pub st_spare4: [::c_long; 2],
     }
 
     pub struct statvfs {}
@@ -696,6 +964,18 @@ f! {
 }
 
 extern {
+    pub fn sem_destroy(sem: *mut sem_t) -> ::c_int;
+    pub fn sem_init(sem: *mut sem_t,
+                    pshared: ::c_int,
+                    value: ::c_uint)
+                    -> ::c_int;
+
+    pub fn abs(i: ::c_int) -> ::c_int;
+    pub fn atof(s: *const ::c_char) -> ::c_double;
+    pub fn labs(i: ::c_long) -> ::c_long;
+    pub fn rand() -> ::c_int;
+    pub fn srand(seed: ::c_uint);
+
     pub fn bind(s: ::c_int, name: *const ::sockaddr, namelen: ::socklen_t)
         -> ::c_int;
 
@@ -721,6 +1001,7 @@ extern {
         -> ::c_int;
 
     pub fn setgroups(ngroups: ::c_int, grouplist: *const ::gid_t) -> ::c_int;
+    pub fn uname(buf: *mut ::utsname) -> ::c_int;
 }
 
 cfg_if! {
