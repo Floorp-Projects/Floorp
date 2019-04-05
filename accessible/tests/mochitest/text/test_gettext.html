@@ -77,9 +77,9 @@
       testText(["d4c"], 0, -1, "Hello My Friend");
 
       // `text-transform: full-width | full-size-kana` should not be reflected in
-      // a11y, see https://bugzilla.mozilla.org/show_bug.cgi?id=1541668.
-      testText(["d5a"], 0, -1, "hello my friend", kTodo);
-      testText(["d5b"], 0, -1, "ゕゖヵヶ", kTodo);
+      // a11y.
+      testText(["d5a"], 0, -1, "hello my friend");
+      testText(["d5b"], 0, -1, "ゕゖヵヶ");
 
       SimpleTest.finish();
     }
