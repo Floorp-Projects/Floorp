@@ -74,6 +74,11 @@ add_task(async function test_merged_item_chunking() {
   let changesToUpload = await buf.apply();
   deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
 
+  let localChildRecordIds = await PlacesSyncUtils.bookmarks.fetchChildRecordIds(
+    "toolbar");
+  deepEqual(localChildRecordIds, toolbarRecord.children,
+    "Should apply all remote toolbar children");
+
   let guidsToUpload = Object.keys(changesToUpload);
   deepEqual(guidsToUpload.sort(), ["unfiled", ...localGuids].sort(),
     "Should upload unfiled and all new local children");
@@ -115,6 +120,11 @@ add_task(async function test_deletion_chunking() {
 
   let tombstones = await PlacesTestUtils.fetchSyncTombstones();
   deepEqual(tombstones, [], "Shouldn't store tombstones for remote deletions");
+
+  let localChildRecordIds = await PlacesSyncUtils.bookmarks.fetchChildRecordIds(
+    "unfiled");
+  deepEqual(localChildRecordIds, [],
+    "Should delete all unfiled children locally");
 
   await buf.finalize();
   await PlacesUtils.bookmarks.eraseEverything();
