@@ -5,11 +5,6 @@ pub type c_ulong = u64;
 pub type boolean_t = ::c_uint;
 
 s! {
-    pub struct pthread_attr_t {
-        __sig: c_long,
-        __opaque: [::c_char; 56]
-    }
-
     pub struct timeval32 {
         pub tv_sec: i32,
         pub tv_usec: i32,
@@ -55,6 +50,42 @@ s! {
     }
 }
 
+s_no_extra_traits!{
+    pub struct pthread_attr_t {
+        __sig: c_long,
+        __opaque: [::c_char; 56]
+    }
+}
+
+cfg_if! {
+    if #[cfg(feature = "extra_traits")] {
+        impl PartialEq for pthread_attr_t {
+            fn eq(&self, other: &pthread_attr_t) -> bool {
+                self.__sig == other.__sig
+                    && self.__opaque
+                    .iter()
+                    .zip(other.__opaque.iter())
+                    .all(|(a,b)| a == b)
+            }
+        }
+        impl Eq for pthread_attr_t {}
+        impl ::fmt::Debug for pthread_attr_t {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("pthread_attr_t")
+                    .field("__sig", &self.__sig)
+                // FIXME: .field("__opaque", &self.__opaque)
+                    .finish()
+            }
+        }
+        impl ::hash::Hash for pthread_attr_t {
+            fn hash<H: ::hash::Hasher>(&self, state: &mut H) {
+                self.__sig.hash(state);
+                self.__opaque.hash(state);
+            }
+        }
+    }
+}
+
 pub const __PTHREAD_MUTEX_SIZE__: usize = 56;
 pub const __PTHREAD_COND_SIZE__: usize = 40;
 pub const __PTHREAD_CONDATTR_SIZE__: usize = 8;
@@ -63,3 +94,9 @@ pub const __PTHREAD_RWLOCKATTR_SIZE__: usize = 16;
 
 pub const TIOCTIMESTAMP: ::c_ulong = 0x40107459;
 pub const TIOCDCDTIMESTAMP: ::c_ulong = 0x40107458;
+
+extern {
+    pub fn exchangedata(path1: *const ::c_char,
+                        path2: *const ::c_char,
+                        options: ::c_uint) -> ::c_int;
+}

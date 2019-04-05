@@ -20,20 +20,6 @@ s! {
         __unused5: *mut ::c_void,
     }
 
-    // FIXME this is actually a union
-    #[cfg_attr(all(feature = "align", target_pointer_width = "32"),
-               repr(align(4)))]
-    #[cfg_attr(all(feature = "align", target_pointer_width = "64"),
-               repr(align(8)))]
-    pub struct sem_t {
-        #[cfg(target_pointer_width = "32")]
-        __size: [::c_char; 16],
-        #[cfg(target_pointer_width = "64")]
-        __size: [::c_char; 32],
-        #[cfg(not(feature = "align"))]
-        __align: [::c_long; 0],
-    }
-
     pub struct termios2 {
         pub c_iflag: ::tcflag_t,
         pub c_oflag: ::tcflag_t,
@@ -397,8 +383,6 @@ pub const SO_PASSSEC: ::c_int = 34;
 pub const SO_TIMESTAMPNS: ::c_int = 35;
 pub const SCM_TIMESTAMPNS: ::c_int = SO_TIMESTAMPNS;
 pub const SO_MARK: ::c_int = 36;
-pub const SO_TIMESTAMPING: ::c_int = 37;
-pub const SCM_TIMESTAMPING: ::c_int = SO_TIMESTAMPING;
 pub const SO_RXQ_OVFL: ::c_int = 40;
 pub const SO_WIFI_STATUS: ::c_int = 41;
 pub const SCM_WIFI_STATUS: ::c_int = SO_WIFI_STATUS;
@@ -539,6 +523,9 @@ pub const MAP_HUGETLB: ::c_int = 0x080000;
 
 pub const EFD_NONBLOCK: ::c_int = 0x80;
 
+pub const F_RDLCK: ::c_int = 0;
+pub const F_WRLCK: ::c_int = 1;
+pub const F_UNLCK: ::c_int = 2;
 pub const F_GETLK: ::c_int = 14;
 pub const F_GETOWN: ::c_int = 23;
 pub const F_SETOWN: ::c_int = 24;
@@ -926,7 +913,7 @@ extern {
                      sz: ::c_int) -> ::c_int;
     pub fn glob64(pattern: *const ::c_char,
                   flags: ::c_int,
-                  errfunc: ::dox::Option<extern fn(epath: *const ::c_char,
+                  errfunc: ::Option<extern fn(epath: *const ::c_char,
                                                    errno: ::c_int)
                                                    -> ::c_int>,
                   pglob: *mut glob64_t) -> ::c_int;
@@ -959,5 +946,15 @@ cfg_if! {
         pub use self::mips64::*;
     } else {
         // Unknown target_arch
+    }
+}
+
+cfg_if! {
+    if #[cfg(libc_align)] {
+        mod align;
+        pub use self::align::*;
+    } else {
+        mod no_align;
+        pub use self::no_align::*;
     }
 }

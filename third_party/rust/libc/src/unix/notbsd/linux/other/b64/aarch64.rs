@@ -284,8 +284,6 @@ pub const SO_PASSSEC: ::c_int = 34;
 pub const SO_TIMESTAMPNS: ::c_int = 35;
 pub const SCM_TIMESTAMPNS: ::c_int = SO_TIMESTAMPNS;
 pub const SO_MARK: ::c_int = 36;
-pub const SO_TIMESTAMPING: ::c_int = 37;
-pub const SCM_TIMESTAMPING: ::c_int = SO_TIMESTAMPING;
 pub const SO_PROTOCOL: ::c_int = 38;
 pub const SO_DOMAIN: ::c_int = 39;
 pub const SO_RXQ_OVFL: ::c_int = 40;
@@ -339,6 +337,10 @@ pub const F_GETOWN: ::c_int = 9;
 pub const F_SETOWN: ::c_int = 8;
 pub const F_SETLK: ::c_int = 6;
 pub const F_SETLKW: ::c_int = 7;
+
+pub const F_RDLCK: ::c_int = 0;
+pub const F_WRLCK: ::c_int = 1;
+pub const F_UNLCK: ::c_int = 2;
 
 pub const SFD_NONBLOCK: ::c_int = 0x0800;
 

@@ -8,14 +8,15 @@
 #define mozilla_dom_SVGFEConvolveMatrixElement_h
 
 #include "DOMSVGAnimatedNumberList.h"
+#include "SVGAnimatedBoolean.h"
+#include "SVGAnimatedEnumeration.h"
+#include "SVGAnimatedInteger.h"
+#include "SVGAnimatedIntegerPair.h"
 #include "SVGAnimatedNumberList.h"
-#include "SVGBoolean.h"
-#include "SVGEnum.h"
-#include "SVGFilters.h"
-#include "SVGInteger.h"
-#include "SVGIntegerPair.h"
 #include "nsSVGNumber2.h"
-#include "SVGString.h"
+#include "SVGAnimatedString.h"
+#include "SVGAnimatedNumberList.h"
+#include "SVGFilters.h"
 
 nsresult NS_NewSVGFEConvolveMatrixElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -47,7 +48,7 @@ class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase {
       nsTArray<RefPtr<SourceSurface>>& aInputImages) override;
   virtual bool AttributeAffectsRendering(int32_t aNameSpaceID,
                                          nsAtom* aAttribute) const override;
-  virtual SVGString& GetResultImageName() override {
+  virtual SVGAnimatedString& GetResultImageName() override {
     return mStringAttributes[RESULT];
   }
   virtual void GetSourceImageNames(nsTArray<SVGStringInfo>& aSources) override;
@@ -83,28 +84,28 @@ class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase {
   static NumberInfo sNumberInfo[2];
 
   enum { KERNEL_UNIT_LENGTH };
-  SVGNumberPair mNumberPairAttributes[1];
+  SVGAnimatedNumberPair mNumberPairAttributes[1];
   static NumberPairInfo sNumberPairInfo[1];
 
   enum { TARGET_X, TARGET_Y };
-  SVGInteger mIntegerAttributes[2];
+  SVGAnimatedInteger mIntegerAttributes[2];
   static IntegerInfo sIntegerInfo[2];
 
   enum { ORDER };
-  SVGIntegerPair mIntegerPairAttributes[1];
+  SVGAnimatedIntegerPair mIntegerPairAttributes[1];
   static IntegerPairInfo sIntegerPairInfo[1];
 
   enum { PRESERVEALPHA };
-  SVGBoolean mBooleanAttributes[1];
+  SVGAnimatedBoolean mBooleanAttributes[1];
   static BooleanInfo sBooleanInfo[1];
 
   enum { EDGEMODE };
-  SVGEnum mEnumAttributes[1];
+  SVGAnimatedEnumeration mEnumAttributes[1];
   static SVGEnumMapping sEdgeModeMap[];
   static EnumInfo sEnumInfo[1];
 
   enum { RESULT, IN1 };
-  SVGString mStringAttributes[2];
+  SVGAnimatedString mStringAttributes[2];
   static StringInfo sStringInfo[2];
 
   enum { KERNELMATRIX };

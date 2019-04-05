@@ -4,23 +4,23 @@ use std::str::{Bytes, CharIndices, Chars};
 
 use unicode_xid::UnicodeXID;
 
-use stable::LexError;
+use fallback::LexError;
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub struct Cursor<'a> {
     pub rest: &'a str,
-    #[cfg(procmacro2_semver_exempt)]
+    #[cfg(span_locations)]
     pub off: u32,
 }
 
 impl<'a> Cursor<'a> {
-    #[cfg(not(procmacro2_semver_exempt))]
+    #[cfg(not(span_locations))]
     pub fn advance(&self, amt: usize) -> Cursor<'a> {
         Cursor {
             rest: &self.rest[amt..],
         }
     }
-    #[cfg(procmacro2_semver_exempt)]
+    #[cfg(span_locations)]
     pub fn advance(&self, amt: usize) -> Cursor<'a> {
         Cursor {
             rest: &self.rest[amt..],

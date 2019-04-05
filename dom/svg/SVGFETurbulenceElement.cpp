@@ -63,13 +63,13 @@ NS_IMPL_ELEMENT_CLONE_WITH_INIT(SVGFETurbulenceElement)
 already_AddRefed<DOMSVGAnimatedNumber>
 SVGFETurbulenceElement::BaseFrequencyX() {
   return mNumberPairAttributes[BASE_FREQ].ToDOMAnimatedNumber(
-      SVGNumberPair::eFirst, this);
+      SVGAnimatedNumberPair::eFirst, this);
 }
 
 already_AddRefed<DOMSVGAnimatedNumber>
 SVGFETurbulenceElement::BaseFrequencyY() {
   return mNumberPairAttributes[BASE_FREQ].ToDOMAnimatedNumber(
-      SVGNumberPair::eSecond, this);
+      SVGAnimatedNumberPair::eSecond, this);
 }
 
 already_AddRefed<DOMSVGAnimatedInteger> SVGFETurbulenceElement::NumOctaves() {
@@ -93,10 +93,10 @@ FilterPrimitiveDescription SVGFETurbulenceElement::GetPrimitiveDescription(
     nsSVGFilterInstance* aInstance, const IntRect& aFilterSubregion,
     const nsTArray<bool>& aInputsAreTainted,
     nsTArray<RefPtr<SourceSurface>>& aInputImages) {
-  float fX =
-      mNumberPairAttributes[BASE_FREQ].GetAnimValue(SVGNumberPair::eFirst);
-  float fY =
-      mNumberPairAttributes[BASE_FREQ].GetAnimValue(SVGNumberPair::eSecond);
+  float fX = mNumberPairAttributes[BASE_FREQ].GetAnimValue(
+      SVGAnimatedNumberPair::eFirst);
+  float fY = mNumberPairAttributes[BASE_FREQ].GetAnimValue(
+      SVGAnimatedNumberPair::eSecond);
   float seed = mNumberAttributes[OCTAVES].GetAnimValue();
   uint32_t octaves =
       clamped(mIntegerAttributes[OCTAVES].GetAnimValue(), 0, MAX_OCTAVES);

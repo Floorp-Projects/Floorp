@@ -48,13 +48,13 @@ SVGFESpecularLightingElement::SpecularExponent() {
 already_AddRefed<DOMSVGAnimatedNumber>
 SVGFESpecularLightingElement::KernelUnitLengthX() {
   return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(
-      SVGNumberPair::eFirst, this);
+      SVGAnimatedNumberPair::eFirst, this);
 }
 
 already_AddRefed<DOMSVGAnimatedNumber>
 SVGFESpecularLightingElement::KernelUnitLengthY() {
   return mNumberPairAttributes[KERNEL_UNIT_LENGTH].ToDOMAnimatedNumber(
-      SVGNumberPair::eSecond, this);
+      SVGAnimatedNumberPair::eSecond, this);
 }
 
 //----------------------------------------------------------------------

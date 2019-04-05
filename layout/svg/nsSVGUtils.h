@@ -44,9 +44,9 @@ struct nsStyleSVG;
 struct nsRect;
 
 namespace mozilla {
+class SVGAnimatedEnumeration;
 class SVGContextPaint;
 struct SVGContextPaintImpl;
-class SVGEnum;
 class SVGGeometryFrame;
 namespace dom {
 class Element;
@@ -344,7 +344,7 @@ class nsSVGUtils {
    * @param aFlags One or more of the BBoxFlags values defined below.
    */
   static gfxMatrix AdjustMatrixForUnits(const gfxMatrix& aMatrix,
-                                        mozilla::SVGEnum* aUnits,
+                                        mozilla::SVGAnimatedEnumeration* aUnits,
                                         nsIFrame* aFrame, uint32_t aFlags);
 
   enum BBoxFlags {
