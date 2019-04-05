@@ -1134,7 +1134,7 @@ async function assertEditorBreakpoint(dbg, line, shouldExist) {
 }
 
 function assertBreakpointSnippet(dbg, index, snippet) {
-  const actualSnippet = findElement(dbg, "breakpointLabel", 3).innerText;
+  const actualSnippet = findElement(dbg, "breakpointLabel", 2).innerText;
   is(snippet, actualSnippet, `Breakpoint ${index} snippet`);
 }
 

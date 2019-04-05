@@ -57,3 +57,8 @@
   width: 20em;
   overflow: auto;
 }
+
+.secondary-panes input[type="checkbox"] {
+  margin: 0;
+  margin-inline-end: 4px;
+}

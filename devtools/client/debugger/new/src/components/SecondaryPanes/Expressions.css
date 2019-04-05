@@ -44,7 +44,7 @@
 .expressions-list {
   /* TODO: add normalize */
   margin: 0;
-  padding: 0;
+  padding: 4px 0px;
 }
 
 .expression-input-container {
