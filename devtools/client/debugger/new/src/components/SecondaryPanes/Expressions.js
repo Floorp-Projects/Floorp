@@ -49,7 +49,9 @@ type Props = {
   updateExpression: typeof actions.updateExpression,
   deleteExpression: typeof actions.deleteExpression,
   openLink: typeof actions.openLink,
-  openElementInInspector: typeof actions.openElementInInspectorCommand
+  openElementInInspector: typeof actions.openElementInInspectorCommand,
+  highlightDomElement: typeof actions.highlightDomElement,
+  unHighlightDomElement: typeof actions.unHighlightDomElement
 };
 
 class Expressions extends Component<Props, State> {
@@ -215,7 +217,14 @@ class Expressions extends Component<Props, State> {
   };
 
   renderExpression = (expression: Expression, index: number) => {
-    const { expressionError, openLink, openElementInInspector } = this.props;
+    const {
+      expressionError,
+      openLink,
+      openElementInInspector,
+      highlightDomElement,
+      unHighlightDomElement
+    } = this.props;
+
     const { editing, editIndex } = this.state;
     const { input, updating } = expression;
     const isEditingExpr = editing && editIndex === index;
@@ -253,6 +262,8 @@ class Expressions extends Component<Props, State> {
             createObjectClient={grip => createObjectClient(grip)}
             onDOMNodeClick={grip => openElementInInspector(grip)}
             onInspectIconClick={grip => openElementInInspector(grip)}
+            onDOMNodeMouseOver={grip => highlightDomElement(grip)}
+            onDOMNodeMouseOut={grip => unHighlightDomElement(grip)}
           />
           <div className="expression-container__close-btn">
             <CloseButton
@@ -383,6 +394,8 @@ export default connect(
     updateExpression: actions.updateExpression,
     deleteExpression: actions.deleteExpression,
     openLink: actions.openLink,
-    openElementInInspector: actions.openElementInInspectorCommand
+    openElementInInspector: actions.openElementInInspectorCommand,
+    highlightDomElement: actions.highlightDomElement,
+    unHighlightDomElement: actions.unHighlightDomElement
   }
 )(Expressions);

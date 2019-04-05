@@ -1793,7 +1793,7 @@ public class GeckoSession implements Parcelable {
          *
          * @param value The serialized SessionState in String form.
          * @return A new SessionState instance.
-         * @throws JSONException
+         * @throws JSONException if the value is not a valid json
          */
         public static @NonNull SessionState fromString(final @NonNull String value) throws JSONException {
             return new SessionState(GeckoBundle.fromJSONObject(new JSONObject(value)));

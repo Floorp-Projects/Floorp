@@ -13,6 +13,7 @@ static const char SandboxPolicyUtility[] = R"SANDBOX_LITERAL(
 
   (define should-log (param "SHOULD_LOG"))
   (define app-path (param "APP_PATH"))
+  (define crashPort (param "CRASH_PORT"))
 
   (define (moz-deny feature)
     (if (string=? should-log "TRUE")
@@ -40,6 +41,9 @@ static const char SandboxPolicyUtility[] = R"SANDBOX_LITERAL(
       (subpath "/System/Library/Frameworks")
       (subpath "/usr/lib")
       (subpath app-path)))
+
+  (if (string? crashPort)
+    (allow mach-lookup (global-name crashPort)))
 
   (allow signal (target self))
   (allow sysctl-read)
