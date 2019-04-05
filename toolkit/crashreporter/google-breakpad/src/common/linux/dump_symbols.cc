@@ -251,8 +251,9 @@ class DumperLineToModule: public DwarfCUToModule::LineToModuleHandler {
     compilation_dir_ = compilation_dir;
   }
   void ReadProgram(const uint8_t *program, uint64 length,
-                   Module* module, std::vector<Module::Line>* lines) {
-    DwarfLineToModule handler(module, compilation_dir_, lines);
+                   Module* module, std::vector<Module::Line>* lines,
+                   FileMap *files) {
+    DwarfLineToModule handler(module, compilation_dir_, lines, files);
     dwarf2reader::LineInfo parser(program, length, byte_reader_, &handler);
     parser.Start();
   }
