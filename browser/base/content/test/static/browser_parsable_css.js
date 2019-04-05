@@ -65,6 +65,9 @@ let whitelist = [
    intermittent: true,
    errorMessage: /Property contained reference to invalid variable.*background/i,
    isFromDevTools: true},
+  {sourceName: /pictureinpicture\/toggle.css$/i,
+   errorMessage: /Unknown pseudo-class.*moz-native-anonymous/i,
+   isFromDevTools: false},
 ];
 
 if (!Services.prefs.getBoolPref("layout.css.xul-box-display-values.content.enabled")) {
