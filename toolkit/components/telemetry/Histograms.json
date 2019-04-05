@@ -7527,6 +7527,21 @@
     ],
     "description": "a testing histogram; not meant to be touched"
   },
+  "TELEMETRY_TEST_CATEGORICAL_WIN_ONLY": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["telemetry-client-dev@mozilla.com"],
+    "bug_numbers": [1539907],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "n_values": 70,
+    "labels": [
+      "CommonLabel",
+      "Label7",
+      "Label8"
+    ],
+    "description": "a testing histogram used as a compile-time check; not meant to be touched",
+    "operating_systems": ["windows"]
+  },
   "TELEMETRY_TEST_KEYED_COUNT_INIT_NO_RECORD": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["telemetry-client-dev@mozilla.com"],
