@@ -107,13 +107,11 @@ web-platform-tests-reftests:
         by-test-platform:
             android.*: ['mozilla-central', 'try']
             windows10-aarch64/opt: ['try', 'mozilla-central']
-            linux64(?:-pgo|-shippable)?-qr/.*: ['release', 'try']  # skip on integration branches due to high load
             default: built-projects
     tier:
         by-test-platform:
             android.*: 2
             linux64-asan/opt: 2
-            linux64(?:-pgo|-shippable)?-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default
     mozharness:
         extra-options:
