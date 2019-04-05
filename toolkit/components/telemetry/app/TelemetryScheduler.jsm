@@ -61,8 +61,12 @@ var Policy = {
  * coordinate jobs and coalesce them.
  */
 var TelemetryScheduler = {
+  // Tracks the main ping
   _lastDailyPingTime: 0,
+  // Tracks the aborted session ping
   _lastSessionCheckpointTime: 0,
+  // Tracks all other pings at regular intervals
+  _lastPeriodicPingTime: 0,
 
   _log: null,
 
@@ -86,6 +90,7 @@ var TelemetryScheduler = {
     // Otherwise, we might end up sending daily pings even if the subsession is not long enough.
     let now = Policy.now();
     this._lastDailyPingTime = now.getTime();
+    this._lastPeriodicPingTime = now.getTime();
     this._lastSessionCheckpointTime = now.getTime();
     this._rescheduleTimeout();
 
@@ -153,11 +158,11 @@ var TelemetryScheduler = {
       Policy.setSchedulerTickTimeout(() => this._onSchedulerTick(), timeout);
   },
 
-  _sentDailyPingToday(nowDate) {
+  _sentPingToday(pingTime, nowDate) {
     // This is today's date and also the previous midnight (0:00).
     const todayDate = TelemetryUtils.truncateToDays(nowDate);
     // We consider a ping sent for today if it occured after or at 00:00 today.
-    return (this._lastDailyPingTime >= todayDate.getTime());
+    return (pingTime >= todayDate.getTime());
   },
 
   /**
@@ -167,7 +172,7 @@ var TelemetryScheduler = {
    */
   _isDailyPingDue(nowDate) {
     // The daily ping is not due if we already sent one today.
-    if (this._sentDailyPingToday(nowDate)) {
+    if (this._sentPingToday(this._lastDailyPingTime, nowDate)) {
       this._log.trace("_isDailyPingDue - already sent one today");
       return false;
     }
@@ -180,6 +185,22 @@ var TelemetryScheduler = {
     }
 
     this._log.trace("_isDailyPingDue - is due");
+    return true;
+  },
+
+  /**
+   * Checks if we can send a regular ping or not.
+   * @param {Object} nowDate A date object.
+   * @return {Boolean} True if we can send the regular pings, false otherwise.
+   */
+  _isPeriodicPingDue(nowDate) {
+    // The periodic ping is not due if we already sent one today.
+    if (this._sentPingToday(this._lastPeriodicPingTime, nowDate)) {
+      this._log.trace("_isPeriodicPingDue - already sent one today");
+      return false;
+    }
+
+    this._log.trace("_isPeriodicPingDue - is due");
     return true;
   },
 
@@ -307,6 +328,14 @@ var TelemetryScheduler = {
 
     // Check if the daily ping is due.
     const shouldSendDaily = this._isDailyPingDue(nowDate);
+    // Check if other regular pings are due.
+    const shouldSendPeriodic = this._isPeriodicPingDue(nowDate);
+
+    if (shouldSendPeriodic) {
+      this._log.trace("_schedulerTickLogic - Periodic ping due.");
+      this._lastPeriodicPingTime = now;
+      // Send other pings.
+    }
 
     if (shouldSendDaily) {
       this._log.trace("_schedulerTickLogic - Daily ping due.");
