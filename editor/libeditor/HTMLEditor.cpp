@@ -3105,7 +3105,7 @@ nsresult HTMLEditor::AddOverrideStyleSheetInternal(const nsAString& aURL) {
   // Add the override style sheet
   // (This checks if already exists)
   presShell->AddOverrideStyleSheet(sheet);
-  presShell->ApplicableStylesChanged();
+  presShell->GetDocument()->ApplicableStylesChanged();
 
   // Save as the last-loaded sheet
   mLastOverrideStyleSheetURL = aURL;
@@ -3183,7 +3183,7 @@ nsresult HTMLEditor::RemoveOverrideStyleSheetInternal(const nsAString& aURL) {
   }
 
   presShell->RemoveOverrideStyleSheet(sheet);
-  presShell->ApplicableStylesChanged();
+  presShell->GetDocument()->ApplicableStylesChanged();
 
   return NS_OK;
 }
