@@ -25,7 +25,10 @@ only-for-build-platforms:
     - win64-devedition-nightly/opt
 
 job-template:
+    worker-type: 'aws-provisioner-v1/gecko-{level}-b-win2012'
     mozharness:
+        use-magic-mh-args: false
+        use-caches: false
         config:
             by-build-platform:
                 win32\b.*:
