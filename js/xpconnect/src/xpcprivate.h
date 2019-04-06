@@ -1634,8 +1634,9 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
 
   static JSObject* GetRootJSObject(JSContext* cx, JSObject* aJSObj);
 
-  nsresult CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
-                      const nsXPTMethodInfo* info, nsXPTCMiniVariant* params);
+  static nsresult CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
+                             const nsXPTMethodInfo* info,
+                             nsXPTCMiniVariant* params);
 
   static JSObject* CallQueryInterfaceOnJSObject(JSContext* cx, JSObject* jsobj,
                                                 JS::HandleObject scope,
