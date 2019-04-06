@@ -20,6 +20,7 @@
 #include "imgIContainer.h"
 #include "Image.h"
 #include "GeckoProfiler.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/layers/WebRenderUserData.h"
 
 using namespace mozilla::dom;

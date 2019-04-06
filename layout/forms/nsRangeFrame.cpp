@@ -7,6 +7,7 @@
 #include "nsRangeFrame.h"
 
 #include "mozilla/EventStates.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TouchEvents.h"
 
 #include "gfxContext.h"
@@ -17,7 +18,6 @@
 #include "nsIContent.h"
 #include "mozilla/dom/Document.h"
 #include "nsNameSpaceManager.h"
-#include "nsIPresShell.h"
 #include "nsGkAtoms.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsPresContext.h"

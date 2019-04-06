@@ -8,18 +8,18 @@
 
 #include "gfxContext.h"
 #include "gfxUtils.h"
+#include "mozilla/Likely.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
-#include "nsIPresShell.h"
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsDisplayList.h"
-#include "mozilla/Likely.h"
 #include "nsIScriptError.h"
 #include "nsContentUtils.h"
 #include "nsMathMLElement.h"
-#include "mozilla/dom/MutationEventBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;

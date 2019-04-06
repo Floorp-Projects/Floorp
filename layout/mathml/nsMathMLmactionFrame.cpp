@@ -13,6 +13,7 @@
 #include "nsIWebBrowserChrome.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsTextFragment.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/dom/Event.h"
 

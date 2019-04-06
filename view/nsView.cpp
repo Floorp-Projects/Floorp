@@ -11,6 +11,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Likely.h"
 #include "mozilla/Poison.h"
+#include "mozilla/PresShell.h"
 #include "nsIWidget.h"
 #include "nsViewManager.h"
 #include "nsIFrame.h"

@@ -20,6 +20,7 @@
 #include "SVGContentUtils.h"
 #include "SVGGeometryFrame.h"
 #include "SVGImageContext.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "mozilla/dom/SVGImageElement.h"
 #include "nsIReflowCallback.h"
@@ -417,9 +418,8 @@ void nsSVGImageFrame::ReflowSVG() {
     SVGObserverUtils::UpdateEffects(this);
 
     if (!mReflowCallbackPosted) {
-      nsIPresShell* shell = PresShell();
       mReflowCallbackPosted = true;
-      shell->PostReflowCallback(this);
+      PresShell()->PostReflowCallback(this);
     }
   }
 

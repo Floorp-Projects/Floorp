@@ -21,7 +21,6 @@
 #include "nsNameSpaceManager.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLParts.h"
-#include "nsIPresShell.h"
 #include "nsCSSRendering.h"
 #include "nsScrollbarButtonFrame.h"
 #include "nsIScrollableFrame.h"
@@ -38,9 +37,10 @@
 #include "nsRefreshDriver.h"  // for nsAPostRefreshObserver
 #include "nsSVGIntegrationUtils.h"
 #include "mozilla/Assertions.h"  // for MOZ_ASSERT
-#include "mozilla/Preferences.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -93,8 +93,8 @@ nsSliderFrame::nsSliderFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
 // stop timer
 nsSliderFrame::~nsSliderFrame() {
   if (mSuppressionActive) {
-    if (nsIPresShell* shell = PresShell()) {
-      shell->SuppressDisplayport(false);
+    if (mozilla::PresShell* presShell = PresShell()) {
+      presShell->SuppressDisplayport(false);
     }
   }
 }
@@ -1009,9 +1009,9 @@ void nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent) {
     return;
   }
 
-  nsIPresShell* shell = PresShell();
+  mozilla::PresShell* presShell = PresShell();
   uint64_t inputblockId = InputAPZContext::GetInputBlockId();
-  uint32_t presShellId = shell->GetPresShellId();
+  uint32_t presShellId = presShell->GetPresShellId();
   AsyncDragMetrics dragMetrics(
       scrollTargetId, presShellId, inputblockId,
       NSAppUnitsToFloatPixels(mDragStart, float(AppUnitsPerCSSPixel())),
@@ -1028,8 +1028,8 @@ void nsSliderFrame::StartAPZDrag(WidgetGUIEvent* aEvent) {
   bool waitForRefresh = InputAPZContext::HavePendingLayerization();
   nsIWidget* widget = this->GetNearestWidget();
   if (waitForRefresh) {
-    waitForRefresh = shell->AddPostRefreshObserver(
-        new AsyncScrollbarDragStarter(shell, widget, dragMetrics));
+    waitForRefresh = presShell->AddPostRefreshObserver(
+        new AsyncScrollbarDragStarter(presShell, widget, dragMetrics));
   }
   if (!waitForRefresh) {
     widget->StartAsyncScrollbarDrag(dragMetrics);
@@ -1458,18 +1458,14 @@ void nsSliderFrame::AsyncScrollbarDragRejected() {
 
 void nsSliderFrame::SuppressDisplayport() {
   if (!mSuppressionActive) {
-    nsIPresShell* shell = PresShell();
-    MOZ_ASSERT(shell);
-    shell->SuppressDisplayport(true);
+    PresShell()->SuppressDisplayport(true);
     mSuppressionActive = true;
   }
 }
 
 void nsSliderFrame::UnsuppressDisplayport() {
   if (mSuppressionActive) {
-    nsIPresShell* shell = PresShell();
-    MOZ_ASSERT(shell);
-    shell->SuppressDisplayport(false);
+    PresShell()->SuppressDisplayport(false);
     mSuppressionActive = false;
   }
 }
