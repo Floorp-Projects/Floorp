@@ -1398,7 +1398,7 @@ nsRefreshDriver* nsIPresShell::GetRefreshDriver() const {
 void nsIPresShell::SetAuthorStyleDisabled(bool aStyleDisabled) {
   if (aStyleDisabled != StyleSet()->GetAuthorStyleDisabled()) {
     StyleSet()->SetAuthorStyleDisabled(aStyleDisabled);
-    ApplicableStylesChanged();
+    mDocument->ApplicableStylesChanged();
 
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
@@ -1492,14 +1492,14 @@ void nsIPresShell::AddUserSheet(StyleSheet* aSheet) {
     StyleSet()->InsertStyleSheetBefore(SheetType::User, aSheet, ref);
   }
 
-  ApplicableStylesChanged();
+  mDocument->ApplicableStylesChanged();
 }
 
 void nsIPresShell::AddAgentSheet(StyleSheet* aSheet) {
   // Make sure this does what nsDocumentViewer::CreateStyleSet does
   // wrt ordering.
   StyleSet()->AppendStyleSheet(SheetType::Agent, aSheet);
-  ApplicableStylesChanged();
+  mDocument->ApplicableStylesChanged();
 }
 
 void nsIPresShell::AddAuthorSheet(StyleSheet* aSheet) {
@@ -1513,12 +1513,12 @@ void nsIPresShell::AddAuthorSheet(StyleSheet* aSheet) {
     StyleSet()->AppendStyleSheet(SheetType::Doc, aSheet);
   }
 
-  ApplicableStylesChanged();
+  mDocument->ApplicableStylesChanged();
 }
 
 void nsIPresShell::RemoveSheet(SheetType aType, StyleSheet* aSheet) {
   StyleSet()->RemoveStyleSheet(aType, aSheet);
-  ApplicableStylesChanged();
+  mDocument->ApplicableStylesChanged();
 }
 
 NS_IMETHODIMP
@@ -4383,22 +4383,6 @@ void PresShell::ReconstructFrames() {
       nsCSSFrameConstructor::InsertionKind::Sync);
 }
 
-void nsIPresShell::ApplicableStylesChanged() {
-  if (mIsDestroying) {
-    // We don't want to mess with restyles at this point
-    return;
-  }
-
-  EnsureStyleFlush();
-  mDocument->MarkUserFontSetDirty();
-
-  if (mPresContext) {
-    mPresContext->MarkCounterStylesDirty();
-    mPresContext->MarkFontFeatureValuesDirty();
-    mPresContext->RestyleManager()->NextRestyleIsForCSSRuleChanges();
-  }
-}
-
 nsresult PresShell::RenderDocument(const nsRect& aRect, uint32_t aFlags,
                                    nscolor aBackgroundColor,
                                    gfxContext* aThebesContext) {
@@ -5889,11 +5873,6 @@ class nsAutoNotifyDidPaint {
   PresShell* mShell;
   uint32_t mFlags;
 };
-
-void nsIPresShell::RecordShadowStyleChange(ShadowRoot& aShadowRoot) {
-  StyleSet()->RecordShadowStyleChange(aShadowRoot);
-  ApplicableStylesChanged();
-}
 
 void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
                       uint32_t aFlags) {

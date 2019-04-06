@@ -287,12 +287,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   bool GetAuthorStyleDisabled() const;
 
   /**
-   * Needs to be called any time the applicable style can has changed, in order
-   * to schedule a style flush and setup all the relevant state.
-   */
-  void ApplicableStylesChanged();
-
-  /**
    * Update the style set somehow to take into account changed prefs which
    * affect document styling.
    */
@@ -534,10 +528,6 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   void PostRecreateFramesFor(mozilla::dom::Element*);
   void RestyleForAnimation(mozilla::dom::Element*, mozilla::RestyleHint);
-
-  // ShadowRoot has APIs that can change styles. This notifies the shell that
-  // stlyes applicable in the shadow tree have potentially changed.
-  void RecordShadowStyleChange(mozilla::dom::ShadowRoot& aShadowRoot);
 
   /**
    * Determine if it is safe to flush all pending notifications.
