@@ -6,10 +6,13 @@
 
 import type { Action, ThunkArgs } from "./types";
 
+import { getContext } from "../selectors";
+
 export function updateWorkers() {
   return async function({ dispatch, getState, client }: ThunkArgs) {
+    const cx = getContext(getState());
     const workers = await client.fetchWorkers();
     const mainThread = client.getMainThread();
-    dispatch(({ type: "SET_WORKERS", workers, mainThread }: Action));
+    dispatch(({ type: "SET_WORKERS", cx, workers, mainThread }: Action));
   };
 }

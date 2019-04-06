@@ -10,6 +10,12 @@
  *   - Reload inside debugger with toolbox caching enabled
  */
 
+// Debugger operations may still be in progress when we navigate.
+const { PromiseTestUtils } = scopedCuImport(
+  "resource://testing-common/PromiseTestUtils.jsm"
+);
+PromiseTestUtils.whitelistRejectionsGlobally(/Page has navigated/);
+
 const server = createTestHTTPServer();
 
 let docValue = 1;

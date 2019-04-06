@@ -11,7 +11,8 @@ import {
   getSelectedSource,
   getSourcesForTabs,
   getIsPaused,
-  getCurrentThread
+  getCurrentThread,
+  getContext
 } from "../../selectors";
 import { isVisible } from "../../utils/ui";
 
@@ -28,11 +29,12 @@ import Dropdown from "../shared/Dropdown";
 import AccessibleImage from "../shared/AccessibleImage";
 import CommandBar from "../SecondaryPanes/CommandBar";
 
-import type { Source } from "../../types";
+import type { Source, Context } from "../../types";
 
 type SourcesList = Source[];
 
 type Props = {
+  cx: Context,
   tabSources: SourcesList,
   selectedSource: ?Source,
   horizontal: boolean,
@@ -136,10 +138,10 @@ class Tabs extends PureComponent<Props, State> {
   }
 
   renderDropdownSource = (source: Source) => {
-    const { selectSource } = this.props;
+    const { cx, selectSource } = this.props;
     const filename = getFilename(source);
 
-    const onClick = () => selectSource(source.id);
+    const onClick = () => selectSource(cx, source.id);
     return (
       <li key={source.id} onClick={onClick}>
         <AccessibleImage
@@ -226,6 +228,7 @@ class Tabs extends PureComponent<Props, State> {
 }
 
 const mapStateToProps = state => ({
+  cx: getContext(state),
   selectedSource: getSelectedSource(state),
   tabSources: getSourcesForTabs(state),
   isPaused: getIsPaused(state, getCurrentThread(state))

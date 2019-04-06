@@ -52,7 +52,7 @@ add_task(async function() {
   ]);
 
   info(`Test previewing in the generated location`);
-  await dbg.actions.jumpToMappedSelectedLocation();
+  await dbg.actions.jumpToMappedSelectedLocation(getContext(dbg));
   await waitForSelectedSource(dbg, "bundle.js");
   await assertPreviews(dbg, [
     { line: 70, column: 11, result: 4, expression: "x" }

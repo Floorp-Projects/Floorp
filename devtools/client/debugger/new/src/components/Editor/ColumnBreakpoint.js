@@ -13,13 +13,14 @@ import { breakpointItems, createBreakpointItems } from "./menus/breakpoints";
 // eslint-disable-next-line max-len
 import type { ColumnBreakpoint as ColumnBreakpointType } from "../../selectors/visibleColumnBreakpoints";
 import type { BreakpointItemActions } from "./menus/breakpoints";
-import type { Source } from "../../types";
+import type { Source, Context } from "../../types";
 
 type Bookmark = {
   clear: Function
 };
 
 type Props = {
+  cx: Context,
   editor: Object,
   source: Source,
   columnBreakpoint: ColumnBreakpointType,
@@ -88,11 +89,11 @@ export default class ColumnBreakpoint extends PureComponent<Props> {
   onClick = (event: MouseEvent) => {
     event.stopPropagation();
     event.preventDefault();
-    const { columnBreakpoint, breakpointActions } = this.props;
+    const { cx, columnBreakpoint, breakpointActions } = this.props;
     if (columnBreakpoint.breakpoint) {
-      breakpointActions.removeBreakpoint(columnBreakpoint.breakpoint);
+      breakpointActions.removeBreakpoint(cx, columnBreakpoint.breakpoint);
     } else {
-      breakpointActions.addBreakpoint(columnBreakpoint.location);
+      breakpointActions.addBreakpoint(cx, columnBreakpoint.location);
     }
   };
 
@@ -100,13 +101,14 @@ export default class ColumnBreakpoint extends PureComponent<Props> {
     event.stopPropagation();
     event.preventDefault();
     const {
+      cx,
       columnBreakpoint: { breakpoint, location },
       breakpointActions
     } = this.props;
 
     const items = breakpoint
-      ? breakpointItems(breakpoint, breakpointActions)
-      : createBreakpointItems(location, breakpointActions);
+      ? breakpointItems(cx, breakpoint, breakpointActions)
+      : createBreakpointItems(cx, location, breakpointActions);
 
     showMenu(event, items);
   };

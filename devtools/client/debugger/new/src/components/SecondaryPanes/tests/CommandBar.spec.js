@@ -7,10 +7,12 @@
 import React from "react";
 import { shallow } from "enzyme";
 import CommandBar from "../CommandBar";
+import { mockthreadcx } from "../../../utils/test-mockup";
 
 describe("CommandBar", () => {
   it("f8 key command calls props.breakOnNext when not in paused state", () => {
     const props = {
+      cx: mockthreadcx,
       breakOnNext: jest.fn(),
       resume: jest.fn(),
       isPaused: false
@@ -43,6 +45,7 @@ describe("CommandBar", () => {
 
   it("f8 key command calls props.resume when in paused state", () => {
     const props = {
+      cx: { ...mockthreadcx, isPaused: true },
       breakOnNext: jest.fn(),
       resume: jest.fn(),
       isPaused: true
