@@ -31,8 +31,6 @@ using namespace JS;
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS(nsXPCWrappedJSClass, nsISupports)
-
 bool AutoScriptEvaluate::StartEvaluating(HandleObject scope) {
   MOZ_ASSERT(!mEvaluated,
              "AutoScriptEvaluate::Evaluate should only be called once");
@@ -98,30 +96,18 @@ class MOZ_STACK_CLASS AutoSavePendingResult {
 };
 
 // static
-already_AddRefed<nsXPCWrappedJSClass> nsXPCWrappedJSClass::GetNewOrUsed(
-    REFNSIID aIID) {
-  XPCJSRuntime* xpcrt = nsXPConnect::GetRuntimeInstance();
-  IID2WrappedJSClassMap* map = xpcrt->GetWrappedJSClassMap();
-  RefPtr<nsXPCWrappedJSClass> clasp = map->Find(aIID);
-
-  if (!clasp) {
-    const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByIID(aIID);
-    if (info) {
-      if (!info->IsBuiltinClass() && nsXPConnect::IsISupportsDescendant(info)) {
-        clasp = new nsXPCWrappedJSClass(info);
-      }
-    }
+const nsXPTInterfaceInfo*
+nsXPCWrappedJSClass::GetInterfaceInfo(REFNSIID aIID) {
+  const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByIID(aIID);
+  if (!info) {
+    return nullptr;
   }
-  return clasp.forget();
-}
 
-nsXPCWrappedJSClass::nsXPCWrappedJSClass(const nsXPTInterfaceInfo* aInfo)
-    : mInfo(aInfo) {
-  XPCJSRuntime::Get()->GetWrappedJSClassMap()->Add(this);
-}
+  if (info->IsBuiltinClass() || !nsXPConnect::IsISupportsDescendant(info)) {
+    return nullptr;
+  }
 
-nsXPCWrappedJSClass::~nsXPCWrappedJSClass() {
-  XPCJSRuntime::Get()->GetWrappedJSClassMap()->Remove(this);
+  return info;
 }
 
 // static
@@ -780,8 +766,7 @@ nsresult nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
     return NS_ERROR_FAILURE;
   }
 
-  const nsXPTInterfaceInfo* interfaceInfo =
-      wrapper->GetClass()->GetInterfaceInfo();
+  const nsXPTInterfaceInfo* interfaceInfo = wrapper->GetInfo();
   JS::RootedId id(cx);
   const char* name;
   nsAutoCString symbolName;
@@ -1093,8 +1078,6 @@ pre_call_clean_up:
 
   return retval;
 }
-
-const char* nsXPCWrappedJSClass::GetInterfaceName() { return mInfo->Name(); }
 
 static const JSClass XPCOutParamClass = {"XPCOutParam", 0, JS_NULL_CLASS_OPS};
 
