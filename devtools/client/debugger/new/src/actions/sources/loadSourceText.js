@@ -9,9 +9,10 @@ import {
   getSource,
   getSourceFromId,
   getGeneratedSource,
-  getSourcesEpoch
+  getSourcesEpoch,
+  getBreakpointsForSource
 } from "../../selectors";
-import { setBreakpointPositions } from "../breakpoints";
+import { setBreakpointPositions, addBreakpoint } from "../breakpoints";
 
 import { prettyPrintSource } from "./prettyPrint";
 
@@ -92,6 +93,12 @@ async function loadSourceTextPromise(
   if (!newSource.isWasm && isLoaded(newSource)) {
     parser.setSource(newSource);
     dispatch(setBreakpointPositions({ sourceId: newSource.id }));
+
+    // Update the text in any breakpoints for this source by re-adding them.
+    const breakpoints = getBreakpointsForSource(getState(), source.id);
+    for (const { location, options, disabled } of breakpoints) {
+      await dispatch(addBreakpoint(location, options, disabled));
+    }
   }
 
   return newSource;
