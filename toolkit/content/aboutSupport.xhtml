@@ -23,6 +23,7 @@
     <link rel="localization" href="branding/brand.ftl"/>
     <link rel="localization" href="toolkit/about/aboutSupport.ftl"/>
     <link rel="localization" href="toolkit/global/resetProfile.ftl"/>
+    <link rel="localization" href="toolkit/global/processTypes.ftl"/>
   </head>
 
   <body class="wide-container">
@@ -179,10 +180,11 @@
             </td>
           </tr>
 
-          <tr id="contentprocesses-row">
-            <th class="column" data-l10n-id="app-basics-process-count"/>
+          <tr id="remoteprocesses-row">
+            <th class="column" data-l10n-id="app-basics-remote-processes-count"/>
 
-            <td id="contentprocesses-box">
+            <td>
+              <a href="#remote-processes"></a>
             </td>
           </tr>
 
@@ -260,7 +262,7 @@
 
       <h2 class="major-section" data-l10n-id="features-title"/>
 
-      <table>
+      <table id="features-table">
         <thead>
           <tr>
             <th data-l10n-id="features-name"/>
@@ -269,6 +271,21 @@
           </tr>
         </thead>
         <tbody id="features-tbody">
+        </tbody>
+      </table>
+
+      <!-- - - - - - - - - - - - - - - - - - - - - -->
+
+      <h2 class="major-section" data-l10n-id="processes-title" id="remote-processes"/>
+
+      <table id="remote-processes-table">
+        <thead>
+          <tr>
+            <th data-l10n-id="processes-type"/>
+            <th data-l10n-id="processes-count"/>
+          </tr>
+        </thead>
+        <tbody id="processes-tbody">
         </tbody>
       </table>
 
