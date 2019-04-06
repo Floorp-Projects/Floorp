@@ -1247,6 +1247,34 @@ class ScriptSourceObject : public NativeObject {
 enum class GeneratorKind : bool { NotGenerator, Generator };
 enum class FunctionAsyncKind : bool { SyncFunction, AsyncFunction };
 
+struct FieldInitializers {
+#ifdef DEBUG
+  bool valid;
+#endif
+  // This struct will eventually have a vector of constant values for optimizing
+  // field initializers.
+  size_t numFieldInitializers;
+
+  explicit FieldInitializers(size_t numFieldInitializers)
+      :
+#ifdef DEBUG
+        valid(true),
+#endif
+        numFieldInitializers(numFieldInitializers) {
+  }
+
+  static FieldInitializers Invalid() { return FieldInitializers(); }
+
+ private:
+  FieldInitializers()
+      :
+#ifdef DEBUG
+        valid(false),
+#endif
+        numFieldInitializers(0) {
+  }
+};
+
 /*
  * NB: after a successful XDR_DECODE, XDRScript callers must do any required
  * subsequent set-up of owning function or script object and then call
@@ -1360,6 +1388,8 @@ class alignas(JS::Value) PrivateScriptData final {
   PackedOffsets packedOffsets = {};  // zeroes
   uint32_t nscopes = 0;
 
+  js::FieldInitializers fieldInitializers_ = js::FieldInitializers::Invalid();
+
   // Translate an offset into a concrete pointer.
   template <typename T>
   T* offsetToPointer(size_t offset) {
@@ -1431,6 +1461,10 @@ class alignas(JS::Value) PrivateScriptData final {
   bool hasResumeOffsets() const {
     return packedOffsets.resumeOffsetsSpanOffset != 0;
   }
+  void setFieldInitializers(FieldInitializers fieldInitializers) {
+    fieldInitializers_ = fieldInitializers;
+  }
+  const FieldInitializers& getFieldInitializers() { return fieldInitializers_; }
 
   // Allocate a new PrivateScriptData. Headers and GCPtrs are initialized.
   // The size of allocation is returned as an out parameter.
@@ -2283,6 +2317,16 @@ class JSScript : public js::gc::TenuredCell {
     return hasFlag(ImmutableFlags::FunctionHasThisBinding);
   }
 
+  void setFieldInitializers(js::FieldInitializers fieldInitializers) {
+    MOZ_ASSERT(data_);
+    data_->setFieldInitializers(fieldInitializers);
+  }
+
+  const js::FieldInitializers& getFieldInitializers() const {
+    MOZ_ASSERT(data_);
+    return data_->getFieldInitializers();
+  }
+
   /*
    * Arguments access (via JSOP_*ARG* opcodes) must access the canonical
    * location for the argument. If an arguments object exists AND it's mapped
@@ -2858,34 +2902,6 @@ static_assert(
 
 namespace js {
 
-struct FieldInitializers {
-#ifdef DEBUG
-  bool valid;
-#endif
-  // This struct will eventually have a vector of constant values for optimizing
-  // field initializers.
-  size_t numFieldInitializers;
-
-  explicit FieldInitializers(size_t numFieldInitializers)
-      :
-#ifdef DEBUG
-        valid(true),
-#endif
-        numFieldInitializers(numFieldInitializers) {
-  }
-
-  static FieldInitializers Invalid() { return FieldInitializers(); }
-
- private:
-  FieldInitializers()
-      :
-#ifdef DEBUG
-        valid(false),
-#endif
-        numFieldInitializers(0) {
-  }
-};
-
 // Variable-length data for LazyScripts. Contains vector of inner functions and
 // vector of captured property ids.
 class alignas(uintptr_t) LazyScriptData final {
@@ -3270,9 +3286,9 @@ class LazyScript : public gc::TenuredCell {
     lazyData_->fieldInitializers_ = fieldInitializers;
   }
 
-  FieldInitializers getFieldInitializers() const {
-    return lazyData_ ? lazyData_->fieldInitializers_
-                     : FieldInitializers::Invalid();
+  const FieldInitializers& getFieldInitializers() const {
+    MOZ_ASSERT(lazyData_);
+    return lazyData_->fieldInitializers_;
   }
 
   const char* filename() const { return scriptSource()->filename(); }
