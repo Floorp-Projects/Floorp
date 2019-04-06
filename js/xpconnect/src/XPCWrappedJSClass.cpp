@@ -780,6 +780,8 @@ nsresult nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
     return NS_ERROR_FAILURE;
   }
 
+  const nsXPTInterfaceInfo* interfaceInfo =
+      wrapper->GetClass()->GetInterfaceInfo();
   JS::RootedId id(cx);
   const char* name;
   nsAutoCString symbolName;
@@ -808,7 +810,7 @@ nsresult nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
     // Throw and warn for good measure.
     JS_ReportErrorASCII(cx, "%s", str);
     NS_WARNING(str);
-    return CheckForException(ccx, aes, obj, name, GetInterfaceName());
+    return CheckForException(ccx, aes, obj, name, interfaceInfo->Name());
   }
 
   RootedValue fval(cx);
@@ -860,7 +862,8 @@ nsresult nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
     // pass this along to the caller as an exception/result code.
 
     fval = ObjectValue(*obj);
-    if (!mInfo->IsFunction() || JS_TypeOfValue(ccx, fval) != JSTYPE_FUNCTION) {
+    if (!interfaceInfo->IsFunction() ||
+        JS_TypeOfValue(ccx, fval) != JSTYPE_FUNCTION) {
       if (!JS_GetPropertyById(cx, obj, id, &fval)) {
         goto pre_call_clean_up;
       }
@@ -943,9 +946,6 @@ pre_call_clean_up:
   // clean up any 'out' params handed in
   CleanupOutparams(info, nativeParams, /* inOutOnly = */ true, paramCount);
 
-  // Make sure "this" doesn't get deleted during this call.
-  nsCOMPtr<nsIXPCWrappedJSClass> kungFuDeathGrip(this);
-
   if (!readyToDoTheCall) {
     return retval;
   }
@@ -979,14 +979,14 @@ pre_call_clean_up:
       }
 
       XPCConvert::ConstructException(
-          code, sz.get(), GetInterfaceName(), name, nullptr,
+          code, sz.get(), interfaceInfo->Name(), name, nullptr,
           getter_AddRefs(syntheticException), nullptr, nullptr);
       success = false;
     }
   }
 
   if (!success) {
-    return CheckForException(ccx, aes, obj, name, GetInterfaceName(),
+    return CheckForException(ccx, aes, obj, name, interfaceInfo->Name(),
                              syntheticException);
   }
 

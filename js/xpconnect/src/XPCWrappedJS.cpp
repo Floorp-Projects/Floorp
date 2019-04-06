@@ -596,7 +596,7 @@ nsXPCWrappedJS::CallMethod(uint16_t methodIndex, const nsXPTMethodInfo* info,
   if (!IsValid()) {
     return NS_ERROR_UNEXPECTED;
   }
-  return GetClass()->CallMethod(this, methodIndex, info, params);
+  return nsXPCWrappedJSClass::CallMethod(this, methodIndex, info, params);
 }
 
 NS_IMETHODIMP
