@@ -25,6 +25,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Likely.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/RestyleManager.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/URLExtraData.h"
 #include <algorithm>
@@ -2260,9 +2261,7 @@ void Document::ResetStylesheetsToURI(nsIURI* aURI) {
     FillStyleSetDocumentSheets();
 
     if (mStyleSet->StyleSheetsHaveChanged()) {
-      if (PresShell* presShell = GetPresShell()) {
-        presShell->ApplicableStylesChanged();
-      }
+      ApplicableStylesChanged();
     }
   }
 }
@@ -2392,9 +2391,7 @@ void Document::CompatibilityModeChanged() {
     mStyleSet->AppendStyleSheet(SheetType::Agent, sheet);
   }
   mQuirkSheetAdded = !mQuirkSheetAdded;
-  if (PresShell* presShell = GetPresShell()) {
-    presShell->ApplicableStylesChanged();
-  }
+  ApplicableStylesChanged();
 }
 
 static void WarnIfSandboxIneffective(nsIDocShell* aDocShell,
@@ -3996,10 +3993,37 @@ void Document::RemoveChildNode(nsIContent* aKid, bool aNotify) {
 void Document::AddStyleSheetToStyleSets(StyleSheet* aSheet) {
   if (mStyleSetFilled) {
     mStyleSet->AddDocStyleSheet(aSheet, this);
-    if (PresShell* presShell = GetPresShell()) {
-      presShell->ApplicableStylesChanged();
-    }
+    ApplicableStylesChanged();
   }
+}
+
+void Document::RecordShadowStyleChange(ShadowRoot& aShadowRoot) {
+  mStyleSet->RecordShadowStyleChange(aShadowRoot);
+  ApplicableStylesChanged();
+}
+
+void Document::ApplicableStylesChanged() {
+  // TODO(emilio): if we decide to resolve style in display: none iframes, then
+  // we need to always track style changes and remove the mStyleSetFilled.
+  if (!mStyleSetFilled) {
+    return;
+  }
+
+  MarkUserFontSetDirty();
+  PresShell* ps = GetPresShell();
+  if (!ps) {
+    return;
+  }
+
+  ps->EnsureStyleFlush();
+  nsPresContext* pc = ps->GetPresContext();
+  if (!pc) {
+    return;
+  }
+
+  pc->MarkCounterStylesDirty();
+  pc->MarkFontFeatureValuesDirty();
+  pc->RestyleManager()->NextRestyleIsForCSSRuleChanges();
 }
 
 #define DO_STYLESHEET_NOTIFICATION(className, type, memberName, argName) \
@@ -4038,9 +4062,7 @@ void Document::NotifyStyleSheetRemoved(StyleSheet* aSheet,
 void Document::RemoveStyleSheetFromStyleSets(StyleSheet* aSheet) {
   if (mStyleSetFilled) {
     mStyleSet->RemoveDocStyleSheet(aSheet);
-    if (PresShell* presShell = GetPresShell()) {
-      presShell->ApplicableStylesChanged();
-    }
+    ApplicableStylesChanged();
   }
 }
 
@@ -4223,9 +4245,7 @@ nsresult Document::AddAdditionalStyleSheet(additionalSheetType aType,
   if (mStyleSetFilled) {
     SheetType type = ConvertAdditionalSheetType(aType);
     mStyleSet->AppendStyleSheet(type, aSheet);
-    if (PresShell* presShell = GetPresShell()) {
-      presShell->ApplicableStylesChanged();
-    }
+    ApplicableStylesChanged();
   }
 
   // Passing false, so documet.styleSheets.length will not be affected by
@@ -4250,9 +4270,7 @@ void Document::RemoveAdditionalStyleSheet(additionalSheetType aType,
       if (mStyleSetFilled) {
         SheetType type = ConvertAdditionalSheetType(aType);
         mStyleSet->RemoveStyleSheet(type, sheetRef);
-        if (PresShell* presShell = GetPresShell()) {
-          presShell->ApplicableStylesChanged();
-        }
+        ApplicableStylesChanged();
       }
     }
 
@@ -5032,9 +5050,7 @@ void Document::DocumentStatesChanged(EventStates aStateMask) {
 }
 
 void Document::StyleRuleChanged(StyleSheet* aSheet, css::Rule* aStyleRule) {
-  if (PresShell* presShell = GetPresShell()) {
-    presShell->ApplicableStylesChanged();
-  }
+  ApplicableStylesChanged();
 
   if (!StyleSheetChangeEventsEnabled()) {
     return;
@@ -5045,9 +5061,7 @@ void Document::StyleRuleChanged(StyleSheet* aSheet, css::Rule* aStyleRule) {
 }
 
 void Document::StyleRuleAdded(StyleSheet* aSheet, css::Rule* aStyleRule) {
-  if (PresShell* presShell = GetPresShell()) {
-    presShell->ApplicableStylesChanged();
-  }
+  ApplicableStylesChanged();
 
   if (!StyleSheetChangeEventsEnabled()) {
     return;
@@ -5058,9 +5072,7 @@ void Document::StyleRuleAdded(StyleSheet* aSheet, css::Rule* aStyleRule) {
 }
 
 void Document::StyleRuleRemoved(StyleSheet* aSheet, css::Rule* aStyleRule) {
-  if (PresShell* presShell = GetPresShell()) {
-    presShell->ApplicableStylesChanged();
-  }
+  ApplicableStylesChanged();
 
   if (!StyleSheetChangeEventsEnabled()) {
     return;
@@ -5588,10 +5600,8 @@ void Document::EnableStyleSheetsForSetInternal(const nsAString& aSheetSet,
   if (aUpdateCSSLoader) {
     CSSLoader()->DocumentStyleSheetSetChanged();
   }
-  if (PresShell* presShell = GetPresShell()) {
-    if (presShell->StyleSet()->StyleSheetsHaveChanged()) {
-      presShell->ApplicableStylesChanged();
-    }
+  if (mStyleSet->StyleSheetsHaveChanged()) {
+    ApplicableStylesChanged();
   }
 }
 
