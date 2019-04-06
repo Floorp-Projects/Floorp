@@ -8,6 +8,7 @@ import React from "react";
 import { shallow } from "enzyme";
 import Outline from "../../components/PrimaryPanes/Outline";
 import { makeSymbolDeclaration } from "../../utils/test-head";
+import { mockcx } from "../../utils/test-mockup";
 import { showMenu } from "devtools-contextmenu";
 import { copyToTheClipboard } from "../../utils/clipboard";
 
@@ -19,6 +20,7 @@ const mockFunctionText = "mock function text";
 
 function generateDefaults(overrides) {
   return {
+    cx: mockcx,
     selectLocation: jest.fn(),
     selectedSource: { id: sourceId },
     getFunctionText: jest.fn().mockReturnValue(mockFunctionText),
@@ -70,7 +72,10 @@ describe("Outline", () => {
     const { selectLocation } = props;
     const listItem = component.find("li").first();
     listItem.simulate("click");
-    expect(selectLocation).toHaveBeenCalledWith({ line: startLine, sourceId });
+    expect(selectLocation).toHaveBeenCalledWith(mockcx, {
+      line: startLine,
+      sourceId
+    });
   });
 
   describe("renders outline", () => {
@@ -210,7 +215,7 @@ describe("Outline", () => {
 
       await component.find("h2").simulate("click", {});
 
-      expect(props.selectLocation).toHaveBeenCalledWith({
+      expect(props.selectLocation).toHaveBeenCalledWith(mockcx, {
         line: 24,
         sourceId: sourceId
       });
