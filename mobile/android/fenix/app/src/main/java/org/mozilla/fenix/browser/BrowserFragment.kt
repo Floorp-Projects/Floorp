@@ -62,6 +62,7 @@ import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.share
+import org.mozilla.fenix.lib.Do
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.quickactionsheet.QuickActionAction
@@ -472,10 +473,6 @@ class BrowserFragment : Fragment(), BackHandler {
         } else {
             requireContext().components.core.sessionManager.selectedSessionOrThrow
         }
-    }
-
-    object Do {
-        inline infix fun <reified T> exhaustive(any: T?) = any
     }
 
     companion object {

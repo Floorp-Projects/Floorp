@@ -2,7 +2,8 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/session_card"
     android:layout_width="match_parent"
@@ -16,12 +17,15 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/item_tab"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/favicon_image"
+            android:importantForAccessibility="no"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:minHeight="32dp"
+            android:minWidth="32dp"
             android:layout_margin="10dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -57,6 +61,7 @@
 
         <ImageView
             android:id="@+id/tab_background"
+            android:importantForAccessibility="no"
             android:layout_width="0dp"
             android:layout_height="100dp"
             android:layout_marginTop="10dp"

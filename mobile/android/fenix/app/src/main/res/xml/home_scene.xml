@@ -11,7 +11,7 @@
         motion:constraintSetEnd="@+id/end">
         <OnSwipe
             motion:dragDirection="dragUp"
-            motion:touchAnchorId="@id/homeScrollView"
+            motion:touchAnchorId="@id/home_component"
             motion:touchAnchorSide="top" />
 
         <KeyFrameSet>
@@ -20,7 +20,6 @@
                 motion:keyPositionType="pathRelative"
                 motion:framePosition="50"
                 motion:percentX="0.9" />
-
 
             <KeyAttribute
                 motion:motionTarget="@id/wordmark"

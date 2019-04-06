@@ -89,47 +89,5 @@
             android:layout_marginStart="40dp"
             android:layout_marginEnd="40dp"/>
 
-        <androidx.core.widget.NestedScrollView
-            android:id="@+id/homeScrollView"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            app:layout_constraintTop_toBottomOf="@id/homeDivider"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent">
-            <LinearLayout
-                android:id="@+id/homeContainer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:descendantFocusability="blocksDescendants">
-                <LinearLayout
-                    android:id="@+id/private_session_description_wrapper"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_margin="16dp"
-                    android:orientation="vertical"
-                    android:visibility="gone">
-                    <TextView xmlns:android="http://schemas.android.com/apk/res/android"
-                        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-                        android:textColor="?attr/toolbarTextColor"
-                        android:text="@string/private_browsing_title"
-                        android:layout_marginBottom="8dp"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content" />
-                    <TextView
-                        android:id="@+id/private_session_description"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:ellipsize="none"
-                        android:gravity="center_vertical"
-                        android:scrollHorizontally="false"
-                        android:text="@string/private_browsing_explanation"
-                        android:textColor="@color/off_white"
-                        android:textSize="14sp" />
-                </LinearLayout>
-            </LinearLayout>
-        </androidx.core.widget.NestedScrollView>
-
     </androidx.constraintlayout.motion.widget.MotionLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

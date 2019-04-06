@@ -16,7 +16,8 @@ import kotlinx.android.synthetic.main.session_bottom_sheet.view.*
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
-import org.mozilla.fenix.home.sessions.ArchivedSession
+import org.mozilla.fenix.home.sessioncontrol.ArchivedSession
+import org.mozilla.fenix.home.sessioncontrol.viewholders.formattedSavedAt
 
 class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer {
     sealed class SessionType {
