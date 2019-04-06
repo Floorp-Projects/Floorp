@@ -12,16 +12,18 @@ import { getSourceLocationFromMouseEvent } from "../../utils/editor";
 import {
   getPrettySource,
   getIsPaused,
-  getCurrentThread
+  getCurrentThread,
+  getThreadContext
 } from "../../selectors";
 
 import { editorMenuItems, editorItemActions } from "./menus/editor";
 
-import type { Source } from "../../types";
+import type { Source, ThreadContext } from "../../types";
 import type { EditorItemActions } from "./menus/editor";
 import type SourceEditor from "../../utils/editor/source-editor";
 
 type Props = {
+  cx: ThreadContext,
   contextMenu: ?MouseEvent,
   editorActions: EditorItemActions,
   clearContextMenu: () => void,
@@ -43,6 +45,7 @@ class EditorMenu extends Component<Props> {
 
   showMenu(props) {
     const {
+      cx,
       editor,
       selectedSource,
       editorActions,
@@ -61,6 +64,7 @@ class EditorMenu extends Component<Props> {
     showMenu(
       event,
       editorMenuItems({
+        cx,
         editorActions,
         selectedSource,
         hasPrettySource,
@@ -78,6 +82,7 @@ class EditorMenu extends Component<Props> {
 }
 
 const mapStateToProps = (state, props) => ({
+  cx: getThreadContext(state),
   isPaused: getIsPaused(state, getCurrentThread(state)),
   hasPrettySource: !!getPrettySource(state, props.selectedSource.id)
 });

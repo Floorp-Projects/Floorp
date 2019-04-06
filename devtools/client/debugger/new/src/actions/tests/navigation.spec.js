@@ -48,11 +48,11 @@ describe("navigation", () => {
   });
 
   it("navigation closes project-search", async () => {
-    const { dispatch, getState } = createStore(threadClient);
+    const { dispatch, getState, cx } = createStore(threadClient);
     const mockQuery = "foo";
 
     await dispatch(actions.newSource(makeSource("foo1")));
-    await dispatch(actions.searchSources(mockQuery));
+    await dispatch(actions.searchSources(cx, mockQuery));
 
     let results = getTextSearchResults(getState());
     expect(results).toHaveLength(1);
@@ -77,9 +77,9 @@ describe("navigation", () => {
   });
 
   it("navigation clears the file-search query", async () => {
-    const { dispatch, getState } = createStore(threadClient);
+    const { dispatch, getState, cx } = createStore(threadClient);
 
-    dispatch(actions.setFileSearchQuery("foobar"));
+    dispatch(actions.setFileSearchQuery(cx, "foobar"));
     expect(getFileSearchQuery(getState())).toBe("foobar");
 
     await dispatch(actions.willNavigate("will-navigate"));
@@ -88,10 +88,10 @@ describe("navigation", () => {
   });
 
   it("navigation clears the file-search results", async () => {
-    const { dispatch, getState } = createStore(threadClient);
+    const { dispatch, getState, cx } = createStore(threadClient);
 
     const searchResults = [{ line: 1, ch: 3 }, { line: 3, ch: 2 }];
-    dispatch(actions.updateSearchResults(2, 3, searchResults));
+    dispatch(actions.updateSearchResults(cx, 2, 3, searchResults));
     expect(getFileSearchResults(getState())).toEqual({
       count: 2,
       index: 2,

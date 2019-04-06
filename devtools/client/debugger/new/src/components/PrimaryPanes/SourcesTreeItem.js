@@ -15,7 +15,8 @@ import AccessibleImage from "../shared/AccessibleImage";
 import {
   getGeneratedSourceByURL,
   getHasSiblingOfSameName,
-  hasPrettySource as checkHasPrettySource
+  hasPrettySource as checkHasPrettySource,
+  getContext
 } from "../../selectors";
 import actions from "../../actions";
 
@@ -30,9 +31,10 @@ import { copyToTheClipboard } from "../../utils/clipboard";
 import { features } from "../../utils/prefs";
 
 import type { TreeNode } from "../../utils/sources-tree/types";
-import type { Source } from "../../types";
+import type { Source, Context } from "../../types";
 
 type Props = {
+  cx: Context,
   debuggeeUrl: string,
   projectRoot: string,
   source: ?Source,
@@ -134,7 +136,7 @@ class SourceTreeItem extends Component<Props, State> {
           click: () => copyToTheClipboard(contents.url)
         };
 
-        const { source } = this.props;
+        const { cx, source } = this.props;
         if (source) {
           const blackBoxMenuItem = {
             id: "node-menu-blackbox",
@@ -143,7 +145,7 @@ class SourceTreeItem extends Component<Props, State> {
               : L10N.getStr("sourceFooter.blackbox"),
             accesskey: L10N.getStr("sourceFooter.blackbox.accesskey"),
             disabled: !shouldBlackbox(source),
-            click: () => this.props.toggleBlackBox(source)
+            click: () => this.props.toggleBlackBox(cx, source)
           };
           menuOptions.push(copySourceUri2, blackBoxMenuItem);
         }
@@ -155,14 +157,14 @@ class SourceTreeItem extends Component<Props, State> {
 
       if (features.root) {
         const { path } = item;
-        const { projectRoot } = this.props;
+        const { cx, projectRoot } = this.props;
 
         if (projectRoot.endsWith(path)) {
           menuOptions.push({
             id: "node-remove-directory-root",
             label: removeDirectoryRootLabel,
             disabled: false,
-            click: () => this.props.clearProjectDirectoryRoot()
+            click: () => this.props.clearProjectDirectoryRoot(cx)
           });
         } else {
           menuOptions.push({
@@ -170,7 +172,7 @@ class SourceTreeItem extends Component<Props, State> {
             label: setDirectoryRootLabel,
             accesskey: setDirectoryRootKey,
             disabled: false,
-            click: () => this.props.setProjectDirectoryRoot(path)
+            click: () => this.props.setProjectDirectoryRoot(cx, path)
           });
         }
       }
@@ -273,6 +275,7 @@ function getHasMatchingGeneratedSource(state, source: ?Source) {
 const mapStateToProps = (state, props) => {
   const { source } = props;
   return {
+    cx: getContext(state),
     hasMatchingGeneratedSource: getHasMatchingGeneratedSource(state, source),
     hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
     hasPrettySource: source ? checkHasPrettySource(state, source.id) : false
