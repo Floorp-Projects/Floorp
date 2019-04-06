@@ -93,14 +93,6 @@ var snapshotFormatters = {
                                 });
     document.l10n.setAttributes($("multiprocess-box-status"), statusTextId);
 
-    if (data.remoteAutoStart) {
-      $("contentprocesses-box").textContent = data.currentContentProcesses +
-                                              "/" +
-                                              data.maxContentProcesses;
-    } else {
-      $("contentprocesses-row").hidden = true;
-    }
-
     if (Services.policies) {
       let policiesStrId = "";
       let aboutPolicies = "about:policies";
@@ -229,6 +221,32 @@ var snapshotFormatters = {
         $.new("td", feature.id),
       ]);
     }));
+  },
+
+  async processes(data) {
+    async function buildEntry(name, value) {
+      let entryName = (await document.l10n.formatValue(`process-type-${name.toLowerCase()}`))
+                      || name;
+
+      $("processes-tbody").appendChild($.new("tr", [
+        $.new("td", entryName),
+        $.new("td", value),
+      ]));
+    }
+
+    let remoteProcessesCount = Object.values(data.remoteTypes).reduce((a, b) => a + b, 0);
+    document.querySelector("#remoteprocesses-row a").textContent = remoteProcessesCount;
+
+    // Display the regular "web" process type first in the list,
+    // and with special formatting.
+    if (data.remoteTypes.web) {
+      await buildEntry("web", `${data.remoteTypes.web} / ${data.maxWebContentProcesses}`);
+      delete data.remoteTypes.web;
+    }
+
+    for (let remoteProcessType in data.remoteTypes) {
+      await buildEntry(remoteProcessType, data.remoteTypes[remoteProcessType]);
+    }
   },
 
   modifiedPreferences(data) {

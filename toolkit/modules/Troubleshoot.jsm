@@ -205,13 +205,6 @@ var dataProviders = {
 
     data.remoteAutoStart = Services.appinfo.browserTabsRemoteAutostart;
 
-    // Services.ppmm.childCount is a count of how many processes currently
-    // exist that might respond to messages sent through the ppmm, including
-    // the parent process. So we subtract the parent process with the "- 1",
-    // and that’s how many content processes we’re waiting for.
-    data.currentContentProcesses = Services.ppmm.childCount - 1;
-    data.maxContentProcesses = Services.appinfo.maxWebProcessCount;
-
     try {
       let e10sStatus = Cc["@mozilla.org/supports-PRUint64;1"]
                          .createInstance(Ci.nsISupportsPRUint64);
@@ -306,6 +299,43 @@ var dataProviders = {
         return fData;
       }, {});
     }));
+  },
+
+  processes: function processes(done) {
+    let remoteTypes = {};
+
+    for (let i = 0; i < Services.ppmm.childCount; i++) {
+      let remoteType;
+      try {
+        remoteType = Services.ppmm.getChildAt(i).remoteType;
+      } catch (e) {}
+
+      // The parent process is also managed by the ppmm (because
+      // of non-remote tabs), but it doesn't have a remoteType.
+      if (!remoteType) {
+        continue;
+      }
+
+      if (remoteTypes[remoteType]) {
+        remoteTypes[remoteType]++;
+      } else {
+        remoteTypes[remoteType] = 1;
+      }
+    }
+
+    try {
+      let winUtils = Services.wm.getMostRecentWindow("").windowUtils;
+      if (winUtils.gpuProcessId != -1) {
+        remoteTypes.gpu = 1;
+      }
+    } catch (e) {}
+
+    let data = {
+      remoteTypes,
+      maxWebContentProcesses: Services.appinfo.maxWebProcessCount,
+    };
+
+    done(data);
   },
 
   modifiedPreferences: function modifiedPreferences(done) {

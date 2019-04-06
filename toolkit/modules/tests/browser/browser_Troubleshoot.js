@@ -140,12 +140,6 @@ const SNAPSHOT_SCHEMA = {
         numRemoteWindows: {
           type: "number",
         },
-        currentContentProcesses: {
-          type: "number",
-        },
-        maxContentProcesses: {
-          type: "number",
-        },
         policiesStatus: {
           type: "number",
         },
@@ -255,6 +249,20 @@ const SNAPSHOT_SCHEMA = {
             required: true,
             type: "string",
           },
+        },
+      },
+    },
+    processes: {
+      required: true,
+      type: "object",
+      properties: {
+        maxWebContentProcesses: {
+          required: true,
+          type: "number",
+        },
+        remoteTypes: {
+          required: true,
+          type: "object",
         },
       },
     },

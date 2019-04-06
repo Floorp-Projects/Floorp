@@ -50,6 +50,19 @@ td.integer {
   overflow: hidden;
 }
 
+#crashes-table th:first-child {
+  width: 50%;
+}
+
+#features-table th:first-child,
+#remote-processes-table th:first-child {
+  width: 30%;
+}
+
+#features-table th:nth-child(2) {
+  width: 20%;
+}
+
 #action-box {
   float: right;
   margin-top: 2em;
