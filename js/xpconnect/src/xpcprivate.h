@@ -1602,7 +1602,8 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
 class nsXPCWrappedJSClass final : public nsISupports {
   // all the interface method declarations...
   NS_DECL_ISUPPORTS
-  nsresult DebugDump(int16_t depth);
+
+  static void DebugDump(const nsXPTInterfaceInfo* aInfo, int16_t depth);
 
  public:
   static already_AddRefed<nsXPCWrappedJSClass> GetNewOrUsed(REFNSIID aIID);

@@ -1106,27 +1106,28 @@ JSObject* xpc::NewOutObject(JSContext* cx) {
   return JS_NewObject(cx, &XPCOutParamClass);
 }
 
-nsresult nsXPCWrappedJSClass::DebugDump(int16_t depth) {
+// static
+void nsXPCWrappedJSClass::DebugDump(const nsXPTInterfaceInfo* aInfo,
+                                    int16_t depth) {
 #ifdef DEBUG
   depth--;
-  XPC_LOG_ALWAYS(("nsXPCWrappedJSClass @ %p with mRefCnt = %" PRIuPTR, this,
-                  mRefCnt.get()));
+  XPC_LOG_ALWAYS(("nsXPTInterfaceInfo @ %p = ", aInfo));
   XPC_LOG_INDENT();
-  const char* name = mInfo->Name();
+  const char* name = aInfo->Name();
   XPC_LOG_ALWAYS(("interface name is %s", name));
-  char* iid = mInfo->IID().ToString();
+  char* iid = aInfo->IID().ToString();
   XPC_LOG_ALWAYS(("IID number is %s", iid ? iid : "invalid"));
   if (iid) {
     free(iid);
   }
-  XPC_LOG_ALWAYS(("InterfaceInfo @ %p", mInfo));
+  XPC_LOG_ALWAYS(("InterfaceInfo @ %p", aInfo));
   uint16_t methodCount = 0;
   if (depth) {
     XPC_LOG_INDENT();
-    XPC_LOG_ALWAYS(("parent @ %p", mInfo->GetParent()));
-    methodCount = mInfo->MethodCount();
+    XPC_LOG_ALWAYS(("parent @ %p", aInfo->GetParent()));
+    methodCount = aInfo->MethodCount();
     XPC_LOG_ALWAYS(("MethodCount = %d", methodCount));
-    XPC_LOG_ALWAYS(("ConstantCount = %d", mInfo->ConstantCount()));
+    XPC_LOG_ALWAYS(("ConstantCount = %d", aInfo->ConstantCount()));
     XPC_LOG_OUTDENT();
   }
   XPC_LOG_ALWAYS(("method count = %d", methodCount));
@@ -1135,7 +1136,7 @@ nsresult nsXPCWrappedJSClass::DebugDump(int16_t depth) {
     XPC_LOG_INDENT();
     for (uint16_t i = 0; i < methodCount; i++) {
       XPC_LOG_ALWAYS(("Method %d is %s%s", i,
-                      mInfo->Method(i).IsReflectable() ? "" : " NOT ",
+                      aInfo->Method(i).IsReflectable() ? "" : " NOT ",
                       "reflectable"));
     }
     XPC_LOG_OUTDENT();
@@ -1143,5 +1144,4 @@ nsresult nsXPCWrappedJSClass::DebugDump(int16_t depth) {
   }
   XPC_LOG_OUTDENT();
 #endif
-  return NS_OK;
 }
