@@ -33,12 +33,17 @@ nsFrameLoaderOwner::GetBrowsingContext() {
 void nsFrameLoaderOwner::ChangeRemoteness(
     const mozilla::dom::RemotenessOptions& aOptions, mozilla::ErrorResult& rv) {
   RefPtr<mozilla::dom::BrowsingContext> bc;
-  // If we already have a Frameloader, destroy it.
-  if (mFrameLoader) {
-    bc = mFrameLoader->GetBrowsingContext();
 
-    // TODO pass in Cross-Origin-Load-Policy rules
-    mFrameLoader->SkipBrowsingContextDetach();
+  // If we already have a Frameloader, destroy it, possibly preserving its
+  // browsing context.
+  if (mFrameLoader) {
+    // If this is a process switch due to a difference in Cross Origin Opener
+    // Policy, do not preserve the browsing context. Otherwise, save off the
+    // browsing context and use it when creating our new FrameLoader.
+    if (!aOptions.mReplaceBrowsingContext) {
+      bc = mFrameLoader->GetBrowsingContext();
+      mFrameLoader->SkipBrowsingContextDetach();
+    }
 
     mFrameLoader->Destroy();
     mFrameLoader = nullptr;
