@@ -109,7 +109,8 @@ describe("pause", () => {
 
       await dispatch(actions.newSource(makeSource("foo1")));
       await dispatch(actions.paused(mockPauseInfo));
-      const stepped = dispatch(actions.stepIn());
+      const cx = selectors.getThreadContext(getState());
+      const stepped = dispatch(actions.stepIn(cx));
       expect(isStepping(getState(), "FakeThread")).toBeTruthy();
       if (!stepInResolve) {
         throw new Error("no stepInResolve");
@@ -121,9 +122,9 @@ describe("pause", () => {
 
     it("should only step when paused", async () => {
       const client = { stepIn: jest.fn() };
-      const { dispatch } = createStore(client);
+      const { dispatch, cx } = createStore(client);
 
-      dispatch(actions.stepIn());
+      dispatch(actions.stepIn(cx));
       expect(client.stepIn.mock.calls).toHaveLength(0);
     });
 
@@ -133,7 +134,8 @@ describe("pause", () => {
 
       await dispatch(actions.newSource(makeSource("foo1")));
       await dispatch(actions.paused(mockPauseInfo));
-      dispatch(actions.stepIn());
+      const cx = selectors.getThreadContext(getState());
+      dispatch(actions.stepIn(cx));
       expect(isStepping(getState(), "FakeThread")).toBeTruthy();
     });
 
@@ -144,15 +146,16 @@ describe("pause", () => {
 
       await dispatch(actions.newSource(makeSource("foo1")));
       await dispatch(actions.paused(mockPauseInfo));
+      const cx = selectors.getThreadContext(getState());
       const getNextStepSpy = jest.spyOn(parser, "getNextStep");
-      dispatch(actions.stepOver());
+      dispatch(actions.stepOver(cx));
       expect(getNextStepSpy).not.toBeCalled();
       expect(isStepping(getState(), "FakeThread")).toBeTruthy();
     });
 
     it("should step over when paused before an await", async () => {
       const store = createStore(mockThreadClient);
-      const { dispatch } = store;
+      const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo({
         sourceId: "await",
         line: 2,
@@ -163,15 +166,16 @@ describe("pause", () => {
       await dispatch(actions.newSource(source));
 
       await dispatch(actions.paused(mockPauseInfo));
+      const cx = selectors.getThreadContext(getState());
       const getNextStepSpy = jest.spyOn(parser, "getNextStep");
-      dispatch(actions.stepOver());
+      dispatch(actions.stepOver(cx));
       expect(getNextStepSpy).toBeCalled();
       getNextStepSpy.mockRestore();
     });
 
     it("should step over when paused after an await", async () => {
       const store = createStore(mockThreadClient);
-      const { dispatch } = store;
+      const { dispatch, getState } = store;
       const mockPauseInfo = createPauseInfo({
         sourceId: "await",
         line: 2,
@@ -182,8 +186,9 @@ describe("pause", () => {
       await dispatch(actions.newSource(source));
 
       await dispatch(actions.paused(mockPauseInfo));
+      const cx = selectors.getThreadContext(getState());
       const getNextStepSpy = jest.spyOn(parser, "getNextStep");
-      dispatch(actions.stepOver());
+      dispatch(actions.stepOver(cx));
       expect(getNextStepSpy).toBeCalled();
       getNextStepSpy.mockRestore();
     });
@@ -367,22 +372,27 @@ describe("pause", () => {
 
   describe("resumed", () => {
     it("should not evaluate expression while stepping", async () => {
-      const client = { evaluateExpressions: jest.fn() };
-      const { dispatch } = createStore(client);
+      const client = { ...mockThreadClient, evaluateExpressions: jest.fn() };
+      const { dispatch, getState } = createStore(client);
+      const mockPauseInfo = createPauseInfo();
 
-      dispatch(actions.stepIn());
+      await dispatch(actions.newSource(makeSource("foo1")));
+      await dispatch(actions.paused(mockPauseInfo));
+
+      const cx = selectors.getThreadContext(getState());
+      dispatch(actions.stepIn(cx));
       await dispatch(actions.resumed(resumedPacket()));
       expect(client.evaluateExpressions.mock.calls).toHaveLength(1);
     });
 
     it("resuming - will re-evaluate watch expressions", async () => {
       const store = createStore(mockThreadClient);
-      const { dispatch, getState } = store;
+      const { dispatch, getState, cx } = store;
       const mockPauseInfo = createPauseInfo();
 
       await dispatch(actions.newSource(makeSource("foo1")));
       await dispatch(actions.newSource(makeSource("foo")));
-      dispatch(actions.addExpression("foo"));
+      await dispatch(actions.addExpression(cx, "foo"));
       await waitForState(store, state => selectors.getExpression(state, "foo"));
 
       mockThreadClient.evaluateExpressions = () => new Promise(r => r(["YAY"]));

@@ -5,7 +5,7 @@ requestLongerTimeout(2);
 
 async function stepOvers(dbg, count, onStep = () => {}) {
   for (let i = 0; i < count; i++) {
-    await dbg.actions.stepOver();
+    await dbg.actions.stepOver(getThreadContext(dbg));
     await waitForPaused(dbg);
     onStep(dbg.getState());
   }

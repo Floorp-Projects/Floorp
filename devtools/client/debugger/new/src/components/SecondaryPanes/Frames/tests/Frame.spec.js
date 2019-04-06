@@ -7,13 +7,18 @@
 import React from "react";
 import { shallow, mount } from "enzyme";
 import Frame from "../Frame.js";
-import { makeMockFrame, makeMockSource } from "../../../../utils/test-mockup";
+import {
+  makeMockFrame,
+  makeMockSource,
+  mockthreadcx
+} from "../../../../utils/test-mockup";
 
 import FrameMenu from "../FrameMenu";
 jest.mock("../FrameMenu", () => jest.fn());
 
 function frameProperties(frame, selectedFrame: any, overrides = {}) {
   return {
+    cx: mockthreadcx,
     frame,
     selectedFrame,
     copyStackTrace: jest.fn(),

@@ -18,18 +18,19 @@ import {
   type MemoizedAction
 } from "../../utils/memoizableAction";
 
-import type { Source } from "../../types";
+import type { Source, Context } from "../../types";
 import type { Symbols } from "../../reducers/types";
 
-async function doSetSymbols(source, { dispatch, getState }) {
+async function doSetSymbols(cx, source, { dispatch, getState }) {
   const sourceId = source.id;
 
   if (!isLoaded(source)) {
-    await dispatch(loadSourceText({ source }));
+    await dispatch(loadSourceText({ cx, source }));
   }
 
   await dispatch({
     type: "SET_SYMBOLS",
+    cx,
     sourceId,
     [PROMISE]: parser.getSymbols(sourceId)
   });
@@ -42,7 +43,7 @@ async function doSetSymbols(source, { dispatch, getState }) {
   return symbols;
 }
 
-type Args = { source: Source };
+type Args = { cx: Context, source: Source };
 
 export const setSymbols: MemoizedAction<Args, ?Symbols> = memoizeableAction(
   "setSymbols",
@@ -51,6 +52,6 @@ export const setSymbols: MemoizedAction<Args, ?Symbols> = memoizeableAction(
     hasValue: ({ source }, { getState }) => hasSymbols(getState(), source),
     getValue: ({ source }, { getState }) => getSymbols(getState(), source),
     createKey: ({ source }) => source.id,
-    action: ({ source }, thunkArgs) => doSetSymbols(source, thunkArgs)
+    action: ({ cx, source }, thunkArgs) => doSetSymbols(cx, source, thunkArgs)
   }
 );
