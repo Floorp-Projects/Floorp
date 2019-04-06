@@ -8,6 +8,7 @@ import React from "react";
 import { mount, shallow } from "enzyme";
 import { ProjectSearch } from "../ProjectSearch";
 import { statusType } from "../../reducers/project-text-search";
+import { mockcx } from "../../utils/test-mockup";
 
 const hooks = { on: [], off: [] };
 const shortcuts = {
@@ -75,6 +76,7 @@ const testMatch = {
 
 function render(overrides = {}, mounted = false) {
   const props = {
+    cx: mockcx,
     status: "DONE",
     sources: {},
     results: [],
@@ -187,7 +189,7 @@ describe("ProjectSearch", () => {
     component
       .find("SearchInput input")
       .simulate("keydown", { key: "Enter", stopPropagation: jest.fn() });
-    expect(searchSources).toHaveBeenCalledWith("foo");
+    expect(searchSources).toHaveBeenCalledWith(mockcx, "foo");
   });
 
   it("onEnterPress shortcut no match or setExpanded", () => {
@@ -215,7 +217,7 @@ describe("ProjectSearch", () => {
     );
     component.instance().state.focusedItem = { ...testMatch };
     shortcuts.dispatch("Enter");
-    expect(selectSpecificLocation).toHaveBeenCalledWith({
+    expect(selectSpecificLocation).toHaveBeenCalledWith(mockcx, {
       sourceId: "some-target/source42",
       line: 3,
       column: 30

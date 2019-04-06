@@ -16,7 +16,7 @@ import assert from "../../utils/assert";
 import { findClosestFunction } from "../../utils/ast";
 import { setSymbols } from "../sources/symbols";
 
-import type { Frame, ThreadId } from "../../types";
+import type { Frame, ThreadContext } from "../../types";
 import type { State } from "../../reducers/types";
 import type { ThunkArgs } from "../types";
 
@@ -155,11 +155,11 @@ async function expandFrames(
   return result;
 }
 
-async function updateFrameSymbols(frames, { dispatch, getState }) {
+async function updateFrameSymbols(cx, frames, { dispatch, getState }) {
   await Promise.all(
     frames.map(frame => {
       const source = getSourceFromId(getState(), frame.location.sourceId);
-      return dispatch(setSymbols({ source }));
+      return dispatch(setSymbols({ cx, source }));
     })
   );
 }
@@ -173,28 +173,29 @@ async function updateFrameSymbols(frames, { dispatch, getState }) {
  * @memberof actions/pause
  * @static
  */
-export function mapFrames(thread: ThreadId) {
+export function mapFrames(cx: ThreadContext) {
   return async function(thunkArgs: ThunkArgs) {
     const { dispatch, getState, sourceMaps } = thunkArgs;
-    const frames = getFrames(getState(), thread);
+    const frames = getFrames(getState(), cx.thread);
     if (!frames) {
       return;
     }
 
     let mappedFrames = await updateFrameLocations(frames, sourceMaps);
-    await updateFrameSymbols(mappedFrames, thunkArgs);
+    await updateFrameSymbols(cx, mappedFrames, thunkArgs);
 
     mappedFrames = await expandFrames(mappedFrames, sourceMaps, getState);
     mappedFrames = mapDisplayNames(mappedFrames, getState);
 
     const selectedFrameId = getSelectedFrameId(
       getState(),
-      thread,
+      cx.thread,
       mappedFrames
     );
     dispatch({
       type: "MAP_FRAMES",
-      thread,
+      cx,
+      thread: cx.thread,
       frames: mappedFrames,
       selectedFrameId
     });

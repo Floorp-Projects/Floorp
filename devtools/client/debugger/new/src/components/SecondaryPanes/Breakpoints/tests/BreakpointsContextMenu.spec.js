@@ -12,7 +12,8 @@ import { buildMenu } from "devtools-contextmenu";
 
 import {
   makeMockBreakpoint,
-  makeMockSource
+  makeMockSource,
+  mockcx
 } from "../../../../utils/test-mockup";
 
 jest.mock("devtools-contextmenu");
@@ -55,6 +56,7 @@ function generateDefaults(disabled) {
   ];
 
   const props = {
+    cx: mockcx,
     breakpoints,
     breakpoint: breakpoints[0],
     removeBreakpoint: jest.fn(),
@@ -90,7 +92,7 @@ describe("BreakpointsContextMenu", () => {
       expect(props.removeBreakpoints).toHaveBeenCalled();
 
       const otherBreakpoints = [props.breakpoints[1], props.breakpoints[2]];
-      expect(props.removeBreakpoints.mock.calls[0][0]).toEqual(
+      expect(props.removeBreakpoints.mock.calls[0][1]).toEqual(
         otherBreakpoints
       );
     });
@@ -105,10 +107,10 @@ describe("BreakpointsContextMenu", () => {
 
       expect(props.toggleBreakpoints).toHaveBeenCalled();
 
-      expect(props.toggleBreakpoints.mock.calls[0][0]).toBe(false);
+      expect(props.toggleBreakpoints.mock.calls[0][1]).toBe(false);
 
       const otherBreakpoints = [props.breakpoints[1], props.breakpoints[2]];
-      expect(props.toggleBreakpoints.mock.calls[0][1]).toEqual(
+      expect(props.toggleBreakpoints.mock.calls[0][2]).toEqual(
         otherBreakpoints
       );
     });
@@ -122,10 +124,10 @@ describe("BreakpointsContextMenu", () => {
       disableOthers.item.click();
 
       expect(props.toggleBreakpoints).toHaveBeenCalled();
-      expect(props.toggleBreakpoints.mock.calls[0][0]).toBe(true);
+      expect(props.toggleBreakpoints.mock.calls[0][1]).toBe(true);
 
       const otherBreakpoints = [props.breakpoints[1], props.breakpoints[2]];
-      expect(props.toggleBreakpoints.mock.calls[0][1]).toEqual(
+      expect(props.toggleBreakpoints.mock.calls[0][2]).toEqual(
         otherBreakpoints
       );
     });
