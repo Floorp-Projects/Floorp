@@ -27,7 +27,7 @@ import { Telemetry } from "devtools-modules";
 
 import type { ThunkArgs } from "../types";
 
-import type { Source } from "../../types";
+import type { Source, Context } from "../../types";
 
 // Measures the time it takes for a source to load
 const loadSourceHistogram = "DEVTOOLS_DEBUGGER_LOAD_SOURCE_MS";
@@ -73,6 +73,7 @@ async function loadSource(
 }
 
 async function loadSourceTextPromise(
+  cx: Context,
   source: Source,
   { dispatch, getState, client, sourceMaps }: ThunkArgs
 ): Promise<?Source> {
@@ -92,27 +93,27 @@ async function loadSourceTextPromise(
 
   if (!newSource.isWasm && isLoaded(newSource)) {
     parser.setSource(newSource);
-    dispatch(setBreakpointPositions({ sourceId: newSource.id }));
+    dispatch(setBreakpointPositions({ cx, sourceId: newSource.id }));
 
     // Update the text in any breakpoints for this source by re-adding them.
     const breakpoints = getBreakpointsForSource(getState(), source.id);
     for (const { location, options, disabled } of breakpoints) {
-      await dispatch(addBreakpoint(location, options, disabled));
+      await dispatch(addBreakpoint(cx, location, options, disabled));
     }
   }
 
   return newSource;
 }
 
-export function loadSourceById(sourceId: string) {
+export function loadSourceById(cx: Context, sourceId: string) {
   return ({ getState, dispatch }: ThunkArgs) => {
     const source = getSourceFromId(getState(), sourceId);
-    return dispatch(loadSourceText({ source }));
+    return dispatch(loadSourceText({ cx, source }));
   };
 }
 
 export const loadSourceText: MemoizedAction<
-  { source: Source },
+  { cx: Context, source: Source },
   ?Source
 > = memoizeableAction("loadSourceText", {
   exitEarly: ({ source }) => !source,
@@ -122,5 +123,6 @@ export const loadSourceText: MemoizedAction<
     const epoch = getSourcesEpoch(getState());
     return `${epoch}:${source.id}`;
   },
-  action: ({ source }, thunkArgs) => loadSourceTextPromise(source, thunkArgs)
+  action: ({ cx, source }, thunkArgs) =>
+    loadSourceTextPromise(cx, source, thunkArgs)
 });

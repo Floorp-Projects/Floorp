@@ -14,15 +14,17 @@ import {
 } from "../../../utils/source";
 import {
   getHasSiblingOfSameName,
-  getBreakpointsForSource
+  getBreakpointsForSource,
+  getContext
 } from "../../../selectors";
 
 import SourceIcon from "../../shared/SourceIcon";
 
-import type { Source, Breakpoint } from "../../../types";
+import type { Source, Breakpoint, Context } from "../../../types";
 import showContextMenu from "./BreakpointHeadingsContextMenu";
 
 type Props = {
+  cx: Context,
   sources: Source[],
   source: Source,
   hasSiblingOfSameName: boolean,
@@ -39,7 +41,13 @@ class BreakpointHeading extends PureComponent<Props> {
   };
 
   render() {
-    const { sources, source, hasSiblingOfSameName, selectSource } = this.props;
+    const {
+      cx,
+      sources,
+      source,
+      hasSiblingOfSameName,
+      selectSource
+    } = this.props;
 
     const path = getDisplayPath(source, sources);
     const query = hasSiblingOfSameName ? getSourceQueryString(source) : "";
@@ -48,7 +56,7 @@ class BreakpointHeading extends PureComponent<Props> {
       <div
         className="breakpoint-heading"
         title={getFileURL(source, false)}
-        onClick={() => selectSource(source.id)}
+        onClick={() => selectSource(cx, source.id)}
         onContextMenu={this.onContextMenu}
       >
         <SourceIcon
@@ -65,6 +73,7 @@ class BreakpointHeading extends PureComponent<Props> {
 }
 
 const mapStateToProps = (state, { source }) => ({
+  cx: getContext(state),
   hasSiblingOfSameName: getHasSiblingOfSameName(state, source),
   breakpointsForSource: getBreakpointsForSource(state, source.id)
 });

@@ -16,7 +16,8 @@ import actions from "../../actions";
 import {
   getSelectedSource,
   getSymbols,
-  getSelectedLocation
+  getSelectedLocation,
+  getContext
 } from "../../selectors";
 
 import OutlineFilter from "./OutlineFilter";
@@ -30,9 +31,10 @@ import type {
   SymbolDeclaration,
   FunctionDeclaration
 } from "../../workers/parser";
-import type { Source } from "../../types";
+import type { Source, Context } from "../../types";
 
 type Props = {
+  cx: Context,
   symbols: SymbolDeclarations,
   selectedSource: ?Source,
   alphabetizeOutline: boolean,
@@ -72,12 +74,12 @@ export class Outline extends Component<Props, State> {
   }
 
   selectItem(location: AstLocation) {
-    const { selectedSource, selectLocation } = this.props;
+    const { cx, selectedSource, selectLocation } = this.props;
     if (!selectedSource) {
       return;
     }
 
-    selectLocation({
+    selectLocation(cx, {
       sourceId: selectedSource.id,
       line: location.start.line,
       column: location.start.column
@@ -264,6 +266,7 @@ const mapStateToProps = state => {
   const symbols = selectedSource ? getSymbols(state, selectedSource) : null;
 
   return {
+    cx: getContext(state),
     symbols,
     selectedSource,
     selectedLocation: getSelectedLocation(state),

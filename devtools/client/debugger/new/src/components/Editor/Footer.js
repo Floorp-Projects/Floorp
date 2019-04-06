@@ -10,7 +10,8 @@ import actions from "../../actions";
 import {
   getSelectedSource,
   getPrettySource,
-  getPaneCollapse
+  getPaneCollapse,
+  getContext
 } from "../../selectors";
 
 import {
@@ -27,7 +28,7 @@ import { shouldShowPrettyPrint } from "../../utils/editor";
 import { PaneToggleButton } from "../shared/Button";
 import AccessibleImage from "../shared/AccessibleImage";
 
-import type { Source } from "../../types";
+import type { Source, Context } from "../../types";
 
 import "./Footer.css";
 
@@ -37,6 +38,7 @@ type CursorPosition = {
 };
 
 type Props = {
+  cx: Context,
   selectedSource: Source,
   mappedSource: Source,
   endPanelCollapsed: boolean,
@@ -83,7 +85,7 @@ class SourceFooter extends PureComponent<Props, State> {
   }
 
   prettyPrintButton() {
-    const { selectedSource, togglePrettyPrint } = this.props;
+    const { cx, selectedSource, togglePrettyPrint } = this.props;
 
     if (!selectedSource) {
       return;
@@ -107,7 +109,7 @@ class SourceFooter extends PureComponent<Props, State> {
     const type = "prettyPrint";
     return (
       <button
-        onClick={() => togglePrettyPrint(selectedSource.id)}
+        onClick={() => togglePrettyPrint(cx, selectedSource.id)}
         className={classnames("action", type, {
           active: sourceLoaded,
           pretty: isPretty(selectedSource)
@@ -122,7 +124,7 @@ class SourceFooter extends PureComponent<Props, State> {
   }
 
   blackBoxButton() {
-    const { selectedSource, toggleBlackBox } = this.props;
+    const { cx, selectedSource, toggleBlackBox } = this.props;
     const sourceLoaded = selectedSource && isLoaded(selectedSource);
 
     if (!selectedSource) {
@@ -143,7 +145,7 @@ class SourceFooter extends PureComponent<Props, State> {
 
     return (
       <button
-        onClick={() => toggleBlackBox(selectedSource)}
+        onClick={() => toggleBlackBox(cx, selectedSource)}
         className={classnames("action", type, {
           active: sourceLoaded,
           blackboxed: blackboxed
@@ -182,7 +184,12 @@ class SourceFooter extends PureComponent<Props, State> {
   }
 
   renderSourceSummary() {
-    const { mappedSource, jumpToMappedLocation, selectedSource } = this.props;
+    const {
+      cx,
+      mappedSource,
+      jumpToMappedLocation,
+      selectedSource
+    } = this.props;
 
     if (!mappedSource || !isOriginal(selectedSource)) {
       return null;
@@ -202,7 +209,7 @@ class SourceFooter extends PureComponent<Props, State> {
     return (
       <button
         className="mapped-source"
-        onClick={() => jumpToMappedLocation(mappedSourceLocation)}
+        onClick={() => jumpToMappedLocation(cx, mappedSourceLocation)}
         title={tooltip}
       >
         <span>{title}</span>
@@ -255,6 +262,7 @@ const mapStateToProps = state => {
   const selectedSource = getSelectedSource(state);
 
   return {
+    cx: getContext(state),
     selectedSource,
     mappedSource: getGeneratedSource(state, selectedSource),
     prettySource: getPrettySource(

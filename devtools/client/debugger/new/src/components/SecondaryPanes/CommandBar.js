@@ -12,11 +12,11 @@ import { connect } from "../../utils/connect";
 import classnames from "classnames";
 import { features } from "../../utils/prefs";
 import {
-  getIsPaused,
   getIsWaitingOnBreak,
   getCanRewind,
   getSkipPausing,
-  getCurrentThread
+  getCurrentThread,
+  getThreadContext
 } from "../../selectors";
 import { formatKeyShortcut } from "../../utils/text";
 import actions from "../../actions";
@@ -25,6 +25,7 @@ import AccessibleImage from "../shared/AccessibleImage";
 import "./CommandBar.css";
 
 import { appinfo } from "devtools-services";
+import type { ThreadContext } from "../../types";
 
 const isMacOS = appinfo.OS === "Darwin";
 
@@ -75,7 +76,7 @@ function formatKey(action) {
 }
 
 type Props = {
-  isPaused: boolean,
+  cx: ThreadContext,
   isWaitingOnBreak: boolean,
   horizontal: boolean,
   canRewind: boolean,
@@ -121,41 +122,44 @@ class CommandBar extends Component<Props> {
   }
 
   handleEvent(e, action) {
+    const { cx } = this.props;
     e.preventDefault();
     e.stopPropagation();
     if (action === "resume") {
-      this.props.isPaused ? this.props.resume() : this.props.breakOnNext();
+      this.props.cx.isPaused
+        ? this.props.resume(cx)
+        : this.props.breakOnNext(cx);
     } else {
-      this.props[action]();
+      this.props[action](cx);
     }
   }
 
   renderStepButtons() {
-    const { isPaused, canRewind } = this.props;
-    const className = isPaused ? "active" : "disabled";
-    const isDisabled = !isPaused;
+    const { cx, canRewind } = this.props;
+    const className = cx.isPaused ? "active" : "disabled";
+    const isDisabled = !cx.isPaused;
 
-    if (canRewind || (!isPaused && features.removeCommandBarOptions)) {
+    if (canRewind || (!cx.isPaused && features.removeCommandBarOptions)) {
       return;
     }
 
     return [
       debugBtn(
-        this.props.stepOver,
+        () => this.props.stepOver(cx),
         "stepOver",
         className,
         L10N.getFormatStr("stepOverTooltip", formatKey("stepOver")),
         isDisabled
       ),
       debugBtn(
-        this.props.stepIn,
+        () => this.props.stepIn(cx),
         "stepIn",
         className,
         L10N.getFormatStr("stepInTooltip", formatKey("stepIn")),
         isDisabled
       ),
       debugBtn(
-        this.props.stepOut,
+        () => this.props.stepOut(cx),
         "stepOut",
         className,
         L10N.getFormatStr("stepOutTooltip", formatKey("stepOut")),
@@ -165,13 +169,13 @@ class CommandBar extends Component<Props> {
   }
 
   resume() {
-    this.props.resume();
+    this.props.resume(this.props.cx);
   }
 
   renderPauseButton() {
-    const { isPaused, breakOnNext, isWaitingOnBreak, canRewind } = this.props;
+    const { cx, breakOnNext, isWaitingOnBreak, canRewind } = this.props;
 
-    if (isPaused) {
+    if (cx.isPaused) {
       if (canRewind) {
         return null;
       }
@@ -198,7 +202,7 @@ class CommandBar extends Component<Props> {
     }
 
     return debugBtn(
-      breakOnNext,
+      () => breakOnNext(cx),
       "pause",
       "active",
       L10N.getFormatStr("pauseButtonTooltip", formatKey("resume"))
@@ -206,32 +210,37 @@ class CommandBar extends Component<Props> {
   }
 
   renderTimeTravelButtons() {
-    const { isPaused, canRewind } = this.props;
+    const { cx, canRewind } = this.props;
 
-    if (!canRewind || !isPaused) {
+    if (!canRewind || !cx.isPaused) {
       return null;
     }
 
-    const isDisabled = !isPaused;
+    const isDisabled = !cx.isPaused;
 
     return [
-      debugBtn(this.props.rewind, "rewind", "active", "Rewind Execution"),
+      debugBtn(
+        () => this.props.rewind(cx),
+        "rewind",
+        "active",
+        "Rewind Execution"
+      ),
 
       debugBtn(
-        this.props.resume,
+        () => this.props.resume(cx),
         "resume",
         "active",
         L10N.getFormatStr("resumeButtonTooltip", formatKey("resume"))
       ),
       <div key="divider-1" className="divider" />,
       debugBtn(
-        this.props.reverseStepOver,
+        () => this.props.reverseStepOver(cx),
         "reverseStepOver",
         "active",
         "Reverse step over"
       ),
       debugBtn(
-        this.props.stepOver,
+        () => this.props.stepOver(cx),
         "stepOver",
         "active",
         L10N.getFormatStr("stepOverTooltip", formatKey("stepOver")),
@@ -239,7 +248,7 @@ class CommandBar extends Component<Props> {
       ),
       <div key="divider-2" className="divider" />,
       debugBtn(
-        this.props.stepOut,
+        () => this.props.stepOut(cx),
         "stepOut",
         "active",
         L10N.getFormatStr("stepOutTooltip", formatKey("stepOut")),
@@ -247,7 +256,7 @@ class CommandBar extends Component<Props> {
       ),
 
       debugBtn(
-        this.props.stepIn,
+        () => this.props.stepIn(cx),
         "stepIn",
         "active",
         L10N.getFormatStr("stepInTooltip", formatKey("stepIn")),
@@ -303,7 +312,7 @@ CommandBar.contextTypes = {
 };
 
 const mapStateToProps = state => ({
-  isPaused: getIsPaused(state, getCurrentThread(state)),
+  cx: getThreadContext(state),
   isWaitingOnBreak: getIsWaitingOnBreak(state, getCurrentThread(state)),
   canRewind: getCanRewind(state),
   skipPausing: getSkipPausing(state)

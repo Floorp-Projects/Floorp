@@ -15,13 +15,18 @@ import { breakpointItems } from "./menus/breakpoints";
 import type { BreakpointItemActions } from "./menus/breakpoints";
 import type { EditorItemActions } from "./menus/editor";
 
-import type { Source, Breakpoint as BreakpointType } from "../../types";
+import type {
+  Source,
+  Breakpoint as BreakpointType,
+  ThreadContext
+} from "../../types";
 
 const breakpointSvg = document.createElement("div");
 breakpointSvg.innerHTML =
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 15" width="60" height="15"><path d="M53.07.5H1.5c-.54 0-1 .46-1 1v12c0 .54.46 1 1 1h51.57c.58 0 1.15-.26 1.53-.7l4.7-6.3-4.7-6.3c-.38-.44-.95-.7-1.53-.7z"/></svg>';
 
 type Props = {
+  cx: ThreadContext,
   breakpoint: BreakpointType,
   selectedSource: Source,
   editor: Object,
@@ -61,6 +66,7 @@ class Breakpoint extends PureComponent<Props> {
 
   onClick = (event: MouseEvent) => {
     const {
+      cx,
       breakpointActions,
       editorActions,
       breakpoint,
@@ -77,31 +83,33 @@ class Breakpoint extends PureComponent<Props> {
 
     const selectedLocation = getSelectedLocation(breakpoint, selectedSource);
     if (event.metaKey) {
-      return editorActions.continueToHere(selectedLocation.line);
+      return editorActions.continueToHere(cx, selectedLocation.line);
     }
 
     if (event.shiftKey) {
       if (features.columnBreakpoints) {
         return breakpointActions.toggleBreakpointsAtLine(
+          cx,
           !breakpoint.disabled,
           selectedLocation.line
         );
       }
 
-      return breakpointActions.toggleDisabledBreakpoint(breakpoint);
+      return breakpointActions.toggleDisabledBreakpoint(cx, breakpoint);
     }
 
     return breakpointActions.removeBreakpointsAtLine(
+      cx,
       selectedLocation.sourceId,
       selectedLocation.line
     );
   };
 
   onContextMenu = (event: MouseEvent) => {
-    const { breakpoint, breakpointActions } = this.props;
+    const { cx, breakpoint, breakpointActions } = this.props;
     event.stopPropagation();
     event.preventDefault();
-    showMenu(event, breakpointItems(breakpoint, breakpointActions));
+    showMenu(event, breakpointItems(cx, breakpoint, breakpointActions));
   };
 
   addBreakpoint(props: Props) {

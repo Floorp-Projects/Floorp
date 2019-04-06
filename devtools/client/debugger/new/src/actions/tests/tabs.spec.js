@@ -16,26 +16,26 @@ import { sourceThreadClient as threadClient } from "./helpers/threadClient.js";
 
 describe("closing tabs", () => {
   it("closing a tab", async () => {
-    const { dispatch, getState } = createStore(threadClient);
+    const { dispatch, getState, cx } = createStore(threadClient);
 
     const fooSource = makeSource("foo.js");
     await dispatch(actions.newSource(fooSource));
-    await dispatch(actions.selectLocation({ sourceId: "foo.js", line: 1 }));
-    dispatch(actions.closeTab(fooSource));
+    await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
+    dispatch(actions.closeTab(cx, fooSource));
 
     expect(getSelectedSource(getState())).toBe(undefined);
     expect(getSourceTabs(getState())).toHaveLength(0);
   });
 
   it("closing the inactive tab", async () => {
-    const { dispatch, getState } = createStore(threadClient);
+    const { dispatch, getState, cx } = createStore(threadClient);
 
     const fooSource = makeSource("foo.js");
     await dispatch(actions.newSource(fooSource));
     await dispatch(actions.newSource(makeSource("bar.js")));
-    await dispatch(actions.selectLocation({ sourceId: "foo.js", line: 1 }));
-    await dispatch(actions.selectLocation({ sourceId: "bar.js", line: 1 }));
-    dispatch(actions.closeTab(fooSource));
+    await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
+    await dispatch(actions.selectLocation(cx, { sourceId: "bar.js", line: 1 }));
+    dispatch(actions.closeTab(cx, fooSource));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe("bar.js");
@@ -43,26 +43,26 @@ describe("closing tabs", () => {
   });
 
   it("closing the only tab", async () => {
-    const { dispatch, getState } = createStore(threadClient);
+    const { dispatch, getState, cx } = createStore(threadClient);
 
     const fooSource = makeSource("foo.js");
     await dispatch(actions.newSource(fooSource));
-    await dispatch(actions.selectLocation({ sourceId: "foo.js", line: 1 }));
-    dispatch(actions.closeTab(fooSource));
+    await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
+    dispatch(actions.closeTab(cx, fooSource));
 
     expect(getSelectedSource(getState())).toBe(undefined);
     expect(getSourceTabs(getState())).toHaveLength(0);
   });
 
   it("closing the active tab", async () => {
-    const { dispatch, getState } = createStore(threadClient);
+    const { dispatch, getState, cx } = createStore(threadClient);
 
     const barSource = makeSource("bar.js");
     await dispatch(actions.newSource(makeSource("foo.js")));
     await dispatch(actions.newSource(barSource));
-    await dispatch(actions.selectLocation({ sourceId: "foo.js", line: 1 }));
-    await dispatch(actions.selectLocation({ sourceId: "bar.js", line: 1 }));
-    await dispatch(actions.closeTab(barSource));
+    await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
+    await dispatch(actions.selectLocation(cx, { sourceId: "bar.js", line: 1 }));
+    await dispatch(actions.closeTab(cx, barSource));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe("foo.js");
@@ -70,22 +70,24 @@ describe("closing tabs", () => {
   });
 
   it("closing many inactive tabs", async () => {
-    const { dispatch, getState } = createStore(threadClient);
+    const { dispatch, getState, cx } = createStore(threadClient);
 
     const fooSource = makeSource("foo.js");
     const barSource = makeSource("bar.js");
     await dispatch(actions.newSource(fooSource));
     await dispatch(actions.newSource(barSource));
     await dispatch(actions.newSource(makeSource("bazz.js")));
-    await dispatch(actions.selectLocation({ sourceId: "foo.js", line: 1 }));
-    await dispatch(actions.selectLocation({ sourceId: "bar.js", line: 1 }));
-    await dispatch(actions.selectLocation({ sourceId: "bazz.js", line: 1 }));
+    await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
+    await dispatch(actions.selectLocation(cx, { sourceId: "bar.js", line: 1 }));
+    await dispatch(
+      actions.selectLocation(cx, { sourceId: "bazz.js", line: 1 })
+    );
 
     const tabs = [
       "http://localhost:8000/examples/foo.js",
       "http://localhost:8000/examples/bar.js"
     ];
-    dispatch(actions.closeTabs(tabs));
+    dispatch(actions.closeTabs(cx, tabs));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe("bazz.js");
@@ -93,19 +95,21 @@ describe("closing tabs", () => {
   });
 
   it("closing many tabs including the active tab", async () => {
-    const { dispatch, getState } = createStore(threadClient);
+    const { dispatch, getState, cx } = createStore(threadClient);
 
     await dispatch(actions.newSource(makeSource("foo.js")));
     await dispatch(actions.newSource(makeSource("bar.js")));
     await dispatch(actions.newSource(makeSource("bazz.js")));
-    await dispatch(actions.selectLocation({ sourceId: "foo.js", line: 1 }));
-    await dispatch(actions.selectLocation({ sourceId: "bar.js", line: 1 }));
-    await dispatch(actions.selectLocation({ sourceId: "bazz.js", line: 1 }));
+    await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
+    await dispatch(actions.selectLocation(cx, { sourceId: "bar.js", line: 1 }));
+    await dispatch(
+      actions.selectLocation(cx, { sourceId: "bazz.js", line: 1 })
+    );
     const tabs = [
       "http://localhost:8000/examples/bar.js",
       "http://localhost:8000/examples/bazz.js"
     ];
-    await dispatch(actions.closeTabs(tabs));
+    await dispatch(actions.closeTabs(cx, tabs));
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.id).toBe("foo.js");
@@ -113,14 +117,14 @@ describe("closing tabs", () => {
   });
 
   it("closing all the tabs", async () => {
-    const { dispatch, getState } = createStore(threadClient);
+    const { dispatch, getState, cx } = createStore(threadClient);
 
     await dispatch(actions.newSource(makeSource("foo.js")));
     await dispatch(actions.newSource(makeSource("bar.js")));
-    await dispatch(actions.selectLocation({ sourceId: "foo.js", line: 1 }));
-    await dispatch(actions.selectLocation({ sourceId: "bar.js", line: 1 }));
+    await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
+    await dispatch(actions.selectLocation(cx, { sourceId: "bar.js", line: 1 }));
     await dispatch(
-      actions.closeTabs([
+      actions.closeTabs(cx, [
         "http://localhost:8000/examples/foo.js",
         "http://localhost:8000/examples/bar.js"
       ])

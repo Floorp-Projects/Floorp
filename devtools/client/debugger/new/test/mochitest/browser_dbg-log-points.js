@@ -16,6 +16,7 @@ add_task(async function() {
   await getDebuggerSplitConsole(dbg);
 
   await dbg.actions.addBreakpoint(
+    getContext(dbg),
     { line: 5, sourceId: source.id },
     { logValue: "'a', 'b', 'c'" }
   );
