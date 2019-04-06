@@ -9,7 +9,8 @@ namespace net {
 
 #define TEST_PREF "network.http_test.auth_utils"
 
-TEST(TestHttpAuthUtils, Bug1351301) {
+TEST(TestHttpAuthUtils, Bug1351301)
+{
   nsCOMPtr<nsIURI> url;
   nsAutoCString spec;
 

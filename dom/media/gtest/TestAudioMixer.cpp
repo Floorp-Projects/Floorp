@@ -70,7 +70,8 @@ void FillBuffer(AudioDataValue* aBuffer, uint32_t aLength,
   }
 }
 
-TEST(AudioMixer, Test) {
+TEST(AudioMixer, Test)
+{
   const uint32_t CHANNEL_LENGTH = 256;
   const uint32_t AUDIO_RATE = 44100;
   MixerConsumer consumer;

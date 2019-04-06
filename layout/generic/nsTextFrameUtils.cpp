@@ -19,7 +19,7 @@ using namespace mozilla;
 
 // static
 bool nsTextFrameUtils::IsSpaceCombiningSequenceTail(const char16_t* aChars,
-                                         int32_t aLength) {
+                                                    int32_t aLength) {
   return aLength > 0 &&
          (mozilla::unicode::IsClusterExtender(aChars[0]) ||
           (IsBidiControl(aChars[0]) &&

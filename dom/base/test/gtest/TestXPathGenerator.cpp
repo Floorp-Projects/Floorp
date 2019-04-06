@@ -8,7 +8,8 @@
 #include "XPathGenerator.h"
 #include "nsString.h"
 
-TEST(TestXPathGenerator, TestQuoteArgumentWithoutQuote) {
+TEST(TestXPathGenerator, TestQuoteArgumentWithoutQuote)
+{
   nsAutoString arg;
   arg.AssignLiteral(u"testing");
 
@@ -21,7 +22,8 @@ TEST(TestXPathGenerator, TestQuoteArgumentWithoutQuote) {
   ASSERT_TRUE(expectedResult.Equals(result));
 }
 
-TEST(TestXPathGenerator, TestQuoteArgumentWithSingleQuote) {
+TEST(TestXPathGenerator, TestQuoteArgumentWithSingleQuote)
+{
   nsAutoString arg;
   arg.AssignLiteral(u"\'testing\'");
 
@@ -34,7 +36,8 @@ TEST(TestXPathGenerator, TestQuoteArgumentWithSingleQuote) {
   ASSERT_TRUE(expectedResult.Equals(result));
 }
 
-TEST(TestXPathGenerator, TestQuoteArgumentWithDoubleQuote) {
+TEST(TestXPathGenerator, TestQuoteArgumentWithDoubleQuote)
+{
   nsAutoString arg;
   arg.AssignLiteral(u"\"testing\"");
 
@@ -47,7 +50,8 @@ TEST(TestXPathGenerator, TestQuoteArgumentWithDoubleQuote) {
   ASSERT_TRUE(expectedResult.Equals(result));
 }
 
-TEST(TestXPathGenerator, TestQuoteArgumentWithSingleAndDoubleQuote) {
+TEST(TestXPathGenerator, TestQuoteArgumentWithSingleAndDoubleQuote)
+{
   nsAutoString arg;
   arg.AssignLiteral(u"\'testing\"");
 
@@ -63,7 +67,8 @@ TEST(TestXPathGenerator, TestQuoteArgumentWithSingleAndDoubleQuote) {
 }
 
 TEST(TestXPathGenerator,
-     TestQuoteArgumentWithDoubleQuoteAndASequenceOfSingleQuote) {
+     TestQuoteArgumentWithDoubleQuoteAndASequenceOfSingleQuote)
+{
   nsAutoString arg;
   arg.AssignLiteral(u"\'\'\'\'testing\"");
 
@@ -79,7 +84,8 @@ TEST(TestXPathGenerator,
 }
 
 TEST(TestXPathGenerator,
-     TestQuoteArgumentWithDoubleQuoteAndTwoSequencesOfSingleQuote) {
+     TestQuoteArgumentWithDoubleQuoteAndTwoSequencesOfSingleQuote)
+{
   nsAutoString arg;
   arg.AssignLiteral(u"\'\'\'\'testing\'\'\'\'\'\'\"");
 
@@ -96,7 +102,8 @@ TEST(TestXPathGenerator,
 }
 
 TEST(TestXPathGenerator,
-     TestQuoteArgumentWithDoubleQuoteAndTwoSequencesOfSingleQuoteInMiddle) {
+     TestQuoteArgumentWithDoubleQuoteAndTwoSequencesOfSingleQuoteInMiddle)
+{
   nsAutoString arg;
   arg.AssignLiteral(u"t\'\'\'\'estin\'\'\'\'\'\'\"g");
 
@@ -112,7 +119,8 @@ TEST(TestXPathGenerator,
   ASSERT_TRUE(expectedResult.Equals(result));
 }
 
-TEST(TestXPathGenerator, TestEscapeNameWithNormalCharacters) {
+TEST(TestXPathGenerator, TestEscapeNameWithNormalCharacters)
+{
   nsAutoString arg;
   arg.AssignLiteral(u"testing");
 
@@ -125,7 +133,8 @@ TEST(TestXPathGenerator, TestEscapeNameWithNormalCharacters) {
   ASSERT_TRUE(expectedResult.Equals(result));
 }
 
-TEST(TestXPathGenerator, TestEscapeNameWithSpecialCharacters) {
+TEST(TestXPathGenerator, TestEscapeNameWithSpecialCharacters)
+{
   nsAutoString arg;
   arg.AssignLiteral(u"^testing!");
 

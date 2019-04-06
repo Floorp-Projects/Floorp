@@ -69,6 +69,7 @@ def get_environment_overlay(js_shell):
     Build a dict of additional environment variables that must be set to run
     tests successfully.
     """
+    # When updating this also update |buildBrowserEnv| in layout/tools/reftest/runreftest.py.
     env = {
         # Force Pacific time zone to avoid failures in Date tests.
         'TZ': 'PST8PDT',

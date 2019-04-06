@@ -8,20 +8,23 @@
 
 using namespace mozilla::intl;
 
-TEST(Intl_Locale_Locale, Locale) {
+TEST(Intl_Locale_Locale, Locale)
+{
   Locale loc = Locale("en-US");
 
   ASSERT_TRUE(loc.GetLanguage().Equals("en"));
   ASSERT_TRUE(loc.GetRegion().Equals("US"));
 }
 
-TEST(Intl_Locale_Locale, AsString) {
+TEST(Intl_Locale_Locale, AsString)
+{
   Locale loc = Locale("ja-jp-windows");
 
   ASSERT_TRUE(loc.AsString().Equals("ja-JP-windows"));
 }
 
-TEST(Intl_Locale_Locale, GetSubTags) {
+TEST(Intl_Locale_Locale, GetSubTags)
+{
   Locale loc = Locale("en-latn-us-macos");
 
   ASSERT_TRUE(loc.GetLanguage().Equals("en"));
@@ -31,7 +34,8 @@ TEST(Intl_Locale_Locale, GetSubTags) {
   ASSERT_TRUE(loc.GetVariants()[0].Equals("macos"));
 }
 
-TEST(Intl_Locale_Locale, Matches) {
+TEST(Intl_Locale_Locale, Matches)
+{
   Locale loc = Locale("en-US");
 
   Locale loc2 = Locale("en-GB");
@@ -44,7 +48,8 @@ TEST(Intl_Locale_Locale, Matches) {
   ASSERT_TRUE(loc == loc4);
 }
 
-TEST(Intl_Locale_Locale, MatchesRange) {
+TEST(Intl_Locale_Locale, MatchesRange)
+{
   Locale loc = Locale("en-US");
 
   Locale loc2 = Locale("en-Latn-US");
@@ -62,14 +67,16 @@ TEST(Intl_Locale_Locale, MatchesRange) {
   ASSERT_TRUE(loc.Matches(loc3, true, true));
 }
 
-TEST(Intl_Locale_Locale, Variants) {
+TEST(Intl_Locale_Locale, Variants)
+{
   Locale loc = Locale("en-US-UniFon-BasicEng");
 
   // Make sure that we canonicalize and sort variant tags
   ASSERT_TRUE(loc.AsString().Equals("en-US-basiceng-unifon"));
 }
 
-TEST(Intl_Locale_Locale, PrivateUse) {
+TEST(Intl_Locale_Locale, PrivateUse)
+{
   Locale loc = Locale("x-test");
 
   ASSERT_TRUE(loc.IsWellFormed());
@@ -98,7 +105,8 @@ TEST(Intl_Locale_Locale, PrivateUse) {
   ASSERT_TRUE(loc3.AsString().Equals("fr-x-foo-bar-baz"));
 }
 
-TEST(Intl_Locale_Locale, InvalidLocale) {
+TEST(Intl_Locale_Locale, InvalidLocale)
+{
   Locale loc = Locale("en-verylongsubtag");
   ASSERT_FALSE(loc.IsWellFormed());
 
@@ -106,13 +114,15 @@ TEST(Intl_Locale_Locale, InvalidLocale) {
   ASSERT_FALSE(loc2.IsWellFormed());
 }
 
-TEST(Intl_Locale_Locale, ClearRegion) {
+TEST(Intl_Locale_Locale, ClearRegion)
+{
   Locale loc = Locale("en-US");
   loc.ClearRegion();
   ASSERT_TRUE(loc.AsString().Equals("en"));
 }
 
-TEST(Intl_Locale_Locale, ClearVariants) {
+TEST(Intl_Locale_Locale, ClearVariants)
+{
   Locale loc = Locale("en-US-mac");
   loc.ClearVariants();
   ASSERT_TRUE(loc.AsString().Equals("en-US"));

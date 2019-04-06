@@ -9,7 +9,8 @@
 
 using namespace mozilla;
 
-TEST(Buffer, TestBufferInfallible) {
+TEST(Buffer, TestBufferInfallible)
+{
   const size_t LEN = 8;
   Array<int32_t, LEN> arr = {1, 2, 3, 4, 5, 6, 7, 8};
   Buffer<int32_t> buf(arr);
@@ -47,7 +48,8 @@ TEST(Buffer, TestBufferInfallible) {
   ASSERT_EQ(buf.Length(), 0U);
 }
 
-TEST(Buffer, TestBufferFallible) {
+TEST(Buffer, TestBufferFallible)
+{
   const size_t LEN = 8;
   Array<int32_t, LEN> arr = {1, 2, 3, 4, 5, 6, 7, 8};
   auto maybe = Buffer<int32_t>::CopyFrom(arr);
@@ -87,7 +89,8 @@ TEST(Buffer, TestBufferFallible) {
   ASSERT_EQ(buf.Length(), 0U);
 }
 
-TEST(Buffer, TestBufferElements) {
+TEST(Buffer, TestBufferElements)
+{
   ASSERT_EQ(Buffer<int32_t>().Elements(),
             reinterpret_cast<int32_t*>(alignof(int32_t)));
 }

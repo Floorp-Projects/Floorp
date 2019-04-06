@@ -715,7 +715,8 @@ void SipccSdpAttributeList::LoadFmtp(sdp_t* sdp, uint16_t level) {
         }
         parameters.reset(teParameters);
       } break;
-      default: {}
+      default: {
+      }
     }
 
     fmtps->PushEntry(osPayloadType.str(), std::move(parameters));

@@ -53,7 +53,7 @@ add_task(async function() {
   assertEmptyLines(dbg, [1, 2]);
   assertBreakpointSnippet(dbg, 3, "return x + y;");
 
-  rightClickElement(dbg, "breakpointItem", 3);
+  rightClickElement(dbg, "breakpointItem", 2);
   const disableBreakpointDispatch = waitForDispatch(dbg, "SET_BREAKPOINT");
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.disableSelf);
   await disableBreakpointDispatch;
@@ -63,7 +63,7 @@ add_task(async function() {
   is(bp1.disabled, true, "first breakpoint is disabled");
   is(bp2.disabled, false, "second breakpoint is enabled");
 
-  rightClickElement(dbg, "breakpointItem", 3);
+  rightClickElement(dbg, "breakpointItem", 2);
   const enableBreakpointDispatch = waitForDispatch(dbg, "SET_BREAKPOINT");
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.enableSelf);
   await enableBreakpointDispatch;

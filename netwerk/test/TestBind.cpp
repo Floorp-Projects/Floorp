@@ -95,7 +95,8 @@ ClientInputCallback::OnInputStreamReady(nsIAsyncInputStream* aStream) {
   return NS_OK;
 }
 
-TEST(TestBind, MainTest) {
+TEST(TestBind, MainTest)
+{
   //
   // Server side.
   //

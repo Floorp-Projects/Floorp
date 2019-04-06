@@ -215,7 +215,8 @@ static void DoTest_CreateRemoteThread_LoadLibrary(TgetArgsProc aGetArgsProc) {
   return;
 }
 
-TEST(TestInjectEject, CreateRemoteThread_LoadLibraryA) {
+TEST(TestInjectEject, CreateRemoteThread_LoadLibraryA)
+{
   DoTest_CreateRemoteThread_LoadLibrary(
       [](const nsString& dllPath, const nsCString& dllPathC,
          uintptr_t& aStartAddress, uintptr_t& aThreadParam) {
@@ -225,7 +226,8 @@ TEST(TestInjectEject, CreateRemoteThread_LoadLibraryA) {
       });
 }
 
-TEST(TestInjectEject, CreateRemoteThread_LoadLibraryW) {
+TEST(TestInjectEject, CreateRemoteThread_LoadLibraryW)
+{
   DoTest_CreateRemoteThread_LoadLibrary(
       [](const nsString& dllPath, const nsCString& dllPathC,
          uintptr_t& aStartAddress, uintptr_t& aThreadParam) {
@@ -235,7 +237,8 @@ TEST(TestInjectEject, CreateRemoteThread_LoadLibraryW) {
       });
 }
 
-TEST(TestInjectEject, CreateRemoteThread_LoadLibraryExW) {
+TEST(TestInjectEject, CreateRemoteThread_LoadLibraryExW)
+{
   DoTest_CreateRemoteThread_LoadLibrary(
       [](const nsString& dllPath, const nsCString& dllPathC,
          uintptr_t& aStartAddress, uintptr_t& aThreadParam) {
@@ -248,7 +251,8 @@ TEST(TestInjectEject, CreateRemoteThread_LoadLibraryExW) {
       });
 }
 
-TEST(TestInjectEject, CreateRemoteThread_LoadLibraryExA) {
+TEST(TestInjectEject, CreateRemoteThread_LoadLibraryExA)
+{
   DoTest_CreateRemoteThread_LoadLibrary(
       [](const nsString& dllPath, const nsCString& dllPathC,
          uintptr_t& aStartAddress, uintptr_t& aThreadParam) {

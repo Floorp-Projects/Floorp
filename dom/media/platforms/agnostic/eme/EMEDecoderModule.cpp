@@ -101,12 +101,13 @@ class EMEDecryptor : public MediaDataDecoder,
       RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
 
       mSamplesWaitingForKey->WaitIfKeyNotUsable(sample)
-          ->Then(mTaskQueue, __func__,
-                 [self](const RefPtr<MediaRawData>& aSample) {
-                   self->mKeyRequest.Complete();
-                   self->ThrottleDecode(aSample);
-                 },
-                 [self]() { self->mKeyRequest.Complete(); })
+          ->Then(
+              mTaskQueue, __func__,
+              [self](const RefPtr<MediaRawData>& aSample) {
+                self->mKeyRequest.Complete();
+                self->ThrottleDecode(aSample);
+              },
+              [self]() { self->mKeyRequest.Complete(); })
           ->Track(mKeyRequest);
 
       return p;
@@ -118,12 +119,13 @@ class EMEDecryptor : public MediaDataDecoder,
 
     RefPtr<EMEDecryptor> self = this;
     mThroughputLimiter.Throttle(aSample)
-        ->Then(mTaskQueue, __func__,
-               [self](RefPtr<MediaRawData> aSample) {
-                 self->mThrottleRequest.Complete();
-                 self->AttemptDecode(aSample);
-               },
-               [self]() { self->mThrottleRequest.Complete(); })
+        ->Then(
+            mTaskQueue, __func__,
+            [self](RefPtr<MediaRawData> aSample) {
+              self->mThrottleRequest.Complete();
+              self->AttemptDecode(aSample);
+            },
+            [self]() { self->mThrottleRequest.Complete(); })
         ->Track(mThrottleRequest);
   }
 
@@ -311,24 +313,25 @@ RefPtr<MediaDataDecoder::DecodePromise> EMEMediaDataDecoderProxy::Decode(
   return InvokeAsync(mThread, __func__, [self, this, sample]() {
     RefPtr<DecodePromise> p = mDecodePromise.Ensure(__func__);
     mSamplesWaitingForKey->WaitIfKeyNotUsable(sample)
-        ->Then(mThread, __func__,
-               [self, this](RefPtr<MediaRawData> aSample) {
-                 mKeyRequest.Complete();
+        ->Then(
+            mThread, __func__,
+            [self, this](RefPtr<MediaRawData> aSample) {
+              mKeyRequest.Complete();
 
-                 MediaDataDecoderProxy::Decode(aSample)
-                     ->Then(mThread, __func__,
-                            [self, this](
-                                DecodePromise::ResolveOrRejectValue&& aValue) {
-                              mDecodeRequest.Complete();
-                              mDecodePromise.ResolveOrReject(std::move(aValue),
-                                                             __func__);
-                            })
-                     ->Track(mDecodeRequest);
-               },
-               [self]() {
-                 self->mKeyRequest.Complete();
-                 MOZ_CRASH("Should never get here");
-               })
+              MediaDataDecoderProxy::Decode(aSample)
+                  ->Then(mThread, __func__,
+                         [self,
+                          this](DecodePromise::ResolveOrRejectValue&& aValue) {
+                           mDecodeRequest.Complete();
+                           mDecodePromise.ResolveOrReject(std::move(aValue),
+                                                          __func__);
+                         })
+                  ->Track(mDecodeRequest);
+            },
+            [self]() {
+              self->mKeyRequest.Complete();
+              MOZ_CRASH("Should never get here");
+            })
         ->Track(mKeyRequest);
 
     return p;

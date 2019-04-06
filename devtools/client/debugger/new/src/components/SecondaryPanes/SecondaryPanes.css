@@ -9,7 +9,6 @@
   flex: 1;
   white-space: nowrap;
   --breakpoint-expression-right-clear-space: 36px;
-  --breakpoint-expression-height: 2.4em;
 }
 
 /*
@@ -56,4 +55,9 @@
 .dropdown {
   width: 20em;
   overflow: auto;
+}
+
+.secondary-panes input[type="checkbox"] {
+  margin: 0;
+  margin-inline-end: 4px;
 }

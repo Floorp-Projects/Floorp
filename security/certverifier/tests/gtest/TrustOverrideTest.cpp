@@ -124,24 +124,29 @@ class psm_TrustOverrideTest : public ::testing::Test {
  protected:
   void SetUp() override {
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    ASSERT_TRUE(prefs != nullptr) << "couldn't get nsIPrefBranch";
+    ASSERT_TRUE(prefs != nullptr)
+    << "couldn't get nsIPrefBranch";
 
     // When PSM initializes, it attempts to get some localized strings.
     // As a result, Android flips out if this isn't set.
     nsresult rv = prefs->SetBoolPref("intl.locale.matchOS", true);
-    ASSERT_TRUE(NS_SUCCEEDED(rv)) << "couldn't set pref 'intl.locale.matchOS'";
+    ASSERT_TRUE(NS_SUCCEEDED(rv))
+    << "couldn't set pref 'intl.locale.matchOS'";
 
     nsCOMPtr<nsIX509CertDB> certdb(do_GetService(NS_X509CERTDB_CONTRACTID));
-    ASSERT_TRUE(certdb != nullptr) << "couldn't get certdb";
+    ASSERT_TRUE(certdb != nullptr)
+    << "couldn't get certdb";
   }
 };
 
 TEST_F(psm_TrustOverrideTest, CheckCertDNIsInList) {
   mozilla::UniqueCERTCertificate caObj = CertFromString(kOverrideCaPem);
-  ASSERT_TRUE(caObj != nullptr) << "Should have parsed";
+  ASSERT_TRUE(caObj != nullptr)
+  << "Should have parsed";
   mozilla::UniqueCERTCertificate intObj =
       CertFromString(kOverrideCaIntermediatePem);
-  ASSERT_TRUE(intObj != nullptr) << "Should have parsed";
+  ASSERT_TRUE(intObj != nullptr)
+  << "Should have parsed";
 
   EXPECT_TRUE(CertDNIsInList(caObj.get(), OverrideCaDNs))
       << "CA should be in the DN list";
@@ -151,10 +156,12 @@ TEST_F(psm_TrustOverrideTest, CheckCertDNIsInList) {
 
 TEST_F(psm_TrustOverrideTest, CheckCertSPKIIsInList) {
   mozilla::UniqueCERTCertificate caObj = CertFromString(kOverrideCaPem);
-  ASSERT_TRUE(caObj != nullptr) << "Should have parsed";
+  ASSERT_TRUE(caObj != nullptr)
+  << "Should have parsed";
   mozilla::UniqueCERTCertificate intObj =
       CertFromString(kOverrideCaIntermediatePem);
-  ASSERT_TRUE(intObj != nullptr) << "Should have parsed";
+  ASSERT_TRUE(intObj != nullptr)
+  << "Should have parsed";
 
   EXPECT_TRUE(CertSPKIIsInList(caObj.get(), OverrideCaSPKIs))
       << "CA should be in the SPKI list";

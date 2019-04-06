@@ -2119,7 +2119,9 @@ bool WasmTableObject::getImpl(JSContext* cx, const CallArgs& args) {
       args.rval().set(UnboxAnyRef(table.getAnyRef(index)));
       break;
     }
-    default: { MOZ_CRASH("Unexpected table kind"); }
+    default: {
+      MOZ_CRASH("Unexpected table kind");
+    }
   }
   return true;
 }
@@ -2209,7 +2211,9 @@ bool WasmTableObject::setImpl(JSContext* cx, const CallArgs& args) {
       table.setAnyRef(index, tmp);
       break;
     }
-    default: { MOZ_CRASH("Unexpected table kind"); }
+    default: {
+      MOZ_CRASH("Unexpected table kind");
+    }
   }
 
   args.rval().setUndefined();
@@ -2292,7 +2296,9 @@ bool WasmTableObject::growImpl(JSContext* cx, const CallArgs& args) {
       }
       break;
     }
-    default: { MOZ_CRASH("Unexpected table kind"); }
+    default: {
+      MOZ_CRASH("Unexpected table kind");
+    }
   }
 
   args.rval().setInt32(oldLength);

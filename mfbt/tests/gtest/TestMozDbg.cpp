@@ -102,7 +102,8 @@ void StaticAssertions() {
   Unused << z;
 }
 
-TEST(MozDbg, ObjectValues) {
+TEST(MozDbg, ObjectValues)
+{
   // Test that moves and assignments all operate correctly with MOZ_DBG wrapped
   // around various parts of the expression.
 

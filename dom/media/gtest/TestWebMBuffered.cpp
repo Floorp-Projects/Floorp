@@ -19,7 +19,8 @@ static const uint64_t gTimecodes[] = {66000000,  160000000, 166000000,
                                       200000000, 233000000, 320000000};
 static const int64_t gEndOffsets[] = {501, 772, 1244, 1380, 1543, 2015};
 
-TEST(WebMBuffered, BasicTests) {
+TEST(WebMBuffered, BasicTests)
+{
   ReentrantMonitor dummy("dummy");
   WebMBufferedParser parser(0);
 
@@ -57,7 +58,8 @@ static void ReadFile(const char* aPath, nsTArray<uint8_t>& aBuffer) {
   ASSERT_EQ(r, 0);
 }
 
-TEST(WebMBuffered, RealData) {
+TEST(WebMBuffered, RealData)
+{
   ReentrantMonitor dummy("dummy");
   WebMBufferedParser parser(0);
 
@@ -78,7 +80,8 @@ TEST(WebMBuffered, RealData) {
   }
 }
 
-TEST(WebMBuffered, RealDataAppend) {
+TEST(WebMBuffered, RealDataAppend)
+{
   ReentrantMonitor dummy("dummy");
   WebMBufferedParser parser(0);
   nsTArray<WebMTimeDataOffset> mapping;

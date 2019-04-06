@@ -34,14 +34,15 @@
 .tree-indent {
   display: inline-block;
   width: 12px;
-  margin-inline-start: 5px;
+  margin-inline-start: 3px;
   border-inline-start: 1px solid #a2d1ff;
   flex-shrink: 0;
 }
 
-/* Align with expandables siblings (where we have the arrow) */
-.tree-node[data-expandable="false"] .tree-indent:last-of-type {
-  margin-inline-end: 15px;
+.debugger .tree-indent {
+  width: 16px;
+  margin-inline-start: 0px;
+  border-inline-start: 0;
 }
 
 /* For non expandable root nodes, we don't have .tree-indent elements, so we declare
@@ -62,7 +63,6 @@
   height: 10px;
   border: 0;
   padding: 0;
-  margin-inline-start: 1px;
   margin-inline-end: 4px;
   transform-origin: center center;
   transition: transform 125ms var(--animation-curve);

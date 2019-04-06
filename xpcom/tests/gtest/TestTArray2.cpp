@@ -82,34 +82,42 @@ static bool test_basic_array(ElementType* data, size_t dataLen,
   if (ary.Length() != (oldLen - 1)) return false;
   if (!(ary == ary)) return false;
 
-  if (ary.ApplyIf(extra, []() { return true; }, []() { return false; }))
+  if (ary.ApplyIf(
+          extra, []() { return true; }, []() { return false; }))
     return false;
-  if (ary.ApplyIf(extra, [](size_t) { return true; }, []() { return false; }))
+  if (ary.ApplyIf(
+          extra, [](size_t) { return true; }, []() { return false; }))
     return false;
   // On a non-const array, ApplyIf's first lambda may use either const or non-
   // const element types.
-  if (ary.ApplyIf(extra, [](ElementType&) { return true; },
-                  []() { return false; }))
+  if (ary.ApplyIf(
+          extra, [](ElementType&) { return true; }, []() { return false; }))
     return false;
-  if (ary.ApplyIf(extra, [](const ElementType&) { return true; },
-                  []() { return false; }))
+  if (ary.ApplyIf(
+          extra, [](const ElementType&) { return true; },
+          []() { return false; }))
     return false;
-  if (ary.ApplyIf(extra, [](size_t, ElementType&) { return true; },
-                  []() { return false; }))
+  if (ary.ApplyIf(
+          extra, [](size_t, ElementType&) { return true; },
+          []() { return false; }))
     return false;
-  if (ary.ApplyIf(extra, [](size_t, const ElementType&) { return true; },
-                  []() { return false; }))
+  if (ary.ApplyIf(
+          extra, [](size_t, const ElementType&) { return true; },
+          []() { return false; }))
     return false;
 
-  if (cary.ApplyIf(extra, []() { return true; }, []() { return false; }))
-    if (cary.ApplyIf(extra, [](size_t) { return true; },
-                     []() { return false; }))
+  if (cary.ApplyIf(
+          extra, []() { return true; }, []() { return false; }))
+    if (cary.ApplyIf(
+            extra, [](size_t) { return true; }, []() { return false; }))
       // On a const array, ApplyIf's first lambda must only use const element
       // types.
-      if (cary.ApplyIf(extra, [](const ElementType&) { return true; },
-                       []() { return false; }))
-        if (cary.ApplyIf(extra, [](size_t, const ElementType&) { return true; },
-                         []() { return false; }))
+      if (cary.ApplyIf(
+              extra, [](const ElementType&) { return true; },
+              []() { return false; }))
+        if (cary.ApplyIf(
+                extra, [](size_t, const ElementType&) { return true; },
+                []() { return false; }))
           return false;
 
   size_t index = ary.Length() / 2;
@@ -121,17 +129,19 @@ static bool test_basic_array(ElementType* data, size_t dataLen,
   // ensure proper searching
   if (ary.IndexOf(extra) > ary.LastIndexOf(extra)) return false;
   if (ary.IndexOf(extra, index) != ary.LastIndexOf(extra, index)) return false;
-  if (!ary.ApplyIf(extra,
-                   [&](size_t i, const ElementType& e) {
-                     return i == index && e == extra;
-                   },
-                   []() { return false; }))
+  if (!ary.ApplyIf(
+          extra,
+          [&](size_t i, const ElementType& e) {
+            return i == index && e == extra;
+          },
+          []() { return false; }))
     return false;
-  if (!cary.ApplyIf(extra,
-                    [&](size_t i, const ElementType& e) {
-                      return i == index && e == extra;
-                    },
-                    []() { return false; }))
+  if (!cary.ApplyIf(
+          extra,
+          [&](size_t i, const ElementType& e) {
+            return i == index && e == extra;
+          },
+          []() { return false; }))
     return false;
 
   nsTArray<ElementType> copy(ary);
@@ -148,9 +158,11 @@ static bool test_basic_array(ElementType* data, size_t dataLen,
   ary.Clear();
   if (ary.IndexOf(extra) != ary.NoIndex) return false;
   if (ary.LastIndexOf(extra) != ary.NoIndex) return false;
-  if (ary.ApplyIf(extra, []() { return true; }, []() { return false; }))
+  if (ary.ApplyIf(
+          extra, []() { return true; }, []() { return false; }))
     return false;
-  if (cary.ApplyIf(extra, []() { return true; }, []() { return false; }))
+  if (cary.ApplyIf(
+          extra, []() { return true; }, []() { return false; }))
     return false;
 
   ary.Clear();
@@ -186,22 +198,26 @@ static bool test_basic_array(ElementType* data, size_t dataLen,
   return true;
 }
 
-TEST(TArray, test_int_array) {
+TEST(TArray, test_int_array)
+{
   int data[] = {4, 6, 8, 2, 4, 1, 5, 7, 3};
   ASSERT_TRUE(test_basic_array(data, ArrayLength(data), int(14)));
 }
 
-TEST(TArray, test_int64_array) {
+TEST(TArray, test_int64_array)
+{
   int64_t data[] = {4, 6, 8, 2, 4, 1, 5, 7, 3};
   ASSERT_TRUE(test_basic_array(data, ArrayLength(data), int64_t(14)));
 }
 
-TEST(TArray, test_char_array) {
+TEST(TArray, test_char_array)
+{
   char data[] = {4, 6, 8, 2, 4, 1, 5, 7, 3};
   ASSERT_TRUE(test_basic_array(data, ArrayLength(data), char(14)));
 }
 
-TEST(TArray, test_uint32_array) {
+TEST(TArray, test_uint32_array)
+{
   uint32_t data[] = {4, 6, 8, 2, 4, 1, 5, 7, 3};
   ASSERT_TRUE(test_basic_array(data, ArrayLength(data), uint32_t(14)));
 }
@@ -238,7 +254,8 @@ class Object {
   uint32_t mNum;
 };
 
-TEST(TArray, test_object_array) {
+TEST(TArray, test_object_array)
+{
   nsTArray<Object> objArray;
   const char kdata[] = "hello world";
   size_t i;
@@ -293,12 +310,14 @@ static nsTArray<int> returns_by_value() {
   return result;
 }
 
-TEST(TArray, test_return_by_value) {
+TEST(TArray, test_return_by_value)
+{
   nsTArray<int> result = returns_by_value();
   ASSERT_TRUE(true);  // This is just a compilation test.
 }
 
-TEST(TArray, test_move_array) {
+TEST(TArray, test_move_array)
+{
   nsTArray<Countable> countableArray;
   uint32_t i;
   for (i = 0; i < 4; ++i) {
@@ -414,7 +433,8 @@ TEST(TArray, test_move_array) {
 
 //----
 
-TEST(TArray, test_string_array) {
+TEST(TArray, test_string_array)
+{
   nsTArray<nsCString> strArray;
   const char kdata[] = "hello world";
   size_t i;
@@ -471,7 +491,8 @@ class nsFileNameComparator {
   }
 };
 
-TEST(TArray, test_comptr_array) {
+TEST(TArray, test_comptr_array)
+{
   FilePointer tmpDir;
   NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(tmpDir));
   ASSERT_TRUE(tmpDir);
@@ -487,9 +508,9 @@ TEST(TArray, test_comptr_array) {
   }
 
   ASSERT_EQ(fileArray.IndexOf(kNames[1], 0, nsFileNameComparator()), size_t(1));
-  ASSERT_TRUE(fileArray.ApplyIf(kNames[1], 0, nsFileNameComparator(),
-                                [](size_t i) { return i == 1; },
-                                []() { return false; }));
+  ASSERT_TRUE(fileArray.ApplyIf(
+      kNames[1], 0, nsFileNameComparator(), [](size_t i) { return i == 1; },
+      []() { return false; }));
 
   // It's unclear what 'operator<' means for nsCOMPtr, but whatever...
   ASSERT_TRUE(
@@ -511,7 +532,8 @@ class RefcountedObject {
   int32_t rc;
 };
 
-TEST(TArray, test_refptr_array) {
+TEST(TArray, test_refptr_array)
+{
   nsTArray<RefPtr<RefcountedObject> > objArray;
 
   RefcountedObject* a = new RefcountedObject();
@@ -538,7 +560,8 @@ TEST(TArray, test_refptr_array) {
 
 //----
 
-TEST(TArray, test_ptrarray) {
+TEST(TArray, test_ptrarray)
+{
   nsTArray<uint32_t*> ary;
   ASSERT_EQ(ary.SafeElementAt(0), nullptr);
   ASSERT_EQ(ary.SafeElementAt(1000), nullptr);
@@ -566,7 +589,8 @@ TEST(TArray, test_ptrarray) {
 // This test relies too heavily on the existence of DebugGetHeader to be
 // useful in non-debug builds.
 #ifdef DEBUG
-TEST(TArray, test_autoarray) {
+TEST(TArray, test_autoarray)
+{
   uint32_t data[] = {4, 6, 8, 2, 4, 1, 5, 7, 3};
   AutoTArray<uint32_t, MOZ_ARRAY_LENGTH(data)> array;
 
@@ -622,7 +646,8 @@ TEST(TArray, test_autoarray) {
 // IndexOf used to potentially scan beyond the end of the array.  Test for
 // this incorrect behavior by adding a value (5), removing it, then seeing
 // if IndexOf finds it.
-TEST(TArray, test_indexof) {
+TEST(TArray, test_indexof)
+{
   nsTArray<int> array;
   array.AppendElement(0);
   // add and remove the 5
@@ -631,8 +656,8 @@ TEST(TArray, test_indexof) {
   // we should not find the 5!
   auto no_index = array.NoIndex;  // Fixes gtest compilation error.
   ASSERT_EQ(array.IndexOf(5, 1), no_index);
-  ASSERT_FALSE(
-      array.ApplyIf(5, 1, []() { return true; }, []() { return false; }));
+  ASSERT_FALSE(array.ApplyIf(
+      5, 1, []() { return true; }, []() { return false; }));
 }
 
 //----
@@ -685,7 +710,8 @@ static bool is_heap(const Array& ary, size_t len) {
     }                                                        \
   } while (0)
 
-TEST(TArray, test_swap) {
+TEST(TArray, test_swap)
+{
   // Test nsTArray::SwapElements.  Unfortunately there are many cases.
   int data1[] = {8, 6, 7, 5};
   int data2[] = {3, 0, 9};
@@ -911,7 +937,8 @@ TEST(TArray, test_swap) {
 
 // Bug 1171296: Disabled on andoid due to crashes.
 #if !defined(ANDROID)
-TEST(TArray, test_fallible) {
+TEST(TArray, test_fallible)
+{
   // Test that FallibleTArray works properly; that is, it never OOMs, but
   // instead eventually returns false.
   //
@@ -953,12 +980,14 @@ TEST(TArray, test_fallible) {
     }
   }
 
-  ASSERT_TRUE(oomed) << "Didn't OOM or crash?  nsTArray::SetCapacity"
-                        "must be lying.";
+  ASSERT_TRUE(oomed)
+  << "Didn't OOM or crash?  nsTArray::SetCapacity"
+     "must be lying.";
 }
 #endif
 
-TEST(TArray, test_conversion_operator) {
+TEST(TArray, test_conversion_operator)
+{
   FallibleTArray<int> f;
   const FallibleTArray<int> fconst;
 
@@ -1002,7 +1031,8 @@ struct BufAccessor : public T {
   void* GetHdr() { return T::mHdr; }
 };
 
-TEST(TArray, test_SetLengthAndRetainStorage_no_ctor) {
+TEST(TArray, test_SetLengthAndRetainStorage_no_ctor)
+{
   // 1050 because sizeof(int)*1050 is more than a page typically.
   const int N = 1050;
   FallibleTArray<int> f;
@@ -1104,7 +1134,8 @@ struct IntComparator {
   bool LessThan(int aLeft, int aRight) const { return aLeft < aRight; }
 };
 
-TEST(TArray, test_comparator_objects) {
+TEST(TArray, test_comparator_objects)
+{
   ASSERT_TRUE(TestCompareMethods(IntComparator()));
   ASSERT_TRUE(
       TestCompareMethods([](int aLeft, int aRight) { return aLeft - aRight; }));
@@ -1114,7 +1145,8 @@ struct Big {
   uint64_t size[40] = {};
 };
 
-TEST(TArray, test_AutoTArray_SwapElements) {
+TEST(TArray, test_AutoTArray_SwapElements)
+{
   AutoTArray<Big, 40> oneArray;
   AutoTArray<Big, 40> another;
 

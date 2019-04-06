@@ -486,7 +486,9 @@ bool ComputeColorMatrix(const ColorMatrixAttributes& aMatrixAttributes,
       break;
     }
 
-    default: { return false; }
+    default: {
+      return false;
+    }
   }
 
   return !ArrayEqual(aOutMatrix, identityMatrix, 20);

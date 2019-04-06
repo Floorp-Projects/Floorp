@@ -866,14 +866,14 @@ bool Debugger::hasAnyLiveHooks(JSRuntime* rt) const {
 ResumeMode Debugger::slowPathOnEnterFrame(JSContext* cx,
                                           AbstractFramePtr frame) {
   RootedValue rval(cx);
-  ResumeMode resumeMode = dispatchHook(cx,
-                                       [frame](Debugger* dbg) -> bool {
-                                         return dbg->observesFrame(frame) &&
-                                                dbg->observesEnterFrame();
-                                       },
-                                       [&](Debugger* dbg) -> ResumeMode {
-                                         return dbg->fireEnterFrame(cx, &rval);
-                                       });
+  ResumeMode resumeMode = dispatchHook(
+      cx,
+      [frame](Debugger* dbg) -> bool {
+        return dbg->observesFrame(frame) && dbg->observesEnterFrame();
+      },
+      [&](Debugger* dbg) -> ResumeMode {
+        return dbg->fireEnterFrame(cx, &rval);
+      });
 
   switch (resumeMode) {
     case ResumeMode::Continue:

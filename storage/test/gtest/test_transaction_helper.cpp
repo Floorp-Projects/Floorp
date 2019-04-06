@@ -20,7 +20,8 @@ bool has_transaction(mozIStorageConnection* aDB) {
  * This file tests our Transaction helper in mozStorageHelper.h.
  */
 
-TEST(storage_transaction_helper, Commit) {
+TEST(storage_transaction_helper, Commit)
+{
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // Create a table in a transaction, call Commit, and make sure that it does
@@ -39,7 +40,8 @@ TEST(storage_transaction_helper, Commit) {
   do_check_true(exists);
 }
 
-TEST(storage_transaction_helper, Rollback) {
+TEST(storage_transaction_helper, Rollback)
+{
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // Create a table in a transaction, call Rollback, and make sure that it does
@@ -58,7 +60,8 @@ TEST(storage_transaction_helper, Rollback) {
   do_check_false(exists);
 }
 
-TEST(storage_transaction_helper, AutoCommit) {
+TEST(storage_transaction_helper, AutoCommit)
+{
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // Create a table in a transaction, and make sure that it exists after the
@@ -76,7 +79,8 @@ TEST(storage_transaction_helper, AutoCommit) {
   do_check_true(exists);
 }
 
-TEST(storage_transaction_helper, AutoRollback) {
+TEST(storage_transaction_helper, AutoRollback)
+{
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // Create a table in a transaction, and make sure that it does not exists
@@ -95,7 +99,8 @@ TEST(storage_transaction_helper, AutoRollback) {
   do_check_false(exists);
 }
 
-TEST(storage_transaction_helper, null_database_connection) {
+TEST(storage_transaction_helper, null_database_connection)
+{
   // We permit the use of the Transaction helper when passing a null database
   // in, so we need to make sure this still works without crashing.
   mozStorageTransaction transaction(nullptr, false);
@@ -103,7 +108,8 @@ TEST(storage_transaction_helper, null_database_connection) {
   do_check_true(NS_SUCCEEDED(transaction.Rollback()));
 }
 
-TEST(storage_transaction_helper, async_Commit) {
+TEST(storage_transaction_helper, async_Commit)
+{
   HookSqliteMutex hook;
 
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());

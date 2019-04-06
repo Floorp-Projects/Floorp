@@ -6450,24 +6450,25 @@ bool HTMLMediaElement::TryRemoveMediaKeysAssociation() {
   if (mDecoder) {
     RefPtr<HTMLMediaElement> self = this;
     mDecoder->SetCDMProxy(nullptr)
-        ->Then(mAbstractMainThread, __func__,
-               [self]() {
-                 self->mSetCDMRequest.Complete();
+        ->Then(
+            mAbstractMainThread, __func__,
+            [self]() {
+              self->mSetCDMRequest.Complete();
 
-                 self->RemoveMediaKeys();
-                 if (self->AttachNewMediaKeys()) {
-                   // No incoming MediaKeys object or MediaDecoder is not
-                   // created yet.
-                   self->MakeAssociationWithCDMResolved();
-                 }
-               },
-               [self](const MediaResult& aResult) {
-                 self->mSetCDMRequest.Complete();
-                 // 5.2.4 If the preceding step failed, let this object's
-                 // attaching media keys value be false and reject promise with
-                 // a new DOMException whose name is the appropriate error name.
-                 self->SetCDMProxyFailure(aResult);
-               })
+              self->RemoveMediaKeys();
+              if (self->AttachNewMediaKeys()) {
+                // No incoming MediaKeys object or MediaDecoder is not
+                // created yet.
+                self->MakeAssociationWithCDMResolved();
+              }
+            },
+            [self](const MediaResult& aResult) {
+              self->mSetCDMRequest.Complete();
+              // 5.2.4 If the preceding step failed, let this object's
+              // attaching media keys value be false and reject promise with
+              // a new DOMException whose name is the appropriate error name.
+              self->SetCDMProxyFailure(aResult);
+            })
         ->Track(mSetCDMRequest);
     return false;
   }
@@ -6523,15 +6524,16 @@ bool HTMLMediaElement::TryMakeAssociationWithCDM(CDMProxy* aProxy) {
     // HTMLMediaElement should resolve or reject the DOM promise.
     RefPtr<HTMLMediaElement> self = this;
     mDecoder->SetCDMProxy(aProxy)
-        ->Then(mAbstractMainThread, __func__,
-               [self]() {
-                 self->mSetCDMRequest.Complete();
-                 self->MakeAssociationWithCDMResolved();
-               },
-               [self](const MediaResult& aResult) {
-                 self->mSetCDMRequest.Complete();
-                 self->SetCDMProxyFailure(aResult);
-               })
+        ->Then(
+            mAbstractMainThread, __func__,
+            [self]() {
+              self->mSetCDMRequest.Complete();
+              self->MakeAssociationWithCDMResolved();
+            },
+            [self](const MediaResult& aResult) {
+              self->mSetCDMRequest.Complete();
+              self->SetCDMProxyFailure(aResult);
+            })
         ->Track(mSetCDMRequest);
     return false;
   }

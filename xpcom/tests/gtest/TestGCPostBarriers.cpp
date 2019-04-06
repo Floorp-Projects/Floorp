@@ -112,7 +112,8 @@ static void CreateGlobalAndRunTest(JSContext* cx) {
   JS::LeaveRealm(cx, oldRealm);
 }
 
-TEST(GCPostBarriers, nsTArray) {
+TEST(GCPostBarriers, nsTArray)
+{
   CycleCollectedJSContext* ccjscx = CycleCollectedJSContext::Get();
   ASSERT_TRUE(ccjscx != nullptr);
   JSContext* cx = ccjscx->Context();

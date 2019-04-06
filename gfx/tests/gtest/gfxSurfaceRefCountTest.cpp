@@ -141,7 +141,8 @@ static int TestExistingSurface() {
   return failures;
 }
 
-TEST(Gfx, SurfaceRefCount) {
+TEST(Gfx, SurfaceRefCount)
+{
   int fail;
 
   fail = TestNewSurface();

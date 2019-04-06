@@ -74,49 +74,50 @@ TEST_F(TelemetryTestFixture, RecordEventNative) {
 
   ASSERT_TRUE(!EventPresent(cx.GetJSContext(), eventsSnapshot, category, method,
                             object))
-      << "Test event must not be present when recorded before enabled.";
+  << "Test event must not be present when recorded before enabled.";
   ASSERT_TRUE(EventPresent(cx.GetJSContext(), eventsSnapshot, category, method2,
                            object))
-      << "Test event must be present.";
+  << "Test event must be present.";
   ASSERT_TRUE(EventPresent(cx.GetJSContext(), eventsSnapshot, category, method,
                            object2))
-      << "Test event with value and extra must be present.";
+  << "Test event with value and extra must be present.";
   ASSERT_TRUE(EventPresent(cx.GetJSContext(), eventsSnapshot, category, method2,
                            object2))
-      << "Test event with truncated value and extra must be present.";
+  << "Test event with truncated value and extra must be present.";
 
   // Ensure that the truncations happened appropriately.
   JSContext* aCx = cx.GetJSContext();
   JS::RootedObject arrayObj(aCx, &eventsSnapshot.toObject());
   JS::Rooted<JS::Value> eventRecord(aCx);
   ASSERT_TRUE(JS_GetElement(aCx, arrayObj, 2, &eventRecord))
-      << "Must be able to get record.";
+  << "Must be able to get record.";
   JS::RootedObject recordArray(aCx, &eventRecord.toObject());
   uint32_t recordLength;
   ASSERT_TRUE(JS_GetArrayLength(aCx, recordArray, &recordLength))
-      << "Event record array must have length.";
-  ASSERT_TRUE(recordLength == 6) << "Event record must have 6 elements.";
+  << "Event record array must have length.";
+  ASSERT_TRUE(recordLength == 6)
+  << "Event record must have 6 elements.";
 
   JS::Rooted<JS::Value> str(aCx);
   nsAutoJSString jsStr;
   // The value string is at index 4
   ASSERT_TRUE(JS_GetElement(aCx, recordArray, 4, &str))
-      << "Must be able to get value.";
+  << "Must be able to get value.";
   ASSERT_TRUE(jsStr.init(aCx, str))
-      << "Value must be able to be init'd to a jsstring.";
+  << "Value must be able to be init'd to a jsstring.";
   ASSERT_EQ(NS_ConvertUTF16toUTF8(jsStr).Length(), (uint32_t)80)
       << "Value must have been truncated to 80 bytes.";
 
   // Extra is at index 5
   JS::Rooted<JS::Value> obj(aCx);
   ASSERT_TRUE(JS_GetElement(aCx, recordArray, 5, &obj))
-      << "Must be able to get extra.";
+  << "Must be able to get extra.";
   JS::RootedObject extraObj(aCx, &obj.toObject());
   JS::Rooted<JS::Value> extraVal(aCx);
   ASSERT_TRUE(JS_GetProperty(aCx, extraObj, extraKey.get(), &extraVal))
-      << "Must be able to get the extra key's value.";
+  << "Must be able to get the extra key's value.";
   ASSERT_TRUE(jsStr.init(aCx, extraVal))
-      << "Extra must be able to be init'd to a jsstring.";
+  << "Extra must be able to be init'd to a jsstring.";
   ASSERT_EQ(NS_ConvertUTF16toUTF8(jsStr).Length(), (uint32_t)80)
       << "Extra must have been truncated to 80 bytes.";
 }

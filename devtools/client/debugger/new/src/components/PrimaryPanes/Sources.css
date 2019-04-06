@@ -118,10 +118,6 @@
   height: 100%;
 }
 
-.tree-indent {
-  border-inline-start: 0 none;
-}
-
 .source-outline-tabs {
   font-size: 12px;
   width: 100%;

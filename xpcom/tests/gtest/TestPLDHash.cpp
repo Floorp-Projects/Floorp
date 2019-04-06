@@ -104,7 +104,8 @@ static void InitCapacityOk_EntrySizeTooBig() {
   PLDHashTable t(PLDHashTable::StubOps(), 256);
 }
 
-TEST(PLDHashTableTest, InitCapacityOk) {
+TEST(PLDHashTableTest, InitCapacityOk)
+{
   // Try the largest allowed capacity.  With kMaxCapacity==1<<26, this
   // would allocate (if we added an element) 0.5GB of entry store on 32-bit
   // platforms and 1GB on 64-bit platforms.
@@ -134,7 +135,8 @@ TEST(PLDHashTableTest, InitCapacityOk) {
   // platforms, so such a test wouldn't be reliable.
 }
 
-TEST(PLDHashTableTest, LazyStorage) {
+TEST(PLDHashTableTest, LazyStorage)
+{
   PLDHashTable t(PLDHashTable::StubOps(), sizeof(PLDHashEntryStub));
 
   // PLDHashTable allocates entry storage lazily. Check that all the non-add
@@ -174,7 +176,8 @@ static const PLDHashTableOps trivialOps = {
     TrivialHash, PLDHashTable::MatchEntryStub, PLDHashTable::MoveEntryStub,
     PLDHashTable::ClearEntryStub, TrivialInitEntry};
 
-TEST(PLDHashTableTest, MoveSemantics) {
+TEST(PLDHashTableTest, MoveSemantics)
+{
   PLDHashTable t1(&trivialOps, sizeof(PLDHashEntryStub));
   t1.Add((const void*)88);
   PLDHashTable t2(&trivialOps, sizeof(PLDHashEntryStub));
@@ -211,7 +214,8 @@ TEST(PLDHashTableTest, MoveSemantics) {
   PLDHashTable t10(std::move(t9));  // new table constructed with inited
 }
 
-TEST(PLDHashTableTest, Clear) {
+TEST(PLDHashTableTest, Clear)
+{
   PLDHashTable t1(&trivialOps, sizeof(PLDHashEntryStub));
 
   t1.Clear();
@@ -239,7 +243,8 @@ TEST(PLDHashTableTest, Clear) {
   ASSERT_EQ(t1.EntryCount(), 0u);
 }
 
-TEST(PLDHashTableTest, Iterator) {
+TEST(PLDHashTableTest, Iterator)
+{
   PLDHashTable t(&trivialOps, sizeof(PLDHashEntryStub));
 
   // Explicitly test the move constructor. We do this because, due to copy
@@ -335,7 +340,8 @@ TEST(PLDHashTableTest, Iterator) {
 //
 // Also, it's slow, and so should always be last.
 #ifdef HAVE_64BIT_BUILD
-TEST(PLDHashTableTest, GrowToMaxCapacity) {
+TEST(PLDHashTableTest, GrowToMaxCapacity)
+{
   // This is infallible.
   PLDHashTable* t =
       new PLDHashTable(&trivialOps, sizeof(PLDHashEntryStub), 128);

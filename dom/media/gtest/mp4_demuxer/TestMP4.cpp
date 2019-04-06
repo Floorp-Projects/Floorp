@@ -51,7 +51,8 @@ static intptr_t vector_reader(uint8_t* buffer, uintptr_t size, void* userdata) {
   return length;
 }
 
-TEST(rust, MP4MetadataEmpty) {
+TEST(rust, MP4MetadataEmpty)
+{
   Mp4parseStatus rv;
   Mp4parseIo io;
 
@@ -105,7 +106,8 @@ TEST(rust, MP4MetadataEmpty) {
   mp4parse_free(context);
 }
 
-TEST(rust, MP4Metadata) {
+TEST(rust, MP4Metadata)
+{
   FILE* f = fopen("street.mp4", "rb");
   ASSERT_TRUE(f != nullptr);
   // Read just the moov header to work around the parser

@@ -8,7 +8,8 @@
 #include "nsString.h"
 #include "gtest/gtest.h"
 
-TEST(Encoding, GoodSurrogatePair) {
+TEST(Encoding, GoodSurrogatePair)
+{
   // When this string is decoded, the surrogate pair is U+10302 and the rest of
   // the string is specified by indexes 2 onward.
   const char16_t goodPairData[] = {0xD800, 0xDF02, 0x65, 0x78, 0x0};
@@ -31,7 +32,8 @@ TEST(Encoding, GoodSurrogatePair) {
   free(goodPair8);
 }
 
-TEST(Encoding, BackwardsSurrogatePair) {
+TEST(Encoding, BackwardsSurrogatePair)
+{
   // When this string is decoded, the two surrogates are wrongly ordered and
   // must each be interpreted as U+FFFD.
   const char16_t backwardsPairData[] = {0xDDDD, 0xD863, 0x65, 0x78, 0x0};
@@ -55,7 +57,8 @@ TEST(Encoding, BackwardsSurrogatePair) {
   free(backwardsPair8);
 }
 
-TEST(Encoding, MalformedUTF16OrphanHighSurrogate) {
+TEST(Encoding, MalformedUTF16OrphanHighSurrogate)
+{
   // When this string is decoded, the high surrogate should be replaced and the
   // rest of the string is specified by indexes 1 onward.
   const char16_t highSurrogateData[] = {0xD863, 0x74, 0x65, 0x78, 0x74, 0x0};
@@ -79,7 +82,8 @@ TEST(Encoding, MalformedUTF16OrphanHighSurrogate) {
   free(highSurrogate8);
 }
 
-TEST(Encoding, MalformedUTF16OrphanLowSurrogate) {
+TEST(Encoding, MalformedUTF16OrphanLowSurrogate)
+{
   // When this string is decoded, the low surrogate should be replaced and the
   // rest of the string is specified by indexes 1 onward.
   const char16_t lowSurrogateData[] = {0xDDDD, 0x74, 0x65, 0x78, 0x74, 0x0};

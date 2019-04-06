@@ -467,13 +467,6 @@ MOZ_ALWAYS_INLINE void NativeObject::setSlotWithType(JSContext* cx,
   AddTypePropertyId(cx, this, shape->propid(), value);
 }
 
-inline void NativeObject::updateShapeAfterMovingGC() {
-  Shape* shape = this->shape();
-  if (IsForwarded(shape)) {
-    shape_.unsafeSet(Forwarded(shape));
-  }
-}
-
 inline bool NativeObject::isInWholeCellBuffer() const {
   const gc::TenuredCell* cell = &asTenured();
   gc::ArenaCellSet* cells = cell->arena()->bufferedCells();

@@ -26,6 +26,7 @@
 #include "js/CharacterEncoding.h"
 #include "js/PropertySpec.h"
 #include "js/UniquePtr.h"
+#include "js/Warnings.h"  // JS::{,Set}WarningReporter
 #include "js/Wrapper.h"
 #include "util/StringBuffer.h"
 #include "vm/ErrorObject.h"

@@ -41,7 +41,8 @@ struct Value {
   int32_t mSerial;
 };
 
-TEST(ImageCopyOnWrite, Read) {
+TEST(ImageCopyOnWrite, Read)
+{
   ValueStats stats;
 
   {
@@ -74,7 +75,8 @@ TEST(ImageCopyOnWrite, Read) {
   EXPECT_EQ(1, stats.mFrees);
 }
 
-TEST(ImageCopyOnWrite, RecursiveRead) {
+TEST(ImageCopyOnWrite, RecursiveRead)
+{
   ValueStats stats;
 
   {
@@ -121,7 +123,8 @@ TEST(ImageCopyOnWrite, RecursiveRead) {
   EXPECT_EQ(1, stats.mFrees);
 }
 
-TEST(ImageCopyOnWrite, Write) {
+TEST(ImageCopyOnWrite, Write)
+{
   ValueStats stats;
 
   {
@@ -155,7 +158,8 @@ TEST(ImageCopyOnWrite, Write) {
   EXPECT_EQ(1, stats.mFrees);
 }
 
-TEST(ImageCopyOnWrite, WriteRecursive) {
+TEST(ImageCopyOnWrite, WriteRecursive)
+{
   ValueStats stats;
 
   {

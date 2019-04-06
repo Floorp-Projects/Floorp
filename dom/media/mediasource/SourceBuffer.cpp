@@ -328,12 +328,13 @@ void SourceBuffer::RangeRemoval(double aStart, double aEnd) {
   RefPtr<SourceBuffer> self = this;
   mTrackBuffersManager
       ->RangeRemoval(TimeUnit::FromSeconds(aStart), TimeUnit::FromSeconds(aEnd))
-      ->Then(mAbstractMainThread, __func__,
-             [self](bool) {
-               self->mPendingRemoval.Complete();
-               self->StopUpdating();
-             },
-             []() { MOZ_ASSERT(false); })
+      ->Then(
+          mAbstractMainThread, __func__,
+          [self](bool) {
+            self->mPendingRemoval.Complete();
+            self->StopUpdating();
+          },
+          []() { MOZ_ASSERT(false); })
       ->Track(mPendingRemoval);
 }
 

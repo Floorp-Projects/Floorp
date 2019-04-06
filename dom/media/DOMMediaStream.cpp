@@ -1055,11 +1055,12 @@ void DOMMediaStream::BlockPlaybackTrack(TrackPort* aTrack) {
   RefPtr<DOMMediaStream> that = this;
   aTrack
       ->BlockSourceTrackId(aTrack->GetTrack()->mTrackID, BlockingMode::CREATION)
-      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-             [this, that](bool aIgnore) { NotifyPlaybackTrackBlocked(); },
-             [](const nsresult& aIgnore) {
-               NS_ERROR("Could not remove track from MSG");
-             });
+      ->Then(
+          GetCurrentThreadSerialEventTarget(), __func__,
+          [this, that](bool aIgnore) { NotifyPlaybackTrackBlocked(); },
+          [](const nsresult& aIgnore) {
+            NS_ERROR("Could not remove track from MSG");
+          });
 }
 
 void DOMMediaStream::NotifyPlaybackTrackBlocked() {

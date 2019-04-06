@@ -33,9 +33,6 @@ using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 
-// the value of this variable is never used - we use its address as a sentinel
-static uint32_t zero_methods_descriptor;
-
 bool AutoScriptEvaluate::StartEvaluating(HandleObject scope) {
   MOZ_ASSERT(!mEvaluated,
              "AutoScriptEvaluate::Evaluate should only be called once");
@@ -111,50 +108,20 @@ already_AddRefed<nsXPCWrappedJSClass> nsXPCWrappedJSClass::GetNewOrUsed(
     const nsXPTInterfaceInfo* info = nsXPTInterfaceInfo::ByIID(aIID);
     if (info) {
       if (!info->IsBuiltinClass() && nsXPConnect::IsISupportsDescendant(info)) {
-        clasp = new nsXPCWrappedJSClass(aIID, info);
-        if (!clasp->mDescriptors) {
-          clasp = nullptr;
-        }
+        clasp = new nsXPCWrappedJSClass(info);
       }
     }
   }
   return clasp.forget();
 }
 
-nsXPCWrappedJSClass::nsXPCWrappedJSClass(REFNSIID aIID,
-                                         const nsXPTInterfaceInfo* aInfo)
-    : mRuntime(nsXPConnect::GetRuntimeInstance()),
-      mInfo(aInfo),
-      mIID(aIID),
-      mDescriptors(nullptr) {
-  mRuntime->GetWrappedJSClassMap()->Add(this);
-
-  uint16_t methodCount = mInfo->MethodCount();
-  if (methodCount) {
-    int wordCount = (methodCount / 32) + 1;
-    if (nullptr != (mDescriptors = new uint32_t[wordCount])) {
-      int i;
-      // init flags to 0;
-      for (i = wordCount - 1; i >= 0; i--) {
-        mDescriptors[i] = 0;
-      }
-
-      for (i = 0; i < methodCount; i++) {
-        SetReflectable(i, XPCConvert::IsMethodReflectable(mInfo->Method(i)));
-      }
-    }
-  } else {
-    mDescriptors = &zero_methods_descriptor;
-  }
+nsXPCWrappedJSClass::nsXPCWrappedJSClass(const nsXPTInterfaceInfo* aInfo)
+    : mInfo(aInfo) {
+  XPCJSRuntime::Get()->GetWrappedJSClassMap()->Add(this);
 }
 
 nsXPCWrappedJSClass::~nsXPCWrappedJSClass() {
-  if (mDescriptors && mDescriptors != &zero_methods_descriptor) {
-    delete[] mDescriptors;
-  }
-  if (mRuntime) {
-    mRuntime->GetWrappedJSClassMap()->Remove(this);
-  }
+  XPCJSRuntime::Get()->GetWrappedJSClassMap()->Remove(this);
 }
 
 JSObject* nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
@@ -191,7 +158,8 @@ JSObject* nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
   }
 
   // check upfront for the existence of the function property
-  HandleId funid = mRuntime->GetStringID(XPCJSContext::IDX_QUERY_INTERFACE);
+  HandleId funid =
+      XPCJSRuntime::Get()->GetStringID(XPCJSContext::IDX_QUERY_INTERFACE);
   if (!JS_GetPropertyById(cx, jsobj, funid, &fun) || fun.isPrimitive()) {
     return nullptr;
   }
@@ -804,7 +772,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
 
   JSContext* cx = ccx.GetJSContext();
 
-  if (!cx || !IsReflectable(methodIndex)) {
+  if (!cx || !info->IsReflectable()) {
     return NS_ERROR_FAILURE;
   }
 
@@ -845,6 +813,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
   RootedValueVector args(cx);
   AutoScriptEvaluate scriptEval(cx);
 
+  XPCJSRuntime* xpcrt = XPCJSRuntime::Get();
   XPCJSContext* xpccx = ccx.GetContext();
   AutoSavePendingResult apr(xpccx);
 
@@ -954,7 +923,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
 
       if (param.IsIn()) {
         if (!JS_SetPropertyById(cx, out_obj,
-                                mRuntime->GetStringID(XPCJSContext::IDX_VALUE),
+                                xpcrt->GetStringID(XPCJSContext::IDX_VALUE),
                                 val)) {
           goto pre_call_clean_up;
         }
@@ -1049,8 +1018,9 @@ pre_call_clean_up:
     } else {
       RootedObject obj(cx, &argv[i].toObject());
       if (!JS_GetPropertyById(
-              cx, obj, mRuntime->GetStringID(XPCJSContext::IDX_VALUE), &val))
+              cx, obj, xpcrt->GetStringID(XPCJSContext::IDX_VALUE), &val)) {
         break;
+      }
     }
 
     // setup allocator and/or iid
@@ -1090,8 +1060,9 @@ pre_call_clean_up:
       } else {
         RootedObject obj(cx, &argv[i].toObject());
         if (!JS_GetPropertyById(
-                cx, obj, mRuntime->GetStringID(XPCJSContext::IDX_VALUE), &val))
+                cx, obj, xpcrt->GetStringID(XPCJSContext::IDX_VALUE), &val)) {
           break;
+        }
       }
 
       // setup allocator and/or iid
@@ -1140,7 +1111,7 @@ nsXPCWrappedJSClass::DebugDump(int16_t depth) {
   XPC_LOG_INDENT();
   const char* name = mInfo->Name();
   XPC_LOG_ALWAYS(("interface name is %s", name));
-  char* iid = mIID.ToString();
+  char* iid = mInfo->IID().ToString();
   XPC_LOG_ALWAYS(("IID number is %s", iid ? iid : "invalid"));
   if (iid) {
     free(iid);
@@ -1155,13 +1126,13 @@ nsXPCWrappedJSClass::DebugDump(int16_t depth) {
     XPC_LOG_ALWAYS(("ConstantCount = %d", mInfo->ConstantCount()));
     XPC_LOG_OUTDENT();
   }
-  XPC_LOG_ALWAYS(("mRuntime @ %p", mRuntime));
-  XPC_LOG_ALWAYS(("mDescriptors @ %p count = %d", mDescriptors, methodCount));
-  if (depth && mDescriptors && methodCount) {
+  XPC_LOG_ALWAYS(("method count = %d", methodCount));
+  if (depth && methodCount) {
     depth--;
     XPC_LOG_INDENT();
     for (uint16_t i = 0; i < methodCount; i++) {
-      XPC_LOG_ALWAYS(("Method %d is %s%s", i, IsReflectable(i) ? "" : " NOT ",
+      XPC_LOG_ALWAYS(("Method %d is %s%s", i,
+                      mInfo->Method(i).IsReflectable() ? "" : " NOT ",
                       "reflectable"));
     }
     XPC_LOG_OUTDENT();

@@ -185,7 +185,8 @@ template <typename Iterator, typename Node, typename PostAction>
 auto ForEachNodePostOrder(Node aRoot, const PostAction& aPostAction) ->
     typename EnableIf<IsSame<decltype(aPostAction(aRoot)), void>::value,
                       void>::Type {
-  ForEachNode<Iterator>(aRoot, [](Node aNode) {}, aPostAction);
+  ForEachNode<Iterator>(
+      aRoot, [](Node aNode) {}, aPostAction);
 }
 
 /*

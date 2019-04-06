@@ -13,6 +13,7 @@
 #include "jsexn.h"
 #include "jsfriendapi.h"
 
+#include "js/Warnings.h"  // JS::WarningReporter
 #include "vm/GlobalObject.h"
 #include "vm/JSContext.h"
 

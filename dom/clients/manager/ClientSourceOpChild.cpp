@@ -56,15 +56,16 @@ void ClientSourceOpChild::DoSourceOp(Method aMethod, const Args& aArgs) {
   // If the ClientSource is doing something async it may throw away the
   // promise on its side if the global is closed.
   promise
-      ->Then(target, __func__,
-             [this, promise](const mozilla::dom::ClientOpResult& aResult) {
-               mPromiseRequestHolder.Complete();
-               Unused << PClientSourceOpChild::Send__delete__(this, aResult);
-             },
-             [this, promise](nsresult aRv) {
-               mPromiseRequestHolder.Complete();
-               Unused << PClientSourceOpChild::Send__delete__(this, aRv);
-             })
+      ->Then(
+          target, __func__,
+          [this, promise](const mozilla::dom::ClientOpResult& aResult) {
+            mPromiseRequestHolder.Complete();
+            Unused << PClientSourceOpChild::Send__delete__(this, aResult);
+          },
+          [this, promise](nsresult aRv) {
+            mPromiseRequestHolder.Complete();
+            Unused << PClientSourceOpChild::Send__delete__(this, aRv);
+          })
       ->Track(mPromiseRequestHolder);
 }
 

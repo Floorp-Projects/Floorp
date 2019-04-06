@@ -131,8 +131,9 @@ class PipeMap {
     DCHECK(fd != -1);
 
     ChannelToFDMap::const_iterator i = map_.find(channel_id);
-    CHECK(i == map_.end()) << "Creating second IPC server for '" << channel_id
-                           << "' while first still exists";
+    CHECK(i == map_.end())
+    << "Creating second IPC server for '" << channel_id
+    << "' while first still exists";
     map_[channel_id] = fd;
   }
 

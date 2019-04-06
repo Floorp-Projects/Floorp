@@ -12,46 +12,54 @@
 #include "nsIX509CertList.h"
 #include "nsServiceManagerUtils.h"
 
-TEST(psm_CertDB, Test) {
+TEST(psm_CertDB, Test)
+{
   {
     nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
-    ASSERT_TRUE(prefs) << "couldn't get nsIPrefBranch";
+    ASSERT_TRUE(prefs)
+    << "couldn't get nsIPrefBranch";
 
     // When PSM initializes, it attempts to get some localized strings.
     // As a result, Android flips out if this isn't set.
     nsresult rv = prefs->SetBoolPref("intl.locale.matchOS", true);
-    ASSERT_TRUE(NS_SUCCEEDED(rv)) << "couldn't set pref 'intl.locale.matchOS'";
+    ASSERT_TRUE(NS_SUCCEEDED(rv))
+    << "couldn't set pref 'intl.locale.matchOS'";
 
     nsCOMPtr<nsIX509CertDB> certdb(do_GetService(NS_X509CERTDB_CONTRACTID));
-    ASSERT_TRUE(certdb) << "couldn't get certdb";
+    ASSERT_TRUE(certdb)
+    << "couldn't get certdb";
 
     nsCOMPtr<nsIX509CertList> certList;
     rv = certdb->GetCerts(getter_AddRefs(certList));
-    ASSERT_TRUE(NS_SUCCEEDED(rv)) << "couldn't get list of certificates";
+    ASSERT_TRUE(NS_SUCCEEDED(rv))
+    << "couldn't get list of certificates";
 
     nsCOMPtr<nsISimpleEnumerator> enumerator;
     rv = certList->GetEnumerator(getter_AddRefs(enumerator));
-    ASSERT_TRUE(NS_SUCCEEDED(rv)) << "couldn't enumerate certificate list";
+    ASSERT_TRUE(NS_SUCCEEDED(rv))
+    << "couldn't enumerate certificate list";
 
     bool foundBuiltIn = false;
     bool hasMore = false;
     while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
       nsCOMPtr<nsISupports> supports;
       ASSERT_TRUE(NS_SUCCEEDED(enumerator->GetNext(getter_AddRefs(supports))))
-          << "couldn't get next certificate";
+      << "couldn't get next certificate";
 
       nsCOMPtr<nsIX509Cert> cert(do_QueryInterface(supports));
-      ASSERT_TRUE(cert) << "couldn't QI to nsIX509Cert";
+      ASSERT_TRUE(cert)
+      << "couldn't QI to nsIX509Cert";
 
       ASSERT_TRUE(NS_SUCCEEDED(cert->GetIsBuiltInRoot(&foundBuiltIn)))
-          << "GetIsBuiltInRoot failed";
+      << "GetIsBuiltInRoot failed";
 
       if (foundBuiltIn) {
         break;
       }
     }
 
-    ASSERT_TRUE(foundBuiltIn) << "didn't load any built-in certificates";
+    ASSERT_TRUE(foundBuiltIn)
+    << "didn't load any built-in certificates";
 
     printf("successfully loaded at least one built-in certificate\n");
 

@@ -17,7 +17,8 @@ static const int MAY_WRITE = SandboxBroker::MAY_WRITE;
 // static const int RECURSIVE = SandboxBroker::RECURSIVE;
 static const auto AddAlways = SandboxBroker::Policy::AddAlways;
 
-TEST(SandboxBrokerPolicyLookup, Simple) {
+TEST(SandboxBrokerPolicyLookup, Simple)
+{
   SandboxBroker::Policy p;
   p.AddPath(MAY_READ, "/dev/urandom", AddAlways);
 
@@ -27,7 +28,8 @@ TEST(SandboxBrokerPolicyLookup, Simple) {
   EXPECT_EQ(0, p.Lookup("/etc/passwd")) << "Non-added path was found.";
 }
 
-TEST(SandboxBrokerPolicyLookup, CopyCtor) {
+TEST(SandboxBrokerPolicyLookup, CopyCtor)
+{
   SandboxBroker::Policy psrc;
   psrc.AddPath(MAY_READ | MAY_WRITE, "/dev/null", AddAlways);
   SandboxBroker::Policy pdst(psrc);
@@ -55,7 +57,8 @@ TEST(SandboxBrokerPolicyLookup, CopyCtor) {
       << "Non-added path is present in copy source.";
 }
 
-TEST(SandboxBrokerPolicyLookup, Recursive) {
+TEST(SandboxBrokerPolicyLookup, Recursive)
+{
   SandboxBroker::Policy psrc;
   psrc.AddPath(MAY_READ | MAY_WRITE, "/dev/null", AddAlways);
   psrc.AddPath(MAY_READ, "/dev/zero", AddAlways);

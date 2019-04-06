@@ -2946,8 +2946,7 @@ static bool MoveToPending(nsIFile* dumpFile, nsIFile* extraFile,
 
 static void OnChildProcessDumpRequested(void* aContext,
                                         const ClientInfo& aClientInfo,
-                                        const xpstring& aFilePath
-) {
+                                        const xpstring& aFilePath) {
   nsCOMPtr<nsIFile> minidump;
   nsCOMPtr<nsIFile> extraFile;
 

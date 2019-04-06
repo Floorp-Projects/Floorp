@@ -122,7 +122,9 @@ bool RelationalExpr::compareResults(txIEvalContext* aContext,
     case GREATER_OR_EQUAL: {
       return (leftDbl >= rightDbl);
     }
-    default: { MOZ_ASSERT_UNREACHABLE("We should have caught all cases"); }
+    default: {
+      MOZ_ASSERT_UNREACHABLE("We should have caught all cases");
+    }
   }
 
   return false;

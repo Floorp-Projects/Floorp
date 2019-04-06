@@ -16,6 +16,391 @@ async function getCountOfBookmarkRows(db) {
   return queryRows[0].getResultByIndex(0);
 }
 
+add_task(async function test_multiple_parents() {
+  let buf = await openMirror("multiple_parents");
+  let now = Date.now();
+
+  info("Set up empty mirror");
+  await PlacesTestUtils.markBookmarksAsSynced();
+
+  info("Make remote changes");
+  await storeRecords(buf, [{
+    id: "toolbar",
+    parentid: "places",
+    type: "folder",
+    modified: now / 1000 - 10,
+    children: ["bookmarkAAAA"],
+  }, {
+    id: "menu",
+    parentid: "places",
+    type: "folder",
+    modified: now / 1000 - 5,
+    children: ["bookmarkAAAA", "bookmarkBBBB", "bookmarkCCCC"],
+  }, {
+    id: "unfiled",
+    parentid: "places",
+    type: "folder",
+    modified: now / 1000 - 3,
+    children: ["bookmarkBBBB"],
+  }, {
+    id: "mobile",
+    parentid: "places",
+    type: "folder",
+    modified: now / 1000,
+    children: ["bookmarkCCCC"],
+  }, {
+    id: "bookmarkAAAA",
+    parentid: "toolbar",
+    type: "bookmark",
+    title: "A",
+    modified: now / 1000 - 10,
+    bmkUri: "http://example.com/a",
+  }, {
+    id: "bookmarkBBBB",
+    parentid: "mobile",
+    type: "bookmark",
+    title: "B",
+    modified: now / 1000 - 3,
+    bmkUri: "http://example.com/b",
+  }]);
+
+  info("Apply remote");
+  let changesToUpload = await buf.apply({
+    localTimeSeconds: now / 1000,
+    remoteTimeSeconds: now / 1000,
+  });
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+
+  let datesAdded = await promiseManyDatesAdded([PlacesUtils.bookmarks.menuGuid,
+    PlacesUtils.bookmarks.toolbarGuid, PlacesUtils.bookmarks.unfiledGuid,
+    PlacesUtils.bookmarks.mobileGuid, "bookmarkAAAA", "bookmarkBBBB"]);
+  deepEqual(changesToUpload, {
+    menu: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "menu",
+        type: "folder",
+        parentid: "places",
+        hasDupe: true,
+        parentName: "",
+        dateAdded: datesAdded.get(PlacesUtils.bookmarks.menuGuid),
+        title: BookmarksMenuTitle,
+        children: ["bookmarkAAAA"],
+      },
+    },
+    toolbar: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "toolbar",
+        type: "folder",
+        parentid: "places",
+        hasDupe: true,
+        parentName: "",
+        dateAdded: datesAdded.get(PlacesUtils.bookmarks.toolbarGuid),
+        title: BookmarksToolbarTitle,
+        children: [],
+      },
+    },
+    unfiled: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "unfiled",
+        type: "folder",
+        parentid: "places",
+        hasDupe: true,
+        parentName: "",
+        dateAdded: datesAdded.get(PlacesUtils.bookmarks.unfiledGuid),
+        title: UnfiledBookmarksTitle,
+        children: ["bookmarkBBBB"],
+      },
+    },
+    mobile: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "mobile",
+        type: "folder",
+        parentid: "places",
+        hasDupe: true,
+        parentName: "",
+        dateAdded: datesAdded.get(PlacesUtils.bookmarks.mobileGuid),
+        title: MobileBookmarksTitle,
+        children: [],
+      },
+    },
+    bookmarkAAAA: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "bookmarkAAAA",
+        type: "bookmark",
+        parentid: "menu",
+        hasDupe: true,
+        parentName: BookmarksMenuTitle,
+        dateAdded: datesAdded.get("bookmarkAAAA"),
+        bmkUri: "http://example.com/a",
+        title: "A",
+      },
+    },
+    bookmarkBBBB: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "bookmarkBBBB",
+        type: "bookmark",
+        parentid: "unfiled",
+        hasDupe: true,
+        parentName: UnfiledBookmarksTitle,
+        dateAdded: datesAdded.get("bookmarkBBBB"),
+        bmkUri: "http://example.com/b",
+        title: "B",
+      },
+    },
+  });
+
+  await assertLocalTree(PlacesUtils.bookmarks.rootGuid, {
+    guid: PlacesUtils.bookmarks.rootGuid,
+    type: PlacesUtils.bookmarks.TYPE_FOLDER,
+    index: 0,
+    title: "",
+    children: [{
+      guid: PlacesUtils.bookmarks.menuGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 0,
+      title: BookmarksMenuTitle,
+      children: [{
+        guid: "bookmarkAAAA",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 0,
+        title: "A",
+        url: "http://example.com/a",
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.toolbarGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 1,
+      title: BookmarksToolbarTitle,
+    }, {
+      guid: PlacesUtils.bookmarks.unfiledGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 3,
+      title: UnfiledBookmarksTitle,
+      children: [{
+        guid: "bookmarkBBBB",
+        type: PlacesUtils.bookmarks.TYPE_BOOKMARK,
+        index: 0,
+        title: "B",
+        url: "http://example.com/b",
+      }],
+    }, {
+      guid: PlacesUtils.bookmarks.mobileGuid,
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      index: 4,
+      title: MobileBookmarksTitle,
+    }],
+  }, "Should parent (A B) correctly");
+
+  await storeChangesInMirror(buf, changesToUpload);
+
+  ok(!(await buf.hasChanges()),
+    "Should not report local or remote changes after updating mirror");
+
+  let newChangesToUpload = await buf.forceApply({
+    localTimeSeconds: now / 1000,
+    remoteTimeSeconds: now / 1000,
+  });
+  deepEqual(newChangesToUpload, {},
+    "Should not upload any changes after updating mirror");
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
+
+add_task(async function test_reupload_replace() {
+  let buf = await openMirror("reupload_replace");
+
+  info("Set up mirror");
+  await PlacesUtils.bookmarks.insertTree({
+    guid: PlacesUtils.bookmarks.menuGuid,
+    children: [{
+      guid: "bookmarkAAAA",
+      title: "A",
+      url: "http://example.com/a",
+    }, {
+      guid: "folderBBBBBB",
+      type: PlacesUtils.bookmarks.TYPE_FOLDER,
+      title: "B",
+    }],
+  });
+  await PlacesTestUtils.markBookmarksAsSynced();
+  await storeRecords(buf, [{
+    id: "menu",
+    parentid: "places",
+    type: "folder",
+    children: ["bookmarkAAAA", "folderBBBBBB"],
+  }, {
+    id: "bookmarkAAAA",
+    parentid: "menu",
+    type: "bookmark",
+    title: "A",
+    bmkUri: "http://example.com/a",
+  }, {
+    id: "folderBBBBBB",
+    parentid: "menu",
+    type: "folder",
+    title: "B",
+    children: [],
+  }], { needsMerge: false });
+
+  info("Make remote changes");
+  await storeRecords(buf, [{
+    id: "menu",
+    parentid: "places",
+    type: "folder",
+    children: ["bookmarkAAAA", "folderBBBBBB", "queryCCCCCCC", "queryDDDDDDD"],
+  }, {
+    // A has an invalid URL, but exists locally, so we should reupload a valid
+    // local copy. This discards _all_ remote changes to A.
+    id: "bookmarkAAAA",
+    parentid: "menu",
+    type: "bookmark",
+    title: "A (remote)",
+    bmkUri: "!@#$%",
+  }, {
+    id: "folderBBBBBB",
+    parentid: "menu",
+    type: "folder",
+    title: "B (remote)",
+    children: ["bookmarkEEEE"],
+  }, {
+    // E is a bookmark with an invalid URL that doesn't exist locally, so we'll
+    // delete it.
+    id: "bookmarkEEEE",
+    parentid: "folderBBBBBB",
+    type: "bookmark",
+    title: "E (remote)",
+    bmkUri: "!@#$%",
+  }, {
+    // C is a legacy tag query, so we'll rewrite its URL and reupload it.
+    id: "queryCCCCCCC",
+    parentid: "menu",
+    type: "query",
+    title: "C (remote)",
+    bmkUri: "place:type=7&folder=999",
+    folderName: "taggy",
+  }, {
+    // D is a query with an invalid URL, so we'll delete it.
+    id: "queryDDDDDDD",
+    parentid: "menu",
+    type: "query",
+    title: "D",
+    bmkUri: "^&*()",
+  }]);
+
+  info("Apply remote");
+  let changesToUpload = await buf.apply();
+  deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
+
+  let datesAdded = await promiseManyDatesAdded([PlacesUtils.bookmarks.menuGuid,
+    "bookmarkAAAA"]);
+  deepEqual(changesToUpload, {
+    menu: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "menu",
+        type: "folder",
+        parentid: "places",
+        hasDupe: true,
+        parentName: "",
+        dateAdded: datesAdded.get(PlacesUtils.bookmarks.menuGuid),
+        title: BookmarksMenuTitle,
+        children: ["bookmarkAAAA", "folderBBBBBB", "queryCCCCCCC"],
+      },
+    },
+    bookmarkAAAA: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "bookmarkAAAA",
+        type: "bookmark",
+        parentid: "menu",
+        hasDupe: true,
+        parentName: BookmarksMenuTitle,
+        dateAdded: datesAdded.get("bookmarkAAAA"),
+        bmkUri: "http://example.com/a",
+        title: "A",
+      },
+    },
+    folderBBBBBB: {
+      // B is reuploaded because we deleted its child E.
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "folderBBBBBB",
+        type: "folder",
+        parentid: "menu",
+        hasDupe: true,
+        parentName: BookmarksMenuTitle,
+        dateAdded: undefined,
+        title: "B (remote)",
+        children: [],
+      },
+    },
+    queryCCCCCCC: {
+      tombstone: false,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "queryCCCCCCC",
+        type: "query",
+        parentid: "menu",
+        hasDupe: true,
+        parentName: BookmarksMenuTitle,
+        dateAdded: undefined,
+        bmkUri: "place:tag=taggy",
+        title: "C (remote)",
+        folderName: "taggy",
+      },
+    },
+    queryDDDDDDD: {
+      tombstone: true,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "queryDDDDDDD",
+        deleted: true,
+      },
+    },
+    bookmarkEEEE: {
+      tombstone: true,
+      counter: 1,
+      synced: false,
+      cleartext: {
+        id: "bookmarkEEEE",
+        deleted: true,
+      },
+    },
+  });
+
+  await buf.finalize();
+  await PlacesUtils.bookmarks.eraseEverything();
+  await PlacesSyncUtils.bookmarks.reset();
+});
+
 add_task(async function test_corrupt_local_roots() {
   let buf = await openMirror("corrupt_roots");
 
@@ -567,13 +952,12 @@ add_task(async function test_new_orphan_without_local_parent() {
     deepEqual(await buf.fetchUnmergedGuids(), [], "Should merge all items");
     let idsToUpload = inspectChangeRecords(changesToUpload);
     deepEqual(idsToUpload, {
-      updated: ["folderAAAAAA", "folderEEEEEE", "menu"],
+      updated: ["folderAAAAAA", "folderEEEEEE", "menu", "unfiled"],
       deleted: [],
-    }, "...");
+    }, "Should move E out of unfiled into menu");
     await storeChangesInMirror(buf, changesToUpload);
   }
 
-  // E is still in unfiled because we don't have a record for the menu.
   await assertLocalTree(PlacesUtils.bookmarks.menuGuid, {
     guid: PlacesUtils.bookmarks.menuGuid,
     type: PlacesUtils.bookmarks.TYPE_FOLDER,

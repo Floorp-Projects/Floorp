@@ -6,7 +6,7 @@ edition = "2018"
 
 [dependencies]
 atomic_refcell = "0.1"
-dogear = "0.2.2"
+dogear = "0.2.3"
 libc = "0.2"
 log = "0.4"
 moz_task = { path = "../../../../xpcom/rust/moz_task" }

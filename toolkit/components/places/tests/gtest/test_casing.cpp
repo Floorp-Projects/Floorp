@@ -11,7 +11,8 @@
 // only non-ASCII characters that lower-case to ASCII ones are:
 //  * U+0130 LATIN CAPITAL LETTER I WITH DOT ABOVE
 //  * U+212A KELVIN SIGN
-TEST(MatchAutocompleteCasing, CaseAssumption) {
+TEST(MatchAutocompleteCasing, CaseAssumption)
+{
   for (uint32_t c = 128; c < 0x110000; c++) {
     if (c != 304 && c != 8490) {
       ASSERT_GE(mozilla::unicode::GetLowercase(c), 128U);
@@ -20,7 +21,8 @@ TEST(MatchAutocompleteCasing, CaseAssumption) {
 }
 
 // Verify the assertion that all ASCII characters lower-case to ASCII.
-TEST(MatchAutocompleteCasing, CaseAssumption2) {
+TEST(MatchAutocompleteCasing, CaseAssumption2)
+{
   for (uint32_t c = 0; c < 128; c++) {
     ASSERT_LT(mozilla::unicode::GetLowercase(c), 128U);
   }

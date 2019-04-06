@@ -336,17 +336,18 @@ void MediaFormatReader::DecoderFactory::RunStage(Data& aData) {
     case Stage::None: {
       MOZ_ASSERT(!aData.mToken);
       aData.mPolicy->Alloc()
-          ->Then(mOwner->OwnerThread(), __func__,
-                 [this, &aData](RefPtr<Token> aToken) {
-                   aData.mTokenRequest.Complete();
-                   aData.mToken = aToken.forget();
-                   aData.mStage = Stage::CreateDecoder;
-                   RunStage(aData);
-                 },
-                 [&aData]() {
-                   aData.mTokenRequest.Complete();
-                   aData.mStage = Stage::None;
-                 })
+          ->Then(
+              mOwner->OwnerThread(), __func__,
+              [this, &aData](RefPtr<Token> aToken) {
+                aData.mTokenRequest.Complete();
+                aData.mToken = aToken.forget();
+                aData.mStage = Stage::CreateDecoder;
+                RunStage(aData);
+              },
+              [&aData]() {
+                aData.mTokenRequest.Complete();
+                aData.mStage = Stage::None;
+              })
           ->Track(aData.mTokenRequest);
       aData.mStage = Stage::WaitForToken;
       break;
@@ -475,33 +476,33 @@ void MediaFormatReader::DecoderFactory::DoInitDecoder(Data& aData) {
   DDLOGEX2("MediaFormatReader::DecoderFactory", this, DDLogCategory::Log,
            "initialize_decoder", DDNoValue{});
   aData.mDecoder->Init()
-      ->Then(mOwner->OwnerThread(), __func__,
-             [this, &aData, &ownerData](TrackType aTrack) {
-               aData.mInitRequest.Complete();
-               aData.mStage = Stage::None;
-               MutexAutoLock lock(ownerData.mMutex);
-               ownerData.mDecoder = aData.mDecoder.forget();
-               ownerData.mDescription =
-                   ownerData.mDecoder->GetDescriptionName();
-               DDLOGEX2("MediaFormatReader::DecoderFactory", this,
-                        DDLogCategory::Log, "decoder_initialized", DDNoValue{});
-               DecoderDoctorLogger::LinkParentAndChild(
-                   "MediaFormatReader::DecoderData", &ownerData, "decoder",
-                   ownerData.mDecoder.get());
-               mOwner->SetVideoDecodeThreshold();
-               mOwner->ScheduleUpdate(aTrack);
-             },
-             [this, &aData, &ownerData](const MediaResult& aError) {
-               aData.mInitRequest.Complete();
-               MOZ_RELEASE_ASSERT(!ownerData.mDecoder,
-                                  "Can't have a decoder already set");
-               aData.mStage = Stage::None;
-               mOwner->mShutdownPromisePool->ShutdownDecoder(
-                   aData.mDecoder.forget());
-               DDLOGEX2("MediaFormatReader::DecoderFactory", this,
-                        DDLogCategory::Log, "initialize_decoder_error", aError);
-               mOwner->NotifyError(aData.mTrack, aError);
-             })
+      ->Then(
+          mOwner->OwnerThread(), __func__,
+          [this, &aData, &ownerData](TrackType aTrack) {
+            aData.mInitRequest.Complete();
+            aData.mStage = Stage::None;
+            MutexAutoLock lock(ownerData.mMutex);
+            ownerData.mDecoder = aData.mDecoder.forget();
+            ownerData.mDescription = ownerData.mDecoder->GetDescriptionName();
+            DDLOGEX2("MediaFormatReader::DecoderFactory", this,
+                     DDLogCategory::Log, "decoder_initialized", DDNoValue{});
+            DecoderDoctorLogger::LinkParentAndChild(
+                "MediaFormatReader::DecoderData", &ownerData, "decoder",
+                ownerData.mDecoder.get());
+            mOwner->SetVideoDecodeThreshold();
+            mOwner->ScheduleUpdate(aTrack);
+          },
+          [this, &aData, &ownerData](const MediaResult& aError) {
+            aData.mInitRequest.Complete();
+            MOZ_RELEASE_ASSERT(!ownerData.mDecoder,
+                               "Can't have a decoder already set");
+            aData.mStage = Stage::None;
+            mOwner->mShutdownPromisePool->ShutdownDecoder(
+                aData.mDecoder.forget());
+            DDLOGEX2("MediaFormatReader::DecoderFactory", this,
+                     DDLogCategory::Log, "initialize_decoder_error", aError);
+            mOwner->NotifyError(aData.mTrack, aError);
+          })
       ->Track(aData.mInitRequest);
 }
 
@@ -653,15 +654,16 @@ class MediaFormatReader::DemuxerProxy::Wrapper : public MediaTrackDemuxer {
     return InvokeAsync(
                mTaskQueue, __func__,
                [self, aTime]() { return self->mTrackDemuxer->Seek(aTime); })
-        ->Then(mTaskQueue, __func__,
-               [self](const TimeUnit& aTime) {
-                 self->UpdateRandomAccessPoint();
-                 return SeekPromise::CreateAndResolve(aTime, __func__);
-               },
-               [self](const MediaResult& aError) {
-                 self->UpdateRandomAccessPoint();
-                 return SeekPromise::CreateAndReject(aError, __func__);
-               });
+        ->Then(
+            mTaskQueue, __func__,
+            [self](const TimeUnit& aTime) {
+              self->UpdateRandomAccessPoint();
+              return SeekPromise::CreateAndResolve(aTime, __func__);
+            },
+            [self](const MediaResult& aError) {
+              self->UpdateRandomAccessPoint();
+              return SeekPromise::CreateAndReject(aError, __func__);
+            });
   }
 
   RefPtr<SamplesPromise> GetSamples(int32_t aNumSamples) override {
@@ -670,16 +672,17 @@ class MediaFormatReader::DemuxerProxy::Wrapper : public MediaTrackDemuxer {
                        [self, aNumSamples]() {
                          return self->mTrackDemuxer->GetSamples(aNumSamples);
                        })
-        ->Then(mTaskQueue, __func__,
-               [self](RefPtr<SamplesHolder> aSamples) {
-                 self->UpdateRandomAccessPoint();
-                 return SamplesPromise::CreateAndResolve(aSamples.forget(),
-                                                         __func__);
-               },
-               [self](const MediaResult& aError) {
-                 self->UpdateRandomAccessPoint();
-                 return SamplesPromise::CreateAndReject(aError, __func__);
-               });
+        ->Then(
+            mTaskQueue, __func__,
+            [self](RefPtr<SamplesHolder> aSamples) {
+              self->UpdateRandomAccessPoint();
+              return SamplesPromise::CreateAndResolve(aSamples.forget(),
+                                                      __func__);
+            },
+            [self](const MediaResult& aError) {
+              self->UpdateRandomAccessPoint();
+              return SamplesPromise::CreateAndReject(aError, __func__);
+            });
   }
 
   bool GetSamplesMayBlock() const override { return mGetSamplesMayBlock; }
@@ -788,56 +791,57 @@ RefPtr<MediaDataDemuxer::InitPromise> MediaFormatReader::DemuxerProxy::Init() {
                        }
                        return data->mDemuxer->Init();
                      })
-      ->Then(taskQueue, __func__,
-             [data, taskQueue]() {
-               if (!data->mDemuxer) {  // Was shutdown.
-                 return InitPromise::CreateAndReject(
-                     NS_ERROR_DOM_MEDIA_CANCELED, __func__);
-               }
-               data->mNumAudioTrack =
-                   data->mDemuxer->GetNumberTracks(TrackInfo::kAudioTrack);
-               if (data->mNumAudioTrack) {
-                 RefPtr<MediaTrackDemuxer> d =
-                     data->mDemuxer->GetTrackDemuxer(TrackInfo::kAudioTrack, 0);
-                 if (d) {
-                   RefPtr<Wrapper> wrapper =
-                       new DemuxerProxy::Wrapper(d, taskQueue);
-                   wrapper->UpdateBuffered();
-                   data->mAudioDemuxer = wrapper;
-                   DecoderDoctorLogger::LinkParentAndChild(
-                       data->mDemuxer.get(), "decoder factory wrapper",
-                       "MediaFormatReader::DecoderFactory::Wrapper",
-                       wrapper.get());
-                 }
-               }
-               data->mNumVideoTrack =
-                   data->mDemuxer->GetNumberTracks(TrackInfo::kVideoTrack);
-               if (data->mNumVideoTrack) {
-                 RefPtr<MediaTrackDemuxer> d =
-                     data->mDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
-                 if (d) {
-                   RefPtr<Wrapper> wrapper =
-                       new DemuxerProxy::Wrapper(d, taskQueue);
-                   wrapper->UpdateBuffered();
-                   data->mVideoDemuxer = wrapper;
-                   DecoderDoctorLogger::LinkParentAndChild(
-                       data->mDemuxer.get(), "decoder factory wrapper",
-                       "MediaFormatReader::DecoderFactory::Wrapper",
-                       wrapper.get());
-                 }
-               }
-               data->mCrypto = data->mDemuxer->GetCrypto();
-               data->mSeekable = data->mDemuxer->IsSeekable();
-               data->mSeekableOnlyInBufferedRange =
-                   data->mDemuxer->IsSeekableOnlyInBufferedRanges();
-               data->mShouldComputeStartTime =
-                   data->mDemuxer->ShouldComputeStartTime();
-               data->mInitDone = true;
-               return InitPromise::CreateAndResolve(NS_OK, __func__);
-             },
-             [](const MediaResult& aError) {
-               return InitPromise::CreateAndReject(aError, __func__);
-             });
+      ->Then(
+          taskQueue, __func__,
+          [data, taskQueue]() {
+            if (!data->mDemuxer) {  // Was shutdown.
+              return InitPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_CANCELED,
+                                                  __func__);
+            }
+            data->mNumAudioTrack =
+                data->mDemuxer->GetNumberTracks(TrackInfo::kAudioTrack);
+            if (data->mNumAudioTrack) {
+              RefPtr<MediaTrackDemuxer> d =
+                  data->mDemuxer->GetTrackDemuxer(TrackInfo::kAudioTrack, 0);
+              if (d) {
+                RefPtr<Wrapper> wrapper =
+                    new DemuxerProxy::Wrapper(d, taskQueue);
+                wrapper->UpdateBuffered();
+                data->mAudioDemuxer = wrapper;
+                DecoderDoctorLogger::LinkParentAndChild(
+                    data->mDemuxer.get(), "decoder factory wrapper",
+                    "MediaFormatReader::DecoderFactory::Wrapper",
+                    wrapper.get());
+              }
+            }
+            data->mNumVideoTrack =
+                data->mDemuxer->GetNumberTracks(TrackInfo::kVideoTrack);
+            if (data->mNumVideoTrack) {
+              RefPtr<MediaTrackDemuxer> d =
+                  data->mDemuxer->GetTrackDemuxer(TrackInfo::kVideoTrack, 0);
+              if (d) {
+                RefPtr<Wrapper> wrapper =
+                    new DemuxerProxy::Wrapper(d, taskQueue);
+                wrapper->UpdateBuffered();
+                data->mVideoDemuxer = wrapper;
+                DecoderDoctorLogger::LinkParentAndChild(
+                    data->mDemuxer.get(), "decoder factory wrapper",
+                    "MediaFormatReader::DecoderFactory::Wrapper",
+                    wrapper.get());
+              }
+            }
+            data->mCrypto = data->mDemuxer->GetCrypto();
+            data->mSeekable = data->mDemuxer->IsSeekable();
+            data->mSeekableOnlyInBufferedRange =
+                data->mDemuxer->IsSeekableOnlyInBufferedRanges();
+            data->mShouldComputeStartTime =
+                data->mDemuxer->ShouldComputeStartTime();
+            data->mInitDone = true;
+            return InitPromise::CreateAndResolve(NS_OK, __func__);
+          },
+          [](const MediaResult& aError) {
+            return InitPromise::CreateAndReject(aError, __func__);
+          });
 }
 
 RefPtr<MediaFormatReader::NotifyDataArrivedPromise>
@@ -1444,20 +1448,20 @@ void MediaFormatReader::DoDemuxVideo() {
 
   if (mVideo.mFirstDemuxedSampleTime.isNothing()) {
     RefPtr<MediaFormatReader> self = this;
-    p = p->Then(OwnerThread(), __func__,
-                [self](RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
-                  DDLOGEX(self.get(), DDLogCategory::Log, "video_first_demuxed",
-                          DDNoValue{});
-                  self->OnFirstDemuxCompleted(TrackInfo::kVideoTrack, aSamples);
-                  return SamplesPromise::CreateAndResolve(aSamples.forget(),
-                                                          __func__);
-                },
-                [self](const MediaResult& aError) {
-                  DDLOGEX(self.get(), DDLogCategory::Log,
-                          "video_first_demuxing_error", aError);
-                  self->OnFirstDemuxFailed(TrackInfo::kVideoTrack, aError);
-                  return SamplesPromise::CreateAndReject(aError, __func__);
-                });
+    p = p->Then(
+        OwnerThread(), __func__,
+        [self](RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
+          DDLOGEX(self.get(), DDLogCategory::Log, "video_first_demuxed",
+                  DDNoValue{});
+          self->OnFirstDemuxCompleted(TrackInfo::kVideoTrack, aSamples);
+          return SamplesPromise::CreateAndResolve(aSamples.forget(), __func__);
+        },
+        [self](const MediaResult& aError) {
+          DDLOGEX(self.get(), DDLogCategory::Log, "video_first_demuxing_error",
+                  aError);
+          self->OnFirstDemuxFailed(TrackInfo::kVideoTrack, aError);
+          return SamplesPromise::CreateAndReject(aError, __func__);
+        });
   }
 
   p->Then(OwnerThread(), __func__, this,
@@ -1522,20 +1526,20 @@ void MediaFormatReader::DoDemuxAudio() {
 
   if (mAudio.mFirstDemuxedSampleTime.isNothing()) {
     RefPtr<MediaFormatReader> self = this;
-    p = p->Then(OwnerThread(), __func__,
-                [self](RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
-                  DDLOGEX(self.get(), DDLogCategory::Log, "audio_first_demuxed",
-                          DDNoValue{});
-                  self->OnFirstDemuxCompleted(TrackInfo::kAudioTrack, aSamples);
-                  return SamplesPromise::CreateAndResolve(aSamples.forget(),
-                                                          __func__);
-                },
-                [self](const MediaResult& aError) {
-                  DDLOGEX(self.get(), DDLogCategory::Log,
-                          "audio_first_demuxing_error", aError);
-                  self->OnFirstDemuxFailed(TrackInfo::kAudioTrack, aError);
-                  return SamplesPromise::CreateAndReject(aError, __func__);
-                });
+    p = p->Then(
+        OwnerThread(), __func__,
+        [self](RefPtr<MediaTrackDemuxer::SamplesHolder> aSamples) {
+          DDLOGEX(self.get(), DDLogCategory::Log, "audio_first_demuxed",
+                  DDNoValue{});
+          self->OnFirstDemuxCompleted(TrackInfo::kAudioTrack, aSamples);
+          return SamplesPromise::CreateAndResolve(aSamples.forget(), __func__);
+        },
+        [self](const MediaResult& aError) {
+          DDLOGEX(self.get(), DDLogCategory::Log, "audio_first_demuxing_error",
+                  aError);
+          self->OnFirstDemuxFailed(TrackInfo::kAudioTrack, aError);
+          return SamplesPromise::CreateAndReject(aError, __func__);
+        });
   }
 
   p->Then(OwnerThread(), __func__, this,
@@ -1993,46 +1997,47 @@ void MediaFormatReader::InternalSeek(TrackType aTrack,
   DDLOG(DDLogCategory::Log, "seeking", DDNoValue{});
   RefPtr<MediaFormatReader> self = this;
   decoder.mTrackDemuxer->Seek(decoder.mTimeThreshold.ref().Time())
-      ->Then(OwnerThread(), __func__,
-             [self, aTrack](TimeUnit aTime) {
-               DDLOGEX(self.get(), DDLogCategory::Log, "seeked", DDNoValue{});
-               auto& decoder = self->GetDecoderData(aTrack);
-               decoder.mSeekRequest.Complete();
-               MOZ_ASSERT(decoder.mTimeThreshold,
-                          "Seek promise must be disconnected when "
-                          "timethreshold is reset");
-               decoder.mTimeThreshold.ref().mHasSeeked = true;
-               self->SetVideoDecodeThreshold();
-               self->ScheduleUpdate(aTrack);
-             },
-             [self, aTrack](const MediaResult& aError) {
-               auto& decoder = self->GetDecoderData(aTrack);
-               decoder.mSeekRequest.Complete();
-               switch (aError.Code()) {
-                 case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
-                   DDLOGEX(self.get(), DDLogCategory::Log,
-                           "seeking_interrupted", aError);
-                   self->NotifyWaitingForData(aTrack);
-                   break;
-                 case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
-                   DDLOGEX(self.get(), DDLogCategory::Log,
-                           "seeking_interrupted", aError);
-                   decoder.mTimeThreshold.reset();
-                   self->NotifyEndOfStream(aTrack);
-                   break;
-                 case NS_ERROR_DOM_MEDIA_CANCELED:
-                   DDLOGEX(self.get(), DDLogCategory::Log,
-                           "seeking_interrupted", aError);
-                   decoder.mTimeThreshold.reset();
-                   break;
-                 default:
-                   DDLOGEX(self.get(), DDLogCategory::Log, "seeking_error",
-                           aError);
-                   decoder.mTimeThreshold.reset();
-                   self->NotifyError(aTrack, aError);
-                   break;
-               }
-             })
+      ->Then(
+          OwnerThread(), __func__,
+          [self, aTrack](TimeUnit aTime) {
+            DDLOGEX(self.get(), DDLogCategory::Log, "seeked", DDNoValue{});
+            auto& decoder = self->GetDecoderData(aTrack);
+            decoder.mSeekRequest.Complete();
+            MOZ_ASSERT(decoder.mTimeThreshold,
+                       "Seek promise must be disconnected when "
+                       "timethreshold is reset");
+            decoder.mTimeThreshold.ref().mHasSeeked = true;
+            self->SetVideoDecodeThreshold();
+            self->ScheduleUpdate(aTrack);
+          },
+          [self, aTrack](const MediaResult& aError) {
+            auto& decoder = self->GetDecoderData(aTrack);
+            decoder.mSeekRequest.Complete();
+            switch (aError.Code()) {
+              case NS_ERROR_DOM_MEDIA_WAITING_FOR_DATA:
+                DDLOGEX(self.get(), DDLogCategory::Log, "seeking_interrupted",
+                        aError);
+                self->NotifyWaitingForData(aTrack);
+                break;
+              case NS_ERROR_DOM_MEDIA_END_OF_STREAM:
+                DDLOGEX(self.get(), DDLogCategory::Log, "seeking_interrupted",
+                        aError);
+                decoder.mTimeThreshold.reset();
+                self->NotifyEndOfStream(aTrack);
+                break;
+              case NS_ERROR_DOM_MEDIA_CANCELED:
+                DDLOGEX(self.get(), DDLogCategory::Log, "seeking_interrupted",
+                        aError);
+                decoder.mTimeThreshold.reset();
+                break;
+              default:
+                DDLOGEX(self.get(), DDLogCategory::Log, "seeking_error",
+                        aError);
+                decoder.mTimeThreshold.reset();
+                self->NotifyError(aTrack, aError);
+                break;
+            }
+          })
       ->Track(decoder.mSeekRequest);
 }
 
@@ -2869,17 +2874,18 @@ void MediaFormatReader::NotifyDataArrived() {
 
   RefPtr<MediaFormatReader> self = this;
   mDemuxer->NotifyDataArrived()
-      ->Then(OwnerThread(), __func__,
-             [self]() {
-               self->mNotifyDataArrivedPromise.Complete();
-               self->UpdateBuffered();
-               self->NotifyTrackDemuxers();
-               if (self->mPendingNotifyDataArrived) {
-                 self->mPendingNotifyDataArrived = false;
-                 self->NotifyDataArrived();
-               }
-             },
-             [self]() { self->mNotifyDataArrivedPromise.Complete(); })
+      ->Then(
+          OwnerThread(), __func__,
+          [self]() {
+            self->mNotifyDataArrivedPromise.Complete();
+            self->UpdateBuffered();
+            self->NotifyTrackDemuxers();
+            if (self->mPendingNotifyDataArrived) {
+              self->mPendingNotifyDataArrived = false;
+              self->NotifyDataArrived();
+            }
+          },
+          [self]() { self->mNotifyDataArrivedPromise.Complete(); })
       ->Track(mNotifyDataArrivedPromise);
 }
 

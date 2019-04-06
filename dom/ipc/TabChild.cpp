@@ -507,9 +507,7 @@ bool TabChild::DoUpdateZoomConstraints(
 }
 
 nsresult TabChild::Init(mozIDOMWindowProxy* aParent) {
-  if (!mTabGroup) {
-    mTabGroup = TabGroup::GetFromActor(this);
-  }
+  MOZ_DIAGNOSTIC_ASSERT(mTabGroup);
 
   nsCOMPtr<nsIWidget> widget = nsIWidget::CreatePuppetWidget(this);
   mPuppetWidget = static_cast<PuppetWidget*>(widget.get());

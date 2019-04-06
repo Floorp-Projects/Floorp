@@ -120,7 +120,8 @@ class AutoCreateAndDestroyReentrantMonitor {
   ReentrantMonitor** mReentrantMonitorPtr;
 };
 
-TEST(ThreadPoolListener, Test) {
+TEST(ThreadPoolListener, Test)
+{
   nsIThread* createdThreadList[NUMBER_OF_THREADS] = {nullptr};
   gCreatedThreadList = createdThreadList;
 

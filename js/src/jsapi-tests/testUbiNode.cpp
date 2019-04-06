@@ -226,11 +226,12 @@ BEGIN_TEST(test_ubiStackFrame) {
 
   // All frames should be from the "filename.js" source.
   while (ubiFrame) {
-    CHECK(checkString("filename.js",
-                      [&](mozilla::RangedPtr<char16_t> ptr, size_t length) {
-                        return ubiFrame.source(ptr, length);
-                      },
-                      [&] { return ubiFrame.source(); }));
+    CHECK(checkString(
+        "filename.js",
+        [&](mozilla::RangedPtr<char16_t> ptr, size_t length) {
+          return ubiFrame.source(ptr, length);
+        },
+        [&] { return ubiFrame.source(); }));
     ubiFrame = ubiFrame.parent();
   }
 

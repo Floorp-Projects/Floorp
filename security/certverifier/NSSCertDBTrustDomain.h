@@ -60,28 +60,28 @@ nsresult DefaultServerNicknameForCert(const CERTCertificate* cert,
                                       /*out*/ nsCString& nickname);
 
 /**
- * Build strings of base64 encoded issuer, serial, subject and public key data
- * from the supplied certificate for use in revocation checks.
+ * Build nsTArray<uint8_t>s out of the issuer, serial, subject and public key
+ * data from the supplied certificate for use in revocation checks.
  *
  * @param cert
  *        The CERTCertificate* from which to extract the data.
  * @param out encIssuer
- *        The string to populate with base64 encoded issuer data.
+ *        The array to populate with issuer data.
  * @param out encSerial
- *        The string to populate with base64 encoded serial number data.
+ *        The array to populate with serial number data.
  * @param out encSubject
- *        The string to populate with base64 encoded subject data.
+ *        The array to populate with subject data.
  * @param out encPubKey
- *        The string to populate with base64 encoded public key data.
+ *        The array to populate with public key data.
  * @return
- *        NS_OK, unless there's a Base64 encoding problem, in which case
- *        NS_ERROR_FAILURE.
+ *        NS_OK, unless there's a memory allocation problem, in which case
+ *        NS_ERROR_OUT_OF_MEMORY.
  */
-nsresult BuildRevocationCheckStrings(const CERTCertificate* cert,
-                                     /*out*/ nsCString& encIssuer,
-                                     /*out*/ nsCString& encSerial,
-                                     /*out*/ nsCString& encSubject,
-                                     /*out*/ nsCString& encPubKey);
+nsresult BuildRevocationCheckArrays(const UniqueCERTCertificate& cert,
+                                    /*out*/ nsTArray<uint8_t>& issuerBytes,
+                                    /*out*/ nsTArray<uint8_t>& serialBytes,
+                                    /*out*/ nsTArray<uint8_t>& subjectBytes,
+                                    /*out*/ nsTArray<uint8_t>& pubKeyBytes);
 
 void SaveIntermediateCerts(const UniqueCERTCertList& certList);
 

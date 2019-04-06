@@ -79,13 +79,14 @@ void StreamFilter::Connect() {
     RefPtr<StreamFilter> self(this);
 
     cc->SendInitStreamFilter(mChannelId, addonId)
-        ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-               [=](mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoint) {
-                 self->FinishConnect(std::move(aEndpoint));
-               },
-               [=](mozilla::ipc::ResponseRejectReason&& aReason) {
-                 self->mActor->RecvInitialized(false);
-               });
+        ->Then(
+            GetCurrentThreadSerialEventTarget(), __func__,
+            [=](mozilla::ipc::Endpoint<PStreamFilterChild>&& aEndpoint) {
+              self->FinishConnect(std::move(aEndpoint));
+            },
+            [=](mozilla::ipc::ResponseRejectReason&& aReason) {
+              self->mActor->RecvInitialized(false);
+            });
   } else {
     mozilla::ipc::Endpoint<PStreamFilterChild> endpoint;
     Unused << StreamFilterParent::Create(nullptr, mChannelId, addonId,

@@ -414,10 +414,12 @@ max-width: ${width}px; max-height: ${height}px`;
     let [allowedDiff, allowedPixels] = allowed;
     logger.info(`Allowed ${allowedPixels.join("-")} pixels different, ` +
                 `maximum difference per channel ${allowedDiff.join("-")}`);
-    return ((maxDifference >= allowedDiff[0] &&
-             maxDifference <= allowedDiff[1]) &&
-            (pixelsDifferent >= allowedPixels[0] ||
-             pixelsDifferent <= allowedPixels[1]));
+    return ((pixelsDifferent === 0 && allowedPixels[0] == 0) ||
+            (maxDifference === 0 && allowedDiff[0] == 0) ||
+            ((maxDifference >= allowedDiff[0] &&
+              maxDifference <= allowedDiff[1]) &&
+             (pixelsDifferent >= allowedPixels[0] ||
+              pixelsDifferent <= allowedPixels[1])));
   }
 
   ensureFocus(win) {

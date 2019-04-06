@@ -144,7 +144,7 @@ add_task(async function() {
   is(bp.options.condition, "1", "breakpoint is created with the condition");
   await assertEditorBreakpoint(dbg, 5, { hasCondition: true });
 
-  rightClickElement(dbg, "breakpointItem", 3);
+  rightClickElement(dbg, "breakpointItem", 2);
   info('select "remove condition"');
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.removeCondition);
   await waitForBreakpointWithoutCondition(dbg, "simple2", 5);

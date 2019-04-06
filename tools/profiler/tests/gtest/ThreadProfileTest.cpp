@@ -10,7 +10,8 @@
 #include "gtest/gtest.h"
 
 // Make sure we can record one entry and read it
-TEST(ThreadProfile, InsertOneEntry) {
+TEST(ThreadProfile, InsertOneEntry)
+{
   auto pb = MakeUnique<ProfileBuffer>(10);
   pb->AddEntry(ProfileBufferEntry::Time(123.1));
   ASSERT_TRUE(pb->GetEntry(pb->mRangeStart).IsTime());
@@ -18,7 +19,8 @@ TEST(ThreadProfile, InsertOneEntry) {
 }
 
 // See if we can insert some entries
-TEST(ThreadProfile, InsertEntriesNoWrap) {
+TEST(ThreadProfile, InsertEntriesNoWrap)
+{
   auto pb = MakeUnique<ProfileBuffer>(100);
   int test_size = 50;
   for (int i = 0; i < test_size; i++) {
@@ -33,7 +35,8 @@ TEST(ThreadProfile, InsertEntriesNoWrap) {
 }
 
 // See if evicting works as it should in the basic case
-TEST(ThreadProfile, InsertEntriesWrap) {
+TEST(ThreadProfile, InsertEntriesWrap)
+{
   int entries = 32;
   auto pb = MakeUnique<ProfileBuffer>(entries);
   ASSERT_TRUE(pb->mRangeStart == 0);

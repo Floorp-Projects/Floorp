@@ -14,7 +14,8 @@ struct A {
   int mValue;
 };
 
-TEST(DataMutex, Basic) {
+TEST(DataMutex, Basic)
+{
   {
     DataMutex<uint32_t> i(1, "1");
     auto x = i.Lock();

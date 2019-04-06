@@ -20,7 +20,8 @@ static const char* const ids[] = {
 };
 #define NUM_IDS ((int)(sizeof(ids) / sizeof(ids[0])))
 
-TEST(nsID, StringConversion) {
+TEST(nsID, StringConversion)
+{
   nsID id;
   for (int i = 0; i < NUM_IDS; i++) {
     const char* idstr = ids[i];

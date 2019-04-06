@@ -81,9 +81,11 @@ bool CreateFile(const nsACString& aData) {
   return true;
 }
 
-TEST(ServiceWorkerRegistrar, TestNoFile) {
+TEST(ServiceWorkerRegistrar, TestNoFile)
+{
   nsCOMPtr<nsIFile> file = GetFile();
-  ASSERT_TRUE(file) << "GetFile must return a nsIFIle";
+  ASSERT_TRUE(file)
+  << "GetFile must return a nsIFIle";
 
   bool exists;
   nsresult rv = file->Exists(&exists);
@@ -104,8 +106,10 @@ TEST(ServiceWorkerRegistrar, TestNoFile) {
       << "No data should be found in an empty file";
 }
 
-TEST(ServiceWorkerRegistrar, TestEmptyFile) {
-  ASSERT_TRUE(CreateFile(EmptyCString())) << "CreateFile should not fail";
+TEST(ServiceWorkerRegistrar, TestEmptyFile)
+{
+  ASSERT_TRUE(CreateFile(EmptyCString()))
+  << "CreateFile should not fail";
 
   RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
@@ -117,10 +121,11 @@ TEST(ServiceWorkerRegistrar, TestEmptyFile) {
       << "No data should be found in an empty file";
 }
 
-TEST(ServiceWorkerRegistrar, TestRightVersionFile) {
+TEST(ServiceWorkerRegistrar, TestRightVersionFile)
+{
   ASSERT_TRUE(
       CreateFile(NS_LITERAL_CSTRING(SERVICEWORKERREGISTRAR_VERSION "\n")))
-      << "CreateFile should not fail";
+  << "CreateFile should not fail";
 
   RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
@@ -133,10 +138,11 @@ TEST(ServiceWorkerRegistrar, TestRightVersionFile) {
       << "No data should be found in an empty file";
 }
 
-TEST(ServiceWorkerRegistrar, TestWrongVersionFile) {
+TEST(ServiceWorkerRegistrar, TestWrongVersionFile)
+{
   ASSERT_TRUE(
       CreateFile(NS_LITERAL_CSTRING(SERVICEWORKERREGISTRAR_VERSION "bla\n")))
-      << "CreateFile should not fail";
+  << "CreateFile should not fail";
 
   RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
@@ -149,7 +155,8 @@ TEST(ServiceWorkerRegistrar, TestWrongVersionFile) {
       << "No data should be found in an empty file";
 }
 
-TEST(ServiceWorkerRegistrar, TestReadData) {
+TEST(ServiceWorkerRegistrar, TestReadData)
+{
   nsAutoCString buffer(SERVICEWORKERREGISTRAR_VERSION "\n");
 
   buffer.AppendLiteral("^appId=123&inBrowser=1\n");
@@ -182,7 +189,8 @@ TEST(ServiceWorkerRegistrar, TestReadData) {
   buffer.AppendLiteral("\n");
   buffer.Append(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
+  ASSERT_TRUE(CreateFile(buffer))
+  << "CreateFile should not fail";
 
   RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
@@ -233,9 +241,10 @@ TEST(ServiceWorkerRegistrar, TestReadData) {
   ASSERT_EQ((int64_t)ts, data[1].lastUpdateTime());
 }
 
-TEST(ServiceWorkerRegistrar, TestDeleteData) {
+TEST(ServiceWorkerRegistrar, TestDeleteData)
+{
   ASSERT_TRUE(CreateFile(NS_LITERAL_CSTRING("Foobar")))
-      << "CreateFile should not fail";
+  << "CreateFile should not fail";
 
   RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
@@ -247,10 +256,12 @@ TEST(ServiceWorkerRegistrar, TestDeleteData) {
   nsresult rv = file->Exists(&exists);
   ASSERT_EQ(NS_OK, rv) << "nsIFile::Exists cannot fail";
 
-  ASSERT_FALSE(exists) << "The file should not exist after a DeleteData().";
+  ASSERT_FALSE(exists)
+  << "The file should not exist after a DeleteData().";
 }
 
-TEST(ServiceWorkerRegistrar, TestWriteData) {
+TEST(ServiceWorkerRegistrar, TestWriteData)
+{
   {
     RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
@@ -332,7 +343,8 @@ TEST(ServiceWorkerRegistrar, TestWriteData) {
   }
 }
 
-TEST(ServiceWorkerRegistrar, TestVersion2Migration) {
+TEST(ServiceWorkerRegistrar, TestVersion2Migration)
+{
   nsAutoCString buffer(
       "2"
       "\n");
@@ -349,7 +361,8 @@ TEST(ServiceWorkerRegistrar, TestVersion2Migration) {
       "1\nactiveCache 1\nwaitingCache 1\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
+  ASSERT_TRUE(CreateFile(buffer))
+  << "CreateFile should not fail";
 
   RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
@@ -402,7 +415,8 @@ TEST(ServiceWorkerRegistrar, TestVersion2Migration) {
   ASSERT_EQ((int64_t)0, data[1].lastUpdateTime());
 }
 
-TEST(ServiceWorkerRegistrar, TestVersion3Migration) {
+TEST(ServiceWorkerRegistrar, TestVersion3Migration)
+{
   nsAutoCString buffer(
       "3"
       "\n");
@@ -417,7 +431,8 @@ TEST(ServiceWorkerRegistrar, TestVersion3Migration) {
       "spec 1\nhttps://scope_1.org\ncurrentWorkerURL 1\ncacheName 1\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
+  ASSERT_TRUE(CreateFile(buffer))
+  << "CreateFile should not fail";
 
   RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
@@ -468,7 +483,8 @@ TEST(ServiceWorkerRegistrar, TestVersion3Migration) {
   ASSERT_EQ((int64_t)0, data[1].lastUpdateTime());
 }
 
-TEST(ServiceWorkerRegistrar, TestVersion4Migration) {
+TEST(ServiceWorkerRegistrar, TestVersion4Migration)
+{
   nsAutoCString buffer(
       "4"
       "\n");
@@ -483,7 +499,8 @@ TEST(ServiceWorkerRegistrar, TestVersion4Migration) {
       "https://scope_1.org\ncurrentWorkerURL 1\ncacheName 1\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
+  ASSERT_TRUE(CreateFile(buffer))
+  << "CreateFile should not fail";
 
   RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
@@ -536,7 +553,8 @@ TEST(ServiceWorkerRegistrar, TestVersion4Migration) {
   ASSERT_EQ((int64_t)0, data[1].lastUpdateTime());
 }
 
-TEST(ServiceWorkerRegistrar, TestVersion5Migration) {
+TEST(ServiceWorkerRegistrar, TestVersion5Migration)
+{
   nsAutoCString buffer(
       "5"
       "\n");
@@ -553,7 +571,8 @@ TEST(ServiceWorkerRegistrar, TestVersion5Migration) {
   buffer.AppendLiteral("cacheName 1\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
+  ASSERT_TRUE(CreateFile(buffer))
+  << "CreateFile should not fail";
 
   RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
@@ -604,7 +623,8 @@ TEST(ServiceWorkerRegistrar, TestVersion5Migration) {
   ASSERT_EQ((int64_t)0, data[1].lastUpdateTime());
 }
 
-TEST(ServiceWorkerRegistrar, TestVersion6Migration) {
+TEST(ServiceWorkerRegistrar, TestVersion6Migration)
+{
   nsAutoCString buffer(
       "6"
       "\n");
@@ -625,7 +645,8 @@ TEST(ServiceWorkerRegistrar, TestVersion6Migration) {
   buffer.AppendLiteral("\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
+  ASSERT_TRUE(CreateFile(buffer))
+  << "CreateFile should not fail";
 
   RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
@@ -676,7 +697,8 @@ TEST(ServiceWorkerRegistrar, TestVersion6Migration) {
   ASSERT_EQ((int64_t)0, data[1].lastUpdateTime());
 }
 
-TEST(ServiceWorkerRegistrar, TestVersion7Migration) {
+TEST(ServiceWorkerRegistrar, TestVersion7Migration)
+{
   nsAutoCString buffer(
       "7"
       "\n");
@@ -710,7 +732,8 @@ TEST(ServiceWorkerRegistrar, TestVersion7Migration) {
   buffer.AppendLiteral("\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
+  ASSERT_TRUE(CreateFile(buffer))
+  << "CreateFile should not fail";
 
   RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
@@ -761,7 +784,8 @@ TEST(ServiceWorkerRegistrar, TestVersion7Migration) {
   ASSERT_EQ((int64_t)ts, data[1].lastUpdateTime());
 }
 
-TEST(ServiceWorkerRegistrar, TestDedupeRead) {
+TEST(ServiceWorkerRegistrar, TestDedupeRead)
+{
   nsAutoCString buffer(
       "3"
       "\n");
@@ -793,7 +817,8 @@ TEST(ServiceWorkerRegistrar, TestDedupeRead) {
       "spec 3\nhttps://scope_1.org\ncurrentWorkerURL 1\ncacheName 1\n");
   buffer.AppendLiteral(SERVICEWORKERREGISTRAR_TERMINATOR "\n");
 
-  ASSERT_TRUE(CreateFile(buffer)) << "CreateFile should not fail";
+  ASSERT_TRUE(CreateFile(buffer))
+  << "CreateFile should not fail";
 
   RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 
@@ -844,7 +869,8 @@ TEST(ServiceWorkerRegistrar, TestDedupeRead) {
   ASSERT_EQ((int64_t)0, data[1].lastUpdateTime());
 }
 
-TEST(ServiceWorkerRegistrar, TestDedupeWrite) {
+TEST(ServiceWorkerRegistrar, TestDedupeWrite)
+{
   {
     RefPtr<ServiceWorkerRegistrarTest> swr = new ServiceWorkerRegistrarTest;
 

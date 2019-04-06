@@ -79,7 +79,8 @@ static Test tests[] = {
 };
 #define NUM_TESTS int((sizeof(tests) / sizeof(tests[0])))
 
-TEST(CRT, main) {
+TEST(CRT, main)
+{
   TestCRT::Test* tp = tests;
   for (int i = 0; i < NUM_TESTS; i++, tp++) {
     Check(tp->s1, tp->s2, tp->n);

@@ -270,7 +270,8 @@ class WebGLTexture final : public nsWrapperCache,
       case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Y:
       case LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_Z:
       case LOCAL_GL_TEXTURE_CUBE_MAP_NEGATIVE_Z:
-        return AutoAssertCast(rawTexImageTarget - LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X);
+        return AutoAssertCast(rawTexImageTarget -
+                              LOCAL_GL_TEXTURE_CUBE_MAP_POSITIVE_X);
 
       default:
         return 0;

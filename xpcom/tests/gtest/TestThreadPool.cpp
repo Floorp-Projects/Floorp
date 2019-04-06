@@ -47,7 +47,8 @@ NS_IMPL_ISUPPORTS(Task, nsIRunnable)
 
 mozilla::Atomic<int> Task::sCount;
 
-TEST(ThreadPool, Main) {
+TEST(ThreadPool, Main)
+{
   nsCOMPtr<nsIThreadPool> pool = new nsThreadPool();
 
   for (int i = 0; i < 100; ++i) {
@@ -61,7 +62,8 @@ TEST(ThreadPool, Main) {
   EXPECT_EQ(Task::sCount, 100);
 }
 
-TEST(ThreadPool, Parallelism) {
+TEST(ThreadPool, Parallelism)
+{
   nsCOMPtr<nsIThreadPool> pool = new nsThreadPool();
 
   // Dispatch and sleep to ensure we have an idle thread
@@ -121,7 +123,8 @@ TEST(ThreadPool, Parallelism) {
   pool->Shutdown();
 }
 
-TEST(ThreadPool, ShutdownWithTimeout) {
+TEST(ThreadPool, ShutdownWithTimeout)
+{
   Task::sCount = 0;
   nsCOMPtr<nsIThreadPool> pool = new nsThreadPool();
 
@@ -161,7 +164,8 @@ TEST(ThreadPool, ShutdownWithTimeout) {
   EXPECT_EQ(Task::sCount, 3);
 }
 
-TEST(ThreadPool, ShutdownWithTimeoutThenSleep) {
+TEST(ThreadPool, ShutdownWithTimeoutThenSleep)
+{
   Task::sCount = 0;
   nsCOMPtr<nsIThreadPool> pool = new nsThreadPool();
 

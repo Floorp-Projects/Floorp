@@ -85,9 +85,11 @@ class TestUserData : public LayerUserData {
   virtual ~TestUserData() { Die(); }
 };
 
-TEST(Layers, LayerConstructor) { TestContainerLayer layer(nullptr); }
+TEST(Layers, LayerConstructor)
+{ TestContainerLayer layer(nullptr); }
 
-TEST(Layers, Defaults) {
+TEST(Layers, Defaults)
+{
   TestContainerLayer layer(nullptr);
   ASSERT_EQ(1.0, layer.GetOpacity());
   ASSERT_EQ(1.0f, layer.GetPostXScale());
@@ -99,7 +101,8 @@ TEST(Layers, Defaults) {
   ASSERT_EQ(nullptr, layer.GetLastChild());
 }
 
-TEST(Layers, Transform) {
+TEST(Layers, Transform)
+{
   TestContainerLayer layer(nullptr);
 
   Matrix4x4 identity;
@@ -108,14 +111,16 @@ TEST(Layers, Transform) {
   ASSERT_EQ(identity, layer.GetTransform());
 }
 
-TEST(Layers, Type) {
+TEST(Layers, Type)
+{
   TestContainerLayer layer(nullptr);
   ASSERT_EQ(nullptr, layer.AsPaintedLayer());
   ASSERT_EQ(nullptr, layer.AsRefLayer());
   ASSERT_EQ(nullptr, layer.AsColorLayer());
 }
 
-TEST(Layers, UserData) {
+TEST(Layers, UserData)
+{
   UniquePtr<TestContainerLayer> layerPtr(new TestContainerLayer(nullptr));
   TestContainerLayer& layer = *layerPtr;
 
@@ -235,7 +240,8 @@ already_AddRefed<Layer> CreateLayerTree(const char* aLayerTreeDescription,
   return rootLayer.forget();
 }
 
-TEST(Layers, LayerTree) {
+TEST(Layers, LayerTree)
+{
   const char* layerTreeSyntax = "c(c(tt))";
   nsIntRegion layerVisibleRegion[] = {
       nsIntRegion(IntRect(0, 0, 100, 100)),
@@ -289,7 +295,8 @@ static void ValidateTreePointers(nsTArray<RefPtr<Layer> >& aLayers) {
   }
 }
 
-TEST(Layers, RepositionChild) {
+TEST(Layers, RepositionChild)
+{
   const char* layerTreeSyntax = "c(ttt)";
 
   nsTArray<RefPtr<Layer> > layers;

@@ -300,16 +300,19 @@ def mozharness_on_generic_worker(config, job, taskdesc):
             "Task generation for mozharness build jobs currently only supported on Windows"
         )
 
-    mh_command = [r'c:\mozilla-build\python\python.exe']
-    mh_command.append('\\'.join([r'.\build\src\testing', run['script'].replace('/', '\\')]))
+    gecko = env['GECKO_PATH'].replace('.', '%cd%')
+    mh_command = [
+            'c:/mozilla-build/python/python.exe',
+            '{}/mach'.format(gecko), 'python',
+    ]
+    mh_command.append('/'.join([gecko, 'testing', run['script']]))
 
     if 'config-paths' in run:
         for path in run['config-paths']:
-            mh_command.append(r'--extra-config-path '
-                              r'.\build\src\{}'.format(path.replace('/', '\\')))
+            mh_command.append('--extra-config-path {}/{}'.format(gecko, path))
 
     for cfg in run['config']:
-        mh_command.append('--config ' + cfg.replace('/', '\\'))
+        mh_command.append('--config ' + cfg)
     if run['use-magic-mh-args']:
         mh_command.append('--branch ' + config.params['project'])
     mh_command.append(r'--work-dir %cd:Z:=z:%\build')

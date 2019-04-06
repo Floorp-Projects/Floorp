@@ -16,7 +16,8 @@ using namespace mozilla;
 void TestParseError(PrefValueKind aKind, const char* aText,
                     nsCString& aErrorMsg);
 
-TEST(PrefsParser, Errors) {
+TEST(PrefsParser, Errors)
+{
   nsAutoCStringN<128> actualErrorMsg;
 
 // Use a macro rather than a function so that the line number reported by

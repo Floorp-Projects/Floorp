@@ -71,6 +71,10 @@ done
 
 rm -rf build logs properties target.dmg
 
+# Use |mach python| if a source checkout exists so in-tree packages are
+# available.
+[[ -d "${GECKO_PATH}" ]] && python="${GECKO_PATH}/mach python" || python="python2.7"
+
 # run the given mozharness script and configs, but pass the rest of the
 # arguments in from our own invocation
-python2.7 $WORKSPACE/mozharness/scripts/${MOZHARNESS_SCRIPT} ${config_cmds} "${@}"
+$python $WORKSPACE/mozharness/scripts/${MOZHARNESS_SCRIPT} ${config_cmds} "${@}"

@@ -274,18 +274,19 @@ nsresult nsBaseChannel::BeginPumpingData() {
     nsCOMPtr<nsISerialEventTarget> serialTarget(do_QueryInterface(target));
     MOZ_ASSERT(serialTarget);
 
-    promise->Then(serialTarget, __func__,
-                  [self, this](nsresult rv) {
-                    MOZ_ASSERT(mPump);
-                    MOZ_ASSERT(NS_SUCCEEDED(rv));
-                    mPump->Resume();
-                  },
-                  [self, this](nsresult rv) {
-                    MOZ_ASSERT(mPump);
-                    MOZ_ASSERT(NS_FAILED(rv));
-                    Cancel(rv);
-                    mPump->Resume();
-                  });
+    promise->Then(
+        serialTarget, __func__,
+        [self, this](nsresult rv) {
+          MOZ_ASSERT(mPump);
+          MOZ_ASSERT(NS_SUCCEEDED(rv));
+          mPump->Resume();
+        },
+        [self, this](nsresult rv) {
+          MOZ_ASSERT(mPump);
+          MOZ_ASSERT(NS_FAILED(rv));
+          Cancel(rv);
+          mPump->Resume();
+        });
   }
 
   return NS_OK;

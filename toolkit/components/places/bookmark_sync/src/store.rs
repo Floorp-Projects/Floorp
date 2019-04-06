@@ -241,7 +241,8 @@ impl<'s> dogear::Store<Error> for Store<'s> {
             "SELECT guid, parentGuid, serverModified, kind, needsMerge, validity
              FROM items
              WHERE NOT isDeleted AND
-                   guid <> :rootGuid",
+                   guid <> :rootGuid
+             ORDER BY guid",
         )?;
         items_statement.bind_by_name("rootGuid", nsCString::from(&*dogear::ROOT_GUID))?;
         while let Some(step) = items_statement.step()? {

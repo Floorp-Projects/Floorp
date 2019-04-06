@@ -25,3 +25,5 @@ NS_QUERYFRAME_TAIL.*$"
 
 SortIncludes: false
 IndentPPDirectives: AfterHash
+StatementMacros: [MARKUPMAP, ASSERT_TRUE, ASSERT_FALSE, TEST, CHECK]
+

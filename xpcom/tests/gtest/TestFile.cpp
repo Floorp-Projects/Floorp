@@ -365,7 +365,8 @@ static bool TestNormalizeNativePath(nsIFile* aBase, nsIFile* aStart) {
   return true;
 }
 
-TEST(TestFile, Tests) {
+TEST(TestFile, Tests)
+{
   nsCOMPtr<nsIFile> base;
   nsresult rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(base));
   ASSERT_TRUE(VerifyResult(rv, "Getting temp directory"));

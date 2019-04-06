@@ -114,7 +114,8 @@ class TestLargestRegion {
   }
 };
 
-TEST(Gfx, RegionSingleRect) {
+TEST(Gfx, RegionSingleRect)
+{
   TestLargestRegion::TestSingleRect(nsRect(0, 52, 720, 480));
   TestLargestRegion::TestSingleRect(nsRect(-20, 40, 50, 20));
   TestLargestRegion::TestSingleRect(nsRect(-20, 40, 10, 8));
@@ -122,19 +123,20 @@ TEST(Gfx, RegionSingleRect) {
   TestLargestRegion::TestSingleRect(nsRect(-10, -10, 20, 20));
 }
 
-TEST(Gfx, RegionNonRectangular) { TestLargestRegion::TestNonRectangular(); }
+TEST(Gfx, RegionNonRectangular)
+{ TestLargestRegion::TestNonRectangular(); }
 
-TEST(Gfx, RegionTwoRectTest) { TestLargestRegion::TwoRectTest(); }
+TEST(Gfx, RegionTwoRectTest)
+{ TestLargestRegion::TwoRectTest(); }
 
-TEST(Gfx, RegionContainsSpecifiedRect) {
-  TestLargestRegion::TestContainsSpecifiedRect();
-}
+TEST(Gfx, RegionContainsSpecifiedRect)
+{ TestLargestRegion::TestContainsSpecifiedRect(); }
 
-TEST(Gfx, RegionTestContainsSpecifiedOverflowingRect) {
-  TestLargestRegion::TestContainsSpecifiedOverflowingRect();
-}
+TEST(Gfx, RegionTestContainsSpecifiedOverflowingRect)
+{ TestLargestRegion::TestContainsSpecifiedOverflowingRect(); }
 
-TEST(Gfx, RegionScaleToInside) {
+TEST(Gfx, RegionScaleToInside)
+{
   {  // no rectangles
     nsRegion r;
 
@@ -176,7 +178,8 @@ TEST(Gfx, RegionScaleToInside) {
   }
 }
 
-TEST(Gfx, RegionIsEqual) {
+TEST(Gfx, RegionIsEqual)
+{
   {
     nsRegion r(nsRect(0, 0, 50, 50));
     EXPECT_FALSE(nsRegion().IsEqual(r));
@@ -215,7 +218,8 @@ TEST(Gfx, RegionIsEqual) {
   }
 }
 
-TEST(Gfx, RegionOrWith) {
+TEST(Gfx, RegionOrWith)
+{
   PR_Sleep(PR_SecondsToInterval(10));
   {
     nsRegion r(nsRect(11840, 11840, 4640, -10880));
@@ -333,7 +337,8 @@ TEST(Gfx, RegionOrWith) {
 #endif
 }
 
-TEST(Gfx, RegionSubWith) {
+TEST(Gfx, RegionSubWith)
+{
   {
     nsRegion r1(nsRect(0, 0, 100, 50));
     r1.OrWith(nsRect(50, 50, 50, 50));
@@ -588,7 +593,8 @@ TEST(Gfx, RegionSubWith) {
   }
 #endif
 }
-TEST(Gfx, RegionSub) {
+TEST(Gfx, RegionSub)
+{
   {
     nsRegion r1(nsRect(0, 0, 100, 50));
     r1.OrWith(nsRect(50, 50, 50, 50));
@@ -784,7 +790,8 @@ TEST(Gfx, RegionSub) {
 #endif
 }
 
-TEST(Gfx, RegionAndWith) {
+TEST(Gfx, RegionAndWith)
+{
   {
     nsRegion r(nsRect(20, 0, 20, 20));
     r.OrWith(nsRect(0, 20, 40, 20));
@@ -865,7 +872,8 @@ TEST(Gfx, RegionAndWith) {
 #endif
 }
 
-TEST(Gfx, RegionAnd) {
+TEST(Gfx, RegionAnd)
+{
   {
     nsRegion r(nsRect(20, 0, 20, 20));
     r.OrWith(nsRect(0, 20, 40, 20));
@@ -963,7 +971,8 @@ TEST(Gfx, RegionAnd) {
 #endif
 }
 
-TEST(Gfx, RegionSimplify) {
+TEST(Gfx, RegionSimplify)
+{
   {  // ensure simplify works on a single rect
     nsRegion r(nsRect(0, 100, 200, 100));
 
@@ -1065,7 +1074,8 @@ TEST(Gfx, RegionSimplify) {
   }
 }
 
-TEST(Gfx, RegionContains) {
+TEST(Gfx, RegionContains)
+{
   {  // ensure Contains works on a simple region
     nsRegion r(nsRect(0, 0, 100, 100));
 
@@ -1235,7 +1245,8 @@ static void TestVisit(nsRegion &r) {
   res.compare(ref);
 }
 
-TEST(Gfx, RegionVisitEdges) {
+TEST(Gfx, RegionVisitEdges)
+{
   {  // visit edges
     nsRegion r(nsRect(20, 20, 100, 100));
     r.Or(r, nsRect(20, 120, 200, 100));
@@ -1340,7 +1351,8 @@ TEST(Gfx, RegionVisitEdges) {
 
 // The TiledRegion tests use nsIntRect / IntRegion because nsRect doesn't have
 // InflateToMultiple which is required by TiledRegion.
-TEST(Gfx, TiledRegionNoSimplification2Rects) {
+TEST(Gfx, TiledRegionNoSimplification2Rects)
+{
   // Add two rectangles, both rectangles are completely inside
   // different tiles.
   nsIntRegion region;
@@ -1355,7 +1367,8 @@ TEST(Gfx, TiledRegionNoSimplification2Rects) {
   EXPECT_TRUE(region.IsEqual(tiledRegion.GetRegion()));
 }
 
-TEST(Gfx, TiledRegionNoSimplification1Region) {
+TEST(Gfx, TiledRegionNoSimplification1Region)
+{
   // Add two rectangles, both rectangles are completely inside
   // different tiles.
   nsIntRegion region;
@@ -1369,7 +1382,8 @@ TEST(Gfx, TiledRegionNoSimplification1Region) {
   EXPECT_TRUE(region.IsEqual(tiledRegion.GetRegion()));
 }
 
-TEST(Gfx, TiledRegionWithSimplification3Rects) {
+TEST(Gfx, TiledRegionWithSimplification3Rects)
+{
   // Add three rectangles. The first two rectangles are completely inside
   // different tiles, but the third rectangle intersects both tiles.
   TiledIntRegion tiledRegion;
@@ -1382,7 +1396,8 @@ TEST(Gfx, TiledRegionWithSimplification3Rects) {
   EXPECT_TRUE(tiledRegion.GetRegion().IsEqual(nsIntRect(50, 50, 300, 50)));
 }
 
-TEST(Gfx, TiledRegionWithSimplification1Region) {
+TEST(Gfx, TiledRegionWithSimplification1Region)
+{
   // Add three rectangles. The first two rectangles are completely inside
   // different tiles, but the third rectangle intersects both tiles.
   nsIntRegion region;
@@ -1398,7 +1413,8 @@ TEST(Gfx, TiledRegionWithSimplification1Region) {
   EXPECT_TRUE(tiledRegion.GetRegion().IsEqual(nsIntRect(50, 50, 300, 50)));
 }
 
-TEST(Gfx, TiledRegionContains) {
+TEST(Gfx, TiledRegionContains)
+{
   // Add three rectangles. The first two rectangles are completely inside
   // different tiles, but the third rectangle intersects both tiles.
   TiledIntRegion tiledRegion;
@@ -1413,7 +1429,8 @@ TEST(Gfx, TiledRegionContains) {
   EXPECT_FALSE(tiledRegion.Contains(nsIntRect(50, 50, 301, 50)));
 }
 
-TEST(Gfx, TiledRegionIntersects) {
+TEST(Gfx, TiledRegionIntersects)
+{
   // Add three rectangles. The first two rectangles are completely inside
   // different tiles, but the third rectangle intersects both tiles.
   TiledIntRegion tiledRegion;
@@ -1429,7 +1446,8 @@ TEST(Gfx, TiledRegionIntersects) {
   EXPECT_FALSE(tiledRegion.Intersects(nsIntRect(0, 0, 50, 500)));
 }
 
-TEST(Gfx, TiledRegionBoundaryConditions1) {
+TEST(Gfx, TiledRegionBoundaryConditions1)
+{
   TiledIntRegion tiledRegion;
   // This one works fine
   tiledRegion.Add(nsIntRegion(nsIntRect(INT_MIN, INT_MIN, 1, 1)));
@@ -1444,7 +1462,8 @@ TEST(Gfx, TiledRegionBoundaryConditions1) {
   EXPECT_FALSE(tiledRegion.Contains(nsIntRect(0, 0, 1, 1)));
 }
 
-TEST(Gfx, TiledRegionBoundaryConditions2) {
+TEST(Gfx, TiledRegionBoundaryConditions2)
+{
   TiledIntRegion tiledRegion;
   // This one works fine
   tiledRegion.Add(nsIntRegion(nsIntRect(INT_MAX - 1, INT_MIN, 1, 1)));
@@ -1457,7 +1476,8 @@ TEST(Gfx, TiledRegionBoundaryConditions2) {
   EXPECT_FALSE(tiledRegion.Contains(nsIntRect(0, 0, 1, 1)));
 }
 
-TEST(Gfx, TiledRegionBigRects) {
+TEST(Gfx, TiledRegionBigRects)
+{
   TiledIntRegion tiledRegion;
   // Super wide region, forces simplification into bounds mode
   tiledRegion.Add(nsIntRegion(nsIntRect(INT_MIN, INT_MIN, INT_MAX, 100)));
@@ -1474,7 +1494,8 @@ TEST(Gfx, TiledRegionBigRects) {
   EXPECT_FALSE(tiledRegion.Contains(nsIntRect(-2, INT_MIN + 201, 1, 1)));
 }
 
-TEST(Gfx, TiledRegionBoundaryOverflow) {
+TEST(Gfx, TiledRegionBoundaryOverflow)
+{
   TiledIntRegion tiledRegion;
   tiledRegion.Add(nsIntRegion(nsIntRect(100, 100, 1, 1)));
   EXPECT_TRUE(tiledRegion.Contains(nsIntRect(100, 100, 1, 1)));
@@ -1495,7 +1516,8 @@ TEST(Gfx, TiledRegionBoundaryOverflow) {
   EXPECT_FALSE(tiledRegion.Contains(nsIntRect(0, 0, 1, 1)));
 }
 
-TEST(Gfx, TiledRegionNegativeRect) {
+TEST(Gfx, TiledRegionNegativeRect)
+{
   TiledIntRegion tiledRegion;
   // The next region is invalid, so it gets ignored
   tiledRegion.Add(nsIntRegion(nsIntRect(0, 0, -500, -500)));

@@ -16,7 +16,8 @@
 using namespace mozilla::gfx;
 typedef mozilla::gfx::Polygon MozPolygon;
 
-TEST(MozPolygon, TriangulateRectangle) {
+TEST(MozPolygon, TriangulateRectangle)
+{
   const MozPolygon p{
       Point4D(0.0f, 0.0f, 1.0f, 1.0f), Point4D(0.0f, 1.0f, 1.0f, 1.0f),
       Point4D(1.0f, 1.0f, 1.0f, 1.0f), Point4D(1.0f, 0.0f, 1.0f, 1.0f)};
@@ -29,7 +30,8 @@ TEST(MozPolygon, TriangulateRectangle) {
   AssertArrayEQ(triangles, expected);
 }
 
-TEST(MozPolygon, TriangulatePentagon) {
+TEST(MozPolygon, TriangulatePentagon)
+{
   const MozPolygon p{
       Point4D(0.0f, 0.0f, 1.0f, 1.0f), Point4D(0.0f, 1.0f, 1.0f, 1.0f),
       Point4D(0.5f, 1.5f, 1.0f, 1.0f), Point4D(1.0f, 1.0f, 1.0f, 1.0f),
@@ -50,7 +52,8 @@ static void TestClipRect(const MozPolygon& aPolygon,
   EXPECT_TRUE(res == aExpected);
 }
 
-TEST(MozPolygon, ClipRectangle) {
+TEST(MozPolygon, ClipRectangle)
+{
   MozPolygon polygon{
       Point4D(0.0f, 0.0f, 0.0f, 1.0f), Point4D(0.0f, 1.0f, 0.0f, 1.0f),
       Point4D(1.0f, 1.0f, 0.0f, 1.0f), Point4D(1.0f, 0.0f, 0.0f, 1.0f)};
@@ -72,7 +75,8 @@ TEST(MozPolygon, ClipRectangle) {
   TestClipRect(polygon, expected, Rect(0.2f, 0.2f, 0.6f, 0.6f));
 }
 
-TEST(MozPolygon, ClipTriangle) {
+TEST(MozPolygon, ClipTriangle)
+{
   MozPolygon clipped, expected;
   const MozPolygon polygon{Point4D(0.0f, 0.0f, 0.0f, 1.0f),
                            Point4D(0.0f, 1.0f, 0.0f, 1.0f),

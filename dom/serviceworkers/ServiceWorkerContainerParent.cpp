@@ -79,18 +79,19 @@ IPCResult ServiceWorkerContainerParent::RecvGetRegistrations(
   }
 
   mProxy->GetRegistrations(ClientInfo(aClientInfo))
-      ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-             [aResolver](
-                 const nsTArray<ServiceWorkerRegistrationDescriptor>& aList) {
-               IPCServiceWorkerRegistrationDescriptorList ipcList;
-               for (auto& desc : aList) {
-                 ipcList.values().AppendElement(desc.ToIPC());
-               }
-               aResolver(std::move(ipcList));
-             },
-             [aResolver](const CopyableErrorResult& aResult) {
-               aResolver(aResult);
-             });
+      ->Then(
+          GetCurrentThreadSerialEventTarget(), __func__,
+          [aResolver](
+              const nsTArray<ServiceWorkerRegistrationDescriptor>& aList) {
+            IPCServiceWorkerRegistrationDescriptorList ipcList;
+            for (auto& desc : aList) {
+              ipcList.values().AppendElement(desc.ToIPC());
+            }
+            aResolver(std::move(ipcList));
+          },
+          [aResolver](const CopyableErrorResult& aResult) {
+            aResolver(aResult);
+          });
 
   return IPC_OK();
 }

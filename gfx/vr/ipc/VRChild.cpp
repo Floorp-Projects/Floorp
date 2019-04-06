@@ -67,9 +67,7 @@ class OpenVRControllerManifestManager {
 
 StaticRefPtr<OpenVRControllerManifestManager> sOpenVRControllerManifestManager;
 
-VRChild::VRChild(VRProcessParent* aHost)
-  : mHost(aHost),
-    mVRReady(false) {
+VRChild::VRChild(VRProcessParent* aHost) : mHost(aHost), mVRReady(false) {
   MOZ_ASSERT(XRE_IsParentProcess());
 }
 
@@ -200,9 +198,9 @@ mozilla::ipc::IPCResult VRChild::RecvInitCrashReporter(
 }
 
 bool VRChild::SendRequestMemoryReport(const uint32_t& aGeneration,
-                                       const bool& aAnonymize,
-                                       const bool& aMinimizeMemoryUsage,
-                                       const Maybe<FileDescriptor>& aDMDFile) {
+                                      const bool& aAnonymize,
+                                      const bool& aMinimizeMemoryUsage,
+                                      const Maybe<FileDescriptor>& aDMDFile) {
   mMemoryReportRequest = MakeUnique<MemoryReportRequestHost>(aGeneration);
   Unused << PVRChild::SendRequestMemoryReport(aGeneration, aAnonymize,
                                               aMinimizeMemoryUsage, aDMDFile);

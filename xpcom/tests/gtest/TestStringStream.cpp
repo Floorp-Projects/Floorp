@@ -52,6 +52,8 @@ static void TestStringStreamClone(uint32_t aNumBytes) {
 
 }  // namespace
 
-TEST(StringStream, Simple_4k) { TestStringStream(1024 * 4); }
+TEST(StringStream, Simple_4k)
+{ TestStringStream(1024 * 4); }
 
-TEST(StringStream, Clone_4k) { TestStringStreamClone(1024 * 4); }
+TEST(StringStream, Clone_4k)
+{ TestStringStreamClone(1024 * 4); }

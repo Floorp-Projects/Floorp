@@ -44,18 +44,19 @@ RefPtr<MediaDataDecoder::InitPromise> RemoteMediaDataDecoder::Init() {
   RefPtr<RemoteMediaDataDecoder> self = this;
   return InvokeAsync(mAbstractManagerThread, __func__,
                      [self]() { return self->mChild->Init(); })
-      ->Then(mAbstractManagerThread, __func__,
-             [self, this](TrackType aTrack) {
-               mDescription = mChild->GetDescriptionName() +
-                              NS_LITERAL_CSTRING(" (remote)");
-               mIsHardwareAccelerated =
-                   mChild->IsHardwareAccelerated(mHardwareAcceleratedReason);
-               mConversion = mChild->NeedsConversion();
-               return InitPromise::CreateAndResolve(aTrack, __func__);
-             },
-             [self](const MediaResult& aError) {
-               return InitPromise::CreateAndReject(aError, __func__);
-             });
+      ->Then(
+          mAbstractManagerThread, __func__,
+          [self, this](TrackType aTrack) {
+            mDescription =
+                mChild->GetDescriptionName() + NS_LITERAL_CSTRING(" (remote)");
+            mIsHardwareAccelerated =
+                mChild->IsHardwareAccelerated(mHardwareAcceleratedReason);
+            mConversion = mChild->NeedsConversion();
+            return InitPromise::CreateAndResolve(aTrack, __func__);
+          },
+          [self](const MediaResult& aError) {
+            return InitPromise::CreateAndReject(aError, __func__);
+          });
 }
 
 RefPtr<MediaDataDecoder::DecodePromise> RemoteMediaDataDecoder::Decode(

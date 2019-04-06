@@ -47,8 +47,7 @@ size_t TreeOrderedArray<Node>::Insert(Node& aNode) {
   };
 
   size_t idx;
-  BinarySearchIf(mList, 0, mList.Length(),
-                 PositionComparator(aNode), &idx);
+  BinarySearchIf(mList, 0, mList.Length(), PositionComparator(aNode), &idx);
   mList.InsertElementAt(idx, &aNode);
   return idx;
 }

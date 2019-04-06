@@ -10,7 +10,8 @@
 
 using namespace mozilla;
 
-TEST(TimeUnit, Rounding) {
+TEST(TimeUnit, Rounding)
+{
   int64_t usecs = 66261715;
   double seconds = media::TimeUnit::FromMicroseconds(usecs).ToSeconds();
   EXPECT_EQ(media::TimeUnit::FromSeconds(seconds).ToMicroseconds(), usecs);

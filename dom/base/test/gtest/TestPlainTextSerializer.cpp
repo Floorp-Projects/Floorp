@@ -18,7 +18,8 @@ void ConvertBufToPlainText(nsString &aConBuf, int aFlag) {
 }
 
 // Test for ASCII with format=flowed; delsp=yes
-TEST(PlainTextSerializer, ASCIIWithFlowedDelSp) {
+TEST(PlainTextSerializer, ASCIIWithFlowedDelSp)
+{
   nsString test;
   nsString result;
 
@@ -42,11 +43,12 @@ TEST(PlainTextSerializer, ASCIIWithFlowedDelSp) {
       "Firefox  \r\nFirefox Firefox Firefox\r\n");
 
   ASSERT_TRUE(test.Equals(result))
-      << "Wrong HTML to ASCII text serialization with format=flowed; delsp=yes";
+  << "Wrong HTML to ASCII text serialization with format=flowed; delsp=yes";
 }
 
 // Test for CJK with format=flowed; delsp=yes
-TEST(PlainTextSerializer, CJKWithFlowedDelSp) {
+TEST(PlainTextSerializer, CJKWithFlowedDelSp)
+{
   nsString test;
   nsString result;
 
@@ -74,11 +76,12 @@ TEST(PlainTextSerializer, CJKWithFlowedDelSp) {
   result.AppendLiteral("\r\n");
 
   ASSERT_TRUE(test.Equals(result))
-      << "Wrong HTML to CJK text serialization with format=flowed; delsp=yes";
+  << "Wrong HTML to CJK text serialization with format=flowed; delsp=yes";
 }
 
 // Test for CJK with DisallowLineBreaking
-TEST(PlainTextSerializer, CJKWithDisallowLineBreaking) {
+TEST(PlainTextSerializer, CJKWithDisallowLineBreaking)
+{
   nsString test;
   nsString result;
 
@@ -103,11 +106,12 @@ TEST(PlainTextSerializer, CJKWithDisallowLineBreaking) {
   result.AppendLiteral("\r\n");
 
   ASSERT_TRUE(test.Equals(result))
-      << "Wrong HTML to CJK text serialization with OutputDisallowLineBreaking";
+  << "Wrong HTML to CJK text serialization with OutputDisallowLineBreaking";
 }
 
 // Test for ASCII with format=flowed; and quoted lines in preformatted span.
-TEST(PlainTextSerializer, PreformatFlowedQuotes) {
+TEST(PlainTextSerializer, PreformatFlowedQuotes)
+{
   nsString test;
   nsString result;
 
@@ -134,12 +138,14 @@ TEST(PlainTextSerializer, PreformatFlowedQuotes) {
       ">> Firefox Firefox Firefox Firefox \r\n"
       ">> Firefox Firefox Firefox Firefox\r\n");
 
-  ASSERT_TRUE(test.Equals(result)) << "Wrong HTML to ASCII text serialization "
-                                      "with format=flowed; and quoted "
-                                      "lines";
+  ASSERT_TRUE(test.Equals(result))
+  << "Wrong HTML to ASCII text serialization "
+     "with format=flowed; and quoted "
+     "lines";
 }
 
-TEST(PlainTextSerializer, PrettyPrintedHtml) {
+TEST(PlainTextSerializer, PrettyPrintedHtml)
+{
   nsString test;
   test.AppendLiteral("<html>" NS_LINEBREAK "<body>" NS_LINEBREAK
                      "  first<br>" NS_LINEBREAK "  second<br>" NS_LINEBREAK
@@ -147,10 +153,11 @@ TEST(PlainTextSerializer, PrettyPrintedHtml) {
 
   ConvertBufToPlainText(test, 0);
   ASSERT_TRUE(test.EqualsLiteral("first" NS_LINEBREAK "second" NS_LINEBREAK))
-      << "Wrong prettyprinted html to text serialization";
+  << "Wrong prettyprinted html to text serialization";
 }
 
-TEST(PlainTextSerializer, PreElement) {
+TEST(PlainTextSerializer, PreElement)
+{
   nsString test;
   test.AppendLiteral("<html>" NS_LINEBREAK "<body>" NS_LINEBREAK
                      "<pre>" NS_LINEBREAK "  first" NS_LINEBREAK
@@ -160,10 +167,11 @@ TEST(PlainTextSerializer, PreElement) {
   ConvertBufToPlainText(test, 0);
   ASSERT_TRUE(test.EqualsLiteral("  first" NS_LINEBREAK
                                  "  second" NS_LINEBREAK NS_LINEBREAK))
-      << "Wrong prettyprinted html to text serialization";
+  << "Wrong prettyprinted html to text serialization";
 }
 
-TEST(PlainTextSerializer, BlockElement) {
+TEST(PlainTextSerializer, BlockElement)
+{
   nsString test;
   test.AppendLiteral("<html>" NS_LINEBREAK "<body>" NS_LINEBREAK
                      "<div>" NS_LINEBREAK "  first" NS_LINEBREAK
@@ -173,10 +181,11 @@ TEST(PlainTextSerializer, BlockElement) {
 
   ConvertBufToPlainText(test, 0);
   ASSERT_TRUE(test.EqualsLiteral("first" NS_LINEBREAK "second" NS_LINEBREAK))
-      << "Wrong prettyprinted html to text serialization";
+  << "Wrong prettyprinted html to text serialization";
 }
 
-TEST(PlainTextSerializer, PreWrapElementForThunderbird) {
+TEST(PlainTextSerializer, PreWrapElementForThunderbird)
+{
   // This test examines the magic pre-wrap setup that Thunderbird relies on.
   nsString test;
   test.AppendLiteral(
@@ -193,15 +202,16 @@ TEST(PlainTextSerializer, PreWrapElementForThunderbird) {
       "  first" NS_LINEBREAK "line is" NS_LINEBREAK "too long" NS_LINEBREAK
       "  second" NS_LINEBREAK "line is" NS_LINEBREAK "even" NS_LINEBREAK
       "loooonger" NS_LINEBREAK NS_LINEBREAK NS_LINEBREAK))
-      << "Wrong prettyprinted html to text serialization";
+  << "Wrong prettyprinted html to text serialization";
 }
 
-TEST(PlainTextSerializer, Simple) {
+TEST(PlainTextSerializer, Simple)
+{
   nsString test;
   test.AppendLiteral(
       "<html><base>base</base><head><span>span</span></head>"
       "<body>body</body></html>");
   ConvertBufToPlainText(test, 0);
   ASSERT_TRUE(test.EqualsLiteral("basespanbody"))
-      << "Wrong html to text serialization";
+  << "Wrong html to text serialization";
 }

@@ -417,6 +417,16 @@ bool VRDisplayExternal::PullState(const std::function<bool()>& aWaitCondition) {
 bool VRDisplayExternal::PullState() {
   VRManager* vm = VRManager::Get();
   VRSystemManagerExternal* manager = vm->GetExternalManager();
+  nsTArray<RefPtr<gfx::VRDisplayHost>> displays;
+  manager->GetHMDs(displays);
+
+  // When VR process crashes, it happenes VRDisplayHost is destroyed
+  // but its mSubmitThread is still running. We need add this
+  // to check if we still need to access its shmem.
+  if (!displays.Length()) {
+    return false;
+  }
+
   return manager->PullState(&mDisplayInfo.mDisplayState, &mLastSensorState,
                             mDisplayInfo.mControllerState);
 }
@@ -635,9 +645,16 @@ void VRSystemManagerExternal::Destroy() { Shutdown(); }
 
 void VRSystemManagerExternal::Shutdown() {
   if (mDisplay) {
+    // We will close Shmem at the next frame to avoid
+    // mSubmitThread is still running but its shmem
+    // has been released.
+    mDisplay->ShutdownSubmitThread();
     mDisplay = nullptr;
+  } else {
+    mDisplay = nullptr;
+    CloseShmem();
   }
-  CloseShmem();
+
   mDoShutdown = false;
 }
 
@@ -873,7 +890,6 @@ bool VRSystemManagerExternal::PullState(
 void VRSystemManagerExternal::PushState(VRBrowserState* aBrowserState,
                                         bool aNotifyCond) {
   MOZ_ASSERT(aBrowserState);
-  MOZ_ASSERT(mExternalShmem);
   if (mExternalShmem) {
 #if defined(MOZ_WIDGET_ANDROID)
     if (pthread_mutex_lock((pthread_mutex_t*)&(mExternalShmem->geckoMutex)) ==

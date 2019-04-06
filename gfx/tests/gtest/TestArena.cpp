@@ -156,12 +156,14 @@ static void TestArenaLimit(IterableArena::ArenaType aType,
 
 using namespace test_arena;
 
-TEST(Moz2D, FixedArena) {
+TEST(Moz2D, FixedArena)
+{
   TestArenaAlloc(IterableArena::FIXED_SIZE);
   TestArenaLimit(IterableArena::FIXED_SIZE, true);
 }
 
-TEST(Moz2D, GrowableArena) {
+TEST(Moz2D, GrowableArena)
+{
   TestArenaAlloc(IterableArena::GROWABLE);
   TestArenaLimit(IterableArena::GROWABLE, false);
 

@@ -90,7 +90,8 @@ bool UnownedCallback::sError = false;
 //// Tests
 
 TEST(storage_async_callbacks_with_spun_event_loops,
-     SpinEventsLoopInHandleResult) {
+     SpinEventsLoopInHandleResult)
+{
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // Create a test table and populate it.
@@ -120,8 +121,8 @@ TEST(storage_async_callbacks_with_spun_event_loops,
   spin_events_loop_until_true(&UnownedCallback::sResult);
 }
 
-TEST(storage_async_callbacks_with_spun_event_loops,
-     SpinEventsLoopInHandleError) {
+TEST(storage_async_callbacks_with_spun_event_loops, SpinEventsLoopInHandleError)
+{
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   // Create a test table and populate it.

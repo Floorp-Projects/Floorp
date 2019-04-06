@@ -15,7 +15,8 @@
 // In nsStandardURL.cpp
 extern nsresult Test_NormalizeIPv4(const nsACString& host, nsCString& result);
 
-TEST(TestStandardURL, Simple) {
+TEST(TestStandardURL, Simple)
+{
   nsCOMPtr<nsIURI> url;
   ASSERT_EQ(NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
                 .SetSpec(NS_LITERAL_CSTRING("http://example.com"))
@@ -79,7 +80,8 @@ TEST(TestStandardURL, Simple) {
   ASSERT_TRUE(out == NS_LITERAL_CSTRING("some-book-mark"));
 }
 
-TEST(TestStandardURL, NormalizeGood) {
+TEST(TestStandardURL, NormalizeGood)
+{
   nsCString result;
   const char* manual[] = {"0.0.0.0",
                           "0.0.0.0",
@@ -184,7 +186,8 @@ TEST(TestStandardURL, NormalizeGood) {
   }
 }
 
-TEST(TestStandardURL, NormalizeBad) {
+TEST(TestStandardURL, NormalizeBad)
+{
   nsAutoCString result;
   const char* manual[] = {
       "x22.232.12.32", "122..12.32",    "122.12.32.12.32", "122.12.32..",
@@ -202,7 +205,8 @@ TEST(TestStandardURL, NormalizeBad) {
   }
 }
 
-TEST(TestStandardURL, From_test_standardurldotjs) {
+TEST(TestStandardURL, From_test_standardurldotjs)
+{
   // These are test (success and failure) cases from test_standardurl.js
   nsAutoCString result;
 
@@ -327,7 +331,8 @@ MOZ_GTEST_BENCH(TestStandardURL, DISABLED_NormalizePerfFails, [] {
 });
 #endif
 
-TEST(TestStandardURL, Mutator) {
+TEST(TestStandardURL, Mutator)
+{
   nsAutoCString out;
   nsCOMPtr<nsIURI> uri;
   nsresult rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
@@ -354,7 +359,8 @@ TEST(TestStandardURL, Mutator) {
   ASSERT_TRUE(out == NS_LITERAL_CSTRING("https://mozilla.org/path?query#ref"));
 }
 
-TEST(TestStandardURL, Deserialize_Bug1392739) {
+TEST(TestStandardURL, Deserialize_Bug1392739)
+{
   mozilla::ipc::StandardURLParams standard_params;
   standard_params.urlType() = nsIStandardURL::URLTYPE_STANDARD;
   standard_params.spec() = NS_LITERAL_CSTRING("");

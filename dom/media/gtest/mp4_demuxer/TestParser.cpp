@@ -68,7 +68,8 @@ class TestStream : public ByteStream,
   size_t mSize;
 };
 
-TEST(MP4Metadata, EmptyStream) {
+TEST(MP4Metadata, EmptyStream)
+{
   RefPtr<ByteStream> stream = new TestStream(nullptr, 0);
 
   MP4Metadata::ResultAndByteBuffer metadataBuffer =
@@ -94,7 +95,8 @@ TEST(MP4Metadata, EmptyStream) {
   EXPECT_FALSE(metadata.Crypto().Ref()->valid);
 }
 
-TEST(MoofParser, EmptyStream) {
+TEST(MoofParser, EmptyStream)
+{
   RefPtr<ByteStream> stream = new TestStream(nullptr, 0);
 
   MoofParser parser(stream, AsVariant(ParseAllTracks{}), false);
@@ -248,7 +250,8 @@ static const TestFileData testFiles[] = {
      300, 1, 10032000, false, 0, true, true, 2},  // Uses bad track id 0
 };
 
-TEST(MP4Metadata, test_case_mp4) {
+TEST(MP4Metadata, test_case_mp4)
+{
   const TestFileData* tests = nullptr;
   size_t length = 0;
 
@@ -403,7 +406,8 @@ TEST(MP4Metadata, test_case_mp4_subsets) {
 }
 #endif
 
-TEST(MoofParser, test_case_mp4) {
+TEST(MoofParser, test_case_mp4)
+{
   const TestFileData* tests = nullptr;
   size_t length = 0;
 
@@ -448,7 +452,8 @@ TEST(MoofParser, test_case_mp4) {
   }
 }
 
-TEST(MoofParser, test_case_sample_description_entries) {
+TEST(MoofParser, test_case_sample_description_entries)
+{
   const TestFileData* tests = testFiles;
   size_t length = ArrayLength(testFiles);
 
@@ -495,7 +500,8 @@ TEST(MoofParser, test_case_sample_description_entries) {
 // used id 0 to trigger special handling in the MoofParser to read multiple
 // track metadata, but since muxers use track id 0 in the wild, we want to
 // make sure they can't accidentally trigger such handling.
-TEST(MoofParser, test_case_track_id_0_does_not_read_multitracks) {
+TEST(MoofParser, test_case_track_id_0_does_not_read_multitracks)
+{
   const char* zeroTrackIdFileName =
       "test_case_1519617-video-has-track_id-0.mp4";
   nsTArray<uint8_t> buffer = ReadTestFile(zeroTrackIdFileName);
@@ -550,7 +556,8 @@ TEST(MoofParser, test_case_track_id_0_does_not_read_multitracks) {
 // if its crypto member is valid. However, even on files where the pssh isn't
 // in the init segment, the MoofParser should still read the sinf, as in this
 // testcase.
-TEST(MoofParser, test_case_track_id_0_reads_crypto_metadata) {
+TEST(MoofParser, test_case_track_id_0_reads_crypto_metadata)
+{
   const char* zeroTrackIdFileName =
       "test_case_1519617-cenc-init-with-track_id-0.mp4";
   nsTArray<uint8_t> buffer = ReadTestFile(zeroTrackIdFileName);
@@ -607,7 +614,8 @@ TEST(MoofParser, test_case_track_id_0_reads_crypto_metadata) {
 // should parse such fragmented media. In this test the metadata contains info
 // for track ids 1 and 2, but track 2's track fragment headers (traf) have been
 // over written with free space boxes (free).
-TEST(MoofParser, test_case_moofs_missing_trafs) {
+TEST(MoofParser, test_case_moofs_missing_trafs)
+{
   const char* noTrafsForTrack2MoofsFileName =
       "test_case_1519617-track2-trafs-removed.mp4";
   nsTArray<uint8_t> buffer = ReadTestFile(noTrafsForTrack2MoofsFileName);
@@ -750,7 +758,8 @@ uint8_t media_gtest_video_init_mp4[] = {
 
 const uint32_t media_gtest_video_init_mp4_len = 745;
 
-TEST(MP4Metadata, EmptyCTTS) {
+TEST(MP4Metadata, EmptyCTTS)
+{
   RefPtr<MediaByteBuffer> buffer =
       new MediaByteBuffer(media_gtest_video_init_mp4_len);
   buffer->AppendElements(media_gtest_video_init_mp4,
@@ -845,7 +854,7 @@ TEST_F(MP4MetadataTelemetryFixture, Telemetry) {
             "MEDIA_MP4_PARSE_SAMPLE_DESCRIPTION_ENTRIES_HAVE_MULTIPLE_CODECS",
             snapshot, &multipleCodecsHistogram);
         ASSERT_TRUE(multipleCodecsHistogram.isObject())
-            << "Multiple codecs histogram should exist!";
+        << "Multiple codecs histogram should exist!";
 
         TelemetryTestHelpers::GetProperty(cx.GetJSContext(), "values",
                                           multipleCodecsHistogram, &values);
@@ -870,7 +879,7 @@ TEST_F(MP4MetadataTelemetryFixture, Telemetry) {
             "MEDIA_MP4_PARSE_SAMPLE_DESCRIPTION_ENTRIES_HAVE_MULTIPLE_CRYPTO",
             snapshot, &multipleCryptoHistogram);
         ASSERT_TRUE(multipleCryptoHistogram.isObject())
-            << "Multiple crypto histogram should exist!";
+        << "Multiple crypto histogram should exist!";
 
         TelemetryTestHelpers::GetProperty(cx.GetJSContext(), "values",
                                           multipleCryptoHistogram, &values);
@@ -893,7 +902,7 @@ TEST_F(MP4MetadataTelemetryFixture, Telemetry) {
             cx.GetJSContext(), "MEDIA_MP4_PARSE_NUM_SAMPLE_DESCRIPTION_ENTRIES",
             snapshot, &numSamplesHistogram);
         ASSERT_TRUE(numSamplesHistogram.isObject())
-            << "Num sample description entries histogram should exist!";
+        << "Num sample description entries histogram should exist!";
 
         TelemetryTestHelpers::GetProperty(cx.GetJSContext(), "values",
                                           numSamplesHistogram, &values);

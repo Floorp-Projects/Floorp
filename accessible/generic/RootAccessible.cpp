@@ -150,8 +150,8 @@ const char* const kEventTypes[] = {
     // add ourself as a CheckboxStateChange listener (custom event fired in
     // HTMLInputElement.cpp)
     "CheckboxStateChange",
-    // add ourself as a RadioStateChange Listener ( custom event fired in in
-    // HTMLInputElement.cpp  & radio.xml)
+    // add ourself as a RadioStateChange Listener (custom event fired in in
+    // HTMLInputElement.cpp & radio.js)
     "RadioStateChange", "popupshown", "popuphiding", "DOMMenuInactive",
     "DOMMenuItemActive", "DOMMenuItemInactive", "DOMMenuBarActive",
     "DOMMenuBarInactive"};

@@ -94,7 +94,8 @@ class TestWebMWriter : public WebMWriter {
   uint64_t mTimestamp;
 };
 
-TEST(WebMWriter, Metadata) {
+TEST(WebMWriter, Metadata)
+{
   TestWebMWriter writer(ContainerWriter::CREATE_AUDIO_TRACK |
                         ContainerWriter::CREATE_VIDEO_TRACK);
 
@@ -129,7 +130,8 @@ TEST(WebMWriter, Metadata) {
   EXPECT_TRUE(encodedBuf.Length() > 0);
 }
 
-TEST(WebMWriter, Cluster) {
+TEST(WebMWriter, Cluster)
+{
   TestWebMWriter writer(ContainerWriter::CREATE_AUDIO_TRACK |
                         ContainerWriter::CREATE_VIDEO_TRACK);
   // Set opus metadata.
@@ -170,7 +172,8 @@ TEST(WebMWriter, Cluster) {
   EXPECT_TRUE(writer.HaveValidCluster());
 }
 
-TEST(WebMWriter, FLUSH_NEEDED) {
+TEST(WebMWriter, FLUSH_NEEDED)
+{
   TestWebMWriter writer(ContainerWriter::CREATE_AUDIO_TRACK |
                         ContainerWriter::CREATE_VIDEO_TRACK);
   // Set opus metadata.
@@ -289,7 +292,8 @@ static int64_t webm_tell(void* aUserData) {
   return ioData->offset.isValid() ? ioData->offset.value() : -1;
 }
 
-TEST(WebMWriter, bug970774_aspect_ratio) {
+TEST(WebMWriter, bug970774_aspect_ratio)
+{
   TestWebMWriter writer(ContainerWriter::CREATE_AUDIO_TRACK |
                         ContainerWriter::CREATE_VIDEO_TRACK);
   // Set opus metadata.

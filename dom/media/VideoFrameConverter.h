@@ -93,13 +93,14 @@ class VideoFrameConverter {
     mLastFrameQueuedForPacing = t;
 
     mPacingTimer->WaitUntil(t, __func__)
-        ->Then(mTaskQueue, __func__,
-               [self = RefPtr<VideoFrameConverter>(this), this,
-                image = RefPtr<layers::Image>(aChunk.mFrame.GetImage()), t,
-                size, aForceBlack]() mutable {
-                 QueueForProcessing(std::move(image), t, size, aForceBlack);
-               },
-               [] {});
+        ->Then(
+            mTaskQueue, __func__,
+            [self = RefPtr<VideoFrameConverter>(this), this,
+             image = RefPtr<layers::Image>(aChunk.mFrame.GetImage()), t, size,
+             aForceBlack]() mutable {
+              QueueForProcessing(std::move(image), t, size, aForceBlack);
+            },
+            [] {});
   }
 
   void SetTrackEnabled(bool aEnabled) {

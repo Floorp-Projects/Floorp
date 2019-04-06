@@ -88,6 +88,11 @@ public final class SampleBuffer implements Parcelable {
         }
     }
 
+    @WrapForJNI
+    public boolean isValid() {
+        return mSharedMem != null;
+    }
+
     @Override public String toString() {
         return "Buffer: " + mSharedMem;
     }

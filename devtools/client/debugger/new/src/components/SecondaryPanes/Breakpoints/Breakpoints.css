@@ -6,20 +6,24 @@
   margin: 2px 3px;
 }
 
-.pane.breakpoints-list {
-  padding-bottom: 0.35em;
-}
-
 .breakpoints-list * {
   user-select: none;
 }
 
+.breakpoints-list {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
 .breakpoints-list .breakpoint-heading {
   text-overflow: ellipsis;
-  overflow: hidden;
-  display: flex;
   width: 100%;
-  align-items: center;
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.breakpoint-heading:not(:first-child) {
+  margin-top: 2px;
 }
 
 .breakpoints-list .breakpoint-heading .filename {
@@ -34,10 +38,8 @@
 
 .breakpoints-list .breakpoint-heading,
 .breakpoints-list .breakpoint {
-  font-size: 12px;
   color: var(--theme-content-color1);
   position: relative;
-  transition: all 0.25s ease;
   cursor: pointer;
 }
 
@@ -45,53 +47,56 @@
 .breakpoints-list .breakpoint,
 .breakpoints-exceptions,
 .breakpoints-exceptions-caught {
-  padding: 0.25em 1em;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  padding-top: 2px;
+  padding-bottom: 2px;
+  padding-inline-start: 16px;
+  padding-inline-end: 12px;
 }
 
 .breakpoints-exceptions {
-  padding-bottom: 0.5em;
-  padding-top: 0.5em;
+  padding-bottom: 3px;
+  padding-top: 3px;
   user-select: none;
 }
 
-.breakpoints-list .breakpoint {
-  min-height: var(--breakpoint-expression-height);
-  overflow: hidden;
-}
-
 .breakpoints-exceptions-caught {
-  padding: 0 1em 0.5em 3em;
-  margin-top: -0.25em;
+  padding-bottom: 3px;
+  padding-top: 3px;
+  padding-inline-start: 36px;
 }
 
-html[dir="rtl"] .breakpoints-exceptions-caught {
-  padding: 0 3em 0.5em 1em;
+.breakpoints-exceptions-options {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+.xhr-breakpoints-pane .breakpoints-exceptions-options {
+  border-bottom: 1px solid var(--theme-splitter-color);
 }
 
 .breakpoints-exceptions-options:not(.empty) {
   border-bottom: 1px solid var(--theme-splitter-color);
-  margin-bottom: 3px;
 }
 
 .breakpoints-exceptions input,
 .breakpoints-exceptions-caught input {
   padding-inline-start: 2px;
+  margin-top: 0px;
+  margin-bottom: 0px;
   margin-inline-start: 0;
+  margin-inline-end: 2px;
   vertical-align: text-bottom;
 }
 
 .breakpoint-exceptions-label {
-  padding-top: 2px;
-  padding-inline-start: 2px;
+  line-height: 14px;
   padding-inline-end: 8px;
   cursor: default;
-}
-
-.breakpoints-list .breakpoint,
-.breakpoints-exceptions,
-.breakpoints-exceptions-caught {
-  display: flex;
-  align-items: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 html[dir="rtl"] .breakpoints-list .breakpoint,
@@ -128,11 +133,17 @@ html .breakpoints-list .breakpoint.paused {
   background-color: var(--search-overlays-semitransparent);
 }
 
+.breakpoint-line-close {
+  margin-inline-start: 4px;
+}
+
 .breakpoints-list .breakpoint .breakpoint-line {
   font-size: 11px;
   color: var(--theme-comment);
   min-width: 16px;
   text-align: end;
+  padding-top: 1px;
+  padding-bottom: 1px;
 }
 
 .breakpoints-list .breakpoint:hover .breakpoint-line,
@@ -145,24 +156,24 @@ html .breakpoints-list .breakpoint.paused {
 }
 
 .breakpoints-list .breakpoint-label {
-  max-width: calc(100% - var(--breakpoint-expression-right-clear-space));
   display: inline-block;
-  padding-inline-end: 8px;
   cursor: pointer;
   flex-grow: 1;
   text-overflow: ellipsis;
   overflow: hidden;
-  padding-top: 2px;
   font-size: 11px;
 }
 
-.breakpoints-list .breakpoint-label,
+.breakpoints-list .breakpoint-label span,
 .breakpoint-line-close {
-  line-height: 1.4em;
+  display: inline;
+  line-height: 14px;
 }
 
 .breakpoint-checkbox {
-  margin-inline-start: 0;
+  margin-inline-start: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
   vertical-align: text-bottom;
 }
 

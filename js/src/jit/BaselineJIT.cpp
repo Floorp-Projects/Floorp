@@ -525,19 +525,20 @@ RetAddrEntry& BaselineScript::retAddrEntryFromReturnOffset(
 #ifdef DEBUG
   bool found =
 #endif
-      BinarySearchIf(RetAddrEntries(this), 0, numRetAddrEntries(),
-                     [&returnOffset](const RetAddrEntry& entry) {
-                       size_t roffset = returnOffset.offset();
-                       size_t entryRoffset = entry.returnOffset().offset();
-                       if (roffset < entryRoffset) {
-                         return -1;
-                       }
-                       if (entryRoffset < roffset) {
-                         return 1;
-                       }
-                       return 0;
-                     },
-                     &loc);
+      BinarySearchIf(
+          RetAddrEntries(this), 0, numRetAddrEntries(),
+          [&returnOffset](const RetAddrEntry& entry) {
+            size_t roffset = returnOffset.offset();
+            size_t entryRoffset = entry.returnOffset().offset();
+            if (roffset < entryRoffset) {
+              return -1;
+            }
+            if (entryRoffset < roffset) {
+              return 1;
+            }
+            return 0;
+          },
+          &loc);
 
   MOZ_ASSERT(found);
   MOZ_ASSERT(loc < numRetAddrEntries());
@@ -550,18 +551,19 @@ template <typename Entries, typename ScriptT>
 static inline bool ComputeBinarySearchMid(ScriptT* script, uint32_t pcOffset,
                                           size_t* loc) {
   Entries entries(script);
-  return BinarySearchIf(entries, 0, entries.numEntries(),
-                        [pcOffset](typename Entries::EntryT& entry) {
-                          uint32_t entryOffset = entry.pcOffset();
-                          if (pcOffset < entryOffset) {
-                            return -1;
-                          }
-                          if (entryOffset < pcOffset) {
-                            return 1;
-                          }
-                          return 0;
-                        },
-                        loc);
+  return BinarySearchIf(
+      entries, 0, entries.numEntries(),
+      [pcOffset](typename Entries::EntryT& entry) {
+        uint32_t entryOffset = entry.pcOffset();
+        if (pcOffset < entryOffset) {
+          return -1;
+        }
+        if (entryOffset < pcOffset) {
+          return 1;
+        }
+        return 0;
+      },
+      loc);
 }
 
 uint8_t* BaselineScript::returnAddressForEntry(const RetAddrEntry& ent) {

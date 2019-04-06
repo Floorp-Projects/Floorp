@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function openFirstBreakpointContextMenu(dbg) {
-  rightClickElement(dbg, "breakpointItem", 3);
+  rightClickElement(dbg, "breakpointItem", 2);
 }
 
 // Tests to see if we can trigger a breakpoint action via the context menu

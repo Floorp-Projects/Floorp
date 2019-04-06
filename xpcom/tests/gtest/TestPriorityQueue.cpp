@@ -31,7 +31,8 @@ class MaxCompare {
   bool LessThan(const A& a, const A& b) { return a > b; }
 };
 
-TEST(PriorityQueue, Main) {
+TEST(PriorityQueue, Main)
+{
   nsTPriorityQueue<int> queue;
 
   EXPECT_TRUE(queue.IsEmpty());

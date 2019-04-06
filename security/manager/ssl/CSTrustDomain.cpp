@@ -44,20 +44,20 @@ Result CSTrustDomain::GetCertTrust(EndEntityOrCA endEntityOrCA,
     return MapPRErrorCodeToResult(PR_GetError());
   }
 
-  nsAutoCString encIssuer;
-  nsAutoCString encSerial;
-  nsAutoCString encSubject;
-  nsAutoCString encPubKey;
+  nsTArray<uint8_t> issuerBytes;
+  nsTArray<uint8_t> serialBytes;
+  nsTArray<uint8_t> subjectBytes;
+  nsTArray<uint8_t> pubKeyBytes;
 
-  nsresult nsrv = BuildRevocationCheckStrings(candidateCert.get(), encIssuer,
-                                              encSerial, encSubject, encPubKey);
+  nsresult nsrv = BuildRevocationCheckArrays(
+      candidateCert, issuerBytes, serialBytes, subjectBytes, pubKeyBytes);
   if (NS_FAILED(nsrv)) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }
 
   int16_t revocationState;
-  nsrv = mCertBlocklist->GetRevocationState(encIssuer, encSerial, encSubject,
-                                            encPubKey, &revocationState);
+  nsrv = mCertBlocklist->GetRevocationState(
+      issuerBytes, serialBytes, subjectBytes, pubKeyBytes, &revocationState);
   if (NS_FAILED(nsrv)) {
     return Result::FATAL_ERROR_LIBRARY_FAILURE;
   }

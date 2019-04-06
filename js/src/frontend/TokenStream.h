@@ -1941,6 +1941,22 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
     return static_cast<TokenStreamSpecific*>(this);
   }
 
+ private:
+  // Computing accurate column numbers requires linearly iterating through all
+  // source units in the line to account for multi-unit code points; on long
+  // lines requiring many column computations, this becomes quadratic.
+  //
+  // However, because usually we need columns for advancing offsets through
+  // scripts, caching the last ((line number, offset) => relative column)
+  // mapping -- in similar manner to how |SourceUnits::lastIndex_| is used to
+  // cache (offset => line number) mappings -- lets us avoid re-iterating
+  // through the line prefix in most cases.
+
+  mutable uint32_t lastLineForColumn_ = UINT32_MAX;
+  mutable uint32_t lastOffsetForColumn_ = UINT32_MAX;
+  mutable uint32_t lastColumn_ = 0;
+
+ protected:
   uint32_t computeColumn(LineToken lineToken, uint32_t offset) const;
   void computeLineAndColumn(uint32_t offset, uint32_t* line,
                             uint32_t* column) const;

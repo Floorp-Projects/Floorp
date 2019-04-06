@@ -16,12 +16,14 @@
 // a particular value to make sure we receive the correct
 // result through this API.
 
-TEST(GfxPrefs, Singleton) {
+TEST(GfxPrefs, Singleton)
+{
   gfxPrefs::GetSingleton();
   ASSERT_TRUE(gfxPrefs::SingletonExists());
 }
 
-TEST(GfxPrefs, LiveValues) {
+TEST(GfxPrefs, LiveValues)
+{
   gfxPrefs::GetSingleton();
   ASSERT_TRUE(gfxPrefs::SingletonExists());
 
@@ -35,7 +37,8 @@ TEST(GfxPrefs, LiveValues) {
   ASSERT_TRUE(gfxPrefs::MSAALevel() == 2);
 }
 
-TEST(GfxPrefs, OnceValues) {
+TEST(GfxPrefs, OnceValues)
+{
   gfxPrefs::GetSingleton();
   ASSERT_TRUE(gfxPrefs::SingletonExists());
 
@@ -52,7 +55,8 @@ TEST(GfxPrefs, OnceValues) {
   ASSERT_TRUE(gfxPrefs::APZMaxVelocity() == -1.0f);
 }
 
-TEST(GfxPrefs, Set) {
+TEST(GfxPrefs, Set)
+{
   gfxPrefs::GetSingleton();
   ASSERT_TRUE(gfxPrefs::SingletonExists());
 
@@ -80,7 +84,8 @@ TEST(GfxPrefs, Set) {
 
 // Randomly test the function we use in nsExceptionHandler.cpp here:
 extern bool SimpleNoCLibDtoA(double aValue, char* aBuffer, int aBufferLength);
-TEST(GfxPrefs, StringUtility) {
+TEST(GfxPrefs, StringUtility)
+{
   char testBuffer[64];
   double testVal[] = {
       13.4,

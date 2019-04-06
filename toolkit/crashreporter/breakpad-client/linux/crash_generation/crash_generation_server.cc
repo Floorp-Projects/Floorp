@@ -41,6 +41,8 @@
 
 #include <vector>
 
+#include "nsThreadUtils.h"
+
 #include "linux/crash_generation/crash_generation_server.h"
 #include "linux/crash_generation/client_info.h"
 #include "linux/handler/exception_handler.h"
@@ -326,6 +328,7 @@ CrashGenerationServer::MakeMinidumpFilename(string& outFilename)
 void*
 CrashGenerationServer::ThreadMain(void *arg)
 {
+  NS_SetCurrentThreadName("Breakpad Server");
   reinterpret_cast<CrashGenerationServer*>(arg)->Run();
   return NULL;
 }

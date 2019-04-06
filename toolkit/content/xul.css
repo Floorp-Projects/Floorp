@@ -186,10 +186,6 @@ radiogroup {
   -moz-box-orient: vertical;
 }
 
-radio {
-  -moz-binding: url("chrome://global/content/bindings/radio.xml#radio");
-}
-
 /******** groupbox *********/
 
 groupbox {

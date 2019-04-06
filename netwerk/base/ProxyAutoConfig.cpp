@@ -19,6 +19,7 @@
 #include "js/PropertySpec.h"
 #include "js/SourceText.h"
 #include "js/Utility.h"
+#include "js/Warnings.h"  // JS::SetWarningReporter
 #include "prnetdb.h"
 #include "nsITimer.h"
 #include "mozilla/net/DNS.h"
@@ -636,9 +637,9 @@ class JSContextWrapper {
   }
 };
 
-const JSClass JSContextWrapper::sGlobalClass = {
-    "PACResolutionThreadGlobal", JSCLASS_GLOBAL_FLAGS,
-    &JS::DefaultGlobalClassOps};
+const JSClass JSContextWrapper::sGlobalClass = {"PACResolutionThreadGlobal",
+                                                JSCLASS_GLOBAL_FLAGS,
+                                                &JS::DefaultGlobalClassOps};
 
 void ProxyAutoConfig::SetThreadLocalIndex(uint32_t index) {
   sRunningIndex = index;

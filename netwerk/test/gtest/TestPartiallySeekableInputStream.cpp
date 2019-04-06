@@ -64,7 +64,8 @@ PartiallySeekableInputStream* CreateStream(uint32_t aSize, uint64_t aStreamSize,
 }
 
 // Simple reading.
-TEST(TestPartiallySeekableInputStream, SimpleRead) {
+TEST(TestPartiallySeekableInputStream, SimpleRead)
+{
   const size_t kBufSize = 10;
 
   nsCString buf;
@@ -98,7 +99,8 @@ TEST(TestPartiallySeekableInputStream, SimpleRead) {
 }
 
 // Simple seek
-TEST(TestPartiallySeekableInputStream, SimpleSeek) {
+TEST(TestPartiallySeekableInputStream, SimpleSeek)
+{
   const size_t kBufSize = 10;
 
   nsCString buf;
@@ -186,7 +188,8 @@ TEST(TestPartiallySeekableInputStream, SimpleSeek) {
 }
 
 // Full in cache
-TEST(TestPartiallySeekableInputStream, FullCachedSeek) {
+TEST(TestPartiallySeekableInputStream, FullCachedSeek)
+{
   const size_t kBufSize = 10;
 
   nsCString buf;
@@ -218,7 +221,8 @@ TEST(TestPartiallySeekableInputStream, FullCachedSeek) {
   ASSERT_EQ((uint64_t)0, length);
 }
 
-TEST(TestPartiallySeekableInputStream, QIInputStreamLength) {
+TEST(TestPartiallySeekableInputStream, QIInputStreamLength)
+{
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -242,7 +246,8 @@ TEST(TestPartiallySeekableInputStream, QIInputStreamLength) {
   }
 }
 
-TEST(TestPartiallySeekableInputStream, InputStreamLength) {
+TEST(TestPartiallySeekableInputStream, InputStreamLength)
+{
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -262,7 +267,8 @@ TEST(TestPartiallySeekableInputStream, InputStreamLength) {
   ASSERT_EQ(buf.Length(), size);
 }
 
-TEST(TestPartiallySeekableInputStream, NegativeInputStreamLength) {
+TEST(TestPartiallySeekableInputStream, NegativeInputStreamLength)
+{
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -282,7 +288,8 @@ TEST(TestPartiallySeekableInputStream, NegativeInputStreamLength) {
   ASSERT_EQ(-1, size);
 }
 
-TEST(TestPartiallySeekableInputStream, AsyncInputStreamLength) {
+TEST(TestPartiallySeekableInputStream, AsyncInputStreamLength)
+{
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -306,7 +313,8 @@ TEST(TestPartiallySeekableInputStream, AsyncInputStreamLength) {
   ASSERT_EQ(buf.Length(), callback->Size());
 }
 
-TEST(TestPartiallySeekableInputStream, NegativeAsyncInputStreamLength) {
+TEST(TestPartiallySeekableInputStream, NegativeAsyncInputStreamLength)
+{
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -330,7 +338,8 @@ TEST(TestPartiallySeekableInputStream, NegativeAsyncInputStreamLength) {
   ASSERT_EQ(-1, callback->Size());
 }
 
-TEST(TestPartiallySeekableInputStream, AbortLengthCallback) {
+TEST(TestPartiallySeekableInputStream, AbortLengthCallback)
+{
   nsCString buf;
   buf.AssignLiteral("Hello world");
 

@@ -287,7 +287,8 @@ nsresult nsClipboard::GetGlobalData(HGLOBAL aHGBL, void** aData,
   nsresult result = NS_ERROR_FAILURE;
   if (aHGBL != nullptr) {
     LPSTR lpStr = (LPSTR)GlobalLock(aHGBL);
-    CheckedInt<uint32_t> allocSize = CheckedInt<uint32_t>(GlobalSize(aHGBL)) + 3;
+    CheckedInt<uint32_t> allocSize =
+        CheckedInt<uint32_t>(GlobalSize(aHGBL)) + 3;
     if (!allocSize.isValid()) {
       return NS_ERROR_INVALID_ARG;
     }

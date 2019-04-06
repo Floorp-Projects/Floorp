@@ -96,6 +96,13 @@ VRDisplayHost::~VRDisplayHost() {
   MOZ_COUNT_DTOR(VRDisplayHost);
 }
 
+void VRDisplayHost::ShutdownSubmitThread() {
+  if (mSubmitThread) {
+    mSubmitThread->Shutdown();
+    mSubmitThread = nullptr;
+  }
+}
+
 #if defined(XP_WIN)
 bool VRDisplayHost::CreateD3DObjects() {
   if (!mDevice) {

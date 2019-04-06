@@ -504,17 +504,18 @@ void ServiceWorkerRegistrationMainThread::Update(
           global);
 
   cb->Promise()
-      ->Then(global->EventTargetFor(TaskCategory::Other), __func__,
-             [successCB = std::move(aSuccessCB),
-              holder](const ServiceWorkerRegistrationDescriptor& aDescriptor) {
-               holder->Complete();
-               successCB(aDescriptor);
-             },
-             [failureCB = std::move(aFailureCB),
-              holder](const CopyableErrorResult& aRv) {
-               holder->Complete();
-               failureCB(CopyableErrorResult(aRv));
-             })
+      ->Then(
+          global->EventTargetFor(TaskCategory::Other), __func__,
+          [successCB = std::move(aSuccessCB),
+           holder](const ServiceWorkerRegistrationDescriptor& aDescriptor) {
+            holder->Complete();
+            successCB(aDescriptor);
+          },
+          [failureCB = std::move(aFailureCB),
+           holder](const CopyableErrorResult& aRv) {
+            holder->Complete();
+            failureCB(CopyableErrorResult(aRv));
+          })
       ->Track(*holder);
 }
 
@@ -555,15 +556,16 @@ void ServiceWorkerRegistrationMainThread::Unregister(
   auto holder = MakeRefPtr<DOMMozPromiseRequestHolder<GenericPromise>>(global);
 
   cb->Promise()
-      ->Then(global->EventTargetFor(TaskCategory::Other), __func__,
-             [successCB = std::move(aSuccessCB), holder](bool aResult) {
-               holder->Complete();
-               successCB(aResult);
-             },
-             [failureCB = std::move(aFailureCB), holder](nsresult aRv) {
-               holder->Complete();
-               failureCB(CopyableErrorResult(aRv));
-             })
+      ->Then(
+          global->EventTargetFor(TaskCategory::Other), __func__,
+          [successCB = std::move(aSuccessCB), holder](bool aResult) {
+            holder->Complete();
+            successCB(aResult);
+          },
+          [failureCB = std::move(aFailureCB), holder](nsresult aRv) {
+            holder->Complete();
+            failureCB(CopyableErrorResult(aRv));
+          })
       ->Track(*holder);
 }
 
@@ -769,17 +771,18 @@ void ServiceWorkerRegistrationWorkerThread::Update(
           global);
 
   promise
-      ->Then(global->EventTargetFor(TaskCategory::Other), __func__,
-             [successCB = std::move(aSuccessCB),
-              holder](const ServiceWorkerRegistrationDescriptor& aDescriptor) {
-               holder->Complete();
-               successCB(aDescriptor);
-             },
-             [failureCB = std::move(aFailureCB),
-              holder](const CopyableErrorResult& aRv) {
-               holder->Complete();
-               failureCB(CopyableErrorResult(aRv));
-             })
+      ->Then(
+          global->EventTargetFor(TaskCategory::Other), __func__,
+          [successCB = std::move(aSuccessCB),
+           holder](const ServiceWorkerRegistrationDescriptor& aDescriptor) {
+            holder->Complete();
+            successCB(aDescriptor);
+          },
+          [failureCB = std::move(aFailureCB),
+           holder](const CopyableErrorResult& aRv) {
+            holder->Complete();
+            failureCB(CopyableErrorResult(aRv));
+          })
       ->Track(*holder);
 
   RefPtr<SWRUpdateRunnable> r = new SWRUpdateRunnable(
@@ -824,15 +827,16 @@ void ServiceWorkerRegistrationWorkerThread::Unregister(
   auto holder = MakeRefPtr<DOMMozPromiseRequestHolder<GenericPromise>>(global);
 
   promise
-      ->Then(global->EventTargetFor(TaskCategory::Other), __func__,
-             [successCB = std::move(aSuccessCB), holder](bool aResult) {
-               holder->Complete();
-               successCB(aResult);
-             },
-             [failureCB = std::move(aFailureCB), holder](nsresult aRv) {
-               holder->Complete();
-               failureCB(CopyableErrorResult(aRv));
-             })
+      ->Then(
+          global->EventTargetFor(TaskCategory::Other), __func__,
+          [successCB = std::move(aSuccessCB), holder](bool aResult) {
+            holder->Complete();
+            successCB(aResult);
+          },
+          [failureCB = std::move(aFailureCB), holder](nsresult aRv) {
+            holder->Complete();
+            failureCB(CopyableErrorResult(aRv));
+          })
       ->Track(*holder);
 
   RefPtr<StartUnregisterRunnable> r =

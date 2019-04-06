@@ -7,7 +7,8 @@
 #include "OpusParser.h"
 #include <algorithm>
 
-TEST(OpusParser, Mapping2) {
+TEST(OpusParser, Mapping2)
+{
   uint8_t validChannels[] = {1,   3,   4,   6,   9,   11,  16,  18,  25,  27,
                              36,  38,  49,  51,  64,  66,  81,  83,  100, 102,
                              121, 123, 144, 146, 169, 171, 196, 198, 225, 227};

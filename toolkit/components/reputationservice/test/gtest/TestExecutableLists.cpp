@@ -291,7 +291,8 @@ static const char* const kTestFileExtensions[] = {
 // duplicates manually, ensures we could start doing more efficient lookups if
 // we felt that was necessary (e.g. if the lists get much bigger), and that it's
 // easy for humans to find things...
-TEST(TestExecutableLists, ListsAreSorted) {
+TEST(TestExecutableLists, ListsAreSorted)
+{
   CheckListSorted(sExecutableExts);
   CheckListSorted(ApplicationReputationService::kBinaryFileExtensions);
   CheckListSorted(ApplicationReputationService::kNonBinaryExecutables);
@@ -311,14 +312,16 @@ bool _IsInList(const char* ext, const char* const _list[], const size_t len) {
 #define IsInList(_ext, _list) \
   _IsInList(_ext, _list, mozilla::ArrayLength(_list))
 
-TEST(TestExecutableLists, NonBinariesInExecutablesList) {
+TEST(TestExecutableLists, NonBinariesInExecutablesList)
+{
   for (auto nonBinary : ApplicationReputationService::kNonBinaryExecutables) {
     EXPECT_TRUE(IsInList(nonBinary, sExecutableExts))
         << "Expected " << nonBinary << " to be part of sExecutableExts list";
   }
 }
 
-TEST(TestExecutableLists, AllExtensionsInTestList) {
+TEST(TestExecutableLists, AllExtensionsInTestList)
+{
   for (auto ext : ApplicationReputationService::kBinaryFileExtensions) {
     EXPECT_TRUE(IsInList(ext, kTestFileExtensions))
         << "Expected binary extension " << ext
@@ -338,7 +341,8 @@ TEST(TestExecutableLists, AllExtensionsInTestList) {
   }
 }
 
-TEST(TestExecutableLists, TestListExtensionsExistSomewhere) {
+TEST(TestExecutableLists, TestListExtensionsExistSomewhere)
+{
   for (auto ext : kTestFileExtensions) {
     EXPECT_TRUE(
         IsInList(ext, ApplicationReputationService::kBinaryFileExtensions) !=

@@ -270,7 +270,7 @@ class MachFormatter(base.BaseFormatter):
         if "expected" not in data and not bool(subtests['unexpected']):
             color = self.color_formatter.log_test_status_pass
         else:
-            color = self.color_formatter.log_test_status_unexpected_fail("UNEXPECTED-FAIL")
+            color = self.color_formatter.log_test_status_unexpected_fail
 
         action = color(data['action'].upper())
         rv = "%s: %s" % (action, rv)

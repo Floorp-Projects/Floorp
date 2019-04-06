@@ -140,7 +140,8 @@ class TypedArrayObject : public ArrayBufferViewObject {
    * Copy all elements from this typed array to vp. vp must point to rooted
    * memory.
    */
-  static bool getElements(JSContext* cx, Handle<TypedArrayObject*> tarray, Value* vp);
+  static bool getElements(JSContext* cx, Handle<TypedArrayObject*> tarray,
+                          Value* vp);
 
   static bool GetTemplateObjectForNative(JSContext* cx, Native native,
                                          const JS::HandleValueArray args,

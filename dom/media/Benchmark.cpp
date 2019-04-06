@@ -282,15 +282,15 @@ void BenchmarkPlayback::GlobalShutdown() {
 
   if (mDecoder) {
     RefPtr<Benchmark> ref(mGlobalState);
-    mDecoder->Flush()->Then(Thread(), __func__,
-                            [ref, this]() {
-                              mDecoder->Shutdown()->Then(
-                                  Thread(), __func__,
-                                  [ref, this]() { FinalizeShutdown(); },
-                                  []() { MOZ_CRASH("not reached"); });
-                              mDecoder = nullptr;
-                            },
-                            []() { MOZ_CRASH("not reached"); });
+    mDecoder->Flush()->Then(
+        Thread(), __func__,
+        [ref, this]() {
+          mDecoder->Shutdown()->Then(
+              Thread(), __func__, [ref, this]() { FinalizeShutdown(); },
+              []() { MOZ_CRASH("not reached"); });
+          mDecoder = nullptr;
+        },
+        []() { MOZ_CRASH("not reached"); });
   } else {
     FinalizeShutdown();
   }
@@ -345,34 +345,36 @@ void BenchmarkPlayback::InputExhausted() {
   mSampleIndex++;
   if (mSampleIndex == mSamples.Length() && !ref->mParameters.mStopAtFrame) {
     // Complete current frame decode then drain if still necessary.
-    p->Then(Thread(), __func__,
-            [ref, this](MediaDataDecoder::DecodedData&& aResults) {
-              Output(std::move(aResults));
-              if (!mFinished) {
-                mDecoder->Drain()->Then(
-                    Thread(), __func__,
-                    [ref, this](MediaDataDecoder::DecodedData&& aResults) {
-                      mDrained = true;
-                      Output(std::move(aResults));
-                      MOZ_ASSERT(mFinished, "We must be done now");
-                    },
-                    [ref, this](const MediaResult& aError) { Error(aError); });
-              }
-            },
-            [ref, this](const MediaResult& aError) { Error(aError); });
+    p->Then(
+        Thread(), __func__,
+        [ref, this](MediaDataDecoder::DecodedData&& aResults) {
+          Output(std::move(aResults));
+          if (!mFinished) {
+            mDecoder->Drain()->Then(
+                Thread(), __func__,
+                [ref, this](MediaDataDecoder::DecodedData&& aResults) {
+                  mDrained = true;
+                  Output(std::move(aResults));
+                  MOZ_ASSERT(mFinished, "We must be done now");
+                },
+                [ref, this](const MediaResult& aError) { Error(aError); });
+          }
+        },
+        [ref, this](const MediaResult& aError) { Error(aError); });
   } else {
     if (mSampleIndex == mSamples.Length() && ref->mParameters.mStopAtFrame) {
       mSampleIndex = 0;
     }
     // Continue decoding
-    p->Then(Thread(), __func__,
-            [ref, this](MediaDataDecoder::DecodedData&& aResults) {
-              Output(std::move(aResults));
-              if (!mFinished) {
-                InputExhausted();
-              }
-            },
-            [ref, this](const MediaResult& aError) { Error(aError); });
+    p->Then(
+        Thread(), __func__,
+        [ref, this](MediaDataDecoder::DecodedData&& aResults) {
+          Output(std::move(aResults));
+          if (!mFinished) {
+            InputExhausted();
+          }
+        },
+        [ref, this](const MediaResult& aError) { Error(aError); });
   }
 }
 

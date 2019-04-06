@@ -2452,14 +2452,15 @@ void ServiceWorkerManager::UpdateClientControllers(
 
     // If we fail to control the client, then automatically remove it
     // from our list of controlled clients.
-    p->Then(SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
-            [](bool) {
-              // do nothing on success
-            },
-            [self, clientInfo = handle->Info()](nsresult aRv) {
-              // failed to control, forget about this client
-              self->StopControllingClient(clientInfo);
-            });
+    p->Then(
+        SystemGroup::EventTargetFor(TaskCategory::Other), __func__,
+        [](bool) {
+          // do nothing on success
+        },
+        [self, clientInfo = handle->Info()](nsresult aRv) {
+          // failed to control, forget about this client
+          self->StopControllingClient(clientInfo);
+        });
   }
 }
 

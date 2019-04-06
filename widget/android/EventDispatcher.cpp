@@ -10,6 +10,7 @@
 #include "nsAppShell.h"
 #include "nsIXPConnect.h"
 #include "nsJSUtils.h"
+#include "js/Warnings.h"  // JS::WarnUTF8
 #include "xpcpublic.h"
 
 #include "mozilla/ScopeExit.h"
@@ -296,7 +297,7 @@ nsresult BoxData(const nsAString& aEvent, JSContext* aCx, JS::HandleValue aData,
 
   NS_ConvertUTF16toUTF8 event(aEvent);
   if (JS_IsExceptionPending(aCx)) {
-    JS_ReportWarningUTF8(aCx, "Error dispatching %s", event.get());
+    JS::WarnUTF8(aCx, "Error dispatching %s", event.get());
   } else {
     JS_ReportErrorUTF8(aCx, "Invalid event data for %s", event.get());
   }
@@ -566,7 +567,7 @@ nsresult UnboxData(jni::String::Param aEvent, JSContext* aCx,
 
   nsCString event = aEvent->ToCString();
   if (JS_IsExceptionPending(aCx)) {
-    JS_ReportWarningUTF8(aCx, "Error dispatching %s", event.get());
+    JS::WarnUTF8(aCx, "Error dispatching %s", event.get());
   } else {
     JS_ReportErrorUTF8(aCx, "Invalid event data for %s", event.get());
   }

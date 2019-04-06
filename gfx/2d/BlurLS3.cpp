@@ -32,8 +32,8 @@ __m128i loadUnaligned128(__m128i *p) {
       "gsldlc1 %[vl], 0x7(%[p]) \n\t"
       "gsldrc1 %[vl], 0x0(%[p]) \n\t"
       ".set pop \n\t"
-      : [vh] "=f"(v.h), [vl] "=f"(v.l)
-      : [p] "r"(p)
+      : [ vh ] "=f"(v.h), [ vl ] "=f"(v.l)
+      : [ p ] "r"(p)
       : "memory");
 
   return v;
@@ -56,8 +56,8 @@ __m128i Divide(__m128i aValues, __m128i aDivisor) {
       "mthc1 %[tmp], %[maskl] \n\t"
       "mov.d %[maskh], %[maskl] \n\t"
       ".set pop \n\t"
-      : [rah] "=f"(ra.h), [ral] "=f"(ra.l), [maskh] "=f"(mask.h),
-        [maskl] "=f"(mask.l), [tmp] "=&r"(tmp));
+      : [ rah ] "=f"(ra.h), [ ral ] "=f"(ra.l), [ maskh ] "=f"(mask.h),
+        [ maskl ] "=f"(mask.l), [ tmp ] "=&r"(tmp));
 
   asm volatile(
       ".set push \n\t"
@@ -69,12 +69,12 @@ __m128i Divide(__m128i aValues, __m128i aDivisor) {
       // the result is rounded.
       _mm_paddd(t1, t1, ra) _mm_psrld(t1, t1, srl32) _mm_paddd(t2, t2, ra)
           _mm_and(t2, t2, mask) _mm_or(p4321, t1, t2) ".set pop \n\t"
-      : [p4321h] "=&f"(p4321.h), [p4321l] "=&f"(p4321.l), [t1h] "=&f"(t1.h),
-        [t1l] "=&f"(t1.l), [t2h] "=&f"(t2.h), [t2l] "=&f"(t2.l),
-        [srl32] "=&f"(srl32), [tmp] "=&r"(tmp)
-      : [rah] "f"(ra.h), [ral] "f"(ra.l), [maskh] "f"(mask.h),
-        [maskl] "f"(mask.l), [avh] "f"(aValues.h), [avl] "f"(aValues.l),
-        [adh] "f"(aDivisor.h), [adl] "f"(aDivisor.l));
+      : [ p4321h ] "=&f"(p4321.h), [ p4321l ] "=&f"(p4321.l),
+        [ t1h ] "=&f"(t1.h), [ t1l ] "=&f"(t1.l), [ t2h ] "=&f"(t2.h),
+        [ t2l ] "=&f"(t2.l), [ srl32 ] "=&f"(srl32), [ tmp ] "=&r"(tmp)
+      : [ rah ] "f"(ra.h), [ ral ] "f"(ra.l), [ maskh ] "f"(mask.h),
+        [ maskl ] "f"(mask.l), [ avh ] "f"(aValues.h), [ avl ] "f"(aValues.l),
+        [ adh ] "f"(aDivisor.h), [ adl ] "f"(aDivisor.l));
 
   return p4321;
 }
@@ -89,11 +89,11 @@ __m128i BlurFourPixels(const __m128i &aTopLeft, const __m128i &aTopRight,
       ".set push \n\t"
       ".set arch=loongson3a \n\t" _mm_psubw(val, abr, atr)
           _mm_psubw(val, val, abl) _mm_paddw(val, val, atl) ".set pop \n\t"
-      : [valh] "=&f"(values.h), [vall] "=&f"(values.l)
-      : [abrh] "f"(aBottomRight.h), [abrl] "f"(aBottomRight.l),
-        [atrh] "f"(aTopRight.h), [atrl] "f"(aTopRight.l),
-        [ablh] "f"(aBottomLeft.h), [abll] "f"(aBottomLeft.l),
-        [atlh] "f"(aTopLeft.h), [atll] "f"(aTopLeft.l));
+      : [ valh ] "=&f"(values.h), [ vall ] "=&f"(values.l)
+      : [ abrh ] "f"(aBottomRight.h), [ abrl ] "f"(aBottomRight.l),
+        [ atrh ] "f"(aTopRight.h), [ atrl ] "f"(aTopRight.l),
+        [ ablh ] "f"(aBottomLeft.h), [ abll ] "f"(aBottomLeft.l),
+        [ atlh ] "f"(aTopLeft.h), [ atll ] "f"(aTopLeft.l));
 
   return Divide(values, aDivisor);
 }
@@ -203,8 +203,8 @@ void GenerateIntegralImage_LS3(int32_t aLeftInflation, int32_t aRightInflation,
       "mtc1 %[tmp], %[see] \n\t"
       "li %[tmp], 0x44 \n\t"
       "mtc1 %[tmp], %[s44] \n\t" _mm_xor(zero, zero, zero) ".set pop \n\t"
-      : [tmp] "=&r"(tmp), [s44] "=f"(s44), [see] "=f"(see),
-        [zeroh] "=f"(zero.h), [zerol] "=f"(zero.l));
+      : [ tmp ] "=&r"(tmp), [ s44 ] "=f"(s44), [ see ] "=f"(see),
+        [ zeroh ] "=f"(zero.h), [ zerol ] "=f"(zero.l));
   for (int y = aTopInflation + 1; y < (aSize.height + aTopInflation); y++) {
     __m128i currentRowSum;
     uint32_t *intRow = aIntegralImage + (y * stride32bit);
@@ -215,7 +215,7 @@ void GenerateIntegralImage_LS3(int32_t aLeftInflation, int32_t aRightInflation,
     asm volatile(
         ".set push \n\t"
         ".set arch=loongson3a \n\t" _mm_xor(cr, cr, cr) ".set pop \n\t"
-        : [crh] "=f"(currentRowSum.h), [crl] "=f"(currentRowSum.l));
+        : [ crh ] "=f"(currentRowSum.h), [ crl ] "=f"(currentRowSum.l));
     for (int x = 0; x < aLeftInflation; x += 4) {
       __m128i sumPixels, t;
       asm volatile(
@@ -227,8 +227,8 @@ void GenerateIntegralImage_LS3(int32_t aLeftInflation, int32_t aRightInflation,
           "pshufh %[sph], %[spl], %[s44] \n\t"
           "pshufh %[spl], %[spl], %[s44] \n\t"
           ".set pop \n\t"
-          : [sph] "=&f"(sumPixels.h), [spl] "=&f"(sumPixels.l)
-          : [pix] "r"(pixel), [s44] "f"(s44));
+          : [ sph ] "=&f"(sumPixels.h), [ spl ] "=&f"(sumPixels.l)
+          : [ pix ] "r"(pixel), [ s44 ] "f"(s44));
       sumPixels = AccumulatePixelSums(sumPixels);
       asm volatile (
         ".set push \n\t"
@@ -264,10 +264,10 @@ void GenerateIntegralImage_LS3(int32_t aLeftInflation, int32_t aRightInflation,
           "punpcklwd %[spl], %[spl], %[spl] \n\t"
           "mov.d %[sph], %[spl] \n\t" _mm_punpcklbh(sp, sp, zero)
               _mm_punpcklhw(sp, sp, zero) ".set pop \n\t"
-          : [sph] "=&f"(sumPixels.h), [spl] "=&f"(sumPixels.l),
-            [crh] "+f"(currentRowSum.h), [crl] "+f"(currentRowSum.l)
-          : [pix] "r"(pixels), [see] "f"(see), [zeroh] "f"(zero.h),
-            [zerol] "f"(zero.l));
+          : [ sph ] "=&f"(sumPixels.h), [ spl ] "=&f"(sumPixels.l),
+            [ crh ] "+f"(currentRowSum.h), [ crl ] "+f"(currentRowSum.l)
+          : [ pix ] "r"(pixels), [ see ] "f"(see), [ zeroh ] "f"(zero.h),
+            [ zerol ] "f"(zero.l));
       sumPixels = AccumulatePixelSums(sumPixels);
       asm volatile (
         ".set push \n\t"
@@ -305,8 +305,8 @@ void GenerateIntegralImage_LS3(int32_t aLeftInflation, int32_t aRightInflation,
               "punpcklwd %[crl], %[crl], %[crl] \n\t"
               "mov.d %[crh], %[crl] \n\t"
               ".set pop \n\t"
-              : [crh] "=f"(currentRowSum.h), [crl] "=f"(currentRowSum.l)
-              : [cr] "r"(intCurrentRowSum));
+              : [ crh ] "=f"(currentRowSum.h), [ crl ] "=f"(currentRowSum.l)
+              : [ cr ] "r"(intCurrentRowSum));
           break;
         }
         intCurrentRowSum += pixel;
@@ -319,8 +319,8 @@ void GenerateIntegralImage_LS3(int32_t aLeftInflation, int32_t aRightInflation,
           "pshufh %[crl], %[crh], %[see] \n\t"
           "pshufh %[crh], %[crh], %[see] \n\t"
           ".set pop \n\t"
-          : [crh] "+f"(currentRowSum.h), [crl] "+f"(currentRowSum.l)
-          : [see] "f"(see));
+          : [ crh ] "+f"(currentRowSum.h), [ crl ] "+f"(currentRowSum.l)
+          : [ see ] "f"(see));
     }
     for (; x < integralImageSize.width; x += 4) {
       __m128i sumPixels, t;
@@ -331,8 +331,8 @@ void GenerateIntegralImage_LS3(int32_t aLeftInflation, int32_t aRightInflation,
           "punpcklwd %[spl], %[spl], %[spl] \n\t"
           "mov.d %[sph], %[spl] \n\t"
           ".set pop \n\t"
-          : [sph] "=f"(sumPixels.h), [spl] "=f"(sumPixels.l)
-          : [pix] "r"(pixel));
+          : [ sph ] "=f"(sumPixels.h), [ spl ] "=f"(sumPixels.l)
+          : [ pix ] "r"(pixel));
       sumPixels = AccumulatePixelSums(sumPixels);
       asm volatile (
         ".set push \n\t"
@@ -432,9 +432,9 @@ void AlphaBoxBlur::BoxBlur_LS3(uint8_t *aData, int32_t aLeftLobe,
       "mtc1 %[rec], %[divl] \n\t"
       "punpcklwd %[divl], %[divl], %[divl] \n\t"
       "mov.d %[divh], %[divl] \n\t" _mm_xor(zero, zero, zero) ".set pop \n\t"
-      : [divh] "=f"(divisor.h), [divl] "=f"(divisor.l), [zeroh] "=f"(zero.h),
-        [zerol] "=f"(zero.l)
-      : [rec] "r"(reciprocal));
+      : [ divh ] "=f"(divisor.h), [ divl ] "=f"(divisor.l),
+        [ zeroh ] "=f"(zero.h), [ zerol ] "=f"(zero.l)
+      : [ rec ] "r"(reciprocal));
 
   // This points to the start of the rectangle within the IntegralImage that
   // overlaps the surface being blurred.

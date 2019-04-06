@@ -8,6 +8,7 @@
 
 #include "GLContext.h"
 #include "jsapi.h"
+#include "js/Warnings.h"  // JS::WarnASCII
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/Preferences.h"
@@ -68,7 +69,7 @@ void WebGLContext::GenerateWarning(const char* fmt, va_list ap) const {
   char buf[1024];
   VsprintfLiteral(buf, fmt, ap);
 
-  // no need to print to stderr, as JS_ReportWarning takes care of this for us.
+  // JS::WarnASCII will print to stderr for us.
 
   if (!mCanvasElement) {
     return;
@@ -81,13 +82,12 @@ void WebGLContext::GenerateWarning(const char* fmt, va_list ap) const {
 
   JSContext* cx = api.cx();
   const auto funcName = FuncName();
-  JS_ReportWarningASCII(cx, "WebGL warning: %s: %s", funcName, buf);
+  JS::WarnASCII(cx, "WebGL warning: %s: %s", funcName, buf);
   if (!ShouldGenerateWarnings()) {
-    JS_ReportWarningASCII(cx,
-                          "WebGL: No further warnings will be reported for"
-                          " this WebGL context."
-                          " (already reported %d warnings)",
-                          mAlreadyGeneratedWarnings);
+    JS::WarnASCII(cx,
+                  "WebGL: No further warnings will be reported for this WebGL "
+                  "context. (already reported %d warnings)",
+                  mAlreadyGeneratedWarnings);
   }
 }
 
@@ -119,15 +119,14 @@ void WebGLContext::GeneratePerfWarning(const char* fmt, ...) const {
   ////
 
   const auto funcName = FuncName();
-  JS_ReportWarningASCII(cx, "WebGL perf warning: %s: %s", funcName, buf);
+  JS::WarnASCII(cx, "WebGL perf warning: %s: %s", funcName, buf);
   mNumPerfWarnings++;
 
   if (!ShouldGeneratePerfWarnings()) {
-    JS_ReportWarningASCII(
-        cx,
-        "WebGL: After reporting %u, no further perf warnings will"
-        " be reported for this WebGL context.",
-        uint32_t(mNumPerfWarnings));
+    JS::WarnASCII(cx,
+                  "WebGL: After reporting %u, no further perf warnings will be "
+                  "reported for this WebGL context.",
+                  uint32_t(mNumPerfWarnings));
   }
 }
 

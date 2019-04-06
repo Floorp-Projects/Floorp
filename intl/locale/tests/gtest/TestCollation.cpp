@@ -10,7 +10,8 @@
 #include "nsICollation.h"
 #include "nsString.h"
 
-TEST(Collation, AllocateRowSortKey) {
+TEST(Collation, AllocateRowSortKey)
+{
   nsCOMPtr<nsICollationFactory> colFactory =
       do_CreateInstance(NS_COLLATIONFACTORY_CONTRACTID);
   ASSERT_TRUE(colFactory);

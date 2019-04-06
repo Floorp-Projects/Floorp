@@ -811,19 +811,20 @@ void TrackBuffersManager::SegmentParserLoop() {
       // run the coded frame processing algorithm.
       RefPtr<TrackBuffersManager> self = this;
       CodedFrameProcessing()
-          ->Then(TaskQueueFromTaskQueue(), __func__,
-                 [self](bool aNeedMoreData) {
-                   self->mProcessingRequest.Complete();
-                   if (aNeedMoreData) {
-                     self->NeedMoreData();
-                   } else {
-                     self->ScheduleSegmentParserLoop();
-                   }
-                 },
-                 [self](const MediaResult& aRejectValue) {
-                   self->mProcessingRequest.Complete();
-                   self->RejectAppend(aRejectValue, __func__);
-                 })
+          ->Then(
+              TaskQueueFromTaskQueue(), __func__,
+              [self](bool aNeedMoreData) {
+                self->mProcessingRequest.Complete();
+                if (aNeedMoreData) {
+                  self->NeedMoreData();
+                } else {
+                  self->ScheduleSegmentParserLoop();
+                }
+              },
+              [self](const MediaResult& aRejectValue) {
+                self->mProcessingRequest.Complete();
+                self->RejectAppend(aRejectValue, __func__);
+              })
           ->Track(mProcessingRequest);
       return;
     }

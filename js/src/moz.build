@@ -191,6 +191,7 @@ EXPORTS.js += [
     '../public/Utility.h',
     '../public/Value.h',
     '../public/Vector.h',
+    '../public/Warnings.h',
     '../public/WeakMapPtr.h',
     '../public/Wrapper.h',
 ]
@@ -328,6 +329,7 @@ UNIFIED_SOURCES += [
     'vm/UbiNodeCensus.cpp',
     'vm/UbiNodeShortestPaths.cpp',
     'vm/Value.cpp',
+    'vm/Warnings.cpp',
     'vm/Xdr.cpp',
 ]
 

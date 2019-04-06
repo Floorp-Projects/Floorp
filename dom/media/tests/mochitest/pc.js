@@ -1653,7 +1653,7 @@ PeerConnectionWrapper.prototype = {
     }
     let attempts = 0;
     // Time-units are MS
-    const waitPeriod = 500;
+    const waitPeriod = 100;
     const maxTime = 20000;
     for (let totalTime = maxTime; totalTime > 0; totalTime -= waitPeriod) {
       try {
@@ -1667,8 +1667,7 @@ PeerConnectionWrapper.prototype = {
           throw e;
       }
       attempts += 1;
-      info("waitForSyncedRtcp: no synced RTCP on attempt" + attempts
-           + ", retrying.\n");
+      info(`waitForSyncedRtcp: no sync on attempt ${attempts}, retrying.`);
       await wait(waitPeriod);
     }
     throw Error("Waiting for synced RTCP timed out after at least "

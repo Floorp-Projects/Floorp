@@ -21,7 +21,8 @@ static bool HttpHeaderCharacter(char const c) {
          (c >= '0' && c <= '9') || (c == '_') || (c == '-');
 }
 
-TEST(Tokenizer, HTTPResponse) {
+TEST(Tokenizer, HTTPResponse)
+{
   Tokenizer::Token t;
 
   // Real life test, HTTP response
@@ -94,7 +95,8 @@ TEST(Tokenizer, HTTPResponse) {
   EXPECT_TRUE(b == "This is the body");
 }
 
-TEST(Tokenizer, Main) {
+TEST(Tokenizer, Main)
+{
   Tokenizer::Token t;
 
   // Synthetic code-specific test
@@ -207,7 +209,8 @@ TEST(Tokenizer, Main) {
   EXPECT_FALSE(p.CheckEOF());
 }
 
-TEST(Tokenizer, Main16) {
+TEST(Tokenizer, Main16)
+{
   Tokenizer16::Token t;
 
   // Synthetic code-specific test
@@ -320,7 +323,8 @@ TEST(Tokenizer, Main16) {
   EXPECT_FALSE(p.CheckEOF());
 }
 
-TEST(Tokenizer, SingleWord) {
+TEST(Tokenizer, SingleWord)
+{
   // Single word with numbers in it test
 
   Tokenizer p(NS_LITERAL_CSTRING("test123"));
@@ -329,7 +333,8 @@ TEST(Tokenizer, SingleWord) {
   EXPECT_TRUE(p.CheckEOF());
 }
 
-TEST(Tokenizer, EndingAfterNumber) {
+TEST(Tokenizer, EndingAfterNumber)
+{
   // An end handling after a number
 
   Tokenizer p(NS_LITERAL_CSTRING("123"));
@@ -339,7 +344,8 @@ TEST(Tokenizer, EndingAfterNumber) {
   EXPECT_TRUE(p.CheckEOF());
 }
 
-TEST(Tokenizer, BadInteger) {
+TEST(Tokenizer, BadInteger)
+{
   Tokenizer::Token t;
 
   // A bad integer test
@@ -351,7 +357,8 @@ TEST(Tokenizer, BadInteger) {
   EXPECT_TRUE(p.CheckEOF());
 }
 
-TEST(Tokenizer, CheckExpectedTokenValue) {
+TEST(Tokenizer, CheckExpectedTokenValue)
+{
   Tokenizer::Token t;
 
   // Check expected token value test
@@ -375,7 +382,8 @@ TEST(Tokenizer, CheckExpectedTokenValue) {
   EXPECT_FALSE(p.Next(t));
 }
 
-TEST(Tokenizer, HasFailed) {
+TEST(Tokenizer, HasFailed)
+{
   Tokenizer::Token t;
 
   // HasFailed test
@@ -415,7 +423,8 @@ TEST(Tokenizer, HasFailed) {
   EXPECT_TRUE(p2.HasFailed());
 }
 
-TEST(Tokenizer, Construction) {
+TEST(Tokenizer, Construction)
+{
   {
     nsCString a("test");
     Tokenizer p1(a);
@@ -465,7 +474,8 @@ TEST(Tokenizer, Construction) {
   }
 }
 
-TEST(Tokenizer, Customization) {
+TEST(Tokenizer, Customization)
+{
   Tokenizer p1(NS_LITERAL_CSTRING("test-custom*words and\tdefault-whites"),
                nullptr, "-*");
   EXPECT_TRUE(p1.CheckWord("test-custom*words"));
@@ -495,7 +505,8 @@ TEST(Tokenizer, Customization) {
   EXPECT_TRUE(p3.CheckWord("whites-and#word-chars"));
 }
 
-TEST(Tokenizer, ShortcutChecks) {
+TEST(Tokenizer, ShortcutChecks)
+{
   Tokenizer p("test1 test2,123");
 
   nsAutoCString test1;
@@ -517,7 +528,8 @@ TEST(Tokenizer, ShortcutChecks) {
 
 static bool ABChar(const char aChar) { return aChar == 'a' || aChar == 'b'; }
 
-TEST(Tokenizer, ReadCharClassified) {
+TEST(Tokenizer, ReadCharClassified)
+{
   Tokenizer p("abc");
 
   char c;
@@ -532,7 +544,8 @@ TEST(Tokenizer, ReadCharClassified) {
   EXPECT_TRUE(p.CheckEOF());
 }
 
-TEST(Tokenizer, ClaimSubstring) {
+TEST(Tokenizer, ClaimSubstring)
+{
   Tokenizer p(" abc ");
 
   EXPECT_TRUE(p.CheckWhite());
@@ -546,7 +559,8 @@ TEST(Tokenizer, ClaimSubstring) {
   EXPECT_TRUE(p.CheckEOF());
 }
 
-TEST(Tokenizer, Fragment) {
+TEST(Tokenizer, Fragment)
+{
   const char str[] = "ab;cd:10 ";
   Tokenizer p(str);
   nsDependentCSubstring f;
@@ -607,7 +621,8 @@ TEST(Tokenizer, Fragment) {
   EXPECT_TRUE(t1.Fragment().BeginReading() == &str[9]);
 }
 
-TEST(Tokenizer, SkipWhites) {
+TEST(Tokenizer, SkipWhites)
+{
   Tokenizer p("Text1 \nText2 \nText3\n Text4\n ");
 
   EXPECT_TRUE(p.CheckWord("Text1"));
@@ -627,7 +642,8 @@ TEST(Tokenizer, SkipWhites) {
   EXPECT_TRUE(p.CheckEOF());
 }
 
-TEST(Tokenizer, SkipCustomWhites) {
+TEST(Tokenizer, SkipCustomWhites)
+{
   Tokenizer p("Text1 \n\r\t.Text2 \n\r\t.", " \n\r\t.");
 
   EXPECT_TRUE(p.CheckWord("Text1"));
@@ -641,7 +657,8 @@ TEST(Tokenizer, SkipCustomWhites) {
   EXPECT_TRUE(p.CheckEOF());
 }
 
-TEST(Tokenizer, IntegerReading) {
+TEST(Tokenizer, IntegerReading)
+{
 #define INT_6_BITS 64U
 #define INT_30_BITS 1073741824UL
 #define INT_32_BITS 4294967295UL
@@ -755,7 +772,8 @@ TEST(Tokenizer, IntegerReading) {
   }
 }
 
-TEST(Tokenizer, ReadUntil) {
+TEST(Tokenizer, ReadUntil)
+{
   Tokenizer p("Hello;test 4,");
   nsDependentCSubstring f;
   EXPECT_TRUE(p.ReadUntil(Tokenizer::Token::Char(';'), f));
@@ -783,7 +801,8 @@ TEST(Tokenizer, ReadUntil) {
   EXPECT_TRUE(f == " 4");
 }
 
-TEST(Tokenizer, SkipUntil) {
+TEST(Tokenizer, SkipUntil)
+{
   {
     Tokenizer p("test1,test2,,,test3");
 
@@ -828,7 +847,8 @@ TEST(Tokenizer, SkipUntil) {
   }
 }
 
-TEST(Tokenizer, Custom) {
+TEST(Tokenizer, Custom)
+{
   Tokenizer p(
       "aaaaaacustom-1\r,custom-1,Custom-1,Custom-1,00custom-2xxxx,CUSTOM-2");
 
@@ -868,7 +888,8 @@ TEST(Tokenizer, Custom) {
   EXPECT_TRUE(p.CheckEOF());
 }
 
-TEST(Tokenizer, CustomRaw) {
+TEST(Tokenizer, CustomRaw)
+{
   Tokenizer p(
       "aaaaaacustom-1\r,custom-1,Custom-1,Custom-1,00custom-2xxxx,CUSTOM-2");
 
@@ -919,7 +940,8 @@ TEST(Tokenizer, CustomRaw) {
   EXPECT_TRUE(p.CheckEOF());
 }
 
-TEST(Tokenizer, Incremental) {
+TEST(Tokenizer, Incremental)
+{
   typedef IncrementalTokenizer::Token Token;
 
   int test = 0;
@@ -967,7 +989,8 @@ TEST(Tokenizer, Incremental) {
   EXPECT_TRUE(test == 8);
 }
 
-TEST(Tokenizer, IncrementalRollback) {
+TEST(Tokenizer, IncrementalRollback)
+{
   typedef IncrementalTokenizer::Token Token;
 
   int test = 0;
@@ -1019,7 +1042,8 @@ TEST(Tokenizer, IncrementalRollback) {
   EXPECT_TRUE(test == 9);
 }
 
-TEST(Tokenizer, IncrementalNeedMoreInput) {
+TEST(Tokenizer, IncrementalNeedMoreInput)
+{
   typedef IncrementalTokenizer::Token Token;
 
   int test = 0;
@@ -1077,7 +1101,8 @@ TEST(Tokenizer, IncrementalNeedMoreInput) {
   EXPECT_TRUE(test == 7);
 }
 
-TEST(Tokenizer, IncrementalCustom) {
+TEST(Tokenizer, IncrementalCustom)
+{
   typedef IncrementalTokenizer::Token Token;
 
   int test = 0;
@@ -1111,7 +1136,8 @@ TEST(Tokenizer, IncrementalCustom) {
   EXPECT_TRUE(test == 3);
 }
 
-TEST(Tokenizer, IncrementalCustomRaw) {
+TEST(Tokenizer, IncrementalCustomRaw)
+{
   typedef IncrementalTokenizer::Token Token;
 
   int test = 0;
@@ -1166,7 +1192,8 @@ TEST(Tokenizer, IncrementalCustomRaw) {
   EXPECT_TRUE(test == 8);
 }
 
-TEST(Tokenizer, IncrementalCustomRemove) {
+TEST(Tokenizer, IncrementalCustomRemove)
+{
   typedef IncrementalTokenizer::Token Token;
 
   int test = 0;
@@ -1198,7 +1225,8 @@ TEST(Tokenizer, IncrementalCustomRemove) {
   EXPECT_TRUE(test == 3);
 }
 
-TEST(Tokenizer, IncrementalBuffering1) {
+TEST(Tokenizer, IncrementalBuffering1)
+{
   typedef IncrementalTokenizer::Token Token;
 
   int test = 0;
@@ -1257,7 +1285,8 @@ TEST(Tokenizer, IncrementalBuffering1) {
   EXPECT_TRUE(test == 6);
 }
 
-TEST(Tokenizer, IncrementalBuffering2) {
+TEST(Tokenizer, IncrementalBuffering2)
+{
   typedef IncrementalTokenizer::Token Token;
 
   int test = 0;
@@ -1306,7 +1335,8 @@ TEST(Tokenizer, IncrementalBuffering2) {
   EXPECT_TRUE(test == 6);
 }
 
-TEST(Tokenizer, RecordAndReadUntil) {
+TEST(Tokenizer, RecordAndReadUntil)
+{
   Tokenizer t("aaaa,bbbb");
   t.SkipWhites();
   nsDependentCSubstring subject;
@@ -1326,7 +1356,8 @@ TEST(Tokenizer, RecordAndReadUntil) {
   EXPECT_TRUE(t.CheckEOF());
 }
 
-TEST(Tokenizer, ReadIntegers) {
+TEST(Tokenizer, ReadIntegers)
+{
   // Make sure that adding dash (the 'minus' sign) as an additional char
   // doesn't break reading negative numbers.
   Tokenizer t("100,-100,200,-200,4294967295,-4294967295,-2147483647", nullptr,

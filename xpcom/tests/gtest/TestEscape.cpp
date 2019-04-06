@@ -13,7 +13,8 @@ using namespace mozilla;
 // Testing for failure here would be somewhat hard in automation. Locally you
 // could use something like ulimit to create a failure.
 
-TEST(Escape, FallibleNoEscape) {
+TEST(Escape, FallibleNoEscape)
+{
   // Tests the fallible version of NS_EscapeURL works as expected when no
   // escaping is necessary.
   nsCString toEscape("data:,Hello%2C%20World!");
@@ -26,7 +27,8 @@ TEST(Escape, FallibleNoEscape) {
   EXPECT_EQ(toEscape.BeginReading(), escaped.BeginReading());
 }
 
-TEST(Escape, FallibleEscape) {
+TEST(Escape, FallibleEscape)
+{
   // Tests the fallible version of NS_EscapeURL works as expected when
   // escaping is necessary.
   nsCString toEscape("data:,Hello%2C%20World!\xC4\x9F");
@@ -38,7 +40,8 @@ TEST(Escape, FallibleEscape) {
   EXPECT_STREQ(escaped.BeginReading(), kExpected);
 }
 
-TEST(Escape, BadEscapeSequences) {
+TEST(Escape, BadEscapeSequences)
+{
   {
     char bad[] = "%s\0fa";
 
@@ -66,7 +69,8 @@ TEST(Escape, BadEscapeSequences) {
   }
 }
 
-TEST(Escape, nsAppendEscapedHTML) {
+TEST(Escape, nsAppendEscapedHTML)
+{
   const char* srcs[] = {
       "a", "bcdefgh", "<",           ">",         "&", "\"",
       "'", "'bad'",   "Foo<T>& foo", "'\"&><abc", "",
@@ -122,7 +126,8 @@ TEST(Escape, nsAppendEscapedHTML) {
   }
 }
 
-TEST(Escape, EscapeSpaces) {
+TEST(Escape, EscapeSpaces)
+{
   // Tests the fallible version of NS_EscapeURL works as expected when no
   // escaping is necessary.
   nsCString toEscape("data:\x0D\x0A spa ces\xC4\x9F");

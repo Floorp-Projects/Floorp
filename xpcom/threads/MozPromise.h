@@ -336,13 +336,14 @@ class MozPromise : public MozPromiseBase {
     RefPtr<AllPromiseHolder> holder = new AllPromiseHolder(aPromises.Length());
     RefPtr<AllPromiseType> promise = holder->Promise();
     for (size_t i = 0; i < aPromises.Length(); ++i) {
-      aPromises[i]->Then(aProcessingTarget, __func__,
-                         [holder, i](ResolveValueType aResolveValue) -> void {
-                           holder->Resolve(i, std::move(aResolveValue));
-                         },
-                         [holder](RejectValueType aRejectValue) -> void {
-                           holder->Reject(std::move(aRejectValue));
-                         });
+      aPromises[i]->Then(
+          aProcessingTarget, __func__,
+          [holder, i](ResolveValueType aResolveValue) -> void {
+            holder->Resolve(i, std::move(aResolveValue));
+          },
+          [holder](RejectValueType aRejectValue) -> void {
+            holder->Reject(std::move(aRejectValue));
+          });
     }
     return promise;
   }

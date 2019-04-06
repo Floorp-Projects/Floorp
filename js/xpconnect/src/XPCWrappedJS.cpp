@@ -250,7 +250,7 @@ MozExternalRefCountType nsXPCWrappedJS::AddRef(void) {
 
   if (2 == cnt && IsValid()) {
     GetJSObject();  // Unmark gray JSObject.
-    mClass->GetRuntime()->AddWrappedJSRoot(this);
+    XPCJSRuntime::Get()->AddWrappedJSRoot(this);
   }
 
   return cnt;

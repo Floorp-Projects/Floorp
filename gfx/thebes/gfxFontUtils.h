@@ -412,7 +412,9 @@ class SharedBitSet {
   SharedBitSet() = delete;
 
   explicit SharedBitSet(const gfxSparseBitSet& aBitset)
-      : mBlockIndexCount(mozilla::AssertedCast<uint16_t>(aBitset.mBlockIndex.Length())), mBlockCount(0) {
+      : mBlockIndexCount(
+            mozilla::AssertedCast<uint16_t>(aBitset.mBlockIndex.Length())),
+        mBlockCount(0) {
     uint16_t* blockIndex = reinterpret_cast<uint16_t*>(this + 1);
     Block* blocks = reinterpret_cast<Block*>(blockIndex + mBlockIndexCount);
     for (uint16_t i = 0; i < mBlockIndexCount; i++) {

@@ -354,7 +354,9 @@ static nsresult flushTransaction(txOutputTransaction* aTransaction,
       return aHandler->startElement(
           transaction->mPrefix, transaction->mLocalName, transaction->mNsID);
     }
-    default: { MOZ_ASSERT_UNREACHABLE("Unexpected transaction type"); }
+    default: {
+      MOZ_ASSERT_UNREACHABLE("Unexpected transaction type");
+    }
   }
 
   return NS_ERROR_UNEXPECTED;

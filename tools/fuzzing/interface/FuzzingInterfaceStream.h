@@ -52,7 +52,8 @@ void afl_interface_stream(const char* testFile, FuzzingTestFuncStream testFunc);
     std::string testFile(testFilePtr);
 
 #  define MOZ_AFL_INTERFACE_STREAM(initFunc, testFunc, moduleName) \
-    TEST(AFL, moduleName) {                                        \
+    TEST(AFL, moduleName)                                          \
+    {                                                              \
       MOZ_AFL_INTERFACE_COMMON(initFunc);                          \
       ::mozilla::afl_interface_stream(testFile.c_str(), testFunc); \
     }

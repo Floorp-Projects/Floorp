@@ -36,7 +36,8 @@ Base64EncodedStringArray MakeBase64EncodedStringArray(nsCString (&aArray)[N]) {
 
 }  // end of unnamed namespace.
 
-TEST(UrlClassifierFindFullHash, Request) {
+TEST(UrlClassifierFindFullHash, Request)
+{
   nsUrlClassifierUtils* urlUtil = nsUrlClassifierUtils::GetInstance();
 
   const char* listNames[] = {"test-phish-proto", "test-unwanted-proto"};
@@ -188,7 +189,8 @@ NS_IMPL_ISUPPORTS(MyParseCallback, nsIUrlClassifierParseFindFullHashCallback)
 
 }  // end of unnamed namespace.
 
-TEST(UrlClassifierFindFullHash, ParseRequest) {
+TEST(UrlClassifierFindFullHash, ParseRequest)
+{
   // Build response.
   FindFullHashesResponse r;
 

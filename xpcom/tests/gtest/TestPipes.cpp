@@ -294,7 +294,8 @@ class nsPump final : public nsIRunnable {
 
 NS_IMPL_ISUPPORTS(nsPump, nsIRunnable)
 
-TEST(Pipes, ChainedPipes) {
+TEST(Pipes, ChainedPipes)
+{
   nsresult rv;
   if (gTrace) {
     printf("TestChainedPipes\n");
@@ -375,7 +376,8 @@ static void RunTests(uint32_t segSize, uint32_t segCount) {
   EXPECT_TRUE(NS_SUCCEEDED(rv));
 }
 
-TEST(Pipes, Main) {
+TEST(Pipes, Main)
+{
   RunTests(16, 1);
   RunTests(4096, 16);
 }
@@ -407,11 +409,14 @@ static void TestPipe2(uint32_t aNumBytes,
 
 }  // namespace
 
-TEST(Pipes, Blocking_32k) { TestPipe2(32 * 1024); }
+TEST(Pipes, Blocking_32k)
+{ TestPipe2(32 * 1024); }
 
-TEST(Pipes, Blocking_64k) { TestPipe2(64 * 1024); }
+TEST(Pipes, Blocking_64k)
+{ TestPipe2(64 * 1024); }
 
-TEST(Pipes, Blocking_128k) { TestPipe2(128 * 1024); }
+TEST(Pipes, Blocking_128k)
+{ TestPipe2(128 * 1024); }
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -574,7 +579,8 @@ static void TestPipeClone(uint32_t aTotalBytes, uint32_t aNumWrites,
 
 }  // namespace
 
-TEST(Pipes, Clone_BeforeWrite_ReadAtEnd) {
+TEST(Pipes, Clone_BeforeWrite_ReadAtEnd)
+{
   TestPipeClone(32 * 1024,  // total bytes
                 16,         // num writes
                 3,          // num initial clones
@@ -583,7 +589,8 @@ TEST(Pipes, Clone_BeforeWrite_ReadAtEnd) {
                 0);         // num streams to read after each write
 }
 
-TEST(Pipes, Clone_BeforeWrite_ReadDuringWrite) {
+TEST(Pipes, Clone_BeforeWrite_ReadDuringWrite)
+{
   // Since this reads all streams on every write, it should trigger the
   // pipe cursor roll back optimization.  Currently we can only verify
   // this with logging.
@@ -596,7 +603,8 @@ TEST(Pipes, Clone_BeforeWrite_ReadDuringWrite) {
                 4);         // num streams to read after each write
 }
 
-TEST(Pipes, Clone_DuringWrite_ReadAtEnd) {
+TEST(Pipes, Clone_DuringWrite_ReadAtEnd)
+{
   TestPipeClone(32 * 1024,  // total bytes
                 16,         // num writes
                 0,          // num initial clones
@@ -605,7 +613,8 @@ TEST(Pipes, Clone_DuringWrite_ReadAtEnd) {
                 0);         // num streams to read after each write
 }
 
-TEST(Pipes, Clone_DuringWrite_ReadDuringWrite) {
+TEST(Pipes, Clone_DuringWrite_ReadDuringWrite)
+{
   TestPipeClone(32 * 1024,  // total bytes
                 16,         // num writes
                 0,          // num initial clones
@@ -614,7 +623,8 @@ TEST(Pipes, Clone_DuringWrite_ReadDuringWrite) {
                 1);         // num streams to read after each write
 }
 
-TEST(Pipes, Clone_DuringWrite_ReadDuringWrite_CloseDuringWrite) {
+TEST(Pipes, Clone_DuringWrite_ReadDuringWrite_CloseDuringWrite)
+{
   // Since this reads streams faster than we clone new ones, it should
   // trigger pipe segment deletion periodically.  Currently we can
   // only verify this with logging.
@@ -627,7 +637,8 @@ TEST(Pipes, Clone_DuringWrite_ReadDuringWrite_CloseDuringWrite) {
                 3);         // num streams to read after each write
 }
 
-TEST(Pipes, Write_AsyncWait) {
+TEST(Pipes, Write_AsyncWait)
+{
   nsCOMPtr<nsIAsyncInputStream> reader;
   nsCOMPtr<nsIAsyncOutputStream> writer;
 
@@ -662,7 +673,8 @@ TEST(Pipes, Write_AsyncWait) {
   ASSERT_TRUE(cb->Called());
 }
 
-TEST(Pipes, Write_AsyncWait_Clone) {
+TEST(Pipes, Write_AsyncWait_Clone)
+{
   nsCOMPtr<nsIAsyncInputStream> reader;
   nsCOMPtr<nsIAsyncOutputStream> writer;
 
@@ -744,7 +756,8 @@ TEST(Pipes, Write_AsyncWait_Clone) {
   testing::ConsumeAndValidateStream(reader, inputData);
 }
 
-TEST(Pipes, Write_AsyncWait_Clone_CloseOriginal) {
+TEST(Pipes, Write_AsyncWait_Clone_CloseOriginal)
+{
   nsCOMPtr<nsIAsyncInputStream> reader;
   nsCOMPtr<nsIAsyncOutputStream> writer;
 
@@ -868,7 +881,8 @@ TEST(Pipes, Write_AsyncWait_Clone_CloseOriginal) {
   ASSERT_TRUE(cb->Called());
 }
 
-TEST(Pipes, Read_AsyncWait) {
+TEST(Pipes, Read_AsyncWait)
+{
   nsCOMPtr<nsIAsyncInputStream> reader;
   nsCOMPtr<nsIAsyncOutputStream> writer;
 
@@ -899,7 +913,8 @@ TEST(Pipes, Read_AsyncWait) {
   testing::ConsumeAndValidateStream(reader, inputData);
 }
 
-TEST(Pipes, Read_AsyncWait_Clone) {
+TEST(Pipes, Read_AsyncWait_Clone)
+{
   nsCOMPtr<nsIAsyncInputStream> reader;
   nsCOMPtr<nsIAsyncOutputStream> writer;
 
@@ -1006,13 +1021,14 @@ void TestCloseDuringRead(uint32_t aSegmentSize, uint32_t aDataSize) {
 
 }  // namespace
 
-TEST(Pipes, Close_During_Read_Partial_Segment) {
-  TestCloseDuringRead(1024, 512);
-}
+TEST(Pipes, Close_During_Read_Partial_Segment)
+{ TestCloseDuringRead(1024, 512); }
 
-TEST(Pipes, Close_During_Read_Full_Segment) { TestCloseDuringRead(1024, 1024); }
+TEST(Pipes, Close_During_Read_Full_Segment)
+{ TestCloseDuringRead(1024, 1024); }
 
-TEST(Pipes, Interfaces) {
+TEST(Pipes, Interfaces)
+{
   nsCOMPtr<nsIInputStream> reader;
   nsCOMPtr<nsIOutputStream> writer;
 

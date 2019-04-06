@@ -1068,7 +1068,9 @@ void CopyValPostBarriered(uint8_t* dst, const Val& src) {
     case ValType::NullRef: {
       break;
     }
-    default: { MOZ_CRASH("unexpected Val type"); }
+    default: {
+      MOZ_CRASH("unexpected Val type");
+    }
   }
 }
 

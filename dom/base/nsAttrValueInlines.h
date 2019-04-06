@@ -243,7 +243,9 @@ inline void nsAttrValue::ToString(mozilla::dom::DOMString& aResult) const {
       aResult.SetKnownLiveAtom(atom, mozilla::dom::DOMString::eNullNotExpected);
       break;
     }
-    default: { ToString(aResult.AsAString()); }
+    default: {
+      ToString(aResult.AsAString());
+    }
   }
 }
 

@@ -118,9 +118,11 @@ XPCOMUtils.defineLazyGetter(this, "LocalItemsSQLFragment", () => `
 const DB_URL_LENGTH_MAX = 65536;
 const DB_TITLE_LENGTH_MAX = 4096;
 
+const SQLITE_MAX_VARIABLE_NUMBER = 999;
+
 // The current mirror database schema version. Bump for migrations, then add
 // migration code to `migrateMirrorSchema`.
-const MIRROR_SCHEMA_VERSION = 3;
+const MIRROR_SCHEMA_VERSION = 4;
 
 const DEFAULT_MAX_FRECENCIES_TO_RECALCULATE = 400;
 
@@ -471,11 +473,29 @@ class SyncedBookmarksMirror {
    *         upload to the server, and to store in the mirror once upload
    *         succeeds.
    */
-  async apply({ localTimeSeconds = Date.now() / 1000,
-                remoteTimeSeconds = 0,
-                weakUpload = [],
-                maxFrecenciesToRecalculate =
-                  DEFAULT_MAX_FRECENCIES_TO_RECALCULATE } = {}) {
+  async apply(options = {}) {
+    let hasChanges = ("weakUpload" in options &&
+                      options.weakUpload.length > 0) ||
+                     (await this.hasChanges());
+    if (!hasChanges) {
+      MirrorLog.debug("No changes detected in both mirror and Places");
+      let limit = "maxFrecenciesToRecalculate" in options ?
+                  options.maxFrecenciesToRecalculate :
+                  DEFAULT_MAX_FRECENCIES_TO_RECALCULATE;
+      await updateFrecencies(this.db, limit);
+      return {};
+    }
+    let changeRecords = await this.forceApply(options);
+    return changeRecords;
+  }
+
+  // Forces a full merge, even if there are no local or remote changes, and
+  // no items to weakly upload. Exposed for tests.
+  async forceApply({ localTimeSeconds = Date.now() / 1000,
+                     remoteTimeSeconds = 0,
+                     weakUpload = [],
+                     maxFrecenciesToRecalculate =
+                       DEFAULT_MAX_FRECENCIES_TO_RECALCULATE } = {}) {
     // We intentionally don't use `executeBeforeShutdown` in this function,
     // since merging can take a while for large trees, and we don't want to
     // block shutdown. Since all new items are in the mirror, we'll just try
@@ -483,13 +503,6 @@ class SyncedBookmarksMirror {
 
     let observersToNotify = new BookmarkObserverRecorder(this.db,
       { maxFrecenciesToRecalculate });
-
-    let hasChanges = weakUpload.length > 0 || (await this.hasChanges());
-    if (!hasChanges) {
-      MirrorLog.debug("No changes detected in both mirror and Places");
-      await observersToNotify.updateFrecencies();
-      return {};
-    }
 
     if (!(await this.validLocalRoots())) {
       throw new SyncedBookmarksMirror.MergeError(
@@ -558,24 +571,26 @@ class SyncedBookmarksMirror {
       wrongSyncStatus: wrongSyncStatus.length,
     });
 
-    MirrorLog.info("Merging bookmarks in Rust");
-    let result = await new Promise((resolve, reject) => {
-      let callback = {
-        handleResult(result) {
-          resolve(result);
-        },
-        handleError(code, message) {
-          if (code == Cr.NS_ERROR_STORAGE_BUSY) {
-            reject(new SyncedBookmarksMirror.MergeConflictError(
-              "Local tree changed during merge"));
-          } else {
-            reject(new SyncedBookmarksMirror.MergeError(message));
-          }
-        },
-      };
-      this.merger.merge(localTimeSeconds, remoteTimeSeconds, weakUpload,
-                        callback);
-    });
+    let result = await withTiming(
+      "Merging bookmarks in Rust",
+      () => {
+        return new Promise((resolve, reject) => {
+          let callback = {
+            handleResult: resolve,
+            handleError(code, message) {
+              if (code == Cr.NS_ERROR_STORAGE_BUSY) {
+                reject(new SyncedBookmarksMirror.MergeConflictError(
+                  "Local tree changed during merge"));
+              } else {
+                reject(new SyncedBookmarksMirror.MergeError(message));
+              }
+            },
+          };
+          this.merger.merge(localTimeSeconds, remoteTimeSeconds, weakUpload,
+                            callback);
+        });
+      },
+    );
     let telem = result.QueryInterface(Ci.nsIPropertyBag);
     const telemPropToEventValue = [
       ["fetchLocalTreeTime", "fetchLocalTree"],
@@ -637,9 +652,8 @@ class SyncedBookmarksMirror {
           await this.db.execute(`DELETE FROM itemsToUpload`);
         }
       },
-      (time, records) => this.recordTelemetryEvent("mirror", "apply",
-        "fetchLocalChangeRecords", { flowID,
-          count: Object.keys(records).length })
+      time => this.recordTelemetryEvent("mirror", "apply",
+        "fetchLocalChangeRecords", { flowID, time })
     );
   }
 
@@ -800,14 +814,20 @@ class SyncedBookmarksMirror {
 
     let children = record.children;
     if (children && Array.isArray(children)) {
-      for (let position = 0; position < children.length; ++position) {
-        await maybeYield();
-        let childRecordId = children[position];
-        let childGuid = PlacesSyncUtils.bookmarks.recordIdToGuid(childRecordId);
-        await this.db.executeCached(`
-          REPLACE INTO structure(guid, parentGuid, position)
-          VALUES(:childGuid, :parentGuid, :position)`,
-          { childGuid, parentGuid: guid, position });
+      for (let [offset, chunk] of PlacesSyncUtils.chunkArray(children,
+        SQLITE_MAX_VARIABLE_NUMBER - 1)) {
+        // Builds a fragment like `(?2, ?1, 0), (?3, ?1, 1), ...`, where ?1 is
+        // the folder's GUID, [?2, ?3] are the first and second child GUIDs
+        // (SQLite binding parameters index from 1), and [0, 1] are the
+        // positions. This lets us store the folder's children using as few
+        // statements as possible.
+        let valuesFragment = Array.from({ length: chunk.length },
+          (_, index) => `(?${index + 2}, ?1, ${offset + index})`).join(",");
+        await this.db.execute(`
+          INSERT INTO structure(guid, parentGuid, position)
+          VALUES ${valuesFragment}`,
+          [guid, ...chunk.map(PlacesSyncUtils.bookmarks.recordIdToGuid)]
+        );
       }
     }
   }
@@ -1338,8 +1358,8 @@ async function attachAndInitMirrorDatabase(db, path) {
  *        The current mirror database schema version.
  */
 async function migrateMirrorSchema(db, currentSchemaVersion) {
-  if (currentSchemaVersion < 3) {
-    // The mirror was pref'd off by default for schema versions 1 and 2.
+  if (currentSchemaVersion < 4) {
+    // The mirror was pref'd off by default for schema versions 1-3.
     throw new DatabaseCorruptError(`Can't migrate from schema version ${
       currentSchemaVersion}; too old`);
   }
@@ -1356,9 +1376,9 @@ async function initializeMirrorDatabase(db) {
   // Key-value metadata table. Stores the server collection last modified time
   // and sync ID.
   await db.execute(`CREATE TABLE mirror.meta(
-    key TEXT NOT NULL PRIMARY KEY,
+    key TEXT PRIMARY KEY,
     value NOT NULL
-  )`);
+  ) WITHOUT ROWID`);
 
   // Note: description and loadInSidebar are not used as of Firefox 63, but
   // remain to avoid rebuilding the database if the user happens to downgrade.
@@ -1388,10 +1408,11 @@ async function initializeMirrorDatabase(db) {
   )`);
 
   await db.execute(`CREATE TABLE mirror.structure(
-    guid TEXT NOT NULL PRIMARY KEY,
-    parentGuid TEXT NOT NULL REFERENCES items(guid)
-                             ON DELETE CASCADE,
-    position INTEGER NOT NULL
+    guid TEXT,
+    parentGuid TEXT REFERENCES items(guid)
+                    ON DELETE CASCADE,
+    position INTEGER NOT NULL,
+    PRIMARY KEY(parentGuid, guid)
   ) WITHOUT ROWID`);
 
   await db.execute(`CREATE TABLE mirror.urls(
@@ -2050,10 +2071,9 @@ function validateTag(rawTag) {
  *         The name of the operation, used for logging.
  * @param  {Function} func
  *         The function to time.
- * @param  {Function} recordTiming
- *         A function with the signature `(time: Number, result: Object?)`,
- *         where `time` is the measured time, and `result` is the return
- *         value of the timed function.
+ * @param  {Function} [recordTiming]
+ *         An optional function with the signature `(time: Number)`, where
+ *         `time` is the measured time.
  * @return The return value of the timed function.
  */
 async function withTiming(name, func, recordTiming) {
@@ -2064,7 +2084,9 @@ async function withTiming(name, func, recordTiming) {
   let elapsedTime = Cu.now() - startTime;
 
   MirrorLog.trace(`${name} took ${elapsedTime.toFixed(3)}ms`);
-  recordTiming(elapsedTime, result);
+  if (typeof recordTiming == "function") {
+    recordTiming(elapsedTime);
+  }
 
   return result;
 }
@@ -2092,24 +2114,7 @@ class BookmarkObserverRecorder {
       await PlacesUtils.keywords.invalidateCachedKeywords();
     }
     await this.notifyBookmarkObservers();
-    await this.updateFrecencies();
-  }
-
-  async updateFrecencies() {
-    MirrorLog.trace("Recalculating frecencies for new URLs");
-    await this.db.execute(`
-      UPDATE moz_places SET
-        frecency = CALCULATE_FRECENCY(id)
-      WHERE id IN (
-        SELECT id FROM moz_places
-        WHERE frecency < 0
-        ORDER BY frecency ASC
-        LIMIT :limit
-      )`,
-      { limit: this.maxFrecenciesToRecalculate });
-
-    // Trigger frecency updates for all affected origins.
-    await this.db.execute(`DELETE FROM moz_updateoriginsupdate_temp`);
+    await updateFrecencies(this.db, this.maxFrecenciesToRecalculate);
   }
 
   /**
@@ -2371,6 +2376,23 @@ class BookmarkChangeRecord {
     this.cleartext = cleartext;
     this.synced = false;
   }
+}
+
+async function updateFrecencies(db, limit) {
+  MirrorLog.trace("Recalculating frecencies for new URLs");
+  await db.execute(`
+    UPDATE moz_places SET
+      frecency = CALCULATE_FRECENCY(id)
+    WHERE id IN (
+      SELECT id FROM moz_places
+      WHERE frecency < 0
+      ORDER BY frecency ASC
+      LIMIT :limit
+    )`,
+    { limit });
+
+  // Trigger frecency updates for all affected origins.
+  await db.execute(`DELETE FROM moz_updateoriginsupdate_temp`);
 }
 
 // In conclusion, this is why bookmark syncing is hard.

@@ -183,7 +183,8 @@ static const struct Test {
              DECL_TEST(test_random8),
              {nullptr, nullptr}};
 
-TEST(ExpirationTracker, main) {
+TEST(ExpirationTracker, main)
+{
   for (const TestExpirationTracker::Test* t = tests; t->name != nullptr; ++t) {
     EXPECT_TRUE(t->func());
   }

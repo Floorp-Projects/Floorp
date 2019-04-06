@@ -280,13 +280,14 @@ void PeerConnectionCtx::EverySecondTelemetryCallback_m(nsITimer* timer,
   for (auto& idAndPc : GetInstance()->mPeerConnections) {
     if (idAndPc.second->HasMedia()) {
       idAndPc.second->GetStats(nullptr, true)
-          ->Then(GetMainThreadSerialEventTarget(), __func__,
-                 [=](UniquePtr<RTCStatsQuery>&& aQuery) {
-                   if (PeerConnectionCtx::isActive()) {
-                     PeerConnectionCtx::GetInstance()->DeliverStats(*aQuery);
-                   }
-                 },
-                 [=](nsresult aError) {});
+          ->Then(
+              GetMainThreadSerialEventTarget(), __func__,
+              [=](UniquePtr<RTCStatsQuery>&& aQuery) {
+                if (PeerConnectionCtx::isActive()) {
+                  PeerConnectionCtx::GetInstance()->DeliverStats(*aQuery);
+                }
+              },
+              [=](nsresult aError) {});
     }
   }
 }

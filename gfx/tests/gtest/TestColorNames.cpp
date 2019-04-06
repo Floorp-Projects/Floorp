@@ -44,18 +44,16 @@ static void RunColorTests() {
 
     // Check that color lookup by name gets the right rgb value
     ASSERT_TRUE(NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(tagName), &rgb))
-        << "can't find '" << tagName.get() << "'";
+    << "can't find '" << tagName.get() << "'";
     ASSERT_TRUE((rgb == kColors[index]))
-        << "failed at index " << index << " out of "
-        << ArrayLength(kColorNames);
+    << "failed at index " << index << " out of " << ArrayLength(kColorNames);
 
     // fiddle with the case to make sure we can still find it
     tagName.SetCharAt(tagName.CharAt(0) - 32, 0);
     ASSERT_TRUE(NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(tagName), &rgb))
-        << "can't find '" << tagName.get() << "'";
+    << "can't find '" << tagName.get() << "'";
     ASSERT_TRUE((rgb == kColors[index]))
-        << "failed at index " << index << " out of "
-        << ArrayLength(kColorNames);
+    << "failed at index " << index << " out of " << ArrayLength(kColorNames);
 
     // Check that parsing an RGB value in hex gets the right values
     uint8_t r = NS_GET_R(rgb);
@@ -71,7 +69,7 @@ static void RunColorTests() {
     nscolor hexrgb;
     ASSERT_TRUE(NS_HexToRGBA(NS_ConvertASCIItoUTF16(cbuf),
                              nsHexColorType::AllowAlpha, &hexrgb))
-        << "hex conversion to color of '" << cbuf << "'";
+    << "hex conversion to color of '" << cbuf << "'";
     ASSERT_TRUE(hexrgb == rgb);
   }
 }
@@ -82,10 +80,12 @@ static void RunJunkColorTests() {
   for (uint32_t i = 0; i < ArrayLength(kJunkNames); i++) {
     nsCString tag(kJunkNames[i]);
     ASSERT_FALSE(NS_ColorNameToRGB(NS_ConvertASCIItoUTF16(tag), &rgb))
-        << "Failed at junk color " << kJunkNames[i];
+    << "Failed at junk color " << kJunkNames[i];
   }
 }
 
-TEST(Gfx, ColorNames) { RunColorTests(); }
+TEST(Gfx, ColorNames)
+{ RunColorTests(); }
 
-TEST(Gfx, JunkColorNames) { RunJunkColorTests(); }
+TEST(Gfx, JunkColorNames)
+{ RunJunkColorTests(); }

@@ -23,98 +23,106 @@ using mozilla::Utf8Unit;
 
 BEGIN_TEST(testUtf8BadBytes) {
   static const char badLeadingUnit[] = "var x = \x80";
-  CHECK(testBadUtf8(badLeadingUnit, JSMSG_BAD_LEADING_UTF8_UNIT,
-                    [this](JS::ConstUTF8CharsZ message) {
-                      const char* chars = message.c_str();
-                      CHECK(startsWith(chars, "0x80"));
-                      CHECK(isBadLeadUnitMessage(chars));
-                      return true;
-                    },
-                    "0x80"));
+  CHECK(testBadUtf8(
+      badLeadingUnit, JSMSG_BAD_LEADING_UTF8_UNIT,
+      [this](JS::ConstUTF8CharsZ message) {
+        const char* chars = message.c_str();
+        CHECK(startsWith(chars, "0x80"));
+        CHECK(isBadLeadUnitMessage(chars));
+        return true;
+      },
+      "0x80"));
 
   static const char badSecondInTwoByte[] = "var x = \xDF\x20";
-  CHECK(testBadUtf8(badSecondInTwoByte, JSMSG_BAD_TRAILING_UTF8_UNIT,
-                    [this](JS::ConstUTF8CharsZ message) {
-                      const char* chars = message.c_str();
-                      CHECK(isBadTrailingBytesMessage(chars));
-                      CHECK(contains(chars, "0x20"));
-                      return true;
-                    },
-                    "0xDF 0x20"));
+  CHECK(testBadUtf8(
+      badSecondInTwoByte, JSMSG_BAD_TRAILING_UTF8_UNIT,
+      [this](JS::ConstUTF8CharsZ message) {
+        const char* chars = message.c_str();
+        CHECK(isBadTrailingBytesMessage(chars));
+        CHECK(contains(chars, "0x20"));
+        return true;
+      },
+      "0xDF 0x20"));
 
   static const char badSecondInThreeByte[] = "var x = \xEF\x17\xA7";
-  CHECK(testBadUtf8(badSecondInThreeByte, JSMSG_BAD_TRAILING_UTF8_UNIT,
-                    [this](JS::ConstUTF8CharsZ message) {
-                      const char* chars = message.c_str();
-                      CHECK(isBadTrailingBytesMessage(chars));
-                      CHECK(contains(chars, "0x17"));
-                      return true;
-                    },
-                    // Validating stops with the first invalid code unit and
-                    // shouldn't go beyond that.
-                    "0xEF 0x17"));
+  CHECK(testBadUtf8(
+      badSecondInThreeByte, JSMSG_BAD_TRAILING_UTF8_UNIT,
+      [this](JS::ConstUTF8CharsZ message) {
+        const char* chars = message.c_str();
+        CHECK(isBadTrailingBytesMessage(chars));
+        CHECK(contains(chars, "0x17"));
+        return true;
+      },
+      // Validating stops with the first invalid code unit and
+      // shouldn't go beyond that.
+      "0xEF 0x17"));
 
   static const char lengthTwoTooShort[] = "var x = \xDF";
-  CHECK(testBadUtf8(lengthTwoTooShort, JSMSG_NOT_ENOUGH_CODE_UNITS,
-                    [this](JS::ConstUTF8CharsZ message) {
-                      const char* chars = message.c_str();
-                      CHECK(isNotEnoughUnitsMessage(chars));
-                      CHECK(contains(chars, "0xDF"));
-                      CHECK(
-                          contains(chars, " 1 byte, but 0 bytes were present"));
-                      return true;
-                    },
-                    "0xDF"));
+  CHECK(testBadUtf8(
+      lengthTwoTooShort, JSMSG_NOT_ENOUGH_CODE_UNITS,
+      [this](JS::ConstUTF8CharsZ message) {
+        const char* chars = message.c_str();
+        CHECK(isNotEnoughUnitsMessage(chars));
+        CHECK(contains(chars, "0xDF"));
+        CHECK(contains(chars, " 1 byte, but 0 bytes were present"));
+        return true;
+      },
+      "0xDF"));
 
   static const char forbiddenHighSurrogate[] = "var x = \xED\xA2\x87";
-  CHECK(testBadUtf8(forbiddenHighSurrogate, JSMSG_FORBIDDEN_UTF8_CODE_POINT,
-                    [this](JS::ConstUTF8CharsZ message) {
-                      const char* chars = message.c_str();
-                      CHECK(isSurrogateMessage(chars));
-                      CHECK(contains(chars, "0xD887"));
-                      return true;
-                    },
-                    "0xED 0xA2 0x87"));
+  CHECK(testBadUtf8(
+      forbiddenHighSurrogate, JSMSG_FORBIDDEN_UTF8_CODE_POINT,
+      [this](JS::ConstUTF8CharsZ message) {
+        const char* chars = message.c_str();
+        CHECK(isSurrogateMessage(chars));
+        CHECK(contains(chars, "0xD887"));
+        return true;
+      },
+      "0xED 0xA2 0x87"));
 
   static const char forbiddenLowSurrogate[] = "var x = \xED\xB7\xAF";
-  CHECK(testBadUtf8(forbiddenLowSurrogate, JSMSG_FORBIDDEN_UTF8_CODE_POINT,
-                    [this](JS::ConstUTF8CharsZ message) {
-                      const char* chars = message.c_str();
-                      CHECK(isSurrogateMessage(chars));
-                      CHECK(contains(chars, "0xDDEF"));
-                      return true;
-                    },
-                    "0xED 0xB7 0xAF"));
+  CHECK(testBadUtf8(
+      forbiddenLowSurrogate, JSMSG_FORBIDDEN_UTF8_CODE_POINT,
+      [this](JS::ConstUTF8CharsZ message) {
+        const char* chars = message.c_str();
+        CHECK(isSurrogateMessage(chars));
+        CHECK(contains(chars, "0xDDEF"));
+        return true;
+      },
+      "0xED 0xB7 0xAF"));
 
   static const char oneTooBig[] = "var x = \xF4\x90\x80\x80";
-  CHECK(testBadUtf8(oneTooBig, JSMSG_FORBIDDEN_UTF8_CODE_POINT,
-                    [this](JS::ConstUTF8CharsZ message) {
-                      const char* chars = message.c_str();
-                      CHECK(isTooBigMessage(chars));
-                      CHECK(contains(chars, "0x110000"));
-                      return true;
-                    },
-                    "0xF4 0x90 0x80 0x80"));
+  CHECK(testBadUtf8(
+      oneTooBig, JSMSG_FORBIDDEN_UTF8_CODE_POINT,
+      [this](JS::ConstUTF8CharsZ message) {
+        const char* chars = message.c_str();
+        CHECK(isTooBigMessage(chars));
+        CHECK(contains(chars, "0x110000"));
+        return true;
+      },
+      "0xF4 0x90 0x80 0x80"));
 
   static const char notShortestFormZero[] = "var x = \xC0\x80";
-  CHECK(testBadUtf8(notShortestFormZero, JSMSG_FORBIDDEN_UTF8_CODE_POINT,
-                    [this](JS::ConstUTF8CharsZ message) {
-                      const char* chars = message.c_str();
-                      CHECK(isNotShortestFormMessage(chars));
-                      CHECK(startsWith(chars, "0x0 isn't "));
-                      return true;
-                    },
-                    "0xC0 0x80"));
+  CHECK(testBadUtf8(
+      notShortestFormZero, JSMSG_FORBIDDEN_UTF8_CODE_POINT,
+      [this](JS::ConstUTF8CharsZ message) {
+        const char* chars = message.c_str();
+        CHECK(isNotShortestFormMessage(chars));
+        CHECK(startsWith(chars, "0x0 isn't "));
+        return true;
+      },
+      "0xC0 0x80"));
 
   static const char notShortestFormNonzero[] = "var x = \xE0\x87\x80";
-  CHECK(testBadUtf8(notShortestFormNonzero, JSMSG_FORBIDDEN_UTF8_CODE_POINT,
-                    [this](JS::ConstUTF8CharsZ message) {
-                      const char* chars = message.c_str();
-                      CHECK(isNotShortestFormMessage(chars));
-                      CHECK(startsWith(chars, "0x1C0 isn't "));
-                      return true;
-                    },
-                    "0xE0 0x87 0x80"));
+  CHECK(testBadUtf8(
+      notShortestFormNonzero, JSMSG_FORBIDDEN_UTF8_CODE_POINT,
+      [this](JS::ConstUTF8CharsZ message) {
+        const char* chars = message.c_str();
+        CHECK(isNotShortestFormMessage(chars));
+        CHECK(startsWith(chars, "0x1C0 isn't "));
+        return true;
+      },
+      "0xE0 0x87 0x80"));
 
   return true;
 }

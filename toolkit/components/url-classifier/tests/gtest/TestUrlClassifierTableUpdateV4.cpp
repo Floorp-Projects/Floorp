@@ -234,7 +234,8 @@ static void testOpenLookupCache() {
 }
 
 // Tests start from here.
-TEST(UrlClassifierTableUpdateV4, FixLengthPSetFullUpdate) {
+TEST(UrlClassifierTableUpdateV4, FixLengthPSetFullUpdate)
+{
   srand(time(NULL));
 
   _PrefixArray array;
@@ -250,7 +251,8 @@ TEST(UrlClassifierTableUpdateV4, FixLengthPSetFullUpdate) {
   Clear();
 }
 
-TEST(UrlClassifierTableUpdateV4, VariableLengthPSetFullUpdate) {
+TEST(UrlClassifierTableUpdateV4, VariableLengthPSetFullUpdate)
+{
   _PrefixArray array;
   PrefixStringMap map;
   nsCString sha256;
@@ -265,7 +267,8 @@ TEST(UrlClassifierTableUpdateV4, VariableLengthPSetFullUpdate) {
 }
 
 // This test contain both variable length prefix set and fixed-length prefix set
-TEST(UrlClassifierTableUpdateV4, MixedPSetFullUpdate) {
+TEST(UrlClassifierTableUpdateV4, MixedPSetFullUpdate)
+{
   _PrefixArray array;
   PrefixStringMap map;
   nsCString sha256;
@@ -280,7 +283,8 @@ TEST(UrlClassifierTableUpdateV4, MixedPSetFullUpdate) {
   Clear();
 }
 
-TEST(UrlClassifierTableUpdateV4, PartialUpdateWithRemoval) {
+TEST(UrlClassifierTableUpdateV4, PartialUpdateWithRemoval)
+{
   _PrefixArray fArray;
 
   // Apply a full update first.
@@ -323,7 +327,8 @@ TEST(UrlClassifierTableUpdateV4, PartialUpdateWithRemoval) {
   Clear();
 }
 
-TEST(UrlClassifierTableUpdateV4, PartialUpdateWithoutRemoval) {
+TEST(UrlClassifierTableUpdateV4, PartialUpdateWithoutRemoval)
+{
   _PrefixArray fArray;
 
   // Apply a full update first.
@@ -363,7 +368,8 @@ TEST(UrlClassifierTableUpdateV4, PartialUpdateWithoutRemoval) {
 
 // Expect failure because partial update contains prefix already
 // in old prefix set.
-TEST(UrlClassifierTableUpdateV4, PartialUpdatePrefixAlreadyExist) {
+TEST(UrlClassifierTableUpdateV4, PartialUpdatePrefixAlreadyExist)
+{
   _PrefixArray fArray;
 
   // Apply a full update fist.
@@ -399,7 +405,8 @@ TEST(UrlClassifierTableUpdateV4, PartialUpdatePrefixAlreadyExist) {
 }
 
 // Test apply partial update directly without applying an full update first.
-TEST(UrlClassifierTableUpdateV4, OnlyPartialUpdate) {
+TEST(UrlClassifierTableUpdateV4, OnlyPartialUpdate)
+{
   _PrefixArray pArray;
   PrefixStringMap pMap;
   nsCString sha256;
@@ -415,7 +422,8 @@ TEST(UrlClassifierTableUpdateV4, OnlyPartialUpdate) {
 }
 
 // Test partial update without any ADD prefixes, only removalIndices.
-TEST(UrlClassifierTableUpdateV4, PartialUpdateOnlyRemoval) {
+TEST(UrlClassifierTableUpdateV4, PartialUpdateOnlyRemoval)
+{
   _PrefixArray fArray;
 
   // Apply a full update first.
@@ -452,7 +460,8 @@ TEST(UrlClassifierTableUpdateV4, PartialUpdateOnlyRemoval) {
 }
 
 // Test one tableupdate array contains full update and multiple partial updates.
-TEST(UrlClassifierTableUpdateV4, MultipleTableUpdates) {
+TEST(UrlClassifierTableUpdateV4, MultipleTableUpdates)
+{
   _PrefixArray fArray, pArray, mergedArray;
   PrefixStringMap fMap, pMap, mergedMap;
   nsCString sha256;
@@ -505,7 +514,8 @@ TEST(UrlClassifierTableUpdateV4, MultipleTableUpdates) {
 
 // Test apply full update first, and then apply multiple partial updates
 // in one tableupdate array.
-TEST(UrlClassifierTableUpdateV4, MultiplePartialUpdateTableUpdates) {
+TEST(UrlClassifierTableUpdateV4, MultiplePartialUpdateTableUpdates)
+{
   _PrefixArray fArray;
 
   // Apply a full update first
@@ -573,7 +583,8 @@ TEST(UrlClassifierTableUpdateV4, MultiplePartialUpdateTableUpdates) {
 }
 
 // Test removal indices are larger than the original prefix set.
-TEST(UrlClassifierTableUpdateV4, RemovalIndexTooLarge) {
+TEST(UrlClassifierTableUpdateV4, RemovalIndexTooLarge)
+{
   _PrefixArray fArray;
 
   // Apply a full update first
@@ -611,7 +622,8 @@ TEST(UrlClassifierTableUpdateV4, RemovalIndexTooLarge) {
   Clear();
 }
 
-TEST(UrlClassifierTableUpdateV4, ChecksumMismatch) {
+TEST(UrlClassifierTableUpdateV4, ChecksumMismatch)
+{
   // Apply a full update first
   {
     _PrefixArray fArray;
@@ -647,7 +659,8 @@ TEST(UrlClassifierTableUpdateV4, ChecksumMismatch) {
   Clear();
 }
 
-TEST(UrlClassifierTableUpdateV4, ApplyUpdateThenLoad) {
+TEST(UrlClassifierTableUpdateV4, ApplyUpdateThenLoad)
+{
   // Apply update with sha256
   {
     _PrefixArray fArray;
@@ -683,7 +696,8 @@ TEST(UrlClassifierTableUpdateV4, ApplyUpdateThenLoad) {
 }
 
 // This test is used to avoid an eror from nsICryptoHash
-TEST(UrlClassifierTableUpdateV4, ApplyUpdateWithFixedChecksum) {
+TEST(UrlClassifierTableUpdateV4, ApplyUpdateWithFixedChecksum)
+{
   _PrefixArray fArray = {_Prefix("enus"),
                          _Prefix("apollo"),
                          _Prefix("mars"),
@@ -723,7 +737,8 @@ TEST(UrlClassifierTableUpdateV4, ApplyUpdateWithFixedChecksum) {
 
 // This test ensure that an empty update works correctly. Empty update
 // should be skipped by CheckValidUpdate in Classifier::UpdateTableV4.
-TEST(UrlClassifierTableUpdateV4, EmptyUpdate) {
+TEST(UrlClassifierTableUpdateV4, EmptyUpdate)
+{
   PrefixStringMap emptyAddition;
   nsTArray<uint32_t> emptyRemoval;
 
@@ -756,7 +771,8 @@ TEST(UrlClassifierTableUpdateV4, EmptyUpdate) {
 
 // This test ensure applying an empty update directly through update algorithm
 // should be correct.
-TEST(UrlClassifierTableUpdateV4, EmptyUpdate2) {
+TEST(UrlClassifierTableUpdateV4, EmptyUpdate2)
+{
   // Setup LookupCache with initial data
   _PrefixArray array;
   CreateRandomSortedPrefixArray(100, 4, 4, array);

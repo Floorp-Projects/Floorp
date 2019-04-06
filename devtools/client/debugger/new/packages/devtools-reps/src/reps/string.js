@@ -7,15 +7,15 @@ const PropTypes = require("prop-types");
 
 const {
   containsURL,
-  isURL,
   escapeString,
   getGripType,
   rawCropString,
   sanitizeString,
   wrapRender,
   isGrip,
-  tokenSplitRegex,
-  ELLIPSIS
+  ELLIPSIS,
+  uneatLastUrlCharsRegex,
+  urlRegex
 } = require("./rep-utils");
 
 const dom = require("react-dom-factories");
@@ -33,7 +33,8 @@ StringRep.propTypes = {
   object: PropTypes.object.isRequired,
   openLink: PropTypes.func,
   className: PropTypes.string,
-  title: PropTypes.string
+  title: PropTypes.string,
+  isInContentPage: PropTypes.bool
 };
 
 function StringRep(props) {
@@ -46,7 +47,8 @@ function StringRep(props) {
     escapeWhitespace = true,
     member,
     openLink,
-    title
+    title,
+    isInContentPage
   } = props;
 
   let text = object;
@@ -89,7 +91,12 @@ function StringRep(props) {
     if (containsURL(text)) {
       return span(
         config,
-        ...getLinkifiedElements(text, shouldCrop && cropLimit, openLink)
+        ...getLinkifiedElements(
+          text,
+          shouldCrop && cropLimit,
+          openLink,
+          isInContentPage
+        )
       );
     }
 
@@ -168,77 +175,84 @@ function maybeCropString(opts, text) {
  * @param {String} text: The actual string to linkify.
  * @param {Integer | null} cropLimit
  * @param {Function} openLink: Function handling the link opening.
+ * @param {Boolean} isInContentPage: pass true if the reps is rendered in
+ *                                   the content page (e.g. in JSONViewer).
  * @returns {Array<String|ReactElement>}
  */
-function getLinkifiedElements(text, cropLimit, openLink) {
+function getLinkifiedElements(text, cropLimit, openLink, isInContentPage) {
   const halfLimit = Math.ceil((cropLimit - ELLIPSIS.length) / 2);
   const startCropIndex = cropLimit ? halfLimit : null;
   const endCropIndex = cropLimit ? text.length - halfLimit : null;
 
-  // As we walk through the tokens of the source string, we make sure to
-  // preserve the original whitespace that separated the tokens.
-  let currentIndex = 0;
   const items = [];
-  for (const token of text.split(tokenSplitRegex)) {
-    if (isURL(token)) {
-      // Let's grab all the non-url strings before the link.
-      const tokenStart = text.indexOf(token, currentIndex);
-      let nonUrlText = text.slice(currentIndex, tokenStart);
-      nonUrlText = getCroppedString(
-        nonUrlText,
-        currentIndex,
-        startCropIndex,
-        endCropIndex
-      );
-      if (nonUrlText) {
-        items.push(nonUrlText);
-      }
-
-      // Update the index to match the beginning of the token.
-      currentIndex = tokenStart;
-
-      const linkText = getCroppedString(
-        token,
-        currentIndex,
-        startCropIndex,
-        endCropIndex
-      );
-      if (linkText) {
-        items.push(
-          a(
-            {
-              className: "url",
-              title: token,
-              draggable: false,
-              onClick: openLink
-                ? e => {
-                    e.preventDefault();
-                    openLink(token, e);
-                  }
-                : null
-            },
-            linkText
-          )
-        );
-      }
-
-      currentIndex = tokenStart + token.length;
+  let currentIndex = 0;
+  let contentStart;
+  while (true) {
+    const url = urlRegex.exec(text);
+    // Pick the regexp with the earlier content; index will always be zero.
+    if (!url) {
+      break;
     }
+    contentStart = url.index + url[1].length;
+    if (contentStart > 0) {
+      const nonUrlText = text.substring(0, contentStart);
+      items.push(
+        getCroppedString(nonUrlText, currentIndex, startCropIndex, endCropIndex)
+      );
+    }
+
+    // There are some final characters for a URL that are much more likely
+    // to have been part of the enclosing text rather than the end of the
+    // URL.
+    let useUrl = url[2];
+    const uneat = uneatLastUrlCharsRegex.exec(useUrl);
+    if (uneat) {
+      useUrl = useUrl.substring(0, uneat.index);
+    }
+
+    currentIndex = currentIndex + contentStart;
+    const linkText = getCroppedString(
+      useUrl,
+      currentIndex,
+      startCropIndex,
+      endCropIndex
+    );
+
+    if (linkText) {
+      items.push(
+        a(
+          {
+            className: "url",
+            title: useUrl,
+            draggable: false,
+            // Because we don't want the link to be open in the current
+            // panel's frame, we only render the href attribute if `openLink`
+            // exists (so we can preventDefault) or if the reps will be
+            // displayed in content page (e.g. in the JSONViewer).
+            href: openLink || isInContentPage ? useUrl : null,
+            onClick: openLink
+              ? e => {
+                  e.preventDefault();
+                  openLink(useUrl, e);
+                }
+              : null
+          },
+          linkText
+        )
+      );
+    }
+
+    currentIndex = currentIndex + useUrl.length;
+    text = text.substring(url.index + url[1].length + useUrl.length);
   }
 
   // Clean up any non-URL text at the end of the source string,
   // i.e. not handled in the loop.
-  if (currentIndex !== text.length) {
-    let nonUrlText = text.slice(currentIndex, text.length);
+  if (text.length > 0) {
     if (currentIndex < endCropIndex) {
-      nonUrlText = getCroppedString(
-        nonUrlText,
-        currentIndex,
-        startCropIndex,
-        endCropIndex
-      );
+      text = getCroppedString(text, currentIndex, startCropIndex, endCropIndex);
     }
-    items.push(nonUrlText);
+    items.push(text);
   }
 
   return items;

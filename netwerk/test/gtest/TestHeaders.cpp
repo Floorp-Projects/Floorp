@@ -2,7 +2,8 @@
 
 #include "nsHttpHeaderArray.h"
 
-TEST(TestHeaders, DuplicateHSTS) {
+TEST(TestHeaders, DuplicateHSTS)
+{
   // When the Strict-Transport-Security header is sent multiple times, its
   // effective value is the value of the first item. It is not merged as other
   // headers are.

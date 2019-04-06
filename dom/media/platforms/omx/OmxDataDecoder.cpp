@@ -139,15 +139,16 @@ RefPtr<MediaDataDecoder::InitPromise> OmxDataDecoder::Init() {
 
     RefPtr<InitPromise> p = mInitPromise.Ensure(__func__);
     mOmxLayer->Init(mTrackInfo.get())
-        ->Then(mOmxTaskQueue, __func__,
-               [self, this]() {
-                 // Omx state should be OMX_StateIdle.
-                 mOmxState = mOmxLayer->GetState();
-                 MOZ_ASSERT(mOmxState != OMX_StateIdle);
-               },
-               [self, this]() {
-                 RejectInitPromise(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
-               });
+        ->Then(
+            mOmxTaskQueue, __func__,
+            [self, this]() {
+              // Omx state should be OMX_StateIdle.
+              mOmxState = mOmxLayer->GetState();
+              MOZ_ASSERT(mOmxState != OMX_StateIdle);
+            },
+            [self, this]() {
+              RejectInitPromise(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+            });
     return p;
   });
 }
@@ -211,39 +212,41 @@ RefPtr<ShutdownPromise> OmxDataDecoder::DoAsyncShutdown() {
   // Flush to all ports, so all buffers can be returned from component.
   RefPtr<OmxDataDecoder> self = this;
   mOmxLayer->SendCommand(OMX_CommandFlush, OMX_ALL, nullptr)
-      ->Then(mOmxTaskQueue, __func__,
-             [self]() -> RefPtr<OmxCommandPromise> {
-               LOGL("DoAsyncShutdown: flush complete");
-               return self->mOmxLayer->SendCommand(OMX_CommandStateSet,
-                                                   OMX_StateIdle, nullptr);
-             },
-             [self](const OmxCommandFailureHolder& aError) {
-               self->mOmxLayer->Shutdown();
-               return OmxCommandPromise::CreateAndReject(aError, __func__);
-             })
-      ->Then(mOmxTaskQueue, __func__,
-             [self]() -> RefPtr<OmxCommandPromise> {
-               RefPtr<OmxCommandPromise> p = self->mOmxLayer->SendCommand(
-                   OMX_CommandStateSet, OMX_StateLoaded, nullptr);
+      ->Then(
+          mOmxTaskQueue, __func__,
+          [self]() -> RefPtr<OmxCommandPromise> {
+            LOGL("DoAsyncShutdown: flush complete");
+            return self->mOmxLayer->SendCommand(OMX_CommandStateSet,
+                                                OMX_StateIdle, nullptr);
+          },
+          [self](const OmxCommandFailureHolder& aError) {
+            self->mOmxLayer->Shutdown();
+            return OmxCommandPromise::CreateAndReject(aError, __func__);
+          })
+      ->Then(
+          mOmxTaskQueue, __func__,
+          [self]() -> RefPtr<OmxCommandPromise> {
+            RefPtr<OmxCommandPromise> p = self->mOmxLayer->SendCommand(
+                OMX_CommandStateSet, OMX_StateLoaded, nullptr);
 
-               // According to spec 3.1.1.2.2.1:
-               // OMX_StateLoaded needs to be sent before releasing buffers.
-               // And state transition from OMX_StateIdle to OMX_StateLoaded
-               // is completed when all of the buffers have been removed
-               // from the component.
-               // Here the buffer promises are not resolved due to displaying
-               // in layer, it needs to wait before the layer returns the
-               // buffers.
-               LOGL("DoAsyncShutdown: releasing buffers...");
-               self->ReleaseBuffers(OMX_DirInput);
-               self->ReleaseBuffers(OMX_DirOutput);
+            // According to spec 3.1.1.2.2.1:
+            // OMX_StateLoaded needs to be sent before releasing buffers.
+            // And state transition from OMX_StateIdle to OMX_StateLoaded
+            // is completed when all of the buffers have been removed
+            // from the component.
+            // Here the buffer promises are not resolved due to displaying
+            // in layer, it needs to wait before the layer returns the
+            // buffers.
+            LOGL("DoAsyncShutdown: releasing buffers...");
+            self->ReleaseBuffers(OMX_DirInput);
+            self->ReleaseBuffers(OMX_DirOutput);
 
-               return p;
-             },
-             [self](const OmxCommandFailureHolder& aError) {
-               self->mOmxLayer->Shutdown();
-               return OmxCommandPromise::CreateAndReject(aError, __func__);
-             })
+            return p;
+          },
+          [self](const OmxCommandFailureHolder& aError) {
+            self->mOmxLayer->Shutdown();
+            return OmxCommandPromise::CreateAndReject(aError, __func__);
+          })
       ->Then(
           mOmxTaskQueue, __func__,
           [self]() -> RefPtr<ShutdownPromise> {
@@ -263,17 +266,18 @@ RefPtr<ShutdownPromise> OmxDataDecoder::DoAsyncShutdown() {
             self->mMediaDataHelper = nullptr;
             return ShutdownPromise::CreateAndReject(false, __func__);
           })
-      ->Then(mTaskQueue, __func__,
-             [self]() {
-               self->mOmxTaskQueue->BeginShutdown();
-               self->mOmxTaskQueue->AwaitShutdownAndIdle();
-               self->mShutdownPromise.Resolve(true, __func__);
-             },
-             [self]() {
-               self->mOmxTaskQueue->BeginShutdown();
-               self->mOmxTaskQueue->AwaitShutdownAndIdle();
-               self->mShutdownPromise.Resolve(true, __func__);
-             });
+      ->Then(
+          mTaskQueue, __func__,
+          [self]() {
+            self->mOmxTaskQueue->BeginShutdown();
+            self->mOmxTaskQueue->AwaitShutdownAndIdle();
+            self->mShutdownPromise.Resolve(true, __func__);
+          },
+          [self]() {
+            self->mOmxTaskQueue->BeginShutdown();
+            self->mOmxTaskQueue->AwaitShutdownAndIdle();
+            self->mShutdownPromise.Resolve(true, __func__);
+          });
   return mShutdownPromise.Ensure(__func__);
 }
 
@@ -325,18 +329,19 @@ void OmxDataDecoder::Output(BufferData* aData) {
 
     RefPtr<OmxDataDecoder> self = this;
     RefPtr<BufferData> buffer = aData;
-    p->Then(mOmxTaskQueue, __func__,
-            [self, buffer]() {
-              MOZ_RELEASE_ASSERT(buffer->mStatus ==
-                                 BufferData::BufferStatus::OMX_CLIENT_OUTPUT);
-              buffer->mStatus = BufferData::BufferStatus::FREE;
-              self->FillAndEmptyBuffers();
-            },
-            [buffer]() {
-              MOZ_RELEASE_ASSERT(buffer->mStatus ==
-                                 BufferData::BufferStatus::OMX_CLIENT_OUTPUT);
-              buffer->mStatus = BufferData::BufferStatus::FREE;
-            });
+    p->Then(
+        mOmxTaskQueue, __func__,
+        [self, buffer]() {
+          MOZ_RELEASE_ASSERT(buffer->mStatus ==
+                             BufferData::BufferStatus::OMX_CLIENT_OUTPUT);
+          buffer->mStatus = BufferData::BufferStatus::FREE;
+          self->FillAndEmptyBuffers();
+        },
+        [buffer]() {
+          MOZ_RELEASE_ASSERT(buffer->mStatus ==
+                             BufferData::BufferStatus::OMX_CLIENT_OUTPUT);
+          buffer->mStatus = BufferData::BufferStatus::FREE;
+        });
   } else {
     aData->mStatus = BufferData::BufferStatus::FREE;
   }
@@ -514,16 +519,16 @@ void OmxDataDecoder::OmxStateRunner() {
     // Send OpenMax state command to OMX_StateIdle.
     RefPtr<OmxDataDecoder> self = this;
     mOmxLayer->SendCommand(OMX_CommandStateSet, OMX_StateIdle, nullptr)
-        ->Then(mOmxTaskQueue, __func__,
-               [self]() {
-                 // Current state should be OMX_StateIdle.
-                 self->mOmxState = self->mOmxLayer->GetState();
-                 MOZ_ASSERT(self->mOmxState == OMX_StateIdle);
-               },
-               [self]() {
-                 self->RejectInitPromise(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                                         __func__);
-               });
+        ->Then(
+            mOmxTaskQueue, __func__,
+            [self]() {
+              // Current state should be OMX_StateIdle.
+              self->mOmxState = self->mOmxLayer->GetState();
+              MOZ_ASSERT(self->mOmxState == OMX_StateIdle);
+            },
+            [self]() {
+              self->RejectInitPromise(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+            });
 
     // Allocate input and output buffers.
     OMX_DIRTYPE types[] = {OMX_DIRTYPE::OMX_DirInput,
@@ -538,17 +543,17 @@ void OmxDataDecoder::OmxStateRunner() {
   } else if (mOmxState == OMX_StateIdle) {
     RefPtr<OmxDataDecoder> self = this;
     mOmxLayer->SendCommand(OMX_CommandStateSet, OMX_StateExecuting, nullptr)
-        ->Then(mOmxTaskQueue, __func__,
-               [self]() {
-                 self->mOmxState = self->mOmxLayer->GetState();
-                 MOZ_ASSERT(self->mOmxState == OMX_StateExecuting);
+        ->Then(
+            mOmxTaskQueue, __func__,
+            [self]() {
+              self->mOmxState = self->mOmxLayer->GetState();
+              MOZ_ASSERT(self->mOmxState == OMX_StateExecuting);
 
-                 self->ResolveInitPromise(__func__);
-               },
-               [self]() {
-                 self->RejectInitPromise(NS_ERROR_DOM_MEDIA_FATAL_ERR,
-                                         __func__);
-               });
+              self->ResolveInitPromise(__func__);
+            },
+            [self]() {
+              self->RejectInitPromise(NS_ERROR_DOM_MEDIA_FATAL_ERR, __func__);
+            });
   } else if (mOmxState == OMX_StateExecuting) {
     // Configure codec once it gets OMX_StateExecuting state.
     FillCodecConfigDataToOmx();
@@ -728,35 +733,36 @@ void OmxDataDecoder::PortSettingsChanged() {
     LOG("PortSettingsChanged: disable port %lu", def.nPortIndex);
     mOmxLayer
         ->SendCommand(OMX_CommandPortDisable, mPortSettingsChanged, nullptr)
-        ->Then(mOmxTaskQueue, __func__,
-               [self, def]() -> RefPtr<OmxCommandPromise> {
-                 // 3. enable port.
-                 // Send enable port command.
-                 RefPtr<OmxCommandPromise> p = self->mOmxLayer->SendCommand(
-                     OMX_CommandPortEnable, self->mPortSettingsChanged,
-                     nullptr);
+        ->Then(
+            mOmxTaskQueue, __func__,
+            [self, def]() -> RefPtr<OmxCommandPromise> {
+              // 3. enable port.
+              // Send enable port command.
+              RefPtr<OmxCommandPromise> p = self->mOmxLayer->SendCommand(
+                  OMX_CommandPortEnable, self->mPortSettingsChanged, nullptr);
 
-                 // 4. allocate port buffers.
-                 // Allocate new port buffers.
-                 nsresult rv = self->AllocateBuffers(def.eDir);
-                 if (NS_FAILED(rv)) {
-                   self->NotifyError(OMX_ErrorUndefined, __func__);
-                 }
+              // 4. allocate port buffers.
+              // Allocate new port buffers.
+              nsresult rv = self->AllocateBuffers(def.eDir);
+              if (NS_FAILED(rv)) {
+                self->NotifyError(OMX_ErrorUndefined, __func__);
+              }
 
-                 return p;
-               },
-               [self](const OmxCommandFailureHolder& aError) {
-                 self->NotifyError(OMX_ErrorUndefined, __func__);
-                 return OmxCommandPromise::CreateAndReject(aError, __func__);
-               })
-        ->Then(mOmxTaskQueue, __func__,
-               [self]() {
-                 LOGL("PortSettingsChanged: port settings changed complete");
-                 // finish port setting changed.
-                 self->mPortSettingsChanged = -1;
-                 self->FillAndEmptyBuffers();
-               },
-               [self]() { self->NotifyError(OMX_ErrorUndefined, __func__); });
+              return p;
+            },
+            [self](const OmxCommandFailureHolder& aError) {
+              self->NotifyError(OMX_ErrorUndefined, __func__);
+              return OmxCommandPromise::CreateAndReject(aError, __func__);
+            })
+        ->Then(
+            mOmxTaskQueue, __func__,
+            [self]() {
+              LOGL("PortSettingsChanged: port settings changed complete");
+              // finish port setting changed.
+              self->mPortSettingsChanged = -1;
+              self->FillAndEmptyBuffers();
+            },
+            [self]() { self->NotifyError(OMX_ErrorUndefined, __func__); });
 
     // 2. wait for port buffers return to client and then release these buffers.
     //

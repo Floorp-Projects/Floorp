@@ -12,9 +12,11 @@
 
 using mozilla::ArenaAllocator;
 
-TEST(ArenaAllocator, Constructor) { ArenaAllocator<4096, 4> a; }
+TEST(ArenaAllocator, Constructor)
+{ ArenaAllocator<4096, 4> a; }
 
-TEST(ArenaAllocator, DefaultAllocate) {
+TEST(ArenaAllocator, DefaultAllocate)
+{
   // Test default 1-byte alignment.
   ArenaAllocator<1024> a;
   void* x = a.Allocate(101);
@@ -25,7 +27,8 @@ TEST(ArenaAllocator, DefaultAllocate) {
   EXPECT_EQ(uintptr_t(x) + 101, uintptr_t(y));
 }
 
-TEST(ArenaAllocator, AllocateAlignment) {
+TEST(ArenaAllocator, AllocateAlignment)
+{
   // Test non-default 8-byte alignment.
   static const size_t kAlignment = 8;
   ArenaAllocator<1024, kAlignment> a;
@@ -71,7 +74,8 @@ TEST(ArenaAllocator, BadAlignment)
 }
 #endif
 
-TEST(ArenaAllocator, AllocateMultipleSizes) {
+TEST(ArenaAllocator, AllocateMultipleSizes)
+{
   // Test non-default 4-byte alignment.
   ArenaAllocator<4096, 4> a;
 
@@ -90,7 +94,8 @@ TEST(ArenaAllocator, AllocateMultipleSizes) {
   }
 }
 
-TEST(ArenaAllocator, AllocateInDifferentChunks) {
+TEST(ArenaAllocator, AllocateInDifferentChunks)
+{
   // Test default 1-byte alignment.
   ArenaAllocator<4096> a;
   void* x = a.Allocate(4000);
@@ -98,7 +103,8 @@ TEST(ArenaAllocator, AllocateInDifferentChunks) {
   EXPECT_NE(uintptr_t(x) + 4000, uintptr_t(y));
 }
 
-TEST(ArenaAllocator, AllocateLargerThanArenaSize) {
+TEST(ArenaAllocator, AllocateLargerThanArenaSize)
+{
   // Test default 1-byte alignment.
   ArenaAllocator<256> a;
   void* x = a.Allocate(4000);
@@ -113,7 +119,8 @@ TEST(ArenaAllocator, AllocateLargerThanArenaSize) {
 }
 
 #ifndef MOZ_CODE_COVERAGE
-TEST(ArenaAllocator, AllocationsPerChunk) {
+TEST(ArenaAllocator, AllocationsPerChunk)
+{
   // Test that expected number of allocations fit in one chunk.
   // We use an alignment of 64-bytes to avoid worrying about differences in
   // the header size on 32 and 64-bit platforms.
@@ -140,7 +147,8 @@ TEST(ArenaAllocator, AllocationsPerChunk) {
   EXPECT_NE(uintptr_t(x) + kAlignment, uintptr_t(y));
 }
 
-TEST(ArenaAllocator, MemoryIsValid) {
+TEST(ArenaAllocator, MemoryIsValid)
+{
   // Make multiple allocations and actually access the memory. This is
   // expected to trip up ASAN or valgrind if out of bounds memory is
   // accessed.
@@ -188,7 +196,8 @@ TEST(ArenaAllocator, MemoryIsValid) {
 
 MOZ_DEFINE_MALLOC_SIZE_OF(TestSizeOf);
 
-TEST(ArenaAllocator, SizeOf) {
+TEST(ArenaAllocator, SizeOf)
+{
   // This tests the sizeof functionality. We can't test for equality as we
   // can't reliably guarantee what sizes the underlying allocator is going to
   // choose, so we just test that things grow (or not) as expected.
@@ -224,7 +233,8 @@ TEST(ArenaAllocator, SizeOf) {
   EXPECT_GT(sz, prev_sz);
 }
 
-TEST(ArenaAllocator, Clear) {
+TEST(ArenaAllocator, Clear)
+{
   // Tests that the Clear function works as expected. The best proxy for
   // checking if a clear is successful is to measure the size. If it's empty we
   // expect the size to be 0.
@@ -269,7 +279,8 @@ TEST(ArenaAllocator, Clear) {
   EXPECT_GT(sz, prev_sz);
 }
 
-TEST(ArenaAllocator, Extensions) {
+TEST(ArenaAllocator, Extensions)
+{
   ArenaAllocator<4096, 8> a;
 
   // Test with raw strings.

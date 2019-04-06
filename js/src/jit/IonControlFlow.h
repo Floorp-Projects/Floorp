@@ -53,11 +53,10 @@ class CFGBlock : public TempObject {
   jsbytecode* start;
   jsbytecode* stop;
   CFGControlInstruction* end;
-  bool inWorkList;
 
  public:
   explicit CFGBlock(jsbytecode* start)
-      : id_(-1), start(start), stop(nullptr), end(nullptr), inWorkList(false) {}
+      : id_(-1), start(start), stop(nullptr), end(nullptr) {}
 
   static CFGBlock* New(TempAllocator& alloc, jsbytecode* start) {
     return new (alloc) CFGBlock(start);
@@ -77,15 +76,6 @@ class CFGBlock : public TempObject {
     return end;
   }
   void setStopIns(CFGControlInstruction* stopIns) { end = stopIns; }
-  bool isInWorkList() const { return inWorkList; }
-  void setInWorklist() {
-    MOZ_ASSERT(!inWorkList);
-    inWorkList = true;
-  }
-  void clearInWorkList() {
-    MOZ_ASSERT(inWorkList);
-    inWorkList = false;
-  }
   size_t id() const { return id_; }
   void setId(size_t id) { id_ = id; }
 };

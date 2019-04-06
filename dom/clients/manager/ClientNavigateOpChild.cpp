@@ -287,15 +287,16 @@ void ClientNavigateOpChild::Init(const ClientNavigateOpConstructorArgs& aArgs) {
   // Capturing `this` is safe here since we clear the mPromiseRequestHolder in
   // ActorDestroy.
   promise
-      ->Then(mSerialEventTarget, __func__,
-             [this](const ClientOpResult& aResult) {
-               mPromiseRequestHolder.Complete();
-               PClientNavigateOpChild::Send__delete__(this, aResult);
-             },
-             [this](nsresult aResult) {
-               mPromiseRequestHolder.Complete();
-               PClientNavigateOpChild::Send__delete__(this, aResult);
-             })
+      ->Then(
+          mSerialEventTarget, __func__,
+          [this](const ClientOpResult& aResult) {
+            mPromiseRequestHolder.Complete();
+            PClientNavigateOpChild::Send__delete__(this, aResult);
+          },
+          [this](nsresult aResult) {
+            mPromiseRequestHolder.Complete();
+            PClientNavigateOpChild::Send__delete__(this, aResult);
+          })
       ->Track(mPromiseRequestHolder);
 }
 

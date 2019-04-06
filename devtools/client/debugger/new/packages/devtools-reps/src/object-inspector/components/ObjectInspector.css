@@ -28,17 +28,22 @@
 }
 
 .tree.object-inspector .block .object-label::before {
-  content: "☲ ";
+  content: "☲";
   font-size: 1.1em;
+  display: inline;
+  padding-inline-end: 2px;
+  line-height: 14px;
 }
 
 .object-inspector .object-delimiter {
   color: var(--theme-comment);
+  white-space: pre-wrap;
 }
 
 .object-inspector .tree-node .arrow {
   display: inline-block;
   vertical-align: middle;
+  margin-inline-start: -1px;
 }
 
 /* Focused styles */

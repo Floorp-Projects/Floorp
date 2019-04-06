@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .xhr-input-container {
-  display: block;
+  display: flex;
   border: 1px solid transparent;
 }
 
@@ -19,27 +19,25 @@
   border: 1px solid red;
 }
 
-.xhr-container label {
-  display: flex;
-}
-
 .xhr-input-form {
   display: inline-flex;
   width: 100%;
-  padding: 0.5em 1em 0.5em 1em;
+  padding-inline-start: 20px;
+  padding-inline-end: 12px;
 }
 
 .xhr-checkbox {
   margin-inline-start: 0;
+  margin-inline-end: 4px;
 }
 
 .xhr-input-url {
   border: 1px;
-  padding: 0em 0.6em 0em 0.6em;
+  padding: 3px 0px;
   flex-grow: 1;
   background-color: var(--theme-sidebar-background);
-  font-size: 12px;
-  line-height: 18px;
+  font-size: inherit;
+  line-height: 14px;
   color: var(--theme-body-color);
 }
 
@@ -57,26 +55,26 @@
   border-left: 4px solid transparent;
   width: 100%;
   color: var(--theme-body-color);
-  padding: 0.25em 1em;
+  padding-inline-start: 16px;
+  padding-inline-end: 12px;
   background-color: var(--theme-body-background);
   display: flex;
   align-items: center;
   position: relative;
-  min-height: var(--breakpoint-expression-height);
 }
 
 :root.theme-light .xhr-container:hover {
-  background-color: var(--theme-selection-background-hover);
+  background-color: var(--search-overlays-semitransparent);
 }
 
 :root.theme-dark .xhr-container:hover {
-  background-color: var(--theme-selection-background-hover);
+  background-color: var(--search-overlays-semitransparent);
 }
 
 .xhr-label-method {
-  padding: 0px 2px 0px 2px;
-  line-height: 15px;
+  line-height: 14px;
   display: inline-block;
+  margin-inline-end: 2px;
 }
 
 .xhr-input-method {
@@ -96,27 +94,18 @@
   text-overflow: ellipsis;
   overflow: hidden;
   padding: 0px 2px 0px 2px;
-  line-height: 15px;
-  font-size: 11px;
+  line-height: 14px;
 }
 
 .xhr-container label {
   flex-grow: 1;
   display: flex;
-  padding-inline-end: 36px;
   align-items: center;
   overflow-x: hidden;
 }
 
 .xhr-container__close-btn {
-  position: absolute;
-  top: calc(50% - 8px);
-}
-
-[dir="ltr"] .xhr-container__close-btn {
-  right: 12px;
-}
-
-[dir="rtl"] .xhr-container__close-btn {
-  left: 12px;
+  display: flex;
+  padding-top: 2px;
+  padding-bottom: 2px;
 }

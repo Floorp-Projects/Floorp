@@ -690,11 +690,26 @@ uint32_t GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeColumn(
 
   const TokenStreamAnyChars& anyChars = anyCharsAccess();
 
-  const Unit* begin =
-      this->sourceUnits.codeUnitPtrAt(anyChars.lineStart(lineToken));
+  uint32_t lineNumber = anyChars.srcCoords.lineNumber(lineToken);
+
+  uint32_t beginOffset;
+  uint32_t partialCols;
+  if (lineNumber == lastLineForColumn_ && lastOffsetForColumn_ <= offset) {
+    beginOffset = lastOffsetForColumn_;
+    partialCols = lastColumn_;
+  } else {
+    beginOffset = anyChars.lineStart(lineToken);
+    partialCols = 0;
+  }
+
+  const Unit* begin = this->sourceUnits.codeUnitPtrAt(beginOffset);
   const Unit* end = this->sourceUnits.codeUnitPtrAt(offset);
 
-  auto partialCols = AssertedCast<uint32_t>(ComputeColumn(begin, end));
+  partialCols += AssertedCast<uint32_t>(ComputeColumn(begin, end));
+
+  lastLineForColumn_ = lineNumber;
+  lastOffsetForColumn_ = offset;
+  lastColumn_ = partialCols;
   return (lineToken.isFirstLine() ? anyChars.options_.column : 0) + partialCols;
 }
 

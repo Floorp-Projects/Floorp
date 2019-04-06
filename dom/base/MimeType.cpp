@@ -2,17 +2,28 @@
 #include "nsUnicharUtils.h"
 
 namespace {
-template <typename char_type>
-static inline bool IsHTTPTokenPoint(const char_type c) {
+template <typename Char>
+constexpr bool IsHTTPTokenPoint(Char aChar) {
+  using UnsignedChar = typename mozilla::detail::MakeUnsignedChar<Char>::Type;
+  auto c = static_cast<UnsignedChar>(aChar);
   return c == '!' || c == '#' || c == '$' || c == '%' || c == '&' ||
          c == '\'' || c == '*' || c == '+' || c == '-' || c == '.' ||
          c == '^' || c == '_' || c == '`' || c == '|' || c == '~' ||
          mozilla::IsAsciiAlphanumeric(c);
 }
 
-template <typename char_type>
-static inline bool IsHTTPQuotedStringTokenPoint(const char_type c) {
+template <typename Char>
+constexpr bool IsHTTPQuotedStringTokenPoint(Char aChar) {
+  using UnsignedChar = typename mozilla::detail::MakeUnsignedChar<Char>::Type;
+  auto c = static_cast<UnsignedChar>(aChar);
   return c == 0x9 || (c >= ' ' && c <= '~') || mozilla::IsNonAsciiLatin1(c);
+}
+
+template <typename Char>
+constexpr bool IsHTTPWhitespace(Char aChar) {
+  using UnsignedChar = typename mozilla::detail::MakeUnsignedChar<Char>::Type;
+  auto c = static_cast<UnsignedChar>(aChar);
+  return c == 0x9 || c == 0xA || c == 0xD || c == 0x20;
 }
 }  // namespace
 
@@ -24,13 +35,13 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType) {
   // Steps 1-2
   const char_type* pos = aMimeType.BeginReading();
   const char_type* end = aMimeType.EndReading();
-  while (pos < end && mozilla::IsAsciiWhitespace(*pos)) {
+  while (pos < end && IsHTTPWhitespace(*pos)) {
     ++pos;
   }
   if (pos == end) {
     return nullptr;
   }
-  while (end > pos && mozilla::IsAsciiWhitespace(*(end - 1))) {
+  while (end > pos && IsHTTPWhitespace(*(end - 1))) {
     --end;
   }
 
@@ -62,11 +73,11 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType) {
     if (!IsHTTPTokenPoint(*pos)) {
       // If we hit a whitespace, check that the rest of
       // the subtype is whitespace, otherwise fail.
-      if (mozilla::IsAsciiWhitespace(*pos)) {
+      if (IsHTTPWhitespace(*pos)) {
         subtypeEnd = pos;
         ++pos;
         while (pos < end && *pos != ';') {
-          if (!mozilla::IsAsciiWhitespace(*pos)) {
+          if (!IsHTTPWhitespace(*pos)) {
             return nullptr;
           }
           ++pos;
@@ -102,7 +113,7 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType) {
     ++pos;
 
     // Step 11.2
-    while (pos < end && mozilla::IsAsciiWhitespace(*pos)) {
+    while (pos < end && IsHTTPWhitespace(*pos)) {
       ++pos;
     }
 
@@ -196,7 +207,7 @@ TMimeType<char_type>::Parse(const nsTSubstring<char_type>& aMimeType) {
       // Step 11.9.2
       const char_type* paramValueLastChar = pos - 1;
       while (paramValueLastChar >= paramValueStart &&
-             mozilla::IsAsciiWhitespace(*paramValueLastChar)) {
+             IsHTTPWhitespace(*paramValueLastChar)) {
         --paramValueLastChar;
       }
 

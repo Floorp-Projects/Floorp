@@ -538,7 +538,9 @@ int MediaEngineRemoteVideoSource::DeliverFrame(
       }
       break;
     }
-    default: { break; }
+    default: {
+      break;
+    }
   }
 
   rtc::Callback0<void> callback_unused;

@@ -62,11 +62,12 @@ Maybe<const SharedPrefMap::Pref> SharedPrefMap::Get(const char* aKey) const {
 bool SharedPrefMap::Find(const char* aKey, size_t* aIndex) const {
   const auto& keys = KeyTable();
 
-  return BinarySearchIf(Entries(), 0, EntryCount(),
-                        [&](const Entry& aEntry) {
-                          return strcmp(aKey, keys.GetBare(aEntry.mKey));
-                        },
-                        aIndex);
+  return BinarySearchIf(
+      Entries(), 0, EntryCount(),
+      [&](const Entry& aEntry) {
+        return strcmp(aKey, keys.GetBare(aEntry.mKey));
+      },
+      aIndex);
 }
 
 void SharedPrefMapBuilder::Add(const char* aKey, const Flags& aFlags,

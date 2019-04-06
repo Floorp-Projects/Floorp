@@ -222,7 +222,8 @@ void test_drop_table_does_not_loop() {
   tester->Shutdown();
 }
 
-TEST(storage_unlock_notify, Test) {
+TEST(storage_unlock_notify, Test)
+{
   // These must execute in order.
   setup();
   test_step_locked_does_not_block_main_thread();

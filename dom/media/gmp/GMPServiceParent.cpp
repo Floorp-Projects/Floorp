@@ -401,17 +401,18 @@ void GeckoMediaPluginServiceParent::InitializePlugins(
   RefPtr<GenericPromise> p = mInitPromise.Ensure(__func__);
   InvokeAsync(aAbstractGMPThread, this, __func__,
               &GeckoMediaPluginServiceParent::LoadFromEnvironment)
-      ->Then(aAbstractGMPThread, __func__,
-             [self]() -> void {
-               MonitorAutoLock lock(self->mInitPromiseMonitor);
-               self->mLoadPluginsFromDiskComplete = true;
-               self->mInitPromise.Resolve(true, __func__);
-             },
-             [self]() -> void {
-               MonitorAutoLock lock(self->mInitPromiseMonitor);
-               self->mLoadPluginsFromDiskComplete = true;
-               self->mInitPromise.Reject(NS_ERROR_FAILURE, __func__);
-             });
+      ->Then(
+          aAbstractGMPThread, __func__,
+          [self]() -> void {
+            MonitorAutoLock lock(self->mInitPromiseMonitor);
+            self->mLoadPluginsFromDiskComplete = true;
+            self->mInitPromise.Resolve(true, __func__);
+          },
+          [self]() -> void {
+            MonitorAutoLock lock(self->mInitPromiseMonitor);
+            self->mLoadPluginsFromDiskComplete = true;
+            self->mInitPromise.Reject(NS_ERROR_FAILURE, __func__);
+          });
 }
 
 void GeckoMediaPluginServiceParent::NotifySyncShutdownComplete() {
@@ -507,12 +508,12 @@ RefPtr<GenericPromise> GeckoMediaPluginServiceParent::LoadFromEnvironment() {
 
   mScannedPluginOnDisk = true;
   return GenericPromise::All(thread, promises)
-      ->Then(thread, __func__,
-             []() { return GenericPromise::CreateAndResolve(true, __func__); },
-             []() {
-               return GenericPromise::CreateAndReject(NS_ERROR_FAILURE,
-                                                      __func__);
-             });
+      ->Then(
+          thread, __func__,
+          []() { return GenericPromise::CreateAndResolve(true, __func__); },
+          []() {
+            return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+          });
 }
 
 class NotifyObserversTask final : public mozilla::Runnable {
@@ -612,23 +613,24 @@ RefPtr<GenericPromise> GeckoMediaPluginServiceParent::AsyncAddPluginDirectory(
   RefPtr<GeckoMediaPluginServiceParent> self = this;
   return InvokeAsync(thread, this, __func__,
                      &GeckoMediaPluginServiceParent::AddOnGMPThread, dir)
-      ->Then(mMainThread, __func__,
-             [dir, self](bool aVal) {
-               LOGD(
-                   ("GeckoMediaPluginServiceParent::AsyncAddPluginDirectory %s "
-                    "succeeded",
-                    NS_ConvertUTF16toUTF8(dir).get()));
-               MOZ_ASSERT(NS_IsMainThread());
-               self->UpdateContentProcessGMPCapabilities();
-               return GenericPromise::CreateAndResolve(aVal, __func__);
-             },
-             [dir](nsresult aResult) {
-               LOGD(
-                   ("GeckoMediaPluginServiceParent::AsyncAddPluginDirectory %s "
-                    "failed",
-                    NS_ConvertUTF16toUTF8(dir).get()));
-               return GenericPromise::CreateAndReject(aResult, __func__);
-             });
+      ->Then(
+          mMainThread, __func__,
+          [dir, self](bool aVal) {
+            LOGD(
+                ("GeckoMediaPluginServiceParent::AsyncAddPluginDirectory %s "
+                 "succeeded",
+                 NS_ConvertUTF16toUTF8(dir).get()));
+            MOZ_ASSERT(NS_IsMainThread());
+            self->UpdateContentProcessGMPCapabilities();
+            return GenericPromise::CreateAndResolve(aVal, __func__);
+          },
+          [dir](nsresult aResult) {
+            LOGD(
+                ("GeckoMediaPluginServiceParent::AsyncAddPluginDirectory %s "
+                 "failed",
+                 NS_ConvertUTF16toUTF8(dir).get()));
+            return GenericPromise::CreateAndReject(aResult, __func__);
+          });
 }
 
 NS_IMETHODIMP

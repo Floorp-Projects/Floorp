@@ -10,6 +10,7 @@ extern crate nserror;
 extern crate nsstring;
 extern crate rkv;
 extern crate sha2;
+extern crate thin_vec;
 extern crate time;
 #[macro_use]
 extern crate xpcom;
@@ -36,6 +37,7 @@ use std::slice;
 use std::str;
 use std::sync::{Arc, Mutex, RwLock};
 use std::time::{Duration, SystemTime};
+use thin_vec::ThinVec;
 use xpcom::interfaces::{
     nsICertStorage, nsICertStorageCallback, nsIFile, nsIObserver, nsIPrefBranch, nsISupports,
     nsIThread,
@@ -799,24 +801,17 @@ impl CertStorage {
 
     unsafe fn GetRevocationState(
         &self,
-        issuer: *const nsACString,
-        serial: *const nsACString,
-        subject: *const nsACString,
-        pub_key_base64: *const nsACString,
+        issuer: *const ThinVec<u8>,
+        serial: *const ThinVec<u8>,
+        subject: *const ThinVec<u8>,
+        pub_key: *const ThinVec<u8>,
         state: *mut i16,
     ) -> nserror::nsresult {
         // TODO (bug 1541212): We really want to restrict this to non-main-threads only, but we
         // can't do so until bug 1406854 and bug 1534600 are fixed.
-        if issuer.is_null() || serial.is_null() || subject.is_null() || pub_key_base64.is_null() {
+        if issuer.is_null() || serial.is_null() || subject.is_null() || pub_key.is_null() {
             return NS_ERROR_FAILURE;
         }
-        // TODO (bug 1535752): If we're calling this function when we already have binary data (e.g.
-        // in a TrustDomain::GetCertTrust callback), we should be able to pass in the binary data
-        // directly. See also bug 1535486.
-        let issuer_decoded = try_ns!(base64::decode(&*issuer));
-        let serial_decoded = try_ns!(base64::decode(&*serial));
-        let subject_decoded = try_ns!(base64::decode(&*subject));
-        let pub_key_decoded = try_ns!(base64::decode(&*pub_key_base64));
         *state = nsICertStorage::STATE_UNSET as i16;
         // The following is a way to ensure the DB has been opened while minimizing lock
         // acquisitions in the common (read-only) case. First we acquire a read lock and see if we
@@ -838,12 +833,7 @@ impl CertStorage {
                 try_ns!(self.security_state.read())
             }
         };
-        match ss.get_revocation_state(
-            &issuer_decoded,
-            &serial_decoded,
-            &subject_decoded,
-            &pub_key_decoded,
-        ) {
+        match ss.get_revocation_state(&*issuer, &*serial, &*subject, &*pub_key) {
             Ok(st) => {
                 *state = st;
                 NS_OK

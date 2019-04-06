@@ -50,7 +50,8 @@ Spinner::HandleResult(mozIStorageResultSet *aResultSet) {
   return NS_OK;
 }
 
-TEST(storage_AsXXX_helpers, NULLFallback) {
+TEST(storage_AsXXX_helpers, NULLFallback)
+{
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   nsCOMPtr<mozIStorageStatement> stmt;
@@ -92,7 +93,8 @@ TEST(storage_AsXXX_helpers, NULLFallback) {
   do_check_eq(valueArray->IsNull(0), true);
 }
 
-TEST(storage_AsXXX_helpers, asyncNULLFallback) {
+TEST(storage_AsXXX_helpers, asyncNULLFallback)
+{
   nsCOMPtr<mozIStorageConnection> db(getMemoryDatabase());
 
   nsCOMPtr<mozIStorageAsyncStatement> stmt;

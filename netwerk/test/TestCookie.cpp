@@ -189,7 +189,8 @@ void InitPrefs(nsIPrefBranch *aPrefBranch) {
   aPrefBranch->SetIntPref(kCookiesMaxPerHost, 50);
 }
 
-TEST(TestCookie, TestCookieMain) {
+TEST(TestCookie, TestCookieMain)
+{
   nsresult rv0;
 
   nsCOMPtr<nsICookieService> cookieService =

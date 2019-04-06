@@ -175,7 +175,6 @@ ImmutableJS
 Fennec
 v59
 tabIndex
-react-inlinesvg
 findClosestScope
 findClosestFunction
 paren

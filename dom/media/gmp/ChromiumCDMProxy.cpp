@@ -93,20 +93,21 @@ void ChromiumCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
               cdm->Init(self->mCallback.get(),
                         self->mDistinctiveIdentifierRequired,
                         self->mPersistentStateRequired, self->mMainThread)
-                  ->Then(thread, __func__,
-                         [self, aPromiseId, cdm](bool /* unused */) {
-                           // CDM init succeeded
-                           {
-                             MutexAutoLock lock(self->mCDMMutex);
-                             self->mCDM = cdm;
-                           }
-                           self->OnCDMCreated(aPromiseId);
-                         },
-                         [self, aPromiseId](MediaResult aResult) {
-                           // CDM init failed
-                           self->RejectPromise(aPromiseId, aResult.Code(),
-                                               aResult.Message());
-                         });
+                  ->Then(
+                      thread, __func__,
+                      [self, aPromiseId, cdm](bool /* unused */) {
+                        // CDM init succeeded
+                        {
+                          MutexAutoLock lock(self->mCDMMutex);
+                          self->mCDM = cdm;
+                        }
+                        self->OnCDMCreated(aPromiseId);
+                      },
+                      [self, aPromiseId](MediaResult aResult) {
+                        // CDM init failed
+                        self->RejectPromise(aPromiseId, aResult.Code(),
+                                            aResult.Message());
+                      });
             },
             [self, aPromiseId](MediaResult rv) {
               // service->GetCDM failed
