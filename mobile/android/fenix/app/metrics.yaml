@@ -72,7 +72,7 @@ events:
       item:
         description: >
           A string containing the name of the item the user tapped. These items include:
-          Settings, Your library, Help, Desktop Site toggle on/off, Find in Page, New Tab,
+          Settings, Library, Help, Desktop Site toggle on/off, Find in Page, New Tab,
           Private Tab, Share, Report Site Issue, Back/Forward button, Reload Button
     bugs:
     - 1024
