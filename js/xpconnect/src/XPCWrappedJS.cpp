@@ -181,7 +181,7 @@ nsXPCWrappedJS::AggregatedQueryInterface(REFNSIID aIID, void** aInstancePtr) {
     return NS_OK;
   }
 
-  return mClass->DelegatedQueryInterface(this, aIID, aInstancePtr);
+  return nsXPCWrappedJSClass::DelegatedQueryInterface(this, aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP
@@ -232,7 +232,7 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr) {
 
   // else...
 
-  return mClass->DelegatedQueryInterface(this, aIID, aInstancePtr);
+  return nsXPCWrappedJSClass::DelegatedQueryInterface(this, aIID, aInstancePtr);
 }
 
 // For a description of nsXPCWrappedJS lifetime and reference counting, see
@@ -339,7 +339,8 @@ nsresult nsXPCWrappedJS::GetNewOrUsed(JSContext* cx, JS::HandleObject jsObj,
     return NS_ERROR_FAILURE;
   }
 
-  JS::RootedObject rootJSObj(cx, clasp->GetRootJSObject(cx, jsObj));
+  JS::RootedObject rootJSObj(cx,
+                             nsXPCWrappedJSClass::GetRootJSObject(cx, jsObj));
   if (!rootJSObj) {
     return NS_ERROR_FAILURE;
   }

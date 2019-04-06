@@ -1629,16 +1629,17 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
   const nsXPTInterfaceInfo* GetInterfaceInfo() const { return mInfo; }
   const char* GetInterfaceName();
 
-  NS_IMETHOD DelegatedQueryInterface(nsXPCWrappedJS* self, REFNSIID aIID,
-                                     void** aInstancePtr);
+  static nsresult DelegatedQueryInterface(nsXPCWrappedJS* self, REFNSIID aIID,
+                                          void** aInstancePtr);
 
-  JSObject* GetRootJSObject(JSContext* cx, JSObject* aJSObj);
+  static JSObject* GetRootJSObject(JSContext* cx, JSObject* aJSObj);
 
-  NS_IMETHOD CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
-                        const nsXPTMethodInfo* info, nsXPTCMiniVariant* params);
+  nsresult CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
+                      const nsXPTMethodInfo* info, nsXPTCMiniVariant* params);
 
-  JSObject* CallQueryInterfaceOnJSObject(JSContext* cx, JSObject* jsobj,
-                                         JS::HandleObject scope, REFNSIID aIID);
+  static JSObject* CallQueryInterfaceOnJSObject(JSContext* cx, JSObject* jsobj,
+                                                JS::HandleObject scope,
+                                                REFNSIID aIID);
 
  private:
   // aObj is the nsXPCWrappedJS's object. We used this as the callee (or |this|
@@ -1656,17 +1657,19 @@ class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
   nsXPCWrappedJSClass() = delete;
   explicit nsXPCWrappedJSClass(const nsXPTInterfaceInfo* aInfo);
 
-  bool GetArraySizeFromParam(const nsXPTMethodInfo* method,
-                             const nsXPTType& type, nsXPTCMiniVariant* params,
-                             uint32_t* result) const;
+  static bool GetArraySizeFromParam(const nsXPTMethodInfo* method,
+                                    const nsXPTType& type,
+                                    nsXPTCMiniVariant* params,
+                                    uint32_t* result);
 
-  bool GetInterfaceTypeFromParam(const nsXPTMethodInfo* method,
-                                 const nsXPTType& type,
-                                 nsXPTCMiniVariant* params, nsID* result) const;
+  static bool GetInterfaceTypeFromParam(const nsXPTMethodInfo* method,
+                                        const nsXPTType& type,
+                                        nsXPTCMiniVariant* params,
+                                        nsID* result);
 
-  void CleanupOutparams(const nsXPTMethodInfo* info,
-                        nsXPTCMiniVariant* nativeParams, bool inOutOnly,
-                        uint8_t n) const;
+  static void CleanupOutparams(const nsXPTMethodInfo* info,
+                               nsXPTCMiniVariant* nativeParams, bool inOutOnly,
+                               uint8_t count);
 
  private:
   const nsXPTInterfaceInfo* mInfo;
