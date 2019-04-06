@@ -9,6 +9,7 @@
 #include "nsCounterManager.h"
 
 #include "mozilla/Likely.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/WritingModes.h"
 #include "nsBulletFrame.h"  // legacy location for list style type to text code
 #include "nsContentUtils.h"

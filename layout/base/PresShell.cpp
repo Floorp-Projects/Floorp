@@ -2951,7 +2951,7 @@ void nsIPresShell::ClearFrameRefs(nsIFrame* aFrame) {
     AutoWeakFrame* prev = weakFrame->GetPreviousWeakFrame();
     if (weakFrame->GetFrame() == aFrame) {
       // This removes weakFrame from mAutoWeakFrames.
-      weakFrame->Clear(this);
+      weakFrame->Clear(static_cast<PresShell*>(this));
     }
     weakFrame = prev;
   }
@@ -2964,7 +2964,7 @@ void nsIPresShell::ClearFrameRefs(nsIFrame* aFrame) {
     }
   }
   for (WeakFrame* weakFrame : toRemove) {
-    weakFrame->Clear(this);
+    weakFrame->Clear(static_cast<PresShell*>(this));
   }
 }
 
@@ -5473,7 +5473,7 @@ void PresShell::MarkFramesInListApproximatelyVisible(
     }
 
     // Use the presshell containing the frame.
-    auto* presShell = static_cast<PresShell*>(frame->PresShell());
+    PresShell* presShell = frame->PresShell();
     MOZ_ASSERT(!presShell->AssumeAllFramesVisible());
     if (presShell->mApproximatelyVisibleFrames.EnsureInserted(frame)) {
       // The frame was added to mApproximatelyVisibleFrames, so increment its
@@ -6388,7 +6388,7 @@ bool PresShell::CanDispatchEvent(const WidgetGUIEvent* aEvent) const {
 PresShell* PresShell::GetShellForEventTarget(nsIFrame* aFrame,
                                              nsIContent* aContent) {
   if (aFrame) {
-    return static_cast<PresShell*>(aFrame->PresShell());
+    return aFrame->PresShell();
   }
   if (aContent) {
     Document* doc = aContent->GetComposedDoc();
@@ -6777,7 +6777,7 @@ nsIFrame* PresShell::EventHandler::GetFrameToHandleNonTouchEvent(
   }
 
   // If target is in a child document, we've not flushed its layout yet.
-  PresShell* childPresShell = static_cast<PresShell*>(targetFrame->PresShell());
+  PresShell* childPresShell = targetFrame->PresShell();
   EventHandler childEventHandler(*childPresShell);
   AutoWeakFrame weakFrame(aRootFrameToHandleEvent);
   bool layoutChanged =
@@ -10917,7 +10917,7 @@ void PresShell::EventHandler::EventTargetData::SetFrameAndComputePresShell(
     nsIFrame* aFrameToHandleEvent) {
   if (aFrameToHandleEvent) {
     mFrame = aFrameToHandleEvent;
-    mPresShell = static_cast<PresShell*>(aFrameToHandleEvent->PresShell());
+    mPresShell = aFrameToHandleEvent->PresShell();
   } else {
     mFrame = nullptr;
     mPresShell = nullptr;

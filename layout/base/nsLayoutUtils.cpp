@@ -596,7 +596,7 @@ nsIContent* nsLayoutUtils::FindContentFor(ViewID aId) {
 static nsIFrame* GetScrollFrameFromContent(nsIContent* aContent) {
   nsIFrame* frame = aContent->GetPrimaryFrame();
   if (aContent->OwnerDoc()->GetRootElement() == aContent) {
-    nsIPresShell* presShell = frame ? frame->PresShell() : nullptr;
+    PresShell* presShell = frame ? frame->PresShell() : nullptr;
     if (!presShell) {
       presShell = aContent->OwnerDoc()->GetPresShell();
     }
@@ -1967,9 +1967,9 @@ nsIScrollableFrame* nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame,
         }
       }
       if (aFlags & SCROLLABLE_ALWAYS_MATCH_ROOT) {
-        nsIPresShell* ps = f->PresShell();
-        if (ps->GetRootScrollFrame() == f && ps->GetDocument() &&
-            ps->GetDocument()->IsRootDisplayDocument()) {
+        PresShell* presShell = f->PresShell();
+        if (presShell->GetRootScrollFrame() == f && presShell->GetDocument() &&
+            presShell->GetDocument()->IsRootDisplayDocument()) {
           return scrollableFrame;
         }
       }
@@ -2152,12 +2152,12 @@ nsPoint nsLayoutUtils::GetEventCoordinatesRelativeTo(
   int32_t rootAPD = rootFrame->PresContext()->AppUnitsPerDevPixel();
   int32_t localAPD = aFrame->PresContext()->AppUnitsPerDevPixel();
   widgetToView = widgetToView.ScaleToOtherAppUnits(rootAPD, localAPD);
-  nsIPresShell* shell = aFrame->PresShell();
+  PresShell* presShell = aFrame->PresShell();
 
   // XXX Bug 1224748 - Update nsLayoutUtils functions to correctly handle
   // nsPresShell resolution
   widgetToView =
-      widgetToView.RemoveResolution(GetCurrentAPZResolutionScale(shell));
+      widgetToView.RemoveResolution(GetCurrentAPZResolutionScale(presShell));
 
   /* If we encountered a transform, we can't do simple arithmetic to figure
    * out how to convert back to aFrame's coordinates and must use the CTM.

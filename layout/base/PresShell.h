@@ -182,6 +182,8 @@ class PresShell final : public nsIPresShell,
 
   void SynthesizeMouseMove(bool aFromScroll) override;
 
+  Document* GetPrimaryContentDocument() override;
+
   // nsIViewObserver interface
 
   void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
@@ -1291,8 +1293,6 @@ class PresShell final : public nsIPresShell,
 
   // The callback for the mPaintSuppressionTimer timer.
   static void sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell);
-
-  Document* GetPrimaryContentDocument() override;
 
   void PausePainting() override;
   void ResumePainting() override;

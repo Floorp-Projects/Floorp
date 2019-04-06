@@ -18,9 +18,10 @@
 #include "nsGkAtoms.h"
 #include "nsIScrollableFrame.h"
 #include "nsIScrollbarMediator.h"
-#include "mozilla/LookAndFeel.h"
 #include "nsStyleConsts.h"
 #include "nsIContent.h"
+#include "mozilla/LookAndFeel.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/MutationEventBinding.h"
 
 using namespace mozilla;

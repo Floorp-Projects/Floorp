@@ -4421,8 +4421,7 @@ nsFlexContainerFrame* nsFlexContainerFrame::GetFlexFrameWithComputedInfo(
       // Hold onto aFrame while we do this, in case reflow destroys it.
       AutoWeakFrame weakFrameRef(aFrame);
 
-      RefPtr<mozilla::PresShell> presShell =
-          static_cast<mozilla::PresShell*>(flexFrame->PresShell());
+      RefPtr<mozilla::PresShell> presShell = flexFrame->PresShell();
       flexFrame->AddStateBits(NS_STATE_FLEX_GENERATE_COMPUTED_VALUES);
       presShell->FrameNeedsReflow(flexFrame, nsIPresShell::eResize,
                                   NS_FRAME_IS_DIRTY);

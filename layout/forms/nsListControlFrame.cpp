@@ -11,7 +11,6 @@
 #include "nsCheckboxRadioFrame.h"  // for COMPARE macro
 #include "nsGkAtoms.h"
 #include "nsComboboxControlFrame.h"
-#include "nsIPresShell.h"
 #include "nsIXULRuntime.h"
 #include "nsFontMetrics.h"
 #include "nsIScrollableFrame.h"
@@ -32,6 +31,7 @@
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextEvents.h"
 #include <algorithm>
 

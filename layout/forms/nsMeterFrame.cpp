@@ -6,18 +6,18 @@
 
 #include "nsMeterFrame.h"
 
+#include "mozilla/PresShell.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLMeterElement.h"
 #include "nsIContent.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
-#include "mozilla/dom/Document.h"
-#include "nsIPresShell.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsCheckboxRadioFrame.h"
 #include "nsFontMetrics.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/dom/HTMLMeterElement.h"
 #include "nsCSSPseudoElements.h"
 #include "nsStyleConsts.h"
 #include <algorithm>

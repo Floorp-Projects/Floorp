@@ -12,6 +12,7 @@
 #include "nsTextControlFrame.h"
 #include "nsListControlFrame.h"
 #include "nsComboboxControlFrame.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ReflowInput.h"
 #include "nsTextFrameUtils.h"
 
@@ -194,7 +195,7 @@ void nsFontInflationData::UpdateISize(const ReflowInput &aReflowInput) {
 
   // See comment above "font.size.inflation.lineThreshold" in
   // modules/libpref/src/init/all.js .
-  nsIPresShell *presShell = bfc->PresShell();
+  PresShell *presShell = bfc->PresShell();
   uint32_t lineThreshold = presShell->FontSizeInflationLineThreshold();
   nscoord newTextThreshold = (newNCAISize * lineThreshold) / 100;
 

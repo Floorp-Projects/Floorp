@@ -15,6 +15,7 @@
 #include "gfxUtils.h"
 #include "mozilla/dom/ElementInlines.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ServoStyleSetInlines.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"

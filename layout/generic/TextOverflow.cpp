@@ -23,6 +23,7 @@
 #include "nsIFrameInlines.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Likely.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/Selection.h"
 #include "TextDrawTarget.h"
 
