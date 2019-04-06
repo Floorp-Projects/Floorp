@@ -1138,9 +1138,6 @@ void XPCJSRuntime::Shutdown(JSContext* cx) {
   delete mWrappedJSMap;
   mWrappedJSMap = nullptr;
 
-  delete mWrappedJSClassMap;
-  mWrappedJSClassMap = nullptr;
-
   delete mIID2NativeInterfaceMap;
   mIID2NativeInterfaceMap = nullptr;
 
@@ -2924,8 +2921,6 @@ static const JSWrapObjectCallbacks WrapObjectCallbacks = {
 XPCJSRuntime::XPCJSRuntime(JSContext* aCx)
     : CycleCollectedJSRuntime(aCx),
       mWrappedJSMap(JSObject2WrappedJSMap::newMap(XPC_JS_MAP_LENGTH)),
-      mWrappedJSClassMap(
-          IID2WrappedJSClassMap::newMap(XPC_JS_CLASS_MAP_LENGTH)),
       mIID2NativeInterfaceMap(
           IID2NativeInterfaceMap::newMap(XPC_NATIVE_INTERFACE_MAP_LENGTH)),
       mClassInfo2NativeSetMap(
@@ -3147,18 +3142,6 @@ void XPCJSRuntime::DebugDump(int16_t depth) {
   depth--;
   XPC_LOG_ALWAYS(("XPCJSRuntime @ %p", this));
   XPC_LOG_INDENT();
-
-  XPC_LOG_ALWAYS(("mWrappedJSClassMap @ %p with %d wrapperclasses(s)",
-                  mWrappedJSClassMap, mWrappedJSClassMap->Count()));
-  // iterate wrappersclasses...
-  if (depth && mWrappedJSClassMap->Count()) {
-    XPC_LOG_INDENT();
-    for (auto i = mWrappedJSClassMap->Iter(); !i.Done(); i.Next()) {
-      auto entry = static_cast<IID2WrappedJSClassMap::Entry*>(i.Get());
-      nsXPCWrappedJSClass::DebugDump(entry->value->GetInterfaceInfo(), depth);
-    }
-    XPC_LOG_OUTDENT();
-  }
 
   // iterate wrappers...
   XPC_LOG_ALWAYS(("mWrappedJSMap @ %p with %d wrappers(s)", mWrappedJSMap,
