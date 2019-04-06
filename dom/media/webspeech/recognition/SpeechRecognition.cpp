@@ -679,29 +679,30 @@ void SpeechRecognition::Start(const Optional<NonNull<DOMMediaStream>>& aStream,
     RefPtr<SpeechRecognition> self(this);
     MediaManager::Get()
         ->GetUserMedia(GetOwner(), constraints, aCallerType)
-        ->Then(GetCurrentThreadSerialEventTarget(), __func__,
-               [this, self](RefPtr<DOMMediaStream>&& aStream) {
-                 mStream = std::move(aStream);
-                 mStream->RegisterTrackListener(this);
-                 nsTArray<RefPtr<AudioStreamTrack>> tracks;
-                 mStream->GetAudioTracks(tracks);
-                 for (const RefPtr<AudioStreamTrack>& track : tracks) {
-                   if (!track->Ended()) {
-                     NotifyTrackAdded(track);
-                   }
-                 }
-               },
-               [this, self](RefPtr<MediaMgrError>&& error) {
-                 SpeechRecognitionErrorCode errorCode;
+        ->Then(
+            GetCurrentThreadSerialEventTarget(), __func__,
+            [this, self](RefPtr<DOMMediaStream>&& aStream) {
+              mStream = std::move(aStream);
+              mStream->RegisterTrackListener(this);
+              nsTArray<RefPtr<AudioStreamTrack>> tracks;
+              mStream->GetAudioTracks(tracks);
+              for (const RefPtr<AudioStreamTrack>& track : tracks) {
+                if (!track->Ended()) {
+                  NotifyTrackAdded(track);
+                }
+              }
+            },
+            [this, self](RefPtr<MediaMgrError>&& error) {
+              SpeechRecognitionErrorCode errorCode;
 
-                 if (error->mName == MediaMgrError::Name::NotAllowedError) {
-                   errorCode = SpeechRecognitionErrorCode::Not_allowed;
-                 } else {
-                   errorCode = SpeechRecognitionErrorCode::Audio_capture;
-                 }
-                 DispatchError(SpeechRecognition::EVENT_AUDIO_ERROR, errorCode,
-                               error->mMessage);
-               });
+              if (error->mName == MediaMgrError::Name::NotAllowedError) {
+                errorCode = SpeechRecognitionErrorCode::Not_allowed;
+              } else {
+                errorCode = SpeechRecognitionErrorCode::Audio_capture;
+              }
+              DispatchError(SpeechRecognition::EVENT_AUDIO_ERROR, errorCode,
+                            error->mMessage);
+            });
   }
 
   RefPtr<SpeechEvent> event = new SpeechEvent(this, EVENT_START);

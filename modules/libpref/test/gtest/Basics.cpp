@@ -9,7 +9,8 @@
 
 using namespace mozilla;
 
-TEST(PrefsBasics, Errors) {
+TEST(PrefsBasics, Errors)
+{
   Preferences::SetBool("foo.bool", true, PrefValueKind::Default);
   Preferences::SetBool("foo.bool", false, PrefValueKind::User);
   ASSERT_EQ(Preferences::GetBool("foo.bool", false, PrefValueKind::Default),

@@ -26,7 +26,7 @@
 }
 
 .object-node {
-  padding-left: 4px;
+  padding-inline-start: 20px;
 }
 
 html[dir="rtl"] .object-node {
@@ -56,6 +56,10 @@ html[dir="rtl"] .object-node {
   overflow: auto;
 }
 
+.scopes-list {
+  padding: 4px 0px;
+}
+
 .scopes-list .function-signature {
   display: inline-block;
 }
@@ -76,4 +80,13 @@ html[dir="rtl"] .object-node {
 
 .scopes-list .scope-type-toggle button:hover {
   background: transparent;
+}
+
+.scopes-list .tree.object-inspector .node.object-node {
+  display: flex;
+  align-items: center;
+}
+
+.scopes-list .tree {
+  line-height: 15px;
 }

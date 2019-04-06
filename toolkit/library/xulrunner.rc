@@ -6,8 +6,8 @@
 #include "widget.rc"
 #ifdef ACCESSIBILITY
 1 typelib IGeckoCustom.tlb
-64 RT_MANIFEST IAccessible64.manifest
+64 24 IAccessible64.manifest
 #ifndef HAVE_64BIT_BUILD
-32 RT_MANIFEST IAccessible32.manifest
+32 24 IAccessible32.manifest
 #endif
 #endif

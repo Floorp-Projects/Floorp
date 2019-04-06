@@ -171,7 +171,8 @@ static already_AddRefed<LookupCacheV4> SetupLookupCache(
 }
 
 // Test setting prefix set with only 4-bytes prefixes
-TEST(UrlClassifierVLPrefixSet, FixedLengthSet) {
+TEST(UrlClassifierVLPrefixSet, FixedLengthSet)
+{
   srand(time(nullptr));
 
   RefPtr<LookupCacheV4> cache = SetupLookupCache(NS_LITERAL_CSTRING("test"));
@@ -204,7 +205,8 @@ TEST(UrlClassifierVLPrefixSet, FixedLengthSet) {
 }
 
 // Test setting prefix set with only 5~32 bytes prefixes
-TEST(UrlClassifierVLPrefixSet, VariableLengthSet) {
+TEST(UrlClassifierVLPrefixSet, VariableLengthSet)
+{
   RefPtr<LookupCacheV4> cache = SetupLookupCache(NS_LITERAL_CSTRING("test"));
 
   PrefixStringMap map;
@@ -240,7 +242,8 @@ TEST(UrlClassifierVLPrefixSet, VariableLengthSet) {
 }
 
 // Test setting prefix set with both 4-bytes prefixes and 5~32 bytes prefixes
-TEST(UrlClassifierVLPrefixSet, MixedPrefixSet) {
+TEST(UrlClassifierVLPrefixSet, MixedPrefixSet)
+{
   RefPtr<LookupCacheV4> cache = SetupLookupCache(NS_LITERAL_CSTRING("test"));
 
   PrefixStringMap map;
@@ -285,7 +288,8 @@ TEST(UrlClassifierVLPrefixSet, MixedPrefixSet) {
 }
 
 // Test resetting prefix set
-TEST(UrlClassifierVLPrefixSet, ResetPrefix) {
+TEST(UrlClassifierVLPrefixSet, ResetPrefix)
+{
   RefPtr<LookupCacheV4> cache = SetupLookupCache(NS_LITERAL_CSTRING("test"));
 
   // First prefix set
@@ -335,7 +339,8 @@ TEST(UrlClassifierVLPrefixSet, ResetPrefix) {
 }
 
 // Test only set one 4-bytes prefix and one full-length prefix
-TEST(UrlClassifierVLPrefixSet, TinyPrefixSet) {
+TEST(UrlClassifierVLPrefixSet, TinyPrefixSet)
+{
   RefPtr<LookupCacheV4> cache = SetupLookupCache(NS_LITERAL_CSTRING("test"));
 
   PrefixStringMap map;
@@ -353,7 +358,8 @@ TEST(UrlClassifierVLPrefixSet, TinyPrefixSet) {
 }
 
 // Test empty prefix set and IsEmpty function
-TEST(UrlClassifierVLPrefixSet, EmptyPrefixSet) {
+TEST(UrlClassifierVLPrefixSet, EmptyPrefixSet)
+{
   RefPtr<LookupCacheV4> cache = SetupLookupCache(NS_LITERAL_CSTRING("test"));
 
   bool empty = cache->IsEmpty();
@@ -384,7 +390,8 @@ TEST(UrlClassifierVLPrefixSet, EmptyPrefixSet) {
 }
 
 // Test prefix size should only between 4~32 bytes
-TEST(UrlClassifierVLPrefixSet, MinMaxPrefixSet) {
+TEST(UrlClassifierVLPrefixSet, MinMaxPrefixSet)
+{
   RefPtr<LookupCacheV4> cache = SetupLookupCache(NS_LITERAL_CSTRING("test"));
 
   PrefixStringMap map;
@@ -417,7 +424,8 @@ TEST(UrlClassifierVLPrefixSet, MinMaxPrefixSet) {
 }
 
 // Test save then load prefix set with only 4-bytes prefixes
-TEST(UrlClassifierVLPrefixSet, LoadSaveFixedLengthPrefixSet) {
+TEST(UrlClassifierVLPrefixSet, LoadSaveFixedLengthPrefixSet)
+{
   nsCOMPtr<nsIFile> file;
   _PrefixArray array;
   PrefixStringMap map;
@@ -456,7 +464,8 @@ TEST(UrlClassifierVLPrefixSet, LoadSaveFixedLengthPrefixSet) {
 }
 
 // Test save then load prefix set with only 5~32 bytes prefixes
-TEST(UrlClassifierVLPrefixSet, LoadSaveVariableLengthPrefixSet) {
+TEST(UrlClassifierVLPrefixSet, LoadSaveVariableLengthPrefixSet)
+{
   nsCOMPtr<nsIFile> file;
   _PrefixArray array;
   PrefixStringMap map;
@@ -495,7 +504,8 @@ TEST(UrlClassifierVLPrefixSet, LoadSaveVariableLengthPrefixSet) {
 }
 
 // Test save then load prefix with both 4 bytes prefixes and 5~32 bytes prefixes
-TEST(UrlClassifierVLPrefixSet, LoadSavePrefixSet) {
+TEST(UrlClassifierVLPrefixSet, LoadSavePrefixSet)
+{
   nsCOMPtr<nsIFile> file;
   _PrefixArray array;
   PrefixStringMap map;
@@ -536,7 +546,8 @@ TEST(UrlClassifierVLPrefixSet, LoadSavePrefixSet) {
 }
 
 // This is for fixed-length prefixset
-TEST(UrlClassifierVLPrefixSet, LoadSaveNoDelta) {
+TEST(UrlClassifierVLPrefixSet, LoadSaveNoDelta)
+{
   nsCOMPtr<nsIFile> file;
   _PrefixArray array;
   PrefixStringMap map;

@@ -116,16 +116,6 @@ void MIRGraph::insertBlockBefore(MBasicBlock* at, MBasicBlock* block) {
   numBlocks_++;
 }
 
-void MIRGraph::renumberBlocksAfter(MBasicBlock* at) {
-  MBasicBlockIterator iter = begin(at);
-  iter++;
-
-  uint32_t id = at->id();
-  for (; iter != end(); iter++) {
-    iter->setId(++id);
-  }
-}
-
 bool MIRGraph::removeSuccessorBlocks(MBasicBlock* start) {
   if (!start->hasLastIns()) {
     return true;

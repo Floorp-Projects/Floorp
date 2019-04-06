@@ -180,6 +180,10 @@ void nsSubDocumentFrame::ShowViewer() {
       }
       mCallingShow = false;
       mDidCreateDoc = didCreateDoc;
+
+      if (!(GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
+        frameloader->UpdatePositionAndSize(this);
+      }
     }
   }
 }
@@ -998,6 +1002,11 @@ nsFrameLoader* nsSubDocumentFrame::FrameLoader() const {
     }
   }
   return mFrameLoader;
+}
+
+void nsSubDocumentFrame::ResetFrameLoader() {
+  mFrameLoader = nullptr;
+  nsContentUtils::AddScriptRunner(new AsyncFrameInit(this));
 }
 
 // XXX this should be called ObtainDocShell or something like that,

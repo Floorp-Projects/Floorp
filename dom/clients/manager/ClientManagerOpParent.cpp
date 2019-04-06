@@ -24,15 +24,16 @@ void ClientManagerOpParent::DoServiceOp(Method aMethod, Args&&... aArgs) {
   // Capturing `this` is safe here because we disconnect the promise in
   // ActorDestroy() which ensures neither lambda is called if the actor
   // is destroyed before the source operation completes.
-  p->Then(GetCurrentThreadSerialEventTarget(), __func__,
-          [this](const mozilla::dom::ClientOpResult& aResult) {
-            mPromiseRequestHolder.Complete();
-            Unused << PClientManagerOpParent::Send__delete__(this, aResult);
-          },
-          [this](nsresult aRv) {
-            mPromiseRequestHolder.Complete();
-            Unused << PClientManagerOpParent::Send__delete__(this, aRv);
-          })
+  p->Then(
+       GetCurrentThreadSerialEventTarget(), __func__,
+       [this](const mozilla::dom::ClientOpResult& aResult) {
+         mPromiseRequestHolder.Complete();
+         Unused << PClientManagerOpParent::Send__delete__(this, aResult);
+       },
+       [this](nsresult aRv) {
+         mPromiseRequestHolder.Complete();
+         Unused << PClientManagerOpParent::Send__delete__(this, aRv);
+       })
       ->Track(mPromiseRequestHolder);
 }
 

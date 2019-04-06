@@ -165,7 +165,9 @@ nsresult XPathResult::SetExprResult(txAExprResult* aExprResult,
       mResult->stringValue(mStringResult);
       break;
     }
-    default: { MOZ_ASSERT(isNode() || isIterator() || isSnapshot()); }
+    default: {
+      MOZ_ASSERT(isNode() || isIterator() || isSnapshot());
+    }
   }
 
   if (aExprResult->getResultType() == txAExprResult::NODESET) {
