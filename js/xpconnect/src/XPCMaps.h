@@ -157,58 +157,6 @@ class Native2WrappedNativeMap {
 
 /*************************/
 
-class IID2WrappedJSClassMap {
- public:
-  struct Entry : public PLDHashEntryHdr {
-    const nsIID* key;
-    nsXPCWrappedJSClass* value;
-
-    static const struct PLDHashTableOps sOps;
-  };
-
-  static IID2WrappedJSClassMap* newMap(int length);
-
-  inline nsXPCWrappedJSClass* Find(REFNSIID iid) const {
-    auto entry = static_cast<Entry*>(mTable.Search(&iid));
-    return entry ? entry->value : nullptr;
-  }
-
-  inline nsXPCWrappedJSClass* Add(nsXPCWrappedJSClass* clazz) {
-    MOZ_ASSERT(clazz, "bad param");
-    const nsIID* iid = &clazz->GetIID();
-    auto entry = static_cast<Entry*>(mTable.Add(iid, mozilla::fallible));
-    if (!entry) {
-      return nullptr;
-    }
-    if (entry->key) {
-      return entry->value;
-    }
-    entry->key = iid;
-    entry->value = clazz;
-    return clazz;
-  }
-
-  inline void Remove(nsXPCWrappedJSClass* clazz) {
-    MOZ_ASSERT(clazz, "bad param");
-    mTable.Remove(&clazz->GetIID());
-  }
-
-  inline uint32_t Count() { return mTable.EntryCount(); }
-
-#ifdef DEBUG
-  PLDHashTable::Iterator Iter() { return mTable.Iter(); }
-#endif
-
- private:
-  IID2WrappedJSClassMap();  // no implementation
-  explicit IID2WrappedJSClassMap(int size);
-
- private:
-  PLDHashTable mTable;
-};
-
-/*************************/
-
 class IID2NativeInterfaceMap {
  public:
   struct Entry : public PLDHashEntryHdr {
