@@ -136,12 +136,12 @@ export function togglePrettyPrint(sourceId: string) {
     const newPrettySource = await dispatch(createPrettySource(sourceId));
     await dispatch(selectPrettyLocation(newPrettySource));
 
-    await dispatch(remapBreakpoints(sourceId));
-
     const threads = getSourceThreads(getState(), source);
     await Promise.all(threads.map(thread => dispatch(mapFrames(thread))));
 
     await dispatch(setSymbols({ source: newPrettySource }));
+
+    await dispatch(remapBreakpoints(sourceId));
 
     return newPrettySource;
   };
