@@ -96,6 +96,7 @@ treeherder:
         'WR': 'WebRender standalone'
         'Gd': 'Geckodriver'
         'clang': 'Clang Tidy & Format'
+        'coverity': 'Coverity Static Analysis'
 
 index:
     products:
