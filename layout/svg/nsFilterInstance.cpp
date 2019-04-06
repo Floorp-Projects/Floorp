@@ -601,7 +601,8 @@ nsresult nsFilterInstance::BuildPrimitivesForFilter(
   // If we don't have a frame, use opaque black for shadows with unspecified
   // shadow colors.
   nscolor shadowFallbackColor =
-      mTargetFrame ? mTargetFrame->StyleColor()->mColor : NS_RGB(0, 0, 0);
+      mTargetFrame ? mTargetFrame->StyleColor()->mColor.ToColor()
+                   : NS_RGB(0, 0, 0);
 
   nsCSSFilterInstance cssFilterInstance(
       aFilter, shadowFallbackColor, mTargetBounds,
@@ -704,8 +705,7 @@ void nsFilterInstance::BuildSourceImage(DrawTarget* aDest,
   SurfaceFormat format = SurfaceFormat::B8G8R8A8;
   if (aDest->CanCreateSimilarDrawTarget(neededRect.Size(), format)) {
     offscreenDT = aDest->CreateSimilarDrawTargetForFilter(
-      neededRect.Size(), format, aFilter, aSource, aSourceRect,
-      Point(0, 0));
+        neededRect.Size(), format, aFilter, aSource, aSourceRect, Point(0, 0));
   }
   if (!offscreenDT || !offscreenDT->IsValid()) {
     return;
