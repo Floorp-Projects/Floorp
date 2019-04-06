@@ -124,7 +124,7 @@ function inspectChangeRecords(changeRecords) {
 async function promiseManyDatesAdded(guids) {
   let datesAdded = new Map();
   let db = await PlacesUtils.promiseDBConnection();
-  for (let chunk of PlacesSyncUtils.chunkArray(guids, 100)) {
+  for (let [, chunk] of PlacesSyncUtils.chunkArray(guids, 100)) {
     let rows = await db.executeCached(`
       SELECT guid, dateAdded FROM moz_bookmarks
       WHERE guid IN (${new Array(chunk.length).fill("?").join(",")})`,

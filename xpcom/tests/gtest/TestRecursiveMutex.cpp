@@ -14,7 +14,8 @@ using mozilla::RecursiveMutexAutoLock;
 // Basic test to make sure the underlying implementation of RecursiveMutex is,
 // well, actually recursively acquirable.
 
-TEST(RecursiveMutex, SmokeTest) {
+TEST(RecursiveMutex, SmokeTest)
+{
   RecursiveMutex mutex("testing mutex");
 
   RecursiveMutexAutoLock lock1(mutex);

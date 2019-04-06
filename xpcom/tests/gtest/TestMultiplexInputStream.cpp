@@ -14,7 +14,8 @@
 #include "nsThreadUtils.h"
 #include "Helpers.h"
 
-TEST(MultiplexInputStream, Seek_SET) {
+TEST(MultiplexInputStream, Seek_SET)
+{
   nsCString buf1;
   nsCString buf2;
   nsCString buf3;
@@ -130,7 +131,8 @@ static already_AddRefed<nsIInputStream> CreateStreamHelper() {
 }
 
 // AsyncWait - without EventTarget
-TEST(TestMultiplexInputStream, AsyncWait_withoutEventTarget) {
+TEST(TestMultiplexInputStream, AsyncWait_withoutEventTarget)
+{
   nsCOMPtr<nsIInputStream> is = CreateStreamHelper();
 
   nsCOMPtr<nsIAsyncInputStream> ais = do_QueryInterface(is);
@@ -143,7 +145,8 @@ TEST(TestMultiplexInputStream, AsyncWait_withoutEventTarget) {
 }
 
 // AsyncWait - with EventTarget
-TEST(TestMultiplexInputStream, AsyncWait_withEventTarget) {
+TEST(TestMultiplexInputStream, AsyncWait_withEventTarget)
+{
   nsCOMPtr<nsIInputStream> is = CreateStreamHelper();
 
   nsCOMPtr<nsIAsyncInputStream> ais = do_QueryInterface(is);
@@ -162,7 +165,8 @@ TEST(TestMultiplexInputStream, AsyncWait_withEventTarget) {
 }
 
 // AsyncWait - without EventTarget - closureOnly
-TEST(TestMultiplexInputStream, AsyncWait_withoutEventTarget_closureOnly) {
+TEST(TestMultiplexInputStream, AsyncWait_withoutEventTarget_closureOnly)
+{
   nsCOMPtr<nsIInputStream> is = CreateStreamHelper();
 
   nsCOMPtr<nsIAsyncInputStream> ais = do_QueryInterface(is);
@@ -179,7 +183,8 @@ TEST(TestMultiplexInputStream, AsyncWait_withoutEventTarget_closureOnly) {
 }
 
 // AsyncWait - withEventTarget - closureOnly
-TEST(TestMultiplexInputStream, AsyncWait_withEventTarget_closureOnly) {
+TEST(TestMultiplexInputStream, AsyncWait_withEventTarget_closureOnly)
+{
   nsCOMPtr<nsIInputStream> is = CreateStreamHelper();
 
   nsCOMPtr<nsIAsyncInputStream> ais = do_QueryInterface(is);
@@ -294,7 +299,8 @@ class AsyncStream final : public nsIAsyncInputStream {
 
 NS_IMPL_ISUPPORTS(AsyncStream, nsIInputStream, nsIAsyncInputStream)
 
-TEST(TestMultiplexInputStream, Available) {
+TEST(TestMultiplexInputStream, Available)
+{
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
       do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
 
@@ -391,7 +397,8 @@ class NonBufferableStringStream final : public nsIInputStream {
 
 NS_IMPL_ISUPPORTS(NonBufferableStringStream, nsIInputStream)
 
-TEST(TestMultiplexInputStream, Bufferable) {
+TEST(TestMultiplexInputStream, Bufferable)
+{
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
       do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
 
@@ -426,7 +433,8 @@ TEST(TestMultiplexInputStream, Bufferable) {
   ASSERT_TRUE(!strncmp(buf3, "Hello world", size));
 }
 
-TEST(TestMultiplexInputStream, QILengthInputStream) {
+TEST(TestMultiplexInputStream, QILengthInputStream)
+{
   nsCString buf;
   buf.AssignLiteral("Hello world");
 
@@ -486,7 +494,8 @@ TEST(TestMultiplexInputStream, QILengthInputStream) {
   }
 }
 
-TEST(TestMultiplexInputStream, LengthInputStream) {
+TEST(TestMultiplexInputStream, LengthInputStream)
+{
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
       do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
 

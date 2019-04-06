@@ -10,7 +10,8 @@ using ::testing::AtLeast;
 
 // Sanity test to make sure that GTest is hooked into
 // the mozilla build system correctly
-TEST(MozillaGTestSanity, Runs) { EXPECT_EQ(1, 1); }
+TEST(MozillaGTestSanity, Runs)
+{ EXPECT_EQ(1, 1); }
 namespace {
 class TestMock {
  public:
@@ -18,7 +19,8 @@ class TestMock {
   MOCK_METHOD0(MockedCall, void());
 };
 }  // namespace
-TEST(MozillaGMockSanity, Runs) {
+TEST(MozillaGMockSanity, Runs)
+{
   TestMock mockedClass;
   EXPECT_CALL(mockedClass, MockedCall()).Times(AtLeast(3));
 

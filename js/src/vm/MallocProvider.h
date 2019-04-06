@@ -194,11 +194,12 @@ struct MallocProvider {
   }
 
   JS_DECLARE_NEW_METHODS(new_, pod_malloc<uint8_t>, MOZ_ALWAYS_INLINE)
-  JS_DECLARE_NEW_ARENA_METHODS(arena_new_,
-                               [this](arena_id_t arena, size_t size) {
-                                 return pod_malloc<uint8_t>(size, arena);
-                               },
-                               MOZ_ALWAYS_INLINE)
+  JS_DECLARE_NEW_ARENA_METHODS(
+      arena_new_,
+      [this](arena_id_t arena, size_t size) {
+        return pod_malloc<uint8_t>(size, arena);
+      },
+      MOZ_ALWAYS_INLINE)
 
   JS_DECLARE_MAKE_METHODS(make_unique, new_, MOZ_ALWAYS_INLINE)
   JS_DECLARE_MAKE_METHODS(arena_make_unique, arena_new_, MOZ_ALWAYS_INLINE)

@@ -266,7 +266,7 @@ class WebrtcVideoConduit
                            unsigned int* cumulativeLost) override;
   bool GetRTCPReceiverReport(uint32_t* jitterMs, uint32_t* packetsReceived,
                              uint64_t* bytesReceived, uint32_t* cumulativeLost,
-                             int32_t* rttMs) override;
+                             Maybe<double>* aOutRttSec) override;
   bool GetRTCPSenderReport(unsigned int* packetsSent,
                            uint64_t* bytesSent) override;
   uint64_t MozVideoLatencyAvg();
@@ -294,13 +294,13 @@ class WebrtcVideoConduit
     explicit CallStatistics(nsCOMPtr<nsIEventTarget> aStatsThread)
         : mStatsThread(aStatsThread) {}
     void Update(const webrtc::Call::Stats& aStats);
-    int32_t RttMs() const;
+    Maybe<DOMHighResTimeStamp> RttSec() const;
 
    protected:
     const nsCOMPtr<nsIEventTarget> mStatsThread;
 
    private:
-    int32_t mRttMs = 0;
+    Maybe<DOMHighResTimeStamp> mRttSec = Nothing();
   };
 
   /**

@@ -88,17 +88,17 @@ interface nsICertStorage : nsISupports {
    * Get the revocation state of a certificate. STATE_UNSET indicates the
    * certificate is not revoked. STATE_ENFORCE indicates the certificate is
    * revoked.
-   * issuer - issuer name, DER, Base64 encoded
-   * serial - serial number, DER, Base64 encoded
-   * subject - subject name, DER, Base64 encoded
-   * pubkey - public key, DER, Base64 encoded
+   * issuer - issuer name, DER encoded
+   * serial - serial number, DER encoded
+   * subject - subject name, DER encoded
+   * pubkey - public key, DER encoded
    * Must not be called from the main thread.
    */
   [must_use]
-  short getRevocationState(in ACString issuer,
-                           in ACString serial,
-                           in ACString subject,
-                           in ACString pubkey);
+  short getRevocationState(in Array<octet> issuer,
+                           in Array<octet> serial,
+                           in Array<octet> subject,
+                           in Array<octet> pubkey);
 
   /**
    * Get the CRLite enrollment status of a certificate.

@@ -38,7 +38,7 @@ var PlacesSyncUtils = {
     }
     let startIndex = 0;
     while (startIndex < array.length) {
-      yield array.slice(startIndex, startIndex + chunkLength);
+      yield [startIndex, array.slice(startIndex, startIndex + chunkLength)];
       startIndex += chunkLength;
     }
   },
@@ -242,7 +242,7 @@ const HistorySyncUtils = PlacesSyncUtils.history = Object.freeze({
     // aren't stored in the database.
     let db = await PlacesUtils.promiseDBConnection();
     let nonSyncableGuids = [];
-    for (let chunk of PlacesSyncUtils.chunkArray(guids, SQLITE_MAX_VARIABLE_NUMBER)) {
+    for (let [, chunk] of PlacesSyncUtils.chunkArray(guids, SQLITE_MAX_VARIABLE_NUMBER)) {
       let rows = await db.execute(`
         SELECT DISTINCT p.guid FROM moz_places p
         JOIN moz_historyvisits v ON p.id = v.place_id

@@ -396,11 +396,12 @@ static uint32_t PLHashComputeHash(void* aKey, PLHashTableInfo* aInfo) {
   MOZ_RELEASE_ASSERT(!aInfo->IsDestroyed());
   uint32_t originalHash = aInfo->mKeyHash(aKey);
   HashNumber newHash;
-  if (aInfo->HasMatchingKey(originalHash,
-                            [=](const void* aExistingKey) {
-                              return aInfo->mKeyCompare(aKey, aExistingKey);
-                            },
-                            &newHash)) {
+  if (aInfo->HasMatchingKey(
+          originalHash,
+          [=](const void* aExistingKey) {
+            return aInfo->mKeyCompare(aKey, aExistingKey);
+          },
+          &newHash)) {
     return newHash;
   }
   return aInfo->SetLastKey(aKey);
@@ -480,12 +481,13 @@ static PLDHashNumber PLDHashTableComputeHash(const void* aKey,
   MOZ_RELEASE_ASSERT(!aInfo->IsDestroyed());
   uint32_t originalHash = aInfo->mOps->hashKey(aKey);
   HashNumber newHash;
-  if (aInfo->HasMatchingKey(originalHash,
-                            [=](const void* aExistingKey) {
-                              return aInfo->mOps->matchEntry(
-                                  (PLDHashEntryHdr*)aExistingKey, aKey);
-                            },
-                            &newHash)) {
+  if (aInfo->HasMatchingKey(
+          originalHash,
+          [=](const void* aExistingKey) {
+            return aInfo->mOps->matchEntry((PLDHashEntryHdr*)aExistingKey,
+                                           aKey);
+          },
+          &newHash)) {
     return newHash;
   }
   return aInfo->SetLastKey(aKey);

@@ -96,11 +96,17 @@ public final class CodecProxy {
                 sample.dispose();
                 return;
             }
+
+            SampleBuffer buffer = CodecProxy.this.getOutputBuffer(sample.bufferId);
             if (mOutputSurface != null) {
                 // Don't render to surface just yet. Callback will make that happen when it's time.
                 mSurfaceOutputs.offer(sample);
+            } else if (buffer == null) {
+                // Buffer with given ID has been flushed.
+                sample.dispose();
+                return;
             }
-            mCallbacks.onOutput(sample, CodecProxy.this.getOutputBuffer(sample.bufferId));
+            mCallbacks.onOutput(sample, buffer);
         }
 
         @Override
@@ -287,6 +293,7 @@ public final class CodecProxy {
             if (DEBUG) {
                 Log.d(LOGTAG, "flush " + this);
             }
+            resetBuffers();
             mRemote.flush();
             mFlushed = true;
         } catch (DeadObjectException e) {
@@ -296,6 +303,17 @@ public final class CodecProxy {
             return false;
         }
         return true;
+    }
+
+    private void resetBuffers() {
+        for (SampleBuffer b : mInputBuffers.values()) {
+            b.dispose();
+        }
+        mInputBuffers.clear();
+        for (SampleBuffer b : mOutputBuffers.values()) {
+            b.dispose();
+        }
+        mOutputBuffers.clear();
     }
 
     @WrapForJNI
@@ -324,14 +342,7 @@ public final class CodecProxy {
                 mSurfaceOutputs.clear();
             }
 
-            for (SampleBuffer b : mInputBuffers.values()) {
-                b.dispose();
-            }
-            mInputBuffers.clear();
-            for (SampleBuffer b : mOutputBuffers.values()) {
-                b.dispose();
-            }
-            mOutputBuffers.clear();
+            resetBuffers();
 
             try {
                 RemoteManager.getInstance().releaseCodec(this);
@@ -401,30 +412,47 @@ public final class CodecProxy {
         return true;
     }
 
+    // Dispose Sample objects without sending requests to remote codec.
+    // Native callbacks use this method instead of releaseOutput() to save
+    // unnecessary IPC calls when recycling samples that have been released by
+    // release() or flush().
+    @WrapForJNI
+    public void disposeOutput(final Sample sample) {
+        if (mOutputSurface != null) {
+            mSurfaceOutputs.remove(sample);
+        }
+        sample.dispose();
+    }
+
     /* package */ void reportError(final boolean fatal) {
         mCallbacks.reportError(fatal);
     }
 
-    private SampleBuffer getOutputBuffer(final int id) {
+    private synchronized SampleBuffer getOutputBuffer(final int id) {
         if (mRemote == null) {
             Log.e(LOGTAG, "cannot get buffer#" + id + " from an ended codec");
             return null;
         }
 
-        if (mOutputSurface != null) {
+        if (mOutputSurface != null || id == Sample.NO_BUFFER) {
             return null;
         }
 
         SampleBuffer buffer = mOutputBuffers.get(id);
-        if (buffer == null) {
-            try {
-                buffer = mRemote.getOutputBuffer(id);
-                mOutputBuffers.put(id, buffer);
-            } catch (Exception e) {
-                Log.e(LOGTAG, "cannot get buffer#" + id, e);
-                return null;
-            }
+        if (buffer != null) {
+            return buffer;
         }
+
+        try {
+            buffer = mRemote.getOutputBuffer(id);
+        } catch (Exception e) {
+            Log.e(LOGTAG, "cannot get buffer#" + id, e);
+            return null;
+        }
+        if (buffer != null) {
+            mOutputBuffers.put(id, buffer);
+        }
+
         return buffer;
     }
 }

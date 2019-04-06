@@ -125,7 +125,8 @@ bool TestASCIIWB(mozilla::intl::WordBreaker* lb, const char* in,
   return Check(in, out, outlen, i, res);
 }
 
-TEST(LineBreak, LineBreaker) {
+TEST(LineBreak, LineBreaker)
+{
   RefPtr<mozilla::intl::LineBreaker> t = mozilla::intl::LineBreaker::Create();
 
   ASSERT_TRUE(t);
@@ -135,7 +136,8 @@ TEST(LineBreak, LineBreaker) {
   ASSERT_TRUE(TestASCIILB(t, teng3, lexp3, sizeof(lexp3) / sizeof(uint32_t)));
 }
 
-TEST(LineBreak, WordBreaker) {
+TEST(LineBreak, WordBreaker)
+{
   RefPtr<mozilla::intl::WordBreaker> t = mozilla::intl::WordBreaker::Create();
   ASSERT_TRUE(t);
 
@@ -251,7 +253,8 @@ void TestFindWordBreakFromPosition(uint32_t fragN, uint32_t offset,
       << "FindWordBreakFromPosition(" << fragN << ", " << offset << ")";
 }
 
-TEST(LineBreak, WordBreakUsage) {
+TEST(LineBreak, WordBreakUsage)
+{
   TestPrintWordWithBreak();
   TestFindWordBreakFromPosition(0, 0, "This");
   TestFindWordBreakFromPosition(1, 0, "his");

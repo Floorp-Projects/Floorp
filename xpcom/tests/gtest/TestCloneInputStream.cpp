@@ -14,14 +14,16 @@
 #include "nsStringStream.h"
 #include "nsComponentManagerUtils.h"
 
-TEST(CloneInputStream, InvalidInput) {
+TEST(CloneInputStream, InvalidInput)
+{
   nsCOMPtr<nsIInputStream> clone;
   nsresult rv = NS_CloneInputStream(nullptr, getter_AddRefs(clone));
   ASSERT_TRUE(NS_FAILED(rv));
   ASSERT_FALSE(clone);
 }
 
-TEST(CloneInputStream, CloneableInput) {
+TEST(CloneInputStream, CloneableInput)
+{
   nsTArray<char> inputData;
   testing::CreateData(4 * 1024, inputData);
   nsDependentCSubstring inputString(inputData.Elements(), inputData.Length());
@@ -76,7 +78,8 @@ class NonCloneableInputStream final : public nsIInputStream {
 
 NS_IMPL_ISUPPORTS(NonCloneableInputStream, nsIInputStream)
 
-TEST(CloneInputStream, NonCloneableInput_NoFallback) {
+TEST(CloneInputStream, NonCloneableInput_NoFallback)
+{
   nsTArray<char> inputData;
   testing::CreateData(4 * 1024, inputData);
   nsDependentCSubstring inputString(inputData.Elements(), inputData.Length());
@@ -98,7 +101,8 @@ TEST(CloneInputStream, NonCloneableInput_NoFallback) {
   testing::ConsumeAndValidateStream(stream, inputString);
 }
 
-TEST(CloneInputStream, NonCloneableInput_Fallback) {
+TEST(CloneInputStream, NonCloneableInput_Fallback)
+{
   nsTArray<char> inputData;
   testing::CreateData(4 * 1024, inputData);
   nsDependentCSubstring inputString(inputData.Elements(), inputData.Length());
@@ -138,7 +142,8 @@ TEST(CloneInputStream, NonCloneableInput_Fallback) {
   testing::ConsumeAndValidateStream(clone, inputString);
 }
 
-TEST(CloneInputStream, CloneMultiplexStream) {
+TEST(CloneInputStream, CloneMultiplexStream)
+{
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
       do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
   ASSERT_TRUE(multiplexStream);
@@ -179,7 +184,8 @@ TEST(CloneInputStream, CloneMultiplexStream) {
   ASSERT_TRUE(NS_FAILED(rv));
 }
 
-TEST(CloneInputStream, CloneMultiplexStreamPartial) {
+TEST(CloneInputStream, CloneMultiplexStreamPartial)
+{
   nsCOMPtr<nsIMultiplexInputStream> multiplexStream =
       do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
   ASSERT_TRUE(multiplexStream);

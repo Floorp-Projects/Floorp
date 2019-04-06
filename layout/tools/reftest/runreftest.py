@@ -437,6 +437,12 @@ class RefTest(object):
             else:
                 browserEnv["ASAN_OPTIONS"] = "detect_leaks=0"
 
+        # Set environment defaults for jstestbrowser. Keep in sync with the
+        # defaults used in js/src/tests/lib/tests.py.
+        if options.suite == "jstestbrowser":
+            browserEnv["TZ"] = "PST8PDT"
+            browserEnv["LC_ALL"] = "en_US.UTF-8"
+
         for v in options.environment:
             ix = v.find("=")
             if ix <= 0:

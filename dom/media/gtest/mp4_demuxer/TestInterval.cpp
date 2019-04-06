@@ -8,12 +8,14 @@
 
 using mozilla::MP4Interval;
 
-TEST(MP4Interval, Length) {
+TEST(MP4Interval, Length)
+{
   MP4Interval<int> i(15, 25);
   EXPECT_EQ(10, i.Length());
 }
 
-TEST(MP4Interval, Intersection) {
+TEST(MP4Interval, Intersection)
+{
   MP4Interval<int> i0(10, 20);
   MP4Interval<int> i1(15, 25);
   MP4Interval<int> i = i0.Intersection(i1);
@@ -21,7 +23,8 @@ TEST(MP4Interval, Intersection) {
   EXPECT_EQ(20, i.end);
 }
 
-TEST(MP4Interval, Equals) {
+TEST(MP4Interval, Equals)
+{
   MP4Interval<int> i0(10, 20);
   MP4Interval<int> i1(10, 20);
   EXPECT_EQ(i0, i1);
@@ -33,7 +36,8 @@ TEST(MP4Interval, Equals) {
   EXPECT_NE(i0, i2);
 }
 
-TEST(MP4Interval, IntersectionVector) {
+TEST(MP4Interval, IntersectionVector)
+{
   nsTArray<MP4Interval<int>> i0;
   i0.AppendElement(MP4Interval<int>(5, 10));
   i0.AppendElement(MP4Interval<int>(20, 25));
@@ -63,7 +67,8 @@ TEST(MP4Interval, IntersectionVector) {
   EXPECT_EQ(57, i[3].end);
 }
 
-TEST(MP4Interval, Normalize) {
+TEST(MP4Interval, Normalize)
+{
   nsTArray<MP4Interval<int>> i;
   i.AppendElement(MP4Interval<int>(20, 30));
   i.AppendElement(MP4Interval<int>(1, 8));

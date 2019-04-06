@@ -437,7 +437,9 @@ Context::QuotaInitRunnable::Run() {
     }
     // -----
     case STATE_WAIT_FOR_DIRECTORY_LOCK:
-    default: { MOZ_CRASH("unexpected state in QuotaInitRunnable"); }
+    default: {
+      MOZ_CRASH("unexpected state in QuotaInitRunnable");
+    }
   }
 
   if (resolver->Resolved()) {

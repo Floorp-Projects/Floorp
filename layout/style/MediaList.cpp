@@ -116,7 +116,7 @@ nsresult MediaList::Delete(const nsAString& aOldMedium) {
 
 bool MediaList::Matches(const Document& aDocument) const {
   const RawServoStyleSet* rawSet =
-    aDocument.StyleSetForPresShellOrMediaQueryEvaluation()->RawSet();
+      aDocument.StyleSetForPresShellOrMediaQueryEvaluation()->RawSet();
   MOZ_ASSERT(rawSet, "The RawServoStyleSet should be valid!");
   return Servo_MediaList_Matches(mRawList, rawSet);
 }

@@ -3929,9 +3929,10 @@ eslint-plugin-mozilla@1.1.1:
     ini-parser "0.0.2"
     sax "1.2.4"
 
-eslint-plugin-mozilla@1.1.2:
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/eslint-plugin-mozilla/-/eslint-plugin-mozilla-1.1.2.tgz#9591385d96fec9141d84ca16cbd408b193bf7dee"
+eslint-plugin-mozilla@1.1.3:
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-mozilla/-/eslint-plugin-mozilla-1.1.3.tgz#412da74dc772f61c0c6ec0cccb925ec19680a011"
+  integrity sha512-XFR4pby4G99bgArNbBCzG8mlpO8Zuqd+FC1MJChL0druU8W7sBru2n2A7NuD/0KuamSZDpACefruzPP3KezymQ==
   dependencies:
     htmlparser2 "3.10.0"
     ini-parser "0.0.2"
@@ -9156,13 +9157,6 @@ react-icons@^2.2.7:
 react-immutable-proptypes@^2.1.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/react-immutable-proptypes/-/react-immutable-proptypes-2.1.0.tgz#023d6f39bb15c97c071e9e60d00d136eac5fa0b4"
-
-react-inlinesvg@^0.8.1:
-  version "0.8.1"
-  resolved "https://registry.yarnpkg.com/react-inlinesvg/-/react-inlinesvg-0.8.1.tgz#d981da38985d2cd0b83628eaf918ca4834f02b5d"
-  dependencies:
-    httpplease "^0.16.4"
-    once "^1.4.0"
 
 react-inspector@^2.2.2:
   version "2.3.0"
