@@ -1083,13 +1083,14 @@ nsRect nsDisplayListBuilder::OutOfFlowDisplayData::ComputeVisibleRectForFrame(
     dirtyRectRelativeToDirtyFrame =
         nsRect(nsPoint(0, 0), aFrame->GetParent()->GetSize());
 
-    nsIPresShell* ps = aFrame->PresShell();
-    if (ps->IsVisualViewportSizeSet() &&
-        dirtyRectRelativeToDirtyFrame.Size() < ps->GetVisualViewportSize()) {
-      dirtyRectRelativeToDirtyFrame.SizeTo(ps->GetVisualViewportSize());
+    PresShell* presShell = aFrame->PresShell();
+    if (presShell->IsVisualViewportSizeSet() &&
+        dirtyRectRelativeToDirtyFrame.Size() <
+            presShell->GetVisualViewportSize()) {
+      dirtyRectRelativeToDirtyFrame.SizeTo(presShell->GetVisualViewportSize());
     }
     // Expand the size to the layout viewport size if necessary.
-    const nsSize layoutViewportSize = ps->GetLayoutViewportSize();
+    const nsSize layoutViewportSize = presShell->GetLayoutViewportSize();
     if (dirtyRectRelativeToDirtyFrame.Size() < layoutViewportSize) {
       dirtyRectRelativeToDirtyFrame.SizeTo(layoutViewportSize);
     }
@@ -1449,7 +1450,7 @@ nsCaret* nsDisplayListBuilder::GetCaret() {
 void nsDisplayListBuilder::IncrementPresShellPaintCount(
     nsIPresShell* aPresShell) {
   if (mIsPaintingToWindow) {
-    mReferenceFrame->AddPaintedPresShell(aPresShell);
+    mReferenceFrame->AddPaintedPresShell(static_cast<PresShell*>(aPresShell));
     aPresShell->IncrementPaintCount();
   }
 }
@@ -6847,7 +6848,7 @@ nsDisplayResolution::nsDisplayResolution(nsDisplayListBuilder* aBuilder,
 void nsDisplayResolution::HitTest(nsDisplayListBuilder* aBuilder,
                                   const nsRect& aRect, HitTestState* aState,
                                   nsTArray<nsIFrame*>* aOutFrames) {
-  nsIPresShell* presShell = mFrame->PresShell();
+  PresShell* presShell = mFrame->PresShell();
   nsRect rect = aRect.RemoveResolution(presShell->GetResolution());
   mList.HitTest(aBuilder, rect, aState, aOutFrames);
 }
@@ -6855,7 +6856,7 @@ void nsDisplayResolution::HitTest(nsDisplayListBuilder* aBuilder,
 already_AddRefed<Layer> nsDisplayResolution::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aContainerParameters) {
-  nsIPresShell* presShell = mFrame->PresShell();
+  PresShell* presShell = mFrame->PresShell();
   float rootLayerResolution = gfxPrefs::LayoutUseContainersForRootFrames()
                                   ? presShell->GetResolution()
                                   : 1.0f;
@@ -7475,7 +7476,7 @@ nsDisplayAsyncZoom::~nsDisplayAsyncZoom() {
 already_AddRefed<Layer> nsDisplayAsyncZoom::BuildLayer(
     nsDisplayListBuilder* aBuilder, LayerManager* aManager,
     const ContainerLayerParameters& aContainerParameters) {
-  nsIPresShell* presShell = mFrame->PresShell();
+  PresShell* presShell = mFrame->PresShell();
   ContainerLayerParameters containerParameters(
       presShell->GetResolution(), presShell->GetResolution(), nsIntPoint(),
       aContainerParameters);

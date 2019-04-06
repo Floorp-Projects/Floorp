@@ -12,6 +12,7 @@
 #include "mozilla/ViewportFrame.h"
 
 #include "mozilla/ComputedStyleInlines.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "nsGkAtoms.h"
 #include "nsIScrollableFrame.h"
@@ -158,8 +159,7 @@ void ViewportFrame::BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  nsIPresShell* shell = PresShell();
-  if (nsCanvasFrame* canvasFrame = shell->GetCanvasFrame()) {
+  if (nsCanvasFrame* canvasFrame = PresShell()->GetCanvasFrame()) {
     if (Element* container = canvasFrame->GetCustomContentContainer()) {
       if (nsIFrame* frame = container->GetPrimaryFrame()) {
         MOZ_ASSERT(frame->StyleDisplay()->mTopLayer != NS_STYLE_TOP_LAYER_NONE,
@@ -251,13 +251,13 @@ nsRect ViewportFrame::AdjustReflowInputAsContainingBlock(
   // computed size.
   nsRect rect(0, 0, aReflowInput->ComputedWidth(),
               aReflowInput->ComputedHeight());
-  nsIPresShell* ps = PresShell();
-  if (ps->IsVisualViewportSizeSet() &&
-      rect.Size() < ps->GetVisualViewportSize()) {
-    rect.SizeTo(ps->GetVisualViewportSize());
+  mozilla::PresShell* presShell = PresShell();
+  if (presShell->IsVisualViewportSizeSet() &&
+      rect.Size() < presShell->GetVisualViewportSize()) {
+    rect.SizeTo(presShell->GetVisualViewportSize());
   }
   // Expand the size to the layout viewport size if necessary.
-  const nsSize layoutViewportSize = ps->GetLayoutViewportSize();
+  const nsSize layoutViewportSize = presShell->GetLayoutViewportSize();
   if (rect.Size() < layoutViewportSize) {
     rect.SizeTo(layoutViewportSize);
   }

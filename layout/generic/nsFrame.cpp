@@ -1979,7 +1979,7 @@ Visibility nsIFrame::GetVisibility() const {
 }
 
 void nsIFrame::UpdateVisibilitySynchronously() {
-  nsIPresShell* presShell = PresShell();
+  mozilla::PresShell* presShell = PresShell();
   if (!presShell) {
     return;
   }
@@ -2046,7 +2046,7 @@ void nsIFrame::EnableVisibilityTracking() {
   AddStateBits(NS_FRAME_VISIBILITY_IS_TRACKED);
   SetProperty(VisibilityStateProperty(), 0);
 
-  nsIPresShell* presShell = PresShell();
+  mozilla::PresShell* presShell = PresShell();
   if (!presShell) {
     return;
   }

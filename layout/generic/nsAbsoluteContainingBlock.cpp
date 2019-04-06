@@ -13,8 +13,8 @@
 
 #include "nsContainerFrame.h"
 #include "nsGkAtoms.h"
-#include "nsIPresShell.h"
 #include "mozilla/CSSAlignUtils.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ReflowInput.h"
 #include "nsPlaceholderFrame.h"
 #include "nsPresContext.h"

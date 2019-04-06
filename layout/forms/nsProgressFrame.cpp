@@ -6,18 +6,18 @@
 
 #include "nsProgressFrame.h"
 
+#include "mozilla/PresShell.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLProgressElement.h"
 #include "nsIContent.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
-#include "mozilla/dom/Document.h"
-#include "nsIPresShell.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsCheckboxRadioFrame.h"
 #include "nsFontMetrics.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/dom/HTMLProgressElement.h"
 #include "nsCSSPseudoElements.h"
 #include "nsStyleConsts.h"
 #include <algorithm>
@@ -190,10 +190,10 @@ nsresult nsProgressFrame::AttributeChanged(int32_t aNameSpaceID,
 
   if (aNameSpaceID == kNameSpaceID_None &&
       (aAttribute == nsGkAtoms::value || aAttribute == nsGkAtoms::max)) {
-    auto shell = PresShell();
+    auto presShell = PresShell();
     for (auto childFrame : PrincipalChildList()) {
-      shell->FrameNeedsReflow(childFrame, nsIPresShell::eResize,
-                              NS_FRAME_IS_DIRTY);
+      presShell->FrameNeedsReflow(childFrame, nsIPresShell::eResize,
+                                  NS_FRAME_IS_DIRTY);
     }
     InvalidateFrame();
   }

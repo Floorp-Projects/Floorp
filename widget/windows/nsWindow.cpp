@@ -164,6 +164,7 @@
 #  include "oleidl.h"
 #  include <winuser.h>
 #  include "nsAccessibilityService.h"
+#  include "mozilla/PresShell.h"
 #  include "mozilla/a11y/DocAccessible.h"
 #  include "mozilla/a11y/LazyInstantiator.h"
 #  include "mozilla/a11y/Platform.h"

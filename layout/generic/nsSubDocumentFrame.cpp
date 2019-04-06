@@ -201,7 +201,7 @@ nsIPresShell* nsSubDocumentFrame::GetSubdocumentPresShellForPainting(
   nsView* subdocView = mInnerView->GetFirstChild();
   if (!subdocView) return nullptr;
 
-  nsIPresShell* presShell = nullptr;
+  mozilla::PresShell* presShell = nullptr;
 
   nsIFrame* subdocRootFrame = subdocView->GetFrame();
   if (subdocRootFrame) {
@@ -221,12 +221,13 @@ nsIPresShell* nsSubDocumentFrame::GetSubdocumentPresShellForPainting(
       frame = nextView->GetFrame();
     }
     if (frame) {
-      nsIPresShell* ps = frame->PresShell();
-      if (!presShell ||
-          (ps && !ps->IsPaintingSuppressed() && sShowPreviousPage)) {
+      mozilla::PresShell* presShellForNextView = frame->PresShell();
+      if (!presShell || (presShellForNextView &&
+                         !presShellForNextView->IsPaintingSuppressed() &&
+                         sShowPreviousPage)) {
         subdocView = nextView;
         subdocRootFrame = frame;
-        presShell = ps;
+        presShell = presShellForNextView;
       }
     }
     if (!presShell) {
@@ -235,7 +236,7 @@ nsIPresShell* nsSubDocumentFrame::GetSubdocumentPresShellForPainting(
       if (!mFrameLoader) return nullptr;
       nsIDocShell* docShell = mFrameLoader->GetDocShell(IgnoreErrors());
       if (!docShell) return nullptr;
-      presShell = docShell->GetPresShell();
+      presShell = static_cast<mozilla::PresShell*>(docShell->GetPresShell());
     }
   }
 

@@ -592,7 +592,7 @@ void nsAccessibilityService::UpdateListBullet(nsIPresShell* aPresShell,
 }
 
 void nsAccessibilityService::UpdateImageMap(nsImageFrame* aImageFrame) {
-  nsIPresShell* presShell = aImageFrame->PresShell();
+  PresShell* presShell = aImageFrame->PresShell();
   DocAccessible* document = GetDocAccessible(presShell);
   if (document) {
     Accessible* accessible = document->GetAccessible(aImageFrame->GetContent());

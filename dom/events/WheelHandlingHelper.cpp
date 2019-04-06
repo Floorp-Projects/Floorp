@@ -12,6 +12,7 @@
 #include "mozilla/EventStateManager.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
@@ -19,7 +20,6 @@
 #include "nsIContentInlines.h"
 #include "mozilla/dom/Document.h"
 #include "DocumentInlines.h"  // for Document and HTMLBodyElement
-#include "nsIPresShell.h"
 #include "nsIScrollableFrame.h"
 #include "nsITextControlElement.h"
 #include "nsITimer.h"
