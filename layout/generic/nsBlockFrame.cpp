@@ -4699,6 +4699,35 @@ bool nsBlockFrame::DrainOverflowLines() {
       ReparentFrames(overflowLines->mFrames, prevBlock, this,
                      ReparentingDirection::Forwards);
 
+      // Collect overflow containers from our [Excess]OverflowContainers lists
+      // that are continuations from the frames we picked up from our prev-in-flow.
+      // We'll append these to mFrames to ensure the continuations are ordered.
+      auto HasOverflowContainers = [this]() -> bool {
+        return GetPropTableFrames(OverflowContainersProperty()) ||
+               GetPropTableFrames(ExcessOverflowContainersProperty());
+      };
+      nsFrameList ocContinuations;
+      if (HasOverflowContainers()) {
+        for (auto* f : overflowLines->mFrames) {
+          auto* cont = f;
+          bool done = false;
+          while (!done && (cont = cont->GetNextContinuation()) &&
+                 cont->GetParent() == this) {
+            bool onlyChild = !cont->GetPrevSibling() && !cont->GetNextSibling();
+            if (MaybeStealOverflowContainerFrame(cont)) {
+              cont->RemoveStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER);
+              ocContinuations.AppendFrame(nullptr, cont);
+              done = onlyChild && !HasOverflowContainers();
+              continue;
+            }
+            break;
+          }
+          if (done) {
+            break;
+          }
+        }
+      }
+
       // Make the overflow out-of-flow frames mine too.
       nsAutoOOFFrameList oofs(prevBlock);
       if (oofs.mList.NotEmpty()) {
@@ -4729,6 +4758,7 @@ bool nsBlockFrame::DrainOverflowLines() {
       mLines.splice(mLines.begin(), overflowLines->mLines);
       NS_ASSERTION(overflowLines->mLines.empty(), "splice should empty list");
       delete overflowLines;
+      AddFrames(ocContinuations, mFrames.LastChild());
       didFindOverflow = true;
     }
   }
