@@ -16,7 +16,7 @@ import { getSourceFromId } from "../../selectors";
 
 import { PROMISE } from "../utils/middleware/promise";
 
-import type { Source } from "../../types";
+import type { Source, Context } from "../../types";
 import type { ThunkArgs } from "../types";
 
 async function blackboxActors(state, client, sourceId, isBlackBoxed, range?) {
@@ -27,7 +27,7 @@ async function blackboxActors(state, client, sourceId, isBlackBoxed, range?) {
   return { isBlackBoxed: !isBlackBoxed };
 }
 
-export function toggleBlackBox(source: Source) {
+export function toggleBlackBox(cx: Context, source: Source) {
   return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const { isBlackBoxed } = source;
 
@@ -45,6 +45,7 @@ export function toggleBlackBox(source: Source) {
 
     return dispatch({
       type: "BLACKBOX",
+      cx,
       source,
       [PROMISE]: blackboxActors(
         getState(),

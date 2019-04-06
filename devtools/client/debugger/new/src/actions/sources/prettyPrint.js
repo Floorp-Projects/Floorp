@@ -18,14 +18,14 @@ import { selectSpecificLocation } from "../sources";
 import {
   getSource,
   getSourceFromId,
-  getSourceThreads,
   getSourceByURL,
-  getSelectedLocation
+  getSelectedLocation,
+  getThreadContext
 } from "../../selectors";
 
 import type { Action, ThunkArgs } from "../types";
 import { selectSource } from "./select";
-import type { JsSource, Source } from "../../types";
+import type { JsSource, Source, Context } from "../../types";
 
 export async function prettyPrintSource(
   sourceMaps: any,
@@ -51,7 +51,7 @@ export async function prettyPrintSource(
   };
 }
 
-export function createPrettySource(sourceId: string) {
+export function createPrettySource(cx: Context, sourceId: string) {
   return async ({ dispatch, getState, sourceMaps }: ThunkArgs) => {
     const source = getSourceFromId(getState(), sourceId);
     const url = getPrettySourceURL(source.url);
@@ -72,25 +72,25 @@ export function createPrettySource(sourceId: string) {
       actors: []
     };
 
-    dispatch(({ type: "ADD_SOURCE", source: prettySource }: Action));
-    await dispatch(selectSource(prettySource.id));
+    dispatch(({ type: "ADD_SOURCE", cx, source: prettySource }: Action));
+    await dispatch(selectSource(cx, prettySource.id));
 
     return prettySource;
   };
 }
 
-function selectPrettyLocation(prettySource: Source) {
+function selectPrettyLocation(cx: Context, prettySource: Source) {
   return async ({ dispatch, sourceMaps, getState }: ThunkArgs) => {
     let location = getSelectedLocation(getState());
 
     if (location) {
       location = await sourceMaps.getOriginalLocation(location);
       return dispatch(
-        selectSpecificLocation({ ...location, sourceId: prettySource.id })
+        selectSpecificLocation(cx, { ...location, sourceId: prettySource.id })
       );
     }
 
-    return dispatch(selectSource(prettySource.id));
+    return dispatch(selectSource(cx, prettySource.id));
   };
 }
 
@@ -106,7 +106,7 @@ function selectPrettyLocation(prettySource: Source) {
  *          A promise that resolves to [aSource, prettyText] or rejects to
  *          [aSource, error].
  */
-export function togglePrettyPrint(sourceId: string) {
+export function togglePrettyPrint(cx: Context, sourceId: string) {
   return async ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const source = getSource(getState(), sourceId);
     if (!source) {
@@ -118,7 +118,7 @@ export function togglePrettyPrint(sourceId: string) {
     }
 
     if (!isLoaded(source)) {
-      await dispatch(loadSourceText({ source }));
+      await dispatch(loadSourceText({ cx, source }));
     }
 
     assert(
@@ -130,18 +130,18 @@ export function togglePrettyPrint(sourceId: string) {
     const prettySource = getSourceByURL(getState(), url);
 
     if (prettySource) {
-      return dispatch(selectPrettyLocation(prettySource));
+      return dispatch(selectPrettyLocation(cx, prettySource));
     }
 
-    const newPrettySource = await dispatch(createPrettySource(sourceId));
-    await dispatch(selectPrettyLocation(newPrettySource));
+    const newPrettySource = await dispatch(createPrettySource(cx, sourceId));
+    await dispatch(selectPrettyLocation(cx, newPrettySource));
 
-    const threads = getSourceThreads(getState(), source);
-    await Promise.all(threads.map(thread => dispatch(mapFrames(thread))));
+    const threadcx = getThreadContext(getState());
+    await dispatch(mapFrames(threadcx));
 
-    await dispatch(setSymbols({ source: newPrettySource }));
+    await dispatch(setSymbols({ cx, source: newPrettySource }));
 
-    await dispatch(remapBreakpoints(sourceId));
+    await dispatch(remapBreakpoints(cx, sourceId));
 
     return newPrettySource;
   };

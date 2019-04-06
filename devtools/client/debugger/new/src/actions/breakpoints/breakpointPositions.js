@@ -17,7 +17,8 @@ import {
 import type {
   MappedLocation,
   SourceLocation,
-  BreakpointPositions
+  BreakpointPositions,
+  Context
 } from "../../types";
 import { makeBreakpointId } from "../../utils/breakpoint";
 import {
@@ -72,7 +73,7 @@ function convertToList(results, source) {
   return positions;
 }
 
-async function _setBreakpointPositions(sourceId, thunkArgs) {
+async function _setBreakpointPositions(cx, sourceId, thunkArgs) {
   const { client, dispatch, getState, sourceMaps } = thunkArgs;
   let generatedSource = getSource(getState(), sourceId);
   if (!generatedSource) {
@@ -124,6 +125,7 @@ async function _setBreakpointPositions(sourceId, thunkArgs) {
 
   dispatch({
     type: "ADD_BREAKPOINT_POSITIONS",
+    cx,
     source: source,
     positions
   });
@@ -132,7 +134,7 @@ async function _setBreakpointPositions(sourceId, thunkArgs) {
 }
 
 export const setBreakpointPositions: MemoizedAction<
-  { sourceId: string },
+  { cx: Context, sourceId: string },
   ?BreakpointPositions
 > = memoizeableAction("setBreakpointPositions", {
   hasValue: ({ sourceId }, { getState }) =>
@@ -149,6 +151,6 @@ export const setBreakpointPositions: MemoizedAction<
       : [];
     return [sourceId, ...actors].join(":");
   },
-  action: ({ sourceId }, thunkArgs) =>
-    _setBreakpointPositions(sourceId, thunkArgs)
+  action: ({ cx, sourceId }, thunkArgs) =>
+    _setBreakpointPositions(cx, sourceId, thunkArgs)
 });
