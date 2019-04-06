@@ -181,7 +181,7 @@ load 398332-1.html
 load 398332-2.html
 asserts(0-2) load 398332-3.html # bug 436123 and bug 457397
 load 399407-1.xhtml
-asserts(1) load 399412-1.html # bug 574889
+load 399412-1.html
 load 399843-1.html
 load 400078-1.html
 load 400190.html
@@ -614,6 +614,7 @@ load 1169420-2.html
 load 1178783-1.html
 load 1183431.html
 load 1186147-1.html
+skip-if(Android) load 1209952.html # test is slow - times out on Android
 load 1221112-1.html
 load 1221112-2.html
 load 1221874-1.html
