@@ -124,6 +124,7 @@ nsXPCWrappedJSClass::~nsXPCWrappedJSClass() {
   XPCJSRuntime::Get()->GetWrappedJSClassMap()->Remove(this);
 }
 
+// static
 JSObject* nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
                                                             JSObject* jsobjArg,
                                                             HandleObject scope,
@@ -317,10 +318,10 @@ nsCString GetFunctionName(JSContext* cx, HandleObject obj) {
 
 /***************************************************************************/
 
-NS_IMETHODIMP
-nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
-                                             REFNSIID aIID,
-                                             void** aInstancePtr) {
+// static
+nsresult nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
+                                                      REFNSIID aIID,
+                                                      void** aInstancePtr) {
   if (aIID.Equals(NS_GET_IID(nsIXPConnectJSObjectHolder))) {
     NS_ADDREF(self);
     *aInstancePtr = (void*)static_cast<nsIXPConnectJSObjectHolder*>(self);
@@ -469,6 +470,7 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
   return NS_NOINTERFACE;
 }
 
+// static
 JSObject* nsXPCWrappedJSClass::GetRootJSObject(JSContext* cx,
                                                JSObject* aJSObjArg) {
   RootedObject aJSObj(cx, aJSObjArg);
@@ -481,10 +483,11 @@ JSObject* nsXPCWrappedJSClass::GetRootJSObject(JSContext* cx,
   return js::UncheckedUnwrap(result);
 }
 
+// static
 bool nsXPCWrappedJSClass::GetArraySizeFromParam(const nsXPTMethodInfo* method,
                                                 const nsXPTType& type,
                                                 nsXPTCMiniVariant* nativeParams,
-                                                uint32_t* result) const {
+                                                uint32_t* result) {
   if (type.Tag() != nsXPTType::T_LEGACY_ARRAY &&
       type.Tag() != nsXPTType::T_PSTRING_SIZE_IS &&
       type.Tag() != nsXPTType::T_PWSTRING_SIZE_IS) {
@@ -511,9 +514,10 @@ bool nsXPCWrappedJSClass::GetArraySizeFromParam(const nsXPTMethodInfo* method,
   return true;
 }
 
+// static
 bool nsXPCWrappedJSClass::GetInterfaceTypeFromParam(
     const nsXPTMethodInfo* method, const nsXPTType& type,
-    nsXPTCMiniVariant* nativeParams, nsID* result) const {
+    nsXPTCMiniVariant* nativeParams, nsID* result) {
   result->Clear();
 
   const nsXPTType& inner = type.InnermostType();
@@ -550,10 +554,10 @@ bool nsXPCWrappedJSClass::GetInterfaceTypeFromParam(
   return true;
 }
 
+// static
 void nsXPCWrappedJSClass::CleanupOutparams(const nsXPTMethodInfo* info,
                                            nsXPTCMiniVariant* nativeParams,
-                                           bool inOutOnly,
-                                           uint8_t count) const {
+                                           bool inOutOnly, uint8_t count) {
   // clean up any 'out' params handed in
   for (uint8_t i = 0; i < count; i++) {
     const nsXPTParamInfo& param = info->GetParam(i);
@@ -745,10 +749,10 @@ nsresult nsXPCWrappedJSClass::CheckForException(
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP
-nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
-                                const nsXPTMethodInfo* info,
-                                nsXPTCMiniVariant* nativeParams) {
+nsresult nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
+                                         uint16_t methodIndex,
+                                         const nsXPTMethodInfo* info,
+                                         nsXPTCMiniVariant* nativeParams) {
   Value* sp = nullptr;
   Value* argv = nullptr;
   uint8_t i;
