@@ -31,7 +31,7 @@ using namespace JS;
 using namespace mozilla;
 using namespace mozilla::dom;
 
-NS_IMPL_ISUPPORTS(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
+NS_IMPL_ISUPPORTS(nsXPCWrappedJSClass, nsISupports)
 
 bool AutoScriptEvaluate::StartEvaluating(HandleObject scope) {
   MOZ_ASSERT(!mEvaluated,
@@ -1106,8 +1106,7 @@ JSObject* xpc::NewOutObject(JSContext* cx) {
   return JS_NewObject(cx, &XPCOutParamClass);
 }
 
-NS_IMETHODIMP
-nsXPCWrappedJSClass::DebugDump(int16_t depth) {
+nsresult nsXPCWrappedJSClass::DebugDump(int16_t depth) {
 #ifdef DEBUG
   depth--;
   XPC_LOG_ALWAYS(("nsXPCWrappedJSClass @ %p with mRefCnt = %" PRIuPTR, this,

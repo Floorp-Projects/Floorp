@@ -1595,32 +1595,14 @@ class XPCWrappedNative final : public nsIXPConnectWrappedNative {
 ****************************************************************************
 ***************************************************************************/
 
-// this interfaces exists so we can refcount nsXPCWrappedJSClass
-// {2453EBA0-A9B8-11d2-BA64-00805F8A5DD7}
-#define NS_IXPCONNECT_WRAPPED_JS_CLASS_IID          \
-  {                                                 \
-    0x2453eba0, 0xa9b8, 0x11d2, {                   \
-      0xba, 0x64, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7 \
-    }                                               \
-  }
-
-class nsIXPCWrappedJSClass : public nsISupports {
- public:
-  NS_DECLARE_STATIC_IID_ACCESSOR(NS_IXPCONNECT_WRAPPED_JS_CLASS_IID)
-  NS_IMETHOD DebugDump(int16_t depth) = 0;
-};
-
-NS_DEFINE_STATIC_IID_ACCESSOR(nsIXPCWrappedJSClass,
-                              NS_IXPCONNECT_WRAPPED_JS_CLASS_IID)
-
 /*************************/
 // nsXPCWrappedJSClass represents the sharable factored out common code and
 // data for nsXPCWrappedJS instances for the same interface type.
 
-class nsXPCWrappedJSClass final : public nsIXPCWrappedJSClass {
+class nsXPCWrappedJSClass final : public nsISupports {
   // all the interface method declarations...
   NS_DECL_ISUPPORTS
-  NS_IMETHOD DebugDump(int16_t depth) override;
+  nsresult DebugDump(int16_t depth);
 
  public:
   static already_AddRefed<nsXPCWrappedJSClass> GetNewOrUsed(REFNSIID aIID);

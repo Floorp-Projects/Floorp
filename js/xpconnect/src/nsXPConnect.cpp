@@ -796,7 +796,6 @@ nsXPConnect::DebugDumpObject(nsISupports* p, int16_t depth) {
   }
 
   nsCOMPtr<nsIXPConnect> xpc;
-  nsCOMPtr<nsIXPCWrappedJSClass> wjsc;
   nsCOMPtr<nsIXPConnectWrappedNative> wn;
   nsCOMPtr<nsIXPConnectWrappedJS> wjs;
 
@@ -804,10 +803,6 @@ nsXPConnect::DebugDumpObject(nsISupports* p, int16_t depth) {
           p->QueryInterface(NS_GET_IID(nsIXPConnect), getter_AddRefs(xpc)))) {
     XPC_LOG_ALWAYS(("Dumping a nsIXPConnect..."));
     xpc->DebugDump(depth);
-  } else if (NS_SUCCEEDED(p->QueryInterface(NS_GET_IID(nsIXPCWrappedJSClass),
-                                            getter_AddRefs(wjsc)))) {
-    XPC_LOG_ALWAYS(("Dumping a nsIXPCWrappedJSClass..."));
-    wjsc->DebugDump(depth);
   } else if (NS_SUCCEEDED(p->QueryInterface(
                  NS_GET_IID(nsIXPConnectWrappedNative), getter_AddRefs(wn)))) {
     XPC_LOG_ALWAYS(("Dumping a nsIXPConnectWrappedNative..."));
