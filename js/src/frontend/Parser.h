@@ -1315,14 +1315,15 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                 ListNodeType& classMembers, bool* done);
   MOZ_MUST_USE bool finishClassConstructor(
       const ParseContext::ClassStatement& classStmt,
-      HandlePropertyName className, uint32_t classStartOffset,
+      HandlePropertyName className, bool hasHeritage, uint32_t classStartOffset,
       uint32_t classEndOffset, size_t numFieldsWithInitializers,
       ListNodeType& classMembers);
 
   FunctionNodeType fieldInitializerOpt(YieldHandling yieldHandling, Node name,
                                        HandleAtom atom, size_t& numFieldKeys);
   FunctionNodeType synthesizeConstructor(HandleAtom className,
-                                         uint32_t classNameOffset);
+                                         uint32_t classNameOffset,
+                                         bool hasHeritage);
 
   bool checkBindingIdentifier(PropertyName* ident, uint32_t offset,
                               YieldHandling yieldHandling,

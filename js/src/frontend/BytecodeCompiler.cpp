@@ -986,8 +986,14 @@ static bool CompileLazyFunctionImpl(JSContext* cx, Handle<LazyScript*> lazy,
     script->setHasBeenCloned();
   }
 
+  FieldInitializers fieldInitializers = FieldInitializers::Invalid();
+  if (fun->kind() == JSFunction::FunctionKind::ClassConstructor) {
+    fieldInitializers = lazy->getFieldInitializers();
+  }
+
   BytecodeEmitter bce(/* parent = */ nullptr, &parser, pn->funbox(), script,
-                      lazy, pn->pn_pos, BytecodeEmitter::LazyFunction);
+                      lazy, pn->pn_pos, BytecodeEmitter::LazyFunction,
+                      fieldInitializers);
   if (!bce.init()) {
     return false;
   }

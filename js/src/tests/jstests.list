@@ -651,10 +651,6 @@ skip script test262/language/statements/class/elements/same-line-method-literal-
 skip script test262/language/statements/class/elements/syntax/valid/grammar-fields-multi-line.js
 skip script test262/language/statements/class/elements/wrapped-in-sc-literal-names-asi.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1534721
-skip script test262/language/expressions/class/elements/fields-run-once-on-double-super.js
-skip script test262/language/expressions/class/constructor-this-tdz-during-initializers.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1540793
 skip script test262/language/expressions/class/elements/arrow-fnc-init-err-contains-arguments.js
 skip script test262/language/expressions/class/elements/comp-name-init-err-contains-arguments.js
