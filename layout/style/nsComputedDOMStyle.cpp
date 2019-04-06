@@ -1047,7 +1047,7 @@ void nsComputedDOMStyle::SetValueFromComplexColor(
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetColor() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetToRGBAColor(val, StyleColor()->mColor);
+  SetToRGBAColor(val, StyleColor()->mColor.ToColor());
   return val.forget();
 }
 
@@ -2142,7 +2142,7 @@ static_assert(NS_STYLE_UNICODE_BIDI_NORMAL == 0,
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetCaretColor() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   if (StyleUI()->mCaretColor.IsAuto()) {
-    SetToRGBAColor(val, StyleColor()->mColor);
+    SetToRGBAColor(val, StyleColor()->mColor.ToColor());
   } else {
     SetValueFromComplexColor(val, StyleUI()->mCaretColor.AsColor());
   }

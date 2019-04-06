@@ -14,10 +14,20 @@
 
 namespace mozilla {
 
+inline StyleRGBA StyleRGBA::FromColor(nscolor aColor) {
+  return {NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor),
+          NS_GET_A(aColor)};
+}
+
+inline nscolor StyleRGBA::ToColor() const {
+  return NS_RGBA(red, green, blue, alpha);
+}
+
+inline StyleRGBA StyleRGBA::Transparent() { return {0, 0, 0, 0}; }
+
 template <>
 inline StyleColor StyleColor::FromColor(nscolor aColor) {
-  return StyleColor::Numeric(
-      {NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor), NS_GET_A(aColor)});
+  return StyleColor::Numeric(StyleRGBA::FromColor(aColor));
 }
 
 template <>
@@ -36,7 +46,10 @@ inline StyleColor StyleColor::Transparent() {
 }
 
 template <>
-nscolor StyleColor::CalcColor(nscolor aForegroundColor) const;
+nscolor StyleColor::CalcColor(const StyleRGBA&) const;
+
+template <>
+nscolor StyleColor::CalcColor(nscolor) const;
 
 template <>
 nscolor StyleColor::CalcColor(const ComputedStyle&) const;

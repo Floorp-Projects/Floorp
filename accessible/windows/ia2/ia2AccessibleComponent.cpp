@@ -79,7 +79,7 @@ ia2AccessibleComponent::get_foreground(IA2Color* aForeground) {
   if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   nsIFrame* frame = acc->GetFrame();
-  if (frame) *aForeground = frame->StyleColor()->mColor;
+  if (frame) *aForeground = frame->StyleColor()->mColor.ToColor();
 
   return S_OK;
 }

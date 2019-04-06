@@ -256,7 +256,7 @@ void nsFont::AddFontFeaturesToStyle(gfxFontStyle* aStyle,
     aStyle->useGrayscaleAntialiasing = true;
   }
 
-  aStyle->fontSmoothingBackgroundColor = fontSmoothingBackgroundColor;
+  aStyle->fontSmoothingBackgroundColor = fontSmoothingBackgroundColor.ToColor();
 }
 
 void nsFont::AddFontVariationsToStyle(gfxFontStyle* aStyle) const {
