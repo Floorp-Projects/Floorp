@@ -233,6 +233,14 @@ exclude-multi-locale = [
     l10n = "{l}toolkit/chrome/global/mozilla.dtd"
 
 [[paths]]
+    reference = "toolkit/locales/en-US/chrome/global/aboutTelemetry.dtd"
+    l10n = "{l}toolkit/chrome/global/aboutTelemetry.dtd"
+
+[[paths]]
+    reference = "toolkit/locales/en-US/chrome/global/aboutTelemetry.properties"
+    l10n = "{l}toolkit/chrome/global/aboutTelemetry.properties"
+
+[[paths]]
     reference = "toolkit/locales/en-US/chrome/global/aboutWebrtc.properties"
     l10n = "{l}toolkit/chrome/global/aboutWebrtc.properties"
 
