@@ -542,7 +542,7 @@ void LIRGenerator::visitAssertFloat32(MAssertFloat32* assertion) {
   MIRType type = assertion->input()->type();
   DebugOnly<bool> checkIsFloat32 = assertion->mustBeFloat32();
 
-  if (type != MIRType::Value && !JitOptions.eagerCompilation) {
+  if (type != MIRType::Value && !JitOptions.eagerIonCompilation()) {
     MOZ_ASSERT_IF(checkIsFloat32, type == MIRType::Float32);
     MOZ_ASSERT_IF(!checkIsFloat32, type != MIRType::Float32);
   }
