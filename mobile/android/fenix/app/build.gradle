@@ -315,6 +315,7 @@ dependencies {
     implementation Deps.androidx_fragment
     implementation Deps.androidx_navigation_fragment
     implementation Deps.androidx_navigation_ui
+    implementation Deps.androidx_recyclerview
 
     implementation Deps.autodispose
 

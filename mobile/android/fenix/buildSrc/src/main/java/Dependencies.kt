@@ -20,6 +20,7 @@ private object Versions {
     const val androidx_lifecycle = "2.1.0-alpha04"
     const val androidx_fragment = "1.1.0-alpha06"
     const val androidx_navigation = "2.1.0-alpha02"
+    const val androidx_recyclerview = "1.1.0-alpha04"
 
     const val appservices_gradle_plugin = "0.4.2"
     const val mozilla_android_components = "0.50.0-SNAPSHOT"
@@ -127,6 +128,7 @@ object Deps {
     const val androidx_safeargs = "androidx.navigation:navigation-safe-args-gradle-plugin:${Versions.androidx_navigation}"
     const val androidx_navigation_fragment = "androidx.navigation:navigation-fragment:${Versions.androidx_navigation}"
     const val androidx_navigation_ui = "androidx.navigation:navigation-ui:${Versions.androidx_navigation}"
+    const val androidx_recyclerview = "androidx.recyclerview:recyclerview:${Versions.androidx_recyclerview}"
 
     const val autodispose = "com.uber.autodispose:autodispose:${Versions.autodispose}"
     const val autodispose_android = "com.uber.autodispose:autodispose-android:${Versions.autodispose}"
