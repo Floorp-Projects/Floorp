@@ -18,4 +18,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #627 - Sets engine preferred color scheme based on light/dark theme
 - #904 - Added tab counter in browser toolbar
 ### Changed
+- #1429 - Updated site permissions ui for MVP
 ### Removed

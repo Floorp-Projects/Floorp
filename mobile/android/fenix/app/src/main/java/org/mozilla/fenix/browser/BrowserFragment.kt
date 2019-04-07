@@ -457,11 +457,8 @@ class BrowserFragment : Fragment(), BackHandler {
     private fun assignSitePermissionsRules() {
         val settings = Settings.getInstance(requireContext())
 
-        val rules: SitePermissionsRules = if (settings.shouldRecommendedSettingsBeActivated) {
-            settings.getSitePermissionsRecommendedSettingsRules()
-        } else {
-            settings.getSitePermissionsCustomSettingsRules()
-        }
+        val rules: SitePermissionsRules = settings.getSitePermissionsCustomSettingsRules()
+
         sitePermissionsFeature.withFeature {
             it.sitePermissionsRules = rules
         }

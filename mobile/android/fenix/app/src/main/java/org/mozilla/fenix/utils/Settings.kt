@@ -55,9 +55,6 @@ class Settings private constructor(context: Context) {
     val shouldAutoBounceQuickActionSheet: Boolean
         get() = autoBounceQuickActionSheetCount < autoBounceMaximumCount
 
-    val shouldRecommendedSettingsBeActivated: Boolean
-        get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_recommended_settings), true)
-
     val shouldUseLightTheme: Boolean
         get() = preferences.getBoolean(
             appContext.getPreferenceKey(R.string.pref_key_light_theme),
@@ -117,12 +114,8 @@ class Settings private constructor(context: Context) {
     }
 
     fun getSitePermissionsPhoneFeatureCameraAction(): SitePermissionsRules.Action {
-        return if (shouldRecommendedSettingsBeActivated) {
-            getSitePermissionsRecommendedSettingsRules().camera
-        } else {
-            preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_camera), 1)
-                .toSitePermissionsRulesAction()
-        }
+        return preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_camera), 1)
+            .toSitePermissionsRulesAction()
     }
 
     fun setSitePermissionsPhoneFeatureMicrophoneAction(action: SitePermissionsRules.Action) {
@@ -132,12 +125,8 @@ class Settings private constructor(context: Context) {
     }
 
     fun getSitePermissionsPhoneFeatureMicrophoneAction(): SitePermissionsRules.Action {
-        return if (shouldRecommendedSettingsBeActivated) {
-            getSitePermissionsRecommendedSettingsRules().microphone
-        } else {
-            preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_microphone), 1)
+        return preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_microphone), 1)
                 .toSitePermissionsRulesAction()
-        }
     }
 
     fun setSitePermissionsPhoneFeatureNotificationAction(action: SitePermissionsRules.Action) {
@@ -147,12 +136,8 @@ class Settings private constructor(context: Context) {
     }
 
     fun getSitePermissionsPhoneFeatureNotificationAction(): SitePermissionsRules.Action {
-        return if (shouldRecommendedSettingsBeActivated) {
-            getSitePermissionsRecommendedSettingsRules().notification
-        } else {
-            return preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_notification), 1)
+        return preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_notification), 1)
                 .toSitePermissionsRulesAction()
-        }
     }
 
     fun setSitePermissionsPhoneFeatureLocation(action: SitePermissionsRules.Action) {
@@ -162,20 +147,9 @@ class Settings private constructor(context: Context) {
     }
 
     fun getSitePermissionsPhoneFeatureLocation(): SitePermissionsRules.Action {
-        return if (shouldRecommendedSettingsBeActivated) {
-            getSitePermissionsRecommendedSettingsRules().location
-        } else {
-            preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_location), 1)
+        return preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_phone_feature_location), 1)
                 .toSitePermissionsRulesAction()
-        }
     }
-
-    fun getSitePermissionsRecommendedSettingsRules() = SitePermissionsRules(
-        camera = SitePermissionsRules.Action.ASK_TO_ALLOW,
-        notification = SitePermissionsRules.Action.ASK_TO_ALLOW,
-        location = SitePermissionsRules.Action.ASK_TO_ALLOW,
-        microphone = SitePermissionsRules.Action.ASK_TO_ALLOW
-    )
 
     fun getSitePermissionsCustomSettingsRules(): SitePermissionsRules {
         return SitePermissionsRules(

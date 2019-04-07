@@ -5,7 +5,6 @@
 package org.mozilla.fenix.settings
 
 import android.os.Bundle
-import android.preference.PreferenceManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.Navigation
 import androidx.preference.Preference
@@ -20,10 +19,6 @@ import org.mozilla.fenix.utils.Settings
 
 @SuppressWarnings("TooManyFunctions")
 class SitePermissionsFragment : PreferenceFragmentCompat() {
-
-    private lateinit var categoryPhoneFeatures: Preference
-    private lateinit var radioRecommendSettings: RadioButtonPreference
-    private lateinit var radioCustomSettings: RadioButtonPreference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,49 +36,10 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
 
     private fun setupPreferences() {
 
-        bindRadioRecommendedSettings()
-
-        bindRadioCustomSettings()
-
         bindCategoryPhoneFeatures()
-
-        setupRadioGroups()
-    }
-
-    private fun setupRadioGroups() {
-        radioRecommendSettings.addToRadioGroup(radioCustomSettings)
-        radioCustomSettings.addToRadioGroup(radioRecommendSettings)
-    }
-
-    private fun bindRadioCustomSettings() {
-        val keyCustomSettings = getString(R.string.pref_key_custom_settings)
-        radioCustomSettings = requireNotNull(findPreference(keyCustomSettings))
-
-        radioCustomSettings.onClickListener {
-            categoryPhoneFeatures.isVisible = true
-        }
-    }
-
-    private fun bindRadioRecommendedSettings() {
-        val keyRecommendSettings = getString(R.string.pref_key_recommended_settings)
-        radioRecommendSettings = requireNotNull(findPreference(keyRecommendSettings))
-
-        radioRecommendSettings.onClickListener {
-            categoryPhoneFeatures.isVisible = false
-        }
     }
 
     private fun bindCategoryPhoneFeatures() {
-        val keyCategoryPhoneFeatures = getString(R.string.pref_key_category_phone_feature)
-
-        categoryPhoneFeatures = requireNotNull(findPreference(keyCategoryPhoneFeatures))
-
-        val isCategoryActivate = PreferenceManager.getDefaultSharedPreferences(requireContext())
-            .getBoolean(radioCustomSettings.key, false)
-        if (isCategoryActivate) {
-            categoryPhoneFeatures.isVisible = true
-        }
-
         val settings = Settings.getInstance(requireContext())
 
         val cameraAction = settings
