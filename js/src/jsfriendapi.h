@@ -467,8 +467,9 @@ typedef enum {
  * Dump the complete object graph of heap-allocated things.
  * fp is the file for the dump output.
  */
-extern JS_FRIEND_API void DumpHeap(JSContext* cx, FILE* fp,
-                                   DumpHeapNurseryBehaviour nurseryBehaviour);
+extern JS_FRIEND_API void DumpHeap(
+    JSContext* cx, FILE* fp, DumpHeapNurseryBehaviour nurseryBehaviour,
+    mozilla::MallocSizeOf mallocSizeOf = nullptr);
 
 #ifdef JS_OLD_GETTER_SETTER_METHODS
 JS_FRIEND_API bool obj_defineGetter(JSContext* cx, unsigned argc,

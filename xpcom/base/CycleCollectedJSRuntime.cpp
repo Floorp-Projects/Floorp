@@ -1196,7 +1196,10 @@ void CycleCollectedJSRuntime::DeferredFinalize(nsISupports* aSupports) {
 
 void CycleCollectedJSRuntime::DumpJSHeap(FILE* aFile) {
   JSContext* cx = CycleCollectedJSContext::Get()->Context();
-  js::DumpHeap(cx, aFile, js::CollectNurseryBeforeDump);
+
+  mozilla::MallocSizeOf mallocSizeOf =
+      PR_GetEnv("MOZ_GC_LOG_SIZE") ? moz_malloc_size_of : nullptr;
+  js::DumpHeap(cx, aFile, js::CollectNurseryBeforeDump, mallocSizeOf);
 }
 
 IncrementalFinalizeRunnable::IncrementalFinalizeRunnable(
