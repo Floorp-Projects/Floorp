@@ -54,6 +54,7 @@ const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
 const {LongStringActor} = require("devtools/server/actors/string");
 const defer = require("devtools/shared/defer");
+const ReplayInspector = require("devtools/server/actors/replay/inspector");
 
 const {inspectorSpec} = require("devtools/shared/specs/inspector");
 
@@ -95,7 +96,7 @@ exports.InspectorActor = protocol.ActorClassWithSpec(inspectorSpec, {
   },
 
   get window() {
-    return this.targetActor.window;
+    return isReplaying ? ReplayInspector.window : this.targetActor.window;
   },
 
   getWalker: function(options = {}) {

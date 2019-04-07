@@ -35,6 +35,8 @@ export function paused(pauseInfo: Pause) {
     const { thread, frames, why, loadedObjects } = pauseInfo;
     const topFrame = frames.length > 0 ? frames[0] : null;
 
+    client.onPauseChange(thread, true);
+
     dispatch({
       type: "PAUSED",
       thread,

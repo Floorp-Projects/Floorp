@@ -16,6 +16,7 @@ const {
   isNativeAnonymous,
 } = require("devtools/shared/layout/utils");
 const Debugger = require("Debugger");
+const ReplayInspector = require("devtools/server/actors/replay/inspector");
 
 // eslint-disable-next-line
 const JQUERY_LIVE_REGEX = /return typeof \w+.*.event\.triggered[\s\S]*\.event\.(dispatch|handle).*arguments/;
@@ -252,17 +253,18 @@ class MainEventCollector {
    *         An array of unfiltered event listeners or an empty array
    */
   getDOMListeners(node) {
+    const els = isReplaying ? ReplayInspector.els : Services.els;
     if (typeof node.nodeName !== "undefined" && node.nodeName.toLowerCase() === "html") {
       const winListeners =
-        Services.els.getListenerInfoFor(node.ownerGlobal) || [];
+        els.getListenerInfoFor(node.ownerGlobal) || [];
       const docElementListeners =
-        Services.els.getListenerInfoFor(node) || [];
+        els.getListenerInfoFor(node) || [];
       const docListeners =
-        Services.els.getListenerInfoFor(node.parentNode) || [];
+        els.getListenerInfoFor(node.parentNode) || [];
 
       return [...winListeners, ...docElementListeners, ...docListeners];
     }
-    return Services.els.getListenerInfoFor(node) || [];
+    return els.getListenerInfoFor(node) || [];
   }
 
   getJQuery(node) {
@@ -870,13 +872,19 @@ class EventCollector {
 
     try {
       const { capturing, handler } = listener;
-      const global = Cu.getGlobalForObject(handler);
 
-      // It is important that we recreate the globalDO for each handler because
-      // their global object can vary e.g. resource:// URLs on a video control. If
-      // we don't do this then all chrome listeners simply display "native code."
-      globalDO = dbg.addDebuggee(global);
-      let listenerDO = globalDO.makeDebuggeeValue(handler);
+      let listenerDO;
+      if (isReplaying) {
+        listenerDO = ReplayInspector.getDebuggerObject(handler);
+      } else {
+        const global = Cu.getGlobalForObject(handler);
+
+        // It is important that we recreate the globalDO for each handler because
+        // their global object can vary e.g. resource:// URLs on a video control. If
+        // we don't do this then all chrome listeners simply display "native code."
+        globalDO = dbg.addDebuggee(global);
+        listenerDO = globalDO.makeDebuggeeValue(handler);
+      }
 
       const { normalizeListener } = listener;
 
