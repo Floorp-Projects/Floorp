@@ -5,7 +5,6 @@ try {
       throw Error
     }
     Object.defineProperty(this, "x", { value: 0 });
-    setJitCompilerOption("baseline.warmup.trigger", 0);
     setJitCompilerOption("ion.warmup.trigger", 0)
   `)
   evaluate(`function f() {} f(x)`)

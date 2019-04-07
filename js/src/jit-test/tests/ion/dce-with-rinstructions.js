@@ -1,6 +1,5 @@
 setJitCompilerOption("baseline.warmup.trigger", 10);
 setJitCompilerOption("ion.warmup.trigger", 20);
-setJitCompilerOption("ion.full.warmup.trigger", 20);
 var i;
 
 var config = getBuildConfiguration();

@@ -17,31 +17,7 @@
 namespace js {
 namespace jit {
 
-// [SMDOC] Ion Optimization Levels
-//
-// Ion can do aggressive inlining, but inlining a lot of code will have a
-// negative effect on compilation time and memory usage. It also means we spend
-// more time in the slower Baseline code while compiling the Ion code
-// off-thread or after an invalidation.
-//
-// To address this, Ion consists of two tiers:
-//
-// * Normal: the first tier (warm-up threshold of 1,000) only inlines small
-//           functions one level deep. This tier also has recompile checks to
-//           recompile the script when it becomes very hot.
-//
-// * Full: the second tier (warm-up threshold of 100,000) is only used for very
-//         hot code so we can afford inlining a lot more code.
-//
-// See MRecompileCheck::RecompileCheckType for more info.
-
-enum class OptimizationLevel : uint8_t {
-  Normal,
-  Full,
-  Wasm,
-  Count,
-  DontCompile
-};
+enum class OptimizationLevel : uint8_t { Normal, Wasm, Count, DontCompile };
 
 #ifdef JS_JITSPEW
 inline const char* OptimizationLevelString(OptimizationLevel level) {
@@ -50,8 +26,6 @@ inline const char* OptimizationLevelString(OptimizationLevel level) {
       return "Optimization_DontCompile";
     case OptimizationLevel::Normal:
       return "Optimization_Normal";
-    case OptimizationLevel::Full:
-      return "Optimization_Full";
     case OptimizationLevel::Wasm:
       return "Optimization_Wasm";
     case OptimizationLevel::Count:;
@@ -60,8 +34,8 @@ inline const char* OptimizationLevelString(OptimizationLevel level) {
 }
 #endif
 
-// Class representing the Ion optimization settings for an OptimizationLevel.
 class OptimizationInfo {
+ public:
   OptimizationLevel level_;
 
   // Toggles whether Effective Address Analysis is performed.
@@ -137,6 +111,20 @@ class OptimizationInfo {
   // Actually it is only needed to make sure we don't blow out the stack.
   uint32_t smallFunctionMaxInlineDepth_;
 
+  // How many invocations or loop iterations are needed before functions
+  // are compiled.
+  uint32_t compilerWarmUpThreshold_;
+
+  // Default compiler warmup threshold, unless it is overridden.
+  static const uint32_t CompilerWarmupThreshold;
+
+  // How many invocations or loop iterations are needed before small functions
+  // are compiled.
+  uint32_t compilerSmallFunctionWarmUpThreshold_;
+
+  // Default small function compiler warmup threshold, unless it is overridden.
+  static const uint32_t CompilerSmallFunctionWarmupThreshold;
+
   // How many invocations or loop iterations are needed before calls
   // are inlined, as a fraction of compilerWarmUpThreshold.
   double inliningWarmUpThresholdFactor_;
@@ -146,26 +134,6 @@ class OptimizationInfo {
   // as a multiplication of inliningWarmUpThreshold.
   uint32_t inliningRecompileThresholdFactor_;
 
-  uint32_t baseCompilerWarmUpThreshold() const {
-    switch (level_) {
-      case OptimizationLevel::Normal:
-        return JitOptions.normalIonWarmUpThreshold;
-      case OptimizationLevel::Full:
-        if (!JitOptions.disableOptimizationLevels) {
-          return JitOptions.fullIonWarmUpThreshold;
-        }
-        // Use the 'normal' threshold so Ion uses a single optimization level,
-        // OptimizationLevel::Full.
-        return JitOptions.normalIonWarmUpThreshold;
-      case OptimizationLevel::DontCompile:
-      case OptimizationLevel::Wasm:
-      case OptimizationLevel::Count:
-        break;
-    }
-    MOZ_CRASH("Unexpected optimization level");
-  }
-
- public:
   constexpr OptimizationInfo()
       : level_(OptimizationLevel::Normal),
         eaa_(false),
@@ -190,11 +158,12 @@ class OptimizationInfo {
         maxInlineDepth_(0),
         scalarReplacement_(false),
         smallFunctionMaxInlineDepth_(0),
+        compilerWarmUpThreshold_(0),
+        compilerSmallFunctionWarmUpThreshold_(0),
         inliningWarmUpThresholdFactor_(0.0),
         inliningRecompileThresholdFactor_(0) {}
 
   void initNormalOptimizationInfo();
-  void initFullOptimizationInfo();
   void initWasmOptimizationInfo();
 
   OptimizationLevel level() const { return level_; }
@@ -209,8 +178,6 @@ class OptimizationInfo {
 
   uint32_t compilerWarmUpThreshold(JSScript* script,
                                    jsbytecode* pc = nullptr) const;
-
-  uint32_t recompileWarmUpThreshold(JSScript* script, jsbytecode* pc) const;
 
   bool gvnEnabled() const { return gvn_ && !JitOptions.disableGvn; }
 
@@ -279,7 +246,10 @@ class OptimizationInfo {
   }
 
   uint32_t inliningWarmUpThreshold() const {
-    return baseCompilerWarmUpThreshold() * inliningWarmUpThresholdFactor_;
+    uint32_t compilerWarmUpThreshold =
+        JitOptions.forcedDefaultIonWarmUpThreshold.valueOr(
+            compilerWarmUpThreshold_);
+    return compilerWarmUpThreshold * inliningWarmUpThresholdFactor_;
   }
 
   uint32_t inliningRecompileThreshold() const {
