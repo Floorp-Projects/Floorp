@@ -321,12 +321,28 @@ nsIFrame* nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame,
     uint32_t flags =
         nsSVGUtils::eForGetClientRects | nsSVGUtils::eBBoxIncludeFill |
         nsSVGUtils::eBBoxIncludeStroke | nsSVGUtils::eBBoxIncludeMarkers;
-    gfxMatrix m = nsSVGUtils::GetUserToCanvasTM(aFrame);
+
+    auto ctm =
+        nsLayoutUtils::GetTransformToAncestor(aFrame, outer, 0, nullptr);
+
+    float appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
+    float initPositionX =
+              NSAppUnitsToFloatPixels(aFrame->GetPosition().x, appUnitsPerDevPixel),
+          initPositionY =
+              NSAppUnitsToFloatPixels(aFrame->GetPosition().y, appUnitsPerDevPixel);
+
+    Matrix mm;
+    ctm.CanDraw2D(&mm);
+    gfxMatrix m = ThebesMatrix(mm);
+
+    // Both nsSVGUtils::GetBBox and nsLayoutUtils::GetTransformToAncestor
+    // will count this displacement, we should remove it here to avoid
+    // double-counting.
+    m = m.PreTranslate(-initPositionX, -initPositionY);
+
     SVGBBox bbox = nsSVGUtils::GetBBox(aFrame, flags, &m);
-    nsRect bounds = nsLayoutUtils::RoundGfxRectToAppRect(
+    *aRect = nsLayoutUtils::RoundGfxRectToAppRect(
         bbox, aFrame->PresContext()->AppUnitsPerDevPixel());
-    nsMargin bp = outer->GetUsedBorderAndPadding();
-    *aRect = bounds + nsPoint(bp.left, bp.top);
   }
 
   return outer;
