@@ -277,8 +277,8 @@ def process_gn_config(gn_config, srcdir, config, output, non_unified_sources,
             context_attrs['LOCAL_INCLUDES'] += [include]
 
         context_attrs['ASFLAGS'] = spec.get('asflags_mozilla', [])
-        if use_defines_in_asflags and defines:
-            context_attrs['ASFLAGS'] += ['-D' + d for d in defines]
+        if use_defines_in_asflags and context_attrs['DEFINES']:
+            context_attrs['ASFLAGS'] += ['-D' + d for d in context_attrs['DEFINES']]
         flags = [_f for _f in spec.get('cflags', []) if _f in mozilla_flags]
         if flags:
             suffix_map = {
