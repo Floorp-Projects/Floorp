@@ -7656,11 +7656,14 @@ static bool ObjectHasExtraOwnProperty(CompileRealm* realm,
 void IonBuilder::insertRecompileCheck() {
   MOZ_ASSERT(pc == script()->code() || *pc == JSOP_LOOPENTRY);
 
-  // No need for recompile checks if this is the highest optimization level.
+  // No need for recompile checks if this is the highest optimization level or
+  // if we're performing an analysis instead of compilation.
   OptimizationLevel curLevel = optimizationLevel();
-  if (IonOptimizations.isLastLevel(curLevel)) {
+  if (IonOptimizations.isLastLevel(curLevel) || info().isAnalysis()) {
     return;
   }
+
+  MOZ_ASSERT(!JitOptions.disableOptimizationLevels);
 
   // Add recompile check. See MRecompileCheck::RecompileCheckType for how this
   // works.
