@@ -60,7 +60,7 @@ const SEARCH_PROVIDER_INFO = {
     "regexp": /^https:\/\/www\.baidu\.com\/(?:s|baidu)/,
     "queryParam": "wd",
     "codeParam": "tn",
-    "codePrefixes": ["monline_dg"],
+    "codePrefixes": ["34046034_", "monline_"],
     "followonParams": ["oq"],
   },
   "bing": {
