@@ -533,6 +533,8 @@ var gShutdownInProgress = false;
 var gPluginPageListener = null;
 var gBrowserUpdated = null;
 
+var AMTelemetry;
+
 /**
  * This is the real manager, kept here rather than in AddonManager to keep its
  * contents hidden from API users.
@@ -700,6 +702,9 @@ var AddonManagerInternal = {
         return;
 
       this.recordTimestamp("AMI_startup_begin");
+
+      // Enable the addonsManager telemetry event category.
+      AMTelemetry.init();
 
       // clear this for xpcshell test restarts
       for (let provider in this.telemetryDetails)
@@ -3501,8 +3506,16 @@ var AddonManager = {
 /**
  * Listens to the AddonManager install and addon events and send telemetry events.
  */
-var AMTelemetry = {
+AMTelemetry = {
   telemetrySetupDone: false,
+
+  init() {
+    // Enable the addonsManager telemetry event category before the AddonManager
+    // has completed its startup, otherwise telemetry events recorded during the
+    // AddonManager/XPIProvider startup will not be recorded (e.g. the telemetry
+    // events for the extension migrated to the private browsing permission).
+    Services.telemetry.setEventRecordingEnabled("addonsManager", true);
+  },
 
   // This method is called by the AddonManager, once it has been started, so that we can
   // init the telemetry event category and start listening for the events related to the
@@ -3513,8 +3526,6 @@ var AMTelemetry = {
     }
 
     this.telemetrySetupDone = true;
-
-    Services.telemetry.setEventRecordingEnabled("addonsManager", true);
 
     Services.obs.addObserver(this, "addon-install-origin-blocked");
     Services.obs.addObserver(this, "addon-install-disabled");

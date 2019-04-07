@@ -70,6 +70,11 @@ function assertTelemetryMatches(events) {
   Assert.deepEqual(relatedEvents, events, "The events are recorded correctly");
 }
 
+add_task(async function test_setup() {
+  // Clear any previosuly collected telemetry event.
+  Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+});
+
 add_task(async function browseraction_popup_contextmenu() {
   let extension = ExtensionTestUtils.loadExtension(extData);
   await extension.startup();
