@@ -4,6 +4,7 @@
 
 package mozilla.components.browser.icons.loader
 
+import android.graphics.Bitmap
 import mozilla.components.browser.icons.Icon
 import mozilla.components.browser.icons.IconRequest
 
@@ -14,7 +15,19 @@ interface IconLoader {
     /**
      * Tries to load the [IconRequest.Resource] for the given [IconRequest].
      */
-    fun load(request: IconRequest, resource: IconRequest.Resource): ByteArray?
+    fun load(request: IconRequest, resource: IconRequest.Resource): Result
 
-    val source: Icon.Source
+    sealed class Result {
+        object NoResult : Result()
+
+        class BitmapResult(
+            val bitmap: Bitmap,
+            val source: Icon.Source
+        ) : Result()
+
+        class BytesResult(
+            val bytes: ByteArray,
+            val source: Icon.Source
+        ) : Result()
+    }
 }

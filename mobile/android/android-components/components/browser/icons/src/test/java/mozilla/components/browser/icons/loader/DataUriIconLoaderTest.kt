@@ -9,7 +9,7 @@ import mozilla.components.browser.icons.IconRequest
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -20,12 +20,15 @@ class DataUriIconLoaderTest {
     fun `Loader returns null for http(s) urls`() {
         val loader = DataUriIconLoader()
 
-        assertNull(loader.load(mock(), IconRequest.Resource(
-            url = "https://www.mozilla.org",
-            type = IconRequest.Resource.Type.FAVICON
-        )))
+        assertEquals(
+            IconLoader.Result.NoResult,
+            loader.load(mock(), IconRequest.Resource(
+                url = "https://www.mozilla.org",
+                type = IconRequest.Resource.Type.FAVICON)))
 
-        assertNull(loader.load(mock(), IconRequest.Resource(
+        assertEquals(
+            IconLoader.Result.NoResult,
+            loader.load(mock(), IconRequest.Resource(
             url = "http://example.org",
             type = IconRequest.Resource.Type.FAVICON
         )))
@@ -35,13 +38,18 @@ class DataUriIconLoaderTest {
     fun `Loader returns bytes for data uri containing png`() {
         val loader = DataUriIconLoader()
 
-        val data = loader.load(mock(), IconRequest.Resource(
+        val result = loader.load(mock(), IconRequest.Resource(
             url = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91Jpz" +
                 "AAAAEklEQVR4AWP4z8AAxCDiP8N/AB3wBPxcBee7AAAAAElFTkSuQmCC",
             type = IconRequest.Resource.Type.FAVICON
         ))
 
-        assertNotNull(data!!)
+        assertTrue(result is IconLoader.Result.BytesResult)
+
+        val data = (result as IconLoader.Result.BytesResult).bytes
+        assertEquals(Icon.Source.INLINE, result.source)
+
+        assertNotNull(data)
         assertEquals(75, data.size)
     }
 
@@ -49,19 +57,17 @@ class DataUriIconLoaderTest {
     fun `Loader returns base64 decoded data`() {
         val loader = DataUriIconLoader()
 
-        val data = loader.load(mock(), IconRequest.Resource(
+        val result = loader.load(mock(), IconRequest.Resource(
             url = "data:image/png;base64,dGhpcyBpcyBhIHRlc3Q=",
             type = IconRequest.Resource.Type.FAVICON
         ))
 
-        assertNotNull(data!!)
+        assertTrue(result is IconLoader.Result.BytesResult)
+
+        val data = (result as IconLoader.Result.BytesResult).bytes
+        assertEquals(Icon.Source.INLINE, result.source)
 
         val text = String(data, Charsets.UTF_8)
         assertEquals("this is a test", text)
-    }
-
-    @Test
-    fun `Loader has source INLINE`() {
-        assertEquals(Icon.Source.INLINE, DataUriIconLoader().source)
     }
 }

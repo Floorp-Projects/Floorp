@@ -17,11 +17,9 @@ import mozilla.components.support.ktx.kotlin.toUri
 class HttpIconLoader(
     private val httpClient: Client
 ) : IconLoader {
-    override val source: Icon.Source = Icon.Source.DOWNLOAD
-
-    override fun load(request: IconRequest, resource: IconRequest.Resource): ByteArray? {
+    override fun load(request: IconRequest, resource: IconRequest.Resource): IconLoader.Result {
         if (!resource.url.toUri().isHttpOrHttps) {
-            return null
+            return IconLoader.Result.NoResult
         }
 
         // Right now we always perform a download. We shouldn't retry to download from URLs that have failed just
@@ -37,7 +35,8 @@ class HttpIconLoader(
         val response = httpClient.fetch(downloadRequest)
 
         return response.body.useStream {
-            it.readBytes()
+            IconLoader.Result.BytesResult(it.readBytes(),
+                Icon.Source.DOWNLOAD)
         }
     }
 }

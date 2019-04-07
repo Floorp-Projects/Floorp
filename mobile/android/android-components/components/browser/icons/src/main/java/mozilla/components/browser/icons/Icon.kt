@@ -35,6 +35,11 @@ data class Icon(
         /**
          * This icon was inlined in the document.
          */
-        INLINE
+        INLINE,
+
+        /**
+         * This icon was loaded from an in-memory cache.
+         */
+        MEMORY
     }
 }

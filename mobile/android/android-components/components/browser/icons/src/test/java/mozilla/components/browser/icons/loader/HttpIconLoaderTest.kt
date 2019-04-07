@@ -13,8 +13,6 @@ import mozilla.components.support.test.mock
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -44,14 +42,17 @@ class HttpIconLoaderTest {
 
             try {
                 val loader = HttpIconLoader(client)
-                val data = loader.load(
+                val result = loader.load(
                     mock(), IconRequest.Resource(
                         url = server.url("/some/path").toString(),
                         type = IconRequest.Resource.Type.APPLE_TOUCH_ICON
                     )
                 )
 
-                assertNotNull(data!!)
+                assertTrue(result is IconLoader.Result.BytesResult)
+
+                val data = (result as IconLoader.Result.BytesResult).bytes
+
                 assertTrue(data.isNotEmpty())
 
                 val text = String(data, Charsets.UTF_8)
@@ -76,13 +77,13 @@ class HttpIconLoaderTest {
     fun `Loader will not perform any requests for data uris`() {
         val client: Client = mock()
 
-        val data = HttpIconLoader(client).load(mock(), IconRequest.Resource(
+        val result = HttpIconLoader(client).load(mock(), IconRequest.Resource(
             url = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAA" +
                 "AAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
             type = IconRequest.Resource.Type.FAVICON
         ))
 
-        assertNull(data)
+        assertEquals(IconLoader.Result.NoResult, result)
         verify(client, never()).fetch(any())
     }
 }

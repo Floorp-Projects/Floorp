@@ -40,7 +40,6 @@ dependencies {
 
     implementation Dependencies.kotlin_stdlib
     implementation Dependencies.kotlin_coroutines
-
     implementation Dependencies.support_annotations
 
     testImplementation project(':support-test')

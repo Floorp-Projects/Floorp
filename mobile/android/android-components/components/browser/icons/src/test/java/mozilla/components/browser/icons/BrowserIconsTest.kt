@@ -14,8 +14,11 @@ import mozilla.components.support.test.mock
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okio.Okio
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertSame
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -26,6 +29,12 @@ import org.robolectric.RobolectricTestRunner
 class BrowserIconsTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
+
+    @Before
+    @After
+    fun cleanUp() {
+        sharedMemoryCache.clear()
+    }
 
     @Test
     fun `Uses generator`() {
@@ -88,6 +97,47 @@ class BrowserIconsTest {
 
             val serverRequest = server.takeRequest()
             assertEquals("/icon128.png", serverRequest.requestUrl.encodedPath())
+        } finally {
+            server.shutdown()
+        }
+    }
+
+    @Test
+    fun `WHEN icon is loaded twice THEN second load is delivered from memory cache`() = runBlocking {
+        val server = MockWebServer()
+
+        server.enqueue(MockResponse().setBody(
+            Okio.buffer(Okio.source(javaClass.getResourceAsStream("/png/mozac.png")!!)).buffer()
+        ))
+
+        server.start()
+
+        try {
+            val icons = BrowserIcons(context, httpClient = HttpURLConnectionClient())
+
+            val request = IconRequest(
+                url = "https://www.mozilla.org",
+                resources = listOf(
+                    IconRequest.Resource(
+                        url = server.url("icon64.png").toString(),
+                        type = IconRequest.Resource.Type.FAVICON
+                    )
+                )
+            )
+
+            val icon = icons.loadIcon(request).await()
+
+            assertEquals(Icon.Source.DOWNLOAD, icon.source)
+            assertNotNull(icon.bitmap)
+
+            val secondIcon = icons.loadIcon(
+                IconRequest("https://www.mozilla.org") // Without resources!
+            ).await()
+
+            assertEquals(Icon.Source.MEMORY, secondIcon.source)
+            assertNotNull(secondIcon.bitmap)
+
+            assertSame(icon.bitmap, secondIcon.bitmap)
         } finally {
             server.shutdown()
         }

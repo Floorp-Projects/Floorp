@@ -12,23 +12,23 @@ import mozilla.components.browser.icons.IconRequest
  * An [IconLoader] implementation that will base64 decode the image bytes from a data:image uri.
  */
 class DataUriIconLoader : IconLoader {
-    override fun load(request: IconRequest, resource: IconRequest.Resource): ByteArray? {
+    override fun load(request: IconRequest, resource: IconRequest.Resource): IconLoader.Result {
         if (!resource.url.startsWith("data:image/")) {
-            return null
+            return IconLoader.Result.NoResult
         }
 
         val offset = resource.url.indexOf(',') + 1
         if (offset == 0) {
-            return null
+            return IconLoader.Result.NoResult
         }
 
         @Suppress("TooGenericExceptionCaught")
         return try {
-            Base64.decode(resource.url.substring(offset), Base64.DEFAULT)
+            IconLoader.Result.BytesResult(
+                Base64.decode(resource.url.substring(offset), Base64.DEFAULT),
+                Icon.Source.INLINE)
         } catch (e: Exception) {
-            null
+            IconLoader.Result.NoResult
         }
     }
-
-    override val source: Icon.Source = Icon.Source.INLINE
 }
