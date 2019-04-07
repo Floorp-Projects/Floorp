@@ -1467,11 +1467,7 @@ pref("javascript.options.unboxed_objects",  false);
 pref("javascript.options.baselinejit",      true);
 //Duplicated in JitOptions - ensure both match.
 pref("javascript.options.baselinejit.threshold", 10);
-#ifdef NO_ION
-pref("javascript.options.ion",              false);
-#else
 pref("javascript.options.ion",              true);
-#endif
 //Duplicated in JitOptions - ensure both match.
 pref("javascript.options.ion.threshold",    1000);
 pref("javascript.options.ion.full.threshold", 100000);
