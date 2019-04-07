@@ -12,7 +12,7 @@ add_task(async function() {
   await addBreakpoint(dbg, "math.min.js", 2);
 
   invokeInTab("arithmetic");
-  await waitForPaused(dbg);
+  await waitForPaused(dbg, "math.min.js");
   assertPausedLocation(dbg);
 
   clickElement(dbg, "prettyPrintButton");
