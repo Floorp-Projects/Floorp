@@ -2043,7 +2043,6 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter, bool aIsRoot)
       mHasOutOfFlowContentInsideFilter(false),
       mSuppressScrollbarRepaints(false),
       mIsUsingMinimumScaleSize(false),
-      mMinimumScaleSizeChanged(false),
       mVelocityQueue(aOuter->PresContext()) {
   if (LookAndFeel::GetInt(LookAndFeel::eIntID_UseOverlayScrollbars) != 0) {
     mScrollbarActivity = new ScrollbarActivity(do_QueryFrame(aOuter));
@@ -5615,37 +5614,9 @@ void ScrollFrameHelper::FinishReflowForScrollbar(Element* aElement,
   SetCoordAttribute(aElement, nsGkAtoms::increment, aIncrement);
 }
 
-class MOZ_RAII AutoMinimumScaleSizeChangeDetector final {
- public:
-  explicit AutoMinimumScaleSizeChangeDetector(
-      ScrollFrameHelper* aScrollFrameHelper)
-      : mHelper(aScrollFrameHelper) {
-    MOZ_ASSERT(mHelper);
-    MOZ_ASSERT(mHelper->mIsRoot);
-
-    mPreviousMinimumScaleSize = aScrollFrameHelper->mMinimumScaleSize;
-    mPreviousIsUsingMinimumScaleSize =
-        aScrollFrameHelper->mIsUsingMinimumScaleSize;
-  }
-  ~AutoMinimumScaleSizeChangeDetector() {
-    if (mPreviousMinimumScaleSize != mHelper->mMinimumScaleSize ||
-        mPreviousIsUsingMinimumScaleSize != mHelper->mIsUsingMinimumScaleSize) {
-      mHelper->mMinimumScaleSizeChanged = true;
-    }
-  }
-
- private:
-  ScrollFrameHelper* mHelper;
-
-  nsSize mPreviousMinimumScaleSize;
-  bool mPreviousIsUsingMinimumScaleSize;
-};
-
 void ScrollFrameHelper::UpdateMinimumScaleSize(
     const nsRect& aScrollableOverflow, const nsSize& aICBSize) {
   MOZ_ASSERT(mIsRoot);
-
-  AutoMinimumScaleSizeChangeDetector minimumScaleSizeChangeDetector(this);
 
   mIsUsingMinimumScaleSize = false;
 
@@ -5714,25 +5685,6 @@ void ScrollFrameHelper::UpdateMinimumScaleSize(
 
 bool ScrollFrameHelper::ReflowFinished() {
   mPostedReflowCallback = false;
-
-  if (mIsRoot && mMinimumScaleSizeChanged &&
-      mOuter->PresShell()->GetIsViewportOverridden() &&
-      !mOuter->PresShell()->IsResolutionUpdatedByApz()) {
-    nsIPresShell* presShell = mOuter->PresShell();
-    RefPtr<MobileViewportManager> manager =
-        presShell->GetMobileViewportManager();
-    MOZ_ASSERT(manager);
-
-    ScreenIntSize displaySize = ViewAs<ScreenPixel>(
-        manager->DisplaySize(),
-        PixelCastJustification::LayoutDeviceIsScreenForBounds);
-
-    Document* doc = presShell->GetDocument();
-    MOZ_ASSERT(doc, "The document should be valid");
-    nsViewportInfo viewportInfo = doc->GetViewportInfo(displaySize);
-    manager->ShrinkToDisplaySizeIfNeeded(viewportInfo, displaySize);
-    mMinimumScaleSizeChanged = false;
-  }
 
   bool doScroll = true;
   if (NS_SUBTREE_DIRTY(mOuter)) {
