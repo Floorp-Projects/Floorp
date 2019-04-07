@@ -1,6 +1,6 @@
 load(libdir + "asm.js");
 
-setJitCompilerOption("ion.full.warmup.trigger", 0);
+setJitCompilerOption("ion.warmup.trigger", 0);
 setJitCompilerOption("baseline.warmup.trigger", 0);
 setJitCompilerOption("offthread-compilation.enable", 0);
 

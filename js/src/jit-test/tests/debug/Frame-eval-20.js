@@ -1,5 +1,3 @@
-// |jit-test| --ion-osr=off
-
 // Eval-in-frame with different type on non-youngest Ion frame.
 
 load(libdir + "jitopts.js");
