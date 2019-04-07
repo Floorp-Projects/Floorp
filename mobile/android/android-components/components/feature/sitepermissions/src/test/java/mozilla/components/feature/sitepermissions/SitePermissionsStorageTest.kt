@@ -103,8 +103,7 @@ class SitePermissionsStorageTest {
             location = BLOCKED,
             notification = NO_DECISION,
             microphone = NO_DECISION,
-            cameraBack = NO_DECISION,
-            cameraFront = NO_DECISION,
+            camera = NO_DECISION,
             bluetooth = ALLOWED,
             savedAt = 0
         )
@@ -118,8 +117,7 @@ class SitePermissionsStorageTest {
                 location = BLOCKED,
                 notification = NO_DECISION,
                 microphone = ALLOWED,
-                cameraBack = BLOCKED,
-                cameraFront = NO_DECISION,
+                camera = BLOCKED,
                 bluetooth = ALLOWED,
                 savedAt = 0
             ),
@@ -129,8 +127,7 @@ class SitePermissionsStorageTest {
                 location = BLOCKED,
                 notification = NO_DECISION,
                 microphone = ALLOWED,
-                cameraBack = BLOCKED,
-                cameraFront = NO_DECISION,
+                camera = BLOCKED,
                 bluetooth = ALLOWED,
                 savedAt = 0
             )

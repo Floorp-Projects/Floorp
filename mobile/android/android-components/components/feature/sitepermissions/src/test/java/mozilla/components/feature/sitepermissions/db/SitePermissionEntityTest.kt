@@ -21,8 +21,7 @@ class SitePermissionEntityTest {
             location = BLOCKED,
             notification = NO_DECISION,
             microphone = NO_DECISION,
-            cameraBack = NO_DECISION,
-            cameraFront = NO_DECISION,
+            camera = NO_DECISION,
             bluetooth = ALLOWED,
             savedAt = 0
         )
@@ -35,8 +34,7 @@ class SitePermissionEntityTest {
             assertEquals(location, domainClass.location)
             assertEquals(notification, domainClass.notification)
             assertEquals(microphone, domainClass.microphone)
-            assertEquals(cameraBack, domainClass.cameraBack)
-            assertEquals(cameraFront, domainClass.cameraFront)
+            assertEquals(camera, domainClass.camera)
             assertEquals(bluetooth, domainClass.bluetooth)
             assertEquals(savedAt, domainClass.savedAt)
         }
@@ -50,8 +48,7 @@ class SitePermissionEntityTest {
             location = BLOCKED,
             notification = NO_DECISION,
             microphone = NO_DECISION,
-            cameraBack = NO_DECISION,
-            cameraFront = NO_DECISION,
+            camera = NO_DECISION,
             bluetooth = ALLOWED,
             savedAt = 0
         )
@@ -64,8 +61,7 @@ class SitePermissionEntityTest {
             assertEquals(location, domainClass.location)
             assertEquals(notification, domainClass.notification)
             assertEquals(microphone, domainClass.microphone)
-            assertEquals(cameraBack, domainClass.cameraBack)
-            assertEquals(cameraFront, domainClass.cameraFront)
+            assertEquals(camera, domainClass.camera)
             assertEquals(bluetooth, domainClass.bluetooth)
             assertEquals(savedAt, domainClass.savedAt)
         }

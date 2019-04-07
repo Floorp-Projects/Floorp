@@ -4,14 +4,13 @@
 
 package mozilla.components.feature.sitepermissions
 
+import android.Manifest.permission.RECORD_AUDIO
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
-import android.graphics.drawable.Drawable
 import android.support.annotation.DrawableRes
 import android.support.annotation.StringRes
 import android.support.annotation.VisibleForTesting
-import android.support.annotation.VisibleForTesting.PRIVATE
 import android.support.v4.content.ContextCompat
 import android.view.View
 import kotlinx.coroutines.CoroutineScope
@@ -33,12 +32,12 @@ import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
 import mozilla.components.support.base.feature.LifecycleAwareFeature
+import mozilla.components.support.ktx.android.content.isPermissionGranted
 import mozilla.components.support.ktx.kotlin.toUri
 import mozilla.components.ui.doorhanger.DoorhangerPrompt
 import mozilla.components.ui.doorhanger.DoorhangerPrompt.Button
 import mozilla.components.ui.doorhanger.DoorhangerPrompt.Control
 import mozilla.components.ui.doorhanger.DoorhangerPrompt.Control.CheckBox
-import mozilla.components.ui.doorhanger.DoorhangerPrompt.Control.RadioButton
 import mozilla.components.ui.doorhanger.DoorhangerPrompt.ControlGroup
 import java.security.InvalidParameterException
 
@@ -171,10 +170,20 @@ class SitePermissionsFeature(
         request: PermissionRequest
     ): DoorhangerPrompt? {
 
-        return if (shouldApplyRules(request.host)) {
+        // Preventing this behavior https://github.com/mozilla-mobile/android-components/issues/2668
+        if (request.isMicrophone && isMicrophoneAndroidPermissionNotGranted) {
+            request.reject()
+            return null
+        }
+
+        val permissionFromStorage = withContext(ioCoroutineScope.coroutineContext) {
+            storage.findSitePermissionsBy(request.host)
+        }
+
+        return if (shouldApplyRules(permissionFromStorage)) {
             handleRuledFlow(request, session)
         } else {
-            handleNoRuledFlow(request, session)
+            handleNoRuledFlow(permissionFromStorage, request, session)
         }
     }
 
@@ -185,14 +194,11 @@ class SitePermissionsFeature(
         } as CheckBox?
     }
 
-    private suspend fun handleNoRuledFlow(
+    private fun handleNoRuledFlow(
+        permissionFromStorage: SitePermissions?,
         permissionRequest: PermissionRequest,
         session: Session
     ): DoorhangerPrompt? {
-        val permissionFromStorage = withContext(ioCoroutineScope.coroutineContext) {
-            storage.findSitePermissionsBy(permissionRequest.host)
-        }
-
         return if (shouldShowPrompt(permissionRequest, permissionFromStorage)) {
             createPrompt(permissionRequest, session)
         } else {
@@ -210,9 +216,7 @@ class SitePermissionsFeature(
         permissionRequest: PermissionRequest,
         permissionFromStorage: SitePermissions?
     ): Boolean {
-        return (permissionRequest.containsVideoAndAudioSources() ||
-            permissionFromStorage == null ||
-            !permissionRequest.doNotAskAgain(permissionFromStorage))
+        return (permissionFromStorage == null || !permissionRequest.doNotAskAgain(permissionFromStorage))
     }
 
     private fun handleRuledFlow(permissionRequest: PermissionRequest, session: Session): DoorhangerPrompt? {
@@ -229,8 +233,8 @@ class SitePermissionsFeature(
         }
     }
 
-    private fun shouldApplyRules(host: String) =
-        sitePermissionsRules != null && !requireNotNull(sitePermissionsRules).isHostInExceptions(host)
+    private fun shouldApplyRules(permissionFromStorage: SitePermissions?) =
+        sitePermissionsRules != null && permissionFromStorage == null
 
     private fun PermissionRequest.doNotAskAgain(permissionFromStore: SitePermissions): Boolean {
         return permissions.any { permission ->
@@ -238,12 +242,14 @@ class SitePermissionsFeature(
                 is ContentGeoLocation -> {
                     permissionFromStore.location.doNotAskAgain()
                 }
+                is ContentNotification -> {
+                    permissionFromStore.notification.doNotAskAgain()
+                }
                 is ContentAudioCapture, is ContentAudioMicrophone -> {
                     permissionFromStore.microphone.doNotAskAgain()
                 }
                 is ContentVideoCamera, is ContentVideoCapture -> {
-                    permissionFromStore.cameraFront.doNotAskAgain() &&
-                        permissionFromStore.cameraBack.doNotAskAgain()
+                    permissionFromStore.camera.doNotAskAgain()
                 }
                 else -> false
             }
@@ -281,11 +287,7 @@ class SitePermissionsFeature(
                 sitePermissions.copy(microphone = status)
             }
             is ContentVideoCamera, is ContentVideoCapture -> {
-                if (permission.isFrontCamera) {
-                    sitePermissions.copy(cameraFront = status)
-                } else {
-                    sitePermissions.copy(cameraBack = status)
-                }
+                sitePermissions.copy(camera = status)
             }
             else ->
                 throw InvalidParameterException("$permission is not a valid permission.")
@@ -314,9 +316,10 @@ class SitePermissionsFeature(
         }
 
         prompt = if (!permissionRequest.containsVideoAndAudioSources()) {
-            handlingSingleContentPermissions(session, permissionRequest, host, allowButton, denyButton)
+            val permission = permissionRequest.permissions.first()
+            handlingSingleContentPermissions(permission, host, allowButton, denyButton)
         } else {
-            createVideoAndAudioPrompt(session, permissionRequest, host, allowButtonTitle, denyButton)
+            createVideoAndAudioPrompt(host, allowButton, denyButton)
         }
 
         prompt.createDoorhanger(context).show(anchorView)
@@ -347,56 +350,29 @@ class SitePermissionsFeature(
         }
     }
 
-    @SuppressLint("VisibleForTests")
     private fun createVideoAndAudioPrompt(
-        session: Session,
-        permissionRequest: PermissionRequest,
-        host: String,
-        allowButtonTitle: String,
-        denyButton: Button
-    ): DoorhangerPrompt {
-        val context = anchorView.context
-        val title = context.getString(R.string.mozac_feature_sitepermissions_microfone_title, host)
-
-        val microphoneIcon = ContextCompat.getDrawable(context, R.drawable.mozac_ic_microphone)
-        val microphoneControlGroups = createControlGroupForMicrophonePermission(
-            icon = microphoneIcon,
-            shouldIncludeDoNotAskAgainCheckBox = false
-        )
-
-        val cameraIcon = ContextCompat.getDrawable(context, R.drawable.mozac_ic_video)
-        val cameraControlGroup = createControlGroupForCameraPermission(
-            icon = cameraIcon,
-            cameraPermissions = permissionRequest.cameraPermissions,
-            shouldIncludeDoNotAskAgainCheckBox = false
-        )
-
-        val allowButton = Button(allowButtonTitle, true) {
-            val selectedCameraPermission: Permission =
-                findSelectedPermission(cameraControlGroup, permissionRequest.cameraPermissions)
-
-            val selectedMicrophonePermission: Permission =
-                findSelectedPermission(microphoneControlGroups, permissionRequest.microphonePermissions)
-
-            onContentPermissionGranted(session, listOf(selectedCameraPermission, selectedMicrophonePermission), false)
-        }
-
-        return DoorhangerPrompt(
-            title = title,
-            controlGroups = listOf(cameraControlGroup, microphoneControlGroups),
-            buttons = listOf(denyButton, allowButton)
-        )
-    }
-
-    private fun handlingSingleContentPermissions(
-        session: Session,
-        permissionRequest: PermissionRequest,
         host: String,
         allowButton: Button,
         denyButton: Button
     ): DoorhangerPrompt {
         val context = anchorView.context
-        val permission = permissionRequest.permissions.first()
+        return createSinglePermissionPrompt(
+            context,
+            host,
+            R.string.mozac_feature_sitepermissions_camera_and_microphone,
+            R.drawable.mozac_ic_microphone,
+            listOf(denyButton, allowButton),
+            shouldIncludeDoNotAskAgainCheckBox = true
+        )
+    }
+
+    private fun handlingSingleContentPermissions(
+        permission: Permission,
+        host: String,
+        allowButton: Button,
+        denyButton: Button
+    ): DoorhangerPrompt {
+        val context = anchorView.context
         val buttons = listOf(denyButton, allowButton)
 
         return when (permission) {
@@ -420,20 +396,23 @@ class SitePermissionsFeature(
                 )
             }
             is ContentAudioCapture, is ContentAudioMicrophone -> {
-                createPromptForMicrophonePermission(
+                createSinglePermissionPrompt(
                     context,
                     host,
-                    buttons
+                    R.string.mozac_feature_sitepermissions_microfone_title,
+                    R.drawable.mozac_ic_microphone,
+                    buttons,
+                    shouldIncludeDoNotAskAgainCheckBox = true
                 )
             }
             is ContentVideoCamera, is ContentVideoCapture -> {
-                createPromptForCameraPermission(
+                createSinglePermissionPrompt(
                     context,
                     host,
-                    permissionRequest,
-                    session,
-                    allowButton.label,
-                    denyButton
+                    R.string.mozac_feature_sitepermissions_camera_title,
+                    R.drawable.mozac_ic_video,
+                    buttons,
+                    shouldIncludeDoNotAskAgainCheckBox = true
                 )
             }
             else ->
@@ -469,140 +448,12 @@ class SitePermissionsFeature(
         )
     }
 
-    @SuppressLint("VisibleForTests")
-    private fun createPromptForMicrophonePermission(
-        context: Context,
-        host: String,
-        buttons: List<Button>
-    ): DoorhangerPrompt {
-
-        val title = context.getString(R.string.mozac_feature_sitepermissions_microfone_title, host)
-        val drawable = ContextCompat.getDrawable(context, R.drawable.mozac_ic_microphone)
-        val controlGroup = createControlGroupForMicrophonePermission(shouldIncludeDoNotAskAgainCheckBox = true)
-
-        return DoorhangerPrompt(
-            title = title,
-            icon = drawable,
-            controlGroups = listOf(controlGroup),
-            buttons = buttons
-        )
-    }
-
-    private fun createControlGroupForMicrophonePermission(
-        icon: Drawable? = null,
-        shouldIncludeDoNotAskAgainCheckBox: Boolean
-    ): ControlGroup {
-        val context = anchorView.context
-        val optionTitle = context.getString(R.string.mozac_feature_sitepermissions_option_microphone_one)
-        val microphoneRadioButton = RadioButton(optionTitle)
-
-        val controls = mutableListOf<Control>(microphoneRadioButton)
-        if (shouldIncludeDoNotAskAgainCheckBox) {
-            controls.add(createDoNotAskAgainCheckBox(anchorView.context))
-        }
-
-        return ControlGroup(icon, controls = controls)
-    }
-
     private fun createDoNotAskAgainCheckBox(context: Context): CheckBox {
         val doNotAskAgainTitle = context.getString(
-            R.string.mozac_feature_sitepermissions_do_not_ask_again_on_this_site2)
+            R.string.mozac_feature_sitepermissions_do_not_ask_again_on_this_site2
+        )
         return CheckBox(doNotAskAgainTitle, true)
     }
-
-    @Suppress("LongParameterList")
-    @SuppressLint("VisibleForTests")
-    private fun createPromptForCameraPermission(
-        context: Context,
-        uriString: String,
-        permissionRequest: PermissionRequest,
-        session: Session,
-        allowButtonTitle: String,
-        denyButton: Button
-    ): DoorhangerPrompt {
-
-        val title = context.getString(R.string.mozac_feature_sitepermissions_microfone_title, uriString)
-        val drawable = ContextCompat.getDrawable(context, R.drawable.mozac_ic_video)
-
-        val controlGroup = createControlGroupForCameraPermission(
-            cameraPermissions = permissionRequest.cameraPermissions,
-            shouldIncludeDoNotAskAgainCheckBox = true
-        )
-
-        val allowButton = Button(allowButtonTitle, true) {
-            val selectedPermission: Permission =
-                findSelectedPermission(controlGroup, permissionRequest.cameraPermissions)
-            val doNotAskAgain = findDoNotAskAgainCheckBox(controlGroup.controls)?.checked ?: false
-            onContentPermissionGranted(session, listOf(selectedPermission), doNotAskAgain)
-        }
-
-        return DoorhangerPrompt(
-            title = title,
-            icon = drawable,
-            controlGroups = listOf(controlGroup),
-            buttons = listOf(denyButton, allowButton)
-        )
-    }
-
-    @VisibleForTesting(otherwise = PRIVATE)
-    internal fun findSelectedPermission(controlGroup: ControlGroup, permissions: List<Permission>): Permission {
-        controlGroup.controls.forEachIndexed { index, control ->
-            if (control is RadioButton && control.checked) {
-                return permissions[index]
-            }
-        }
-        throw NoSuchElementException("Unable to find the selected permission on $permissions")
-    }
-
-    @VisibleForTesting(otherwise = PRIVATE)
-    internal fun createControlGroupForCameraPermission(
-        icon: Drawable? = null,
-        cameraPermissions: List<Permission>,
-        shouldIncludeDoNotAskAgainCheckBox: Boolean
-    ): ControlGroup {
-
-        val (titleOption1, titleOption2) = getCameraTextOptions(cameraPermissions)
-
-        val option1 = RadioButton(titleOption1)
-
-        val option2 = RadioButton(titleOption2)
-
-        val controls = mutableListOf<Control>(option1, option2)
-        if (shouldIncludeDoNotAskAgainCheckBox) {
-            controls.add(createDoNotAskAgainCheckBox(anchorView.context))
-        }
-        return ControlGroup(icon, controls = controls)
-    }
-
-    private fun getCameraTextOptions(cameraPermissions: List<Permission>): Pair<String, String> {
-        val context = anchorView.context
-        val option1Text = if (cameraPermissions[0].isBackCamera) {
-            R.string.mozac_feature_sitepermissions_back_facing_camera2
-        } else {
-            R.string.mozac_feature_sitepermissions_selfie_camera2
-        }
-
-        val option2Text = if (cameraPermissions[1].isBackCamera) {
-            R.string.mozac_feature_sitepermissions_back_facing_camera2
-        } else {
-            R.string.mozac_feature_sitepermissions_selfie_camera2
-        }
-        return context.getString(option1Text) to context.getString(option2Text)
-    }
-
-    private val PermissionRequest.cameraPermissions: List<Permission>
-        get() {
-            return permissions.filter {
-                it is ContentVideoCamera || it is ContentVideoCapture
-            }
-        }
-
-    private val PermissionRequest.microphonePermissions: List<Permission>
-        get() {
-            return permissions.filter {
-                it is ContentAudioCapture || it is ContentAudioMicrophone
-            }
-        }
 
     private fun onAppPermissionRequested(permissionRequest: PermissionRequest): Boolean {
         val permissions = permissionRequest.permissions.map { it.id ?: "" }
@@ -611,8 +462,21 @@ class SitePermissionsFeature(
     }
 
     private val PermissionRequest.host get() = uri?.toUri()?.host ?: ""
-    private val Permission.isBackCamera get() = desc?.contains("back") ?: false
-    private val Permission.isFrontCamera get() = desc?.contains("front") ?: false
+    private val PermissionRequest.isMicrophone: Boolean
+        get() {
+            if (containsVideoAndAudioSources()) {
+                return false
+            }
+            return when (permissions.first()) {
+                is ContentAudioCapture, is ContentAudioMicrophone -> true
+                else -> false
+            }
+        }
+
+    private val isMicrophoneAndroidPermissionNotGranted: Boolean
+        get() {
+            return !anchorView.context.isPermissionGranted(RECORD_AUDIO)
+        }
 
     internal class SitePermissionsRequestObserver(
         sessionManager: SessionManager,
@@ -657,7 +521,7 @@ private fun isPermissionGranted(
             permissionFromStorage.microphone.isAllowed()
         }
         is ContentVideoCamera, is ContentVideoCapture -> {
-            permissionFromStorage.cameraBack.isAllowed() || permissionFromStorage.cameraFront.isAllowed()
+            permissionFromStorage.camera.isAllowed()
         }
         else ->
             throw InvalidParameterException("$permission is not a valid permission.")
@@ -666,20 +530,16 @@ private fun isPermissionGranted(
 
 @VisibleForTesting
 internal fun PermissionRequest.shouldIncludeDoNotAskAgainCheckBox(): Boolean {
-    return if (this.containsVideoAndAudioSources()) {
-        false
-    } else {
-        this.permissions.any { permission ->
-            when (permission) {
-                is ContentGeoLocation,
-                is ContentVideoCamera,
-                is ContentVideoCapture,
-                is ContentAudioCapture,
-                is ContentAudioMicrophone -> {
-                    true
-                }
-                else -> false
+    return this.permissions.any { permission ->
+        when (permission) {
+            is ContentGeoLocation,
+            is ContentVideoCamera,
+            is ContentVideoCapture,
+            is ContentAudioCapture,
+            is ContentAudioMicrophone -> {
+                true
             }
+            else -> false
         }
     }
 }

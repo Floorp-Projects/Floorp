@@ -12,6 +12,7 @@ import android.util.AttributeSet
 import android.widget.FrameLayout
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.permission.PermissionRequest
 
 import org.mozilla.geckoview.GeckoResult
 
@@ -47,6 +48,8 @@ class GeckoEngineView @JvmOverloads constructor(
                 currentSession?.let { currentGeckoView.setSession(it.geckoSession) }
             }
         }
+        override fun onAppPermissionRequest(permissionRequest: PermissionRequest) = Unit
+        override fun onContentPermissionRequest(permissionRequest: PermissionRequest) = Unit
     }
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)

@@ -28,11 +28,8 @@ internal data class SitePermissionsEntity(
     @ColumnInfo(name = "microphone")
     var microphone: SitePermissions.Status,
 
-    @ColumnInfo(name = "camera_back")
-    var cameraBack: SitePermissions.Status,
-
-    @ColumnInfo(name = "camera_front")
-    var cameraFront: SitePermissions.Status,
+    @ColumnInfo(name = "camera")
+    var camera: SitePermissions.Status,
 
     @ColumnInfo(name = "bluetooth")
     var bluetooth: SitePermissions.Status,
@@ -50,8 +47,7 @@ internal data class SitePermissionsEntity(
             location,
             notification,
             microphone,
-            cameraBack,
-            cameraFront,
+            camera,
             bluetooth,
             localStorage,
             savedAt
@@ -65,8 +61,7 @@ internal fun SitePermissions.toSitePermissionsEntity(): SitePermissionsEntity {
         location,
         notification,
         microphone,
-        cameraBack,
-        cameraFront,
+        camera,
         bluetooth,
         localStorage,
         savedAt

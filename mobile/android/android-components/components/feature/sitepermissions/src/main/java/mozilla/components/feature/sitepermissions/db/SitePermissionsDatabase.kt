@@ -4,18 +4,20 @@
 
 package mozilla.components.feature.sitepermissions.db
 
+import android.arch.persistence.db.SupportSQLiteDatabase
 import android.arch.persistence.room.Database
 import android.arch.persistence.room.Room
 import android.arch.persistence.room.RoomDatabase
 import android.arch.persistence.room.TypeConverter
 import android.arch.persistence.room.TypeConverters
+import android.arch.persistence.room.migration.Migration
 import android.content.Context
 import mozilla.components.feature.sitepermissions.SitePermissions
 
 /**
  * Internal database for saving site permissions.
  */
-@Database(entities = [SitePermissionsEntity::class], version = 1)
+@Database(entities = [SitePermissionsEntity::class], version = 2)
 @TypeConverters(StatusConverter::class)
 internal abstract class SitePermissionsDatabase : RoomDatabase() {
     abstract fun sitePermissionsDao(): SitePermissionsDao
@@ -32,6 +34,8 @@ internal abstract class SitePermissionsDatabase : RoomDatabase() {
                 context,
                 SitePermissionsDatabase::class.java,
                 "site_permissions_database"
+            ).addMigrations(
+                Migrations.migration_1_2
             ).build().also { instance = it }
         }
     }
@@ -49,5 +53,28 @@ internal class StatusConverter {
     @TypeConverter
     fun toStatus(index: Int): SitePermissions.Status? {
         return statusArray.find { it.id == index }
+    }
+}
+
+internal object Migrations {
+    val migration_1_2 = object : Migration(1, 2) {
+        override fun migrate(database: SupportSQLiteDatabase) {
+            // Version 1 is used in Nightly builds of Fenix, but not in production. Let's just skip actually migrating
+            // anything and let's re-create the "site_permissions" table.
+
+            database.execSQL("DROP TABLE site_permissions")
+            database.execSQL(
+                "CREATE TABLE IF NOT EXISTS `site_permissions` (" +
+                    "`origin` TEXT NOT NULL, " +
+                    "`location` INTEGER NOT NULL, " +
+                    "`notification` INTEGER NOT NULL, " +
+                    "`microphone` INTEGER NOT NULL, " +
+                    "`camera` INTEGER NOT NULL, " +
+                    "`bluetooth` INTEGER NOT NULL, " +
+                    "`local_storage` INTEGER NOT NULL, " +
+                    "`saved_at` INTEGER NOT NULL," +
+                    " PRIMARY KEY(`origin`))"
+            )
+        }
     }
 }

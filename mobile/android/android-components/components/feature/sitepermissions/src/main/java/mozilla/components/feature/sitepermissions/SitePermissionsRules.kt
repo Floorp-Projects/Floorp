@@ -4,7 +4,6 @@
 
 package mozilla.components.feature.sitepermissions
 
-import android.net.Uri
 import mozilla.components.concept.engine.permission.Permission
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
@@ -17,8 +16,7 @@ data class SitePermissionsRules(
     val camera: Action,
     val location: Action,
     val notification: Action,
-    val microphone: Action,
-    val exceptions: List<Uri>? = null
+    val microphone: Action
 ) {
     enum class Action {
         BLOCKED, ASK_TO_ALLOW;
@@ -29,16 +27,6 @@ data class SitePermissionsRules(
             getActionForCombinedPermission()
         } else {
             getActionForSinglePermission(request.permissions.first())
-        }
-    }
-
-    internal fun isHostInExceptions(host: String): Boolean {
-        if (exceptions == null || exceptions.isEmpty()) {
-            return false
-        }
-
-        return exceptions.any {
-            it.host == host
         }
     }
 

@@ -1,0 +1,81 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+package mozilla.components.feature.sitepermissions.db
+
+import android.arch.persistence.room.Room
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
+import mozilla.components.feature.sitepermissions.SitePermissions
+import mozilla.components.feature.sitepermissions.SitePermissions.Status.ALLOWED
+import mozilla.components.feature.sitepermissions.SitePermissions.Status.BLOCKED
+import mozilla.components.support.ktx.kotlin.toUri
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Before
+import org.junit.Test
+
+class SitePermissionsDaoTest {
+
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
+    private lateinit var database: SitePermissionsDatabase
+    private lateinit var dao: SitePermissionsDao
+
+    @Before
+    fun setUp() {
+        database = Room.inMemoryDatabaseBuilder(context, SitePermissionsDatabase::class.java).build()
+        dao = database.sitePermissionsDao()
+    }
+
+    @After
+    fun tearDown() {
+        database.close()
+    }
+
+    @Test
+    fun testInsertingAndReadingSitePermissions() {
+        val origin = insertMockSitePermissions("https://www.mozilla.org")
+
+        val siteFromDb = dao.getSitePermissionsBy(origin)!!.toSitePermission()
+
+        assertEquals(origin, siteFromDb.origin)
+        assertEquals(BLOCKED, siteFromDb.camera)
+    }
+
+    @Test
+    fun testUpdateAndDeleteSitePermissions() {
+        val origin = insertMockSitePermissions("https://www.mozilla.org")
+        var siteFromDb = dao.getSitePermissionsBy(origin)!!.toSitePermission()
+
+        assertEquals(BLOCKED, siteFromDb.camera)
+
+        dao.update(siteFromDb.copy(camera = ALLOWED).toSitePermissionsEntity())
+
+        siteFromDb = dao.getSitePermissionsBy(origin)!!.toSitePermission()
+
+        assertEquals(ALLOWED, siteFromDb.camera)
+
+        dao.deleteSitePermissions(siteFromDb.toSitePermissionsEntity())
+
+        val notFoundSitePermissions = dao.getSitePermissionsBy(origin)?.toSitePermission()
+
+        assertNull(notFoundSitePermissions)
+    }
+
+    private fun insertMockSitePermissions(url: String): String {
+        val origin = url.toUri().host!!
+        val sitePermissions = SitePermissions(
+            origin = origin,
+            camera = BLOCKED,
+            savedAt = System.currentTimeMillis()
+        )
+        dao.insert(
+            sitePermissions.toSitePermissionsEntity()
+        )
+        return origin
+    }
+}

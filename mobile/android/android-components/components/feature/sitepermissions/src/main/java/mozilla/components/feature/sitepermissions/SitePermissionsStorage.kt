@@ -35,7 +35,7 @@ class SitePermissionsStorage(
      * Persists the [sitePermissions] provided as a parameter.
      * @param sitePermissions the [sitePermissions] to be stored.
      */
-    internal fun save(sitePermissions: SitePermissions) {
+    fun save(sitePermissions: SitePermissions) {
         database
             .sitePermissionsDao()
             .insert(
@@ -78,8 +78,7 @@ class SitePermissionsStorage(
             with(permission) {
                 map.putIfAllowed(BLUETOOTH, bluetooth, permission)
                 map.putIfAllowed(MICROPHONE, microphone, permission)
-                map.putIfAllowed(CAMERA, cameraFront, permission)
-                map.putIfAllowed(CAMERA, cameraBack, permission)
+                map.putIfAllowed(CAMERA, camera, permission)
                 map.putIfAllowed(LOCAL_STORAGE, localStorage, permission)
                 map.putIfAllowed(NOTIFICATION, notification, permission)
                 map.putIfAllowed(LOCATION, location, permission)
