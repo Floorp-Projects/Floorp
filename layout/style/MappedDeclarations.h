@@ -106,11 +106,6 @@ class MappedDeclarations final {
     Servo_DeclarationBlock_SetCounterSetListItem(mDecl, aValue);
   }
 
-  // Set "counter-increment: list-item <integer>".
-  void SetCounterIncrementListItem(int32_t aValue) {
-    Servo_DeclarationBlock_SetCounterIncrementListItem(mDecl, aValue);
-  }
-
   // Set a property to a pixel value
   void SetPixelValue(nsCSSPropertyID aId, float aValue) {
     Servo_DeclarationBlock_SetPixelValue(mDecl, aId, aValue);
