@@ -3,6 +3,7 @@
      xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1">
   <style type="text/css">
 text { font: 20px monospace; }
+#css-trans-rect-2 { transform: scaleX(2) }
   </style>
 
 <g id="g">
@@ -71,5 +72,7 @@ text { font: 20px monospace; }
   <line id="rotatedLine1" x1="160" y1="150" x2="180" y2="170"
         stroke="darkmagenta" stroke-width="10"
         transform="rotate(-45 160 150)" />
+
+  <rect id="css-trans-rect-2" x="5" y="5" width="6" height="6"></rect>
 </g>
 </svg>

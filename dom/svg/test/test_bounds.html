@@ -7,6 +7,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=463934
   <title>Test for Bug 463934</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <style>
+    #css-trans-rect-1 {
+      transform: scaleX(2)
+    }
+  </style>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=463934">Mozilla Bug 463934</a>
@@ -21,6 +26,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=463934
   </svg>
   <svg id="outer-4" xmlns="http://www.w3.org/2000/svg" width="30" height="30"
        style="border: 10px solid black; padding: 10px">
+  </svg>
+  <svg id="outer-5" xmlns="http://www.w3.org/2000/svg" width="30" height="30">
+    <rect id="css-trans-rect-1" width="6" height="6"></rect>
   </svg>
 </div>
 
@@ -66,6 +74,10 @@ function runTest() {
   bounds = document.getElementById("outer-4").getBoundingClientRect();
   is(bounds.width, 70, "outer-svg 4 getBoundingClientRect().width");
   is(bounds.height, 70, "outer-svg 4 getBoundingClientRect().height");
+
+  bounds = document.getElementById("css-trans-rect-1").getBoundingClientRect();
+  is(bounds.width, 12, "css-trans-rect getBoundingClientRect().width");
+  is(bounds.height, 6, "css-trans-rect getBoundingClientRect().height");
 
   var doc = $("svg").contentWindow.document;
 
@@ -278,6 +290,13 @@ function runTest() {
     "rotatedLine1Bounds.width");
   isWithAbsTolerance(rotatedLine1Bounds.height, 10, 0.1,
     "rotatedLine1Bounds.height");
+
+  var cssTransRect2Bounds =
+    doc.getElementById("css-trans-rect-2").getBoundingClientRect();
+  is(cssTransRect2Bounds.left, 10, "cssTransRect2Bounds.left");
+  is(cssTransRect2Bounds.top, 5, "cssTransRect2Bounds.top");
+  is(cssTransRect2Bounds.width, 12, "cssTransRect2Bounds.width");
+  is(cssTransRect2Bounds.height, 6, "cssTransRect2Bounds.height");
 
   SimpleTest.finish();
 }
