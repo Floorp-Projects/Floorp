@@ -19,6 +19,8 @@ const {
   getCSSStyleRules,
 } = require("devtools/shared/inspector/css-logic");
 const InspectorUtils = require("InspectorUtils");
+const Debugger = require("Debugger");
+const ReplayInspector = require("devtools/server/actors/replay/inspector");
 
 // Set up a dummy environment so that EventUtils works. We need to be careful to
 // pass a window object into each EventUtils method we call rather than having
@@ -299,6 +301,11 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
   },
 
   get content() {
+    // When replaying, the content window is in the replaying process. We can't
+    // use isReplaying here because this actor is loaded into its own sandbox.
+    if (Debugger.recordReplayProcessKind() == "Middleman") {
+      return ReplayInspector.window;
+    }
     return this.targetActor.window;
   },
 
@@ -476,6 +483,20 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
   },
 
   /**
+   * Get the window which mouse events on node should be delivered to.
+   */
+  windowForMouseEvent: function(node) {
+    // When replaying, the node is a proxy for an element in the replaying
+    // process. Use the window which the server is running against, which is
+    // able to receive events. We can't use isReplaying here because this actor
+    // is loaded into its own sandbox.
+    if (Debugger.recordReplayProcessKind() == "Middleman") {
+      return this.targetActor.window;
+    }
+    return node.ownerDocument.defaultView;
+  },
+
+  /**
    * Synthesize a mouse event on an element, after ensuring that it is visible
    * in the viewport. This handler doesn't send a message back. Consumers
    * should listen to specific events on the inspector/highlighter to know when
@@ -491,9 +512,9 @@ var TestActor = exports.TestActor = protocol.ActorClassWithSpec(testSpec, {
     const node = this._querySelector(selector);
     node.scrollIntoView();
     if (center) {
-      EventUtils.synthesizeMouseAtCenter(node, options, node.ownerDocument.defaultView);
+      EventUtils.synthesizeMouseAtCenter(node, options, this.windowForMouseEvent(node));
     } else {
-      EventUtils.synthesizeMouse(node, x, y, options, node.ownerDocument.defaultView);
+      EventUtils.synthesizeMouse(node, x, y, options, this.windowForMouseEvent(node));
     }
   },
 
