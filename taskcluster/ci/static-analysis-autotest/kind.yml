@@ -64,6 +64,7 @@ jobs:
 
     win64-st-autotest/debug:
         description: "Win64 Debug Static Analysis Autotest"
+        run-on-projects: [] # Don't run by default until bug 1503453 has been fixed.
         index:
             job-name: win64-st-autotest-debug
         treeherder:
