@@ -118,13 +118,6 @@ class OptimizationInfo {
   // Default compiler warmup threshold, unless it is overridden.
   static const uint32_t CompilerWarmupThreshold;
 
-  // How many invocations or loop iterations are needed before small functions
-  // are compiled.
-  uint32_t compilerSmallFunctionWarmUpThreshold_;
-
-  // Default small function compiler warmup threshold, unless it is overridden.
-  static const uint32_t CompilerSmallFunctionWarmupThreshold;
-
   // How many invocations or loop iterations are needed before calls
   // are inlined, as a fraction of compilerWarmUpThreshold.
   double inliningWarmUpThresholdFactor_;
@@ -159,7 +152,6 @@ class OptimizationInfo {
         scalarReplacement_(false),
         smallFunctionMaxInlineDepth_(0),
         compilerWarmUpThreshold_(0),
-        compilerSmallFunctionWarmUpThreshold_(0),
         inliningWarmUpThresholdFactor_(0.0),
         inliningRecompileThresholdFactor_(0) {}
 
