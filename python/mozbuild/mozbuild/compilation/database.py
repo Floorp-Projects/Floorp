@@ -13,11 +13,8 @@ from mozbuild.frontend.data import (
     Sources,
     GeneratedSources,
     DirectoryTraversal,
-    Linkable,
-    LocalInclude,
     PerSourceFlag,
     VariablePassthru,
-    SimpleProgram,
 )
 from mozbuild.shellutil import (
     quote as shell_quote,

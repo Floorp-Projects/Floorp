@@ -6,8 +6,6 @@
 
 from __future__ import absolute_import
 
-import os
-
 from mach.decorators import (
     CommandArgument,
     CommandProvider,

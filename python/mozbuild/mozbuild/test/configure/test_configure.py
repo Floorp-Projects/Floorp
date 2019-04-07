@@ -639,18 +639,20 @@ class TestConfigure(unittest.TestCase):
             mozpath.join(test_data_path, 'imply_option', 'imm.configure'))
 
         with self.assertRaisesRegexp(InvalidOptionError,
-                                     "--enable-foo' implied by 'imply_option at %s:7' conflicts with "
-                                     "'--disable-foo' from the command-line" % config_path):
+                                     "--enable-foo' implied by 'imply_option at %s:7' conflicts "
+                                     "with '--disable-foo' from the command-line" % config_path):
             get_config(['--disable-foo'])
 
         with self.assertRaisesRegexp(InvalidOptionError,
-                                     "--enable-bar=foo,bar' implied by 'imply_option at %s:16' conflicts"
-                                     " with '--enable-bar=a,b,c' from the command-line" % config_path):
+                                     "--enable-bar=foo,bar' implied by 'imply_option at %s:16' "
+                                     "conflicts with '--enable-bar=a,b,c' from the command-line"
+                                     % config_path):
             get_config(['--enable-bar=a,b,c'])
 
         with self.assertRaisesRegexp(InvalidOptionError,
-                                     "--enable-baz=BAZ' implied by 'imply_option at %s:25' conflicts"
-                                     " with '--enable-baz=QUUX' from the command-line" % config_path):
+                                     "--enable-baz=BAZ' implied by 'imply_option at %s:25' "
+                                     "conflicts with '--enable-baz=QUUX' from the command-line"
+                                     % config_path):
             get_config(['--enable-baz=QUUX'])
 
     def test_imply_option_failures(self):
@@ -810,17 +812,17 @@ class TestConfigure(unittest.TestCase):
             # imply_options resolve to None, which disables the imply_option.
 
             with self.assertRaises(ConfigureError) as e:
-                config = self.get_config()
+                self.get_config()
 
             self.assertEquals(e.exception.message, message)
 
             with self.assertRaises(ConfigureError) as e:
-                config = self.get_config(['--with-qux'])
+                self.get_config(['--with-qux'])
 
             self.assertEquals(e.exception.message, message)
 
             with self.assertRaises(ConfigureError) as e:
-                config = self.get_config(['--without-foo', '--with-qux'])
+                self.get_config(['--without-foo', '--with-qux'])
 
             self.assertEquals(e.exception.message, message)
 

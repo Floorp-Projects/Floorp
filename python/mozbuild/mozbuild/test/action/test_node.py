@@ -37,7 +37,7 @@ class TestNode(unittest.TestCase):
     def tearDown(self):
         try:
             SCRIPT_ALLOWLIST.remove(TEST_SCRIPT)
-        except:
+        except Exception:
             pass
 
     def test_generate_no_returned_deps(self):

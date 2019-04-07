@@ -49,7 +49,8 @@ class TestAndroidVersionCode(unittest.TestCase):
         self.assertTrue('underflow' in cm.exception.message)
 
     def test_android_version_code_v1_running_low(self):
-        '''Verify there is an informative message if one asks for v1 codes that are close to overflow.'''
+        '''Verify there is an informative message if one asks for v1
+        codes that are close to overflow.'''
         with self.assertRaises(ValueError) as cm:
             overflow = '20290801000000'
             android_version_code_v1(overflow, cpu_arch='armeabi', min_sdk=9, max_sdk=None)
@@ -65,8 +66,9 @@ class TestAndroidVersionCode(unittest.TestCase):
     def test_android_version_code_v0_relative_v1(self):
         '''Verify that the first v1 code is greater than the equivalent v0 code.'''
         buildid = '20150801000000'
-        self.assertGreater(android_version_code_v1(buildid, cpu_arch='armeabi', min_sdk=9, max_sdk=None),
-                           android_version_code_v0(buildid, cpu_arch='armeabi', min_sdk=9, max_sdk=None))
+        self.assertGreater(
+            android_version_code_v1(buildid, cpu_arch='armeabi', min_sdk=9, max_sdk=None),
+            android_version_code_v0(buildid, cpu_arch='armeabi', min_sdk=9, max_sdk=None))
 
 
 if __name__ == '__main__':

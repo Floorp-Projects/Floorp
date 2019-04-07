@@ -247,7 +247,7 @@ class TestBuildReader(unittest.TestCase):
     def test_error_error_func_ok(self):
         reader = self.reader('reader-error-error-func', error_is_fatal=False)
 
-        contexts = list(reader.read_topsrcdir())
+        list(reader.read_topsrcdir())
 
     def test_error_empty_list(self):
         reader = self.reader('reader-error-empty-list')

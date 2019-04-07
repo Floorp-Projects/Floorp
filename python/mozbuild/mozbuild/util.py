@@ -23,7 +23,6 @@ import time
 import types
 
 from collections import (
-    defaultdict,
     Iterable,
     OrderedDict,
 )
@@ -661,8 +660,10 @@ def StrictOrderingOnAppendListWithFlagsFactory(flags):
                                  (self._flags_type._flags, other._flags_type._flags))
             intersection = set(self._flags.keys()) & set(other._flags.keys())
             if intersection:
-                raise ValueError('Cannot update flags: both lists of strings with flags configure %s' %
-                                 intersection)
+                raise ValueError(
+                    'Cannot update flags: both lists of strings with flags configure %s' %
+                    intersection
+                    )
             self._flags.update(other._flags)
 
         def extend(self, l):

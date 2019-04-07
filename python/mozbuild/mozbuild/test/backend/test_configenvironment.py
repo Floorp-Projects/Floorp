@@ -3,10 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
-import posixpath
-from StringIO import StringIO
 import unittest
-from mozunit import main, MockedOpen
+from mozunit import main
 
 import mozbuild.backend.configenvironment as ConfigStatus
 
@@ -19,7 +17,7 @@ class ConfigEnvironment(ConfigStatus.ConfigEnvironment):
     def __init__(self, *args, **kwargs):
         ConfigStatus.ConfigEnvironment.__init__(self, *args, **kwargs)
         # Be helpful to unit tests
-        if not 'top_srcdir' in self.substs:
+        if 'top_srcdir' not in self.substs:
             if os.path.isabs(self.topsrcdir):
                 top_srcdir = self.topsrcdir.replace(os.sep, '/')
             else:

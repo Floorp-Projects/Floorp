@@ -139,7 +139,6 @@ class TestMozconfigLoader(unittest.TestCase):
 
         srcdir = self.get_temp_dir()
         curdir = self.get_temp_dir()
-        dirs = [srcdir, curdir]
         loader = MozconfigLoader(srcdir)
 
         path = os.path.join(srcdir, relative_mozconfig)

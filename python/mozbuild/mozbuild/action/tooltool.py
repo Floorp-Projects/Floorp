@@ -748,7 +748,7 @@ def _cache_checksum_matches(base_file, checksum):
                 log.info("Cache matches, avoiding extracting in '%s'" % base_file)
                 return True
             return False
-    except IOError as e:
+    except IOError:
         return False
 
 
@@ -1022,7 +1022,7 @@ def _authorize(req, auth_file):
         try:
             auth_file_content = json.loads(auth_file_content)
             is_taskcluster_auth = True
-        except:
+        except Exception:
             pass
 
     if is_taskcluster_auth:

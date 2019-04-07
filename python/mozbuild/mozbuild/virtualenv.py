@@ -330,7 +330,7 @@ class VirtualenvManager(object):
                 try:
                     handle_package(package[1:])
                     return True
-                except:
+                except Exception:
                     print('Error processing command. Ignoring',
                           'because optional. (%s)' % ':'.join(package),
                           file=self.log_handle)
@@ -659,7 +659,9 @@ def verify_python_version(log_handle):
 
 if __name__ == '__main__':
     if len(sys.argv) < 5:
-        print('Usage: populate_virtualenv.py /path/to/topsrcdir /path/to/topobjdir /path/to/virtualenv /path/to/virtualenv_manifest')
+        print(
+            'Usage: populate_virtualenv.py /path/to/topsrcdir '
+            '/path/to/topobjdir /path/to/virtualenv /path/to/virtualenv_manifest')
         sys.exit(1)
 
     verify_python_version(sys.stdout)

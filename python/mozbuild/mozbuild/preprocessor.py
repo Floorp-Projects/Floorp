@@ -497,7 +497,7 @@ class Preprocessor:
                                          None)
             try:
                 from makeutil import Makefile
-            except:
+            except Exception:
                 raise Preprocessor.Error(self, "--depend requires the "
                                                "mozbuild.makeutil module", None)
             depfile = get_output_file(options.depend)
@@ -598,7 +598,7 @@ class Preprocessor:
             val = self.applyFilters(m.group('value'))
             try:
                 val = int(val)
-            except:
+            except Exception:
                 pass
         self.context[m.group('name')] = val
 
@@ -709,7 +709,6 @@ class Preprocessor:
 
     def do_expand(self, args):
         lst = re.split('__(\w+)__', args, re.U)
-        do_replace = False
 
         def vsubst(v):
             if v in self.context:
@@ -805,7 +804,7 @@ class Preprocessor:
                 args = open(args, 'rU')
             except Preprocessor.Error:
                 raise
-            except:
+            except Exception:
                 raise Preprocessor.Error(self, 'FILE_NOT_FOUND', str(args))
         self.checkLineNumbers = bool(re.search('\.(js|jsm|java|webidl)(?:\.in)?$', args.name))
         oldFile = self.context['FILE']

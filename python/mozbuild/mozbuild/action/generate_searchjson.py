@@ -25,7 +25,7 @@ else:
 
 
 def validateDefault(key):
-    if (not key in searchinfo["default"]):
+    if key not in searchinfo["default"]:
         print >>sys.stderr, "Error: Missing default %s in list.json" % (key)
         sys.exit(1)
 
@@ -35,13 +35,16 @@ validateDefault("visibleDefaultEngines")
 
 # If the selected locale doesn't have a searchDefault,
 # use the global one.
-if not "searchDefault" in localeSearchInfo["default"]:
+if "searchDefault" not in localeSearchInfo["default"]:
     localeSearchInfo["default"]["searchDefault"] = searchinfo["default"]["searchDefault"]
 
 # If the selected locale doesn't have a searchOrder,
 # use the global one if present.
 # searchOrder is NOT required.
-if not "searchOrder" in localeSearchInfo["default"] and "searchOrder" in searchinfo["default"]:
+if (
+    "searchOrder" not in localeSearchInfo["default"]
+    and "searchOrder" in searchinfo["default"]
+):
     localeSearchInfo["default"]["searchOrder"] = searchinfo["default"]["searchOrder"]
 
 # If we have region overrides, enumerate through them
@@ -63,7 +66,8 @@ if "regionOverrides" in searchinfo:
                 visibleDefaultEngines)
             for i, engine in enumerate(localeSearchInfo[region]["visibleDefaultEngines"]):
                 if engine in regionOverrides[region]:
-                    localeSearchInfo[region]["visibleDefaultEngines"][i] = regionOverrides[region][engine]
+                    localeSearchInfo[region]["visibleDefaultEngines"][i] = \
+                        regionOverrides[region][engine]
 
 output.write(json.dumps(localeSearchInfo, ensure_ascii=False).encode('utf8'))
 

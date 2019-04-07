@@ -18,7 +18,6 @@ import logging
 from time import localtime
 from MozZipFile import ZipFile
 from cStringIO import StringIO
-from collections import defaultdict
 
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.action.buildlist import addEntriesToListFile
@@ -108,9 +107,10 @@ class JarManifestParser(object):
     relsrcline = re.compile('relativesrcdir\s+(?P<relativesrcdir>.+?):')
     regline = re.compile('\%\s+(.*)$')
     entryre = '(?P<optPreprocess>\*)?(?P<optOverwrite>\+?)\s+'
-    entryline = re.compile(entryre
-                           + '(?P<output>[\w\d.\-\_\\\/\+\@]+)\s*(\((?P<locale>\%?)(?P<source>[\w\d.\-\_\\\/\@\*]+)\))?\s*$'
-                           )
+    entryline = re.compile(
+        entryre + ('(?P<output>[\w\d.\-\_\\\/\+\@]+)\s*'
+                   '(\((?P<locale>\%?)(?P<source>[\w\d.\-\_\\\/\@\*]+)\))?\s*$')
+        )
 
     def __init__(self):
         self._current_jar = None
@@ -245,7 +245,8 @@ class JarMaker(object):
                      help='base directory to be used for localization (requires relativesrcdir)'
                      )
         p.add_option('--locale-mergedir', type='string', action='store',
-                     help='base directory to be used for l10n-merge (requires l10n-base and relativesrcdir)'
+                     help='base directory to be used for l10n-merge '
+                     '(requires l10n-base and relativesrcdir)'
                      )
         p.add_option('--relativesrcdir', type='string',
                      help='relativesrcdir to be used for localization')
@@ -501,7 +502,7 @@ class JarMaker(object):
             try:
                 info = self.jarfile.getinfo(aPath)
                 return info.date_time
-            except:
+            except Exception:
                 return 0
 
         def getOutput(self, name):

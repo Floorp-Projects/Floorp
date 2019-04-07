@@ -129,7 +129,7 @@ class Rule(object):
 
     def dependencies(self):
         '''Return an iterator on the rule dependencies.'''
-        return iter(d for d in self._dependencies if not d in self._targets)
+        return iter(d for d in self._dependencies if d not in self._targets)
 
     def commands(self):
         '''Return an iterator on the rule commands.'''
