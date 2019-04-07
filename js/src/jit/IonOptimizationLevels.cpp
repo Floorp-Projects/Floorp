@@ -17,9 +17,6 @@ namespace jit {
 
 const OptimizationLevelInfo IonOptimizations;
 
-// Duplicated in all.js - ensure both match.
-const uint32_t OptimizationInfo::CompilerWarmupThreshold = 1000;
-
 void OptimizationInfo::initNormalOptimizationInfo() {
   level_ = OptimizationLevel::Normal;
 
@@ -46,7 +43,6 @@ void OptimizationInfo::initNormalOptimizationInfo() {
   maxInlineDepth_ = 3;
   scalarReplacement_ = true;
   smallFunctionMaxInlineDepth_ = 10;
-  compilerWarmUpThreshold_ = CompilerWarmupThreshold;
   inliningWarmUpThresholdFactor_ = 0.125;
   inliningRecompileThresholdFactor_ = 4;
 }
@@ -78,8 +74,7 @@ uint32_t OptimizationInfo::compilerWarmUpThreshold(JSScript* script,
     pc = nullptr;
   }
 
-  uint32_t warmUpThreshold = JitOptions.forcedDefaultIonWarmUpThreshold.valueOr(
-      compilerWarmUpThreshold_);
+  uint32_t warmUpThreshold = baseCompilerWarmUpThreshold();
 
   // If the script is too large to compile on the main thread, we can still
   // compile it off thread. In these cases, increase the warm-up counter
