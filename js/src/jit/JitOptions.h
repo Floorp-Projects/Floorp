@@ -65,7 +65,7 @@ struct DefaultJitOptions {
   bool disableCacheIRBinaryArith;
   bool disableSincos;
   bool disableSink;
-  bool disableOptimizationLevels;
+  bool eagerCompilation;
   bool forceInlineCaches;
   bool fullDebugChecks;
   bool limitScriptSize;
@@ -83,8 +83,6 @@ struct DefaultJitOptions {
   bool enableWasmFuncCallSpew;
 #endif
   uint32_t baselineWarmUpThreshold;
-  uint32_t normalIonWarmUpThreshold;
-  uint32_t fullIonWarmUpThreshold;
   uint32_t exceptionBailoutThreshold;
   uint32_t frequentBailoutThreshold;
   uint32_t maxStackArgs;
@@ -98,6 +96,8 @@ struct DefaultJitOptions {
   uint32_t branchPruningThreshold;
   uint32_t wasmBatchIonThreshold;
   uint32_t wasmBatchBaselineThreshold;
+  mozilla::Maybe<uint32_t> forcedDefaultIonWarmUpThreshold;
+  mozilla::Maybe<uint32_t> forcedDefaultIonSmallFunctionWarmUpThreshold;
   mozilla::Maybe<IonRegisterAllocator> forcedRegisterAllocator;
 
   // Spectre mitigation flags. Each mitigation has its own flag in order to
@@ -115,16 +115,10 @@ struct DefaultJitOptions {
 
   DefaultJitOptions();
   bool isSmallFunction(JSScript* script) const;
-  void setEagerIonCompilation();
-  void setNormalIonWarmUpThreshold(uint32_t warmUpThreshold);
-  void setFullIonWarmUpThreshold(uint32_t warmUpThreshold);
-  void resetNormalIonWarmUpThreshold();
-  void resetFullIonWarmUpThreshold();
+  void setEagerCompilation();
+  void setCompilerWarmUpThreshold(uint32_t warmUpThreshold);
+  void resetCompilerWarmUpThreshold();
   void enableGvn(bool val);
-
-  bool eagerIonCompilation() const {
-    return normalIonWarmUpThreshold == 0;
-  }
 };
 
 extern DefaultJitOptions JitOptions;

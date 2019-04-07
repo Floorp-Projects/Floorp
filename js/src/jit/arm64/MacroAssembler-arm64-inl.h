@@ -828,8 +828,8 @@ void MacroAssembler::branch32(Condition cond, const AbsoluteAddress& lhs,
                               Imm32 rhs, Label* label) {
   vixl::UseScratchRegisterScope temps(this);
   const Register scratch = temps.AcquireX().asUnsized();
-  load32(lhs, scratch);
-  branch32(cond, scratch, rhs, label);
+  movePtr(ImmPtr(lhs.addr), scratch);
+  branch32(cond, Address(scratch, 0), rhs, label);
 }
 
 void MacroAssembler::branch32(Condition cond, const BaseIndex& lhs, Imm32 rhs,

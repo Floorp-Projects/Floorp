@@ -1,4 +1,3 @@
-setJitCompilerOption("baseline.warmup.trigger", 0);
 setJitCompilerOption('ion.warmup.trigger', 0);
 gczeal(7, 1);
 var dbgGlobal = newGlobal({newCompartment: true});

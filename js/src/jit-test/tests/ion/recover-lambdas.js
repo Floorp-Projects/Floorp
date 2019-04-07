@@ -1,8 +1,6 @@
-// |jit-test| --ion-osr=off
 
 var max = 40;
 setJitCompilerOption("ion.warmup.trigger", max - 10);
-setJitCompilerOption("ion.full.warmup.trigger", max - 10);
 
 // This function is used to escape "g" which is a non-escaped inner function.
 // As it is not escaped within "f", the lambda for "g" would be computed on the

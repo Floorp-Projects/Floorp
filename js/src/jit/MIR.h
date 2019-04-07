@@ -10977,42 +10977,35 @@ class MCheckReturn : public MBinaryInstruction, public BoxInputsPolicy::Data {
 // the outermost script (i.e. not the inlined script).
 class MRecompileCheck : public MNullaryInstruction {
  public:
-  enum class RecompileCheckType : uint8_t {
-    // If we're not at the highest optimization level, keep incrementing the
-    // warm-up counter for the outermost script on entry. The warmup check will
-    // trigger recompilation to tier up. The lazy link mechanism will be used to
-    // tier up once recompilation is done.
-    OptimizationLevel,
-
-    // If we're not at the highest optimization level, keep incrementing the
-    // warm-up counter at loop edges. This check will trigger invalidation for
-    // very long-running loops to ensure we still tier up even if we don't
-    // invoke the lazy link stub.
-    OptimizationLevelOSR,
-
-    // If we're not at the highest optimization level, keep incrementing the
-    // warm-up counter for inlined scripts. This check does not trigger any
-    // recompilation or invalidation, it exists to ensure inlined scripts have
-    // an accurate warm-up count.
-    OptimizationLevelInlined,
-
-    // Used at the last optimization level for callees that weren't hot enough
-    // to be inlined. If a callee becomes hot enough we force recompilation of
-    // the caller's Ion script.
-    Inlining
+  enum RecompileCheckType {
+    RecompileCheck_OptimizationLevel,
+    RecompileCheck_Inlining
   };
 
  private:
   JSScript* script_;
   uint32_t recompileThreshold_;
-  RecompileCheckType type_;
+  bool forceRecompilation_;
+  bool increaseWarmUpCounter_;
 
   MRecompileCheck(JSScript* script, uint32_t recompileThreshold,
                   RecompileCheckType type)
       : MNullaryInstruction(classOpcode),
         script_(script),
-        recompileThreshold_(recompileThreshold),
-        type_(type) {
+        recompileThreshold_(recompileThreshold) {
+    switch (type) {
+      case RecompileCheck_OptimizationLevel:
+        forceRecompilation_ = false;
+        increaseWarmUpCounter_ = true;
+        break;
+      case RecompileCheck_Inlining:
+        forceRecompilation_ = true;
+        increaseWarmUpCounter_ = false;
+        break;
+      default:
+        MOZ_CRASH("Unexpected recompile check type");
+    }
+
     setGuard();
   }
 
@@ -11024,23 +11017,9 @@ class MRecompileCheck : public MNullaryInstruction {
 
   uint32_t recompileThreshold() const { return recompileThreshold_; }
 
-  bool forceInvalidation() const {
-    return type_ == RecompileCheckType::OptimizationLevelOSR;
-  }
+  bool forceRecompilation() const { return forceRecompilation_; }
 
-  bool forceRecompilation() const {
-    return type_ == RecompileCheckType::Inlining;
-  }
-
-  bool checkCounter() const {
-    return type_ != RecompileCheckType::OptimizationLevelInlined;
-  }
-
-  bool increaseWarmUpCounter() const {
-    return (type_ == RecompileCheckType::OptimizationLevel ||
-            type_ == RecompileCheckType::OptimizationLevelInlined ||
-            type_ == RecompileCheckType::OptimizationLevelOSR);
-  }
+  bool increaseWarmUpCounter() const { return increaseWarmUpCounter_; }
 
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 };

@@ -1,6 +1,5 @@
 
 setJitCompilerOption("offthread-compilation.enable", 0);
-setJitCompilerOption("baseline.warmup.trigger", 0);
 setJitCompilerOption("ion.warmup.trigger", 0);
 
 foo();

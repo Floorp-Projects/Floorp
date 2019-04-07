@@ -993,8 +993,6 @@ JSObject* CreateDerivedTypedObj(JSContext* cx, HandleObject descr,
 
 MOZ_MUST_USE bool IonRecompile(JSContext* cx);
 MOZ_MUST_USE bool IonForcedRecompile(JSContext* cx);
-MOZ_MUST_USE bool IonForcedInvalidation(JSContext* cx);
-
 JSString* StringReplace(JSContext* cx, HandleString string,
                         HandleString pattern, HandleString repl);
 

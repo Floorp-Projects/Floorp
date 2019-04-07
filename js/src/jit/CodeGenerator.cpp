@@ -13439,18 +13439,13 @@ void CodeGenerator::visitWasmLoadTls(LWasmLoadTls* ins) {
 void CodeGenerator::visitRecompileCheck(LRecompileCheck* ins) {
   Label done;
   Register tmp = ToRegister(ins->scratch());
+  OutOfLineCode* ool;
 
-  OutOfLineCode* ool = nullptr;
-  if (ins->mir()->checkCounter()) {
-    using Fn = bool (*)(JSContext*);
-    if (ins->mir()->forceInvalidation()) {
-      ool =
-          oolCallVM<Fn, IonForcedInvalidation>(ins, ArgList(), StoreNothing());
-    } else if (ins->mir()->forceRecompilation()) {
-      ool = oolCallVM<Fn, IonForcedRecompile>(ins, ArgList(), StoreNothing());
-    } else {
-      ool = oolCallVM<Fn, IonRecompile>(ins, ArgList(), StoreNothing());
-    }
+  using Fn = bool (*)(JSContext*);
+  if (ins->mir()->forceRecompilation()) {
+    ool = oolCallVM<Fn, IonForcedRecompile>(ins, ArgList(), StoreNothing());
+  } else {
+    ool = oolCallVM<Fn, IonRecompile>(ins, ArgList(), StoreNothing());
   }
 
   // Check if warm-up counter is high enough.
@@ -13460,25 +13455,21 @@ void CodeGenerator::visitRecompileCheck(LRecompileCheck* ins) {
     masm.load32(warmUpCount, tmp);
     masm.add32(Imm32(1), tmp);
     masm.store32(tmp, warmUpCount);
-    if (ins->mir()->checkCounter()) {
-      masm.branch32(Assembler::BelowOrEqual, tmp,
-                    Imm32(ins->mir()->recompileThreshold()), &done);
-    }
+    masm.branch32(Assembler::BelowOrEqual, tmp,
+                  Imm32(ins->mir()->recompileThreshold()), &done);
   } else {
     masm.branch32(Assembler::BelowOrEqual, warmUpCount,
                   Imm32(ins->mir()->recompileThreshold()), &done);
   }
 
   // Check if not yet recompiling.
-  if (ins->mir()->checkCounter()) {
-    CodeOffset label = masm.movWithPatch(ImmWord(uintptr_t(-1)), tmp);
-    masm.propagateOOM(ionScriptLabels_.append(label));
-    masm.branch32(Assembler::Equal,
-                  Address(tmp, IonScript::offsetOfRecompiling()), Imm32(0),
-                  ool->entry());
-    masm.bind(ool->rejoin());
-    masm.bind(&done);
-  }
+  CodeOffset label = masm.movWithPatch(ImmWord(uintptr_t(-1)), tmp);
+  masm.propagateOOM(ionScriptLabels_.append(label));
+  masm.branch32(Assembler::Equal,
+                Address(tmp, IonScript::offsetOfRecompiling()), Imm32(0),
+                ool->entry());
+  masm.bind(ool->rejoin());
+  masm.bind(&done);
 }
 
 void CodeGenerator::visitLexicalCheck(LLexicalCheck* ins) {
