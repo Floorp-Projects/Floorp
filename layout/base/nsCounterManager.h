@@ -22,8 +22,8 @@ struct nsCounterChangeNode;
 struct nsCounterNode : public nsGenConNode {
   enum Type {
     RESET,      // a "counter number" pair in 'counter-reset'
-    SET,        // a "counter number" pair in 'counter-set'
     INCREMENT,  // a "counter number" pair in 'counter-increment'
+    SET,        // a "counter number" pair in 'counter-set'
     USE         // counter() or counters() in 'content'
   };
 
@@ -57,11 +57,11 @@ struct nsCounterNode : public nsGenConNode {
   inline nsCounterUseNode* UseNode();
   inline nsCounterChangeNode* ChangeNode();
 
-  // For RESET, SET and INCREMENT nodes, aPseudoFrame need not be a
+  // For RESET, INCREMENT and SET nodes, aPseudoFrame need not be a
   // pseudo-element, and aContentIndex represents the index within the
-  // 'counter-reset', 'counter-set' or 'counter-increment' property
+  // 'counter-reset', 'counter-increment' or 'counter-set'  property
   // instead of within the 'content' property but offset to ensure
-  // that (reset, set, increment, use) sort in that order.
+  // that (reset, increment, set, use) sort in that order.
   // (This slight weirdness allows sharing a lot of code with 'quotes'.)
   nsCounterNode(int32_t aContentIndex, Type aType)
       : nsGenConNode(aContentIndex),
@@ -112,18 +112,18 @@ struct nsCounterChangeNode : public nsCounterNode {
   // since it is for every other subclass of nsGenConNode, we follow
   // the naming convention here.
   // |aPropIndex| is the index of the value within the list in the
-  // 'counter-increment', 'counter-set' or 'counter-reset' property.
+  // 'counter-increment', 'counter-reset' or 'counter-set' property.
   nsCounterChangeNode(nsIFrame* aPseudoFrame, nsCounterNode::Type aChangeType,
                       int32_t aChangeValue,
                       int32_t aPropIndex)
-      : nsCounterNode(  // Fake a content index for resets, sets and increments
+      : nsCounterNode(  // Fake a content index for resets, increments and sets
                         // that comes before all the real content, with
-                        // the resets first, in order, and then the sets and
-                        // then the increments.
+                        // the resets first, in order, and then the increments and
+                        // then the sets.
             aPropIndex + (aChangeType == RESET
                               ? (INT32_MIN)
-                              : (aChangeType == SET ? ((INT32_MIN / 3) * 2)
-                                                    : INT32_MIN / 3)),
+                              : (aChangeType == INCREMENT ? ((INT32_MIN / 3) * 2)
+                                                          : INT32_MIN / 3)),
             aChangeType),
         mChangeValue(aChangeValue) {
     NS_ASSERTION(aPropIndex >= 0, "out of range");
