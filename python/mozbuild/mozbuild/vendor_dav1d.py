@@ -4,10 +4,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-from distutils.version import LooseVersion
 import logging
 from mozbuild.base import (
-    BuildEnvironmentNotFoundException,
     MozbuildObject,
 )
 import mozfile
@@ -52,7 +50,7 @@ Please set a repository url with --repo on either googlesource or github.''' % h
 
     def upstream_gitlab_commit(self, revision):
         '''Query the github api for a git commit id and timestamp.'''
-        gitlab_api = 'https://code.videolan.org/api/v4/projects/videolan%2Fdav1d/repository/commits'
+        gitlab_api = 'https://code.videolan.org/api/v4/projects/videolan%2Fdav1d/repository/commits'  # noqa
         url = mozpath.join(gitlab_api, revision)
         self.log(logging.INFO, 'fetch', {'url': url},
                  'Fetching commit id from {url}')

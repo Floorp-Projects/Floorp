@@ -58,7 +58,7 @@ class TestBuild(unittest.TestCase):
                 backend(config).consume(definitions)
 
             yield config
-        except:
+        except Exception:
             raise
         finally:
             if not os.environ.get('MOZ_NO_CLEANUP'):
@@ -73,7 +73,7 @@ class TestBuild(unittest.TestCase):
 
         try:
             yield handle_make_line
-        except:
+        except Exception:
             print('\n'.join(lines))
             raise
 

@@ -4,7 +4,6 @@
 
 # This action is used to generate the wpt manifest
 
-import os
 import sys
 
 import buildconfig

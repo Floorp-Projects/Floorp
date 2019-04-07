@@ -2,7 +2,6 @@ import unittest
 
 from StringIO import StringIO
 import os
-import sys
 import os.path
 import mozunit
 
