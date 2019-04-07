@@ -22,9 +22,5 @@ skip-if(winWidget||webrender) fails == horizontal-overflow-hidden-region.html ho
 skip-if(winWidget||webrender) == vertical-overflow-hidden-region.html about:blank
 skip-if(winWidget||webrender) == scroll-to-unreachable-area.html scroll-to-unreachable-area-ref.html
 skip-if(winWidget||webrender) == wrapped-text-at-icb.html wrapped-text-at-icb-ref.html
-skip-if(winWidget||webrender) == overflow-hidden-region-dynamic-width-change.html overflow-region-ref.html
-skip-if(winWidget||webrender) == remove-overflow-hidden-region.html remove-overflow-hidden-region-ref.html
-skip-if(winWidget||webrender) fails == dynamic-grow-width.html horizontal-overflow-hidden-region-ref.html # bug 1508177
-skip-if(winWidget||webrender) == dynamic-grow-width-and-height.html overflow-region-ref.html
 skip-if(winWidget||webrender) == not-able-to-scrollTo.html about:blank
 skip-if(winWidget||webrender) == min-scale-aspect-ratio.html about:blank
