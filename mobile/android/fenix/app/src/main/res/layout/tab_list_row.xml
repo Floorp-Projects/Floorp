@@ -2,31 +2,32 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<androidx.cardview.widget.CardView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/session_card"
+    android:id="@+id/item_tab"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
-    app:cardBackgroundColor="?attr/sessionBackgroundColor"
+    android:clickable="true"
     android:clipToPadding="false"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground"
+    app:cardBackgroundColor="?attr/sessionBackgroundColor"
     app:cardCornerRadius="@dimen/tab_corner_radius"
     app:cardElevation="5dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/item_tab"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
         <ImageView
             android:id="@+id/favicon_image"
-            android:importantForAccessibility="no"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:minHeight="32dp"
-            android:minWidth="32dp"
             android:layout_margin="10dp"
+            android:importantForAccessibility="no"
+            android:minWidth="32dp"
+            android:minHeight="32dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -61,12 +62,12 @@
 
         <ImageView
             android:id="@+id/tab_background"
-            android:importantForAccessibility="no"
             android:layout_width="0dp"
             android:layout_height="100dp"
             android:layout_marginTop="10dp"
             android:adjustViewBounds="false"
             android:focusable="false"
+            android:importantForAccessibility="no"
             android:scaleType="centerCrop"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

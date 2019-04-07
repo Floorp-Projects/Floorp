@@ -4,16 +4,19 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/session_item"
     android:layout_width="match_parent"
     android:layout_height="96dp"
-    app:cardBackgroundColor="@color/sessionBackgroundColor_normal_theme"
     android:layout_marginTop="8dp"
     android:layout_marginBottom="8dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground"
+    app:cardBackgroundColor="@color/sessionBackgroundColor_normal_theme"
     app:cardCornerRadius="10dp"
     app:cardElevation="5dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/session_item"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="@dimen/session_card_padding">
@@ -45,8 +48,8 @@
             android:id="@+id/session_card_titles"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:textColor="?attr/secondaryTextColor"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            android:textColor="?attr/secondaryTextColor"
             app:layout_constraintEnd_toEndOf="@id/session_card_timestamp"
             app:layout_constraintStart_toStartOf="@id/session_card_timestamp"
             app:layout_constraintTop_toBottomOf="@+id/session_card_timestamp" />
@@ -55,8 +58,8 @@
             android:id="@+id/session_card_extras"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="?attr/secondaryTextColor"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
+            android:textColor="?attr/secondaryTextColor"
             app:layout_constraintStart_toStartOf="@id/session_card_titles"
             app:layout_constraintTop_toBottomOf="@+id/session_card_titles" />
 
