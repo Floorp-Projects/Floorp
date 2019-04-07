@@ -37,7 +37,6 @@ from .mozconfig import (
 )
 from .pythonutil import find_python3_executable
 from .util import (
-    ReadOnlyNamespace,
     memoize,
     memoized_property,
 )
@@ -179,9 +178,10 @@ class MozbuildObject(ProcessExecutionMixin):
             topobjdir = mozpath.normsep(os.path.normpath(topobjdir))
 
             if topsrcdir == topobjdir:
-                raise BadEnvironmentException('The object directory appears '
-                                              'to be the same as your source directory (%s). This build '
-                                              'configuration is not supported.' % topsrcdir)
+                raise BadEnvironmentException(
+                    'The object directory appears '
+                    'to be the same as your source directory (%s). This build '
+                    'configuration is not supported.' % topsrcdir)
 
         # If we can't resolve topobjdir, oh well. We'll figure out when we need
         # one.
@@ -256,11 +256,13 @@ class MozbuildObject(ProcessExecutionMixin):
     @property
     def virtualenv_manager(self):
         if self._virtualenv_manager is None:
-            self._virtualenv_manager = VirtualenvManager(self.topsrcdir,
-                                                         self.topobjdir, os.path.join(
-                                                             self.topobjdir, '_virtualenvs', 'init'),
-                                                         sys.stdout, os.path.join(self.topsrcdir, 'build',
-                                                                                  'virtualenv_packages.txt'))
+            self._virtualenv_manager = VirtualenvManager(
+                self.topsrcdir,
+                self.topobjdir,
+                os.path.join(self.topobjdir, '_virtualenvs', 'init'),
+                sys.stdout,
+                os.path.join(self.topsrcdir, 'build', 'virtualenv_packages.txt')
+                )
 
         return self._virtualenv_manager
 
@@ -622,8 +624,8 @@ class MozbuildObject(ProcessExecutionMixin):
                 self.run_process([notifier, '--app-name=Mozilla Build System',
                                   'Mozilla Build System', msg], ensure_exit_code=False)
         except Exception as e:
-            self.log(logging.WARNING, 'notifier-failed', {'error':
-                                                          e.message}, 'Notification center failed: {error}')
+            self.log(logging.WARNING, 'notifier-failed',
+                     {'error': e.message}, 'Notification center failed: {error}')
 
     def _ensure_objdir_exists(self):
         if os.path.isdir(self.statedir):
@@ -868,8 +870,9 @@ class MachCommandBase(MozbuildObject):
             detect_virtualenv_mozinfo = getattr(context,
                                                 'detect_virtualenv_mozinfo')
         try:
-            dummy = MozbuildObject.from_environment(cwd=context.cwd,
-                                                    detect_virtualenv_mozinfo=detect_virtualenv_mozinfo)
+            dummy = MozbuildObject.from_environment(
+                cwd=context.cwd,
+                detect_virtualenv_mozinfo=detect_virtualenv_mozinfo)
             topsrcdir = dummy.topsrcdir
             topobjdir = dummy._topobjdir
             if topobjdir:

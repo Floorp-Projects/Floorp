@@ -23,7 +23,6 @@ from mozbuild.base import (
     BadEnvironmentException,
     MachCommandBase,
     MozbuildObject,
-    ObjdirMismatchException,
     PathArgument,
 )
 

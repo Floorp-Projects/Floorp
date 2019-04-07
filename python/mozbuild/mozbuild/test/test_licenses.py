@@ -1,12 +1,6 @@
 import unittest
 
-from StringIO import StringIO
-import os
-import sys
-import os.path
 import mozunit
-
-from mozbuild.preprocessor import Preprocessor
 
 from mozbuild.vendor_rust import VendorRust
 

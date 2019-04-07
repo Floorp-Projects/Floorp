@@ -875,14 +875,18 @@ class TestCommandLineHelper(unittest.TestCase):
 
         bar = Option('--bar',
                      possible_origins=('mozconfig',))
-        with self.assertRaisesRegexp(InvalidOptionError,
-                                     "--bar can not be set by command-line. Values are accepted from: mozconfig"):
+        with self.assertRaisesRegexp(
+            InvalidOptionError,
+            "--bar can not be set by command-line. Values are accepted from: mozconfig"
+        ):
             helper.handle(bar)
 
         baz = Option(env='BAZ',
                      possible_origins=('implied',))
-        with self.assertRaisesRegexp(InvalidOptionError,
-                                     "BAZ=1 can not be set by environment. Values are accepted from: implied"):
+        with self.assertRaisesRegexp(
+            InvalidOptionError,
+            "BAZ=1 can not be set by environment. Values are accepted from: implied"
+        ):
             helper.handle(baz)
 
 

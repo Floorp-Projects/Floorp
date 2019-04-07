@@ -10,7 +10,6 @@ import re
 import sys
 from buildconfig import topsrcdir, topobjdir
 from mozbuild.backend.configenvironment import PartialConfigEnvironment
-from mozbuild.util import FileAvoidWrite
 import mozpack.path as mozpath
 
 
@@ -51,12 +50,12 @@ def process_define_file(output, input):
                             raise Exception(
                                 '`#define ALLDEFINES` is not allowed in a '
                                 'CONFIGURE_DEFINE_FILE')
-                        # WebRTC files like to define WINVER and _WIN32_WINNT
-                        # via the command line, which raises a mass of macro
-                        # redefinition warnings.  Just handle those macros
-                        # specially here.
 
                         def define_for_name(name, val):
+                            """WebRTC files like to define WINVER and _WIN32_WINNT
+                            via the command line, which raises a mass of macro
+                            redefinition warnings.  Just handle those macros
+                            specially here."""
                             define = "#define {name} {val}".format(name=name, val=val)
                             if name in ('WINVER', '_WIN32_WINNT'):
                                 return '#if !defined({name})\n{define}\n#endif' \

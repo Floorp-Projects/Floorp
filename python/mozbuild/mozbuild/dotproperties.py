@@ -78,7 +78,7 @@ class DotProperties:
                  if k.startswith(prefix) and '.' not in k[len(prefix):])
 
         for required_key in required_keys:
-            if not required_key in D:
+            if required_key not in D:
                 raise ValueError('Required key %s not present' % required_key)
 
         return D

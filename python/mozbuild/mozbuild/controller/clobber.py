@@ -95,7 +95,7 @@ class Clobberer(object):
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.STDOUT)
             return p.wait() == 1 and p.stdout.read().startswith('winrm')
-        except:
+        except Exception:
             return False
 
     def remove_objdir(self, full=True):

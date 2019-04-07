@@ -30,7 +30,7 @@ class TestReadOnlyNamespace(unittest.TestCase):
             ['bar', 'foo'])
 
         with self.assertRaises(AttributeError):
-            value = test.missing
+            test.missing
 
         with self.assertRaises(Exception):
             test.foo = 2
@@ -56,7 +56,7 @@ class TestReadOnlyDict(unittest.TestCase):
         self.assertEqual(test['foo'], 1)
 
         with self.assertRaises(KeyError):
-            value = test['missing']
+            test['missing']
 
         with self.assertRaises(Exception):
             test['baz'] = True

@@ -49,7 +49,7 @@ class BuildConfig(object):
 
         # cache the compiled code as it can be reused
         # we cache it the first time, or if the file changed
-        if not path in code_cache or code_cache[path][0] != mtime:
+        if path not in code_cache or code_cache[path][0] != mtime:
             # Add config.status manually to sys.modules so it gets picked up by
             # iter_modules_in_path() for automatic dependencies.
             mod = ModuleType('config.status')
@@ -148,10 +148,13 @@ class ConfigEnvironment(object):
         self.bin_suffix = self.substs.get('BIN_SUFFIX', '')
 
         global_defines = [name for name in self.defines
-                          if not name in self.non_global_defines]
-        self.substs['ACDEFINES'] = ' '.join(['-D%s=%s' % (name,
-                                                          shell_quote(self.defines[name]).replace('$', '$$'))
-                                             for name in sorted(global_defines)])
+                          if name not in self.non_global_defines]
+        self.substs["ACDEFINES"] = ' '.join(
+            [
+                '-D%s=%s' % (name, shell_quote(self.defines[name]).replace('$', '$$'))
+                for name in sorted(global_defines)
+            ]
+        )
 
         def serialize(name, obj):
             if isinstance(obj, StringTypes):
@@ -159,10 +162,21 @@ class ConfigEnvironment(object):
             if isinstance(obj, Iterable):
                 return ' '.join(obj)
             raise Exception('Unhandled type %s for %s', type(obj), str(name))
-        self.substs['ALLSUBSTS'] = '\n'.join(sorted(['%s = %s' % (name,
-                                                                  serialize(name, self.substs[name])) for name in self.substs if self.substs[name]]))
-        self.substs['ALLEMPTYSUBSTS'] = '\n'.join(sorted(['%s =' % name
-                                                          for name in self.substs if not self.substs[name]]))
+        self.substs['ALLSUBSTS'] = '\n'.join(
+            sorted([
+                '%s = %s' % (
+                    name,
+                    serialize(name, self.substs[name])
+                    )
+                for name in self.substs if self.substs[name]
+                ])
+            )
+        self.substs['ALLEMPTYSUBSTS'] = '\n'.join(
+            sorted([
+                '%s =' % name
+                for name in self.substs if not self.substs[name]
+                ])
+            )
 
         self.substs = ReadOnlyDict(self.substs)
 

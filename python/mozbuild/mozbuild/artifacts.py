@@ -338,9 +338,11 @@ class AndroidArtifactJob(ArtifactJob):
                 if not filename.endswith('.gz'):
                     continue
 
-                # Uncompress "libxul.so/D3271457813E976AE7BF5DAFBABABBFD0/libxul.so.dbg.gz" into "libxul.so.dbg".
+                # Uncompress "libxul.so/D3271457813E976AE7BF5DAFBABABBFD0/libxul.so.dbg.gz"
+                # into "libxul.so.dbg".
                 #
-                # After `settings append target.debug-file-search-paths /path/to/topobjdir/dist/crashreporter-symbols`,
+                # After running `settings append target.debug-file-search-paths $file`,
+                # where file=/path/to/topobjdir/dist/crashreporter-symbols,
                 # Android Studio's lldb (7.0.0, at least) will find the ELF debug symbol files.
                 #
                 # There are other paths that will work but none seem more desireable.  See
@@ -349,7 +351,8 @@ class AndroidArtifactJob(ArtifactJob):
                 destpath = mozpath.join('crashreporter-symbols', basename)
                 self.log(logging.INFO, 'artifact',
                          {'destpath': destpath},
-                         'Adding uncompressed ELF debug symbol file {destpath} to processed archive')
+                         'Adding uncompressed ELF debug symbol file '
+                         '{destpath} to processed archive')
                 writer.add(destpath.encode('utf-8'),
                            gzip.GzipFile(fileobj=reader[filename].uncompressed_data))
 
@@ -656,7 +659,8 @@ class CacheManager(object):
     Provide simple logging.
     '''
 
-    def __init__(self, cache_dir, cache_name, cache_size, cache_callback=None, log=None, skip_cache=False):
+    def __init__(self, cache_dir, cache_name, cache_size, cache_callback=None,
+                 log=None, skip_cache=False):
         self._skip_cache = skip_cache
         self._cache = pylru.lrucache(cache_size, callback=cache_callback)
         self._cache_filename = mozpath.join(cache_dir, cache_name + '-cache.pickle')
@@ -960,7 +964,8 @@ class Artifacts(object):
 There are no public revisions.
 This can happen if the repository is created from bundle file and never pulled
 from remote.  Please run `hg pull` and build again.
-see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles""")
+see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code/Mercurial/Bundles\
+""")
 
         self.log(logging.INFO, 'artifact',
                  {'len': len(last_revs)},
@@ -1005,10 +1010,11 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
             yield candidate_pushheads[rev], rev
 
         if not count:
-            raise Exception('Could not find any candidate pushheads in the last {num} revisions.\n'
-                            'Search started with {rev}, which must be known to Mozilla automation.\n\n'
-                            'see https://developer.mozilla.org/en-US/docs/Artifact_builds'.format(
-                                rev=last_revs[0], num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT))
+            raise Exception(
+                'Could not find any candidate pushheads in the last {num} revisions.\n'
+                'Search started with {rev}, which must be known to Mozilla automation.\n\n'
+                'see https://developer.mozilla.org/en-US/docs/Artifact_builds'.format(
+                    rev=last_revs[0], num=NUM_PUSHHEADS_TO_QUERY_PER_PARENT))
 
     def find_pushhead_artifacts(self, task_cache, job, tree, pushhead):
         try:
@@ -1073,7 +1079,8 @@ see https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Source_Code
                 shutil.copyfileobj(zf.open(info), fh)
                 file_existed, file_updated = fh.close()
                 self.log(logging.INFO, 'artifact',
-                         {'updating': 'Updating' if file_updated else 'Not updating', 'filename': n},
+                         {'updating': 'Updating' if file_updated else 'Not updating',
+                          'filename': n},
                          '{updating} {filename}')
                 if not file_existed or file_updated:
                     # Libraries and binaries may need to be marked executable,

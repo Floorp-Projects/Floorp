@@ -31,8 +31,10 @@ def archive_exe(pkg_dir, tagfile, sfx_package, package, use_upx):
         except BuildEnvironmentNotFoundException:
             # configure hasn't been run, just use the default
             sevenz = '7z'
-        subprocess.check_call([sevenz, 'a', '-r', '-t7z', mozpath.join(tmpdir, 'app.7z'), '-mx',
-                               '-m0=BCJ2', '-m1=LZMA:d25', '-m2=LZMA:d19', '-m3=LZMA:d19', '-mb0:1', '-mb0s1:2', '-mb0s2:3'])
+        subprocess.check_call([
+            sevenz, 'a', '-r', '-t7z', mozpath.join(tmpdir, 'app.7z'), '-mx',
+            '-m0=BCJ2', '-m1=LZMA:d25', '-m2=LZMA:d19', '-m3=LZMA:d19', '-mb0:1',
+            '-mb0s1:2', '-mb0s2:3'])
 
         with open(package, 'wb') as o:
             for i in [final_sfx, tagfile, mozpath.join(tmpdir, 'app.7z')]:

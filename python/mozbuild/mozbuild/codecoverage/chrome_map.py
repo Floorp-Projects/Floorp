@@ -2,11 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from collections import defaultdict
 import json
 import os
 import re
-import urlparse
 
 from mach.config import ConfigSettings
 from mach.logging import LoggingManager
@@ -120,9 +118,11 @@ class ChromeMapBackend(CommonBackend):
         #  A map from url prefixes to objdir directories:
         #  { "chrome://mozapps/content/": [ "dist/bin/chrome/toolkit/content/mozapps" ], ... }
         #  A map of overrides.
-        #  A map from objdir paths to sourcedir paths, and an object storing mapping information for preprocessed files:
+        #  A map from objdir paths to sourcedir paths, and an object storing mapping
+        #    information for preprocessed files:
         #  { "dist/bin/browser/chrome/browser/content/browser/aboutSessionRestore.js":
-        #    [ "$topsrcdir/browser/components/sessionstore/content/aboutSessionRestore.js", {} ], ... }
+        #    [ "$topsrcdir/browser/components/sessionstore/content/aboutSessionRestore.js", {} ],
+        #    ... }
         #  An object containing build configuration information.
         outputfile = os.path.join(self.environment.topobjdir, 'chrome-map.json')
         with self._write_file(outputfile) as fh:

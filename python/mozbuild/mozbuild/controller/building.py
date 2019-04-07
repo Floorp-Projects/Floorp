@@ -6,7 +6,6 @@ from __future__ import absolute_import, unicode_literals
 
 import errno
 import getpass
-import glob
 import io
 import json
 import logging
@@ -305,7 +304,7 @@ class BuildMonitor(MozbuildObject):
         try:
             warning = self._warnings_collector.process_line(line)
             message = line
-        except:
+        except Exception:
             pass
 
         return BuildOutputResult(warning, False, message)
@@ -902,7 +901,10 @@ class CCacheStats(object):
         return int(numeric * unit)
 
     def hit_rate_message(self):
-        return 'ccache (direct) hit rate: {:.1%}; (preprocessed) hit rate: {:.1%}; miss rate: {:.1%}'.format(*self.hit_rates())
+        return ('ccache (direct) hit rate: {:.1%}; (preprocessed) hit rate: {:.1%};'
+                ' miss rate: {:.1%}'.format(
+                    *self.hit_rates()
+                ))
 
     def hit_rates(self):
         direct = self._values['cache_hit_direct']
@@ -1144,12 +1146,13 @@ class BuildDriver(MozbuildObject):
                     # could potentially be fixed if the build monitor were more
                     # intelligent about encountering undefined state.
                     no_build_status = b'1' if make_dir is not None else b''
-                    status = self._run_make(directory=make_dir, target=make_target,
-                                            line_handler=output.on_line, log=False, print_directory=False,
-                                            ensure_exit_code=False, num_jobs=jobs, silent=not verbose,
-                                            append_env={
-                                                b'NO_BUILDSTATUS_MESSAGES': no_build_status},
-                                            keep_going=keep_going)
+                    status = self._run_make(
+                        directory=make_dir, target=make_target,
+                        line_handler=output.on_line, log=False, print_directory=False,
+                        ensure_exit_code=False, num_jobs=jobs, silent=not verbose,
+                        append_env={
+                            b'NO_BUILDSTATUS_MESSAGES': no_build_status},
+                        keep_going=keep_going)
 
                     if status != 0:
                         break
@@ -1299,8 +1302,10 @@ class BuildDriver(MozbuildObject):
                     print('To take your build for a test drive, run: |mach run|')
                 app = self.substs['MOZ_BUILD_APP']
                 if app in ('browser', 'mobile/android'):
-                    print('For more information on what to do now, see '
-                          'https://developer.mozilla.org/docs/Developer_Guide/So_You_Just_Built_Firefox')
+                    print(
+                        'For more information on what to do now, see '
+                        'https://developer.mozilla.org/docs/Developer_Guide/So_You_Just_Built_Firefox'  # noqa
+                    )
             except Exception:
                 # Ignore Exceptions in case we can't find config.status (such
                 # as when doing OSX Universal builds)
