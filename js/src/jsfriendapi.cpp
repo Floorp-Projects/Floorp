@@ -1007,12 +1007,14 @@ extern JS_FRIEND_API int JS::IsGCPoisoning() {
 struct DumpHeapTracer : public JS::CallbackTracer, public WeakMapTracer {
   const char* prefix;
   FILE* output;
+  mozilla::MallocSizeOf mallocSizeOf;
 
-  DumpHeapTracer(FILE* fp, JSContext* cx)
+  DumpHeapTracer(FILE* fp, JSContext* cx, mozilla::MallocSizeOf mallocSizeOf)
       : JS::CallbackTracer(cx, DoNotTraceWeakMaps),
         js::WeakMapTracer(cx->runtime()),
         prefix(""),
-        output(fp) {}
+        output(fp),
+        mallocSizeOf(mallocSizeOf) {}
 
  private:
   void trace(JSObject* map, JS::GCCellPtr key, JS::GCCellPtr value) override {
@@ -1074,7 +1076,16 @@ static void DumpHeapVisitCell(JSRuntime* rt, void* data, void* thing,
   char cellDesc[1024 * 32];
   JS_GetTraceThingInfo(cellDesc, sizeof(cellDesc), dtrc, thing, traceKind,
                        true);
-  fprintf(dtrc->output, "%p %c %s\n", thing, MarkDescriptor(thing), cellDesc);
+
+  fprintf(dtrc->output, "%p %c %s", thing, MarkDescriptor(thing), cellDesc);
+  if (dtrc->mallocSizeOf) {
+    auto size =
+        JS::ubi::Node(JS::GCCellPtr(thing, traceKind)).size(dtrc->mallocSizeOf);
+    fprintf(dtrc->output, " SIZE:: %" PRIu64 "\n", size);
+  } else {
+    fprintf(dtrc->output, "\n");
+  }
+
   js::TraceChildren(dtrc, thing, traceKind);
 }
 
@@ -1090,12 +1101,13 @@ void DumpHeapTracer::onChild(const JS::GCCellPtr& thing) {
 }
 
 void js::DumpHeap(JSContext* cx, FILE* fp,
-                  js::DumpHeapNurseryBehaviour nurseryBehaviour) {
+                  js::DumpHeapNurseryBehaviour nurseryBehaviour,
+                  mozilla::MallocSizeOf mallocSizeOf) {
   if (nurseryBehaviour == js::CollectNurseryBeforeDump) {
     cx->runtime()->gc.evictNursery(JS::GCReason::API);
   }
 
-  DumpHeapTracer dtrc(fp, cx);
+  DumpHeapTracer dtrc(fp, cx, mallocSizeOf);
 
   fprintf(dtrc.output, "# Roots.\n");
   {
