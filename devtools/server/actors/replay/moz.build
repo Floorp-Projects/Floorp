@@ -8,6 +8,7 @@ DevToolsModules(
     'control.js',
     'debugger.js',
     'graphics.js',
+    'inspector.js',
     'replay.js',
 )
 

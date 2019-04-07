@@ -6,6 +6,8 @@
 
 const {Cc, Ci, Cu} = require("chrome");
 
+const ReplayInspector = require("devtools/server/actors/replay/inspector");
+
 loader.lazyRequireGetter(this, "isShadowRoot", "devtools/shared/layout/utils", true);
 loader.lazyRequireGetter(this, "nodeFilterConstants", "devtools/shared/dom-node-filter-constants");
 loader.lazyRequireGetter(this, "standardTreeWalkerFilter", "devtools/server/actors/inspector/utils", true);
@@ -48,8 +50,12 @@ function DocumentWalker(node, rootWin,
     throw new Error("Got an invalid root window in DocumentWalker");
   }
 
-  this.walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"]
-    .createInstance(Ci.inIDeepTreeWalker);
+  if (isReplaying) {
+    this.walker = ReplayInspector.newDeepTreeWalker();
+  } else {
+    this.walker = Cc["@mozilla.org/inspector/deep-tree-walker;1"]
+      .createInstance(Ci.inIDeepTreeWalker);
+  }
   this.walker.showAnonymousContent = showAnonymousContent;
   this.walker.showSubDocuments = true;
   this.walker.showDocumentsAsNodes = true;
