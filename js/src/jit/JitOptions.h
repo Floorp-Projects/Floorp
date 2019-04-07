@@ -65,7 +65,6 @@ struct DefaultJitOptions {
   bool disableCacheIRBinaryArith;
   bool disableSincos;
   bool disableSink;
-  bool eagerCompilation;
   bool forceInlineCaches;
   bool fullDebugChecks;
   bool limitScriptSize;
@@ -114,10 +113,14 @@ struct DefaultJitOptions {
 
   DefaultJitOptions();
   bool isSmallFunction(JSScript* script) const;
-  void setEagerCompilation();
+  void setEagerIonCompilation();
   void setCompilerWarmUpThreshold(uint32_t warmUpThreshold);
   void resetCompilerWarmUpThreshold();
   void enableGvn(bool val);
+
+  bool eagerIonCompilation() const {
+    return normalIonWarmUpThreshold == 0;
+  }
 };
 
 extern DefaultJitOptions JitOptions;

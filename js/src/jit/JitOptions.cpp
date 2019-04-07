@@ -136,9 +136,6 @@ DefaultJitOptions::DefaultJitOptions() {
   // Toggles whether sink code motion is globally disabled.
   SET_DEFAULT(disableSink, true);
 
-  // Whether functions are compiled immediately.
-  SET_DEFAULT(eagerCompilation, false);
-
   // Whether IonBuilder should prefer IC generation above specialized MIR.
   SET_DEFAULT(forceInlineCaches, false);
 
@@ -267,32 +264,18 @@ bool DefaultJitOptions::isSmallFunction(JSScript* script) const {
 
 void DefaultJitOptions::enableGvn(bool enable) { disableGvn = !enable; }
 
-void DefaultJitOptions::setEagerCompilation() {
-  eagerCompilation = true;
+void DefaultJitOptions::setEagerIonCompilation() {
   baselineWarmUpThreshold = 0;
   normalIonWarmUpThreshold = 0;
 }
 
 void DefaultJitOptions::setCompilerWarmUpThreshold(uint32_t warmUpThreshold) {
   normalIonWarmUpThreshold = warmUpThreshold;
-
-  // Undo eager compilation
-  if (eagerCompilation && warmUpThreshold != 0) {
-    jit::DefaultJitOptions defaultValues;
-    eagerCompilation = false;
-    baselineWarmUpThreshold = defaultValues.baselineWarmUpThreshold;
-  }
 }
 
 void DefaultJitOptions::resetCompilerWarmUpThreshold() {
   jit::DefaultJitOptions defaultValues;
   normalIonWarmUpThreshold = defaultValues.normalIonWarmUpThreshold;
-
-  // Undo eager compilation
-  if (eagerCompilation) {
-    eagerCompilation = false;
-    baselineWarmUpThreshold = defaultValues.baselineWarmUpThreshold;
-  }
 }
 
 }  // namespace jit

@@ -10399,7 +10399,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   }
 
   if (op.getBoolOption("ion-eager")) {
-    jit::JitOptions.setEagerCompilation();
+    jit::JitOptions.setEagerIonCompilation();
   }
 
   offthreadCompilation = true;
