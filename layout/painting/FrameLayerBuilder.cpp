@@ -1216,25 +1216,16 @@ class ContainerState {
     return aRect.ScaleToNearestPixels(mParameters.mXScale, mParameters.mYScale,
                                       mAppUnitsPerDevPixel);
   }
-  nsIntRegion ScaleRegionToNearestPixels(const nsRegion& aRegion) const {
-    return aRegion.ScaleToNearestPixels(
-        mParameters.mXScale, mParameters.mYScale, mAppUnitsPerDevPixel);
-  }
   nsIntRect ScaleToOutsidePixels(const nsRect& aRect,
                                  bool aSnap = false) const {
+    if (aRect.IsEmpty()) {
+      return nsIntRect();
+    }
     if (aSnap && mSnappingEnabled) {
       return ScaleToNearestPixels(aRect);
     }
     return aRect.ScaleToOutsidePixels(mParameters.mXScale, mParameters.mYScale,
                                       mAppUnitsPerDevPixel);
-  }
-  nsIntRegion ScaleToOutsidePixels(const nsRegion& aRegion,
-                                   bool aSnap = false) const {
-    if (aSnap && mSnappingEnabled) {
-      return ScaleRegionToNearestPixels(aRegion);
-    }
-    return aRegion.ScaleToOutsidePixels(
-        mParameters.mXScale, mParameters.mYScale, mAppUnitsPerDevPixel);
   }
   nsIntRect ScaleToInsidePixels(const nsRect& aRect, bool aSnap = false) const {
     if (aSnap && mSnappingEnabled) {
@@ -1243,7 +1234,10 @@ class ContainerState {
     return aRect.ScaleToInsidePixels(mParameters.mXScale, mParameters.mYScale,
                                      mAppUnitsPerDevPixel);
   }
-
+  nsIntRegion ScaleRegionToNearestPixels(const nsRegion& aRegion) const {
+    return aRegion.ScaleToNearestPixels(
+        mParameters.mXScale, mParameters.mYScale, mAppUnitsPerDevPixel);
+  }
   nsIntRegion ScaleRegionToInsidePixels(const nsRegion& aRegion,
                                         bool aSnap = false) const {
     if (aSnap && mSnappingEnabled) {
@@ -1255,6 +1249,9 @@ class ContainerState {
 
   nsIntRegion ScaleRegionToOutsidePixels(const nsRegion& aRegion,
                                          bool aSnap = false) const {
+    if (aRegion.IsEmpty()) {
+      return nsIntRegion();
+    }
     if (aSnap && mSnappingEnabled) {
       return ScaleRegionToNearestPixels(aRegion);
     }
@@ -4921,7 +4918,7 @@ void ContainerState::ProcessDisplayItems(nsDisplayList* aList) {
       nsIntRegion itemVisibleRegion = itemVisibleRect;
       nsRegion tightBounds = item->GetTightBounds(mBuilder, &snap);
       if (!tightBounds.IsEmpty()) {
-        itemVisibleRegion.AndWith(ScaleToOutsidePixels(tightBounds, snap));
+        itemVisibleRegion.AndWith(ScaleRegionToOutsidePixels(tightBounds, snap));
       }
 
       ContainerLayer* oldContainer = ownLayer->GetParent();
