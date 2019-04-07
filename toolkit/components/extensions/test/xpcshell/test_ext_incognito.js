@@ -8,13 +8,20 @@ AddonTestUtils.init(this);
 AddonTestUtils.overrideCertDB();
 AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 AddonTestUtils.usePrivilegedSignatures = false;
-AddonTestUtils.hookAMTelemetryEvents();
 
 // Assert on the expected "addonsManager.action" telemetry events (and optional filter events to verify
 // by using a given actionType).
 function assertActionAMTelemetryEvent(expectedActionEvents, assertMessage, {actionType} = {}) {
-  const events = AddonTestUtils.getAMTelemetryEvents().filter(({method, extra}) => {
-    return method === "action" && (!actionType ? true : extra && extra.action === actionType);
+  const snapshot = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+
+  ok(snapshot.parent && snapshot.parent.length > 0, "Got parent telemetry events in the snapshot");
+
+  const events = snapshot.parent.filter(([timestamp, category, method, object, value, extra]) => {
+    return category === "addonsManager" && method === "action" && (
+      !actionType ? true : extra && extra.action === actionType
+    );
+  }).map(([timestamp, category, method, object, value, extra]) => {
+    return {method, object, value, extra};
   });
 
   Assert.deepEqual(events, expectedActionEvents, assertMessage);
@@ -72,15 +79,16 @@ add_task(async function test_extension_incognito_spanning_grandfathered() {
 
   // This extension gets disabled before the "upgrade", it should not
   // get grandfathered permissions.
+  const disabledAddonId = "disabled-ext@mozilla.com";
   let disabledWrapper = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {gecko: {id: "@disabled"}},
+      applications: {gecko: {id: disabledAddonId}},
       incognito: "spanning",
     },
     useAddonManager: "permanent",
   });
   await disabledWrapper.startup();
-  let disabledPolicy = WebExtensionPolicy.getByID("@disabled");
+  let disabledPolicy = WebExtensionPolicy.getByID(disabledAddonId);
 
   // Verify policy settings.
   equal(disabledPolicy.permissions.includes("internal:privateBrowsingAllowed"), false,
@@ -88,20 +96,20 @@ add_task(async function test_extension_incognito_spanning_grandfathered() {
   equal(disabledPolicy.privateBrowsingAllowed, true,
         "privateBrowsingAllowed in disabled addon");
 
-  let disabledAddon = await AddonManager.getAddonByID("@disabled");
+  let disabledAddon = await AddonManager.getAddonByID(disabledAddonId);
   await disabledAddon.disable();
 
   // This extension gets grandfathered permissions for private browsing.
-  let id = "@grandfathered";
+  let addonId = "grandfathered@mozilla.com";
   let wrapper = ExtensionTestUtils.loadExtension({
     manifest: {
-      applications: {gecko: {id}},
+      applications: {gecko: {id: addonId}},
       incognito: "spanning",
     },
     useAddonManager: "permanent",
   });
   await wrapper.startup();
-  let policy = WebExtensionPolicy.getByID(id);
+  let policy = WebExtensionPolicy.getByID(addonId);
 
   // Verify policy settings.
   equal(policy.permissions.includes("internal:privateBrowsingAllowed"), false,
@@ -111,6 +119,10 @@ add_task(async function test_extension_incognito_spanning_grandfathered() {
 
   // Turn on incognito support and update the browser.
   Services.prefs.setBoolPref("extensions.allowPrivateBrowsingByDefault", false);
+  // Disable the addonsManager telemetry event category, to ensure that it will
+  // be enabled automatically during the AddonManager/XPIProvider startup and
+  // the telemetry event recorded (See Bug 1540112 for a rationale).
+  Services.telemetry.setEventRecordingEnabled("addonsManager", false);
   await AddonTestUtils.promiseRestartManager("2");
   await wrapper.awaitStartup();
 
@@ -119,16 +131,16 @@ add_task(async function test_extension_incognito_spanning_grandfathered() {
      "pref marked as migrated");
 
   // Verify policy settings.
-  policy = WebExtensionPolicy.getByID(id);
+  policy = WebExtensionPolicy.getByID(addonId);
   ok(policy.permissions.includes("internal:privateBrowsingAllowed"),
      "privateBrowsingAllowed is in permissions");
   equal(policy.privateBrowsingAllowed, true,
         "privateBrowsingAllowed in extension");
 
   // Verify the disabled addon did not get permissions.
-  disabledAddon = await AddonManager.getAddonByID("@disabled");
+  disabledAddon = await AddonManager.getAddonByID(disabledAddonId);
   await disabledAddon.enable();
-  disabledPolicy = WebExtensionPolicy.getByID("@disabled");
+  disabledPolicy = WebExtensionPolicy.getByID(disabledAddonId);
 
   // Verify policy settings.
   equal(disabledPolicy.permissions.includes("internal:privateBrowsingAllowed"), false,
@@ -145,10 +157,7 @@ add_task(async function test_extension_incognito_spanning_grandfathered() {
     method: "action",
     object: "appUpgrade",
     value: "on",
-    extra: {
-      addonId: "@grandfathered",
-      action: "privateBrowsingAllowed",
-    },
+    extra: {addonId, action: "privateBrowsingAllowed"},
   }];
 
   assertActionAMTelemetryEvent(
