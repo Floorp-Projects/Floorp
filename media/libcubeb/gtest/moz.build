@@ -12,7 +12,7 @@ UNIFIED_SOURCES += [
   'test_utils.cpp'
 ]
 
-if CONFIG['MOZ_PULSEAUDIO'] or CONFIG['OS_TARGET'] in ('Darwin', 'WINNT', 'Android'):
+if CONFIG['MOZ_PULSEAUDIO'] or CONFIG['OS_TARGET'] in ('Darwin', 'WINNT'):
   UNIFIED_SOURCES += [
     'test_resampler.cpp',
   ]

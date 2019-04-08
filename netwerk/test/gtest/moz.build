@@ -10,15 +10,19 @@ UNIFIED_SOURCES += [
     'TestHttpAuthUtils.cpp',
     'TestIsValidIp.cpp',
     'TestMIMEInputStream.cpp',
-    'TestMozURL.cpp',
     'TestPACMan.cpp',
     'TestPartiallySeekableInputStream.cpp',
     'TestProtocolProxyService.cpp',
     'TestReadStreamToString.cpp',
-    'TestServerTimingHeader.cpp',
     'TestStandardURL.cpp',
     'TestURIMutator.cpp',
 ]
+
+if CONFIG['OS_TARGET'] != 'Android':
+    UNIFIED_SOURCES += [
+        'TestMozURL.cpp',
+        'TestServerTimingHeader.cpp',
+    ]
 
 TEST_HARNESS_FILES.gtest += [
     'urltestdata.json',
