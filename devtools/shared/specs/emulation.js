@@ -130,6 +130,25 @@ const emulationSpec = generateActorSpec({
       },
       response: {},
     },
+
+    getIsPrintSimulationEnabled: {
+      request: {},
+      response: {
+        enabled: RetVal("boolean"),
+      },
+    },
+
+    startPrintMediaSimulation: {
+      request: {},
+      response: {},
+    },
+
+    stopPrintMediaSimulation: {
+      request: {
+        state: Arg(0, "boolean"),
+      },
+      response: {},
+    },
   },
 });
 
