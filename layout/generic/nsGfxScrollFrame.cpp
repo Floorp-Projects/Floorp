@@ -1356,7 +1356,7 @@ bool ScrollFrameHelper::WantAsyncScroll() const {
   ScrollStyles styles = GetScrollStylesFromFrame();
   nscoord oneDevPixel =
       GetScrolledFrame()->PresContext()->AppUnitsPerDevPixel();
-  nsRect scrollRange = GetScrollRange();
+  nsRect scrollRange = GetLayoutScrollRange();
 
   // If the page has a visual viewport size that's different from
   // the layout viewport size at the current zoom level, we need to be
@@ -1463,7 +1463,7 @@ void ScrollFrameHelper::ThumbMoved(nsScrollbarFrame* aScrollbar,
   nsPoint current = GetScrollPosition();
   nsPoint dest = current;
   if (isHorizontal) {
-    dest.x = IsPhysicalLTR() ? aNewPos : aNewPos - GetScrollRange().width;
+    dest.x = IsPhysicalLTR() ? aNewPos : aNewPos - GetLayoutScrollRange().width;
   } else {
     dest.y = aNewPos;
   }
@@ -4049,7 +4049,7 @@ ScrollStyles ScrollFrameHelper::GetScrollStylesFromFrame() const {
   return result;
 }
 
-nsRect ScrollFrameHelper::GetScrollRange() const {
+nsRect ScrollFrameHelper::GetLayoutScrollRange() const {
   return GetScrollRange(mScrollPort.width, mScrollPort.height);
 }
 
