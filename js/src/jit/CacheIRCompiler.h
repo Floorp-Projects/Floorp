@@ -34,7 +34,9 @@ namespace jit {
   _(GuardClass)                           \
   _(GuardGroupHasUnanalyzedNewScript)     \
   _(GuardIsExtensible)                    \
-  _(GuardIsNativeFunction)                \
+  _(GuardFunctionIsNative)                \
+  _(GuardFunctionIsConstructor)           \
+  _(GuardSpecificNativeFunction)          \
   _(GuardFunctionPrototype)               \
   _(GuardIsNativeObject)                  \
   _(GuardIsProxy)                         \
@@ -55,6 +57,7 @@ namespace jit {
   _(GuardNoAllocationMetadataBuilder)     \
   _(GuardObjectGroupNotPretenured)        \
   _(GuardFunctionHasJitEntry)             \
+  _(GuardNotClassConstructor)             \
   _(LoadObject)                           \
   _(LoadProto)                            \
   _(LoadEnclosingEnvironment)             \
@@ -574,6 +577,8 @@ class MOZ_RAII CacheRegisterAllocator {
   void discardStack(MacroAssembler& masm);
 
   Address addressOf(MacroAssembler& masm, BaselineFrameSlot slot) const;
+  BaseValueIndex addressOf(MacroAssembler& masm, Register argcReg,
+                           BaselineFrameSlot slot) const;
 
   // Returns the register for the given operand. If the operand is currently
   // not in a register, it will load it into one.
@@ -885,10 +890,10 @@ class MOZ_RAII CacheIRCompiler {
   }
 
  public:
-  // The maximum number of inlineable spread call arguments. Keep this small
-  // to avoid controllable stack overflows by attackers passing large arrays
-  // to spread call.
-  static const uint32_t MAX_ARGS_SPREAD_LENGTH = 16;
+  // The maximum number of arguments passed to a spread call or
+  // fun_apply IC.  Keep this small to avoid controllable stack
+  // overflows by attackers passing large arrays.
+  static const uint32_t MAX_ARGS_ARRAY_LENGTH = 16;
 };
 
 // Ensures the IC's output register is available for writing.

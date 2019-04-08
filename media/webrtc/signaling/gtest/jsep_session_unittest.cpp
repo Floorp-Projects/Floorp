@@ -4474,11 +4474,87 @@ TEST_F(JsepSessionTest, LowDynamicPayloadType) {
   ASSERT_EQ("12", codec->mDefaultPt);
 }
 
+TEST_F(JsepSessionTest, TestOfferPTAsymmetry) {
+  SetPayloadTypeNumber(*mSessionAns, "opus", "105");
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(*mSessionOff, "audio");
+  AddTracks(*mSessionAns, "audio");
+  JsepOfferOptions options;
+
+  // Ensure that mSessionAns is appropriately configured. Also ensure that
+  // creating an offer with 105 does not prompt mSessionAns to ignore the
+  // PT in the offer.
+  std::string offer;
+  JsepSession::Result result = mSessionAns->CreateOffer(options, &offer);
+  ASSERT_FALSE(result.mError.isSome());
+  ASSERT_NE(std::string::npos, offer.find("a=rtpmap:105 opus")) << offer;
+
+  OfferAnswer();
+
+  // Answerer should use what the offerer suggested
+  UniquePtr<JsepCodecDescription> codec;
+  GetCodec(*mSessionAns, 0, sdp::kSend, 0, 0, &codec);
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("opus", codec->mName);
+  ASSERT_EQ("109", codec->mDefaultPt);
+  GetCodec(*mSessionAns, 0, sdp::kRecv, 0, 0, &codec);
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("opus", codec->mName);
+  ASSERT_EQ("109", codec->mDefaultPt);
+
+  // Answerer should not change when it reoffers
+  result = mSessionAns->CreateOffer(options, &offer);
+  ASSERT_FALSE(result.mError.isSome());
+  ASSERT_NE(std::string::npos, offer.find("a=rtpmap:109 opus")) << offer;
+}
+
+TEST_F(JsepSessionTest, TestAnswerPTAsymmetry) {
+  // JsepSessionImpl will never answer with an asymmetric payload type
+  // (tested in TestOfferPTAsymmetry), so we have to rewrite SDP a little.
+  types.push_back(SdpMediaSection::kAudio);
+  AddTracks(*mSessionOff, "audio");
+  AddTracks(*mSessionAns, "audio");
+
+  std::string offer = CreateOffer();
+  SetLocalOffer(offer);
+
+  Replace("a=rtpmap:109 opus", "a=rtpmap:105 opus", &offer);
+  Replace("m=audio 9 UDP/TLS/RTP/SAVPF 109", "m=audio 9 UDP/TLS/RTP/SAVPF 105",
+          &offer);
+  ReplaceAll("a=fmtp:109", "a=fmtp:105", &offer);
+  SetRemoteOffer(offer);
+
+  std::string answer = CreateAnswer();
+  SetLocalAnswer(answer);
+  SetRemoteAnswer(answer);
+
+  UniquePtr<JsepCodecDescription> codec;
+  GetCodec(*mSessionOff, 0, sdp::kSend, 0, 0, &codec);
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("opus", codec->mName);
+  ASSERT_EQ("105", codec->mDefaultPt);
+  GetCodec(*mSessionOff, 0, sdp::kRecv, 0, 0, &codec);
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("opus", codec->mName);
+  ASSERT_EQ("109", codec->mDefaultPt);
+
+  GetCodec(*mSessionAns, 0, sdp::kSend, 0, 0, &codec);
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("opus", codec->mName);
+  ASSERT_EQ("105", codec->mDefaultPt);
+  GetCodec(*mSessionAns, 0, sdp::kRecv, 0, 0, &codec);
+  ASSERT_TRUE(codec);
+  ASSERT_EQ("opus", codec->mName);
+  ASSERT_EQ("105", codec->mDefaultPt);
+}
+
 TEST_F(JsepSessionTest, PayloadTypeClash) {
-  // Disable this so mSessionOff doesn't have a duplicate
-  SetCodecEnabled(*mSessionOff, "PCMU", false);
+  // Set up a scenario where mSessionAns' favorite codec (opus) is unsupported
+  // by mSessionOff, and mSessionOff uses that payload type for something else.
+  SetCodecEnabled(*mSessionOff, "opus", false);
   SetPayloadTypeNumber(*mSessionOff, "opus", "0");
-  SetPayloadTypeNumber(*mSessionAns, "PCMU", "0");
+  SetPayloadTypeNumber(*mSessionOff, "G722", "109");
+  SetPayloadTypeNumber(*mSessionAns, "opus", "109");
   types.push_back(SdpMediaSection::kAudio);
   AddTracks(*mSessionOff, "audio");
   AddTracks(*mSessionAns, "audio");
@@ -4487,21 +4563,22 @@ TEST_F(JsepSessionTest, PayloadTypeClash) {
   UniquePtr<JsepCodecDescription> codec;
   GetCodec(*mSessionAns, 0, sdp::kSend, 0, 0, &codec);
   ASSERT_TRUE(codec);
-  ASSERT_EQ("opus", codec->mName);
-  ASSERT_EQ("0", codec->mDefaultPt);
+  ASSERT_EQ("G722", codec->mName);
+  ASSERT_EQ("109", codec->mDefaultPt);
   GetCodec(*mSessionAns, 0, sdp::kRecv, 0, 0, &codec);
   ASSERT_TRUE(codec);
-  ASSERT_EQ("opus", codec->mName);
-  ASSERT_EQ("0", codec->mDefaultPt);
+  ASSERT_EQ("G722", codec->mName);
+  ASSERT_EQ("109", codec->mDefaultPt);
 
-  // Now, make sure that mSessionAns does not put a=rtpmap:0 PCMU in a reoffer,
-  // since pt 0 is taken for opus (the answerer still supports PCMU, and will
-  // reoffer it, but it should choose a new payload type for it)
+  // Now, make sure that mSessionAns does not put a=rtpmap:109 opus in a
+  // reoffer, since pt 109 is taken for PCMU (the answerer still supports opus,
+  // and will reoffer it, but it should choose a new payload type for it)
   JsepOfferOptions options;
   std::string reoffer;
   JsepSession::Result result = mSessionAns->CreateOffer(options, &reoffer);
   ASSERT_FALSE(result.mError.isSome());
-  ASSERT_EQ(std::string::npos, reoffer.find("a=rtpmap:0 PCMU")) << reoffer;
+  ASSERT_EQ(std::string::npos, reoffer.find("a=rtpmap:109 opus")) << reoffer;
+  ASSERT_NE(std::string::npos, reoffer.find(" opus")) << reoffer;
 }
 
 TEST_P(JsepSessionTest, TestGlareRollback) {

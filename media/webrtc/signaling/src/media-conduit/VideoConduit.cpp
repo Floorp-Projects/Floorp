@@ -979,11 +979,13 @@ bool WebrtcVideoConduit::SetRemoteSSRCLocked(unsigned int ssrc) {
   }
 
   mRecvStreamConfig.rtp.remote_ssrc = ssrc;
-  mStsThread->Dispatch(
-      NS_NewRunnableFunction("WebrtcVideoConduit::WaitingForInitialSsrcNoMore",
-                             [this, self = RefPtr<WebrtcVideoConduit>(this)]() {
-                               mWaitingForInitialSsrc = false;
-                             }));
+  mStsThread->Dispatch(NS_NewRunnableFunction(
+      "WebrtcVideoConduit::WaitingForInitialSsrcNoMore",
+      [this, self = RefPtr<WebrtcVideoConduit>(this)]() mutable {
+        mWaitingForInitialSsrc = false;
+        NS_ReleaseOnMainThreadSystemGroup(
+            "WebrtcVideoConduit::WaitingForInitialSsrcNoMore", self.forget());
+      }));
   // On the next StartReceiving() or ConfigureRecvMediaCodec, force
   // building a new RecvStream to switch SSRCs.
   DeleteRecvStream();
@@ -1097,11 +1099,13 @@ void WebrtcVideoConduit::PollStats() {
   mStsThread->Dispatch(NS_NewRunnableFunction(
       "WebrtcVideoConduit::UpdateStreamStatistics",
       [this, self = RefPtr<WebrtcVideoConduit>(this), stats = std::move(stats),
-       runnables = std::move(runnables)]() {
+       runnables = std::move(runnables)]() mutable {
         mCallStats.Update(stats);
         for (const auto& runnable : runnables) {
           runnable->Run();
         }
+        NS_ReleaseOnMainThreadSystemGroup(
+            "WebrtcVideoConduit::UpdateStreamStatistics", self.forget());
       }));
 }
 
@@ -1110,13 +1114,15 @@ void WebrtcVideoConduit::UpdateVideoStatsTimer() {
 
   bool transmitting = mEngineTransmitting;
   bool receiving = mEngineReceiving;
-  mStsThread->Dispatch(
-      NS_NewRunnableFunction("WebrtcVideoConduit::SetSendStreamStatsActive",
-                             [this, self = RefPtr<WebrtcVideoConduit>(this),
-                              transmitting, receiving]() {
-                               mSendStreamStats.SetActive(transmitting);
-                               mRecvStreamStats.SetActive(receiving);
-                             }));
+  mStsThread->Dispatch(NS_NewRunnableFunction(
+      "WebrtcVideoConduit::SetSendStreamStatsActive",
+      [this, self = RefPtr<WebrtcVideoConduit>(this), transmitting,
+       receiving]() mutable {
+        mSendStreamStats.SetActive(transmitting);
+        mRecvStreamStats.SetActive(receiving);
+        NS_ReleaseOnMainThreadSystemGroup(
+            "WebrtcVideoConduit::SetSendStreamStatsActive", self.forget());
+      }));
 
   bool shouldBeActive = transmitting || receiving;
   if (mVideoStatsTimerActive == shouldBeActive) {
@@ -1886,11 +1892,13 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
   mVideoBroadcaster.OnFrame(webrtc::VideoFrame(
       buffer, frame.timestamp(), frame.render_time_ms(), frame.rotation()));
 
-  mStsThread->Dispatch(
-      NS_NewRunnableFunction("SendStreamStatistics::FrameDeliveredToEncoder",
-                             [self = RefPtr<WebrtcVideoConduit>(this), this]() {
-                               mSendStreamStats.FrameDeliveredToEncoder();
-                             }));
+  mStsThread->Dispatch(NS_NewRunnableFunction(
+      "SendStreamStatistics::FrameDeliveredToEncoder",
+      [self = RefPtr<WebrtcVideoConduit>(this), this]() mutable {
+        mSendStreamStats.FrameDeliveredToEncoder();
+        NS_ReleaseOnMainThreadSystemGroup(
+            "SendStreamStatistics::FrameDeliveredToEncoder", self.forget());
+      }));
   return kMediaConduitNoError;
 }
 
@@ -1956,12 +1964,16 @@ MediaConduitErrorCode WebrtcVideoConduit::ReceivedRTPPacket(const void* data,
             // We want to unblock the queued packets on the original thread
             mStsThread->Dispatch(NS_NewRunnableFunction(
                 "WebrtcVideoConduit::QueuedPacketsHandler",
-                [this, self, ssrc]() mutable {
+                [this, self = RefPtr<WebrtcVideoConduit>(this),
+                 ssrc]() mutable {
                   if (ssrc != mRecvSSRC) {
                     // this is an intermediate switch; another is in-flight
                     return;
                   }
-                  self->mRtpPacketQueue.DequeueAll(self);
+                  mRtpPacketQueue.DequeueAll(this);
+                  NS_ReleaseOnMainThreadSystemGroup(
+                      "WebrtcVideoConduit::QueuedPacketsHandler",
+                      self.forget());
                 }));
           }));
       return kMediaConduitNoError;

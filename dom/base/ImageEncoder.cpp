@@ -285,11 +285,11 @@ nsresult ImageEncoder::ExtractDataAsync(
 nsresult ImageEncoder::GetInputStream(int32_t aWidth, int32_t aHeight,
                                       uint8_t* aImageBuffer, int32_t aFormat,
                                       imgIEncoder* aEncoder,
-                                      const char16_t* aEncoderOptions,
+                                      const nsAString& aEncoderOptions,
                                       nsIInputStream** aStream) {
   nsresult rv = aEncoder->InitFromData(aImageBuffer, aWidth * aHeight * 4,
                                        aWidth, aHeight, aWidth * 4, aFormat,
-                                       nsDependentString(aEncoderOptions));
+                                       aEncoderOptions);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<imgIEncoder> encoder(aEncoder);
@@ -319,16 +319,14 @@ nsresult ImageEncoder::ExtractDataInternal(
 
     rv = ImageEncoder::GetInputStream(
         aSize.width, aSize.height, aImageBuffer, aFormat, aEncoder,
-        nsPromiseFlatString(aOptions).get(), getter_AddRefs(imgStream));
+        aOptions, getter_AddRefs(imgStream));
   } else if (aContext && !aUsePlaceholder) {
     NS_ConvertUTF16toUTF8 encoderType(aType);
-    rv = aContext->GetInputStream(encoderType.get(),
-                                  nsPromiseFlatString(aOptions).get(),
+    rv = aContext->GetInputStream(encoderType.get(), aOptions,
                                   getter_AddRefs(imgStream));
   } else if (aRenderer && !aUsePlaceholder) {
     NS_ConvertUTF16toUTF8 encoderType(aType);
-    rv = aRenderer->GetInputStream(encoderType.get(),
-                                   nsPromiseFlatString(aOptions).get(),
+    rv = aRenderer->GetInputStream(encoderType.get(), aOptions,
                                    getter_AddRefs(imgStream));
   } else if (aImage && !aUsePlaceholder) {
     // It is safe to convert PlanarYCbCr format from YUV to RGB off-main-thread.

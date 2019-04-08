@@ -36,6 +36,8 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   uint64_t OwnerProcessId() const { return mProcessId; }
   ContentParent* GetContentParent() const;
 
+  void GetCurrentRemoteType(nsAString& aRemoteType, ErrorResult& aRv) const;
+
   void SetOwnerProcessId(uint64_t aProcessId) { mProcessId = aProcessId; }
 
   void GetWindowGlobals(nsTArray<RefPtr<WindowGlobalParent>>& aWindows);

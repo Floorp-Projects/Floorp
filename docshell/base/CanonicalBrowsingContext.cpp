@@ -65,6 +65,23 @@ ContentParent* CanonicalBrowsingContext::GetContentParent() const {
   return cpm->GetContentProcessById(ContentParentId(mProcessId));
 }
 
+void CanonicalBrowsingContext::GetCurrentRemoteType(nsAString& aRemoteType,
+                                                    ErrorResult& aRv) const {
+  // If we're in the parent process, dump out the void string.
+  if (mProcessId == 0) {
+    aRemoteType.Assign(VoidString());
+    return;
+  }
+
+  ContentParent* cp = GetContentParent();
+  if (!cp) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return;
+  }
+
+  aRemoteType.Assign(cp->GetRemoteType());
+}
+
 void CanonicalBrowsingContext::GetWindowGlobals(
     nsTArray<RefPtr<WindowGlobalParent>>& aWindows) {
   aWindows.SetCapacity(mWindowGlobals.Count());

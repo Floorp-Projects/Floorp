@@ -95,6 +95,7 @@ void JsepTrack::EnsureSsrcs(SsrcGenerator& ssrcGenerator) {
 
 void JsepTrack::PopulateCodecs(
     const std::vector<UniquePtr<JsepCodecDescription>>& prototype) {
+  mPrototypeCodecs.clear();
   for (const auto& prototypeCodec : prototype) {
     if (prototypeCodec->mType == mType) {
       mPrototypeCodecs.emplace_back(prototypeCodec->Clone());
@@ -123,9 +124,8 @@ void JsepTrack::AddToAnswer(const SdpMediaSection& offer,
                             SdpMediaSection* answer) {
   // We do not modify mPrototypeCodecs here, since we're only creating an
   // answer. Once offer/answer concludes, we will update mPrototypeCodecs.
-  std::vector<UniquePtr<JsepCodecDescription>> codecs;
-  codecs = GetCodecClones();
-  NegotiateCodecs(offer, &codecs);
+  std::vector<UniquePtr<JsepCodecDescription>> codecs =
+      NegotiateCodecs(offer, true);
   if (codecs.empty()) {
     return;
   }
@@ -375,31 +375,44 @@ static bool CompareCodec(const UniquePtr<JsepCodecDescription>& lhs,
   return lhs->mStronglyPreferred && !rhs->mStronglyPreferred;
 }
 
-void JsepTrack::NegotiateCodecs(
-    const SdpMediaSection& remote,
-    std::vector<UniquePtr<JsepCodecDescription>>* codecs,
-    std::map<std::string, std::string>* formatChanges) const {
-  MOZ_ASSERT(codecs->size());
-  std::vector<UniquePtr<JsepCodecDescription>> unnegotiatedCodecs;
-  std::swap(unnegotiatedCodecs, *codecs);
+std::vector<UniquePtr<JsepCodecDescription>> JsepTrack::NegotiateCodecs(
+    const SdpMediaSection& remote, bool isOffer) {
+  std::vector<UniquePtr<JsepCodecDescription>> negotiatedCodecs;
+  std::vector<UniquePtr<JsepCodecDescription>> newPrototypeCodecs;
 
   // Outer loop establishes the remote side's preference
   for (const std::string& fmt : remote.GetFormats()) {
-    for (auto& codec : unnegotiatedCodecs) {
+    for (auto& codec : mPrototypeCodecs) {
       if (!codec || !codec->mEnabled || !codec->Matches(fmt, remote)) {
         continue;
       }
 
-      std::string originalFormat = codec->mDefaultPt;
-      if (codec->Negotiate(fmt, remote)) {
-        if (formatChanges) {
-          (*formatChanges)[originalFormat] = codec->mDefaultPt;
-        }
-        codecs->push_back(std::move(codec));
+      // First codec of ours that matches. See if we can negotiate it.
+      UniquePtr<JsepCodecDescription> clone(codec->Clone());
+      if (clone->Negotiate(fmt, remote, isOffer)) {
+        // If negotiation changed the payload type, remember that for later
+        codec->mDefaultPt = clone->mDefaultPt;
+        // Moves the codec out of mPrototypeCodecs, leaving an empty
+        // UniquePtr, so we don't use it again. Also causes successfully
+        // negotiated codecs to be placed up front in the future.
+        newPrototypeCodecs.emplace_back(std::move(codec));
+        negotiatedCodecs.emplace_back(std::move(clone));
         break;
       }
     }
   }
+
+  // newPrototypeCodecs contains just the negotiated stuff so far. Add the rest.
+  for (auto& codec : mPrototypeCodecs) {
+    if (codec) {
+      newPrototypeCodecs.emplace_back(std::move(codec));
+    }
+  }
+
+  // Negotiated stuff is up front, so it will take precedence when ensuring
+  // there are no duplicate payload types.
+  EnsureNoDuplicatePayloadTypes(&newPrototypeCodecs);
+  std::swap(newPrototypeCodecs, mPrototypeCodecs);
 
   // Find the (potential) red codec and ulpfec codec or telephone-event
   JsepVideoCodecDescription* red = nullptr;
@@ -407,7 +420,7 @@ void JsepTrack::NegotiateCodecs(
   JsepAudioCodecDescription* dtmf = nullptr;
   // We can safely cast here since JsepTrack has a MediaType and only codecs
   // that match that MediaType (kAudio or kVideo) are added.
-  for (auto& codec : *codecs) {
+  for (auto& codec : negotiatedCodecs) {
     if (codec->mName == "red") {
       red = static_cast<JsepVideoCodecDescription*>(codec.get());
     } else if (codec->mName == "ulpfec") {
@@ -425,7 +438,7 @@ void JsepTrack::NegotiateCodecs(
     std::swap(unnegotiatedEncodings, red->mRedundantEncodings);
     for (auto redundantPt : unnegotiatedEncodings) {
       std::string pt = std::to_string(redundantPt);
-      for (const auto& codec : *codecs) {
+      for (const auto& codec : negotiatedCodecs) {
         if (pt == codec->mDefaultPt) {
           red->mRedundantEncodings.push_back(redundantPt);
           break;
@@ -438,7 +451,7 @@ void JsepTrack::NegotiateCodecs(
   // a rtcpfb attr). If we see both red and ulpfec codecs, we enable FEC
   // on all the other codecs.
   if (red && ulpfec) {
-    for (auto& codec : *codecs) {
+    for (auto& codec : negotiatedCodecs) {
       if (codec->mName != "red" && codec->mName != "ulpfec") {
         JsepVideoCodecDescription* videoCodec =
             static_cast<JsepVideoCodecDescription*>(codec.get());
@@ -452,7 +465,7 @@ void JsepTrack::NegotiateCodecs(
   // rtcpfb attr). If we see the telephone-event codec, we enabled dtmf
   // support on all the other audio codecs.
   if (dtmf) {
-    for (auto& codec : *codecs) {
+    for (auto& codec : negotiatedCodecs) {
       JsepAudioCodecDescription* audioCodec =
           static_cast<JsepAudioCodecDescription*>(codec.get());
       audioCodec->mDtmfEnabled = true;
@@ -461,16 +474,17 @@ void JsepTrack::NegotiateCodecs(
 
   // Make sure strongly preferred codecs are up front, overriding the remote
   // side's preference.
-  std::stable_sort(codecs->begin(), codecs->end(), CompareCodec);
+  std::stable_sort(negotiatedCodecs.begin(), negotiatedCodecs.end(),
+                   CompareCodec);
 
   // TODO(bug 814227): Remove this once we're ready to put multiple codecs in an
   // answer.  For now, remove all but the first codec unless the red codec
   // exists, in which case we include the others per RFC 5109, section 14.2.
-  if (!codecs->empty() && !red) {
+  if (!negotiatedCodecs.empty() && !red) {
     std::vector<UniquePtr<JsepCodecDescription>> codecsToKeep;
 
     bool foundPreferredCodec = false;
-    for (auto& codec : *codecs) {
+    for (auto& codec : negotiatedCodecs) {
       if (codec.get() == dtmf) {
         codecsToKeep.push_back(std::move(codec));
         // TODO: keep ulpfec when we enable it in Bug 875922
@@ -482,31 +496,16 @@ void JsepTrack::NegotiateCodecs(
       }
     }
 
-    *codecs = std::move(codecsToKeep);
+    negotiatedCodecs = std::move(codecsToKeep);
   }
+
+  return negotiatedCodecs;
 }
 
 void JsepTrack::Negotiate(const SdpMediaSection& answer,
                           const SdpMediaSection& remote) {
-  std::vector<UniquePtr<JsepCodecDescription>> negotiatedCodecs;
-  negotiatedCodecs = GetCodecClones();
-
-  std::map<std::string, std::string> formatChanges;
-  NegotiateCodecs(remote, &negotiatedCodecs, &formatChanges);
-
-  // Use |formatChanges| to update mPrototypeCodecs
-  size_t insertPos = 0;
-  for (auto& codec : mPrototypeCodecs) {
-    if (formatChanges.count(codec->mDefaultPt)) {
-      // Update the payload type to what was negotiated
-      codec->mDefaultPt = formatChanges[codec->mDefaultPt];
-      // Move this negotiated codec up front
-      std::swap(mPrototypeCodecs[insertPos], codec);
-      ++insertPos;
-    }
-  }
-
-  EnsureNoDuplicatePayloadTypes(&mPrototypeCodecs);
+  std::vector<UniquePtr<JsepCodecDescription>> negotiatedCodecs =
+      NegotiateCodecs(remote, &answer != &remote);
 
   UniquePtr<JsepTrackNegotiatedDetails> negotiatedDetails =
       MakeUnique<JsepTrackNegotiatedDetails>();

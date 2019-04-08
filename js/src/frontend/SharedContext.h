@@ -115,6 +115,7 @@ class SharedContext {
   bool allowNewTarget_ : 1;
   bool allowSuperProperty_ : 1;
   bool allowSuperCall_ : 1;
+  bool allowArguments_ : 1;
   bool inWith_ : 1;
   bool needsThisTDZChecks_ : 1;
 
@@ -164,6 +165,7 @@ class SharedContext {
         allowNewTarget_(false),
         allowSuperProperty_(false),
         allowSuperCall_(false),
+        allowArguments_(true),
         inWith_(false),
         needsThisTDZChecks_(false),
         hasExplicitUseStrict_(false),
@@ -202,6 +204,7 @@ class SharedContext {
   bool allowNewTarget() const { return allowNewTarget_; }
   bool allowSuperProperty() const { return allowSuperProperty_; }
   bool allowSuperCall() const { return allowSuperCall_; }
+  bool allowArguments() const { return allowArguments_; }
   bool inWith() const { return inWith_; }
   bool needsThisTDZChecks() const { return needsThisTDZChecks_; }
 
@@ -273,6 +276,8 @@ inline EvalSharedContext* SharedContext::asEvalContext() {
   MOZ_ASSERT(isEvalContext());
   return static_cast<EvalSharedContext*>(this);
 }
+
+enum class HasHeritage : bool { No, Yes };
 
 class FunctionBox : public ObjectBox, public SharedContext {
   // The parser handles tracing the fields below via the TraceListNode linked
@@ -420,6 +425,7 @@ class FunctionBox : public ObjectBox, public SharedContext {
   void initStandaloneFunction(Scope* enclosingScope);
   void initWithEnclosingParseContext(ParseContext* enclosing,
                                      FunctionSyntaxKind kind);
+  void initFieldInitializer(ParseContext* enclosing, HasHeritage hasHeritage);
 
   inline bool isLazyFunctionWithoutEnclosingScope() const {
     return function()->isInterpretedLazy() &&

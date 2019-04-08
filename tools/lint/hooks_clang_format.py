@@ -27,7 +27,23 @@ def run_clang_format(hooktype, changedFiles):
         # No files have been touched
         return
 
-    arguments = ["clang-format", "-p"] + changedFiles
+    # We have also a copy of this list in:
+    # python/mozbuild/mozbuild/mach_commands.py
+    # version-control-tools/hgext/clang-format/__init__.py
+    # release-services/src/staticanalysis/bot/static_analysis_bot/config.py
+    # Too heavy to import the full class just for this variable
+    extensions = (".cpp", ".c", ".cc", ".h", ".m", ".mm")
+    path_list = []
+    for filename in sorted(changedFiles):
+        # Ignore files unsupported in clang-format
+        if filename.endswith(extensions):
+            path_list.append(filename)
+
+    if not path_list:
+        # No files have been touched
+        return
+
+    arguments = ["clang-format", "-p"] + path_list
     # On windows we need this to call the command in a shell, see Bug 1511594
     if os.name == "nt":
         clang_format_cmd = ["sh", "mach"] + arguments
@@ -36,8 +52,12 @@ def run_clang_format(hooktype, changedFiles):
     if "commit" in hooktype:
         # don't prevent commits, just display the clang-format results
         subprocess.call(clang_format_cmd)
+
         # Add the modified files back to the repo (expect a string)
-        vcs.add_remove_files(" ".join(changedFiles))
+        # one by one (fails otherwise, see bug #1541409)
+        for f in path_list:
+            vcs.add_remove_files(f)
+
         return False
     print("warning: '{}' is not a valid clang-format hooktype".format(hooktype))
     return False
