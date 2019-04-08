@@ -72,17 +72,6 @@
       <menuitem id="context-copyurl"
         label="&copyUrl.label;"/>
     </menupopup>
-    <menupopup id="style-editor-options-popup"
-               position="before_start">
-      <menuitem id="options-origsources"
-                type="checkbox"
-                label="&showOriginalSources.label;"
-                accesskey="&showOriginalSources.accesskey;"/>
-      <menuitem id="options-show-media"
-                type="checkbox"
-                label="&showMediaSidebar.label;"
-                accesskey="&showMediaSidebar.accesskey;"/>
-    </menupopup>
   </popupset>
 
   <commandset id="sourceEditorCommands">
@@ -110,8 +99,7 @@
             <spacer/>
             <toolbarbutton id="style-editor-options"
                         class="devtools-toolbarbutton devtools-option-toolbarbutton"
-                        tooltiptext="&optionsButton.tooltip;"
-                        popup="style-editor-options-popup"/>
+                        tooltiptext="&optionsButton.tooltip;"/>
           </toolbar>
         </box>
         <box id="splitview-resizer-target" class="theme-sidebar splitview-nav-container"
