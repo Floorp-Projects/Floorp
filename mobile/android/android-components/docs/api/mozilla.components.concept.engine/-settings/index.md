@@ -2,7 +2,7 @@
 
 # Settings
 
-`abstract class Settings` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L18)
+`abstract class Settings` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L19)
 
 Holds settings of an engine or session. Concrete engine
 implementations define how these settings are applied i.e.
@@ -31,6 +31,7 @@ whether a setting is applied on an engine or session instance.
 | [javascriptEnabled](javascript-enabled.md) | `open var javascriptEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Setting to control whether or not JavaScript is enabled. |
 | [loadWithOverviewMode](load-with-overview-mode.md) | `open var loadWithOverviewMode: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Setting to control whether or not the engine zooms out the content to fit on screen by width. |
 | [mediaPlaybackRequiresUserGesture](media-playback-requires-user-gesture.md) | `open var mediaPlaybackRequiresUserGesture: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Setting to control whether or not a user gesture is required to play media. |
+| [preferredColorScheme](preferred-color-scheme.md) | `open var preferredColorScheme: `[`PreferredColorScheme`](../../mozilla.components.concept.engine.mediaquery/-preferred-color-scheme/index.md)<br>Setting to alert the content that the user prefers a particular theme. This affects the [@mediaprefers-color-scheme](#) query. |
 | [remoteDebuggingEnabled](remote-debugging-enabled.md) | `open var remoteDebuggingEnabled: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Setting to control whether or not remote debugging is enabled. |
 | [requestInterceptor](request-interceptor.md) | `open var requestInterceptor: `[`RequestInterceptor`](../../mozilla.components.concept.engine.request/-request-interceptor/index.md)`?`<br>Setting to intercept and override requests. |
 | [supportMultipleWindows](support-multiple-windows.md) | `open var supportMultipleWindows: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Setting to control whether or not multiple windows are supported. |

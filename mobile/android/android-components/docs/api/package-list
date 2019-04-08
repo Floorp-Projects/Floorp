@@ -117,6 +117,7 @@ mozilla.components.concept.awesomebar
 mozilla.components.concept.engine
 mozilla.components.concept.engine.history
 mozilla.components.concept.engine.media
+mozilla.components.concept.engine.mediaquery
 mozilla.components.concept.engine.permission
 mozilla.components.concept.engine.prompt
 mozilla.components.concept.engine.request

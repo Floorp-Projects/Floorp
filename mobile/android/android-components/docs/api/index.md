@@ -45,6 +45,7 @@
 | [mozilla.components.concept.engine](mozilla.components.concept.engine/index.md) |  |
 | [mozilla.components.concept.engine.history](mozilla.components.concept.engine.history/index.md) |  |
 | [mozilla.components.concept.engine.media](mozilla.components.concept.engine.media/index.md) |  |
+| [mozilla.components.concept.engine.mediaquery](mozilla.components.concept.engine.mediaquery/index.md) |  |
 | [mozilla.components.concept.engine.permission](mozilla.components.concept.engine.permission/index.md) |  |
 | [mozilla.components.concept.engine.prompt](mozilla.components.concept.engine.prompt/index.md) |  |
 | [mozilla.components.concept.engine.request](mozilla.components.concept.engine.request/index.md) |  |

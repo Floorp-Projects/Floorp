@@ -2,7 +2,7 @@
 
 # initialize
 
-`fun initialize(applicationContext: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, fetchClient: `[`Client`](../../mozilla.components.concept.fetch/-client/index.md)` = HttpURLConnectionClient()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/experiments/src/main/java/mozilla/components/service/experiments/Experiments.kt#L50)
+`fun initialize(applicationContext: `[`Context`](https://developer.android.com/reference/android/content/Context.html)`, configuration: `[`Configuration`](../-configuration/index.md)` = Configuration()): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/experiments/src/main/java/mozilla/components/service/experiments/Experiments.kt#L49)
 
 Initialize the experiments library.
 

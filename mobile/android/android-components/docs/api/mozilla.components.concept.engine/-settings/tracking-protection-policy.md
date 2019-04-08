@@ -2,7 +2,7 @@
 
 # trackingProtectionPolicy
 
-`open var trackingProtectionPolicy: `[`TrackingProtectionPolicy`](../-engine-session/-tracking-protection-policy/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L42)
+`open var trackingProtectionPolicy: `[`TrackingProtectionPolicy`](../-engine-session/-tracking-protection-policy/index.md)`?` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/engine/src/main/java/mozilla/components/concept/engine/Settings.kt#L43)
 
 Setting to control tracking protection.
 

@@ -77,6 +77,7 @@
 | [mozilla.components.support.utils.ColorUtils](../mozilla.components.support.utils/-color-utils/index.md) |  |
 | [mozilla.components.service.glean.metrics.CommonMetricData](../mozilla.components.service.glean.metrics/-common-metric-data/index.md) | This defines the common set of data shared across all the different metric types. |
 | [mozilla.components.service.fxa.Config](../mozilla.components.service.fxa/-config.md) |  |
+| [mozilla.components.service.experiments.Configuration](../mozilla.components.service.experiments/-configuration/index.md) | The Configuration class describes how to configure Experiments. |
 | [mozilla.components.service.glean.config.Configuration](../mozilla.components.service.glean.config/-configuration/index.md) | The Configuration class describes how to configure the Glean. |
 | [mozilla.components.browser.storage.sync.Connection](../mozilla.components.browser.storage.sync/-connection/index.md) | A slight abstraction over [PlacesApi](#). |
 | [mozilla.components.support.base.observer.Consumable](../mozilla.components.support.base.observer/-consumable/index.md) | A generic wrapper for values that can get consumed. |
@@ -308,6 +309,7 @@
 | [mozilla.components.service.pocket.data.PocketListenArticleMetadata](../mozilla.components.service.pocket.data/-pocket-listen-article-metadata/index.md) | The metadata for a spoken article's audio file. |
 | [mozilla.components.service.pocket.PocketListenEndpoint](../mozilla.components.service.pocket/-pocket-listen-endpoint/index.md) | Makes requests to the Pocket Listen API and returns the requested data. |
 | [mozilla.components.service.pocket.net.PocketResponse](../mozilla.components.service.pocket.net/-pocket-response/index.md) | A response from the Pocket API: the subclasses determine the type of the result and contain usable data. |
+| [mozilla.components.concept.engine.mediaquery.PreferredColorScheme](../mozilla.components.concept.engine.mediaquery/-preferred-color-scheme/index.md) | A simple data class used to suggest to page content that the user prefers a particular color scheme. |
 | [org.mozilla.telemetry.measurement.ProcessStartTimestampMeasurement](../org.mozilla.telemetry.measurement/-process-start-timestamp-measurement/index.md) |  |
 | [mozilla.components.concept.sync.Profile](../mozilla.components.concept.sync/-profile/index.md) |  |
 | [mozilla.appservices.fxaclient.Profile](../mozilla.components.service.fxa/mozilla.appservices.fxaclient.-profile/index.md) (extensions in package mozilla.components.service.fxa) |  |
