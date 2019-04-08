@@ -92,6 +92,16 @@ function getRowByLabel(panel, text) {
 }
 
 /**
+ * Returns tree row with specified index.
+ */
+function getRowByIndex(panel, id) {
+  const doc = panel.panelWin.document;
+  const labels = [...doc.querySelectorAll(".treeLabel")];
+  const label = labels.find((node, i) => i == id);
+  return label ? label.closest(".treeRow") : null;
+}
+
+/**
  * Returns the children (tree row text) of the specified object name as an
  * array.
  */
