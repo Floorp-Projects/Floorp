@@ -574,6 +574,8 @@ class MOZ_RAII CacheRegisterAllocator {
   void discardStack(MacroAssembler& masm);
 
   Address addressOf(MacroAssembler& masm, BaselineFrameSlot slot) const;
+  BaseValueIndex addressOf(MacroAssembler& masm, Register argcReg,
+                           BaselineFrameSlot slot) const;
 
   // Returns the register for the given operand. If the operand is currently
   // not in a register, it will load it into one.

@@ -249,12 +249,13 @@ extern const uint32_t ArgLengths[];
   _(GuardObjectGroupNotPretenured, Field)                                      \
   _(GuardFunctionHasJitEntry, Id, Byte)                                        \
   _(GuardAndUpdateSpreadArgc, Id, Byte)                                        \
-  _(LoadStackValue, Id, UInt32)                                                \
   _(LoadObject, Id, Field)                                                     \
   _(LoadProto, Id, Id)                                                         \
   _(LoadEnclosingEnvironment, Id, Id)                                          \
   _(LoadWrapperTarget, Id, Id)                                                 \
   _(LoadValueTag, Id, Id)                                                      \
+  _(LoadArgumentFixedSlot, Id, Byte)                                           \
+  _(LoadArgumentDynamicSlot, Id, Id, Byte)                                     \
                                                                                \
   _(TruncateDoubleToUInt32, Id, Id)                                            \
                                                                                \
@@ -290,9 +291,9 @@ extern const uint32_t ArgLengths[];
   _(CallAddOrUpdateSparseElementHelper, Id, Id, Id, Byte)                      \
   _(CallInt32ToString, Id, Id)                                                 \
   _(CallNumberToString, Id, Id)                                                \
-  _(CallScriptedFunction, Id, Id, Byte, Byte, Byte)                            \
-  _(CallNativeFunction, Id, Id, Byte, Byte, Byte, IF_SIMULATOR(Field, Byte))   \
-  _(CallClassHook, Id, Id, Byte, Byte, Byte, Field)                            \
+  _(CallScriptedFunction, Id, Id, Byte)                                        \
+  _(CallNativeFunction, Id, Id, Byte, IF_SIMULATOR(Field, Byte))               \
+  _(CallClassHook, Id, Id, Byte, Field)                                        \
                                                                                \
   /* Meta ops generate no code, but contain data for BaselineInspector */      \
   _(MetaTwoByte, Byte, Field, Field)                                           \
@@ -456,7 +457,100 @@ class StubField {
   }
 } JS_HAZ_GC_POINTER;
 
-typedef uint8_t FieldOffset;
+using FieldOffset = uint8_t;
+
+// This class is used to wrap up information about a call to make it
+// easier to convey from one function to another. (In particular,
+// CacheIRWriter encodes the CallFlags in CacheIR, and CacheIRReader
+// decodes them and uses them for compilation.)
+class CallFlags {
+ public:
+  enum ArgFormat : uint8_t { Standard, Spread, LastArgFormat = Spread };
+
+  CallFlags(bool isConstructing, bool isSpread, bool isSameRealm = false)
+      : argFormat_(isSpread ? Spread : Standard),
+        isConstructing_(isConstructing),
+        isSameRealm_(isSameRealm) {}
+  explicit CallFlags(ArgFormat format)
+      : argFormat_(format), isConstructing_(false), isSameRealm_(false) {}
+
+  ArgFormat getArgFormat() const { return argFormat_; }
+  bool isConstructing() const {
+    MOZ_ASSERT_IF(isConstructing_,
+                  argFormat_ == Standard || argFormat_ == Spread);
+    return isConstructing_;
+  }
+  bool isSameRealm() const { return isSameRealm_; }
+
+ private:
+  ArgFormat argFormat_;
+  bool isConstructing_;
+  bool isSameRealm_;
+
+  // Used for encoding/decoding
+  static const uint8_t ArgFormatBits = 4;
+  static const uint8_t ArgFormatMask = (1 << ArgFormatBits) - 1;
+  static_assert(LastArgFormat <= ArgFormatMask, "Not enough arg format bits");
+  static const uint8_t IsConstructing = 1 << 5;
+  static const uint8_t IsSameRealm = 1 << 6;
+
+  friend class CacheIRReader;
+  friend class CacheIRWriter;
+};
+
+// Set of arguments supported by GetIndexOfArgument.
+// Support for Arg2 and up can be added easily, but is currently unneeded.
+enum class ArgumentKind : uint8_t { Callee, This, NewTarget, Arg0, Arg1 };
+
+// This function calculates the index of an argument based on the call flags.
+// addArgc is an out-parameter, indicating whether the value of argc should
+// be added to the return value to find the actual index.
+inline int32_t GetIndexOfArgument(ArgumentKind kind, CallFlags flags,
+                                  bool* addArgc) {
+  // *** STACK LAYOUT (bottom to top) ***        ******** INDEX ********
+  //   Callee                                <-- argc+1 + isConstructing
+  //   ThisValue                             <-- argc   + isConstructing
+  //   Args: | Arg0 |        |  ArgArray  |  <-- argc-1 + isConstructing
+  //         | Arg1 | --or-- |            |  <-- argc-2 + isConstructing
+  //         | ...  |        | (if spread |  <-- ...
+  //         | ArgN |        |  call)     |  <-- 0      + isConstructing
+  //   NewTarget (only if constructing)      <-- 0 (if it exists)
+  //
+  // If this is a spread call, then argc is always 1, and we can calculate the
+  // index directly. If this is not a spread call, then the index of any
+  // argument other than NewTarget depends on argc.
+
+  // First we determine whether the caller needs to add argc.
+  switch (flags.getArgFormat()) {
+    case CallFlags::Standard:
+      *addArgc = true;
+      break;
+    case CallFlags::Spread:
+      // Spread calls do not have Arg1 or higher.
+      MOZ_ASSERT(kind != ArgumentKind::Arg1);
+      *addArgc = false;
+      break;
+  }
+
+  // Second, we determine the offset relative to argc.
+  bool hasArgumentArray = !*addArgc;
+  switch (kind) {
+    case ArgumentKind::Callee:
+      return flags.isConstructing() + hasArgumentArray + 1;
+    case ArgumentKind::This:
+      return flags.isConstructing() + hasArgumentArray;
+    case ArgumentKind::Arg0:
+      return flags.isConstructing() + hasArgumentArray - 1;
+    case ArgumentKind::Arg1:
+      return flags.isConstructing() + hasArgumentArray - 2;
+    case ArgumentKind::NewTarget:
+      MOZ_ASSERT(flags.isConstructing());
+      *addArgc = false;
+      return 0;
+    default:
+      MOZ_CRASH("Invalid argument kind");
+  }
+}
 
 // We use this enum as GuardClass operand, instead of storing Class* pointers
 // in the IR, to keep the IR compact and the same size on all platforms.
@@ -547,6 +641,18 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void writeInt32Immediate(int32_t i32) { buffer_.writeFixedUint32_t(i32); }
   void writeUint32Immediate(uint32_t u32) { buffer_.writeFixedUint32_t(u32); }
   void writePointer(void* ptr) { buffer_.writeRawPointer(ptr); }
+
+  void writeCallFlags(CallFlags flags) {
+    // See CacheIRReader::callFlags()
+    uint8_t value = flags.getArgFormat();
+    if (flags.isConstructing()) {
+      value |= CallFlags::IsConstructing;
+    }
+    if (flags.isSameRealm()) {
+      value |= CallFlags::IsSameRealm;
+    }
+    buffer_.writeByte(uint32_t(value));
+  }
 
   void writeOpWithOperandId(CacheOp op, OperandId opId) {
     writeOp(op);
@@ -913,12 +1019,6 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::GuardNoDenseElements, obj);
   }
 
-  ValOperandId loadStackValue(uint32_t idx) {
-    ValOperandId res(nextOperandId_++);
-    writeOpWithOperandId(CacheOp::LoadStackValue, res);
-    writeUint32Immediate(idx);
-    return res;
-  }
   ObjOperandId loadObject(JSObject* obj) {
     assertSameCompartment(obj);
     ObjOperandId res(nextOperandId_++);
@@ -958,6 +1058,41 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     ValueTagOperandId res(nextOperandId_++);
     writeOpWithOperandId(CacheOp::LoadValueTag, val);
     writeOperandId(res);
+    return res;
+  }
+
+  ValOperandId loadArgumentFixedSlot(
+      ArgumentKind kind, uint32_t argc,
+      CallFlags flags = CallFlags(CallFlags::Standard)) {
+    bool addArgc;
+    int32_t slotIndex = GetIndexOfArgument(kind, flags, &addArgc);
+    if (addArgc) {
+      slotIndex += argc;
+    }
+    MOZ_ASSERT(slotIndex >= 0);
+    MOZ_ASSERT(slotIndex <= UINT8_MAX);
+
+    ValOperandId res(nextOperandId_++);
+    writeOpWithOperandId(CacheOp::LoadArgumentFixedSlot, res);
+    buffer_.writeByte(uint32_t(slotIndex));
+    return res;
+  }
+
+  ValOperandId loadArgumentDynamicSlot(
+      ArgumentKind kind, Int32OperandId argcId,
+      CallFlags flags = CallFlags(CallFlags::Standard)) {
+    ValOperandId res(nextOperandId_++);
+
+    bool addArgc;
+    int32_t slotIndex = GetIndexOfArgument(kind, flags, &addArgc);
+    if (addArgc) {
+      writeOpWithOperandId(CacheOp::LoadArgumentDynamicSlot, res);
+      writeOperandId(argcId);
+      buffer_.writeByte(uint32_t(slotIndex));
+    } else {
+      writeOpWithOperandId(CacheOp::LoadArgumentFixedSlot, res);
+      buffer_.writeByte(uint32_t(slotIndex));
+    }
     return res;
   }
 
@@ -1084,7 +1219,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOpWithOperandId(CacheOp::CallScriptedSetter, obj);
     addStubField(uintptr_t(setter), StubField::Type::JSObject);
     writeOperandId(rhs);
-    buffer_.writeByte(cx_->realm() != setter->realm());
+    buffer_.writeByte(cx_->realm() == setter->realm());
   }
   void callNativeSetter(ObjOperandId obj, JSFunction* setter,
                         ValOperandId rhs) {
@@ -1130,23 +1265,16 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     return res;
   }
   void callScriptedFunction(ObjOperandId calleeId, Int32OperandId argc,
-                            bool isCrossRealm, bool isSpread,
-                            bool isConstructing) {
+                            CallFlags flags) {
     writeOpWithOperandId(CacheOp::CallScriptedFunction, calleeId);
     writeOperandId(argc);
-    buffer_.writeByte(uint32_t(isCrossRealm));
-    buffer_.writeByte(uint32_t(isSpread));
-    buffer_.writeByte(uint32_t(isConstructing));
+    writeCallFlags(flags);
   }
   void callNativeFunction(ObjOperandId calleeId, Int32OperandId argc, JSOp op,
-                          HandleFunction calleeFunc, bool isSpread,
-                          bool isConstructing) {
+                          HandleFunction calleeFunc, CallFlags flags) {
     writeOpWithOperandId(CacheOp::CallNativeFunction, calleeId);
     writeOperandId(argc);
-    bool isCrossRealm = cx_->realm() != calleeFunc->realm();
-    buffer_.writeByte(uint32_t(isCrossRealm));
-    buffer_.writeByte(uint32_t(isSpread));
-    buffer_.writeByte(uint32_t(isConstructing));
+    writeCallFlags(flags);
 
     // Some native functions can be implemented faster if we know that
     // the return value is ignored.
@@ -1175,12 +1303,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   }
 
   void callClassHook(ObjOperandId calleeId, Int32OperandId argc, JSNative hook,
-                     bool isSpread, bool isConstructing) {
+                     CallFlags flags) {
     writeOpWithOperandId(CacheOp::CallClassHook, calleeId);
     writeOperandId(argc);
-    buffer_.writeByte(true);  // may be cross-realm
-    buffer_.writeByte(uint32_t(isSpread));
-    buffer_.writeByte(uint32_t(isConstructing));
+    MOZ_ASSERT(!flags.isSameRealm());
+    writeCallFlags(flags);
     void* target = JS_FUNC_TO_DATA_PTR(void*, hook);
 
 #ifdef JS_SIMULATOR
@@ -1422,7 +1549,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void callScriptedGetterResult(ObjOperandId obj, JSFunction* getter) {
     writeOpWithOperandId(CacheOp::CallScriptedGetterResult, obj);
     addStubField(uintptr_t(getter), StubField::Type::JSObject);
-    buffer_.writeByte(cx_->realm() != getter->realm());
+    buffer_.writeByte(cx_->realm() == getter->realm());
   }
   void callNativeGetterResult(ObjOperandId obj, JSFunction* getter) {
     writeOpWithOperandId(CacheOp::CallNativeGetterResult, obj);
@@ -1620,6 +1747,16 @@ class MOZ_RAII CacheIRReader {
 
   ReferenceType referenceTypeDescrType() {
     return ReferenceType(buffer_.readByte());
+  }
+  CallFlags callFlags() {
+    // See CacheIRWriter::writeCallFlags()
+    uint8_t encoded = buffer_.readByte();
+    CallFlags::ArgFormat format =
+        CallFlags::ArgFormat(encoded & CallFlags::ArgFormatMask);
+    bool isConstructing = encoded & CallFlags::IsConstructing;
+    bool isSpread = format == CallFlags::Spread;
+    bool isSameRealm = encoded & CallFlags::IsSameRealm;
+    return CallFlags(isConstructing, isSpread, isSameRealm);
   }
 
   uint8_t readByte() { return buffer_.readByte(); }
@@ -2104,7 +2241,6 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   PropertyTypeCheckInfo typeCheckInfo_;
   BaselineCacheIRStubKind cacheIRStubKind_;
 
-  uint32_t calleeStackSlot(bool isSpread, bool isConstructing);
   bool getTemplateObjectForScripted(HandleFunction calleeFunc,
                                     MutableHandleObject result,
                                     bool* skipAttach);
