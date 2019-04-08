@@ -72,7 +72,7 @@
             android:key="@string/pref_key_data_choices"
             android:title="@string/preferences_data_choices" />
         <androidx.preference.SwitchPreference
-            android:icon="@drawable/ic_about"
+            android:icon="@drawable/ic_info"
             android:key="@string/pref_key_leakcanary"
             android:title="@string/preference_leakcanary"
             android:defaultValue="false" />
@@ -100,11 +100,11 @@
             android:key="@string/pref_key_rate"
             android:title="@string/preferences_rate" />
         <androidx.preference.Preference
-            android:icon="@drawable/ic_feedback"
+            android:icon="@drawable/ic_notification"
             android:key="@string/pref_key_feedback"
             android:title="@string/preferences_feedback" />
         <androidx.preference.Preference
-            android:icon="@drawable/ic_about"
+            android:icon="@drawable/ic_info"
             android:key="@string/pref_key_about"
             android:title="@string/preferences_about" />
     </androidx.preference.PreferenceCategory>
