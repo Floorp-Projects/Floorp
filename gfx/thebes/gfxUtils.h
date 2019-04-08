@@ -295,7 +295,7 @@ class gfxUtils {
   static nsresult GetInputStream(DataSourceSurface* aSurface,
                                  bool aIsAlphaPremultiplied,
                                  const char* aMimeType,
-                                 const char16_t* aEncoderOptions,
+                                 const nsAString& aEncoderOptions,
                                  nsIInputStream** outStream);
 
   static nsresult ThreadSafeGetFeatureStatus(

@@ -89,7 +89,7 @@ class AsyncCanvasRenderer final {
   // function called GetSurface implicitly and GetSurface handles only get
   // called in the main thread. So this function can be called in main thread.
   nsresult GetInputStream(const char* aMimeType,
-                          const char16_t* aEncoderOptions,
+                          const nsAString& aEncoderOptions,
                           nsIInputStream** aStream);
 
   gfx::IntSize GetSize() const { return gfx::IntSize(mWidth, mHeight); }

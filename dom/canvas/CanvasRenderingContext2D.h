@@ -405,7 +405,7 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
       nsIDocShell* aShell, NotNull<gfx::DrawTarget*> aTarget) override;
 
   NS_IMETHOD GetInputStream(const char* aMimeType,
-                            const char16_t* aEncoderOptions,
+                            const nsAString& aEncoderOptions,
                             nsIInputStream** aStream) override;
 
   already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(

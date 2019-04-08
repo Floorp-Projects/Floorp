@@ -62,7 +62,7 @@ class ImageBitmapRenderingContext final
   virtual mozilla::UniquePtr<uint8_t[]> GetImageBuffer(
       int32_t* aFormat) override;
   NS_IMETHOD GetInputStream(const char* aMimeType,
-                            const char16_t* aEncoderOptions,
+                            const nsAString& aEncoderOptions,
                             nsIInputStream** aStream) override;
 
   virtual already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(
