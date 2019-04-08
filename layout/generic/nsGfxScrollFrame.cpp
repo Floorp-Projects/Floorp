@@ -1362,7 +1362,7 @@ bool ScrollFrameHelper::WantAsyncScroll() const {
   // the layout viewport size at the current zoom level, we need to be
   // able to scroll the visual viewport inside the layout viewport
   // even if the page is not zoomable.
-  if (!GetScrollRangeForClamping().IsEqualInterior(scrollRange)) {
+  if (!GetVisualScrollRange().IsEqualInterior(scrollRange)) {
     return true;
   }
 
@@ -2246,7 +2246,7 @@ void ScrollFrameHelper::ScrollToWithOrigin(
                                aScrollPosition);
   }
 
-  nsRect scrollRange = GetScrollRangeForClamping();
+  nsRect scrollRange = GetVisualScrollRange();
   mDestination = scrollRange.ClampPoint(aScrollPosition);
   if (mDestination != aScrollPosition && aOrigin == nsGkAtoms::restore &&
       GetPageLoadingState() != LoadingState::Loading) {
@@ -2301,13 +2301,13 @@ void ScrollFrameHelper::ScrollToWithOrigin(
 
         mAsyncSmoothMSDScroll = new AsyncSmoothMSDScroll(
             GetScrollPosition(), mDestination, currentVelocity,
-            GetScrollRangeForClamping(), now, presContext);
+            GetVisualScrollRange(), now, presContext);
 
         mAsyncSmoothMSDScroll->SetRefreshObserver(this);
       } else {
         // A previous smooth MSD scroll is still in progress, so we just need to
         // update its range and destination.
-        mAsyncSmoothMSDScroll->SetRange(GetScrollRangeForClamping());
+        mAsyncSmoothMSDScroll->SetRange(GetVisualScrollRange());
         mAsyncSmoothMSDScroll->SetDestination(mDestination);
       }
 
@@ -2701,7 +2701,7 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   // actually matter since all we are about is that there be an integer number
   // of layer pixels between pt and curPos.
   nsPoint pt =
-      ClampAndAlignWithLayerPixels(aPt, GetScrollRangeForClamping(), aRange,
+      ClampAndAlignWithLayerPixels(aPt, GetVisualScrollRange(), aRange,
                                    alignWithPos, appUnitsPerDevPixel, scale);
   if (pt == curPos) {
     return;
@@ -3189,7 +3189,7 @@ void ScrollFrameHelper::EnsureFrameVisPrefsCached() {
 nsRect ScrollFrameHelper::ExpandRectToNearlyVisible(const nsRect& aRect) const {
   // We don't want to expand a rect in a direction that we can't scroll, so we
   // check the scroll range.
-  nsRect scrollRange = GetScrollRangeForClamping();
+  nsRect scrollRange = GetVisualScrollRange();
   nsPoint scrollPos = GetScrollPosition();
   nsMargin expand(0, 0, 0, 0);
 
@@ -4061,7 +4061,7 @@ nsRect ScrollFrameHelper::GetScrollRange(nscoord aWidth,
   return range;
 }
 
-nsRect ScrollFrameHelper::GetScrollRangeForClamping() const {
+nsRect ScrollFrameHelper::GetVisualScrollRange() const {
   nsSize visualViewportSize = GetVisualViewportSize();
   return GetScrollRange(visualViewportSize.width, visualViewportSize.height);
 }
@@ -4304,7 +4304,7 @@ void ScrollFrameHelper::ScrollSnap(ScrollMode aMode) {
 
 void ScrollFrameHelper::ScrollSnap(const nsPoint& aDestination,
                                    ScrollMode aMode) {
-  nsRect scrollRange = GetScrollRangeForClamping();
+  nsRect scrollRange = GetVisualScrollRange();
   nsPoint pos = GetScrollPosition();
   nsPoint snapDestination = scrollRange.ClampPoint(aDestination);
   if (GetSnapPointForDestination(nsIScrollableFrame::DEVICE_PIXELS, pos,
@@ -6572,7 +6572,7 @@ bool ScrollFrameHelper::GetSnapPointForDestination(
     nsIScrollableFrame::ScrollUnit aUnit, nsPoint aStartPos,
     nsPoint& aDestination) {
   Maybe<nsPoint> snapPoint = ScrollSnapUtils::GetSnapPointForDestination(
-      GetScrollSnapInfo(), aUnit, GetScrollRangeForClamping(), aStartPos,
+      GetScrollSnapInfo(), aUnit, GetVisualScrollRange(), aStartPos,
       aDestination);
   if (snapPoint) {
     aDestination = snapPoint.ref();
@@ -6604,7 +6604,7 @@ bool ScrollFrameHelper::DragScroll(WidgetEvent* aEvent) {
   bool willScroll = false;
   nsPoint pnt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, mOuter);
   nsPoint scrollPoint = GetScrollPosition();
-  nsRect rangeRect = GetScrollRangeForClamping();
+  nsRect rangeRect = GetVisualScrollRange();
 
   // Only drag scroll when a scrollbar is present.
   nsPoint offset;
@@ -6762,7 +6762,7 @@ bool ScrollFrameHelper::SmoothScrollVisual(
   //   - clamp mDestination to the layout scroll range here
   //   - make sure ComputeScrollMetadata() picks up the former as the
   //     smooth scroll destination to send to APZ.
-  mDestination = GetScrollRangeForClamping().ClampPoint(aVisualViewportOffset);
+  mDestination = GetVisualScrollRange().ClampPoint(aVisualViewportOffset);
 
   // Perform the scroll.
   ApzSmoothScrollTo(mDestination, aUpdateType == FrameMetrics::eRestore

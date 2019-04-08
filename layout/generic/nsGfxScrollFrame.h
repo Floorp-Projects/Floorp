@@ -265,7 +265,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
                   ScrollMode aMode = ScrollMode::eSmoothMsd);
 
  protected:
-  nsRect GetScrollRangeForClamping() const;
+  nsRect GetVisualScrollRange() const;
 
  public:
   static void AsyncScrollCallback(ScrollFrameHelper* aInstance,
