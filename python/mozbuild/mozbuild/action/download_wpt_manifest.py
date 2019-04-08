@@ -4,6 +4,8 @@
 
 # This action is used to generate the wpt manifest
 
+from __future__ import absolute_import
+
 import sys
 
 import buildconfig
