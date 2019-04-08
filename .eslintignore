@@ -23,8 +23,7 @@ netwerk/cookie/test/browser/**
 netwerk/test/browser/**
 netwerk/test/mochitests/**
 netwerk/test/unit*/**
-tools/update-packaging/**
-xpfe/**
+startupcache/**
 
 # We currently have no js files in these directories, so we ignore them by
 # default to aid ESLint's performance.
@@ -38,7 +37,7 @@ mfbt/**
 mozglue/**
 nsprpub/**
 other-licenses/**
-startupcache/**
+xpfe/**
 
 # These directories only contain crashtests, but we still skip the whole
 # directory to aid performance.
@@ -50,6 +49,8 @@ browser/branding/**/firefox-branding.js
 # Gzipped test file.
 browser/base/content/test/general/gZipOfflineChild.html
 browser/base/content/test/urlbar/file_blank_but_not_blank.html
+# Third-party code.
+browser/components/payments/res/vendor/*
 # Test files that are really json not js, and don't need to be linted.
 browser/components/sessionstore/test/unit/data/sessionstore_valid.js
 browser/components/sessionstore/test/unit/data/sessionstore_invalid.js
@@ -154,7 +155,7 @@ devtools/server/tests/unit/sourcemapped.js
 # devtools specific format test file
 devtools/server/tests/unit/xpcshell_debugging_script.js
 
-# dom/ exclusions
+# dom/ exclusions which should be removed (aka ESLint enabled)
 dom/animation/**
 dom/base/*.*
 dom/base/test/*.*
@@ -191,7 +192,6 @@ dom/security/test/mixedcontentblocker/**
 dom/security/test/sri/**
 dom/serviceworkers/**
 dom/smil/**
-
 dom/tests/html/**
 dom/tests/mochitest/**
 dom/u2f/**
@@ -291,6 +291,10 @@ security/nss/**
 
 # services/ exclusions
 
+# Third party services
+services/common/kinto-http-client.js
+services/common/kinto-offline-client.js
+
 # Webpack-bundled library
 services/fxaccounts/FxAccountsPairingChannel.js
 
@@ -337,33 +341,38 @@ testing/xpcshell/dns-packet/**
 testing/xpcshell/node-ip/**
 
 
-# Third party services
-services/common/kinto-http-client.js
-services/common/kinto-offline-client.js
+# Third party.
+third_party/**
 
 # toolkit/ exclusions
-toolkit/content/widgets/wizard.xml
+
+# Ignore generated code from wasm-bindgen
+toolkit/components/extensions/profiler_get_symbols.js
 
 # Intentionally invalid JS
 toolkit/components/workerloader/tests/moduleF-syntax-error.js
 
-# Tests old non-star function generators
-toolkit/modules/tests/xpcshell/test_task.js
-
 # External code:
-browser/components/payments/res/vendor/*
 toolkit/components/reader/Readability.js
 toolkit/components/reader/JSDOMParser.js
 
 # Uses preprocessing
 toolkit/components/reader/Readerable.jsm
-toolkit/modules/AppConstants.jsm
+
+# Should be going away soon
+toolkit/content/widgets/wizard.xml
+
+# Uses preprocessing
 toolkit/mozapps/update/tests/data/xpcshellConstantsPP.js
-tools/tryselect/selectors/chooser/templates/chooser.html
+toolkit/modules/AppConstants.jsm
+
+# Tests old non-star function generators
+toolkit/modules/tests/xpcshell/test_task.js
 
 # Third party
 toolkit/modules/third_party/**
-third_party/**
 
-# Ignore generated code from wasm-bindgen
-toolkit/components/extensions/profiler_get_symbols.js
+tools/tryselect/selectors/chooser/templates/chooser.html
+
+# Ignore preprocessed *(P)refs.js files in update-packaging.
+tools/update-packaging/**/*refs.js
