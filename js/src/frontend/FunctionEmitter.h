@@ -263,7 +263,6 @@ class MOZ_STACK_CLASS FunctionScriptEmitter {
 
  private:
   MOZ_MUST_USE bool emitExtraBodyVarScope();
-  MOZ_MUST_USE bool emitInitializeInstanceFields();
 
   // Async functions have implicit try-catch blocks to convert exceptions
   // into promise rejections.
