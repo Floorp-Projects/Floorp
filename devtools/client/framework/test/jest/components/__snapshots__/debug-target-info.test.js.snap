@@ -2,7 +2,7 @@
 
 exports[`DebugTargetInfo component renders the expected snapshot for This Firefox target 1`] = `
 <header
-  className="debug-target-info"
+  className="debug-target-info js-debug-target-info"
 >
   <span
     className="iconized-label"
@@ -43,7 +43,7 @@ exports[`DebugTargetInfo component renders the expected snapshot for This Firefo
 
 exports[`DebugTargetInfo component renders the expected snapshot for USB Release target 1`] = `
 <header
-  className="debug-target-info"
+  className="debug-target-info js-debug-target-info"
 >
   <span
     className="iconized-label js-connection-info"
@@ -95,7 +95,7 @@ exports[`DebugTargetInfo component renders the expected snapshot for USB Release
 
 exports[`DebugTargetInfo component renders the expected snapshot for a Toolbox with an unnamed target 1`] = `
 <header
-  className="debug-target-info"
+  className="debug-target-info js-debug-target-info"
 >
   <span
     className="iconized-label"
