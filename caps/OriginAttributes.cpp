@@ -67,7 +67,7 @@ void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
     rv = aURI->GetHost(ipAddr);
     NS_ENSURE_SUCCESS_VOID(rv);
 
-    if (net_IsValidIPv6Addr(ipAddr.BeginReading(), ipAddr.Length())) {
+    if (net_IsValidIPv6Addr(ipAddr)) {
       // According to RFC2732, the host of an IPv6 address should be an
       // IPv6reference. The GetHost() of nsIURI will only return the IPv6
       // address. So, we need to convert it back to IPv6reference here.
