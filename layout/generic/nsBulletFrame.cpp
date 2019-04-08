@@ -824,11 +824,11 @@ ImgDrawResult nsBulletFrame::PaintBullet(gfxContext& aRenderingContext,
                    aDisableSubpixelAA, this);
 }
 
-int32_t nsBulletFrame::Ordinal() const {
+int32_t nsBulletFrame::Ordinal(bool aDebugFromA11y) const {
   auto* fc = PresShell()->FrameConstructor();
   auto* cm = fc->CounterManager();
   auto* list = cm->CounterListFor(NS_LITERAL_STRING("list-item"));
-  MOZ_ASSERT(list && !list->IsDirty());
+  MOZ_ASSERT(aDebugFromA11y || (list && !list->IsDirty()));
   nsIFrame* listItem = GetParent()->GetContent()->GetPrimaryFrame();
   int32_t value = 0;
   for (auto* node = list->First(); node; node = list->Next(node)) {
@@ -1263,12 +1263,13 @@ nscoord nsBulletFrame::GetLogicalBaseline(WritingMode aWritingMode) const {
   return ascent + GetLogicalUsedMargin(aWritingMode).BStart(aWritingMode);
 }
 
+#ifdef ACCESSIBILITY
 void nsBulletFrame::GetSpokenText(nsAString& aText) {
   CounterStyle* style =
       PresContext()->CounterStyleManager()->ResolveCounterStyle(
           StyleList()->mCounterStyle);
   bool isBullet;
-  style->GetSpokenCounterText(Ordinal(), GetWritingMode(), aText, isBullet);
+  style->GetSpokenCounterText(Ordinal(true), GetWritingMode(), aText, isBullet);
   if (isBullet) {
     if (!style->IsNone()) {
       aText.Append(' ');
@@ -1280,6 +1281,7 @@ void nsBulletFrame::GetSpokenText(nsAString& aText) {
     aText = prefix + aText + suffix;
   }
 }
+#endif
 
 void nsBulletFrame::RegisterImageRequest(bool aKnownToBeAnimated) {
   if (mImageRequest) {

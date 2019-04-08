@@ -93,7 +93,9 @@ class nsBulletFrame final : public nsFrame {
   static void GetListItemText(mozilla::CounterStyle*, mozilla::WritingMode,
                               int32_t aOrdinal, nsAString& aResult);
 
+#ifdef ACCESSIBILITY
   void GetSpokenText(nsAString& aText);
+#endif
 
   Maybe<BulletRenderer> CreateBulletRenderer(gfxContext& aRenderingContext,
                                              nsPoint aPt);
@@ -112,7 +114,8 @@ class nsBulletFrame final : public nsFrame {
   }
   void SetFontSizeInflation(float aInflation);
 
-  int32_t Ordinal() const;
+  // aDebugFromA11y should not be used
+  int32_t Ordinal(bool aDebugFromA11y = false) const;
 
   already_AddRefed<imgIContainer> GetImage() const;
 

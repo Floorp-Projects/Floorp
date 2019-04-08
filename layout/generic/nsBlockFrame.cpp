@@ -6770,6 +6770,7 @@ bool nsBlockFrame::MarkerIsEmpty() const {
          marker->StyleContent()->ContentCount() == 0;
 }
 
+#ifdef ACCESSIBILITY
 void nsBlockFrame::GetSpokenMarkerText(nsAString& aText) const {
   const nsStyleList* myList = StyleList();
   if (myList->GetListStyleImage()) {
@@ -6791,6 +6792,7 @@ void nsBlockFrame::GetSpokenMarkerText(nsAString& aText) const {
     }
   }
 }
+#endif
 
 void nsBlockFrame::ReflowOutsideMarker(nsIFrame* aMarkerFrame,
                                        BlockReflowInput& aState,
