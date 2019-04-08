@@ -58,6 +58,31 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
         }
     }
 
+    fun getStatus(sitePermissions: SitePermissions? = null, settings: Settings): SitePermissions.Status {
+        return when (this) {
+            CAMERA -> {
+                sitePermissions?.camera ?: settings
+                    .getSitePermissionsPhoneFeatureCameraAction()
+                    .toStatus()
+            }
+            LOCATION -> {
+                sitePermissions?.location ?: settings
+                    .getSitePermissionsPhoneFeatureLocation()
+                    .toStatus()
+            }
+            MICROPHONE -> {
+                sitePermissions?.microphone ?: settings
+                    .getSitePermissionsPhoneFeatureMicrophoneAction()
+                    .toStatus()
+            }
+            NOTIFICATION -> {
+                sitePermissions?.notification ?: settings
+                    .getSitePermissionsPhoneFeatureNotificationAction()
+                    .toStatus()
+            }
+        }
+    }
+
     companion object {
         fun findFeatureBy(permissions: Array<out String>): PhoneFeature? {
             return PhoneFeature.values().find { feature ->

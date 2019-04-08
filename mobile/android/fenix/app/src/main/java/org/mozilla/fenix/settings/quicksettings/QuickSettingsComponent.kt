@@ -4,7 +4,11 @@
 
 package org.mozilla.fenix.settings.quicksettings
 
+import android.content.Context
 import android.view.ViewGroup
+import mozilla.components.feature.sitepermissions.SitePermissions
+import mozilla.components.support.ktx.kotlin.toUri
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.mvi.Action
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.Change
@@ -12,6 +16,9 @@ import org.mozilla.fenix.mvi.UIComponent
 import org.mozilla.fenix.mvi.UIView
 import org.mozilla.fenix.mvi.ViewState
 import org.mozilla.fenix.settings.PhoneFeature
+import org.mozilla.fenix.settings.toStatus
+import org.mozilla.fenix.settings.toggle
+import org.mozilla.fenix.utils.Settings
 
 class QuickSettingsComponent(
     private val container: ViewGroup,
@@ -28,18 +35,23 @@ class QuickSettingsComponent(
                     mode = QuickSettingsState.Mode.Normal(
                         change.url,
                         change.isSecured,
-                        change.isSiteInExceptionList
+                        change.sitePermissions
                     )
                 )
             }
             is QuickSettingsChange.PermissionGranted -> {
                 state.copy(
-                    mode = QuickSettingsState.Mode.ActionLabelUpdated(change.phoneFeature)
+                    mode = QuickSettingsState.Mode.ActionLabelUpdated(change.phoneFeature, change.sitePermissions)
                 )
             }
-            QuickSettingsChange.PromptRestarted -> {
+            is QuickSettingsChange.PromptRestarted -> {
                 state.copy(
-                    mode = QuickSettingsState.Mode.CheckPendingFeatureBlockedByAndroid
+                    mode = QuickSettingsState.Mode.CheckPendingFeatureBlockedByAndroid(change.sitePermissions)
+                )
+            }
+            is QuickSettingsChange.Stored -> {
+                state.copy(
+                    mode = QuickSettingsState.Mode.ActionLabelUpdated(change.phoneFeature, change.sitePermissions)
                 )
             }
         }
@@ -52,28 +64,62 @@ class QuickSettingsComponent(
     init {
         render(reducer)
     }
+
+    fun toggleSitePermission(
+        context: Context,
+        featurePhone: PhoneFeature,
+        url: String,
+        sitePermissions: SitePermissions?
+    ): SitePermissions {
+
+        return if (sitePermissions == null) {
+            val settings = Settings.getInstance(context)
+            val origin = requireNotNull(url.toUri().host)
+            var location = settings.getSitePermissionsPhoneFeatureLocation().toStatus()
+            var camera = settings.getSitePermissionsPhoneFeatureCameraAction().toStatus()
+            var microphone = settings.getSitePermissionsPhoneFeatureMicrophoneAction().toStatus()
+            var notification = settings.getSitePermissionsPhoneFeatureNotificationAction().toStatus()
+
+            when (featurePhone) {
+                PhoneFeature.CAMERA -> camera = camera.toggle()
+                PhoneFeature.LOCATION -> location = location.toggle()
+                PhoneFeature.MICROPHONE -> microphone = microphone.toggle()
+                PhoneFeature.NOTIFICATION -> notification = notification.toggle()
+            }
+            context.components.storage.addSitePermissionException(origin, location, camera, microphone, notification)
+        } else {
+            val updatedSitePermissions = sitePermissions.toggle(featurePhone)
+            context.components.storage.updateSitePermissions(updatedSitePermissions)
+            updatedSitePermissions
+        }
+    }
 }
 
 data class QuickSettingsState(val mode: Mode) : ViewState {
     sealed class Mode {
-        data class Normal(val url: String, val isSecured: Boolean, val isSiteInExceptionList: Boolean) : Mode()
-        data class ActionLabelUpdated(val phoneFeature: PhoneFeature) : Mode()
-        object CheckPendingFeatureBlockedByAndroid : Mode()
+        data class Normal(val url: String, val isSecured: Boolean, val sitePermissions: SitePermissions?) : Mode()
+        data class ActionLabelUpdated(val phoneFeature: PhoneFeature, val sitePermissions: SitePermissions?) :
+            Mode()
+
+        data class CheckPendingFeatureBlockedByAndroid(val sitePermissions: SitePermissions?) : Mode()
     }
 }
 
 sealed class QuickSettingsAction : Action {
     data class SelectBlockedByAndroid(val permissions: Array<String>) : QuickSettingsAction()
-    object DismissDialog : QuickSettingsAction()
+    data class TogglePermission(val featurePhone: PhoneFeature) : QuickSettingsAction()
 }
 
 sealed class QuickSettingsChange : Change {
     data class Change(
         val url: String,
         val isSecured: Boolean,
-        val isSiteInExceptionList: Boolean
+        val sitePermissions: SitePermissions?
     ) : QuickSettingsChange()
 
-    data class PermissionGranted(val phoneFeature: PhoneFeature) : QuickSettingsChange()
-    object PromptRestarted : QuickSettingsChange()
+    data class PermissionGranted(val phoneFeature: PhoneFeature, val sitePermissions: SitePermissions?) :
+        QuickSettingsChange()
+
+    data class PromptRestarted(val sitePermissions: SitePermissions?) : QuickSettingsChange()
+    data class Stored(val phoneFeature: PhoneFeature, val sitePermissions: SitePermissions?) : QuickSettingsChange()
 }

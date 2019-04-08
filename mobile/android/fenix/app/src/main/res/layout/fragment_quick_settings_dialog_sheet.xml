@@ -121,16 +121,5 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/notification_action_label"/>
 
-    <TextView
-            android:id="@+id/manage_site_permissions"
-            style="@style/QuickSettingsText"
-            android:layout_width="wrap_content"
-            android:layout_height="@dimen/quicksettings_item_height"
-            android:textColor="@color/photonBlue50"
-            android:background="?android:attr/selectableItemBackground"
-            android:text="@string/quick_settings_sheet_manage_site_permissions"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/location_icon"/>
-
 </androidx.constraintlayout.widget.ConstraintLayout>
 

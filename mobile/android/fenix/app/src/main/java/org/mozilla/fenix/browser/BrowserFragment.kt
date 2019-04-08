@@ -25,8 +25,10 @@ import kotlinx.android.synthetic.main.component_search.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.browser.session.Session
@@ -39,12 +41,14 @@ import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.ThumbnailsFeature
+import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsFeature
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.view.enterToImmersiveMode
 import mozilla.components.support.ktx.android.view.exitImmersiveModeIfNeeded
+import mozilla.components.support.ktx.kotlin.toUri
 import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
@@ -73,9 +77,10 @@ import org.mozilla.fenix.quickactionsheet.QuickActionComponent
 import org.mozilla.fenix.settings.quicksettings.QuickSettingsSheetDialogFragment
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.utils.Settings
+import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions", "LargeClass")
-class BrowserFragment : Fragment(), BackHandler {
+class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     private lateinit var toolbarComponent: ToolbarComponent
 
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
@@ -88,8 +93,16 @@ class BrowserFragment : Fragment(), BackHandler {
     private val fullScreenFeature = ViewBoundFeatureWrapper<FullScreenFeature>()
     private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
     private val customTabsIntegration = ViewBoundFeatureWrapper<CustomTabsIntegration>()
+    private lateinit var job: Job
 
     var sessionId: String? = null
+
+    override val coroutineContext: CoroutineContext get() = Dispatchers.IO + job
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        job = Job()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -263,13 +276,7 @@ class BrowserFragment : Fragment(), BackHandler {
             )
         }
         toolbarComponent.getView().setOnSiteSecurityClickedListener {
-            val session = getSessionByIdOrUseSelectedSession()
-            val quickSettingsSheet = QuickSettingsSheetDialogFragment.newInstance(
-                url = session.url,
-                isSecured = session.securityInfo.secure,
-                isSiteInExceptionList = false
-            )
-            quickSettingsSheet.show(requireFragmentManager(), QuickSettingsSheetDialogFragment.FRAGMENT_TAG)
+            showQuickSettingsDialog()
         }
     }
 
@@ -388,6 +395,11 @@ class BrowserFragment : Fragment(), BackHandler {
         promptsFeature.withFeature { it.onActivityResult(requestCode, resultCode, data) }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        job.cancel()
+    }
+
     // This method triggers the complexity warning. However it's actually not that hard to understand.
     @SuppressWarnings("ComplexMethod")
     private fun trackToolbarItemInteraction(action: SearchAction.ToolbarMenuItemTapped) {
@@ -469,6 +481,26 @@ class BrowserFragment : Fragment(), BackHandler {
 
         sitePermissionsFeature.withFeature {
             it.sitePermissionsRules = rules
+        }
+    }
+
+    private fun showQuickSettingsDialog() {
+        val session = getSessionByIdOrUseSelectedSession()
+        val host = requireNotNull(session.url.toUri().host)
+
+        launch {
+            val storage = requireContext().components.storage
+            val sitePermissions: SitePermissions? = storage.findSitePermissionsBy(host)
+
+            launch(Main) {
+                val quickSettingsSheet = QuickSettingsSheetDialogFragment.newInstance(
+                    url = session.url,
+                    isSecured = session.securityInfo.secure,
+                    sitePermissions = sitePermissions
+                )
+                quickSettingsSheet.sitePermissions = sitePermissions
+                quickSettingsSheet.show(requireFragmentManager(), QuickSettingsSheetDialogFragment.FRAGMENT_TAG)
+            }
         }
     }
 

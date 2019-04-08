@@ -34,7 +34,7 @@
             android:id="@+id/block_radio"
             android:layout_width="match_parent"
             android:layout_height="@dimen/radio_button_preference_height"
-            android:text="@string/preference_option_phone_feature_block"
+            android:text="@string/preference_option_phone_feature_blocked"
             android:textAppearance="?android:attr/textAppearanceListItem"
             android:background="?android:attr/selectableItemBackground"
             android:button="@null"
