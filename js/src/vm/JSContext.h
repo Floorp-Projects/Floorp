@@ -12,6 +12,7 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "ds/TraceableFifo.h"
+#include "gc/Memory.h"
 #include "js/CharacterEncoding.h"
 #include "js/ContextOptions.h"  // JS::ContextOptions
 #include "js/GCVector.h"
