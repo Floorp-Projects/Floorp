@@ -3815,19 +3815,26 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
     HandleValueArray args = HandleValueArray::fromMarkedLocation(argc, vp + 2);
     CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), argc, callee,
                         callArgs.thisv(), newTarget, args);
-    if (gen.tryAttachStub()) {
-      ICStub* newStub = AttachBaselineCacheIRStub(
-          cx, gen.writerRef(), gen.cacheKind(), gen.cacheIRStubKind(), script,
-          stub, &handled);
+    switch (gen.tryAttachStub()) {
+      case AttachDecision::NoAction:
+        break;
+      case AttachDecision::Attach: {
+        ICStub* newStub = AttachBaselineCacheIRStub(
+            cx, gen.writerRef(), gen.cacheKind(), gen.cacheIRStubKind(), script,
+            stub, &handled);
+        if (newStub) {
+          JitSpew(JitSpew_BaselineIC, "  Attached Call CacheIR stub");
 
-      if (newStub) {
-        JitSpew(JitSpew_BaselineIC, "  Attached Call CacheIR stub");
-
-        // If it's an updated stub, initialize it.
-        if (gen.cacheIRStubKind() == BaselineCacheIRStubKind::Updated) {
-          SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
+          // If it's an updated stub, initialize it.
+          if (gen.cacheIRStubKind() == BaselineCacheIRStubKind::Updated) {
+            SetUpdateStubData(newStub->toCacheIR_Updated(),
+                              gen.typeCheckInfo());
+          }
         }
-      }
+      } break;
+      case AttachDecision::TemporarilyUnoptimizable:
+        handled = true;
+        break;
     }
 
     // Try attaching a regular call stub, but only if the CacheIR attempt didn't
@@ -3937,19 +3944,27 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
         aobj->length(), aobj->getDenseElements());
     CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), 1, callee,
                         thisv, newTarget, args);
-    if (gen.tryAttachStub()) {
-      ICStub* newStub = AttachBaselineCacheIRStub(
-          cx, gen.writerRef(), gen.cacheKind(), gen.cacheIRStubKind(), script,
-          stub, &handled);
+    switch (gen.tryAttachStub()) {
+      case AttachDecision::NoAction:
+        break;
+      case AttachDecision::Attach: {
+        ICStub* newStub = AttachBaselineCacheIRStub(
+            cx, gen.writerRef(), gen.cacheKind(), gen.cacheIRStubKind(), script,
+            stub, &handled);
 
-      if (newStub) {
-        JitSpew(JitSpew_BaselineIC, "  Attached Spread Call CacheIR stub");
+        if (newStub) {
+          JitSpew(JitSpew_BaselineIC, "  Attached Spread Call CacheIR stub");
 
-        // If it's an updated stub, initialize it.
-        if (gen.cacheIRStubKind() == BaselineCacheIRStubKind::Updated) {
-          SetUpdateStubData(newStub->toCacheIR_Updated(), gen.typeCheckInfo());
+          // If it's an updated stub, initialize it.
+          if (gen.cacheIRStubKind() == BaselineCacheIRStubKind::Updated) {
+            SetUpdateStubData(newStub->toCacheIR_Updated(),
+                              gen.typeCheckInfo());
+          }
         }
-      }
+      } break;
+      case AttachDecision::TemporarilyUnoptimizable:
+        handled = true;
+        break;
     }
 
     // Try attaching a regular call stub, but only if the CacheIR attempt didn't

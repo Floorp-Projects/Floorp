@@ -508,6 +508,8 @@ class CallFlags {
   friend class CacheIRWriter;
 };
 
+enum class AttachDecision { NoAction, Attach, TemporarilyUnoptimizable };
+
 // Set of arguments supported by GetIndexOfArgument.
 // Support for Arg2 and up can be added easily, but is currently unneeded.
 enum class ArgumentKind : uint8_t { Callee, This, NewTarget, Arg0, Arg1 };
@@ -2304,16 +2306,16 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   bool getTemplateObjectForClassHook(HandleObject calleeObj,
                                      MutableHandleObject result);
 
-  bool tryAttachStringSplit();
-  bool tryAttachArrayPush();
-  bool tryAttachArrayJoin();
-  bool tryAttachIsSuspendedGenerator();
-  bool tryAttachFunCall();
-  bool tryAttachFunApply();
-  bool tryAttachCallScripted(HandleFunction calleeFunc);
-  bool tryAttachSpecialCaseCallNative(HandleFunction calleeFunc);
-  bool tryAttachCallNative(HandleFunction calleeFunc);
-  bool tryAttachCallHook(HandleObject calleeObj);
+  AttachDecision tryAttachStringSplit();
+  AttachDecision tryAttachArrayPush();
+  AttachDecision tryAttachArrayJoin();
+  AttachDecision tryAttachIsSuspendedGenerator();
+  AttachDecision tryAttachFunCall();
+  AttachDecision tryAttachFunApply();
+  AttachDecision tryAttachCallScripted(HandleFunction calleeFunc);
+  AttachDecision tryAttachSpecialCaseCallNative(HandleFunction calleeFunc);
+  AttachDecision tryAttachCallNative(HandleFunction calleeFunc);
+  AttachDecision tryAttachCallHook(HandleObject calleeObj);
 
   void trackAttached(const char* name);
 
@@ -2323,7 +2325,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
                   HandleValue thisval, HandleValue newTarget,
                   HandleValueArray args);
 
-  bool tryAttachStub();
+  AttachDecision tryAttachStub();
 
   BaselineCacheIRStubKind cacheIRStubKind() const { return cacheIRStubKind_; }
 
