@@ -243,7 +243,7 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
 
     AssertOnTaskQueue();
     if (GetState() == State::SHUTDOWN) {
-      mJavaDecoder->DisposeOutput(aSample);
+      aSample->Dispose();
       return;
     }
 
@@ -427,7 +427,7 @@ class RemoteAudioDecoder : public RemoteDataDecoder {
     AssertOnTaskQueue();
 
     if (GetState() == State::SHUTDOWN || !aBuffer->IsValid()) {
-      mJavaDecoder->DisposeOutput(aSample);
+      aSample->Dispose();
       return;
     }
 
