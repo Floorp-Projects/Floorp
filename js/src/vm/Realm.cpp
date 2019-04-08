@@ -49,7 +49,6 @@ Realm::Realm(Compartment* comp, const JS::RealmOptions& options)
       runtime_(comp->runtimeFromMainThread()),
       creationOptions_(options.creationOptions()),
       behaviors_(options.behaviors()),
-      global_(nullptr),
       objects_(zone_),
       randomKeyGenerator_(runtime_->forkRandomKeyGenerator()),
       wasm(runtime_) {
@@ -269,6 +268,8 @@ void Realm::traceGlobal(JSTracer* trc) {
   // Trace things reachable from the realm's global. Note that these edges
   // must be swept too in case the realm is live but the global is not.
 
+  TraceEdge(trc, &lexicalEnv_, "realm-global-lexical");
+
   savedStacks_.trace(trc);
 
   // Atoms are always tenured.
@@ -302,11 +303,11 @@ void Realm::traceRoots(JSTracer* trc,
     // The global is never nursery allocated, so we don't need to
     // trace it when doing a minor collection.
     //
-    // If a compartment is on-stack, we mark its global so that
+    // If a realm is on-stack, we mark its global so that
     // JSContext::global() remains valid.
     if (shouldTraceGlobal() && global_.unbarrieredGet()) {
       TraceRoot(trc, global_.unsafeUnbarrieredForTracing(),
-                "on-stack compartment global");
+                "on-stack realm global");
     }
   }
 
@@ -396,6 +397,9 @@ void Realm::sweepSavedStacks() { savedStacks_.sweep(); }
 void Realm::sweepGlobalObject() {
   if (global_ && IsAboutToBeFinalized(&global_)) {
     global_.set(nullptr);
+  }
+  if (lexicalEnv_ && IsAboutToBeFinalized(&lexicalEnv_)) {
+    lexicalEnv_.set(nullptr);
   }
 }
 
@@ -593,6 +597,7 @@ void Realm::purge() {
 
 void Realm::clearTables() {
   global_.set(nullptr);
+  lexicalEnv_.set(nullptr);
 
   // No scripts should have run in this realm. This is used when merging
   // a realm that has been used off thread into another realm and zone.
