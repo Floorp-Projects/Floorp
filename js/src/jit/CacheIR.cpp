@@ -4718,7 +4718,8 @@ bool CallIRGenerator::tryAttachStringSplit() {
   ValOperandId calleeValId =
       writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
-  writer.guardIsNativeFunction(calleeObjId, js::intrinsic_StringSplitString);
+  writer.guardSpecificNativeFunction(calleeObjId,
+                                     js::intrinsic_StringSplitString);
 
   // Ensure arg0 is a string.
   ValOperandId arg0ValId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
@@ -4789,7 +4790,7 @@ bool CallIRGenerator::tryAttachArrayPush() {
   ValOperandId calleeValId =
       writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
-  writer.guardIsNativeFunction(calleeObjId, js::array_push);
+  writer.guardSpecificNativeFunction(calleeObjId, js::array_push);
 
   // Guard this is an array object.
   ValOperandId thisValId = writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
@@ -4863,7 +4864,7 @@ bool CallIRGenerator::tryAttachArrayJoin() {
   ValOperandId calleeValId =
       writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
-  writer.guardIsNativeFunction(calleeObjId, js::array_join);
+  writer.guardSpecificNativeFunction(calleeObjId, js::array_join);
 
   if (argc_ == 1) {
     // If argcount is 1, guard that the argument is a string.
@@ -4936,18 +4937,13 @@ bool CallIRGenerator::tryAttachFunCall() {
   bool isScripted = target->isInterpreted() || target->isNativeWithJitEntry();
   MOZ_ASSERT_IF(!isScripted, target->isNative());
 
-  if (!isScripted) {
-    // TODO: Support fun_call of native functions
-    return false;
-  }
-
   Int32OperandId argcId(writer.setInputOperandId(0));
 
   // Guard that callee is the |fun_call| native function.
   ValOperandId calleeValId =
       writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
-  writer.guardIsNativeFunction(calleeObjId, fun_call);
+  writer.guardSpecificNativeFunction(calleeObjId, fun_call);
 
   // Guard that |this| is a function.
   ValOperandId thisValId =
@@ -4955,18 +4951,16 @@ bool CallIRGenerator::tryAttachFunCall() {
   ObjOperandId thisObjId = writer.guardIsObject(thisValId);
   writer.guardClass(thisObjId, GuardClassKind::JSFunction);
 
+  // Guard that function is not a class constructor.
+  writer.guardNotClassConstructor(thisObjId);
+
   CallFlags targetFlags(CallFlags::FunCall);
   if (isScripted) {
-    // Guard that function is scripted.
     writer.guardFunctionHasJitEntry(thisObjId, /*isConstructing =*/false);
-
-    // Guard that function is not a class constructor.
-    writer.guardNotClassConstructor(thisObjId);
-
     writer.callScriptedFunction(thisObjId, argcId, targetFlags);
   } else {
-    // TODO: guard that function is (any?) native.
-    // writer.callNativeFunction(thisObjId, argcId, op_, calleeFunc, flags);
+    writer.guardFunctionIsNative(thisObjId);
+    writer.callAnyNativeFunction(thisObjId, argcId, targetFlags);
   }
 
   writer.typeMonitorResult();
@@ -6456,3 +6450,17 @@ bool NewObjectIRGenerator::tryAttachStub() {
   trackAttached("NewObjectWithTemplate");
   return true;
 }
+
+#ifdef JS_SIMULATOR
+bool js::jit::CallAnyNative(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject calleeObj(cx, &args.callee());
+
+  MOZ_ASSERT(calleeObj->is<JSFunction>());
+  RootedFunction calleeFunc(cx, &calleeObj->as<JSFunction>());
+  MOZ_ASSERT(calleeFunc->isNative());
+
+  JSNative native = calleeFunc->native();
+  return native(cx, args.length(), args.base());
+}
+#endif

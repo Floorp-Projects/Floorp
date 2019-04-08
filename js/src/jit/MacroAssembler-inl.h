@@ -369,11 +369,17 @@ void MacroAssembler::branchIfFunctionHasNoJitEntry(Register fun,
   branchTest32(Assembler::Zero, address, Imm32(bit), label);
 }
 
-void MacroAssembler::branchIfInterpreted(Register fun, Label* label) {
+void MacroAssembler::branchIfInterpreted(Register fun, bool isConstructing,
+                                         Label* label) {
   // 16-bit loads are slow and unaligned 32-bit loads may be too so
   // perform an aligned 32-bit load and adjust the bitmask accordingly.
+
   Address address(fun, JSFunction::offsetOfNargs());
-  int32_t bit = IMM32_16ADJ(JSFunction::INTERPRETED);
+  int32_t bit = JSFunction::INTERPRETED | JSFunction::INTERPRETED_LAZY;
+  if (!isConstructing) {
+    bit |= JSFunction::WASM_JIT_ENTRY;
+  }
+  bit = IMM32_16ADJ(bit);
   branchTest32(Assembler::NonZero, address, Imm32(bit), label);
 }
 
