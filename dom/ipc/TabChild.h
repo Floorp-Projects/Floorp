@@ -673,7 +673,7 @@ class TabChild final : public TabChildBase,
 
   virtual PBrowserBridgeChild* AllocPBrowserBridgeChild(
       const nsString& aName, const nsString& aRemoteType,
-      BrowsingContext* aBrowsingContext) override;
+      BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags) override;
 
   virtual bool DeallocPBrowserBridgeChild(PBrowserBridgeChild* aActor) override;
 
