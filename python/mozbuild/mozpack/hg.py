@@ -27,7 +27,7 @@
 # do not wish to do so, delete this exception statement from your
 # version.
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 import mercurial.error as error
 import mercurial.hg as hg
