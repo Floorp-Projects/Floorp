@@ -77,6 +77,9 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   void pushSpreadCallArguments(Register argcReg, Register scratch,
                                Register scratch2, bool isJitCall,
                                bool isConstructing);
+  void pushFunCallArguments(Register argcReg, Register calleeReg,
+                            Register scratch, Register scratch2,
+                            bool isJitCall);
   void createThis(Register argcReg, Register calleeReg, Register scratch,
                   CallFlags flags);
   void updateReturnValue();
@@ -2420,7 +2423,6 @@ bool BaselineCacheIRCompiler::emitCallStringObjectConcatResult() {
   return true;
 }
 
-
 // The value of argc entering the call IC is not always the value of
 // argc entering the callee. (For example, argc for a spread call IC
 // is always 1, but argc for the callee is the length of the array.)
@@ -2433,9 +2435,17 @@ bool BaselineCacheIRCompiler::emitCallStringObjectConcatResult() {
 // modifying argc. In the real world, we have x86-32.)
 bool BaselineCacheIRCompiler::updateArgc(CallFlags flags, Register argcReg,
                                          Register scratch) {
-  // Standard calls have no extra guards, and argc is already correct.
-  if (flags.getArgFormat() == CallFlags::Standard) {
-    return true;
+  CallFlags::ArgFormat format = flags.getArgFormat();
+  switch (format) {
+    case CallFlags::Standard:
+      // Standard calls have no extra guards, and argc is already correct.
+      return true;
+    case CallFlags::FunCall:
+      // fun_call has no extra guards, and argc will be corrected in
+      // pushFunCallArguments.
+      return true;
+    default:
+      break;
   }
 
   FailurePath* failure;
@@ -2563,6 +2573,60 @@ void BaselineCacheIRCompiler::pushSpreadCallArguments(Register argcReg,
   masm.pushValue(
       Address(BaselineFrameReg,
               STUB_FRAME_SIZE + (2 + isConstructing) * sizeof(Value)));
+}
+
+void BaselineCacheIRCompiler::pushFunCallArguments(Register argcReg,
+                                                   Register calleeReg,
+                                                   Register scratch,
+                                                   Register scratch2,
+                                                   bool isJitCall) {
+  Label zeroArgs, done;
+  masm.branchTest32(Assembler::Zero, argcReg, argcReg, &zeroArgs);
+
+  // When we call fun_call, the stack looks like the left column (note
+  // that newTarget will not be present, because fun_call cannot be a
+  // constructor call):
+  //
+  // ***Arguments to fun_call***
+  // callee (fun_call)               ***Arguments to target***
+  // this (target function)   -----> callee
+  // arg0 (this of target)    -----> this
+  // arg1 (arg0 of target)    -----> arg0
+  // argN (argN-1 of target)  -----> arg1
+  //
+  // As demonstrated in the right column, this is exactly what we need
+  // the stack to look like when calling pushCallArguments for target,
+  // except with one more argument. If we subtract 1 from argc,
+  // everything works out correctly.
+  masm.sub32(Imm32(1), argcReg);
+
+  pushCallArguments(argcReg, scratch, scratch2, isJitCall,
+                    /*isConstructing =*/false);
+
+  masm.jump(&done);
+  masm.bind(&zeroArgs);
+
+  // The exception is the case where argc == 0:
+  //
+  // ***Arguments to fun_call***
+  // callee (fun_call)               ***Arguments to target***
+  // this (target function)   -----> callee
+  // <nothing>                -----> this
+  //
+  // In this case, we push |undefined| for |this|.
+
+  if (isJitCall) {
+    // Align the stack to 0 args.
+    masm.alignJitStackBasedOnNArgs(0);
+  }
+
+  // Store the new |this|.
+  masm.pushValue(UndefinedValue());
+
+  // Store |callee|.
+  masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(calleeReg)));
+
+  masm.bind(&done);
 }
 
 bool BaselineCacheIRCompiler::emitCallNativeShared(NativeCallType callType) {
@@ -2853,6 +2917,10 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction() {
     case CallFlags::Spread:
       pushSpreadCallArguments(argcReg, scratch, scratch2, /*isJitCall = */ true,
                               isConstructing);
+      break;
+    case CallFlags::FunCall:
+      pushFunCallArguments(argcReg, calleeReg, scratch, scratch2,
+                           /*isJitCall = */ true);
       break;
     default:
       MOZ_CRASH("Invalid arg format");

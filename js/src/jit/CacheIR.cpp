@@ -4923,8 +4923,72 @@ bool CallIRGenerator::tryAttachIsSuspendedGenerator() {
   return true;
 }
 
+bool CallIRGenerator::tryAttachFunCall() {
+  if (JitOptions.disableCacheIRCalls) {
+    return false;
+  }
+
+  if (!thisval_.isObject() || !thisval_.toObject().is<JSFunction>()) {
+    return false;
+  }
+  RootedFunction target(cx_, &thisval_.toObject().as<JSFunction>());
+
+  bool isScripted = target->isInterpreted() || target->isNativeWithJitEntry();
+  MOZ_ASSERT_IF(!isScripted, target->isNative());
+
+  if (!isScripted) {
+    // TODO: Support fun_call of native functions
+    return false;
+  }
+
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard that callee is the |fun_call| native function.
+  ValOperandId calleeValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId);
+  ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
+  writer.guardIsNativeFunction(calleeObjId, fun_call);
+
+  // Guard that |this| is a function.
+  ValOperandId thisValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::This, argcId);
+  ObjOperandId thisObjId = writer.guardIsObject(thisValId);
+  writer.guardClass(thisObjId, GuardClassKind::JSFunction);
+
+  CallFlags targetFlags(CallFlags::FunCall);
+  if (isScripted) {
+    // Guard that function is scripted.
+    writer.guardFunctionHasJitEntry(thisObjId, /*isConstructing =*/false);
+
+    // Guard that function is not a class constructor.
+    writer.guardNotClassConstructor(thisObjId);
+
+    writer.callScriptedFunction(thisObjId, argcId, targetFlags);
+  } else {
+    // TODO: guard that function is (any?) native.
+    // writer.callNativeFunction(thisObjId, argcId, op_, calleeFunc, flags);
+  }
+
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  if (isScripted) {
+    trackAttached("Scripted fun_call");
+  } else {
+    trackAttached("Native fun_call");
+  }
+
+  return true;
+}
+
 bool CallIRGenerator::tryAttachSpecialCaseCallNative(HandleFunction callee) {
   MOZ_ASSERT(callee->isNative());
+
+  if (op_ == JSOP_FUNCALL && callee->native() == fun_call) {
+    if (tryAttachFunCall()) {
+      return true;
+    }
+  }
 
   if (op_ != JSOP_CALL && op_ != JSOP_CALL_IGNORES_RV) {
     return false;
@@ -5324,6 +5388,7 @@ bool CallIRGenerator::tryAttachStub() {
     case JSOP_SPREADCALL:
     case JSOP_NEW:
     case JSOP_SPREADNEW:
+    case JSOP_FUNCALL:
       break;
     default:
       return false;
