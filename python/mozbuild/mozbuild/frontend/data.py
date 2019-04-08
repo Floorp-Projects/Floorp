@@ -15,7 +15,7 @@ contains the code for converting executed mozbuild files into these data
 structures.
 """
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 
 from mozbuild.frontend.context import (
     ObjDirPath,
