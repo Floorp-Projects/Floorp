@@ -607,11 +607,31 @@ function forwardToScript(name) {
   return request => gScripts.getObject(request.id)[name](request.value);
 }
 
+function unknownObjectProperties(why) {
+  return [{
+    name: "Unknown properties",
+    desc: {
+      value: why,
+      enumerable: true,
+    },
+  }];
+}
+
 function getObjectProperties(object) {
-  const names = object.getOwnPropertyNames();
+  let names;
+  try {
+    names = object.getOwnPropertyNames();
+  } catch (e) {
+    return unknownObjectProperties(e.toString());
+  }
 
   return names.map(name => {
-    const desc = object.getOwnPropertyDescriptor(name);
+    let desc;
+    try {
+      desc = object.getOwnPropertyDescriptor(name);
+    } catch (e) {
+      return { name, desc: { value: "Unknown: " + e, enumerable: true } };
+    }
     if ("value" in desc) {
       desc.value = convertValue(desc.value);
     }
@@ -735,13 +755,7 @@ const gRequestHandlers = {
 
   getObjectProperties(request) {
     if (!RecordReplayControl.maybeDivergeFromRecording()) {
-      return [{
-        name: "Unknown properties",
-        desc: {
-          value: "Recording divergence in getObjectProperties",
-          enumerable: true,
-        },
-      }];
+      return unknownObjectProperties("Recording divergence in getObjectProperties");
     }
 
     const object = gPausedObjects.getObject(request.id);
