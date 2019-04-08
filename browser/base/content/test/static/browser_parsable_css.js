@@ -14,9 +14,9 @@ let whitelist = [
   {sourceName: /codemirror\.css$/i,
    isFromDevTools: true},
   // The debugger uses cross-browser CSS.
-  {sourceName: /devtools\/client\/debugger\/new\/dist\/vendors.css/i,
+  {sourceName: /devtools\/client\/debugger\/dist\/vendors.css/i,
    isFromDevTools: true},
-  {sourceName: /devtools\/client\/debugger\/new\/src\/components\/([A-z\/]+).css/i,
+  {sourceName: /devtools\/client\/debugger\/src\/components\/([A-z\/]+).css/i,
   isFromDevTools: true},
    // Reps uses cross-browser CSS.
    {sourceName: /devtools-client-shared\/components\/reps\/reps.css/i,
