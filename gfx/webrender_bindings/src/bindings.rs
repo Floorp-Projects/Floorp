@@ -581,8 +581,13 @@ extern "C" {
     fn wr_notifier_nop_frame_done(window_id: WrWindowId);
     fn wr_notifier_external_event(window_id: WrWindowId,
                                   raw_event: usize);
-    fn wr_schedule_render(window_id: WrWindowId, document_id: WrDocumentId);
-    fn wr_finished_scene_build(window_id: WrWindowId, document_id: WrDocumentId, pipeline_info: WrPipelineInfo);
+    fn wr_schedule_render(window_id: WrWindowId,
+                          document_id_array: *const WrDocumentId,
+                          document_id_count: usize);
+    fn wr_finished_scene_build(window_id: WrWindowId,
+                               document_id_array: *const WrDocumentId,
+                               document_id_count: usize,
+                               pipeline_info: WrPipelineInfo);
 
     fn wr_transaction_notification_notified(handler: usize, when: Checkpoint);
 }
@@ -916,7 +921,7 @@ impl SceneBuilderHooks for APZCallbacks {
         }
     }
 
-    fn post_scene_swap(&self, document_id: DocumentId, info: PipelineInfo, sceneswap_time: u64) {
+    fn post_scene_swap(&self, document_ids: &Vec<DocumentId>, info: PipelineInfo, sceneswap_time: u64) {
         unsafe {
             let info = WrPipelineInfo::new(&info);
             record_telemetry_time(TelemetryProbe::SceneSwapTime, sceneswap_time);
@@ -927,12 +932,12 @@ impl SceneBuilderHooks for APZCallbacks {
         // After a scene swap we should schedule a render for the next vsync,
         // otherwise there's no guarantee that the new scene will get rendered
         // anytime soon
-        unsafe { wr_finished_scene_build(self.window_id, document_id, info) }
+        unsafe { wr_finished_scene_build(self.window_id, document_ids.as_ptr(), document_ids.len(), info) }
         unsafe { gecko_profiler_end_marker(b"SceneBuilding\0".as_ptr() as *const c_char); }
     }
 
-    fn post_resource_update(&self, document_id: DocumentId) {
-        unsafe { wr_schedule_render(self.window_id, document_id) }
+    fn post_resource_update(&self, document_ids: &Vec<DocumentId>) {
+        unsafe { wr_schedule_render(self.window_id, document_ids.as_ptr(), document_ids.len()) }
         unsafe { gecko_profiler_end_marker(b"SceneBuilding\0".as_ptr() as *const c_char); }
     }
 
@@ -1718,6 +1723,30 @@ pub extern "C" fn wr_api_send_transaction(
     let new_txn = make_transaction(is_async);
     let txn = mem::replace(transaction, new_txn);
     dh.api.send_transaction(dh.document_id, txn);
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wr_api_send_transactions(
+    document_handles: *const *const DocumentHandle,
+    transactions: *const *mut Transaction,
+    transaction_count: usize,
+    is_async: bool
+) {
+    if transaction_count == 0 {
+        return;
+    }
+    let mut out_transactions = Vec::with_capacity(transaction_count);
+    let mut out_documents = Vec::with_capacity(transaction_count);
+    for i in 0..transaction_count {
+        let txn = &mut **transactions.offset(i as isize);
+        debug_assert!(!txn.is_empty());
+        let new_txn = make_transaction(is_async);
+        out_transactions.push(mem::replace(txn, new_txn));
+        out_documents.push((**document_handles.offset(i as isize)).document_id);
+    }
+    (**document_handles).api.send_transactions(
+        out_documents,
+        out_transactions);
 }
 
 #[no_mangle]
