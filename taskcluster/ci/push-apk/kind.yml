@@ -30,7 +30,7 @@ jobs:
             # See https://github.com/mozilla-releng/pushapkscript#aurora-beta-release-vs-alpha-beta-production
             by-release-type:
                nightly: 'beta'
-               beta: 'rollout'
+               beta: 'production'
                release(-rc)?: 'rollout'
                default: 'internal'
          implementation: push-apk
@@ -44,7 +44,6 @@ jobs:
                # 'rollout' if you add a new supported project
                release: 10
                release-rc: 5
-               beta: 10
                default: null
       requires: all-resolved
       scopes:  # see transforms
