@@ -145,11 +145,16 @@ class Core(private val context: Context) {
         normalMode: Boolean = true,
         privateMode: Boolean = true
     ): TrackingProtectionPolicy {
+        val trackingProtectionPolicy = TrackingProtectionPolicy.select(
+            TrackingProtectionPolicy.AD,
+            TrackingProtectionPolicy.ANALYTICS,
+            TrackingProtectionPolicy.SOCIAL
+        )
 
         return when {
-            normalMode && privateMode -> TrackingProtectionPolicy.all()
-            normalMode && !privateMode -> TrackingProtectionPolicy.all().forRegularSessionsOnly()
-            !normalMode && privateMode -> TrackingProtectionPolicy.all().forPrivateSessionsOnly()
+            normalMode && privateMode -> trackingProtectionPolicy
+            normalMode && !privateMode -> trackingProtectionPolicy.forRegularSessionsOnly()
+            !normalMode && privateMode -> trackingProtectionPolicy.forPrivateSessionsOnly()
             else -> TrackingProtectionPolicy.none()
         }
     }
