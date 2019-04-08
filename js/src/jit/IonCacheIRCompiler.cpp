@@ -1279,28 +1279,12 @@ bool IonCacheIRCompiler::emitLoadStringResult() {
 
 bool IonCacheIRCompiler::emitCallStringSplitResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
-  AutoSaveLiveRegisters save(*this);
-  AutoOutputRegister output(*this);
+  MOZ_CRASH("not used in ion");
+}
 
-  Register str = allocator.useRegister(masm, reader.stringOperandId());
-  Register sep = allocator.useRegister(masm, reader.stringOperandId());
-  ObjectGroup* group = groupStubField(reader.stubOffset());
-
-  allocator.discardStack(masm);
-
-  prepareVMCall(masm, save);
-
-  masm.Push(str);
-  masm.Push(sep);
-  masm.Push(ImmGCPtr(group));
-  masm.Push(Imm32(INT32_MAX));
-
-  using Fn = bool (*)(JSContext*, HandleString, HandleString, HandleObjectGroup,
-                      uint32_t limit, MutableHandleValue);
-  callVM<Fn, StringSplitHelper>(masm);
-
-  masm.storeCallResultValue(output);
-  return true;
+bool IonCacheIRCompiler::emitCallConstStringSplitResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  MOZ_CRASH("not used in ion");
 }
 
 bool IonCacheIRCompiler::emitCompareStringResult() {
