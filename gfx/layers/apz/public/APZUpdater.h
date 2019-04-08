@@ -159,6 +159,7 @@ class APZUpdater {
 
  private:
   RefPtr<APZCTreeManager> mApz;
+  bool mDestroyed;
   bool mIsUsingWebRender;
 
   // Map from WRRoot id to WebRenderScrollData. This can only be touched on
