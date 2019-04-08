@@ -2,8 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "js/CompilationAndEvaluation.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
+
+#include "js/CompilationAndEvaluation.h"  // JS::CompileFunction
 #include "js/MemoryFunctions.h"
+#include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 #include "vm/JSScript.h"
 
@@ -17,6 +20,9 @@ BEGIN_TEST(testBug795104) {
   s[0] = '"';
   memset(s + 1, 'x', strLen - 2);
   s[strLen - 1] = '"';
+
+  JS::SourceText<mozilla::Utf8Unit> srcBuf;
+  CHECK(srcBuf.init(cx, s, strLen, JS::SourceOwnership::Borrowed));
 
   JS::CompileOptions opts(cx);
 
@@ -33,8 +39,8 @@ BEGIN_TEST(testBug795104) {
   // mode, since it's not supported for functions.
   opts.setNoScriptRval(false);
 
-  CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, opts, "f", 0, nullptr, s,
-                                strLen, &fun));
+  CHECK(JS::CompileFunction(cx, emptyScopeChain, opts, "f", 0, nullptr, srcBuf,
+                            &fun));
   CHECK(fun);
 
   JS_free(cx, s);

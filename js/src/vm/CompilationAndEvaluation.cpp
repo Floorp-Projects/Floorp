@@ -384,23 +384,42 @@ JS_PUBLIC_API bool JS::CompileFunction(JSContext* cx,
                          parameterListEnd, env, scope, fun);
 }
 
+JS_PUBLIC_API bool JS::CompileFunction(JSContext* cx,
+                                       HandleObjectVector envChain,
+                                       const ReadOnlyCompileOptions& options,
+                                       const char* name, unsigned nargs,
+                                       const char* const* argnames,
+                                       SourceText<Utf8Unit>& srcBuf,
+                                       MutableHandleFunction fun) {
+  const char* chars = srcBuf.get();
+  size_t length = srcBuf.length();
+
+  auto inflatedChars = UniqueTwoByteChars(
+      UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(chars, length), &length).get());
+  if (!inflatedChars) {
+    return false;
+  }
+
+  SourceText<char16_t> source;
+  if (!source.init(cx, std::move(inflatedChars), length)) {
+    return false;
+  }
+
+  return CompileFunction(cx, envChain, options, name, nargs, argnames, source,
+                         fun);
+}
+
 JS_PUBLIC_API bool JS::CompileFunctionUtf8(
     JSContext* cx, HandleObjectVector envChain,
     const ReadOnlyCompileOptions& options, const char* name, unsigned nargs,
     const char* const* argnames, const char* bytes, size_t length,
     MutableHandleFunction fun) {
-  auto chars = UniqueTwoByteChars(
-      UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get());
-  if (!chars) {
+  SourceText<Utf8Unit> srcBuf;
+  if (!srcBuf.init(cx, bytes, length, SourceOwnership::Borrowed)) {
     return false;
   }
 
-  SourceText<char16_t> source;
-  if (!source.init(cx, std::move(chars), length)) {
-    return false;
-  }
-
-  return CompileFunction(cx, envChain, options, name, nargs, argnames, source,
+  return CompileFunction(cx, envChain, options, name, nargs, argnames, srcBuf,
                          fun);
 }
 
