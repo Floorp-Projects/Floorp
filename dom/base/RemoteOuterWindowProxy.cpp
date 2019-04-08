@@ -42,11 +42,11 @@ class RemoteOuterWindowProxy
       JSContext* aCx, JS::Handle<JSObject*> aProxy, JS::Handle<jsid> aId,
       JS::MutableHandle<JS::PropertyDescriptor> aDesc) const final;
   bool ownPropertyKeys(JSContext* aCx, JS::Handle<JSObject*> aProxy,
-                       JS::AutoIdVector& aProps) const final;
+                       JS::MutableHandleVector<jsid> aProps) const final;
 
   // SpiderMonkey extensions
   bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
-                                    JS::AutoIdVector& props) const final;
+                                    JS::MutableHandleVector<jsid> props) const final;
 
   void NoteChildren(JSObject* aProxy,
                     nsCycleCollectionTraversalCallback& aCb) const override {
@@ -128,7 +128,7 @@ bool RemoteOuterWindowProxy::getOwnPropertyDescriptor(
 }
 
 bool AppendIndexedPropertyNames(JSContext* aCx, BrowsingContext* aContext,
-                                JS::AutoIdVector& aIndexedProps) {
+                                JS::MutableHandleVector<jsid> aIndexedProps) {
   int32_t length = aContext->GetChildren().Length();
   if (!aIndexedProps.reserve(aIndexedProps.length() + length)) {
     return false;
@@ -142,7 +142,7 @@ bool AppendIndexedPropertyNames(JSContext* aCx, BrowsingContext* aContext,
 
 bool RemoteOuterWindowProxy::ownPropertyKeys(JSContext* aCx,
                                              JS::Handle<JSObject*> aProxy,
-                                             JS::AutoIdVector& aProps) const {
+                                             JS::MutableHandleVector<jsid> aProps) const {
   BrowsingContext* bc = GetBrowsingContext(aProxy);
 
   // https://html.spec.whatwg.org/multipage/window-object.html#windowproxy-ownpropertykeys:crossoriginownpropertykeys-(-o-)
@@ -158,7 +158,7 @@ bool RemoteOuterWindowProxy::ownPropertyKeys(JSContext* aCx,
 
 bool RemoteOuterWindowProxy::getOwnEnumerablePropertyKeys(
     JSContext* aCx, JS::Handle<JSObject*> aProxy,
-    JS::AutoIdVector& aProps) const {
+    JS::MutableHandleVector<jsid> aProps) const {
   return AppendIndexedPropertyNames(aCx, GetBrowsingContext(aProxy), aProps);
 }
 

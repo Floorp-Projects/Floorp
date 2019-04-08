@@ -768,7 +768,7 @@ CheckedInt32 StructMetaTypeDescr::Layout::close(int32_t* alignment) {
 JSObject* StructMetaTypeDescr::create(JSContext* cx, HandleObject metaTypeDescr,
                                       HandleObject fields) {
   // Obtain names of fields, which are the own properties of `fields`
-  AutoIdVector ids(cx);
+  RootedIdVector ids(cx);
   if (!GetPropertyKeys(cx, fields, JSITER_OWNONLY | JSITER_SYMBOLS, &ids)) {
     return nullptr;
   }
@@ -838,7 +838,7 @@ JSObject* StructMetaTypeDescr::create(JSContext* cx, HandleObject metaTypeDescr,
 /* static */
 StructTypeDescr* StructMetaTypeDescr::createFromArrays(
     JSContext* cx, HandleObject structTypePrototype, bool opaque,
-    bool allowConstruct, AutoIdVector& ids, JS::HandleValueVector fieldTypeObjs,
+    bool allowConstruct, HandleIdVector ids, JS::HandleValueVector fieldTypeObjs,
     Vector<StructFieldProps>& fieldProps) {
   StringBuffer stringBuffer(cx);       // Canonical string repr
   RootedValueVector fieldNames(cx);    // Name of each field.
@@ -2075,7 +2075,7 @@ bool TypedObject::obj_deleteProperty(JSContext* cx, HandleObject obj,
 }
 
 bool TypedObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
-                                   AutoIdVector& properties,
+                                   MutableHandleIdVector properties,
                                    bool enumerableOnly) {
   MOZ_ASSERT(obj->is<TypedObject>());
   Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());

@@ -547,7 +547,7 @@ bool ModuleEnvironmentObject::deleteProperty(JSContext* cx, HandleObject obj,
 
 /* static */
 bool ModuleEnvironmentObject::newEnumerate(JSContext* cx, HandleObject obj,
-                                           AutoIdVector& properties,
+                                           MutableHandleIdVector properties,
                                            bool enumerableOnly) {
   RootedModuleEnvironmentObject self(cx, &obj->as<ModuleEnvironmentObject>());
   const IndirectBindingMap& bs(self->importBindings());
@@ -2254,7 +2254,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
   }
 
   bool ownPropertyKeys(JSContext* cx, HandleObject proxy,
-                       AutoIdVector& props) const override {
+                       MutableHandleIdVector props) const override {
     Rooted<EnvironmentObject*> env(
         cx, &proxy->as<DebugEnvironmentProxy>().environment());
 
@@ -2283,7 +2283,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
     } else {
       target = env;
     }
-    if (!GetPropertyKeys(cx, target, JSITER_OWNONLY, &props)) {
+    if (!GetPropertyKeys(cx, target, JSITER_OWNONLY, props)) {
       return false;
     }
 

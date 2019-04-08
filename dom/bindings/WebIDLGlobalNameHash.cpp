@@ -181,7 +181,7 @@ bool WebIDLGlobalNameHash::MayResolve(jsid aId) {
 /* static */
 bool WebIDLGlobalNameHash::GetNames(JSContext* aCx, JS::Handle<JSObject*> aObj,
                                     NameType aNameType,
-                                    JS::AutoIdVector& aNames) {
+                                    JS::MutableHandleVector<jsid> aNames) {
   // aObj is always a Window here, so GetProtoAndIfaceCache on it is safe.
   ProtoAndIfaceCache* cache = GetProtoAndIfaceCache(aObj);
   for (size_t i = 0; i < sCount; ++i) {
@@ -243,7 +243,7 @@ bool WebIDLGlobalNameHash::ResolveForSystemGlobal(JSContext* aCx,
 
 /* static */
 bool WebIDLGlobalNameHash::NewEnumerateSystemGlobal(
-    JSContext* aCx, JS::Handle<JSObject*> aObj, JS::AutoIdVector& aProperties,
+    JSContext* aCx, JS::Handle<JSObject*> aObj, JS::MutableHandleVector<jsid> aProperties,
     bool aEnumerableOnly) {
   MOZ_ASSERT(JS_IsGlobalObject(aObj));
 

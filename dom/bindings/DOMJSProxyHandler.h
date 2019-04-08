@@ -53,7 +53,7 @@ class BaseDOMProxyHandler : public js::BaseProxyHandler {
       JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id,
       JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
   virtual bool ownPropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
-                               JS::AutoIdVector& props) const override;
+                               JS::MutableHandleVector<jsid> props) const override;
 
   virtual bool getPrototypeIfOrdinary(
       JSContext* cx, JS::Handle<JSObject*> proxy, bool* isOrdinary,
@@ -65,7 +65,7 @@ class BaseDOMProxyHandler : public js::BaseProxyHandler {
   // unnecessary work during enumeration.
   virtual bool getOwnEnumerablePropertyKeys(
       JSContext* cx, JS::Handle<JSObject*> proxy,
-      JS::AutoIdVector& props) const override;
+      JS::MutableHandleVector<jsid> props) const override;
 
  protected:
   // Hook for subclasses to implement shared ownPropertyKeys()/keys()
@@ -73,7 +73,7 @@ class BaseDOMProxyHandler : public js::BaseProxyHandler {
   // or JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS (for
   // ownPropertyKeys()).
   virtual bool ownPropNames(JSContext* cx, JS::Handle<JSObject*> proxy,
-                            unsigned flags, JS::AutoIdVector& props) const = 0;
+                            unsigned flags, JS::MutableHandleVector<jsid> props) const = 0;
 
   // Hook for subclasses to allow set() to ignore named props while other things
   // that look at property descriptors see them.  This is intentionally not

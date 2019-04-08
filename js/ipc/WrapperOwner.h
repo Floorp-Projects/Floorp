@@ -32,7 +32,7 @@ class WrapperOwner : public virtual JavaScriptShared {
                       JS::Handle<JS::PropertyDescriptor> desc,
                       JS::ObjectOpResult& result);
   bool ownPropertyKeys(JSContext* cx, JS::HandleObject proxy,
-                       JS::AutoIdVector& props);
+                       JS::MutableHandleIdVector props);
   bool delete_(JSContext* cx, JS::HandleObject proxy, JS::HandleId id,
                JS::ObjectOpResult& result);
   bool preventExtensions(JSContext* cx, JS::HandleObject proxy,
@@ -50,7 +50,7 @@ class WrapperOwner : public virtual JavaScriptShared {
   // SpiderMonkey extensions.
   bool hasOwn(JSContext* cx, JS::HandleObject proxy, JS::HandleId id, bool* bp);
   bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::HandleObject proxy,
-                                    JS::AutoIdVector& props);
+                                    JS::MutableHandleIdVector props);
   bool hasInstance(JSContext* cx, JS::HandleObject proxy,
                    JS::MutableHandleValue v, bool* bp);
   bool getBuiltinClass(JSContext* cx, JS::HandleObject proxy, js::ESClass* cls);
@@ -99,7 +99,7 @@ class WrapperOwner : public virtual JavaScriptShared {
   ObjectId idOfUnchecked(JSObject* obj);
 
   bool getPropertyKeys(JSContext* cx, JS::HandleObject proxy, uint32_t flags,
-                       JS::AutoIdVector& props);
+                       JS::MutableHandleIdVector props);
 
   // Catastrophic IPC failure.
   bool ipcfail(JSContext* cx);

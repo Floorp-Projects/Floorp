@@ -27,13 +27,13 @@ class FilteringWrapper : public Base {
       JSContext* cx, JS::Handle<JSObject*> wrapper, JS::Handle<jsid> id,
       JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
   virtual bool ownPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                               JS::AutoIdVector& props) const override;
+                               JS::MutableHandleIdVector props) const override;
 
   virtual bool getOwnEnumerablePropertyKeys(
       JSContext* cx, JS::Handle<JSObject*> wrapper,
-      JS::AutoIdVector& props) const override;
+      JS::MutableHandleIdVector props) const override;
   virtual bool enumerate(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                         JS::AutoIdVector& props) const override;
+                         JS::MutableHandleIdVector props) const override;
 
   virtual bool call(JSContext* cx, JS::Handle<JSObject*> wrapper,
                     const JS::CallArgs& args) const override;

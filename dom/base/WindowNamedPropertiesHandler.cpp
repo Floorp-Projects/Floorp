@@ -157,7 +157,7 @@ bool WindowNamedPropertiesHandler::defineProperty(
 
 bool WindowNamedPropertiesHandler::ownPropNames(
     JSContext* aCx, JS::Handle<JSObject*> aProxy, unsigned flags,
-    JS::AutoIdVector& aProps) const {
+    JS::MutableHandleVector<jsid> aProps) const {
   if (!(flags & JSITER_HIDDEN)) {
     // None of our named properties are enumerable.
     return true;
@@ -206,8 +206,8 @@ bool WindowNamedPropertiesHandler::ownPropNames(
   // is.
   document->GetSupportedNames(names);
 
-  JS::AutoIdVector docProps(aCx);
-  if (!AppendNamedPropertyIds(aCx, aProxy, names, false, docProps)) {
+  JS::RootedVector<jsid> docProps(aCx);
+  if (!AppendNamedPropertyIds(aCx, aProxy, names, false, &docProps)) {
     return false;
   }
 

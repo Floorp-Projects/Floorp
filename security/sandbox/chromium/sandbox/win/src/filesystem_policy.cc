@@ -256,6 +256,7 @@ bool FileSystemPolicy::CreateFileAction(EvalResult eval_result,
                                         HANDLE* handle,
                                         NTSTATUS* nt_status,
                                         ULONG_PTR* io_information) {
+  *handle = nullptr;
   // The only action supported is ASK_BROKER which means create the requested
   // file as specified.
   if (ASK_BROKER != eval_result) {
@@ -288,11 +289,12 @@ bool FileSystemPolicy::OpenFileAction(EvalResult eval_result,
                                       HANDLE* handle,
                                       NTSTATUS* nt_status,
                                       ULONG_PTR* io_information) {
+  *handle = nullptr;
   // The only action supported is ASK_BROKER which means open the requested
   // file as specified.
   if (ASK_BROKER != eval_result) {
     *nt_status = STATUS_ACCESS_DENIED;
-    return true;
+    return false;
   }
   // An NtOpen is equivalent to an NtCreate with FileAttributes = 0 and
   // CreateDisposition = FILE_OPEN.
@@ -323,7 +325,7 @@ bool FileSystemPolicy::QueryAttributesFileAction(
   // file as specified.
   if (ASK_BROKER != eval_result) {
     *nt_status = STATUS_ACCESS_DENIED;
-    return true;
+    return false;
   }
 
   NtQueryAttributesFileFunction NtQueryAttributesFile = NULL;
@@ -351,7 +353,7 @@ bool FileSystemPolicy::QueryFullAttributesFileAction(
   // file as specified.
   if (ASK_BROKER != eval_result) {
     *nt_status = STATUS_ACCESS_DENIED;
-    return true;
+    return false;
   }
 
   NtQueryFullAttributesFileFunction NtQueryFullAttributesFile = NULL;
@@ -380,7 +382,7 @@ bool FileSystemPolicy::SetInformationFileAction(EvalResult eval_result,
   // file as specified.
   if (ASK_BROKER != eval_result) {
     *nt_status = STATUS_ACCESS_DENIED;
-    return true;
+    return false;
   }
 
   NtSetInformationFileFunction NtSetInformationFile = NULL;
@@ -391,7 +393,7 @@ bool FileSystemPolicy::SetInformationFileAction(EvalResult eval_result,
                          ::GetCurrentProcess(), &local_handle, 0, FALSE,
                          DUPLICATE_SAME_ACCESS)) {
     *nt_status = STATUS_ACCESS_DENIED;
-    return true;
+    return false;
   }
 
   base::win::ScopedHandle handle(local_handle);

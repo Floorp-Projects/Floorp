@@ -1175,7 +1175,7 @@ static bool CreateExportObject(JSContext* cx,
 #ifdef ENABLE_WASM_GC
 static bool MakeStructField(JSContext* cx, const ValType& v, bool isMutable,
                             const char* format, uint32_t fieldNo,
-                            AutoIdVector* ids,
+                            MutableHandleIdVector ids,
                             MutableHandleValueVector fieldTypeObjs,
                             Vector<StructFieldProps>* fieldProps) {
   char buf[20];
@@ -1225,7 +1225,7 @@ static bool MakeStructField(JSContext* cx, const ValType& v, bool isMutable,
   }
   MOZ_ASSERT(t != nullptr);
 
-  if (!ids->append(id)) {
+  if (!ids.append(id)) {
     return false;
   }
 
@@ -1272,7 +1272,7 @@ bool Module::makeStructTypeDescrs(
            .toObject());
 
   for (const StructType& structType : structTypes()) {
-    AutoIdVector ids(cx);
+    RootedIdVector ids(cx);
     RootedValueVector fieldTypeObjs(cx);
     Vector<StructFieldProps> fieldProps(cx);
     bool allowConstruct = true;

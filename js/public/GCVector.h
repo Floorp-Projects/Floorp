@@ -294,17 +294,6 @@ class MutableWrappedPtrOperations<JS::StackGCVector<T, AllocPolicy>, Wrapper>
 
 namespace JS {
 
-// Deprecated, use RootedVector instead.
-// An automatically rooted vector for stack use.
-template <typename T>
-class AutoVector : public Rooted<GCVector<T, 8>> {
-  using Vec = GCVector<T, 8>;
-  using Base = Rooted<Vec>;
-
- public:
-  explicit AutoVector(JSContext* cx) : Base(cx, Vec(cx)) {}
-};
-
 // An automatically rooted GCVector for stack use.
 template <typename T>
 class RootedVector : public Rooted<StackGCVector<T>> {

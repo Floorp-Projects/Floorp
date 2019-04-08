@@ -865,7 +865,7 @@ Shape* js::ReshapeForAllocKind(JSContext* cx, Shape* shape, TaggedProto proto,
   size_t nfixed = gc::GetGCKindSlots(allocKind, shape->getObjectClass());
 
   // Get all the ids in the shape, in order.
-  js::AutoIdVector ids(cx);
+  js::RootedIdVector ids(cx);
   {
     for (unsigned i = 0; i < shape->slotSpan(); i++) {
       if (!ids.append(JSID_VOID)) {

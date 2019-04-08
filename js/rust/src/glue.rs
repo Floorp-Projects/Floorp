@@ -30,7 +30,7 @@ pub struct ProxyTraps {
                                                    -> bool>,
     pub ownPropertyKeys: ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                                     proxy: JS::HandleObject,
-                                                                    props: *mut JS::AutoIdVector)
+                                                                    props: JS::MutableHandleIdVector)
                                                                     -> bool>,
     pub delete_: ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                             proxy: JS::HandleObject,
@@ -90,7 +90,7 @@ pub struct ProxyTraps {
     pub getOwnEnumerablePropertyKeys:
         ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                    proxy: JS::HandleObject,
-                                                   props: *mut JS::AutoIdVector)
+                                                   props: JS::MutableHandleIdVector)
                                                    -> bool>,
     pub nativeCall: ::std::option::Option<unsafe extern "C" fn(cx: *mut JSContext,
                                                                test: JS::IsAcceptableThis,
@@ -257,10 +257,11 @@ extern "C" {
     pub fn IsWrapper(obj: *mut JSObject) -> bool;
     pub fn UnwrapObjectStatic(obj: *mut JSObject) -> *mut JSObject;
     pub fn UncheckedUnwrapObject(obj: *mut JSObject, stopAtOuter: u8) -> *mut JSObject;
-    pub fn CreateAutoIdVector(cx: *mut JSContext) -> *mut JS::AutoIdVector;
-    pub fn AppendToAutoIdVector(v: *mut JS::AutoIdVector, id: jsid) -> bool;
-    pub fn SliceAutoIdVector(v: *const JS::AutoIdVector, length: *mut usize) -> *const jsid;
-    pub fn DestroyAutoIdVector(v: *mut JS::AutoIdVector);
+    pub fn CreateRootedIdVector(cx: *mut JSContext) -> *mut JS::RootedIdVector;
+    pub fn AppendToRootedIdVector(v: *mut JS::RootedIdVector, id: jsid) -> bool;
+    pub fn SliceRootedIdVector(v: *const JS::RootedIdVector, length: *mut usize) -> *const jsid;
+    pub fn DestroyRootedIdVector(v: *mut JS::RootedIdVector);
+    pub fn GetMutableHandleIdVector(v: *mut JS::RootedIdVector)-> JS::MutableHandleIdVector;
     pub fn CreateRootedObjectVector(aCx: *mut JSContext) -> *mut JS::RootedObjectVector;
     pub fn AppendToRootedObjectVector(v: *mut JS::RootedObjectVector, obj: *mut JSObject) -> bool;
     pub fn DeleteRootedObjectVector(v: *mut JS::RootedObjectVector);

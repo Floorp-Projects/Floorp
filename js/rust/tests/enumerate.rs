@@ -14,7 +14,7 @@ use js::jsapi::root::JS_NewGlobalObject;
 use js::jsapi::root::JS_StringEqualsAscii;
 use js::jsapi::root::JS::OnNewGlobalHookOption;
 use js::jsval::UndefinedValue;
-use js::rust::IdVector;
+use js::rust::RootedIdVectorWrapper;
 use js::rust::Runtime;
 use js::rust::SIMPLE_GLOBAL_CLASS;
 use std::ptr;
@@ -37,8 +37,8 @@ fn enumerate() {
         assert!(rval.is_object());
 
         rooted!(in(cx) let object = rval.to_object());
-        let ids = IdVector::new(cx);
-        assert!(GetPropertyKeys(cx, object.handle(), JSITER_OWNONLY, ids.get()));
+        let ids = RootedIdVectorWrapper::new(cx);
+        assert!(GetPropertyKeys(cx, object.handle(), JSITER_OWNONLY, ids.handle_mut()));
 
         assert_eq!(ids.len(), 1);
         rooted!(in(cx) let id = ids[0]);

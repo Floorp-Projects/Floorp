@@ -693,6 +693,11 @@ bool JSXrayTraits::resolveOwnProperty(JSContext* cx, HandleObject wrapper,
     return true;
   }
 
+  if (ShouldIgnorePropertyDefinition(cx, key, id)) {
+    MOZ_ASSERT(!desc.object());
+    return true;
+  }
+
   // Grab the JSClass. We require all Xrayable classes to have a ClassSpec.
   const js::Class* clasp = js::GetObjectClass(target);
   MOZ_ASSERT(clasp->specDefined());
@@ -830,7 +835,7 @@ bool JSXrayTraits::defineProperty(JSContext* cx, HandleObject wrapper,
   return true;
 }
 
-static bool MaybeAppend(jsid id, unsigned flags, AutoIdVector& props) {
+static bool MaybeAppend(jsid id, unsigned flags, MutableHandleIdVector props) {
   MOZ_ASSERT(!(flags & JSITER_SYMBOLSONLY));
   if (!(flags & JSITER_SYMBOLS) && JSID_IS_SYMBOL(id)) {
     return true;
@@ -839,19 +844,19 @@ static bool MaybeAppend(jsid id, unsigned flags, AutoIdVector& props) {
 }
 
 // Append the names from the given function and property specs to props.
-static bool AppendNamesFromFunctionAndPropertySpecs(JSContext* cx,
-                                                    const JSFunctionSpec* fs,
-                                                    const JSPropertySpec* ps,
-                                                    unsigned flags,
-                                                    AutoIdVector& props) {
+static bool AppendNamesFromFunctionAndPropertySpecs(
+    JSContext* cx, JSProtoKey key, const JSFunctionSpec* fs,
+    const JSPropertySpec* ps, unsigned flags, MutableHandleIdVector props) {
   // Convert the method and property names to jsids and pass them to the caller.
   for (; fs && fs->name; ++fs) {
     jsid id;
     if (!PropertySpecNameToPermanentId(cx, fs->name, &id)) {
       return false;
     }
-    if (!MaybeAppend(id, flags, props)) {
-      return false;
+    if (!js::ShouldIgnorePropertyDefinition(cx, key, id)) {
+      if (!MaybeAppend(id, flags, props)) {
+        return false;
+      }
     }
   }
   for (; ps && ps->name; ++ps) {
@@ -859,8 +864,10 @@ static bool AppendNamesFromFunctionAndPropertySpecs(JSContext* cx,
     if (!PropertySpecNameToPermanentId(cx, ps->name, &id)) {
       return false;
     }
-    if (!MaybeAppend(id, flags, props)) {
-      return false;
+    if (!js::ShouldIgnorePropertyDefinition(cx, key, id)) {
+      if (!MaybeAppend(id, flags, props)) {
+        return false;
+      }
     }
   }
 
@@ -868,7 +875,7 @@ static bool AppendNamesFromFunctionAndPropertySpecs(JSContext* cx,
 }
 
 bool JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper,
-                                  unsigned flags, AutoIdVector& props) {
+                                  unsigned flags, MutableHandleIdVector props) {
   MOZ_ASSERT(js::IsObjectInContextCompartment(wrapper, cx));
 
   RootedObject target(cx, getTargetObject(wrapper));
@@ -886,7 +893,7 @@ bool JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper,
       RootedObject wrapperGlobal(cx, JS::CurrentGlobalOrNull(cx));
       {
         JSAutoRealm ar(cx, target);
-        AutoIdVector targetProps(cx);
+        RootedIdVector targetProps(cx);
         if (!js::GetPropertyKeys(cx, target, flags | JSITER_OWNONLY,
                                  &targetProps)) {
           return false;
@@ -945,7 +952,7 @@ bool JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper,
           MOZ_ASSERT(clasp->specDefined());
 
           if (!AppendNamesFromFunctionAndPropertySpecs(
-                  cx, clasp->specConstructorFunctions(),
+                  cx, key, clasp->specConstructorFunctions(),
                   clasp->specConstructorProperties(), flags, props)) {
             return false;
           }
@@ -979,8 +986,8 @@ bool JSXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper,
   MOZ_ASSERT(clasp->specDefined());
 
   return AppendNamesFromFunctionAndPropertySpecs(
-      cx, clasp->specPrototypeFunctions(), clasp->specPrototypeProperties(),
-      flags, props);
+      cx, key, clasp->specPrototypeFunctions(),
+      clasp->specPrototypeProperties(), flags, props);
 }
 
 bool JSXrayTraits::construct(JSContext* cx, HandleObject wrapper,
@@ -1706,7 +1713,7 @@ bool DOMXrayTraits::defineProperty(JSContext* cx, HandleObject wrapper,
 }
 
 bool DOMXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper,
-                                   unsigned flags, AutoIdVector& props) {
+                                   unsigned flags, MutableHandleIdVector props) {
   // Put the indexed properties for a window first.
   nsGlobalWindowInner* win = AsWindow(cx, wrapper);
   if (win) {
@@ -2027,7 +2034,7 @@ bool XrayWrapper<Base, Traits>::defineProperty(JSContext* cx,
 template <typename Base, typename Traits>
 bool XrayWrapper<Base, Traits>::ownPropertyKeys(JSContext* cx,
                                                 HandleObject wrapper,
-                                                AutoIdVector& props) const {
+                                                MutableHandleIdVector props) const {
   assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
   return getPropertyKeys(
       cx, wrapper, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, props);
@@ -2121,14 +2128,14 @@ bool XrayWrapper<Base, Traits>::hasOwn(JSContext* cx, HandleObject wrapper,
 
 template <typename Base, typename Traits>
 bool XrayWrapper<Base, Traits>::getOwnEnumerablePropertyKeys(
-    JSContext* cx, HandleObject wrapper, AutoIdVector& props) const {
+    JSContext* cx, HandleObject wrapper, MutableHandleIdVector props) const {
   // Skip our Base if it isn't already ProxyHandler.
   return js::BaseProxyHandler::getOwnEnumerablePropertyKeys(cx, wrapper, props);
 }
 
 template <typename Base, typename Traits>
 bool XrayWrapper<Base, Traits>::enumerate(JSContext* cx, HandleObject wrapper,
-                                          JS::AutoIdVector& props) const {
+                                          JS::MutableHandleIdVector props) const {
   MOZ_CRASH("Shouldn't be called: we return true for hasPrototype()");
 }
 
@@ -2288,7 +2295,7 @@ template <typename Base, typename Traits>
 bool XrayWrapper<Base, Traits>::getPropertyKeys(JSContext* cx,
                                                 HandleObject wrapper,
                                                 unsigned flags,
-                                                AutoIdVector& props) const {
+                                                MutableHandleIdVector props) const {
   assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
 
   // Enumerate expando properties first. Note that the expando object lives
@@ -2301,7 +2308,7 @@ bool XrayWrapper<Base, Traits>::getPropertyKeys(JSContext* cx,
 
   if (expando) {
     JSAutoRealm ar(cx, expando);
-    if (!js::GetPropertyKeys(cx, expando, flags, &props)) {
+    if (!js::GetPropertyKeys(cx, expando, flags, props)) {
       return false;
     }
   }

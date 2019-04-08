@@ -179,7 +179,7 @@ NS_IMPL_ISUPPORTS(nsXPCComponents_Interfaces, nsIXPCComponents_Interfaces,
 NS_IMETHODIMP
 nsXPCComponents_Interfaces::NewEnumerate(nsIXPConnectWrappedNative* wrapper,
                                          JSContext* cx, JSObject* obj,
-                                         JS::AutoIdVector& properties,
+                                         JS::MutableHandleIdVector properties,
                                          bool enumerableOnly, bool* _retval) {
   if (!properties.reserve(nsXPTInterfaceInfo::InterfaceCount())) {
     *_retval = false;
@@ -332,7 +332,7 @@ NS_IMPL_ISUPPORTS(nsXPCComponents_Classes, nsIXPCComponents_Classes,
 NS_IMETHODIMP
 nsXPCComponents_Classes::NewEnumerate(nsIXPConnectWrappedNative* wrapper,
                                       JSContext* cx, JSObject* obj,
-                                      JS::AutoIdVector& properties,
+                                      JS::MutableHandleIdVector properties,
                                       bool enumerableOnly, bool* _retval) {
   nsCOMPtr<nsIComponentRegistrar> compMgr;
   if (NS_FAILED(NS_GetComponentRegistrar(getter_AddRefs(compMgr))) ||
@@ -485,7 +485,7 @@ NS_IMPL_ISUPPORTS(nsXPCComponents_Results, nsIXPCComponents_Results,
 NS_IMETHODIMP
 nsXPCComponents_Results::NewEnumerate(nsIXPConnectWrappedNative* wrapper,
                                       JSContext* cx, JSObject* obj,
-                                      JS::AutoIdVector& properties,
+                                      JS::MutableHandleIdVector properties,
                                       bool enumerableOnly, bool* _retval) {
   const char* name;
   const void* iter = nullptr;

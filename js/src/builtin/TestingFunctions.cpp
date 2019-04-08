@@ -5383,7 +5383,7 @@ static bool GlobalLexicals(JSContext* cx, unsigned argc, Value* vp) {
   Rooted<LexicalEnvironmentObject*> globalLexical(
       cx, &cx->global()->lexicalEnvironment());
 
-  AutoIdVector props(cx);
+  RootedIdVector props(cx);
   if (!GetPropertyKeys(cx, globalLexical, JSITER_HIDDEN, &props)) {
     return false;
   }

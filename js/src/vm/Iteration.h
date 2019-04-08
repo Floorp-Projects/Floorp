@@ -110,7 +110,7 @@ struct NativeIterator {
    * to mean this function failed.
    */
   NativeIterator(JSContext* cx, Handle<PropertyIteratorObject*> propIter,
-                 Handle<JSObject*> objBeingIterated, const AutoIdVector& props,
+                 Handle<JSObject*> objBeingIterated, HandleIdVector props,
                  uint32_t numGuards, uint32_t guardKey, bool* hadError);
 
   /** Initialize an |ObjectRealm::enumerators| sentinel. */
@@ -370,7 +370,7 @@ RegExpStringIteratorObject* NewRegExpStringIteratorObject(
     JSContext* cx, NewObjectKind newKind = GenericObject);
 
 MOZ_MUST_USE bool EnumerateProperties(JSContext* cx, HandleObject obj,
-                                      AutoIdVector& props);
+                                      MutableHandleIdVector props);
 
 PropertyIteratorObject* LookupInIteratorCache(JSContext* cx, HandleObject obj);
 

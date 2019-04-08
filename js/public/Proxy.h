@@ -16,7 +16,6 @@
 
 namespace js {
 
-using JS::AutoIdVector;
 using JS::CallArgs;
 using JS::Handle;
 using JS::HandleId;
@@ -24,6 +23,7 @@ using JS::HandleObject;
 using JS::HandleValue;
 using JS::IsAcceptableThis;
 using JS::MutableHandle;
+using JS::MutableHandleIdVector;
 using JS::MutableHandleObject;
 using JS::MutableHandleValue;
 using JS::NativeImpl;
@@ -275,7 +275,7 @@ class JS_FRIEND_API BaseProxyHandler {
                               Handle<PropertyDescriptor> desc,
                               ObjectOpResult& result) const = 0;
   virtual bool ownPropertyKeys(JSContext* cx, HandleObject proxy,
-                               AutoIdVector& props) const = 0;
+                               MutableHandleIdVector props) const = 0;
   virtual bool delete_(JSContext* cx, HandleObject proxy, HandleId id,
                        ObjectOpResult& result) const = 0;
 
@@ -338,11 +338,11 @@ class JS_FRIEND_API BaseProxyHandler {
 
   /* SpiderMonkey extensions. */
   virtual bool enumerate(JSContext* cx, HandleObject proxy,
-                         AutoIdVector& props) const;
+                         MutableHandleIdVector props) const;
   virtual bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id,
                       bool* bp) const;
   virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
-                                            AutoIdVector& props) const;
+                                            MutableHandleIdVector props) const;
   virtual bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
                           const CallArgs& args) const;
   virtual bool hasInstance(JSContext* cx, HandleObject proxy,

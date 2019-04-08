@@ -419,7 +419,7 @@ typedef bool (*JSDeletePropertyOp)(JSContext* cx, JS::HandleObject obj,
  * add enumerable properties.
  */
 typedef bool (*JSNewEnumerateOp)(JSContext* cx, JS::HandleObject obj,
-                                 JS::AutoIdVector& properties,
+                                 JS::MutableHandleIdVector properties,
                                  bool enumerableOnly);
 
 /**

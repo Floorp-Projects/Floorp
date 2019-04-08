@@ -61,7 +61,7 @@ BackstagePass::Resolve(nsIXPConnectWrappedNative* wrapper, JSContext* cx,
 
 NS_IMETHODIMP
 BackstagePass::NewEnumerate(nsIXPConnectWrappedNative* wrapper, JSContext* cx,
-                            JSObject* objArg, JS::AutoIdVector& properties,
+                            JSObject* objArg, JS::MutableHandleIdVector properties,
                             bool enumerableOnly, bool* _retval) {
   JS::RootedObject obj(cx, objArg);
   *_retval = WebIDLGlobalNameHash::NewEnumerateSystemGlobal(cx, obj, properties,
