@@ -389,3 +389,21 @@ function assertSelectedLocationInDebugger(debuggerPanel, line, column) {
   is(location.line, line);
   is(location.column, column);
 }
+
+/**
+ * Open a new tab on about:devtools-toolbox with the provided params object used as
+ * queryString.
+ */
+async function openAboutToolbox(params) {
+  info("Open about:devtools-toolbox");
+  const querystring = new URLSearchParams();
+  Object.keys(params).forEach(x => querystring.append(x, params[x]));
+
+  const tab = await addTab(`about:devtools-toolbox?${querystring}`);
+  const browser = tab.linkedBrowser;
+
+  return {
+    tab,
+    document: browser.contentDocument,
+  };
+}
