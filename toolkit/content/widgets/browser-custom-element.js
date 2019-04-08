@@ -1265,8 +1265,13 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
 
           let menulist = document.getElementById(this.getAttribute("selectmenulist"));
           menulist.menupopup.style.direction = data.style.direction;
+
+          let useFullZoom = !this.isRemoteBrowser ||
+                            Services.prefs.getBoolPref("browser.zoom.full") ||
+                            this.isSyntheticDocument;
+          let zoom = useFullZoom ? this._fullZoom : this._textZoom;
           this._selectParentHelper.populate(menulist, data.options.options,
-            data.options.uniqueStyles, data.selectedIndex, this._fullZoom,
+            data.options.uniqueStyles, data.selectedIndex, zoom,
             data.defaultStyle, data.style);
           this._selectParentHelper.open(this, menulist, data.rect, data.isOpenedViaTouch);
           break;
@@ -1304,25 +1309,6 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
           height: data.height,
         };
         break;
-
-      case "Forms:ShowDropDown":
-        {
-          if (!this._selectParentHelper) {
-            this._selectParentHelper =
-              ChromeUtils.import("resource://gre/modules/SelectParentHelper.jsm", {}).SelectParentHelper;
-          }
-
-          let menulist = document.getElementById(this.getAttribute("selectmenulist"));
-          menulist.menupopup.style.direction = data.style.direction;
-
-          let zoom = Services.prefs.getBoolPref("browser.zoom.full") ||
-            this.isSyntheticDocument ? this._fullZoom : this._textZoom;
-          this._selectParentHelper.populate(menulist, data.options.options,
-            data.options.uniqueStyles, data.selectedIndex, zoom,
-            data.defaultStyle, data.style);
-          this._selectParentHelper.open(this, menulist, data.rect, data.isOpenedViaTouch);
-          break;
-        }
 
       case "FullZoomChange":
         {
