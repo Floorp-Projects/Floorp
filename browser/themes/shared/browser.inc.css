@@ -339,17 +339,31 @@
 }
 
 #cfr-notification-footer-pintab-animation-container {
+  height: 173px;
+  padding-top: 129px;
+  position: relative;
+  width: 343px;
+}
+
+#cfr-notification-footer-pintab-animation-container:before {
+  content: "";
   background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_animated.png");
   background-position: top center;
   background-repeat: no-repeat;
   background-size: cover;
-  height: 173px;
-  padding-top: 129px;
-  width: 343px;
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: 100%;
+}
+
+#cfr-notification-footer-pintab-animation-container:-moz-locale-dir(rtl):before {
+  transform: scaleX(-1);
 }
 
 @media (min-resolution: 2dppx) {
-  #cfr-notification-footer-pintab-animation-container {
+  #cfr-notification-footer-pintab-animation-container:before {
     background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_animated@2x.png");
   }
 }
@@ -358,28 +372,28 @@
   display: none;
 }
 
-#cfr-notification-footer-pintab-animation-container:not([animate]),
-#cfr-notification-footer-pintab-animation-container[paused],
-:root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container:not([animate]),
-:root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container[paused] {
+#cfr-notification-footer-pintab-animation-container:not([animate]):before,
+#cfr-notification-footer-pintab-animation-container[paused]:before,
+:root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container:not([animate]):before,
+:root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container[paused]:before {
   background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_static.png");
 }
 
 @media (min-resolution: 2dppx) {
-  #cfr-notification-footer-pintab-animation-container:not([animate]),
-  #cfr-notification-footer-pintab-animation-container[paused],
-  :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container:not([animate]),
-  :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container[paused] {
+  #cfr-notification-footer-pintab-animation-container:not([animate]):before,
+  #cfr-notification-footer-pintab-animation-container[paused]:before,
+  :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container:not([animate]):before,
+  :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container[paused]:before {
     background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_static@2x.png");
   }
 }
 
-:root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container {
+:root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container:before {
   background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_animated_darktheme.png");
 }
 
 @media (min-resolution: 2dppx) {
-  :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container {
+  :root[lwt-popup-brighttext] #cfr-notification-footer-pintab-animation-container:before {
     background-image: url("resource://activity-stream/data/content/assets/cfr_pinnedtab_animated_darktheme@2x.png");
   }
 }
@@ -387,10 +401,12 @@
 #cfr-notification-footer-animation-controls {
   background: linear-gradient(transparent 0%, rgba(255, 255, 255, 0.95) 35%);
   padding: 20px var(--arrowpanel-padding) 10px;
+  position: relative;
+  z-index: 1;
 }
 
 :root[lwt-popup-brighttext] #cfr-notification-footer-animation-controls {
-  margin-left: 13px;
+  margin-inline-start: 13px;
 }
 
 #cfr-notification-footer-pintab-animation-container:not([animate]) #cfr-notification-footer-animation-controls {
