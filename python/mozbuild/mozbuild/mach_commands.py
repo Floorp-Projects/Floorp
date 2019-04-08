@@ -2053,9 +2053,13 @@ class StaticAnalysis(MachCommandBase):
     @CommandArgument('--task', '-t', type=str,
                      default='compileWithGeckoBinariesDebugSources',
                      help='Which gradle tasks to use to compile the java codebase.')
+    @CommandArgument('--outgoing', default=False, action='store_true',
+                     help='Run infer checks on outgoing files from repository')
+    @CommandArgument('--output', default=None,
+                     help='Write infer json output in a file')
     def check_java(self, source=['mobile'], jobs=2, strip=1, verbose=False, checks=[],
                    task='compileWithGeckoBinariesDebugSources',
-                   skip_export=False):
+                   skip_export=False, outgoing=False, output=None):
         self._set_log_level(verbose)
         self.log_manager.enable_all_structured_loggers()
         if self.substs['MOZ_BUILD_APP'] != 'mobile/android':
@@ -2065,12 +2069,25 @@ class StaticAnalysis(MachCommandBase):
         rc = self._check_for_java()
         if rc != 0:
             return 1
+        if output is not None:
+            output = os.path.abspath(output)
+            if not os.path.isdir(os.path.dirname(output)):
+                self.log(logging.WARNING, 'static-analysis', {},
+                         'Missing report destination folder for {}'.format(output))
+
         # if source contains the whole mobile folder, then we just have to
         # analyze everything
         check_all = any(i.rstrip(os.sep).split(os.sep)[-1] == 'mobile' for i in source)
         # gather all java sources from the source variable
         java_sources = []
-        if not check_all:
+        if outgoing:
+            repo = get_repository_object(self.topsrcdir)
+            java_sources = self._get_java_files(repo.get_outgoing_files())
+            if not java_sources:
+                self.log(logging.WARNING, 'static-analysis', {},
+                         'No outgoing Java files to check')
+                return 0
+        elif not check_all:
             java_sources = self._get_java_files(source)
             if not java_sources:
                 return 0
@@ -2100,6 +2117,14 @@ class StaticAnalysis(MachCommandBase):
         rc = rc or self.run_process(args=analysis_cmd, cwd=self.topsrcdir, pass_thru=True)
         if tmp_file:
             tmp_file.close()
+
+        # Copy the infer report
+        report_path = os.path.join(self.topsrcdir, 'infer-out', 'report.json')
+        if output is not None and os.path.exists(report_path):
+            shutil.copy(report_path, output)
+            self.log(logging.INFO, 'static-analysis', {},
+                     'Report available in {}'.format(output))
+
         return rc
 
     def _get_java_files(self, sources):
