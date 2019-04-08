@@ -3,6 +3,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* global DomProvider */
+
 "use strict";
 
 // React & Redux
@@ -68,11 +71,32 @@ class DomTree extends Component {
       "id": "value",
     }];
 
+    let onDOMNodeMouseOver;
+    let onDOMNodeMouseOut;
+    const toolbox = DomProvider.getToolbox();
+    if (toolbox) {
+      onDOMNodeMouseOver = async (grip, options = {}) => {
+        await toolbox.initInspector();
+        if (!toolbox.highlighter) {
+          return null;
+        }
+        const nodeFront = await toolbox.walker.gripToNodeFront(grip);
+        return toolbox.highlighter.highlight(nodeFront, options);
+      };
+      onDOMNodeMouseOut = (forceHide = false) => {
+        return toolbox.highlighter
+          ? toolbox.highlighter.unhighlight(forceHide)
+          : null;
+      };
+    }
+
     // This is the integration point with Reps. The DomTree is using
     // Reps to render all values. The code also specifies default rep
     // used for data types that don't have its own specific template.
     const renderValue = props => {
       return Rep(Object.assign({}, props, {
+        onDOMNodeMouseOver,
+        onDOMNodeMouseOut,
         defaultRep: Grip,
         cropLimit: 50,
       }));
