@@ -11,8 +11,9 @@ class nsFrameLoader;
 namespace mozilla {
 class ErrorResult;
 namespace dom {
+class BrowsingContext;
 struct RemotenessOptions;
-}
+}  // namespace dom
 }  // namespace mozilla
 
 // IID for the FrameLoaderOwner interface
@@ -37,6 +38,8 @@ class nsFrameLoaderOwner : public nsISupports {
   nsFrameLoaderOwner() = default;
   already_AddRefed<nsFrameLoader> GetFrameLoader();
   void SetFrameLoader(nsFrameLoader* aNewFrameLoader);
+
+  already_AddRefed<mozilla::dom::BrowsingContext> GetBrowsingContext();
 
   // Destroy (if it exists) and recreate our frameloader, based on new
   // remoteness requirements. This should follow the same path as
