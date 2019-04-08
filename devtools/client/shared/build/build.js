@@ -17,7 +17,7 @@ const defaultPlugins = [
 
 function transform(filePath) {
 // Use the extra plugins only for the debugger
-  const plugins = filePath.includes("devtools/client/debugger/new")
+  const plugins = filePath.includes("devtools/client/debugger")
     ? require("./build-debugger")(filePath)
     : defaultPlugins;
 

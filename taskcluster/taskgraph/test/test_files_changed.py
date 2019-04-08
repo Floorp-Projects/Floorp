@@ -17,7 +17,7 @@ PARAMS = {
 }
 
 FILES_CHANGED = [
-    'devtools/client/debugger/new/index.html',
+    'devtools/client/debugger/index.html',
     'devtools/client/inspector/test/browser_inspector_highlighter-eyedropper-events.js',
     'devtools/client/inspector/test/head.js',
     'devtools/client/themes/rules.css',

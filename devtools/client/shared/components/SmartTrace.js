@@ -10,8 +10,8 @@ const { LocalizationHelper } = require("devtools/shared/l10n");
 
 const l10n = new LocalizationHelper("devtools/client/locales/components.properties");
 const dbgL10n = new LocalizationHelper("devtools/client/locales/debugger.properties");
-const Frames = createFactory(require("devtools/client/debugger/new/src/components/SecondaryPanes/Frames/index").Frames);
-const { annotateFrames } = require("devtools/client/debugger/new/src/utils/pause/frames/annotateFrames");
+const Frames = createFactory(require("devtools/client/debugger/src/components/SecondaryPanes/Frames/index").Frames);
+const { annotateFrames } = require("devtools/client/debugger/src/utils/pause/frames/annotateFrames");
 
 class SmartTrace extends Component {
   static get propTypes() {

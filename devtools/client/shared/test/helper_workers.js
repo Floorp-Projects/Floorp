@@ -4,10 +4,10 @@
 
 "use strict";
 
-/* import-globals-from ../../debugger/new/test/mochitest/helpers.js */
-/* import-globals-from ../../debugger/new/test/mochitest/helpers/context.js */
+/* import-globals-from ../../debugger/test/mochitest/helpers.js */
+/* import-globals-from ../../debugger/test/mochitest/helpers/context.js */
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers.js",
+  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/helpers.js",
   this);
 
 var { DebuggerServer } = require("devtools/server/main");
