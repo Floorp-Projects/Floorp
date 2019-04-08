@@ -153,7 +153,7 @@ typedef ScrollableLayerGuid::ViewID ViewID;
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsFrameLoader, mBrowsingContext,
                                       mMessageManager, mChildMessageManager,
-                                      mParentSHistory, mRemoteBrowser)
+                                      mParentSHistory, mBrowserParent)
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsFrameLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsFrameLoader)
 
@@ -170,7 +170,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, BrowsingContext* aBrowsingContext,
       mOwnerContent(aOwner),
       mDetachedSubdocFrame(nullptr),
       mPendingSwitchID(0),
-      mRemoteBrowser(nullptr),
+      mBrowserParent(nullptr),
       mChildID(0),
       mDepthTooGreat(false),
       mIsTopLevelContent(false),
@@ -195,7 +195,7 @@ nsFrameLoader::nsFrameLoader(Element* aOwner, BrowsingContext* aBrowsingContext,
       mOwnerContent(aOwner),
       mDetachedSubdocFrame(nullptr),
       mPendingSwitchID(0),
-      mRemoteBrowser(nullptr),
+      mBrowserParent(nullptr),
       mChildID(0),
       mDepthTooGreat(false),
       mIsTopLevelContent(false),
@@ -545,7 +545,7 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
   AUTO_PROFILER_LABEL("nsFrameLoader::ReallyStartLoadingInternal", OTHER);
 
   if (IsRemoteFrame()) {
-    if (!mRemoteBrowser && !mBrowserBridgeChild && !TryRemoteBrowser()) {
+    if (!mBrowserParent && !mBrowserBridgeChild && !TryRemoteBrowser()) {
       NS_WARNING("Couldn't create child process for iframe.");
       return NS_ERROR_FAILURE;
     }
@@ -565,7 +565,7 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
         Unused << mBrowserBridgeChild->SendLoadURL(spec);
       } else {
         // FIXME get error codes from child
-        mRemoteBrowser->LoadURL(mURIToLoad);
+        mBrowserParent->LoadURL(mURIToLoad);
       }
     }
 
@@ -1035,7 +1035,7 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
   NS_ASSERTION(IsRemoteFrame(),
                "ShowRemote only makes sense on remote frames.");
 
-  if (!mRemoteBrowser && !mBrowserBridgeChild && !TryRemoteBrowser()) {
+  if (!mBrowserParent && !mBrowserBridgeChild && !TryRemoteBrowser()) {
     NS_ERROR("Couldn't create child process.");
     return false;
   }
@@ -1070,14 +1070,14 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
     }
 
     RenderFrame* rf =
-        mRemoteBrowser ? mRemoteBrowser->GetRenderFrame() : nullptr;
+        mBrowserParent ? mBrowserParent->GetRenderFrame() : nullptr;
 
     if (!rf || !rf->AttachLayerManager()) {
       // This is just not going to work.
       return false;
     }
 
-    mRemoteBrowser->Show(size, ParentWindowIsActive(mOwnerContent->OwnerDoc()));
+    mBrowserParent->Show(size, ParentWindowIsActive(mOwnerContent->OwnerDoc()));
     mRemoteBrowserShown = true;
 
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
@@ -1090,8 +1090,8 @@ bool nsFrameLoader::ShowRemoteFrame(const ScreenIntSize& size,
 
     // Don't show remote iframe if we are waiting for the completion of reflow.
     if (!aFrame || !(aFrame->GetStateBits() & NS_FRAME_FIRST_REFLOW)) {
-      if (mRemoteBrowser) {
-        mRemoteBrowser->UpdateDimensions(dimensions, size);
+      if (mBrowserParent) {
+        mBrowserParent->UpdateDimensions(dimensions, size);
       } else if (mBrowserBridgeChild) {
         mBrowserBridgeChild->UpdateDimensions(dimensions, size);
       }
@@ -1192,12 +1192,12 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  if (!mRemoteBrowser || !aOther->mRemoteBrowser) {
+  if (!mBrowserParent || !aOther->mBrowserParent) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  if (mRemoteBrowser->IsIsolatedMozBrowserElement() !=
-      aOther->mRemoteBrowser->IsIsolatedMozBrowserElement()) {
+  if (mBrowserParent->IsIsolatedMozBrowserElement() !=
+      aOther->mBrowserParent->IsIsolatedMozBrowserElement()) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -1209,12 +1209,12 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
   // This is the reason why now we must retrieve the correct value from the
   // usercontextid attribute before comparing our originAttributes with the
   // other one.
-  OriginAttributes ourOriginAttributes = mRemoteBrowser->OriginAttributesRef();
+  OriginAttributes ourOriginAttributes = mBrowserParent->OriginAttributesRef();
   rv = PopulateUserContextIdFromAttribute(ourOriginAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
   OriginAttributes otherOriginAttributes =
-      aOther->mRemoteBrowser->OriginAttributesRef();
+      aOther->mBrowserParent->OriginAttributesRef();
   rv = aOther->PopulateUserContextIdFromAttribute(otherOriginAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1258,9 +1258,9 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
   }
 
   nsCOMPtr<nsIBrowserDOMWindow> otherBrowserDOMWindow =
-      aOther->mRemoteBrowser->GetBrowserDOMWindow();
+      aOther->mBrowserParent->GetBrowserDOMWindow();
   nsCOMPtr<nsIBrowserDOMWindow> browserDOMWindow =
-      mRemoteBrowser->GetBrowserDOMWindow();
+      mBrowserParent->GetBrowserDOMWindow();
 
   if (!!otherBrowserDOMWindow != !!browserDOMWindow) {
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -1274,8 +1274,8 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
     aOther->DestroyBrowserFrameScripts();
   }
 
-  aOther->mRemoteBrowser->SetBrowserDOMWindow(browserDOMWindow);
-  mRemoteBrowser->SetBrowserDOMWindow(otherBrowserDOMWindow);
+  aOther->mBrowserParent->SetBrowserDOMWindow(browserDOMWindow);
+  mBrowserParent->SetBrowserDOMWindow(otherBrowserDOMWindow);
 
 #ifdef XP_WIN
   // Native plugin windows used by this remote content need to be reparented.
@@ -1283,7 +1283,7 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
     RefPtr<nsIWidget> newParent =
         nsGlobalWindowOuter::Cast(newWin)->GetMainWidget();
     const ManagedContainer<mozilla::plugins::PPluginWidgetParent>& plugins =
-        aOther->mRemoteBrowser->ManagedPPluginWidgetParent();
+        aOther->mBrowserParent->ManagedPPluginWidgetParent();
     for (auto iter = plugins.ConstIter(); !iter.Done(); iter.Next()) {
       static_cast<mozilla::plugins::PluginWidgetParent*>(iter.Get()->GetKey())
           ->SetParent(newParent);
@@ -1297,13 +1297,13 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
   SetOwnerContent(otherContent);
   aOther->SetOwnerContent(ourContent);
 
-  mRemoteBrowser->SetOwnerElement(otherContent);
-  aOther->mRemoteBrowser->SetOwnerElement(ourContent);
+  mBrowserParent->SetOwnerElement(otherContent);
+  aOther->mBrowserParent->SetOwnerElement(ourContent);
 
   // Update window activation state for the swapped owner content.
-  Unused << mRemoteBrowser->SendParentActivated(
+  Unused << mBrowserParent->SendParentActivated(
       ParentWindowIsActive(otherContent->OwnerDoc()));
-  Unused << aOther->mRemoteBrowser->SendParentActivated(
+  Unused << aOther->mBrowserParent->SendParentActivated(
       ParentWindowIsActive(ourContent->OwnerDoc()));
 
   MaybeUpdatePrimaryTabParent(eTabParentChanged);
@@ -1350,9 +1350,9 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
     return rv;
   }
 
-  Unused << mRemoteBrowser->SendSwappedWithOtherRemoteLoader(
+  Unused << mBrowserParent->SendSwappedWithOtherRemoteLoader(
       ourContext.AsIPCTabContext());
-  Unused << aOther->mRemoteBrowser->SendSwappedWithOtherRemoteLoader(
+  Unused << aOther->mBrowserParent->SendSwappedWithOtherRemoteLoader(
       otherContext.AsIPCTabContext());
   return NS_OK;
 }
@@ -1803,10 +1803,10 @@ void nsFrameLoader::StartDestroy() {
   // Retain references to the <browser> element and the frameloader in case we
   // receive any messages from the message manager on the frame. These
   // references are dropped in DestroyComplete.
-  if (mChildMessageManager || mRemoteBrowser) {
+  if (mChildMessageManager || mBrowserParent) {
     mOwnerContentStrong = mOwnerContent;
-    if (mRemoteBrowser) {
-      mRemoteBrowser->CacheFrameLoader(this);
+    if (mBrowserParent) {
+      mBrowserParent->CacheFrameLoader(this);
     }
     if (mChildMessageManager) {
       mChildMessageManager->CacheFrameLoader(this);
@@ -1815,8 +1815,8 @@ void nsFrameLoader::StartDestroy() {
 
   // If the TabParent has installed any event listeners on the window, this is
   // its last chance to remove them while we're still in the document.
-  if (mRemoteBrowser) {
-    mRemoteBrowser->RemoveWindowListeners();
+  if (mBrowserParent) {
+    mBrowserParent->RemoveWindowListeners();
   }
 
   nsCOMPtr<Document> doc;
@@ -1915,8 +1915,8 @@ void nsFrameLoader::DestroyDocShell() {
   // Ask the TabChild to fire the frame script "unload" event, destroy its
   // docshell, and finally destroy the PBrowser actor. This eventually leads to
   // nsFrameLoader::DestroyComplete being called.
-  if (mRemoteBrowser) {
-    mRemoteBrowser->Destroy();
+  if (mBrowserParent) {
+    mBrowserParent->Destroy();
   }
 
   if (mBrowserBridgeChild) {
@@ -1949,10 +1949,10 @@ void nsFrameLoader::DestroyComplete() {
   // case, StartDestroy might not have been called.
 
   // Drop the strong references created in StartDestroy.
-  if (mChildMessageManager || mRemoteBrowser) {
+  if (mChildMessageManager || mBrowserParent) {
     mOwnerContentStrong = nullptr;
-    if (mRemoteBrowser) {
-      mRemoteBrowser->CacheFrameLoader(nullptr);
+    if (mBrowserParent) {
+      mBrowserParent->CacheFrameLoader(nullptr);
     }
     if (mChildMessageManager) {
       mChildMessageManager->CacheFrameLoader(nullptr);
@@ -1960,10 +1960,10 @@ void nsFrameLoader::DestroyComplete() {
   }
 
   // Call TabParent::Destroy if we haven't already (in case of a crash).
-  if (mRemoteBrowser) {
-    mRemoteBrowser->SetOwnerElement(nullptr);
-    mRemoteBrowser->Destroy();
-    mRemoteBrowser = nullptr;
+  if (mBrowserParent) {
+    mBrowserParent->SetOwnerElement(nullptr);
+    mBrowserParent->Destroy();
+    mBrowserParent = nullptr;
   }
 
   if (mBrowserBridgeChild) {
@@ -2495,7 +2495,7 @@ nsresult nsFrameLoader::GetWindowDimensions(nsIntRect& aRect) {
 
 nsresult nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame* aIFrame) {
   if (IsRemoteFrame()) {
-    if (mRemoteBrowser || mBrowserBridgeChild) {
+    if (mBrowserParent || mBrowserBridgeChild) {
       ScreenIntSize size = aIFrame->GetSubdocumentSize();
       // If we were not able to show remote frame before, we should probably
       // retry now to send correct showInfo.
@@ -2505,8 +2505,8 @@ nsresult nsFrameLoader::UpdatePositionAndSize(nsSubDocumentFrame* aIFrame) {
       nsIntRect dimensions;
       NS_ENSURE_SUCCESS(GetWindowDimensions(dimensions), NS_ERROR_FAILURE);
       mLazySize = size;
-      if (mRemoteBrowser) {
-        mRemoteBrowser->UpdateDimensions(dimensions, size);
+      if (mBrowserParent) {
+        mBrowserParent->UpdateDimensions(dimensions, size);
       } else if (mBrowserBridgeChild) {
         mBrowserBridgeChild->UpdateDimensions(dimensions, size);
       }
@@ -2588,7 +2588,7 @@ static Tuple<ContentParent*, TabParent*> GetContentParent(Element* aBrowser) {
 }
 
 bool nsFrameLoader::TryRemoteBrowser() {
-  NS_ASSERTION(!mRemoteBrowser && !mBrowserBridgeChild,
+  NS_ASSERTION(!mBrowserParent && !mBrowserBridgeChild,
                "TryRemoteBrowser called with a remote browser already?");
 
   if (!mOwnerContent) {
@@ -2715,10 +2715,10 @@ bool nsFrameLoader::TryRemoteBrowser() {
     return !!mBrowserBridgeChild;
   }
 
-  mRemoteBrowser = ContentParent::CreateBrowser(
+  mBrowserParent = ContentParent::CreateBrowser(
       context, ownerElement, mBrowsingContext, openerContentParent,
       sameTabGroupAs, nextTabParentId);
-  if (!mRemoteBrowser) {
+  if (!mBrowserParent) {
     return false;
   }
 
@@ -2726,12 +2726,12 @@ bool nsFrameLoader::TryRemoteBrowser() {
   // The remoteType can be queried by asking the message manager instead.
   ownerElement->UnsetAttr(kNameSpaceID_None, nsGkAtoms::RemoteType, false);
 
-  // Now that mRemoteBrowser is set, we can initialize the RenderFrame
-  mRemoteBrowser->InitRendering();
+  // Now that mBrowserParent is set, we can initialize the RenderFrame
+  mBrowserParent->InitRendering();
 
   MaybeUpdatePrimaryTabParent(eTabParentChanged);
 
-  mChildID = mRemoteBrowser->Manager()->ChildID();
+  mChildID = mBrowserParent->Manager()->ChildID();
 
   nsCOMPtr<nsIDocShellTreeItem> rootItem;
   parentDocShell->GetRootTreeItem(getter_AddRefs(rootItem));
@@ -2741,7 +2741,7 @@ bool nsFrameLoader::TryRemoteBrowser() {
   if (rootChromeWin) {
     nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
     rootChromeWin->GetBrowserDOMWindow(getter_AddRefs(browserDOMWin));
-    mRemoteBrowser->SetBrowserDOMWindow(browserDOMWin);
+    mBrowserParent->SetBrowserDOMWindow(browserDOMWin);
   }
 
   // Set up a parent SHistory
@@ -2754,17 +2754,17 @@ bool nsFrameLoader::TryRemoteBrowser() {
 
   // For xul:browsers, update some settings based on attributes:
   if (mOwnerContent->IsXULElement()) {
-    // Send down the name of the browser through mRemoteBrowser if it is set.
+    // Send down the name of the browser through mBrowserParent if it is set.
     nsAutoString frameName;
     mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::name, frameName);
     if (nsContentUtils::IsOverridingWindowName(frameName)) {
-      Unused << mRemoteBrowser->SendSetWindowName(frameName);
+      Unused << mBrowserParent->SendSetWindowName(frameName);
     }
     // Allow scripts to close the window if the browser specified so:
     if (mOwnerContent->AttrValueIs(kNameSpaceID_None,
                                    nsGkAtoms::allowscriptstoclose,
                                    nsGkAtoms::_true, eCaseMatters)) {
-      Unused << mRemoteBrowser->SendAllowScriptsToClose();
+      Unused << mBrowserParent->SendAllowScriptsToClose();
     }
   }
 
@@ -2783,7 +2783,7 @@ bool nsFrameLoader::IsRemoteFrame() {
 }
 
 mozilla::dom::PBrowserParent* nsFrameLoader::GetRemoteBrowser() const {
-  return mRemoteBrowser;
+  return mBrowserParent;
 }
 
 mozilla::dom::BrowserBridgeChild* nsFrameLoader::GetBrowserBridgeChild() const {
@@ -2792,8 +2792,8 @@ mozilla::dom::BrowserBridgeChild* nsFrameLoader::GetBrowserBridgeChild() const {
 
 mozilla::layers::LayersId nsFrameLoader::GetLayersId() const {
   MOZ_ASSERT(mIsRemoteFrame);
-  if (mRemoteBrowser) {
-    return mRemoteBrowser->GetRenderFrame()->GetLayersId();
+  if (mBrowserParent) {
+    return mBrowserParent->GetRenderFrame()->GetLayersId();
   }
   if (mBrowserBridgeChild) {
     return mBrowserBridgeChild->GetLayersId();
@@ -2802,21 +2802,21 @@ mozilla::layers::LayersId nsFrameLoader::GetLayersId() const {
 }
 
 void nsFrameLoader::ActivateRemoteFrame(ErrorResult& aRv) {
-  if (!mRemoteBrowser) {
+  if (!mBrowserParent) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
   }
 
-  mRemoteBrowser->Activate();
+  mBrowserParent->Activate();
 }
 
 void nsFrameLoader::DeactivateRemoteFrame(ErrorResult& aRv) {
-  if (!mRemoteBrowser) {
+  if (!mBrowserParent) {
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
   }
 
-  mRemoteBrowser->Deactivate();
+  mBrowserParent->Deactivate();
 }
 
 void nsFrameLoader::SendCrossProcessMouseEvent(const nsAString& aType, float aX,
@@ -2825,23 +2825,23 @@ void nsFrameLoader::SendCrossProcessMouseEvent(const nsAString& aType, float aX,
                                                int32_t aModifiers,
                                                bool aIgnoreRootScrollFrame,
                                                ErrorResult& aRv) {
-  if (!mRemoteBrowser) {
+  if (!mBrowserParent) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
-  mRemoteBrowser->SendMouseEvent(aType, aX, aY, aButton, aClickCount,
+  mBrowserParent->SendMouseEvent(aType, aX, aY, aButton, aClickCount,
                                  aModifiers, aIgnoreRootScrollFrame);
 }
 
 void nsFrameLoader::ActivateFrameEvent(const nsAString& aType, bool aCapture,
                                        ErrorResult& aRv) {
-  if (!mRemoteBrowser) {
+  if (!mBrowserParent) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
 
-  bool ok = mRemoteBrowser->SendActivateFrameEvent(nsString(aType), aCapture);
+  bool ok = mBrowserParent->SendActivateFrameEvent(nsString(aType), aCapture);
   if (!ok) {
     aRv.Throw(NS_ERROR_NOT_AVAILABLE);
   }
@@ -2916,7 +2916,7 @@ nsresult nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
                                            StructuredCloneData& aData,
                                            JS::Handle<JSObject*> aCpows,
                                            nsIPrincipal* aPrincipal) {
-  TabParent* tabParent = mRemoteBrowser;
+  TabParent* tabParent = mBrowserParent;
   if (tabParent) {
     ClonedMessageData data;
     ContentParent* cp = tabParent->Manager();
@@ -3030,14 +3030,14 @@ already_AddRefed<Element> nsFrameLoader::GetOwnerElement() {
 }
 
 void nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent) {
-  MOZ_ASSERT(!mRemoteBrowser);
+  MOZ_ASSERT(!mBrowserParent);
   mIsRemoteFrame = true;
-  mRemoteBrowser = TabParent::GetFrom(aTabParent);
-  mChildID = mRemoteBrowser ? mRemoteBrowser->Manager()->ChildID() : 0;
+  mBrowserParent = TabParent::GetFrom(aTabParent);
+  mChildID = mBrowserParent ? mBrowserParent->Manager()->ChildID() : 0;
   MaybeUpdatePrimaryTabParent(eTabParentChanged);
   ReallyLoadFrameScripts();
   InitializeBrowserAPI();
-  mRemoteBrowser->InitRendering();
+  mBrowserParent->InitRendering();
   ShowRemoteFrame(ScreenIntSize(0, 0));
 }
 
@@ -3141,8 +3141,8 @@ void nsFrameLoader::AttributeChanged(mozilla::dom::Element* aElement,
  */
 void nsFrameLoader::RequestNotifyAfterRemotePaint() {
   // If remote browsing (e10s), handle this with the TabParent.
-  if (mRemoteBrowser) {
-    Unused << mRemoteBrowser->SendRequestNotifyAfterRemotePaint();
+  if (mBrowserParent) {
+    Unused << mBrowserParent->SendRequestNotifyAfterRemotePaint();
   }
 }
 
@@ -3161,9 +3161,9 @@ void nsFrameLoader::Print(uint64_t aOuterWindowID,
                           nsIWebProgressListener* aProgressListener,
                           ErrorResult& aRv) {
 #if defined(NS_PRINTING)
-  if (mRemoteBrowser) {
+  if (mBrowserParent) {
     RefPtr<embedding::PrintingParent> printingParent =
-        mRemoteBrowser->Manager()->GetPrintingParent();
+        mBrowserParent->Manager()->GetPrintingParent();
 
     embedding::PrintData printData;
     nsresult rv = printingParent->SerializeAndEnsureRemotePrintJob(
@@ -3173,7 +3173,7 @@ void nsFrameLoader::Print(uint64_t aOuterWindowID,
       return;
     }
 
-    bool success = mRemoteBrowser->SendPrint(aOuterWindowID, printData);
+    bool success = mBrowserParent->SendPrint(aOuterWindowID, printData);
     if (!success) {
       aRv.Throw(NS_ERROR_FAILURE);
     }
@@ -3234,7 +3234,7 @@ already_AddRefed<mozilla::dom::Promise> nsFrameLoader::DrawSnapshot(
   gfx::IntRect rect = gfx::IntRect::RoundOut(gfx::Rect(aX, aY, aW, aH));
 
   if (IsRemoteFrame()) {
-    gfx::CrossProcessPaint::StartRemote(mRemoteBrowser->GetTabId(), rect,
+    gfx::CrossProcessPaint::StartRemote(mBrowserParent->GetTabId(), rect,
                                         aScale, color, promise);
   } else {
     gfx::CrossProcessPaint::StartLocal(GetDocShell(), rect, aScale, color,
@@ -3245,15 +3245,15 @@ already_AddRefed<mozilla::dom::Promise> nsFrameLoader::DrawSnapshot(
 }
 
 already_AddRefed<nsITabParent> nsFrameLoader::GetTabParent() {
-  return do_AddRef(mRemoteBrowser);
+  return do_AddRef(mBrowserParent);
 }
 
 already_AddRefed<nsILoadContext> nsFrameLoader::LoadContext() {
   nsCOMPtr<nsILoadContext> loadContext;
   if (IsRemoteFrame() &&
-      (mRemoteBrowser || mBrowserBridgeChild || TryRemoteBrowser())) {
-    if (mRemoteBrowser) {
-      loadContext = mRemoteBrowser->GetLoadContext();
+      (mBrowserParent || mBrowserBridgeChild || TryRemoteBrowser())) {
+    if (mBrowserParent) {
+      loadContext = mBrowserParent->GetLoadContext();
     } else {
       loadContext = mBrowserBridgeChild->GetLoadContext();
     }
@@ -3266,9 +3266,9 @@ already_AddRefed<nsILoadContext> nsFrameLoader::LoadContext() {
 already_AddRefed<BrowsingContext> nsFrameLoader::GetBrowsingContext() {
   RefPtr<BrowsingContext> browsingContext;
   if (IsRemoteFrame() &&
-      (mRemoteBrowser || mBrowserBridgeChild || TryRemoteBrowser())) {
-    if (mRemoteBrowser) {
-      browsingContext = mRemoteBrowser->GetBrowsingContext();
+      (mBrowserParent || mBrowserBridgeChild || TryRemoteBrowser())) {
+    if (mBrowserParent) {
+      browsingContext = mBrowserParent->GetBrowsingContext();
     } else {
       browsingContext = mBrowserBridgeChild->GetBrowsingContext();
     }
@@ -3315,8 +3315,8 @@ void nsFrameLoader::StartPersistence(
     ErrorResult& aRv) {
   MOZ_ASSERT(aRecv);
 
-  if (mRemoteBrowser) {
-    mRemoteBrowser->StartPersistence(aOuterWindowID, aRecv, aRv);
+  if (mBrowserParent) {
+    mBrowserParent->StartPersistence(aOuterWindowID, aRecv, aRv);
     return;
   }
 
@@ -3340,7 +3340,7 @@ void nsFrameLoader::StartPersistence(
 }
 
 void nsFrameLoader::MaybeUpdatePrimaryTabParent(TabParentChange aChange) {
-  if (mRemoteBrowser && mOwnerContent) {
+  if (mBrowserParent && mOwnerContent) {
     nsCOMPtr<nsIDocShell> docShell = mOwnerContent->OwnerDoc()->GetDocShell();
     if (!docShell) {
       return;
@@ -3362,11 +3362,11 @@ void nsFrameLoader::MaybeUpdatePrimaryTabParent(TabParentChange aChange) {
       mObservingOwnerContent = true;
     }
 
-    parentTreeOwner->TabParentRemoved(mRemoteBrowser);
+    parentTreeOwner->TabParentRemoved(mBrowserParent);
     if (aChange == eTabParentChanged) {
       bool isPrimary = mOwnerContent->AttrValueIs(
           kNameSpaceID_None, nsGkAtoms::primary, nsGkAtoms::_true, eIgnoreCase);
-      parentTreeOwner->TabParentAdded(mRemoteBrowser, isPrimary);
+      parentTreeOwner->TabParentAdded(mBrowserParent, isPrimary);
     }
   }
 }
@@ -3444,7 +3444,7 @@ nsresult nsFrameLoader::PopulateUserContextIdFromAttribute(
 }
 
 ProcessMessageManager* nsFrameLoader::GetProcessMessageManager() const {
-  return mRemoteBrowser ? mRemoteBrowser->Manager()->GetMessageManager()
+  return mBrowserParent ? mBrowserParent->Manager()->GetMessageManager()
                         : nullptr;
 };
 
