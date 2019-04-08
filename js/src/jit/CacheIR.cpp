@@ -5350,12 +5350,9 @@ bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   MOZ_ASSERT(calleeFunc->isNative());
 
   bool isSpecialized = mode_ == ICState::Mode::Specialized;
-  if (!isSpecialized) {
-    return false;
-  }
 
   bool isSpread = IsSpreadCallPC(pc_);
-  bool isSameRealm = cx_->realm() == calleeFunc->realm();
+  bool isSameRealm = isSpecialized && cx_->realm() == calleeFunc->realm();
   bool isConstructing = IsConstructorCallPC(pc_);
   CallFlags flags(isConstructing, isSpread, isSameRealm);
 
@@ -5364,7 +5361,7 @@ bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   }
 
   // Check for specific native-function optimizations.
-  if (tryAttachSpecialCaseCallNative(calleeFunc)) {
+  if (isSpecialized && tryAttachSpecialCaseCallNative(calleeFunc)) {
     return true;
   }
   if (JitOptions.disableCacheIRCalls) {
@@ -5372,7 +5369,8 @@ bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   }
 
   RootedObject templateObj(cx_);
-  if (isConstructing && !getTemplateObjectForNative(calleeFunc, &templateObj)) {
+  if (isConstructing && isSpecialized &&
+      !getTemplateObjectForNative(calleeFunc, &templateObj)) {
     return false;
   }
 
@@ -5384,19 +5382,39 @@ bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
       writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId, flags);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
 
-  // Ensure callee matches this stub's callee
-  FieldOffset calleeOffset =
-      writer.guardSpecificObject(calleeObjId, calleeFunc);
+  FieldOffset calleeOffset = 0;
+  if (isSpecialized) {
+    // Ensure callee matches this stub's callee
+    calleeOffset = writer.guardSpecificObject(calleeObjId, calleeFunc);
+    writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc, flags);
+  } else {
+    // Guard that object is a native function
+    writer.guardClass(calleeObjId, GuardClassKind::JSFunction);
+    writer.guardFunctionIsNative(calleeObjId);
 
-  writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc, flags);
+    if (isConstructing) {
+      // If callee is not a constructor, we have to throw.
+      writer.guardFunctionIsConstructor(calleeObjId);
+    } else {
+      // If callee is a class constructor, we have to throw.
+      writer.guardNotClassConstructor(calleeObjId);
+    }
+    writer.callAnyNativeFunction(calleeObjId, argcId, flags);
+  }
+
   writer.typeMonitorResult();
 
   if (templateObj) {
+    MOZ_ASSERT(isSpecialized);
     writer.metaNativeTemplateObject(templateObj, calleeOffset);
   }
 
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
-  trackAttached("Call native func");
+  if (isSpecialized) {
+    trackAttached("Call native func");
+  } else {
+    trackAttached("Call any native func");
+  }
 
   return true;
 }
