@@ -263,7 +263,23 @@ extern JS_PUBLIC_API bool CompileFunction(JSContext* cx,
                                           MutableHandle<JSFunction*> fun);
 
 /**
- * Same as above, but taking UTF-8 encoded const char* for the function body.
+ * Compile a function with envChain plus the global as its scope chain.
+ * envChain must contain objects in the current compartment of cx.  The actual
+ * scope chain used for the function will consist of With wrappers for those
+ * objects, followed by the current global of the compartment cx is in.  This
+ * global must not be explicitly included in the scope chain.
+ */
+extern JS_PUBLIC_API bool CompileFunction(JSContext* cx,
+                                          HandleObjectVector envChain,
+                                          const ReadOnlyCompileOptions& options,
+                                          const char* name, unsigned nargs,
+                                          const char* const* argnames,
+                                          SourceText<mozilla::Utf8Unit>& srcBuf,
+                                          MutableHandle<JSFunction*> fun);
+
+/**
+ * Identical to the CompileFunction overload above for UTF-8, but with
+ * Rust-friendly ergonomics.
  */
 extern JS_PUBLIC_API bool CompileFunctionUtf8(
     JSContext* cx, HandleObjectVector envChain,
