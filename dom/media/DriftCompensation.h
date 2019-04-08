@@ -103,24 +103,25 @@ class DriftCompensator {
       return aTime;
     }
 
-    int64_t videoScaleUs = (aNow - mAudioStartTime).ToMicroseconds();
-    int64_t audioScaleUs = FramesToUsecs(samples, mAudioRate).value();
-    int64_t videoDurationUs = (aTime - mAudioStartTime).ToMicroseconds();
-
-    if (videoScaleUs == 0) {
-      videoScaleUs = audioScaleUs;
+    if (aNow == mAudioStartTime) {
+      LOG(LogLevel::Warning,
+          "DriftCompensator %p video scale 0, assuming no drift", this);
+      return aTime;
     }
 
+    double videoScaleUs = (aNow - mAudioStartTime).ToMicroseconds();
+    double audioScaleUs = FramesToUsecs(samples, mAudioRate).value();
+    double videoDurationUs = (aTime - mAudioStartTime).ToMicroseconds();
+
     TimeStamp reclocked =
-        mAudioStartTime +
-        TimeDuration::FromMicroseconds(
-            SaferMultDiv(videoDurationUs, audioScaleUs, videoScaleUs).value());
+        mAudioStartTime + TimeDuration::FromMicroseconds(
+                              videoDurationUs * audioScaleUs / videoScaleUs);
 
     LOG(LogLevel::Debug,
         "DriftCompensator %p GetVideoTime, v-now: %.3fs, a-now: %.3fs; %.3fs "
         "-> %.3fs (d %.3fms)",
         this, (aNow - mAudioStartTime).ToSeconds(),
-        static_cast<double>(audioScaleUs) / 1000000.0,
+        TimeDuration::FromMicroseconds(audioScaleUs).ToSeconds(),
         (aTime - mAudioStartTime).ToSeconds(),
         (reclocked - mAudioStartTime).ToSeconds(),
         (reclocked - aTime).ToMilliseconds());

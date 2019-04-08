@@ -1069,7 +1069,7 @@ UniquePtr<uint8_t[]> WebGLContext::GetImageBuffer(int32_t* out_format) {
 
 NS_IMETHODIMP
 WebGLContext::GetInputStream(const char* mimeType,
-                             const char16_t* encoderOptions,
+                             const nsAString& encoderOptions,
                              nsIInputStream** out_stream) {
   NS_ASSERTION(gl, "GetInputStream on invalid context?");
   if (!gl) return NS_ERROR_FAILURE;

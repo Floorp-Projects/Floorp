@@ -2974,21 +2974,11 @@ void MacroAssembler::moveRegPair(Register src0, Register src1, Register dst0,
 void MacroAssembler::branchIfNotInterpretedConstructor(Register fun,
                                                        Register scratch,
                                                        Label* label) {
-  // 16-bit loads are slow and unaligned 32-bit loads may be too so
-  // perform an aligned 32-bit load and adjust the bitmask accordingly.
-  static_assert(JSFunction::offsetOfNargs() % sizeof(uint32_t) == 0,
-                "JSFunction nargs are aligned to uint32_t");
-  static_assert(JSFunction::offsetOfFlags() == JSFunction::offsetOfNargs() + 2,
-                "JSFunction nargs and flags are stored next to each other");
-
   // First, ensure it's a scripted function.
-  load32(Address(fun, JSFunction::offsetOfNargs()), scratch);
-  int32_t bits = IMM32_16ADJ(JSFunction::INTERPRETED);
-  branchTest32(Assembler::Zero, scratch, Imm32(bits), label);
+  branchTestFunctionFlags(fun, JSFunction::INTERPRETED, Assembler::Zero, label);
 
   // Check if the CONSTRUCTOR bit is set.
-  bits = IMM32_16ADJ(JSFunction::CONSTRUCTOR);
-  branchTest32(Assembler::Zero, scratch, Imm32(bits), label);
+  branchTestFunctionFlags(fun, JSFunction::CONSTRUCTOR, Assembler::Zero, label);
 }
 
 void MacroAssembler::branchTestObjGroupNoSpectreMitigations(

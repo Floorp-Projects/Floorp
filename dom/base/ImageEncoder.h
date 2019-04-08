@@ -78,7 +78,7 @@ class ImageEncoder {
   static nsresult GetInputStream(int32_t aWidth, int32_t aHeight,
                                  uint8_t* aImageBuffer, int32_t aFormat,
                                  imgIEncoder* aEncoder,
-                                 const char16_t* aEncoderOptions,
+                                 const nsAString& aEncoderOptions,
                                  nsIInputStream** aStream);
 
  private:

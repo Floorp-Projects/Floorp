@@ -194,6 +194,7 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
     allowNewTarget_ = sc->allowNewTarget();
     allowSuperProperty_ = sc->allowSuperProperty();
     allowSuperCall_ = sc->allowSuperCall();
+    allowArguments_ = sc->allowArguments();
     needsThisTDZChecks_ = sc->needsThisTDZChecks();
     thisBinding_ = sc->thisBinding();
   } else {
@@ -225,6 +226,16 @@ void FunctionBox::initWithEnclosingParseContext(ParseContext* enclosing,
 
     inWith_ = enclosing->findInnermostStatement(isWith);
   }
+}
+
+void FunctionBox::initFieldInitializer(ParseContext* enclosing,
+                                       HasHeritage hasHeritage) {
+  this->initWithEnclosingParseContext(enclosing,
+                                      FunctionSyntaxKind::Expression);
+  allowSuperProperty_ = false;
+  allowSuperCall_ = false;
+  allowArguments_ = false;
+  needsThisTDZChecks_ = hasHeritage == HasHeritage::Yes;
 }
 
 void FunctionBox::initWithEnclosingScope(Scope* enclosingScope) {

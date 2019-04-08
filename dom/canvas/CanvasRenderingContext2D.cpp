@@ -1648,7 +1648,7 @@ nsString CanvasRenderingContext2D::GetHitRegion(
 
 NS_IMETHODIMP
 CanvasRenderingContext2D::GetInputStream(const char* aMimeType,
-                                         const char16_t* aEncoderOptions,
+                                         const nsAString& aEncoderOptions,
                                          nsIInputStream** aStream) {
   nsCString enccid("@mozilla.org/image/encoder;2?type=");
   enccid += aMimeType;

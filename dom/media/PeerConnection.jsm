@@ -1173,7 +1173,8 @@ class RTCPeerConnection {
     sender.checkWasCreatedByPc(this.__DOM_IMPL__);
 
     let transceiver =
-      this._transceivers.find(transceiver => transceiver.sender == sender);
+      this._transceivers.find(transceiver =>
+        !transceiver.stopped && transceiver.sender == sender);
 
     // If the transceiver was removed due to rollback, let it slide.
     if (!transceiver || !sender.track) {

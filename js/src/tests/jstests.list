@@ -655,9 +655,7 @@ skip script test262/language/statements/class/elements/wrapped-in-sc-literal-nam
 skip script test262/language/expressions/class/elements/fields-run-once-on-double-super.js
 skip script test262/language/expressions/class/constructor-this-tdz-during-initializers.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1540793
-skip script test262/language/expressions/class/elements/arrow-fnc-init-err-contains-arguments.js
-skip script test262/language/expressions/class/elements/comp-name-init-err-contains-arguments.js
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1542406
 skip script test262/language/expressions/class/elements/derived-cls-direct-eval-err-contains-supercall-1.js
 skip script test262/language/expressions/class/elements/derived-cls-direct-eval-err-contains-supercall-2.js
 skip script test262/language/expressions/class/elements/derived-cls-direct-eval-err-contains-supercall.js
@@ -669,21 +667,12 @@ skip script test262/language/expressions/class/elements/derived-cls-indirect-eva
 skip script test262/language/expressions/class/elements/derived-cls-indirect-eval-err-contains-superproperty-1.js
 skip script test262/language/expressions/class/elements/derived-cls-indirect-eval-err-contains-superproperty-2.js
 skip script test262/language/expressions/class/elements/direct-eval-err-contains-arguments.js
-skip script test262/language/expressions/class/elements/equality-init-err-contains-arguments.js
-skip script test262/language/expressions/class/elements/fields-literal-name-propname-constructor.js
-skip script test262/language/expressions/class/elements/fields-string-name-propname-constructor.js
-skip script test262/language/expressions/class/elements/literal-name-init-err-contains-arguments.js
 skip script test262/language/expressions/class/elements/private-derived-cls-direct-eval-err-contains-supercall-1.js
 skip script test262/language/expressions/class/elements/private-derived-cls-direct-eval-err-contains-supercall-2.js
 skip script test262/language/expressions/class/elements/private-derived-cls-direct-eval-err-contains-supercall.js
 skip script test262/language/expressions/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-1.js
 skip script test262/language/expressions/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-2.js
 skip script test262/language/expressions/class/elements/private-derived-cls-indirect-eval-err-contains-supercall.js
-skip script test262/language/expressions/class/elements/string-literal-name-init-err-contains-arguments.js
-skip script test262/language/expressions/class/elements/ternary-init-err-contains-arguments.js
-skip script test262/language/expressions/class/elements/typeof-init-err-contains-arguments.js
-skip script test262/language/statements/class/elements/arrow-fnc-init-err-contains-arguments.js
-skip script test262/language/statements/class/elements/comp-name-init-err-contains-arguments.js
 skip script test262/language/statements/class/elements/derived-cls-direct-eval-err-contains-supercall-1.js
 skip script test262/language/statements/class/elements/derived-cls-direct-eval-err-contains-supercall-2.js
 skip script test262/language/statements/class/elements/derived-cls-direct-eval-err-contains-supercall.js
@@ -695,19 +684,12 @@ skip script test262/language/statements/class/elements/derived-cls-indirect-eval
 skip script test262/language/statements/class/elements/derived-cls-indirect-eval-err-contains-superproperty-1.js
 skip script test262/language/statements/class/elements/derived-cls-indirect-eval-err-contains-superproperty-2.js
 skip script test262/language/statements/class/elements/direct-eval-err-contains-arguments.js
-skip script test262/language/statements/class/elements/equality-init-err-contains-arguments.js
-skip script test262/language/statements/class/elements/fields-literal-name-propname-constructor.js
-skip script test262/language/statements/class/elements/fields-string-name-propname-constructor.js
-skip script test262/language/statements/class/elements/literal-name-init-err-contains-arguments.js
 skip script test262/language/statements/class/elements/private-derived-cls-direct-eval-err-contains-supercall-1.js
 skip script test262/language/statements/class/elements/private-derived-cls-direct-eval-err-contains-supercall-2.js
 skip script test262/language/statements/class/elements/private-derived-cls-direct-eval-err-contains-supercall.js
 skip script test262/language/statements/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-1.js
 skip script test262/language/statements/class/elements/private-derived-cls-indirect-eval-err-contains-supercall-2.js
 skip script test262/language/statements/class/elements/private-derived-cls-indirect-eval-err-contains-supercall.js
-skip script test262/language/statements/class/elements/string-literal-name-init-err-contains-arguments.js
-skip script test262/language/statements/class/elements/ternary-init-err-contains-arguments.js
-skip script test262/language/statements/class/elements/typeof-init-err-contains-arguments.js
 
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1541641
 skip script test262/language/expressions/class/elements/evaluation-error/computed-name-toprimitive-err.js

@@ -15,6 +15,9 @@ interface MozFrameLoaderOwner {
   [ChromeOnly]
   readonly attribute FrameLoader? frameLoader;
 
+  [ChromeOnly]
+  readonly attribute BrowsingContext? browsingContext;
+
   [ChromeOnly, Throws]
   void presetOpenerWindow(WindowProxy? window);
 

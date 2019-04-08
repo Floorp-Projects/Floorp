@@ -4678,7 +4678,7 @@ CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script,
                                  jsbytecode* pc, JSOp op, ICState::Mode mode,
                                  uint32_t argc, HandleValue callee,
                                  HandleValue thisval, HandleValue newTarget,
-                                 HandleValueArray args)
+                                 HandleValueArray args, bool isFirstStub)
     : IRGenerator(cx, script, pc, CacheKind::Call, mode),
       op_(op),
       argc_(argc),
@@ -4687,26 +4687,27 @@ CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script,
       newTarget_(newTarget),
       args_(args),
       typeCheckInfo_(cx, /* needsTypeBarrier = */ true),
-      cacheIRStubKind_(BaselineCacheIRStubKind::Regular) {}
+      cacheIRStubKind_(BaselineCacheIRStubKind::Regular),
+      isFirstStub_(isFirstStub) {}
 
-bool CallIRGenerator::tryAttachStringSplit() {
+AttachDecision CallIRGenerator::tryAttachStringSplit() {
   // Only optimize StringSplitString(str, str)
   if (argc_ != 2 || !args_[0].isString() || !args_[1].isString()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
-  // Just for now: if they're both atoms, then do not optimize using
-  // CacheIR and allow the legacy "ConstStringSplit" BaselineIC optimization
-  // to proceed.
-  if (args_[0].toString()->isAtom() && args_[1].toString()->isAtom()) {
-    return false;
+  // If we have not previously attached a stub and both arguments are atoms,
+  // defer until after the call and attach a const string split stub.
+  if (isOptimizableConstStringSplit()) {
+    return AttachDecision::Deferred;
   }
 
   // Get the object group to use for this location.
   RootedObjectGroup group(cx_,
                           ObjectGroupRealm::getStringSplitStringGroup(cx_));
   if (!group) {
-    return false;
+    cx_->clearPendingException();
+    return AttachDecision::NoAction;
   }
 
   Int32OperandId argcId(writer.setInputOperandId(0));
@@ -4714,24 +4715,19 @@ bool CallIRGenerator::tryAttachStringSplit() {
   // Ensure argc == 2.
   writer.guardSpecificInt32Immediate(argcId, 2);
 
-  // 2 arguments.  Stack-layout here is (bottom to top):
-  //
-  //  3: Callee
-  //  2: ThisValue
-  //  1: Arg0
-  //  0: Arg1 <-- Top of stack
-
   // Ensure callee is the |String_split| native function.
-  ValOperandId calleeValId = writer.loadStackValue(3);
+  ValOperandId calleeValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
-  writer.guardIsNativeFunction(calleeObjId, js::intrinsic_StringSplitString);
+  writer.guardSpecificNativeFunction(calleeObjId,
+                                     js::intrinsic_StringSplitString);
 
   // Ensure arg0 is a string.
-  ValOperandId arg0ValId = writer.loadStackValue(1);
+  ValOperandId arg0ValId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   StringOperandId arg0StrId = writer.guardIsString(arg0ValId);
 
   // Ensure arg1 is a string.
-  ValOperandId arg1ValId = writer.loadStackValue(0);
+  ValOperandId arg1ValId = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
   StringOperandId arg1StrId = writer.guardIsString(arg1ValId);
 
   // Call custom string splitter VM-function.
@@ -4743,40 +4739,40 @@ bool CallIRGenerator::tryAttachStringSplit() {
 
   TypeScript::Monitor(cx_, script_, pc_, TypeSet::ObjectType(group));
 
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool CallIRGenerator::tryAttachArrayPush() {
+AttachDecision CallIRGenerator::tryAttachArrayPush() {
   // Only optimize on obj.push(val);
   if (argc_ != 1 || !thisval_.isObject()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Where |obj| is a native array.
   RootedObject thisobj(cx_, &thisval_.toObject());
   if (!thisobj->is<ArrayObject>()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (thisobj->hasLazyGroup()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   RootedArrayObject thisarray(cx_, &thisobj->as<ArrayObject>());
 
   // Check for other indexed properties or class hooks.
   if (!CanAttachAddElement(thisarray, /* isInit = */ false)) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Can't add new elements to arrays with non-writable length.
   if (!thisarray->lengthIsWritable()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Check that array is extensible.
   if (!thisarray->isExtensible()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   MOZ_ASSERT(!thisarray->getElementsHeader()->isFrozen(),
@@ -4791,19 +4787,14 @@ bool CallIRGenerator::tryAttachArrayPush() {
   // Ensure argc == 1.
   writer.guardSpecificInt32Immediate(argcId, 1);
 
-  // 1 argument only.  Stack-layout here is (bottom to top):
-  //
-  //  2: Callee
-  //  1: ThisValue
-  //  0: Arg0 <-- Top of stack.
-
   // Guard callee is the |js::array_push| native function.
-  ValOperandId calleeValId = writer.loadStackValue(2);
+  ValOperandId calleeValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
-  writer.guardIsNativeFunction(calleeObjId, js::array_push);
+  writer.guardSpecificNativeFunction(calleeObjId, js::array_push);
 
   // Guard this is an array object.
-  ValOperandId thisValId = writer.loadStackValue(1);
+  ValOperandId thisValId = writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId thisObjId = writer.guardIsObject(thisValId);
 
   // This is a soft assert, documenting the fact that we pass 'true'
@@ -4821,7 +4812,7 @@ bool CallIRGenerator::tryAttachArrayPush() {
   ShapeGuardProtoChain(writer, thisobj, thisObjId);
 
   // arr.push(x) is equivalent to arr[arr.length] = x for regular arrays.
-  ValOperandId argId = writer.loadStackValue(0);
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   writer.arrayPush(thisObjId, argId);
 
   writer.returnFromIC();
@@ -4832,36 +4823,41 @@ bool CallIRGenerator::tryAttachArrayPush() {
   cacheIRStubKind_ = BaselineCacheIRStubKind::Updated;
 
   trackAttached("ArrayPush");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool CallIRGenerator::tryAttachArrayJoin() {
+AttachDecision CallIRGenerator::tryAttachArrayJoin() {
   // Only handle argc <= 1.
   if (argc_ > 1) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Only optimize on obj.join(...);
   if (!thisval_.isObject()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Where |obj| is a native array.
   RootedObject thisobj(cx_, &thisval_.toObject());
   if (!thisobj->is<ArrayObject>()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   RootedArrayObject thisarray(cx_, &thisobj->as<ArrayObject>());
 
   // And the array is of length 0 or 1.
   if (thisarray->length() > 1) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // And the array is packed.
   if (thisarray->getDenseInitializedLength() != thisarray->length()) {
-    return false;
+    return AttachDecision::NoAction;
+  }
+
+  // And the only element (if it exists) is a string
+  if (thisarray->length() == 1 && !thisarray->getDenseElement(0).isString()) {
+    return AttachDecision::NoAction;
   }
 
   // We don't need to worry about indexed properties because we can perform
@@ -4870,30 +4866,22 @@ bool CallIRGenerator::tryAttachArrayJoin() {
   // Generate code.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // if 0 arguments:
-  //  1: Callee
-  //  0: ThisValue <-- Top of stack.
-  //
-  // if 1 argument:
-  //  2: Callee
-  //  1: ThisValue
-  //  0: Arg0 [optional] <-- Top of stack.
-
   // Guard callee is the |js::array_join| native function.
-  uint32_t calleeIndex = (argc_ == 0) ? 1 : 2;
-  ValOperandId calleeValId = writer.loadStackValue(calleeIndex);
+  ValOperandId calleeValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
-  writer.guardIsNativeFunction(calleeObjId, js::array_join);
+  writer.guardSpecificNativeFunction(calleeObjId, js::array_join);
 
   if (argc_ == 1) {
     // If argcount is 1, guard that the argument is a string.
-    ValOperandId argValId = writer.loadStackValue(0);
+    ValOperandId argValId =
+        writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
     writer.guardIsString(argValId);
   }
 
   // Guard this is an array object.
-  uint32_t thisIndex = (argc_ == 0) ? 0 : 1;
-  ValOperandId thisValId = writer.loadStackValue(thisIndex);
+  ValOperandId thisValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId thisObjId = writer.guardIsObject(thisValId);
   writer.guardClass(thisObjId, GuardClassKind::Array);
 
@@ -4910,22 +4898,24 @@ bool CallIRGenerator::tryAttachArrayJoin() {
   cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("ArrayJoin");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool CallIRGenerator::tryAttachIsSuspendedGenerator() {
+AttachDecision CallIRGenerator::tryAttachIsSuspendedGenerator() {
   // The IsSuspendedGenerator intrinsic is only called in
   // self-hosted code, so it's safe to assume we have a single
   // argument and the callee is our intrinsic.
 
   MOZ_ASSERT(argc_ == 1);
 
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
   // Stack layout here is (bottom to top):
   //  2: Callee
   //  1: ThisValue
   //  0: Arg <-- Top of stack.
   // We only care about the argument.
-  ValOperandId valId = writer.loadStackValue(0);
+  ValOperandId valId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
 
   // Check whether the argument is a suspended generator.
   // We don't need guards, because IsSuspendedGenerator returns
@@ -4939,52 +4929,170 @@ bool CallIRGenerator::tryAttachIsSuspendedGenerator() {
   cacheIRStubKind_ = BaselineCacheIRStubKind::Regular;
 
   trackAttached("IsSuspendedGenerator");
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool CallIRGenerator::tryAttachSpecialCaseCallNative(HandleFunction callee) {
+AttachDecision CallIRGenerator::tryAttachFunCall() {
+  if (JitOptions.disableCacheIRCalls) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!thisval_.isObject() || !thisval_.toObject().is<JSFunction>()) {
+    return AttachDecision::NoAction;
+  }
+  RootedFunction target(cx_, &thisval_.toObject().as<JSFunction>());
+
+  bool isScripted = target->isInterpreted() || target->isNativeWithJitEntry();
+  MOZ_ASSERT_IF(!isScripted, target->isNative());
+
+  if (target->isClassConstructor()) {
+    return AttachDecision::NoAction;
+  }
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard that callee is the |fun_call| native function.
+  ValOperandId calleeValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId);
+  ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
+  writer.guardSpecificNativeFunction(calleeObjId, fun_call);
+
+  // Guard that |this| is a function.
+  ValOperandId thisValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::This, argcId);
+  ObjOperandId thisObjId = writer.guardIsObject(thisValId);
+  writer.guardClass(thisObjId, GuardClassKind::JSFunction);
+
+  // Guard that function is not a class constructor.
+  writer.guardNotClassConstructor(thisObjId);
+
+  CallFlags targetFlags(CallFlags::FunCall);
+  if (isScripted) {
+    writer.guardFunctionHasJitEntry(thisObjId, /*isConstructing =*/false);
+    writer.callScriptedFunction(thisObjId, argcId, targetFlags);
+  } else {
+    writer.guardFunctionIsNative(thisObjId);
+    writer.callAnyNativeFunction(thisObjId, argcId, targetFlags);
+  }
+
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  if (isScripted) {
+    trackAttached("Scripted fun_call");
+  } else {
+    trackAttached("Native fun_call");
+  }
+
+  return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachFunApply() {
+  if (JitOptions.disableCacheIRCalls) {
+    return AttachDecision::NoAction;
+  }
+
+  if (argc_ != 2) {
+    return AttachDecision::NoAction;
+  }
+
+  if (!thisval_.isObject() || !thisval_.toObject().is<JSFunction>()) {
+    return AttachDecision::NoAction;
+  }
+  RootedFunction target(cx_, &thisval_.toObject().as<JSFunction>());
+
+  bool isScripted = target->isInterpreted() || target->isNativeWithJitEntry();
+  MOZ_ASSERT_IF(!isScripted, target->isNative());
+
+  if (target->isClassConstructor()) {
+    return AttachDecision::NoAction;
+  }
+
+  CallFlags::ArgFormat format = CallFlags::Standard;
+  if (args_[1].isMagic(JS_OPTIMIZED_ARGUMENTS) && !script_->needsArgsObj()) {
+    format = CallFlags::FunApplyArgs;
+  } else if (args_[1].isObject() && args_[1].toObject().is<ArrayObject>() &&
+             args_[1].toObject().as<ArrayObject>().length() <=
+                 CacheIRCompiler::MAX_ARGS_ARRAY_LENGTH) {
+    format = CallFlags::FunApplyArray;
+  } else {
+    return AttachDecision::NoAction;
+  }
+
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard that callee is the |fun_apply| native function.
+  ValOperandId calleeValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId);
+  ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
+  writer.guardSpecificNativeFunction(calleeObjId, fun_apply);
+
+  // Guard that |this| is a function.
+  ValOperandId thisValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::This, argcId);
+  ObjOperandId thisObjId = writer.guardIsObject(thisValId);
+  writer.guardClass(thisObjId, GuardClassKind::JSFunction);
+
+  // Guard that function is not a class constructor.
+  writer.guardNotClassConstructor(thisObjId);
+
+  CallFlags targetFlags(format);
+  writer.guardFunApply(argcId, targetFlags);
+
+  if (isScripted) {
+    // Guard that function is scripted.
+    writer.guardFunctionHasJitEntry(thisObjId, /*isConstructing =*/false);
+    writer.callScriptedFunction(thisObjId, argcId, targetFlags);
+  } else {
+    // Guard that function is native.
+    writer.guardFunctionIsNative(thisObjId);
+    writer.callAnyNativeFunction(thisObjId, argcId, targetFlags);
+  }
+
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  if (isScripted) {
+    trackAttached("Scripted fun_apply");
+  } else {
+    trackAttached("Native fun_apply");
+  }
+
+  return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachSpecialCaseCallNative(
+    HandleFunction callee) {
+  MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
   MOZ_ASSERT(callee->isNative());
 
+  // Check for fun_call and fun_apply.
+  if (op_ == JSOP_FUNCALL && callee->native() == fun_call) {
+    return tryAttachFunCall();
+  }
+  if (op_ == JSOP_FUNAPPLY && callee->native() == fun_apply) {
+    return tryAttachFunApply();
+  }
+
+  // Other functions are only optimized for normal calls.
   if (op_ != JSOP_CALL && op_ != JSOP_CALL_IGNORES_RV) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
+  // Check for special-cased native functions.
   if (callee->native() == js::intrinsic_StringSplitString) {
-    if (tryAttachStringSplit()) {
-      return true;
-    }
+    return tryAttachStringSplit();
   }
-
   if (callee->native() == js::array_push) {
-    if (tryAttachArrayPush()) {
-      return true;
-    }
+    return tryAttachArrayPush();
   }
-
   if (callee->native() == js::array_join) {
-    if (tryAttachArrayJoin()) {
-      return true;
-    }
+    return tryAttachArrayJoin();
   }
   if (callee->native() == intrinsic_IsSuspendedGenerator) {
-    if (tryAttachIsSuspendedGenerator()) {
-      return true;
-    }
+    return tryAttachIsSuspendedGenerator();
   }
-  return false;
-}
 
-uint32_t CallIRGenerator::calleeStackSlot(bool isSpread, bool isConstructing) {
-  // Stack layout is (bottom to top):
-  //   Callee
-  //   ThisValue
-  //   Args:
-  //     a) if spread: array object containing args
-  //     b) if not spread: |argc| values on the stack
-  //   NewTarget (only if constructing)
-  //   <top of stack>
-
-  return 1 + (isSpread ? 1 : argc_) + isConstructing;
+  return AttachDecision::NoAction;
 }
 
 // Remember the template object associated with any script being called
@@ -5027,9 +5135,6 @@ bool CallIRGenerator::getTemplateObjectForScripted(HandleFunction calleeFunc,
     if (group->newScript(sweep) && !group->newScript(sweep)->analyzed()) {
       // Function newScript has not been analyzed
       trackAttached(IRGenerator::NotAttached);
-
-      // TODO: This is temporary until the analysis is perfomed, so
-      // don't treat this as unoptimizable.
       *skipAttach = true;
       return true;
     }
@@ -5050,35 +5155,39 @@ bool CallIRGenerator::getTemplateObjectForScripted(HandleFunction calleeFunc,
   return true;
 }
 
-bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
+AttachDecision CallIRGenerator::tryAttachCallScripted(
+    HandleFunction calleeFunc) {
   if (JitOptions.disableCacheIRCalls) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Never attach optimized scripted call stubs for JSOP_FUNAPPLY.
   // MagicArguments may escape the frame through them.
   if (op_ == JSOP_FUNAPPLY) {
-    return false;
+    return AttachDecision::NoAction;
   }
+
+  bool isSpecialized = mode_ == ICState::Mode::Specialized;
 
   bool isConstructing = IsConstructorCallPC(pc_);
   bool isSpread = IsSpreadCallPC(pc_);
+  bool isSameRealm = isSpecialized && cx_->realm() == calleeFunc->realm();
+  CallFlags flags(isConstructing, isSpread, isSameRealm);
 
   // If callee is not an interpreted constructor, we have to throw.
   if (isConstructing && !calleeFunc->isConstructor()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Likewise, if the callee is a class constructor, we have to throw.
   if (!isConstructing && calleeFunc->isClassConstructor()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (!calleeFunc->hasJitEntry()) {
     // Don't treat this as an unoptimizable case, as we'll add a
     // stub when the callee is delazified.
-    // TODO: find a way to represent *handled = true;
-    return false;
+    return AttachDecision::TemporarilyUnoptimizable;
   }
 
   if (isConstructing && !calleeFunc->hasJITCode()) {
@@ -5086,8 +5195,7 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
     // code. This isn't required for correctness but avoids allocating
     // a template object below for constructors that aren't hot. See
     // bug 1419758.
-    // TODO: find a way to represent *handled = true;
-    return false;
+    return AttachDecision::TemporarilyUnoptimizable;
   }
 
   // Keep track of the function's |prototype| property in type
@@ -5098,52 +5206,71 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
 
   RootedObject templateObj(cx_);
   bool skipAttach = false;
-  if (isConstructing &&
+  if (isConstructing && isSpecialized &&
       !getTemplateObjectForScripted(calleeFunc, &templateObj, &skipAttach)) {
-    return false;
+    cx_->clearPendingException();
+    return AttachDecision::NoAction;
   }
   if (skipAttach) {
-    // TODO: this should mark "handled" somehow
-    return false;
+    return AttachDecision::TemporarilyUnoptimizable;
   }
 
   // Load argc.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Load the callee
-  uint32_t calleeSlot = calleeStackSlot(isSpread, isConstructing);
-  ValOperandId calleeValId = writer.loadStackValue(calleeSlot);
+  // Load the callee and ensure it is an object
+  ValOperandId calleeValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId, flags);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
 
-  // Ensure callee matches this stub's callee
-  FieldOffset calleeOffset =
-      writer.guardSpecificObject(calleeObjId, calleeFunc);
+  FieldOffset calleeOffset = 0;
+  if (isSpecialized) {
+    // Ensure callee matches this stub's callee
+    calleeOffset = writer.guardSpecificObject(calleeObjId, calleeFunc);
+    // Guard against relazification
+    writer.guardFunctionHasJitEntry(calleeObjId, isConstructing);
+  } else {
+    // Guard that object is a scripted function
+    writer.guardClass(calleeObjId, GuardClassKind::JSFunction);
+    writer.guardFunctionHasJitEntry(calleeObjId, isConstructing);
 
-  // Guard against relazification
-  writer.guardFunctionHasJitEntry(calleeObjId, isConstructing);
-
-  // Enforce limits on spread call length, and update argc.
-  if (isSpread) {
-    writer.guardAndUpdateSpreadArgc(argcId, isConstructing);
+    if (isConstructing) {
+      // If callee is not a constructor, we have to throw.
+      writer.guardFunctionIsConstructor(calleeObjId);
+    } else {
+      // If callee is a class constructor, we have to throw.
+      writer.guardNotClassConstructor(calleeObjId);
+    }
   }
 
-  bool isCrossRealm = cx_->realm() != calleeFunc->realm();
-  writer.callScriptedFunction(calleeObjId, argcId, isCrossRealm, isSpread,
-                              isConstructing);
+  writer.callScriptedFunction(calleeObjId, argcId, flags);
   writer.typeMonitorResult();
 
   if (templateObj) {
+    MOZ_ASSERT(isSpecialized);
     writer.metaScriptedTemplateObject(templateObj, calleeOffset);
   }
 
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
-  trackAttached("Call scripted func");
+  if (isSpecialized) {
+    trackAttached("Call scripted func");
+  } else {
+    trackAttached("Call any scripted func");
+  }
 
-  return true;
+  return AttachDecision::Attach;
 }
 
 bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
                                                  MutableHandleObject res) {
+  // Saving the template object is unsound for super(), as a single
+  // callsite can have multiple possible prototype objects created
+  // (via different newTargets)
+  bool isSuper = op_ == JSOP_SUPERCALL || op_ == JSOP_SPREADSUPERCALL;
+  if (isSuper) {
+    return true;
+  }
+
   if (!calleeFunc->hasJitInfo() ||
       calleeFunc->jitInfo()->type() != JSJitInfo::InlinableNative) {
     return true;
@@ -5230,64 +5357,95 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
   }
 }
 
-bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
-  MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
+AttachDecision CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   MOZ_ASSERT(calleeFunc->isNative());
 
-  bool isSpread = IsSpreadCallPC(pc_);
+  bool isSpecialized = mode_ == ICState::Mode::Specialized;
 
+  bool isSpread = IsSpreadCallPC(pc_);
+  bool isSameRealm = isSpecialized && cx_->realm() == calleeFunc->realm();
   bool isConstructing = IsConstructorCallPC(pc_);
+  CallFlags flags(isConstructing, isSpread, isSameRealm);
+
   if (isConstructing && !calleeFunc->isConstructor()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   // Check for specific native-function optimizations.
-  if (tryAttachSpecialCaseCallNative(calleeFunc)) {
-    return true;
+  if (isSpecialized) {
+    AttachDecision decision = tryAttachSpecialCaseCallNative(calleeFunc);
+    if (decision != AttachDecision::NoAction) {
+      return decision;
+    }
   }
   if (JitOptions.disableCacheIRCalls) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   RootedObject templateObj(cx_);
-  if (isConstructing && !getTemplateObjectForNative(calleeFunc, &templateObj)) {
-    return false;
+  if (isConstructing && isSpecialized &&
+      !getTemplateObjectForNative(calleeFunc, &templateObj)) {
+    cx_->clearPendingException();
+    return AttachDecision::NoAction;
   }
 
   // Load argc.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Load the callee
-  uint32_t calleeSlot = calleeStackSlot(isSpread, isConstructing);
-  ValOperandId calleeValId = writer.loadStackValue(calleeSlot);
+  // Load the callee and ensure it is an object
+  ValOperandId calleeValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId, flags);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
 
-  // Ensure callee matches this stub's callee
-  FieldOffset calleeOffset =
-      writer.guardSpecificObject(calleeObjId, calleeFunc);
+  FieldOffset calleeOffset = 0;
+  if (isSpecialized) {
+    // Ensure callee matches this stub's callee
+    calleeOffset = writer.guardSpecificObject(calleeObjId, calleeFunc);
+    writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc, flags);
+  } else {
+    // Guard that object is a native function
+    writer.guardClass(calleeObjId, GuardClassKind::JSFunction);
+    writer.guardFunctionIsNative(calleeObjId);
 
-  // Enforce limits on spread call length, and update argc.
-  if (isSpread) {
-    writer.guardAndUpdateSpreadArgc(argcId, isConstructing);
+    if (isConstructing) {
+      // If callee is not a constructor, we have to throw.
+      writer.guardFunctionIsConstructor(calleeObjId);
+    } else {
+      // If callee is a class constructor, we have to throw.
+      writer.guardNotClassConstructor(calleeObjId);
+    }
+    writer.callAnyNativeFunction(calleeObjId, argcId, flags);
   }
-  writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc, isSpread,
-                            isConstructing);
+
   writer.typeMonitorResult();
 
   if (templateObj) {
+    MOZ_ASSERT(isSpecialized);
     writer.metaNativeTemplateObject(templateObj, calleeOffset);
   }
 
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
-  trackAttached("Call native func");
+  if (isSpecialized) {
+    trackAttached("Call native func");
+  } else {
+    trackAttached("Call any native func");
+  }
 
-  return true;
+  return AttachDecision::Attach;
 }
 
 bool CallIRGenerator::getTemplateObjectForClassHook(
     HandleObject calleeObj, MutableHandleObject result) {
   MOZ_ASSERT(IsConstructorCallPC(pc_));
   JSNative hook = calleeObj->constructHook();
+
+  // Saving the template object is unsound for super(), as a single
+  // callsite can have multiple possible prototype objects created
+  // (via different newTargets)
+  bool isSuper = op_ == JSOP_SUPERCALL || op_ == JSOP_SPREADSUPERCALL;
+  if (isSuper) {
+    return true;
+  }
 
   if (calleeObj->nonCCWRealm() != cx_->realm()) {
     return true;
@@ -5297,7 +5455,6 @@ bool CallIRGenerator::getTemplateObjectForClassHook(
     Rooted<TypeDescr*> descr(cx_, calleeObj.as<TypeDescr>());
     result.set(TypedObject::createZeroed(cx_, descr, gc::TenuredHeap));
     if (!result) {
-      cx_->clearPendingException();
       return false;
     }
   }
@@ -5305,47 +5462,51 @@ bool CallIRGenerator::getTemplateObjectForClassHook(
   return true;
 }
 
-bool CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
+AttachDecision CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
   if (JitOptions.disableCacheIRCalls) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   if (op_ == JSOP_FUNAPPLY) {
-    return false;
+    return AttachDecision::NoAction;
+  }
+
+  if (mode_ != ICState::Mode::Specialized) {
+    // We do not have megamorphic call hook stubs.
+    // TODO: Should we attach specialized call hook stubs in
+    // megamorphic mode to avoid going generic?
+    return AttachDecision::NoAction;
   }
 
   bool isSpread = IsSpreadCallPC(pc_);
   bool isConstructing = IsConstructorCallPC(pc_);
+  CallFlags flags(isConstructing, isSpread);
   JSNative hook =
       isConstructing ? calleeObj->constructHook() : calleeObj->callHook();
   if (!hook) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   RootedObject templateObj(cx_);
   if (isConstructing &&
       !getTemplateObjectForClassHook(calleeObj, &templateObj)) {
-    return false;
+    cx_->clearPendingException();
+    return AttachDecision::NoAction;
   }
 
   // Load argc.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Load the callee.
-  uint32_t calleeSlot = calleeStackSlot(isSpread, isConstructing);
-  ValOperandId calleeValId = writer.loadStackValue(calleeSlot);
+  // Load the callee and ensure it is an object
+  ValOperandId calleeValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId, flags);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
 
   // Ensure the callee's class matches the one in this stub.
   FieldOffset classOffset =
       writer.guardAnyClass(calleeObjId, calleeObj->getClass());
 
-  // Enforce limits on spread call length, and update argc.
-  if (isSpread) {
-    writer.guardAndUpdateSpreadArgc(argcId, isConstructing);
-  }
-
-  writer.callClassHook(calleeObjId, argcId, hook, isSpread, isConstructing);
+  writer.callClassHook(calleeObjId, argcId, hook, flags);
   writer.typeMonitorResult();
 
   if (templateObj) {
@@ -5355,32 +5516,34 @@ bool CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
   trackAttached("Call native func");
 
-  return true;
+  return AttachDecision::Attach;
 }
 
-bool CallIRGenerator::tryAttachStub() {
+AttachDecision CallIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
 
   // Some opcodes are not yet supported.
   switch (op_) {
     case JSOP_CALL:
     case JSOP_CALL_IGNORES_RV:
+    case JSOP_CALLITER:
     case JSOP_SPREADCALL:
     case JSOP_NEW:
     case JSOP_SPREADNEW:
+    case JSOP_SUPERCALL:
+    case JSOP_SPREADSUPERCALL:
+    case JSOP_FUNCALL:
+    case JSOP_FUNAPPLY:
       break;
     default:
-      return false;
+      return AttachDecision::NoAction;
   }
 
-  // Only optimize when the mode is Specialized.
-  if (mode_ != ICState::Mode::Specialized) {
-    return false;
-  }
+  MOZ_ASSERT(mode_ != ICState::Mode::Generic);
 
   // Ensure callee is a function.
   if (!callee_.isObject()) {
-    return false;
+    return AttachDecision::NoAction;
   }
 
   RootedObject calleeObj(cx_, &callee_.toObject());
@@ -5400,7 +5563,130 @@ bool CallIRGenerator::tryAttachStub() {
     return tryAttachCallNative(calleeFunc);
   }
 
-  return false;
+  return AttachDecision::NoAction;
+}
+
+bool CallIRGenerator::isOptimizableConstStringSplit() {
+  // If we have not yet attached any stubs to this IC...
+  if (!isFirstStub_) {
+    return false;
+  }
+
+  // And we have two arguments, both of which are strings...
+  if (argc_ != 2 || !args_[0].isString() || !args_[1].isString()) {
+    return false;
+  }
+
+  // And the strings are atoms...
+  if (!args_[0].toString()->isAtom() || !args_[1].toString()->isAtom()) {
+    return false;
+  }
+
+  // And we are calling a function in the current realm...
+  RootedFunction calleeFunc(cx_, &callee_.toObject().as<JSFunction>());
+  if (calleeFunc->realm() != cx_->realm()) {
+    return false;
+  }
+
+  // Which is the String split intrinsic...
+  if (!calleeFunc->isNative() ||
+      calleeFunc->native() != js::intrinsic_StringSplitString) {
+    return false;
+  }
+
+  // Then this might be a call of the form:
+  //  "literal list".split("literal separator")
+  // If so, we can cache the result and avoid having to perform the operation
+  // each time.
+  return true;
+}
+
+AttachDecision CallIRGenerator::tryAttachConstStringSplit(HandleValue result) {
+  if (!isOptimizableConstStringSplit()) {
+    return AttachDecision::NoAction;
+  }
+
+  RootedString str(cx_, args_[0].toString());
+  RootedString sep(cx_, args_[1].toString());
+  RootedArrayObject resultObj(cx_, &result.toObject().as<ArrayObject>());
+  uint32_t initLength = resultObj->getDenseInitializedLength();
+  MOZ_ASSERT(initLength == resultObj->length(),
+             "string-split result is a fully initialized array");
+
+  // Copy the array before storing in stub.
+  RootedArrayObject arrObj(cx_);
+  arrObj = NewFullyAllocatedArrayTryReuseGroup(cx_, resultObj, initLength,
+                                               TenuredObject);
+  if (!arrObj) {
+    cx_->clearPendingException();
+    return AttachDecision::NoAction;
+  }
+  arrObj->ensureDenseInitializedLength(cx_, 0, initLength);
+
+  // Atomize all elements of the array.
+  if (initLength > 0) {
+    // Mimic NewFullyAllocatedStringArray() and directly inform TI about
+    // the element type.
+    AddTypePropertyId(cx_, arrObj, JSID_VOID, TypeSet::StringType());
+
+    for (uint32_t i = 0; i < initLength; i++) {
+      JSAtom* str =
+          js::AtomizeString(cx_, resultObj->getDenseElement(i).toString());
+      if (!str) {
+        cx_->clearPendingException();
+        return AttachDecision::NoAction;
+      }
+      arrObj->initDenseElement(i, StringValue(str));
+    }
+  }
+
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard that callee is the |intrinsic_StringSplitString| native function.
+  ValOperandId calleeValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Callee, 2);
+  ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
+  writer.guardSpecificNativeFunction(calleeObjId, intrinsic_StringSplitString);
+
+  // Guard that the first argument is the expected string
+  ValOperandId strValId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, 2);
+  StringOperandId strStringId = writer.guardIsString(strValId);
+  writer.guardSpecificAtom(strStringId, &str->asAtom());
+
+  // Guard that the second argument is the expected string
+  ValOperandId sepValId = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, 2);
+  StringOperandId sepStringId = writer.guardIsString(sepValId);
+  writer.guardSpecificAtom(sepStringId, &sep->asAtom());
+
+  writer.callConstStringSplitResult(arrObj);
+
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  trackAttached("Const string split");
+
+  return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachDeferredStub(HandleValue result) {
+  AutoAssertNoPendingException aanpe(cx_);
+
+  // Ensure that the opcode makes sense.
+  MOZ_ASSERT(op_ == JSOP_CALL || op_ == JSOP_CALL_IGNORES_RV);
+
+  // Ensure that the mode makes sense.
+  MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
+
+  // We currently only defer native functions.
+  RootedFunction calleeFunc(cx_, &callee_.toObject().as<JSFunction>());
+  MOZ_ASSERT(calleeFunc->isNative());
+
+  if (calleeFunc->native() == js::intrinsic_StringSplitString) {
+    return tryAttachConstStringSplit(result);
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Unexpected deferred function");
+  return AttachDecision::NoAction;
 }
 
 void CallIRGenerator::trackAttached(const char* name) {
@@ -6435,3 +6721,17 @@ bool NewObjectIRGenerator::tryAttachStub() {
   trackAttached("NewObjectWithTemplate");
   return true;
 }
+
+#ifdef JS_SIMULATOR
+bool js::jit::CallAnyNative(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  RootedObject calleeObj(cx, &args.callee());
+
+  MOZ_ASSERT(calleeObj->is<JSFunction>());
+  RootedFunction calleeFunc(cx, &calleeObj->as<JSFunction>());
+  MOZ_ASSERT(calleeFunc->isNative());
+
+  JSNative native = calleeFunc->native();
+  return native(cx, args.length(), args.base());
+}
+#endif

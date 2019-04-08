@@ -98,6 +98,7 @@ public final class Sample implements Parcelable {
                        crypto.mode);
     }
 
+    @WrapForJNI
     public void dispose() {
         if (isEOS()) {
             return;

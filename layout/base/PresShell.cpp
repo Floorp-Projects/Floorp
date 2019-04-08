@@ -10559,6 +10559,8 @@ void PresShell::AddSizeOfIncludingThis(nsWindowSizes& aSizes) const {
       mPendingScrollAnchorSelection.ShallowSizeOfExcludingThis(mallocSizeOf) +
       mPendingScrollAnchorAdjustment.ShallowSizeOfExcludingThis(mallocSizeOf);
 
+  StyleSet()->AddSizeOfIncludingThis(aSizes);
+
   aSizes.mLayoutTextRunsSize += SizeOfTextRuns(mallocSizeOf);
 
   aSizes.mLayoutPresContextSize +=

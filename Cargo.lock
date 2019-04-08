@@ -1763,7 +1763,6 @@ name = "moz_task"
 version = "0.1.0"
 dependencies = [
  "libc 0.2.51 (registry+https://github.com/rust-lang/crates.io-index)",
- "memchr 2.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "nserror 0.1.0",
  "nsstring 0.1.0",
  "xpcom 0.1.0",

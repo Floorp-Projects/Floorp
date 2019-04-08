@@ -396,7 +396,7 @@ loser:
 
 nsresult nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
                                              const nsAString& aChallenge,
-                                             const nsString& aKeyType,
+                                             const nsAString& aKeyType,
                                              nsAString& aOutPublicKey,
                                              const nsAString& aKeyParams) {
   nsresult rv = NS_ERROR_FAILURE;
@@ -700,7 +700,7 @@ nsresult nsKeygenFormProcessor::ProcessValueIPC(const nsAString& aOldValue,
                                                 const nsAString& aKeyType,
                                                 const nsAString& aKeyParams,
                                                 nsAString& newValue) {
-  return GetPublicKey(aOldValue, aChallenge, PromiseFlatString(aKeyType),
+  return GetPublicKey(aOldValue, aChallenge, aKeyType,
                       newValue, aKeyParams);
 }
 

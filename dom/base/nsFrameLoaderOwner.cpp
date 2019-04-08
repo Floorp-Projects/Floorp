@@ -7,6 +7,7 @@
 #include "nsFrameLoaderOwner.h"
 #include "nsFrameLoader.h"
 #include "mozilla/dom/FrameLoaderBinding.h"
+#include "mozilla/dom/BrowsingContext.h"
 
 already_AddRefed<nsFrameLoader> nsFrameLoaderOwner::GetFrameLoader() {
   return do_AddRef(mFrameLoader);
@@ -14,6 +15,14 @@ already_AddRefed<nsFrameLoader> nsFrameLoaderOwner::GetFrameLoader() {
 
 void nsFrameLoaderOwner::SetFrameLoader(nsFrameLoader* aNewFrameLoader) {
   mFrameLoader = aNewFrameLoader;
+}
+
+already_AddRefed<mozilla::dom::BrowsingContext>
+nsFrameLoaderOwner::GetBrowsingContext() {
+  if (mFrameLoader) {
+    return mFrameLoader->GetBrowsingContext();
+  }
+  return nullptr;
 }
 
 void nsFrameLoaderOwner::ChangeRemoteness(
