@@ -9316,7 +9316,7 @@ static bool DebuggerGenericEval(JSContext* cx,
 
   // Gather keys and values of bindings, if any. This must be done in the
   // debugger compartment, since that is where any exceptions must be thrown.
-  AutoIdVector keys(cx);
+  RootedIdVector keys(cx);
   RootedValueVector values(cx);
   if (bindings) {
     if (!GetPropertyKeys(cx, bindings, JSITER_OWNONLY, &keys) ||
@@ -10947,7 +10947,7 @@ bool DebuggerObject::definePropertiesMethod(JSContext* cx, unsigned argc,
   if (!props) {
     return false;
   }
-  AutoIdVector ids(cx);
+  RootedIdVector ids(cx);
   Rooted<PropertyDescriptorVector> descs(cx, PropertyDescriptorVector(cx));
   if (!ReadPropertyDescriptors(cx, props, false, &ids, &descs)) {
     return false;
@@ -11793,7 +11793,7 @@ bool DebuggerObject::getOwnPropertyNames(JSContext* cx,
                                          MutableHandle<IdVector> result) {
   RootedObject referent(cx, object->referent());
 
-  AutoIdVector ids(cx);
+  RootedIdVector ids(cx);
   {
     Maybe<AutoRealm> ar;
     EnterDebuggeeObjectRealm(cx, ar, referent);
@@ -11817,7 +11817,7 @@ bool DebuggerObject::getOwnPropertySymbols(JSContext* cx,
                                            MutableHandle<IdVector> result) {
   RootedObject referent(cx, object->referent());
 
-  AutoIdVector ids(cx);
+  RootedIdVector ids(cx);
   {
     Maybe<AutoRealm> ar;
     EnterDebuggeeObjectRealm(cx, ar, referent);
@@ -12783,7 +12783,7 @@ bool DebuggerEnvironment::getNames(JSContext* cx,
 
   Rooted<Env*> referent(cx, environment->referent());
 
-  AutoIdVector ids(cx);
+  RootedIdVector ids(cx);
   {
     Maybe<AutoRealm> ar;
     ar.emplace(cx, referent);

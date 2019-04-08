@@ -74,7 +74,7 @@ typedef bool (*ResolveOwnProperty)(
 typedef bool (*EnumerateOwnProperties)(JSContext* cx,
                                        JS::Handle<JSObject*> wrapper,
                                        JS::Handle<JSObject*> obj,
-                                       JS::AutoIdVector& props);
+                                       JS::MutableHandleVector<jsid> props);
 
 typedef bool (*DeleteNamedProperty)(JSContext* cx,
                                     JS::Handle<JSObject*> wrapper,

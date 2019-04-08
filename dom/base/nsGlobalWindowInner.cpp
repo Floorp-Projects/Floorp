@@ -2789,7 +2789,7 @@ bool nsGlobalWindowInner::MayResolve(jsid aId) {
 }
 
 void nsGlobalWindowInner::GetOwnPropertyNames(JSContext* aCx,
-                                              JS::AutoIdVector& aNames,
+                                              JS::MutableHandleVector<jsid> aNames,
                                               bool aEnumerableOnly,
                                               ErrorResult& aRv) {
   if (aEnumerableOnly) {
