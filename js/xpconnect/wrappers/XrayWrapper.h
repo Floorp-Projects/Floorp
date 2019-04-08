@@ -163,7 +163,7 @@ class DOMXrayTraits : public XrayTraits {
                       JS::Handle<JS::PropertyDescriptor> existingDesc,
                       JS::ObjectOpResult& result, bool* defined);
   virtual bool enumerateNames(JSContext* cx, JS::HandleObject wrapper,
-                              unsigned flags, JS::AutoIdVector& props);
+                              unsigned flags, JS::MutableHandleIdVector props);
   static bool call(JSContext* cx, JS::HandleObject wrapper,
                    const JS::CallArgs& args, const js::Wrapper& baseInstance);
   static bool construct(JSContext* cx, JS::HandleObject wrapper,
@@ -203,7 +203,7 @@ class JSXrayTraits : public XrayTraits {
                       JS::ObjectOpResult& result, bool* defined);
 
   virtual bool enumerateNames(JSContext* cx, JS::HandleObject wrapper,
-                              unsigned flags, JS::AutoIdVector& props);
+                              unsigned flags, JS::MutableHandleIdVector props);
 
   static bool call(JSContext* cx, JS::HandleObject wrapper,
                    const JS::CallArgs& args, const js::Wrapper& baseInstance) {
@@ -310,7 +310,7 @@ class OpaqueXrayTraits : public XrayTraits {
   }
 
   virtual bool enumerateNames(JSContext* cx, JS::HandleObject wrapper,
-                              unsigned flags, JS::AutoIdVector& props) {
+                              unsigned flags, JS::MutableHandleIdVector props) {
     return true;
   }
 
@@ -386,12 +386,12 @@ class XrayWrapper : public Base {
                               JS::Handle<JS::PropertyDescriptor> desc,
                               JS::ObjectOpResult& result) const override;
   virtual bool ownPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                               JS::AutoIdVector& props) const override;
+                               JS::MutableHandleIdVector props) const override;
   virtual bool delete_(JSContext* cx, JS::Handle<JSObject*> wrapper,
                        JS::Handle<jsid> id,
                        JS::ObjectOpResult& result) const override;
   virtual bool enumerate(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                         JS::AutoIdVector& props) const override;
+                         JS::MutableHandleIdVector props) const override;
   virtual bool getPrototype(JSContext* cx, JS::HandleObject wrapper,
                             JS::MutableHandleObject protop) const override;
   virtual bool setPrototype(JSContext* cx, JS::HandleObject wrapper,
@@ -425,7 +425,7 @@ class XrayWrapper : public Base {
                       JS::Handle<jsid> id, bool* bp) const override;
   virtual bool getOwnEnumerablePropertyKeys(
       JSContext* cx, JS::Handle<JSObject*> wrapper,
-      JS::AutoIdVector& props) const override;
+      JS::MutableHandleIdVector props) const override;
 
   virtual bool getBuiltinClass(JSContext* cx, JS::HandleObject wapper,
                                js::ESClass* cls) const override;
@@ -438,7 +438,7 @@ class XrayWrapper : public Base {
 
  protected:
   bool getPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
-                       unsigned flags, JS::AutoIdVector& props) const;
+                       unsigned flags, JS::MutableHandleIdVector props) const;
 };
 
 #define PermissiveXrayDOM \

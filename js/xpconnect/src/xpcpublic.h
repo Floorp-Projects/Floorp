@@ -747,7 +747,7 @@ bool IsCrossOriginWhitelistedProp(JSContext* cx, JS::HandleId id);
 // Appends to props the jsids for property names (strings or symbols) whose
 // value can be gotten cross-origin.
 bool AppendCrossOriginWhitelistedPropNames(JSContext* cx,
-                                           JS::AutoIdVector& props);
+                                           JS::MutableHandleIdVector props);
 }  // namespace xpc
 
 namespace mozilla {

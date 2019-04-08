@@ -186,7 +186,7 @@ class NPObjWrapperProxyHandler : public js::BaseProxyHandler {
       JS::MutableHandle<JS::PropertyDescriptor> desc) const override;
 
   bool ownPropertyKeys(JSContext *cx, JS::Handle<JSObject *> proxy,
-                       JS::AutoIdVector &properties) const override;
+                       JS::MutableHandleVector<jsid> properties) const override;
 
   bool delete_(JSContext *cx, JS::Handle<JSObject *> proxy, JS::Handle<jsid> id,
                JS::ObjectOpResult &result) const override;
@@ -1515,7 +1515,7 @@ bool NPObjWrapperProxyHandler::getOwnPropertyDescriptor(
 
 bool NPObjWrapperProxyHandler::ownPropertyKeys(
     JSContext *cx, JS::Handle<JSObject *> proxy,
-    JS::AutoIdVector &properties) const {
+    JS::MutableHandleVector<jsid> properties) const {
   NPObject *npobj = GetNPObject(cx, proxy);
   if (!npobj || !npobj->_class) {
     ThrowJSExceptionASCII(cx, "Bad NPObject as private data!");

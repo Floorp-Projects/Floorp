@@ -175,7 +175,7 @@ class ModuleNamespaceObject : public ProxyObject {
                         Handle<PropertyDescriptor> desc,
                         ObjectOpResult& result) const override;
     bool ownPropertyKeys(JSContext* cx, HandleObject proxy,
-                         AutoIdVector& props) const override;
+                         MutableHandleIdVector props) const override;
     bool delete_(JSContext* cx, HandleObject proxy, HandleId id,
                  ObjectOpResult& result) const override;
     bool getPrototype(JSContext* cx, HandleObject proxy,

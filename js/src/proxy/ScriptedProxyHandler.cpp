@@ -742,7 +742,7 @@ bool ScriptedProxyHandler::defineProperty(JSContext* cx, HandleObject proxy,
 // ES8 rev 0c1bd3004329336774cbc90de727cd0cf5f11e93
 // 7.3.17 CreateListFromArrayLike with elementTypes fixed to symbol/string.
 static bool CreateFilteredListFromArrayLike(JSContext* cx, HandleValue v,
-                                            AutoIdVector& props) {
+                                            MutableHandleIdVector props) {
   // Step 2.
   RootedObject obj(
       cx, NonNullObjectWithName(cx, "return value of the ownKeys trap", v));
@@ -793,7 +793,7 @@ static bool CreateFilteredListFromArrayLike(JSContext* cx, HandleValue v,
 // ES2018 draft rev aab1ea3bd4d03c85d6f4a91503b4169346ab7271
 // 9.5.11 Proxy.[[OwnPropertyKeys]]()
 bool ScriptedProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
-                                           AutoIdVector& props) const {
+                                           MutableHandleIdVector props) const {
   // Steps 1-3.
   RootedObject handler(cx, ScriptedProxyHandler::handlerObject(proxy));
   if (!handler) {
@@ -815,7 +815,7 @@ bool ScriptedProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
   // Step 6.
   if (trap.isUndefined()) {
     return GetPropertyKeys(
-        cx, target, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, &props);
+        cx, target, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, props);
   }
 
   // Step 7.
@@ -826,8 +826,8 @@ bool ScriptedProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
   }
 
   // Step 8.
-  AutoIdVector trapResult(cx);
-  if (!CreateFilteredListFromArrayLike(cx, trapResultArray, trapResult)) {
+  RootedIdVector trapResult(cx);
+  if (!CreateFilteredListFromArrayLike(cx, trapResultArray, &trapResult)) {
     return false;
   }
 
@@ -855,7 +855,7 @@ bool ScriptedProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
   }
 
   // Steps 11-13.
-  AutoIdVector targetKeys(cx);
+  RootedIdVector targetKeys(cx);
   if (!GetPropertyKeys(cx, target,
                        JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS,
                        &targetKeys)) {
@@ -863,8 +863,8 @@ bool ScriptedProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
   }
 
   // Steps 14-15.
-  AutoIdVector targetConfigurableKeys(cx);
-  AutoIdVector targetNonconfigurableKeys(cx);
+  RootedIdVector targetConfigurableKeys(cx);
+  RootedIdVector targetNonconfigurableKeys(cx);
 
   // Step 16.
   Rooted<PropertyDescriptor> desc(cx);
