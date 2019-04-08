@@ -154,7 +154,7 @@ function transformMC({ types: t }) {
 
         // Handle require() to files bundled in vendor.js.
         // e.g. require("some-module");
-        //   -> require("devtools/client/debugger/new/dist/vendors").vendored["some-module"];
+        //   -> require("devtools/client/debugger/dist/vendors").vendored["some-module"];
         const isVendored = VENDORS.some(vendored => value.endsWith(vendored));
         if (isVendored) {
           // components/shared/Svg is required using various relative paths.
@@ -165,7 +165,7 @@ function transformMC({ types: t }) {
 
           // Transform the required path to require vendors.js
           path.replaceWith(
-            t.stringLiteral("devtools/client/debugger/new/dist/vendors")
+            t.stringLiteral("devtools/client/debugger/dist/vendors")
           );
 
           // Append `.vendored["some-module"]` after the require().
