@@ -253,6 +253,7 @@ DWORD ProcessPolicy::CreateThreadAction(
     const DWORD creation_flags,
     LPDWORD thread_id,
     HANDLE* handle) {
+  *handle = NULL;
   HANDLE local_handle =
       ::CreateRemoteThread(client_info.process, nullptr, stack_size,
                            start_address, parameter, creation_flags, thread_id);
