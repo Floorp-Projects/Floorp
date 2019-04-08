@@ -152,7 +152,7 @@ const EXTRA_CLANG_FLAGS: &'static [&'static str] = &[
 /// transitively use).
 const WHITELIST_TYPES: &'static [&'static str] = &[
     "JS::AutoCheckCannotGC",
-    "JS::AutoIdVector",
+    "JS::RootedIdVector",
     "JS::CallArgs",
     "js::Class",
     "JS::RealmOptions",

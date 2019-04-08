@@ -31,7 +31,7 @@ class DeadObjectProxy : public BaseProxyHandler {
                               Handle<PropertyDescriptor> desc,
                               ObjectOpResult& result) const override;
   virtual bool ownPropertyKeys(JSContext* cx, HandleObject wrapper,
-                               AutoIdVector& props) const override;
+                               MutableHandleIdVector props) const override;
   virtual bool delete_(JSContext* cx, HandleObject wrapper, HandleId id,
                        ObjectOpResult& result) const override;
   virtual bool getPrototype(JSContext* cx, HandleObject proxy,

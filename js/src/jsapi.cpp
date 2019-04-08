@@ -920,7 +920,7 @@ JS_PUBLIC_API bool JS_EnumerateStandardClasses(JSContext* cx,
 
 static bool EnumerateStandardClassesInTable(JSContext* cx,
                                             Handle<GlobalObject*> global,
-                                            AutoIdVector& properties,
+                                            MutableHandleIdVector properties,
                                             const JSStdName* table,
                                             bool includeResolved) {
   for (unsigned i = 0; !table[i].isSentinel(); i++) {
@@ -956,7 +956,7 @@ static bool EnumerateStandardClassesInTable(JSContext* cx,
 }
 
 static bool EnumerateStandardClasses(JSContext* cx, JS::HandleObject obj,
-                                     JS::AutoIdVector& properties,
+                                     JS::MutableHandleIdVector properties,
                                      bool enumerableOnly,
                                      bool includeResolved) {
   if (enumerableOnly) {
@@ -987,13 +987,13 @@ static bool EnumerateStandardClasses(JSContext* cx, JS::HandleObject obj,
 
 JS_PUBLIC_API bool JS_NewEnumerateStandardClasses(JSContext* cx,
                                                   JS::HandleObject obj,
-                                                  JS::AutoIdVector& properties,
+                                                  JS::MutableHandleIdVector properties,
                                                   bool enumerableOnly) {
   return EnumerateStandardClasses(cx, obj, properties, enumerableOnly, false);
 }
 
 JS_PUBLIC_API bool JS_NewEnumerateStandardClassesIncludingResolved(
-    JSContext* cx, JS::HandleObject obj, JS::AutoIdVector& properties,
+    JSContext* cx, JS::HandleObject obj, JS::MutableHandleIdVector properties,
     bool enumerableOnly) {
   return EnumerateStandardClasses(cx, obj, properties, enumerableOnly, true);
 }
@@ -2526,7 +2526,7 @@ JS_PUBLIC_API bool JS_Enumerate(JSContext* cx, HandleObject obj,
   cx->check(obj, props);
   MOZ_ASSERT(props.empty());
 
-  AutoIdVector ids(cx);
+  RootedIdVector ids(cx);
   if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY, &ids)) {
     return false;
   }

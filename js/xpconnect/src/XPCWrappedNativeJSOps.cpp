@@ -850,7 +850,7 @@ bool XPC_WN_Helper_Enumerate(JSContext* cx, HandleObject obj) {
 /***************************************************************************/
 
 bool XPC_WN_NewEnumerate(JSContext* cx, HandleObject obj,
-                         AutoIdVector& properties, bool enumerableOnly) {
+                         MutableHandleIdVector properties, bool enumerableOnly) {
   XPCCallContext ccx(cx, obj);
   XPCWrappedNative* wrapper = ccx.GetWrapper();
   THROW_AND_RETURN_IF_BAD_WRAPPER(cx, wrapper);

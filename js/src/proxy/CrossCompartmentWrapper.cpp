@@ -36,7 +36,7 @@ static bool MarkAtoms(JSContext* cx, jsid id) {
   return true;
 }
 
-static bool MarkAtoms(JSContext* cx, const AutoIdVector& ids) {
+static bool MarkAtoms(JSContext* cx, HandleIdVector ids) {
   for (size_t i = 0; i < ids.length(); i++) {
     cx->markId(ids[i]);
   }
@@ -62,7 +62,7 @@ bool CrossCompartmentWrapper::defineProperty(JSContext* cx,
 
 bool CrossCompartmentWrapper::ownPropertyKeys(JSContext* cx,
                                               HandleObject wrapper,
-                                              AutoIdVector& props) const {
+                                              MutableHandleIdVector props) const {
   PIERCE(cx, wrapper, NOTHING, Wrapper::ownPropertyKeys(cx, wrapper, props),
          MarkAtoms(cx, props));
 }
@@ -205,14 +205,14 @@ bool CrossCompartmentWrapper::set(JSContext* cx, HandleObject wrapper,
 }
 
 bool CrossCompartmentWrapper::getOwnEnumerablePropertyKeys(
-    JSContext* cx, HandleObject wrapper, AutoIdVector& props) const {
+    JSContext* cx, HandleObject wrapper, MutableHandleIdVector props) const {
   PIERCE(cx, wrapper, NOTHING,
          Wrapper::getOwnEnumerablePropertyKeys(cx, wrapper, props),
          MarkAtoms(cx, props));
 }
 
 bool CrossCompartmentWrapper::enumerate(JSContext* cx, HandleObject wrapper,
-                                        AutoIdVector& props) const {
+                                        MutableHandleIdVector props) const {
   PIERCE(cx, wrapper, NOTHING, Wrapper::enumerate(cx, wrapper, props),
          MarkAtoms(cx, props));
 }
