@@ -1,3 +1,0 @@
-First bytes of 2-byte sequences (0xc0-0xdf), each followed by a space character: À Á Â Ã Ä Å Æ Ç È É Ê Ë Ì Í Î Ï Ð Ñ Ò Ó Ô Õ Ö × Ø Ù Ú Û Ü Ý Þ ß 
-First bytes of 3-byte sequences (0xe0-0xef), each followed by a space character: à á â ã ä å æ ç è é ê ë ì í î ï 
-First bytes of 4-byte sequences (0xf0-0xf4), each followed by a space character: ð ñ ò ó ô 
