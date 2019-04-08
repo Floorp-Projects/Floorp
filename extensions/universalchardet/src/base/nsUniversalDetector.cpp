@@ -9,12 +9,12 @@
 
 #include "nsMBCSGroupProber.h"
 #include "nsEscCharsetProber.h"
-#include "nsLatin1Prober.h"
 
 nsUniversalDetector::nsUniversalDetector() {
   mDone = false;
   mBestGuess = -1;  // illegal value as signal
   mInTag = false;
+  mMultibyteProber = nullptr;
   mEscCharSetProber = nullptr;
 
   mStart = true;
@@ -22,15 +22,10 @@ nsUniversalDetector::nsUniversalDetector() {
   mGotData = false;
   mInputState = ePureAscii;
   mLastChar = '\0';
-
-  uint32_t i;
-  for (i = 0; i < NUM_OF_CHARSET_PROBERS; i++) mCharSetProbers[i] = nullptr;
 }
 
 nsUniversalDetector::~nsUniversalDetector() {
-  for (int32_t i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
-    delete mCharSetProbers[i];
-
+  delete mMultibyteProber;
   delete mEscCharSetProber;
 }
 
@@ -45,11 +40,13 @@ void nsUniversalDetector::Reset() {
   mInputState = ePureAscii;
   mLastChar = '\0';
 
-  if (mEscCharSetProber) mEscCharSetProber->Reset();
+  if (mMultibyteProber) {
+    mMultibyteProber->Reset();
+  }
 
-  uint32_t i;
-  for (i = 0; i < NUM_OF_CHARSET_PROBERS; i++)
-    if (mCharSetProbers[i]) mCharSetProbers[i]->Reset();
+  if (mEscCharSetProber) {
+    mEscCharSetProber->Reset(); 
+  }
 }
 
 //---------------------------------------------------------------------
@@ -110,14 +107,9 @@ nsresult nsUniversalDetector::HandleData(const char* aBuf, uint32_t aLen) {
           mEscCharSetProber = nullptr;
         }
 
-        // start multibyte and singlebyte charset prober
-        if (nullptr == mCharSetProbers[0]) {
-          mCharSetProbers[0] = new nsMBCSGroupProber();
-          if (nullptr == mCharSetProbers[0]) return NS_ERROR_OUT_OF_MEMORY;
-        }
-        if (nullptr == mCharSetProbers[2]) {
-          mCharSetProbers[2] = new nsLatin1Prober;
-          if (nullptr == mCharSetProbers[2]) return NS_ERROR_OUT_OF_MEMORY;
+        // start multibyte charset prober
+        if (!mMultibyteProber) {
+          mMultibyteProber = new nsMBCSGroupProber();
         }
       }
     } else {
@@ -144,16 +136,12 @@ nsresult nsUniversalDetector::HandleData(const char* aBuf, uint32_t aLen) {
       }
       break;
     case eHighbyte:
-      for (i = 0; i < NUM_OF_CHARSET_PROBERS; i++) {
-        if (mCharSetProbers[i]) {
-          st = mCharSetProbers[i]->HandleData(aBuf, aLen);
+          st = mMultibyteProber->HandleData(aBuf, aLen);
           if (st == eFoundIt) {
             mDone = true;
-            mDetectedCharset = mCharSetProbers[i]->GetCharSetName();
+            mDetectedCharset = mMultibyteProber->GetCharSetName();
             return NS_OK;
           }
-        }
-      }
       break;
 
     default:     // pure ascii
@@ -179,23 +167,10 @@ void nsUniversalDetector::DataEnd() {
 
   switch (mInputState) {
     case eHighbyte: {
-      float proberConfidence;
-      float maxProberConfidence = (float)0.0;
-      int32_t maxProber = 0;
-
-      for (int32_t i = 0; i < NUM_OF_CHARSET_PROBERS; i++) {
-        if (mCharSetProbers[i]) {
-          proberConfidence = mCharSetProbers[i]->GetConfidence();
-          if (proberConfidence > maxProberConfidence) {
-            maxProberConfidence = proberConfidence;
-            maxProber = i;
-          }
-        }
-      }
       // do not report anything because we are not confident of it, that's in
       // fact a negative answer
-      if (maxProberConfidence > MINIMUM_THRESHOLD)
-        Report(mCharSetProbers[maxProber]->GetCharSetName());
+      if (mMultibyteProber->GetConfidence() > MINIMUM_THRESHOLD)
+        Report(mMultibyteProber->GetCharSetName());
     } break;
     case eEscAscii:
       break;

@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-const pdfjsVersion = '2.2.117';
-const pdfjsBuild = '57abddc9';
+const pdfjsVersion = '2.2.129';
+const pdfjsBuild = '725a6959';
 
 const pdfjsCoreWorker = __w_pdfjs_require__(1);
 
@@ -378,7 +378,7 @@ var WorkerMessageHandler = {
     var WorkerTasks = [];
     const verbosity = (0, _util.getVerbosityLevel)();
     let apiVersion = docParams.apiVersion;
-    let workerVersion = '2.2.117';
+    let workerVersion = '2.2.129';
 
     if (apiVersion !== workerVersion) {
       throw new Error(`The API version "${apiVersion}" does not match ` + `the Worker version "${workerVersion}".`);
@@ -643,6 +643,9 @@ var WorkerMessageHandler = {
     });
     handler.on('GetPageLabels', function wphSetupGetPageLabels(data) {
       return pdfManager.ensureCatalog('pageLabels');
+    });
+    handler.on('GetPageLayout', function wphSetupGetPageLayout(data) {
+      return pdfManager.ensureCatalog('pageLayout');
     });
     handler.on('GetPageMode', function wphSetupGetPageMode(data) {
       return pdfManager.ensureCatalog('pageMode');
@@ -3745,6 +3748,25 @@ class Catalog {
     }
 
     return pageLabels;
+  }
+
+  get pageLayout() {
+    const obj = this.catDict.get('PageLayout');
+    let pageLayout = '';
+
+    if ((0, _primitives.isName)(obj)) {
+      switch (obj.name) {
+        case 'SinglePage':
+        case 'OneColumn':
+        case 'TwoColumnLeft':
+        case 'TwoColumnRight':
+        case 'TwoPageLeft':
+        case 'TwoPageRight':
+          pageLayout = obj.name;
+      }
+    }
+
+    return (0, _util.shadow)(this, 'pageLayout', pageLayout);
   }
 
   get pageMode() {
