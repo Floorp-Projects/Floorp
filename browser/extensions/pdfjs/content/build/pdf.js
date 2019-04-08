@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.2.117';
-var pdfjsBuild = '57abddc9';
+var pdfjsVersion = '2.2.129';
+var pdfjsBuild = '725a6959';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1303,7 +1303,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.2.117',
+    apiVersion: '2.2.129',
     source: {
       data: source.data,
       url: source.url,
@@ -1406,10 +1406,10 @@ class PDFDataRangeTransport {
     }
   }
 
-  onDataProgress(loaded) {
+  onDataProgress(loaded, total) {
     this._readyCapability.promise.then(() => {
       for (const listener of this._progressListeners) {
-        listener(loaded);
+        listener(loaded, total);
       }
     });
   }
@@ -1476,6 +1476,10 @@ class PDFDocumentProxy {
 
   getPageLabels() {
     return this._transport.getPageLabels();
+  }
+
+  getPageLayout() {
+    return this._transport.getPageLayout();
   }
 
   getPageMode() {
@@ -2761,6 +2765,10 @@ class WorkerTransport {
     return this.messageHandler.sendWithPromise('GetPageLabels', null);
   }
 
+  getPageLayout() {
+    return this.messageHandler.sendWithPromise('GetPageLayout', null);
+  }
+
   getPageMode() {
     return this.messageHandler.sendWithPromise('GetPageMode', null);
   }
@@ -3075,9 +3083,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.2.117';
+const version = '2.2.129';
 exports.version = version;
-const build = '57abddc9';
+const build = '725a6959';
 exports.build = build;
 
 /***/ }),
@@ -4591,8 +4599,11 @@ var CanvasGraphics = function CanvasGraphicsClosure() {
         ctx.lineDashOffset = dashPhase;
       }
     },
-    setRenderingIntent: function CanvasGraphics_setRenderingIntent(intent) {},
-    setFlatness: function CanvasGraphics_setFlatness(flatness) {},
+
+    setRenderingIntent(intent) {},
+
+    setFlatness(flatness) {},
+
     setGState: function CanvasGraphics_setGState(states) {
       for (var i = 0, ii = states.length; i < ii; i++) {
         var state = states[i];
@@ -7337,9 +7348,10 @@ var PDFDataTransportStream = function PDFDataTransportStreamClosure() {
       });
     });
 
-    this._pdfDataRangeTransport.addProgressListener(loaded => {
+    this._pdfDataRangeTransport.addProgressListener((loaded, total) => {
       this._onProgress({
-        loaded
+        loaded,
+        total
       });
     });
 
@@ -7381,14 +7393,24 @@ var PDFDataTransportStream = function PDFDataTransportStreamClosure() {
       }
     },
     _onProgress: function PDFDataTransportStream_onDataProgress(evt) {
-      if (this._rangeReaders.length > 0) {
+      if (evt.total === undefined && this._rangeReaders.length > 0) {
         var firstReader = this._rangeReaders[0];
 
         if (firstReader.onProgress) {
           firstReader.onProgress({
             loaded: evt.loaded
           });
+          return;
         }
+      }
+
+      let fullReader = this._fullRequestReader;
+
+      if (fullReader && fullReader.onProgress) {
+        fullReader.onProgress({
+          loaded: evt.loaded,
+          total: evt.total
+        });
       }
     },
 
@@ -9730,7 +9752,7 @@ var _is_node = _interopRequireDefault(__w_pdfjs_require__(21));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var SVGGraphics = function () {
+let SVGGraphics = function () {
   throw new Error('Not implemented: SVGGraphics');
 };
 
