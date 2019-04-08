@@ -1,16 +1,16 @@
-use string_cache::DefaultAtom as Atom;
 use generate;
 use grammar::repr::*;
-use test_util::{compare, expect_debug, normalized_grammar};
 use lr1::core::*;
 use lr1::interpret::interpret;
 use lr1::lookahead::Token;
 use lr1::lookahead::Token::EOF;
 use lr1::lookahead::TokenSet;
 use lr1::tls::Lr1Tls;
+use string_cache::DefaultAtom as Atom;
+use test_util::{compare, expect_debug, normalized_grammar};
 use tls::Tls;
 
-use super::{use_lane_table, build_lr0_states, build_lr1_states, LR};
+use super::{build_lr0_states, build_lr1_states, use_lane_table, LR};
 
 fn nt(t: &str) -> NonterminalString {
     NonterminalString(Atom::from(t))

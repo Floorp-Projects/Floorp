@@ -1,13 +1,13 @@
 //! Validate checks some basic safety conditions.
 
-use super::{NormError, NormResult};
 use super::norm_util::{self, Symbols};
+use super::{NormError, NormResult};
 
+use collections::{set, Multimap};
 use grammar::consts::*;
 use grammar::parse_tree::*;
 use grammar::repr as r;
 use string_cache::DefaultAtom as Atom;
-use collections::{set, Multimap};
 use util::Sep;
 
 #[cfg(test)]
@@ -131,7 +131,8 @@ impl<'grammar> Validator<'grammar> {
                         return_err!(data.span, "macros cannot be marked public");
                     }
                     let inline_annotation = Atom::from(INLINE);
-                    let known_annotations = vec![inline_annotation.clone()];
+                    let cfg_annotation = Atom::from(CFG);
+                    let known_annotations = [inline_annotation.clone(), cfg_annotation.clone()];
                     let mut found_annotations = set();
                     for annotation in &data.annotations {
                         if !known_annotations.contains(&annotation.id) {
@@ -151,6 +152,21 @@ impl<'grammar> Validator<'grammar> {
                                 annotation.id_span,
                                 "public items cannot be marked #[inline]"
                             );
+                        } else if annotation.id == cfg_annotation {
+                            if data.visibility.is_pub() {
+                                match annotation.arg {
+                                Some((ref name, _)) if name == "feature" => (),
+                                _ => return_err!(
+                                    annotation.id_span,
+                                    r#"`cfg` annotations must have a `feature = "my_feature" argument"#
+                                ),
+                            }
+                            } else {
+                                return_err!(
+                                    annotation.id_span,
+                                    "private items cannot be marked #[cfg]"
+                                );
+                            }
                         }
                     }
 
@@ -203,7 +219,8 @@ impl<'grammar> Validator<'grammar> {
             try!(self.validate_symbol(symbol));
         }
 
-        let chosen: Vec<&Symbol> = expr.symbols
+        let chosen: Vec<&Symbol> = expr
+            .symbols
             .iter()
             .filter(|sym| match sym.kind {
                 SymbolKind::Choose(_) => true,
@@ -211,7 +228,8 @@ impl<'grammar> Validator<'grammar> {
             })
             .collect();
 
-        let named: Multimap<Atom, Vec<&Symbol>> = expr.symbols
+        let named: Multimap<Atom, Vec<&Symbol>> = expr
+            .symbols
             .iter()
             .filter_map(|sym| match sym.kind {
                 SymbolKind::Name(ref nt, _) => Some((nt.clone(), sym)),

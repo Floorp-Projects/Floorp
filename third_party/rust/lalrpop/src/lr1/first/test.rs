@@ -1,10 +1,10 @@
-use string_cache::DefaultAtom as Atom;
-use grammar::repr::*;
-use lr1::lookahead::{Token, TokenSet};
-use lr1::lookahead::Token::EOF;
-use lr1::tls::Lr1Tls;
-use test_util::normalized_grammar;
 use super::FirstSets;
+use grammar::repr::*;
+use lr1::lookahead::Token::EOF;
+use lr1::lookahead::{Token, TokenSet};
+use lr1::tls::Lr1Tls;
+use string_cache::DefaultAtom as Atom;
+use test_util::normalized_grammar;
 
 pub fn nt(t: &str) -> Symbol {
     Symbol::Nonterminal(NonterminalString(Atom::from(t)))
