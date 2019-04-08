@@ -606,7 +606,7 @@ function Loader(options) {
     // Whether the modules loaded should be ignored by the debugger
     invisibleToDebugger: { enumerable: false,
                            value: options.invisibleToDebugger || false },
-    requireHook: { enumerable: false, value: options.requireHook },
+    requireHook: { enumerable: false, writable: true, value: options.requireHook },
   };
 
   return Object.create(null, returnObj);
