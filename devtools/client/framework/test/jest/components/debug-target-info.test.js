@@ -10,7 +10,8 @@
 const renderer = require("react-test-renderer");
 const React = require("devtools/client/shared/vendor/react");
 const DebugTargetInfo = React.createFactory(require("devtools/client/framework/components/DebugTargetInfo"));
-const { CONNECTION_TYPES } = require("devtools/client/shared/remote-debugging/constants");
+const { CONNECTION_TYPES, DEBUG_TARGET_TYPES } =
+  require("devtools/client/shared/remote-debugging/constants");
 
 /**
  * Stub for the L10N property expected by the DebugTargetInfo component.
@@ -56,18 +57,21 @@ const THIS_FIREFOX_DEVICE_DESCRIPTION = {
 
 const USB_TARGET_INFO = DebugTargetInfo({
   deviceDescription: USB_DEVICE_DESCRIPTION,
+  targetType: DEBUG_TARGET_TYPES.TAB,
   toolbox: TEST_TOOLBOX,
   L10N: stubL10N,
 });
 
 const THIS_FIREFOX_TARGET_INFO = DebugTargetInfo({
   deviceDescription: THIS_FIREFOX_DEVICE_DESCRIPTION,
+  targetType: DEBUG_TARGET_TYPES.TAB,
   toolbox: TEST_TOOLBOX,
   L10N: stubL10N,
 });
 
 const THIS_FIREFOX_NO_NAME_TARGET_INFO = DebugTargetInfo({
   deviceDescription: THIS_FIREFOX_DEVICE_DESCRIPTION,
+  targetType: DEBUG_TARGET_TYPES.TAB,
   toolbox: TEST_TOOLBOX_NO_NAME,
   L10N: stubL10N,
 });
