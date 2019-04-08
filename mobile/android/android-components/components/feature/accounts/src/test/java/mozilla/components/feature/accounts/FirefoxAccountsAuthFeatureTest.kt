@@ -55,7 +55,7 @@ class FirefoxAccountsAuthFeatureTest {
         `when`(mockTabs.addTab).thenReturn(mockAddTab)
 
         runBlocking {
-            val feature = FirefoxAccountsAuthFeature(manager, mockTabs, "somePath", "somePath", this.coroutineContext)
+            val feature = FirefoxAccountsAuthFeature(manager, mockTabs, "somePath", this.coroutineContext)
             feature.beginAuthentication()
         }
 
@@ -70,7 +70,7 @@ class FirefoxAccountsAuthFeatureTest {
         `when`(mockTabs.addTab).thenReturn(mockAddTab)
 
         runBlocking {
-            val feature = FirefoxAccountsAuthFeature(manager, mockTabs, "somePath", "somePath", this.coroutineContext)
+            val feature = FirefoxAccountsAuthFeature(manager, mockTabs, "somePath", this.coroutineContext)
             feature.beginPairingAuthentication("auth://pair")
         }
 
@@ -85,7 +85,7 @@ class FirefoxAccountsAuthFeatureTest {
         `when`(mockTabs.addTab).thenReturn(mockAddTab)
 
         runBlocking {
-            val feature = FirefoxAccountsAuthFeature(manager, mockTabs, "somePath", "somePath", this.coroutineContext)
+            val feature = FirefoxAccountsAuthFeature(manager, mockTabs, "somePath", this.coroutineContext)
             feature.beginAuthentication()
         }
 
@@ -101,7 +101,7 @@ class FirefoxAccountsAuthFeatureTest {
         `when`(mockTabs.addTab).thenReturn(mockAddTab)
 
         runBlocking {
-            val feature = FirefoxAccountsAuthFeature(manager, mockTabs, "somePath", "somePath", this.coroutineContext)
+            val feature = FirefoxAccountsAuthFeature(manager, mockTabs, "somePath", this.coroutineContext)
             feature.beginPairingAuthentication("auth://pair")
         }
 

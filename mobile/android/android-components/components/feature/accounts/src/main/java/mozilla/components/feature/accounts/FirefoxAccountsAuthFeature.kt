@@ -23,7 +23,6 @@ class FirefoxAccountsAuthFeature(
     private val accountManager: FxaAccountManager,
     private val tabsUseCases: TabsUseCases,
     private val redirectUrl: String,
-    private val successPath: String,
     private val coroutineContext: CoroutineContext = Dispatchers.Main
 ) {
     fun beginAuthentication() {
@@ -59,20 +58,21 @@ class FirefoxAccountsAuthFeature(
 
     val interceptor = object : RequestInterceptor {
         override fun onLoadRequest(session: EngineSession, uri: String): RequestInterceptor.InterceptionResponse? {
-            if (!uri.startsWith(redirectUrl)) {
-                return null
+            if (uri.startsWith(redirectUrl)) {
+                val parsedUri = Uri.parse(uri)
+                val code = parsedUri.getQueryParameter("code")
+
+                if (code != null) {
+                    val state = parsedUri.getQueryParameter("state") as String
+
+                    // Notify the state machine about our success.
+                    accountManager.finishAuthenticationAsync(code, state)
+
+                    return RequestInterceptor.InterceptionResponse.Url(redirectUrl)
+                }
             }
 
-            val parsedUri = Uri.parse(uri)
-            val code = parsedUri.getQueryParameter("code") as String
-            val state = parsedUri.getQueryParameter("state") as String
-
-            // Notify the state machine about our success.
-            accountManager.finishAuthenticationAsync(code, state)
-
-            // TODO this can be simplified once https://github.com/mozilla/application-services/issues/305 lands
-            val successUrl = "${parsedUri.scheme}://${parsedUri.host}/$successPath"
-            return RequestInterceptor.InterceptionResponse.Url(successUrl)
+            return null
         }
     }
 }

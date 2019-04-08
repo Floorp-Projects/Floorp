@@ -44,6 +44,9 @@ permalink: /changelog/
    * Adds `automaticLanguageAdjustment` setting, which should hint to implementations to send 
    language specific headers to websites. Implementation in `browser-engine-gecko-nightly`.
 
+* **service-firefox-accounts**
+   *  The service no longer accepts a `successPath` option. Instead the service uses the OAuth `redirectUri`.
+
 # 0.49.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.48.0...v0.49.0)
