@@ -1318,6 +1318,9 @@ Search.prototype = {
       // but isn't in the whitelist.
       let matched = await this._matchUnknownUrl();
       if (matched) {
+        // Because we think this may be a URL, we won't be fetching search
+        // suggestions for it.
+        this._prohibitSearchSuggestions = true;
         // Since we can't tell if this is a real URL and
         // whether the user wants to visit or search for it,
         // we always provide an alternative searchengine match.
