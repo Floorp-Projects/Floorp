@@ -20,7 +20,7 @@ class DeleteTabsViewHolder(
 
     init {
         view.delete_session_button.setOnClickListener {
-            actionEmitter.onNext(TabAction.Archive)
+            actionEmitter.onNext(TabAction.CloseAll(true))
         }
     }
     companion object {

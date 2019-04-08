@@ -22,9 +22,7 @@ private fun SessionControlState.toAdapterList(): List<AdapterItem> {
     if (tabs.isNotEmpty()) {
         items.add(AdapterItem.TabHeader)
         tabs.map(AdapterItem::TabItem).forEach { items.add(it) }
-        if (mode == Mode.Private) {
-            items.add(AdapterItem.ArchiveTabs)
-        }
+        items.add(if (mode == Mode.Private) AdapterItem.DeleteTabs else AdapterItem.ArchiveTabs)
     } else {
         if (mode == Mode.Private) {
             items.add(AdapterItem.PrivateBrowsingDescription)
@@ -55,7 +53,7 @@ class SessionControlUIView(
     ) {
 
     override val view: RecyclerView = LayoutInflater.from(container.context)
-        .inflate(R.layout.component_home, container, true)
+        .inflate(R.layout.component_session_control, container, true)
         .findViewById(R.id.home_component)
 
     private val sessionControlAdapter = SessionControlAdapter(actionEmitter)
