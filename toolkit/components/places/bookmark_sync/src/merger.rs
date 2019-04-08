@@ -154,7 +154,7 @@ impl MergeTask {
             .unwrap_or(LevelFilter::Off);
         let logger = match logger {
             Some(logger) => Some(ThreadPtrHolder::new(
-                "mozISyncedBookmarksMirrorLogger",
+                c_str!("mozISyncedBookmarksMirrorLogger"),
                 logger,
             )?),
             None => None,
@@ -166,7 +166,7 @@ impl MergeTask {
             local_time_millis: local_time_seconds * 1000,
             remote_time_millis: remote_time_seconds * 1000,
             weak_uploads,
-            callback: ThreadPtrHolder::new("mozISyncedBookmarksMirrorCallback", callback)?,
+            callback: ThreadPtrHolder::new(c_str!("mozISyncedBookmarksMirrorCallback"), callback)?,
             result: AtomicRefCell::default(),
         })
     }
