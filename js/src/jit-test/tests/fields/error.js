@@ -33,6 +33,31 @@ source = `class C {
 }`;
 assertErrorMessage(() => Function(source), SyntaxError, /./);
 
+source = `class C {
+    constructor;
+}`;
+assertErrorMessage(() => Function(source), SyntaxError, /./);
+
+source = `class C {
+    "constructor";
+}`;
+assertErrorMessage(() => Function(source), SyntaxError, /./);
+
+source = `class C {
+    x = arguments;
+}`;
+assertErrorMessage(() => Function(source), SyntaxError, /./);
+
+source = `class C {
+    x = super.a;
+}`;
+assertErrorMessage(() => Function(source), SyntaxError, /./);
+
+source = `class C {
+    x = super();
+}`;
+assertErrorMessage(() => Function(source), SyntaxError, /./);
+
 source = `function f() {
 class C {
     #"should still throw error during lazy parse";
