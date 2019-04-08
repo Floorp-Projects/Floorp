@@ -669,6 +669,9 @@ inline JSProtoKey InheritanceProtoKeyForStandardClass(JSProtoKey key) {
   return JSProto_Object;
 }
 
+JS_FRIEND_API bool ShouldIgnorePropertyDefinition(JSContext* cx, JSProtoKey key,
+                                                  jsid id);
+
 JS_FRIEND_API bool IsFunctionObject(JSObject* obj);
 
 JS_FRIEND_API bool UninlinedIsCrossCompartmentWrapper(const JSObject* obj);
