@@ -277,7 +277,7 @@ class TestEmitterBasic(unittest.TestCase):
         sources, ldflags, lib, compile_flags = self.read_topsrcdir(reader)
         self.assertIsInstance(ldflags, ComputedFlags)
         self.assertIn('-DEBUG', ldflags.flags['OS'])
-        self.assertIn('-OPT:REF,ICF', ldflags.flags['OS'])
+        self.assertIn('-OPT:REF', ldflags.flags['OS'])
 
     def test_windows_dmd_link_flags(self):
         reader = self.reader('link-flags', extra_substs={
@@ -292,7 +292,7 @@ class TestEmitterBasic(unittest.TestCase):
         sources, ldflags, lib, compile_flags = self.read_topsrcdir(reader)
         self.assertIsInstance(ldflags, ComputedFlags)
         self.assertEqual(ldflags.flags['OS'],
-                         ['-DEBUG', '-OPT:REF,ICF'])
+                         ['-DEBUG', '-OPT:REF'])
 
     def test_host_compile_flags(self):
         reader = self.reader('host-compile-flags', extra_substs={
