@@ -1038,15 +1038,16 @@ bool TabParent::DeallocPWindowGlobalParent(PWindowGlobalParent* aActor) {
 
 IPCResult TabParent::RecvPBrowserBridgeConstructor(
     PBrowserBridgeParent* aActor, const nsString& aName,
-    const nsString& aRemoteType, BrowsingContext* aBrowsingContext) {
+    const nsString& aRemoteType, BrowsingContext* aBrowsingContext,
+    const uint32_t& aChromeFlags) {
   static_cast<BrowserBridgeParent*>(aActor)->Init(
-      aName, aRemoteType, CanonicalBrowsingContext::Cast(aBrowsingContext));
+      aName, aRemoteType, CanonicalBrowsingContext::Cast(aBrowsingContext), aChromeFlags);
   return IPC_OK();
 }
 
 PBrowserBridgeParent* TabParent::AllocPBrowserBridgeParent(
     const nsString& aName, const nsString& aRemoteType,
-    BrowsingContext* aBrowsingContext) {
+    BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags) {
   // Reference freed in DeallocPBrowserBridgeParent.
   return do_AddRef(new BrowserBridgeParent()).take();
 }
