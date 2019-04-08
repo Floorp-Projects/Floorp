@@ -11,7 +11,7 @@ def CompiledModules(*modules):
   base = FINAL_TARGET_FILES.chrome.devtools.modules
 
   compiled_directory_whitelist = (
-    "devtools/client/debugger/new/src",
+    "devtools/client/debugger/src",
   )
 
   if not RELATIVEDIR.startswith(compiled_directory_whitelist):

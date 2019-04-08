@@ -1,0 +1,15 @@
+{
+  "environment": "firefox-panel",
+  "logging": false,
+  "clientLogging": false,
+  "firefox": {
+    "mcPath": "./firefox"
+  },
+  "workers": {
+    "parserURL": "resource://devtools/client/debugger/parser-worker.js",
+    "prettyPrintURL":
+      "resource://devtools/client/debugger/pretty-print-worker.js",
+    "searchURL": "resource://devtools/client/debugger/search-worker.js"
+  },
+  "features": {}
+}

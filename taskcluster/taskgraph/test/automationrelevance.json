@@ -18,7 +18,7 @@
                 "branch": "default"
             },
             "files": [
-                "devtools/client/debugger/new/index.html"
+                "devtools/client/debugger/index.html"
             ],
             "node": "ae2144aa4356b65c2f8c0de8c9082dcb7e330e24",
             "parents": [

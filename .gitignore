@@ -89,8 +89,8 @@ devtools/client/chrome.manifest
 devtools/shared/chrome.manifest
 
 # Ignore debugger build directories
-devtools/client/debugger/new/assets/build
-devtools/client/debugger/new/assets/module-manifest.json
+devtools/client/debugger/assets/build
+devtools/client/debugger/assets/module-manifest.json
 
 # Ignore node_modules directories in devtools
 devtools/**/node_modules
