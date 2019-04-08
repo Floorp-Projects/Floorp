@@ -4450,7 +4450,7 @@ void ScrollFrameHelper::ScrollToRestoredPosition() {
   // Note that we can't do the clamping when initializing mRestorePos in
   // RestoreState(), since the scrollable rect (which the clamping depends
   // on) can change over the course of the restoration process.
-  nsPoint layoutRestorePos = GetScrollRange().ClampPoint(mRestorePos);
+  nsPoint layoutRestorePos = GetLayoutScrollRange().ClampPoint(mRestorePos);
 
   // Continue restoring until both the layout and visual scroll positions
   // reach the destination. (Note that the two can only be different for
