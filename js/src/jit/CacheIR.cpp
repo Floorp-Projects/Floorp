@@ -4714,24 +4714,18 @@ bool CallIRGenerator::tryAttachStringSplit() {
   // Ensure argc == 2.
   writer.guardSpecificInt32Immediate(argcId, 2);
 
-  // 2 arguments.  Stack-layout here is (bottom to top):
-  //
-  //  3: Callee
-  //  2: ThisValue
-  //  1: Arg0
-  //  0: Arg1 <-- Top of stack
-
   // Ensure callee is the |String_split| native function.
-  ValOperandId calleeValId = writer.loadStackValue(3);
+  ValOperandId calleeValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
   writer.guardIsNativeFunction(calleeObjId, js::intrinsic_StringSplitString);
 
   // Ensure arg0 is a string.
-  ValOperandId arg0ValId = writer.loadStackValue(1);
+  ValOperandId arg0ValId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   StringOperandId arg0StrId = writer.guardIsString(arg0ValId);
 
   // Ensure arg1 is a string.
-  ValOperandId arg1ValId = writer.loadStackValue(0);
+  ValOperandId arg1ValId = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
   StringOperandId arg1StrId = writer.guardIsString(arg1ValId);
 
   // Call custom string splitter VM-function.
@@ -4791,19 +4785,14 @@ bool CallIRGenerator::tryAttachArrayPush() {
   // Ensure argc == 1.
   writer.guardSpecificInt32Immediate(argcId, 1);
 
-  // 1 argument only.  Stack-layout here is (bottom to top):
-  //
-  //  2: Callee
-  //  1: ThisValue
-  //  0: Arg0 <-- Top of stack.
-
   // Guard callee is the |js::array_push| native function.
-  ValOperandId calleeValId = writer.loadStackValue(2);
+  ValOperandId calleeValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
   writer.guardIsNativeFunction(calleeObjId, js::array_push);
 
   // Guard this is an array object.
-  ValOperandId thisValId = writer.loadStackValue(1);
+  ValOperandId thisValId = writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId thisObjId = writer.guardIsObject(thisValId);
 
   // This is a soft assert, documenting the fact that we pass 'true'
@@ -4821,7 +4810,7 @@ bool CallIRGenerator::tryAttachArrayPush() {
   ShapeGuardProtoChain(writer, thisobj, thisObjId);
 
   // arr.push(x) is equivalent to arr[arr.length] = x for regular arrays.
-  ValOperandId argId = writer.loadStackValue(0);
+  ValOperandId argId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   writer.arrayPush(thisObjId, argId);
 
   writer.returnFromIC();
@@ -4870,30 +4859,22 @@ bool CallIRGenerator::tryAttachArrayJoin() {
   // Generate code.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // if 0 arguments:
-  //  1: Callee
-  //  0: ThisValue <-- Top of stack.
-  //
-  // if 1 argument:
-  //  2: Callee
-  //  1: ThisValue
-  //  0: Arg0 [optional] <-- Top of stack.
-
   // Guard callee is the |js::array_join| native function.
-  uint32_t calleeIndex = (argc_ == 0) ? 1 : 2;
-  ValOperandId calleeValId = writer.loadStackValue(calleeIndex);
+  ValOperandId calleeValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Callee, argc_);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
   writer.guardIsNativeFunction(calleeObjId, js::array_join);
 
   if (argc_ == 1) {
     // If argcount is 1, guard that the argument is a string.
-    ValOperandId argValId = writer.loadStackValue(0);
+    ValOperandId argValId =
+        writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
     writer.guardIsString(argValId);
   }
 
   // Guard this is an array object.
-  uint32_t thisIndex = (argc_ == 0) ? 0 : 1;
-  ValOperandId thisValId = writer.loadStackValue(thisIndex);
+  ValOperandId thisValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId thisObjId = writer.guardIsObject(thisValId);
   writer.guardClass(thisObjId, GuardClassKind::Array);
 
@@ -4925,7 +4906,7 @@ bool CallIRGenerator::tryAttachIsSuspendedGenerator() {
   //  1: ThisValue
   //  0: Arg <-- Top of stack.
   // We only care about the argument.
-  ValOperandId valId = writer.loadStackValue(0);
+  ValOperandId valId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
 
   // Check whether the argument is a suspended generator.
   // We don't need guards, because IsSuspendedGenerator returns
@@ -4972,19 +4953,6 @@ bool CallIRGenerator::tryAttachSpecialCaseCallNative(HandleFunction callee) {
     }
   }
   return false;
-}
-
-uint32_t CallIRGenerator::calleeStackSlot(bool isSpread, bool isConstructing) {
-  // Stack layout is (bottom to top):
-  //   Callee
-  //   ThisValue
-  //   Args:
-  //     a) if spread: array object containing args
-  //     b) if not spread: |argc| values on the stack
-  //   NewTarget (only if constructing)
-  //   <top of stack>
-
-  return 1 + (isSpread ? 1 : argc_) + isConstructing;
 }
 
 // Remember the template object associated with any script being called
@@ -5063,6 +5031,8 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
 
   bool isConstructing = IsConstructorCallPC(pc_);
   bool isSpread = IsSpreadCallPC(pc_);
+  bool isSameRealm = cx_->realm() == calleeFunc->realm();
+  CallFlags flags(isConstructing, isSpread, isSameRealm);
 
   // If callee is not an interpreted constructor, we have to throw.
   if (isConstructing && !calleeFunc->isConstructor()) {
@@ -5110,9 +5080,9 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
   // Load argc.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Load the callee
-  uint32_t calleeSlot = calleeStackSlot(isSpread, isConstructing);
-  ValOperandId calleeValId = writer.loadStackValue(calleeSlot);
+  // Load the callee and ensure it is an object
+  ValOperandId calleeValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId, flags);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
 
   // Ensure callee matches this stub's callee
@@ -5127,9 +5097,7 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
     writer.guardAndUpdateSpreadArgc(argcId, isConstructing);
   }
 
-  bool isCrossRealm = cx_->realm() != calleeFunc->realm();
-  writer.callScriptedFunction(calleeObjId, argcId, isCrossRealm, isSpread,
-                              isConstructing);
+  writer.callScriptedFunction(calleeObjId, argcId, flags);
   writer.typeMonitorResult();
 
   if (templateObj) {
@@ -5235,8 +5203,10 @@ bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   MOZ_ASSERT(calleeFunc->isNative());
 
   bool isSpread = IsSpreadCallPC(pc_);
-
+  bool isSameRealm = cx_->realm() == calleeFunc->realm();
   bool isConstructing = IsConstructorCallPC(pc_);
+  CallFlags flags(isConstructing, isSpread, isSameRealm);
+
   if (isConstructing && !calleeFunc->isConstructor()) {
     return false;
   }
@@ -5257,9 +5227,9 @@ bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   // Load argc.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Load the callee
-  uint32_t calleeSlot = calleeStackSlot(isSpread, isConstructing);
-  ValOperandId calleeValId = writer.loadStackValue(calleeSlot);
+  // Load the callee and ensure it is an object
+  ValOperandId calleeValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId, flags);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
 
   // Ensure callee matches this stub's callee
@@ -5270,8 +5240,8 @@ bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   if (isSpread) {
     writer.guardAndUpdateSpreadArgc(argcId, isConstructing);
   }
-  writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc, isSpread,
-                            isConstructing);
+
+  writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc, flags);
   writer.typeMonitorResult();
 
   if (templateObj) {
@@ -5316,6 +5286,7 @@ bool CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
 
   bool isSpread = IsSpreadCallPC(pc_);
   bool isConstructing = IsConstructorCallPC(pc_);
+  CallFlags flags(isConstructing, isSpread);
   JSNative hook =
       isConstructing ? calleeObj->constructHook() : calleeObj->callHook();
   if (!hook) {
@@ -5331,9 +5302,9 @@ bool CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
   // Load argc.
   Int32OperandId argcId(writer.setInputOperandId(0));
 
-  // Load the callee.
-  uint32_t calleeSlot = calleeStackSlot(isSpread, isConstructing);
-  ValOperandId calleeValId = writer.loadStackValue(calleeSlot);
+  // Load the callee and ensure it is an object
+  ValOperandId calleeValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId, flags);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
 
   // Ensure the callee's class matches the one in this stub.
@@ -5345,7 +5316,7 @@ bool CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
     writer.guardAndUpdateSpreadArgc(argcId, isConstructing);
   }
 
-  writer.callClassHook(calleeObjId, argcId, hook, isSpread, isConstructing);
+  writer.callClassHook(calleeObjId, argcId, hook, flags);
   writer.typeMonitorResult();
 
   if (templateObj) {

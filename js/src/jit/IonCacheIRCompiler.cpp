@@ -934,8 +934,8 @@ bool IonCacheIRCompiler::emitCallScriptedGetterResult() {
   JSFunction* target = &objectStubField(reader.stubOffset())->as<JSFunction>();
   AutoScratchRegister scratch(allocator, masm);
 
-  bool isCrossRealm = reader.readBool();
-  MOZ_ASSERT(isCrossRealm == (cx_->realm() != target->realm()));
+  bool isSameRealm = reader.readBool();
+  MOZ_ASSERT(isSameRealm == (cx_->realm() == target->realm()));
 
   allocator.discardStack(masm);
 
@@ -963,7 +963,7 @@ bool IonCacheIRCompiler::emitCallScriptedGetterResult() {
   }
   masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
 
-  if (isCrossRealm) {
+  if (!isSameRealm) {
     masm.switchToRealm(target->realm(), scratch);
   }
 
@@ -986,7 +986,7 @@ bool IonCacheIRCompiler::emitCallScriptedGetterResult() {
   masm.loadJitCodeRaw(scratch, scratch);
   masm.callJit(scratch);
 
-  if (isCrossRealm) {
+  if (!isSameRealm) {
     static_assert(!JSReturnOperand.aliases(ReturnReg),
                   "ReturnReg available as scratch after scripted calls");
     masm.switchToRealm(cx_->realm(), ReturnReg);
@@ -2099,8 +2099,8 @@ bool IonCacheIRCompiler::emitCallScriptedSetter() {
   ConstantOrRegister val =
       allocator.useConstantOrRegister(masm, reader.valOperandId());
 
-  bool isCrossRealm = reader.readBool();
-  MOZ_ASSERT(isCrossRealm == (cx_->realm() != target->realm()));
+  bool isSameRealm = reader.readBool();
+  MOZ_ASSERT(isSameRealm == (cx_->realm() == target->realm()));
 
   AutoScratchRegister scratch(allocator, masm);
 
@@ -2132,7 +2132,7 @@ bool IonCacheIRCompiler::emitCallScriptedSetter() {
   masm.Push(val);
   masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(obj)));
 
-  if (isCrossRealm) {
+  if (!isSameRealm) {
     masm.switchToRealm(target->realm(), scratch);
   }
 
@@ -2155,7 +2155,7 @@ bool IonCacheIRCompiler::emitCallScriptedSetter() {
   masm.loadJitCodeRaw(scratch, scratch);
   masm.callJit(scratch);
 
-  if (isCrossRealm) {
+  if (!isSameRealm) {
     masm.switchToRealm(cx_->realm(), ReturnReg);
   }
 
@@ -2337,11 +2337,6 @@ bool IonCacheIRCompiler::emitReturnFromIC() {
   rejoinOffset_ = masm.jumpWithPatch(&rejoin);
   masm.bind(&rejoin);
   return true;
-}
-
-bool IonCacheIRCompiler::emitLoadStackValue() {
-  MOZ_ASSERT_UNREACHABLE("emitLoadStackValue not supported for IonCaches.");
-  return false;
 }
 
 bool IonCacheIRCompiler::emitGuardAndGetIterator() {
@@ -2619,5 +2614,13 @@ bool IonCacheIRCompiler::emitCallClassHook() {
 }
 
 bool IonCacheIRCompiler::emitGuardAndUpdateSpreadArgc() {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
+bool IonCacheIRCompiler::emitLoadArgumentFixedSlot() {
+  MOZ_CRASH("Call ICs not used in ion");
+}
+
+bool IonCacheIRCompiler::emitLoadArgumentDynamicSlot() {
   MOZ_CRASH("Call ICs not used in ion");
 }
