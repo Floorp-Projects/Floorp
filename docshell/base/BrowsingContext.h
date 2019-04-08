@@ -121,6 +121,7 @@ class BrowsingContext : public nsWrapperCache,
   // null if it's not.
   nsIDocShell* GetDocShell() { return mDocShell; }
   void SetDocShell(nsIDocShell* aDocShell);
+  void ClearDocShell() { mDocShell = nullptr; }
 
   // Get the outer window object for this BrowsingContext if it is in-process
   // and still has a docshell, or null otherwise.
@@ -160,6 +161,8 @@ class BrowsingContext : public nsWrapperCache,
   void SetOpener(BrowsingContext* aOpener) {
     SetOpenerId(aOpener ? aOpener->Id() : 0);
   }
+
+  bool HasOpener() const;
 
   void GetChildren(nsTArray<RefPtr<BrowsingContext>>& aChildren);
 
