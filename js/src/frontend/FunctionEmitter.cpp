@@ -476,9 +476,8 @@ bool FunctionScriptEmitter::prepareForBody() {
   }
 
   if (funbox_->function()->kind() ==
-          JSFunction::FunctionKind::ClassConstructor &&
-      !funbox_->isDerivedClassConstructor()) {
-    if (!bce_->emitInitializeInstanceFields()) {
+      JSFunction::FunctionKind::ClassConstructor) {
+    if (!emitInitializeInstanceFields()) {
       //            [stack]
       return false;
     }
@@ -592,6 +591,63 @@ bool FunctionScriptEmitter::emitExtraBodyVarScope() {
 
     if (!bce_->emit1(JSOP_POP)) {
       //            [stack]
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool FunctionScriptEmitter::emitInitializeInstanceFields() {
+  MOZ_ASSERT(bce_->fieldInitializers_.valid);
+  size_t numFields = bce_->fieldInitializers_.numFieldInitializers;
+
+  if (numFields == 0) {
+    return true;
+  }
+
+  if (!bce_->emitGetName(bce_->cx->names().dotInitializers)) {
+    //              [stack] ARRAY
+    return false;
+  }
+
+  for (size_t fieldIndex = 0; fieldIndex < numFields; fieldIndex++) {
+    if (fieldIndex < numFields - 1) {
+      // We DUP to keep the array around (it is consumed in the bytecode below)
+      // for next iterations of this loop, except for the last iteration, which
+      // avoids an extra POP at the end of the loop.
+      if (!bce_->emit1(JSOP_DUP)) {
+        //          [stack] ARRAY ARRAY
+        return false;
+      }
+    }
+
+    if (!bce_->emitNumberOp(fieldIndex)) {
+      //            [stack] ARRAY? ARRAY INDEX
+      return false;
+    }
+
+    // Don't use CALLELEM here, because the receiver of the call != the receiver
+    // of this getelem. (Specifically, the call receiver is `this`, and the
+    // receiver of this getelem is `.initializers`)
+    if (!bce_->emit1(JSOP_GETELEM)) {
+      //            [stack] ARRAY? FUNC
+      return false;
+    }
+
+    // This is guaranteed to run after super(), so we don't need TDZ checks.
+    if (!bce_->emitGetName(bce_->cx->names().dotThis)) {
+      //            [stack] ARRAY? FUNC THIS
+      return false;
+    }
+
+    if (!bce_->emitCall(JSOP_CALL_IGNORES_RV, 0)) {
+      //            [stack] ARRAY? RVAL
+      return false;
+    }
+
+    if (!bce_->emit1(JSOP_POP)) {
+      //            [stack] ARRAY?
       return false;
     }
   }
