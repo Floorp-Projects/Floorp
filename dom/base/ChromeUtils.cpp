@@ -227,7 +227,7 @@ void ChromeUtils::ShallowClone(GlobalObject& aGlobal, JS::HandleObject aObj,
 
   JS::Rooted<JS::IdVector> ids(cx, JS::IdVector(cx));
   JS::RootedVector<JS::Value> values(cx);
-  JS::AutoIdVector valuesIds(cx);
+  JS::RootedVector<jsid> valuesIds(cx);
 
   {
     // cx represents our current Realm, so it makes sense to use it for the

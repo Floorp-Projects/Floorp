@@ -23,7 +23,7 @@ use std::thread;
 use jsapi::root::*;
 use jsval::{self, UndefinedValue};
 use glue::{CreateRootedObjectVector, CreateCallArgsFromVp, AppendToRootedObjectVector, DeleteRootedObjectVector, IsDebugBuild};
-use glue::{CreateAutoIdVector, SliceAutoIdVector, DestroyAutoIdVector};
+use glue::{CreateRootedIdVector, SliceRootedIdVector, DestroyRootedIdVector, GetMutableHandleIdVector};
 use glue::{NewCompileOptions, DeleteCompileOptions};
 use panic;
 
@@ -934,35 +934,41 @@ impl JSNativeWrapper {
     }
 }
 
-pub struct IdVector(*mut JS::AutoIdVector);
-
-impl IdVector {
-    pub unsafe fn new(cx: *mut JSContext) -> IdVector {
-        let vector = CreateAutoIdVector(cx);
-        assert!(!vector.is_null());
-        IdVector(vector)
-    }
-
-    pub fn get(&self) -> *mut JS::AutoIdVector {
-        self.0
-    }
+pub struct RootedIdVectorWrapper {
+    pub ptr: *mut JS::RootedIdVector
 }
 
-impl Drop for IdVector {
-    fn drop(&mut self) {
+impl RootedIdVectorWrapper {
+    pub fn new(cx: *mut JSContext) -> RootedIdVectorWrapper {
+        RootedIdVectorWrapper {
+            ptr: unsafe {
+                CreateRootedIdVector(cx)
+            }
+        }
+    }
+
+    pub fn handle_mut(&self) -> JS::MutableHandleIdVector {
         unsafe {
-            DestroyAutoIdVector(self.0)
+            GetMutableHandleIdVector(self.ptr)
         }
     }
 }
 
-impl Deref for IdVector {
+impl Drop for RootedIdVectorWrapper {
+    fn drop(&mut self) {
+        unsafe {
+            DestroyRootedIdVector(self.ptr)
+        }
+    }
+}
+
+impl Deref for RootedIdVectorWrapper {
     type Target = [jsid];
 
     fn deref(&self) -> &[jsid] {
         unsafe {
             let mut length = 0;
-            let pointer = SliceAutoIdVector(self.0 as *const _, &mut length);
+            let pointer = SliceRootedIdVector(self.ptr as *const _, &mut length);
             slice::from_raw_parts(pointer, length)
         }
     }

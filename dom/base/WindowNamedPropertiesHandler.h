@@ -26,7 +26,7 @@ class WindowNamedPropertiesHandler : public BaseDOMProxyHandler {
                               JS::ObjectOpResult& result) const override;
   virtual bool ownPropNames(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                             unsigned flags,
-                            JS::AutoIdVector& aProps) const override;
+                            JS::MutableHandleVector<jsid> aProps) const override;
   virtual bool delete_(JSContext* aCx, JS::Handle<JSObject*> aProxy,
                        JS::Handle<jsid> aId,
                        JS::ObjectOpResult& aResult) const override;

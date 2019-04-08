@@ -3720,7 +3720,7 @@ typedef struct ComplexObject {
 } ComplexObject;
 
 static bool sandbox_enumerate(JSContext* cx, JS::HandleObject obj,
-                              JS::AutoIdVector& properties,
+                              JS::MutableHandleIdVector properties,
                               bool enumerableOnly) {
   RootedValue v(cx);
 
@@ -9157,7 +9157,7 @@ static bool PrintHelp(JSContext* cx, HandleObject obj) {
 
 static bool PrintEnumeratedHelp(JSContext* cx, HandleObject obj,
                                 HandleObject pattern, bool brief) {
-  AutoIdVector idv(cx);
+  RootedIdVector idv(cx);
   if (!GetPropertyKeys(cx, obj, JSITER_OWNONLY | JSITER_HIDDEN, &idv)) {
     return false;
   }
@@ -9463,7 +9463,7 @@ void js::shell::WarningReporter(JSContext* cx, JSErrorReport* report) {
 }
 
 static bool global_enumerate(JSContext* cx, JS::HandleObject obj,
-                             JS::AutoIdVector& properties,
+                             JS::MutableHandleIdVector properties,
                              bool enumerableOnly) {
 #ifdef LAZY_STANDARD_CLASSES
   return JS_NewEnumerateStandardClasses(cx, obj, properties, enumerableOnly);
