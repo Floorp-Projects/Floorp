@@ -4904,9 +4904,9 @@ bool XRE_IsE10sParentProcess() {
   return XRE_IsParentProcess() && BrowserTabsRemoteAutostart();
 }
 
-#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name, bin_type) \
-  bool XRE_Is##xre_name##Process() {                                   \
-    return XRE_GetProcessType() == GeckoProcessType_##enum_name;       \
+#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name)     \
+  bool XRE_Is##xre_name##Process() {                             \
+    return XRE_GetProcessType() == GeckoProcessType_##enum_name; \
   }
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE
@@ -5072,29 +5072,9 @@ void OverrideDefaultLocaleIfNeeded() {
   }
 }
 
-static bool gRunSelfAsContentProc = false;
-
 void XRE_EnableSameExecutableForContentProc() {
   if (!PR_GetEnv("MOZ_SEPARATE_CHILD_PROCESS")) {
-    gRunSelfAsContentProc = true;
-  }
-}
-
-mozilla::BinPathType XRE_GetChildProcBinPathType(GeckoProcessType aProcessType) {
-  MOZ_ASSERT(aProcessType != GeckoProcessType_Default);
-
-  if (!gRunSelfAsContentProc) {
-    return BinPathType::PluginContainer;
-  }
-
-  switch (aProcessType) {
-#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name, bin_type) \
-    case GeckoProcessType_##enum_name:                                 \
-      return BinPathType::bin_type;
-#include "mozilla/GeckoProcessTypes.h"
-#undef GECKO_PROCESS_TYPE
-    default:
-      return BinPathType::PluginContainer;
+    mozilla::ipc::GeckoChildProcessHost::EnableSameExecutableForContentProc();
   }
 }
 

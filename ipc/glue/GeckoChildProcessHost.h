@@ -136,6 +136,10 @@ class GeckoChildProcessHost : public ChildProcessHost {
   // For bug 943174: Skip the EnsureProcessTerminated call in the destructor.
   void SetAlreadyDead();
 
+  static void EnableSameExecutableForContentProc() {
+    sRunSelfAsContentProc = true;
+  }
+
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
   // To allow filling a MacSandboxInfo from the child
   // process without an instance of RDDProcessHost.
@@ -234,8 +238,10 @@ class GeckoChildProcessHost : public ChildProcessHost {
   // PerformAsyncLaunch, and consolidates error handling.
   void RunPerformAsyncLaunch(StringVector aExtraOpts);
 
-  static BinPathType GetPathToBinary(FilePath& exePath,
-                                     GeckoProcessType processType);
+  enum class BinaryPathType { Self, PluginContainer };
+
+  static BinaryPathType GetPathToBinary(FilePath& exePath,
+                                        GeckoProcessType processType);
 
   // The buffer is passed to preserve its lifetime until we are done
   // with launching the sub-process.
@@ -258,6 +264,8 @@ class GeckoChildProcessHost : public ChildProcessHost {
   mozilla::Atomic<bool> mDestroying;
 
   static uint32_t sNextUniqueID;
+
+  static bool sRunSelfAsContentProc;
 
 #if defined(MOZ_WIDGET_ANDROID)
   void LaunchAndroidService(
