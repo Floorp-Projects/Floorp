@@ -1051,15 +1051,14 @@ bitflags! {
         const TEXTURE_CACHE_DBG_CLEAR_EVICTED = 1 << 14;
         /// Show picture caching debug overlay
         const PICTURE_CACHING_DBG   = 1 << 15;
-        const TEXTURE_CACHE_DBG_DISABLE_SHRINK = 1 << 16;
         /// Highlight all primitives with colors based on kind.
-        const PRIMITIVE_DBG = 1 << 17;
+        const PRIMITIVE_DBG = 1 << 16;
         /// Draw a zoom widget showing part of the framebuffer zoomed in.
-        const ZOOM_DBG = 1 << 18;
+        const ZOOM_DBG = 1 << 17;
         /// Scale the debug renderer down for a smaller screen. This will disrupt
         /// any mapping between debug display items and page content, so shouldn't
         /// be used with overlays like the picture caching or primitive display.
-        const SMALL_SCREEN = 1 << 19;
+        const SMALL_SCREEN = 1 << 18;
     }
 }
 
