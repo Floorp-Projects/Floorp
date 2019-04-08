@@ -120,6 +120,8 @@ requireHacker.global_hook("default", (path, module) => {
       return "{}";
     case "devtools/server/actors/reflow":
       return "{}";
+    case "devtools/shared/layout/utils":
+      return "{getCurrentZoom = () => {}}";
   }
 
   // We need to rewrite all the modules assuming the root is mozilla-central and give them
