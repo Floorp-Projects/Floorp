@@ -34,7 +34,8 @@ namespace jit {
   _(GuardClass)                           \
   _(GuardGroupHasUnanalyzedNewScript)     \
   _(GuardIsExtensible)                    \
-  _(GuardIsNativeFunction)                \
+  _(GuardFunctionIsNative)                \
+  _(GuardSpecificNativeFunction)          \
   _(GuardFunctionPrototype)               \
   _(GuardIsNativeObject)                  \
   _(GuardIsProxy)                         \
