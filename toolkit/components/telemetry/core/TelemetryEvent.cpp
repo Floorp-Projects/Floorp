@@ -912,7 +912,7 @@ nsresult TelemetryEvent::RecordEvent(const nsACString& aCategory,
                           PromiseFlatCString(aCategory).get(),
                           PromiseFlatCString(aMethod).get(),
                           PromiseFlatCString(aObject).get());
-      return NS_ERROR_INVALID_ARG;
+      return NS_OK;
     }
     case RecordEventResult::InvalidExtraKey: {
       nsPrintfCString msg(R"(Invalid extra key for event ["%s", "%s", "%s"].)",
