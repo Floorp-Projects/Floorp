@@ -4678,7 +4678,7 @@ CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script,
                                  jsbytecode* pc, JSOp op, ICState::Mode mode,
                                  uint32_t argc, HandleValue callee,
                                  HandleValue thisval, HandleValue newTarget,
-                                 HandleValueArray args)
+                                 HandleValueArray args, bool isFirstStub)
     : IRGenerator(cx, script, pc, CacheKind::Call, mode),
       op_(op),
       argc_(argc),
@@ -4687,7 +4687,8 @@ CallIRGenerator::CallIRGenerator(JSContext* cx, HandleScript script,
       newTarget_(newTarget),
       args_(args),
       typeCheckInfo_(cx, /* needsTypeBarrier = */ true),
-      cacheIRStubKind_(BaselineCacheIRStubKind::Regular) {}
+      cacheIRStubKind_(BaselineCacheIRStubKind::Regular),
+      isFirstStub_(isFirstStub) {}
 
 AttachDecision CallIRGenerator::tryAttachStringSplit() {
   // Only optimize StringSplitString(str, str)
@@ -4695,11 +4696,10 @@ AttachDecision CallIRGenerator::tryAttachStringSplit() {
     return AttachDecision::NoAction;
   }
 
-  // Just for now: if they're both atoms, then do not optimize using
-  // CacheIR and allow the legacy "ConstStringSplit" BaselineIC optimization
-  // to proceed.
-  if (args_[0].toString()->isAtom() && args_[1].toString()->isAtom()) {
-    return AttachDecision::NoAction;
+  // If we have not previously attached a stub and both arguments are atoms,
+  // defer until after the call and attach a const string split stub.
+  if (isOptimizableConstStringSplit()) {
+    return AttachDecision::Deferred;
   }
 
   // Get the object group to use for this location.
@@ -4902,6 +4902,8 @@ AttachDecision CallIRGenerator::tryAttachIsSuspendedGenerator() {
   // argument and the callee is our intrinsic.
 
   MOZ_ASSERT(argc_ == 1);
+
+  Int32OperandId argcId(writer.setInputOperandId(0));
 
   // Stack layout here is (bottom to top):
   //  2: Callee
@@ -5528,6 +5530,129 @@ AttachDecision CallIRGenerator::tryAttachStub() {
     return tryAttachCallNative(calleeFunc);
   }
 
+  return AttachDecision::NoAction;
+}
+
+bool CallIRGenerator::isOptimizableConstStringSplit() {
+  // If we have not yet attached any stubs to this IC...
+  if (!isFirstStub_) {
+    return false;
+  }
+
+  // And we have two arguments, both of which are strings...
+  if (argc_ != 2 || !args_[0].isString() || !args_[1].isString()) {
+    return false;
+  }
+
+  // And the strings are atoms...
+  if (!args_[0].toString()->isAtom() || !args_[1].toString()->isAtom()) {
+    return false;
+  }
+
+  // And we are calling a function in the current realm...
+  RootedFunction calleeFunc(cx_, &callee_.toObject().as<JSFunction>());
+  if (calleeFunc->realm() != cx_->realm()) {
+    return false;
+  }
+
+  // Which is the String split intrinsic...
+  if (!calleeFunc->isNative() ||
+      calleeFunc->native() != js::intrinsic_StringSplitString) {
+    return false;
+  }
+
+  // Then this might be a call of the form:
+  //  "literal list".split("literal separator")
+  // If so, we can cache the result and avoid having to perform the operation
+  // each time.
+  return true;
+}
+
+AttachDecision CallIRGenerator::tryAttachConstStringSplit(HandleValue result) {
+  if (!isOptimizableConstStringSplit()) {
+    return AttachDecision::NoAction;
+  }
+
+  RootedString str(cx_, args_[0].toString());
+  RootedString sep(cx_, args_[1].toString());
+  RootedArrayObject resultObj(cx_, &result.toObject().as<ArrayObject>());
+  uint32_t initLength = resultObj->getDenseInitializedLength();
+  MOZ_ASSERT(initLength == resultObj->length(),
+             "string-split result is a fully initialized array");
+
+  // Copy the array before storing in stub.
+  RootedArrayObject arrObj(cx_);
+  arrObj = NewFullyAllocatedArrayTryReuseGroup(cx_, resultObj, initLength,
+                                               TenuredObject);
+  if (!arrObj) {
+    cx_->clearPendingException();
+    return AttachDecision::NoAction;
+  }
+  arrObj->ensureDenseInitializedLength(cx_, 0, initLength);
+
+  // Atomize all elements of the array.
+  if (initLength > 0) {
+    // Mimic NewFullyAllocatedStringArray() and directly inform TI about
+    // the element type.
+    AddTypePropertyId(cx_, arrObj, JSID_VOID, TypeSet::StringType());
+
+    for (uint32_t i = 0; i < initLength; i++) {
+      JSAtom* str =
+          js::AtomizeString(cx_, resultObj->getDenseElement(i).toString());
+      if (!str) {
+        cx_->clearPendingException();
+        return AttachDecision::NoAction;
+      }
+      arrObj->initDenseElement(i, StringValue(str));
+    }
+  }
+
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard that callee is the |intrinsic_StringSplitString| native function.
+  ValOperandId calleeValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Callee, 2);
+  ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
+  writer.guardSpecificNativeFunction(calleeObjId, intrinsic_StringSplitString);
+
+  // Guard that the first argument is the expected string
+  ValOperandId strValId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, 2);
+  StringOperandId strStringId = writer.guardIsString(strValId);
+  writer.guardSpecificAtom(strStringId, &str->asAtom());
+
+  // Guard that the second argument is the expected string
+  ValOperandId sepValId = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, 2);
+  StringOperandId sepStringId = writer.guardIsString(sepValId);
+  writer.guardSpecificAtom(sepStringId, &sep->asAtom());
+
+  writer.callConstStringSplitResult(arrObj);
+
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  trackAttached("Const string split");
+
+  return AttachDecision::Attach;
+}
+
+AttachDecision CallIRGenerator::tryAttachDeferredStub(HandleValue result) {
+  AutoAssertNoPendingException aanpe(cx_);
+
+  // Ensure that the opcode makes sense.
+  MOZ_ASSERT(op_ == JSOP_CALL || op_ == JSOP_CALL_IGNORES_RV);
+
+  // Ensure that the mode makes sense.
+  MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
+
+  // We currently only defer native functions.
+  RootedFunction calleeFunc(cx_, &callee_.toObject().as<JSFunction>());
+  MOZ_ASSERT(calleeFunc->isNative());
+
+  if (calleeFunc->native() == js::intrinsic_StringSplitString) {
+    return tryAttachConstStringSplit(result);
+  }
+
+  MOZ_ASSERT_UNREACHABLE("Unexpected deferred function");
   return AttachDecision::NoAction;
 }
 

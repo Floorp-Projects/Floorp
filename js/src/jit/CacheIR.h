@@ -367,6 +367,7 @@ extern const uint32_t ArgLengths[];
   _(LoadNewObjectFromTemplateResult, Field, UInt32, UInt32)                    \
                                                                                \
   _(CallStringSplitResult, Id, Id, Field)                                      \
+  _(CallConstStringSplitResult, Field)                                         \
   _(CallStringConcatResult, Id, Id)                                            \
   _(CallStringObjectConcatResult, Id, Id)                                      \
   _(CallIsSuspendedGeneratorResult, Id)                                        \
@@ -508,7 +509,12 @@ class CallFlags {
   friend class CacheIRWriter;
 };
 
-enum class AttachDecision { NoAction, Attach, TemporarilyUnoptimizable };
+enum class AttachDecision {
+  NoAction,
+  Attach,
+  TemporarilyUnoptimizable,
+  Deferred
+};
 
 // Set of arguments supported by GetIndexOfArgument.
 // Support for Arg2 and up can be added easily, but is currently unneeded.
@@ -1688,6 +1694,10 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
     writeOperandId(sep);
     addStubField(uintptr_t(group), StubField::Type::ObjectGroup);
   }
+  void callConstStringSplitResult(ArrayObject* resultTemplate) {
+    writeOp(CacheOp::CallConstStringSplitResult);
+    addStubField(uintptr_t(resultTemplate), StubField::Type::JSObject);
+  }
 
   void compareStringResult(uint32_t op, StringOperandId lhs,
                            StringOperandId rhs) {
@@ -2297,6 +2307,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   HandleValueArray args_;
   PropertyTypeCheckInfo typeCheckInfo_;
   BaselineCacheIRStubKind cacheIRStubKind_;
+  bool isFirstStub_;
 
   bool getTemplateObjectForScripted(HandleFunction calleeFunc,
                                     MutableHandleObject result,
@@ -2306,6 +2317,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   bool getTemplateObjectForClassHook(HandleObject calleeObj,
                                      MutableHandleObject result);
 
+  // Regular stubs
   AttachDecision tryAttachStringSplit();
   AttachDecision tryAttachArrayPush();
   AttachDecision tryAttachArrayJoin();
@@ -2317,15 +2329,21 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   AttachDecision tryAttachCallNative(HandleFunction calleeFunc);
   AttachDecision tryAttachCallHook(HandleObject calleeObj);
 
+  // Deferred stubs
+  AttachDecision tryAttachConstStringSplit(HandleValue result);
+
   void trackAttached(const char* name);
 
  public:
   CallIRGenerator(JSContext* cx, HandleScript script, jsbytecode* pc, JSOp op,
                   ICState::Mode mode, uint32_t argc, HandleValue callee,
                   HandleValue thisval, HandleValue newTarget,
-                  HandleValueArray args);
+                  HandleValueArray args, bool isFirstStub);
 
   AttachDecision tryAttachStub();
+
+  bool isOptimizableConstStringSplit();
+  AttachDecision tryAttachDeferredStub(HandleValue result);
 
   BaselineCacheIRStubKind cacheIRStubKind() const { return cacheIRStubKind_; }
 
