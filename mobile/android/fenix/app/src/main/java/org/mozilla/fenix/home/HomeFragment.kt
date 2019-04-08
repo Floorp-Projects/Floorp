@@ -153,6 +153,9 @@ class HomeFragment : Fragment(), CoroutineScope {
                 BrowsingModeManager.Mode.Private -> BrowsingModeManager.Mode.Normal
             }
         }
+
+        // We need the shadow to be above the components.
+        homeDividerShadow.bringToFront()
     }
 
     override fun onDestroyView() {

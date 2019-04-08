@@ -51,6 +51,21 @@
                 android:alpha="0" />
 
             <KeyAttribute
+                motion:motionTarget="@id/homeDividerShadow"
+                motion:framePosition="90">
+                <CustomAttribute
+                    motion:attributeName="layoutMarginStart"
+                    motion:customPixelDimension="0dp" />
+                <CustomAttribute
+                    motion:attributeName="layoutMarginEnd"
+                    motion:customPixelDimension="0dp" />
+            </KeyAttribute>
+            <KeyAttribute
+                motion:motionTarget="@id/homeDividerShadow"
+                motion:framePosition="90"
+                android:alpha="0" />
+
+            <KeyAttribute
                 motion:motionTarget="@id/toolbar_wrapper"
                 motion:framePosition="0"
                 android:elevation="@dimen/toolbar_elevation" />
@@ -120,5 +135,23 @@
             android:layout_width="@dimen/glyph_button_height"
             motion:layout_constraintEnd_toStartOf="@id/menuButton"
             motion:layout_constraintTop_toTopOf="@id/menuButton"/>
+
+        <Constraint
+            android:id="@+id/homeDivider"
+            android:layout_height="1dp"
+            android:layout_marginStart="0dp"
+            android:layout_marginEnd="0dp"
+            android:layout_marginTop="8dp"
+            motion:layout_constraintTop_toBottomOf="@id/toolbar_wrapper"
+            motion:layout_constraintStart_toStartOf="parent"
+            motion:layout_constraintEnd_toEndOf="parent" />
+
+        <Constraint
+            android:id="@+id/homeDividerShadow"
+            android:layout_height="3dp"
+            android:alpha="1"
+            motion:layout_constraintTop_toBottomOf="@id/homeDivider"
+            motion:layout_constraintStart_toStartOf="@+id/homeDivider"
+            motion:layout_constraintEnd_toEndOf="@+id/homeDivider" />
     </ConstraintSet>
 </MotionScene>
