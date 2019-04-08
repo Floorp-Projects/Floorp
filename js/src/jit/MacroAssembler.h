@@ -1295,6 +1295,9 @@ class MacroAssembler : public MacroAssemblerSpecific {
   inline void branchLatin1String(Register string, Label* label);
   inline void branchTwoByteString(Register string, Label* label);
 
+  inline void branchTestFunctionFlags(Register fun, uint32_t flags,
+                                      Condition cond, Label* label);
+
   inline void branchIfFunctionHasNoJitEntry(Register fun, bool isConstructing,
                                             Label* label);
   inline void branchIfInterpreted(Register fun, bool isConstructing,
