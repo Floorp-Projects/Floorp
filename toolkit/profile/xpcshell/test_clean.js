@@ -19,7 +19,6 @@ add_task(async () => {
 
   let profileData = readProfilesIni();
 
-  Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
   Assert.equal(profileData.profiles.length, 1, "Should have the right number of profiles.");
 
   let profile = profileData.profiles[0];
@@ -31,12 +30,15 @@ add_task(async () => {
 
   checkProfileService(profileData);
 
+  Assert.ok(service.startWithLastProfile, "Should be set to start with the last profile.");
+  service.startWithLastProfile = false;
+  Assert.ok(!service.startWithLastProfile, "Should be set to not start with the last profile.");
+
   service.defaultProfile = newProfile;
   service.flush();
 
   profileData = readProfilesIni();
 
-  Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
   Assert.equal(profileData.profiles.length, 1, "Should have the right number of profiles.");
 
   profile = profileData.profiles[0];
@@ -56,7 +58,6 @@ add_task(async () => {
 
   profileData = readProfilesIni();
 
-  Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
   Assert.equal(profileData.profiles.length, 2, "Should have the right number of profiles.");
 
   profile = profileData.profiles[0];
@@ -77,7 +78,6 @@ add_task(async () => {
 
   profileData = readProfilesIni();
 
-  Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
   Assert.equal(profileData.profiles.length, 1, "Should have the right number of profiles.");
 
   profile = profileData.profiles[0];
@@ -94,7 +94,6 @@ add_task(async () => {
 
   profileData = readProfilesIni();
 
-  Assert.ok(profileData.options.startWithLastProfile, "Should be set to start with the last profile.");
   Assert.equal(profileData.profiles.length, 0, "Should have the right number of profiles.");
 
   // We leave a reference to the missing profile to stop us trying to steal the
