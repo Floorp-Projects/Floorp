@@ -6,6 +6,11 @@ Drives the browser during the playback test.
 """
 import contextlib
 import os
+import time
+import json
+import re
+
+from marionette_driver.by import By
 
 
 here = os.path.dirname(__file__)
@@ -22,6 +27,19 @@ for script in JS_MACROS:
     js = os.path.join(here, "%s.js" % script)
     with open(js) as f:
         JS_MACROS[script] = f.read()
+
+SPLIT_FIELD = (
+    "Audio State",
+    "Audio Track Buffer Details",
+    "AudioSink",
+    "MDSM",
+    "Video State",
+    "Video Track Buffer Details",
+    "Dumping Audio Track",
+    "Dumping Video Track",
+    "MediaDecoder",
+    "VideoSink",
+)
 
 
 class YoutubePage:
@@ -53,20 +71,70 @@ class YoutubePage:
 
     def run_test(self):
         self.start_video()
+        # If we don't pause here for just a bit the media events
+        # are not intercepted.
+        time.sleep(5)
+        body = self.marionette.find_element(By.TAG_NAME, "html")
+        body.click()
         options = dict(JS_MACROS)
         options.update(self.options)
         if "duration" in options:
             script = DURATION_TEST % options
         else:
             script = UNTIL_END_TEST % options
-        self.marionette.set_pref("media.autoplay.default", 0)
-        return self.execute_async_script(script)
+        res = self.execute_async_script(script)
+        if res is None:
+            return res
+        res = self._parse_res(res)
+        self._dump_res(res)
+        return res
 
     def execute_async_script(self, script, context=None):
         if context is None:
             context = self.marionette.CONTEXT_CONTENT
         with self.marionette.using_context(context):
             return self.marionette.execute_async_script(script, sandbox="system")
+
+    def _parse_res(self, res):
+        debug_info = {}
+        # The parsing won't be necessary once we have bug 1542674
+        for key, value in res["mozRequestDebugInfo"].items():
+            key, value = key.strip(), value.strip()
+            if key.startswith(SPLIT_FIELD):
+                value_dict = {}
+                for field in re.findall(r"\S+\(.+\)\s|\S+", value):
+                    field = field.strip()
+                    if field == "":
+                        continue
+                    if field.startswith("VideoQueue"):
+                        k = "VideoQueue"
+                        v = field[len("VideoQueue(") : -2]  # noqa: E203
+                        fields = {}
+                        v = v.split(" ")
+                        for h in v:
+                            f, vv = h.split("=")
+                            fields[f] = vv
+                        v = fields
+                    else:
+                        if "=" in field:
+                            k, v = field.split("=", 1)
+                        else:
+                            k, v = field.split(":", 1)
+                    value_dict[k] = v
+                value = value_dict
+            debug_info[key] = value
+        res["mozRequestDebugInfo"] = debug_info
+        return res
+
+    def _dump_res(self, res):
+        raw = json.dumps(res, indent=2, sort_keys=True)
+        print(raw)
+        if "upload_dir" in self.options:
+            fn = "%s-videoPlaybackQuality.json" % self.video_id
+            fn = os.path.join(self.options["upload_dir"], fn)
+            # dumping on disk
+            with open(fn, "w") as f:
+                f.write(raw)
 
     def close(self):
         if self.started:

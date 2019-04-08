@@ -171,6 +171,7 @@ dom/grid/**
 dom/html/**
 dom/jsurl/**
 dom/media/test/**
+!dom/media/test/marionette/yttest/*.js
 dom/media/tests/**
 dom/media/webaudio/**
 dom/media/webspeech/**
