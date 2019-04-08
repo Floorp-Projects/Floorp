@@ -3206,7 +3206,8 @@ bool TabChild::DeallocPWindowGlobalChild(PWindowGlobalChild* aActor) {
 
 PBrowserBridgeChild* TabChild::AllocPBrowserBridgeChild(const nsString&,
                                                         const nsString&,
-                                                        BrowsingContext*) {
+                                                        BrowsingContext*,
+                                                        const uint32_t&) {
   MOZ_CRASH(
       "We should never be manually allocating PBrowserBridgeChild actors");
   return nullptr;
