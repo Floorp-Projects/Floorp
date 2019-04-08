@@ -1,4 +1,5 @@
 <!DOCTYPE HTML>
+<meta charset="utf-8">
 <!--
 Bug 1143879 - Implement lang member of Web manifest
 https://bugzilla.mozilla.org/show_bug.cgi?id=1143879
@@ -34,11 +35,11 @@ var validTags = [
   "ch", "co", "cr", "cs", "cu", "cv", "cy", "da", "de", "dv", "dz", "ee",
   "el", "en", "eo", "es", "et", "eu", "fa", "ff", "fi", "fj", "fo", "fr",
   "fy", "ga", "gd", "gl", "gn", "gu", "gv", "ha", "he", "hi", "ho", "hr",
-  "ht", "hu", "hy", "hz", "ia", "id", "ie", "ig", "ik", "in", "io",
-  "is", "it", "iu", "iw", "ja", "ji", "jv", "jw", "ka", "kg", "ki", "kj",
+  "ht", "hu", "hy", "hz", "ia", "id", "ie", "ig", "ik", "io",
+  "is", "it", "iu", "ja", "jv", "ka", "kg", "ki", "kj",
   "kk", "kl", "km", "kn", "ko", "kr", "ks", "ku", "kv", "kw", "ky", "la",
   "lb", "lg", "li", "ln", "lo", "lt", "lu", "lv", "mg", "mh", "mi", "mk",
-  "ml", "mn", "mo", "mr", "ms", "mt", "my", "na", "nb", "nd", "ne", "ng",
+  "ml", "mn", "mr", "ms", "mt", "my", "na", "nb", "nd", "ne", "ng",
   "nl", "nn", "no", "nr", "nv", "ny", "oc", "oj", "om", "or", "os", "pa",
   "pi", "pl", "ps", "pt", "qu", "rm", "rn", "ro", "ru", "rw", "sa", "sc",
   "sd", "se", "sg", "sh", "si", "sk", "sl", "sm", "sn", "so", "sq", "sr",
@@ -46,17 +47,16 @@ var validTags = [
   "tn", "to", "tr", "ts", "tt", "tw", "ty", "ug", "uk", "ur", "uz", "ve",
   "vi", "vo", "wa", "wo", "xh", "yi", "yo", "za", "zh", "zu", "en-US",
   "jp-JS", "pt-PT", "pt-BR", "de-CH", "de-DE-1901", "es-419", "sl-IT-nedis",
-  "en-US-boont", "mn-Cyrl-MN", "x-fr-CH", "sr-Cyrl", "sr-Latn",
-  "hy-Latn-IT-arevela", "zh-TW", "en-GB-boont-r-extended-sequence-x-private",
-  "zh-nan-hans-bu-variant2-variant1-u-ca-chinese-t-zh-latn-x-private",
-  "zh-cmn-Hans-CN", "cmn-Hans-CN", "zh-yue-HK", "yue-HK",
-  "de-CH-x-phonebk", "az-Arab-x-AZE-derbend", "x-whatever",
+  "en-US-boont", "mn-Cyrl-MN", "x-fr-ch", "sr-Cyrl", "sr-Latn",
+  "zh-TW", "en-GB-boont-posix-r-extended-sequence-x-private",
+  "nan-Hans-MM-variant2-variant1-t-zh-latn-u-ca-chinese-x-private", "cmn-Hans-CN",
+  "yue-HK", "de-CH-x-phonebk", "az-Arab-x-aze-derbend", "x-whatever",
   "qaa-Qaaa-QM-x-southern",
 ];
 
 
 for (var tag of validTags) {
-  expected = `Expect lang to be ${tag}.`;
+  expected = `Expect lang to be "${tag}"`;
   data.jsonText = JSON.stringify({
     lang: tag,
   });
@@ -64,7 +64,25 @@ for (var tag of validTags) {
   is(result.lang, tag, expected);
 }
 
+// Canonical form conversion... old names become new names.
+const granfatheredTags = [
+  ["in", "id"],
+  ["iw", "he"],
+  ["ji", "yi"],
+  ["jw", "jv"],
+  ["mo", "ro"],
+  ["zh-cmn-Hans-CN", "cmn-Hans-CN"],
+  ["zh-yue-HK", "yue-HK"],
+];
 
+for (const [oldTag, newTag] of granfatheredTags) {
+  expected = `Expect lang to be "${newTag}"`;
+  data.jsonText = JSON.stringify({
+    lang: oldTag,
+  });
+  result = processor.process(data);
+  is(result.lang, newTag, expected);
+}
 
 // trim tests - check that language tags get trimmed properly.
 for (tag of validTags) {
@@ -91,19 +109,18 @@ for (var item of invalidTags) {
     lang: item,
   });
   result = processor.process(data);
-  todo_is(result.lang, undefined, expected);
+  is(result.lang, undefined, expected);
 }
 
 // Canonical form conversion tests. We convert the following tags, which are in
 // canonical form, to upper case and expect the processor to return them
 // in canonical form.
 var canonicalTags = [
-"jp-JS", "pt-PT", "pt-BR", "de-CH", "de-DE-1901", "es-419", "sl-IT-nedis",
-"en-US-boont", "mn-Cyrl-MN", "x-fr-CH", "sr-Cyrl", "sr-Latn",
-"hy-Latn-IT-arevela", "zh-TW", "en-GB-boont-r-extended-sequence-x-private",
-"zh-cmn-Hans-CN", "cmn-Hans-CN", "zh-yue-HK", "yue-HK",
-"de-CH-x-phonebk", "az-Arab-x-AZE-derbend", "x-whatever",
-"qaa-Qaaa-QM-x-southern",
+  "jp-JS", "pt-PT", "pt-BR", "de-CH", "de-DE-1901", "es-419", "sl-IT-nedis",
+  "en-US-boont", "mn-Cyrl-MN", "x-fr-ch", "sr-Cyrl", "sr-Latn",
+  "hy-Latn-IT", "zh-TW", "en-GB-boont-r-extended-sequence-x-private",
+  "cmn-Hans-CN", "yue-HK", "de-CH-x-phonebk", "az-Arab-x-aze-derbend",
+  "x-whatever", "qaa-Qaaa-QM-x-southern",
 ];
 
 for (tag of canonicalTags) {
@@ -113,7 +130,6 @@ for (tag of canonicalTags) {
     lang: uppedTag,
   });
   result = processor.process(data);
-  todo_is(result.lang, tag, expected);
+  is(result.lang, tag, expected);
 }
-
 </script>
