@@ -11155,8 +11155,6 @@ void Document::DocAddSizeOfExcludingThis(nsWindowSizes& aWindowSizes) const {
     mPresShell->AddSizeOfIncludingThis(aWindowSizes);
   }
 
-  mStyleSet->AddSizeOfIncludingThis(aWindowSizes);
-
   aWindowSizes.mDOMOtherSize += mLangGroupFontPrefs.SizeOfExcludingThis(
       aWindowSizes.mState.mMallocSizeOf);
 
