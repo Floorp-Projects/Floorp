@@ -7,9 +7,14 @@
 include("/ipc/chromium/chromium-config.mozbuild")
 
 if CONFIG['OS_TARGET'] != 'WINNT':
+
+    if CONFIG['OS_TARGET'] != 'Android':
+        SOURCES += [
+            'ice_unittest.cpp',
+        ]
+
     SOURCES += [
         'buffered_stun_socket_unittest.cpp',
-        'ice_unittest.cpp',
         'multi_tcp_socket_unittest.cpp',
         'nrappkit_unittest.cpp',
         'proxy_tunnel_socket_unittest.cpp',

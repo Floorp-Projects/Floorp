@@ -18,10 +18,11 @@ LOCAL_INCLUDES += [
     '/tools/profiler/lul',
 ]
 
-UNIFIED_SOURCES += [
-    'GeckoProfiler.cpp',
-    'ThreadProfileTest.cpp',
-]
+if CONFIG['OS_TARGET'] != 'Android':
+    UNIFIED_SOURCES += [
+        'GeckoProfiler.cpp',
+        'ThreadProfileTest.cpp',
+    ]
 
 FINAL_LIBRARY = 'xul-gtest'
 
