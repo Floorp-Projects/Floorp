@@ -19,7 +19,7 @@ namespace jit {
 #if JS_BITS_PER_WORD == 32
 static const size_t MaxCodeBytesPerProcess = 140 * 1024 * 1024;
 #else
-static const size_t MaxCodeBytesPerProcess = 2 * 1024 * 1024 * 1024;
+static const size_t MaxCodeBytesPerProcess = 1 * 1024 * 1024 * 1024;
 #endif
 
 // Limit on the number of bytes of code memory per buffer.  This limit comes
