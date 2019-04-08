@@ -12,6 +12,11 @@ import sys
 import datetime
 import time
 
+try:
+    from urllib import unquote
+except ImportError:
+    from urllib.parse import unquote
+
 
 itags = {
     "5": {
@@ -596,6 +601,13 @@ def OK(flow, code=204):
 
 
 def request(flow):
+    # in some cases, the YT client sends requests with a methode of the form:
+    #   VAR=XX%3GET /xxx
+    # this will clean it up:
+    method = flow.request.method
+    method = unquote(method).split("=")
+    flow.request.method = method[-1]
+
     # All requests made for stats purposes can be discarded and
     # a 204 sent back to the client.
     if flow.request.url.startswith("https://www.youtube.com/ptracking"):
@@ -609,6 +621,9 @@ def request(flow):
         return
     # disable a few trackers, sniffers, etc
     if "push.services.mozilla.com" in flow.request.url:
+        OK(flow, code=200)
+        return
+    if "tracking-protection.cdn.mozilla.net" in flow.request.url:
         OK(flow, code=200)
         return
     if "gen_204" in flow.request.url:
