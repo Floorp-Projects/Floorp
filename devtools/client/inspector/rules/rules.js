@@ -124,7 +124,6 @@ function CssRuleView(inspector, document, store) {
   this._onTogglePseudoClassPanel = this._onTogglePseudoClassPanel.bind(this);
   this._onTogglePseudoClass = this._onTogglePseudoClass.bind(this);
   this._onToggleClassPanel = this._onToggleClassPanel.bind(this);
-  this._onTogglePrintSimulation = this._onTogglePrintSimulation.bind(this);
   this.highlightElementRule = this.highlightElementRule.bind(this);
   this.highlightProperty = this.highlightProperty.bind(this);
 
@@ -141,8 +140,6 @@ function CssRuleView(inspector, document, store) {
   this.activeCheckbox = doc.getElementById("pseudo-active-toggle");
   this.focusCheckbox = doc.getElementById("pseudo-focus-toggle");
   this.focusWithinCheckbox = doc.getElementById("pseudo-focus-within-toggle");
-
-  this._initPrintSimulation();
 
   this.searchClearButton.hidden = true;
 
@@ -231,10 +228,6 @@ CssRuleView.prototype = {
     return this._dummyElement;
   },
 
-  get emulationFront() {
-    return this._emulationFront;
-  },
-
   // Get the highlighters overlay from the Inspector.
   get highlighters() {
     if (!this._highlighters) {
@@ -252,10 +245,6 @@ CssRuleView.prototype = {
 
   get rules() {
     return this._elementStyle ? this._elementStyle.rules : [];
-  },
-
-  get target() {
-    return this.inspector.toolbox.target;
   },
 
   /**
@@ -332,29 +321,6 @@ CssRuleView.prototype = {
     } else {
       this.highlighters.selectorHighlighterShown = null;
       this.emit("ruleview-selectorhighlighter-toggled", false);
-    }
-  },
-
-  /**
-   * Check the print emulation actor's backwards-compatibility via the target actor's
-   * actorHasMethod.
-   */
-  async _initPrintSimulation() {
-    // In order to query if the emulation actor's print simulation methods are supported,
-    // we have to call the emulation front so that the actor is lazily loaded. This allows
-    // us to use `actorHasMethod`. Please see `getActorDescription` for more information.
-    this._emulationFront = await this.target.getFront("emulation");
-
-    // Show the toggle button if:
-    // - Print simulation is supported for the current target.
-    // - Not debugging content document.
-    if (await this.target.actorHasMethod("emulation", "getIsPrintSimulationEnabled") &&
-        !this.target.chrome) {
-      this.printSimulationButton =
-        this.styleDocument.getElementById("print-simulation-toggle");
-      this.printSimulationButton.removeAttribute("hidden");
-
-      this.printSimulationButton.addEventListener("click", this._onTogglePrintSimulation);
     }
   },
 
@@ -750,15 +716,6 @@ CssRuleView.prototype = {
     if (this._highlighters) {
       this._highlighters.removeFromView(this);
       this._highlighters = null;
-    }
-
-    // Clean-up for print simulation.
-    if (this._emulationFront) {
-      this.printSimulationButton.removeEventListener("click",
-        this._onTogglePrintSimulation);
-
-      this.printSimulationButton = null;
-      this._emulationFront = null;
     }
 
     this.tooltips.destroy();
@@ -1554,21 +1511,6 @@ CssRuleView.prototype = {
       event.preventDefault();
       event.stopPropagation();
     }
-  },
-
-  async _onTogglePrintSimulation() {
-    const enabled = await this.emulationFront.getIsPrintSimulationEnabled();
-
-    if (!enabled) {
-      this.printSimulationButton.classList.add("checked");
-      this.emulationFront.startPrintMediaSimulation();
-    } else {
-      this.printSimulationButton.classList.remove("checked");
-      this.emulationFront.stopPrintMediaSimulation(false);
-    }
-
-    // Refresh the current element's rules in the panel.
-    this.refreshPanel();
   },
 
   /**

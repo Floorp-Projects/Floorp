@@ -653,15 +653,6 @@
   content: ".cls";
 }
 
-#print-simulation-toggle::before {
-  background-image: url("chrome://devtools/skin/images/rules-view-print-simulation.svg");
-  fill-opacity: 0;
-}
-
-#print-simulation-toggle.checked::before {
-  fill-opacity: 0.15;
-}
-
 .flash-out {
   animation: flash-out 1s ease-out;
 }
