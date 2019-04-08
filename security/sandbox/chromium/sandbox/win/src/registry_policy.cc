@@ -62,6 +62,7 @@ NTSTATUS NtCreateKeyInTarget(HANDLE* target_key_handle,
                              ULONG create_options,
                              ULONG* disposition,
                              HANDLE target_process) {
+  *target_key_handle = nullptr;
   NtCreateKeyFunction NtCreateKey = NULL;
   ResolveNTFunctionPtr("NtCreateKey", &NtCreateKey);
 
@@ -90,6 +91,7 @@ NTSTATUS NtOpenKeyInTarget(HANDLE* target_key_handle,
                            ACCESS_MASK desired_access,
                            OBJECT_ATTRIBUTES* obj_attributes,
                            HANDLE target_process) {
+  *target_key_handle = nullptr;
   NtOpenKeyFunction NtOpenKey = NULL;
   ResolveNTFunctionPtr("NtOpenKey", &NtOpenKey);
 
@@ -213,7 +215,7 @@ bool RegistryPolicy::OpenKeyAction(EvalResult eval_result,
   // file as specified.
   if (ASK_BROKER != eval_result) {
     *nt_status = STATUS_ACCESS_DENIED;
-    return true;
+    return false;
   }
 
   UNICODE_STRING uni_name = {0};
