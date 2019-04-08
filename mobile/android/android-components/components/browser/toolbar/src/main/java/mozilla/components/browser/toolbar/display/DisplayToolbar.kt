@@ -137,7 +137,7 @@ internal class DisplayToolbar(
                 anchor = this,
                 orientation = BrowserMenu.determineMenuOrientation(toolbar))
 
-            emitOpenMenuFact()
+            emitOpenMenuFact(menuBuilder?.extras)
         }
     }
 

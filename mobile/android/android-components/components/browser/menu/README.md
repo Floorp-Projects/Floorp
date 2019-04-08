@@ -75,7 +75,6 @@ To customize the menu you could use separate properties 1 or full access to the 
 1) If you just want to change a specify property, just add one these dimen items to your ``dimes.xml`` file.
 
 ```xml
-
     <!--Menu Item -->
        <!--Change the text_size for ALL menu items NOT only for the BrowserMenuImageText -->
         <dimen name="mozac_browser_menu_item_text_size" tools:ignore="UnusedResources">16sp</dimen>
@@ -95,12 +94,11 @@ To customize the menu you could use separate properties 1 or full access to the 
             <dimen name="mozac_browser_menu_item_image_text_label_padding_start" tools:ignore="UnusedResources">20dp</dimen> <!--Default value-->
 
     <!--Label-->
-
 ```
 
 2) For full customization, override the default style of menu by adding this style item in your `style.xml` file, and customize to your liking.
-```xml
 
+```xml
     <!--Change the appearance of all text menu items-->
     <style name="Mozac.Browser.Menu.Item.Text" parent="@android:style/TextAppearance.Material.Menu" tools:ignore="UnusedResources">
         <item name="android:background">?android:attr/selectableItemBackground</item>
@@ -122,6 +120,7 @@ To customize the menu you could use separate properties 1 or full access to the 
         <item name="android:paddingStart">@dimen/mozac_browser_menu_item_image_text_label_padding_start</item>
     </style>
 ```
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public

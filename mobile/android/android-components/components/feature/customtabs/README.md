@@ -12,6 +12,17 @@ Use Gradle to download the library from [maven.mozilla.org](https://maven.mozill
 implementation "org.mozilla.components:feature-customtabs:{latest-version}"
 ```
 
+## Facts
+
+This component emits the following [Facts](../../support/base/README.md#Facts):
+
+| Action | Item              | Description                              |
+|--------|-------------------|------------------------------------------|
+| CLICK  | close             | The user clicked on the close button     |
+| CLICK  | action_button     | The user clicked on an action button     |
+
+In addition to the facts emitted above this feature will inject an addition extra (`customTab: true`) into the `BrowserMenuBuilder` passed to the `BrowserToolbar` (see [browser-menu](../../browser/menu/README.md)).
+
 ## License
 
     This Source Code Form is subject to the terms of the Mozilla Public

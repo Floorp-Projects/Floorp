@@ -100,7 +100,10 @@ class CustomTabsToolbarFeature(
         }.also {
             val button = Toolbar.ActionButton(
                 it, context.getString(R.string.mozac_feature_customtabs_exit_button)
-            ) { closeListener.invoke() }
+            ) {
+                emitCloseFact()
+                closeListener.invoke()
+            }
             toolbar.addNavigationAction(button)
         }
     }
@@ -111,7 +114,10 @@ class CustomTabsToolbarFeature(
             val button = Toolbar.ActionButton(
                 BitmapDrawable(context.resources, config.icon),
                 config.description
-            ) { config.pendingIntent.send() }
+            ) {
+                emitActionButtonFact()
+                config.pendingIntent.send()
+            }
 
             toolbar.addBrowserAction(button)
         }
@@ -137,8 +143,10 @@ class CustomTabsToolbarFeature(
             SimpleBrowserMenuItem(it.name) { it.pendingIntent.send() }
         }.also { items ->
             val combinedItems = menuBuilder?.let { builder -> builder.items + items } ?: items
-
-            toolbar.setMenuBuilder(BrowserMenuBuilder(combinedItems))
+            val combinedExtras = menuBuilder?.let {
+                    builder -> builder.extras + Pair("customTab", true)
+            }
+            toolbar.setMenuBuilder(BrowserMenuBuilder(combinedItems, combinedExtras ?: emptyMap()))
         }
     }
 

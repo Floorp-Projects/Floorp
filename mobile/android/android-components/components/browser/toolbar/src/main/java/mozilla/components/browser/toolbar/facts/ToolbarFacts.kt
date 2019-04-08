@@ -30,7 +30,9 @@ private object ToolbarItems {
     const val MENU = "menu"
 }
 
-internal fun emitOpenMenuFact() = emitToolbarFact(Action.CLICK, ToolbarItems.MENU)
+internal fun emitOpenMenuFact(extras: Map<String, Any>?) {
+    emitToolbarFact(Action.CLICK, ToolbarItems.MENU, metadata = extras)
+}
 
 internal fun emitCommitFact(
     autocompleteResult: InlineAutocompleteEditText.AutocompleteResult?

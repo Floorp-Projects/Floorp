@@ -34,8 +34,10 @@ This component emits the following [Facts](../../support/base/README.md#Facts):
 
 | Action | Item    | Extras         | Description                        |
 |--------|---------|----------------|------------------------------------|
-| CLICK  | menu    |                | The user opened the overflow menu. |
+| CLICK  | menu    | `menuExtras`   | The user opened the overflow menu. |
 | COMMIT | toolbar | `commitExtras` | The user has edited the URL.       |
+
+`menuExtras` are additional extras set on the `BrowserMenuBuilder` passed to the `BrowserToolbar` (see [browser-menu](../menu/README.md)).
 
 #### `commitExtras`
 
