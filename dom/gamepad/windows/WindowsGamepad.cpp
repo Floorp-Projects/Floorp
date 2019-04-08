@@ -114,8 +114,6 @@ class Gamepad {
   // Information about the physical device.
   unsigned numAxes;
   unsigned numButtons;
-  bool hasDpad;
-  HIDP_VALUE_CAPS dpadCaps;
 
   nsTArray<bool> buttons;
   struct axisValue {
@@ -127,12 +125,10 @@ class Gamepad {
   // Used during rescan to find devices that were disconnected.
   bool present;
 
-  Gamepad(uint32_t aNumAxes, uint32_t aNumButtons, bool aHasDpad,
-          GamepadType aType)
+  Gamepad(uint32_t aNumAxes, uint32_t aNumButtons, GamepadType aType)
       : type(aType),
         numAxes(aNumAxes),
         numButtons(aNumButtons),
-        hasDpad(aHasDpad),
         present(true) {
     buttons.SetLength(numButtons);
     axes.SetLength(numAxes);
@@ -204,45 +200,6 @@ bool GetPreparsedData(HANDLE handle, nsTArray<uint8_t>& data) {
  */
 double ScaleAxis(ULONG value, LONG min, LONG max) {
   return 2.0 * (value - min) / (max - min) - 1.0;
-}
-
-/*
- * Given a value from a d-pad (POV hat in USB HID terminology),
- * represent it as 4 buttons, one for each cardinal direction.
- */
-void UnpackDpad(LONG dpad_value, const Gamepad* gamepad,
-                nsTArray<bool>& buttons) {
-  const unsigned kUp = gamepad->numButtons - 4;
-  const unsigned kDown = gamepad->numButtons - 3;
-  const unsigned kLeft = gamepad->numButtons - 2;
-  const unsigned kRight = gamepad->numButtons - 1;
-
-  // Different controllers have different ways of representing
-  // "nothing is pressed", but they're all outside the range of values.
-  if (dpad_value < gamepad->dpadCaps.LogicalMin ||
-      dpad_value > gamepad->dpadCaps.LogicalMax) {
-    // Nothing is pressed.
-    return;
-  }
-
-  // Normalize value to start at 0.
-  int value = dpad_value - gamepad->dpadCaps.LogicalMin;
-
-  // Value will be in the range 0-7. The value represents the
-  // position of the d-pad around a circle, with 0 being straight up,
-  // 2 being right, 4 being straight down, and 6 being left.
-  if ((value < 2 || value > 6) && buttons.Length() > kUp) {
-    buttons[kUp] = true;
-  }
-  if ((value > 2 && value < 6) && buttons.Length() > kDown) {
-    buttons[kDown] = true;
-  }
-  if (value > 4 && buttons.Length() > kLeft) {
-    buttons[kLeft] = true;
-  }
-  if ((value > 0 && value < 4) && buttons.Length() > kRight) {
-    buttons[kRight] = true;
-  }
 }
 
 /*
@@ -465,8 +422,7 @@ bool WindowsGamepadService::ScanForXInputDevices() {
     }
 
     // Not already present, add it.
-    Gamepad gamepad(kStandardGamepadAxes, kStandardGamepadButtons, true,
-                    kXInputGamepad);
+    Gamepad gamepad(kStandardGamepadAxes, kStandardGamepadButtons, kXInputGamepad);
     gamepad.userIndex = i;
     gamepad.state = state;
     gamepad.id = service->AddGamepad(
@@ -823,18 +779,6 @@ bool WindowsGamepadService::HandleRawInput(HRAWINPUT handle) {
       continue;
     }
     buttons[usages[i] - 1u] = true;
-  }
-
-  if (gamepad->hasDpad) {
-    // Get d-pad position as 4 buttons.
-    ULONG value;
-    if (mHID.mHidP_GetUsageValue(HidP_Input, gamepad->dpadCaps.UsagePage, 0,
-                                 gamepad->dpadCaps.Range.UsageMin, &value,
-                                 parsed, (PCHAR)raw->data.hid.bRawData,
-                                 raw->data.hid.dwSizeHid) ==
-        HIDP_STATUS_SUCCESS) {
-      UnpackDpad(static_cast<LONG>(value), gamepad, buttons);
-    }
   }
 
   for (unsigned i = 0; i < gamepad->numButtons; i++) {
