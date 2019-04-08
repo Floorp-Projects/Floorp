@@ -73,7 +73,7 @@ class ForOfLoopControl : public LoopControl {
   MOZ_MUST_USE bool emitBeginCodeNeedingIteratorClose(BytecodeEmitter* bce);
   MOZ_MUST_USE bool emitEndCodeNeedingIteratorClose(BytecodeEmitter* bce);
 
-  MOZ_MUST_USE bool emitIteratorCloseInInnermostScope(
+  MOZ_MUST_USE bool emitIteratorCloseInInnermostScopeWithTryNote(
       BytecodeEmitter* bce,
       CompletionKind completionKind = CompletionKind::Normal);
   MOZ_MUST_USE bool emitIteratorCloseInScope(
@@ -81,7 +81,8 @@ class ForOfLoopControl : public LoopControl {
       CompletionKind completionKind = CompletionKind::Normal);
 
   MOZ_MUST_USE bool emitPrepareForNonLocalJumpFromScope(
-      BytecodeEmitter* bce, EmitterScope& currentScope, bool isTarget);
+      BytecodeEmitter* bce, EmitterScope& currentScope, bool isTarget,
+      ptrdiff_t* tryNoteStart);
 };
 template <>
 inline bool NestableControl::is<ForOfLoopControl>() const {
