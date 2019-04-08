@@ -4796,7 +4796,8 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
         std::max(mZoomConstraints.mMinZoom.scale,
                  std::max(compositionBounds.Width() / cssPageRect.Width(),
                           compositionBounds.Height() / cssPageRect.Height())));
-    CSSToParentLayerScale localMaxZoom = mZoomConstraints.mMaxZoom;
+    CSSToParentLayerScale localMaxZoom
+        = std::max(localMinZoom, mZoomConstraints.mMaxZoom);
 
     if (!aRect.IsEmpty()) {
       // Intersect the zoom-to-rect to the CSS rect to make sure it fits.
