@@ -236,101 +236,134 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
   return result;
 }
 
-/*
- * enclosingScope is a scope, if any (e.g. a WithScope).  If the scope is the
- * global scope, this must be null.
- *
- * enclosingEnv is an environment to use, if it's not the global.
- */
-static bool CompileFunction(
-    JSContext* cx, const ReadOnlyCompileOptions& optionsArg, HandleAtom name,
-    bool isInvalidName, SourceText<char16_t>& srcBuf, uint32_t parameterListEnd,
-    HandleObject enclosingEnv, HandleScope enclosingScope,
-    MutableHandleFunction fun) {
-  MOZ_ASSERT(!cx->zone()->isAtomsZone());
-  AssertHeapIsIdle();
-  CHECK_THREAD(cx);
-  cx->check(enclosingEnv);
-  RootedAtom funAtom(cx);
+class FunctionCompiler {
+ private:
+  JSContext* const cx_;
+  RootedAtom nameAtom_;
+  StringBuffer funStr_;
 
-  fun.set(NewScriptedFunction(cx, 0, JSFunction::INTERPRETED_NORMAL,
-                              isInvalidName ? nullptr : name,
-                              /* proto = */ nullptr, gc::AllocKind::FUNCTION,
-                              TenuredObject, enclosingEnv));
-  if (!fun) {
-    return false;
+  uint32_t parameterListEnd_ = 0;
+  bool nameIsIdentifier_ = true;
+
+ public:
+  explicit FunctionCompiler(JSContext* cx)
+      : cx_(cx), nameAtom_(cx), funStr_(cx) {
+    AssertHeapIsIdle();
+    CHECK_THREAD(cx);
+    MOZ_ASSERT(!cx->zone()->isAtomsZone());
   }
 
-  // Make sure the static scope chain matches up when we have a
-  // non-syntactic scope.
-  MOZ_ASSERT_IF(!IsGlobalLexicalEnvironment(enclosingEnv),
-                enclosingScope->hasOnChain(ScopeKind::NonSyntactic));
-
-  if (!js::frontend::CompileStandaloneFunction(cx, fun, optionsArg, srcBuf,
-                                               mozilla::Some(parameterListEnd),
-                                               enclosingScope)) {
-    return false;
-  }
-
-  // When function name is not valid identifier, generated function source
-  // in srcBuf doesn't have function name.  Set it here.
-  if (isInvalidName) {
-    fun->setAtom(name);
-  }
-
-  return true;
-}
-
-static MOZ_MUST_USE bool BuildFunctionString(const char* name, size_t nameLen,
-                                             unsigned nargs,
-                                             const char* const* argnames,
-                                             const SourceText<char16_t>& srcBuf,
-                                             StringBuffer* out,
-                                             uint32_t* parameterListEnd) {
-  MOZ_ASSERT(out);
-  MOZ_ASSERT(parameterListEnd);
-
-  if (!out->ensureTwoByteChars()) {
-    return false;
-  }
-  if (!out->append("function ")) {
-    return false;
-  }
-  if (name) {
-    if (!out->append(name, nameLen)) {
+  MOZ_MUST_USE bool init(const char* name, unsigned nargs,
+                         const char* const* argnames) {
+    if (!funStr_.ensureTwoByteChars()) {
       return false;
     }
-  }
-  if (!out->append("(")) {
-    return false;
-  }
-  for (unsigned i = 0; i < nargs; i++) {
-    if (i != 0) {
-      if (!out->append(", ")) {
+    if (!funStr_.append("function ")) {
+      return false;
+    }
+
+    if (name) {
+      size_t nameLen = strlen(name);
+
+      nameAtom_ = Atomize(cx_, name, nameLen);
+      if (!nameAtom_) {
+        return false;
+      }
+
+      // If the name is an identifier, we can just add it to source text.
+      // Otherwise we'll have to set it manually later.
+      nameIsIdentifier_ = js::frontend::IsIdentifier(
+          reinterpret_cast<const Latin1Char*>(name), nameLen);
+      if (nameIsIdentifier_) {
+        if (!funStr_.append(nameAtom_)) {
+          return false;
+        }
+      }
+    }
+
+    if (!funStr_.append("(")) {
+      return false;
+    }
+
+    for (unsigned i = 0; i < nargs; i++) {
+      if (i != 0) {
+        if (!funStr_.append(", ")) {
+          return false;
+        }
+      }
+      if (!funStr_.append(argnames[i], strlen(argnames[i]))) {
         return false;
       }
     }
-    if (!out->append(argnames[i], strlen(argnames[i]))) {
+
+    // Remember the position of ")".
+    parameterListEnd_ = funStr_.length();
+    MOZ_ASSERT(FunctionConstructorMedialSigils[0] == ')');
+
+    return funStr_.append(FunctionConstructorMedialSigils);
+  }
+
+  template <typename Unit>
+  inline MOZ_MUST_USE bool addFunctionBody(const SourceText<Unit>& srcBuf) {
+    return funStr_.append(srcBuf.get(), srcBuf.length());
+  }
+
+  MOZ_MUST_USE bool finish(HandleObjectVector envChain,
+                           const ReadOnlyCompileOptions& options,
+                           MutableHandleFunction fun) {
+    if (!funStr_.append(FunctionConstructorFinalBrace)) {
       return false;
     }
-  }
 
-  // Remember the position of ")".
-  *parameterListEnd = out->length();
-  MOZ_ASSERT(FunctionConstructorMedialSigils[0] == ')');
+    size_t newLen = funStr_.length();
+    UniqueTwoByteChars stolen(funStr_.stealChars());
+    if (!stolen) {
+      return false;
+    }
 
-  if (!out->append(FunctionConstructorMedialSigils)) {
-    return false;
-  }
-  if (!out->append(srcBuf.get(), srcBuf.length())) {
-    return false;
-  }
-  if (!out->append(FunctionConstructorFinalBrace)) {
-    return false;
-  }
+    SourceText<char16_t> newSrcBuf;
+    if (!newSrcBuf.init(cx_, std::move(stolen), newLen)) {
+      return false;
+    }
 
-  return true;
-}
+    RootedObject enclosingEnv(cx_);
+    RootedScope enclosingScope(cx_);
+    if (!CreateNonSyntacticEnvironmentChain(cx_, envChain, &enclosingEnv,
+                                            &enclosingScope)) {
+      return false;
+    }
+
+    cx_->check(enclosingEnv);
+
+    fun.set(
+        NewScriptedFunction(cx_, 0, JSFunction::INTERPRETED_NORMAL,
+                            nameIsIdentifier_ ? HandleAtom(nameAtom_) : nullptr,
+                            /* proto = */ nullptr, gc::AllocKind::FUNCTION,
+                            TenuredObject, enclosingEnv));
+    if (!fun) {
+      return false;
+    }
+
+    // Make sure the static scope chain matches up when we have a
+    // non-syntactic scope.
+    MOZ_ASSERT_IF(!IsGlobalLexicalEnvironment(enclosingEnv),
+                  enclosingScope->hasOnChain(ScopeKind::NonSyntactic));
+
+    if (!js::frontend::CompileStandaloneFunction(
+            cx_, fun, options, newSrcBuf, mozilla::Some(parameterListEnd_),
+            enclosingScope)) {
+      return false;
+    }
+
+    // When the function name isn't a valid identifier, the generated function
+    // source in srcBuf won't include the name, so name the function manually.
+    if (!nameIsIdentifier_) {
+      fun->setAtom(nameAtom_);
+    }
+
+    return true;
+  }
+};
 
 JS_PUBLIC_API bool JS::CompileFunction(JSContext* cx,
                                        HandleObjectVector envChain,
@@ -339,49 +372,10 @@ JS_PUBLIC_API bool JS::CompileFunction(JSContext* cx,
                                        const char* const* argnames,
                                        SourceText<char16_t>& srcBuf,
                                        MutableHandleFunction fun) {
-  RootedObject env(cx);
-  RootedScope scope(cx);
-  if (!CreateNonSyntacticEnvironmentChain(cx, envChain, &env, &scope)) {
-    return false;
-  }
-
-  size_t nameLen = 0;
-  bool isInvalidName = false;
-  RootedAtom nameAtom(cx);
-  if (name) {
-    nameLen = strlen(name);
-    nameAtom = Atomize(cx, name, nameLen);
-    if (!nameAtom) {
-      return false;
-    }
-
-    // If name is not valid identifier
-    if (!js::frontend::IsIdentifier(reinterpret_cast<const Latin1Char*>(name),
-                                    nameLen)) {
-      isInvalidName = true;
-    }
-  }
-
-  uint32_t parameterListEnd;
-  StringBuffer funStr(cx);
-  if (!BuildFunctionString(isInvalidName ? nullptr : name, nameLen, nargs,
-                           argnames, srcBuf, &funStr, &parameterListEnd)) {
-    return false;
-  }
-
-  size_t newLen = funStr.length();
-  UniqueTwoByteChars stolen(funStr.stealChars());
-  if (!stolen) {
-    return false;
-  }
-
-  SourceText<char16_t> newSrcBuf;
-  if (!newSrcBuf.init(cx, std::move(stolen), newLen)) {
-    return false;
-  }
-
-  return CompileFunction(cx, options, nameAtom, isInvalidName, newSrcBuf,
-                         parameterListEnd, env, scope, fun);
+  FunctionCompiler compiler(cx);
+  return compiler.init(name, nargs, argnames) &&
+         compiler.addFunctionBody(srcBuf) &&
+         compiler.finish(envChain, options, fun);
 }
 
 JS_PUBLIC_API bool JS::CompileFunction(JSContext* cx,
@@ -391,22 +385,10 @@ JS_PUBLIC_API bool JS::CompileFunction(JSContext* cx,
                                        const char* const* argnames,
                                        SourceText<Utf8Unit>& srcBuf,
                                        MutableHandleFunction fun) {
-  const char* chars = srcBuf.get();
-  size_t length = srcBuf.length();
-
-  auto inflatedChars = UniqueTwoByteChars(
-      UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(chars, length), &length).get());
-  if (!inflatedChars) {
-    return false;
-  }
-
-  SourceText<char16_t> source;
-  if (!source.init(cx, std::move(inflatedChars), length)) {
-    return false;
-  }
-
-  return CompileFunction(cx, envChain, options, name, nargs, argnames, source,
-                         fun);
+  FunctionCompiler compiler(cx);
+  return compiler.init(name, nargs, argnames) &&
+         compiler.addFunctionBody(srcBuf) &&
+         compiler.finish(envChain, options, fun);
 }
 
 JS_PUBLIC_API bool JS::CompileFunctionUtf8(
