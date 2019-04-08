@@ -328,7 +328,7 @@ bool IndirectBindingMap::put(JSContext* cx, HandleId name,
                              HandleId localName) {
   // This object might have been allocated on the background parsing thread in
   // different zone to the final module. Lazily allocate the map so we don't
-  // have to switch its zone when merging compartments.
+  // have to switch its zone when merging realms.
   if (!map_) {
     MOZ_ASSERT(!cx->zone()->createdForHelperThread());
     map_.emplace(cx->zone());
@@ -905,9 +905,9 @@ inline static void AssertModuleScopesMatch(ModuleObject* module) {
       &module->initialEnvironment().enclosingEnvironment()));
 }
 
-void ModuleObject::fixEnvironmentsAfterCompartmentMerge() {
+void ModuleObject::fixEnvironmentsAfterRealmMerge() {
   AssertModuleScopesMatch(this);
-  initialEnvironment().fixEnclosingEnvironmentAfterCompartmentMerge(
+  initialEnvironment().fixEnclosingEnvironmentAfterRealmMerge(
       script()->global());
   AssertModuleScopesMatch(this);
 }

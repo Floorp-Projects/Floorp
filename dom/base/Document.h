@@ -1635,6 +1635,14 @@ class Document : public nsINode,
     return mStyleSet.get();
   }
 
+  // ShadowRoot has APIs that can change styles. This notifies the shell that
+  // stlyes applicable in the shadow tree have potentially changed.
+  void RecordShadowStyleChange(ShadowRoot&);
+
+  // Needs to be called any time the applicable style can has changed, in order
+  // to schedule a style flush and setup all the relevant state.
+  void ApplicableStylesChanged();
+
   // Whether we filled the style set with any style sheet. Only meant to be used
   // from DocumentOrShadowRoot::Traverse.
   bool StyleSetFilled() const { return mStyleSetFilled; }

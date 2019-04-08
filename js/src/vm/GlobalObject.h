@@ -71,7 +71,6 @@ class GlobalObject : public NativeObject {
     THROWTYPEERROR,
 
     /* One-off properties stored after slots for built-ins. */
-    LEXICAL_ENVIRONMENT,
     EMPTY_GLOBAL_SCOPE,
     ITERATOR_PROTO,
     ARRAY_ITERATOR_PROTO,
@@ -133,12 +132,6 @@ class GlobalObject : public NativeObject {
  public:
   LexicalEnvironmentObject& lexicalEnvironment() const;
   GlobalScope& emptyGlobalScope() const;
-
-  static constexpr size_t offsetOfLexicalEnvironmentSlot() {
-    static_assert(LEXICAL_ENVIRONMENT >= MAX_FIXED_SLOTS,
-                  "Code assumes lexical environment is stored in dynamic slot");
-    return (LEXICAL_ENVIRONMENT - MAX_FIXED_SLOTS) * sizeof(Value);
-  }
 
   void setOriginalEval(JSObject* evalobj) {
     MOZ_ASSERT(getSlotRef(EVAL).isUndefined());

@@ -906,8 +906,12 @@ async function sanitizeSessionPrincipal(progress, principal) {
   await new Promise(resolve => {
     progress.sanitizePrincipal = "started";
     Services.clearData.deleteDataFromPrincipal(principal, true /* user request */,
+                                               Ci.nsIClearDataService.CLEAR_ALL_CACHES |
+                                               Ci.nsIClearDataService.CLEAR_COOKIES |
                                                Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-                                               Ci.nsIClearDataService.CLEAR_COOKIES,
+                                               Ci.nsIClearDataService.CLEAR_SECURITY_SETTINGS |
+                                               Ci.nsIClearDataService.CLEAR_EME |
+                                               Ci.nsIClearDataService.CLEAR_PLUGIN_DATA,
                                                resolve);
   });
   progress.sanitizePrincipal = "completed";

@@ -27,18 +27,6 @@ class TestL10n(PuppeteerMixin, MarionetteTestCase):
         self.assertRaises(NoSuchElementException,
                           self.l10n.localize_entity, dtds, 'notExistent')
 
-    def test_dtd_entity_content(self):
-        dtds = ['chrome://branding/locale/brand.dtd',
-                'chrome://global/locale/aboutTelemetry.dtd']
-
-        value = self.l10n.localize_entity(dtds, 'aboutTelemetry.homeSection')
-
-        self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
-        self.marionette.navigate('about:telemetry')
-
-        elm = self.marionette.find_element(By.ID, 'sectionTitle')
-        self.assertEqual(value, elm.text)
-
     def test_properties(self):
         properties = ['chrome://global/locale/filepicker.properties',
                       'chrome://global/locale/findbar.properties']

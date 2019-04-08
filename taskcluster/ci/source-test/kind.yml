@@ -17,6 +17,7 @@ kind-dependencies:
 
 jobs-from:
    - clang.yml
+   - coverity.yml
    - cram.yml
    - doc.yml
    - file-metadata.yml

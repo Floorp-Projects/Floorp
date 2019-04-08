@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1554301860877" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1554463075420" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2712,15 +2712,19 @@
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
-    <emItem blockID="9fde5729-9be6-4955-9627-67742c5ed62a" id="sourcegraph-for-firefox@sourcegraph.com">
-      <prefs/>
-      <versionRange minVersion="0" maxVersion="*" severity="1"/>
-    </emItem>
     <emItem blockID="aacb25e1-71c5-4bee-ad16-e39e732210ba" id="/^((@searchlock-staging-automation)|(@searchlock-automation)|(@searchlock-fx)|(@searchlock-staging)|(jid1-vRJA7N8VwBoiXw@jetpack))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="04b2954e-4f83-4557-968e-2139a277bf1c" id="/^((\{6ab41e83-2a91-4c2a-babb-86107a1d1f75\})|(\{d84a9d0d-7a31-459e-b45a-2ad111884d1f\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="9fde5729-9be6-4955-9627-67742c5ed62a" id="sourcegraph-for-firefox@sourcegraph.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="19.4.2.1038" severity="1"/>
+    </emItem>
+    <emItem blockID="a1c376fe-20c5-4da3-9126-3fe95b874dce" id="/^((\{00b4b65b-79d9-4e92-bc1e-2b926918b91c\})|(\{0cb66591-e935-47e4-95c2-3063786f6555\})|(\{6cf25884-f86d-4a4e-a924-d95282ce5b71\})|(\{22cce9c6-a1de-457f-8938-c981b976b6f4\})|(\{89d99d4c-e7c4-4601-91a8-216e597a826b\})|(\{998d3ac7-b475-410e-ad3d-2eeb526c1853\})|(\{9423e8df-6200-45c0-877a-479c46e91b30\})|(\{64937e0b-6e00-4d5f-bf19-190d6614aae2\})|(\{91507dc4-c005-4534-80af-d8fbdeac29ed\})|(\{a2247e60-7b89-4857-a2fa-0eaee1cad460\})|(\{c9c28751-5865-449f-8e45-b3363edf9fb7\})|(\{cdfd004f-cddc-4ad7-8e2d-a58457e42b1f\})|(\{d3e7f35d-7d9f-4d38-9a2b-1581f6b3e870\})|(\{df574ffe-cce0-42db-857b-627cb164a4d4\})|(\{e06afe6e-ed52-40f8-82bf-d070a37387fb\})|(\{e7e7fb96-cfab-4a5b-85fe-20f621e1bc2e\})|(\{e12e5afd-bd1e-43c6-9288-321dc485cb1c\})|(\{e92d8545-0396-4808-96de-830c61c0d1b3\})|(\{e883b012-1987-4f37-8053-02e59e20c242\})|(\{ed3386c6-76c6-4786-a37b-9816d5f2a260\}))$/">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>

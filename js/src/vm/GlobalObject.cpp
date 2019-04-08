@@ -542,7 +542,6 @@ GlobalObject* GlobalObject::createInternal(JSContext* cx, const Class* clasp) {
   if (!lexical) {
     return nullptr;
   }
-  global->setReservedSlot(LEXICAL_ENVIRONMENT, ObjectValue(*lexical));
 
   Rooted<GlobalScope*> emptyGlobalScope(
       cx, GlobalScope::createEmpty(cx, ScopeKind::Global));
@@ -552,7 +551,7 @@ GlobalObject* GlobalObject::createInternal(JSContext* cx, const Class* clasp) {
   global->setReservedSlot(EMPTY_GLOBAL_SCOPE,
                           PrivateGCThingValue(emptyGlobalScope));
 
-  cx->realm()->initGlobal(*global);
+  cx->realm()->initGlobal(*global, *lexical);
 
   if (!JSObject::setQualifiedVarObj(cx, global)) {
     return nullptr;
@@ -605,9 +604,9 @@ GlobalObject* GlobalObject::new_(JSContext* cx, const Class* clasp,
 }
 
 LexicalEnvironmentObject& GlobalObject::lexicalEnvironment() const {
-  return getReservedSlot(LEXICAL_ENVIRONMENT)
-      .toObject()
-      .as<LexicalEnvironmentObject>();
+  // The lexical environment is marked when marking the global, so we don't need
+  // a read barrier here because we know the global is live.
+  return *realm()->unbarrieredLexicalEnvironment();
 }
 
 GlobalScope& GlobalObject::emptyGlobalScope() const {

@@ -114,18 +114,6 @@ nsPresContext* ServoStyleSet::GetPresContext() {
   return mDocument->GetPresContext();
 }
 
-void ServoStyleSet::ShellAttachedToDocument() {
-  // We may have Shadow DOM style changes that we weren't notified about because
-  // the document didn't have a shell, if the ShadowRoot was created in a
-  // display: none iframe.
-  //
-  // Now that we got a shell, we may need to get them up-to-date.
-  //
-  // TODO(emilio, bug 1418159): This wouldn't be needed if the StyleSet was
-  // owned by the document.
-  SetStylistXBLStyleSheetsDirty();
-}
-
 template <typename Functor>
 void EnumerateShadowRoots(const Document& aDoc, const Functor& aCb) {
   const Document::ShadowRootSet& shadowRoots = aDoc.ComposedShadowRoots();
@@ -140,6 +128,9 @@ void EnumerateShadowRoots(const Document& aDoc, const Functor& aCb) {
 void ServoStyleSet::ShellDetachedFromDocument() {
   // Make sure we drop our cached styles before the presshell arena starts going
   // away.
+  //
+  // TODO(emilio): The presshell arena comment is no longer relevant. We could
+  // avoid doing this if we wanted to.
   ClearNonInheritingComputedStyles();
   mStyleRuleMap = nullptr;
 }

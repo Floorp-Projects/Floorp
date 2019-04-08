@@ -901,8 +901,10 @@ class nsLayoutUtils {
 
   /**
    * Gets the transform for aFrame relative to aAncestor. Pass null for
-   * aAncestor to go up to the root frame. aInCSSUnits set to true will
-   * return CSS units, set to false (the default) will return App units.
+   * aAncestor to go up to the root frame. Including nsIFrame::IN_CSS_UNITS
+   * flag in aFlags will return CSS pixels, by default it returns device
+   * pixels.
+   * More info can be found in nsIFrame::GetTransformMatrix.
    */
   static Matrix4x4Flagged GetTransformToAncestor(
       const nsIFrame* aFrame, const nsIFrame* aAncestor, uint32_t aFlags = 0,

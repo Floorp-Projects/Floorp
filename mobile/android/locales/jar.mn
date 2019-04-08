@@ -47,9 +47,6 @@ relativesrcdir toolkit/locales:
   locale/@AB_CD@/browser/overrides/plugins/pluginproblem.dtd       (%chrome/pluginproblem/pluginproblem.dtd)
 #about:mozilla
   locale/@AB_CD@/browser/overrides/global/mozilla.dtd                (%chrome/global/mozilla.dtd)
-#about:telemetry
-  locale/@AB_CD@/browser/overrides/global/aboutTelemetry.dtd         (%chrome/global/aboutTelemetry.dtd)
-  locale/@AB_CD@/browser/overrides/global/aboutTelemetry.properties  (%chrome/global/aboutTelemetry.properties)
 #about:webrtc
   locale/@AB_CD@/browser/overrides/global/aboutWebrtc.properties  (%chrome/global/aboutWebrtc.properties)
 

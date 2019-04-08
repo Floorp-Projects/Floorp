@@ -23,6 +23,7 @@ class VideoStreamTestCase(MarionetteTestCase):
         if "MOZ_UPLOAD_DIR" not in os.environ:
             os.environ["OBJ_PATH"] = "/tmp/"
         self.marionette.set_pref("media.autoplay.default", 1)
+        self.marionette.set_pref("privacy.trackingprotection.enabled", False)
 
     @contextmanager
     def using_proxy(self, video_id):
@@ -56,8 +57,6 @@ class VideoStreamTestCase(MarionetteTestCase):
         playback_file = os.path.join(playback_dir, "%s.playback" % video_id)
 
         config["playback_tool_args"] = [
-            "--set",
-            "stream_large_bodies=30",
             "--ssl-insecure",
             "--server-replay-nopop",
             "--set",
@@ -82,9 +81,29 @@ class VideoStreamTestCase(MarionetteTestCase):
     def youtube_video(self, video_id, **options):
         proxy = options.get("proxy", True)
         if proxy:
-            with self.using_proxy(video_id):
+            with self.using_proxy(video_id) as proxy:
+                options["upload_dir"] = proxy.upload_dir
                 with using_page(video_id, self.marionette, **options) as page:
                     yield page
         else:
             with using_page(video_id, self.marionette, **options) as page:
                 yield page
+
+    def assertVideoQuality(self, res):
+        self.assertTrue(res is not None, "We did not get back the results")
+        debug_info = res["mozRequestDebugInfo"]
+
+        # looking at mNumSamplesOutputTotal vs mNumSamplesSkippedTotal
+        decoded, skipped = debug_info["Video Frames Decoded"].split(" ", 1)
+        decoded = int(decoded)
+        skipped = int(skipped.split("=")[-1][:-1])
+        self.assertLess(skipped, decoded * 0.04)
+
+        # extracting in/out from the debugInfo
+        video_state = debug_info["Video State"]
+        video_in = int(video_state["in"])
+        video_out = int(video_state["out"])
+        # what's the ratio ? we want 99%+
+        if video_out != video_in:
+            in_out_ratio = float(video_out) / float(video_in) * 100
+            self.assertGreater(in_out_ratio, 99.0)

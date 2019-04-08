@@ -330,13 +330,8 @@ void ShadowRoot::RuleChanged(StyleSheet& aSheet, css::Rule*) {
 }
 
 void ShadowRoot::ApplicableRulesChanged() {
-  Document* doc = GetComposedDoc();
-  if (!doc) {
-    return;
-  }
-
-  if (PresShell* presShell = doc->GetPresShell()) {
-    presShell->RecordShadowStyleChange(*this);
+  if (Document* doc = GetComposedDoc()) {
+    doc->RecordShadowStyleChange(*this);
   }
 }
 

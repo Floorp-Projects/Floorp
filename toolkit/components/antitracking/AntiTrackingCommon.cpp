@@ -181,12 +181,18 @@ int32_t CookiesBehavior(Document* aTopLevelDocument,
   MOZ_ASSERT(aTopLevelDocument);
   MOZ_ASSERT(a3rdPartyDocument);
 
-  // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
-  // (See Bug 1406675 for rationale).
-  if (BasePrincipal::Cast(aTopLevelDocument->NodePrincipal())->AddonPolicy()) {
+  // Override the cookiebehavior to accept if the top level document has
+  // an extension principal (if the static pref has been set to true
+  // to force the old behavior here, See Bug 1525917).
+  // This block (and the static pref) should be removed as part of
+  // Bug 1537753.
+  if (StaticPrefs::extensions_cookiesBehavior_overrideOnTopLevel() &&
+      BasePrincipal::Cast(aTopLevelDocument->NodePrincipal())->AddonPolicy()) {
     return nsICookieService::BEHAVIOR_ACCEPT;
   }
 
+  // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
+  // (See Bug 1406675 and Bug 1525917 for rationale).
   if (BasePrincipal::Cast(a3rdPartyDocument->NodePrincipal())->AddonPolicy()) {
     return nsICookieService::BEHAVIOR_ACCEPT;
   }
@@ -201,13 +207,18 @@ int32_t CookiesBehavior(nsILoadInfo* aLoadInfo,
   MOZ_ASSERT(aTopLevelPrincipal);
   MOZ_ASSERT(a3rdPartyURI);
 
-  // WebExtensions principals always get BEHAVIOR_ACCEPT as cookieBehavior
-  // (See Bug 1406675 for rationale).
-  if (BasePrincipal::Cast(aTopLevelPrincipal)->AddonPolicy()) {
+  // Override the cookiebehavior to accept if the top level principal is
+  // an extension principal (if the static pref has been turned to true
+  // to force the old behavior here, See Bug 1525917).
+  // This block (and the static pref) should be removed as part of
+  // Bug 1537753.
+  if (StaticPrefs::extensions_cookiesBehavior_overrideOnTopLevel() &&
+      BasePrincipal::Cast(aTopLevelPrincipal)->AddonPolicy()) {
     return nsICookieService::BEHAVIOR_ACCEPT;
   }
 
-  // This is semantically equivalent to the principal having a AddonPolicy().
+  // WebExtensions 3rd party URI always get BEHAVIOR_ACCEPT as cookieBehavior,
+  // this is semantically equivalent to the principal having a AddonPolicy().
   bool is3rdPartyMozExt = false;
   if (NS_SUCCEEDED(
           a3rdPartyURI->SchemeIs("moz-extension", &is3rdPartyMozExt)) &&

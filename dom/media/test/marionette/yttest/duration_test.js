@@ -10,9 +10,11 @@ if (!video) {
 
 video.addEventListener("timeupdate", () => {
     if (video.currentTime >= %(duration)s) {
-      video.pause();
       %(video_playback_quality)s
       %(debug_info)s
+      // Pausing after we get the debug info so
+      // we can also look at in/out data in buffers
+      video.pause();
     }
   }
 );

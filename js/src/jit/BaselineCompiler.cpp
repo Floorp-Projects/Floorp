@@ -781,13 +781,8 @@ void BaselineCompilerCodeGen::loadGlobalLexicalEnvironment(Register dest) {
 
 template <>
 void BaselineInterpreterCodeGen::loadGlobalLexicalEnvironment(Register dest) {
-  // TODO(bug 1522394): consider storing a pointer to the global lexical in
-  // Realm to eliminate some dependent loads and unboxing.
   masm.loadPtr(AbsoluteAddress(cx->addressOfRealm()), dest);
-  masm.loadPtr(Address(dest, Realm::offsetOfActiveGlobal()), dest);
-  masm.loadPtr(Address(dest, NativeObject::offsetOfSlots()), dest);
-  Address lexicalSlot(dest, GlobalObject::offsetOfLexicalEnvironmentSlot());
-  masm.unboxObject(lexicalSlot, dest);
+  masm.loadPtr(Address(dest, Realm::offsetOfActiveLexicalEnvironment()), dest);
 }
 
 template <>

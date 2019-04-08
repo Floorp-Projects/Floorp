@@ -98,7 +98,6 @@ class ServoStyleSet {
   explicit ServoStyleSet(dom::Document&);
   ~ServoStyleSet();
 
-  void ShellAttachedToDocument();
   void ShellDetachedFromDocument();
 
   // Called when a rules in a stylesheet in this set, or a child sheet of that,

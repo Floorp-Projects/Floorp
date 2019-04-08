@@ -26,8 +26,6 @@ def test(mod, path, entity=None):
             "chrome/search/search.properties",
             "chrome/pluginproblem/pluginproblem.dtd",
             "chrome/global/mozilla.dtd",
-            "chrome/global/aboutTelemetry.dtd",
-            "chrome/global/aboutTelemetry.properties",
             "chrome/global/aboutWebrtc.properties",
         ):
             return "error"
