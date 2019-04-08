@@ -39,7 +39,7 @@ def configure_python_test(config, job, taskdesc):
 
     if worker['os'] == 'macosx' and run['python-version'] == 3:
         # OSX hosts can't seem to find python 3 on their own
-        run['python-version'] = '/usr/local/bin/python3'
+        run['python-version'] = '/tools/python36/bin/python3.6'
 
     # defer to the mach implementation
     run['mach'] = 'python-test --python {python-version} --subsuite {subsuite}'.format(**run)
