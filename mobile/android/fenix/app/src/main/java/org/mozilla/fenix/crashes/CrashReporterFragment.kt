@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_crash_reporter.*
+import mozilla.components.browser.session.Session
 import mozilla.components.lib.crash.Crash
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -36,19 +37,14 @@ class CrashReporterFragment : Fragment() {
 
         requireContext().components.analytics.metrics.track(Event.CrashReporterOpened)
 
+        val selectedSession = requireComponents.core.sessionManager.selectedSession
+
+        restore_tab_button.setOnClickListener {
+            selectedSession?.let { session -> closeFragment(true, session, crash) }
+        }
+
         close_tab_button.setOnClickListener {
-            val selectedSession = requireComponents.core.sessionManager.selectedSession
-
-            selectedSession?.let { session -> requireComponents.useCases.tabsUseCases.removeTab.invoke(session) }
-
-            var wantsSubmitCrashReport = false
-            if (Settings.getInstance(context!!).isCrashReportingEnabled) {
-                requireComponents.analytics.crashReporter.submitReport(crash)
-                wantsSubmitCrashReport = true
-            }
-
-            requireContext().components.analytics.metrics.track(Event.CrashReporterClosed(wantsSubmitCrashReport))
-            navigateHome(view)
+            selectedSession?.let { session -> closeFragment(false, session, crash) }
         }
     }
 
@@ -57,12 +53,29 @@ class CrashReporterFragment : Fragment() {
         (activity as AppCompatActivity).supportActionBar?.hide()
     }
 
-    fun navigateHome(fromView: View) {
-        val directions = CrashReporterFragmentDirections.actionCrashReporterFragmentToHomeFragment()
-        Navigation.findNavController(fromView).navigate(directions)
+    private fun closeFragment(shouldRestore: Boolean, session: Session, crash: Crash) {
+        submitReportIfNecessary(crash)
+
+        if (shouldRestore) {
+            requireComponents.useCases.sessionUseCases.crashRecovery.invoke(session)
+            Navigation.findNavController(view!!).popBackStack()
+        } else {
+            requireComponents.useCases.tabsUseCases.removeTab.invoke(session)
+            navigateHome(view!!)
+        }
     }
 
-    fun onBackPressed() {
-        requireContext().components.analytics.metrics.track(Event.CrashReporterClosed(false))
+    private fun submitReportIfNecessary(crash: Crash) {
+        var didSubmitCrashReport = false
+        if (Settings.getInstance(context!!).isCrashReportingEnabled) {
+            requireComponents.analytics.crashReporter.submitReport(crash)
+            didSubmitCrashReport = true
+        }
+        requireContext().components.analytics.metrics.track(Event.CrashReporterClosed(didSubmitCrashReport))
+    }
+
+    private fun navigateHome(fromView: View) {
+        val directions = CrashReporterFragmentDirections.actionCrashReporterFragmentToHomeFragment()
+        Navigation.findNavController(fromView).navigate(directions)
     }
 }
