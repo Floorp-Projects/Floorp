@@ -7,7 +7,8 @@ pub fn interpret<'text>(dfa: &DFA, input: &'text str) -> Option<(NFAIndex, &'tex
     for (offset, ch) in input.char_indices() {
         let state = &dfa.states[state_index.0];
 
-        let target = dfa.state(state_index)
+        let target = dfa
+            .state(state_index)
             .test_edges
             .iter()
             .filter_map(|&(test, target)| {

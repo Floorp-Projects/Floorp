@@ -1,5 +1,5 @@
-use parser;
 use grammar::parse_tree::Span;
+use parser;
 use regex::Regex;
 
 fn check_err(expected_err: &str, grammar: &str) {

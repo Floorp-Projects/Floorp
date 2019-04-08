@@ -50,15 +50,18 @@ macro_rules! debug {
 }
 
 macro_rules! profile {
-    ($session:expr, $phase_name:expr, $action:expr) => {
-        {
-            log!($session, Verbose, "Phase `{}` begun", $phase_name);
-            let time_stamp = ::std::time::Instant::now();
-            let result = $action;
-            let elapsed = time_stamp.elapsed();
-            log!($session, Verbose, "Phase `{}` completed in {} seconds",
-                 $phase_name, elapsed.as_secs() as f64 + elapsed.subsec_nanos() as f64 / 1000_000_000.0);
-            result
-        }
-    }
+    ($session:expr, $phase_name:expr, $action:expr) => {{
+        log!($session, Verbose, "Phase `{}` begun", $phase_name);
+        let time_stamp = ::std::time::Instant::now();
+        let result = $action;
+        let elapsed = time_stamp.elapsed();
+        log!(
+            $session,
+            Verbose,
+            "Phase `{}` completed in {} seconds",
+            $phase_name,
+            elapsed.as_secs() as f64 + elapsed.subsec_nanos() as f64 / 1000_000_000.0
+        );
+        result
+    }};
 }

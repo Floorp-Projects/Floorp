@@ -12,8 +12,9 @@
 
 [package]
 name = "docopt"
-version = "0.8.3"
+version = "1.0.2"
 authors = ["Andrew Gallant <jamslam@gmail.com>"]
+exclude = ["/.travis.yml", "/Makefile", "/ctags.rust", "/scripts/*", "/session.vim"]
 description = "Command line argument parsing."
 homepage = "https://github.com/docopt/docopt.rs"
 documentation = "http://burntsushi.net/rustdoc/docopt/"
@@ -35,7 +36,7 @@ doc = false
 version = "1"
 
 [dependencies.regex]
-version = "0.2"
+version = "1.0.3"
 
 [dependencies.serde]
 version = "1.0"
@@ -44,4 +45,4 @@ version = "1.0"
 version = "1.0"
 
 [dependencies.strsim]
-version = "0.6"
+version = "0.7"

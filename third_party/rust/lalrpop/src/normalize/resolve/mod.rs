@@ -3,9 +3,9 @@
 
 use super::{NormError, NormResult};
 
+use collections::{map, Map};
 use grammar::parse_tree::*;
 use string_cache::DefaultAtom as Atom;
-use collections::{map, Map};
 
 #[cfg(test)]
 mod test;
@@ -160,7 +160,8 @@ impl Validator {
                 );
             }
         }
-        Ok(args.iter()
+        Ok(args
+            .iter()
             .map(|nt| (nt.0.clone(), Def::MacroArg))
             .collect())
     }

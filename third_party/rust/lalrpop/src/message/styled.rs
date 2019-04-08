@@ -1,7 +1,7 @@
+use super::*;
 use ascii_canvas::AsciiView;
 use std::fmt::{Debug, Error, Formatter};
 use style::Style;
-use super::*;
 
 pub struct Styled {
     style: Style,

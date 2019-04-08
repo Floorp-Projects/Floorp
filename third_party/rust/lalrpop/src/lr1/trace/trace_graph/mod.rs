@@ -1,12 +1,12 @@
 use collections::{map, Map};
+use grammar::repr::*;
 use lr1::core::*;
+use lr1::example::*;
 use lr1::first::*;
 use lr1::lookahead::*;
-use lr1::example::*;
-use grammar::repr::*;
-use petgraph::{Directed, EdgeDirection, Graph};
 use petgraph::graph::{EdgeReference, Edges, NodeIndex};
 use petgraph::prelude::*;
+use petgraph::{Directed, EdgeDirection, Graph};
 use std::fmt::{Debug, Error, Formatter};
 
 #[cfg(test)]
@@ -73,7 +73,8 @@ impl<'grammar> TraceGraph<'grammar> {
     {
         let node = node.into();
         let graph = &mut self.graph;
-        *self.indices
+        *self
+            .indices
             .entry(node.clone())
             .or_insert_with(|| graph.add_node(node))
     }
@@ -85,7 +86,8 @@ impl<'grammar> TraceGraph<'grammar> {
     {
         let from = self.add_node(from.into());
         let to = self.add_node(to.into());
-        if !self.graph
+        if !self
+            .graph
             .edges_directed(from, EdgeDirection::Outgoing)
             .any(|edge| edge.target() == to && *edge.weight() == labels)
         {
@@ -349,10 +351,12 @@ impl<'graph, 'grammar> PathEnumerator<'graph, 'grammar> {
 
         match self.stack[1].symbol_sets.cursor {
             Some(s) => symbols.push(ExampleSymbol::Symbol(s.clone())),
-            None => if self.stack[1].symbol_sets.prefix.is_empty() {
-                symbols.push(ExampleSymbol::Epsilon)
-            } else {
-            },
+            None => {
+                if self.stack[1].symbol_sets.prefix.is_empty() {
+                    symbols.push(ExampleSymbol::Epsilon)
+                } else {
+                }
+            }
         }
 
         symbols.extend(
