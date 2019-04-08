@@ -2328,6 +2328,11 @@ ICStub* js::jit::AttachBaselineCacheIRStub(
     // case.
     if (updated) {
       *attached = true;
+    } else {
+      JitSpew(JitSpew_BaselineICFallback,
+              "Tried attaching identical stub for (%s:%u%u)",
+              outerScript->filename(), outerScript->lineno(),
+              outerScript->column());
     }
     return nullptr;
   }

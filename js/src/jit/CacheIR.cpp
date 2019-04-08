@@ -4855,6 +4855,11 @@ AttachDecision CallIRGenerator::tryAttachArrayJoin() {
     return AttachDecision::NoAction;
   }
 
+  // And the only element (if it exists) is a string
+  if (thisarray->length() == 1 && !thisarray->getDenseElement(0).isString()) {
+    return AttachDecision::NoAction;
+  }
+
   // We don't need to worry about indexed properties because we can perform
   // hole check manually.
 
@@ -4940,6 +4945,9 @@ AttachDecision CallIRGenerator::tryAttachFunCall() {
   bool isScripted = target->isInterpreted() || target->isNativeWithJitEntry();
   MOZ_ASSERT_IF(!isScripted, target->isNative());
 
+  if (target->isClassConstructor()) {
+    return AttachDecision::NoAction;
+  }
   Int32OperandId argcId(writer.setInputOperandId(0));
 
   // Guard that callee is the |fun_call| native function.
@@ -4995,10 +5003,16 @@ AttachDecision CallIRGenerator::tryAttachFunApply() {
   bool isScripted = target->isInterpreted() || target->isNativeWithJitEntry();
   MOZ_ASSERT_IF(!isScripted, target->isNative());
 
+  if (target->isClassConstructor()) {
+    return AttachDecision::NoAction;
+  }
+
   CallFlags::ArgFormat format = CallFlags::Standard;
   if (args_[1].isMagic(JS_OPTIMIZED_ARGUMENTS) && !script_->needsArgsObj()) {
     format = CallFlags::FunApplyArgs;
-  } else if (args_[1].isObject() && args_[1].toObject().is<ArrayObject>()) {
+  } else if (args_[1].isObject() && args_[1].toObject().is<ArrayObject>() &&
+             args_[1].toObject().as<ArrayObject>().length() <=
+                 CacheIRCompiler::MAX_ARGS_ARRAY_LENGTH) {
     format = CallFlags::FunApplyArray;
   } else {
     return AttachDecision::NoAction;
@@ -5249,6 +5263,14 @@ AttachDecision CallIRGenerator::tryAttachCallScripted(
 
 bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
                                                  MutableHandleObject res) {
+  // Saving the template object is unsound for super(), as a single
+  // callsite can have multiple possible prototype objects created
+  // (via different newTargets)
+  bool isSuper = op_ == JSOP_SUPERCALL || op_ == JSOP_SPREADSUPERCALL;
+  if (isSuper) {
+    return true;
+  }
+
   if (!calleeFunc->hasJitInfo() ||
       calleeFunc->jitInfo()->type() != JSJitInfo::InlinableNative) {
     return true;
@@ -5417,6 +5439,14 @@ bool CallIRGenerator::getTemplateObjectForClassHook(
   MOZ_ASSERT(IsConstructorCallPC(pc_));
   JSNative hook = calleeObj->constructHook();
 
+  // Saving the template object is unsound for super(), as a single
+  // callsite can have multiple possible prototype objects created
+  // (via different newTargets)
+  bool isSuper = op_ == JSOP_SUPERCALL || op_ == JSOP_SPREADSUPERCALL;
+  if (isSuper) {
+    return true;
+  }
+
   if (calleeObj->nonCCWRealm() != cx_->realm()) {
     return true;
   }
@@ -5496,9 +5526,12 @@ AttachDecision CallIRGenerator::tryAttachStub() {
   switch (op_) {
     case JSOP_CALL:
     case JSOP_CALL_IGNORES_RV:
+    case JSOP_CALLITER:
     case JSOP_SPREADCALL:
     case JSOP_NEW:
     case JSOP_SPREADNEW:
+    case JSOP_SUPERCALL:
+    case JSOP_SPREADSUPERCALL:
     case JSOP_FUNCALL:
     case JSOP_FUNAPPLY:
       break;
