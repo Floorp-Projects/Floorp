@@ -727,6 +727,12 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
     return true;
   };
 
+  // If we are closing multiple for-of loops, the resulting FOR_OF_ITERCLOSE
+  // trynotes must be appropriately nested. Each FOR_OF_ITERCLOSE starts when
+  // we close the corresponding for-of iterator, and continues until the
+  // actual jump.
+  Vector<ptrdiff_t, 4> forOfIterCloseScopeStarts(bce_->cx);
+
   // Walk the nestable control stack and patch jumps.
   for (NestableControl* control = bce_->innermostNestableControl;
        control != target; control = control->enclosing()) {
@@ -765,12 +771,15 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
           if (!flushPops(bce_)) {
             return false;
           }
-
+          ptrdiff_t tryNoteStart = 0;
           ForOfLoopControl& loopinfo = control->as<ForOfLoopControl>();
           if (!loopinfo.emitPrepareForNonLocalJumpFromScope(
                   bce_, *es,
-                  /* isTarget = */ false)) {
+                  /* isTarget = */ false, &tryNoteStart)) {
             //      [stack] ...
+            return false;
+          }
+          if (!forOfIterCloseScopeStarts.append(tryNoteStart)) {
             return false;
           }
         } else {
@@ -806,10 +815,15 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
   }
 
   if (target && emitIteratorCloseAtTarget && target->is<ForOfLoopControl>()) {
+    ptrdiff_t tryNoteStart = 0;
     ForOfLoopControl& loopinfo = target->as<ForOfLoopControl>();
     if (!loopinfo.emitPrepareForNonLocalJumpFromScope(bce_, *es,
-                                                      /* isTarget = */ true)) {
+                                                      /* isTarget = */ true,
+                                                      &tryNoteStart)) {
       //            [stack] ... UNDEF UNDEF UNDEF
+      return false;
+    }
+    if (!forOfIterCloseScopeStarts.append(tryNoteStart)) {
       return false;
     }
   }
@@ -818,6 +832,14 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
       target ? target->emitterScope() : bce_->varEmitterScope;
   for (; es != targetEmitterScope; es = es->enclosingInFrame()) {
     if (!leaveScope(es)) {
+      return false;
+    }
+  }
+
+  // Close FOR_OF_ITERCLOSE trynotes.
+  ptrdiff_t end = bce_->offset();
+  for (ptrdiff_t start : forOfIterCloseScopeStarts) {
+    if (!bce_->addTryNote(JSTRY_FOR_OF_ITERCLOSE, 0, start, end)) {
       return false;
     }
   }
