@@ -589,6 +589,14 @@ VARCACHE_PREF(
 )
 #undef PREF_VALUE
 
+// This pref should be set to true only in case of regression related to the
+// changes applied in Bug 152591 (to be removed as part of Bug 1537753).
+VARCACHE_PREF(
+  "extensions.cookiesBehavior.overrideOnTopLevel",
+   extensions_cookiesBehavior_overrideOnTopLevel,
+  bool, false
+)
+
 //---------------------------------------------------------------------------
 // Full-screen prefs
 //---------------------------------------------------------------------------

@@ -74,11 +74,11 @@
         },
         "awscli": {
             "hashes": [
-                "sha256:16e663ef121420d9ff602d643d0108f7d0d07ec29c361f53915ff41248c2eb16",
-                "sha256:99f7aedcaef3f0b97036933064c9daf5f2999c3347288ff070f7e2227bf45cce"
+                "sha256:00a438e74bfe7db2bfe4c0a7c91e87c2378133320e9f8b7ecd8f716557e74b0d",
+                "sha256:7c19110758c5a8a549548ba471e76ed21e62d27f427047a34b334b0c83eeae7b"
             ],
             "index": "pypi",
-            "version": "==1.16.135"
+            "version": "==1.16.140"
         },
         "backports.lzma": {
             "hashes": [
@@ -88,10 +88,10 @@
         },
         "botocore": {
             "hashes": [
-                "sha256:2c071fb9f3cd71d792846e18e2c650f2985b822c552514ea6f27e44764d45a0a",
-                "sha256:ac9585c2afdf81929ccb69b8e6919ec64f3693cc7d3f4f216f292f63312111cf"
+                "sha256:128130b12f8ba4bf07a673b119135264060eb98f6a4a7419cbd1f2c6dc926827",
+                "sha256:59376112fdee707927b644dd44a1771861f8fe354a48d596131ced83d7a3c05b"
             ],
-            "version": "==1.12.125"
+            "version": "==1.12.130"
         },
         "certifi": {
             "hashes": [

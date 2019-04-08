@@ -447,7 +447,7 @@ bool ModuleEnvironmentObject::lookupImport(jsid name,
   return importBindings().lookup(name, envOut, shapeOut);
 }
 
-void ModuleEnvironmentObject::fixEnclosingEnvironmentAfterCompartmentMerge(
+void ModuleEnvironmentObject::fixEnclosingEnvironmentAfterRealmMerge(
     GlobalObject& global) {
   setEnclosingEnvironment(&global.lexicalEnvironment());
 }

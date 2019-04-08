@@ -897,6 +897,13 @@ nsresult ContentChild::ProvideWindowCommon(
 
     Maybe<URIParams> uriToLoad;
     SerializeURI(aURI, uriToLoad);
+
+    if (name.LowerCaseEqualsLiteral("_blank")) {
+      name = EmptyString();
+    }
+
+    MOZ_DIAGNOSTIC_ASSERT(!nsContentUtils::IsSpecialName(name));
+
     Unused << SendCreateWindowInDifferentProcess(
         aTabOpener, aChromeFlags, aCalledFromJS, aPositionSpecified,
         aSizeSpecified, uriToLoad, features, fullZoom, name,

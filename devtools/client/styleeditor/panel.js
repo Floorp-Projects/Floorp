@@ -48,8 +48,8 @@ StyleEditorPanel.prototype = {
     const {cssProperties} = await initCssProperties(this._toolbox);
 
     // Initialize the UI
-    this.UI = new StyleEditorUI(this._debuggee, this.target, this._panelDoc,
-                                cssProperties);
+    this.UI = new StyleEditorUI(this._toolbox, this._debuggee, this.target,
+                                this._panelDoc, cssProperties);
     this.UI.on("error", this._showError);
     await this.UI.initialize();
 
