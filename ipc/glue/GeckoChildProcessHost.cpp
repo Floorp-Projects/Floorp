@@ -183,11 +183,14 @@ void GeckoChildProcessHost::Destroy() {
 }
 
 // static
-BinPathType GeckoChildProcessHost::GetPathToBinary(FilePath& exePath,
-                                            GeckoProcessType processType) {
-  BinPathType pathType = XRE_GetChildProcBinPathType(processType);
-
-  if (pathType == BinPathType::Self) {
+auto GeckoChildProcessHost::GetPathToBinary(FilePath& exePath,
+                                            GeckoProcessType processType)
+    -> BinaryPathType {
+  if (sRunSelfAsContentProc && (processType == GeckoProcessType_Content ||
+                                processType == GeckoProcessType_GPU ||
+                                processType == GeckoProcessType_VR ||
+                                processType == GeckoProcessType_RDD ||
+                                processType == GeckoProcessType_Socket)) {
 #if defined(OS_WIN)
     wchar_t exePathBuf[MAXPATHLEN];
     if (!::GetModuleFileNameW(nullptr, exePathBuf, MAXPATHLEN)) {
@@ -210,7 +213,7 @@ BinPathType GeckoChildProcessHost::GetPathToBinary(FilePath& exePath,
 #else
 #  error Sorry; target OS not supported yet.
 #endif
-    return pathType;
+    return BinaryPathType::Self;
   }
 
   if (ShouldHaveDirectoryService()) {
@@ -249,7 +252,7 @@ BinPathType GeckoChildProcessHost::GetPathToBinary(FilePath& exePath,
 
   exePath = exePath.AppendASCII(MOZ_CHILD_PROCESS_NAME);
 
-  return pathType;
+  return BinaryPathType::PluginContainer;
 }
 
 #ifdef MOZ_WIDGET_COCOA
@@ -852,7 +855,7 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
 #  endif  // defined(OS_POSIX)
 
   FilePath exePath;
-  BinPathType pathType = GetPathToBinary(exePath, mProcessType);
+  BinaryPathType pathType = GetPathToBinary(exePath, mProcessType);
 
   // remap the IPC socket fd to a well-known int, as the OS does for
   // STDOUT_FILENO, for example
@@ -868,7 +871,7 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
 
   childArgv.push_back(exePath.value());
 
-  if (pathType == BinPathType::Self) {
+  if (pathType == BinaryPathType::Self) {
     childArgv.push_back("-contentproc");
   }
 
@@ -1037,7 +1040,7 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
 #elif defined(OS_WIN)  // defined(OS_POSIX)
 
   FilePath exePath;
-  BinPathType pathType = GetPathToBinary(exePath, mProcessType);
+  BinaryPathType pathType = GetPathToBinary(exePath, mProcessType);
 
 #  if defined(MOZ_SANDBOX) || defined(_ARM64_)
   const bool isGMP = mProcessType == GeckoProcessType_GMPlugin;
@@ -1058,7 +1061,7 @@ bool GeckoChildProcessHost::PerformAsyncLaunch(
 
   CommandLine cmdLine(exePath.ToWStringHack());
 
-  if (pathType == BinPathType::Self) {
+  if (pathType == BinaryPathType::Self) {
     cmdLine.AppendLooseValue(UTF8ToWide("-contentproc"));
   }
 
@@ -1349,6 +1352,8 @@ void GeckoChildProcessHost::GetQueuedMessages(std::queue<IPC::Message>& queue) {
   swap(queue, mQueue);
   // We expect the next listener to take over processing of our queue.
 }
+
+bool GeckoChildProcessHost::sRunSelfAsContentProc(false);
 
 #ifdef MOZ_WIDGET_ANDROID
 void GeckoChildProcessHost::LaunchAndroidService(
