@@ -2246,7 +2246,7 @@ void ScrollFrameHelper::ScrollToWithOrigin(
                                aScrollPosition);
   }
 
-  nsRect scrollRange = GetVisualScrollRange();
+  nsRect scrollRange = GetLayoutScrollRange();
   mDestination = scrollRange.ClampPoint(aScrollPosition);
   if (mDestination != aScrollPosition && aOrigin == nsGkAtoms::restore &&
       GetPageLoadingState() != LoadingState::Loading) {
@@ -2301,13 +2301,13 @@ void ScrollFrameHelper::ScrollToWithOrigin(
 
         mAsyncSmoothMSDScroll = new AsyncSmoothMSDScroll(
             GetScrollPosition(), mDestination, currentVelocity,
-            GetVisualScrollRange(), now, presContext);
+            GetLayoutScrollRange(), now, presContext);
 
         mAsyncSmoothMSDScroll->SetRefreshObserver(this);
       } else {
         // A previous smooth MSD scroll is still in progress, so we just need to
         // update its range and destination.
-        mAsyncSmoothMSDScroll->SetRange(GetVisualScrollRange());
+        mAsyncSmoothMSDScroll->SetRange(GetLayoutScrollRange());
         mAsyncSmoothMSDScroll->SetDestination(mDestination);
       }
 
@@ -2701,7 +2701,7 @@ void ScrollFrameHelper::ScrollToImpl(nsPoint aPt, const nsRect& aRange,
   // actually matter since all we are about is that there be an integer number
   // of layer pixels between pt and curPos.
   nsPoint pt =
-      ClampAndAlignWithLayerPixels(aPt, GetVisualScrollRange(), aRange,
+      ClampAndAlignWithLayerPixels(aPt, GetLayoutScrollRange(), aRange,
                                    alignWithPos, appUnitsPerDevPixel, scale);
   if (pt == curPos) {
     return;
@@ -3189,7 +3189,7 @@ void ScrollFrameHelper::EnsureFrameVisPrefsCached() {
 nsRect ScrollFrameHelper::ExpandRectToNearlyVisible(const nsRect& aRect) const {
   // We don't want to expand a rect in a direction that we can't scroll, so we
   // check the scroll range.
-  nsRect scrollRange = GetVisualScrollRange();
+  nsRect scrollRange = GetLayoutScrollRange();
   nsPoint scrollPos = GetScrollPosition();
   nsMargin expand(0, 0, 0, 0);
 
@@ -4304,7 +4304,7 @@ void ScrollFrameHelper::ScrollSnap(ScrollMode aMode) {
 
 void ScrollFrameHelper::ScrollSnap(const nsPoint& aDestination,
                                    ScrollMode aMode) {
-  nsRect scrollRange = GetVisualScrollRange();
+  nsRect scrollRange = GetLayoutScrollRange();
   nsPoint pos = GetScrollPosition();
   nsPoint snapDestination = scrollRange.ClampPoint(aDestination);
   if (GetSnapPointForDestination(nsIScrollableFrame::DEVICE_PIXELS, pos,
@@ -6572,7 +6572,7 @@ bool ScrollFrameHelper::GetSnapPointForDestination(
     nsIScrollableFrame::ScrollUnit aUnit, nsPoint aStartPos,
     nsPoint& aDestination) {
   Maybe<nsPoint> snapPoint = ScrollSnapUtils::GetSnapPointForDestination(
-      GetScrollSnapInfo(), aUnit, GetVisualScrollRange(), aStartPos,
+      GetScrollSnapInfo(), aUnit, GetLayoutScrollRange(), aStartPos,
       aDestination);
   if (snapPoint) {
     aDestination = snapPoint.ref();
@@ -6604,7 +6604,7 @@ bool ScrollFrameHelper::DragScroll(WidgetEvent* aEvent) {
   bool willScroll = false;
   nsPoint pnt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aEvent, mOuter);
   nsPoint scrollPoint = GetScrollPosition();
-  nsRect rangeRect = GetVisualScrollRange();
+  nsRect rangeRect = GetLayoutScrollRange();
 
   // Only drag scroll when a scrollbar is present.
   nsPoint offset;
