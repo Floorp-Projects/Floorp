@@ -3119,6 +3119,7 @@ void ProcessedMediaStream::DestroyImpl() {
 MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
                                            GraphRunType aRunTypeRequested,
                                            TrackRate aSampleRate,
+                                           uint32_t aChannelCount,
                                            AbstractThread* aMainThread)
     : MediaStreamGraph(aSampleRate),
       mGraphRunner(aRunTypeRequested == SINGLE_THREAD ? new GraphRunner(this)
@@ -3142,7 +3143,7 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
       mStreamOrderDirty(false),
       mAbstractMainThread(aMainThread),
       mSelfRef(this),
-      mOutputChannels(std::min<uint32_t>(8, CubebUtils::MaxNumberOfChannels())),
+      mOutputChannels(aChannelCount),
       mGlobalVolume(CubebUtils::GetVolumeScale())
 #ifdef DEBUG
       ,
@@ -3271,8 +3272,14 @@ MediaStreamGraph* MediaStreamGraph::GetInstance(
         Preferences::GetBool("dom.audioworklet.enabled", false)) {
       runType = SINGLE_THREAD;
     }
+
+    // In a real time graph, the number of output channels is determined by
+    // the underlying number of channel of the default audio output device, and
+    // capped to 8.
+    uint32_t channelCount =
+        std::min<uint32_t>(8, CubebUtils::MaxNumberOfChannels());
     graph = new MediaStreamGraphImpl(aGraphDriverRequested, runType, sampleRate,
-                                     mainThread);
+                                     channelCount, mainThread);
 
     uint32_t hashkey = WindowToHash(aWindow, sampleRate);
     gGraphs.Put(hashkey, graph);
@@ -3296,8 +3303,10 @@ MediaStreamGraph* MediaStreamGraph::CreateNonRealtimeInstance(
         aWindow->AsGlobal()->AbstractMainThreadFor(TaskCategory::Other);
   }
 
+  // Offline graphs have 0 output channel count: they write the output to a
+  // buffer, not an audio output stream.
   MediaStreamGraphImpl* graph = new MediaStreamGraphImpl(
-      OFFLINE_THREAD_DRIVER, DIRECT_DRIVER, aSampleRate, mainThread);
+      OFFLINE_THREAD_DRIVER, DIRECT_DRIVER, aSampleRate, 0, mainThread);
 
   LOG(LogLevel::Debug, ("Starting up Offline MediaStreamGraph %p", graph));
 
