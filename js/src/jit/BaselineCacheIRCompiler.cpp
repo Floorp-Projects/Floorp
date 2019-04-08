@@ -2665,6 +2665,10 @@ bool BaselineCacheIRCompiler::emitCallNativeShared(NativeCallType callType) {
       pushSpreadCallArguments(argcReg, scratch, scratch2, /*isJitCall =*/false,
                               isConstructing);
       break;
+    case CallFlags::FunCall:
+      pushFunCallArguments(argcReg, calleeReg, scratch, scratch2,
+                           /*isJitCall = */ false);
+      break;
     default:
       MOZ_CRASH("Invalid arg format");
   }
