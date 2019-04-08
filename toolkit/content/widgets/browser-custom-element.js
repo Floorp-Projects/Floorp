@@ -1313,7 +1313,7 @@ class MozBrowser extends MozElementMixin(XULFrameElement) {
           }
 
           let menulist = document.getElementById(this.getAttribute("selectmenulist"));
-          menulist.menupopup.style.direction = data.direction;
+          menulist.menupopup.style.direction = data.style.direction;
 
           let zoom = Services.prefs.getBoolPref("browser.zoom.full") ||
             this.isSyntheticDocument ? this._fullZoom : this._textZoom;
