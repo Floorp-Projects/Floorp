@@ -24,8 +24,8 @@ exports[`DebugTargetInfo component renders the expected snapshot for This Firefo
     className="iconized-label"
   >
     <img
-      alt="favicon"
-      src="chrome://devtools/skin/images/aboutdebugging-globe-icon.svg"
+      alt="toolbox.debugTargetInfo.targetType.tab"
+      src="chrome://devtools/skin/images/globe.svg"
     />
     <b
       className="devtools-ellipsis-text js-target-title"
@@ -76,8 +76,8 @@ exports[`DebugTargetInfo component renders the expected snapshot for USB Release
     className="iconized-label"
   >
     <img
-      alt="favicon"
-      src="chrome://devtools/skin/images/aboutdebugging-globe-icon.svg"
+      alt="toolbox.debugTargetInfo.targetType.tab"
+      src="chrome://devtools/skin/images/globe.svg"
     />
     <b
       className="devtools-ellipsis-text js-target-title"
@@ -117,8 +117,8 @@ exports[`DebugTargetInfo component renders the expected snapshot for a Toolbox w
     className="iconized-label"
   >
     <img
-      alt="favicon"
-      src="chrome://devtools/skin/images/aboutdebugging-globe-icon.svg"
+      alt="toolbox.debugTargetInfo.targetType.tab"
+      src="chrome://devtools/skin/images/globe.svg"
     />
     <span
       className="devtools-ellipsis-text"

@@ -38,6 +38,11 @@
   border-inline-end: 1px solid var(--theme-splitter-color);
 }
 
+.debug-target-info .iconized-label img {
+  width: 20px;
+  height: 20px;
+}
+
 .debug-target-info img {
   -moz-context-properties: fill;
   fill: var(--theme-toolbar-icon-color);
