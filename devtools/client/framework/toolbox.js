@@ -2906,6 +2906,13 @@ Toolbox.prototype = {
   },
 
   /**
+   * Public API to check is the current toolbox is currently being destroyed.
+   */
+  isDestroying: function() {
+    return this._destroyer;
+  },
+
+  /**
    * Remove all UI elements, detach from target and clear up
    */
   destroy: function() {

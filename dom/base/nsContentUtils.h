@@ -3288,6 +3288,12 @@ class nsContentUtils {
   static nsCString& JSBytecodeMimeType() { return *sJSBytecodeMimeType; }
 
   /**
+   * Checks if the passed-in name is one of the special names: "_blank", "_top",
+   * "_parent" or "_self".
+   */
+  static bool IsSpecialName(const nsAString& aName);
+
+  /**
    * Checks if the passed-in name should override an existing name on the
    * window. Values which should not override include: "", "_blank", "_top",
    * "_parent" and "_self".
