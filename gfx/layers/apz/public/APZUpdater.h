@@ -155,6 +155,7 @@ class APZUpdater {
 
  private:
   RefPtr<APZCTreeManager> mApz;
+  bool mDestroyed;
   bool mIsUsingWebRender;
 
   // Map from layers id to WebRenderScrollData. This can only be touched on

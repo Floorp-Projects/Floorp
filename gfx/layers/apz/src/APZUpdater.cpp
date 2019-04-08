@@ -26,6 +26,7 @@ StaticAutoPtr<std::unordered_map<uint64_t, APZUpdater*>>
 APZUpdater::APZUpdater(const RefPtr<APZCTreeManager>& aApz,
                        bool aIsUsingWebRender)
     : mApz(aApz),
+      mDestroyed(false),
       mIsUsingWebRender(aIsUsingWebRender),
       mThreadIdLock("APZUpdater::ThreadIdLock"),
       mQueueLock("APZUpdater::QueueLock") {
@@ -134,6 +135,7 @@ void APZUpdater::ClearTree(LayersId aRootLayersId) {
   RunOnUpdaterThread(aRootLayersId,
                      NS_NewRunnableFunction("APZUpdater::ClearTree", [=]() {
                        self->mApz->ClearTree();
+                       self->mDestroyed = true;
 
                        // Once ClearTree is called on the APZCTreeManager, we
                        // are in a shutdown phase. After this point it's ok if
@@ -426,6 +428,8 @@ already_AddRefed<APZUpdater> APZUpdater::GetUpdater(
 }
 
 void APZUpdater::ProcessQueue() {
+  MOZ_ASSERT(!mDestroyed);
+
   {  // scope lock to check for emptiness
     MutexAutoLock lock(mQueueLock);
     if (mUpdaterQueue.empty()) {
@@ -464,6 +468,23 @@ void APZUpdater::ProcessQueue() {
     } else {
       // Run and discard the task
       task.mRunnable->Run();
+    }
+  }
+
+  if (mDestroyed) {
+    // If we get here, then we must have just run the ClearTree task for
+    // this updater. There might be tasks in the queue from content subtrees
+    // of this window that are blocked due to stale epochs. This can happen
+    // if the tasks were queued after the root pipeline was removed in
+    // WebRender, which prevents scene builds (and therefore prevents us
+    // from getting updated epochs via CompleteSceneSwap). See bug 1465658
+    // comment 43 for some more context.
+    // To avoid leaking these tasks, we discard the contents of the queue.
+    // This happens during window shutdown so if we don't run the tasks it's
+    // not going to matter much.
+    MutexAutoLock lock(mQueueLock);
+    if (!mUpdaterQueue.empty()) {
+      mUpdaterQueue.clear();
     }
   }
 }
