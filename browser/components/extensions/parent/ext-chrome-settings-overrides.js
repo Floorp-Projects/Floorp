@@ -5,6 +5,7 @@
 "use strict";
 
 var {ExtensionPreferencesManager} = ChromeUtils.import("resource://gre/modules/ExtensionPreferencesManager.jsm");
+var {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
 
 ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
                                "resource://gre/modules/ExtensionSettingsStore.jsm");
@@ -16,6 +17,8 @@ const DEFAULT_SEARCH_SETTING_NAME = "defaultSearch";
 const ENGINE_ADDED_SETTING_NAME = "engineAdded";
 
 const HOMEPAGE_PREF = "browser.startup.homepage";
+const HOMEPAGE_PRIVATE_ALLOWED = "browser.startup.homepage_override.privateAllowed";
+const HOMEPAGE_EXTENSION_CONTROLLED = "browser.startup.homepage_override.extensionControlled";
 const HOMEPAGE_CONFIRMED_TYPE = "homepageNotification";
 const HOMEPAGE_SETTING_TYPE = "prefs";
 const HOMEPAGE_SETTING_NAME = "homepage_override";
@@ -186,12 +189,36 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
       // We need to add the listener here too since onPrefsChanged won't trigger on a
       // restart (the prefs are already set).
       if (inControl) {
+        Services.prefs.setBoolPref(HOMEPAGE_PRIVATE_ALLOWED, extension.privateBrowsingAllowed);
+        // Also set this now as an upgraded browser will need this.
+        Services.prefs.setBoolPref(HOMEPAGE_EXTENSION_CONTROLLED, true);
         if (extension.startupReason == "APP_STARTUP") {
           handleInitialHomepagePopup(extension.id, homepageUrl);
         } else {
           homepagePopup.addObserver(extension.id);
         }
       }
+
+      // We need to monitor permission change and update the preferences.
+      // eslint-disable-next-line mozilla/balanced-listeners
+      extension.on("add-permissions", async (ignoreEvent, permissions) => {
+        if (permissions.permissions.includes("internal:privateBrowsingAllowed")) {
+          let item = await ExtensionPreferencesManager.getSetting("homepage_override");
+          if (item.id == extension.id) {
+            Services.prefs.setBoolPref(HOMEPAGE_PRIVATE_ALLOWED, true);
+          }
+        }
+      });
+      // eslint-disable-next-line mozilla/balanced-listeners
+      extension.on("remove-permissions", async (ignoreEvent, permissions) => {
+        if (permissions.permissions.includes("internal:privateBrowsingAllowed")) {
+          let item = await ExtensionPreferencesManager.getSetting("homepage_override");
+          if (item.id == extension.id) {
+            Services.prefs.setBoolPref(HOMEPAGE_PRIVATE_ALLOWED, false);
+          }
+        }
+      });
+
       extension.callOnClose({
         close: () => {
           if (extension.shutdownReason == "ADDON_DISABLE") {
@@ -344,6 +371,7 @@ this.chrome_settings_overrides = class extends ExtensionAPI {
 ExtensionPreferencesManager.addSetting("homepage_override", {
   prefNames: [
     HOMEPAGE_PREF,
+    HOMEPAGE_EXTENSION_CONTROLLED,
   ],
   // ExtensionPreferencesManager will call onPrefsChanged when control changes
   // and it updates the preferences. We are passed the item from
@@ -353,13 +381,21 @@ ExtensionPreferencesManager.addSetting("homepage_override", {
   onPrefsChanged(item) {
     if (item.id) {
       homepagePopup.addObserver(item.id);
+
+      let policy = ExtensionParent.WebExtensionPolicy.getByID(item.id);
+      Services.prefs.setBoolPref(HOMEPAGE_PRIVATE_ALLOWED, policy && policy.privateBrowsingAllowed);
+      Services.prefs.setBoolPref(HOMEPAGE_EXTENSION_CONTROLLED, true);
     } else {
       homepagePopup.removeObserver();
+
+      Services.prefs.clearUserPref(HOMEPAGE_PRIVATE_ALLOWED);
+      Services.prefs.clearUserPref(HOMEPAGE_EXTENSION_CONTROLLED);
     }
   },
   setCallback(value) {
     return {
       [HOMEPAGE_PREF]: value,
+      [HOMEPAGE_EXTENSION_CONTROLLED]: !!value,
     };
   },
 });
