@@ -53,6 +53,7 @@ skip-if(Android) == blend-multiply.svg blend-multiply-ref.svg
 #skip-if(Android) == blend-screen.svg blend-screen-ref.svg
 #skip-if(Android) == blend-soft-light.svg blend-soft-light-ref.svg
 skip == blend-difference-stacking.html blend-difference-stacking-ref.html # bug 1458353
+== active-transform-blend-mode.html active-transform-blend-mode-ref.html
 
 fuzzy(0-11,0-7155) == blur-inside-clipPath.svg blur-inside-clipPath-ref.svg
 
