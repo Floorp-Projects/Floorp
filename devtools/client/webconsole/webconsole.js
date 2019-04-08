@@ -298,10 +298,10 @@ class WebConsole {
     }
 
     this._parserService =
-      require("devtools/client/debugger/src/workers/parser/index");
+      require("devtools/client/debugger/new/src/workers/parser/index");
 
     this._parserService.start(
-      "resource://devtools/client/debugger/dist/parser-worker.js",
+      "resource://devtools/client/debugger/new/dist/parser-worker.js",
       this.chromeUtilsWindow);
     return this._parserService;
   }
