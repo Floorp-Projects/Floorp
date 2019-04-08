@@ -915,6 +915,27 @@ bool BaselineCacheIRCompiler::emitCallStringSplitResult() {
   return true;
 }
 
+bool BaselineCacheIRCompiler::emitCallConstStringSplitResult() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  Address resultTemplateAddr(stubAddress(reader.stubOffset()));
+
+  AutoScratchRegister scratch(allocator, masm);
+  allocator.discardStack(masm);
+
+  AutoStubFrame stubFrame(*this);
+  stubFrame.enter(masm, scratch);
+
+  // Push argument
+  masm.loadPtr(resultTemplateAddr, scratch);
+  masm.Push(scratch);
+
+  using Fn = bool (*)(JSContext*, HandleArrayObject, MutableHandleValue);
+  callVM<Fn, CopyStringSplitArray>(masm);
+
+  stubFrame.leave(masm);
+  return true;
+}
+
 bool BaselineCacheIRCompiler::emitCompareStringResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoOutputRegister output(*this);
@@ -2139,16 +2160,13 @@ bool BaselineCacheIRCompiler::init(CacheKind kind) {
 #endif
       break;
     case CacheKind::Call:
-      // Calls pass argc in R0. CallICs may or may not use it.
-      MOZ_ASSERT(numInputs == 0 || numInputs == 1);
-      if (numInputs == 1) {
-        allocator.initInputLocation(0, R0.scratchReg(), JSVAL_TYPE_INT32);
+      MOZ_ASSERT(numInputs == 1);
+      allocator.initInputLocation(0, R0.scratchReg(), JSVAL_TYPE_INT32);
 #if defined(JS_NUNBOX32)
-        // availableGeneralRegs can't know that Call is only using
-        // the payloadReg and not typeReg on x86.
-        available.add(R0.typeReg());
+      // availableGeneralRegs can't know that Call is only using
+      // the payloadReg and not typeReg on x86.
+      available.add(R0.typeReg());
 #endif
-      }
       break;
   }
 
