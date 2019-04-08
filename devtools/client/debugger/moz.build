@@ -4,12 +4,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DIRS += [
-    'new'
+  'dist',
+  'images',
+  'src',
 ]
 
-BROWSER_CHROME_MANIFESTS += [
-  'new/test/mochitest/browser.ini',
-]
+include('../shared/build/node-templates.mozbuild')
 
-with Files('**'):
-    BUG_COMPONENT = ('DevTools', 'Debugger')
+DevToolsModules(
+    'panel.js',
+)
