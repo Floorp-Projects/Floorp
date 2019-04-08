@@ -28,6 +28,9 @@ pub use xpcom_macros::*;
 mod base;
 pub use base::*;
 
+mod cstr;
+pub use cstr::*;
+
 // Declarative macro to generate XPCOM method stubs.
 mod method;
 pub use method::*;
