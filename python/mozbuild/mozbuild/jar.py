@@ -21,6 +21,7 @@ from cStringIO import StringIO
 
 from mozbuild.preprocessor import Preprocessor
 from mozbuild.action.buildlist import addEntriesToListFile
+from mozbuild.util import ensure_bytes
 from mozpack.files import FileFinder
 import mozpack.path as mozpath
 if sys.platform == 'win32':
@@ -560,7 +561,7 @@ class JarMaker(object):
                 os.symlink(src, out)
             else:
                 # On Win32, use ctypes to create a hardlink
-                rv = CreateHardLink(out, src, None)
+                rv = CreateHardLink(ensure_bytes(out), ensure_bytes(src), None)
                 if rv == 0:
                     raise WinError()
 

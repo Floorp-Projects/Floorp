@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import, print_function, unicode_literals
 
 from mozpack.files import FileFinder
 from mozpack.mozjar import (
@@ -95,25 +95,25 @@ class TestDeflater(unittest.TestCase):
 
     def test_deflater_no_compress(self):
         deflater = Deflater(False)
-        deflater.write(self.wrap('abc'))
+        deflater.write(self.wrap(b'abc'))
         self.assertFalse(deflater.compressed)
         self.assertEqual(deflater.uncompressed_size, 3)
         self.assertEqual(deflater.compressed_size, deflater.uncompressed_size)
-        self.assertEqual(deflater.compressed_data, 'abc')
+        self.assertEqual(deflater.compressed_data, b'abc')
         self.assertEqual(deflater.crc32, 0x352441c2)
 
     def test_deflater_compress_no_gain(self):
         deflater = Deflater(True)
-        deflater.write(self.wrap('abc'))
+        deflater.write(self.wrap(b'abc'))
         self.assertFalse(deflater.compressed)
         self.assertEqual(deflater.uncompressed_size, 3)
         self.assertEqual(deflater.compressed_size, deflater.uncompressed_size)
-        self.assertEqual(deflater.compressed_data, 'abc')
+        self.assertEqual(deflater.compressed_data, b'abc')
         self.assertEqual(deflater.crc32, 0x352441c2)
 
     def test_deflater_compress(self):
         deflater = Deflater(True)
-        deflater.write(self.wrap('aaaaaaaaaaaaanopqrstuvwxyz'))
+        deflater.write(self.wrap(b'aaaaaaaaaaaaanopqrstuvwxyz'))
         self.assertTrue(deflater.compressed)
         self.assertEqual(deflater.uncompressed_size, 26)
         self.assertNotEqual(deflater.compressed_size,
@@ -122,7 +122,7 @@ class TestDeflater(unittest.TestCase):
         # The CRC is the same as when not compressed
         deflater = Deflater(False)
         self.assertFalse(deflater.compressed)
-        deflater.write(self.wrap('aaaaaaaaaaaaanopqrstuvwxyz'))
+        deflater.write(self.wrap(b'aaaaaaaaaaaaanopqrstuvwxyz'))
         self.assertEqual(deflater.crc32, 0xd46b97ed)
 
     def test_deflater_empty(self):
@@ -143,25 +143,25 @@ class TestJar(unittest.TestCase):
     def test_jar(self):
         s = MockDest()
         with JarWriter(fileobj=s) as jar:
-            jar.add('foo', 'foo')
-            self.assertRaises(JarWriterError, jar.add, 'foo', 'bar')
-            jar.add('bar', 'aaaaaaaaaaaaanopqrstuvwxyz')
-            jar.add('baz/qux', 'aaaaaaaaaaaaanopqrstuvwxyz', False)
-            jar.add('baz\\backslash', 'aaaaaaaaaaaaaaa')
+            jar.add('foo', b'foo')
+            self.assertRaises(JarWriterError, jar.add, 'foo', b'bar')
+            jar.add('bar', b'aaaaaaaaaaaaanopqrstuvwxyz')
+            jar.add('baz/qux', b'aaaaaaaaaaaaanopqrstuvwxyz', False)
+            jar.add('baz\\backslash', b'aaaaaaaaaaaaaaa')
 
         files = [j for j in JarReader(fileobj=s)]
 
         self.assertEqual(files[0].filename, 'foo')
         self.assertFalse(files[0].compressed)
-        self.assertEqual(files[0].read(), 'foo')
+        self.assertEqual(files[0].read(), b'foo')
 
         self.assertEqual(files[1].filename, 'bar')
         self.assertTrue(files[1].compressed)
-        self.assertEqual(files[1].read(), 'aaaaaaaaaaaaanopqrstuvwxyz')
+        self.assertEqual(files[1].read(), b'aaaaaaaaaaaaanopqrstuvwxyz')
 
         self.assertEqual(files[2].filename, 'baz/qux')
         self.assertFalse(files[2].compressed)
-        self.assertEqual(files[2].read(), 'aaaaaaaaaaaaanopqrstuvwxyz')
+        self.assertEqual(files[2].read(), b'aaaaaaaaaaaaanopqrstuvwxyz')
 
         if os.sep == '\\':
             self.assertEqual(files[3].filename, 'baz/backslash',
@@ -172,24 +172,24 @@ class TestJar(unittest.TestCase):
 
         s = MockDest()
         with JarWriter(fileobj=s, compress=False) as jar:
-            jar.add('bar', 'aaaaaaaaaaaaanopqrstuvwxyz')
-            jar.add('foo', 'foo')
-            jar.add('baz/qux', 'aaaaaaaaaaaaanopqrstuvwxyz', True)
+            jar.add('bar', b'aaaaaaaaaaaaanopqrstuvwxyz')
+            jar.add('foo', b'foo')
+            jar.add('baz/qux', b'aaaaaaaaaaaaanopqrstuvwxyz', True)
 
         jar = JarReader(fileobj=s)
         files = [j for j in jar]
 
         self.assertEqual(files[0].filename, 'bar')
         self.assertFalse(files[0].compressed)
-        self.assertEqual(files[0].read(), 'aaaaaaaaaaaaanopqrstuvwxyz')
+        self.assertEqual(files[0].read(), b'aaaaaaaaaaaaanopqrstuvwxyz')
 
         self.assertEqual(files[1].filename, 'foo')
         self.assertFalse(files[1].compressed)
-        self.assertEqual(files[1].read(), 'foo')
+        self.assertEqual(files[1].read(), b'foo')
 
         self.assertEqual(files[2].filename, 'baz/qux')
         self.assertTrue(files[2].compressed)
-        self.assertEqual(files[2].read(), 'aaaaaaaaaaaaanopqrstuvwxyz')
+        self.assertEqual(files[2].read(), b'aaaaaaaaaaaaanopqrstuvwxyz')
 
         self.assertTrue('bar' in jar)
         self.assertTrue('foo' in jar)
@@ -224,9 +224,9 @@ class TestJar(unittest.TestCase):
     def test_rejar(self):
         s = MockDest()
         with JarWriter(fileobj=s) as jar:
-            jar.add('foo', 'foo')
-            jar.add('bar', 'aaaaaaaaaaaaanopqrstuvwxyz')
-            jar.add('baz/qux', 'aaaaaaaaaaaaanopqrstuvwxyz', False)
+            jar.add('foo', b'foo')
+            jar.add('bar', b'aaaaaaaaaaaaanopqrstuvwxyz')
+            jar.add('baz/qux', b'aaaaaaaaaaaaanopqrstuvwxyz', False)
 
         new = MockDest()
         with JarWriter(fileobj=new) as jar:
@@ -238,15 +238,15 @@ class TestJar(unittest.TestCase):
 
         self.assertEqual(files[0].filename, 'foo')
         self.assertFalse(files[0].compressed)
-        self.assertEqual(files[0].read(), 'foo')
+        self.assertEqual(files[0].read(), b'foo')
 
         self.assertEqual(files[1].filename, 'bar')
         self.assertTrue(files[1].compressed)
-        self.assertEqual(files[1].read(), 'aaaaaaaaaaaaanopqrstuvwxyz')
+        self.assertEqual(files[1].read(), b'aaaaaaaaaaaaanopqrstuvwxyz')
 
         self.assertEqual(files[2].filename, 'baz/qux')
         self.assertTrue(files[2].compressed)
-        self.assertEqual(files[2].read(), 'aaaaaaaaaaaaanopqrstuvwxyz')
+        self.assertEqual(files[2].read(), b'aaaaaaaaaaaaanopqrstuvwxyz')
 
     def test_add_from_finder(self):
         s = MockDest()
@@ -260,28 +260,28 @@ class TestJar(unittest.TestCase):
 
         self.assertEqual(files[0].filename, 'test_data')
         self.assertFalse(files[0].compressed)
-        self.assertEqual(files[0].read(), 'test_data')
+        self.assertEqual(files[0].read(), b'test_data')
 
 
 class TestPreload(unittest.TestCase):
     def test_preload(self):
         s = MockDest()
         with JarWriter(fileobj=s) as jar:
-            jar.add('foo', 'foo')
-            jar.add('bar', 'abcdefghijklmnopqrstuvwxyz')
-            jar.add('baz/qux', 'aaaaaaaaaaaaanopqrstuvwxyz')
+            jar.add('foo', b'foo')
+            jar.add('bar', b'abcdefghijklmnopqrstuvwxyz')
+            jar.add('baz/qux', b'aaaaaaaaaaaaanopqrstuvwxyz')
 
         jar = JarReader(fileobj=s)
         self.assertEqual(jar.last_preloaded, None)
 
         with JarWriter(fileobj=s) as jar:
-            jar.add('foo', 'foo')
-            jar.add('bar', 'abcdefghijklmnopqrstuvwxyz')
-            jar.add('baz/qux', 'aaaaaaaaaaaaanopqrstuvwxyz')
-            jar.preload(['baz/qux', 'bar'])
+            jar.add('foo', b'foo')
+            jar.add('bar', b'abcdefghijklmnopqrstuvwxyz')
+            jar.add('baz/qux', b'aaaaaaaaaaaaanopqrstuvwxyz')
+            jar.preload(['baz/qux', b'bar'])
 
         jar = JarReader(fileobj=s)
-        self.assertEqual(jar.last_preloaded, 'bar')
+        self.assertEqual(jar.last_preloaded, b'bar')
         files = [j for j in jar]
 
         self.assertEqual(files[0].filename, 'baz/qux')
