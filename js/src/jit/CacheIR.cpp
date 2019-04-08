@@ -5092,11 +5092,6 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
   // Guard against relazification
   writer.guardFunctionHasJitEntry(calleeObjId, isConstructing);
 
-  // Enforce limits on spread call length, and update argc.
-  if (isSpread) {
-    writer.guardAndUpdateSpreadArgc(argcId, isConstructing);
-  }
-
   writer.callScriptedFunction(calleeObjId, argcId, flags);
   writer.typeMonitorResult();
 
@@ -5236,11 +5231,6 @@ bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
   FieldOffset calleeOffset =
       writer.guardSpecificObject(calleeObjId, calleeFunc);
 
-  // Enforce limits on spread call length, and update argc.
-  if (isSpread) {
-    writer.guardAndUpdateSpreadArgc(argcId, isConstructing);
-  }
-
   writer.callNativeFunction(calleeObjId, argcId, op_, calleeFunc, flags);
   writer.typeMonitorResult();
 
@@ -5310,11 +5300,6 @@ bool CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
   // Ensure the callee's class matches the one in this stub.
   FieldOffset classOffset =
       writer.guardAnyClass(calleeObjId, calleeObj->getClass());
-
-  // Enforce limits on spread call length, and update argc.
-  if (isSpread) {
-    writer.guardAndUpdateSpreadArgc(argcId, isConstructing);
-  }
 
   writer.callClassHook(calleeObjId, argcId, hook, flags);
   writer.typeMonitorResult();
