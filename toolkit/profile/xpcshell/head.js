@@ -377,6 +377,14 @@ function checkBackup(profileData = readProfilesIni(), installData = readInstalls
 function checkProfileService(profileData = readProfilesIni(), verifyBackup = true) {
   let service = getProfileService();
 
+  let expectedStartWithLast = true;
+  if ("options" in profileData) {
+    expectedStartWithLast = profileData.options.startWithLastProfile;
+  }
+
+  Assert.equal(service.startWithLastProfile, expectedStartWithLast,
+               "Start with last profile should match.");
+
   let serviceProfiles = Array.from(service.profiles);
 
   Assert.equal(serviceProfiles.length, profileData.profiles.length, "Should be the same number of profiles.");

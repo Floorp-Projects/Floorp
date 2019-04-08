@@ -782,7 +782,7 @@ NS_IMETHODIMP
 nsToolkitProfileService::SetStartWithLastProfile(bool aValue) {
   if (mStartWithLast != aValue) {
     nsresult rv = mProfileDB.SetString("General", "StartWithLastProfile",
-                                       mStartWithLast ? "1" : "0");
+                                       aValue ? "1" : "0");
     NS_ENSURE_SUCCESS(rv, rv);
     mStartWithLast = aValue;
   }
