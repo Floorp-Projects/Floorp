@@ -1014,6 +1014,49 @@ class BuildDriver(MozbuildObject):
                 if directory.startswith('/'):
                     directory = directory[1:]
 
+            def build_out_of_date(output, dep_file):
+                if not os.path.isfile(output):
+                    print(" Output reference file not found: %s" % output)
+                    return True
+                if not os.path.isfile(dep_file):
+                    print(" Configure dependency file not found: %s" % dep_file)
+                    return True
+
+                deps = []
+                with open(dep_file, 'r') as fh:
+                    deps = fh.read().splitlines()
+
+                mtime = os.path.getmtime(output)
+                for f in deps:
+                    try:
+                        dep_mtime = os.path.getmtime(f)
+                    except OSError as e:
+                        if e.errno == errno.ENOENT:
+                            print(" Configure input not found: %s" % f)
+                            return True
+                        raise
+                    if dep_mtime > mtime:
+                        print(" %s is out of date with respect to %s" % (output, f))
+                        return True
+                return False
+
+            def backend_out_of_date(backend_file):
+                if not os.path.isfile(backend_file):
+                    return True
+
+                # Check if any of our output files have been removed since
+                # we last built the backend, re-generate the backend if
+                # so.
+                outputs = []
+                with open(backend_file, 'r') as fh:
+                    outputs = fh.read().splitlines()
+                for output in outputs:
+                    if not os.path.isfile(mozpath.join(self.topobjdir, output)):
+                        return True
+
+                dep_file = '%s.in' % backend_file
+                return build_out_of_date(backend_file, dep_file)
+
             monitor.start_resource_recording()
 
             self.mach_context.command_attrs['clobber'] = False
@@ -1041,10 +1084,10 @@ class BuildDriver(MozbuildObject):
             config_rc = None
             # Even if we have a config object, it may be out of date
             # if something that influences its result has changed.
-            if config is None or self.build_out_of_date(mozpath.join(self.topobjdir,
-                                                                     'config.status'),
-                                                        mozpath.join(self.topobjdir,
-                                                                     'config_status_deps.in')):
+            if config is None or build_out_of_date(mozpath.join(self.topobjdir,
+                                                                'config.status'),
+                                                   mozpath.join(self.topobjdir,
+                                                                'config_status_deps.in')):
                 if previous_backend and 'Make' not in previous_backend:
                     clobber_requested = self._clobber_configure()
 
@@ -1063,16 +1106,16 @@ class BuildDriver(MozbuildObject):
 
             status = None
 
-            if (not config_rc and
-                self.backend_out_of_date(mozpath.join(self.topobjdir,
-                                                      'backend.%sBackend' %
-                                                      active_backend))):
-                print('Build configuration changed. Regenerating backend.')
-                args = [config.substs['PYTHON'],
-                        mozpath.join(self.topobjdir, 'config.status')]
-                self.run_process(args, cwd=self.topobjdir, pass_thru=True)
-
             if 'Make' not in active_backend:
+                if (not config_rc and
+                    backend_out_of_date(mozpath.join(self.topobjdir,
+                                                     'backend.%sBackend' %
+                                                     active_backend))):
+                    print('Build configuration changed. Regenerating backend.')
+                    args = [config.substs['PYTHON'],
+                            mozpath.join(self.topobjdir, 'config.status')]
+                    self.run_process(args, cwd=self.topobjdir, pass_thru=True)
+
                 # client.mk has its own handling of MOZ_PARALLEL_BUILD so the
                 # make backend can determine when to run in single-threaded mode
                 # or parallel mode. For other backends, we can pass in the value
@@ -1137,6 +1180,15 @@ class BuildDriver(MozbuildObject):
                              'Added extra dependencies: will build {new_pairs} ' +
                              'instead of {target_pairs}.')
                     target_pairs = new_pairs
+
+                # Ensure build backend is up to date. The alternative is to
+                # have rules in the invoked Makefile to rebuild the build
+                # backend. But that involves make reinvoking itself and there
+                # are undesired side-effects of this. See bug 877308 for a
+                # comprehensive history lesson.
+                self._run_make(directory=self.topobjdir, target='backend',
+                    line_handler=output.on_line, log=False,
+                    print_directory=False, keep_going=keep_going)
 
                 # Build target pairs.
                 for make_dir, make_target in target_pairs:
