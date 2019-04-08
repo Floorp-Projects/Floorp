@@ -1017,6 +1017,7 @@ let PDFViewerApplication = {
         });
       });
     });
+    const pageLayoutPromise = pdfDocument.getPageLayout().catch(function () {});
     const pageModePromise = pdfDocument.getPageMode().catch(function () {});
     const openActionDestPromise = pdfDocument.getOpenActionDestination().catch(function () {});
     this.toolbar.setPagesCount(pdfDocument.numPages, false);
@@ -1045,7 +1046,7 @@ let PDFViewerApplication = {
         scrollMode: _ui_utils.ScrollMode.UNKNOWN,
         spreadMode: _ui_utils.SpreadMode.UNKNOWN
       }).catch(() => {});
-      Promise.all([storePromise, pageModePromise, openActionDestPromise]).then(async ([values = {}, pageMode, openActionDest]) => {
+      Promise.all([storePromise, pageLayoutPromise, pageModePromise, openActionDestPromise]).then(async ([values = {}, pageLayout, pageMode, openActionDest]) => {
         const viewOnLoad = _app_options.AppOptions.get('viewOnLoad');
 
         this._initializePdfHistory({
@@ -1086,6 +1087,10 @@ let PDFViewerApplication = {
 
         if (pageMode && sidebarView === _pdf_sidebar.SidebarView.UNKNOWN) {
           sidebarView = apiPageModeToSidebarView(pageMode);
+        }
+
+        if (pageLayout && spreadMode === _ui_utils.SpreadMode.UNKNOWN) {
+          spreadMode = apiPageLayoutToSpreadMode(pageLayout);
         }
 
         this.setInitialView(hash, {
@@ -2338,6 +2343,24 @@ function webViewerKeyDown(evt) {
   if (handled) {
     evt.preventDefault();
   }
+}
+
+function apiPageLayoutToSpreadMode(layout) {
+  switch (layout) {
+    case 'SinglePage':
+    case 'OneColumn':
+      return _ui_utils.SpreadMode.NONE;
+
+    case 'TwoColumnLeft':
+    case 'TwoPageLeft':
+      return _ui_utils.SpreadMode.ODD;
+
+    case 'TwoColumnRight':
+    case 'TwoPageRight':
+      return _ui_utils.SpreadMode.EVEN;
+  }
+
+  return _ui_utils.SpreadMode.NONE;
 }
 
 function apiPageModeToSidebarView(mode) {
@@ -11405,6 +11428,7 @@ _app.PDFViewerApplication.externalServices = {
 
         case 'progressiveRead':
           pdfDataRangeTransport.onDataProgressiveRead(args.chunk);
+          pdfDataRangeTransport.onDataProgress(args.loaded, args.total);
           break;
 
         case 'progressiveDone':
