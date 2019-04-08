@@ -889,10 +889,10 @@ class MOZ_RAII CacheIRCompiler {
   }
 
  public:
-  // The maximum number of inlineable spread call arguments. Keep this small
-  // to avoid controllable stack overflows by attackers passing large arrays
-  // to spread call.
-  static const uint32_t MAX_ARGS_SPREAD_LENGTH = 16;
+  // The maximum number of arguments passed to a spread call or
+  // fun_apply IC.  Keep this small to avoid controllable stack
+  // overflows by attackers passing large arrays.
+  static const uint32_t MAX_ARGS_ARRAY_LENGTH = 16;
 };
 
 // Ensures the IC's output register is available for writing.
