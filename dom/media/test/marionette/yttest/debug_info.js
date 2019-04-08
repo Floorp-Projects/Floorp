@@ -1,4 +1,5 @@
 video.mozRequestDebugInfo().then(debugInfo => {
+  // The parsing won't be necessary once we have bug 1542674
   try {
     debugInfo = debugInfo.replace(/\t/g, '').split(/\n/g);
     var JSONDebugInfo = "{";
@@ -8,11 +9,10 @@ video.mozRequestDebugInfo().then(debugInfo => {
       }
       JSONDebugInfo = JSONDebugInfo.slice(0,JSONDebugInfo.length-1);
       JSONDebugInfo += "}";
-      result["debugInfo"] = JSON.parse(JSONDebugInfo);
+      result["mozRequestDebugInfo"] = JSON.parse(JSONDebugInfo);
   } catch (err) {
     console.log(`Error '${err.toString()} in JSON.parse(${debugInfo})`);
-    result["debugInfo"] = debugInfo;
+    result["mozRequestDebugInfo"] = debugInfo;
   }
-  result["debugInfo"] = debugInfo;
   resolve(result);
 });
