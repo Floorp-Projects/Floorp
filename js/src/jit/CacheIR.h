@@ -249,6 +249,7 @@ extern const uint32_t ArgLengths[];
   _(GuardObjectGroupNotPretenured, Field)                                      \
   _(GuardFunctionHasJitEntry, Id, Byte)                                        \
   _(GuardFunctionIsNative, Id)                                                 \
+  _(GuardFunctionIsConstructor, Id)                                            \
   _(GuardNotClassConstructor, Id)                                              \
   _(GuardFunApply, Id, Byte)                                                   \
   _(LoadObject, Id, Field)                                                     \
@@ -904,6 +905,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   }
   void guardFunctionIsNative(ObjOperandId obj) {
     writeOpWithOperandId(CacheOp::GuardFunctionIsNative, obj);
+  }
+  void guardFunctionIsConstructor(ObjOperandId obj) {
+    writeOpWithOperandId(CacheOp::GuardFunctionIsConstructor, obj);
   }
   void guardSpecificNativeFunction(ObjOperandId obj, JSNative nativeFunc) {
     writeOpWithOperandId(CacheOp::GuardSpecificNativeFunction, obj);
