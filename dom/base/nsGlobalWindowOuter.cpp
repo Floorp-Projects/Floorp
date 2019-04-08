@@ -389,7 +389,7 @@ class nsOuterWindowProxy : public MaybeCrossOriginObject<js::Wrapper> {
    * with cx.
    */
   bool ownPropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
-                       JS::AutoIdVector& props) const override;
+                       JS::MutableHandleVector<jsid> props) const override;
   /**
    * Implementation of [[Delete]] as defined at
    * https://html.spec.whatwg.org/multipage/window-object.html#windowproxy-delete
@@ -477,7 +477,7 @@ class nsOuterWindowProxy : public MaybeCrossOriginObject<js::Wrapper> {
    * with cx.
    */
   bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
-                                    JS::AutoIdVector& props) const override;
+                                    JS::MutableHandleVector<jsid> props) const override;
 
   /**
    * Hook used by SpiderMonkey to implement Object.prototype.toString.
@@ -513,7 +513,7 @@ class nsOuterWindowProxy : public MaybeCrossOriginObject<js::Wrapper> {
       JSContext* cx, JS::Handle<JSObject*> proxy, JS::Handle<jsid> id) const;
 
   bool AppendIndexedPropertyNames(JSObject* proxy,
-                                  JS::AutoIdVector& props) const;
+                                  JS::MutableHandleVector<jsid> props) const;
 
   using MaybeCrossOriginObjectMixins::EnsureHolder;
   bool EnsureHolder(JSContext* cx, JS::Handle<JSObject*> proxy,
@@ -735,7 +735,7 @@ bool nsOuterWindowProxy::definePropertySameOrigin(
 
 bool nsOuterWindowProxy::ownPropertyKeys(JSContext* cx,
                                          JS::Handle<JSObject*> proxy,
-                                         JS::AutoIdVector& props) const {
+                                         JS::MutableHandleVector<jsid> props) const {
   // Just our indexed stuff followed by our "normal" own property names.
   if (!AppendIndexedPropertyNames(proxy, props)) {
     return false;
@@ -745,10 +745,10 @@ bool nsOuterWindowProxy::ownPropertyKeys(JSContext* cx,
     // When forwarding to js::Wrapper, we should just enter the Realm of proxy
     // for now.  That's what js::Wrapper expects, and since we're same-origin
     // anyway this is not changing any security behavior.
-    JS::AutoIdVector innerProps(cx);
+    JS::RootedVector<jsid> innerProps(cx);
     {  // Scope for JSAutoRealm so we can mark the ids once we exit it
       JSAutoRealm ar(cx, proxy);
-      if (!js::Wrapper::ownPropertyKeys(cx, proxy, innerProps)) {
+      if (!js::Wrapper::ownPropertyKeys(cx, proxy, &innerProps)) {
         return false;
       }
     }
@@ -765,7 +765,7 @@ bool nsOuterWindowProxy::ownPropertyKeys(JSContext* cx,
     return false;
   }
 
-  JS::AutoIdVector crossOriginProps(cx);
+  JS::RootedVector<jsid> crossOriginProps(cx);
   if (!js::GetPropertyKeys(cx, holder,
                            JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS,
                            &crossOriginProps) ||
@@ -938,7 +938,7 @@ bool nsOuterWindowProxy::set(JSContext* cx, JS::Handle<JSObject*> proxy,
 }
 
 bool nsOuterWindowProxy::getOwnEnumerablePropertyKeys(
-    JSContext* cx, JS::Handle<JSObject*> proxy, JS::AutoIdVector& props) const {
+    JSContext* cx, JS::Handle<JSObject*> proxy, JS::MutableHandleVector<jsid> props) const {
   // We could just stop overring getOwnEnumerablePropertyKeys and let our
   // superclasses deal (by falling back on the BaseProxyHandler implementation
   // that uses a combination of ownPropertyKeys and getOwnPropertyDescriptor to
@@ -960,10 +960,10 @@ bool nsOuterWindowProxy::getOwnEnumerablePropertyKeys(
   // When forwarding to js::Wrapper, we should just enter the Realm of proxy
   // for now.  That's what js::Wrapper expects, and since we're same-origin
   // anyway this is not changing any security behavior.
-  JS::AutoIdVector innerProps(cx);
+  JS::RootedVector<jsid> innerProps(cx);
   {  // Scope for JSAutoRealm so we can mark the ids once we exit it.
     JSAutoRealm ar(cx, proxy);
-    if (!js::Wrapper::getOwnEnumerablePropertyKeys(cx, proxy, innerProps)) {
+    if (!js::Wrapper::getOwnEnumerablePropertyKeys(cx, proxy, &innerProps)) {
       return false;
     }
   }
@@ -1014,7 +1014,7 @@ already_AddRefed<nsPIDOMWindowOuter> nsOuterWindowProxy::GetSubframeWindow(
 }
 
 bool nsOuterWindowProxy::AppendIndexedPropertyNames(
-    JSObject* proxy, JS::AutoIdVector& props) const {
+    JSObject* proxy, JS::MutableHandleVector<jsid> props) const {
   uint32_t length = GetOuterWindow(proxy)->Length();
   MOZ_ASSERT(int32_t(length) >= 0);
   if (!props.reserve(props.length() + length)) {

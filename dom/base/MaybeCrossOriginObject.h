@@ -316,7 +316,7 @@ class MaybeCrossOriginObject : public Base,
    * Spidermonkey-internal hook for enumerating objects.
    */
   bool enumerate(JSContext* cx, JS::Handle<JSObject*> proxy,
-                 JS::AutoIdVector& props) const final;
+                 JS::MutableHandleVector<jsid> props) const final;
 
   /**
    * Spidermonkey-internal hook used for instanceof.  We need to override this

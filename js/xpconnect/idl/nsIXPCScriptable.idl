@@ -27,9 +27,9 @@ interface nsIXPConnectWrappedNative;
 [ptr] native JSValPtr(JS::Value);
 [ptr] native JSFreeOpPtr(JSFreeOp);
 [ref] native JSCallArgsRef(const JS::CallArgs);
-[ref] native JSAutoIdVector(JS::AutoIdVector);
 [ptr] native jsClassPtr(const js::Class);
 [ptr] native JSClassPtr(const JSClass);
+      native JSMutableHandleIdVector(JS::MutableHandleIdVector);
 
 %{ C++
     // nsIXPCScriptable flags (only 32 bits available!). They are defined via
@@ -79,7 +79,7 @@ interface nsIXPCScriptable : nsISupports
 
     boolean newEnumerate(in nsIXPConnectWrappedNative wrapper,
                         in JSContextPtr cx, in JSObjectPtr obj,
-                        in JSAutoIdVector properties,
+                        in JSMutableHandleIdVector properties,
                         in boolean enumerableOnly);
 
     boolean resolve(in nsIXPConnectWrappedNative wrapper,

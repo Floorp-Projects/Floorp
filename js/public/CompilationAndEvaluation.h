@@ -26,9 +26,6 @@ class JSScript;
 
 namespace JS {
 
-template <typename T>
-class AutoVector;
-
 template <typename UnitT>
 class SourceText;
 

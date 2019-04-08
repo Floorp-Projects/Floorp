@@ -59,7 +59,7 @@ class WebIDLGlobalNameHash {
   };
   // Returns false if an exception has been thrown on aCx.
   static bool GetNames(JSContext* aCx, JS::Handle<JSObject*> aObj,
-                       NameType aNameType, JS::AutoIdVector& aNames);
+                       NameType aNameType, JS::MutableHandleVector<jsid> aNames);
 
   // Helpers for resolving & enumerating names on the system global.
   // NOTE: These are distinct as it currently lacks a ProtoAndIfaceCache, and is
@@ -69,7 +69,7 @@ class WebIDLGlobalNameHash {
 
   static bool NewEnumerateSystemGlobal(JSContext* aCx,
                                        JS::Handle<JSObject*> aObj,
-                                       JS::AutoIdVector& aProperties,
+                                       JS::MutableHandleVector<jsid> aProperties,
                                        bool aEnumerableOnly);
 
  private:

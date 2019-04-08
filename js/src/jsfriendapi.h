@@ -669,6 +669,9 @@ inline JSProtoKey InheritanceProtoKeyForStandardClass(JSProtoKey key) {
   return JSProto_Object;
 }
 
+JS_FRIEND_API bool ShouldIgnorePropertyDefinition(JSContext* cx, JSProtoKey key,
+                                                  jsid id);
+
 JS_FRIEND_API bool IsFunctionObject(JSObject* obj);
 
 JS_FRIEND_API bool UninlinedIsCrossCompartmentWrapper(const JSObject* obj);
@@ -957,10 +960,10 @@ inline void CopyFlatStringChars(char16_t* dest, JSFlatString* s, size_t len) {
  * results that match the output of Reflect.ownKeys.
  */
 JS_FRIEND_API bool GetPropertyKeys(JSContext* cx, JS::HandleObject obj,
-                                   unsigned flags, JS::AutoIdVector* props);
+                                   unsigned flags, JS::MutableHandleIdVector props);
 
-JS_FRIEND_API bool AppendUnique(JSContext* cx, JS::AutoIdVector& base,
-                                JS::AutoIdVector& others);
+JS_FRIEND_API bool AppendUnique(JSContext* cx, JS::MutableHandleIdVector base,
+                                JS::HandleIdVector others);
 
 /**
  * Determine whether the given string is an array index in the sense of
