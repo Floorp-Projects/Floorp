@@ -55,6 +55,7 @@ namespace jit {
   _(GuardNoAllocationMetadataBuilder)     \
   _(GuardObjectGroupNotPretenured)        \
   _(GuardFunctionHasJitEntry)             \
+  _(GuardNotClassConstructor)             \
   _(LoadObject)                           \
   _(LoadProto)                            \
   _(LoadEnclosingEnvironment)             \

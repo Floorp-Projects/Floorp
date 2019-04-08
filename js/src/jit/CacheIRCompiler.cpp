@@ -3058,6 +3058,20 @@ bool CacheIRCompiler::emitGuardFunctionHasJitEntry() {
   return true;
 }
 
+bool CacheIRCompiler::emitGuardNotClassConstructor() {
+  Register fun = allocator.useRegister(masm, reader.objOperandId());
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor, fun,
+                          scratch, failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitLoadDenseElementHoleResult() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoOutputRegister output(*this);
