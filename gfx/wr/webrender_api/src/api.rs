@@ -439,6 +439,11 @@ impl Transaction {
     }
 }
 
+pub struct DocumentTransaction {
+    pub document_id: DocumentId,
+    pub transaction: Transaction,
+}
+
 /// Represents a transaction in the format sent through the channel.
 #[derive(Clone, Deserialize, Serialize)]
 pub struct TransactionMsg {
@@ -726,7 +731,7 @@ pub enum ApiMsg {
     /// Adds a new document with given initial size.
     AddDocument(DocumentId, FramebufferIntSize, DocumentLayer),
     /// A message targeted at a particular document.
-    UpdateDocument(DocumentId, TransactionMsg),
+    UpdateDocuments(Vec<DocumentId>, Vec<TransactionMsg>),
     /// Deletes an existing document.
     DeleteDocument(DocumentId),
     /// An opaque handle that must be passed to the render notifier. It is used by Gecko
@@ -758,7 +763,7 @@ impl fmt::Debug for ApiMsg {
             ApiMsg::CloneApi(..) => "ApiMsg::CloneApi",
             ApiMsg::CloneApiByClient(..) => "ApiMsg::CloneApiByClient",
             ApiMsg::AddDocument(..) => "ApiMsg::AddDocument",
-            ApiMsg::UpdateDocument(..) => "ApiMsg::UpdateDocument",
+            ApiMsg::UpdateDocuments(..) => "ApiMsg::UpdateDocuments",
             ApiMsg::DeleteDocument(..) => "ApiMsg::DeleteDocument",
             ApiMsg::ExternalEvent(..) => "ApiMsg::ExternalEvent",
             ApiMsg::ClearNamespace(..) => "ApiMsg::ClearNamespace",
@@ -1216,7 +1221,7 @@ impl RenderApi {
         // `RenderApi` instances for layout and compositor.
         //assert_eq!(document_id.0, self.namespace_id);
         self.api_sender
-            .send(ApiMsg::UpdateDocument(document_id, TransactionMsg::scene_message(msg)))
+            .send(ApiMsg::UpdateDocuments(vec![document_id], vec![TransactionMsg::scene_message(msg)]))
             .unwrap()
     }
 
@@ -1226,7 +1231,7 @@ impl RenderApi {
         // `RenderApi` instances for layout and compositor.
         //assert_eq!(document_id.0, self.namespace_id);
         self.api_sender
-            .send(ApiMsg::UpdateDocument(document_id, TransactionMsg::frame_message(msg)))
+            .send(ApiMsg::UpdateDocuments(vec![document_id], vec![TransactionMsg::frame_message(msg)]))
             .unwrap()
     }
 
@@ -1235,7 +1240,24 @@ impl RenderApi {
         for payload in payloads {
             self.payload_sender.send_payload(payload).unwrap();
         }
-        self.api_sender.send(ApiMsg::UpdateDocument(document_id, msg)).unwrap();
+        self.api_sender.send(ApiMsg::UpdateDocuments(vec![document_id], vec![msg])).unwrap();
+    }
+
+    pub fn send_transactions(&self, document_ids: Vec<DocumentId>, mut transactions: Vec<Transaction>) {
+        debug_assert!(document_ids.len() == transactions.len());
+        let length = document_ids.len();
+        let (msgs, mut document_payloads) = transactions.drain(..)
+            .fold((Vec::with_capacity(length), Vec::with_capacity(length)),
+                  |(mut msgs, mut document_payloads), transaction| {
+                    let (msg, payloads) = transaction.finalize();
+                    msgs.push(msg);
+                    document_payloads.push(payloads);
+                    (msgs, document_payloads)
+                  });
+        for payload in document_payloads.drain(..).flatten() {
+            self.payload_sender.send_payload(payload).unwrap();
+        }
+        self.api_sender.send(ApiMsg::UpdateDocuments(document_ids.clone(), msgs)).unwrap();
     }
 
     /// Does a hit test on display items in the specified document, at the given
