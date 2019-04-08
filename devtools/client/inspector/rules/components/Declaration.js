@@ -59,6 +59,18 @@ class Declaration extends PureComponent {
     });
   }
 
+  get hasComputed() {
+    // Only show the computed list expander or the shorthand overridden list if:
+    // - The computed properties are actually different from the current property
+    //   (i.e these are longhands while the current property is the shorthand).
+    // - All of the computed properties have defined values. In case the current property
+    //   value contains CSS variables, then the computed properties will be missing and we
+    //   want to avoid showing them.
+    const { computedProperties } = this.props.declaration;
+    return computedProperties.some(c => c.name !== this.props.declaration.name) &&
+           !computedProperties.every(c => !c.value);
+  }
+
   onComputedExpanderClick(event) {
     event.stopPropagation();
 
@@ -124,7 +136,9 @@ class Declaration extends PureComponent {
   }
 
   renderShorthandOverriddenList() {
-    if (this.state.isComputedListExpanded || this.props.declaration.isOverridden) {
+    if (this.state.isComputedListExpanded ||
+        this.props.declaration.isOverridden ||
+        !this.hasComputed) {
       return null;
     }
 
@@ -175,7 +189,6 @@ class Declaration extends PureComponent {
 
   render() {
     const {
-      computedProperties,
       isEnabled,
       isKnownProperty,
       isOverridden,
@@ -218,7 +231,7 @@ class Declaration extends PureComponent {
             className: "ruleview-expander theme-twisty" +
                        (this.state.isComputedListExpanded ? " open" : ""),
             onClick: this.onComputedExpanderClick,
-            style: { display: computedProperties.length ? "inline-block" : "none" },
+            style: { display: this.hasComputed ? "inline-block" : "none" },
           }),
           dom.span({ className: "ruleview-propertyvaluecontainer" },
             dom.span(
