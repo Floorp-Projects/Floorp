@@ -11,15 +11,18 @@
 
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
+#include "vm/EnvironmentObject.h"
 #include "vm/GlobalObject.h"
 #include "vm/Iteration.h"
 
 #include "vm/JSContext-inl.h"
 
-inline void JS::Realm::initGlobal(js::GlobalObject& global) {
+inline void JS::Realm::initGlobal(js::GlobalObject& global,
+                                  js::LexicalEnvironmentObject& lexicalEnv) {
   MOZ_ASSERT(global.realm() == this);
   MOZ_ASSERT(!global_);
   global_.set(&global);
+  lexicalEnv_.set(&lexicalEnv);
 }
 
 js::GlobalObject* JS::Realm::maybeGlobal() const {
@@ -29,6 +32,10 @@ js::GlobalObject* JS::Realm::maybeGlobal() const {
 
 js::GlobalObject* JS::Realm::unsafeUnbarrieredMaybeGlobal() const {
   return *global_.unsafeGet();
+}
+
+js::LexicalEnvironmentObject* JS::Realm::unbarrieredLexicalEnvironment() const {
+  return *lexicalEnv_.unsafeGet();
 }
 
 inline bool JS::Realm::globalIsAboutToBeFinalized() {
