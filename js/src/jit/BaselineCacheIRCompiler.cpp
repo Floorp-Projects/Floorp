@@ -69,12 +69,14 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   MOZ_MUST_USE bool emitStoreSlotShared(bool isFixed);
   MOZ_MUST_USE bool emitAddAndStoreSlotShared(CacheOp op);
 
+  bool updateArgc(CallFlags flags, Register argcReg, Register scratch);
   void loadStackObject(ArgumentKind slot, CallFlags flags, size_t stackPushed,
                        Register argcReg, Register dest);
-  void pushCallArguments(Register argcReg, Register scratch, bool isJitCall,
-                         bool isConstructing);
+  void pushCallArguments(Register argcReg, Register scratch, Register scratch2,
+                         bool isJitCall, bool isConstructing);
   void pushSpreadCallArguments(Register argcReg, Register scratch,
-                               bool isJitCall, bool isConstructing);
+                               Register scratch2, bool isJitCall,
+                               bool isConstructing);
   void createThis(Register argcReg, Register calleeReg, Register scratch,
                   CallFlags flags);
   void updateReturnValue();
@@ -2419,40 +2421,57 @@ bool BaselineCacheIRCompiler::emitCallStringObjectConcatResult() {
 }
 
 
-bool BaselineCacheIRCompiler::emitGuardAndUpdateSpreadArgc() {
-  JitSpew(JitSpew_Codegen, __FUNCTION__);
-  Register argcReg = allocator.useRegister(masm, reader.int32OperandId());
-  AutoScratchRegister scratch(allocator, masm);
-  bool isConstructing = reader.readBool();
+// The value of argc entering the call IC is not always the value of
+// argc entering the callee. (For example, argc for a spread call IC
+// is always 1, but argc for the callee is the length of the array.)
+// In these cases, we update argc as part of the call op itself, to
+// avoid modifying input operands while it is still possible to fail a
+// guard. The code to update argc overlaps with some of the guard
+// code, so for the sake of efficiency we perform the final set of
+// guards here, just before updating argc. (In a perfect world, we
+// would have more registers and we would not need to worry about
+// modifying argc. In the real world, we have x86-32.)
+bool BaselineCacheIRCompiler::updateArgc(CallFlags flags, Register argcReg,
+                                         Register scratch) {
+  // Standard calls have no extra guards, and argc is already correct.
+  if (flags.getArgFormat() == CallFlags::Standard) {
+    return true;
+  }
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
     return false;
   }
 
-  masm.unboxObject(Address(masm.getStackPointer(),
-                           isConstructing * sizeof(Value) + ICStackValueOffset),
-                   scratch);
-  masm.loadPtr(Address(scratch, NativeObject::offsetOfElements()), scratch);
-  masm.load32(Address(scratch, ObjectElements::offsetOfLength()), scratch);
+  switch (flags.getArgFormat()) {
+    case CallFlags::Spread: {
+      // Find length of args array
+      BaselineFrameSlot slot(flags.isConstructing());
+      masm.unboxObject(allocator.addressOf(masm, slot), scratch);
+      masm.loadPtr(Address(scratch, NativeObject::offsetOfElements()), scratch);
+      masm.load32(Address(scratch, ObjectElements::offsetOfLength()), scratch);
 
-  // Limit actual argc to something reasonable (huge number of arguments can
-  // blow the stack limit).
-  static_assert(CacheIRCompiler::MAX_ARGS_SPREAD_LENGTH <= ARGS_LENGTH_MAX,
-                "maximum arguments length for optimized stub should be <= "
-                "ARGS_LENGTH_MAX");
-  masm.branch32(Assembler::Above, argcReg,
-                Imm32(CacheIRCompiler::MAX_ARGS_SPREAD_LENGTH),
-                failure->label());
+      // Limit actual argc to something reasonable to avoid blowing stack limit.
+      static_assert(CacheIRCompiler::MAX_ARGS_SPREAD_LENGTH <= ARGS_LENGTH_MAX,
+                    "maximum arguments length for optimized stub should be <= "
+                    "ARGS_LENGTH_MAX");
+      masm.branch32(Assembler::Above, scratch,
+                    Imm32(CacheIRCompiler::MAX_ARGS_SPREAD_LENGTH),
+                    failure->label());
 
-  // All guards have been passed. The call operation is no longer fallible.
-  // We update argcReg in-place, to avoid running out of registers on x86-32.
-  masm.move32(scratch, argcReg);
+      // We're past the final guard. Overwrite argc with the new value.
+      masm.move32(scratch, argcReg);
+    } break;
+    default:
+      MOZ_CRASH("Unknown arg format");
+  }
+
   return true;
 }
 
 void BaselineCacheIRCompiler::pushCallArguments(Register argcReg,
                                                 Register scratch,
+                                                Register scratch2,
                                                 bool isJitCall,
                                                 bool isConstructing) {
   // The arguments to the call IC are pushed on the stack left-to-right.
@@ -2469,9 +2488,9 @@ void BaselineCacheIRCompiler::pushCallArguments(Register argcReg,
   masm.add32(Imm32(2 + isConstructing), countReg);
 
   // argPtr initially points to the last argument. Skip the stub frame.
-  AutoScratchRegister argPtr(allocator, masm);
+  Register argPtr = scratch2;
   Address argAddress(masm.getStackPointer(), STUB_FRAME_SIZE);
-  masm.computeEffectiveAddress(argAddress, argPtr.get());
+  masm.computeEffectiveAddress(argAddress, argPtr);
 
   // Align the stack such that the JitFrameLayout is aligned on the
   // JitStackAlignment.
@@ -2495,10 +2514,11 @@ void BaselineCacheIRCompiler::pushCallArguments(Register argcReg,
 
 void BaselineCacheIRCompiler::pushSpreadCallArguments(Register argcReg,
                                                       Register scratch,
+                                                      Register scratch2,
                                                       bool isJitCall,
                                                       bool isConstructing) {
   // Pull the array off the stack before aligning.
-  AutoScratchRegister startReg(allocator, masm);
+  Register startReg = scratch;
   masm.unboxObject(Address(masm.getStackPointer(),
                            (isConstructing * sizeof(Value)) + STUB_FRAME_SIZE),
                    startReg);
@@ -2510,7 +2530,7 @@ void BaselineCacheIRCompiler::pushSpreadCallArguments(Register argcReg,
     Register alignReg = argcReg;
     if (isConstructing) {
       // If we are constructing, we must take newTarget into account.
-      alignReg = scratch;
+      alignReg = scratch2;
       masm.computeEffectiveAddress(Address(argcReg, 1), alignReg);
     }
     masm.alignJitStackBasedOnNArgs(alignReg);
@@ -2522,7 +2542,7 @@ void BaselineCacheIRCompiler::pushSpreadCallArguments(Register argcReg,
   }
 
   // Push arguments: set up endReg to point to &array[argc]
-  Register endReg = scratch;
+  Register endReg = scratch2;
   BaseValueIndex endAddr(startReg, argcReg);
   masm.computeEffectiveAddress(endAddr, endReg);
 
@@ -2548,6 +2568,7 @@ void BaselineCacheIRCompiler::pushSpreadCallArguments(Register argcReg,
 bool BaselineCacheIRCompiler::emitCallNativeShared(NativeCallType callType) {
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
 
   Register calleeReg = allocator.useRegister(masm, reader.objOperandId());
   Register argcReg = allocator.useRegister(masm, reader.int32OperandId());
@@ -2555,6 +2576,10 @@ bool BaselineCacheIRCompiler::emitCallNativeShared(NativeCallType callType) {
   CallFlags flags = reader.callFlags();
   bool isConstructing = flags.isConstructing();
   bool isSameRealm = flags.isSameRealm();
+
+  if (!updateArgc(flags, argcReg, scratch)) {
+    return false;
+  }
 
   allocator.discardStack(masm);
 
@@ -2569,11 +2594,11 @@ bool BaselineCacheIRCompiler::emitCallNativeShared(NativeCallType callType) {
 
   switch (flags.getArgFormat()) {
     case CallFlags::Standard:
-      pushCallArguments(argcReg, scratch, /*isJitCall = */ false,
+      pushCallArguments(argcReg, scratch, scratch2, /*isJitCall =*/false,
                         isConstructing);
       break;
     case CallFlags::Spread:
-      pushSpreadCallArguments(argcReg, scratch, /*isJitCall = */ false,
+      pushSpreadCallArguments(argcReg, scratch, scratch2, /*isJitCall =*/false,
                               isConstructing);
       break;
     default:
@@ -2588,7 +2613,6 @@ bool BaselineCacheIRCompiler::emitCallNativeShared(NativeCallType callType) {
   // onward are the function arguments.
 
   // Initialize vp.
-  AutoScratchRegister scratch2(allocator, masm);
   masm.moveStackPtrTo(scratch2.get());
 
   // Construct a native exit frame.
@@ -2793,6 +2817,7 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
+  AutoScratchRegister scratch2(allocator, masm);
 
   Register calleeReg = allocator.useRegister(masm, reader.objOperandId());
   Register argcReg = allocator.useRegister(masm, reader.int32OperandId());
@@ -2800,6 +2825,10 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction() {
   CallFlags flags = reader.callFlags();
   bool isConstructing = flags.isConstructing();
   bool isSameRealm = flags.isSameRealm();
+
+  if (!updateArgc(flags, argcReg, scratch)) {
+    return false;
+  }
 
   allocator.discardStack(masm);
 
@@ -2818,11 +2847,11 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction() {
 
   switch (flags.getArgFormat()) {
     case CallFlags::Standard:
-      pushCallArguments(argcReg, scratch, /*isJitCall = */ true,
+      pushCallArguments(argcReg, scratch, scratch2, /*isJitCall = */ true,
                         isConstructing);
       break;
     case CallFlags::Spread:
-      pushSpreadCallArguments(argcReg, scratch, /*isJitCall = */ true,
+      pushSpreadCallArguments(argcReg, scratch, scratch2, /*isJitCall = */ true,
                               isConstructing);
       break;
     default:
@@ -2838,7 +2867,7 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction() {
   masm.freeStack(sizeof(Value));
 
   // Load the start of the target JitCode.
-  AutoScratchRegister code(allocator, masm);
+  Register code = scratch2;
   masm.loadJitCodeRaw(calleeReg, code);
 
   EmitBaselineCreateStubFrameDescriptor(masm, scratch, JitFrameLayout::Size());
@@ -2873,8 +2902,7 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction() {
   stubFrame.leave(masm, true);
 
   if (!isSameRealm) {
-    // Use |code| as a scratch register.
-    masm.switchToBaselineFrameRealm(code);
+    masm.switchToBaselineFrameRealm(scratch2);
   }
 
   return true;
