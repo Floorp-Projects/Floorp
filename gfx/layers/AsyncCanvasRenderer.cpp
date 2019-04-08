@@ -242,7 +242,7 @@ already_AddRefed<gfx::DataSourceSurface> AsyncCanvasRenderer::GetSurface() {
 }
 
 nsresult AsyncCanvasRenderer::GetInputStream(const char* aMimeType,
-                                             const char16_t* aEncoderOptions,
+                                             const nsAString& aEncoderOptions,
                                              nsIInputStream** aStream) {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<gfx::DataSourceSurface> surface = GetSurface();
