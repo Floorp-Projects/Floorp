@@ -651,10 +651,6 @@ skip script test262/language/statements/class/elements/same-line-method-literal-
 skip script test262/language/statements/class/elements/syntax/valid/grammar-fields-multi-line.js
 skip script test262/language/statements/class/elements/wrapped-in-sc-literal-names-asi.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1534721
-skip script test262/language/expressions/class/elements/fields-run-once-on-double-super.js
-skip script test262/language/expressions/class/constructor-this-tdz-during-initializers.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1542406
 skip script test262/language/expressions/class/elements/derived-cls-direct-eval-err-contains-supercall-1.js
 skip script test262/language/expressions/class/elements/derived-cls-direct-eval-err-contains-supercall-2.js
