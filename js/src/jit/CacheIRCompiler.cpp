@@ -3073,6 +3073,22 @@ bool CacheIRCompiler::emitGuardFunctionIsNative() {
   return true;
 }
 
+bool CacheIRCompiler::emitGuardFunctionIsConstructor() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  Register funcReg = allocator.useRegister(masm, reader.objOperandId());
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Ensure obj is a constructor
+  masm.branchTestFunctionFlags(funcReg, JSFunction::CONSTRUCTOR,
+                               Assembler::Zero, failure->label());
+  return true;
+}
+
 bool CacheIRCompiler::emitGuardNotClassConstructor() {
   Register fun = allocator.useRegister(masm, reader.objOperandId());
   AutoScratchRegister scratch(allocator, masm);

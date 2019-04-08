@@ -5044,6 +5044,7 @@ bool CallIRGenerator::tryAttachFunApply() {
 }
 
 bool CallIRGenerator::tryAttachSpecialCaseCallNative(HandleFunction callee) {
+  MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
   MOZ_ASSERT(callee->isNative());
 
   if (op_ == JSOP_FUNCALL && callee->native() == fun_call) {
@@ -5161,9 +5162,11 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
     return false;
   }
 
+  bool isSpecialized = mode_ == ICState::Mode::Specialized;
+
   bool isConstructing = IsConstructorCallPC(pc_);
   bool isSpread = IsSpreadCallPC(pc_);
-  bool isSameRealm = cx_->realm() == calleeFunc->realm();
+  bool isSameRealm = isSpecialized && cx_->realm() == calleeFunc->realm();
   CallFlags flags(isConstructing, isSpread, isSameRealm);
 
   // If callee is not an interpreted constructor, we have to throw.
@@ -5200,7 +5203,7 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
 
   RootedObject templateObj(cx_);
   bool skipAttach = false;
-  if (isConstructing &&
+  if (isConstructing && isSpecialized &&
       !getTemplateObjectForScripted(calleeFunc, &templateObj, &skipAttach)) {
     return false;
   }
@@ -5217,22 +5220,40 @@ bool CallIRGenerator::tryAttachCallScripted(HandleFunction calleeFunc) {
       writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId, flags);
   ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
 
-  // Ensure callee matches this stub's callee
-  FieldOffset calleeOffset =
-      writer.guardSpecificObject(calleeObjId, calleeFunc);
+  FieldOffset calleeOffset = 0;
+  if (isSpecialized) {
+    // Ensure callee matches this stub's callee
+    calleeOffset = writer.guardSpecificObject(calleeObjId, calleeFunc);
+    // Guard against relazification
+    writer.guardFunctionHasJitEntry(calleeObjId, isConstructing);
+  } else {
+    // Guard that object is a scripted function
+    writer.guardClass(calleeObjId, GuardClassKind::JSFunction);
+    writer.guardFunctionHasJitEntry(calleeObjId, isConstructing);
 
-  // Guard against relazification
-  writer.guardFunctionHasJitEntry(calleeObjId, isConstructing);
+    if (isConstructing) {
+      // If callee is not a constructor, we have to throw.
+      writer.guardFunctionIsConstructor(calleeObjId);
+    } else {
+      // If callee is a class constructor, we have to throw.
+      writer.guardNotClassConstructor(calleeObjId);
+    }
+  }
 
   writer.callScriptedFunction(calleeObjId, argcId, flags);
   writer.typeMonitorResult();
 
   if (templateObj) {
+    MOZ_ASSERT(isSpecialized);
     writer.metaScriptedTemplateObject(templateObj, calleeOffset);
   }
 
   cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
-  trackAttached("Call scripted func");
+  if (isSpecialized) {
+    trackAttached("Call scripted func");
+  } else {
+    trackAttached("Call any scripted func");
+  }
 
   return true;
 }
@@ -5326,8 +5347,12 @@ bool CallIRGenerator::getTemplateObjectForNative(HandleFunction calleeFunc,
 }
 
 bool CallIRGenerator::tryAttachCallNative(HandleFunction calleeFunc) {
-  MOZ_ASSERT(mode_ == ICState::Mode::Specialized);
   MOZ_ASSERT(calleeFunc->isNative());
+
+  bool isSpecialized = mode_ == ICState::Mode::Specialized;
+  if (!isSpecialized) {
+    return false;
+  }
 
   bool isSpread = IsSpreadCallPC(pc_);
   bool isSameRealm = cx_->realm() == calleeFunc->realm();
@@ -5406,6 +5431,13 @@ bool CallIRGenerator::tryAttachCallHook(HandleObject calleeObj) {
     return false;
   }
 
+  if (mode_ != ICState::Mode::Specialized) {
+    // We do not have megamorphic call hook stubs.
+    // TODO: Should we attach specialized call hook stubs in
+    // megamorphic mode to avoid going generic?
+    return false;
+  }
+
   bool isSpread = IsSpreadCallPC(pc_);
   bool isConstructing = IsConstructorCallPC(pc_);
   CallFlags flags(isConstructing, isSpread);
@@ -5463,10 +5495,7 @@ bool CallIRGenerator::tryAttachStub() {
       return false;
   }
 
-  // Only optimize when the mode is Specialized.
-  if (mode_ != ICState::Mode::Specialized) {
-    return false;
-  }
+  MOZ_ASSERT(mode_ != ICState::Mode::Generic);
 
   // Ensure callee is a function.
   if (!callee_.isObject()) {
