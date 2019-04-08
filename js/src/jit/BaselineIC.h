@@ -468,7 +468,7 @@ class ICStub {
   friend class ICFallbackStub;
 
  public:
-  enum Kind {
+  enum Kind : uint16_t {
     INVALID = 0,
 #define DEF_ENUM_KIND(kindName) kindName,
     IC_BASELINE_STUB_KIND_LIST(DEF_ENUM_KIND)
@@ -494,7 +494,7 @@ class ICStub {
     }
   }
 
-  enum Trait {
+  enum Trait : uint16_t {
     Regular = 0x0,
     Fallback = 0x1,
     Monitored = 0x2,
@@ -504,6 +504,8 @@ class ICStub {
 
   void updateCode(JitCode* stubCode);
   void trace(JSTracer* trc);
+
+  static const uint16_t EXPECTED_TRACE_MAGIC = 0b1100011;
 
   template <typename T, typename... Args>
   static T* New(JSContext* cx, ICStubSpace* space, JitCode* code,
@@ -534,23 +536,32 @@ class ICStub {
 
   // Pointer to next IC stub.  This is null for the last IC stub, which should
   // either be a fallback or inert IC stub.
-  ICStub* next_;
+  ICStub* next_ = nullptr;
 
   // A 16-bit field usable by subtypes of ICStub for subtype-specific small-info
-  uint16_t extra_;
+  uint16_t extra_ = 0;
 
-  // The kind of the stub.
-  //  High bit is 'isFallback' flag.
-  //  Second high bit is 'isMonitored' flag.
-  Trait trait_ : 3;
-  Kind kind_ : 13;
+  // A 16-bit field storing the trait and kind.
+  // Unused bits are filled with a magic value and verified when tracing.
+  uint16_t traitKindBits_;
 
-  inline ICStub(Kind kind, uint8_t* stubCode)
-      : stubCode_(stubCode),
-        next_(nullptr),
-        extra_(0),
-        trait_(Regular),
-        kind_(kind) {
+  static const uint16_t TRAIT_OFFSET = 0;
+  static const uint16_t TRAIT_BITS = 3;
+  static const uint16_t TRAIT_MASK = (1 << TRAIT_BITS) - 1;
+  static const uint16_t KIND_OFFSET = TRAIT_OFFSET + TRAIT_BITS;
+  static const uint16_t KIND_BITS = 6;
+  static const uint16_t KIND_MASK = (1 << KIND_BITS) - 1;
+  static const uint16_t MAGIC_OFFSET = KIND_OFFSET + KIND_BITS;
+  static const uint16_t MAGIC_BITS = 7;
+  static const uint16_t MAGIC_MASK = (1 << MAGIC_BITS) - 1;
+  static const uint16_t EXPECTED_MAGIC = 0b1100011;
+
+  static_assert(LIMIT <= (1 << KIND_BITS), "Not enough kind bits");
+  static_assert(LIMIT > (1 << (KIND_BITS - 1)), "Too many kind bits");
+  static_assert(TRAIT_BITS + KIND_BITS + MAGIC_BITS == 16, "Unused bits");
+
+  inline ICStub(Kind kind, uint8_t* stubCode) : stubCode_(stubCode) {
+    setTraitKind(Regular, kind);
     MOZ_ASSERT(stubCode != nullptr);
   }
 
@@ -559,25 +570,34 @@ class ICStub {
   }
 
   inline ICStub(Kind kind, Trait trait, uint8_t* stubCode)
-      : stubCode_(stubCode),
-        next_(nullptr),
-        extra_(0),
-        trait_(trait),
-        kind_(kind) {
+      : stubCode_(stubCode) {
+    setTraitKind(trait, kind);
     MOZ_ASSERT(stubCode != nullptr);
   }
+
   inline ICStub(Kind kind, Trait trait, JitCode* stubCode)
       : ICStub(kind, trait, stubCode->raw()) {
     MOZ_ASSERT(stubCode != nullptr);
   }
 
   inline Trait trait() const {
-    // Workaround for MSVC reading trait_ as signed value.
-    return (Trait)(trait_ & 0x7);
+    return (Trait)((traitKindBits_ >> TRAIT_OFFSET) & TRAIT_MASK);
+  }
+
+  inline void setTraitKind(Trait trait, Kind kind) {
+    traitKindBits_ = (trait << TRAIT_OFFSET) | (kind << KIND_OFFSET) |
+                     (EXPECTED_MAGIC << MAGIC_OFFSET);
+  }
+
+  inline void checkTraceMagic() {
+    uint16_t magic = (traitKindBits_ >> MAGIC_OFFSET) & MAGIC_MASK;
+    MOZ_DIAGNOSTIC_ASSERT(magic == EXPECTED_MAGIC);
   }
 
  public:
-  inline Kind kind() const { return static_cast<Kind>(kind_); }
+  inline Kind kind() const {
+    return (Kind)((traitKindBits_ >> KIND_OFFSET) & KIND_MASK);
+  }
 
   inline bool isFallback() const {
     return trait() == Fallback || trait() == MonitoredFallback;
