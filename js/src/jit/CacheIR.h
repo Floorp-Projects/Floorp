@@ -248,6 +248,7 @@ extern const uint32_t ArgLengths[];
   _(GuardNoAllocationMetadataBuilder, None)                                    \
   _(GuardObjectGroupNotPretenured, Field)                                      \
   _(GuardFunctionHasJitEntry, Id, Byte)                                        \
+  _(GuardNotClassConstructor, Id)                                              \
   _(LoadObject, Id, Field)                                                     \
   _(LoadProto, Id, Id)                                                         \
   _(LoadEnclosingEnvironment, Id, Id)                                          \
@@ -464,7 +465,12 @@ using FieldOffset = uint8_t;
 // decodes them and uses them for compilation.)
 class CallFlags {
  public:
-  enum ArgFormat : uint8_t { Standard, Spread, LastArgFormat = Spread };
+  enum ArgFormat : uint8_t {
+    Standard,
+    Spread,
+    FunCall,
+    LastArgFormat = FunCall
+  };
 
   CallFlags(bool isConstructing, bool isSpread, bool isSameRealm = false)
       : argFormat_(isSpread ? Spread : Standard),
@@ -522,6 +528,7 @@ inline int32_t GetIndexOfArgument(ArgumentKind kind, CallFlags flags,
   // First we determine whether the caller needs to add argc.
   switch (flags.getArgFormat()) {
     case CallFlags::Standard:
+    case CallFlags::FunCall:
       *addArgc = true;
       break;
     case CallFlags::Spread:
@@ -840,6 +847,9 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   void guardFunctionHasJitEntry(ObjOperandId fun, bool isConstructing) {
     writeOpWithOperandId(CacheOp::GuardFunctionHasJitEntry, fun);
     buffer_.writeByte(isConstructing);
+  }
+  void guardNotClassConstructor(ObjOperandId fun) {
+    writeOpWithOperandId(CacheOp::GuardNotClassConstructor, fun);
   }
 
  public:
@@ -1745,9 +1755,18 @@ class MOZ_RAII CacheIRReader {
     CallFlags::ArgFormat format =
         CallFlags::ArgFormat(encoded & CallFlags::ArgFormatMask);
     bool isConstructing = encoded & CallFlags::IsConstructing;
-    bool isSpread = format == CallFlags::Spread;
     bool isSameRealm = encoded & CallFlags::IsSameRealm;
-    return CallFlags(isConstructing, isSpread, isSameRealm);
+    switch (format) {
+      case CallFlags::Standard:
+        return CallFlags(isConstructing, /*isSpread =*/false, isSameRealm);
+      case CallFlags::Spread:
+        return CallFlags(isConstructing, /*isSpread =*/true, isSameRealm);
+      default:
+        // The existing non-standard argument formats (FunCall and FunApply)
+        // can't be constructors and have no support for isSameRealm.
+        MOZ_ASSERT(!isConstructing && !isSameRealm);
+        return CallFlags(format);
+    }
   }
 
   uint8_t readByte() { return buffer_.readByte(); }
@@ -2244,6 +2263,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   bool tryAttachArrayPush();
   bool tryAttachArrayJoin();
   bool tryAttachIsSuspendedGenerator();
+  bool tryAttachFunCall();
   bool tryAttachCallScripted(HandleFunction calleeFunc);
   bool tryAttachSpecialCaseCallNative(HandleFunction calleeFunc);
   bool tryAttachCallNative(HandleFunction calleeFunc);
