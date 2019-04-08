@@ -65,26 +65,6 @@ CLOBBER: $(topsrcdir)/CLOBBER
 	@exit 1
 endif
 
-# Regenerate the build backend if it is out of date. We only have this rule in
-# this main make file because having it in rules.mk and applied to partial tree
-# builds resulted in a world of hurt. Gory details are in bug 877308.
-#
-# The mach build driver will ensure the backend is up to date for partial tree
-# builds. This cleanly avoids most of the pain.
-
-ifndef TEST_MOZBUILD
-
-.PHONY: backend
-backend: $(BUILD_BACKEND_FILES)
-
-include $(topsrcdir)/build/rebuild-backend.mk
-
-Makefile: $(BUILD_BACKEND_FILES)
-	@$(TOUCH) $@
-
-default:: $(BUILD_BACKEND_FILES)
-endif
-
 install_manifests := \
   $(addprefix dist/,branding include public private xpi-stage) \
   _tests \
