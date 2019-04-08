@@ -3014,9 +3014,12 @@ extern bool PropertySpecNameToId(JSContext* cx, const char* name,
                                  MutableHandleId id,
                                  js::PinningBehavior pin = js::DoNotPinAtom);
 
-static bool ShouldIgnorePropertyDefinition(JSContext* cx, HandleObject obj,
-                                           HandleId id) {
-  if (StandardProtoKeyOrNull(obj) == JSProto_DataView &&
+// If a property or method is part of an experimental feature that can be
+// disabled at run-time by a preference, we keep it in the JSFunctionSpec /
+// JSPropertySpec list, but omit the definition if the preference is off.
+JS_FRIEND_API bool js::ShouldIgnorePropertyDefinition(JSContext* cx,
+                                                      JSProtoKey key, jsid id) {
+  if (key == JSProto_DataView &&
       !cx->realm()->creationOptions().getBigIntEnabled() &&
       (id == NameToId(cx->names().getBigInt64) ||
        id == NameToId(cx->names().getBigUint64) ||
@@ -3036,7 +3039,7 @@ static bool DefineFunctionFromSpec(JSContext* cx, HandleObject obj,
     return false;
   }
 
-  if (ShouldIgnorePropertyDefinition(cx, obj, id)) {
+  if (ShouldIgnorePropertyDefinition(cx, StandardProtoKeyOrNull(obj), id)) {
     return true;
   }
 
