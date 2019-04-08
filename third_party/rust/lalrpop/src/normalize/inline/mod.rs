@@ -104,7 +104,8 @@ impl<'a> Inliner<'a> {
                 ret_type: into_ret_type,
                 kind: ActionFnDefnKind::Inline(inline_defn),
             });
-            let prod_symbols: Vec<Symbol> = self.new_symbols
+            let prod_symbols: Vec<Symbol> = self
+                .new_symbols
                 .iter()
                 .flat_map(|sym| match *sym {
                     InlinedSymbol::Original(ref s) => vec![s.clone()],
