@@ -124,6 +124,10 @@ ICFallbackStub* ICEntry::fallbackStub() const {
 }
 
 void ICEntry::trace(JSTracer* trc) {
+#ifdef JS_64BIT
+  // If we have filled our padding with a magic value, check it now.
+  MOZ_DIAGNOSTIC_ASSERT(traceMagic_ == EXPECTED_TRACE_MAGIC);
+#endif
   for (ICStub* stub = firstStub(); stub; stub = stub->next()) {
     stub->trace(trc);
   }
