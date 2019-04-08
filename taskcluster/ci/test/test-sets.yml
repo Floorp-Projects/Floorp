@@ -483,6 +483,26 @@ android-hw-aarch64-raptor-power:
 
 android-hw-arm7-raptor-nightly:
     - raptor-speedometer-fennec
+    - raptor-tp6m-1-fennec
+    - raptor-tp6m-2-fennec
+    - raptor-tp6m-3-fennec
+    - raptor-tp6m-4-fennec
+    - raptor-tp6m-5-fennec
+    - raptor-tp6m-6-fennec
+    - raptor-tp6m-7-fennec
+    - raptor-tp6m-8-fennec
+    - raptor-tp6m-9-fennec
+    - raptor-tp6m-10-fennec
 
 android-hw-aarch64-raptor-nightly:
     - raptor-speedometer-fennec
+    - raptor-tp6m-1-fennec
+    - raptor-tp6m-2-fennec
+    - raptor-tp6m-3-fennec
+    - raptor-tp6m-4-fennec
+    - raptor-tp6m-5-fennec
+    - raptor-tp6m-6-fennec
+    - raptor-tp6m-7-fennec
+    - raptor-tp6m-8-fennec
+    - raptor-tp6m-9-fennec
+    - raptor-tp6m-10-fennec
