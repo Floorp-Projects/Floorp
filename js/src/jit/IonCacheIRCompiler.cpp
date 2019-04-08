@@ -2620,3 +2620,7 @@ bool IonCacheIRCompiler::emitLoadArgumentFixedSlot() {
 bool IonCacheIRCompiler::emitLoadArgumentDynamicSlot() {
   MOZ_CRASH("Call ICs not used in ion");
 }
+
+bool IonCacheIRCompiler::emitGuardFunApply() {
+  MOZ_CRASH("Call ICs not used in ion");
+}

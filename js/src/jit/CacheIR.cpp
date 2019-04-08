@@ -4975,11 +4975,85 @@ bool CallIRGenerator::tryAttachFunCall() {
   return true;
 }
 
+bool CallIRGenerator::tryAttachFunApply() {
+  if (JitOptions.disableCacheIRCalls) {
+    return false;
+  }
+
+  if (argc_ != 2) {
+    return false;
+  }
+
+  if (!thisval_.isObject() || !thisval_.toObject().is<JSFunction>()) {
+    return false;
+  }
+  RootedFunction target(cx_, &thisval_.toObject().as<JSFunction>());
+
+  bool isScripted = target->isInterpreted() || target->isNativeWithJitEntry();
+  MOZ_ASSERT_IF(!isScripted, target->isNative());
+
+  CallFlags::ArgFormat format = CallFlags::Standard;
+  if (args_[1].isMagic(JS_OPTIMIZED_ARGUMENTS) && !script_->needsArgsObj()) {
+    format = CallFlags::FunApplyArgs;
+  } else if (args_[1].isObject() && args_[1].toObject().is<ArrayObject>()) {
+    format = CallFlags::FunApplyArray;
+  } else {
+    return false;
+  }
+
+  Int32OperandId argcId(writer.setInputOperandId(0));
+
+  // Guard that callee is the |fun_apply| native function.
+  ValOperandId calleeValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::Callee, argcId);
+  ObjOperandId calleeObjId = writer.guardIsObject(calleeValId);
+  writer.guardSpecificNativeFunction(calleeObjId, fun_apply);
+
+  // Guard that |this| is a function.
+  ValOperandId thisValId =
+      writer.loadArgumentDynamicSlot(ArgumentKind::This, argcId);
+  ObjOperandId thisObjId = writer.guardIsObject(thisValId);
+  writer.guardClass(thisObjId, GuardClassKind::JSFunction);
+
+  // Guard that function is not a class constructor.
+  writer.guardNotClassConstructor(thisObjId);
+
+  CallFlags targetFlags(format);
+  writer.guardFunApply(argcId, targetFlags);
+
+  if (isScripted) {
+    // Guard that function is scripted.
+    writer.guardFunctionHasJitEntry(thisObjId, /*isConstructing =*/false);
+    writer.callScriptedFunction(thisObjId, argcId, targetFlags);
+  } else {
+    // Guard that function is native.
+    writer.guardFunctionIsNative(thisObjId);
+    writer.callAnyNativeFunction(thisObjId, argcId, targetFlags);
+  }
+
+  writer.typeMonitorResult();
+  cacheIRStubKind_ = BaselineCacheIRStubKind::Monitored;
+
+  if (isScripted) {
+    trackAttached("Scripted fun_apply");
+  } else {
+    trackAttached("Native fun_apply");
+  }
+
+  return true;
+}
+
 bool CallIRGenerator::tryAttachSpecialCaseCallNative(HandleFunction callee) {
   MOZ_ASSERT(callee->isNative());
 
   if (op_ == JSOP_FUNCALL && callee->native() == fun_call) {
     if (tryAttachFunCall()) {
+      return true;
+    }
+  }
+
+  if (op_ == JSOP_FUNAPPLY && callee->native() == fun_apply) {
+    if (tryAttachFunApply()) {
       return true;
     }
   }
@@ -5383,6 +5457,7 @@ bool CallIRGenerator::tryAttachStub() {
     case JSOP_NEW:
     case JSOP_SPREADNEW:
     case JSOP_FUNCALL:
+    case JSOP_FUNAPPLY:
       break;
     default:
       return false;

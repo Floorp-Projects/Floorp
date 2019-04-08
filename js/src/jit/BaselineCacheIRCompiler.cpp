@@ -70,16 +70,19 @@ class MOZ_RAII BaselineCacheIRCompiler : public CacheIRCompiler {
   MOZ_MUST_USE bool emitAddAndStoreSlotShared(CacheOp op);
 
   bool updateArgc(CallFlags flags, Register argcReg, Register scratch);
-  void loadStackObject(ArgumentKind slot, CallFlags flags, size_t stackPushed,
+  void loadStackObject(ArgumentKind kind, CallFlags flags, size_t stackPushed,
                        Register argcReg, Register dest);
   void pushCallArguments(Register argcReg, Register scratch, Register scratch2,
                          bool isJitCall, bool isConstructing);
-  void pushSpreadCallArguments(Register argcReg, Register scratch,
-                               Register scratch2, bool isJitCall,
-                               bool isConstructing);
+  void pushArrayArguments(Register argcReg, Register scratch, Register scratch2,
+                          bool isJitCall, bool isConstructing);
   void pushFunCallArguments(Register argcReg, Register calleeReg,
                             Register scratch, Register scratch2,
                             bool isJitCall);
+  void pushFunApplyArgs(Register argcReg, Register calleeReg, Register scratch,
+                        Register scratch2, bool isJitCall);
+  void pushFunApplyArray(Register argcReg, Register scratch, Register scratch2,
+                         bool isJitCall);
   void createThis(Register argcReg, Register calleeReg, Register scratch,
                   CallFlags flags);
   void updateReturnValue();
@@ -2428,13 +2431,14 @@ bool BaselineCacheIRCompiler::emitCallStringObjectConcatResult() {
 // is always 1, but argc for the callee is the length of the array.)
 // In these cases, we update argc as part of the call op itself, to
 // avoid modifying input operands while it is still possible to fail a
-// guard. The code to update argc overlaps with some of the guard
-// code, so for the sake of efficiency we perform the final set of
-// guards here, just before updating argc. (In a perfect world, we
-// would have more registers and we would not need to worry about
-// modifying argc. In the real world, we have x86-32.)
+// guard. We also limit callee argc to a reasonable value to avoid
+// blowing the stack limit.
 bool BaselineCacheIRCompiler::updateArgc(CallFlags flags, Register argcReg,
                                          Register scratch) {
+  static_assert(CacheIRCompiler::MAX_ARGS_ARRAY_LENGTH <= ARGS_LENGTH_MAX,
+                "maximum arguments length for optimized stub should be <= "
+                "ARGS_LENGTH_MAX");
+
   CallFlags::ArgFormat format = flags.getArgFormat();
   switch (format) {
     case CallFlags::Standard:
@@ -2444,38 +2448,138 @@ bool BaselineCacheIRCompiler::updateArgc(CallFlags flags, Register argcReg,
       // fun_call has no extra guards, and argc will be corrected in
       // pushFunCallArguments.
       return true;
+    case CallFlags::FunApplyArray: {
+      // GuardFunApply array already guarded argc while checking for
+      // holes in the array, so we don't need to guard again here. We
+      // do still need to update argc.
+      BaselineFrameSlot slot(0);
+      masm.unboxObject(allocator.addressOf(masm, slot), argcReg);
+      masm.loadPtr(Address(argcReg, NativeObject::offsetOfElements()), argcReg);
+      masm.load32(Address(argcReg, ObjectElements::offsetOfLength()), argcReg);
+      return true;
+    }
     default:
       break;
   }
+
+  // We need to guard the length of the arguments.
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Load callee argc into scratch.
+  switch (flags.getArgFormat()) {
+    case CallFlags::Spread: {
+      // Load the length of the elements.
+      BaselineFrameSlot slot(flags.isConstructing());
+      masm.unboxObject(allocator.addressOf(masm, slot), scratch);
+      masm.loadPtr(Address(scratch, NativeObject::offsetOfElements()), scratch);
+      masm.load32(Address(scratch, ObjectElements::offsetOfLength()), scratch);
+    } break;
+    case CallFlags::FunApplyArgs: {
+      // The length of |arguments| is stored in the baseline frame.
+      Address numActualArgsAddr(BaselineFrameReg,
+                                BaselineFrame::offsetOfNumActualArgs());
+      masm.load32(numActualArgsAddr, scratch);
+    } break;
+    default:
+      MOZ_CRASH("Unknown arg format");
+  }
+
+  // Ensure that callee argc does not exceed the limit.
+  masm.branch32(Assembler::Above, scratch,
+                Imm32(CacheIRCompiler::MAX_ARGS_ARRAY_LENGTH),
+                failure->label());
+
+  // We're past the final guard. Update argc with the new value.
+  masm.move32(scratch, argcReg);
+
+  return true;
+}
+
+bool BaselineCacheIRCompiler::emitGuardFunApply() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  Register argcReg = allocator.useRegister(masm, reader.int32OperandId());
+  AutoScratchRegister scratch(allocator, masm);
+  AutoScratchRegister scratch2(allocator, masm);
+  CallFlags flags = reader.callFlags();
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
     return false;
   }
 
-  switch (flags.getArgFormat()) {
-    case CallFlags::Spread: {
-      // Find length of args array
-      BaselineFrameSlot slot(flags.isConstructing());
-      masm.unboxObject(allocator.addressOf(masm, slot), scratch);
-      masm.loadPtr(Address(scratch, NativeObject::offsetOfElements()), scratch);
-      masm.load32(Address(scratch, ObjectElements::offsetOfLength()), scratch);
+  // Ensure argc == 2
+  masm.branch32(Assembler::NotEqual, argcReg, Imm32(2), failure->label());
 
-      // Limit actual argc to something reasonable to avoid blowing stack limit.
-      static_assert(CacheIRCompiler::MAX_ARGS_SPREAD_LENGTH <= ARGS_LENGTH_MAX,
-                    "maximum arguments length for optimized stub should be <= "
-                    "ARGS_LENGTH_MAX");
-      masm.branch32(Assembler::Above, scratch,
-                    Imm32(CacheIRCompiler::MAX_ARGS_SPREAD_LENGTH),
+  // Stack layout is (bottom to top):
+  //   Callee (fun_apply)
+  //   ThisValue (target)
+  //   Arg0 (new this)
+  //   Arg1 (argument array)
+
+  Address argsAddr = allocator.addressOf(masm, BaselineFrameSlot(0));
+  switch (flags.getArgFormat()) {
+    case CallFlags::FunApplyArgs: {
+      // Ensure that args is magic |arguments|.
+      masm.branchTestMagic(Assembler::NotEqual, argsAddr, failure->label());
+
+      // Ensure that this frame doesn't have an arguments object.
+      Address flagAddr(BaselineFrameReg, BaselineFrame::reverseOffsetOfFlags());
+      masm.branchTest32(Assembler::NonZero, flagAddr,
+                        Imm32(BaselineFrame::HAS_ARGS_OBJ), failure->label());
+    } break;
+    case CallFlags::FunApplyArray: {
+      // Ensure that args is an array object.
+      masm.branchTestObject(Assembler::NotEqual, argsAddr, failure->label());
+      masm.unboxObject(argsAddr, scratch);
+      const Class* clasp = &ArrayObject::class_;
+      masm.branchTestObjClass(Assembler::NotEqual, scratch, clasp, scratch2,
+                              scratch, failure->label());
+
+      // Get the array elements and length
+      Register elementsReg = scratch;
+      masm.loadPtr(Address(scratch, NativeObject::offsetOfElements()),
+                   elementsReg);
+      Register calleeArgcReg = scratch2;
+      masm.load32(Address(elementsReg, ObjectElements::offsetOfLength()),
+                  calleeArgcReg);
+
+      // Ensure that callee argc does not exceed the limit.  Note that
+      // we do this earlier for FunApplyArray than for FunApplyArgs,
+      // because we don't want to loop over every element of the array
+      // looking for holes if we already know it is too long.
+      masm.branch32(Assembler::Above, calleeArgcReg,
+                    Imm32(CacheIRCompiler::MAX_ARGS_ARRAY_LENGTH),
                     failure->label());
 
-      // We're past the final guard. Overwrite argc with the new value.
-      masm.move32(scratch, argcReg);
+      // Ensure that length == initializedLength
+      Address initLenAddr(elementsReg,
+                          ObjectElements::offsetOfInitializedLength());
+      masm.branch32(Assembler::NotEqual, initLenAddr, calleeArgcReg,
+                    failure->label());
+
+      // Ensure no holes. Loop through array and verify no elements are magic.
+      Register start = elementsReg;
+      Register end = scratch2;
+      BaseValueIndex endAddr(elementsReg, calleeArgcReg);
+      masm.computeEffectiveAddress(endAddr, end);
+
+      Label loop;
+      Label endLoop;
+      masm.bind(&loop);
+      masm.branchPtr(Assembler::AboveOrEqual, start, end, &endLoop);
+      masm.branchTestMagic(Assembler::Equal, Address(start, 0),
+                           failure->label());
+      masm.addPtr(Imm32(sizeof(Value)), start);
+      masm.jump(&loop);
+      masm.bind(&endLoop);
     } break;
     default:
-      MOZ_CRASH("Unknown arg format");
+      MOZ_CRASH("Invalid arg format");
+      break;
   }
-
   return true;
 }
 
@@ -2522,11 +2626,11 @@ void BaselineCacheIRCompiler::pushCallArguments(Register argcReg,
   masm.bind(&done);
 }
 
-void BaselineCacheIRCompiler::pushSpreadCallArguments(Register argcReg,
-                                                      Register scratch,
-                                                      Register scratch2,
-                                                      bool isJitCall,
-                                                      bool isConstructing) {
+void BaselineCacheIRCompiler::pushArrayArguments(Register argcReg,
+                                                 Register scratch,
+                                                 Register scratch2,
+                                                 bool isJitCall,
+                                                 bool isConstructing) {
   // Pull the array off the stack before aligning.
   Register startReg = scratch;
   masm.unboxObject(Address(masm.getStackPointer(),
@@ -2629,6 +2733,54 @@ void BaselineCacheIRCompiler::pushFunCallArguments(Register argcReg,
   masm.bind(&done);
 }
 
+void BaselineCacheIRCompiler::pushFunApplyArgs(Register argcReg,
+                                               Register calleeReg,
+                                               Register scratch,
+                                               Register scratch2,
+                                               bool isJitCall) {
+  // Push the caller's arguments onto the stack.
+
+  // Find the start of the caller's arguments.
+  Register startReg = scratch;
+  masm.loadPtr(Address(BaselineFrameReg, 0), startReg);
+  masm.addPtr(Imm32(BaselineFrame::offsetOfArg(0)), startReg);
+
+  if (isJitCall) {
+    masm.alignJitStackBasedOnNArgs(argcReg);
+  }
+
+  Register endReg = scratch2;
+  BaseValueIndex endAddr(startReg, argcReg);
+  masm.computeEffectiveAddress(endAddr, endReg);
+
+  // Copying pre-decrements endReg by 8 until startReg is reached
+  Label copyDone;
+  Label copyStart;
+  masm.bind(&copyStart);
+  masm.branchPtr(Assembler::Equal, endReg, startReg, &copyDone);
+  masm.subPtr(Imm32(sizeof(Value)), endReg);
+  masm.pushValue(Address(endReg, 0));
+  masm.jump(&copyStart);
+  masm.bind(&copyDone);
+
+  // Push arg0 as |this| for call
+  masm.pushValue(Address(BaselineFrameReg, STUB_FRAME_SIZE + sizeof(Value)));
+
+  // Push |callee|.
+  masm.Push(TypedOrValueRegister(MIRType::Object, AnyRegister(calleeReg)));
+}
+
+void BaselineCacheIRCompiler::pushFunApplyArray(Register argcReg,
+                                                Register scratch,
+                                                Register scratch2,
+                                                bool isJitCall) {
+  // Push the contents of the array onto the stack.
+  // We have already ensured that the array is packed and has no holes.
+
+  pushArrayArguments(argcReg, scratch, scratch2, isJitCall,
+                     /*isConstructing =*/false);
+}
+
 bool BaselineCacheIRCompiler::emitCallNativeShared(NativeCallType callType) {
   AutoOutputRegister output(*this);
   AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
@@ -2662,12 +2814,19 @@ bool BaselineCacheIRCompiler::emitCallNativeShared(NativeCallType callType) {
                         isConstructing);
       break;
     case CallFlags::Spread:
-      pushSpreadCallArguments(argcReg, scratch, scratch2, /*isJitCall =*/false,
-                              isConstructing);
+      pushArrayArguments(argcReg, scratch, scratch2, /*isJitCall =*/false,
+                         isConstructing);
       break;
     case CallFlags::FunCall:
       pushFunCallArguments(argcReg, calleeReg, scratch, scratch2,
                            /*isJitCall = */ false);
+      break;
+    case CallFlags::FunApplyArgs:
+      pushFunApplyArgs(argcReg, calleeReg, scratch, scratch2,
+                       /*isJitCall = */ false);
+      break;
+    case CallFlags::FunApplyArray:
+      pushFunApplyArray(argcReg, scratch, scratch2, /*isJitCall = */ false);
       break;
     default:
       MOZ_CRASH("Invalid arg format");
@@ -2919,12 +3078,19 @@ bool BaselineCacheIRCompiler::emitCallScriptedFunction() {
                         isConstructing);
       break;
     case CallFlags::Spread:
-      pushSpreadCallArguments(argcReg, scratch, scratch2, /*isJitCall = */ true,
-                              isConstructing);
+      pushArrayArguments(argcReg, scratch, scratch2, /*isJitCall = */ true,
+                         isConstructing);
       break;
     case CallFlags::FunCall:
       pushFunCallArguments(argcReg, calleeReg, scratch, scratch2,
                            /*isJitCall = */ true);
+      break;
+    case CallFlags::FunApplyArgs:
+      pushFunApplyArgs(argcReg, calleeReg, scratch, scratch2,
+                       /*isJitCall = */ true);
+      break;
+    case CallFlags::FunApplyArray:
+      pushFunApplyArray(argcReg, scratch, scratch2, /*isJitCall = */ true);
       break;
     default:
       MOZ_CRASH("Invalid arg format");

@@ -250,6 +250,7 @@ extern const uint32_t ArgLengths[];
   _(GuardFunctionHasJitEntry, Id, Byte)                                        \
   _(GuardFunctionIsNative, Id)                                                 \
   _(GuardNotClassConstructor, Id)                                              \
+  _(GuardFunApply, Id, Byte)                                                   \
   _(LoadObject, Id, Field)                                                     \
   _(LoadProto, Id, Id)                                                         \
   _(LoadEnclosingEnvironment, Id, Id)                                          \
@@ -470,7 +471,9 @@ class CallFlags {
     Standard,
     Spread,
     FunCall,
-    LastArgFormat = FunCall
+    FunApplyArgs,
+    FunApplyArray,
+    LastArgFormat = FunApplyArray
   };
 
   CallFlags(bool isConstructing, bool isSpread, bool isSameRealm = false)
@@ -529,13 +532,17 @@ inline int32_t GetIndexOfArgument(ArgumentKind kind, CallFlags flags,
   // First we determine whether the caller needs to add argc.
   switch (flags.getArgFormat()) {
     case CallFlags::Standard:
-    case CallFlags::FunCall:
       *addArgc = true;
       break;
     case CallFlags::Spread:
       // Spread calls do not have Arg1 or higher.
       MOZ_ASSERT(kind != ArgumentKind::Arg1);
       *addArgc = false;
+      break;
+    case CallFlags::FunCall:
+    case CallFlags::FunApplyArgs:
+    case CallFlags::FunApplyArray:
+      MOZ_CRASH("Currently unreachable");
       break;
   }
 
@@ -1103,6 +1110,11 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
       buffer_.writeByte(uint32_t(slotIndex));
     }
     return res;
+  }
+
+  void guardFunApply(Int32OperandId argcId, CallFlags flags) {
+    writeOpWithOperandId(CacheOp::GuardFunApply, argcId);
+    writeCallFlags(flags);
   }
 
   ValOperandId loadDOMExpandoValue(ObjOperandId obj) {
@@ -2293,6 +2305,7 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   bool tryAttachArrayJoin();
   bool tryAttachIsSuspendedGenerator();
   bool tryAttachFunCall();
+  bool tryAttachFunApply();
   bool tryAttachCallScripted(HandleFunction calleeFunc);
   bool tryAttachSpecialCaseCallNative(HandleFunction calleeFunc);
   bool tryAttachCallNative(HandleFunction calleeFunc);
