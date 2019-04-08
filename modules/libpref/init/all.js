@@ -5612,6 +5612,9 @@ pref("network.trr.max-fails", 5);
 // Comma separated list of domains that we should not use TRR for
 pref("network.trr.excluded-domains", "localhost,local");
 
+// enable HttpTrafficAnalyzer
+pref("network.traffic_analyzer.enabled", true);
+
 pref("captivedetect.canonicalURL", "http://detectportal.firefox.com/success.txt");
 pref("captivedetect.canonicalContent", "success\n");
 pref("captivedetect.maxWaitingTime", 5000);
