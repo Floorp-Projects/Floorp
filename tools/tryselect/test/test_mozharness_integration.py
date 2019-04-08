@@ -13,18 +13,67 @@ import pytest
 
 from tryselect.tasks import build, resolve_tests_by_suite
 
+MOZHARNESS_SCRIPTS = {
+    'android_emulator_unittest': {
+        'class_name': 'AndroidEmulatorTest',
+        'configs': [
+            'android/android_common.py',
+        ],
+        'xfail': [
+            'cppunittest',
+            'geckoview-junit',
+            'jittest',
+            'jsreftest',
+            'mochitest',
+            'mochitest-chrome',
+            'mochitest-plain-clipboard',
+            'mochitest-plain-gpu',
+            'robocop',
+        ],
+    },
+    'desktop_unittest': {
+        'class_name': 'DesktopUnittest',
+        'configs': [
+            'unittests/linux_unittest.py',
+            'unittests/mac_unittest.py',
+            'unittests/win_unittest.py',
+        ],
+        'xfail': [
+            'browser-chrome-instrumentation',
+            'cppunittest',
+            'gtest',
+            'jittest',
+            'jittest-chunked',
+            'jittest1',
+            'jittest2',
+            'jsreftest',
+            'mochitest-devtools-webreplay',
+            'reftest-gpu',
+            'reftest-no-accel',
+            'reftest-qr',
+            'valgrind-plain',
+        ],
+    },
+}
+"""A suite being listed in a script's `xfail` list  means it won't work
+properly with MOZHARNESS_TEST_PATHS (the mechanism |mach try fuzzy <path>|
+uses).
+"""
+
+
+def get_mozharness_test_paths(name):
+    scriptdir = os.path.join(build.topsrcdir, 'testing', 'mozharness', 'scripts')
+
+    files = imp.find_module(name, [scriptdir])
+    mod = imp.load_module('scripts.{}'.format(name), *files)
+
+    class_name = MOZHARNESS_SCRIPTS[name]['class_name']
+    cls = getattr(mod, class_name)
+    return cls(require_config_file=False)._get_mozharness_test_paths
+
 
 @pytest.fixture(scope='module')
-def get_mozharness_test_paths():
-    scriptdir = os.path.join(build.topsrcdir, 'testing', 'mozharness', 'scripts')
-    files = imp.find_module('desktop_unittest', [scriptdir])
-    mod = imp.load_module('scripts.desktop_unittest', *files)
-    du = mod.DesktopUnittest(require_config_file=False)
-    return du._get_mozharness_test_paths
-
-
-@pytest.fixture
-def all_suites(patch_resolver):
+def all_suites():
     from moztest.resolve import _test_flavors, _test_subsuites
     all_suites = []
     for flavor in _test_flavors:
@@ -33,66 +82,68 @@ def all_suites(patch_resolver):
     for flavor, subsuite in _test_subsuites:
         all_suites.append({'flavor': flavor, 'subsuite': subsuite, 'srcdir_relpath': 'test'})
 
-    patch_resolver([], all_suites)
-    return resolve_tests_by_suite(['test'])
+    return all_suites
 
 
-KNOWN_FAILURES = (
-    'browser-chrome-instrumentation',
-    'cppunittest',
-    'gtest',
-    'jittest',
-    'jittest-chunked',
-    'jittest1',
-    'jittest2',
-    'jsreftest',
-    'mochitest-devtools-webreplay',
-    'reftest-gpu',
-    'reftest-no-accel',
-    'reftest-qr',
-    'valgrind-plain',
-)
-"""A suite being listed here means it won't work properly with
-MOZHARNESS_TEST_PATHS (the mechanism |mach try fuzzy <path>| uses.
-"""
+def generate_suites_from_config(path):
+    configdir = os.path.join(build.topsrcdir, 'testing', 'mozharness', 'configs')
+
+    parent, name = os.path.split(path)
+    name = os.path.splitext(name)[0]
+
+    files = imp.find_module('{}'.format(name), [os.path.join(configdir, parent)])
+    mod = imp.load_module('config.{}'.format(name), *files)
+    config = mod.config
+
+    for category in sorted(config['suite_definitions']):
+        if category == 'mozmill':
+            continue
+
+        key = 'all_{}_suites'.format(category)
+        if key not in config:
+            yield category,
+            continue
+
+        for suite in sorted(config['all_{}_suites'.format(category)]):
+            yield category, suite
 
 
-def generate_mozharness_suite_names():
-    configdir = os.path.join(build.topsrcdir, 'testing', 'mozharness', 'configs', 'unittests')
-    seen = set()
+def generate_suites():
+    for name, script in MOZHARNESS_SCRIPTS.items():
+        seen = set()
 
-    for platform in ('linux', 'mac', 'win'):
-        files = imp.find_module('{}_unittest'.format(platform), [configdir])
-        mod = imp.load_module('config.{}_unittest'.format(platform), *files)
-        config = mod.config
-
-        for category in sorted(config['suite_definitions']):
-            if category == 'mozmill':
-                continue
-
-            for suite in sorted(config['all_{}_suites'.format(category)]):
-                result = category, suite
-
-                if result in seen:
+        for path in script['configs']:
+            for suite in generate_suites_from_config(path):
+                if suite in seen:
                     continue
+                seen.add(suite)
 
-                seen.add(result)
+                item = (name, suite)
 
-                if suite in KNOWN_FAILURES:
-                    result = pytest.param(result, marks=pytest.mark.xfail)
+                if suite[-1] in script['xfail']:
+                    item = pytest.param(item, marks=pytest.mark.xfail)
 
-                yield result
+                yield item
 
 
-@pytest.mark.parametrize('mozharness_suite', generate_mozharness_suite_names(),
-                         ids=lambda val: val[1])
-def test_mozharness_suites(get_mozharness_test_paths, all_suites, mozharness_suite):
+def idfn(item):
+    name, suite = item
+    return "{}/{}".format(name, suite[-1])
+
+
+@pytest.mark.parametrize('item', generate_suites(), ids=idfn)
+def test_suites(item, patch_resolver, all_suites):
     """An integration test to make sure the suites returned by
     `tasks.resolve_tests_by_suite` match up with the names defined in
-    mozharness' desktop_unittest.py script.
+    mozharness.
     """
-    os.environ['MOZHARNESS_TEST_PATHS'] = json.dumps(all_suites)
-    assert get_mozharness_test_paths(*mozharness_suite)
+    patch_resolver([], all_suites)
+    suites = resolve_tests_by_suite(['test'])
+    os.environ['MOZHARNESS_TEST_PATHS'] = json.dumps(suites)
+
+    name, suite = item
+    func = get_mozharness_test_paths(name)
+    assert func(*suite)
 
 
 if __name__ == '__main__':
