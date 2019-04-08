@@ -1690,7 +1690,7 @@ bool CacheIRCompiler::emitGuardIsExtensible() {
   return true;
 }
 
-bool CacheIRCompiler::emitGuardIsNativeFunction() {
+bool CacheIRCompiler::emitGuardSpecificNativeFunction() {
   JitSpew(JitSpew_Codegen, __FUNCTION__);
   Register obj = allocator.useRegister(masm, reader.objOperandId());
   JSNative nativeFunc = reinterpret_cast<JSNative>(reader.pointer());
@@ -3055,6 +3055,51 @@ bool CacheIRCompiler::emitGuardFunctionHasJitEntry() {
   }
 
   masm.branchIfFunctionHasNoJitEntry(fun, isConstructing, failure->label());
+  return true;
+}
+
+bool CacheIRCompiler::emitGuardFunctionIsNative() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  Register obj = allocator.useRegister(masm, reader.objOperandId());
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Ensure obj is not an interpreted function.
+  masm.branchIfInterpreted(obj, /*isConstructing =*/false, failure->label());
+  return true;
+}
+
+bool CacheIRCompiler::emitGuardFunctionIsConstructor() {
+  JitSpew(JitSpew_Codegen, __FUNCTION__);
+  Register funcReg = allocator.useRegister(masm, reader.objOperandId());
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  // Ensure obj is a constructor
+  masm.branchTestFunctionFlags(funcReg, JSFunction::CONSTRUCTOR,
+                               Assembler::Zero, failure->label());
+  return true;
+}
+
+bool CacheIRCompiler::emitGuardNotClassConstructor() {
+  Register fun = allocator.useRegister(masm, reader.objOperandId());
+  AutoScratchRegister scratch(allocator, masm);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  masm.branchFunctionKind(Assembler::Equal, JSFunction::ClassConstructor, fun,
+                          scratch, failure->label());
   return true;
 }
 

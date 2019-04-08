@@ -325,7 +325,7 @@ var dataProviders = {
 
     try {
       let winUtils = Services.wm.getMostRecentWindow("").windowUtils;
-      if (winUtils.gpuProcessId != -1) {
+      if (winUtils.gpuProcessPid != -1) {
         remoteTypes.gpu = 1;
       }
     } catch (e) {}
