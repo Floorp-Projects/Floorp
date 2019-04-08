@@ -862,66 +862,57 @@ impl RenderBackend {
 
             while let Ok(msg) = self.scene_rx.try_recv() {
                 match msg {
-                    SceneBuilderResult::Transactions(mut txns, result_tx) => {
-                        self.resource_cache.before_frames(SystemTime::now());
-                        self.maybe_force_nop_documents(
+                    SceneBuilderResult::Transaction(mut txn, result_tx) => {
+                        let has_built_scene = txn.built_scene.is_some();
+                        if let Some(doc) = self.documents.get_mut(&txn.document_id) {
+
+                            doc.removed_pipelines.append(&mut txn.removed_pipelines);
+
+                            if let Some(mut built_scene) = txn.built_scene.take() {
+                                doc.new_async_scene_ready(
+                                    built_scene,
+                                    &mut self.recycler,
+                                );
+                            }
+
+                            if let Some(tx) = result_tx {
+                                let (resume_tx, resume_rx) = channel();
+                                tx.send(SceneSwapResult::Complete(resume_tx)).unwrap();
+                                // Block until the post-swap hook has completed on
+                                // the scene builder thread. We need to do this before
+                                // we can sample from the sampler hook which might happen
+                                // in the update_document call below.
+                                resume_rx.recv().ok();
+                            }
+                        } else {
+                            // The document was removed while we were building it, skip it.
+                            // TODO: we might want to just ensure that removed documents are
+                            // always forwarded to the scene builder thread to avoid this case.
+                            if let Some(tx) = result_tx {
+                                tx.send(SceneSwapResult::Aborted).unwrap();
+                            }
+                            continue;
+                        }
+
+                        self.resource_cache.add_rasterized_blob_images(
+                            txn.rasterized_blobs.take()
+                        );
+                        if let Some((rasterizer, info)) = txn.blob_rasterizer.take() {
+                            self.resource_cache.set_blob_rasterizer(rasterizer, info);
+                        }
+
+                        self.update_document(
+                            txn.document_id,
+                            txn.resource_updates.take(),
+                            txn.interner_updates.take(),
+                            txn.frame_ops.take(),
+                            txn.notifications.take(),
+                            txn.render_frame,
+                            txn.invalidate_rendered_frame,
                             &mut frame_counter,
                             &mut profile_counters,
-                            |document_id| txns.iter().any(|txn| txn.document_id == document_id));
-
-                        for mut txn in txns.drain(..) {
-                            let has_built_scene = txn.built_scene.is_some();
-                            if let Some(doc) = self.documents.get_mut(&txn.document_id) {
-
-                                doc.removed_pipelines.append(&mut txn.removed_pipelines);
-
-                                if let Some(mut built_scene) = txn.built_scene.take() {
-                                    doc.new_async_scene_ready(
-                                        built_scene,
-                                        &mut self.recycler,
-                                    );
-                                }
-
-                                if let Some(ref tx) = result_tx {
-                                    let (resume_tx, resume_rx) = channel();
-                                    tx.send(SceneSwapResult::Complete(resume_tx)).unwrap();
-                                    // Block until the post-swap hook has completed on
-                                    // the scene builder thread. We need to do this before
-                                    // we can sample from the sampler hook which might happen
-                                    // in the update_document call below.
-                                    resume_rx.recv().ok();
-                                }
-                            } else {
-                                // The document was removed while we were building it, skip it.
-                                // TODO: we might want to just ensure that removed documents are
-                                // always forwarded to the scene builder thread to avoid this case.
-                                if let Some(ref tx) = result_tx {
-                                    tx.send(SceneSwapResult::Aborted).unwrap();
-                                }
-                                continue;
-                            }
-
-                            self.resource_cache.add_rasterized_blob_images(
-                                txn.rasterized_blobs.take()
-                            );
-                            if let Some((rasterizer, info)) = txn.blob_rasterizer.take() {
-                                self.resource_cache.set_blob_rasterizer(rasterizer, info);
-                            }
-
-                            self.update_document(
-                                txn.document_id,
-                                txn.resource_updates.take(),
-                                txn.interner_updates.take(),
-                                txn.frame_ops.take(),
-                                txn.notifications.take(),
-                                txn.render_frame,
-                                txn.invalidate_rendered_frame,
-                                &mut frame_counter,
-                                &mut profile_counters,
-                                has_built_scene,
-                            );
-                        }
-                        self.resource_cache.after_frames();
+                            has_built_scene,
+                        );
                     },
                     SceneBuilderResult::FlushComplete(tx) => {
                         tx.send(()).ok();
@@ -1129,7 +1120,7 @@ impl RenderBackend {
                                     preserve_frame_state: false,
                                 };
                                 let txn = TransactionMsg::scene_message(scene_msg);
-                                r.write_msg(*frame_counter, &ApiMsg::UpdateDocuments(vec![*id], vec![txn]));
+                                r.write_msg(*frame_counter, &ApiMsg::UpdateDocument(*id, txn));
                                 r.write_payload(*frame_counter, &Payload::construct_data(
                                     epoch,
                                     pipeline_id,
@@ -1186,10 +1177,10 @@ impl RenderBackend {
                 info!("Recycling stats: {:?}", self.recycler);
                 return false;
             }
-            ApiMsg::UpdateDocuments(document_ids, transaction_msgs) => {
-                self.prepare_transactions(
-                    document_ids,
-                    transaction_msgs,
+            ApiMsg::UpdateDocument(document_id, transaction_msg) => {
+                self.prepare_transaction(
+                    document_id,
+                    transaction_msg,
                     frame_counter,
                     profile_counters,
                 );
@@ -1199,152 +1190,99 @@ impl RenderBackend {
         true
     }
 
-    fn prepare_transactions(
+    fn prepare_transaction(
         &mut self,
-        document_ids: Vec<DocumentId>,
-        mut transaction_msgs: Vec<TransactionMsg>,
+        document_id: DocumentId,
+        mut transaction_msg: TransactionMsg,
         frame_counter: &mut u32,
         profile_counters: &mut BackendProfileCounters,
     ) {
-        let mut use_scene_builder = transaction_msgs.iter()
-            .any(|transaction_msg| transaction_msg.use_scene_builder_thread);
-        let use_high_priority = transaction_msgs.iter()
-            .any(|transaction_msg| !transaction_msg.low_priority);
-
-        let mut txns : Vec<Box<Transaction>> = document_ids.iter().zip(transaction_msgs.drain(..))
-            .map(|(&document_id, mut transaction_msg)| {
-                let mut txn = Box::new(Transaction {
-                    document_id,
-                    display_list_updates: Vec::new(),
-                    removed_pipelines: Vec::new(),
-                    epoch_updates: Vec::new(),
-                    request_scene_build: None,
-                    blob_rasterizer: None,
-                    blob_requests: Vec::new(),
-                    resource_updates: transaction_msg.resource_updates,
-                    frame_ops: transaction_msg.frame_ops,
-                    rasterized_blobs: Vec::new(),
-                    notifications: transaction_msg.notifications,
-                    set_root_pipeline: None,
-                    render_frame: transaction_msg.generate_frame,
-                    invalidate_rendered_frame: transaction_msg.invalidate_rendered_frame,
-                });
-
-                self.resource_cache.pre_scene_building_update(
-                    &mut txn.resource_updates,
-                    &mut profile_counters.resources,
-                );
-
-                // If we've been above the threshold for reclaiming GPU cache memory for
-                // long enough, drop it and rebuild it. This needs to be done before any
-                // updates for this frame are made.
-                if self.gpu_cache.should_reclaim_memory() {
-                    self.gpu_cache.clear();
-                }
-
-                for scene_msg in transaction_msg.scene_ops.drain(..) {
-                    let _timer = profile_counters.total_time.timer();
-                    self.process_scene_msg(
-                        document_id,
-                        scene_msg,
-                        *frame_counter,
-                        &mut txn,
-                        &mut profile_counters.ipc,
-                    )
-                }
-
-                let blobs_to_rasterize = get_blob_image_updates(&txn.resource_updates);
-                if !blobs_to_rasterize.is_empty() {
-                    let (blob_rasterizer, blob_requests) = self.resource_cache
-                        .create_blob_scene_builder_requests(&blobs_to_rasterize);
-
-                    txn.blob_requests = blob_requests;
-                    txn.blob_rasterizer = blob_rasterizer;
-                }
-                txn
-            }).collect();
-
-        use_scene_builder = use_scene_builder || txns.iter().any(|txn| {
-            !txn.can_skip_scene_builder() || txn.blob_rasterizer.is_some()
+        let mut txn = Box::new(Transaction {
+            document_id,
+            display_list_updates: Vec::new(),
+            removed_pipelines: Vec::new(),
+            epoch_updates: Vec::new(),
+            request_scene_build: None,
+            blob_rasterizer: None,
+            blob_requests: Vec::new(),
+            resource_updates: transaction_msg.resource_updates,
+            frame_ops: transaction_msg.frame_ops,
+            rasterized_blobs: Vec::new(),
+            notifications: transaction_msg.notifications,
+            set_root_pipeline: None,
+            render_frame: transaction_msg.generate_frame,
+            invalidate_rendered_frame: transaction_msg.invalidate_rendered_frame,
         });
 
-        if use_scene_builder {
-            for txn in txns.iter_mut() {
-                let doc = self.documents.get_mut(&txn.document_id).unwrap();
+        self.resource_cache.pre_scene_building_update(
+            &mut txn.resource_updates,
+            &mut profile_counters.resources,
+        );
 
-                if txn.should_build_scene() {
-                    txn.request_scene_build = Some(SceneRequest {
-                        view: doc.view.clone(),
-                        font_instances: self.resource_cache.get_font_instances(),
-                        output_pipelines: doc.output_pipelines.clone(),
-                    });
-                }
-            }
-        } else {
-            self.resource_cache.before_frames(SystemTime::now());
-            self.maybe_force_nop_documents(
+        // If we've been above the threshold for reclaiming GPU cache memory for
+        // long enough, drop it and rebuild it. This needs to be done before any
+        // updates for this frame are made.
+        if self.gpu_cache.should_reclaim_memory() {
+            self.gpu_cache.clear();
+        }
+
+        for scene_msg in transaction_msg.scene_ops.drain(..) {
+            let _timer = profile_counters.total_time.timer();
+            self.process_scene_msg(
+                document_id,
+                scene_msg,
+                *frame_counter,
+                &mut txn,
+                &mut profile_counters.ipc,
+            )
+        }
+
+        let blobs_to_rasterize = get_blob_image_updates(&txn.resource_updates);
+        if !blobs_to_rasterize.is_empty() {
+            let (blob_rasterizer, blob_requests) = self.resource_cache
+                .create_blob_scene_builder_requests(&blobs_to_rasterize);
+
+            txn.blob_requests = blob_requests;
+            txn.blob_rasterizer = blob_rasterizer;
+        }
+
+        if !transaction_msg.use_scene_builder_thread &&
+            txn.can_skip_scene_builder() &&
+            txn.blob_rasterizer.is_none() {
+
+            self.update_document(
+                txn.document_id,
+                txn.resource_updates.take(),
+                None,
+                txn.frame_ops.take(),
+                txn.notifications.take(),
+                txn.render_frame,
+                txn.invalidate_rendered_frame,
                 frame_counter,
                 profile_counters,
-                |document_id| txns.iter().any(|txn| txn.document_id == document_id));
+                false
+            );
 
-            for mut txn in txns {
-                self.update_document(
-                    txn.document_id,
-                    txn.resource_updates.take(),
-                    None,
-                    txn.frame_ops.take(),
-                    txn.notifications.take(),
-                    txn.render_frame,
-                    txn.invalidate_rendered_frame,
-                    frame_counter,
-                    profile_counters,
-                    false
-                );                
-            }
-
-            self.resource_cache.after_frames();
             return;
         }
 
-        let tx = if use_high_priority {
-            &self.scene_tx
-        } else {
+        let doc = self.documents.get_mut(&document_id).unwrap();
+
+        if txn.should_build_scene() {
+            txn.request_scene_build = Some(SceneRequest {
+                view: doc.view.clone(),
+                font_instances: self.resource_cache.get_font_instances(),
+                output_pipelines: doc.output_pipelines.clone(),
+            });
+        }
+
+        let tx = if transaction_msg.low_priority {
             &self.low_priority_scene_tx
+        } else {
+            &self.scene_tx
         };
 
-        tx.send(SceneBuilderRequest::Transactions(txns)).unwrap();
-    }
-
-    /// In certain cases, resources shared by multiple documents have to run
-    /// maintenance operations, like cleaning up unused cache items. In those
-    /// cases, we are forced to build frames for all documents, however we
-    /// may not have a transaction ready for every document - this method
-    /// calls update_document with the details of a fake, nop transaction just
-    /// to force a frame build.
-    fn maybe_force_nop_documents<F>(&mut self,
-                                    frame_counter: &mut u32,
-                                    profile_counters: &mut BackendProfileCounters,
-                                    document_already_present: F) where
-        F: Fn(DocumentId) -> bool {
-        if self.resource_cache.requires_frame_build() {
-            let nop_documents : Vec<DocumentId> = self.documents.keys()
-                .cloned()
-                .filter(|key| !document_already_present(*key))
-                .collect();
-            for &document_id in &nop_documents {
-                self.update_document(
-                    document_id,
-                    Vec::default(),
-                    None,
-                    Vec::default(),
-                    Vec::default(),
-                    false,
-                    false,
-                    frame_counter,
-                    profile_counters,
-                    false);
-            }
-        }
+        tx.send(SceneBuilderRequest::Transaction(txn)).unwrap();
     }
 
     fn update_document(
@@ -1415,8 +1353,7 @@ impl RenderBackend {
         }
 
         // Avoid re-building the frame if the current built frame is still valid.
-        let build_frame = (render_frame && !doc.frame_is_valid) ||
-            self.resource_cache.requires_frame_build();
+        let build_frame = render_frame && !doc.frame_is_valid;
 
         // Request composite is true when we want to composite frame even when
         // there is no frame update. This happens when video frame is updated under

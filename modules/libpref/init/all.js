@@ -947,6 +947,7 @@ pref("gfx.webrender.blob.paint-flashing", false);
 // WebRender debugging utilities.
 pref("gfx.webrender.debug.texture-cache", false);
 pref("gfx.webrender.debug.texture-cache.clear-evicted", true);
+pref("gfx.webrender.debug.texture-cache.disable-shrink", false);
 pref("gfx.webrender.debug.render-targets", false);
 pref("gfx.webrender.debug.gpu-cache", false);
 pref("gfx.webrender.debug.alpha-primitives", false);

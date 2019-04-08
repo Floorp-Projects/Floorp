@@ -271,31 +271,6 @@ impl JsonFrameWriter {
         self.images.insert(key, data);
         Some(path)
     }
-    
-    fn update_document(&mut self, txn: &TransactionMsg) {
-        self.update_resources(&txn.resource_updates);
-        for doc_msg in &txn.scene_ops {
-            match *doc_msg {
-                SceneMsg::SetDisplayList {
-                    ref epoch,
-                    ref pipeline_id,
-                    ref background,
-                    ref viewport_size,
-                    ref list_descriptor,
-                    ..
-                } => {
-                    self.begin_write_display_list(
-                        epoch,
-                        pipeline_id,
-                        background,
-                        viewport_size,
-                        list_descriptor,
-                    );
-                }
-                _ => {}
-            }
-        }
-    }
 }
 
 impl fmt::Debug for JsonFrameWriter {
@@ -308,9 +283,29 @@ impl webrender::ApiRecordingReceiver for JsonFrameWriter {
     fn write_msg(&mut self, _: u32, msg: &ApiMsg) {
         match *msg {
             ApiMsg::UpdateResources(ref updates) => self.update_resources(updates),
-            ApiMsg::UpdateDocuments(_, ref txns) => {
-                for txn in txns {
-                    self.update_document(txn)
+
+            ApiMsg::UpdateDocument(_, ref txn) => {
+                self.update_resources(&txn.resource_updates);
+                for doc_msg in &txn.scene_ops {
+                    match *doc_msg {
+                        SceneMsg::SetDisplayList {
+                            ref epoch,
+                            ref pipeline_id,
+                            ref background,
+                            ref viewport_size,
+                            ref list_descriptor,
+                            ..
+                        } => {
+                            self.begin_write_display_list(
+                                epoch,
+                                pipeline_id,
+                                background,
+                                viewport_size,
+                                list_descriptor,
+                            );
+                        }
+                        _ => {}
+                    }
                 }
             }
             ApiMsg::CloneApi(..) => {}
