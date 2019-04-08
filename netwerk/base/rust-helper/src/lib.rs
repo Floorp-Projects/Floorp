@@ -195,3 +195,81 @@ pub fn is_valid_ipv4_addr<'a>(addr: &'a [u8]) -> bool {
     }
     dots == 3 && current_octet.is_some()
 }
+
+
+#[no_mangle]
+#[allow(non_snake_case)]
+pub extern "C" fn rust_net_is_valid_ipv6_addr<'a>(addr: &'a nsACString) -> bool {
+    is_valid_ipv6_addr(addr)
+}
+
+#[inline(always)]
+fn fast_is_hex_digit(c: char) -> bool {
+    match c {
+        '0'..='9' => true,
+        'a'..='f' => true,
+        'A'..='F' => true,
+        _ => false,
+    }
+}
+
+pub fn is_valid_ipv6_addr<'a>(addr: &'a [u8]) -> bool {
+    let mut double_colon = false;
+    let mut colon_before = false;
+    let mut digits: u8 = 0;
+    let mut blocks: u8 = 0;
+
+    // The smallest ipv6 is unspecified (::)
+    // The IP starts with a single colon
+    if addr.len() < 2 || addr[0] == b':' && addr[1] != b':' {
+        return false;
+    }
+    //Enumerate with an u8 for cache locality
+    for (i, c) in (0u8..).zip(addr) {
+        match c {
+            maybe_digit if fast_is_hex_digit(*maybe_digit as char) => {
+                // Too many digits in the block
+                if digits == 4 {
+                    return false;
+                }
+                colon_before = false;
+                digits += 1;
+            }
+            b':' => {
+                // Too many columns
+                if double_colon && colon_before || blocks == 8 {
+                    return false;
+                }
+                if !colon_before {
+                    if digits != 0 {
+                        blocks += 1;
+                    }
+                    digits = 0;
+                    colon_before = true;
+                } else if !double_colon {
+                    double_colon = true;
+                }
+            }
+            b'.' => {
+                // IPv4 from the last block
+                if is_valid_ipv4_addr(&addr[(i - digits) as usize..]) {
+                    return double_colon && blocks < 6 || !double_colon && blocks == 6;
+                }
+                return false;
+            }
+            _ => {
+                // Invalid character
+                return false;
+            }
+        }
+    }
+    if colon_before && !double_colon {
+        // The IP ends with a single colon
+        return false;
+    }
+    if digits != 0 {
+        blocks += 1;
+    }
+
+    double_colon && blocks < 8 || !double_colon && blocks == 8
+}

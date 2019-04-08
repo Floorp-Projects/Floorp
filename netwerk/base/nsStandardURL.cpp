@@ -590,7 +590,7 @@ bool nsStandardURL::ValidIPv6orHostname(const char *host, uint32_t length) {
   bool closeBracket = host[length - 1] == ']';
 
   if (openBracket && closeBracket) {
-    return net_IsValidIPv6Addr(host + 1, length - 2);
+    return net_IsValidIPv6Addr(Substring(host + 1, length - 2));
   }
 
   if (openBracket || closeBracket) {
