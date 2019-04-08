@@ -369,7 +369,7 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
 
   virtual UniquePtr<uint8_t[]> GetImageBuffer(int32_t* out_format) override;
   NS_IMETHOD GetInputStream(const char* mimeType,
-                            const char16_t* encoderOptions,
+                            const nsAString& encoderOptions,
                             nsIInputStream** out_stream) override;
 
   virtual already_AddRefed<mozilla::gfx::SourceSurface> GetSurfaceSnapshot(
