@@ -568,6 +568,8 @@ static void WebRenderDebugPrefChangeCallback(const char* aPrefName, void*) {
   GFX_WEBRENDER_DEBUG(".texture-cache.clear-evicted",
                       wr::DebugFlags_TEXTURE_CACHE_DBG_CLEAR_EVICTED)
   GFX_WEBRENDER_DEBUG(".picture-caching", wr::DebugFlags_PICTURE_CACHING_DBG)
+  GFX_WEBRENDER_DEBUG(".texture-cache.disable-shrink",
+                      wr::DebugFlags_TEXTURE_CACHE_DBG_DISABLE_SHRINK)
   GFX_WEBRENDER_DEBUG(".primitives", wr::DebugFlags_PRIMITIVE_DBG)
   // Bit 18 is for the zoom display, which requires the mouse position and thus
   // currently only works in wrench.

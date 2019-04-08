@@ -2004,7 +2004,6 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
 #endif
 
   MOZ_ASSERT(framesGenerated > 0);
-  wr::RenderRootArray<wr::TransactionBuilder*> generateFrameTxns;
   for (auto& api : mApis) {
     if (!api) {
       continue;
@@ -2012,11 +2011,9 @@ void WebRenderBridgeParent::MaybeGenerateFrame(VsyncId aId,
     auto renderRoot = api->GetRenderRoot();
     if (generateFrame[renderRoot]) {
       fastTxns[renderRoot]->GenerateFrame();
-      generateFrameTxns[renderRoot] = fastTxns[renderRoot].ptr();
+      api->SendTransaction(*fastTxns[renderRoot]);
     }
   }
-  wr::WebRenderAPI::SendTransactions(mApis, generateFrameTxns);
-
   mMostRecentComposite = TimeStamp::Now();
 }
 
@@ -2064,16 +2061,13 @@ void WebRenderBridgeParent::NotifySceneBuiltForEpoch(
 }
 
 void WebRenderBridgeParent::NotifyDidSceneBuild(
-    const nsTArray<wr::RenderRoot>& aRenderRoots,
-    RefPtr<wr::WebRenderPipelineInfo> aInfo) {
+    wr::RenderRoot aRenderRoot, RefPtr<wr::WebRenderPipelineInfo> aInfo) {
   MOZ_ASSERT(IsRootWebRenderBridgeParent());
   if (!mCompositorScheduler) {
     return;
   }
 
-  for (auto renderRoot : aRenderRoots) {
-    mAsyncImageManager->SetWillGenerateFrame(renderRoot);
-  }
+  mAsyncImageManager->SetWillGenerateFrame(aRenderRoot);
 
   // If the scheduler has a composite more recent than our last composite (which
   // we missed), and we're within the threshold ms of the last vsync, then
@@ -2199,19 +2193,6 @@ void WebRenderBridgeParent::ScheduleGenerateFrame(
   if (mCompositorScheduler) {
     if (aRenderRoot.isSome()) {
       mAsyncImageManager->SetWillGenerateFrame(*aRenderRoot);
-    }
-    mCompositorScheduler->ScheduleComposition();
-  }
-}
-
-void WebRenderBridgeParent::ScheduleGenerateFrame(
-    const nsTArray<wr::RenderRoot>& aRenderRoots) {
-  if (mCompositorScheduler) {
-    if (aRenderRoots.IsEmpty()) {
-      mAsyncImageManager->SetWillGenerateFrameAllRenderRoots();
-    }
-    for (auto renderRoot : aRenderRoots) {
-      mAsyncImageManager->SetWillGenerateFrame(renderRoot);
     }
     mCompositorScheduler->ScheduleComposition();
   }
