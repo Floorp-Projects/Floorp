@@ -73,6 +73,7 @@ class DomTree extends Component {
 
     let onDOMNodeMouseOver;
     let onDOMNodeMouseOut;
+    let onInspectIconClick;
     const toolbox = DomProvider.getToolbox();
     if (toolbox) {
       onDOMNodeMouseOver = async (grip, options = {}) => {
@@ -88,6 +89,21 @@ class DomTree extends Component {
           ? toolbox.highlighter.unhighlight(forceHide)
           : null;
       };
+      onInspectIconClick = async (grip) => {
+        await toolbox.initInspector();
+        const onSelectInspector = toolbox.selectTool("inspector", "inspect_dom");
+        const onGripNodeToFront = toolbox.walker.gripToNodeFront(grip);
+        const [
+          front,
+          inspector,
+        ] = await Promise.all([onGripNodeToFront, onSelectInspector]);
+
+        const onInspectorUpdated = inspector.once("inspector-updated");
+        const onNodeFrontSet = toolbox.selection
+          .setNodeFront(front, { reason: "console" });
+
+        return Promise.all([onNodeFrontSet, onInspectorUpdated]);
+      };
     }
 
     // This is the integration point with Reps. The DomTree is using
@@ -97,6 +113,7 @@ class DomTree extends Component {
       return Rep(Object.assign({}, props, {
         onDOMNodeMouseOver,
         onDOMNodeMouseOut,
+        onInspectIconClick,
         defaultRep: Grip,
         cropLimit: 50,
       }));
