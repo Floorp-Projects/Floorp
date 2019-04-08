@@ -323,10 +323,10 @@ var listener = {
       }
 
       // In the world before bug 997440, exceptions were getting lost because of
-      // the arbitrary JSContext being used in nsXPCWrappedJSClass::CallMethod.
+      // the arbitrary JSContext being used in nsXPCWrappedJS::CallMethod.
       // In the new world, the wanderers have returned. However, because of the,
       // currently very-broken, exception reporting machinery in
-      // XPCWrappedJSClass these get reported as errors to the console, even if
+      // nsXPCWrappedJS these get reported as errors to the console, even if
       // there's actually JS on the stack above that will catch them.  If we
       // throw an error here because of them our tests start failing.  So, we'll
       // just dump the message to the logs instead, to make sure the information
