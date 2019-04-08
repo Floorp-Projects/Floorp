@@ -9,7 +9,7 @@ const { openToolboxAndLog, reloadPageAndLog } = require("../head");
 /*
  * These methods are used for working with debugger state changes in order
  * to make it easier to manipulate the ui and test different behavior. These
- * methods roughly reflect those found in debugger/new/test/mochi/head.js with
+ * methods roughly reflect those found in debugger/test/mochi/head.js with
  * a few exceptions. The `dbg` object is not exactly the same, and the methods
  * have been simplified. We may want to consider unifying them in the future
  */
