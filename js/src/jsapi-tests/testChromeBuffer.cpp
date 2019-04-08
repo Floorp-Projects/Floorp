@@ -4,8 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "js/CompilationAndEvaluation.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
+
+#include "js/CompilationAndEvaluation.h"  // JS::CompileFunction
 #include "js/ContextOptions.h"
+#include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 
 static TestJSPrincipals system_principals(1);
@@ -53,14 +56,18 @@ BEGIN_TEST(testChromeBuffer) {
     {
       JSAutoRealm ar(cx, trusted_glob);
       const char* paramName = "x";
-      const char* bytes = "return x ? 1 + trusted(x-1) : 0";
+      static const char bytes[] = "return x ? 1 + trusted(x-1) : 0";
+
+      JS::SourceText<mozilla::Utf8Unit> srcBuf;
+      CHECK(srcBuf.init(cx, bytes, mozilla::ArrayLength(bytes) - 1,
+                        JS::SourceOwnership::Borrowed));
 
       JS::CompileOptions options(cx);
       options.setFileAndLine("", 0);
 
       JS::RootedObjectVector emptyScopeChain(cx);
-      CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "trusted", 1,
-                                    &paramName, bytes, strlen(bytes), &fun));
+      CHECK(JS::CompileFunction(cx, emptyScopeChain, options, "trusted", 1,
+                                &paramName, srcBuf, &fun));
       CHECK(JS_DefineProperty(cx, trusted_glob, "trusted", fun,
                               JSPROP_ENUMERATE));
       trusted_fun.init(cx, JS_GetFunctionObject(fun));
@@ -70,7 +77,7 @@ BEGIN_TEST(testChromeBuffer) {
     CHECK(JS_WrapValue(cx, &v));
 
     const char* paramName = "trusted";
-    const char* bytes =
+    static const char bytes[] =
         "try {                                      "
         "    return untrusted(trusted);             "
         "} catch (e) {                              "
@@ -81,12 +88,16 @@ BEGIN_TEST(testChromeBuffer) {
         "    }                                      "
         "}                                          ";
 
+    JS::SourceText<mozilla::Utf8Unit> srcBuf;
+    CHECK(srcBuf.init(cx, bytes, mozilla::ArrayLength(bytes) - 1,
+                      JS::SourceOwnership::Borrowed));
+
     JS::CompileOptions options(cx);
     options.setFileAndLine("", 0);
 
     JS::RootedObjectVector emptyScopeChain(cx);
-    CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "untrusted", 1,
-                                  &paramName, bytes, strlen(bytes), &fun));
+    CHECK(JS::CompileFunction(cx, emptyScopeChain, options, "untrusted", 1,
+                              &paramName, srcBuf, &fun));
     CHECK(JS_DefineProperty(cx, global, "untrusted", fun, JSPROP_ENUMERATE));
 
     JS::RootedValue rval(cx);
@@ -104,7 +115,7 @@ BEGIN_TEST(testChromeBuffer) {
       JSAutoRealm ar(cx, trusted_glob);
 
       const char* paramName = "untrusted";
-      const char* bytes =
+      static const char bytes[] =
           "try {                                  "
           "  untrusted();                         "
           "} catch (e) {                          "
@@ -116,12 +127,16 @@ BEGIN_TEST(testChromeBuffer) {
           "         e.name + ': ' + e.message;    "
           "}                                      ";
 
+      JS::SourceText<mozilla::Utf8Unit> srcBuf;
+      CHECK(srcBuf.init(cx, bytes, mozilla::ArrayLength(bytes) - 1,
+                        JS::SourceOwnership::Borrowed));
+
       JS::CompileOptions options(cx);
       options.setFileAndLine("", 0);
 
       JS::RootedObjectVector emptyScopeChain(cx);
-      CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "trusted", 1,
-                                    &paramName, bytes, strlen(bytes), &fun));
+      CHECK(JS::CompileFunction(cx, emptyScopeChain, options, "trusted", 1,
+                                &paramName, srcBuf, &fun));
       CHECK(JS_DefineProperty(cx, trusted_glob, "trusted", fun,
                               JSPROP_ENUMERATE));
       trusted_fun = JS_GetFunctionObject(fun);
@@ -131,19 +146,23 @@ BEGIN_TEST(testChromeBuffer) {
     CHECK(JS_WrapValue(cx, &v));
 
     const char* paramName = "trusted";
-    const char* bytes =
+    static const char bytes[] =
         "try {                                      "
         "  return untrusted(trusted);               "
         "} catch (e) {                              "
         "  return trusted(untrusted);               "
         "}                                          ";
 
+    JS::SourceText<mozilla::Utf8Unit> srcBuf;
+    CHECK(srcBuf.init(cx, bytes, mozilla::ArrayLength(bytes) - 1,
+                      JS::SourceOwnership::Borrowed));
+
     JS::CompileOptions options(cx);
     options.setFileAndLine("", 0);
 
     JS::RootedObjectVector emptyScopeChain(cx);
-    CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "untrusted", 1,
-                                  &paramName, bytes, strlen(bytes), &fun));
+    CHECK(JS::CompileFunction(cx, emptyScopeChain, options, "untrusted", 1,
+                              &paramName, srcBuf, &fun));
     CHECK(JS_DefineProperty(cx, global, "untrusted", fun, JSPROP_ENUMERATE));
 
     JS::RootedValue rval(cx);
@@ -165,14 +184,18 @@ BEGIN_TEST(testChromeBuffer) {
     {
       JSAutoRealm ar(cx, trusted_glob);
 
-      const char* bytes = "return 42";
+      static const char bytes[] = "return 42";
+
+      JS::SourceText<mozilla::Utf8Unit> srcBuf;
+      CHECK(srcBuf.init(cx, bytes, mozilla::ArrayLength(bytes) - 1,
+                        JS::SourceOwnership::Borrowed));
 
       JS::CompileOptions options(cx);
       options.setFileAndLine("", 0);
 
       JS::RootedObjectVector emptyScopeChain(cx);
-      CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "trusted", 0,
-                                    nullptr, bytes, strlen(bytes), &fun));
+      CHECK(JS::CompileFunction(cx, emptyScopeChain, options, "trusted", 0,
+                                nullptr, srcBuf, &fun));
       CHECK(JS_DefineProperty(cx, trusted_glob, "trusted", fun,
                               JSPROP_ENUMERATE));
       trusted_fun = JS_GetFunctionObject(fun);
@@ -183,19 +206,23 @@ BEGIN_TEST(testChromeBuffer) {
     JS::RootedObject callTrusted(cx, JS_GetFunctionObject(fun));
 
     const char* paramName = "f";
-    const char* bytes =
+    static const char bytes[] =
         "try {                                      "
         "  return untrusted(trusted);               "
         "} catch (e) {                              "
         "  return f();                              "
         "}                                          ";
 
+    JS::SourceText<mozilla::Utf8Unit> srcBuf;
+    CHECK(srcBuf.init(cx, bytes, mozilla::ArrayLength(bytes) - 1,
+                      JS::SourceOwnership::Borrowed));
+
     JS::CompileOptions options(cx);
     options.setFileAndLine("", 0);
 
     JS::RootedObjectVector emptyScopeChain(cx);
-    CHECK(JS::CompileFunctionUtf8(cx, emptyScopeChain, options, "untrusted", 1,
-                                  &paramName, bytes, strlen(bytes), &fun));
+    CHECK(JS::CompileFunction(cx, emptyScopeChain, options, "untrusted", 1,
+                              &paramName, srcBuf, &fun));
     CHECK(JS_DefineProperty(cx, global, "untrusted", fun, JSPROP_ENUMERATE));
 
     JS::RootedValue arg(cx, JS::ObjectValue(*callTrusted));
