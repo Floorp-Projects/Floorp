@@ -106,7 +106,7 @@ devtools/client/webreplay/mochitest/examples/*.html
 devtools/client/debugger/**
 
 # Ignore devtools imported repositories
-devtools/client/debugger/new/**
+devtools/client/debugger/**
 devtools/client/shared/components/reps/**
 
 # Ignore devtools preferences files
