@@ -690,13 +690,13 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
   { "business.facebook.com", true, false, false, -1, &kPinset_facebook },
   { "business.twitter.com", true, false, false, -1, &kPinset_twitterCom },
   { "ca.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
+  { "calendar.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "cd.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
   { "cdn.ampproject.org", true, false, false, -1, &kPinset_google_root_pems },
   { "cdn.mozilla.net", true, false, true, 16, &kPinset_mozilla_services },
   { "cdn.mozilla.org", true, false, true, 17, &kPinset_mozilla_services },
   { "cg.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
   { "ch.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
-  { "chart.apis.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "check.torproject.org", true, false, false, -1, &kPinset_tor },
   { "checkout.google.com", true, false, false, -1, &kPinset_google_root_pems },
   { "chfr.search.yahoo.com", false, true, false, -1, &kPinset_yahoo },
@@ -1152,4 +1152,4 @@ static const TransportSecurityPreload kPublicKeyPinningPreloadList[] = {
 
 static const int32_t kUnknownId = -1;
 
-static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1562847957319000);
+static const PRTime kPreloadPKPinsExpirationTime = INT64_C(1563193400460000);
