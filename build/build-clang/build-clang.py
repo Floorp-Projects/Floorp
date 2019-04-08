@@ -270,9 +270,7 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
 
     if is_final_stage and android_targets:
         cmake_args += [
-            "-DCOMPILER_RT_DEFAULT_TARGET_TRIPLE=%s" % android_targets.keys()[0],
             "-DLLVM_BUILTIN_TARGETS=%s" % ";".join(android_targets),
-            "-DLLVM_DEFAULT_TARGET_TRIPLE=%s" % android_targets.keys()[0],
             "-DLLVM_LIBDIR_SUFFIX=64",
             "-DLLVM_RUNTIME_TARGETS=%s" % ";".join(android_targets),
         ]
