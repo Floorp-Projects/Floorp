@@ -328,7 +328,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   /**
    * Tell this FrameLoader to use a particular remote browser.
    *
-   * This will assert if mRemoteBrowser is non-null.  In practice,
+   * This will assert if mBrowserParent is non-null.  In practice,
    * this means you can't have successfully run TryRemoteBrowser() on
    * this object, which means you can't have called ShowRemoteFrame()
    * or ReallyStartLoading().
@@ -480,7 +480,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // target process.
   uint64_t mPendingSwitchID;
 
-  RefPtr<TabParent> mRemoteBrowser;
+  RefPtr<TabParent> mBrowserParent;
   uint64_t mChildID;
 
   // This is used when this refers to a remote sub frame
