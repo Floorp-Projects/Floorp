@@ -8,7 +8,7 @@ processing jar.mn files.
 See the documentation for jar.mn on MDC for further details on the format.
 '''
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function
 
 import sys
 import os
