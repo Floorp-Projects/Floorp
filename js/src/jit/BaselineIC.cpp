@@ -3812,9 +3812,9 @@ bool DoCallFallback(JSContext* cx, BaselineFrame* frame, ICCall_Fallback* stub,
   // Only bother to try optimizing JSOP_CALL with CacheIR if the chain is still
   // allowed to attach stubs.
   if (canAttachStub) {
+    HandleValueArray args = HandleValueArray::fromMarkedLocation(argc, vp + 2);
     CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), argc, callee,
-                        callArgs.thisv(), newTarget,
-                        HandleValueArray::fromMarkedLocation(argc, vp + 2));
+                        callArgs.thisv(), newTarget, args);
     if (gen.tryAttachStub()) {
       ICStub* newStub = AttachBaselineCacheIRStub(
           cx, gen.writerRef(), gen.cacheKind(), gen.cacheIRStubKind(), script,
@@ -3933,10 +3933,10 @@ bool DoSpreadCallFallback(JSContext* cx, BaselineFrame* frame,
     RootedArrayObject aobj(cx, &arr.toObject().as<ArrayObject>());
     MOZ_ASSERT(aobj->length() == aobj->getDenseInitializedLength());
 
+    HandleValueArray args = HandleValueArray::fromMarkedLocation(
+        aobj->length(), aobj->getDenseElements());
     CallIRGenerator gen(cx, script, pc, op, stub->state().mode(), 1, callee,
-                        thisv, newTarget,
-                        HandleValueArray::fromMarkedLocation(
-                            aobj->length(), aobj->getDenseElements()));
+                        thisv, newTarget, args);
     if (gen.tryAttachStub()) {
       ICStub* newStub = AttachBaselineCacheIRStub(
           cx, gen.writerRef(), gen.cacheKind(), gen.cacheIRStubKind(), script,
