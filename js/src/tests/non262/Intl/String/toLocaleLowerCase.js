@@ -24,11 +24,6 @@ for (let locale of ["no_locale", "tr-invalid_ext", ["no_locale"], ["en", "no_loc
     assertThrowsInstanceOf(() => "x".toLocaleLowerCase(locale), RangeError);
 }
 
-// The language tag fast-path for String.prototype.toLocaleLowerCase doesn't
-// trip up on three element private-use only language tags.
-assertEq("A".toLocaleLowerCase("x-x"), "a");
-assertEq("A".toLocaleLowerCase("x-0"), "a");
-
 // No locale argument, undefined as locale, and empty array or array-like all
 // return the same result. Testing with "a/A" because it has only simple case
 // mappings.
