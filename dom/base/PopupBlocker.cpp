@@ -136,15 +136,11 @@ bool PopupBlocker::CanShowPopupByPermission(nsIPrincipal* aPrincipal) {
 }
 
 /* static */
-bool PopupBlocker::TryUsePopupOpeningToken(nsIPrincipal* aPrincipal) {
+bool PopupBlocker::TryUsePopupOpeningToken() {
   MOZ_ASSERT(sPopupStatePusherCount);
 
   if (!sUnusedPopupToken) {
     sUnusedPopupToken = true;
-    return true;
-  }
-
-  if (aPrincipal && nsContentUtils::IsSystemPrincipal(aPrincipal)) {
     return true;
   }
 

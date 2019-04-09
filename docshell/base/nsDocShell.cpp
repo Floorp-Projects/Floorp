@@ -9622,10 +9622,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
         // page is allowed to open them without abuse regardless of allowed
         // events
         if (PopupBlocker::GetPopupControlState() <= PopupBlocker::openBlocked) {
-          nsCOMPtr<nsINode> loadingNode =
-              mScriptGlobal->AsOuter()->GetFrameElementInternal();
-          popupBlocked = !PopupBlocker::TryUsePopupOpeningToken(
-              loadingNode ? loadingNode->NodePrincipal() : nullptr);
+          popupBlocked = !PopupBlocker::TryUsePopupOpeningToken();
         } else if (mIsActive &&
                    PopupBlocker::ConsumeTimerTokenForExternalProtocolIframe()) {
           popupBlocked = false;
