@@ -158,12 +158,6 @@ class HomeFragment : Fragment(), CoroutineScope {
 
         // We need the shadow to be above the components.
         homeDividerShadow.bringToFront()
-
-        wordmark.setOnClickListener {
-            FenixSnackbar.make(it, FenixSnackbar.LENGTH_LONG)
-                .setText("Testing")
-                .show()
-        }
     }
 
     override fun onDestroyView() {
