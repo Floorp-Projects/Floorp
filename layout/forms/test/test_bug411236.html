@@ -39,8 +39,7 @@ function test() {
     return;
   }
 
-  ok(window.oTarget instanceof HTMLButtonElement, "Should have focused an input element!")
-  ok(SpecialPowers.wrap(window.oTarget).type == "button", "Should have focused 'Browse...' button!");
+  ok(window.oTarget instanceof HTMLButtonElement, "Should have focused the browse button!");
   var e = document.createEvent("mouseevents");
   e.initMouseEvent("click", true, true, window, 0, 1, 1, 1, 1,
                     false, false, false, false, 0, null);
