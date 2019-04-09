@@ -80,7 +80,7 @@ using mozilla::DefaultXDisplay;
 #  include <winuser.h>
 #endif
 
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 
 #ifdef CreateEvent  // Thank you MS.
 #  undef CreateEvent
@@ -741,7 +741,7 @@ mozilla::LayoutDeviceIntPoint nsPluginFrame::GetRemoteTabChromeOffset() {
   if (XRE_IsContentProcess()) {
     if (nsPIDOMWindowOuter* window = GetContent()->OwnerDoc()->GetWindow()) {
       if (nsCOMPtr<nsPIDOMWindowOuter> topWindow = window->GetTop()) {
-        dom::TabChild* tc = dom::TabChild::GetFrom(topWindow);
+        dom::BrowserChild* tc = dom::BrowserChild::GetFrom(topWindow);
         if (tc) {
           offset += tc->GetChromeOffset();
         }

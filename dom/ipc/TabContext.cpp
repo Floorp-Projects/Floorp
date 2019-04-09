@@ -7,7 +7,7 @@
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/dom/PTabContext.h"
 #include "mozilla/dom/BrowserParent.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsServiceManagerUtils.h"
@@ -163,7 +163,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
         }
       } else if (ipcContext.opener().type() == PBrowserOrId::TPBrowserChild) {
         context =
-            static_cast<TabChild*>(ipcContext.opener().get_PBrowserChild());
+            static_cast<BrowserChild*>(ipcContext.opener().get_PBrowserChild());
       } else if (ipcContext.opener().type() == PBrowserOrId::TTabId) {
         // We should never get here because this PopupIPCTabContext is only
         // used for allocating a new tab id, not for allocating a PBrowser.
@@ -211,7 +211,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
     case IPCTabContext::TUnsafeIPCTabContext: {
       // XXXcatalinb: This used *only* by ServiceWorkerClients::OpenWindow.
       // It is meant as a temporary solution until service workers can
-      // provide a TabChild equivalent. Don't allow this on b2g since
+      // provide a BrowserChild equivalent. Don't allow this on b2g since
       // it might be used to escalate privileges.
       if (!StaticPrefs::dom_serviceWorkers_enabled()) {
         mInvalidReason = "ServiceWorkers should be enabled.";

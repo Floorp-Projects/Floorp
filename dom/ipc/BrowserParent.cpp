@@ -86,7 +86,7 @@
 #include "StructuredCloneData.h"
 #include "ColorPickerParent.h"
 #include "FilePickerParent.h"
-#include "TabChild.h"
+#include "BrowserChild.h"
 #include "LoadContext.h"
 #include "nsNetCID.h"
 #include "nsIAuthInformation.h"
@@ -740,7 +740,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvSetDimensions(const uint32_t& aFlags,
   NS_ENSURE_TRUE(treeOwnerAsWin, IPC_OK());
 
   // We only care about the parameters that actually changed, see more
-  // details in TabChild::SetDimensions.
+  // details in BrowserChild::SetDimensions.
   int32_t unused;
   int32_t x = aX;
   if (aFlags & nsIEmbeddingSiteWindow::DIM_FLAGS_IGNORE_X) {
@@ -1138,8 +1138,8 @@ void BrowserParent::SendRealMouseEvent(WidgetMouseEvent& aEvent) {
 
   if (mIsMouseEnterIntoWidgetEventSuppressed) {
     // In the case that the BrowserParent suppressed the eMouseEnterWidget event
-    // due to its corresponding TabChild wasn't ready to handle it, we have to
-    // resend it when the TabChild is ready.
+    // due to its corresponding BrowserChild wasn't ready to handle it, we have
+    // to resend it when the BrowserChild is ready.
     mIsMouseEnterIntoWidgetEventSuppressed = false;
     WidgetMouseEvent localEvent(aEvent);
     localEvent.mMessage = eMouseEnterIntoWidget;
@@ -2587,9 +2587,9 @@ BrowserParent* BrowserParent::GetFrom(nsIContent* aContent) {
 
 /*static*/
 TabId BrowserParent::GetTabIdFrom(nsIDocShell* docShell) {
-  nsCOMPtr<nsIBrowserChild> tabChild(TabChild::GetFrom(docShell));
-  if (tabChild) {
-    return static_cast<TabChild*>(tabChild.get())->GetTabId();
+  nsCOMPtr<nsIBrowserChild> browserChild(BrowserChild::GetFrom(docShell));
+  if (browserChild) {
+    return static_cast<BrowserChild*>(browserChild.get())->GetTabId();
   }
   return TabId(0);
 }
@@ -3289,7 +3289,7 @@ mozilla::ipc::IPCResult BrowserParent::RecvRemoteIsReadyToHandleInputEvents() {
   // When enabling input event prioritization, input events may preempt other
   // normal priority IPC messages. To prevent the input events preempt
   // PBrowserConstructor, we use an IPC 'RemoteIsReadyToHandleInputEvents' to
-  // notify the parent that TabChild is created and ready to handle input
+  // notify the parent that BrowserChild is created and ready to handle input
   // events.
   SetReadyToHandleInputEvents();
   return IPC_OK();

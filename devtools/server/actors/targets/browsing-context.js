@@ -700,7 +700,7 @@ const browsingContextTargetPrototype = {
   _onDocShellCreated(docShell) {
     // (chrome-)webnavigation-create is fired very early during docshell
     // construction. In new root docshells within child processes, involving
-    // TabChild, this event is from within this call:
+    // BrowserChild, this event is from within this call:
     //   https://hg.mozilla.org/mozilla-central/annotate/74d7fb43bb44/dom/ipc/TabChild.cpp#l912
     // whereas the chromeEventHandler (and most likely other stuff) is set
     // later:

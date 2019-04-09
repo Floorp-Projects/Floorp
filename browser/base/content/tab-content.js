@@ -18,7 +18,7 @@ var {ActorManagerChild} = ChromeUtils.import("resource://gre/modules/ActorManage
 
 ActorManagerChild.attach(this, "browsers");
 
-// TabChildGlobal
+// BrowserChildGlobal
 var global = this;
 
 // Keep a reference to the translation content handler to avoid it it being GC'ed.

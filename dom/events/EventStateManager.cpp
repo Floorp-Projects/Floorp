@@ -24,7 +24,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/FrameLoaderBinding.h"
 #include "mozilla/dom/MouseEventBinding.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/dom/UIEventBinding.h"
@@ -659,7 +659,7 @@ nsresult EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
         // If the eKeyPress event will be sent to a remote process, this
         // process needs to wait reply from the remote process for checking if
         // preceding eKeyDown event is consumed.  If preceding eKeyDown event
-        // is consumed in the remote process, TabChild won't send the event
+        // is consumed in the remote process, BrowserChild won't send the event
         // back to this process.  So, only when this process receives a reply
         // eKeyPress event in BrowserParent, we should handle accesskey in this
         // process.
@@ -1031,7 +1031,7 @@ bool EventStateManager::LookForAccessKeyAndExecute(
           // order.
           nsIDocShell* docShell = mPresContext->GetDocShell();
           nsCOMPtr<nsIBrowserChild> child =
-              docShell ? docShell->GetTabChild() : nullptr;
+              docShell ? docShell->GetBrowserChild() : nullptr;
           if (child) {
             child->SendRequestFocus(false);
           }
@@ -2041,8 +2041,8 @@ nsresult EventStateManager::GetContentViewer(nsIContentViewer** aCv) {
   nsCOMPtr<nsPIDOMWindowOuter> rootWindow = window->GetPrivateRoot();
   if (!rootWindow) return NS_ERROR_FAILURE;
 
-  TabChild* tabChild = TabChild::GetFrom(rootWindow);
-  if (!tabChild) {
+  BrowserChild* browserChild = BrowserChild::GetFrom(rootWindow);
+  if (!browserChild) {
     nsIFocusManager* fm = nsFocusManager::GetFocusManager();
     if (!fm) return NS_ERROR_FAILURE;
 
@@ -2050,7 +2050,7 @@ nsresult EventStateManager::GetContentViewer(nsIContentViewer** aCv) {
     fm->GetActiveWindow(getter_AddRefs(activeWindow));
     if (rootWindow != activeWindow) return NS_OK;
   } else {
-    if (!tabChild->ParentIsActive()) return NS_OK;
+    if (!browserChild->ParentIsActive()) return NS_OK;
   }
 
   nsCOMPtr<nsPIDOMWindowOuter> contentWindow =

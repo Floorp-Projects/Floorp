@@ -26,7 +26,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBDatabaseFileChild.h"
 #include "mozilla/dom/ipc/PendingIPCBlobChild.h"
 #include "mozilla/dom/IPCBlobUtils.h"
@@ -944,13 +944,13 @@ class WorkerPermissionChallenge final : public Runnable {
       return permission != PermissionRequestBase::kPermissionPrompt;
     }
 
-    TabChild* tabChild = TabChild::GetFrom(window);
-    MOZ_ASSERT(tabChild);
+    BrowserChild* browserChild = BrowserChild::GetFrom(window);
+    MOZ_ASSERT(browserChild);
 
     IPC::Principal ipcPrincipal(principal);
 
     RefPtr<WorkerPermissionChallenge> self(this);
-    tabChild->SendIndexedDBPermissionRequest(ipcPrincipal)
+    browserChild->SendIndexedDBPermissionRequest(ipcPrincipal)
         ->Then(
             GetCurrentThreadSerialEventTarget(), __func__,
             [self](const uint32_t& aPermission) { self->OperationCompleted(); },
@@ -1714,12 +1714,12 @@ mozilla::ipc::IPCResult BackgroundFactoryRequestChild::RecvPermissionChallenge(
     return IPC_OK();
   }
 
-  RefPtr<TabChild> tabChild = mFactory->GetTabChild();
-  MOZ_ASSERT(tabChild);
+  RefPtr<BrowserChild> browserChild = mFactory->GetBrowserChild();
+  MOZ_ASSERT(browserChild);
 
   IPC::Principal ipcPrincipal(principal);
 
-  tabChild->SendIndexedDBPermissionRequest(ipcPrincipal)
+  browserChild->SendIndexedDBPermissionRequest(ipcPrincipal)
       ->Then(
           GetCurrentThreadSerialEventTarget(), __func__,
           [this](const uint32_t& aPermission) {

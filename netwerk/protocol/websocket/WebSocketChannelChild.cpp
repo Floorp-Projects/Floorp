@@ -6,7 +6,7 @@
 
 #include "WebSocketLog.h"
 #include "base/compiler_specific.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "WebSocketChannelChild.h"
 #include "nsContentUtils.h"
@@ -425,15 +425,16 @@ WebSocketChannelChild::AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
   MOZ_ASSERT(aListener && !mListenerMT,
              "Invalid state for WebSocketChannelChild::AsyncOpen");
 
-  mozilla::dom::TabChild* tabChild = nullptr;
-  nsCOMPtr<nsIBrowserChild> iTabChild;
+  mozilla::dom::BrowserChild* browserChild = nullptr;
+  nsCOMPtr<nsIBrowserChild> iBrowserChild;
   NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
                                 NS_GET_IID(nsIBrowserChild),
-                                getter_AddRefs(iTabChild));
-  if (iTabChild) {
-    tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
+                                getter_AddRefs(iBrowserChild));
+  if (iBrowserChild) {
+    browserChild =
+        static_cast<mozilla::dom::BrowserChild*>(iBrowserChild.get());
   }
-  if (MissingRequiredTabChild(tabChild, "websocket")) {
+  if (MissingRequiredBrowserChild(browserChild, "websocket")) {
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -469,7 +470,7 @@ WebSocketChannelChild::AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
   SetupNeckoTarget();
 
   gNeckoChild->SendPWebSocketConstructor(
-      this, tabChild, IPC::SerializedLoadContext(this), mSerial);
+      this, browserChild, IPC::SerializedLoadContext(this), mSerial);
   if (!SendAsyncOpen(uri, nsCString(aOrigin), aInnerWindowID, mProtocol,
                      mEncrypted, mPingInterval, mClientSetPingInterval,
                      mPingResponseTimeout, mClientSetPingTimeout, loadInfoArgs,

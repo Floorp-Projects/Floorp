@@ -75,7 +75,7 @@ interface nsIRemoteTab : nsISupports
   void transmitPermissionsForPrincipal(in nsIPrincipal aPrincipal);
 
   /**
-   * True if any of the frames loaded in the TabChild have registered
+   * True if any of the frames loaded in the tab have registered
    * an onbeforeunload event handler.
    */
   readonly attribute boolean hasBeforeUnload;

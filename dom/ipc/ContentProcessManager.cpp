@@ -128,7 +128,7 @@ bool ContentProcessManager::RegisterRemoteFrame(
 
   struct RemoteFrameInfo info;
 
-  // If it's a PopupIPCTabContext, it's the case that a TabChild want to
+  // If it's a PopupIPCTabContext, it's the case that a BrowserChild want to
   // open a new tab. aOpenerTabId has to be it's parent frame's opener id.
   if (aContext.type() == IPCTabContext::TPopupIPCTabContext) {
     auto remoteFrameIter = iter->second.mRemoteFrames.find(aOpenerTabId);

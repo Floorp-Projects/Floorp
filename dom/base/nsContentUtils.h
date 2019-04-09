@@ -147,7 +147,7 @@ class MessageBroadcaster;
 class NodeInfo;
 class ContentChild;
 class ContentParent;
-class TabChild;
+class BrowserChild;
 class Selection;
 class BrowserParent;
 }  // namespace dom
@@ -2849,7 +2849,7 @@ class nsContentUtils {
       const nsContentPolicyType& aContentPolicyType,
       nsITransferable* aTransferable,
       mozilla::dom::ContentParent* aContentParent,
-      mozilla::dom::TabChild* aTabChild);
+      mozilla::dom::BrowserChild* aBrowserChild);
 
   static void TransferablesToIPCTransferables(
       nsIArray* aTransferables, nsTArray<mozilla::dom::IPCDataTransfer>& aIPC,
@@ -3331,7 +3331,7 @@ class nsContentUtils {
   static bool ContentIsLink(nsIContent* aContent);
 
   static already_AddRefed<mozilla::dom::ContentFrameMessageManager>
-  TryGetTabChildGlobal(nsISupports* aFrom);
+  TryGetBrowserChildGlobal(nsISupports* aFrom);
 
   // Get a serial number for a newly created inner or outer window.
   static uint32_t InnerOrOuterWindowCreated();

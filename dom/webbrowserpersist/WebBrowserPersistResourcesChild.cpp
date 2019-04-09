@@ -34,7 +34,7 @@ WebBrowserPersistResourcesChild::VisitDocument(
   // As a consequence of how PWebBrowserPersistDocumentConstructor
   // can be sent by both the parent and the child, we must pass the
   // aBrowser and outerWindowID arguments here, but the values are
-  // ignored by the parent.  In particular, the TabChild in which
+  // ignored by the parent.  In particular, the BrowserChild in which
   // persistence started does not necessarily exist at this point;
   // see bug 1203602.
   if (!Manager()->Manager()->SendPWebBrowserPersistDocumentConstructor(

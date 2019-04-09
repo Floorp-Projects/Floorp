@@ -11,7 +11,7 @@
 
 var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-// TabChildGlobal
+// BrowserChildGlobal
 var global = this;
 
 XPCOMUtils.defineLazyModuleGetters(this, {

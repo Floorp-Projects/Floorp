@@ -373,7 +373,7 @@ nested(upto inside_cpow) sync protocol PContent
     // created from either the child or parent process!
     //
     // The child creates the PBrowser as part of
-    // TabChild::BrowserFrameProvideWindow (which happens when the child's
+    // BrowserChild::BrowserFrameProvideWindow (which happens when the child's
     // content calls window.open()), and the parent creates the PBrowser as part
     // of ContentParent::CreateBrowser.
     //
