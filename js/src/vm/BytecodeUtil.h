@@ -57,7 +57,7 @@ enum {
   JOF_ATOM = 14,        /* uint32_t constant index */
   JOF_OBJECT = 15,      /* uint32_t object index */
   JOF_REGEXP = 16,      /* uint32_t regexp index */
-  JOF_DOUBLE = 17,      /* uint32_t index for double value */
+  JOF_DOUBLE = 17,      /* inline double value */
   JOF_SCOPE = 18,       /* uint32_t scope index */
   JOF_CODE_OFFSET = 19, /* int32_t bytecode offset */
   JOF_ICINDEX = 20,     /* uint32_t IC index */
@@ -161,6 +161,16 @@ static MOZ_ALWAYS_INLINE uint32_t GET_UINT32(const jsbytecode* pc) {
 
 static MOZ_ALWAYS_INLINE void SET_UINT32(jsbytecode* pc, uint32_t u) {
   mozilla::NativeEndian::copyAndSwapToLittleEndian(pc + 1, &u, 1);
+}
+
+static MOZ_ALWAYS_INLINE double GET_DOUBLE(const jsbytecode* pc) {
+  double result;
+  mozilla::NativeEndian::copyAndSwapFromLittleEndian(&result, pc + 1, 1);
+  return result;
+}
+
+static MOZ_ALWAYS_INLINE void SET_DOUBLE(jsbytecode* pc, double d) {
+  mozilla::NativeEndian::copyAndSwapToLittleEndian(pc + 1, &d, 1);
 }
 
 static MOZ_ALWAYS_INLINE int32_t GET_INT32(const jsbytecode* pc) {

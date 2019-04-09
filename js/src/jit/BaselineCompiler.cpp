@@ -2163,7 +2163,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_RESUMEINDEX() {
 
 template <>
 bool BaselineCompilerCodeGen::emit_JSOP_DOUBLE() {
-  frame.push(handler.script()->getConst(GET_UINT32_INDEX(handler.pc())));
+  frame.push(DoubleValue(GET_DOUBLE(handler.pc())));
   return true;
 }
 
@@ -2172,9 +2172,15 @@ bool BaselineInterpreterCodeGen::emit_JSOP_DOUBLE() {
   MOZ_CRASH("NYI: interpreter JSOP_DOUBLE");
 }
 
-template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_JSOP_BIGINT() {
-  return emit_JSOP_DOUBLE();
+template <>
+bool BaselineCompilerCodeGen::emit_JSOP_BIGINT() {
+  frame.push(handler.script()->getConst(GET_UINT32_INDEX(handler.pc())));
+  return true;
+}
+
+template <>
+bool BaselineInterpreterCodeGen::emit_JSOP_BIGINT() {
+  MOZ_CRASH("NYI: interpreter JSOP_BIGINT");
 }
 
 template <>
