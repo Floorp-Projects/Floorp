@@ -913,8 +913,8 @@ void ServoStyleSet::StyleNewSubtree(Element* aRoot) {
                                                                  aRoot)) {
     postTraversalRequired = Servo_TraverseSubtree(
         aRoot, mRawSet.get(), &snapshots,
-        ServoTraversalFlags::AnimationOnly | ServoTraversalFlags::Forgetful |
-            ServoTraversalFlags::ClearAnimationOnlyDirtyDescendants);
+        ServoTraversalFlags::AnimationOnly |
+            ServoTraversalFlags::FinalAnimationTraversal);
     MOZ_ASSERT(!postTraversalRequired);
   }
 }
