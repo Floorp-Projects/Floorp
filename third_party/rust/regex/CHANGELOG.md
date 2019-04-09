@@ -1,3 +1,50 @@
+1.0.2 (2018-07-18)
+==================
+This release exposes some new lower level APIs on `Regex` that permit
+amortizing allocation and controlling the location at which a search is
+performed in a more granular way. Most users of the regex crate will not
+need or want to use these APIs.
+
+New features:
+
+* [FEATURE #493](https://github.com/rust-lang/regex/pull/493):
+  Add a few lower level APIs for amortizing allocation and more fine grained
+  searching.
+
+Bug fixes:
+
+* [BUG 3981d2ad](https://github.com/rust-lang/regex/commit/3981d2ad):
+  Correct outdated documentation on `RegexBuilder::dot_matches_new_line`.
+* [BUG 7ebe4ae0](https://github.com/rust-lang/regex/commit/7ebe4ae0):
+  Correct outdated documentation on `Parser::allow_invalid_utf8` in the
+  `regex-syntax` crate.
+* [BUG 24c7770b](https://github.com/rust-lang/regex/commit/24c7770b):
+  Fix a bug in the HIR printer where it wouldn't correctly escape meta
+  characters in character classes.
+
+
+1.0.1 (2018-06-19)
+==================
+This release upgrades regex's Unicode tables to Unicode 11, and enables SIMD
+optimizations automatically on Rust stable (1.27 or newer).
+
+New features:
+
+* [FEATURE #486](https://github.com/rust-lang/regex/pull/486):
+  Implement `size_hint` on `RegexSet` match iterators.
+* [FEATURE #488](https://github.com/rust-lang/regex/pull/488):
+  Update Unicode tables for Unicode 11.
+* [FEATURE #490](https://github.com/rust-lang/regex/pull/490):
+  SIMD optimizations are now enabled automatically in Rust stable, for versions
+  1.27 and up. No compilation flags or features need to be set. CPU support
+  SIMD is detected automatically at runtime.
+
+Bug fixes:
+
+* [BUG #482](https://github.com/rust-lang/regex/pull/482):
+  Present a better compilation error when the `use_std` feature isn't used.
+
+
 1.0.0 (2018-05-01)
 ==================
 This release marks the 1.0 release of regex.

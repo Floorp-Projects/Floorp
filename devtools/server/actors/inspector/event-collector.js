@@ -253,18 +253,17 @@ class MainEventCollector {
    *         An array of unfiltered event listeners or an empty array
    */
   getDOMListeners(node) {
-    const els = isReplaying ? ReplayInspector.els : Services.els;
     if (typeof node.nodeName !== "undefined" && node.nodeName.toLowerCase() === "html") {
       const winListeners =
-        els.getListenerInfoFor(node.ownerGlobal) || [];
+        Services.els.getListenerInfoFor(node.ownerGlobal) || [];
       const docElementListeners =
-        els.getListenerInfoFor(node) || [];
+        Services.els.getListenerInfoFor(node) || [];
       const docListeners =
-        els.getListenerInfoFor(node.parentNode) || [];
+        Services.els.getListenerInfoFor(node.parentNode) || [];
 
       return [...winListeners, ...docElementListeners, ...docListeners];
     }
-    return els.getListenerInfoFor(node) || [];
+    return Services.els.getListenerInfoFor(node) || [];
   }
 
   getJQuery(node) {
