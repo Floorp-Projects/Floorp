@@ -11,11 +11,6 @@ const testcases = [
     { locale: "en-x-yz", start: -1, end: 0 },
     { locale: "en-x-u-kf", start: -1, end: 0 },
 
-    // Privateuse only language tag.
-    { locale: "x-only", start: -1, end: 0 },
-    { locale: "x-only-u", start: -1, end: 0 },
-    { locale: "x-only-u-kf", start: -1, end: 0 },
-
     // Unicode extension sequence starts with key subtag.
     // - no suceeding key or type subtags.
     { locale: "en-u-ab", start: 2, end: 7 },

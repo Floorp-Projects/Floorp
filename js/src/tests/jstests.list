@@ -730,3 +730,6 @@ skip script test262/intl402/language-tags-valid.js
 # Irregular grandfathered tags no longer allowed: "en-GB-oed"
 skip script test262/intl402/Intl/getCanonicalLocales/preferred-grandfathered.js
 skip script test262/intl402/RelativeTimeFormat/constructor/constructor/locales-valid.js
+
+# Privateuse-only tags no longer allowed: "x-u-foo"
+skip script test262/intl402/Intl/getCanonicalLocales/weird-cases.js
