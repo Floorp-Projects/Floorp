@@ -23,6 +23,14 @@ namespace dom {
 struct LSSnapshotInitInfo
 {
   /**
+   * Boolean indicating whether the `key` provided as an argument to the
+   * PBackgroundLSSnapshot constructor did not exist in the Datastore and should
+   * be treated as an unknown and therefore undefined value. Note that `key` may
+   * have been provided as a void string, in which case this value is forced to
+   * be false.
+   */
+  bool addKeyToUnknownItems;
+  /**
    * As many key/value or key/void pairs as the snapshot prefill byte budget
    * allowed.
    */
@@ -99,11 +107,20 @@ parent:
    * consult any other threads or perform any I/O.  Additionally, the response
    * is explicitly bounded in size by the tunable snapshot prefill byte limit.
    *
+   * @param key
+   *   If key is non-void, then the snapshot is being triggered by a direct
+   *   access to a localStorage key (get, set, or removal, with set/removal
+   *   requiring the old value in order to properly populate the "storage"
+   *   event), the key being requested. It's possible the key is not present in
+   *   localStorage, in which case LSSnapshotInitInfo::addKeyToUnknownItems will
+   *   be true indicating that there is no such key/value pair, otherwise it
+   *   will be false.
    * @param increasePeakUsage
    *   Whether the parent should attempt to pre-allocate some amount of quota
    *   usage to the Snapshot.
    */
   sync PBackgroundLSSnapshot(nsString documentURI,
+                             nsString key,
                              bool increasePeakUsage,
                              int64_t requestedSize,
                              int64_t minSize)
