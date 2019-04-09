@@ -195,11 +195,17 @@ add_task(async function sortingCheck() {
   const typeColumn = win.document.getElementById("typeColumn");
   Assert.ok(typeColumn, "typeColumn is present in handlersView.");
 
+  let expectedNumberOfItems = handlerView.querySelectorAll("richlistitem").length;
+
   // Test default sorting
   assertSortByType("ascending");
 
   const oldDir = typeColumn.getAttribute("sortDirection");
 
+  // click on an item and sort again:
+  let itemToUse = handlerView.querySelector("richlistitem[type=mailto]");
+  itemToUse.scrollIntoView({block: "center"});
+  itemToUse.closest("richlistbox").selectItem(itemToUse);
 
   // Test sorting on the type column
   typeColumn.click();
@@ -230,10 +236,10 @@ add_task(async function sortingCheck() {
   assertSortByType("ascending");
 
   function assertSortByAction(order) {
-  Assert.equal(actionColumn.getAttribute("sortDirection"),
-               order,
-               `Sort direction should be ${order}`);
+    Assert.equal(actionColumn.getAttribute("sortDirection"), order,
+                 `Sort direction should be ${order}`);
     let siteItems = handlerView.getElementsByTagName("richlistitem");
+    Assert.equal(siteItems.length, expectedNumberOfItems, "Number of items should not change.");
     for (let i = 0; i < siteItems.length - 1; ++i) {
       let aType = siteItems[i].getAttribute("actionDescription").toLowerCase();
       let bType = siteItems[i + 1].getAttribute("actionDescription").toLowerCase();
@@ -252,10 +258,11 @@ add_task(async function sortingCheck() {
   }
 
   function assertSortByType(order) {
-  Assert.equal(typeColumn.getAttribute("sortDirection"),
-               order,
-               `Sort direction should be ${order}`);
+    Assert.equal(typeColumn.getAttribute("sortDirection"), order,
+                 `Sort direction should be ${order}`);
+
     let siteItems = handlerView.getElementsByTagName("richlistitem");
+    Assert.equal(siteItems.length, expectedNumberOfItems, "Number of items should not change.");
     for (let i = 0; i < siteItems.length - 1; ++i) {
       let aType = siteItems[i].getAttribute("typeDescription").toLowerCase();
       let bType = siteItems[i + 1].getAttribute("typeDescription").toLowerCase();
