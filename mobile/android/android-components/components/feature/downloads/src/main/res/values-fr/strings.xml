@@ -9,6 +9,6 @@
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
     <string name="mozac_feature_downloads_dialog_cancel">Annuler</string>
 
-    <!-- Error shown when the user is trying to download a invalid file. -->
-    <string name="mozac_feature_downloads_file_not_supported">Protocole de téléchargement non pris en charge</string>
+    <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
+    <string name="mozac_feature_downloads_file_not_supported2">%1$s ne peut pas télécharger ce type de fichier</string>
 </resources>

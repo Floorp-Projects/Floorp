@@ -13,10 +13,18 @@
     <!-- Option in a dialog for requesting a microphone permission, this option will give access to
          the first microphone-->
     <string name="mozac_feature_sitepermissions_option_microphone_one">Microfono 1</string>
+    <!-- Option in a dialog for requesting a camera permission, this option will give access to
+         back facing camera-->
+    <string name="mozac_feature_sitepermissions_back_facing_camera2">Fotocamera posteriore</string>
+    <!-- Option in a dialog for requesting a camera permission, this option will give access to
+     front facing camera-->
+    <string name="mozac_feature_sitepermissions_selfie_camera2">Fotocamera frontale</string>
     <!-- Text for a positive button in a permission request dialog, this button will give
         access to this permission-->
-    <string name="mozac_feature_sitepermissions_allow">Permetti</string>
+    <string name="mozac_feature_sitepermissions_allow">Consenti</string>
     <!-- Text for a negative button in a permission request dialog, this button will do not give
     access to this permission-->
     <string name="mozac_feature_sitepermissions_not_allow">Non permettere</string>
-    </resources>
+    <!-- Text for a checkbox in a permission request dialog, this will allow to not show again the prompt-->
+    <string name="mozac_feature_sitepermissions_do_not_ask_again_on_this_site2">Ricorda la scelta per questo sito</string>
+</resources>

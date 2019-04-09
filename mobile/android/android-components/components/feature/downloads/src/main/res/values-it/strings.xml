@@ -6,4 +6,6 @@
     <string name="mozac_feature_downloads_dialog_download">Scarica</string>
     <!-- Alert dialog confirmation before download a file, this is the negative action. -->
     <string name="mozac_feature_downloads_dialog_cancel">Annulla</string>
-    </resources>
+    <!-- Error shown when the user is trying to download a invalid file. %1$s will be replaced with the name of the app. -->
+    <string name="mozac_feature_downloads_file_not_supported2">Non è possibile scaricare questo tipo di file in %1$s</string>
+</resources>

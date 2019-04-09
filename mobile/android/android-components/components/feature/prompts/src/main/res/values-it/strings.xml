@@ -4,6 +4,8 @@
     <string name="mozac_feature_prompts_ok">OK</string>
     <!-- Text for confirmation for a negative action in dialog.  -->
     <string name="mozac_feature_prompts_cancel">Annulla</string>
+    <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
+    <string name="mozac_feature_prompts_no_more_dialogs">Impedisci a questa pagina di aprire ulteriori finestre di dialogo</string>
     <!-- Title of a date picker dialog, this text is shown above a date picker. -->
     <string name="mozac_feature_prompts_pick_a_date">Seleziona data</string>
     <!-- Title of a time picker dialog, this text is shown above a time picker. -->
