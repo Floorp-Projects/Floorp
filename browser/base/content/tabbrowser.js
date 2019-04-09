@@ -235,9 +235,10 @@ window._gBrowser = {
   },
 
   get visibleTabs() {
-    if (!this._visibleTabs)
-      this._visibleTabs = Array.filter(this.tabs,
-        tab => !tab.hidden && !tab.closing);
+    if (!this._visibleTabs) {
+      this._visibleTabs =
+        Array.prototype.filter.call(this.tabs, tab => !tab.hidden && !tab.closing);
+    }
     return this._visibleTabs;
   },
 
@@ -3181,9 +3182,7 @@ window._gBrowser = {
     let remainingTabs = this.visibleTabs;
     let numTabs = remainingTabs.length;
     if (numTabs == 0 || numTabs == 1 && remainingTabs[0] == aTab) {
-      remainingTabs = Array.filter(this.tabs, function(tab) {
-        return !tab.closing;
-      }, this);
+      remainingTabs = Array.prototype.filter.call(this.tabs, tab => !tab.closing);
     }
 
     // Try to find a remaining tab that comes after the given tab
