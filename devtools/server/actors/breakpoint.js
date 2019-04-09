@@ -8,6 +8,8 @@
 
 "use strict";
 
+const { formatDisplayName } = require("devtools/server/actors/frame");
+
 /**
  * Set breakpoints on all the given entry points with the given
  * BreakpointActor as the handler.
@@ -95,13 +97,16 @@ BreakpointActor.prototype = {
       for (const offset of offsets) {
         const { lineNumber, columnNumber } = script.getOffsetLocation(offset);
         script.replayVirtualConsoleLog(
-          offset, options.logValue, options.condition, (executionPoint, rv) => {
+          offset,
+          options.logValue,
+          options.condition,
+          (executionPoint, rv) => {
             const message = {
               filename: script.url,
               lineNumber,
               columnNumber,
               executionPoint,
-              "arguments": ["return" in rv ? rv.return : rv.throw],
+              arguments: ["return" in rv ? rv.return : rv.throw],
               logpointId: options.logGroupId,
             };
             this.threadActor._parent._consoleActor.onConsoleAPICall(message);
@@ -174,22 +179,26 @@ BreakpointActor.prototype = {
     } = this.threadActor.sources.getFrameLocation(frame);
     const url = generatedSourceActor.url;
 
-    if (this.threadActor.sources.isBlackBoxed(url, generatedLine, generatedColumn)
-        || this.threadActor.skipBreakpoints
-        || frame.onStep) {
+    if (
+      this.threadActor.sources.isBlackBoxed(url, generatedLine, generatedColumn) ||
+      this.threadActor.skipBreakpoints ||
+      frame.onStep
+    ) {
       return undefined;
     }
 
     // If we're trying to pop this frame, and we see a breakpoint at
     // the spot at which popping started, ignore it.  See bug 970469.
     const locationAtFinish = frame.onPop && frame.onPop.generatedLocation;
-    if (locationAtFinish &&
-        locationAtFinish.generatedLine === generatedLine &&
-        locationAtFinish.generatedColumn === generatedColumn) {
+    if (
+      locationAtFinish &&
+      locationAtFinish.generatedLine === generatedLine &&
+      locationAtFinish.generatedColumn === generatedColumn
+    ) {
       return undefined;
     }
 
-    const reason = { type: "breakpoint", actors: [ this.actorID ] };
+    const reason = { type: "breakpoint", actors: [this.actorID] };
     const { condition, logValue } = this.options || {};
 
     // When replaying, breakpoints with log values are handled via
@@ -212,7 +221,8 @@ BreakpointActor.prototype = {
     }
 
     if (logValue) {
-      const completion = frame.eval(`[${logValue}]`);
+      const displayName = formatDisplayName(frame);
+      const completion = frame.evalWithBindings(`[${logValue}]`, { displayName });
       let value;
       if (!completion) {
         // The evaluation was killed (possibly by the slow script dialog).
@@ -231,7 +241,8 @@ BreakpointActor.prototype = {
         filename: url,
         lineNumber: generatedLine,
         columnNumber: generatedColumn,
-        "arguments": value,
+        level: "logPoint",
+        arguments: value,
       };
       this.threadActor._parent._consoleActor.onConsoleAPICall(message);
 
