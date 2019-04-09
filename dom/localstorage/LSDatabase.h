@@ -79,7 +79,8 @@ class LSDatabase final {
  private:
   ~LSDatabase();
 
-  nsresult EnsureSnapshot(LSObject* aObject, bool aExplicit = false);
+  nsresult EnsureSnapshot(LSObject* aObject, const nsAString& aKey,
+                          bool aExplicit = false);
 
   void AllowToClose();
 };
