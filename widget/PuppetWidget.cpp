@@ -829,7 +829,7 @@ nsresult PuppetWidget::NotifyIMEOfTextChange(
     return NS_ERROR_FAILURE;
   }
 
-  // TabParent doesn't this this to cache.  we don't send the notification
+  // BrowserParent doesn't this this to cache.  we don't send the notification
   // if parent process doesn't request NOTIFY_TEXT_CHANGE.
   if (mIMENotificationRequestsOfParent.WantTextChange()) {
     mTabChild->SendNotifyIMETextChange(mContentCache, aIMENotification);

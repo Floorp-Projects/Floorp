@@ -17,7 +17,7 @@
 namespace mozilla {
 
 namespace dom {
-class TabParent;
+class BrowserParent;
 }  // namespace dom
 
 namespace plugins {
@@ -48,7 +48,7 @@ class PluginWidgetParent : public PPluginWidgetParent {
 
  private:
   // The tab our connection is associated with.
-  mozilla::dom::TabParent* GetTabParent();
+  mozilla::dom::BrowserParent* GetBrowserParent();
 
  private:
   void KillWidget();

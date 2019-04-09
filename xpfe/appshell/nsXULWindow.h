@@ -184,11 +184,11 @@ class nsXULWindow : public nsIBaseWindow,
   nsString mTitle;
   nsIntRect mOpenerScreenRect;  // the screen rect of the opener
 
-  nsCOMPtr<nsIRemoteTab> mPrimaryTabParent;
+  nsCOMPtr<nsIRemoteTab> mPrimaryBrowserParent;
 
  private:
-  // GetPrimaryTabParentSize is called from xpidl methods and we don't have a
-  // good way to annotate those with MOZ_CAN_RUN_SCRIPT yet.  It takes no
+  // GetPrimaryBrowserParentSize is called from xpidl methods and we don't have
+  // a good way to annotate those with MOZ_CAN_RUN_SCRIPT yet.  It takes no
   // refcounted args other than "this", and the "this" uses seem ok.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   GetPrimaryRemoteTabSize(int32_t* aWidth, int32_t* aHeight);

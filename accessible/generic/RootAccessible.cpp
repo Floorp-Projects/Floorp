@@ -669,12 +669,12 @@ ProxyAccessible* RootAccessible::GetPrimaryRemoteTopLevelContentDoc() const {
   mDocumentNode->GetDocShell()->GetTreeOwner(getter_AddRefs(owner));
   NS_ENSURE_TRUE(owner, nullptr);
 
-  nsCOMPtr<nsIRemoteTab> tabParent;
-  owner->GetPrimaryRemoteTab(getter_AddRefs(tabParent));
-  if (!tabParent) {
+  nsCOMPtr<nsIRemoteTab> browserParent;
+  owner->GetPrimaryRemoteTab(getter_AddRefs(browserParent));
+  if (!browserParent) {
     return nullptr;
   }
 
-  auto tab = static_cast<dom::TabParent*>(tabParent.get());
+  auto tab = static_cast<dom::BrowserParent*>(browserParent.get());
   return tab->GetTopLevelDocAccessible();
 }

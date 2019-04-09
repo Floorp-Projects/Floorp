@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/dom/PTabContext.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/StaticPrefs.h"
 #include "nsIScriptSecurityManager.h"
@@ -142,7 +142,8 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
 
       TabContext* context;
       if (ipcContext.opener().type() == PBrowserOrId::TPBrowserParent) {
-        context = TabParent::GetFrom(ipcContext.opener().get_PBrowserParent());
+        context =
+            BrowserParent::GetFrom(ipcContext.opener().get_PBrowserParent());
         if (!context) {
           mInvalidReason =
               "Child is-browser process tried to "
@@ -151,10 +152,10 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
         }
         if (context->IsMozBrowserElement() &&
             !ipcContext.isMozBrowserElement()) {
-          // If the TabParent corresponds to a browser element, then it can only
-          // open other browser elements, for security reasons.  We should have
-          // checked this before calling the TabContext constructor, so this is
-          // a fatal error.
+          // If the BrowserParent corresponds to a browser element, then it can
+          // only open other browser elements, for security reasons.  We should
+          // have checked this before calling the TabContext constructor, so
+          // this is a fatal error.
           mInvalidReason =
               "Child is-browser process tried to "
               "open a non-browser tab.";

@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "TabParent.h"
+#include "BrowserParent.h"
 
-// TabParent.h transitively includes <windows.h>, which does
+// BrowserParent.h transitively includes <windows.h>, which does
 //   #define CreateEvent CreateEventW
 // That messes up our call to EventDispatcher::CreateEvent below.
 
@@ -172,10 +172,11 @@ BrowserElementParent::DispatchOpenWindowEvent(Element* aOpenerFrameElement,
 
 /*static*/
 BrowserElementParent::OpenWindowResult BrowserElementParent::OpenWindowOOP(
-    TabParent* aOpenerTabParent, TabParent* aPopupTabParent,
+    BrowserParent* aOpenerBrowserParent, BrowserParent* aPopupBrowserParent,
     const nsAString& aURL, const nsAString& aName, const nsAString& aFeatures) {
   // Create an iframe owned by the same document which owns openerFrameElement.
-  nsCOMPtr<Element> openerFrameElement = aOpenerTabParent->GetOwnerElement();
+  nsCOMPtr<Element> openerFrameElement =
+      aOpenerBrowserParent->GetOwnerElement();
   NS_ENSURE_TRUE(openerFrameElement, BrowserElementParent::OPEN_WINDOW_IGNORED);
   RefPtr<HTMLIFrameElement> popupFrameElement =
       CreateIframe(openerFrameElement, aName, /* aRemote = */ true);
@@ -201,9 +202,9 @@ BrowserElementParent::OpenWindowResult BrowserElementParent::OpenWindowOOP(
 
   // The popup was not blocked, so hook up the frame element and the popup tab
   // parent, and return success.
-  aPopupTabParent->SetOwnerElement(popupFrameElement);
+  aPopupBrowserParent->SetOwnerElement(popupFrameElement);
   popupFrameElement->AllowCreateFrameLoader();
-  popupFrameElement->CreateRemoteFrameLoader(aPopupTabParent);
+  popupFrameElement->CreateRemoteFrameLoader(aPopupBrowserParent);
 
   return opened;
 }

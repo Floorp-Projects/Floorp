@@ -7256,14 +7256,15 @@ class DomPromiseListener final : dom::PromiseNativeHandler {
 
   virtual void ResolvedCallback(JSContext *aCx,
                                 JS::Handle<JS::Value> aValue) override {
-    nsCOMPtr<nsIRemoteTab> tabParent;
+    nsCOMPtr<nsIRemoteTab> browserParent;
     JS::Rooted<JSObject *> obj(aCx, &aValue.toObject());
-    nsresult rv = UnwrapArg<nsIRemoteTab>(aCx, obj, getter_AddRefs(tabParent));
+    nsresult rv =
+        UnwrapArg<nsIRemoteTab>(aCx, obj, getter_AddRefs(browserParent));
     if (NS_FAILED(rv)) {
       mPromiseHolder.Reject(rv, __func__);
       return;
     }
-    mPromiseHolder.Resolve(tabParent, __func__);
+    mPromiseHolder.Resolve(browserParent, __func__);
   }
 
   virtual void RejectedCallback(JSContext *aCx,

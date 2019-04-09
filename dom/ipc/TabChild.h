@@ -645,7 +645,7 @@ class TabChild final : public TabChildBase,
   WindowsHandle WidgetNativeData() { return mWidgetNativeData; }
 
   // The transform from the coordinate space of this TabChild to the coordinate
-  // space of the native window its TabParent is in.
+  // space of the native window its BrowserParent is in.
   mozilla::LayoutDeviceToLayoutDeviceMatrix4x4
   GetChildToParentConversionMatrix() const;
 

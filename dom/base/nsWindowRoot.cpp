@@ -22,7 +22,7 @@
 #include "nsIController.h"
 #include "xpcpublic.h"
 #include "nsCycleCollectionParticipant.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/JSWindowActorService.h"
@@ -300,13 +300,13 @@ JSObject* nsWindowRoot::WrapObject(JSContext* aCx,
   return mozilla::dom::WindowRoot_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-void nsWindowRoot::AddBrowser(mozilla::dom::TabParent* aBrowser) {
+void nsWindowRoot::AddBrowser(mozilla::dom::BrowserParent* aBrowser) {
   nsWeakPtr weakBrowser =
       do_GetWeakReference(static_cast<nsIRemoteTab*>(aBrowser));
   mWeakBrowsers.PutEntry(weakBrowser);
 }
 
-void nsWindowRoot::RemoveBrowser(mozilla::dom::TabParent* aBrowser) {
+void nsWindowRoot::RemoveBrowser(mozilla::dom::BrowserParent* aBrowser) {
   nsWeakPtr weakBrowser =
       do_GetWeakReference(static_cast<nsIRemoteTab*>(aBrowser));
   mWeakBrowsers.RemoveEntry(weakBrowser);
@@ -315,16 +315,17 @@ void nsWindowRoot::RemoveBrowser(mozilla::dom::TabParent* aBrowser) {
 void nsWindowRoot::EnumerateBrowsers(BrowserEnumerator aEnumFunc, void* aArg) {
   // Collect strong references to all browsers in a separate array in
   // case aEnumFunc alters mWeakBrowsers.
-  nsTArray<RefPtr<TabParent>> tabParents;
+  nsTArray<RefPtr<BrowserParent>> browserParents;
   for (auto iter = mWeakBrowsers.ConstIter(); !iter.Done(); iter.Next()) {
-    nsCOMPtr<nsIRemoteTab> tabParent(do_QueryReferent(iter.Get()->GetKey()));
-    if (TabParent* tab = TabParent::GetFrom(tabParent)) {
-      tabParents.AppendElement(tab);
+    nsCOMPtr<nsIRemoteTab> browserParent(
+        do_QueryReferent(iter.Get()->GetKey()));
+    if (BrowserParent* tab = BrowserParent::GetFrom(browserParent)) {
+      browserParents.AppendElement(tab);
     }
   }
 
-  for (uint32_t i = 0; i < tabParents.Length(); ++i) {
-    aEnumFunc(tabParents[i], aArg);
+  for (uint32_t i = 0; i < browserParents.Length(); ++i) {
+    aEnumFunc(browserParents[i], aArg);
   }
 }
 

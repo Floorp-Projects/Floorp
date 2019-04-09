@@ -9,7 +9,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/hal_sandbox/PHalChild.h"
 #include "mozilla/hal_sandbox/PHalParent.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/fallback/FallbackScreenConfiguration.h"
 #include "mozilla/EnumeratedRange.h"
@@ -166,10 +166,10 @@ class HalParent : public PHalParent,
       InfallibleTArray<unsigned int>&& pattern, InfallibleTArray<uint64_t>&& id,
       PBrowserParent* browserParent) override {
     // We give all content vibration permission.
-    //    TabParent *tabParent = TabParent::GetFrom(browserParent);
+    //    BrowserParent *browserParent = BrowserParent::GetFrom(browserParent);
     /* xxxkhuey wtf
     nsCOMPtr<nsIDOMWindow> window =
-      do_QueryInterface(tabParent->GetBrowserDOMWindow());
+      do_QueryInterface(browserParent->GetBrowserDOMWindow());
     */
     WindowIdentifier newID(id, nullptr);
     hal::Vibrate(pattern, newID);
@@ -178,10 +178,10 @@ class HalParent : public PHalParent,
 
   virtual mozilla::ipc::IPCResult RecvCancelVibrate(
       InfallibleTArray<uint64_t>&& id, PBrowserParent* browserParent) override {
-    // TabParent *tabParent = TabParent::GetFrom(browserParent);
+    // BrowserParent *browserParent = BrowserParent::GetFrom(browserParent);
     /* XXXkhuey wtf
     nsCOMPtr<nsIDOMWindow> window =
-      tabParent->GetBrowserDOMWindow();
+      browserParent->GetBrowserDOMWindow();
     */
     WindowIdentifier newID(id, nullptr);
     hal::CancelVibrate(newID);

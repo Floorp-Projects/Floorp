@@ -8,7 +8,7 @@
 #include "mozilla/net/FTPChannelParent.h"
 #include "nsStringStream.h"
 #include "mozilla/net/ChannelEventQueue.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "nsFTPChannel.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
@@ -54,8 +54,8 @@ FTPChannelParent::FTPChannelParent(const PBrowserOrId& aIframeEmbedding,
   MOZ_ASSERT(handler, "no ftp handler");
 
   if (aIframeEmbedding.type() == PBrowserOrId::TPBrowserParent) {
-    mTabParent =
-        static_cast<dom::TabParent*>(aIframeEmbedding.get_PBrowserParent());
+    mBrowserParent =
+        static_cast<dom::BrowserParent*>(aIframeEmbedding.get_PBrowserParent());
   }
 
   mEventQ = new ChannelEventQueue(static_cast<nsIParentChannel*>(this));
@@ -551,12 +551,12 @@ NS_IMETHODIMP
 FTPChannelParent::GetInterface(const nsIID& uuid, void** result) {
   if (uuid.Equals(NS_GET_IID(nsIAuthPromptProvider)) ||
       uuid.Equals(NS_GET_IID(nsISecureBrowserUI))) {
-    if (mTabParent) {
-      return mTabParent->QueryInterface(uuid, result);
+    if (mBrowserParent) {
+      return mBrowserParent->QueryInterface(uuid, result);
     }
   } else if (uuid.Equals(NS_GET_IID(nsIAuthPrompt)) ||
              uuid.Equals(NS_GET_IID(nsIAuthPrompt2))) {
-    nsCOMPtr<nsIAuthPromptProvider> provider(do_QueryObject(mTabParent));
+    nsCOMPtr<nsIAuthPromptProvider> provider(do_QueryObject(mBrowserParent));
     if (provider) {
       return provider->GetAuthPrompt(nsIAuthPromptProvider::PROMPT_NORMAL, uuid,
                                      result);
