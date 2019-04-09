@@ -559,7 +559,7 @@ already_AddRefed<ComputedStyle> nsComputedDOMStyle::DoGetComputedStyleNoFlush(
                                  ? StyleRuleInclusion::DefaultOnly
                                  : StyleRuleInclusion::All;
   RefPtr<ComputedStyle> result =
-      styleSet->ResolveStyleLazily(aElement, pseudoType, rules);
+      styleSet->ResolveStyleLazily(*aElement, pseudoType, rules);
   return result.forget();
 }
 

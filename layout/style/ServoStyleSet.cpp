@@ -312,15 +312,6 @@ void ServoStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled) {
   SetStylistStyleSheetsDirty();
 }
 
-already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleFor(
-    Element* aElement, LazyComputeBehavior aMayCompute) {
-  if (aMayCompute == LazyComputeBehavior::Allow) {
-    return ResolveStyleLazily(aElement, PseudoStyleType::NotPseudo);
-  }
-
-  return ResolveServoStyle(*aElement);
-}
-
 const ServoElementSnapshotTable& ServoStyleSet::Snapshots() {
   MOZ_ASSERT(GetPresContext(), "Styling a document without a shell?");
   return GetPresContext()->RestyleManager()->Snapshots();
@@ -496,13 +487,6 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolvePseudoElementStyle(
 
   MOZ_ASSERT(computedValues);
   return computedValues.forget();
-}
-
-already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazily(
-    Element* aElement, PseudoStyleType aPseudoType,
-    StyleRuleInclusion aRuleInclusion) {
-  PreTraverseSync();
-  return ResolveStyleLazilyInternal(aElement, aPseudoType, aRuleInclusion);
 }
 
 already_AddRefed<ComputedStyle>
@@ -1145,12 +1129,13 @@ void ServoStyleSet::ClearNonInheritingComputedStyles() {
   }
 }
 
-already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazilyInternal(
-    Element* aElement, PseudoStyleType aPseudoType,
+already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazily(
+    Element& aElement, PseudoStyleType aPseudoType,
     StyleRuleInclusion aRuleInclusion) {
+  PreTraverseSync();
   MOZ_ASSERT(GetPresContext(),
              "For now, no style resolution without a pres context");
-  GetPresContext()->EffectCompositor()->PreTraverse(aElement, aPseudoType);
+  GetPresContext()->EffectCompositor()->PreTraverse(&aElement, aPseudoType);
   MOZ_ASSERT(!StylistNeedsUpdate());
 
   AutoSetInServoTraversal guard(this);
@@ -1166,20 +1151,20 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazilyInternal(
    * getComputedStyle, the only API where this can be observed, to look at the
    * style of the pseudo-element if it exists instead.
    */
-  Element* elementForStyleResolution = aElement;
+  Element* elementForStyleResolution = &aElement;
   PseudoStyleType pseudoTypeForStyleResolution = aPseudoType;
   if (aPseudoType == PseudoStyleType::before) {
-    if (Element* pseudo = nsLayoutUtils::GetBeforePseudo(aElement)) {
+    if (Element* pseudo = nsLayoutUtils::GetBeforePseudo(&aElement)) {
       elementForStyleResolution = pseudo;
       pseudoTypeForStyleResolution = PseudoStyleType::NotPseudo;
     }
   } else if (aPseudoType == PseudoStyleType::after) {
-    if (Element* pseudo = nsLayoutUtils::GetAfterPseudo(aElement)) {
+    if (Element* pseudo = nsLayoutUtils::GetAfterPseudo(&aElement)) {
       elementForStyleResolution = pseudo;
       pseudoTypeForStyleResolution = PseudoStyleType::NotPseudo;
     }
   } else if (aPseudoType == PseudoStyleType::marker) {
-    if (Element* pseudo = nsLayoutUtils::GetMarkerPseudo(aElement)) {
+    if (Element* pseudo = nsLayoutUtils::GetMarkerPseudo(&aElement)) {
       elementForStyleResolution = pseudo;
       pseudoTypeForStyleResolution = PseudoStyleType::NotPseudo;
     }
@@ -1191,7 +1176,7 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazilyInternal(
                                &Snapshots(), mRawSet.get())
           .Consume();
 
-  if (GetPresContext()->EffectCompositor()->PreTraverse(aElement,
+  if (GetPresContext()->EffectCompositor()->PreTraverse(&aElement,
                                                         aPseudoType)) {
     computedValues =
         Servo_ResolveStyleLazily(elementForStyleResolution,

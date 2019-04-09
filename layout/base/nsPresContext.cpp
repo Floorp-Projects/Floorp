@@ -1039,6 +1039,7 @@ static bool CheckOverflow(const nsStyleDisplay* aDisplay,
   return true;
 }
 
+// https://drafts.csswg.org/css-overflow/#overflow-propagation
 static Element* GetPropagatedScrollStylesForViewport(
     nsPresContext* aPresContext, ScrollStyles* aStyles) {
   Document* document = aPresContext->Document();
@@ -1051,8 +1052,7 @@ static Element* GetPropagatedScrollStylesForViewport(
 
   // Check the style on the document root element
   ServoStyleSet* styleSet = aPresContext->StyleSet();
-  RefPtr<ComputedStyle> rootStyle =
-      styleSet->ResolveStyleFor(docElement, LazyComputeBehavior::Allow);
+  RefPtr<ComputedStyle> rootStyle = styleSet->ResolveStyleLazily(*docElement);
   if (CheckOverflow(rootStyle->StyleDisplay(), aStyles)) {
     // tell caller we stole the overflow style from the root element
     return docElement;
@@ -1076,8 +1076,12 @@ static Element* GetPropagatedScrollStylesForViewport(
   MOZ_ASSERT(bodyElement->IsHTMLElement(nsGkAtoms::body),
              "GetBodyElement returned something bogus");
 
-  RefPtr<ComputedStyle> bodyStyle =
-      styleSet->ResolveStyleFor(bodyElement, LazyComputeBehavior::Allow);
+  // FIXME(emilio): We could make these just a ResolveServoStyle call if we
+  // looked at `display` on the root, and updated styles properly before doing
+  // this on first construction:
+  //
+  // https://github.com/w3c/csswg-drafts/issues/3779
+  RefPtr<ComputedStyle> bodyStyle = styleSet->ResolveStyleLazily(*bodyElement);
 
   if (CheckOverflow(bodyStyle->StyleDisplay(), aStyles)) {
     // tell caller we stole the overflow style from the body element
