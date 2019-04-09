@@ -4829,9 +4829,9 @@ class TabProgressListener {
     delete this.mBrowser;
   }
 
-  _callProgressListeners() {
-    Array.unshift(arguments, this.mBrowser);
-    return gBrowser._callProgressListeners.apply(gBrowser, arguments);
+  _callProgressListeners(...args) {
+    args.unshift(this.mBrowser);
+    return gBrowser._callProgressListeners.apply(gBrowser, args);
   }
 
   _shouldShowProgress(aRequest) {
