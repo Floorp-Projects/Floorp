@@ -9,6 +9,7 @@ import hashlib
 import urllib
 
 import typing
+from urllib import parse
 from mitmproxy import command
 from mitmproxy import ctx, http
 from mitmproxy import exceptions
@@ -73,7 +74,9 @@ class AlternateServerPlayback:
         """
         r = flow.request
 
-        _, _, path, _, query, _ = urllib.parse.urlparse(r.url)
+        # unquote url
+        # See Bug 1509835
+        _, _, path, _, query, _ = urllib.parse.urlparse(parse.unquote(r.url))
         queriesArray = urllib.parse.parse_qsl(query, keep_blank_values=True)
 
         key = [str(r.port), str(r.scheme), str(r.method), str(path)]
