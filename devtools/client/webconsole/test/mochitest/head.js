@@ -1245,7 +1245,7 @@ function isScrolledToBottom(container) {
  * @param {Array<String>} expectedMessages: An array of string representing the messages
  *                        from the output. This can only be a part of the string of the
  *                        message.
- *                        Start the string with "▶︎ " or "▼ " to indicate that the
+ *                        Start the string with "▶︎⚠ " or "▼⚠ " to indicate that the
  *                        message is a warningGroup (with respectively an open or
  *                        collapsed arrow).
  *                        Start the string with "|︎ " to indicate that the message is
@@ -1254,23 +1254,65 @@ function isScrolledToBottom(container) {
 function checkConsoleOutputForWarningGroup(hud, expectedMessages) {
   const messages = findMessages(hud, "");
   is(messages.length, expectedMessages.length, "Got the expected number of messages");
+
+  const isInWarningGroup = index => {
+    const message = expectedMessages[index];
+    if (!message.startsWith("|")) {
+      return false;
+    }
+    const groups = expectedMessages.slice(0, index)
+      .reverse()
+      .filter(m => !m.startsWith("|"));
+    if (groups.length === 0) {
+      ok(false, "Unexpected structure: an indented message isn't in a group");
+    }
+
+    return groups[0].startsWith("▶︎⚠") || groups[0].startsWith("▼⚠");
+  };
+
   expectedMessages.forEach((expectedMessage, i) => {
     const message = messages[i];
+    info(`Checking "${expectedMessage}"`);
+
+    // Collapsed Warning group
+    if (expectedMessage.startsWith("▶︎⚠")) {
+      is(message.querySelector(".arrow").getAttribute("aria-expanded"), "false",
+        "There's a collapsed arrow");
+      is(message.querySelector(".indent").getAttribute("data-indent"), "0",
+        "The warningGroup has the expected indent");
+      expectedMessage = expectedMessage.replace("▶︎⚠ ", "");
+    }
+
+    // Expanded Warning group
+    if (expectedMessage.startsWith("▼︎⚠")) {
+      is(message.querySelector(".arrow").getAttribute("aria-expanded"), "true",
+        "There's an expanded arrow");
+      is(message.querySelector(".indent").getAttribute("data-indent"), "0",
+        "The warningGroup has the expected indent");
+      expectedMessage = expectedMessage.replace("▼︎⚠ ", "");
+    }
+
+    // Collapsed console.group
     if (expectedMessage.startsWith("▶︎")) {
       is(message.querySelector(".arrow").getAttribute("aria-expanded"), "false",
         "There's a collapsed arrow");
       expectedMessage = expectedMessage.replace("▶︎ ", "");
     }
 
+    // Expanded console.group
     if (expectedMessage.startsWith("▼")) {
       is(message.querySelector(".arrow").getAttribute("aria-expanded"), "true",
         "There's an expanded arrow");
-      expectedMessage = expectedMessage.replace("▼︎ ", "");
+      expectedMessage = expectedMessage.replace("▼ ", "");
     }
 
+    // In-group message
     if (expectedMessage.startsWith("|")) {
-      is(message.querySelector(".indent.warning-indent").getAttribute("data-indent"), "1",
-        "The message has the expected indent");
+      if (isInWarningGroup(i)) {
+        is(message.querySelector(".indent.warning-indent").getAttribute("data-indent"),
+          "1", "The message has the expected indent");
+      }
+
       expectedMessage = expectedMessage.replace("| ", "");
     }
 

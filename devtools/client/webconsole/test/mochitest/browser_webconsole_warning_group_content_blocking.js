@@ -63,7 +63,7 @@ add_task(async function testContentBlockingMessage() {
     "The badge has the expected text");
 
   checkConsoleOutputForWarningGroup(hud, [
-    `▶︎ ${CONTENT_BLOCKING_GROUP_LABEL} 2`,
+    `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL} 2`,
   ]);
 
   info("Open the group");
@@ -71,7 +71,7 @@ add_task(async function testContentBlockingMessage() {
   await waitFor(() => findMessage(hud, "http://tracking.example.com/?1"));
 
   checkConsoleOutputForWarningGroup(hud, [
-    `▼︎ ${CONTENT_BLOCKING_GROUP_LABEL} 2`,
+    `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL} 2`,
     `| The resource at \u201chttp://tracking.example.com/?1&${now}\u201d was blocked`,
     `| The resource at \u201chttp://tracking.example.com/?2&${now}\u201d was blocked`,
   ]);
@@ -154,7 +154,7 @@ async function testStorageAccessBlockedGrouping(getWarningMessage) {
     "The badge has the expected text");
 
   checkConsoleOutputForWarningGroup(hud, [
-    `▶︎ ${CONTENT_BLOCKING_GROUP_LABEL} 2`,
+    `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL} 2`,
   ]);
 
   info("Open the group");
@@ -162,7 +162,7 @@ async function testStorageAccessBlockedGrouping(getWarningMessage) {
   await waitFor(() => findMessage(hud, TRACKER_IMG));
 
   checkConsoleOutputForWarningGroup(hud, [
-    `▼︎ ${CONTENT_BLOCKING_GROUP_LABEL} 2`,
+    `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL} 2`,
     `| ${getWarningMessage(TRACKER_IMG + "?1&" + now)}`,
     `| ${getWarningMessage(TRACKER_IMG + "?2&" + now)}`,
   ]);

@@ -151,8 +151,10 @@ function addMessage(newMessage, state, filtersState, prefsState) {
 
   // Add the new message with a reference to the parent group.
   const parentGroups = getParentGroups(currentGroup, groupsById);
-  newMessage.groupId = currentGroup;
-  newMessage.indent = parentGroups.length;
+  if (!isWarningGroup(newMessage)) {
+    newMessage.groupId = currentGroup;
+    newMessage.indent = parentGroups.length;
+  }
 
   ensureExecutionPoint(state, newMessage);
 
@@ -188,12 +190,27 @@ function addMessage(newMessage, state, filtersState, prefsState) {
     ) {
       // Then we put it in the visibleMessages properties, at the position of the first
       // warning message inside the warningGroup.
-      // TODO [Bug 1534927]: It should be added before the outermost console.group message
-      // a warning message could be in.
-      const index = state
-        .visibleMessages
-        .indexOf(state.warningGroupsById.get(warningGroupMessageId)[0]);
-      state.visibleMessages.splice(index, 1, warningGroupMessageId);
+      // If that first warning message is in a console.group, we place it before the
+      // outermost console.group message.
+      const firstWarningMessageId = state.warningGroupsById.get(warningGroupMessageId)[0];
+      const firstWarningMessage = state.messagesById.get(firstWarningMessageId);
+      const outermostGroupId = getOutermostGroup(firstWarningMessage, groupsById);
+      const groupIndex = state.visibleMessages.indexOf(outermostGroupId);
+      const warningMessageIndex = state.visibleMessages.indexOf(firstWarningMessageId);
+
+      if (groupIndex > -1) {
+        // We remove the warning message
+        if (warningMessageIndex > -1) {
+          state.visibleMessages.splice(warningMessageIndex, 1);
+        }
+
+        // And we put the warning group before the console.group
+        state.visibleMessages.splice(groupIndex, 0, warningGroupMessageId);
+      } else {
+        // If the warning message is not in a console.group, we replace it by the
+        // warning group message.
+        state.visibleMessages.splice(warningMessageIndex, 1, warningGroupMessageId);
+      }
     }
   }
 
@@ -415,11 +432,20 @@ function messages(state = MessageState(), action, filtersState, prefsState) {
 
       // If the message is a group
       if (isGroupType(messagesById.get(messageId).type)) {
-        // Hide all its children
-        closeState.visibleMessages = visibleMessages.filter(id =>
-          getParentGroups(messagesById.get(id).groupId, groupsById)
-            .includes(messageId) === false
-        );
+        // Hide all its children, unless they're in a warningGroup.
+        closeState.visibleMessages = visibleMessages.filter((id, i, arr) => {
+          const message = messagesById.get(id);
+          const warningGroupMessage =
+            messagesById.get(getParentWarningGroupMessageId(message));
+
+          // If the message is in a warning group, then we return its current visibility.
+          if (shouldGroupWarningMessages(warningGroupMessage, closeState, prefsState)) {
+            return arr.includes(id);
+          }
+
+          const parentGroups = getParentGroups(message.groupId, groupsById);
+          return parentGroups.includes(messageId) === false;
+        });
       } else if (isWarningGroup(messagesById.get(messageId))) {
         // If the message was a warningGroup, we hide all the messages in the group.
         const groupMessages = closeState.warningGroupsById.get(messageId);
@@ -549,6 +575,14 @@ function getParentGroups(currentGroup, groupsById) {
   }
 
   return groups;
+}
+
+function getOutermostGroup(message, groupsById) {
+  const groups = getParentGroups(message.groupId, groupsById);
+  if (groups.length === 0) {
+    return null;
+  }
+  return groups[groups.length - 1];
 }
 
 /**
@@ -734,10 +768,14 @@ function getMessageVisibility(message, {
     prefsState,
     checkGroup = true,
 }) {
-  // Do not display the message if it's in closed group.
+  const warningGroupMessage =
+    messagesState.messagesById.get(getParentWarningGroupMessageId(message));
+
+  // Do not display the message if it's in closed group and not in a warning group.
   if (
     checkGroup
     && !isInOpenedGroup(message, messagesState.groupsById, messagesState.messagesUiById)
+    && !shouldGroupWarningMessages(warningGroupMessage, messagesState, prefsState)
   ) {
     return {
       visible: false,
@@ -1183,6 +1221,10 @@ function getLastMessageId(state) {
  * @param {PrefsState} prefsState
  */
 function shouldGroupWarningMessages(warningGroupMessage, messagesState, prefsState) {
+  if (!warningGroupMessage) {
+    return false;
+  }
+
   // Only group if the preference is ON.
   if (!prefsState.groupWarnings) {
     return false;
@@ -1190,7 +1232,11 @@ function shouldGroupWarningMessages(warningGroupMessage, messagesState, prefsSta
 
   // We group warning messages if there are at least 2 messages that could go in it.
   const warningGroup = messagesState.warningGroupsById.get(warningGroupMessage.id);
-  return warningGroup && warningGroup.length > 1;
+  if (!warningGroup || !Array.isArray(warningGroup)) {
+    return false;
+  }
+
+  return warningGroup.length > 1;
 }
 
 exports.messages = messages;

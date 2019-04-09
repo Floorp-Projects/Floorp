@@ -52,7 +52,7 @@ add_task(async function testContentBlockingMessage() {
     "The badge has the expected text");
 
   checkConsoleOutputForWarningGroup(hud, [
-    `▶︎ ${CONTENT_BLOCKING_GROUP_LABEL}`,
+    `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `simple message 1`,
   ]);
 
@@ -60,7 +60,7 @@ add_task(async function testContentBlockingMessage() {
   await logString(hud, "simple message 2");
 
   checkConsoleOutputForWarningGroup(hud, [
-    `▶︎ ${CONTENT_BLOCKING_GROUP_LABEL}`,
+    `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `simple message 1`,
     `simple message 2`,
   ]);
@@ -70,7 +70,7 @@ add_task(async function testContentBlockingMessage() {
   await waitFor(() => node.querySelector(".warning-group-badge").textContent == "3");
 
   checkConsoleOutputForWarningGroup(hud, [
-    `▶︎ ${CONTENT_BLOCKING_GROUP_LABEL}`,
+    `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `simple message 1`,
     `simple message 2`,
   ]);
@@ -80,7 +80,7 @@ add_task(async function testContentBlockingMessage() {
   await waitFor(() => findMessage(hud, BLOCKED_URL));
 
   checkConsoleOutputForWarningGroup(hud, [
-    `▼︎ ${CONTENT_BLOCKING_GROUP_LABEL}`,
+    `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `| ${BLOCKED_URL}?1`,
     `| ${BLOCKED_URL}?2`,
     `| ${BLOCKED_URL}?3`,
@@ -96,7 +96,7 @@ add_task(async function testContentBlockingMessage() {
   ok(true, "The new tracking protection message is displayed");
 
   checkConsoleOutputForWarningGroup(hud, [
-    `▼︎ ${CONTENT_BLOCKING_GROUP_LABEL}`,
+    `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `| ${BLOCKED_URL}?1`,
     `| ${BLOCKED_URL}?2`,
     `| ${BLOCKED_URL}?3`,
@@ -125,7 +125,7 @@ add_task(async function testContentBlockingMessage() {
   await logString(hud, "simple message 3");
 
   checkConsoleOutputForWarningGroup(hud, [
-    `▼︎ ${CONTENT_BLOCKING_GROUP_LABEL}`,
+    `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `| ${BLOCKED_URL}?1`,
     `| ${BLOCKED_URL}?2`,
     `| ${BLOCKED_URL}?3`,
@@ -146,7 +146,7 @@ add_task(async function testContentBlockingMessage() {
     "The badge has the expected text");
 
   checkConsoleOutputForWarningGroup(hud, [
-    `▼︎ ${CONTENT_BLOCKING_GROUP_LABEL}`,
+    `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `| ${BLOCKED_URL}?1`,
     `| ${BLOCKED_URL}?2`,
     `| ${BLOCKED_URL}?3`,
@@ -154,7 +154,7 @@ add_task(async function testContentBlockingMessage() {
     `simple message 1`,
     `simple message 2`,
     `Navigated to`,
-    `▶︎ ${CONTENT_BLOCKING_GROUP_LABEL}`,
+    `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `simple message 3`,
   ]);
 
@@ -163,7 +163,7 @@ add_task(async function testContentBlockingMessage() {
   await waitFor(() => findMessages(hud, BLOCKED_URL).length === 6);
 
   checkConsoleOutputForWarningGroup(hud, [
-    `▼︎ ${CONTENT_BLOCKING_GROUP_LABEL}`,
+    `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `| ${BLOCKED_URL}?1`,
     `| ${BLOCKED_URL}?2`,
     `| ${BLOCKED_URL}?3`,
@@ -171,7 +171,7 @@ add_task(async function testContentBlockingMessage() {
     `simple message 1`,
     `simple message 2`,
     `Navigated to`,
-    `▼︎ ${CONTENT_BLOCKING_GROUP_LABEL}`,
+    `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `| ${BLOCKED_URL}?5`,
     `| ${BLOCKED_URL}?6`,
     `simple message 3`,
@@ -182,7 +182,7 @@ add_task(async function testContentBlockingMessage() {
   await waitFor(() => findMessages(hud, BLOCKED_URL).length === 4);
 
   checkConsoleOutputForWarningGroup(hud, [
-    `▼︎ ${CONTENT_BLOCKING_GROUP_LABEL}`,
+    `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `| ${BLOCKED_URL}?1`,
     `| ${BLOCKED_URL}?2`,
     `| ${BLOCKED_URL}?3`,
@@ -190,7 +190,7 @@ add_task(async function testContentBlockingMessage() {
     `simple message 1`,
     `simple message 2`,
     `Navigated to`,
-    `▶︎ ${CONTENT_BLOCKING_GROUP_LABEL}`,
+    `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `simple message 3`,
   ]);
 
@@ -199,7 +199,7 @@ add_task(async function testContentBlockingMessage() {
   await waitFor(() => node.querySelector(".warning-group-badge").textContent == "3");
 
   checkConsoleOutputForWarningGroup(hud, [
-    `▼︎ ${CONTENT_BLOCKING_GROUP_LABEL}`,
+    `▼︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `| ${BLOCKED_URL}?1`,
     `| ${BLOCKED_URL}?2`,
     `| ${BLOCKED_URL}?3`,
@@ -207,7 +207,7 @@ add_task(async function testContentBlockingMessage() {
     `simple message 1`,
     `simple message 2`,
     `Navigated to`,
-    `▶︎ ${CONTENT_BLOCKING_GROUP_LABEL}`,
+    `▶︎⚠ ${CONTENT_BLOCKING_GROUP_LABEL}`,
     `simple message 3`,
   ]);
 });
