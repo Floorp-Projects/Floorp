@@ -42,7 +42,7 @@ namespace google_breakpad {
 class FileID {
  public:
   FileID(const char *path);
-  ~FileID() {};
+  ~FileID() {}
 
   // Load the identifier for the file path specified in the constructor into
   // |identifier|.  Return false if the identifier could not be created for the

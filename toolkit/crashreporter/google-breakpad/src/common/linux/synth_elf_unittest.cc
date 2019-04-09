@@ -193,7 +193,7 @@ class BasicElf : public Test {};
 
 typedef Types<ElfClass32, ElfClass64> ElfClasses;
 
-TYPED_TEST_CASE(BasicElf, ElfClasses);
+TYPED_TEST_SUITE(BasicElf, ElfClasses);
 
 TYPED_TEST(BasicElf, EmptyLE) {
   typedef typename TypeParam::Ehdr Ehdr;

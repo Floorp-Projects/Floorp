@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
   if (!WriteMinidumpFromCore(minidump_file,
                              core_file,
                              procfs_dir)) {
-    fprintf(stderr, "Unable to generate minidump.\n");
+    perror("core2md: Unable to generate minidump");
     return 1;
   }
 
