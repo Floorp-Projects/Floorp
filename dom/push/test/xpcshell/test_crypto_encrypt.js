@@ -7,9 +7,9 @@ const {PushCrypto} = ChromeUtils.import("resource://gre/modules/PushCrypto.jsm")
 
 let from64 = v => {
   // allow whitespace in the strings.
-  let stripped = v.replace(/ |\t|\r|\n/g, '');
+  let stripped = v.replace(/ |\t|\r|\n/g, "");
   return new Uint8Array(ChromeUtils.base64URLDecode(stripped, {padding: "reject"}));
-}
+};
 
 let to64 = v => ChromeUtils.base64URLEncode(v, {pad: false});
 
@@ -24,13 +24,13 @@ async function importKeyPair(publicKeyBuffer, privateKeyBuffer) {
     y: to64(publicKeyBuffer.slice(33, 65)),
     ext: true,
   };
-  let publicKey = await crypto.subtle.importKey('jwk', jwk,
-                                                { name: 'ECDH', namedCurve: 'P-256' },
+  let publicKey = await crypto.subtle.importKey("jwk", jwk,
+                                                { name: "ECDH", namedCurve: "P-256" },
                                                 true, []);
   jwk.d = to64(privateKeyBuffer);
-  let privateKey = await crypto.subtle.importKey('jwk', jwk,
-                                                 { name: 'ECDH', namedCurve: 'P-256' },
-                                                 true, ['deriveBits']);
+  let privateKey = await crypto.subtle.importKey("jwk", jwk,
+                                                 { name: "ECDH", namedCurve: "P-256" },
+                                                 true, ["deriveBits"]);
   return {publicKey, privateKey};
 }
 
@@ -55,14 +55,10 @@ add_task(async function static_aes128gcm() {
     salt: from64("DGv6ra1nlYgDCS1FRnbzlw"),
   };
 
-
-  let publicKeyBuffer = from64(`BP4z9KsN6nGRTbVYI_c7VJSPQTBtkgcy27mlmlMoZ
-                                IIgDll6e3vCYLocInmYWAmS6TlzAC8wEqKK6PBru3jl7A8`);
-  let privateKeyBuffer = from64("yfWPiYE-n46HLnH0KqZOF1fJJU3MYrct3AELtAQ-oRw");
   let options = {
     senderKeyPair: await importKeyPair(fixture.sender.public, fixture.sender.private),
     salt: fixture.salt,
-  }
+  };
 
   let {ciphertext, encoding} = await PushCrypto.encrypt(fixture.plaintext,
                                                         fixture.receiver.public,
@@ -130,7 +126,7 @@ add_task(async function aes128gcm_rs() {
 add_task(async function aes128gcm_edgecases() {
   let [recvPublicKey, recvPrivateKey] = await PushCrypto.generateKeys();
 
-  for (let size of [0, 4096-16, 4096-16-1, 4096-16+1,
+  for (let size of [0, 4096 - 16, 4096 - 16 - 1, 4096 - 16 + 1,
                     4095, 4096, 4097, 10240]) {
     info(`testing encryption of ${size} byte payload`);
     let message = new TextEncoder("utf-8").encode("x".repeat(size));

@@ -130,10 +130,6 @@ class ServoStyleSet {
 
   void SetAuthorStyleDisabled(bool aStyleDisabled);
 
-  // FIXME(emilio): All the callers pass Allow here
-  already_AddRefed<ComputedStyle> ResolveStyleFor(
-      dom::Element* aElement, LazyComputeBehavior aMayCompute);
-
   // Get a CopmutedStyle for a text node (which no rules will match).
   //
   // The returned ComputedStyle will have nsCSSAnonBoxes::mozText() as its
@@ -179,11 +175,14 @@ class ServoStyleSet {
 
   // Resolves style for a (possibly-pseudo) Element without assuming that the
   // style has been resolved. If the element was unstyled and a new style
-  // context was resolved, it is not stored in the DOM. (That is, the element
-  // remains unstyled.)
+  // was resolved, it is not stored in the DOM. (That is, the element remains
+  // unstyled.)
+  //
+  // TODO(emilio): Element argument should be `const`.
   already_AddRefed<ComputedStyle> ResolveStyleLazily(
-      dom::Element* aElement, PseudoStyleType,
-      StyleRuleInclusion aRules = StyleRuleInclusion::All);
+      dom::Element&,
+      PseudoStyleType = PseudoStyleType::NotPseudo,
+      StyleRuleInclusion = StyleRuleInclusion::All);
 
   // Get a ComputedStyle for an anonymous box. The pseudo type must be an
   // inheriting anon box.
@@ -487,10 +486,6 @@ class ServoStyleSet {
    * This should only be called if StylistNeedsUpdate returns true.
    */
   void UpdateStylist();
-
-  already_AddRefed<ComputedStyle> ResolveStyleLazilyInternal(
-      dom::Element* aElement, PseudoStyleType aPseudoType,
-      StyleRuleInclusion aRules = StyleRuleInclusion::All);
 
   void RunPostTraversalTasks();
 

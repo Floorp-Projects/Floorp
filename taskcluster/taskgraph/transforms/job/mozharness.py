@@ -300,12 +300,23 @@ def mozharness_on_generic_worker(config, job, taskdesc):
             "Task generation for mozharness build jobs currently only supported on Windows"
         )
 
+    # TODO We should run the mozharness script with `mach python` so these
+    # modules are automatically available, but doing so somehow caused hangs in
+    # Windows ccov builds (see bug 1543149).
     gecko = env['GECKO_PATH'].replace('.', '%cd%')
+    mozbase_dir = "{}/testing/mozbase".format(gecko)
+    env['PYTHONPATH'] = ';'.join([
+        "{}/manifestparser".format(mozbase_dir),
+        "{}/mozinfo".format(mozbase_dir),
+        "{}/mozfile".format(mozbase_dir),
+        "{}/mozprocess".format(mozbase_dir),
+        "{}/third_party/python/six".format(gecko),
+    ])
+
     mh_command = [
             'c:/mozilla-build/python/python.exe',
-            '{}/mach'.format(gecko), 'python',
+            '{}/testing/{}'.format(gecko, run['script']),
     ]
-    mh_command.append('/'.join([gecko, 'testing', run['script']]))
 
     if 'config-paths' in run:
         for path in run['config-paths']:

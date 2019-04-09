@@ -1786,9 +1786,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     COUNT_COVERAGE_PC(REGS.pc);                       \
   JS_END_MACRO
 
-#define LOAD_DOUBLE(PCOFF, dbl) \
-  ((dbl) = script->getConst(GET_UINT32_INDEX(REGS.pc + (PCOFF))).toDouble())
-
 #define SET_SCRIPT(s)                                                       \
   JS_BEGIN_MACRO                                                            \
     script = (s);                                                           \
@@ -3269,11 +3266,7 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     CASE(JSOP_INT32) { PUSH_INT32(GET_INT32(REGS.pc)); }
     END_CASE(JSOP_INT32)
 
-    CASE(JSOP_DOUBLE) {
-      double dbl;
-      LOAD_DOUBLE(0, dbl);
-      PUSH_DOUBLE(dbl);
-    }
+    CASE(JSOP_DOUBLE) { PUSH_COPY(GET_INLINE_VALUE(REGS.pc)); }
     END_CASE(JSOP_DOUBLE)
 
     CASE(JSOP_STRING) { PUSH_STRING(script->getAtom(REGS.pc)); }

@@ -11,6 +11,8 @@ const { TelemetryTestUtils } = ChromeUtils.import("resource://testing-common/Tel
 
 const NS_ERROR_START_PROFILE_MANAGER = 0x805800c9;
 
+const UPDATE_CHANNEL = AppConstants.MOZ_UPDATE_CHANNEL;
+
 let gProfD = do_get_profile();
 let gDataHome = gProfD.clone();
 gDataHome.append("data");
@@ -70,7 +72,7 @@ function getProfileService() {
 }
 
 let PROFILE_DEFAULT = "default";
-let DEDICATED_NAME = `default-${AppConstants.MOZ_UPDATE_CHANNEL}`;
+let DEDICATED_NAME = `default-${UPDATE_CHANNEL}`;
 if (AppConstants.MOZ_DEV_EDITION) {
   DEDICATED_NAME = PROFILE_DEFAULT = "dev-edition-default";
 }
@@ -95,7 +97,8 @@ function selectStartupProfile(args = [], isResetting = false) {
   let localDir = {};
   let profile = {};
   let didCreate = service.selectStartupProfile(["xpcshell", ...args], isResetting,
-                                               rootDir, localDir, profile);
+                                               UPDATE_CHANNEL, rootDir, localDir,
+                                               profile);
 
   if (profile.value) {
     Assert.ok(rootDir.value.equals(profile.value.rootDir), "Should have matched the root dir.");

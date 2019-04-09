@@ -8,6 +8,8 @@
 
 const { Services } = require("resource://gre/modules/Services.jsm");
 
+loader.lazyRequireGetter(this, "InspectorUtils", "InspectorUtils");
+
 var systemAppOrigin = (function() {
   let systemOrigin = "_";
   try {
@@ -22,6 +24,8 @@ var systemAppOrigin = (function() {
 
 var threshold = Services.prefs.getIntPref("ui.dragThresholdX", 25);
 var delay = Services.prefs.getIntPref("ui.click_hold_context_menus.delay", 500);
+
+const kStateHover = 0x00000004; // NS_EVENT_STATE_HOVER
 
 function TouchSimulator(simulatorTarget) {
   this.simulatorTarget = simulatorTarget;
@@ -145,6 +149,12 @@ TouchSimulator.prototype = {
       case "mouseleave":
         // Don't propagate events which are not related to touch events
         evt.stopPropagation();
+        evt.preventDefault();
+
+        // We don't want to trigger any visual changes to elements whose content can
+        // be modified via hover states. We can avoid this by removing the element's
+        // content state.
+        InspectorUtils.removeContentState(evt.target, kStateHover);
         break;
 
       case "mousedown":

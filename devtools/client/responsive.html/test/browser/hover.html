@@ -1,0 +1,37 @@
+<!doctype html>
+<meta charset="UTF-8">
+<style>
+  button {
+    background-color: rgb(255, 0, 0);
+    color: black;
+  }
+
+  button:hover {
+    background-color: rgb(0, 0, 0);
+    color: white;
+  }
+
+  .drop-down-menu {
+    height: 100px;
+    width: 100px;
+  }
+
+  .drop-down-menu .menu-items-list {
+    display: none;
+  }
+
+  .drop-down-menu:hover .menu-items-list {
+    display: block;
+  }
+</style>
+<div>
+  <button>Test Button</button>
+  <div class="drop-down-menu">
+    <div class="menu-title">Test Menu</div>
+    <ul class="menu-items-list">
+      <li class="item-one">One</li>
+      <li class="item-two">Two</li>
+      <li class="item-three">Three</li>
+    </ul>
+  </div>
+</div>

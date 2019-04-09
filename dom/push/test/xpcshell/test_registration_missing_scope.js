@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-'use strict';
+"use strict";
 
 const {PushDB, PushService} = serviceExports;
 
@@ -16,11 +16,11 @@ add_task(async function test_registration_missing_scope() {
     serverURI: "wss://push.example.org/",
     makeWebSocket(uri) {
       return new MockWebSocket(uri);
-    }
+    },
   });
-  await rejects(
-    PushService.registration({ scope: '', originAttributes: '' }),
+  await Assert.rejects(
+    PushService.registration({ scope: "", originAttributes: "" }),
     /Invalid page record/,
-    'Record missing page and manifest URLs'
+    "Record missing page and manifest URLs"
   );
 });

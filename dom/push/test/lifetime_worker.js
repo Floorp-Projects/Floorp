@@ -1,7 +1,7 @@
 var state = "from_scope";
 var resolvePromiseCallback;
 
-onfetch = function(event) {
+self.onfetch = function(event) {
   if (event.request.url.includes("lifetime_frame.html")) {
     event.respondWith(new Response("iframe_lifetime"));
     return;
@@ -9,12 +9,12 @@ onfetch = function(event) {
 
   var currentState = state;
   event.waitUntil(
-    clients.matchAll()
-           .then(clients => {
-             clients.forEach(client => {
-               client.postMessage({type: "fetch", state: currentState});
-             });
-           })
+    self.clients.matchAll()
+      .then(clients => {
+        clients.forEach(client => {
+          client.postMessage({type: "fetch", state: currentState});
+        });
+      })
   );
 
   if (event.request.url.includes("update")) {
@@ -33,7 +33,7 @@ onfetch = function(event) {
     state = "release";
     resolvePromise();
   }
-}
+};
 
 function resolvePromise() {
   if (resolvePromiseCallback === undefined || resolvePromiseCallback == null) {
@@ -44,23 +44,23 @@ function resolvePromise() {
   resolvePromiseCallback = null;
 }
 
-onmessage = function(event) {
+self.onmessage = function(event) {
   var lastState = state;
   state = event.data;
-  if (state === 'wait') {
+  if (state === "wait") {
     event.waitUntil(new Promise(function(res, rej) {
       if (resolvePromiseCallback) {
         dump("ERROR: service worker was already waiting on a promise.\n");
       }
       resolvePromiseCallback = res;
     }));
-  } else if (state === 'release') {
+  } else if (state === "release") {
     resolvePromise();
   }
   event.source.postMessage({type: "message", state: lastState});
-}
+};
 
-onpush = function(event) {
+self.onpush = function(event) {
   var pushResolve;
   event.waitUntil(new Promise(function(resolve) {
     pushResolve = resolve;
@@ -68,12 +68,12 @@ onpush = function(event) {
 
   // FIXME(catalinb): push message carry no data. So we assume the only
   // push message we get is "wait"
-  clients.matchAll().then(function(client) {
+  self.clients.matchAll().then(function(client) {
     if (client.length == 0) {
       dump("ERROR: no clients to send the response to.\n");
     }
 
-    client[0].postMessage({type: "push", state: state});
+    client[0].postMessage({type: "push", state});
 
     state = "wait";
     if (resolvePromiseCallback) {
@@ -82,4 +82,4 @@ onpush = function(event) {
       resolvePromiseCallback = pushResolve;
     }
   });
-}
+};

@@ -340,6 +340,32 @@ normandy:
     release_channel_collection: opt-out
     expiry_version: never
 
+fxa_avatar_menu:
+  click:
+    objects: [
+      "account_settings",
+      "cad",
+      "login",
+      "send_tab",
+      "sync_now",
+      "sync_settings",
+      "sync_tabs",
+      "sync_tabs_sidebar",
+      "toolbar_icon",
+      "unver_sync_settings"
+      ]
+    methods: ["click"]
+    release_channel_collection: opt-out
+    record_in_processes: ["main"]
+    description: This is recorded on interactions with the FxA avatar menu on the toolbar
+    bug_numbers: [1524665]
+    notification_emails: ["vbudhram@mozilla.com", "loines@mozilla.com"]
+    expiry_version: "71"
+    extra_keys:
+      fxa_status: >
+        The current state of the user. Possible states are "not_configured", "unverified",
+        "signedin" and "login_failed".
+      fxa_avatar: Boolean for whether or not account has set an avatar
 
 # This category contains event entries used for Telemetry tests.
 # They will not be sent out with any pings.
