@@ -36,39 +36,13 @@ class HistoryUIView(
             adapter = HistoryAdapter(actionEmitter)
             layoutManager = LinearLayoutManager(container.context)
         }
-
-        view.delete_history_button.setOnClickListener {
-            val mode = mode
-            val action = when (mode) {
-                is HistoryState.Mode.Normal -> HistoryAction.Delete.All
-                is HistoryState.Mode.Editing -> HistoryAction.Delete.Some(mode.selectedItems)
-            }
-
-            actionEmitter.onNext(action)
-        }
     }
 
     override fun updateView() = Consumer<HistoryState> {
         mode = it.mode
-        updateDeleteButton()
         (view.history_list.adapter as HistoryAdapter).updateData(it.items, it.mode)
     }
 
-    private fun updateDeleteButton() {
-        val mode = mode
-
-        val text = if (mode is HistoryState.Mode.Editing && mode.selectedItems.isNotEmpty()) {
-            view.delete_history_button_text.context.resources.getString(
-                R.string.history_delete_some,
-                mode.selectedItems.size
-            )
-        } else {
-            view.delete_history_button_text.context.resources.getString(R.string.history_delete_all)
-        }
-
-        view.delete_history_button.contentDescription = text
-        view.delete_history_button_text.text = text
-    }
     override fun onBackPressed(): Boolean {
         if (mode is HistoryState.Mode.Editing) {
             actionEmitter.onNext(HistoryAction.BackPressed)
