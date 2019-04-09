@@ -48,13 +48,6 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
                                            const bool& aForceRepaint,
                                            const LayersObserverEpoch& aEpoch);
 
-  mozilla::ipc::IPCResult RecvNavigateByKey(const bool& aForward,
-                                            const bool& aForDocumentNavigation);
-
-  mozilla::ipc::IPCResult RecvActivate();
-
-  mozilla::ipc::IPCResult RecvDeactivate();
-
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:

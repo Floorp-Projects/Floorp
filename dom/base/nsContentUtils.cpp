@@ -6200,8 +6200,7 @@ bool nsContentUtils::IsSubDocumentTabbable(nsIContent* aContent) {
 
   // If the subdocument lives in another process, the frame is
   // tabbable.
-  if (EventStateManager::IsRemoteTarget(aContent) ||
-      BrowserBridgeChild::GetFrom(aContent)) {
+  if (EventStateManager::IsRemoteTarget(aContent)) {
     return true;
   }
 

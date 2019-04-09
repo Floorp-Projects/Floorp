@@ -125,22 +125,6 @@ IPCResult BrowserBridgeParent::RecvRenderLayers(
   return IPC_OK();
 }
 
-IPCResult BrowserBridgeParent::RecvNavigateByKey(
-    const bool& aForward, const bool& aForDocumentNavigation) {
-  Unused << mTabParent->SendNavigateByKey(aForward, aForDocumentNavigation);
-  return IPC_OK();
-}
-
-IPCResult BrowserBridgeParent::RecvActivate() {
-  mTabParent->Activate();
-  return IPC_OK();
-}
-
-IPCResult BrowserBridgeParent::RecvDeactivate() {
-  mTabParent->Deactivate();
-  return IPC_OK();
-}
-
 void BrowserBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCOpen = false;
 }

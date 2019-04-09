@@ -2670,10 +2670,6 @@ mozilla::dom::PBrowserParent* nsFrameLoader::GetRemoteBrowser() const {
   return mRemoteBrowser;
 }
 
-mozilla::dom::BrowserBridgeChild* nsFrameLoader::GetBrowserBridgeChild() const {
-  return mBrowserBridgeChild;
-}
-
 mozilla::layers::LayersId nsFrameLoader::GetLayersId() const {
   MOZ_ASSERT(mIsRemoteFrame);
   if (mRemoteBrowser) {
