@@ -100,7 +100,7 @@ struct MapTypeToTraceKind {
 // When this header is used outside SpiderMonkey, the class definitions are not
 // available, so the following table containing all public GC types is used.
 #define JS_FOR_EACH_TRACEKIND(D)                          \
-  /* PrettyName       TypeName           IsCCTraceKind */ \
+  /* name   type    canBeGray */                          \
   D(BaseShape, js::BaseShape, true)                       \
   D(JitCode, js::jit::JitCode, true)                      \
   D(LazyScript, js::LazyScript, true)                     \
