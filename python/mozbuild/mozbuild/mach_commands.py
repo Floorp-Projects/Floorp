@@ -978,6 +978,15 @@ class RunProgram(MachCommandBase):
                 print("setpref is only supported if a profile is not specified")
                 return 1
 
+            if not no_profile_option_given:
+                # The profile name may be non-ascii, but come from the
+                # commandline as str, so convert here with a better guess at
+                # an encoding than the default.
+                encoding = (sys.getfilesystemencoding() or
+                            sys.getdefaultencoding())
+                args = [unicode(a, encoding) if not isinstance(a, unicode) else a
+                        for a in args]
+
         extra_env = {
             'MOZ_DEVELOPER_REPO_DIR': self.topsrcdir,
             'MOZ_DEVELOPER_OBJ_DIR': self.topobjdir,
