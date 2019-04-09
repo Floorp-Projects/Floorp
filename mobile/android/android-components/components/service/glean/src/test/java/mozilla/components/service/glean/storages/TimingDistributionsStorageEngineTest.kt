@@ -226,7 +226,9 @@ class TimingDistributionsStorageEngineTest {
 
     @Test
     fun `getBuckets() correctly populates the buckets property`() {
-        // Hand calculated values using current default range 0 - 60000 and bucket count of 100
+        // Hand calculated values using current default range 0 - 60000 and bucket count of 100.
+        // NOTE: The final bucket, regardless of width, represents the overflow bucket to hold any
+        // values beyond the maximum (in this case the maximum is 60000)
         val testBuckets: List<Long> = listOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17,
             19, 21, 23, 25, 28, 31, 34, 38, 42, 46, 51, 56, 62, 68, 75, 83, 92, 101, 111, 122, 135,
             149, 164, 181, 200, 221, 244, 269, 297, 328, 362, 399, 440, 485, 535, 590, 651, 718,
