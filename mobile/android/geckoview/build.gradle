@@ -309,7 +309,9 @@ android.libraryVariants.all { variant ->
 }
 
 android.libraryVariants.all { variant ->
-    configureLibraryVariantWithJNIWrappers(variant, "Generated")
+    if (variant.name == mozconfig.substs.GRADLE_ANDROID_GECKOVIEW_VARIANT_NAME) {
+        configureLibraryVariantWithJNIWrappers(variant, "Generated")
+    }
 }
 
 apply plugin: 'maven-publish'
