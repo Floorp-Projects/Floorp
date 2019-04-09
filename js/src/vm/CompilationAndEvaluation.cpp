@@ -149,7 +149,7 @@ JSScript* JS::CompileUtf8Path(JSContext* cx,
 
   CompileOptions options(cx, optionsArg);
   options.setFileAndLine(filename, 1);
-  return CompileUtf8File(cx, options, file.fp());
+  return CompileUtf8FileDontInflate(cx, options, file.fp());
 }
 
 JSScript* JS::CompileForNonSyntacticScope(
@@ -583,15 +583,9 @@ JS_PUBLIC_API bool JS::EvaluateUtf8Path(
 
   auto contents = reinterpret_cast<const char*>(buffer.begin());
   size_t length = buffer.length();
-  auto chars = UniqueTwoByteChars(
-      UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(contents, length), &length)
-          .get());
-  if (!chars) {
-    return false;
-  }
 
-  SourceText<char16_t> srcBuf;
-  if (!srcBuf.init(cx, std::move(chars), length)) {
+  JS::SourceText<Utf8Unit> srcBuf;
+  if (!srcBuf.init(cx, contents, length, JS::SourceOwnership::Borrowed)) {
     return false;
   }
 
