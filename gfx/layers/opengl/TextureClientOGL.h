@@ -38,7 +38,7 @@ class AndroidSurfaceTextureData : public TextureData {
  public:
   static already_AddRefed<TextureClient> CreateTextureClient(
       AndroidSurfaceTextureHandle aHandle, gfx::IntSize aSize, bool aContinuous,
-      gl::OriginPos aOriginPos, bool aHasAlpha, LayersIPCChannel* aAllocator,
+      gl::OriginPos aOriginPos, LayersIPCChannel* aAllocator,
       TextureFlags aFlags);
 
   ~AndroidSurfaceTextureData();
@@ -57,13 +57,11 @@ class AndroidSurfaceTextureData : public TextureData {
 
  protected:
   AndroidSurfaceTextureData(AndroidSurfaceTextureHandle aHandle,
-                            gfx::IntSize aSize, bool aContinuous,
-                            bool aHasAlpha);
+                            gfx::IntSize aSize, bool aContinuous);
 
   const AndroidSurfaceTextureHandle mHandle;
   const gfx::IntSize mSize;
   const bool mContinuous;
-  const bool mHasAlpha;
 };
 
 class AndroidNativeWindowTextureData : public TextureData {
