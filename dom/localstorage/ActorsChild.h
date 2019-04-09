@@ -78,9 +78,9 @@ class LSDatabaseChild final : public PBackgroundLSDatabaseChild {
   mozilla::ipc::IPCResult RecvRequestAllowToClose() override;
 
   PBackgroundLSSnapshotChild* AllocPBackgroundLSSnapshotChild(
-      const nsString& aDocumentURI, const bool& aIncreasePeakUsage,
-      const int64_t& aRequestedSize, const int64_t& aMinSize,
-      LSSnapshotInitInfo* aInitInfo) override;
+      const nsString& aDocumentURI, const nsString& aKey,
+      const bool& aIncreasePeakUsage, const int64_t& aRequestedSize,
+      const int64_t& aMinSize, LSSnapshotInitInfo* aInitInfo) override;
 
   bool DeallocPBackgroundLSSnapshotChild(
       PBackgroundLSSnapshotChild* aActor) override;
