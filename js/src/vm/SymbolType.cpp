@@ -8,6 +8,7 @@
 
 #include "builtin/Symbol.h"
 #include "gc/Allocator.h"
+#include "gc/HashUtil.h"
 #include "gc/Rooting.h"
 #include "util/StringBuffer.h"
 #include "vm/JSContext.h"
@@ -19,22 +20,20 @@ using JS::Symbol;
 using namespace js;
 
 Symbol* Symbol::newInternal(JSContext* cx, JS::SymbolCode code, uint32_t hash,
-                            JSAtom* description) {
+                            HandleAtom description) {
   MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
   AutoAllocInAtomsZone az(cx);
 
-  // Following js::AtomizeString, we grudgingly forgo last-ditch GC here.
-  Symbol* p = Allocate<JS::Symbol, NoGC>(cx);
+  Symbol* p = Allocate<JS::Symbol>(cx);
   if (!p) {
-    ReportOutOfMemory(cx);
     return nullptr;
   }
   return new (p) Symbol(code, hash, description);
 }
 
 Symbol* Symbol::new_(JSContext* cx, JS::SymbolCode code,
-                     JSString* description) {
-  JSAtom* atom = nullptr;
+                     HandleString description) {
+  RootedAtom atom(cx);
   if (description) {
     atom = AtomizeString(cx, description);
     if (!atom) {
@@ -50,13 +49,13 @@ Symbol* Symbol::new_(JSContext* cx, JS::SymbolCode code,
 }
 
 Symbol* Symbol::for_(JSContext* cx, HandleString description) {
-  JSAtom* atom = AtomizeString(cx, description);
+  RootedAtom atom(cx, AtomizeString(cx, description));
   if (!atom) {
     return nullptr;
   }
 
   SymbolRegistry& registry = cx->symbolRegistry();
-  SymbolRegistry::AddPtr p = registry.lookupForAdd(atom);
+  DependentAddPtr<SymbolRegistry> p(cx, registry, atom);
   if (p) {
     cx->markAtom(*p);
     return *p;
@@ -70,11 +69,7 @@ Symbol* Symbol::for_(JSContext* cx, HandleString description) {
     return nullptr;
   }
 
-  // p is still valid here because we only access the symbol registry from the
-  // main thread, and newInternal can't GC.
-  if (!registry.add(p, sym)) {
-    // SystemAllocPolicy does not report OOM.
-    ReportOutOfMemory(cx);
+  if (!p.add(cx, registry, atom, sym)) {
     return nullptr;
   }
 
