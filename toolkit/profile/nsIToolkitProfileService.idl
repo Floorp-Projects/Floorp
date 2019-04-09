@@ -74,7 +74,7 @@ interface nsIToolkitProfileService : nsISupports
      * This method is primarily for testing. It can be called only once.
      */
     bool selectStartupProfile(in Array<ACString> aArgv,
-                              in boolean aIsResetting,
+                              in boolean aIsResetting, in AUTF8String aUpdateChannel,
                               out nsIFile aRootDir, out nsIFile aLocalDir,
                               out nsIToolkitProfile aProfile);
 

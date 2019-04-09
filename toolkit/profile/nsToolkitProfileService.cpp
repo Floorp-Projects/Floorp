@@ -372,7 +372,8 @@ nsToolkitProfileService::nsToolkitProfileService()
 #endif
       mCreatedAlternateProfile(false),
       mStartupReason(NS_LITERAL_STRING("unknown")),
-      mMaybeLockProfile(false) {
+      mMaybeLockProfile(false),
+      mUpdateChannel(NS_STRINGIFY(MOZ_UPDATE_CHANNEL)) {
 #ifdef MOZ_DEV_EDITION
   mUseDevEditionProfile = true;
 #endif
@@ -941,7 +942,7 @@ nsresult nsToolkitProfileService::CreateDefaultProfile(
   if (mUseDevEditionProfile) {
     name.AssignLiteral(DEV_EDITION_NAME);
   } else if (mUseDedicatedProfile) {
-    name.AssignLiteral("default-" NS_STRINGIFY(MOZ_UPDATE_CHANNEL));
+    name.AppendPrintf("default-%s", mUpdateChannel.get());
   } else {
     name.AssignLiteral(DEFAULT_NAME);
   }
@@ -966,8 +967,9 @@ nsresult nsToolkitProfileService::CreateDefaultProfile(
  */
 NS_IMETHODIMP
 nsToolkitProfileService::SelectStartupProfile(
-    const nsTArray<nsCString>& aArgv, bool aIsResetting, nsIFile** aRootDir,
-    nsIFile** aLocalDir, nsIToolkitProfile** aProfile, bool* aDidCreate) {
+    const nsTArray<nsCString>& aArgv, bool aIsResetting,
+    const nsACString& aUpdateChannel, nsIFile** aRootDir, nsIFile** aLocalDir,
+    nsIToolkitProfile** aProfile, bool* aDidCreate) {
   int argc = aArgv.Length();
   // Our command line handling expects argv to be null-terminated so construct
   // an appropriate array.
@@ -981,6 +983,8 @@ nsToolkitProfileService::SelectStartupProfile(
     argv[i] = allocated[i].get();
   }
   argv[argc] = nullptr;
+
+  mUpdateChannel = aUpdateChannel;
 
   bool wasDefault;
   nsresult rv =
