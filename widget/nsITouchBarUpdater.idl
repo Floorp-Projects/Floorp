@@ -5,6 +5,7 @@
 #include "nsIArray.idl"
 #include "nsIBaseWindow.idl"
 #include "nsISupports.idl"
+#include "nsITouchBarInput.idl"
 
 /**
  * Front-to-backend communication to keep Touch Bar updated
@@ -15,5 +16,5 @@ interface nsITouchBarUpdater : nsISupports
   /**
    * Updates an array of nsITouchBarInputs in the specified window.
    */
-  void updateTouchBarInputs(in nsIBaseWindow aWindow, in nsIArray aInputs);
+  void updateTouchBarInputs(in nsIBaseWindow aWindow, in Array<nsITouchBarInput> aInputs);
 };

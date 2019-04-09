@@ -22,7 +22,7 @@
 NS_IMPL_ISUPPORTS(nsTouchBarUpdater, nsITouchBarUpdater);
 
 NS_IMETHODIMP
-nsTouchBarUpdater::UpdateTouchBarInputs(nsIBaseWindow* aWindow, nsIArray* aInputs) {
+nsTouchBarUpdater::UpdateTouchBarInputs(nsIBaseWindow* aWindow, const nsTArray<RefPtr<nsITouchBarInput>>& aInputs) {
   nsCOMPtr<nsIWidget> widget = nullptr;
   aWindow->GetMainWidget(getter_AddRefs(widget));
   if (!widget) {
@@ -34,10 +34,9 @@ nsTouchBarUpdater::UpdateTouchBarInputs(nsIBaseWindow* aWindow, nsIArray* aInput
   }
 
   if ([cocoaWin respondsToSelector:@selector(touchBar)]) {
-    uint32_t itemCount = 0;
-    aInputs->GetLength(&itemCount);
-    for (uint32_t i = 0; i < itemCount; ++i) {
-      nsCOMPtr<nsITouchBarInput> input = do_QueryElementAt(aInputs, i);
+    size_t itemCount = aInputs.Length();
+    for (size_t i = 0; i < itemCount; ++i) {
+      nsCOMPtr<nsITouchBarInput> input(aInputs.ElementAt(i));
       if (!input) {
         continue;
       }
