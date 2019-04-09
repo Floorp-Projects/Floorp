@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.navigation.Navigation
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
 import kotlinx.coroutines.CoroutineScope
@@ -35,6 +36,7 @@ import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.archive
@@ -156,6 +158,12 @@ class HomeFragment : Fragment(), CoroutineScope {
 
         // We need the shadow to be above the components.
         homeDividerShadow.bringToFront()
+
+        wordmark.setOnClickListener {
+            FenixSnackbar.make(it, FenixSnackbar.LENGTH_LONG)
+                .setText("Testing")
+                .show()
+        }
     }
 
     override fun onDestroyView() {

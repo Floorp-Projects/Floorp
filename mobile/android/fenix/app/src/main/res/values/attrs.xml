@@ -61,4 +61,7 @@
 
     <!-- Library Fragment -->
     <attr name="libraryListItemTextColor" format="reference" />
+
+    <!-- Fenix Snackbar -->
+    <attr name="fenixSnackbarBackground" format="reference" />
 </resources>

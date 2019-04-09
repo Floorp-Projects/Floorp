@@ -79,6 +79,9 @@
 
         <!-- Library Fragment -->
         <item name="libraryListItemTextColor">@color/library_list_item_text_color_light_mode</item>
+
+        <!-- Fenix Snackbar -->
+        <item name="fenixSnackbarBackground">@color/fenix_snackbar_background_normal_theme</item>
     </style>
 
     <style name="NormalTheme" parent="NormalThemeBase">
@@ -148,6 +151,9 @@
 
         <!-- Library Fragment -->
         <item name="libraryListItemTextColor">@color/off_white</item>
+
+        <!-- Fenix Snackbar -->
+        <item name="fenixSnackbarBackground">@color/fenix_snackbar_background_private_theme</item>
     </style>
 
     <style name="PrivateTheme" parent="PrivateThemeBase">

@@ -53,6 +53,9 @@ class FenixSnackbar private constructor(
 
 
     companion object {
+        const val LENGTH_LONG = Snackbar.LENGTH_LONG
+        const val LENGTH_SHORT = Snackbar.LENGTH_SHORT
+
         private const val minTextSize = 12
         private const val maxTextSize = 18
         private const val actionButtonIncreaseDps = 16

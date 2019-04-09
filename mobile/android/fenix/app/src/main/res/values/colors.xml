@@ -139,7 +139,8 @@
     <color name="quick_action_background_normal_theme">@color/toolbar_normal_theme</color>
     <color name="quick_action_background_private_theme">@color/toolbar_dark_mode</color>
 
-    <color name="fenix_snackbar_background">#232749</color>
+    <color name="fenix_snackbar_background_normal_theme">#312a65</color>
+    <color name="fenix_snackbar_background_private_theme">#592acb</color>
 
     <color name="home_header_shadow">#1F1B215E</color>
 

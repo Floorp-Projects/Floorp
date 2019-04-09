@@ -87,4 +87,7 @@
 
     <!-- Crash Page -->
     <color name="crash_page_accent">@color/accent_bright_dark_theme</color>
+
+    <!-- Fenix Snackbar -->
+    <color name="fenix_snackbar_background_normal_theme">#592acb</color>
 </resources>

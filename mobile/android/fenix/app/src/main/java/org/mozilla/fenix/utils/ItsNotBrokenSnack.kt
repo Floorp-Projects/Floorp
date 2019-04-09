@@ -7,7 +7,6 @@ package org.mozilla.fenix.utils
 import android.content.Context
 import android.view.View
 import android.view.ViewGroup
-import com.google.android.material.snackbar.Snackbar
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
@@ -17,7 +16,7 @@ class ItsNotBrokenSnack(val context: Context) {
         val rootView =
             context.asActivity()?.window?.decorView?.findViewById<View>(android.R.id.content) as ViewGroup
 
-        FenixSnackbar.make(rootView, Snackbar.LENGTH_SHORT)
+        FenixSnackbar.make(rootView, FenixSnackbar.LENGTH_SHORT)
             .setText(message.replace("%", issueNumber))
             .setAction("Add Tab to Issue") {
                 context.components.useCases.tabsUseCases.addTab
