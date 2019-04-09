@@ -856,16 +856,22 @@ nsresult mozJSComponentLoader::ObjectForLocation(
       // Note: exceptions will get handled further down;
       // don't early return for them here.
       auto buf = map.get<char>();
-      script = reuseGlobal ? CompileUtf8ForNonSyntacticScope(
-                                 cx, options, buf.get(), map.size())
-                           : CompileUtf8(cx, options, buf.get(), map.size());
+      if (reuseGlobal) {
+        CompileUtf8ForNonSyntacticScope(cx, options, buf.get(), map.size(),
+                                        &script);
+      } else {
+        CompileUtf8(cx, options, buf.get(), map.size(), &script);
+      }
     } else {
       nsCString str;
       MOZ_TRY_VAR(str, ReadScript(aInfo));
 
-      script = reuseGlobal ? CompileUtf8ForNonSyntacticScope(
-                                 cx, options, str.get(), str.Length())
-                           : CompileUtf8(cx, options, str.get(), str.Length());
+      if (reuseGlobal) {
+        CompileUtf8ForNonSyntacticScope(cx, options, str.get(), str.Length(),
+                                        &script);
+      } else {
+        CompileUtf8(cx, options, str.get(), str.Length(), &script);
+      }
     }
     // Propagate the exception, if one exists. Also, don't leave the stale
     // exception on this context.
