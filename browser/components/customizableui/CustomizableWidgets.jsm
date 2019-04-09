@@ -740,7 +740,7 @@ let preferencesButton = {
   id: "preferences-button",
   onCommand(aEvent) {
     let win = aEvent.target.ownerGlobal;
-    win.openPreferences(undefined, {origin: "preferencesButton"});
+    win.openPreferences(undefined);
   },
 };
 if (AppConstants.platform == "win") {

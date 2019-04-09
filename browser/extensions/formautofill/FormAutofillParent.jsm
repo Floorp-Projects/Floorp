@@ -267,7 +267,7 @@ FormAutofillParent.prototype = {
       }
       case "FormAutofill:OpenPreferences": {
         const win = BrowserWindowTracker.getTopWindow();
-        win.openPreferences("privacy-form-autofill", {origin: "autofillFooter"});
+        win.openPreferences("privacy-form-autofill");
         break;
       }
       case "FormAutofill:GetDecryptedString": {
@@ -453,8 +453,7 @@ FormAutofillParent.prototype = {
             return;
           }
 
-          target.ownerGlobal.openPreferences("privacy-address-autofill",
-                                             {origin: "autofillDoorhanger"});
+          target.ownerGlobal.openPreferences("privacy-address-autofill");
         };
       } else {
         // We want to exclude the first time form filling.

@@ -420,7 +420,7 @@ var ContentSearch = {
   },
 
   _onMessageManageEngines(msg) {
-    msg.target.ownerGlobal.openPreferences("paneSearch", { origin: "contentSearch" });
+    msg.target.ownerGlobal.openPreferences("paneSearch");
   },
 
   async _onMessageGetSuggestions(msg, data) {

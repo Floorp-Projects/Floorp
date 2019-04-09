@@ -1178,7 +1178,7 @@ class SearchOneOffs {
 
     if (target == this.settingsButton ||
         target == this.settingsButtonCompact) {
-      openPreferences("paneSearch", { origin: "contentSearch" });
+      openPreferences("paneSearch");
 
       // If the preference tab was already selected, the panel doesn't
       // close itself automatically.

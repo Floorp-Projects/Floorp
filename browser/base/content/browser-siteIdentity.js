@@ -267,7 +267,7 @@ var gIdentityHandler = {
   },
 
   openPermissionPreferences() {
-    openPreferences("privacy-permissions", { origin: "identityPopup-permissions-PreferencesButton" });
+    openPreferences("privacy-permissions");
   },
 
   recordClick(object) {
