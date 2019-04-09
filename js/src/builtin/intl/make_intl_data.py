@@ -90,22 +90,36 @@ def readRegistry(registry):
         - regionMappings: mappings from region subtags to preferred subtags
         - variantMappings: mappings from complete language tags to preferred
           complete language tags
-        - extlangMappings: mappings from extlang subtags to preferred subtags,
-          with prefix to be removed
-        Returns these six mappings as dictionaries, along with the registry's
+        Returns these five mappings as dictionaries, along with the registry's
         file date.
-
-        We also check that extlang mappings don't generate preferred values
-        which in turn are subject to language subtag mappings, so that
-        CanonicalizeLanguageTag can process subtags sequentially.
     """
     grandfatheredMappings = {}
     redundantMappings = {}
     languageMappings = {}
     regionMappings = {}
     variantMappings = {}
-    extlangMappings = {}
-    extlangSubtags = []
+
+    # From Unicode BCP 47 locale identifier <https://unicode.org/reports/tr35/>.
+    reUnicodeLanguageId = re.compile(
+        r"""
+        ^
+        # unicode_language_id = unicode_language_subtag
+        #     unicode_language_subtag = alpha{2,3} | alpha{5,8}
+        ([a-z]{2,3}|[a-z]{5,8})
+
+        # (sep unicode_script_subtag)?
+        #     unicode_script_subtag = alpha{4}
+        (-[a-z]{4})?
+
+        # (sep unicode_region_subtag)?
+        #     unicode_region_subtag = (alpha{2} | digit{3})
+        (-([a-z]{2}|[0-9]{3}))?
+
+        # (sep unicode_variant_subtag)*
+        #     unicode_variant_subtag = (alphanum{5,8} | digit alphanum{3})
+        (-([a-z0-9]{5,8}|[0-9][a-z0-9]{3}))*
+        $
+        """, re.IGNORECASE | re.VERBOSE)
 
     # Set of language tags which require special handling.
     SpecialCase = namedtuple("SpecialCase", ["Type", "Subtag", "Prefix", "Preferred_Value"])
@@ -144,10 +158,14 @@ def readRegistry(registry):
             # For grandfatheredMappings, keys must be in lower case; values in
             # the case used in the registry.
             tag = record["Tag"]
-            if "Preferred-Value" in record:
-                grandfatheredMappings[tag.lower()] = record["Preferred-Value"]
-            else:
-                grandfatheredMappings[tag.lower()] = tag
+
+            # Ignore any grandfathered tags which can't be parsed as Unicode
+            # BCP 47 locale identifiers, because they aren't supported anymore.
+            if reUnicodeLanguageId.match(tag):
+                if "Preferred-Value" in record:
+                    grandfatheredMappings[tag.lower()] = record["Preferred-Value"]
+                else:
+                    grandfatheredMappings[tag.lower()] = tag
         elif record["Type"] == "redundant":
             # For redundantMappings, keys and values must be in the case used
             # in the registry.
@@ -184,28 +202,13 @@ def readRegistry(registry):
                 tag = "{}-{}".format(record["Prefix"], record["Subtag"])
                 variantMappings[tag] = record["Preferred-Value"]
         elif record["Type"] == "extlang":
-            # For extlangMappings, keys must be in the case used in the
-            # registry; values are records with the preferred value and the
-            # prefix to be removed.
-            subtag = record["Subtag"]
-            extlangSubtags.append(subtag)
-            if "Preferred-Value" in record:
-                preferred = record["Preferred-Value"]
-                # The 'Preferred-Value' and 'Subtag' fields MUST be identical.
-                # https://tools.ietf.org/html/rfc5646#section-2.2.2
-                assert preferred == subtag, "{0} = {1}".format(preferred, subtag)
-                prefix = record["Prefix"]
-                extlangMappings[subtag] = {"preferred": preferred, "prefix": prefix}
+            # extlang subtags are not allowed in Unicode BCP 47 locale identifiers,
+            # so ignore any replacements.
+            pass
         else:
             # No other types are allowed by
             # https://tools.ietf.org/html/rfc5646#section-3.1.3
             assert False, "Unrecognized Type: {0}".format(record["Type"])
-
-    # Check that mappings for language subtags and extlang subtags don't affect
-    # each other.
-    for extlang in extlangSubtags:
-        if extlang in languageMappings:
-            raise Exception("Conflict: extlang with lang mapping: " + extlang)
 
     # Check all known special cases were processed.
     for elem in knownSpecialCases:
@@ -224,8 +227,7 @@ def readRegistry(registry):
             "redundantMappings": redundantMappings,
             "languageMappings": languageMappings,
             "regionMappings": regionMappings,
-            "variantMappings": variantMappings,
-            "extlangMappings": extlangMappings}
+            "variantMappings": variantMappings}
 
 
 def writeMappingHeader(println, description, fileDate, url):
@@ -261,8 +263,8 @@ def writeMappingsVar(println, mapping, name, description, fileDate, url):
     println(u"};")
 
 
-def writeMappingsFunction(println, variantMappings, redundantMappings, extlangMappings,
-                          description, fileDate, url):
+def writeMappingsFunction(println, variantMappings, redundantMappings, description,
+                          fileDate, url):
     """ Writes a function definition which performs language tag mapping.
 
         Processes the contents of dictionaries |variantMappings| and
@@ -328,18 +330,12 @@ def writeMappingsFunction(println, variantMappings, redundantMappings, extlangMa
 
         # Compare the input language tag with the current language tag.
         cond = []
-        extlangIndex = 1
         lastVariant = None
         for (kind, subtag) in splitSubtags(tag):
             if kind == Subtag.Language:
                 continue
 
-            if kind == Subtag.ExtLang:
-                assert extlangIndex in [1, 2, 3], \
-                    "Language-Tag permits no more than three extlang subtags"
-                cond.append('tag.extlang{} === "{}"'.format(extlangIndex, subtag))
-                extlangIndex += 1
-            elif kind == Subtag.Script:
+            if kind == Subtag.Script:
                 cond.append('tag.script === "{}"'.format(subtag))
             elif kind == Subtag.Region:
                 cond.append('tag.region === "{}"'.format(subtag))
@@ -363,9 +359,7 @@ def writeMappingsFunction(println, variantMappings, redundantMappings, extlangMa
             assert tag_kind == Subtag.Language
             (tag_kind, _) = tag_next()
 
-            subtags = ([(Subtag.ExtLang, "extlang{}".format(i)) for i in range(1, 3+1)] +
-                       [(Subtag.Script, "script"), (Subtag.Region, "region")])
-            for kind, prop_name in subtags:
+            for kind, prop_name in ((Subtag.Script, "script"), (Subtag.Region, "region")):
                 if tag_kind == kind:
                     (tag_kind, _) = tag_next()
                 else:
@@ -421,20 +415,8 @@ def writeMappingsFunction(println, variantMappings, redundantMappings, extlangMa
         (tag_kind, tag_subtag) = tag_next()
         (preferred_kind, preferred_subtag) = preferred_next()
 
-        # Remove any extlang subtags per RFC 5646, 4.5:
-        # 'The canonical form contains no 'extlang' subtags.'
-        # https://tools.ietf.org/html/rfc5646#section-4.5
-        assert preferred_kind != Subtag.ExtLang
-        extlangIndex = 1
-        while tag_kind == Subtag.ExtLang:
-            assert extlangIndex in [1, 2, 3], \
-                "Language-Tag permits no more than three extlang subtags"
-            println3(u"tag.extlang{} = undefined;".format(extlangIndex))
-            extlangIndex += 1
-            (tag_kind, tag_subtag) = tag_next()
-
         # Update the script and region subtags.
-        for kind, prop_name in [(Subtag.Script, "script"), (Subtag.Region, "region")]:
+        for kind, prop_name in ((Subtag.Script, "script"), (Subtag.Region, "region")):
             if tag_kind == kind and preferred_kind == kind:
                 if tag_subtag != preferred_subtag:
                     println3(u'tag.{} = "{}";'.format(prop_name, preferred_subtag))
@@ -481,9 +463,8 @@ def writeMappingsFunction(println, variantMappings, redundantMappings, extlangMa
 
         println2(u"}")
 
-    # Remove mappings for redundant language tags which are from our point of
-    # view, wait for it, redundant, because there is an equivalent extlang
-    # mapping.
+    # Remove mappings for redundant language tags which contain extlang subtags,
+    # because extlangs are not supported in Unicode BCP 47 locale identifiers.
     #
     # For example this entry for the redundant tag "zh-cmn":
     #
@@ -491,35 +472,21 @@ def writeMappingsFunction(println, variantMappings, redundantMappings, extlangMa
     #   Tag: zh-cmn
     #   Preferred-Value: cmn
     #
-    # Can also be expressed through the extlang mapping for "cmn":
-    #
-    #   Type: extlang
-    #   Subtag: cmn
-    #   Preferred-Value: cmn
-    #   Prefix: zh
-    #
-    def hasExtlangMapping(tag, preferred):
+    # Can be omitted because "zh-cmn" is already rejected in the parser.
+    def hasExtlangSubtag(tag):
         tag_it = splitSubtags(tag)
-        (_, tag_lang) = next(tag_it)
-        (tag_kind, tag_extlang) = next(tag_it)
+        (_, _) = next(tag_it)
+        (tag_kind, _) = next(tag_it)
 
-        preferred_it = splitSubtags(preferred)
-        (_, preferred_lang) = next(preferred_it)
-
-        # Return true if the mapping is for an extlang language and the extlang
-        # mapping table contains an equivalent entry and any trailing elements,
-        # if present, are the same.
-        return (tag_kind == Subtag.ExtLang and
-                (tag_extlang, {"preferred": preferred_lang, "prefix": tag_lang}) in
-                extlangMappings.items() and
-                list(tag_it) == list(preferred_it))
+        # Return true if |tag| contains an extlang subtag.
+        return tag_kind == Subtag.ExtLang
 
     # Create a single mapping for variant and redundant tags, ignoring the
-    # entries which are also covered through extlang mappings.
+    # entries which contain extlang subtags.
     langTagMappings = {tag: preferred
                        for mapping in [variantMappings, redundantMappings]
                        for (tag, preferred) in mapping.items()
-                       if not hasExtlangMapping(tag, preferred)}
+                       if not hasExtlangSubtag(tag)}
 
     println(u"")
     println(u"/* eslint-disable complexity */")
@@ -555,9 +522,8 @@ def writeLanguageTagData(println, data, url):
     languageMappings = data["languageMappings"]
     regionMappings = data["regionMappings"]
     variantMappings = data["variantMappings"]
-    extlangMappings = data["extlangMappings"]
 
-    writeMappingsFunction(println, variantMappings, redundantMappings, extlangMappings,
+    writeMappingsFunction(println, variantMappings, redundantMappings,
                           "Mappings from complete tags to preferred values.", fileDate, url)
     writeMappingsVar(println, grandfatheredMappings, "grandfatheredMappings",
                      "Mappings from grandfathered tags to preferred values.", fileDate, url)
@@ -565,12 +531,6 @@ def writeLanguageTagData(println, data, url):
                      "Mappings from language subtags to preferred values.", fileDate, url)
     writeMappingsVar(println, regionMappings, "regionMappings",
                      "Mappings from region subtags to preferred values.", fileDate, url)
-    writeMappingsVar(println, extlangMappings, "extlangMappings",
-                     ["Mappings from extlang subtags to preferred values.",
-                      "All current deprecated extlang subtags have the form `<prefix>-<extlang>`",
-                      "and their preferred value is exactly equal to `<extlang>`. So each key in",
-                      "extlangMappings acts both as the extlang subtag and its preferred value."],
-                     fileDate, url)
 
 
 def updateLangTags(args):

@@ -24,11 +24,6 @@ for (let locale of ["no_locale", "lt-invalid_ext", ["no_locale"], ["en", "no_loc
     assertThrowsInstanceOf(() => "a".toLocaleUpperCase(locale), RangeError);
 }
 
-// The language tag fast-path for String.prototype.toLocaleUpperCase doesn't
-// trip up on three element private-use only language tags.
-assertEq("a".toLocaleUpperCase("x-x"), "A");
-assertEq("a".toLocaleUpperCase("x-0"), "A");
-
 // No locale argument, undefined as locale, and empty array or array-like all
 // return the same result. Testing with "a/A" because it has only simple case
 // mappings.

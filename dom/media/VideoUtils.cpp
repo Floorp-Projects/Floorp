@@ -31,9 +31,6 @@
 
 namespace mozilla {
 
-NS_NAMED_LITERAL_CSTRING(kEMEKeySystemClearkey, "org.w3.clearkey");
-NS_NAMED_LITERAL_CSTRING(kEMEKeySystemWidevine, "com.widevine.alpha");
-
 using layers::PlanarYCbCrImage;
 using media::TimeUnit;
 

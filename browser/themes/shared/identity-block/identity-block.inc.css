@@ -292,7 +292,7 @@
   visibility: visible;
 }
 
-#main-window[remotecontrol] #remote-control-icon {
+:root[remotecontrol] #remote-control-icon {
   list-style-image: url(chrome://browser/content/static-robot.png);
   visibility: visible;
   width: 16px;

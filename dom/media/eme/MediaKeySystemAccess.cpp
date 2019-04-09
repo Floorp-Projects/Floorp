@@ -244,9 +244,10 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
   nsTArray<KeySystemConfig> keySystemConfigs;
 
   {
-    if (HavePluginForKeySystem(kEMEKeySystemClearkey)) {
+    const nsCString keySystem = NS_LITERAL_CSTRING(EME_KEY_SYSTEM_CLEARKEY);
+    if (HavePluginForKeySystem(keySystem)) {
       KeySystemConfig clearkey;
-      clearkey.mKeySystem = NS_ConvertUTF8toUTF16(kEMEKeySystemClearkey);
+      clearkey.mKeySystem.AssignLiteral(EME_KEY_SYSTEM_CLEARKEY);
       clearkey.mInitDataTypes.AppendElement(NS_LITERAL_STRING("cenc"));
       clearkey.mInitDataTypes.AppendElement(NS_LITERAL_STRING("keyids"));
       clearkey.mInitDataTypes.AppendElement(NS_LITERAL_STRING("webm"));
@@ -281,9 +282,10 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
     }
   }
   {
-    if (HavePluginForKeySystem(kEMEKeySystemWidevine)) {
+    const nsCString keySystem = NS_LITERAL_CSTRING(EME_KEY_SYSTEM_WIDEVINE);
+    if (HavePluginForKeySystem(keySystem)) {
       KeySystemConfig widevine;
-      widevine.mKeySystem = NS_ConvertUTF8toUTF16(kEMEKeySystemWidevine);
+      widevine.mKeySystem.AssignLiteral(EME_KEY_SYSTEM_WIDEVINE);
       widevine.mInitDataTypes.AppendElement(NS_LITERAL_STRING("cenc"));
       widevine.mInitDataTypes.AppendElement(NS_LITERAL_STRING("keyids"));
       widevine.mInitDataTypes.AppendElement(NS_LITERAL_STRING("webm"));
@@ -350,7 +352,7 @@ static nsTArray<KeySystemConfig> GetSupportedKeySystems() {
       };
 
       for (const auto& data : validationList) {
-        if (MediaDrmProxy::IsCryptoSchemeSupported(kEMEKeySystemWidevine,
+        if (MediaDrmProxy::IsCryptoSchemeSupported(EME_KEY_SYSTEM_WIDEVINE,
                                                    data.mMimeType)) {
           if (AndroidDecoderModule::SupportsMimeType(data.mMimeType)) {
             data.mSupportType->SetCanDecryptAndDecode(data.mEMECodecType);

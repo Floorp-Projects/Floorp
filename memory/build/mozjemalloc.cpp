@@ -2433,8 +2433,13 @@ void arena_t::Purge(bool aAll) {
         mStats.committed -= npages;
 
 #ifndef MALLOC_DECOMMIT
+#ifdef XP_SOLARIS
+        posix_madvise((void*)(uintptr_t(chunk) + (i << gPageSize2Pow)),
+                (npages << gPageSize2Pow), MADV_FREE);
+#else
         madvise((void*)(uintptr_t(chunk) + (i << gPageSize2Pow)),
                 (npages << gPageSize2Pow), MADV_FREE);
+#endif
 #  ifdef MALLOC_DOUBLE_PURGE
         madvised = true;
 #  endif

@@ -36,17 +36,15 @@
 "use strict";
 
 const { Cu } = require("chrome");
+const ChromeUtils = require("ChromeUtils");
 
-// Get a "Debugger" constructor. Can't call `addDebuggerToGlobal`
-// on the frame script global, so call it on jsdebugger one...
-const global = require("resource://gre/modules/jsdebugger.jsm");
-const {addDebuggerToGlobal} = global;
+const global = Cu.getGlobalForObject(this);
+const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(global);
-const { Debugger } = global;
 
 exports.allocationTracker = function() {
   dump("DEVTOOLS ALLOCATION: Start logging allocations\n");
-  let dbg = new Debugger();
+  let dbg = new global.Debugger();
 
   // Enable allocation site tracking, to have the stack for each allocation
   dbg.memory.trackingAllocationSites = true;
@@ -59,7 +57,7 @@ exports.allocationTracker = function() {
   dbg.addAllGlobalsAsDebuggees();
 
   // Remove this global to ignore all its object/JS
-  dbg.removeDebuggee(Cu.getGlobalForObject({}));
+  dbg.removeDebuggee(global);
 
   // addAllGlobalsAsDebuggees won't automatically track new ones,
   // so ensure tracking all new globals
