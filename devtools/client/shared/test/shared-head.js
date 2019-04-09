@@ -25,7 +25,7 @@ if (DEBUG_ALLOCATIONS) {
   loader.invisibleToDebugger = true;
 
   const { allocationTracker } = loader.require("devtools/shared/test-helpers/allocation-tracker");
-  const tracker = allocationTracker();
+  const tracker = allocationTracker({ watchAllGlobals: true });
   registerCleanupFunction(() => {
     if (DEBUG_ALLOCATIONS == "normal") {
       tracker.logCount();
