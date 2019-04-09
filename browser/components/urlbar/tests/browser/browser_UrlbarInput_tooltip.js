@@ -66,6 +66,7 @@ add_task(async function() {
 
   // Ensure the URL bar is neither focused nor hovered before we start.
   gBrowser.selectedBrowser.focus();
+  await synthesizeMouseOver(gURLBar.inputField);
   await synthesizeMouseOut(gURLBar.inputField);
 
   gURLBar.value = "short string";
