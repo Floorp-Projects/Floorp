@@ -341,12 +341,10 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext)
       mTouchEventsOverride(nsIDocShell::TOUCHEVENTS_OVERRIDE_NONE),
       mMetaViewportOverride(nsIDocShell::META_VIEWPORT_OVERRIDE_NONE),
       mFullscreenAllowed(CHECK_ATTRIBUTES),
-      mCreatingDocument(false)
+      mCreatingDocument(false),
 #ifdef DEBUG
-      ,
-      mInEnsureScriptEnv(false)
+      mInEnsureScriptEnv(false),
 #endif
-      ,
       mCreated(false),
       mAllowSubframes(true),
       mAllowPlugins(true),
