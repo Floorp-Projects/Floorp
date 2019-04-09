@@ -42,8 +42,9 @@ BEGIN_TEST(testPrivateGCThingValue) {
   JS::CompileOptions options(cx);
   options.setFileAndLine(__FILE__, __LINE__);
 
-  JS::RootedScript script(cx);
-  CHECK(JS::CompileUtf8(cx, options, code, sizeof(code) - 1, &script));
+  JS::RootedScript script(cx,
+                          JS::CompileUtf8(cx, options, code, sizeof(code) - 1));
+  CHECK(script);
   JS_SetReservedSlot(obj, 0, PrivateGCThingValue(script));
 
   TestTracer trc(cx);
