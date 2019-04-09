@@ -351,7 +351,6 @@ nsComponentManagerImpl::nsComponentManagerImpl()
       mStatus(NOT_INITIALIZED) {}
 
 extern const mozilla::Module kNeckoModule;
-extern const mozilla::Module kParserModule;
 #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_ANDROID)
 extern const mozilla::Module kSpeechSynthModule;
 #endif
@@ -361,9 +360,6 @@ extern const mozilla::Module kContentProcessWidgetModule;
 extern const mozilla::Module kWidgetModule;
 #endif
 extern const mozilla::Module kLayoutModule;
-namespace mozilla {
-extern const mozilla::Module kLocalCertServiceModule;
-}
 extern const mozilla::Module kKeyValueModule;
 extern const mozilla::Module kXREModule;
 extern const mozilla::Module kEmbeddingModule;
@@ -466,7 +462,6 @@ nsresult nsComponentManagerImpl::Init() {
 
   RegisterModule(&kXPCOMModule);
   RegisterModule(&kNeckoModule);
-  RegisterModule(&kParserModule);
 #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_ANDROID)
   RegisterModule(&kSpeechSynthModule);
 #endif
@@ -476,7 +471,6 @@ nsresult nsComponentManagerImpl::Init() {
   RegisterModule(&kWidgetModule);
 #endif
   RegisterModule(&kLayoutModule);
-  RegisterModule(&mozilla::kLocalCertServiceModule);
   RegisterModule(&kKeyValueModule);
   RegisterModule(&kXREModule);
   RegisterModule(&kEmbeddingModule);
