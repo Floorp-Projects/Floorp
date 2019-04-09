@@ -31,7 +31,6 @@ push_apk_description_schema = Schema({
     Required('worker'): object,
     Required('scopes'): None,
     Required('requires'): task_description_schema['requires'],
-    Required('deadline-after'): basestring,
     Required('shipping-phase'): task_description_schema['shipping-phase'],
     Required('shipping-product'): task_description_schema['shipping-product'],
     Optional('extra'): task_description_schema['extra'],

@@ -1,16 +1,17 @@
-FROM          ubuntu:16.04
+FROM          ubuntu:18.04
 MAINTAINER    Johan Lorenzo <jlorenzo+tc@mozilla.com>
 
 RUN mkdir /builds
 RUN groupadd -g 1000 worker
 RUN useradd -u 1000 -g 1000 -d /builds/worker -s /bin/bash -m worker
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update \
+  && apt-get install -y \
     build-essential \
     curl \
     libffi-dev \
     libfreetype6-dev \
-    libpng12-dev \
+    libpng-dev \
     libssl-dev \
     libxml2-dev \
     libxslt1-dev \
@@ -18,19 +19,22 @@ RUN apt-get update && apt-get install -y \
     python3-dev \
     python3-pip \
     python3-setuptools \
-    unzip
+    unzip \
+  && apt-get clean
 
 WORKDIR /builds/worker/
 # Change hash_for_given_tag to point to a newer tag. For more information, see
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1459980#c3
-RUN curl --location https://github.com/mozilla-releng/mozapkpublisher/archive/8051c7f98959e2f041ce63a1911ade88827c3a66.zip > mozapkpublisher.zip
-RUN unzip mozapkpublisher.zip
-RUN mv mozapkpublisher-8051c7f98959e2f041ce63a1911ade88827c3a66 mozapkpublisher
+RUN export revision='0ac130cdece189f3913952a5c80913504413de7c' \
+  && curl --location "https://github.com/mozilla-releng/mozapkpublisher/archive/$revision.zip" > mozapkpublisher.zip \
+  && unzip mozapkpublisher.zip \
+  && mv "mozapkpublisher-$revision" mozapkpublisher \
+  && rm mozapkpublisher.zip
 
 WORKDIR /builds/worker/mozapkpublisher
-RUN pip3 install --upgrade pip
-RUN pip3 install --no-deps --require-hashes --requirement requirements.txt
-RUN pip3 install --no-deps --editable .
+RUN pip3 --no-cache-dir install --upgrade pip
+RUN pip3 --no-cache-dir install --no-deps --require-hashes --requirement requirements.txt
+RUN pip3 --no-cache-dir install --no-deps --editable .
 
 RUN chown -R worker:worker /builds/worker
 

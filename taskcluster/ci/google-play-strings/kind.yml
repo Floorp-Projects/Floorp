@@ -21,7 +21,7 @@ jobs:
       worker:
          implementation: docker-worker
          os: linux
-         docker-image: {in-tree: google-play-strings}
+         docker-image: {in-tree: mozapkpublisher}
          chain-of-trust: true
          max-run-time: 600
          artifacts:
