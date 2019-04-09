@@ -2701,11 +2701,6 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
 
   SerializeURI(mTopWindowURI, openArgs.topWindowURI());
 
-  if (!mTopWindowPrincipal) {
-    GetTopWindowPrincipal(getter_AddRefs(mTopWindowPrincipal));
-  }
-  openArgs.topWindowPrincipal() = mTopWindowPrincipal;
-
   openArgs.preflightArgs() = optionalCorsPreflightArgs;
 
   openArgs.uploadStreamHasHeaders() = mUploadStreamHasHeaders;

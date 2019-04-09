@@ -306,14 +306,6 @@ interface nsIHttpChannelInternal : nsISupports
     [must_use] void setTopWindowURIIfUnknown(in nsIURI topWindowURI);
 
     /**
-     * Set top-level window Principal for this channel.
-     * This method is used in HttpChannelParent to pass the window principal
-     * from the child to nsHttpChannel.
-     * It's also called directly in xpcshell-tests
-     */
-    [must_use] void setTopWindowPrincipal(in nsIPrincipal topWindowPrincipal);
-
-    /**
      * Read the proxy URI, which, if non-null, will be used to resolve
      * proxies for this channel.
      */
