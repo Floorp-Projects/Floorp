@@ -127,10 +127,6 @@ var UrlbarUtils = {
     BLUR: 2,
   },
 
-  // Limit the length of titles and URLs we display so layout doesn't spend too
-  // much time building text runs.
-  MAX_TEXT_LENGTH: 255,
-
   /**
    * Adds a url to history as long as it isn't in a private browsing window,
    * and it is valid.
