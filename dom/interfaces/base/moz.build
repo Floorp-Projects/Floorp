@@ -10,6 +10,7 @@ with Files("**"):
 XPIDL_SOURCES += [
     'domstubs.idl',
     'nsIBrowser.idl',
+    'nsIBrowserChild.idl',
     'nsIBrowserDOMWindow.idl',
     'nsIContentPermissionPrompt.idl',
     'nsIContentPrefService2.idl',
@@ -23,7 +24,6 @@ XPIDL_SOURCES += [
     'nsIRemoteTab.idl',
     'nsIServiceWorkerManager.idl',
     'nsIStructuredCloneContainer.idl',
-    'nsITabChild.idl',
     'nsITextInputProcessor.idl',
     'nsITextInputProcessorCallback.idl',
 ]

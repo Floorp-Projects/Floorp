@@ -83,7 +83,7 @@ nsPrintingProxy::ShowPrintDialog(mozIDOMWindowProxy* parent,
     nsCOMPtr<nsIDocShell> docShell = pwin->GetDocShell();
     NS_ENSURE_STATE(docShell);
 
-    nsCOMPtr<nsITabChild> tabchild = docShell->GetTabChild();
+    nsCOMPtr<nsIBrowserChild> tabchild = docShell->GetTabChild();
     NS_ENSURE_STATE(tabchild);
 
     pBrowser = static_cast<TabChild*>(tabchild.get());
@@ -139,7 +139,7 @@ nsPrintingProxy::ShowProgress(
   NS_ENSURE_STATE(pwin);
   nsCOMPtr<nsIDocShell> docShell = pwin->GetDocShell();
   NS_ENSURE_STATE(docShell);
-  nsCOMPtr<nsITabChild> tabchild = docShell->GetTabChild();
+  nsCOMPtr<nsIBrowserChild> tabchild = docShell->GetTabChild();
   TabChild* pBrowser = static_cast<TabChild*>(tabchild.get());
 
   RefPtr<PrintProgressDialogChild> dialogChild =

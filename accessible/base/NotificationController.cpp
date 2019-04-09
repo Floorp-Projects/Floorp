@@ -920,7 +920,7 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
       parentIPCDoc->ConstructChildDocInParentProcess(
           ipcDoc, id, AccessibleWrap::GetChildIDFor(childDoc));
 #else
-      nsCOMPtr<nsITabChild> tabChild =
+      nsCOMPtr<nsIBrowserChild> tabChild =
           do_GetInterface(mDocument->DocumentNode()->GetDocShell());
       if (tabChild) {
         static_cast<TabChild*>(tabChild.get())

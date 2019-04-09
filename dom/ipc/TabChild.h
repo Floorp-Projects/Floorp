@@ -23,7 +23,7 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsFrameMessageManager.h"
 #include "nsWeakReference.h"
-#include "nsITabChild.h"
+#include "nsIBrowserChild.h"
 #include "nsITooltipListener.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebProgressListener2.h"
@@ -203,7 +203,7 @@ class TabChild final : public TabChildBase,
                        public nsIInterfaceRequestor,
                        public nsIWindowProvider,
                        public nsSupportsWeakReference,
-                       public nsITabChild,
+                       public nsIBrowserChild,
                        public nsIObserver,
                        public nsIWebProgressListener2,
                        public TabContext,
@@ -262,7 +262,7 @@ class TabChild final : public TabChildBase,
   NS_DECL_NSIWEBBROWSERCHROMEFOCUS
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSIWINDOWPROVIDER
-  NS_DECL_NSITABCHILD
+  NS_DECL_NSIBROWSERCHILD
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSIWEBPROGRESSLISTENER2
@@ -482,7 +482,7 @@ class TabChild final : public TabChildBase,
       return nullptr;
     }
 
-    nsCOMPtr<nsITabChild> tc = aDocShell->GetTabChild();
+    nsCOMPtr<nsIBrowserChild> tc = aDocShell->GetTabChild();
     return static_cast<TabChild*>(tc.get());
   }
 

@@ -24,7 +24,7 @@ class nsILoadGroup;
 class nsIPrincipal;
 class nsIRunnable;
 class nsIScriptContext;
-class nsITabChild;
+class nsIBrowserChild;
 class nsIURI;
 class nsPIDOMWindowInner;
 
@@ -79,13 +79,14 @@ struct WorkerLoadInfoData {
    private:
     ~InterfaceRequestor() {}
 
-    already_AddRefed<nsITabChild> GetAnyLiveTabChild();
+    already_AddRefed<nsIBrowserChild> GetAnyLiveTabChild();
 
     nsCOMPtr<nsILoadContext> mLoadContext;
     nsCOMPtr<nsIInterfaceRequestor> mOuterRequestor;
 
-    // Array of weak references to nsITabChild.  We do not want to keep TabChild
-    // actors alive for long after their ActorDestroy() methods are called.
+    // Array of weak references to nsIBrowserChild.  We do not want to keep
+    // TabChild actors alive for long after their ActorDestroy() methods are
+    // called.
     nsTArray<nsWeakPtr> mTabChildList;
   };
 

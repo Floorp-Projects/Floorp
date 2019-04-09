@@ -408,11 +408,12 @@ TabChild::TabChild(ContentChild* aManager, const TabId& aTabId,
   mozilla::HoldJSObjects(this);
 
   nsWeakPtr weakPtrThis(do_GetWeakReference(
-      static_cast<nsITabChild*>(this)));  // for capture by the lambda
+      static_cast<nsIBrowserChild*>(this)));  // for capture by the lambda
   mSetAllowedTouchBehaviorCallback =
       [weakPtrThis](uint64_t aInputBlockId,
                     const nsTArray<TouchBehaviorFlags>& aFlags) {
-        if (nsCOMPtr<nsITabChild> tabChild = do_QueryReferent(weakPtrThis)) {
+        if (nsCOMPtr<nsIBrowserChild> tabChild =
+                do_QueryReferent(weakPtrThis)) {
           static_cast<TabChild*>(tabChild.get())
               ->SetAllowedTouchBehavior(aInputBlockId, aFlags);
         }
@@ -591,11 +592,12 @@ nsresult TabChild::Init(mozIDOMWindowProxy* aParent) {
       !!(mChromeFlags & nsIWebBrowserChrome::CHROME_SCROLLBARS));
 
   nsWeakPtr weakPtrThis = do_GetWeakReference(
-      static_cast<nsITabChild*>(this));  // for capture by the lambda
+      static_cast<nsIBrowserChild*>(this));  // for capture by the lambda
   ContentReceivedInputBlockCallback callback(
       [weakPtrThis](const ScrollableLayerGuid& aGuid, uint64_t aInputBlockId,
                     bool aPreventDefault) {
-        if (nsCOMPtr<nsITabChild> tabChild = do_QueryReferent(weakPtrThis)) {
+        if (nsCOMPtr<nsIBrowserChild> tabChild =
+                do_QueryReferent(weakPtrThis)) {
           static_cast<TabChild*>(tabChild.get())
               ->ContentReceivedInputBlock(aGuid, aInputBlockId,
                                           aPreventDefault);
@@ -667,7 +669,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TabChild)
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChromeFocus)
   NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
   NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
-  NS_INTERFACE_MAP_ENTRY(nsITabChild)
+  NS_INTERFACE_MAP_ENTRY(nsIBrowserChild)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsITooltipListener)

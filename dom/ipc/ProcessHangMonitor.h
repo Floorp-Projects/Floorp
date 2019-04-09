@@ -14,7 +14,7 @@
 #include "nsStringFwd.h"
 
 class nsIRunnable;
-class nsITabChild;
+class nsIBrowserChild;
 class nsIThread;
 
 namespace mozilla {
@@ -61,7 +61,7 @@ class ProcessHangMonitor final : public nsIObserver {
     StartDebugger,
     TerminateGlobal,
   };
-  SlowScriptAction NotifySlowScript(nsITabChild* aTabChild,
+  SlowScriptAction NotifySlowScript(nsIBrowserChild* aTabChild,
                                     const char* aFileName,
                                     const nsString& aAddonId);
 

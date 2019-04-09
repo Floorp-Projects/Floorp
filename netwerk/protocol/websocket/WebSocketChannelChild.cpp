@@ -10,7 +10,7 @@
 #include "mozilla/net/NeckoChild.h"
 #include "WebSocketChannelChild.h"
 #include "nsContentUtils.h"
-#include "nsITabChild.h"
+#include "nsIBrowserChild.h"
 #include "nsNetUtil.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ipc/URIUtils.h"
@@ -426,8 +426,9 @@ WebSocketChannelChild::AsyncOpen(nsIURI* aURI, const nsACString& aOrigin,
              "Invalid state for WebSocketChannelChild::AsyncOpen");
 
   mozilla::dom::TabChild* tabChild = nullptr;
-  nsCOMPtr<nsITabChild> iTabChild;
-  NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, NS_GET_IID(nsITabChild),
+  nsCOMPtr<nsIBrowserChild> iTabChild;
+  NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
+                                NS_GET_IID(nsIBrowserChild),
                                 getter_AddRefs(iTabChild));
   if (iTabChild) {
     tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());

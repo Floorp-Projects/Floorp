@@ -22,7 +22,7 @@
 #include "mozilla/dom/Document.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"
-#include "nsITabChild.h"
+#include "nsIBrowserChild.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
@@ -356,8 +356,8 @@ OfflineCacheUpdateChild::Schedule() {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsITabChild> tabchild = docshell->GetTabChild();
-  // because owner implements nsITabChild, we can assume that it is
+  nsCOMPtr<nsIBrowserChild> tabchild = docshell->GetTabChild();
+  // because owner implements nsIBrowserChild, we can assume that it is
   // the one and only TabChild.
   TabChild *child =
       tabchild ? static_cast<TabChild *>(tabchild.get()) : nullptr;

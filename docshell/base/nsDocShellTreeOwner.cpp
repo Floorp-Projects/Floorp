@@ -40,7 +40,7 @@
 #include "nsPIWindowWatcher.h"
 #include "nsIPrompt.h"
 #include "nsIRemoteTab.h"
-#include "nsITabChild.h"
+#include "nsIBrowserChild.h"
 #include "nsRect.h"
 #include "nsIWebBrowserChromeFocus.h"
 #include "nsIContent.h"
@@ -356,7 +356,7 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem, int32_t aCX,
   }
 
   if (aShellItem == mWebBrowser->mDocShell) {
-    nsCOMPtr<nsITabChild> tabChild = do_QueryInterface(webBrowserChrome);
+    nsCOMPtr<nsIBrowserChild> tabChild = do_QueryInterface(webBrowserChrome);
     if (tabChild) {
       // The XUL window to resize is in the parent process, but there we
       // won't be able to get aShellItem to do the hack in
@@ -884,7 +884,7 @@ nsDocShellTreeOwner::HandleEvent(Event* aEvent) {
           nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome =
               GetWebBrowserChrome();
           if (webBrowserChrome) {
-            nsCOMPtr<nsITabChild> tabChild =
+            nsCOMPtr<nsIBrowserChild> tabChild =
                 do_QueryInterface(webBrowserChrome);
             if (tabChild) {
               nsresult rv = tabChild->RemoteDropLinks(linksCount, links);

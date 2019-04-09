@@ -99,7 +99,7 @@ bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
     dataSpec.AppendLiteral("...");
   }
   nsCOMPtr<nsISupports> context = loadInfo->ContextForTopLevelLoad();
-  nsCOMPtr<nsITabChild> tabChild = do_QueryInterface(context);
+  nsCOMPtr<nsIBrowserChild> tabChild = do_QueryInterface(context);
   nsCOMPtr<Document> doc;
   if (tabChild) {
     doc = static_cast<mozilla::dom::TabChild*>(tabChild.get())
