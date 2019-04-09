@@ -12,11 +12,11 @@ test(t => {
   var observer = new PerformanceObserver(() => {
   });
 
-  assert_throws({name: "TypeError"}, function() {
+  assert_throws({name: "SyntaxError"}, function() {
     observer.observe();
   }, "observe() should throw TypeError exception if no option specified.");
 
-  assert_throws({name: "TypeError"}, function() {
+  assert_throws({name: "SyntaxError"}, function() {
     observer.observe({ unsupportedAttribute: "unsupported" });
   }, "obsrve() should throw TypeError exception if the option has no 'entryTypes' attribute.");
 
