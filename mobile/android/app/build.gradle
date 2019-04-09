@@ -382,7 +382,9 @@ android.applicationVariants.all { variant ->
 }
 
 android.applicationVariants.all { variant ->
-    configureApplicationVariantWithJNIWrappers(variant, "Fennec")
+    if (variant.name == mozconfig.substs.GRADLE_ANDROID_APP_VARIANT_NAME) {
+        configureApplicationVariantWithJNIWrappers(variant, "Fennec")
+    }
 }
 
 if (gradle.startParameter.taskNames.any { it.endsWith('UnitTest') }) {

@@ -170,6 +170,21 @@ public class AnnotationProcessor {
     private static int writeOutputFile(final String name, final StringBuilder content) {
         final byte[] contentBytes = content.toString().getBytes(StandardCharsets.UTF_8);
 
+        try {
+            final byte[] existingBytes = Files.readAllBytes(new File(name).toPath());
+            if (Arrays.equals(contentBytes, existingBytes)) {
+                return 0;
+            }
+        } catch (FileNotFoundException e) {
+            // Pass.
+        } catch (NoSuchFileException e) {
+            // Pass.
+        } catch (IOException e) {
+            System.err.println("Unable to read " + name + ". Perhaps a permissions issue?");
+            e.printStackTrace(System.err);
+            return 1;
+        }
+
         try (FileOutputStream outStream = new FileOutputStream(name)) {
             outStream.write(contentBytes);
         } catch (IOException e) {
