@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { CONNECTION_TYPES, DEBUG_TARGET_TYPES } =
-  require("devtools/client/shared/remote-debugging/constants");
+const { CONNECTION_TYPES } =
+  require("devtools/client/shared/remote-debugging/remote-client-manager");
 
 const actionTypes = {
   ADB_ADDON_INSTALL_START: "ADB_ADDON_INSTALL_START",
@@ -67,7 +67,12 @@ const actionTypes = {
   WATCH_RUNTIME_SUCCESS: "WATCH_RUNTIME_SUCCESS",
 };
 
-const DEBUG_TARGETS = DEBUG_TARGET_TYPES;
+const DEBUG_TARGETS = {
+  EXTENSION: "EXTENSION",
+  PROCESS: "PROCESS",
+  TAB: "TAB",
+  WORKER: "WORKER",
+};
 
 const DEBUG_TARGET_PANE = {
   INSTALLED_EXTENSION: "installedExtension",

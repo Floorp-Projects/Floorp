@@ -5,7 +5,6 @@
 "use strict";
 
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
-const { DEBUG_TARGETS } = require("../constants");
 
 const extensionTargetDetails = {
   // actor ID for this extention.
@@ -60,8 +59,8 @@ const debugTarget = {
   id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
   // display name for the debug target.
   name: PropTypes.string.isRequired,
-  // one of "extension", "tab", "worker", "process".
-  type: PropTypes.oneOf(Object.values(DEBUG_TARGETS)).isRequired,
+  // one of "EXTENSION", "TAB", "WORKER".
+  type: PropTypes.string.isRequired,
 };
 
 exports.debugTarget = PropTypes.shape(debugTarget);
