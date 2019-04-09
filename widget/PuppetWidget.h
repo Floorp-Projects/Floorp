@@ -129,8 +129,15 @@ class PuppetWidget : public nsBaseWidget,
     return NS_ERROR_UNEXPECTED;
   }
 
+  virtual mozilla::LayoutDeviceToLayoutDeviceMatrix4x4
+  WidgetToTopLevelWidgetTransform() override;
+
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() override {
     return GetWindowPosition() + GetChromeOffset();
+  }
+
+  virtual LayoutDeviceIntPoint TopLevelWidgetToScreenOffset() override {
+    return GetWindowPosition();
   }
 
   int32_t RoundsWidgetCoordinatesTo() override;

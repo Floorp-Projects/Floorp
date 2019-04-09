@@ -12,14 +12,32 @@
 
 const { Constructor: CC } = Components;
 
-function scopedCuImport(path) {
-  const scope = {};
-  ChromeUtils.import(path, scope);
-  return scope;
+// Print allocation count if DEBUG_DEVTOOLS_ALLOCATIONS is set to "normal",
+// and allocation sites if DEBUG_DEVTOOLS_ALLOCATIONS is set to "verbose".
+const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+const DEBUG_ALLOCATIONS = env.get("DEBUG_DEVTOOLS_ALLOCATIONS");
+if (DEBUG_ALLOCATIONS) {
+  // Use a custom loader with `invisibleToDebugger` flag for the allocation tracker
+  // as it instantiates custom Debugger API instances and has to be running in a distinct
+  // compartments from DevTools and system scopes (JSMs, XPCOM,...)
+  const { DevToolsLoader } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
+  const loader = new DevToolsLoader();
+  loader.invisibleToDebugger = true;
+
+  const { allocationTracker } = loader.require("devtools/shared/test-helpers/allocation-tracker");
+  const tracker = allocationTracker();
+  registerCleanupFunction(() => {
+    if (DEBUG_ALLOCATIONS == "normal") {
+      tracker.logCount();
+    } else if (DEBUG_ALLOCATIONS == "verbose") {
+      tracker.logAllocationSites();
+    }
+    tracker.stop();
+  });
 }
 
-const {ScratchpadManager} = scopedCuImport("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
-const {loader, require} = scopedCuImport("resource://devtools/shared/Loader.jsm");
+const {ScratchpadManager} = ChromeUtils.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
+const {loader, require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {TargetFactory} = require("devtools/client/framework/target");
@@ -90,23 +108,6 @@ Services.obs.addObserver(ConsoleObserver, "console-api-log-event");
 registerCleanupFunction(() => {
   Services.obs.removeObserver(ConsoleObserver, "console-api-log-event");
 });
-
-// Print allocation count if DEBUG_DEVTOOLS_ALLOCATIONS is set to "normal",
-// and allocation sites if DEBUG_DEVTOOLS_ALLOCATIONS is set to "verbose".
-const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-const DEBUG_ALLOCATIONS = env.get("DEBUG_DEVTOOLS_ALLOCATIONS");
-if (DEBUG_ALLOCATIONS) {
-  const { allocationTracker } = require("devtools/shared/test-helpers/allocation-tracker");
-  const tracker = allocationTracker();
-  registerCleanupFunction(() => {
-    if (DEBUG_ALLOCATIONS == "normal") {
-      tracker.logCount();
-    } else if (DEBUG_ALLOCATIONS == "verbose") {
-      tracker.logAllocationSites();
-    }
-    tracker.stop();
-  });
-}
 
 var waitForTime = DevToolsUtils.waitForTime;
 

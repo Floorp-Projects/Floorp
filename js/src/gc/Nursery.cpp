@@ -1238,9 +1238,20 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
   }
 #endif
 
-  unsigned newMaxNurseryChunks =
-      JS_ROUND(tunables().gcMaxNurseryBytes(), ChunkSize) / ChunkSize;
-  MOZ_ASSERT(newMaxNurseryChunks > 0);
+  CheckedInt<unsigned> newMaxNurseryChunksChecked =
+      (JS_ROUND(CheckedInt<size_t>(tunables().gcMaxNurseryBytes()), ChunkSize) /
+       ChunkSize)
+          .toChecked<unsigned>();
+  if (!newMaxNurseryChunksChecked.isValid()) {
+    // The above calculation probably overflowed (I don't think it can
+    // underflow).
+    newMaxNurseryChunksChecked = 1;
+  }
+  unsigned newMaxNurseryChunks = newMaxNurseryChunksChecked.value();
+  if (newMaxNurseryChunks == 0) {
+    // The above code rounded down, but don't round down all the way to zero.
+    newMaxNurseryChunks = 1;
+  }
   if (newMaxNurseryChunks != chunkCountLimit_) {
     chunkCountLimit_ = newMaxNurseryChunks;
     /* The configured maximum nursery size is changing */
