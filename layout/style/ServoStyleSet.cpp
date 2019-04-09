@@ -895,10 +895,10 @@ void ServoStyleSet::StyleNewSubtree(Element* aRoot) {
   // update the styles and clear the animation bits.
   if (GetPresContext()->EffectCompositor()->PreTraverseInSubtree(flags,
                                                                  aRoot)) {
-    postTraversalRequired = Servo_TraverseSubtree(
-        aRoot, mRawSet.get(), &snapshots,
-        ServoTraversalFlags::AnimationOnly |
-            ServoTraversalFlags::FinalAnimationTraversal);
+    postTraversalRequired =
+        Servo_TraverseSubtree(aRoot, mRawSet.get(), &snapshots,
+                              ServoTraversalFlags::AnimationOnly |
+                                  ServoTraversalFlags::FinalAnimationTraversal);
     MOZ_ASSERT(!postTraversalRequired);
   }
 }
@@ -1135,7 +1135,6 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazily(
   PreTraverseSync();
   MOZ_ASSERT(GetPresContext(),
              "For now, no style resolution without a pres context");
-  GetPresContext()->EffectCompositor()->PreTraverse(&aElement, aPseudoType);
   MOZ_ASSERT(!StylistNeedsUpdate());
 
   AutoSetInServoTraversal guard(this);
@@ -1170,22 +1169,10 @@ already_AddRefed<ComputedStyle> ServoStyleSet::ResolveStyleLazily(
     }
   }
 
-  RefPtr<ComputedStyle> computedValues =
-      Servo_ResolveStyleLazily(elementForStyleResolution,
-                               pseudoTypeForStyleResolution, aRuleInclusion,
-                               &Snapshots(), mRawSet.get())
-          .Consume();
-
-  if (GetPresContext()->EffectCompositor()->PreTraverse(&aElement,
-                                                        aPseudoType)) {
-    computedValues =
-        Servo_ResolveStyleLazily(elementForStyleResolution,
-                                 pseudoTypeForStyleResolution, aRuleInclusion,
-                                 &Snapshots(), mRawSet.get())
-            .Consume();
-  }
-
-  return computedValues.forget();
+  return Servo_ResolveStyleLazily(elementForStyleResolution,
+                                  pseudoTypeForStyleResolution, aRuleInclusion,
+                                  &Snapshots(), mRawSet.get())
+      .Consume();
 }
 
 void ServoStyleSet::AppendFontFaceRules(
