@@ -179,6 +179,8 @@ function parseLanguageTag(locale) {
     #define UPPER_A 0x41
     #define UPPER_Z 0x5A
     #define LOWER_A 0x61
+    #define LOWER_T 0x74
+    #define LOWER_U 0x75
     #define LOWER_X 0x78
     #define LOWER_Z 0x7A
     assert(std_String_fromCharCode(HYPHEN) === "-" &&
@@ -187,6 +189,8 @@ function parseLanguageTag(locale) {
            std_String_fromCharCode(UPPER_A) === "A" &&
            std_String_fromCharCode(UPPER_Z) === "Z" &&
            std_String_fromCharCode(LOWER_A) === "a" &&
+           std_String_fromCharCode(LOWER_T) === "t" &&
+           std_String_fromCharCode(LOWER_U) === "u" &&
            std_String_fromCharCode(LOWER_X) === "x" &&
            std_String_fromCharCode(LOWER_Z) === "z",
            "code unit constants should match the expected characters");
@@ -229,11 +233,13 @@ function parseLanguageTag(locale) {
     // case maps to U+006B (LATIN SMALL LETTER K).
     var localeLowercase = callFunction(std_String_toLowerCase, locale);
 
-    // Returns the code unit of the first character at the current token
-    // position. Always returns the lower-case form of an alphabetical
+    // Returns the code unit of the character at the requested index from the
+    // current token. Always returns the lower-case form of an alphabetical
     // character.
-    function tokenStartCodeUnitLower() {
-        var c = callFunction(std_String_charCodeAt, localeLowercase, tokenStart);
+    function tokenCharCodeUnitLower(index) {
+        assert(0 <= index && index < tokenLength,
+               "must be an index into the current token");
+        var c = callFunction(std_String_charCodeAt, localeLowercase, tokenStart + index);
         assert((DIGIT_ZERO <= c && c <= DIGIT_NINE) || (LOWER_A <= c && c <= LOWER_Z),
                "unexpected code unit");
         return c;
@@ -308,10 +314,10 @@ function parseLanguageTag(locale) {
     //
     // alphanum               = [0-9 A-Z a-z] ;
     while ((5 <= tokenLength && tokenLength <= 8) ||
-           (tokenLength === 4 && tokenStartCodeUnitLower() <= DIGIT_NINE))
+           (tokenLength === 4 && tokenCharCodeUnitLower(0) <= DIGIT_NINE))
     {
-        assert(!(tokenStartCodeUnitLower() <= DIGIT_NINE) ||
-               tokenStartCodeUnitLower() >= DIGIT_ZERO,
+        assert(!(tokenCharCodeUnitLower(0) <= DIGIT_NINE) ||
+               tokenCharCodeUnitLower(0) >= DIGIT_ZERO,
                "token-start-code-unit <= '9' implies token-start-code-unit is in '0'..'9'");
 
         // Locale identifiers are case insensitive (UTS 35, section 3.2).
@@ -367,20 +373,15 @@ function parseLanguageTag(locale) {
     // tkey = alpha digit ;
     //
     // tvalue = (sep alphanum{3,8})+ ;
-    //
-    // Note: unicode_locale_extensions and transformed_extensions are currently
-    //       parsed as other_extensions. That means for example we allow the
-    //       input "en-u-a0" even though "a0" can't be parsed as the `key`
-    //       production.
     var seenSingletons = [];
     while (tokenLength === 1) {
         var extensionStart = tokenStart;
-        var singleton = tokenStartCodeUnitLower();
+        var singleton = tokenCharCodeUnitLower(0);
         if (singleton === LOWER_X)
             break;
 
         // Locale identifiers are case insensitive (UTS 35, section 3.2).
-        // Ensure |tokenStartCodeUnitLower()| does not return the code
+        // Ensure |tokenCharCodeUnitLower(0)| does not return the code
         // unit of an upper-case character, so we can properly detect and
         // reject singletons with different case, e.g. "en-u-foo-U-foo".
         assert(!(UPPER_A <= singleton && singleton <= UPPER_Z),
@@ -398,22 +399,87 @@ function parseLanguageTag(locale) {
         if (!nextToken())
             return null;
 
-        if (!(2 <= tokenLength && tokenLength <= 8))
-            return null;
-        do {
-            if (!nextToken())
-                return null;
-        } while (2 <= tokenLength && tokenLength <= 8);
+        if (singleton === LOWER_U) {
+            while (2 <= tokenLength && tokenLength <= 8) {
+                // `key` doesn't allow a digit as its second character.
+                if (tokenLength === 2 && tokenCharCodeUnitLower(1) <= DIGIT_NINE)
+                    return null;
+                if (!nextToken())
+                    return null;
+            }
+        } else if (singleton === LOWER_T) {
+            // `tfield` starts with `tkey`, which in turn is `alpha digit`, so
+            // an alpha-only token must be a `tlang`.
+            if (token === ALPHA) {
+                // `unicode_language_subtag`
+                if (tokenLength === 1 || tokenLength === 4 || tokenLength > 8)
+                    return null;
+                if (!nextToken())
+                    return null;
 
+                // `unicode_script_subtag` (optional)
+                if (tokenLength === 4 && token === ALPHA) {
+                    if (!nextToken())
+                        return null;
+                }
+
+                // `unicode_region_subtag` (optional)
+                if ((tokenLength === 2 && token === ALPHA) ||
+                    (tokenLength === 3 && token === DIGIT))
+                {
+                    if (!nextToken())
+                        return null;
+                }
+
+                // `unicode_variant_subtag` (optional)
+                while ((5 <= tokenLength && tokenLength <= 8) ||
+                       (tokenLength === 4 && tokenCharCodeUnitLower(0) <= DIGIT_NINE))
+                {
+                    if (!nextToken())
+                        return null;
+                }
+            }
+
+            // Trailing `tfield` subtags.
+            while (tokenLength === 2) {
+                // `tkey` is `alpha digit`.
+                if ((tokenCharCodeUnitLower(0) <= DIGIT_NINE) ||
+                    (tokenCharCodeUnitLower(1) > DIGIT_NINE))
+                {
+                    return null;
+                }
+                if (!nextToken())
+                    return null;
+
+                // `tfield` requires at least one `tvalue`.
+                if (!(3 <= tokenLength && tokenLength <= 8))
+                    return null;
+                do {
+                    if (!nextToken())
+                        return null;
+                } while (3 <= tokenLength && tokenLength <= 8);
+            }
+        } else {
+            while (2 <= tokenLength && tokenLength <= 8) {
+                if (!nextToken())
+                    return null;
+            }
+        }
+
+        // Singletons must be followed by some value, "en-a-b" is not allowed.
+        var extensionLength = tokenStart - 1 - extensionStart;
+        if (extensionLength <= 2) {
+            return null;
+        }
         var extension = Substring(localeLowercase, extensionStart,
-                                  (tokenStart - 1 - extensionStart));
+                                  extensionLength);
         _DefineDataProperty(extensions, extensions.length, extension);
     }
 
     // Trailing pu_extensions component of the unicode_locale_id production.
     //
     // pu_extensions = sep [xX] (sep alphanum{1,8})+ ;
-    if (tokenLength === 1 && tokenStartCodeUnitLower() === LOWER_X) {
+    if (tokenLength === 1 && tokenCharCodeUnitLower(0) === LOWER_X) {
         var privateuseStart = tokenStart;
         if (!nextToken())
             return null;
@@ -470,6 +536,8 @@ function parseLanguageTag(locale) {
     #undef UPPER_A
     #undef UPPER_Z
     #undef LOWER_A
+    #undef LOWER_T
+    #undef LOWER_U
     #undef LOWER_X
     #undef LOWER_Z
 }
