@@ -138,34 +138,19 @@ static MOZ_ALWAYS_INLINE RangedPtr<DstCharT> InfallibleQuote(
   return dstPtr;
 }
 
-template <typename SrcCharT, typename CharVectorT>
-static bool Quote(JSContext* cx, CharVectorT& sb, JSLinearString* str) {
-  // We resize the backing buffer to the maximum size we could possibly need,
-  // write the escaped string into it, and shrink it back to the size we ended
-  // up needing.
-
-  size_t len = str->length();
-  CheckedInt<size_t> reservedLen = CheckedInt<size_t>(len) * 6 + 2;
-  if (MOZ_UNLIKELY(!reservedLen.isValid())) {
-    ReportAllocationOverflow(cx);
-    return false;
-  }
-
-  size_t sbInitialLen = sb.length();
-  if (!sb.growByUninitialized(reservedLen.value())) {
-    return false;
-  }
-
-  typedef typename CharVectorT::ElementType DstCharT;
+template <typename SrcCharT, typename DstCharT>
+static size_t QuoteHelper(const JSLinearString& linear, StringBuffer& sb,
+                          size_t sbOffset) {
+  size_t len = linear.length();
 
   JS::AutoCheckCannotGC nogc;
-  RangedPtr<const SrcCharT> srcBegin{str->chars<SrcCharT>(nogc), len};
-  RangedPtr<DstCharT> dstBegin{sb.begin(), sb.begin(), sb.end()};
+  RangedPtr<const SrcCharT> srcBegin{linear.chars<SrcCharT>(nogc), len};
+  RangedPtr<DstCharT> dstBegin{sb.begin<DstCharT>(), sb.begin<DstCharT>(),
+                               sb.end<DstCharT>()};
   RangedPtr<DstCharT> dstEnd =
-      InfallibleQuote(srcBegin, srcBegin + len, dstBegin + sbInitialLen);
-  size_t newSize = dstEnd - dstBegin;
-  sb.shrinkTo(newSize);
-  return true;
+      InfallibleQuote(srcBegin, srcBegin + len, dstBegin + sbOffset);
+
+  return dstEnd - dstBegin;
 }
 
 static bool Quote(JSContext* cx, StringBuffer& sb, JSString* str) {
@@ -174,20 +159,40 @@ static bool Quote(JSContext* cx, StringBuffer& sb, JSString* str) {
     return false;
   }
 
-  // Check if either has non-latin1 before calling ensure, so that the buffer's
-  // hasEnsured flag is set if the converstion to twoByte was automatic.
-  if (!sb.isUnderlyingBufferLatin1() || linear->hasTwoByteChars()) {
-    if (!sb.ensureTwoByteChars()) {
-      return false;
-    }
-  }
-  if (linear->hasTwoByteChars()) {
-    return Quote<char16_t>(cx, sb.rawTwoByteBuffer(), linear);
+  if (linear->hasTwoByteChars() && !sb.ensureTwoByteChars()) {
+    return false;
   }
 
-  return sb.isUnderlyingBufferLatin1()
-             ? Quote<Latin1Char>(cx, sb.latin1Chars(), linear)
-             : Quote<Latin1Char>(cx, sb.rawTwoByteBuffer(), linear);
+  // We resize the backing buffer to the maximum size we could possibly need,
+  // write the escaped string into it, and shrink it back to the size we ended
+  // up needing.
+
+  size_t len = linear->length();
+  size_t sbInitialLen = sb.length();
+
+  CheckedInt<size_t> reservedLen = CheckedInt<size_t>(len) * 6 + 2;
+  if (MOZ_UNLIKELY(!reservedLen.isValid())) {
+    ReportAllocationOverflow(cx);
+    return false;
+  }
+
+  if (!sb.growByUninitialized(reservedLen.value())) {
+    return false;
+  }
+
+  size_t newSize;
+
+  if (linear->hasTwoByteChars()) {
+    newSize = QuoteHelper<char16_t, char16_t>(*linear, sb, sbInitialLen);
+  } else if (sb.isUnderlyingBufferLatin1()) {
+    newSize = QuoteHelper<Latin1Char, Latin1Char>(*linear, sb, sbInitialLen);
+  } else {
+    newSize = QuoteHelper<Latin1Char, char16_t>(*linear, sb, sbInitialLen);
+  }
+
+  sb.shrinkTo(newSize);
+
+  return true;
 }
 
 namespace {
