@@ -312,6 +312,9 @@ class TabChild final : public TabChildBase,
   virtual mozilla::ipc::IPCResult RecvSizeModeChanged(
       const nsSizeMode& aSizeMode) override;
 
+  virtual mozilla::ipc::IPCResult RecvChildToParentMatrix(
+      const mozilla::gfx::Matrix4x4& aMatrix) override;
+
   mozilla::ipc::IPCResult RecvActivate();
 
   mozilla::ipc::IPCResult RecvDeactivate();
@@ -637,6 +640,10 @@ class TabChild final : public TabChildBase,
   // The HANDLE object for the widget this TabChild in.
   WindowsHandle WidgetNativeData() { return mWidgetNativeData; }
 
+  // The transform from the coordinate space of this TabChild to the coordinate
+  // space of the native window its TabParent is in.
+  mozilla::LayoutDeviceToLayoutDeviceMatrix4x4 GetChildToParentConversionMatrix() const;
+
   // Prepare to dispatch all coalesced mousemove events. We'll move all data
   // in mCoalescedMouseData to a nsDeque; then we start processing them. We
   // can't fetch the coalesced event one by one and dispatch it because we may
@@ -673,7 +680,7 @@ class TabChild final : public TabChildBase,
 
   virtual PBrowserBridgeChild* AllocPBrowserBridgeChild(
       const nsString& aName, const nsString& aRemoteType,
-      BrowsingContext* aBrowsingContext) override;
+      BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags) override;
 
   virtual bool DeallocPBrowserBridgeChild(PBrowserBridgeChild* aActor) override;
 
@@ -904,6 +911,8 @@ class TabChild final : public TabChildBase,
   uint32_t mPendingDocShellBlockers;
 
   WindowsHandle mWidgetNativeData;
+
+  Maybe<LayoutDeviceToLayoutDeviceMatrix4x4> mChildToParentConversionMatrix;
 
   // This state is used to keep track of the current visible tabs (the ones
   // rendering layers). There may be more than one if there are multiple browser

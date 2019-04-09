@@ -5,8 +5,6 @@
 
 "use strict";
 
-/* import-globals-from ../../../shared/test/shared-head.js */
-
 /**
  * This test records the number of modules loaded by DevTools, as well as the total count
  * of characters in those modules, when opening the webconsole. These metrics are
