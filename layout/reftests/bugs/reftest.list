@@ -40,13 +40,13 @@
 != 24998-1.html 24998-1-ref.html
 # Debug builds and ASAN builds have larger stack frames, so skipped.
 # 32-bit Windows doesn't have enough run-time stack to deal with the test, so skipped.
-skip-if(isDebugBuild||AddressSanitizer||(winWidget&&(!is64Bit))||(Android&&AndroidVersion<21)||(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-256)&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI))) == 256180-1.html 256180-1-ref.html
+skip-if(isDebugBuild||AddressSanitizer||(winWidget&&(!is64Bit))||(Android&&AndroidVersion<21)) == 256180-1.html 256180-1-ref.html
 # Debug builds have larger stack frames, so skipped.
 # 32-bit Windows doesn't have enough run-time stack to deal with the test, so skipped.
-skip-if(isDebugBuild||(winWidget&&(!is64Bit))||(Android&&AndroidVersion<21)||(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-256)&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI))) == 256180-2.html 256180-2-ref.html
+skip-if(isDebugBuild||(winWidget&&(!is64Bit))||(Android&&AndroidVersion<21)) == 256180-2.html 256180-2-ref.html
 # Debug builds and ASAN builds have larger stack frames, so skipped.
 # 32-bit Windows doesn't have enough run-time stack to deal with the test, so skipped.
-skip-if(isDebugBuild||AddressSanitizer||(winWidget&&(!is64Bit))||(Android&&AndroidVersion<21)||(/^Windows\x20NT\x2010\.0/.test(http.oscpu),0-1,0-256)&&(/^aarch64-msvc/.test(xulRuntime.XPCOMABI))) == 256180-3.html 256180-3-ref.html
+skip-if(isDebugBuild||AddressSanitizer||(winWidget&&(!is64Bit))||(Android&&AndroidVersion<21)) == 256180-3.html 256180-3-ref.html
 # Debug builds have larger stack frames, so skipped.
 skip-if(isDebugBuild) == 256180-4.html 256180-4-ref.html
 skip-if(isDebugBuild) == 256180-6.html 256180-6-ref.html

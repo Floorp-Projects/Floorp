@@ -290,7 +290,7 @@ endif
 endif # WINNT
 
 ifneq (,$(filter msvc clang-cl,$(CC_TYPE)))
-ifeq ($(CPU_ARCH),x86_64)
+ifneq ($(CPU_ARCH),x86)
 # Normal operation on 64-bit Windows needs 2 MB of stack. (Bug 582910)
 # ASAN requires 6 MB of stack.
 # Setting the stack to 8 MB to match the capability of other systems
