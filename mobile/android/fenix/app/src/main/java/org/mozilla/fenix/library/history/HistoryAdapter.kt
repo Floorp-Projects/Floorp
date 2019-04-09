@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
+import kotlinx.coroutines.Job
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.history.viewholders.HistoryDeleteButtonViewHolder
 import org.mozilla.fenix.library.history.viewholders.HistoryHeaderViewHolder
@@ -96,6 +97,7 @@ class HistoryAdapter(
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private var historyList: HistoryList = HistoryList(emptyList())
     private var mode: HistoryState.Mode = HistoryState.Mode.Normal
+    private lateinit var job: Job
 
     fun updateData(items: List<HistoryItem>, mode: HistoryState.Mode) {
         this.historyList = HistoryList(items)
@@ -119,11 +121,10 @@ class HistoryAdapter(
         return when (viewType) {
             HistoryDeleteButtonViewHolder.LAYOUT_ID -> HistoryDeleteButtonViewHolder(view, actionEmitter)
             HistoryHeaderViewHolder.LAYOUT_ID -> HistoryHeaderViewHolder(view)
-            HistoryListItemViewHolder.LAYOUT_ID -> HistoryListItemViewHolder(view, actionEmitter)
+            HistoryListItemViewHolder.LAYOUT_ID -> HistoryListItemViewHolder(view, actionEmitter, job)
             else -> throw IllegalStateException()
         }
     }
-
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
@@ -136,6 +137,16 @@ class HistoryAdapter(
             is HistoryListItemViewHolder -> (historyList.items[position] as AdapterItem.Item).also {
                 holder.bind(it.item, mode)
             }
-       }
+        }
+    }
+
+    override fun onAttachedToRecyclerView(recyclerView: RecyclerView) {
+        super.onAttachedToRecyclerView(recyclerView)
+        job = Job()
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView)
+        job.cancel()
     }
 }

@@ -17,11 +17,11 @@ class HistoryDeleteButtonViewHolder(
     private val actionEmitter: Observer<HistoryAction>
 ) : RecyclerView.ViewHolder(view) {
     private var mode: HistoryState.Mode? = null
-    val delete_history_button_text = view.delete_history_button_text
-    val delete_history_button = view.delete_history_button
+    private val textView = view.delete_history_button_text
+    private val buttonView = view.delete_history_button
 
     init {
-        delete_history_button.setOnClickListener {
+        buttonView.setOnClickListener {
             mode?.also {
                 val action = when (it) {
                     is HistoryState.Mode.Normal -> HistoryAction.Delete.All
@@ -36,16 +36,16 @@ class HistoryDeleteButtonViewHolder(
         val mode = mode
 
         val text = if (mode is HistoryState.Mode.Editing && mode.selectedItems.isNotEmpty()) {
-            delete_history_button_text.context.resources.getString(
+            textView.context.resources.getString(
                 R.string.history_delete_some,
                 mode.selectedItems.size
             )
         } else {
-            delete_history_button_text.context.resources.getString(R.string.history_delete_all)
+            textView.context.resources.getString(R.string.history_delete_all)
         }
 
-        delete_history_button.contentDescription = text
-        delete_history_button_text.text = text
+        buttonView.contentDescription = text
+        textView.text = text
     }
 
     companion object {

@@ -52,7 +52,7 @@
         android:textAlignment="viewStart"
         android:textColor="?attr/historyURLColor"
         android:textSize="12sp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        android:layout_marginTop="4dp"
         app:layout_constraintEnd_toStartOf="@id/history_item_overflow"
         app:layout_constraintStart_toEndOf="@id/history_favicon"
         app:layout_constraintTop_toBottomOf="@id/history_title" />
@@ -62,6 +62,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:ellipsize="end"
         android:singleLine="true"
         android:textAlignment="viewStart"
@@ -69,5 +70,5 @@
         android:textSize="18sp"
         app:layout_constraintEnd_toStartOf="@id/history_item_overflow"
         app:layout_constraintStart_toEndOf="@id/history_favicon"
-        app:layout_constraintTop_toTopOf="@id/history_item_overflow" />
+        app:layout_constraintTop_toTopOf="@id/history_favicon" />
 </androidx.constraintlayout.widget.ConstraintLayout>
