@@ -182,53 +182,6 @@
 //! assert_eq!(args.flag_emit, Some(Emit::Ir));
 //! # }
 //! ```
-//!
-//! # The `docopt!` macro
-//!
-//! This package comes bundled with an additional crate, `docopt_macros`,
-//! which provides a `docopt!` syntax extension. Its purpose is to automate
-//! the creation of a Rust struct from a Docopt usage string. In particular,
-//! this provides a single point of truth about the definition of command line
-//! arguments in your program.
-//!
-//! Another advantage of using the macro is that errors in your Docopt usage
-//! string will be caught at compile time. Stated differently, your program
-//! will not compile with an invalid Docopt usage string.
-//!
-//! The example above using type based decoding can be simplified to this:
-//!
-//! ```ignore
-//! #![feature(plugin)]
-//! #![plugin(docopt_macros)]
-//!
-//! extern crate serde;
-//!
-//! extern crate docopt;
-//!
-//! // Write the Docopt usage string with the `docopt!` macro.
-//! docopt!(Args, "
-//! Usage: cp [-a] <source> <dest>
-//!        cp [-a] <source>... <dir>
-//!
-//! Options:
-//!     -a, --archive  Copy everything.
-//! ")
-//!
-//! fn main() {
-//!     let argv = || vec!["cp", "-a", "file1", "file2", "dest/"];
-//!
-//!     // Your `Args` struct has a single static method defined on it,
-//!     // `docopt`, which will return a normal `Docopt` value.
-//!     let args: Args = Args::docopt().deserialize().unwrap_or_else(|e| e.exit());
-//!
-//!     // Now access your argv values.
-//!     fn s(x: &str) -> String { x.to_string() }
-//!     assert!(args.flag_archive);
-//!     assert_eq!(args.arg_source, vec![s("file1"), s("file2")]);
-//!     assert_eq!(args.arg_dir, s("dest/"));
-//!     assert_eq!(args.arg_dest, s(""));
-//! }
-//! ```
 
 #![crate_name = "docopt"]
 #![doc(html_root_url = "http://burntsushi.net/rustdoc/docopt")]

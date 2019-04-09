@@ -75,12 +75,19 @@ pub trait SnapshotVecDelegate {
     fn reverse(values: &mut Vec<Self::Value>, action: Self::Undo);
 }
 
-impl<D: SnapshotVecDelegate> SnapshotVec<D> {
-    pub fn new() -> SnapshotVec<D> {
+// HACK(eddyb) manual impl avoids `Default` bound on `D`.
+impl<D: SnapshotVecDelegate> Default for SnapshotVec<D> {
+    fn default() -> Self {
         SnapshotVec {
             values: Vec::new(),
             undo_log: Vec::new(),
         }
+    }
+}
+
+impl<D: SnapshotVecDelegate> SnapshotVec<D> {
+    pub fn new() -> Self {
+        Self::default()
     }
 
     pub fn with_capacity(c: usize) -> SnapshotVec<D> {
@@ -275,8 +282,12 @@ impl<D: SnapshotVecDelegate> Extend<D::Value> for SnapshotVec<D> {
     where
         T: IntoIterator<Item = D::Value>,
     {
-        for item in iterable {
-            self.push(item);
+        let initial_len = self.values.len();
+        self.values.extend(iterable);
+        let final_len = self.values.len();
+
+        if self.in_snapshot() {
+            self.undo_log.extend((initial_len..final_len).map(|len| NewElem(len)));
         }
     }
 }
