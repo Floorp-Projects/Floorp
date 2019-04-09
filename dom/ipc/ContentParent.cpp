@@ -1377,8 +1377,8 @@ void ContentParent::ShutDownProcess(ShutDownMethod aMethod) {
 
   using mozilla::dom::quota::QuotaManagerService;
 
-  if (QuotaManagerService* quotaManagerService = QuotaManagerService::Get()) {
-    quotaManagerService->AbortOperationsForProcess(mChildID);
+  if (QuotaManagerService* qms = QuotaManagerService::GetOrCreate()) {
+    qms->AbortOperationsForProcess(mChildID);
   }
 
   // If Close() fails with an error, we'll end up back in this function, but

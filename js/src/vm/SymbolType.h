@@ -49,7 +49,7 @@ class Symbol : public js::gc::TenuredCell {
   void operator=(const Symbol&) = delete;
 
   static Symbol* newInternal(JSContext* cx, SymbolCode code,
-                             js::HashNumber hash, JSAtom* description);
+                             js::HashNumber hash, js::HandleAtom description);
 
   static void staticAsserts() {
     static_assert(uint32_t(SymbolCode::WellKnownAPILimit) ==
@@ -62,7 +62,8 @@ class Symbol : public js::gc::TenuredCell {
   }
 
  public:
-  static Symbol* new_(JSContext* cx, SymbolCode code, JSString* description);
+  static Symbol* new_(JSContext* cx, SymbolCode code,
+                      js::HandleString description);
   static Symbol* for_(JSContext* cx, js::HandleString description);
 
   JSAtom* description() const { return description_; }
