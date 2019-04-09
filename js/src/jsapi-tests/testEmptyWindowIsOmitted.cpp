@@ -85,29 +85,29 @@ static bool equals(const char* str, const char* expected) {
   return std::strcmp(str, expected) == 0;
 }
 
-JSScript* compile(const char16_t* chars, size_t len) {
+bool compile(const char16_t* chars, size_t len,
+             JS::MutableHandle<JSScript*> script) {
   JS::SourceText<char16_t> source;
-  MOZ_RELEASE_ASSERT(
-      source.init(cx, chars, len, JS::SourceOwnership::Borrowed));
+  CHECK(source.init(cx, chars, len, JS::SourceOwnership::Borrowed));
 
   JS::CompileOptions options(cx);
-  return JS::Compile(cx, options, source);
+  return JS::Compile(cx, options, source, script);
 }
 
-JSScript* compile(const char* chars, size_t len) {
+bool compile(const char* chars, size_t len,
+             JS::MutableHandle<JSScript*> script) {
   JS::SourceText<Utf8Unit> source;
-  MOZ_RELEASE_ASSERT(
-      source.init(cx, chars, len, JS::SourceOwnership::Borrowed));
+  CHECK(source.init(cx, chars, len, JS::SourceOwnership::Borrowed));
 
   JS::CompileOptions options(cx);
-  return JS::CompileDontInflate(cx, options, source);
+  return JS::CompileDontInflate(cx, options, source, script);
 }
 
 template <typename CharT, size_t N>
 bool testOmittedWindow(const CharT (&chars)[N], unsigned expectedErrorNumber,
                        const char* badCodeUnits = nullptr) {
-  JS::Rooted<JSScript*> script(cx, compile(chars, N - 1));
-  CHECK(script);
+  JS::Rooted<JSScript*> script(cx);
+  CHECK(!compile(chars, N - 1, &script));
 
   JS::RootedValue exn(cx);
   CHECK(JS_GetPendingException(cx, &exn));

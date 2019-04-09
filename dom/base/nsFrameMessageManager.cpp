@@ -1319,8 +1319,7 @@ void nsMessageManagerScriptExecutor::TryCacheLoadAndCompileScript(
     options.setFileAndLine(url.get(), 1);
     options.setNoScriptRval(true);
 
-    script = JS::CompileForNonSyntacticScope(cx, options, srcBuf);
-    if (!script) {
+    if (!JS::CompileForNonSyntacticScope(cx, options, srcBuf, &script)) {
       return;
     }
   }

@@ -30,7 +30,8 @@ BEGIN_TEST(testScriptInfo) {
   JS::CompileOptions options(cx);
   options.setFileAndLine(__FILE__, startLine);
 
-  JS::RootedScript script(cx, JS::CompileUtf8(cx, options, code, strlen(code)));
+  JS::RootedScript script(cx);
+  CHECK(JS::CompileUtf8(cx, options, code, strlen(code), &script));
   CHECK(script);
 
   CHECK_EQUAL(JS_GetScriptBaseLineNumber(cx, script), startLine);

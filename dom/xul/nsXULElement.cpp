@@ -2147,10 +2147,9 @@ nsresult nsXULPrototypeScript::Compile(
     }
     NotifyOffThreadScriptCompletedRunnable::NoteReceiver(aOffThreadReceiver);
   } else {
-    JS::Rooted<JSScript*> script(cx, JS::Compile(cx, options, srcBuf));
-    if (!script) {
+    JS::Rooted<JSScript*> script(cx);
+    if (!JS::Compile(cx, options, srcBuf, &script))
       return NS_ERROR_OUT_OF_MEMORY;
-    }
     Set(script);
   }
   return NS_OK;

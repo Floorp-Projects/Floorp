@@ -861,14 +861,16 @@ static MOZ_MUST_USE bool RunFile(JSContext* cx, const char* filename,
       fprintf(stderr, "(compiling '%s' as UTF-8 without inflating)\n",
               filename);
 
-      script = JS::CompileUtf8FileDontInflate(cx, options, file);
+      if (!JS::CompileUtf8FileDontInflate(cx, options, file, &script)) {
+        return false;
+      }
     } else {
-      script = JS::CompileUtf8File(cx, options, file);
+      if (!JS::CompileUtf8File(cx, options, file, &script)) {
+        return false;
+      }
     }
 
-    if (!script) {
-      return false;
-    }
+    MOZ_ASSERT(script);
   }
 
   if (!RegisterScriptPathWithModuleLoader(cx, script, filename)) {
@@ -1266,8 +1268,8 @@ static MOZ_MUST_USE bool EvalUtf8AndPrint(JSContext* cx, const char* bytes,
       .setIsRunOnce(true)
       .setFileAndLine("typein", lineno);
 
-  RootedScript script(cx, JS::CompileUtf8(cx, options, bytes, length));
-  if (!script) {
+  RootedScript script(cx);
+  if (!JS::CompileUtf8(cx, options, bytes, length, &script)) {
     return false;
   }
   if (compileOnly) {
@@ -1724,9 +1726,10 @@ static bool LoadScript(JSContext* cx, unsigned argc, Value* vp,
         .setIsRunOnce(true)
         .setNoScriptRval(true);
 
+    RootedScript script(cx);
     RootedValue unused(cx);
     if (!(compileOnly
-              ? JS::CompileUtf8Path(cx, opts, filename.get()) != nullptr
+              ? JS::CompileUtf8Path(cx, opts, filename.get(), &script)
               : JS::EvaluateUtf8Path(cx, opts, filename.get(), &unused))) {
       return false;
     }
@@ -2191,9 +2194,9 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
         }
 
         if (envChain.length() == 0) {
-          script = JS::Compile(cx, options, srcBuf);
+          (void)JS::Compile(cx, options, srcBuf, &script);
         } else {
-          script = JS::CompileForNonSyntacticScope(cx, options, srcBuf);
+          (void)JS::CompileForNonSyntacticScope(cx, options, srcBuf, &script);
         }
       }
 
@@ -2450,8 +2453,7 @@ static bool Run(JSContext* cx, unsigned argc, Value* vp) {
         .setIsRunOnce(true)
         .setNoScriptRval(true);
 
-    script = JS::Compile(cx, options, srcBuf);
-    if (!script) {
+    if (!JS::Compile(cx, options, srcBuf, &script)) {
       return false;
     }
   }
@@ -3453,8 +3455,7 @@ static bool DisassFile(JSContext* cx, unsigned argc, Value* vp) {
         .setIsRunOnce(true)
         .setNoScriptRval(true);
 
-    script = JS::CompileUtf8Path(cx, options, filename.get());
-    if (!script) {
+    if (!JS::CompileUtf8Path(cx, options, filename.get(), &script)) {
       return false;
     }
   }
@@ -4024,14 +4025,11 @@ static void WorkerMain(WorkerInput* input) {
     options.setFileAndLine("<string>", 1).setIsRunOnce(true);
 
     AutoReportException are(cx);
+    RootedScript script(cx);
     JS::SourceText<char16_t> srcBuf;
     if (!srcBuf.init(cx, input->chars.get(), input->length,
-                     JS::SourceOwnership::Borrowed)) {
-      break;
-    }
-
-    RootedScript script(cx, JS::Compile(cx, options, srcBuf));
-    if (!script) {
+                     JS::SourceOwnership::Borrowed) ||
+        !JS::Compile(cx, options, srcBuf, &script)) {
       break;
     }
     RootedValue result(cx);
@@ -4666,8 +4664,8 @@ static bool Compile(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedScript script(cx, JS::Compile(cx, options, srcBuf));
-  if (!script) {
+  RootedScript script(cx);
+  if (!JS::Compile(cx, options, srcBuf, &script)) {
     return false;
   }
 

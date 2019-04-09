@@ -61,7 +61,8 @@ BEGIN_TEST(testXDR_bug506491) {
   JS::CompileOptions options(cx);
   options.setFileAndLine(__FILE__, __LINE__);
 
-  JS::RootedScript script(cx, JS::CompileUtf8(cx, options, s, strlen(s)));
+  JS::RootedScript script(cx);
+  CHECK(JS::CompileUtf8(cx, options, s, strlen(s), &script));
   CHECK(script);
 
   script = FreezeThaw(cx, script);
@@ -87,7 +88,8 @@ BEGIN_TEST(testXDR_bug516827) {
   JS::CompileOptions options(cx);
   options.setFileAndLine(__FILE__, __LINE__);
 
-  JS::RootedScript script(cx, JS::CompileUtf8(cx, options, "", 0));
+  JS::RootedScript script(cx);
+  CHECK(JS::CompileUtf8(cx, options, "", 0, &script));
   CHECK(script);
 
   script = FreezeThaw(cx, script);
@@ -116,7 +118,8 @@ BEGIN_TEST(testXDR_source) {
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
 
-    JS::RootedScript script(cx, JS::CompileUtf8(cx, options, *s, strlen(*s)));
+    JS::RootedScript script(cx);
+    CHECK(JS::CompileUtf8(cx, options, *s, strlen(*s), &script));
     CHECK(script);
 
     script = FreezeThaw(cx, script);
@@ -141,7 +144,7 @@ BEGIN_TEST(testXDR_sourceMap) {
     JS::CompileOptions options(cx);
     options.setFileAndLine(__FILE__, __LINE__);
 
-    script = JS::CompileUtf8(cx, options, "", 0);
+    CHECK(JS::CompileUtf8(cx, options, "", 0, &script));
     CHECK(script);
 
     size_t len = strlen(*sm);

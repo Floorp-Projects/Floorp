@@ -126,10 +126,9 @@ static void ReportError(JSContext* cx, const char* origMsg, nsIURI* uri) {
   ReportError(cx, msg);
 }
 
-static JSScript* PrepareScript(nsIURI* uri, JSContext* cx,
-                               bool wantGlobalScript, const char* uriStr,
-                               const char* buf, int64_t len,
-                               bool wantReturnValue) {
+static bool PrepareScript(nsIURI* uri, JSContext* cx, bool wantGlobalScript,
+                          const char* uriStr, const char* buf, int64_t len,
+                          bool wantReturnValue, MutableHandleScript script) {
   JS::CompileOptions options(cx);
   options.setFileAndLine(uriStr, 1).setNoScriptRval(!wantReturnValue);
 
@@ -144,9 +143,9 @@ static JSScript* PrepareScript(nsIURI* uri, JSContext* cx,
   options.setSourceIsLazy(true);
 
   if (wantGlobalScript) {
-    return JS::CompileUtf8(cx, options, buf, len);
+    return JS::CompileUtf8(cx, options, buf, len, script);
   }
-  return JS::CompileUtf8ForNonSyntacticScope(cx, options, buf, len);
+  return JS::CompileUtf8ForNonSyntacticScope(cx, options, buf, len, script);
 }
 
 static bool EvalScript(JSContext* cx, HandleObject targetObj,
@@ -373,10 +372,9 @@ AsyncScriptLoader::OnStreamComplete(nsIIncrementalStreamLoader* aLoader,
   RootedObject targetObj(cx, mTargetObj);
   RootedObject loadScope(cx, mLoadScope);
 
-  script = PrepareScript(uri, cx, JS_IsGlobalObject(targetObj), spec.get(),
-                         reinterpret_cast<const char*>(aBuf), aLength,
-                         mWantReturnValue);
-  if (!script) {
+  if (!PrepareScript(uri, cx, JS_IsGlobalObject(targetObj), spec.get(),
+                     reinterpret_cast<const char*>(aBuf), aLength,
+                     mWantReturnValue, &script)) {
     return NS_OK;
   }
 
@@ -442,9 +440,14 @@ nsresult mozJSSubScriptLoader::ReadScriptAsync(nsIURI* uri,
   return channel->AsyncOpen(listener);
 }
 
-JSScript* mozJSSubScriptLoader::ReadScript(
-    nsIURI* uri, JSContext* cx, HandleObject targetObj, const char* uriStr,
-    nsIIOService* serv, bool wantReturnValue, bool useCompilationScope) {
+bool mozJSSubScriptLoader::ReadScript(nsIURI* uri, JSContext* cx,
+                                      HandleObject targetObj,
+                                      const char* uriStr, nsIIOService* serv,
+                                      bool wantReturnValue,
+                                      bool useCompilationScope,
+                                      MutableHandleScript script) {
+  script.set(nullptr);
+
   // We create a channel and call SetContentType, to avoid expensive MIME type
   // lookups (bug 632490).
   nsCOMPtr<nsIChannel> chan;
@@ -467,7 +470,7 @@ JSScript* mozJSSubScriptLoader::ReadScript(
 
   if (NS_FAILED(rv)) {
     ReportError(cx, LOAD_ERROR_NOSTREAM, uri);
-    return nullptr;
+    return false;
   }
 
   int64_t len = -1;
@@ -475,17 +478,17 @@ JSScript* mozJSSubScriptLoader::ReadScript(
   rv = chan->GetContentLength(&len);
   if (NS_FAILED(rv) || len == -1) {
     ReportError(cx, LOAD_ERROR_NOCONTENT, uri);
-    return nullptr;
+    return false;
   }
 
   if (len > INT32_MAX) {
     ReportError(cx, LOAD_ERROR_CONTENTTOOBIG, uri);
-    return nullptr;
+    return false;
   }
 
   nsCString buf;
   rv = NS_ReadInputStreamToString(instream, buf, len);
-  NS_ENSURE_SUCCESS(rv, nullptr);
+  NS_ENSURE_SUCCESS(rv, false);
 
   Maybe<JSAutoRealm> ar;
 
@@ -502,7 +505,7 @@ JSScript* mozJSSubScriptLoader::ReadScript(
   }
 
   return PrepareScript(uri, cx, JS_IsGlobalObject(targetObj), uriStr, buf.get(),
-                       len, wantReturnValue);
+                       len, wantReturnValue, script);
 }
 
 NS_IMETHODIMP
@@ -669,13 +672,10 @@ nsresult mozJSSubScriptLoader::DoLoadSubScriptWithOptions(
     // |script| came from the cache, so don't bother writing it
     // |back there.
     cache = nullptr;
-  } else {
-    script =
-        ReadScript(uri, cx, targetObj, static_cast<const char*>(uriStr.get()),
-                   serv, options.wantReturnValue, useCompilationScope);
-    if (!script) {
-      return NS_OK;
-    }
+  } else if (!ReadScript(
+                 uri, cx, targetObj, static_cast<const char*>(uriStr.get()),
+                 serv, options.wantReturnValue, useCompilationScope, &script)) {
+    return NS_OK;
   }
 
   Unused << EvalScript(cx, targetObj, loadScope, retval, uri, !!cache,

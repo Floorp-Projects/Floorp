@@ -43,8 +43,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScript) {
   JS::CompileOptions options(cx);
   options.setFileAndLine(__FILE__, __LINE__);
 
-  JS::RootedScript script(cx, JS::CompileUtf8(cx, options, code, code_size));
-  CHECK(script);
+  JS::RootedScript script(cx);
+  CHECK(JS::CompileUtf8(cx, options, code, code_size, &script));
 
   return tryScript(script);
 }
@@ -54,8 +54,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScript_empty) {
   JS::CompileOptions options(cx);
   options.setFileAndLine(__FILE__, __LINE__);
 
-  JS::RootedScript script(cx, JS::CompileUtf8(cx, options, "", 0));
-  CHECK(script);
+  JS::RootedScript script(cx);
+  CHECK(JS::CompileUtf8(cx, options, "", 0, &script));
 
   return tryScript(script);
 }
@@ -65,7 +65,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScriptForPrincipals) {
   JS::CompileOptions options(cx);
   options.setFileAndLine(__FILE__, __LINE__);
 
-  JS::RootedScript script(cx, JS::CompileUtf8(cx, options, code, code_size));
+  JS::RootedScript script(cx);
+  CHECK(JS::CompileUtf8(cx, options, code, code_size, &script));
 
   return tryScript(script);
 }
@@ -78,8 +79,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScript) {
   JS::SourceText<char16_t> srcBuf;
   CHECK(srcBuf.init(cx, uc_code, code_size, JS::SourceOwnership::Borrowed));
 
-  JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
-  CHECK(script);
+  JS::RootedScript script(cx);
+  CHECK(JS::Compile(cx, options, srcBuf, &script));
 
   return tryScript(script);
 }
@@ -92,8 +93,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileUCScript_empty) {
   JS::SourceText<char16_t> srcBuf;
   CHECK(srcBuf.init(cx, uc_code, 0, JS::SourceOwnership::Borrowed));
 
-  JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
-  CHECK(script);
+  JS::RootedScript script(cx);
+  CHECK(JS::Compile(cx, options, srcBuf, &script));
 
   return tryScript(script);
 }
@@ -107,8 +108,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture,
   JS::SourceText<char16_t> srcBuf;
   CHECK(srcBuf.init(cx, uc_code, code_size, JS::SourceOwnership::Borrowed));
 
-  JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
-  CHECK(script);
+  JS::RootedScript script(cx);
+  CHECK(JS::Compile(cx, options, srcBuf, &script));
 
   return tryScript(script);
 }
@@ -124,9 +125,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile) {
   JS::CompileOptions options(cx);
   options.setFileAndLine(script_filename, 1);
 
-  JS::RootedScript script(cx,
-                          JS::CompileUtf8Path(cx, options, script_filename));
-  CHECK(script);
+  JS::RootedScript script(cx);
+  CHECK(JS::CompileUtf8Path(cx, options, script_filename, &script));
 
   tempScript.remove();
   return tryScript(script);
@@ -142,9 +142,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFile_empty) {
   JS::CompileOptions options(cx);
   options.setFileAndLine(script_filename, 1);
 
-  JS::RootedScript script(cx,
-                          JS::CompileUtf8Path(cx, options, script_filename));
-  CHECK(script);
+  JS::RootedScript script(cx);
+  CHECK(JS::CompileUtf8Path(cx, options, script_filename, &script));
 
   tempScript.remove();
   return tryScript(script);
@@ -160,9 +159,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle) {
   JS::CompileOptions options(cx);
   options.setFileAndLine("temporary file", 1);
 
-  JS::RootedScript script(cx, JS::CompileUtf8File(cx, options, script_stream));
-  CHECK(script);
-
+  JS::RootedScript script(cx);
+  CHECK(JS::CompileUtf8File(cx, options, script_stream, &script));
   return tryScript(script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle)
@@ -175,9 +173,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle_empty) {
   JS::CompileOptions options(cx);
   options.setFileAndLine("empty temporary file", 1);
 
-  JS::RootedScript script(cx, JS::CompileUtf8File(cx, options, script_stream));
-  CHECK(script);
-
+  JS::RootedScript script(cx);
+  CHECK(JS::CompileUtf8File(cx, options, script_stream, &script));
   return tryScript(script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle_empty)
@@ -193,9 +190,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture,
   JS::CompileOptions options(cx);
   options.setFileAndLine("temporary file", 1);
 
-  JS::RootedScript script(cx, JS::CompileUtf8File(cx, options, script_stream));
-  CHECK(script);
-
+  JS::RootedScript script(cx);
+  CHECK(JS::CompileUtf8File(cx, options, script_stream, &script));
   return tryScript(script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture,
@@ -209,8 +205,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, CloneAndExecuteScript) {
   JS::CompileOptions options(cx);
   options.setFileAndLine(__FILE__, __LINE__);
 
-  JS::RootedScript script(cx, JS::CompileUtf8(cx, options, "val", 3));
-  CHECK(script);
+  JS::RootedScript script(cx);
+  CHECK(JS::CompileUtf8(cx, options, "val", 3, &script));
 
   JS::RootedValue value(cx);
   CHECK(JS_ExecuteScript(cx, script, &value));
