@@ -62,7 +62,8 @@ impl Content for Message {
         let count = span.chars().count();
         view.write_chars(0, count, ":".chars(), Style::new());
 
-        let (row, _) = self.heading
+        let (row, _) = self
+            .heading
             .emit_at(&mut view.styled(session.heading), 0, count + 2);
 
         self.body.emit_at(view, row + 2, 2);

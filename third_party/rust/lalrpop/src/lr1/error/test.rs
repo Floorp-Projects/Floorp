@@ -1,7 +1,7 @@
-use string_cache::DefaultAtom as Atom;
 use grammar::repr::*;
 use lr1::build_states;
 use lr1::tls::Lr1Tls;
+use string_cache::DefaultAtom as Atom;
 use test_util::normalized_grammar;
 use tls::Tls;
 

@@ -12,7 +12,7 @@
 
 [package]
 name = "ena"
-version = "0.9.3"
+version = "0.10.1"
 authors = ["Niko Matsakis <niko@alum.mit.edu>"]
 description = "Union-find, congruence closure, and other unification code. Based on code from rustc."
 homepage = "https://github.com/nikomatsakis/ena"

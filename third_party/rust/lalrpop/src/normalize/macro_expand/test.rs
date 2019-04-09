@@ -14,7 +14,8 @@ grammar;
 
     Ids = Comma<"Id">;
 "#,
-    ).unwrap();
+    )
+    .unwrap();
 
     let actual = expand_macros(grammar).unwrap();
 
@@ -48,7 +49,8 @@ grammar;
         <v:`(<"Id"> ",")+`> <e:`(<"Id"> ",")`> => { let mut v = v; v.push(e); v },
     };
 "##,
-    ).unwrap();
+    )
+    .unwrap();
 
     compare(actual, expected);
 }
@@ -69,7 +71,8 @@ grammar;
     Expr2 = Expr<"AAC">;
     Expr3 = Expr<"ABC">;
 "#,
-    ).unwrap();
+    )
+    .unwrap();
 
     let actual = expand_macros(grammar).unwrap();
 
@@ -84,7 +87,8 @@ grammar;
     `Expr<"AAC">` = { "B", "C" };
     `Expr<"A*C">` = { "A", "D" };
 "#,
-    ).unwrap();
+    )
+    .unwrap();
 
     compare(actual, expected);
 }
@@ -96,7 +100,8 @@ fn test_lookahead() {
         grammar;
         Expr = @L;
 "#,
-    ).unwrap();
+    )
+    .unwrap();
 
     let actual = expand_macros(grammar).unwrap();
 
@@ -106,7 +111,8 @@ fn test_lookahead() {
         Expr = `@L`;
         #[inline] `@L` = =>@L;
 "#,
-    ).unwrap();
+    )
+    .unwrap();
 
     compare(actual, expected);
 }

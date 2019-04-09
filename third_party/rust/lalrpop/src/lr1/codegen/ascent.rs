@@ -4,8 +4,10 @@
 
 use collections::{Multimap, Set};
 use grammar::parse_tree::WhereClause;
-use grammar::repr::{Grammar, NonterminalString, Production, Symbol, TerminalString, TypeParameter,
-                    TypeRepr, Visibility};
+use grammar::repr::{
+    Grammar, NonterminalString, Production, Symbol, TerminalString, TypeParameter, TypeRepr,
+    Visibility,
+};
 use lr1::core::*;
 use lr1::lookahead::Token;
 use lr1::state_graph::StateGraph;
@@ -145,7 +147,8 @@ impl<'ascent, 'grammar, W: Write>
         let mut referenced_where_clauses = Set::new();
         for wc in &grammar.where_clauses {
             wc.map(|ty| {
-                if ty.referenced()
+                if ty
+                    .referenced()
                     .iter()
                     .any(|p| nonterminal_type_params.contains(p))
                 {
@@ -231,7 +234,8 @@ impl<'ascent, 'grammar, W: Write>
         // have to unwrap and rewrap as we pass up the stack, which
         // seems silly
         for ref nt in self.grammar.nonterminals.keys() {
-            let ty = self.types
+            let ty = self
+                .types
                 .spanned_type(self.types.nonterminal_type(nt).clone());
             rust!(self.out, "{}({}),", Escape(nt), ty);
         }
@@ -399,11 +403,10 @@ impl<'ascent, 'grammar, W: Write>
         rust!(self.out, "_ => {{");
         // The terminals which would have resulted in a successful parse in this state
         let successful_terminals = self.grammar.terminals.all.iter().filter(|&terminal| {
-            this_state.shifts.contains_key(terminal)
-                || this_state
-                    .reductions
-                    .iter()
-                    .any(|&(ref t, _)| t.contains(&Token::Terminal(terminal.clone())))
+            this_state.shifts.contains_key(terminal) || this_state
+                .reductions
+                .iter()
+                .any(|&(ref t, _)| t.contains(&Token::Terminal(terminal.clone())))
         });
         rust!(
             self.out,
@@ -541,12 +544,10 @@ impl<'ascent, 'grammar, W: Write>
             self.grammar,
             &Visibility::Priv,
             format!("{}{}{}", self.prefix, fn_kind, fn_index),
-            vec![
-                format!(
-                    "{}TOKENS: Iterator<Item=Result<{},{}>>",
-                    self.prefix, triple_type, iter_error_type
-                ),
-            ],
+            vec![format!(
+                "{}TOKENS: Iterator<Item=Result<{},{}>>",
+                self.prefix, triple_type, iter_error_type
+            ),],
             None,
             fn_args,
             format!(
@@ -663,7 +664,8 @@ impl<'ascent, 'grammar, W: Write>
     ) -> io::Result<StackSuffix<'grammar>> {
         let mut result = inputs;
 
-        let top_opt = self.custom
+        let top_opt = self
+            .custom
             .graph
             .successors(state_index)
             .iter()
@@ -719,8 +721,8 @@ impl<'ascent, 'grammar, W: Write>
     ) -> io::Result<Vec<String>> {
         let total_have = optional + fixed;
         let total_need = inputs.len();
-        (total_have - total_need .. total_have) // number relative to us
-            .zip(0 .. total_need) // number relative to them
+        (total_have - total_need..total_have) // number relative to us
+            .zip(0..total_need) // number relative to them
             .map(|(h, n)| {
                 let name = format!("{}sym{}", self.prefix, h);
                 let have_optional = h < optional;

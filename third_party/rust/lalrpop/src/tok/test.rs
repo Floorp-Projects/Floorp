@@ -1,5 +1,5 @@
-use super::{Error, ErrorCode, Tok, Tokenizer};
 use super::Tok::*;
+use super::{Error, ErrorCode, Tok, Tokenizer};
 
 enum Expectation<'a> {
     ExpectTok(Tok<'a>),
@@ -22,7 +22,7 @@ fn gen_test(input: &str, expected: Vec<(&str, Expectation)>) {
         match expectation {
             ExpectTok(expected_tok) => {
                 assert_eq!(Ok((expected_start, expected_tok, expected_end)), token);
-            },
+            }
             ExpectErr(expected_ec) => assert_eq!(
                 Err(Error {
                     location: expected_start,
@@ -624,12 +624,10 @@ fn shebang_attribute_normal_text() {
 fn shebang_attribute_special_characters_without_quotes() {
     test(
         r#" #![set width = 80] "#,
-        vec![
-            (
-                r#" ~~~~~~~~~~~~~~~~~~ "#,
-                ShebangAttribute("#![set width = 80]"),
-            ),
-        ],
+        vec![(
+            r#" ~~~~~~~~~~~~~~~~~~ "#,
+            ShebangAttribute("#![set width = 80]"),
+        )],
     );
 }
 
@@ -637,12 +635,10 @@ fn shebang_attribute_special_characters_without_quotes() {
 fn shebang_attribute_special_characters_with_quotes() {
     test(
         r#" #![set width = "80"] "#,
-        vec![
-            (
-                r#" ~~~~~~~~~~~~~~~~~~~~ "#,
-                ShebangAttribute(r#"#![set width = "80"]"#),
-            ),
-        ],
+        vec![(
+            r#" ~~~~~~~~~~~~~~~~~~~~ "#,
+            ShebangAttribute(r#"#![set width = "80"]"#),
+        )],
     );
 }
 
@@ -650,12 +646,10 @@ fn shebang_attribute_special_characters_with_quotes() {
 fn shebang_attribute_special_characters_closing_sqbracket_in_string_literal() {
     test(
         r#" #![set width = "80]"] "#,
-        vec![
-            (
-                r#" ~~~~~~~~~~~~~~~~~~~~~ "#,
-                ShebangAttribute(r#"#![set width = "80]"]"#),
-            ),
-        ],
+        vec![(
+            r#" ~~~~~~~~~~~~~~~~~~~~~ "#,
+            ShebangAttribute(r#"#![set width = "80]"]"#),
+        )],
     );
 }
 
@@ -663,12 +657,10 @@ fn shebang_attribute_special_characters_closing_sqbracket_in_string_literal() {
 fn shebang_attribute_special_characters_opening_sqbracket_in_string_literal() {
     test(
         r#" #![set width = "[80"] "#,
-        vec![
-            (
-                r#" ~~~~~~~~~~~~~~~~~~~~~ "#,
-                ShebangAttribute(r#"#![set width = "[80"]"#),
-            ),
-        ],
+        vec![(
+            r#" ~~~~~~~~~~~~~~~~~~~~~ "#,
+            ShebangAttribute(r#"#![set width = "[80"]"#),
+        )],
     );
 }
 
@@ -676,12 +668,10 @@ fn shebang_attribute_special_characters_opening_sqbracket_in_string_literal() {
 fn shebang_attribute_special_characters_nested_sqbrackets() {
     test(
         r#" #![set width = [80]] "#,
-        vec![
-            (
-                r#" ~~~~~~~~~~~~~~~~~~~~ "#,
-                ShebangAttribute(r#"#![set width = [80]]"#),
-            ),
-        ],
+        vec![(
+            r#" ~~~~~~~~~~~~~~~~~~~~ "#,
+            ShebangAttribute(r#"#![set width = [80]]"#),
+        )],
     );
 }
 
@@ -703,5 +693,50 @@ fn char_literals() {
             (r#"                     ~~~~   "#, CharLiteral("\\'")),
             (r#"                          ~~"#, Lifetime("'c")),
         ],
+    );
+}
+
+#[test]
+fn string_escapes() {
+    use super::apply_string_escapes;
+    use std::borrow::Cow;
+
+    assert_eq!(apply_string_escapes(r#"foo"#, 5), Ok(Cow::Borrowed("foo")));
+    assert_eq!(
+        apply_string_escapes(r#"\\"#, 10),
+        Ok(Cow::Owned::<str>(r#"\"#.into()))
+    );
+    assert_eq!(
+        apply_string_escapes(r#"\""#, 15),
+        Ok(Cow::Owned::<str>(r#"""#.into()))
+    );
+    assert_eq!(
+        apply_string_escapes(r#"up\ndown"#, 25),
+        Ok(Cow::Owned::<str>("up\ndown".into()))
+    );
+    assert_eq!(
+        apply_string_escapes(r#"forth\rback"#, 25),
+        Ok(Cow::Owned::<str>("forth\rback".into()))
+    );
+    assert_eq!(
+        apply_string_escapes(r#"left\tright"#, 40),
+        Ok(Cow::Owned::<str>("left\tright".into()))
+    );
+
+    // Errors.
+    assert_eq!(
+        apply_string_escapes("\u{192}\\oo", 65), // "ƒ\oo"
+        Err(Error {
+            location: 68,
+            code: ErrorCode::UnrecognizedEscape
+        })
+    );
+    // LALRPOP doesn't support the other Rust escape sequences.
+    assert_eq!(
+        apply_string_escapes(r#"star: \u{2a}"#, 105),
+        Err(Error {
+            location: 112,
+            code: ErrorCode::UnrecognizedEscape
+        })
     );
 }

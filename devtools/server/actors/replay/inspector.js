@@ -42,13 +42,6 @@ const ReplayInspector = {
     return gWindow;
   },
 
-  // Return a proxy for a new tree walker in the replaying process.
-  newDeepTreeWalker() {
-    const data = dbg()._sendRequestAllowDiverge({ type: "newDeepTreeWalker" });
-    const obj = dbg()._getObject(data.id);
-    return wrapObject(obj);
-  },
-
   // Create the InspectorUtils object to bind for other server users.
   createInspectorUtils(utils) {
     // Overwrite some APIs that will fail if called on proxies from the
@@ -61,19 +54,11 @@ const ReplayInspector = {
     };
   },
 
-  // Modified EventListenerService to use when replaying. It would be nice to
-  // bind a special Services object for other server users, but doing so creates
-  // initialization problems.
-  els: {
-    getListenerInfoFor(node) {
-      const id = unwrapValue(node)._data.id;
-      const rv = dbg()._sendRequestAllowDiverge({
-        type: "getListenerInfoFor",
-        id,
-      });
-      const obj = dbg()._getObject(rv.id);
-      return wrapValue(obj);
-    },
+  wrapRequireHook(requireHook) {
+    return (id, require) => {
+      const rv = requireHook(id, require);
+      return substituteRequire(id, rv);
+    };
   },
 
   // Find the element in the replaying process which is being targeted by a
@@ -93,6 +78,96 @@ const ReplayInspector = {
     return unwrapValue(node);
   },
 };
+
+///////////////////////////////////////////////////////////////////////////////
+// Require Substitutions
+///////////////////////////////////////////////////////////////////////////////
+
+// Server code in this process can try to interact with our replaying object
+// proxies using various chrome interfaces. We swap these out for our own
+// equivalent implementations so that things work smoothly.
+
+function newSubstituteProxy(target, mapping) {
+  return new Proxy({}, {
+    get(_, name) {
+      if (mapping[name]) {
+        return mapping[name];
+      }
+      return target[name];
+    },
+  });
+}
+
+function createSubstituteChrome(chrome) {
+  const { Cc, Cu } = chrome;
+  return {
+    ...chrome,
+    Cc: newSubstituteProxy(Cc, {
+      "@mozilla.org/inspector/deep-tree-walker;1": {
+        createInstance() {
+          // Return a proxy for a new tree walker in the replaying process.
+          const data = dbg()._sendRequestAllowDiverge({ type: "newDeepTreeWalker" });
+          const obj = dbg()._getObject(data.id);
+          return wrapObject(obj);
+        },
+      },
+    }),
+    Cu: newSubstituteProxy(Cu, {
+      isDeadWrapper(node) {
+        let unwrapped = proxyMap.get(node);
+        if (!unwrapped) {
+          return Cu.isDeadWrapper(node);
+        }
+        assert(unwrapped instanceof ReplayDebugger.Object);
+
+        // Objects are considered dead if we have unpaused since creating them
+        // and they are not one of the fixed proxies. This prevents the
+        // inspector from trying to continue using them.
+        if (!unwrapped._data) {
+          updateFixedProxies();
+          unwrapped = proxyMap.get(node);
+          return !unwrapped._data;
+        }
+        return false;
+      },
+    }),
+  };
+}
+
+function createSubstituteServices(Services) {
+  return newSubstituteProxy(Services, {
+    els: {
+      getListenerInfoFor(node) {
+        const id = unwrapValue(node)._data.id;
+        const rv = dbg()._sendRequestAllowDiverge({
+          type: "getListenerInfoFor",
+          id,
+        });
+        const obj = dbg()._getObject(rv.id);
+        return wrapValue(obj);
+      },
+    },
+  });
+}
+
+function createSubstitute(id, rv) {
+  switch (id) {
+  case "chrome": return createSubstituteChrome(rv);
+  case "Services": return createSubstituteServices(rv);
+  }
+  return null;
+}
+
+const substitutes = new Map();
+
+function substituteRequire(id, rv) {
+  if (substitutes.has(id)) {
+    return substitutes.get(id) || rv;
+  }
+  const newrv = createSubstitute(id, rv);
+  substitutes.set(id, newrv);
+  return newrv || rv;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Replaying Object Proxies

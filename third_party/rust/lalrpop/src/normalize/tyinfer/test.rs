@@ -1,10 +1,10 @@
-use string_cache::DefaultAtom as Atom;
-use parser;
+use grammar::parse_tree::NonterminalString;
+use grammar::repr::TypeRepr;
 use normalize::macro_expand::expand_macros;
 use normalize::token_check;
 use normalize::tyinfer::infer_types;
-use grammar::parse_tree::NonterminalString;
-use grammar::repr::TypeRepr;
+use parser;
+use string_cache::DefaultAtom as Atom;
 
 fn type_repr(s: &str) -> TypeRepr {
     let type_ref = parser::parse_type_ref(s).unwrap();
@@ -53,7 +53,8 @@ grammar;
     };
     Y = "Hi";
 "#,
-    ).unwrap();
+    )
+    .unwrap();
 
     let actual = expand_macros(grammar).unwrap();
     assert!(infer_types(&actual).is_err());
@@ -70,7 +71,8 @@ grammar;
     C = D;
     D = A;
 "#,
-    ).unwrap();
+    )
+    .unwrap();
 
     let actual = expand_macros(grammar).unwrap();
     assert!(infer_types(&actual).is_err());
@@ -197,7 +199,8 @@ grammar;
 
     Z: u32 = "bar" => 22;
 "#,
-    ).unwrap();
+    )
+    .unwrap();
 
     let actual = expand_macros(grammar).unwrap();
     assert!(infer_types(&actual).is_err());
@@ -233,11 +236,9 @@ fn error() {
 grammar;
     Z = !;
 "#,
-        vec![
-            (
-                "Z",
-                "__lalrpop_util::ErrorRecovery<usize, Token<'input>, &'static str>",
-            ),
-        ],
+        vec![(
+            "Z",
+            "__lalrpop_util::ErrorRecovery<usize, Token<'input>, &'static str>",
+        )],
     )
 }

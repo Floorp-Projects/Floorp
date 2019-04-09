@@ -106,9 +106,9 @@ impl RegexBuilder {
     /// anything when `s` is set and matches anything except for new line when
     /// it is not set (the default).
     ///
-    /// N.B. "matches anything" means "any byte" for `regex::bytes::Regex`
-    /// expressions and means "any Unicode scalar value" for `regex::Regex`
-    /// expressions.
+    /// N.B. "matches anything" means "any byte" when Unicode is disabled and
+    /// means "any valid UTF-8 encoding of any Unicode scalar value" when
+    /// Unicode is enabled.
     pub fn dot_matches_new_line(&mut self, yes: bool) -> &mut RegexBuilder {
         self.0.dot_matches_new_line = yes;
         self
