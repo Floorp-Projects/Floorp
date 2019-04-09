@@ -58,9 +58,9 @@ uint16_t nsSVGFilterFrame::GetEnumValue(uint32_t aIndex, nsIContent* aDefault) {
                     .GetAnimValue();
 }
 
-const SVGAnimatedLength* nsSVGFilterFrame::GetLengthValue(
-    uint32_t aIndex, nsIContent* aDefault) {
-  const SVGAnimatedLength* thisLength =
+const nsSVGLength2* nsSVGFilterFrame::GetLengthValue(uint32_t aIndex,
+                                                     nsIContent* aDefault) {
+  const nsSVGLength2* thisLength =
       &static_cast<SVGFilterElement*>(GetContent())->mLengthAttributes[aIndex];
 
   if (thisLength->IsExplicitlySet()) {

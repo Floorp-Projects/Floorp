@@ -9,7 +9,7 @@
 
 #include "nsAutoPtr.h"
 #include "SVGAnimatedEnumeration.h"
-#include "SVGAnimatedLength.h"
+#include "nsSVGLength2.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGAnimatedString.h"
 #include "SVGAnimatedTransformList.h"
@@ -77,7 +77,7 @@ class SVGPatternElement final : public SVGPatternElementBase {
   virtual SVGAnimatedViewBox* GetViewBox() override;
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
-  SVGAnimatedLength mLengthAttributes[4];
+  nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
   enum { PATTERNUNITS, PATTERNCONTENTUNITS };

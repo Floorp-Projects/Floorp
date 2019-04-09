@@ -4653,7 +4653,7 @@ gfxFloat SVGTextFrame::GetOffsetScale(nsIFrame* aTextPathFrame) {
 gfxFloat SVGTextFrame::GetStartOffset(nsIFrame* aTextPathFrame) {
   SVGTextPathElement* tp =
       static_cast<SVGTextPathElement*>(aTextPathFrame->GetContent());
-  SVGAnimatedLength* length =
+  nsSVGLength2* length =
       &tp->mLengthAttributes[SVGTextPathElement::STARTOFFSET];
 
   if (length->IsPercentage()) {
@@ -4830,7 +4830,7 @@ void SVGTextFrame::DoGlyphPositioning() {
   // to record that a new run starts with each glyph.
   SVGTextContentElement* element =
       static_cast<SVGTextContentElement*>(GetContent());
-  SVGAnimatedLength* textLengthAttr =
+  nsSVGLength2* textLengthAttr =
       element->GetAnimatedLength(nsGkAtoms::textLength);
   uint16_t lengthAdjust =
       element->EnumAttributes()[SVGTextContentElement::LENGTHADJUST]

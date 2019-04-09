@@ -410,7 +410,7 @@ void nsAttrValue::SetTo(const SVGAnimatedIntegerPair& aValue,
   SetSVGType(eSVGIntegerPair, &aValue, aSerialized);
 }
 
-void nsAttrValue::SetTo(const SVGAnimatedLength& aValue,
+void nsAttrValue::SetTo(const nsSVGLength2& aValue,
                         const nsAString* aSerialized) {
   SetSVGType(eSVGLength, &aValue, aSerialized);
 }
@@ -1610,7 +1610,7 @@ void nsAttrValue::SetSVGType(ValueType aType, const void* aValue,
   // will do. We'll lose type-safety but the signature of the calling
   // function should ensure we don't get anything unexpected, and once we
   // stick aValue in a union we lose type information anyway.
-  cont->mValue.mSVGLength = static_cast<const SVGAnimatedLength*>(aValue);
+  cont->mValue.mSVGLength = static_cast<const nsSVGLength2*>(aValue);
   cont->mType = aType;
   SetMiscAtomOrString(aSerialized);
 }

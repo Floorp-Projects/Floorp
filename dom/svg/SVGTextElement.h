@@ -42,8 +42,8 @@ class SVGTextElement final : public SVGTextElementBase {
     return mEnumAttributes;
   }
 
-  SVGAnimatedLength mLengthAttributes[1];
-  virtual SVGAnimatedLength* LengthAttributes() override {
+  nsSVGLength2 mLengthAttributes[1];
+  virtual nsSVGLength2* LengthAttributes() override {
     return mLengthAttributes;
   }
 };

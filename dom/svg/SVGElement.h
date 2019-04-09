@@ -27,6 +27,9 @@
 #include "nsStyledElement.h"
 #include "gfxMatrix.h"
 
+class nsSVGLength2;
+class nsSVGNumber2;
+
 nsresult NS_NewSVGElement(mozilla::dom::Element** aResult,
                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
@@ -38,9 +41,7 @@ class SVGAnimatedBoolean;
 class SVGAnimatedEnumeration;
 class SVGAnimatedInteger;
 class SVGAnimatedIntegerPair;
-class SVGAnimatedLength;
 class SVGAnimatedLengthList;
-class SVGAnimatedNumber;
 class SVGAnimatedNumberList;
 class SVGAnimatedNumberPair;
 class SVGAnimatedOrient;
@@ -163,7 +164,7 @@ class SVGElement : public SVGElementBase  // nsIContent
     return GetNumberInfo().mNumberInfo[aAttrEnum].mPercentagesAllowed;
   }
   virtual bool HasValidDimensions() const { return true; }
-  void SetLength(nsAtom* aName, const SVGAnimatedLength& aLength);
+  void SetLength(nsAtom* aName, const nsSVGLength2& aLength);
 
   nsAttrValue WillChangeLength(uint8_t aAttrEnum);
   nsAttrValue WillChangeNumberPair(uint8_t aAttrEnum);
@@ -230,7 +231,7 @@ class SVGElement : public SVGElementBase  // nsIContent
     DO_ALLOCATE = 0x1
   };
 
-  SVGAnimatedLength* GetAnimatedLength(const nsAtom* aAttrName);
+  nsSVGLength2* GetAnimatedLength(const nsAtom* aAttrName);
   void GetAnimatedLengthValues(float* aFirst, ...);
   void GetAnimatedNumberValues(float* aFirst, ...);
   void GetAnimatedIntegerValues(int32_t* aFirst, ...);
@@ -335,11 +336,11 @@ class SVGElement : public SVGElementBase  // nsIContent
   };
 
   struct LengthAttributesInfo {
-    SVGAnimatedLength* const mLengths;
+    nsSVGLength2* const mLengths;
     const LengthInfo* const mLengthInfo;
     const uint32_t mLengthCount;
 
-    LengthAttributesInfo(SVGAnimatedLength* aLengths, LengthInfo* aLengthInfo,
+    LengthAttributesInfo(nsSVGLength2* aLengths, LengthInfo* aLengthInfo,
                          uint32_t aLengthCount)
         : mLengths(aLengths),
           mLengthInfo(aLengthInfo),
@@ -355,11 +356,11 @@ class SVGElement : public SVGElementBase  // nsIContent
   };
 
   struct NumberAttributesInfo {
-    SVGAnimatedNumber* const mNumbers;
+    nsSVGNumber2* const mNumbers;
     const NumberInfo* const mNumberInfo;
     const uint32_t mNumberCount;
 
-    NumberAttributesInfo(SVGAnimatedNumber* aNumbers, NumberInfo* aNumberInfo,
+    NumberAttributesInfo(nsSVGNumber2* aNumbers, NumberInfo* aNumberInfo,
                          uint32_t aNumberCount)
         : mNumbers(aNumbers),
           mNumberInfo(aNumberInfo),

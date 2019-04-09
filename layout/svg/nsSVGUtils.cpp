@@ -16,6 +16,11 @@
 #include "gfxPlatform.h"
 #include "gfxRect.h"
 #include "gfxUtils.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/PatternHelpers.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/SVGContextPaint.h"
 #include "nsCSSClipPathInstance.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDisplayList.h"
@@ -23,38 +28,34 @@
 #include "nsFrameList.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
+#include "mozilla/dom/Document.h"
 #include "nsIFrame.h"
+#include "nsSVGDisplayableFrame.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
 #include "nsStyleCoord.h"
 #include "nsStyleStruct.h"
-#include "SVGAnimatedLength.h"
 #include "nsSVGClipPathFrame.h"
 #include "nsSVGContainerFrame.h"
-#include "SVGContentUtils.h"
-#include "nsSVGDisplayableFrame.h"
+#include "SVGObserverUtils.h"
 #include "nsSVGFilterPaintCallback.h"
 #include "nsSVGForeignObjectFrame.h"
-#include "SVGGeometryFrame.h"
 #include "nsSVGInnerSVGFrame.h"
 #include "nsSVGIntegrationUtils.h"
+#include "nsSVGLength2.h"
 #include "nsSVGMaskFrame.h"
-#include "SVGObserverUtils.h"
 #include "nsSVGOuterSVGFrame.h"
-#include "nsSVGPaintServerFrame.h"
-#include "SVGTextFrame.h"
-#include "nsTextFrame.h"
-#include "mozilla/Preferences.h"
-#include "mozilla/SVGContextPaint.h"
-#include "mozilla/Unused.h"
-#include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/PatternHelpers.h"
-#include "mozilla/dom/Document.h"
 #include "mozilla/dom/SVGClipPathElement.h"
-#include "mozilla/dom/SVGGeometryElement.h"
 #include "mozilla/dom/SVGPathElement.h"
 #include "mozilla/dom/SVGUnitTypesBinding.h"
+#include "SVGGeometryElement.h"
+#include "SVGGeometryFrame.h"
+#include "nsSVGPaintServerFrame.h"
 #include "mozilla/dom/SVGViewportElement.h"
+#include "nsTextFrame.h"
+#include "SVGContentUtils.h"
+#include "SVGTextFrame.h"
+#include "mozilla/Unused.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -250,7 +251,7 @@ Size nsSVGUtils::GetContextSize(const nsIFrame* aFrame) {
 }
 
 float nsSVGUtils::ObjectSpace(const gfxRect& aRect,
-                              const SVGAnimatedLength* aLength) {
+                              const nsSVGLength2* aLength) {
   float axis;
 
   switch (aLength->GetCtxType()) {
@@ -278,17 +279,17 @@ float nsSVGUtils::ObjectSpace(const gfxRect& aRect,
 }
 
 float nsSVGUtils::UserSpace(SVGElement* aSVGElement,
-                            const SVGAnimatedLength* aLength) {
+                            const nsSVGLength2* aLength) {
   return aLength->GetAnimValue(aSVGElement);
 }
 
 float nsSVGUtils::UserSpace(nsIFrame* aNonSVGContext,
-                            const SVGAnimatedLength* aLength) {
+                            const nsSVGLength2* aLength) {
   return aLength->GetAnimValue(aNonSVGContext);
 }
 
 float nsSVGUtils::UserSpace(const UserSpaceMetrics& aMetrics,
-                            const SVGAnimatedLength* aLength) {
+                            const nsSVGLength2* aLength) {
   return aLength->GetAnimValue(aMetrics);
 }
 
@@ -1161,7 +1162,7 @@ gfxPoint nsSVGUtils::FrameSpaceInCSSPxToUserSpaceOffset(nsIFrame* aFrame) {
   return gfxPoint();
 }
 
-static gfxRect GetBoundingBoxRelativeRect(const SVGAnimatedLength* aXYWH,
+static gfxRect GetBoundingBoxRelativeRect(const nsSVGLength2* aXYWH,
                                           const gfxRect& aBBox) {
   return gfxRect(aBBox.x + nsSVGUtils::ObjectSpace(aBBox, &aXYWH[0]),
                  aBBox.y + nsSVGUtils::ObjectSpace(aBBox, &aXYWH[1]),
@@ -1169,8 +1170,7 @@ static gfxRect GetBoundingBoxRelativeRect(const SVGAnimatedLength* aXYWH,
                  nsSVGUtils::ObjectSpace(aBBox, &aXYWH[3]));
 }
 
-gfxRect nsSVGUtils::GetRelativeRect(uint16_t aUnits,
-                                    const SVGAnimatedLength* aXYWH,
+gfxRect nsSVGUtils::GetRelativeRect(uint16_t aUnits, const nsSVGLength2* aXYWH,
                                     const gfxRect& aBBox,
                                     const UserSpaceMetrics& aMetrics) {
   if (aUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
@@ -1181,8 +1181,7 @@ gfxRect nsSVGUtils::GetRelativeRect(uint16_t aUnits,
                  UserSpace(aMetrics, &aXYWH[3]));
 }
 
-gfxRect nsSVGUtils::GetRelativeRect(uint16_t aUnits,
-                                    const SVGAnimatedLength* aXYWH,
+gfxRect nsSVGUtils::GetRelativeRect(uint16_t aUnits, const nsSVGLength2* aXYWH,
                                     const gfxRect& aBBox, nsIFrame* aFrame) {
   if (aUnits == SVG_UNIT_TYPE_OBJECTBOUNDINGBOX) {
     return GetBoundingBoxRelativeRect(aXYWH, aBBox);

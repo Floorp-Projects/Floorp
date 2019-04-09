@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_SVGEllipseElement_h
 #define mozilla_dom_SVGEllipseElement_h
 
-#include "SVGAnimatedLength.h"
 #include "SVGGeometryElement.h"
+#include "nsSVGLength2.h"
 
 nsresult NS_NewSVGEllipseElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -51,7 +51,7 @@ class SVGEllipseElement final : public SVGEllipseElementBase {
   virtual LengthAttributesInfo GetLengthInfo() override;
 
   enum { CX, CY, RX, RY };
-  SVGAnimatedLength mLengthAttributes[4];
+  nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 };
 

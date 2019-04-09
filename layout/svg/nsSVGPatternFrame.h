@@ -15,9 +15,9 @@
 #include "nsSVGPaintServerFrame.h"
 
 class nsIFrame;
+class nsSVGLength2;
 
 namespace mozilla {
-class SVGAnimatedLength;
 class SVGAnimatedPreserveAspectRatio;
 class SVGAnimatedTransformList;
 class SVGAnimatedViewBox;
@@ -87,9 +87,8 @@ class nsSVGPatternFrame final : public nsSVGPaintServerFrame {
   const SVGAnimatedPreserveAspectRatio& GetPreserveAspectRatio() {
     return GetPreserveAspectRatio(mContent);
   }
-  const SVGAnimatedLength* GetLengthValue(uint32_t aIndex,
-                                          nsIContent* aDefault);
-  const SVGAnimatedLength* GetLengthValue(uint32_t aIndex) {
+  const nsSVGLength2* GetLengthValue(uint32_t aIndex, nsIContent* aDefault);
+  const nsSVGLength2* GetLengthValue(uint32_t aIndex) {
     return GetLengthValue(aIndex, mContent);
   }
 

@@ -70,7 +70,7 @@ class SVGFEDisplacementMapElement : public SVGFEDisplacementMapElementBase {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { SCALE };
-  SVGAnimatedNumber mNumberAttributes[1];
+  nsSVGNumber2 mNumberAttributes[1];
   static NumberInfo sNumberInfo[1];
 
   enum { CHANNEL_X, CHANNEL_Y };

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "SVGAnimatedNumber.h"
+#include "nsSVGNumber2.h"
 
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILValue.h"
@@ -13,14 +13,12 @@
 #include "SMILFloatType.h"
 #include "SVGAttrTearoffTable.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
-
-namespace mozilla {
 
 /* Implementation */
 
-static SVGAttrTearoffTable<SVGAnimatedNumber,
-                           SVGAnimatedNumber::DOMAnimatedNumber>
+static SVGAttrTearoffTable<nsSVGNumber2, nsSVGNumber2::DOMAnimatedNumber>
     sSVGAnimatedNumberTearoffTable;
 
 static bool GetValueFromString(const nsAString& aString,
@@ -50,8 +48,8 @@ static bool GetValueFromString(const nsAString& aString,
   return iter == end;
 }
 
-nsresult SVGAnimatedNumber::SetBaseValueString(const nsAString& aValueAsString,
-                                               SVGElement* aSVGElement) {
+nsresult nsSVGNumber2::SetBaseValueString(const nsAString& aValueAsString,
+                                          SVGElement* aSVGElement) {
   float val;
 
   if (!GetValueFromString(aValueAsString,
@@ -74,12 +72,12 @@ nsresult SVGAnimatedNumber::SetBaseValueString(const nsAString& aValueAsString,
   return NS_OK;
 }
 
-void SVGAnimatedNumber::GetBaseValueString(nsAString& aValueAsString) {
+void nsSVGNumber2::GetBaseValueString(nsAString& aValueAsString) {
   aValueAsString.Truncate();
   aValueAsString.AppendFloat(mBaseVal);
 }
 
-void SVGAnimatedNumber::SetBaseValue(float aValue, SVGElement* aSVGElement) {
+void nsSVGNumber2::SetBaseValue(float aValue, SVGElement* aSVGElement) {
   if (mIsBaseSet && aValue == mBaseVal) {
     return;
   }
@@ -94,7 +92,7 @@ void SVGAnimatedNumber::SetBaseValue(float aValue, SVGElement* aSVGElement) {
   aSVGElement->DidChangeNumber(mAttrEnum);
 }
 
-void SVGAnimatedNumber::SetAnimValue(float aValue, SVGElement* aSVGElement) {
+void nsSVGNumber2::SetAnimValue(float aValue, SVGElement* aSVGElement) {
   if (mIsAnimated && aValue == mAnimVal) {
     return;
   }
@@ -103,7 +101,7 @@ void SVGAnimatedNumber::SetAnimValue(float aValue, SVGElement* aSVGElement) {
   aSVGElement->DidAnimateNumber(mAttrEnum);
 }
 
-already_AddRefed<DOMSVGAnimatedNumber> SVGAnimatedNumber::ToDOMAnimatedNumber(
+already_AddRefed<DOMSVGAnimatedNumber> nsSVGNumber2::ToDOMAnimatedNumber(
     SVGElement* aSVGElement) {
   RefPtr<DOMAnimatedNumber> domAnimatedNumber =
       sSVGAnimatedNumberTearoffTable.GetTearoff(this);
@@ -115,15 +113,15 @@ already_AddRefed<DOMSVGAnimatedNumber> SVGAnimatedNumber::ToDOMAnimatedNumber(
   return domAnimatedNumber.forget();
 }
 
-SVGAnimatedNumber::DOMAnimatedNumber::~DOMAnimatedNumber() {
+nsSVGNumber2::DOMAnimatedNumber::~DOMAnimatedNumber() {
   sSVGAnimatedNumberTearoffTable.RemoveTearoff(mVal);
 }
 
-UniquePtr<SMILAttr> SVGAnimatedNumber::ToSMILAttr(SVGElement* aSVGElement) {
+UniquePtr<SMILAttr> nsSVGNumber2::ToSMILAttr(SVGElement* aSVGElement) {
   return MakeUnique<SMILNumber>(this, aSVGElement);
 }
 
-nsresult SVGAnimatedNumber::SMILNumber::ValueFromString(
+nsresult nsSVGNumber2::SMILNumber::ValueFromString(
     const nsAString& aStr,
     const mozilla::dom::SVGAnimationElement* /*aSrcElement*/, SMILValue& aValue,
     bool& aPreventCachingOfSandwich) const {
@@ -143,13 +141,13 @@ nsresult SVGAnimatedNumber::SMILNumber::ValueFromString(
   return NS_OK;
 }
 
-SMILValue SVGAnimatedNumber::SMILNumber::GetBaseValue() const {
+SMILValue nsSVGNumber2::SMILNumber::GetBaseValue() const {
   SMILValue val(SMILFloatType::Singleton());
   val.mU.mDouble = mVal->mBaseVal;
   return val;
 }
 
-void SVGAnimatedNumber::SMILNumber::ClearAnimValue() {
+void nsSVGNumber2::SMILNumber::ClearAnimValue() {
   if (mVal->mIsAnimated) {
     mVal->mIsAnimated = false;
     mVal->mAnimVal = mVal->mBaseVal;
@@ -157,7 +155,7 @@ void SVGAnimatedNumber::SMILNumber::ClearAnimValue() {
   }
 }
 
-nsresult SVGAnimatedNumber::SMILNumber::SetAnimValue(const SMILValue& aValue) {
+nsresult nsSVGNumber2::SMILNumber::SetAnimValue(const SMILValue& aValue) {
   NS_ASSERTION(aValue.mType == SMILFloatType::Singleton(),
                "Unexpected type to assign animated value");
   if (aValue.mType == SMILFloatType::Singleton()) {
@@ -165,5 +163,3 @@ nsresult SVGAnimatedNumber::SMILNumber::SetAnimValue(const SMILValue& aValue) {
   }
   return NS_OK;
 }
-
-}  // namespace mozilla

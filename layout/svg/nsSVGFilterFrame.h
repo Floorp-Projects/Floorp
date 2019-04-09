@@ -17,11 +17,11 @@ class nsAtom;
 class nsIContent;
 class nsIFrame;
 class nsIPresShell;
+class nsSVGLength2;
 
 struct nsRect;
 
 namespace mozilla {
-class SVGAnimatedLength;
 namespace dom {
 class SVGFilterElement;
 }  // namespace dom
@@ -68,9 +68,8 @@ class nsSVGFilterFrame final : public nsSVGContainerFrame {
   uint16_t GetEnumValue(uint32_t aIndex) {
     return GetEnumValue(aIndex, mContent);
   }
-  const mozilla::SVGAnimatedLength* GetLengthValue(uint32_t aIndex,
-                                                   nsIContent* aDefault);
-  const mozilla::SVGAnimatedLength* GetLengthValue(uint32_t aIndex) {
+  const nsSVGLength2* GetLengthValue(uint32_t aIndex, nsIContent* aDefault);
+  const nsSVGLength2* GetLengthValue(uint32_t aIndex) {
     return GetLengthValue(aIndex, mContent);
   }
   const mozilla::dom::SVGFilterElement* GetFilterContent(nsIContent* aDefault);

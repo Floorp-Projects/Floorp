@@ -111,6 +111,7 @@
 #include "nsGlobalWindow.h"
 #include "nsIScreenManager.h"
 #include "nsFilterInstance.h"
+#include "nsSVGLength2.h"
 #include "nsDeviceContext.h"
 #include "nsFontMetrics.h"
 #include "Units.h"
