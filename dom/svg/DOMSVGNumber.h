@@ -31,7 +31,7 @@ class SVGSVGElement;
  * are in an SVGNumberList. It is also used to create the objects returned by
  * SVGSVGElement.createSVGNumber().
  *
- * For the DOM wrapper classes for non-list SVGNumber, see nsSVGNumber2.h.
+ * For the DOM wrapper classes for non-list SVGNumber, see SVGAnimatedNumber.h.
  *
  * See the architecture comment in DOMSVGAnimatedNumberList.h.
  *

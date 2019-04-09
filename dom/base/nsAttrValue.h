@@ -153,7 +153,8 @@ class nsAttrValue {
   void SetTo(const nsIntMargin& aValue);
   void SetTo(const mozilla::SVGAnimatedIntegerPair& aValue,
              const nsAString* aSerialized);
-  void SetTo(const nsSVGLength2& aValue, const nsAString* aSerialized);
+  void SetTo(const mozilla::SVGAnimatedLength& aValue,
+             const nsAString* aSerialized);
   void SetTo(const mozilla::SVGAnimatedNumberPair& aValue,
              const nsAString* aSerialized);
   void SetTo(const mozilla::SVGAnimatedOrient& aValue,
