@@ -101,6 +101,11 @@ bool RenderCompositorEGL::BeginFrame() {
     DestroyEGLSurface();
     mEGLSurface = CreateEGLSurface();
     gl::GLContextEGL::Cast(gl())->SetEGLSurfaceOverride(mEGLSurface);
+    if (mEGLSurface) {
+      const auto* egl = gl::GLLibraryEGL::Get();
+      // Make eglSwapBuffers() non-blocking on wayland
+      egl->fSwapInterval(gl::EGL_DISPLAY(), 0);
+    }
   }
 #endif
   if (!gl()->MakeCurrent()) {
