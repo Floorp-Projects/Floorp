@@ -661,7 +661,13 @@ nsresult nsHttpChannelAuthProvider::GetCredentialsForChallenge(
   rv = mAuthChannel->GetLoadFlags(&loadFlags);
   if (NS_FAILED(rv)) return rv;
 
+  // Fill only for non-proxy auth, proxy credentials are not OA-isolated.
+  nsAutoCString suffix;
+
   if (!proxyAuth) {
+    nsCOMPtr<nsIChannel> chan = do_QueryInterface(mAuthChannel);
+    GetOriginAttributesSuffix(chan, suffix);
+
     // if this is the first challenge, then try using the identity
     // specified in the URL.
     if (mIdent.IsEmpty()) {
@@ -680,10 +686,6 @@ nsresult nsHttpChannelAuthProvider::GetCredentialsForChallenge(
     LOG(("Skipping authentication for anonymous non-proxy request\n"));
     return NS_ERROR_NOT_AVAILABLE;
   }
-
-  nsCOMPtr<nsIChannel> chan = do_QueryInterface(mAuthChannel);
-  nsAutoCString suffix;
-  GetOriginAttributesSuffix(chan, suffix);
 
   //
   // if we already tried some credentials for this transaction, then
@@ -1244,7 +1246,10 @@ NS_IMETHODIMP nsHttpChannelAuthProvider::OnAuthAvailable(
 
   nsCOMPtr<nsIChannel> chan = do_QueryInterface(mAuthChannel);
   nsAutoCString suffix;
-  GetOriginAttributesSuffix(chan, suffix);
+  if (!mProxyAuth) {
+    // Fill only for non-proxy auth, proxy credentials are not OA-isolated.
+    GetOriginAttributesSuffix(chan, suffix);
+  }
 
   nsHttpAuthCache *authCache = gHttpHandler->AuthCache(mIsPrivate);
   nsHttpAuthEntry *entry = nullptr;
