@@ -51,7 +51,6 @@
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSlotElement.h"
-#include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/Text.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
@@ -1637,12 +1636,6 @@ bool nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
       remote->Deactivate();
       LOGFOCUS(("Remote browser deactivated %p", remote));
     }
-
-    // Same as above but for out-of-process iframes
-    if (BrowserBridgeChild* bbc = BrowserBridgeChild::GetFrom(element)) {
-      bbc->Deactivate();
-      LOGFOCUS(("Out-of-process iframe deactivated %p", bbc));
-    }
   }
 
   bool result = true;
@@ -1857,12 +1850,6 @@ void nsFocusManager::Focus(nsPIDOMWindowOuter* aWindow, Element* aElement,
         if (TabParent* remote = TabParent::GetFrom(aElement)) {
           remote->Activate();
           LOGFOCUS(("Remote browser activated %p", remote));
-        }
-
-        // Same as above but for out-of-process iframes
-        if (BrowserBridgeChild* bbc = BrowserBridgeChild::GetFrom(aElement)) {
-          bbc->Activate();
-          LOGFOCUS(("Out-of-process iframe activated %p", bbc));
         }
       }
 
@@ -3483,13 +3470,6 @@ nsresult nsFocusManager::GetNextTabbableContent(
           TabParent* remote = TabParent::GetFrom(currentContent);
           if (remote) {
             remote->NavigateByKey(aForward, aForDocumentNavigation);
-            return NS_SUCCESS_DOM_NO_OPERATION;
-          }
-
-          // Same as above but for out-of-process iframes
-          BrowserBridgeChild* bbc = BrowserBridgeChild::GetFrom(currentContent);
-          if (bbc) {
-            bbc->NavigateByKey(aForward, aForDocumentNavigation);
             return NS_SUCCESS_DOM_NO_OPERATION;
           }
 

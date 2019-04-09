@@ -1226,20 +1226,6 @@ void EventStateManager::DispatchCrossProcessEvent(WidgetEvent* aEvent,
     return;
   }
 
-  if (aEvent->mLayersId.IsValid()) {
-    TabParent* preciseRemote =
-        TabParent::GetTabParentFromLayersId(aEvent->mLayersId);
-    if (preciseRemote) {
-      remote = preciseRemote;
-    }
-    // else there is a race between APZ and the LayersId to TabParent mapping,
-    // so fall back to delivering the event to the topmost child process.
-  }
-  // else if aEvent->mLayersId was not valid: APZ thinks a pointer
-  // event didn't hit anything but traditional targeting believed it
-  // belongs to a child process-backed frame loader. Dispatch to the
-  // top-level content process found by traditional targeting.
-
   switch (aEvent->mClass) {
     case eMouseEventClass: {
       remote->SendRealMouseEvent(*aEvent->AsMouseEvent());
