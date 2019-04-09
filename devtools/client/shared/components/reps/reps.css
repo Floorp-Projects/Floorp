@@ -34,14 +34,15 @@
 .tree-indent {
   display: inline-block;
   width: 12px;
-  margin-inline-start: 5px;
+  margin-inline-start: 3px;
   border-inline-start: 1px solid #a2d1ff;
   flex-shrink: 0;
 }
 
-/* Align with expandables siblings (where we have the arrow) */
-.tree-node[data-expandable="false"] .tree-indent:last-of-type {
-  margin-inline-end: 15px;
+.debugger .tree-indent {
+  width: 16px;
+  margin-inline-start: 0px;
+  border-inline-start: 0;
 }
 
 /* For non expandable root nodes, we don't have .tree-indent elements, so we declare
@@ -55,14 +56,13 @@
 }
 
 .tree-node button.arrow {
-  mask: url("resource://devtools/client/debugger/new/images/arrow.svg") no-repeat center;
+  mask: url("resource://devtools/client/debugger/images/arrow.svg") no-repeat center;
   mask-size: 10px;
   vertical-align: -1px;
   width: 10px;
   height: 10px;
   border: 0;
   padding: 0;
-  margin-inline-start: 1px;
   margin-inline-end: 4px;
   transform-origin: center center;
   transition: transform 125ms var(--animation-curve);
@@ -420,17 +420,22 @@ button.invoke-getter {
 }
 
 .tree.object-inspector .block .object-label::before {
-  content: "\2632   ";
+  content: "\2632";
   font-size: 1.1em;
+  display: inline;
+  padding-inline-end: 2px;
+  line-height: 14px;
 }
 
 .object-inspector .object-delimiter {
   color: var(--theme-comment);
+  white-space: pre-wrap;
 }
 
 .object-inspector .tree-node .arrow {
   display: inline-block;
   vertical-align: middle;
+  margin-inline-start: -1px;
 }
 
 /* Focused styles */

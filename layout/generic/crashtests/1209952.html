@@ -1,0 +1,38 @@
+<style>
+.multicol-a {
+  width: 300px;
+  column-width: 100px;
+  column-gap: 0;
+  height: 100px;
+}
+.multicol-b {
+  border: 1px solid silver;
+  width: 200px;
+  column-width: 51px;
+  column-gap: 0;
+  height: 50px;
+}
+
+.step {
+  height: 1px;
+}
+.float-L {
+  width: 1px;
+  height: 1px;
+  float: left;
+}
+.float-R {
+  width: 1px;
+  height: 26px; /* 25 -> 26 crash */
+}
+</style>
+
+<div class="multicol-a">
+  <div class="float-R"></div>
+  <div class="multicol-b">
+    <div class="step"></div>
+    <div>
+      <div class="float-L"></div>
+    <div>
+  </div>
+</div>

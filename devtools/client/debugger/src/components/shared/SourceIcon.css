@@ -1,0 +1,150 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+/**
+ * Variant of AccessibleImage used in sources list and tabs.
+ * Define the different source type / framework / library icons here.
+ */
+
+.source-icon {
+  margin-inline-end: 4px;
+}
+
+/* Icons for frameworks and libs */
+
+.img.aframe {
+  background-image: url(resource://devtools/client/debugger/images/sources/aframe.svg);
+  background-color: transparent !important;
+}
+
+.img.angular {
+  background-image: url(resource://devtools/client/debugger/images/sources/angular.svg);
+  background-color: transparent !important;
+}
+
+.img.babel {
+  mask-image: url(resource://devtools/client/debugger/images/sources/babel.svg);
+}
+
+.img.backbone {
+  mask-image: url(resource://devtools/client/debugger/images/sources/backbone.svg);
+}
+
+.img.choo {
+  background-image: url(resource://devtools/client/debugger/images/sources/choo.svg);
+  background-color: transparent !important;
+}
+
+.img.coffeescript {
+  mask-image: url(resource://devtools/client/debugger/images/sources/coffeescript.svg);
+}
+
+.img.dojo {
+  background-image: url(resource://devtools/client/debugger/images/sources/dojo.svg);
+  background-color: transparent !important;
+}
+
+.img.ember {
+  background-image: url(resource://devtools/client/debugger/images/sources/ember.svg);
+  background-color: transparent !important;
+}
+
+.img.express {
+  mask-image: url(resource://devtools/client/debugger/images/sources/express.svg);
+}
+
+.img.extension {
+  mask-image: url(resource://devtools/client/debugger/images/sources/extension.svg);
+}
+
+.img.immutable {
+  mask-image: url(resource://devtools/client/debugger/images/sources/immutable.svg);
+}
+
+.img.javascript {
+  mask-image: url(resource://devtools/client/debugger/images/sources/javascript.svg);
+  mask-size: 14px 14px;
+}
+
+.img.jquery {
+  mask-image: url(resource://devtools/client/debugger/images/sources/jquery.svg);
+}
+
+.img.lodash {
+  mask-image: url(resource://devtools/client/debugger/images/sources/lodash.svg);
+}
+
+.img.marko {
+  background-image: url(resource://devtools/client/debugger/images/sources/marko.svg);
+  background-color: transparent !important;
+}
+
+.img.mobx {
+  background-image: url(resource://devtools/client/debugger/images/sources/mobx.svg);
+  background-color: transparent !important;
+}
+
+.img.nextjs {
+  background-image: url(resource://devtools/client/debugger/images/sources/nextjs.svg);
+  background-color: transparent !important;
+}
+
+.img.node {
+  background-image: url(resource://devtools/client/debugger/images/sources/node.svg);
+  background-color: transparent !important;
+}
+
+.img.nuxtjs {
+  background-image: url(resource://devtools/client/debugger/images/sources/nuxtjs.svg);
+  background-color: transparent !important;
+}
+
+.img.preact {
+  background-image: url(resource://devtools/client/debugger/images/sources/preact.svg);
+  background-color: transparent !important;
+}
+
+.img.pug {
+  background-image: url(resource://devtools/client/debugger/images/sources/pug.svg);
+  background-color: transparent !important;
+}
+
+.img.react {
+  mask-image: url(resource://devtools/client/debugger/images/sources/react.svg);
+  background-color: var(--theme-highlight-bluegrey);
+}
+
+.img.redux {
+  mask-image: url(resource://devtools/client/debugger/images/sources/redux.svg);
+}
+
+.img.rxjs {
+  background-image: url(resource://devtools/client/debugger/images/sources/rxjs.svg);
+  background-color: transparent !important;
+}
+
+.img.sencha-extjs {
+  background-image: url(resource://devtools/client/debugger/images/sources/sencha-extjs.svg);
+  background-color: transparent !important;
+}
+
+.img.typescript {
+  mask-image: url(resource://devtools/client/debugger/images/sources/typescript.svg);
+}
+
+.img.underscore {
+  mask-image: url(resource://devtools/client/debugger/images/sources/underscore.svg);
+}
+
+/* We use both 'Vue' and 'VueJS' when identifying frameworks */
+.img.vue,
+.img.vuejs {
+  background-image: url(resource://devtools/client/debugger/images/sources/vuejs.svg);
+  background-color: transparent !important;
+}
+
+.img.webpack {
+  background-image: url(resource://devtools/client/debugger/images/sources/webpack.svg);
+  background-color: transparent !important;
+}

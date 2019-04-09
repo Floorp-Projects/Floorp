@@ -272,6 +272,12 @@ class MOZ_STACK_CLASS AutoJSAPI : protected ScriptSettingsStackEntry {
   // into the current compartment.
   MOZ_MUST_USE bool StealException(JS::MutableHandle<JS::Value> aVal);
 
+  // As for StealException(), but put the saved frames for any stack trace
+  // associated with the point the exception was thrown into aStack.
+  // aVal will be in the current compartment, but aStack might not be.
+  MOZ_MUST_USE bool StealExceptionAndStack(JS::MutableHandle<JS::Value> aVal,
+                                           JS::MutableHandle<JSObject*> aStack);
+
   // Peek the current exception from the JS engine, without stealing it.
   // Callers must ensure that HasException() is true, and that cx() is in a
   // non-null compartment.
