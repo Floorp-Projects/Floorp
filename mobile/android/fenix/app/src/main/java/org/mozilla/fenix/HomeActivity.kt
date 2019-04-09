@@ -6,6 +6,7 @@ package org.mozilla.fenix
 
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.preference.PreferenceManager
 import android.util.AttributeSet
@@ -43,7 +44,14 @@ open class HomeActivity : AppCompatActivity() {
     val themeManager = DefaultThemeManager().also {
         it.onThemeChange = { theme ->
             setTheme(theme)
-            recreate()
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
+                // Older versions of android do not support window animation style, so we use a transition instead
+                finish()
+                overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+                startActivity(intent)
+            } else {
+                recreate()
+            }
         }
     }
 
