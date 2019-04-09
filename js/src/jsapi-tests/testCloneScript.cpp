@@ -53,8 +53,9 @@ BEGIN_TEST(test_cloneScript) {
 
     JS::RootedFunction fun(cx);
     JS::RootedObjectVector emptyScopeChain(cx);
-    CHECK(JS::CompileFunction(cx, emptyScopeChain, options, "f", 0, nullptr,
-                              srcBuf, &fun));
+    fun = JS::CompileFunction(cx, emptyScopeChain, options, "f", 0, nullptr,
+                              srcBuf);
+    CHECK(fun);
     CHECK(obj = JS_GetFunctionObject(fun));
   }
 
@@ -128,9 +129,8 @@ BEGIN_TEST(test_cloneScriptWithPrincipals) {
 
     JS::RootedFunction fun(cx);
     JS::RootedObjectVector emptyScopeChain(cx);
-    CHECK(JS::CompileFunction(cx, emptyScopeChain, options, "f",
-                              mozilla::ArrayLength(argnames), argnames, srcBuf,
-                              &fun));
+    fun = JS::CompileFunction(cx, emptyScopeChain, options, "f",
+                              mozilla::ArrayLength(argnames), argnames, srcBuf);
     CHECK(fun);
 
     JSScript* script;

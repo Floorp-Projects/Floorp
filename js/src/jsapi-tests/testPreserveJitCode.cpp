@@ -68,8 +68,9 @@ bool testPreserveJitCode(bool preserveJitCode, unsigned remainingIonScripts) {
 
   JS::RootedFunction fun(cx);
   JS::RootedObjectVector emptyScopeChain(cx);
-  CHECK(JS::CompileFunction(cx, emptyScopeChain, options, "f", 0, nullptr,
-                            srcBuf, &fun));
+  fun = JS::CompileFunction(cx, emptyScopeChain, options, "f", 0, nullptr,
+                            srcBuf);
+  CHECK(fun);
 
   RootedValue value(cx);
   for (unsigned i = 0; i < 1500; ++i) {
