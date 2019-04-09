@@ -5,7 +5,7 @@
 #include "nsIStreamListener.idl"
 #include "nsIHttpChannel.idl"
 
-interface nsITabParent;
+interface nsIRemoteTab;
 
 %{C++
 namespace mozilla {

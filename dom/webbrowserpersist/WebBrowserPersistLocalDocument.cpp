@@ -39,7 +39,7 @@
 #include "nsIProtocolHandler.h"
 #include "nsISHEntry.h"
 #include "nsISupportsPrimitives.h"
-#include "nsITabParent.h"
+#include "nsIRemoteTab.h"
 #include "nsIURIMutator.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIWebNavigation.h"

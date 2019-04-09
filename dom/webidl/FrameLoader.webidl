@@ -5,7 +5,7 @@
  */
 
 interface LoadContext;
-interface TabParent;
+interface RemoteTab;
 interface URI;
 interface nsIDocShell;
 interface nsIPrintSettings;
@@ -21,10 +21,10 @@ interface FrameLoader {
   readonly attribute nsIDocShell? docShell;
 
   /**
-   * Get this frame loader's TabParent, if it has a remote frame.  Otherwise,
+   * Get this frame loader's RemoteTab, if it has a remote frame.  Otherwise,
    * returns null.
    */
-  readonly attribute TabParent? tabParent;
+  readonly attribute RemoteTab? remoteTab;
 
   /**
    * Get an nsILoadContext for the top-level docshell. For remote
@@ -149,8 +149,8 @@ interface FrameLoader {
 
 
   /**
-   * Cached childID of the ContentParent owning the TabParent in this frame
-   * loader. This can be used to obtain the childID after the TabParent died.
+   * Cached childID of the ContentParent owning the RemoteTab in this frame
+   * loader. This can be used to obtain the childID after the RemoteTab died.
    */
   [Pure]
   readonly attribute unsigned long long childID;

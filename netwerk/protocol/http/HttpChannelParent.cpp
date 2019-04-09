@@ -294,7 +294,7 @@ NS_IMETHODIMP
 HttpChannelParent::GetInterface(const nsIID& aIID, void** result) {
   if (aIID.Equals(NS_GET_IID(nsIAuthPromptProvider)) ||
       aIID.Equals(NS_GET_IID(nsISecureBrowserUI)) ||
-      aIID.Equals(NS_GET_IID(nsITabParent))) {
+      aIID.Equals(NS_GET_IID(nsIRemoteTab))) {
     if (mTabParent) {
       return mTabParent->QueryInterface(aIID, result);
     }

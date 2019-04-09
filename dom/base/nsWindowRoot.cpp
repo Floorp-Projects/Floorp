@@ -302,13 +302,13 @@ JSObject* nsWindowRoot::WrapObject(JSContext* aCx,
 
 void nsWindowRoot::AddBrowser(mozilla::dom::TabParent* aBrowser) {
   nsWeakPtr weakBrowser =
-      do_GetWeakReference(static_cast<nsITabParent*>(aBrowser));
+      do_GetWeakReference(static_cast<nsIRemoteTab*>(aBrowser));
   mWeakBrowsers.PutEntry(weakBrowser);
 }
 
 void nsWindowRoot::RemoveBrowser(mozilla::dom::TabParent* aBrowser) {
   nsWeakPtr weakBrowser =
-      do_GetWeakReference(static_cast<nsITabParent*>(aBrowser));
+      do_GetWeakReference(static_cast<nsIRemoteTab*>(aBrowser));
   mWeakBrowsers.RemoveEntry(weakBrowser);
 }
 
@@ -317,7 +317,7 @@ void nsWindowRoot::EnumerateBrowsers(BrowserEnumerator aEnumFunc, void* aArg) {
   // case aEnumFunc alters mWeakBrowsers.
   nsTArray<RefPtr<TabParent>> tabParents;
   for (auto iter = mWeakBrowsers.ConstIter(); !iter.Done(); iter.Next()) {
-    nsCOMPtr<nsITabParent> tabParent(do_QueryReferent(iter.Get()->GetKey()));
+    nsCOMPtr<nsIRemoteTab> tabParent(do_QueryReferent(iter.Get()->GetKey()));
     if (TabParent* tab = TabParent::GetFrom(tabParent)) {
       tabParents.AppendElement(tab);
     }

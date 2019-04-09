@@ -17,7 +17,7 @@
 #include "nsDataHashtable.h"
 
 class nsAtom;
-class nsITabParent;
+class nsIRemoteTab;
 class nsITraceableChannel;
 
 namespace mozilla {

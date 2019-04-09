@@ -26,7 +26,7 @@
 #include "nsExceptionHandler.h"
 #include "nsFrameLoader.h"
 #include "nsIHangReport.h"
-#include "nsITabParent.h"
+#include "nsIRemoteTab.h"
 #include "nsQueryObject.h"
 #include "nsPluginHost.h"
 #include "nsThreadUtils.h"

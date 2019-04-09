@@ -36,7 +36,7 @@ class nsView;
 class AutoResetInShow;
 class AutoResetInFrameSwap;
 class nsFrameLoaderOwner;
-class nsITabParent;
+class nsIRemoteTab;
 class nsIDocShellTreeItem;
 class nsIDocShellTreeOwner;
 class nsILoadContext;
@@ -132,7 +132,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   nsDocShell* GetDocShell(mozilla::ErrorResult& aRv);
 
-  already_AddRefed<nsITabParent> GetTabParent();
+  already_AddRefed<nsIRemoteTab> GetRemoteTab();
 
   already_AddRefed<nsILoadContext> LoadContext();
 
@@ -333,7 +333,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
    * this object, which means you can't have called ShowRemoteFrame()
    * or ReallyStartLoading().
    */
-  void SetRemoteBrowser(nsITabParent* aTabParent);
+  void SetRemoteBrowser(nsIRemoteTab* aTabParent);
 
   /**
    * Stashes a detached nsIFrame on the frame loader. We do this when we're

@@ -133,7 +133,7 @@ void nsGenericHTMLFrameElement::EnsureFrameLoader() {
 }
 
 nsresult nsGenericHTMLFrameElement::CreateRemoteFrameLoader(
-    nsITabParent* aTabParent) {
+    nsIRemoteTab* aTabParent) {
   MOZ_ASSERT(!mFrameLoader);
   EnsureFrameLoader();
   NS_ENSURE_STATE(mFrameLoader);

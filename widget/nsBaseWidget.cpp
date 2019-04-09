@@ -2025,7 +2025,7 @@ void nsBaseWidget::NotifyLiveResizeStarted() {
   NotifyLiveResizeStopped();
   MOZ_ASSERT(mLiveResizeListeners.IsEmpty());
 
-  // If we can get the active tab parent for the current widget, suppress
+  // If we can get the active remote tab for the current widget, suppress
   // the displayport on it during the live resize.
   if (!mWidgetListener) {
     return;

@@ -39,7 +39,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
 #include "nsIPrompt.h"
-#include "nsITabParent.h"
+#include "nsIRemoteTab.h"
 #include "nsITabChild.h"
 #include "nsRect.h"
 #include "nsIWebBrowserChromeFocus.h"
@@ -248,7 +248,7 @@ nsDocShellTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
 
   if (aPrimary) {
     mPrimaryContentShell = aContentShell;
-    mPrimaryTabParent = nullptr;
+    mPrimaryRemoteTab = nullptr;
   }
   return NS_OK;
 }
@@ -275,7 +275,7 @@ nsDocShellTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell) {
   }
 
   nsCOMPtr<nsIDocShellTreeItem> shell;
-  if (!mPrimaryTabParent) {
+  if (!mPrimaryRemoteTab) {
     shell =
         mPrimaryContentShell ? mPrimaryContentShell : mWebBrowser->mDocShell;
   }
@@ -285,41 +285,41 @@ nsDocShellTreeOwner::GetPrimaryContentShell(nsIDocShellTreeItem** aShell) {
 }
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::TabParentAdded(nsITabParent* aTab, bool aPrimary) {
+nsDocShellTreeOwner::RemoteTabAdded(nsIRemoteTab* aTab, bool aPrimary) {
   if (mTreeOwner) {
-    return mTreeOwner->TabParentAdded(aTab, aPrimary);
+    return mTreeOwner->RemoteTabAdded(aTab, aPrimary);
   }
 
   if (aPrimary) {
-    mPrimaryTabParent = aTab;
+    mPrimaryRemoteTab = aTab;
     mPrimaryContentShell = nullptr;
-  } else if (mPrimaryTabParent == aTab) {
-    mPrimaryTabParent = nullptr;
+  } else if (mPrimaryRemoteTab == aTab) {
+    mPrimaryRemoteTab = nullptr;
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::TabParentRemoved(nsITabParent* aTab) {
+nsDocShellTreeOwner::RemoteTabRemoved(nsIRemoteTab* aTab) {
   if (mTreeOwner) {
-    return mTreeOwner->TabParentRemoved(aTab);
+    return mTreeOwner->RemoteTabRemoved(aTab);
   }
 
-  if (aTab == mPrimaryTabParent) {
-    mPrimaryTabParent = nullptr;
+  if (aTab == mPrimaryRemoteTab) {
+    mPrimaryRemoteTab = nullptr;
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocShellTreeOwner::GetPrimaryTabParent(nsITabParent** aTab) {
+nsDocShellTreeOwner::GetPrimaryRemoteTab(nsIRemoteTab** aTab) {
   if (mTreeOwner) {
-    return mTreeOwner->GetPrimaryTabParent(aTab);
+    return mTreeOwner->GetPrimaryRemoteTab(aTab);
   }
 
-  nsCOMPtr<nsITabParent> tab = mPrimaryTabParent;
+  nsCOMPtr<nsIRemoteTab> tab = mPrimaryRemoteTab;
   tab.forget(aTab);
   return NS_OK;
 }
@@ -430,7 +430,7 @@ nsDocShellTreeOwner::GetTabCount(uint32_t* aResult) {
 
 NS_IMETHODIMP
 nsDocShellTreeOwner::GetHasPrimaryContent(bool* aResult) {
-  *aResult = mPrimaryTabParent || mPrimaryContentShell;
+  *aResult = mPrimaryRemoteTab || mPrimaryContentShell;
   return NS_OK;
 }
 

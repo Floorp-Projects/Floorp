@@ -63,7 +63,7 @@ class WindowGlobalParent final : public nsISupports,
 
   // Get this actor's manager if it is not an in-process actor. Returns
   // |nullptr| if the actor has been torn down, or is in-process.
-  already_AddRefed<TabParent> GetTabParent();
+  already_AddRefed<TabParent> GetRemoteTab();
 
   void ReceiveRawMessage(const JSWindowActorMessageMeta& aMeta,
                          ipc::StructuredCloneData&& aData);
