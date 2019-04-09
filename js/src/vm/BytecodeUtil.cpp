@@ -1474,8 +1474,15 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
       break;
     }
 
-    case JOF_BIGINT:
     case JOF_DOUBLE: {
+      double d = GET_DOUBLE(pc);
+      if (!sp->jsprintf(" %lf", d)) {
+        return 0;
+      }
+      break;
+    }
+
+    case JOF_BIGINT: {
       RootedValue v(cx, script->getConst(GET_UINT32_INDEX(pc)));
       UniqueChars bytes = ToDisassemblySource(cx, v);
       if (!bytes) {
@@ -2012,8 +2019,7 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
         return write("CONSTRUCTOR");
 
       case JSOP_DOUBLE:
-        return sprinter.printf(
-            "%lf", script->getConst(GET_UINT32_INDEX(pc)).toDouble());
+        return sprinter.printf("%lf", GET_DOUBLE(pc));
 
       case JSOP_EXCEPTION:
         return write("EXCEPTION");

@@ -1967,6 +1967,9 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
       return jsop_compare(op);
 
     case JSOP_DOUBLE:
+      pushConstant(DoubleValue(GET_DOUBLE(pc)));
+      return Ok();
+
     case JSOP_BIGINT:
       pushConstant(info().getConst(pc));
       return Ok();

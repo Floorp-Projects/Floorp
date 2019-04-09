@@ -2011,6 +2011,19 @@ bool BytecodeEmitter::emitCallIncDec(UnaryNode* incDec) {
   return emitUint16Operand(JSOP_THROWMSG, JSMSG_BAD_LEFTSIDE_OF_ASS);
 }
 
+bool BytecodeEmitter::emitDouble(double d) {
+  ptrdiff_t offset;
+  if (!emitCheck(JSOP_DOUBLE, 9, &offset)) {
+    return false;
+  }
+
+  jsbytecode* code = this->code(offset);
+  code[0] = jsbytecode(JSOP_DOUBLE);
+  SET_DOUBLE(code, d);
+  updateDepth(offset);
+  return true;
+}
+
 bool BytecodeEmitter::emitNumberOp(double dval) {
   int32_t ival;
   if (NumberIsInt32(dval, &ival)) {
@@ -2045,11 +2058,7 @@ bool BytecodeEmitter::emitNumberOp(double dval) {
     return true;
   }
 
-  if (!numberList.append(DoubleValue(dval))) {
-    return false;
-  }
-
-  return emitIndex32(JSOP_DOUBLE, numberList.length() - 1);
+  return emitDouble(dval);
 }
 
 /*
