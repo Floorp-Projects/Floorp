@@ -293,6 +293,14 @@ already_AddRefed<GLContext> GLContextEGLFactory::Create(
 
   gl->MakeCurrent();
   gl->SetIsDoubleBuffered(doubleBuffered);
+
+#if defined(MOZ_WAYLAND)
+  if (surface != EGL_NO_SURFACE &&
+      !GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+    // Make eglSwapBuffers() non-blocking on wayland
+    egl->fSwapInterval(EGL_DISPLAY(), 0);
+  }
+#endif
   if (aWebRender && egl->IsANGLE()) {
     MOZ_ASSERT(doubleBuffered);
     egl->fSwapInterval(EGL_DISPLAY(), 0);
@@ -469,8 +477,17 @@ bool GLContextEGL::RenewSurface(CompositorWidget* aWidget) {
       return false;
     }
   }
-
-  return MakeCurrent(true);
+  const bool ok = MakeCurrent(true);
+  MOZ_ASSERT(ok);
+#if defined(MOZ_WAYLAND)
+  if (mSurface &&
+      !GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+    const auto* egl = gl::GLLibraryEGL::Get();
+    // Make eglSwapBuffers() non-blocking on wayland
+    egl->fSwapInterval(EGL_DISPLAY(), 0);
+  }
+#endif
+  return ok;
 }
 
 void GLContextEGL::ReleaseSurface() {
