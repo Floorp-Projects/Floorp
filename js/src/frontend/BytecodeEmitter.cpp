@@ -2019,7 +2019,7 @@ bool BytecodeEmitter::emitDouble(double d) {
 
   jsbytecode* code = this->code(offset);
   code[0] = jsbytecode(JSOP_DOUBLE);
-  SET_DOUBLE(code, d);
+  SET_INLINE_VALUE(code, DoubleValue(d));
   updateDepth(offset);
   return true;
 }

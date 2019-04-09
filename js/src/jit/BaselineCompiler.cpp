@@ -2163,7 +2163,7 @@ bool BaselineCodeGen<Handler>::emit_JSOP_RESUMEINDEX() {
 
 template <>
 bool BaselineCompilerCodeGen::emit_JSOP_DOUBLE() {
-  frame.push(DoubleValue(GET_DOUBLE(handler.pc())));
+  frame.push(GET_INLINE_VALUE(handler.pc()));
   return true;
 }
 
