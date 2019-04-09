@@ -9,7 +9,7 @@
 
 #include "gfxMatrix.h"
 #include "gfxRect.h"
-#include "SVGAnimatedNumber.h"
+#include "nsSVGNumber2.h"
 #include "SVGAnimatedNumberPair.h"
 #include "SVGFilters.h"
 #include "nsTArray.h"
@@ -65,7 +65,6 @@ class SVGFilterElement;
  *   "filter space point" = (20, 20)
  */
 class nsSVGFilterInstance {
-  typedef mozilla::SVGAnimatedNumber SVGAnimatedNumber;
   typedef mozilla::SVGAnimatedNumberPair SVGAnimatedNumberPair;
   typedef mozilla::gfx::Point3D Point3D;
   typedef mozilla::gfx::IntRect IntRect;
@@ -112,7 +111,7 @@ class nsSVGFilterInstance {
       nsTArray<RefPtr<SourceSurface>>& aInputImages, bool aInputIsTainted);
 
   float GetPrimitiveNumber(uint8_t aCtxType,
-                           const SVGAnimatedNumber* aNumber) const {
+                           const nsSVGNumber2* aNumber) const {
     return GetPrimitiveNumber(aCtxType, aNumber->GetAnimValue());
   }
   float GetPrimitiveNumber(uint8_t aCtxType,

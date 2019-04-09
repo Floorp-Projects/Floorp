@@ -12,7 +12,7 @@
 #include "nsAutoPtr.h"
 #include "nsIContentInlines.h"
 #include "SVGAnimatedEnumeration.h"
-#include "SVGAnimatedLength.h"
+#include "nsSVGLength2.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGAnimatedViewBox.h"
 #include "SVGGraphicsElement.h"
@@ -172,7 +172,7 @@ class SVGViewportElement : public SVGGraphicsElement {
   virtual float GetCurrentScale() const { return 1.0f; }
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
-  SVGAnimatedLength mLengthAttributes[4];
+  nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
   virtual LengthAttributesInfo GetLengthInfo() override;
 

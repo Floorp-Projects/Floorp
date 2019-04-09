@@ -6,14 +6,14 @@
 
 #include "SVGAttrValueWrapper.h"
 
-#include "SVGAnimatedIntegerPair.h"
-#include "SVGAnimatedLength.h"
-#include "SVGAnimatedNumberPair.h"
-#include "SVGAnimatedOrient.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
-#include "SVGAnimatedViewBox.h"
+#include "SVGAnimatedIntegerPair.h"
+#include "nsSVGLength2.h"
 #include "SVGLengthList.h"
+#include "SVGAnimatedNumberPair.h"
 #include "SVGNumberList.h"
+#include "SVGAnimatedOrient.h"
+#include "SVGAnimatedViewBox.h"
 #include "SVGPathData.h"
 #include "SVGPointList.h"
 #include "SVGStringList.h"
@@ -34,7 +34,7 @@ void SVGAttrValueWrapper::ToString(const SVGAnimatedIntegerPair* aIntegerPair,
 }
 
 /*static*/
-void SVGAttrValueWrapper::ToString(const SVGAnimatedLength* aLength,
+void SVGAttrValueWrapper::ToString(const nsSVGLength2* aLength,
                                    nsAString& aResult) {
   aLength->GetBaseValueString(aResult);
 }

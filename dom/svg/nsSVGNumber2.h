@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_SVGAnimatedNumber_h
-#define mozilla_SVGAnimatedNumber_h
+#ifndef __NS_SVGNUMBER2_H__
+#define __NS_SVGNUMBER2_H__
 
 #include "DOMSVGAnimatedNumber.h"
 #include "nsCycleCollectionParticipant.h"
@@ -24,8 +24,9 @@ class SMILValue;
 namespace dom {
 class SVGAnimationElement;
 }  // namespace dom
+}  // namespace mozilla
 
-class SVGAnimatedNumber {
+class nsSVGNumber2 {
  public:
   typedef mozilla::SMILAttr SMILAttr;
   typedef mozilla::SMILValue SMILValue;
@@ -66,13 +67,13 @@ class SVGAnimatedNumber {
 
  public:
   // DOM wrapper class for the (DOM)SVGAnimatedNumber interface where the
-  // wrapped class is SVGAnimatedNumber.
+  // wrapped class is nsSVGNumber2.
   struct DOMAnimatedNumber final : public mozilla::dom::DOMSVGAnimatedNumber {
-    DOMAnimatedNumber(SVGAnimatedNumber* aVal, SVGElement* aSVGElement)
+    DOMAnimatedNumber(nsSVGNumber2* aVal, SVGElement* aSVGElement)
         : mozilla::dom::DOMSVGAnimatedNumber(aSVGElement), mVal(aVal) {}
     virtual ~DOMAnimatedNumber();
 
-    SVGAnimatedNumber* mVal;  // kept alive because it belongs to content
+    nsSVGNumber2* mVal;  // kept alive because it belongs to content
 
     virtual float BaseVal() override { return mVal->GetBaseValue(); }
     virtual void SetBaseVal(float aValue) override {
@@ -90,13 +91,13 @@ class SVGAnimatedNumber {
 
   struct SMILNumber : public SMILAttr {
    public:
-    SMILNumber(SVGAnimatedNumber* aVal, SVGElement* aSVGElement)
+    SMILNumber(nsSVGNumber2* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    SVGAnimatedNumber* mVal;
+    nsSVGNumber2* mVal;
     SVGElement* mSVGElement;
 
     // SMILAttr methods
@@ -110,6 +111,4 @@ class SVGAnimatedNumber {
   };
 };
 
-}  // namespace mozilla
-
-#endif  //  mozilla_SVGAnimatedNumber_h
+#endif  //__NS_SVGNUMBER2_H__

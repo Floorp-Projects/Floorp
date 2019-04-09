@@ -8,7 +8,7 @@
 #define mozilla_dom_SVGImageElement_h
 
 #include "nsImageLoadingContent.h"
-#include "SVGAnimatedLength.h"
+#include "nsSVGLength2.h"
 #include "SVGAnimatedString.h"
 #include "SVGGeometryElement.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
@@ -106,7 +106,7 @@ class SVGImageElement : public SVGImageElementBase,
   nsIContent* AsContent() override { return this; }
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
-  SVGAnimatedLength mLengthAttributes[4];
+  nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;

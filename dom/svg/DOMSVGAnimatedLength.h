@@ -10,9 +10,9 @@
 #include "mozilla/Attributes.h"
 #include "SVGElement.h"
 
-namespace mozilla {
+class nsSVGLength2;
 
-class SVGAnimatedLength;
+namespace mozilla {
 
 namespace dom {
 
@@ -23,7 +23,7 @@ class DOMSVGAnimatedLength final : public nsWrapperCache {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DOMSVGAnimatedLength)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(DOMSVGAnimatedLength)
 
-  DOMSVGAnimatedLength(SVGAnimatedLength* aVal, SVGElement* aSVGElement)
+  DOMSVGAnimatedLength(nsSVGLength2* aVal, SVGElement* aSVGElement)
       : mVal(aVal), mSVGElement(aSVGElement) {}
 
   // WebIDL
@@ -36,7 +36,7 @@ class DOMSVGAnimatedLength final : public nsWrapperCache {
  protected:
   ~DOMSVGAnimatedLength();
 
-  SVGAnimatedLength* mVal;  // kept alive because it belongs to content
+  nsSVGLength2* mVal;  // kept alive because it belongs to content
   RefPtr<SVGElement> mSVGElement;
 };
 
