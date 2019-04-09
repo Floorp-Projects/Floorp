@@ -2062,6 +2062,10 @@ TabParent::GetChildToParentConversionMatrix() {
 void TabParent::SetChildToParentConversionMatrix(
     const LayoutDeviceToLayoutDeviceMatrix4x4& aMatrix) {
   mChildToParentConversionMatrix = Some(aMatrix);
+  if (mIsDestroyed) {
+    return;
+  }
+  mozilla::Unused << SendChildToParentMatrix(aMatrix.ToUnknownMatrix());
 }
 
 LayoutDeviceIntPoint TabParent::GetChildProcessOffset() {

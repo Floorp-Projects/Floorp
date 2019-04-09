@@ -32,7 +32,7 @@ include "mozilla/layers/LayersMessageUtils.h";
 
 using class IPC::Principal from "mozilla/dom/PermissionMessageUtils.h";
 using moveonly mozilla::gfx::PaintFragment from "mozilla/gfx/CrossProcessPaint.h";
-using mozilla::gfx::Matrix from "mozilla/gfx/Matrix.h";
+using mozilla::gfx::Matrix4x4 from "mozilla/gfx/Matrix.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using mozilla::LayoutDeviceIntPoint from "Units.h";
 using mozilla::LayoutDevicePoint from "Units.h";
@@ -642,6 +642,8 @@ child:
     async UpdateDimensions(DimensionInfo dimensions) compressall;
 
     async SizeModeChanged(nsSizeMode sizeMode);
+
+    async ChildToParentMatrix(Matrix4x4 aMatrix);
 
     async ParentActivated(bool aActivated);
 

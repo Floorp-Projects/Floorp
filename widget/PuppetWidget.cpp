@@ -286,6 +286,15 @@ void PuppetWidget::Invalidate(const LayoutDeviceIntRect& aRect) {
   }
 }
 
+mozilla::LayoutDeviceToLayoutDeviceMatrix4x4
+PuppetWidget::WidgetToTopLevelWidgetTransform() {
+  if (!GetOwningTabChild()) {
+    NS_WARNING("PuppetWidget without Tab does not have transform information.");
+    return mozilla::LayoutDeviceToLayoutDeviceMatrix4x4();
+  }
+  return GetOwningTabChild()->GetChildToParentConversionMatrix();
+}
+
 void PuppetWidget::InitEvent(WidgetGUIEvent& aEvent,
                              LayoutDeviceIntPoint* aPoint) {
   if (nullptr == aPoint) {

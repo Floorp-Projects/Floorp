@@ -1216,6 +1216,13 @@ mozilla::ipc::IPCResult TabChild::RecvSizeModeChanged(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult TabChild::RecvChildToParentMatrix(
+    const mozilla::gfx::Matrix4x4& aMatrix) {
+  mChildToParentConversionMatrix =
+      Some(LayoutDeviceToLayoutDeviceMatrix4x4::FromUnknownMatrix(aMatrix));
+  return IPC_OK();
+}
+
 bool TabChild::UpdateFrame(const RepaintRequest& aRequest) {
   return TabChildBase::UpdateFrameHandler(aRequest);
 }
@@ -1454,6 +1461,14 @@ void TabChild::ProcessPendingCoalescedMouseDataAndDispatchEvents() {
   if (mCoalescedMouseEventFlusher) {
     mCoalescedMouseEventFlusher->RemoveObserver();
   }
+}
+
+LayoutDeviceToLayoutDeviceMatrix4x4 TabChild::GetChildToParentConversionMatrix() const {
+  if (mChildToParentConversionMatrix) {
+    return *mChildToParentConversionMatrix;
+  }
+  LayoutDevicePoint offset(GetChromeOffset());
+  return LayoutDeviceToLayoutDeviceMatrix4x4::Translation(offset);
 }
 
 void TabChild::FlushAllCoalescedMouseData() {
