@@ -58,7 +58,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
     .filter(cb => !cb.checked)[0];
   const value = uncheckedCb.value;
   uncheckedCb.click();
-  document.getElementById("device-submit-button").click();
+  document.getElementById("device-close-button").click();
 
   ok(!store.getState().devices.isModalOpen, "The device modal is closed on submit.");
 
@@ -88,7 +88,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
     .filter(cb => cb.checked && cb.value != value)[0];
   const checkedVal = checkedCb.value;
   checkedCb.click();
-  document.getElementById("device-submit-button").click();
+  document.getElementById("device-close-button").click();
 
   info("Checking that the device is removed from the user preference list.");
   preferredDevices = _loadPreferredDevices();

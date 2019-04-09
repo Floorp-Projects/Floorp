@@ -55,6 +55,7 @@ class DeviceModal extends PureComponent {
   }
 
   componentWillUnmount() {
+    this.onDeviceModalSubmit();
     window.removeEventListener("keydown", this.onKeyDown, true);
   }
 
@@ -250,13 +251,6 @@ class DeviceModal extends PureComponent {
           },
           this.renderDevices()
           ),
-          dom.button(
-            {
-              id: "device-submit-button",
-              onClick: this.onDeviceModalSubmit,
-            },
-            getStr("responsive.done")
-          )
         ),
         dom.div(
           {
