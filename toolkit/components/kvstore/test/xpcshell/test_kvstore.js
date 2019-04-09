@@ -28,6 +28,15 @@ add_task(async function getOrCreate() {
   const databaseDir = await makeDatabaseDir("getOrCreate");
   const database = await KeyValueService.getOrCreate(databaseDir, "db");
   Assert.ok(database);
+
+  // Test creating a database with a nonexistent path.
+  const nonexistentDir = OS.Path.join(OS.Constants.Path.profileDir, "nonexistent");
+  await Assert.rejects(KeyValueService.getOrCreate(nonexistentDir, "db"), /DirectoryDoesNotExistError/);
+
+  // Test creating a database with a non-normalized but fully-qualified path.
+  let nonNormalizedDir = await makeDatabaseDir("non-normalized");
+  nonNormalizedDir = OS.Path.join(nonNormalizedDir, "..", ".", "non-normalized");
+  Assert.ok(await KeyValueService.getOrCreate(nonNormalizedDir, "db"));
 });
 
 add_task(async function putGetHasDelete() {
