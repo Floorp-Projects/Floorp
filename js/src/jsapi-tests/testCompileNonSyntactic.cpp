@@ -69,31 +69,37 @@ bool testCompile(bool nonSyntactic) {
 
   // Check explicit non-syntactic compilation first to make sure it doesn't
   // modify our options object.
-  CHECK(CompileForNonSyntacticScope(cx, options, buf, &script));
+  script = CompileForNonSyntacticScope(cx, options, buf);
+  CHECK(script);
   CHECK_EQUAL(script->hasNonSyntacticScope(), true);
 
-  CHECK(CompileUtf8ForNonSyntacticScope(cx, options, src, length, &script));
+  script = CompileUtf8ForNonSyntacticScope(cx, options, src, length);
+  CHECK(script);
   CHECK_EQUAL(script->hasNonSyntacticScope(), true);
 
   {
     JS::SourceText<char16_t> srcBuf;
     CHECK(srcBuf.init(cx, src_16, length, JS::SourceOwnership::Borrowed));
 
-    CHECK(CompileForNonSyntacticScope(cx, options, srcBuf, &script));
+    script = CompileForNonSyntacticScope(cx, options, srcBuf);
+    CHECK(script);
     CHECK_EQUAL(script->hasNonSyntacticScope(), true);
   }
 
-  CHECK(Compile(cx, options, buf, &script));
+  script = Compile(cx, options, buf);
+  CHECK(script);
   CHECK_EQUAL(script->hasNonSyntacticScope(), nonSyntactic);
 
-  CHECK(CompileUtf8(cx, options, src, length, &script));
+  script = CompileUtf8(cx, options, src, length);
+  CHECK(script);
   CHECK_EQUAL(script->hasNonSyntacticScope(), nonSyntactic);
 
   {
     JS::SourceText<char16_t> srcBuf;
     CHECK(srcBuf.init(cx, src_16, length, JS::SourceOwnership::Borrowed));
 
-    CHECK(Compile(cx, options, srcBuf, &script));
+    script = Compile(cx, options, srcBuf);
+    CHECK(script);
     CHECK_EQUAL(script->hasNonSyntacticScope(), nonSyntactic);
   }
 
