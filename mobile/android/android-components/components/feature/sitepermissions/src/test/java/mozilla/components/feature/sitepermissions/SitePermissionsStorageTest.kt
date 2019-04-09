@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.sitepermissions
 
+import android.arch.paging.DataSource
 import android.arch.persistence.db.SupportSQLiteOpenHelper
 import android.arch.persistence.room.DatabaseConfiguration
 import android.arch.persistence.room.InvalidationTracker
@@ -94,6 +95,28 @@ class SitePermissionsStorageTest {
         storage.remove(sitePermissions)
 
         verify(mockDAO).deleteSitePermissions(any())
+    }
+
+    @Test
+    fun `remove all SitePermissions`() {
+        storage.removeAll()
+
+        verify(mockDAO).deleteAllSitePermissions()
+    }
+
+    @Test
+    fun `get all SitePermissions paged`() {
+        val mockDataSource: DataSource<Int, SitePermissionsEntity> = mock()
+
+        doReturn(object : DataSource.Factory<Int, SitePermissionsEntity>() {
+            override fun create(): DataSource<Int, SitePermissionsEntity> {
+                return mockDataSource
+            }
+        }).`when`(mockDAO).getSitePermissionsPaged()
+
+        storage.getSitePermissionsPaged()
+
+        verify(mockDAO).getSitePermissionsPaged()
     }
 
     private fun createNewSitePermission(): SitePermissions {

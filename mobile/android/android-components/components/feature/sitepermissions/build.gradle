@@ -46,6 +46,10 @@ dependencies {
 
     implementation Dependencies.room_runtime
     kapt Dependencies.room_compiler
+    implementation Dependencies.arch_paging
+
+    implementation Dependencies.arch_lifecycle
+    kapt Dependencies.arch_lifecycl_compiler
 
     implementation Dependencies.kotlin_coroutines
 

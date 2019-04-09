@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.sitepermissions.db
 
+import android.arch.paging.DataSource
 import android.arch.persistence.room.Dao
 import android.arch.persistence.room.Delete
 import android.arch.persistence.room.Insert
@@ -30,4 +31,10 @@ internal interface SitePermissionsDao {
 
     @Delete
     fun deleteSitePermissions(entity: SitePermissionsEntity)
+
+    @Query("DELETE FROM site_permissions")
+    fun deleteAllSitePermissions()
+
+    @Query("SELECT * FROM site_permissions ORDER BY saved_at DESC")
+    fun getSitePermissionsPaged(): DataSource.Factory<Int, SitePermissionsEntity>
 }

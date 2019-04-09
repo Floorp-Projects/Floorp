@@ -14,6 +14,7 @@ import mozilla.components.support.ktx.kotlin.toUri
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -44,6 +45,23 @@ class SitePermissionsDaoTest {
 
         assertEquals(origin, siteFromDb.origin)
         assertEquals(BLOCKED, siteFromDb.camera)
+    }
+
+    @Test
+    fun testRemoveAllSitePermissions() {
+        for (index in 1..4) {
+            val origin = insertMockSitePermissions("https://www.mozilla$index.org")
+
+            val sitePermissionFromDb = dao.getSitePermissionsBy(origin)
+
+            assertEquals(origin, sitePermissionFromDb!!.origin)
+        }
+
+        dao.deleteAllSitePermissions()
+
+        val isEmpty = dao.getSitePermissions().isEmpty()
+
+        assertTrue(isEmpty)
     }
 
     @Test

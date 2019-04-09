@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.sitepermissions
 
+import android.arch.paging.DataSource
 import android.content.Context
 import android.support.annotation.VisibleForTesting
 import mozilla.components.feature.sitepermissions.SitePermissions.Status
@@ -67,6 +68,24 @@ class SitePermissionsStorage(
     }
 
     /**
+     * Returns all saved [SitePermissions] instances as a [DataSource.Factory].
+     *
+     * A consuming app can transform the data source into a `LiveData<PagedList>` of when using RxJava2 into a
+     * `Flowable<PagedList>` or `Observable<PagedList>`, that can be observed.
+     *
+     * - https://developer.android.com/topic/libraries/architecture/paging/data
+     * - https://developer.android.com/topic/libraries/architecture/paging/ui
+     */
+    fun getSitePermissionsPaged(): DataSource.Factory<Int, SitePermissions> {
+        return database
+            .sitePermissionsDao()
+            .getSitePermissionsPaged()
+            .map { entity ->
+                entity.toSitePermission()
+            }
+    }
+
+    /**
      * Finds all SitePermissions grouped by [Permission].
      * @return a map of site grouped by [Permission].
      */
@@ -97,6 +116,15 @@ class SitePermissionsStorage(
             .deleteSitePermissions(
                 sitePermissions.toSitePermissionsEntity()
             )
+    }
+
+    /**
+     * Deletes all sitePermissions sitePermissions.
+     */
+    fun removeAll() {
+        return database
+            .sitePermissionsDao()
+            .deleteAllSitePermissions()
     }
 
     private fun all(): List<SitePermissions> {
