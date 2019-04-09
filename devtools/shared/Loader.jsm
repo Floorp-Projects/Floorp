@@ -59,6 +59,7 @@ BuiltinProvider.prototype = {
     this.loader = new Loader({
       paths,
       invisibleToDebugger: this.invisibleToDebugger,
+      freshCompartment: this.freshCompartment,
       sharedGlobal: true,
       sandboxName: "DevTools (Module loader)",
       requireHook: (id, require) => {
@@ -152,6 +153,7 @@ DevToolsLoader.prototype = {
 
     // Pass through internal loader settings specific to this loader instance
     this._provider.invisibleToDebugger = this.invisibleToDebugger;
+    this._provider.freshCompartment = this.freshCompartment;
 
     this._provider.load();
     this.require = Require(this._provider.loader, { id: "devtools" });
