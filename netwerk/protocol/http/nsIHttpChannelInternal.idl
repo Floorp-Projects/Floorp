@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+#include "nsILoadInfo.idl"
 
 %{C++
 #include "nsStringFwd.h"
@@ -14,7 +15,7 @@ class TimeStamp;
 }
 %}
 [ptr] native StringArray(nsTArray<nsCString>);
-[ref] native StringArrayRef(const nsTArray<nsCString>);
+[ref] native CStringArrayRef(const nsTArray<nsCString>);
 [ref] native securityMessagesArray(nsCOMArray<nsISecurityConsoleMessage>);
 
 native TimeStamp(mozilla::TimeStamp);
@@ -323,7 +324,7 @@ interface nsIHttpChannelInternal : nsISupports
      * the CORS preflight parameters.
      */
     [noscript, notxpcom, nostdcall]
-    void setCorsPreflightParameters(in StringArrayRef unsafeHeaders);
+    void setCorsPreflightParameters(in CStringArrayRef unsafeHeaders);
 
     [noscript, notxpcom, nostdcall]
     void setAltDataForChild(in boolean aIsForChild);
@@ -377,4 +378,7 @@ interface nsIHttpChannelInternal : nsISupports
      */
     [noscript, notxpcom, nostdcall]
     void setIPv6Disabled();
+
+    [noscript]
+    nsILoadInfo_CrossOriginOpenerPolicy getCrossOriginOpenerPolicy();
 };

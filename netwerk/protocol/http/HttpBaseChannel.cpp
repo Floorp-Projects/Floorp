@@ -4564,5 +4564,59 @@ void HttpBaseChannel::SetIPv4Disabled() { mCaps |= NS_HTTP_DISABLE_IPV4; }
 
 void HttpBaseChannel::SetIPv6Disabled() { mCaps |= NS_HTTP_DISABLE_IPV6; }
 
+NS_IMETHODIMP HttpBaseChannel::GetCrossOriginOpenerPolicy(
+    nsILoadInfo::CrossOriginOpenerPolicy* aPolicy) {
+  if (!mResponseHead) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  nsAutoCString openerPolicy;
+  Unused << mResponseHead->GetHeader(nsHttp::Cross_Origin_Opener_Policy,
+                                     openerPolicy);
+
+  // Cross-Origin-Opener-Policy = sameness [ RWS outgoing ]
+  // sameness = %s"same-origin" / %s"same-site" ; case-sensitive
+  // outgoing = %s"unsafe-allow-outgoing" ; case-sensitive
+
+  Tokenizer t(openerPolicy);
+  nsAutoCString sameness;
+  nsAutoCString outgoing;
+
+  // The return value will be true if we find any whitespace. If there is
+  // whitespace, then it must be followed by "unsafe-allow-outgoing" otherwise
+  // this is a malformed header value.
+  bool allowOutgoing = t.ReadUntil(Tokenizer::Token::Whitespace(), sameness);
+  if (allowOutgoing) {
+    t.SkipWhites();
+    bool foundEOF = t.ReadUntil(Tokenizer::Token::EndOfFile(), outgoing);
+    if (!foundEOF) {
+      // Malformed response. There should be no text after the second token.
+      *aPolicy = nsILoadInfo::OPENER_POLICY_NULL;
+      return NS_OK;
+    }
+    if (!outgoing.EqualsLiteral("unsafe-allow-outgoing")) {
+      // Malformed response. Only one allowed value for the second token.
+      *aPolicy = nsILoadInfo::OPENER_POLICY_NULL;
+      return NS_OK;
+    }
+  }
+
+  nsILoadInfo::CrossOriginOpenerPolicy policy = nsILoadInfo::OPENER_POLICY_NULL;
+  if (sameness.EqualsLiteral("same-origin")) {
+    policy = nsILoadInfo::OPENER_POLICY_SAME_ORIGIN;
+    if (allowOutgoing) {
+      policy = nsILoadInfo::OPENER_POLICY_SAME_ORIGIN_ALLOW_OUTGOING;
+    }
+  } else if (sameness.EqualsLiteral("same-site")) {
+    policy = nsILoadInfo::OPENER_POLICY_SAME_SITE;
+    if (allowOutgoing) {
+      policy = nsILoadInfo::OPENER_POLICY_SAME_SITE_ALLOW_OUTGOING;
+    }
+  }
+
+  *aPolicy = policy;
+  return NS_OK;
+}
+
 }  // namespace net
 }  // namespace mozilla

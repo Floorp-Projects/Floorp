@@ -17,6 +17,7 @@
 MOZ_BC_FIELD_RACY(Name, nsString)
 MOZ_BC_FIELD_RACY(Closed, bool)
 MOZ_BC_FIELD(CrossOriginPolicy, nsILoadInfo::CrossOriginPolicy)
+MOZ_BC_FIELD(OpenerPolicy, nsILoadInfo::CrossOriginOpenerPolicy)
 
 // The current opener for this BrowsingContext. This is a weak reference, and
 // stored as the opener ID.

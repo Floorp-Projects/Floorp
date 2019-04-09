@@ -21,7 +21,6 @@ using RequestHeaderTuples from "mozilla/net/PHttpChannelParams.h";
 using struct nsHttpAtom from "nsHttp.h";
 using class mozilla::net::nsHttpResponseHead from "nsHttpResponseHead.h";
 using class mozilla::TimeStamp from "mozilla/TimeStamp.h";
-using nsILoadInfo::CrossOriginOpenerPolicy from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace net {
@@ -141,7 +140,6 @@ struct LoadInfoArgs
   bool                        documentHasLoaded;
   nsString                    cspNonce;
   bool                        isFromProcessingFrameAttributes;
-  CrossOriginOpenerPolicy     openerPolicy;
 
   CookieSettingsArgs cookieSettings;
 };
@@ -174,8 +172,6 @@ struct ParentLoadInfoForwarderArgs
 
   bool documentHasUserInteracted;
   bool documentHasLoaded;
-
-  CrossOriginOpenerPolicy openerPolicy;
 
   CookieSettingsArgs? cookieSettings;
 
