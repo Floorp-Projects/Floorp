@@ -11,9 +11,11 @@ transforms:
 kind-dependencies:
    - build-signing
    - google-play-strings
+   - push-apk-checks
 
 jobs:
    push-apk/opt:
+      label: 'push-apk/opt'
       description: Publishes APK onto Google Play Store
       attributes:
          build_platform: android-nightly
@@ -53,5 +55,4 @@ jobs:
          platform: Android/opt
          tier: 2
          kind: other
-      run-on-projects: ['mozilla-central', 'mozilla-beta', 'mozilla-release', 'maple']
-      deadline-after: 5 days
+      run-on-projects: ['mozilla-central', 'mozilla-beta', 'mozilla-release']

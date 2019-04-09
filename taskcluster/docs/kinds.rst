@@ -243,6 +243,10 @@ PushApk publishes Android packages onto Google Play Store. Jobs of this kind tak
 all the signed multi-locales (aka "multi") APKs for a given release and upload them
 all at once.
 
+push-apk-checks
+---------------
+Runs the checks done in push-apk to ensure APKs are sane before submitting them
+
 release-balrog-submit-toplevel
 ------------------------------
 Toplevel tasks are responsible for submitting metadata to Balrog that is not specific to any
