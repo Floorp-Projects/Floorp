@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_SVGFEDistantLightElement_h
 #define mozilla_dom_SVGFEDistantLightElement_h
 
+#include "SVGAnimatedNumber.h"
 #include "SVGFilters.h"
-#include "nsSVGNumber2.h"
 
 nsresult NS_NewSVGFEDistantLightElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -47,7 +47,7 @@ class SVGFEDistantLightElement : public SVGFEDistantLightElementBase {
   virtual NumberAttributesInfo GetNumberInfo() override;
 
   enum { AZIMUTH, ELEVATION };
-  nsSVGNumber2 mNumberAttributes[2];
+  SVGAnimatedNumber mNumberAttributes[2];
   static NumberInfo sNumberInfo[2];
 };
 

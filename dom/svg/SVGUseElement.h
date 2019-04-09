@@ -13,7 +13,7 @@
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 #include "nsStubMutationObserver.h"
-#include "nsSVGLength2.h"
+#include "SVGAnimatedLength.h"
 #include "SVGAnimatedString.h"
 #include "nsTArray.h"
 
@@ -140,7 +140,7 @@ class SVGUseElement final : public SVGUseElementBase,
   void UnlinkSource();
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
-  nsSVGLength2 mLengthAttributes[4];
+  SVGAnimatedLength mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
   enum { HREF, XLINK_HREF };

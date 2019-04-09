@@ -8,7 +8,7 @@
 #define mozilla_dom_SVGTextPathElement_h
 
 #include "SVGAnimatedEnumeration.h"
-#include "nsSVGLength2.h"
+#include "SVGAnimatedLength.h"
 #include "SVGAnimatedPathSegList.h"
 #include "SVGAnimatedString.h"
 #include "mozilla/dom/SVGTextContentElement.h"
@@ -65,8 +65,8 @@ class SVGTextPathElement final : public SVGTextPathElementBase {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { /* TEXTLENGTH, */ STARTOFFSET = 1 };
-  nsSVGLength2 mLengthAttributes[2];
-  virtual nsSVGLength2* LengthAttributes() override {
+  SVGAnimatedLength mLengthAttributes[2];
+  virtual SVGAnimatedLength* LengthAttributes() override {
     return mLengthAttributes;
   }
   static LengthInfo sLengthInfo[2];
