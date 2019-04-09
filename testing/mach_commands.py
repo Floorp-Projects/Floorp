@@ -205,6 +205,7 @@ class AddTest(MachCommandBase):
         return guessed_suite, err
 
 
+@CommandProvider
 class Test(MachCommandBase):
     @Command('test', category='testing',
              description='Run tests (detects the kind of test and runs it).',
