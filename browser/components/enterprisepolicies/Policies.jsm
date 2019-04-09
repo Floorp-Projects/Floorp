@@ -779,7 +779,11 @@ var Policies = {
 
   "RequestedLocales": {
     onBeforeAddons(manager, param) {
-      Services.locale.requestedLocales = param;
+      if (Array.isArray(param)) {
+        Services.locale.requestedLocales = param;
+      } else {
+        Services.locale.requestedLocales = param.split(",");
+      }
     },
   },
 
