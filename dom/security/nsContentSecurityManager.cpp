@@ -26,7 +26,6 @@
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/Components.h"
 #include "mozilla/Logging.h"
-#include "xpcpublic.h"
 
 NS_IMPL_ISUPPORTS(nsContentSecurityManager, nsIContentSecurityManager,
                   nsIChannelEventSink)
@@ -751,47 +750,6 @@ static void DebugDoContentSecurityCheck(nsIChannel* aChannel,
   }
 }
 
-#if defined(DEBUG) || defined(FUZZING)
-// Assert that we never use the SystemPrincipal to load remote documents
-// i.e., HTTP, HTTPS, FTP URLs
-static void AssertSystemPrincipalMustNotLoadRemoteDocuments(
-    nsIChannel* aChannel) {
-  nsCOMPtr<nsILoadInfo> loadInfo;
-  aChannel->GetLoadInfo((getter_AddRefs(loadInfo)));
-
-  // bail out, if we're not loading with a SystemPrincipal
-  if (!nsContentUtils::IsSystemPrincipal(loadInfo->LoadingPrincipal())) {
-    return;
-  }
-  nsContentPolicyType contentPolicyType =
-      loadInfo->GetExternalContentPolicyType();
-  if ((contentPolicyType != nsIContentPolicy::TYPE_DOCUMENT) &&
-      (contentPolicyType != nsIContentPolicy::TYPE_SUBDOCUMENT)) {
-    return;
-  }
-  nsCOMPtr<nsIURI> finalURI;
-  NS_GetFinalChannelURI(aChannel, getter_AddRefs(finalURI));
-  // bail out, if URL isn't pointing to remote resource
-  if (!nsContentUtils::SchemeIs(finalURI, "http") &&
-      !nsContentUtils::SchemeIs(finalURI, "https") &&
-      !nsContentUtils::SchemeIs(finalURI, "ftp")) {
-    return;
-  }
-  if (xpc::IsInAutomation()) {
-    bool disallowSystemPrincipalRemoteDocuments = Preferences::GetBool(
-        "security.disallow_non_local_systemprincipal_in_tests");
-    if (disallowSystemPrincipalRemoteDocuments) {
-      // our own mochitest needs NS_ASSERTION instead of MOZ_ASSERT
-      NS_ASSERTION(false, "SystemPrincipal must not load remote documents.");
-      return;
-    }
-    // but other mochitest are exempt from this
-    return;
-  }
-  MOZ_ASSERT(false, "SystemPrincipal must not load remote documents.");
-}
-#endif
-
 /*
  * Based on the security flags provided in the loadInfo of the channel,
  * doContentSecurityCheck() performs the following content security checks
@@ -817,10 +775,6 @@ nsresult nsContentSecurityManager::doContentSecurityCheck(
   if (MOZ_UNLIKELY(MOZ_LOG_TEST(sCSMLog, LogLevel::Debug))) {
     DebugDoContentSecurityCheck(aChannel, loadInfo);
   }
-
-#if defined(DEBUG) || defined(FUZZING)
-  AssertSystemPrincipalMustNotLoadRemoteDocuments(aChannel);
-#endif
 
   // if dealing with a redirected channel then we have already installed
   // streamlistener and redirect proxies and so we are done.
