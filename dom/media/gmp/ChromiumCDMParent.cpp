@@ -61,7 +61,6 @@ RefPtr<ChromiumCDMParent::InitPromise> ChromiumCDMParent::Init(
                                     !aMainThread ? "true" : "false")),
         __func__);
   }
-  mCDMCallback = aCDMCallback;
 
   RefPtr<ChromiumCDMParent::InitPromise> promise =
       mInitPromise.Ensure(__func__);
@@ -69,7 +68,7 @@ RefPtr<ChromiumCDMParent::InitPromise> ChromiumCDMParent::Init(
   SendInit(aAllowDistinctiveIdentifier, aAllowPersistentState)
       ->Then(
           AbstractThread::GetCurrent(), __func__,
-          [self](bool aSuccess) {
+          [self, aCDMCallback](bool aSuccess) {
             if (!aSuccess) {
               GMP_LOG(
                   "ChromiumCDMParent::Init() failed with callback from "
@@ -83,6 +82,7 @@ RefPtr<ChromiumCDMParent::InitPromise> ChromiumCDMParent::Init(
             }
             GMP_LOG(
                 "ChromiumCDMParent::Init() succeeded with callback from child");
+            self->mCDMCallback = aCDMCallback;
             self->mInitPromise.ResolveIfExists(true /* unused */, __func__);
           },
           [self](ResponseRejectReason&& aReason) {
