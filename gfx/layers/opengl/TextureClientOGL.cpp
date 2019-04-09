@@ -32,24 +32,20 @@ class CompositableForwarder;
 
 already_AddRefed<TextureClient> AndroidSurfaceTextureData::CreateTextureClient(
     AndroidSurfaceTextureHandle aHandle, gfx::IntSize aSize, bool aContinuous,
-    gl::OriginPos aOriginPos, bool aHasAlpha, LayersIPCChannel* aAllocator,
+    gl::OriginPos aOriginPos, LayersIPCChannel* aAllocator,
     TextureFlags aFlags) {
   if (aOriginPos == gl::OriginPos::BottomLeft) {
     aFlags |= TextureFlags::ORIGIN_BOTTOM_LEFT;
   }
 
   return TextureClient::CreateWithData(
-      new AndroidSurfaceTextureData(aHandle, aSize, aContinuous, aHasAlpha),
-      aFlags, aAllocator);
+      new AndroidSurfaceTextureData(aHandle, aSize, aContinuous), aFlags,
+      aAllocator);
 }
 
 AndroidSurfaceTextureData::AndroidSurfaceTextureData(
-    AndroidSurfaceTextureHandle aHandle, gfx::IntSize aSize, bool aContinuous,
-    bool aHasAlpha)
-    : mHandle(aHandle),
-      mSize(aSize),
-      mContinuous(aContinuous),
-      mHasAlpha(aHasAlpha) {
+    AndroidSurfaceTextureHandle aHandle, gfx::IntSize aSize, bool aContinuous)
+    : mHandle(aHandle), mSize(aSize), mContinuous(aContinuous) {
   MOZ_ASSERT(mHandle);
 }
 
@@ -66,9 +62,8 @@ void AndroidSurfaceTextureData::FillInfo(TextureData::Info& aInfo) const {
 
 bool AndroidSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   aOutDescriptor = SurfaceTextureDescriptor(
-      mHandle, mSize,
-      mHasAlpha ? gfx::SurfaceFormat::R8G8B8A8 : gfx::SurfaceFormat::R8G8B8X8,
-      mContinuous, false /* do not ignore transform */);
+      mHandle, mSize, gfx::SurfaceFormat::R8G8B8A8, mContinuous,
+      false /* do not ignore transform */);
   return true;
 }
 

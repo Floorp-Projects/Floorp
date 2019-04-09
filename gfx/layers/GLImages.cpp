@@ -75,14 +75,12 @@ already_AddRefed<gfx::SourceSurface> GLImage::GetAsSourceSurface() {
 SurfaceTextureImage::SurfaceTextureImage(AndroidSurfaceTextureHandle aHandle,
                                          const gfx::IntSize& aSize,
                                          bool aContinuous,
-                                         gl::OriginPos aOriginPos,
-                                         bool aHasAlpha /* = true */)
+                                         gl::OriginPos aOriginPos)
     : GLImage(ImageFormat::SURFACE_TEXTURE),
       mHandle(aHandle),
       mSize(aSize),
       mContinuous(aContinuous),
-      mOriginPos(aOriginPos),
-      mHasAlpha(aHasAlpha) {
+      mOriginPos(aOriginPos) {
   MOZ_ASSERT(mHandle);
 }
 #endif

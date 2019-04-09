@@ -282,7 +282,7 @@ class RemoteVideoDecoder : public RemoteDataDecoder {
     if (ok && (size > 0 || presentationTimeUs >= 0)) {
       RefPtr<layers::Image> img = new SurfaceTextureImage(
           mSurfaceHandle, inputInfo.mImageSize, false /* NOT continuous */,
-          gl::OriginPos::BottomLeft, mConfig.HasAlpha());
+          gl::OriginPos::BottomLeft);
 
       RefPtr<VideoData> v = VideoData::CreateFromImage(
           inputInfo.mDisplaySize, offset,
