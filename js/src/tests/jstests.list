@@ -723,3 +723,10 @@ skip script test262/intl402/fallback-locales-are-supported.js
 # "zh-hak-CN" no longer allowed, because it contains an extlang subtag.
 skip script test262/intl402/language-tags-canonicalized.js
 skip script test262/intl402/Intl/getCanonicalLocales/canonicalized-tags.js
+
+# Irregular grandfathered tags no longer allowed: "i-klingon"
+skip script test262/intl402/language-tags-valid.js
+
+# Irregular grandfathered tags no longer allowed: "en-GB-oed"
+skip script test262/intl402/Intl/getCanonicalLocales/preferred-grandfathered.js
+skip script test262/intl402/RelativeTimeFormat/constructor/constructor/locales-valid.js
