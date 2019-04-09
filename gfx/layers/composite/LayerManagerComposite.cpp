@@ -215,80 +215,6 @@ void LayerManagerComposite::BeginTransactionWithDrawTarget(
   mTargetBounds = aRect;
 }
 
-template <typename Units>
-static IntRectTyped<Units> TransformRect(const IntRectTyped<Units>& aRect,
-                                         const Matrix& aTransform,
-                                         bool aRoundIn = false) {
-  if (aRect.IsEmpty()) {
-    return IntRectTyped<Units>();
-  }
-
-  Rect rect(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
-  rect = aTransform.TransformBounds(rect);
-  if (aRoundIn) {
-    MOZ_ASSERT(aTransform.PreservesAxisAlignedRectangles());
-    rect.RoundIn();
-  } else {
-    rect.RoundOut();
-  }
-
-  IntRect intRect;
-  if (!rect.ToIntRect(&intRect)) {
-    intRect = IntRect::MaxIntRect();
-  }
-
-  return ViewAs<Units>(intRect);
-}
-
-template <typename Units>
-static IntRectTyped<Units> TransformRect(const IntRectTyped<Units>& aRect,
-                                         const Matrix4x4& aTransform,
-                                         bool aRoundIn = false) {
-  if (aRect.IsEmpty()) {
-    return IntRectTyped<Units>();
-  }
-
-  Rect rect(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
-  rect = aTransform.TransformAndClipBounds(rect, Rect::MaxIntRect());
-  if (aRoundIn) {
-    rect.RoundIn();
-  } else {
-    rect.RoundOut();
-  }
-
-  IntRect intRect;
-  if (!rect.ToIntRect(&intRect)) {
-    intRect = IntRect::MaxIntRect();
-  }
-
-  return ViewAs<Units>(intRect);
-}
-
-template <typename Units, typename MatrixType>
-static IntRectTyped<Units> TransformRectRoundIn(
-    const IntRectTyped<Units>& aRect, const MatrixType& aTransform) {
-  return TransformRect(aRect, aTransform, true);
-}
-
-template <typename Units, typename MatrixType>
-static void AddTransformedRegion(IntRegionTyped<Units>& aDest,
-                                 const IntRegionTyped<Units>& aSource,
-                                 const MatrixType& aTransform) {
-  for (auto iter = aSource.RectIter(); !iter.Done(); iter.Next()) {
-    aDest.Or(aDest, TransformRect(iter.Get(), aTransform));
-  }
-  aDest.SimplifyOutward(20);
-}
-
-template <typename Units, typename MatrixType>
-static void AddTransformedRegionRoundIn(IntRegionTyped<Units>& aDest,
-                                        const IntRegionTyped<Units>& aSource,
-                                        const MatrixType& aTransform) {
-  for (auto iter = aSource.RectIter(); !iter.Done(); iter.Next()) {
-    aDest.Or(aDest, TransformRectRoundIn(iter.Get(), aTransform));
-  }
-}
-
 void LayerManagerComposite::PostProcessLayers(nsIntRegion& aOpaqueRegion) {
   LayerIntRegion visible;
   LayerComposite* rootComposite =
@@ -398,16 +324,17 @@ void LayerManagerComposite::PostProcessLayers(
   // a giant layer if it is a leaf.
   Matrix4x4 transform = aLayer->GetEffectiveTransform();
   Matrix transform2d;
-  bool canTransformOpaqueRegion = false;
+  Maybe<IntPoint> integerTranslation;
   // If aLayer has a simple transform (only an integer translation) then we
   // can easily convert aOpaqueRegion into pre-transform coordinates and include
   // that region.
-  if (transform.Is2D(&transform2d) &&
-      transform2d.PreservesAxisAlignedRectangles()) {
-    Matrix inverse = transform2d;
-    inverse.Invert();
-    AddTransformedRegionRoundIn(localOpaque, opaqueRegion, inverse);
-    canTransformOpaqueRegion = true;
+  if (transform.Is2D(&transform2d)) {
+    if (transform2d.IsIntegerTranslation()) {
+      integerTranslation =
+          Some(IntPoint::Truncate(transform2d.GetTranslation()));
+      localOpaque = opaqueRegion;
+      localOpaque.MoveBy(-*integerTranslation);
+    }
   }
 
   // Save the value of localOpaque, which currently stores the region obscured
@@ -467,17 +394,16 @@ void LayerManagerComposite::PostProcessLayers(
 
   // If we have a simple transform, then we can add our opaque area into
   // aOpaqueRegion.
-  if (canTransformOpaqueRegion && !aLayer->HasMaskLayers() &&
+  if (integerTranslation && !aLayer->HasMaskLayers() &&
       aLayer->IsOpaqueForVisibility()) {
     if (aLayer->IsOpaque()) {
       localOpaque.OrWith(composite->GetFullyRenderedRegion());
     }
-    nsIntRegion parentSpaceOpaque;
-    AddTransformedRegionRoundIn(parentSpaceOpaque, localOpaque, transform2d);
+    localOpaque.MoveBy(*integerTranslation);
     if (aRenderTargetClip) {
-      parentSpaceOpaque.AndWith(aRenderTargetClip->ToUnknownRect());
+      localOpaque.AndWith(aRenderTargetClip->ToUnknownRect());
     }
-    opaqueRegion.OrWith(parentSpaceOpaque);
+    opaqueRegion.OrWith(localOpaque);
   }
 }
 
@@ -1448,6 +1374,33 @@ Matrix4x4 HostLayer::GetShadowTransform() {
   }
 
   return transform;
+}
+
+static LayerIntRect TransformRect(const LayerIntRect& aRect,
+                                  const Matrix4x4& aTransform) {
+  if (aRect.IsEmpty()) {
+    return LayerIntRect();
+  }
+
+  Rect rect(aRect.X(), aRect.Y(), aRect.Width(), aRect.Height());
+  rect = aTransform.TransformAndClipBounds(rect, Rect::MaxIntRect());
+  rect.RoundOut();
+
+  IntRect intRect;
+  if (!rect.ToIntRect(&intRect)) {
+    intRect = IntRect::MaxIntRect();
+  }
+
+  return ViewAs<LayerPixel>(intRect);
+}
+
+static void AddTransformedRegion(LayerIntRegion& aDest,
+                                 const LayerIntRegion& aSource,
+                                 const Matrix4x4& aTransform) {
+  for (auto iter = aSource.RectIter(); !iter.Done(); iter.Next()) {
+    aDest.Or(aDest, TransformRect(iter.Get(), aTransform));
+  }
+  aDest.SimplifyOutward(20);
 }
 
 // Async animations can move child layers without updating our visible region.
