@@ -15,14 +15,14 @@ debugger-tests:
         command: >
             cd /builds/worker/checkouts/gecko/ &&
             npm install &&
-            cd /builds/worker/checkouts/gecko/devtools/client/debugger/new/ &&
+            cd /builds/worker/checkouts/gecko/devtools/client/debugger/ &&
             yarn &&
             yarn flow &&
             yarn test &&
             yarn lint
     when:
         files-changed:
-            - 'devtools/client/debugger/new/**'
+            - 'devtools/client/debugger/**'
 
 devtools-tests:
     description: devtools node-based tests (for instance jest)
