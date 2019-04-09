@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGRectElement_h
 #define mozilla_dom_SVGRectElement_h
 
-#include "nsSVGLength2.h"
+#include "SVGAnimatedLength.h"
 #include "SVGGeometryElement.h"
 
 nsresult NS_NewSVGRectElement(
@@ -54,7 +54,7 @@ class SVGRectElement final : public SVGRectElementBase {
   virtual LengthAttributesInfo GetLengthInfo() override;
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT, ATTR_RX, ATTR_RY };
-  nsSVGLength2 mLengthAttributes[6];
+  SVGAnimatedLength mLengthAttributes[6];
   static LengthInfo sLengthInfo[6];
 };
 

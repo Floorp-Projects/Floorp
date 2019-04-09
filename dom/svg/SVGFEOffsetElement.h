@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFEOffsetElement_h
 #define mozilla_dom_SVGFEOffsetElement_h
 
-#include "nsSVGNumber2.h"
+#include "SVGAnimatedNumber.h"
 #include "SVGAnimatedString.h"
 #include "SVGFilters.h"
 
@@ -55,7 +55,7 @@ class SVGFEOffsetElement : public SVGFEOffsetElementBase {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { DX, DY };
-  nsSVGNumber2 mNumberAttributes[2];
+  SVGAnimatedNumber mNumberAttributes[2];
   static NumberInfo sNumberInfo[2];
 
   enum { RESULT, IN1 };

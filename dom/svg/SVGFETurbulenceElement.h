@@ -9,7 +9,7 @@
 
 #include "SVGAnimatedEnumeration.h"
 #include "SVGAnimatedInteger.h"
-#include "nsSVGNumber2.h"
+#include "SVGAnimatedNumber.h"
 #include "SVGAnimatedString.h"
 #include "SVGFilters.h"
 
@@ -64,7 +64,7 @@ class SVGFETurbulenceElement : public SVGFETurbulenceElementBase {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { SEED };  // floating point seed?!
-  nsSVGNumber2 mNumberAttributes[1];
+  SVGAnimatedNumber mNumberAttributes[1];
   static NumberInfo sNumberInfo[1];
 
   enum { BASE_FREQ };

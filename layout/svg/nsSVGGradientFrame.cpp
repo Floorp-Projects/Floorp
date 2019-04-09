@@ -419,7 +419,7 @@ float nsSVGLinearGradientFrame::GetLengthValue(uint32_t aIndex) {
   // return value should also be non-null.
   MOZ_ASSERT(lengthElement,
              "Got unexpected null element from GetLinearGradientWithLength");
-  const nsSVGLength2& length = lengthElement->mLengthAttributes[aIndex];
+  const SVGAnimatedLength& length = lengthElement->mLengthAttributes[aIndex];
 
   // Object bounding box units are handled by setting the appropriate
   // transform in GetGradientTransform, but we need to handle user
@@ -441,7 +441,7 @@ nsSVGLinearGradientFrame::GetLinearGradientWithLength(
     uint32_t aIndex, dom::SVGLinearGradientElement* aDefault) {
   dom::SVGLinearGradientElement* thisElement =
       static_cast<dom::SVGLinearGradientElement*>(GetContent());
-  const nsSVGLength2& length = thisElement->mLengthAttributes[aIndex];
+  const SVGAnimatedLength& length = thisElement->mLengthAttributes[aIndex];
 
   if (length.IsExplicitlySet()) {
     return thisElement;
@@ -521,7 +521,7 @@ float nsSVGRadialGradientFrame::GetLengthValue(uint32_t aIndex,
 
 float nsSVGRadialGradientFrame::GetLengthValueFromElement(
     uint32_t aIndex, dom::SVGRadialGradientElement& aElement) {
-  const nsSVGLength2& length = aElement.mLengthAttributes[aIndex];
+  const SVGAnimatedLength& length = aElement.mLengthAttributes[aIndex];
 
   // Object bounding box units are handled by setting the appropriate
   // transform in GetGradientTransform, but we need to handle user
@@ -543,7 +543,7 @@ nsSVGRadialGradientFrame::GetRadialGradientWithLength(
     uint32_t aIndex, dom::SVGRadialGradientElement* aDefault) {
   dom::SVGRadialGradientElement* thisElement =
       static_cast<dom::SVGRadialGradientElement*>(GetContent());
-  const nsSVGLength2& length = thisElement->mLengthAttributes[aIndex];
+  const SVGAnimatedLength& length = thisElement->mLengthAttributes[aIndex];
 
   if (length.IsExplicitlySet()) {
     return thisElement;
