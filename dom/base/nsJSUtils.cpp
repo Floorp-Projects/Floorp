@@ -94,10 +94,11 @@ nsresult nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
     return NS_ERROR_FAILURE;
   }
 
-  JS::Rooted<JSFunction*> fun(cx);
-  if (!JS::CompileFunction(cx, aScopeChain, aOptions,
-                           PromiseFlatCString(aName).get(), aArgCount,
-                           aArgArray, source, &fun)) {
+  JS::Rooted<JSFunction*> fun(
+      cx, JS::CompileFunction(cx, aScopeChain, aOptions,
+                              PromiseFlatCString(aName).get(), aArgCount,
+                              aArgArray, source));
+  if (!fun) {
     return NS_ERROR_FAILURE;
   }
 

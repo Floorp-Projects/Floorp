@@ -270,12 +270,10 @@ void nsLayoutModuleDtor() {
   xpcModuleDtor();
 }
 
-static const mozilla::Module kLayoutModule = {mozilla::Module::kVersion,
+extern const mozilla::Module kLayoutModule = {mozilla::Module::kVersion,
                                               nullptr,
                                               nullptr,
                                               kLayoutCategories,
                                               nullptr,
                                               nullptr,
                                               nullptr};
-
-NSMODULE_DEFN(nsLayoutModule) = &kLayoutModule;

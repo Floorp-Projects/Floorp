@@ -57,24 +57,28 @@ function makeXhr(aUrl, aCallback) {
 }
 
 function firstCheck() {
-  is(window.performance.getEntriesByType("resource").length, 5, "The number of PerformanceResourceTiming should be 5.");
-  is(receivedBufferFullEvents, 1, "onresourcetimingbufferfull should be called once.");
-  makeXhr("test-data2.json", secondCheck);
+  SpecialPowers.executeSoon(() => {
+    is(window.performance.getEntriesByType("resource").length, 5,
+      "The number of PerformanceResourceTiming should be 5.");
+    is(receivedBufferFullEvents, 0,
+      "onresourcetimingbufferfull should not have been called yet.");
+    makeXhr("test-data2.json", secondCheck);
+	}, window);
 }
 
 function secondCheck() {
-  is(window.performance.getEntriesByType("resource").length, 5, "The number of PerformanceResourceTiming should be 5.");
-  is(receivedBufferFullEvents, 1, "onresourcetimingbufferfull should never be called since the last call.");
-  checkOrder(window.performance.getEntries(), "All PerformanceEntry");
-  checkOrder(window.performance.getEntriesByType("resource"), "PerformanceResourceTiming");
-  checkOrder(window.performance.getEntriesByType("mark"), "PerformanceMark");
-  checkOrder(window.performance.getEntriesByType("measure"), "PerformanceMeasure");
+  SpecialPowers.executeSoon(() => {
+    is(window.performance.getEntriesByType("resource").length, 5, "The number of PerformanceResourceTiming should be 5.");
+    is(receivedBufferFullEvents, 1, "onresourcetimingbufferfull should have been called since the last call.");
+    checkOrder(window.performance.getEntries(), "All PerformanceEntry");
+    checkOrder(window.performance.getEntriesByType("resource"), "PerformanceResourceTiming");
+    checkOrder(window.performance.getEntriesByType("mark"), "PerformanceMark");
+    checkOrder(window.performance.getEntriesByType("measure"), "PerformanceMeasure");
 
-  is(window.performance.getEntriesByName("http://mochi.test:8888/tests/dom/tests/mochitest/general/test-data2.json").length, 2,
-                                         "Both PerformanceMeasure and XMLHttpRequest resource should be included.");
-  checkOrder(window.performance.getEntriesByName("http://mochi.test:8888/tests/dom/tests/mochitest/general/test-data2.json"),
-                                                 "Entry with performance.getEntrieByName()");
-  window.opener.finishTests();
+    is(window.performance.getEntriesByName("http://mochi.test:8888/tests/dom/tests/mochitest/general/test-data2.json").length, 2, "Both PerformanceMeasure and XMLHttpRequest resource should be included.");
+    checkOrder(window.performance.getEntriesByName("http://mochi.test:8888/tests/dom/tests/mochitest/general/test-data2.json"), "Entry with performance.getEntrieByName()");
+    window.opener.finishTests();
+  }, window);
 }
 
 function checkOrder(entries, name) {

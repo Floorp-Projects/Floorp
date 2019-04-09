@@ -274,17 +274,6 @@ class nsSVGUtils {
   static gfxMatrix GetCanvasTM(nsIFrame* aFrame);
 
   /**
-   * Returns the transform from aFrame's user space to canvas space. Only call
-   * with SVG frames. This is like GetCanvasTM, except that it only includes
-   * the transforms from aFrame's user space (i.e. the coordinate context
-   * established by its 'transform' attribute, or else the coordinate context
-   * that its _parent_ establishes for its children) to outer-<svg> device
-   * space. Specifically, it does not include any other transforms introduced
-   * by the frame such as x/y offsets and viewBox attributes.
-   */
-  static gfxMatrix GetUserToCanvasTM(nsIFrame* aFrame);
-
-  /**
    * Notify the descendants of aFrame of a change to one of their ancestors
    * that might affect them.
    */

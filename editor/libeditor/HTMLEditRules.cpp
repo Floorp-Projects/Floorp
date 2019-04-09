@@ -21,6 +21,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Move.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/TextComposition.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/Selection.h"
@@ -337,12 +338,17 @@ nsresult HTMLEditRules::BeforeEdit(EditSubAction aEditSubAction,
     AutoSafeEditorData setData(*this, *mHTMLEditor);
 
     // Remember where our selection was before edit action took place:
-
-    // Get the selection location
-    if (!SelectionRefPtr()->RangeCount()) {
-      return NS_ERROR_UNEXPECTED;
+    if (HTMLEditorRef().GetCompositionStartPoint().IsSet()) {
+      // If there is composition string, let's remember current composition
+      // range.
+      mRangeItem->StoreRange(HTMLEditorRef().GetCompositionStartPoint(), HTMLEditorRef().GetCompositionEndPoint());
+    } else {
+      // Get the selection location
+      if (!SelectionRefPtr()->RangeCount()) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      mRangeItem->StoreRange(SelectionRefPtr()->GetRangeAt(0));
     }
-    mRangeItem->StoreRange(SelectionRefPtr()->GetRangeAt(0));
     nsCOMPtr<nsINode> selStartNode = mRangeItem->mStartContainer;
     nsCOMPtr<nsINode> selEndNode = mRangeItem->mEndContainer;
 
@@ -529,7 +535,24 @@ nsresult HTMLEditRules::AfterEditInner(EditSubAction aEditSubAction,
         aEditSubAction == EditSubAction::eInsertParagraphSeparator ||
         aEditSubAction == EditSubAction::ePasteHTMLContent ||
         aEditSubAction == EditSubAction::eInsertHTMLSource) {
-      rv = AdjustWhitespace();
+      // TODO: Temporarily, WSRunObject replaces ASCII whitespaces with NPSPs
+      //       and then, we'll replace them with ASCII whitespaces here.  We
+      //       should avoid this overwriting things as far as possible because
+      //       replacing characters in text nodes causes running mutation event
+      //       listeners which are really expensive.
+      // Adjust end of composition string if there is composition string.
+      EditorRawDOMPoint pointToAdjust(HTMLEditorRef().GetCompositionEndPoint());
+      if (!pointToAdjust.IsSet()) {
+        // Otherwise, adjust current selection start point.
+        pointToAdjust = EditorBase::GetStartPoint(*SelectionRefPtr());
+        if (NS_WARN_IF(!pointToAdjust.IsSet())) {
+          return NS_ERROR_FAILURE;
+        }
+      }
+      rv = WSRunObject(&HTMLEditorRef(), pointToAdjust).AdjustWhitespace();
+      if (NS_WARN_IF(!CanHandleEditAction())) {
+        return NS_ERROR_EDITOR_DESTROYED;
+      }
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -1331,21 +1354,19 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
   }
 
   if (aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
-    // Right now the WSRunObject code bails on empty strings, but IME needs
-    // the InsertTextWithTransaction() call to still happen since empty strings
-    // are meaningful there.
-    // If there is one or more IME selections, its minimum offset should be
-    // the insertion point.
-    int32_t IMESelectionOffset = HTMLEditorRef().GetIMESelectionStartOffsetIn(
-        pointToInsert.GetContainer());
-    if (IMESelectionOffset >= 0) {
-      pointToInsert.Set(pointToInsert.GetContainer(), IMESelectionOffset);
+    EditorRawDOMPoint compositionStartPoint =
+        HTMLEditorRef().GetCompositionStartPoint();
+    if (!compositionStartPoint.IsSet()) {
+      compositionStartPoint = pointToInsert;
     }
 
     if (inString->IsEmpty()) {
+      // Right now the WSRunObject code bails on empty strings, but IME needs
+      // the InsertTextWithTransaction() call to still happen since empty
+      // strings are meaningful there.
       rv = MOZ_KnownLive(HTMLEditorRef())
                .InsertTextWithTransaction(*doc, *inString,
-                                          EditorRawDOMPoint(pointToInsert));
+                                          compositionStartPoint);
       if (NS_WARN_IF(!CanHandleEditAction())) {
         return NS_ERROR_EDITOR_DESTROYED;
       }
@@ -1355,11 +1376,33 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
       return NS_OK;
     }
 
-    WSRunObject wsObj(&HTMLEditorRef(), pointToInsert);
-    rv = wsObj.InsertText(*doc, *inString, pointToInsert);
+    EditorRawDOMPoint compositionEndPoint =
+        HTMLEditorRef().GetCompositionEndPoint();
+    if (!compositionEndPoint.IsSet()) {
+      compositionEndPoint = compositionStartPoint;
+    }
+    WSRunObject wsObj(&HTMLEditorRef(), compositionStartPoint,
+                      compositionEndPoint);
+    rv = wsObj.InsertText(*doc, *inString);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    compositionStartPoint = HTMLEditorRef().GetCompositionStartPoint();
+    compositionEndPoint = HTMLEditorRef().GetCompositionEndPoint();
+    if (NS_WARN_IF(!compositionStartPoint.IsSet()) ||
+        NS_WARN_IF(!compositionEndPoint.IsSet())) {
+      // Mutation event listener has changed the DOM tree...
+      return NS_OK;
+    }
+    if (!mDocChangeRange) {
+      mDocChangeRange = new nsRange(compositionStartPoint.GetContainer());
+    }
+    rv = mDocChangeRange->SetStartAndEnd(compositionStartPoint,
+                                         compositionEndPoint);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -1486,8 +1529,7 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
         // is it a tab?
         if (subStr.Equals(tabStr)) {
           EditorRawDOMPoint pointAfterInsertedSpaces;
-          rv = wsObj.InsertText(*doc, spacesStr, currentPoint,
-                                &pointAfterInsertedSpaces);
+          rv = wsObj.InsertText(*doc, spacesStr, &pointAfterInsertedSpaces);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -1527,8 +1569,7 @@ nsresult HTMLEditRules::WillInsertText(EditSubAction aEditSubAction,
               "Perhaps, newBRElement has been moved or removed unexpectedly");
         } else {
           EditorRawDOMPoint pointAfterInsertedString;
-          rv = wsObj.InsertText(*doc, subStr, currentPoint,
-                                &pointAfterInsertedString);
+          rv = wsObj.InsertText(*doc, subStr, &pointAfterInsertedString);
           if (NS_WARN_IF(!CanHandleEditAction())) {
             return NS_ERROR_EDITOR_DESTROYED;
           }
@@ -9050,27 +9091,6 @@ HTMLEditRules::InsertBRElementToEmptyListItemsAndTableCellsInChangedRange() {
     if (NS_WARN_IF(createMozBrResult.Failed())) {
       return createMozBrResult.Rv();
     }
-  }
-  return NS_OK;
-}
-
-nsresult HTMLEditRules::AdjustWhitespace() {
-  MOZ_ASSERT(IsEditorDataAvailable());
-
-  EditorRawDOMPoint selectionStartPoint(
-      EditorBase::GetStartPoint(*SelectionRefPtr()));
-  if (NS_WARN_IF(!selectionStartPoint.IsSet())) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Ask whitespace object to tweak nbsp's
-  nsresult rv =
-      WSRunObject(&HTMLEditorRef(), selectionStartPoint).AdjustWhitespace();
-  if (NS_WARN_IF(!CanHandleEditAction())) {
-    return NS_ERROR_EDITOR_DESTROYED;
-  }
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
   }
   return NS_OK;
 }

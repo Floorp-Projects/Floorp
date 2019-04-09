@@ -10,7 +10,7 @@ use moz_task::Task;
 use nserror::{nsresult, NS_ERROR_FAILURE};
 use nsstring::nsCString;
 use owned_value::owned_to_variant;
-use rkv::{Manager, OwnedValue, Rkv, SingleStore, StoreError, StoreOptions, Value};
+use rkv::{OwnedValue, Rkv, SingleStore, StoreError, StoreOptions, Value};
 use std::{
     path::Path,
     str,
@@ -27,6 +27,7 @@ use xpcom::{
 use KeyValueDatabase;
 use KeyValueEnumerator;
 use KeyValuePairResult;
+use manager::Manager;
 
 /// A macro to generate a done() implementation for a Task.
 /// Takes one argument that specifies the type of the Task's callback function:

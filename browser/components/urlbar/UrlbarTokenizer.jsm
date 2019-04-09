@@ -27,7 +27,7 @@ var UrlbarTokenizer = {
   // Regex used to guess url-like strings.
   // These are not expected to be 100% correct, we accept some user mistypes
   // and we're unlikely to be able to cover 100% of the cases.
-  REGEXP_LIKE_PROTOCOL: /^[A-Z+.-]+:\/{0,2}(?!\/)/i,
+  REGEXP_LIKE_PROTOCOL: /^[A-Z+.-]+:\/*(?!\/)/i,
   REGEXP_USERINFO_INVALID_CHARS: /[^\w.~%!$&'()*+,;=:-]/,
   REGEXP_HOSTPORT_INVALID_CHARS: /[^\[\]A-Z0-9.:-]/i,
   REGEXP_HOSTPORT_IP_LIKE: /^[a-f0-9\.\[\]:]+$/i,

@@ -377,19 +377,6 @@ gfxMatrix nsSVGUtils::GetCanvasTM(nsIFrame* aFrame) {
   return static_cast<SVGGeometryFrame*>(aFrame)->GetCanvasTM();
 }
 
-gfxMatrix nsSVGUtils::GetUserToCanvasTM(nsIFrame* aFrame) {
-  nsSVGDisplayableFrame* svgFrame = do_QueryFrame(aFrame);
-  NS_ASSERTION(svgFrame, "bad frame");
-
-  gfxMatrix tm;
-  if (svgFrame) {
-    SVGElement* content = static_cast<SVGElement*>(aFrame->GetContent());
-    tm = content->PrependLocalTransformsTo(GetCanvasTM(aFrame->GetParent()),
-                                           eUserSpaceToParent);
-  }
-  return tm;
-}
-
 void nsSVGUtils::NotifyChildrenOfSVGChange(nsIFrame* aFrame, uint32_t aFlags) {
   for (nsIFrame* kid : aFrame->PrincipalChildList()) {
     nsSVGDisplayableFrame* SVGFrame = do_QueryFrame(kid);
