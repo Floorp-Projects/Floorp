@@ -261,8 +261,6 @@ function parseLanguageTag(locale) {
 
     // All Language-Tag productions start with the ALPHA token, have at least
     // two characters, and contain less-or-equal to eight characters.
-    if (token !== ALPHA || tokenLength < 2 || tokenLength > 8)
-        return null;
 
     var language, script, region, privateuse;
     var variants = [];
@@ -276,18 +274,20 @@ function parseLanguageTag(locale) {
     //           ["-" privateuse]
 
     // language = 2*3ALPHA          ; shortest ISO 639 code
-    //          / 4ALPHA            ; or reserved for future use
     //          / 5*8ALPHA          ; or registered language subtag
-    if (tokenLength <= 3) {
-        language = tokenStringLower();
-        if (!nextToken())
-            return null;
-    } else {
-        assert(4 <= tokenLength && tokenLength <= 8, "reserved/registered language subtags");
-        language = tokenStringLower();
-        if (!nextToken())
-            return null;
+    if (token !== ALPHA || tokenLength === 1 || tokenLength === 4 || tokenLength > 8) {
+        // Four character language subtags are not allowed in Unicode BCP 47
+        // locale identifiers. Also see the comparison to Unicode CLDR locale
+        // identifiers in <https://unicode.org/reports/tr35/#BCP_47_Conformance>.
+        return null;
     }
+    assert((2 <= tokenLength && tokenLength <= 3) ||
+           (5 <= tokenLength && tokenLength <= 8),
+           "language subtags have 2-3 or 5-8 letters");
+
+    language = tokenStringLower();
+    if (!nextToken())
+        return null;
 
     // script = 4ALPHA              ; ISO 15924 code
     if (tokenLength === 4 && token === ALPHA) {
