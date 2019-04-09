@@ -31,7 +31,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   info("Check that the device list remains unchanged after exitting.");
   const preferredDevicesAfter = _loadPreferredDevices();
 
-  is(preferredDevicesBefore.added.size, preferredDevicesAfter.added.size,
+  is(preferredDevicesAfter.added.size - preferredDevicesBefore.added.size, 1,
     "Got expected number of added devices.");
   is(preferredDevicesBefore.removed.size, preferredDevicesAfter.removed.size,
     "Got expected number of removed devices.");
