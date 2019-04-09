@@ -49,9 +49,7 @@ class PerformanceObserver final : public nsISupports, public nsWrapperCache {
 
   nsISupports* GetParentObject() const { return mOwner; }
 
-  void Observe(const PerformanceObserverInit& aOptions, ErrorResult& aRv);
-  static void GetSupportedEntryTypes(const GlobalObject& aGlobal,
-                                     JS::MutableHandle<JSObject*> aObject);
+  void Observe(const PerformanceObserverInit& aOptions);
 
   void Disconnect();
 
@@ -60,26 +58,13 @@ class PerformanceObserver final : public nsISupports, public nsWrapperCache {
   MOZ_CAN_RUN_SCRIPT void Notify();
   void QueueEntry(PerformanceEntry* aEntry);
 
-  bool ObservesTypeOfEntry(PerformanceEntry* aEntry);
-
  private:
-  void ReportUnsupportedTypesErrorToConsole(bool aIsMainThread,
-                                            const nsString& aInvalidTypes);
   ~PerformanceObserver();
 
   nsCOMPtr<nsISupports> mOwner;
   RefPtr<PerformanceObserverCallback> mCallback;
   RefPtr<Performance> mPerformance;
   nsTArray<nsString> mEntryTypes;
-  nsTArray<PerformanceObserverInit> mOptions;
-  enum {
-    ObserverTypeUndefined,
-    ObserverTypeSingle,
-    ObserverTypeMultiple,
-  } mObserverType;
-  /*
-   * This is also known as registered, in the spec.
-   */
   bool mConnected;
   nsTArray<RefPtr<PerformanceEntry>> mQueuedEntries;
 };
