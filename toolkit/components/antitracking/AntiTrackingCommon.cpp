@@ -255,10 +255,10 @@ struct ContentBlockingAllowListKey {
   // a case where the allocator reallocates a window object where a channel used
   // to live and vice versa.
   explicit ContentBlockingAllowListKey(nsPIDOMWindowInner* aWindow)
-      : mHash(mozilla::AddToHash(uintptr_t(aWindow),
+      : mHash(mozilla::AddToHash(aWindow->WindowID(),
                                  mozilla::HashString("window"))) {}
-  explicit ContentBlockingAllowListKey(nsIChannel* aChannel)
-      : mHash(mozilla::AddToHash(uintptr_t(aChannel),
+  explicit ContentBlockingAllowListKey(nsIHttpChannel* aChannel)
+      : mHash(mozilla::AddToHash(aChannel->ChannelId(),
                                  mozilla::HashString("channel"))) {}
 
   ContentBlockingAllowListKey(const ContentBlockingAllowListKey& aRHS)
@@ -278,7 +278,7 @@ struct ContentBlockingAllowListEntry {
   ContentBlockingAllowListEntry() : mResult(false) {}
   ContentBlockingAllowListEntry(nsPIDOMWindowInner* aWindow, bool aResult)
       : mKey(aWindow), mResult(aResult) {}
-  ContentBlockingAllowListEntry(nsIChannel* aChannel, bool aResult)
+  ContentBlockingAllowListEntry(nsIHttpChannel* aChannel, bool aResult)
       : mKey(aChannel), mResult(aResult) {}
 
   ContentBlockingAllowListKey mKey;
