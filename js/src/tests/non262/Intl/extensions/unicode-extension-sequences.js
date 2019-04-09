@@ -11,9 +11,6 @@ const testcases = [
     { locale: "en-x-yz", start: -1, end: 0 },
     { locale: "en-x-u-kf", start: -1, end: 0 },
 
-    // Irregular grandfathered language tag without Unicode extension.
-    { locale: "i-default", start: -1, end: 0 },
-
     // Privateuse only language tag.
     { locale: "x-only", start: -1, end: 0 },
     { locale: "x-only-u", start: -1, end: 0 },
@@ -69,6 +66,9 @@ const testcases = [
 ];
 
 for (const {locale, start, end} of testcases) {
+    // Ensure the input is a valid language tag.
+    assertEqArray(Intl.getCanonicalLocales(locale), [locale]);
+
     assertEq(startOfUnicodeExtensions(locale), start);
 
     if (start >= 0)

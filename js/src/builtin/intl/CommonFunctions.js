@@ -36,10 +36,10 @@ function startOfUnicodeExtensions(locale) {
     assert(std_String_fromCharCode(HYPHEN) === "-",
            "code unit constant should match the expected character");
 
-    // A wholly-privateuse or grandfathered locale has no extension sequences.
+    // A wholly-privateuse locale has no extension sequences.
     if (callFunction(std_String_charCodeAt, locale, 1) === HYPHEN) {
-        assert(locale[0] === "x" || locale[0] === "i",
-               "locale[1] === '-' implies a privateuse-only or grandfathered locale");
+        assert(locale[0] === "x",
+               "locale[1] === '-' implies a privateuse-only locale");
         return -1;
     }
 
@@ -140,6 +140,8 @@ function getUnicodeExtensions(locale) {
  * The following features were removed because the spec was changed to use
  * Unicode BCP 47 locale identifier instead:
  * - extlang subtags
+ * - irregular grandfathered language tags.
+ * - regular grandfathered language tags with extlang-like subtags.
  *
  * The removed features may still be referenced in some comments. This will be
  * cleaned up when everything has been updated to follow the new specification.
@@ -425,61 +427,20 @@ function parseLanguageTag(locale) {
                                localeLowercase.length - privateuseStart);
     }
 
-    // Return if the complete input was successfully parsed and it is not a
-    // regular grandfathered language tag. That means it is either a langtag
-    // or privateuse-only language tag
-    if (token === NONE && !hasOwn(localeLowercase, grandfatheredMappings)) {
-        return {
-            language,
-            script,
-            region,
-            variants,
-            extensions,
-            privateuse,
-        };
-    }
+    // Reject the input if it couldn't be parsed completely.
+    if (token !== NONE)
+        return null;
 
-    // Before we can compare the lower-case form of locale to the list of
-    // grandfathered language tags, we need to ensure any remaining parts are
-    // alphanum-only ASCII characters. This step is necessary because locale
-    // could include other characters which lower-case map into ASCII
-    // characters.
-    // For example we need to reject "i-ha\u212A" (U+212A KELVIN SIGN) even
-    // though its lower-case form "i-hak" matches a grandfathered language
-    // tag.
-    while (token !== NONE) {
-        if (!nextToken())
-            return null;
-    }
-
-    // grandfathered = irregular        ; non-redundant tags registered
-    //               / regular          ; during the RFC 3066 era
-    // irregular = "en-GB-oed"          ; irregular tags do not match
-    //           / "i-ami"              ; the 'langtag' production and
-    //           / "i-bnn"              ; would not otherwise be
-    //           / "i-default"          ; considered 'well-formed'
-    //           / "i-enochian"         ; These tags are all valid,
-    //           / "i-hak"              ; but most are deprecated
-    //           / "i-klingon"          ; in favor of more modern
-    //           / "i-lux"              ; subtags or subtag
-    //           / "i-mingo"            ; combination
-    //           / "i-navajo"
-    //           / "i-pwn"
-    //           / "i-tao"
-    //           / "i-tay"
-    //           / "i-tsu"
-    //           / "sgn-BE-FR"
-    //           / "sgn-BE-NL"
-    //           / "sgn-CH-DE"
-    // regular = "art-lojban"           ; these tags match the 'langtag'
-    //         / "cel-gaulish"          ; production, but their subtags
-    //         / "no-bok"               ; are not extended language
-    //         / "no-nyn"               ; or variant subtags: their meaning
-    //         / "zh-guoyu"             ; is defined by their registration
-    //         / "zh-hakka"             ; and all of these are deprecated
-    //         / "zh-min"               ; in favor of a more modern
-    //         / "zh-min-nan"           ; subtag or sequence of subtags
-    //         / "zh-xiang"
+    // grandfathered = "art-lojban"     ; non-redundant tags registered
+    //               / "cel-gaulish"    ; during the RFC 3066 era
+    //               / "zh-guoyu"       ; these tags match the 'langtag'
+    //               / "zh-hakka"       ; production, but their subtags
+    //               / "zh-xiang"       ; are not extended language
+    //                                  ; or variant subtags: their meaning
+    //                                  ; is defined by their registration
+    //                                  ; and all of these are deprecated
+    //                                  ; in favor of a more modern
+    //                                  ; subtag or sequence of subtags
     if (hasOwn(localeLowercase, grandfatheredMappings)) {
         return {
             locale: grandfatheredMappings[localeLowercase],
@@ -487,7 +448,17 @@ function parseLanguageTag(locale) {
         };
     }
 
-    return null;
+    // Return if the complete input was successfully parsed and it is not a
+    // regular grandfathered language tag. That means it is either a langtag
+    // or privateuse-only language tag
+    return {
+        language,
+        script,
+        region,
+        variants,
+        extensions,
+        privateuse,
+    };
 
     #undef NONE
     #undef ALPHA
