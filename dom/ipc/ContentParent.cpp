@@ -1213,8 +1213,8 @@ BrowserParent* ContentParent::CreateBrowser(const TabContext& aContext,
     }
 
     if (remoteType.EqualsLiteral(LARGE_ALLOCATION_REMOTE_TYPE)) {
-      // Tell the TabChild object that it was created due to a Large-Allocation
-      // request.
+      // Tell the BrowserChild object that it was created due to a
+      // Large-Allocation request.
       Unused << browserParent->SendAwaitLargeAlloc();
     }
 
@@ -3291,9 +3291,9 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
   // When enabling input event prioritization, input events may preempt other
   // normal priority IPC messages. To prevent the input events preempt
   // PBrowserConstructor, we use an IPC 'RemoteIsReadyToHandleInputEvents' to
-  // notify parent that TabChild is created. In this case, PBrowser is initiated
-  // from content so that we can set BrowserParent as ready to handle input
-  // events.
+  // notify parent that BrowserChild is created. In this case, PBrowser is
+  // initiated from content so that we can set BrowserParent as ready to handle
+  // input
   parent->SetReadyToHandleInputEvents();
   return IPC_OK();
 }

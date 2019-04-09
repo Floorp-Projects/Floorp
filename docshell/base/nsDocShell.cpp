@@ -57,7 +57,7 @@
 #include "mozilla/dom/ServiceWorkerInterceptController.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/SessionStorageManager.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/TabGroup.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/ChildSHistory.h"
@@ -660,7 +660,7 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink) {
       return treeOwner->QueryInterface(aIID, aSink);
     }
   } else if (aIID.Equals(NS_GET_IID(nsIBrowserChild))) {
-    *aSink = GetTabChild().take();
+    *aSink = GetBrowserChild().take();
     return *aSink ? NS_OK : NS_ERROR_FAILURE;
   } else {
     return nsDocLoader::GetInterface(aIID, aSink);
@@ -3195,18 +3195,21 @@ nsDocShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner) {
   }
 
   // If we're in the content process and have had a TreeOwner set on us, extract
-  // our TabChild actor. If we've already had our TabChild set, assert that it
-  // hasn't changed.
+  // our BrowserChild actor. If we've already had our BrowserChild set, assert
+  // that it hasn't changed.
   if (mTreeOwner && XRE_IsContentProcess()) {
-    nsCOMPtr<nsIBrowserChild> newTabChild = do_GetInterface(mTreeOwner);
-    MOZ_ASSERT(newTabChild, "No TabChild actor for tree owner in Content!");
+    nsCOMPtr<nsIBrowserChild> newBrowserChild = do_GetInterface(mTreeOwner);
+    MOZ_ASSERT(newBrowserChild,
+               "No BrowserChild actor for tree owner in Content!");
 
-    if (mTabChild) {
-      nsCOMPtr<nsIBrowserChild> oldTabChild = do_QueryReferent(mTabChild);
-      MOZ_RELEASE_ASSERT(oldTabChild == newTabChild,
-                         "Cannot cahnge TabChild during nsDocShell lifetime!");
+    if (mBrowserChild) {
+      nsCOMPtr<nsIBrowserChild> oldBrowserChild =
+          do_QueryReferent(mBrowserChild);
+      MOZ_RELEASE_ASSERT(
+          oldBrowserChild == newBrowserChild,
+          "Cannot cahnge BrowserChild during nsDocShell lifetime!");
     } else {
-      mTabChild = do_GetWeakReference(newTabChild);
+      mBrowserChild = do_GetWeakReference(newBrowserChild);
     }
   }
 
@@ -3683,8 +3686,8 @@ nsDocShell::GetDomWindow(mozIDOMWindowProxy** aWindow) {
 NS_IMETHODIMP
 nsDocShell::GetMessageManager(ContentFrameMessageManager** aMessageManager) {
   RefPtr<ContentFrameMessageManager> mm;
-  if (RefPtr<TabChild> tabChild = TabChild::GetFrom(this)) {
-    mm = tabChild->GetMessageManager();
+  if (RefPtr<BrowserChild> browserChild = BrowserChild::GetFrom(this)) {
+    mm = browserChild->GetMessageManager();
   } else if (nsPIDOMWindowOuter* win = GetWindow()) {
     mm = win->GetMessageManager();
   }
@@ -5024,7 +5027,7 @@ nsDocShell::Destroy() {
 
   SetTreeOwner(nullptr);
 
-  mTabChild = nullptr;
+  mBrowserChild = nullptr;
 
   mChromeEventHandler = nullptr;
 
@@ -9749,8 +9752,8 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
       // In e10s the child process doesn't have access to the element that
       // contains the browsing context (because that element is in the chrome
       // process).
-      nsCOMPtr<nsIBrowserChild> tabChild = GetTabChild();
-      topLevelLoadingContext = ToSupports(tabChild);
+      nsCOMPtr<nsIBrowserChild> browserChild = GetBrowserChild();
+      topLevelLoadingContext = ToSupports(browserChild);
     } else {
       // This is for loading non-e10s tabs and toplevel windows of various
       // sorts.
@@ -13296,13 +13299,13 @@ nsDocShell::GetEditingSession(nsIEditingSession** aEditSession) {
 }
 
 NS_IMETHODIMP
-nsDocShell::GetScriptableTabChild(nsIBrowserChild** aTabChild) {
-  *aTabChild = GetTabChild().take();
-  return *aTabChild ? NS_OK : NS_ERROR_FAILURE;
+nsDocShell::GetScriptableBrowserChild(nsIBrowserChild** aBrowserChild) {
+  *aBrowserChild = GetBrowserChild().take();
+  return *aBrowserChild ? NS_OK : NS_ERROR_FAILURE;
 }
 
-already_AddRefed<nsIBrowserChild> nsDocShell::GetTabChild() {
-  nsCOMPtr<nsIBrowserChild> tc = do_QueryReferent(mTabChild);
+already_AddRefed<nsIBrowserChild> nsDocShell::GetBrowserChild() {
+  nsCOMPtr<nsIBrowserChild> tc = do_QueryReferent(mBrowserChild);
   return tc.forget();
 }
 
@@ -13343,12 +13346,13 @@ nsDocShell::GetIsOnlyToplevelInTabGroup(bool* aResult) {
 NS_IMETHODIMP
 nsDocShell::GetAwaitingLargeAlloc(bool* aResult) {
   MOZ_ASSERT(aResult);
-  nsCOMPtr<nsIBrowserChild> tabChild = GetTabChild();
-  if (!tabChild) {
+  nsCOMPtr<nsIBrowserChild> browserChild = GetBrowserChild();
+  if (!browserChild) {
     *aResult = false;
     return NS_OK;
   }
-  *aResult = static_cast<TabChild*>(tabChild.get())->IsAwaitingLargeAlloc();
+  *aResult =
+      static_cast<BrowserChild*>(browserChild.get())->IsAwaitingLargeAlloc();
   return NS_OK;
 }
 

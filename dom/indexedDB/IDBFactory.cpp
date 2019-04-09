@@ -15,7 +15,7 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
 #include "mozilla/dom/quota/QuotaManager.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/ipc/BackgroundUtils.h"
 #include "mozilla/ipc/PBackground.h"
@@ -143,7 +143,7 @@ nsresult IDBFactory::CreateForWindow(nsPIDOMWindowInner* aWindow,
   factory->mGlobal = do_QueryInterface(aWindow);
   MOZ_ASSERT(factory->mGlobal);
 
-  factory->mTabChild = TabChild::GetFrom(aWindow);
+  factory->mBrowserChild = BrowserChild::GetFrom(aWindow);
   factory->mEventTarget =
       nsGlobalWindowInner::Cast(aWindow)->EventTargetFor(TaskCategory::Other);
   factory->mInnerWindowID = aWindow->WindowID();
@@ -834,14 +834,14 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(IDBFactory)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(IDBFactory)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTabChild)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowserChild)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEventTarget)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(IDBFactory)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobal)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTabChild)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowserChild)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEventTarget)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 

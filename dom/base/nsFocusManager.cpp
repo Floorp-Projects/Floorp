@@ -38,7 +38,7 @@
 #include "nsIObjectFrame.h"
 #include "nsBindingManager.h"
 #include "nsStyleCoord.h"
-#include "TabChild.h"
+#include "BrowserChild.h"
 #include "nsFrameLoader.h"
 #include "nsNumberControlFrame.h"
 #include "nsNetUtil.h"
@@ -837,8 +837,8 @@ nsFocusManager::WindowShown(mozIDOMWindowProxy* aWindow, bool aNeedsFocus) {
   }
 
   if (nsIDocShell* docShell = window->GetDocShell()) {
-    if (nsCOMPtr<nsIBrowserChild> child = docShell->GetTabChild()) {
-      bool active = static_cast<TabChild*>(child.get())->ParentIsActive();
+    if (nsCOMPtr<nsIBrowserChild> child = docShell->GetBrowserChild()) {
+      bool active = static_cast<BrowserChild*>(child.get())->ParentIsActive();
       ActivateOrDeactivate(window, active);
     }
   }
@@ -1614,9 +1614,9 @@ bool nsFocusManager::Blur(nsPIDOMWindowOuter* aWindowToClear,
       if (aAdjustWidgets && objectFrame && !sTestMode) {
         if (XRE_IsContentProcess()) {
           // set focus to the top level window via the chrome process.
-          nsCOMPtr<nsIBrowserChild> tabChild = docShell->GetTabChild();
-          if (tabChild) {
-            static_cast<TabChild*>(tabChild.get())
+          nsCOMPtr<nsIBrowserChild> browserChild = docShell->GetBrowserChild();
+          if (browserChild) {
+            static_cast<BrowserChild*>(browserChild.get())
                 ->SendDispatchFocusToTopLevelWindow();
           }
         } else {

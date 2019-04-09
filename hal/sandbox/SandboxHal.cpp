@@ -10,7 +10,7 @@
 #include "mozilla/hal_sandbox/PHalChild.h"
 #include "mozilla/hal_sandbox/PHalParent.h"
 #include "mozilla/dom/BrowserParent.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/fallback/FallbackScreenConfiguration.h"
 #include "mozilla/EnumeratedRange.h"
 #include "mozilla/Observer.h"
@@ -44,7 +44,8 @@ void Vibrate(const nsTArray<uint32_t>& pattern, const WindowIdentifier& id) {
 
   WindowIdentifier newID(id);
   newID.AppendProcessID();
-  Hal()->SendVibrate(p, newID.AsArray(), TabChild::GetFrom(newID.GetWindow()));
+  Hal()->SendVibrate(p, newID.AsArray(),
+                     BrowserChild::GetFrom(newID.GetWindow()));
 }
 
 void CancelVibrate(const WindowIdentifier& id) {
@@ -53,7 +54,7 @@ void CancelVibrate(const WindowIdentifier& id) {
   WindowIdentifier newID(id);
   newID.AppendProcessID();
   Hal()->SendCancelVibrate(newID.AsArray(),
-                           TabChild::GetFrom(newID.GetWindow()));
+                           BrowserChild::GetFrom(newID.GetWindow()));
 }
 
 void EnableBatteryNotifications() { Hal()->SendEnableBatteryNotifications(); }

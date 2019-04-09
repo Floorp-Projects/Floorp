@@ -40,9 +40,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1139964
 
   function tabListener(m) {
     messageManager.removeMessageListener(msgName, tabListener);
-    ok(m.data.hasPromise, "TabChildGlobal should have Promise object in the global scope!");
-    ok(m.data.hasTextEncoder, "TabChildGlobal should have TextEncoder object in the global scope!");
-    ok(m.data.hasWindow, "TabChildGlobal should have Window object in the global scope!");
+    ok(m.data.hasPromise, "BrowserChildGlobal should have Promise object in the global scope!");
+    ok(m.data.hasTextEncoder, "BrowserChildGlobal should have TextEncoder object in the global scope!");
+    ok(m.data.hasWindow, "BrowserChildGlobal should have Window object in the global scope!");
 
     opener.setTimeout("done()", 0);
     window.close();

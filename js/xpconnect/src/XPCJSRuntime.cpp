@@ -1210,10 +1210,10 @@ static void GetRealmName(JS::Realm* realm, nsCString& name, int* anonymizeID,
       }
 
       // We might have a location like this:
-      //   inProcessTabChildGlobal?ownedBy=http://www.example.com/
+      //   inProcessBrowserChildGlobal?ownedBy=http://www.example.com/
       // The owner should be omitted if it's not a chrome: URI and we're
       // anonymizing.
-      static const char* ownedByPrefix = "inProcessTabChildGlobal?ownedBy=";
+      static const char* ownedByPrefix = "inProcessBrowserChildGlobal?ownedBy=";
       int ownedByPos = name.Find(ownedByPrefix);
       if (ownedByPos >= 0) {
         const char* chrome = "chrome:";

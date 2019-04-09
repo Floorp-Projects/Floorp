@@ -73,7 +73,7 @@
 
 #include "mozilla/dom/AudioDeviceInfo.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/IDBFactoryBinding.h"
 #include "mozilla/dom/IDBMutableFileBinding.h"
 #include "mozilla/dom/IDBMutableFile.h"

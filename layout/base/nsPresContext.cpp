@@ -59,7 +59,7 @@
 #include "mozilla/SMILAnimationController.h"
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/dom/PBrowserParent.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "nsRefreshDriver.h"
 #include "Layers.h"
@@ -1855,9 +1855,9 @@ static bool MayHavePaintEventListener(nsPIDOMWindowInner* aInnerWindow) {
   if (window) return MayHavePaintEventListener(window);
 
   nsCOMPtr<nsPIWindowRoot> root = do_QueryInterface(parentTarget);
-  EventTarget* tabChildGlobal;
-  return root && (tabChildGlobal = root->GetParentTarget()) &&
-         (manager = tabChildGlobal->GetExistingListenerManager()) &&
+  EventTarget* browserChildGlobal;
+  return root && (browserChildGlobal = root->GetParentTarget()) &&
+         (manager = browserChildGlobal->GetExistingListenerManager()) &&
          manager->MayHavePaintEventListener();
 }
 

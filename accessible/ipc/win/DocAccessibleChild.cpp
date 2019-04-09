@@ -77,7 +77,7 @@ HWND DocAccessibleChild::GetNativeWindowHandle() const {
     return mEmulatedWindowHandle;
   }
 
-  auto tab = static_cast<dom::TabChild*>(Manager());
+  auto tab = static_cast<dom::BrowserChild*>(Manager());
   MOZ_ASSERT(tab);
   return reinterpret_cast<HWND>(tab->GetNativeWindowHandle());
 }
@@ -88,13 +88,13 @@ void DocAccessibleChild::PushDeferredEvent(UniquePtr<DeferredEvent> aEvent) {
   if (mDoc && mDoc->IsRoot()) {
     topLevelIPCDoc = this;
   } else {
-    auto tabChild = static_cast<dom::TabChild*>(Manager());
-    if (!tabChild) {
+    auto browserChild = static_cast<dom::BrowserChild*>(Manager());
+    if (!browserChild) {
       return;
     }
 
     topLevelIPCDoc = static_cast<DocAccessibleChild*>(
-        tabChild->GetTopLevelDocAccessibleChild());
+        browserChild->GetTopLevelDocAccessibleChild());
   }
 
   if (topLevelIPCDoc) {
@@ -255,9 +255,9 @@ bool DocAccessibleChild::ConstructChildDocInParentProcess(
     DocAccessibleChild* aNewChildDoc, uint64_t aUniqueID, uint32_t aMsaaID) {
   if (IsConstructedInParentProcess()) {
     // We may send the constructor immediately
-    auto tabChild = static_cast<dom::TabChild*>(Manager());
-    MOZ_ASSERT(tabChild);
-    bool result = tabChild->SendPDocAccessibleConstructor(
+    auto browserChild = static_cast<dom::BrowserChild*>(Manager());
+    MOZ_ASSERT(browserChild);
+    bool result = browserChild->SendPDocAccessibleConstructor(
         aNewChildDoc, this, aUniqueID, aMsaaID, IAccessibleHolder());
     if (result) {
       aNewChildDoc->SetConstructedInParentProcess();

@@ -14,7 +14,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/ipc/TaskFactory.h"
 #include "mozilla/Monitor.h"
@@ -81,7 +81,7 @@ class HangMonitorChild : public PProcessHangMonitorChild,
   void Bind(Endpoint<PProcessHangMonitorChild>&& aEndpoint);
 
   typedef ProcessHangMonitor::SlowScriptAction SlowScriptAction;
-  SlowScriptAction NotifySlowScript(nsIBrowserChild* aTabChild,
+  SlowScriptAction NotifySlowScript(nsIBrowserChild* aBrowserChild,
                                     const char* aFileName,
                                     const nsString& aAddonId);
   void NotifySlowScriptAsync(TabId aTabId, const nsCString& aFileName,
@@ -341,12 +341,12 @@ void HangMonitorChild::InterruptCallback() {
   // Don't paint from the interrupt callback when recording or replaying, as
   // the interrupt callback is triggered non-deterministically.
   if (paintWhileInterruptingJS && !recordreplay::IsRecordingOrReplaying()) {
-    RefPtr<TabChild> tabChild =
-        TabChild::FindTabChild(paintWhileInterruptingJSTab);
-    if (tabChild) {
+    RefPtr<BrowserChild> browserChild =
+        BrowserChild::FindBrowserChild(paintWhileInterruptingJSTab);
+    if (browserChild) {
       js::AutoAssertNoContentJS nojs(mContext);
-      tabChild->PaintWhileInterruptingJS(paintWhileInterruptingJSEpoch,
-                                         paintWhileInterruptingJSForce);
+      browserChild->PaintWhileInterruptingJS(paintWhileInterruptingJSEpoch,
+                                             paintWhileInterruptingJSForce);
     }
   }
 }
@@ -467,7 +467,7 @@ void HangMonitorChild::NotifySlowScriptAsync(TabId aTabId,
 }
 
 HangMonitorChild::SlowScriptAction HangMonitorChild::NotifySlowScript(
-    nsIBrowserChild* aTabChild, const char* aFileName,
+    nsIBrowserChild* aBrowserChild, const char* aFileName,
     const nsString& aAddonId) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
@@ -493,9 +493,10 @@ HangMonitorChild::SlowScriptAction HangMonitorChild::NotifySlowScript(
   }
 
   TabId id;
-  if (aTabChild) {
-    RefPtr<TabChild> tabChild = static_cast<TabChild*>(aTabChild);
-    id = tabChild->GetTabId();
+  if (aBrowserChild) {
+    RefPtr<BrowserChild> browserChild =
+        static_cast<BrowserChild*>(aBrowserChild);
+    id = browserChild->GetTabId();
   }
   nsAutoCString filename(aFileName);
 
@@ -1107,10 +1108,10 @@ ProcessHangMonitor::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 ProcessHangMonitor::SlowScriptAction ProcessHangMonitor::NotifySlowScript(
-    nsIBrowserChild* aTabChild, const char* aFileName,
+    nsIBrowserChild* aBrowserChild, const char* aFileName,
     const nsString& aAddonId) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-  return HangMonitorChild::Get()->NotifySlowScript(aTabChild, aFileName,
+  return HangMonitorChild::Get()->NotifySlowScript(aBrowserChild, aFileName,
                                                    aAddonId);
 }
 

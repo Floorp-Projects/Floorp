@@ -86,9 +86,10 @@ inline nsresult nsContentPolicy::CheckPolicy(CPMethod policyMethod,
   {
     nsCOMPtr<nsINode> node(do_QueryInterface(requestingContext));
     nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(requestingContext));
-    nsCOMPtr<nsIBrowserChild> tabChild(do_QueryInterface(requestingContext));
-    NS_ASSERTION(!requestingContext || node || window || tabChild,
-                 "Context should be a DOM node, DOM window or a tabChild!");
+    nsCOMPtr<nsIBrowserChild> browserChild(
+        do_QueryInterface(requestingContext));
+    NS_ASSERTION(!requestingContext || node || window || browserChild,
+                 "Context should be a DOM node, DOM window or a browserChild!");
   }
 #endif
 

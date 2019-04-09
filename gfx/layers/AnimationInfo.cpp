@@ -177,12 +177,12 @@ void AnimationInfo::EnumerateGenerationOnFrame(
       // we call the callback function with |Nothing()| for the generation.
       //
       // Note that we need to use nsContentUtils::WidgetForContent() instead of
-      // TabChild::GetFrom(aFrame->PresShell())->WebWidget() because in the case
-      // of child popup content PuppetWidget::mTabChild is the same as the
-      // parent's one, which means mTabChild->IsLayersConnected() check in
-      // PuppetWidget::GetLayerManager queries the parent state, it results the
-      // assertion in the function failure.
-      if (widget->GetOwningTabChild() &&
+      // BrowserChild::GetFrom(aFrame->PresShell())->WebWidget() because in the
+      // case of child popup content PuppetWidget::mBrowserChild is the same as
+      // the parent's one, which means mBrowserChild->IsLayersConnected() check
+      // in PuppetWidget::GetLayerManager queries the parent state, it results
+      // the assertion in the function failure.
+      if (widget->GetOwningBrowserChild() &&
           !static_cast<widget::PuppetWidget*>(widget)->HasLayerManager()) {
         for (auto displayItem : LayerAnimationInfo::sDisplayItemTypes) {
           aCallback(Nothing(), displayItem);

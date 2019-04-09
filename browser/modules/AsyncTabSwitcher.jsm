@@ -336,7 +336,7 @@ class AsyncTabSwitcher {
     // the tab switch spinner - especially since the spinner is usually
     // preceded by a perceived lag of TAB_SWITCH_TIMEOUT ms in the
     // tab switch. We can hide this lag, and hide the time being spent
-    // constructing TabChild's, layer trees, etc, by showing a blank
+    // constructing BrowserChild's, layer trees, etc, by showing a blank
     // tab instead and focusing it immediately.
     let shouldBeBlank = false;
     if (requestedBrowser.isRemoteBrowser) {

@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef nsInProcessTabChildGlobal_h
-#define nsInProcessTabChildGlobal_h
+#ifndef nsInProcessBrowserChildGlobal_h
+#define nsInProcessBrowserChildGlobal_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
@@ -29,11 +29,11 @@ namespace dom {
 
 /**
  * This class implements a ContentFrameMessageManager for use by frame loaders
- * in the parent process. It is bound to a DocShell rather than a TabChild, and
- * does not use any IPC infrastructure for its message passing.
+ * in the parent process. It is bound to a DocShell rather than a BrowserChild,
+ * and does not use any IPC infrastructure for its message passing.
  */
 
-class InProcessTabChildMessageManager final
+class InProcessBrowserChildMessageManager final
     : public ContentFrameMessageManager,
       public nsMessageManagerScriptExecutor,
       public nsIInProcessContentFrameMessageManager,
@@ -42,14 +42,14 @@ class InProcessTabChildMessageManager final
   typedef mozilla::dom::ipc::StructuredCloneData StructuredCloneData;
 
  private:
-  InProcessTabChildMessageManager(nsDocShell* aShell, nsIContent* aOwner,
-                                  nsFrameMessageManager* aChrome);
+  InProcessBrowserChildMessageManager(nsDocShell* aShell, nsIContent* aOwner,
+                                      nsFrameMessageManager* aChrome);
 
  public:
-  static already_AddRefed<InProcessTabChildMessageManager> Create(
+  static already_AddRefed<InProcessBrowserChildMessageManager> Create(
       nsDocShell* aShell, nsIContent* aOwner, nsFrameMessageManager* aChrome) {
-    RefPtr<InProcessTabChildMessageManager> mm =
-        new InProcessTabChildMessageManager(aShell, aOwner, aChrome);
+    RefPtr<InProcessBrowserChildMessageManager> mm =
+        new InProcessBrowserChildMessageManager(aShell, aOwner, aChrome);
 
     NS_ENSURE_TRUE(mm->Init(), nullptr);
 
@@ -58,7 +58,7 @@ class InProcessTabChildMessageManager final
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(
-      InProcessTabChildMessageManager, DOMEventTargetHelper)
+      InProcessBrowserChildMessageManager, DOMEventTargetHelper)
 
   void MarkForCC();
 
@@ -117,7 +117,7 @@ class InProcessTabChildMessageManager final
   already_AddRefed<nsFrameLoader> GetFrameLoader();
 
  protected:
-  virtual ~InProcessTabChildMessageManager();
+  virtual ~InProcessBrowserChildMessageManager();
 
   RefPtr<nsDocShell> mDocShell;
   bool mLoadingScript;

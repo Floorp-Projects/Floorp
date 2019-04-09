@@ -22,7 +22,7 @@ class BrowsingContext;
 class WindowGlobalParent;
 class JSWindowActorChild;
 class JSWindowActorMessageMeta;
-class TabChild;
+class BrowserChild;
 
 /**
  * Actor for a single nsGlobalWindowInner. This actor is used to communicate
@@ -66,7 +66,7 @@ class WindowGlobalChild : public nsWrapperCache, public PWindowGlobalChild {
 
   // Get this actor's manager if it is not an in-process actor. Returns
   // |nullptr| if the actor has been torn down, or is in-process.
-  already_AddRefed<TabChild> GetTabChild();
+  already_AddRefed<BrowserChild> GetBrowserChild();
 
   void ReceiveRawMessage(const JSWindowActorMessageMeta& aMeta,
                          ipc::StructuredCloneData&& aData);

@@ -958,7 +958,7 @@ nsEventStatus nsBaseWidget::ProcessUntransformedAPZEvent(
   // process, apply that APZC's callback-transform before dispatching the
   // event. If the event is instead targeted to an APZC in the child process,
   // the transform will be applied in the child process before dispatching
-  // the event there (see e.g. TabChild::RecvRealTouchEvent()).
+  // the event there (see e.g. BrowserChild::RecvRealTouchEvent()).
   if (aGuid.mLayersId == mCompositorSession->RootLayerTreeId()) {
     APZCCallbackHelper::ApplyCallbackTransform(*aEvent, aGuid,
                                                GetDefaultScale());
@@ -1383,8 +1383,9 @@ LayerManager* nsBaseWidget::GetLayerManager(
     }
     // Try to use an async compositor first, if possible
     if (ShouldUseOffMainThreadCompositing()) {
-      // e10s uses the parameter to pass in the shadow manager from the TabChild
-      // so we don't expect to see it there since this doesn't support e10s.
+      // e10s uses the parameter to pass in the shadow manager from the
+      // BrowserChild so we don't expect to see it there since this doesn't
+      // support e10s.
       NS_ASSERTION(aShadowManager == nullptr,
                    "Async Compositor not supported with e10s");
       CreateCompositor();

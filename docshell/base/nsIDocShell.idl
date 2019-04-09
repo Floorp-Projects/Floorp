@@ -1000,10 +1000,10 @@ interface nsIDocShell : nsIDocShellTreeItem
   readonly attribute nsIEditingSession editingSession;
 
   /**
-   * The tab child for this docshell.
+   * The browser child for this docshell.
    */
-  [binaryname(ScriptableTabChild)] readonly attribute nsIBrowserChild tabChild;
-  [noscript,notxpcom,nostdcall] BrowserChildRef GetTabChild();
+  [binaryname(ScriptableBrowserChild)] readonly attribute nsIBrowserChild browserChild;
+  [noscript,notxpcom,nostdcall] BrowserChildRef GetBrowserChild();
 
   [noscript,nostdcall,notxpcom] nsCommandManager GetCommandManager();
 
