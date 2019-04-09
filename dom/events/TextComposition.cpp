@@ -17,6 +17,7 @@
 #include "mozilla/MiscEvents.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/PresShell.h"
+#include "mozilla/RangeBoundary.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
@@ -665,6 +666,122 @@ already_AddRefed<EditorBase> TextComposition::GetEditorBase() const {
 
 bool TextComposition::HasEditor() const {
   return mEditorBaseWeak && mEditorBaseWeak->IsAlive();
+}
+
+RawRangeBoundary TextComposition::GetStartRef() const {
+  RefPtr<EditorBase> editorBase = GetEditorBase();
+  if (!editorBase) {
+    return RawRangeBoundary();
+  }
+
+  nsISelectionController* selectionController =
+      editorBase->GetSelectionController();
+  if (NS_WARN_IF(!selectionController)) {
+    return RawRangeBoundary();
+  }
+
+  nsRange* firstRange = nullptr;
+  static const SelectionType kIMESelectionTypes[] = {
+      SelectionType::eIMERawClause, SelectionType::eIMESelectedRawClause,
+      SelectionType::eIMEConvertedClause, SelectionType::eIMESelectedClause};
+  for (auto selectionType : kIMESelectionTypes) {
+    Selection* selection =
+        selectionController->GetSelection(ToRawSelectionType(selectionType));
+    if (!selection) {
+      continue;
+    }
+    for (uint32_t i = 0; i < selection->RangeCount(); i++) {
+      nsRange* range = selection->GetRangeAt(i);
+      if (NS_WARN_IF(!range) || NS_WARN_IF(!range->GetStartContainer())) {
+        continue;
+      }
+      if (!firstRange) {
+        firstRange = range;
+        continue;
+      }
+      // In most cases, all composition string should be in same text node.
+      if (firstRange->GetStartContainer() == range->GetStartContainer()) {
+        if (firstRange->StartOffset() > range->StartOffset()) {
+          firstRange = range;
+        }
+        continue;
+      }
+      // However, if web apps have inserted different nodes in composition
+      // string, composition string may span 2 or more nodes.
+      if (firstRange->GetStartContainer()->GetNextSibling() ==
+          range->GetStartContainer()) {
+        // Fast path for some known applications like Google Keep.
+        firstRange = range;
+        continue;
+      }
+      // Unfortunately, really slow path.
+      bool disconnected = false;
+      if (nsContentUtils::ComparePoints(range->StartRef().AsRaw(),
+                                        firstRange->StartRef().AsRaw(),
+                                        &disconnected) == -1) {
+        firstRange = range;
+      }
+    }
+  }
+  return firstRange ? firstRange->StartRef().AsRaw() : RawRangeBoundary();
+}
+
+RawRangeBoundary TextComposition::GetEndRef() const {
+  RefPtr<EditorBase> editorBase = GetEditorBase();
+  if (!editorBase) {
+    return RawRangeBoundary();
+  }
+
+  nsISelectionController* selectionController =
+      editorBase->GetSelectionController();
+  if (NS_WARN_IF(!selectionController)) {
+    return RawRangeBoundary();
+  }
+
+  nsRange* lastRange = nullptr;
+  static const SelectionType kIMESelectionTypes[] = {
+      SelectionType::eIMERawClause, SelectionType::eIMESelectedRawClause,
+      SelectionType::eIMEConvertedClause, SelectionType::eIMESelectedClause};
+  for (auto selectionType : kIMESelectionTypes) {
+    Selection* selection =
+        selectionController->GetSelection(ToRawSelectionType(selectionType));
+    if (!selection) {
+      continue;
+    }
+    for (uint32_t i = 0; i < selection->RangeCount(); i++) {
+      nsRange* range = selection->GetRangeAt(i);
+      if (NS_WARN_IF(!range) || NS_WARN_IF(!range->GetEndContainer())) {
+        continue;
+      }
+      if (!lastRange) {
+        lastRange = range;
+        continue;
+      }
+      // In most cases, all composition string should be in same text node.
+      if (lastRange->GetEndContainer() == range->GetEndContainer()) {
+        if (lastRange->EndOffset() < range->EndOffset()) {
+          lastRange = range;
+        }
+        continue;
+      }
+      // However, if web apps have inserted different nodes in composition
+      // string, composition string may span 2 or more nodes.
+      if (lastRange->GetEndContainer() ==
+          range->GetEndContainer()->GetNextSibling()) {
+        // Fast path for some known applications like Google Keep.
+        lastRange = range;
+        continue;
+      }
+      // Unfortunately, really slow path.
+      bool disconnected = false;
+      if (nsContentUtils::ComparePoints(lastRange->EndRef().AsRaw(),
+                                        range->EndRef().AsRaw(),
+                                        &disconnected) == -1) {
+        lastRange = range;
+      }
+    }
+  }
+  return lastRange ? lastRange->EndRef().AsRaw() : RawRangeBoundary();
 }
 
 /******************************************************************************
