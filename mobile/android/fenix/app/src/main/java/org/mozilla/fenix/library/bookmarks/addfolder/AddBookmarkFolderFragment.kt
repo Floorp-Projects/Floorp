@@ -54,6 +54,8 @@ class AddBookmarkFolderFragment : Fragment(), CoroutineScope {
 
     override fun onResume() {
         super.onResume()
+        (activity as AppCompatActivity).title =
+            getString(R.string.bookmark_add_folder_fragment_label)
         (activity as AppCompatActivity).supportActionBar?.show()
 
         launch(IO) {

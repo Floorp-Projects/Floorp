@@ -66,6 +66,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
 
     override fun onResume() {
         super.onResume()
+        (activity as AppCompatActivity).title = getString(R.string.library_bookmarks)
         (activity as AppCompatActivity).supportActionBar?.show()
         checkIfSignedIn()
     }

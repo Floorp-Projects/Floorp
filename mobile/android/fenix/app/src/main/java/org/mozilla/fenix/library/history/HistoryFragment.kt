@@ -63,6 +63,7 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
 
     override fun onResume() {
         super.onResume()
+        (activity as AppCompatActivity).title = getString(R.string.library_history)
         (activity as AppCompatActivity).supportActionBar?.show()
     }
 

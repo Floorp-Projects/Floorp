@@ -69,6 +69,7 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
 
     override fun onResume() {
         super.onResume()
+        (activity as? AppCompatActivity)?.title = getString(R.string.edit_bookmark_fragment_title)
         (activity as? AppCompatActivity)?.supportActionBar?.show()
 
         guidToEdit = EditBookmarkFragmentArgs.fromBundle(arguments!!).guidToEdit

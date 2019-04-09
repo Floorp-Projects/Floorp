@@ -37,6 +37,7 @@ class LibraryFragment : Fragment() {
 
     override fun onResume() {
         super.onResume()
+        (activity as AppCompatActivity).title = getString(R.string.library_title)
         (activity as AppCompatActivity).supportActionBar?.show()
     }
 

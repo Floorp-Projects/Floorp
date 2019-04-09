@@ -89,6 +89,8 @@ class SelectBookmarkFolderFragment : Fragment(), CoroutineScope, AccountObserver
 
     override fun onResume() {
         super.onResume()
+        (activity as AppCompatActivity).title =
+            getString(R.string.bookmark_select_folder_fragment_label)
         (activity as AppCompatActivity).supportActionBar?.show()
 
         folderGuid = SelectBookmarkFolderFragmentArgs.fromBundle(arguments!!).folderGuid ?: BookmarkRoot.Root.id

@@ -22,6 +22,7 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        (activity as AppCompatActivity).title = getString(R.string.preferences_site_permissions)
         (activity as AppCompatActivity).supportActionBar?.show()
     }
 

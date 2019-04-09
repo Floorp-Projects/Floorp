@@ -67,6 +67,7 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
     override fun onResume() {
         super.onResume()
 
+        (activity as AppCompatActivity).title = getString(R.string.settings_title)
         (activity as AppCompatActivity).supportActionBar?.show()
         val defaultBrowserPreference =
             findPreference<DefaultBrowserPreference>(getString(R.string.pref_key_make_default_browser))
