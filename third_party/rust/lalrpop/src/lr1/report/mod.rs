@@ -1,8 +1,8 @@
+use collections::*;
 use grammar::repr::*;
 use lr1::core::*;
-use std::io::{self, Write};
 use std::cmp::max;
-use collections::*;
+use std::io::{self, Write};
 
 use super::lookahead::*;
 

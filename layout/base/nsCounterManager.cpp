@@ -215,14 +215,14 @@ bool nsCounterManager::AddCounterChanges(nsIFrame* aFrame) {
     dirty |= AddCounterChangeNode(aFrame, i, styleContent->CounterResetAt(i),
                                   nsCounterChangeNode::RESET);
   }
-  for (i = 0, i_end = styleContent->CounterSetCount(); i != i_end; ++i) {
-    dirty |= AddCounterChangeNode(aFrame, i, styleContent->CounterSetAt(i),
-                                  nsCounterChangeNode::SET);
-  }
   for (i = 0, i_end = styleContent->CounterIncrementCount(); i != i_end; ++i) {
     dirty |=
         AddCounterChangeNode(aFrame, i, styleContent->CounterIncrementAt(i),
                              nsCounterChangeNode::INCREMENT);
+  }
+  for (i = 0, i_end = styleContent->CounterSetCount(); i != i_end; ++i) {
+    dirty |= AddCounterChangeNode(aFrame, i, styleContent->CounterSetAt(i),
+                                  nsCounterChangeNode::SET);
   }
   return dirty;
 }

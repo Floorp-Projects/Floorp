@@ -1,0 +1,14 @@
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  var o=document.getElementById('b');
+  o.parentNode.removeChild(o);
+  window.frames[0].document.body.appendChild(document.getElementById('a'));
+})
+</script>
+<ol>
+<li>
+<table id='a'>
+</table>
+<iframe></iframe>
+</li>
+<ul id='b'>

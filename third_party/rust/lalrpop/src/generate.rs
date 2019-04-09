@@ -70,9 +70,11 @@ impl ParseTree {
     fn push_terminals(&self, vec: &mut Vec<TerminalString>) {
         match *self {
             ParseTree::Terminal(ref s) => vec.push(s.clone()),
-            ParseTree::Nonterminal(_, ref trees) => for tree in trees {
-                tree.push_terminals(vec);
-            },
+            ParseTree::Nonterminal(_, ref trees) => {
+                for tree in trees {
+                    tree.push_terminals(vec);
+                }
+            }
         }
     }
 }

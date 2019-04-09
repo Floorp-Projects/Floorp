@@ -249,6 +249,11 @@ matching engine we want to test. The entry points are:
   backtracking on every regex and use *arbitrary* byte based programs.
 * `tests/test_backtrack_utf8bytes.rs` - tests `Regex::new`, forced to use
   backtracking on every regex and use *UTF-8* byte based programs.
+* `tests/test_crates_regex.rs` - tests to make sure that all of the
+  backends behave in the same way against a number of quickcheck
+  generated random inputs. These tests need to be enabled through
+  the `RUST_REGEX_RANDOM_TEST` environment variable (see
+  below).
 
 The lazy DFA and pure literal engines are absent from this list because
 they cannot be used on every regular expression. Instead, we rely on
@@ -259,6 +264,12 @@ entry points, it can take a while to compile everything. To reduce compile
 times slightly, try using `cargo test --test default`, which will only use the
 `tests/test_default.rs` entry point.
 
+The random testing takes quite a while, so it is not enabled by default.
+In order to run the random testing you can set the
+`RUST_REGEX_RANDOM_TEST` environment variable to anything before
+invoking `cargo test`. Note that this variable is inspected at compile
+time, so if the tests don't seem to be running, you may need to run
+`cargo clean`.
 
 ## Benchmarking
 
