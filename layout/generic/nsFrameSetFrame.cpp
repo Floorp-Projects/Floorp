@@ -36,6 +36,7 @@
 #include "nsNodeUtils.h"
 #include "mozAutoDocUpdate.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/ChildIterator.h"
 #include "mozilla/dom/HTMLFrameSetElement.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
@@ -259,10 +260,11 @@ void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
   // create the children frames; skip content which isn't <frameset> or <frame>
   mChildCount = 0;  // number of <frame> or <frameset> children
 
-  for (nsIContent* child = mContent->GetFirstChild(); child;
-       child = child->GetNextSibling()) {
-    if (mChildCount ==
-        numCells) {  // we have more <frame> or <frameset> than cells
+  FlattenedChildIterator children(mContent);
+  for (nsIContent* child = children.GetNextChild(); child;
+       child = children.GetNextChild()) {
+    if (mChildCount == numCells) {
+      // we have more <frame> or <frameset> than cells
       // Clear the lazy bits in the remaining children.  Also clear
       // the restyle flags, like nsCSSFrameConstructor::ProcessChildren does.
       for (; child; child = child->GetNextSibling()) {
@@ -274,20 +276,19 @@ void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
     // IMPORTANT: This must match the conditions in
     // nsCSSFrameConstructor::ContentAppended/Inserted/Removed
-    if (!child->IsHTMLElement()) {
-      continue;
-    }
-
     if (!child->IsAnyOfHTMLElements(nsGkAtoms::frameset, nsGkAtoms::frame)) {
       continue;
     }
 
-    RefPtr<ComputedStyle> kidSC = presShell->StyleSet()->ResolveStyleFor(
-        child->AsElement(), LazyComputeBehavior::Allow);
-
+    // FIXME(emilio): This doesn't even respect display: none, but that matches
+    // other browsers ;_;
+    //
+    // Maybe we should change that though.
+    RefPtr<ComputedStyle> kidStyle =
+        presShell->StyleSet()->ResolveServoStyle(*child->AsElement());
     nsIFrame* frame;
     if (child->IsHTMLElement(nsGkAtoms::frameset)) {
-      frame = NS_NewHTMLFramesetFrame(presShell, kidSC);
+      frame = NS_NewHTMLFramesetFrame(presShell, kidStyle);
 
       nsHTMLFramesetFrame* childFrame = (nsHTMLFramesetFrame*)frame;
       childFrame->SetParentFrameborder(frameborder);
@@ -297,7 +298,7 @@ void nsHTMLFramesetFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
 
       mChildBorderColors[mChildCount].Set(childFrame->GetBorderColor());
     } else {  // frame
-      frame = NS_NewSubDocumentFrame(presShell, kidSC);
+      frame = NS_NewSubDocumentFrame(presShell, kidStyle);
 
       frame->Init(child, this, nullptr);
 
