@@ -372,7 +372,7 @@ class MediaKeysGMPCrashHelper : public GMPCrashHelper {
 };
 
 already_AddRefed<CDMProxy> MediaKeys::CreateCDMProxy(
-    nsIEventTarget* aMainThread) {
+    nsISerialEventTarget* aMainThread) {
   EME_LOG("MediaKeys[%p]::CreateCDMProxy()", this);
   RefPtr<CDMProxy> proxy;
 #ifdef MOZ_WIDGET_ANDROID
