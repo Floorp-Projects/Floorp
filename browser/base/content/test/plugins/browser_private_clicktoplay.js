@@ -110,9 +110,7 @@ add_task(async function test2c() {
   await createPrivateWindow(gHttpTestRoot + "plugin_test.html");
   await topicObserved;
 
-  let popupNotification = await TestUtils.waitForCondition(() => {
-    return gPrivateWindow.PopupNotifications.getNotification("click-to-play-plugins", gPrivateBrowser);
-  }, "Waiting for click-to-play-plugins notification in the private window");
+  let popupNotification = gPrivateWindow.PopupNotifications.getNotification("click-to-play-plugins", gPrivateBrowser);
   ok(popupNotification, "Test 2c, Should have a click-to-play notification");
 
   await ContentTask.spawn(gPrivateBrowser, null, function() {
@@ -174,9 +172,7 @@ add_task(async function test3c() {
   await createPrivateWindow(gHttpTestRoot + "plugin_test.html");
   await topicObserved;
 
-  let popupNotification = await TestUtils.waitForCondition(() => {
-    return gPrivateWindow.PopupNotifications.getNotification("click-to-play-plugins", gPrivateBrowser);
-  }, "Waiting for click-to-play-plugins notification in the private window");
+  let popupNotification = gPrivateWindow.PopupNotifications.getNotification("click-to-play-plugins", gPrivateBrowser);
   ok(popupNotification, "Test 3c, Should have a click-to-play notification");
 
   // Check the button status
