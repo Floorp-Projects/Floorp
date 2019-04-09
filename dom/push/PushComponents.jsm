@@ -89,7 +89,6 @@ PushServiceBase.prototype = {
     if (topic === "android-push-service") {
       // Load PushService immediately.
       this._handleReady();
-      return;
     }
   },
 
@@ -147,7 +146,7 @@ Object.assign(PushServiceParent.prototype, {
 
   subscribeWithKey(scope, principal, keyLen, key, callback) {
     this._handleRequest("Push:Register", principal, {
-      scope: scope,
+      scope,
       appServerKey: key,
     }).then(result => {
       this._deliverSubscription(callback, result);
@@ -158,7 +157,7 @@ Object.assign(PushServiceParent.prototype, {
 
   unsubscribe(scope, principal, callback) {
     this._handleRequest("Push:Unregister", principal, {
-      scope: scope,
+      scope,
     }).then(result => {
       callback.onUnsubscribe(Cr.NS_OK, result);
     }, error => {
@@ -168,7 +167,7 @@ Object.assign(PushServiceParent.prototype, {
 
   getSubscription(scope, principal, callback) {
     return this._handleRequest("Push:Registration", principal, {
-      scope: scope,
+      scope,
     }).then(result => {
       this._deliverSubscription(callback, result);
     }, error => {
@@ -178,7 +177,7 @@ Object.assign(PushServiceParent.prototype, {
 
   clearForDomain(domain, callback) {
     return this._handleRequest("Push:Clear", null, {
-      domain: domain,
+      domain,
     }).then(result => {
       callback.onClear(Cr.NS_OK);
     }, error => {
@@ -219,10 +218,10 @@ Object.assign(PushServiceParent.prototype, {
       this.reportDeliveryError(data.messageId, data.reason);
       return;
     }
-    return this._handleRequest(name, principal, data).then(result => {
+    this._handleRequest(name, principal, data).then(result => {
       target.sendAsyncMessage(this._getResponseName(name, "OK"), {
         requestID: data.requestID,
-        result: result
+        result,
       });
     }, error => {
       target.sendAsyncMessage(this._getResponseName(name, "KO"), {
@@ -353,35 +352,35 @@ Object.assign(PushServiceContent.prototype, {
   },
 
   subscribeWithKey(scope, principal, keyLen, key, callback) {
-    let requestId = this._addRequest(callback);
+    let requestID = this._addRequest(callback);
     this._mm.sendAsyncMessage("Push:Register", {
-      scope: scope,
+      scope,
       appServerKey: key,
-      requestID: requestId,
+      requestID,
     }, null, principal);
   },
 
   unsubscribe(scope, principal, callback) {
-    let requestId = this._addRequest(callback);
+    let requestID = this._addRequest(callback);
     this._mm.sendAsyncMessage("Push:Unregister", {
-      scope: scope,
-      requestID: requestId,
+      scope,
+      requestID,
     }, null, principal);
   },
 
   getSubscription(scope, principal, callback) {
-    let requestId = this._addRequest(callback);
+    let requestID = this._addRequest(callback);
     this._mm.sendAsyncMessage("Push:Registration", {
-      scope: scope,
-      requestID: requestId,
+      scope,
+      requestID,
     }, null, principal);
   },
 
   clearForDomain(domain, callback) {
-    let requestId = this._addRequest(callback);
+    let requestID = this._addRequest(callback);
     this._mm.sendAsyncMessage("Push:Clear", {
-      domain: domain,
-      requestID: requestId,
+      domain,
+      requestID,
     });
   },
 
@@ -399,8 +398,8 @@ Object.assign(PushServiceContent.prototype, {
 
   reportDeliveryError(messageId, reason) {
     this._mm.sendAsyncMessage("Push:ReportError", {
-      messageId: messageId,
-      reason: reason,
+      messageId,
+      reason,
     });
   },
 
@@ -560,4 +559,4 @@ PushSubscription.prototype = {
 // the parent or content process.
 let Service = isParent ? PushServiceParent : PushServiceContent;
 
-var EXPORTED_SYMBOLS = ["Service"];
+const EXPORTED_SYMBOLS = ["Service"];

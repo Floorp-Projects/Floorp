@@ -23,6 +23,7 @@ http://creativecommons.org/licenses/publicdomain/
 </pre>
 
 <script class="testbody" type="text/javascript">
+  /* import-globals-from ./test_utils.js */
 
   var scopeA = "./a/";
   var scopeB = "./b/";
@@ -32,7 +33,7 @@ http://creativecommons.org/licenses/publicdomain/
   }
 
   function registerServiceWorker(scope) {
-    return navigator.serviceWorker.register("worker.js" + "?" + (Math.random()), {scope: scope})
+    return navigator.serviceWorker.register("worker.js?" + (Math.random()), {scope})
       .then(swr => waitForActive(swr));
   }
 
@@ -41,7 +42,7 @@ http://creativecommons.org/licenses/publicdomain/
       .then(result => {
         ok(result, "Unregister should return true.");
       }, err => {
-        ok(false,"Unregistering the SW failed with " + err + "\n");
+        ok(false, "Unregistering the SW failed with " + err + "\n");
         throw err;
       });
   }
@@ -61,7 +62,7 @@ http://creativecommons.org/licenses/publicdomain/
   function setupMultipleSubscriptions(swr1, swr2) {
     return Promise.all([
       subscribe(swr1),
-      subscribe(swr2)
+      subscribe(swr2),
     ]).then(a => {
       ok(a[0].endpoint != a[1].endpoint, "setupMultipleSubscriptions - Got different endpoints.");
       return a;

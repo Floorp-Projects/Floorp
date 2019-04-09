@@ -1,11 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-'use strict';
+"use strict";
 
 const {PushDB, PushService, PushServiceHttp2} = serviceExports;
 
-var prefs;
 var pushEnabled;
 var pushConnectionEnabled;
 
@@ -15,20 +14,18 @@ function run_test() {
   serverPort = getTestServerPort();
 
   do_get_profile();
-  prefs = Cc["@mozilla.org/preferences-service;1"].getService(Ci.nsIPrefBranch);
-
-  pushEnabled = prefs.getBoolPref("dom.push.enabled");
-  pushConnectionEnabled = prefs.getBoolPref("dom.push.connection.enabled");
+  pushEnabled = Services.prefs.getBoolPref("dom.push.enabled");
+  pushConnectionEnabled = Services.prefs.getBoolPref("dom.push.connection.enabled");
 
   // Set to allow the cert presented by our H2 server
-  var oldPref = prefs.getIntPref("network.http.speculative-parallel-limit");
-  prefs.setIntPref("network.http.speculative-parallel-limit", 0);
-  prefs.setBoolPref("dom.push.enabled", true);
-  prefs.setBoolPref("dom.push.connection.enabled", true);
+  var oldPref = Services.prefs.getIntPref("network.http.speculative-parallel-limit");
+  Services.prefs.setIntPref("network.http.speculative-parallel-limit", 0);
+  Services.prefs.setBoolPref("dom.push.enabled", true);
+  Services.prefs.setBoolPref("dom.push.connection.enabled", true);
 
   trustHttp2CA();
 
-  prefs.setIntPref("network.http.speculative-parallel-limit", oldPref);
+  Services.prefs.setIntPref("network.http.speculative-parallel-limit", oldPref);
 
   run_next_test();
 }
@@ -42,10 +39,10 @@ add_task(async function test_pushUnsubscriptionSuccess() {
   var serverURL = "https://localhost:" + serverPort;
 
   await db.put({
-    subscriptionUri: serverURL + '/subscriptionUnsubscriptionSuccess',
-    pushEndpoint: serverURL + '/pushEndpointUnsubscriptionSuccess',
-    pushReceiptEndpoint: serverURL + '/receiptPushEndpointUnsubscriptionSuccess',
-    scope: 'https://example.com/page/unregister-success',
+    subscriptionUri: serverURL + "/subscriptionUnsubscriptionSuccess",
+    pushEndpoint: serverURL + "/pushEndpointUnsubscriptionSuccess",
+    pushReceiptEndpoint: serverURL + "/receiptPushEndpointUnsubscriptionSuccess",
+    scope: "https://example.com/page/unregister-success",
     originAttributes: ChromeUtils.originAttributesToSuffix(
       { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     quota: Infinity,
@@ -53,20 +50,19 @@ add_task(async function test_pushUnsubscriptionSuccess() {
 
   PushService.init({
     serverURI: serverURL,
-    db
+    db,
   });
 
   await PushService.unregister({
-    scope: 'https://example.com/page/unregister-success',
+    scope: "https://example.com/page/unregister-success",
     originAttributes: ChromeUtils.originAttributesToSuffix(
       { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
   });
-  let record = await db.getByKeyID(serverURL + '/subscriptionUnsubscriptionSuccess');
-  ok(!record, 'Unregister did not remove record');
-
+  let record = await db.getByKeyID(serverURL + "/subscriptionUnsubscriptionSuccess");
+  ok(!record, "Unregister did not remove record");
 });
 
 add_task(async function test_complete() {
-  prefs.setBoolPref("dom.push.enabled", pushEnabled);
-  prefs.setBoolPref("dom.push.connection.enabled", pushConnectionEnabled);
+  Services.prefs.setBoolPref("dom.push.enabled", pushEnabled);
+  Services.prefs.setBoolPref("dom.push.connection.enabled", pushConnectionEnabled);
 });

@@ -1,3 +1,5 @@
+/* eslint-env mozilla/frame-script */
+
 "use strict";
 
 /**
@@ -61,7 +63,7 @@ var pushService = Cc["@mozilla.org/push/Service;1"].
 var mockSocket;
 var serverMsgs = [];
 
-addMessageListener("socket-setup", function () {
+addMessageListener("socket-setup", function() {
   pushService.replaceServiceBackend({
     serverURI: "wss://push.example.org/",
     makeWebSocket(uri) {
@@ -71,11 +73,11 @@ addMessageListener("socket-setup", function () {
         mockSocket.serverSendMsg(msg);
       }
       return mockSocket;
-    }
+    },
   });
 });
 
-addMessageListener("socket-teardown", function (msg) {
+addMessageListener("socket-teardown", function(msg) {
   pushService.restoreServiceBackend().then(_ => {
     serverMsgs.length = 0;
     if (mockSocket) {
@@ -85,10 +87,10 @@ addMessageListener("socket-teardown", function (msg) {
     sendAsyncMessage("socket-server-teardown");
   }).catch(error => {
     Cu.reportError(`Error restoring service backend: ${error}`);
-  })
+  });
 });
 
-addMessageListener("socket-server-msg", function (msg) {
+addMessageListener("socket-server-msg", function(msg) {
   if (mockSocket) {
     mockSocket.serverSendMsg(msg);
   } else {
@@ -105,9 +107,9 @@ var MockService = {
       let id = this.requestID++;
       this.resolvers.set(id, { resolve, reject });
       sendAsyncMessage("service-request", {
-        name: name,
-        id: id,
-        params: params,
+        name,
+        id,
+        params,
       });
     });
   },
@@ -142,8 +144,8 @@ var MockService = {
 
   reportDeliveryError(messageId, reason) {
     sendAsyncMessage("service-delivery-error", {
-      messageId: messageId,
-      reason: reason,
+      messageId,
+      reason,
     });
   },
 
@@ -174,6 +176,6 @@ addMessageListener("service-restore", function() {
   });
 });
 
-addMessageListener("service-response", function (response) {
+addMessageListener("service-response", function(response) {
   MockService.handleResponse(response);
 });

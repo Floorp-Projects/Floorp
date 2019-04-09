@@ -1,32 +1,30 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-'use strict';
+"use strict";
 
-var {XPCOMUtils} = ChromeUtils.import('resource://gre/modules/XPCOMUtils.jsm');
-var {Services} = ChromeUtils.import('resource://gre/modules/Services.jsm');
-var {clearInterval, clearTimeout, setInterval, setIntervalWithTarget, setTimeout, setTimeoutWithTarget} = ChromeUtils.import('resource://gre/modules/Timer.jsm');
-var {Preferences} = ChromeUtils.import('resource://gre/modules/Preferences.jsm');
-var {PlacesUtils} = ChromeUtils.import('resource://gre/modules/PlacesUtils.jsm');
-var {ObjectUtils} = ChromeUtils.import('resource://gre/modules/ObjectUtils.jsm');
+var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+var {clearInterval, clearTimeout, setInterval, setIntervalWithTarget, setTimeout, setTimeoutWithTarget} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+var {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
+var {PlacesUtils} = ChromeUtils.import("resource://gre/modules/PlacesUtils.jsm");
+var {ObjectUtils} = ChromeUtils.import("resource://gre/modules/ObjectUtils.jsm");
 
-ChromeUtils.defineModuleGetter(this, 'PlacesTestUtils',
-                               'resource://testing-common/PlacesTestUtils.jsm');
-ChromeUtils.defineModuleGetter(this, 'pushBroadcastService',
-                               'resource://gre/modules/PushBroadcastService.jsm', {});
-XPCOMUtils.defineLazyServiceGetter(this, 'PushServiceComponent',
-                                   '@mozilla.org/push/Service;1', 'nsIPushService');
+ChromeUtils.defineModuleGetter(this, "PlacesTestUtils",
+                               "resource://testing-common/PlacesTestUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "pushBroadcastService",
+                               "resource://gre/modules/PushBroadcastService.jsm", {});
+XPCOMUtils.defineLazyServiceGetter(this, "PushServiceComponent",
+                                   "@mozilla.org/push/Service;1", "nsIPushService");
 
 const serviceExports = ChromeUtils.import("resource://gre/modules/PushService.jsm", null);
-const servicePrefs = new Preferences('dom.push.');
+const servicePrefs = new Preferences("dom.push.");
 
 const WEBSOCKET_CLOSE_GOING_AWAY = 1001;
 
 const MS_IN_ONE_DAY = 24 * 60 * 60 * 1000;
 
-var isParent = Cc['@mozilla.org/xre/runtime;1']
-                 .getService(Ci.nsIXULRuntime).processType ==
-                 Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
+var isParent = Services.appinfo.processType == Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
 
 // Stop and clean up after the PushService.
 Services.obs.addObserver(function observe(subject, topic, data) {
@@ -46,7 +44,7 @@ Services.obs.addObserver(function observe(subject, topic, data) {
       Cu.reportError(e);
     }
   }
-}, 'profile-change-net-teardown');
+}, "profile-change-net-teardown");
 
 /**
  * Gates a function so that it is called only after the wrapper is called a
@@ -59,7 +57,7 @@ Services.obs.addObserver(function observe(subject, topic, data) {
 function after(times, func) {
   return function afterFunc() {
     if (--times <= 0) {
-      return func.apply(this, arguments);
+      func.apply(this, arguments);
     }
   };
 }
@@ -85,12 +83,12 @@ function waterfall(...callbacks) {
  */
 function promiseObserverNotification(topic, matchFunc) {
   return new Promise((resolve, reject) => {
-    Services.obs.addObserver(function observe(subject, topic, data) {
-      let matches = typeof matchFunc != 'function' || matchFunc(subject, data);
+    Services.obs.addObserver(function observe(subject, aTopic, data) {
+      let matches = typeof matchFunc != "function" || matchFunc(subject, data);
       if (!matches) {
         return;
       }
-      Services.obs.removeObserver(observe, topic);
+      Services.obs.removeObserver(observe, aTopic);
       resolve({subject, data});
     }, topic);
   });
@@ -108,22 +106,22 @@ function promiseObserverNotification(topic, matchFunc) {
  */
 function makeStub(target, stubs) {
   return new Proxy(target, {
-    get(target, property) {
-      if (!stubs || typeof stubs != 'object' || !(property in stubs)) {
-        return target[property];
+    get(aTarget, property) {
+      if (!stubs || typeof stubs != "object" || !(property in stubs)) {
+        return aTarget[property];
       }
       let stub = stubs[property];
-      if (typeof stub != 'function') {
+      if (typeof stub != "function") {
         return stub;
       }
-      let original = target[property];
-      if (typeof original != 'function') {
+      let original = aTarget[property];
+      if (typeof original != "function") {
         return stub.call(this, original);
       }
       return function callStub(...params) {
         return stub.call(this, original, ...params);
       };
-    }
+    },
   });
 }
 
@@ -135,22 +133,22 @@ function makeStub(target, stubs) {
  */
 function setPrefs(prefs = {}) {
   let defaultPrefs = Object.assign({
-    loglevel: 'all',
-    serverURL: 'wss://push.example.org',
-    'connection.enabled': true,
-    userAgentID: '',
+    loglevel: "all",
+    serverURL: "wss://push.example.org",
+    "connection.enabled": true,
+    userAgentID: "",
     enabled: true,
     // Defaults taken from /modules/libpref/init/all.js.
     requestTimeout: 10000,
     retryBaseInterval: 5000,
     pingInterval: 30 * 60 * 1000,
     // Misc. defaults.
-    'http2.maxRetries': 2,
-    'http2.retryInterval': 500,
-    'http2.reset_retry_count_after_ms': 60000,
+    "http2.maxRetries": 2,
+    "http2.retryInterval": 500,
+    "http2.reset_retry_count_after_ms": 60000,
     maxQuotaPerSubscription: 16,
     quotaUpdateDelay: 3000,
-    'testing.notifyWorkers': false,
+    "testing.notifyWorkers": false,
   }, prefs);
   for (let pref in defaultPrefs) {
     servicePrefs.set(pref, defaultPrefs[pref]);
@@ -158,7 +156,10 @@ function setPrefs(prefs = {}) {
 }
 
 function compareAscending(a, b) {
-  return a > b ? 1 : a < b ? -1 : 0;
+  if (a > b) {
+    return 1;
+  }
+  return a < b ? -1 : 0;
 }
 
 /**
@@ -215,60 +216,60 @@ MockWebSocket.prototype = {
 
   _handleMessage(msg) {
     let messageType, request;
-    if (msg == '{}') {
+    if (msg == "{}") {
       request = {};
-      messageType = 'ping';
+      messageType = "ping";
     } else {
       request = JSON.parse(msg);
       messageType = request.messageType;
     }
     switch (messageType) {
-    case 'hello':
-      if (typeof this._onHello != 'function') {
-        throw new Error('Unexpected handshake request');
+    case "hello":
+      if (typeof this._onHello != "function") {
+        throw new Error("Unexpected handshake request");
       }
       this._onHello(request);
       break;
 
-    case 'register':
-      if (typeof this._onRegister != 'function') {
-        throw new Error('Unexpected register request');
+    case "register":
+      if (typeof this._onRegister != "function") {
+        throw new Error("Unexpected register request");
       }
       this._onRegister(request);
       break;
 
-    case 'unregister':
-      if (typeof this._onUnregister != 'function') {
-        throw new Error('Unexpected unregister request');
+    case "unregister":
+      if (typeof this._onUnregister != "function") {
+        throw new Error("Unexpected unregister request");
       }
       this._onUnregister(request);
       break;
 
-    case 'ack':
-      if (typeof this._onACK != 'function') {
-        throw new Error('Unexpected acknowledgement');
+    case "ack":
+      if (typeof this._onACK != "function") {
+        throw new Error("Unexpected acknowledgement");
       }
       this._onACK(request);
       break;
 
-    case 'ping':
-      if (typeof this._onPing == 'function') {
+    case "ping":
+      if (typeof this._onPing == "function") {
         this._onPing(request);
       } else {
         // Echo ping packets.
-        this.serverSendMsg('{}');
+        this.serverSendMsg("{}");
       }
       break;
 
-    case 'broadcast_subscribe':
-      if (typeof this._onBroadcastSubscribe != 'function') {
-        throw new Error('Unexpected broadcast_subscribe');
+    case "broadcast_subscribe":
+      if (typeof this._onBroadcastSubscribe != "function") {
+        throw new Error("Unexpected broadcast_subscribe");
       }
       this._onBroadcastSubscribe(request);
       break;
 
     default:
-      throw new Error('Unexpected message: ' + messageType);
+      throw new Error("Unexpected message: " + messageType);
     }
   },
 
@@ -288,8 +289,8 @@ MockWebSocket.prototype = {
    * @param {String} msg The message to send to the client.
    */
   serverSendMsg(msg) {
-    if (typeof msg != 'string') {
-      throw new Error('Invalid response message');
+    if (typeof msg != "string") {
+      throw new Error("Invalid response message");
     }
     waterfall(
       () => this._listener.onMessageAvailable(this._context, msg),
@@ -304,7 +305,7 @@ MockWebSocket.prototype = {
    * @param {Number} [statusCode] The WebSocket connection close code.
    * @param {String} [reason] The connection close reason.
    */
-  serverClose(statusCode, reason = '') {
+  serverClose(statusCode, reason = "") {
     if (!isFinite(statusCode)) {
       statusCode = WEBSOCKET_CLOSE_GOING_AWAY;
     }
@@ -324,36 +325,36 @@ var setUpServiceInParent = async function(service, db) {
     return;
   }
 
-  let userAgentID = 'ce704e41-cb77-4206-b07b-5bf47114791b';
+  let userAgentID = "ce704e41-cb77-4206-b07b-5bf47114791b";
   setPrefs({
-    userAgentID: userAgentID,
+    userAgentID,
   });
 
   await db.put({
-    channelID: '6e2814e1-5f84-489e-b542-855cc1311f09',
-    pushEndpoint: 'https://example.org/push/get',
-    scope: 'https://example.com/get/ok',
-    originAttributes: '',
+    channelID: "6e2814e1-5f84-489e-b542-855cc1311f09",
+    pushEndpoint: "https://example.org/push/get",
+    scope: "https://example.com/get/ok",
+    originAttributes: "",
     version: 1,
     pushCount: 10,
     lastPush: 1438360548322,
     quota: 16,
   });
   await db.put({
-    channelID: '3a414737-2fd0-44c0-af05-7efc172475fc',
-    pushEndpoint: 'https://example.org/push/unsub',
-    scope: 'https://example.com/unsub/ok',
-    originAttributes: '',
+    channelID: "3a414737-2fd0-44c0-af05-7efc172475fc",
+    pushEndpoint: "https://example.org/push/unsub",
+    scope: "https://example.com/unsub/ok",
+    originAttributes: "",
     version: 2,
     pushCount: 10,
     lastPush: 1438360848322,
     quota: 4,
   });
   await db.put({
-    channelID: 'ca3054e8-b59b-4ea0-9c23-4a3c518f3161',
-    pushEndpoint: 'https://example.org/push/stale',
-    scope: 'https://example.com/unsub/fail',
-    originAttributes: '',
+    channelID: "ca3054e8-b59b-4ea0-9c23-4a3c518f3161",
+    pushEndpoint: "https://example.org/push/stale",
+    scope: "https://example.com/unsub/fail",
+    originAttributes: "",
     version: 3,
     pushCount: 10,
     lastPush: 1438362348322,
@@ -361,23 +362,23 @@ var setUpServiceInParent = async function(service, db) {
   });
 
   service.init({
-    serverURI: 'wss://push.example.org/',
+    serverURI: "wss://push.example.org/",
     db: makeStub(db, {
       put(prev, record) {
-        if (record.scope == 'https://example.com/sub/fail') {
-          return Promise.reject('synergies not aligned');
+        if (record.scope == "https://example.com/sub/fail") {
+          return Promise.reject("synergies not aligned");
         }
         return prev.call(this, record);
       },
-      delete: function(prev, channelID) {
-        if (channelID == 'ca3054e8-b59b-4ea0-9c23-4a3c518f3161') {
-          return Promise.reject('splines not reticulated');
+      delete(prev, channelID) {
+        if (channelID == "ca3054e8-b59b-4ea0-9c23-4a3c518f3161") {
+          return Promise.reject("splines not reticulated");
         }
         return prev.call(this, channelID);
       },
       getByIdentifiers(prev, identifiers) {
-        if (identifiers.scope == 'https://example.com/get/fail') {
-          return Promise.reject('qualia unsynchronized');
+        if (identifiers.scope == "https://example.com/get/fail") {
+          return Promise.reject("qualia unsynchronized");
         }
         return prev.call(this, identifiers);
       },
@@ -386,7 +387,7 @@ var setUpServiceInParent = async function(service, db) {
       return new MockWebSocket(uri, {
         onHello(request) {
           this.serverSendMsg(JSON.stringify({
-            messageType: 'hello',
+            messageType: "hello",
             uaid: userAgentID,
             status: 200,
           }));
@@ -398,20 +399,20 @@ var setUpServiceInParent = async function(service, db) {
                 padding: "require",
               })
             );
-            equal(appServerKey.length, 65, 'Wrong app server key length');
-            equal(appServerKey[0], 4, 'Wrong app server key format');
+            equal(appServerKey.length, 65, "Wrong app server key length");
+            equal(appServerKey[0], 4, "Wrong app server key format");
           }
           this.serverSendMsg(JSON.stringify({
-            messageType: 'register',
+            messageType: "register",
             uaid: userAgentID,
             channelID: request.channelID,
             status: 200,
-            pushEndpoint: 'https://example.org/push/' + request.channelID,
+            pushEndpoint: "https://example.org/push/" + request.channelID,
           }));
         },
         onUnregister(request) {
           this.serverSendMsg(JSON.stringify({
-            messageType: 'unregister',
+            messageType: "unregister",
             channelID: request.channelID,
             status: 200,
           }));
@@ -427,26 +428,26 @@ var tearDownServiceInParent = async function(db) {
   }
 
   let record = await db.getByIdentifiers({
-    scope: 'https://example.com/sub/ok',
-    originAttributes: '',
+    scope: "https://example.com/sub/ok",
+    originAttributes: "",
   });
-  ok(record.pushEndpoint.startsWith('https://example.org/push'),
-    'Wrong push endpoint in subscription record');
+  ok(record.pushEndpoint.startsWith("https://example.org/push"),
+    "Wrong push endpoint in subscription record");
 
-  record = await db.getByKeyID('3a414737-2fd0-44c0-af05-7efc172475fc');
-  ok(!record, 'Unsubscribed record should not exist');
+  record = await db.getByKeyID("3a414737-2fd0-44c0-af05-7efc172475fc");
+  ok(!record, "Unsubscribed record should not exist");
 };
 
 function putTestRecord(db, keyID, scope, quota) {
   return db.put({
     channelID: keyID,
-    pushEndpoint: 'https://example.org/push/' + keyID,
-    scope: scope,
+    pushEndpoint: "https://example.org/push/" + keyID,
+    scope,
     pushCount: 0,
     lastPush: 0,
     version: null,
-    originAttributes: '',
-    quota: quota,
+    originAttributes: "",
+    quota,
     systemRecord: quota == Infinity,
   });
 }

@@ -1,7 +1,7 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-'use strict';
+"use strict";
 
 const {PushDB, PushService} = serviceExports;
 
@@ -18,17 +18,17 @@ add_task(async function test_unregister_not_found() {
       return new MockWebSocket(uri, {
         onHello(request) {
           this.serverSendMsg(JSON.stringify({
-            messageType: 'hello',
+            messageType: "hello",
             status: 200,
-            uaid: 'f074ed80-d479-44fa-ba65-792104a79ea9'
+            uaid: "f074ed80-d479-44fa-ba65-792104a79ea9",
           }));
-        }
+        },
       });
-    }
+    },
   });
 
   let result = await PushService.unregister({
-    scope: 'https://example.net/nonexistent',
+    scope: "https://example.net/nonexistent",
     originAttributes: ChromeUtils.originAttributesToSuffix(
       { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
   });

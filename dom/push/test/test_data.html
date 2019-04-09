@@ -25,6 +25,10 @@ http://creativecommons.org/licenses/publicdomain/
 </pre>
 
 <script class="testbody" type="text/javascript">
+  /* import-globals-from ./test_utils.js */
+
+  /* globals webPushEncrypt */
+
   var userAgentID = "ac44402c-85fc-41e4-a0d0-483316d15351";
   var channelID = null;
 
@@ -36,7 +40,7 @@ http://creativecommons.org/licenses/publicdomain/
       uaid: userAgentID,
       channelID,
       status: 200,
-      pushEndpoint: "https://example.com/endpoint/1"
+      pushEndpoint: "https://example.com/endpoint/1",
     }));
   };
 
@@ -45,7 +49,7 @@ http://creativecommons.org/licenses/publicdomain/
     await setupPrefsAndMockSocket(mockSocket);
     await setPushPermission(true);
 
-    var url = "worker.js" + "?" + (Math.random());
+    var url = "worker.js?" + (Math.random());
     registration = await navigator.serviceWorker.register(url, {scope: "."});
     await waitForActive(registration);
   });
@@ -92,28 +96,28 @@ http://creativecommons.org/licenses/publicdomain/
   });
 
   var version = 0;
-  function sendEncryptedMsg(pushSubscription, message) {
-    return webPushEncrypt(pushSubscription, message)
+  function sendEncryptedMsg(pushSub, message) {
+    return webPushEncrypt(pushSub, message)
       .then((encryptedData) => {
         mockSocket.serverSendMsg(JSON.stringify({
-          messageType: 'notification',
+          messageType: "notification",
           version: version++,
-          channelID: channelID,
+          channelID,
           data: encryptedData.data,
           headers: {
             encryption: encryptedData.encryption,
             encryption_key: encryptedData.encryption_key,
-            encoding: encryptedData.encoding
-          }
+            encoding: encryptedData.encoding,
+          },
         }));
       });
   }
 
-  function waitForMessage(pushSubscription, message) {
+  function waitForMessage(pushSub, message) {
     return Promise.all([
       controlledFrame.waitOnWorkerMessage("finished"),
-      sendEncryptedMsg(pushSubscription, message),
-    ]).then(([message]) => message);
+      sendEncryptedMsg(pushSub, message),
+    ]).then(([msg]) => msg);
   }
 
   add_task(async function sendPushMessageFromPage() {
@@ -169,11 +173,11 @@ http://creativecommons.org/licenses/publicdomain/
     mockSocket.serverSendMsg(JSON.stringify({
       messageType: "notification",
       version: "vDummy",
-      channelID: channelID
+      channelID,
     }));
 
-    var message = await finishedPromise;
-    ok(!message.data, "Should exclude data for blank messages");
+    var msg = await finishedPromise;
+    ok(!msg.data, "Should exclude data for blank messages");
   });
 
   add_task(async function unsubscribe() {

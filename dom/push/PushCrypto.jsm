@@ -1,47 +1,48 @@
-/* jshint moz: true, esnext: true */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-'use strict';
+"use strict";
 
-const {Services} = ChromeUtils.import('resource://gre/modules/Services.jsm');
-const {XPCOMUtils} = ChromeUtils.import('resource://gre/modules/XPCOMUtils.jsm');
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyGetter(this, 'gDOMBundle', () =>
-  Services.strings.createBundle('chrome://global/locale/dom/dom.properties'));
+XPCOMUtils.defineLazyGetter(this, "gDOMBundle", () =>
+  Services.strings.createBundle("chrome://global/locale/dom/dom.properties"));
 
-XPCOMUtils.defineLazyGlobalGetters(this, ['crypto']);
+XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
 
-var EXPORTED_SYMBOLS = ['PushCrypto', 'concatArray'];
+const EXPORTED_SYMBOLS = ["PushCrypto", "concatArray"];
 
-var UTF8 = new TextEncoder('utf-8');
+const UTF8 = new TextEncoder("utf-8");
 
-var ECDH_KEY = { name: 'ECDH', namedCurve: 'P-256' };
-var ECDSA_KEY =  { name: 'ECDSA', namedCurve: 'P-256' };
+const ECDH_KEY = { name: "ECDH", namedCurve: "P-256" };
+const ECDSA_KEY = { name: "ECDSA", namedCurve: "P-256" };
+const HMAC_SHA256 = { name: "HMAC", hash: "SHA-256" };
+const NONCE_INFO = UTF8.encode("Content-Encoding: nonce");
 
 // A default keyid with a name that won't conflict with a real keyid.
-var DEFAULT_KEYID = '';
+const DEFAULT_KEYID = "";
 
 /** Localized error property names. */
 
 // `Encryption` header missing or malformed.
-const BAD_ENCRYPTION_HEADER = 'PushMessageBadEncryptionHeader';
+const BAD_ENCRYPTION_HEADER = "PushMessageBadEncryptionHeader";
 // `Crypto-Key` or legacy `Encryption-Key` header missing.
-const BAD_CRYPTO_KEY_HEADER = 'PushMessageBadCryptoKeyHeader';
-const BAD_ENCRYPTION_KEY_HEADER = 'PushMessageBadEncryptionKeyHeader';
+const BAD_CRYPTO_KEY_HEADER = "PushMessageBadCryptoKeyHeader";
+const BAD_ENCRYPTION_KEY_HEADER = "PushMessageBadEncryptionKeyHeader";
 // `Content-Encoding` header missing or contains unsupported encoding.
-const BAD_ENCODING_HEADER = 'PushMessageBadEncodingHeader';
+const BAD_ENCODING_HEADER = "PushMessageBadEncodingHeader";
 // `dh` parameter of `Crypto-Key` header missing or not base64url-encoded.
-const BAD_DH_PARAM = 'PushMessageBadSenderKey';
+const BAD_DH_PARAM = "PushMessageBadSenderKey";
 // `salt` parameter of `Encryption` header missing or not base64url-encoded.
-const BAD_SALT_PARAM = 'PushMessageBadSalt';
+const BAD_SALT_PARAM = "PushMessageBadSalt";
 // `rs` parameter of `Encryption` header not a number or less than pad size.
-const BAD_RS_PARAM = 'PushMessageBadRecordSize';
+const BAD_RS_PARAM = "PushMessageBadRecordSize";
 // Invalid or insufficient padding for encrypted chunk.
-const BAD_PADDING = 'PushMessageBadPaddingError';
+const BAD_PADDING = "PushMessageBadPaddingError";
 // Generic crypto error.
-const BAD_CRYPTO = 'PushMessageBadCryptoError';
+const BAD_CRYPTO = "PushMessageBadCryptoError";
 
 class CryptoError extends Error {
   /**
@@ -80,9 +81,9 @@ function getEncryptionKeyParams(encryptKeyField) {
   if (!encryptKeyField) {
     return null;
   }
-  var params = encryptKeyField.split(',');
+  var params = encryptKeyField.split(",");
   return params.reduce((m, p) => {
-    var pmap = p.split(';').reduce(parseHeaderFieldParams, {});
+    var pmap = p.split(";").reduce(parseHeaderFieldParams, {});
     if (pmap.keyid && pmap.dh) {
       m[pmap.keyid] = pmap.dh;
     }
@@ -95,34 +96,34 @@ function getEncryptionKeyParams(encryptKeyField) {
 
 function getEncryptionParams(encryptField) {
   if (!encryptField) {
-    throw new CryptoError('Missing encryption header',
+    throw new CryptoError("Missing encryption header",
                           BAD_ENCRYPTION_HEADER);
   }
-  var p = encryptField.split(',', 1)[0];
+  var p = encryptField.split(",", 1)[0];
   if (!p) {
-    throw new CryptoError('Encryption header missing params',
+    throw new CryptoError("Encryption header missing params",
                           BAD_ENCRYPTION_HEADER);
   }
-  return p.split(';').reduce(parseHeaderFieldParams, {});
+  return p.split(";").reduce(parseHeaderFieldParams, {});
 }
 
 // Extracts the sender public key, salt, and record size from the payload for the
 // aes128gcm scheme.
 function getCryptoParamsFromPayload(payload) {
   if (payload.byteLength < 21) {
-    throw new CryptoError('Truncated header', BAD_CRYPTO);
+    throw new CryptoError("Truncated header", BAD_CRYPTO);
   }
   let rs = (payload[16] << 24) | (payload[17] << 16) | (payload[18] << 8) | payload[19];
   let keyIdLen = payload[20];
   if (keyIdLen != 65) {
-    throw new CryptoError('Invalid sender public key', BAD_DH_PARAM);
+    throw new CryptoError("Invalid sender public key", BAD_DH_PARAM);
   }
   if (payload.byteLength <= 21 + keyIdLen) {
-    throw new CryptoError('Truncated payload', BAD_CRYPTO);
+    throw new CryptoError("Truncated payload", BAD_CRYPTO);
   }
   return {
     salt: payload.slice(0, 16),
-    rs: rs,
+    rs,
     senderKey: payload.slice(21, 21 + keyIdLen),
     ciphertext: payload.slice(21 + keyIdLen),
   };
@@ -143,7 +144,7 @@ function getCryptoParamsFromHeaders(headers) {
     // https://tools.ietf.org/html/draft-ietf-httpbis-encryption-encoding-01
     keymap = getEncryptionKeyParams(headers.crypto_key);
     if (!keymap) {
-      throw new CryptoError('Missing Crypto-Key header',
+      throw new CryptoError("Missing Crypto-Key header",
                             BAD_CRYPTO_KEY_HEADER);
     }
   } else if (headers.encoding == AESGCM128_ENCODING) {
@@ -151,7 +152,7 @@ function getCryptoParamsFromHeaders(headers) {
     // https://tools.ietf.org/html/draft-thomson-http-encryption-02
     keymap = getEncryptionKeyParams(headers.encryption_key);
     if (!keymap) {
-      throw new CryptoError('Missing Encryption-Key header',
+      throw new CryptoError("Missing Encryption-Key header",
                             BAD_ENCRYPTION_KEY_HEADER);
     }
   }
@@ -160,21 +161,21 @@ function getCryptoParamsFromHeaders(headers) {
   var dh = keymap[enc.keyid || DEFAULT_KEYID];
   var senderKey = base64URLDecode(dh);
   if (!senderKey) {
-    throw new CryptoError('Invalid dh parameter', BAD_DH_PARAM);
+    throw new CryptoError("Invalid dh parameter", BAD_DH_PARAM);
   }
 
   var salt = base64URLDecode(enc.salt);
   if (!salt) {
-    throw new CryptoError('Invalid salt parameter', BAD_SALT_PARAM);
+    throw new CryptoError("Invalid salt parameter", BAD_SALT_PARAM);
   }
   var rs = enc.rs ? parseInt(enc.rs, 10) : 4096;
   if (isNaN(rs)) {
-    throw new CryptoError('rs parameter must be a number', BAD_RS_PARAM);
+    throw new CryptoError("rs parameter must be a number", BAD_RS_PARAM);
   }
   return {
-    salt: salt,
-    rs: rs,
-    senderKey: senderKey,
+    salt,
+    rs,
+    senderKey,
   };
 }
 
@@ -186,19 +187,19 @@ function base64URLDecode(string) {
   try {
     return ChromeUtils.base64URLDecode(string, {
       // draft-ietf-httpbis-encryption-encoding-01 prohibits padding.
-      padding: 'reject',
+      padding: "reject",
     });
   } catch (ex) {}
   return null;
 }
 
 var parseHeaderFieldParams = (m, v) => {
-  var i = v.indexOf('=');
+  var i = v.indexOf("=");
   if (i >= 0) {
     // A quoted string with internal quotes is invalid for all the possible
     // values of this header field.
     m[v.substring(0, i).trim()] = v.substring(i + 1).trim()
-                                   .replace(/^"(.*)"$/, '$1');
+                                   .replace(/^"(.*)"$/, "$1");
   }
   return m;
 };
@@ -208,7 +209,7 @@ function chunkArray(array, size) {
   array = array.buffer || array;
   var index = 0;
   var result = [];
-  while(index + size <= array.byteLength) {
+  while (index + size <= array.byteLength) {
     result.push(new Uint8Array(array, start + index, size));
     index += size;
   }
@@ -218,7 +219,7 @@ function chunkArray(array, size) {
   return result;
 }
 
-var concatArray = function(arrays) {
+function concatArray(arrays) {
   var size = arrays.reduce((total, a) => total + a.byteLength, 0);
   var index = 0;
   return arrays.reduce((result, a) => {
@@ -226,17 +227,15 @@ var concatArray = function(arrays) {
     index += a.byteLength;
     return result;
   }, new Uint8Array(size));
-};
-
-var HMAC_SHA256 = { name: 'HMAC', hash: 'SHA-256' };
+}
 
 function hmac(key) {
-  this.keyPromise = crypto.subtle.importKey('raw', key, HMAC_SHA256,
-                                            false, ['sign']);
+  this.keyPromise = crypto.subtle.importKey("raw", key, HMAC_SHA256,
+                                            false, ["sign"]);
 }
 
 hmac.prototype.hash = function(input) {
-  return this.keyPromise.then(k => crypto.subtle.sign('HMAC', k, input));
+  return this.keyPromise.then(k => crypto.subtle.sign("HMAC", k, input));
 };
 
 function hkdf(salt, ikm) {
@@ -250,7 +249,7 @@ hkdf.prototype.extract = function(info, len) {
     .then(prkh => prkh.hash(input))
     .then(h => {
       if (h.byteLength < len) {
-        throw new CryptoError('HKDF length is too long', BAD_CRYPTO);
+        throw new CryptoError("HKDF length is too long", BAD_CRYPTO);
       }
       return h.slice(0, len);
     });
@@ -259,7 +258,7 @@ hkdf.prototype.extract = function(info, len) {
 /* generate a 96-bit nonce for use in GCM, 48-bits of which are populated */
 function generateNonce(base, index) {
   if (index >= Math.pow(2, 48)) {
-    throw new CryptoError('Nonce index is too large', BAD_CRYPTO);
+    throw new CryptoError("Nonce index is too large", BAD_CRYPTO);
   }
   var nonce = base.slice(0, 12);
   nonce = new Uint8Array(nonce);
@@ -272,8 +271,6 @@ function generateNonce(base, index) {
 function encodeLength(buffer) {
   return new Uint8Array([0, buffer.byteLength]);
 }
-
-var NONCE_INFO = UTF8.encode('Content-Encoding: nonce');
 
 class Decoder {
   /**
@@ -312,8 +309,8 @@ class Decoder {
     try {
       let ikm = await this.computeSharedSecret();
       let [gcmBits, nonce] = await this.deriveKeyAndNonce(ikm);
-      let key = await crypto.subtle.importKey('raw', gcmBits, 'AES-GCM', false,
-                                              ['decrypt']);
+      let key = await crypto.subtle.importKey("raw", gcmBits, "AES-GCM", false,
+                                              ["decrypt"]);
 
       let r = await Promise.all(chunkArray(this.ciphertext, this.chunkSize)
         .map((slice, index, chunks) => this.decodeChunk(slice, index, nonce,
@@ -327,7 +324,7 @@ class Decoder {
       // Web Crypto returns an unhelpful "operation failed for an
       // operation-specific reason" error if decryption fails. We don't have
       // context about what went wrong, so we throw a generic error instead.
-      throw new CryptoError('Bad encryption', BAD_CRYPTO);
+      throw new CryptoError("Bad encryption", BAD_CRYPTO);
     }
   }
 
@@ -339,12 +336,12 @@ class Decoder {
    */
   async computeSharedSecret() {
     let [appServerKey, subscriptionPrivateKey] = await Promise.all([
-      crypto.subtle.importKey('raw', this.senderKey, ECDH_KEY,
-                              false, ['deriveBits']),
-      crypto.subtle.importKey('jwk', this.privateKey, ECDH_KEY,
-                              false, ['deriveBits'])
+      crypto.subtle.importKey("raw", this.senderKey, ECDH_KEY,
+                              false, ["deriveBits"]),
+      crypto.subtle.importKey("jwk", this.privateKey, ECDH_KEY,
+                              false, ["deriveBits"]),
     ]);
-    return crypto.subtle.deriveBits({ name: 'ECDH', public: appServerKey },
+    return crypto.subtle.deriveBits({ name: "ECDH", public: appServerKey },
                                     subscriptionPrivateKey, 256);
   }
 
@@ -355,7 +352,7 @@ class Decoder {
    * @returns {Array} A `[gcmBits, nonce]` tuple.
    */
   async deriveKeyAndNonce(ikm) {
-    throw new Error('Missing `deriveKeyAndNonce` implementation');
+    throw new Error("Missing `deriveKeyAndNonce` implementation");
   }
 
   /**
@@ -371,8 +368,8 @@ class Decoder {
    */
   async decodeChunk(slice, index, nonce, key, last) {
     let params = {
-      name: 'AES-GCM',
-      iv: generateNonce(nonce, index)
+      name: "AES-GCM",
+      iv: generateNonce(nonce, index),
     };
     let decoded = await crypto.subtle.decrypt(params, key, slice);
     return this.unpadChunk(new Uint8Array(decoded), last);
@@ -386,12 +383,12 @@ class Decoder {
    * @returns {Uint8Array} The block with padding removed.
    */
   unpadChunk(chunk, last) {
-    throw new Error('Missing `unpadChunk` implementation');
+    throw new Error("Missing `unpadChunk` implementation");
   }
 
   /** The record chunking size. */
   get chunkSize() {
-    throw new Error('Missing `chunkSize` implementation');
+    throw new Error("Missing `chunkSize` implementation");
   }
 }
 
@@ -401,7 +398,7 @@ class OldSchemeDecoder extends Decoder {
     // boundary.
     if (this.ciphertext.byteLength > 0 &&
         this.ciphertext.byteLength % this.chunkSize === 0) {
-      throw new CryptoError('Encrypted data truncated', BAD_CRYPTO);
+      throw new CryptoError("Encrypted data truncated", BAD_CRYPTO);
     }
     return super.decode();
   }
@@ -412,19 +409,19 @@ class OldSchemeDecoder extends Decoder {
    */
   unpadChunk(decoded) {
     if (decoded.length < this.padSize) {
-      throw new CryptoError('Decoded array is too short!', BAD_PADDING);
+      throw new CryptoError("Decoded array is too short!", BAD_PADDING);
     }
-    var pad = decoded[0]
+    var pad = decoded[0];
     if (this.padSize == 2) {
       pad = (pad << 8) | decoded[1];
     }
     if (pad > decoded.length - this.padSize) {
-      throw new CryptoError('Padding is wrong!', BAD_PADDING);
+      throw new CryptoError("Padding is wrong!", BAD_PADDING);
     }
     // All padded bytes must be zero except the first one.
     for (var i = this.padSize; i < this.padSize + pad; i++) {
       if (decoded[i] !== 0) {
-        throw new CryptoError('Padding is wrong!', BAD_PADDING);
+        throw new CryptoError("Padding is wrong!", BAD_PADDING);
       }
     }
     return decoded.slice(pad + this.padSize);
@@ -439,16 +436,16 @@ class OldSchemeDecoder extends Decoder {
   }
 
   get padSize() {
-    throw new Error('Missing `padSize` implementation');
+    throw new Error("Missing `padSize` implementation");
   }
 }
 
 /** New encryption scheme (draft-ietf-httpbis-encryption-encoding-06). */
 
-var AES128GCM_ENCODING = 'aes128gcm';
-var AES128GCM_KEY_INFO = UTF8.encode('Content-Encoding: aes128gcm\0');
-var AES128GCM_AUTH_INFO = UTF8.encode('WebPush: info\0');
-var AES128GCM_NONCE_INFO = UTF8.encode('Content-Encoding: nonce\0');
+const AES128GCM_ENCODING = "aes128gcm";
+const AES128GCM_KEY_INFO = UTF8.encode("Content-Encoding: aes128gcm\0");
+const AES128GCM_AUTH_INFO = UTF8.encode("WebPush: info\0");
+const AES128GCM_NONCE_INFO = UTF8.encode("Content-Encoding: nonce\0");
 
 class aes128gcmDecoder extends Decoder {
   /**
@@ -461,13 +458,13 @@ class aes128gcmDecoder extends Decoder {
     let authInfo = concatArray([
       AES128GCM_AUTH_INFO,
       this.publicKey,
-      this.senderKey
+      this.senderKey,
     ]);
     let prk = await authKdf.extract(authInfo, 32);
     let prkKdf = new hkdf(this.salt, prk);
     return Promise.all([
       prkKdf.extract(AES128GCM_KEY_INFO, 16),
-      prkKdf.extract(AES128GCM_NONCE_INFO, 12)
+      prkKdf.extract(AES128GCM_NONCE_INFO, 12),
     ]);
   }
 
@@ -479,11 +476,11 @@ class aes128gcmDecoder extends Decoder {
       }
       let recordPad = last ? 2 : 1;
       if (decoded[length] != recordPad) {
-        throw new CryptoError('Padding is wrong!', BAD_PADDING);
+        throw new CryptoError("Padding is wrong!", BAD_PADDING);
       }
       return decoded.slice(0, length);
     }
-    throw new CryptoError('Zero plaintext', BAD_PADDING);
+    throw new CryptoError("Zero plaintext", BAD_PADDING);
   }
 
   /** aes128gcm accounts for the authentication tag in the record size. */
@@ -494,10 +491,10 @@ class aes128gcmDecoder extends Decoder {
 
 /** Older encryption scheme (draft-ietf-httpbis-encryption-encoding-01). */
 
-var AESGCM_ENCODING = 'aesgcm';
-var AESGCM_KEY_INFO = UTF8.encode('Content-Encoding: aesgcm\0');
-var AESGCM_AUTH_INFO = UTF8.encode('Content-Encoding: auth\0'); // note nul-terminus
-var AESGCM_P256DH_INFO = UTF8.encode('P-256\0');
+const AESGCM_ENCODING = "aesgcm";
+const AESGCM_KEY_INFO = UTF8.encode("Content-Encoding: aesgcm\0");
+const AESGCM_AUTH_INFO = UTF8.encode("Content-Encoding: auth\0"); // note nul-terminus
+const AESGCM_P256DH_INFO = UTF8.encode("P-256\0");
 
 class aesgcmDecoder extends OldSchemeDecoder {
   /**
@@ -516,16 +513,16 @@ class aesgcmDecoder extends OldSchemeDecoder {
     let keyInfo = concatArray([
       AESGCM_KEY_INFO, AESGCM_P256DH_INFO,
       encodeLength(this.publicKey), this.publicKey,
-      encodeLength(this.senderKey), this.senderKey
+      encodeLength(this.senderKey), this.senderKey,
     ]);
     let nonceInfo = concatArray([
       NONCE_INFO, new Uint8Array([0]), AESGCM_P256DH_INFO,
       encodeLength(this.publicKey), this.publicKey,
-      encodeLength(this.senderKey), this.senderKey
+      encodeLength(this.senderKey), this.senderKey,
     ]);
     return Promise.all([
       prkKdf.extract(keyInfo, 16),
-      prkKdf.extract(nonceInfo, 12)
+      prkKdf.extract(nonceInfo, 12),
     ]);
   }
 
@@ -536,8 +533,8 @@ class aesgcmDecoder extends OldSchemeDecoder {
 
 /** Oldest encryption scheme (draft-thomson-http-encryption-02). */
 
-var AESGCM128_ENCODING = 'aesgcm128';
-var AESGCM128_KEY_INFO = UTF8.encode('Content-Encoding: aesgcm128');
+const AESGCM128_ENCODING = "aesgcm128";
+const AESGCM128_KEY_INFO = UTF8.encode("Content-Encoding: aesgcm128");
 
 class aesgcm128Decoder extends OldSchemeDecoder {
   constructor(privateKey, publicKey, cryptoParams, ciphertext) {
@@ -553,7 +550,7 @@ class aesgcm128Decoder extends OldSchemeDecoder {
     let prkKdf = new hkdf(this.salt, ikm);
     return Promise.all([
       prkKdf.extract(AESGCM128_KEY_INFO, 16),
-      prkKdf.extract(NONCE_INFO, 12)
+      prkKdf.extract(NONCE_INFO, 12),
     ]);
   }
 
@@ -569,17 +566,17 @@ var PushCrypto = {
   },
 
   validateAppServerKey(key) {
-    return crypto.subtle.importKey('raw', key, ECDSA_KEY,
-                                   true, ['verify'])
+    return crypto.subtle.importKey("raw", key, ECDSA_KEY,
+                                   true, ["verify"])
       .then(_ => key);
   },
 
   generateKeys() {
-    return crypto.subtle.generateKey(ECDH_KEY, true, ['deriveBits'])
+    return crypto.subtle.generateKey(ECDH_KEY, true, ["deriveBits"])
       .then(cryptoKey =>
          Promise.all([
-           crypto.subtle.exportKey('raw', cryptoKey.publicKey),
-           crypto.subtle.exportKey('jwk', cryptoKey.privateKey)
+           crypto.subtle.exportKey("raw", cryptoKey.publicKey),
+           crypto.subtle.exportKey("jwk", cryptoKey.privateKey),
          ]));
   },
 
@@ -604,7 +601,7 @@ var PushCrypto = {
 
     let encoding = headers.encoding;
     if (!headers.encoding) {
-      throw new CryptoError('Missing Content-Encoding header',
+      throw new CryptoError("Missing Content-Encoding header",
                             BAD_ENCODING_HEADER);
     }
 
@@ -630,7 +627,7 @@ var PushCrypto = {
     }
 
     if (!decoder) {
-      throw new CryptoError('Unsupported Content-Encoding: ' + encoding,
+      throw new CryptoError("Unsupported Content-Encoding: " + encoding,
                             BAD_ENCODING_HEADER);
     }
 
@@ -650,7 +647,7 @@ var PushCrypto = {
    * @param {options} Object Encryption options, used for tests.
    * @returns {ciphertext, encoding} The encrypted payload and encoding.
    */
-  async encrypt(plaintext, receiverPublicKey, receiverAuthSecret, options={}) {
+  async encrypt(plaintext, receiverPublicKey, receiverAuthSecret, options = {}) {
     const encoding = options.encoding || AES128GCM_ENCODING;
     // We only support one encoding type.
     if (encoding != AES128GCM_ENCODING) {
@@ -674,7 +671,7 @@ var PushCrypto = {
 
 // A class for aes128gcm encryption - the only kind we support.
 class aes128gcmEncoder {
-  constructor(plaintext ,receiverPublicKey, receiverAuthSecret, senderKeyPair, salt, rs) {
+  constructor(plaintext, receiverPublicKey, receiverAuthSecret, senderKeyPair, salt, rs) {
     this.receiverPublicKey = receiverPublicKey;
     this.receiverAuthSecret = receiverAuthSecret;
     this.senderKeyPair = senderKeyPair;
@@ -689,7 +686,7 @@ class aes128gcmEncoder {
 
     const rawSenderPublicKey = await crypto.subtle.exportKey("raw", this.senderKeyPair.publicKey);
     const [gcmBits, nonce] = await this.deriveKeyAndNonce(sharedSecret,
-                                                          rawSenderPublicKey)
+                                                          rawSenderPublicKey);
 
     const contentEncryptionKey = await crypto.subtle.importKey("raw", gcmBits,
                                                                "AES-GCM", false,
@@ -712,17 +709,17 @@ class aes128gcmEncoder {
       // Send an authentication tag for empty messages.
       chunks = [await crypto.subtle.encrypt({
         name: "AES-GCM",
-        iv: generateNonce(nonce, 0)
+        iv: generateNonce(nonce, 0),
       }, key, new Uint8Array([2]))];
     } else {
       // Use specified recordsize, though we burn 1 for padding and 16 byte
       // overhead.
       let inChunks = chunkArray(this.plaintext, this.rs - 1 - 16);
-      chunks = await Promise.all(inChunks.map(async function (slice, index) {
+      chunks = await Promise.all(inChunks.map(async function(slice, index) {
         let isLast = index == inChunks.length - 1;
         let padding = new Uint8Array([isLast ? 2 : 1]);
         let input = concatArray([slice, padding]);
-        return await crypto.subtle.encrypt({
+        return crypto.subtle.encrypt({
           name: "AES-GCM",
           iv: generateNonce(nonce, index),
         }, key, input);
