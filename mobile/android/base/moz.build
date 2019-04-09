@@ -29,7 +29,7 @@ with Files('java/org/mozilla/gecko/activitystream/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Awesomescreen')
 
 with Files('java/org/mozilla/gecko/cleanup/**'):
-    BUG_COMPONENT = ('Android Background Services', 'Firefox Health Report Service')
+    BUG_COMPONENT = ('Firefox for Android', 'Firefox Health Report Service')
 
 with Files('java/org/mozilla/gecko/distribution/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Distributions')
