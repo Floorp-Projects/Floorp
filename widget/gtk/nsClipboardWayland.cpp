@@ -639,7 +639,6 @@ static gboolean offer_hash_remove(gpointer wl_offer, gpointer aDataOffer,
 nsRetrievalContextWayland::~nsRetrievalContextWayland(void) {
   g_hash_table_foreach_remove(mActiveOffers, offer_hash_remove, nullptr);
   g_hash_table_destroy(mActiveOffers);
-  WaylandDisplayRelease(mDisplay);
 }
 
 GdkAtom *nsRetrievalContextWayland::GetTargets(int32_t aWhichClipboard,
