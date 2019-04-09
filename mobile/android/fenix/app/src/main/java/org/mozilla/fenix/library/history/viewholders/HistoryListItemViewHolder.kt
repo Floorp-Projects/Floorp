@@ -96,8 +96,8 @@ class HistoryListItemViewHolder(
         url.text = item.url
 
         val isEditing = mode is HistoryState.Mode.Editing
-        checkbox.visibility = if (isEditing) { View.VISIBLE } else { View.GONE }
-        favicon.visibility = if (isEditing) { View.INVISIBLE } else { View.VISIBLE }
+        checkbox.visibility = if (isEditing) View.VISIBLE else View.GONE
+        favicon.visibility = if (isEditing) View.INVISIBLE else View.VISIBLE
 
         if (mode is HistoryState.Mode.Editing) {
             checkbox.setOnCheckedChangeListener(null)
