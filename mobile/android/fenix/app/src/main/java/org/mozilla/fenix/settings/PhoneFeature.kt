@@ -36,7 +36,7 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
     fun getActionLabel(context: Context, sitePermissions: SitePermissions? = null, settings: Settings): String {
         return when (this) {
             CAMERA -> {
-                sitePermissions?.cameraBack?.toString(context) ?: settings
+                sitePermissions?.camera?.toString(context) ?: settings
                     .getSitePermissionsPhoneFeatureCameraAction()
                     .toString(context)
             }

@@ -5,7 +5,7 @@ package org.mozilla.fenix.components.metrics
 
 import android.content.Context
 import mozilla.components.service.glean.Glean
-import mozilla.components.service.glean.metrics.NoExtraKeys
+import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.utils.Browsers
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.GleanMetrics.CrashReporter
