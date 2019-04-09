@@ -84,89 +84,10 @@ void BrowserBridgeChild::UpdateDimensions(const nsIntRect& aRect,
   Unused << SendUpdateDimensions(di);
 }
 
-void BrowserBridgeChild::NavigateByKey(bool aForward,
-                                       bool aForDocumentNavigation) {
-  Unused << SendNavigateByKey(aForward, aForDocumentNavigation);
-}
-
-void BrowserBridgeChild::Activate() { Unused << SendActivate(); }
-
-void BrowserBridgeChild::Deactivate() { Unused << SendDeactivate(); }
-
-/*static*/
-BrowserBridgeChild* BrowserBridgeChild::GetFrom(nsFrameLoader* aFrameLoader) {
-  if (!aFrameLoader) {
-    return nullptr;
-  }
-  return aFrameLoader->GetBrowserBridgeChild();
-}
-
-/*static*/
-BrowserBridgeChild* BrowserBridgeChild::GetFrom(nsIContent* aContent) {
-  RefPtr<nsFrameLoaderOwner> loaderOwner = do_QueryObject(aContent);
-  if (!loaderOwner) {
-    return nullptr;
-  }
-  RefPtr<nsFrameLoader> frameLoader = loaderOwner->GetFrameLoader();
-  return GetFrom(frameLoader);
-}
-
 IPCResult BrowserBridgeChild::RecvSetLayersId(
     const mozilla::layers::LayersId& aLayersId) {
   MOZ_ASSERT(!mLayersId.IsValid() && aLayersId.IsValid());
   mLayersId = aLayersId;
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult BrowserBridgeChild::RecvRequestFocus(
-    const bool& aCanRaise) {
-  // Adapted from TabParent
-  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
-  if (!fm) {
-    return IPC_OK();
-  }
-
-  RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
-
-  if (!owner || !owner->OwnerDoc()) {
-    return IPC_OK();
-  }
-
-  uint32_t flags = nsIFocusManager::FLAG_NOSCROLL;
-  if (aCanRaise) {
-    flags |= nsIFocusManager::FLAG_RAISE;
-  }
-
-  fm->SetFocus(owner, flags);
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult BrowserBridgeChild::RecvMoveFocus(
-    const bool& aForward, const bool& aForDocumentNavigation) {
-  // Adapted from TabParent
-  nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
-  if (!fm) {
-    return IPC_OK();
-  }
-
-  RefPtr<Element> owner = mFrameLoader->GetOwnerContent();
-
-  if (!owner || !owner->OwnerDoc()) {
-    return IPC_OK();
-  }
-
-  RefPtr<Element> dummy;
-
-  uint32_t type =
-      aForward
-          ? (aForDocumentNavigation
-                 ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_FORWARDDOC)
-                 : static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_FORWARD))
-          : (aForDocumentNavigation
-                 ? static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_BACKWARDDOC)
-                 : static_cast<uint32_t>(nsIFocusManager::MOVEFOCUS_BACKWARD));
-  fm->MoveFocus(nullptr, owner, type, nsIFocusManager::FLAG_BYKEY,
-                getter_AddRefs(dummy));
   return IPC_OK();
 }
 

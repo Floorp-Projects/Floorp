@@ -25,19 +25,6 @@ async protocol PBrowserBridge {
 child:
   async SetLayersId(LayersId layersId);
 
-  /**
-   * Request that the IPC child / Web parent process move focus to the
-   * browser's frame. If canRaise is true, the window can be raised if
-   * it is inactive.
-   */
-  async RequestFocus(bool canRaise);
-
-  /**
-   * When IPC parent / Web child sends this message, the IPC child / Web parent
-   * should move focus to the next or previous focusable element or document.
-   */
-  async MoveFocus(bool forward, bool forDocumentNavigation);
-
 parent:
   // Destroy the remote web browser due to the nsFrameLoader going away.
   async __delete__();
@@ -49,19 +36,6 @@ parent:
   async Show(ScreenIntSize size, bool parentIsActive, nsSizeMode sizeMode);
   async UpdateDimensions(DimensionInfo dimensions) compressall;
   async RenderLayers(bool aEnabled, bool aForceRepaint, LayersObserverEpoch aEpoch);
-
-  /**
-   * Navigate by key (Tab/Shift+Tab/F6/Shift+f6).
-   */
-  async NavigateByKey(bool aForward, bool aForDocumentNavigation);
-
-  /**
-   * Sending an activate message moves focus to the iframe.
-   */
-  async Activate();
-
-  async Deactivate();
-
 };
 
 }  // namespace dom

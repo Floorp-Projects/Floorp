@@ -295,12 +295,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   PBrowserParent* GetRemoteBrowser() const;
 
   /**
-   * Returns the BrowserBridgeChild if this is an out-of-process iframe, or null
-   * otherwise.
-   */
-  mozilla::dom::BrowserBridgeChild* GetBrowserBridgeChild() const;
-
-  /**
    * Returns the layers ID that this remote frame is using to render.
    *
    * This must only be called if this is a remote frame.

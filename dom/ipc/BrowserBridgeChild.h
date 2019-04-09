@@ -40,16 +40,6 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
   void UpdateDimensions(const nsIntRect& aRect,
                         const mozilla::ScreenIntSize& aSize);
 
-  void NavigateByKey(bool aForward, bool aForDocumentNavigation);
-
-  void Activate();
-
-  void Deactivate();
-
-  static BrowserBridgeChild* GetFrom(nsFrameLoader* aFrameLoader);
-
-  static BrowserBridgeChild* GetFrom(nsIContent* aContent);
-
  protected:
   friend class PBrowserBridgeChild;
 
