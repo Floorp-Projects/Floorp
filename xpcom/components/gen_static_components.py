@@ -69,6 +69,8 @@ class ProcessSelector:
     ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS = (ALLOW_IN_GPU_PROCESS |
                                           ALLOW_IN_VR_PROCESS |
                                           ALLOW_IN_SOCKET_PROCESS)
+    ALLOW_IN_RDD_AND_SOCKET_PROCESS = (ALLOW_IN_RDD_PROCESS |
+                                       ALLOW_IN_SOCKET_PROCESS)
     ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS = (ALLOW_IN_GPU_PROCESS |
                                            ALLOW_IN_RDD_PROCESS |
                                            ALLOW_IN_SOCKET_PROCESS)
@@ -91,6 +93,8 @@ PROCESSES = {
     ProcessSelector.ALLOW_IN_GPU_AND_SOCKET_PROCESS: 'ALLOW_IN_GPU_AND_SOCKET_PROCESS',
     ProcessSelector.ALLOW_IN_GPU_AND_VR_PROCESS: 'ALLOW_IN_GPU_AND_VR_PROCESS',
     ProcessSelector.ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS: 'ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS',
+    ProcessSelector.ALLOW_IN_RDD_AND_SOCKET_PROCESS:
+        'ALLOW_IN_RDD_AND_SOCKET_PROCESS',
     ProcessSelector.ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS:
         'ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS',
     ProcessSelector.ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS:
