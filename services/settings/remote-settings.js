@@ -81,6 +81,7 @@ async function jexlFilterFunc(entry, environment) {
 
 function remoteSettingsFunction() {
   const _clients = new Map();
+  let _invalidatePolling = false;
 
   // If not explicitly specified, use the default signer.
   const defaultSigner = gPrefs.getCharPref(PREF_SETTINGS_DEFAULT_SIGNER);
@@ -106,7 +107,7 @@ function remoteSettingsFunction() {
       _clients.set(collectionName, c);
       // Invalidate the polling status, since we want the new collection to
       // be taken into account.
-      gPrefs.clearUserPref(PREF_SETTINGS_LAST_ETAG);
+      _invalidatePolling = true;
     }
     return _clients.get(collectionName);
   };
@@ -179,7 +180,9 @@ function remoteSettingsFunction() {
 
     Services.obs.notifyObservers(null, "remote-settings:changes-poll-start", JSON.stringify({ expectedTimestamp }));
 
-    const lastEtag = gPrefs.getCharPref(PREF_SETTINGS_LAST_ETAG, "");
+    // Do we have the latest version already?
+    // Every time we register a new client, we have to fetch the whole list again.
+    const lastEtag = _invalidatePolling ? "" : gPrefs.getCharPref(PREF_SETTINGS_LAST_ETAG, "");
 
     let pollResult;
     try {
@@ -257,6 +260,10 @@ function remoteSettingsFunction() {
         }
       }
     }
+
+    // Polling is done.
+    _invalidatePolling = false;
+
     // Report total synchronization duration to Telemetry.
     const durationMilliseconds = new Date() - startedAt;
     const syncTelemetryArgs = { source: TELEMETRY_SOURCE_SYNC, duration: durationMilliseconds, trigger };
