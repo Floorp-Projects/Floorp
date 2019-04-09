@@ -14,7 +14,7 @@
 #endif
 #include "Layers.h"
 #include "ContentChild.h"
-#include "TabParent.h"
+#include "BrowserParent.h"
 #include "js/JSON.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/BrowserElementParent.h"
@@ -1096,8 +1096,8 @@ void TabChild::DoFakeShow(const ShowInfo& aShowInfo) {
 
 void TabChild::ApplyShowInfo(const ShowInfo& aInfo) {
   // Even if we already set real show info, the dpi / rounding & scale may still
-  // be invalid (if TabParent wasn't able to get widget it would just send 0).
-  // So better to always set up-to-date values here.
+  // be invalid (if BrowserParent wasn't able to get widget it would just send
+  // 0). So better to always set up-to-date values here.
   if (aInfo.dpi() > 0) {
     mPuppetWidget->UpdateBackingScaleCache(aInfo.dpi(), aInfo.widgetRounding(),
                                            aInfo.defaultScale());
@@ -2430,8 +2430,8 @@ mozilla::ipc::IPCResult TabChild::RecvRenderLayers(
     MOZ_ASSERT(lm);
 
     // We send the current layer observer epoch to the compositor so that
-    // TabParent knows whether a layer update notification corresponds to the
-    // latest RecvRenderLayers request that was made.
+    // BrowserParent knows whether a layer update notification corresponds to
+    // the latest RecvRenderLayers request that was made.
     lm->SetLayersObserverEpoch(mLayersObserverEpoch);
   }
 
@@ -2995,12 +2995,12 @@ void TabChild::ReinitRendering() {
 
   // Before we establish a new PLayerTransaction, we must connect our layer tree
   // id, CompositorBridge, and the widget compositor all together again.
-  // Normally this happens in TabParent before TabChild is given rendering
+  // Normally this happens in BrowserParent before TabChild is given rendering
   // information.
   //
-  // In this case, we will send a sync message to our TabParent, which in turn
-  // will send a sync message to the Compositor of the widget owning this tab.
-  // This guarantees the correct association is in place before our
+  // In this case, we will send a sync message to our BrowserParent, which in
+  // turn will send a sync message to the Compositor of the widget owning this
+  // tab. This guarantees the correct association is in place before our
   // PLayerTransaction constructor message arrives on the cross-process
   // compositor bridge.
   CompositorOptions options;
@@ -3077,7 +3077,7 @@ mozilla::ipc::IPCResult TabChild::RecvRequestNotifyAfterRemotePaint() {
 
   // Tell the CompositorBridgeChild that, when it gets a RemotePaintIsReady
   // message that it should forward it us so that we can bounce it to our
-  // TabParent.
+  // BrowserParent.
   compositor->RequestNotifyAfterRemotePaint(this);
   return IPC_OK();
 }

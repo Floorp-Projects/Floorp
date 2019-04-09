@@ -57,7 +57,7 @@ class MessageSender;
 class PBrowserParent;
 class ProcessMessageManager;
 class Promise;
-class TabParent;
+class BrowserParent;
 class MutableTabContext;
 class BrowserBridgeChild;
 class RemoteFrameChild;
@@ -93,7 +93,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   friend class AutoResetInFrameSwap;
   typedef mozilla::dom::PBrowserParent PBrowserParent;
   typedef mozilla::dom::Document Document;
-  typedef mozilla::dom::TabParent TabParent;
+  typedef mozilla::dom::BrowserParent BrowserParent;
   typedef mozilla::layout::RenderFrame RenderFrame;
 
  public:
@@ -333,7 +333,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
    * this object, which means you can't have called ShowRemoteFrame()
    * or ReallyStartLoading().
    */
-  void SetRemoteBrowser(nsIRemoteTab* aTabParent);
+  void SetRemoteBrowser(nsIRemoteTab* aBrowserParent);
 
   /**
    * Stashes a detached nsIFrame on the frame loader. We do this when we're
@@ -449,8 +449,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
   nsresult GetNewTabContext(mozilla::dom::MutableTabContext* aTabContext,
                             nsIURI* aURI = nullptr);
 
-  enum TabParentChange { eTabParentRemoved, eTabParentChanged };
-  void MaybeUpdatePrimaryTabParent(TabParentChange aChange);
+  enum BrowserParentChange { eBrowserParentRemoved, eBrowserParentChanged };
+  void MaybeUpdatePrimaryBrowserParent(BrowserParentChange aChange);
 
   nsresult PopulateUserContextIdFromAttribute(mozilla::OriginAttributes& aAttr);
 
@@ -480,7 +480,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // target process.
   uint64_t mPendingSwitchID;
 
-  RefPtr<TabParent> mBrowserParent;
+  RefPtr<BrowserParent> mBrowserParent;
   uint64_t mChildID;
 
   // This is used when this refers to a remote sub frame

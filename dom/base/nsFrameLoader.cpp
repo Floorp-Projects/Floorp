@@ -71,7 +71,7 @@
 #include "ClientLayerManager.h"
 
 #include "ContentParent.h"
-#include "TabParent.h"
+#include "BrowserParent.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/GuardObjects.h"
@@ -554,7 +554,7 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
       if (mBrowserBridgeChild) {
         Unused << mBrowserBridgeChild->SendResumeLoad(mPendingSwitchID);
       } else {
-        mRemoteBrowser->ResumeLoad(mPendingSwitchID);
+        mBrowserParent->ResumeLoad(mPendingSwitchID);
       }
 
       mPendingSwitchID = 0;
@@ -1291,8 +1291,8 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
   }
 #endif  // XP_WIN
 
-  MaybeUpdatePrimaryTabParent(eTabParentRemoved);
-  aOther->MaybeUpdatePrimaryTabParent(eTabParentRemoved);
+  MaybeUpdatePrimaryBrowserParent(eBrowserParentRemoved);
+  aOther->MaybeUpdatePrimaryBrowserParent(eBrowserParentRemoved);
 
   SetOwnerContent(otherContent);
   aOther->SetOwnerContent(ourContent);
@@ -1306,8 +1306,8 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
   Unused << aOther->mBrowserParent->SendParentActivated(
       ParentWindowIsActive(ourContent->OwnerDoc()));
 
-  MaybeUpdatePrimaryTabParent(eTabParentChanged);
-  aOther->MaybeUpdatePrimaryTabParent(eTabParentChanged);
+  MaybeUpdatePrimaryBrowserParent(eBrowserParentChanged);
+  aOther->MaybeUpdatePrimaryBrowserParent(eBrowserParentChanged);
 
   RefPtr<nsFrameMessageManager> ourMessageManager = mMessageManager;
   RefPtr<nsFrameMessageManager> otherMessageManager = aOther->mMessageManager;
@@ -1813,8 +1813,8 @@ void nsFrameLoader::StartDestroy() {
     }
   }
 
-  // If the TabParent has installed any event listeners on the window, this is
-  // its last chance to remove them while we're still in the document.
+  // If the BrowserParent has installed any event listeners on the window, this
+  // is its last chance to remove them while we're still in the document.
   if (mBrowserParent) {
     mBrowserParent->RemoveWindowListeners();
   }
@@ -1825,7 +1825,7 @@ void nsFrameLoader::StartDestroy() {
     doc = mOwnerContent->OwnerDoc();
     dynamicSubframeRemoval = !mIsTopLevelContent && !doc->InUnlinkOrDeletion();
     doc->SetSubDocumentFor(mOwnerContent, nullptr);
-    MaybeUpdatePrimaryTabParent(eTabParentRemoved);
+    MaybeUpdatePrimaryBrowserParent(eBrowserParentRemoved);
     SetOwnerContent(nullptr);
   }
 
@@ -1869,7 +1869,7 @@ nsresult nsFrameLoaderDestroyRunnable::Run() {
     case eDestroyDocShell:
       mFrameLoader->DestroyDocShell();
 
-      // In the out-of-process case, TabParent will eventually call
+      // In the out-of-process case, BrowserParent will eventually call
       // DestroyComplete once it receives a __delete__ message from the child.
       // In the in-process case, we dispatch a series of runnables to ensure
       // that DestroyComplete gets called at the right time. The frame loader is
@@ -1959,7 +1959,7 @@ void nsFrameLoader::DestroyComplete() {
     }
   }
 
-  // Call TabParent::Destroy if we haven't already (in case of a crash).
+  // Call BrowserParent::Destroy if we haven't already (in case of a crash).
   if (mBrowserParent) {
     mBrowserParent->SetOwnerElement(nullptr);
     mBrowserParent->Destroy();
@@ -2565,8 +2565,9 @@ uint32_t nsFrameLoader::LazyHeight() const {
   return lazyHeight;
 }
 
-static Tuple<ContentParent*, TabParent*> GetContentParent(Element* aBrowser) {
-  using ReturnTuple = Tuple<ContentParent*, TabParent*>;
+static Tuple<ContentParent*, BrowserParent*> GetContentParent(
+    Element* aBrowser) {
+  using ReturnTuple = Tuple<ContentParent*, BrowserParent*>;
 
   nsCOMPtr<nsIBrowser> browser = aBrowser ? aBrowser->AsBrowser() : nullptr;
   if (!browser) {
@@ -2579,9 +2580,9 @@ static Tuple<ContentParent*, TabParent*> GetContentParent(Element* aBrowser) {
     return ReturnTuple(nullptr, nullptr);
   }
 
-  TabParent* tabParent = TabParent::GetFrom(otherLoader);
-  if (tabParent && tabParent->Manager()) {
-    return MakeTuple(tabParent->Manager(), tabParent);
+  BrowserParent* browserParent = BrowserParent::GetFrom(otherLoader);
+  if (browserParent && browserParent->Manager()) {
+    return MakeTuple(browserParent->Manager(), browserParent);
   }
 
   return ReturnTuple(nullptr, nullptr);
@@ -2621,9 +2622,10 @@ bool nsFrameLoader::TryRemoteBrowser() {
     return false;
   }
 
-  TabParent* openingTab = TabParent::GetFrom(parentDocShell->GetOpener());
+  BrowserParent* openingTab =
+      BrowserParent::GetFrom(parentDocShell->GetOpener());
   RefPtr<ContentParent> openerContentParent;
-  RefPtr<TabParent> sameTabGroupAs;
+  RefPtr<BrowserParent> sameTabGroupAs;
 
   if (openingTab && openingTab->Manager()) {
     openerContentParent = openingTab->Manager();
@@ -2690,11 +2692,11 @@ bool nsFrameLoader::TryRemoteBrowser() {
 
   uint64_t nextRemoteTabId = 0;
   if (mOwnerContent) {
-    nsAutoString nextTabParentIdAttr;
+    nsAutoString nextBrowserParentIdAttr;
     mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::nextRemoteTabId,
-                           nextTabParentIdAttr);
-    nextRemoteTabId =
-        strtoull(NS_ConvertUTF16toUTF8(nextTabParentIdAttr).get(), nullptr, 10);
+                           nextBrowserParentIdAttr);
+    nextRemoteTabId = strtoull(
+        NS_ConvertUTF16toUTF8(nextBrowserParentIdAttr).get(), nullptr, 10);
 
     // We may be in a window that was just opened, so try the
     // nsIBrowserDOMWindow API as a backup.
@@ -2729,7 +2731,7 @@ bool nsFrameLoader::TryRemoteBrowser() {
   // Now that mBrowserParent is set, we can initialize the RenderFrame
   mBrowserParent->InitRendering();
 
-  MaybeUpdatePrimaryTabParent(eTabParentChanged);
+  MaybeUpdatePrimaryBrowserParent(eBrowserParentChanged);
 
   mChildID = mBrowserParent->Manager()->ChildID();
 
@@ -2872,9 +2874,10 @@ nsresult nsFrameLoader::CreateStaticClone(nsFrameLoader* aDest) {
 
 bool nsFrameLoader::DoLoadMessageManagerScript(const nsAString& aURL,
                                                bool aRunInGlobalScope) {
-  auto* tabParent = TabParent::GetFrom(GetRemoteBrowser());
-  if (tabParent) {
-    return tabParent->SendLoadRemoteScript(nsString(aURL), aRunInGlobalScope);
+  auto* browserParent = BrowserParent::GetFrom(GetRemoteBrowser());
+  if (browserParent) {
+    return browserParent->SendLoadRemoteScript(nsString(aURL),
+                                               aRunInGlobalScope);
   }
   RefPtr<InProcessTabChildMessageManager> tabChild =
       GetTabChildMessageManager();
@@ -2916,10 +2919,10 @@ nsresult nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
                                            StructuredCloneData& aData,
                                            JS::Handle<JSObject*> aCpows,
                                            nsIPrincipal* aPrincipal) {
-  TabParent* tabParent = mBrowserParent;
-  if (tabParent) {
+  BrowserParent* browserParent = mBrowserParent;
+  if (browserParent) {
     ClonedMessageData data;
-    ContentParent* cp = tabParent->Manager();
+    ContentParent* cp = browserParent->Manager();
     if (!BuildClonedMessageDataForParent(cp, aData, data)) {
       MOZ_CRASH();
       return NS_ERROR_DOM_DATA_CLONE_ERR;
@@ -2929,8 +2932,8 @@ nsresult nsFrameLoader::DoSendAsyncMessage(JSContext* aCx,
     if (aCpows && (!mgr || !mgr->Wrap(aCx, aCpows, &cpows))) {
       return NS_ERROR_UNEXPECTED;
     }
-    if (tabParent->SendAsyncMessage(nsString(aMessage), cpows,
-                                    IPC::Principal(aPrincipal), data)) {
+    if (browserParent->SendAsyncMessage(nsString(aMessage), cpows,
+                                        IPC::Principal(aPrincipal), data)) {
       return NS_OK;
     } else {
       return NS_ERROR_UNEXPECTED;
@@ -3029,12 +3032,12 @@ already_AddRefed<Element> nsFrameLoader::GetOwnerElement() {
   return do_AddRef(mOwnerContent);
 }
 
-void nsFrameLoader::SetRemoteBrowser(nsIRemoteTab* aTabParent) {
+void nsFrameLoader::SetRemoteBrowser(nsIRemoteTab* aBrowserParent) {
   MOZ_ASSERT(!mBrowserParent);
   mIsRemoteFrame = true;
-  mBrowserParent = TabParent::GetFrom(aTabParent);
+  mBrowserParent = BrowserParent::GetFrom(aBrowserParent);
   mChildID = mBrowserParent ? mBrowserParent->Manager()->ChildID() : 0;
-  MaybeUpdatePrimaryTabParent(eTabParentChanged);
+  MaybeUpdatePrimaryBrowserParent(eBrowserParentChanged);
   ReallyLoadFrameScripts();
   InitializeBrowserAPI();
   mBrowserParent->InitRendering();
@@ -3096,7 +3099,7 @@ void nsFrameLoader::AttributeChanged(mozilla::dom::Element* aElement,
   // if our parent is chrome, since in all other cases we're random content
   // subframes and the treeowner shouldn't worry about us.
   if (!GetDocShell()) {
-    MaybeUpdatePrimaryTabParent(eTabParentChanged);
+    MaybeUpdatePrimaryBrowserParent(eBrowserParentChanged);
     return;
   }
 
@@ -3140,15 +3143,15 @@ void nsFrameLoader::AttributeChanged(mozilla::dom::Element* aElement,
  * Send the RequestNotifyAfterRemotePaint message to the current Tab.
  */
 void nsFrameLoader::RequestNotifyAfterRemotePaint() {
-  // If remote browsing (e10s), handle this with the TabParent.
+  // If remote browsing (e10s), handle this with the BrowserParent.
   if (mBrowserParent) {
     Unused << mBrowserParent->SendRequestNotifyAfterRemotePaint();
   }
 }
 
 void nsFrameLoader::RequestUpdatePosition(ErrorResult& aRv) {
-  if (auto* tabParent = TabParent::GetFrom(GetRemoteBrowser())) {
-    nsresult rv = tabParent->UpdatePosition();
+  if (auto* browserParent = BrowserParent::GetFrom(GetRemoteBrowser())) {
+    nsresult rv = browserParent->UpdatePosition();
 
     if (NS_FAILED(rv)) {
       aRv.Throw(rv);
@@ -3339,7 +3342,8 @@ void nsFrameLoader::StartPersistence(
   }
 }
 
-void nsFrameLoader::MaybeUpdatePrimaryTabParent(TabParentChange aChange) {
+void nsFrameLoader::MaybeUpdatePrimaryBrowserParent(
+    BrowserParentChange aChange) {
   if (mBrowserParent && mOwnerContent) {
     nsCOMPtr<nsIDocShell> docShell = mOwnerContent->OwnerDoc()->GetDocShell();
     if (!docShell) {
@@ -3363,7 +3367,7 @@ void nsFrameLoader::MaybeUpdatePrimaryTabParent(TabParentChange aChange) {
     }
 
     parentTreeOwner->RemoteTabRemoved(mBrowserParent);
-    if (aChange == eTabParentChanged) {
+    if (aChange == eBrowserParentChanged) {
       bool isPrimary = mOwnerContent->AttrValueIs(
           kNameSpaceID_None, nsGkAtoms::primary, nsGkAtoms::_true, eIgnoreCase);
       parentTreeOwner->RemoteTabAdded(mBrowserParent, isPrimary);

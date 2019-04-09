@@ -124,7 +124,7 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
 
   /**
    * Request that the parent tell us when graphics are ready on GPU.
-   * When we get that message, we bounce it to the TabParent via
+   * When we get that message, we bounce it to the BrowserParent via
    * the TabChild
    * @param tabChild The object to bounce the note to.  Non-NULL.
    */

@@ -36,7 +36,7 @@
 #include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabContext.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/network/TCPSocketParent.h"
 #include "mozilla/dom/network/TCPServerSocketParent.h"
 #include "mozilla/dom/network/UDPSocketParent.h"
@@ -57,11 +57,11 @@
 
 using IPC::SerializedLoadContext;
 using mozilla::OriginAttributes;
+using mozilla::dom::BrowserParent;
 using mozilla::dom::ChromeUtils;
 using mozilla::dom::ContentParent;
 using mozilla::dom::ServiceWorkerManager;
 using mozilla::dom::TabContext;
-using mozilla::dom::TabParent;
 using mozilla::dom::TCPServerSocketParent;
 using mozilla::dom::TCPSocketParent;
 using mozilla::dom::UDPSocketParent;
@@ -244,11 +244,11 @@ const char* NeckoParent::CreateChannelLoadContext(
         aSerialized.mOriginAttributes.mPrivateBrowsingId > 0);
     switch (aBrowser.type()) {
       case PBrowserOrId::TPBrowserParent: {
-        RefPtr<TabParent> tabParent =
-            TabParent::GetFrom(aBrowser.get_PBrowserParent());
+        RefPtr<BrowserParent> browserParent =
+            BrowserParent::GetFrom(aBrowser.get_PBrowserParent());
         dom::Element* topFrameElement = nullptr;
-        if (tabParent) {
-          topFrameElement = tabParent->GetOwnerElement();
+        if (browserParent) {
+          topFrameElement = browserParent->GetOwnerElement();
         }
         aResult = new LoadContext(aSerialized, topFrameElement, attrs);
         break;
@@ -333,7 +333,8 @@ bool NeckoParent::DeallocPStunAddrsRequestParent(
 PWebrtcProxyChannelParent* NeckoParent::AllocPWebrtcProxyChannelParent(
     const PBrowserOrId& aBrowser) {
 #ifdef MOZ_WEBRTC
-  RefPtr<TabParent> tab = TabParent::GetFrom(aBrowser.get_PBrowserParent());
+  RefPtr<BrowserParent> tab =
+      BrowserParent::GetFrom(aBrowser.get_PBrowserParent());
   WebrtcProxyChannelParent* parent = new WebrtcProxyChannelParent(tab);
   parent->AddRef();
   return parent;
@@ -439,11 +440,11 @@ PWebSocketParent* NeckoParent::AllocPWebSocketParent(
     return nullptr;
   }
 
-  RefPtr<TabParent> tabParent =
-      TabParent::GetFrom(browser.get_PBrowserParent());
+  RefPtr<BrowserParent> browserParent =
+      BrowserParent::GetFrom(browser.get_PBrowserParent());
   PBOverrideStatus overrideStatus = PBOverrideStatusFromLoadContext(serialized);
   WebSocketChannelParent* p = new WebSocketChannelParent(
-      tabParent, loadContext, overrideStatus, aSerial);
+      browserParent, loadContext, overrideStatus, aSerial);
   p->AddRef();
   return p;
 }

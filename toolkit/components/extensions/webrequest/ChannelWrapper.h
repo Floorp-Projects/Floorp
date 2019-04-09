@@ -127,7 +127,7 @@ class ChannelWrapper final : public DOMEventTargetHelper,
       const dom::GlobalObject& global, nsIChannel* channel);
   static already_AddRefed<extensions::ChannelWrapper> GetRegisteredChannel(
       const dom::GlobalObject& global, uint64_t aChannelId,
-      const WebExtensionPolicy& aAddon, nsIRemoteTab* aTabParent);
+      const WebExtensionPolicy& aAddon, nsIRemoteTab* aBrowserParent);
 
   uint64_t Id() const { return mId; }
 
@@ -148,7 +148,7 @@ class ChannelWrapper final : public DOMEventTargetHelper,
   void SetContentType(const nsACString& aContentType);
 
   void RegisterTraceableChannel(const WebExtensionPolicy& aAddon,
-                                nsIRemoteTab* aTabParent);
+                                nsIRemoteTab* aBrowserParent);
 
   already_AddRefed<nsITraceableChannel> GetTraceableChannel(
       nsAtom* aAddonId, dom::ContentParent* aContentParent) const;

@@ -19,7 +19,7 @@
 #include "mozilla/dom/HTMLTextAreaElement.h"
 #include "mozilla/dom/NodeFilterBinding.h"
 #include "mozilla/dom/ProcessingInstruction.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/TreeWalker.h"
 #include "mozilla/Unused.h"
 #include "nsComponentManagerUtils.h"

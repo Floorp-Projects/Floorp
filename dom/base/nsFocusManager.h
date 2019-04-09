@@ -31,7 +31,7 @@ class PresShell;
 namespace dom {
 class Element;
 struct FocusOptions;
-class TabParent;
+class BrowserParent;
 }  // namespace dom
 }  // namespace mozilla
 
