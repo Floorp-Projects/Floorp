@@ -13,25 +13,20 @@ const Provider = createFactory(require("react-redux").Provider);
 const { setupStore } = require("devtools/client/webconsole/test/helpers");
 
 // Components under test.
-const EvaluationResult = createFactory(
-  require("devtools/client/webconsole/components/message-types/EvaluationResult")
-);
+const EvaluationResult = createFactory(require("devtools/client/webconsole/components/message-types/EvaluationResult"));
 const { INDENT_WIDTH } = require("devtools/client/webconsole/components/MessageIndent");
 
 // Test fakes.
-const {
-  stubPreparedMessages,
-} = require("devtools/client/webconsole/test/fixtures/stubs/index");
+const { stubPreparedMessages } = require("devtools/client/webconsole/test/fixtures/stubs/index");
 const serviceContainer = require("devtools/client/webconsole/test/fixtures/serviceContainer");
 
 describe("EvaluationResult component:", () => {
-  it.skip("renders a grip result", () => {
+  it("renders a grip result", () => {
     const message = stubPreparedMessages.get("new Date(0)");
     // We need to wrap the ConsoleApiElement in a Provider in order for the
     // ObjectInspector to work.
-    const wrapper = render(
-      Provider({ store: setupStore() }, EvaluationResult({ message, serviceContainer }))
-    );
+    const wrapper = render(Provider({ store: setupStore() },
+      EvaluationResult({ message, serviceContainer })));
 
     expect(wrapper.find(".message-body").text()).toBe("Date 1970-01-01T00:00:00.000Z");
 
@@ -43,9 +38,8 @@ describe("EvaluationResult component:", () => {
     const message = stubPreparedMessages.get("asdf()");
     const wrapper = render(EvaluationResult({ message, serviceContainer }));
 
-    expect(wrapper.find(".message-body").text()).toBe(
-      "ReferenceError: asdf is not defined[Learn More]"
-    );
+    expect(wrapper.find(".message-body").text())
+      .toBe("ReferenceError: asdf is not defined[Learn More]");
 
     expect(wrapper.hasClass("message")).toBe(true);
     expect(wrapper.hasClass("error")).toBe(true);
@@ -81,9 +75,8 @@ describe("EvaluationResult component:", () => {
     const message = stubPreparedMessages.get("inspect({a: 1})");
     // We need to wrap the ConsoleApiElement in a Provider in order for the
     // ObjectInspector to work.
-    const wrapper = render(
-      Provider({ store: setupStore() }, EvaluationResult({ message, serviceContainer }))
-    );
+    const wrapper = render(Provider({ store: setupStore() },
+      EvaluationResult({ message, serviceContainer })));
 
     expect(wrapper.find(".message-body").text()).toBe("Object { a: 1 }");
   });
@@ -92,9 +85,8 @@ describe("EvaluationResult component:", () => {
     const message = stubPreparedMessages.get("cd(document)");
     const wrapper = render(EvaluationResult({ message, serviceContainer }));
 
-    expect(wrapper.find(".message-body").text()).toBe(
-      "Cannot cd() to the given window. Invalid argument."
-    );
+    expect(wrapper.find(".message-body").text())
+      .toBe("Cannot cd() to the given window. Invalid argument.");
   });
 
   it("displays a [Learn more] link", () => {
@@ -103,9 +95,9 @@ describe("EvaluationResult component:", () => {
     const message = stubPreparedMessages.get("asdf()");
 
     serviceContainer.openLink = sinon.spy();
-    const wrapper = mount(
-      Provider({ store }, EvaluationResult({ message, serviceContainer }))
-    );
+    const wrapper = mount(Provider({store},
+      EvaluationResult({message, serviceContainer})
+    ));
 
     const url =
       "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/Not_defined";
@@ -124,22 +116,16 @@ describe("EvaluationResult component:", () => {
     const indent = 10;
     // We need to wrap the ConsoleApiElement in a Provider in order for the
     // ObjectInspector to work.
-    let wrapper = render(
-      Provider(
-        { store: setupStore() },
-        EvaluationResult({
-          message: Object.assign({}, message, { indent }),
-          serviceContainer,
-        })
-      )
-    );
+    let wrapper = render(Provider({ store: setupStore() }, EvaluationResult({
+      message: Object.assign({}, message, {indent}),
+      serviceContainer,
+    })));
     let indentEl = wrapper.find(".indent");
     expect(indentEl.prop("style").width).toBe(`${indent * INDENT_WIDTH}px`);
     expect(indentEl.prop("data-indent")).toBe(`${indent}`);
 
-    wrapper = render(
-      Provider({ store: setupStore() }, EvaluationResult({ message, serviceContainer }))
-    );
+    wrapper = render(Provider({ store: setupStore() },
+      EvaluationResult({ message, serviceContainer})));
     indentEl = wrapper.find(".indent");
     expect(indentEl.prop("style").width).toBe(`0`);
     expect(indentEl.prop("data-indent")).toBe(`0`);
@@ -158,16 +144,11 @@ describe("EvaluationResult component:", () => {
     const message = stubPreparedMessages.get("new Date(0)");
     // We need to wrap the ConsoleApiElement in a Provider in order for the
     // ObjectInspector to work.
-    const wrapper = render(
-      Provider(
-        { store: setupStore() },
-        EvaluationResult({
-          message,
-          serviceContainer,
-          timestampsVisible: true,
-        })
-      )
-    );
+    const wrapper = render(Provider({ store: setupStore() }, EvaluationResult({
+      message,
+      serviceContainer,
+      timestampsVisible: true,
+    })));
     const { timestampString } = require("devtools/client/webconsole/webconsole-l10n");
 
     expect(wrapper.find(".timestamp").text()).toBe(timestampString(message.timeStamp));
@@ -177,16 +158,11 @@ describe("EvaluationResult component:", () => {
     const message = stubPreparedMessages.get("new Date(0)");
     // We need to wrap the ConsoleApiElement in a Provider in order for the
     // ObjectInspector to work.
-    const wrapper = render(
-      Provider(
-        { store: setupStore() },
-        EvaluationResult({
-          message,
-          serviceContainer,
-          timestampsVisible: false,
-        })
-      )
-    );
+    const wrapper = render(Provider({ store: setupStore() }, EvaluationResult({
+      message,
+      serviceContainer,
+      timestampsVisible: false,
+    })));
 
     expect(wrapper.find(".timestamp").length).toBe(0);
   });
