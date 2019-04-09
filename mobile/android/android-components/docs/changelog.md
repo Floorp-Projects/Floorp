@@ -30,6 +30,10 @@ permalink: /changelog/
      intended for public use, part of the glean API has been renamed from
      `mozilla.components.service.glean.metrics` to
      `mozilla.components.service.glean.private`.
+   * ⚠️ **This is a breaking API change**: Labeled metrics are now their own
+     distinct metric types in the `metrics.yaml` file. For example, for a
+     labeled counter, rather than using `type: counter` and `labeled: true`, use
+     `type: labeled_counter`. See bugzilla 1540725.
 
 # 0.49.0
 

@@ -522,13 +522,14 @@ This is useful when you need to break down metrics by a label known at build tim
 
 **Note**: Be careful with using arbitrary strings as labels and make sure they can't accidentally contain identifying data (like directory paths or user input).
 
+All metric types except events have labeled variants.  For example, for a labeled counter, use `type: labeled_counter`.
+
 Say you're adding a new counter for errors that can occur when loading a resource from a REST API. First you need to add an entry for the counter to the `metrics.yaml` file:
 
 ```YAML
 updater:
   load_error:
-    type: counter
-    labeled: true # This makes it a labeled counter.
+    type: labeled_counter
     labels: # This is optional, if provided it limits the set of labels you can use.
     - timeout
     - not_found
