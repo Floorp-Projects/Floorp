@@ -153,10 +153,10 @@ namespace dom {
 TabParent::LayerToTabParentTable* TabParent::sLayerToTabParentTable = nullptr;
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(TabParent)
-  NS_INTERFACE_MAP_ENTRY(nsITabParent)
+  NS_INTERFACE_MAP_ENTRY(nsIRemoteTab)
   NS_INTERFACE_MAP_ENTRY(nsIAuthPromptProvider)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsITabParent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRemoteTab)
 NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTION(TabParent, mFrameElement, mBrowserDOMWindow,
                          mLoadContext, mFrameLoader, mBrowsingContext)
@@ -523,7 +523,7 @@ void TabParent::ActorDestroy(ActorDestroyReason why) {
   mFrameLoader = nullptr;
 
   if (os) {
-    os->NotifyObservers(NS_ISUPPORTS_CAST(nsITabParent*, this),
+    os->NotifyObservers(NS_ISUPPORTS_CAST(nsIRemoteTab*, this),
                         "ipc:browser-destroyed", nullptr);
   }
 }
@@ -2560,7 +2560,7 @@ TabParent* TabParent::GetFrom(nsFrameLoader* aFrameLoader) {
 }
 
 /*static*/
-TabParent* TabParent::GetFrom(nsITabParent* aTabParent) {
+TabParent* TabParent::GetFrom(nsIRemoteTab* aTabParent) {
   return static_cast<TabParent*>(aTabParent);
 }
 
@@ -2929,7 +2929,7 @@ already_AddRefed<nsILoadContext> TabParent::GetLoadContext() {
   return loadContext.forget();
 }
 
-// defined in nsITabParent
+// defined in nsIRemoteTab
 NS_IMETHODIMP
 TabParent::SetDocShellIsActive(bool isActive) {
   mDocShellIsActive = isActive;

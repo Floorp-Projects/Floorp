@@ -61,7 +61,7 @@ async function testProbe(aProbe) {
   let hangTab = await BrowserTestUtils.openNewForegroundTab(gBrowser);
   let hangBrowser = hangTab.linkedBrowser;
   ok(hangBrowser.isRemoteBrowser, "New tab should be remote.");
-  ok(hangBrowser.frameLoader.tabParent.hasPresented, "New tab has presented.");
+  ok(hangBrowser.frameLoader.remoteTab.hasPresented, "New tab has presented.");
 
   // Now switch back to the original tab and set up our hang.
   await BrowserTestUtils.switchTab(gBrowser, origTab);

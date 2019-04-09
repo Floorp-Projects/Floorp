@@ -669,8 +669,8 @@ ProxyAccessible* RootAccessible::GetPrimaryRemoteTopLevelContentDoc() const {
   mDocumentNode->GetDocShell()->GetTreeOwner(getter_AddRefs(owner));
   NS_ENSURE_TRUE(owner, nullptr);
 
-  nsCOMPtr<nsITabParent> tabParent;
-  owner->GetPrimaryTabParent(getter_AddRefs(tabParent));
+  nsCOMPtr<nsIRemoteTab> tabParent;
+  owner->GetPrimaryRemoteTab(getter_AddRefs(tabParent));
   if (!tabParent) {
     return nullptr;
   }

@@ -496,7 +496,7 @@ BrowserElementParent.prototype = {
   sendMouseEvent: defineNoReturnMethod(function(type, x, y, button, clickCount, modifiers) {
     // This method used to attempt to transform from the parent
     // coordinate space to the child coordinate space, but the
-    // transform was always a no-op, because this._frameLoader.tabParent
+    // transform was always a no-op, because this._frameLoader.remoteTab
     // was null.
     this._sendAsyncMsg("send-mouse-event", {
       "type": type,

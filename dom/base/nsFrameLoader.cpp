@@ -2688,18 +2688,18 @@ bool nsFrameLoader::TryRemoteBrowser() {
   nsresult rv = GetNewTabContext(&context);
   NS_ENSURE_SUCCESS(rv, false);
 
-  uint64_t nextTabParentId = 0;
+  uint64_t nextRemoteTabId = 0;
   if (mOwnerContent) {
     nsAutoString nextTabParentIdAttr;
-    mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::nextTabParentId,
+    mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::nextRemoteTabId,
                            nextTabParentIdAttr);
-    nextTabParentId =
+    nextRemoteTabId =
         strtoull(NS_ConvertUTF16toUTF8(nextTabParentIdAttr).get(), nullptr, 10);
 
     // We may be in a window that was just opened, so try the
     // nsIBrowserDOMWindow API as a backup.
-    if (!nextTabParentId && window) {
-      Unused << window->GetNextTabParentId(&nextTabParentId);
+    if (!nextRemoteTabId && window) {
+      Unused << window->GetNextRemoteTabId(&nextRemoteTabId);
     }
   }
 
@@ -2717,7 +2717,7 @@ bool nsFrameLoader::TryRemoteBrowser() {
 
   mBrowserParent = ContentParent::CreateBrowser(
       context, ownerElement, mBrowsingContext, openerContentParent,
-      sameTabGroupAs, nextTabParentId);
+      sameTabGroupAs, nextRemoteTabId);
   if (!mBrowserParent) {
     return false;
   }
@@ -3029,7 +3029,7 @@ already_AddRefed<Element> nsFrameLoader::GetOwnerElement() {
   return do_AddRef(mOwnerContent);
 }
 
-void nsFrameLoader::SetRemoteBrowser(nsITabParent* aTabParent) {
+void nsFrameLoader::SetRemoteBrowser(nsIRemoteTab* aTabParent) {
   MOZ_ASSERT(!mBrowserParent);
   mIsRemoteFrame = true;
   mBrowserParent = TabParent::GetFrom(aTabParent);
@@ -3244,7 +3244,7 @@ already_AddRefed<mozilla::dom::Promise> nsFrameLoader::DrawSnapshot(
   return promise.forget();
 }
 
-already_AddRefed<nsITabParent> nsFrameLoader::GetTabParent() {
+already_AddRefed<nsIRemoteTab> nsFrameLoader::GetRemoteTab() {
   return do_AddRef(mBrowserParent);
 }
 
@@ -3362,11 +3362,11 @@ void nsFrameLoader::MaybeUpdatePrimaryTabParent(TabParentChange aChange) {
       mObservingOwnerContent = true;
     }
 
-    parentTreeOwner->TabParentRemoved(mBrowserParent);
+    parentTreeOwner->RemoteTabRemoved(mBrowserParent);
     if (aChange == eTabParentChanged) {
       bool isPrimary = mOwnerContent->AttrValueIs(
           kNameSpaceID_None, nsGkAtoms::primary, nsGkAtoms::_true, eIgnoreCase);
-      parentTreeOwner->TabParentAdded(mBrowserParent, isPrimary);
+      parentTreeOwner->RemoteTabAdded(mBrowserParent, isPrimary);
     }
   }
 }

@@ -737,7 +737,7 @@ HttpObserverManager = {
         let data = Object.create(commonData);
 
         if (registerFilter && opts.blocking && opts.extension) {
-          data.registerTraceableChannel = (extension, tabParent) => {
+          data.registerTraceableChannel = (extension, remoteTab) => {
             // `channel` is a ChannelWrapper, which contains the actual
             // underlying nsIChannel in `channel.channel`.  For startup events
             // that are held until the extension background page is started,
@@ -745,7 +745,7 @@ HttpObserverManager = {
             // cleaned up between the time the event occurred and the time
             // we reach this code.
             if (channel.channel) {
-              channel.registerTraceableChannel(extension, tabParent);
+              channel.registerTraceableChannel(extension, remoteTab);
             }
           };
         }
@@ -995,7 +995,7 @@ var WebRequest = {
   onErrorOccurred: onErrorOccurred,
 
   getSecurityInfo: (details) => {
-    let channel = ChannelWrapper.getRegisteredChannel(details.id, details.extension, details.tabParent);
+    let channel = ChannelWrapper.getRegisteredChannel(details.id, details.extension, details.remoteTab);
     if (channel) {
       return SecurityInfo.getSecurityInfo(channel.channel, details.options);
     }
