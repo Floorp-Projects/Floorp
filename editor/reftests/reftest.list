@@ -98,7 +98,7 @@ skip-if(Android) needs-focus == 462758-grabbers-resizers.html 462758-grabbers-re
 == readonly-non-editable.html readonly-non-editable-ref.html
 == readonly-editable.html readonly-editable-ref.html
 == dynamic-overflow-change.html dynamic-overflow-change-ref.html
-== 694880-1.html 694880-ref.html
+fuzzy-if(Android&&isDebugBuild&&AndroidVersion=='18',0-255,0-19) == 694880-1.html 694880-ref.html
 == 694880-2.html 694880-ref.html
 == 694880-3.html 694880-ref.html
 == 388980-1.html 388980-1-ref.html
