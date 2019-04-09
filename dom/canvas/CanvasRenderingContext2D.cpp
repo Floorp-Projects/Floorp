@@ -1931,7 +1931,11 @@ void CanvasRenderingContext2D::SetStyleFromUnion(
   }
 
   if (aValue.IsCanvasPattern()) {
-    SetStyleFromPattern(aValue.GetAsCanvasPattern(), aWhichStyle);
+    CanvasPattern& pattern = aValue.GetAsCanvasPattern();
+    SetStyleFromPattern(pattern, aWhichStyle);
+    if (pattern.mForceWriteOnly) {
+      SetWriteOnly();
+    }
     return;
   }
 
@@ -2099,13 +2103,14 @@ already_AddRefed<CanvasPattern> CanvasRenderingContext2D::CreatePattern(
       nsLayoutUtils::SurfaceFromElement(
           element, nsLayoutUtils::SFE_WANT_FIRST_FRAME_IF_IMAGE, mTarget);
 
-  if (!res.GetSourceSurface()) {
+  RefPtr<SourceSurface> surface = res.GetSourceSurface();
+  if (!surface) {
     return nullptr;
   }
 
   RefPtr<CanvasPattern> pat =
-      new CanvasPattern(this, res.GetSourceSurface(), repeatMode,
-                        res.mPrincipal, res.mIsWriteOnly, res.mCORSUsed);
+      new CanvasPattern(this, surface, repeatMode, res.mPrincipal,
+                        res.mIsWriteOnly, res.mCORSUsed);
   return pat.forget();
 }
 
@@ -4228,8 +4233,8 @@ CanvasRenderingContext2D::CachedSurfaceFromElement(Element* aElement) {
 
   res.mSize = res.mSourceSurface->GetSize();
   res.mPrincipal = principal.forget();
-  res.mIsWriteOnly = false;
   res.mImageRequest = imgRequest.forget();
+  res.mIsWriteOnly = CheckWriteOnlySecurity(res.mCORSUsed, res.mPrincipal);
 
   return res;
 }
