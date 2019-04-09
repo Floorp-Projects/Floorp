@@ -19,7 +19,33 @@
   <inherited-element-declarative foo="fuagra"></inherited-element-declarative>
   <inherited-element-shadowdom-declarative foo="fuagra"></inherited-element-shadowdom-declarative>
   <inherited-element-imperative foo="fuagra"></inherited-element-imperative>
+  <inherited-element-beforedomloaded foo="fuagra"></inherited-element-beforedomloaded>
 
+  <!-- test code running before page load goes here -->
+  <script type="application/javascript"><![CDATA[
+    class InheritAttrsChangeBeforDOMLoaded extends MozXULElement {
+      static get inheritedAttributes() {
+        return {
+          "label": "foo",
+        };
+      }
+      connectedCallback() {
+        this.append(MozXULElement.parseXULToFragment(`<label />`));
+        this.label = this.querySelector("label");
+
+        this.initializeAttributeInheritance();
+        is(this.label.getAttribute("foo"), "fuagra",
+           "InheritAttrsChangeBeforDOMLoaded: attribute should be propagated #1");
+
+        this.setAttribute("foo", "chuk&gek");
+        is(this.label.getAttribute("foo"), "chuk&gek",
+           "InheritAttrsChangeBeforDOMLoaded: attribute should be propagated #2");
+      }
+    }
+    customElements.define("inherited-element-beforedomloaded",
+                          InheritAttrsChangeBeforDOMLoaded);
+  ]]>
+  </script>
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
