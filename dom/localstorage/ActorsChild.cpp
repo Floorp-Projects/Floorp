@@ -70,9 +70,9 @@ mozilla::ipc::IPCResult LSDatabaseChild::RecvRequestAllowToClose() {
 }
 
 PBackgroundLSSnapshotChild* LSDatabaseChild::AllocPBackgroundLSSnapshotChild(
-    const nsString& aDocumentURI, const bool& aIncreasePeakUsage,
-    const int64_t& aRequestedSize, const int64_t& aMinSize,
-    LSSnapshotInitInfo* aInitInfo) {
+    const nsString& aDocumentURI, const nsString& aKey,
+    const bool& aIncreasePeakUsage, const int64_t& aRequestedSize,
+    const int64_t& aMinSize, LSSnapshotInitInfo* aInitInfo) {
   MOZ_CRASH("PBackgroundLSSnapshotChild actor should be manually constructed!");
 }
 
