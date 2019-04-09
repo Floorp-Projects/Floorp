@@ -45,8 +45,8 @@ namespace mozilla {
 class MediaContainerType;
 
 // EME Key System String.
-extern const nsLiteralCString kEMEKeySystemClearkey;
-extern const nsLiteralCString kEMEKeySystemWidevine;
+#define EME_KEY_SYSTEM_CLEARKEY "org.w3.clearkey"
+#define EME_KEY_SYSTEM_WIDEVINE "com.widevine.alpha"
 
 /**
  * ReentrantMonitorConditionallyEnter
