@@ -566,6 +566,15 @@
         },
         "browser.cache.disk.parent_directory": {
           "type": "string"
+        },
+        "browser.urlbar.suggest.openpage": {
+          "type": "boolean"
+        },
+        "browser.urlbar.suggest.history": {
+          "type": "boolean"
+        },
+        "browser.urlbar.suggest.bookmark": {
+          "type": "boolean"
         }
       }
     },
@@ -694,6 +703,10 @@
           }
         }
       }
+    },
+
+    "SearchSuggestEnabled": {
+      "type": "boolean"
     },
 
     "SecurityDevices": {
