@@ -63,6 +63,12 @@ static string ExpandPath(const string &path,
 
 namespace google_breakpad {
 
+DwarfLineToModule::~DwarfLineToModule() {
+  if (out_files_) {
+    *out_files_ = std::move(files_);
+  }
+}
+
 void DwarfLineToModule::DefineDir(const string &name, uint32 dir_num) {
   // Directory number zero is reserved to mean the compilation
   // directory. Silently ignore attempts to redefine it.

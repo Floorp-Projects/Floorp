@@ -150,6 +150,10 @@ class nsToolkitProfileService final : public nsIToolkitProfileService {
   nsString mStartupReason;
   bool mMaybeLockProfile;
 
+  // Holds the current application update channel. This is only really held
+  // so it can be overriden in tests.
+  nsCString mUpdateChannel;
+
   static nsToolkitProfileService* gService;
 
   class ProfileEnumerator final : public nsSimpleEnumerator {

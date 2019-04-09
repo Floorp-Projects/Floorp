@@ -120,9 +120,40 @@ add_task(async function() {
     // Cleanup previous aborted tests.
     unregisterFont(privateFontPath, /* waitForUnreg = */ false);
 
+    // Get the original width, using the fallback monospaced font
+    let origWidth = await ContentTask.spawn(aBrowser, {}, async function() {
+      let window = content.window.wrappedJSObject;
+      let contentDiv = window.document.getElementById("content");
+      return contentDiv.offsetWidth;
+    });
+
+    // Activate the font we want to test at a non-standard path.
     await registerFont(privateFontPath);
 
-    // Get a list of fonts being used to display the web content.
+    // Assign the new font to the content.
+    await ContentTask.spawn(aBrowser, {}, async function() {
+      let window = content.window.wrappedJSObject;
+      let contentDiv = window.document.getElementById("content");
+      contentDiv.style.fontFamily = "'Fira Sans', monospace";
+    });
+
+    // Wait until the width has changed, indicating the content process
+    // has recognized the newly-activated font.
+    while (true) {
+      let width = await ContentTask.spawn(aBrowser, {}, async function() {
+        let window = content.window.wrappedJSObject;
+        let contentDiv = window.document.getElementById("content");
+        return contentDiv.offsetWidth;
+      });
+      if (width != origWidth) {
+        break;
+      }
+      // If the content wasn't ready yet, wait a little before re-checking.
+      // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+      await new Promise(c => setTimeout(c, 100));
+    }
+
+    // Get a list of fonts now being used to display the web content.
     let fontList = await ContentTask.spawn(aBrowser, {}, async function() {
       let window = content.window.wrappedJSObject;
       let range = window.document.createRange();

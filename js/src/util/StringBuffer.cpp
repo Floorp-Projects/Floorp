@@ -15,9 +15,10 @@
 using namespace js;
 
 template <typename CharT, class Buffer>
-static CharT* ExtractWellSized(JSContext* cx, Buffer& cb) {
+static CharT* ExtractWellSized(Buffer& cb) {
   size_t capacity = cb.capacity();
   size_t length = cb.length();
+  TempAllocPolicy allocPolicy = cb.allocPolicy();
 
   CharT* buf = cb.extractOrCopyRawBuffer();
   if (!buf) {
@@ -27,9 +28,9 @@ static CharT* ExtractWellSized(JSContext* cx, Buffer& cb) {
   /* For medium/big buffers, avoid wasting more than 1/4 of the memory. */
   MOZ_ASSERT(capacity >= length);
   if (length > Buffer::sMaxInlineStorage && capacity - length > length / 4) {
-    CharT* tmp = cx->pod_realloc<CharT>(buf, capacity, length + 1);
+    CharT* tmp = allocPolicy.pod_realloc<CharT>(buf, capacity, length + 1);
     if (!tmp) {
-      js_free(buf);
+      allocPolicy.free_(buf);
       return nullptr;
     }
     buf = tmp;
@@ -43,7 +44,7 @@ char16_t* StringBuffer::stealChars() {
     return nullptr;
   }
 
-  return ExtractWellSized<char16_t>(cx, twoByteChars());
+  return ExtractWellSized<char16_t>(twoByteChars());
 }
 
 bool StringBuffer::inflateChars() {
@@ -68,15 +69,22 @@ bool StringBuffer::inflateChars() {
   return true;
 }
 
-template <typename CharT, class Buffer>
-static JSFlatString* FinishStringFlat(JSContext* cx, StringBuffer& sb,
-                                      Buffer& cb) {
-  size_t len = sb.length();
-  if (!sb.append('\0')) {
+template <typename CharT>
+JSFlatString* StringBuffer::finishStringInternal(JSContext* cx) {
+  size_t len = length();
+
+  if (JSInlineString::lengthFits<CharT>(len)) {
+    mozilla::Range<const CharT> range(begin<CharT>(), len);
+    return NewInlineString<CanGC>(cx, range);
+  }
+
+  if (!append('\0')) {
     return nullptr;
   }
 
-  UniquePtr<CharT[], JS::FreePolicy> buf(ExtractWellSized<CharT>(cx, cb));
+  UniquePtr<CharT[], JS::FreePolicy> buf(
+      ExtractWellSized<CharT>(chars<CharT>()));
+
   if (!buf) {
     return nullptr;
   }
@@ -110,20 +118,8 @@ JSFlatString* StringBuffer::finishString() {
   JS_STATIC_ASSERT(JSFatInlineString::MAX_LENGTH_LATIN1 <
                    Latin1CharBuffer::InlineLength);
 
-  if (isLatin1()) {
-    if (JSInlineString::lengthFits<Latin1Char>(len)) {
-      mozilla::Range<const Latin1Char> range(latin1Chars().begin(), len);
-      return NewInlineString<CanGC>(cx, range);
-    }
-  } else {
-    if (JSInlineString::lengthFits<char16_t>(len)) {
-      mozilla::Range<const char16_t> range(twoByteChars().begin(), len);
-      return NewInlineString<CanGC>(cx, range);
-    }
-  }
-
-  return isLatin1() ? FinishStringFlat<Latin1Char>(cx, *this, latin1Chars())
-                    : FinishStringFlat<char16_t>(cx, *this, twoByteChars());
+  return isLatin1() ? finishStringInternal<Latin1Char>(cx)
+                    : finishStringInternal<char16_t>(cx);
 }
 
 JSAtom* StringBuffer::finishAtom() {

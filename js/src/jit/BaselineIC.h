@@ -223,11 +223,13 @@ class ICEntry {
   // The PC of this IC's bytecode op within the JSScript.
   uint32_t pcOffset_;
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
 #ifdef JS_64BIT
   // On 64-bit architectures, we have 32 bits of alignment padding.
   // We fill it with a magic value, and check that value when tracing.
   static const uint32_t EXPECTED_TRACE_MAGIC = 0xdeaddead;
   uint32_t traceMagic_ = EXPECTED_TRACE_MAGIC;
+#endif
 #endif
 
  public:

@@ -1,19 +1,19 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-'use strict';
+"use strict";
 
 const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
-var userAgentID = '9a2f9efe-2ebb-4bcb-a5d9-9e2b73d30afe';
-var channelID = '264c2ba0-f6db-4e84-acdb-bd225b62d9e3';
+var userAgentID = "9a2f9efe-2ebb-4bcb-a5d9-9e2b73d30afe";
+var channelID = "264c2ba0-f6db-4e84-acdb-bd225b62d9e3";
 
 function run_test() {
   do_get_profile();
   setPrefs({
     userAgentID,
     requestTimeout: 1000,
-    retryBaseInterval: 150
+    retryBaseInterval: 150,
   });
   run_next_test();
 }
@@ -30,34 +30,34 @@ add_task(async function test_register_no_id() {
       return new MockWebSocket(uri, {
         onHello(request) {
           this.serverSendMsg(JSON.stringify({
-            messageType: 'hello',
+            messageType: "hello",
             status: 200,
-            uaid: userAgentID
+            uaid: userAgentID,
           }));
           helloDone();
         },
         onRegister(request) {
           registers++;
-          equal(request.channelID, channelID, 'Register: wrong channel ID');
+          equal(request.channelID, channelID, "Register: wrong channel ID");
           this.serverSendMsg(JSON.stringify({
-            messageType: 'register',
-            status: 200
+            messageType: "register",
+            status: 200,
           }));
-        }
+        },
       });
-    }
+    },
   });
 
-  await rejects(
+  await Assert.rejects(
     PushService.register({
-      scope: 'https://example.com/incomplete',
+      scope: "https://example.com/incomplete",
       originAttributes: ChromeUtils.originAttributesToSuffix(
         { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
     /Registration error/,
-    'Expected error for incomplete register response'
+    "Expected error for incomplete register response"
   );
 
   await helloPromise;
-  equal(registers, 1, 'Wrong register count');
+  equal(registers, 1, "Wrong register count");
 });

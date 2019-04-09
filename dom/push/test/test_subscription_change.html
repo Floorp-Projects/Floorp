@@ -24,13 +24,14 @@ http://creativecommons.org/licenses/publicdomain/
 </pre>
 
 <script class="testbody" type="text/javascript">
+  /* import-globals-from ./test_utils.js */
 
   var registration;
   add_task(async function start() {
     await setupPrefsAndMockSocket(new MockWebSocket());
     await setPushPermission(true);
 
-    var url = "worker.js" + "?" + (Math.random());
+    var url = "worker.js?" + (Math.random());
     registration = await navigator.serviceWorker.register(url, {scope: "."});
     await waitForActive(registration);
   });
@@ -48,7 +49,7 @@ http://creativecommons.org/licenses/publicdomain/
     var permissionState = await registration.pushManager.permissionState();
     is(permissionState, "denied", "Should deny push permission");
 
-    var subscription = await registration.pushManager.getSubscription();
+    subscription = await registration.pushManager.getSubscription();
     is(subscription, null, "Should not return subscription when permission is revoked");
 
     var changePromise = controlledFrame.waitOnWorkerMessage("changed");

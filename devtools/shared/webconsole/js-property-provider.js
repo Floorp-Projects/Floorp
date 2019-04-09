@@ -563,8 +563,32 @@ function getPropertiesFromAstExpression(ast) {
 }
 
 function wrapMatchesInQuotes(matches, quote = `"`) {
-  return new Set([...matches].map(p =>
-    `${quote}${p.replace(new RegExp(`${quote}`, "g"), `\\${quote}`)}${quote}`));
+  return new Set([...matches].map(p => {
+    // Escape as a double-quoted string literal
+    p = JSON.stringify(p);
+
+    // We don't have to do anything more when using double quotes
+    if (quote == `"`) {
+      return p;
+    }
+
+    // Remove surrounding double quotes
+    p = p.slice(1, -1);
+
+    // Unescape inner double quotes (all must be escaped, so no need to count backslashes)
+    p = p.replace(/\\(?=")/g, "");
+
+    // Escape the specified quote (assuming ' or `, which are treated literally in regex)
+    p = p.replace(new RegExp(quote, "g"), "\\$&");
+
+    // Template literals treat ${ specially, escape it
+    if (quote == "`") {
+      p = p.replace(/\${/g, "\\$&");
+    }
+
+    // Surround the result with quotes
+    return `${quote}${p}${quote}`;
+  }));
 }
 
 /**

@@ -23,15 +23,18 @@ http://creativecommons.org/licenses/publicdomain/
 </pre>
 
 <script class="testbody" type="text/javascript">
+  /* import-globals-from ./test_utils.js */
 
   function debug(str) {
   //  console.log(str + "\n");
   }
 
+  var registration;
+
   function start() {
-    return navigator.serviceWorker.register("worker.js" + "?" + (Math.random()), {scope: "."})
+    return navigator.serviceWorker.register("worker.js?" + (Math.random()), {scope: "."})
     .then((swr) => {
-      registration = swr
+      registration = swr;
       return waitForActive(registration);
     });
   }
@@ -49,7 +52,7 @@ http://creativecommons.org/licenses/publicdomain/
       swr.pushManager.subscribe().then(
         function(pushSubscription) {
           ok(true, "successful registered for push notification");
-          res({swr: swr, pushSubscription: pushSubscription});
+          res({swr, pushSubscription});
         }, function(error) {
           ok(false, "could not register for push notification");
           res(null);
