@@ -20,7 +20,8 @@ class SVGElement;
 
 /**
  * This SVGLength class is currently used for SVGLength *list* attributes only.
- * The class that is currently used for <length> attributes is nsSVGLength2.
+ * The class that is currently used for <length> attributes is
+ * SVGAnimatedLength.
  *
  * The member mUnit should always be valid, but the member mValue may be
  * numeric_limits<float>::quiet_NaN() under one circumstances (see the comment

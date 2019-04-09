@@ -10,7 +10,7 @@
 #include "gfxPlatform.h"
 #include "nsCOMPtr.h"
 #include "nsComputedDOMStyle.h"
-#include "nsSVGLength2.h"
+#include "SVGAnimatedLength.h"
 #include "nsSVGUtils.h"
 #include "mozilla/dom/SVGLengthBinding.h"
 #include "mozilla/gfx/2D.h"
@@ -57,7 +57,7 @@ bool SVGGeometryElement::AttributeDefinesGeometry(const nsAtom* aName) {
     return true;
   }
 
-  // Check for nsSVGLength2 attribute
+  // Check for SVGAnimatedLength attribute
   LengthAttributesInfo info = GetLengthInfo();
   for (uint32_t i = 0; i < info.mLengthCount; i++) {
     if (aName == info.mLengthInfo[i].mName) {
@@ -69,7 +69,7 @@ bool SVGGeometryElement::AttributeDefinesGeometry(const nsAtom* aName) {
 }
 
 bool SVGGeometryElement::GeometryDependsOnCoordCtx() {
-  // Check the nsSVGLength2 attribute
+  // Check the SVGAnimatedLength attribute
   LengthAttributesInfo info =
       const_cast<SVGGeometryElement*>(this)->GetLengthInfo();
   for (uint32_t i = 0; i < info.mLengthCount; i++) {

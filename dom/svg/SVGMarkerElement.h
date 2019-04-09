@@ -11,7 +11,7 @@
 #include "DOMSVGAnimatedEnumeration.h"
 #include "nsAutoPtr.h"
 #include "SVGAnimatedEnumeration.h"
-#include "nsSVGLength2.h"
+#include "SVGAnimatedLength.h"
 #include "SVGAnimatedOrient.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGAnimatedViewBox.h"
@@ -84,7 +84,7 @@ class SVGMarkerElement : public SVGMarkerElementBase {
   virtual SVGAnimatedViewBox* GetViewBox() override;
 
   enum { REFX, REFY, MARKERWIDTH, MARKERHEIGHT };
-  nsSVGLength2 mLengthAttributes[4];
+  SVGAnimatedLength mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
   enum { MARKERUNITS };

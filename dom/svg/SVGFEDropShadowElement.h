@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_SVGFEDropShadowElement_h
 #define mozilla_dom_SVGFEDropShadowElement_h
 
-#include "nsSVGNumber2.h"
+#include "SVGAnimatedNumber.h"
 #include "SVGAnimatedNumberPair.h"
 #include "SVGAnimatedString.h"
 #include "SVGFilters.h"
@@ -63,7 +63,7 @@ class SVGFEDropShadowElement : public SVGFEDropShadowElementBase {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { DX, DY };
-  nsSVGNumber2 mNumberAttributes[2];
+  SVGAnimatedNumber mNumberAttributes[2];
   static NumberInfo sNumberInfo[2];
 
   enum { STD_DEV };

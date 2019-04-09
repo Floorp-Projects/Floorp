@@ -8,8 +8,8 @@
 #define mozilla_dom_SVGFECompositeElement_h
 
 #include "SVGAnimatedEnumeration.h"
+#include "SVGAnimatedNumber.h"
 #include "SVGFilters.h"
-#include "nsSVGNumber2.h"
 
 nsresult NS_NewSVGFECompositeElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -61,7 +61,7 @@ class SVGFECompositeElement : public SVGFECompositeElementBase {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { ATTR_K1, ATTR_K2, ATTR_K3, ATTR_K4 };
-  nsSVGNumber2 mNumberAttributes[4];
+  SVGAnimatedNumber mNumberAttributes[4];
   static NumberInfo sNumberInfo[4];
 
   enum { OPERATOR };

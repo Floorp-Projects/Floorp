@@ -521,9 +521,9 @@ const SVGAnimatedPreserveAspectRatio &nsSVGPatternFrame::GetPreserveAspectRatio(
              : static_cast<SVGPatternElement *>(aDefault)->mPreserveAspectRatio;
 }
 
-const nsSVGLength2 *nsSVGPatternFrame::GetLengthValue(uint32_t aIndex,
-                                                      nsIContent *aDefault) {
-  const nsSVGLength2 *thisLength =
+const SVGAnimatedLength *nsSVGPatternFrame::GetLengthValue(
+    uint32_t aIndex, nsIContent *aDefault) {
+  const SVGAnimatedLength *thisLength =
       &static_cast<SVGPatternElement *>(GetContent())
            ->mLengthAttributes[aIndex];
 
@@ -590,7 +590,7 @@ gfxRect nsSVGPatternFrame::GetPatternRect(uint16_t aPatternUnits,
   float x, y, width, height;
 
   // Get the pattern x,y,width, and height
-  const nsSVGLength2 *tmpX, *tmpY, *tmpHeight, *tmpWidth;
+  const SVGAnimatedLength *tmpX, *tmpY, *tmpHeight, *tmpWidth;
   tmpX = GetLengthValue(SVGPatternElement::ATTR_X);
   tmpY = GetLengthValue(SVGPatternElement::ATTR_Y);
   tmpHeight = GetLengthValue(SVGPatternElement::ATTR_HEIGHT);

@@ -8,7 +8,7 @@
 #define mozilla_dom_SVGCircleElement_h
 
 #include "SVGGeometryElement.h"
-#include "nsSVGLength2.h"
+#include "SVGAnimatedLength.h"
 
 nsresult NS_NewSVGCircleElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -50,7 +50,7 @@ class SVGCircleElement final : public SVGCircleElementBase {
   virtual LengthAttributesInfo GetLengthInfo() override;
 
   enum { ATTR_CX, ATTR_CY, ATTR_R };
-  nsSVGLength2 mLengthAttributes[3];
+  SVGAnimatedLength mLengthAttributes[3];
   static LengthInfo sLengthInfo[3];
 };
 

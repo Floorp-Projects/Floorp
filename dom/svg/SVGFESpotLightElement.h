@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_SVGFESpotLightElement_h
 #define mozilla_dom_SVGFESpotLightElement_h
 
+#include "SVGAnimatedNumber.h"
 #include "SVGFilters.h"
-#include "nsSVGNumber2.h"
 
 nsresult NS_NewSVGFESpotLightElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -63,7 +63,7 @@ class SVGFESpotLightElement : public SVGFESpotLightElementBase {
     SPECULAR_EXPONENT,
     LIMITING_CONE_ANGLE
   };
-  nsSVGNumber2 mNumberAttributes[8];
+  SVGAnimatedNumber mNumberAttributes[8];
   static NumberInfo sNumberInfo[8];
 };
 
