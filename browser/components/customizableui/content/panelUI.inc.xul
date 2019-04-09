@@ -9,7 +9,7 @@
        position="bottomcenter topright"
        photon="true"
        hidden="true">
-  <panelmultiview mainViewId="widget-overflow-mainView" disablekeynav="true">
+  <panelmultiview mainViewId="widget-overflow-mainView">
     <panelview id="widget-overflow-mainView"
                context="toolbar-context-menu">
       <vbox class="panel-subview-body">
