@@ -25,7 +25,7 @@ devtools.jar:
     content/shared/sourceeditor/codemirror/lib/codemirror.css (shared/sourceeditor/codemirror/lib/codemirror.css)
     content/shared/sourceeditor/codemirror/mozilla.css (shared/sourceeditor/codemirror/mozilla.css)
     content/shared/sourceeditor/codemirror/cmiframe.html (shared/sourceeditor/codemirror/cmiframe.html)
-    content/debugger/new/index.html (debugger/new/index.html)
+    content/debugger/index.html (debugger/index.html)
     content/performance/index.xul (performance/index.xul)
     content/performance-new/index.xhtml (performance-new/index.xhtml)
     content/performance-new/frame-script.js (performance-new/frame-script.js)

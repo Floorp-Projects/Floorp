@@ -2877,9 +2877,7 @@ function parseStackString(stack) {
     // Given the input: "scriptLocation:2:100"
     // Result:
     // ["scriptLocation:2:100", "scriptLocation", "2", "100"]
-    const locationParts = location
-      ? location.match(/^(.*):(\d+):(\d+)$/)
-      : null;
+    const locationParts = location ? location.match(/^(.*):(\d+):(\d+)$/) : null;
 
     if (location && locationParts) {
       const [, filename, line, column] = locationParts;
@@ -3742,7 +3740,63 @@ module.exports = {
 
 // Dependencies
 const validProtocols = /(http|https|ftp|data|resource|chrome):/i;
-const tokenSplitRegex = /(\s|\'|\"|\\)+/;
+
+// URL Regex, common idioms:
+//
+// Lead-in (URL):
+// (                     Capture because we need to know if there was a lead-in
+//                       character so we can include it as part of the text
+//                       preceding the match. We lack look-behind matching.
+//  ^|                   The URL can start at the beginning of the string.
+//  [\s(,;'"`]           Or whitespace or some punctuation that does not imply
+//                       a context which would preclude a URL.
+// )
+//
+// We do not need a trailing look-ahead because our regex's will terminate
+// because they run out of characters they can eat.
+
+// What we do not attempt to have the regexp do:
+// - Avoid trailing '.' and ')' characters.  We let our greedy match absorb
+//   these, but have a separate regex for extra characters to leave off at the
+//   end.
+//
+// The Regex (apart from lead-in/lead-out):
+// (                     Begin capture of the URL
+//  (?:                  (potential detect beginnings)
+//   https?:\/\/|        Start with "http" or "https"
+//   www\d{0,3}[.][a-z0-9.\-]{2,249}|
+//                      Start with "www", up to 3 numbers, then "." then
+//                       something that looks domain-namey.  We differ from the
+//                       next case in that we do not constrain the top-level
+//                       domain as tightly and do not require a trailing path
+//                       indicator of "/".  This is IDN root compatible.
+//   [a-z0-9.\-]{2,250}[.][a-z]{2,4}\/
+//                       Detect a non-www domain, but requiring a trailing "/"
+//                       to indicate a path.  This only detects IDN domains
+//                       with a non-IDN root.  This is reasonable in cases where
+//                       there is no explicit http/https start us out, but
+//                       unreasonable where there is.  Our real fix is the bug
+//                       to port the Thunderbird/gecko linkification logic.
+//
+//                       Domain names can be up to 253 characters long, and are
+//                       limited to a-zA-Z0-9 and '-'.  The roots don't have
+//                       hyphens unless they are IDN roots.  Root zones can be
+//                       found here: http://www.iana.org/domains/root/db
+//  )
+//  [-\w.!~*'();,/?:@&=+$#%]*
+//                       path onwards. We allow the set of characters that
+//                       encodeURI does not escape plus the result of escaping
+//                       (so also '%')
+// )
+// eslint-disable-next-line max-len
+const urlRegex = /(^|[\s(,;'"`])((?:https?:\/\/|www\d{0,3}[.][a-z0-9.\-]{2,249}|[a-z0-9.\-]{2,250}[.][a-z]{2,4}\/)[-\w.!~*'();,/?:@&=+$#%]*)/im;
+
+// Set of terminators that are likely to have been part of the context rather
+// than part of the URL and so should be uneaten. This is '(', ',', ';', plus
+// quotes and question end-ing punctuation and the potential permutations with
+// parentheses (english-specific).
+const uneatLastUrlCharsRegex = /(?:[),;.!?`'"]|[.!?]\)|\)[.!?])$/;
+
 const ELLIPSIS = "\u2026";
 const dom = __webpack_require__(1);
 const { span } = dom;
@@ -4102,7 +4156,7 @@ function containsURL(grip) {
  * @param string token
  *        The token.
  * @return boolean
- *         Whenther the token is a URL.
+ *         Whether the token is a URL.
  */
 function isURL(token) {
   try {
@@ -4156,9 +4210,10 @@ module.exports = {
   maybeEscapePropertyName,
   getGripPreviewItems,
   getGripType,
-  tokenSplitRegex,
   ellipsisElement,
-  ELLIPSIS
+  ELLIPSIS,
+  uneatLastUrlCharsRegex,
+  urlRegex
 };
 
 /***/ }),
@@ -4320,15 +4375,15 @@ const PropTypes = __webpack_require__(0);
 
 const {
   containsURL,
-  isURL,
   escapeString,
   getGripType,
   rawCropString,
   sanitizeString,
   wrapRender,
   isGrip,
-  tokenSplitRegex,
-  ELLIPSIS
+  ELLIPSIS,
+  uneatLastUrlCharsRegex,
+  urlRegex
 } = __webpack_require__(2);
 
 const dom = __webpack_require__(1);
@@ -4346,7 +4401,8 @@ StringRep.propTypes = {
   object: PropTypes.object.isRequired,
   openLink: PropTypes.func,
   className: PropTypes.string,
-  title: PropTypes.string
+  title: PropTypes.string,
+  isInContentPage: PropTypes.bool
 };
 
 function StringRep(props) {
@@ -4359,7 +4415,8 @@ function StringRep(props) {
     escapeWhitespace = true,
     member,
     openLink,
-    title
+    title,
+    isInContentPage
   } = props;
 
   let text = object;
@@ -4394,7 +4451,7 @@ function StringRep(props) {
 
   if (!isLong) {
     if (containsURL(text)) {
-      return span(config, ...getLinkifiedElements(text, shouldCrop && cropLimit, openLink));
+      return span(config, ...getLinkifiedElements(text, shouldCrop && cropLimit, openLink, isInContentPage));
     }
 
     // Cropping of longString has been handled before formatting.
@@ -4467,55 +4524,70 @@ function maybeCropString(opts, text) {
  * @param {String} text: The actual string to linkify.
  * @param {Integer | null} cropLimit
  * @param {Function} openLink: Function handling the link opening.
+ * @param {Boolean} isInContentPage: pass true if the reps is rendered in
+ *                                   the content page (e.g. in JSONViewer).
  * @returns {Array<String|ReactElement>}
  */
-function getLinkifiedElements(text, cropLimit, openLink) {
+function getLinkifiedElements(text, cropLimit, openLink, isInContentPage) {
   const halfLimit = Math.ceil((cropLimit - ELLIPSIS.length) / 2);
   const startCropIndex = cropLimit ? halfLimit : null;
   const endCropIndex = cropLimit ? text.length - halfLimit : null;
 
-  // As we walk through the tokens of the source string, we make sure to
-  // preserve the original whitespace that separated the tokens.
-  let currentIndex = 0;
   const items = [];
-  for (const token of text.split(tokenSplitRegex)) {
-    if (isURL(token)) {
-      // Let's grab all the non-url strings before the link.
-      const tokenStart = text.indexOf(token, currentIndex);
-      let nonUrlText = text.slice(currentIndex, tokenStart);
-      nonUrlText = getCroppedString(nonUrlText, currentIndex, startCropIndex, endCropIndex);
-      if (nonUrlText) {
-        items.push(nonUrlText);
-      }
-
-      // Update the index to match the beginning of the token.
-      currentIndex = tokenStart;
-
-      const linkText = getCroppedString(token, currentIndex, startCropIndex, endCropIndex);
-      if (linkText) {
-        items.push(a({
-          className: "url",
-          title: token,
-          draggable: false,
-          onClick: openLink ? e => {
-            e.preventDefault();
-            openLink(token, e);
-          } : null
-        }, linkText));
-      }
-
-      currentIndex = tokenStart + token.length;
+  let currentIndex = 0;
+  let contentStart;
+  while (true) {
+    const url = urlRegex.exec(text);
+    // Pick the regexp with the earlier content; index will always be zero.
+    if (!url) {
+      break;
     }
+    contentStart = url.index + url[1].length;
+    if (contentStart > 0) {
+      const nonUrlText = text.substring(0, contentStart);
+      items.push(getCroppedString(nonUrlText, currentIndex, startCropIndex, endCropIndex));
+    }
+
+    // There are some final characters for a URL that are much more likely
+    // to have been part of the enclosing text rather than the end of the
+    // URL.
+    let useUrl = url[2];
+    const uneat = uneatLastUrlCharsRegex.exec(useUrl);
+    if (uneat) {
+      useUrl = useUrl.substring(0, uneat.index);
+    }
+
+    currentIndex = currentIndex + contentStart;
+    const linkText = getCroppedString(useUrl, currentIndex, startCropIndex, endCropIndex);
+
+    if (linkText) {
+      items.push(a({
+        className: "url",
+        title: useUrl,
+        draggable: false,
+        // Because we don't want the link to be open in the current
+        // panel's frame, we only render the href attribute if `openLink`
+        // exists (so we can preventDefault) or if the reps will be
+        // displayed in content page (e.g. in the JSONViewer).
+        href: openLink || isInContentPage ? useUrl : null,
+        onClick: openLink ? e => {
+          e.preventDefault();
+          openLink(useUrl, e);
+        } : null
+      }, linkText));
+    }
+
+    currentIndex = currentIndex + useUrl.length;
+    text = text.substring(url.index + url[1].length + useUrl.length);
   }
 
   // Clean up any non-URL text at the end of the source string,
   // i.e. not handled in the loop.
-  if (currentIndex !== text.length) {
-    let nonUrlText = text.slice(currentIndex, text.length);
+  if (text.length > 0) {
     if (currentIndex < endCropIndex) {
-      nonUrlText = getCroppedString(nonUrlText, currentIndex, startCropIndex, endCropIndex);
+      text = getCroppedString(text, currentIndex, startCropIndex, endCropIndex);
     }
-    items.push(nonUrlText);
+    items.push(text);
   }
 
   return items;
@@ -5624,10 +5696,15 @@ function DateTime(props) {
   const grip = props.object;
   let date;
   try {
+    const dateObject = new Date(grip.preview.timestamp);
+    // Calling `toISOString` will throw if the date is invalid,
+    // so we can render an `Invalid Date` element.
+    dateObject.toISOString();
+
     date = span({
       "data-link-actor-id": grip.actor,
       className: "objectBox"
-    }, getTitle(grip), span({ className: "Date" }, new Date(grip.preview.timestamp).toISOString()));
+    }, getTitle(grip), span({ className: "Date" }, dateObject.toString()));
   } catch (e) {
     date = span({ className: "objectBox" }, "Invalid Date");
   }

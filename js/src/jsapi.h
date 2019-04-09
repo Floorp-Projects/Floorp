@@ -2779,8 +2779,22 @@ extern JS_PUBLIC_API bool JS_IsExceptionPending(JSContext* cx);
 extern JS_PUBLIC_API bool JS_GetPendingException(JSContext* cx,
                                                  JS::MutableHandleValue vp);
 
+namespace JS {
+
+enum class ExceptionStackBehavior: bool {
+  // Do not capture any stack.
+  DoNotCapture,
+
+  // Capture the current JS stack when setting the exception. It may be
+  // retrieved by JS::GetPendingExceptionStack.
+  Capture
+};
+
+} // namespace JS
+
 extern JS_PUBLIC_API void JS_SetPendingException(JSContext* cx,
-                                                 JS::HandleValue v);
+                                                 JS::HandleValue v,
+                                                 JS::ExceptionStackBehavior behavior = JS::ExceptionStackBehavior::Capture);
 
 extern JS_PUBLIC_API void JS_ClearPendingException(JSContext* cx);
 
@@ -2805,6 +2819,7 @@ class JS_PUBLIC_API AutoSaveExceptionState {
   bool wasOverRecursed;
   bool wasThrowing;
   RootedValue exceptionValue;
+  RootedObject exceptionStack;
 
  public:
   /*
@@ -2823,12 +2838,7 @@ class JS_PUBLIC_API AutoSaveExceptionState {
    * Discard any stored exception state.
    * If this is called, the destructor is a no-op.
    */
-  void drop() {
-    wasPropagatingForcedReturn = false;
-    wasOverRecursed = false;
-    wasThrowing = false;
-    exceptionValue.setUndefined();
-  }
+  void drop();
 
   /*
    * Replace cx's exception state with the stored exception state. Then
@@ -2837,6 +2847,17 @@ class JS_PUBLIC_API AutoSaveExceptionState {
    */
   void restore();
 };
+
+/**
+ * Get the SavedFrame stack object captured when the pending exception was set
+ * on the JSContext. This fuzzily correlates with a `throw` statement in JS,
+ * although arbitrary JSAPI consumers or VM code may also set pending exceptions
+ * via `JS_SetPendingException`.
+ *
+ * This is not the same stack as `e.stack` when `e` is an `Error` object. (That
+ * would be JS::ExceptionStackOrNull).
+ */
+MOZ_MUST_USE JS_PUBLIC_API JSObject* GetPendingExceptionStack(JSContext* cx);
 
 } /* namespace JS */
 

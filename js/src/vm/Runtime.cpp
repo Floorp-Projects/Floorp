@@ -456,7 +456,7 @@ static bool HandleInterrupt(JSContext* cx, bool invokeCallback) {
                 "Debugger single-step forced return");
             return false;
           case ResumeMode::Throw:
-            cx->setPendingException(rval);
+            cx->setPendingExceptionAndCaptureStack(rval);
             mozilla::recordreplay::InvalidateRecording(
                 "Debugger single-step threw an exception");
             return false;

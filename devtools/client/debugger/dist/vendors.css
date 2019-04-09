@@ -1,0 +1,282 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* We can remove the outline since we do add our own focus style on nodes */
+.tree:focus {
+  outline: none;
+}
+
+.tree.inline {
+  display: inline-block;
+}
+
+.tree.nowrap {
+  white-space: nowrap;
+}
+
+.tree.noselect {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+}
+
+.tree .tree-node {
+  display: flex;
+}
+
+.tree .tree-node:not(.focused):hover {
+  background-color: var(--theme-selection-background-hover);
+}
+
+.tree-indent {
+  display: inline-block;
+  width: 12px;
+  margin-inline-start: 3px;
+  border-inline-start: 1px solid #a2d1ff;
+  flex-shrink: 0;
+}
+
+.debugger .tree-indent {
+  width: 16px;
+  margin-inline-start: 0px;
+  border-inline-start: 0;
+}
+
+/* For non expandable root nodes, we don't have .tree-indent elements, so we declare
+   the margin on the start of the node */
+.tree-node[data-expandable="false"][aria-level="1"] {
+  padding-inline-start: 15px;
+}
+
+.tree .tree-node[data-expandable="true"] {
+  cursor: default;
+}
+
+.tree-node button.arrow {
+  mask: url("resource://devtools/client/debugger/images/arrow.svg") no-repeat center;
+  mask-size: 10px;
+  vertical-align: -1px;
+  width: 10px;
+  height: 10px;
+  border: 0;
+  padding: 0;
+  margin-inline-end: 4px;
+  transform-origin: center center;
+  transition: transform 125ms var(--animation-curve);
+  background-color: var(--theme-icon-dimmed-color);
+}
+
+.tree-node button.arrow:not(.expanded) {
+  transform: rotate(-90deg);
+}
+
+html[dir="rtl"] .tree-node button:not(.expanded) {
+  transform: rotate(90deg);
+}
+
+.tree .tree-node.focused {
+  color: white;
+  background-color: var(--theme-selection-background, #0a84ff);
+}
+
+.tree-node.focused button.arrow {
+  background-color: currentColor;
+}
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+menu {
+  display: inline;
+  padding: 0;
+}
+
+menu > menuitem::after {
+  content: "\25BA";
+  float: right;
+  padding-left: 5px;
+}
+
+menu > menupopup {
+  display: none;
+}
+
+menu > menuitem:hover + menupopup,
+menu > menupopup:hover {
+  display: block;
+}
+
+menupopup {
+  position: fixed;
+  z-index: 10000;
+  background: white;
+  border: 1px solid #cccccc;
+  padding: 5px 0;
+  background: #f2f2f2;
+  border-radius: 5px;
+  color: #585858;
+  box-shadow: 0 0 4px 0 rgba(190, 190, 190, 0.8);
+  min-width: 130px;
+}
+
+menuitem {
+  display: block;
+  padding: 0 20px;
+  line-height: 20px;
+  font-weight: 500;
+  font-size: 13px;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+menuitem:hover {
+  background: #3780fb;
+  color: white;
+  cursor: pointer;
+}
+
+menuitem[disabled=true] {
+  color: #cccccc;
+}
+
+menuitem[disabled=true]:hover {
+  background-color: transparent;
+  cursor: default;
+}
+
+menuitem[type=checkbox]::before {
+  content: "";
+  width: 10px;
+  display: inline-block;
+}
+
+menuitem[type=checkbox][checked=true]::before {
+  content: "\2713";
+  left: -8px;
+  position: relative;
+}
+
+menuseparator {
+  border-bottom: 1px solid #cacdd3;
+  width: 100%;
+  height: 5px;
+  display: block;
+  margin-bottom: 5px;
+}
+
+#contextmenu-mask.show {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 999;
+}
+.container {
+  background-color: lightgrey;
+  border: 1px solid darkgrey;
+  cursor: pointer;
+  padding: 0 3px;
+}
+
+.container[aria-selected=true] {
+  background-color: white;
+}
+.container {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+/* vim:set ts=2 sw=2 sts=2 et: */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.split-box {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.split-box.vert {
+  flex-direction: row;
+}
+
+.split-box.horz {
+  flex-direction: column;
+}
+
+.split-box > .uncontrolled {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+
+.split-box > .controlled {
+  display: flex;
+  overflow: auto;
+}
+
+.split-box > .splitter {
+  background-image: none;
+  border: 0;
+  border-style: solid;
+  border-color: transparent;
+  background-color: var(--theme-splitter-color);
+  background-clip: content-box;
+  position: relative;
+
+  box-sizing: border-box;
+
+  /* Positive z-index positions the splitter on top of its siblings and makes
+     it clickable on both sides. */
+  z-index: 1;
+}
+
+.split-box.vert > .splitter {
+  /* prettier-ignore */
+  min-width: calc(var(--devtools-splitter-inline-start-width) +
+    var(--devtools-splitter-inline-end-width) + 1px);
+
+  border-left-width: var(--devtools-splitter-inline-start-width);
+  border-right-width: var(--devtools-splitter-inline-end-width);
+
+  margin-left: calc(-1 * var(--devtools-splitter-inline-start-width) - 1px);
+  margin-right: calc(-1 * var(--devtools-splitter-inline-end-width));
+
+  cursor: ew-resize;
+}
+
+.split-box.horz > .splitter {
+  /* prettier-ignore */
+  min-height: calc(var(--devtools-splitter-top-width) +
+    var(--devtools-splitter-bottom-width) + 1px);
+  border-top-width: var(--devtools-splitter-top-width);
+  border-bottom-width: var(--devtools-splitter-bottom-width);
+
+  margin-top: calc(-1 * var(--devtools-splitter-top-width) - 1px);
+  margin-bottom: calc(-1 * var(--devtools-splitter-bottom-width));
+
+  cursor: ns-resize;
+}
+
+.split-box.disabled {
+  pointer-events: none;
+}
+
+/**
+ * Make sure splitter panels are not processing any mouse
+ * events. This is good for performance during splitter
+ * bar dragging.
+ */
+.split-box.dragging > .controlled,
+.split-box.dragging > .uncontrolled {
+  pointer-events: none;
+}

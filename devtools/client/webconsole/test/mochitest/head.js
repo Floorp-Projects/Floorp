@@ -21,15 +21,15 @@ Services.scriptloader.loadSubScript(
   this);
 
 // Import helpers for the new debugger
-/* import-globals-from ../../../debugger/new/test/mochitest/helpers/context.js */
+/* import-globals-from ../../../debugger/test/mochitest/helpers/context.js */
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers/context.js",
+  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/helpers/context.js",
   this);
 
 // Import helpers for the new debugger
-/* import-globals-from ../../../debugger/new/test/mochitest/helpers.js*/
+/* import-globals-from ../../../debugger/test/mochitest/helpers.js*/
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/devtools/client/debugger/new/test/mochitest/helpers.js",
+  "chrome://mochitests/content/browser/devtools/client/debugger/test/mochitest/helpers.js",
   this);
 
 var {HUDService} = require("devtools/client/webconsole/hudservice");

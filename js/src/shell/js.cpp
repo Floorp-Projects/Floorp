@@ -4944,7 +4944,7 @@ static bool AbortDynamicModuleImport(JSContext* cx, unsigned argc, Value* vp) {
   RootedString specifier(cx, args[1].toString());
   Rooted<PromiseObject*> promise(cx, &args[2].toObject().as<PromiseObject>());
 
-  cx->setPendingException(args[3]);
+  cx->setPendingExceptionAndCaptureStack(args[3]);
   return js::FinishDynamicModuleImport(cx, args[0], specifier, promise);
 }
 
