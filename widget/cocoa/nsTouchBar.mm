@@ -194,6 +194,11 @@ static char sIdentifierAssociationKey;
 
 - (void)releaseJSObjects {
   mTouchBarHelper = nil;
+
+  for (NSTouchBarItemIdentifier identifier in self.mappedLayoutItems) {
+    TouchBarInput* input = self.mappedLayoutItems[identifier];
+    [input setCallback:nil];
+  }
 }
 
 #pragma mark - TouchBar Utilities
