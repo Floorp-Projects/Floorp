@@ -6,7 +6,7 @@
 requestLongerTimeout(5);
 
 // Debugger operations may still be in progress when we step.
-const { PromiseTestUtils } = scopedCuImport(
+const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
 PromiseTestUtils.whitelistRejectionsGlobally(/Current thread has paused or resumed/);

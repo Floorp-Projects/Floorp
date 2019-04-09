@@ -23,7 +23,6 @@
     "ok": false,
     "registerCleanupFunction": false,
     "requestLongerTimeout": false,
-    "scopedCuImport": false,
     "SimpleTest": false,
     "SpecialPowers": false,
     "TestUtils": false,
