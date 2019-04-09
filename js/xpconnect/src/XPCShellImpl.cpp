@@ -367,7 +367,7 @@ static bool Load(JSContext* cx, unsigned argc, Value* vp) {
     options.setFileAndLine(filename.get(), 1).setIsRunOnce(true);
     JS::Rooted<JSScript*> script(cx);
     JS::Rooted<JSObject*> global(cx, JS::CurrentGlobalOrNull(cx));
-    JS::CompileUtf8File(cx, options, file, &script);
+    script = JS::CompileUtf8File(cx, options, file);
     fclose(file);
     if (!script) {
       return false;
@@ -699,8 +699,9 @@ static bool ProcessUtf8Line(AutoJSAPI& jsapi, const char* buffer,
   JS::CompileOptions options(cx);
   options.setFileAndLine("typein", startline).setIsRunOnce(true);
 
-  JS::RootedScript script(cx);
-  if (!JS::CompileUtf8(cx, options, buffer, strlen(buffer), &script)) {
+  JS::RootedScript script(cx,
+                          JS::CompileUtf8(cx, options, buffer, strlen(buffer)));
+  if (!script) {
     return false;
   }
   if (compileOnly) {
@@ -763,7 +764,8 @@ static bool ProcessFile(AutoJSAPI& jsapi, const char* filename, FILE* file,
     options.setFileAndLine(filename, 1)
         .setIsRunOnce(true)
         .setNoScriptRval(true);
-    if (!JS::CompileUtf8File(cx, options, file, &script)) {
+    script = JS::CompileUtf8File(cx, options, file);
+    if (!script) {
       return false;
     }
     return compileOnly || JS_ExecuteScript(cx, script, &unused);
