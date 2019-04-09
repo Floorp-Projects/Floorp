@@ -338,6 +338,7 @@
     <!-- These are used to build the Application menu -->
     <key id="key_preferencesCmdMac"
          key="&preferencesCmdMac.commandkey;"
+         reserved="true"
          modifiers="accel"/>
     <key id="key_hideThisAppCmdMac"
          key="&hideThisAppCmdMac2.commandkey;"
