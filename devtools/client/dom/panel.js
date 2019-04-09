@@ -55,6 +55,7 @@ DomPanel.prototype = {
 
     // Export provider object with useful API for DOM panel.
     const provider = {
+      getToolbox: this.getToolbox.bind(this),
       getPrototypeAndProperties: this.getPrototypeAndProperties.bind(this),
       openLink: this.openLink.bind(this),
     };
@@ -191,6 +192,10 @@ DomPanel.prototype = {
     if (typeof this[method] == "function") {
       this[method](data.args);
     }
+  },
+
+  getToolbox: function() {
+    return this._toolbox;
   },
 
   get target() {

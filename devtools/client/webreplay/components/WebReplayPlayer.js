@@ -18,7 +18,7 @@ const getFormatStr = (key, a) => L10N.getFormatStr(`toolbox.replay.${key}`, a);
 const { div } = dom;
 
 const markerWidth = 7;
-const imgResource = "resource://devtools/client/debugger/new/images";
+const imgResource = "resource://devtools/client/debugger/images";
 const imgChrome = "chrome://devtools/skin/images";
 const shouldLog = false;
 
