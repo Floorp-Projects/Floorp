@@ -626,7 +626,7 @@
     },
 
     "RequestedLocales": {
-      "type": "array",
+      "type": ["string", "array"],
       "items": {
         "type": "string"
       }
