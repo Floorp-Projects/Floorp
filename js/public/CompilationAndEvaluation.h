@@ -147,12 +147,12 @@ extern JS_PUBLIC_API bool EvaluateUtf8Path(
     MutableHandle<Value> rval);
 
 /**
- * |script| will always be set. On failure, it will be set to nullptr.
+ * Compile the provided script using the given options.  Return the script on
+ * success, or return null on failure (usually with an error reported).
  */
-extern JS_PUBLIC_API bool Compile(JSContext* cx,
-                                  const ReadOnlyCompileOptions& options,
-                                  SourceText<char16_t>& srcBuf,
-                                  MutableHandle<JSScript*> script);
+extern JS_PUBLIC_API JSScript* Compile(JSContext* cx,
+                                       const ReadOnlyCompileOptions& options,
+                                       SourceText<char16_t>& srcBuf);
 
 /**
  * Identical to |JS::Compile|, but compiles UTF-8.
@@ -165,84 +165,73 @@ extern JS_PUBLIC_API bool Compile(JSContext* cx,
  *       compiling them.  UTF-8 compilation is currently experimental and has
  *       known bugs.  Use only if you're willing to tolerate unspecified bugs!
  */
-extern JS_PUBLIC_API bool CompileDontInflate(
+extern JS_PUBLIC_API JSScript* CompileDontInflate(
     JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<mozilla::Utf8Unit>& srcBuf, MutableHandle<JSScript*> script);
+    SourceText<mozilla::Utf8Unit>& srcBuf);
 
 /**
- * Compile the provided UTF-8 data into a script.  If the data contains invalid
- * UTF-8, an error is reported.
- *
- * |script| is always set to the compiled script or to null in case of error.
+ * Compile the provided UTF-8 data into a script.  It is an error if the data
+ * contains invalid UTF-8.  Return the script on success, or return null on
+ * failure (usually with an error reported).
  */
-extern JS_PUBLIC_API bool CompileUtf8(JSContext* cx,
-                                      const ReadOnlyCompileOptions& options,
-                                      const char* bytes, size_t length,
-                                      MutableHandle<JSScript*> script);
-
-/**
- * Compile the provided UTF-8 data into a script.  If the data contains invalid
- * UTF-8, an error is reported.
- *
- * |script| is always set to the compiled script or to null in case of error.
- *
- * NOTE: This function DOES NOT INFLATE the UTF-8 bytes to UTF-16 before
- *       compiling them.  UTF-8 compilation is currently experimental and has
- *       known bugs.  Use only if you're willing to tolerate unspecified bugs!
- */
-extern JS_PUBLIC_API bool CompileUtf8DontInflate(
+extern JS_PUBLIC_API JSScript* CompileUtf8(
     JSContext* cx, const ReadOnlyCompileOptions& options, const char* bytes,
-    size_t length, MutableHandle<JSScript*> script);
+    size_t length);
 
 /**
- * Compile the UTF-8 contents of the given file into a script.  If the contents
- * contain any malformed UTF-8, an error is reported.
- *
- * |script| is always set to the compiled script or to null in case of error.
- */
-extern JS_PUBLIC_API bool CompileUtf8File(JSContext* cx,
-                                          const ReadOnlyCompileOptions& options,
-                                          FILE* file,
-                                          MutableHandle<JSScript*> script);
-
-/**
- * Compile the UTF-8 contents of the given file into a script.  If the contents
- * contain any malformed UTF-8, an error is reported.
- *
- * |script| is always set to the compiled script or to null in case of error.
+ * Compile the provided UTF-8 data into a script.  It is an error if the data
+ * contains invalid UTF-8.  Return the script on success, or return null on
+ * failure (usually with an error reported).
  *
  * NOTE: This function DOES NOT INFLATE the UTF-8 bytes to UTF-16 before
  *       compiling them.  UTF-8 compilation is currently experimental and has
  *       known bugs.  Use only if you're willing to tolerate unspecified bugs!
  */
-extern JS_PUBLIC_API bool CompileUtf8FileDontInflate(
-    JSContext* cx, const ReadOnlyCompileOptions& options, FILE* file,
-    MutableHandle<JSScript*> script);
+extern JS_PUBLIC_API JSScript* CompileUtf8DontInflate(
+    JSContext* cx, const ReadOnlyCompileOptions& options, const char* bytes,
+    size_t length);
+
+/**
+ * Compile the UTF-8 contents of the given file into a script.  It is an error
+ * if the file contains invalid UTF-8.  Return the script on success, or return
+ * null on failure (usually with an error reported).
+ */
+extern JS_PUBLIC_API JSScript* CompileUtf8File(
+    JSContext* cx, const ReadOnlyCompileOptions& options, FILE* file);
+
+/**
+ * Compile the UTF-8 contents of the given file into a script.  It is an error
+ * if the file contains invalid UTF-8.  Return the script on success, or return
+ * null on failure (usually with an error reported).
+ *
+ * NOTE: This function DOES NOT INFLATE the UTF-8 bytes to UTF-16 before
+ *       compiling them.  UTF-8 compilation is currently experimental and has
+ *       known bugs.  Use only if you're willing to tolerate unspecified bugs!
+ */
+extern JS_PUBLIC_API JSScript* CompileUtf8FileDontInflate(
+    JSContext* cx, const ReadOnlyCompileOptions& options, FILE* file);
 
 /**
  * Compile the UTF-8 contents of the file at the given path into a script.
- * (The path itself is in the system encoding, not [necessarily] UTF-8.)  If
- * the contents contain any malformed UTF-8, an error is reported.
- *
- * |script| is always set to the compiled script or to null in case of error.
+ * (The path itself is in the system encoding, not [necessarily] UTF-8.)  It
+ * is an error if the file's contents are invalid UTF-8.  Return the script on
+ * success, or return null on failure (usually with an error reported).
  */
-extern JS_PUBLIC_API bool CompileUtf8Path(JSContext* cx,
-                                          const ReadOnlyCompileOptions& options,
-                                          const char* filename,
-                                          MutableHandle<JSScript*> script);
+extern JS_PUBLIC_API JSScript* CompileUtf8Path(
+    JSContext* cx, const ReadOnlyCompileOptions& options, const char* filename);
 
-extern JS_PUBLIC_API bool CompileForNonSyntacticScope(
+extern JS_PUBLIC_API JSScript* CompileForNonSyntacticScope(
     JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<char16_t>& srcBuf, MutableHandle<JSScript*> script);
+    SourceText<char16_t>& srcBuf);
 
 /**
- * Compile the given UTF-8 data for non-syntactic scope.
- *
- * An exception is thrown if the data isn't valid UTF-8.
+ * Compile the provided UTF-8 data into a script in a non-syntactic scope.  It
+ * is an error if the data contains invalid UTF-8.  Return the script on
+ * success, or return null on failure (usually with an error reported).
  */
-extern JS_PUBLIC_API bool CompileUtf8ForNonSyntacticScope(
+extern JS_PUBLIC_API JSScript* CompileUtf8ForNonSyntacticScope(
     JSContext* cx, const ReadOnlyCompileOptions& options, const char* bytes,
-    size_t length, MutableHandle<JSScript*> script);
+    size_t length);
 
 /**
  * Compile a function with envChain plus the global as its scope chain.
