@@ -90,7 +90,7 @@ MozElements.MozElementMixin = Base => class MozElement extends Base {
    * based on the static `inheritedAttributes` Object. This can be overridden by callers.
    */
   attributeChangedCallback(name, oldValue, newValue) {
-    if (!this.isConnectedAndReady || oldValue === newValue || !this.inheritedAttributesCache) {
+    if (oldValue === newValue || !this.inheritedAttributesCache) {
       return;
     }
 
