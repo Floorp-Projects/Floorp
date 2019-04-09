@@ -6,11 +6,14 @@
 
 #include "jsapi-tests/tests.h"
 
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
+
 #include <stdio.h>
 
-#include "js/CompilationAndEvaluation.h"
+#include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/Initialization.h"
 #include "js/RootingAPI.h"
+#include "js/SourceText.h"  // JS::Source{Ownership,Text}
 
 JSAPITest* JSAPITest::list;
 
@@ -48,8 +51,10 @@ bool JSAPITest::exec(const char* utf8, const char* filename, int lineno) {
   JS::CompileOptions opts(cx);
   opts.setFileAndLine(filename, lineno);
 
+  JS::SourceText<mozilla::Utf8Unit> srcBuf;
   JS::RootedValue v(cx);
-  return JS::EvaluateUtf8(cx, opts, utf8, strlen(utf8), &v) ||
+  return (srcBuf.init(cx, utf8, strlen(utf8), JS::SourceOwnership::Borrowed) &&
+          JS::Evaluate(cx, opts, srcBuf, &v)) ||
          fail(JSAPITestString(utf8), filename, lineno);
 }
 
@@ -58,8 +63,10 @@ bool JSAPITest::execDontReport(const char* utf8, const char* filename,
   JS::CompileOptions opts(cx);
   opts.setFileAndLine(filename, lineno);
 
+  JS::SourceText<mozilla::Utf8Unit> srcBuf;
   JS::RootedValue v(cx);
-  return JS::EvaluateUtf8(cx, opts, utf8, strlen(utf8), &v);
+  return srcBuf.init(cx, utf8, strlen(utf8), JS::SourceOwnership::Borrowed) &&
+         JS::Evaluate(cx, opts, srcBuf, &v);
 }
 
 bool JSAPITest::evaluate(const char* utf8, const char* filename, int lineno,
@@ -67,7 +74,9 @@ bool JSAPITest::evaluate(const char* utf8, const char* filename, int lineno,
   JS::CompileOptions opts(cx);
   opts.setFileAndLine(filename, lineno);
 
-  return JS::EvaluateUtf8(cx, opts, utf8, strlen(utf8), vp) ||
+  JS::SourceText<mozilla::Utf8Unit> srcBuf;
+  return (srcBuf.init(cx, utf8, strlen(utf8), JS::SourceOwnership::Borrowed) &&
+          JS::Evaluate(cx, opts, srcBuf, vp)) ||
          fail(JSAPITestString(utf8), filename, lineno);
 }
 

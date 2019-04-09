@@ -8,14 +8,16 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/CharacterEncoding.h"
-#include "js/CompilationAndEvaluation.h"
+#include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/ContextOptions.h"
 #include "js/Printf.h"
 #include "js/PropertySpec.h"
+#include "js/SourceText.h"  // JS::SourceText
 #include "mozilla/ChaosMode.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/IOInterposer.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "nsServiceManagerUtils.h"
 #include "nsComponentManagerUtils.h"
 #include "nsExceptionHandler.h"
@@ -985,7 +987,11 @@ static bool ProcessArgs(AutoJSAPI& jsapi, char** argv, int argc,
         JS::CompileOptions opts(cx);
         opts.setFileAndLine("-e", 1);
 
-        JS::EvaluateUtf8(cx, opts, argv[i], strlen(argv[i]), &rval);
+        JS::SourceText<mozilla::Utf8Unit> srcBuf;
+        if (srcBuf.init(cx, argv[i], strlen(argv[i]),
+                        JS::SourceOwnership::Borrowed)) {
+          JS::Evaluate(cx, opts, srcBuf, &rval);
+        }
 
         isInteractive = false;
         break;
