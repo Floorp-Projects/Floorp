@@ -62,7 +62,6 @@ RefPtr<ChromiumCDMParent::InitPromise> ChromiumCDMParent::Init(
         __func__);
   }
   mCDMCallback = aCDMCallback;
-  mMainThread = aMainThread;
 
   RefPtr<ChromiumCDMParent::InitPromise> promise =
       mInitPromise.Ensure(__func__);
