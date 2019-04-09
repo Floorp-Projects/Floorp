@@ -760,7 +760,7 @@ add_task(async function test_syncs_clients_with_local_dump() {
 add_task(clear_state);
 
 
-add_task(async function test_adding_client_resets_last_etag() {
+add_task(async function test_adding_client_resets_polling() {
   function serve200or304(request, response) {
     const entries = [{
       id: "aa71e6cc-9f37-447a-b6e0-c025e8eabd03",
@@ -800,4 +800,9 @@ add_task(async function test_adding_client_resets_last_etag() {
 
   // The new client was called, even if the server data didn't change.
   Assert.ok(maybeSyncCalled);
+
+  // Poll again. This time maybeSync() won't be called.
+  maybeSyncCalled = false;
+  await RemoteSettings.pollChanges();
+  Assert.ok(!maybeSyncCalled);
 });

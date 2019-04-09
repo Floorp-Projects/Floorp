@@ -43,17 +43,9 @@ enum class ServoTraversalFlags : uint32_t {
   AnimationOnly = 1 << 0,
   // Traverses as normal mode but tries to update all CSS animations.
   ForCSSRuleChanges = 1 << 1,
-  // A forgetful traversal ignores the previous state of the frame tree, and
-  // thus does not compute damage or maintain other state describing the styles
-  // pre-traversal. A forgetful traversal is usually the right thing if you
-  // aren't going to do a post-traversal.
-  Forgetful = 1 << 3,
-  // Clears all the dirty bits (dirty descendants, animation-only
-  // dirty-descendants, needs frame, descendants need frames) on the elements
-  // traversed. in the subtree.
-  ClearDirtyBits = 1 << 5,
-  // Clears only the animation-only dirty descendants bit in the subtree.
-  ClearAnimationOnlyDirtyDescendants = 1 << 6,
+  // The final animation-only traversal, which shouldn't really care about other
+  // style changes anymore.
+  FinalAnimationTraversal = 1 << 2,
   // Allows the traversal to run in parallel if there are sufficient cores on
   // the machine.
   ParallelTraversal = 1 << 7,

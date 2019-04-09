@@ -292,8 +292,11 @@ nsresult nsAppShell::Init() {
   mAutoreleasePools = ::CFArrayCreateMutable(nullptr, 0, nullptr);
   NS_ENSURE_STATE(mAutoreleasePools);
 
-  if (XRE_GetProcessType() != GeckoProcessType_RDD &&
-      XRE_GetProcessType() != GeckoProcessType_Socket) {
+  bool isNSApplicationProcessType =
+      (XRE_GetProcessType() != GeckoProcessType_RDD) &&
+      (XRE_GetProcessType() != GeckoProcessType_Socket);
+
+  if (isNSApplicationProcessType) {
     // Get the path of the nib file, which lives in the GRE location
     nsCOMPtr<nsIFile> nibFile;
     nsresult rv = NS_GetSpecialDirectory(NS_GRE_DIR, getter_AddRefs(nibFile));
@@ -352,7 +355,7 @@ nsresult nsAppShell::Init() {
 
   nsresult rv = nsBaseAppShell::Init();
 
-  if (!gAppShellMethodsSwizzled) {
+  if (isNSApplicationProcessType && !gAppShellMethodsSwizzled) {
     // We should only replace the original terminate: method if we're not
     // running in a Cocoa embedder. See bug 604901.
     if (!mRunningCocoaEmbedded) {

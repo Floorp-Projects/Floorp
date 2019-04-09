@@ -1,6 +1,6 @@
-'use strict';
+"use strict";
 
-const pushNotifier = Cc['@mozilla.org/push/Notifier;1']
+const pushNotifier = Cc["@mozilla.org/push/Notifier;1"]
                        .getService(Ci.nsIPushNotifier);
 
 add_task(async function test_observer_remoting() {
@@ -13,12 +13,12 @@ add_task(async function test_observer_remoting() {
 });
 
 const childTests = [{
-  text: 'Hello from child!',
+  text: "Hello from child!",
   principal: Services.scriptSecurityManager.getSystemPrincipal(),
 }];
 
 const parentTests = [{
-  text: 'Hello from parent!',
+  text: "Hello from parent!",
   principal: Services.scriptSecurityManager.getSystemPrincipal(),
 }];
 
@@ -30,11 +30,11 @@ async function testInParent() {
     (p, test) => p.then(_ => waitForNotifierObservers(test, /* shouldNotify = */ false)),
     Promise.resolve()
   );
-  let promiseFinished = run_test_in_child('./test_observer_remoting.js');
+  let promiseFinished = run_test_in_child("./test_observer_remoting.js");
   await promiseNotifications;
 
   // Wait until the child is listening for notifications from the parent.
-  await do_await_remote_message('push_test_observer_remoting_child_ready');
+  await do_await_remote_message("push_test_observer_remoting_child_ready");
 
   // Fire an observer notification in the parent that should be forwarded to
   // the child.
@@ -61,7 +61,7 @@ async function testInChild() {
     (p, test) => p.then(_ => waitForNotifierObservers(test, /* shouldNotify = */ false)),
     Promise.resolve()
   );
-  do_send_remote_message('push_test_observer_remoting_child_ready');
+  do_send_remote_message("push_test_observer_remoting_child_ready");
   await promiseNotifierObservers;
 }
 
@@ -73,11 +73,11 @@ var waitForNotifierObservers = async function({ text, principal }, shouldNotify 
   let subModifiedPromise = promiseObserverNotification(
     PushServiceComponent.subscriptionModifiedTopic);
 
-  let scope = 'chrome://test-scope';
-  let data = new TextEncoder('utf-8').encode(text);
+  let scope = "chrome://test-scope";
+  let data = new TextEncoder("utf-8").encode(text);
 
   if (shouldNotify) {
-    pushNotifier.notifyPushWithData(scope, principal, '', data.length, data);
+    pushNotifier.notifyPushWithData(scope, principal, "", data.length, data);
     pushNotifier.notifySubscriptionChange(scope, principal);
     pushNotifier.notifySubscriptionModified(scope, principal);
   }
@@ -87,27 +87,27 @@ var waitForNotifierObservers = async function({ text, principal }, shouldNotify 
     subject: notifySubject,
   } = await notifyPromise;
   equal(notifyScope, scope,
-    'Should fire push notifications with the correct scope');
+    "Should fire push notifications with the correct scope");
   let message = notifySubject.QueryInterface(Ci.nsIPushMessage);
   equal(message.principal, principal,
-    'Should include the principal in the push message');
-  strictEqual(message.data.text(), text, 'Should include data');
+    "Should include the principal in the push message");
+  strictEqual(message.data.text(), text, "Should include data");
 
   let {
     data: subChangeScope,
     subject: subChangePrincipal,
   } = await subChangePromise;
   equal(subChangeScope, scope,
-    'Should fire subscription change notifications with the correct scope');
+    "Should fire subscription change notifications with the correct scope");
   equal(subChangePrincipal, principal,
-    'Should pass the principal as the subject of a change notification');
+    "Should pass the principal as the subject of a change notification");
 
   let {
     data: subModifiedScope,
     subject: subModifiedPrincipal,
   } = await subModifiedPromise;
   equal(subModifiedScope, scope,
-    'Should fire subscription modified notifications with the correct scope');
+    "Should fire subscription modified notifications with the correct scope");
   equal(subModifiedPrincipal, principal,
-    'Should pass the principal as the subject of a modified notification');
+    "Should pass the principal as the subject of a modified notification");
 };

@@ -144,8 +144,8 @@ bool AsyncScriptCompiler::StartCompile(JSContext* aCx) {
     return true;
   }
 
-  Rooted<JSScript*> script(aCx);
-  if (!JS::Compile(aCx, mOptions, srcBuf, &script)) {
+  Rooted<JSScript*> script(aCx, JS::Compile(aCx, mOptions, srcBuf));
+  if (!script) {
     return false;
   }
 

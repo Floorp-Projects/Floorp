@@ -616,10 +616,10 @@
      *
      *   Category: Literals
      *   Type: Constants
-     *   Operands: uint32_t constIndex
+     *   Operands: DoubleValue literal
      *   Stack: => val
      */ \
-    MACRO(JSOP_DOUBLE, 60, "double", NULL, 5, 0, 1, JOF_DOUBLE) \
+    MACRO(JSOP_DOUBLE, 60, "double", NULL, 9, 0, 1, JOF_DOUBLE) \
     /*
      * Pushes string constant onto the stack.
      *

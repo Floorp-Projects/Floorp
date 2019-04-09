@@ -43,7 +43,7 @@ class nsImageMap final : public nsStubMutationObserver,
    * Return the first area element (in content order) for the given aX,aY pixel
    * coordinate or nullptr if the coordinate is outside all areas.
    */
-  nsIContent* GetArea(nscoord aX, nscoord aY) const;
+  mozilla::dom::HTMLAreaElement* GetArea(nscoord aX, nscoord aY) const;
 
   /**
    * Return area elements count associated with the image map.
@@ -53,7 +53,7 @@ class nsImageMap final : public nsStubMutationObserver,
   /**
    * Return area element at the given index.
    */
-  nsIContent* GetAreaAt(uint32_t aIndex) const;
+  mozilla::dom::HTMLAreaElement* GetAreaAt(uint32_t aIndex) const;
 
   void Draw(nsIFrame* aFrame, DrawTarget& aDrawTarget,
             const ColorPattern& aColor,

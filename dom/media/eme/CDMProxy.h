@@ -82,7 +82,7 @@ class CDMProxy {
   // Main thread only.
   CDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,
            bool aDistinctiveIdentifierRequired, bool aPersistentStateRequired,
-           nsIEventTarget* aMainThread)
+           nsISerialEventTarget* aMainThread)
       : mKeys(aKeys),
         mKeySystem(aKeySystem),
         mCapabilites("CDMProxy::mCDMCaps"),
@@ -272,7 +272,7 @@ class CDMProxy {
   const bool mPersistentStateRequired;
 
   // The main thread associated with the root document.
-  const nsCOMPtr<nsIEventTarget> mMainThread;
+  const nsCOMPtr<nsISerialEventTarget> mMainThread;
 };
 
 }  // namespace mozilla

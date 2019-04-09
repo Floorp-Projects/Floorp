@@ -24,6 +24,7 @@ http://creativecommons.org/licenses/publicdomain/
 </pre>
 
 <script class="testbody" type="text/javascript">
+  /* import-globals-from ./test_utils.js */
 
   var isTestingMismatchedKey = false;
   var subscriptions = 0;
@@ -45,10 +46,12 @@ http://creativecommons.org/licenses/publicdomain/
         ok(pageRecord.appServerKey.length > 0,
           "App server key should not be empty");
         if (pageRecord.appServerKey.length != 65) {
+          // eslint-disable-next-line no-throw-literal
           throw { result:
-                  SpecialPowers.Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR };
-        }
-        if (isTestingMismatchedKey) {
+            SpecialPowers.Cr.NS_ERROR_DOM_PUSH_INVALID_KEY_ERR };
+          }
+          if (isTestingMismatchedKey) {
+          // eslint-disable-next-line no-throw-literal
           throw { result:
                   SpecialPowers.Cr.NS_ERROR_DOM_PUSH_MISMATCHED_KEY_ERR };
         }
@@ -68,7 +71,7 @@ http://creativecommons.org/licenses/publicdomain/
     await setPushPermission(true);
     testKey = await generateKey();
 
-    var url = "worker.js" + "?" + (Math.random());
+    var url = "worker.js?" + (Math.random());
     registration = await navigator.serviceWorker.register(url, {scope: "."});
     await waitForActive(registration);
   });
@@ -171,7 +174,7 @@ http://creativecommons.org/licenses/publicdomain/
     var key = await generateKey();
     var data = await sendRequestToWorker({
       type: "subscribeWithKey",
-      key: key,
+      key,
     });
     is(data.endpoint, "https://example.com/push/2",
       "Wrong endpoint for subscription with key created in worker");

@@ -186,7 +186,8 @@ bool testBadUtf8(const char (&chars)[N], unsigned errorNumber,
   JS::Rooted<JSScript*> script(cx);
   {
     JS::CompileOptions options(cx);
-    CHECK(!JS::CompileUtf8DontInflate(cx, options, chars, N - 1, &script));
+    script = JS::CompileUtf8DontInflate(cx, options, chars, N - 1);
+    CHECK(!script);
   }
 
   JS::RootedValue exn(cx);
@@ -265,7 +266,8 @@ bool testContext(const char (&chars)[N],
   JS::Rooted<JSScript*> script(cx);
   {
     JS::CompileOptions options(cx);
-    CHECK(!JS::CompileUtf8DontInflate(cx, options, chars, N - 1, &script));
+    script = JS::CompileUtf8DontInflate(cx, options, chars, N - 1);
+    CHECK(!script);
   }
 
   JS::RootedValue exn(cx);

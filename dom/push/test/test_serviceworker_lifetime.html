@@ -36,6 +36,7 @@
 </pre>
 
 <script class="testbody" type="text/javascript">
+  /* import-globals-from ./test_utils.js */
 
   function start() {
     return navigator.serviceWorker.register("lifetime_worker.js", {scope: "./"})
@@ -82,7 +83,7 @@
       uaid: "fa8f2e4b-5ddc-4408-b1e3-5f25a02abff0",
       channelID,
       status: 200,
-      pushEndpoint: endpoint
+      pushEndpoint: endpoint,
     }));
   };
 
@@ -91,7 +92,7 @@
     mockSocket.serverSendMsg(JSON.stringify({
       messageType: "notification",
       version: "vDummy",
-      channelID
+      channelID,
     }));
   }
 
@@ -105,7 +106,7 @@
 
   function createIframe(ctx) {
     var p = new Promise(function(res, rej) {
-      var iframe = document.createElement('iframe');
+      var iframe = document.createElement("iframe");
       // This file doesn't exist, the service worker will give us an empty
       // document.
       iframe.src = "http://mochi.test:8888/tests/dom/push/test/lifetime_frame.html";
@@ -113,7 +114,7 @@
       iframe.onload = function() {
         ctx.iframe = iframe;
         res(ctx);
-      }
+      };
       document.body.appendChild(iframe);
     });
     return p;
@@ -130,9 +131,9 @@
   }
 
   function waitAndCheckMessage(contentWindow, expected) {
-    function checkMessage(expected, resolve, event) {
-      ok(event.data.type == expected.type, "Received correct message type: " + expected.type);
-      ok(event.data.state == expected.state, "Service worker is in the correct state: " + expected.state);
+    function checkMessage({ type, state }, resolve, event) {
+      ok(event.data.type == type, "Received correct message type: " + type);
+      ok(event.data.state == state, "Service worker is in the correct state: " + state);
       this.navigator.serviceWorker.onmessage = null;
       resolve();
     }
@@ -174,7 +175,7 @@
     return function(ctx) {
       return eventFunction(ctx, expected_state, new_state)
         .then(() => ctx);
-    }
+    };
   }
 
   let shutdownTopic =
@@ -190,21 +191,21 @@
 
       ctx.observer_promise = new Promise(function(res, rej) {
         ctx.observer = {
-          observe: function(subject, topic, data) {
+          observe(subject, topic, data) {
             ok((topic == shutdownTopic) && expectingEvent, "Service worker was terminated.");
             this.remove(ctx);
           },
-          remove: function(ctx) {
+          remove(context) {
             SpecialPowers.removeObserver(this, shutdownTopic);
-            ctx.observer = null;
-            res(ctx);
-          }
-        }
+            context.observer = null;
+            res(context);
+          },
+        };
         SpecialPowers.addObserver(ctx.observer, shutdownTopic);
       });
 
       return ctx;
-    }
+    };
   }
 
   function waitOnShutdownObserver(ctx) {
@@ -225,22 +226,22 @@
         function run() {
           test.steps(ctx).catch(function(e) {
             ok(false, "Some test failed with error: " + e);
-          }).then((ctx) => res(ctx));
+          }).then(res);
         }
 
-        SpecialPowers.pushPrefEnv({"set" : test.prefs}, run);
+        SpecialPowers.pushPrefEnv({"set": test.prefs}, run);
       });
-    }
+    };
   }
 
   var test1 = {
     prefs: [
       ["dom.serviceWorkers.idle_timeout", 0],
-      ["dom.serviceWorkers.idle_extended_timeout", 2999999]
+      ["dom.serviceWorkers.idle_extended_timeout", 2999999],
     ],
     // Test that service workers are terminated after the grace period expires
     // when there are no pending waitUntil or respondWith promises.
-    steps: function(ctx) {
+    steps(ctx) {
       // Test with fetch events and respondWith promises
       return createIframe(ctx)
         .then(setShutdownObserver(true))
@@ -271,16 +272,16 @@
         .then(setShutdownObserver(true))
         .then(checkStateAndUpdate(messageEventIframe, "update", "release"))
         .then(waitOnShutdownObserver)
-        .then(closeIframe)
-    }
-  }
+        .then(closeIframe);
+    },
+  };
 
   var test2 = {
     prefs: [
       ["dom.serviceWorkers.idle_timeout", 0],
-      ["dom.serviceWorkers.idle_extended_timeout", 2999999]
+      ["dom.serviceWorkers.idle_extended_timeout", 2999999],
     ],
-    steps: function(ctx) {
+    steps(ctx) {
       // Older versions used to terminate workers when the last controlled
       // window was closed.  This should no longer happen, though.  Verify
       // the new behavior.
@@ -308,30 +309,30 @@
         .then(closeIframe)
         .then(setShutdownObserver(true))
         .then(checkStateAndUpdate(messageEvent, "wait", "release"))
-        .then(waitOnShutdownObserver)
-    }
+        .then(waitOnShutdownObserver);
+    },
   };
 
   var test3 = {
     prefs: [
       ["dom.serviceWorkers.idle_timeout", 2999999],
-      ["dom.serviceWorkers.idle_extended_timeout", 0]
+      ["dom.serviceWorkers.idle_extended_timeout", 0],
     ],
-    steps: function(ctx) {
+    steps(ctx) {
       // set the grace period to 0 and dispatch a message which will reset
       // the internal sw timer to the new value.
       var test3_1 = {
         prefs: [
           ["dom.serviceWorkers.idle_timeout", 0],
-          ["dom.serviceWorkers.idle_extended_timeout", 0]
+          ["dom.serviceWorkers.idle_extended_timeout", 0],
         ],
-        steps: function(ctx) {
-          return new Promise(function(res, rej) {
-            ctx.iframe.contentWindow.fetch("update");
-            res(ctx);
-          });
-        }
-      }
+        steps(context) {
+        return new Promise(function(res, rej) {
+          context.iframe.contentWindow.fetch("update");
+          res(context);
+        });
+      },
+      };
 
       // Test that service worker is closed when the extended timeout expired
       return createIframe(ctx)
@@ -342,9 +343,9 @@
         .then(setShutdownObserver(true))
         .then(subTest(test3_1)) // This should cause the internal timer to expire.
         .then(waitOnShutdownObserver)
-        .then(closeIframe)
-    }
-  }
+        .then(closeIframe);
+    },
+  };
 
   function runTest() {
     start()
@@ -356,12 +357,12 @@
       .then(unregisterPushNotification)
       .then(unregister)
       .catch(function(e) {
-        ok(false, "Some test failed with error " + e)
+        ok(false, "Some test failed with error " + e);
       }).then(SimpleTest.finish);
   }
 
   setupPrefsAndMockSocket(mockSocket).then(_ => runTest());
-  SpecialPowers.addPermission('desktop-notification', true, document);
+  SpecialPowers.addPermission("desktop-notification", true, document);
   SimpleTest.waitForExplicitFinish();
 </script>
 </body>

@@ -54,9 +54,9 @@ def cargo_info(cargo):
     )
 
 
-@depends(rustc_info, cargo_info, build_project)
+@depends(rustc_info, cargo_info, build_project, host, target)
 @imports(_from='textwrap', _import='dedent')
-def rust_compiler(rustc_info, cargo_info, build_project):
+def rust_compiler(rustc_info, cargo_info, build_project, host, target):
     if not rustc_info:
         die(dedent('''\
         Rust compiler not found.
@@ -88,6 +88,14 @@ def rust_compiler(rustc_info, cargo_info, build_project):
         to the latest release by typing 'rustup update'. The
         installer is available from https://rustup.rs/
         '''.format(version, rustc_min_version)))
+
+    if host.os == 'OSX' and target.os == 'Android' and version >= '1.33.0':
+        die(dedent('''\
+        Cross-Compiling Android on OSX with Rust 1.33 is currently broken, see bug 1536486.
+
+        As a workaround: invoke 'rustup override set 1.32.0' in your source directory, then
+        rerun './mach bootstrap' to pick up the required toolchains.
+        '''))
 
     if not cargo_info:
         die(dedent('''\

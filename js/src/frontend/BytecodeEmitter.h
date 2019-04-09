@@ -556,6 +556,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   // Emit (1 + extra) bytecodes, for N bytes of op and its immediate operand.
   MOZ_MUST_USE bool emitN(JSOp op, size_t extra, ptrdiff_t* offset = nullptr);
 
+  MOZ_MUST_USE bool emitDouble(double dval);
   MOZ_MUST_USE bool emitNumberOp(double dval);
 
   MOZ_MUST_USE bool emitBigIntOp(BigInt* bigint);

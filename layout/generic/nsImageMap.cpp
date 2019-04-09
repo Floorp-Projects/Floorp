@@ -738,7 +738,7 @@ void nsImageMap::AddArea(HTMLAreaElement* aArea) {
   mAreas.AppendElement(std::move(area));
 }
 
-nsIContent* nsImageMap::GetArea(nscoord aX, nscoord aY) const {
+HTMLAreaElement* nsImageMap::GetArea(nscoord aX, nscoord aY) const {
   NS_ASSERTION(mMap, "Not initialized");
   for (const auto& area : mAreas) {
     if (area->IsInside(aX, aY)) {
@@ -749,7 +749,7 @@ nsIContent* nsImageMap::GetArea(nscoord aX, nscoord aY) const {
   return nullptr;
 }
 
-nsIContent* nsImageMap::GetAreaAt(uint32_t aIndex) const {
+HTMLAreaElement* nsImageMap::GetAreaAt(uint32_t aIndex) const {
   return mAreas.ElementAt(aIndex)->mArea;
 }
 

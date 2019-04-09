@@ -72,7 +72,10 @@ function closeGlobalTab() {
 
 var gTabsProgressListener = {
   onLocationChange(aBrowser, aWebProgress, aRequest, aLocation, aFlags) {
-    if (!gTab || gTab.linkedBrowser != aBrowser) {
+    // Tear down customize mode when the customize mode tab loads some other page.
+    // Customize mode will be re-entered if "about:blank" is loaded again, so
+    // don't tear down in this case.
+    if (!gTab || gTab.linkedBrowser != aBrowser || aLocation.spec == "about:blank") {
       return;
     }
 
@@ -186,7 +189,9 @@ CustomizeMode.prototype = {
     gTab.setAttribute("customizemode", "true");
     SessionStore.persistTabAttribute("customizemode");
 
-    gTab.linkedBrowser.stop();
+    if (gTab.linkedPanel) {
+      gTab.linkedBrowser.stop();
+    }
 
     let win = gTab.ownerGlobal;
 
