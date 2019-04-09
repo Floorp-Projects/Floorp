@@ -1,6 +1,6 @@
 . "$topsrcdir/browser/config/mozconfigs/macosx64/nightly"
 
-ac_add_options --disable-lto
+unset MOZ_LTO
 
 TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
 
