@@ -5613,7 +5613,7 @@ PopupBlocker::PopupControlState nsGlobalWindowOuter::RevisePopupAbuseLevel(
   if ((abuse == PopupBlocker::openAllowed ||
        abuse == PopupBlocker::openControlled) &&
       StaticPrefs::dom_block_multiple_popups() && !PopupWhitelisted() &&
-      !PopupBlocker::TryUsePopupOpeningToken(mDoc->NodePrincipal())) {
+      !PopupBlocker::TryUsePopupOpeningToken()) {
     abuse = PopupBlocker::openBlocked;
   }
 
