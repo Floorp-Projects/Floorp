@@ -20,6 +20,7 @@
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/dom/GeneratedImageContent.h"
+#include "mozilla/dom/HTMLAreaElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/ResponsiveImageSelector.h"
 #include "mozilla/layers/RenderRootStateManager.h"
@@ -2298,14 +2299,14 @@ Maybe<nsIFrame::Cursor> nsImageFrame::GetCursor(const nsPoint& aPoint) {
   }
   nsIntPoint p;
   TranslateEventCoords(aPoint, p);
-  nsCOMPtr<nsIContent> area = map->GetArea(p.x, p.y);
+  HTMLAreaElement* area = map->GetArea(p.x, p.y);
   if (!area) {
     return nsFrame::GetCursor(aPoint);
   }
 
   // Use the cursor from the style of the *area* element.
-  RefPtr<ComputedStyle> areaStyle = PresShell()->StyleSet()->ResolveStyleFor(
-      area->AsElement(), LazyComputeBehavior::Allow);
+  RefPtr<ComputedStyle> areaStyle =
+    PresShell()->StyleSet()->ResolveStyleLazily(*area);
   StyleCursorKind kind = areaStyle->StyleUI()->mCursor;
   if (kind == StyleCursorKind::Auto) {
     kind = StyleCursorKind::Default;
