@@ -126,6 +126,8 @@
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "nsIWebNavigation.h"
 #include "HttpTrafficAnalyzer.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 
 #ifdef MOZ_TASK_TRACER
 #  include "GeckoTaskTracer.h"
@@ -7357,6 +7359,8 @@ static bool CompareCrossOriginOpenerPolicies(
 
     documentOrigin->GetSiteOrigin(siteOriginA);
     resultOrigin->GetSiteOrigin(siteOriginB);
+    LOG(("Comparing origin doc:[%s] with result:[%s]\n", siteOriginA.get(),
+         siteOriginB.get()));
     if (siteOriginA == siteOriginB) {
       return true;
     }
@@ -7395,19 +7399,36 @@ nsHttpChannel::HasCrossOriginOpenerPolicyMismatch(bool *aMismatch) {
       nsILoadInfo::OPENER_POLICY_NULL;
   GetCrossOriginOpenerPolicy(&resultPolicy);
 
-  // We use the top window principal as the documentOrigin
-  if (!mTopWindowPrincipal) {
-    GetTopWindowPrincipal(getter_AddRefs(mTopWindowPrincipal));
+  if (!ctx->Canonical()->GetCurrentWindowGlobal()) {
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
-  nsCOMPtr<nsIPrincipal> documentOrigin = mTopWindowPrincipal;
+  // We use the top window principal as the documentOrigin
+  nsCOMPtr<nsIPrincipal> documentOrigin =
+      ctx->Canonical()->GetCurrentWindowGlobal()->DocumentPrincipal();
   nsCOMPtr<nsIPrincipal> resultOrigin;
 
   nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
       this, getter_AddRefs(resultOrigin));
 
-  if (!CompareCrossOriginOpenerPolicies(documentPolicy, documentOrigin,
-                                        resultPolicy, resultOrigin)) {
+  bool compareResult = CompareCrossOriginOpenerPolicies(
+      documentPolicy, documentOrigin, resultPolicy, resultOrigin);
+
+  if (LOG_ENABLED()) {
+    LOG(
+        ("nsHttpChannel::HasCrossOriginOpenerPolicyMismatch - "
+         "doc:%d result:%d - compare:%d\n",
+         documentPolicy, resultPolicy, compareResult));
+    nsAutoCString docOrigin;
+    nsCOMPtr<nsIURI> uri = documentOrigin->GetURI();
+    uri->GetSpec(docOrigin);
+    nsAutoCString resOrigin;
+    uri = resultOrigin->GetURI();
+    uri->GetSpec(resOrigin);
+    LOG(("doc origin:%s - res origin: %s\n", docOrigin.get(), resOrigin.get()));
+  }
+
+  if (!compareResult) {
     // If one of the following is false:
     //   - doc is the initial about:blank document
     //   - document's unsafe-allow-outgoing is true
