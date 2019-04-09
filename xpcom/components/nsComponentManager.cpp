@@ -710,6 +710,19 @@ void nsComponentManagerImpl::RegisterCIDEntryLocked(
     return;
   }
 
+#ifdef DEBUG
+  // If we're still in the static initialization phase, check that we're not
+  // registering something that was already registered.
+  if (mStatus != NORMAL) {
+    if (StaticComponents::LookupByCID(*aEntry->cid)) {
+      MOZ_CRASH_UNSAFE_PRINTF(
+          "While registering XPCOM module %s, trying to re-register CID '%s' "
+          "already registered by a static component.",
+          aModule->Description().get(), AutoIDString(*aEntry->cid).get());
+    }
+  }
+#endif
+
   if (auto entry = mFactories.LookupForAdd(aEntry->cid)) {
     nsFactoryEntry* f = entry.Data();
     NS_WARNING("Re-registering a CID?");
@@ -739,6 +752,21 @@ void nsComponentManagerImpl::RegisterContractIDLocked(
   if (!ProcessSelectorMatches(aEntry->processSelector)) {
     return;
   }
+
+#ifdef DEBUG
+  // If we're still in the static initialization phase, check that we're not
+  // registering something that was already registered.
+  if (mStatus != NORMAL) {
+    if (const StaticModule* module = StaticComponents::LookupByContractID(
+            nsAutoCString(aEntry->contractid))) {
+      MOZ_CRASH_UNSAFE_PRINTF(
+          "Could not map contract ID '%s' to CID %s because it is already "
+          "mapped to CID %s.",
+          aEntry->contractid, AutoIDString(*aEntry->cid).get(),
+          AutoIDString(module->CID()).get());
+    }
+  }
+#endif
 
   nsFactoryEntry* f = mFactories.Get(aEntry->cid);
   if (!f) {
