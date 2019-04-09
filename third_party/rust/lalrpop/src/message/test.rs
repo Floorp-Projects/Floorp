@@ -45,7 +45,8 @@ fn hello_world() {
     "      very, very long sentence.",
     "      OK, not THAT long!"
 ]
-"#.trim(),
+"#
+        .trim(),
     );
 }
 
@@ -76,7 +77,8 @@ fn long_body() {
     "",
     "  This is a very, very, very, very long sentence. OK, not THAT long!"
 ]
-"#.trim(),
+"#
+        .trim(),
     );
 }
 
@@ -90,18 +92,24 @@ fn paragraphs() {
         .body()
         .begin_paragraphs()
         .begin_wrap()
-        .text("This is the first paragraph. It contains a lot of really interesting \
-               information that the reader will no doubt peruse with care.")
+        .text(
+            "This is the first paragraph. It contains a lot of really interesting \
+             information that the reader will no doubt peruse with care.",
+        )
         .end()
         .begin_wrap()
-        .text("This is the second paragraph. It contains even more really interesting \
-               information that the reader will no doubt skip over with wild abandon.")
+        .text(
+            "This is the second paragraph. It contains even more really interesting \
+             information that the reader will no doubt skip over with wild abandon.",
+        )
         .end()
         .begin_wrap()
-        .text("This is the final paragraph. The reader won't even spare this one \
-               a second glance, despite it containing just waht they need to know \
-               to solve their problem and to derive greater pleasure from life. \
-               The secret: All you need is love! Dum da da dum.")
+        .text(
+            "This is the final paragraph. The reader won't even spare this one \
+             a second glance, despite it containing just waht they need to know \
+             to solve their problem and to derive greater pleasure from life. \
+             The secret: All you need is love! Dum da da dum.",
+        )
         .end()
         .end()
         .end()
@@ -137,6 +145,7 @@ fn paragraphs() {
     "  life. The secret: All you",
     "  need is love! Dum da da dum."
 ]
-"#.trim(),
+"#
+        .trim(),
     );
 }

@@ -22,7 +22,7 @@ use error::Error;
 use exec::{Exec, ExecNoSyncStr};
 use expand::expand_str;
 use re_builder::unicode::RegexBuilder;
-use re_trait::{self, RegularExpression, Locations, SubCapturesPosIter};
+use re_trait::{self, RegularExpression, SubCapturesPosIter};
 
 /// Escapes all regular expression meta characters in `text`.
 ///
@@ -289,8 +289,8 @@ impl Regex {
     ///                .unwrap();
     /// let text = "Not my favorite movie: 'Citizen Kane' (1941).";
     /// let caps = re.captures(text).unwrap();
-    /// assert_eq!(&caps["title"], "Citizen Kane");
-    /// assert_eq!(&caps["year"], "1941");
+    /// assert_eq!(caps.name("title").unwrap().as_str(), "Citizen Kane");
+    /// assert_eq!(caps.name("year").unwrap().as_str(), "1941");
     /// assert_eq!(caps.get(0).unwrap().as_str(), "'Citizen Kane' (1941)");
     /// // You can also access the groups by name using the Index notation.
     /// // Note that this will panic on an invalid group name.
@@ -309,10 +309,10 @@ impl Regex {
     /// The `0`th capture group is always unnamed, so it must always be
     /// accessed with `get(0)` or `[0]`.
     pub fn captures<'t>(&self, text: &'t str) -> Option<Captures<'t>> {
-        let mut locs = self.locations();
-        self.read_captures_at(&mut locs, text, 0).map(|_| Captures {
+        let mut locs = self.capture_locations();
+        self.captures_read_at(&mut locs, text, 0).map(move |_| Captures {
             text: text,
-            locs: locs,
+            locs: locs.0,
             named_groups: self.0.capture_name_idx().clone(),
         })
     }
@@ -624,7 +624,6 @@ impl Regex {
     /// The significance of the starting point is that it takes the surrounding
     /// context into consideration. For example, the `\A` anchor can only
     /// match when `start == 0`.
-    #[doc(hidden)]
     pub fn shortest_match_at(
         &self,
         text: &str,
@@ -639,7 +638,6 @@ impl Regex {
     /// The significance of the starting point is that it takes the surrounding
     /// context into consideration. For example, the `\A` anchor can only
     /// match when `start == 0`.
-    #[doc(hidden)]
     pub fn is_match_at(&self, text: &str, start: usize) -> bool {
         self.shortest_match_at(text, start).is_some()
     }
@@ -650,7 +648,6 @@ impl Regex {
     /// The significance of the starting point is that it takes the surrounding
     /// context into consideration. For example, the `\A` anchor can only
     /// match when `start == 0`.
-    #[doc(hidden)]
     pub fn find_at<'t>(
         &self,
         text: &'t str,
@@ -661,23 +658,55 @@ impl Regex {
         })
     }
 
+    /// This is like `captures`, but uses
+    /// [`CaptureLocations`](struct.CaptureLocations.html)
+    /// instead of
+    /// [`Captures`](struct.Captures.html) in order to amortize allocations.
+    ///
+    /// To create a `CaptureLocations` value, use the
+    /// `Regex::capture_locations` method.
+    ///
+    /// This returns the overall match if this was successful, which is always
+    /// equivalence to the `0`th capture group.
+    pub fn captures_read<'t>(
+        &self,
+        locs: &mut CaptureLocations,
+        text: &'t str,
+    ) -> Option<Match<'t>> {
+        self.captures_read_at(locs, text, 0)
+    }
+
     /// Returns the same as captures, but starts the search at the given
     /// offset and populates the capture locations given.
     ///
     /// The significance of the starting point is that it takes the surrounding
     /// context into consideration. For example, the `\A` anchor can only
     /// match when `start == 0`.
-    #[doc(hidden)]
-    pub fn read_captures_at<'t>(
+    pub fn captures_read_at<'t>(
         &self,
-        locs: &mut Locations,
+        locs: &mut CaptureLocations,
         text: &'t str,
         start: usize,
     ) -> Option<Match<'t>> {
         self.0
             .searcher_str()
-            .read_captures_at(locs, text, start)
+            .captures_read_at(&mut locs.0, text, start)
             .map(|(s, e)| Match::new(text, s, e))
+    }
+
+    /// An undocumented alias for `captures_read_at`.
+    ///
+    /// The `regex-capi` crate previously used this routine, so to avoid
+    /// breaking that crate, we continue to provide the name as an undocumented
+    /// alias.
+    #[doc(hidden)]
+    pub fn read_captures_at<'t>(
+        &self,
+        locs: &mut CaptureLocations,
+        text: &'t str,
+        start: usize,
+    ) -> Option<Match<'t>> {
+        self.captures_read_at(locs, text, start)
     }
 }
 
@@ -698,11 +727,19 @@ impl Regex {
         self.0.capture_names().len()
     }
 
-    /// Returns an empty set of locations that can be reused in multiple calls
-    /// to `read_captures`.
+    /// Returns an empty set of capture locations that can be reused in
+    /// multiple calls to `captures_read` or `captures_read_at`.
+    pub fn capture_locations(&self) -> CaptureLocations {
+        CaptureLocations(self.0.searcher_str().locations())
+    }
+
+    /// An alias for `capture_locations` to preserve backward compatibility.
+    ///
+    /// The `regex-capi` crate uses this method, so to avoid breaking that
+    /// crate, we continue to export it as an undocumented API.
     #[doc(hidden)]
-    pub fn locations(&self) -> Locations {
-        self.0.searcher_str().locations()
+    pub fn locations(&self) -> CaptureLocations {
+        CaptureLocations(self.0.searcher_str().locations())
     }
 }
 
@@ -790,6 +827,63 @@ impl<'r, 't> Iterator for SplitN<'r, 't> {
     }
 }
 
+/// CaptureLocations is a low level representation of the raw offsets of each
+/// submatch.
+///
+/// You can think of this as a lower level
+/// [`Captures`](struct.Captures.html), where this type does not support
+/// named capturing groups directly and it does not borrow the text that these
+/// offsets were matched on.
+///
+/// Primarily, this type is useful when using the lower level `Regex` APIs
+/// such as `read_captures`, which permits amortizing the allocation in which
+/// capture match locations are stored.
+///
+/// In order to build a value of this type, you'll need to call the
+/// `capture_locations` method on the `Regex` being used to execute the search.
+/// The value returned can then be reused in subsequent searches.
+#[derive(Clone, Debug)]
+pub struct CaptureLocations(re_trait::Locations);
+
+/// A type alias for `CaptureLocations` for backwards compatibility.
+///
+/// Previously, we exported `CaptureLocations` as `Locations` in an
+/// undocumented API. To prevent breaking that code (e.g., in `regex-capi`),
+/// we continue re-exporting the same undocumented API.
+#[doc(hidden)]
+pub type Locations = CaptureLocations;
+
+impl CaptureLocations {
+    /// Returns the start and end positions of the Nth capture group. Returns
+    /// `None` if `i` is not a valid capture group or if the capture group did
+    /// not match anything. The positions returned are *always* byte indices
+    /// with respect to the original string matched.
+    #[inline]
+    pub fn get(&self, i: usize) -> Option<(usize, usize)> {
+        self.0.pos(i)
+    }
+
+    /// Returns the total number of capturing groups.
+    ///
+    /// This is always at least `1` since every regex has at least `1`
+    /// capturing group that corresponds to the entire match.
+    #[inline]
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    /// An alias for the `get` method for backwards compatibility.
+    ///
+    /// Previously, we exported `get` as `pos` in an undocumented API. To
+    /// prevent breaking that code (e.g., in `regex-capi`), we continue
+    /// re-exporting the same undocumented API.
+    #[doc(hidden)]
+    #[inline]
+    pub fn pos(&self, i: usize) -> Option<(usize, usize)> {
+        self.get(i)
+    }
+}
+
 /// Captures represents a group of captured strings for a single match.
 ///
 /// The 0th capture always corresponds to the entire match. Each subsequent
@@ -803,7 +897,7 @@ impl<'r, 't> Iterator for SplitN<'r, 't> {
 /// `'t` is the lifetime of the matched text.
 pub struct Captures<'t> {
     text: &'t str,
-    locs: Locations,
+    locs: re_trait::Locations,
     named_groups: Arc<HashMap<String, usize>>,
 }
 

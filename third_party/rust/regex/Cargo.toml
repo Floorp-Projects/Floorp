@@ -12,8 +12,9 @@
 
 [package]
 name = "regex"
-version = "1.0.0"
+version = "1.0.3"
 authors = ["The Rust Project Developers"]
+autotests = false
 description = "An implementation of regular expressions for Rust. This implementation uses\nfinite automata and guarantees linear time matching on all inputs.\n"
 homepage = "https://github.com/rust-lang/regex"
 documentation = "https://docs.rs/regex"
@@ -64,6 +65,10 @@ path = "tests/test_backtrack_utf8bytes.rs"
 [[test]]
 name = "backtrack-bytes"
 path = "tests/test_backtrack_bytes.rs"
+
+[[test]]
+name = "crates-regex"
+path = "tests/test_crates_regex.rs"
 [dependencies.aho-corasick]
 version = "0.6.0"
 
@@ -74,7 +79,7 @@ version = "2.0.0"
 version = "0.6.0"
 
 [dependencies.thread_local]
-version = "0.3.2"
+version = "0.3.6"
 
 [dependencies.utf8-ranges]
 version = "1.0.0"
