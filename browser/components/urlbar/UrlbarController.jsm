@@ -294,7 +294,7 @@ class UrlbarController {
           this.view.selectBy(
             event.keyCode == KeyEvent.DOM_VK_PAGE_DOWN ||
             event.keyCode == KeyEvent.DOM_VK_PAGE_UP ?
-              5 : 1,
+              UrlbarUtils.PAGE_UP_DOWN_DELTA : 1,
             { reverse: event.keyCode == KeyEvent.DOM_VK_UP ||
                        event.keyCode == KeyEvent.DOM_VK_PAGE_UP });
         } else {

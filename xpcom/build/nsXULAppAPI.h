@@ -365,7 +365,7 @@ XRE_API(nsresult, XRE_ParseAppData,
         (nsIFile * aINIFile, mozilla::XREAppData& aAppData))
 
 enum GeckoProcessType {
-#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name) \
+#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name, bin_type) \
   GeckoProcessType_##enum_name,
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE
@@ -374,7 +374,8 @@ enum GeckoProcessType {
 };
 
 static const char* const kGeckoProcessTypeString[] = {
-#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name) string_name,
+#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name, bin_type) \
+  string_name,
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE
 };
@@ -438,7 +439,7 @@ XRE_API(bool, XRE_IsE10sParentProcess, ())
  * the e10s parent process or called in the main process when e10s is
  * disabled.
  */
-#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name) \
+#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name, bin_type) \
   XRE_API(bool, XRE_Is##xre_name##Process, ())
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE
@@ -493,6 +494,12 @@ XRE_API(void, XRE_InitOmnijar, (nsIFile * aGreOmni, nsIFile* aAppOmni))
 XRE_API(void, XRE_StopLateWriteChecks, (void))
 
 XRE_API(void, XRE_EnableSameExecutableForContentProc, ())
+
+namespace mozilla {
+enum class BinPathType { Self, PluginContainer };
+}
+XRE_API(mozilla::BinPathType, XRE_GetChildProcBinPathType,
+        (GeckoProcessType aProcessType));
 
 XRE_API(int, XRE_XPCShellMain,
         (int argc, char** argv, char** envp, const XREShellData* aShellData))

@@ -23,13 +23,11 @@ LoadContext::LoadContext(nsIPrincipal* aPrincipal,
       mNestedFrameId(0),
       mIsContent(true),
       mUseRemoteTabs(false),
-      mUseTrackingProtection(false)
+      mUseTrackingProtection(false),
 #ifdef DEBUG
-      ,
-      mIsNotNull(true)
+      mIsNotNull(true),
 #endif
-{
-  mOriginAttributes = aPrincipal->OriginAttributesRef();
+      mOriginAttributes(aPrincipal->OriginAttributesRef()) {
   if (!aOptionalBase) {
     return;
   }

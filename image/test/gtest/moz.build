@@ -11,20 +11,24 @@ UNIFIED_SOURCES = [
     'TestADAM7InterpolatingFilter.cpp',
     'TestAnimationFrameBuffer.cpp',
     'TestBlendAnimationFilter.cpp',
-    'TestContainers.cpp',
     'TestCopyOnWrite.cpp',
-    'TestDecoders.cpp',
-    'TestDecodeToSurface.cpp',
     'TestDeinterlacingFilter.cpp',
-    'TestFrameAnimator.cpp',
     'TestLoader.cpp',
-    'TestMetadata.cpp',
     'TestRemoveFrameRectFilter.cpp',
-    'TestSourceBuffer.cpp',
     'TestStreamingLexer.cpp',
-    'TestSurfaceCache.cpp',
     'TestSurfaceSink.cpp',
 ]
+
+if CONFIG['OS_TARGET'] != 'Android':
+    UNIFIED_SOURCES += [
+        'TestContainers.cpp',
+        'TestDecoders.cpp',
+        'TestDecodeToSurface.cpp',
+        'TestFrameAnimator.cpp',
+        'TestMetadata.cpp',
+        'TestSourceBuffer.cpp',
+        'TestSurfaceCache.cpp',
+    ]
 
 if CONFIG['MOZ_ENABLE_SKIA']:
     UNIFIED_SOURCES += [

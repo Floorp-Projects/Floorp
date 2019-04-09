@@ -2226,7 +2226,7 @@ class WrappedJSHolder : public nsISupports {
 NS_IMPL_ADDREF(WrappedJSHolder)
 NS_IMPL_RELEASE(WrappedJSHolder)
 
-// nsINamed is always supported by nsXPCWrappedJSClass.
+// nsINamed is always supported by nsXPCWrappedJS::DelegatedQueryInterface().
 // We expose this interface only for the identity in telemetry analysis.
 NS_INTERFACE_TABLE_HEAD(WrappedJSHolder)
   if (aIID.Equals(NS_GET_IID(nsINamed))) {

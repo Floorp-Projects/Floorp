@@ -7,11 +7,9 @@
 UNIFIED_SOURCES += [
     'Helpers.cpp',
     'TestArenaAllocator.cpp',
-    'TestAtoms.cpp',
     'TestAutoPtr.cpp',
     'TestAutoRef.cpp',
     'TestAutoRefCnt.cpp',
-    'TestBase64.cpp',
     'TestCallTemplates.cpp',
     'TestCloneInputStream.cpp',
     'TestCOMPtrEq.cpp',
@@ -46,7 +44,6 @@ UNIFIED_SOURCES += [
     'TestSnappyStreams.cpp',
     'TestStateWatching.cpp',
     'TestStorageStream.cpp',
-    'TestStrings.cpp',
     'TestStringStream.cpp',
     'TestSynchronization.cpp',
     'TestTArray.cpp',
@@ -57,14 +54,21 @@ UNIFIED_SOURCES += [
     'TestThreadMetrics.cpp',
     'TestThreadPool.cpp',
     'TestThreadPoolListener.cpp',
-    'TestThreads.cpp',
     'TestThreadUtils.cpp',
     'TestThrottledEventQueue.cpp',
-    'TestTimers.cpp',
     'TestTimeStamp.cpp',
     'TestTokenizer.cpp',
     'TestUTF.cpp',
 ]
+
+if CONFIG['OS_TARGET'] != 'Android':
+    UNIFIED_SOURCES += [
+        'TestAtoms.cpp',
+        'TestBase64.cpp',
+        'TestStrings.cpp',
+        'TestThreads.cpp',
+        'TestTimers.cpp',
+    ]
 
 if CONFIG['MOZ_DEBUG'] and CONFIG['OS_ARCH'] not in ('WINNT') and CONFIG['OS_TARGET'] != 'Android':
     # FIXME bug 523392: TestDeadlockDetector doesn't like Windows
@@ -84,7 +88,7 @@ else:
     ]
 
 
-if CONFIG['WRAP_STL_INCLUDES'] and CONFIG['CC_TYPE'] != 'clang-cl':
+if CONFIG['WRAP_STL_INCLUDES'] and CONFIG['CC_TYPE'] != 'clang-cl' and CONFIG['OS_TARGET'] != 'Android':
     UNIFIED_SOURCES += [
         'TestSTLWrappers.cpp',
     ]

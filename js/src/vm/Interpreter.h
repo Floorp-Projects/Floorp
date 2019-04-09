@@ -348,13 +348,53 @@ class MOZ_STACK_CLASS TryNoteIter {
        *  trynotes within that for-of are no longer active. When we
        *  see a for-of-iterclose, we skip ahead in the trynotes list
        *  until we see the matching for-of.
+       *
+       *  Breaking out of multiple levels of for-of at once is handled
+       *  using nested FOR_OF_ITERCLOSE try-notes. Consider this code:
+       *
+       *  try {
+       *    loop: for (i of first) {
+       *      <A>
+       *      for (j of second) {
+       *        <B>
+       *        break loop; // <C1/2>
+       *      }
+       *    }
+       *  } catch {...}
+       *
+       *  Here is the mapping from various PCs to try-notes that we
+       *  want to return:
+       *
+       *        A     B     C1     C2
+       *        |     |     |      |
+       *        |     |     |  [---|---]     ForOfIterClose (outer)
+       *        |     | [---|------|---]     ForOfIterClose (inner)
+       *        |  [--X-----|------|----]    ForOf (inner)
+       *    [---X-----------X------|-----]   ForOf (outer)
+       *  [------------------------X------]  TryCatch
+       *
+       *  - At A, we find the outer for-of.
+       *  - At B, we find the inner for-of.
+       *  - At C1, we find one FOR_OF_ITERCLOSE, skip past one FOR_OF, and find
+       *    the outer for-of. (This occurs if an exception is thrown while
+       *    closing the inner iterator.)
+       *  - At C2, we find two FOR_OF_ITERCLOSE, skip past two FOR_OF, and reach
+       *    the outer try-catch. (This occurs if an exception is thrown while
+       *    closing the outer iterator.)
        */
       if (tn_->kind == JSTRY_FOR_OF_ITERCLOSE) {
+        uint32_t iterCloseDepth = 1;
         do {
           ++tn_;
           MOZ_ASSERT(tn_ != tnEnd_);
-          MOZ_ASSERT_IF(pcInRange(), tn_->kind != JSTRY_FOR_OF_ITERCLOSE);
-        } while (!(pcInRange() && tn_->kind == JSTRY_FOR_OF));
+          if (pcInRange()) {
+            if (tn_->kind == JSTRY_FOR_OF_ITERCLOSE) {
+              iterCloseDepth++;
+            } else if (tn_->kind == JSTRY_FOR_OF) {
+              iterCloseDepth--;
+            }
+          }
+        } while (iterCloseDepth > 0);
 
         // Advance to trynote following the enclosing for-of.
         continue;

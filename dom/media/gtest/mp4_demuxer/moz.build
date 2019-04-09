@@ -6,10 +6,11 @@
 
 Library('mp4_demuxer_gtest')
 
-SOURCES += [
-    'TestInterval.cpp',
-    'TestParser.cpp',
-]
+if CONFIG['OS_TARGET'] != 'Android':
+    SOURCES += [
+        'TestInterval.cpp',
+        'TestParser.cpp',
+    ]
 
 TEST_HARNESS_FILES.gtest += [
     'test_case_1156505.mp4',
@@ -48,7 +49,9 @@ TEST_HARNESS_FILES.gtest += [
     'test_case_1519617-video-has-track_id-0.mp4',
 ]
 
-UNIFIED_SOURCES += ['TestMP4.cpp',]
+if CONFIG['OS_TARGET'] != 'Android':
+    UNIFIED_SOURCES += ['TestMP4.cpp',]
+
 TEST_HARNESS_FILES.gtest += [
     '../../test/street.mp4',
 ]

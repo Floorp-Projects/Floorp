@@ -1433,13 +1433,16 @@ static void DumpHelp() {
 #ifdef MOZ_BLOCK_PROFILE_DOWNGRADE
       "  --allow-downgrade  Allows downgrading a profile.\n"
 #endif
-      "  -MOZ_LOG=<modules> Treated as MOZ_LOG=<modules> environment variable, "
-      "overrides it.\n"
-      "  -MOZ_LOG_FILE=<file> Treated as MOZ_LOG_FILE=<file> environment "
-      "variable, overrides it.\n"
-      "                     If MOZ_LOG_FILE is not specified as an argument or "
-      "as an environment variable,\n"
-      "                     logging will be written to stdout.\n",
+      "  --MOZ_LOG=<modules> Treated as MOZ_LOG=<modules> environment "
+      "variable,\n"
+      "                     overrides it.\n"
+      "  --MOZ_LOG_FILE=<file> Treated as MOZ_LOG_FILE=<file> environment "
+      "variable,\n"
+      "                     overrides it. If MOZ_LOG_FILE is not specified as "
+      "an\n"
+      "                     argument or as an environment variable, logging "
+      "will be\n"
+      "                     written to stdout.\n",
       (const char*)gAppData->name);
 
 #if defined(XP_WIN)
@@ -4904,9 +4907,9 @@ bool XRE_IsE10sParentProcess() {
   return XRE_IsParentProcess() && BrowserTabsRemoteAutostart();
 }
 
-#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name)     \
-  bool XRE_Is##xre_name##Process() {                             \
-    return XRE_GetProcessType() == GeckoProcessType_##enum_name; \
+#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name, bin_type) \
+  bool XRE_Is##xre_name##Process() {                                   \
+    return XRE_GetProcessType() == GeckoProcessType_##enum_name;       \
   }
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE
@@ -5072,9 +5075,29 @@ void OverrideDefaultLocaleIfNeeded() {
   }
 }
 
+static bool gRunSelfAsContentProc = false;
+
 void XRE_EnableSameExecutableForContentProc() {
   if (!PR_GetEnv("MOZ_SEPARATE_CHILD_PROCESS")) {
-    mozilla::ipc::GeckoChildProcessHost::EnableSameExecutableForContentProc();
+    gRunSelfAsContentProc = true;
+  }
+}
+
+mozilla::BinPathType XRE_GetChildProcBinPathType(GeckoProcessType aProcessType) {
+  MOZ_ASSERT(aProcessType != GeckoProcessType_Default);
+
+  if (!gRunSelfAsContentProc) {
+    return BinPathType::PluginContainer;
+  }
+
+  switch (aProcessType) {
+#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name, bin_type) \
+    case GeckoProcessType_##enum_name:                                 \
+      return BinPathType::bin_type;
+#include "mozilla/GeckoProcessTypes.h"
+#undef GECKO_PROCESS_TYPE
+    default:
+      return BinPathType::PluginContainer;
   }
 }
 

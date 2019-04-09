@@ -126,9 +126,9 @@ bool CrashReporterHost::FinalizeCrashReport() {
     // This check will pick up some cases that will never happen (e.g. IPDL
     // unit tests), but that's OK.
     switch (mProcessType) {
-#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name) \
-  case GeckoProcessType_##enum_name:                         \
-    type.AssignLiteral(string_name);                         \
+#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name, bin_type) \
+  case GeckoProcessType_##enum_name:                                   \
+    type.AssignLiteral(string_name);                                   \
     break;
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE
@@ -199,9 +199,9 @@ void CrashReporterHost::NotifyCrashService(GeckoProcessType aProcessType,
     telemetryKey.AssignLiteral("pluginhang");
   } else {
     switch (aProcessType) {
-#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name) \
-  case GeckoProcessType_##enum_name:                         \
-    telemetryKey.AssignLiteral(string_name);                 \
+#define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name, bin_type) \
+  case GeckoProcessType_##enum_name:                                   \
+    telemetryKey.AssignLiteral(string_name);                           \
     break;
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE

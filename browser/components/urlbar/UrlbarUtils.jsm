@@ -110,6 +110,9 @@ var UrlbarUtils = {
     SEARCH_GLASS: "chrome://browser/skin/search-glass.svg",
   },
 
+  // The number of results by which Page Up/Down move the selection.
+  PAGE_UP_DOWN_DELTA: 5,
+
   // IME composition states.
   COMPOSITION: {
     NONE: 1,

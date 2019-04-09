@@ -13,23 +13,27 @@ UNIFIED_SOURCES += [
     'TestBSPTree.cpp',
     'TestBufferRotation.cpp',
     'TestColorNames.cpp',
-    'TestCompositor.cpp',
-    'TestGfxPrefs.cpp',
     'TestGfxWidgets.cpp',
     'TestJobScheduler.cpp',
     'TestLayers.cpp',
     'TestMoz2D.cpp',
     'TestPolygon.cpp',
     'TestQcms.cpp',
-    'TestRect.cpp',
     'TestRegion.cpp',
     'TestSkipChars.cpp',
     'TestSwizzle.cpp',
-    'TestTextureCompatibility.cpp',
     'TestTextures.cpp',
     'TestTreeTraversal.cpp',
     'TestVsync.cpp',
 ]
+
+if CONFIG['OS_TARGET'] != 'Android':
+    UNIFIED_SOURCES += [
+        'TestCompositor.cpp',
+        'TestGfxPrefs.cpp',
+        'TestRect.cpp',
+        'TestTextureCompatibility.cpp',
+    ]
 
 UNIFIED_SOURCES += [ '/gfx/2d/unittest/%s' % p for p in [
     'TestBase.cpp',

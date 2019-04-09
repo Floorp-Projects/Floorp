@@ -24,26 +24,17 @@ UNIFIED_SOURCES += [
     'TestBitWriter.cpp',
     'TestBlankVideoDataCreator.cpp',
     'TestBufferReader.cpp',
-    'TestCDMStorage.cpp',
     'TestDataMutex.cpp',
     'TestDriftCompensation.cpp',
-    'TestGMPCrossOrigin.cpp',
-    'TestGMPRemoveAndDelete.cpp',
     'TestGMPUtils.cpp',
     'TestGroupId.cpp',
     'TestIntervalSet.cpp',
-    'TestMediaDataDecoder.cpp',
-    'TestMediaDataEncoder.cpp',
     'TestMediaEventSource.cpp',
     'TestMediaMIMETypes.cpp',
-    'TestMP3Demuxer.cpp',
-    'TestMP4Demuxer.cpp',
     'TestOpusParser.cpp',
     'TestRust.cpp',
     'TestVideoSegment.cpp',
     'TestVideoUtils.cpp',
-    'TestVPXDecoding.cpp',
-    'TestWebMBuffered.cpp',
 ]
 
 if CONFIG['MOZ_WEBM_ENCODER']:
@@ -56,7 +47,20 @@ if CONFIG['MOZ_WEBM_ENCODER']:
         '/gfx/2d/',
     ]
 
-if CONFIG['MOZ_WEBRTC']:
+if CONFIG['OS_TARGET'] != 'Android':
+    UNIFIED_SOURCES += [
+        'TestCDMStorage.cpp',
+        'TestGMPCrossOrigin.cpp',
+        'TestGMPRemoveAndDelete.cpp',
+        'TestMediaDataDecoder.cpp',
+        'TestMediaDataEncoder.cpp',
+        'TestMP3Demuxer.cpp',
+        'TestMP4Demuxer.cpp',
+        'TestVPXDecoding.cpp',
+        'TestWebMBuffered.cpp',
+    ]
+
+if CONFIG['MOZ_WEBRTC'] and CONFIG['OS_TARGET'] != 'Android':
     UNIFIED_SOURCES += [
         'TestAudioDeviceEnumerator.cpp',
         'TestVideoFrameConverter.cpp',

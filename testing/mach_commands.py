@@ -83,7 +83,128 @@ def get_test_parser():
     return parser
 
 
+ADD_TEST_SUPPORTED_SUITES = ['mochitest-chrome', 'mochitest-plain', 'mochitest-browser',
+                             'xpcshell']
+ADD_TEST_SUPPORTED_DOCS = ['js', 'html', 'xhtml', 'xul']
+
+
 @CommandProvider
+class AddTest(MachCommandBase):
+    @Command('addtest', category='testing',
+             description='Generate tests based on templates')
+    @CommandArgument('--suite',
+                     choices=ADD_TEST_SUPPORTED_SUITES,
+                     help='suite for the test (currently only mochitests and xpcshell '
+                          'are supported). If you pass a `test` argument this will be determined'
+                          'based on the filename and the folder it is in')
+    @CommandArgument('-o', '--overwrite',
+                     action='store_true',
+                     help='Overwrite an existing file if it exists.')
+    @CommandArgument('--doc',
+                     choices=ADD_TEST_SUPPORTED_DOCS,
+                     help='Document type for the test (if applicable).'
+                          'If you pass a `test` argument this will be determined'
+                          'based on the filename.')
+    @CommandArgument('test',
+                     nargs='?',
+                     help=('Test to create.'))
+    def addtest(self, suite=None, doc=None, overwrite=False, test=None):
+        if test:
+            if not overwrite and os.path.isfile(os.path.abspath(test)):
+                print("Error: can't generate a test that already exists:", test)
+                return 1
+
+            abs_test = os.path.abspath(test)
+            if doc is None:
+                doc = self.guess_doc(abs_test)
+            if suite is None:
+                guessed_suite, err = self.guess_suite(abs_test)
+                if err:
+                    print(err)
+                    return 1
+                suite = guessed_suite
+
+        else:
+            test = None
+            if doc is None:
+                doc = "html"
+
+        if not suite:
+            print("We couldn't automatically determine a suite. "
+                  "Please specify `--suite` with one of the following options:\n{}\n"
+                  "If you'd like to add support to a new suite, please file a bug "
+                  "blocking https://bugzilla.mozilla.org/show_bug.cgi?id=1540285."
+                  .format(ADD_TEST_SUPPORTED_SUITES))
+            return 1
+
+        if doc not in ADD_TEST_SUPPORTED_DOCS:
+            print("Error: invalid `doc`. Either pass in a test with a valid extension"
+                  "({}) or pass in the `doc` argument".format(ADD_TEST_SUPPORTED_DOCS))
+            return 1
+
+        from addtest import (
+            MochitestCreator,
+            XpcshellCreator,
+        )
+        creator = None
+        if suite == "xpcshell":
+            creator = XpcshellCreator()
+        elif suite in ("mochitest-browser", "mochitest-chrome", "mochitest-plain"):
+            creator = MochitestCreator()
+        else:
+            print("Sorry, `addtest` doesn't currently know how to add {}".format(suite))
+            return 1
+
+        if (test):
+            print("Adding a test at {} (suite `{}`)".format(test, suite))
+
+            adding_error = creator.add_test(test, suite, doc)
+
+            if adding_error:
+                print("Error adding test: {}".format(adding_error))
+                return 1
+
+            mach_command = TEST_SUITES[suite]["mach_command"]
+            print('Please make sure to add the new test to your commit. '
+                  'You can now run the test with:\n    ./mach {} {}'.format(mach_command, test))
+        else:
+            # write to stdout if you passed only suite and doc and not a file path
+            print(creator.get_template_contents(suite, doc))
+        return 0
+
+    def guess_doc(self, abs_test):
+        filename = os.path.basename(abs_test)
+        return os.path.splitext(filename)[1].strip(".")
+
+    def guess_suite(self, abs_test):
+        # If you pass a abs_test, try to detect the type based on the name
+        # and folder. This detection can be skipped if you pass the `type` arg.
+        err = None
+        guessed_suite = None
+        parent = os.path.dirname(abs_test)
+        filename = os.path.basename(abs_test)
+
+        has_browser_ini = os.path.isfile(os.path.join(parent, "browser.ini"))
+        has_chrome_ini = os.path.isfile(os.path.join(parent, "chrome.ini"))
+        has_plain_ini = os.path.isfile(os.path.join(parent, "mochitest.ini"))
+        has_xpcshell_ini = os.path.isfile(os.path.join(parent, "xpcshell.ini"))
+
+        if filename.startswith("test_") and has_xpcshell_ini and self.guess_doc(abs_test) == "js":
+            guessed_suite = "xpcshell"
+        else:
+            if filename.startswith("browser_") and has_browser_ini:
+                guessed_suite = "mochitest-browser"
+            elif filename.startswith("test_"):
+                if has_chrome_ini and has_plain_ini:
+                    err = ("Error: directory contains both a chrome.ini and mochitest.ini. "
+                           "Please set --suite=mochitest-chrome or --suite=mochitest-plain.")
+                elif has_chrome_ini:
+                    guessed_suite = "mochitest-chrome"
+                elif has_plain_ini:
+                    guessed_suite = "mochitest-plain"
+        return guessed_suite, err
+
+
 class Test(MachCommandBase):
     @Command('test', category='testing',
              description='Run tests (detects the kind of test and runs it).',
