@@ -529,8 +529,19 @@ CSSIntPoint Event::GetScreenCoords(nsPresContext* aPresContext,
     return CSSIntPoint(aPoint.x, aPoint.y);
   }
 
+  // (Potentially) transform the point from the coordinate space of an
+  // out-of-process iframe to the coordinate space of the native
+  // window. The transform can only be applied to a point whose components
+  // are floating-point values, so convert the integer point first, then
+  // transform, and then round the result back to an integer point.
+  LayoutDevicePoint floatPoint(aPoint);
+  LayoutDevicePoint topLevelPoint =
+      guiEvent->mWidget->WidgetToTopLevelWidgetTransform().TransformPoint(
+          floatPoint);
+  LayoutDeviceIntPoint rounded = RoundedToInt(topLevelPoint);
+
   nsPoint pt = LayoutDevicePixel::ToAppUnits(
-      aPoint,
+      rounded,
       aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
 
   if (PresShell* presShell = aPresContext->GetPresShell()) {
@@ -539,7 +550,7 @@ CSSIntPoint Event::GetScreenCoords(nsPresContext* aPresContext,
   }
 
   pt += LayoutDevicePixel::ToAppUnits(
-      guiEvent->mWidget->WidgetToScreenOffset(),
+      guiEvent->mWidget->TopLevelWidgetToScreenOffset(),
       aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
 
   return CSSPixel::FromAppUnitsRounded(pt);

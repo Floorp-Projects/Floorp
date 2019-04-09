@@ -48,11 +48,11 @@ void CopyArrayBufferViewOrArrayBufferData(
 }
 
 bool IsClearkeyKeySystem(const nsAString& aKeySystem) {
-  return !CompareUTF8toUTF16(kEMEKeySystemClearkey, aKeySystem);
+  return aKeySystem.EqualsLiteral(EME_KEY_SYSTEM_CLEARKEY);
 }
 
 bool IsWidevineKeySystem(const nsAString& aKeySystem) {
-  return !CompareUTF8toUTF16(kEMEKeySystemWidevine, aKeySystem);
+  return aKeySystem.EqualsLiteral(EME_KEY_SYSTEM_WIDEVINE);
 }
 
 nsString KeySystemToGMPName(const nsAString& aKeySystem) {
