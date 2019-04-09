@@ -64,7 +64,7 @@ class BrowserTabChild extends ActorChild {
       case "Browser:HasSiblings":
         try {
           let tabChild = this.docShell.QueryInterface(Ci.nsIInterfaceRequestor)
-                             .getInterface(Ci.nsITabChild);
+                             .getInterface(Ci.nsIBrowserChild);
           let hasSiblings = message.data;
           tabChild.hasSiblings = hasSiblings;
         } catch (e) {

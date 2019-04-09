@@ -89,7 +89,7 @@
 #include "nsNodeUtils.h"
 #include "nsLayoutUtils.h"  // for GetFrameForPoint
 #include "nsIFrame.h"
-#include "nsITabChild.h"
+#include "nsIBrowserChild.h"
 
 #include "nsRange.h"
 #include "mozilla/dom/DocumentType.h"
@@ -1034,7 +1034,7 @@ NS_IMETHODIMP
 ExternalResourceMap::LoadgroupCallbacks::GetInterface(const nsIID& aIID,
                                                       void** aSink) {
   if (mCallbacks && (IID_IS(nsIPrompt) || IID_IS(nsIAuthPrompt) ||
-                     IID_IS(nsIAuthPrompt2) || IID_IS(nsITabChild))) {
+                     IID_IS(nsIAuthPrompt2) || IID_IS(nsIBrowserChild))) {
     return mCallbacks->GetInterface(aIID, aSink);
   }
 

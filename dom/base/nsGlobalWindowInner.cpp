@@ -229,7 +229,7 @@
 #include "mozilla/dom/PopupBlockedEvent.h"
 #include "mozilla/dom/PrimitiveConversions.h"
 #include "mozilla/dom/WindowBinding.h"
-#include "nsITabChild.h"
+#include "nsIBrowserChild.h"
 #include "mozilla/dom/LoadedScript.h"
 #include "mozilla/dom/MediaQueryList.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -4616,7 +4616,8 @@ nsGlobalWindowInner::ShowSlowScriptDialog(JSContext* aCx,
     ProcessHangMonitor::SlowScriptAction action;
     RefPtr<ProcessHangMonitor> monitor = ProcessHangMonitor::Get();
     nsIDocShell* docShell = GetDocShell();
-    nsCOMPtr<nsITabChild> child = docShell ? docShell->GetTabChild() : nullptr;
+    nsCOMPtr<nsIBrowserChild> child =
+        docShell ? docShell->GetTabChild() : nullptr;
     action = monitor->NotifySlowScript(child, filename.get(), aAddonId);
     if (action == ProcessHangMonitor::Terminate) {
       return KillSlowScript;
