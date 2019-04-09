@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #1239 - Added the ability to move bookmark folders
 - #1068 - Adds the ability to quickly copy the URL by long clicking the URLBar
 - #1170: Allow user to add a new site exception to site permissions
+- #1430 - Adds the Fenix Snackbar
 ### Changed
 - #1429 - Updated site permissions ui for MVP
 ### Removed

@@ -65,7 +65,6 @@ import org.mozilla.fenix.components.toolbar.ToolbarIntegration
 import org.mozilla.fenix.components.toolbar.ToolbarMenu
 import org.mozilla.fenix.components.toolbar.ToolbarUIView
 import org.mozilla.fenix.customtabs.CustomTabsIntegration
-import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.share
@@ -310,6 +309,9 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                     }
                     is SearchAction.ToolbarLongClicked -> {
                         getSessionByIdOrUseSelectedSession().copyUrl(requireContext())
+                        FenixSnackbar.make(view!!, Snackbar.LENGTH_LONG)
+                            .setText(resources.getString(R.string.url_copied))
+                            .show()
                     }
                 }
             }
@@ -514,11 +516,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val uri = Uri.parse(url)
         clipBoard.primaryClip = ClipData.newRawUri("Uri", uri)
-
-        val rootView = context.asActivity()?.window?.decorView?.findViewById<View>(android.R.id.content) as ViewGroup
-        FenixSnackbar.make(rootView, Snackbar.LENGTH_LONG)
-            .setText(context.getString(R.string.url_copied))
-            .show()
     }
 
     companion object {

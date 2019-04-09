@@ -51,7 +51,6 @@ class FenixSnackbar private constructor(
         }
     }
 
-
     companion object {
         const val LENGTH_LONG = Snackbar.LENGTH_LONG
         const val LENGTH_SHORT = Snackbar.LENGTH_SHORT
@@ -77,6 +76,7 @@ class FenixSnackbar private constructor(
             }
         }
 
+        // Use the same implementation of `Snackbar`
         private fun findSuitableParent(_view: View?): ViewGroup? {
             var view = _view
             var fallback: ViewGroup? = null
@@ -87,7 +87,7 @@ class FenixSnackbar private constructor(
                 }
 
                 if (view is FrameLayout) {
-                    if (view.id == 16908290) {
+                    if (view.id == R.id.content) {
                         return view
                     }
 
