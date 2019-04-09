@@ -235,12 +235,10 @@ class TouchBarHelper {
       kBuiltInInputs[inputName].localTitle = result; // Cache result.
       // Checking this.window since this callback can fire after all windows are closed.
       if (this.window) {
-        let wrapperArray = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-        wrapperArray.appendElement(item);
         let baseWindow = this.window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
         let updater = Cc["@mozilla.org/widget/touchbarupdater;1"]
                         .getService(Ci.nsITouchBarUpdater);
-        updater.updateTouchBarInputs(baseWindow, wrapperArray);
+        updater.updateTouchBarInputs(baseWindow, [item]);
       }
     });
 
@@ -259,14 +257,13 @@ class TouchBarHelper {
     if (!input || !this.window) {
       return;
     }
-    let inputs = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
-    inputs.appendElement(input);
+    let inputs = [input];
     for (let otherInputName of otherInputs) {
       input = this.getTouchBarInput(otherInputName);
       if (!input) {
         continue;
       }
-      inputs.appendElement(input);
+      inputs.push(input);
     }
 
     let baseWindow = this.window.docShell.treeOwner.QueryInterface(Ci.nsIBaseWindow);
