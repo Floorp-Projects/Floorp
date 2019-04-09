@@ -291,22 +291,7 @@ void SessionStoreUtils::RestoreScrollPosition(const GlobalObject& aGlobal,
   token = tokenizer.nextToken();
   int pos_Y = atoi(token.get());
 
-  // Self-clamp the layout scroll position to the layout scroll range.
-  // This step will be unnecessary after bug 1516056, when window.scrollTo()
-  // will start performing this clamping itself.
-  CSSCoord layoutPosX = pos_X;
-  CSSCoord layoutPosY = pos_Y;
-  ErrorResult rv;
-  CSSCoord layoutPosMaxX = aWindow.GetScrollMaxX(rv);
-  CSSCoord layoutPosMaxY = aWindow.GetScrollMaxY(rv);
-  if (layoutPosX > layoutPosMaxX) {
-    layoutPosX = layoutPosMaxX;
-  }
-  if (layoutPosY > layoutPosMaxY) {
-    layoutPosY = layoutPosMaxY;
-  }
-
-  aWindow.ScrollTo(layoutPosX, layoutPosY);
+  aWindow.ScrollTo(pos_X, pos_Y);
 
   if (nsCOMPtr<Document> doc = aWindow.GetExtantDoc()) {
     if (nsPresContext* presContext = doc->GetPresContext()) {

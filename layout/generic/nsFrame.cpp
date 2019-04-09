@@ -2350,6 +2350,14 @@ void nsFrame::DisplayOutlineUnconditional(nsDisplayListBuilder* aBuilder,
     return;
   }
 
+  if (IsTableColGroupFrame() || IsTableColFrame()) {
+    // Per https://drafts.csswg.org/css-tables-3/#global-style-overrides:
+    // "All css properties of table-column and table-column-group boxes are
+    // ignored, except when explicitly specified by this specification."
+    // CSS outlines fall into this category, so we skip them on these boxes.
+    return;
+  }
+
   aLists.Outlines()->AppendNewToTop<nsDisplayOutline>(aBuilder, this);
 }
 

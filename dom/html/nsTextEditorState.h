@@ -41,6 +41,10 @@ class HTMLInputElement;
  * nsTextEditorState is a class which is responsible for managing the state of
  * plaintext controls.  This currently includes the following HTML elements:
  *   <input type=text>
+ *   <input type=search>
+ *   <input type=url>
+ *   <input type=telephone>
+ *   <input type=email>
  *   <input type=password>
  *   <textarea>
  * and also XUL controls such as <textbox> which use one of these elements
@@ -173,14 +177,25 @@ class nsTextEditorState : public mozilla::SupportsWeakPtr<nsTextEditorState> {
     eSetValue_Notify = 1 << 3,
     // Whether to move the cursor to end of the value (in the case when we have
     // cached selection offsets), in the case when the value has changed.  If
-    // this is not set, the cached selection offsets will simply be clamped to
-    // be within the length of the new value.  In either case, if the value has
+    // this is not set and
+    // eSetValue_MoveCursorToBeginSetSelectionDirectionForward
+    // is not set, the cached selection offsets will simply be clamped to
+    // be within the length of the new value. In either case, if the value has
     // not changed the cursor won't move.
+    // TODO(mbrodesser): update comment and enumerator identifier to reflect
+    // that also the direction is set to forward.
     eSetValue_MoveCursorToEndIfValueChanged = 1 << 4,
     // The value is changed for a XUL text control as opposed to for an HTML
     // text control.  Such value changes are different in that they preserve the
     // undo history.
     eSetValue_ForXUL = 1 << 5,
+    // Whether it should be tried to move the cursor to the beginning of the
+    // text control and set the selection direction to "forward".
+    // TODO(mbrodesser): As soon as "none" is supported
+    // (https://bugzilla.mozilla.org/show_bug.cgi?id=1541454), it should be set
+    // to "none" and only fall back to "forward" if the platform doesn't support
+    // it.
+    eSetValue_MoveCursorToBeginSetSelectionDirectionForward = 1 << 6,
   };
   MOZ_CAN_RUN_SCRIPT
   MOZ_MUST_USE bool SetValue(const nsAString& aValue,

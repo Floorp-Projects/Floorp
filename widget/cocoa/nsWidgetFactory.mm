@@ -200,7 +200,7 @@ static void nsWidgetCocoaModuleDtor() {
   nsAppShellShutdown();
 }
 
-static const mozilla::Module kWidgetModule = {mozilla::Module::kVersion,
+extern const mozilla::Module kWidgetModule = {mozilla::Module::kVersion,
                                               kWidgetCIDs,
                                               kWidgetContracts,
                                               NULL,
@@ -208,5 +208,3 @@ static const mozilla::Module kWidgetModule = {mozilla::Module::kVersion,
                                               nsAppShellInit,
                                               nsWidgetCocoaModuleDtor,
                                               mozilla::Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS};
-
-NSMODULE_DEFN(nsWidgetMacModule) = &kWidgetModule;

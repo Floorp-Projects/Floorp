@@ -155,13 +155,21 @@ class Performance : public DOMEventTargetHelper {
       mUserEntries;
   AutoTArray<RefPtr<PerformanceEntry>, kDefaultResourceTimingBufferSize>
       mResourceEntries;
+  AutoTArray<RefPtr<PerformanceEntry>, kDefaultResourceTimingBufferSize>
+      mSecondaryResourceEntries;
 
   uint64_t mResourceTimingBufferSize;
   bool mPendingNotificationObserversTask;
 
+  bool mPendingResourceTimingBufferFullEvent;
+
   RefPtr<PerformanceService> mPerformanceService;
 
   bool mSystemPrincipal;
+
+ private:
+  MOZ_ALWAYS_INLINE bool CanAddResourceTimingEntry();
+  void BufferEvent();
 };
 
 }  // namespace dom

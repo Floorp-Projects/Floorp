@@ -231,12 +231,14 @@ function secondCheck() {
 
 function finishTest() {
   // Check if all the tests are completed.
-  if (iframeTestsDone) {
-    is(bufferFullCounter, expectedBufferFullEvents, "onresourcetimingbufferfull called a wrong number of times");
-    window.opener.finishTests();
-  } else {
-    mainWindowTestsDone = true;
-  }
+  SpecialPowers.executeSoon(function () {
+    if (iframeTestsDone) {
+        is(bufferFullCounter, expectedBufferFullEvents, "onresourcetimingbufferfull called a wrong number of times");
+        window.opener.finishTests();
+    } else {
+        mainWindowTestsDone = true;
+    }
+  }, window);
 }
 
 function makeXhr(aUrl, aCallback) {

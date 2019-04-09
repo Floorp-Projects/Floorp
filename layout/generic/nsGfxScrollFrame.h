@@ -233,7 +233,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
     return pt;
   }
   nsPoint GetApzScrollPosition() const { return mApzScrollPos; }
-  nsRect GetScrollRange() const;
+  nsRect GetLayoutScrollRange() const;
   // Get the scroll range assuming the viewport has size (aWidth, aHeight).
   nsRect GetScrollRange(nscoord aWidth, nscoord aHeight) const;
   nsSize GetVisualViewportSize() const;
@@ -265,7 +265,7 @@ class ScrollFrameHelper : public nsIReflowCallback {
                   ScrollMode aMode = ScrollMode::eSmoothMsd);
 
  protected:
-  nsRect GetScrollRangeForClamping() const;
+  nsRect GetVisualScrollRange() const;
 
  public:
   static void AsyncScrollCallback(ScrollFrameHelper* aInstance,
@@ -934,7 +934,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
     return mHelper.GetApzScrollPosition();
   }
   virtual nsRect GetScrollRange() const override {
-    return mHelper.GetScrollRange();
+    return mHelper.GetLayoutScrollRange();
   }
   virtual nsSize GetVisualViewportSize() const override {
     return mHelper.GetVisualViewportSize();
@@ -1413,7 +1413,7 @@ class nsXULScrollFrame final : public nsBoxFrame,
     return mHelper.GetApzScrollPosition();
   }
   virtual nsRect GetScrollRange() const override {
-    return mHelper.GetScrollRange();
+    return mHelper.GetLayoutScrollRange();
   }
   virtual nsSize GetVisualViewportSize() const override {
     return mHelper.GetVisualViewportSize();

@@ -107,11 +107,15 @@
 #endif
 
 ; We don't have a complete view of which dlls to expect when doing an artifact
-; build because we haven't run all of configure, so we trust what's in
-; dist/bin, because everything there was extracted from our original build's
-; package.
+; build because we haven't run the relevant parts of configure, so we guess
+; here and trust what came from our source build.
 #if defined(MOZ_ARTIFACT_BUILDS) && defined(XP_WIN)
-@BINPATH@/*.dll
+@BINPATH@/api-ms-win-*.dll
+@BINPATH@/ucrtbase.dll
+@BINPATH@/vcruntime*.dll
+@BINPATH@/msvcp*.dll
+@BINPATH@/libEGL.dll
+@BINPATH@/libGLESv2.dll
 #endif
 
 [browser]

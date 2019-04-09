@@ -33,8 +33,8 @@ BEGIN_TEST(test_functionBinding) {
     CHECK(srcBuf.init(cx, s1chars, mozilla::ArrayLength(s1chars) - 1,
                       JS::SourceOwnership::Borrowed));
 
-    CHECK(JS::CompileFunction(cx, emptyScopeChain, options, "s1", 0, nullptr,
-                              srcBuf, &fun));
+    fun = JS::CompileFunction(cx, emptyScopeChain, options, "s1", 0, nullptr,
+                              srcBuf);
     CHECK(fun);
   }
 
@@ -52,8 +52,8 @@ BEGIN_TEST(test_functionBinding) {
     CHECK(srcBuf.init(cx, s2chars, mozilla::ArrayLength(s2chars) - 1,
                       JS::SourceOwnership::Borrowed));
 
-    CHECK(JS::CompileFunction(cx, emptyScopeChain, options, "s2", 0, nullptr,
-                              srcBuf, &fun));
+    fun = JS::CompileFunction(cx, emptyScopeChain, options, "s2", 0, nullptr,
+                              srcBuf);
     CHECK(fun);
   }
 
@@ -69,8 +69,8 @@ BEGIN_TEST(test_functionBinding) {
     CHECK(srcBuf.init(cx, s3chars, mozilla::ArrayLength(s3chars) - 1,
                       JS::SourceOwnership::Borrowed));
 
-    CHECK(JS::CompileFunction(cx, emptyScopeChain, options, nullptr, 0, nullptr,
-                              srcBuf, &fun));
+    fun = JS::CompileFunction(cx, emptyScopeChain, options, nullptr, 0, nullptr,
+                              srcBuf);
     CHECK(fun);
   }
 

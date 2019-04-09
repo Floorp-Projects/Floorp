@@ -13,9 +13,21 @@
  *        the formatter may decide to replace the url with a fixed one, because
  *        it can't properly guess a host. In that case aClobbered is the
  *        expected de-emphasized value.
+ * @param {boolean} synthesizeInput [optional] Whether to synthesize an input
+ *        event to test.
  */
-function testVal(aExpected, aClobbered = null) {
-  gURLBar.value = aExpected.replace(/[<>]/g, "");
+function testVal(aExpected, aClobbered = null, synthesizeInput = false) {
+  let str = aExpected.replace(/[<>]/g, "");
+  if (synthesizeInput) {
+    gURLBar.focus();
+    gURLBar.select();
+    EventUtils.sendString(str);
+    Assert.equal(gURLBar.editor.rootElement.textContent, str,
+                 "Url is not highlighted");
+    gBrowser.selectedBrowser.focus();
+  } else {
+    gURLBar.value = str;
+  }
 
   let selectionController = gURLBar.editor.selectionController;
   let selection = selectionController.getSelection(selectionController.SELECTION_URLSECONDARY);
@@ -28,8 +40,14 @@ function testVal(aExpected, aClobbered = null) {
     value = value.substring(pos + range.length);
   }
   result += value;
-  is(result, aClobbered || aExpected,
-     "Correct part of the urlbar contents is highlighted");
+  Assert.equal(result, aClobbered || aExpected,
+    "Correct part of the url is de-emphasized" +
+      (synthesizeInput ? " (with input simulation)" : ""));
+
+  // Now re-test synthesizing input.
+  if (!synthesizeInput) {
+    testVal(aExpected, aClobbered, true);
+  }
 }
 
 function test() {
@@ -39,12 +57,6 @@ function test() {
     Services.prefs.clearUserPref(prefname);
     URLBarSetURI();
   });
-
-  Services.prefs.setBoolPref(prefname, true);
-
-  gURLBar.focus();
-
-  testVal("https://mozilla.org");
 
   gBrowser.selectedBrowser.focus();
 

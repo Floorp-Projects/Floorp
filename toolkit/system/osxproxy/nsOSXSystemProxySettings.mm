@@ -288,7 +288,5 @@ static const mozilla::Module::CIDEntry kOSXSysProxyCIDs[] = {
 static const mozilla::Module::ContractIDEntry kOSXSysProxyContracts[] = {
     {NS_SYSTEMPROXYSETTINGS_CONTRACTID, &kNS_OSXSYSTEMPROXYSERVICE_CID}, {NULL}};
 
-static const mozilla::Module kOSXSysProxyModule = {mozilla::Module::kVersion, kOSXSysProxyCIDs,
-                                                   kOSXSysProxyContracts};
-
-NSMODULE_DEFN(nsOSXProxyModule) = &kOSXSysProxyModule;
+extern const mozilla::Module kSysProxyModule = {mozilla::Module::kVersion, kOSXSysProxyCIDs,
+                                                kOSXSysProxyContracts};

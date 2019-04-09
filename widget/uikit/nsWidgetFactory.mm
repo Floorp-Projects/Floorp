@@ -46,8 +46,6 @@ static void nsWidgetUIKitModuleDtor() {
   nsAppShellShutdown();
 }
 
-static const mozilla::Module kWidgetModule = {
+extern const mozilla::Module kWidgetModule = {
     mozilla::Module::kVersion, kWidgetCIDs, kWidgetContracts, nullptr, nullptr, nsAppShellInit,
     nsWidgetUIKitModuleDtor};
-
-NSMODULE_DEFN(nsWidgetUIKitModule) = &kWidgetModule;

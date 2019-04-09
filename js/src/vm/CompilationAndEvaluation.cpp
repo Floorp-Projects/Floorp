@@ -308,40 +308,40 @@ class FunctionCompiler {
     return funStr_.append(srcBuf.get(), srcBuf.length());
   }
 
-  MOZ_MUST_USE bool finish(HandleObjectVector envChain,
-                           const ReadOnlyCompileOptions& options,
-                           MutableHandleFunction fun) {
+  JSFunction* finish(HandleObjectVector envChain,
+                     const ReadOnlyCompileOptions& options) {
     if (!funStr_.append(FunctionConstructorFinalBrace)) {
-      return false;
+      return nullptr;
     }
 
     size_t newLen = funStr_.length();
     UniqueTwoByteChars stolen(funStr_.stealChars());
     if (!stolen) {
-      return false;
+      return nullptr;
     }
 
     SourceText<char16_t> newSrcBuf;
     if (!newSrcBuf.init(cx_, std::move(stolen), newLen)) {
-      return false;
+      return nullptr;
     }
 
     RootedObject enclosingEnv(cx_);
     RootedScope enclosingScope(cx_);
     if (!CreateNonSyntacticEnvironmentChain(cx_, envChain, &enclosingEnv,
                                             &enclosingScope)) {
-      return false;
+      return nullptr;
     }
 
     cx_->check(enclosingEnv);
 
-    fun.set(
+    RootedFunction fun(
+        cx_,
         NewScriptedFunction(cx_, 0, JSFunction::INTERPRETED_NORMAL,
                             nameIsIdentifier_ ? HandleAtom(nameAtom_) : nullptr,
                             /* proto = */ nullptr, gc::AllocKind::FUNCTION,
                             TenuredObject, enclosingEnv));
     if (!fun) {
-      return false;
+      return nullptr;
     }
 
     // Make sure the static scope chain matches up when we have a
@@ -350,9 +350,9 @@ class FunctionCompiler {
                   enclosingScope->hasOnChain(ScopeKind::NonSyntactic));
 
     if (!js::frontend::CompileStandaloneFunction(
-            cx_, fun, options, newSrcBuf, mozilla::Some(parameterListEnd_),
+            cx_, &fun, options, newSrcBuf, mozilla::Some(parameterListEnd_),
             enclosingScope)) {
-      return false;
+      return nullptr;
     }
 
     // When the function name isn't a valid identifier, the generated function
@@ -361,48 +361,46 @@ class FunctionCompiler {
       fun->setAtom(nameAtom_);
     }
 
-    return true;
+    return fun;
   }
 };
 
-JS_PUBLIC_API bool JS::CompileFunction(JSContext* cx,
-                                       HandleObjectVector envChain,
-                                       const ReadOnlyCompileOptions& options,
-                                       const char* name, unsigned nargs,
-                                       const char* const* argnames,
-                                       SourceText<char16_t>& srcBuf,
-                                       MutableHandleFunction fun) {
-  FunctionCompiler compiler(cx);
-  return compiler.init(name, nargs, argnames) &&
-         compiler.addFunctionBody(srcBuf) &&
-         compiler.finish(envChain, options, fun);
-}
-
-JS_PUBLIC_API bool JS::CompileFunction(JSContext* cx,
-                                       HandleObjectVector envChain,
-                                       const ReadOnlyCompileOptions& options,
-                                       const char* name, unsigned nargs,
-                                       const char* const* argnames,
-                                       SourceText<Utf8Unit>& srcBuf,
-                                       MutableHandleFunction fun) {
-  FunctionCompiler compiler(cx);
-  return compiler.init(name, nargs, argnames) &&
-         compiler.addFunctionBody(srcBuf) &&
-         compiler.finish(envChain, options, fun);
-}
-
-JS_PUBLIC_API bool JS::CompileFunctionUtf8(
+JS_PUBLIC_API JSFunction* JS::CompileFunction(
     JSContext* cx, HandleObjectVector envChain,
     const ReadOnlyCompileOptions& options, const char* name, unsigned nargs,
-    const char* const* argnames, const char* bytes, size_t length,
-    MutableHandleFunction fun) {
-  SourceText<Utf8Unit> srcBuf;
-  if (!srcBuf.init(cx, bytes, length, SourceOwnership::Borrowed)) {
-    return false;
+    const char* const* argnames, SourceText<char16_t>& srcBuf) {
+  FunctionCompiler compiler(cx);
+  if (!compiler.init(name, nargs, argnames) ||
+      !compiler.addFunctionBody(srcBuf)) {
+    return nullptr;
   }
 
-  return CompileFunction(cx, envChain, options, name, nargs, argnames, srcBuf,
-                         fun);
+  return compiler.finish(envChain, options);
+}
+
+JS_PUBLIC_API JSFunction* JS::CompileFunction(
+    JSContext* cx, HandleObjectVector envChain,
+    const ReadOnlyCompileOptions& options, const char* name, unsigned nargs,
+    const char* const* argnames, SourceText<Utf8Unit>& srcBuf) {
+  FunctionCompiler compiler(cx);
+  if (!compiler.init(name, nargs, argnames) ||
+      !compiler.addFunctionBody(srcBuf)) {
+    return nullptr;
+  }
+
+  return compiler.finish(envChain, options);
+}
+
+JS_PUBLIC_API JSFunction* JS::CompileFunctionUtf8(
+    JSContext* cx, HandleObjectVector envChain,
+    const ReadOnlyCompileOptions& options, const char* name, unsigned nargs,
+    const char* const* argnames, const char* bytes, size_t length) {
+  SourceText<Utf8Unit> srcBuf;
+  if (!srcBuf.init(cx, bytes, length, SourceOwnership::Borrowed)) {
+    return nullptr;
+  }
+
+  return CompileFunction(cx, envChain, options, name, nargs, argnames, srcBuf);
 }
 
 JS_PUBLIC_API bool JS::InitScriptSourceElement(JSContext* cx,

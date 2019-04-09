@@ -39,7 +39,5 @@ static const mozilla::Module::ContractIDEntry kEmbeddingContracts[] = {
 #endif
     {nullptr}};
 
-static const mozilla::Module kEmbeddingModule = {
+extern const mozilla::Module kEmbeddingModule = {
     mozilla::Module::kVersion, kEmbeddingCIDs, kEmbeddingContracts};
-
-NSMODULE_DEFN(embedcomponents) = &kEmbeddingModule;

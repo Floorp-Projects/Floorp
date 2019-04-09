@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=2.0">
+  <title>Test for bug 1516056: "scroll into view" respects bounds on layout scroll position</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    #target {
+      width: 100px;
+      height: 100px;
+      margin-left: 50%;
+      margin-right: 50%;
+      background: cyan;
+    }
+  </style>
+</head>
+<body>
+  <div id="target"></div>
+  <script>
+    function getVisualScrollRange() {
+      let rootScroller = document.scrollingElement;
+      let vv = window.visualViewport;
+      return {
+        width: rootScroller.scrollWidth - vv.width,
+        height: rootScroller.scrollHeight - vv.height,
+      };
+    }
+    function* test(testDriver) {
+      SimpleTest.is(window.scrollMaxX, 0, "page should have a zero horizontal layout scroll range");
+      SimpleTest.is(window.scrollMaxY, 0, "page should have a zero vertical layout scroll range");
+      let visualScrollRange = getVisualScrollRange();
+      SimpleTest.ok(visualScrollRange.width > 0, "page should have a nonzero horizontal visual scroll range");
+      SimpleTest.ok(visualScrollRange.height > 0, "page should have a nonzero vertical visual scroll range");
+      let target = document.getElementById("target");
+      target.scrollIntoView();
+      SimpleTest.is(window.scrollX, 0, "page should not layout-scroll with a zero layout scroll range");
+      SimpleTest.is(window.scrollY, 0, "page should not layout-scroll with a zero layout scroll range");
+    }
+    waitUntilApzStable().then(runContinuation(test)).then(subtestDone);
+  </script>
+</body>
+</html>

@@ -22,7 +22,5 @@ const mozilla::Module::CIDEntry kKeyValueCIDs[] = {
 const mozilla::Module::ContractIDEntry kKeyValueContracts[] = {
     {NS_KEY_VALUE_SERVICE_CONTRACTID, &kNS_KEY_VALUE_SERVICE_CID}, {nullptr}};
 
-const mozilla::Module kKeyValueModule = {
+extern const mozilla::Module kKeyValueModule = {
     mozilla::Module::kVersion, kKeyValueCIDs, kKeyValueContracts, nullptr};
-
-NSMODULE_DEFN(nsKeyValueModule) = &kKeyValueModule;

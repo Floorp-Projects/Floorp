@@ -173,7 +173,7 @@ static const mozilla::Module::ContractIDEntry kPowerManagerContracts[] = {
 
 // We mark the power module as being available in the GPU process because the
 // appshell depends on the power manager service.
-static const mozilla::Module kPowerManagerModule = {
+extern const mozilla::Module kPowerManagerModule = {
     mozilla::Module::kVersion,
     kPowerManagerCIDs,
     kPowerManagerContracts,
@@ -182,5 +182,3 @@ static const mozilla::Module kPowerManagerModule = {
     nullptr,
     nullptr,
     mozilla::Module::ALLOW_IN_GPU_AND_SOCKET_PROCESS};
-
-NSMODULE_DEFN(nsPowerManagerModule) = &kPowerManagerModule;
