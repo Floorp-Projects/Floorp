@@ -5,6 +5,7 @@
 package org.mozilla.fenix.library.history
 
 import android.os.Bundle
+import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuInflater
@@ -30,6 +31,7 @@ import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
+import java.net.MalformedURLException
 import java.net.URL
 import kotlin.coroutines.CoroutineContext
 
@@ -154,7 +156,15 @@ class HistoryFragment : Fragment(), CoroutineScope, BackHandler {
             // See https://github.com/mozilla-mobile/android-components/issues/2643
             .filter { allowedVisitTypes.contains(it.visitType) }
 
-            .mapIndexed { id, item -> HistoryItem(id, item.title ?: URL(item.url).host, item.url, item.visitTime) }
+            .mapIndexed { id, item ->
+                HistoryItem(
+                    id, if (TextUtils.isEmpty(item.title!!)) try {
+                        URL(item.url).host
+                    } catch (e: MalformedURLException) {
+                        item.url
+                    } else item.title!!, item.url, item.visitTime
+                )
+            }
             .toList()
 
         coroutineScope {
