@@ -53,14 +53,13 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await addDeviceInModal(ui, device2);
 
   info("Verify all custom devices default to enabled in modal");
-  const submitButton = document.getElementById("device-submit-button");
   const deviceCbs =
     [...document.querySelectorAll(".device-type-custom .device-input-checkbox")];
   is(deviceCbs.length, 2, "Both devices have a checkbox in modal");
   for (const cb of deviceCbs) {
     ok(cb.checked, "Custom device enabled");
   }
-  submitButton.click();
+  document.getElementById("device-close-button").click();
 
   info("Look for device 1 and 2 in device selector");
 
@@ -79,7 +78,7 @@ addRDMTask(TEST_URL, async function({ ui }) {
   const removed = waitUntilState(store, state => state.devices.custom.length == 1);
   deviceRemoveButtons[1].click();
   await removed;
-  submitButton.click();
+  document.getElementById("device-close-button").click();
 
   info("Ensure device 2 is no longer in device selector");
   await testMenuItems(toolWindow, deviceSelector, menuItems => {
