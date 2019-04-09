@@ -11,10 +11,10 @@
 #include "mozilla/dom/SVGElement.h"
 #include "FilterSupport.h"
 #include "nsImageLoadingContent.h"
-#include "SVGAnimatedString.h"
-#include "nsSVGLength2.h"
-#include "nsSVGNumber2.h"
+#include "SVGAnimatedLength.h"
+#include "SVGAnimatedNumber.h"
 #include "SVGAnimatedNumberPair.h"
+#include "SVGAnimatedString.h"
 
 class nsSVGFilterInstance;
 
@@ -149,7 +149,7 @@ class SVGFE : public SVGFEBase {
                            SVGAnimatedNumberPair* aKernelUnitLength);
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
-  nsSVGLength2 mLengthAttributes[4];
+  SVGAnimatedLength mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 };
 
@@ -221,7 +221,7 @@ class SVGFELightingElement : public SVGFELightingElementBase {
     SPECULAR_CONSTANT,
     SPECULAR_EXPONENT
   };
-  nsSVGNumber2 mNumberAttributes[4];
+  SVGAnimatedNumber mNumberAttributes[4];
   static NumberInfo sNumberInfo[4];
 
   enum { KERNEL_UNIT_LENGTH };

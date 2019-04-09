@@ -47,8 +47,8 @@
 #include "SVGAnimatedEnumeration.h"
 #include "SVGAnimatedInteger.h"
 #include "SVGAnimatedIntegerPair.h"
-#include "nsSVGLength2.h"
-#include "nsSVGNumber2.h"
+#include "SVGAnimatedLength.h"
+#include "SVGAnimatedNumber.h"
 #include "SVGAnimatedNumberPair.h"
 #include "SVGAnimatedOrient.h"
 #include "SVGAnimatedString.h"
@@ -301,7 +301,7 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
   bool didSetResult = false;
 
   if (aNamespaceID == kNameSpaceID_None) {
-    // Check for nsSVGLength2 attribute
+    // Check for SVGAnimatedLength attribute
     LengthAttributesInfo lengthInfo = GetLengthInfo();
 
     uint32_t i;
@@ -390,7 +390,7 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     }
 
     if (!foundMatch) {
-      // Check for nsSVGNumber2 attribute
+      // Check for SVGAnimatedNumber attribute
       NumberAttributesInfo numberInfo = GetNumberInfo();
       for (i = 0; i < numberInfo.mNumberCount; i++) {
         if (aAttribute == numberInfo.mNumberInfo[i].mName) {
@@ -1259,9 +1259,9 @@ nsAttrValue SVGElement::WillChangeValue(nsAtom* aName) {
 
   // This is not strictly correct--the attribute value parameter for
   // BeforeSetAttr should reflect the value that *will* be set but that implies
-  // allocating, e.g. an extra nsSVGLength2, and isn't necessary at the moment
-  // since no SVG elements overload BeforeSetAttr. For now we just pass the
-  // current value.
+  // allocating, e.g. an extra SVGAnimatedLength, and isn't necessary at the
+  // moment since no SVG elements overload BeforeSetAttr. For now we just pass
+  // the current value.
   nsAttrValueOrString attrStringOrValue(attrValue ? *attrValue
                                                   : emptyOrOldAttrValue);
   DebugOnly<nsresult> rv = BeforeSetAttr(
@@ -1359,7 +1359,7 @@ void SVGElement::LengthAttributesInfo::Reset(uint8_t aAttrEnum) {
                            mLengthInfo[aAttrEnum].mDefaultUnitType);
 }
 
-void SVGElement::SetLength(nsAtom* aName, const nsSVGLength2& aLength) {
+void SVGElement::SetLength(nsAtom* aName, const SVGAnimatedLength& aLength) {
   LengthAttributesInfo lengthInfo = GetLengthInfo();
 
   for (uint32_t i = 0; i < lengthInfo.mLengthCount; i++) {
@@ -1403,7 +1403,7 @@ void SVGElement::DidAnimateLength(uint8_t aAttrEnum) {
   }
 }
 
-nsSVGLength2* SVGElement::GetAnimatedLength(const nsAtom* aAttrName) {
+SVGAnimatedLength* SVGElement::GetAnimatedLength(const nsAtom* aAttrName) {
   LengthAttributesInfo lengthInfo = GetLengthInfo();
 
   for (uint32_t i = 0; i < lengthInfo.mLengthCount; i++) {
