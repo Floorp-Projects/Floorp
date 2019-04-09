@@ -90,7 +90,7 @@ class UrlbarValueFormatter {
     });
   }
 
-  _getUrlMetaData(allowReplacement = true) {
+  _getUrlMetaData() {
     if (this.urlbarInput.focused) {
       return null;
     }
@@ -143,12 +143,18 @@ class UrlbarValueFormatter {
       return null;
     }
     if (replaceUrl) {
-      if (!allowReplacement) {
+      if (this._inGetUrlMetaData) {
         // Protect from infinite recursion.
         return null;
       }
-      this.window.URLBarSetURI(uriInfo.fixedURI);
-      return this._getUrlMetaData(false);
+      try {
+        this._inGetUrlMetaData = true;
+        this.window.gBrowser.userTypedValue = null;
+        this.window.URLBarSetURI(uriInfo.fixedURI);
+        return this._getUrlMetaData();
+      } finally {
+        this._inGetUrlMetaData = false;
+      }
     }
 
     return { preDomain, schemeWSlashes, domain, url, uriInfo, trimmedLength };
