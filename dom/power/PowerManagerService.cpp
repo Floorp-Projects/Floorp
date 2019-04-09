@@ -159,14 +159,14 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(
 
 static const mozilla::Module::CIDEntry kPowerManagerCIDs[] = {
     // clang-format off
-  { &kNS_POWERMANAGERSERVICE_CID, false, nullptr, nsIPowerManagerServiceConstructor, mozilla::Module::ALLOW_IN_GPU_AND_SOCKET_PROCESS },
+  { &kNS_POWERMANAGERSERVICE_CID, false, nullptr, nsIPowerManagerServiceConstructor, mozilla::Module::ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS },
   { nullptr }
     // clang-format on
 };
 
 static const mozilla::Module::ContractIDEntry kPowerManagerContracts[] = {
     // clang-format off
-  { POWERMANAGERSERVICE_CONTRACTID, &kNS_POWERMANAGERSERVICE_CID, mozilla::Module::ALLOW_IN_GPU_AND_SOCKET_PROCESS },
+  { POWERMANAGERSERVICE_CONTRACTID, &kNS_POWERMANAGERSERVICE_CID, mozilla::Module::ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS },
   { nullptr }
     // clang-format on
 };
@@ -181,4 +181,4 @@ extern const mozilla::Module kPowerManagerModule = {
     nullptr,
     nullptr,
     nullptr,
-    mozilla::Module::ALLOW_IN_GPU_AND_SOCKET_PROCESS};
+    mozilla::Module::ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS};
