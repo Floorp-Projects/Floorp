@@ -36,6 +36,7 @@ EXPORTS.mozilla.dom += [
 
 EXPORTS.mozilla.dom.quota += [
     'ActorsParent.h',
+    'CheckedUnsafePtr.h',
     'Client.h',
     'FileStreams.h',
     'MemoryOutputStream.h',
