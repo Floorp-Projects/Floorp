@@ -230,6 +230,10 @@ already_AddRefed<Layer> nsVideoFrame::BuildLayer(
 
   layer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
   layer->SetScaleToSize(scaleHint, ScaleMode::STRETCH);
+
+  uint32_t flags = element->HasAlpha() ? 0 : Layer::CONTENT_OPAQUE;
+  layer->SetContentFlags(flags);
+
   RefPtr<Layer> result = layer.forget();
   return result.forget();
 }
@@ -469,13 +473,17 @@ class nsDisplayVideo : public nsDisplayItem {
     return true;
   }
 
-  // It would be great if we could override GetOpaqueRegion to return nonempty
-  // here, but it's probably not safe to do so in general. Video frames are
-  // updated asynchronously from decoder threads, and it's possible that
-  // we might have an opaque video frame when GetOpaqueRegion is called, but
-  // when we come to paint, the video frame is transparent or has gone
-  // away completely (e.g. because of a decoder error). The problem would
-  // be especially acute if we have off-main-thread rendering.
+  nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
+                           bool* aSnap) const override {
+    *aSnap = false;
+
+    HTMLVideoElement* element =
+        static_cast<HTMLVideoElement*>(Frame()->GetContent());
+    if (element->HasAlpha()) {
+      return nsRegion();
+    }
+    return GetBounds(aBuilder, aSnap);
+  }
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override {
