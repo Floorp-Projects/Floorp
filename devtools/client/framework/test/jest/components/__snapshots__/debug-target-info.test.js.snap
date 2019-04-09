@@ -1,47 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`DebugTargetInfo component renders the expected snapshot for This Firefox target 1`] = `
-<header
-  className="debug-target-info js-debug-target-info"
->
-  <span
-    className="iconized-label"
-  >
-    <img
-      className="channel-icon"
-      src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
-    />
-    <b
-      className="devtools-ellipsis-text"
-    >
-      toolbox.debugTargetInfo.runtimeLabel.thisFirefox-1.0.0
-    </b>
-    <span
-      className="devtools-ellipsis-text"
-    />
-  </span>
-  <span
-    className="iconized-label"
-  >
-    <img
-      alt="toolbox.debugTargetInfo.targetType.tab"
-      src="chrome://devtools/skin/images/globe.svg"
-    />
-    <b
-      className="devtools-ellipsis-text js-target-title"
-    >
-      Test Tab Name
-    </b>
-    <span
-      className="devtools-ellipsis-text"
-    >
-      http://some.target/url
-    </span>
-  </span>
-</header>
-`;
-
-exports[`DebugTargetInfo component renders the expected snapshot for USB Release target 1`] = `
+exports[`DebugTargetInfo component Connection info renders the expected snapshot for USB Release target 1`] = `
 <header
   className="debug-target-info js-debug-target-info"
 >
@@ -93,7 +52,256 @@ exports[`DebugTargetInfo component renders the expected snapshot for USB Release
 </header>
 `;
 
-exports[`DebugTargetInfo component renders the expected snapshot for a Toolbox with an unnamed target 1`] = `
+exports[`DebugTargetInfo component Target icon renders the expected snapshot for a process target 1`] = `
+<header
+  className="debug-target-info js-debug-target-info"
+>
+  <span
+    className="iconized-label js-connection-info"
+  >
+    <img
+      alt="usb icon"
+      src="chrome://devtools/skin/images/aboutdebugging-usb-icon.svg"
+    />
+    toolbox.debugTargetInfo.connection.usb
+  </span>
+  <span
+    className="iconized-label"
+  >
+    <img
+      className="channel-icon"
+      src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
+    />
+    <b
+      className="devtools-ellipsis-text"
+    >
+      toolbox.debugTargetInfo.runtimeLabel-usbRuntimeBrandName-1.0.0
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    >
+      usbDeviceName
+    </span>
+  </span>
+  <span
+    className="iconized-label"
+  >
+    <img
+      alt="toolbox.debugTargetInfo.targetType.process"
+      src="chrome://devtools/skin/images/settings.svg"
+    />
+    <b
+      className="devtools-ellipsis-text js-target-title"
+    >
+      Test Tab Name
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    >
+      http://some.target/url
+    </span>
+  </span>
+</header>
+`;
+
+exports[`DebugTargetInfo component Target icon renders the expected snapshot for a tab target 1`] = `
+<header
+  className="debug-target-info js-debug-target-info"
+>
+  <span
+    className="iconized-label js-connection-info"
+  >
+    <img
+      alt="usb icon"
+      src="chrome://devtools/skin/images/aboutdebugging-usb-icon.svg"
+    />
+    toolbox.debugTargetInfo.connection.usb
+  </span>
+  <span
+    className="iconized-label"
+  >
+    <img
+      className="channel-icon"
+      src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
+    />
+    <b
+      className="devtools-ellipsis-text"
+    >
+      toolbox.debugTargetInfo.runtimeLabel-usbRuntimeBrandName-1.0.0
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    >
+      usbDeviceName
+    </span>
+  </span>
+  <span
+    className="iconized-label"
+  >
+    <img
+      alt="toolbox.debugTargetInfo.targetType.tab"
+      src="chrome://devtools/skin/images/globe.svg"
+    />
+    <b
+      className="devtools-ellipsis-text js-target-title"
+    >
+      Test Tab Name
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    >
+      http://some.target/url
+    </span>
+  </span>
+</header>
+`;
+
+exports[`DebugTargetInfo component Target icon renders the expected snapshot for a worker target 1`] = `
+<header
+  className="debug-target-info js-debug-target-info"
+>
+  <span
+    className="iconized-label js-connection-info"
+  >
+    <img
+      alt="usb icon"
+      src="chrome://devtools/skin/images/aboutdebugging-usb-icon.svg"
+    />
+    toolbox.debugTargetInfo.connection.usb
+  </span>
+  <span
+    className="iconized-label"
+  >
+    <img
+      className="channel-icon"
+      src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
+    />
+    <b
+      className="devtools-ellipsis-text"
+    >
+      toolbox.debugTargetInfo.runtimeLabel-usbRuntimeBrandName-1.0.0
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    >
+      usbDeviceName
+    </span>
+  </span>
+  <span
+    className="iconized-label"
+  >
+    <img
+      alt="toolbox.debugTargetInfo.targetType.worker"
+      src="chrome://devtools/skin/images/debugging-workers.svg"
+    />
+    <b
+      className="devtools-ellipsis-text js-target-title"
+    >
+      Test Tab Name
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    >
+      http://some.target/url
+    </span>
+  </span>
+</header>
+`;
+
+exports[`DebugTargetInfo component Target icon renders the expected snapshot for an extension target 1`] = `
+<header
+  className="debug-target-info js-debug-target-info"
+>
+  <span
+    className="iconized-label js-connection-info"
+  >
+    <img
+      alt="usb icon"
+      src="chrome://devtools/skin/images/aboutdebugging-usb-icon.svg"
+    />
+    toolbox.debugTargetInfo.connection.usb
+  </span>
+  <span
+    className="iconized-label"
+  >
+    <img
+      className="channel-icon"
+      src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
+    />
+    <b
+      className="devtools-ellipsis-text"
+    >
+      toolbox.debugTargetInfo.runtimeLabel-usbRuntimeBrandName-1.0.0
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    >
+      usbDeviceName
+    </span>
+  </span>
+  <span
+    className="iconized-label"
+  >
+    <img
+      alt="toolbox.debugTargetInfo.targetType.extension"
+      src="chrome://devtools/skin/images/debugging-addons.svg"
+    />
+    <b
+      className="devtools-ellipsis-text js-target-title"
+    >
+      Test Tab Name
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    >
+      http://some.target/url
+    </span>
+  </span>
+</header>
+`;
+
+exports[`DebugTargetInfo component Target title renders the expected snapshot for This Firefox target 1`] = `
+<header
+  className="debug-target-info js-debug-target-info"
+>
+  <span
+    className="iconized-label"
+  >
+    <img
+      className="channel-icon"
+      src="chrome://devtools/skin/images/aboutdebugging-firefox-release.svg"
+    />
+    <b
+      className="devtools-ellipsis-text"
+    >
+      toolbox.debugTargetInfo.runtimeLabel.thisFirefox-1.0.0
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    />
+  </span>
+  <span
+    className="iconized-label"
+  >
+    <img
+      alt="toolbox.debugTargetInfo.targetType.tab"
+      src="chrome://devtools/skin/images/globe.svg"
+    />
+    <b
+      className="devtools-ellipsis-text js-target-title"
+    >
+      Test Tab Name
+    </b>
+    <span
+      className="devtools-ellipsis-text"
+    >
+      http://some.target/url
+    </span>
+  </span>
+</header>
+`;
+
+exports[`DebugTargetInfo component Target title renders the expected snapshot for a Toolbox with an unnamed target 1`] = `
 <header
   className="debug-target-info js-debug-target-info"
 >
