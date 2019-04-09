@@ -8,9 +8,8 @@
  */
 
 dictionary PerformanceObserverInit {
-  sequence<DOMString> entryTypes;
-	DOMString type;
-  boolean buffered;
+  required sequence<DOMString> entryTypes;
+  boolean buffered = false;
 };
 
 callback PerformanceObserverCallback = void (PerformanceObserverEntryList entries,
@@ -20,8 +19,7 @@ callback PerformanceObserverCallback = void (PerformanceObserverEntryList entrie
  Constructor(PerformanceObserverCallback callback),
  Exposed=(Window,Worker)]
 interface PerformanceObserver {
-    [Throws] void observe(optional PerformanceObserverInit options);
+    void observe(PerformanceObserverInit options);
     void disconnect();
     PerformanceEntryList takeRecords();
-    static readonly attribute object supportedEntryTypes;
 };
