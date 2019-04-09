@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+
+    <!-- Home Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
+    <string name="content_description_menu">更多選項</string>
+
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_private_browsing_button">開啟隱私瀏覽模式</string>
+    <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
+    <string name="content_description_disable_private_browsing_button">關閉隱私瀏覽模式</string>
+    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <string name="search_hint">搜尋或輸入網址</string>
+
+    <!-- Private Browsing -->
+    <!-- Title for private session option -->
+    <string name="private_browsing_title">您在隱私瀏覽模式當中</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_explanation">%1$s 會在結束隱私瀏覽階段時，清除您的搜尋與上網紀錄。雖然這樣做不會讓您對網站或電信業者匿名，但還是可以更簡單就讓使用此裝置的人，無法得知您在線上做了什麼事。\n\n關於隱私瀏覽的常見迷思</string>
+    <!-- Delete session button to erase your history in a private session -->
+    <string name="private_browsing_delete_session">清除瀏覽階段</string>
+
+    <!-- Browser Fragment -->
+    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
+    <string name="browser_tabs_button">開啟分頁</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
+    <string name="browser_menu_back">上一頁</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
+    <string name="browser_menu_forward">下一頁</string>
+    <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
+    <string name="browser_menu_refresh">重新整理</string>
+    <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
+    <string name="browser_menu_stop">停止</string>
+    <!-- Browser menu button that sends a user to help articles -->
+    <string name="browser_menu_help">說明</string>
+    <!-- Browser menu button that opens the settings menu -->
+    <string name="browser_menu_settings">設定</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">收藏庫</string>
+    <!-- Browser menu toggle that requests a desktop site -->
+    <string name="browser_menu_desktop_site">桌面版網站</string>
+    <!-- Browser menu button that opens the find in page menu -->
+    <string name="browser_menu_find_in_page">在頁面中搜尋</string>
+    <!-- Browser menu button that creates a private tab -->
+    <string name="browser_menu_private_tab">隱私分頁</string>
+    <!-- Browser menu button that creates a new tab -->
+    <string name="browser_menu_new_tab">開新分頁</string>
+    <!-- Browser menu button that opens a dialog to report issues with the current site -->
+    <string name="browser_menu_report_issue">回報網站問題</string>
+    <!-- Browser menu button that open a share menu to share the current site -->
+    <string name="browser_menu_share">分享</string>
+    <!-- Share menu title, displayed when a user is sharing their current site -->
+    <string name="menu_share_with">使用下列方式分享…</string>
+    <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_open_in_fenix">使用 %1$s 開啟</string>
+
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">由 %1$s 提供</string>
+
+    <!-- Search Fragment -->
+    <!-- Button in the search view that lets a user search by scanning a QR code -->
+    <string name="search_scan_button">掃描</string>
+    <!-- Button in the search view that lets a user search by using a shortcut -->
+    <string name="search_shortcuts_button">捷徑</string>
+    <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
+    <string name="search_shortcuts_engine_settings">搜尋引擎設定</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_shortcuts_search_with">使用下列引擎搜尋</string>
+    <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
+    <string name="awesomebar_clipboard_title">開啟剪貼簿中的鏈結</string>
+
+    <!-- Settings Fragment -->
+    <!-- Title for the settings page-->
+    <string name="settings">設定</string>
+
+    <!-- Preferences -->
+    <!-- Preference category for basic settings -->
+    <string name="preferences_category_basics">基礎設定</string>
+    <!-- Preference category for all links about Fenix -->
+    <string name="preferences_category_about">關於</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_search_engine">搜尋引擎</string>
+    <!-- Preference linking to help about Fenix -->
+    <string name="preferences_help">說明</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">到 Google Play 打分數</string>
+    <!-- Preference for giving feedback about Fenix -->
+    <string name="preferences_feedback">提供意見回饋</string>
+    <!-- Preference linking to about page for Fenix
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="preferences_about">關於 %1$s</string>
+    <!-- Preference for settings related to saved passwords -->
+    <string name="preferences_passwords">密碼</string>
+    <!-- Preference for settings related to saved credit cards and addresses -->
+    <string name="preferences_credit_cards_addresses">信用卡與地址資料</string>
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">設為預設瀏覽器</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">進階</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">網站權限</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">輔助功能</string>
+    <!-- Preference category for account information -->
+    <string name="preferences_category_account">帳號</string>
+    <!-- Preference shown on banner to sign into account -->
+    <string name="preferences_sign_in">登入</string>
+    <!-- Preference for changing default theme to dark or light mode -->
+    <string name="preferences_theme">佈景主題</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description">使用您的 Firefox 帳號同步書籤、瀏覽紀錄等資料</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name">Firefox 帳號</string>
+    <!-- Preference for language -->
+    <string name="preferences_language">語言</string>
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">回報資料</string>
+    <!-- Preference category for developer tools -->
+    <string name="developer_tools_category">開發者工具</string>
+
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">透過 USB 進行遠端除錯</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">顯示搜尋建議</string>
+    <!-- Preference for account settings -->
+    <string name="preferences_account_settings">帳號設定</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">立即同步</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">選擇要同步的內容</string>
+    <!-- Preference for syncing history -->
+    <string name="preferences_sync_history">瀏覽紀錄</string>
+    <!-- Preference for signing out -->
+    <string name="preferences_sign_out">登出</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing">同步中</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">同步失敗。上次成功: ％s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">同步失敗。上次同步: 從未</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">上次同步: ％s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">上次同步: 從未</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference switch for Telemetry -->
+    <string name="preferences_telemetry">Telemetry</string>
+    <!-- Preference switch for crash reporter -->
+    <string name="preferences_crash_reporter">程式錯誤回報員</string>
+    <!-- Preference switch for Mozilla location service -->
+    <string name="preferences_mozilla_location_service">Mozilla Location Service</string>
+    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
+    <string name="preferences_fenix_health_report">%s 健康檢查報告</string>
+
+    <!-- Theme Preferences -->
+    <!-- Preference for using light theme -->
+    <string name="preference_light_theme">亮色</string>
+    <!-- Preference for using dark theme -->
+    <string name="preference_dark_theme">暗色</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">由系統省電模式設定</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">跟隨裝置佈景主題</string>
+
+    <!-- Quick Action Sheet -->
+    <!-- Button in the browser chrome to share the current page -->
+    <string name="quick_action_share">分享頁面</string>
+    <!-- Button in the browser chrome to download the current page -->
+    <string name="quick_action_download">下載頁面</string>
+    <!-- Button in the browser chrome in the browser to bookmark the current page -->
+    <string name="quick_action_bookmark">加入書籤</string>
+    <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
+    <string name="quick_action_read">閱讀模式</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
+        with shortcuts to commonly used actions such as Share, Bookmark etc.. -->
+    <string name="quick_action_sheet_handle">快速操作</string>
+
+    <!-- Library -->
+    <!-- Option in Library to open Sessions page -->
+    <string name="library_sessions">瀏覽階段</string>
+    <!-- Option in Library to open Screenshots page -->
+    <string name="library_screenshots">畫面擷圖</string>
+    <!-- Option in Library to open Downloads page -->
+    <string name="library_downloads">下載項目</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">書籤</string>
+    <!-- Option in Library to open History page -->
+    <string name="library_history">瀏覽紀錄</string>
+    <!-- Option in Library to open Reading List -->
+    <string name="library_reading_list">閱讀清單</string>
+    <!-- Menu Item Label for Search in Library -->
+    <string name="library_search">搜尋</string>
+    <!-- Library Page Title -->
+    <string name="library_title">收藏庫</string>
+    <!-- Settings Page Title -->
+    <string name="settings_title">設定</string>
+    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
+    <string name="content_description_history_menu">瀏覽紀錄選單</string>
+    <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
+    <string name="content_description_close_button">關閉</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs in the current session -->
+    <string name="tabs_header_title">目前使用階段</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_title">隱私瀏覽階段</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">新增分頁</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
+    <string name="close_tab">關閉分頁</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
+    <string name="tab_menu">分頁選單</string>
+    <!-- Button in the current session menu. Deletes the session when pressed -->
+    <string name="current_session_delete">刪除</string>
+    <!-- Button in the current session menu. Saves the session when pressed -->
+    <string name="current_session_save">儲存</string>
+    <!-- Button in the current session menu. Opens the share menu when pressed -->
+    <string name="current_session_share">分享</string>
+    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
+    <string name="current_session_image">目前瀏覽階段圖片</string>
+    <!-- Text for the button to save a session -->
+    <string name="session_save">儲存瀏覽階段</string>
+    <!-- Text for the button to delete a session -->
+    <string name="session_delete">刪除瀏覽階段</string>
+    <!-- Text for the button to delete a single session -->
+    <string name="session_item_delete">刪除</string>
+    <!-- Text to tell the user how many more tabs this session has.
+        The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
+    <string name="session_items_more">還有 %1$d 個網站…</string>
+
+    <!-- History -->
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">刪除瀏覽紀錄</string>
+    <!-- Text for the button to delete a single history item -->
+    <string name="history_delete_item">刪除</string>
+    <!-- Text for the button to clear selected history items. The first parameter
+        is a digit showing the number of items you have selected -->
+    <string name="history_delete_some">刪除 %1$d 個項目</string>
+    <!-- Text for the header that groups the history for Today -->
+    <string name="history_today">今天</string>
+    <!-- Text for the header that groups the history the past week -->
+    <string name="history_this_week">本週</string>
+    <!-- Text for the header that groups the history the past month -->
+    <string name="history_this_month">這個月</string>
+    <!-- Text for the header that groups the history older than the last month -->
+    <string name="history_older">更久之前</string>
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">進入全螢幕模式</string>
+
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title">抱歉，%1$s 無法還原該分頁</string>
+    <!-- Description text displayed on the tab crash page -->
+    <string name="tab_crash_description">您可在下面嘗試回復或關閉此分頁。</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">傳送錯誤報告給 Mozilla</string>
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">關閉分頁</string>
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">還原分頁</string>
+
+    <!-- Content Description for session item menu button -->
+    <string name="content_description_session_menu">瀏覽階段選項</string>
+
+    <!-- Content Description for session item share button -->
+    <string name="content_description_session_share">分享瀏覽階段</string>
+
+    <!-- Content description for bookmarks library menu -->
+    <string name="bookmark_menu_content_description">書籤選單</string>
+    <!-- Screen title for editing bookmarks -->
+    <string name="bookmark_edit">編輯書籤</string>
+    <!-- Screen title for selecting a bookmarks folder -->
+    <string name="bookmark_select_folder">選擇資料夾</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">新增資料夾</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">已建立書籤。</string>
+    <!-- Snackbar edit button shown after a bookmark has been created. -->
+    <string name="edit_bookmark_snackbar_action">編輯</string>
+
+    <!-- Bookmark overflow menu edit button -->
+    <string name="bookmark_menu_edit_button">編輯</string>
+    <!-- Bookmark overflow menu select button -->
+    <string name="bookmark_menu_select_button">選擇</string>
+    <!-- Bookmark overflow menu copy button -->
+    <string name="bookmark_menu_copy_button">複製</string>
+    <!-- Bookmark overflow menu share button -->
+    <string name="bookmark_menu_share_button">分享</string>
+    <!-- Bookmark overflow menu open in new tab button -->
+    <string name="bookmark_menu_open_in_new_tab_button">用新分頁開啟</string>
+    <!-- Bookmark overflow menu open in private tab button -->
+    <string name="bookmark_menu_open_in_private_tab_button">用新隱私分頁開啟</string>
+    <!-- Bookmark overflow menu delete button -->
+    <string name="bookmark_menu_delete_button">刪除</string>
+</resources>
