@@ -122,12 +122,10 @@ static void nsWidgetAndroidModuleDtor() {
   nsAppShellShutdown();
 }
 
-static const mozilla::Module kWidgetModule = {mozilla::Module::kVersion,
+extern const mozilla::Module kWidgetModule = {mozilla::Module::kVersion,
                                               kWidgetCIDs,
                                               kWidgetContracts,
                                               nullptr,
                                               nullptr,
                                               nsAppShellInit,
                                               nsWidgetAndroidModuleDtor};
-
-NSMODULE_DEFN(nsWidgetAndroidModule) = &kWidgetModule;

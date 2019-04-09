@@ -150,6 +150,18 @@ add_task(async function test_tokenizer() {
         { value: "http://test", type: UrlbarTokenizer.TYPE.POSSIBLE_URL },
       ],
     },
+    { desc: "bogus protocol with host (we allow visits to http://///example.com)",
+      searchString: "http:///test",
+      expectedTokens: [
+        { value: "http:///test", type: UrlbarTokenizer.TYPE.POSSIBLE_URL },
+      ],
+    },
+    { desc: "file protocol with path",
+      searchString: "file:///home",
+      expectedTokens: [
+        { value: "file:///home", type: UrlbarTokenizer.TYPE.POSSIBLE_URL },
+      ],
+    },
     { desc: "almost a protocol",
       searchString: "http:",
       expectedTokens: [
@@ -162,10 +174,16 @@ add_task(async function test_tokenizer() {
         { value: "http:/", type: UrlbarTokenizer.TYPE.POSSIBLE_URL },
       ],
     },
-    { desc: "bogus protocol",
+    { desc: "bogus protocol (we allow visits to http://///example.com)",
       searchString: "http:///",
       expectedTokens: [
-        { value: "http:///", type: UrlbarTokenizer.TYPE.TEXT },
+        { value: "http:///", type: UrlbarTokenizer.TYPE.POSSIBLE_URL },
+      ],
+    },
+    { desc: "file protocol",
+      searchString: "file:///",
+      expectedTokens: [
+        { value: "file:///", type: UrlbarTokenizer.TYPE.POSSIBLE_URL },
       ],
     },
     { desc: "userinfo",

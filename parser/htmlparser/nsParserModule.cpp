@@ -31,12 +31,10 @@ static nsresult Initialize() {
 
 static void Shutdown() { nsHTMLTags::ReleaseTable(); }
 
-static mozilla::Module kParserModule = {mozilla::Module::kVersion,
-                                        kParserCIDs,
-                                        nullptr,
-                                        nullptr,
-                                        nullptr,
-                                        Initialize,
-                                        Shutdown};
-
-NSMODULE_DEFN(nsParserModule) = &kParserModule;
+extern const mozilla::Module kParserModule = {mozilla::Module::kVersion,
+                                              kParserCIDs,
+                                              nullptr,
+                                              nullptr,
+                                              nullptr,
+                                              Initialize,
+                                              Shutdown};

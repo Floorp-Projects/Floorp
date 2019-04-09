@@ -18,7 +18,5 @@ static const mozilla::Module::CIDEntry kCodeCoverageCIDs[] = {
 static const mozilla::Module::ContractIDEntry kCodeCoverageContracts[] = {
     {"@mozilla.org/tools/code-coverage;1", &kNS_CODECOVERAGE_CID}, {nullptr}};
 
-static const mozilla::Module kCodeCoverageModule = {
+extern const mozilla::Module kCodeCoverageModule = {
     mozilla::Module::kVersion, kCodeCoverageCIDs, kCodeCoverageContracts};
-
-NSMODULE_DEFN(nsCodeCoverageModule) = &kCodeCoverageModule;

@@ -16,6 +16,7 @@
 #include "nsPresContext.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/RangeBoundary.h"
 #include "mozilla/TextRange.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/Text.h"
@@ -124,6 +125,16 @@ class TextComposition final {
   uint32_t NativeOffsetOfTargetClause() const {
     return mCompositionStartOffset + mTargetClauseOffsetInComposition;
   }
+
+  /**
+   * Return current composition start and end point in the DOM tree.
+   * Note that one of or both of those result container may be different
+   * from GetContainerTextNode() if the DOM tree was modified by the web
+   * app.  If there is no composition string the DOM tree, these return
+   * unset range boundaries.
+   */
+  RawRangeBoundary GetStartRef() const;
+  RawRangeBoundary GetEndRef() const;
 
   /**
    * The offset of composition string in the text node.  If composition string

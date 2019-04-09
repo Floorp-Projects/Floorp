@@ -1721,6 +1721,8 @@ void nsTextEditorState::SetSelectionEnd(const Nullable<uint32_t>& aEnd,
 static void DirectionToName(nsITextControlFrame::SelectionDirection dir,
                             nsAString& aDirection) {
   if (dir == nsITextControlFrame::eNone) {
+    // TODO(mbrodesser): this should be supported, see
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1541454.
     NS_WARNING("We don't actually support this... how did we get it?");
     aDirection.AssignLiteral("none");
   } else if (dir == nsITextControlFrame::eForward) {
@@ -2127,6 +2129,19 @@ void nsTextEditorState::GetValue(nsAString& aValue, bool aIgnoreWrap) const {
   }
 }
 
+#ifdef DEBUG
+namespace {
+// @param aFlags nsTextEditorState::SetValueFlags
+bool AreFlagsNotDemandingContradictingMovements(uint32_t aFlags) {
+  return !(
+      !!(aFlags &
+         nsTextEditorState::
+             eSetValue_MoveCursorToBeginSetSelectionDirectionForward) &&
+      !!(aFlags & nsTextEditorState::eSetValue_MoveCursorToEndIfValueChanged));
+}
+}  // anonymous namespace
+#endif  // DEBUG
+
 bool nsTextEditorState::SetValue(const nsAString& aValue,
                                  const nsAString* aOldValue, uint32_t aFlags) {
   nsAutoString newValue(aValue);
@@ -2415,10 +2430,17 @@ bool nsTextEditorState::SetValue(const nsAString& aValue,
 
       // Since we have no editor we presumably have cached selection state.
       if (IsSelectionCached()) {
+        MOZ_ASSERT(AreFlagsNotDemandingContradictingMovements(aFlags));
+
         SelectionProperties& props = GetSelectionProperties();
         if (aFlags & eSetValue_MoveCursorToEndIfValueChanged) {
           props.SetStart(newValue.Length());
           props.SetEnd(newValue.Length());
+          props.SetDirection(nsITextControlFrame::eForward);
+        } else if (aFlags &
+                   eSetValue_MoveCursorToBeginSetSelectionDirectionForward) {
+          props.SetStart(0);
+          props.SetEnd(0);
           props.SetDirection(nsITextControlFrame::eForward);
         } else {
           // Make sure our cached selection position is not outside the new

@@ -110,6 +110,7 @@ devtools.jar:
     skin/images/command-measure.svg (themes/images/command-measure.svg)
     skin/images/command-noautohide.svg (themes/images/command-noautohide.svg)
     skin/images/command-chevron.svg (themes/images/command-chevron.svg)
+    skin/images/rules-view-print-simulation.svg (themes/images/rules-view-print-simulation.svg)
     skin/markup.css (themes/markup.css)
     skin/webconsole.css (themes/webconsole.css)
     skin/images/webconsole/error.svg (themes/images/webconsole/error.svg)
