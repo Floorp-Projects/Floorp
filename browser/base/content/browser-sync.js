@@ -296,6 +296,7 @@ var gSync = {
     if (anchor.getAttribute("open") == "true") {
       PanelUI.hide();
     } else {
+      this.emitFxaToolbarTelemetry("toolbar_icon");
       PanelUI.showSubView(viewId, anchor, aEvent);
     }
   },
@@ -356,6 +357,18 @@ var gSync = {
       document.getElementById("PanelUI-fxa-menu-sendtab-button").removeAttribute("disabled");
     } else {
       document.getElementById("PanelUI-fxa-menu-sendtab-button").setAttribute("disabled", true);
+    }
+  },
+
+  emitFxaToolbarTelemetry(type) {
+    if (!gFxaToolbarEnabled) {
+      return;
+    }
+    if (UIState.isReady()) {
+      const state = UIState.get();
+      const hasAvatar = state.avatarURL && !state.avatarURL.includes(FXA_NO_AVATAR_ZEROS);
+      let extraOptions = {"fxa_status": state.status, "fxa_avatar": hasAvatar ? "true" : "false"};
+      Services.telemetry.recordEvent("fxa_avatar_menu", "click", type, null, extraOptions);
     }
   },
 
