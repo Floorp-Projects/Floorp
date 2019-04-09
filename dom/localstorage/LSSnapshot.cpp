@@ -59,7 +59,8 @@ void LSSnapshot::SetActor(LSSnapshotChild* aActor) {
   mActor = aActor;
 }
 
-nsresult LSSnapshot::Init(const LSSnapshotInitInfo& aInitInfo, bool aExplicit) {
+nsresult LSSnapshot::Init(const nsAString& aKey,
+                          const LSSnapshotInitInfo& aInitInfo, bool aExplicit) {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!mSelfRef);
   MOZ_ASSERT(mActor);
@@ -85,6 +86,9 @@ nsresult LSSnapshot::Init(const LSSnapshotInitInfo& aInitInfo, bool aExplicit) {
   }
 
   if (loadState == LoadState::Partial) {
+    if (aInitInfo.addKeyToUnknownItems()) {
+      mUnknownItems.PutEntry(aKey);
+    }
     mInitLength = aInitInfo.totalLength();
     mLength = mInitLength;
   } else if (loadState == LoadState::AllOrderedKeys) {
