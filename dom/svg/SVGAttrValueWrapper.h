@@ -14,9 +14,10 @@
 
 #include "nsString.h"
 
+class nsSVGLength2;
+
 namespace mozilla {
 class SVGAnimatedIntegerPair;
-class SVGAnimatedLength;
 class SVGAnimatedNumberPair;
 class SVGAnimatedOrient;
 class SVGAnimatedPreserveAspectRatio;
@@ -32,18 +33,18 @@ class SVGAttrValueWrapper {
  public:
   static void ToString(const SVGAnimatedIntegerPair* aIntegerPair,
                        nsAString& aResult);
-  static void ToString(const SVGAnimatedLength* aLength, nsAString& aResult);
   static void ToString(const SVGAnimatedNumberPair* aNumberPair,
                        nsAString& aResult);
   static void ToString(const SVGAnimatedOrient* aOrient, nsAString& aResult);
-  static void ToString(
-      const SVGAnimatedPreserveAspectRatio* aPreserveAspectRatio,
-      nsAString& aResult);
+  static void ToString(const nsSVGLength2* aLength, nsAString& aResult);
   static void ToString(const SVGAnimatedViewBox* aViewBox, nsAString& aResult);
   static void ToString(const SVGLengthList* aLengthList, nsAString& aResult);
   static void ToString(const SVGNumberList* aNumberList, nsAString& aResult);
   static void ToString(const SVGPathData* aPathData, nsAString& aResult);
   static void ToString(const SVGPointList* aPointList, nsAString& aResult);
+  static void ToString(
+      const SVGAnimatedPreserveAspectRatio* aPreserveAspectRatio,
+      nsAString& aResult);
   static void ToString(const SVGStringList* aStringList, nsAString& aResult);
   static void ToString(const SVGTransformList* aTransformList,
                        nsAString& aResult);

@@ -8,7 +8,7 @@
 #define mozilla_dom_SVGFilterElement_h
 
 #include "SVGAnimatedEnumeration.h"
-#include "SVGAnimatedLength.h"
+#include "nsSVGLength2.h"
 #include "SVGAnimatedString.h"
 #include "mozilla/dom/SVGElement.h"
 
@@ -60,7 +60,7 @@ class SVGFilterElement : public SVGFilterElementBase {
   virtual StringAttributesInfo GetStringInfo() override;
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
-  SVGAnimatedLength mLengthAttributes[4];
+  nsSVGLength2 mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 
   enum { FILTERUNITS, PRIMITIVEUNITS };

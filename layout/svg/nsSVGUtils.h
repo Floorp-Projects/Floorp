@@ -36,6 +36,7 @@ class nsIFrame;
 class nsPresContext;
 class nsStyleSVGPaint;
 class nsSVGDisplayContainerFrame;
+class nsSVGLength2;
 class nsSVGOuterSVGFrame;
 class nsTextFrame;
 
@@ -44,7 +45,6 @@ struct nsRect;
 
 namespace mozilla {
 class SVGAnimatedEnumeration;
-class SVGAnimatedLength;
 class SVGContextPaint;
 struct SVGContextPaintImpl;
 class SVGGeometryFrame;
@@ -160,7 +160,6 @@ class nsSVGUtils {
   typedef mozilla::gfx::FillRule FillRule;
   typedef mozilla::gfx::GeneralPattern GeneralPattern;
   typedef mozilla::gfx::Size Size;
-  typedef mozilla::SVGAnimatedLength SVGAnimatedLength;
   typedef mozilla::SVGContextPaint SVGContextPaint;
   typedef mozilla::SVGContextPaintImpl SVGContextPaintImpl;
   typedef mozilla::SVGGeometryFrame SVGGeometryFrame;
@@ -226,18 +225,16 @@ class nsSVGUtils {
      Input: rect - bounding box
             length - length to be converted
   */
-  static float ObjectSpace(const gfxRect& aRect,
-                           const SVGAnimatedLength* aLength);
+  static float ObjectSpace(const gfxRect& aRect, const nsSVGLength2* aLength);
 
   /* Computes the input length in terms of user space coordinates.
      Input: content - object to be used for determining user space
      Input: length - length to be converted
   */
-  static float UserSpace(SVGElement* aSVGElement,
-                         const SVGAnimatedLength* aLength);
-  static float UserSpace(nsIFrame* aFrame, const SVGAnimatedLength* aLength);
+  static float UserSpace(SVGElement* aSVGElement, const nsSVGLength2* aLength);
+  static float UserSpace(nsIFrame* aFrame, const nsSVGLength2* aLength);
   static float UserSpace(const mozilla::dom::UserSpaceMetrics& aMetrics,
-                         const SVGAnimatedLength* aLength);
+                         const nsSVGLength2* aLength);
 
   /* Find the outermost SVG frame of the passed frame */
   static nsSVGOuterSVGFrame* GetOuterSVGFrame(nsIFrame* aFrame);
@@ -415,22 +412,20 @@ class nsSVGUtils {
 
   /**
    * Convert a userSpaceOnUse/objectBoundingBoxUnits rectangle that's specified
-   * using four SVGAnimatedLength values into a user unit rectangle in user
-   * space.
+   * using four nsSVGLength2 values into a user unit rectangle in user space.
    *
-   * @param aXYWH pointer to 4 consecutive SVGAnimatedLength objects containing
+   * @param aXYWH pointer to 4 consecutive nsSVGLength2 objects containing
    * the x, y, width and height values in that order
    * @param aBBox the bounding box of the object the rect is relative to;
    * may be null if aUnits is not SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
    * @param aFrame the object in which to interpret user-space units;
    * may be null if aUnits is SVG_UNIT_TYPE_OBJECTBOUNDINGBOX
    */
-  static gfxRect GetRelativeRect(uint16_t aUnits,
-                                 const SVGAnimatedLength* aXYWH,
+  static gfxRect GetRelativeRect(uint16_t aUnits, const nsSVGLength2* aXYWH,
                                  const gfxRect& aBBox, nsIFrame* aFrame);
 
   static gfxRect GetRelativeRect(
-      uint16_t aUnits, const SVGAnimatedLength* aXYWH, const gfxRect& aBBox,
+      uint16_t aUnits, const nsSVGLength2* aXYWH, const gfxRect& aBBox,
       const mozilla::dom::UserSpaceMetrics& aMetrics);
 
   /**

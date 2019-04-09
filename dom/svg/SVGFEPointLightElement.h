@@ -7,8 +7,8 @@
 #ifndef mozilla_dom_SVGFEPointLightElement_h
 #define mozilla_dom_SVGFEPointLightElement_h
 
-#include "SVGAnimatedNumber.h"
 #include "SVGFilters.h"
+#include "nsSVGNumber2.h"
 
 nsresult NS_NewSVGFEPointLightElement(
     nsIContent** aResult, already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
@@ -48,7 +48,7 @@ class SVGFEPointLightElement : public SVGFEPointLightElementBase {
   virtual NumberAttributesInfo GetNumberInfo() override;
 
   enum { ATTR_X, ATTR_Y, ATTR_Z };
-  SVGAnimatedNumber mNumberAttributes[3];
+  nsSVGNumber2 mNumberAttributes[3];
   static NumberInfo sNumberInfo[3];
 };
 
