@@ -37,6 +37,9 @@ DISTRIBUTION_DIR="$SOURCE_DEST/distribution"
 mv "$PARTNER_CONFIG_DIR/desktop/ubuntu/distribution" "$DISTRIBUTION_DIR"
 cp -v "$SCRIPT_DIRECTORY/firefox.desktop" "$DISTRIBUTION_DIR"
 
+# Add a group policy file to disable app updates, as those are handled by snapd
+cp -v "$SCRIPT_DIRECTORY/policies.json" "$DISTRIBUTION_DIR"
+
 # Use list of locales to fetch L10N XPIs
 $CURL -o "${WORKSPACE}/l10n_changesets.json" "$L10N_CHANGESETS"
 locales=$(python3 "$SCRIPT_DIRECTORY/extract_locales_from_l10n_json.py" "${WORKSPACE}/l10n_changesets.json")

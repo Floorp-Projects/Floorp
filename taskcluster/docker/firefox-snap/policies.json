@@ -1,0 +1,5 @@
+{
+  "policies": {
+    "DisableAppUpdate": true
+  }
+}
