@@ -488,6 +488,16 @@ interface nsIHttpChannel : nsIChannel
      */
     [must_use] attribute uint64_t channelId;
 
+%{ C++
+  inline uint64_t ChannelId()
+  {
+    uint64_t value = 0;
+    if (NS_SUCCEEDED(GetChannelId(&value))) {
+      return value;
+    }
+    return 0;
+  }
+%}
     /**
      * ID of the top-level document's inner window.  Identifies the content
      * this channels is being load in.
