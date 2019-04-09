@@ -203,7 +203,7 @@ NS_EVENT_MESSAGE(eCompositionCommit)
 // eCompositionCommitRequestHandled is NOT used with any Widget*Event.
 // This is used only by PBrowser.OnEventNeedingAckHandled().  If active IME
 // commits composition synchronously, BrowserParent returns the commit string
-// to the remote process synchronously.  Then, TabChild dispatches
+// to the remote process synchronously.  Then, BrowserChild dispatches
 // eCompositionCommit in the remote process.  Finally, this message is sent
 // to BrowserParent.  (If IME commits composition asynchronously, this message
 // is not used.)

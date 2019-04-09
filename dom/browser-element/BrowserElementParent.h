@@ -79,7 +79,7 @@ class BrowserElementParent {
    *
    * @param aURL the URL the new window should load.  The empty string is
    *             allowed.
-   * @param aOpenerBrowserParent the BrowserParent whose TabChild called
+   * @param aOpenerBrowserParent the BrowserParent whose BrowserChild called
    * window.open.
    * @param aPopupBrowserParent the BrowserParent inside which the opened window
    * will live.

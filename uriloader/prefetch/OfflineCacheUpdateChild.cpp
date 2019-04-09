@@ -8,7 +8,7 @@
 #include "nsOfflineCacheUpdate.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/OfflineResourceListBinding.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoCommon.h"
 
@@ -35,9 +35,9 @@
 
 using namespace mozilla::ipc;
 using namespace mozilla::net;
+using mozilla::dom::BrowserChild;
 using mozilla::dom::ContentChild;
 using mozilla::dom::Document;
-using mozilla::dom::TabChild;
 
 //
 // To enable logging (see mozilla/Logging.h for full details):
@@ -356,13 +356,13 @@ OfflineCacheUpdateChild::Schedule() {
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIBrowserChild> tabchild = docshell->GetTabChild();
+  nsCOMPtr<nsIBrowserChild> tabchild = docshell->GetBrowserChild();
   // because owner implements nsIBrowserChild, we can assume that it is
-  // the one and only TabChild.
-  TabChild *child =
-      tabchild ? static_cast<TabChild *>(tabchild.get()) : nullptr;
+  // the one and only BrowserChild.
+  BrowserChild *child =
+      tabchild ? static_cast<BrowserChild *>(tabchild.get()) : nullptr;
 
-  if (MissingRequiredTabChild(child, "offlinecacheupdate")) {
+  if (MissingRequiredBrowserChild(child, "offlinecacheupdate")) {
     return NS_ERROR_FAILURE;
   }
 
@@ -476,7 +476,7 @@ mozilla::ipc::IPCResult OfflineCacheUpdateChild::RecvFinish(
 
   // This is by contract the last notification from the parent, release
   // us now. This is corresponding to AddRef in Schedule().
-  // TabChild::DeallocPOfflineCacheUpdate will call Release.
+  // BrowserChild::DeallocPOfflineCacheUpdate will call Release.
   OfflineCacheUpdateChild::Send__delete__(this);
 
   return IPC_OK();

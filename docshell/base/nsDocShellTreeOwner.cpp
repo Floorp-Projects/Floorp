@@ -356,8 +356,9 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem, int32_t aCX,
   }
 
   if (aShellItem == mWebBrowser->mDocShell) {
-    nsCOMPtr<nsIBrowserChild> tabChild = do_QueryInterface(webBrowserChrome);
-    if (tabChild) {
+    nsCOMPtr<nsIBrowserChild> browserChild =
+        do_QueryInterface(webBrowserChrome);
+    if (browserChild) {
       // The XUL window to resize is in the parent process, but there we
       // won't be able to get aShellItem to do the hack in
       // nsXULWindow::SizeShellTo, so let's send the width and height of
@@ -368,7 +369,7 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem, int32_t aCX,
       int32_t width = 0;
       int32_t height = 0;
       shellAsWin->GetSize(&width, &height);
-      return tabChild->RemoteSizeShellTo(aCX, aCY, width, height);
+      return browserChild->RemoteSizeShellTo(aCX, aCY, width, height);
     }
     // XXX: this is weird, but we used to call a method here
     // (webBrowserChrome->SizeBrowserTo()) whose implementations all failed
@@ -884,10 +885,10 @@ nsDocShellTreeOwner::HandleEvent(Event* aEvent) {
           nsCOMPtr<nsIWebBrowserChrome> webBrowserChrome =
               GetWebBrowserChrome();
           if (webBrowserChrome) {
-            nsCOMPtr<nsIBrowserChild> tabChild =
+            nsCOMPtr<nsIBrowserChild> browserChild =
                 do_QueryInterface(webBrowserChrome);
-            if (tabChild) {
-              nsresult rv = tabChild->RemoteDropLinks(linksCount, links);
+            if (browserChild) {
+              nsresult rv = browserChild->RemoteDropLinks(linksCount, links);
               for (uint32_t i = 0; i < linksCount; i++) {
                 NS_RELEASE(links[i]);
               }

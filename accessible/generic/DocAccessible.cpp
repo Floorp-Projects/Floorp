@@ -44,7 +44,7 @@
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/TextEditor.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/DocumentType.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/MutationEventBinding.h"
@@ -1359,10 +1359,11 @@ void DocAccessible::DoInitialUpdate() {
     mDocFlags |= eTabDocument;
     if (IPCAccessibilityActive()) {
       nsIDocShell* docShell = mDocumentNode->GetDocShell();
-      if (RefPtr<dom::TabChild> tabChild = dom::TabChild::GetFrom(docShell)) {
+      if (RefPtr<dom::BrowserChild> browserChild =
+              dom::BrowserChild::GetFrom(docShell)) {
         DocAccessibleChild* ipcDoc = IPCDoc();
         if (!ipcDoc) {
-          ipcDoc = new DocAccessibleChild(this, tabChild);
+          ipcDoc = new DocAccessibleChild(this, browserChild);
           SetIPCDoc(ipcDoc);
 
 #if defined(XP_WIN)
@@ -1373,12 +1374,12 @@ void DocAccessible::DoInitialUpdate() {
 #else
           int32_t holder = 0, childID = 0;
 #endif
-          tabChild->SendPDocAccessibleConstructor(ipcDoc, nullptr, 0, childID,
-                                                  holder);
+          browserChild->SendPDocAccessibleConstructor(ipcDoc, nullptr, 0,
+                                                      childID, holder);
         }
 
         if (IsRoot()) {
-          tabChild->SetTopLevelDocAccessibleChild(ipcDoc);
+          browserChild->SetTopLevelDocAccessibleChild(ipcDoc);
         }
       }
     }

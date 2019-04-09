@@ -30,7 +30,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1412775
         var path = e.composedPath();
         var mm = d.defaultView.docShell.messageManager;
         is(path.length, 5, "Should have 5 items in composedPath in chrome.");
-        is(path[0], mm, "TabChildGlobal is the chrome handler.");
+        is(path[0], mm, "BrowserChildGlobal is the chrome handler.");
         is(path[1], b, "browser element should be in the path.");
         is(path[2], b.parentNode, "window element should be in the path.");
         is(path[3], win.document, "Document object should be in the path.");

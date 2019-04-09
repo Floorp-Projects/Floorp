@@ -13,7 +13,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/dom/ContentChild.h"  // for ContentChild
-#include "mozilla/dom/TabChild.h"      // for TabChild
+#include "mozilla/dom/BrowserChild.h"  // for BrowserChild
 #include "mozilla/dom/TabGroup.h"      // for TabGroup
 #include "VsyncSource.h"
 
@@ -249,12 +249,13 @@ CompositorManagerChild::GetSpecificMessageEventTarget(const Message& aMsg) {
       return nullptr;
     }
 
-    TabChild* tabChild = TabChild::GetFrom(layersId);
-    if (!tabChild) {
+    BrowserChild* browserChild = BrowserChild::GetFrom(layersId);
+    if (!browserChild) {
       return nullptr;
     }
 
-    return do_AddRef(tabChild->TabGroup()->EventTargetFor(TaskCategory::Other));
+    return do_AddRef(
+        browserChild->TabGroup()->EventTargetFor(TaskCategory::Other));
   }
 
   if (aMsg.type() == PCompositorBridge::Msg_ParentAsyncMessages__ID) {

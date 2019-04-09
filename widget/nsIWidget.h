@@ -52,7 +52,7 @@ class Shmem;
 }
 #endif  // defined(MOZ_WIDGET_ANDROID)
 namespace dom {
-class TabChild;
+class BrowserChild;
 }  // namespace dom
 namespace plugins {
 class PluginWidgetChild;
@@ -333,7 +333,7 @@ struct AutoObserverNotifier {
  */
 class nsIWidget : public nsISupports {
  protected:
-  typedef mozilla::dom::TabChild TabChild;
+  typedef mozilla::dom::BrowserChild BrowserChild;
 
  public:
   typedef mozilla::layers::CompositorBridgeChild CompositorBridgeChild;
@@ -1904,7 +1904,8 @@ class nsIWidget : public nsISupports {
    * This function is called "Create" to match CreateInstance().
    * The returned widget must still be nsIWidget::Create()d.
    */
-  static already_AddRefed<nsIWidget> CreatePuppetWidget(TabChild* aTabChild);
+  static already_AddRefed<nsIWidget> CreatePuppetWidget(
+      BrowserChild* aBrowserChild);
 
   static already_AddRefed<nsIWidget> CreateHeadlessWidget();
 
@@ -1915,7 +1916,7 @@ class nsIWidget : public nsISupports {
    * nsIWidget's Create to do this.
    */
   static already_AddRefed<nsIWidget> CreatePluginProxyWidget(
-      TabChild* aTabChild, mozilla::plugins::PluginWidgetChild* aActor);
+      BrowserChild* aBrowserChild, mozilla::plugins::PluginWidgetChild* aActor);
 
   /**
    * Reparent this widget's native widget.
@@ -1973,10 +1974,10 @@ class nsIWidget : public nsISupports {
   virtual const SizeConstraints GetSizeConstraints() = 0;
 
   /**
-   * If this is owned by a TabChild, return that.  Otherwise return
+   * If this is owned by a BrowserChild, return that.  Otherwise return
    * null.
    */
-  virtual TabChild* GetOwningTabChild() { return nullptr; }
+  virtual BrowserChild* GetOwningBrowserChild() { return nullptr; }
 
   /**
    * If this isn't directly compositing to its window surface,

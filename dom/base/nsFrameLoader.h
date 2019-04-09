@@ -52,7 +52,7 @@ class OriginAttributes;
 namespace dom {
 class ChromeMessageSender;
 class ContentParent;
-class InProcessTabChildMessageManager;
+class InProcessBrowserChildMessageManager;
 class MessageSender;
 class PBrowserParent;
 class ProcessMessageManager;
@@ -121,8 +121,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
   nsIDocShell* GetExistingDocShell() const {
     return mBrowsingContext ? mBrowsingContext->GetDocShell() : nullptr;
   }
-  mozilla::dom::InProcessTabChildMessageManager* GetTabChildMessageManager()
-      const {
+  mozilla::dom::InProcessBrowserChildMessageManager*
+  GetBrowserChildMessageManager() const {
     return mChildMessageManager;
   }
   nsresult CreateStaticClone(nsFrameLoader* aDest);
@@ -372,7 +372,8 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   // public because a callback needs these.
   RefPtr<mozilla::dom::ChromeMessageSender> mMessageManager;
-  RefPtr<mozilla::dom::InProcessTabChildMessageManager> mChildMessageManager;
+  RefPtr<mozilla::dom::InProcessBrowserChildMessageManager>
+      mChildMessageManager;
 
   virtual JSObject* WrapObject(JSContext* cx,
                                JS::Handle<JSObject*> aGivenProto) override;

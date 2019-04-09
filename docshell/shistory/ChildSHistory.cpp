@@ -83,7 +83,7 @@ JSObject* ChildSHistory::WrapObject(JSContext* cx,
 }
 
 nsISupports* ChildSHistory::GetParentObject() const {
-  // We want to get the TabChildMessageManager, which is the
+  // We want to get the BrowserChildMessageManager, which is the
   // messageManager on mDocShell.
   RefPtr<ContentFrameMessageManager> mm;
   if (mDocShell) {

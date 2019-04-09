@@ -8,7 +8,7 @@
 #define mozilla_dom_BrowserBridgeChild_h
 
 #include "mozilla/dom/PBrowserBridgeChild.h"
-#include "mozilla/dom/TabChild.h"
+#include "mozilla/dom/BrowserChild.h"
 
 namespace mozilla {
 namespace dom {
@@ -21,9 +21,9 @@ class BrowserBridgeChild : public PBrowserBridgeChild {
  public:
   NS_INLINE_DECL_REFCOUNTING(BrowserBridgeChild);
 
-  TabChild* Manager() {
+  BrowserChild* Manager() {
     MOZ_ASSERT(mIPCOpen);
-    return static_cast<TabChild*>(PBrowserBridgeChild::Manager());
+    return static_cast<BrowserChild*>(PBrowserBridgeChild::Manager());
   }
 
   mozilla::layers::LayersId GetLayersId() { return mLayersId; }

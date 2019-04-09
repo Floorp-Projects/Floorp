@@ -745,8 +745,8 @@ class BrowserParent final : public PBrowserParent,
   TabId mTabId;
 
   // When loading a new tab or window via window.open, the child is
-  // responsible for loading the URL it wants into the new TabChild. When the
-  // parent receives the CreateWindow message, though, it sends a LoadURL
+  // responsible for loading the URL it wants into the new BrowserChild. When
+  // the parent receives the CreateWindow message, though, it sends a LoadURL
   // message, usually for about:blank. It's important for the about:blank load
   // to get processed because the Firefox frontend expects every new window to
   // immediately start loading something (see bug 1123090). However, we want
@@ -769,16 +769,16 @@ class BrowserParent final : public PBrowserParent,
   // separate IPC messages, since they won't be processed by the child until
   // returning to the event loop, which is too late. Instead, we queue up
   // frame scripts that we intend to load and send them as part of the
-  // CreateWindow response. Then TabChild loads them immediately.
+  // CreateWindow response. Then BrowserChild loads them immediately.
   nsTArray<FrameScriptInfo> mDelayedFrameScripts;
 
-  // Cached cursor setting from TabChild.  When the cursor is over the tab,
+  // Cached cursor setting from BrowserChild.  When the cursor is over the tab,
   // it should take this appearance.
   nsCursor mCursor;
   nsCOMPtr<imgIContainer> mCustomCursor;
   uint32_t mCustomCursorHotspotX, mCustomCursorHotspotY;
 
-  // True if the cursor changes from the TabChild should change the widget
+  // True if the cursor changes from the BrowserChild should change the widget
   // cursor.  This happens whenever the cursor is in the tab's region.
   bool mTabSetsCursor;
 
@@ -830,7 +830,7 @@ class BrowserParent final : public PBrowserParent,
   // Whether this is active for the ProcessPriorityManager or not.
   bool mActiveInPriorityManager;
 
-  // True if the compositor has reported that the TabChild has uploaded
+  // True if the compositor has reported that the BrowserChild has uploaded
   // layers.
   bool mHasLayers;
 
@@ -838,16 +838,16 @@ class BrowserParent final : public PBrowserParent,
   // at least once.
   bool mHasPresented;
 
-  // True if at least one window hosted in the TabChild has added a
+  // True if at least one window hosted in the BrowserChild has added a
   // beforeunload event listener.
   bool mHasBeforeUnload;
 
   // True when the remote browser is created and ready to handle input events.
   bool mIsReadyToHandleInputEvents;
 
-  // True if we suppress the eMouseEnterIntoWidget event due to the TabChild was
-  // not ready to handle it. We will resend it when the next time we fire a
-  // mouse event and the TabChild is ready.
+  // True if we suppress the eMouseEnterIntoWidget event due to the BrowserChild
+  // was not ready to handle it. We will resend it when the next time we fire a
+  // mouse event and the BrowserChild is ready.
   bool mIsMouseEnterIntoWidgetEventSuppressed;
 
   // How many record/replay tabs have active docshells in this process.
