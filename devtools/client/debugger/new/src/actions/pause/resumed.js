@@ -24,6 +24,8 @@ export function resumed(packet: ResumedPacket) {
     const wasPausedInEval = inDebuggerEval(why);
     const wasStepping = isStepping(getState(), thread);
 
+    client.onPauseChange(thread, false);
+
     dispatch({ type: "RESUME", thread, wasStepping });
 
     const cx = getThreadContext(getState());
