@@ -456,14 +456,6 @@ class GCSchedulingTunables {
    */
   UnprotectedData<uint32_t> pretenureGroupThreshold_;
 
-  /*
-   * JSGC_MIN_LAST_DITCH_GC_PERIOD
-   *
-   * Last ditch GC is skipped if allocation failure occurs less than this many
-   * seconds from the previous one.
-   */
-  MainThreadData<mozilla::TimeDuration> minLastDitchGCPeriod_;
-
  public:
   GCSchedulingTunables();
 
@@ -509,10 +501,6 @@ class GCSchedulingTunables {
   bool attemptPretenuring() const { return pretenureThreshold_ < 1.0f; }
   float pretenureThreshold() const { return pretenureThreshold_; }
   uint32_t pretenureGroupThreshold() const { return pretenureGroupThreshold_; }
-
-  mozilla::TimeDuration minLastDitchGCPeriod() const {
-    return minLastDitchGCPeriod_;
-  }
 
   MOZ_MUST_USE bool setParameter(JSGCParamKey key, uint32_t value,
                                  const AutoLockGC& lock);

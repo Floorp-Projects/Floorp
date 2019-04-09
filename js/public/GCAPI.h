@@ -307,14 +307,6 @@ typedef enum JSGCParamKey {
    */
   JSGC_MIN_NURSERY_BYTES = 31,
 
-  /*
-   * The minimum time to allow between triggering last ditch GCs in seconds.
-   *
-   * Default: 60 seconds
-   * Pref: None
-   */
-  JSGC_MIN_LAST_DITCH_GC_PERIOD = 32,
-
 } JSGCParamKey;
 
 /*

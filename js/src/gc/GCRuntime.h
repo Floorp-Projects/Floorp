@@ -310,7 +310,8 @@ class GCRuntime {
   bool isForegroundSweeping() const { return state() == State::Sweep; }
   bool isBackgroundSweeping() { return sweepTask.isRunning(); }
   void waitBackgroundSweepEnd();
-  void waitBackgroundAllocEnd() {
+  void waitBackgroundSweepOrAllocEnd() {
+    waitBackgroundSweepEnd();
     allocTask.cancelAndWait();
   }
   void waitBackgroundFreeEnd();
@@ -534,7 +535,6 @@ class GCRuntime {
                                                    AllocKind thingKind);
   static TenuredCell* refillFreeListFromHelperThread(JSContext* cx,
                                                      AllocKind thingKind);
-  bool lastDitchGC(JSContext* cx);
 
   /*
    * Return the list of chunks that can be released outside the GC lock.
@@ -1044,8 +1044,6 @@ class GCRuntime {
   void evictNursery(JS::GCReason reason = JS::GCReason::EVICT_NURSERY) {
     minorGC(reason, gcstats::PhaseKind::EVICT_NURSERY);
   }
-
-  mozilla::TimeStamp lastLastDitchTime;
 
   friend class MarkingValidator;
   friend class AutoEnterIteration;
