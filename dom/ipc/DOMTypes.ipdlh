@@ -191,6 +191,7 @@ struct PerformanceInfo
 struct WindowGlobalInit
 {
   nsIPrincipal principal;
+  nsIURI documentURI;
   BrowsingContext browsingContext;
   uint64_t innerWindowId;
   uint64_t outerWindowId;

@@ -41,6 +41,7 @@ static StaticAutoPtr<WGPByIdMap> gWindowGlobalParentsById;
 WindowGlobalParent::WindowGlobalParent(const WindowGlobalInit& aInit,
                                        bool aInProcess)
     : mDocumentPrincipal(aInit.principal()),
+      mDocumentURI(aInit.documentURI()),
       mInnerWindowId(aInit.innerWindowId()),
       mOuterWindowId(aInit.outerWindowId()),
       mInProcess(aInProcess),
