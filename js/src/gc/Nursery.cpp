@@ -1238,8 +1238,16 @@ bool js::Nursery::maybeResizeExact(JS::GCReason reason) {
   }
 #endif
 
-  unsigned newMaxNurseryChunks =
-      JS_ROUND(tunables().gcMaxNurseryBytes(), ChunkSize) / ChunkSize;
+  CheckedInt<unsigned> newMaxNurseryChunksChecked =
+      (JS_ROUND(CheckedInt<size_t>(tunables().gcMaxNurseryBytes()), ChunkSize) /
+       ChunkSize)
+          .toChecked<unsigned>();
+  if (!newMaxNurseryChunksChecked.isValid()) {
+    // The above calculation probably overflowed (I don't think it can
+    // underflow).
+    newMaxNurseryChunksChecked = 1;
+  }
+  unsigned newMaxNurseryChunks = newMaxNurseryChunksChecked.value();
   MOZ_ASSERT(newMaxNurseryChunks > 0);
   if (newMaxNurseryChunks != chunkCountLimit_) {
     chunkCountLimit_ = newMaxNurseryChunks;
