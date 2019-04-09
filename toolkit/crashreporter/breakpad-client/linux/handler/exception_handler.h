@@ -276,11 +276,6 @@ class ExceptionHandler {
 typedef bool (*FirstChanceHandler)(int, siginfo_t*, void*);
 void SetFirstChanceExceptionHandler(FirstChanceHandler callback);
 
-typedef bool (*FirstChanceHandlerDeprecated)(int, void*, void*);
-// Deprecated. Use SetFirstChanceExceptionHandler(FirstChanceHandler callback)
-// instead.
-void SetFirstChanceExceptionHandler(FirstChanceHandlerDeprecated callback);
-
 }  // namespace google_breakpad
 
 #endif  // CLIENT_LINUX_HANDLER_EXCEPTION_HANDLER_H_

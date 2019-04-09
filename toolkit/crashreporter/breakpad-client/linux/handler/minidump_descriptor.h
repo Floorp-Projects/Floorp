@@ -137,7 +137,7 @@ class MinidumpDescriptor {
   MicrodumpExtraInfo* microdump_extra_info() {
     assert(IsMicrodumpOnConsole());
     return &microdump_extra_info_;
-  };
+  }
 
  private:
   enum DumpMode {

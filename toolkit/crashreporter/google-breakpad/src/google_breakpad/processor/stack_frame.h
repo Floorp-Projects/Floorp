@@ -84,7 +84,7 @@ struct StackFrame {
       default:
         return "unknown";
     }
-  };
+  }
 
   // Return the actual return address, as saved on the stack or in a
   // register. See the comments for 'instruction', below, for details.
