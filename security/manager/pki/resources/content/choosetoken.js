@@ -19,7 +19,7 @@ function onLoad() {
     let token = dialogParams.GetString(i);
     menuItemNode.setAttribute("value", token);
     menuItemNode.setAttribute("label", token);
-    selectElement.firstChild.appendChild(menuItemNode);
+    selectElement.menupopup.appendChild(menuItemNode);
     if (i == 0) {
       selectElement.selectedItem = menuItemNode;
     }

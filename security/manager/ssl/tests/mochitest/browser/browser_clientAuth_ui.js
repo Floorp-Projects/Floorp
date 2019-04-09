@@ -70,6 +70,7 @@ function checkDialogContents(win, notBefore, notAfter) {
                "Mochitest client [03]",
                "Actual and expected selected cert nickname and serial should " +
                "be equal");
+  Assert.equal(win.document.getElementById("nicknames").itemCount, 1, "correct number of items");
 
   let [subject, serialNum, validity, issuer, tokenName] =
     win.document.getElementById("details").value.split("\n");

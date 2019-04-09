@@ -88,7 +88,7 @@ function onLoad() {
                                 [cert.displayName, cert.serialNumber]);
     menuItemNode.setAttribute("value", i);
     menuItemNode.setAttribute("label", nickAndSerial); // This is displayed.
-    selectElement.firstChild.appendChild(menuItemNode);
+    selectElement.menupopup.appendChild(menuItemNode);
     if (i == 0) {
       selectElement.selectedItem = menuItemNode;
     }
