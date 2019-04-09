@@ -13,6 +13,8 @@
 namespace mozilla {
 namespace ipc {
 
+class GeckoChildProcessHost;
+
 // You probably should call ContentChild::SetProcessName instead of calling
 // this directly.
 void SetThisProcessName(const char* aName);
@@ -36,6 +38,9 @@ class SharedPreferenceSerializer final {
   nsACString::size_type GetPrefLength() const { return mPrefs.Length(); }
 
   size_t GetPrefMapSize() const { return mPrefMapSize; }
+
+  void AddSharedPrefCmdLineArgs(GeckoChildProcessHost& procHost,
+                                std::vector<std::string>& aExtraOpts) const;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(SharedPreferenceSerializer);
