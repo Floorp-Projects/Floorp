@@ -348,7 +348,8 @@ class HgRepository(Repository):
 
     def push_to_try(self, message):
         try:
-            subprocess.check_call((self._tool, 'push-to-try', '-m', message), cwd=self.path)
+            subprocess.check_call((self._tool, 'push-to-try', '-m', message), cwd=self.path,
+                                  env=self._env)
         except subprocess.CalledProcessError:
             try:
                 self._run('showconfig', 'extensions.push-to-try')
