@@ -4,7 +4,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Debugger operations may still be in progress when we switch threads.
-const { PromiseTestUtils } = scopedCuImport(
+const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
 PromiseTestUtils.whitelistRejectionsGlobally(/Current thread has paused or resumed/);

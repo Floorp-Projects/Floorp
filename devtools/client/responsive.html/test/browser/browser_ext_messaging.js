@@ -9,7 +9,7 @@ const TEST_URL = "http://example.com/";
 
 // These allowed rejections are copied from
 // browser/components/extensions/test/browser/head.js.
-const { PromiseTestUtils } = scopedCuImport("resource://testing-common/PromiseTestUtils.jsm");
+const { PromiseTestUtils } = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
 PromiseTestUtils.whitelistRejectionsGlobally(/Message manager disconnected/);
 PromiseTestUtils.whitelistRejectionsGlobally(/Receiving end does not exist/);
 

@@ -1,21 +1,6 @@
 var {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 /**
- * Returns a Promise that resolves once a new tab has been opened in
- * a xul:tabbrowser.
- *
- * @param aTabBrowser
- *        The xul:tabbrowser to monitor for a new tab.
- * @return {Promise}
- *        Resolved when the new tab has been opened.
- * @resolves to the TabOpen event that was fired.
- * @rejects Never.
- */
-function waitForNewTabEvent(aTabBrowser) {
-  return BrowserTestUtils.waitForEvent(aTabBrowser.tabContainer, "TabOpen");
-}
-
-/**
  * Waits for a load (or custom) event to finish in a given tab. If provided
  * load an uri into the tab.
  *

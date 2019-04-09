@@ -392,7 +392,7 @@ bool GMPCapability::Supports(const nsTArray<GMPCapability>& aCapabilities,
         // file, but uses Windows Media Foundation to decode. That's not present
         // on Windows XP, and on some Vista, Windows N, and KN variants without
         // certain services packs.
-        if (tag.Equals(kEMEKeySystemClearkey)) {
+        if (tag.EqualsLiteral(EME_KEY_SYSTEM_CLEARKEY)) {
           if (capabilities.mAPIName.EqualsLiteral(GMP_API_VIDEO_DECODER)) {
             if (!WMFDecoderModule::HasH264()) {
               continue;
@@ -708,20 +708,20 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
   // We hard code a few of the settings because they can't be stored in the
   // widevine manifest without making our API different to widevine's.
   if (mDisplayName.EqualsASCII("clearkey")) {
-    kEMEKeySystem = kEMEKeySystemClearkey;
+    kEMEKeySystem.AssignLiteral(EME_KEY_SYSTEM_CLEARKEY);
 #if XP_WIN
     mLibs = NS_LITERAL_CSTRING(
         "dxva2.dll, msmpeg2vdec.dll, evr.dll, mfh264dec.dll, mfplat.dll");
 #endif
   } else if (mDisplayName.EqualsASCII("WidevineCdm")) {
-    kEMEKeySystem = kEMEKeySystemWidevine;
+    kEMEKeySystem.AssignLiteral(EME_KEY_SYSTEM_WIDEVINE);
 #if XP_WIN
     // psapi.dll added for GetMappedFileNameW, which could possibly be avoided
     // in future versions, see bug 1383611 for details.
     mLibs = NS_LITERAL_CSTRING("dxva2.dll, psapi.dll");
 #endif
   } else if (mDisplayName.EqualsASCII("fake")) {
-    kEMEKeySystem = NS_LITERAL_CSTRING("fake");
+    kEMEKeySystem.AssignLiteral("fake");
 #if XP_WIN
     mLibs = NS_LITERAL_CSTRING("dxva2.dll");
 #endif

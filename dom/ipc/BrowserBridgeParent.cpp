@@ -27,7 +27,8 @@ BrowserBridgeParent::~BrowserBridgeParent() {
 
 nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
                                    const nsString& aRemoteType,
-                                   CanonicalBrowsingContext* aBrowsingContext) {
+                                   CanonicalBrowsingContext* aBrowsingContext,
+                                   const uint32_t& aChromeFlags) {
   mIPCOpen = true;
 
   // FIXME: This should actually use a non-bogus TabContext, probably inherited
@@ -63,15 +64,14 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
                            constructorSender->ChildID());
 
   // Construct the TabParent object for our subframe.
-  uint32_t chromeFlags = 0;
   RefPtr<TabParent> tabParent(new TabParent(constructorSender, tabId,
                                             tabContext, aBrowsingContext,
-                                            chromeFlags, this));
+                                            aChromeFlags, this));
 
   PBrowserParent* browser = constructorSender->SendPBrowserConstructor(
       // DeallocPBrowserParent() releases this ref.
       tabParent.forget().take(), tabId, TabId(0), tabContext.AsIPCTabContext(),
-      chromeFlags, constructorSender->ChildID(), aBrowsingContext,
+      aChromeFlags, constructorSender->ChildID(), aBrowsingContext,
       constructorSender->IsForBrowser());
   if (NS_WARN_IF(!browser)) {
     MOZ_ASSERT(false, "Browser Constructor Failed");
