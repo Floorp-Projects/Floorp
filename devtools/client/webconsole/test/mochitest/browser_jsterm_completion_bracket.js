@@ -17,6 +17,7 @@ const TEST_URI = `data:text/html;charset=utf8,<p>test [ completion.
       "da\`ta\`test": 4,
       "da'ta'test": 5,
       "DATA-TEST": 6,
+      "DAT_\\\\a\\"'\`\${0}\\u0000\\b\\t\\n\\f\\r\\ude80\\ud83d\\ud83d\\ude80_TEST": 7,
     }));
   </script>`;
 
@@ -49,6 +50,7 @@ async function testInputs(hud) {
       `"data-test"`,
       `"dataTest"`,
       `"DATA-TEST"`,
+      `"DAT_\\\\a\\"'\`\${0}\\u0000\\b\\t\\n\\f\\r\\ude80\\ud83d🚀_TEST"`,
     ],
     expectedCompletionText: `"bar"]`,
     expectedInputAfterCompletion: `window.testObject["bar"]`,
@@ -62,6 +64,7 @@ async function testInputs(hud) {
       `"data-test"`,
       `"dataTest"`,
       `"DATA-TEST"`,
+      `"DAT_\\\\a\\"'\`\${0}\\u0000\\b\\t\\n\\f\\r\\ude80\\ud83d🚀_TEST"`,
     ],
     expectedCompletionText: `a'ta'test"]`,
     expectedInputAfterCompletion: `window.testObject["da'ta'test"]`,
@@ -75,6 +78,7 @@ async function testInputs(hud) {
       `"data-test"`,
       `"dataTest"`,
       `"DATA-TEST"`,
+      `"DAT_\\\\a\\"'\`\${0}\\u0000\\b\\t\\n\\f\\r\\ude80\\ud83d🚀_TEST"`,
     ],
     expectedCompletionText: `a'ta'test"]`,
     expectedInputAfterCompletion: `window.testObject["da'ta'test"]`,
@@ -88,6 +92,7 @@ async function testInputs(hud) {
       `'data-test'`,
       `'dataTest'`,
       `'DATA-TEST'`,
+      `'DAT_\\\\a"\\'\`\${0}\\u0000\\b\\t\\n\\f\\r\\ude80\\ud83d🚀_TEST'`,
     ],
     expectedCompletionText: `a"ta"test']`,
     expectedInputAfterCompletion: `window.testObject['da"ta"test']`,
@@ -101,6 +106,7 @@ async function testInputs(hud) {
       "`data-test`",
       "`dataTest`",
       "`DATA-TEST`",
+      "`DAT_\\\\a\"'\\`\\${0}\\u0000\\b\\t\\n\\f\\r\\ude80\\ud83d🚀_TEST`",
     ],
     expectedCompletionText: 'a"ta"test`]',
     expectedInputAfterCompletion: 'window.testObject[`da"ta"test`]',
