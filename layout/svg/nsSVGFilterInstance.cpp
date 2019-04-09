@@ -74,7 +74,7 @@ bool nsSVGFilterInstance::ComputeBounds() {
   // units). So really only percentage values should be used in this case.
 
   // Set the user space bounds (i.e. the filter region in user space).
-  nsSVGLength2 XYWH[4];
+  SVGAnimatedLength XYWH[4];
   static_assert(sizeof(mFilterElement->mLengthAttributes) == sizeof(XYWH),
                 "XYWH size incorrect");
   memcpy(XYWH, mFilterElement->mLengthAttributes,
@@ -168,7 +168,7 @@ nsSVGFilterFrame* nsSVGFilterInstance::GetFilterFrame(nsIFrame* aTargetFrame) {
 
 float nsSVGFilterInstance::GetPrimitiveNumber(uint8_t aCtxType,
                                               float aValue) const {
-  nsSVGLength2 val;
+  SVGAnimatedLength val;
   val.Init(aCtxType, 0xff, aValue, SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
 
   float value;
@@ -192,7 +192,7 @@ float nsSVGFilterInstance::GetPrimitiveNumber(uint8_t aCtxType,
 }
 
 Point3D nsSVGFilterInstance::ConvertLocation(const Point3D& aPoint) const {
-  nsSVGLength2 val[4];
+  SVGAnimatedLength val[4];
   val[0].Init(SVGContentUtils::X, 0xff, aPoint.x,
               SVGLength_Binding::SVG_LENGTHTYPE_NUMBER);
   val[1].Init(SVGContentUtils::Y, 0xff, aPoint.y,
