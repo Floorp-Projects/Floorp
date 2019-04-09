@@ -109,7 +109,8 @@ extern JS_PUBLIC_API bool CloneAndExecuteScript(JSContext* cx,
                                                 MutableHandle<Value> rval);
 
 /**
- * Evaluate the given source buffer in the scope of the current global of cx.
+ * Evaluate the given source buffer in the scope of the current global of cx,
+ * and return the completion value in |rval|.
  */
 extern JS_PUBLIC_API bool Evaluate(JSContext* cx,
                                    const ReadOnlyCompileOptions& options,
@@ -131,10 +132,10 @@ extern JS_PUBLIC_API bool Evaluate(JSContext* cx, HandleObjectVector envChain,
  * and return the completion value in |rval|.  If the data contains invalid
  * UTF-8, an error is reported.
  */
-extern JS_PUBLIC_API bool EvaluateUtf8(JSContext* cx,
-                                       const ReadOnlyCompileOptions& options,
-                                       const char* bytes, size_t length,
-                                       MutableHandle<Value> rval);
+extern JS_PUBLIC_API bool Evaluate(JSContext* cx,
+                                   const ReadOnlyCompileOptions& options,
+                                   SourceText<mozilla::Utf8Unit>& srcBuf,
+                                   MutableHandle<Value> rval);
 
 /**
  * Evaluate the UTF-8 contents of the file at the given path, and return the

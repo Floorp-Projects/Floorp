@@ -546,14 +546,10 @@ static bool Evaluate(JSContext* cx, HandleObjectVector envChain,
   return ::Evaluate(cx, scope->kind(), env, optionsArg, srcBuf, rval);
 }
 
-extern JS_PUBLIC_API bool JS::EvaluateUtf8(
-    JSContext* cx, const ReadOnlyCompileOptions& options, const char* bytes,
-    size_t length, MutableHandle<Value> rval) {
-  SourceText<Utf8Unit> srcBuf;
-  if (!srcBuf.init(cx, bytes, length, SourceOwnership::Borrowed)) {
-    return false;
-  }
-
+extern JS_PUBLIC_API bool JS::Evaluate(JSContext* cx,
+                                       const ReadOnlyCompileOptions& options,
+                                       SourceText<Utf8Unit>& srcBuf,
+                                       MutableHandle<Value> rval) {
   RootedObject globalLexical(cx, &cx->global()->lexicalEnvironment());
   return ::Evaluate(cx, ScopeKind::Global, globalLexical, options, srcBuf,
                     rval);
