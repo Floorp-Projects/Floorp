@@ -2027,7 +2027,7 @@ HttpChannelChild::ConnectParent(uint32_t registrarId) {
        registrarId));
   MOZ_ASSERT(NS_IsMainThread());
   mozilla::dom::TabChild* tabChild = nullptr;
-  nsCOMPtr<nsITabChild> iTabChild;
+  nsCOMPtr<nsIBrowserChild> iTabChild;
   GetCallback(iTabChild);
   if (iTabChild) {
     tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());
@@ -2636,7 +2636,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   //
 
   mozilla::dom::TabChild* tabChild = nullptr;
-  nsCOMPtr<nsITabChild> iTabChild;
+  nsCOMPtr<nsIBrowserChild> iTabChild;
   GetCallback(iTabChild);
   if (iTabChild) {
     tabChild = static_cast<mozilla::dom::TabChild*>(iTabChild.get());

@@ -13,7 +13,7 @@
 #include "mozilla/dom/TabChild.h"
 #include "nsContentUtils.h"
 #include "nsFtpProtocolHandler.h"
-#include "nsITabChild.h"
+#include "nsIBrowserChild.h"
 #include "nsStringStream.h"
 #include "nsNetUtil.h"
 #include "base/compiler_specific.h"
@@ -154,8 +154,9 @@ FTPChannelChild::AsyncOpen(nsIStreamListener* aListener) {
   if (NS_FAILED(rv)) return rv;
 
   mozilla::dom::TabChild* tabChild = nullptr;
-  nsCOMPtr<nsITabChild> iTabChild;
-  NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, NS_GET_IID(nsITabChild),
+  nsCOMPtr<nsIBrowserChild> iTabChild;
+  NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
+                                NS_GET_IID(nsIBrowserChild),
                                 getter_AddRefs(iTabChild));
   GetCallback(iTabChild);
   if (iTabChild) {
@@ -688,8 +689,9 @@ FTPChannelChild::ConnectParent(uint32_t id) {
   LOG(("FTPChannelChild::ConnectParent [this=%p]\n", this));
 
   mozilla::dom::TabChild* tabChild = nullptr;
-  nsCOMPtr<nsITabChild> iTabChild;
-  NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup, NS_GET_IID(nsITabChild),
+  nsCOMPtr<nsIBrowserChild> iTabChild;
+  NS_QueryNotificationCallbacks(mCallbacks, mLoadGroup,
+                                NS_GET_IID(nsIBrowserChild),
                                 getter_AddRefs(iTabChild));
   GetCallback(iTabChild);
   if (iTabChild) {

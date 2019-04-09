@@ -81,7 +81,7 @@ class HangMonitorChild : public PProcessHangMonitorChild,
   void Bind(Endpoint<PProcessHangMonitorChild>&& aEndpoint);
 
   typedef ProcessHangMonitor::SlowScriptAction SlowScriptAction;
-  SlowScriptAction NotifySlowScript(nsITabChild* aTabChild,
+  SlowScriptAction NotifySlowScript(nsIBrowserChild* aTabChild,
                                     const char* aFileName,
                                     const nsString& aAddonId);
   void NotifySlowScriptAsync(TabId aTabId, const nsCString& aFileName,
@@ -467,7 +467,8 @@ void HangMonitorChild::NotifySlowScriptAsync(TabId aTabId,
 }
 
 HangMonitorChild::SlowScriptAction HangMonitorChild::NotifySlowScript(
-    nsITabChild* aTabChild, const char* aFileName, const nsString& aAddonId) {
+    nsIBrowserChild* aTabChild, const char* aFileName,
+    const nsString& aAddonId) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
 
   mSentReport = true;
@@ -1106,7 +1107,8 @@ ProcessHangMonitor::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 ProcessHangMonitor::SlowScriptAction ProcessHangMonitor::NotifySlowScript(
-    nsITabChild* aTabChild, const char* aFileName, const nsString& aAddonId) {
+    nsIBrowserChild* aTabChild, const char* aFileName,
+    const nsString& aAddonId) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   return HangMonitorChild::Get()->NotifySlowScript(aTabChild, aFileName,
                                                    aAddonId);

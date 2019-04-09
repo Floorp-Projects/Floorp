@@ -61,7 +61,7 @@
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
 #include "nsFrameManager.h"
-#include "nsITabChild.h"
+#include "nsIBrowserChild.h"
 #include "nsPluginFrame.h"
 #include "nsMenuPopupFrame.h"
 
@@ -1030,7 +1030,7 @@ bool EventStateManager::LookForAccessKeyAndExecute(
           // focus, but pass false since we don't want to change the window
           // order.
           nsIDocShell* docShell = mPresContext->GetDocShell();
-          nsCOMPtr<nsITabChild> child =
+          nsCOMPtr<nsIBrowserChild> child =
               docShell ? docShell->GetTabChild() : nullptr;
           if (child) {
             child->SendRequestFocus(false);

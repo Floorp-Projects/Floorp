@@ -2587,7 +2587,7 @@ BrowserParent* BrowserParent::GetFrom(nsIContent* aContent) {
 
 /*static*/
 TabId BrowserParent::GetTabIdFrom(nsIDocShell* docShell) {
-  nsCOMPtr<nsITabChild> tabChild(TabChild::GetFrom(docShell));
+  nsCOMPtr<nsIBrowserChild> tabChild(TabChild::GetFrom(docShell));
   if (tabChild) {
     return static_cast<TabChild*>(tabChild.get())->GetTabId();
   }

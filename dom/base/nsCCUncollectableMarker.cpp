@@ -486,7 +486,7 @@ void mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC) {
           // need to look for only those windows, not all.
           nsIDocShell* ds = window->GetDocShell();
           if (ds) {
-            nsCOMPtr<nsITabChild> tabChild = ds->GetTabChild();
+            nsCOMPtr<nsIBrowserChild> tabChild = ds->GetTabChild();
             if (tabChild) {
               RefPtr<ContentFrameMessageManager> mm;
               tabChild->GetMessageManager(getter_AddRefs(mm));

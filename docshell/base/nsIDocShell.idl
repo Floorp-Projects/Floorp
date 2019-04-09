@@ -61,10 +61,10 @@ interface nsIPrivacyTransitionObserver;
 interface nsIReflowObserver;
 interface nsIScrollObserver;
 interface nsIRemoteTab;
-interface nsITabChild;
+interface nsIBrowserChild;
 interface nsICommandParams;
 interface nsILoadURIDelegate;
-native TabChildRef(already_AddRefed<nsITabChild>);
+native BrowserChildRef(already_AddRefed<nsIBrowserChild>);
 native nsDocShellLoadStatePtr(nsDocShellLoadState*);
 
 webidl BrowsingContext;
@@ -1002,8 +1002,8 @@ interface nsIDocShell : nsIDocShellTreeItem
   /**
    * The tab child for this docshell.
    */
-  [binaryname(ScriptableTabChild)] readonly attribute nsITabChild tabChild;
-  [noscript,notxpcom,nostdcall] TabChildRef GetTabChild();
+  [binaryname(ScriptableTabChild)] readonly attribute nsIBrowserChild tabChild;
+  [noscript,notxpcom,nostdcall] BrowserChildRef GetTabChild();
 
   [noscript,nostdcall,notxpcom] nsCommandManager GetCommandManager();
 

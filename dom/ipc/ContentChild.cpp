@@ -1833,7 +1833,7 @@ mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    os->NotifyObservers(static_cast<nsITabChild*>(tabChild),
+    os->NotifyObservers(static_cast<nsIBrowserChild*>(tabChild),
                         "tab-child-created", nullptr);
   }
   // Notify parent that we are ready to handle input events.
