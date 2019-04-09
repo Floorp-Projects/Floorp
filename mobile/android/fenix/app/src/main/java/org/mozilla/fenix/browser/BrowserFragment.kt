@@ -4,6 +4,8 @@
 
 package org.mozilla.fenix.browser
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -282,7 +284,7 @@ class BrowserFragment : Fragment(), BackHandler {
         getAutoDisposeObservable<SearchAction>()
             .subscribe {
                 when (it) {
-                    is SearchAction.ToolbarTapped -> {
+                    is SearchAction.ToolbarClicked -> {
                         Navigation
                             .findNavController(toolbarComponent.getView())
                             .navigate(
@@ -298,6 +300,9 @@ class BrowserFragment : Fragment(), BackHandler {
                     is SearchAction.ToolbarMenuItemTapped -> {
                         trackToolbarItemInteraction(it)
                         handleToolbarItemInteraction(it)
+                    }
+                    is SearchAction.ToolbarLongClicked -> {
+                        getSessionByIdOrUseSelectedSession().copyUrl(requireContext())
                     }
                 }
             }
@@ -473,6 +478,17 @@ class BrowserFragment : Fragment(), BackHandler {
         } else {
             requireContext().components.core.sessionManager.selectedSessionOrThrow
         }
+    }
+
+    private fun Session.copyUrl(context: Context) {
+        val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val uri = Uri.parse(url)
+        clipBoard.primaryClip = ClipData.newRawUri("Uri", uri)
+
+        val rootView = context.asActivity()?.window?.decorView?.findViewById<View>(android.R.id.content) as ViewGroup
+        FenixSnackbar.make(rootView, Snackbar.LENGTH_LONG)
+            .setText(context.getString(R.string.url_copied))
+            .show()
     }
 
     companion object {

@@ -47,7 +47,7 @@ class ToolbarUIView(
             false
             }
             onUrlClicked = {
-                actionEmitter.onNext(SearchAction.ToolbarTapped)
+                actionEmitter.onNext(SearchAction.ToolbarClicked)
                 false
             }
 
@@ -66,6 +66,11 @@ class ToolbarUIView(
                     actionEmitter.onNext(SearchAction.TextChanged(text))
                 }
             })
+
+            setOnUrlLongClickListener {
+                actionEmitter.onNext(SearchAction.ToolbarLongClicked)
+                true
+            }
         }
 
         with(view.context) {

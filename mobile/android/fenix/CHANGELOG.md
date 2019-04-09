@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #1237 - Added the ability to delete bookmark folders
 - #1238 - Added the ability to edit bookmark folders
 - #1239 - Added the ability to move bookmark folders
+- #1068 - Adds the ability to quickly copy the URL by long clicking the URLBar
 ### Changed
 - #1429 - Updated site permissions ui for MVP
 ### Removed

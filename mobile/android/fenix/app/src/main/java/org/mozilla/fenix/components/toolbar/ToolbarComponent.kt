@@ -81,7 +81,8 @@ data class SearchState(
 sealed class SearchAction : Action {
     data class UrlCommitted(val url: String, val session: String?, val engine: SearchEngine? = null) : SearchAction()
     data class TextChanged(val query: String) : SearchAction()
-    object ToolbarTapped : SearchAction()
+    object ToolbarClicked : SearchAction()
+    object ToolbarLongClicked : SearchAction()
     data class ToolbarMenuItemTapped(val item: ToolbarMenu.Item) : SearchAction()
     object EditingCanceled : SearchAction()
 }
