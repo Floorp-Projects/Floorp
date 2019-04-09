@@ -317,6 +317,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD CancelByChannelClassifier(nsresult aErrorCode) override;
   virtual void SetIPv4Disabled(void) override;
   virtual void SetIPv6Disabled(void) override;
+  NS_IMETHOD GetCrossOriginOpenerPolicy(
+      nsILoadInfo::CrossOriginOpenerPolicy *aPolicy) override;
 
   inline void CleanRedirectCacheChainIfNecessary() {
     mRedirectedCachekeys = nullptr;

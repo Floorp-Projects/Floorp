@@ -1092,8 +1092,6 @@ interface nsILoadInfo : nsISupports
     OPENER_POLICY_SAME_SITE_ALLOW_OUTGOING = OPENER_POLICY_SAME_SITE | OPENER_POLICY_UNSAFE_ALLOW_OUTGOING_FLAG
   };
 
-  [infallible] attribute nsILoadInfo_CrossOriginOpenerPolicy openerPolicy;
-
   cenum CrossOriginPolicy : 8 {
     CROSS_ORIGIN_POLICY_NULL            = 0,
     CROSS_ORIGIN_POLICY_ANONYMOUS       = 1,
