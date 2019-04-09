@@ -175,6 +175,10 @@ struct Segment {
   // of this value are valid.
   uint64_t vmsize;
 
+  // The file offset and size of the segment in the Mach-O image.
+  uint64_t fileoff;
+  uint64_t filesize;
+
   // The maximum and initial VM protection of this segment's contents.
   uint32_t maxprot;
   uint32_t initprot;

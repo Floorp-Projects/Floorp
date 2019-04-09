@@ -34,6 +34,7 @@ rm -rf \
   ${crashreporter_dir}/google-breakpad/src/client/ \
   ${crashreporter_dir}/google-breakpad/src/processor/testdata/ \
   ${crashreporter_dir}/google-breakpad/src/testing/ \
+  ${crashreporter_dir}/google-breakpad/src/third_party/linux \
   ${crashreporter_dir}/google-breakpad/src/third_party/protobuf \
   ${crashreporter_dir}/google-breakpad/src/tools/gyp/ \
   ${crashreporter_dir}/google-breakpad/src/tools/windows/dump_syms/testdata/ \
