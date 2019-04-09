@@ -7518,7 +7518,7 @@ Element* PresShell::EventHandler::ComputeFocusedEventTargetElement(
             sLastKeyDownEventTargetElement->GetComposedDoc());
         if (keyDownIsChrome != nsContentUtils::IsChromeDoc(
                                    eventTargetElement->GetComposedDoc()) ||
-            (keyDownIsChrome && TabParent::GetFrom(eventTargetElement))) {
+            (keyDownIsChrome && BrowserParent::GetFrom(eventTargetElement))) {
           eventTargetElement = sLastKeyDownEventTargetElement;
         }
       }
@@ -8214,7 +8214,7 @@ nsresult PresShell::EventHandler::DispatchEventToDOM(
 
     if (aEvent->mClass == eCompositionEventClass) {
       IMEStateManager::DispatchCompositionEvent(
-          eventTarget, GetPresContext(), TabParent::GetFocused(),
+          eventTarget, GetPresContext(), BrowserParent::GetFocused(),
           aEvent->AsCompositionEvent(), aEventStatus, eventCBPtr);
     } else {
       EventDispatcher::Dispatch(eventTarget, GetPresContext(), aEvent, nullptr,

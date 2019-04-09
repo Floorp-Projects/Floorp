@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/ParentSHistory.h"
 #include "mozilla/dom/ParentSHistoryBinding.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "nsDocShell.h"
 #include "nsFrameLoader.h"
 #include "nsXULAppAPI.h"
@@ -25,8 +25,8 @@ nsDocShell* ParentSHistory::GetDocShell() {
   return nsDocShell::Cast(mFrameLoader->GetExistingDocShell());
 }
 
-TabParent* ParentSHistory::GetTabParent() {
-  return static_cast<TabParent*>(mFrameLoader->GetRemoteBrowser());
+BrowserParent* ParentSHistory::GetBrowserParent() {
+  return static_cast<BrowserParent*>(mFrameLoader->GetRemoteBrowser());
 }
 
 already_AddRefed<ChildSHistory> ParentSHistory::GetChildIfSameProcess() {

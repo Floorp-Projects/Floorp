@@ -144,7 +144,7 @@ IPCResult BrowserBridgeChild::RecvSetLayersId(
 
 mozilla::ipc::IPCResult BrowserBridgeChild::RecvRequestFocus(
     const bool& aCanRaise) {
-  // Adapted from TabParent
+  // Adapted from BrowserParent
   nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     return IPC_OK();
@@ -167,7 +167,7 @@ mozilla::ipc::IPCResult BrowserBridgeChild::RecvRequestFocus(
 
 mozilla::ipc::IPCResult BrowserBridgeChild::RecvMoveFocus(
     const bool& aForward, const bool& aForDocumentNavigation) {
-  // Adapted from TabParent
+  // Adapted from BrowserParent
   nsCOMPtr<nsIFocusManager> fm = nsFocusManager::GetFocusManager();
   if (!fm) {
     return IPC_OK();

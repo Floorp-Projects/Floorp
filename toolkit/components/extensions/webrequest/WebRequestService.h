@@ -22,7 +22,7 @@ class nsITraceableChannel;
 
 namespace mozilla {
 namespace dom {
-class TabParent;
+class BrowserParent;
 class ContentParent;
 }  // namespace dom
 

@@ -8,7 +8,7 @@
 
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/ContentParent.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/LayerTransactionParent.h"
@@ -29,8 +29,9 @@ using namespace mozilla::layers;
 namespace mozilla {
 namespace layout {
 
-static already_AddRefed<LayerManager> GetLayerManager(TabParent* aTabParent) {
-  if (Element* element = aTabParent->GetOwnerElement()) {
+static already_AddRefed<LayerManager> GetLayerManager(
+    BrowserParent* aBrowserParent) {
+  if (Element* element = aBrowserParent->GetOwnerElement()) {
     if (RefPtr<LayerManager> lm =
             nsContentUtils::LayerManagerForContent(element)) {
       return lm.forget();
@@ -42,23 +43,23 @@ static already_AddRefed<LayerManager> GetLayerManager(TabParent* aTabParent) {
 
 RenderFrame::RenderFrame()
     : mLayersId{0},
-      mTabParent(nullptr),
+      mBrowserParent(nullptr),
       mLayerManager(nullptr),
       mInitialized(false),
       mLayersConnected(false) {}
 
 RenderFrame::~RenderFrame() {}
 
-bool RenderFrame::Initialize(TabParent* aTabParent) {
-  if (mInitialized || !aTabParent) {
+bool RenderFrame::Initialize(BrowserParent* aBrowserParent) {
+  if (mInitialized || !aBrowserParent) {
     return false;
   }
 
-  mTabParent = aTabParent;
-  RefPtr<LayerManager> lm = GetLayerManager(mTabParent);
+  mBrowserParent = aBrowserParent;
+  RefPtr<LayerManager> lm = GetLayerManager(mBrowserParent);
   PCompositorBridgeChild* compositor =
       lm ? lm->GetCompositorBridgeChild() : nullptr;
-  mTabProcessId = mTabParent->Manager()->OtherPid();
+  mTabProcessId = mBrowserParent->Manager()->OtherPid();
 
   // Our remote frame will push layers updates to the compositor,
   // and we'll keep an indirect reference to that tree.
@@ -75,12 +76,12 @@ void RenderFrame::Destroy() {
     GPUProcessManager::Get()->UnmapLayerTreeId(mLayersId, mTabProcessId);
   }
 
-  mTabParent = nullptr;
+  mBrowserParent = nullptr;
   mLayerManager = nullptr;
 }
 
 void RenderFrame::EnsureLayersConnected(CompositorOptions* aCompositorOptions) {
-  RefPtr<LayerManager> lm = GetLayerManager(mTabParent);
+  RefPtr<LayerManager> lm = GetLayerManager(mBrowserParent);
   if (!lm) {
     return;
   }
@@ -96,8 +97,8 @@ void RenderFrame::EnsureLayersConnected(CompositorOptions* aCompositorOptions) {
 
 LayerManager* RenderFrame::AttachLayerManager() {
   RefPtr<LayerManager> lm;
-  if (mTabParent) {
-    lm = GetLayerManager(mTabParent);
+  if (mBrowserParent) {
+    lm = GetLayerManager(mBrowserParent);
   }
 
   // Perhaps the document containing this frame currently has no presentation?
@@ -115,7 +116,8 @@ void RenderFrame::OwnerContentChanged() { Unused << AttachLayerManager(); }
 
 void RenderFrame::GetTextureFactoryIdentifier(
     TextureFactoryIdentifier* aTextureFactoryIdentifier) const {
-  RefPtr<LayerManager> lm = mTabParent ? GetLayerManager(mTabParent) : nullptr;
+  RefPtr<LayerManager> lm =
+      mBrowserParent ? GetLayerManager(mBrowserParent) : nullptr;
   // Perhaps the document containing this frame currently has no presentation?
   if (lm) {
     *aTextureFactoryIdentifier = lm->GetTextureFactoryIdentifier();
@@ -180,7 +182,7 @@ nsDisplayRemote::nsDisplayRemote(nsDisplayListBuilder* aBuilder,
   if (nsFrameLoader* frameLoader = GetFrameLoader()) {
     // TODO: We need to handle acquiring a TabId in the remote sub-frame case
     // for fission.
-    if (TabParent* browser = TabParent::GetFrom(frameLoader)) {
+    if (BrowserParent* browser = BrowserParent::GetFrom(frameLoader)) {
       mTabId = browser->GetTabId();
     }
   }

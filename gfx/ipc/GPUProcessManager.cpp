@@ -546,7 +546,7 @@ void GPUProcessManager::HandleProcessLost() {
   //        (a) [CONTENT] ContentChild::RecvReinitRendering
   //        (b) [CONTENT] TabChild::ReinitRendering
   //        (c) [CONTENT] TabChild::SendEnsureLayersConnected
-  //        (d)      [UI] TabParent::RecvEnsureLayersConnected
+  //        (d)      [UI] BrowserParent::RecvEnsureLayersConnected
   //        (e)      [UI] RenderFrame::EnsureLayersConnected
   //        (f)      [UI] CompositorBridgeChild::SendNotifyChildRecreated
   //

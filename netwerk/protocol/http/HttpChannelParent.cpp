@@ -13,7 +13,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ServiceWorkerUtils.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/net/NeckoParent.h"
 #include "mozilla/InputStreamLengthHelper.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -94,8 +94,8 @@ HttpChannelParent::HttpChannelParent(const PBrowserOrId& iframeEmbedding,
   mHttpHandler = gHttpHandler;
 
   if (iframeEmbedding.type() == PBrowserOrId::TPBrowserParent) {
-    mTabParent =
-        static_cast<dom::TabParent*>(iframeEmbedding.get_PBrowserParent());
+    mBrowserParent =
+        static_cast<dom::BrowserParent*>(iframeEmbedding.get_PBrowserParent());
   } else {
     mNestedFrameId = iframeEmbedding.get_TabId();
   }
@@ -295,8 +295,8 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void** result) {
   if (aIID.Equals(NS_GET_IID(nsIAuthPromptProvider)) ||
       aIID.Equals(NS_GET_IID(nsISecureBrowserUI)) ||
       aIID.Equals(NS_GET_IID(nsIRemoteTab))) {
-    if (mTabParent) {
-      return mTabParent->QueryInterface(aIID, result);
+    if (mBrowserParent) {
+      return mBrowserParent->QueryInterface(aIID, result);
     }
   }
 
@@ -313,8 +313,8 @@ HttpChannelParent::GetInterface(const nsIID& aIID, void** result) {
     return NS_OK;
   }
 
-  if (mTabParent && aIID.Equals(NS_GET_IID(nsIPrompt))) {
-    nsCOMPtr<Element> frameElement = mTabParent->GetOwnerElement();
+  if (mBrowserParent && aIID.Equals(NS_GET_IID(nsIPrompt))) {
+    nsCOMPtr<Element> frameElement = mBrowserParent->GetOwnerElement();
     if (frameElement) {
       nsCOMPtr<nsPIDOMWindowOuter> win = frameElement->OwnerDoc()->GetWindow();
       NS_ENSURE_TRUE(win, NS_ERROR_UNEXPECTED);

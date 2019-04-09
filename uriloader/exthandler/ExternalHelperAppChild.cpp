@@ -65,9 +65,9 @@ ExternalHelperAppChild::OnStartRequest(nsIRequest *request) {
   NS_ENSURE_SUCCESS(rv, NS_ERROR_UNEXPECTED);
 
   // Calling OnStartRequest could cause mHandler to close the window it was
-  // loaded for. In that case, the TabParent in the parent context might then
-  // point to the wrong window. Re-send the window context along with either
-  // DivertToParent or SendOnStartRequest just in case.
+  // loaded for. In that case, the BrowserParent in the parent context might
+  // then point to the wrong window. Re-send the window context along with
+  // either DivertToParent or SendOnStartRequest just in case.
   nsCOMPtr<nsPIDOMWindowOuter> window =
       do_GetInterface(mHandler->GetDialogParent());
   NS_ENSURE_TRUE(window, NS_ERROR_NOT_AVAILABLE);

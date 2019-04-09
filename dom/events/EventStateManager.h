@@ -45,7 +45,7 @@ class DataTransfer;
 class Document;
 class Element;
 class Selection;
-class TabParent;
+class BrowserParent;
 }  // namespace dom
 
 class OverOutElementsWrapper final : public nsISupports {
@@ -1050,7 +1050,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
 
   LayoutDeviceIntPoint GetEventRefPoint(WidgetEvent* aEvent) const;
 
-  friend class mozilla::dom::TabParent;
+  friend class mozilla::dom::BrowserParent;
   void BeginTrackingRemoteDragGesture(nsIContent* aContent);
   void StopTrackingDragGesture();
   void GenerateDragGesture(nsPresContext* aPresContext,
@@ -1112,7 +1112,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   nsresult DoContentCommandEvent(WidgetContentCommandEvent* aEvent);
   nsresult DoContentCommandScrollEvent(WidgetContentCommandEvent* aEvent);
 
-  dom::TabParent* GetCrossProcessTarget();
+  dom::BrowserParent* GetCrossProcessTarget();
   bool IsTargetCrossProcess(WidgetGUIEvent* aEvent);
 
   /**

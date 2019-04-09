@@ -8,7 +8,7 @@
 #define mozilla_dom_BrowserBridgeParent_h
 
 #include "mozilla/dom/PBrowserBridgeParent.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 
 namespace mozilla {
 namespace dom {
@@ -24,16 +24,16 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
                 CanonicalBrowsingContext* aBrowsingContext,
                 const uint32_t& aChromeFlags);
 
-  TabParent* GetTabParent() { return mTabParent; }
+  BrowserParent* GetBrowserParent() { return mBrowserParent; }
 
   CanonicalBrowsingContext* GetBrowsingContext() {
-    return mTabParent->GetBrowsingContext();
+    return mBrowserParent->GetBrowsingContext();
   }
 
   // Get our manager actor.
-  TabParent* Manager() {
+  BrowserParent* Manager() {
     MOZ_ASSERT(mIPCOpen);
-    return static_cast<TabParent*>(PBrowserBridgeParent::Manager());
+    return static_cast<BrowserParent*>(PBrowserBridgeParent::Manager());
   }
 
   // Tear down this BrowserBridgeParent.
@@ -65,7 +65,7 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
  private:
   ~BrowserBridgeParent();
 
-  RefPtr<TabParent> mTabParent;
+  RefPtr<BrowserParent> mBrowserParent;
   bool mIPCOpen;
 };
 

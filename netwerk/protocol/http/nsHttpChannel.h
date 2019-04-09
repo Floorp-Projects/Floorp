@@ -160,7 +160,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   NS_IMETHOD AsyncOpen(nsIStreamListener *aListener) override;
   // nsIHttpChannel
   NS_IMETHOD GetEncodedBodySize(uint64_t *aEncodedBodySize) override;
-  NS_IMETHOD SwitchProcessTo(mozilla::dom::Promise *aTabParent,
+  NS_IMETHOD SwitchProcessTo(mozilla::dom::Promise *aBrowserParent,
                              uint64_t aIdentifier) override;
   NS_IMETHOD HasCrossOriginOpenerPolicyMismatch(bool *aMismatch) override;
   // nsIHttpChannelInternal

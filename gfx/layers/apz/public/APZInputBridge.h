@@ -94,7 +94,7 @@ class APZInputBridge {
   // synchronous scroll.
   //
   // Even if this returns Nothing(), all wheel events in APZ-aware widgets must
-  // be sent through APZ so they are transformed correctly for TabParent.
+  // be sent through APZ so they are transformed correctly for BrowserParent.
   static Maybe<APZWheelAction> ActionForWheelEvent(WidgetWheelEvent* aEvent);
 
  protected:

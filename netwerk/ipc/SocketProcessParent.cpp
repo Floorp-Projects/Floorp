@@ -11,7 +11,7 @@
 #include "mozilla/TelemetryIPC.h"
 #ifdef MOZ_WEBRTC
 #  include "mozilla/dom/ContentProcessManager.h"
-#  include "mozilla/dom/TabParent.h"
+#  include "mozilla/dom/BrowserParent.h"
 #  include "mozilla/net/WebrtcProxyChannelParent.h"
 #endif
 
@@ -143,9 +143,9 @@ PWebrtcProxyChannelParent* SocketProcessParent::AllocPWebrtcProxyChannelParent(
   dom::ContentProcessManager* cpm = dom::ContentProcessManager::GetSingleton();
   dom::TabId tabId = aBrowser.get_TabId();
   dom::ContentParentId cpId = cpm->GetTabProcessId(tabId);
-  RefPtr<dom::TabParent> tab = cpm->GetTabParentByProcessAndTabId(cpId, tabId);
+  RefPtr<dom::BrowserParent> tab = cpm->GetBrowserParentByProcessAndTabId(cpId, tabId);
   if (!tab) {
-    MOZ_ASSERT(false, "Cannot find the TabParent!");
+    MOZ_ASSERT(false, "Cannot find the BrowserParent!");
     return nullptr;
   }
 

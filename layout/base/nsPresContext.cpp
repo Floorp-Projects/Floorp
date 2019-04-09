@@ -60,7 +60,7 @@
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/dom/PBrowserParent.h"
 #include "mozilla/dom/TabChild.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "nsRefreshDriver.h"
 #include "Layers.h"
 #include "LayerUserData.h"
@@ -1273,8 +1273,8 @@ void nsPresContext::ThemeChanged() {
   }
 }
 
-static bool NotifyThemeChanged(TabParent* aTabParent, void* aArg) {
-  aTabParent->ThemeChanged();
+static bool NotifyThemeChanged(BrowserParent* aBrowserParent, void* aArg) {
+  aBrowserParent->ThemeChanged();
   return false;
 }
 
@@ -1397,7 +1397,7 @@ bool nsPresContext::UIResolutionChangedSubdocumentCallback(
   return true;
 }
 
-static void NotifyTabUIResolutionChanged(TabParent* aTab, void* aArg) {
+static void NotifyTabUIResolutionChanged(BrowserParent* aTab, void* aArg) {
   aTab->UIResolutionChanged();
 }
 
@@ -1582,7 +1582,7 @@ void nsPresContext::FlushPendingMediaFeatureValuesChanged() {
   }
 }
 
-static bool NotifyTabSizeModeChanged(TabParent* aTab, void* aArg) {
+static bool NotifyTabSizeModeChanged(BrowserParent* aTab, void* aArg) {
   nsSizeMode* sizeMode = static_cast<nsSizeMode*>(aArg);
   aTab->SizeModeChanged(*sizeMode);
   return false;

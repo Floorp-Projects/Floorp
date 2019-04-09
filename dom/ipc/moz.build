@@ -36,6 +36,7 @@ EXPORTS.mozilla.dom.ipc += [
 EXPORTS.mozilla.dom += [
     'BrowserBridgeChild.h',
     'BrowserBridgeParent.h',
+    'BrowserParent.h',
     'CoalescedInputData.h',
     'CoalescedMouseData.h',
     'CoalescedWheelData.h',
@@ -59,7 +60,6 @@ EXPORTS.mozilla.dom += [
     'TabChild.h',
     'TabContext.h',
     'TabMessageUtils.h',
-    'TabParent.h',
     'URLClassifierChild.h',
     'URLClassifierParent.h',
     'WindowGlobalChild.h',
@@ -76,6 +76,7 @@ EXPORTS.mozilla += [
 UNIFIED_SOURCES += [
     'BrowserBridgeChild.cpp',
     'BrowserBridgeParent.cpp',
+    'BrowserParent.cpp',
     'CoalescedMouseData.cpp',
     'CoalescedWheelData.cpp',
     'ColorPickerParent.cpp',
@@ -104,7 +105,6 @@ UNIFIED_SOURCES += [
     'TabChild.cpp',
     'TabContext.cpp',
     'TabMessageUtils.cpp',
-    'TabParent.cpp',
     'URLClassifierParent.cpp',
     'WindowGlobalChild.cpp',
     'WindowGlobalParent.cpp',

@@ -324,7 +324,7 @@ struct BaseEventFlags {
    * ParamTraits<mozilla::WidgetEvent>.  Therefore, it *might* be possible
    * that posting the event failed even if this returns true.  But that must
    * really rare.  If that'd be problem for you, you should unmark this in
-   * TabParent or somewhere.
+   * BrowserParent or somewhere.
    */
   inline bool HasBeenPostedToRemoteProcess() const {
     return mPostedToRemoteProcess;

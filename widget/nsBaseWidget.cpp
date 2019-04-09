@@ -65,7 +65,7 @@
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/dom/ContentChild.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/Move.h"

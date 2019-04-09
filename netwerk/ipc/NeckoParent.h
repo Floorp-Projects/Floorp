@@ -62,7 +62,7 @@ class NeckoParent : public PNeckoParent {
    * This implementation of nsIAuthPrompt2 is used for nested remote iframes
    * that want an auth prompt.  This class lives in the parent process and
    * informs the NeckoChild that we want an auth prompt, which forwards the
-   * request to the TabParent in the remote iframe that contains the nested
+   * request to the BrowserParent in the remote iframe that contains the nested
    * iframe
    */
   class NestedFrameAuthPrompt final : public nsIAuthPrompt2 {

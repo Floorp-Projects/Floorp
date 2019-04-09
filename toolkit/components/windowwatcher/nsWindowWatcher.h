@@ -121,7 +121,7 @@ class nsWindowWatcher : public nsIWindowWatcher,
   nsresult CreateChromeWindow(const nsACString& aFeatures,
                               nsIWebBrowserChrome* aParentChrome,
                               uint32_t aChromeFlags,
-                              nsIRemoteTab* aOpeningTabParent,
+                              nsIRemoteTab* aOpeningBrowserParent,
                               mozIDOMWindowProxy* aOpener,
                               uint64_t aNextRemoteTabId,
                               nsIWebBrowserChrome** aResult);

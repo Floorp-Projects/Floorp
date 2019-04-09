@@ -15,7 +15,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/TabChild.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/ipc/TaskFactory.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/plugins/PluginBridge.h"
@@ -231,7 +231,8 @@ class HangMonitorParent : public PProcessHangMonitorParent,
 
   void Shutdown();
 
-  void PaintWhileInterruptingJS(dom::TabParent* aTabParent, bool aForceRepaint,
+  void PaintWhileInterruptingJS(dom::BrowserParent* aBrowserParent,
+                                bool aForceRepaint,
                                 const LayersObserverEpoch& aEpoch);
 
   void TerminateScript(bool aTerminateGlobal);
@@ -632,7 +633,7 @@ void HangMonitorParent::ShutdownOnThread() {
 }
 
 void HangMonitorParent::PaintWhileInterruptingJS(
-    dom::TabParent* aTab, bool aForceRepaint,
+    dom::BrowserParent* aTab, bool aForceRepaint,
     const LayersObserverEpoch& aEpoch) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   if (sShouldPaintWhileInterruptingJS) {
@@ -866,7 +867,7 @@ HangMonitoredProcess::GetScriptBrowser(Element** aBrowser) {
   nsTArray<PBrowserParent*> tabs;
   mContentParent->ManagedPBrowserParent(tabs);
   for (size_t i = 0; i < tabs.Length(); i++) {
-    TabParent* tp = TabParent::GetFrom(tabs[i]);
+    BrowserParent* tp = BrowserParent::GetFrom(tabs[i]);
     if (tp->GetTabId() == tabId) {
       RefPtr<Element> node = tp->GetOwnerElement();
       node.forget(aBrowser);
@@ -1019,7 +1020,7 @@ HangMonitoredProcess::IsReportForBrowser(nsFrameLoader* aFrameLoader,
 
   NS_ENSURE_STATE(aFrameLoader);
 
-  TabParent* tp = TabParent::GetFrom(aFrameLoader);
+  BrowserParent* tp = BrowserParent::GetFrom(aFrameLoader);
   if (!tp) {
     *aResult = false;
     return NS_OK;
@@ -1225,11 +1226,11 @@ void ProcessHangMonitor::ClearHang() {
 
 /* static */
 void ProcessHangMonitor::PaintWhileInterruptingJS(
-    PProcessHangMonitorParent* aParent, dom::TabParent* aTabParent,
+    PProcessHangMonitorParent* aParent, dom::BrowserParent* aBrowserParent,
     bool aForceRepaint, const layers::LayersObserverEpoch& aEpoch) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
   auto parent = static_cast<HangMonitorParent*>(aParent);
-  parent->PaintWhileInterruptingJS(aTabParent, aForceRepaint, aEpoch);
+  parent->PaintWhileInterruptingJS(aBrowserParent, aForceRepaint, aEpoch);
 }
 
 /* static */

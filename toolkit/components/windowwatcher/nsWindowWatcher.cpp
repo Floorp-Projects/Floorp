@@ -65,7 +65,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Storage.h"
 #include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/TabGroup.h"
 #include "nsIXULWindow.h"
@@ -395,14 +395,11 @@ static bool CheckUserContextCompatibility(nsIDocShell* aDocShell) {
 
   return subjectPrincipal->GetUserContextId() == userContextId;
 }
-
-nsresult nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
-                                             nsIWebBrowserChrome* aParentChrome,
-                                             uint32_t aChromeFlags,
-                                             nsIRemoteTab* aOpeningTabParent,
-                                             mozIDOMWindowProxy* aOpener,
-                                             uint64_t aNextRemoteTabId,
-                                             nsIWebBrowserChrome** aResult) {
+nsresult nsWindowWatcher::CreateChromeWindow(
+    const nsACString& aFeatures, nsIWebBrowserChrome* aParentChrome,
+    uint32_t aChromeFlags, nsIRemoteTab* aOpeningBrowserParent,
+    mozIDOMWindowProxy* aOpener, uint64_t aNextRemoteTabId,
+    nsIWebBrowserChrome** aResult) {
   nsCOMPtr<nsIWindowCreator2> windowCreator2(do_QueryInterface(mWindowCreator));
   if (NS_WARN_IF(!windowCreator2)) {
     return NS_ERROR_UNEXPECTED;
@@ -411,8 +408,8 @@ nsresult nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
   bool cancel = false;
   nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
   nsresult rv = windowCreator2->CreateChromeWindow2(
-      aParentChrome, aChromeFlags, aOpeningTabParent, aOpener, aNextRemoteTabId,
-      &cancel, getter_AddRefs(newWindowChrome));
+      aParentChrome, aChromeFlags, aOpeningBrowserParent, aOpener,
+      aNextRemoteTabId, &cancel, getter_AddRefs(newWindowChrome));
 
   if (NS_SUCCEEDED(rv) && cancel) {
     newWindowChrome = nullptr;
@@ -476,7 +473,7 @@ nsWindowWatcher::OpenWindowWithRemoteTab(
   if (aRemoteTab) {
     // We need to examine the window that aRemoteTab belongs to in
     // order to inform us of what kind of window we're going to open.
-    TabParent* openingTab = TabParent::GetFrom(aRemoteTab);
+    BrowserParent* openingTab = BrowserParent::GetFrom(aRemoteTab);
     parentWindowOuter = openingTab->GetParentWindowOuter();
 
     // Propagate the privacy & fission status of the parent window, if
@@ -564,13 +561,13 @@ nsWindowWatcher::OpenWindowWithRemoteTab(
   SizeOpenedWindow(chromeTreeOwner, parentWindowOuter, false, sizeSpec,
                    Some(aOpenerFullZoom));
 
-  nsCOMPtr<nsIRemoteTab> newTabParent;
-  chromeTreeOwner->GetPrimaryRemoteTab(getter_AddRefs(newTabParent));
-  if (NS_WARN_IF(!newTabParent)) {
+  nsCOMPtr<nsIRemoteTab> newBrowserParent;
+  chromeTreeOwner->GetPrimaryRemoteTab(getter_AddRefs(newBrowserParent));
+  if (NS_WARN_IF(!newBrowserParent)) {
     return NS_ERROR_UNEXPECTED;
   }
 
-  newTabParent.forget(aResult);
+  newBrowserParent.forget(aResult);
   return NS_OK;
 }
 
@@ -608,7 +605,7 @@ nsresult nsWindowWatcher::OpenWindowInternal(
 
   GetWindowTreeOwner(parent, getter_AddRefs(parentTreeOwner));
 
-  // We expect TabParent to have provided us the absolute URI of the window
+  // We expect BrowserParent to have provided us the absolute URI of the window
   // we're to open, so there's no need to call URIfromURL (or more importantly,
   // to check for a chrome URI, which cannot be opened from a remote tab).
   if (aUrl) {

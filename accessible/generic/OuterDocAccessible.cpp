@@ -9,7 +9,7 @@
 #include "nsAccUtils.h"
 #include "DocAccessible-inl.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
-#include "mozilla/dom/TabParent.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "Role.h"
 #include "States.h"
 
@@ -185,7 +185,7 @@ Accessible* OuterDocAccessible::GetChildAt(uint32_t aIndex) const {
 #endif  // defined(XP_WIN)
 
 DocAccessibleParent* OuterDocAccessible::RemoteChildDoc() const {
-  dom::TabParent* tab = dom::TabParent::GetFrom(GetContent());
+  dom::BrowserParent* tab = dom::BrowserParent::GetFrom(GetContent());
   if (!tab) return nullptr;
 
   return tab->GetTopLevelDocAccessible();
