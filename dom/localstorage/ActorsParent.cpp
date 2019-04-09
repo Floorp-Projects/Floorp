@@ -1600,7 +1600,8 @@ class ConnectionThread final {
  * Snapshot instances Checkpoint their mutations locally accumulated in the
  * child LSSnapshots.
  */
-class Datastore final {
+class Datastore final
+    : public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
   RefPtr<DirectoryLock> mDirectoryLock;
   RefPtr<Connection> mConnection;
   RefPtr<QuotaObject> mQuotaObject;
@@ -2729,7 +2730,22 @@ typedef nsTArray<CheckedUnsafePtr<PrepareDatastoreOp>> PrepareDatastoreOpArray;
 
 StaticAutoPtr<PrepareDatastoreOpArray> gPrepareDatastoreOps;
 
-typedef nsDataHashtable<nsCStringHashKey, Datastore*> DatastoreHashtable;
+// nsCStringHashKey with disabled memmove
+class nsCStringHashKeyDM : public nsCStringHashKey {
+ public:
+  explicit nsCStringHashKeyDM(const nsCStringHashKey::KeyTypePointer aKey)
+      : nsCStringHashKey(aKey) {}
+  enum { ALLOW_MEMMOVE = false };
+};
+
+// When CheckedUnsafePtr's checking is enabled, it's necessary to ensure that
+// the hashtable uses the copy constructor instead of memmove for moving entries
+// since memmove will break CheckedUnsafePtr in a memory-corrupting way.
+typedef std::conditional<DiagnosticAssertEnabled::value, nsCStringHashKeyDM,
+                         nsCStringHashKey>::type DatastoreHashKey;
+
+typedef nsDataHashtable<DatastoreHashKey, CheckedUnsafePtr<Datastore>>
+    DatastoreHashtable;
 
 StaticAutoPtr<DatastoreHashtable> gDatastores;
 
