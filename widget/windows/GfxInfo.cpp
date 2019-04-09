@@ -1602,9 +1602,9 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
     ////////////////////////////////////
     // FEATURE_WEBRENDER
 
-    // We are blocking all non-Nvidia cards in gfxPlatform.cpp where we check
-    // for the WEBRENDER_QUALIFIED feature. However we also want to block some
-    // specific Nvidia cards for being too low-powered, so we do that here.
+    // We are blocking most hardware explicitly in gfxPlatform.cpp where we
+    // check for the WEBRENDER_QUALIFIED feature. However we also want to block
+    // some specific Nvidia cards for being too low-powered, so we do that here.
     APPEND_TO_DRIVER_BLOCKLIST2(
         OperatingSystem::Windows10,
         (nsAString&)GfxDriverInfo::GetDeviceVendor(VendorNVIDIA),

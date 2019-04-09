@@ -330,7 +330,7 @@ uint32_t gfxPlatformGtk::MaxGenericSubstitions() {
 }
 
 bool gfxPlatformGtk::AccelerateLayersByDefault() {
-  return gfxPrefs::WebRenderAll();
+  return true;
 }
 
 void gfxPlatformGtk::GetPlatformCMSOutputProfile(void*& mem, size_t& size) {
