@@ -222,6 +222,11 @@ exports.allocationTracker = function({
       dbg.memory.drainAllocationsLog();
     },
 
+    stillAllocatedObjects() {
+      const sensus = dbg.memory.takeCensus({ breakdown: { by: "count" } });
+      return sensus.count;
+    },
+
     stop() {
       dump("DEVTOOLS ALLOCATION: Stop logging allocations\n");
       dbg.onNewGlobalObject = undefined;
