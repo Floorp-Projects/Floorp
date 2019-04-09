@@ -11,7 +11,7 @@
  */
 
 // Debugger operations may still be in progress when we navigate.
-const { PromiseTestUtils } = scopedCuImport(
+const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
 PromiseTestUtils.whitelistRejectionsGlobally(/Page has navigated/);
