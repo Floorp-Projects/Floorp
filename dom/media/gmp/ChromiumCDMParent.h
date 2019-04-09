@@ -180,9 +180,6 @@ class ChromiumCDMParent final : public PChromiumCDMParent,
   // life time of this object, but never more than one active at once.
   uint32_t mMaxRefFrames = 0;
   ReorderQueue mReorderQueue;
-
-  // The main thread associated with the root document. Must be set in Init().
-  nsCOMPtr<nsIEventTarget> mMainThread;
 };
 
 }  // namespace gmp
