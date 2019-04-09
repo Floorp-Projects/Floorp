@@ -450,25 +450,4 @@ LocalCertService::GetLoginPromptRequired(bool* aRequired) {
   return NS_OK;
 }
 
-#define LOCALCERTSERVICE_CID                         \
-  {                                                  \
-    0x47402be2, 0xe653, 0x45d0, {                    \
-      0x8d, 0xaa, 0x9f, 0x0d, 0xce, 0x0a, 0xc1, 0x48 \
-    }                                                \
-  }
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(LocalCertService)
-
-NS_DEFINE_NAMED_CID(LOCALCERTSERVICE_CID);
-
-static const Module::CIDEntry kLocalCertServiceCIDs[] = {
-    {&kLOCALCERTSERVICE_CID, false, nullptr, LocalCertServiceConstructor},
-    {nullptr}};
-
-static const Module::ContractIDEntry kLocalCertServiceContracts[] = {
-    {LOCALCERTSERVICE_CONTRACTID, &kLOCALCERTSERVICE_CID}, {nullptr}};
-
-extern const Module kLocalCertServiceModule = {
-    Module::kVersion, kLocalCertServiceCIDs, kLocalCertServiceContracts};
-
 }  // namespace mozilla
