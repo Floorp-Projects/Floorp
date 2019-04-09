@@ -484,6 +484,9 @@ function showFxaToolbarMenu(enable) {
     // event was performed yet.
     gSync.maybeUpdateUIState();
 
+    // Enabled FxA toolbar telemetry
+    Services.telemetry.setEventRecordingEnabled("fxa_avatar_menu", true);
+
     // We set an attribute here so that we can toggle the custom
     // badge depending on whether the FxA menu was ever accessed.
     if (!gFxaToolbarAccessed) {
