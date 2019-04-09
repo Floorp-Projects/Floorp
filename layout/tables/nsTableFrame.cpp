@@ -409,12 +409,13 @@ int32_t nsTableFrame::GetIndexOfLastRealCol() {
 }
 
 nsTableColFrame* nsTableFrame::GetColFrame(int32_t aColIndex) const {
-  NS_ASSERTION(!GetPrevInFlow(), "GetColFrame called on next in flow");
+  MOZ_ASSERT(!GetPrevInFlow(), "GetColFrame called on next in flow");
   int32_t numCols = mColFrames.Length();
   if ((aColIndex >= 0) && (aColIndex < numCols)) {
+    MOZ_ASSERT(mColFrames.ElementAt(aColIndex));
     return mColFrames.ElementAt(aColIndex);
   } else {
-    NS_ERROR("invalid col index");
+    MOZ_ASSERT_UNREACHABLE("invalid col index");
     return nullptr;
   }
 }
@@ -4262,6 +4263,7 @@ struct BCMapCellInfo {
 
   // storage of table information
   nsTableFrame* mTableFrame;
+  nsTableFrame* mTableFirstInFlow;
   int32_t mNumTableRows;
   int32_t mNumTableCols;
   BCPropertyData* mTableBCData;
@@ -4304,6 +4306,7 @@ struct BCMapCellInfo {
 
 BCMapCellInfo::BCMapCellInfo(nsTableFrame* aTableFrame)
     : mTableFrame(aTableFrame),
+      mTableFirstInFlow(static_cast<nsTableFrame*>(aTableFrame->FirstInFlow())),
       mNumTableRows(aTableFrame->GetRowCount()),
       mNumTableCols(aTableFrame->GetColCount()),
       mTableBCData(mTableFrame->GetProperty(TableBCProperty())),
@@ -4477,13 +4480,13 @@ void BCMapCellInfo::SetInfo(nsTableRowFrame* aNewRow, int32_t aColIndex,
   mRgAtEnd = rgEnd == rowIndex + mRowSpan - 1;
 
   // col frame info
-  mStartCol = mTableFrame->GetColFrame(aColIndex);
+  mStartCol = mTableFirstInFlow->GetColFrame(aColIndex);
   if (!mStartCol) ABORT0();
 
   mEndCol = mStartCol;
   if (mColSpan > 1) {
     nsTableColFrame* colFrame =
-        mTableFrame->GetColFrame(aColIndex + mColSpan - 1);
+        mTableFirstInFlow->GetColFrame(aColIndex + mColSpan - 1);
     if (!colFrame) ABORT0();
     mEndCol = colFrame;
   }
@@ -5488,10 +5491,7 @@ void BCMapCellInfo::SetTableBEndBorderWidth(BCPixelSize aWidth) {
 }
 
 void BCMapCellInfo::SetColumn(int32_t aColX) {
-  mCurrentColFrame = mTableFrame->GetColFrame(aColX);
-  if (!mCurrentColFrame) {
-    NS_ERROR("null mCurrentColFrame");
-  }
+  mCurrentColFrame = mTableFirstInFlow->GetColFrame(aColX);
   mCurrentColGroupFrame =
       static_cast<nsTableColGroupFrame*>(mCurrentColFrame->GetParent());
   if (!mCurrentColGroupFrame) {

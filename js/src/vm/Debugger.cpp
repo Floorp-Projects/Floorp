@@ -880,7 +880,7 @@ ResumeMode Debugger::slowPathOnEnterFrame(JSContext* cx,
       break;
 
     case ResumeMode::Throw:
-      cx->setPendingException(rval);
+      cx->setPendingExceptionAndCaptureStack(rval);
       break;
 
     case ResumeMode::Terminate:
@@ -1109,7 +1109,7 @@ bool Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
       return true;
 
     case ResumeMode::Throw:
-      cx->setPendingException(value);
+      cx->setPendingExceptionAndCaptureStack(value);
       return false;
 
     case ResumeMode::Terminate:
@@ -1170,7 +1170,7 @@ ResumeMode Debugger::slowPathOnDebuggerStatement(JSContext* cx,
       break;
 
     case ResumeMode::Throw:
-      cx->setPendingException(rval);
+      cx->setPendingExceptionAndCaptureStack(rval);
       break;
 
     default:
@@ -1206,7 +1206,7 @@ ResumeMode Debugger::slowPathOnExceptionUnwind(JSContext* cx,
       break;
 
     case ResumeMode::Throw:
-      cx->setPendingException(rval);
+      cx->setPendingExceptionAndCaptureStack(rval);
       break;
 
     case ResumeMode::Terminate:
@@ -1987,6 +1987,7 @@ ResumeMode Debugger::fireExceptionUnwind(JSContext* cx, MutableHandleValue vp) {
   MOZ_ASSERT(hook->isCallable());
 
   RootedValue exc(cx);
+  RootedSavedFrame stack(cx, cx->getPendingExceptionStack());
   if (!cx->getPendingException(&exc)) {
     return ResumeMode::Terminate;
   }
@@ -2010,7 +2011,7 @@ ResumeMode Debugger::fireExceptionUnwind(JSContext* cx, MutableHandleValue vp) {
   ResumeMode resumeMode =
       processHandlerResult(ar, ok, rv, iter.abstractFramePtr(), iter.pc(), vp);
   if (resumeMode == ResumeMode::Continue) {
-    cx->setPendingException(exc);
+    cx->setPendingException(exc, stack);
   }
   return resumeMode;
 }
