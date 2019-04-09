@@ -251,13 +251,10 @@ extern JS_PUBLIC_API bool CompileUtf8ForNonSyntacticScope(
  * objects, followed by the current global of the compartment cx is in.  This
  * global must not be explicitly included in the scope chain.
  */
-extern JS_PUBLIC_API bool CompileFunction(JSContext* cx,
-                                          HandleObjectVector envChain,
-                                          const ReadOnlyCompileOptions& options,
-                                          const char* name, unsigned nargs,
-                                          const char* const* argnames,
-                                          SourceText<char16_t>& srcBuf,
-                                          MutableHandle<JSFunction*> fun);
+extern JS_PUBLIC_API JSFunction* CompileFunction(
+    JSContext* cx, HandleObjectVector envChain,
+    const ReadOnlyCompileOptions& options, const char* name, unsigned nargs,
+    const char* const* argnames, SourceText<char16_t>& srcBuf);
 
 /**
  * Compile a function with envChain plus the global as its scope chain.
@@ -266,23 +263,19 @@ extern JS_PUBLIC_API bool CompileFunction(JSContext* cx,
  * objects, followed by the current global of the compartment cx is in.  This
  * global must not be explicitly included in the scope chain.
  */
-extern JS_PUBLIC_API bool CompileFunction(JSContext* cx,
-                                          HandleObjectVector envChain,
-                                          const ReadOnlyCompileOptions& options,
-                                          const char* name, unsigned nargs,
-                                          const char* const* argnames,
-                                          SourceText<mozilla::Utf8Unit>& srcBuf,
-                                          MutableHandle<JSFunction*> fun);
+extern JS_PUBLIC_API JSFunction* CompileFunction(
+    JSContext* cx, HandleObjectVector envChain,
+    const ReadOnlyCompileOptions& options, const char* name, unsigned nargs,
+    const char* const* argnames, SourceText<mozilla::Utf8Unit>& srcBuf);
 
 /**
  * Identical to the CompileFunction overload above for UTF-8, but with
  * Rust-friendly ergonomics.
  */
-extern JS_PUBLIC_API bool CompileFunctionUtf8(
+extern JS_PUBLIC_API JSFunction* CompileFunctionUtf8(
     JSContext* cx, HandleObjectVector envChain,
     const ReadOnlyCompileOptions& options, const char* name, unsigned nargs,
-    const char* const* argnames, const char* utf8, size_t length,
-    MutableHandle<JSFunction*> fun);
+    const char* const* argnames, const char* utf8, size_t length);
 
 /*
  * Associate an element wrapper and attribute name with a previously compiled
