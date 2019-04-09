@@ -36,14 +36,8 @@ if (DEBUG_ALLOCATIONS) {
   });
 }
 
-function scopedCuImport(path) {
-  const scope = {};
-  ChromeUtils.import(path, scope);
-  return scope;
-}
-
-const {ScratchpadManager} = scopedCuImport("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
-const {loader, require} = scopedCuImport("resource://devtools/shared/Loader.jsm");
+const {ScratchpadManager} = ChromeUtils.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
+const {loader, require} = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {TargetFactory} = require("devtools/client/framework/target");
