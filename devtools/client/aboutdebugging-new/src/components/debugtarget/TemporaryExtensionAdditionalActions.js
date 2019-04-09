@@ -46,6 +46,7 @@ class TemporaryExtensionAdditionalActions extends PureComponent {
 
     return Message(
       {
+        className: "qa-temporary-extension-reload-error",
         level: MESSAGE_LEVEL.ERROR,
         key: "reload-error",
       },
