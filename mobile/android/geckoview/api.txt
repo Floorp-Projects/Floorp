@@ -211,7 +211,6 @@ package org.mozilla.geckoview {
     method @android.support.annotation.NonNull public java.lang.String[] getArguments();
     method public boolean getAutomaticFontSizeAdjustment();
     method public int getAutoplayDefault();
-    method @android.support.annotation.Nullable public java.lang.String getConfigFilePath();
     method public boolean getConsoleOutputEnabled();
     method @android.support.annotation.NonNull public org.mozilla.geckoview.ContentBlocking.Settings getContentBlocking();
     method @android.support.annotation.Nullable public java.lang.Class<?> getCrashHandler();
@@ -253,7 +252,6 @@ package org.mozilla.geckoview {
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder arguments(@android.support.annotation.NonNull java.lang.String[]);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder automaticFontSizeAdjustment(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder autoplayDefault(int);
-    method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder configFilePath(@android.support.annotation.Nullable java.lang.String);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder consoleOutput(boolean);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder contentBlocking(@android.support.annotation.NonNull org.mozilla.geckoview.ContentBlocking.Settings);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoRuntimeSettings.Builder crashHandler(java.lang.Class<?>);
