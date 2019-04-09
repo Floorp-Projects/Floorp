@@ -33,6 +33,7 @@
             android:letterSpacing="0.05"
             android:gravity="center"
             tools:text="This is a custom Snackbar text"
+            android:textAlignment="textStart"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toStartOf="@id/snackbar_btn"
             app:layout_constraintTop_toTopOf="parent"

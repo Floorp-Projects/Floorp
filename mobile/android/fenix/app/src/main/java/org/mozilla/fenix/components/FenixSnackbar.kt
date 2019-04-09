@@ -9,7 +9,10 @@ import android.view.View
 import android.view.ViewGroup
 import com.google.android.material.snackbar.BaseTransientBottomBar
 import android.view.LayoutInflater
+import android.widget.FrameLayout
+import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.TextViewCompat
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fenix_snackbar.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.increaseTapArea
@@ -48,13 +51,20 @@ class FenixSnackbar private constructor(
         }
     }
 
+
     companion object {
         private const val minTextSize = 12
         private const val maxTextSize = 18
         private const val actionButtonIncreaseDps = 16
         private const val stepGranularity = 1
 
-        fun make(parent: ViewGroup, duration: Int): FenixSnackbar {
+        fun make(view: View, duration: Int): FenixSnackbar {
+            val parent = findSuitableParent(view) ?: run {
+                throw IllegalArgumentException(
+                    "No suitable parent found from the given view. Please provide a valid view."
+                )
+            }
+
             val inflater = LayoutInflater.from(parent.context)
             val content = inflater.inflate(R.layout.fenix_snackbar, parent, false)
 
@@ -62,6 +72,32 @@ class FenixSnackbar private constructor(
             return FenixSnackbar(parent, content, callback).also {
                 it.duration = duration
             }
+        }
+
+        private fun findSuitableParent(_view: View?): ViewGroup? {
+            var view = _view
+            var fallback: ViewGroup? = null
+
+            do {
+                if (view is CoordinatorLayout) {
+                    return view
+                }
+
+                if (view is FrameLayout) {
+                    if (view.id == 16908290) {
+                        return view
+                    }
+
+                    fallback = view
+                }
+
+                if (view != null) {
+                    val parent = view.parent
+                    view = if (parent is View) parent else null
+                }
+            } while (view != null)
+
+            return fallback
         }
     }
 }

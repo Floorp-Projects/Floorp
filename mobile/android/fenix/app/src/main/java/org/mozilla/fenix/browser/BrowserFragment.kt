@@ -339,10 +339,8 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                             val guid = requireComponents.core.bookmarksStorage
                                 .addItem(BookmarkRoot.Mobile.id, session!!.url, session.title, null)
                             launch(Main) {
-                                context?.asActivity()?.window?.decorView
-                                    ?.findViewById<View>(android.R.id.content)?.let { view ->
                                 FenixSnackbar.make(
-                                    view as ViewGroup,
+                                    view!!,
                                     Snackbar.LENGTH_LONG
                                 )
                                     .setAction(getString(R.string.edit_bookmark_snackbar_action)) {
@@ -355,7 +353,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                                             )
                                     }
                                     .setText(getString(R.string.bookmark_created_snackbar))
-                                }!!.show()
+                                    .show()
                             }
                         }
                     }

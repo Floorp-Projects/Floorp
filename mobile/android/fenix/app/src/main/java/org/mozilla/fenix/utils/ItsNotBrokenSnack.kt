@@ -13,7 +13,6 @@ import org.mozilla.fenix.ext.asActivity
 import org.mozilla.fenix.ext.components
 
 class ItsNotBrokenSnack(val context: Context) {
-
     fun showSnackbar(issueNumber: String) {
         val rootView =
             context.asActivity()?.window?.decorView?.findViewById<View>(android.R.id.content) as ViewGroup
