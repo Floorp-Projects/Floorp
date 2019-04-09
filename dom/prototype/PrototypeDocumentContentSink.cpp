@@ -439,6 +439,7 @@ nsresult PrototypeDocumentContentSink::ResumeWalk() {
       // inserted to the actual document.
       nsXULPrototypeElement* proto;
       nsCOMPtr<nsIContent> element;
+      nsCOMPtr<nsIContent> nodeToPushTo;
       int32_t indx;  // all children of proto before indx (not
                      // inclusive) have already been constructed
       rv = mContextStack.Peek(&proto, getter_AddRefs(element), &indx);
@@ -467,6 +468,15 @@ nsresult PrototypeDocumentContentSink::ResumeWalk() {
         continue;
       }
 
+      nodeToPushTo = element;
+      // For template elements append the content to the template's document
+      // fragment.
+      if (element->IsHTMLElement(nsGkAtoms::_template)) {
+        HTMLTemplateElement* templateElement =
+            static_cast<HTMLTemplateElement*>(element.get());
+        nodeToPushTo = templateElement->Content();
+      }
+
       // Grab the next child, and advance the current context stack
       // to the next sibling to our right.
       nsXULPrototypeNode* childproto = proto->mChildren[indx];
@@ -487,7 +497,7 @@ nsresult PrototypeDocumentContentSink::ResumeWalk() {
           if (NS_FAILED(rv)) return rv;
 
           // ...and append it to the content model.
-          rv = element->AppendChildTo(child, false);
+          rv = nodeToPushTo->AppendChildTo(child, false);
           if (NS_FAILED(rv)) return rv;
 
           // If it has children, push the element onto the context
@@ -532,7 +542,7 @@ nsresult PrototypeDocumentContentSink::ResumeWalk() {
               static_cast<nsXULPrototypeText*>(childproto);
           text->SetText(textproto->mValue, false);
 
-          rv = element->AppendChildTo(text, false);
+          rv = nodeToPushTo->AppendChildTo(text, false);
           NS_ENSURE_SUCCESS(rv, rv);
         } break;
 
