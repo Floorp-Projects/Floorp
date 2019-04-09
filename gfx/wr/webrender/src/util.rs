@@ -752,18 +752,6 @@ impl<Src, Dst> FastTransform<Src, Dst> {
         }
     }
 
-    pub fn unapply(&self, rect: &TypedRect<f32, Dst>) -> Option<TypedRect<f32, Src>> {
-        match *self {
-            FastTransform::Offset(offset) =>
-                Some(TypedRect::from_untyped(&rect.to_untyped().translate(&-offset.to_untyped()))),
-            FastTransform::Transform { inverse: Some(ref inverse), is_2d: true, .. }  =>
-                inverse.transform_rect(rect),
-            FastTransform::Transform { ref transform, is_2d: false, .. } =>
-                transform.inverse_rect_footprint(rect),
-            FastTransform::Transform { inverse: None, .. }  => None,
-        }
-    }
-
     pub fn post_translate(&self, new_offset: TypedVector2D<f32, Dst>) -> Self {
         match *self {
             FastTransform::Offset(offset) => {

@@ -2829,8 +2829,12 @@ impl ClipBatcher {
             clip_instance.local_pos,
             clip_rect_size,
         );
+        let transform = clip_scroll_tree.get_relative_transform(
+            clip_instance.spatial_node_index,
+            ROOT_SPATIAL_NODE_INDEX,
+        );
         let world_clip_rect = match project_rect(
-            &clip_spatial_node.world_content_transform.to_transform(),
+            &transform.flattened.with_destination::<WorldPixel>(),
             &local_clip_rect,
             world_rect,
         ) {
