@@ -385,4 +385,6 @@ class nsParser final : public nsIParser,
   bool mIsAboutBlank;
 };
 
+nsresult nsParserInitialize();
+
 #endif

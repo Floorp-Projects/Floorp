@@ -3,21 +3,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ModuleUtils.h"
-#include "nsParser.h"
-#include "nsParserCIID.h"
 #include "nsHTMLTags.h"
 
-//----------------------------------------------------------------------
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsParser)
-
-NS_DEFINE_NAMED_CID(NS_PARSER_CID);
-
-static const mozilla::Module::CIDEntry kParserCIDs[] = {
-    {&kNS_PARSER_CID, false, nullptr, nsParserConstructor}, {nullptr}};
-
-static nsresult Initialize() {
+nsresult nsParserInitialize() {
   nsresult rv = nsHTMLTags::AddRefTable();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -28,13 +16,3 @@ static nsresult Initialize() {
 
   return rv;
 }
-
-static void Shutdown() { nsHTMLTags::ReleaseTable(); }
-
-extern const mozilla::Module kParserModule = {mozilla::Module::kVersion,
-                                              kParserCIDs,
-                                              nullptr,
-                                              nullptr,
-                                              nullptr,
-                                              Initialize,
-                                              Shutdown};
