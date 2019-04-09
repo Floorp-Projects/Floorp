@@ -1475,7 +1475,7 @@ static unsigned Disassemble1(JSContext* cx, HandleScript script, jsbytecode* pc,
     }
 
     case JOF_DOUBLE: {
-      double d = GET_DOUBLE(pc);
+      double d = GET_INLINE_VALUE(pc).toDouble();
       if (!sp->jsprintf(" %lf", d)) {
         return 0;
       }
@@ -2019,7 +2019,7 @@ bool ExpressionDecompiler::decompilePC(jsbytecode* pc, uint8_t defIndex) {
         return write("CONSTRUCTOR");
 
       case JSOP_DOUBLE:
-        return sprinter.printf("%lf", GET_DOUBLE(pc));
+        return sprinter.printf("%lf", GET_INLINE_VALUE(pc).toDouble());
 
       case JSOP_EXCEPTION:
         return write("EXCEPTION");
