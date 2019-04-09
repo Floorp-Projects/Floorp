@@ -924,12 +924,20 @@ var gIdentityHandler = {
     let urlString = value + "\n" + gBrowser.contentTitle;
     let htmlString = "<a href=\"" + value + "\">" + value + "</a>";
 
+    let windowUtils = window.windowUtils;
+    let scale = windowUtils.screenPixelsPerCSSPixel / windowUtils.fullZoom;
+    let canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+    canvas.width = 550 * scale;
+    let ctx = canvas.getContext("2d");
+    ctx.font = `${14 * scale}px sans-serif`;
+    ctx.fillText(`${value}`, 10, 50);
+
     let dt = event.dataTransfer;
     dt.setData("text/x-moz-url", urlString);
     dt.setData("text/uri-list", value);
     dt.setData("text/plain", value);
     dt.setData("text/html", htmlString);
-    dt.setDragImage(this._identityIcon, 16, 16);
+    dt.setDragImage(canvas, 16, 16);
   },
 
   onLocationChange() {
