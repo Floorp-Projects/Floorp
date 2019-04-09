@@ -1165,7 +1165,7 @@ bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr,
       return jit::DebugEpilogue(cx, frame, pc, true);
 
     case ResumeMode::Throw:
-      cx->setPendingException(rval);
+      cx->setPendingExceptionAndCaptureStack(rval);
       return false;
 
     default:

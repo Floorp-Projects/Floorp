@@ -3057,7 +3057,8 @@ static MOZ_MUST_USE bool ReadableStreamDefaultControllerEnqueue(
     // Step e: If enqueueResult is an abrupt completion,
     if (!success) {
       RootedValue exn(cx);
-      if (!cx->isExceptionPending() || !GetAndClearException(cx, &exn)) {
+      RootedSavedFrame stack(cx);
+      if (!cx->isExceptionPending() || !GetAndClearExceptionAndStack(cx, &exn, &stack)) {
         // Uncatchable error. Die immediately without erroring the
         // stream.
         return false;
@@ -3074,7 +3075,7 @@ static MOZ_MUST_USE bool ReadableStreamDefaultControllerEnqueue(
       // Step b.ii: Return result.
       // Step e.ii: Return enqueueResult.
       // (I.e., propagate the exception.)
-      cx->setPendingException(exn);
+      cx->setPendingException(exn, stack);
       return false;
     }
   }
@@ -3880,7 +3881,8 @@ static MOZ_MUST_USE bool ReadableByteStreamControllerClose(
           cx, GetErrorMessage, nullptr,
           JSMSG_READABLEBYTESTREAMCONTROLLER_CLOSE_PENDING_PULL);
       RootedValue e(cx);
-      if (!cx->isExceptionPending() || !GetAndClearException(cx, &e)) {
+      RootedSavedFrame stack(cx);
+      if (!cx->isExceptionPending() || !GetAndClearExceptionAndStack(cx, &e, &stack)) {
         // Uncatchable error. Die immediately without erroring the
         // stream.
         return false;
@@ -3892,7 +3894,7 @@ static MOZ_MUST_USE bool ReadableByteStreamControllerClose(
       }
 
       // Step iii: Throw e.
-      cx->setPendingException(e);
+      cx->setPendingException(e, stack);
       return false;
     }
   }
