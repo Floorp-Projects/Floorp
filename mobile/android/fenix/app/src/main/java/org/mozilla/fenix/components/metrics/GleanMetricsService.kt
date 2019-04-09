@@ -7,14 +7,12 @@ import android.content.Context
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.utils.Browsers
-import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.GleanMetrics.CrashReporter
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.FindInPage
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.QuickActionSheet
 import org.mozilla.fenix.GleanMetrics.Metrics
-import org.mozilla.fenix.utils.Settings
 
 private class EventWrapper<T : Enum<T>>(
     private val recorder: ((Map<T, String>?) -> Unit),
@@ -109,13 +107,19 @@ private val Event.wrapper
     }
 
 class GleanMetricsService(private val context: Context) : MetricsService {
+    private var initialized = false
+
     override fun start() {
+        Glean.setUploadEnabled(true)
+        if (initialized) return
+
         Glean.initialize(context)
-        Glean.setUploadEnabled(IsGleanEnabled)
 
         Metrics.apply {
             defaultBrowser.set(Browsers.all(context).isDefaultBrowser)
         }
+
+        initialized = true
     }
 
     override fun stop() {
@@ -127,10 +131,6 @@ class GleanMetricsService(private val context: Context) : MetricsService {
     }
 
     override fun shouldTrack(event: Event): Boolean {
-        return Settings.getInstance(context).isTelemetryEnabled && event.wrapper != null
-    }
-
-    companion object {
-        private const val IsGleanEnabled = BuildConfig.TELEMETRY
+        return event.wrapper != null
     }
 }

@@ -7,6 +7,7 @@ import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.FactProcessor
 import mozilla.components.support.base.facts.Facts
+import mozilla.components.support.base.log.logger.Logger
 import org.mozilla.fenix.BuildConfig
 
 sealed class Event {
@@ -144,7 +145,37 @@ interface MetricsService {
     fun shouldTrack(event: Event): Boolean
 }
 
-class Metrics(private val services: List<MetricsService>, private val isTelemetryEnabled: () -> Boolean) {
+interface MetricController {
+    fun start()
+    fun stop()
+    fun track(event: Event)
+
+    companion object {
+        fun create(services: List<MetricsService>, isTelemetryEnabled: () -> Boolean): MetricController {
+            return if (BuildConfig.TELEMETRY) return ReleaseMetricController(services, isTelemetryEnabled)
+            else DebugMetricController()
+        }
+    }
+}
+
+private class DebugMetricController : MetricController {
+    override fun start() {
+        Logger.debug("DebugMetricController: start")
+    }
+
+    override fun stop() {
+        Logger.debug("DebugMetricController: stop")
+    }
+
+    override fun track(event: Event) {
+        Logger.debug("DebugMetricController: track event: $event")
+    }
+}
+
+private class ReleaseMetricController(
+    private val services: List<MetricsService>,
+    private val isTelemetryEnabled: () -> Boolean
+) : MetricController {
     private var initialized = false
 
     init {
@@ -157,22 +188,22 @@ class Metrics(private val services: List<MetricsService>, private val isTelemetr
         })
     }
 
-    fun start() {
-        if (BuildConfig.TELEMETRY && !isTelemetryEnabled.invoke() || initialized) { return }
+    override fun start() {
+        if (!isTelemetryEnabled.invoke() || initialized) { return }
 
         services.forEach { it.start() }
         initialized = true
     }
 
-    fun stop() {
+    override fun stop() {
         if (!initialized) { return }
 
         services.forEach { it.stop() }
         initialized = false
     }
 
-    fun track(event: Event) {
-        if (BuildConfig.TELEMETRY && !isTelemetryEnabled.invoke() && !initialized) { return }
+    override fun track(event: Event) {
+        if (!isTelemetryEnabled.invoke() && !initialized) { return }
 
         services
             .filter { it.shouldTrack(event) }
