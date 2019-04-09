@@ -239,11 +239,8 @@ static already_AddRefed<Element> MakeAnonButton(Document* aDoc,
     buttonElement->SetAccessKey(aAccessKey, IgnoreErrors());
   }
 
-  // Both elements are given the same tab index so that the user can tab
-  // to the file control at the correct index, and then between the two
-  // buttons.
-  buttonElement->SetTabIndex(aInputElement->TabIndex(), IgnoreErrors());
-
+  // We allow tabbing over the input itself, not the button.
+  buttonElement->SetTabIndex(-1, IgnoreErrors());
   return button.forget();
 }
 
