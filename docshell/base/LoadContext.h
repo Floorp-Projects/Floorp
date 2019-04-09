@@ -42,12 +42,10 @@ class LoadContext final : public nsILoadContext, public nsIInterfaceRequestor {
         mIsContent(aToCopy.mIsContent),
         mUseRemoteTabs(aToCopy.mUseRemoteTabs),
         mUseTrackingProtection(aToCopy.mUseTrackingProtection),
-        mOriginAttributes(aAttrs)
 #ifdef DEBUG
-        ,
-        mIsNotNull(aToCopy.mIsNotNull)
+        mIsNotNull(aToCopy.mIsNotNull),
 #endif
-  {
+        mOriginAttributes(aAttrs) {
   }
 
   // appId/inIsolatedMozBrowser arguments override those in
@@ -59,12 +57,10 @@ class LoadContext final : public nsILoadContext, public nsIInterfaceRequestor {
         mIsContent(aToCopy.mIsContent),
         mUseRemoteTabs(aToCopy.mUseRemoteTabs),
         mUseTrackingProtection(aToCopy.mUseTrackingProtection),
-        mOriginAttributes(aAttrs)
 #ifdef DEBUG
-        ,
-        mIsNotNull(aToCopy.mIsNotNull)
+        mIsNotNull(aToCopy.mIsNotNull),
 #endif
-  {
+        mOriginAttributes(aAttrs) {
   }
 
   LoadContext(dom::Element* aTopFrameElement, bool aIsContent,
@@ -75,12 +71,10 @@ class LoadContext final : public nsILoadContext, public nsIInterfaceRequestor {
         mIsContent(aIsContent),
         mUseRemoteTabs(aUseRemoteTabs),
         mUseTrackingProtection(aUseTrackingProtection),
-        mOriginAttributes(aAttrs)
 #ifdef DEBUG
-        ,
-        mIsNotNull(true)
+        mIsNotNull(true),
 #endif
-  {
+        mOriginAttributes(aAttrs) {
     MOZ_DIAGNOSTIC_ASSERT(aUsePrivateBrowsing ==
                           (aAttrs.mPrivateBrowsingId > 0));
   }
@@ -92,12 +86,10 @@ class LoadContext final : public nsILoadContext, public nsIInterfaceRequestor {
         mIsContent(false),
         mUseRemoteTabs(false),
         mUseTrackingProtection(false),
-        mOriginAttributes(aAttrs)
 #ifdef DEBUG
-        ,
-        mIsNotNull(true)
+        mIsNotNull(true),
 #endif
-  {
+        mOriginAttributes(aAttrs) {
   }
 
   // Constructor for creating a LoadContext with a given principal's appId and
@@ -113,10 +105,10 @@ class LoadContext final : public nsILoadContext, public nsIInterfaceRequestor {
   bool mIsContent;
   bool mUseRemoteTabs;
   bool mUseTrackingProtection;
-  OriginAttributes mOriginAttributes;
 #ifdef DEBUG
   bool mIsNotNull;
 #endif
+  OriginAttributes mOriginAttributes;
 };
 
 already_AddRefed<nsILoadContext> CreateLoadContext();

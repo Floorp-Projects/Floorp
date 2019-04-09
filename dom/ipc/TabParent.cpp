@@ -3291,28 +3291,30 @@ class FakeChannel final : public nsIChannel,
   }
 
   NS_DECL_ISUPPORTS
+
 #define NO_IMPL \
   override { return NS_ERROR_NOT_IMPLEMENTED; }
-  NS_IMETHOD GetName(nsACString&) NO_IMPL NS_IMETHOD
-      IsPending(bool*) NO_IMPL NS_IMETHOD
-      GetStatus(nsresult*) NO_IMPL NS_IMETHOD
-      Cancel(nsresult) NO_IMPL NS_IMETHOD Suspend() NO_IMPL NS_IMETHOD
-      Resume() NO_IMPL NS_IMETHOD
-      GetLoadGroup(nsILoadGroup**) NO_IMPL NS_IMETHOD
-      SetLoadGroup(nsILoadGroup*) NO_IMPL NS_IMETHOD
-      SetLoadFlags(nsLoadFlags) NO_IMPL NS_IMETHOD
-      GetLoadFlags(nsLoadFlags*) NO_IMPL NS_IMETHOD
-      GetIsDocument(bool*) NO_IMPL NS_IMETHOD
-      GetOriginalURI(nsIURI**) NO_IMPL NS_IMETHOD
-      SetOriginalURI(nsIURI*) NO_IMPL NS_IMETHOD
-      GetURI(nsIURI** aUri) override {
+  NS_IMETHOD GetName(nsACString&) NO_IMPL;
+  NS_IMETHOD IsPending(bool*) NO_IMPL;
+  NS_IMETHOD GetStatus(nsresult*) NO_IMPL;
+  NS_IMETHOD Cancel(nsresult) NO_IMPL;
+  NS_IMETHOD Suspend() NO_IMPL;
+  NS_IMETHOD Resume() NO_IMPL;
+  NS_IMETHOD GetLoadGroup(nsILoadGroup**) NO_IMPL;
+  NS_IMETHOD SetLoadGroup(nsILoadGroup*) NO_IMPL;
+  NS_IMETHOD SetLoadFlags(nsLoadFlags) NO_IMPL;
+  NS_IMETHOD GetLoadFlags(nsLoadFlags*) NO_IMPL;
+  NS_IMETHOD GetIsDocument(bool*) NO_IMPL;
+  NS_IMETHOD GetOriginalURI(nsIURI**) NO_IMPL;
+  NS_IMETHOD SetOriginalURI(nsIURI*) NO_IMPL;
+  NS_IMETHOD GetURI(nsIURI** aUri) override {
     nsCOMPtr<nsIURI> copy = mUri;
     copy.forget(aUri);
     return NS_OK;
   }
-  NS_IMETHOD GetOwner(nsISupports**) NO_IMPL NS_IMETHOD
-      SetOwner(nsISupports*) NO_IMPL NS_IMETHOD
-      GetLoadInfo(nsILoadInfo** aLoadInfo) override {
+  NS_IMETHOD GetOwner(nsISupports**) NO_IMPL;
+  NS_IMETHOD SetOwner(nsISupports*) NO_IMPL;
+  NS_IMETHOD GetLoadInfo(nsILoadInfo** aLoadInfo) override {
     nsCOMPtr<nsILoadInfo> copy = mLoadInfo;
     copy.forget(aLoadInfo);
     return NS_OK;
@@ -3326,51 +3328,52 @@ class FakeChannel final : public nsIChannel,
     NS_ADDREF(*aRequestor = this);
     return NS_OK;
   }
-  NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor*) NO_IMPL NS_IMETHOD
-      GetSecurityInfo(nsISupports**) NO_IMPL NS_IMETHOD
-      GetContentType(nsACString&) NO_IMPL NS_IMETHOD
-      SetContentType(const nsACString&) NO_IMPL NS_IMETHOD
-      GetContentCharset(nsACString&) NO_IMPL NS_IMETHOD
-      SetContentCharset(const nsACString&) NO_IMPL NS_IMETHOD
-      GetContentLength(int64_t*) NO_IMPL NS_IMETHOD
-      SetContentLength(int64_t) NO_IMPL NS_IMETHOD
-      Open(nsIInputStream**) NO_IMPL NS_IMETHOD
-      AsyncOpen(nsIStreamListener*) NO_IMPL NS_IMETHOD
-      GetContentDisposition(uint32_t*) NO_IMPL NS_IMETHOD
-      SetContentDisposition(uint32_t) NO_IMPL NS_IMETHOD
-      GetContentDispositionFilename(nsAString&) NO_IMPL NS_IMETHOD
-      SetContentDispositionFilename(const nsAString&) NO_IMPL NS_IMETHOD
-      GetContentDispositionHeader(nsACString&) NO_IMPL NS_IMETHOD
-      OnAuthAvailable(nsISupports* aContext,
-                      nsIAuthInformation* aAuthInfo) override;
+  NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor*) NO_IMPL;
+  NS_IMETHOD GetSecurityInfo(nsISupports**) NO_IMPL;
+  NS_IMETHOD GetContentType(nsACString&) NO_IMPL;
+  NS_IMETHOD SetContentType(const nsACString&) NO_IMPL;
+  NS_IMETHOD GetContentCharset(nsACString&) NO_IMPL;
+  NS_IMETHOD SetContentCharset(const nsACString&) NO_IMPL;
+  NS_IMETHOD GetContentLength(int64_t*) NO_IMPL;
+  NS_IMETHOD SetContentLength(int64_t) NO_IMPL;
+  NS_IMETHOD Open(nsIInputStream**) NO_IMPL;
+  NS_IMETHOD AsyncOpen(nsIStreamListener*) NO_IMPL;
+  NS_IMETHOD GetContentDisposition(uint32_t*) NO_IMPL;
+  NS_IMETHOD SetContentDisposition(uint32_t) NO_IMPL;
+  NS_IMETHOD GetContentDispositionFilename(nsAString&) NO_IMPL;
+  NS_IMETHOD SetContentDispositionFilename(const nsAString&) NO_IMPL;
+  NS_IMETHOD GetContentDispositionHeader(nsACString&) NO_IMPL;
+  NS_IMETHOD OnAuthAvailable(nsISupports* aContext,
+                             nsIAuthInformation* aAuthInfo) override;
   NS_IMETHOD OnAuthCancelled(nsISupports* aContext, bool userCancel) override;
   NS_IMETHOD GetInterface(const nsIID& uuid, void** result) override {
     return QueryInterface(uuid, result);
   }
-  NS_IMETHOD GetAssociatedWindow(mozIDOMWindowProxy**) NO_IMPL NS_IMETHOD
-      GetTopWindow(mozIDOMWindowProxy**) NO_IMPL NS_IMETHOD
-      GetTopFrameElement(Element** aElement) override {
+  NS_IMETHOD GetAssociatedWindow(mozIDOMWindowProxy**) NO_IMPL;
+  NS_IMETHOD GetTopWindow(mozIDOMWindowProxy**) NO_IMPL;
+  NS_IMETHOD GetTopFrameElement(Element** aElement) override {
     nsCOMPtr<Element> elem = mElement;
     elem.forget(aElement);
     return NS_OK;
   }
-  NS_IMETHOD GetNestedFrameId(uint64_t*) NO_IMPL NS_IMETHOD
-      GetIsContent(bool*) NO_IMPL NS_IMETHOD
-      GetUsePrivateBrowsing(bool*) NO_IMPL NS_IMETHOD
-      SetUsePrivateBrowsing(bool) NO_IMPL NS_IMETHOD
-      SetPrivateBrowsing(bool) NO_IMPL NS_IMETHOD
-      GetIsInIsolatedMozBrowserElement(bool*) NO_IMPL NS_IMETHOD
-      GetScriptableOriginAttributes(JSContext*, JS::MutableHandleValue) NO_IMPL
-      NS_IMETHOD_(void)
-          GetOriginAttributes(mozilla::OriginAttributes& aAttrs) override {}
-  NS_IMETHOD GetUseRemoteTabs(bool*) NO_IMPL NS_IMETHOD
-      SetRemoteTabs(bool) NO_IMPL NS_IMETHOD
-      GetUseTrackingProtection(bool*) NO_IMPL NS_IMETHOD
-      SetUseTrackingProtection(bool) NO_IMPL
+  NS_IMETHOD GetNestedFrameId(uint64_t*) NO_IMPL;
+  NS_IMETHOD GetIsContent(bool*) NO_IMPL;
+  NS_IMETHOD GetUsePrivateBrowsing(bool*) NO_IMPL;
+  NS_IMETHOD SetUsePrivateBrowsing(bool) NO_IMPL;
+  NS_IMETHOD SetPrivateBrowsing(bool) NO_IMPL;
+  NS_IMETHOD GetIsInIsolatedMozBrowserElement(bool*) NO_IMPL;
+  NS_IMETHOD GetScriptableOriginAttributes(JSContext*,
+                                           JS::MutableHandleValue) NO_IMPL;
+  NS_IMETHOD_(void)
+  GetOriginAttributes(mozilla::OriginAttributes& aAttrs) override {}
+  NS_IMETHOD GetUseRemoteTabs(bool*) NO_IMPL;
+  NS_IMETHOD SetRemoteTabs(bool) NO_IMPL;
+  NS_IMETHOD GetUseTrackingProtection(bool*) NO_IMPL;
+  NS_IMETHOD SetUseTrackingProtection(bool) NO_IMPL;
 #undef NO_IMPL
 
-      protected : ~FakeChannel() {
-  }
+ protected:
+  ~FakeChannel() {}
 
   nsCOMPtr<nsIURI> mUri;
   uint64_t mCallbackId;

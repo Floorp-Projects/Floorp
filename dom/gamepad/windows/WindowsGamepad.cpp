@@ -31,14 +31,16 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using mozilla::ArrayLength;
 
-// USB HID usage tables, page 1 (Hat switch)
-const unsigned kUsageDpad = 0x39;
 // USB HID usage tables, page 1, 0x30 = X
-const unsigned kFirstAxis = 0x30;
+const uint32_t kAxisMinimumUsageNumber = 0x30;
+// USB HID usage tables, page 1 (Hat switch)
+const uint32_t kDpadMinimumUsageNumber = 0x39;
+const uint32_t kAxesLengthCap = 16;
 
 // USB HID usage tables
-const unsigned kDesktopUsagePage = 0x1;
-const unsigned kButtonUsagePage = 0x9;
+const uint32_t kDesktopUsagePage = 0x1;
+const uint32_t kGameControlsUsagePage = 0x5;
+const uint32_t kButtonUsagePage = 0x9;
 
 // Multiple devices-changed notifications can be sent when a device
 // is connected, because USB devices consist of multiple logical devices.
@@ -114,25 +116,28 @@ class Gamepad {
   // Information about the physical device.
   unsigned numAxes;
   unsigned numButtons;
-  bool hasDpad;
-  HIDP_VALUE_CAPS dpadCaps;
 
   nsTArray<bool> buttons;
   struct axisValue {
     HIDP_VALUE_CAPS caps;
     double value;
+    bool active;
+
+    axisValue() = default;
+    explicit axisValue(const HIDP_VALUE_CAPS& aCaps)
+        : caps(aCaps), value(0.0f), active(true) {}
   };
   nsTArray<axisValue> axes;
+
+  RefPtr<GamepadRemapper> remapper;
 
   // Used during rescan to find devices that were disconnected.
   bool present;
 
-  Gamepad(uint32_t aNumAxes, uint32_t aNumButtons, bool aHasDpad,
-          GamepadType aType)
+  Gamepad(uint32_t aNumAxes, uint32_t aNumButtons, GamepadType aType)
       : type(aType),
         numAxes(aNumAxes),
         numButtons(aNumButtons),
-        hasDpad(aHasDpad),
         present(true) {
     buttons.SetLength(numButtons);
     axes.SetLength(numAxes);
@@ -204,45 +209,6 @@ bool GetPreparsedData(HANDLE handle, nsTArray<uint8_t>& data) {
  */
 double ScaleAxis(ULONG value, LONG min, LONG max) {
   return 2.0 * (value - min) / (max - min) - 1.0;
-}
-
-/*
- * Given a value from a d-pad (POV hat in USB HID terminology),
- * represent it as 4 buttons, one for each cardinal direction.
- */
-void UnpackDpad(LONG dpad_value, const Gamepad* gamepad,
-                nsTArray<bool>& buttons) {
-  const unsigned kUp = gamepad->numButtons - 4;
-  const unsigned kDown = gamepad->numButtons - 3;
-  const unsigned kLeft = gamepad->numButtons - 2;
-  const unsigned kRight = gamepad->numButtons - 1;
-
-  // Different controllers have different ways of representing
-  // "nothing is pressed", but they're all outside the range of values.
-  if (dpad_value < gamepad->dpadCaps.LogicalMin ||
-      dpad_value > gamepad->dpadCaps.LogicalMax) {
-    // Nothing is pressed.
-    return;
-  }
-
-  // Normalize value to start at 0.
-  int value = dpad_value - gamepad->dpadCaps.LogicalMin;
-
-  // Value will be in the range 0-7. The value represents the
-  // position of the d-pad around a circle, with 0 being straight up,
-  // 2 being right, 4 being straight down, and 6 being left.
-  if ((value < 2 || value > 6) && buttons.Length() > kUp) {
-    buttons[kUp] = true;
-  }
-  if ((value > 2 && value < 6) && buttons.Length() > kDown) {
-    buttons[kDown] = true;
-  }
-  if (value > 4 && buttons.Length() > kLeft) {
-    buttons[kLeft] = true;
-  }
-  if ((value > 0 && value < 4) && buttons.Length() > kRight) {
-    buttons[kRight] = true;
-  }
 }
 
 /*
@@ -465,8 +431,7 @@ bool WindowsGamepadService::ScanForXInputDevices() {
     }
 
     // Not already present, add it.
-    Gamepad gamepad(kStandardGamepadAxes, kStandardGamepadButtons, true,
-                    kXInputGamepad);
+    Gamepad gamepad(kStandardGamepadAxes, kStandardGamepadButtons, kXInputGamepad);
     gamepad.userIndex = i;
     gamepad.state = state;
     gamepad.id = service->AddGamepad(
@@ -587,18 +552,23 @@ void WindowsGamepadService::CheckXInputChanges(Gamepad& gamepad,
 // Used to sort a list of axes by HID usage.
 class HidValueComparator {
  public:
-  bool Equals(const HIDP_VALUE_CAPS& c1, const HIDP_VALUE_CAPS& c2) const {
-    return c1.UsagePage == c2.UsagePage &&
-           c1.Range.UsageMin == c2.Range.UsageMin;
+  bool Equals(const Gamepad::axisValue& c1,
+              const Gamepad::axisValue& c2) const {
+    return c1.caps.UsagePage == c2.caps.UsagePage &&
+           c1.caps.Range.UsageMin == c2.caps.Range.UsageMin;
   }
-  bool LessThan(const HIDP_VALUE_CAPS& c1, const HIDP_VALUE_CAPS& c2) const {
-    if (c1.UsagePage == c2.UsagePage) {
-      return c1.Range.UsageMin < c2.Range.UsageMin;
+  bool LessThan(const Gamepad::axisValue& c1,
+                const Gamepad::axisValue& c2) const {
+    if (c1.caps.UsagePage == c2.caps.UsagePage) {
+      return c1.caps.Range.UsageMin < c2.caps.Range.UsageMin;
     }
-    return c1.UsagePage < c2.UsagePage;
+    return c1.caps.UsagePage < c2.caps.UsagePage;
   }
 };
 
+// GetRawGamepad() processes its raw data from HID and
+// then trying to remapping buttons and axes based on
+// the mapping rules that are defined for different gamepad products.
 bool WindowsGamepadService::GetRawGamepad(HANDLE handle) {
   RefPtr<GamepadPlatformService> service =
       GamepadPlatformService::GetParentService();
@@ -657,7 +627,7 @@ bool WindowsGamepadService::GetRawGamepad(HANDLE handle) {
   wchar_t name[128] = {0};
   size = sizeof(name);
   nsTArray<char> gamepad_name;
-  HANDLE hid_handle = CreateFile(
+  const HANDLE hid_handle = CreateFile(
       devname.Elements(), GENERIC_READ | GENERIC_WRITE,
       FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, 0, NULL);
   if (hid_handle) {
@@ -709,49 +679,48 @@ bool WindowsGamepadService::GetRawGamepad(HANDLE handle) {
 
   // Enumerate value caps, which represent axes and d-pads.
   count = caps.NumberInputValueCaps;
-  nsTArray<HIDP_VALUE_CAPS> valueCaps(count);
-  valueCaps.SetLength(count);
-  if (mHID.mHidP_GetValueCaps(HidP_Input, valueCaps.Elements(), &count,
+  nsTArray<HIDP_VALUE_CAPS> axisCaps(count);
+  axisCaps.SetLength(count);
+  if (mHID.mHidP_GetValueCaps(HidP_Input, axisCaps.Elements(), &count,
                               parsed) != HIDP_STATUS_SUCCESS) {
     return false;
   }
-  nsTArray<HIDP_VALUE_CAPS> axes;
-  // Sort the axes by usagePage and usage to expose a consistent ordering.
-  bool hasDpad;
-  HIDP_VALUE_CAPS dpadCaps;
 
-  HidValueComparator comparator;
-  for (unsigned i = 0; i < count; i++) {
-    if (valueCaps[i].UsagePage == kDesktopUsagePage &&
-        valueCaps[i].Range.UsageMin == kUsageDpad
-        // Don't know how to handle d-pads that return weird values.
-        && valueCaps[i].LogicalMax - valueCaps[i].LogicalMin == 7) {
-      // d-pad gets special handling.
-      // Ostensibly HID devices can expose multiple d-pads, but this
-      // doesn't happen in practice.
-      hasDpad = true;
-      dpadCaps = valueCaps[i];
-      // Expose d-pad as 4 additional buttons.
-      numButtons += 4;
-    } else {
-      axes.InsertElementSorted(valueCaps[i], comparator);
+  size_t numAxes = 0;
+  nsTArray<Gamepad::axisValue> axes(kAxesLengthCap);
+  // We store these value caps and handle the dpad info in GamepadRemapper later.
+  axes.SetLength(kAxesLengthCap);
+
+  // Looking for the exisiting ramapping rule.
+  RefPtr<GamepadRemapper> remapper =
+      GetGamepadRemapper(rdi.hid.dwVendorId, rdi.hid.dwProductId);
+  MOZ_ASSERT(remapper);
+
+  for (size_t i = 0; i < count; i++) {
+    const size_t axisIndex = axisCaps[i].Range.UsageMin - kAxisMinimumUsageNumber;
+    if (axisIndex < kAxesLengthCap && !axes[axisIndex].active) {
+      axes[axisIndex].caps = axisCaps[i];
+      axes[axisIndex].active = true;
+      numAxes = std::max(numAxes, axisIndex + 1);
     }
   }
 
-  uint32_t numAxes = axes.Length();
-
   // Not already present, add it.
-  Gamepad gamepad(numAxes, numButtons, true, kRawInputGamepad);
 
+  remapper->SetAxisCount(numAxes);
+  remapper->SetButtonCount(numButtons);
+  Gamepad gamepad(numAxes, numButtons, kRawInputGamepad);
   gamepad.handle = handle;
 
   for (unsigned i = 0; i < gamepad.numAxes; i++) {
-    gamepad.axes[i].caps = axes[i];
+    gamepad.axes[i] = axes[i];
   }
 
-  gamepad.id = service->AddGamepad(gamepad_id, GamepadMappingType::_empty,
-                                   GamepadHand::_empty, gamepad.numButtons,
-                                   gamepad.numAxes, 0);
+  gamepad.remapper = remapper.forget();
+  gamepad.id =
+      service->AddGamepad(gamepad_id, gamepad.remapper->GetMappingType(),
+                          GamepadHand::_empty, gamepad.remapper->GetButtonCount(),
+                          gamepad.remapper->GetAxisCount(), 0);
   mGamepads.AppendElement(gamepad);
   return true;
 }
@@ -825,21 +794,9 @@ bool WindowsGamepadService::HandleRawInput(HRAWINPUT handle) {
     buttons[usages[i] - 1u] = true;
   }
 
-  if (gamepad->hasDpad) {
-    // Get d-pad position as 4 buttons.
-    ULONG value;
-    if (mHID.mHidP_GetUsageValue(HidP_Input, gamepad->dpadCaps.UsagePage, 0,
-                                 gamepad->dpadCaps.Range.UsageMin, &value,
-                                 parsed, (PCHAR)raw->data.hid.bRawData,
-                                 raw->data.hid.dwSizeHid) ==
-        HIDP_STATUS_SUCCESS) {
-      UnpackDpad(static_cast<LONG>(value), gamepad, buttons);
-    }
-  }
-
   for (unsigned i = 0; i < gamepad->numButtons; i++) {
     if (gamepad->buttons[i] != buttons[i]) {
-      service->NewButtonEvent(gamepad->id, i, buttons[i]);
+      gamepad->remapper->RemapButtonEvent(gamepad->id, i, buttons[i]);
       gamepad->buttons[i] = buttons[i];
     }
   }
@@ -872,7 +829,7 @@ bool WindowsGamepadService::HandleRawInput(HRAWINPUT handle) {
                             gamepad->axes[i].caps.LogicalMax);
     }
     if (gamepad->axes[i].value != new_value) {
-      service->NewAxisMoveEvent(gamepad->id, i, new_value);
+      gamepad->remapper->RemapAxisMoveEvent(gamepad->id, i, new_value);
       gamepad->axes[i].value = new_value;
     }
   }

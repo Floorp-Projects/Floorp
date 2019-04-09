@@ -13,12 +13,16 @@ LOCAL_INCLUDES += [
 UNIFIED_SOURCES = [
     'TelemetryFixture.cpp',
     'TelemetryTestHelpers.cpp',
-    'TestCombinedStacks.cpp',
-    'TestCounters.cpp',
-    'TestEvents.cpp',
-    'TestHistograms.cpp',
-    'TestOrigins.cpp',
-    'TestScalars.cpp'
 ]
+
+if CONFIG['OS_TARGET'] != 'Android':
+    UNIFIED_SOURCES += [
+        'TestCombinedStacks.cpp',
+        'TestCounters.cpp',
+        'TestEvents.cpp',
+        'TestHistograms.cpp',
+        'TestOrigins.cpp',
+        'TestScalars.cpp'
+    ]
 
 FINAL_LIBRARY = 'xul-gtest'
