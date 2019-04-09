@@ -29,7 +29,7 @@ used by adding `regex` to your dependencies in your project's `Cargo.toml`.
 
 ```toml
 [dependencies]
-regex = "0.2"
+regex = "1"
 ```
 
 and this to your crate root:
@@ -287,7 +287,7 @@ regexes.
 The syntax supported in this crate is documented below.
 
 Note that the regular expression parser and abstract syntax are exposed in
-a separate crate, [`regex-syntax`](../regex_syntax/index.html).
+a separate crate, [`regex-syntax`](https://docs.rs/regex-syntax).
 
 ## Matching one character
 
@@ -521,6 +521,9 @@ another matching engine with fixed memory requirements.
 #![cfg_attr(test, deny(warnings))]
 #![cfg_attr(feature = "pattern", feature(pattern))]
 
+#[cfg(not(feature = "use_std"))]
+compile_error!("`use_std` feature is currently required to build this crate");
+
 extern crate aho_corasick;
 extern crate memchr;
 extern crate thread_local;
@@ -539,11 +542,11 @@ pub use re_builder::set_unicode::*;
 #[cfg(feature = "use_std")]
 pub use re_set::unicode::*;
 #[cfg(feature = "use_std")]
-pub use re_trait::Locations;
 #[cfg(feature = "use_std")]
 pub use re_unicode::{
     Regex, Match, Captures,
     CaptureNames, Matches, CaptureMatches, SubCaptureMatches,
+    CaptureLocations, Locations,
     Replacer, ReplacerRef, NoExpand, Split, SplitN,
     escape,
 };
@@ -641,7 +644,6 @@ pub mod bytes {
     pub use re_builder::set_bytes::*;
     pub use re_bytes::*;
     pub use re_set::bytes::*;
-    pub use re_trait::Locations;
 }
 
 mod backtrack;
@@ -664,7 +666,7 @@ mod re_set;
 mod re_trait;
 mod re_unicode;
 mod sparse;
-#[cfg(feature = "unstable")]
+#[cfg(any(regex_runtime_teddy_ssse3, regex_runtime_teddy_avx2))]
 mod vector;
 
 /// The `internal` module exists to support suspicious activity, such as
