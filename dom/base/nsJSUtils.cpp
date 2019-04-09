@@ -216,12 +216,16 @@ nsresult nsJSUtils::ExecutionContext::Compile(
 #endif
 
   MOZ_ASSERT(!mScript);
-  mScript =
-      mScopeChain.length() == 0
-          ? JS::Compile(mCx, aCompileOptions, aSrcBuf)
-          : JS::CompileForNonSyntacticScope(mCx, aCompileOptions, aSrcBuf);
+  bool compiled = true;
+  if (mScopeChain.length() == 0) {
+    compiled = JS::Compile(mCx, aCompileOptions, aSrcBuf, &mScript);
+  } else {
+    compiled = JS::CompileForNonSyntacticScope(mCx, aCompileOptions, aSrcBuf,
+                                               &mScript);
+  }
 
-  if (!mScript) {
+  MOZ_ASSERT_IF(compiled, mScript);
+  if (!compiled) {
     mSkip = true;
     mRv = EvaluationExceptionToNSResult(mCx);
     return mRv;

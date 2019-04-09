@@ -55,9 +55,10 @@ JS_PUBLIC_API void JS::detail::ReportSourceTooLong(JSContext* cx) {
 }
 
 template <typename Unit>
-static JSScript* CompileSourceBuffer(JSContext* cx,
-                                     const ReadOnlyCompileOptions& options,
-                                     SourceText<Unit>& srcBuf) {
+static bool CompileSourceBuffer(JSContext* cx,
+                                const ReadOnlyCompileOptions& options,
+                                SourceText<Unit>& srcBuf,
+                                JS::MutableHandleScript script) {
   ScopeKind scopeKind =
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
@@ -66,113 +67,119 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
   CHECK_THREAD(cx);
 
   frontend::GlobalScriptInfo info(cx, options, scopeKind);
-  return frontend::CompileGlobalScript(info, srcBuf);
+  script.set(frontend::CompileGlobalScript(info, srcBuf));
+  return !!script;
 }
 
-static JSScript* CompileUtf8(JSContext* cx,
-                             const ReadOnlyCompileOptions& options,
-                             const char* bytes, size_t length) {
+static bool CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
+                        const char* bytes, size_t length,
+                        JS::MutableHandleScript script) {
   auto chars = UniqueTwoByteChars(
       UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get());
   if (!chars) {
-    return nullptr;
+    return false;
   }
 
   SourceText<char16_t> source;
   if (!source.init(cx, std::move(chars), length)) {
-    return nullptr;
+    return false;
   }
 
-  return CompileSourceBuffer(cx, options, source);
+  return CompileSourceBuffer(cx, options, source, script);
 }
 
-static JSScript* CompileUtf8DontInflate(JSContext* cx,
-                                        const ReadOnlyCompileOptions& options,
-                                        const char* bytes, size_t length) {
+static bool CompileUtf8DontInflate(JSContext* cx,
+                                   const ReadOnlyCompileOptions& options,
+                                   const char* bytes, size_t length,
+                                   JS::MutableHandleScript script) {
   SourceText<Utf8Unit> source;
   if (!source.init(cx, bytes, length, SourceOwnership::Borrowed)) {
-    return nullptr;
+    return false;
   }
 
-  return CompileSourceBuffer(cx, options, source);
+  return CompileSourceBuffer(cx, options, source, script);
 }
 
-JSScript* JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
-                      SourceText<char16_t>& srcBuf) {
-  return CompileSourceBuffer(cx, options, srcBuf);
+bool JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
+                 SourceText<char16_t>& srcBuf, JS::MutableHandleScript script) {
+  return CompileSourceBuffer(cx, options, srcBuf, script);
 }
 
-JSScript* JS::CompileDontInflate(JSContext* cx,
-                                 const ReadOnlyCompileOptions& options,
-                                 SourceText<Utf8Unit>& srcBuf) {
-  return CompileSourceBuffer(cx, options, srcBuf);
+bool JS::CompileDontInflate(JSContext* cx,
+                            const ReadOnlyCompileOptions& options,
+                            SourceText<Utf8Unit>& srcBuf,
+                            JS::MutableHandleScript script) {
+  return CompileSourceBuffer(cx, options, srcBuf, script);
 }
 
-JSScript* JS::CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
-                          const char* bytes, size_t length) {
-  return ::CompileUtf8(cx, options, bytes, length);
+bool JS::CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
+                     const char* bytes, size_t length,
+                     JS::MutableHandleScript script) {
+  return ::CompileUtf8(cx, options, bytes, length, script);
 }
 
-JSScript* JS::CompileUtf8DontInflate(JSContext* cx,
-                                     const ReadOnlyCompileOptions& options,
-                                     const char* bytes, size_t length) {
-  return ::CompileUtf8DontInflate(cx, options, bytes, length);
+bool JS::CompileUtf8DontInflate(JSContext* cx,
+                                const ReadOnlyCompileOptions& options,
+                                const char* bytes, size_t length,
+                                JS::MutableHandleScript script) {
+  return ::CompileUtf8DontInflate(cx, options, bytes, length, script);
 }
 
-JSScript* JS::CompileUtf8File(JSContext* cx,
-                              const ReadOnlyCompileOptions& options,
-                              FILE* file) {
+bool JS::CompileUtf8File(JSContext* cx, const ReadOnlyCompileOptions& options,
+                         FILE* file, JS::MutableHandleScript script) {
   FileContents buffer(cx);
   if (!ReadCompleteFile(cx, file, buffer)) {
-    return nullptr;
+    return false;
   }
 
   return ::CompileUtf8(cx, options,
                        reinterpret_cast<const char*>(buffer.begin()),
-                       buffer.length());
+                       buffer.length(), script);
 }
 
-JSScript* JS::CompileUtf8FileDontInflate(JSContext* cx,
-                                         const ReadOnlyCompileOptions& options,
-                                         FILE* file) {
+bool JS::CompileUtf8FileDontInflate(JSContext* cx,
+                                    const ReadOnlyCompileOptions& options,
+                                    FILE* file,
+                                    JS::MutableHandleScript script) {
   FileContents buffer(cx);
   if (!ReadCompleteFile(cx, file, buffer)) {
-    return nullptr;
+    return false;
   }
 
   return ::CompileUtf8DontInflate(cx, options,
                                   reinterpret_cast<const char*>(buffer.begin()),
-                                  buffer.length());
+                                  buffer.length(), script);
 }
 
-JSScript* JS::CompileUtf8Path(JSContext* cx,
-                              const ReadOnlyCompileOptions& optionsArg,
-                              const char* filename) {
+bool JS::CompileUtf8Path(JSContext* cx,
+                         const ReadOnlyCompileOptions& optionsArg,
+                         const char* filename, JS::MutableHandleScript script) {
   AutoFile file;
   if (!file.open(cx, filename)) {
-    return nullptr;
+    return false;
   }
 
   CompileOptions options(cx, optionsArg);
   options.setFileAndLine(filename, 1);
-  return CompileUtf8File(cx, options, file.fp());
+  return CompileUtf8File(cx, options, file.fp(), script);
 }
 
-JSScript* JS::CompileForNonSyntacticScope(
-    JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
-    SourceText<char16_t>& srcBuf) {
+bool JS::CompileForNonSyntacticScope(JSContext* cx,
+                                     const ReadOnlyCompileOptions& optionsArg,
+                                     SourceText<char16_t>& srcBuf,
+                                     JS::MutableHandleScript script) {
   CompileOptions options(cx, optionsArg);
   options.setNonSyntacticScope(true);
-  return CompileSourceBuffer(cx, options, srcBuf);
+  return CompileSourceBuffer(cx, options, srcBuf, script);
 }
 
-JSScript* JS::CompileUtf8ForNonSyntacticScope(
+bool JS::CompileUtf8ForNonSyntacticScope(
     JSContext* cx, const ReadOnlyCompileOptions& optionsArg, const char* bytes,
-    size_t length) {
+    size_t length, JS::MutableHandleScript script) {
   CompileOptions options(cx, optionsArg);
   options.setNonSyntacticScope(true);
 
-  return ::CompileUtf8(cx, options, bytes, length);
+  return ::CompileUtf8(cx, options, bytes, length, script);
 }
 
 JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
