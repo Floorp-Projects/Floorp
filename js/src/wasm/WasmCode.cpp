@@ -114,8 +114,7 @@ UniqueCodeBytes CodeSegment::AllocateCodeBytes(uint32_t codeLength) {
     return nullptr;
   }
 
-  static_assert(MaxCodeBytesPerProcess <= (1u << 31),
-                "rounding won't overflow");
+  static_assert(MaxCodeBytesPerProcess <= INT32_MAX, "rounding won't overflow");
   uint32_t roundedCodeLength = RoundupCodeLength(codeLength);
 
   void* p =
