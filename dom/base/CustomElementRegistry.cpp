@@ -53,7 +53,7 @@ class CustomElementUpgradeReaction final : public CustomElementReaction {
     CustomElementRegistry::Upgrade(aElement, mDefinition, aRv);
   }
 
-  RefPtr<CustomElementDefinition> mDefinition;
+  const RefPtr<CustomElementDefinition> mDefinition;
 };
 
 //-----------------------------------------------------
