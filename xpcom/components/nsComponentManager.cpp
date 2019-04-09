@@ -441,6 +441,10 @@ nsresult nsComponentManagerImpl::Init() {
         ProcessSelectorMatches(
             ProcessSelector::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS);
     gProcessMatchTable[size_t(
+        ProcessSelector::ALLOW_IN_RDD_AND_SOCKET_PROCESS)] =
+        ProcessSelectorMatches(
+            ProcessSelector::ALLOW_IN_RDD_AND_SOCKET_PROCESS);
+    gProcessMatchTable[size_t(
         ProcessSelector::ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS)] =
         ProcessSelectorMatches(
             ProcessSelector::ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS);
