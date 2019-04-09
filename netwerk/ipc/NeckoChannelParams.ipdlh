@@ -220,7 +220,6 @@ struct HttpChannelOpenArgs
   uint32_t                    referrerPolicy;
   URIParams?                  apiRedirectTo;
   URIParams?                  topWindowURI;
-  nsIPrincipal                topWindowPrincipal;
   uint32_t                    loadFlags;
   RequestHeaderTuples         requestHeaders;
   nsCString                   requestMethod;
