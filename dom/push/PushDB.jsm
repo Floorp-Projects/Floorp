@@ -1,4 +1,3 @@
-/* jshint moz: true, esnext: true */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,9 +6,8 @@
 
 const {IndexedDBHelper} = ChromeUtils.import("resource://gre/modules/IndexedDBHelper.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyGlobalGetters(this, ["indexedDB"]);
 
-var EXPORTED_SYMBOLS = ["PushDB"];
+const EXPORTED_SYMBOLS = ["PushDB"];
 
 XPCOMUtils.defineLazyGetter(this, "console", () => {
   let {ConsoleAPI} = ChromeUtils.import("resource://gre/modules/Console.jsm");
@@ -33,24 +31,24 @@ function PushDB(dbName, dbVersion, dbStoreName, keyPath, model) {
 this.PushDB.prototype = {
   __proto__: IndexedDBHelper.prototype,
 
-  toPushRecord: function(record) {
+  toPushRecord(record) {
     if (!record) {
-      return;
+      return null;
     }
     return new this._model(record);
   },
 
-  isValidRecord: function(record) {
+  isValidRecord(record) {
     return record && typeof record.scope == "string" &&
            typeof record.originAttributes == "string" &&
            record.quota >= 0 &&
            typeof record[this._keyPath] == "string";
   },
 
-  upgradeSchema: function(aTransaction, aDb, aOldVersion, aNewVersion) {
+  upgradeSchema(aTransaction, aDb, aOldVersion, aNewVersion) {
     if (aOldVersion <= 3) {
-      //XXXnsm We haven't shipped Push during this upgrade, so I'm just going to throw old
-      //registrations away without even informing the app.
+      // XXXnsm We haven't shipped Push during this upgrade, so I'm just going to throw old
+      // registrations away without even informing the app.
       if (aDb.objectStoreNames.contains(this._dbStoreName)) {
         aDb.deleteObjectStore(this._dbStoreName);
       }
@@ -83,7 +81,7 @@ this.PushDB.prototype = {
    *        The record to be added.
    */
 
-  put: function(aRecord) {
+  put(aRecord) {
     console.debug("put()", aRecord);
     if (!this.isValidRecord(aRecord)) {
       return Promise.reject(new TypeError(
@@ -116,7 +114,7 @@ this.PushDB.prototype = {
    * @param aKeyID
    *        The ID of record to be deleted.
    */
-  delete: function(aKeyID) {
+  delete(aKeyID) {
     console.debug("delete()");
 
     return new Promise((resolve, reject) =>
@@ -138,7 +136,7 @@ this.PushDB.prototype = {
 
   // testFn(record) is called with a database record and should return true if
   // that record should be deleted.
-  clearIf: function(testFn) {
+  clearIf(testFn) {
     console.debug("clearIf()");
     return new Promise((resolve, reject) =>
       this.newTxn(
@@ -156,11 +154,11 @@ this.PushDB.prototype = {
                 deleteRequest.onerror = e => {
                   console.error("clearIf: Error removing record",
                     record.keyID, e);
-                }
+                };
               }
               cursor.continue();
             }
-          }
+          };
         },
         resolve,
         reject
@@ -168,7 +166,7 @@ this.PushDB.prototype = {
     );
   },
 
-  getByPushEndpoint: function(aPushEndpoint) {
+  getByPushEndpoint(aPushEndpoint) {
     console.debug("getByPushEndpoint()");
 
     return new Promise((resolve, reject) =>
@@ -191,7 +189,7 @@ this.PushDB.prototype = {
     );
   },
 
-  getByKeyID: function(aKeyID) {
+  getByKeyID(aKeyID) {
     console.debug("getByKeyID()");
 
     return new Promise((resolve, reject) =>
@@ -224,7 +222,7 @@ this.PushDB.prototype = {
    *  `cursor` is an `IDBCursor`.
    * @returns {Promise} Resolves once all records have been processed.
    */
-  forEachOrigin: function(origin, originAttributes, callback) {
+  forEachOrigin(origin, originAttributes, callback) {
     console.debug("forEachOrigin()");
 
     return new Promise((resolve, reject) =>
@@ -255,7 +253,7 @@ this.PushDB.prototype = {
   },
 
   // Perform a unique match against { scope, originAttributes }
-  getByIdentifiers: function(aPageRecord) {
+  getByIdentifiers(aPageRecord) {
     console.debug("getByIdentifiers()", aPageRecord);
     if (!aPageRecord.scope || aPageRecord.originAttributes == undefined) {
       console.error("getByIdentifiers: Scope and originAttributes are required",
@@ -282,7 +280,7 @@ this.PushDB.prototype = {
     );
   },
 
-  _getAllByKey: function(aKeyName, aKeyValue) {
+  _getAllByKey(aKeyName, aKeyValue) {
     return new Promise((resolve, reject) =>
       this.newTxn(
         "readonly",
@@ -307,14 +305,14 @@ this.PushDB.prototype = {
   },
 
   // aOriginAttributes must be a string!
-  getAllByOriginAttributes: function(aOriginAttributes) {
+  getAllByOriginAttributes(aOriginAttributes) {
     if (typeof aOriginAttributes !== "string") {
       return Promise.reject("Expected string!");
     }
     return this._getAllByKey("originAttributes", aOriginAttributes);
   },
 
-  getAllKeyIDs: function() {
+  getAllKeyIDs() {
     console.debug("getAllKeyIDs()");
 
     return new Promise((resolve, reject) =>
@@ -334,7 +332,7 @@ this.PushDB.prototype = {
     );
   },
 
-  _getAllByPushQuota: function(range) {
+  _getAllByPushQuota(range) {
     console.debug("getAllByPushQuota()");
 
     return new Promise((resolve, reject) =>
@@ -359,12 +357,12 @@ this.PushDB.prototype = {
     );
   },
 
-  getAllUnexpired: function() {
+  getAllUnexpired() {
     console.debug("getAllUnexpired()");
     return this._getAllByPushQuota(IDBKeyRange.lowerBound(1));
   },
 
-  getAllExpired: function() {
+  getAllExpired() {
     console.debug("getAllExpired()");
     return this._getAllByPushQuota(IDBKeyRange.only(0));
   },
@@ -379,7 +377,7 @@ this.PushDB.prototype = {
    *  Rejects if the record does not exist, or the function returns an invalid
    *  record.
    */
-  update: function(aKeyID, aUpdateFunc) {
+  update(aKeyID, aUpdateFunc) {
     return new Promise((resolve, reject) =>
       this.newTxn(
         "readwrite",
@@ -420,7 +418,7 @@ this.PushDB.prototype = {
     );
   },
 
-  drop: function() {
+  drop() {
     console.debug("drop()");
 
     return new Promise((resolve, reject) =>

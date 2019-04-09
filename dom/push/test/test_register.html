@@ -24,6 +24,7 @@ http://creativecommons.org/licenses/publicdomain/
 </pre>
 
 <script class="testbody" type="text/javascript">
+  /* import-globals-from ./test_utils.js */
 
   function debug(str) {
   //  console.log(str + "\n");
@@ -40,7 +41,7 @@ http://creativecommons.org/licenses/publicdomain/
       uaid: "c69e2014-9e15-438d-b253-d79cc2df60a8",
       channelID,
       status: 200,
-      pushEndpoint: "https://example.com/endpoint/1"
+      pushEndpoint: "https://example.com/endpoint/1",
     }));
   };
 
@@ -49,7 +50,7 @@ http://creativecommons.org/licenses/publicdomain/
     await setupPrefsAndMockSocket(mockSocket);
     await setPushPermission(true);
 
-    var url = "worker.js" + "?" + (Math.random());
+    var url = "worker.js?" + (Math.random());
     registration = await navigator.serviceWorker.register(url, {scope: "."});
     await waitForActive(registration);
   });
@@ -88,7 +89,7 @@ http://creativecommons.org/licenses/publicdomain/
     mockSocket.serverSendMsg(JSON.stringify({
       messageType: "notification",
       version: "vDummy",
-      channelID: channelID
+      channelID,
     }));
 
     await finishedPromise;

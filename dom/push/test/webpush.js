@@ -12,23 +12,23 @@
  * use PushCrypto directly is easier said than done.)
  */
 
-(function (g) {
-  'use strict';
+(function(g) {
+  "use strict";
 
   var P256DH = {
-    name: 'ECDH',
-    namedCurve: 'P-256'
+    name: "ECDH",
+    namedCurve: "P-256",
   };
   var webCrypto = g.crypto.subtle;
-  var ENCRYPT_INFO = new TextEncoder('utf-8').encode("Content-Encoding: aesgcm128");
-  var NONCE_INFO = new TextEncoder('utf-8').encode("Content-Encoding: nonce");
+  var ENCRYPT_INFO = new TextEncoder("utf-8").encode("Content-Encoding: aesgcm128");
+  var NONCE_INFO = new TextEncoder("utf-8").encode("Content-Encoding: nonce");
 
   function chunkArray(array, size) {
     var start = array.byteOffset || 0;
     array = array.buffer || array;
     var index = 0;
     var result = [];
-    while(index + size <= array.byteLength) {
+    while (index + size <= array.byteLength) {
       result.push(new Uint8Array(array, start + index, size));
       index += size;
     }
@@ -42,21 +42,21 @@
    * Note: these are not efficient, merely expedient.
    */
   var base64url = {
-    _strmap: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_',
-    encode: function(data) {
+    _strmap: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_",
+    encode(data) {
       data = new Uint8Array(data);
       var len = Math.ceil(data.length * 4 / 3);
       return chunkArray(data, 3).map(chunk => [
         chunk[0] >>> 2,
         ((chunk[0] & 0x3) << 4) | (chunk[1] >>> 4),
         ((chunk[1] & 0xf) << 2) | (chunk[2] >>> 6),
-        chunk[2] & 0x3f
-      ].map(v => base64url._strmap[v]).join('')).join('').slice(0, len);
+        chunk[2] & 0x3f,
+      ].map(v => base64url._strmap[v]).join("")).join("").slice(0, len);
     },
-    _lookup: function(s, i) {
+    _lookup(s, i) {
       return base64url._strmap.indexOf(s.charAt(i));
     },
-    decode: function(str) {
+    decode(str) {
       var v = new Uint8Array(Math.floor(str.length * 3 / 4));
       var vi = 0;
       for (var si = 0; si < str.length;) {
@@ -69,15 +69,15 @@
         v[vi++] = y << 6 | z;
       }
       return v;
-    }
+    },
   };
 
   g.base64url = base64url;
 
   /* Coerces data into a Uint8Array */
   function ensureView(data) {
-    if (typeof data === 'string') {
-      return new TextEncoder('utf-8').encode(data);
+    if (typeof data === "string") {
+      return new TextEncoder("utf-8").encode(data);
     }
     if (data instanceof ArrayBuffer) {
       return new Uint8Array(data);
@@ -85,7 +85,7 @@
     if (ArrayBuffer.isView(data)) {
       return new Uint8Array(data.buffer);
     }
-    throw new Error('webpush() needs a string or BufferSource');
+    throw new Error("webpush() needs a string or BufferSource");
   }
 
   function bsConcat(arrays) {
@@ -99,11 +99,11 @@
   }
 
   function hmac(key) {
-    this.keyPromise = webCrypto.importKey('raw', key, { name: 'HMAC', hash: 'SHA-256' },
-                                          false, ['sign']);
+    this.keyPromise = webCrypto.importKey("raw", key, { name: "HMAC", hash: "SHA-256" },
+                                          false, ["sign"]);
   }
   hmac.prototype.hash = function(input) {
-    return this.keyPromise.then(k => webCrypto.sign('HMAC', k, input));
+    return this.keyPromise.then(k => webCrypto.sign("HMAC", k, input));
   };
 
   function hkdf(salt, ikm) {
@@ -117,7 +117,7 @@
       .then(prkh => prkh.hash(input))
       .then(h => {
         if (h.byteLength < len) {
-          throw new Error('Length is too long');
+          throw new Error("Length is too long");
         }
         return h.slice(0, len);
       });
@@ -133,7 +133,7 @@
   }
 
   function encrypt(localKey, remoteShare, salt, data) {
-    return webCrypto.importKey('raw', remoteShare, P256DH, false, ['deriveBits'])
+    return webCrypto.importKey("raw", remoteShare, P256DH, false, ["deriveBits"])
       .then(remoteKey =>
             webCrypto.deriveBits({ name: P256DH.name, public: remoteKey },
                                  localKey, 256))
@@ -142,24 +142,24 @@
         return Promise.all([
           kdf.generate(ENCRYPT_INFO, 16)
             .then(gcmBits =>
-                  webCrypto.importKey('raw', gcmBits, 'AES-GCM', false, ['encrypt'])),
-          kdf.generate(NONCE_INFO, 12)
+                  webCrypto.importKey("raw", gcmBits, "AES-GCM", false, ["encrypt"])),
+          kdf.generate(NONCE_INFO, 12),
         ]);
       })
       .then(([key, nonce]) => {
         if (data.byteLength === 0) {
           // Send an authentication tag for empty messages.
           return webCrypto.encrypt({
-            name: 'AES-GCM',
-            iv: generateNonce(nonce, 0)
+            name: "AES-GCM",
+            iv: generateNonce(nonce, 0),
           }, key, new Uint8Array([0])).then(value => [value]);
         }
         // 4096 is the default size, though we burn 1 for padding
         return Promise.all(chunkArray(data, 4095).map((slice, index) => {
           var padded = bsConcat([new Uint8Array([0]), slice]);
           return webCrypto.encrypt({
-            name: 'AES-GCM',
-            iv: generateNonce(nonce, index)
+            name: "AES-GCM",
+            iv: generateNonce(nonce, index),
           }, key, padded);
         }));
       }).then(bsConcat);
@@ -169,19 +169,19 @@
     data = ensureView(data);
 
     var salt = g.crypto.getRandomValues(new Uint8Array(16));
-    return webCrypto.generateKey(P256DH, false, ['deriveBits'])
+    return webCrypto.generateKey(P256DH, false, ["deriveBits"])
       .then(localKey => {
         return Promise.all([
           encrypt(localKey.privateKey, subscription.getKey("p256dh"), salt, data),
           // 1337 p-256 specific haxx to get the raw value out of the spki value
-          webCrypto.exportKey('raw', localKey.publicKey),
+          webCrypto.exportKey("raw", localKey.publicKey),
         ]);
       }).then(([payload, pubkey]) => {
         return {
           data: base64url.encode(payload),
-          encryption: 'keyid=p256dh;salt=' + base64url.encode(salt),
-          encryption_key: 'keyid=p256dh;dh=' + base64url.encode(pubkey),
-          encoding: 'aesgcm128'
+          encryption: "keyid=p256dh;salt=" + base64url.encode(salt),
+          encryption_key: "keyid=p256dh;dh=" + base64url.encode(pubkey),
+          encoding: "aesgcm128",
         };
       });
   }

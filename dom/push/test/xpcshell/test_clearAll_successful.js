@@ -1,13 +1,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-'use strict';
+"use strict";
 
 const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
 var db;
 var unregisterDefers = {};
-var userAgentID = '4ce480ef-55b2-4f83-924c-dcd35ab978b4';
+var userAgentID = "4ce480ef-55b2-4f83-924c-dcd35ab978b4";
 
 function promiseUnregister(keyID, code) {
   return new Promise(r => unregisterDefers[keyID] = r);
@@ -16,36 +16,36 @@ function promiseUnregister(keyID, code) {
 function run_test() {
   do_get_profile();
   setPrefs({
-    userAgentID: userAgentID,
+    userAgentID,
   });
   run_next_test();
 }
 
 add_task(async function setup() {
   db = PushServiceWebSocket.newPushDB();
-  registerCleanupFunction(_ => db.drop().then(_ => db.close()));
+  registerCleanupFunction(() => db.drop().then(() => db.close()));
 
   // Active subscriptions; should be expired then dropped.
-  await putTestRecord(db, 'active-1', 'https://example.info/some-page', 8);
-  await putTestRecord(db, 'active-2', 'https://example.com/another-page', 16);
+  await putTestRecord(db, "active-1", "https://example.info/some-page", 8);
+  await putTestRecord(db, "active-2", "https://example.com/another-page", 16);
 
   // Expired subscription; should be dropped.
-  await putTestRecord(db, 'expired', 'https://example.net/yet-another-page', 0);
+  await putTestRecord(db, "expired", "https://example.net/yet-another-page", 0);
 
   // A privileged subscription that should not be affected by sanitizing data
   // because its quota is set to `Infinity`.
-  await putTestRecord(db, 'privileged', 'app://chrome/only', Infinity);
+  await putTestRecord(db, "privileged", "app://chrome/only", Infinity);
 
   let handshakeDone;
   let handshakePromise = new Promise(r => handshakeDone = r);
   PushService.init({
-    serverURI: 'wss://push.example.org/',
-    db: db,
+    serverURI: "wss://push.example.org/",
+    db,
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
           this.serverSendMsg(JSON.stringify({
-            messageType: 'hello',
+            messageType: "hello",
             uaid: userAgentID,
             status: 200,
             use_webpush: true,
@@ -54,13 +54,13 @@ add_task(async function setup() {
         },
         onUnregister(request) {
           let resolve = unregisterDefers[request.channelID];
-          equal(typeof resolve, 'function',
-            'Dropped unexpected channel ID ' + request.channelID);
+          equal(typeof resolve, "function",
+            "Dropped unexpected channel ID " + request.channelID);
           delete unregisterDefers[request.channelID];
           equal(request.code, 200,
-            'Expected manual unregister reason');
+            "Expected manual unregister reason");
           this.serverSendMsg(JSON.stringify({
-            messageType: 'unregister',
+            messageType: "unregister",
             channelID: request.channelID,
             status: 200,
           }));
@@ -78,8 +78,8 @@ add_task(async function test_sanitize() {
 
   let promiseCleared = Promise.all([
     // Active subscriptions should be unregistered.
-    promiseUnregister('active-1'),
-    promiseUnregister('active-2'),
+    promiseUnregister("active-1"),
+    promiseUnregister("active-2"),
     promiseObserverNotification(
       PushServiceComponent.subscriptionModifiedTopic, (subject, data) => {
         modifiedScopes.push(data);
@@ -87,7 +87,7 @@ add_task(async function test_sanitize() {
     }),
 
     // Privileged should be recreated.
-    promiseUnregister('privileged'),
+    promiseUnregister("privileged"),
     promiseObserverNotification(
       PushServiceComponent.subscriptionChangeTopic, (subject, data) => {
         changeScopes.push(data);
@@ -96,20 +96,20 @@ add_task(async function test_sanitize() {
   ]);
 
   await PushService.clear({
-    domain: '*',
+    domain: "*",
   });
 
   await promiseCleared;
 
   deepEqual(modifiedScopes.sort(compareAscending), [
-    'app://chrome/only',
-    'https://example.com/another-page',
-    'https://example.info/some-page',
-  ], 'Should modify active subscription scopes');
+    "app://chrome/only",
+    "https://example.com/another-page",
+    "https://example.info/some-page",
+  ], "Should modify active subscription scopes");
 
-  deepEqual(changeScopes, ['app://chrome/only'],
-    'Should fire change notification for privileged scope');
+  deepEqual(changeScopes, ["app://chrome/only"],
+    "Should fire change notification for privileged scope");
 
   let remainingIDs = await getAllKeyIDs(db);
-  deepEqual(remainingIDs, [], 'Should drop all subscriptions');
+  deepEqual(remainingIDs, [], "Should drop all subscriptions");
 });
