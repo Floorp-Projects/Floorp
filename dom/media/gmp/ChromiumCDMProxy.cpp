@@ -22,7 +22,7 @@ ChromiumCDMProxy::ChromiumCDMProxy(dom::MediaKeys* aKeys,
                                    GMPCrashHelper* aCrashHelper,
                                    bool aDistinctiveIdentifierRequired,
                                    bool aPersistentStateRequired,
-                                   nsIEventTarget* aMainThread)
+                                   nsISerialEventTarget* aMainThread)
     : CDMProxy(aKeys, aKeySystem, aDistinctiveIdentifierRequired,
                aPersistentStateRequired, aMainThread),
       mCrashHelper(aCrashHelper),

@@ -28,7 +28,7 @@ MediaDrmCDMProxy::MediaDrmCDMProxy(dom::MediaKeys* aKeys,
                                    const nsAString& aKeySystem,
                                    bool aDistinctiveIdentifierRequired,
                                    bool aPersistentStateRequired,
-                                   nsIEventTarget* aMainThread)
+                                   nsISerialEventTarget* aMainThread)
     : CDMProxy(aKeys, aKeySystem, aDistinctiveIdentifierRequired,
                aPersistentStateRequired, aMainThread),
       mCDM(nullptr),

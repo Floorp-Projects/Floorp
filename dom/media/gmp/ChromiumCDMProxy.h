@@ -23,7 +23,7 @@ class ChromiumCDMProxy : public CDMProxy {
   ChromiumCDMProxy(dom::MediaKeys* aKeys, const nsAString& aKeySystem,
                    GMPCrashHelper* aCrashHelper,
                    bool aAllowDistinctiveIdentifier, bool aAllowPersistentState,
-                   nsIEventTarget* aMainThread);
+                   nsISerialEventTarget* aMainThread);
 
   void Init(PromiseId aPromiseId, const nsAString& aOrigin,
             const nsAString& aTopLevelOrigin,
