@@ -109,22 +109,13 @@ static inline jsbytecode UINT16_HI(uint16_t i) { return jsbytecode(i >> 8); }
 static inline jsbytecode UINT16_LO(uint16_t i) { return jsbytecode(i); }
 
 static MOZ_ALWAYS_INLINE uint16_t GET_UINT16(const jsbytecode* pc) {
-#if MOZ_LITTLE_ENDIAN
   uint16_t result;
-  memcpy(&result, pc + 1, sizeof(result));
+  mozilla::NativeEndian::copyAndSwapFromLittleEndian(&result, pc + 1, 1);
   return result;
-#else
-  return uint16_t((pc[2] << 8) | pc[1]);
-#endif
 }
 
 static MOZ_ALWAYS_INLINE void SET_UINT16(jsbytecode* pc, uint16_t i) {
-#if MOZ_LITTLE_ENDIAN
-  memcpy(pc + 1, &i, sizeof(i));
-#else
-  pc[1] = UINT16_LO(i);
-  pc[2] = UINT16_HI(i);
-#endif
+  mozilla::NativeEndian::copyAndSwapToLittleEndian(pc + 1, &i, 1);
 }
 
 static const unsigned UINT16_LIMIT = 1 << 16;
@@ -142,7 +133,7 @@ static MOZ_ALWAYS_INLINE uint32_t GET_UINT24(const jsbytecode* pc) {
   memcpy(&result, pc, 4);
   return result >> 8;
 #else
-  return unsigned((pc[3] << 16) | (pc[2] << 8) | pc[1]);
+  return uint32_t((pc[3] << 16) | (pc[2] << 8) | pc[1]);
 #endif
 }
 
@@ -163,25 +154,13 @@ static MOZ_ALWAYS_INLINE int8_t GET_INT8(const jsbytecode* pc) {
 }
 
 static MOZ_ALWAYS_INLINE uint32_t GET_UINT32(const jsbytecode* pc) {
-#if MOZ_LITTLE_ENDIAN
   uint32_t result;
-  memcpy(&result, pc + 1, sizeof(result));
+  mozilla::NativeEndian::copyAndSwapFromLittleEndian(&result, pc + 1, 1);
   return result;
-#else
-  return (uint32_t(pc[4]) << 24) | (uint32_t(pc[3]) << 16) |
-         (uint32_t(pc[2]) << 8) | uint32_t(pc[1]);
-#endif
 }
 
 static MOZ_ALWAYS_INLINE void SET_UINT32(jsbytecode* pc, uint32_t u) {
-#if MOZ_LITTLE_ENDIAN
-  memcpy(pc + 1, &u, sizeof(u));
-#else
-  pc[1] = jsbytecode(u);
-  pc[2] = jsbytecode(u >> 8);
-  pc[3] = jsbytecode(u >> 16);
-  pc[4] = jsbytecode(u >> 24);
-#endif
+  mozilla::NativeEndian::copyAndSwapToLittleEndian(pc + 1, &u, 1);
 }
 
 static MOZ_ALWAYS_INLINE int32_t GET_INT32(const jsbytecode* pc) {
