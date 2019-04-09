@@ -32,13 +32,11 @@ static const char SandboxPolicyUtility[] = R"SANDBOX_LITERAL(
 
   (if (defined? 'file-map-executable)
     (allow file-map-executable file-read*
-      (subpath "/System/Library/PrivateFrameworks")
-      (subpath "/System/Library/Frameworks")
+      (subpath "/System/Library")
       (subpath "/usr/lib")
       (subpath app-path))
     (allow file-read*
-      (subpath "/System/Library/PrivateFrameworks")
-      (subpath "/System/Library/Frameworks")
+      (subpath "/System/Library")
       (subpath "/usr/lib")
       (subpath app-path)))
 
@@ -50,7 +48,6 @@ static const char SandboxPolicyUtility[] = R"SANDBOX_LITERAL(
   (allow file-read*
     (literal "/dev/random")
     (literal "/dev/urandom")
-    (literal "/System/Library/CoreServices/SystemVersion.plist")
     (subpath "/usr/share/icu"))
 
   (allow mach-lookup
