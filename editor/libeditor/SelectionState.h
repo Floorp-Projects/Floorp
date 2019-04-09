@@ -34,6 +34,14 @@ struct RangeItem final {
 
  public:
   void StoreRange(nsRange* aRange);
+  void StoreRange(const EditorRawDOMPoint& aStartPoint, const EditorRawDOMPoint& aEndPoint) {
+    MOZ_ASSERT(aStartPoint.IsSet());
+    MOZ_ASSERT(aEndPoint.IsSet());
+    mStartContainer = aStartPoint.GetContainer();
+    mStartOffset = aStartPoint.Offset();
+    mEndContainer = aEndPoint.GetContainer();
+    mEndOffset = aEndPoint.Offset();
+  }
   already_AddRefed<nsRange> GetRange();
 
   NS_INLINE_DECL_MAIN_THREAD_ONLY_CYCLE_COLLECTING_NATIVE_REFCOUNTING(RangeItem)

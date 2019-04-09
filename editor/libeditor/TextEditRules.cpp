@@ -829,19 +829,15 @@ nsresult TextEditRules::WillInsertText(EditSubAction aEditSubAction,
   }
 
   if (aEditSubAction == EditSubAction::eInsertTextComingFromIME) {
-    // Find better insertion point to insert text.
-    EditorRawDOMPoint betterInsertionPoint =
-        TextEditorRef().FindBetterInsertionPoint(atStartOfSelection);
-    // If there is one or more IME selections, its minimum offset should be
-    // the insertion point.
-    int32_t IMESelectionOffset = TextEditorRef().GetIMESelectionStartOffsetIn(
-        betterInsertionPoint.GetContainer());
-    if (IMESelectionOffset >= 0) {
-      betterInsertionPoint.Set(betterInsertionPoint.GetContainer(),
-                               IMESelectionOffset);
+    EditorRawDOMPoint compositionStartPoint =
+        TextEditorRef().GetCompositionStartPoint();
+    if (!compositionStartPoint.IsSet()) {
+      compositionStartPoint =
+          TextEditorRef().FindBetterInsertionPoint(atStartOfSelection);
     }
-    rv = MOZ_KnownLive(TextEditorRef())
-             .InsertTextWithTransaction(*doc, *outString, betterInsertionPoint);
+    rv =
+        MOZ_KnownLive(TextEditorRef())
+            .InsertTextWithTransaction(*doc, *outString, compositionStartPoint);
     if (NS_WARN_IF(!CanHandleEditAction())) {
       return NS_ERROR_EDITOR_DESTROYED;
     }

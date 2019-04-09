@@ -3895,6 +3895,16 @@ void EditorBase::EndUpdateViewBatch() {
 
 TextComposition* EditorBase::GetComposition() const { return mComposition; }
 
+EditorRawDOMPoint EditorBase::GetCompositionStartPoint() const {
+  return mComposition ? EditorRawDOMPoint(mComposition->GetStartRef())
+                      : EditorRawDOMPoint();
+}
+
+EditorRawDOMPoint EditorBase::GetCompositionEndPoint() const {
+  return mComposition ? EditorRawDOMPoint(mComposition->GetEndRef())
+                      : EditorRawDOMPoint();
+}
+
 bool EditorBase::IsIMEComposing() const {
   return mComposition && mComposition->IsComposing();
 }
@@ -4803,43 +4813,6 @@ void EditorBase::OnFocus(EventTarget* aFocusEventTarget) {
     mInlineSpellChecker->UpdateCurrentDictionary();
     mSpellCheckerDictionaryUpdated = true;
   }
-}
-
-int32_t EditorBase::GetIMESelectionStartOffsetIn(nsINode* aTextNode) {
-  MOZ_ASSERT(aTextNode, "aTextNode must not be nullptr");
-
-  nsISelectionController* selectionController = GetSelectionController();
-  if (NS_WARN_IF(!selectionController)) {
-    return -1;
-  }
-
-  uint32_t minOffset = UINT32_MAX;
-  static const SelectionType kIMESelectionTypes[] = {
-      SelectionType::eIMERawClause, SelectionType::eIMESelectedRawClause,
-      SelectionType::eIMEConvertedClause, SelectionType::eIMESelectedClause};
-  for (auto selectionType : kIMESelectionTypes) {
-    RefPtr<Selection> selection = GetSelection(selectionType);
-    if (!selection) {
-      continue;
-    }
-    for (uint32_t i = 0; i < selection->RangeCount(); i++) {
-      RefPtr<nsRange> range = selection->GetRangeAt(i);
-      if (NS_WARN_IF(!range)) {
-        continue;
-      }
-      if (NS_WARN_IF(range->GetStartContainer() != aTextNode)) {
-        // ignore the start offset...
-      } else {
-        minOffset = std::min(minOffset, range->StartOffset());
-      }
-      if (NS_WARN_IF(range->GetEndContainer() != aTextNode)) {
-        // ignore the end offset...
-      } else {
-        minOffset = std::min(minOffset, range->EndOffset());
-      }
-    }
-  }
-  return minOffset < INT32_MAX ? minOffset : -1;
 }
 
 void EditorBase::HideCaret(bool aHide) {

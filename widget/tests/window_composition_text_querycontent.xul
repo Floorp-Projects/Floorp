@@ -4771,6 +4771,33 @@ function runBug1375825Test()
   is(ret.text, "h", "runBug1375825Test #2 (7, 1), \"" + contenteditable.innerHTML + "\": should have queried a rect for 'h'");
 }
 
+function runBug1530649Test()
+{
+  // Vietnamese IME on macOS commits composition with typing space key.
+  // Then, typing new word shouldn't trim the trailing whitespace.
+  contenteditable.focus();
+  contenteditable.innerHTML = "";
+  synthesizeCompositionChange(
+    {composition: {string: "abc", clauses: [{length: 3, attr: COMPOSITION_ATTR_RAW_CLAUSE}]},
+     caret: {start: 3, length: 0}});
+  synthesizeComposition({type: "compositioncommit", data: "abc ", key: " "});
+
+  is(contenteditable.innerHTML, "abc <br>",
+     "runBug1530649Test: The trailing space shouldn't be removed");
+
+  synthesizeCompositionChange(
+    {composition: {string: "d", clauses: [{length: 1, attr: COMPOSITION_ATTR_RAW_CLAUSE}]},
+     caret: {start: 1, length: 0}});
+
+  is(contenteditable.innerHTML, "abc d<br>",
+     "runBug1530649Test: The new composition string shouldn't remove the last space");
+
+  synthesizeComposition({type: "compositioncommitasis", key: "KEY_Enter"});
+
+  is(contenteditable.innerHTML, "abc d<br>",
+     "runBug1530649Test: Committing the new composition string shouldn't remove the last space");
+}
+
 function runCSSTransformTest()
 {
   textarea.focus();
@@ -8392,6 +8419,7 @@ function* testBody()
   runCSSTransformTest();
   runBug722639Test();
   runBug1375825Test();
+  runBug1530649Test();
   runForceCommitTest();
   runNestedSettingValue();
   runBug811755Test();
