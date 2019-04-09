@@ -24,6 +24,12 @@ permalink: /changelog/
 * **browser-toolbar**
    * Adds `browserToolbarProgressBarGravity` attr with options `top` and `bottom` (default).
    * Adds the ability to long click the urlView
+   
+* **service-glean**
+   * ⚠️ **This is a breaking API change**: The technically public, but not
+     intended for public use, part of the glean API has been renamed from
+     `mozilla.components.service.glean.metrics` to
+     `mozilla.components.service.glean.private`.
 
 # 0.49.0
 
