@@ -29,10 +29,11 @@ ChromiumCDMProxy::ChromiumCDMProxy(dom::MediaKeys* aKeys,
       mCDMMutex("ChromiumCDMProxy"),
       mGMPThread(GetGMPAbstractThread()) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_COUNT_CTOR(ChromiumCDMProxy);
 }
 
-ChromiumCDMProxy::~ChromiumCDMProxy() { MOZ_COUNT_DTOR(ChromiumCDMProxy); }
+ChromiumCDMProxy::~ChromiumCDMProxy() {
+  EME_LOG("ChromiumCDMProxy::~ChromiumCDMProxy(this=%p)", this);
+}
 
 void ChromiumCDMProxy::Init(PromiseId aPromiseId, const nsAString& aOrigin,
                             const nsAString& aTopLevelOrigin,
@@ -305,7 +306,7 @@ void ChromiumCDMProxy::RemoveSession(const nsAString& aSessionId,
 
 void ChromiumCDMProxy::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
-  EME_LOG("ChromiumCDMProxy::Shutdown(this=%p)", this);
+  EME_LOG("ChromiumCDMProxy::Shutdown(this=%p) mCDM=%p", this, mCDM.get());
   mKeys.Clear();
   RefPtr<gmp::ChromiumCDMParent> cdm;
   {
