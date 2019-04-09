@@ -68,11 +68,8 @@ for (const [key, val] of Object.entries(expectedValuesENUS)) {
 }
 
 const invalidHourCycleValues = [
-  "h5",
-  "h0",
   "h28",
   "f28",
-  "23",
 ];
 
 for (const key of invalidHourCycleValues) {

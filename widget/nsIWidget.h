@@ -1346,6 +1346,26 @@ class nsIWidget : public nsISupports {
   virtual LayoutDeviceIntPoint WidgetToScreenOffset() = 0;
 
   /**
+   * The same as WidgetToScreenOffset(), except in the case of
+   * PuppetWidget where this method omits the chrome offset.
+   */
+  virtual LayoutDeviceIntPoint TopLevelWidgetToScreenOffset() {
+    return WidgetToScreenOffset();
+  }
+
+  /**
+   * For a PuppetWidget, returns the transform from the coordinate
+   * space of the PuppetWidget to the coordinate space of the
+   * top-level native widget.
+   *
+   * Identity transform in other cases.
+   */
+  virtual mozilla::LayoutDeviceToLayoutDeviceMatrix4x4
+  WidgetToTopLevelWidgetTransform() {
+    return mozilla::LayoutDeviceToLayoutDeviceMatrix4x4();
+  }
+
+  /**
    * Given the specified client size, return the corresponding window size,
    * which includes the area for the borders and titlebar. This method
    * should work even when the window is not yet visible.

@@ -34,9 +34,9 @@ var badLocales =
 for (var locale of badLocales)
   checkInvalidLocale(locale);
 
-// Fully-privateuse locales are okay.
+// Fully-privateuse locales are rejected.
 for (var locale of badLocales)
-  new Intl.NumberFormat("x-" + locale).format(5);
+  assertThrowsInstanceOf(() => new Intl.NumberFormat("x-" + locale), RangeError);
 
 // Locales with trailing privateuse also okay.
 for (var locale of badLocales)

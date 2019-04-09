@@ -585,8 +585,9 @@ void ICStub::updateCode(JitCode* code) {
 
 /* static */
 void ICStub::trace(JSTracer* trc) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   checkTraceMagic();
-
+#endif
   // Fallback stubs use runtime-wide trampoline code we don't need to trace.
   if (!usesTrampolineCode()) {
     JitCode* stubJitCode = jitCode();
@@ -990,7 +991,9 @@ void ICFallbackStub::unlinkStub(Zone* zone, ICStub* prev, ICStub* stub) {
     stub->toMonitoredStub()->resetFirstMonitorStub(monitorFallback);
   }
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   stub->checkTraceMagic();
+#endif
 #ifdef DEBUG
   // Poison stub code to ensure we don't call this stub again. However, if
   // this stub can make calls, a pointer to it may be stored in a stub frame

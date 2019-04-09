@@ -62,9 +62,6 @@ function updateLangTagMappings(tag) {
       case "sgn":
         // sgn-BR -> bzs
         if (tag.region === "BR" &&
-            tag.extlang1 === undefined &&
-            tag.extlang2 === undefined &&
-            tag.extlang3 === undefined &&
             tag.script === undefined &&
             tag.variants.length === 0 &&
             tag.extensions.length === 0 &&
@@ -75,9 +72,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-CO -> csn
         else if (tag.region === "CO" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -88,9 +82,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-DE -> gsg
         else if (tag.region === "DE" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -101,9 +92,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-DK -> dsl
         else if (tag.region === "DK" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -114,9 +102,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-ES -> ssp
         else if (tag.region === "ES" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -127,9 +112,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-FR -> fsl
         else if (tag.region === "FR" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -140,9 +122,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-GB -> bfi
         else if (tag.region === "GB" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -153,9 +132,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-GR -> gss
         else if (tag.region === "GR" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -166,9 +142,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-IE -> isg
         else if (tag.region === "IE" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -179,9 +152,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-IT -> ise
         else if (tag.region === "IT" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -192,9 +162,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-JP -> jsl
         else if (tag.region === "JP" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -205,9 +172,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-MX -> mfs
         else if (tag.region === "MX" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -218,9 +182,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-NI -> ncs
         else if (tag.region === "NI" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -231,9 +192,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-NL -> dse
         else if (tag.region === "NL" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -244,9 +202,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-NO -> nsl
         else if (tag.region === "NO" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -257,9 +212,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-PT -> psr
         else if (tag.region === "PT" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -270,9 +222,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-SE -> swl
         else if (tag.region === "SE" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -283,9 +232,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-US -> ase
         else if (tag.region === "US" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -296,9 +242,6 @@ function updateLangTagMappings(tag) {
         }
         // sgn-ZA -> sfs
         else if (tag.region === "ZA" &&
-                 tag.extlang1 === undefined &&
-                 tag.extlang2 === undefined &&
-                 tag.extlang3 === undefined &&
                  tag.script === undefined &&
                  tag.variants.length === 0 &&
                  tag.extensions.length === 0 &&
@@ -318,29 +261,8 @@ function updateLangTagMappings(tag) {
 var grandfatheredMappings = {
     "art-lojban": "jbo",
     "cel-gaulish": "cel-gaulish",
-    "en-gb-oed": "en-GB-oxendict",
-    "i-ami": "ami",
-    "i-bnn": "bnn",
-    "i-default": "i-default",
-    "i-enochian": "i-enochian",
-    "i-hak": "hak",
-    "i-klingon": "tlh",
-    "i-lux": "lb",
-    "i-mingo": "i-mingo",
-    "i-navajo": "nv",
-    "i-pwn": "pwn",
-    "i-tao": "tao",
-    "i-tay": "tay",
-    "i-tsu": "tsu",
-    "no-bok": "nb",
-    "no-nyn": "nn",
-    "sgn-be-fr": "sfb",
-    "sgn-be-nl": "vgt",
-    "sgn-ch-de": "sgg",
     "zh-guoyu": "cmn",
     "zh-hakka": "hak",
-    "zh-min": "zh-min",
-    "zh-min-nan": "nan",
     "zh-xiang": "hsn",
 };
 
@@ -438,248 +360,4 @@ var regionMappings = {
     "TP": "TL",
     "YD": "YE",
     "ZR": "CD",
-};
-
-// Mappings from extlang subtags to preferred values.
-// All current deprecated extlang subtags have the form `<prefix>-<extlang>`
-// and their preferred value is exactly equal to `<extlang>`. So each key in
-// extlangMappings acts both as the extlang subtag and its preferred value.
-// Derived from IANA Language Subtag Registry, file date 2019-02-20.
-// https://www.iana.org/assignments/language-subtag-registry
-var extlangMappings = {
-    "aao": "ar",
-    "abh": "ar",
-    "abv": "ar",
-    "acm": "ar",
-    "acq": "ar",
-    "acw": "ar",
-    "acx": "ar",
-    "acy": "ar",
-    "adf": "ar",
-    "ads": "sgn",
-    "aeb": "ar",
-    "aec": "ar",
-    "aed": "sgn",
-    "aen": "sgn",
-    "afb": "ar",
-    "afg": "sgn",
-    "ajp": "ar",
-    "apc": "ar",
-    "apd": "ar",
-    "arb": "ar",
-    "arq": "ar",
-    "ars": "ar",
-    "ary": "ar",
-    "arz": "ar",
-    "ase": "sgn",
-    "asf": "sgn",
-    "asp": "sgn",
-    "asq": "sgn",
-    "asw": "sgn",
-    "auz": "ar",
-    "avl": "ar",
-    "ayh": "ar",
-    "ayl": "ar",
-    "ayn": "ar",
-    "ayp": "ar",
-    "bbz": "ar",
-    "bfi": "sgn",
-    "bfk": "sgn",
-    "bjn": "ms",
-    "bog": "sgn",
-    "bqn": "sgn",
-    "bqy": "sgn",
-    "btj": "ms",
-    "bve": "ms",
-    "bvl": "sgn",
-    "bvu": "ms",
-    "bzs": "sgn",
-    "cdo": "zh",
-    "cds": "sgn",
-    "cjy": "zh",
-    "cmn": "zh",
-    "coa": "ms",
-    "cpx": "zh",
-    "csc": "sgn",
-    "csd": "sgn",
-    "cse": "sgn",
-    "csf": "sgn",
-    "csg": "sgn",
-    "csl": "sgn",
-    "csn": "sgn",
-    "csq": "sgn",
-    "csr": "sgn",
-    "czh": "zh",
-    "czo": "zh",
-    "doq": "sgn",
-    "dse": "sgn",
-    "dsl": "sgn",
-    "dup": "ms",
-    "ecs": "sgn",
-    "esl": "sgn",
-    "esn": "sgn",
-    "eso": "sgn",
-    "eth": "sgn",
-    "fcs": "sgn",
-    "fse": "sgn",
-    "fsl": "sgn",
-    "fss": "sgn",
-    "gan": "zh",
-    "gds": "sgn",
-    "gom": "kok",
-    "gse": "sgn",
-    "gsg": "sgn",
-    "gsm": "sgn",
-    "gss": "sgn",
-    "gus": "sgn",
-    "hab": "sgn",
-    "haf": "sgn",
-    "hak": "zh",
-    "hds": "sgn",
-    "hji": "ms",
-    "hks": "sgn",
-    "hos": "sgn",
-    "hps": "sgn",
-    "hsh": "sgn",
-    "hsl": "sgn",
-    "hsn": "zh",
-    "icl": "sgn",
-    "iks": "sgn",
-    "ils": "sgn",
-    "inl": "sgn",
-    "ins": "sgn",
-    "ise": "sgn",
-    "isg": "sgn",
-    "isr": "sgn",
-    "jak": "ms",
-    "jax": "ms",
-    "jcs": "sgn",
-    "jhs": "sgn",
-    "jls": "sgn",
-    "jos": "sgn",
-    "jsl": "sgn",
-    "jus": "sgn",
-    "kgi": "sgn",
-    "knn": "kok",
-    "kvb": "ms",
-    "kvk": "sgn",
-    "kvr": "ms",
-    "kxd": "ms",
-    "lbs": "sgn",
-    "lce": "ms",
-    "lcf": "ms",
-    "liw": "ms",
-    "lls": "sgn",
-    "lsg": "sgn",
-    "lsl": "sgn",
-    "lso": "sgn",
-    "lsp": "sgn",
-    "lst": "sgn",
-    "lsy": "sgn",
-    "ltg": "lv",
-    "lvs": "lv",
-    "lws": "sgn",
-    "lzh": "zh",
-    "max": "ms",
-    "mdl": "sgn",
-    "meo": "ms",
-    "mfa": "ms",
-    "mfb": "ms",
-    "mfs": "sgn",
-    "min": "ms",
-    "mnp": "zh",
-    "mqg": "ms",
-    "mre": "sgn",
-    "msd": "sgn",
-    "msi": "ms",
-    "msr": "sgn",
-    "mui": "ms",
-    "mzc": "sgn",
-    "mzg": "sgn",
-    "mzy": "sgn",
-    "nan": "zh",
-    "nbs": "sgn",
-    "ncs": "sgn",
-    "nsi": "sgn",
-    "nsl": "sgn",
-    "nsp": "sgn",
-    "nsr": "sgn",
-    "nzs": "sgn",
-    "okl": "sgn",
-    "orn": "ms",
-    "ors": "ms",
-    "pel": "ms",
-    "pga": "ar",
-    "pgz": "sgn",
-    "pks": "sgn",
-    "prl": "sgn",
-    "prz": "sgn",
-    "psc": "sgn",
-    "psd": "sgn",
-    "pse": "ms",
-    "psg": "sgn",
-    "psl": "sgn",
-    "pso": "sgn",
-    "psp": "sgn",
-    "psr": "sgn",
-    "pys": "sgn",
-    "rms": "sgn",
-    "rsi": "sgn",
-    "rsl": "sgn",
-    "rsm": "sgn",
-    "sdl": "sgn",
-    "sfb": "sgn",
-    "sfs": "sgn",
-    "sgg": "sgn",
-    "sgx": "sgn",
-    "shu": "ar",
-    "slf": "sgn",
-    "sls": "sgn",
-    "sqk": "sgn",
-    "sqs": "sgn",
-    "ssh": "ar",
-    "ssp": "sgn",
-    "ssr": "sgn",
-    "svk": "sgn",
-    "swc": "sw",
-    "swh": "sw",
-    "swl": "sgn",
-    "syy": "sgn",
-    "szs": "sgn",
-    "tmw": "ms",
-    "tse": "sgn",
-    "tsm": "sgn",
-    "tsq": "sgn",
-    "tss": "sgn",
-    "tsy": "sgn",
-    "tza": "sgn",
-    "ugn": "sgn",
-    "ugy": "sgn",
-    "ukl": "sgn",
-    "uks": "sgn",
-    "urk": "ms",
-    "uzn": "uz",
-    "uzs": "uz",
-    "vgt": "sgn",
-    "vkk": "ms",
-    "vkt": "ms",
-    "vsi": "sgn",
-    "vsl": "sgn",
-    "vsv": "sgn",
-    "wbs": "sgn",
-    "wuu": "zh",
-    "xki": "sgn",
-    "xml": "sgn",
-    "xmm": "ms",
-    "xms": "sgn",
-    "yds": "sgn",
-    "ygs": "sgn",
-    "yhs": "sgn",
-    "ysl": "sgn",
-    "yue": "zh",
-    "zib": "sgn",
-    "zlm": "ms",
-    "zmi": "ms",
-    "zsl": "sgn",
-    "zsm": "ms",
 };
