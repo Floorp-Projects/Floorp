@@ -26,6 +26,7 @@
 #include "mozilla/dom/PBackgroundLSSnapshotParent.h"
 #include "mozilla/dom/StorageDBUpdater.h"
 #include "mozilla/dom/StorageUtils.h"
+#include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/dom/quota/OriginScope.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/QuotaManager.h"
@@ -1853,7 +1854,9 @@ class PreparedDatastore {
  * Actor class declarations
  ******************************************************************************/
 
-class Database final : public PBackgroundLSDatabaseParent {
+class Database final
+    : public PBackgroundLSDatabaseParent,
+      public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
   RefPtr<Datastore> mDatastore;
   Snapshot* mSnapshot;
   const PrincipalInfo mPrincipalInfo;
@@ -2207,7 +2210,10 @@ class LSRequestBase : public DatastoreOperationBase,
   mozilla::ipc::IPCResult RecvFinish() final;
 };
 
-class PrepareDatastoreOp : public LSRequestBase, public OpenDirectoryListener {
+class PrepareDatastoreOp
+    : public LSRequestBase,
+      public OpenDirectoryListener,
+      public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
   class LoadDataOp;
 
   enum class NestedState {
@@ -2726,7 +2732,7 @@ class QuotaClient::MatchFunction final : public mozIStorageFunction {
 bool gLocalStorageInitialized = false;
 #endif
 
-typedef nsTArray<PrepareDatastoreOp*> PrepareDatastoreOpArray;
+typedef nsTArray<CheckedUnsafePtr<PrepareDatastoreOp>> PrepareDatastoreOpArray;
 
 StaticAutoPtr<PrepareDatastoreOpArray> gPrepareDatastoreOps;
 
@@ -2741,7 +2747,7 @@ typedef nsClassHashtable<nsUint64HashKey, PreparedDatastore>
 
 StaticAutoPtr<PreparedDatastoreHashtable> gPreparedDatastores;
 
-typedef nsTArray<Database*> LiveDatabaseArray;
+typedef nsTArray<CheckedUnsafePtr<Database>> LiveDatabaseArray;
 
 StaticAutoPtr<LiveDatabaseArray> gLiveDatabases;
 
