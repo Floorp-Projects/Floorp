@@ -16,7 +16,7 @@ ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
 
 
-var EXPORTED_SYMBOLS = ["PushRecord"];
+const EXPORTED_SYMBOLS = ["PushRecord"];
 
 const prefs = Services.prefs.getBranch("dom.push.");
 
@@ -147,7 +147,7 @@ PushRecord.prototype = {
       Ci.nsINavHistoryService.TRANSITION_TYPED,
       Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
       Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT,
-      Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY
+      Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY,
     ].join(",");
 
     let db =  await PlacesUtils.promiseDBConnection();
@@ -282,7 +282,6 @@ Object.defineProperties(PushRecord.prototype, {
         let uri = Services.io.newURI(this.scope);
         // Allow tests to omit origin attributes.
         let originSuffix = this.originAttributes || "";
-        let originAttributes =
         principal = Services.scriptSecurityManager.createCodebasePrincipal(uri,
           ChromeUtils.createOriginAttributesFromOrigin(originSuffix));
         principals.set(this, principal);

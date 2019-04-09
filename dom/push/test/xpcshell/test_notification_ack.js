@@ -1,11 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-'use strict';
+"use strict";
 
 const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
-var userAgentID = '5ab1d1df-7a3d-4024-a469-b9e1bb399fad';
+var userAgentID = "5ab1d1df-7a3d-4024-a469-b9e1bb399fad";
 
 function run_test() {
   do_get_profile();
@@ -15,28 +15,28 @@ function run_test() {
 
 add_task(async function test_notification_ack() {
   let db = PushServiceWebSocket.newPushDB();
-  registerCleanupFunction(() => {return db.drop().then(_ => db.close());});
+  registerCleanupFunction(() => { return db.drop().then(_ => db.close()); });
   let records = [{
-    channelID: '21668e05-6da8-42c9-b8ab-9cc3f4d5630c',
-    pushEndpoint: 'https://example.com/update/1',
-    scope: 'https://example.org/1',
-    originAttributes: '',
+    channelID: "21668e05-6da8-42c9-b8ab-9cc3f4d5630c",
+    pushEndpoint: "https://example.com/update/1",
+    scope: "https://example.org/1",
+    originAttributes: "",
     version: 1,
     quota: Infinity,
     systemRecord: true,
   }, {
-    channelID: '9a5ff87f-47c9-4215-b2b8-0bdd38b4b305',
-    pushEndpoint: 'https://example.com/update/2',
-    scope: 'https://example.org/2',
-    originAttributes: '',
+    channelID: "9a5ff87f-47c9-4215-b2b8-0bdd38b4b305",
+    pushEndpoint: "https://example.com/update/2",
+    scope: "https://example.org/2",
+    originAttributes: "",
     version: 2,
     quota: Infinity,
     systemRecord: true,
   }, {
-    channelID: '5477bfda-22db-45d4-9614-fee369630260',
-    pushEndpoint: 'https://example.com/update/3',
-    scope: 'https://example.org/3',
-    originAttributes: '',
+    channelID: "5477bfda-22db-45d4-9614-fee369630260",
+    pushEndpoint: "https://example.com/update/3",
+    scope: "https://example.org/3",
+    originAttributes: "",
     version: 3,
     quota: Infinity,
     systemRecord: true,
@@ -59,65 +59,65 @@ add_task(async function test_notification_ack() {
       return new MockWebSocket(uri, {
         onHello(request) {
           equal(request.uaid, userAgentID,
-            'Should send matching device IDs in handshake');
+            "Should send matching device IDs in handshake");
           this.serverSendMsg(JSON.stringify({
-            messageType: 'hello',
+            messageType: "hello",
             uaid: userAgentID,
-            status: 200
+            status: 200,
           }));
           this.serverSendMsg(JSON.stringify({
-            messageType: 'notification',
+            messageType: "notification",
             updates: [{
-              channelID: '21668e05-6da8-42c9-b8ab-9cc3f4d5630c',
-              version: 2
-            }]
+              channelID: "21668e05-6da8-42c9-b8ab-9cc3f4d5630c",
+              version: 2,
+            }],
           }));
         },
         onACK(request) {
-          equal(request.messageType, 'ack', 'Should send acknowledgements');
+          equal(request.messageType, "ack", "Should send acknowledgements");
           let updates = request.updates;
           switch (++acks) {
           case 1:
             deepEqual([{
-              channelID: '21668e05-6da8-42c9-b8ab-9cc3f4d5630c',
+              channelID: "21668e05-6da8-42c9-b8ab-9cc3f4d5630c",
               version: 2,
               code: 100,
-            }], updates, 'Wrong updates for acknowledgement 1');
+            }], updates, "Wrong updates for acknowledgement 1");
             this.serverSendMsg(JSON.stringify({
-              messageType: 'notification',
+              messageType: "notification",
               updates: [{
-                channelID: '9a5ff87f-47c9-4215-b2b8-0bdd38b4b305',
-                version: 4
+                channelID: "9a5ff87f-47c9-4215-b2b8-0bdd38b4b305",
+                version: 4,
               }, {
-                channelID: '5477bfda-22db-45d4-9614-fee369630260',
-                version: 6
-              }]
+                channelID: "5477bfda-22db-45d4-9614-fee369630260",
+                version: 6,
+              }],
             }));
             break;
 
           case 2:
             deepEqual([{
-              channelID: '9a5ff87f-47c9-4215-b2b8-0bdd38b4b305',
+              channelID: "9a5ff87f-47c9-4215-b2b8-0bdd38b4b305",
               version: 4,
               code: 100,
-            }], updates, 'Wrong updates for acknowledgement 2');
+            }], updates, "Wrong updates for acknowledgement 2");
             break;
 
           case 3:
             deepEqual([{
-              channelID: '5477bfda-22db-45d4-9614-fee369630260',
+              channelID: "5477bfda-22db-45d4-9614-fee369630260",
               version: 6,
               code: 100,
-            }], updates, 'Wrong updates for acknowledgement 3');
+            }], updates, "Wrong updates for acknowledgement 3");
             ackDone();
             break;
 
           default:
-            ok(false, 'Unexpected acknowledgement ' + acks);
+            ok(false, "Unexpected acknowledgement " + acks);
           }
-        }
+        },
       });
-    }
+    },
   });
 
   await notifyPromise;

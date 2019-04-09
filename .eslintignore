@@ -183,7 +183,6 @@ dom/payments/**
 dom/performance/**
 dom/permission/**
 dom/promise/**
-dom/push/**
 dom/quota/**
 dom/security/test/cors/**
 dom/security/test/csp/**

@@ -12,5 +12,5 @@ var broadcastHandler = {
         this.notifications.push(Array.from(arguments));
       };
     });
-  }
+  },
 };

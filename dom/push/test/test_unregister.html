@@ -24,9 +24,10 @@ http://creativecommons.org/licenses/publicdomain/
 </pre>
 
 <script class="testbody" type="text/javascript">
+  /* import-globals-from ./test_utils.js */
 
   function generateURL() {
-    return "worker.js" + "?" + (Math.random());
+    return "worker.js?" + (Math.random());
   }
 
   var registration;
@@ -65,7 +66,7 @@ http://creativecommons.org/licenses/publicdomain/
     registration = await navigator.serviceWorker.register(
       generateURL(), {scope: "."});
     await waitForActive(registration);
-    var pushSubscription = await registration.pushManager.getSubscription();
+    pushSubscription = await registration.pushManager.getSubscription();
     ok(!pushSubscription,
       "Unregistering a service worker should drop its subscription");
   });

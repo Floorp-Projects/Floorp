@@ -1,16 +1,16 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-'use strict';
+"use strict";
 
 const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
-const userAgentID = '05f7b940-51b6-4b6f-8032-b83ebb577ded';
+const userAgentID = "05f7b940-51b6-4b6f-8032-b83ebb577ded";
 
 function run_test() {
   do_get_profile();
   setPrefs({
-    userAgentID: userAgentID,
+    userAgentID,
     pingInterval: 2000,
     retryBaseInterval: 25,
   });
@@ -19,14 +19,14 @@ function run_test() {
 
 add_task(async function test_ws_retry() {
   let db = PushServiceWebSocket.newPushDB();
-  registerCleanupFunction(() => {return db.drop().then(_ => db.close());});
+  registerCleanupFunction(() => { return db.drop().then(_ => db.close()); });
 
   await db.put({
-    channelID: '61770ba9-2d57-4134-b949-d40404630d5b',
-    pushEndpoint: 'https://example.org/push/1',
-    scope: 'https://example.net/push/1',
+    channelID: "61770ba9-2d57-4134-b949-d40404630d5b",
+    pushEndpoint: "https://example.org/push/1",
+    scope: "https://example.net/push/1",
     version: 1,
-    originAttributes: '',
+    originAttributes: "",
     quota: Infinity,
   });
 
@@ -52,7 +52,7 @@ add_task(async function test_ws_retry() {
         onHello(request) {
           if (reconnects == 10) {
             this.serverSendMsg(JSON.stringify({
-              messageType: 'hello',
+              messageType: "hello",
               status: 200,
               uaid: userAgentID,
             }));

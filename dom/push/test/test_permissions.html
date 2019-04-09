@@ -24,6 +24,7 @@ http://creativecommons.org/licenses/publicdomain/
 </pre>
 
 <script class="testbody" type="text/javascript">
+  /* import-globals-from ./test_utils.js */
 
   function debug(str) {
   //  console.log(str + "\n");
@@ -34,7 +35,7 @@ http://creativecommons.org/licenses/publicdomain/
     await setupPrefsAndMockSocket(new MockWebSocket());
     await setPushPermission(false);
 
-    var url = "worker.js" + "?" + Math.random();
+    var url = "worker.js?" + Math.random();
     registration = await navigator.serviceWorker.register(url, {scope: "."});
     await waitForActive(registration);
   });

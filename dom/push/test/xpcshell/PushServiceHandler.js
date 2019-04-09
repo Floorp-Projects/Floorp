@@ -24,6 +24,6 @@ PushServiceHandler.prototype = {
   observe(subject, topic, data) {
     this.observed.push({ subject, topic, data });
   },
-}
+};
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([PushServiceHandler]);

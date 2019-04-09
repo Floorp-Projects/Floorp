@@ -1,20 +1,20 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-'use strict';
+"use strict";
 
 const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
-const userAgentID = '84afc774-6995-40d1-9c90-8c34ddcd0cb4';
-const clientChannelID = '4b42a681c99e4dfbbb166a7e01a09b8b';
-const serverChannelID = '3f5aeb89c6e8405a9569619522783436';
+const userAgentID = "84afc774-6995-40d1-9c90-8c34ddcd0cb4";
+const clientChannelID = "4b42a681c99e4dfbbb166a7e01a09b8b";
+const serverChannelID = "3f5aeb89c6e8405a9569619522783436";
 
 function run_test() {
   do_get_profile();
   setPrefs({
     userAgentID,
     requestTimeout: 1000,
-    retryBaseInterval: 150
+    retryBaseInterval: 150,
   });
   run_next_test();
 }
@@ -32,38 +32,38 @@ add_task(async function test_register_wrong_id() {
       return new MockWebSocket(uri, {
         onHello(request) {
           this.serverSendMsg(JSON.stringify({
-            messageType: 'hello',
+            messageType: "hello",
             status: 200,
-            uaid: userAgentID
+            uaid: userAgentID,
           }));
           helloDone();
         },
         onRegister(request) {
           equal(request.channelID, clientChannelID,
-            'Register: wrong channel ID');
+            "Register: wrong channel ID");
           registers++;
           this.serverSendMsg(JSON.stringify({
-            messageType: 'register',
+            messageType: "register",
             status: 200,
             // Reply with a different channel ID. Since the ID is used as a
             // nonce, the registration request will time out.
-            channelID: serverChannelID
+            channelID: serverChannelID,
           }));
-        }
+        },
       });
-    }
+    },
   });
 
-  await rejects(
+  await Assert.rejects(
     PushService.register({
-      scope: 'https://example.com/mismatched',
+      scope: "https://example.com/mismatched",
       originAttributes: ChromeUtils.originAttributesToSuffix(
         { appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inIsolatedMozBrowser: false }),
     }),
     /Registration error/,
-    'Expected error for mismatched register reply'
+    "Expected error for mismatched register reply"
   );
 
   await helloPromise;
-  equal(registers, 1, 'Wrong register count');
+  equal(registers, 1, "Wrong register count");
 });
