@@ -139,10 +139,9 @@ static bool Load(JSContext *cx, unsigned argc, JS::Value *vp) {
     JS::CompileOptions options(cx);
     options.setFileAndLine(filename.get(), 1);
 
-    JS::Rooted<JSScript *> script(cx);
-    bool ok = JS::CompileUtf8File(cx, options, file, &script);
+    JS::Rooted<JSScript *> script(cx, JS::CompileUtf8File(cx, options, file));
     fclose(file);
-    if (!ok) return false;
+    if (!script) return false;
 
     if (!JS_ExecuteScript(cx, script)) {
       return false;
@@ -251,9 +250,10 @@ void XPCShellEnvironment::ProcessFile(JSContext *cx, const char *filename,
     JS::CompileOptions options(cx);
     options.setFileAndLine(filename, 1);
 
-    JS::Rooted<JSScript *> script(cx);
-    if (JS::CompileUtf8File(cx, options, file, &script))
+    JS::Rooted<JSScript *> script(cx, JS::CompileUtf8File(cx, options, file));
+    if (script) {
       (void)JS_ExecuteScript(cx, script, &result);
+    }
 
     return;
   }
@@ -288,8 +288,9 @@ void XPCShellEnvironment::ProcessFile(JSContext *cx, const char *filename,
     JS::CompileOptions options(cx);
     options.setFileAndLine("typein", startline);
 
-    JS::Rooted<JSScript *> script(cx);
-    if (JS::CompileUtf8(cx, options, buffer, strlen(buffer), &script)) {
+    JS::Rooted<JSScript *> script(
+        cx, JS::CompileUtf8(cx, options, buffer, strlen(buffer)));
+    if (script) {
       ok = JS_ExecuteScript(cx, script, &result);
       if (ok && !result.isUndefined()) {
         /* Suppress warnings from JS::ToString(). */
@@ -425,8 +426,8 @@ bool XPCShellEnvironment::EvaluateString(const nsString &aString,
     return false;
   }
 
-  JS::Rooted<JSScript *> script(cx);
-  if (!JS::Compile(cx, options, srcBuf, &script)) {
+  JS::Rooted<JSScript *> script(cx, JS::Compile(cx, options, srcBuf));
+  if (!script) {
     return false;
   }
 

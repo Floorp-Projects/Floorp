@@ -25,8 +25,7 @@ BEGIN_TEST(testGCCellPtr) {
 
   JS::CompileOptions opts(cx);
 
-  JS::RootedScript script(cx);
-  CHECK(JS::CompileUtf8(cx, opts, code, strlen(code), &script));
+  JS::RootedScript script(cx, JS::CompileUtf8(cx, opts, code, strlen(code)));
   CHECK(script);
 
   CHECK(!JS::GCCellPtr(nullptr));
