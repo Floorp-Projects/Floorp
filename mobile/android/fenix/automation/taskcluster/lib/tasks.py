@@ -72,7 +72,7 @@ class TaskBuilder(object):
         )
 
         gradle_commands = (
-            './gradlew --no-daemon -PcrashReports=true clean test assembleRelease',
+            './gradlew --no-daemon -PcrashReports=true -Ptelemetry=true clean test assembleRelease',
         )
 
         command = ' && '.join(
