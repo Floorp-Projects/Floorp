@@ -1403,7 +1403,7 @@ window._gBrowser = {
     var aOpener;
     var aOpenerBrowser;
     var aCreateLazyBrowser;
-    var aNextTabParentId;
+    var aNextRemoteTabId;
     var aFocusUrlBar;
     var aName;
     var aCsp;
@@ -1430,7 +1430,7 @@ window._gBrowser = {
       aOpener = params.opener;
       aOpenerBrowser = params.openerBrowser;
       aCreateLazyBrowser = params.createLazyBrowser;
-      aNextTabParentId = params.nextTabParentId;
+      aNextRemoteTabId = params.nextRemoteTabId;
       aFocusUrlBar = params.focusUrlBar;
       aName = params.name;
       aCsp = params.csp;
@@ -1465,7 +1465,7 @@ window._gBrowser = {
       sameProcessAsFrameLoader: aSameProcessAsFrameLoader,
       opener: aOpener,
       openerBrowser: aOpenerBrowser,
-      nextTabParentId: aNextTabParentId,
+      nextRemoteTabId: aNextRemoteTabId,
       focusUrlBar: aFocusUrlBar,
       name: aName,
       csp: aCsp,
@@ -1824,7 +1824,7 @@ window._gBrowser = {
   createBrowser({
     isPreloadBrowser,
     name,
-    nextTabParentId,
+    nextRemoteTabId,
     openerWindow,
     recordExecution,
     remoteType,
@@ -1903,12 +1903,12 @@ window._gBrowser = {
       b.setAttribute("preloadedState", "preloaded");
     }
 
-    if (nextTabParentId) {
+    if (nextRemoteTabId) {
       if (!remoteType) {
-        throw new Error("Cannot have nextTabParentId without a remoteType");
+        throw new Error("Cannot have nextRemoteTabId without a remoteType");
       }
       // Gecko is going to read this attribute and use it.
-      b.setAttribute("nextTabParentId", nextTabParentId.toString());
+      b.setAttribute("nextRemoteTabId", nextRemoteTabId.toString());
     }
 
     if (sameProcessAsFrameLoader) {
@@ -2257,7 +2257,7 @@ window._gBrowser = {
     index,
     lazyTabTitle,
     name,
-    nextTabParentId,
+    nextRemoteTabId,
     noInitialLabel,
     opener,
     openerBrowser,
@@ -2482,7 +2482,7 @@ window._gBrowser = {
           userContextId,
           sameProcessAsFrameLoader,
           openerWindow: opener,
-          nextTabParentId,
+          nextRemoteTabId,
           name,
           recordExecution,
           replayExecution,
@@ -2860,8 +2860,8 @@ window._gBrowser = {
   _hasBeforeUnload(aTab) {
     let browser = aTab.linkedBrowser;
     return browser.isRemoteBrowser && browser.frameLoader &&
-           browser.frameLoader.tabParent &&
-           browser.frameLoader.tabParent.hasBeforeUnload;
+           browser.frameLoader.remoteTab &&
+           browser.frameLoader.remoteTab.hasBeforeUnload;
   },
 
   _beginRemoveTab(aTab, {
@@ -4265,7 +4265,7 @@ window._gBrowser = {
         if (tab.linkedBrowser &&
             tab.linkedBrowser.isRemoteBrowser &&
             tab.linkedBrowser.frameLoader) {
-          label += " (pid " + tab.linkedBrowser.frameLoader.tabParent.osPid + ")";
+          label += " (pid " + tab.linkedBrowser.frameLoader.remoteTab.osPid + ")";
 
           if (window.docShell.QueryInterface(Ci.nsILoadContext).useRemoteSubframes) {
             label += " [F]";

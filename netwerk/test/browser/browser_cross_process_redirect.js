@@ -9,15 +9,15 @@ const gRegistrar = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
 
 let gLoadedInProcess2Promise = null;
 
-function _createProcessChooser(tabParent, from, to, rejectPromise = false) {
-  let processChooser = new ProcessChooser(tabParent, "example.com", "example.org", rejectPromise);
+function _createProcessChooser(remoteTab, from, to, rejectPromise = false) {
+  let processChooser = new ProcessChooser(remoteTab, "example.com", "example.org", rejectPromise);
   registerCleanupFunction(function() {
     processChooser.unregister();
   });
 }
 
-function ProcessChooser(tabParent, from, to, rejectPromise = false) {
-  this.tabParent = tabParent;
+function ProcessChooser(remoteTab, from, to, rejectPromise = false) {
+  this.remoteTab = remoteTab;
   this.fromDomain = from;
   this.toDomain = to;
   this.rejectPromise = rejectPromise;
@@ -70,7 +70,7 @@ ProcessChooser.prototype = {
       // Can asyncly create a tab, or can resolve with a tab that was
       // previously created.
       info("resolving");
-      resolve(self.tabParent);
+      resolve(self.remoteTab);
     });
 
     info("calling switchprocessto");
@@ -112,7 +112,7 @@ add_task(async function() {
   // This is for testing purposes only.
   // This "process chooser" will direct the channel to be opened in the second
   // tab, and thus in the second parent.
-  let processChooser = _createProcessChooser(browser2.frameLoader.tabParent, "example.com", "example.org");
+  let processChooser = _createProcessChooser(browser2.frameLoader.remoteTab, "example.com", "example.org");
 
   info("Loading redirected URL");
   // Open the URL in the first process. We expect it to wind up in the second
@@ -197,7 +197,7 @@ add_task(async function() {
   await browser1LoadHasStopped;
 
   // check that a rejected promise also works.
-  processChooser = _createProcessChooser(browser2.frameLoader.tabParent, "example.com", "example.org", true);
+  processChooser = _createProcessChooser(browser2.frameLoader.remoteTab, "example.com", "example.org", true);
   let browser1LoadHasStoppedAgain = BrowserTestUtils.browserStopped(browser1);
   await BrowserTestUtils.loadURI(browser1, kRoot1 + "redirect.sjs?" + kRoot2 + "dummy.html");
   await browser1LoadHasStoppedAgain;

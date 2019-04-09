@@ -399,9 +399,9 @@ static bool CheckUserContextCompatibility(nsIDocShell* aDocShell) {
 nsresult nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
                                              nsIWebBrowserChrome* aParentChrome,
                                              uint32_t aChromeFlags,
-                                             nsITabParent* aOpeningTabParent,
+                                             nsIRemoteTab* aOpeningTabParent,
                                              mozIDOMWindowProxy* aOpener,
-                                             uint64_t aNextTabParentId,
+                                             uint64_t aNextRemoteTabId,
                                              nsIWebBrowserChrome** aResult) {
   nsCOMPtr<nsIWindowCreator2> windowCreator2(do_QueryInterface(mWindowCreator));
   if (NS_WARN_IF(!windowCreator2)) {
@@ -411,7 +411,7 @@ nsresult nsWindowWatcher::CreateChromeWindow(const nsACString& aFeatures,
   bool cancel = false;
   nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
   nsresult rv = windowCreator2->CreateChromeWindow2(
-      aParentChrome, aChromeFlags, aOpeningTabParent, aOpener, aNextTabParentId,
+      aParentChrome, aChromeFlags, aOpeningTabParent, aOpener, aNextRemoteTabId,
       &cancel, getter_AddRefs(newWindowChrome));
 
   if (NS_SUCCEEDED(rv) && cancel) {
@@ -452,10 +452,10 @@ void nsWindowWatcher::MaybeDisablePersistence(
 }
 
 NS_IMETHODIMP
-nsWindowWatcher::OpenWindowWithTabParent(
-    nsITabParent* aOpeningTabParent, const nsACString& aFeatures,
-    bool aCalledFromJS, float aOpenerFullZoom, uint64_t aNextTabParentId,
-    bool aForceNoOpener, nsITabParent** aResult) {
+nsWindowWatcher::OpenWindowWithRemoteTab(
+    nsIRemoteTab* aRemoteTab, const nsACString& aFeatures, bool aCalledFromJS,
+    float aOpenerFullZoom, uint64_t aNextRemoteTabId, bool aForceNoOpener,
+    nsIRemoteTab** aResult) {
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(mWindowCreator);
 
@@ -473,10 +473,10 @@ nsWindowWatcher::OpenWindowWithTabParent(
       Preferences::GetBool("browser.privatebrowsing.autostart");
 
   nsCOMPtr<nsPIDOMWindowOuter> parentWindowOuter;
-  if (aOpeningTabParent) {
-    // We need to examine the window that aOpeningTabParent belongs to in
+  if (aRemoteTab) {
+    // We need to examine the window that aRemoteTab belongs to in
     // order to inform us of what kind of window we're going to open.
-    TabParent* openingTab = TabParent::GetFrom(aOpeningTabParent);
+    TabParent* openingTab = TabParent::GetFrom(aRemoteTab);
     parentWindowOuter = openingTab->GetParentWindowOuter();
 
     // Propagate the privacy & fission status of the parent window, if
@@ -491,7 +491,7 @@ nsWindowWatcher::OpenWindowWithTabParent(
 
   if (!parentWindowOuter) {
     // We couldn't find a browser window for the opener, so either we
-    // never were passed aOpeningTabParent, the window is closed,
+    // never were passed aRemoteTab, the window is closed,
     // or it's in the process of closing. Either way, we'll use
     // the most recently opened browser window instead.
     parentWindowOuter = nsContentUtils::GetMostRecentNonPBWindow();
@@ -526,8 +526,8 @@ nsWindowWatcher::OpenWindowWithTabParent(
   nsCOMPtr<nsIWebBrowserChrome> newWindowChrome;
 
   CreateChromeWindow(aFeatures, parentChrome, chromeFlags,
-                     aForceNoOpener ? nullptr : aOpeningTabParent, nullptr,
-                     aNextTabParentId, getter_AddRefs(newWindowChrome));
+                     aForceNoOpener ? nullptr : aRemoteTab, nullptr,
+                     aNextRemoteTabId, getter_AddRefs(newWindowChrome));
 
   if (NS_WARN_IF(!newWindowChrome)) {
     return NS_ERROR_UNEXPECTED;
@@ -564,8 +564,8 @@ nsWindowWatcher::OpenWindowWithTabParent(
   SizeOpenedWindow(chromeTreeOwner, parentWindowOuter, false, sizeSpec,
                    Some(aOpenerFullZoom));
 
-  nsCOMPtr<nsITabParent> newTabParent;
-  chromeTreeOwner->GetPrimaryTabParent(getter_AddRefs(newTabParent));
+  nsCOMPtr<nsIRemoteTab> newTabParent;
+  chromeTreeOwner->GetPrimaryRemoteTab(getter_AddRefs(newTabParent));
   if (NS_WARN_IF(!newTabParent)) {
     return NS_ERROR_UNEXPECTED;
   }

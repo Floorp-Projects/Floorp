@@ -9,7 +9,7 @@ interface nsIPrincipal;
 webidl Element;
 
 [builtinclass, scriptable, uuid(8e49f7b0-1f98-4939-bf91-e9c39cd56434)]
-interface nsITabParent : nsISupports
+interface nsIRemoteTab : nsISupports
 {
   /**
    * Manages the docshell active state of the remote browser. Setting the
@@ -69,7 +69,7 @@ interface nsITabParent : nsISupports
   readonly attribute boolean hasPresented;
 
   /**
-   * Ensures that the content process which has this tab parent has all of the
+   * Ensures that the content process which has this remote tab has all of the
    * permissions required to load a document with the given principal.
    */
   void transmitPermissionsForPrincipal(in nsIPrincipal aPrincipal);
@@ -81,7 +81,7 @@ interface nsITabParent : nsISupports
   readonly attribute boolean hasBeforeUnload;
 
   /**
-   * The frame element which currently embeds this nsITabParent object.
+   * The frame element which currently embeds this nsIRemoteTab object.
    */
   readonly attribute Element ownerElement;
 

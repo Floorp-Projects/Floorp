@@ -33,7 +33,7 @@
 #include "nsIRaceCacheWithNetwork.h"
 #include "mozilla/extensions/PStreamFilterParent.h"
 #include "mozilla/Mutex.h"
-#include "nsITabParent.h"
+#include "nsIRemoteTab.h"
 
 class nsDNSPrefetch;
 class nsICancelable;
@@ -286,7 +286,7 @@ class nsHttpChannel final : public HttpBaseChannel,
   }
   TransactionObserver *GetTransactionObserver() { return mTransactionObserver; }
 
-  typedef MozPromise<nsCOMPtr<nsITabParent>, nsresult, false> TabPromise;
+  typedef MozPromise<nsCOMPtr<nsIRemoteTab>, nsresult, false> TabPromise;
   already_AddRefed<TabPromise> TakeRedirectTabPromise() {
     return mRedirectTabPromise.forget();
   }

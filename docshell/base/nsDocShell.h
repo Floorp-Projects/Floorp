@@ -34,7 +34,7 @@
 #include "nsINetworkInterceptController.h"
 #include "nsIRefreshURI.h"
 #include "nsIScrollable.h"
-#include "nsITabParent.h"
+#include "nsIRemoteTab.h"
 #include "nsIWebNavigation.h"
 #include "nsIWebPageDescriptor.h"
 #include "nsIWebProgressListener.h"

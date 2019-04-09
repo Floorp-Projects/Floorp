@@ -683,7 +683,7 @@ void ParticularProcessPriorityManager::OnRemoteBrowserFrameShown(
 
 void ParticularProcessPriorityManager::OnTabParentDestroyed(
     nsISupports* aSubject) {
-  nsCOMPtr<nsITabParent> tp = do_QueryInterface(aSubject);
+  nsCOMPtr<nsIRemoteTab> tp = do_QueryInterface(aSubject);
   NS_ENSURE_TRUE_VOID(tp);
 
   MOZ_ASSERT(XRE_IsParentProcess());

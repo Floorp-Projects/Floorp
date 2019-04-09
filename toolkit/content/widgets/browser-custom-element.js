@@ -382,8 +382,8 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
   set docShellIsActive(val) {
     if (this.isRemoteBrowser) {
       let { frameLoader } = this;
-      if (frameLoader && frameLoader.tabParent) {
-        frameLoader.tabParent.docShellIsActive = val;
+      if (frameLoader && frameLoader.remoteTab) {
+        frameLoader.remoteTab.docShellIsActive = val;
       }
     } else if (this.docShell) {
       this.docShell.isActive = val;
@@ -393,8 +393,8 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
   get docShellIsActive() {
     if (this.isRemoteBrowser) {
       let { frameLoader } = this;
-      if (frameLoader && frameLoader.tabParent) {
-        return frameLoader.tabParent.docShellIsActive;
+      if (frameLoader && frameLoader.remoteTab) {
+        return frameLoader.remoteTab.docShellIsActive;
       }
       return false;
     }
@@ -404,8 +404,8 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
   set renderLayers(val) {
     if (this.isRemoteBrowser) {
       let { frameLoader } = this;
-      if (frameLoader && frameLoader.tabParent) {
-        frameLoader.tabParent.renderLayers = val;
+      if (frameLoader && frameLoader.remoteTab) {
+        frameLoader.remoteTab.renderLayers = val;
       }
     } else {
       this.docShellIsActive = val;
@@ -415,8 +415,8 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
   get renderLayers() {
     if (this.isRemoteBrowser) {
       let { frameLoader } = this;
-      if (frameLoader && frameLoader.tabParent) {
-        return frameLoader.tabParent.renderLayers;
+      if (frameLoader && frameLoader.remoteTab) {
+        return frameLoader.remoteTab.renderLayers;
       }
       return false;
     }
@@ -426,8 +426,8 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
   get hasLayers() {
     if (this.isRemoteBrowser) {
       let { frameLoader } = this;
-      if (frameLoader && frameLoader.tabParent) {
-        return frameLoader.tabParent.hasLayers;
+      if (frameLoader && frameLoader.remoteTab) {
+        return frameLoader.remoteTab.hasLayers;
       }
       return false;
     }
@@ -466,7 +466,7 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
       return false;
     }
 
-    return !this.frameLoader.tabParent;
+    return !this.frameLoader.remoteTab;
   }
 
   get messageManager() {
@@ -687,7 +687,7 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
 
   get hasContentOpener() {
     if (this.isRemoteBrowser) {
-      return this.frameLoader.tabParent.hasContentOpener;
+      return this.frameLoader.remoteTab.hasContentOpener;
     }
     return !!this.contentWindow.opener;
   }
@@ -848,8 +848,8 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
       return;
     }
     let { frameLoader } = this;
-    if (frameLoader.tabParent) {
-      frameLoader.tabParent.preserveLayers(preserve);
+    if (frameLoader.remoteTab) {
+      frameLoader.remoteTab.preserveLayers(preserve);
     }
   }
 
@@ -858,8 +858,8 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
       return;
     }
     let { frameLoader } = this;
-    if (frameLoader.tabParent) {
-      frameLoader.tabParent.deprioritize();
+    if (frameLoader.remoteTab) {
+      frameLoader.remoteTab.deprioritize();
     }
   }
 
@@ -868,8 +868,8 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
       return;
     }
     let { frameLoader } = this;
-    if (frameLoader && frameLoader.tabParent) {
-      frameLoader.tabParent.forceRepaint();
+    if (frameLoader && frameLoader.remoteTab) {
+      frameLoader.remoteTab.forceRepaint();
     }
   }
 
@@ -1222,15 +1222,15 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
           let usingApz = false;
           if (this.isRemoteBrowser && data.scrollId != null &&
             this.mPrefs.getBoolPref("apz.autoscroll.enabled", false)) {
-            let { tabParent } = this.frameLoader;
-            if (tabParent) {
+            let { remoteTab } = this.frameLoader;
+            if (remoteTab) {
               // If APZ is handling the autoscroll, it may decide to cancel
               // it of its own accord, so register an observer to allow it
               // to notify us of that.
               var os = Services.obs;
               os.addObserver(this.observer, "apz:cancel-autoscroll", true);
 
-              usingApz = tabParent.startApzAutoscroll(
+              usingApz = remoteTab.startApzAutoscroll(
                 data.screenX, data.screenY,
                 data.scrollId, data.presShellId);
             }
@@ -1393,7 +1393,7 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
       // needed to create a document with the given principal.
       let permissionPrincipal =
         BrowserUtils.principalWithMatchingOA(aPrincipal, this.contentPrincipal);
-      this.frameLoader.tabParent.transmitPermissionsForPrincipal(permissionPrincipal);
+      this.frameLoader.remoteTab.transmitPermissionsForPrincipal(permissionPrincipal);
 
       // Create the about blank content viewer in the content process
       this.messageManager.sendAsyncMessage("Browser:CreateAboutBlank", aPrincipal);
@@ -1423,9 +1423,9 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
       }
 
       if (this.isRemoteBrowser && this._autoScrollScrollId != null) {
-        let { tabParent } = this.frameLoader;
-        if (tabParent) {
-          tabParent.stopApzAutoscroll(this._autoScrollScrollId,
+        let { remoteTab } = this.frameLoader;
+        if (remoteTab) {
+          remoteTab.stopApzAutoscroll(this._autoScrollScrollId,
             this._autoScrollPresShellId);
         }
         this._autoScrollScrollId = null;
@@ -1741,9 +1741,9 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
 
   permitUnload(aPermitUnloadFlags) {
     if (this.isRemoteBrowser) {
-      let { tabParent } = this.frameLoader;
+      let { remoteTab } = this.frameLoader;
 
-      if (!tabParent.hasBeforeUnload) {
+      if (!remoteTab.hasBeforeUnload) {
         return { permitUnload: true, timedOut: false };
       }
 
@@ -1850,7 +1850,7 @@ class MozBrowser extends MozElements.MozElementMixin(XULFrameElement) {
 
   getContentBlockingLog() {
     if (this.isRemoteBrowser) {
-      return this.frameLoader.tabParent.getContentBlockingLog();
+      return this.frameLoader.remoteTab.getContentBlockingLog();
     }
     return this.docShell ?
       this.docShell.getContentBlockingLog() :

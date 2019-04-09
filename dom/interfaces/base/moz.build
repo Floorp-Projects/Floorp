@@ -20,10 +20,10 @@ XPIDL_SOURCES += [
     'nsIDOMWindowUtils.idl',
     'nsIFocusManager.idl',
     'nsIQueryContentEventResult.idl',
+    'nsIRemoteTab.idl',
     'nsIServiceWorkerManager.idl',
     'nsIStructuredCloneContainer.idl',
     'nsITabChild.idl',
-    'nsITabParent.idl',
     'nsITextInputProcessor.idl',
     'nsITextInputProcessorCallback.idl',
 ]

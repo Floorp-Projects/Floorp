@@ -120,14 +120,14 @@ interface nsIBrowserDOMWindow : nsISupports
    * returned as Element, QI'd back to nsFrameLoaderOwner as needed.
    *
    * Additional Parameters:
-   * @param aNextTabParentId The TabParent to associate the window with.
+   * @param aNextRemoteTabId The RemoteTab to associate the window with.
    * @param aName The name to give the window opened in the new tab.
    * @return The frame element for the newly opened window.
    */
   Element
   createContentWindowInFrame(in nsIURI aURI, in nsIOpenURIInFrameParams params,
                              in short aWhere, in long aFlags,
-                             in unsigned long long aNextTabParentId,
+                             in unsigned long long aNextRemoteTabId,
                              in AString aName);
 
   /**
@@ -154,7 +154,7 @@ interface nsIBrowserDOMWindow : nsISupports
    * returned as Element, QI'd back to nsFrameLoaderOwner as needed.
    *
    * Additional Parameters:
-   * @param aNextTabParentId The TabParent to associate the window with.
+   * @param aNextRemoteTabId The RemoteTab to associate the window with.
    * @param aName The name to give the window opened in the new tab.
    * @return The frame element for the newly opened window.
    // XXXbz is this the right API?
@@ -163,7 +163,7 @@ interface nsIBrowserDOMWindow : nsISupports
   Element
   openURIInFrame(in nsIURI aURI, in nsIOpenURIInFrameParams params,
                  in short aWhere, in long aFlags,
-                 in unsigned long long aNextTabParentId,
+                 in unsigned long long aNextRemoteTabId,
                  in AString aName);
 
   /**

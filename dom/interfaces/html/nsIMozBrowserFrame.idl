@@ -7,7 +7,7 @@
 
 #include "nsIDOMMozBrowserFrame.idl"
 
-interface nsITabParent;
+interface nsIRemoteTab;
 
 [scriptable, builtinclass, uuid(0c0a862c-1a47-43c0-ae9e-d51835e3e1a6)]
 interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
@@ -53,11 +53,11 @@ interface nsIMozBrowserFrame : nsIDOMMozBrowserFrame
 
   /**
    * Create a remote (i.e., out-of-process) frame loader attached to the given
-   * tab parent.
+   * remote tab.
    *
    * It is an error to call this method if we already have a frame loader.
    */
-  void createRemoteFrameLoader(in nsITabParent aTabParent);
+  void createRemoteFrameLoader(in nsIRemoteTab aRemoteTab);
 
   /**
    * Initialize the API, and add frame message listener that supports API

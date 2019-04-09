@@ -140,7 +140,7 @@ already_AddRefed<ChannelWrapper> ChannelWrapper::Get(const GlobalObject& global,
 
 already_AddRefed<ChannelWrapper> ChannelWrapper::GetRegisteredChannel(
     const GlobalObject& global, uint64_t aChannelId,
-    const WebExtensionPolicy& aAddon, nsITabParent* aTabParent) {
+    const WebExtensionPolicy& aAddon, nsIRemoteTab* aTabParent) {
   ContentParent* contentParent = nullptr;
   if (TabParent* parent = static_cast<TabParent*>(aTabParent)) {
     contentParent = parent->Manager();
@@ -662,7 +662,7 @@ nsresult ChannelWrapper::GetFrameAncestors(
  *****************************************************************************/
 
 void ChannelWrapper::RegisterTraceableChannel(const WebExtensionPolicy& aAddon,
-                                              nsITabParent* aTabParent) {
+                                              nsIRemoteTab* aTabParent) {
   // We can't attach new listeners after the response has started, so don't
   // bother registering anything.
   if (mResponseStarted || !CanModify()) {
@@ -678,7 +678,7 @@ void ChannelWrapper::RegisterTraceableChannel(const WebExtensionPolicy& aAddon,
 
 already_AddRefed<nsITraceableChannel> ChannelWrapper::GetTraceableChannel(
     nsAtom* aAddonId, dom::ContentParent* aContentParent) const {
-  nsCOMPtr<nsITabParent> tabParent;
+  nsCOMPtr<nsIRemoteTab> tabParent;
   if (mAddonEntries.Get(aAddonId, getter_AddRefs(tabParent))) {
     ContentParent* contentParent = nullptr;
     if (tabParent) {

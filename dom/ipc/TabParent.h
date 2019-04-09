@@ -27,7 +27,7 @@
 #include "nsIBrowserDOMWindow.h"
 #include "nsIDOMEventListener.h"
 #include "nsIKeyEventInPluginCallback.h"
-#include "nsITabParent.h"
+#include "nsIRemoteTab.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsRefreshDriver.h"
 #include "nsWeakReference.h"
@@ -80,7 +80,7 @@ class StructuredCloneData;
 
 class TabParent final : public PBrowserParent,
                         public nsIDOMEventListener,
-                        public nsITabParent,
+                        public nsIRemoteTab,
                         public nsIAuthPromptProvider,
                         public nsIKeyEventInPluginCallback,
                         public nsSupportsWeakReference,
@@ -99,12 +99,12 @@ class TabParent final : public PBrowserParent,
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_NSIAUTHPROMPTPROVIDER
-  // nsITabParent
-  NS_DECL_NSITABPARENT
+  // nsIRemoteTab
+  NS_DECL_NSIREMOTETAB
   // nsIDOMEventListener interfaces
   NS_DECL_NSIDOMEVENTLISTENER
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(TabParent, nsITabParent)
+  NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(TabParent, nsIRemoteTab)
 
   TabParent(ContentParent* aManager, const TabId& aTabId,
             const TabContext& aContext,
@@ -498,7 +498,7 @@ class TabParent final : public PBrowserParent,
 
   static TabParent* GetFrom(nsFrameLoader* aFrameLoader);
 
-  static TabParent* GetFrom(nsITabParent* aTabParent);
+  static TabParent* GetFrom(nsIRemoteTab* aTabParent);
 
   static TabParent* GetFrom(PBrowserParent* aTabParent);
 

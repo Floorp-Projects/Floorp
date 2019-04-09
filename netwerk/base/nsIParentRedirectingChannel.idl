@@ -4,7 +4,7 @@
 
 #include "nsIParentChannel.idl"
 
-interface nsITabParent;
+interface nsIRemoteTab;
 interface nsIChannel;
 interface nsIAsyncVerifyRedirectCallback;
 

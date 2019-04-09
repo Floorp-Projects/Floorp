@@ -59,7 +59,7 @@ class nsConsoleService;
 class nsIContentProcessInfo;
 class nsICycleCollectorLogSink;
 class nsIDumpGCAndCCLogsCallback;
-class nsITabParent;
+class nsIRemoteTab;
 class nsITimer;
 class ParentIdleListener;
 class nsIWidget;
@@ -211,7 +211,7 @@ class ContentParent final : public PContentParent,
                                   BrowsingContext* aBrowsingContext,
                                   ContentParent* aOpenerContentParent,
                                   TabParent* aSameTabGroupAs,
-                                  uint64_t aNextTabParentId);
+                                  uint64_t aNextRemoteTabId);
 
   static void GetAll(nsTArray<ContentParent*>& aArray);
 
@@ -665,8 +665,8 @@ class ContentParent final : public PContentParent,
       const bool& aCalledFromJS, const bool& aPositionSpecified,
       const bool& aSizeSpecified, nsIURI* aURIToLoad,
       const nsCString& aFeatures, const float& aFullZoom,
-      uint64_t aNextTabParentId, const nsString& aName, nsresult& aResult,
-      nsCOMPtr<nsITabParent>& aNewTabParent, bool* aWindowIsNew,
+      uint64_t aNextRemoteTabId, const nsString& aName, nsresult& aResult,
+      nsCOMPtr<nsIRemoteTab>& aNewTabParent, bool* aWindowIsNew,
       int32_t& aOpenLocation, nsIPrincipal* aTriggeringPrincipal,
       nsIReferrerInfo* aReferrerInfo, bool aLoadUri,
       nsIContentSecurityPolicy* aCsp);
@@ -1311,7 +1311,7 @@ class ContentParent final : public PContentParent,
 
   RefPtr<mozilla::dom::ProcessMessageManager> mMessageManager;
 
-  static uint64_t sNextTabParentId;
+  static uint64_t sNextRemoteTabId;
   static nsDataHashtable<nsUint64HashKey, TabParent*> sNextTabParents;
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)

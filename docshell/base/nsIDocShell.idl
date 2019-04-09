@@ -60,7 +60,7 @@ interface nsIWebBrowserPrint;
 interface nsIPrivacyTransitionObserver;
 interface nsIReflowObserver;
 interface nsIScrollObserver;
-interface nsITabParent;
+interface nsIRemoteTab;
 interface nsITabChild;
 interface nsICommandParams;
 interface nsILoadURIDelegate;
@@ -948,8 +948,8 @@ interface nsIDocShell : nsIDocShellTreeItem
    * should be fine, considering that these methods should only ever be
    * called from native code.
    */
-  [noscript,notxpcom,nostdcall] void setOpener(in nsITabParent aOpener);
-  [noscript,notxpcom,nostdcall] nsITabParent getOpener();
+  [noscript,notxpcom,nostdcall] void setOpener(in nsIRemoteTab aOpener);
+  [noscript,notxpcom,nostdcall] nsIRemoteTab getOpener();
 
   /**
    * Notify DocShell when the browser is about to start executing JS, and after

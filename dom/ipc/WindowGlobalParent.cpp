@@ -147,7 +147,7 @@ already_AddRefed<WindowGlobalChild> WindowGlobalParent::GetChildActor() {
   return do_AddRef(static_cast<WindowGlobalChild*>(otherSide));
 }
 
-already_AddRefed<TabParent> WindowGlobalParent::GetTabParent() {
+already_AddRefed<TabParent> WindowGlobalParent::GetRemoteTab() {
   if (IsInProcess() || mIPCClosed) {
     return nullptr;
   }
@@ -168,7 +168,7 @@ IPCResult WindowGlobalParent::RecvBecomeCurrentWindowGlobal() {
 
 IPCResult WindowGlobalParent::RecvDestroy() {
   if (!mIPCClosed) {
-    RefPtr<TabParent> tabParent = GetTabParent();
+    RefPtr<TabParent> tabParent = GetRemoteTab();
     if (!tabParent || !tabParent->IsDestroyed()) {
       Unused << Send__delete__(this);
     }
@@ -213,7 +213,7 @@ already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
   }
 
   nsAutoString remoteType;
-  if (RefPtr<TabParent> tabParent = GetTabParent()) {
+  if (RefPtr<TabParent> tabParent = GetRemoteTab()) {
     remoteType = tabParent->Manager()->GetRemoteType();
   } else {
     remoteType = VoidString();
@@ -253,8 +253,8 @@ IPCResult WindowGlobalParent::RecvDidEmbedBrowsingContext(
 already_AddRefed<Promise> WindowGlobalParent::ChangeFrameRemoteness(
     dom::BrowsingContext* aBc, const nsAString& aRemoteType,
     uint64_t aPendingSwitchId, ErrorResult& aRv) {
-  RefPtr<TabParent> tabParent = GetTabParent();
-  if (NS_WARN_IF(!tabParent)) {
+  RefPtr<BrowserParent> browserParent = GetRemoteTab();
+  if (NS_WARN_IF(!browserParent)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
