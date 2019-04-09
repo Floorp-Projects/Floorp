@@ -680,6 +680,12 @@ var Policies = {
     },
   },
 
+  "NewTabPage": {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("browser.newtabpage.enabled", param);
+    },
+  },
+
   "NoDefaultBookmarks": {
     onProfileAfterChange(manager, param) {
       if (param) {
