@@ -59,13 +59,18 @@ class AddBookmarkFolderFragment : Fragment(), CoroutineScope {
         launch(IO) {
             sharedViewModel.selectedFolder = sharedViewModel.selectedFolder
                 ?: requireComponents.core.bookmarksStorage.getTree(BookmarkRoot.Mobile.id)
-            bookmark_add_folder_parent_selector.text = sharedViewModel.selectedFolder!!.title
-            bookmark_add_folder_parent_selector.setOnClickListener {
-                Navigation.findNavController(requireActivity(), R.id.container)
-                    .navigate(
-                        AddBookmarkFolderFragmentDirections
-                            .actionBookmarkAddFolderFragmentToBookmarkSelectFolderFragment(BookmarkRoot.Root.id, true)
-                    )
+            launch(Main) {
+                bookmark_add_folder_parent_selector.text = sharedViewModel.selectedFolder!!.title
+                bookmark_add_folder_parent_selector.setOnClickListener {
+                    Navigation.findNavController(requireActivity(), R.id.container)
+                        .navigate(
+                            AddBookmarkFolderFragmentDirections
+                                .actionBookmarkAddFolderFragmentToBookmarkSelectFolderFragment(
+                                    BookmarkRoot.Root.id,
+                                    true
+                                )
+                        )
+                }
             }
         }
     }
