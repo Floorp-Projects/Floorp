@@ -2,14 +2,15 @@
 <html>
 <head>
   <title>Test for single filepicker per event</title>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
   <div id='foo'><a href='#'>Click here to test this issue</a></div>
   <script>
 
+SimpleTest.requestFlakyTimeout("Timeouts are needed to simulate user-interaction");
 SimpleTest.waitForExplicitFinish();
 
 let clickCount = 0;
