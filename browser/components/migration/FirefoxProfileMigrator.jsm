@@ -71,7 +71,7 @@ FirefoxProfileMigrator.prototype.getResources = function(aProfile) {
   let sourceProfileDir = aProfile ? this._getAllProfiles().get(aProfile.id) :
     Cc["@mozilla.org/toolkit/profile-service;1"]
       .getService(Ci.nsIToolkitProfileService)
-      .currentProfile.rootDir;
+      .defaultProfile.rootDir;
   if (!sourceProfileDir || !sourceProfileDir.exists() ||
       !sourceProfileDir.isReadable())
     return null;
