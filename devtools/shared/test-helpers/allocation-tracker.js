@@ -53,7 +53,11 @@ addDebuggerToGlobal(global);
  * @param Boolean watchAllGlobals
  *        If true, only allocations made from DevTools contexts are going to be recorded.
  */
-exports.allocationTracker = function({ watchGlobal, watchAllGlobals, watchDevToolsGlobals } = {}) {
+exports.allocationTracker = function({
+  watchGlobal,
+  watchAllGlobals,
+  watchDevToolsGlobals,
+} = {}) {
   dump("DEVTOOLS ALLOCATION: Start logging allocations\n");
   let dbg = new global.Debugger();
 
@@ -77,10 +81,10 @@ exports.allocationTracker = function({ watchGlobal, watchAllGlobals, watchDevToo
       if (g.class == "self-hosting-global") {
         return false;
       }
-      let ref = g.unsafeDereference();
-      let location = Cu.getRealmLocation(ref);
-      let accept = !!location.match(/devtools/i);
-      dump("NEW GLOBAL: " + (accept ? "+" : "-") + " : " + location + "\n");
+      const ref = g.unsafeDereference();
+      const location = Cu.getRealmLocation(ref);
+      const accept = !!location.match(/devtools/i);
+      dump("TRACKER NEW GLOBAL: " + (accept ? "+" : "-") + " : " + location + "\n");
       return accept;
     };
   }
@@ -89,7 +93,7 @@ exports.allocationTracker = function({ watchGlobal, watchAllGlobals, watchDevToo
   if (watchAllGlobals || watchDevToolsGlobals) {
     dbg.addAllGlobalsAsDebuggees();
 
-    for(let g of dbg.getDebuggees()) {
+    for (const g of dbg.getDebuggees()) {
       if (!acceptGlobal(g)) {
         dbg.removeDebuggee(g);
       }
