@@ -143,8 +143,12 @@ using ProcessSelector = Module::ProcessSelector;
 // Module.h.
 bool ProcessSelectorMatches(ProcessSelector aSelector) {
   GeckoProcessType type = XRE_GetProcessType();
-  if (type == GeckoProcessType_GPU || type == GeckoProcessType_RDD) {
+  if (type == GeckoProcessType_GPU) {
     return !!(aSelector & Module::ALLOW_IN_GPU_PROCESS);
+  }
+
+  if (type == GeckoProcessType_RDD) {
+    return !!(aSelector & Module::ALLOW_IN_RDD_PROCESS);
   }
 
   if (type == GeckoProcessType_Socket) {
@@ -424,6 +428,8 @@ nsresult nsComponentManagerImpl::Init() {
         ProcessSelectorMatches(ProcessSelector::ALLOW_IN_VR_PROCESS);
     gProcessMatchTable[size_t(ProcessSelector::ALLOW_IN_SOCKET_PROCESS)] =
         ProcessSelectorMatches(ProcessSelector::ALLOW_IN_SOCKET_PROCESS);
+    gProcessMatchTable[size_t(ProcessSelector::ALLOW_IN_RDD_PROCESS)] =
+        ProcessSelectorMatches(ProcessSelector::ALLOW_IN_RDD_PROCESS);
     gProcessMatchTable[size_t(ProcessSelector::ALLOW_IN_GPU_AND_VR_PROCESS)] =
         ProcessSelectorMatches(ProcessSelector::ALLOW_IN_GPU_AND_VR_PROCESS);
     gProcessMatchTable[size_t(
@@ -434,6 +440,14 @@ nsresult nsComponentManagerImpl::Init() {
         ProcessSelector::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS)] =
         ProcessSelectorMatches(
             ProcessSelector::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS);
+    gProcessMatchTable[size_t(
+        ProcessSelector::ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS)] =
+        ProcessSelectorMatches(
+            ProcessSelector::ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS);
+    gProcessMatchTable[size_t(
+        ProcessSelector::ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS)] =
+        ProcessSelectorMatches(
+            ProcessSelector::ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS);
   }
 
   MOZ_ASSERT(NOT_INITIALIZED == mStatus);
