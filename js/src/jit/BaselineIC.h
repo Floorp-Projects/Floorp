@@ -596,10 +596,12 @@ class ICStub {
                      (EXPECTED_MAGIC << MAGIC_OFFSET);
   }
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   inline void checkTraceMagic() {
     uint16_t magic = (traitKindBits_ >> MAGIC_OFFSET) & MAGIC_MASK;
     MOZ_DIAGNOSTIC_ASSERT(magic == EXPECTED_MAGIC);
   }
+#endif
 
  public:
   inline Kind kind() const {
