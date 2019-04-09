@@ -844,13 +844,6 @@ function openAboutDialog() {
 }
 
 function openPreferences(paneID, extraArgs) {
-  let histogram = Services.telemetry.getHistogramById("FX_PREFERENCES_OPENED_VIA");
-  if (extraArgs && extraArgs.origin) {
-    histogram.add(extraArgs.origin);
-  } else {
-    histogram.add("other");
-  }
-
   // This function is duplicated from preferences.js.
   function internalPrefCategoryNameToFriendlyName(aName) {
     return (aName || "").replace(/^pane./, function(toReplace) { return toReplace[4].toLowerCase(); });
