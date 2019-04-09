@@ -1493,15 +1493,9 @@ pref("media.gmp-widevinecdm.visible", true);
 pref("media.gmp-widevinecdm.enabled", true);
 #endif
 
-#if defined(_ARM64_) && defined(XP_WIN)
-// Windows on ARM64, OpenH264 not available yet.
-pref("media.gmp-gmpopenh264.visible", false);
-pref("media.gmp-gmpopenh264.enabled", false);
-#else
-// Not Windows on ARM64
 pref("media.gmp-gmpopenh264.visible", true);
 pref("media.gmp-gmpopenh264.enabled", true);
-#endif
+
 // Switch block autoplay logic to v2, and enable UI.
 pref("media.autoplay.enabled.user-gestures-needed", true);
 // Set Firefox to block autoplay, asking for permission by default.

@@ -466,6 +466,8 @@ pref("media.navigator.mediadatadecoder_vpx_enabled", false);
 #endif
 #if defined(ANDROID)
 pref("media.navigator.mediadatadecoder_h264_enabled", false); // bug 1509316
+#elif defined(_ARM64_) && defined(XP_WIN)
+pref("media.navigator.mediadatadecoder_h264_enabled", false);
 #else
 pref("media.navigator.mediadatadecoder_h264_enabled", true);
 #endif
