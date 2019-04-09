@@ -2978,13 +2978,10 @@ void HTMLInputElement::Focus(ErrorResult& aError) {
   if (frame) {
     for (nsIFrame* childFrame : frame->PrincipalChildList()) {
       // See if the child is a button control.
-      nsCOMPtr<nsIFormControl> formCtrl =
-          do_QueryInterface(childFrame->GetContent());
-      if (formCtrl && formCtrl->ControlType() == NS_FORM_BUTTON_BUTTON) {
-        nsCOMPtr<Element> element = do_QueryInterface(formCtrl);
-        nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-        if (fm && element) {
-          fm->SetFocus(element, 0);
+      if (childFrame->GetContent() &&
+          childFrame->GetContent()->IsHTMLElement(nsGkAtoms::button)) {
+        if (nsIFocusManager* fm = nsFocusManager::GetFocusManager()) {
+          fm->SetFocus(childFrame->GetContent()->AsElement(), 0);
         }
         break;
       }
@@ -3651,8 +3648,7 @@ bool HTMLInputElement::ShouldPreventDOMActivateDispatch(
 
   return target->GetParent() == this &&
          target->IsRootOfNativeAnonymousSubtree() &&
-         target->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                             nsGkAtoms::button, eCaseMatters);
+         target->IsHTMLElement(nsGkAtoms::button);
 }
 
 nsresult HTMLInputElement::MaybeInitPickers(EventChainPostVisitor& aVisitor) {

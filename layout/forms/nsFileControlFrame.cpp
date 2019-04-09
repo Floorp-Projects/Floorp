@@ -212,8 +212,6 @@ static already_AddRefed<Element> MakeAnonButton(Document* aDoc,
   // NOTE: SetIsNativeAnonymousRoot() has to be called before setting any
   // attribute.
   button->SetIsNativeAnonymousRoot();
-  button->SetAttr(kNameSpaceID_None, nsGkAtoms::type,
-                  NS_LITERAL_STRING("button"), false);
 
   // Set the file picking button text depending on the current locale.
   nsAutoString buttonTxt;
@@ -277,7 +275,7 @@ nsresult nsFileControlFrame::CreateAnonymousContent(
 
   // Update the displayed text to reflect the current element's value.
   nsAutoString value;
-  HTMLInputElement::FromNode(mContent)->GetDisplayFileName(value);
+  fileContent->GetDisplayFileName(value);
   UpdateDisplayedValue(value, false);
 
   aElements.AppendElement(mTextContent);
