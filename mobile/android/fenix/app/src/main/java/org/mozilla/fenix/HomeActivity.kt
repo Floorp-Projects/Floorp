@@ -7,6 +7,7 @@ package org.mozilla.fenix
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.util.AttributeSet
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -56,12 +57,17 @@ open class HomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         sessionObserver = subscribeToSessions()
 
+        themeManager.temporaryThemeManagerStorage =
+            when (PreferenceManager.getDefaultSharedPreferences(this)
+                .getBoolean(this.getString(R.string.pref_key_private_mode), false)) {
+                true -> ThemeManager.Theme.Private
+                false -> ThemeManager.Theme.Normal
+            }
         setTheme(themeManager.currentTheme)
         DefaultThemeManager.applyStatusBarTheme(window, themeManager, this)
-        components.core.setEnginePreferredColorScheme()
-
         browsingModeManager = DefaultBrowsingModeManager(this)
 
+        components.core.setEnginePreferredColorScheme()
         setContentView(R.layout.activity_home)
 
         val appBarConfiguration = AppBarConfiguration.Builder(setOf(R.id.libraryFragment)).build()
