@@ -36,10 +36,6 @@ function waitForElementFocus(dbg, el) {
   return waitFor(() => doc.activeElement == el && doc.hasFocus());
 }
 
-function waitForBreakpoint(dbg, url, line) {
-  return waitForState(dbg, () => findBreakpoint(dbg, url, line));
-}
-
 function waitForBreakpointWithCondition(dbg, url, line, cond) {
   return waitForState(dbg, () => {
     const bp = findBreakpoint(dbg, url, line);
@@ -63,11 +59,6 @@ function waitForBreakpointWithoutCondition(dbg, url, line) {
   });
 }
 
-async function assertConditionalBreakpointIsFocused(dbg) {
-  const input = findElement(dbg, "conditionalPanelInput");
-  await waitForElementFocus(dbg, input);
-}
-
 async function setConditionalBreakpoint(dbg, index, condition) {
   const {
     addConditionalBreakpoint,
@@ -79,7 +70,6 @@ async function setConditionalBreakpoint(dbg, index, condition) {
   rightClickElement(dbg, "gutter", index);
   selectContextMenuItem(dbg, selector);
   await waitForElement(dbg, "conditionalPanelInput");
-  await assertConditionalBreakpointIsFocused(dbg);
 
   // Position cursor reliably at the end of the text.
   pressKey(dbg, "End");
@@ -96,7 +86,6 @@ async function setLogPoint(dbg, index, value) {
   rightClickElement(dbg, "gutter", index);
   selectContextMenuItem(dbg, selector);
   await waitForElement(dbg, "conditionalPanelInput");
-  await assertConditionalBreakpointIsFocused(dbg);
 
   // Position cursor reliably at the end of the text.
   pressKey(dbg, "End");
@@ -158,4 +147,8 @@ add_task(async function() {
 
   bp = findBreakpoint(dbg, "simple2", 5);
   is(bp.options.logValue, "44", "breakpoint condition removed");
+
+  await altClickElement(dbg, "gutter", 6);
+  bp = await waitForBreakpoint(dbg, "simple2", 6);
+  is(bp.options.logValue, "displayName", "logPoint has default value");
 });

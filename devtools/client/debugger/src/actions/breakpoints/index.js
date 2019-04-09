@@ -244,7 +244,11 @@ export function toggleBreakpointAtLine(cx: Context, line: number) {
   };
 }
 
-export function addBreakpointAtLine(cx: Context, line: number) {
+export function addBreakpointAtLine(
+  cx: Context,
+  line: number,
+  shouldLog: ?boolean = false
+) {
   return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const state = getState();
     const source = getSelectedSource(state);
@@ -252,15 +256,19 @@ export function addBreakpointAtLine(cx: Context, line: number) {
     if (!source || isEmptyLineInSource(state, line, source.id)) {
       return;
     }
+    const breakpointLocation = {
+      sourceId: source.id,
+      sourceUrl: source.url,
+      column: undefined,
+      line
+    };
 
-    return dispatch(
-      addBreakpoint(cx, {
-        sourceId: source.id,
-        sourceUrl: source.url,
-        column: undefined,
-        line
-      })
-    );
+    const options = {};
+    if (shouldLog) {
+      options.logValue = "displayName";
+    }
+
+    return dispatch(addBreakpoint(cx, breakpointLocation, options));
   };
 }
 
