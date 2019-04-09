@@ -129,23 +129,42 @@ with only_when(target_is_osx):
     option('--with-macos-sdk', env='MACOS_SDK_DIR', nargs=1,
            help='Location of platform SDK to use')
 
-    @depends_if('--with-macos-sdk')
+    @depends('--with-macos-sdk')
     @imports(_from='os.path', _import='isdir')
-    @imports(_from='plistlib', _import='readPlist')
+    @imports(_from='biplist', _import='readPlist')
+    @imports('subprocess')
+    @imports('which')
     def macos_sdk(value):
         sdk_min_version = Version('10.11')
         sdk_max_version = Version('10.13')
 
-        if not isdir(value[0]):
+        sdk_path = None
+        if value:
+            sdk_path = value[0]
+        else:
+            try:
+                xcrun = which.which('xcrun')
+                args = [xcrun, '--sdk', 'macosx', '--show-sdk-path']
+                sdk_path = subprocess.check_output(args).strip()
+            except which.WhichError:
+                # On a Linux cross-compile, we don't have xcrun, so just leave
+                # the SDK unset if --with-macos-sdk isn't specified.
+                pass
+
+        if not sdk_path:
+            return
+
+        if not isdir(sdk_path):
             die('SDK not found in %s. When using --with-macos-sdk, you must specify a '
                 'valid SDK. SDKs are installed when the optional cross-development '
                 'tools are selected during the Xcode/Developer Tools installation.'
-                % value[0])
-        obj = readPlist(os.path.join(value[0], 'SDKSettings.plist'))
+                % sdk_path)
+        obj = readPlist(os.path.join(sdk_path, 'SDKSettings.plist'))
         if not obj:
-            die('Error parsing SDKSettings.plist in the SDK directory: %s' % value[0])
+            die('Error parsing SDKSettings.plist in the SDK directory: %s' % sdk_path)
         if 'Version' not in obj:
-            die('Error finding Version information in SDKSettings.plist from the SDK: %s' % value[0])
+            die('Error finding Version information in SDKSettings.plist from the '
+                'SDK: %s' % sdk_path)
         version = Version(obj['Version'])
         if version < sdk_min_version:
             die('SDK version "%s" is too old. Please upgrade to at least %s. '
@@ -157,7 +176,7 @@ with only_when(target_is_osx):
                 '%s. You may need to point to it using --with-macos-sdk=<path> in '
                 'your mozconfig. Various SDK versions are available from '
                 'https://github.com/phracker/MacOSX-SDKs' % (version, sdk_max_version))
-        return value[0]
+        return sdk_path
 
     set_config('MACOS_SDK_DIR', macos_sdk)
 
