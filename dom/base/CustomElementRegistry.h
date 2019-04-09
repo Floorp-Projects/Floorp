@@ -344,7 +344,7 @@ class CustomElementReactionsStack {
     }
 
    private:
-    RefPtr<CustomElementReactionsStack> mReactionStack;
+    const RefPtr<CustomElementReactionsStack> mReactionStack;
   };
 };
 
@@ -589,7 +589,7 @@ class MOZ_RAII AutoCEReaction final {
   }
 
  private:
-  RefPtr<CustomElementReactionsStack> mReactionsStack;
+  const RefPtr<CustomElementReactionsStack> mReactionsStack;
   JSContext* mCx;
   bool mIsElementQueuePushedForPreviousRecursionDepth;
 };
