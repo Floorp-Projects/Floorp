@@ -136,6 +136,17 @@ function getUnicodeExtensions(locale) {
 /**
  * Parser for BCP 47 language tags.
  *
+ * ---------------------------------------------------------------------------
+ * The following features were removed because the spec was changed to use
+ * Unicode BCP 47 locale identifier instead:
+ * - extlang subtags
+ *
+ * The removed features may still be referenced in some comments. This will be
+ * cleaned up when everything has been updated to follow the new specification.
+ *
+ * Ref: https://github.com/tc39/ecma402/pull/289
+ * ---------------------------------------------------------------------------
+ *
  * Returns null if |locale| can't be parsed as a Language-Tag. If the input is
  * a grandfathered language tag, the object
  *
@@ -147,10 +158,7 @@ function getUnicodeExtensions(locale) {
  * is returned. Otherwise the returned object has the following structure:
  *
  *   {
- *     language: language subtag without extlang / undefined,
- *     extlang1: first extlang subtag / undefined,
- *     extlang2: second extlang subtag / undefined,
- *     extlang3: third extlang subtag / undefined,
+ *     language: language subtag / undefined,
  *     script: script subtag / undefined,
  *     region: region subtag / undefined,
  *     variants: array of variant subtags,
@@ -269,7 +277,7 @@ function parseLanguageTag(locale) {
 
     assert(tokenLength > 0, "token length is not zero if type is ALPHA");
 
-    var language, extlang1, extlang2, extlang3, script, region, privateuse;
+    var language, script, region, privateuse;
     var variants = [];
     var extensions = [];
 
@@ -281,32 +289,12 @@ function parseLanguageTag(locale) {
     //           ["-" privateuse]
     if (tokenLength > 1) {
         // language = 2*3ALPHA          ; shortest ISO 639 code
-        //            ["-" extlang]     ; sometimes followed by
-        //                              ; extended language subtags
         //          / 4ALPHA            ; or reserved for future use
         //          / 5*8ALPHA          ; or registered language subtag
         if (tokenLength <= 3) {
             language = tokenStringLower();
             if (!nextToken())
                 return null;
-
-            // extlang = 3ALPHA         ; selected ISO 639 codes
-            //           *2("-" 3ALPHA) ; permanently reserved
-            if (token === ALPHA && tokenLength === 3) {
-                extlang1 = tokenStringLower();
-                if (!nextToken())
-                    return null;
-                if (token === ALPHA && tokenLength === 3) {
-                    extlang2 = tokenStringLower();
-                    if (!nextToken())
-                        return null;
-                    if (token === ALPHA && tokenLength === 3) {
-                        extlang3 = tokenStringLower();
-                        if (!nextToken())
-                            return null;
-                    }
-                }
-            }
         } else {
             assert(4 <= tokenLength && tokenLength <= 8, "reserved/registered language subtags");
             language = tokenStringLower();
@@ -443,9 +431,6 @@ function parseLanguageTag(locale) {
     if (token === NONE && !hasOwn(localeLowercase, grandfatheredMappings)) {
         return {
             language,
-            extlang1,
-            extlang2,
-            extlang3,
             script,
             region,
             variants,
@@ -531,10 +516,9 @@ function IsStructurallyValidLanguageTag(locale) {
 /**
  * Canonicalizes the given structurally valid BCP 47 language tag, including
  * regularized case of subtags. For example, the language tag
- * Zh-NAN-haNS-bu-variant2-Variant1-u-ca-chinese-t-Zh-laTN-x-PRIVATE, where
+ * Zh-haNS-bu-variant2-Variant1-u-ca-chinese-t-Zh-laTN-x-PRIVATE, where
  *
  *     Zh             ; 2*3ALPHA
- *     -NAN           ; ["-" extlang]
  *     -haNS          ; ["-" script]
  *     -bu            ; ["-" region]
  *     -variant2      ; *("-" variant)
@@ -543,7 +527,7 @@ function IsStructurallyValidLanguageTag(locale) {
  *     -t-Zh-laTN
  *     -x-PRIVATE     ; ["-" privateuse]
  *
- * becomes nan-Hans-mm-variant2-variant1-t-zh-latn-u-ca-chinese-x-private
+ * becomes zh-Hans-mm-variant2-variant1-t-zh-latn-u-ca-chinese-x-private
  *
  * Spec: ECMAScript Internationalization API Specification, 6.2.3.
  * Spec: RFC 5646, section 4.5.
@@ -560,9 +544,6 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
 
     var {
         language,
-        extlang1,
-        extlang2,
-        extlang3,
         script,
         region,
         variants,
@@ -582,40 +563,6 @@ function CanonicalizeLanguageTagFromObject(localeObj) {
         language = languageMappings[language];
 
     var canonical = language;
-
-    if (extlang1) {
-        // When an extlang subtag is encountered with its corresponding
-        // primary language tag prefix, replace the combination with the
-        // preferred value -- which MUST be the unadorned extlang subtag.
-        // For example, this entry
-        //
-        //   Type: extlang
-        //   Subtag: nan
-        //   Description: Min Nan Chinese
-        //   Added: 2009-07-29
-        //   Preferred-Value: nan
-        //   Prefix: zh
-        //   Macrolanguage: zh
-        //
-        // is interpreted to say that if a "nan" extlang appears after a "zh"
-        // primary language prefix, the extlang and its prefix must be
-        // replaced by its preferred value, so "zh-nan" must be replaced by
-        // the preferred value "nan". (RFC 5646 section 2.2.2)
-        if (hasOwn(extlang1, extlangMappings) && extlangMappings[extlang1] === language)
-            canonical = extlang1;
-        else
-            canonical += "-" + extlang1;
-    }
-
-    // The second extlang subtag will always be left as is.
-    // (RFC 5646 section 2.2.2)
-    if (extlang2)
-        canonical += "-" + extlang2;
-
-    // The third extlang subtag will always be left as is.
-    // (RFC 5646 section 2.2.2)
-    if (extlang3)
-        canonical += "-" + extlang3;
 
     // No script replacements are currently present, so append as is.
     if (script) {
@@ -833,10 +780,9 @@ function CanonicalizeUnicodeExtension(attributes, keywords) {
 /**
  * Canonicalizes the given structurally valid BCP 47 language tag, including
  * regularized case of subtags. For example, the language tag
- * Zh-NAN-haNS-bu-variant2-Variant1-u-ca-chinese-t-Zh-laTN-x-PRIVATE, where
+ * Zh-haNS-bu-variant2-Variant1-u-ca-chinese-t-Zh-laTN-x-PRIVATE, where
  *
  *     Zh             ; 2*3ALPHA
- *     -NAN           ; ["-" extlang]
  *     -haNS          ; ["-" script]
  *     -bu            ; ["-" region]
  *     -variant2      ; *("-" variant)
@@ -845,7 +791,7 @@ function CanonicalizeUnicodeExtension(attributes, keywords) {
  *     -t-Zh-laTN
  *     -x-PRIVATE     ; ["-" privateuse]
  *
- * becomes nan-Hans-mm-variant2-variant1-t-zh-latn-u-ca-chinese-x-private
+ * becomes zh-Hans-mm-variant2-variant1-t-zh-latn-u-ca-chinese-x-private
  *
  * Spec: ECMAScript Internationalization API Specification, 6.2.3.
  * Spec: RFC 5646, section 4.5.

@@ -717,3 +717,9 @@ skip script test262/harness/detachArrayBuffer.js
 # shouldn't require that zh-Hans is explicitly supported without a fallback to
 # zh.
 skip script test262/intl402/fallback-locales-are-supported.js
+
+# https://github.com/tc39/test262/pull/2097
+#
+# "zh-hak-CN" no longer allowed, because it contains an extlang subtag.
+skip script test262/intl402/language-tags-canonicalized.js
+skip script test262/intl402/Intl/getCanonicalLocales/canonicalized-tags.js
