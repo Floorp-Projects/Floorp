@@ -44,6 +44,10 @@ exclude: true
 
 - Added [`@NonNull`][66.1] or [`@Nullable`][66.2] to all fields.
 
+- [`RuntimeTelemetry#getSnapshots`][68.10] returns a [`JSONObject`][67.22] now.
+
+[68.10]: ../RuntimeTelemetry.html#getSnapshots-boolean-
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -250,4 +254,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: bb3f2a7e754d92f6d5d9679e4d135c168327c73a
+[api-version]: 0d106c73184df553b2204170473080bf2825ea23
