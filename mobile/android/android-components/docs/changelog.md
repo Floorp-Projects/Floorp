@@ -56,6 +56,9 @@ permalink: /changelog/
 * **feature-findinpage**
    * Find in Page now emits facts
 
+* **feature-awesomebar**
+   * Added `BookmarksStorageSuggestionProvider`
+
 * **browser-toolbar**
    * Adds `browserToolbarProgressBarGravity` attr with options `top` and `bottom` (default).
    * Adds the ability to long click the urlView
