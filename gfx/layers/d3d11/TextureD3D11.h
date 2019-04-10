@@ -100,6 +100,7 @@ class D3D11TextureData final : public TextureData {
 
   bool PrepareDrawTargetInLock(OpenMode aMode);
 
+  friend class gl::GLBlitHelper;
   bool SerializeSpecific(SurfaceDescriptorD3D10* aOutDesc);
 
   static D3D11TextureData* Create(gfx::IntSize aSize,
