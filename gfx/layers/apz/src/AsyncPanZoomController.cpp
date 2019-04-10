@@ -2258,6 +2258,7 @@ bool AsyncPanZoomController::AllowScrollHandoffInCurrentBlock() const {
       // Do not allow handoff beyond the first APZC to scroll.
       if (currentBlock->GetScrolledApzc() == this) {
         result = false;
+        APZC_LOG("%p dropping handoff; AllowImmediateHandoff=false\n", this);
       }
     }
   }
@@ -3336,6 +3337,8 @@ void AsyncPanZoomController::HandleFlingOverscroll(
                                          true /* handoff */, aScrolledApzc};
     ParentLayerPoint residualVelocity =
         treeManagerLocal->DispatchFling(this, handoffState);
+    FLING_LOG("APZC %p left with residual velocity %s\n", this,
+        Stringify(residualVelocity).c_str());
     if (!IsZero(residualVelocity) && IsPannable() &&
         gfxPrefs::APZOverscrollEnabled()) {
       // Obey overscroll-behavior.
