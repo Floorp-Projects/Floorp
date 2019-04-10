@@ -23,6 +23,7 @@ import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.GeckoView;
+import org.mozilla.geckoview.GeckoViewBridge;
 
 import java.util.List;
 
@@ -71,7 +72,7 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
 
         final GeckoBundle data = new GeckoBundle(1);
         data.putInt("selectionID", selectionID);
-        geckoView.getEventDispatcher().dispatch("TextSelection:End", data);
+        GeckoViewBridge.getEventDispatcher(geckoView).dispatch("TextSelection:End", data);
     }
 
     @Override
@@ -85,7 +86,7 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
     }
 
     private void registerForEvents() {
-        geckoView.getEventDispatcher().registerUiThreadListener(this,
+        GeckoViewBridge.getEventDispatcher(geckoView).registerUiThreadListener(this,
                 "TextSelection:ActionbarInit",
                 "TextSelection:ActionbarStatus",
                 "TextSelection:ActionbarUninit",
@@ -93,7 +94,7 @@ public class FloatingToolbarTextSelection implements TextSelection, BundleEventL
     }
 
     private void unregisterFromEvents() {
-        geckoView.getEventDispatcher().unregisterUiThreadListener(this,
+        GeckoViewBridge.getEventDispatcher(geckoView).unregisterUiThreadListener(this,
                 "TextSelection:ActionbarInit",
                 "TextSelection:ActionbarStatus",
                 "TextSelection:ActionbarUninit",

@@ -187,7 +187,7 @@ public class GeckoSession implements Parcelable {
         @Override protected native void disposeNative();
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
-        public native void attachNPZC(PanZoomController npzc);
+        public native void attachNPZC(PanZoomController.NativeProvider npzc);
 
         @WrapForJNI(calledFrom = "ui", dispatchTo = "gecko")
         public native void onBoundsChanged(int left, int top, int width, int height);
@@ -1746,7 +1746,7 @@ public class GeckoSession implements Parcelable {
             mState = new GeckoBundle(state.mState);
         }
 
-        public void updateSessionState(final @NonNull GeckoBundle updateData) {
+        /* package */ void updateSessionState(final @NonNull GeckoBundle updateData) {
             if (updateData == null) {
                 Log.w(LOGTAG, "Session state update has no data field.");
                 return;
@@ -2516,7 +2516,7 @@ public class GeckoSession implements Parcelable {
     }
 
     @AnyThread
-    public @NonNull EventDispatcher getEventDispatcher() {
+    /* package */ @NonNull EventDispatcher getEventDispatcher() {
         return mEventDispatcher;
     }
 
@@ -4446,7 +4446,7 @@ public class GeckoSession implements Parcelable {
         }
 
         mAttachedCompositor = true;
-        mCompositor.attachNPZC(mPanZoomController);
+        mCompositor.attachNPZC(mPanZoomController.mNative);
 
         if (mSurface != null) {
             // If we have a valid surface, create the compositor now that we're attached.

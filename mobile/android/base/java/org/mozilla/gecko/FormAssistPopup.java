@@ -14,6 +14,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.SwipeDismissListViewTouchListener;
 import org.mozilla.gecko.widget.SwipeDismissListViewTouchListener.OnDismissCallback;
 import org.mozilla.geckoview.GeckoView;
+import org.mozilla.geckoview.GeckoViewBridge;
 
 import android.content.Context;
 import android.content.res.Resources;
@@ -95,14 +96,14 @@ public class FormAssistPopup extends RelativeLayout implements BundleEventListen
 
     public void create(final GeckoView view) {
         mGeckoView = view;
-        mGeckoView.getEventDispatcher().registerUiThreadListener(this,
+        GeckoViewBridge.getEventDispatcher(mGeckoView).registerUiThreadListener(this,
             "FormAssist:AutoCompleteResult",
             "FormAssist:ValidationMessage",
             "FormAssist:Hide");
     }
 
     public void destroy() {
-        mGeckoView.getEventDispatcher().unregisterUiThreadListener(this,
+        GeckoViewBridge.getEventDispatcher(mGeckoView).unregisterUiThreadListener(this,
             "FormAssist:AutoCompleteResult",
             "FormAssist:ValidationMessage",
             "FormAssist:Hide");

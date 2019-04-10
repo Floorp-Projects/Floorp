@@ -48,6 +48,8 @@ exclude: true
 
 [68.10]: ../RuntimeTelemetry.html#getSnapshots-boolean-
 
+- Removed all `org.mozilla.gecko` references in the API.
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -254,4 +256,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 0d106c73184df553b2204170473080bf2825ea23
+[api-version]: 2105a5c321285d3e0e2756fbd56e26090a275c25
