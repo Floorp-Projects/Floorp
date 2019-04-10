@@ -235,20 +235,27 @@ class UrlbarController {
    *
    * @param {KeyboardEvent} event
    *   The DOM KeyboardEvent.
+   * @param {boolean} executeAction
+   *   Whether the event should actually execute the associated action, or just
+   *   be managed (at a preventDefault() level). This is used when the event
+   *   will be deferred by the event bufferer, but preventDefault() and friends
+   *   should still happen synchronously.
    */
-  handleKeyNavigation(event) {
+  handleKeyNavigation(event, executeAction = true) {
     const isMac = AppConstants.platform == "macosx";
     // Handle readline/emacs-style navigation bindings on Mac.
     if (isMac &&
         this.view.isOpen &&
         event.ctrlKey &&
         (event.key == "n" || event.key == "p")) {
-      this.view.selectBy(1, { reverse: event.key == "p" });
+      if (executeAction) {
+        this.view.selectBy(1, { reverse: event.key == "p" });
+      }
       event.preventDefault();
       return;
     }
 
-    if (this.view.isOpen) {
+    if (this.view.isOpen && executeAction) {
       let queryContext = this._lastQueryContext;
       if (queryContext) {
         this.view.oneOffSearchButtons.handleKeyPress(
@@ -264,7 +271,9 @@ class UrlbarController {
 
     switch (event.keyCode) {
       case KeyEvent.DOM_VK_ESCAPE:
-        this.input.handleRevert();
+        if (executeAction) {
+          this.input.handleRevert();
+        }
         event.preventDefault();
         break;
       case KeyEvent.DOM_VK_RETURN:
@@ -273,12 +282,16 @@ class UrlbarController {
           // Prevent beep on Mac.
           event.preventDefault();
         }
-        this.input.handleCommand(event);
+        if (executeAction) {
+          this.input.handleCommand(event);
+        }
         break;
       case KeyEvent.DOM_VK_TAB:
         if (this.view.isOpen) {
-          this.view.selectBy(1, { reverse: event.shiftKey });
-          this.userSelectionBehavior = "tab";
+          if (executeAction) {
+            this.view.selectBy(1, { reverse: event.shiftKey });
+            this.userSelectionBehavior = "tab";
+          }
           event.preventDefault();
         }
         break;
@@ -290,18 +303,22 @@ class UrlbarController {
           break;
         }
         if (this.view.isOpen) {
-          this.userSelectionBehavior = "arrow";
-          this.view.selectBy(
-            event.keyCode == KeyEvent.DOM_VK_PAGE_DOWN ||
-            event.keyCode == KeyEvent.DOM_VK_PAGE_UP ?
+          if (executeAction) {
+            this.userSelectionBehavior = "arrow";
+            this.view.selectBy(
+              event.keyCode == KeyEvent.DOM_VK_PAGE_DOWN ||
+              event.keyCode == KeyEvent.DOM_VK_PAGE_UP ?
               UrlbarUtils.PAGE_UP_DOWN_DELTA : 1,
-            { reverse: event.keyCode == KeyEvent.DOM_VK_UP ||
-                       event.keyCode == KeyEvent.DOM_VK_PAGE_UP });
+              { reverse: event.keyCode == KeyEvent.DOM_VK_UP ||
+                        event.keyCode == KeyEvent.DOM_VK_PAGE_UP });
+          }
         } else {
           if (this.keyEventMovesCaret(event)) {
             break;
           }
-          this.input.startQuery();
+          if (executeAction) {
+            this.input.startQuery();
+          }
         }
         event.preventDefault();
         break;
@@ -313,7 +330,8 @@ class UrlbarController {
         break;
       case KeyEvent.DOM_VK_DELETE:
       case KeyEvent.DOM_VK_BACK_SPACE:
-        if (event.shiftKey && this.view.isOpen && this._handleDeleteEntry()) {
+        if (event.shiftKey && this.view.isOpen &&
+            (!executeAction || this._handleDeleteEntry())) {
           event.preventDefault();
         }
         break;

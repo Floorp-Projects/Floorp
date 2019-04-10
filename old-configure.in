@@ -61,7 +61,6 @@ GTK2_VERSION=2.18.0
 GTK3_VERSION=3.4.0
 GDK_VERSION_MAX_ALLOWED=GDK_VERSION_3_4
 W32API_VERSION=3.14
-GCONF_VERSION=1.2.1
 STARTUP_NOTIFICATION_VERSION=0.8
 DBUS_VERSION=0.60
 SQLITE_VERSION=3.27.2
@@ -1907,47 +1906,6 @@ fi
 
 AC_DEFINE_UNQUOTED(MOZ_DISTRIBUTION_ID,"$MOZ_DISTRIBUTION_ID")
 AC_SUBST(MOZ_DISTRIBUTION_ID)
-
-dnl ========================================================
-dnl = GConf support module
-dnl ========================================================
-
-if test "$MOZ_X11"
-then
-    if test "$MOZ_ENABLE_GTK"
-    then
-        MOZ_ENABLE_GCONF=1
-    fi
-
-    dnl ========================================================
-    dnl = GConf support module
-    dnl ========================================================
-    MOZ_ARG_DISABLE_BOOL(gconf,
-    [  --disable-gconf      Disable Gconf support ],
-        MOZ_ENABLE_GCONF=,
-        MOZ_ENABLE_GCONF=1)
-
-    if test "$MOZ_ENABLE_GCONF"
-    then
-        PKG_CHECK_MODULES(MOZ_GCONF, gconf-2.0 >= $GCONF_VERSION gobject-2.0 ,[
-            MOZ_GCONF_LIBS=`$PKG_CONFIG --libs gobject-2.0`
-            MOZ_ENABLE_GCONF=1
-        ],[
-            if test -n "$MOZ_ENABLE_GCONF";
-            then
-                AC_MSG_ERROR([* * * Could not find gconf-2.0 ])
-            else
-                AC_MSG_WARN([Many automated tests will fail with --disable-gconf. See bug 1167201.])
-            fi
-        ])
-    fi
-
-    if test "$MOZ_ENABLE_GCONF"; then
-        AC_DEFINE(MOZ_ENABLE_GCONF)
-    fi
-
-    AC_SUBST(MOZ_ENABLE_GCONF)
-fi
 
 dnl ========================================================
 dnl = libproxy support

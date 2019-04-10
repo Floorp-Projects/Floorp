@@ -674,7 +674,7 @@ static bool ospath_join(JSContext* cx, unsigned argc, Value* vp) {
   // This function doesn't take into account some aspects of Windows paths,
   // e.g. the drive letter is always reset when an absolute path is appended.
 
-  StringBuffer buffer(cx);
+  JSStringBuilder buffer(cx);
 
   for (unsigned i = 0; i < args.length(); i++) {
     if (!args[i].isString()) {

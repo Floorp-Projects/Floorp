@@ -11,3 +11,6 @@ pref("devtools.webide.lastConnectedRuntime", "");
 pref("devtools.webide.lastSelectedProject", "");
 pref("devtools.webide.zoom", "1");
 pref("devtools.webide.busyTimeout", 10000);
+
+// Show a deprecation message when starting WebIDE.
+pref("devtools.webide.showDeprecationMessage", true);

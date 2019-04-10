@@ -28,6 +28,7 @@ namespace js {
  * See |extractWellSized|.
  */
 class StringBuffer {
+ protected:
   template <typename CharT>
   using BufferType = Vector<CharT, 64 / sizeof(CharT)>;
 
@@ -264,12 +265,6 @@ class StringBuffer {
   const Latin1Char* rawLatin1Begin() const { return begin<Latin1Char>(); }
   const Latin1Char* rawLatin1End() const { return end<Latin1Char>(); }
 
-  /*
-   * Creates a string from the characters in this buffer, then (regardless
-   * whether string creation succeeded or failed) empties the buffer.
-   */
-  JSFlatString* finishString();
-
   /* Identical to finishString() except that an atom is created. */
   JSAtom* finishAtom();
 
@@ -279,6 +274,18 @@ class StringBuffer {
    * null-terminated unless the last appended character was '\0'.
    */
   char16_t* stealChars();
+};
+
+class JSStringBuilder : public StringBuffer {
+ public:
+  explicit JSStringBuilder(JSContext* cx)
+      : StringBuffer(cx) {}
+
+  /*
+   * Creates a string from the characters in this buffer, then (regardless
+   * whether string creation succeeded or failed) empties the buffer.
+   */
+  JSFlatString* finishString();
 };
 
 inline bool StringBuffer::append(const char16_t* begin, const char16_t* end) {

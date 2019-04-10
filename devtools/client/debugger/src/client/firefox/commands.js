@@ -303,10 +303,6 @@ function reload(): Promise<*> {
   return tabTarget.reload();
 }
 
-function onPauseChange(thread: string, paused: boolean) {
-  tabTarget.emit("pause-change", { thread, paused });
-}
-
 function getProperties(thread: string, grip: Grip): Promise<*> {
   const objClient = lookupThreadClient(thread).pauseGrip(grip);
 
@@ -508,7 +504,6 @@ const clientCommands = {
   evaluateExpressions,
   navigate,
   reload,
-  onPauseChange,
   getProperties,
   getFrameScopes,
   pauseOnExceptions,

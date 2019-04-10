@@ -10,13 +10,53 @@ from mach.decorators import (
     CommandArgument,
     CommandProvider,
     Command,
+    SubCommand,
 )
 
 from mozbuild.base import MachCommandBase, MozbuildObject
 
 
 @CommandProvider
+class BustedProvider(object):
+    @Command('busted', category='misc',
+             description='Query known bugs in our tooling, and file new ones.')
+    def busted_default(self):
+        import requests
+        payload = {'include_fields': 'id,summary,last_change_time',
+                   'blocks': 1543241,
+                   'resolution': '---'}
+        response = requests.get('https://bugzilla.mozilla.org/rest/bug', payload)
+        response.raise_for_status()
+        json_response = response.json()
+        if 'bugs' in json_response and len(json_response['bugs']) > 0:
+            # Display most recently modifed bugs first.
+            bugs = sorted(json_response['bugs'], key=lambda item: item['last_change_time'],
+                          reverse=True)
+            for bug in bugs:
+                print("Bug %s - %s" % (bug['id'], bug['summary']))
+        else:
+            print("No known tooling issues found.")
+
+    @SubCommand('busted',
+                'file',
+                description='File a bug for busted tooling.')
+    def busted_file(self):
+        import webbrowser
+        uri = ('https://bugzilla.mozilla.org/enter_bug.cgi?'
+               'product=Firefox%20Build%20System&component=General&blocked=1543241')
+        webbrowser.open_new_tab(uri)
+
+
+@CommandProvider
 class SearchProvider(object):
+    @Command('searchfox', category='misc',
+             description='Search for something in Searchfox.')
+    @CommandArgument('term', nargs='+', help='Term(s) to search for.')
+    def searchfox(self, term):
+        import webbrowser
+        term = ' '.join(term)
+        uri = 'https://searchfox.org/mozilla-central/search?q=%s' % term
+        webbrowser.open_new_tab(uri)
     @Command('dxr', category='misc',
              description='Search for something in DXR.')
     @CommandArgument('term', nargs='+', help='Term(s) to search for.')
@@ -46,13 +86,14 @@ class SearchProvider(object):
 
     @Command('search', category='misc',
              description='Search for something on the Internets. '
-             'This will open 3 new browser tabs and search for the term on Google, '
-             'MDN, and DXR.')
+             'This will open 4 new browser tabs and search for the term on Google, '
+             'MDN, DXR, and Searchfox.')
     @CommandArgument('term', nargs='+', help='Term(s) to search for.')
     def search(self, term):
         self.google(term)
         self.mdn(term)
         self.dxr(term)
+        self.searchfox(term)
 
 
 @CommandProvider

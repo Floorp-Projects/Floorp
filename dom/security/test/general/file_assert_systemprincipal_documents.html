@@ -1,0 +1,11 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1513445: Assert not loading web documents into system land</title>
+</head>
+<body>
+<h1>This page loads documents from the SystemPrincipal (which causes the assertion)</h1>
+<iframe type="chrome" id="testframe" src="http://example.com/browser/dom/security/test/general/file_assert_systemprincipal_documents_iframe.html"></iframe>
+</body>
+</html>
+

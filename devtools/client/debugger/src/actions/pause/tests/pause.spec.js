@@ -70,8 +70,7 @@ const mockThreadClient = {
       }
     });
   },
-  getBreakpointPositions: async () => ({}),
-  onPauseChange() {}
+  getBreakpointPositions: async () => ({})
 };
 
 const mockFrameId = "1";

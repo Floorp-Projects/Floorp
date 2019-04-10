@@ -123,8 +123,8 @@ already_AddRefed<TextureClient> ImageClient::CreateTextureClientForImage(
     SurfaceTextureImage* typedImage = aImage->AsSurfaceTextureImage();
     texture = AndroidSurfaceTextureData::CreateTextureClient(
         typedImage->GetHandle(), size, typedImage->GetContinuous(),
-        typedImage->GetOriginPos(), aForwarder->GetTextureForwarder(),
-        TextureFlags::DEFAULT);
+        typedImage->GetOriginPos(), typedImage->GetHasAlpha(),
+        aForwarder->GetTextureForwarder(), TextureFlags::DEFAULT);
 #endif
   } else {
     RefPtr<gfx::SourceSurface> surface = aImage->GetAsSourceSurface();

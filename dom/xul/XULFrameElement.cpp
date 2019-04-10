@@ -92,7 +92,8 @@ void XULFrameElement::LoadSrc() {
     // session history handling works like dynamic html:iframes.
     // Usually xul elements are used in chrome, which doesn't have
     // session history at all.
-    mFrameLoader = nsFrameLoader::Create(this, opener, false);
+    mFrameLoader = nsFrameLoader::Create(
+        this, opener ? opener->GetDOMWindow() : nullptr, false);
     if (NS_WARN_IF(!mFrameLoader)) {
       return;
     }

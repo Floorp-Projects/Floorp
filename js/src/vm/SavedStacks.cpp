@@ -1014,7 +1014,7 @@ JS_PUBLIC_API bool BuildStackString(JSContext* cx, JSPrincipals* principals,
   CHECK_THREAD(cx);
   MOZ_RELEASE_ASSERT(cx->realm());
 
-  js::StringBuffer sb(cx);
+  js::JSStringBuilder sb(cx);
 
   if (format == js::StackFormat::Default) {
     format = cx->runtime()->stackFormat();
