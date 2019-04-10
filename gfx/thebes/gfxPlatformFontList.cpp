@@ -16,7 +16,6 @@
 #include "nsGkAtoms.h"
 #include "nsServiceManagerUtils.h"
 #include "nsUnicharUtils.h"
-#include "nsUnicodeRange.h"
 #include "nsUnicodeProperties.h"
 #include "nsXULAppAPI.h"
 
@@ -601,14 +600,12 @@ gfxFontEntry* gfxPlatformFontList::SystemFindFontForChar(
   LogModule* log = gfxPlatform::GetLog(eGfxLog_textrun);
 
   if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Warning))) {
-    uint32_t unicodeRange = FindCharUnicodeRange(aCh);
     Script script = mozilla::unicode::GetScriptCode(aCh);
     MOZ_LOG(log, LogLevel::Warning,
             ("(textrun-systemfallback-%s) char: u+%6.6x "
-             "unicode-range: %d script: %d match: [%s]"
+             "script: %d match: [%s]"
              " time: %dus cmaps: %d\n",
-             (common ? "common" : "global"), aCh, unicodeRange,
-             static_cast<int>(script),
+             (common ? "common" : "global"), aCh, static_cast<int>(script),
              (fontEntry ? fontEntry->Name().get() : "<none>"),
              int32_t(elapsed.ToMicroseconds()), cmapCount));
   }
@@ -1046,61 +1043,116 @@ const char* gfxPlatformFontList::GetPrefLangName(eFontPrefLang aLang) {
   return nullptr;
 }
 
-eFontPrefLang gfxPlatformFontList::GetFontPrefLangFor(uint8_t aUnicodeRange) {
-  switch (aUnicodeRange) {
-    case kRangeSetLatin:
+eFontPrefLang gfxPlatformFontList::GetFontPrefLangFor(uint32_t aCh) {
+  switch (ublock_getCode(aCh)) {
+    case UBLOCK_BASIC_LATIN:
+    case UBLOCK_LATIN_1_SUPPLEMENT:
+    case UBLOCK_LATIN_EXTENDED_A:
+    case UBLOCK_LATIN_EXTENDED_B:
+    case UBLOCK_IPA_EXTENSIONS:
+    case UBLOCK_SPACING_MODIFIER_LETTERS:
+    case UBLOCK_LATIN_EXTENDED_ADDITIONAL:
+    case UBLOCK_LATIN_EXTENDED_C:
+    case UBLOCK_LATIN_EXTENDED_D:
+    case UBLOCK_LATIN_EXTENDED_E:
+    case UBLOCK_PHONETIC_EXTENSIONS:
       return eFontPrefLang_Western;
-    case kRangeCyrillic:
-      return eFontPrefLang_Cyrillic;
-    case kRangeGreek:
+    case UBLOCK_GREEK:
+    case UBLOCK_GREEK_EXTENDED:
       return eFontPrefLang_Greek;
-    case kRangeHebrew:
-      return eFontPrefLang_Hebrew;
-    case kRangeArabic:
-      return eFontPrefLang_Arabic;
-    case kRangeThai:
-      return eFontPrefLang_Thai;
-    case kRangeKorean:
-      return eFontPrefLang_Korean;
-    case kRangeJapanese:
-      return eFontPrefLang_Japanese;
-    case kRangeSChinese:
-      return eFontPrefLang_ChineseCN;
-    case kRangeTChinese:
-      return eFontPrefLang_ChineseTW;
-    case kRangeDevanagari:
-      return eFontPrefLang_Devanagari;
-    case kRangeTamil:
-      return eFontPrefLang_Tamil;
-    case kRangeArmenian:
+    case UBLOCK_CYRILLIC:
+    case UBLOCK_CYRILLIC_SUPPLEMENT:
+    case UBLOCK_CYRILLIC_EXTENDED_A:
+    case UBLOCK_CYRILLIC_EXTENDED_B:
+    case UBLOCK_CYRILLIC_EXTENDED_C:
+      return eFontPrefLang_Cyrillic;
+    case UBLOCK_ARMENIAN:
       return eFontPrefLang_Armenian;
-    case kRangeBengali:
+    case UBLOCK_HEBREW:
+      return eFontPrefLang_Hebrew;
+    case UBLOCK_ARABIC:
+    case UBLOCK_ARABIC_PRESENTATION_FORMS_A:
+    case UBLOCK_ARABIC_PRESENTATION_FORMS_B:
+    case UBLOCK_ARABIC_SUPPLEMENT:
+    case UBLOCK_ARABIC_EXTENDED_A:
+    case UBLOCK_ARABIC_MATHEMATICAL_ALPHABETIC_SYMBOLS:
+      return eFontPrefLang_Arabic;
+    case UBLOCK_DEVANAGARI:
+    case UBLOCK_DEVANAGARI_EXTENDED:
+      return eFontPrefLang_Devanagari;
+    case UBLOCK_BENGALI:
       return eFontPrefLang_Bengali;
-    case kRangeCanadian:
-      return eFontPrefLang_Canadian;
-    case kRangeEthiopic:
-      return eFontPrefLang_Ethiopic;
-    case kRangeGeorgian:
-      return eFontPrefLang_Georgian;
-    case kRangeGujarati:
-      return eFontPrefLang_Gujarati;
-    case kRangeGurmukhi:
+    case UBLOCK_GURMUKHI:
       return eFontPrefLang_Gurmukhi;
-    case kRangeKhmer:
-      return eFontPrefLang_Khmer;
-    case kRangeMalayalam:
-      return eFontPrefLang_Malayalam;
-    case kRangeOriya:
+    case UBLOCK_GUJARATI:
+      return eFontPrefLang_Gujarati;
+    case UBLOCK_ORIYA:
       return eFontPrefLang_Oriya;
-    case kRangeTelugu:
+    case UBLOCK_TAMIL:
+      return eFontPrefLang_Tamil;
+    case UBLOCK_TELUGU:
       return eFontPrefLang_Telugu;
-    case kRangeKannada:
+    case UBLOCK_KANNADA:
       return eFontPrefLang_Kannada;
-    case kRangeSinhala:
+    case UBLOCK_MALAYALAM:
+      return eFontPrefLang_Malayalam;
+    case UBLOCK_SINHALA:
+    case UBLOCK_SINHALA_ARCHAIC_NUMBERS:
       return eFontPrefLang_Sinhala;
-    case kRangeTibetan:
+    case UBLOCK_THAI:
+      return eFontPrefLang_Thai;
+    case UBLOCK_TIBETAN:
       return eFontPrefLang_Tibetan;
-    case kRangeSetCJK:
+    case UBLOCK_GEORGIAN:
+    case UBLOCK_GEORGIAN_SUPPLEMENT:
+    case UBLOCK_GEORGIAN_EXTENDED:
+      return eFontPrefLang_Georgian;
+    case UBLOCK_HANGUL_JAMO:
+    case UBLOCK_HANGUL_COMPATIBILITY_JAMO:
+    case UBLOCK_HANGUL_SYLLABLES:
+    case UBLOCK_HANGUL_JAMO_EXTENDED_A:
+    case UBLOCK_HANGUL_JAMO_EXTENDED_B:
+      return eFontPrefLang_Korean;
+    case UBLOCK_ETHIOPIC:
+    case UBLOCK_ETHIOPIC_EXTENDED:
+    case UBLOCK_ETHIOPIC_SUPPLEMENT:
+    case UBLOCK_ETHIOPIC_EXTENDED_A:
+      return eFontPrefLang_Ethiopic;
+    case UBLOCK_UNIFIED_CANADIAN_ABORIGINAL_SYLLABICS:
+    case UBLOCK_UNIFIED_CANADIAN_ABORIGINAL_SYLLABICS_EXTENDED:
+      return eFontPrefLang_Canadian;
+    case UBLOCK_KHMER:
+    case UBLOCK_KHMER_SYMBOLS:
+      return eFontPrefLang_Khmer;
+    case UBLOCK_CJK_RADICALS_SUPPLEMENT:
+    case UBLOCK_KANGXI_RADICALS:
+    case UBLOCK_IDEOGRAPHIC_DESCRIPTION_CHARACTERS:
+    case UBLOCK_CJK_SYMBOLS_AND_PUNCTUATION:
+    case UBLOCK_HIRAGANA:
+    case UBLOCK_KATAKANA:
+    case UBLOCK_BOPOMOFO:
+    case UBLOCK_KANBUN:
+    case UBLOCK_BOPOMOFO_EXTENDED:
+    case UBLOCK_ENCLOSED_CJK_LETTERS_AND_MONTHS:
+    case UBLOCK_CJK_COMPATIBILITY:
+    case UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_A:
+    case UBLOCK_CJK_UNIFIED_IDEOGRAPHS:
+    case UBLOCK_CJK_COMPATIBILITY_IDEOGRAPHS:
+    case UBLOCK_CJK_COMPATIBILITY_FORMS:
+    case UBLOCK_SMALL_FORM_VARIANTS:
+    case UBLOCK_HALFWIDTH_AND_FULLWIDTH_FORMS:
+    case UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_B:
+    case UBLOCK_CJK_COMPATIBILITY_IDEOGRAPHS_SUPPLEMENT:
+    case UBLOCK_KATAKANA_PHONETIC_EXTENSIONS:
+    case UBLOCK_CJK_STROKES:
+    case UBLOCK_VERTICAL_FORMS:
+    case UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_C:
+    case UBLOCK_KANA_SUPPLEMENT:
+    case UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_D:
+    case UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_E:
+    case UBLOCK_IDEOGRAPHIC_SYMBOLS_AND_PUNCTUATION:
+    case UBLOCK_CJK_UNIFIED_IDEOGRAPHS_EXTENSION_F:
+    case UBLOCK_KANA_EXTENDED_A:
       return eFontPrefLang_CJKSet;
     default:
       return eFontPrefLang_Others;
