@@ -557,10 +557,10 @@ static bool ComputeBinarySearchMid(ICEntries entries, uint32_t pcOffset,
         if (entryOffset < pcOffset) {
           return 1;
         }
-        if (!entry.isForOp()) {
-          // Non-op ICEntries are used for prologue argument type checks. Ignore
-          // those entries and return 1 because these entries appear in the
-          // ICEntry list before the for-op ICEntry (if any) at offset 0.
+        if (entry.isForPrologue()) {
+          // Prologue ICEntries are used for function argument type checks.
+          // Ignore these entries and return 1 because these entries appear in
+          // the ICEntry list before the other ICEntry (if any) at offset 0.
           MOZ_ASSERT(entryOffset == 0);
           return 1;
         }
@@ -591,8 +591,9 @@ uint8_t* BaselineScript::returnAddressForEntry(const RetAddrEntry& ent) {
 }
 
 ICEntry* ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset) {
-  // Multiple IC entries can have the same PC offset, but this method only looks
-  // for those which have isForOp() set.
+  // This method ignores prologue IC entries. There can be at most one
+  // non-prologue IC per bytecode op.
+
   size_t mid;
   if (!ComputeBinarySearchMid(ICEntries(this), pcOffset, &mid)) {
     return nullptr;
@@ -601,7 +602,7 @@ ICEntry* ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset) {
   MOZ_ASSERT(mid < numICEntries());
 
   ICEntry& entry = icEntry(mid);
-  MOZ_ASSERT(entry.isForOp());
+  MOZ_ASSERT(!entry.isForPrologue());
   MOZ_ASSERT(entry.pcOffset() == pcOffset);
   return &entry;
 }
@@ -622,7 +623,7 @@ ICEntry* ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset,
     ICEntry* lastEntry = &icEntry(numICEntries() - 1);
     ICEntry* curEntry = prevLookedUpEntry;
     while (curEntry >= firstEntry && curEntry <= lastEntry) {
-      if (curEntry->pcOffset() == pcOffset && curEntry->isForOp()) {
+      if (curEntry->pcOffset() == pcOffset && !curEntry->isForPrologue()) {
         return curEntry;
       }
       curEntry++;
@@ -646,7 +647,7 @@ ICEntry* ICScript::interpreterICEntryFromPCOffset(uint32_t pcOffset) {
   // pcOffset does not necessarily have an ICEntry, so we want to return the
   // first ICEntry for which the following is true:
   //
-  //    entry.isForOp() && entry.pcOffset() >= pcOffset
+  //    !entry.isForPrologue() && entry.pcOffset() >= pcOffset
   //
   // Fortunately, ComputeBinarySearchMid returns exactly this entry.
 
@@ -655,7 +656,7 @@ ICEntry* ICScript::interpreterICEntryFromPCOffset(uint32_t pcOffset) {
 
   if (mid < numICEntries()) {
     ICEntry& entry = icEntry(mid);
-    MOZ_ASSERT(entry.isForOp());
+    MOZ_ASSERT(!entry.isForPrologue());
     MOZ_ASSERT(entry.pcOffset() >= pcOffset);
     return &entry;
   }
