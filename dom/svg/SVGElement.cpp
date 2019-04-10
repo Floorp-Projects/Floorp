@@ -173,20 +173,20 @@ nsresult SVGElement::Init() {
     enumInfo.Reset(i);
   }
 
-  SVGAnimatedOrient* orient = GetOrient();
+  SVGAnimatedOrient* orient = GetAnimatedOrient();
 
   if (orient) {
     orient->Init();
   }
 
-  SVGAnimatedViewBox* viewBox = GetViewBox();
+  SVGAnimatedViewBox* viewBox = GetAnimatedViewBox();
 
   if (viewBox) {
     viewBox->Init();
   }
 
   SVGAnimatedPreserveAspectRatio* preserveAspectRatio =
-      GetPreserveAspectRatio();
+      GetAnimatedPreserveAspectRatio();
 
   if (preserveAspectRatio) {
     preserveAspectRatio->Init();
@@ -532,7 +532,7 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
     if (!foundMatch) {
       // Check for orient attribute
       if (aAttribute == nsGkAtoms::orient) {
-        SVGAnimatedOrient* orient = GetOrient();
+        SVGAnimatedOrient* orient = GetAnimatedOrient();
         if (orient) {
           rv = orient->SetBaseValueString(aValue, this, false);
           if (NS_FAILED(rv)) {
@@ -545,7 +545,7 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
         }
         // Check for viewBox attribute
       } else if (aAttribute == nsGkAtoms::viewBox) {
-        SVGAnimatedViewBox* viewBox = GetViewBox();
+        SVGAnimatedViewBox* viewBox = GetAnimatedViewBox();
         if (viewBox) {
           rv = viewBox->SetBaseValueString(aValue, this, false);
           if (NS_FAILED(rv)) {
@@ -559,7 +559,7 @@ bool SVGElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
         // Check for preserveAspectRatio attribute
       } else if (aAttribute == nsGkAtoms::preserveAspectRatio) {
         SVGAnimatedPreserveAspectRatio* preserveAspectRatio =
-            GetPreserveAspectRatio();
+            GetAnimatedPreserveAspectRatio();
         if (preserveAspectRatio) {
           rv = preserveAspectRatio->SetBaseValueString(aValue, this, false);
           if (NS_FAILED(rv)) {
@@ -768,7 +768,7 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
 
     // Check if this is an orient attribute going away
     if (aName == nsGkAtoms::orient) {
-      SVGAnimatedOrient* orient = GetOrient();
+      SVGAnimatedOrient* orient = GetAnimatedOrient();
       if (orient) {
         MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         orient->Init();
@@ -778,7 +778,7 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
 
     // Check if this is a viewBox attribute going away
     if (aName == nsGkAtoms::viewBox) {
-      SVGAnimatedViewBox* viewBox = GetViewBox();
+      SVGAnimatedViewBox* viewBox = GetAnimatedViewBox();
       if (viewBox) {
         MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         viewBox->Init();
@@ -789,7 +789,7 @@ void SVGElement::UnsetAttrInternal(int32_t aNamespaceID, nsAtom* aName,
     // Check if this is a preserveAspectRatio attribute going away
     if (aName == nsGkAtoms::preserveAspectRatio) {
       SVGAnimatedPreserveAspectRatio* preserveAspectRatio =
-          GetPreserveAspectRatio();
+          GetAnimatedPreserveAspectRatio();
       if (preserveAspectRatio) {
         MaybeSerializeAttrBeforeRemoval(aName, aNotify);
         preserveAspectRatio->Init();
@@ -1885,14 +1885,14 @@ void SVGElement::DidAnimateEnum(uint8_t aAttrEnum) {
   }
 }
 
-SVGAnimatedOrient* SVGElement::GetOrient() { return nullptr; }
+SVGAnimatedOrient* SVGElement::GetAnimatedOrient() { return nullptr; }
 
 nsAttrValue SVGElement::WillChangeOrient() {
   return WillChangeValue(nsGkAtoms::orient);
 }
 
 void SVGElement::DidChangeOrient(const nsAttrValue& aEmptyOrOldValue) {
-  SVGAnimatedOrient* orient = GetOrient();
+  SVGAnimatedOrient* orient = GetAnimatedOrient();
 
   NS_ASSERTION(orient, "DidChangeOrient on element with no orient attrib");
 
@@ -1911,14 +1911,14 @@ void SVGElement::DidAnimateOrient() {
   }
 }
 
-SVGAnimatedViewBox* SVGElement::GetViewBox() { return nullptr; }
+SVGAnimatedViewBox* SVGElement::GetAnimatedViewBox() { return nullptr; }
 
 nsAttrValue SVGElement::WillChangeViewBox() {
   return WillChangeValue(nsGkAtoms::viewBox);
 }
 
 void SVGElement::DidChangeViewBox(const nsAttrValue& aEmptyOrOldValue) {
-  SVGAnimatedViewBox* viewBox = GetViewBox();
+  SVGAnimatedViewBox* viewBox = GetAnimatedViewBox();
 
   NS_ASSERTION(viewBox, "DidChangeViewBox on element with no viewBox attrib");
 
@@ -1937,7 +1937,7 @@ void SVGElement::DidAnimateViewBox() {
   }
 }
 
-SVGAnimatedPreserveAspectRatio* SVGElement::GetPreserveAspectRatio() {
+SVGAnimatedPreserveAspectRatio* SVGElement::GetAnimatedPreserveAspectRatio() {
   return nullptr;
 }
 
@@ -1948,7 +1948,7 @@ nsAttrValue SVGElement::WillChangePreserveAspectRatio() {
 void SVGElement::DidChangePreserveAspectRatio(
     const nsAttrValue& aEmptyOrOldValue) {
   SVGAnimatedPreserveAspectRatio* preserveAspectRatio =
-      GetPreserveAspectRatio();
+      GetAnimatedPreserveAspectRatio();
 
   NS_ASSERTION(preserveAspectRatio,
                "DidChangePreserveAspectRatio on element with no "
@@ -2222,20 +2222,20 @@ UniquePtr<SMILAttr> SVGElement::GetAnimatedAttr(int32_t aNamespaceID,
 
     // orient:
     if (aName == nsGkAtoms::orient) {
-      SVGAnimatedOrient* orient = GetOrient();
+      SVGAnimatedOrient* orient = GetAnimatedOrient();
       return orient ? orient->ToSMILAttr(this) : nullptr;
     }
 
     // viewBox:
     if (aName == nsGkAtoms::viewBox) {
-      SVGAnimatedViewBox* viewBox = GetViewBox();
+      SVGAnimatedViewBox* viewBox = GetAnimatedViewBox();
       return viewBox ? viewBox->ToSMILAttr(this) : nullptr;
     }
 
     // preserveAspectRatio:
     if (aName == nsGkAtoms::preserveAspectRatio) {
       SVGAnimatedPreserveAspectRatio* preserveAspectRatio =
-          GetPreserveAspectRatio();
+          GetAnimatedPreserveAspectRatio();
       return preserveAspectRatio ? preserveAspectRatio->ToSMILAttr(this)
                                  : nullptr;
     }

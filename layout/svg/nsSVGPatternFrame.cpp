@@ -636,9 +636,9 @@ gfxMatrix nsSVGPatternFrame::ConstructCTM(const SVGAnimatedViewBox &aViewBox,
   if (!aViewBox.IsExplicitlySet()) {
     return gfxMatrix(scaleX, 0.0, 0.0, scaleY, 0.0, 0.0);
   }
-  const SVGViewBoxRect viewBoxRect = aViewBox.GetAnimValue();
+  const SVGViewBox viewBox = aViewBox.GetAnimValue();
 
-  if (viewBoxRect.height <= 0.0f || viewBoxRect.width <= 0.0f) {
+  if (viewBox.height <= 0.0f || viewBox.width <= 0.0f) {
     return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular
   }
 
@@ -664,9 +664,8 @@ gfxMatrix nsSVGPatternFrame::ConstructCTM(const SVGAnimatedViewBox &aViewBox,
   }
 
   Matrix tm = SVGContentUtils::GetViewBoxTransform(
-      viewportWidth * scaleX, viewportHeight * scaleY, viewBoxRect.x,
-      viewBoxRect.y, viewBoxRect.width, viewBoxRect.height,
-      GetPreserveAspectRatio());
+      viewportWidth * scaleX, viewportHeight * scaleY, viewBox.x, viewBox.y,
+      viewBox.width, viewBox.height, GetPreserveAspectRatio());
 
   return ThebesMatrix(tm);
 }
