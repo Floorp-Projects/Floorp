@@ -27,6 +27,8 @@ namespace {
   "urlclassifier.features.cryptomining.annotate.whitelistTables"
 #define URLCLASSIFIER_CRYPTOMINING_ANNOTATION_WHITELIST_TEST_ENTRIES \
   "urlclassifier.features.cryptomining.annotate.whitelistHosts"
+#define URLCLASSIFIER_CRYPTOMINING_ANNOTATION_SKIP_URLS \
+  "urlclassifier.features.cryptomining.annotate.skipURLs"
 #define TABLE_CRYPTOMINING_ANNOTATION_BLACKLIST_PREF \
   "cryptomining-annotate-blacklist-pref"
 #define TABLE_CRYPTOMINING_ANNOTATION_WHITELIST_PREF \
@@ -49,7 +51,8 @@ UrlClassifierFeatureCryptominingAnnotation::
               URLCLASSIFIER_CRYPTOMINING_ANNOTATION_WHITELIST_TEST_ENTRIES),
           NS_LITERAL_CSTRING(TABLE_CRYPTOMINING_ANNOTATION_BLACKLIST_PREF),
           NS_LITERAL_CSTRING(TABLE_CRYPTOMINING_ANNOTATION_WHITELIST_PREF),
-          EmptyCString()) {}
+          NS_LITERAL_CSTRING(URLCLASSIFIER_CRYPTOMINING_ANNOTATION_SKIP_URLS)) {
+}
 
 /* static */ const char* UrlClassifierFeatureCryptominingAnnotation::Name() {
   return CRYPTOMINING_ANNOTATION_FEATURE_NAME;
