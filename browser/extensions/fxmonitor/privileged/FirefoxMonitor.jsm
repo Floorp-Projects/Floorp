@@ -104,10 +104,6 @@ this.FirefoxMonitor = {
     Services.scriptloader.loadSubScript(
       this.getURL("privileged/subscripts/EveryWindow.jsm"));
 
-    /* globals PanelUI */
-    Services.scriptloader.loadSubScript(
-      this.getURL("privileged/subscripts/PanelUI.jsm"));
-
     // Expire our telemetry on November 1, at which time
     // we should redo data-review.
     let telemetryExpiryDate = new Date(2019, 10, 1); // Month is zero-index
@@ -232,6 +228,9 @@ this.FirefoxMonitor = {
     this.warnIfNeeded(aBrowser, host);
   },
 
+  notificationsByWindow: new WeakMap(),
+  panelUIsByWindow: new WeakMap(),
+
   async startObserving() {
     if (this.observerAdded) {
       return;
@@ -247,26 +246,7 @@ this.FirefoxMonitor = {
         DOMWindowUtils.loadSheetUsingURIString(this.getURL("privileged/FirefoxMonitor.css"),
                                                DOMWindowUtils.AUTHOR_SHEET);
 
-        // Set up some helper functions on the window object
-        // for the popup notification to use.
-        win.FirefoxMonitorUtils = {
-          // Keeps track of all notifications currently shown,
-          // so that we can clear them out properly if we get
-          // disabled.
-          notifications: new Set(),
-          disable: () => {
-            this.disable();
-          },
-          getString: (aKey) => {
-            return this.getString(aKey);
-          },
-          getFormattedString: (aKey, args) => {
-            return this.getFormattedString(aKey, args);
-          },
-          getFirefoxMonitorURL: (aSiteName) => {
-            return `${this.FirefoxMonitorURL}/?breach=${encodeURIComponent(aSiteName)}&utm_source=firefox&utm_medium=popup`;
-          },
-        };
+        this.notificationsByWindow.set(win, new Set());
 
         // Setup the popup notification stuff. First, the URL bar icon:
         let doc = win.document;
@@ -298,7 +278,7 @@ this.FirefoxMonitor = {
         pn.setAttribute("id", `${this.kNotificationID}-notification`);
         pn.setAttribute("hidden", "true");
         parentElt.appendChild(pn);
-        win.FirefoxMonitorPanelUI = panelUI;
+        this.panelUIsByWindow.set(win, panelUI);
 
         // Start listening across all tabs!
         win.gBrowser.addTabsProgressListener(this);
@@ -311,23 +291,18 @@ this.FirefoxMonitor = {
         }
 
         let DOMWindowUtils = win.windowUtils;
-        if (!DOMWindowUtils) {
-          // win.windowUtils was added in 63, fallback if it's not available.
-          DOMWindowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                              .getInterface(Ci.nsIDOMWindowUtils);
-        }
         DOMWindowUtils.removeSheetUsingURIString(this.getURL("privileged/FirefoxMonitor.css"),
                                                  DOMWindowUtils.AUTHOR_SHEET);
 
-        win.FirefoxMonitorUtils.notifications.forEach(n => {
+        this.notificationsByWindow.get(win).forEach(n => {
           n.remove();
         });
-        delete win.FirefoxMonitorUtils;
+        this.notificationsByWindow.delete(win);
 
         let doc = win.document;
         doc.getElementById(`${this.kNotificationID}-notification-anchor`).remove();
         doc.getElementById(`${this.kNotificationID}-notification`).remove();
-        delete win.FirefoxMonitorPanelUI;
+        this.panelUIsByWindow.delete(win);
 
         win.gBrowser.removeTabsProgressListener(this);
       },
@@ -374,7 +349,7 @@ this.FirefoxMonitor = {
 
     let doc = browser.ownerDocument;
     let win = doc.defaultView;
-    let panelUI = doc.defaultView.FirefoxMonitorPanelUI;
+    let panelUI = this.panelUIsByWindow.get(win);
 
     let animatedOnce = false;
     let populatePanel = (event) => {
@@ -400,7 +375,7 @@ this.FirefoxMonitor = {
           animatedOnce = true;
           break;
         case "removed":
-          win.FirefoxMonitorUtils.notifications.delete(
+          this.notificationsByWindow.get(win).delete(
             win.PopupNotifications.getNotification(this.kNotificationID, browser));
           Services.telemetry.recordEvent("fxmonitor", "interaction", "doorhanger_removed");
           break;
@@ -420,6 +395,118 @@ this.FirefoxMonitor = {
 
     Services.telemetry.recordEvent("fxmonitor", "interaction", "doorhanger_shown");
 
-    win.FirefoxMonitorUtils.notifications.add(n);
+    this.notificationsByWindow.get(win).add(n);
+  },
+};
+
+/* globals PluralForm */
+
+function PanelUI(doc) {
+  this.site = null;
+  this.doc = doc;
+
+  let box = doc.createElementNS(XUL_NS, "vbox");
+
+  let elt = doc.createElementNS(XUL_NS, "description");
+  elt.textContent = this.getString("fxmonitor.popupHeader");
+  elt.classList.add("headerText");
+  box.appendChild(elt);
+
+  elt = doc.createElementNS(XUL_NS, "description");
+  elt.classList.add("popupText");
+  box.appendChild(elt);
+
+  this.box = box;
+}
+
+PanelUI.prototype = {
+  getString(aKey) {
+    return FirefoxMonitor.getString(aKey);
+  },
+
+  getFormattedString(aKey, args) {
+    return FirefoxMonitor.getFormattedString(aKey, args);
+  },
+
+  get brandString() {
+    if (this._brandString) {
+      return this._brandString;
+    }
+    return this._brandString = this.getString("fxmonitor.brandName");
+  },
+
+  getFirefoxMonitorURL: (aSiteName) => {
+    return `${FirefoxMonitor.FirefoxMonitorURL}/?breach=${encodeURIComponent(aSiteName)}&utm_source=firefox&utm_medium=popup`;
+  },
+
+  get primaryAction() {
+    if (this._primaryAction) {
+      return this._primaryAction;
+    }
+    return this._primaryAction = {
+      label: this.getFormattedString("fxmonitor.checkButton.label", [this.brandString]),
+      accessKey: this.getString("fxmonitor.checkButton.accessKey"),
+      callback: () => {
+        let win = this.doc.defaultView;
+        win.openTrustedLinkIn(
+          this.getFirefoxMonitorURL(this.site.Name), "tab", { });
+
+        Services.telemetry.recordEvent("fxmonitor", "interaction", "check_btn");
+      },
+    };
+  },
+
+  get secondaryActions() {
+    if (this._secondaryActions) {
+      return this._secondaryActions;
+    }
+    return this._secondaryActions = [
+      {
+        label: this.getString("fxmonitor.dismissButton.label"),
+        accessKey: this.getString("fxmonitor.dismissButton.accessKey"),
+        callback: () => {
+          Services.telemetry.recordEvent("fxmonitor", "interaction", "dismiss_btn");
+        },
+      }, {
+        label: this.getFormattedString("fxmonitor.neverShowButton.label", [this.brandString]),
+        accessKey: this.getString("fxmonitor.neverShowButton.accessKey"),
+        callback: () => {
+          FirefoxMonitor.disable();
+          Services.telemetry.recordEvent("fxmonitor", "interaction", "never_show_btn");
+        },
+      },
+    ];
+  },
+
+  refresh(site) {
+    this.site = site;
+
+    let elt = this.box.querySelector(".popupText");
+
+    // If > 100k, the PwnCount is rounded down to the most significant
+    // digit and prefixed with "More than".
+    // Ex.: 12,345 -> 12,345
+    //      234,567 -> More than 200,000
+    //      345,678,901 -> More than 300,000,000
+    //      4,567,890,123 -> More than 4,000,000,000
+    let k100k = 100000;
+    let pwnCount = site.PwnCount;
+    let stringName = "fxmonitor.popupText";
+    if (pwnCount > k100k) {
+      let multiplier = 1;
+      while (pwnCount >= 10) {
+        pwnCount /= 10;
+        multiplier *= 10;
+      }
+      pwnCount = Math.floor(pwnCount) * multiplier;
+      stringName = "fxmonitor.popupTextRounded";
+    }
+
+    elt.textContent =
+      PluralForm.get(pwnCount, this.getString(stringName))
+                .replace("#1", pwnCount.toLocaleString())
+                .replace("#2", site.Name)
+                .replace("#3", site.Year)
+                .replace("#4", this.brandString);
   },
 };
