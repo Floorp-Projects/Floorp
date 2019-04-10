@@ -320,30 +320,6 @@ struct Token {
   enum ModifierException {
     NoException,
 
-    // Used in following 2 cases:
-    // a) After |yield| we look for a token on the same line that starts an
-    // expression (Operand): |yield <expr>|.  If no token is found, the
-    // |yield| stands alone, and the next token on a subsequent line must
-    // be: a comma continuing a comma expression, a semicolon terminating
-    // the statement that ended with |yield|, or the start of another
-    // statement (possibly an expression statement).  The comma/semicolon
-    // cases are gotten as operators (None), contrasting with Operand
-    // earlier.
-    // b) After an arrow function with a block body in an expression
-    // statement, the next token must be: a colon in a conditional
-    // expression, a comma continuing a comma expression, a semicolon
-    // terminating the statement, or the token on a subsequent line that is
-    // the start of another statement (possibly an expression statement).
-    // Colon is gotten as operator (None), and it should only be gotten in
-    // conditional expression and missing it results in SyntaxError.
-    // Comma/semicolon cases are also gotten as operators (None), and 4th
-    // case is gotten after them.  If no comma/semicolon found but EOL,
-    // the next token should be gotten as operand in 4th case (especially
-    // if '/' is the first code unit).  So we should peek the token as
-    // operand before try getting colon/comma/semicolon.
-    // See also the comment in Parser::assignExpr().
-    NoneIsOperand,
-
     // If a semicolon is inserted automatically, the next token is already
     // gotten with None, but we expect Operand.
     OperandIsNone,
@@ -491,7 +467,6 @@ class TokenStreamShared {
 
   using ModifierException = Token::ModifierException;
   static constexpr ModifierException NoException = Token::NoException;
-  static constexpr ModifierException NoneIsOperand = Token::NoneIsOperand;
   static constexpr ModifierException OperandIsNone = Token::OperandIsNone;
 
   static void verifyConsistentModifier(Modifier modifier,
@@ -505,13 +480,6 @@ class TokenStreamShared {
     if (lookaheadToken.modifierException == OperandIsNone) {
       // getToken(Operand) permissibly following getToken().
       if (modifier == Operand && lookaheadToken.modifier == None) {
-        return;
-      }
-    }
-
-    if (lookaheadToken.modifierException == NoneIsOperand) {
-      // getToken() permissibly following getToken(Operand).
-      if (modifier == None && lookaheadToken.modifier == Operand) {
         return;
       }
     }
@@ -669,26 +637,8 @@ class TokenStreamAnyChars : public TokenStreamShared {
       return;
     }
 
-    if (next.modifierException == NoneIsOperand) {
-      // Token after yield expression without operand already has
-      // NoneIsOperand exception.
-      MOZ_ASSERT(modifierException == OperandIsNone);
-      MOZ_ASSERT(next.type != TokenKind::Div,
-                 "next token requires contextual specifier to be parsed "
-                 "unambiguously");
-
-      // Do not update modifierException.
-      return;
-    }
-
     MOZ_ASSERT(next.modifierException == NoException);
     switch (modifierException) {
-      case NoneIsOperand:
-        MOZ_ASSERT(next.modifier == Operand);
-        MOZ_ASSERT(next.type != TokenKind::Div,
-                   "next token requires contextual specifier to be parsed "
-                   "unambiguously");
-        break;
       case OperandIsNone:
         MOZ_ASSERT(next.modifier == None);
         MOZ_ASSERT(
