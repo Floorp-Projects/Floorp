@@ -18,6 +18,10 @@ job-defaults:
                     - awsy/macosx_config.py
                 default:
                     - awsy/linux_config.py
+    tier:
+        by-test-platform:
+            windows10-aarch64.*: 2
+            default: default
 
 awsy:
     description: "Are we slim yet"
