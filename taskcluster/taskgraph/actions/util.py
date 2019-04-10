@@ -111,6 +111,12 @@ def update_parent(task, graph):
     return task
 
 
+def update_dependencies(task, graph):
+    if os.environ.get('TASK_ID'):
+        task.task.setdefault('dependencies', []).append(os.environ['TASK_ID'])
+    return task
+
+
 def create_tasks(graph_config, to_run, full_task_graph, label_to_taskid,
                  params, decision_task_id=None, suffix='', modifier=lambda t: t):
     """Create new tasks.  The task definition will have {relative-datestamp':
@@ -144,6 +150,7 @@ def create_tasks(graph_config, to_run, full_task_graph, label_to_taskid,
         {l: modifier(full_task_graph[l]) for l in target_graph.nodes},
         target_graph)
     target_task_graph.for_each_task(update_parent)
+    target_task_graph.for_each_task(update_dependencies)
     optimized_task_graph, label_to_taskid = optimize_task_graph(target_task_graph,
                                                                 params,
                                                                 to_run,
