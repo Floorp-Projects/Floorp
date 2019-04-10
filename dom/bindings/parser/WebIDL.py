@@ -4649,7 +4649,7 @@ class IDLArgument(IDLObjectWithIdentifier):
 
 
 class IDLCallback(IDLObjectWithScope):
-    def __init__(self, location, parentScope, identifier, returnType, arguments):
+    def __init__(self, location, parentScope, identifier, returnType, arguments, isConstructor):
         assert isinstance(returnType, IDLType)
 
         self._returnType = returnType
@@ -4665,9 +4665,13 @@ class IDLCallback(IDLObjectWithScope):
         self._treatNonCallableAsNull = False
         self._treatNonObjectAsNull = False
         self._isRunScriptBoundary = False
+        self._isConstructor = isConstructor
 
     def isCallback(self):
         return True
+
+    def isConstructor(self):
+        return self._isConstructor
 
     def signatures(self):
         return [(self._returnType, self._arguments)]
@@ -5485,6 +5489,7 @@ class Tokenizer(object):
         "iterable": "ITERABLE",
         "namespace": "NAMESPACE",
         "ReadableStream": "READABLESTREAM",
+        "constructor": "CONSTRUCTOR",
         }
 
     tokens.extend(keywords.values())
@@ -5611,6 +5616,7 @@ class Parser(Tokenizer):
     def p_CallbackRestOrInterface(self, p):
         """
             CallbackRestOrInterface : CallbackRest
+                                    | CallbackConstructorRest
                                     | Interface
         """
         assert p[1]
@@ -5980,7 +5986,15 @@ class Parser(Tokenizer):
         """
         identifier = IDLUnresolvedIdentifier(self.getLocation(p, 1), p[1])
         p[0] = IDLCallback(self.getLocation(p, 1), self.globalScope(),
-                           identifier, p[3], p[5])
+                           identifier, p[3], p[5], isConstructor=False)
+
+    def p_CallbackConstructorRest(self, p):
+        """
+            CallbackConstructorRest : CONSTRUCTOR IDENTIFIER EQUALS ReturnType LPAREN ArgumentList RPAREN SEMICOLON
+        """
+        identifier = IDLUnresolvedIdentifier(self.getLocation(p, 2), p[2])
+        p[0] = IDLCallback(self.getLocation(p, 2), self.globalScope(),
+                           identifier, p[4], p[6], isConstructor=True)
 
     def p_ExceptionMembers(self, p):
         """
@@ -6449,6 +6463,7 @@ class Parser(Tokenizer):
                          | ATTRIBUTE
                          | CALLBACK
                          | CONST
+                         | CONSTRUCTOR
                          | DELETER
                          | DICTIONARY
                          | ENUM
@@ -6573,6 +6588,7 @@ class Parser(Tokenizer):
                   | BYTE
                   | LEGACYCALLER
                   | CONST
+                  | CONSTRUCTOR
                   | DELETER
                   | DOUBLE
                   | EXCEPTION
