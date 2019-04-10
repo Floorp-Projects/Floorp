@@ -77,6 +77,10 @@ const accessibleSpec = generateActorSpec({
       type: "indexInParentChange",
       indexInParent: Arg(0, "number"),
     },
+    "audited": {
+      type: "audited",
+      audit: Arg(0, "nullable:json"),
+    },
   },
 
   methods: {
