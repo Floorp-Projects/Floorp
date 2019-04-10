@@ -1617,7 +1617,7 @@ void js::ReportInNotObjectError(JSContext* cx, HandleValue lref, int lindex,
     static const size_t MaxStringLength = 16;
     RootedString str(cx, ref.toString());
     if (str->length() > MaxStringLength) {
-      StringBuffer buf(cx);
+      JSStringBuilder buf(cx);
       if (!buf.appendSubstring(str, 0, MaxStringLength)) {
         return nullptr;
       }

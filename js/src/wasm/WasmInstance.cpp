@@ -1821,7 +1821,7 @@ JSString* Instance::createDisplayURL(JSContext* cx) {
   // - URI encoded filename from metadata (if can be encoded), plus ":";
   // - 64-bit hash of the module bytes (as hex dump).
 
-  StringBuffer result(cx);
+  JSStringBuilder result(cx);
   if (!result.append("wasm:")) {
     return nullptr;
   }

@@ -3003,7 +3003,7 @@ static bool date_toDateString(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 MOZ_ALWAYS_INLINE bool date_toSource_impl(JSContext* cx, const CallArgs& args) {
-  StringBuffer sb(cx);
+  JSStringBuilder sb(cx);
   if (!sb.append("(new Date(") ||
       !NumberValueToStringBuffer(
           cx, args.thisv().toObject().as<DateObject>().UTCTime(), sb) ||
