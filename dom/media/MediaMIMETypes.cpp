@@ -116,7 +116,7 @@ static int32_t GetParameterAsNumber(const nsContentTypeParser& aParser,
 MediaExtendedMIMEType::MediaExtendedMIMEType(
     const nsACString& aOriginalString, const nsACString& aMIMEType,
     bool aHaveCodecs, const nsAString& aCodecs, int32_t aWidth, int32_t aHeight,
-    double aFramerate, int32_t aBitrate, EOTF aEOTF, int32_t aChannels)
+    double aFramerate, int32_t aBitrate)
     : mOriginalString(aOriginalString),
       mMIMEType(aMIMEType),
       mHaveCodecs(aHaveCodecs),
@@ -124,8 +124,6 @@ MediaExtendedMIMEType::MediaExtendedMIMEType(
       mWidth(aWidth),
       mHeight(aHeight),
       mFramerate(aFramerate),
-      mEOTF(aEOTF),
-      mChannels(aChannels),
       mBitrate(aBitrate) {}
 
 MediaExtendedMIMEType::MediaExtendedMIMEType(
@@ -183,18 +181,6 @@ Maybe<double> MediaExtendedMIMEType::ComputeFractionalString(
   return Some(result);
 }
 
-static EOTF GetParameterAsEOTF(const nsContentTypeParser& aParser) {
-  nsAutoString eotf;
-  nsresult rv = aParser.GetParameter("eotf", eotf);
-  if (NS_FAILED_impl(rv)) {
-    return EOTF::UNSPECIFIED;
-  }
-  if (eotf.LowerCaseEqualsASCII("bt709")) {
-    return EOTF::BT709;
-  }
-  return EOTF::NOT_SUPPORTED;
-}
-
 Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(const nsAString& aType) {
   nsContentTypeParser parser(aType);
   nsAutoString mime;
@@ -216,12 +202,10 @@ Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(const nsAString& aType) {
   int32_t height = GetParameterAsNumber(parser, "height", -1);
   double framerate = GetParameterAsNumber(parser, "framerate", -1);
   int32_t bitrate = GetParameterAsNumber(parser, "bitrate", -1);
-  EOTF eotf = GetParameterAsEOTF(parser);
-  int32_t channels = GetParameterAsNumber(parser, "channels", -1);
 
   return Some(MediaExtendedMIMEType(NS_ConvertUTF16toUTF8(aType), mime8,
                                     haveCodecs, codecs, width, height,
-                                    framerate, bitrate, eotf, channels));
+                                    framerate, bitrate));
 }
 
 Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(
@@ -251,10 +235,9 @@ Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(
     return Nothing();
   }
 
-  return Some(MediaExtendedMIMEType(NS_ConvertUTF16toUTF8(aConfig.mContentType),
-                                    mime8, haveCodecs, codecs, aConfig.mWidth,
-                                    aConfig.mHeight, framerate.ref(),
-                                    aConfig.mBitrate, EOTF::UNSPECIFIED));
+  return Some(MediaExtendedMIMEType(
+      NS_ConvertUTF16toUTF8(aConfig.mContentType), mime8, haveCodecs, codecs,
+      aConfig.mWidth, aConfig.mHeight, framerate.ref(), aConfig.mBitrate));
 }
 
 Maybe<MediaExtendedMIMEType> MakeMediaExtendedMIMEType(
