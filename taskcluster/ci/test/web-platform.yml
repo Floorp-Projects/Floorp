@@ -57,6 +57,7 @@ web-platform-tests:
         by-test-platform:
             android.*: 2
             linux64-asan/opt: 2
+            windows10-aarch64.*: 2
             .*-qr/.*: 2  # can't be tier-1 if it's not running on integration branches
             default: default
     mozharness:
@@ -112,6 +113,7 @@ web-platform-tests-reftests:
         by-test-platform:
             android.*: 2
             linux64-asan/opt: 2
+            windows10-aarch64.*: 2
             default: default
     mozharness:
         extra-options:
