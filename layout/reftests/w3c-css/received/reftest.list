@@ -1034,7 +1034,7 @@ fuzzy-if(OSX||winWidget,0-110,0-1200) == css-writing-modes/table-column-order-00
 fuzzy-if(OSX||winWidget,0-110,0-1200) == css-writing-modes/table-column-order-003.xht css-writing-modes/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,0-110,0-1200) == css-writing-modes/table-column-order-004.xht css-writing-modes/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,0-110,0-1200) == css-writing-modes/table-column-order-005.xht css-writing-modes/block-flow-direction-001-ref.xht
-fuzzy-if(winWidget,0-110,0-1200) fuzzy-if(OSX,1-1,2-2) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/table-column-order-slr-007.xht css-writing-modes/block-flow-direction-001-ref.xht
+fuzzy-if(winWidget,0-110,0-1200) fuzzy-if(webrender&&cocoaWidget,1-1,2-2) random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == css-writing-modes/table-column-order-slr-007.xht css-writing-modes/block-flow-direction-001-ref.xht
 fuzzy-if(OSX||winWidget,0-110,0-1200) == css-writing-modes/table-column-order-srl-006.xht css-writing-modes/block-flow-direction-001-ref.xht
 == css-writing-modes/table-progression-slr-001.html css-writing-modes/table-progression-slr-001-ref.html
 fails == css-writing-modes/table-progression-slr-002.html css-writing-modes/table-progression-002-ref.html
