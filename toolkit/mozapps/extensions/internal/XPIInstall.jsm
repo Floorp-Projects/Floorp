@@ -556,7 +556,7 @@ var loadManifest = async function(aPackage, aLocation, aOldAddon) {
 
   let {signedState, cert} = await aPackage.verifySignedState(addon);
   addon.signedState = signedState;
-  if (signedState != AddonManager.SIGNEDSTATE_PRIVILEGED) {
+  if (!addon.isPrivileged) {
     addon.hidden = false;
   }
 
