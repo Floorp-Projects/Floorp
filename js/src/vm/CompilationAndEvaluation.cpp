@@ -528,17 +528,6 @@ static bool Evaluate(JSContext* cx, ScopeKind scopeKind, HandleObject env,
                  options.noScriptRval ? nullptr : rval.address());
 }
 
-static bool Evaluate(JSContext* cx, HandleObjectVector envChain,
-                     const ReadOnlyCompileOptions& optionsArg,
-                     SourceText<char16_t>& srcBuf, MutableHandleValue rval) {
-  RootedObject env(cx);
-  RootedScope scope(cx);
-  if (!CreateNonSyntacticEnvironmentChain(cx, envChain, &env, &scope)) {
-    return false;
-  }
-  return ::Evaluate(cx, scope->kind(), env, optionsArg, srcBuf, rval);
-}
-
 extern JS_PUBLIC_API bool JS::Evaluate(JSContext* cx,
                                        const ReadOnlyCompileOptions& options,
                                        SourceText<Utf8Unit>& srcBuf,
@@ -558,10 +547,16 @@ JS_PUBLIC_API bool JS::Evaluate(JSContext* cx,
 }
 
 JS_PUBLIC_API bool JS::Evaluate(JSContext* cx, HandleObjectVector envChain,
-                                const ReadOnlyCompileOptions& optionsArg,
+                                const ReadOnlyCompileOptions& options,
                                 SourceText<char16_t>& srcBuf,
                                 MutableHandleValue rval) {
-  return ::Evaluate(cx, envChain, optionsArg, srcBuf, rval);
+  RootedObject env(cx);
+  RootedScope scope(cx);
+  if (!CreateNonSyntacticEnvironmentChain(cx, envChain, &env, &scope)) {
+    return false;
+  }
+
+  return ::Evaluate(cx, scope->kind(), env, options, srcBuf, rval);
 }
 
 JS_PUBLIC_API bool JS::EvaluateUtf8Path(
