@@ -6,7 +6,6 @@ package org.mozilla.focus.search
 
 import android.content.Context
 import kotlinx.coroutines.coroutineScope
-import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.provider.SearchEngineProvider
 import mozilla.components.browser.search.provider.SearchEngineList
 
