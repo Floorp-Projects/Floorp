@@ -1553,7 +1553,7 @@ void JsepSessionImpl::RollbackLocalOffer() {
   for (size_t i = 0; i < mTransceivers.size(); ++i) {
     RefPtr<JsepTransceiver>& transceiver(mTransceivers[i]);
     if (i < mOldTransceivers.size()) {
-      transceiver->Rollback(*mOldTransceivers[i]);
+      transceiver->Rollback(*mOldTransceivers[i], false);
       continue;
     }
 
@@ -1561,7 +1561,7 @@ void JsepSessionImpl::RollbackLocalOffer() {
         new JsepTransceiver(transceiver->GetMediaType()));
     temp->mSendTrack.PopulateCodecs(mSupportedCodecs);
     temp->mRecvTrack.PopulateCodecs(mSupportedCodecs);
-    transceiver->Rollback(*temp);
+    transceiver->Rollback(*temp, false);
   }
 
   mOldTransceivers.clear();
@@ -1571,7 +1571,7 @@ void JsepSessionImpl::RollbackRemoteOffer() {
   for (size_t i = 0; i < mTransceivers.size(); ++i) {
     RefPtr<JsepTransceiver>& transceiver(mTransceivers[i]);
     if (i < mOldTransceivers.size()) {
-      transceiver->Rollback(*mOldTransceivers[i]);
+      transceiver->Rollback(*mOldTransceivers[i], true);
       continue;
     }
 
@@ -1585,7 +1585,7 @@ void JsepSessionImpl::RollbackRemoteOffer() {
         new JsepTransceiver(transceiver->GetMediaType()));
     temp->mSendTrack.PopulateCodecs(mSupportedCodecs);
     temp->mRecvTrack.PopulateCodecs(mSupportedCodecs);
-    transceiver->Rollback(*temp);
+    transceiver->Rollback(*temp, true);
 
     if (shouldRemove) {
       transceiver->Stop();
