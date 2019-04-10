@@ -138,7 +138,7 @@
 <toolbar type="menubar" id="sp-menu-toolbar">
 <menubar>
   <menu id="sp-file-menu" label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
-    <menupopup id="sp-menu-filepopup">
+    <menupopup id="sp-menu-filepopup" incontentshell="false">
       <menuitem id="sp-menu-newscratchpad"
                 label="&newWindowCmd.label;"
                 accesskey="&newWindowCmd.accesskey;"
@@ -183,7 +183,7 @@
 
   <menu id="sp-edit-menu" label="&editMenu.label;"
         accesskey="&editMenu.accesskey;">
-    <menupopup id="sp-menu_editpopup">
+    <menupopup id="sp-menu_editpopup" incontentshell="false">
       <menuitem id="menu_undo" label="&undoCmd.label;"
                 key="key_undo" accesskey="&undoCmd.accesskey;"
                 command="cmd_undo"/>
@@ -221,7 +221,7 @@
   </menu>
 
   <menu id="sp-view-menu" label="&viewMenu.label;" accesskey="&viewMenu.accesskey;">
-    <menupopup id="sp-menu-viewpopup">
+    <menupopup id="sp-menu-viewpopup" incontentshell="false">
       <menuitem id="sp-menu-line-numbers"
                 label="&lineNumbers.label;"
                 accesskey="&lineNumbers.accesskey;"
@@ -258,7 +258,7 @@
 
   <menu id="sp-execute-menu" label="&executeMenu.label;"
         accesskey="&executeMenu.accesskey;">
-    <menupopup id="sp-menu_executepopup">
+    <menupopup id="sp-menu_executepopup" incontentshell="false">
       <menuitem id="sp-text-run"
                 label="&run.label;"
                 accesskey="&run.accesskey;"
@@ -292,7 +292,7 @@
         label="&environmentMenu.label;"
         accesskey="&environmentMenu.accesskey;"
         hidden="true">
-    <menupopup id="sp-menu-environment">
+    <menupopup id="sp-menu-environment" incontentshell="false">
       <menuitem id="sp-menu-content"
                 label="&contentContext.label;"
                 accesskey="&contentContext.accesskey;"
@@ -311,7 +311,7 @@
         label="&helpMenu.label;"
         accesskey="&helpMenu.accesskey;"
         accesskeywindows="&helpMenuWin.accesskey;">
-    <menupopup id="sp-menu-help">
+    <menupopup id="sp-menu-help" incontentshell="false">
       <menuitem id="sp-menu-documentation"
                 label="&documentationLink.label;"
                 accesskey="&documentationLink.accesskey;"
@@ -353,7 +353,7 @@
 
 
 <popupset id="scratchpad-popups">
-  <menupopup id="scratchpad-text-popup">
+  <menupopup id="scratchpad-text-popup" incontentshell="false">
     <menuitem id="cMenu_cut" label="&cutCmd.label;"
               accesskey="&cutCmd.accesskey;" command="cmd_cut"/>
     <menuitem id="cMenu_copy" label="&copyCmd.label;"
