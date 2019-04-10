@@ -53,7 +53,7 @@ bool TryEmitter::emitTry() {
   // For that we store in a try note associated with the catch or
   // finally block the stack depth upon the try entry. The interpreter
   // uses this depth to properly unwind the stack and the scope chain.
-  depth_ = bce_->stackDepth;
+  depth_ = bce_->bytecodeSection().stackDepth();
 
   // Record the try location, then emit the try block.
   if (!bce_->newSrcNote(SRC_TRY, &noteIndex_)) {
@@ -62,7 +62,7 @@ bool TryEmitter::emitTry() {
   if (!bce_->emit1(JSOP_TRY)) {
     return false;
   }
-  tryStart_ = bce_->offset();
+  tryStart_ = bce_->bytecodeSection().offset();
 
 #ifdef DEBUG
   state_ = State::Try;
@@ -72,7 +72,7 @@ bool TryEmitter::emitTry() {
 
 bool TryEmitter::emitTryEnd() {
   MOZ_ASSERT(state_ == State::Try);
-  MOZ_ASSERT(depth_ == bce_->stackDepth);
+  MOZ_ASSERT(depth_ == bce_->bytecodeSection().stackDepth());
 
   // GOSUB to finally, if present.
   if (hasFinally() && controlInfo_) {
@@ -82,8 +82,9 @@ bool TryEmitter::emitTryEnd() {
   }
 
   // Source note points to the jump at the end of the try block.
-  if (!bce_->setSrcNoteOffset(noteIndex_, SrcNote::Try::EndOfTryJumpOffset,
-                              bce_->offset() - tryStart_ + JSOP_TRY_LENGTH)) {
+  if (!bce_->setSrcNoteOffset(
+          noteIndex_, SrcNote::Try::EndOfTryJumpOffset,
+          bce_->bytecodeSection().offset() - tryStart_ + JSOP_TRY_LENGTH)) {
     return false;
   }
 
@@ -105,7 +106,7 @@ bool TryEmitter::emitCatch() {
     return false;
   }
 
-  MOZ_ASSERT(bce_->stackDepth == depth_);
+  MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == depth_);
 
   if (controlKind_ == ControlKind::Syntactic) {
     // Clear the frame's return value that might have been set by the
@@ -138,7 +139,7 @@ bool TryEmitter::emitCatchEnd() {
     if (!bce_->emitGoSub(&controlInfo_->gosubs)) {
       return false;
     }
-    MOZ_ASSERT(bce_->stackDepth == depth_);
+    MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == depth_);
 
     // Jump over the finally block.
     if (!bce_->emitJump(JSOP_GOTO, &catchAndFinallyJump_)) {
@@ -177,7 +178,7 @@ bool TryEmitter::emitFinally(
     }
   }
 
-  MOZ_ASSERT(bce_->stackDepth == depth_);
+  MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == depth_);
 
   if (!bce_->emitJumpTarget(&finallyStart_)) {
     return false;
@@ -253,7 +254,7 @@ bool TryEmitter::emitEnd() {
     }
   }
 
-  MOZ_ASSERT(bce_->stackDepth == depth_);
+  MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == depth_);
 
   // ReconstructPCStack needs a NOP here to mark the end of the last
   // catch block.

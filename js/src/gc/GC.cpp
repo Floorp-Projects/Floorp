@@ -364,6 +364,9 @@ static const float PretenureThreshold = 0.6f;
 /* JSGC_PRETENURE_GROUP_THRESHOLD */
 static const float PretenureGroupThreshold = 3000;
 
+/* JSGC_MIN_LAST_DITCH_GC_PERIOD */
+static const TimeDuration MinLastDitchGCPeriod = TimeDuration::FromSeconds(60);
+
 }  // namespace TuningDefaults
 }  // namespace gc
 }  // namespace js
@@ -1521,6 +1524,9 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       }
       pretenureGroupThreshold_ = value;
       break;
+    case JSGC_MIN_LAST_DITCH_GC_PERIOD:
+      minLastDitchGCPeriod_ = TimeDuration::FromSeconds(value);
+      break;
     default:
       MOZ_CRASH("Unknown GC parameter.");
   }
@@ -1613,7 +1619,8 @@ GCSchedulingTunables::GCSchedulingTunables()
       nurseryFreeThresholdForIdleCollectionFraction_(
           TuningDefaults::NurseryFreeThresholdForIdleCollectionFraction),
       pretenureThreshold_(TuningDefaults::PretenureThreshold),
-      pretenureGroupThreshold_(TuningDefaults::PretenureGroupThreshold) {}
+      pretenureGroupThreshold_(TuningDefaults::PretenureGroupThreshold),
+      minLastDitchGCPeriod_(TuningDefaults::MinLastDitchGCPeriod) {}
 
 void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
   switch (key) {
@@ -1708,6 +1715,9 @@ void GCSchedulingTunables::resetParameter(JSGCParamKey key,
     case JSGC_PRETENURE_GROUP_THRESHOLD:
       pretenureGroupThreshold_ = TuningDefaults::PretenureGroupThreshold;
       break;
+    case JSGC_MIN_LAST_DITCH_GC_PERIOD:
+      minLastDitchGCPeriod_ = TuningDefaults::MinLastDitchGCPeriod;
+      break;
     default:
       MOZ_CRASH("Unknown GC parameter.");
   }
@@ -1783,6 +1793,8 @@ uint32_t GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock) {
       return uint32_t(tunables.pretenureThreshold() * 100);
     case JSGC_PRETENURE_GROUP_THRESHOLD:
       return tunables.pretenureGroupThreshold();
+    case JSGC_MIN_LAST_DITCH_GC_PERIOD:
+      return tunables.minLastDitchGCPeriod().ToSeconds();
     default:
       MOZ_CRASH("Unknown parameter key");
   }

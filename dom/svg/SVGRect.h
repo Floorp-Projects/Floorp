@@ -46,7 +46,7 @@ class SVGRect final : public SVGIRect {
   virtual nsIContent* GetParentObject() const override { return mParent; }
 
  protected:
-  ~SVGRect() {}
+  ~SVGRect() = default;
 
   nsCOMPtr<nsIContent> mParent;
   float mX, mY, mWidth, mHeight;
