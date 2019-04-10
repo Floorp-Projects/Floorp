@@ -416,7 +416,14 @@ class GeckoViewContentChild extends GeckoViewChildModule {
         break;
       case "DOMContentLoaded": {
         content.requestIdleCallback(async () => {
-          const manifest = await ManifestObtainer.contentObtainManifest(content);
+          let manifest = null;
+          try {
+            manifest = await ManifestObtainer.contentObtainManifest(content);
+          } catch (e) {
+            // Unfortunately, this throws if there is no manifest present, so we
+            // probably don't want to log anything here. Bug 1534756.
+          }
+
           if (manifest) {
             this.eventDispatcher.sendRequest({
               type: "GeckoView:WebAppManifest",
