@@ -3241,7 +3241,7 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t nscopes,
   uint32_t nscopes = bce->scopeList.length();
   uint32_t nconsts = bce->numberList.length();
   uint32_t nobjects = bce->objectList.length;
-  uint32_t ntrynotes = bce->tryNoteList.length();
+  uint32_t ntrynotes = bce->bytecodeSection().tryNoteList().length();
   uint32_t nscopenotes = bce->scopeNoteList.length();
   uint32_t nresumeoffsets = bce->resumeOffsetList.length();
 
@@ -3263,7 +3263,7 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t nscopes,
     bce->objectList.finish(data->objects());
   }
   if (ntrynotes) {
-    bce->tryNoteList.finish(data->tryNotes());
+    bce->bytecodeSection().tryNoteList().finish(data->tryNotes());
   }
   if (nscopenotes) {
     bce->scopeNoteList.finish(data->scopeNotes());
