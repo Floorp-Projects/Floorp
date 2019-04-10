@@ -39,8 +39,8 @@ class SVGLengthList {
   friend class SVGAnimatedLengthList;
 
  public:
-  SVGLengthList() {}
-  ~SVGLengthList() {}
+  SVGLengthList() = default;
+  ~SVGLengthList() = default;
 
   // Only methods that don't make/permit modification to this list are public.
   // Only our friend classes can access methods that may change us.

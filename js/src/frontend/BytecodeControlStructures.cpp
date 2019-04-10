@@ -41,7 +41,7 @@ LoopControl::LoopControl(BytecodeEmitter* bce, StatementKind loopKind)
 
   LoopControl* enclosingLoop = findNearest<LoopControl>(enclosing());
 
-  stackDepth_ = bce->stackDepth;
+  stackDepth_ = bce->bytecodeSection().stackDepth();
   loopDepth_ = enclosingLoop ? enclosingLoop->loopDepth_ + 1 : 1;
 
   int loopSlots;
@@ -81,7 +81,7 @@ bool LoopControl::emitContinueTarget(BytecodeEmitter* bce) {
 bool LoopControl::emitSpecialBreakForDone(BytecodeEmitter* bce) {
   // This doesn't pop stack values, nor handle any other controls.
   // Should be called on the toplevel of the loop.
-  MOZ_ASSERT(bce->stackDepth == stackDepth_);
+  MOZ_ASSERT(bce->bytecodeSection().stackDepth() == stackDepth_);
   MOZ_ASSERT(bce->innermostNestableControl == this);
 
   if (!bce->newSrcNote(SRC_BREAK)) {
@@ -109,7 +109,7 @@ bool LoopControl::emitLoopHead(BytecodeEmitter* bce,
     }
   }
 
-  head_ = {bce->offset()};
+  head_ = {bce->bytecodeSection().offset()};
   ptrdiff_t off;
   if (!bce->emitJumpTargetOp(JSOP_LOOPHEAD, &off)) {
     return false;
@@ -126,7 +126,7 @@ bool LoopControl::emitLoopEntry(BytecodeEmitter* bce,
     }
   }
 
-  JumpTarget entry = {bce->offset()};
+  JumpTarget entry = {bce->bytecodeSection().offset()};
   bce->patchJumpsToTarget(entryJump_, entry);
 
   MOZ_ASSERT(loopDepth_ > 0);
@@ -135,7 +135,8 @@ bool LoopControl::emitLoopEntry(BytecodeEmitter* bce,
   if (!bce->emitJumpTargetOp(JSOP_LOOPENTRY, &off)) {
     return false;
   }
-  SetLoopEntryDepthHintAndFlags(bce->code(off), loopDepth_, canIonOsr_);
+  SetLoopEntryDepthHintAndFlags(bce->bytecodeSection().code(off), loopDepth_,
+                                canIonOsr_);
 
   return true;
 }
