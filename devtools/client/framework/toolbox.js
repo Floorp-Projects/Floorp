@@ -71,6 +71,10 @@ loader.lazyGetter(this, "domNodeConstants", () => {
   return require("devtools/shared/dom-node-constants");
 });
 
+loader.lazyGetter(this, "DEBUG_TARGET_TYPES", () => {
+  return require("devtools/client/shared/remote-debugging/constants").DEBUG_TARGET_TYPES;
+});
+
 loader.lazyGetter(this, "registerHarOverlay", () => {
   return require("devtools/client/netmonitor/src/har/toolbox-overlay").register;
 });
@@ -458,9 +462,8 @@ Toolbox.prototype = {
       if (this.hostType === Toolbox.HostType.PAGE) {
         // Displays DebugTargetInfo which shows the basic information of debug target,
         // if `about:devtools-toolbox` URL opens directly.
-        // DebugTargetInfo requires this._deviceDescription to be populated
-        this._showDebugTargetInfo = true;
-        this._deviceDescription = await this._getDeviceDescription();
+        // DebugTargetInfo requires this._debugTargetData to be populated
+        this._debugTargetData = await this._getDebugTargetData();
       }
 
       const domHelper = new DOMHelpers(this.win);
@@ -615,12 +618,22 @@ Toolbox.prototype = {
     });
   },
 
-  _getDeviceDescription: async function() {
+  _getDebugTargetData: async function() {
+    const url = new URL(this.win.location);
+    const searchParams = new this.win.URLSearchParams(url.search);
+
+    const targetType = searchParams.get("type") || DEBUG_TARGET_TYPES.TAB;
+
     const deviceFront = await this.target.client.mainRoot.getFront("device");
-    const description = await deviceFront.getDescription();
-    const remoteId = new this.win.URLSearchParams(this.win.location.href).get("remoteId");
+    const deviceDescription = await deviceFront.getDescription();
+    const remoteId = searchParams.get("remoteId");
     const connectionType = remoteClientManager.getConnectionTypeByRemoteId(remoteId);
-    return Object.assign({}, description, { connectionType });
+
+    return {
+      connectionType,
+      deviceDescription,
+      targetType,
+    };
   },
 
   _onTargetClosed: async function() {
@@ -1214,8 +1227,7 @@ Toolbox.prototype = {
       closeToolbox: this.closeToolbox,
       focusButton: this._onToolbarFocus,
       toolbox: this,
-      showDebugTargetInfo: this._showDebugTargetInfo,
-      deviceDescription: this._deviceDescription,
+      debugTargetData: this._debugTargetData,
       onTabsOrderUpdated: this._onTabsOrderUpdated,
     });
 
