@@ -360,17 +360,6 @@ extern const mozilla::Module kLayoutModule;
 extern const mozilla::Module kKeyValueModule;
 extern const mozilla::Module kXREModule;
 extern const mozilla::Module kEmbeddingModule;
-#if defined(XP_WIN)
-namespace mozilla {
-namespace toolkit {
-namespace system {
-namespace windowsDHCPClient {
-extern const mozilla::Module kSysDHCPClientModule;
-}
-}  // namespace system
-}  // namespace toolkit
-}  // namespace mozilla
-#endif
 #if defined(MOZ_WIDGET_ANDROID)
 extern const mozilla::Module kBrowserModule;
 #endif
@@ -465,9 +454,6 @@ nsresult nsComponentManagerImpl::Init() {
   RegisterModule(&kKeyValueModule);
   RegisterModule(&kXREModule);
   RegisterModule(&kEmbeddingModule);
-#if defined(XP_WIN)
-  RegisterModule(&mozilla::toolkit::system::windowsDHCPClient::kSysDHCPClientModule);
-#endif
 #if defined(MOZ_WIDGET_ANDROID)
   RegisterModule(&kBrowserModule);
 #endif
