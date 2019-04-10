@@ -100,6 +100,12 @@ function CustomizeMode(aWindow) {
   this.browser = aWindow.gBrowser;
   this.areas = new Set();
 
+  let content = this.$("customization-content-container");
+  if (!content) {
+    this.window.MozXULElement.insertFTLIfNeeded("browser/customizeMode.ftl");
+    let container = this.$("customization-container");
+    container.replaceChild(this.window.MozXULElement.parseXULToFragment(container.firstChild.data), container.lastChild);
+  }
   // There are two palettes - there's the palette that can be overlayed with
   // toolbar items in browser.xul. This is invisible, and never seen by the
   // user. Then there's the visible palette, which gets populated and displayed
