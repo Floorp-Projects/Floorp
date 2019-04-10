@@ -289,7 +289,6 @@ package org.mozilla.geckoview {
     method @android.support.annotation.UiThread @android.support.annotation.Nullable public org.mozilla.geckoview.GeckoSession.ContentDelegate getContentDelegate();
     method @android.support.annotation.AnyThread @android.support.annotation.NonNull public static java.lang.String getDefaultUserAgent();
     method @android.support.annotation.UiThread @android.support.annotation.NonNull public org.mozilla.geckoview.DynamicToolbarAnimator getDynamicToolbarAnimator();
-    method @android.support.annotation.AnyThread @android.support.annotation.NonNull public org.mozilla.gecko.EventDispatcher getEventDispatcher();
     method @android.support.annotation.AnyThread @android.support.annotation.NonNull public org.mozilla.geckoview.SessionFinder getFinder();
     method @android.support.annotation.AnyThread @android.support.annotation.Nullable public org.mozilla.geckoview.GeckoSession.HistoryDelegate getHistoryDelegate();
     method @android.support.annotation.AnyThread @android.support.annotation.Nullable public org.mozilla.geckoview.GeckoSession.MediaDelegate getMediaDelegate();
@@ -642,7 +641,6 @@ package org.mozilla.geckoview {
     ctor public SessionState(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession.SessionState);
     method @android.support.annotation.NonNull public static org.mozilla.geckoview.GeckoSession.SessionState fromString(@android.support.annotation.NonNull java.lang.String);
     method public void readFromParcel(@android.support.annotation.NonNull android.os.Parcel);
-    method public void updateSessionState(@android.support.annotation.NonNull org.mozilla.gecko.util.GeckoBundle);
     field public static final android.os.Parcelable.Creator<org.mozilla.geckoview.GeckoSession.SessionState> CREATOR;
   }
 
@@ -748,7 +746,6 @@ package org.mozilla.geckoview {
     method @android.support.annotation.UiThread @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoResult<android.graphics.Bitmap> capturePixels();
     method public void coverUntilFirstPaint(int);
     method @android.support.annotation.NonNull public org.mozilla.geckoview.DynamicToolbarAnimator getDynamicToolbarAnimator();
-    method @android.support.annotation.AnyThread @android.support.annotation.NonNull public org.mozilla.gecko.EventDispatcher getEventDispatcher();
     method @android.support.annotation.NonNull public org.mozilla.geckoview.PanZoomController getPanZoomController();
     method @android.support.annotation.AnyThread @android.support.annotation.Nullable public org.mozilla.geckoview.GeckoSession getSession();
     method @android.support.annotation.UiThread @android.support.annotation.Nullable public org.mozilla.geckoview.GeckoSession releaseSession();
@@ -853,7 +850,7 @@ package org.mozilla.geckoview {
     method public void setTheme(@android.support.annotation.NonNull android.content.Context);
   }
 
-  @android.support.annotation.UiThread public class PanZoomController extends org.mozilla.gecko.mozglue.JNIObject {
+  @android.support.annotation.UiThread public class PanZoomController {
     ctor protected PanZoomController(org.mozilla.geckoview.GeckoSession);
     method public float getScrollFactor();
     method public boolean onMotionEvent(@android.support.annotation.NonNull android.view.MotionEvent);

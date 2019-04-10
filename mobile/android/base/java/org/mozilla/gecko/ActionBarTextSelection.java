@@ -12,6 +12,7 @@ import org.mozilla.gecko.util.GeckoBundle;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.widget.ActionModePresenter;
 import org.mozilla.geckoview.GeckoView;
+import org.mozilla.geckoview.GeckoViewBridge;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -65,7 +66,7 @@ public class ActionBarTextSelection implements TextSelection, BundleEventListene
 
     @Override
     public void create() {
-        geckoView.getEventDispatcher().registerUiThreadListener(this,
+        GeckoViewBridge.getEventDispatcher(geckoView).registerUiThreadListener(this,
                 "TextSelection:ActionbarInit",
                 "TextSelection:ActionbarStatus",
                 "TextSelection:ActionbarUninit");
@@ -79,7 +80,7 @@ public class ActionBarTextSelection implements TextSelection, BundleEventListene
 
     @Override
     public void destroy() {
-        geckoView.getEventDispatcher().unregisterUiThreadListener(this,
+        GeckoViewBridge.getEventDispatcher(geckoView).unregisterUiThreadListener(this,
                 "TextSelection:ActionbarInit",
                 "TextSelection:ActionbarStatus",
                 "TextSelection:ActionbarUninit");
@@ -200,7 +201,7 @@ public class ActionBarTextSelection implements TextSelection, BundleEventListene
             final GeckoBundle obj = mItems[item.getItemId()];
             final GeckoBundle data = new GeckoBundle(1);
             data.putString("id", obj.getString("id", ""));
-            geckoView.getEventDispatcher().dispatch("TextSelection:Action", data);
+            GeckoViewBridge.getEventDispatcher(geckoView).dispatch("TextSelection:Action", data);
             return true;
         }
 
@@ -212,7 +213,7 @@ public class ActionBarTextSelection implements TextSelection, BundleEventListene
 
             final GeckoBundle data = new GeckoBundle(1);
             data.putInt("selectionID", selectionID);
-            geckoView.getEventDispatcher().dispatch("TextSelection:End", data);
+            GeckoViewBridge.getEventDispatcher(geckoView).dispatch("TextSelection:End", data);
         }
     }
 }

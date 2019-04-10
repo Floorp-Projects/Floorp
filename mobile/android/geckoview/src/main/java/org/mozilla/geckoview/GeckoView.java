@@ -410,7 +410,7 @@ public class GeckoView extends FrameLayout {
     }
 
     @AnyThread
-    public @NonNull EventDispatcher getEventDispatcher() {
+    /* package */ @NonNull EventDispatcher getEventDispatcher() {
         return mSession.getEventDispatcher();
     }
 
