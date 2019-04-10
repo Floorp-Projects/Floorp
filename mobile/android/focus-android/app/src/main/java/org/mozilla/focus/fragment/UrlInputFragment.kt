@@ -51,7 +51,14 @@ import org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.tips.Tip
 import org.mozilla.focus.tips.TipManager
-import org.mozilla.focus.utils.*
+import org.mozilla.focus.utils.AppConstants
+import org.mozilla.focus.utils.Features
+import org.mozilla.focus.utils.OneShotOnPreDrawListener
+import org.mozilla.focus.utils.Settings
+import org.mozilla.focus.utils.StatusBarUtils
+import org.mozilla.focus.utils.SupportUtils
+import org.mozilla.focus.utils.UrlUtils
+import org.mozilla.focus.utils.ViewUtils
 import org.mozilla.focus.viewmodel.MainViewModel
 import org.mozilla.focus.whatsnew.WhatsNew
 import java.util.Objects
@@ -773,6 +780,7 @@ class UrlInputFragment :
         onFilter(searchText, null)
     }
 
+    @Suppress("ComplexMethod")
     private fun onFilter(searchText: String, view: InlineAutocompleteEditText?) {
         // If the UrlInputFragment has already been hidden, don't bother with filtering. Because of the text
         // input architecture on Android it's possible for onFilter() to be called after we've already
@@ -790,7 +798,8 @@ class UrlInputFragment :
             } else {
                 null
             }
-            view.applyAutocompleteResult(AutocompleteResult(result!!.text, result.source, result.totalItems, { result.url }))
+            view.applyAutocompleteResult(AutocompleteResult(
+                    result!!.text, result.source, result.totalItems, { result.url }))
         }
 
         searchSuggestionsViewModel.setSearchQuery(searchText)
