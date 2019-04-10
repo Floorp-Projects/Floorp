@@ -640,6 +640,31 @@ ICEntry& ICScript::icEntryFromPCOffset(uint32_t pcOffset,
   return *entry;
 }
 
+ICEntry* ICScript::interpreterICEntryFromPCOffset(uint32_t pcOffset) {
+  // We have to return the entry to store in BaselineFrame::interpreterICEntry
+  // when resuming in the Baseline Interpreter at pcOffset. The bytecode op at
+  // pcOffset does not necessarily have an ICEntry, so we want to return the
+  // first ICEntry for which the following is true:
+  //
+  //    entry.isForOp() && entry.pcOffset() >= pcOffset
+  //
+  // Fortunately, ComputeBinarySearchMid returns exactly this entry.
+
+  size_t mid;
+  ComputeBinarySearchMid(ICEntries(this), pcOffset, &mid);
+
+  if (mid < numICEntries()) {
+    ICEntry& entry = icEntry(mid);
+    MOZ_ASSERT(entry.isForOp());
+    MOZ_ASSERT(entry.pcOffset() >= pcOffset);
+    return &entry;
+  }
+
+  // Resuming at a pc after the last ICEntry. Just return nullptr:
+  // BaselineFrame::interpreterICEntry will never be used in this case.
+  return nullptr;
+}
+
 RetAddrEntry& BaselineScript::retAddrEntryFromPCOffset(
     uint32_t pcOffset, RetAddrEntry::Kind kind) {
   size_t mid;
