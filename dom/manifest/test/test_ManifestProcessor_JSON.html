@@ -23,12 +23,22 @@ invalidJson.forEach((testString) => {
   SimpleTest.is(result.start_url, docURL.href, expected);
 });
 
-var validButUnhelpful = ["1", 1, "", "[{}]", "null"];
+var validButUnhelpful = ["1", 1, "", "[{}]"];
 validButUnhelpful.forEach((testString) => {
-  var expected = `Expect to recover from invalid JSON: ${testString}`;
+  var expected = `Expect to recover from valid JSON: ${testString}`;
   data.jsonText = testString;
   var result = processor.process(data);
   SimpleTest.is(result.start_url, docURL.href, expected);
 });
+
+// Bug 1534756 - Allow for null manifests
+var input = {
+  jsonText: "null",
+  manifestURL,
+  docURL,
+};
+var result = processor.process(input);
+SimpleTest.is(result, null, "Expected null when the input is null");
+
   </script>
 </head>
