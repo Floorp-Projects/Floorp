@@ -22,7 +22,7 @@
     <color name="browserToolbarBackground_normal_theme">@color/background_dark_theme</color>
     <color name="unloaded_progress_normal_theme">#42414D</color>
 
-    <!-- home -->
+    <!-- Home -->
     <color name="history_header_normal_theme">@color/off_white</color>
     <color name="history_title_normal_theme">@color/off_white</color>
     <color name="history_url_normal_theme">@color/off_white</color>
@@ -84,4 +84,7 @@
     <!-- Quick Action Sheet -->
     <color name="quick_action_pull_tab">@color/secondaryTextColor_dark_theme</color>
     <color name="quick_action_background_normal_theme">@color/background_dark_theme</color>
+
+    <!-- Crash Page -->
+    <color name="crash_page_accent">@color/accent_bright_dark_theme</color>
 </resources>

@@ -7,7 +7,7 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/photonGrey10">
+        android:background="@color/searchBackground_normal_theme">
 
     <ImageView
         android:id="@+id/crash_tab_image"
@@ -78,7 +78,7 @@
             android:backgroundTint="@color/crash_page_off_accent"
             android:text="@string/tab_crash_close"
             android:fontFamily="Sharp Sans"
-            android:textColor="@color/text_color_normal_theme"
+            android:textColor="@color/about_primary_text_color"
             android:textStyle="bold"
             android:textAllCaps="false"
             android:textSize="14sp"

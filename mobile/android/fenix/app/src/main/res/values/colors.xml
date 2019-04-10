@@ -142,4 +142,7 @@
     <color name="fenix_snackbar_background">#232749</color>
 
     <color name="home_header_shadow">#1F1B215E</color>
+
+    <!-- About Pages Colors -->
+    <color name="about_primary_text_color">#20123A</color>
 </resources>
