@@ -176,7 +176,13 @@ bool CompositorVsyncScheduler::NotifyVsync(const VsyncEvent& aVsync) {
   MOZ_ASSERT_IF(XRE_GetProcessType() == GeckoProcessType_GPU,
                 CompositorThreadHolder::IsInCompositorThread());
   MOZ_ASSERT(!NS_IsMainThread());
-  PostCompositeTask(aVsync.mId, aVsync.mTime);
+
+#if defined(MOZ_WIDGET_ANDROID)
+    gfx::VRManager* vm = gfx::VRManager::Get();
+    if (!vm->IsPresenting()) {
+      PostCompositeTask(aVsync.mId, aVsync.mTime);
+    }
+#endif    // defined(MOZ_WIDGET_ANDROID)
   PostVRTask(aVsync.mTime);
   return true;
 }
