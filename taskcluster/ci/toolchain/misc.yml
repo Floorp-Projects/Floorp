@@ -70,23 +70,6 @@ linux64-libdmg:
         script: build-libdmg-hfsplus.sh
         toolchain-artifact: public/build/dmg.tar.xz
 
-linux64-mar-tools:
-    description: "mar-tools toolchain build"
-    treeherder:
-        symbol: TL(mar-tools)
-    toolchains:
-        - linux64-clang-7
-        - linux64-binutils
-    run:
-        script: build-mar-tools.sh
-        sparse-profile: null
-        toolchain-artifact: public/build/mar-tools.tar.xz
-        resources:
-            - modules/libmar/
-            - other-licenses/nsis/Contrib/CityHash/cityhash/
-            - other-licenses/bsdiff/
-            - toolkit/mozapps/update/updater/bspatch/
-
 linux64-tup:
     description: "tup toolchain build"
     treeherder:
@@ -103,15 +86,6 @@ linux64-tup:
         - try
     toolchains:
         - linux64-gcc-6
-
-linux64-upx:
-    description: "UPX build"
-    treeherder:
-        symbol: TL(upx)
-        tier: 1
-    run:
-        script: build-upx.sh
-        toolchain-artifact: public/build/upx.tar.xz
 
 linux64-custom-v8:
     description: "Custom v8 build"

@@ -760,7 +760,7 @@ static JSString* KindToString(JSContext* cx, const KindNames& names,
 }
 
 static JSString* FuncTypeToString(JSContext* cx, const FuncType& funcType) {
-  StringBuffer buf(cx);
+  JSStringBuilder buf(cx);
   if (!buf.append('(')) {
     return nullptr;
   }

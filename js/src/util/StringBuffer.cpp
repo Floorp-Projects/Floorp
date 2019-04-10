@@ -103,7 +103,7 @@ JSFlatString* StringBuffer::finishStringInternal(JSContext* cx) {
   return str;
 }
 
-JSFlatString* StringBuffer::finishString() {
+JSFlatString* JSStringBuilder::finishString() {
   size_t len = length();
   if (len == 0) {
     return cx->names().empty;

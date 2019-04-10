@@ -231,7 +231,7 @@ XPCOMUtils.defineLazyGetter(this.AboutPages, "aboutStudies", () => {
 
     openDataPreferences() {
       const browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
-      browserWindow.openPreferences("privacy-reports", {origin: "aboutStudies"});
+      browserWindow.openPreferences("privacy-reports");
     },
 
     getShieldLearnMoreHref() {

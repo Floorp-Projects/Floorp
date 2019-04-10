@@ -7,7 +7,7 @@
 #include "Platform.h"
 
 #include "nsIAccessibleEvent.h"
-#include "nsIGConfService.h"
+#include "nsIGSettingsService.h"
 #include "nsIServiceManager.h"
 #include "nsMai.h"
 #include "AtkSocketAccessible.h"
@@ -308,13 +308,21 @@ dbus_done:
   if (dbusSuccess) return sShouldEnable;
 #endif
 
-    // check gconf-2 setting
-#define GCONF_A11Y_KEY "/desktop/gnome/interface/accessibility"
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIGConfService> gconf =
-      do_GetService(NS_GCONFSERVICE_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv) && gconf)
-    gconf->GetBool(NS_LITERAL_CSTRING(GCONF_A11Y_KEY), &sShouldEnable);
+// check GSettings
+#define GSETINGS_A11Y_INTERFACE "org.gnome.desktop.interface"
+#define GSETINGS_A11Y_KEY       "toolkit-accessibility"
+  nsCOMPtr<nsIGSettingsService> gsettings =
+      do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
+  nsCOMPtr<nsIGSettingsCollection> a11y_settings;
+
+  if (gsettings) {
+    gsettings->GetCollectionForSchema(NS_LITERAL_CSTRING(GSETINGS_A11Y_INTERFACE),
+                                      getter_AddRefs(a11y_settings));
+    if (a11y_settings) {
+      a11y_settings->GetBoolean(NS_LITERAL_CSTRING(GSETINGS_A11Y_KEY),
+                                &sShouldEnable);
+    }
+  }
 
   return sShouldEnable;
 }

@@ -178,7 +178,7 @@
                 <menuitem id="menu_preferences"
                           label="&preferencesCmdUnix.label;"
                           accesskey="&preferencesCmdUnix.accesskey;"
-                          oncommand="openPreferences(undefined, {origin: 'menubar'});"/>
+                          oncommand="openPreferences(undefined);"/>
 #endif
 #endif
               </menupopup>
@@ -518,7 +518,7 @@
               <menuitem id="menu_preferences"
                         label="&preferencesCmd2.label;"
                         accesskey="&preferencesCmd2.accesskey;"
-                        oncommand="openPreferences(undefined, {origin: 'menubar'});"/>
+                        oncommand="openPreferences(undefined);"/>
 #endif
 #ifdef MOZ_DEBUG
               <menuitem id="menu_layout_debugger"
@@ -529,7 +529,7 @@
 #endif
 #ifdef XP_MACOSX
 <!-- nsMenuBarX hides these and uses them to build the Application menu. -->
-              <menuitem id="menu_preferences" label="&preferencesCmdMac.label;" key="key_preferencesCmdMac" oncommand="openPreferences(undefined, {origin: 'commandLineLegacy'});"/>
+              <menuitem id="menu_preferences" label="&preferencesCmdMac.label;" key="key_preferencesCmdMac" oncommand="openPreferences(undefined);"/>
               <menuitem id="menu_mac_services" label="&servicesMenuMac.label;"/>
               <menuitem id="menu_mac_hide_app" label="&hideThisAppCmdMac2.label;" key="key_hideThisAppCmdMac"/>
               <menuitem id="menu_mac_hide_others" label="&hideOtherAppsCmdMac.label;" key="key_hideOtherAppsCmdMac"/>

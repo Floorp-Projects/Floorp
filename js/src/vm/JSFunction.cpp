@@ -894,7 +894,7 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
     return str;
   }
 
-  StringBuffer out(cx);
+  JSStringBuilder out(cx);
   if (addParentheses) {
     if (!out.append('(')) {
       return nullptr;
@@ -1342,7 +1342,7 @@ JSLinearString* JSFunction::getBoundFunctionName(JSContext* cx,
   MOZ_ASSERT(
       StringEqualsAscii(cx->names().boundWithSpace, boundWithSpaceChars));
 
-  StringBuffer sb(cx);
+  JSStringBuilder sb(cx);
   if (name->hasTwoByteChars() && !sb.ensureTwoByteChars()) {
     return nullptr;
   }
@@ -1801,7 +1801,7 @@ static bool CreateDynamicFunction(JSContext* cx, const CallArgs& args,
                            maybeScript, pcOffset)
       .setScriptOrModule(maybeScript);
 
-  StringBuffer sb(cx);
+  JSStringBuilder sb(cx);
 
   if (isAsync) {
     if (!sb.append("async ")) {

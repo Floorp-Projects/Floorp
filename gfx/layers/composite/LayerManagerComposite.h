@@ -331,7 +331,8 @@ class LayerManagerComposite final : public HostLayerManager {
   void PostProcessLayers(Layer* aLayer, nsIntRegion& aOpaqueRegion,
                          LayerIntRegion& aVisibleRegion,
                          const Maybe<RenderTargetIntRect>& aRenderTargetClip,
-                         const Maybe<ParentLayerIntRect>& aClipFromAncestors);
+                         const Maybe<ParentLayerIntRect>& aClipFromAncestors,
+                         bool aCanContributeOpaque);
 
   /**
    * RAII helper class to add a mask effect with the compositable from

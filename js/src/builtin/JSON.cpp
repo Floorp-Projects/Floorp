@@ -1075,7 +1075,7 @@ bool json_stringify(JSContext* cx, unsigned argc, Value* vp) {
   RootedValue value(cx, args.get(0));
   RootedValue space(cx, args.get(2));
 
-  StringBuffer sb(cx);
+  JSStringBuilder sb(cx);
   if (!Stringify(cx, &value, replacer, space, sb, StringifyBehavior::Normal)) {
     return false;
   }

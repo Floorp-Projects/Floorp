@@ -2132,14 +2132,19 @@ class nsContentUtils {
    * suitable for, for example, header values. The UTF versions return strings
    * containing international characters.
    *
+   * The thread-safe versions return NS_ERROR_UNKNOWN_PROTOCOL if the
+   * operation cannot be completed on the current thread.
+   *
    * @pre aPrincipal/aOrigin must not be null.
    *
    * @note this should be used for HTML5 origin determination.
    */
   static nsresult GetASCIIOrigin(nsIPrincipal* aPrincipal, nsACString& aOrigin);
   static nsresult GetASCIIOrigin(nsIURI* aURI, nsACString& aOrigin);
+  static nsresult GetThreadSafeASCIIOrigin(nsIURI* aURI, nsACString& aOrigin);
   static nsresult GetUTFOrigin(nsIPrincipal* aPrincipal, nsAString& aOrigin);
   static nsresult GetUTFOrigin(nsIURI* aURI, nsAString& aOrigin);
+  static nsresult GetThreadSafeUTFOrigin(nsIURI* aURI, nsAString& aOrigin);
 
   /**
    * This method creates and dispatches "command" event, which implements

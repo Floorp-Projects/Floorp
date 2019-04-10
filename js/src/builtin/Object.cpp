@@ -237,7 +237,7 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
     return NewStringCopyZ<CanGC>(cx, "{}");
   }
 
-  StringBuffer buf(cx);
+  JSStringBuilder buf(cx);
   if (outermost && !buf.append('(')) {
     return nullptr;
   }
