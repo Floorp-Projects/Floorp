@@ -13,6 +13,11 @@ const {PushDB} = ChromeUtils.import("resource://gre/modules/PushDB.jsm");
 const {PushRecord} = ChromeUtils.import("resource://gre/modules/PushRecord.jsm");
 const {PushCrypto} = ChromeUtils.import("resource://gre/modules/PushCrypto.jsm");
 
+ChromeUtils.defineModuleGetter(this, "pushBroadcastService",
+  "resource://gre/modules/PushBroadcastService.jsm");
+ChromeUtils.defineModuleGetter(this, "ObjectUtils",
+  "resource://gre/modules/ObjectUtils.jsm");
+
 const kPUSHWSDB_DB_NAME = "pushapi";
 const kPUSHWSDB_DB_VERSION = 5; // Change this if the IndexedDB format changes
 const kPUSHWSDB_STORE_NAME = "pushapi";
@@ -117,6 +122,7 @@ const STATE_READY = 3;
 var PushServiceWebSocket = {
   _mainPushService: null,
   _serverURI: null,
+  _currentlyRegistering: new Set(),
 
   newPushDB() {
     return new PushDB(kPUSHWSDB_DB_NAME,
@@ -565,10 +571,11 @@ var PushServiceWebSocket = {
       prefs.observe("userAgentID", this);
 
       // Handle broadcasts received in response to the "hello" message.
-      if (reply.broadcasts) {
+      if (!ObjectUtils.isEmpty(reply.broadcasts)) {
         // The reply isn't technically a broadcast message, but it has
         // the shape of a broadcast message (it has a broadcasts field).
-        this._mainPushService.receivedBroadcastMessage(reply);
+        const context = { phase: pushBroadcastService.PHASES.HELLO };
+        this._mainPushService.receivedBroadcastMessage(reply, context);
       }
 
       this._dataEnabled = !!reply.use_webpush;
@@ -752,7 +759,20 @@ var PushServiceWebSocket = {
   },
 
   _handleBroadcastReply(reply) {
-    this._mainPushService.receivedBroadcastMessage(reply);
+    let phase = pushBroadcastService.PHASES.BROADCAST;
+    // Check if this reply is the result of registration.
+    for (const id of Object.keys(reply.broadcasts)) {
+      const wasRegistering = this._currentlyRegistering.delete(id);
+      if (wasRegistering) {
+        // If we get multiple broadcasts and only one is "registering",
+        // then we consider the phase to be REGISTER for all of them.
+        // It is acceptable since registrations do not happen so often,
+        // and are all very likely to occur soon after browser startup.
+        phase = pushBroadcastService.PHASES.REGISTER;
+      }
+    }
+    const context = { phase };
+    this._mainPushService.receivedBroadcastMessage(reply, context);
   },
 
   reportDeliveryError(messageID, reason) {
@@ -1123,6 +1143,7 @@ var PushServiceWebSocket = {
   },
 
   sendSubscribeBroadcast(serviceId, version) {
+    this._currentlyRegistering.add(serviceId);
     let data = {
       messageType: "broadcast_subscribe",
       broadcasts: {

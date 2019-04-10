@@ -347,7 +347,16 @@ function remoteSettingsFunction() {
 var RemoteSettings = remoteSettingsFunction();
 
 var remoteSettingsBroadcastHandler = {
-  async receivedBroadcastMessage(data, broadcastID) {
-    return RemoteSettings.pollChanges({ expectedTimestamp: data, trigger: "broadcast" });
+  async receivedBroadcastMessage(version, broadcastID, context) {
+    const { phase } = context;
+    const isStartup = [
+      pushBroadcastService.PHASES.HELLO,
+      pushBroadcastService.PHASES.REGISTER,
+    ].includes(phase);
+
+    return RemoteSettings.pollChanges({
+      expectedTimestamp: version,
+      trigger: isStartup ? "startup" : "broadcast",
+    });
   },
 };

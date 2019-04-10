@@ -34,6 +34,12 @@ const BROADCAST_SERVICE_VERSION = 1;
 
 var BroadcastService = class {
   constructor(pushService, path) {
+    this.PHASES = {
+      HELLO: "hello",
+      REGISTER: "register",
+      BROADCAST: "broadcast",
+    };
+
     this.pushService = pushService;
     this.jsonFile = new JSONFile({
       path,
@@ -140,8 +146,16 @@ var BroadcastService = class {
     }
   }
 
-  async receivedBroadcastMessage(broadcasts) {
-    console.info("receivedBroadcastMessage:", broadcasts);
+  /**
+   * Call the listeners of the specified broadcasts.
+   *
+   * @param {Array<Object>} broadcasts Map between broadcast ids and versions.
+   * @param {Object} context Additional information about the context in which the
+   *  broadcast notification was originally received. This is transmitted to listeners.
+   * @param {String} context.phase One of `BroadcastService.PHASES`
+   */
+  async receivedBroadcastMessage(broadcasts, context) {
+    console.info("receivedBroadcastMessage:", broadcasts, context);
     await this.initializePromise;
     for (const broadcastId in broadcasts) {
       const version = broadcasts[broadcastId];
@@ -191,7 +205,7 @@ var BroadcastService = class {
       }
 
       try {
-        await handler.receivedBroadcastMessage(version, broadcastId);
+        await handler.receivedBroadcastMessage(version, broadcastId, context);
       } catch (e) {
         console.error("receivedBroadcastMessage: handler for", broadcastId,
                       "threw error:", e);
