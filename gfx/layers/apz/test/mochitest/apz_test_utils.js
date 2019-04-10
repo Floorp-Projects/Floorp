@@ -291,6 +291,7 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         w.subtestDone = advanceSubtestExecution;
         w.isApzSubtest = true;
         w.SimpleTest = SimpleTest;
+        w.dump = function(msg) { return dump(aFile + " | " + msg); };
         w.is = function(a, b, msg) { return is(a, b, aFile + " | " + msg); };
         w.ok = function(cond, msg) {
           arguments[1] = aFile + " | " + msg;

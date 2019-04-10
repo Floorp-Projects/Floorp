@@ -45,6 +45,7 @@ function setupDragging(testDriver) {
   mouseDown = false;
 
   bar.addEventListener("mousedown", function(e) {
+    dump("Got mousedown clientY " + e.clientY + "\n");
     mouseDown = true;
     moveTo(e.clientY, testDriver);
   }, true);
@@ -59,6 +60,7 @@ function setupDragging(testDriver) {
 
   bar.addEventListener("mouseup", function(e) {
     mouseDown = false;
+    dump("Got mouseup clientY " + e.clientY + "\n");
   }, true);
 
   window.addEventListener("mousemove", function(e) {
