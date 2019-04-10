@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #1170: Allow user to add a new site exception to site permissions
 - #1430 - Adds the Fenix Snackbar
 - #1397 - Adds favicons to the history view
+- #1375 - Added setting for turning off history suggestions
 
 >>>>>>> For #1397 - Updates changelog
 ### Changed
