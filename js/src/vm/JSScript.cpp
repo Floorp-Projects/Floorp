@@ -3565,7 +3565,7 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
       mozilla::MakeScopeExit([&] { script->freeScriptData(); });
 
   /* The counts of indexed things must be checked during code generation. */
-  MOZ_ASSERT(bce->atomIndices->count() <= INDEX_LIMIT);
+  MOZ_ASSERT(bce->perScriptData().atomIndices()->count() <= INDEX_LIMIT);
   MOZ_ASSERT(bce->perScriptData().objectList().length <= INDEX_LIMIT);
 
   uint64_t nslots =
@@ -4523,7 +4523,7 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
 
 /* static */ bool SharedScriptData::InitFromEmitter(
     JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce) {
-  uint32_t natoms = bce->atomIndices->count();
+  uint32_t natoms = bce->perScriptData().atomIndices()->count();
   uint32_t codeLength = bce->bytecodeSection().code().length();
 
   // The + 1 is to account for the final SN_MAKE_TERMINATOR that is appended
@@ -4540,7 +4540,7 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
   // Initialize trailing arrays
   std::copy_n(bce->bytecodeSection().code().begin(), codeLength, data->code());
   bce->copySrcNotes(data->notes(), noteLength);
-  InitAtomMap(*bce->atomIndices, data->atoms());
+  InitAtomMap(*bce->perScriptData().atomIndices(), data->atoms());
 
   return true;
 }
