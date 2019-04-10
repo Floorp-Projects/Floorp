@@ -49,6 +49,7 @@ class CustomElementUpgradeReaction final : public CustomElementReaction {
   }
 
  private:
+  MOZ_CAN_RUN_SCRIPT
   virtual void Invoke(Element* aElement, ErrorResult& aRv) override {
     CustomElementRegistry::Upgrade(aElement, mDefinition, aRv);
   }
@@ -1062,6 +1063,7 @@ already_AddRefed<Promise> CustomElementRegistry::WhenDefined(
 
 namespace {
 
+MOZ_CAN_RUN_SCRIPT
 static void DoUpgrade(Element* aElement, CustomElementConstructor* aConstructor,
                       ErrorResult& aRv) {
   // Rethrow the exception since it might actually throw the exception from the
@@ -1129,7 +1131,7 @@ void CustomElementRegistry::Upgrade(Element* aElement,
   AutoConstructionStackEntry acs(aDefinition->mConstructionStack, aElement);
 
   // Step 6 and step 7.
-  DoUpgrade(aElement, aDefinition->mConstructor, aRv);
+  DoUpgrade(aElement, MOZ_KnownLive(aDefinition->mConstructor), aRv);
   if (aRv.Failed()) {
     data->mState = CustomElementData::State::eFailed;
     // Empty element's custom element reaction queue.
@@ -1229,7 +1231,7 @@ void CustomElementReactionsStack::PopAndInvokeElementQueue() {
     // In that case, the exception of callback reactions will be automatically
     // reported in CallSetup.
     nsIGlobalObject* global = GetEntryGlobal();
-    InvokeReactions(elementQueue, global);
+    InvokeReactions(elementQueue, MOZ_KnownLive(global));
   }
 
   // InvokeReactions() might create other custom element reactions, but those
@@ -1337,7 +1339,7 @@ void CustomElementReactionsStack::InvokeReactions(ElementQueue* aElementQueue,
           aes.emplace(global, "custom elements reaction invocation");
         }
         ErrorResult rv;
-        reaction->Invoke(element, rv);
+        reaction->Invoke(MOZ_KnownLive(element), rv);
         if (aes) {
           JSContext* cx = aes->cx();
           if (rv.MaybeSetPendingException(cx)) {
