@@ -101,6 +101,7 @@ class WindowSurfaceWayland : public WindowSurface {
       const gfx::IntSize& aLockSize);
   bool CommitImageSurfaceToWaylandBuffer(const LayoutDeviceIntRegion& aRegion);
   void CommitWaylandBuffer();
+  void CalcRectScale(LayoutDeviceIntRect& aRect, int scale);
 
   // TODO: Do we need to hold a reference to nsWindow object?
   nsWindow* mWindow;
