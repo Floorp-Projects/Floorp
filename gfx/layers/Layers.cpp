@@ -675,8 +675,6 @@ void Layer::ComputeEffectiveTransformForMaskLayers(
 /* static */
 void Layer::ComputeEffectiveTransformForMaskLayer(
     Layer* aMaskLayer, const gfx::Matrix4x4& aTransformToSurface) {
-  aMaskLayer->mEffectiveTransform = aTransformToSurface;
-
 #ifdef DEBUG
   bool maskIs2D = aMaskLayer->GetTransform().CanDraw2D();
   NS_ASSERTION(maskIs2D, "How did we end up with a 3D transform here?!");
@@ -684,8 +682,8 @@ void Layer::ComputeEffectiveTransformForMaskLayer(
   // The mask layer can have an async transform applied to it in some
   // situations, so be sure to use its GetLocalTransform() rather than
   // its GetTransform().
-  aMaskLayer->mEffectiveTransform =
-      aMaskLayer->GetLocalTransform() * aMaskLayer->mEffectiveTransform;
+  aMaskLayer->mEffectiveTransform = aMaskLayer->SnapTransformTranslation(
+      aMaskLayer->GetLocalTransform() * aTransformToSurface, nullptr);
 }
 
 RenderTargetRect Layer::TransformRectToRenderTarget(const LayerIntRect& aRect) {
