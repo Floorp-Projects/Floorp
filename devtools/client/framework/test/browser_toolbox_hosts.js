@@ -84,7 +84,7 @@ async function testWindowHost() {
   const win = Services.wm.getMostRecentWindow("devtools:toolbox");
   ok(win, "toolbox separate window exists");
 
-  const iframe = win.document.getElementById("toolbox-iframe");
+  const iframe = win.document.querySelector(".devtools-toolbox-window-iframe");
   checkToolboxLoaded(iframe);
 }
 
