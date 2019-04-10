@@ -886,7 +886,7 @@ package org.mozilla.geckoview {
   }
 
   public final class RuntimeTelemetry {
-    method @android.support.annotation.AnyThread @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoResult<org.mozilla.gecko.util.GeckoBundle> getSnapshots(boolean);
+    method @android.support.annotation.AnyThread @android.support.annotation.NonNull public org.mozilla.geckoview.GeckoResult<org.json.JSONObject> getSnapshots(boolean);
   }
 
   public class ScreenLength {
