@@ -11,9 +11,7 @@ import android.view.ViewGroup
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.toolbar.Toolbar
-import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.ext.asActivity
 import java.lang.ref.WeakReference
 
 /**
@@ -21,7 +19,8 @@ import java.lang.ref.WeakReference
  */
 class TabCounterToolbarButton(
     private val sessionManager: SessionManager,
-    private val showTabs: () -> Unit
+    private val showTabs: () -> Unit,
+    private val isPrivate: Boolean
 ) : Toolbar.Action {
     private var reference: WeakReference<TabCounter> = WeakReference<TabCounter>(null)
 
@@ -30,12 +29,9 @@ class TabCounterToolbarButton(
 
         val view = TabCounter(parent.context).apply {
             reference = WeakReference(this)
-            setCount(
-                (sessionManager.sessions
-                    .filter {
-                        (context.asActivity() as? HomeActivity)?.browsingModeManager?.isPrivate == it.private
-                    }).size
-            )
+            setCount(sessionManager.sessions.count {
+                    it.private == isPrivate
+                })
             setOnClickListener {
                 it.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                 showTabs.invoke()
@@ -58,7 +54,9 @@ class TabCounterToolbarButton(
     override fun bind(view: View) = Unit
 
     private fun updateCount() {
-        reference.get()?.setCountWithAnimation(sessionManager.sessions.size)
+        reference.get()?.setCountWithAnimation(sessionManager.sessions.count {
+            it.private == isPrivate
+        })
     }
 
     private val sessionManagerObserver = object : SessionManager.Observer {

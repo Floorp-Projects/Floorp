@@ -39,10 +39,11 @@ class ToolbarIntegration(
 
                 val tabsAction = TabCounterToolbarButton(
                     sessionManager,
-                    showTabs = {
+                    {
                         Navigation.findNavController(toolbar)
                             .navigate(BrowserFragmentDirections.actionBrowserFragmentToHomeFragment())
-                    }
+                    },
+                    isPrivate
                 )
                 toolbar.addBrowserAction(tabsAction)
             }
