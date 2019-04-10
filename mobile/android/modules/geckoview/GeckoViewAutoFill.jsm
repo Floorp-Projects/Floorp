@@ -59,7 +59,7 @@ class GeckoViewAutoFill {
       // Start a new task so we can coalesce adding elements in one batch.
       debug `Deferring auto-fill task`;
       task = new DeferredTask(
-          () => this._addElement(aFormLike, true), 100);
+        () => this._addElement(aFormLike, true), 100);
       task.arm();
       if (!this._autoFillTasks) {
         this._autoFillTasks = new WeakMap();
@@ -95,8 +95,9 @@ class GeckoViewAutoFill {
                   ["color", "date", "datetime-local", "email", "month",
                    "number", "password", "range", "search", "tel", "text",
                    "time", "url", "week"].includes(element.type),
-        disabled: element instanceof window.HTMLInputElement ? element.disabled
-                                                             : null,
+        disabled: element instanceof window.HTMLInputElement
+          ? element.disabled
+          : null,
         attributes: Object.assign({}, ...Array.from(element.attributes)
             .filter(attr => attr.localName !== "value")
             .map(attr => ({[attr.localName]: attr.value}))),
@@ -152,9 +153,11 @@ class GeckoViewAutoFill {
               winUtils.addManuallyManagedState(element, AUTOFILL_STATE);
 
               // Remove highlighting when the field is changed.
-              element.addEventListener("input", _ =>
-                  winUtils.removeManuallyManagedState(element, AUTOFILL_STATE),
-                  { mozSystemGroup: true, once: true });
+              element.addEventListener(
+                "input",
+                _ => winUtils.removeManuallyManagedState(element,
+                                                         AUTOFILL_STATE),
+                { mozSystemGroup: true, once: true });
             }
           } else if (element) {
             warn `Don't know how to auto-fill ${element.tagName}`;
@@ -216,13 +219,11 @@ class GeckoViewAutoFill {
     for (let i = 0; i < inputs.length; i++) {
       if (inputs[i].form) {
         // Let _addAutoFillElement coalesce multiple calls for the same form.
-        this._addElement(
-            FormLikeFactory.createFromForm(inputs[i].form));
+        this._addElement(FormLikeFactory.createFromForm(inputs[i].form));
       } else if (!inputAdded) {
         // Treat inputs without forms as one unit, and process them only once.
         inputAdded = true;
-        this._addElement(
-            FormLikeFactory.createFromField(inputs[i]));
+        this._addElement(FormLikeFactory.createFromField(inputs[i]));
       }
     }
 
