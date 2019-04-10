@@ -33,9 +33,6 @@ class PropertyProvider;
 struct SelectionDetails;
 class nsTextFragment;
 
-class nsDisplayTextGeometry;
-class nsDisplayText;
-
 namespace mozilla {
 class SVGContextPaint;
 };
@@ -63,8 +60,6 @@ class nsTextFrame : public nsFrame {
   NS_DECL_FRAMEARENA_HELPERS(nsTextFrame)
 
   friend class nsContinuingTextFrame;
-  friend class nsDisplayTextGeometry;
-  friend class nsDisplayText;
 
   // nsQueryFrame
   NS_DECL_QUERYFRAME
@@ -446,7 +441,7 @@ class nsTextFrame : public nsFrame {
     mozilla::gfx::Point framePt;
     LayoutDeviceRect dirtyRect;
     const nsTextPaintStyle* textStyle = nullptr;
-    const nsCharClipDisplayItem::ClipEdges* clipEdges = nullptr;
+    const nsDisplayText::ClipEdges* clipEdges = nullptr;
     const nscolor* decorationOverrideColor = nullptr;
     explicit DrawTextParams(gfxContext* aContext)
         : DrawTextRunParams(aContext) {}
@@ -462,9 +457,8 @@ class nsTextFrame : public nsFrame {
   // helper: paint text frame when we're impacted by at least one selection.
   // Return false if the text was not painted and we should continue with
   // the fast path.
-  bool PaintTextWithSelection(
-      const PaintTextSelectionParams& aParams,
-      const nsCharClipDisplayItem::ClipEdges& aClipEdges);
+  bool PaintTextWithSelection(const PaintTextSelectionParams& aParams,
+                              const nsDisplayText::ClipEdges& aClipEdges);
   // helper: paint text with foreground and background colors determined
   // by selection(s). Also computes a mask of all selection types applying to
   // our text, returned in aAllSelectionTypeMask.
@@ -474,7 +468,7 @@ class nsTextFrame : public nsFrame {
       const PaintTextSelectionParams& aParams,
       const mozilla::UniquePtr<SelectionDetails>& aDetails,
       SelectionTypeMask* aAllSelectionTypeMask,
-      const nsCharClipDisplayItem::ClipEdges& aClipEdges);
+      const nsDisplayText::ClipEdges& aClipEdges);
   // helper: paint text decorations for text selected by aSelectionType
   void PaintTextSelectionDecorations(
       const PaintTextSelectionParams& aParams,
@@ -618,6 +612,9 @@ class nsTextFrame : public nsFrame {
  protected:
   virtual ~nsTextFrame();
 
+  friend class nsDisplayTextGeometry;
+  friend class nsDisplayText;
+
   RefPtr<nsFontMetrics> mFontMetrics;
   RefPtr<gfxTextRun> mTextRun;
   nsTextFrame* mNextContinuation;
@@ -663,7 +660,7 @@ class nsTextFrame : public nsFrame {
     mozilla::gfx::Point textBaselinePt;
     gfxContext* context;
     nscolor foregroundColor = NS_RGBA(0, 0, 0, 0);
-    const nsCharClipDisplayItem::ClipEdges* clipEdges = nullptr;
+    const nsDisplayText::ClipEdges* clipEdges = nullptr;
     PropertyProvider* provider = nullptr;
     nscoord leftSideOffset = 0;
     explicit PaintShadowParams(const PaintTextParams& aParams)
@@ -797,6 +794,8 @@ class nsTextFrame : public nsFrame {
 
   ContentOffsets GetCharacterOffsetAtFramePointInternal(
       const nsPoint& aPoint, bool aForInsertionPoint);
+
+  static float GetTextCombineScaleFactor(nsTextFrame* aFrame);
 
   void ClearFrameOffsetCache();
 

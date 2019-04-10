@@ -304,15 +304,6 @@ class nsDisplayFiltersGeometry
   }
 };
 
-class nsCharClipGeometry : public nsDisplayItemGenericGeometry {
- public:
-  nsCharClipGeometry(nsCharClipDisplayItem* aItem,
-                     nsDisplayListBuilder* aBuilder);
-
-  nscoord mVisIStartEdge;
-  nscoord mVisIEndEdge;
-};
-
 class nsDisplayTableItemGeometry
     : public nsDisplayItemGenericGeometry,
       public nsImageGeometryMixin<nsDisplayTableItemGeometry> {
