@@ -98,6 +98,7 @@ Menu.prototype.popup = function(screenX, screenY, toolbox) {
   popup = doc.createXULElement("menupopup");
   popup.setAttribute("menu-api", "true");
   popup.setAttribute("consumeoutsideclicks", "false");
+  popup.setAttribute("incontentshell", "false");
 
   if (this.id) {
     popup.id = this.id;
@@ -131,6 +132,8 @@ Menu.prototype._createMenuItems = function(parent) {
 
     if (item.submenu) {
       const menupopup = doc.createXULElement("menupopup");
+      menupopup.setAttribute("incontentshell", "false");
+
       item.submenu._createMenuItems(menupopup);
 
       const menu = doc.createXULElement("menu");

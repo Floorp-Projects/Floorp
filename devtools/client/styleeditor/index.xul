@@ -39,6 +39,7 @@
 
   <popupset id="style-editor-popups">
     <menupopup id="sourceEditorContextMenu"
+               incontentshell="false"
                onpopupshowing="goUpdateSourceEditorMenuItems()">
       <menuitem id="cMenu_undo" label="&undoCmd.label;"
                 accesskey="&undoCmd.accesskey;" command="cmd_undo"/>
@@ -66,7 +67,7 @@
           key="key_gotoLine"
           command="cmd_gotoLine"/>
     </menupopup>
-    <menupopup id="sidebar-context">
+    <menupopup id="sidebar-context" incontentshell="false">
       <menuitem id="context-openlinknewtab"
         label="&openLinkNewTab.label;"/>
       <menuitem id="context-copyurl"
