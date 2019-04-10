@@ -247,18 +247,18 @@ bool BytecodeEmitter::emitCheck(JSOp op, ptrdiff_t delta, ptrdiff_t* offset) {
   return true;
 }
 
-void BytecodeEmitter::updateDepth(ptrdiff_t target) {
-  jsbytecode* pc = bytecodeSection().code(target);
+void BytecodeEmitter::BytecodeSection::updateDepth(ptrdiff_t target) {
+  jsbytecode* pc = code(target);
 
   int nuses = StackUses(pc);
   int ndefs = StackDefs(pc);
 
-  stackDepth -= nuses;
-  MOZ_ASSERT(stackDepth >= 0);
-  stackDepth += ndefs;
+  stackDepth_ -= nuses;
+  MOZ_ASSERT(stackDepth_ >= 0);
+  stackDepth_ += ndefs;
 
-  if ((uint32_t)stackDepth > maxStackDepth) {
-    maxStackDepth = stackDepth;
+  if ((uint32_t)stackDepth_ > maxStackDepth_) {
+    maxStackDepth_ = stackDepth_;
   }
 }
 
@@ -284,7 +284,7 @@ bool BytecodeEmitter::emit1(JSOp op) {
 
   jsbytecode* code = bytecodeSection().code(offset);
   code[0] = jsbytecode(op);
-  updateDepth(offset);
+  bytecodeSection().updateDepth(offset);
   return true;
 }
 
@@ -299,7 +299,7 @@ bool BytecodeEmitter::emit2(JSOp op, uint8_t op1) {
   jsbytecode* code = bytecodeSection().code(offset);
   code[0] = jsbytecode(op);
   code[1] = jsbytecode(op1);
-  updateDepth(offset);
+  bytecodeSection().updateDepth(offset);
   return true;
 }
 
@@ -319,7 +319,7 @@ bool BytecodeEmitter::emit3(JSOp op, jsbytecode op1, jsbytecode op2) {
   code[0] = jsbytecode(op);
   code[1] = op1;
   code[2] = op2;
-  updateDepth(offset);
+  bytecodeSection().updateDepth(offset);
   return true;
 }
 
@@ -341,7 +341,7 @@ bool BytecodeEmitter::emitN(JSOp op, size_t extra, ptrdiff_t* offset) {
    * operand yet to be stored in the extra bytes after op.
    */
   if (CodeSpec[op].nuses >= 0) {
-    updateDepth(off);
+    bytecodeSection().updateDepth(off);
   }
 
   if (offset) {
@@ -394,7 +394,7 @@ bool BytecodeEmitter::emitJumpNoFallthrough(JSOp op, JumpList* jump) {
   code[0] = jsbytecode(op);
   MOZ_ASSERT(-1 <= jump->offset && jump->offset < offset);
   jump->push(bytecodeSection().code(0), offset);
-  updateDepth(offset);
+  bytecodeSection().updateDepth(offset);
   return true;
 }
 
@@ -463,7 +463,7 @@ bool BytecodeEmitter::emitCall(JSOp op, uint16_t argc, ParseNode* pn) {
 }
 
 bool BytecodeEmitter::emitDupAt(unsigned slotFromTop) {
-  MOZ_ASSERT(slotFromTop < unsigned(stackDepth));
+  MOZ_ASSERT(slotFromTop < unsigned(bytecodeSection().stackDepth()));
 
   if (slotFromTop == 0) {
     return emit1(JSOP_DUP);
@@ -669,7 +669,7 @@ class NonLocalExitControl {
   NonLocalExitControl(BytecodeEmitter* bce, Kind kind)
       : bce_(bce),
         savedScopeNoteIndex_(bce->scopeNoteList.length()),
-        savedDepth_(bce->stackDepth),
+        savedDepth_(bce->bytecodeSection().stackDepth()),
         openScopeNoteIndex_(bce->innermostEmitterScope()->noteIndex()),
         kind_(kind) {}
 
@@ -678,7 +678,7 @@ class NonLocalExitControl {
          n++) {
       bce_->scopeNoteList.recordEnd(n, bce_->bytecodeSection().offset());
     }
-    bce_->stackDepth = savedDepth_;
+    bce_->bytecodeSection().setStackDepth(savedDepth_);
   }
 
   MOZ_MUST_USE bool prepareForNonLocalJump(NestableControl* target);
@@ -893,7 +893,7 @@ bool BytecodeEmitter::emitIndex32(JSOp op, uint32_t index) {
   jsbytecode* code = bytecodeSection().code(offset);
   code[0] = jsbytecode(op);
   SET_UINT32_INDEX(code, index);
-  updateDepth(offset);
+  bytecodeSection().updateDepth(offset);
   return true;
 }
 
@@ -911,7 +911,7 @@ bool BytecodeEmitter::emitIndexOp(JSOp op, uint32_t index) {
   jsbytecode* code = bytecodeSection().code(offset);
   code[0] = jsbytecode(op);
   SET_UINT32_INDEX(code, index);
-  updateDepth(offset);
+  bytecodeSection().updateDepth(offset);
   return true;
 }
 
@@ -1692,7 +1692,7 @@ bool BytecodeEmitter::emitNewInit() {
   code[2] = 0;
   code[3] = 0;
   code[4] = 0;
-  updateDepth(offset);
+  bytecodeSection().updateDepth(offset);
   return true;
 }
 
@@ -2575,7 +2575,7 @@ bool BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target,
   }
 
 #ifdef DEBUG
-  int depth = stackDepth;
+  int depth = bytecodeSection().stackDepth();
 #endif
 
   switch (target->getKind()) {
@@ -2653,7 +2653,7 @@ bool BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target,
       MOZ_CRASH("emitDestructuringLHSRef: bad lhs kind");
   }
 
-  MOZ_ASSERT(stackDepth == depth + int(*emitted));
+  MOZ_ASSERT(bytecodeSection().stackDepth() == depth + int(*emitted));
 
   return true;
 }
@@ -2816,7 +2816,7 @@ bool BytecodeEmitter::emitIteratorNext(
              "can run user-modifiable iteration code");
 
   //                [stack] ... NEXT ITER
-  MOZ_ASSERT(this->stackDepth >= 2);
+  MOZ_ASSERT(bytecodeSection().stackDepth() >= 2);
 
   if (!emitCall(JSOP_CALL, 0, callSourceCoordOffset)) {
     //              [stack] ... RESULT
@@ -2839,7 +2839,7 @@ bool BytecodeEmitter::emitIteratorNext(
 
 bool BytecodeEmitter::emitPushNotUndefinedOrNull() {
   //                [stack] V
-  MOZ_ASSERT(this->stackDepth > 0);
+  MOZ_ASSERT(bytecodeSection().stackDepth() > 0);
 
   if (!emit1(JSOP_DUP)) {
     //              [stack] V V
@@ -3087,7 +3087,7 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
 template <typename InnerEmitter>
 bool BytecodeEmitter::wrapWithDestructuringTryNote(int32_t iterDepth,
                                                    InnerEmitter emitter) {
-  MOZ_ASSERT(this->stackDepth >= iterDepth);
+  MOZ_ASSERT(bytecodeSection().stackDepth() >= iterDepth);
 
   // Pad a nop at the beginning of the bytecode covered by the trynote so
   // that when unwinding environments, we may unwind to the scope
@@ -3208,7 +3208,7 @@ bool BytecodeEmitter::emitInitializer(ParseNode* initializer,
 bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
                                                 DestructuringFlavor flav) {
   MOZ_ASSERT(pattern->isKind(ParseNodeKind::ArrayExpr));
-  MOZ_ASSERT(this->stackDepth != 0);
+  MOZ_ASSERT(bytecodeSection().stackDepth() != 0);
 
   // Here's pseudo code for |let [a, b, , c=y, ...d] = x;|
   //
@@ -3332,7 +3332,7 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
   // JSTRY_DESTRUCTURING expects the iterator and the done value
   // to be the second to top and the top of the stack, respectively.
   // IteratorClose is called upon exception only if done is false.
-  int32_t tryNoteDepth = stackDepth;
+  int32_t tryNoteDepth = bytecodeSection().stackDepth();
 
   for (ParseNode* member : pattern->contents()) {
     bool isFirst = member == pattern->head();
@@ -3641,7 +3641,7 @@ bool BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern,
   MOZ_ASSERT(pattern->isKind(ParseNodeKind::ObjectExpr));
 
   //                [stack] ... RHS
-  MOZ_ASSERT(this->stackDepth > 0);
+  MOZ_ASSERT(bytecodeSection().stackDepth() > 0);
 
   if (!emit1(JSOP_CHECKOBJCOERCIBLE)) {
     //              [stack] ... RHS
@@ -4905,7 +4905,7 @@ bool BytecodeEmitter::emitWith(BinaryNode* withNode) {
 }
 
 bool BytecodeEmitter::emitCopyDataProperties(CopyOption option) {
-  DebugOnly<int32_t> depth = this->stackDepth;
+  DebugOnly<int32_t> depth = bytecodeSection().stackDepth();
 
   uint32_t argc;
   if (option == CopyOption::Filtered) {
@@ -4960,7 +4960,7 @@ bool BytecodeEmitter::emitCopyDataProperties(CopyOption option) {
     return false;
   }
 
-  MOZ_ASSERT(depth - int(argc) == this->stackDepth);
+  MOZ_ASSERT(depth - int(argc) == bytecodeSection().stackDepth());
   return true;
 }
 
@@ -5151,11 +5151,11 @@ bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
   // when we reach this point on the loop backedge (if spreading produces at
   // least one value), we've additionally pushed a RESULT iteration value.
   // Increment manually to reflect this.
-  this->stackDepth++;
+  bytecodeSection().setStackDepth(bytecodeSection().stackDepth() + 1);
 
   {
 #ifdef DEBUG
-    auto loopDepth = this->stackDepth;
+    auto loopDepth = bytecodeSection().stackDepth();
 #endif
 
     // Emit code to assign result.value to the iteration variable.
@@ -5168,7 +5168,7 @@ bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
       return false;
     }
 
-    MOZ_ASSERT(this->stackDepth == loopDepth - 1);
+    MOZ_ASSERT(bytecodeSection().stackDepth() == loopDepth - 1);
 
     // Spread operations can't contain |continue|, so don't bother setting loop
     // and enclosing "update" offsets, as we do with for-loops.
@@ -5205,7 +5205,7 @@ bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
       return false;
     }
 
-    MOZ_ASSERT(this->stackDepth == loopDepth);
+    MOZ_ASSERT(bytecodeSection().stackDepth() == loopDepth);
   }
 
   // Let Ion know where the closing jump of this loop is.
@@ -5218,8 +5218,8 @@ bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
   MOZ_ASSERT(loopInfo.breaks.offset == -1);
   MOZ_ASSERT(loopInfo.continues.offset == -1);
 
-  if (!addTryNote(JSTRY_FOR_OF, stackDepth, loopInfo.headOffset(),
-                  loopInfo.breakTargetOffset())) {
+  if (!addTryNote(JSTRY_FOR_OF, bytecodeSection().stackDepth(),
+                  loopInfo.headOffset(), loopInfo.breakTargetOffset())) {
     return false;
   }
 
@@ -5240,7 +5240,7 @@ bool BytecodeEmitter::emitInitializeForInOrOfTarget(TernaryNode* forHead) {
   MOZ_ASSERT(forHead->isKind(ParseNodeKind::ForIn) ||
              forHead->isKind(ParseNodeKind::ForOf));
 
-  MOZ_ASSERT(this->stackDepth >= 1,
+  MOZ_ASSERT(bytecodeSection().stackDepth() >= 1,
              "must have a per-iteration value for initializing");
 
   ParseNode* target = forHead->kid1();
@@ -5288,14 +5288,14 @@ bool BytecodeEmitter::emitInitializeForInOrOfTarget(TernaryNode* forHead) {
       // iteration value *before* initializing.  Thus the initializing
       // value may be buried under a bind-specific value on the stack.
       // Swap it to the top of the stack.
-      MOZ_ASSERT(stackDepth >= 2);
+      MOZ_ASSERT(bytecodeSection().stackDepth() >= 2);
       if (!emit1(JSOP_SWAP)) {
         return false;
       }
     } else {
       // In cases of emitting a frame slot or environment slot,
       // nothing needs be done.
-      MOZ_ASSERT(stackDepth >= 1);
+      MOZ_ASSERT(bytecodeSection().stackDepth() >= 1);
     }
     if (!noe.emitAssignment()) {
       return false;
@@ -6220,7 +6220,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
   }
 
   int32_t savedDepthTemp;
-  int32_t startDepth = stackDepth;
+  int32_t startDepth = bytecodeSection().stackDepth();
   MOZ_ASSERT(startDepth >= 3);
 
   TryEmitter tryCatch(this, TryEmitter::Kind::TryCatchFinally,
@@ -6252,7 +6252,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  MOZ_ASSERT(this->stackDepth == startDepth);
+  MOZ_ASSERT(bytecodeSection().stackDepth() == startDepth);
 
   // Step 7.a.vi.
   // Step 7.b.ii.7.
@@ -6285,7 +6285,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  MOZ_ASSERT(stackDepth == startDepth);
+  MOZ_ASSERT(bytecodeSection().stackDepth() == startDepth);
 
   if (!emit1(JSOP_EXCEPTION)) {
     //              [stack] NEXT ITER RESULT EXCEPTION
@@ -6304,7 +6304,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  savedDepthTemp = stackDepth;
+  savedDepthTemp = bytecodeSection().stackDepth();
   InternalIfEmitter ifThrowMethodIsNotDefined(this);
   if (!emitPushNotUndefinedOrNull()) {
     //              [stack] NEXT ITER RESULT EXCEPTION ITER THROW
@@ -6355,7 +6355,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER RESULT
     return false;
   }
-  MOZ_ASSERT(this->stackDepth == startDepth);
+  MOZ_ASSERT(bytecodeSection().stackDepth() == startDepth);
 
   JumpList checkResult;
   // Note that there is no GOSUB to the finally block here. If the iterator has
@@ -6366,7 +6366,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  stackDepth = savedDepthTemp;
+  bytecodeSection().setStackDepth(savedDepthTemp);
   if (!ifThrowMethodIsNotDefined.emitElse()) {
     //              [stack] NEXT ITER RESULT EXCEPTION ITER THROW
     return false;
@@ -6391,12 +6391,12 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  stackDepth = savedDepthTemp;
+  bytecodeSection().setStackDepth(savedDepthTemp);
   if (!ifThrowMethodIsNotDefined.emitEnd()) {
     return false;
   }
 
-  stackDepth = startDepth;
+  bytecodeSection().setStackDepth(startDepth);
   if (!tryCatch.emitFinally()) {
     return false;
   }
@@ -6523,7 +6523,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE
     return false;
   }
-  savedDepthTemp = this->stackDepth;
+  savedDepthTemp = bytecodeSection().stackDepth();
   if (!ifReturnDone.emitElse()) {
     //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE RESULT
     return false;
@@ -6545,7 +6545,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
       return false;
     }
   }
-  this->stackDepth = savedDepthTemp;
+  bytecodeSection().setStackDepth(savedDepthTemp);
   if (!ifReturnDone.emitEnd()) {
     return false;
   }
@@ -6620,7 +6620,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER RESULT
     return false;
   }
-  MOZ_ASSERT(this->stackDepth == startDepth);
+  MOZ_ASSERT(bytecodeSection().stackDepth() == startDepth);
 
   // Steps 7.a.iv-v.
   // Steps 7.b.ii.5-6.
@@ -6665,7 +6665,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  MOZ_ASSERT(this->stackDepth == startDepth - 2);
+  MOZ_ASSERT(bytecodeSection().stackDepth() == startDepth - 2);
 
   return true;
 }
