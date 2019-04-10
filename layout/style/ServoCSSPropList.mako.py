@@ -62,19 +62,38 @@ def method(prop):
 
 # TODO(emilio): Get this to zero.
 LONGHANDS_NOT_SERIALIZED_WITH_SERVO = [
-    # Servo serializes one value when both are the same, a few tests expect two.
+    "animation-delay",
+    "animation-duration",
+    "animation-iteration-count",
+    "animation-name",
+    "border-image-width",
     "border-spacing",
-
-    # Resolved value should be zero when the column-rule-style is none.
-    "column-rule-width",
-
-    # Clamping (need to get rid of nsStyleCoord storage before removing these).
-    "row-gap",
+    "border-image-width",
+    "border-spacing",
+    "box-shadow",
+    "caret-color",
+    "color",
+    "column-count",
     "column-gap",
+    "column-rule-width",
+    "display",
+    "fill",
+    "filter",
+    "flex-basis",
+    "flex-grow",
+    "flex-shrink",
     "grid-auto-columns",
+    "grid-auto-flow",
     "grid-auto-rows",
-
-    # These resolve auto to zero in a few cases, but not all.
+    "grid-column-end",
+    "grid-column-start",
+    "grid-row-end",
+    "grid-row-start",
+    "grid-template-areas",
+    "initial-letter",
+    "marker-end",
+    "marker-mid",
+    "marker-start",
     "max-block-size",
     "max-height",
     "max-inline-size",
@@ -83,9 +102,27 @@ LONGHANDS_NOT_SERIALIZED_WITH_SERVO = [
     "min-height",
     "min-inline-size",
     "min-width",
-
-    # resistfingerprinting stuff.
+    "-moz-binding",
+    "-moz-box-flex",
+    "-moz-force-broken-image-icon",
     "-moz-osx-font-smoothing",
+    "outline-width",
+    "paint-order",
+    "row-gap",
+    "scrollbar-color",
+    "scroll-snap-points-x",
+    "scroll-snap-points-y",
+    "stroke",
+    "text-emphasis-position",
+    "text-emphasis-style",
+    "text-overflow",
+    "text-shadow",
+    "transition-delay",
+    "transition-duration",
+    "transition-property",
+    "vertical-align",
+    "-webkit-text-stroke-width",
+    "will-change",
 ]
 
 def serialized_by_servo(prop):

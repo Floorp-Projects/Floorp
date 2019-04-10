@@ -36,7 +36,7 @@ pub type GradientKind =
     generic::GradientKind<LineDirection, Length, LengthPercentage, Position, Angle>;
 
 /// A computed gradient line direction.
-#[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq, ToResolvedValue)]
+#[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq)]
 pub enum LineDirection {
     /// An angle.
     Angle(Angle),

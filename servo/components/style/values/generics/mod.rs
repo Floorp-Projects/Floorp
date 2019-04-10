@@ -44,7 +44,7 @@ pub mod url;
 #[allow(missing_docs)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 #[derive(
-    Clone, Copy, Debug, Eq, MallocSizeOf, Parse, PartialEq, ToComputedValue, ToCss, ToResolvedValue, ToShmem,
+    Clone, Copy, Debug, Eq, MallocSizeOf, Parse, PartialEq, ToComputedValue, ToCss, ToShmem,
 )]
 pub enum SymbolsType {
     Cyclic,
@@ -87,7 +87,7 @@ impl SymbolsType {
 /// Since wherever <counter-style> is used, 'none' is a valid value as
 /// well, we combine them into one type to make code simpler.
 #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
-#[derive(Clone, Debug, Eq, PartialEq, ToComputedValue, ToCss, ToResolvedValue, ToShmem)]
+#[derive(Clone, Debug, Eq, PartialEq, ToComputedValue, ToCss, ToShmem)]
 pub enum CounterStyleOrNone {
     /// `none`
     None,
@@ -175,7 +175,6 @@ impl SpecifiedValueInfo for CounterStyleOrNone {
     ToAnimatedZero,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 #[repr(transparent)]
@@ -214,7 +213,6 @@ impl<T: Zero> Zero for NonNegative<T> {
     ToAnimatedZero,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 pub struct GreaterThanOrEqualToOne<T>(pub T);
@@ -233,7 +231,6 @@ pub struct GreaterThanOrEqualToOne<T>(pub T);
     ToAnimatedZero,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 #[css(function = "rect", comma)]

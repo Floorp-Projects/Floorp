@@ -16,7 +16,6 @@
     ToAnimatedValue,
     ToAnimatedZero,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 pub struct BoxShadow<Color, SizeLength, BlurShapeLength, ShapeLength> {
@@ -43,7 +42,6 @@ pub struct BoxShadow<Color, SizeLength, BlurShapeLength, ShapeLength> {
     ToAnimatedValue,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 pub enum Filter<Angle, Factor, Length, DropShadow, Url> {
@@ -97,7 +95,6 @@ pub enum Filter<Angle, Factor, Length, DropShadow, Url> {
     ToAnimatedValue,
     ToAnimatedZero,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 pub struct SimpleShadow<Color, SizeLength, ShapeLength> {
