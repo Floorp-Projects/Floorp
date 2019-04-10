@@ -735,24 +735,24 @@ void TextOverflow::PruneDisplayListContents(
       }
     }
 
-    nsCharClipDisplayItem* charClip =
-        itemFrame ? nsCharClipDisplayItem::CheckCast(item) : nullptr;
-    if (charClip && GetSelfOrNearestBlock(itemFrame) == mBlock) {
+    nsDisplayText* textItem =
+        itemFrame ? nsDisplayText::CheckCast(item) : nullptr;
+    if (textItem && GetSelfOrNearestBlock(itemFrame) == mBlock) {
       LogicalRect rect =
           GetLogicalScrollableOverflowRectRelativeToBlock(itemFrame);
       if (mIStart.IsNeeded()) {
         nscoord istart =
             aInsideMarkersArea.IStart(mBlockWM) - rect.IStart(mBlockWM);
         if (istart > 0) {
-          (mBlockWM.IsBidiLTR() ? charClip->mVisIStartEdge
-                                : charClip->mVisIEndEdge) = istart;
+          (mBlockWM.IsBidiLTR() ? textItem->VisIStartEdge()
+                                : textItem->VisIEndEdge()) = istart;
         }
       }
       if (mIEnd.IsNeeded()) {
         nscoord iend = rect.IEnd(mBlockWM) - aInsideMarkersArea.IEnd(mBlockWM);
         if (iend > 0) {
-          (mBlockWM.IsBidiLTR() ? charClip->mVisIEndEdge
-                                : charClip->mVisIStartEdge) = iend;
+          (mBlockWM.IsBidiLTR() ? textItem->VisIEndEdge()
+                                : textItem->VisIStartEdge()) = iend;
         }
       }
     }

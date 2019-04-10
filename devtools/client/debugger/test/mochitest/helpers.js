@@ -209,14 +209,11 @@ async function waitForElementWithSelector(dbg, selector) {
   return findElementWithSelector(dbg, selector);
 }
 
-function waitForSelectedLocation(dbg, line ) {
-  return waitForState(
-    dbg,
-    state => {
-      const location = dbg.selectors.getSelectedLocation(state)
-      return location && location.line == line
-    }
-  );
+function waitForSelectedLocation(dbg, line) {
+  return waitForState(dbg, state => {
+    const location = dbg.selectors.getSelectedLocation(state);
+    return location && location.line == line;
+  });
 }
 
 function waitForSelectedSource(dbg, url) {
@@ -463,6 +460,10 @@ function waitForBreakpointCount(dbg, count) {
     dbg,
     state => dbg.selectors.getBreakpointCount(state) == count
   );
+}
+
+function waitForBreakpoint(dbg, url, line) {
+  return waitForState(dbg, () => findBreakpoint(dbg, url, line));
 }
 
 /**
@@ -796,7 +797,11 @@ async function addBreakpoint(dbg, source, line, column, options) {
   source = findSource(dbg, source);
   const sourceId = source.id;
   const bpCount = dbg.selectors.getBreakpointCount(dbg.getState());
-  await dbg.actions.addBreakpoint(getContext(dbg), { sourceId, line, column }, options);
+  await dbg.actions.addBreakpoint(
+    getContext(dbg),
+    { sourceId, line, column },
+    options
+  );
   is(
     dbg.selectors.getBreakpointCount(dbg.getState()),
     bpCount + 1,
@@ -815,8 +820,12 @@ function disableBreakpoint(dbg, source, line, column) {
 function setBreakpointOptions(dbg, source, line, column, options) {
   source = findSource(dbg, source);
   const sourceId = source.id;
-  column = column || getFirstBreakpointColumn(dbg, {line, sourceId});
-  return dbg.actions.setBreakpointOptions(getContext(dbg), { sourceId, line, column }, options);
+  column = column || getFirstBreakpointColumn(dbg, { line, sourceId });
+  return dbg.actions.setBreakpointOptions(
+    getContext(dbg),
+    { sourceId, line, column },
+    options
+  );
 }
 
 function findBreakpoint(dbg, url, line) {
@@ -1317,6 +1326,14 @@ function dblClickElement(dbg, elementName, ...args) {
     { clickCount: 2 },
     dbg.win
   );
+}
+
+function altClickElement(dbg, elementName, ...args) {
+  const selector = getSelector(elementName, ...args);
+  const el = findElementWithSelector(dbg, selector);
+  el.scrollIntoView();
+
+  return EventUtils.synthesizeMouseAtCenter(el, { altKey: true }, dbg.win);
 }
 
 function rightClickElement(dbg, elementName, ...args) {

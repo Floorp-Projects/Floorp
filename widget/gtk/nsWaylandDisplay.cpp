@@ -21,6 +21,13 @@ namespace widget {
 static nsWaylandDisplay *gWaylandDisplays[MAX_DISPLAY_CONNECTIONS];
 static StaticMutex gWaylandDisplaysMutex;
 
+static void ReleaseDisplaysAtExit() {
+  for (int i = 0; i < MAX_DISPLAY_CONNECTIONS; i++) {
+    delete gWaylandDisplays[i];
+    gWaylandDisplays[i] = nullptr;
+  }
+}
+
 // Each thread which is using wayland connection (wl_display) has to operate
 // its own wl_event_queue. Main Firefox thread wl_event_queue is handled
 // by Gtk main loop, other threads/wl_event_queue has to be handled by us.
@@ -31,19 +38,24 @@ static StaticMutex gWaylandDisplaysMutex;
 static void WaylandDisplayLoop(wl_display *aDisplay);
 
 // Get WaylandDisplay for given wl_display and actual calling thread.
-static nsWaylandDisplay *WaylandDisplayGetLocked(wl_display *aDisplay,
+static nsWaylandDisplay *WaylandDisplayGetLocked(GdkDisplay *aGdkDisplay,
                                                  const StaticMutexAutoLock &) {
+  // Available as of GTK 3.8+
+  static auto sGdkWaylandDisplayGetWlDisplay = (wl_display * (*)(GdkDisplay *))
+      dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_display");
+  wl_display *waylandDisplay = sGdkWaylandDisplayGetWlDisplay(aGdkDisplay);
+
+  // Search existing display connections for wl_display:thread combination.
   for (auto &display : gWaylandDisplays) {
-    if (display && display->Matches(aDisplay)) {
-      NS_ADDREF(display);
+    if (display && display->Matches(waylandDisplay)) {
       return display;
     }
   }
 
   for (auto &display : gWaylandDisplays) {
     if (display == nullptr) {
-      display = new nsWaylandDisplay(aDisplay);
-      NS_ADDREF(display);
+      display = new nsWaylandDisplay(waylandDisplay);
+      atexit(ReleaseDisplaysAtExit);
       return display;
     }
   }
@@ -57,34 +69,8 @@ nsWaylandDisplay *WaylandDisplayGet(GdkDisplay *aGdkDisplay) {
     aGdkDisplay = gdk_display_get_default();
   }
 
-  // Available as of GTK 3.8+
-  static auto sGdkWaylandDisplayGetWlDisplay = (wl_display * (*)(GdkDisplay *))
-      dlsym(RTLD_DEFAULT, "gdk_wayland_display_get_wl_display");
-
-  wl_display *display = sGdkWaylandDisplayGetWlDisplay(aGdkDisplay);
-
   StaticMutexAutoLock lock(gWaylandDisplaysMutex);
-  return WaylandDisplayGetLocked(display, lock);
-}
-
-static bool WaylandDisplayReleaseLocked(nsWaylandDisplay *aDisplay,
-                                        const StaticMutexAutoLock &) {
-  for (auto &display : gWaylandDisplays) {
-    if (display == aDisplay) {
-      int rc = display->Release();
-      if (rc == 0) {
-        display = nullptr;
-      }
-      return true;
-    }
-  }
-  MOZ_ASSERT(false, "Missing nsWaylandDisplay for this thread!");
-  return false;
-}
-
-void WaylandDisplayRelease(nsWaylandDisplay *aDisplay) {
-  StaticMutexAutoLock lock(gWaylandDisplaysMutex);
-  WaylandDisplayReleaseLocked(aDisplay, lock);
+  return WaylandDisplayGetLocked(aGdkDisplay, lock);
 }
 
 static void WaylandDisplayLoopLocked(wl_display *aDisplay,
@@ -130,6 +116,8 @@ static void global_registry_handler(void *data, wl_registry *registry,
                                     uint32_t id, const char *interface,
                                     uint32_t version) {
   auto display = reinterpret_cast<nsWaylandDisplay *>(data);
+  if (!display)
+    return;
 
   if (strcmp(interface, "wl_shm") == 0) {
     auto shm = static_cast<wl_shm *>(
@@ -180,9 +168,7 @@ bool nsWaylandDisplay::Matches(wl_display *aDisplay) {
   return mThreadId == PR_GetCurrentThread() && aDisplay == mDisplay;
 }
 
-NS_IMPL_ISUPPORTS(nsWaylandDisplay, nsISupports);
-
-nsWaylandDisplay::nsWaylandDisplay(wl_display *aDisplay)
+nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
     : mThreadId(PR_GetCurrentThread()),
       mDisplay(aDisplay),
       mEventQueue(nullptr),
@@ -190,9 +176,10 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display *aDisplay)
       mSubcompositor(nullptr),
       mSeat(nullptr),
       mShm(nullptr),
-      mPrimarySelectionDeviceManager(nullptr) {
-  wl_registry *registry = wl_display_get_registry(mDisplay);
-  wl_registry_add_listener(registry, &registry_listener, this);
+      mPrimarySelectionDeviceManager(nullptr),
+      mRegistry(nullptr) {
+  mRegistry = wl_display_get_registry(mDisplay);
+  wl_registry_add_listener(mRegistry, &registry_listener, this);
 
   if (NS_IsMainThread()) {
     // Use default event queue in main thread operated by Gtk+.
@@ -203,16 +190,18 @@ nsWaylandDisplay::nsWaylandDisplay(wl_display *aDisplay)
     mEventQueue = wl_display_create_queue(mDisplay);
     MessageLoop::current()->PostTask(NewRunnableFunction(
         "WaylandDisplayLoop", &WaylandDisplayLoop, mDisplay));
-    wl_proxy_set_queue((struct wl_proxy *)registry, mEventQueue);
+    wl_proxy_set_queue((struct wl_proxy *)mRegistry, mEventQueue);
     wl_display_roundtrip_queue(mDisplay, mEventQueue);
     wl_display_roundtrip_queue(mDisplay, mEventQueue);
   }
 }
 
 nsWaylandDisplay::~nsWaylandDisplay() {
-  MOZ_ASSERT(mThreadId == PR_GetCurrentThread());
   // Owned by Gtk+, we don't need to release
   mDisplay = nullptr;
+
+  wl_registry_destroy(mRegistry);
+  mRegistry = nullptr;
 
   if (mEventQueue) {
     wl_event_queue_destroy(mEventQueue);

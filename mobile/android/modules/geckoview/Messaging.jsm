@@ -23,7 +23,7 @@ function DispatcherDelegate(aDispatcher, aMessageManager) {
     // Child process.
     this._replies = new Map();
     (aMessageManager || Services.cpmm).addMessageListener(
-        "GeckoView:MessagingReply", this);
+      "GeckoView:MessagingReply", this);
   }
 }
 

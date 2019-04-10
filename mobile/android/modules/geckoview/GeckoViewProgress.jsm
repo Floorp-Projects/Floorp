@@ -10,11 +10,12 @@ const {GeckoViewModule} = ChromeUtils.import("resource://gre/modules/GeckoViewMo
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "OverrideService",
-  "@mozilla.org/security/certoverride;1", "nsICertOverrideService");
+XPCOMUtils.defineLazyServiceGetter(
+  this, "OverrideService", "@mozilla.org/security/certoverride;1",
+  "nsICertOverrideService");
 
-XPCOMUtils.defineLazyServiceGetter(this, "IDNService",
-  "@mozilla.org/network/idn-service;1", "nsIIDNService");
+XPCOMUtils.defineLazyServiceGetter(
+  this, "IDNService", "@mozilla.org/network/idn-service;1", "nsIIDNService");
 
 var IdentityHandler = {
   // The definitions below should be kept in sync with those in GeckoView.ProgressListener.SecurityInformation
@@ -56,11 +57,11 @@ var IdentityHandler = {
 
   getMixedDisplayMode: function getMixedDisplayMode(aState) {
     if (aState & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT) {
-        return this.MIXED_MODE_CONTENT_LOADED;
+      return this.MIXED_MODE_CONTENT_LOADED;
     }
 
     if (aState & Ci.nsIWebProgressListener.STATE_BLOCKED_MIXED_DISPLAY_CONTENT) {
-        return this.MIXED_MODE_CONTENT_BLOCKED;
+      return this.MIXED_MODE_CONTENT_BLOCKED;
     }
 
     return this.MIXED_MODE_UNKNOWN;
@@ -131,7 +132,7 @@ var IdentityHandler = {
 
     try {
       result.securityException = OverrideService.hasMatchingOverride(
-          uri.host, uri.port, cert, {}, {});
+        uri.host, uri.port, cert, {}, {});
     } catch (e) {
     }
 

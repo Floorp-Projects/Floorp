@@ -920,6 +920,7 @@ HTMLTooltip.prototype = {
     // so disable all features that impact the behavior.
     panel.setAttribute("animate", false);
     panel.setAttribute("consumeoutsideclicks", false);
+    panel.setAttribute("incontentshell", false);
     panel.setAttribute("noautofocus", true);
     panel.setAttribute("ignorekeys", true);
     panel.setAttribute("tooltip", "aHTMLTooltip");

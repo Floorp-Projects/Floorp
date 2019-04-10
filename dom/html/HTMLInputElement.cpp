@@ -654,7 +654,7 @@ bool HTMLInputElement::IsPopupBlocked() const {
 
   // Check if page can open a popup without abuse regardless of allowed events
   if (PopupBlocker::GetPopupControlState() <= PopupBlocker::openBlocked) {
-    return !PopupBlocker::TryUsePopupOpeningToken();
+    return !PopupBlocker::TryUsePopupOpeningToken(OwnerDoc()->NodePrincipal());
   }
 
   return !PopupBlocker::CanShowPopupByPermission(OwnerDoc()->NodePrincipal());

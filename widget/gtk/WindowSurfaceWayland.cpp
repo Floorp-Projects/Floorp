@@ -413,16 +413,6 @@ WindowSurfaceWayland::~WindowSurfaceWayland() {
       delete mBackupBuffer[i];
     }
   }
-
-  if (!mIsMainThread) {
-    // We can be destroyed from main thread even though we was created/used
-    // in compositor thread. We have to unref/delete WaylandDisplay in
-    // compositor thread then and we can't use MessageLoop::current() here.
-    mDisplayThreadMessageLoop->PostTask(NewRunnableFunction(
-        "WaylandDisplayRelease", &WaylandDisplayRelease, mWaylandDisplay));
-  } else {
-    WaylandDisplayRelease(mWaylandDisplay);
-  }
 }
 
 WindowBackBuffer* WindowSurfaceWayland::GetWaylandBufferToDraw(int aWidth,

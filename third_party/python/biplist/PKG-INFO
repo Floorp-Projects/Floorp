@@ -1,0 +1,24 @@
+Metadata-Version: 1.1
+Name: biplist
+Version: 1.0.3
+Summary: biplist is a library for reading/writing binary plists.
+Home-page: https://bitbucket.org/wooster/biplist
+Author: Andrew Wooster
+Author-email: andrew@planetaryscale.com
+License: BSD
+Download-URL: https://bitbucket.org/wooster/biplist/downloads/biplist-1.0.3.tar.gz
+Description: `biplist` is a binary plist parser/generator for Python.
+        
+        Binary Property List (plist) files provide a faster and smaller serialization
+        format for property lists on OS X. This is a library for generating binary
+        plists which can be read by OS X, iOS, or other clients.
+        
+        This module requires Python 2.6 or higher or Python 3.4 or higher.
+Platform: UNKNOWN
+Classifier: Development Status :: 5 - Production/Stable
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: BSD License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Classifier: Topic :: Text Processing :: Markup

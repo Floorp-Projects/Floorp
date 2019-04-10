@@ -20,11 +20,10 @@ namespace widget {
 
 // Our general connection to Wayland display server,
 // holds our display connection and runs event loop.
-class nsWaylandDisplay : public nsISupports {
-  NS_DECL_THREADSAFE_ISUPPORTS
-
+class nsWaylandDisplay {
  public:
   explicit nsWaylandDisplay(wl_display* aDisplay);
+  virtual ~nsWaylandDisplay();
 
   bool DisplayLoop();
   bool Matches(wl_display* aDisplay);
@@ -41,7 +40,6 @@ class nsWaylandDisplay : public nsISupports {
     return mPrimarySelectionDeviceManager;
   };
 
- public:
   void SetShm(wl_shm* aShm);
   void SetSubcompositor(wl_subcompositor* aSubcompositor);
   void SetDataDeviceManager(wl_data_device_manager* aDataDeviceManager);
@@ -49,9 +47,7 @@ class nsWaylandDisplay : public nsISupports {
   void SetPrimarySelectionDeviceManager(
       gtk_primary_selection_device_manager* aPrimarySelectionDeviceManager);
 
- private:
-  virtual ~nsWaylandDisplay();
-
+private:
   PRThread* mThreadId;
   wl_display* mDisplay;
   wl_event_queue* mEventQueue;
@@ -60,10 +56,10 @@ class nsWaylandDisplay : public nsISupports {
   wl_seat* mSeat;
   wl_shm* mShm;
   gtk_primary_selection_device_manager* mPrimarySelectionDeviceManager;
+  wl_registry *mRegistry;
 };
 
 nsWaylandDisplay* WaylandDisplayGet(GdkDisplay* aGdkDisplay = nullptr);
-void WaylandDisplayRelease(nsWaylandDisplay* aDisplay);
 
 }  // namespace widget
 }  // namespace mozilla

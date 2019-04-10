@@ -680,6 +680,12 @@ var Policies = {
     },
   },
 
+  "NewTabPage": {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("browser.newtabpage.enabled", param);
+    },
+  },
+
   "NoDefaultBookmarks": {
     onProfileAfterChange(manager, param) {
       if (param) {
@@ -773,7 +779,11 @@ var Policies = {
 
   "RequestedLocales": {
     onBeforeAddons(manager, param) {
-      Services.locale.requestedLocales = param;
+      if (Array.isArray(param)) {
+        Services.locale.requestedLocales = param;
+      } else {
+        Services.locale.requestedLocales = param.split(",");
+      }
     },
   },
 

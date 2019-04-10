@@ -517,6 +517,7 @@ STATIC_ATOMS = [
     Atom("import", "import"),
     Atom("include", "include"),
     Atom("includes", "includes"),
+    Atom("incontentshell", "incontentshell"),
     Atom("increment", "increment"),
     Atom("indent", "indent"),
     Atom("indeterminate", "indeterminate"),

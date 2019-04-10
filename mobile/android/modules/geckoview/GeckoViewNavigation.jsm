@@ -87,12 +87,12 @@ class GeckoViewNavigation extends GeckoViewModule {
         let parsedUri;
         let triggeringPrincipal;
         try {
-            parsedUri = Services.io.newURI(uri);
-            if (parsedUri.schemeIs("about") || parsedUri.schemeIs("data") ||
-                parsedUri.schemeIs("file") || parsedUri.schemeIs("resource")) {
-              // Only allow privileged loading for certain URIs.
-              triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
-            }
+          parsedUri = Services.io.newURI(uri);
+          if (parsedUri.schemeIs("about") || parsedUri.schemeIs("data") ||
+              parsedUri.schemeIs("file") || parsedUri.schemeIs("resource")) {
+            // Only allow privileged loading for certain URIs.
+            triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+          }
         } catch (ignored) {
         }
         if (!triggeringPrincipal) {
@@ -195,7 +195,7 @@ class GeckoViewNavigation extends GeckoViewModule {
 
     // Wait indefinitely for app to respond with a browser or null
     Services.tm.spinEventLoopUntil(() =>
-        this.window.closed || browser !== undefined);
+      this.window.closed || browser !== undefined);
     return browser || null;
   }
 

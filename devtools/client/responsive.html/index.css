@@ -7,8 +7,6 @@
 
 :root {
   --rdm-box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
-  --submit-button-active-background-color: rgba(0,0,0,0.12);
-  --submit-button-active-color: var(--theme-body-color);
   --viewport-active-color: #3b3b3b;
   --input-invalid-border-color: var(--red-60);
   --custom-device-button-hover: var(--grey-30);
@@ -16,8 +14,6 @@
 
 :root.theme-dark {
   --rdm-box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
-  --submit-button-active-background-color: var(--theme-toolbar-hover-active);
-  --submit-button-active-color: var(--theme-selection-color);
   --viewport-active-color: #fcfcfc;
   --input-invalid-border-color: var(--red-50);
   --custom-device-button-hover: var(--grey-10-a20)
@@ -399,7 +395,7 @@ body,
 
 .device-modal {
   display: grid;
-  grid-template-rows: minmax(80px, auto) auto 20px;
+  grid-template-rows: minmax(80px, auto) auto;
   background-color: var(--theme-toolbar-background);
   border: 1px solid var(--theme-splitter-color);
   border-radius: 2px;
@@ -611,28 +607,6 @@ body,
 
 .device-remove-button:empty::before {
   background-image: url("chrome://devtools/skin/images/close.svg");
-}
-
-#device-submit-button {
-  background-color: var(--theme-tab-toolbar-background);
-  border-width: 1px 0 0 0;
-  border-top-width: 1px;
-  border-top-style: solid;
-  border-top-color: var(--theme-splitter-color);
-  color: var(--theme-body-color);
-  width: 100%;
-  height: 20px;
-  position: absolute;
-  bottom: 0;
-}
-
-#device-submit-button:hover {
-  background-color: var(--theme-toolbar-hover);
-}
-
-#device-submit-button:hover:active {
-  background-color: var(--submit-button-active-background-color);
-  color: var(--submit-button-active-color);
 }
 
 /**

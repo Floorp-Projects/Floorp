@@ -8,6 +8,7 @@ mozilla.pth:python/mozversioncontrol
 mozilla.pth:python/l10n
 mozilla.pth:third_party/python/atomicwrites
 mozilla.pth:third_party/python/attrs/src
+mozilla.pth:third_party/python/biplist
 mozilla.pth:third_party/python/blessings
 mozilla.pth:third_party/python/Click
 mozilla.pth:third_party/python/compare-locales
