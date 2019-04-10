@@ -355,6 +355,8 @@ class ICScript {
   void trace(JSTracer* trc);
   void purgeOptimizedStubs(JSScript* script);
 
+  ICEntry* interpreterICEntryFromPCOffset(uint32_t pcOffset);
+
   ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset);
   ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset,
                                     ICEntry* prevLookedUpEntry);
