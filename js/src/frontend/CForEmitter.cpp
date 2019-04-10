@@ -75,7 +75,7 @@ bool CForEmitter::emitBody(Cond cond, const Maybe<uint32_t>& bodyPos) {
     return false;
   }
 
-  biasedTop_ = bce_->offset();
+  biasedTop_ = bce_->bytecodeSection().offset();
 
   if (cond_ == Cond::Present) {
     // Goto the loop condition, which branches back to iterate.
@@ -163,11 +163,11 @@ bool CForEmitter::emitCond(const Maybe<uint32_t>& forPos,
     // Restore the absolute line number for source note readers.
     if (endPos) {
       uint32_t lineNum = bce_->parser->errorReporter().lineAt(*endPos);
-      if (bce_->currentLine() != lineNum) {
+      if (bce_->bytecodeSection().currentLine() != lineNum) {
         if (!bce_->newSrcNote2(SRC_SETLINE, ptrdiff_t(lineNum))) {
           return false;
         }
-        bce_->setCurrentLine(lineNum);
+        bce_->bytecodeSection().setCurrentLine(lineNum);
       }
     }
   }
@@ -176,7 +176,7 @@ bool CForEmitter::emitCond(const Maybe<uint32_t>& forPos,
     tdzCache_.reset();
   }
 
-  condOffset_ = bce_->offset();
+  condOffset_ = bce_->bytecodeSection().offset();
 
   if (cond_ == Cond::Present) {
     if (!loopInfo_->emitLoopEntry(bce_, condPos)) {
@@ -228,7 +228,8 @@ bool CForEmitter::emitEnd() {
     return false;
   }
 
-  if (!bce_->addTryNote(JSTRY_LOOP, bce_->stackDepth, loopInfo_->headOffset(),
+  if (!bce_->addTryNote(JSTRY_LOOP, bce_->bytecodeSection().stackDepth(),
+                        loopInfo_->headOffset(),
                         loopInfo_->breakTargetOffset())) {
     return false;
   }

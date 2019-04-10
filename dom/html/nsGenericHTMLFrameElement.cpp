@@ -133,7 +133,9 @@ void nsGenericHTMLFrameElement::EnsureFrameLoader() {
 
   // Strangely enough, this method doesn't actually ensure that the
   // frameloader exists.  It's more of a best-effort kind of thing.
-  mFrameLoader = nsFrameLoader::Create(this, mOpenerWindow, mNetworkCreated);
+  mFrameLoader = nsFrameLoader::Create(
+      this, mOpenerWindow ? mOpenerWindow->GetDOMWindow() : nullptr,
+      mNetworkCreated);
 }
 
 nsresult nsGenericHTMLFrameElement::CreateRemoteFrameLoader(

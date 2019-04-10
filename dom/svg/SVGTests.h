@@ -105,7 +105,7 @@ class SVGTests : public nsISupports {
   }
 
  protected:
-  virtual ~SVGTests() {}
+  virtual ~SVGTests() = default;
 
  private:
   enum { FEATURES, EXTENSIONS, LANGUAGE };

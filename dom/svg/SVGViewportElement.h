@@ -25,9 +25,9 @@ class nsSVGViewportFrame;
 
 namespace mozilla {
 class AutoPreserveAspectRatioOverride;
-class DOMSVGAnimatedPreserveAspectRatio;
 
 namespace dom {
+class DOMSVGAnimatedPreserveAspectRatio;
 class SVGAnimatedRect;
 class SVGViewElement;
 class SVGViewportElement;
