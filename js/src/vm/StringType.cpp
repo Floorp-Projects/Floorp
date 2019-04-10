@@ -2303,7 +2303,7 @@ static JSString* SymbolToSource(JSContext* cx, Symbol* symbol) {
     return desc;
   }
 
-  StringBuffer buf(cx);
+  JSStringBuilder buf(cx);
   if (code == SymbolCode::InSymbolRegistry ? !buf.append("Symbol.for(")
                                            : !buf.append("Symbol(")) {
     return nullptr;

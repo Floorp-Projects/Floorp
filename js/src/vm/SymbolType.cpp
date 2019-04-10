@@ -112,7 +112,7 @@ void Symbol::dump(js::GenericPrinter& out) {
 bool js::SymbolDescriptiveString(JSContext* cx, Symbol* sym,
                                  MutableHandleValue result) {
   // steps 2-5
-  StringBuffer sb(cx);
+  JSStringBuilder sb(cx);
   if (!sb.append("Symbol(")) {
     return false;
   }
