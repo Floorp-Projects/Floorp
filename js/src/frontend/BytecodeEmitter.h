@@ -193,6 +193,15 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     uint32_t numYields() const { return numYields_; }
     void addNumYields() { numYields_++; }
 
+    // ---- JIT ----
+
+    size_t numICEntries() const { return numICEntries_; }
+    void addNumICEntries() { numICEntries_++; }
+    void setNumICEntries(size_t entries) { numICEntries_ = entries; }
+
+    uint16_t typesetCount() const { return typesetCount_; }
+    void addTypesetCount() { typesetCount_++; }
+
    private:
     // ---- Bytecode ----
 
@@ -241,6 +250,14 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
     // Number of yield instructions emitted. Does not include JSOP_AWAIT.
     uint32_t numYields_ = 0;
+
+    // ---- JIT ----
+
+    // Number of JOF_IC opcodes emitted.
+    size_t numICEntries_ = 0;
+
+    // Number of JOF_TYPESET opcodes generated.
+    uint16_t typesetCount_ = 0;
   };
 
   BytecodeSection bytecodeSection_;
@@ -357,12 +374,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   EmitterScope* innermostEmitterScopeNoCheck() const {
     return innermostEmitterScope_;
   }
-
-  // Number of JOF_IC opcodes emitted.
-  size_t numICEntries = 0;
-
-  // Number of JOF_TYPESET opcodes generated.
-  uint16_t typesetCount = 0;
 
   // Script contains singleton initializer JSOP_OBJECT.
   bool hasSingletons = false;

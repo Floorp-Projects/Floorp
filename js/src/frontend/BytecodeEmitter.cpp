@@ -126,7 +126,7 @@ BytecodeEmitter::BytecodeEmitter(
 
   if (sc->isFunctionBox()) {
     // Functions have IC entries for type monitoring |this| and arguments.
-    numICEntries = sc->asFunctionBox()->function()->nargs() + 1;
+    bytecodeSection().setNumICEntries(sc->asFunctionBox()->function()->nargs() + 1);
   }
 }
 
@@ -243,13 +243,13 @@ bool BytecodeEmitter::emitCheck(JSOp op, ptrdiff_t delta, ptrdiff_t* offset) {
   // If op is JOF_TYPESET (see the type barriers comment in TypeInference.h),
   // reserve a type set to store its result.
   if (CodeSpec[op].format & JOF_TYPESET) {
-    if (typesetCount < JSScript::MaxBytecodeTypeSets) {
-      typesetCount++;
+    if (bytecodeSection().typesetCount() < JSScript::MaxBytecodeTypeSets) {
+      bytecodeSection().addTypesetCount();
     }
   }
 
   if (BytecodeOpHasIC(op)) {
-    numICEntries++;
+    bytecodeSection().addNumICEntries();
   }
 
   return true;
@@ -361,7 +361,7 @@ bool BytecodeEmitter::emitN(JSOp op, size_t extra, ptrdiff_t* offset) {
 bool BytecodeEmitter::emitJumpTargetOp(JSOp op, ptrdiff_t* off) {
   MOZ_ASSERT(BytecodeIsJumpTarget(op));
 
-  size_t numEntries = numICEntries;
+  size_t numEntries = bytecodeSection().numICEntries();
   if (MOZ_UNLIKELY(numEntries > UINT32_MAX)) {
     reportError(nullptr, JSMSG_NEED_DIET, js_script_str);
     return false;
