@@ -3732,7 +3732,6 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
       return null();
     }
     if (tt == TokenKind::RightCurly) {
-      anyChars.addModifierException(TokenStream::SlashIsRegExpOK);
       break;
     }
 
@@ -3892,7 +3891,6 @@ GeneralParser<ParseHandler, Unit>::arrayBindingPattern(
 
     if (tt == TokenKind::RightBracket) {
       anyChars.ungetToken();
-      anyChars.addModifierException(TokenStream::SlashIsRegExpOK);
       break;
     }
 
@@ -9887,7 +9885,6 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
       return null();
     }
     if (tt == TokenKind::RightCurly) {
-      anyChars.addModifierException(TokenStream::SlashIsRegExpOK);
       break;
     }
 
