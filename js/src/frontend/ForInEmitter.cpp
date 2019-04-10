@@ -124,7 +124,7 @@ bool ForInEmitter::emitBody() {
 bool ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
   MOZ_ASSERT(state_ == State::Body);
 
-  loopInfo_->setContinueTarget(bce_->offset());
+  loopInfo_->setContinueTarget(bce_->bytecodeSection().offset());
 
   if (forPos) {
     // Make sure this code is attributed to the "for".
@@ -172,7 +172,7 @@ bool ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
   }
 
   if (!bce_->addTryNote(JSTRY_FOR_IN, bce_->stackDepth, loopInfo_->headOffset(),
-                        bce_->offset())) {
+                        bce_->bytecodeSection().offset())) {
     return false;
   }
 

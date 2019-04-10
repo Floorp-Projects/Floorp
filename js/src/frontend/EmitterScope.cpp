@@ -359,7 +359,7 @@ bool EmitterScope::appendScopeNote(BytecodeEmitter* bce) {
   MOZ_ASSERT(ScopeKindIsInBody(scope(bce)->kind()) && enclosingInFrame(),
              "Scope notes are not needed for body-level scopes.");
   noteIndex_ = bce->scopeNoteList.length();
-  return bce->scopeNoteList.append(index(), bce->offset(),
+  return bce->scopeNoteList.append(index(), bce->bytecodeSection().offset(),
                                    enclosingInFrame()
                                        ? enclosingInFrame()->noteIndex()
                                        : ScopeNote::NoScopeNoteIndex);
@@ -1057,8 +1057,9 @@ bool EmitterScope::leave(BytecodeEmitter* bce, bool nonLocal) {
     if (ScopeKindIsInBody(kind)) {
       // The extra function var scope is never popped once it's pushed,
       // so its scope note extends until the end of any possible code.
-      uint32_t offset =
-          kind == ScopeKind::FunctionBodyVar ? UINT32_MAX : bce->offset();
+      uint32_t offset = kind == ScopeKind::FunctionBodyVar
+                            ? UINT32_MAX
+                            : bce->bytecodeSection().offset();
       bce->scopeNoteList.recordEnd(noteIndex_, offset);
     }
   }
