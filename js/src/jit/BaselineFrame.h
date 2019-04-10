@@ -237,6 +237,7 @@ class BaselineFrame {
     MOZ_ASSERT(runningInInterpreter());
     return interpreterPC_;
   }
+  void setInterpreterPC(jsbytecode* pc);
 
   bool hasReturnValue() const { return flags_ & HAS_RVAL; }
   MutableHandleValue returnValue() {

@@ -108,6 +108,13 @@ bool BaselineFrame::pushVarEnvironment(JSContext* cx, HandleScope scope) {
   return js::PushVarEnvironmentObject(cx, scope, this);
 }
 
+void BaselineFrame::setInterpreterPC(jsbytecode* pc) {
+  uint32_t pcOffset = script()->pcToOffset(pc);
+  ICScript* icScript = script()->icScript();
+  interpreterPC_ = pc;
+  interpreterICEntry_ = icScript->interpreterICEntryFromPCOffset(pcOffset);
+}
+
 bool BaselineFrame::initForOsr(InterpreterFrame* fp, uint32_t numStackValues) {
   mozilla::PodZero(this);
 
