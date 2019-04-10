@@ -76,6 +76,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
     // the debugger instance.
     this._onLoadBreakpointURLs = new Set();
 
+    // A WeakMap from Debugger.Frame to an exception value which will be ignored
+    // when deciding to pause if the value is thrown by the frame. When we are
+    // pausing on exceptions then we only want to pause when the youngest frame
+    // throws a particular exception, instead of for all older frames as well.
+    this._handledFrameExceptions = new WeakMap();
+
     this.global = global;
 
     this.onNewSourceEvent = this.onNewSourceEvent.bind(this);
@@ -1565,6 +1571,11 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
       return undefined;
     }
 
+    if (this._handledFrameExceptions.has(youngestFrame) &&
+        this._handledFrameExceptions.get(youngestFrame) === value) {
+      return undefined;
+    }
+
     // NS_ERROR_NO_INTERFACE exceptions are a special case in browser code,
     // since they're almost always thrown by QueryInterface functions, and
     // handled cleanly by native code.
@@ -1583,6 +1594,12 @@ const ThreadActor = ActorClassWithSpec(threadSpec, {
 
     if (this.skipBreakpoints || this.sources.isBlackBoxed(url)) {
       return undefined;
+    }
+
+    // Now that we've decided to pause, ignore this exception if it's thrown by
+    // any older frames.
+    for (let frame = youngestFrame.older; frame != null; frame = frame.older) {
+      this._handledFrameExceptions.set(frame, value);
     }
 
     try {
