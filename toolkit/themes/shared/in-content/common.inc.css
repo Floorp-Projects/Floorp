@@ -267,6 +267,7 @@ html|select:not([size]):not([multiple]) {
   -moz-context-properties: fill;
   fill: currentColor;
   font-size: inherit;
+  line-height: 2.1;
   padding-inline-start: 5px;
   padding-inline-end: 24px;
   text-overflow: ellipsis;
