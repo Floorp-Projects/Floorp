@@ -126,7 +126,7 @@
     "eslint-plugin-prettier": "^3.0.0",
     "eslint-plugin-react": "^7.2.1",
     "expect.js": "^0.3.1",
-    "flow-bin": "0.93.0",
+    "flow-bin": "0.96.0",
     "glob": "^7.0.3",
     "husky": "^1.0.1",
     "jest": "^23.0.0",
