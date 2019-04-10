@@ -26,7 +26,7 @@ class Provider {
    * @returns {Array} arraof of accessible children.
    */
   getChildren(accessible) {
-    if (!accessible || !accessible.actor || accessible.childCount === 0) {
+    if (!accessible || !accessible.actorID || accessible.childCount === 0) {
       return [];
     }
 
