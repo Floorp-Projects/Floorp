@@ -22,6 +22,7 @@
 namespace mozilla {
 
 namespace layers {
+class D3D11ShareHandleImage;
 class D3D11YCbCrImage;
 class Image;
 class GPUVideoImage;
@@ -189,6 +190,8 @@ class GLBlitHelper final {
   // GLBlitHelperD3D.cpp:
   bool BlitImage(layers::GPUVideoImage* srcImage, const gfx::IntSize& destSize,
                  OriginPos destOrigin) const;
+  bool BlitImage(layers::D3D11ShareHandleImage* srcImage,
+                 const gfx::IntSize& destSize, OriginPos destOrigin) const;
   bool BlitImage(layers::D3D11YCbCrImage* srcImage,
                  const gfx::IntSize& destSize, OriginPos destOrigin) const;
 

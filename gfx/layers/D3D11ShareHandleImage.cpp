@@ -36,8 +36,7 @@ bool D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator,
   if (aAllocator) {
     mTextureClient = aAllocator->CreateOrRecycleClient(mYUVColorSpace, mSize);
     if (mTextureClient) {
-      D3D11TextureData* textureData =
-          mTextureClient->GetInternalData()->AsD3D11TextureData();
+      D3D11TextureData* textureData = GetData();
       MOZ_DIAGNOSTIC_ASSERT(textureData, "Wrong TextureDataType");
       mTexture = textureData->GetD3D11Texture();
       return true;
