@@ -123,27 +123,6 @@ function isStale(accessible) {
 }
 
 /**
- * Get accessibility audit starting with the passed accessible object as a root.
- *
- * @param {Object} acc
- *        AccessibileActor to be used as the root for the audit.
- * @param {Map} report
- *        An accumulator map to be used to store audit information.
- */
-function getAudit(acc, report) {
-  if (acc.isDefunct) {
-    return;
-  }
-
-  // Audit returns a promise, save the actual value in the report.
-  report.set(acc, acc.audit().then(result => report.set(acc, result)));
-
-  for (const child of acc.children()) {
-    getAudit(child, report);
-  }
-}
-
-/**
  * The AccessibleWalkerActor stores a cache of AccessibleActors that represent
  * accessible objects in a given document.
  *
@@ -386,30 +365,6 @@ const AccessibleWalkerActor = ActorClassWithSpec(accessibleWalkerSpec, {
 
     return ancestry.map(parent => (
       { accessible: parent, children: parent.children() }));
-  },
-
-  /**
-   * Run accessibility audit and return relevant ancestries for AccessibleActors
-   * that have non-empty audit checks.
-   *
-   * @return {Promise}
-   *         A promise that resolves when the audit is complete and all relevant
-   *         ancestries are calculated.
-   */
-  async audit() {
-    const doc = await this.getDocument();
-    const report = new Map();
-    getAudit(doc, report);
-    await Promise.all(report.values());
-
-    const ancestries = [];
-    for (const [acc, audit] of report.entries()) {
-      if (audit && Object.values(audit).filter(check => check != null).length > 0) {
-        ancestries.push(this.getAncestry(acc));
-      }
-    }
-
-    return Promise.all(ancestries);
   },
 
   onHighlighterEvent: function(data) {
