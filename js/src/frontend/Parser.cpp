@@ -125,9 +125,13 @@ GeneralParser<ParseHandler, Unit>::asFinalParser() const {
 template <class ParseHandler, typename Unit>
 template <typename ConditionT, typename ErrorReportT>
 bool GeneralParser<ParseHandler, Unit>::mustMatchTokenInternal(
-    ConditionT condition, Modifier modifier, ErrorReportT errorReport) {
+    ConditionT condition, ErrorReportT errorReport) {
+  MOZ_ASSERT(condition(TokenKind::Div) == false);
+  MOZ_ASSERT(condition(TokenKind::DivAssign) == false);
+  MOZ_ASSERT(condition(TokenKind::RegExp) == false);
+
   TokenKind actual;
-  if (!tokenStream.getToken(&actual, modifier)) {
+  if (!tokenStream.getToken(&actual, TokenStream::SlashIsInvalid)) {
     return false;
   }
   if (!condition(actual)) {
@@ -3466,8 +3470,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::condition(
     return null();
   }
 
-  if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
-                      JSMSG_PAREN_AFTER_COND)) {
+  if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_COND)) {
     return null();
   }
 
@@ -3848,11 +3851,10 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
     }
   }
 
-  if (!mustMatchToken(TokenKind::RightCurly, TokenStream::SlashIsRegExp,
-                      [this, begin](TokenKind actual) {
-                        this->reportMissingClosing(JSMSG_CURLY_AFTER_LIST,
-                                                   JSMSG_CURLY_OPENED, begin);
-                      })) {
+  if (!mustMatchToken(TokenKind::RightCurly, [this, begin](TokenKind actual) {
+        this->reportMissingClosing(JSMSG_CURLY_AFTER_LIST, JSMSG_CURLY_OPENED,
+                                   begin);
+      })) {
     return null();
   }
 
@@ -3954,11 +3956,10 @@ GeneralParser<ParseHandler, Unit>::arrayBindingPattern(
     }
   }
 
-  if (!mustMatchToken(TokenKind::RightBracket, TokenStream::SlashIsRegExp,
-                      [this, begin](TokenKind actual) {
-                        this->reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
-                                                   JSMSG_BRACKET_OPENED, begin);
-                      })) {
+  if (!mustMatchToken(TokenKind::RightBracket, [this, begin](TokenKind actual) {
+        this->reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
+                                   JSMSG_BRACKET_OPENED, begin);
+      })) {
     return null();
   }
 
@@ -4016,11 +4017,10 @@ GeneralParser<ParseHandler, Unit>::blockStatement(YieldHandling yieldHandling,
     return null();
   }
 
-  if (!mustMatchToken(TokenKind::RightCurly, TokenStream::SlashIsRegExp,
-                      [this, errorNumber, openedPos](TokenKind actual) {
-                        this->reportMissingClosing(
-                            errorNumber, JSMSG_CURLY_OPENED, openedPos);
-                      })) {
+  if (!mustMatchToken(TokenKind::RightCurly, [this, errorNumber,
+                                              openedPos](TokenKind actual) {
+        this->reportMissingClosing(errorNumber, JSMSG_CURLY_OPENED, openedPos);
+      })) {
     return null();
   }
 
@@ -4078,8 +4078,7 @@ GeneralParser<ParseHandler, Unit>::declarationPattern(
     }
   }
 
-  if (!mustMatchToken(TokenKind::Assign, TokenStream::SlashIsRegExp,
-                      JSMSG_BAD_DESTRUCT_DECL)) {
+  if (!mustMatchToken(TokenKind::Assign, JSMSG_BAD_DESTRUCT_DECL)) {
     return null();
   }
 
@@ -5615,8 +5614,7 @@ GeneralParser<ParseHandler, Unit>::doWhileStatement(
   if (!body) {
     return null();
   }
-  if (!mustMatchToken(TokenKind::While, TokenStream::SlashIsRegExp,
-                      JSMSG_WHILE_AFTER_DO)) {
+  if (!mustMatchToken(TokenKind::While, JSMSG_WHILE_AFTER_DO)) {
     return null();
   }
   Node cond = condition(InAllowed, yieldHandling);
@@ -5923,8 +5921,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
 
     // Look for an operand: |for (;| means we might have already examined
     // this semicolon with that modifier.
-    if (!mustMatchToken(TokenKind::Semi, TokenStream::SlashIsRegExp,
-                        JSMSG_SEMI_AFTER_FOR_INIT)) {
+    if (!mustMatchToken(TokenKind::Semi, JSMSG_SEMI_AFTER_FOR_INIT)) {
       return null();
     }
 
@@ -5943,8 +5940,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
       }
     }
 
-    if (!mustMatchToken(TokenKind::Semi, TokenStream::SlashIsRegExp,
-                        JSMSG_SEMI_AFTER_FOR_COND)) {
+    if (!mustMatchToken(TokenKind::Semi, JSMSG_SEMI_AFTER_FOR_COND)) {
       return null();
     }
 
@@ -5962,8 +5958,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
       }
     }
 
-    if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
-                        JSMSG_PAREN_AFTER_FOR_CTRL)) {
+    if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_FOR_CTRL)) {
       return null();
     }
 
@@ -5991,8 +5986,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
     // Parser::declaration consumed everything up to the closing ')'.  That
     // token follows an {Assignment,}Expression and so must be interpreted
     // as an operand to be consistent with normal expression tokenizing.
-    if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
-                        JSMSG_PAREN_AFTER_FOR_CTRL)) {
+    if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_FOR_CTRL)) {
       return null();
     }
 
@@ -6038,8 +6032,7 @@ GeneralParser<ParseHandler, Unit>::switchStatement(
     return null();
   }
 
-  if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
-                      JSMSG_PAREN_AFTER_SWITCH)) {
+  if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_SWITCH)) {
     return null();
   }
   if (!mustMatchToken(TokenKind::LeftCurly, JSMSG_CURLY_BEFORE_SWITCH)) {
@@ -6091,8 +6084,7 @@ GeneralParser<ParseHandler, Unit>::switchStatement(
         return null();
     }
 
-    if (!mustMatchToken(TokenKind::Colon, TokenStream::SlashIsRegExp,
-                        JSMSG_COLON_AFTER_CASE)) {
+    if (!mustMatchToken(TokenKind::Colon, JSMSG_COLON_AFTER_CASE)) {
       return null();
     }
 
@@ -6337,8 +6329,7 @@ GeneralParser<ParseHandler, Unit>::withStatement(YieldHandling yieldHandling) {
     return null();
   }
 
-  if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
-                      JSMSG_PAREN_AFTER_WITH)) {
+  if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_WITH)) {
     return null();
   }
 
@@ -6506,12 +6497,11 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
       return null();
     }
 
-    if (!mustMatchToken(TokenKind::RightCurly, TokenStream::SlashIsRegExp,
-                        [this, openedPos](TokenKind actual) {
-                          this->reportMissingClosing(JSMSG_CURLY_AFTER_TRY,
-                                                     JSMSG_CURLY_OPENED,
-                                                     openedPos);
-                        })) {
+    if (!mustMatchToken(
+            TokenKind::RightCurly, [this, openedPos](TokenKind actual) {
+              this->reportMissingClosing(JSMSG_CURLY_AFTER_TRY,
+                                         JSMSG_CURLY_OPENED, openedPos);
+            })) {
       return null();
     }
   }
@@ -6579,8 +6569,7 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
         }
       }
 
-      if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
-                          JSMSG_PAREN_AFTER_CATCH)) {
+      if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_CATCH)) {
         return null();
       }
 
@@ -6634,12 +6623,11 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
       return null();
     }
 
-    if (!mustMatchToken(TokenKind::RightCurly, TokenStream::SlashIsRegExp,
-                        [this, openedPos](TokenKind actual) {
-                          this->reportMissingClosing(JSMSG_CURLY_AFTER_FINALLY,
-                                                     JSMSG_CURLY_OPENED,
-                                                     openedPos);
-                        })) {
+    if (!mustMatchToken(
+            TokenKind::RightCurly, [this, openedPos](TokenKind actual) {
+              this->reportMissingClosing(JSMSG_CURLY_AFTER_FINALLY,
+                                         JSMSG_CURLY_OPENED, openedPos);
+            })) {
       return null();
     }
   } else {
@@ -6681,12 +6669,11 @@ GeneralParser<ParseHandler, Unit>::catchBlockStatement(
     return null();
   }
 
-  if (!mustMatchToken(TokenKind::RightCurly, TokenStream::SlashIsRegExp,
-                      [this, openedPos](TokenKind actual) {
-                        this->reportMissingClosing(JSMSG_CURLY_AFTER_CATCH,
-                                                   JSMSG_CURLY_OPENED,
-                                                   openedPos);
-                      })) {
+  if (!mustMatchToken(
+          TokenKind::RightCurly, [this, openedPos](TokenKind actual) {
+            this->reportMissingClosing(JSMSG_CURLY_AFTER_CATCH,
+                                       JSMSG_CURLY_OPENED, openedPos);
+          })) {
     return null();
   }
 
@@ -8202,8 +8189,7 @@ GeneralParser<ParseHandler, Unit>::condExpr(
     return null();
   }
 
-  if (!mustMatchToken(TokenKind::Colon, TokenStream::SlashIsRegExp,
-                      JSMSG_COLON_IN_COND)) {
+  if (!mustMatchToken(TokenKind::Colon, JSMSG_COLON_IN_COND)) {
     return null();
   }
 
@@ -8803,8 +8789,7 @@ GeneralParser<ParseHandler, Unit>::argumentList(
     }
   }
 
-  if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
-                      JSMSG_PAREN_AFTER_ARGS)) {
+  if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_ARGS)) {
     return null();
   }
 
@@ -8951,8 +8936,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
         return null();
       }
 
-      if (!mustMatchToken(TokenKind::RightBracket, TokenStream::SlashIsRegExp,
-                          JSMSG_BRACKET_IN_INDEX)) {
+      if (!mustMatchToken(TokenKind::RightBracket, JSMSG_BRACKET_IN_INDEX)) {
         return null();
       }
 
@@ -9614,12 +9598,11 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
       }
     }
 
-    if (!mustMatchToken(TokenKind::RightBracket, TokenStream::SlashIsRegExp,
-                        [this, begin](TokenKind actual) {
-                          this->reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
-                                                     JSMSG_BRACKET_OPENED,
-                                                     begin);
-                        })) {
+    if (!mustMatchToken(
+            TokenKind::RightBracket, [this, begin](TokenKind actual) {
+              this->reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
+                                         JSMSG_BRACKET_OPENED, begin);
+            })) {
       return null();
     }
   }
@@ -9875,8 +9858,7 @@ GeneralParser<ParseHandler, Unit>::computedPropertyName(
     return null();
   }
 
-  if (!mustMatchToken(TokenKind::RightBracket, TokenStream::SlashIsRegExp,
-                      JSMSG_COMP_PROP_UNTERM_EXPR)) {
+  if (!mustMatchToken(TokenKind::RightBracket, JSMSG_COMP_PROP_UNTERM_EXPR)) {
     return null();
   }
   return handler_.newComputedName(assignNode, begin, pos().end);
@@ -10127,12 +10109,11 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
     }
   }
 
-  if (!mustMatchToken(TokenKind::RightCurly, TokenStream::SlashIsRegExp,
-                      [this, openedPos](TokenKind actual) {
-                        this->reportMissingClosing(JSMSG_CURLY_AFTER_LIST,
-                                                   JSMSG_CURLY_OPENED,
-                                                   openedPos);
-                      })) {
+  if (!mustMatchToken(
+          TokenKind::RightCurly, [this, openedPos](TokenKind actual) {
+            this->reportMissingClosing(JSMSG_CURLY_AFTER_LIST,
+                                       JSMSG_CURLY_OPENED, openedPos);
+          })) {
     return null();
   }
 
@@ -10286,8 +10267,7 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
       return null();
     }
 
-    if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
-                        JSMSG_PAREN_AFTER_ARGS)) {
+    if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_ARGS)) {
       return null();
     }
 
@@ -10360,8 +10340,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
       if (!expr) {
         return null();
       }
-      if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
-                          JSMSG_PAREN_IN_PAREN)) {
+      if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_IN_PAREN)) {
         return null();
       }
       return handler_.parenthesize(expr);
