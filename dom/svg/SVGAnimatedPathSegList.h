@@ -44,7 +44,7 @@ class SVGAnimatedPathSegList final {
   friend class DOMSVGPathSegList;
 
  public:
-  SVGAnimatedPathSegList() {}
+  SVGAnimatedPathSegList() = default;
 
   /**
    * Because it's so important that mBaseVal and its DOMSVGPathSegList wrapper

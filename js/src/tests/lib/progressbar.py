@@ -39,6 +39,8 @@ class ProgressBar(object):
         self.limit_digits = int(math.ceil(math.log10(self.limit)))
         # datetime: The start time.
         self.t0 = datetime.now()
+        # datetime: Optional, the last time update() ran.
+        self.last_update_time = None
 
         # Compute the width of the counters and build the format string.
         self.counters_width = 1  # [
@@ -79,7 +81,8 @@ class ProgressBar(object):
         sys.stdout.write(bar + '|')
 
         # Update the bar.
-        dt = datetime.now() - self.t0
+        now = datetime.now()
+        dt = now - self.t0
         dt = dt.seconds + dt.microseconds * 1e-6
         sys.stdout.write('{:6.1f}s'.format(dt))
         Terminal.clear_right()
@@ -87,8 +90,12 @@ class ProgressBar(object):
         # Force redisplay, since we didn't write a \n.
         sys.stdout.flush()
 
+        self.last_update_time = now
+
     def poke(self):
         if not self.prior:
+            return
+        if datetime.now() - self.last_update_time < self.update_granularity():
             return
         self.update(*self.prior)
 
