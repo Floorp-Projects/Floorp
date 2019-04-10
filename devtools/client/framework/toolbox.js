@@ -449,11 +449,6 @@ Toolbox.prototype = {
    */
   open: function() {
     return (async function() {
-      this.browserRequire = BrowserLoader({
-        window: this.doc.defaultView,
-        useOnlyShared: true,
-      }).require;
-
       const isToolboxURL = this.win.location.href.startsWith(this._URL);
       if (isToolboxURL) {
         // Update the URL so that onceDOMReady watch for the right url.
@@ -492,6 +487,11 @@ Toolbox.prototype = {
       // Attach the thread
       this._threadClient = await attachThread(this);
       await domReady;
+
+      this.browserRequire = BrowserLoader({
+        window: this.win,
+        useOnlyShared: true,
+      }).require;
 
       // The web console is immediately loaded when replaying, so that the
       // timeline will always be populated with generated messages.
