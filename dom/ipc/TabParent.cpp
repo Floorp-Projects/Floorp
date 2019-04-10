@@ -1340,7 +1340,10 @@ class SynthesizedEventObserver : public nsIObserver {
       return NS_OK;
     }
 
-    if (!mTabParent->SendNativeSynthesisResponse(mObserverId,
+    if (mTabParent->IsDestroyed()) {
+      // If this happens it's probably a bug in the test that's triggering this.
+      NS_WARNING("TabParent was unexpectedly destroyed during event synthesization!");
+    } else if (!mTabParent->SendNativeSynthesisResponse(mObserverId,
                                                  nsCString(aTopic))) {
       NS_WARNING("Unable to send native event synthesization response!");
     }
