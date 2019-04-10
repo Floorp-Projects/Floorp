@@ -376,42 +376,25 @@ bool CheckContentBlockingAllowList(nsIHttpChannel* aChannel) {
     return entry.Data().mResult;
   }
 
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  nsContentPolicyType contentPolicyType =
-      loadInfo->GetExternalContentPolicyType();
+  nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel);
+  if (chan) {
+    nsCOMPtr<nsIURI> topWinURI;
+    nsresult rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
+    if (NS_SUCCEEDED(rv)) {
+      const bool result = CheckContentBlockingAllowList(
+          topWinURI, NS_UsePrivateBrowsing(aChannel));
 
-  nsCOMPtr<nsIURI> uri;
+      entry.Set(ContentBlockingAllowListEntry(aChannel, result));
 
-  // This is the top-level request. Let's use the channel URI.
-  if (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) {
-    nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      LOG(
-          ("Could not check the content blocking allow list because the "
-           "channel URI is not accessible"));
-      entry.Set(ContentBlockingAllowListEntry(aChannel, false));
-      return false;
-    }
-  } else {
-    nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel);
-    MOZ_ASSERT(chan);
-
-    nsresult rv = chan->GetTopWindowURI(getter_AddRefs(uri));
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      LOG(
-          ("Could not check the content blocking allow list because the top "
-           "window wasn't accessible"));
-      entry.Set(ContentBlockingAllowListEntry(aChannel, false));
-      return false;
+      return result;
     }
   }
 
-  MOZ_ASSERT(uri);
-
-  const bool result =
-      CheckContentBlockingAllowList(uri, NS_UsePrivateBrowsing(aChannel));
-  entry.Set(ContentBlockingAllowListEntry(aChannel, result));
-  return result;
+  LOG(
+      ("Could not check the content blocking allow list because the top "
+       "window wasn't accessible"));
+  entry.Set(ContentBlockingAllowListEntry(aChannel, false));
+  return false;
 }
 
 void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,
