@@ -154,6 +154,7 @@ class Breakpoint extends PureComponent<Props> {
     const text = this.getBreakpointText();
     const editor = getEditor();
     const labelId = `${breakpoint.id}-label`;
+
     return (
       <div
         className={classnames({
