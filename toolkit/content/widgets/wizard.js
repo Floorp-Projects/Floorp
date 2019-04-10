@@ -61,8 +61,7 @@ class MozWizardButtons extends MozXULElement {
 
   static get inheritedAttributes() {
     return AppConstants.platform == "macosx" ? {
-      "[dlgtype='finish']": "hidefinishbutton",
-      "[dlgtype='next']": "lastpage",
+      "[dlgtype='next']": "hidden=lastpage",
     } : null;
   }
 
@@ -144,8 +143,7 @@ class MozWizardButtons extends MozXULElement {
 
   onPageChange() {
     if (AppConstants.platform == "macosx") {
-      this.setAttribute("hidefinishbutton",
-                        !(this.getAttribute("lastpage") == "true"));
+      this.getButton("finish").hidden = !(this.getAttribute("lastpage") == "true");
     } else if (this.getAttribute("lastpage") == "true") {
       this._wizardButtonDeck.setAttribute("selectedIndex", 0);
     } else {

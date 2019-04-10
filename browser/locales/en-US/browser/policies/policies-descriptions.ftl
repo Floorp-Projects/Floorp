@@ -99,6 +99,8 @@ policy-InstallAddonsPermission = Allow certain websites to install add-ons.
 
 policy-NetworkPrediction = Enable or disable network prediction (DNS prefetching).
 
+policy-NewTabPage = Enable or disable the New Tab page.
+
 policy-NoDefaultBookmarks = Disable creation of the default bookmarks bundled with { -brand-short-name }, and the Smart Bookmarks (Most Visited, Recent Tags). Note: this policy is only effective if used before the first run of the profile.
 
 policy-OfferToSaveLogins = Enforce the setting to allow { -brand-short-name } to offer to remember saved logins and passwords. Both true and false values are accepted.

@@ -1,0 +1,4 @@
+include LICENSE
+include AUTHORS
+include README.md
+recursive-include tests *.py *.plist

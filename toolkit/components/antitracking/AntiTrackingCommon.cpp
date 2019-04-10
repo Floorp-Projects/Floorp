@@ -255,10 +255,10 @@ struct ContentBlockingAllowListKey {
   // a case where the allocator reallocates a window object where a channel used
   // to live and vice versa.
   explicit ContentBlockingAllowListKey(nsPIDOMWindowInner* aWindow)
-      : mHash(mozilla::AddToHash(uintptr_t(aWindow),
+      : mHash(mozilla::AddToHash(aWindow->WindowID(),
                                  mozilla::HashString("window"))) {}
-  explicit ContentBlockingAllowListKey(nsIChannel* aChannel)
-      : mHash(mozilla::AddToHash(uintptr_t(aChannel),
+  explicit ContentBlockingAllowListKey(nsIHttpChannel* aChannel)
+      : mHash(mozilla::AddToHash(aChannel->ChannelId(),
                                  mozilla::HashString("channel"))) {}
 
   ContentBlockingAllowListKey(const ContentBlockingAllowListKey& aRHS)
@@ -278,7 +278,7 @@ struct ContentBlockingAllowListEntry {
   ContentBlockingAllowListEntry() : mResult(false) {}
   ContentBlockingAllowListEntry(nsPIDOMWindowInner* aWindow, bool aResult)
       : mKey(aWindow), mResult(aResult) {}
-  ContentBlockingAllowListEntry(nsIChannel* aChannel, bool aResult)
+  ContentBlockingAllowListEntry(nsIHttpChannel* aChannel, bool aResult)
       : mKey(aChannel), mResult(aResult) {}
 
   ContentBlockingAllowListKey mKey;
@@ -376,25 +376,42 @@ bool CheckContentBlockingAllowList(nsIHttpChannel* aChannel) {
     return entry.Data().mResult;
   }
 
-  nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel);
-  if (chan) {
-    nsCOMPtr<nsIURI> topWinURI;
-    nsresult rv = chan->GetTopWindowURI(getter_AddRefs(topWinURI));
-    if (NS_SUCCEEDED(rv)) {
-      const bool result = CheckContentBlockingAllowList(
-          topWinURI, NS_UsePrivateBrowsing(aChannel));
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  nsContentPolicyType contentPolicyType =
+      loadInfo->GetExternalContentPolicyType();
 
-      entry.Set(ContentBlockingAllowListEntry(aChannel, result));
+  nsCOMPtr<nsIURI> uri;
 
-      return result;
+  // This is the top-level request. Let's use the channel URI.
+  if (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) {
+    nsresult rv = NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
+    if (NS_WARN_IF(NS_FAILED(rv)) || !uri) {
+      LOG(
+          ("Could not check the content blocking allow list because the "
+           "channel URI is not accessible"));
+      entry.Set(ContentBlockingAllowListEntry(aChannel, false));
+      return false;
+    }
+  } else {
+    nsCOMPtr<nsIHttpChannelInternal> chan = do_QueryInterface(aChannel);
+    MOZ_ASSERT(chan);
+
+    nsresult rv = chan->GetTopWindowURI(getter_AddRefs(uri));
+    if (NS_WARN_IF(NS_FAILED(rv)) || !uri) {
+      LOG(
+          ("Could not check the content blocking allow list because the top "
+           "window wasn't accessible"));
+      entry.Set(ContentBlockingAllowListEntry(aChannel, false));
+      return false;
     }
   }
 
-  LOG(
-      ("Could not check the content blocking allow list because the top "
-       "window wasn't accessible"));
-  entry.Set(ContentBlockingAllowListEntry(aChannel, false));
-  return false;
+  MOZ_ASSERT(uri);
+
+  const bool result =
+      CheckContentBlockingAllowList(uri, NS_UsePrivateBrowsing(aChannel));
+  entry.Set(ContentBlockingAllowListEntry(aChannel, result));
+  return result;
 }
 
 void ReportBlockingToConsole(nsPIDOMWindowOuter* aWindow, nsIURI* aURI,

@@ -19,7 +19,7 @@ use display_list_flattener::{CreateShadow, IsVisible};
 use euclid::{SideOffsets2D, TypedTransform3D, TypedRect, TypedScale, TypedSize2D};
 use euclid::approxeq::ApproxEq;
 use frame_builder::{FrameBuildingContext, FrameBuildingState, PictureContext, PictureState};
-use frame_builder::{PrimitiveContext, FrameVisibilityContext, FrameVisibilityState};
+use frame_builder::{FrameVisibilityContext, FrameVisibilityState};
 use glyph_rasterizer::GlyphKey;
 use gpu_cache::{GpuCache, GpuCacheAddress, GpuCacheHandle, GpuDataRequest, ToGpuBlocks};
 use gpu_types::{BrushFlags, SnapOffsets};
@@ -271,6 +271,10 @@ impl<F, T> SpaceMapper<F, T> where F: fmt::Debug {
 
     pub fn visible_face(&self) -> VisibleFace {
         self.visible_face
+    }
+
+    pub fn get_conservative_local_bounds(&self) -> Option<TypedRect<f32, F>> {
+        self.unmap(&self.bounds)
     }
 }
 
@@ -1777,18 +1781,6 @@ impl PrimitiveStore {
                 continue;
             }
 
-            let spatial_node = &frame_context
-                .clip_scroll_tree
-                .spatial_nodes[prim_instance.spatial_node_index.0 as usize];
-
-            // TODO(gw): Although constructing these is cheap, they are often
-            //           the same for many consecutive primitives, so it may
-            //           be worth caching the most recent context.
-            let prim_context = PrimitiveContext::new(
-                spatial_node,
-                prim_instance.spatial_node_index,
-            );
-
             map_local_to_surface.set_target_spatial_node(
                 prim_instance.spatial_node_index,
                 frame_context.clip_scroll_tree,
@@ -1931,7 +1923,7 @@ impl PrimitiveStore {
                         frame_state.clip_chain_stack.current_clips(),
                         local_rect,
                         prim_instance.local_clip_rect,
-                        prim_context.spatial_node_index,
+                        prim_instance.spatial_node_index,
                         &map_local_to_surface,
                         &map_surface_to_world,
                         &frame_context.clip_scroll_tree,
@@ -2170,7 +2162,6 @@ impl PrimitiveStore {
     pub fn prepare_prim_for_render(
         &mut self,
         prim_instance: &mut PrimitiveInstance,
-        prim_context: &PrimitiveContext,
         pic_context: &PictureContext,
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
@@ -2274,7 +2265,6 @@ impl PrimitiveStore {
             frame_state.clip_chain_stack.push_clip(prim_instance.clip_chain_id);
 
             prim_instance.update_clip_task(
-                prim_context,
                 pic_context.raster_spatial_node_index,
                 pic_context,
                 pic_state,
@@ -2361,8 +2351,8 @@ impl PrimitiveStore {
             PrimitiveInstanceKind::LineDecoration { .. } => {
                 self.prepare_interned_prim_for_render(
                     prim_instance,
-                    prim_context,
                     pic_context,
+                    pic_state,
                     frame_context,
                     frame_state,
                     data_stores,
@@ -2432,18 +2422,6 @@ impl PrimitiveStore {
                 }
             }
 
-            let spatial_node = &frame_context
-                .clip_scroll_tree
-                .spatial_nodes[prim_instance.spatial_node_index.0 as usize];
-
-            // TODO(gw): Although constructing these is cheap, they are often
-            //           the same for many consecutive primitives, so it may
-            //           be worth caching the most recent context.
-            let prim_context = PrimitiveContext::new(
-                spatial_node,
-                prim_instance.spatial_node_index,
-            );
-
             pic_state.map_local_to_pic.set_target_spatial_node(
                 prim_instance.spatial_node_index,
                 frame_context.clip_scroll_tree,
@@ -2451,7 +2429,6 @@ impl PrimitiveStore {
 
             if self.prepare_prim_for_render(
                 prim_instance,
-                &prim_context,
                 pic_context,
                 pic_state,
                 frame_context,
@@ -2471,8 +2448,8 @@ impl PrimitiveStore {
     fn prepare_interned_prim_for_render(
         &mut self,
         prim_instance: &mut PrimitiveInstance,
-        prim_context: &PrimitiveContext,
         pic_context: &PictureContext,
+        pic_state: &PictureState,
         frame_context: &FrameBuildingContext,
         frame_state: &mut FrameBuildingState,
         data_stores: &mut DataStores,
@@ -2540,7 +2517,12 @@ impl PrimitiveStore {
                 prim_data.update(frame_state);
 
                 // The transform only makes sense for screen space rasterization
-                let transform = prim_context.spatial_node.world_content_transform.to_transform();
+                let relative_transform = frame_context
+                    .clip_scroll_tree
+                    .get_relative_transform(
+                        prim_instance.spatial_node_index,
+                        ROOT_SPATIAL_NODE_INDEX,
+                    );
                 let prim_offset = prim_instance.prim_origin.to_vector() - run.reference_frame_relative_offset;
 
                 // TODO(gw): This match is a bit untidy, but it should disappear completely
@@ -2552,7 +2534,7 @@ impl PrimitiveStore {
                     &prim_data.font,
                     &prim_data.glyphs,
                     device_pixel_scale,
-                    &transform,
+                    &relative_transform.flattened.with_destination::<WorldPixel>(),
                     pic_context,
                     frame_state.resource_cache,
                     frame_state.gpu_cache,
@@ -2576,14 +2558,20 @@ impl PrimitiveStore {
                 // cache with any shared template data.
                 border_data.update(common_data, frame_state);
 
-                // TODO(gw): When drawing in screen raster mode, we should also incorporate a
-                //           scale factor from the world transform to get an appropriately
-                //           sized border task.
-                let transform = prim_context.spatial_node.world_content_transform.to_transform();
+                // TODO(gw): For now, the scale factors to rasterize borders at are
+                //           based on the true world transform of the primitive. When
+                //           raster roots with local scale are supported in future,
+                //           that will need to be accounted for here.
+                let relative_transform = frame_context
+                    .clip_scroll_tree
+                    .get_relative_transform(
+                        prim_instance.spatial_node_index,
+                        ROOT_SPATIAL_NODE_INDEX,
+                    );
 
                 // Scale factors are normalized to a power of 2 to reduce the number of
                 // resolution changes
-                let scale = scale_factors(&transform);
+                let scale = scale_factors(&relative_transform.flattened);
                 // For frames with a changing scale transform round scale factors up to
                 // nearest power-of-2 boundary so that we don't keep having to redraw
                 // the content as it scales up and down. Rounding up to nearest
@@ -2727,9 +2715,8 @@ impl PrimitiveStore {
                     image_instance.tight_local_clip_rect = tight_clip_rect;
 
                     let visible_rect = compute_conservative_visible_rect(
-                        prim_context,
-                        &frame_state.current_dirty_region().combined.world_rect,
-                        &tight_clip_rect
+                        &tight_clip_rect,
+                        &pic_state.map_local_to_pic,
                     );
 
                     let base_edge_flags = edge_flags_for_tile_spacing(&image_data.tile_spacing);
@@ -2886,9 +2873,9 @@ impl PrimitiveStore {
                         &prim_rect,
                         &prim_data.stretch_size,
                         &prim_data.tile_spacing,
-                        prim_context,
                         frame_state,
                         &mut scratch.gradient_tiles,
+                        &pic_state.map_local_to_pic,
                         &mut |_, mut request| {
                             request.push([
                                 prim_data.start_point.x,
@@ -2932,9 +2919,9 @@ impl PrimitiveStore {
                         &prim_rect,
                         &prim_data.stretch_size,
                         &prim_data.tile_spacing,
-                        prim_context,
                         frame_state,
                         &mut scratch.gradient_tiles,
+                        &pic_state.map_local_to_pic,
                         &mut |_, mut request| {
                             request.push([
                                 prim_data.center.x,
@@ -2997,13 +2984,12 @@ fn decompose_repeated_primitive(
     prim_local_rect: &LayoutRect,
     stretch_size: &LayoutSize,
     tile_spacing: &LayoutSize,
-    prim_context: &PrimitiveContext,
     frame_state: &mut FrameBuildingState,
     gradient_tiles: &mut GradientTileStorage,
+    map_local_to_pic: &SpaceMapper<LayoutPixel, PicturePixel>,
     callback: &mut FnMut(&LayoutRect, GpuDataRequest),
 ) -> GradientTileRange {
     let mut visible_tiles = Vec::new();
-    let world_rect = frame_state.current_dirty_region().combined.world_rect;
 
     // Tighten the clip rect because decomposing the repeated image can
     // produce primitives that are partially covering the original image
@@ -3012,9 +2998,8 @@ fn decompose_repeated_primitive(
         .intersection(prim_local_rect).unwrap();
 
     let visible_rect = compute_conservative_visible_rect(
-        prim_context,
-        &world_rect,
-        &tight_clip_rect
+        &tight_clip_rect,
+        map_local_to_pic,
     );
     let stride = *stretch_size + *tile_spacing;
 
@@ -3050,16 +3035,11 @@ fn decompose_repeated_primitive(
 }
 
 fn compute_conservative_visible_rect(
-    prim_context: &PrimitiveContext,
-    world_rect: &WorldRect,
     local_clip_rect: &LayoutRect,
+    map_local_to_pic: &SpaceMapper<LayoutPixel, PicturePixel>,
 ) -> LayoutRect {
-    if let Some(layer_screen_rect) = prim_context
-        .spatial_node
-        .world_content_transform
-        .unapply(world_rect) {
-
-        return local_clip_rect.intersection(&layer_screen_rect).unwrap_or(LayoutRect::zero());
+    if let Some(local_bounds) = map_local_to_pic.get_conservative_local_bounds() {
+        return local_clip_rect.intersection(&local_bounds).unwrap_or(LayoutRect::zero())
     }
 
     *local_clip_rect
@@ -3336,7 +3316,6 @@ impl PrimitiveInstance {
         &self,
         prim_info: &mut PrimitiveVisibility,
         root_spatial_node_index: SpatialNodeIndex,
-        prim_context: &PrimitiveContext,
         pic_context: &PictureContext,
         pic_state: &mut PictureState,
         frame_context: &FrameBuildingContext,
@@ -3477,7 +3456,7 @@ impl PrimitiveInstance {
                             self.prim_origin.y,
                         )),
                         self.local_clip_rect,
-                        prim_context.spatial_node_index,
+                        self.spatial_node_index,
                         &pic_state.map_local_to_pic,
                         &pic_state.map_pic_to_world,
                         &frame_context.clip_scroll_tree,
@@ -3510,7 +3489,6 @@ impl PrimitiveInstance {
 
     fn update_clip_task(
         &mut self,
-        prim_context: &PrimitiveContext,
         root_spatial_node_index: SpatialNodeIndex,
         pic_context: &PictureContext,
         pic_state: &mut PictureState,
@@ -3530,7 +3508,7 @@ impl PrimitiveInstance {
         // Get the device space rect for the primitive if it was unclipped,
         // including any snap offsets applied to the corners.
         let (unclipped, prim_snap_offsets) = match get_unclipped_device_rect(
-            prim_context.spatial_node_index,
+            self.spatial_node_index,
             root_spatial_node_index,
             prim_info.clip_chain.pic_clip_rect,
             &pic_state.map_pic_to_raster,
@@ -3555,7 +3533,6 @@ impl PrimitiveInstance {
         if self.update_clip_task_for_brush(
             prim_info,
             root_spatial_node_index,
-            prim_context,
             pic_context,
             pic_state,
             frame_context,

@@ -309,7 +309,9 @@ android.libraryVariants.all { variant ->
 }
 
 android.libraryVariants.all { variant ->
-    configureLibraryVariantWithJNIWrappers(variant, "Generated")
+    if (variant.name == mozconfig.substs.GRADLE_ANDROID_GECKOVIEW_VARIANT_NAME) {
+        configureLibraryVariantWithJNIWrappers(variant, "Generated")
+    }
 }
 
 apply plugin: 'maven-publish'
@@ -457,4 +459,10 @@ apiLint {
     changelogFileName = 'src/main/java/org/mozilla/geckoview/doc-files/CHANGELOG.md'
     skipClassesRegex = ['^org.mozilla.geckoview.BuildConfig$']
     lintFilters = ['GV']
+    allowedPackages = [
+        'java',
+        'android',
+        'org.json',
+        'org.mozilla.geckoview',
+    ]
 }

@@ -96,8 +96,7 @@ LoadInfo::LoadInfo(
       mServiceWorkerTaintingSynthesized(false),
       mDocumentHasUserInteracted(false),
       mDocumentHasLoaded(false),
-      mIsFromProcessingFrameAttributes(false),
-      mOpenerPolicy(nsILoadInfo::OPENER_POLICY_NULL) {
+      mIsFromProcessingFrameAttributes(false) {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
 
@@ -356,8 +355,7 @@ LoadInfo::LoadInfo(nsPIDOMWindowOuter* aOuterWindow,
       mServiceWorkerTaintingSynthesized(false),
       mDocumentHasUserInteracted(false),
       mDocumentHasLoaded(false),
-      mIsFromProcessingFrameAttributes(false),
-      mOpenerPolicy(nsILoadInfo::OPENER_POLICY_NULL) {
+      mIsFromProcessingFrameAttributes(false) {
   // Top-level loads are never third-party
   // Grab the information we can out of the window.
   MOZ_ASSERT(aOuterWindow);
@@ -471,8 +469,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mDocumentHasUserInteracted(rhs.mDocumentHasUserInteracted),
       mDocumentHasLoaded(rhs.mDocumentHasLoaded),
       mCspNonce(rhs.mCspNonce),
-      mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes),
-      mOpenerPolicy(rhs.mOpenerPolicy) {}
+      mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes) {}
 
 LoadInfo::LoadInfo(
     nsIPrincipal* aLoadingPrincipal, nsIPrincipal* aTriggeringPrincipal,
@@ -553,8 +550,7 @@ LoadInfo::LoadInfo(
       mDocumentHasUserInteracted(aDocumentHasUserInteracted),
       mDocumentHasLoaded(aDocumentHasLoaded),
       mCspNonce(aCspNonce),
-      mIsFromProcessingFrameAttributes(false),
-      mOpenerPolicy(nsILoadInfo::OPENER_POLICY_NULL) {
+      mIsFromProcessingFrameAttributes(false) {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal ||
              aContentPolicyType == nsIContentPolicy::TYPE_DOCUMENT);
@@ -1438,18 +1434,6 @@ LoadInfo::GetCspEventListener(nsICSPEventListener** aCSPEventListener) {
 NS_IMETHODIMP
 LoadInfo::SetCspEventListener(nsICSPEventListener* aCSPEventListener) {
   mCSPEventListener = aCSPEventListener;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::GetOpenerPolicy(nsILoadInfo::CrossOriginOpenerPolicy* aOpenerPolicy) {
-  *aOpenerPolicy = mOpenerPolicy;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-LoadInfo::SetOpenerPolicy(nsILoadInfo::CrossOriginOpenerPolicy aOpenerPolicy) {
-  mOpenerPolicy = aOpenerPolicy;
   return NS_OK;
 }
 

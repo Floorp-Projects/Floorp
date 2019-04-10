@@ -143,7 +143,7 @@ public class GeckoWebExecutor {
      *         of {@link InetAddress}. In case of failure, the {@link GeckoResult}
      *         will be completed exceptionally with a {@link java.net.UnknownHostException}.
      */
-    public GeckoResult<InetAddress[]> resolve(final @NonNull String host) {
+    public @NonNull GeckoResult<InetAddress[]> resolve(final @NonNull String host) {
         final GeckoResult<InetAddress[]> result = new GeckoResult<>();
 
         if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {

@@ -6,7 +6,7 @@
 
 Library('xul-gtest')
 
-if CONFIG['OS_ARCH'] == 'WINNT':
+if CONFIG['ENABLE_TESTS'] and CONFIG['OS_ARCH'] == 'WINNT':
     UNIFIED_SOURCES += [
         'TestUCRTDepends.cpp',
     ]

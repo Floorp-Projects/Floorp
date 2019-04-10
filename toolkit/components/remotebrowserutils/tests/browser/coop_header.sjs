@@ -2,7 +2,7 @@ function handleRequest(request, response)
 {
   response.setStatusLine(request.httpVersion, 200, "OK");
 
-  let coop = request.queryString;
+  let coop = request.queryString.replace(/\./g, '');
   if (coop.length > 0) {
     response.setHeader("Cross-Origin-Opener-Policy", unescape(coop), false);
   }

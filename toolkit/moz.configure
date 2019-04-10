@@ -913,12 +913,13 @@ add_old_configure_assignment('FT2_CFLAGS',
                              ft2_info.cflags)
 
 
-# CDP remote agent
+# Remote agent (part of CDP based remote protocol)
 # ==============================================================
 #
+# See https://firefox-source-docs.mozilla.org/remote/ for more.
 # The source code lives under ../remote.
 
-option('--enable-cdp', help='Enable CDP-based remote agent')
+option('--enable-cdp', help='{Enable|Disable} remote agent')
 
 @depends('--enable-cdp')
 def remote(value):
@@ -926,6 +927,7 @@ def remote(value):
         return True
 
 set_config('ENABLE_REMOTE_AGENT', remote)
+set_define('ENABLE_REMOTE_AGENT', remote)
 
 
 # Marionette remote protocol

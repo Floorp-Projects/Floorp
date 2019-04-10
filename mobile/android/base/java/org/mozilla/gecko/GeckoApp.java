@@ -95,6 +95,7 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.geckoview.GeckoViewBridge;
 import org.mozilla.mozstumbler.service.mainthread.SafeReceiver;
 
 import java.io.File;
@@ -1753,7 +1754,7 @@ public abstract class GeckoApp extends GeckoActivity
             throw new IllegalStateException("Must not call getAppEventDispatcher() until after onCreate()");
         }
 
-        return mLayerView.getEventDispatcher();
+        return GeckoViewBridge.getEventDispatcher(mLayerView);
     }
 
     protected static GeckoProfile getProfile() {

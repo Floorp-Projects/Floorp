@@ -173,7 +173,7 @@ const mozilla::Module kXPCOMModule = {
     nullptr,
     nullptr,
     nullptr,
-    Module::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS};
+    Module::ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS};
 
 // gDebug will be freed during shutdown.
 static nsIDebug2* gDebug = nullptr;
