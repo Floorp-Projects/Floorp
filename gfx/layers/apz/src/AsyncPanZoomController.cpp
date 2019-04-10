@@ -3142,7 +3142,28 @@ bool AsyncPanZoomController::AttemptScroll(
           }
         }
 #endif
-        block->SetScrolledApzc(this);
+        bool displacementIsUserVisible = true;
+
+        { // Release the APZC lock before calling ToScreenCoordinates which
+          // acquires the APZ tree lock. Note that this just unlocks the mutex
+          // once, so if we're locking it multiple times on the callstack then
+          // this will be insufficient.
+          RecursiveMutexAutoUnlock unlock(mRecursiveMutex);
+
+          ScreenIntPoint screenDisplacement = RoundedToInt(
+              ToScreenCoordinates(adjustedDisplacement, aStartPoint));
+          // If the displacement we just applied rounds to zero in screen space,
+          // then it's probably not going to be visible to the user. In that
+          // case let's not mark this APZC as scrolled, so that even if the
+          // immediate handoff pref is disabled, we'll allow doing the handoff
+          // to the next APZC.
+          if (screenDisplacement == ScreenIntPoint()) {
+            displacementIsUserVisible = false;
+          }
+        }
+        if (displacementIsUserVisible) {
+          block->SetScrolledApzc(this);
+        }
       }
       ScheduleCompositeAndMaybeRepaint();
       UpdateSharedCompositorFrameMetrics();
