@@ -144,7 +144,7 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
    * of unescaped characters into a temporary buffer, then an escaped
    * character, and repeat until the entire string is consumed.
    */
-  StringBuffer buffer(cx);
+  JSStringBuilder buffer(cx);
   do {
     if (start < current && !buffer.append(start.get(), current.get())) {
       return token(OOM);

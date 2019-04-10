@@ -12,7 +12,7 @@ static JS::PersistentRootedString gLatestMessage;
 // An interceptor that stores the error in `gLatestMessage`.
 struct SimpleInterceptor : JSErrorInterceptor {
   virtual void interceptError(JSContext* cx, JS::HandleValue val) override {
-    js::StringBuffer buffer(cx);
+    js::JSStringBuilder buffer(cx);
     if (!ValueToStringBuffer(cx, val, buffer)) {
       MOZ_CRASH("Could not convert to string buffer");
     }
@@ -103,7 +103,7 @@ BEGIN_TEST(testErrorInterceptor) {
     CHECK(JS_GetPendingException(cx, &exn));
     JS_ClearPendingException(cx);
 
-    js::StringBuffer buffer(cx);
+    js::JSStringBuilder buffer(cx);
     CHECK(ValueToStringBuffer(cx, exn, buffer));
     JS::Rooted<JSFlatString*> flat(cx, buffer.finishString());
     CHECK(equalStrings(cx, flat, gLatestMessage));
@@ -128,7 +128,7 @@ BEGIN_TEST(testErrorInterceptor) {
     CHECK(JS_GetPendingException(cx, &exn));
     JS_ClearPendingException(cx);
 
-    js::StringBuffer buffer(cx);
+    js::JSStringBuilder buffer(cx);
     CHECK(ValueToStringBuffer(cx, exn, buffer));
     JS::Rooted<JSFlatString*> flat(cx, buffer.finishString());
     CHECK(js::StringEqualsAscii(flat, TO_STRING[i]));
