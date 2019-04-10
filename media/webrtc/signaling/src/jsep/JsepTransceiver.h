@@ -55,13 +55,15 @@ class JsepTransceiver {
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(JsepTransceiver);
 
-  void Rollback(JsepTransceiver& oldTransceiver) {
+  void Rollback(JsepTransceiver& oldTransceiver, bool rollbackLevel) {
     MOZ_ASSERT(oldTransceiver.GetMediaType() == GetMediaType());
     MOZ_ASSERT(!oldTransceiver.IsNegotiated() || !oldTransceiver.HasLevel() ||
                !HasLevel() || oldTransceiver.GetLevel() == GetLevel());
     mTransport = oldTransceiver.mTransport;
-    mLevel = oldTransceiver.mLevel;
-    mBundleLevel = oldTransceiver.mBundleLevel;
+    if (rollbackLevel) {
+      mLevel = oldTransceiver.mLevel;
+      mBundleLevel = oldTransceiver.mBundleLevel;
+    }
     mRecvTrack = oldTransceiver.mRecvTrack;
 
     // stop() caused by a disabled m-section in a remote offer cannot be
