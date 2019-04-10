@@ -26,8 +26,8 @@ const LoadURIDelegate = {
 
     const triggerUri = aTriggeringPrincipal &&
                        (aTriggeringPrincipal.isNullPrincipal
-                        ? null
-                        : aTriggeringPrincipal.URI);
+                         ? null
+                         : aTriggeringPrincipal.URI);
 
     const message = {
       type: "GeckoView:OnLoadRequest",
@@ -46,7 +46,7 @@ const LoadURIDelegate = {
       handled = false;
     });
     Services.tm.spinEventLoopUntil(() =>
-        aWindow.closed || handled !== undefined);
+      aWindow.closed || handled !== undefined);
 
     return handled || false;
   },
@@ -56,7 +56,7 @@ const LoadURIDelegate = {
     let errorClass = 0;
     try {
       const nssErrorsService = Cc["@mozilla.org/nss_errors_service;1"]
-                               .getService(Ci.nsINSSErrorsService);
+        .getService(Ci.nsINSSErrorsService);
       errorClass = nssErrorsService.getErrorClass(aError);
     } catch (e) {}
 
@@ -82,7 +82,7 @@ const LoadURIDelegate = {
       Components.returnCode = Cr.NS_ERROR_ABORT;
     });
     Services.tm.spinEventLoopUntil(() =>
-        aWindow.closed || errorPageURI !== undefined);
+      aWindow.closed || errorPageURI !== undefined);
 
     return errorPageURI;
   },

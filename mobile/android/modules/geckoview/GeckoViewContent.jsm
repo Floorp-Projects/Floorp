@@ -16,24 +16,24 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 class GeckoViewContent extends GeckoViewModule {
   onInit() {
     this.registerListener([
-        "GeckoViewContent:ExitFullScreen",
-        "GeckoView:ClearMatches",
-        "GeckoView:DisplayMatches",
-        "GeckoView:FindInPage",
-        "GeckoView:RestoreState",
-        "GeckoView:SetActive",
-        "GeckoView:SetFocused",
-        "GeckoView:ZoomToInput",
-        "GeckoView:ScrollBy",
-        "GeckoView:ScrollTo",
+      "GeckoViewContent:ExitFullScreen",
+      "GeckoView:ClearMatches",
+      "GeckoView:DisplayMatches",
+      "GeckoView:FindInPage",
+      "GeckoView:RestoreState",
+      "GeckoView:SetActive",
+      "GeckoView:SetFocused",
+      "GeckoView:ZoomToInput",
+      "GeckoView:ScrollBy",
+      "GeckoView:ScrollTo",
     ]);
   }
 
   onEnable() {
     this.window.addEventListener("MozDOMFullscreen:Entered", this,
-                                 /* capture */ true, /* untrusted */ false);
+      /* capture */ true, /* untrusted */ false);
     this.window.addEventListener("MozDOMFullscreen:Exited", this,
-                                 /* capture */ true, /* untrusted */ false);
+      /* capture */ true, /* untrusted */ false);
 
     this.messageManager.addMessageListener("GeckoView:DOMFullscreenExit", this);
     this.messageManager.addMessageListener("GeckoView:DOMFullscreenRequest", this);
@@ -43,9 +43,9 @@ class GeckoViewContent extends GeckoViewModule {
 
   onDisable() {
     this.window.removeEventListener("MozDOMFullscreen:Entered", this,
-                                    /* capture */ true);
+      /* capture */ true);
     this.window.removeEventListener("MozDOMFullscreen:Exited", this,
-                                    /* capture */ true);
+      /* capture */ true);
 
     this.messageManager.removeMessageListener("GeckoView:DOMFullscreenExit", this);
     this.messageManager.removeMessageListener("GeckoView:DOMFullscreenRequest", this);
@@ -156,8 +156,8 @@ class GeckoViewContent extends GeckoViewModule {
         this.eventDispatcher.sendRequest({
           type: "GeckoView:ContentCrash",
         });
+        break;
       }
-      break;
     }
   }
 
