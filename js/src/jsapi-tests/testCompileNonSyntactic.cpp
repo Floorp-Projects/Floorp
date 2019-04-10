@@ -5,7 +5,7 @@
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
 #include "gc/GCInternals.h"
-#include "js/CompilationAndEvaluation.h"  // JS::Compile{,ForNonSyntacticScope}
+#include "js/CompilationAndEvaluation.h"  // JS::Compile{,DontInflate,ForNonSyntacticScope}
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 #include "vm/Monitor.h"
@@ -95,7 +95,7 @@ bool testCompile(bool nonSyntactic) {
   CHECK(script);
   CHECK_EQUAL(script->hasNonSyntacticScope(), nonSyntactic);
 
-  script = Compile(cx, options, buf8);
+  script = CompileDontInflate(cx, options, buf8);
   CHECK(script);
   CHECK_EQUAL(script->hasNonSyntacticScope(), nonSyntactic);
 
