@@ -109,7 +109,7 @@ bool LoopControl::emitLoopHead(BytecodeEmitter* bce,
     }
   }
 
-  head_ = {bce->offset()};
+  head_ = {bce->bytecodeSection().offset()};
   ptrdiff_t off;
   if (!bce->emitJumpTargetOp(JSOP_LOOPHEAD, &off)) {
     return false;
@@ -126,7 +126,7 @@ bool LoopControl::emitLoopEntry(BytecodeEmitter* bce,
     }
   }
 
-  JumpTarget entry = {bce->offset()};
+  JumpTarget entry = {bce->bytecodeSection().offset()};
   bce->patchJumpsToTarget(entryJump_, entry);
 
   MOZ_ASSERT(loopDepth_ > 0);
@@ -135,7 +135,8 @@ bool LoopControl::emitLoopEntry(BytecodeEmitter* bce,
   if (!bce->emitJumpTargetOp(JSOP_LOOPENTRY, &off)) {
     return false;
   }
-  SetLoopEntryDepthHintAndFlags(bce->code(off), loopDepth_, canIonOsr_);
+  SetLoopEntryDepthHintAndFlags(bce->bytecodeSection().code(off), loopDepth_,
+                                canIonOsr_);
 
   return true;
 }

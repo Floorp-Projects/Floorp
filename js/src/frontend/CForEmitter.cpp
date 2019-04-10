@@ -75,7 +75,7 @@ bool CForEmitter::emitBody(Cond cond, const Maybe<uint32_t>& bodyPos) {
     return false;
   }
 
-  biasedTop_ = bce_->offset();
+  biasedTop_ = bce_->bytecodeSection().offset();
 
   if (cond_ == Cond::Present) {
     // Goto the loop condition, which branches back to iterate.
@@ -176,7 +176,7 @@ bool CForEmitter::emitCond(const Maybe<uint32_t>& forPos,
     tdzCache_.reset();
   }
 
-  condOffset_ = bce_->offset();
+  condOffset_ = bce_->bytecodeSection().offset();
 
   if (cond_ == Cond::Present) {
     if (!loopInfo_->emitLoopEntry(bce_, condPos)) {

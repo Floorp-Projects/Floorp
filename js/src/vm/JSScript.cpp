@@ -4523,7 +4523,7 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
 /* static */ bool SharedScriptData::InitFromEmitter(
     JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce) {
   uint32_t natoms = bce->atomIndices->count();
-  uint32_t codeLength = bce->code().length();
+  uint32_t codeLength = bce->bytecodeSection().code().length();
 
   // The + 1 is to account for the final SN_MAKE_TERMINATOR that is appended
   // when the notes are copied to their final destination by copySrcNotes.
@@ -4537,7 +4537,7 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
   js::SharedScriptData* data = script->scriptData_;
 
   // Initialize trailing arrays
-  std::copy_n(bce->code().begin(), codeLength, data->code());
+  std::copy_n(bce->bytecodeSection().code().begin(), codeLength, data->code());
   bce->copySrcNotes(data->notes(), noteLength);
   InitAtomMap(*bce->atomIndices, data->atoms());
 
