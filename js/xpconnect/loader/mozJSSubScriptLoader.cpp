@@ -20,7 +20,7 @@
 #include "jsfriendapi.h"
 #include "xpcprivate.h"  // For xpc::OptionsBase
 #include "js/CompilationAndEvaluation.h"
-#include "js/SourceText.h"
+#include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "js/Wrapper.h"
 
 #include "mozilla/ContentPrincipal.h"
@@ -33,6 +33,7 @@
 #include "mozilla/scache/StartupCache.h"
 #include "mozilla/scache/StartupCacheUtils.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "nsContentUtils.h"
 #include "nsString.h"
 #include "nsCycleCollectionParticipant.h"
@@ -143,10 +144,15 @@ static JSScript* PrepareScript(nsIURI* uri, JSContext* cx,
   // pass through here, we may need to disable lazy source for them.
   options.setSourceIsLazy(true);
 
-  if (wantGlobalScript) {
-    return JS::CompileUtf8(cx, options, buf, len);
+  JS::SourceText<Utf8Unit> srcBuf;
+  if (!srcBuf.init(cx, buf, len, JS::SourceOwnership::Borrowed)) {
+    return nullptr;
   }
-  return JS::CompileUtf8ForNonSyntacticScope(cx, options, buf, len);
+
+  if (wantGlobalScript) {
+    return JS::Compile(cx, options, srcBuf);
+  }
+  return JS::CompileForNonSyntacticScope(cx, options, srcBuf);
 }
 
 static bool EvalScript(JSContext* cx, HandleObject targetObj,

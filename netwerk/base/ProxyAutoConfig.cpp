@@ -17,13 +17,13 @@
 #include "jsfriendapi.h"
 #include "js/CompilationAndEvaluation.h"
 #include "js/PropertySpec.h"
-#include "js/SourceText.h"
+#include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "js/Utility.h"
 #include "js/Warnings.h"  // JS::SetWarningReporter
 #include "prnetdb.h"
 #include "nsITimer.h"
 #include "mozilla/net/DNS.h"
-#include "mozilla/Utf8.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "nsServiceManagerUtils.h"
 #include "nsNetCID.h"
 
@@ -715,7 +715,13 @@ nsresult ProxyAutoConfig::SetupJS() {
     const char *scriptData = this->mConcatenatedPACData.get();
     size_t scriptLength = this->mConcatenatedPACData.Length();
     if (mozilla::IsValidUtf8(scriptData, scriptLength)) {
-      return JS::CompileUtf8(cx, options, scriptData, scriptLength);
+      JS::SourceText<Utf8Unit> srcBuf;
+      if (!srcBuf.init(cx, scriptData, scriptLength,
+                       JS::SourceOwnership::Borrowed)) {
+        return nullptr;
+      }
+
+      return JS::Compile(cx, options, srcBuf);
     }
 
     // nsReadableUtils.h says that "ASCII" is a misnomer "for legacy reasons",
