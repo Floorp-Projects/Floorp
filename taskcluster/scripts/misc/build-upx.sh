@@ -12,8 +12,7 @@ cd $WORKSPACE
 
 git clone -n https://github.com/upx/upx.git upx-clone
 cd upx-clone
-# https://github.com/upx/upx/releases/tag/v3.95
-git checkout 7a3637ff5a800b8bcbad20ae7f668d8c8449b014 # Asserts integrity of the clone (right?)
+git checkout d31947e1f016e87f24f88b944439bbee892f0429 # Asserts integrity of the clone (right?)
 git submodule update --init --recursive
 cd src
 make -j$(nproc)
