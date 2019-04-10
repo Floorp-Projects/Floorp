@@ -257,7 +257,7 @@ nsSize nsSVGOuterSVGFrame::GetIntrinsicRatio() {
   }
 
   SVGViewElement* viewElement = content->GetCurrentViewElement();
-  const SVGViewBoxRect* viewbox = nullptr;
+  const SVGViewBox* viewbox = nullptr;
 
   // The logic here should match HasViewBox().
   if (viewElement && viewElement->mViewBox.HasRect()) {
@@ -781,7 +781,7 @@ void nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags) {
   SVGSVGElement* content = static_cast<SVGSVGElement*>(GetContent());
 
   if (aFlags & COORD_CONTEXT_CHANGED) {
-    if (content->HasViewBoxRect()) {
+    if (content->HasViewBox()) {
       // Percentage lengths on children resolve against the viewBox rect so we
       // don't need to notify them of the viewport change, but the viewBox
       // transform will have changed, so we need to notify them of that instead.
