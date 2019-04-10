@@ -55,30 +55,36 @@ add_task(async function checkPrefTurnsOffCanonize() {
   await Services.search.setDefault(engine);
   registerCleanupFunction(async () => Services.search.setDefault(oldDefaultEngine));
 
-  let tabsToClose = [];
   // Ensure we don't end up loading something in the current tab becuase it's empty:
-  if (gBrowser.selectedTab.isEmpty) {
-    tabsToClose.push(await BrowserTestUtils.openNewForegroundTab({gBrowser, opening: "about:mozilla"}));
-  }
-  let initialTabURL = gBrowser.selectedBrowser.currentURI.spec;
-  let initialTab = gBrowser.selectedTab;
+  let initialTab = await BrowserTestUtils.openNewForegroundTab({gBrowser, opening: "about:mozilla"});
   await SpecialPowers.pushPrefEnv({set: [["browser.urlbar.ctrlCanonizesURLs", false]]});
 
-  let promiseTabOpened = BrowserTestUtils.waitForNewTab(gBrowser);
+  let newURL = "http://mochi.test:8888/?terms=example";
+  // On MacOS CTRL+Enter is not supposed to open in a new tab, because it uses
+  // CMD+Enter for that.
+  let promiseLoaded = AppConstants.platform == "macosx" ?
+                      BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, newURL) :
+                      BrowserTestUtils.waitForNewTab(gBrowser);
 
   gURLBar.focus();
   gURLBar.selectionStart = gURLBar.selectionEnd =
     gURLBar.inputField.value.length;
   gURLBar.inputField.value = "exampl";
   EventUtils.sendString("e");
-  EventUtils.synthesizeKey("KEY_Enter", AppConstants.platform == "macosx" ?
-                           {metaKey: true} : {ctrlKey: true});
+  EventUtils.synthesizeKey("KEY_Enter", {ctrlKey: true});
 
-  tabsToClose.push(await promiseTabOpened);
-  is(initialTab.linkedBrowser.currentURI.spec, initialTabURL,
-     "Original tab shouldn't have navigated");
-  for (let t of tabsToClose) {
-    gBrowser.removeTab(t);
+  await promiseLoaded;
+  if (AppConstants.platform == "macosx") {
+    Assert.equal(initialTab.linkedBrowser.currentURI.spec, newURL,
+                 "Original tab should have navigated");
+  } else {
+    Assert.equal(initialTab.linkedBrowser.currentURI.spec, "about:mozilla",
+                 "Original tab shouldn't have navigated");
+    Assert.equal(gBrowser.selectedBrowser.currentURI.spec, newURL,
+                 "New tab should have navigated");
+  }
+  while (gBrowser.tabs.length > 1) {
+    gBrowser.removeTab(gBrowser.selectedTab, {animate: false});
   }
 });
 
@@ -93,13 +99,14 @@ add_task(async function autofill() {
   // starts with the new search string, so to make sure that doesn't happen and
   // that earlier tests don't conflict with this one, start a new search for
   // some other string.
-  gURLBar.focus();
+  gURLBar.select();
   EventUtils.sendString("blah");
 
   // Add a visit that will be autofilled.
   await PlacesUtils.history.clear();
   await PlacesTestUtils.addVisits([{
     uri: "http://example.com/",
+    transition: PlacesUtils.history.TRANSITIONS.TYPED,
   }]);
 
   let testcases = [
@@ -117,17 +124,16 @@ add_task(async function autofill() {
   for (let [inputValue, expectedURL, options] of testcases) {
     let promiseLoad =
       BrowserTestUtils.waitForDocLoadAndStopIt(expectedURL, gBrowser.selectedBrowser);
-    gURLBar.focus();
-    gURLBar.inputField.value = inputValue.slice(0, -1);
+    gURLBar.select();
     let autofillPromise = promiseAutofill();
-    EventUtils.sendString(inputValue.slice(-1));
+    EventUtils.sendString(inputValue);
     await autofillPromise;
     EventUtils.synthesizeKey("KEY_Enter", options);
     await promiseLoad;
 
     // Here again, make sure autofill isn't disabled for the next search.  See
     // the comment above.
-    gURLBar.focus();
+    gURLBar.select();
     EventUtils.sendString("blah");
   }
 
