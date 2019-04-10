@@ -958,7 +958,7 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
                        WebGLintptr offset, WebGLsizeiptr size);
 
  private:
-  void BufferDataImpl(GLenum target, uint64_t dataLen, const uint8_t* data,
+  void BufferDataImpl(GLenum target, size_t dataLen, const uint8_t* data,
                       GLenum usage);
 
  public:
@@ -972,7 +972,7 @@ class WebGLContext : public nsICanvasRenderingContextInternal,
 
  private:
   void BufferSubDataImpl(GLenum target, WebGLsizeiptr dstByteOffset,
-                         uint64_t srcDataLen, const uint8_t* srcData);
+                         size_t srcDataLen, const uint8_t* srcData);
 
  public:
   void BufferSubData(GLenum target, WebGLsizeiptr dstByteOffset,
