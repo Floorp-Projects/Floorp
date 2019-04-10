@@ -1878,15 +1878,19 @@ class StaticAnalysis(MachCommandBase):
                     'line': issue['mainEventLineNumber'],
                     'flag': issue['checkerName'],
                     'message': event_path['eventDescription'],
-                    'extra': []
+                    'extra': {
+                        'category': issue['checkerProperties']['category'],
+                        'stateOnServer': issue['stateOnServer'],
+                        'stack': []
+                    }
                 }
 
                 # Embed all events into extra message
                 for event in issue['events']:
-                    dict_issue['extra'].append({'file_path': event['strippedFilePathname'],
-                                                'line_number': event['lineNumber'],
-                                                'path_type': event['eventTag'],
-                                                'description': event['eventDescription']})
+                    dict_issue['extra']['stack'].append({'file_path': event['strippedFilePathname'],
+                                                         'line_number': event['lineNumber'],
+                                                         'path_type': event['eventTag'],
+                                                         'description': event['eventDescription']})
 
                 return dict_issue
 
