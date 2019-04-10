@@ -683,11 +683,11 @@ html|*.urlbar-input:-moz-lwtheme::placeholder,
 }
 
 .browserContainer > findbar {
-  background-color: var(--toolbar-bgcolor);
-  color: var(--toolbar-color);
+  background-color: var(--toolbar-non-lwt-bgcolor);
+  color: var(--toolbar-non-lwt-textcolor);
 }
 
-.browserContainer > findbar:-moz-lwtheme {
+:root:not([lwtheme-image]) .browserContainer > findbar:-moz-lwtheme {
   background-color: var(--lwt-accent-color);
   background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-bgcolor));
   border-top-color: var(--chrome-content-separator-color);
