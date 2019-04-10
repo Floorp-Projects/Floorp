@@ -3838,7 +3838,7 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
 
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::Comma,
-                                TokenStream::SlashIsRegExp)) {
+                                TokenStream::SlashIsInvalid)) {
       return null();
     }
     if (!matched) {
@@ -6725,7 +6725,7 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
   *done = false;
 
   TokenKind tt;
-  if (!tokenStream.getToken(&tt)) {
+  if (!tokenStream.getToken(&tt, TokenStream::SlashIsInvalid)) {
     return false;
   }
   if (tt == TokenKind::RightCurly) {
@@ -9808,7 +9808,6 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
     }
 
     anyChars.ungetToken();
-    anyChars.addModifierException(TokenStream::SlashIsRegExpOK);
     *propType = tt == TokenKind::Assign ? PropertyType::CoverInitializedName
                                         : PropertyType::Shorthand;
     return propName;
@@ -10094,7 +10093,7 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
 
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::Comma,
-                                TokenStream::SlashIsRegExp)) {
+                                TokenStream::SlashIsInvalid)) {
       return null();
     }
     if (!matched) {
