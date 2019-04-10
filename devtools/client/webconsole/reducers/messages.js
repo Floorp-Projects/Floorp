@@ -959,7 +959,15 @@ function passCssFilters(message, filters) {
  * @returns {Boolean}
  */
 function passSearchFilters(message, filters) {
-  const text = (filters.text || "").trim();
+  const text = (filters.text || "").trim().toLocaleLowerCase();
+  let regex;
+  if (text.startsWith("/") && text.endsWith("/") && text.length > 2) {
+    try {
+      regex = new RegExp(text.slice(1, -1), "im");
+    } catch (e) {
+
+    }
+  }
 
   // If there is no search, the message passes the filter.
   if (!text) {
@@ -968,26 +976,26 @@ function passSearchFilters(message, filters) {
 
   return (
     // Look for a match in parameters.
-    isTextInParameters(text, message.parameters)
+    isTextInParameters(text, regex, message.parameters)
     // Look for a match in location.
-    || isTextInFrame(text, message.frame)
+    || isTextInFrame(text, regex, message.frame)
     // Look for a match in net events.
-    || isTextInNetEvent(text, message.request)
+    || isTextInNetEvent(text, regex, message.request)
     // Look for a match in stack-trace.
-    || isTextInStackTrace(text, message.stacktrace)
+    || isTextInStackTrace(text, regex, message.stacktrace)
     // Look for a match in messageText.
-    || isTextInMessageText(text, message.messageText)
+    || isTextInMessageText(text, regex, message.messageText)
     // Look for a match in notes.
-    || isTextInNotes(text, message.notes)
+    || isTextInNotes(text, regex, message.notes)
     // Look for a match in prefix.
-    || isTextInPrefix(text, message.prefix)
+    || isTextInPrefix(text, regex, message.prefix)
   );
 }
 
 /**
 * Returns true if given text is included in provided stack frame.
 */
-function isTextInFrame(text, frame) {
+function isTextInFrame(text, regex, frame) {
   if (!frame) {
     return false;
   }
@@ -1001,53 +1009,50 @@ function isTextInFrame(text, frame) {
   const { short } = getSourceNames(source);
   const unicodeShort = getUnicodeUrlPath(short);
 
-  const includes =
-    `${functionName ? functionName + " " : ""}${unicodeShort}:${line}:${column}`
-    .toLocaleLowerCase()
-    .includes(text.toLocaleLowerCase());
-  return includes;
+  const str =
+    `${functionName ? functionName + " " : ""}${unicodeShort}:${line}:${column}`;
+  return regex ? regex.test(str) : str.toLocaleLowerCase().includes(text);
 }
 
 /**
 * Returns true if given text is included in provided parameters.
 */
-function isTextInParameters(text, parameters) {
+function isTextInParameters(text, regex, parameters) {
   if (!parameters) {
     return false;
   }
 
-  text = text.toLocaleLowerCase();
-  return getAllProps(parameters).some(prop =>
-    (prop + "").toLocaleLowerCase().includes(text)
-  );
+  return getAllProps(parameters).some(prop => {
+    const str = (prop + "");
+    return regex ? regex.test(str) : str.toLocaleLowerCase().includes(text);
+  });
 }
 
 /**
 * Returns true if given text is included in provided net event grip.
 */
-function isTextInNetEvent(text, request) {
+function isTextInNetEvent(text, regex, request) {
   if (!request) {
     return false;
   }
 
-  text = text.toLocaleLowerCase();
-
-  const method = request.method.toLocaleLowerCase();
-  const url = request.url.toLocaleLowerCase();
-  return method.includes(text) || url.includes(text);
+  const method = request.method;
+  const url = request.url;
+  return regex ? regex.test(method) || regex.test(url) :
+    method.toLocaleLowerCase().includes(text) || url.toLocaleLowerCase().includes(text);
 }
 
 /**
 * Returns true if given text is included in provided stack trace.
 */
-function isTextInStackTrace(text, stacktrace) {
+function isTextInStackTrace(text, regex, stacktrace) {
   if (!Array.isArray(stacktrace)) {
     return false;
   }
 
   // isTextInFrame expect the properties of the frame object to be in the same
   // order they are rendered in the Frame component.
-  return stacktrace.some(frame => isTextInFrame(text, {
+  return stacktrace.some(frame => isTextInFrame(text, regex, {
     functionName: frame.functionName || l10n.getStr("stacktrace.anonymousFunction"),
     source: frame.filename,
     lineNumber: frame.lineNumber,
@@ -1058,17 +1063,19 @@ function isTextInStackTrace(text, stacktrace) {
 /**
 * Returns true if given text is included in `messageText` field.
 */
-function isTextInMessageText(text, messageText) {
+function isTextInMessageText(text, regex, messageText) {
   if (!messageText) {
     return false;
   }
 
   if (typeof messageText === "string") {
-    return messageText.toLocaleLowerCase().includes(text.toLocaleLowerCase());
+    return regex ? regex.test(messageText) :
+      messageText.toLocaleLowerCase().includes(text);
   }
 
   if (messageText.type === "longString") {
-    return messageText.initial.toLocaleLowerCase().includes(text.toLocaleLowerCase());
+    return regex ? regex.test(messageText.initial) :
+      messageText.initial.toLocaleLowerCase().includes(text);
   }
 
   return true;
@@ -1077,18 +1084,21 @@ function isTextInMessageText(text, messageText) {
 /**
 * Returns true if given text is included in notes.
 */
-function isTextInNotes(text, notes) {
+function isTextInNotes(text, regex, notes) {
   if (!Array.isArray(notes)) {
     return false;
   }
 
   return notes.some(note =>
     // Look for a match in location.
-    isTextInFrame(text, note.frame) ||
+    isTextInFrame(text, regex, note.frame) ||
     // Look for a match in messageBody.
     (
       note.messageBody &&
-      note.messageBody.toLocaleLowerCase().includes(text.toLocaleLowerCase())
+      (
+        regex ? regex.test(note.messageBody) :
+          note.messageBody.toLocaleLowerCase().includes(text)
+      )
     )
   );
 }
@@ -1096,12 +1106,14 @@ function isTextInNotes(text, notes) {
 /**
 * Returns true if given text is included in prefix.
 */
-function isTextInPrefix(text, prefix) {
+function isTextInPrefix(text, regex, prefix) {
   if (!prefix) {
     return false;
   }
 
-  return `${prefix}: `.toLocaleLowerCase().includes(text.toLocaleLowerCase());
+  const str = `${prefix}: `;
+
+  return regex ? regex.test(str) : str.toLocaleLowerCase().includes(text);
 }
 
 /**
