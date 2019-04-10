@@ -302,3 +302,4 @@ pref(layout.css.moz-binding.content.enabled,false) load 1517319.html
 load 1533891.html
 load 1533783.html
 load 1541126.html
+pref(gfx.omta.background-color,true) load 1533968.html

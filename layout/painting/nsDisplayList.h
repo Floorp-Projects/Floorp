@@ -4826,6 +4826,10 @@ class nsDisplayTableBackgroundColor : public nsDisplayBackgroundColor {
            nsDisplayItem::GetPerFrameKey();
   }
 
+  bool CanUseAsyncAnimations(nsDisplayListBuilder* aBuilder) override {
+    return false;
+  }
+
  protected:
   nsIFrame* mAncestorFrame;
   TableType mTableType;
