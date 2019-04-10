@@ -8,6 +8,7 @@
 #include "nsUrlClassifierPrefixSet.h"
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
+#include "mozilla/ScopeExit.h"
 #include "mozilla/EndianUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
@@ -50,9 +51,12 @@ VariableLengthPrefixSet::~VariableLengthPrefixSet() {
   UnregisterWeakMemoryReporter(this);
 }
 
-nsresult VariableLengthPrefixSet::SetPrefixes(
-    const PrefixStringMap& aPrefixMap) {
+nsresult VariableLengthPrefixSet::SetPrefixes(PrefixStringMap& aPrefixMap) {
   MutexAutoLock lock(mLock);
+
+  // We may modify the prefix string in this function, clear this data
+  // before returning to ensure no one use the data after this API.
+  auto scopeExit = MakeScopeExit([&]() { aPrefixMap.Clear(); });
 
   // Prefix size should not less than 4-bytes or greater than 32-bytes
   for (auto iter = aPrefixMap.ConstIter(); !iter.Done(); iter.Next()) {
@@ -73,33 +77,26 @@ nsresult VariableLengthPrefixSet::SetPrefixes(
 
     uint32_t numPrefixes = prefixes->Length() / PREFIX_SIZE_FIXED;
 
-#if MOZ_BIG_ENDIAN
-    const uint32_t* arrayPtr =
-        reinterpret_cast<const uint32_t*>(prefixes->BeginReading());
-#else
-    FallibleTArray<uint32_t> array;
     // Prefixes are lexicographically-sorted, so the interger array
     // passed to nsUrlClassifierPrefixSet should also follow the same order.
-    // To make sure of that, we convert char array to integer with Big-Endian
-    // instead of casting to integer directly.
-    if (!array.SetCapacity(numPrefixes, fallible)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    const char* begin = prefixes->BeginReading();
-    const char* end = prefixes->EndReading();
+    // Reverse byte order in-place in Little-Endian platform.
+#if MOZ_LITTLE_ENDIAN
+    char* begin = prefixes->BeginWriting();
+    char* end = prefixes->EndWriting();
 
     while (begin != end) {
-      array.AppendElement(BigEndian::readUint32(begin), fallible);
+      uint32_t* p = reinterpret_cast<uint32_t*>(begin);
+      *p = BigEndian::readUint32(begin);
       begin += sizeof(uint32_t);
     }
-    MOZ_ASSERT(array.Length() == numPrefixes);
-
-    const uint32_t* arrayPtr = array.Elements();
 #endif
+    const uint32_t* arrayPtr =
+        reinterpret_cast<const uint32_t*>(prefixes->BeginReading());
 
     nsresult rv = mFixedPrefixSet->SetPrefixes(arrayPtr, numPrefixes);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
   }
 
   // 5~32 bytes prefixes are stored in mVLPrefixSet.
