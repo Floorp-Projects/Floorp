@@ -4,13 +4,7 @@
 
 "use strict";
 
-/* connection types for remote clients */
-const CONNECTION_TYPES = {
-  NETWORK: "network",
-  THIS_FIREFOX: "this-firefox",
-  UNKNOWN: "unknown",
-  USB: "usb",
-};
+const { CONNECTION_TYPES } = require("devtools/client/shared/remote-debugging/constants");
 
 /**
  * This class is designed to be a singleton shared by all DevTools to get access to
@@ -126,5 +120,4 @@ class RemoteClientManager {
 // Expose a singleton of RemoteClientManager.
 module.exports = {
   remoteClientManager: new RemoteClientManager(),
-  CONNECTION_TYPES,
 };

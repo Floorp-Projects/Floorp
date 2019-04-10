@@ -7,7 +7,7 @@ const { PureComponent } = require("devtools/client/shared/vendor/react");
 const dom = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { CONNECTION_TYPES } =
-  require("devtools/client/shared/remote-debugging/remote-client-manager");
+  require("devtools/client/shared/remote-debugging/constants");
 
 /**
  * This is header that should be displayed on top of the toolbox when using
