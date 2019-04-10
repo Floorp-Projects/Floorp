@@ -284,8 +284,8 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   // ==> "zh-TW")
   static const char* GetPrefLangName(eFontPrefLang aLang);
 
-  // map a Unicode range (based on char code) to a font language for Preferences
-  static eFontPrefLang GetFontPrefLangFor(uint8_t aUnicodeRange);
+  // map a char code to a font language for Preferences
+  static eFontPrefLang GetFontPrefLangFor(uint32_t aCh);
 
   // returns true if a pref lang is CJK
   static bool IsLangCJK(eFontPrefLang aLang);
