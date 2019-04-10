@@ -24,6 +24,13 @@ endif
 include $(topsrcdir)/config/config.mk
 
 GARBAGE_DIRS += _javagen _profile staticlib
+# To share compilation of dependencies, Rust libraries all set their
+# CARGO_TARGET_DIR as a subdirectory of topobjdir.  Normally, we would add
+# RUST*TARGET to GARBAGE_DIRS for those directories building Rust libraries.
+# But the directories building Rust libraries don't actually have
+# subdirectories to remove.  So we add to GARBAGE_DIRS once here, globally,
+# for it to have the desired effect.
+GARBAGE_DIRS += $(RUST_TARGET)
 DIST_GARBAGE = config.cache config.log config.status* config-defs.h \
    config/autoconf.mk \
    mozilla-config.h \

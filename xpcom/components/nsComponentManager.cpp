@@ -143,8 +143,12 @@ using ProcessSelector = Module::ProcessSelector;
 // Module.h.
 bool ProcessSelectorMatches(ProcessSelector aSelector) {
   GeckoProcessType type = XRE_GetProcessType();
-  if (type == GeckoProcessType_GPU || type == GeckoProcessType_RDD) {
+  if (type == GeckoProcessType_GPU) {
     return !!(aSelector & Module::ALLOW_IN_GPU_PROCESS);
+  }
+
+  if (type == GeckoProcessType_RDD) {
+    return !!(aSelector & Module::ALLOW_IN_RDD_PROCESS);
   }
 
   if (type == GeckoProcessType_Socket) {
@@ -347,7 +351,6 @@ nsComponentManagerImpl::nsComponentManagerImpl()
       mStatus(NOT_INITIALIZED) {}
 
 extern const mozilla::Module kNeckoModule;
-extern const mozilla::Module kParserModule;
 #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_ANDROID)
 extern const mozilla::Module kSpeechSynthModule;
 #endif
@@ -357,9 +360,6 @@ extern const mozilla::Module kContentProcessWidgetModule;
 extern const mozilla::Module kWidgetModule;
 #endif
 extern const mozilla::Module kLayoutModule;
-namespace mozilla {
-extern const mozilla::Module kLocalCertServiceModule;
-}
 extern const mozilla::Module kKeyValueModule;
 extern const mozilla::Module kXREModule;
 extern const mozilla::Module kEmbeddingModule;
@@ -424,6 +424,8 @@ nsresult nsComponentManagerImpl::Init() {
         ProcessSelectorMatches(ProcessSelector::ALLOW_IN_VR_PROCESS);
     gProcessMatchTable[size_t(ProcessSelector::ALLOW_IN_SOCKET_PROCESS)] =
         ProcessSelectorMatches(ProcessSelector::ALLOW_IN_SOCKET_PROCESS);
+    gProcessMatchTable[size_t(ProcessSelector::ALLOW_IN_RDD_PROCESS)] =
+        ProcessSelectorMatches(ProcessSelector::ALLOW_IN_RDD_PROCESS);
     gProcessMatchTable[size_t(ProcessSelector::ALLOW_IN_GPU_AND_VR_PROCESS)] =
         ProcessSelectorMatches(ProcessSelector::ALLOW_IN_GPU_AND_VR_PROCESS);
     gProcessMatchTable[size_t(
@@ -434,6 +436,18 @@ nsresult nsComponentManagerImpl::Init() {
         ProcessSelector::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS)] =
         ProcessSelectorMatches(
             ProcessSelector::ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS);
+    gProcessMatchTable[size_t(
+        ProcessSelector::ALLOW_IN_RDD_AND_SOCKET_PROCESS)] =
+        ProcessSelectorMatches(
+            ProcessSelector::ALLOW_IN_RDD_AND_SOCKET_PROCESS);
+    gProcessMatchTable[size_t(
+        ProcessSelector::ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS)] =
+        ProcessSelectorMatches(
+            ProcessSelector::ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS);
+    gProcessMatchTable[size_t(
+        ProcessSelector::ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS)] =
+        ProcessSelectorMatches(
+            ProcessSelector::ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS);
   }
 
   MOZ_ASSERT(NOT_INITIALIZED == mStatus);
@@ -448,7 +462,6 @@ nsresult nsComponentManagerImpl::Init() {
 
   RegisterModule(&kXPCOMModule);
   RegisterModule(&kNeckoModule);
-  RegisterModule(&kParserModule);
 #if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_ANDROID)
   RegisterModule(&kSpeechSynthModule);
 #endif
@@ -458,7 +471,6 @@ nsresult nsComponentManagerImpl::Init() {
   RegisterModule(&kWidgetModule);
 #endif
   RegisterModule(&kLayoutModule);
-  RegisterModule(&mozilla::kLocalCertServiceModule);
   RegisterModule(&kKeyValueModule);
   RegisterModule(&kXREModule);
   RegisterModule(&kEmbeddingModule);
@@ -698,6 +710,19 @@ void nsComponentManagerImpl::RegisterCIDEntryLocked(
     return;
   }
 
+#ifdef DEBUG
+  // If we're still in the static initialization phase, check that we're not
+  // registering something that was already registered.
+  if (mStatus != NORMAL) {
+    if (StaticComponents::LookupByCID(*aEntry->cid)) {
+      MOZ_CRASH_UNSAFE_PRINTF(
+          "While registering XPCOM module %s, trying to re-register CID '%s' "
+          "already registered by a static component.",
+          aModule->Description().get(), AutoIDString(*aEntry->cid).get());
+    }
+  }
+#endif
+
   if (auto entry = mFactories.LookupForAdd(aEntry->cid)) {
     nsFactoryEntry* f = entry.Data();
     NS_WARNING("Re-registering a CID?");
@@ -727,6 +752,21 @@ void nsComponentManagerImpl::RegisterContractIDLocked(
   if (!ProcessSelectorMatches(aEntry->processSelector)) {
     return;
   }
+
+#ifdef DEBUG
+  // If we're still in the static initialization phase, check that we're not
+  // registering something that was already registered.
+  if (mStatus != NORMAL) {
+    if (const StaticModule* module = StaticComponents::LookupByContractID(
+            nsAutoCString(aEntry->contractid))) {
+      MOZ_CRASH_UNSAFE_PRINTF(
+          "Could not map contract ID '%s' to CID %s because it is already "
+          "mapped to CID %s.",
+          aEntry->contractid, AutoIDString(*aEntry->cid).get(),
+          AutoIDString(module->CID()).get());
+    }
+  }
+#endif
 
   nsFactoryEntry* f = mFactories.Get(aEntry->cid);
   if (!f) {

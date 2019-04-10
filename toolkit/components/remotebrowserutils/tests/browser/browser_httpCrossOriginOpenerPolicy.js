@@ -60,6 +60,87 @@ async function test_coop(start, target, expectedProcessSwitch) {
   });
 }
 
+// Check that multiple navigations of the same tab will only switch processes
+// when it's expected.
+add_task(async function test_multiple_nav_process_switches() {
+  await SpecialPowers.pushPrefEnv({set: [[PREF_NAME, true]]});
+  await BrowserTestUtils.withNewTab({
+    gBrowser,
+    url: httpURL("coop_header.sjs", "https://example.org"),
+    waitForStateStop: true,
+  }, async function(browser) {
+    await new Promise(resolve => setTimeout(resolve, 20));
+    let prevPID = await ContentTask.spawn(browser, null, () => {
+      return Services.appinfo.processID;
+    });
+
+    let target = httpURL("coop_header.sjs?.", "https://example.org");
+    await performLoad(browser, {
+      url: target,
+      maybeErrorPage: false,
+    }, async () => {
+      BrowserTestUtils.loadURI(browser, target);
+    });
+
+    let currentPID = await ContentTask.spawn(browser, null, () => {
+      return Services.appinfo.processID;
+    });
+
+    Assert.equal(prevPID, currentPID);
+    prevPID = currentPID;
+
+    target = httpURL("coop_header.sjs?same-origin", "https://example.org");
+    await performLoad(browser, {
+      url: target,
+      maybeErrorPage: false,
+    }, async () => {
+      BrowserTestUtils.loadURI(browser, target);
+      await BrowserTestUtils.waitForEvent(gBrowser.getTabForBrowser(browser), "SSTabRestored");
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 20));
+    currentPID = await ContentTask.spawn(browser, null, () => {
+      return Services.appinfo.processID;
+    });
+
+    Assert.notEqual(prevPID, currentPID);
+    prevPID = currentPID;
+
+    target = httpURL("coop_header.sjs?same-origin", "https://example.com");
+    await performLoad(browser, {
+      url: target,
+      maybeErrorPage: false,
+    }, async () => {
+      BrowserTestUtils.loadURI(browser, target);
+      await BrowserTestUtils.waitForEvent(gBrowser.getTabForBrowser(browser), "SSTabRestored");
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 20));
+    currentPID = await ContentTask.spawn(browser, null, () => {
+      return Services.appinfo.processID;
+    });
+
+    Assert.notEqual(prevPID, currentPID);
+    prevPID = currentPID;
+
+    target = httpURL("coop_header.sjs?same-origin.#4", "https://example.com");
+    await performLoad(browser, {
+      url: target,
+      maybeErrorPage: false,
+    }, async () => {
+      BrowserTestUtils.loadURI(browser, target);
+    });
+
+    await new Promise(resolve => setTimeout(resolve, 20));
+    currentPID = await ContentTask.spawn(browser, null, () => {
+      return Services.appinfo.processID;
+    });
+
+    Assert.equal(prevPID, currentPID);
+    prevPID = currentPID;
+  });
+});
+
 add_task(async function test_disabled() {
   await SpecialPowers.pushPrefEnv({set: [[PREF_NAME, false]]});
   await test_coop(httpURL("coop_header.sjs", "https://example.com"), httpURL("coop_header.sjs", "https://example.com"), false);

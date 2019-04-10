@@ -14,6 +14,7 @@ import android.view.View;
 
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.util.GeckoBundle;
+import org.mozilla.geckoview.GeckoViewBridge;
 
 import java.util.List;
 
@@ -54,7 +55,7 @@ public class FloatingActionModeCallback extends ActionMode.Callback2 {
 
         final GeckoBundle data = new GeckoBundle(1);
         data.putString("id", action.getId());
-        textSelection.geckoView.getEventDispatcher().dispatch("TextSelection:Action", data);
+        GeckoViewBridge.getEventDispatcher(textSelection.geckoView).dispatch("TextSelection:Action", data);
 
         return true;
     }

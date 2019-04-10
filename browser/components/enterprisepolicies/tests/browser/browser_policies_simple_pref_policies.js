@@ -268,6 +268,16 @@ const POLICIES_TESTS = [
       "browser.newtabpage.activity-stream.asrouter.userprefs.cfr.features": false,
     },
   },
+
+  // POLICY: NewTabPage
+  {
+    policies: {
+      "NewTabPage": false,
+    },
+    lockedPrefs: {
+      "browser.newtabpage.enabled": false,
+    },
+  },
 ];
 
 add_task(async function test_policy_remember_passwords() {

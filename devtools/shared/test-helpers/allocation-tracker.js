@@ -42,7 +42,22 @@ const global = Cu.getGlobalForObject(this);
 const {addDebuggerToGlobal} = ChromeUtils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(global);
 
-exports.allocationTracker = function() {
+/**
+ * Start recording JS object allocations.
+ *
+ * @param Object watchGlobal
+ *        One global object to observe. Only allocation made from this global
+ *        will be recorded.
+ * @param Boolean watchAllGlobals
+ *        If true, allocations from everywhere are going to be recorded.
+ * @param Boolean watchAllGlobals
+ *        If true, only allocations made from DevTools contexts are going to be recorded.
+ */
+exports.allocationTracker = function({
+  watchGlobal,
+  watchAllGlobals,
+  watchDevToolsGlobals,
+} = {}) {
   dump("DEVTOOLS ALLOCATION: Start logging allocations\n");
   let dbg = new global.Debugger();
 
@@ -53,8 +68,37 @@ exports.allocationTracker = function() {
   // Bumps the default buffer size, which may prevent recording all the test allocations
   dbg.memory.maxAllocationsLogLength = 5000000;
 
+  let acceptGlobal;
+  if (watchGlobal) {
+    acceptGlobal = () => false;
+    dbg.addDebuggee(watchGlobal);
+  } else if (watchAllGlobals) {
+    acceptGlobal = () => true;
+  } else if (watchDevToolsGlobals) {
+    // Only accept globals related to DevTools
+    acceptGlobal = g => {
+      // self-hosting-global crashes when trying to call unsafeDereference
+      if (g.class == "self-hosting-global") {
+        return false;
+      }
+      const ref = g.unsafeDereference();
+      const location = Cu.getRealmLocation(ref);
+      const accept = !!location.match(/devtools/i);
+      dump("TRACKER NEW GLOBAL: " + (accept ? "+" : "-") + " : " + location + "\n");
+      return accept;
+    };
+  }
+
   // Watch all globals
-  dbg.addAllGlobalsAsDebuggees();
+  if (watchAllGlobals || watchDevToolsGlobals) {
+    dbg.addAllGlobalsAsDebuggees();
+
+    for (const g of dbg.getDebuggees()) {
+      if (!acceptGlobal(g)) {
+        dbg.removeDebuggee(g);
+      }
+    }
+  }
 
   // Remove this global to ignore all its object/JS
   dbg.removeDebuggee(global);
@@ -62,7 +106,9 @@ exports.allocationTracker = function() {
   // addAllGlobalsAsDebuggees won't automatically track new ones,
   // so ensure tracking all new globals
   dbg.onNewGlobalObject = function(g) {
-    dbg.addDebuggee(g);
+    if (acceptGlobal(g)) {
+      dbg.addDebuggee(g);
+    }
   };
 
   return {
@@ -174,6 +220,11 @@ exports.allocationTracker = function() {
 
     flushAllocations() {
       dbg.memory.drainAllocationsLog();
+    },
+
+    stillAllocatedObjects() {
+      const sensus = dbg.memory.takeCensus({ breakdown: { by: "count" } });
+      return sensus.count;
     },
 
     stop() {

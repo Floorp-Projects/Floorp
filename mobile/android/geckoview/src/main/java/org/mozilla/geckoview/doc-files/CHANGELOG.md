@@ -42,6 +42,14 @@ exclude: true
 
 [68.9]: ../GeckoRuntimeSettings.html#setPreferredColorScheme-int-
 
+- Added [`@NonNull`][66.1] or [`@Nullable`][66.2] to all fields.
+
+- [`RuntimeTelemetry#getSnapshots`][68.10] returns a [`JSONObject`][67.22] now.
+
+[68.10]: ../RuntimeTelemetry.html#getSnapshots-boolean-
+
+- Removed all `org.mozilla.gecko` references in the API.
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -248,4 +256,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 053d9b4164690ff13996be9e7288dd183e2a1db4
+[api-version]: a5ffe8ea42f0210fc7c64b742ae6d81d03a93e06

@@ -534,8 +534,7 @@ nsresult LoadInfoToLoadInfoArgs(nsILoadInfo* aLoadInfo,
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
       aLoadInfo->GetDocumentHasLoaded(), cspNonce,
-      aLoadInfo->GetIsFromProcessingFrameAttributes(),
-      aLoadInfo->GetOpenerPolicy(), cookieSettingsArgs));
+      aLoadInfo->GetIsFromProcessingFrameAttributes(), cookieSettingsArgs));
 
   return NS_OK;
 }
@@ -692,8 +691,6 @@ nsresult LoadInfoArgsToLoadInfo(
     loadInfo->SetIsFromProcessingFrameAttributes();
   }
 
-  loadInfo->SetOpenerPolicy(loadInfoArgs.openerPolicy());
-
   loadInfo.forget(outLoadInfo);
   return NS_OK;
 }
@@ -706,7 +703,7 @@ void LoadInfoToParentLoadInfoForwarder(
         false,  // serviceWorkerTaintingSynthesized
         false,  // documentHasUserInteracted
         false,  // documentHasLoaded
-        nsILoadInfo::OPENER_POLICY_NULL, Maybe<CookieSettingsArgs>());
+        Maybe<CookieSettingsArgs>());
     return;
   }
 
@@ -718,9 +715,6 @@ void LoadInfoToParentLoadInfoForwarder(
 
   uint32_t tainting = nsILoadInfo::TAINTING_BASIC;
   Unused << aLoadInfo->GetTainting(&tainting);
-
-  nsILoadInfo::CrossOriginOpenerPolicy openerPolicy =
-      aLoadInfo->GetOpenerPolicy();
 
   Maybe<CookieSettingsArgs> cookieSettingsArgs;
 
@@ -737,7 +731,7 @@ void LoadInfoToParentLoadInfoForwarder(
       aLoadInfo->GetAllowInsecureRedirectToDataURI(), ipcController, tainting,
       aLoadInfo->GetServiceWorkerTaintingSynthesized(),
       aLoadInfo->GetDocumentHasUserInteracted(),
-      aLoadInfo->GetDocumentHasLoaded(), openerPolicy, cookieSettingsArgs);
+      aLoadInfo->GetDocumentHasLoaded(), cookieSettingsArgs);
 }
 
 nsresult MergeParentLoadInfoForwarder(
@@ -764,9 +758,6 @@ nsresult MergeParentLoadInfoForwarder(
   } else {
     aLoadInfo->MaybeIncreaseTainting(aForwarderArgs.tainting());
   }
-
-  MOZ_ALWAYS_SUCCEEDS(
-      aLoadInfo->SetOpenerPolicy(aForwarderArgs.openerPolicy()));
 
   MOZ_ALWAYS_SUCCEEDS(aLoadInfo->SetDocumentHasUserInteracted(
       aForwarderArgs.documentHasUserInteracted()));

@@ -13,6 +13,11 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/TaskFactory.h"
 
+namespace mozilla {
+namespace ipc {
+class SharedPreferenceSerializer;
+}
+}
 class nsITimer;
 
 namespace mozilla {
@@ -138,6 +143,8 @@ class RDDProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
 
   UniquePtr<RDDChild> mRDDChild;
   uint64_t mProcessToken;
+
+  UniquePtr<ipc::SharedPreferenceSerializer> mPrefSerializer;
 
   bool mShutdownRequested;
   bool mChannelClosed;

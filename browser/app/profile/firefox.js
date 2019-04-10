@@ -1054,7 +1054,7 @@ pref("security.sandbox.gmp.win32k-disable", false);
 // of when messaged by the parent after the message loop is running.
 pref("security.sandbox.content.mac.earlyinit", true);
 // Remove this pref once RDD early init is stable on Release.
-pref("security.sandbox.rdd.mac.earlyinit", false);
+pref("security.sandbox.rdd.mac.earlyinit", true);
 
 // This pref is discussed in bug 1083344, the naming is inspired from its
 // Windows counterpart, but on Mac it's an integer which means:
@@ -1479,15 +1479,8 @@ pref("media.gmp-gmpopenh264.enabled", true);
 
 // Switch block autoplay logic to v2, and enable UI.
 pref("media.autoplay.enabled.user-gestures-needed", true);
-
-#ifdef NIGHTLY_BUILD
 // Set Firefox to block autoplay, asking for permission by default.
 pref("media.autoplay.default", 1); // 0=Allowed, 1=Blocked
-#else
-// Set Firefox to block autoplay, asking for permission by default.
-pref("media.autoplay.default", 0); // 0=Allowed, 1=Blocked
-#endif
-
 
 #ifdef NIGHTLY_BUILD
 // Block WebAudio from playing automatically.

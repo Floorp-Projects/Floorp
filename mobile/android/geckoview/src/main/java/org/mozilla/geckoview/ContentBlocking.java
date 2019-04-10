@@ -29,7 +29,7 @@ public class ContentBlocking {
         public static class Builder
                 extends RuntimeSettings.Builder<Settings> {
             @Override
-            protected @NonNull Settings newSettings(final Settings settings) {
+            protected @NonNull Settings newSettings(final @Nullable Settings settings) {
                 return new Settings(settings);
             }
 

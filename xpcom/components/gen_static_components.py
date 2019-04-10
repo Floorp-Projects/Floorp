@@ -62,12 +62,22 @@ class ProcessSelector:
     ALLOW_IN_GPU_PROCESS = 0x4
     ALLOW_IN_VR_PROCESS = 0x8
     ALLOW_IN_SOCKET_PROCESS = 0x10
+    ALLOW_IN_RDD_PROCESS = 0x20
     ALLOW_IN_GPU_AND_SOCKET_PROCESS = (ALLOW_IN_GPU_PROCESS |
                                        ALLOW_IN_SOCKET_PROCESS)
     ALLOW_IN_GPU_AND_VR_PROCESS = ALLOW_IN_GPU_PROCESS | ALLOW_IN_VR_PROCESS
     ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS = (ALLOW_IN_GPU_PROCESS |
                                           ALLOW_IN_VR_PROCESS |
                                           ALLOW_IN_SOCKET_PROCESS)
+    ALLOW_IN_RDD_AND_SOCKET_PROCESS = (ALLOW_IN_RDD_PROCESS |
+                                       ALLOW_IN_SOCKET_PROCESS)
+    ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS = (ALLOW_IN_GPU_PROCESS |
+                                           ALLOW_IN_RDD_PROCESS |
+                                           ALLOW_IN_SOCKET_PROCESS)
+    ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS = (ALLOW_IN_GPU_PROCESS |
+                                              ALLOW_IN_RDD_PROCESS |
+                                              ALLOW_IN_VR_PROCESS |
+                                              ALLOW_IN_SOCKET_PROCESS)
 
 
 # Maps ProcessSelector constants to the name of the corresponding
@@ -79,9 +89,16 @@ PROCESSES = {
     ProcessSelector.ALLOW_IN_GPU_PROCESS: 'ALLOW_IN_GPU_PROCESS',
     ProcessSelector.ALLOW_IN_VR_PROCESS: 'ALLOW_IN_VR_PROCESS',
     ProcessSelector.ALLOW_IN_SOCKET_PROCESS: 'ALLOW_IN_SOCKET_PROCESS',
+    ProcessSelector.ALLOW_IN_RDD_PROCESS: 'ALLOW_IN_RDD_PROCESS',
     ProcessSelector.ALLOW_IN_GPU_AND_SOCKET_PROCESS: 'ALLOW_IN_GPU_AND_SOCKET_PROCESS',
     ProcessSelector.ALLOW_IN_GPU_AND_VR_PROCESS: 'ALLOW_IN_GPU_AND_VR_PROCESS',
     ProcessSelector.ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS: 'ALLOW_IN_GPU_VR_AND_SOCKET_PROCESS',
+    ProcessSelector.ALLOW_IN_RDD_AND_SOCKET_PROCESS:
+        'ALLOW_IN_RDD_AND_SOCKET_PROCESS',
+    ProcessSelector.ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS:
+        'ALLOW_IN_GPU_RDD_AND_SOCKET_PROCESS',
+    ProcessSelector.ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS:
+        'ALLOW_IN_GPU_RDD_VR_AND_SOCKET_PROCESS',
 }
 
 

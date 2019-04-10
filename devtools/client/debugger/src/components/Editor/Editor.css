@@ -30,14 +30,6 @@
   overflow-anchor: none;
 }
 
-.theme-dark {
-  --theme-conditional-breakpoint-color: #9fa4a9;
-}
-
-.theme-light {
-  --theme-conditional-breakpoint-color: var(--theme-body-color);
-}
-
 /**
  * There's a known codemirror flex issue with chrome that this addresses.
  * BUG https://github.com/firefox-devtools/debugger/issues/63

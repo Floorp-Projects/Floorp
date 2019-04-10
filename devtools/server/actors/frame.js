@@ -83,21 +83,20 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
    */
   form: function() {
     const threadActor = this.threadActor;
-    const form = { actor: this.actorID,
-                   type: this.frame.type };
+    const form = { actor: this.actorID, type: this.frame.type };
 
     // NOTE: ignoreFrameEnvironment lets the client explicitly avoid
     // populating form environments on pause.
-    if (
-      !this.threadActor._options.ignoreFrameEnvironment &&
-      this.frame.environment
-    ) {
+    if (!this.threadActor._options.ignoreFrameEnvironment && this.frame.environment) {
       form.environment = this.getEnvironment();
     }
 
     if (this.frame.type != "wasmcall") {
-      form.this = createValueGrip(this.frame.this, threadActor._pausePool,
-        threadActor.objectGrip);
+      form.this = createValueGrip(
+        this.frame.this,
+        threadActor._pausePool,
+        threadActor.objectGrip
+      );
     }
 
     form.displayName = formatDisplayName(this.frame);
@@ -123,9 +122,11 @@ const FrameActor = ActorClassWithSpec(frameSpec, {
       return [];
     }
 
-    return this.frame.arguments.map(arg => createValueGrip(arg,
-      this.threadActor._pausePool, this.threadActor.objectGrip));
+    return this.frame.arguments.map(arg =>
+      createValueGrip(arg, this.threadActor._pausePool, this.threadActor.objectGrip)
+    );
   },
 });
 
 exports.FrameActor = FrameActor;
+exports.formatDisplayName = formatDisplayName;

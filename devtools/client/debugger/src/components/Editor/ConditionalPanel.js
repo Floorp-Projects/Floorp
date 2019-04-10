@@ -20,6 +20,12 @@ import {
 
 import type { SourceLocation, Context } from "../../types";
 
+function addNewLine(doc: Object) {
+  const cursor = doc.getCursor();
+  const pos = { line: cursor.line, ch: cursor.ch };
+  doc.replaceRange("\n", pos);
+}
+
 type Props = {
   cx: Context,
   breakpoint: ?Object,
@@ -33,7 +39,8 @@ type Props = {
 
 export class ConditionalPanel extends PureComponent<Props> {
   cbPanel: null | Object;
-  input: ?HTMLInputElement;
+  input: ?HTMLTextAreaElement;
+  codeMirror: ?Object;
   panelNode: ?HTMLDivElement;
   scrollParent: ?HTMLElement;
 
@@ -50,15 +57,19 @@ export class ConditionalPanel extends PureComponent<Props> {
 
   saveAndClose = () => {
     if (this.input) {
-      this.setBreakpoint(this.input.value);
+      this.setBreakpoint(this.input.value.trim());
     }
 
     this.props.closeConditionalPanel();
   };
 
-  onKey = (e: SyntheticKeyboardEvent<HTMLInputElement>) => {
+  onKey = (e: SyntheticKeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter") {
-      this.saveAndClose();
+      if (this.codeMirror && e.altKey) {
+        addNewLine(this.codeMirror.doc);
+      } else {
+        this.saveAndClose();
+      }
     } else if (e.key === "Escape") {
       this.props.closeConditionalPanel();
     }
@@ -146,10 +157,40 @@ export class ConditionalPanel extends PureComponent<Props> {
     }
   }
 
-  renderConditionalPanel(props: Props) {
-    const { breakpoint, log, editor } = props;
+  createEditor = (input: ?HTMLTextAreaElement) => {
+    const { log, editor } = this.props;
+
+    const codeMirror = editor.CodeMirror.fromTextArea(input, {
+      mode: "javascript",
+      theme: "mozilla",
+      placeholder: L10N.getStr(
+        log
+          ? "editor.conditionalPanel.logPoint.placeholder2"
+          : "editor.conditionalPanel.placeholder2"
+      )
+    });
+    const codeMirrorWrapper = codeMirror.getWrapperElement();
+
+    codeMirrorWrapper.addEventListener("keydown", e => {
+      codeMirror.save();
+      this.onKey(e);
+    });
+
+    this.input = input;
+    this.codeMirror = codeMirror;
+    codeMirror.focus();
+    codeMirror.setCursor(codeMirror.lineCount(), 0);
+  };
+
+  getDefaultValue() {
+    const { breakpoint, log } = this.props;
     const options = (breakpoint && breakpoint.options) || {};
-    const condition = log ? options.logValue : options.condition;
+    return log ? options.logValue : options.condition;
+  }
+
+  renderConditionalPanel(props: Props) {
+    const { log } = props;
+    const defaultValue = this.getDefaultValue();
 
     const panel = document.createElement("div");
     ReactDOM.render(
@@ -158,33 +199,13 @@ export class ConditionalPanel extends PureComponent<Props> {
           "log-point": log
         })}
         onClick={() => this.keepFocusOnInput()}
-        onBlur={this.props.closeConditionalPanel}
+        // onBlur={this.props.closeConditionalPanel}
         ref={node => (this.panelNode = node)}
       >
         <div className="prompt">»</div>
-        <input
-          defaultValue={condition}
-          ref={input => {
-            const codeMirror = editor.CodeMirror.fromTextArea(input, {
-              mode: "javascript",
-              theme: "mozilla",
-              placeholder: L10N.getStr(
-                log
-                  ? "editor.conditionalPanel.logPoint.placeholder"
-                  : "editor.conditionalPanel.placeholder"
-              )
-            });
-            const codeMirrorWrapper = codeMirror.getWrapperElement();
-
-            codeMirrorWrapper.addEventListener("keydown", e => {
-              codeMirror.save();
-              this.onKey(e);
-            });
-
-            this.input = input;
-            codeMirror.focus();
-            codeMirror.setCursor(codeMirror.lineCount(), 0);
-          }}
+        <textarea
+          defaultValue={defaultValue}
+          ref={input => this.createEditor(input)}
         />
       </div>,
       panel

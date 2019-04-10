@@ -282,6 +282,12 @@ class MOZ_STACK_CLASS LayerMetricsWrapper {
     return false;
   }
 
+  bool Combines3DTransformWithAncestors() const {
+    MOZ_ASSERT(IsValid());
+
+    return mLayer->Combines3DTransformWithAncestors();
+  }
+
   EventRegions GetEventRegions() const {
     MOZ_ASSERT(IsValid());
 

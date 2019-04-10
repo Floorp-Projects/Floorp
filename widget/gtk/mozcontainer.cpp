@@ -610,7 +610,6 @@ struct wl_surface *moz_container_get_wl_surface(MozContainer *container) {
 
     wl_surface_commit(container->surface);
     wl_display_flush(waylandDisplay->GetDisplay());
-    WaylandDisplayRelease(waylandDisplay);
   }
 
   LOGWAYLAND(("%s [%p] created surface %p\n", __FUNCTION__, (void *)container,

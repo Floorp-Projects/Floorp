@@ -9,6 +9,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs.h"
 
+#include "ProcessUtils.h"
 #include "RDDChild.h"
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
@@ -50,6 +51,12 @@ RDDProcessHost::~RDDProcessHost() { MOZ_COUNT_DTOR(RDDProcessHost); }
 bool RDDProcessHost::Launch(StringVector aExtraOpts) {
   MOZ_ASSERT(mLaunchPhase == LaunchPhase::Unlaunched);
   MOZ_ASSERT(!mRDDChild);
+
+  mPrefSerializer = MakeUnique<ipc::SharedPreferenceSerializer>();
+  if (!mPrefSerializer->SerializeToSharedMemory()) {
+    return false;
+  }
+  mPrefSerializer->AddSharedPrefCmdLineArgs(*this, aExtraOpts);
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   mSandboxLevel = Preferences::GetInt("security.sandbox.rdd.level");
@@ -139,6 +146,7 @@ void RDDProcessHost::InitAfterConnect(bool aSucceeded) {
   MOZ_ASSERT(!mRDDChild);
 
   mLaunchPhase = LaunchPhase::Complete;
+  mPrefSerializer = nullptr;
 
   if (aSucceeded) {
     mProcessToken = ++sRDDProcessTokenCounter;
