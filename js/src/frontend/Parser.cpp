@@ -6288,10 +6288,9 @@ GeneralParser<ParseHandler, Unit>::yieldExpression(InHandling inHandling) {
     case TokenKind::RightParen:
     case TokenKind::Colon:
     case TokenKind::Comma:
-    case TokenKind::In:
+    case TokenKind::In:  // Annex B.3.6 `for (x = yield in y) ;`
       // No value.
       exprNode = null();
-      anyChars.addModifierException(TokenStream::NoneIsOperand);
       break;
     case TokenKind::Mul:
       kind = ParseNodeKind::YieldStarExpr;
