@@ -8,7 +8,7 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import mozilla.components.support.utils.SafeIntent
-import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.IntentReceiverActivity
 import org.mozilla.fenix.ext.components
 
 /**
@@ -22,6 +22,12 @@ class BrowserPerformanceTestActivity : Activity() {
 
         components.core.testConfig = SafeIntent(intent).extras
 
-        startActivity(Intent(this, HomeActivity::class.java))
+        val intent = Intent(intent)
+
+        intent.setClassName(applicationContext, IntentReceiverActivity::class.java.name)
+
+        startActivity(intent)
+
+        finish()
     }
 }

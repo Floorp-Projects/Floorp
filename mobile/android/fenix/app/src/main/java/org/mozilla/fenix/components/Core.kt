@@ -43,6 +43,7 @@ class Core(private val context: Context) {
 
         testConfig?.let {
             builder.extras(it)
+                .remoteDebuggingEnabled(true)
         }
 
         val runtimeSettings = builder
