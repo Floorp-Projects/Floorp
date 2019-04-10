@@ -305,3 +305,16 @@ add_task(async function test_regExpMatch() {
     "regExpMatch returns null if there are no matches",
   );
 });
+
+add_task(async function test_versionCompare() {
+  let val;
+
+  val = await FilterExpressions.eval('"1.0.0"|versionCompare("1")');
+  ok(val === 0);
+
+  val = await FilterExpressions.eval('"1.0.0"|versionCompare("1.1")');
+  ok(val < 0);
+
+  val = await FilterExpressions.eval('"1.0.0"|versionCompare("0.1")');
+  ok(val > 0);
+});
