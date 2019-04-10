@@ -795,5 +795,15 @@ void VRManager::StopVRNavigation(const uint32_t& aDisplayID,
   }
 }
 
+bool VRManager::IsPresenting() {
+  for (const auto& manager : mManagers) {
+    if (manager->GetIsPresenting()) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 }  // namespace gfx
 }  // namespace mozilla
