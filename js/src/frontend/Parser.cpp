@@ -6799,7 +6799,7 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       return false;
     }
 
-    if (!tokenStream.getToken(&tt)) {
+    if (!tokenStream.getToken(&tt, TokenStream::SlashIsInvalid)) {
       return false;
     }
 
@@ -8152,11 +8152,11 @@ GeneralParser<ParseHandler, Unit>::orExpr(
     MOZ_ASSERT(depth <= PRECEDENCE_CLASSES);
   }
 
-  // When the next token is no longer a binary operator, it's potentially the
-  // start of an expression.  Add a modifier exception so that the next token
-  // modifier can be SlashIsRegExp.
   anyChars.ungetToken();
-  anyChars.addModifierException(TokenStream::SlashIsRegExpOK);
+
+  // Had the next token been a Div, we would have consumed it. So there's no
+  // ambiguity if we later (after ASI) re-get this token with SlashIsRegExp.
+  anyChars.allowGettingNextTokenWithSlashIsRegExp();
 
   MOZ_ASSERT(depth == 0);
   return pn;
@@ -8175,7 +8175,8 @@ GeneralParser<ParseHandler, Unit>::condExpr(
   }
 
   bool matched;
-  if (!tokenStream.matchToken(&matched, TokenKind::Hook)) {
+  if (!tokenStream.matchToken(&matched, TokenKind::Hook,
+                              TokenStream::SlashIsInvalid)) {
     return null();
   }
   if (!matched) {
