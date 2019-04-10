@@ -2950,7 +2950,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         }
 
         // Look for a regexp.
-        if (modifier == Operand) {
+        if (modifier == SlashIsRegExp) {
           return regexpLiteral(start, ttp);
         }
 

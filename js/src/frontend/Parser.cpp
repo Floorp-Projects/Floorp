@@ -401,7 +401,7 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
   }
 
   TokenKind tt;
-  if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+  if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
     return null();
   }
   if (tt != TokenKind::Eof) {
@@ -872,7 +872,7 @@ bool Parser<FullParseHandler, Unit>::checkStatementsEOF() {
   // The statementList() call breaks on TokenKind::RightCurly, so make sure
   // we've reached EOF here.
   TokenKind tt;
-  if (!tokenStream.peekToken(&tt, TokenStream::Operand)) {
+  if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
     return false;
   }
   if (tt != TokenKind::Eof) {
@@ -1498,7 +1498,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   moduleNode->setBody(&stmtList->as<ListNode>());
 
   TokenKind tt;
-  if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+  if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
     return null();
   }
   if (tt != TokenKind::Eof) {
@@ -1738,12 +1738,12 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
 
   // Skip prelude.
   TokenKind tt;
-  if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+  if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
     return null();
   }
   if (asyncKind == FunctionAsyncKind::AsyncFunction) {
     MOZ_ASSERT(tt == TokenKind::Async);
-    if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+    if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
       return null();
     }
   }
@@ -1803,7 +1803,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
     return null();
   }
 
-  if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+  if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
     return null();
   }
   if (tt != TokenKind::Eof) {
@@ -2018,7 +2018,7 @@ JSFunction* ParserBase::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::matchOrInsertSemicolon() {
   TokenKind tt = TokenKind::Eof;
-  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand)) {
+  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
     return false;
   }
   if (tt != TokenKind::Eof && tt != TokenKind::Eol && tt != TokenKind::Semi &&
@@ -2046,13 +2046,13 @@ bool GeneralParser<ParseHandler, Unit>::matchOrInsertSemicolon() {
     }
 
     /* Advance the scanner for proper error location reporting. */
-    tokenStream.consumeKnownToken(tt, TokenStream::Operand);
+    tokenStream.consumeKnownToken(tt, TokenStream::SlashIsRegExp);
     error(JSMSG_UNEXPECTED_TOKEN_NO_EXPECT, TokenKindToDesc(tt));
     return false;
   }
   bool matched;
   return tokenStream.matchToken(&matched, TokenKind::Semi,
-                                TokenStream::Operand);
+                                TokenStream::SlashIsRegExp);
 }
 
 bool ParserBase::leaveInnerFunction(ParseContext* outerpc) {
@@ -2111,7 +2111,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
 
   bool parenFreeArrow = false;
   // Modifier for the following tokens.
-  // TokenStream::None for the following cases:
+  // TokenStream::SlashIsDiv for the following cases:
   //   async a => 1
   //         ^
   //
@@ -2124,24 +2124,24 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
   //   function f(a) {}
   //             ^
   //
-  // TokenStream::Operand for the following case:
+  // TokenStream::SlashIsRegExp for the following case:
   //   a => 1
   //   ^
-  Modifier firstTokenModifier = TokenStream::None;
+  Modifier firstTokenModifier = TokenStream::SlashIsDiv;
 
   // Modifier for the the first token in each argument.
-  // can be changed to TokenStream::None for the following case:
+  // can be changed to TokenStream::SlashIsDiv for the following case:
   //   async a => 1
   //         ^
-  Modifier argModifier = TokenStream::Operand;
+  Modifier argModifier = TokenStream::SlashIsRegExp;
   if (kind == FunctionSyntaxKind::Arrow) {
     TokenKind tt;
     // In async function, the first token after `async` is already gotten
-    // with TokenStream::None.
+    // with TokenStream::SlashIsDiv.
     // In sync function, the first token is already gotten with
-    // TokenStream::Operand.
-    firstTokenModifier =
-        funbox->isAsync() ? TokenStream::None : TokenStream::Operand;
+    // TokenStream::SlashIsRegExp.
+    firstTokenModifier = funbox->isAsync() ? TokenStream::SlashIsDiv
+                                           : TokenStream::SlashIsRegExp;
     if (!tokenStream.peekToken(&tt, firstTokenModifier)) {
       return false;
     }
@@ -2189,7 +2189,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
   } else {
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::RightParen,
-                                TokenStream::Operand)) {
+                                TokenStream::SlashIsRegExp)) {
       return false;
     }
     if (!matched) {
@@ -2220,7 +2220,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
       if (!tokenStream.getToken(&tt, argModifier)) {
         return false;
       }
-      argModifier = TokenStream::Operand;
+      argModifier = TokenStream::SlashIsRegExp;
       MOZ_ASSERT_IF(parenFreeArrow, TokenKindIsPossibleIdentifier(tt));
 
       if (tt == TokenKind::TripleDot) {
@@ -2320,7 +2320,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
 
       bool matched;
       if (!tokenStream.matchToken(&matched, TokenKind::Assign,
-                                  TokenStream::Operand)) {
+                                  TokenStream::SlashIsRegExp)) {
         return false;
       }
       if (matched) {
@@ -2365,7 +2365,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
       }
 
       if (!tokenStream.matchToken(&matched, TokenKind::Comma,
-                                  TokenStream::Operand)) {
+                                  TokenStream::SlashIsRegExp)) {
         return false;
       }
       if (!matched) {
@@ -2373,7 +2373,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
       }
 
       if (!hasRest) {
-        if (!tokenStream.peekToken(&tt, TokenStream::Operand)) {
+        if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
           return false;
         }
         if (tt == TokenKind::RightParen) {
@@ -2384,7 +2384,7 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
 
     if (!parenFreeArrow) {
       TokenKind tt;
-      if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+      if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
         return false;
       }
       if (tt != TokenKind::RightParen) {
@@ -2477,7 +2477,7 @@ bool GeneralParser<ParseHandler, Unit>::addExprAndGetNextTemplStrToken(
   handler_.addList(nodeList, pn);
 
   TokenKind tt;
-  if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+  if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
     return false;
   }
   if (tt != TokenKind::RightCurly) {
@@ -2862,13 +2862,13 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
 
   // Our tokenStream has no current token, so funNode's position is garbage.
   // Substitute the position of the first token in our source.  If the
-  // function is a not-async arrow, use TokenStream::Operand to keep
+  // function is a not-async arrow, use TokenStream::SlashIsRegExp to keep
   // verifyConsistentModifier from complaining (we will use
-  // TokenStream::Operand in functionArguments).
+  // TokenStream::SlashIsRegExp in functionArguments).
   Modifier modifier =
       (fun->isArrow() && asyncKind == FunctionAsyncKind::SyncFunction)
-          ? TokenStream::Operand
-          : TokenStream::None;
+          ? TokenStream::SlashIsRegExp
+          : TokenStream::SlashIsDiv;
   if (!tokenStream.peekTokenPos(&funNode->pn_pos, modifier)) {
     return null();
   }
@@ -2954,7 +2954,7 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
   // Parse the function body.
   FunctionBodyType bodyType = StatementListBody;
   TokenKind tt;
-  if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+  if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
     return false;
   }
   uint32_t openedPos = 0;
@@ -3025,7 +3025,7 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
     // Cannot use mustMatchToken here because of internal compiler error on
     // gcc 6.4.0, with linux 64 SM hazard build.
     TokenKind actual;
-    if (!tokenStream.getToken(&actual, TokenStream::Operand)) {
+    if (!tokenStream.getToken(&actual, TokenStream::SlashIsRegExp)) {
       return false;
     }
     if (actual != TokenKind::RightCurly) {
@@ -3401,7 +3401,7 @@ GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
   uint32_t statementBegin = 0;
   for (;;) {
     TokenKind tt = TokenKind::Eof;
-    if (!tokenStream.peekToken(&tt, TokenStream::Operand)) {
+    if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
       if (anyChars.isEOF()) {
         isUnexpectedEOF_ = true;
       }
@@ -3409,14 +3409,15 @@ GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
     }
     if (tt == TokenKind::Eof || tt == TokenKind::RightCurly) {
       TokenPos pos;
-      if (!tokenStream.peekTokenPos(&pos, TokenStream::Operand)) {
+      if (!tokenStream.peekTokenPos(&pos, TokenStream::SlashIsRegExp)) {
         return null();
       }
       handler_.setListEndPosition(stmtList, pos);
       break;
     }
     if (afterReturn) {
-      if (!tokenStream.peekOffset(&statementBegin, TokenStream::Operand)) {
+      if (!tokenStream.peekOffset(&statementBegin,
+                                  TokenStream::SlashIsRegExp)) {
         return null();
       }
     }
@@ -3465,7 +3466,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::condition(
     return null();
   }
 
-  if (!mustMatchToken(TokenKind::RightParen, TokenStream::Operand,
+  if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
                       JSMSG_PAREN_AFTER_COND)) {
     return null();
   }
@@ -3483,12 +3484,12 @@ template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::matchLabel(
     YieldHandling yieldHandling, MutableHandle<PropertyName*> label) {
   TokenKind tt = TokenKind::Eof;
-  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand)) {
+  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
     return false;
   }
 
   if (TokenKindIsPossibleIdentifier(tt)) {
-    tokenStream.consumeKnownToken(tt, TokenStream::Operand);
+    tokenStream.consumeKnownToken(tt, TokenStream::SlashIsRegExp);
 
     label.set(labelIdentifier(yieldHandling));
     if (!label) {
@@ -3728,7 +3729,7 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
       return null();
     }
     if (tt == TokenKind::RightCurly) {
-      anyChars.addModifierException(TokenStream::OperandIsNone);
+      anyChars.addModifierException(TokenStream::SlashIsRegExpOK);
       break;
     }
 
@@ -3767,7 +3768,7 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
       if (propType == PropertyType::Normal) {
         // Handle e.g., |var {p: x} = o| and |var {p: x=0} = o|.
 
-        if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+        if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
           return null();
         }
 
@@ -3778,7 +3779,7 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
 
         bool hasInitializer;
         if (!tokenStream.matchToken(&hasInitializer, TokenKind::Assign,
-                                    TokenStream::Operand)) {
+                                    TokenStream::SlashIsRegExp)) {
           return null();
         }
 
@@ -3835,7 +3836,7 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
 
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::Comma,
-                                TokenStream::Operand)) {
+                                TokenStream::SlashIsRegExp)) {
       return null();
     }
     if (!matched) {
@@ -3847,7 +3848,7 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
     }
   }
 
-  if (!mustMatchToken(TokenKind::RightCurly, TokenStream::Operand,
+  if (!mustMatchToken(TokenKind::RightCurly, TokenStream::SlashIsRegExp,
                       [this, begin](TokenKind actual) {
                         this->reportMissingClosing(JSMSG_CURLY_AFTER_LIST,
                                                    JSMSG_CURLY_OPENED, begin);
@@ -3889,7 +3890,7 @@ GeneralParser<ParseHandler, Unit>::arrayBindingPattern(
 
     if (tt == TokenKind::RightBracket) {
       anyChars.ungetToken();
-      anyChars.addModifierException(TokenStream::OperandIsNone);
+      anyChars.addModifierException(TokenStream::SlashIsRegExpOK);
       break;
     }
 
@@ -3921,7 +3922,7 @@ GeneralParser<ParseHandler, Unit>::arrayBindingPattern(
 
       bool hasInitializer;
       if (!tokenStream.matchToken(&hasInitializer, TokenKind::Assign,
-                                  TokenStream::Operand)) {
+                                  TokenStream::SlashIsRegExp)) {
         return null();
       }
 
@@ -3939,7 +3940,7 @@ GeneralParser<ParseHandler, Unit>::arrayBindingPattern(
       // If we didn't already match TokenKind::Comma in above case.
       bool matched;
       if (!tokenStream.matchToken(&matched, TokenKind::Comma,
-                                  TokenStream::Operand)) {
+                                  TokenStream::SlashIsRegExp)) {
         return null();
       }
       if (!matched) {
@@ -3953,7 +3954,7 @@ GeneralParser<ParseHandler, Unit>::arrayBindingPattern(
     }
   }
 
-  if (!mustMatchToken(TokenKind::RightBracket, TokenStream::Operand,
+  if (!mustMatchToken(TokenKind::RightBracket, TokenStream::SlashIsRegExp,
                       [this, begin](TokenKind actual) {
                         this->reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
                                                    JSMSG_BRACKET_OPENED, begin);
@@ -4015,7 +4016,7 @@ GeneralParser<ParseHandler, Unit>::blockStatement(YieldHandling yieldHandling,
     return null();
   }
 
-  if (!mustMatchToken(TokenKind::RightCurly, TokenStream::Operand,
+  if (!mustMatchToken(TokenKind::RightCurly, TokenStream::SlashIsRegExp,
                       [this, errorNumber, openedPos](TokenKind actual) {
                         this->reportMissingClosing(
                             errorNumber, JSMSG_CURLY_OPENED, openedPos);
@@ -4077,7 +4078,7 @@ GeneralParser<ParseHandler, Unit>::declarationPattern(
     }
   }
 
-  if (!mustMatchToken(TokenKind::Assign, TokenStream::Operand,
+  if (!mustMatchToken(TokenKind::Assign, TokenStream::SlashIsRegExp,
                       JSMSG_BAD_DESTRUCT_DECL)) {
     return null();
   }
@@ -4100,7 +4101,7 @@ GeneralParser<ParseHandler, Unit>::initializerInNameDeclaration(
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Assign));
 
   uint32_t initializerOffset;
-  if (!tokenStream.peekOffset(&initializerOffset, TokenStream::Operand)) {
+  if (!tokenStream.peekOffset(&initializerOffset, TokenStream::SlashIsRegExp)) {
     return null();
   }
 
@@ -4183,10 +4184,10 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::declarationName(
   //  var foo   // VariableDeclaration
   //  /bar/g;   // ExpressionStatement
   //
-  // Therefore get the token here as Operand.
+  // Therefore get the token here with SlashIsRegExp.
   bool matched;
   if (!tokenStream.matchToken(&matched, TokenKind::Assign,
-                              TokenStream::Operand)) {
+                              TokenStream::SlashIsRegExp)) {
     return null();
   }
 
@@ -4303,7 +4304,7 @@ GeneralParser<ParseHandler, Unit>::declarationList(
     initialDeclaration = false;
 
     if (!tokenStream.matchToken(&moreDeclarations, TokenKind::Comma,
-                                TokenStream::Operand)) {
+                                TokenStream::SlashIsRegExp)) {
       return null();
     }
   } while (moreDeclarations);
@@ -5070,7 +5071,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::exportClause(
   //   export { x }
   //   from "foo"; // a single ExportDeclaration
   //
-  // But if it doesn't, we might have an ASI opportunity in Operand context:
+  // But if it doesn't, we might have an ASI opportunity in SlashIsRegExp
+  // context:
   //
   //   export { x }   // ExportDeclaration, terminated by ASI
   //   fro\u006D      // ExpressionStatement, the name "from"
@@ -5079,7 +5081,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::exportClause(
   // error.
   bool matched;
   if (!tokenStream.matchToken(&matched, TokenKind::From,
-                              TokenStream::Operand)) {
+                              TokenStream::SlashIsRegExp)) {
     return null();
   }
 
@@ -5348,7 +5350,7 @@ GeneralParser<ParseHandler, Unit>::exportDefault(uint32_t begin) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Default));
 
   TokenKind tt;
-  if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+  if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
     return null();
   }
 
@@ -5475,7 +5477,7 @@ typename ParseHandler::Node
 GeneralParser<ParseHandler, Unit>::consequentOrAlternative(
     YieldHandling yieldHandling) {
   TokenKind next;
-  if (!tokenStream.peekToken(&next, TokenStream::Operand)) {
+  if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
     return null();
   }
 
@@ -5486,7 +5488,7 @@ GeneralParser<ParseHandler, Unit>::consequentOrAlternative(
   // Careful!  FunctionDeclaration doesn't include generators or async
   // functions.
   if (next == TokenKind::Function) {
-    tokenStream.consumeKnownToken(next, TokenStream::Operand);
+    tokenStream.consumeKnownToken(next, TokenStream::SlashIsRegExp);
 
     // Parser::statement would handle this, but as this function handles
     // every other error case, it seems best to handle this.
@@ -5548,7 +5550,7 @@ GeneralParser<ParseHandler, Unit>::ifStatement(YieldHandling yieldHandling) {
     }
 
     TokenKind tt;
-    if (!tokenStream.peekToken(&tt, TokenStream::Operand)) {
+    if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
       return null();
     }
     if (tt == TokenKind::Semi) {
@@ -5569,12 +5571,12 @@ GeneralParser<ParseHandler, Unit>::ifStatement(YieldHandling yieldHandling) {
 
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::Else,
-                                TokenStream::Operand)) {
+                                TokenStream::SlashIsRegExp)) {
       return null();
     }
     if (matched) {
       if (!tokenStream.matchToken(&matched, TokenKind::If,
-                                  TokenStream::Operand)) {
+                                  TokenStream::SlashIsRegExp)) {
         return null();
       }
       if (matched) {
@@ -5613,7 +5615,7 @@ GeneralParser<ParseHandler, Unit>::doWhileStatement(
   if (!body) {
     return null();
   }
-  if (!mustMatchToken(TokenKind::While, TokenStream::Operand,
+  if (!mustMatchToken(TokenKind::While, TokenStream::SlashIsRegExp,
                       JSMSG_WHILE_AFTER_DO)) {
     return null();
   }
@@ -5627,10 +5629,10 @@ GeneralParser<ParseHandler, Unit>::doWhileStatement(
   //   http://bugzilla.mozilla.org/show_bug.cgi?id=238945
   // ES3 and ES5 disagreed, but ES6 conforms to Web reality:
   //   https://bugs.ecmascript.org/show_bug.cgi?id=157
-  // To parse |do {} while (true) false| correctly, use Operand.
+  // To parse |do {} while (true) false| correctly, use SlashIsRegExp.
   bool ignored;
   if (!tokenStream.matchToken(&ignored, TokenKind::Semi,
-                              TokenStream::Operand)) {
+                              TokenStream::SlashIsRegExp)) {
     return null();
   }
   return handler_.newDoWhileStatement(body, cond, TokenPos(begin, pos().end));
@@ -5656,7 +5658,7 @@ template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::matchInOrOf(bool* isForInp,
                                                     bool* isForOfp) {
   TokenKind tt;
-  if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+  if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
     return false;
   }
 
@@ -5678,7 +5680,7 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftParen));
 
   TokenKind tt;
-  if (!tokenStream.peekToken(&tt, TokenStream::Operand)) {
+  if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
     return false;
   }
 
@@ -5694,7 +5696,7 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
   // point of view).  No block-related work complicates matters, so delegate
   // to Parser::declaration.
   if (tt == TokenKind::Var) {
-    tokenStream.consumeKnownToken(tt, TokenStream::Operand);
+    tokenStream.consumeKnownToken(tt, TokenStream::SlashIsRegExp);
 
     // Pass null for block object because |var| declarations don't use one.
     *forInitialPart = declarationList(yieldHandling, ParseNodeKind::VarStmt,
@@ -5711,13 +5713,13 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
   bool letIsIdentifier = false;
   if (tt == TokenKind::Const) {
     parsingLexicalDeclaration = true;
-    tokenStream.consumeKnownToken(tt, TokenStream::Operand);
+    tokenStream.consumeKnownToken(tt, TokenStream::SlashIsRegExp);
   } else if (tt == TokenKind::Let) {
     // We could have a {For,Lexical}Declaration, or we could have a
     // LeftHandSideExpression with lookahead restrictions so it's not
     // ambiguous with the former.  Check for a continuation of the former
     // to decide which we have.
-    tokenStream.consumeKnownToken(TokenKind::Let, TokenStream::Operand);
+    tokenStream.consumeKnownToken(TokenKind::Let, TokenStream::SlashIsRegExp);
 
     TokenKind next;
     if (!tokenStream.peekToken(&next)) {
@@ -5751,7 +5753,7 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
   }
 
   uint32_t exprOffset;
-  if (!tokenStream.peekOffset(&exprOffset, TokenStream::Operand)) {
+  if (!tokenStream.peekOffset(&exprOffset, TokenStream::SlashIsRegExp)) {
     return false;
   }
 
@@ -5900,7 +5902,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
   //           ^next token
   //
   // In either case the subsequent token can be consistently accessed using
-  // TokenStream::None semantics.
+  // TokenStream::SlashIsDiv semantics.
   if (!forHeadStart(yieldHandling, &headKind, &startNode, forLoopLexicalScope,
                     &iteratedExpr)) {
     return null();
@@ -5921,13 +5923,13 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
 
     // Look for an operand: |for (;| means we might have already examined
     // this semicolon with that modifier.
-    if (!mustMatchToken(TokenKind::Semi, TokenStream::Operand,
+    if (!mustMatchToken(TokenKind::Semi, TokenStream::SlashIsRegExp,
                         JSMSG_SEMI_AFTER_FOR_INIT)) {
       return null();
     }
 
     TokenKind tt;
-    if (!tokenStream.peekToken(&tt, TokenStream::Operand)) {
+    if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
       return null();
     }
 
@@ -5941,12 +5943,12 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
       }
     }
 
-    if (!mustMatchToken(TokenKind::Semi, TokenStream::Operand,
+    if (!mustMatchToken(TokenKind::Semi, TokenStream::SlashIsRegExp,
                         JSMSG_SEMI_AFTER_FOR_COND)) {
       return null();
     }
 
-    if (!tokenStream.peekToken(&tt, TokenStream::Operand)) {
+    if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
       return null();
     }
 
@@ -5960,7 +5962,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
       }
     }
 
-    if (!mustMatchToken(TokenKind::RightParen, TokenStream::Operand,
+    if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
                         JSMSG_PAREN_AFTER_FOR_CTRL)) {
       return null();
     }
@@ -5989,7 +5991,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
     // Parser::declaration consumed everything up to the closing ')'.  That
     // token follows an {Assignment,}Expression and so must be interpreted
     // as an operand to be consistent with normal expression tokenizing.
-    if (!mustMatchToken(TokenKind::RightParen, TokenStream::Operand,
+    if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
                         JSMSG_PAREN_AFTER_FOR_CTRL)) {
       return null();
     }
@@ -6036,7 +6038,7 @@ GeneralParser<ParseHandler, Unit>::switchStatement(
     return null();
   }
 
-  if (!mustMatchToken(TokenKind::RightParen, TokenStream::Operand,
+  if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
                       JSMSG_PAREN_AFTER_SWITCH)) {
     return null();
   }
@@ -6058,7 +6060,7 @@ GeneralParser<ParseHandler, Unit>::switchStatement(
   bool seenDefault = false;
   TokenKind tt;
   while (true) {
-    if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+    if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
       return null();
     }
     if (tt == TokenKind::RightCurly) {
@@ -6089,7 +6091,7 @@ GeneralParser<ParseHandler, Unit>::switchStatement(
         return null();
     }
 
-    if (!mustMatchToken(TokenKind::Colon, TokenStream::Operand,
+    if (!mustMatchToken(TokenKind::Colon, TokenStream::SlashIsRegExp,
                         JSMSG_COLON_AFTER_CASE)) {
       return null();
     }
@@ -6103,7 +6105,7 @@ GeneralParser<ParseHandler, Unit>::switchStatement(
     bool warnedAboutStatementsAfterReturn = false;
     uint32_t statementBegin = 0;
     while (true) {
-      if (!tokenStream.peekToken(&tt, TokenStream::Operand)) {
+      if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
         return null();
       }
       if (tt == TokenKind::RightCurly || tt == TokenKind::Case ||
@@ -6111,7 +6113,8 @@ GeneralParser<ParseHandler, Unit>::switchStatement(
         break;
       }
       if (afterReturn) {
-        if (!tokenStream.peekOffset(&statementBegin, TokenStream::Operand)) {
+        if (!tokenStream.peekOffset(&statementBegin,
+                                    TokenStream::SlashIsRegExp)) {
           return null();
         }
       }
@@ -6231,7 +6234,7 @@ GeneralParser<ParseHandler, Unit>::returnStatement(
   // This is ugly, but we don't want to require a semicolon.
   Node exprNode;
   TokenKind tt = TokenKind::Eof;
-  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand)) {
+  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
     return null();
   }
   switch (tt) {
@@ -6270,7 +6273,7 @@ GeneralParser<ParseHandler, Unit>::yieldExpression(InHandling inHandling) {
   Node exprNode;
   ParseNodeKind kind = ParseNodeKind::YieldExpr;
   TokenKind tt = TokenKind::Eof;
-  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand)) {
+  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
     return null();
   }
   switch (tt) {
@@ -6294,7 +6297,7 @@ GeneralParser<ParseHandler, Unit>::yieldExpression(InHandling inHandling) {
       break;
     case TokenKind::Mul:
       kind = ParseNodeKind::YieldStarExpr;
-      tokenStream.consumeKnownToken(TokenKind::Mul, TokenStream::Operand);
+      tokenStream.consumeKnownToken(TokenKind::Mul, TokenStream::SlashIsRegExp);
       MOZ_FALLTHROUGH;
     default:
       exprNode = assignExpr(inHandling, YieldIsKeyword, TripledotProhibited);
@@ -6334,7 +6337,7 @@ GeneralParser<ParseHandler, Unit>::withStatement(YieldHandling yieldHandling) {
     return null();
   }
 
-  if (!mustMatchToken(TokenKind::RightParen, TokenStream::Operand,
+  if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
                       JSMSG_PAREN_AFTER_WITH)) {
     return null();
   }
@@ -6357,7 +6360,7 @@ template <class ParseHandler, typename Unit>
 typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::labeledItem(
     YieldHandling yieldHandling) {
   TokenKind tt;
-  if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+  if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
     return null();
   }
 
@@ -6430,7 +6433,7 @@ GeneralParser<ParseHandler, Unit>::throwStatement(YieldHandling yieldHandling) {
 
   /* ECMA-262 Edition 3 says 'throw [no LineTerminator here] Expr'. */
   TokenKind tt = TokenKind::Eof;
-  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::Operand)) {
+  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
     return null();
   }
   if (tt == TokenKind::Eof || tt == TokenKind::Semi ||
@@ -6503,7 +6506,7 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
       return null();
     }
 
-    if (!mustMatchToken(TokenKind::RightCurly, TokenStream::Operand,
+    if (!mustMatchToken(TokenKind::RightCurly, TokenStream::SlashIsRegExp,
                         [this, openedPos](TokenKind actual) {
                           this->reportMissingClosing(JSMSG_CURLY_AFTER_TRY,
                                                      JSMSG_CURLY_OPENED,
@@ -6576,7 +6579,7 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
         }
       }
 
-      if (!mustMatchToken(TokenKind::RightParen, TokenStream::Operand,
+      if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
                           JSMSG_PAREN_AFTER_CATCH)) {
         return null();
       }
@@ -6601,7 +6604,7 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
     }
     handler_.setEndPosition(catchScope, pos().end);
 
-    if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+    if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
       return null();
     }
   }
@@ -6631,7 +6634,7 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
       return null();
     }
 
-    if (!mustMatchToken(TokenKind::RightCurly, TokenStream::Operand,
+    if (!mustMatchToken(TokenKind::RightCurly, TokenStream::SlashIsRegExp,
                         [this, openedPos](TokenKind actual) {
                           this->reportMissingClosing(JSMSG_CURLY_AFTER_FINALLY,
                                                      JSMSG_CURLY_OPENED,
@@ -6678,7 +6681,7 @@ GeneralParser<ParseHandler, Unit>::catchBlockStatement(
     return null();
   }
 
-  if (!mustMatchToken(TokenKind::RightCurly, TokenStream::Operand,
+  if (!mustMatchToken(TokenKind::RightCurly, TokenStream::SlashIsRegExp,
                       [this, openedPos](TokenKind actual) {
                         this->reportMissingClosing(JSMSG_CURLY_AFTER_CATCH,
                                                    JSMSG_CURLY_OPENED,
@@ -7269,7 +7272,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
     HandleAtom propAtom, size_t& numFieldKeys) {
   bool hasInitializer = false;
   if (!tokenStream.matchToken(&hasInitializer, TokenKind::Assign,
-                              TokenStream::None)) {
+                              TokenStream::SlashIsDiv)) {
     return null();
   }
 
@@ -7475,7 +7478,7 @@ bool ParserBase::nextTokenContinuesLetDeclaration(TokenKind next) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Let));
   MOZ_ASSERT(anyChars.nextToken().type == next);
 
-  TokenStreamShared::verifyConsistentModifier(TokenStreamShared::None,
+  TokenStreamShared::verifyConsistentModifier(TokenStreamShared::SlashIsDiv,
                                               anyChars.nextToken());
 
   // Destructuring continues a let declaration.
@@ -7522,7 +7525,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
   }
 
   TokenKind tt;
-  if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+  if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
     return null();
   }
 
@@ -7546,9 +7549,9 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
       // around using static consts in the arms of a ternary.
       Modifier modifier;
       if (yieldExpressionsSupported()) {
-        modifier = TokenStream::Operand;
+        modifier = TokenStream::SlashIsRegExp;
       } else {
-        modifier = TokenStream::None;
+        modifier = TokenStream::SlashIsDiv;
       }
 
       TokenKind next;
@@ -7564,7 +7567,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
     }
 
     default: {
-      // Avoid getting next token with None.
+      // Avoid getting next token with SlashIsDiv.
       if (tt == TokenKind::Await && pc_->isAsync()) {
         return expressionStatement(yieldHandling);
       }
@@ -7755,7 +7758,7 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
   }
 
   TokenKind tt;
-  if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+  if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
     return null();
   }
 
@@ -7793,9 +7796,9 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
       // around using static consts in the arms of a ternary.
       Modifier modifier;
       if (yieldExpressionsSupported()) {
-        modifier = TokenStream::Operand;
+        modifier = TokenStream::SlashIsRegExp;
       } else {
-        modifier = TokenStream::None;
+        modifier = TokenStream::SlashIsDiv;
       }
 
       TokenKind next;
@@ -7811,7 +7814,7 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
     }
 
     default: {
-      // Avoid getting next token with None.
+      // Avoid getting next token with SlashIsDiv.
       if (tt == TokenKind::Await && pc_->isAsync()) {
         return expressionStatement(yieldHandling);
       }
@@ -7964,7 +7967,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::expr(
 
   bool matched;
   if (!tokenStream.matchToken(&matched, TokenKind::Comma,
-                              TokenStream::Operand)) {
+                              TokenStream::SlashIsRegExp)) {
     return null();
   }
   if (!matched) {
@@ -7983,13 +7986,13 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::expr(
     // are present allow the trailing comma.
     if (tripledotHandling == TripledotAllowed) {
       TokenKind tt;
-      if (!tokenStream.peekToken(&tt, TokenStream::Operand)) {
+      if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
         return null();
       }
 
       if (tt == TokenKind::RightParen) {
         tokenStream.consumeKnownToken(TokenKind::RightParen,
-                                      TokenStream::Operand);
+                                      TokenStream::SlashIsRegExp);
 
         if (!tokenStream.peekToken(&tt)) {
           return null();
@@ -8028,7 +8031,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::expr(
     handler_.addList(seq, pn);
 
     if (!tokenStream.matchToken(&matched, TokenKind::Comma,
-                                TokenStream::Operand)) {
+                                TokenStream::SlashIsRegExp)) {
       return null();
     }
     if (!matched) {
@@ -8166,9 +8169,9 @@ GeneralParser<ParseHandler, Unit>::orExpr(
 
   // When the next token is no longer a binary operator, it's potentially the
   // start of an expression.  Add a modifier exception so that the next token
-  // modifier can be Operand.
+  // modifier can be SlashIsRegExp.
   anyChars.ungetToken();
-  anyChars.addModifierException(TokenStream::OperandIsNone);
+  anyChars.addModifierException(TokenStream::SlashIsRegExpOK);
 
   MOZ_ASSERT(depth == 0);
   return pn;
@@ -8199,7 +8202,7 @@ GeneralParser<ParseHandler, Unit>::condExpr(
     return null();
   }
 
-  if (!mustMatchToken(TokenKind::Colon, TokenStream::Operand,
+  if (!mustMatchToken(TokenKind::Colon, TokenStream::SlashIsRegExp,
                       JSMSG_COLON_IN_COND)) {
     return null();
   }
@@ -8234,7 +8237,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
   // primaryExpr().
 
   TokenKind firstToken;
-  if (!tokenStream.getToken(&firstToken, TokenStream::Operand)) {
+  if (!tokenStream.getToken(&firstToken, TokenStream::SlashIsRegExp)) {
     return null();
   }
 
@@ -8304,7 +8307,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
   TokenKind tokenAfterLHS;
   bool isArrow;
   if (maybeAsyncArrow) {
-    tokenStream.consumeKnownToken(TokenKind::Async, TokenStream::Operand);
+    tokenStream.consumeKnownToken(TokenKind::Async, TokenStream::SlashIsRegExp);
 
     TokenKind tokenAfterAsync;
     if (!tokenStream.getToken(&tokenAfterAsync)) {
@@ -8336,10 +8339,11 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
       return null();
     }
 
-    // Use Operand here because the ConditionalExpression parsed above
+    // Use SlashIsRegExp here because the ConditionalExpression parsed above
     // could be the entirety of this AssignmentExpression, and then ASI
     // permits this token to be a regular expression.
-    if (!tokenStream.peekTokenSameLine(&tokenAfterLHS, TokenStream::Operand)) {
+    if (!tokenStream.peekTokenSameLine(&tokenAfterLHS,
+                                       TokenStream::SlashIsRegExp)) {
       return null();
     }
 
@@ -8350,7 +8354,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
     tokenStream.seek(start);
 
     TokenKind next;
-    if (!tokenStream.getToken(&next, TokenStream::Operand)) {
+    if (!tokenStream.getToken(&next, TokenStream::SlashIsRegExp)) {
       return null();
     }
     TokenPos startPos = pos();
@@ -8360,7 +8364,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
     FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction;
 
     if (next == TokenKind::Async) {
-      tokenStream.consumeKnownToken(next, TokenStream::Operand);
+      tokenStream.consumeKnownToken(next, TokenStream::SlashIsRegExp);
 
       TokenKind nextSameLine = TokenKind::Eof;
       if (!tokenStream.peekTokenSameLine(&nextSameLine)) {
@@ -8389,7 +8393,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
                               asyncKind);
   }
 
-  MOZ_ALWAYS_TRUE(tokenStream.getToken(&tokenAfterLHS, TokenStream::Operand));
+  MOZ_ALWAYS_TRUE(
+      tokenStream.getToken(&tokenAfterLHS, TokenStream::SlashIsRegExp));
 
   ParseNodeKind kind;
   switch (tokenAfterLHS) {
@@ -8587,7 +8592,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
   }
 
   TokenKind tt;
-  if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+  if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
     return null();
   }
   uint32_t begin = pos().begin;
@@ -8626,7 +8631,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
     case TokenKind::Inc:
     case TokenKind::Dec: {
       TokenKind tt2;
-      if (!tokenStream.getToken(&tt2, TokenStream::Operand)) {
+      if (!tokenStream.getToken(&tt2, TokenStream::SlashIsRegExp)) {
         return null();
       }
 
@@ -8643,7 +8648,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
 
     case TokenKind::Delete: {
       uint32_t exprOffset;
-      if (!tokenStream.peekOffset(&exprOffset, TokenStream::Operand)) {
+      if (!tokenStream.peekOffset(&exprOffset, TokenStream::SlashIsRegExp)) {
         return null();
       }
 
@@ -8745,7 +8750,7 @@ GeneralParser<ParseHandler, Unit>::argumentList(
 
   bool matched;
   if (!tokenStream.matchToken(&matched, TokenKind::RightParen,
-                              TokenStream::Operand)) {
+                              TokenStream::SlashIsRegExp)) {
     return null();
   }
   if (matched) {
@@ -8757,7 +8762,7 @@ GeneralParser<ParseHandler, Unit>::argumentList(
     bool spread = false;
     uint32_t begin = 0;
     if (!tokenStream.matchToken(&matched, TokenKind::TripleDot,
-                                TokenStream::Operand)) {
+                                TokenStream::SlashIsRegExp)) {
       return null();
     }
     if (matched) {
@@ -8782,7 +8787,7 @@ GeneralParser<ParseHandler, Unit>::argumentList(
 
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::Comma,
-                                TokenStream::Operand)) {
+                                TokenStream::SlashIsRegExp)) {
       return null();
     }
     if (!matched) {
@@ -8790,7 +8795,7 @@ GeneralParser<ParseHandler, Unit>::argumentList(
     }
 
     TokenKind tt;
-    if (!tokenStream.peekToken(&tt, TokenStream::Operand)) {
+    if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
       return null();
     }
     if (tt == TokenKind::RightParen) {
@@ -8798,7 +8803,7 @@ GeneralParser<ParseHandler, Unit>::argumentList(
     }
   }
 
-  if (!mustMatchToken(TokenKind::RightParen, TokenStream::Operand,
+  if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
                       JSMSG_PAREN_AFTER_ARGS)) {
     return null();
   }
@@ -8946,7 +8951,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
         return null();
       }
 
-      if (!mustMatchToken(TokenKind::RightBracket, TokenStream::Operand,
+      if (!mustMatchToken(TokenKind::RightBracket, TokenStream::SlashIsRegExp,
                           JSMSG_BRACKET_IN_INDEX)) {
         return null();
       }
@@ -9514,7 +9519,7 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
   }
 
   TokenKind tt;
-  if (!tokenStream.getToken(&tt, TokenStream::Operand)) {
+  if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
     return null();
   }
 
@@ -9534,7 +9539,7 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
       }
 
       TokenKind tt;
-      if (!tokenStream.peekToken(&tt, TokenStream::Operand)) {
+      if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
         return null();
       }
       if (tt == TokenKind::RightBracket) {
@@ -9542,7 +9547,8 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
       }
 
       if (tt == TokenKind::Comma) {
-        tokenStream.consumeKnownToken(TokenKind::Comma, TokenStream::Operand);
+        tokenStream.consumeKnownToken(TokenKind::Comma,
+                                      TokenStream::SlashIsRegExp);
         if (!handler_.addElision(literal, pos())) {
           return null();
         }
@@ -9551,11 +9557,11 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
 
       if (tt == TokenKind::TripleDot) {
         tokenStream.consumeKnownToken(TokenKind::TripleDot,
-                                      TokenStream::Operand);
+                                      TokenStream::SlashIsRegExp);
         uint32_t begin = pos().begin;
 
         TokenPos innerPos;
-        if (!tokenStream.peekTokenPos(&innerPos, TokenStream::Operand)) {
+        if (!tokenStream.peekTokenPos(&innerPos, TokenStream::SlashIsRegExp)) {
           return null();
         }
 
@@ -9575,7 +9581,8 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
         }
       } else {
         TokenPos elementPos;
-        if (!tokenStream.peekTokenPos(&elementPos, TokenStream::Operand)) {
+        if (!tokenStream.peekTokenPos(&elementPos,
+                                      TokenStream::SlashIsRegExp)) {
           return null();
         }
 
@@ -9594,7 +9601,7 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
 
       bool matched;
       if (!tokenStream.matchToken(&matched, TokenKind::Comma,
-                                  TokenStream::Operand)) {
+                                  TokenStream::SlashIsRegExp)) {
         return null();
       }
       if (!matched) {
@@ -9607,7 +9614,7 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
       }
     }
 
-    if (!mustMatchToken(TokenKind::RightBracket, TokenStream::Operand,
+    if (!mustMatchToken(TokenKind::RightBracket, TokenStream::SlashIsRegExp,
                         [this, begin](TokenKind actual) {
                           this->reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
                                                      JSMSG_BRACKET_OPENED,
@@ -9820,7 +9827,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
     }
 
     anyChars.ungetToken();
-    anyChars.addModifierException(TokenStream::OperandIsNone);
+    anyChars.addModifierException(TokenStream::SlashIsRegExpOK);
     *propType = tt == TokenKind::Assign ? PropertyType::CoverInitializedName
                                         : PropertyType::Shorthand;
     return propName;
@@ -9868,7 +9875,7 @@ GeneralParser<ParseHandler, Unit>::computedPropertyName(
     return null();
   }
 
-  if (!mustMatchToken(TokenKind::RightBracket, TokenStream::Operand,
+  if (!mustMatchToken(TokenKind::RightBracket, TokenStream::SlashIsRegExp,
                       JSMSG_COMP_PROP_UNTERM_EXPR)) {
     return null();
   }
@@ -9898,7 +9905,7 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
       return null();
     }
     if (tt == TokenKind::RightCurly) {
-      anyChars.addModifierException(TokenStream::OperandIsNone);
+      anyChars.addModifierException(TokenStream::SlashIsRegExpOK);
       break;
     }
 
@@ -9907,7 +9914,7 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
       uint32_t begin = pos().begin;
 
       TokenPos innerPos;
-      if (!tokenStream.peekTokenPos(&innerPos, TokenStream::Operand)) {
+      if (!tokenStream.peekTokenPos(&innerPos, TokenStream::SlashIsRegExp)) {
         return null();
       }
 
@@ -9937,7 +9944,7 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
 
       if (propType == PropertyType::Normal) {
         TokenPos exprPos;
-        if (!tokenStream.peekTokenPos(&exprPos, TokenStream::Operand)) {
+        if (!tokenStream.peekTokenPos(&exprPos, TokenStream::SlashIsRegExp)) {
           return null();
         }
 
@@ -10108,7 +10115,7 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
 
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::Comma,
-                                TokenStream::Operand)) {
+                                TokenStream::SlashIsRegExp)) {
       return null();
     }
     if (!matched) {
@@ -10120,7 +10127,7 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
     }
   }
 
-  if (!mustMatchToken(TokenKind::RightCurly, TokenStream::Operand,
+  if (!mustMatchToken(TokenKind::RightCurly, TokenStream::SlashIsRegExp,
                       [this, openedPos](TokenKind actual) {
                         this->reportMissingClosing(JSMSG_CURLY_AFTER_LIST,
                                                    JSMSG_CURLY_OPENED,
@@ -10204,7 +10211,7 @@ bool GeneralParser<ParseHandler, Unit>::tryNewTarget(
 
   // |new| expects to look for an operand, so we will honor that.
   TokenKind next;
-  if (!tokenStream.getToken(&next, TokenStream::Operand)) {
+  if (!tokenStream.getToken(&next, TokenStream::SlashIsRegExp)) {
     return false;
   }
 
@@ -10279,7 +10286,7 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
       return null();
     }
 
-    if (!mustMatchToken(TokenKind::RightParen, TokenStream::Operand,
+    if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
                         JSMSG_PAREN_AFTER_ARGS)) {
       return null();
     }
@@ -10322,7 +10329,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
 
     case TokenKind::LeftParen: {
       TokenKind next;
-      if (!tokenStream.peekToken(&next, TokenStream::Operand)) {
+      if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
         return null();
       }
 
@@ -10330,7 +10337,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
         // Not valid expression syntax, but this is valid in an arrow function
         // with no params: `() => body`.
         tokenStream.consumeKnownToken(TokenKind::RightParen,
-                                      TokenStream::Operand);
+                                      TokenStream::SlashIsRegExp);
 
         if (!tokenStream.peekToken(&next)) {
           return null();
@@ -10353,7 +10360,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
       if (!expr) {
         return null();
       }
-      if (!mustMatchToken(TokenKind::RightParen, TokenStream::Operand,
+      if (!mustMatchToken(TokenKind::RightParen, TokenStream::SlashIsRegExp,
                           JSMSG_PAREN_IN_PAREN)) {
         return null();
       }
