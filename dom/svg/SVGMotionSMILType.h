@@ -71,7 +71,7 @@ class SVGMotionSMILType : public SMILType {
 
  private:
   // Private constructor: prevent instances beyond my singleton.
-  constexpr SVGMotionSMILType() {}
+  constexpr SVGMotionSMILType() = default;
 };
 
 }  // namespace mozilla

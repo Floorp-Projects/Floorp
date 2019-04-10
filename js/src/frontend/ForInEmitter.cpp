@@ -94,7 +94,7 @@ bool ForInEmitter::emitInitialize() {
   }
 
 #ifdef DEBUG
-  loopDepth_ = bce_->stackDepth;
+  loopDepth_ = bce_->bytecodeSection().stackDepth();
 #endif
   MOZ_ASSERT(loopDepth_ >= 2);
 
@@ -112,7 +112,7 @@ bool ForInEmitter::emitInitialize() {
 bool ForInEmitter::emitBody() {
   MOZ_ASSERT(state_ == State::Initialize);
 
-  MOZ_ASSERT(bce_->stackDepth == loopDepth_,
+  MOZ_ASSERT(bce_->bytecodeSection().stackDepth() == loopDepth_,
              "iterator and iterval must be left on the stack");
 
 #ifdef DEBUG
@@ -124,7 +124,7 @@ bool ForInEmitter::emitBody() {
 bool ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
   MOZ_ASSERT(state_ == State::Body);
 
-  loopInfo_->setContinueTarget(bce_->offset());
+  loopInfo_->setContinueTarget(bce_->bytecodeSection().offset());
 
   if (forPos) {
     // Make sure this code is attributed to the "for".
@@ -171,8 +171,9 @@ bool ForInEmitter::emitEnd(const Maybe<uint32_t>& forPos) {
     return false;
   }
 
-  if (!bce_->addTryNote(JSTRY_FOR_IN, bce_->stackDepth, loopInfo_->headOffset(),
-                        bce_->offset())) {
+  if (!bce_->addTryNote(JSTRY_FOR_IN, bce_->bytecodeSection().stackDepth(),
+                        loopInfo_->headOffset(),
+                        bce_->bytecodeSection().offset())) {
     return false;
   }
 

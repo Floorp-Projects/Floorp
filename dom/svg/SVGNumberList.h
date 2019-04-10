@@ -37,8 +37,8 @@ class SVGNumberList {
   friend class SVGAnimatedNumberList;
 
  public:
-  SVGNumberList() {}
-  ~SVGNumberList() {}
+  SVGNumberList() = default;
+  ~SVGNumberList() = default;
 
   // Only methods that don't make/permit modification to this list are public.
   // Only our friend classes can access methods that may change us.

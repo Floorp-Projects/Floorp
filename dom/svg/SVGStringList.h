@@ -22,7 +22,7 @@ class SVGStringList {
 
  public:
   SVGStringList() : mIsSet(false), mIsCommaSeparated(false) {}
-  ~SVGStringList() {}
+  ~SVGStringList() = default;
 
   void SetIsCommaSeparated(bool aIsCommaSeparated) {
     mIsCommaSeparated = aIsCommaSeparated;
