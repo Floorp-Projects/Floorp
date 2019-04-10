@@ -130,17 +130,35 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
    public:
     explicit BytecodeSection(JSContext* cx);
 
+    // ---- Bytecode ----
+
     BytecodeVector& code() { return code_; }
     const BytecodeVector& code() const { return code_; }
 
     jsbytecode* code(ptrdiff_t offset) { return code_.begin() + offset; }
     ptrdiff_t offset() const { return code_.end() - code_.begin(); }
 
+    // ---- Source notes ----
+
+    SrcNotesVector& notes() { return notes_; }
+    const SrcNotesVector& notes() const { return notes_; }
+
+    ptrdiff_t lastNoteOffset() const { return lastNoteOffset_; }
+    void setLastNoteOffset(ptrdiff_t offset) { lastNoteOffset_ = offset; }
+
    private:
     // ---- Bytecode ----
 
     // Bytecode.
     BytecodeVector code_;
+
+    // ---- Source notes ----
+
+    // Source notes
+    SrcNotesVector notes_;
+
+    // Code offset for last source note
+    ptrdiff_t lastNoteOffset_ = 0;
   };
 
   BytecodeSection bytecodeSection_;
@@ -150,11 +168,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   const BytecodeSection& bytecodeSection() const { return bytecodeSection_; }
 
  private:
-  SrcNotesVector notes_; /* source notes, see below */
-
-  // Code offset for last source note
-  ptrdiff_t lastNoteOffset_ = 0;
-
   // Line number for srcnotes.
   //
   // WARNING: If this becomes out of sync with already-emitted srcnotes,
@@ -434,12 +447,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     mainOffset_.emplace(bytecodeSection().code().length());
   }
 
-  SrcNotesVector& notes() {
-    // Prologue shouldn't have source notes.
-    MOZ_ASSERT(!inPrologue());
-    return notes_;
-  }
-  ptrdiff_t lastNoteOffset() const { return lastNoteOffset_; }
   unsigned currentLine() const { return currentLine_; }
 
   void setCurrentLine(uint32_t line) {

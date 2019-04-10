@@ -243,11 +243,12 @@ bool SwitchEmitter::emitCaseOrDefaultJump(uint32_t caseIndex, bool isDefault) {
 
   if (caseIndex == 0) {
     // Switch note's second offset is to first JSOP_CASE.
-    unsigned noteCount = bce_->notes().length();
+    unsigned noteCount = bce_->bytecodeSection().notes().length();
     if (!bce_->setSrcNoteOffset(noteIndex_, 1, lastCaseOffset_ - top_)) {
       return false;
     }
-    unsigned noteCountDelta = bce_->notes().length() - noteCount;
+    unsigned noteCountDelta =
+        bce_->bytecodeSection().notes().length() - noteCount;
     if (noteCountDelta != 0) {
       caseNoteIndex_ += noteCountDelta;
     }
