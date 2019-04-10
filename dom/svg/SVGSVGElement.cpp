@@ -524,15 +524,15 @@ void SVGSVGElement::SetImageOverridePreserveAspectRatio(
   MOZ_ASSERT(OwnerDoc()->IsBeingUsedAsImage(),
              "should only override preserveAspectRatio in images");
 
-  bool hasViewBoxRect = HasViewBoxRect();
-  if (!hasViewBoxRect && ShouldSynthesizeViewBox()) {
+  bool hasViewBox = HasViewBox();
+  if (!hasViewBox && ShouldSynthesizeViewBox()) {
     // My non-<svg:image> clients will have been painting me with a synthesized
     // viewBox, but my <svg:image> client that's about to paint me now does NOT
     // want that.  Need to tell ourselves to flush our transform.
     mImageNeedsTransformInvalidation = true;
   }
 
-  if (!hasViewBoxRect) {
+  if (!hasViewBox) {
     return;  // preserveAspectRatio irrelevant (only matters if we have viewBox)
   }
 
@@ -545,7 +545,7 @@ void SVGSVGElement::ClearImageOverridePreserveAspectRatio() {
   MOZ_ASSERT(OwnerDoc()->IsBeingUsedAsImage(),
              "should only override image preserveAspectRatio in images");
 
-  if (!HasViewBoxRect() && ShouldSynthesizeViewBox()) {
+  if (!HasViewBox() && ShouldSynthesizeViewBox()) {
     // My non-<svg:image> clients will want to paint me with a synthesized
     // viewBox, but my <svg:image> client that just painted me did NOT
     // use that.  Need to tell ourselves to flush our transform.
@@ -603,9 +603,9 @@ SVGPreserveAspectRatio SVGSVGElement::GetPreserveAspectRatioWithOverride()
 
   SVGViewElement* viewElement = GetCurrentViewElement();
 
-  // This check is equivalent to "!HasViewBoxRect() &&
+  // This check is equivalent to "!HasViewBox() &&
   // ShouldSynthesizeViewBox()". We're just holding onto the viewElement that
-  // HasViewBoxRect() would look up, so that we don't have to look it up again
+  // HasViewBox() would look up, so that we don't have to look it up again
   // later.
   if (!((viewElement && viewElement->mViewBox.HasRect()) ||
         (mSVGView && mSVGView->mViewBox.HasRect()) || mViewBox.HasRect()) &&

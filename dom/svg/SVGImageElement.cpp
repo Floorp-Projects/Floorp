@@ -279,7 +279,8 @@ SVGElement::LengthAttributesInfo SVGImageElement::GetLengthInfo() {
                               ArrayLength(sLengthInfo));
 }
 
-SVGAnimatedPreserveAspectRatio* SVGImageElement::GetPreserveAspectRatio() {
+SVGAnimatedPreserveAspectRatio*
+SVGImageElement::GetAnimatedPreserveAspectRatio() {
   return &mPreserveAspectRatio;
 }
 

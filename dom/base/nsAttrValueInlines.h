@@ -45,11 +45,11 @@ struct MiscContainer final {
         mozilla::AtomArray* mAtomArray;
         nsIntMargin* mIntMargin;
         const mozilla::SVGAnimatedIntegerPair* mSVGAnimatedIntegerPair;
-        const mozilla::SVGAnimatedPreserveAspectRatio*
-            mSVGAnimatedPreserveAspectRatio;
+        const mozilla::SVGAnimatedLength* mSVGLength;
         const mozilla::SVGAnimatedNumberPair* mSVGAnimatedNumberPair;
         const mozilla::SVGAnimatedOrient* mSVGAnimatedOrient;
-        const nsSVGLength2* mSVGLength;
+        const mozilla::SVGAnimatedPreserveAspectRatio*
+            mSVGAnimatedPreserveAspectRatio;
         const mozilla::SVGAnimatedViewBox* mSVGAnimatedViewBox;
         const mozilla::SVGLengthList* mSVGLengthList;
         const mozilla::SVGNumberList* mSVGNumberList;
