@@ -14,6 +14,7 @@
 #include "nsIDOMWindow.h"
 #include "nsISupportsPrimitives.h"
 #include "nsICommandLine.h"
+#include "nsIURI.h"
 
 nsLayoutDebugCLH::nsLayoutDebugCLH() {}
 
