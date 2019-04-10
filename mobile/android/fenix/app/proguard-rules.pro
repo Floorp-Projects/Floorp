@@ -74,7 +74,7 @@
 }
 
 # Keep code generated from Glean Metrics
--keep org.mozilla.fenix.GleanMetrics. ** {  *; }
+-keep org.mozilla.fenix.GleanMetrics.** {  *; }
 
 # Keep methods that are called by MotionLayout
 -keep org.mozilla.fenix.home.SearchView { *; }
