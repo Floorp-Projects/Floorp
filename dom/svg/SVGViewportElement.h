@@ -12,7 +12,7 @@
 #include "nsAutoPtr.h"
 #include "nsIContentInlines.h"
 #include "SVGAnimatedEnumeration.h"
-#include "nsSVGLength2.h"
+#include "SVGAnimatedLength.h"
 #include "SVGAnimatedPreserveAspectRatio.h"
 #include "SVGAnimatedViewBox.h"
 #include "SVGGraphicsElement.h"
@@ -79,19 +79,19 @@ class SVGViewportElement : public SVGGraphicsElement {
    * Note also that this method does not pay attention to whether the width or
    * height values of the viewBox rect are positive!
    */
-  bool HasViewBoxRect() const { return GetViewBoxInternal().HasRect(); }
+  bool HasViewBox() const { return GetViewBoxInternal().HasRect(); }
 
   /**
    * Returns true if we should synthesize a viewBox for ourselves (that is, if
    * we're the root element in an image document, and we're not currently being
    * painted for an <svg:image> element).
    *
-   * Only call this method if HasViewBoxRect() returns false.
+   * Only call this method if HasViewBox() returns false.
    */
   bool ShouldSynthesizeViewBox() const;
 
   bool HasViewBoxOrSyntheticViewBox() const {
-    return HasViewBoxRect() || ShouldSynthesizeViewBox();
+    return HasViewBox() || ShouldSynthesizeViewBox();
   }
 
   bool HasChildrenOnlyTransform() const { return mHasChildrenOnlyTransform; }
@@ -126,7 +126,7 @@ class SVGViewportElement : public SVGGraphicsElement {
   // WebIDL
   already_AddRefed<SVGAnimatedRect> ViewBox();
   already_AddRefed<DOMSVGAnimatedPreserveAspectRatio> PreserveAspectRatio();
-  virtual SVGAnimatedViewBox* GetViewBox() override;
+  virtual SVGAnimatedViewBox* GetAnimatedViewBox() override;
 
  protected:
   // implementation helpers:
@@ -162,8 +162,8 @@ class SVGViewportElement : public SVGGraphicsElement {
    * viewBox, if appropriate, or else a viewBox matching the dimensions of the
    * SVG viewport.
    */
-  SVGViewBoxRect GetViewBoxWithSynthesis(float aViewportWidth,
-                                         float aViewportHeight) const;
+  SVGViewBox GetViewBoxWithSynthesis(float aViewportWidth,
+                                     float aViewportHeight) const;
 
   /**
    * Retrieve the value of currentScale and currentTranslate.
@@ -172,11 +172,12 @@ class SVGViewportElement : public SVGGraphicsElement {
   virtual float GetCurrentScale() const { return 1.0f; }
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
-  nsSVGLength2 mLengthAttributes[4];
+  SVGAnimatedLength mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
   virtual LengthAttributesInfo GetLengthInfo() override;
 
-  virtual SVGAnimatedPreserveAspectRatio* GetPreserveAspectRatio() override;
+  virtual SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio()
+      override;
 
   virtual const SVGAnimatedViewBox& GetViewBoxInternal() const {
     return mViewBox;

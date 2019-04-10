@@ -9589,14 +9589,15 @@ static nsRect ComputeSVGReferenceRect(nsIFrame* aFrame,
       SVGViewportElement* svgElement = element->GetCtx();
       MOZ_ASSERT(svgElement);
 
-      if (svgElement && svgElement->HasViewBoxRect()) {
+      if (svgElement && svgElement->HasViewBox()) {
         // If a `viewBox` attribute is specified for the SVG viewport creating
         // element:
         // 1. The reference box is positioned at the origin of the coordinate
         //    system established by the `viewBox` attribute.
         // 2. The dimension of the reference box is set to the width and height
         //    values of the `viewBox` attribute.
-        const SVGViewBoxRect& value = svgElement->GetViewBox()->GetAnimValue();
+        const SVGViewBox& value =
+            svgElement->GetAnimatedViewBox()->GetAnimValue();
         r = nsRect(nsPresContext::CSSPixelsToAppUnits(value.x),
                    nsPresContext::CSSPixelsToAppUnits(value.y),
                    nsPresContext::CSSPixelsToAppUnits(value.width),
