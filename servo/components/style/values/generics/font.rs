@@ -16,15 +16,7 @@ use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
 
 /// https://drafts.csswg.org/css-fonts-4/#feature-tag-value
 #[derive(
-    Clone,
-    Debug,
-    Eq,
-    MallocSizeOf,
-    PartialEq,
-    SpecifiedValueInfo,
-    ToComputedValue,
-    ToResolvedValue,
-    ToShmem,
+    Clone, Debug, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToShmem,
 )]
 pub struct FeatureTagValue<Integer> {
     /// A four-character tag, packed into a u32 (one byte per character).
@@ -66,7 +58,6 @@ where
     SpecifiedValueInfo,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 pub struct VariationValue<Number> {
@@ -80,16 +71,7 @@ pub struct VariationValue<Number> {
 /// A value both for font-variation-settings and font-feature-settings.
 #[css(comma)]
 #[derive(
-    Clone,
-    Debug,
-    Eq,
-    MallocSizeOf,
-    PartialEq,
-    SpecifiedValueInfo,
-    ToComputedValue,
-    ToCss,
-    ToResolvedValue,
-    ToShmem,
+    Clone, Debug, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToShmem,
 )]
 pub struct FontSettings<T>(#[css(if_empty = "normal", iterable)] pub Box<[T]>);
 
@@ -127,16 +109,7 @@ impl<T: Parse> Parse for FontSettings<T> {
 ///   https://drafts.csswg.org/css-fonts-4/#descdef-font-face-font-feature-settings
 ///
 #[derive(
-    Clone,
-    Copy,
-    Debug,
-    Eq,
-    MallocSizeOf,
-    PartialEq,
-    SpecifiedValueInfo,
-    ToComputedValue,
-    ToResolvedValue,
-    ToShmem,
+    Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToShmem,
 )]
 pub struct FontTag(pub u32);
 
@@ -290,7 +263,6 @@ impl Default for KeywordSize {
     SpecifiedValueInfo,
     ToAnimatedValue,
     ToAnimatedZero,
-    ToResolvedValue,
     ToShmem,
 )]
 pub enum FontStyle<Angle> {

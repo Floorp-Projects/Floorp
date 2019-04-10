@@ -3,21 +3,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/. */
 
 //! Generic types for legacy Gecko-only properties that should probably be
-//! un-shipped at some point in the future.
+//! unshipped at some point in the future.
 
 /// A generic value for scroll snap points.
 #[cfg_attr(feature = "gecko", derive(MallocSizeOf))]
-#[derive(
-    Clone,
-    Copy,
-    Debug,
-    PartialEq,
-    SpecifiedValueInfo,
-    ToComputedValue,
-    ToCss,
-    ToResolvedValue,
-    ToShmem,
-)]
+#[derive(Clone, Copy, Debug, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToShmem)]
 pub enum ScrollSnapPoint<LengthPercentage> {
     /// `none`
     None,

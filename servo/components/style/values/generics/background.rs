@@ -27,7 +27,6 @@ fn width_and_height_are_auto<L>(
     ToAnimatedZero,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 #[repr(C, u8)]

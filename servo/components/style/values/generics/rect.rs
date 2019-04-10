@@ -22,7 +22,6 @@ use style_traits::{CssWriter, ParseError, ToCss};
     SpecifiedValueInfo,
     ToAnimatedValue,
     ToComputedValue,
-    ToResolvedValue,
     ToShmem,
 )]
 #[repr(C)]

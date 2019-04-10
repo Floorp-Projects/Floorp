@@ -40,7 +40,7 @@ pub use crate::values::specified::font::{XLang, XTextZoom};
 /// https://drafts.csswg.org/css-fonts-4/#propdef-font-weight
 ///
 /// This is effectively just a `Number`.
-#[derive(Clone, ComputeSquaredDistance, Copy, Debug, MallocSizeOf, PartialEq, ToCss, ToResolvedValue)]
+#[derive(Clone, ComputeSquaredDistance, Copy, Debug, MallocSizeOf, PartialEq, ToCss)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 pub struct FontWeight(pub Number);
 
@@ -74,7 +74,6 @@ impl ToAnimatedValue for FontWeight {
     PartialEq,
     ToAnimatedZero,
     ToCss,
-    ToResolvedValue,
 )]
 /// The computed value of font-size
 pub struct FontSize {
@@ -175,7 +174,7 @@ impl ToAnimatedValue for FontSize {
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, ToResolvedValue)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "servo", derive(Hash, MallocSizeOf))]
 /// Specifies a prioritized list of font family names or generic family names.
 pub struct FontFamily {
@@ -222,7 +221,7 @@ impl ToCss for FontFamily {
     }
 }
 
-#[derive(Clone, Debug, Eq, Hash, MallocSizeOf, PartialEq, ToResolvedValue, ToShmem)]
+#[derive(Clone, Debug, Eq, Hash, MallocSizeOf, PartialEq, ToShmem)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 /// The name of a font family of choice
 pub struct FamilyName {
@@ -265,7 +264,7 @@ impl ToCss for FamilyName {
     }
 }
 
-#[derive(Clone, Copy, Debug, Eq, Hash, MallocSizeOf, PartialEq, ToResolvedValue, ToShmem)]
+#[derive(Clone, Copy, Debug, Eq, Hash, MallocSizeOf, PartialEq, ToShmem)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 /// Font family names must either be given quoted as strings,
 /// or unquoted as a sequence of one or more identifiers.
@@ -280,7 +279,7 @@ pub enum FontFamilyNameSyntax {
     Identifiers,
 }
 
-#[derive(Clone, Debug, Eq, MallocSizeOf, PartialEq, ToCss, ToResolvedValue)]
+#[derive(Clone, Debug, Eq, MallocSizeOf, PartialEq, ToCss)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize, Hash))]
 /// A set of faces that vary in weight, width or slope.
 pub enum SingleFontFamily {
@@ -295,7 +294,7 @@ pub enum SingleFontFamily {
 /// The order here is important, if you change it make sure that
 /// `gfxPlatformFontList.h`s ranged array and `gfxFontFamilyList`'s
 /// sSingleGenerics are updated as well.
-#[derive(Clone, Copy, Debug, Eq, Hash, MallocSizeOf, PartialEq, Parse, ToCss, ToResolvedValue)]
+#[derive(Clone, Copy, Debug, Eq, Hash, MallocSizeOf, PartialEq, Parse, ToCss)]
 #[repr(u8)]
 #[allow(missing_docs)]
 pub enum GenericFontFamily {
@@ -385,7 +384,7 @@ impl SingleFontFamily {
 }
 
 #[cfg(feature = "servo")]
-#[derive(Clone, Debug, Eq, Hash, MallocSizeOf, PartialEq, ToResolvedValue)]
+#[derive(Clone, Debug, Eq, Hash, MallocSizeOf, PartialEq)]
 /// A list of SingleFontFamily
 pub struct FontFamilyList(Box<[SingleFontFamily]>);
 
@@ -547,7 +546,7 @@ impl<'a> Iterator for FontFamilyNameIter<'a> {
 }
 
 /// Preserve the readability of text when font fallback occurs
-#[derive(Animate, Clone, ComputeSquaredDistance, Copy, Debug, MallocSizeOf, PartialEq, ToCss, ToResolvedValue)]
+#[derive(Animate, Clone, ComputeSquaredDistance, Copy, Debug, MallocSizeOf, PartialEq, ToCss)]
 pub enum FontSizeAdjust {
     #[animation(error)]
     /// None variant
@@ -628,7 +627,7 @@ pub type FontVariationSettings = FontSettings<VariationValue<Number>>;
 /// OpenType "language system" tag, so we should be able to compute
 /// it and store it as a 32-bit integer
 /// (see http://www.microsoft.com/typography/otspec/languagetags.htm).
-#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, ToResolvedValue)]
+#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq)]
 #[repr(C)]
 pub struct FontLanguageOverride(pub u32);
 
@@ -734,7 +733,7 @@ impl ToComputedValue for specified::MozScriptLevel {
 
 /// A wrapper over an `Angle`, that handles clamping to the appropriate range
 /// for `font-style` animation.
-#[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq, ToCss, ToResolvedValue)]
+#[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq, ToCss)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 pub struct FontStyleAngle(pub Angle);
 
@@ -831,7 +830,7 @@ impl ToCss for FontStyle {
 /// A value for the font-stretch property per:
 ///
 /// https://drafts.csswg.org/css-fonts-4/#propdef-font-stretch
-#[derive(Clone, ComputeSquaredDistance, Copy, Debug, MallocSizeOf, PartialEq, ToCss, ToResolvedValue)]
+#[derive(Clone, ComputeSquaredDistance, Copy, Debug, MallocSizeOf, PartialEq, ToCss)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 pub struct FontStretch(pub NonNegativePercentage);
 

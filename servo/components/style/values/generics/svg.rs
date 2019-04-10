@@ -24,7 +24,6 @@ use style_traits::{ParseError, StyleParseErrorKind};
     ToAnimatedValue,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 pub struct SVGPaint<ColorType, UrlPaintServer> {
@@ -52,7 +51,6 @@ pub struct SVGPaint<ColorType, UrlPaintServer> {
     ToAnimatedZero,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 pub enum SVGPaintKind<ColorType, UrlPaintServer> {
@@ -146,7 +144,6 @@ impl<ColorType: Parse, UrlPaintServer: Parse> Parse for SVGPaint<ColorType, UrlP
     ToAnimatedZero,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 pub enum SVGLength<L> {
@@ -168,7 +165,6 @@ pub enum SVGLength<L> {
     ToAnimatedZero,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 pub enum SVGStrokeDashArray<L> {
@@ -194,7 +190,6 @@ pub enum SVGStrokeDashArray<L> {
     ToAnimatedZero,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 pub enum SVGOpacity<OpacityType> {

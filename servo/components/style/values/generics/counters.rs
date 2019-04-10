@@ -15,7 +15,7 @@ use std::ops::Deref;
 
 /// A name / value pair for counters.
 #[derive(
-    Clone, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToResolvedValue, ToShmem,
+    Clone, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToShmem,
 )]
 pub struct CounterPair<Integer> {
     /// The name of the counter.
@@ -34,7 +34,6 @@ pub struct CounterPair<Integer> {
     SpecifiedValueInfo,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 pub struct CounterIncrement<I>(Counters<I>);
@@ -66,7 +65,6 @@ impl<I> Deref for CounterIncrement<I> {
     SpecifiedValueInfo,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 pub struct CounterSetOrReset<I>(Counters<I>);
@@ -92,15 +90,7 @@ impl<I> Deref for CounterSetOrReset<I> {
 ///
 /// Keyword `none` is represented by an empty vector.
 #[derive(
-    Clone,
-    Debug,
-    MallocSizeOf,
-    PartialEq,
-    SpecifiedValueInfo,
-    ToComputedValue,
-    ToCss,
-    ToResolvedValue,
-    ToShmem,
+    Clone, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToShmem,
 )]
 pub struct Counters<I>(#[css(iterable, if_empty = "none")] Box<[CounterPair<I>]>);
 
@@ -133,16 +123,7 @@ fn is_decimal(counter_type: &CounterStyleType) -> bool {
 ///
 /// https://drafts.csswg.org/css-content/#propdef-content
 #[derive(
-    Clone,
-    Debug,
-    Eq,
-    MallocSizeOf,
-    PartialEq,
-    SpecifiedValueInfo,
-    ToComputedValue,
-    ToCss,
-    ToResolvedValue,
-    ToShmem,
+    Clone, Debug, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToShmem,
 )]
 pub enum Content<ImageUrl> {
     /// `normal` reserved keyword.
@@ -166,16 +147,7 @@ impl<ImageUrl> Content<ImageUrl> {
 
 /// Items for the `content` property.
 #[derive(
-    Clone,
-    Debug,
-    Eq,
-    MallocSizeOf,
-    PartialEq,
-    SpecifiedValueInfo,
-    ToComputedValue,
-    ToCss,
-    ToResolvedValue,
-    ToShmem,
+    Clone, Debug, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToCss, ToShmem,
 )]
 pub enum ContentItem<ImageUrl> {
     /// Literal string content.
