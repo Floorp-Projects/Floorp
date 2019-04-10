@@ -532,13 +532,14 @@ bool BaselineCompilerCodeGen::emitNextIC() {
   } while (entry->pcOffset() < pcOffset);
 
   MOZ_RELEASE_ASSERT(entry->pcOffset() == pcOffset);
-  MOZ_ASSERT_IF(entry->isForOp(), BytecodeOpHasIC(JSOp(*handler.pc())));
+  MOZ_ASSERT_IF(!entry->isForPrologue(), BytecodeOpHasIC(JSOp(*handler.pc())));
 
   CodeOffset callOffset;
   EmitCallIC(masm, entry, &callOffset);
 
-  RetAddrEntry::Kind kind =
-      entry->isForOp() ? RetAddrEntry::Kind::IC : RetAddrEntry::Kind::NonOpIC;
+  RetAddrEntry::Kind kind = entry->isForPrologue()
+                                ? RetAddrEntry::Kind::PrologueIC
+                                : RetAddrEntry::Kind::IC;
 
   if (!handler.retAddrEntries().emplaceBack(pcOffset, kind, callOffset)) {
     ReportOutOfMemory(cx);
