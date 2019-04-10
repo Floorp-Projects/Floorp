@@ -328,10 +328,11 @@ MethodStatus jit::CanEnterBaselineMethod(JSContext* cx, RunState& state) {
 
 BaselineScript* BaselineScript::New(
     JSScript* jsscript, uint32_t bailoutPrologueOffset,
-    uint32_t debugOsrPrologueOffset, uint32_t debugOsrEpilogueOffset,
-    uint32_t profilerEnterToggleOffset, uint32_t profilerExitToggleOffset,
-    size_t retAddrEntries, size_t pcMappingIndexEntries, size_t pcMappingSize,
-    size_t resumeEntries, size_t traceLoggerToggleOffsetEntries) {
+    uint32_t warmUpCheckPrologueOffset, uint32_t debugOsrPrologueOffset,
+    uint32_t debugOsrEpilogueOffset, uint32_t profilerEnterToggleOffset,
+    uint32_t profilerExitToggleOffset, size_t retAddrEntries,
+    size_t pcMappingIndexEntries, size_t pcMappingSize, size_t resumeEntries,
+    size_t traceLoggerToggleOffsetEntries) {
   static const unsigned DataAlignment = sizeof(uintptr_t);
 
   size_t retAddrEntriesSize = retAddrEntries * sizeof(RetAddrEntry);
@@ -358,9 +359,10 @@ BaselineScript* BaselineScript::New(
   if (!script) {
     return nullptr;
   }
-  new (script) BaselineScript(bailoutPrologueOffset, debugOsrPrologueOffset,
-                              debugOsrEpilogueOffset, profilerEnterToggleOffset,
-                              profilerExitToggleOffset);
+  new (script)
+      BaselineScript(bailoutPrologueOffset, warmUpCheckPrologueOffset,
+                     debugOsrPrologueOffset, debugOsrEpilogueOffset,
+                     profilerEnterToggleOffset, profilerExitToggleOffset);
 
   size_t offsetCursor = sizeof(BaselineScript);
   MOZ_ASSERT(offsetCursor == AlignBytes(sizeof(BaselineScript), DataAlignment));

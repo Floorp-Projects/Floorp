@@ -279,6 +279,10 @@ class BaselineCodeGen {
   // construction and before environment chain is initialized.
   CodeOffset bailoutPrologueOffset_;
 
+  // Baseline Interpreter can enter Baseline Compiler code at this address. This
+  // is right after the warm-up counter check in the prologue.
+  CodeOffset warmUpCheckPrologueOffset_;
+
   // Baseline Debug OSR during prologue will enter at this address. This is
   // right after where a debug prologue VM call would have returned.
   CodeOffset debugOsrPrologueOffset_;
