@@ -287,17 +287,42 @@ class TokenStreamShared;
 
 struct Token {
  private:
-  // Sometimes the parser needs to inform the tokenizer to interpret
-  // subsequent text in a particular manner: for example, to tokenize a
-  // keyword as an identifier, not as the actual keyword, on the right-hand
-  // side of a dotted property access.  Such information is communicated to
-  // the tokenizer as a Modifier when getting the next token.
+  // The lexical grammar of JavaScript has a quirk around the '/' character.
+  // As the spec puts it:
   //
-  // Ideally this definition would reside in TokenStream as that's the real
-  // user, but the debugging-use of it here causes a cyclic dependency (and
-  // C++ provides no way to forward-declare an enum inside a class).  So
-  // define it here, then typedef it into TokenStream with static consts to
-  // bring the initializers into scope.
+  // > There are several situations where the identification of lexical input
+  // > elements is sensitive to the syntactic grammar context that is consuming
+  // > the input elements. This requires multiple goal symbols for the lexical
+  // > grammar. [...] The InputElementRegExp goal symbol is used in all
+  // > syntactic grammar contexts where a RegularExpressionLiteral is permitted
+  // > [...]  In all other contexts, InputElementDiv is used as the lexical
+  // > goal symbol.
+  //
+  // https://tc39.github.io/ecma262/#sec-lexical-and-regexp-grammars
+  //
+  // What "sensitive to the syntactic grammar context" means is, the parser has
+  // to tell the TokenStream whether to interpret '/' as division or
+  // RegExp. Because only one or the other (or neither) will be legal at that
+  // point in the program, and only the parser knows which one.
+  //
+  // But there's a problem: the parser often gets a token, puts it back, then
+  // consumes it later; or (equivalently) peeks at a token, leaves it, peeks
+  // again later, then finally consumes it. Of course we don't actually re-scan
+  // the token every time; we cache it in the TokenStream. This leads to the
+  // following rule:
+  //
+  // The parser must not pass SlashIsRegExp when getting/peeking at a token
+  // previously scanned with SlashIsDiv; or vice versa.
+  //
+  // That way, code that asks for a SlashIsRegExp mode will never get a cached
+  // Div token. But this rule is easy to screw up, because tokens are so often
+  // peeked at on Parser.cpp line A and consumed on line B, where |A-B| is
+  // thousands of lines. We therefore enforce it with the frontend's most
+  // annoying assertion (in verifyConsistentModifier), and provide
+  // Modifier::SlashIsInvalid to help avoid tripping it.
+  //
+  // This enum belongs in TokenStream, but C++, so we define it here and
+  // typedef it there.
   enum Modifier {
     // Parse `/` and `/=` as the division operators. (That is, use
     // InputElementDiv as the goal symbol.)
@@ -306,6 +331,12 @@ struct Token {
     // Parse `/` as the beginning of a RegExp literal. (That is, use
     // InputElementRegExp.)
     SlashIsRegExp,
+
+    // Like SlashIsDiv, but used when actually *neither* a Div token nor a
+    // RegExp token is syntactically valid here. When the parser calls
+    // `getToken(SlashIsInvalid)`, it must be prepared to see either one
+    // (and throw a SyntaxError either way).
+    SlashIsInvalid,
 
     // Treat subsequent code units as the tail of a template literal, after
     // a template substitution, beginning with a "}", continuing with zero
@@ -463,6 +494,7 @@ class TokenStreamShared {
   using Modifier = Token::Modifier;
   static constexpr Modifier SlashIsDiv = Token::SlashIsDiv;
   static constexpr Modifier SlashIsRegExp = Token::SlashIsRegExp;
+  static constexpr Modifier SlashIsInvalid = Token::SlashIsInvalid;
   static constexpr Modifier TemplateTail = Token::TemplateTail;
 
   using ModifierException = Token::ModifierException;
@@ -477,6 +509,12 @@ class TokenStreamShared {
       return;
     }
 
+    if (modifier == SlashIsInvalid &&
+        lookaheadToken.modifier != TemplateTail) {
+      // "Don't care" mode is fine after either SlashIsDiv or SlashIsRegExp.
+      return;
+    }
+
     if (lookaheadToken.modifierException == SlashIsRegExpOK) {
       // getToken(SlashIsRegExp) permissibly following getToken().
       if (modifier == SlashIsRegExp && lookaheadToken.modifier == SlashIsDiv) {
@@ -485,9 +523,9 @@ class TokenStreamShared {
     }
 
     MOZ_ASSERT_UNREACHABLE(
-        "this token was previously looked up with a "
-        "different modifier, potentially making "
-        "tokenization non-deterministic");
+        "This token was scanned with both SlashIsRegExp and SlashIsDiv, indicating "
+        "the parser is confused about which one is allowed here. See comment "
+        "at Token::Modifier.");
 #endif
   }
 };
@@ -1846,6 +1884,9 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
     // Save the modifier used to get this token, so that if an ungetToken()
     // occurs and then the token is re-gotten (or peeked, etc.), we can
     // assert both gets used compatible modifiers.
+    if (modifier == TokenStreamShared::SlashIsInvalid) {
+      modifier = TokenStreamShared::SlashIsDiv;
+    }
     token->modifier = modifier;
     token->modifierException = TokenStreamShared::NoException;
 #endif
