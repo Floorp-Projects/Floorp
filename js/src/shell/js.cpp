@@ -1301,7 +1301,12 @@ static MOZ_MUST_USE bool EvalUtf8AndPrint(JSContext* cx, const char* bytes,
       .setIsRunOnce(true)
       .setFileAndLine("typein", lineno);
 
-  RootedScript script(cx, JS::CompileUtf8(cx, options, bytes, length));
+  JS::SourceText<Utf8Unit> srcBuf;
+  if (!srcBuf.init(cx, bytes, length, JS::SourceOwnership::Borrowed)) {
+    return false;
+  }
+
+  RootedScript script(cx, JS::Compile(cx, options, srcBuf));
   if (!script) {
     return false;
   }

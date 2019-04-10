@@ -701,8 +701,12 @@ static bool ProcessUtf8Line(AutoJSAPI& jsapi, const char* buffer,
   JS::CompileOptions options(cx);
   options.setFileAndLine("typein", startline).setIsRunOnce(true);
 
-  JS::RootedScript script(cx,
-                          JS::CompileUtf8(cx, options, buffer, strlen(buffer)));
+  JS::SourceText<mozilla::Utf8Unit> srcBuf;
+  if (!srcBuf.init(cx, buffer, strlen(buffer), JS::SourceOwnership::Borrowed)) {
+    return false;
+  }
+
+  JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
   if (!script) {
     return false;
   }
