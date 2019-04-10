@@ -10922,9 +10922,9 @@ nsDocShell::AddState(JS::Handle<JS::Value> aData, const nsAString& aTitle,
   }
 
   // Check that the state object isn't too long.
-  // Default max length: 640k bytes.
+  // Default max length: 2097152 (0x200000) bytes.
   int32_t maxStateObjSize =
-      Preferences::GetInt("browser.history.maxStateObjectSize", 0xA0000);
+      Preferences::GetInt("browser.history.maxStateObjectSize", 2097152);
   if (maxStateObjSize < 0) {
     maxStateObjSize = 0;
   }
