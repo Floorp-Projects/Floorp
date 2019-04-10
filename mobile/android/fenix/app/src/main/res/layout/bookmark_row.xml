@@ -26,6 +26,7 @@
         android:padding="10dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintDimensionRatio="1:1"
         android:foregroundTint="?attr/iconColor"
         tools:src="@drawable/ic_folder_icon" />
