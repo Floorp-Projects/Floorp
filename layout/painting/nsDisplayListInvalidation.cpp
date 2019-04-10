@@ -114,12 +114,6 @@ nsDisplayFiltersGeometry::nsDisplayFiltersGeometry(
     : nsDisplaySVGEffectGeometry(aItem, aBuilder),
       nsImageGeometryMixin(aItem, aBuilder) {}
 
-nsCharClipGeometry::nsCharClipGeometry(nsCharClipDisplayItem* aItem,
-                                       nsDisplayListBuilder* aBuilder)
-    : nsDisplayItemGenericGeometry(aItem, aBuilder),
-      mVisIStartEdge(aItem->mVisIStartEdge),
-      mVisIEndEdge(aItem->mVisIEndEdge) {}
-
 nsDisplayTableItemGeometry::nsDisplayTableItemGeometry(
     nsDisplayTableItem* aItem, nsDisplayListBuilder* aBuilder,
     const nsPoint& aFrameOffsetToViewport)
