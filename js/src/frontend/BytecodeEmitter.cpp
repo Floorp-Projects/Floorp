@@ -92,7 +92,11 @@ static bool ParseNodeRequiresSpecialLineNumberNotes(ParseNode* pn) {
 }
 
 BytecodeEmitter::BytecodeSection::BytecodeSection(JSContext* cx)
-    : code_(cx), notes_(cx), tryNoteList_(cx), scopeNoteList_(cx) {}
+    : code_(cx),
+      notes_(cx),
+      tryNoteList_(cx),
+      scopeNoteList_(cx),
+      resumeOffsetList_(cx) {}
 
 BytecodeEmitter::PerScriptData::PerScriptData(JSContext* cx)
     : scopeList_(cx), numberList_(cx) {}
@@ -112,7 +116,6 @@ BytecodeEmitter::BytecodeEmitter(
       fieldInitializers_(fieldInitializers),
       atomIndices(cx->frontendCollectionPool()),
       firstLine(lineNum),
-      resumeOffsetList(cx),
       emitterMode(emitterMode) {
   MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
 
@@ -2261,13 +2264,13 @@ bool BytecodeEmitter::allocateResumeIndex(ptrdiff_t offset,
       "resumeIndex * sizeof(uintptr_t) must fit in an int32. JIT code relies "
       "on this when loading resume entries from BaselineScript");
 
-  *resumeIndex = resumeOffsetList.length();
+  *resumeIndex = bytecodeSection().resumeOffsetList().length();
   if (*resumeIndex > MaxResumeIndex) {
     reportError(nullptr, JSMSG_TOO_MANY_RESUME_INDEXES);
     return false;
   }
 
-  return resumeOffsetList.append(offset);
+  return bytecodeSection().resumeOffsetList().append(offset);
 }
 
 bool BytecodeEmitter::allocateResumeIndexRange(mozilla::Span<ptrdiff_t> offsets,
@@ -2300,7 +2303,7 @@ bool BytecodeEmitter::emitYieldOp(JSOp op) {
   }
 
   if (op == JSOP_INITIALYIELD || op == JSOP_YIELD) {
-    numYields++;
+    bytecodeSection().addNumYields();
   }
 
   uint32_t resumeIndex;
