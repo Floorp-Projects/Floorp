@@ -73,8 +73,9 @@ class SVGPatternElement final : public SVGPatternElementBase {
   virtual LengthAttributesInfo GetLengthInfo() override;
   virtual EnumAttributesInfo GetEnumInfo() override;
   virtual StringAttributesInfo GetStringInfo() override;
-  virtual SVGAnimatedPreserveAspectRatio* GetPreserveAspectRatio() override;
-  virtual SVGAnimatedViewBox* GetViewBox() override;
+  virtual SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio()
+      override;
+  virtual SVGAnimatedViewBox* GetAnimatedViewBox() override;
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
   SVGAnimatedLength mLengthAttributes[4];

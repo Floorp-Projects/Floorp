@@ -567,9 +567,9 @@ class SVGElement : public SVGElementBase  // nsIContent
   virtual EnumAttributesInfo GetEnumInfo();
   // We assume all orients, viewboxes and preserveAspectRatios are alike
   // so we don't need to wrap the class
-  virtual SVGAnimatedOrient* GetOrient();
-  virtual SVGAnimatedPreserveAspectRatio* GetPreserveAspectRatio();
-  virtual SVGAnimatedViewBox* GetViewBox();
+  virtual SVGAnimatedOrient* GetAnimatedOrient();
+  virtual SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio();
+  virtual SVGAnimatedViewBox* GetAnimatedViewBox();
   virtual NumberListAttributesInfo GetNumberListInfo();
   virtual LengthListAttributesInfo GetLengthListInfo();
   virtual StringAttributesInfo GetStringInfo();

@@ -56,7 +56,7 @@ class SVGMarkerElement : public SVGMarkerElementBase {
 
   // public helpers
   gfx::Matrix GetMarkerTransform(float aStrokeWidth, const SVGMark& aMark);
-  SVGViewBoxRect GetViewBoxRect();
+  SVGViewBox GetViewBox();
   gfx::Matrix GetViewBoxTransform();
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
@@ -79,9 +79,10 @@ class SVGMarkerElement : public SVGMarkerElementBase {
 
   virtual LengthAttributesInfo GetLengthInfo() override;
   virtual EnumAttributesInfo GetEnumInfo() override;
-  virtual SVGAnimatedOrient* GetOrient() override;
-  virtual SVGAnimatedPreserveAspectRatio* GetPreserveAspectRatio() override;
-  virtual SVGAnimatedViewBox* GetViewBox() override;
+  virtual SVGAnimatedOrient* GetAnimatedOrient() override;
+  virtual SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio()
+      override;
+  virtual SVGAnimatedViewBox* GetAnimatedViewBox() override;
 
   enum { REFX, REFY, MARKERWIDTH, MARKERHEIGHT };
   SVGAnimatedLength mLengthAttributes[4];
