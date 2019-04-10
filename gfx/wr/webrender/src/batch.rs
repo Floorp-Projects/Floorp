@@ -981,7 +981,7 @@ impl AlphaBatchBuilder {
                 let prim_cache_address = gpu_cache.get_address(&ctx.globals.default_image_handle);
 
                 let prim_header = PrimitiveHeader {
-                    local_rect: picture.local_rect,
+                    local_rect: picture.snapped_local_rect,
                     local_clip_rect: prim_info.combined_local_clip_rect,
                     task_address,
                     specific_prim_address: prim_cache_address,
@@ -1019,7 +1019,7 @@ impl AlphaBatchBuilder {
                             ).unwrap_or(OPAQUE_TASK_ADDRESS);
 
                             let prim_header = PrimitiveHeader {
-                                local_rect: pic.local_rect,
+                                local_rect: pic.snapped_local_rect,
                                 local_clip_rect: prim_info.combined_local_clip_rect,
                                 task_address,
                                 specific_prim_address: GpuCacheAddress::invalid(),
@@ -1130,7 +1130,7 @@ impl AlphaBatchBuilder {
                                 // the local bounds of the picture extend to within the edge tiles.
                                 let local_clip_rect = prim_info
                                     .combined_local_clip_rect
-                                    .intersection(&picture.local_rect)
+                                    .intersection(&picture.snapped_local_rect)
                                     .and_then(|rect| {
                                         rect.intersection(&tile_cache.local_clip_rect)
                                     });
@@ -1613,7 +1613,7 @@ impl AlphaBatchBuilder {
                                 };
 
                                 let prim_header = PrimitiveHeader {
-                                    local_rect: picture.local_rect,
+                                    local_rect: picture.snapped_local_rect,
                                     local_clip_rect: prim_info.combined_local_clip_rect,
                                     task_address,
                                     specific_prim_address: prim_cache_address,
