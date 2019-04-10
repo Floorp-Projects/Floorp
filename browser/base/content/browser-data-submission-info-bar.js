@@ -57,7 +57,7 @@ var gDataNotificationInfoBar = {
       popup: null,
       callback: () => {
         this._actionTaken = true;
-        window.openPreferences("privacy-reports", {origin: "dataReporting"});
+        window.openPreferences("privacy-reports");
       },
     }];
 

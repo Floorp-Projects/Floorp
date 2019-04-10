@@ -37,16 +37,17 @@ from .dispatcher import CommandAction
 from .logging import LoggingManager
 from .registrar import Registrar
 
+SUGGEST_MACH_BUSTED = r'''
+You can invoke |./mach busted| to check if this issue is already on file. If it
+isn't, please use |./mach busted file| to report it. If |./mach busted| is
+misbehaving, you can also inspect the dependencies of bug 1543241.
+'''.lstrip()
 
 MACH_ERROR = r'''
 The error occurred in mach itself. This is likely a bug in mach itself or a
 fundamental problem with a loaded module.
 
-Please consider filing a bug against mach by going to the URL:
-
-    https://bugzilla.mozilla.org/enter_bug.cgi?product=Firefox%20Build%20System&component=Mach%20Core
-
-'''.lstrip()
+'''.lstrip() + SUGGEST_MACH_BUSTED
 
 ERROR_FOOTER = r'''
 If filing a bug, please include the full output of mach, including this error
@@ -59,15 +60,13 @@ COMMAND_ERROR = r'''
 The error occurred in the implementation of the invoked mach command.
 
 This should never occur and is likely a bug in the implementation of that
-command. Consider filing a bug for this issue.
-'''.lstrip()
+command.
+'''.lstrip() + SUGGEST_MACH_BUSTED
 
 MODULE_ERROR = r'''
 The error occurred in code that was called by the mach command. This is either
 a bug in the called code itself or in the way that mach is calling it.
-
-You should consider filing a bug for this issue.
-'''.lstrip()
+'''.lstrip() + SUGGEST_MACH_BUSTED
 
 NO_COMMAND_ERROR = r'''
 It looks like you tried to run mach without a command.

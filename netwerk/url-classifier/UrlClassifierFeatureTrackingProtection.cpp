@@ -25,6 +25,8 @@ namespace {
 #define URLCLASSIFIER_TRACKING_WHITELIST "urlclassifier.trackingWhitelistTable"
 #define URLCLASSIFIER_TRACKING_WHITELIST_TEST_ENTRIES \
   "urlclassifier.trackingWhitelistTable.testEntries"
+#define URLCLASSIFIER_TRACKING_PROTECTION_SKIP_URLS \
+  "urlclassifier.trackingSkipURLs"
 #define TABLE_TRACKING_BLACKLIST_PREF "tracking-blacklist-pref"
 #define TABLE_TRACKING_WHITELIST_PREF "tracking-whitelist-pref"
 
@@ -40,7 +42,8 @@ UrlClassifierFeatureTrackingProtection::UrlClassifierFeatureTrackingProtection()
           NS_LITERAL_CSTRING(URLCLASSIFIER_TRACKING_BLACKLIST_TEST_ENTRIES),
           NS_LITERAL_CSTRING(URLCLASSIFIER_TRACKING_WHITELIST_TEST_ENTRIES),
           NS_LITERAL_CSTRING(TABLE_TRACKING_BLACKLIST_PREF),
-          NS_LITERAL_CSTRING(TABLE_TRACKING_WHITELIST_PREF), EmptyCString()) {}
+          NS_LITERAL_CSTRING(TABLE_TRACKING_WHITELIST_PREF),
+          NS_LITERAL_CSTRING(URLCLASSIFIER_TRACKING_PROTECTION_SKIP_URLS)) {}
 
 /* static */ const char* UrlClassifierFeatureTrackingProtection::Name() {
   return TRACKING_PROTECTION_FEATURE_NAME;

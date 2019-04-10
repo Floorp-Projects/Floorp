@@ -58,9 +58,7 @@ BottomHost.prototype = {
     // Avoid resizing notification containers
     this._splitter.setAttribute("resizebefore", "flex");
 
-    this.frame = ownerDocument.createXULElement("iframe");
-    this.frame.flex = 1; // Required to be able to shrink when the window shrinks
-    this.frame.className = "devtools-toolbox-bottom-iframe";
+    this.frame = createDevToolsFrame(ownerDocument, "devtools-toolbox-bottom-iframe");
     this.frame.height = Math.min(
       Services.prefs.getIntPref(this.heightPref),
       this._browserContainer.clientHeight - MIN_PAGE_SIZE
@@ -68,8 +66,6 @@ BottomHost.prototype = {
 
     this._browserContainer.appendChild(this._splitter);
     this._browserContainer.appendChild(this.frame);
-
-    this.frame.tooltip = "aHTMLTooltip";
 
     // we have to load something so we can switch documents if we have to
     this.frame.setAttribute("src", "about:blank");
@@ -144,10 +140,7 @@ class SidebarHost {
     this._splitter = ownerDocument.createXULElement("splitter");
     this._splitter.setAttribute("class", "devtools-side-splitter");
 
-    this.frame = ownerDocument.createXULElement("iframe");
-    this.frame.flex = 1; // Required to be able to shrink when the window shrinks
-    this.frame.className = "devtools-toolbox-side-iframe";
-
+    this.frame = createDevToolsFrame(ownerDocument, "devtools-toolbox-side-iframe");
     this.frame.width = Math.min(
       Services.prefs.getIntPref(this.widthPref),
       this._browserPanel.clientWidth - MIN_PAGE_SIZE
@@ -167,7 +160,6 @@ class SidebarHost {
       this._browserPanel.insertBefore(this._splitter, this._browserContainer);
     }
 
-    this.frame.tooltip = "aHTMLTooltip";
     this.frame.setAttribute("src", "about:blank");
 
     const frame = await new Promise(resolve => {
@@ -257,8 +249,15 @@ WindowHost.prototype = {
         win.removeEventListener("load", frameLoad, true);
         win.focus();
 
-        this.frame = win.document.getElementById("toolbox-iframe");
-        this.emit("ready", this.frame);
+        this.frame = createDevToolsFrame(win.document, "devtools-toolbox-window-iframe");
+        win.document.getElementById("devtools-toolbox-window").appendChild(this.frame);
+
+        // The forceOwnRefreshDriver attribute is set to avoid Windows only issues with
+        // CSS transitions when switching from docked to window hosts.
+        // Added in Bug 832920, should be reviewed in Bug 1542468.
+        this.frame.setAttribute("forceOwnRefreshDriver", "");
+
+        this.frame.setAttribute("src", "about:blank");
         resolve(this.frame);
       };
 
@@ -406,6 +405,17 @@ function focusTab(tab) {
   const browserWindow = tab.ownerDocument.defaultView;
   browserWindow.focus();
   browserWindow.gBrowser.selectedTab = tab;
+}
+
+/**
+ * Create an iframe that can be used to load DevTools via about:devtools-toolbox.
+ */
+function createDevToolsFrame(doc, className) {
+  const frame = doc.createXULElement("iframe");
+  frame.flex = 1; // Required to be able to shrink when the window shrinks
+  frame.className = className;
+  frame.tooltip = "aHTMLTooltip";
+  return frame;
 }
 
 exports.Hosts = {

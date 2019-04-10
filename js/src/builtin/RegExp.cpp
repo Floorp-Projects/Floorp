@@ -1502,7 +1502,7 @@ bool js::RegExpGetSubstitution(JSContext* cx, HandleArrayObject matchResult,
     return false;
   }
 
-  StringBuffer result(cx);
+  JSStringBuilder result(cx);
   if (NeedTwoBytes(string, replacement, matched, captures)) {
     if (!result.ensureTwoByteChars()) {
       return false;

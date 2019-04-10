@@ -61,8 +61,6 @@ def main():
     dtds = get_dtds(data['dtd'], data['mozilla-central'])
 
     print('======== DTDs ========')
-    # with open('DTDs.json', 'w') as outfile:
-    #     json.dump(dtds, outfile, sort_keys=True, indent=2)
     print(json.dumps(dtds, sort_keys=True, indent=2))
 
     s = read_file(data['xul'], data['mozilla-central'])
