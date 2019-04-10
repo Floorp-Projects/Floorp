@@ -329,8 +329,8 @@ CustomElementRegistry::RunCustomElementCreationCallback::Run() {
   MOZ_ASSERT(NS_SUCCEEDED(er.StealNSResult()),
              "chrome JavaScript error in the callback.");
 
-  CustomElementDefinition* definition =
-      mRegistry->mCustomDefinitions.GetWeak(mAtom);
+  RefPtr<CustomElementDefinition> definition =
+      mRegistry->mCustomDefinitions.Get(mAtom);
   MOZ_ASSERT(definition, "Callback should define the definition of type.");
   MOZ_ASSERT(!mRegistry->mElementCreationCallbacks.GetWeak(mAtom),
              "Callback should be removed.");
