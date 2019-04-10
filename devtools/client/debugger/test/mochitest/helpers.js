@@ -204,9 +204,22 @@ async function waitForElement(dbg, name, ...args) {
   return findElement(dbg, name, ...args);
 }
 
+async function waitForAllElements(dbg, name, count = 1) {
+  await waitUntil(() => findAllElements(dbg, name).length >= count);
+  return findAllElements(dbg, name);
+}
+
 async function waitForElementWithSelector(dbg, selector) {
   await waitUntil(() => findElementWithSelector(dbg, selector));
   return findElementWithSelector(dbg, selector);
+}
+
+function assertClass(el, className, exists = true) {
+  if (exists) {
+    ok(el.classList.contains(className), `${className} class exists`);
+  } else {
+    ok(!el.classList.contains(className), `${className} class does not exist`);
+  }
 }
 
 function waitForSelectedLocation(dbg, line) {
@@ -485,6 +498,22 @@ async function waitForPaused(dbg, url) {
 
   await waitForLoadedScopes(dbg);
   await waitForSelectedSource(dbg, url);
+}
+
+function waitForCondition(dbg, condition) {
+  return waitForState(dbg, state =>
+    dbg.selectors
+      .getBreakpointsList(state)
+      .find(bp => bp.options.condition == condition)
+  );
+}
+
+function waitForLog(dbg, logValue) {
+  return waitForState(dbg, state =>
+    dbg.selectors
+      .getBreakpointsList(state)
+      .find(bp => bp.options.logValue == logValue)
+  );
 }
 
 /*
@@ -1190,6 +1219,7 @@ const selectors = {
     removeOthers: "#node-menu-delete-other",
     removeCondition: "#node-menu-remove-condition"
   },
+  columnBreakpoints: ".column-breakpoint",
   scopes: ".scopes-list",
   scopeNode: i => `.scopes-list .tree-node:nth-child(${i}) .object-label`,
   scopeValue: i =>
@@ -1197,15 +1227,13 @@ const selectors = {
   frame: i => `.frames [role="list"] [role="listitem"]:nth-child(${i})`,
   frames: '.frames [role="list"] [role="listitem"]',
   gutter: i => `.CodeMirror-code *:nth-child(${i}) .CodeMirror-linenumber`,
-  // These work for bobth the breakpoint listing and gutter marker
-  gutterContextMenu: {
-    addConditionalBreakpoint:
-      "#node-menu-add-condition, #node-menu-add-conditional-breakpoint",
-    editConditionalBreakpoint:
-      "#node-menu-edit-condition, #node-menu-edit-conditional-breakpoint",
-    addLogPoint: "#node-menu-add-log-point",
-    editLogPoint: "#node-menu-edit-log-point"
-  },
+  addConditionItem:
+    "#node-menu-add-condition, #node-menu-add-conditional-breakpoint",
+  editConditionItem:
+    "#node-menu-edit-condition, #node-menu-edit-conditional-breakpoint",
+  addLogItem: "#node-menu-add-log-point",
+  editLogItem: "#node-menu-edit-log-point",
+  disableItem: "#node-menu-disable-breakpoint",
   menuitem: i => `menupopup menuitem:nth-child(${i})`,
   pauseOnExceptions: ".pause-exceptions",
   breakpoint: ".CodeMirror-code > .new-breakpoint",
@@ -1339,12 +1367,12 @@ function altClickElement(dbg, elementName, ...args) {
 function rightClickElement(dbg, elementName, ...args) {
   const selector = getSelector(elementName, ...args);
   const doc = dbg.win.document;
+  return rightClickEl(dbg, doc.querySelector(selector));
+}
 
-  return EventUtils.synthesizeMouseAtCenter(
-    doc.querySelector(selector),
-    { type: "contextmenu" },
-    dbg.win
-  );
+function rightClickEl(dbg, el) {
+  const doc = dbg.win.document;
+  EventUtils.synthesizeMouseAtCenter(el, { type: "contextmenu" }, dbg.win);
 }
 
 async function clickGutter(dbg, line) {
@@ -1361,6 +1389,15 @@ function selectContextMenuItem(dbg, selector) {
 
   const item = popup.querySelector(selector);
   return EventUtils.synthesizeMouseAtCenter(item, {}, dbg.toolbox.win);
+}
+
+async function typeInPanel(dbg, text) {
+  await waitForElement(dbg, "conditionalPanelInput");
+
+  // Position cursor reliably at the end of the text.
+  pressKey(dbg, "End");
+  type(dbg, text);
+  pressKey(dbg, "Enter");
 }
 
 /**
