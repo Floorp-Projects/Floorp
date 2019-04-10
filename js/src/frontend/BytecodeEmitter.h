@@ -183,6 +183,16 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     CGScopeNoteList& scopeNoteList() { return scopeNoteList_; };
     const CGScopeNoteList& scopeNoteList() const { return scopeNoteList_; };
 
+    // ---- Generator ----
+
+    CGResumeOffsetList& resumeOffsetList() { return resumeOffsetList_; }
+    const CGResumeOffsetList& resumeOffsetList() const {
+      return resumeOffsetList_;
+    }
+
+    uint32_t numYields() const { return numYields_; }
+    void addNumYields() { numYields_++; }
+
    private:
     // ---- Bytecode ----
 
@@ -219,6 +229,18 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
     // List of emitted block scope notes.
     CGScopeNoteList scopeNoteList_;
+
+    // ---- Generator ----
+
+    // Certain ops (yield, await, gosub) have an entry in the script's
+    // resumeOffsets list. This can be used to map from the op's resumeIndex to
+    // the bytecode offset of the next pc. This indirection makes it easy to
+    // resume in the JIT (because BaselineScript stores a resumeIndex => native
+    // code array).
+    CGResumeOffsetList resumeOffsetList_;
+
+    // Number of yield instructions emitted. Does not include JSOP_AWAIT.
+    uint32_t numYields_ = 0;
   };
 
   BytecodeSection bytecodeSection_;
@@ -327,18 +349,8 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     return innermostEmitterScope_;
   }
 
-  // Certain ops (yield, await, gosub) have an entry in the script's
-  // resumeOffsets list. This can be used to map from the op's resumeIndex to
-  // the bytecode offset of the next pc. This indirection makes it easy to
-  // resume in the JIT (because BaselineScript stores a resumeIndex => native
-  // code array).
-  CGResumeOffsetList resumeOffsetList;
-
   // Number of JOF_IC opcodes emitted.
   size_t numICEntries = 0;
-
-  // Number of yield instructions emitted. Does not include JSOP_AWAIT.
-  uint32_t numYields = 0;
 
   // Number of JOF_TYPESET opcodes generated.
   uint16_t typesetCount = 0;

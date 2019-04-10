@@ -3243,7 +3243,7 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t nscopes,
   uint32_t nobjects = bce->perScriptData().objectList().length;
   uint32_t ntrynotes = bce->bytecodeSection().tryNoteList().length();
   uint32_t nscopenotes = bce->bytecodeSection().scopeNoteList().length();
-  uint32_t nresumeoffsets = bce->resumeOffsetList.length();
+  uint32_t nresumeoffsets = bce->bytecodeSection().resumeOffsetList().length();
 
   // Create and initialize PrivateScriptData
   if (!JSScript::createPrivateScriptData(cx, script, nscopes, nconsts, nobjects,
@@ -3269,7 +3269,7 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t nscopes,
     bce->bytecodeSection().scopeNoteList().finish(data->scopeNotes());
   }
   if (nresumeoffsets) {
-    bce->resumeOffsetList.finish(data->resumeOffsets());
+    bce->bytecodeSection().resumeOffsetList().finish(data->resumeOffsets());
   }
 
   return true;
