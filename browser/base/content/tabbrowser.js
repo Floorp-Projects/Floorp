@@ -2435,7 +2435,7 @@ window._gBrowser = {
       t.setAttribute("pinned", "true");
     }
 
-    t.className = "tabbrowser-tab";
+    t.classList.add("tabbrowser-tab");
 
     this.tabContainer._unlockTabSizing();
 
