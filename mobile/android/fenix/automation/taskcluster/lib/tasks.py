@@ -271,7 +271,7 @@ class TaskBuilder(object):
         }
 
         return self._craft_default_task_definition(
-            worker_type='mobile-signing-dep-v1' if signing_format == 'dep' else 'mobile-signing-v1',
+            worker_type='mobile-signing-dep-v1' if signing_type == 'dep-signing' else 'mobile-signing-v1',
             provisioner_id='scriptworker-prov-v1',
             dependencies=[assemble_task_id],
             routes=routes,
