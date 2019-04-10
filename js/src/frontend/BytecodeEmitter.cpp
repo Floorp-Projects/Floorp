@@ -99,7 +99,13 @@ BytecodeEmitter::BytecodeSection::BytecodeSection(JSContext* cx)
       resumeOffsetList_(cx) {}
 
 BytecodeEmitter::PerScriptData::PerScriptData(JSContext* cx)
-    : scopeList_(cx), numberList_(cx) {}
+    : scopeList_(cx),
+      numberList_(cx),
+      atomIndices_(cx->frontendCollectionPool()) {}
+
+bool BytecodeEmitter::PerScriptData::init(JSContext* cx) {
+  return atomIndices_.acquire(cx);
+}
 
 BytecodeEmitter::BytecodeEmitter(
     BytecodeEmitter* parent, SharedContext* sc, HandleScript script,
@@ -114,7 +120,6 @@ BytecodeEmitter::BytecodeEmitter(
       perScriptData_(cx),
       currentLine_(lineNum),
       fieldInitializers_(fieldInitializers),
-      atomIndices(cx->frontendCollectionPool()),
       firstLine(lineNum),
       emitterMode(emitterMode) {
   MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
@@ -153,7 +158,7 @@ void BytecodeEmitter::initFromBodyPosition(TokenPos bodyPosition) {
   setFunctionBodyEndPos(bodyPosition.end);
 }
 
-bool BytecodeEmitter::init() { return atomIndices.acquire(cx); }
+bool BytecodeEmitter::init() { return perScriptData_.init(cx); }
 
 template <typename T>
 T* BytecodeEmitter::findInnermostNestableControl() const {
