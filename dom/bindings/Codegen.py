@@ -5673,7 +5673,11 @@ def getJSToNativeConversionInfo(type, descriptorProvider, failureCode=None,
 
         templateBody = ""
         if forceOwningType:
-            templateBody += 'static_assert(IsRefcounted<%s>::value, "We can only store refcounted classes.");' % typeName
+            templateBody += fill(
+                """
+                static_assert(IsRefcounted<${typeName}>::value, "We can only store refcounted classes.");
+                """,
+                typeName=typeName)
 
         if (not descriptor.interface.isConsequential() and
             not descriptor.interface.isExternal()):
