@@ -44,6 +44,8 @@ using LengthPercentageOrAuto = StyleLengthPercentageOrAuto;
 using NonNegativeLengthPercentage = StyleNonNegativeLengthPercentage;
 using NonNegativeLengthPercentageOrAuto =
     StyleNonNegativeLengthPercentageOrAuto;
+using NonNegativeLengthPercentageOrNormal =
+    StyleNonNegativeLengthPercentageOrNormal;
 using Length = StyleLength;
 using LengthOrAuto = StyleLengthOrAuto;
 using NonNegativeLength = StyleNonNegativeLength;

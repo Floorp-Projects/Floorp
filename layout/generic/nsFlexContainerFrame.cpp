@@ -4737,7 +4737,8 @@ void nsFlexContainerFrame::DoFlexLayout(
   // Recalculate the gap sizes if necessary now that the container size has
   // been determined.
   if (aReflowInput.ComputedBSize() == NS_INTRINSICSIZE &&
-      aReflowInput.mStylePosition->mRowGap.HasPercent()) {
+      aReflowInput.mStylePosition->mRowGap.IsLengthPercentage() &&
+      aReflowInput.mStylePosition->mRowGap.AsLengthPercentage().HasPercent()) {
     bool rowIsCross = aAxisTracker.IsRowOriented();
     nscoord newBlockGapSize = nsLayoutUtils::ResolveGapToLength(
         aReflowInput.mStylePosition->mRowGap,
