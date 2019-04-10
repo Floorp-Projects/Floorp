@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+
+<html>
+
+  <head>
+    <meta charset="utf8">
+    <title></title>
+
+    <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
+    <script type="application/javascript" src="head.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  </head>
+
+  <body>
+
+    <script type="application/javascript">
+      window.onload = function() {
+        SimpleTest.waitForExplicitFinish();
+
+        async function testWithMessageDisabled() {
+          info("Open WebIDE with the showDeprecationMessage preference set to FALSE");
+          const win = await openWebIDE({
+            showDeprecationMessage: false,
+          });
+
+          const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
+          await gDevToolsBrowser.isWebIDEInitialized.promise;
+          ok(true, "WebIDE was initialized");
+
+          info("Check if the deprecation message is hidden");
+          const nbox = win.UI.deprecationBox;
+          const deprecationMessage = nbox.getNotificationWithValue("webide:deprecationnotification");
+          ok(!deprecationMessage, "The deprecation message is hidden");
+
+          await closeWebIDE(win);
+        }
+
+        async function testWithMessageEnabled() {
+          info("Open WebIDE with the showDeprecationMessage preference set to TRUE");
+          const win = await openWebIDE({
+            showDeprecationMessage: true,
+          });
+
+          const {gDevToolsBrowser} = require("devtools/client/framework/devtools-browser");
+          await gDevToolsBrowser.isWebIDEInitialized.promise;
+          ok(true, "WebIDE was initialized");
+
+          info("Check if the deprecation message is displayed");
+          const nbox = win.UI.deprecationBox;
+          const deprecationMessage = nbox.getNotificationWithValue("webide:deprecationnotification");
+          ok(!!deprecationMessage, "The deprecation message is displayed");
+
+          info("Check if a button is displayed in the notification box");
+          // Note: `notification-button` is a hardcoded className added by the XUL
+          // notificationbox widget and we cannot set custom classnames.
+          const button = nbox.stack.querySelector(".notification-button");
+          ok(!!button, "The button to open about:debugging is displayed");
+          button.click();
+
+          info("Wait until the about:debugging tab is selected in the main window");
+          const mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
+          await waitUntil(() => {
+            const contentWindow = mainWindow.gBrowser.selectedBrowser.contentWindow;
+            return contentWindow.location.href.startsWith("about:debugging");
+          });
+
+          info("Remove the about:debugging tab");
+          await removeTab(mainWindow.gBrowser.selectedTab, mainWindow);
+
+          await closeWebIDE(win);
+        }
+
+        (async function() {
+          await testWithMessageDisabled();
+          await testWithMessageEnabled();
+
+          SimpleTest.finish();
+        })();
+      };
+    </script>
+  </body>
+</html>
