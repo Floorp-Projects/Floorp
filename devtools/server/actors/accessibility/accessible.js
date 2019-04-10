@@ -7,12 +7,10 @@
 const { Ci, Cu } = require("chrome");
 const { Actor, ActorClassWithSpec } = require("devtools/shared/protocol");
 const { accessibleSpec } = require("devtools/shared/specs/accessibility");
-const { accessibility: { AUDIT_TYPE } } = require("devtools/shared/constants");
 
 loader.lazyRequireGetter(this, "getContrastRatioFor", "devtools/server/actors/accessibility/contrast", true);
 loader.lazyRequireGetter(this, "isDefunct", "devtools/server/actors/utils/accessibility", true);
 loader.lazyRequireGetter(this, "findCssSelector", "devtools/shared/inspector/css-logic", true);
-loader.lazyRequireGetter(this, "events", "devtools/shared/event-emitter");
 
 const RELATIONS_TO_IGNORE = new Set([
   Ci.nsIAccessibleRelation.RELATION_CONTAINING_APPLICATION,
@@ -155,10 +153,6 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     Actor.prototype.destroy.call(this);
     this.walker = null;
     this.rawAccessible = null;
-  },
-
-  get isDestroyed() {
-    return this.actorID == null;
   },
 
   get role() {
@@ -375,7 +369,6 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
       states: this.states,
       actions: this.actions,
       attributes: this.attributes,
-      checks: this._lastAudit,
     };
   },
 
@@ -395,16 +388,13 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
 
     const { DOMNode: rawNode } = this.rawAccessible;
     const win = rawNode.ownerGlobal;
-    // Keep the reference to the walker actor in case the actor gets destroyed
-    // during the colour contrast ratio calculation.
-    const { walker } = this;
-    walker.clearStyles(win);
+    this.walker.clearStyles(win);
     const contrastRatio = await getContrastRatioFor(rawNode.parentNode, {
       bounds: this.bounds,
       win,
     });
 
-    walker.restoreStyles(win);
+    this.walker.restoreStyles(win);
 
     return contrastRatio;
   },
@@ -415,7 +405,7 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
    * @return {Object|null}
    *         Audit results for the accessible object.
   */
-  audit() {
+  async audit() {
     if (this._auditing) {
       return this._auditing;
     }
@@ -428,23 +418,12 @@ const AccessibleActor = ActorClassWithSpec(accessibleSpec, {
     ]).then(([
       contrastRatio,
     ]) => {
-      let audit = null;
-      if (!this.isDefunct && !this.isDestroyed) {
-        audit = {
-          [AUDIT_TYPE.CONTRAST]: contrastRatio,
-        };
-        this._lastAudit = audit;
-        events.emit(this, "audited", audit);
-      }
+      const audit = this.isDefunct ? null : {
+        contrastRatio,
+      };
 
-      return audit;
-    }).catch(error => {
-      if (!this.isDefunct && !this.isDestroyed) {
-        throw error;
-      }
-      return null;
-    }).finally(() => {
       this._auditing = null;
+      return audit;
     });
 
     return this._auditing;

@@ -139,11 +139,9 @@ class Accessible extends Component {
 
   update() {
     const { dispatch, accessible, supports } = this.props;
-    if (!gToolbox || !accessible.actorID) {
-      return;
+    if (gToolbox) {
+      dispatch(updateDetails(gToolbox.walker, accessible, supports));
     }
-
-    dispatch(updateDetails(gToolbox.walker, accessible, supports));
   }
 
   setExpanded(item, isExpanded) {
