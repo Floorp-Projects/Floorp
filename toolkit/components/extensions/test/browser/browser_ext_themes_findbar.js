@@ -9,9 +9,6 @@ add_task(async function test_support_toolbar_properties_on_findbar() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "theme": {
-        "images": {
-          "theme_frame": "image1.png",
-        },
         "colors": {
           "frame": ACCENT_COLOR,
           "tab_background_text": TEXT_COLOR,
@@ -19,9 +16,6 @@ add_task(async function test_support_toolbar_properties_on_findbar() {
           "bookmark_text": TOOLBAR_TEXT_COLOR,
         },
       },
-    },
-    files: {
-      "image1.png": BACKGROUND,
     },
   });
 
@@ -53,9 +47,6 @@ add_task(async function test_support_toolbar_field_properties_on_findbar() {
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
       "theme": {
-        "images": {
-          "theme_frame": "image1.png",
-        },
         "colors": {
           "frame": ACCENT_COLOR,
           "tab_background_text": TEXT_COLOR,
@@ -64,9 +55,6 @@ add_task(async function test_support_toolbar_field_properties_on_findbar() {
           "toolbar_field_border": TOOLBAR_FIELD_BORDER_COLOR,
         },
       },
-    },
-    files: {
-      "image1.png": BACKGROUND,
     },
   });
 
@@ -91,6 +79,106 @@ add_task(async function test_support_toolbar_field_properties_on_findbar() {
   testBorderColor(findbar_textbox, TOOLBAR_FIELD_BORDER_COLOR);
   testBorderColor(findbar_prev_button, TOOLBAR_FIELD_BORDER_COLOR);
   testBorderColor(findbar_next_button, TOOLBAR_FIELD_BORDER_COLOR);
+
+  await extension.unload();
+});
+
+// Test that theme properties are *not* applied with a theme_frame (see bug 1506913)
+add_task(async function test_toolbar_properties_on_findbar_with_theme_frame() {
+  const TOOLBAR_COLOR = "#ff00ff";
+  const TOOLBAR_TEXT_COLOR = "#9400ff";
+  // The TabContextMenu initializes its strings only on a focus or mouseover event.
+  // Calls focus event on the TabContextMenu early in the test.
+  gBrowser.selectedTab.focus();
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "theme": {
+        "images": {
+          "theme_frame": "image1.png",
+        },
+        "colors": {
+          "frame": ACCENT_COLOR,
+          "tab_background_text": TEXT_COLOR,
+          "toolbar": TOOLBAR_COLOR,
+          "bookmark_text": TOOLBAR_TEXT_COLOR,
+        },
+      },
+    },
+    files: {
+      "image1.png": BACKGROUND,
+    },
+  });
+
+  await extension.startup();
+  await gBrowser.getFindBar();
+
+  let findbar_button = gFindBar.getElement("highlight");
+
+  info("Checking findbar background is *not* set as toolbar color");
+  Assert.notEqual(
+    window.getComputedStyle(gFindBar).backgroundColor,
+    hexToCSS(ACCENT_COLOR),
+    "Findbar background color should not be set by theme."
+  );
+
+  info("Checking findbar and button text color is *not* set as toolbar text color");
+  Assert.notEqual(
+    window.getComputedStyle(gFindBar).color,
+    hexToCSS(TOOLBAR_TEXT_COLOR),
+    "Findbar text color should not be set by theme."
+  );
+  Assert.notEqual(
+    window.getComputedStyle(findbar_button).color,
+    hexToCSS(TOOLBAR_TEXT_COLOR),
+    "Findbar button text color should not be set by theme."
+  );
+
+  await extension.unload();
+});
+
+add_task(async function test_toolbar_field_properties_on_findbar_with_theme_frame() {
+  const TOOLBAR_FIELD_COLOR = "#ff00ff";
+  const TOOLBAR_FIELD_TEXT_COLOR = "#9400ff";
+  const TOOLBAR_FIELD_BORDER_COLOR = "#ffffff";
+  // The TabContextMenu initializes its strings only on a focus or mouseover event.
+  // Calls focus event on the TabContextMenu early in the test.
+  gBrowser.selectedTab.focus();
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "theme": {
+        "images": {
+          "theme_frame": "image1.png",
+        },
+        "colors": {
+          "frame": ACCENT_COLOR,
+          "tab_background_text": TEXT_COLOR,
+          "toolbar_field": TOOLBAR_FIELD_COLOR,
+          "toolbar_field_text": TOOLBAR_FIELD_TEXT_COLOR,
+          "toolbar_field_border": TOOLBAR_FIELD_BORDER_COLOR,
+        },
+      },
+    },
+    files: {
+      "image1.png": BACKGROUND,
+    },
+  });
+
+  await extension.startup();
+  await gBrowser.getFindBar();
+
+  let findbar_textbox = gFindBar.getElement("findbar-textbox");
+
+  Assert.notEqual(
+    window.getComputedStyle(findbar_textbox).backgroundColor,
+    hexToCSS(TOOLBAR_FIELD_COLOR),
+    "Findbar textbox background color should not be set by theme."
+  );
+
+  Assert.notEqual(
+    window.getComputedStyle(findbar_textbox).color,
+    hexToCSS(TOOLBAR_FIELD_TEXT_COLOR),
+    "Findbar textbox text color should not be set by theme."
+  );
 
   await extension.unload();
 });

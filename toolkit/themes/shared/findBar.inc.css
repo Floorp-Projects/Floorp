@@ -38,6 +38,16 @@ findbar[noanim] {
 
 /* Search field */
 
+/* Don't apply theme colors on findbar when header image is applied to avoid
+contrast issues, see bug 1506913 */
+:root[lwtheme-image] findbar {
+  --lwt-toolbar-field-background-color: initial;
+  --lwt-toolbar-field-color: initial;
+  --lwt-toolbar-field-border-color: initial;
+  --lwt-toolbar-field-focus: initial;
+  --lwt-toolbar-field-focus-color: initial;
+}
+
 .findbar-textbox {
   -moz-appearance: none;
   background-color: -moz-Field;
