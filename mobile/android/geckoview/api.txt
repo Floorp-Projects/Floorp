@@ -19,15 +19,15 @@ package org.mozilla.geckoview {
     method protected boolean performAction(@android.support.annotation.NonNull java.lang.String, @android.support.annotation.NonNull android.view.MenuItem);
     method protected void prepareAction(@android.support.annotation.NonNull java.lang.String, @android.support.annotation.NonNull android.view.MenuItem);
     field protected static final java.lang.String ACTION_PROCESS_TEXT = "android.intent.action.PROCESS_TEXT";
-    field protected android.view.ActionMode mActionMode;
-    field protected java.util.List<java.lang.String> mActions;
-    field protected final android.app.Activity mActivity;
+    field @android.support.annotation.Nullable protected android.view.ActionMode mActionMode;
+    field @android.support.annotation.Nullable protected java.util.List<java.lang.String> mActions;
+    field @android.support.annotation.NonNull protected final android.app.Activity mActivity;
     field protected boolean mRepopulatedMenu;
-    field protected org.mozilla.geckoview.GeckoResponse<java.lang.String> mResponse;
-    field protected org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.Selection mSelection;
-    field protected org.mozilla.geckoview.GeckoSession mSession;
-    field protected final android.graphics.Matrix mTempMatrix;
-    field protected final android.graphics.RectF mTempRect;
+    field @android.support.annotation.Nullable protected org.mozilla.geckoview.GeckoResponse<java.lang.String> mResponse;
+    field @android.support.annotation.Nullable protected org.mozilla.geckoview.GeckoSession.SelectionActionDelegate.Selection mSelection;
+    field @android.support.annotation.Nullable protected org.mozilla.geckoview.GeckoSession mSession;
+    field @android.support.annotation.NonNull protected final android.graphics.Matrix mTempMatrix;
+    field @android.support.annotation.NonNull protected final android.graphics.RectF mTempRect;
     field protected final boolean mUseFloatingToolbar;
   }
 
@@ -351,7 +351,7 @@ package org.mozilla.geckoview {
     field public static final int LOAD_FLAGS_BYPASS_PROXY = 2;
     field public static final int LOAD_FLAGS_EXTERNAL = 4;
     field public static final int LOAD_FLAGS_NONE = 0;
-    field protected org.mozilla.geckoview.GeckoSession.Window mWindow;
+    field @android.support.annotation.Nullable protected org.mozilla.geckoview.GeckoSession.Window mWindow;
   }
 
   public static interface GeckoSession.ContentDelegate {
@@ -466,9 +466,9 @@ package org.mozilla.geckoview {
     field public static final int SOURCE_WINDOW = 3;
     field public static final int TYPE_AUDIO = 1;
     field public static final int TYPE_VIDEO = 0;
-    field public final java.lang.String id;
-    field public final java.lang.String name;
-    field public final java.lang.String rawId;
+    field @android.support.annotation.NonNull public final java.lang.String id;
+    field @android.support.annotation.Nullable public final java.lang.String name;
+    field @android.support.annotation.NonNull public final java.lang.String rawId;
     field public final int source;
     field public final int type;
   }
@@ -492,17 +492,17 @@ package org.mozilla.geckoview {
     field public static final int SECURITY_MODE_IDENTIFIED = 1;
     field public static final int SECURITY_MODE_UNKNOWN = 0;
     field public static final int SECURITY_MODE_VERIFIED = 2;
-    field public final java.lang.String host;
+    field @android.support.annotation.NonNull public final java.lang.String host;
     field public final boolean isException;
     field public final boolean isSecure;
-    field public final java.lang.String issuerCommonName;
-    field public final java.lang.String issuerOrganization;
+    field @android.support.annotation.NonNull public final java.lang.String issuerCommonName;
+    field @android.support.annotation.NonNull public final java.lang.String issuerOrganization;
     field public final int mixedModeActive;
     field public final int mixedModePassive;
-    field public final java.lang.String organization;
-    field public final java.lang.String origin;
+    field @android.support.annotation.NonNull public final java.lang.String organization;
+    field @android.support.annotation.Nullable public final java.lang.String origin;
     field public final int securityMode;
-    field public final java.lang.String subjectName;
+    field @android.support.annotation.NonNull public final java.lang.String subjectName;
   }
 
   public static interface GeckoSession.PromptDelegate {
@@ -552,9 +552,9 @@ package org.mozilla.geckoview {
     field public static final int AUTH_LEVEL_SECURE = 2;
     field public int flags;
     field public int level;
-    field public java.lang.String password;
-    field public java.lang.String uri;
-    field public java.lang.String username;
+    field @android.support.annotation.Nullable public java.lang.String password;
+    field @android.support.annotation.Nullable public java.lang.String uri;
+    field @android.support.annotation.Nullable public java.lang.String username;
   }
 
   public static interface GeckoSession.PromptDelegate.ButtonCallback implements org.mozilla.geckoview.GeckoSession.PromptDelegate.AlertCallback {
@@ -567,10 +567,10 @@ package org.mozilla.geckoview {
     field public static final int CHOICE_TYPE_MULTIPLE = 3;
     field public static final int CHOICE_TYPE_SINGLE = 2;
     field public final boolean disabled;
-    field public final java.lang.String icon;
-    field public final java.lang.String id;
-    field public final org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice[] items;
-    field public final java.lang.String label;
+    field @android.support.annotation.Nullable public final java.lang.String icon;
+    field @android.support.annotation.NonNull public final java.lang.String id;
+    field @android.support.annotation.Nullable public final org.mozilla.geckoview.GeckoSession.PromptDelegate.Choice[] items;
+    field @android.support.annotation.NonNull public final java.lang.String label;
     field public final boolean selected;
     field public final boolean separator;
   }
@@ -633,9 +633,9 @@ package org.mozilla.geckoview {
 
   public static class GeckoSession.SelectionActionDelegate.Selection {
     ctor protected Selection();
-    field public final android.graphics.RectF clientRect;
+    field @android.support.annotation.Nullable public final android.graphics.RectF clientRect;
     field public final int flags;
-    field public final java.lang.String text;
+    field @android.support.annotation.NonNull public final java.lang.String text;
   }
 
   @android.support.annotation.AnyThread public static class GeckoSession.SessionState implements android.os.Parcelable {
@@ -755,10 +755,10 @@ package org.mozilla.geckoview {
     method @android.support.annotation.UiThread public void setSession(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession);
     method @android.support.annotation.UiThread public void setSession(@android.support.annotation.NonNull org.mozilla.geckoview.GeckoSession, @android.support.annotation.Nullable org.mozilla.geckoview.GeckoRuntime);
     method public boolean shouldPinOnScreen();
-    field protected final org.mozilla.geckoview.GeckoView.Display mDisplay;
-    field protected org.mozilla.geckoview.GeckoRuntime mRuntime;
-    field protected org.mozilla.geckoview.GeckoSession mSession;
-    field protected android.view.SurfaceView mSurfaceView;
+    field @android.support.annotation.NonNull protected final org.mozilla.geckoview.GeckoView.Display mDisplay;
+    field @android.support.annotation.Nullable protected org.mozilla.geckoview.GeckoRuntime mRuntime;
+    field @android.support.annotation.Nullable protected org.mozilla.geckoview.GeckoSession mSession;
+    field @android.support.annotation.Nullable protected android.view.SurfaceView mSurfaceView;
   }
 
   @android.support.annotation.AnyThread public class GeckoWebExecutor {
@@ -805,8 +805,8 @@ package org.mozilla.geckoview {
     field public static final int MEDIA_STATE_STALLED = 6;
     field public static final int MEDIA_STATE_SUSPEND = 7;
     field public static final int MEDIA_STATE_WAITING = 8;
-    field protected org.mozilla.geckoview.MediaElement.Delegate mDelegate;
-    field protected final org.mozilla.geckoview.GeckoSession mSession;
+    field @android.support.annotation.Nullable protected org.mozilla.geckoview.MediaElement.Delegate mDelegate;
+    field @android.support.annotation.NonNull protected final org.mozilla.geckoview.GeckoSession mSession;
     field protected final long mVideoId;
   }
 
@@ -838,7 +838,7 @@ package org.mozilla.geckoview {
   public static class MediaElement.Metadata {
     ctor protected Metadata();
     field public final int audioTrackCount;
-    field public final java.lang.String currentSource;
+    field @android.support.annotation.Nullable public final java.lang.String currentSource;
     field public final double duration;
     field public final long height;
     field public final boolean isSeekable;

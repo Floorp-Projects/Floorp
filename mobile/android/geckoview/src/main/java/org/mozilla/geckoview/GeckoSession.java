@@ -1122,7 +1122,7 @@ public class GeckoSession implements Parcelable {
         }
     }
 
-    protected Window mWindow;
+    protected @Nullable Window mWindow;
     private GeckoSessionSettings mSettings;
 
     public GeckoSession() {
@@ -2550,27 +2550,27 @@ public class GeckoSession implements Parcelable {
             /**
              * Contains the origin of the certificate.
              */
-            public final String origin;
+            public final @Nullable String origin;
             /**
              * Contains the host associated with the certificate.
              */
-            public final String host;
+            public final @NonNull String host;
             /**
              * Contains the human-readable name of the certificate subject.
              */
-            public final String organization;
+            public final @NonNull String organization;
             /**
              * Contains the full name of the certificate subject, including location.
              */
-            public final String subjectName;
+            public final @NonNull String subjectName;
             /**
              * Contains the common name of the issuing authority.
              */
-            public final String issuerCommonName;
+            public final @NonNull String issuerCommonName;
             /**
              * Contains the full/proper name of the issuing authority.
              */
-            public final String issuerOrganization;
+            public final @NonNull String issuerOrganization;
             /**
              * Indicates the security level of the site; possible values are SECURITY_MODE_UNKNOWN,
              * SECURITY_MODE_IDENTIFIED, and SECURITY_MODE_VERIFIED. SECURITY_MODE_IDENTIFIED
@@ -2969,14 +2969,14 @@ public class GeckoSession implements Parcelable {
              * Text content of the current selection. An empty string indicates the selection
              * is collapsed or the selection cannot be represented as plain text.
              */
-            public final String text;
+            public final @NonNull String text;
 
             /**
              * The bounds of the current selection in client coordinates. Use {@link
              * GeckoSession#getClientToScreenMatrix} to perform transformation to screen
              * coordinates.
              */
-            public final RectF clientRect;
+            public final @Nullable RectF clientRect;
 
             /* package */ Selection(final GeckoBundle bundle) {
                 flags = (bundle.getBoolean("collapsed") ?
@@ -3449,7 +3449,7 @@ public class GeckoSession implements Parcelable {
             /**
              * A string containing the URI for the auth request or null if unknown.
              */
-            public String uri;
+            public @Nullable String uri;
 
             /**
              * An int, one of AUTH_LEVEL_*, indicating level of encryption.
@@ -3459,12 +3459,12 @@ public class GeckoSession implements Parcelable {
             /**
              * A string containing the initial username or null if password-only.
              */
-            public String username;
+            public @Nullable String username;
 
             /**
              * A string containing the initial password.
              */
-            public String password;
+            public @Nullable String password;
 
             /* package */ AuthOptions(final GeckoBundle options) {
                 flags = options.getInt("flags");
@@ -3532,22 +3532,22 @@ public class GeckoSession implements Parcelable {
              * A String giving the URI of the item icon, or null if none exists
              * (only valid for menus)
              */
-            public final String icon;
+            public final @Nullable String icon;
 
             /**
              * A String giving the ID of the item or group
              */
-            public final String id;
+            public final @NonNull String id;
 
             /**
              * A Choice array of sub-items in a group, or null if not a group
              */
-            public final Choice[] items;
+            public final @Nullable Choice[] items;
 
             /**
              * A string giving the label for displaying the item or group
              */
-            public final String label;
+            public final @NonNull String label;
 
             /**
              * A boolean indicating if the item should be pre-selected
@@ -4108,19 +4108,19 @@ public class GeckoSession implements Parcelable {
             /**
              * A string giving the origin-specific source identifier.
              */
-            public final String id;
+            public final @NonNull String id;
 
             /**
              * A string giving the non-origin-specific source identifier.
              */
-            public final String rawId;
+            public final @NonNull String rawId;
 
             /**
              * A string giving the name of the video source from the system
              * (for example, "Camera 0, Facing back, Orientation 90").
              * May be empty.
              */
-            public final String name;
+            public final @Nullable String name;
 
             /**
              * An int giving the media source type.

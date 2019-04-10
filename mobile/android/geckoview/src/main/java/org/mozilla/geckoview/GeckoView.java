@@ -52,12 +52,12 @@ public class GeckoView extends FrameLayout {
     private static final String LOGTAG = "GeckoView";
     private static final boolean DEBUG = false;
 
-    protected final Display mDisplay = new Display();
-    protected GeckoSession mSession;
-    protected GeckoRuntime mRuntime;
+    protected final @NonNull Display mDisplay = new Display();
+    protected @Nullable GeckoSession mSession;
+    protected @Nullable GeckoRuntime mRuntime;
     private boolean mStateSaved;
 
-    protected SurfaceView mSurfaceView;
+    protected @Nullable SurfaceView mSurfaceView;
 
     private boolean mIsResettingFocus;
 

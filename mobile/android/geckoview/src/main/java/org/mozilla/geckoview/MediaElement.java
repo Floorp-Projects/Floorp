@@ -152,7 +152,7 @@ public class MediaElement {
         /**
          * Contains the current media source URI.
          */
-        public final String currentSource;
+        public final @Nullable String currentSource;
 
         /**
          * Indicates the duration of the media in seconds.
@@ -574,7 +574,7 @@ public class MediaElement {
         mSession = session;
     }
 
-    final protected GeckoSession mSession;
+    final protected @NonNull GeckoSession mSession;
     final protected long mVideoId;
-    protected MediaElement.Delegate mDelegate;
+    protected @Nullable MediaElement.Delegate mDelegate;
 }

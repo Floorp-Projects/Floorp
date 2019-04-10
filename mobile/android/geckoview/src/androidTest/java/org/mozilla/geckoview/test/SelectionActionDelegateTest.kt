@@ -383,7 +383,7 @@ class SelectionActionDelegateTest : BaseSessionTest() {
                 assertThat("Selection flags should be valid",
                            selection.flags, equalTo(expectedFlags))
                 assertThat("Selection rect should be valid",
-                           selection.clientRect.isEmpty, equalTo(false))
+                           selection.clientRect!!.isEmpty, equalTo(false))
                 assertThat("Actions must be valid", actions,
                            arrayContainingInAnyOrder(*expectedActions))
             }
