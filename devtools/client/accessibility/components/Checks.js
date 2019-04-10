@@ -14,8 +14,6 @@ const ColorContrastCheck =
   createFactory(require("./ColorContrastAccessibility").ColorContrastCheck);
 const { L10N } = require("../utils/l10n");
 
-const { accessibility: { AUDIT_TYPE } } = require("devtools/shared/constants");
-
 function EmptyChecks() {
   return (
     div({
@@ -35,7 +33,7 @@ class Checks extends Component {
     };
   }
 
-  [AUDIT_TYPE.CONTRAST](contrastRatio) {
+  contrastRatio(contrastRatio) {
     return ColorContrastCheck(contrastRatio);
   }
 

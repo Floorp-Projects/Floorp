@@ -77,10 +77,6 @@ const accessibleSpec = generateActorSpec({
       type: "indexInParentChange",
       indexInParent: Arg(0, "number"),
     },
-    "audited": {
-      type: "audited",
-      audit: Arg(0, "nullable:json"),
-    },
   },
 
   methods: {
@@ -160,12 +156,6 @@ const accessibleWalkerSpec = generateActorSpec({
       request: { accessible: Arg(0, "accessible") },
       response: {
         ancestry: RetVal("array:accessibleWithChildren"),
-      },
-    },
-    audit: {
-      request: {},
-      response: {
-        audit: RetVal("array:array:accessibleWithChildren"),
       },
     },
     highlightAccessible: {
