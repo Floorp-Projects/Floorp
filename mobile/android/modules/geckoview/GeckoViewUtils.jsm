@@ -154,7 +154,7 @@ var GeckoViewUtils = {
     const listener = (...args) => {
       let handlers = handler(...args);
       if (!handlers) {
-          return;
+        return;
       }
       if (!Array.isArray(handlers)) {
         handlers = [handlers];
@@ -183,7 +183,8 @@ var GeckoViewUtils = {
    * @param options Options for addEventListener.
    */
   addLazyEventListener: function(target, events, {handler, scope, name, options}) {
-    this._addLazyListeners(events, handler, scope, name,
+    this._addLazyListeners(
+      events, handler, scope, name,
       (events, listener) => {
         events.forEach(event => target.addEventListener(event, listener, options));
       },
@@ -215,7 +216,8 @@ var GeckoViewUtils = {
                                             {handler, scope, name, once}) {
     const dispatcher = this.getDispatcherForWindow(window);
 
-    this._addLazyListeners(events, handler, scope, name,
+    this._addLazyListeners(
+      events, handler, scope, name,
       (events, listener) => {
         dispatcher.registerListener(listener, events);
       },
@@ -246,7 +248,8 @@ var GeckoViewUtils = {
    * @param once    If true, only observe the specified prefs once.
    */
   addLazyPrefObserver: function(aPrefs, {handler, scope, name, once}) {
-    this._addLazyListeners(aPrefs, handler, scope, name,
+    this._addLazyListeners(
+      aPrefs, handler, scope, name,
       (prefs, observer) => {
         prefs.forEach(pref => Services.prefs.addObserver(pref.name, observer));
         prefs.forEach(pref => {
@@ -383,7 +386,7 @@ var GeckoViewUtils = {
     // For "error", throw an actual JS error instead.
     for (const level of ["DEBUG", "WARN"]) {
       const log = (strings, ...exprs) =>
-          this._log(log.logger, level, strings, exprs);
+        this._log(log.logger, level, strings, exprs);
 
       XPCOMUtils.defineLazyGetter(log, "logger", _ => {
         const logger = Log.repository.getLogger(tag);
@@ -458,4 +461,4 @@ var GeckoViewUtils = {
 };
 
 XPCOMUtils.defineLazyGetter(GeckoViewUtils, "IS_PARENT_PROCESS", _ =>
-    Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT);
+  Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_DEFAULT);
