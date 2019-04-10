@@ -220,7 +220,7 @@ bool FunctionEmitter::emitAsmJSModule() {
 
 bool FunctionEmitter::emitFunction() {
   // Make the function object a literal in the outer script's pool.
-  unsigned index = bce_->perScriptData().objectList().add(funbox_);
+  unsigned index = bce_->objectList.add(funbox_);
 
   //                [stack]
 

@@ -412,7 +412,7 @@ bool ObjectEmitter::emitObject(size_t propertyCount) {
   // Emit code for {p:a, '%q':b, 2:c} that is equivalent to constructing
   // a new object and defining (in source order) each property on the object
   // (or mutating the object's [[Prototype]], in the case of __proto__).
-  top_ = bce_->bytecodeSection().offset();
+  top_ = bce_->offset();
   if (!bce_->emitNewInit()) {
     //              [stack] OBJ
     return false;
