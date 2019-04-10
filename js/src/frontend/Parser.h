@@ -444,7 +444,7 @@ class MOZ_STACK_CLASS ParserBase : public ParserSharedBase,
 
   // While on a |let| Name token, examine |next| (which must already be
   // gotten).  Indicate whether |next|, the next token already gotten with
-  // modifier TokenStream::None, continues a LexicalDeclaration.
+  // modifier TokenStream::SlashIsDiv, continues a LexicalDeclaration.
   bool nextTokenContinuesLetDeclaration(TokenKind next);
 
   bool noteUsedNameInternal(HandlePropertyName name);
@@ -1004,7 +1004,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
    * The following mustMatchToken variants follow the behavior and parameter
    * types of mustMatchTokenInternal above.
    *
-   * If modifier is omitted, `None` is used.
+   * If modifier is omitted, `SlashIsDiv` is used.
    * If TokenKind is passed instead of `condition`, it checks if the next
    * token is the passed token.
    * If error number is passed instead of `errorReport`, it reports an
@@ -1018,13 +1018,13 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   }
 
   MOZ_MUST_USE bool mustMatchToken(TokenKind excpected, JSErrNum errorNumber) {
-    return mustMatchToken(excpected, TokenStream::None, errorNumber);
+    return mustMatchToken(excpected, TokenStream::SlashIsDiv, errorNumber);
   }
 
   template <typename ConditionT>
   MOZ_MUST_USE bool mustMatchToken(ConditionT condition, JSErrNum errorNumber) {
     return mustMatchTokenInternal(
-        condition, TokenStream::None,
+        condition, TokenStream::SlashIsDiv,
         [this, errorNumber](TokenKind) { this->error(errorNumber); });
   }
 
@@ -1039,7 +1039,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   template <typename ErrorReportT>
   MOZ_MUST_USE bool mustMatchToken(TokenKind expected,
                                    ErrorReportT errorReport) {
-    return mustMatchToken(expected, TokenStream::None, errorReport);
+    return mustMatchToken(expected, TokenStream::SlashIsDiv, errorReport);
   }
 
  private:
@@ -1341,8 +1341,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   bool matchLabel(YieldHandling yieldHandling,
                   MutableHandle<PropertyName*> label);
 
-  // Indicate if the next token (tokenized as Operand) is |in| or |of|.  If
-  // so, consume it.
+  // Indicate if the next token (tokenized with SlashIsRegExp) is |in| or |of|.
+  // If so, consume it.
   bool matchInOrOf(bool* isForInp, bool* isForOfp);
 
  private:
