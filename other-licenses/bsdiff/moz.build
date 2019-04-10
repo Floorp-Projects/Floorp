@@ -18,5 +18,4 @@ if CONFIG['HOST_OS_ARCH'] == 'WINNT':
 
 LOCAL_INCLUDES += [
     '/toolkit/mozapps/update/updater',
-    '/toolkit/mozapps/update/updater/bspatch',
 ]
