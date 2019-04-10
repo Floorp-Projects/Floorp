@@ -221,6 +221,11 @@ nsresult TableUpdateV4::NewFullHashResponse(
   return NS_OK;
 }
 
+void TableUpdateV4::Clear() {
+  mPrefixesMap.Clear();
+  mRemovalIndiceArray.Clear();
+}
+
 HashStore::HashStore(const nsACString& aTableName, const nsACString& aProvider,
                      nsIFile* aRootStoreDir)
     : mTableName(aTableName), mInUpdate(false), mFileSize(0) {
