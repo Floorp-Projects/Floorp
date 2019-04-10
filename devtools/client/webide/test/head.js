@@ -35,12 +35,14 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.webide.busyTimeout");
   Services.prefs.clearUserPref("devtools.webide.lastSelectedProject");
   Services.prefs.clearUserPref("devtools.webide.lastConnectedRuntime");
+  Services.prefs.clearUserPref("devtools.webide.showDeprecationMessage");
 });
 
-var openWebIDE = async function(autoInstallAddons) {
+var openWebIDE = async function({ autoInstallAddons, showDeprecationMessage } = {}) {
   info("opening WebIDE");
 
   Services.prefs.setBoolPref("devtools.webide.autoinstallADBExtension", !!autoInstallAddons);
+  Services.prefs.setBoolPref("devtools.webide.showDeprecationMessage", !!showDeprecationMessage);
 
   const win = Services.ww.openWindow(null, "chrome://webide/content/", "webide",
                                    "chrome,centerscreen,resizable", null);
@@ -218,5 +220,19 @@ function waitForConnectionChange(expectedState, count = 1) {
       resolve();
     };
     DebuggerServer.on("connectionchange", onConnectionChange);
+  });
+}
+
+/**
+ * Copied from shared-head.js.
+ */
+function waitUntil(predicate, interval = 100) {
+  if (predicate()) {
+    return Promise.resolve(true);
+  }
+  return new Promise(resolve => {
+    setTimeout(function() {
+      waitUntil(predicate, interval).then(() => resolve(true));
+    }, interval);
   });
 }

@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'constants.js',
     'remote-client-manager.js',
     'version-checker.js',
 )

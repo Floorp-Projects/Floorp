@@ -2,139 +2,126 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<box id="customization-container" flex="1" hidden="true">
-  <box id="customization-content-container">
-    <box flex="1" id="customization-palette-container">
-      <label id="customization-header">
-        &customizeMode.menuAndToolbars.header3;
-      </label>
-      <vbox id="customization-palette" class="customization-palette" hidden="true"/>
-      <vbox id="customization-pong-arena" hidden="true"/>
-      <spacer id="customization-spacer"/>
+<box id="customization-content-container">
+<box flex="1" id="customization-palette-container">
+  <label id="customization-header" data-l10n-id="customize-mode-menu-and-toolbars-header"></label>
+  <vbox id="customization-palette" class="customization-palette" hidden="true"/>
+  <vbox id="customization-pong-arena" hidden="true"/>
+  <spacer id="customization-spacer"/>
+</box>
+<vbox id="customization-panel-container">
+  <vbox id="customization-panelWrapper">
+    <box class="panel-arrowbox">
+      <image class="panel-arrow" side="top"/>
     </box>
-    <vbox id="customization-panel-container">
-      <vbox id="customization-panelWrapper">
-        <box class="panel-arrowbox">
-          <image class="panel-arrow" side="top"/>
-        </box>
-        <box class="panel-arrowcontent" side="top" flex="1">
-          <vbox id="customization-panelHolder">
-            <description id="customization-panelHeader">&customizeMode.overflowList.title2;</description>
-            <description id="customization-panelDescription">&customizeMode.overflowList.description;</description>
-          </vbox>
-          <box class="panel-inner-arrowcontentfooter" hidden="true"/>
-        </box>
+    <box class="panel-arrowcontent" side="top" flex="1">
+      <vbox id="customization-panelHolder">
+        <description id="customization-panelHeader" data-l10n-id="customize-mode-overflow-list-title"></description>
+        <description id="customization-panelDescription" data-l10n-id="customize-mode-overflow-list-description"></description>
       </vbox>
-    </vbox>
-  </box>
-  <hbox id="customization-footer">
-    <checkbox id="customization-titlebar-visibility-checkbox" class="customizationmode-checkbox"
-              label="&customizeMode.titlebar;"
+      <box class="panel-inner-arrowcontentfooter" hidden="true"/>
+    </box>
+  </vbox>
+</vbox>
+</box>
+<hbox id="customization-footer">
+<checkbox id="customization-titlebar-visibility-checkbox" class="customizationmode-checkbox"
 # NB: because oncommand fires after click, by the time we've fired, the checkbox binding
 #    will already have switched the button's state, so this is correct:
-              oncommand="gCustomizeMode.toggleTitlebar(this.checked)"/>
-    <checkbox id="customization-extra-drag-space-checkbox" class="customizationmode-checkbox"
-              label="&customizeMode.extraDragSpace;"
-              oncommand="gCustomizeMode.toggleDragSpace(this.checked)"/>
-    <button id="customization-toolbar-visibility-button" label="&customizeMode.toolbars2;" class="customizationmode-button" type="menu">
-      <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>
-    </button>
-    <button id="customization-lwtheme-button" label="&customizeMode.lwthemes;" class="customizationmode-button" type="menu">
-      <panel type="arrow" id="customization-lwtheme-menu"
-             onpopupshowing="gCustomizeMode.onThemesMenuShowing(event);"
-             position="topcenter bottomleft"
-             flip="none"
-             role="menu">
-        <label id="customization-lwtheme-menu-header" value="&customizeMode.lwthemes.myThemes;"/>
-        <hbox id="customization-lwtheme-menu-footer">
-          <toolbarbutton class="customization-lwtheme-menu-footeritem"
-                         label="&customizeMode.lwthemes.menuManage;"
-                         accesskey="&customizeMode.lwthemes.menuManage.accessKey;"
-                         tabindex="0"
-                         oncommand="gCustomizeMode.openAddonsManagerThemes(event);"/>
-          <toolbarbutton class="customization-lwtheme-menu-footeritem"
-                         label="&customizeMode.lwthemes.menuGetMore;"
-                         accesskey="&customizeMode.lwthemes.menuGetMore.accessKey;"
-                         tabindex="0"
-                         oncommand="gCustomizeMode.getMoreThemes(event);"/>
-        </hbox>
-      </panel>
-    </button>
-    <button id="customization-uidensity-button"
-            label="&customizeMode.uidensity;"
-            class="customizationmode-button"
-            type="menu">
-      <panel type="arrow" id="customization-uidensity-menu"
-             onpopupshowing="gCustomizeMode.onUIDensityMenuShowing();"
-             position="topcenter bottomleft"
-             flip="none"
-             role="menu">
-        <menuitem id="customization-uidensity-menuitem-compact"
-                  class="menuitem-iconic customization-uidensity-menuitem"
-                  role="menuitemradio"
-                  label="&customizeMode.uidensity.menuCompact.label;"
-                  accesskey="&customizeMode.uidensity.menuCompact.accessKey;"
-                  tooltiptext="&customizeMode.uidensity.menuCompact.tooltip;"
-                  tabindex="0"
-                  onfocus="gCustomizeMode.updateUIDensity(this.mode);"
-                  onmouseover="gCustomizeMode.updateUIDensity(this.mode);"
-                  onblur="gCustomizeMode.resetUIDensity();"
-                  onmouseout="gCustomizeMode.resetUIDensity();"
-                  oncommand="gCustomizeMode.setUIDensity(this.mode);" />
-        <menuitem id="customization-uidensity-menuitem-normal"
-                  class="menuitem-iconic customization-uidensity-menuitem"
-                  role="menuitemradio"
-                  label="&customizeMode.uidensity.menuNormal.label;"
-                  accesskey="&customizeMode.uidensity.menuNormal.accessKey;"
-                  tooltiptext="&customizeMode.uidensity.menuNormal.tooltip;"
-                  tabindex="0"
-                  onfocus="gCustomizeMode.updateUIDensity(this.mode);"
-                  onmouseover="gCustomizeMode.updateUIDensity(this.mode);"
-                  onblur="gCustomizeMode.resetUIDensity();"
-                  onmouseout="gCustomizeMode.resetUIDensity();"
-                  oncommand="gCustomizeMode.setUIDensity(this.mode);" />
+          oncommand="gCustomizeMode.toggleTitlebar(this.checked)" data-l10n-id="customize-mode-titlebar"/>
+<checkbox id="customization-extra-drag-space-checkbox" class="customizationmode-checkbox"
+          data-l10n-id="customize-mode-extra-drag-space"
+          oncommand="gCustomizeMode.toggleDragSpace(this.checked)"/>
+<button id="customization-toolbar-visibility-button" class="customizationmode-button" type="menu" data-l10n-id="customize-mode-toolbars">
+  <menupopup id="customization-toolbar-menu" onpopupshowing="onViewToolbarsPopupShowing(event)"/>
+</button>
+<button id="customization-lwtheme-button" data-l10n-id="customize-mode-lwthemes" class="customizationmode-button" type="menu">
+  <panel type="arrow" id="customization-lwtheme-menu"
+         onpopupshowing="gCustomizeMode.onThemesMenuShowing(event);"
+         position="topcenter bottomleft"
+         flip="none"
+         role="menu">
+    <label id="customization-lwtheme-menu-header" data-l10n-id="customize-mode-lwthemes-my-themes"/>
+    <hbox id="customization-lwtheme-menu-footer">
+      <toolbarbutton class="customization-lwtheme-menu-footeritem"
+                     data-l10n-id="customize-mode-lwthemes-menu-manage"
+                     tabindex="0"
+                     oncommand="gCustomizeMode.openAddonsManagerThemes(event);"/>
+      <toolbarbutton class="customization-lwtheme-menu-footeritem"
+                     data-l10n-id="customize-mode-lwthemes-menu-get-more"
+                     tabindex="0"
+                     oncommand="gCustomizeMode.getMoreThemes(event);"/>
+    </hbox>
+  </panel>
+</button>
+<button id="customization-uidensity-button"
+        data-l10n-id="customize-mode-uidensity"
+        class="customizationmode-button"
+        type="menu">
+  <panel type="arrow" id="customization-uidensity-menu"
+         onpopupshowing="gCustomizeMode.onUIDensityMenuShowing();"
+         position="topcenter bottomleft"
+         flip="none"
+         role="menu">
+    <menuitem id="customization-uidensity-menuitem-compact"
+              class="menuitem-iconic customization-uidensity-menuitem"
+              role="menuitemradio"
+              data-l10n-id="customize-mode-uidensity-menu-compact"
+              tabindex="0"
+              onfocus="gCustomizeMode.updateUIDensity(this.mode);"
+              onmouseover="gCustomizeMode.updateUIDensity(this.mode);"
+              onblur="gCustomizeMode.resetUIDensity();"
+              onmouseout="gCustomizeMode.resetUIDensity();"
+              oncommand="gCustomizeMode.setUIDensity(this.mode);"/>
+    <menuitem id="customization-uidensity-menuitem-normal"
+              class="menuitem-iconic customization-uidensity-menuitem"
+              role="menuitemradio"
+              data-l10n-id="customize-mode-uidensity-menu-normal"
+              tabindex="0"
+              onfocus="gCustomizeMode.updateUIDensity(this.mode);"
+              onmouseover="gCustomizeMode.updateUIDensity(this.mode);"
+              onblur="gCustomizeMode.resetUIDensity();"
+              onmouseout="gCustomizeMode.resetUIDensity();"
+              oncommand="gCustomizeMode.setUIDensity(this.mode);"/>
 #ifndef XP_MACOSX
-        <menuitem id="customization-uidensity-menuitem-touch"
-                  class="menuitem-iconic customization-uidensity-menuitem"
-                  role="menuitemradio"
-                  label="&customizeMode.uidensity.menuTouch.label;"
-                  accesskey="&customizeMode.uidensity.menuTouch.accessKey;"
-                  tooltiptext="&customizeMode.uidensity.menuTouch.tooltip;"
-                  tabindex="0"
-                  onfocus="gCustomizeMode.updateUIDensity(this.mode);"
-                  onmouseover="gCustomizeMode.updateUIDensity(this.mode);"
-                  onblur="gCustomizeMode.resetUIDensity();"
-                  onmouseout="gCustomizeMode.resetUIDensity();"
-                  oncommand="gCustomizeMode.setUIDensity(this.mode);">
-        </menuitem>
-        <spacer hidden="true" id="customization-uidensity-touch-spacer"/>
-        <checkbox id="customization-uidensity-autotouchmode-checkbox"
-                  hidden="true"
-                  label="&customizeMode.uidensity.autoTouchMode.checkbox.label;"
-                  oncommand="gCustomizeMode.updateAutoTouchMode(this.checked)"/>
+    <menuitem id="customization-uidensity-menuitem-touch"
+              class="menuitem-iconic customization-uidensity-menuitem"
+              role="menuitemradio"
+              data-l10n-id="customize-mode-uidensity-menu-touch"
+              tabindex="0"
+              onfocus="gCustomizeMode.updateUIDensity(this.mode);"
+              onmouseover="gCustomizeMode.updateUIDensity(this.mode);"
+              onblur="gCustomizeMode.resetUIDensity();"
+              onmouseout="gCustomizeMode.resetUIDensity();"
+              oncommand="gCustomizeMode.setUIDensity(this.mode);">
+    </menuitem>
+    <spacer hidden="true" id="customization-uidensity-touch-spacer"/>
+    <checkbox id="customization-uidensity-autotouchmode-checkbox"
+              hidden="true"
+              data-l10n-id="customize-mode-uidensity-auto-touch-mode-checkbox"
+              oncommand="gCustomizeMode.updateAutoTouchMode(this.checked)"/>
 #endif
-      </panel>
-    </button>
+  </panel>
+</button>
 
-    <button id="whimsy-button"
-            type="checkbox"
-            class="customizationmode-button"
-            oncommand="gCustomizeMode.togglePong(this.checked);"
-            hidden="true"/>
+<button id="whimsy-button"
+        type="checkbox"
+        class="customizationmode-button"
+        oncommand="gCustomizeMode.togglePong(this.checked);"
+        hidden="true"/>
 
-    <spacer id="customization-footer-spacer"/>
-    <button id="customization-undo-reset-button"
-            class="customizationmode-button"
-            hidden="true"
-            oncommand="gCustomizeMode.undoReset();"
-            label="&undoCmd.label;"/>
-    <button id="customization-reset-button"
-            oncommand="gCustomizeMode.reset();"
-            label="&customizeMode.restoreDefaults;"
-            class="customizationmode-button"/>
-    <button id="customization-done-button"
-            oncommand="gCustomizeMode.exit();"
-            label="&customizeMode.done;"
-            class="customizationmode-button"/>
-  </hbox>
-</box>
+<spacer id="customization-footer-spacer"/>
+<button id="customization-undo-reset-button"
+        class="customizationmode-button"
+        hidden="true"
+        oncommand="gCustomizeMode.undoReset();"
+        data-l10n-id="customize-mode-undo-cmd"/>
+<button id="customization-reset-button"
+        oncommand="gCustomizeMode.reset();"
+        data-l10n-id="customize-mode-restore-defaults"
+        class="customizationmode-button"/>
+<button id="customization-done-button"
+        oncommand="gCustomizeMode.exit();"
+        data-l10n-id="customize-mode-done"
+        class="customizationmode-button"/>
+</hbox>

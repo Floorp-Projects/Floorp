@@ -106,7 +106,7 @@ let gFlexShorthandTestcases = [
   },
   {
     "flex":        "20000000",
-    "flex-grow":   "2e+7"
+    "flex-grow":   "20000000",
   },
 
   // One Value (length or other nonnumeric) --> sets flex-basis
@@ -141,7 +141,7 @@ let gFlexShorthandTestcases = [
   },
   {
     "flex":        "calc(15% + 30px)",
-    "flex-basis":  "calc(30px + 15%)",
+    "flex-basis":  "calc(15% + 30px)",
   },
 
   // Two Values (numeric) --> sets flex-grow, flex-shrink
@@ -212,7 +212,7 @@ let gFlexShorthandTestcases = [
   {
     "flex":        "calc(5% + 10px) 3",
     "flex-grow":   "3",
-    "flex-basis":  "calc(10px + 5%)",
+    "flex-basis":  "calc(5% + 10px)",
   },
 
   // Three Values --> Sets all three subproperties

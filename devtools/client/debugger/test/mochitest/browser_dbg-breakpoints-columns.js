@@ -1,111 +1,104 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-function getColumnBreakpointElements(dbg) {
-  return findAllElementsWithSelector(dbg, ".column-breakpoint");
+async function enableFirstBreakpoint(dbg) {
+  getCM(dbg).setCursor({ line: 32, ch: 0 });
+  await addBreakpoint(dbg, "long", 32);
+  const bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
+
+  ok(bpMarkers.length === 2, "2 column breakpoints");
+  assertClass(bpMarkers[0], "active");
+  assertClass(bpMarkers[1], "active", false);
 }
 
-async function assertConditionalBreakpointIsFocused(dbg) {
-  const input = findElement(dbg, "conditionalPanelInput");
-  await waitForElementFocus(dbg, input);
-}
+async function enableSecondBreakpoint(dbg) {
+  let bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
 
-function waitForElementFocus(dbg, el) {
-  const doc = dbg.win.document;
-  return waitFor(() => doc.activeElement == el && doc.hasFocus());
-}
+  bpMarkers[1].click();
+  await waitForBreakpointCount(dbg, 2);
 
-function hasCondition(marker) {
-  return marker.classList.contains("has-condition");
+  bpMarkers = findAllElements(dbg, "columnBreakpoints");
+  assertClass(bpMarkers[1], "active");
+  await waitForAllElements(dbg, "breakpointItems", 2);
 }
 
 async function setConditionalBreakpoint(dbg, index, condition) {
-  const {
-      addConditionalBreakpoint,
-      editConditionalBreakpoint
-  } = selectors.gutterContextMenu;
-  // Make this work with either add or edit menu items
-  const selector = `${addConditionalBreakpoint},${editConditionalBreakpoint}`;
+  let bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
+  rightClickEl(dbg, bpMarkers[index]);
+  selectContextMenuItem(dbg, selectors.addConditionItem);
+  await typeInPanel(dbg, condition);
+  await waitForCondition(dbg, condition);
 
-  rightClickElement(dbg, "breakpointItem", index);
-  selectContextMenuItem(dbg, selector);
-  await waitForElement(dbg, "conditionalPanelInput");
-  await assertConditionalBreakpointIsFocused(dbg);
-
-  // Position cursor reliably at the end of the text.
-  pressKey(dbg, "End");
-  type(dbg, condition);
-  pressKey(dbg, "Enter");
+  bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
+  assertClass(bpMarkers[index], "has-condition");
 }
 
-function removeBreakpointViaContext(dbg, index) {
-  rightClickElement(dbg, "breakpointItem", index);
-  selectContextMenuItem(dbg, "#node-menu-delete-self");
+async function setLogPoint(dbg, index, expression) {
+  let bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
+  rightClickEl(dbg, bpMarkers[index]);
+
+  selectContextMenuItem(dbg, selectors.addLogItem);
+  await typeInPanel(dbg, expression);
+  await waitForLog(dbg, expression);
+
+  bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
+  assertClass(bpMarkers[index], "has-log");
 }
 
-// Test enabling and disabling a breakpoint using the check boxes
+async function disableBreakpoint(dbg, index) {
+  rightClickElement(dbg, "columnBreakpoints");
+  selectContextMenuItem(dbg, selectors.disableItem);
+
+  await waitForState(dbg, state => {
+    const bp = dbg.selectors.getBreakpointsList(state)[index];
+    return bp.disabled;
+  });
+
+  const bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
+  assertClass(bpMarkers[0], "disabled");
+}
+
+async function removeFirstBreakpoint(dbg) {
+  let bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
+
+  bpMarkers[0].click();
+  bpMarkers = await waitForAllElements(dbg, "columnBreakpoints");
+  assertClass(bpMarkers[0], "active", false);
+}
+
+async function removeAllBreakpoints(dbg, line, count) {
+  clickGutter(dbg, 32);
+  await waitForBreakpointCount(dbg, 0);
+
+  ok(findAllElements(dbg, "columnBreakpoints").length == 0);
+}
+
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple1");
-  await pushPref("devtools.debugger.features.column-breakpoints", false);
+  await selectSource(dbg, "long");
 
-  if(!Services.prefs.getBoolPref("devtools.debugger.features.column-breakpoints")) {
-    ok(true, "This test only applies when column breakpoints are on");
-    return;
-  }
+  info("1. Add a column breakpoint on line 32");
+  await enableFirstBreakpoint(dbg);
 
-  await selectSource(dbg, "simple1");
+  info("2. Click on the second breakpoint on line 32");
+  await enableSecondBreakpoint(dbg);
 
-  // Scroll down to desired line so that column breakpoints render
-  getCM(dbg).setCursor({ line: 15, ch: 0 });
+  info("3. Add a condition to the first breakpoint");
+  await setConditionalBreakpoint(dbg, 0, "foo");
 
-  // Create a breakpoint at 15:undefined
-  await addBreakpoint(dbg, "simple1", 15);
+  info("4. Add a log to the first breakpoint");
+  await setLogPoint(dbg, 0, "bar");
 
-  // Wait for column breakpoint markers
-  await waitForElementWithSelector(dbg, ".column-breakpoint");
+  info("5. Disable the first breakpoint");
+  await disableBreakpoint(dbg, 0);
 
-  let columnBreakpointMarkers = getColumnBreakpointElements(dbg);
-  ok(
-    columnBreakpointMarkers.length === 2,
-      "2 column breakpoint markers display"
-  );
+  info("6. Remove the first breakpoint");
+  await removeFirstBreakpoint(dbg);
 
-  // Create a breakpoint at 15:8
-  columnBreakpointMarkers[0].click();
+  info("7. Add a condition to the second breakpoint");
+  await setConditionalBreakpoint(dbg, 1, "foo2");
 
-  // Create a breakpoint at 15:28
-  columnBreakpointMarkers[1].click();
-
-  // Wait for breakpoints in right panel to render
-  await waitForState(dbg, state => {
-    return dbg.win.document.querySelectorAll(".breakpoints-list .breakpoint").length === 3;
-  })
-
-  // Scroll down in secondary pane so element we want to right-click is showing
-  dbg.win.document.querySelector(".secondary-panes").scrollTop = 100;
-
-  // Set a condition at 15:8
-  await setConditionalBreakpoint(dbg, 4, "Eight");
-
-  // Ensure column breakpoint is yellow
-  await waitForElementWithSelector(dbg, ".column-breakpoint.has-condition");
-
-  // Remove the breakpoint from 15:undefined via the secondary pane context menu
-  removeBreakpointViaContext(dbg, 3);
-
-  // Ensure that there's still a marker on line 15
-  await waitForState(dbg, state => dbg.selectors.getBreakpointCount(state) == 2);
-  await waitForElementWithSelector(dbg, ".column-breakpoint.has-condition");
-  columnBreakpointMarkers = getColumnBreakpointElements(dbg);
-  ok(hasCondition(columnBreakpointMarkers[0]), "First column breakpoint has conditional style");
-
-  // Remove the breakpoint from 15:8
-  removeBreakpointViaContext(dbg, 3);
-
-  // Ensure there's still a marker and it has no condition
-  await waitForState(dbg, state => dbg.selectors.getBreakpointCount(state) == 1);
-  await waitForElementWithSelector(dbg, ".column-breakpoint");
-
-  // Ensure the first column breakpoint has no conditional style
-  await waitFor(() => !hasCondition(getColumnBreakpointElements(dbg)[0]));
+  info("8. test removing the breakpoints by clicking in the gutter");
+  await removeAllBreakpoints(dbg, 32, 0);
 });

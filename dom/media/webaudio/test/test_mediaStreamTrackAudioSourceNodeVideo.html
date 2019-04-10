@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<meta charset="utf-8">
+<head>
+  <title>Test MediaStreamTrackAudioSourceNode throw video track</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/dom/media/webaudio/test/webaudio.js"></script>
+  <script type="text/javascript" src="/tests/dom/media/tests/mochitest/head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  let context = new AudioContext();
+  let canvas = document.createElement("canvas");
+  canvas.getContext("2d");
+  let track = canvas.captureStream().getTracks()[0];
+
+  expectException(() => {
+    let mediaStreamTrackSource = new MediaStreamTrackAudioSourceNode(
+      context,
+      { mediaStreamTrack: track });
+  }, DOMException.INVALID_STATE_ERR);
+</script>
+</pre>
+</body>
+</html>

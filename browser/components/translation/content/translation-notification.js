@@ -62,7 +62,7 @@ class MozTranslationNotification extends MozElements.Notification {
             <menuitem anonid="neverForLanguage" oncommand="this.closest('notification').neverForLanguage();"/>
             <menuitem anonid="neverForSite" oncommand="this.closest('notification').neverForSite();" label="&translation.options.neverForSite.label;" accesskey="&translation.options.neverForSite.accesskey;"/>
             <menuseparator/>
-            <menuitem oncommand="openPreferences('paneGeneral', {origin:'translationInfobar'});" label="&translation.options.preferences.label;" accesskey="&translation.options.preferences.accesskey;"/>
+            <menuitem oncommand="openPreferences('paneGeneral');" label="&translation.options.preferences.label;" accesskey="&translation.options.preferences.accesskey;"/>
             <menuitem class="subviewbutton panel-subview-footer" oncommand="this.closest('notification').openProviderAttribution();">
               <deck anonid="translationEngine" selectedIndex="0">
                 <hbox class="translation-attribution">

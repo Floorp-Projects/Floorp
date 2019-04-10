@@ -278,6 +278,16 @@ const POLICIES_TESTS = [
       "browser.newtabpage.enabled": false,
     },
   },
+
+  // POLICY: SearchSuggestEnabled
+  {
+    policies: {
+      "SearchSuggestEnabled": false,
+    },
+    lockedPrefs: {
+      "browser.urlbar.suggest.searches": false,
+    },
+  },
 ];
 
 add_task(async function test_policy_remember_passwords() {
