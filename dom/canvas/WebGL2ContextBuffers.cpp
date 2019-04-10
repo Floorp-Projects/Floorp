@@ -15,9 +15,8 @@ namespace mozilla {
 // Buffer objects
 
 void WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
-                                      WebGLintptr readOffset,
-                                      WebGLintptr writeOffset,
-                                      WebGLsizeiptr size) {
+                                      GLintptr readOffset, GLintptr writeOffset,
+                                      GLsizeiptr size) {
   const FuncScope funcScope(*this, "copyBufferSubData");
   if (IsContextLost()) return;
 
@@ -33,14 +32,9 @@ void WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
     return;
   }
 
-  if (!CheckedInt<GLintptr>(readOffset).isValid() ||
-      !CheckedInt<GLintptr>(writeOffset).isValid() ||
-      !CheckedInt<GLsizeiptr>(size).isValid())
-    return ErrorOutOfMemory("offset or size too large for platform.");
-
-  const auto fnValidateOffsetSize = [&](const char* info, WebGLintptr offset,
+  const auto fnValidateOffsetSize = [&](const char* info, GLintptr offset,
                                         const WebGLBuffer* buffer) {
-    const auto neededBytes = CheckedInt<uint64_t>(offset) + size;
+    const auto neededBytes = CheckedInt<size_t>(offset) + size;
     if (!neededBytes.isValid() || neededBytes.value() > buffer->ByteLength()) {
       ErrorInvalidValue("Invalid %s range.", info);
       return false;
@@ -54,6 +48,9 @@ void WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
   }
 
   if (readBuffer == writeBuffer) {
+    MOZ_ASSERT((CheckedInt<WebGLsizeiptr>(readOffset) + size).isValid());
+    MOZ_ASSERT((CheckedInt<WebGLsizeiptr>(writeOffset) + size).isValid());
+
     const bool separate =
         (readOffset + size <= writeOffset || writeOffset + size <= readOffset);
     if (!separate) {
@@ -84,7 +81,7 @@ void WebGL2Context::CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
   writeBuffer->ResetLastUpdateFenceId();
 }
 
-void WebGL2Context::GetBufferSubData(GLenum target, WebGLintptr srcByteOffset,
+void WebGL2Context::GetBufferSubData(GLenum target, GLintptr srcByteOffset,
                                      const dom::ArrayBufferView& dstData,
                                      GLuint dstElemOffset,
                                      GLuint dstElemCountOverride) {
@@ -109,9 +106,8 @@ void WebGL2Context::GetBufferSubData(GLenum target, WebGLintptr srcByteOffset,
 
   ////
 
-  if (!CheckedInt<GLintptr>(srcByteOffset).isValid() ||
-      !CheckedInt<GLsizeiptr>(byteLen).isValid()) {
-    ErrorOutOfMemory("offset or size too large for platform.");
+  if (!CheckedInt<GLsizeiptr>(byteLen).isValid()) {
+    ErrorOutOfMemory("Size too large.");
     return;
   }
   const GLsizeiptr glByteLen(byteLen);
