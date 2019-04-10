@@ -69,8 +69,6 @@ LONGHANDS_NOT_SERIALIZED_WITH_SERVO = [
     "column-rule-width",
 
     # Clamping (need to get rid of nsStyleCoord storage before removing these).
-    "row-gap",
-    "column-gap",
     "grid-auto-columns",
     "grid-auto-rows",
 

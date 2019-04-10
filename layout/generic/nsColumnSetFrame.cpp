@@ -277,7 +277,7 @@ nscoord nsColumnSetFrame::GetAvailableContentBSize(
 static nscoord GetColumnGap(nsColumnSetFrame* aFrame,
                             nscoord aPercentageBasis) {
   const auto& columnGap = aFrame->StylePosition()->mColumnGap;
-  if (columnGap.GetUnit() == eStyleUnit_Normal) {
+  if (columnGap.IsNormal()) {
     return aFrame->StyleFont()->mFont.size;
   }
   return nsLayoutUtils::ResolveGapToLength(columnGap, aPercentageBasis);
