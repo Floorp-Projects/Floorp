@@ -3569,7 +3569,8 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   MOZ_ASSERT(bce->objectList.length <= INDEX_LIMIT);
 
   uint64_t nslots =
-      bce->maxFixedSlots + static_cast<uint64_t>(bce->maxStackDepth);
+      bce->maxFixedSlots +
+      static_cast<uint64_t>(bce->bytecodeSection().maxStackDepth());
   if (nslots > UINT32_MAX) {
     bce->reportError(nullptr, JSMSG_NEED_DIET, js_script_str);
     return false;
