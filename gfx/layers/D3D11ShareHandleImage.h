@@ -17,6 +17,9 @@
 #include "mozilla/layers/TextureD3D11.h"
 
 namespace mozilla {
+namespace gl {
+class GLBlitHelper;
+}
 namespace layers {
 
 class D3D11RecycleAllocator final : public TextureClientRecycleAllocator {
@@ -64,6 +67,14 @@ class D3D11ShareHandleImage final : public Image {
   gfx::YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }
 
  private:
+  friend class gl::GLBlitHelper;
+  D3D11TextureData* GetData() const {
+    if (!mTextureClient) {
+      return nullptr;
+    }
+    return mTextureClient->GetInternalData()->AsD3D11TextureData();
+  }
+
   gfx::IntSize mSize;
   gfx::IntRect mPictureRect;
   gfx::YUVColorSpace mYUVColorSpace;

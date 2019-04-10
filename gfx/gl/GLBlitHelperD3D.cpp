@@ -13,6 +13,7 @@
 #include "GPUVideoImage.h"
 #include "ScopedGLHelpers.h"
 
+#include "mozilla/layers/D3D11ShareHandleImage.h"
 #include "mozilla/layers/D3D11YCbCrImage.h"
 #include "mozilla/layers/TextureD3D11.h"
 
@@ -197,6 +198,20 @@ bool GLBlitHelper::BlitImage(layers::GPUVideoImage* const srcImage,
                          << uint32_t(subdescUnion.type());
       return false;
   }
+}
+
+// -------------------------------------
+
+bool GLBlitHelper::BlitImage(layers::D3D11ShareHandleImage* const srcImage,
+                             const gfx::IntSize& destSize,
+                             const OriginPos destOrigin) const {
+  const auto& data = srcImage->GetData();
+  if (!data) return false;
+
+  layers::SurfaceDescriptorD3D10 desc;
+  if (!data->SerializeSpecific(&desc)) return false;
+
+  return BlitDescriptor(desc, destSize, destOrigin);
 }
 
 // -------------------------------------
