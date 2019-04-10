@@ -162,6 +162,12 @@ const accessibleWalkerSpec = generateActorSpec({
         ancestry: RetVal("array:accessibleWithChildren"),
       },
     },
+    audit: {
+      request: {},
+      response: {
+        audit: RetVal("array:array:accessibleWithChildren"),
+      },
+    },
     highlightAccessible: {
       request: {
         accessible: Arg(0, "accessible"),

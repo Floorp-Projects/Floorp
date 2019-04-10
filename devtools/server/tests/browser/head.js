@@ -272,7 +272,7 @@ function checkA11yFront(front, expected, expectedFront) {
   }
 
   for (const key in expected) {
-    if (["actions", "states", "attributes"].includes(key)) {
+    if (["actions", "states", "attributes", "checks"].includes(key)) {
       SimpleTest.isDeeply(front[key], expected[key],
         `Accessible Front has correct ${key}`);
     } else {
