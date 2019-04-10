@@ -505,7 +505,7 @@ static bool exn_toSource(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  StringBuffer sb(cx);
+  JSStringBuilder sb(cx);
   if (!sb.append("(new ") || !sb.append(name) || !sb.append("(")) {
     return false;
   }
@@ -1057,7 +1057,7 @@ const char* js::ValueToSourceForError(JSContext* cx, HandleValue val,
     return "<<error converting value to string>>";
   }
 
-  StringBuffer sb(cx);
+  JSStringBuilder sb(cx);
   if (val.isObject()) {
     RootedObject valObj(cx, val.toObjectOrNull());
     ESClass cls;

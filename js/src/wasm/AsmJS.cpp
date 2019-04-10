@@ -7212,7 +7212,7 @@ JSString* js::AsmJSModuleToString(JSContext* cx, HandleFunction fun,
   uint32_t end = metadata.srcEndAfterCurly();
   ScriptSource* source = metadata.scriptSource.get();
 
-  StringBuffer out(cx);
+  JSStringBuilder out(cx);
 
   if (isToSource && fun->isLambda() && !out.append("(")) {
     return nullptr;
@@ -7263,7 +7263,7 @@ JSString* js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun) {
   uint32_t end = metadata.srcStart + f.endOffsetInModule();
 
   ScriptSource* source = metadata.scriptSource.get();
-  StringBuffer out(cx);
+  JSStringBuilder out(cx);
 
   if (!out.append("function ")) {
     return nullptr;

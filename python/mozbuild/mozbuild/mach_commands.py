@@ -1878,15 +1878,19 @@ class StaticAnalysis(MachCommandBase):
                     'line': issue['mainEventLineNumber'],
                     'flag': issue['checkerName'],
                     'message': event_path['eventDescription'],
-                    'extra': []
+                    'extra': {
+                        'category': issue['checkerProperties']['category'],
+                        'stateOnServer': issue['stateOnServer'],
+                        'stack': []
+                    }
                 }
 
                 # Embed all events into extra message
                 for event in issue['events']:
-                    dict_issue['extra'].append({'file_path': event['strippedFilePathname'],
-                                                'line_number': event['lineNumber'],
-                                                'path_type': event['eventTag'],
-                                                'description': event['eventDescription']})
+                    dict_issue['extra']['stack'].append({'file_path': event['strippedFilePathname'],
+                                                         'line_number': event['lineNumber'],
+                                                         'path_type': event['eventTag'],
+                                                         'description': event['eventDescription']})
 
                 return dict_issue
 
@@ -2049,9 +2053,13 @@ class StaticAnalysis(MachCommandBase):
     @CommandArgument('--task', '-t', type=str,
                      default='compileWithGeckoBinariesDebugSources',
                      help='Which gradle tasks to use to compile the java codebase.')
+    @CommandArgument('--outgoing', default=False, action='store_true',
+                     help='Run infer checks on outgoing files from repository')
+    @CommandArgument('--output', default=None,
+                     help='Write infer json output in a file')
     def check_java(self, source=['mobile'], jobs=2, strip=1, verbose=False, checks=[],
                    task='compileWithGeckoBinariesDebugSources',
-                   skip_export=False):
+                   skip_export=False, outgoing=False, output=None):
         self._set_log_level(verbose)
         self.log_manager.enable_all_structured_loggers()
         if self.substs['MOZ_BUILD_APP'] != 'mobile/android':
@@ -2061,12 +2069,25 @@ class StaticAnalysis(MachCommandBase):
         rc = self._check_for_java()
         if rc != 0:
             return 1
+        if output is not None:
+            output = os.path.abspath(output)
+            if not os.path.isdir(os.path.dirname(output)):
+                self.log(logging.WARNING, 'static-analysis', {},
+                         'Missing report destination folder for {}'.format(output))
+
         # if source contains the whole mobile folder, then we just have to
         # analyze everything
         check_all = any(i.rstrip(os.sep).split(os.sep)[-1] == 'mobile' for i in source)
         # gather all java sources from the source variable
         java_sources = []
-        if not check_all:
+        if outgoing:
+            repo = get_repository_object(self.topsrcdir)
+            java_sources = self._get_java_files(repo.get_outgoing_files())
+            if not java_sources:
+                self.log(logging.WARNING, 'static-analysis', {},
+                         'No outgoing Java files to check')
+                return 0
+        elif not check_all:
             java_sources = self._get_java_files(source)
             if not java_sources:
                 return 0
@@ -2096,6 +2117,14 @@ class StaticAnalysis(MachCommandBase):
         rc = rc or self.run_process(args=analysis_cmd, cwd=self.topsrcdir, pass_thru=True)
         if tmp_file:
             tmp_file.close()
+
+        # Copy the infer report
+        report_path = os.path.join(self.topsrcdir, 'infer-out', 'report.json')
+        if output is not None and os.path.exists(report_path):
+            shutil.copy(report_path, output)
+            self.log(logging.INFO, 'static-analysis', {},
+                     'Report available in {}'.format(output))
+
         return rc
 
     def _get_java_files(self, sources):
@@ -3190,8 +3219,8 @@ class StaticAnalysis(MachCommandBase):
         with open(paths[0], 'r') as fin:
             process.stdin.write(fin.read())
             process.stdin.close()
-            process.wait();
-            return 0
+            process.wait()
+            return process.returncode
 
     def _run_clang_format_path(self, clang_format, paths, output_file, output_format):
 

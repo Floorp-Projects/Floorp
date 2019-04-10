@@ -4,6 +4,8 @@
 
 "use strict";
 
+var {ExtensionParent} = ChromeUtils.import("resource://gre/modules/ExtensionParent.jsm");
+
 ChromeUtils.defineModuleGetter(this, "ExtensionControlledPopup",
                                "resource:///modules/ExtensionControlledPopup.jsm");
 ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
@@ -16,6 +18,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
 const STORE_TYPE = "url_overrides";
 const NEW_TAB_SETTING_NAME = "newTabURL";
 const NEW_TAB_CONFIRMED_TYPE = "newTabNotification";
+const NEW_TAB_PRIVATE_ALLOWED = "browser.newtab.privateAllowed";
+const NEW_TAB_EXTENSION_CONTROLLED = "browser.newtab.extensionControlled";
 
 XPCOMUtils.defineLazyGetter(this, "newTabPopup", () => {
   return new ExtensionControlledPopup({
@@ -60,11 +64,33 @@ XPCOMUtils.defineLazyGetter(this, "newTabPopup", () => {
 function setNewTabURL(extensionId, url) {
   if (extensionId) {
     newTabPopup.addObserver(extensionId);
+    let policy = ExtensionParent.WebExtensionPolicy.getByID(extensionId);
+    Services.prefs.setBoolPref(NEW_TAB_PRIVATE_ALLOWED, policy && policy.privateBrowsingAllowed);
+    Services.prefs.setBoolPref(NEW_TAB_EXTENSION_CONTROLLED, true);
   } else {
     newTabPopup.removeObserver();
+    Services.prefs.clearUserPref(NEW_TAB_PRIVATE_ALLOWED);
+    Services.prefs.clearUserPref(NEW_TAB_EXTENSION_CONTROLLED);
   }
-  aboutNewTabService.newTabURL = url;
+  if (url) {
+    aboutNewTabService.newTabURL = url;
+  }
 }
+
+// eslint-disable-next-line mozilla/balanced-listeners
+ExtensionParent.apiManager.on("extension-setting-changed", async (eventName, setting) => {
+  let extensionId, url;
+  if (setting.type === STORE_TYPE && setting.key === NEW_TAB_SETTING_NAME) {
+    if (setting.action === "enable" || setting.item) {
+      let {item} = setting;
+      // If setting.item exists, it is the new value.  If it doesn't exist, and an
+      // extension is being enabled, we use the id.
+      extensionId = (item && item.id) || setting.id;
+      url = item && (item.value || item.initialValue);
+    }
+  }
+  setNewTabURL(extensionId, url);
+});
 
 this.urlOverrides = class extends ExtensionAPI {
   static onUninstall(id) {
@@ -74,10 +100,7 @@ this.urlOverrides = class extends ExtensionAPI {
 
   processNewTabSetting(action) {
     let {extension} = this;
-    let item = ExtensionSettingsStore[action](extension.id, STORE_TYPE, NEW_TAB_SETTING_NAME);
-    if (item) {
-      setNewTabURL(item.id, item.value || item.initialValue);
-    }
+    ExtensionSettingsStore[action](extension.id, STORE_TYPE, NEW_TAB_SETTING_NAME);
   }
 
   async onManifestEntry(entryName) {
@@ -125,6 +148,26 @@ this.urlOverrides = class extends ExtensionAPI {
       if (item) {
         setNewTabURL(item.id, item.value || item.initialValue);
       }
+
+      // We need to monitor permission change and update the preferences.
+      // eslint-disable-next-line mozilla/balanced-listeners
+      extension.on("add-permissions", async (ignoreEvent, permissions) => {
+        if (permissions.permissions.includes("internal:privateBrowsingAllowed")) {
+          let item = await ExtensionSettingsStore.getSetting(STORE_TYPE, NEW_TAB_SETTING_NAME);
+          if (item && item.id == extension.id) {
+            Services.prefs.setBoolPref(NEW_TAB_PRIVATE_ALLOWED, true);
+          }
+        }
+      });
+      // eslint-disable-next-line mozilla/balanced-listeners
+      extension.on("remove-permissions", async (ignoreEvent, permissions) => {
+        if (permissions.permissions.includes("internal:privateBrowsingAllowed")) {
+          let item = await ExtensionSettingsStore.getSetting(STORE_TYPE, NEW_TAB_SETTING_NAME);
+          if (item && item.id == extension.id) {
+            Services.prefs.setBoolPref(NEW_TAB_PRIVATE_ALLOWED, false);
+          }
+        }
+      });
     }
   }
 };

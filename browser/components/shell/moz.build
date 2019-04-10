@@ -9,7 +9,6 @@ LOCAL_INCLUDES += [
     '/xpcom/build'
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']
 MOCHITEST_CHROME_MANIFESTS += ['test/chrome.ini']
 

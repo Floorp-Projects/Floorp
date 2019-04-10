@@ -9249,6 +9249,9 @@ TemporaryTypeSet* IonBuilder::computeHeapType(const TemporaryTypeSet* objTypes,
 
   for (unsigned i = 0; i < objTypes->getObjectCount(); i++) {
     TypeSet::ObjectKey* key = objTypes->getObject(i);
+    if (!key) {
+      continue;
+    }
 
     if (key->unknownProperties()) {
       return nullptr;

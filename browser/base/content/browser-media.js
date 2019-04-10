@@ -155,7 +155,7 @@ var gEMEHandler = {
       label: gNavigatorBundle.getString(btnLabelId),
       accessKey: gNavigatorBundle.getString(btnAccessKeyId),
       callback() {
-        openPreferences("general-drm", {origin: "browserMedia"});
+        openPreferences("general-drm");
       },
       dismiss: true,
     };

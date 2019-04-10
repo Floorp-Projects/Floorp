@@ -12,8 +12,6 @@ var EXPORTED_SYMBOLS = ["HomePage"];
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "PrivateBrowsingUtils",
                                "resource://gre/modules/PrivateBrowsingUtils.jsm");
-ChromeUtils.defineModuleGetter(this, "ExtensionSettingsStore",
-                               "resource://gre/modules/ExtensionSettingsStore.jsm");
 
 const kPrefName = "browser.startup.homepage";
 
@@ -53,23 +51,12 @@ let HomePage = {
         (aWindow && PrivateBrowsingUtils.isWindowPrivate(aWindow))) {
       // If an extension controls the setting and does not have private
       // browsing permission, use the default setting.
-      let extensionInfo;
-      try {
-        extensionInfo = ExtensionSettingsStore.getSetting("prefs", "homepage_override");
-      } catch (e) {
-        // ExtensionSettings may not be initialized if no extensions are enabled.  If
-        // we have some indication that an extension controls the homepage, return
-        // the defaults instead.
-        if (homePages.includes("moz-extension://")) {
-          return this.getDefault();
-        }
-      }
-
-      if (extensionInfo) {
-        let policy = WebExtensionPolicy.getByID(extensionInfo.id);
-        if (!policy || !policy.privateBrowsingAllowed) {
-          return this.getDefault();
-        }
+      let extensionControlled = Services.prefs.getBoolPref("browser.startup.homepage_override.extensionControlled", false);
+      let privateAllowed = Services.prefs.getBoolPref("browser.startup.homepage_override.privateAllowed", false);
+      // There is a potential on upgrade that the prefs are not set yet, so we double check
+      // for moz-extension.
+      if (!privateAllowed && (extensionControlled || homePages.includes("moz-extension://"))) {
+        return this.getDefault();
       }
     }
 

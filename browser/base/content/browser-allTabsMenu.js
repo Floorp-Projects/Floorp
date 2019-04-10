@@ -80,8 +80,8 @@ var gTabsPanel = {
         menuitem.setAttribute("usercontextid", identity.userContextId);
         // The command handler depends on this.
         menuitem.setAttribute("data-usercontextid", identity.userContextId);
-        menuitem.setAttribute("data-identity-color", identity.color);
-        menuitem.setAttribute("data-identity-icon", identity.icon);
+        menuitem.classList.add("identity-icon-" + identity.icon);
+        menuitem.classList.add("identity-color-" + identity.color);
 
         menuitem.setAttribute("command", "Browser:NewUserContextTab");
 

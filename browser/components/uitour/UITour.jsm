@@ -438,7 +438,7 @@ var UITour = {
           log.warn("openPreferences: Invalid pane specified");
           return false;
         }
-        window.openPreferences(data.pane, { origin: "UITour" });
+        window.openPreferences(data.pane);
         break;
       }
 

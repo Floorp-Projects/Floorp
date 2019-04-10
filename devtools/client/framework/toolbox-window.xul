@@ -14,5 +14,4 @@
         width="900" height="320"
         persist="screenX screenY width height sizemode">
   <tooltip id="aHTMLTooltip" page="true"/>
-  <iframe id="toolbox-iframe" flex="1" forceOwnRefreshDriver="" tooltip="aHTMLTooltip"></iframe>
 </window>

@@ -135,6 +135,7 @@ function Inspector(toolbox) {
   this.onSidebarSelect = this.onSidebarSelect.bind(this);
   this.onSidebarShown = this.onSidebarShown.bind(this);
   this.onSidebarToggle = this.onSidebarToggle.bind(this);
+  this.handleThreadState = this.handleThreadState.bind(this);
 
   this._target.on("will-navigate", this._onBeforeNavigate);
 }
@@ -155,8 +156,8 @@ Inspector.prototype = {
       }
       this._replayResumed = !dbg.isPaused();
 
-      this._onReplayPauseChange = this._onReplayPauseChange.bind(this);
-      this._target.on("pause-change", this._onReplayPauseChange);
+      this._target.threadClient.addListener("paused", this.handleThreadState);
+      this._target.threadClient.addListener("resumed", this.handleThreadState);
     }
 
     await Promise.all([
@@ -1124,9 +1125,8 @@ Inspector.prototype = {
   /**
    * When replaying, reset the inspector whenever the target paused or unpauses.
    */
-  _onReplayPauseChange({ paused }) {
-    this._replayResumed = !paused;
-
+  handleThreadState(event) {
+    this._replayResumed = event != "paused";
     this.onNewRoot();
   },
 

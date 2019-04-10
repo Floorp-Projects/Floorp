@@ -2468,7 +2468,6 @@ void nsGlobalWindowOuter::DetachFromDocShell() {
   }
 
   mDocShell = nullptr;
-  mBrowsingContext->ClearDocShell();
 
   if (mFrames) {
     mFrames->SetDocShell(nullptr);

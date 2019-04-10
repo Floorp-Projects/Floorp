@@ -4,7 +4,7 @@ schema: 1
 bugzilla:
   # Bugzilla product and component for this directory and subdirectories
   product: Core
-  component: Audio/Video: Playback
+  component: "Audio/Video: Playback"
 
 # Document the source of externally hosted code
 origin:

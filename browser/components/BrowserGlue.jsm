@@ -718,7 +718,7 @@ BrowserGlue.prototype = {
   observe: async function BG_observe(subject, topic, data) {
     switch (topic) {
       case "notifications-open-settings":
-        this._openPreferences("privacy-permissions", { origin: "notifOpenSettings" });
+        this._openPreferences("privacy-permissions");
         break;
       case "final-ui-startup":
         this._beforeUIStartup();
@@ -2191,7 +2191,7 @@ BrowserGlue.prototype = {
     let clickCallback = (subject, topic, data) => {
       if (topic != "alertclickcallback")
         return;
-      this._openPreferences("sync", { origin: "doorhanger" });
+      this._openPreferences("sync");
     };
     this.AlertsService.showAlertNotification(null, title, body, true, null, clickCallback);
   },
@@ -2869,7 +2869,7 @@ BrowserGlue.prototype = {
     let clickCallback = (subject, topic, data) => {
       if (topic != "alertclickcallback")
         return;
-      this._openPreferences("sync", { origin: "devDisconnectedAlert"});
+      this._openPreferences("sync");
     };
     this.AlertsService.showAlertNotification(null, title, body, true, null, clickCallback);
   },

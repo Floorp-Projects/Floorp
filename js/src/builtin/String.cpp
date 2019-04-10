@@ -324,7 +324,7 @@ static bool str_unescape(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Step 3.
-  StringBuffer sb(cx);
+  JSStringBuilder sb(cx);
   if (str->hasTwoByteChars() && !sb.ensureTwoByteChars()) {
     return false;
   }
@@ -498,7 +498,7 @@ MOZ_ALWAYS_INLINE bool str_toSource_impl(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  StringBuffer sb(cx);
+  JSStringBuilder sb(cx);
   if (!sb.append("(new String(") ||
       !sb.append(quoted.get(), strlen(quoted.get())) || !sb.append("))")) {
     return false;
@@ -2816,7 +2816,7 @@ static JSLinearString* InterpretDollarReplacement(
    *
    * Note that dollar vars _could_ make the resulting text smaller than this.
    */
-  StringBuffer newReplaceChars(cx);
+  JSStringBuilder newReplaceChars(cx);
   if (repstr->hasTwoByteChars() && !newReplaceChars.ensureTwoByteChars()) {
     return nullptr;
   }
@@ -2936,7 +2936,7 @@ JSString* js::StringFlatReplaceString(JSContext* cx, HandleString string,
     return nullptr;
   }
 
-  StringBuffer sb(cx);
+  JSStringBuilder sb(cx);
   if (linearStr->hasTwoByteChars()) {
     if (!sb.ensureTwoByteChars()) {
       return nullptr;
@@ -3801,7 +3801,7 @@ static const bool js_isUriUnescaped[] = {
 
 #undef ____
 
-static inline bool TransferBufferToString(StringBuffer& sb, JSString* str,
+static inline bool TransferBufferToString(JSStringBuilder& sb, JSString* str,
                                           MutableHandleValue rval) {
   if (!sb.empty()) {
     str = sb.finishString();
@@ -3929,7 +3929,7 @@ static MOZ_ALWAYS_INLINE bool Encode(JSContext* cx, HandleLinearString str,
     return true;
   }
 
-  StringBuffer sb(cx);
+  JSStringBuilder sb(cx);
 
   EncodeResult res;
   if (str->hasLatin1Chars()) {
@@ -4074,7 +4074,7 @@ static bool Decode(JSContext* cx, HandleLinearString str,
     return true;
   }
 
-  StringBuffer sb(cx);
+  JSStringBuilder sb(cx);
 
   DecodeResult res;
   if (str->hasLatin1Chars()) {
@@ -4139,7 +4139,7 @@ static bool str_encodeURI_Component(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 JSString* js::EncodeURI(JSContext* cx, const char* chars, size_t length) {
-  StringBuffer sb(cx);
+  JSStringBuilder sb(cx);
   EncodeResult result = Encode(sb, reinterpret_cast<const Latin1Char*>(chars),
                                length, js_isUriReservedPlusPound);
   if (result == EncodeResult::Encode_Failure) {

@@ -27,6 +27,8 @@ namespace {
   "urlclassifier.features.fingerprinting.annotate.whitelistTables"
 #define URLCLASSIFIER_FINGERPRINTING_ANNOTATION_WHITELIST_TEST_ENTRIES \
   "urlclassifier.features.fingerprinting.annotate.whitelistHosts"
+#define URLCLASSIFIER_FINGERPRINTING_ANNOTATION_SKIP_URLS \
+  "urlclassifier.features.fingerprinting.annotate.skipURLs"
 #define TABLE_FINGERPRINTING_ANNOTATION_BLACKLIST_PREF \
   "fingerprinting-annotate-blacklist-pref"
 #define TABLE_FINGERPRINTING_ANNOTATION_WHITELIST_PREF \
@@ -49,7 +51,8 @@ UrlClassifierFeatureFingerprintingAnnotation::
               URLCLASSIFIER_FINGERPRINTING_ANNOTATION_WHITELIST_TEST_ENTRIES),
           NS_LITERAL_CSTRING(TABLE_FINGERPRINTING_ANNOTATION_BLACKLIST_PREF),
           NS_LITERAL_CSTRING(TABLE_FINGERPRINTING_ANNOTATION_WHITELIST_PREF),
-          EmptyCString()) {}
+          NS_LITERAL_CSTRING(
+              URLCLASSIFIER_FINGERPRINTING_ANNOTATION_SKIP_URLS)) {}
 
 /* static */ const char* UrlClassifierFeatureFingerprintingAnnotation::Name() {
   return FINGERPRINTING_ANNOTATION_FEATURE_NAME;

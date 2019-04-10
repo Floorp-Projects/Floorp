@@ -545,7 +545,7 @@ function test()
         check(() => b[90] == 5)
 
     // Protos and proxies, oh my!
-    var alien = newGlobal();
+    var alien = newGlobal({newCompartment: true});
 
     var alien_view = alien.eval('view = new Uint8Array(7)');
     var alien_buffer = alien.eval('buffer = view.buffer');

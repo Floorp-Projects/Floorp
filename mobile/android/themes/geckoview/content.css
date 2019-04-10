@@ -7,8 +7,9 @@
 
 @namespace url("http://www.w3.org/1999/xhtml");
 @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace svg url("http://www.w3.org/2000/svg");
 
-::-moz-selection {
+*|*::selection {
   background-color: var(--color_background_highlight);
   color: var(--color_text_highlight);
 }

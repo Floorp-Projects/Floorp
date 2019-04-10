@@ -150,7 +150,7 @@
           return;
         }
 
-        window.openPreferences("privacy-form-autofill", {origin: "autofillFooter"});
+        window.openPreferences("privacy-form-autofill");
       });
     }
 

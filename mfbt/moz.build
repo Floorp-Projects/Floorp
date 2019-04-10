@@ -155,7 +155,7 @@ UNIFIED_SOURCES += [
     'Utf8.cpp',
 ]
 
-if CONFIG['MOZ_BUILD_APP'] not in ('memory', 'tools/crashreporter', 'tools/update-packaging'):
+if CONFIG['MOZ_BUILD_APP'] not in ('memory', 'tools/crashreporter'):
     # RecordReplay.cpp uses files from js/
     UNIFIED_SOURCES += [
         'RecordReplay.cpp',

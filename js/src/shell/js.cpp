@@ -533,8 +533,36 @@ static bool ScheduleWatchdog(JSContext* cx, double t);
 
 static void CancelExecution(JSContext* cx);
 
+enum class ShellGlobalKind {
+  GlobalObject,
+  WindowProxy,
+};
+
 static JSObject* NewGlobalObject(JSContext* cx, JS::RealmOptions& options,
-                                 JSPrincipals* principals);
+                                 JSPrincipals* principals,
+                                 ShellGlobalKind kind);
+
+/*
+ * A toy WindowProxy class for the shell. This is intended for testing code
+ * where global |this| is a WindowProxy. All requests are forwarded to the
+ * underlying global and no navigation is supported.
+ */
+const js::Class ShellWindowProxyClass =
+    PROXY_CLASS_DEF("ShellWindowProxy", JSCLASS_HAS_RESERVED_SLOTS(1));
+
+JSObject* NewShellWindowProxy(JSContext* cx, JS::HandleObject global) {
+  MOZ_ASSERT(global->is<GlobalObject>());
+
+  js::WrapperOptions options;
+  options.setClass(&ShellWindowProxyClass);
+  options.setSingleton(true);
+
+  JSAutoRealm ar(cx, global);
+  JSObject* obj =
+      js::Wrapper::New(cx, global, &js::Wrapper::singleton, options);
+  MOZ_ASSERT_IF(obj, js::IsWindowProxy(obj));
+  return obj;
+}
 
 /*
  * A toy principals type for the shell.
@@ -2048,7 +2076,8 @@ static bool Evaluate(JSContext* cx, unsigned argc, Value* vp) {
     }
     if (!v.isUndefined()) {
       if (v.isObject()) {
-        global = js::UncheckedUnwrap(&v.toObject());
+        global = js::CheckedUnwrapDynamic(&v.toObject(), cx,
+                                          /* stopAtWindowProxy = */ false);
         if (!global) {
           return false;
         }
@@ -4001,6 +4030,8 @@ static void WorkerMain(WorkerInput* input) {
   JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
   JS_SetDestroyCompartmentCallback(cx, DestroyShellCompartmentPrivate);
 
+  js::SetWindowProxyClass(cx, &ShellWindowProxyClass);
+
   js::UseInternalJobQueues(cx);
 
   if (!JS::InitSelfHostedCode(cx)) {
@@ -4010,10 +4041,11 @@ static void WorkerMain(WorkerInput* input) {
   EnvironmentPreparer environmentPreparer(cx);
 
   do {
-    JS::RealmOptions compartmentOptions;
-    SetStandardRealmOptions(compartmentOptions);
+    JS::RealmOptions realmOptions;
+    SetStandardRealmOptions(realmOptions);
 
-    RootedObject global(cx, NewGlobalObject(cx, compartmentOptions, nullptr));
+    RootedObject global(cx, NewGlobalObject(cx, realmOptions, nullptr,
+                                            ShellGlobalKind::GlobalObject));
     if (!global) {
       break;
     }
@@ -6116,6 +6148,7 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
   JS::RealmOptions options;
   JS::RealmCreationOptions& creationOptions = options.creationOptions();
   JS::RealmBehaviors& behaviors = options.behaviors();
+  ShellGlobalKind kind = ShellGlobalKind::GlobalObject;
 
   SetStandardRealmOptions(options);
 
@@ -6175,6 +6208,14 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
       behaviors.setDisableLazyParsing(v.toBoolean());
     }
 
+    if (!JS_GetProperty(cx, opts, "useWindowProxy", &v)) {
+      return false;
+    }
+    if (v.isBoolean()) {
+      kind = v.toBoolean() ? ShellGlobalKind::WindowProxy
+                           : ShellGlobalKind::GlobalObject;
+    }
+
     if (!JS_GetProperty(cx, opts, "enableBigInt", &v)) {
       return false;
     }
@@ -6210,7 +6251,7 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  RootedObject global(cx, NewGlobalObject(cx, options, principals));
+  RootedObject global(cx, NewGlobalObject(cx, options, principals, kind));
   if (principals) {
     JS_DropPrincipals(cx, principals);
   }
@@ -6218,11 +6259,12 @@ static bool NewGlobal(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  if (!JS_WrapObject(cx, &global)) {
+  RootedObject wrapped(cx, ToWindowProxyIfWindow(global));
+  if (!JS_WrapObject(cx, &wrapped)) {
     return false;
   }
 
-  args.rval().setObject(*global);
+  args.rval().setObject(*wrapped);
   return true;
 }
 
@@ -8121,7 +8163,9 @@ static bool TransplantObject(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // |newGlobal| needs to be a GlobalObject.
-  RootedObject newGlobal(cx, CheckedUnwrapDynamic(&args[0].toObject(), cx));
+  RootedObject newGlobal(
+      cx, js::CheckedUnwrapDynamic(&args[0].toObject(), cx,
+                                   /* stopAtWindowProxy = */ false));
   if (!newGlobal) {
     ReportAccessDenied(cx);
     return false;
@@ -8752,6 +8796,8 @@ JS_FN_HELP("parseBin", BinParse, 1, 0,
 "         debugger (default false)\n"
 "      disableLazyParsing: If true, don't create lazy scripts for functions\n"
 "         (default false).\n"
+"      useWindowProxy: the global will be created with a WindowProxy attached. In this\n"
+"          case, the WindowProxy will be returned.\n"
 "      principal: if present, its value converted to a number must be an\n"
 "         integer that fits in 32 bits; use that as the new realm's\n"
 "         principal. Shell principals are toys, meant only for testing; one\n"
@@ -9823,7 +9869,8 @@ static const JSPropertySpec TestingProperties[] = {
     JS_PSG("timesAccessed", TimesAccessed, 0), JS_PS_END};
 
 static JSObject* NewGlobalObject(JSContext* cx, JS::RealmOptions& options,
-                                 JSPrincipals* principals) {
+                                 JSPrincipals* principals,
+                                 ShellGlobalKind kind) {
   RootedObject glob(cx,
                     JS_NewGlobalObject(cx, &global_class, principals,
                                        JS::DontFireOnNewGlobalHook, options));
@@ -9833,6 +9880,14 @@ static JSObject* NewGlobalObject(JSContext* cx, JS::RealmOptions& options,
 
   {
     JSAutoRealm ar(cx, glob);
+
+    if (kind == ShellGlobalKind::WindowProxy) {
+      RootedObject proxy(cx, NewShellWindowProxy(cx, glob));
+      if (!proxy) {
+        return nullptr;
+      }
+      js::SetWindowProxy(cx, glob, proxy);
+    }
 
 #ifndef LAZY_STANDARD_CLASSES
     if (!JS::InitRealmStandardClasses(cx)) {
@@ -10666,7 +10721,8 @@ static int Shell(JSContext* cx, OptionParser* op, char** envp) {
 
   JS::RealmOptions options;
   SetStandardRealmOptions(options);
-  RootedObject glob(cx, NewGlobalObject(cx, options, nullptr));
+  RootedObject glob(
+      cx, NewGlobalObject(cx, options, nullptr, ShellGlobalKind::GlobalObject));
   if (!glob) {
     return 1;
   }
@@ -11223,6 +11279,8 @@ int main(int argc, char** argv, char** envp) {
   JS_SetSecurityCallbacks(cx, &ShellPrincipals::securityCallbacks);
   JS_InitDestroyPrincipalsCallback(cx, ShellPrincipals::destroy);
   JS_SetDestroyCompartmentCallback(cx, DestroyShellCompartmentPrivate);
+
+  js::SetWindowProxyClass(cx, &ShellWindowProxyClass);
 
   JS_AddInterruptCallback(cx, ShellInterruptCallback);
 

@@ -495,7 +495,7 @@ JSFlatString* RegExpObject::toString(JSContext* cx) const {
   RootedAtom escapedSrc(cx, EscapeRegExpPattern(cx, src));
 
   // Step 7.
-  StringBuffer sb(cx);
+  JSStringBuilder sb(cx);
   size_t len = escapedSrc->length();
   if (!sb.reserve(len + 2)) {
     return nullptr;
