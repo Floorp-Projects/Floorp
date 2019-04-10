@@ -37,7 +37,8 @@
     <!-- Search Settings -->
     <string name="pref_key_show_search_suggestions" translatable="false">pref_key_show_search_suggestions</string>
 
-    <string name = "pref_key_bounce_quick_action" translatable="false">pref_key_bounce_quick_action</string>
+    <string name="pref_key_bounce_quick_action" translatable="false">pref_key_bounce_quick_action</string>
+    <string name="pref_key_show_visited_sites_bookmarks" translatable="false">pref_key_show_visited_sites_bookmarks</string>
     <!-- Site Permissions Settings -->
     <string name="pref_key_optimize" translatable="false">pref_key_optimize</string>
     <string name="pref_key_show_site_exceptions" translatable="false">pref_key_show_site_exceptions</string>

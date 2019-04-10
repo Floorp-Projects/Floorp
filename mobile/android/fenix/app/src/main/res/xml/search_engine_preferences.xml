@@ -11,4 +11,9 @@
         android:key="@string/pref_key_show_search_suggestions"
         android:title="@string/preferences_show_search_suggestions"
         app:iconSpaceReserved="false" />
+    <SwitchPreference
+        android:defaultValue="true"
+        android:key="@string/pref_key_show_visited_sites_bookmarks"
+        android:title='@string/preference_show_visited_sites_bookmarks'
+        app:iconSpaceReserved="false" />
 </PreferenceScreen>

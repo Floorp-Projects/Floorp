@@ -61,6 +61,12 @@ class Settings private constructor(context: Context) {
             false
         )
 
+    val shouldShowVisitedSitesBookmarks: Boolean
+        get() = preferences.getBoolean(
+            appContext.getPreferenceKey(R.string.pref_key_show_visited_sites_bookmarks),
+            true
+        )
+
     val shouldUseDarkTheme: Boolean
         get() = preferences.getBoolean(
             appContext.getPreferenceKey(R.string.pref_key_dark_theme),

@@ -155,9 +155,12 @@ class AwesomeBarUIView(
             view.addProviders(searchSuggestionProvider!!)
         }
 
+        if (Settings.getInstance(container.context).shouldShowVisitedSitesBookmarks) {
+            view.addProviders(historyStorageProvider!!)
+        }
+
         view.addProviders(
             clipboardSuggestionProvider!!,
-            historyStorageProvider!!,
             sessionProvider!!
         )
     }

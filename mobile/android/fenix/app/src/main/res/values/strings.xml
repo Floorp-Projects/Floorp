@@ -89,6 +89,8 @@
     <string name="preferences_category_about">About</string>
     <!-- Preference for settings related to changing the default search engine -->
     <string name="preferences_search_engine">Search engine</string>
+    <!-- Preference for showing visited sites and bookmarks in awesomebar -->
+    <string name="preference_show_visited_sites_bookmarks">Show visited sites and bookmarks</string>
     <!-- Preference linking to help about Fenix -->
     <string name="preferences_help">Help</string>
     <!-- Preference link to rating Fenix on the Play Store -->
