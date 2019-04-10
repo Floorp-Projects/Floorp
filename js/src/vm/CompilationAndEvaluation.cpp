@@ -69,9 +69,12 @@ static JSScript* CompileSourceBuffer(JSContext* cx,
   return frontend::CompileGlobalScript(info, srcBuf);
 }
 
-static JSScript* CompileUtf8(JSContext* cx,
-                             const ReadOnlyCompileOptions& options,
-                             const char* bytes, size_t length) {
+static JSScript* CompileUtf8Inflating(JSContext* cx,
+                                      const ReadOnlyCompileOptions& options,
+                                      SourceText<Utf8Unit>& srcBuf) {
+  auto bytes = srcBuf.get();
+  size_t length = srcBuf.length();
+
   auto chars = UniqueTwoByteChars(
       UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get());
   if (!chars) {
@@ -86,37 +89,20 @@ static JSScript* CompileUtf8(JSContext* cx,
   return CompileSourceBuffer(cx, options, source);
 }
 
-static JSScript* CompileUtf8DontInflate(JSContext* cx,
-                                        const ReadOnlyCompileOptions& options,
-                                        const char* bytes, size_t length) {
-  SourceText<Utf8Unit> source;
-  if (!source.init(cx, bytes, length, SourceOwnership::Borrowed)) {
-    return nullptr;
-  }
-
-  return CompileSourceBuffer(cx, options, source);
-}
-
 JSScript* JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
                       SourceText<char16_t>& srcBuf) {
   return CompileSourceBuffer(cx, options, srcBuf);
+}
+
+JSScript* JS::Compile(JSContext* cx, const ReadOnlyCompileOptions& options,
+                      SourceText<Utf8Unit>& srcBuf) {
+  return CompileUtf8Inflating(cx, options, srcBuf);
 }
 
 JSScript* JS::CompileDontInflate(JSContext* cx,
                                  const ReadOnlyCompileOptions& options,
                                  SourceText<Utf8Unit>& srcBuf) {
   return CompileSourceBuffer(cx, options, srcBuf);
-}
-
-JSScript* JS::CompileUtf8(JSContext* cx, const ReadOnlyCompileOptions& options,
-                          const char* bytes, size_t length) {
-  return ::CompileUtf8(cx, options, bytes, length);
-}
-
-JSScript* JS::CompileUtf8DontInflate(JSContext* cx,
-                                     const ReadOnlyCompileOptions& options,
-                                     const char* bytes, size_t length) {
-  return ::CompileUtf8DontInflate(cx, options, bytes, length);
 }
 
 JSScript* JS::CompileUtf8File(JSContext* cx,
@@ -127,9 +113,13 @@ JSScript* JS::CompileUtf8File(JSContext* cx,
     return nullptr;
   }
 
-  return ::CompileUtf8(cx, options,
-                       reinterpret_cast<const char*>(buffer.begin()),
-                       buffer.length());
+  SourceText<Utf8Unit> srcBuf;
+  if (!srcBuf.init(cx, reinterpret_cast<const char*>(buffer.begin()),
+                   buffer.length(), SourceOwnership::Borrowed)) {
+    return nullptr;
+  }
+
+  return CompileUtf8Inflating(cx, options, srcBuf);
 }
 
 JSScript* JS::CompileUtf8FileDontInflate(JSContext* cx,
@@ -140,9 +130,13 @@ JSScript* JS::CompileUtf8FileDontInflate(JSContext* cx,
     return nullptr;
   }
 
-  return ::CompileUtf8DontInflate(cx, options,
-                                  reinterpret_cast<const char*>(buffer.begin()),
-                                  buffer.length());
+  SourceText<Utf8Unit> srcBuf;
+  if (!srcBuf.init(cx, reinterpret_cast<const char*>(buffer.begin()),
+                   buffer.length(), SourceOwnership::Borrowed)) {
+    return nullptr;
+  }
+
+  return CompileSourceBuffer(cx, options, srcBuf);
 }
 
 JSScript* JS::CompileUtf8Path(JSContext* cx,
@@ -166,13 +160,12 @@ JSScript* JS::CompileForNonSyntacticScope(
   return CompileSourceBuffer(cx, options, srcBuf);
 }
 
-JSScript* JS::CompileUtf8ForNonSyntacticScope(
-    JSContext* cx, const ReadOnlyCompileOptions& optionsArg, const char* bytes,
-    size_t length) {
+JSScript* JS::CompileForNonSyntacticScope(
+    JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
+    SourceText<Utf8Unit>& srcBuf) {
   CompileOptions options(cx, optionsArg);
   options.setNonSyntacticScope(true);
-
-  return ::CompileUtf8(cx, options, bytes, length);
+  return CompileUtf8Inflating(cx, options, srcBuf);
 }
 
 JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
