@@ -637,10 +637,10 @@ int32_t CustomElementRegistry::InferNamespace(
 }
 
 // https://html.spec.whatwg.org/multipage/scripting.html#element-definition
-void CustomElementRegistry::Define(JSContext* aCx, const nsAString& aName,
-                                   Function& aFunctionConstructor,
-                                   const ElementDefinitionOptions& aOptions,
-                                   ErrorResult& aRv) {
+void CustomElementRegistry::Define(
+    JSContext* aCx, const nsAString& aName,
+    CustomElementConstructor& aFunctionConstructor,
+    const ElementDefinitionOptions& aOptions, ErrorResult& aRv) {
   JS::Rooted<JSObject*> constructor(aCx, aFunctionConstructor.CallableOrNull());
 
   // We need to do a dynamic unwrap in order to throw the right exception.  We
@@ -1387,7 +1387,8 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(CustomElementDefinition, Release)
 
 CustomElementDefinition::CustomElementDefinition(
     nsAtom* aType, nsAtom* aLocalName, int32_t aNamespaceID,
-    Function* aConstructor, nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
+    CustomElementConstructor* aConstructor,
+    nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
     UniquePtr<LifecycleCallbacks>&& aCallbacks)
     : mType(aType),
       mLocalName(aLocalName),
