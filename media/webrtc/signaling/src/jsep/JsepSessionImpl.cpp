@@ -350,7 +350,7 @@ JsepSession::Result JsepSessionImpl::CreateOffer(
     const JsepOfferOptions& options, std::string* offer) {
   mLastError.clear();
 
-  if (mState != kJsepStateStable) {
+  if (mState != kJsepStateStable && mState != kJsepStateHaveLocalOffer) {
     JSEP_SET_ERROR("Cannot create offer in state " << GetStateStr(mState));
     // Spec doesn't seem to say this is an error. It probably should.
     return dom::PCError::InvalidStateError;
@@ -642,6 +642,11 @@ JsepSession::Result JsepSessionImpl::SetLocalDescription(
       if (sdp.empty()) {
         sdp = mGeneratedOffer->ToString();
       }
+      if (mState == kJsepStateHaveLocalOffer) {
+        // Rollback previous offer before applying the new one.
+        SetLocalDescription(kJsepSdpRollback, "");
+        MOZ_ASSERT(mState == kJsepStateStable);
+      }
       break;
     case kJsepSdpAnswer:
     case kJsepSdpPranswer:
@@ -789,6 +794,12 @@ JsepSession::Result JsepSessionImpl::SetRemoteDescription(
   MOZ_MTLOG(ML_DEBUG, "[" << mName << "]: SetRemoteDescription type=" << type
                           << "\nSDP=\n"
                           << sdp);
+
+  if (mState == kJsepStateHaveRemoteOffer && type == kJsepSdpOffer) {
+    // Rollback previous offer before applying the new one.
+    SetRemoteDescription(kJsepSdpRollback, "");
+    MOZ_ASSERT(mState == kJsepStateStable);
+  }
 
   if (type == kJsepSdpRollback) {
     if (mState != kJsepStateHaveRemoteOffer) {
