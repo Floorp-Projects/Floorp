@@ -1134,7 +1134,6 @@ pref("devtools.recordreplay.enableRewinding", true);
 #endif
 
 pref("devtools.recordreplay.mvp.enabled", false);
-pref("devtools.recordreplay.timeline.enabled", false);
 pref("devtools.recordreplay.allowRepaintFailures", true);
 pref("devtools.recordreplay.includeSystemScripts", false);
 
