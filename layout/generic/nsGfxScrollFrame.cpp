@@ -5667,6 +5667,11 @@ void ScrollFrameHelper::UpdateMinimumScaleSize(
   if (displaySize.width == 0 || displaySize.height == 0) {
     return;
   }
+  if (aScrollableOverflow.IsEmpty()) {
+    // Bail if the scrollable overflow rect is empty, as we're going to be
+    // dividing by it.
+    return;
+  }
 
   Document* doc = pc->Document();
   MOZ_ASSERT(doc, "The document should be valid");
