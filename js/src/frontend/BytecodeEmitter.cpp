@@ -92,7 +92,7 @@ static bool ParseNodeRequiresSpecialLineNumberNotes(ParseNode* pn) {
 }
 
 BytecodeEmitter::BytecodeSection::BytecodeSection(JSContext* cx)
-    : code_(cx), notes_(cx) {}
+    : code_(cx), notes_(cx), tryNoteList_(cx) {}
 
 BytecodeEmitter::BytecodeEmitter(
     BytecodeEmitter* parent, SharedContext* sc, HandleScript script,
@@ -110,7 +110,6 @@ BytecodeEmitter::BytecodeEmitter(
       firstLine(lineNum),
       numberList(cx),
       scopeList(cx),
-      tryNoteList(cx),
       scopeNoteList(cx),
       resumeOffsetList(cx),
       emitterMode(emitterMode) {
@@ -9341,7 +9340,7 @@ static bool AllocSrcNote(JSContext* cx, SrcNotesVector& notes,
 bool BytecodeEmitter::addTryNote(JSTryNoteKind kind, uint32_t stackDepth,
                                  size_t start, size_t end) {
   MOZ_ASSERT(!inPrologue());
-  return tryNoteList.append(kind, stackDepth, start, end);
+  return bytecodeSection().tryNoteList().append(kind, stackDepth, start, end);
 }
 
 bool BytecodeEmitter::newSrcNote(SrcNoteType type, unsigned* indexp) {
