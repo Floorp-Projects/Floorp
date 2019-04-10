@@ -168,6 +168,14 @@ JSScript* JS::CompileForNonSyntacticScope(
   return CompileUtf8Inflating(cx, options, srcBuf);
 }
 
+JSScript* JS::CompileForNonSyntacticScopeDontInflate(
+    JSContext* cx, const ReadOnlyCompileOptions& optionsArg,
+    SourceText<Utf8Unit>& srcBuf) {
+  CompileOptions options(cx, optionsArg);
+  options.setNonSyntacticScope(true);
+  return CompileSourceBuffer(cx, options, srcBuf);
+}
+
 JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
                                                  HandleObject obj,
                                                  const char* utf8,
