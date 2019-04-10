@@ -39,16 +39,15 @@ class WebGL2Context : public WebGLContext {
   // Buffer objects - WebGL2ContextBuffers.cpp
 
   void CopyBufferSubData(GLenum readTarget, GLenum writeTarget,
-                         WebGLintptr readOffset, WebGLintptr writeOffset,
-                         WebGLsizeiptr size);
+                         GLintptr readOffset, GLintptr writeOffset,
+                         GLsizeiptr size);
 
  private:
   template <typename BufferT>
-  void GetBufferSubDataT(GLenum target, WebGLintptr offset,
-                         const BufferT& data);
+  void GetBufferSubDataT(GLenum target, GLintptr offset, const BufferT& data);
 
  public:
-  void GetBufferSubData(GLenum target, WebGLintptr srcByteOffset,
+  void GetBufferSubData(GLenum target, GLintptr srcByteOffset,
                         const dom::ArrayBufferView& dstData,
                         GLuint dstElemOffset, GLuint dstElemCountOverride);
 
@@ -304,7 +303,7 @@ class WebGL2Context : public WebGLContext {
   void DrawArraysInstanced(GLenum mode, GLint first, GLsizei count,
                            GLsizei instanceCount);
   void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
-                             WebGLintptr offset, GLsizei instanceCount);
+                             GLintptr offset, GLsizei instanceCount);
   */
 
   void DrawRangeElements(GLenum mode, GLuint start, GLuint end, GLsizei count,
@@ -406,7 +405,7 @@ class WebGL2Context : public WebGLContext {
   /*
       void BindBufferBase(GLenum target, GLuint index, WebGLBuffer* buffer);
       void BindBufferRange(GLenum target, GLuint index, WebGLBuffer* buffer,
-                           WebGLintptr offset, WebGLsizeiptr size);
+                           GLintptr offset, GLsizeiptr size);
   */
   virtual JS::Value GetParameter(JSContext* cx, GLenum pname,
                                  ErrorResult& rv) override;
