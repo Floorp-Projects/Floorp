@@ -10,6 +10,7 @@ const {
   ADD_VIEWPORT,
   CHANGE_DEVICE,
   CHANGE_PIXEL_RATIO,
+  EDIT_DEVICE,
   REMOVE_DEVICE_ASSOCIATION,
   RESIZE_VIEWPORT,
   ROTATE_VIEWPORT,
@@ -74,6 +75,33 @@ const reducers = {
       return {
         ...viewport,
         pixelRatio,
+      };
+    });
+  },
+
+  [EDIT_DEVICE](viewports, { viewport, newDevice, deviceType }) {
+    if (!viewport) {
+      return viewports;
+    }
+
+    return viewports.map(v => {
+      if (v.id !== viewport.id) {
+        return viewport;
+      }
+
+      Services.prefs.setIntPref(VIEWPORT_WIDTH_PREF, newDevice.width);
+      Services.prefs.setIntPref(VIEWPORT_HEIGHT_PREF, newDevice.height);
+      Services.prefs.setIntPref(VIEWPORT_PIXEL_RATIO_PREF, newDevice.pixelRatio);
+
+      return {
+        ...viewport,
+        device: newDevice.name,
+        deviceType,
+        height: newDevice.height,
+        width: newDevice.width,
+        pixelRatio: newDevice.pixelRatio,
+        userAgent: newDevice.userAgent,
+        touch: newDevice.touch,
       };
     });
   },
