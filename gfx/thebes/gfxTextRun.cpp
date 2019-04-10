@@ -1709,7 +1709,7 @@ void gfxFontGroup::BuildFontList() {
   for (const FontFamilyName& name : mFamilyList.GetFontlist()->mNames) {
     if (name.IsNamed()) {
       if (name.mName) {
-        AddPlatformFont(nsAtomCString(name.mName), fonts);
+        AddPlatformFont(nsAtomCString(name.mName), name.IsQuoted(), fonts);
       } else {
         MOZ_ASSERT_UNREACHABLE("broken FontFamilyName, no atom!");
       }
@@ -1737,7 +1737,7 @@ void gfxFontGroup::BuildFontList() {
   }
 }
 
-void gfxFontGroup::AddPlatformFont(const nsACString& aName,
+void gfxFontGroup::AddPlatformFont(const nsACString& aName, bool aQuotedName,
                                    nsTArray<FamilyAndGeneric>& aFamilyList) {
   // First, look up in the user font set...
   // If the fontSet matches the family, we must not look for a platform
@@ -1755,8 +1755,11 @@ void gfxFontGroup::AddPlatformFont(const nsACString& aName,
 
   // Not known in the user font set ==> check system fonts
   gfxPlatformFontList::PlatformFontList()->FindAndAddFamilies(
-      aName, &aFamilyList, gfxPlatformFontList::FindFamiliesFlags(0), &mStyle,
-      mDevToCssSize);
+      aName, &aFamilyList,
+      aQuotedName
+        ? gfxPlatformFontList::FindFamiliesFlags::eQuotedFamilyName
+        : gfxPlatformFontList::FindFamiliesFlags(0),
+      &mStyle, mDevToCssSize);
 }
 
 void gfxFontGroup::AddFamilyToFontList(gfxFontFamily* aFamily,

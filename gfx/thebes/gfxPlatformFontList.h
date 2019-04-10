@@ -154,7 +154,11 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
     // If set, FindAndAddFamilies will not add a missing entry to
     // mOtherNamesMissed
-    eNoAddToNamesMissedWhenSearching = 1 << 2
+    eNoAddToNamesMissedWhenSearching = 1 << 2,
+
+    // If set, the family name was quoted and so must not be treated as a CSS
+    // generic.
+    eQuotedFamilyName = 1 << 3
   };
 
   // Find family(ies) matching aFamily and append to the aOutput array
