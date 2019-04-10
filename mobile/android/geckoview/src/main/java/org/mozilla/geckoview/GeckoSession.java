@@ -1547,7 +1547,8 @@ public class GeckoSession implements Parcelable {
      * @return a URI String
      */
     @AnyThread
-    public static String createDataUri(@NonNull final byte[] bytes, @Nullable final String mimeType) {
+    public static @NonNull String createDataUri(@NonNull final byte[] bytes,
+                                                @Nullable final String mimeType) {
         return String.format("data:%s;base64,%s", mimeType != null ? mimeType : "",
                              Base64.encodeToString(bytes, Base64.NO_WRAP));
     }
@@ -1559,7 +1560,8 @@ public class GeckoSession implements Parcelable {
      * @return a URI String
      */
     @AnyThread
-    public static String createDataUri(@NonNull final String data, @Nullable final String mimeType) {
+    public static @NonNull String createDataUri(@NonNull final String data,
+                                                @Nullable final String mimeType) {
         return String.format("data:%s,%s", mimeType != null ? mimeType : "", data);
     }
 
@@ -3033,7 +3035,8 @@ public class GeckoSession implements Parcelable {
          */
         @UiThread
         default void onShowActionRequest(@NonNull GeckoSession session, @NonNull Selection selection,
-                                         @Action String[] actions, @NonNull GeckoResponse<String> response) {}
+                                         @NonNull @Action String[] actions,
+                                         @NonNull GeckoResponse<String> response) {}
 
         @Retention(RetentionPolicy.SOURCE)
         @IntDef({HIDE_REASON_NO_SELECTION,
