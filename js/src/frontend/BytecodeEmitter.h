@@ -124,249 +124,29 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   Rooted<LazyScript*> lazyScript;
 
  private:
-  // Bytecode and all data directly associated with specific opcode/index inside
-  // bytecode is stored in this class.
-  class BytecodeSection {
-   public:
-    BytecodeSection(JSContext* cx, uint32_t lineNum);
+  BytecodeVector code_;  /* bytecode */
+  SrcNotesVector notes_; /* source notes, see below */
+
+  // Code offset for last source note
+  ptrdiff_t lastNoteOffset_ = 0;
+
+  // Line number for srcnotes.
+  //
+  // WARNING: If this becomes out of sync with already-emitted srcnotes,
+  // we can get undefined behavior.
+  uint32_t currentLine_ = 0;
+
+  // Zero-based column index on currentLine of last SRC_COLSPAN-annotated
+  // opcode.
+  //
+  // WARNING: If this becomes out of sync with already-emitted srcnotes,
+  // we can get undefined behavior.
+  uint32_t lastColumn_ = 0;
+
+  uint32_t lastSeparatorOffet_ = 0;
+  uint32_t lastSeparatorLine_ = 0;
+  uint32_t lastSeparatorColumn_ = 0;
 
-    // ---- Bytecode ----
-
-    BytecodeVector& code() { return code_; }
-    const BytecodeVector& code() const { return code_; }
-
-    jsbytecode* code(ptrdiff_t offset) { return code_.begin() + offset; }
-    ptrdiff_t offset() const { return code_.end() - code_.begin(); }
-
-    // ---- Source notes ----
-
-    SrcNotesVector& notes() { return notes_; }
-    const SrcNotesVector& notes() const { return notes_; }
-
-    ptrdiff_t lastNoteOffset() const { return lastNoteOffset_; }
-    void setLastNoteOffset(ptrdiff_t offset) { lastNoteOffset_ = offset; }
-
-    // ---- Jump ----
-
-    ptrdiff_t lastTargetOffset() const { return lastTarget_.offset; }
-    void setLastTargetOffset(ptrdiff_t offset) { lastTarget_.offset = offset; }
-
-    // Check if the last emitted opcode is a jump target.
-    bool lastOpcodeIsJumpTarget() const {
-      return offset() - lastTarget_.offset == ptrdiff_t(JSOP_JUMPTARGET_LENGTH);
-    }
-
-    // JumpTarget should not be part of the emitted statement, as they can be
-    // aliased by multiple statements. If we included the jump target as part of
-    // the statement we might have issues where the enclosing statement might
-    // not contain all the opcodes of the enclosed statements.
-    ptrdiff_t lastNonJumpTargetOffset() const {
-      return lastOpcodeIsJumpTarget() ? lastTarget_.offset : offset();
-    }
-
-    // ---- Stack ----
-
-    int32_t stackDepth() const { return stackDepth_; }
-    void setStackDepth(int32_t depth) { stackDepth_ = depth; }
-
-    uint32_t maxStackDepth() const { return maxStackDepth_; }
-
-    void updateDepth(ptrdiff_t target);
-
-    // ---- Try notes ----
-
-    CGTryNoteList& tryNoteList() { return tryNoteList_; };
-    const CGTryNoteList& tryNoteList() const { return tryNoteList_; };
-
-    // ---- Scope ----
-
-    CGScopeNoteList& scopeNoteList() { return scopeNoteList_; };
-    const CGScopeNoteList& scopeNoteList() const { return scopeNoteList_; };
-
-    // ---- Generator ----
-
-    CGResumeOffsetList& resumeOffsetList() { return resumeOffsetList_; }
-    const CGResumeOffsetList& resumeOffsetList() const {
-      return resumeOffsetList_;
-    }
-
-    uint32_t numYields() const { return numYields_; }
-    void addNumYields() { numYields_++; }
-
-    // ---- Line and column ----
-
-    uint32_t currentLine() const { return currentLine_; }
-    uint32_t lastColumn() const { return lastColumn_; }
-    void setCurrentLine(uint32_t line) {
-      currentLine_ = line;
-      lastColumn_ = 0;
-    }
-    void setLastColumn(uint32_t column) { lastColumn_ = column; }
-
-    void updateSeparatorPosition() {
-      lastSeparatorOffet_ = code().length();
-      lastSeparatorLine_ = currentLine_;
-      lastSeparatorColumn_ = lastColumn_;
-    }
-
-    void updateSeparatorPositionIfPresent() {
-      if (lastSeparatorOffet_ == code().length()) {
-        lastSeparatorLine_ = currentLine_;
-        lastSeparatorColumn_ = lastColumn_;
-      }
-    }
-
-    bool isDuplicateLocation() const {
-      return lastSeparatorLine_ == currentLine_ &&
-             lastSeparatorColumn_ == lastColumn_;
-    }
-
-    // ---- JIT ----
-
-    size_t numICEntries() const { return numICEntries_; }
-    void addNumICEntries() { numICEntries_++; }
-    void setNumICEntries(size_t entries) { numICEntries_ = entries; }
-
-    uint16_t typesetCount() const { return typesetCount_; }
-    void addTypesetCount() { typesetCount_++; }
-
-   private:
-    // ---- Bytecode ----
-
-    // Bytecode.
-    BytecodeVector code_;
-
-    // ---- Source notes ----
-
-    // Source notes
-    SrcNotesVector notes_;
-
-    // Code offset for last source note
-    ptrdiff_t lastNoteOffset_ = 0;
-
-    // ---- Jump ----
-
-    // Last jump target emitted.
-    JumpTarget lastTarget_ = {-1 - ptrdiff_t(JSOP_JUMPTARGET_LENGTH)};
-
-    // ---- Stack ----
-
-    // Maximum number of expression stack slots so far.
-    uint32_t maxStackDepth_ = 0;
-
-    // Current stack depth in script frame.
-    int32_t stackDepth_ = 0;
-
-    // ---- Try notes ----
-
-    // List of emitted try notes.
-    CGTryNoteList tryNoteList_;
-
-    // ---- Scope ----
-
-    // List of emitted block scope notes.
-    CGScopeNoteList scopeNoteList_;
-
-    // ---- Generator ----
-
-    // Certain ops (yield, await, gosub) have an entry in the script's
-    // resumeOffsets list. This can be used to map from the op's resumeIndex to
-    // the bytecode offset of the next pc. This indirection makes it easy to
-    // resume in the JIT (because BaselineScript stores a resumeIndex => native
-    // code array).
-    CGResumeOffsetList resumeOffsetList_;
-
-    // Number of yield instructions emitted. Does not include JSOP_AWAIT.
-    uint32_t numYields_ = 0;
-
-    // ---- Line and column ----
-
-    // Line number for srcnotes.
-    //
-    // WARNING: If this becomes out of sync with already-emitted srcnotes,
-    // we can get undefined behavior.
-    uint32_t currentLine_;
-
-    // Zero-based column index on currentLine_ of last SRC_COLSPAN-annotated
-    // opcode.
-    //
-    // WARNING: If this becomes out of sync with already-emitted srcnotes,
-    // we can get undefined behavior.
-    uint32_t lastColumn_ = 0;
-
-    // The offset, line and column numbers of the last opcode for the
-    // breakpoint for step execution.
-    uint32_t lastSeparatorOffet_ = 0;
-    uint32_t lastSeparatorLine_ = 0;
-    uint32_t lastSeparatorColumn_ = 0;
-
-    // ---- JIT ----
-
-    // Number of JOF_IC opcodes emitted.
-    size_t numICEntries_ = 0;
-
-    // Number of JOF_TYPESET opcodes generated.
-    uint16_t typesetCount_ = 0;
-  };
-
-  BytecodeSection bytecodeSection_;
-
- public:
-  BytecodeSection& bytecodeSection() { return bytecodeSection_; }
-  const BytecodeSection& bytecodeSection() const { return bytecodeSection_; }
-
- private:
-  // Data that is not directly associated with specific opcode/index inside
-  // bytecode, but referred from bytecode is stored in this class.
-  class PerScriptData {
-   public:
-    explicit PerScriptData(JSContext* cx);
-
-    MOZ_MUST_USE bool init(JSContext* cx);
-
-    // ---- Scope ----
-
-    CGScopeList& scopeList() { return scopeList_; }
-    const CGScopeList& scopeList() const { return scopeList_; }
-
-    // ---- Literals ----
-
-    CGNumberList& numberList() { return numberList_; }
-    const CGNumberList& numberList() const { return numberList_; }
-
-    CGObjectList& objectList() { return objectList_; }
-    const CGObjectList& objectList() const { return objectList_; }
-
-    PooledMapPtr<AtomIndexMap>& atomIndices() { return atomIndices_; }
-    const PooledMapPtr<AtomIndexMap>& atomIndices() const {
-      return atomIndices_;
-    }
-
-   private:
-    // ---- Scope ----
-
-    // List of emitted scopes.
-    CGScopeList scopeList_;
-
-    // ---- Literals ----
-
-    // List of double and bigint values used by script.
-    CGNumberList numberList_;
-
-    // List of emitted objects.
-    CGObjectList objectList_;
-
-    // Map from atom to index.
-    PooledMapPtr<AtomIndexMap> atomIndices_;
-  };
-
-  PerScriptData perScriptData_;
-
- public:
-  PerScriptData& perScriptData() { return perScriptData_; }
-  const PerScriptData& perScriptData() const { return perScriptData_; }
-
- private:
   // switchToMain sets this to the bytecode offset of the main section.
   mozilla::Maybe<uint32_t> mainOffset_ = {};
 
@@ -374,14 +154,22 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   const FieldInitializers fieldInitializers_;
 
  public:
+  // Last jump target emitted.
+  JumpTarget lastTarget = {-1 - ptrdiff_t(JSOP_JUMPTARGET_LENGTH)};
+
   // Private storage for parser wrapper. DO NOT REFERENCE INTERNALLY. May not be
   // initialized. Use |parser| instead.
   mozilla::Maybe<EitherParser> ep_ = {};
   BCEParserHandle* parser = nullptr;
 
+  PooledMapPtr<AtomIndexMap> atomIndices; /* literals indexed for mapping */
   unsigned firstLine = 0; /* first line, for JSScript::initFromEmitter */
 
   uint32_t maxFixedSlots = 0; /* maximum number of fixed frame slots so far */
+  uint32_t maxStackDepth =
+      0; /* maximum number of expression stack slots so far */
+
+  int32_t stackDepth = 0; /* current stack depth in script frame */
 
   uint32_t bodyScopeIndex =
       UINT32_MAX; /* index into scopeList of the body scope */
@@ -406,6 +194,28 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   EmitterScope* innermostEmitterScopeNoCheck() const {
     return innermostEmitterScope_;
   }
+
+  CGNumberList numberList;       /* double and bigint values used by script */
+  CGObjectList objectList;       /* list of emitted objects */
+  CGScopeList scopeList;         /* list of emitted scopes */
+  CGTryNoteList tryNoteList;     /* list of emitted try notes */
+  CGScopeNoteList scopeNoteList; /* list of emitted block scope notes */
+
+  // Certain ops (yield, await, gosub) have an entry in the script's
+  // resumeOffsets list. This can be used to map from the op's resumeIndex to
+  // the bytecode offset of the next pc. This indirection makes it easy to
+  // resume in the JIT (because BaselineScript stores a resumeIndex => native
+  // code array).
+  CGResumeOffsetList resumeOffsetList;
+
+  // Number of JOF_IC opcodes emitted.
+  size_t numICEntries = 0;
+
+  // Number of yield instructions emitted. Does not include JSOP_AWAIT.
+  uint32_t numYields = 0;
+
+  // Number of JOF_TYPESET opcodes generated.
+  uint16_t typesetCount = 0;
 
   // Script contains singleton initializer JSOP_OBJECT.
   bool hasSingletons = false;
@@ -550,26 +360,24 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     varEmitterScope = emitterScope;
   }
 
-  Scope* outermostScope() const {
-    return perScriptData().scopeList().vector[0];
-  }
+  Scope* outermostScope() const { return scopeList.vector[0]; }
   Scope* innermostScope() const;
   Scope* bodyScope() const {
-    MOZ_ASSERT(bodyScopeIndex < perScriptData().scopeList().length());
-    return perScriptData().scopeList().vector[bodyScopeIndex];
+    MOZ_ASSERT(bodyScopeIndex < scopeList.length());
+    return scopeList.vector[bodyScopeIndex];
   }
 
   MOZ_ALWAYS_INLINE
   MOZ_MUST_USE bool makeAtomIndex(JSAtom* atom, uint32_t* indexp) {
-    MOZ_ASSERT(perScriptData().atomIndices());
-    AtomIndexMap::AddPtr p = perScriptData().atomIndices()->lookupForAdd(atom);
+    MOZ_ASSERT(atomIndices);
+    AtomIndexMap::AddPtr p = atomIndices->lookupForAdd(atom);
     if (p) {
       *indexp = p->value();
       return true;
     }
 
-    uint32_t index = perScriptData().atomIndices()->count();
-    if (!perScriptData().atomIndices()->add(p, atom, index)) {
+    uint32_t index = atomIndices->count();
+    if (!atomIndices->add(p, atom, index)) {
       ReportOutOfMemory(cx);
       return false;
     }
@@ -592,13 +400,45 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   void tellDebuggerAboutCompiledScript(JSContext* cx);
 
+  BytecodeVector& code() { return code_; }
+  const BytecodeVector& code() const { return code_; }
+
+  jsbytecode* code(ptrdiff_t offset) { return code_.begin() + offset; }
+  ptrdiff_t offset() const { return code_.end() - code_.begin(); }
+
   uint32_t mainOffset() const { return *mainOffset_; }
 
   bool inPrologue() const { return mainOffset_.isNothing(); }
 
   void switchToMain() {
     MOZ_ASSERT(inPrologue());
-    mainOffset_.emplace(bytecodeSection().code().length());
+    mainOffset_.emplace(code_.length());
+  }
+
+  SrcNotesVector& notes() {
+    // Prologue shouldn't have source notes.
+    MOZ_ASSERT(!inPrologue());
+    return notes_;
+  }
+  ptrdiff_t lastNoteOffset() const { return lastNoteOffset_; }
+  unsigned currentLine() const { return currentLine_; }
+
+  void setCurrentLine(uint32_t line) {
+    currentLine_ = line;
+    lastColumn_ = 0;
+  }
+
+  // Check if the last emitted opcode is a jump target.
+  bool lastOpcodeIsJumpTarget() const {
+    return offset() - lastTarget.offset == ptrdiff_t(JSOP_JUMPTARGET_LENGTH);
+  }
+
+  // JumpTarget should not be part of the emitted statement, as they can be
+  // aliased by multiple statements. If we included the jump target as part of
+  // the statement we might have issues where the enclosing statement might
+  // not contain all the opcodes of the enclosed statements.
+  ptrdiff_t lastNonJumpTargetOffset() const {
+    return lastOpcodeIsJumpTarget() ? lastTarget.offset : offset();
   }
 
   void setFunctionBodyEndPos(uint32_t pos) {
@@ -669,10 +509,12 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   MOZ_MUST_USE bool emitFunctionScript(FunctionNode* funNode,
                                        TopLevelFunction isTopLevel);
 
+  void updateDepth(ptrdiff_t target);
   MOZ_MUST_USE bool markStepBreakpoint();
   MOZ_MUST_USE bool markSimpleBreakpoint();
   MOZ_MUST_USE bool updateLineNumberNotes(uint32_t offset);
   MOZ_MUST_USE bool updateSourceCoordNotes(uint32_t offset);
+  void updateSeparatorPosition();
 
   JSOp strictifySetNameOp(JSOp op);
 

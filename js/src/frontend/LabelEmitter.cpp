@@ -27,7 +27,7 @@ bool LabelEmitter::emitLabel(JSAtom* name) {
     return false;
   }
 
-  controlInfo_.emplace(bce_, name, bce_->bytecodeSection().offset());
+  controlInfo_.emplace(bce_, name, bce_->offset());
 
 #ifdef DEBUG
   state_ = State::Label;
@@ -39,8 +39,8 @@ bool LabelEmitter::emitEnd() {
   MOZ_ASSERT(state_ == State::Label);
 
   // Patch the JSOP_LABEL offset.
-  jsbytecode* labelpc = bce_->bytecodeSection().code(top_);
-  int32_t offset = bce_->bytecodeSection().lastNonJumpTargetOffset() - top_;
+  jsbytecode* labelpc = bce_->code(top_);
+  int32_t offset = bce_->lastNonJumpTargetOffset() - top_;
   MOZ_ASSERT(*labelpc == JSOP_LABEL);
   SET_CODE_OFFSET(labelpc, offset);
 

@@ -91,24 +91,6 @@ static bool ParseNodeRequiresSpecialLineNumberNotes(ParseNode* pn) {
          kind == ParseNodeKind::Function;
 }
 
-BytecodeEmitter::BytecodeSection::BytecodeSection(JSContext* cx,
-                                                  uint32_t lineNum)
-    : code_(cx),
-      notes_(cx),
-      tryNoteList_(cx),
-      scopeNoteList_(cx),
-      resumeOffsetList_(cx),
-      currentLine_(lineNum) {}
-
-BytecodeEmitter::PerScriptData::PerScriptData(JSContext* cx)
-    : scopeList_(cx),
-      numberList_(cx),
-      atomIndices_(cx->frontendCollectionPool()) {}
-
-bool BytecodeEmitter::PerScriptData::init(JSContext* cx) {
-  return atomIndices_.acquire(cx);
-}
-
 BytecodeEmitter::BytecodeEmitter(
     BytecodeEmitter* parent, SharedContext* sc, HandleScript script,
     Handle<LazyScript*> lazyScript, uint32_t lineNum, EmitterMode emitterMode,
@@ -118,17 +100,23 @@ BytecodeEmitter::BytecodeEmitter(
       parent(parent),
       script(cx, script),
       lazyScript(cx, lazyScript),
-      bytecodeSection_(cx, lineNum),
-      perScriptData_(cx),
+      code_(cx),
+      notes_(cx),
+      currentLine_(lineNum),
       fieldInitializers_(fieldInitializers),
+      atomIndices(cx->frontendCollectionPool()),
       firstLine(lineNum),
+      numberList(cx),
+      scopeList(cx),
+      tryNoteList(cx),
+      scopeNoteList(cx),
+      resumeOffsetList(cx),
       emitterMode(emitterMode) {
   MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
 
   if (sc->isFunctionBox()) {
     // Functions have IC entries for type monitoring |this| and arguments.
-    bytecodeSection().setNumICEntries(sc->asFunctionBox()->function()->nargs() +
-                                      1);
+    numICEntries = sc->asFunctionBox()->function()->nargs() + 1;
   }
 }
 
@@ -160,7 +148,7 @@ void BytecodeEmitter::initFromBodyPosition(TokenPos bodyPosition) {
   setFunctionBodyEndPos(bodyPosition.end);
 }
 
-bool BytecodeEmitter::init() { return perScriptData_.init(cx); }
+bool BytecodeEmitter::init() { return atomIndices.acquire(cx); }
 
 template <typename T>
 T* BytecodeEmitter::findInnermostNestableControl() const {
@@ -206,7 +194,9 @@ bool BytecodeEmitter::markStepBreakpoint() {
   // We track the location of the most recent separator for use in
   // markSimpleBreakpoint. Note that this means that the position must already
   // be set before markStepBreakpoint is called.
-  bytecodeSection().updateSeparatorPosition();
+  lastSeparatorOffet_ = code().length();
+  lastSeparatorLine_ = currentLine_;
+  lastSeparatorColumn_ = lastColumn_;
 
   return true;
 }
@@ -220,7 +210,10 @@ bool BytecodeEmitter::markSimpleBreakpoint() {
   // expression start, we need to skip marking it breakable in order to avoid
   // having two breakpoints with the same line/column position.
   // Note: This assumes that the position for the call has already been set.
-  if (!bytecodeSection().isDuplicateLocation()) {
+  bool isDuplicateLocation =
+      lastSeparatorLine_ == currentLine_ && lastSeparatorColumn_ == lastColumn_;
+
+  if (!isDuplicateLocation) {
     if (!newSrcNote(SRC_BREAKPOINT)) {
       return false;
     }
@@ -230,9 +223,9 @@ bool BytecodeEmitter::markSimpleBreakpoint() {
 }
 
 bool BytecodeEmitter::emitCheck(JSOp op, ptrdiff_t delta, ptrdiff_t* offset) {
-  *offset = bytecodeSection().code().length();
+  *offset = code().length();
 
-  if (!bytecodeSection().code().growByUninitialized(delta)) {
+  if (!code().growByUninitialized(delta)) {
     ReportOutOfMemory(cx);
     return false;
   }
@@ -240,30 +233,30 @@ bool BytecodeEmitter::emitCheck(JSOp op, ptrdiff_t delta, ptrdiff_t* offset) {
   // If op is JOF_TYPESET (see the type barriers comment in TypeInference.h),
   // reserve a type set to store its result.
   if (CodeSpec[op].format & JOF_TYPESET) {
-    if (bytecodeSection().typesetCount() < JSScript::MaxBytecodeTypeSets) {
-      bytecodeSection().addTypesetCount();
+    if (typesetCount < JSScript::MaxBytecodeTypeSets) {
+      typesetCount++;
     }
   }
 
   if (BytecodeOpHasIC(op)) {
-    bytecodeSection().addNumICEntries();
+    numICEntries++;
   }
 
   return true;
 }
 
-void BytecodeEmitter::BytecodeSection::updateDepth(ptrdiff_t target) {
+void BytecodeEmitter::updateDepth(ptrdiff_t target) {
   jsbytecode* pc = code(target);
 
   int nuses = StackUses(pc);
   int ndefs = StackDefs(pc);
 
-  stackDepth_ -= nuses;
-  MOZ_ASSERT(stackDepth_ >= 0);
-  stackDepth_ += ndefs;
+  stackDepth -= nuses;
+  MOZ_ASSERT(stackDepth >= 0);
+  stackDepth += ndefs;
 
-  if ((uint32_t)stackDepth_ > maxStackDepth_) {
-    maxStackDepth_ = stackDepth_;
+  if ((uint32_t)stackDepth > maxStackDepth) {
+    maxStackDepth = stackDepth;
   }
 }
 
@@ -287,9 +280,9 @@ bool BytecodeEmitter::emit1(JSOp op) {
     return false;
   }
 
-  jsbytecode* code = bytecodeSection().code(offset);
+  jsbytecode* code = this->code(offset);
   code[0] = jsbytecode(op);
-  bytecodeSection().updateDepth(offset);
+  updateDepth(offset);
   return true;
 }
 
@@ -301,10 +294,10 @@ bool BytecodeEmitter::emit2(JSOp op, uint8_t op1) {
     return false;
   }
 
-  jsbytecode* code = bytecodeSection().code(offset);
+  jsbytecode* code = this->code(offset);
   code[0] = jsbytecode(op);
   code[1] = jsbytecode(op1);
-  bytecodeSection().updateDepth(offset);
+  updateDepth(offset);
   return true;
 }
 
@@ -320,11 +313,11 @@ bool BytecodeEmitter::emit3(JSOp op, jsbytecode op1, jsbytecode op2) {
     return false;
   }
 
-  jsbytecode* code = bytecodeSection().code(offset);
+  jsbytecode* code = this->code(offset);
   code[0] = jsbytecode(op);
   code[1] = op1;
   code[2] = op2;
-  bytecodeSection().updateDepth(offset);
+  updateDepth(offset);
   return true;
 }
 
@@ -337,7 +330,7 @@ bool BytecodeEmitter::emitN(JSOp op, size_t extra, ptrdiff_t* offset) {
     return false;
   }
 
-  jsbytecode* code = bytecodeSection().code(off);
+  jsbytecode* code = this->code(off);
   code[0] = jsbytecode(op);
   /* The remaining |extra| bytes are set by the caller */
 
@@ -346,7 +339,7 @@ bool BytecodeEmitter::emitN(JSOp op, size_t extra, ptrdiff_t* offset) {
    * operand yet to be stored in the extra bytes after op.
    */
   if (CodeSpec[op].nuses >= 0) {
-    bytecodeSection().updateDepth(off);
+    updateDepth(off);
   }
 
   if (offset) {
@@ -358,7 +351,7 @@ bool BytecodeEmitter::emitN(JSOp op, size_t extra, ptrdiff_t* offset) {
 bool BytecodeEmitter::emitJumpTargetOp(JSOp op, ptrdiff_t* off) {
   MOZ_ASSERT(BytecodeIsJumpTarget(op));
 
-  size_t numEntries = bytecodeSection().numICEntries();
+  size_t numEntries = numICEntries;
   if (MOZ_UNLIKELY(numEntries > UINT32_MAX)) {
     reportError(nullptr, JSMSG_NEED_DIET, js_script_str);
     return false;
@@ -368,22 +361,21 @@ bool BytecodeEmitter::emitJumpTargetOp(JSOp op, ptrdiff_t* off) {
     return false;
   }
 
-  SET_ICINDEX(bytecodeSection().code(*off), numEntries);
+  SET_ICINDEX(code(*off), numEntries);
   return true;
 }
 
 bool BytecodeEmitter::emitJumpTarget(JumpTarget* target) {
-  ptrdiff_t off = bytecodeSection().offset();
+  ptrdiff_t off = offset();
 
   // Alias consecutive jump targets.
-  if (off == bytecodeSection().lastTargetOffset() +
-                 ptrdiff_t(JSOP_JUMPTARGET_LENGTH)) {
-    target->offset = bytecodeSection().lastTargetOffset();
+  if (off == lastTarget.offset + ptrdiff_t(JSOP_JUMPTARGET_LENGTH)) {
+    target->offset = lastTarget.offset;
     return true;
   }
 
   target->offset = off;
-  bytecodeSection().setLastTargetOffset(off);
+  lastTarget.offset = off;
 
   ptrdiff_t opOff;
   return emitJumpTargetOp(JSOP_JUMPTARGET, &opOff);
@@ -395,11 +387,11 @@ bool BytecodeEmitter::emitJumpNoFallthrough(JSOp op, JumpList* jump) {
     return false;
   }
 
-  jsbytecode* code = bytecodeSection().code(offset);
+  jsbytecode* code = this->code(offset);
   code[0] = jsbytecode(op);
   MOZ_ASSERT(-1 <= jump->offset && jump->offset < offset);
-  jump->push(bytecodeSection().code(0), offset);
-  bytecodeSection().updateDepth(offset);
+  jump->push(this->code(0), offset);
+  updateDepth(offset);
   return true;
 }
 
@@ -433,12 +425,11 @@ bool BytecodeEmitter::emitBackwardJump(JSOp op, JumpTarget target,
 }
 
 void BytecodeEmitter::patchJumpsToTarget(JumpList jump, JumpTarget target) {
-  MOZ_ASSERT(-1 <= jump.offset && jump.offset <= bytecodeSection().offset());
-  MOZ_ASSERT(0 <= target.offset && target.offset <= bytecodeSection().offset());
-  MOZ_ASSERT_IF(
-      jump.offset != -1 && target.offset + 4 <= bytecodeSection().offset(),
-      BytecodeIsJumpTarget(JSOp(*bytecodeSection().code(target.offset))));
-  jump.patchAll(bytecodeSection().code(0), target);
+  MOZ_ASSERT(-1 <= jump.offset && jump.offset <= offset());
+  MOZ_ASSERT(0 <= target.offset && target.offset <= offset());
+  MOZ_ASSERT_IF(jump.offset != -1 && target.offset + 4 <= offset(),
+                BytecodeIsJumpTarget(JSOp(*code(target.offset))));
+  jump.patchAll(code(0), target);
 }
 
 bool BytecodeEmitter::emitJumpTargetAndPatch(JumpList jump) {
@@ -468,7 +459,7 @@ bool BytecodeEmitter::emitCall(JSOp op, uint16_t argc, ParseNode* pn) {
 }
 
 bool BytecodeEmitter::emitDupAt(unsigned slotFromTop) {
-  MOZ_ASSERT(slotFromTop < unsigned(bytecodeSection().stackDepth()));
+  MOZ_ASSERT(slotFromTop < unsigned(stackDepth));
 
   if (slotFromTop == 0) {
     return emit1(JSOP_DUP);
@@ -484,7 +475,7 @@ bool BytecodeEmitter::emitDupAt(unsigned slotFromTop) {
     return false;
   }
 
-  jsbytecode* pc = bytecodeSection().code(off);
+  jsbytecode* pc = code(off);
   SET_UINT24(pc, slotFromTop);
   return true;
 }
@@ -525,14 +516,14 @@ bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
 
   ErrorReporter* er = &parser->errorReporter();
   bool onThisLine;
-  if (!er->isOnThisLine(offset, bytecodeSection().currentLine(), &onThisLine)) {
+  if (!er->isOnThisLine(offset, currentLine(), &onThisLine)) {
     er->errorNoOffset(JSMSG_OUT_OF_MEMORY);
     return false;
   }
 
   if (!onThisLine) {
     unsigned line = er->lineAt(offset);
-    unsigned delta = line - bytecodeSection().currentLine();
+    unsigned delta = line - currentLine();
 
     /*
      * Encode any change in the current source line number by using
@@ -545,7 +536,7 @@ bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
      * unsigned delta_ wrap to a very large number, which triggers a
      * SRC_SETLINE.
      */
-    bytecodeSection().setCurrentLine(line);
+    setCurrentLine(line);
     if (delta >= LengthOfSetLine(line)) {
       if (!newSrcNote2(SRC_SETLINE, ptrdiff_t(line))) {
         return false;
@@ -558,7 +549,7 @@ bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
       } while (--delta != 0);
     }
 
-    bytecodeSection().updateSeparatorPositionIfPresent();
+    updateSeparatorPosition();
   }
   return true;
 }
@@ -575,8 +566,7 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
   }
 
   uint32_t columnIndex = parser->errorReporter().columnAt(offset);
-  ptrdiff_t colspan =
-      ptrdiff_t(columnIndex) - ptrdiff_t(bytecodeSection().lastColumn());
+  ptrdiff_t colspan = ptrdiff_t(columnIndex) - ptrdiff_t(lastColumn_);
   if (colspan != 0) {
     // If the column span is so large that we can't store it, then just
     // discard this information. This can happen with minimized or otherwise
@@ -589,10 +579,18 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
     if (!newSrcNote2(SRC_COLSPAN, SN_COLSPAN_TO_OFFSET(colspan))) {
       return false;
     }
-    bytecodeSection().setLastColumn(columnIndex);
-    bytecodeSection().updateSeparatorPositionIfPresent();
+    lastColumn_ = columnIndex;
+    updateSeparatorPosition();
   }
   return true;
+}
+
+/* Updates the last separator position, if present */
+void BytecodeEmitter::updateSeparatorPosition() {
+  if (!inPrologue() && lastSeparatorOffet_ == code().length()) {
+    lastSeparatorLine_ = currentLine_;
+    lastSeparatorColumn_ = lastColumn_;
+  }
 }
 
 Maybe<uint32_t> BytecodeEmitter::getOffsetForLoop(ParseNode* nextpn) {
@@ -628,7 +626,7 @@ bool BytecodeEmitter::emitUint32Operand(JSOp op, uint32_t operand) {
   if (!emitN(op, 4, &off)) {
     return false;
   }
-  SET_UINT32(bytecodeSection().code(off), operand);
+  SET_UINT32(code(off), operand);
   return true;
 }
 
@@ -665,18 +663,17 @@ class NonLocalExitControl {
  public:
   NonLocalExitControl(BytecodeEmitter* bce, Kind kind)
       : bce_(bce),
-        savedScopeNoteIndex_(bce->bytecodeSection().scopeNoteList().length()),
-        savedDepth_(bce->bytecodeSection().stackDepth()),
+        savedScopeNoteIndex_(bce->scopeNoteList.length()),
+        savedDepth_(bce->stackDepth),
         openScopeNoteIndex_(bce->innermostEmitterScope()->noteIndex()),
         kind_(kind) {}
 
   ~NonLocalExitControl() {
-    for (uint32_t n = savedScopeNoteIndex_;
-         n < bce_->bytecodeSection().scopeNoteList().length(); n++) {
-      bce_->bytecodeSection().scopeNoteList().recordEnd(
-          n, bce_->bytecodeSection().offset());
+    for (uint32_t n = savedScopeNoteIndex_; n < bce_->scopeNoteList.length();
+         n++) {
+      bce_->scopeNoteList.recordEnd(n, bce_->offset());
     }
-    bce_->bytecodeSection().setStackDepth(savedDepth_);
+    bce_->stackDepth = savedDepth_;
   }
 
   MOZ_MUST_USE bool prepareForNonLocalJump(NestableControl* target);
@@ -698,12 +695,11 @@ bool NonLocalExitControl::leaveScope(EmitterScope* es) {
   if (es->enclosingInFrame()) {
     enclosingScopeIndex = es->enclosingInFrame()->index();
   }
-  if (!bce_->bytecodeSection().scopeNoteList().append(
-          enclosingScopeIndex, bce_->bytecodeSection().offset(),
-          openScopeNoteIndex_)) {
+  if (!bce_->scopeNoteList.append(enclosingScopeIndex, bce_->offset(),
+                                  openScopeNoteIndex_)) {
     return false;
   }
-  openScopeNoteIndex_ = bce_->bytecodeSection().scopeNoteList().length() - 1;
+  openScopeNoteIndex_ = bce_->scopeNoteList.length() - 1;
 
   return true;
 }
@@ -842,7 +838,7 @@ bool NonLocalExitControl::prepareForNonLocalJump(NestableControl* target) {
   }
 
   // Close FOR_OF_ITERCLOSE trynotes.
-  ptrdiff_t end = bce_->bytecodeSection().offset();
+  ptrdiff_t end = bce_->offset();
   for (ptrdiff_t start : forOfIterCloseScopeStarts) {
     if (!bce_->addTryNote(JSTRY_FOR_OF_ITERCLOSE, 0, start, end)) {
       return false;
@@ -888,10 +884,10 @@ bool BytecodeEmitter::emitIndex32(JSOp op, uint32_t index) {
     return false;
   }
 
-  jsbytecode* code = bytecodeSection().code(offset);
+  jsbytecode* code = this->code(offset);
   code[0] = jsbytecode(op);
   SET_UINT32_INDEX(code, index);
-  bytecodeSection().updateDepth(offset);
+  updateDepth(offset);
   return true;
 }
 
@@ -906,10 +902,10 @@ bool BytecodeEmitter::emitIndexOp(JSOp op, uint32_t index) {
     return false;
   }
 
-  jsbytecode* code = bytecodeSection().code(offset);
+  jsbytecode* code = this->code(offset);
   code[0] = jsbytecode(op);
   SET_UINT32_INDEX(code, index);
-  bytecodeSection().updateDepth(offset);
+  updateDepth(offset);
   return true;
 }
 
@@ -944,24 +940,24 @@ bool BytecodeEmitter::emitAtomOp(uint32_t atomIndex, JSOp op) {
 
 bool BytecodeEmitter::emitInternedScopeOp(uint32_t index, JSOp op) {
   MOZ_ASSERT(JOF_OPTYPE(op) == JOF_SCOPE);
-  MOZ_ASSERT(index < perScriptData().scopeList().length());
+  MOZ_ASSERT(index < scopeList.length());
   return emitIndex32(op, index);
 }
 
 bool BytecodeEmitter::emitInternedObjectOp(uint32_t index, JSOp op) {
   MOZ_ASSERT(JOF_OPTYPE(op) == JOF_OBJECT);
-  MOZ_ASSERT(index < perScriptData().objectList().length);
+  MOZ_ASSERT(index < objectList.length);
   return emitIndex32(op, index);
 }
 
 bool BytecodeEmitter::emitObjectOp(ObjectBox* objbox, JSOp op) {
-  return emitInternedObjectOp(perScriptData().objectList().add(objbox), op);
+  return emitInternedObjectOp(objectList.add(objbox), op);
 }
 
 bool BytecodeEmitter::emitObjectPairOp(ObjectBox* objbox1, ObjectBox* objbox2,
                                        JSOp op) {
-  uint32_t index = perScriptData().objectList().add(objbox1);
-  perScriptData().objectList().add(objbox2);
+  uint32_t index = objectList.add(objbox1);
+  objectList.add(objbox2);
   return emitInternedObjectOp(index, op);
 }
 
@@ -978,7 +974,7 @@ bool BytecodeEmitter::emitLocalOp(JSOp op, uint32_t slot) {
     return false;
   }
 
-  SET_LOCALNO(bytecodeSection().code(off), slot);
+  SET_LOCALNO(code(off), slot);
   return true;
 }
 
@@ -989,7 +985,7 @@ bool BytecodeEmitter::emitArgOp(JSOp op, uint16_t slot) {
     return false;
   }
 
-  SET_ARGNO(bytecodeSection().code(off), slot);
+  SET_ARGNO(code(off), slot);
   return true;
 }
 
@@ -1004,7 +1000,7 @@ bool BytecodeEmitter::emitEnvCoordOp(JSOp op, EnvironmentCoordinate ec) {
     return false;
   }
 
-  jsbytecode* pc = bytecodeSection().code(off);
+  jsbytecode* pc = code(off);
   SET_ENVCOORD_HOPS(pc, ec.hops());
   pc += ENVCOORD_HOPS_LEN;
   SET_ENVCOORD_SLOT(pc, ec.slot());
@@ -1684,13 +1680,13 @@ bool BytecodeEmitter::emitNewInit() {
     return false;
   }
 
-  jsbytecode* code = bytecodeSection().code(offset);
+  jsbytecode* code = this->code(offset);
   code[0] = JSOP_NEWINIT;
   code[1] = 0;
   code[2] = 0;
   code[3] = 0;
   code[4] = 0;
-  bytecodeSection().updateDepth(offset);
+  updateDepth(offset);
   return true;
 }
 
@@ -1720,7 +1716,7 @@ bool BytecodeEmitter::iteratorResultShape(unsigned* shape) {
     return false;
   }
 
-  *shape = perScriptData().objectList().add(objbox);
+  *shape = objectList.add(objbox);
 
   return true;
 }
@@ -2051,13 +2047,13 @@ bool BytecodeEmitter::emitNumberOp(double dval) {
       if (!emitN(JSOP_UINT24, 3, &off)) {
         return false;
       }
-      SET_UINT24(bytecodeSection().code(off), u);
+      SET_UINT24(code(off), u);
     } else {
       ptrdiff_t off;
       if (!emitN(JSOP_INT32, 4, &off)) {
         return false;
       }
-      SET_INT32(bytecodeSection().code(off), ival);
+      SET_INT32(code(off), ival);
     }
     return true;
   }
@@ -2258,13 +2254,13 @@ bool BytecodeEmitter::allocateResumeIndex(ptrdiff_t offset,
       "resumeIndex * sizeof(uintptr_t) must fit in an int32. JIT code relies "
       "on this when loading resume entries from BaselineScript");
 
-  *resumeIndex = bytecodeSection().resumeOffsetList().length();
+  *resumeIndex = resumeOffsetList.length();
   if (*resumeIndex > MaxResumeIndex) {
     reportError(nullptr, JSMSG_TOO_MANY_RESUME_INDEXES);
     return false;
   }
 
-  return bytecodeSection().resumeOffsetList().append(offset);
+  return resumeOffsetList.append(offset);
 }
 
 bool BytecodeEmitter::allocateResumeIndexRange(mozilla::Span<ptrdiff_t> offsets,
@@ -2297,15 +2293,15 @@ bool BytecodeEmitter::emitYieldOp(JSOp op) {
   }
 
   if (op == JSOP_INITIALYIELD || op == JSOP_YIELD) {
-    bytecodeSection().addNumYields();
+    numYields++;
   }
 
   uint32_t resumeIndex;
-  if (!allocateResumeIndex(bytecodeSection().offset(), &resumeIndex)) {
+  if (!allocateResumeIndex(offset(), &resumeIndex)) {
     return false;
   }
 
-  SET_RESUMEINDEX(bytecodeSection().code(off), resumeIndex);
+  SET_RESUMEINDEX(code(off), resumeIndex);
 
   return emit1(JSOP_DEBUGAFTERYIELD);
 }
@@ -2573,7 +2569,7 @@ bool BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target,
   }
 
 #ifdef DEBUG
-  int depth = bytecodeSection().stackDepth();
+  int depth = stackDepth;
 #endif
 
   switch (target->getKind()) {
@@ -2651,7 +2647,7 @@ bool BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target,
       MOZ_CRASH("emitDestructuringLHSRef: bad lhs kind");
   }
 
-  MOZ_ASSERT(bytecodeSection().stackDepth() == depth + int(*emitted));
+  MOZ_ASSERT(stackDepth == depth + int(*emitted));
 
   return true;
 }
@@ -2814,7 +2810,7 @@ bool BytecodeEmitter::emitIteratorNext(
              "can run user-modifiable iteration code");
 
   //                [stack] ... NEXT ITER
-  MOZ_ASSERT(bytecodeSection().stackDepth() >= 2);
+  MOZ_ASSERT(this->stackDepth >= 2);
 
   if (!emitCall(JSOP_CALL, 0, callSourceCoordOffset)) {
     //              [stack] ... RESULT
@@ -2837,7 +2833,7 @@ bool BytecodeEmitter::emitIteratorNext(
 
 bool BytecodeEmitter::emitPushNotUndefinedOrNull() {
   //                [stack] V
-  MOZ_ASSERT(bytecodeSection().stackDepth() > 0);
+  MOZ_ASSERT(this->stackDepth > 0);
 
   if (!emit1(JSOP_DUP)) {
     //              [stack] V V
@@ -3085,7 +3081,7 @@ bool BytecodeEmitter::emitIteratorCloseInScope(
 template <typename InnerEmitter>
 bool BytecodeEmitter::wrapWithDestructuringTryNote(int32_t iterDepth,
                                                    InnerEmitter emitter) {
-  MOZ_ASSERT(bytecodeSection().stackDepth() >= iterDepth);
+  MOZ_ASSERT(this->stackDepth >= iterDepth);
 
   // Pad a nop at the beginning of the bytecode covered by the trynote so
   // that when unwinding environments, we may unwind to the scope
@@ -3096,11 +3092,11 @@ bool BytecodeEmitter::wrapWithDestructuringTryNote(int32_t iterDepth,
     return false;
   }
 
-  ptrdiff_t start = bytecodeSection().offset();
+  ptrdiff_t start = offset();
   if (!emitter(this)) {
     return false;
   }
-  ptrdiff_t end = bytecodeSection().offset();
+  ptrdiff_t end = offset();
   if (start != end) {
     return addTryNote(JSTRY_DESTRUCTURING, iterDepth, start, end);
   }
@@ -3206,7 +3202,7 @@ bool BytecodeEmitter::emitInitializer(ParseNode* initializer,
 bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
                                                 DestructuringFlavor flav) {
   MOZ_ASSERT(pattern->isKind(ParseNodeKind::ArrayExpr));
-  MOZ_ASSERT(bytecodeSection().stackDepth() != 0);
+  MOZ_ASSERT(this->stackDepth != 0);
 
   // Here's pseudo code for |let [a, b, , c=y, ...d] = x;|
   //
@@ -3330,7 +3326,7 @@ bool BytecodeEmitter::emitDestructuringOpsArray(ListNode* pattern,
   // JSTRY_DESTRUCTURING expects the iterator and the done value
   // to be the second to top and the top of the stack, respectively.
   // IteratorClose is called upon exception only if done is false.
-  int32_t tryNoteDepth = bytecodeSection().stackDepth();
+  int32_t tryNoteDepth = stackDepth;
 
   for (ParseNode* member : pattern->contents()) {
     bool isFirst = member == pattern->head();
@@ -3639,7 +3635,7 @@ bool BytecodeEmitter::emitDestructuringOpsObject(ListNode* pattern,
   MOZ_ASSERT(pattern->isKind(ParseNodeKind::ObjectExpr));
 
   //                [stack] ... RHS
-  MOZ_ASSERT(bytecodeSection().stackDepth() > 0);
+  MOZ_ASSERT(this->stackDepth > 0);
 
   if (!emit1(JSOP_CHECKOBJCOERCIBLE)) {
     //              [stack] ... RHS
@@ -3819,7 +3815,7 @@ bool BytecodeEmitter::emitDestructuringObjRestExclusionSet(ListNode* pattern) {
   MOZ_ASSERT(pattern->isKind(ParseNodeKind::ObjectExpr));
   MOZ_ASSERT(pattern->last()->isKind(ParseNodeKind::Spread));
 
-  ptrdiff_t offset = bytecodeSection().offset();
+  ptrdiff_t offset = this->offset();
   if (!emitNewInit()) {
     return false;
   }
@@ -4694,11 +4690,11 @@ MOZ_MUST_USE bool BytecodeEmitter::emitGoSub(JumpList* jump) {
   }
 
   uint32_t resumeIndex;
-  if (!allocateResumeIndex(bytecodeSection().offset(), &resumeIndex)) {
+  if (!allocateResumeIndex(offset(), &resumeIndex)) {
     return false;
   }
 
-  SET_RESUMEINDEX(bytecodeSection().code(off), resumeIndex);
+  SET_RESUMEINDEX(code(off), resumeIndex);
   return true;
 }
 
@@ -4903,7 +4899,7 @@ bool BytecodeEmitter::emitWith(BinaryNode* withNode) {
 }
 
 bool BytecodeEmitter::emitCopyDataProperties(CopyOption option) {
-  DebugOnly<int32_t> depth = bytecodeSection().stackDepth();
+  DebugOnly<int32_t> depth = this->stackDepth;
 
   uint32_t argc;
   if (option == CopyOption::Filtered) {
@@ -4958,15 +4954,15 @@ bool BytecodeEmitter::emitCopyDataProperties(CopyOption option) {
     return false;
   }
 
-  MOZ_ASSERT(depth - int(argc) == bytecodeSection().stackDepth());
+  MOZ_ASSERT(depth - int(argc) == this->stackDepth);
   return true;
 }
 
 bool BytecodeEmitter::emitBigIntOp(BigInt* bigint) {
-  if (!perScriptData().numberList().append(BigIntValue(bigint))) {
+  if (!numberList.append(BigIntValue(bigint))) {
     return false;
   }
-  return emitIndex32(JSOP_BIGINT, perScriptData().numberList().length() - 1);
+  return emitIndex32(JSOP_BIGINT, numberList.length() - 1);
 }
 
 bool BytecodeEmitter::emitIterator() {
@@ -5149,11 +5145,11 @@ bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
   // when we reach this point on the loop backedge (if spreading produces at
   // least one value), we've additionally pushed a RESULT iteration value.
   // Increment manually to reflect this.
-  bytecodeSection().setStackDepth(bytecodeSection().stackDepth() + 1);
+  this->stackDepth++;
 
   {
 #ifdef DEBUG
-    auto loopDepth = bytecodeSection().stackDepth();
+    auto loopDepth = this->stackDepth;
 #endif
 
     // Emit code to assign result.value to the iteration variable.
@@ -5166,7 +5162,7 @@ bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
       return false;
     }
 
-    MOZ_ASSERT(bytecodeSection().stackDepth() == loopDepth - 1);
+    MOZ_ASSERT(this->stackDepth == loopDepth - 1);
 
     // Spread operations can't contain |continue|, so don't bother setting loop
     // and enclosing "update" offsets, as we do with for-loops.
@@ -5203,7 +5199,7 @@ bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
       return false;
     }
 
-    MOZ_ASSERT(bytecodeSection().stackDepth() == loopDepth);
+    MOZ_ASSERT(this->stackDepth == loopDepth);
   }
 
   // Let Ion know where the closing jump of this loop is.
@@ -5216,8 +5212,8 @@ bool BytecodeEmitter::emitSpread(bool allowSelfHosted) {
   MOZ_ASSERT(loopInfo.breaks.offset == -1);
   MOZ_ASSERT(loopInfo.continues.offset == -1);
 
-  if (!addTryNote(JSTRY_FOR_OF, bytecodeSection().stackDepth(),
-                  loopInfo.headOffset(), loopInfo.breakTargetOffset())) {
+  if (!addTryNote(JSTRY_FOR_OF, stackDepth, loopInfo.headOffset(),
+                  loopInfo.breakTargetOffset())) {
     return false;
   }
 
@@ -5238,7 +5234,7 @@ bool BytecodeEmitter::emitInitializeForInOrOfTarget(TernaryNode* forHead) {
   MOZ_ASSERT(forHead->isKind(ParseNodeKind::ForIn) ||
              forHead->isKind(ParseNodeKind::ForOf));
 
-  MOZ_ASSERT(bytecodeSection().stackDepth() >= 1,
+  MOZ_ASSERT(this->stackDepth >= 1,
              "must have a per-iteration value for initializing");
 
   ParseNode* target = forHead->kid1();
@@ -5286,14 +5282,14 @@ bool BytecodeEmitter::emitInitializeForInOrOfTarget(TernaryNode* forHead) {
       // iteration value *before* initializing.  Thus the initializing
       // value may be buried under a bind-specific value on the stack.
       // Swap it to the top of the stack.
-      MOZ_ASSERT(bytecodeSection().stackDepth() >= 2);
+      MOZ_ASSERT(stackDepth >= 2);
       if (!emit1(JSOP_SWAP)) {
         return false;
       }
     } else {
       // In cases of emitting a frame slot or environment slot,
       // nothing needs be done.
-      MOZ_ASSERT(bytecodeSection().stackDepth() >= 1);
+      MOZ_ASSERT(stackDepth >= 1);
     }
     if (!noe.emitAssignment()) {
       return false;
@@ -5971,7 +5967,7 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
    * In this case we mutate JSOP_RETURN into JSOP_SETRVAL and add an
    * extra JSOP_RETRVAL after the fixups.
    */
-  ptrdiff_t top = bytecodeSection().offset();
+  ptrdiff_t top = offset();
 
   bool needsFinalYield =
       sc->isFunctionBox() && sc->asFunctionBox()->needsFinalYield();
@@ -6032,13 +6028,12 @@ bool BytecodeEmitter::emitReturn(UnaryNode* returnNode) {
       return false;
     }
   } else if (isDerivedClassConstructor) {
-    MOZ_ASSERT(bytecodeSection().code()[top] == JSOP_SETRVAL);
+    MOZ_ASSERT(code()[top] == JSOP_SETRVAL);
     if (!emit1(JSOP_RETRVAL)) {
       return false;
     }
-  } else if (top + static_cast<ptrdiff_t>(JSOP_RETURN_LENGTH) !=
-             bytecodeSection().offset()) {
-    bytecodeSection().code()[top] = JSOP_SETRVAL;
+  } else if (top + static_cast<ptrdiff_t>(JSOP_RETURN_LENGTH) != offset()) {
+    code()[top] = JSOP_SETRVAL;
     if (!emit1(JSOP_RETRVAL)) {
       return false;
     }
@@ -6218,7 +6213,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
   }
 
   int32_t savedDepthTemp;
-  int32_t startDepth = bytecodeSection().stackDepth();
+  int32_t startDepth = stackDepth;
   MOZ_ASSERT(startDepth >= 3);
 
   TryEmitter tryCatch(this, TryEmitter::Kind::TryCatchFinally,
@@ -6250,7 +6245,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  MOZ_ASSERT(bytecodeSection().stackDepth() == startDepth);
+  MOZ_ASSERT(this->stackDepth == startDepth);
 
   // Step 7.a.vi.
   // Step 7.b.ii.7.
@@ -6283,7 +6278,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  MOZ_ASSERT(bytecodeSection().stackDepth() == startDepth);
+  MOZ_ASSERT(stackDepth == startDepth);
 
   if (!emit1(JSOP_EXCEPTION)) {
     //              [stack] NEXT ITER RESULT EXCEPTION
@@ -6302,7 +6297,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  savedDepthTemp = bytecodeSection().stackDepth();
+  savedDepthTemp = stackDepth;
   InternalIfEmitter ifThrowMethodIsNotDefined(this);
   if (!emitPushNotUndefinedOrNull()) {
     //              [stack] NEXT ITER RESULT EXCEPTION ITER THROW
@@ -6353,7 +6348,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER RESULT
     return false;
   }
-  MOZ_ASSERT(bytecodeSection().stackDepth() == startDepth);
+  MOZ_ASSERT(this->stackDepth == startDepth);
 
   JumpList checkResult;
   // Note that there is no GOSUB to the finally block here. If the iterator has
@@ -6364,7 +6359,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  bytecodeSection().setStackDepth(savedDepthTemp);
+  stackDepth = savedDepthTemp;
   if (!ifThrowMethodIsNotDefined.emitElse()) {
     //              [stack] NEXT ITER RESULT EXCEPTION ITER THROW
     return false;
@@ -6389,12 +6384,12 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  bytecodeSection().setStackDepth(savedDepthTemp);
+  stackDepth = savedDepthTemp;
   if (!ifThrowMethodIsNotDefined.emitEnd()) {
     return false;
   }
 
-  bytecodeSection().setStackDepth(startDepth);
+  stackDepth = startDepth;
   if (!tryCatch.emitFinally()) {
     return false;
   }
@@ -6521,7 +6516,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE
     return false;
   }
-  savedDepthTemp = bytecodeSection().stackDepth();
+  savedDepthTemp = this->stackDepth;
   if (!ifReturnDone.emitElse()) {
     //              [stack] NEXT ITER OLDRESULT FTYPE FVALUE RESULT
     return false;
@@ -6543,7 +6538,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
       return false;
     }
   }
-  bytecodeSection().setStackDepth(savedDepthTemp);
+  this->stackDepth = savedDepthTemp;
   if (!ifReturnDone.emitEnd()) {
     return false;
   }
@@ -6618,7 +6613,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     //              [stack] NEXT ITER RESULT
     return false;
   }
-  MOZ_ASSERT(bytecodeSection().stackDepth() == startDepth);
+  MOZ_ASSERT(this->stackDepth == startDepth);
 
   // Steps 7.a.iv-v.
   // Steps 7.b.ii.5-6.
@@ -6663,7 +6658,7 @@ bool BytecodeEmitter::emitYieldStar(ParseNode* iter) {
     return false;
   }
 
-  MOZ_ASSERT(bytecodeSection().stackDepth() == startDepth - 2);
+  MOZ_ASSERT(this->stackDepth == startDepth - 2);
 
   return true;
 }
@@ -6712,7 +6707,7 @@ bool BytecodeEmitter::emitExpressionStatement(UnaryNode* exprStmt) {
     if (innermostNestableControl &&
         innermostNestableControl->is<LabelControl>() &&
         innermostNestableControl->as<LabelControl>().startOffset() >=
-            bytecodeSection().offset()) {
+            offset()) {
       useful = true;
     }
   }
@@ -8187,8 +8182,8 @@ bool BytecodeEmitter::replaceNewInitWithNewObject(JSObject* obj,
       JSOP_NEWINIT_LENGTH == JSOP_NEWOBJECT_LENGTH,
       "newinit and newobject must have equal length to edit in-place");
 
-  uint32_t index = perScriptData().objectList().add(objbox);
-  jsbytecode* code = bytecodeSection().code(offset);
+  uint32_t index = objectList.add(objbox);
+  jsbytecode* code = this->code(offset);
 
   MOZ_ASSERT(code[0] == JSOP_NEWINIT);
   code[0] = JSOP_NEWOBJECT;
@@ -9238,8 +9233,7 @@ bool BytecodeEmitter::emitTree(
       break;
 
     case ParseNodeKind::RegExpExpr:
-      if (!emitRegExp(perScriptData().objectList().add(
-              pn->as<RegExpLiteral>().objbox()))) {
+      if (!emitRegExp(objectList.add(pn->as<RegExpLiteral>().objbox()))) {
         return false;
       }
       break;
@@ -9340,13 +9334,11 @@ static bool AllocSrcNote(JSContext* cx, SrcNotesVector& notes,
 bool BytecodeEmitter::addTryNote(JSTryNoteKind kind, uint32_t stackDepth,
                                  size_t start, size_t end) {
   MOZ_ASSERT(!inPrologue());
-  return bytecodeSection().tryNoteList().append(kind, stackDepth, start, end);
+  return tryNoteList.append(kind, stackDepth, start, end);
 }
 
 bool BytecodeEmitter::newSrcNote(SrcNoteType type, unsigned* indexp) {
-  // Prologue shouldn't have source notes.
-  MOZ_ASSERT(!inPrologue());
-  SrcNotesVector& notes = bytecodeSection().notes();
+  SrcNotesVector& notes = this->notes();
   unsigned index;
   if (!AllocSrcNote(cx, notes, &index)) {
     return false;
@@ -9356,9 +9348,9 @@ bool BytecodeEmitter::newSrcNote(SrcNoteType type, unsigned* indexp) {
    * Compute delta from the last annotated bytecode's offset.  If it's too
    * big to fit in sn, allocate one or more xdelta notes and reset sn.
    */
-  ptrdiff_t offset = bytecodeSection().offset();
-  ptrdiff_t delta = offset - bytecodeSection().lastNoteOffset();
-  bytecodeSection().setLastNoteOffset(offset);
+  ptrdiff_t offset = this->offset();
+  ptrdiff_t delta = offset - lastNoteOffset();
+  lastNoteOffset_ = offset;
   if (delta >= SN_DELTA_LIMIT) {
     do {
       ptrdiff_t xdelta = Min(delta, SN_XDELTA_MASK);
@@ -9428,7 +9420,7 @@ bool BytecodeEmitter::setSrcNoteOffset(unsigned index, unsigned which,
     return false;
   }
 
-  SrcNotesVector& notes = bytecodeSection().notes();
+  SrcNotesVector& notes = this->notes();
 
   /* Find the offset numbered which (i.e., skip exactly which offsets). */
   jssrcnote* sn = &notes[index];
@@ -9466,10 +9458,10 @@ bool BytecodeEmitter::setSrcNoteOffset(unsigned index, unsigned which,
 }
 
 void BytecodeEmitter::copySrcNotes(jssrcnote* destination, uint32_t nsrcnotes) {
-  unsigned count = bytecodeSection().notes().length();
+  unsigned count = notes_.length();
   // nsrcnotes includes SN_MAKE_TERMINATOR in addition to the srcnotes.
   MOZ_ASSERT(nsrcnotes == count + 1);
-  PodCopy(destination, bytecodeSection().notes().begin(), count);
+  PodCopy(destination, notes_.begin(), count);
   SN_MAKE_TERMINATOR(&destination[count]);
 }
 
