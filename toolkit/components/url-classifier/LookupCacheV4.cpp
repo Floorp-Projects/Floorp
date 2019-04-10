@@ -642,6 +642,10 @@ nsresult LookupCacheV4::ApplyUpdate(RefPtr<TableUpdateV4> aTableUpdate,
     return NS_ERROR_UC_UPDATE_WRONG_REMOVAL_INDICES;
   }
 
+  // Prefixes and removal indice from update is no longer required
+  // after merging the data with local prefixes.
+  aTableUpdate->Clear();
+
   nsAutoCString sha256;
   crypto->Finish(false, sha256);
   if (aTableUpdate->SHA256().IsEmpty()) {
