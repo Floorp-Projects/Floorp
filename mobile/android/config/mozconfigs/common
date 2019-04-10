@@ -40,8 +40,6 @@ ac_add_options --with-google-safebrowsing-api-keyfile=/builds/sb-gapi.data
 ac_add_options --with-google-location-service-api-keyfile=/builds/gls-gapi.data
 ac_add_options --with-mozilla-api-keyfile=/builds/mozilla-fennec-geoloc-api.key
 
-ac_add_options --enable-marionette
-
 # MOZ_INSTALL_TRACKING does not guarantee MOZ_UPDATE_CHANNEL will be set so we
 # provide a default state. Currently, the default state provides a default
 # keyfile because an assertion will be thrown if MOZ_INSTALL_TRACKING is

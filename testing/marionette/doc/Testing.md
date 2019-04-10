@@ -83,8 +83,7 @@ but has the additional benefit of also working on macOS and Windows.
 
 Prerequisites:
 
-*   You have [built Fennec](https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Simple_Firefox_for_Android_build) with
-    `ac_add_options --enable-marionette` in your mozconfig.
+*   You have [built Fennec](https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Build_Instructions/Simple_Firefox_for_Android_build).
 *   You can run an Android [emulator](https://wiki.mozilla.org/Mobile/Fennec/Android/Testing#Running_tests_on_the_Android_emulator),
     which means you have the AVD you need.
 
