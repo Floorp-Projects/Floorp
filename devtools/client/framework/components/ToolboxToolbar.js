@@ -96,10 +96,11 @@ class ToolboxToolbar extends Component {
       // Because in the component we cannot compare the visibility since the
       // button definition instance in toolboxButtons will be unchanged.
       visibleToolboxButtonCount: PropTypes.number,
-      // Flag whether need to show DebugTargetInfo.
-      showDebugTargetInfo: PropTypes.bool,
-      // Device description for DebugTargetInfo component.
-      deviceDescription: PropTypes.object,
+      // Data to show debug target info, if needed
+      debugTargetData: PropTypes.shape({
+        deviceDescription: PropTypes.object.isRequired,
+        targetType: PropTypes.string.isRequired,
+      }),
     };
   }
 
@@ -422,7 +423,7 @@ class ToolboxToolbar extends Component {
    * render functions for how each of the sections is rendered.
    */
   render() {
-    const {deviceDescription, L10N, showDebugTargetInfo, toolbox} = this.props;
+    const { L10N, debugTargetData, toolbox} = this.props;
     const classnames = ["devtools-tabbar"];
     const startButtons = this.renderToolboxButtonsStart();
     const endButtons = this.renderToolboxButtonsEnd();
@@ -448,8 +449,9 @@ class ToolboxToolbar extends Component {
       )
       : div({ className: classnames.join(" ") });
 
-    const debugTargetInfo =
-      showDebugTargetInfo ? DebugTargetInfo({ deviceDescription, L10N, toolbox }) : null;
+    const debugTargetInfo = debugTargetData
+      ? DebugTargetInfo({ debugTargetData, L10N, toolbox })
+      : null;
 
     if (toolbox.target.canRewind) {
       return div(
