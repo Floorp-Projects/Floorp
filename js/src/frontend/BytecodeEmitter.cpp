@@ -92,7 +92,9 @@ static bool ParseNodeRequiresSpecialLineNumberNotes(ParseNode* pn) {
 }
 
 BytecodeEmitter::BytecodeSection::BytecodeSection(JSContext* cx)
-    : code_(cx), notes_(cx), tryNoteList_(cx) {}
+    : code_(cx), notes_(cx), tryNoteList_(cx), scopeNoteList_(cx) {}
+
+BytecodeEmitter::PerScriptData::PerScriptData(JSContext* cx) : scopeList_(cx) {}
 
 BytecodeEmitter::BytecodeEmitter(
     BytecodeEmitter* parent, SharedContext* sc, HandleScript script,
@@ -104,13 +106,12 @@ BytecodeEmitter::BytecodeEmitter(
       script(cx, script),
       lazyScript(cx, lazyScript),
       bytecodeSection_(cx),
+      perScriptData_(cx),
       currentLine_(lineNum),
       fieldInitializers_(fieldInitializers),
       atomIndices(cx->frontendCollectionPool()),
       firstLine(lineNum),
       numberList(cx),
-      scopeList(cx),
-      scopeNoteList(cx),
       resumeOffsetList(cx),
       emitterMode(emitterMode) {
   MOZ_ASSERT_IF(emitterMode == LazyFunction, lazyScript);
@@ -667,15 +668,16 @@ class NonLocalExitControl {
  public:
   NonLocalExitControl(BytecodeEmitter* bce, Kind kind)
       : bce_(bce),
-        savedScopeNoteIndex_(bce->scopeNoteList.length()),
+        savedScopeNoteIndex_(bce->bytecodeSection().scopeNoteList().length()),
         savedDepth_(bce->bytecodeSection().stackDepth()),
         openScopeNoteIndex_(bce->innermostEmitterScope()->noteIndex()),
         kind_(kind) {}
 
   ~NonLocalExitControl() {
-    for (uint32_t n = savedScopeNoteIndex_; n < bce_->scopeNoteList.length();
-         n++) {
-      bce_->scopeNoteList.recordEnd(n, bce_->bytecodeSection().offset());
+    for (uint32_t n = savedScopeNoteIndex_;
+         n < bce_->bytecodeSection().scopeNoteList().length(); n++) {
+      bce_->bytecodeSection().scopeNoteList().recordEnd(
+          n, bce_->bytecodeSection().offset());
     }
     bce_->bytecodeSection().setStackDepth(savedDepth_);
   }
@@ -699,12 +701,12 @@ bool NonLocalExitControl::leaveScope(EmitterScope* es) {
   if (es->enclosingInFrame()) {
     enclosingScopeIndex = es->enclosingInFrame()->index();
   }
-  if (!bce_->scopeNoteList.append(enclosingScopeIndex,
-                                  bce_->bytecodeSection().offset(),
-                                  openScopeNoteIndex_)) {
+  if (!bce_->bytecodeSection().scopeNoteList().append(
+          enclosingScopeIndex, bce_->bytecodeSection().offset(),
+          openScopeNoteIndex_)) {
     return false;
   }
-  openScopeNoteIndex_ = bce_->scopeNoteList.length() - 1;
+  openScopeNoteIndex_ = bce_->bytecodeSection().scopeNoteList().length() - 1;
 
   return true;
 }
@@ -945,7 +947,7 @@ bool BytecodeEmitter::emitAtomOp(uint32_t atomIndex, JSOp op) {
 
 bool BytecodeEmitter::emitInternedScopeOp(uint32_t index, JSOp op) {
   MOZ_ASSERT(JOF_OPTYPE(op) == JOF_SCOPE);
-  MOZ_ASSERT(index < scopeList.length());
+  MOZ_ASSERT(index < perScriptData().scopeList().length());
   return emitIndex32(op, index);
 }
 
