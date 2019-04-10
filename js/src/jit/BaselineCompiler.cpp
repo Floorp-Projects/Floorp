@@ -277,6 +277,7 @@ MethodStatus BaselineCompiler::compile() {
       script->hasResumeOffsets() ? script->resumeOffsets().size() : 0;
   UniquePtr<BaselineScript> baselineScript(
       BaselineScript::New(script, bailoutPrologueOffset_.offset(),
+                          warmUpCheckPrologueOffset_.offset(),
                           debugOsrPrologueOffset_.offset(),
                           debugOsrEpilogueOffset_.offset(),
                           profilerEnterFrameToggleOffset_.offset(),
@@ -6135,6 +6136,8 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
   if (!emitWarmUpCounterIncrement()) {
     return false;
   }
+
+  warmUpCheckPrologueOffset_ = CodeOffset(masm.currentOffset());
 
   if (!emitArgumentTypeChecks()) {
     return false;
