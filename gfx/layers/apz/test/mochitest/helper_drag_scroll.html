@@ -23,6 +23,7 @@
   <script type="text/javascript">
 var bar = null;
 var mouseDown = false;
+var mouseDownY = -1;
 
 function moveTo(mouseY, testDriver) {
   var fraction = (mouseY - bar.getBoundingClientRect().top) / bar.getBoundingClientRect().height;
@@ -43,18 +44,24 @@ function moveTo(mouseY, testDriver) {
 function setupDragging(testDriver) {
   bar = document.getElementById("scrollbar");
   mouseDown = false;
+  mouseDownY = -1;
 
   bar.addEventListener("mousedown", function(e) {
     dump("Got mousedown clientY " + e.clientY + "\n");
     mouseDown = true;
+    mouseDownY = e.clientY;
     moveTo(e.clientY, testDriver);
   }, true);
 
   bar.addEventListener("mousemove", function(e) {
     if (mouseDown) {
       dump("Got mousemove clientY " + e.clientY + "\n");
-      moveTo(e.clientY, testDriver);
       e.stopPropagation();
+      if (e.clientY == mouseDownY) {
+        dump("Discarding spurious mousemove\n");
+        return;
+      }
+      moveTo(e.clientY, testDriver);
     }
   }, true);
 
