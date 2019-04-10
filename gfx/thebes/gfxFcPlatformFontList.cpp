@@ -1794,26 +1794,28 @@ bool gfxFcPlatformFontList::FindAndAddFamilies(
   ToLowerCase(familyName);
   nsAtom* language = (aStyle ? aStyle->language.get() : nullptr);
 
-  // deprecated generic names are explicitly converted to standard generics
-  bool isDeprecatedGeneric = false;
-  if (familyName.EqualsLiteral("sans") ||
-      familyName.EqualsLiteral("sans serif")) {
-    familyName.AssignLiteral("sans-serif");
-    isDeprecatedGeneric = true;
-  } else if (familyName.EqualsLiteral("mono")) {
-    familyName.AssignLiteral("monospace");
-    isDeprecatedGeneric = true;
-  }
-
-  // fontconfig generics? use fontconfig to determine the family for lang
-  if (isDeprecatedGeneric ||
-      mozilla::FontFamilyName::Convert(familyName).IsGeneric()) {
-    PrefFontList* prefFonts = FindGenericFamilies(familyName, language);
-    if (prefFonts && !prefFonts->IsEmpty()) {
-      aOutput->AppendElements(*prefFonts);
-      return true;
+  if (!(aFlags & FindFamiliesFlags::eQuotedFamilyName)) {
+    // deprecated generic names are explicitly converted to standard generics
+    bool isDeprecatedGeneric = false;
+    if (familyName.EqualsLiteral("sans") ||
+        familyName.EqualsLiteral("sans serif")) {
+      familyName.AssignLiteral("sans-serif");
+      isDeprecatedGeneric = true;
+    } else if (familyName.EqualsLiteral("mono")) {
+      familyName.AssignLiteral("monospace");
+      isDeprecatedGeneric = true;
     }
-    return false;
+
+    // fontconfig generics? use fontconfig to determine the family for lang
+    if (isDeprecatedGeneric ||
+        mozilla::FontFamilyName::Convert(familyName).IsGeneric()) {
+      PrefFontList* prefFonts = FindGenericFamilies(familyName, language);
+      if (prefFonts && !prefFonts->IsEmpty()) {
+        aOutput->AppendElements(*prefFonts);
+        return true;
+      }
+      return false;
+    }
   }
 
   // fontconfig allows conditional substitutions in such a way that it's
