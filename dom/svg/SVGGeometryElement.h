@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_SVGGeometryElement_h
 #define mozilla_dom_SVGGeometryElement_h
 
+#include "mozilla/dom/SVGGraphicsElement.h"
 #include "mozilla/gfx/2D.h"
-#include "SVGGraphicsElement.h"
+#include "SVGAnimatedNumber.h"
 #include "nsISVGPoint.h"
-#include "nsSVGNumber2.h"
 
 namespace mozilla {
 
@@ -217,7 +217,7 @@ class SVGGeometryElement : public SVGGeometryElementBase {
   // SVGElement method
   virtual NumberAttributesInfo GetNumberInfo() override;
 
-  nsSVGNumber2 mPathLength;
+  SVGAnimatedNumber mPathLength;
   static NumberInfo sNumberInfo;
   mutable RefPtr<Path> mCachedPath;
 };

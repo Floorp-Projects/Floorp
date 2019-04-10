@@ -164,7 +164,7 @@ nscoord nsSVGOuterSVGFrame::GetPrefISize(gfxContext* aRenderingContext) {
 
   SVGSVGElement* svg = static_cast<SVGSVGElement*>(GetContent());
   WritingMode wm = GetWritingMode();
-  const nsSVGLength2& isize =
+  const SVGAnimatedLength& isize =
       wm.IsVertical() ? svg->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT]
                       : svg->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
 
@@ -206,9 +206,9 @@ IntrinsicSize nsSVGOuterSVGFrame::GetIntrinsicSize() {
   IntrinsicSize intrinsicSize;
 
   SVGSVGElement* content = static_cast<SVGSVGElement*>(GetContent());
-  const nsSVGLength2& width =
+  const SVGAnimatedLength& width =
       content->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
-  const nsSVGLength2& height =
+  const SVGAnimatedLength& height =
       content->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT];
 
   if (!width.IsPercentage()) {
@@ -238,9 +238,9 @@ nsSize nsSVGOuterSVGFrame::GetIntrinsicRatio() {
   // values to work but really small or large numbers will fail.
 
   SVGSVGElement* content = static_cast<SVGSVGElement*>(GetContent());
-  const nsSVGLength2& width =
+  const SVGAnimatedLength& width =
       content->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
-  const nsSVGLength2& height =
+  const SVGAnimatedLength& height =
       content->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT];
 
   if (!width.IsPercentage() && !height.IsPercentage()) {
@@ -257,7 +257,7 @@ nsSize nsSVGOuterSVGFrame::GetIntrinsicRatio() {
   }
 
   SVGViewElement* viewElement = content->GetCurrentViewElement();
-  const SVGViewBoxRect* viewbox = nullptr;
+  const SVGViewBox* viewbox = nullptr;
 
   // The logic here should match HasViewBox().
   if (viewElement && viewElement->mViewBox.HasRect()) {
@@ -319,7 +319,7 @@ LogicalSize nsSVGOuterSVGFrame::ComputeSize(
 
     SVGSVGElement* content = static_cast<SVGSVGElement*>(GetContent());
 
-    const nsSVGLength2& width =
+    const SVGAnimatedLength& width =
         content->mLengthAttributes[SVGSVGElement::ATTR_WIDTH];
     if (width.IsPercentage()) {
       MOZ_ASSERT(intrinsicSize.width.GetUnit() == eStyleUnit_None,
@@ -329,7 +329,7 @@ LogicalSize nsSVGOuterSVGFrame::ComputeSize(
       intrinsicSize.width.SetCoordValue(val * cbSize.Width(aWM));
     }
 
-    const nsSVGLength2& height =
+    const SVGAnimatedLength& height =
         content->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT];
     NS_ASSERTION(aCBSize.BSize(aWM) != NS_AUTOHEIGHT,
                  "root should not have auto-height containing block");
@@ -781,7 +781,7 @@ void nsSVGOuterSVGFrame::NotifyViewportOrTransformChanged(uint32_t aFlags) {
   SVGSVGElement* content = static_cast<SVGSVGElement*>(GetContent());
 
   if (aFlags & COORD_CONTEXT_CHANGED) {
-    if (content->HasViewBoxRect()) {
+    if (content->HasViewBox()) {
       // Percentage lengths on children resolve against the viewBox rect so we
       // don't need to notify them of the viewport change, but the viewBox
       // transform will have changed, so we need to notify them of that instead.
@@ -917,7 +917,7 @@ bool nsSVGOuterSVGFrame::IsRootOfImage() {
 }
 
 bool nsSVGOuterSVGFrame::VerticalScrollbarNotNeeded() const {
-  const nsSVGLength2& height =
+  const SVGAnimatedLength& height =
       static_cast<SVGSVGElement*>(GetContent())
           ->mLengthAttributes[SVGSVGElement::ATTR_HEIGHT];
   return height.IsPercentage() && height.GetBaseValInSpecifiedUnits() <= 100;

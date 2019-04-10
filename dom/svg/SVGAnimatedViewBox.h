@@ -26,23 +26,23 @@ class SVGAnimationElement;
 class SVGElement;
 }  // namespace dom
 
-struct SVGViewBoxRect {
+struct SVGViewBox {
   float x, y;
   float width, height;
   bool none;
 
-  SVGViewBoxRect() : x(0.0), y(0.0), width(0.0), height(0.0), none(true) {}
-  SVGViewBoxRect(float aX, float aY, float aWidth, float aHeight)
+  SVGViewBox() : x(0.0), y(0.0), width(0.0), height(0.0), none(true) {}
+  SVGViewBox(float aX, float aY, float aWidth, float aHeight)
       : x(aX), y(aY), width(aWidth), height(aHeight), none(false) {}
-  SVGViewBoxRect(const SVGViewBoxRect& rhs)
+  SVGViewBox(const SVGViewBox& rhs)
       : x(rhs.x),
         y(rhs.y),
         width(rhs.width),
         height(rhs.height),
         none(rhs.none) {}
-  bool operator==(const SVGViewBoxRect& aOther) const;
+  bool operator==(const SVGViewBox& aOther) const;
 
-  static nsresult FromString(const nsAString& aStr, SVGViewBoxRect* aViewBox);
+  static nsresult FromString(const nsAString& aStr, SVGViewBox* aViewBox);
 };
 
 class SVGAnimatedViewBox {
@@ -66,18 +66,18 @@ class SVGAnimatedViewBox {
    */
   bool IsExplicitlySet() const {
     if (mAnimVal || mHasBaseVal) {
-      const SVGViewBoxRect& rect = GetAnimValue();
+      const SVGViewBox& rect = GetAnimValue();
       return rect.none || (rect.width >= 0 && rect.height >= 0);
     }
     return false;
   }
 
-  const SVGViewBoxRect& GetBaseValue() const { return mBaseVal; }
-  void SetBaseValue(const SVGViewBoxRect& aRect, SVGElement* aSVGElement);
-  const SVGViewBoxRect& GetAnimValue() const {
+  const SVGViewBox& GetBaseValue() const { return mBaseVal; }
+  void SetBaseValue(const SVGViewBox& aRect, SVGElement* aSVGElement);
+  const SVGViewBox& GetAnimValue() const {
     return mAnimVal ? *mAnimVal : mBaseVal;
   }
-  void SetAnimValue(const SVGViewBoxRect& aRect, SVGElement* aSVGElement);
+  void SetAnimValue(const SVGViewBox& aRect, SVGElement* aSVGElement);
 
   nsresult SetBaseValueString(const nsAString& aValue, SVGElement* aSVGElement,
                               bool aDoSetAttr);
@@ -95,8 +95,8 @@ class SVGAnimatedViewBox {
   mozilla::UniquePtr<SMILAttr> ToSMILAttr(SVGElement* aSVGElement);
 
  private:
-  SVGViewBoxRect mBaseVal;
-  nsAutoPtr<SVGViewBoxRect> mAnimVal;
+  SVGViewBox mBaseVal;
+  nsAutoPtr<SVGViewBox> mAnimVal;
   bool mHasBaseVal;
 
  public:

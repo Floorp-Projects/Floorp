@@ -7,7 +7,7 @@
 #include "DOMSVGAnimatedLength.h"
 
 #include "mozilla/dom/SVGAnimatedLengthBinding.h"
-#include "nsSVGLength2.h"
+#include "SVGAnimatedLength.h"
 #include "DOMSVGLength.h"
 
 namespace mozilla {

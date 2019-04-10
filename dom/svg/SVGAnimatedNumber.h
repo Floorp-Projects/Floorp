@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGNUMBER2_H__
-#define __NS_SVGNUMBER2_H__
+#ifndef mozilla_SVGAnimatedNumber_h
+#define mozilla_SVGAnimatedNumber_h
 
 #include "DOMSVGAnimatedNumber.h"
 #include "nsCycleCollectionParticipant.h"
@@ -24,9 +24,8 @@ class SMILValue;
 namespace dom {
 class SVGAnimationElement;
 }  // namespace dom
-}  // namespace mozilla
 
-class nsSVGNumber2 {
+class SVGAnimatedNumber {
  public:
   typedef mozilla::SMILAttr SMILAttr;
   typedef mozilla::SMILValue SMILValue;
@@ -67,13 +66,13 @@ class nsSVGNumber2 {
 
  public:
   // DOM wrapper class for the (DOM)SVGAnimatedNumber interface where the
-  // wrapped class is nsSVGNumber2.
+  // wrapped class is SVGAnimatedNumber.
   struct DOMAnimatedNumber final : public mozilla::dom::DOMSVGAnimatedNumber {
-    DOMAnimatedNumber(nsSVGNumber2* aVal, SVGElement* aSVGElement)
+    DOMAnimatedNumber(SVGAnimatedNumber* aVal, SVGElement* aSVGElement)
         : mozilla::dom::DOMSVGAnimatedNumber(aSVGElement), mVal(aVal) {}
     virtual ~DOMAnimatedNumber();
 
-    nsSVGNumber2* mVal;  // kept alive because it belongs to content
+    SVGAnimatedNumber* mVal;  // kept alive because it belongs to content
 
     virtual float BaseVal() override { return mVal->GetBaseValue(); }
     virtual void SetBaseVal(float aValue) override {
@@ -91,13 +90,13 @@ class nsSVGNumber2 {
 
   struct SMILNumber : public SMILAttr {
    public:
-    SMILNumber(nsSVGNumber2* aVal, SVGElement* aSVGElement)
+    SMILNumber(SVGAnimatedNumber* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    nsSVGNumber2* mVal;
+    SVGAnimatedNumber* mVal;
     SVGElement* mSVGElement;
 
     // SMILAttr methods
@@ -111,4 +110,6 @@ class nsSVGNumber2 {
   };
 };
 
-#endif  //__NS_SVGNUMBER2_H__
+}  // namespace mozilla
+
+#endif  //  mozilla_SVGAnimatedNumber_h

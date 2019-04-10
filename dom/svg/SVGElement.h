@@ -27,9 +27,6 @@
 #include "nsStyledElement.h"
 #include "gfxMatrix.h"
 
-class nsSVGLength2;
-class nsSVGNumber2;
-
 nsresult NS_NewSVGElement(mozilla::dom::Element** aResult,
                           already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
 
@@ -41,7 +38,9 @@ class SVGAnimatedBoolean;
 class SVGAnimatedEnumeration;
 class SVGAnimatedInteger;
 class SVGAnimatedIntegerPair;
+class SVGAnimatedLength;
 class SVGAnimatedLengthList;
+class SVGAnimatedNumber;
 class SVGAnimatedNumberList;
 class SVGAnimatedNumberPair;
 class SVGAnimatedOrient;
@@ -164,7 +163,7 @@ class SVGElement : public SVGElementBase  // nsIContent
     return GetNumberInfo().mNumberInfo[aAttrEnum].mPercentagesAllowed;
   }
   virtual bool HasValidDimensions() const { return true; }
-  void SetLength(nsAtom* aName, const nsSVGLength2& aLength);
+  void SetLength(nsAtom* aName, const SVGAnimatedLength& aLength);
 
   nsAttrValue WillChangeLength(uint8_t aAttrEnum);
   nsAttrValue WillChangeNumberPair(uint8_t aAttrEnum);
@@ -231,7 +230,7 @@ class SVGElement : public SVGElementBase  // nsIContent
     DO_ALLOCATE = 0x1
   };
 
-  nsSVGLength2* GetAnimatedLength(const nsAtom* aAttrName);
+  SVGAnimatedLength* GetAnimatedLength(const nsAtom* aAttrName);
   void GetAnimatedLengthValues(float* aFirst, ...);
   void GetAnimatedNumberValues(float* aFirst, ...);
   void GetAnimatedIntegerValues(int32_t* aFirst, ...);
@@ -336,11 +335,11 @@ class SVGElement : public SVGElementBase  // nsIContent
   };
 
   struct LengthAttributesInfo {
-    nsSVGLength2* const mLengths;
+    SVGAnimatedLength* const mLengths;
     const LengthInfo* const mLengthInfo;
     const uint32_t mLengthCount;
 
-    LengthAttributesInfo(nsSVGLength2* aLengths, LengthInfo* aLengthInfo,
+    LengthAttributesInfo(SVGAnimatedLength* aLengths, LengthInfo* aLengthInfo,
                          uint32_t aLengthCount)
         : mLengths(aLengths),
           mLengthInfo(aLengthInfo),
@@ -356,11 +355,11 @@ class SVGElement : public SVGElementBase  // nsIContent
   };
 
   struct NumberAttributesInfo {
-    nsSVGNumber2* const mNumbers;
+    SVGAnimatedNumber* const mNumbers;
     const NumberInfo* const mNumberInfo;
     const uint32_t mNumberCount;
 
-    NumberAttributesInfo(nsSVGNumber2* aNumbers, NumberInfo* aNumberInfo,
+    NumberAttributesInfo(SVGAnimatedNumber* aNumbers, NumberInfo* aNumberInfo,
                          uint32_t aNumberCount)
         : mNumbers(aNumbers),
           mNumberInfo(aNumberInfo),
@@ -568,9 +567,9 @@ class SVGElement : public SVGElementBase  // nsIContent
   virtual EnumAttributesInfo GetEnumInfo();
   // We assume all orients, viewboxes and preserveAspectRatios are alike
   // so we don't need to wrap the class
-  virtual SVGAnimatedOrient* GetOrient();
-  virtual SVGAnimatedPreserveAspectRatio* GetPreserveAspectRatio();
-  virtual SVGAnimatedViewBox* GetViewBox();
+  virtual SVGAnimatedOrient* GetAnimatedOrient();
+  virtual SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio();
+  virtual SVGAnimatedViewBox* GetAnimatedViewBox();
   virtual NumberListAttributesInfo GetNumberListInfo();
   virtual LengthListAttributesInfo GetLengthListInfo();
   virtual StringAttributesInfo GetStringInfo();
