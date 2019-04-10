@@ -239,11 +239,27 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
     CGScopeList& scopeList() { return scopeList_; }
     const CGScopeList& scopeList() const { return scopeList_; }
 
+    // ---- Literals ----
+
+    CGNumberList& numberList() { return numberList_; }
+    const CGNumberList& numberList() const { return numberList_; }
+
+    CGObjectList& objectList() { return objectList_; }
+    const CGObjectList& objectList() const { return objectList_; }
+
    private:
     // ---- Scope ----
 
     // List of emitted scopes.
     CGScopeList scopeList_;
+
+    // ---- Literals ----
+
+    // List of double and bigint values used by script.
+    CGNumberList numberList_;
+
+    // List of emitted objects.
+    CGObjectList objectList_;
   };
 
   PerScriptData perScriptData_;
@@ -310,9 +326,6 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   EmitterScope* innermostEmitterScopeNoCheck() const {
     return innermostEmitterScope_;
   }
-
-  CGNumberList numberList; /* double and bigint values used by script */
-  CGObjectList objectList; /* list of emitted objects */
 
   // Certain ops (yield, await, gosub) have an entry in the script's
   // resumeOffsets list. This can be used to map from the op's resumeIndex to
