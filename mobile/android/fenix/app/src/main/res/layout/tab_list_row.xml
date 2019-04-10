@@ -60,7 +60,7 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/text_url" />
 
-        <ImageView
+        <org.mozilla.fenix.home.ImageViewTopCrop
             android:id="@+id/tab_background"
             android:layout_width="0dp"
             android:layout_height="100dp"
@@ -68,7 +68,7 @@
             android:adjustViewBounds="false"
             android:focusable="false"
             android:importantForAccessibility="no"
-            android:scaleType="centerCrop"
+            android:scaleType="matrix"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
