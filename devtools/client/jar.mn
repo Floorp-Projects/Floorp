@@ -143,6 +143,7 @@ devtools.jar:
     skin/images/open-inspector.svg (themes/images/open-inspector.svg)
     skin/images/more.svg (themes/images/more.svg)
     skin/images/pause.svg (themes/images/pause.svg)
+    skin/images/pencil-icon.svg (themes/images/pencil-icon.svg)
     skin/images/play.svg (themes/images/play.svg)
     skin/images/rewind.svg (themes/images/rewind.svg)
     skin/images/dock-bottom.svg (themes/images/dock-bottom.svg)

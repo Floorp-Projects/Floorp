@@ -7,6 +7,7 @@
 const {
   ADD_DEVICE,
   ADD_DEVICE_TYPE,
+  EDIT_DEVICE,
   LOAD_DEVICE_LIST_START,
   LOAD_DEVICE_LIST_ERROR,
   LOAD_DEVICE_LIST_END,
@@ -38,6 +39,20 @@ const reducers = {
       ...devices,
       types: [...devices.types, deviceType],
       [deviceType]: [],
+    };
+  },
+
+  [EDIT_DEVICE](devices, { oldDevice, newDevice, deviceType }) {
+    const index = devices[deviceType].indexOf(oldDevice);
+    if (index < 0) {
+      return devices;
+    }
+
+    devices[deviceType].splice(index, 1, newDevice);
+
+    return {
+      ...devices,
+      [deviceType]: [...devices[deviceType]],
     };
   },
 
