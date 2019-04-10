@@ -596,23 +596,8 @@ void Performance::QueueEntry(PerformanceEntry* aEntry) {
   if (mObservers.IsEmpty()) {
     return;
   }
-
-  nsTObserverArray<PerformanceObserver*> interestedObservers;
-  nsTObserverArray<PerformanceObserver*>::ForwardIterator observerIt(
-      mObservers);
-  while (observerIt.HasMore()) {
-    PerformanceObserver* observer = observerIt.GetNext();
-    if (observer->ObservesTypeOfEntry(aEntry)) {
-      interestedObservers.AppendElement(observer);
-    }
-  }
-
-  if (interestedObservers.IsEmpty()) {
-    return;
-  }
-
-  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(
-      interestedObservers, PerformanceObserver, QueueEntry, (aEntry));
+  NS_OBSERVER_ARRAY_NOTIFY_XPCOM_OBSERVERS(mObservers, PerformanceObserver,
+                                           QueueEntry, (aEntry));
 
   if (!mPendingNotificationObserversTask) {
     RunNotificationObserversTask();
