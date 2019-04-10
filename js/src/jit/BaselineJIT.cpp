@@ -557,6 +557,13 @@ static bool ComputeBinarySearchMid(ICEntries entries, uint32_t pcOffset,
         if (entryOffset < pcOffset) {
           return 1;
         }
+        if (!entry.isForOp()) {
+          // Non-op ICEntries are used for prologue argument type checks. Ignore
+          // those entries and return 1 because these entries appear in the
+          // ICEntry list before the for-op ICEntry (if any) at offset 0.
+          MOZ_ASSERT(entryOffset == 0);
+          return 1;
+        }
         return 0;
       },
       loc);
@@ -593,26 +600,10 @@ ICEntry* ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset) {
 
   MOZ_ASSERT(mid < numICEntries());
 
-  // Found an IC entry with a matching PC offset.  Search backward, and then
-  // forward from this IC entry, looking for one with the same PC offset which
-  // has isForOp() set.
-  for (size_t i = mid; icEntry(i).pcOffset() == pcOffset; i--) {
-    if (icEntry(i).isForOp()) {
-      return &icEntry(i);
-    }
-    if (i == 0) {
-      break;
-    }
-  }
-  for (size_t i = mid + 1; i < numICEntries(); i++) {
-    if (icEntry(i).pcOffset() != pcOffset) {
-      break;
-    }
-    if (icEntry(i).isForOp()) {
-      return &icEntry(i);
-    }
-  }
-  return nullptr;
+  ICEntry& entry = icEntry(mid);
+  MOZ_ASSERT(entry.isForOp());
+  MOZ_ASSERT(entry.pcOffset() == pcOffset);
+  return &entry;
 }
 
 ICEntry& ICScript::icEntryFromPCOffset(uint32_t pcOffset) {
