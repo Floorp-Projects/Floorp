@@ -732,9 +732,13 @@ var PushService = {
 
   /**
    * Dispatches a broadcast notification to the BroadcastService.
+   *
+   * @param {Object} message The reply received by PushServiceWebSocket
+   * @param {Object} context Additional information about the context in which the
+   *  notification was received.
    */
-  receivedBroadcastMessage(message) {
-    pushBroadcastService.receivedBroadcastMessage(message.broadcasts)
+  receivedBroadcastMessage(message, context) {
+    pushBroadcastService.receivedBroadcastMessage(message.broadcasts, context)
       .catch(e => {
         console.error(e);
       });
