@@ -118,7 +118,7 @@ SVGViewportElement::IsAttributeMapped(const nsAtom* name) const {
 // resolve percentage lengths. (It can only be used to resolve
 // 'em'/'ex'-valued units).
 inline float ComputeSynthesizedViewBoxDimension(
-    const nsSVGLength2& aLength, float aViewportLength,
+    const SVGAnimatedLength& aLength, float aViewportLength,
     const SVGViewportElement* aSelf) {
   if (aLength.IsPercentage()) {
     return aViewportLength * aLength.GetAnimValInSpecifiedUnits() / 100.0f;
@@ -185,8 +185,7 @@ gfx::Matrix SVGViewportElement::GetViewBoxTransform() const {
     return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular
   }
 
-  SVGViewBoxRect viewBox =
-      GetViewBoxWithSynthesis(viewportWidth, viewportHeight);
+  SVGViewBox viewBox = GetViewBoxWithSynthesis(viewportWidth, viewportHeight);
 
   if (viewBox.width <= 0.0f || viewBox.height <= 0.0f) {
     return gfx::Matrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular
@@ -200,9 +199,9 @@ gfx::Matrix SVGViewportElement::GetViewBoxTransform() const {
 // SVGViewportElement
 
 float SVGViewportElement::GetLength(uint8_t aCtxType) {
-  const SVGViewBoxRect* viewbox = GetViewBoxInternal().HasRect()
-                                      ? &GetViewBoxInternal().GetAnimValue()
-                                      : nullptr;
+  const SVGViewBox* viewbox = GetViewBoxInternal().HasRect()
+                                  ? &GetViewBoxInternal().GetAnimValue()
+                                  : nullptr;
 
   float h = 0.0f, w = 0.0f;
   bool shouldComputeWidth =
@@ -310,14 +309,17 @@ bool SVGViewportElement::HasValidDimensions() const {
            mLengthAttributes[ATTR_HEIGHT].GetAnimValInSpecifiedUnits() > 0));
 }
 
-SVGAnimatedViewBox* SVGViewportElement::GetViewBox() { return &mViewBox; }
+SVGAnimatedViewBox* SVGViewportElement::GetAnimatedViewBox() {
+  return &mViewBox;
+}
 
-SVGAnimatedPreserveAspectRatio* SVGViewportElement::GetPreserveAspectRatio() {
+SVGAnimatedPreserveAspectRatio*
+SVGViewportElement::GetAnimatedPreserveAspectRatio() {
   return &mPreserveAspectRatio;
 }
 
 bool SVGViewportElement::ShouldSynthesizeViewBox() const {
-  MOZ_ASSERT(!HasViewBoxRect(), "Should only be called if we lack a viewBox");
+  MOZ_ASSERT(!HasViewBox(), "Should only be called if we lack a viewBox");
 
   return IsRoot() && OwnerDoc()->IsBeingUsedAsImage();
 }
@@ -325,7 +327,7 @@ bool SVGViewportElement::ShouldSynthesizeViewBox() const {
 //----------------------------------------------------------------------
 // implementation helpers
 
-SVGViewBoxRect SVGViewportElement::GetViewBoxWithSynthesis(
+SVGViewBox SVGViewportElement::GetViewBoxWithSynthesis(
     float aViewportWidth, float aViewportHeight) const {
   if (GetViewBoxInternal().HasRect()) {
     return GetViewBoxInternal().GetAnimValue();
@@ -334,7 +336,7 @@ SVGViewBoxRect SVGViewportElement::GetViewBoxWithSynthesis(
   if (ShouldSynthesizeViewBox()) {
     // Special case -- fake a viewBox, using height & width attrs.
     // (Use |this| as context, since if we get here, we're outermost <svg>.)
-    return SVGViewBoxRect(
+    return SVGViewBox(
         0, 0,
         ComputeSynthesizedViewBoxDimension(mLengthAttributes[ATTR_WIDTH],
                                            mViewportWidth, this),
@@ -344,7 +346,7 @@ SVGViewBoxRect SVGViewportElement::GetViewBoxWithSynthesis(
 
   // No viewBox attribute, so we shouldn't auto-scale. This is equivalent
   // to having a viewBox that exactly matches our viewport size.
-  return SVGViewBoxRect(0, 0, aViewportWidth, aViewportHeight);
+  return SVGViewBox(0, 0, aViewportWidth, aViewportHeight);
 }
 
 SVGElement::LengthAttributesInfo SVGViewportElement::GetLengthInfo() {

@@ -49,8 +49,6 @@ async function testThrowValue(dbg, val) {
   is(getValue(dbg, 2), uneval(val), `check exception is ${uneval(val)}`);
 
   await resume(dbg);
-  await waitForPaused(dbg);
-  await resume(dbg);
   assertNotPaused(dbg);
 }
 
