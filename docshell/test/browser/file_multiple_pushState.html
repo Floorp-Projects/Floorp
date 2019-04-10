@@ -9,6 +9,12 @@
   </body>
   <script type="text/javascript">
     window.history.pushState({}, "", "/bar/ABC?key=baz");
-    window.history.pushState({}, "", "/bar/ABC/DEF?key=baz");
+    let data = new Array(100000).join("a");
+    window.history.pushState({ data }, "", "/bar/ABC/DEF?key=baz");
+    // Test also Gecko specific state object size limit.
+    try {
+      let largeData = new Array(10000000).join("a");
+      window.history.pushState({ largeData }, "", "/bar/ABC/DEF/GHI?key=baz");
+    } catch (ex) {}
   </script>
 </html>
