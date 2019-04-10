@@ -140,8 +140,8 @@ void CookieServiceParent::TrackCookieLoad(nsIChannel *aChannel) {
     // Check first-party storage access even for non-tracking resources, since
     // we will need the result when computing the access rights for the reject
     // foreign cookie behavior mode.
-    if (isForeign && AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(
-                         httpChannel, uri, nullptr)) {
+    if (AntiTrackingCommon::IsFirstPartyStorageAccessGrantedFor(httpChannel,
+                                                                uri, nullptr)) {
       storageAccessGranted = true;
     }
   }
