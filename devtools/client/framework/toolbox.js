@@ -579,15 +579,14 @@ Toolbox.prototype = {
 
       // Wait until the original tool is selected so that the split
       // console input will receive focus.
-      const browserWin = this.win.top;
       let splitConsolePromise = promise.resolve();
       if (Services.prefs.getBoolPref(SPLITCONSOLE_ENABLED_PREF)) {
         splitConsolePromise = this.openSplitConsole();
         this.telemetry.addEventProperty(
-          browserWin, "open", "tools", null, "splitconsole", true);
+          this.win, "open", "tools", null, "splitconsole", true);
       } else {
         this.telemetry.addEventProperty(
-          browserWin, "open", "tools", null, "splitconsole", false);
+          this.win, "open", "tools", null, "splitconsole", false);
       }
 
       await promise.all([
@@ -2121,8 +2120,7 @@ Toolbox.prototype = {
       });
     }
 
-    const browserWin = this.win.top;
-    this.telemetry.addEventProperties(browserWin, "open", "tools", null, {
+    this.telemetry.addEventProperties(this.win, "open", "tools", null, {
       "width": width,
       "session_id": this.sessionId,
     });
