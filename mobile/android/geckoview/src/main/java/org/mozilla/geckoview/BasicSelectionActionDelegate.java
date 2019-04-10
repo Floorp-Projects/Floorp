@@ -58,18 +58,18 @@ public class BasicSelectionActionDelegate implements ActionMode.Callback,
         ACTION_SELECT_ALL, ACTION_CUT, ACTION_COPY, ACTION_PASTE
     };
 
-    protected final Activity mActivity;
+    protected final @NonNull Activity mActivity;
     protected final boolean mUseFloatingToolbar;
-    protected final Matrix mTempMatrix = new Matrix();
-    protected final RectF mTempRect = new RectF();
+    protected final @NonNull Matrix mTempMatrix = new Matrix();
+    protected final @NonNull RectF mTempRect = new RectF();
 
     private boolean mExternalActionsEnabled;
 
-    protected ActionMode mActionMode;
-    protected GeckoSession mSession;
-    protected Selection mSelection;
-    protected List<String> mActions;
-    protected GeckoResponse<String> mResponse;
+    protected @Nullable ActionMode mActionMode;
+    protected @Nullable GeckoSession mSession;
+    protected @Nullable Selection mSelection;
+    protected @Nullable List<String> mActions;
+    protected @Nullable GeckoResponse<String> mResponse;
     protected boolean mRepopulatedMenu;
 
     @TargetApi(Build.VERSION_CODES.M)

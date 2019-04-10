@@ -42,6 +42,8 @@ exclude: true
 
 [68.9]: ../GeckoRuntimeSettings.html#setPreferredColorScheme-int-
 
+- Added [`@NonNull`][66.1] or [`@Nullable`][66.2] to all fields.
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -248,4 +250,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 053d9b4164690ff13996be9e7288dd183e2a1db4
+[api-version]: bb3f2a7e754d92f6d5d9679e4d135c168327c73a
