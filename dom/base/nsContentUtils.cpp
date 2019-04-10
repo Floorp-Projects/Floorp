@@ -9457,8 +9457,8 @@ static void DoCustomElementCreate(Element** aElement, Document* aDoc,
                                   NodeInfo* aNodeInfo,
                                   CustomElementConstructor* aConstructor,
                                   ErrorResult& aRv) {
-  RefPtr<Element> element =
-      aConstructor->Construct("Custom Element Create", aRv);
+  RefPtr<Element> element = aConstructor->Construct(
+      aRv, "Custom Element Create", CallbackFunction::eRethrowExceptions);
   if (aRv.Failed()) {
     return;
   }
