@@ -1330,8 +1330,8 @@ nsStylePosition::nsStylePosition(const Document& aDocument)
       mFlexGrow(0.0f),
       mFlexShrink(1.0f),
       mZIndex(StyleZIndex::Auto()),
-      mColumnGap(eStyleUnit_Normal),
-      mRowGap(eStyleUnit_Normal) {
+      mColumnGap(NonNegativeLengthPercentageOrNormal::Normal()),
+      mRowGap(NonNegativeLengthPercentageOrNormal::Normal()) {
   MOZ_COUNT_CTOR(nsStylePosition);
 
   // The initial value of grid-auto-columns and grid-auto-rows is 'auto',

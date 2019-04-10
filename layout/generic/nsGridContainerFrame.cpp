@@ -873,8 +873,8 @@ struct nsGridContainerFrame::TrackSizingFunctions {
    * Initialize the number of auto-fill/fit tracks to use and return that.
    * (zero if no auto-fill/fit track was specified)
    */
-  uint32_t InitRepeatTracks(const nsStyleCoord& aGridGap, nscoord aMinSize,
-                            nscoord aSize, nscoord aMaxSize) {
+  uint32_t InitRepeatTracks(const NonNegativeLengthPercentageOrNormal& aGridGap,
+                            nscoord aMinSize, nscoord aSize, nscoord aMaxSize) {
     uint32_t repeatTracks =
         CalculateRepeatFillCount(aGridGap, aMinSize, aSize, aMaxSize);
     SetNumRepeatTracks(repeatTracks);
@@ -886,9 +886,9 @@ struct nsGridContainerFrame::TrackSizingFunctions {
     return repeatTracks;
   }
 
-  uint32_t CalculateRepeatFillCount(const nsStyleCoord& aGridGap,
-                                    nscoord aMinSize, nscoord aSize,
-                                    nscoord aMaxSize) const {
+  uint32_t CalculateRepeatFillCount(
+      const NonNegativeLengthPercentageOrNormal& aGridGap, nscoord aMinSize,
+      nscoord aSize, nscoord aMaxSize) const {
     if (!mHasRepeatAuto) {
       return 0;
     }
@@ -1041,8 +1041,8 @@ struct nsGridContainerFrame::Tracks {
   }
 
   void Initialize(const TrackSizingFunctions& aFunctions,
-                  const nsStyleCoord& aGridGap, uint32_t aNumTracks,
-                  nscoord aContentBoxSize);
+                  const NonNegativeLengthPercentageOrNormal& aGridGap,
+                  uint32_t aNumTracks, nscoord aContentBoxSize);
 
   /**
    * Return the union of the state bits for the tracks in aRange.
@@ -3335,8 +3335,9 @@ void nsGridContainerFrame::Grid::PlaceGridItems(
 }
 
 void nsGridContainerFrame::Tracks::Initialize(
-    const TrackSizingFunctions& aFunctions, const nsStyleCoord& aGridGap,
-    uint32_t aNumTracks, nscoord aContentBoxSize) {
+    const TrackSizingFunctions& aFunctions,
+    const NonNegativeLengthPercentageOrNormal& aGridGap, uint32_t aNumTracks,
+    nscoord aContentBoxSize) {
   MOZ_ASSERT(aNumTracks >=
              aFunctions.mExplicitGridOffset + aFunctions.NumExplicitTracks());
   mSizes.SetLength(aNumTracks);
@@ -5794,7 +5795,9 @@ void nsGridContainerFrame::Reflow(nsPresContext* aPresContext,
                           bSize);
 
   if (!prevInFlow) {
-    if (computedBSize == NS_AUTOHEIGHT && stylePos->mRowGap.HasPercent()) {
+    if (computedBSize == NS_AUTOHEIGHT &&
+        stylePos->mRowGap.IsLengthPercentage() &&
+        stylePos->mRowGap.AsLengthPercentage().HasPercent()) {
       // Re-resolve the row-gap now that we know our intrinsic block-size.
       gridReflowInput.mRows.mGridGap =
           nsLayoutUtils::ResolveGapToLength(stylePos->mRowGap, bSize);

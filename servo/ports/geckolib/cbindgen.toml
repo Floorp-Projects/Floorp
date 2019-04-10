@@ -82,6 +82,7 @@ include = [
   "LengthPercentageOrAuto",
   "LineHeight",
   "NonNegativeLengthPercentageOrAuto",
+  "NonNegativeLengthPercentageOrNormal",
   "LengthOrAuto",
   "NonNegativeLengthOrAuto",
   "Rect",
