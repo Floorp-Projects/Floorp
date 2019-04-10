@@ -2037,6 +2037,18 @@ var XPIProvider = {
   },
 
   /**
+   * Returns true if the add-on with the given ID is built-in.
+   *
+   * @param {string} addonId
+   *        The ID of the add-on to check.
+   * @returns {boolean}
+   */
+  addonIsBuiltin(addonId) {
+    let state = XPIStates.findAddon(addonId);
+    return state && state.location.isBuiltin;
+  },
+
+  /**
    * Returns an array of the add-on values in `enabledAddons`,
    * sorted so that all of an add-on's dependencies appear in the array
    * before itself.

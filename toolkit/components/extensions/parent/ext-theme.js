@@ -6,6 +6,8 @@
 
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
+ChromeUtils.defineModuleGetter(this, "AddonManagerPrivate",
+                               "resource://gre/modules/AddonManager.jsm");
 ChromeUtils.defineModuleGetter(this, "LightweightThemeManager",
                                "resource://gre/modules/LightweightThemeManager.jsm");
 
@@ -53,8 +55,10 @@ class Theme {
       this.lwtDarkStyles = null;
 
       if (experiment) {
-        const canRunExperiment = AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS &&
-          Services.prefs.getBoolPref("extensions.legacy.enabled");
+        const canRunExperiment = AddonManagerPrivate.addonIsBuiltin(extension.id) || (
+          AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS &&
+          Services.prefs.getBoolPref("extensions.legacy.enabled")
+        );
         if (canRunExperiment) {
           this.lwtStyles.experimental = {
             colors: {},
