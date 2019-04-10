@@ -1822,28 +1822,28 @@ class JSScript : public js::gc::TenuredCell {
   // behavior of this script. This is only public for the JITs.
  public:
   enum class MutableFlags : uint32_t {
+    // Number of times the |warmUpCount| was forcibly discarded. The counter is
+    // reset when a script is successfully jit-compiled.
+    WarmupResets_MASK = 0xFF,
+
     // Have warned about uses of undefined properties in this script.
-    WarnedAboutUndefinedProp = 1 << 0,
+    WarnedAboutUndefinedProp = 1 << 8,
 
     // If treatAsRunOnce, whether script has executed.
-    HasRunOnce = 1 << 1,
+    HasRunOnce = 1 << 9,
 
     // Script has been reused for a clone.
-    HasBeenCloned = 1 << 2,
+    HasBeenCloned = 1 << 10,
 
     // Whether the record/replay execution progress counter (see RecordReplay.h)
     // should be updated as this script runs.
-    TrackRecordReplayProgress = 1 << 3,
-
-    // (1 << 4) is unused.
+    TrackRecordReplayProgress = 1 << 11,
 
     // Script has an entry in Realm::scriptCountsMap.
-    HasScriptCounts = 1 << 5,
+    HasScriptCounts = 1 << 12,
 
     // Script has an entry in Realm::debugScriptMap.
-    HasDebugScript = 1 << 6,
-
-    // (1 << 7) and (1 << 8) are unused.
+    HasDebugScript = 1 << 13,
 
     // Do not relazify this script. This is used by the relazify() testing
     // function for scripts that are on the stack and also by the AutoDelazify
@@ -1851,37 +1851,37 @@ class JSScript : public js::gc::TenuredCell {
     // scripts on the stack, but the relazify() testing function overrides that,
     // and sometimes we're working with a cross-compartment function and need to
     // keep it from relazifying.
-    DoNotRelazify = 1 << 9,
+    DoNotRelazify = 1 << 14,
 
     // IonMonkey compilation hints.
 
     // Script has had hoisted bounds checks fail.
-    FailedBoundsCheck = 1 << 10,
+    FailedBoundsCheck = 1 << 15,
 
     // Script has had hoisted shape guard fail.
-    FailedShapeGuard = 1 << 11,
+    FailedShapeGuard = 1 << 16,
 
-    HadFrequentBailouts = 1 << 12,
-    HadOverflowBailout = 1 << 13,
+    HadFrequentBailouts = 1 << 17,
+    HadOverflowBailout = 1 << 18,
 
     // Explicitly marked as uninlineable.
-    Uninlineable = 1 << 14,
+    Uninlineable = 1 << 19,
 
     // Idempotent cache has triggered invalidation.
-    InvalidatedIdempotentCache = 1 << 15,
+    InvalidatedIdempotentCache = 1 << 20,
 
     // Lexical check did fail and bail out.
-    FailedLexicalCheck = 1 << 16,
+    FailedLexicalCheck = 1 << 21,
 
     // See comments below.
-    NeedsArgsAnalysis = 1 << 17,
-    NeedsArgsObj = 1 << 18,
+    NeedsArgsAnalysis = 1 << 22,
+    NeedsArgsObj = 1 << 23,
 
     // Set if the debugger's onNewScript hook has not yet been called.
-    HideScriptFromDebugger = 1 << 19,
+    HideScriptFromDebugger = 1 << 24,
 
     // Set if the script has opted into spew
-    SpewEnabled = 1 << 20,
+    SpewEnabled = 1 << 25,
   };
 
  private:
@@ -1890,12 +1890,6 @@ class JSScript : public js::gc::TenuredCell {
   uint32_t mutableFlags_ = 0;
 
   // 16-bit fields.
-
-  /**
-   * Number of times the |warmUpCount| was forcibly discarded. The counter is
-   * reset when a script is successfully jit-compiled.
-   */
-  uint16_t warmUpResetCount = 0;
 
   /* ES6 function length. */
   uint16_t funLength_ = 0;
@@ -2611,11 +2605,22 @@ class JSScript : public js::gc::TenuredCell {
     warmUpCount = 0;
   }
 
-  uint16_t getWarmUpResetCount() const { return warmUpResetCount; }
-  uint16_t incWarmUpResetCounter(uint16_t amount = 1) {
-    return warmUpResetCount += amount;
+  unsigned getWarmUpResetCount() const {
+    constexpr uint32_t MASK = uint32_t(MutableFlags::WarmupResets_MASK);
+    return mutableFlags_ & MASK;
   }
-  void resetWarmUpResetCounter() { warmUpResetCount = 0; }
+  void incWarmUpResetCounter() {
+    constexpr uint32_t MASK = uint32_t(MutableFlags::WarmupResets_MASK);
+    uint32_t newCount = getWarmUpResetCount() + 1;
+    if (newCount <= MASK) {
+      mutableFlags_ &= ~MASK;
+      mutableFlags_ |= newCount;
+    }
+  }
+  void resetWarmUpResetCounter() {
+    constexpr uint32_t MASK = uint32_t(MutableFlags::WarmupResets_MASK);
+    mutableFlags_ &= ~MASK;
+  }
 
  public:
   bool initScriptCounts(JSContext* cx);
