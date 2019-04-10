@@ -371,13 +371,14 @@ bool BytecodeEmitter::emitJumpTarget(JumpTarget* target) {
   ptrdiff_t off = bytecodeSection().offset();
 
   // Alias consecutive jump targets.
-  if (off == lastTarget.offset + ptrdiff_t(JSOP_JUMPTARGET_LENGTH)) {
-    target->offset = lastTarget.offset;
+  if (off == bytecodeSection().lastTargetOffset() +
+                 ptrdiff_t(JSOP_JUMPTARGET_LENGTH)) {
+    target->offset = bytecodeSection().lastTargetOffset();
     return true;
   }
 
   target->offset = off;
-  lastTarget.offset = off;
+  bytecodeSection().setLastTargetOffset(off);
 
   ptrdiff_t opOff;
   return emitJumpTargetOp(JSOP_JUMPTARGET, &opOff);

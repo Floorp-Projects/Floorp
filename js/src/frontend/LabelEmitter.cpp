@@ -40,7 +40,7 @@ bool LabelEmitter::emitEnd() {
 
   // Patch the JSOP_LABEL offset.
   jsbytecode* labelpc = bce_->bytecodeSection().code(top_);
-  int32_t offset = bce_->lastNonJumpTargetOffset() - top_;
+  int32_t offset = bce_->bytecodeSection().lastNonJumpTargetOffset() - top_;
   MOZ_ASSERT(*labelpc == JSOP_LABEL);
   SET_CODE_OFFSET(labelpc, offset);
 
