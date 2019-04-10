@@ -33,7 +33,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "b6de11d2026a"
+        "revision": "7542c8222311"
     },
     "bg": {
         "platforms": [
@@ -105,7 +105,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "6027ab829794"
+        "revision": "00a442e3bcb7"
     },
     "el": {
         "platforms": [
@@ -195,7 +195,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "e700edd60625"
+        "revision": "03731d911616"
     },
     "fy-NL": {
         "platforms": [
@@ -273,7 +273,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "c755f7aba570"
+        "revision": "bd8cec2e27e6"
     },
     "is": {
         "platforms": [
@@ -285,7 +285,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "161360717186"
+        "revision": "dea88aaa9b34"
     },
     "ja": {
         "platforms": [
@@ -399,7 +399,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "9aba2d244484"
+        "revision": "39c4f669b430"
     },
     "oc": {
         "platforms": [
@@ -435,7 +435,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "63bd65734373"
+        "revision": "d09ba4f60430"
     },
     "rm": {
         "platforms": [
@@ -477,7 +477,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "0d049d49711c"
+        "revision": "26f9900874a1"
     },
     "sr": {
         "platforms": [
@@ -513,7 +513,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "ef4c03a54c60"
+        "revision": "11ea8990fb26"
     },
     "trs": {
         "platforms": [
@@ -543,7 +543,7 @@
         "platforms": [
             "android-multilocale"
         ],
-        "revision": "6bc9146f257e"
+        "revision": "5264f1b4b813"
     },
     "wo": {
         "platforms": [
