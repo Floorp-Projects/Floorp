@@ -7,7 +7,7 @@
 
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
-#include "js/CompilationAndEvaluation.h"  // JS::Compile{,DontInflate,Utf8{Path,File}}
+#include "js/CompilationAndEvaluation.h"  // JS::Compile{,DontInflate,Utf8{FileDontInflate,Path}}
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 
@@ -171,7 +171,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle) {
   JS::CompileOptions options(cx);
   options.setFileAndLine("temporary file", 1);
 
-  JS::RootedScript script(cx, JS::CompileUtf8File(cx, options, script_stream));
+  JS::RootedScript script(
+      cx, JS::CompileUtf8FileDontInflate(cx, options, script_stream));
   CHECK(script);
 
   return tryScript(script);
@@ -186,7 +187,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandle_empty) {
   JS::CompileOptions options(cx);
   options.setFileAndLine("empty temporary file", 1);
 
-  JS::RootedScript script(cx, JS::CompileUtf8File(cx, options, script_stream));
+  JS::RootedScript script(
+      cx, JS::CompileUtf8FileDontInflate(cx, options, script_stream));
   CHECK(script);
 
   return tryScript(script);
@@ -204,7 +206,8 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture,
   JS::CompileOptions options(cx);
   options.setFileAndLine("temporary file", 1);
 
-  JS::RootedScript script(cx, JS::CompileUtf8File(cx, options, script_stream));
+  JS::RootedScript script(
+      cx, JS::CompileUtf8FileDontInflate(cx, options, script_stream));
   CHECK(script);
 
   return tryScript(script);
