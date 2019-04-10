@@ -62,6 +62,7 @@ import org.mozilla.geckoview.GeckoResult;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoSessionSettings;
 import org.mozilla.geckoview.GeckoView;
+import org.mozilla.geckoview.GeckoViewBridge;
 import org.mozilla.geckoview.WebRequestError;
 
 import java.util.List;
@@ -134,8 +135,9 @@ public class CustomTabsActivity extends AppCompatActivity
 
         mGeckoView.setSession(mGeckoSession, GeckoApplication.ensureRuntime(this));
 
-        mPromptService = new PromptService(this, mGeckoView.getEventDispatcher());
-        mDoorHangerPopup = new DoorHangerPopup(this, mGeckoView.getEventDispatcher());
+        mPromptService = new PromptService(this, GeckoViewBridge.getEventDispatcher(mGeckoView));
+        mDoorHangerPopup = new DoorHangerPopup(this,
+                                               GeckoViewBridge.getEventDispatcher(mGeckoView));
 
         mFormAssistPopup = (FormAssistPopup) findViewById(R.id.form_assist_popup);
         mFormAssistPopup.create(mGeckoView);
