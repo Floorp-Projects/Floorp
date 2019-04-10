@@ -91,12 +91,14 @@ static bool ParseNodeRequiresSpecialLineNumberNotes(ParseNode* pn) {
          kind == ParseNodeKind::Function;
 }
 
-BytecodeEmitter::BytecodeSection::BytecodeSection(JSContext* cx)
+BytecodeEmitter::BytecodeSection::BytecodeSection(JSContext* cx,
+                                                  uint32_t lineNum)
     : code_(cx),
       notes_(cx),
       tryNoteList_(cx),
       scopeNoteList_(cx),
-      resumeOffsetList_(cx) {}
+      resumeOffsetList_(cx),
+      currentLine_(lineNum) {}
 
 BytecodeEmitter::PerScriptData::PerScriptData(JSContext* cx)
     : scopeList_(cx),
@@ -116,9 +118,8 @@ BytecodeEmitter::BytecodeEmitter(
       parent(parent),
       script(cx, script),
       lazyScript(cx, lazyScript),
-      bytecodeSection_(cx),
+      bytecodeSection_(cx, lineNum),
       perScriptData_(cx),
-      currentLine_(lineNum),
       fieldInitializers_(fieldInitializers),
       firstLine(lineNum),
       emitterMode(emitterMode) {
@@ -126,7 +127,8 @@ BytecodeEmitter::BytecodeEmitter(
 
   if (sc->isFunctionBox()) {
     // Functions have IC entries for type monitoring |this| and arguments.
-    bytecodeSection().setNumICEntries(sc->asFunctionBox()->function()->nargs() + 1);
+    bytecodeSection().setNumICEntries(sc->asFunctionBox()->function()->nargs() +
+                                      1);
   }
 }
 
@@ -204,9 +206,7 @@ bool BytecodeEmitter::markStepBreakpoint() {
   // We track the location of the most recent separator for use in
   // markSimpleBreakpoint. Note that this means that the position must already
   // be set before markStepBreakpoint is called.
-  lastSeparatorOffet_ = bytecodeSection().code().length();
-  lastSeparatorLine_ = currentLine_;
-  lastSeparatorColumn_ = lastColumn_;
+  bytecodeSection().updateSeparatorPosition();
 
   return true;
 }
@@ -220,10 +220,7 @@ bool BytecodeEmitter::markSimpleBreakpoint() {
   // expression start, we need to skip marking it breakable in order to avoid
   // having two breakpoints with the same line/column position.
   // Note: This assumes that the position for the call has already been set.
-  bool isDuplicateLocation =
-      lastSeparatorLine_ == currentLine_ && lastSeparatorColumn_ == lastColumn_;
-
-  if (!isDuplicateLocation) {
+  if (!bytecodeSection().isDuplicateLocation()) {
     if (!newSrcNote(SRC_BREAKPOINT)) {
       return false;
     }
@@ -528,14 +525,14 @@ bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
 
   ErrorReporter* er = &parser->errorReporter();
   bool onThisLine;
-  if (!er->isOnThisLine(offset, currentLine(), &onThisLine)) {
+  if (!er->isOnThisLine(offset, bytecodeSection().currentLine(), &onThisLine)) {
     er->errorNoOffset(JSMSG_OUT_OF_MEMORY);
     return false;
   }
 
   if (!onThisLine) {
     unsigned line = er->lineAt(offset);
-    unsigned delta = line - currentLine();
+    unsigned delta = line - bytecodeSection().currentLine();
 
     /*
      * Encode any change in the current source line number by using
@@ -548,7 +545,7 @@ bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
      * unsigned delta_ wrap to a very large number, which triggers a
      * SRC_SETLINE.
      */
-    setCurrentLine(line);
+    bytecodeSection().setCurrentLine(line);
     if (delta >= LengthOfSetLine(line)) {
       if (!newSrcNote2(SRC_SETLINE, ptrdiff_t(line))) {
         return false;
@@ -561,7 +558,7 @@ bool BytecodeEmitter::updateLineNumberNotes(uint32_t offset) {
       } while (--delta != 0);
     }
 
-    updateSeparatorPosition();
+    bytecodeSection().updateSeparatorPositionIfPresent();
   }
   return true;
 }
@@ -578,7 +575,8 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
   }
 
   uint32_t columnIndex = parser->errorReporter().columnAt(offset);
-  ptrdiff_t colspan = ptrdiff_t(columnIndex) - ptrdiff_t(lastColumn_);
+  ptrdiff_t colspan =
+      ptrdiff_t(columnIndex) - ptrdiff_t(bytecodeSection().lastColumn());
   if (colspan != 0) {
     // If the column span is so large that we can't store it, then just
     // discard this information. This can happen with minimized or otherwise
@@ -591,19 +589,10 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
     if (!newSrcNote2(SRC_COLSPAN, SN_COLSPAN_TO_OFFSET(colspan))) {
       return false;
     }
-    lastColumn_ = columnIndex;
-    updateSeparatorPosition();
+    bytecodeSection().setLastColumn(columnIndex);
+    bytecodeSection().updateSeparatorPositionIfPresent();
   }
   return true;
-}
-
-/* Updates the last separator position, if present */
-void BytecodeEmitter::updateSeparatorPosition() {
-  if (!inPrologue() &&
-      lastSeparatorOffet_ == bytecodeSection().code().length()) {
-    lastSeparatorLine_ = currentLine_;
-    lastSeparatorColumn_ = lastColumn_;
-  }
 }
 
 Maybe<uint32_t> BytecodeEmitter::getOffsetForLoop(ParseNode* nextpn) {

@@ -163,11 +163,11 @@ bool CForEmitter::emitCond(const Maybe<uint32_t>& forPos,
     // Restore the absolute line number for source note readers.
     if (endPos) {
       uint32_t lineNum = bce_->parser->errorReporter().lineAt(*endPos);
-      if (bce_->currentLine() != lineNum) {
+      if (bce_->bytecodeSection().currentLine() != lineNum) {
         if (!bce_->newSrcNote2(SRC_SETLINE, ptrdiff_t(lineNum))) {
           return false;
         }
-        bce_->setCurrentLine(lineNum);
+        bce_->bytecodeSection().setCurrentLine(lineNum);
       }
     }
   }
