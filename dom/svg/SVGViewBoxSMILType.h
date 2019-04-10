@@ -38,7 +38,7 @@ class SVGViewBoxSMILType : public SMILType {
 
  private:
   // Private constructor: prevent instances beyond my singleton.
-  constexpr SVGViewBoxSMILType() {}
+  constexpr SVGViewBoxSMILType() = default;
 };
 
 }  // namespace mozilla

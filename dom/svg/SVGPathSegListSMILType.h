@@ -48,7 +48,7 @@ class SVGPathSegListSMILType : public SMILType {
 
  private:
   // Private constructor: prevent instances beyond my singleton.
-  constexpr SVGPathSegListSMILType() {}
+  constexpr SVGPathSegListSMILType() = default;
 };
 
 }  // namespace mozilla

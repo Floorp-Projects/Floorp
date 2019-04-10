@@ -91,8 +91,8 @@ class SVGPathData {
  public:
   typedef const float* const_iterator;
 
-  SVGPathData() {}
-  ~SVGPathData() {}
+  SVGPathData() = default;
+  ~SVGPathData() = default;
 
   // Only methods that don't make/permit modification to this list are public.
   // Only our friend classes can access methods that may change us.

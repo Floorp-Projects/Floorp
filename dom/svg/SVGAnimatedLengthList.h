@@ -42,7 +42,7 @@ class SVGAnimatedLengthList {
   friend class dom::DOMSVGLengthList;
 
  public:
-  SVGAnimatedLengthList() {}
+  SVGAnimatedLengthList() = default;
 
   /**
    * Because it's so important that mBaseVal and its DOMSVGLengthList wrapper
