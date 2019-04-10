@@ -1,88 +1,88 @@
-[data-identity-color="blue"] {
+.identity-color-blue {
   --identity-tab-color: #37adff;
   --identity-icon-color: #37adff;
 }
 
-[data-identity-color="turquoise"] {
+.identity-color-turquoise {
   --identity-tab-color: #00c79a;
   --identity-icon-color: #00c79a;
 }
 
-[data-identity-color="green"] {
+.identity-color-green {
   --identity-tab-color: #51cd00;
   --identity-icon-color: #51cd00;
 }
 
-[data-identity-color="yellow"] {
+.identity-color-yellow {
   --identity-tab-color: #ffcb00;
   --identity-icon-color: #ffcb00;
 }
 
-[data-identity-color="orange"] {
+.identity-color-orange {
   --identity-tab-color: #ff9f00;
   --identity-icon-color: #ff9f00;
 }
 
-[data-identity-color="red"] {
+.identity-color-red {
   --identity-tab-color: #ff613d;
   --identity-icon-color: #ff613d;
 }
 
-[data-identity-color="pink"] {
+.identity-color-pink {
   --identity-tab-color: #ff4bda;
   --identity-icon-color: #ff4bda;
 }
 
-[data-identity-color="purple"] {
+.identity-color-purple {
   --identity-tab-color: #af51f5;
   --identity-icon-color: #af51f5;
 }
 
-[data-identity-icon="fingerprint"] {
+.identity-icon-fingerprint {
   --identity-icon: url("resource://usercontext-content/fingerprint.svg");
 }
 
-[data-identity-icon="briefcase"] {
+.identity-icon-briefcase {
   --identity-icon: url("resource://usercontext-content/briefcase.svg");
 }
 
-[data-identity-icon="dollar"] {
+.identity-icon-dollar {
   --identity-icon: url("resource://usercontext-content/dollar.svg");
 }
 
-[data-identity-icon="cart"] {
+.identity-icon-cart {
   --identity-icon: url("resource://usercontext-content/cart.svg");
 }
 
-[data-identity-icon="circle"] {
+.identity-icon-circle {
   --identity-icon: url("resource://usercontext-content/circle.svg");
 }
 
-[data-identity-icon="vacation"] {
+.identity-icon-vacation {
   --identity-icon: url("resource://usercontext-content/vacation.svg");
 }
 
-[data-identity-icon="gift"] {
+.identity-icon-gift {
   --identity-icon: url("resource://usercontext-content/gift.svg");
 }
 
-[data-identity-icon="food"] {
+.identity-icon-food {
   --identity-icon: url("resource://usercontext-content/food.svg");
 }
 
-[data-identity-icon="fruit"] {
+.identity-icon-fruit {
   --identity-icon: url("resource://usercontext-content/fruit.svg");
 }
 
-[data-identity-icon="pet"] {
+.identity-icon-pet {
   --identity-icon: url("resource://usercontext-content/pet.svg");
 }
 
-[data-identity-icon="tree"] {
+.identity-icon-tree {
   --identity-icon: url("resource://usercontext-content/tree.svg");
 }
 
-[data-identity-icon="chill"] {
+.identity-icon-chill {
   --identity-icon: url("resource://usercontext-content/chill.svg");
 }
 

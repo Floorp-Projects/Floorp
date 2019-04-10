@@ -671,13 +671,13 @@ function createUserContextMenu(event, {
     }
 
     menuitem.classList.add("menuitem-iconic");
-    menuitem.setAttribute("data-identity-color", identity.color);
+    menuitem.classList.add("identity-color-" + identity.color);
 
     if (!isContextMenu) {
       menuitem.setAttribute("command", "Browser:NewUserContextTab");
     }
 
-    menuitem.setAttribute("data-identity-icon", identity.icon);
+    menuitem.classList.add("identity-icon-" + identity.icon);
 
     docfrag.appendChild(menuitem);
   });
