@@ -4,7 +4,6 @@
 
 package mozilla.components.service.glean.private
 
-import android.support.annotation.RestrictTo
 import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.Dispatchers
 import mozilla.components.service.glean.storages.TimingDistributionData
@@ -20,7 +19,6 @@ import mozilla.components.support.base.log.logger.Logger
  * The string list API exposes the [accumulate] method, which interacts with the storage engine to
  * accumulate to the correct bucket.
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY)
 data class TimingDistributionMetricType(
     override val disabled: Boolean,
     override val category: String,

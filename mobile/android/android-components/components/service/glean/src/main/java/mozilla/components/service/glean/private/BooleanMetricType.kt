@@ -4,7 +4,6 @@
 
 package mozilla.components.service.glean.private
 
-import android.support.annotation.RestrictTo
 import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.Dispatchers
 import mozilla.components.service.glean.storages.BooleansStorageEngine
@@ -18,7 +17,6 @@ import mozilla.components.support.base.log.logger.Logger
  *
  * The boolean API only exposes the [set] method.
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY)
 data class BooleanMetricType(
     override val disabled: Boolean,
     override val category: String,
@@ -36,7 +34,6 @@ data class BooleanMetricType(
      *
      * @param value This is a user defined boolean value.
      */
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
     fun set(value: Boolean) {
         if (!shouldRecord(logger)) {
             return

@@ -4,7 +4,6 @@
 
 package mozilla.components.service.glean.private
 
-import android.support.annotation.RestrictTo
 import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.Dispatchers
 import mozilla.components.service.glean.storages.StringsStorageEngine
@@ -19,7 +18,6 @@ import mozilla.components.support.base.log.logger.Logger
  * The string API only exposes the [set] method, which takes care of validating the input
  * data and making sure that limits are enforced.
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY)
 data class StringMetricType(
     override val disabled: Boolean,
     override val category: String,

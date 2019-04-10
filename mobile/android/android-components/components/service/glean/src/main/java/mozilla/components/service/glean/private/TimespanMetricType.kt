@@ -4,7 +4,6 @@
 
 package mozilla.components.service.glean.private
 
-import android.support.annotation.RestrictTo
 import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.storages.TimespansStorageEngine
 import mozilla.components.support.base.log.logger.Logger
@@ -17,7 +16,6 @@ import mozilla.components.support.base.log.logger.Logger
  *
  * The timespans API exposes the [start], [stopAndSum] and [cancel] methods.
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY)
 data class TimespanMetricType(
     override val disabled: Boolean,
     override val category: String,
