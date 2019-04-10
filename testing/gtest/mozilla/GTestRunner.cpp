@@ -9,6 +9,9 @@
 #include "nsICrashReporter.h"
 #include "testing/TestHarness.h"
 #include "prenv.h"
+#ifdef ANDROID
+#  include <android/log.h>
+#endif
 #ifdef XP_WIN
 #  include "mozilla/ipc/WindowsMessageLoop.h"
 #endif
@@ -24,34 +27,56 @@ using ::testing::UnitTest;
 
 namespace mozilla {
 
+#ifdef ANDROID
+  #define MOZ_STDOUT_PRINT(...) __android_log_print(ANDROID_LOG_INFO, "gtest", __VA_ARGS__);
+#else
+  #define MOZ_STDOUT_PRINT(...) printf(__VA_ARGS__);
+#endif
+
+#define MOZ_PRINT(...)              \
+  MOZ_STDOUT_PRINT(__VA_ARGS__);    \
+  if (mLogFile) {                   \
+    fprintf(mLogFile, __VA_ARGS__); \
+  }
+
 // See gtest.h for method documentation
 class MozillaPrinter : public EmptyTestEventListener {
  public:
+  MozillaPrinter() : mLogFile(nullptr) {
+    char* path = PR_GetEnv("MOZ_GTEST_LOG_PATH");
+    if (path) {
+      mLogFile = fopen(path, "w");
+    }
+  }
   virtual void OnTestProgramStart(const UnitTest& /* aUnitTest */) override {
-    printf("TEST-INFO | GTest unit test starting\n");
+    MOZ_PRINT("TEST-INFO | GTest unit test starting\n");
   }
   virtual void OnTestProgramEnd(const UnitTest& aUnitTest) override {
-    printf("TEST-%s | GTest unit test: %s\n",
+    MOZ_PRINT("TEST-%s | GTest unit test: %s\n",
            aUnitTest.Passed() ? "PASS" : "UNEXPECTED-FAIL",
            aUnitTest.Passed() ? "passed" : "failed");
-    printf("Passed: %d\n", aUnitTest.successful_test_count());
-    printf("Failed: %d\n", aUnitTest.failed_test_count());
+    MOZ_PRINT("Passed: %d\n", aUnitTest.successful_test_count());
+    MOZ_PRINT("Failed: %d\n", aUnitTest.failed_test_count());
+    if (mLogFile) {
+      fclose(mLogFile);
+      mLogFile = nullptr;
+    }
   }
   virtual void OnTestStart(const TestInfo& aTestInfo) override {
     mTestInfo = &aTestInfo;
-    printf("TEST-START | %s.%s\n", mTestInfo->test_case_name(),
+    MOZ_PRINT("TEST-START | %s.%s\n", mTestInfo->test_case_name(),
            mTestInfo->name());
   }
   virtual void OnTestPartResult(
       const TestPartResult& aTestPartResult) override {
-    printf("TEST-%s | %s.%s | %s @ %s:%i\n",
+    MOZ_PRINT("TEST-%s | %s.%s | %s @ %s:%i\n",
            !aTestPartResult.failed() ? "PASS" : "UNEXPECTED-FAIL",
            mTestInfo ? mTestInfo->test_case_name() : "?",
            mTestInfo ? mTestInfo->name() : "?", aTestPartResult.summary(),
            aTestPartResult.file_name(), aTestPartResult.line_number());
   }
   virtual void OnTestEnd(const TestInfo& aTestInfo) override {
-    printf("TEST-%s | %s.%s | test completed (time: %llims)\n",
+    MOZ_PRINT("TEST-%s | %s.%s | test completed (time: %llims)\n",
            aTestInfo.result()->Passed() ? "PASS" : "UNEXPECTED-FAIL",
            aTestInfo.test_case_name(), aTestInfo.name(),
            aTestInfo.result()->elapsed_time());
@@ -60,6 +85,7 @@ class MozillaPrinter : public EmptyTestEventListener {
   }
 
   const TestInfo* mTestInfo;
+  FILE* mLogFile;
 };
 
 static void ReplaceGTestLogger() {
