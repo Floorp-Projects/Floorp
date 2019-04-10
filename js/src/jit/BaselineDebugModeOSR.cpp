@@ -266,8 +266,8 @@ static const char* RetAddrEntryKindToString(RetAddrEntry::Kind kind) {
   switch (kind) {
     case RetAddrEntry::Kind::IC:
       return "IC";
-    case RetAddrEntry::Kind::NonOpIC:
-      return "non-op IC";
+    case RetAddrEntry::Kind::PrologueIC:
+      return "prologue IC";
     case RetAddrEntry::Kind::CallVM:
       return "callVM";
     case RetAddrEntry::Kind::WarmupCounter:

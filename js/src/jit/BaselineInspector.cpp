@@ -144,7 +144,7 @@ ICEntry* BaselineInspector::maybeICEntryFromPC(jsbytecode* pc) {
     return nullptr;
   }
 
-  MOZ_ASSERT(ent->isForOp());
+  MOZ_ASSERT(!ent->isForPrologue());
   prevLookedUpEntry = ent;
   return ent;
 }
