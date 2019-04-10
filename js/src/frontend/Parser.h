@@ -996,7 +996,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
    */
   template <typename ConditionT, typename ErrorReportT>
   MOZ_MUST_USE bool mustMatchTokenInternal(ConditionT condition,
-                                           Modifier modifier,
                                            ErrorReportT errorReport);
 
  public:
@@ -1010,36 +1009,25 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
    * If error number is passed instead of `errorReport`, it reports an
    * error with the passed errorNumber.
    */
-  MOZ_MUST_USE bool mustMatchToken(TokenKind expected, Modifier modifier,
-                                   JSErrNum errorNumber) {
+  MOZ_MUST_USE bool mustMatchToken(TokenKind expected, JSErrNum errorNumber) {
     return mustMatchTokenInternal(
-        [expected](TokenKind actual) { return actual == expected; }, modifier,
+        [expected](TokenKind actual) { return actual == expected; },
         [this, errorNumber](TokenKind) { this->error(errorNumber); });
-  }
-
-  MOZ_MUST_USE bool mustMatchToken(TokenKind excpected, JSErrNum errorNumber) {
-    return mustMatchToken(excpected, TokenStream::SlashIsDiv, errorNumber);
   }
 
   template <typename ConditionT>
   MOZ_MUST_USE bool mustMatchToken(ConditionT condition, JSErrNum errorNumber) {
-    return mustMatchTokenInternal(
-        condition, TokenStream::SlashIsDiv,
-        [this, errorNumber](TokenKind) { this->error(errorNumber); });
-  }
-
-  template <typename ErrorReportT>
-  MOZ_MUST_USE bool mustMatchToken(TokenKind expected, Modifier modifier,
-                                   ErrorReportT errorReport) {
-    return mustMatchTokenInternal(
-        [expected](TokenKind actual) { return actual == expected; }, modifier,
-        errorReport);
+    return mustMatchTokenInternal(condition, [this, errorNumber](TokenKind) {
+      this->error(errorNumber);
+    });
   }
 
   template <typename ErrorReportT>
   MOZ_MUST_USE bool mustMatchToken(TokenKind expected,
                                    ErrorReportT errorReport) {
-    return mustMatchToken(expected, TokenStream::SlashIsDiv, errorReport);
+    return mustMatchTokenInternal(
+        [expected](TokenKind actual) { return actual == expected; },
+        errorReport);
   }
 
  private:
