@@ -3,8 +3,8 @@
 <?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
 <window title="TODO: Insert title here"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript"><![CDATA[
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script><![CDATA[
     ok(true, "TODO: implement the test");
   ]]></script>
   <body xmlns="http://www.w3.org/1999/xhtml">
