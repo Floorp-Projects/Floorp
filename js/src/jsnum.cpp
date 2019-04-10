@@ -586,7 +586,7 @@ static inline double Extract(const Value& v) {
 MOZ_ALWAYS_INLINE bool num_toSource_impl(JSContext* cx, const CallArgs& args) {
   double d = Extract(args.thisv());
 
-  StringBuffer sb(cx);
+  JSStringBuilder sb(cx);
   if (!sb.append("(new Number(") ||
       !NumberValueToStringBuffer(cx, NumberValue(d), sb) || !sb.append("))")) {
     return false;

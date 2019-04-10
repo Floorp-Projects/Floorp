@@ -47,7 +47,9 @@
         (async function() {
           ok(!isAdbAddonInstalled(), "ADB extension not installed");
 
-          const win = await openWebIDE(true);
+          const win = await openWebIDE({
+            autoInstallAddons: true,
+          });
 
           // ADB is installed asynchronously after starting WebIDE.
           while (!isAdbAddonInstalled()) {

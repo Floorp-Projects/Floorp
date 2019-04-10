@@ -224,9 +224,7 @@ class OriginGetterRunnable : public WorkerMainThreadRunnable {
   OriginGetterRunnable(WorkerPrivate* aWorkerPrivate, nsAString& aValue,
                        nsIURI* aURI)
       : WorkerMainThreadRunnable(aWorkerPrivate,
-                                 // We can have telemetry keys for each getter
-                                 // when needed.
-                                 NS_LITERAL_CSTRING("URL :: getter")),
+                                 NS_LITERAL_CSTRING("URL :: origin getter")),
         mValue(aValue),
         mURI(aURI) {
     mWorkerPrivate->AssertIsOnWorkerThread();
@@ -484,10 +482,18 @@ void URLWorker::SetHref(const nsAString& aHref, ErrorResult& aRv) {
 }
 
 void URLWorker::GetOrigin(nsAString& aOrigin, ErrorResult& aRv) const {
-  RefPtr<OriginGetterRunnable> runnable =
-      new OriginGetterRunnable(mWorkerPrivate, aOrigin, GetURI());
+  nsresult rv = nsContentUtils::GetThreadSafeUTFOrigin(GetURI(), aOrigin);
+  if (rv == NS_ERROR_UNKNOWN_PROTOCOL) {
+    RefPtr<OriginGetterRunnable> runnable =
+        new OriginGetterRunnable(mWorkerPrivate, aOrigin, GetURI());
 
-  runnable->Dispatch(aRv);
+    runnable->Dispatch(aRv);
+    return;
+  }
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    aOrigin.Truncate();
+  }
 }
 
 void URLWorker::SetProtocol(const nsAString& aProtocol, ErrorResult& aRv) {

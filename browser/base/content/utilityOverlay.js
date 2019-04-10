@@ -28,25 +28,14 @@ Object.defineProperty(this, "BROWSER_NEW_TAB_URL", {
           !aboutNewTabService.overridden) {
         return "about:privatebrowsing";
       }
-      // If the extension does not have private browsing permission,
-      // use about:privatebrowsing.
-      let extensionInfo;
-      try {
-        extensionInfo = ExtensionSettingsStore.getSetting("url_overrides", "newTabURL");
-      } catch (e) {
-        // ExtensionSettings may not be initialized if no extensions are enabled.  If
-        // we have some indication that an extension controls the homepage, return
-        // the defaults instead.
-        if (aboutNewTabService.newTabURL.startsWith("moz-extension://")) {
-          return "about:privatebrowsing";
-        }
-      }
-
-      if (extensionInfo) {
-        let policy = WebExtensionPolicy.getByID(extensionInfo.id);
-        if (!policy || !policy.privateBrowsingAllowed) {
-          return "about:privatebrowsing";
-        }
+      // If an extension controls the setting and does not have private
+      // browsing permission, use the default setting.
+      let extensionControlled = Services.prefs.getBoolPref("browser.newtab.extensionControlled", false);
+      let privateAllowed = Services.prefs.getBoolPref("browser.newtab.privateAllowed", false);
+      // There is a potential on upgrade that the prefs are not set yet, so we double check
+      // for moz-extension.
+      if (!privateAllowed && (extensionControlled || aboutNewTabService.newTabURL.startsWith("moz-extension://"))) {
+        return "about:privatebrowsing";
       }
     }
     return aboutNewTabService.newTabURL;
@@ -682,13 +671,13 @@ function createUserContextMenu(event, {
     }
 
     menuitem.classList.add("menuitem-iconic");
-    menuitem.setAttribute("data-identity-color", identity.color);
+    menuitem.classList.add("identity-color-" + identity.color);
 
     if (!isContextMenu) {
       menuitem.setAttribute("command", "Browser:NewUserContextTab");
     }
 
-    menuitem.setAttribute("data-identity-icon", identity.icon);
+    menuitem.classList.add("identity-icon-" + identity.icon);
 
     docfrag.appendChild(menuitem);
   });
@@ -844,13 +833,6 @@ function openAboutDialog() {
 }
 
 function openPreferences(paneID, extraArgs) {
-  let histogram = Services.telemetry.getHistogramById("FX_PREFERENCES_OPENED_VIA");
-  if (extraArgs && extraArgs.origin) {
-    histogram.add(extraArgs.origin);
-  } else {
-    histogram.add("other");
-  }
-
   // This function is duplicated from preferences.js.
   function internalPrefCategoryNameToFriendlyName(aName) {
     return (aName || "").replace(/^pane./, function(toReplace) { return toReplace[4].toLowerCase(); });

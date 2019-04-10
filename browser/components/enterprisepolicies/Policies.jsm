@@ -897,6 +897,12 @@ var Policies = {
     },
   },
 
+  "SearchSuggestEnabled": {
+    onBeforeAddons(manager, param) {
+      setAndLockPref("browser.urlbar.suggest.searches", param);
+    },
+  },
+
   "SecurityDevices": {
     onProfileAfterChange(manager, param) {
       let securityDevices = param;

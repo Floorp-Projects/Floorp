@@ -733,7 +733,7 @@ const gStoragePressureObserver = {
         callback(notificationBar, button) {
           // The advanced subpanes are only supported in the old organization, which will
           // be removed by bug 1349689.
-          openPreferences("privacy-sitedata", { origin: "storagePressure" });
+          openPreferences("privacy-sitedata");
         },
       });
     }
@@ -4711,29 +4711,44 @@ function updateFileMenuUserContextUIVisibility(id) {
  * Updates the User Context UI indicators if the browser is in a non-default context
  */
 function updateUserContextUIIndicator() {
+  function replaceContainerClass(classType, element, value) {
+    let prefix = "identity-" + classType + "-";
+    if (value && element.classList.contains(prefix + value)) {
+      return;
+    }
+    for (let className of element.classList) {
+      if (className.startsWith(prefix)) {
+        element.classList.remove(className);
+      }
+    }
+    if (value) {
+      element.classList.add(prefix + value);
+    }
+  }
+
   let hbox = document.getElementById("userContext-icons");
 
   let userContextId = gBrowser.selectedBrowser.getAttribute("usercontextid");
   if (!userContextId) {
-    hbox.setAttribute("data-identity-color", "");
+    replaceContainerClass("color", hbox, "");
     hbox.hidden = true;
     return;
   }
 
   let identity = ContextualIdentityService.getPublicIdentityFromId(userContextId);
   if (!identity) {
-    hbox.setAttribute("data-identity-color", "");
+    replaceContainerClass("color", hbox, "");
     hbox.hidden = true;
     return;
   }
 
-  hbox.setAttribute("data-identity-color", identity.color);
+  replaceContainerClass("color", hbox, identity.color);
 
   let label = document.getElementById("userContext-label");
   label.setAttribute("value", ContextualIdentityService.getUserContextLabel(userContextId));
 
   let indicator = document.getElementById("userContext-indicator");
-  indicator.setAttribute("data-identity-icon", identity.icon);
+  replaceContainerClass("icon", indicator, identity.icon);
 
   hbox.hidden = false;
 }
@@ -6952,7 +6967,7 @@ var OfflineApps = {
   },
 
   manage() {
-    openPreferences("panePrivacy", { origin: "offlineApps" });
+    openPreferences("panePrivacy");
   },
 
   receiveMessage(msg) {

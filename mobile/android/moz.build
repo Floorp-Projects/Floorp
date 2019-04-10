@@ -33,7 +33,7 @@ with Files('gradle/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Build Config & IDE Support')
 
 with Files('services/**'):
-    BUG_COMPONENT = ('Android Background Services', 'Android Sync')
+    BUG_COMPONENT = ('Firefox for Android', 'Android Sync')
 
 with Files('themes/**'):
     BUG_COMPONENT = ('Firefox for Android', 'Theme and Visual Design')

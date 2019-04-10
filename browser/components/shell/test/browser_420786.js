@@ -70,31 +70,7 @@ add_task(async function() {
         gsettings.setString(GS_OPTION_KEY, prevOption);
         gsettings.setBoolean(GS_DRAW_BG_KEY, prevDrawBG);
       };
-    } catch (e) {
-      // Fallback to GConf
-      var gconf = Cc["@mozilla.org/gnome-gconf-service;1"].
-                  getService(Ci.nsIGConfService);
-
-      var prevImageKey = gconf.getString(DG_IMAGE_KEY);
-      var prevOptionKey = gconf.getString(DG_OPTION_KEY);
-      var prevDrawBgKey = gconf.getBool(DG_DRAW_BG_KEY);
-
-      checkWallpaper = function(position, expectedGConfPosition) {
-        shell.setDesktopBackground(image, position, "");
-        ok(wpFile.exists(), "Wallpaper was written to disk");
-        is(gconf.getString(DG_IMAGE_KEY), wpFile.path,
-           "Wallpaper file GConf key is correct");
-        is(gconf.getString(DG_OPTION_KEY), expectedGConfPosition,
-           "Wallpaper position GConf key is correct");
-        wpFile.remove(false);
-      };
-
-      restoreSettings = function() {
-        gconf.setString(DG_IMAGE_KEY, prevImageKey);
-        gconf.setString(DG_OPTION_KEY, prevOptionKey);
-        gconf.setBool(DG_DRAW_BG_KEY, prevDrawBgKey);
-      };
-    }
+    } catch (e) {}
 
     checkWallpaper(Ci.nsIShellService.BACKGROUND_TILE, "wallpaper");
     checkWallpaper(Ci.nsIShellService.BACKGROUND_STRETCH, "stretched");

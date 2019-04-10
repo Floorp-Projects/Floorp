@@ -19,7 +19,7 @@ def ind(n=0):
 
 
 def add_copy(dtd, entity_id):
-    result = '{' + 'COPY("{0}", "{1}")'.format(dtd, entity_id)+' }\n'
+    result = '{ ' + 'COPY("{0}", "{1}")'.format(dtd, entity_id)+' }\n'
     return result
 
 
@@ -49,21 +49,23 @@ def build_migration(messages, dtds, data):
 
     res += '\n'
     res += ind(1) + 'ctx.add_transforms(\n'
-    res += ind(2) + '{0},\n'.format(to_chrome_path(data['ftl']))
-    res += ind(2) + '{0},\n'.format(to_chrome_path(data['ftl']))
+    res += ind(2) + "'{0}',\n".format(to_chrome_path(data['ftl']))
+    res += ind(2) + "'{0}',\n".format(to_chrome_path(data['ftl']))
     res += ind(2) + 'transforms_from(\n'
     res += '"""\n'
     for l10n_id in messages:
         msg = messages[l10n_id]
         if not msg['attrs']:
-            res += '{0} = {1}'.format(l10n_id,
-                                      add_copy(get_dtd_path(msg['value'], dtds), msg['value']))
+            entity = get_entity_name(msg['value'])
+            entity_path = to_chrome_path(get_dtd_path(msg['value'], dtds))
+            res += '{0} = {1}'.format(l10n_id, add_copy(entity_path, entity))
         else:
             res += '{0} = \n'.format(l10n_id)
             for name in msg['attrs']:
                 attr = msg['attrs'][name]
-                res += '{0}.{1} = {2}'.format(ind(1),
-                                              name, add_copy(get_dtd_path(attr, dtds), attr))
+                attr_name = get_entity_name(attr)
+                entity_path = to_chrome_path(get_dtd_path(attr, dtds))
+                res += '{0}.{1} = {2}'.format(ind(1), name, add_copy(entity_path, attr_name))
     res += '"""\n'
     res += ind(2) + ')\n'
     res += ind(1) + ')'

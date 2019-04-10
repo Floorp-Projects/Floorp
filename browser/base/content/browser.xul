@@ -1338,7 +1338,9 @@
       </vbox>
       <vbox id="browser-border-end" hidden="true" layer="true"/>
     </hbox>
+    <box id="customization-container" flex="1" hidden="true"><![CDATA[
 #include ../../components/customizableui/content/customizeMode.inc.xul
+    ]]></box>
   </deck>
 
   <html:div id="fullscreen-warning" class="pointerlockfswarning" hidden="true" renderroot="content">

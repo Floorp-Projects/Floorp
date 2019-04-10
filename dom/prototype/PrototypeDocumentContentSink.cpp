@@ -1034,6 +1034,15 @@ nsresult PrototypeDocumentContentSink::CreateElementFromPrototype(
 
     rv = AddAttributes(aPrototype, result);
     if (NS_FAILED(rv)) return rv;
+
+    if (xtfNi->Equals(nsGkAtoms::script, kNameSpaceID_XHTML) ||
+        xtfNi->Equals(nsGkAtoms::script, kNameSpaceID_SVG)) {
+      nsCOMPtr<nsIScriptElement> sele = do_QueryInterface(result);
+      MOZ_ASSERT(sele, "Node didn't QI to script.");
+      // Script loading is handled by the this content sink, so prevent the
+      // script from loading when it is bound to the document.
+      sele->PreventExecution();
+    }
   }
 
   result.forget(aResult);

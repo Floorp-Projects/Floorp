@@ -46,8 +46,7 @@ const mockThreadClient = {
         matchProp: "to"
       });
     });
-  },
-  onPauseChange() {}
+  }
 };
 
 describe("expressions", () => {
