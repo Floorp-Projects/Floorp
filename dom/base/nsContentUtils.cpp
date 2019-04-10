@@ -9453,6 +9453,7 @@ void nsContentUtils::TryToUpgradeElement(Element* aElement) {
   }
 }
 
+MOZ_CAN_RUN_SCRIPT
 static void DoCustomElementCreate(Element** aElement, Document* aDoc,
                                   NodeInfo* aNodeInfo,
                                   CustomElementConstructor* aConstructor,
