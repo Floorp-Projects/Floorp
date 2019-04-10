@@ -213,7 +213,7 @@ function Toolbox(target, selectedTool, hostType, contentWindow, frameId,
    */
   loader.lazyGetter(this, "direction", () => {
     // Get the direction from browser.xul document
-    const top = this.win.top;
+    const top = this.topWindow;
     const topDocEl = top.document.documentElement;
     const isRtl = top.getComputedStyle(topDocEl).direction === "rtl";
     return isRtl ? "rtl" : "ltr";
@@ -375,6 +375,15 @@ Toolbox.prototype = {
    */
   get win() {
     return this._win;
+  },
+
+  /**
+   * When the toolbox is loaded in a frame with type="content", win.parent will not return
+   * the parent Chrome window. This getter should return the parent Chrome window
+   * regardless of the frame type. See Bug 1539979.
+   */
+  get topWindow() {
+    return this.win.windowRoot.ownerGlobal;
   },
 
   /**
@@ -1165,12 +1174,12 @@ Toolbox.prototype = {
 
   postMessage: function(msg) {
     // We sometime try to send messages in middle of destroy(), where the
-    // toolbox iframe may already be detached and no longer have a parent.
-    if (this.win.parent) {
+    // toolbox iframe may already be detached.
+    if (!this._destroyer) {
       // Toolbox document is still chrome and disallow identifying message
       // origin via event.source as it is null. So use a custom id.
       msg.frameId = this.frameId;
-      this.win.parent.postMessage(msg, "*");
+      this.topWindow.postMessage(msg, "*");
     }
   },
 
