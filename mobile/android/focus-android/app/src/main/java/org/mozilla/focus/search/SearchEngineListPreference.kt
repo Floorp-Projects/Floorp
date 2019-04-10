@@ -66,6 +66,7 @@ abstract class SearchEngineListPreference : Preference, CoroutineScope {
             searchEngines = context.components.searchEngineManager
                     .load(this@SearchEngineListPreference.context)
                     .await()
+                    .list
                     .sortedBy { it.name }
             refreshSearchEngineViews(this@SearchEngineListPreference.context)
         }

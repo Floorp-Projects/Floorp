@@ -32,7 +32,8 @@ import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.CustomDomains
-import mozilla.components.browser.domains.DomainAutoCompleteProvider
+import mozilla.components.browser.domains.autocomplete.CustomDomainsProvider
+import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.support.utils.ThreadUtils
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
@@ -50,14 +51,7 @@ import org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.tips.Tip
 import org.mozilla.focus.tips.TipManager
-import org.mozilla.focus.utils.AppConstants
-import org.mozilla.focus.utils.Features
-import org.mozilla.focus.utils.OneShotOnPreDrawListener
-import org.mozilla.focus.utils.Settings
-import org.mozilla.focus.utils.StatusBarUtils
-import org.mozilla.focus.utils.SupportUtils
-import org.mozilla.focus.utils.UrlUtils
-import org.mozilla.focus.utils.ViewUtils
+import org.mozilla.focus.utils.*
 import org.mozilla.focus.viewmodel.MainViewModel
 import org.mozilla.focus.whatsnew.WhatsNew
 import java.util.Objects
@@ -146,7 +140,10 @@ class UrlInputFragment :
     private var job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
-    private val autoCompleteProvider: DomainAutoCompleteProvider = DomainAutoCompleteProvider()
+    private val shippedDomainsProvider = ShippedDomainsProvider()
+    private val customDomainsProvider = CustomDomainsProvider()
+    private var useShipped = false
+    private var useCustom = false
     private var displayedPopupMenu: HomeMenu? = null
 
     @Volatile
@@ -201,10 +198,10 @@ class UrlInputFragment :
 
         activity?.let {
             val settings = Settings.getInstance(it.applicationContext)
-            val useCustomDomains = settings.shouldAutocompleteFromCustomDomainList()
-            val useShippedDomains = settings.shouldAutocompleteFromShippedDomainList()
-            autoCompleteProvider.initialize(it.applicationContext, useShippedDomains,
-                useCustomDomains)
+            useCustom = settings.shouldAutocompleteFromCustomDomainList()
+            useShipped = settings.shouldAutocompleteFromShippedDomainList()
+            shippedDomainsProvider.initialize(it.applicationContext)
+            customDomainsProvider.initialize(it.applicationContext)
         }
 
         StatusBarUtils.getStatusBarHeight(keyboardLinearLayout) {
@@ -653,7 +650,7 @@ class UrlInputFragment :
     }
 
     private fun onCommit() {
-        val input = urlView.autocompleteResult.formattedText.let {
+        val input = urlView.autocompleteResult!!.text.let {
             if (it.isEmpty() || !URLUtil.isValidUrl(urlView?.text.toString())) {
                 urlView?.text.toString()
             } else it
@@ -671,7 +668,7 @@ class UrlInputFragment :
 
             openUrl(url, searchTerms)
 
-            TelemetryWrapper.urlBarEvent(isUrl, urlView.autocompleteResult)
+            TelemetryWrapper.urlBarEvent(isUrl, urlView.autocompleteResult!!)
         }
     }
 
@@ -772,6 +769,10 @@ class UrlInputFragment :
         }
     }
 
+    private fun onFilter(searchText: String) {
+        onFilter(searchText, null)
+    }
+
     private fun onFilter(searchText: String, view: InlineAutocompleteEditText?) {
         // If the UrlInputFragment has already been hidden, don't bother with filtering. Because of the text
         // input architecture on Android it's possible for onFilter() to be called after we've already
@@ -782,8 +783,14 @@ class UrlInputFragment :
         }
 
         view?.let {
-            val result = autoCompleteProvider.autocomplete(searchText)
-            view.applyAutocompleteResult(AutocompleteResult(result.text, result.source, result.size, { result.url }))
+            val result = if (useShipped) {
+                shippedDomainsProvider.getAutocompleteSuggestion(searchText)
+            } else if (useCustom) {
+                customDomainsProvider.getAutocompleteSuggestion(searchText)
+            } else {
+                null
+            }
+            view.applyAutocompleteResult(AutocompleteResult(result!!.text, result.source, result.totalItems, { result.url }))
         }
 
         searchSuggestionsViewModel.setSearchQuery(searchText)

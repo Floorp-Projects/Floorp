@@ -42,6 +42,7 @@ import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.webview.SystemWebView
 import org.mozilla.geckoview.AllowOrDeny
+import org.mozilla.geckoview.ContentBlocking
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
@@ -88,8 +89,16 @@ class GeckoWebViewProvider : IWebViewProvider {
         if (geckoRuntime == null) {
             val runtimeSettingsBuilder = GeckoRuntimeSettings.Builder()
             runtimeSettingsBuilder.useContentProcessHint(true)
-            runtimeSettingsBuilder.blockMalware(Settings.getInstance(context).shouldUseSafeBrowsing())
-            runtimeSettingsBuilder.blockPhishing(Settings.getInstance(context).shouldUseSafeBrowsing())
+            runtimeSettingsBuilder.contentBlocking(ContentBlocking.Settings.Builder()
+                    .categories(ContentBlocking.SB_MALWARE)
+                    .categories(ContentBlocking.SB_PHISHING)
+                    .build())
+            val contentBlockingBuilder = ContentBlocking.Settings.Builder()
+            if (Settings.getInstance(context).shouldUseSafeBrowsing()) {
+                contentBlockingBuilder.categories(ContentBlocking.SB_MALWARE)
+                        .categories(ContentBlocking.SB_PHISHING)
+            }
+            runtimeSettingsBuilder.contentBlocking(contentBlockingBuilder.build())
             runtimeSettingsBuilder.crashHandler(CrashHandlerService::class.java)
 
             geckoRuntime =
@@ -153,19 +162,18 @@ class GeckoWebViewProvider : IWebViewProvider {
             geckoSession.contentDelegate = createContentDelegate()
             geckoSession.progressDelegate = createProgressDelegate()
             geckoSession.navigationDelegate = createNavigationDelegate()
-            geckoSession.trackingProtectionDelegate = createTrackingProtectionDelegate()
+            geckoSession.contentBlockingDelegate = createTrackingProtectionDelegate()
             geckoSession.promptDelegate = createPromptDelegate()
             finder = geckoSession.finder
             finder.displayFlags = GeckoSession.FINDER_DISPLAY_HIGHLIGHT_ALL
         }
 
         private fun createGeckoSession(): GeckoSession {
-            val settings = GeckoSessionSettings()
-            settings.setBoolean(GeckoSessionSettings.USE_MULTIPROCESS, true)
-            settings.setBoolean(GeckoSessionSettings.USE_PRIVATE_MODE, true)
-            settings.setBoolean(GeckoSessionSettings.SUSPEND_MEDIA_WHEN_INACTIVE, true)
-
-            return GeckoSession(settings)
+            val builder = GeckoSessionSettings.Builder()
+            builder.useMultiprocess(true)
+            builder.usePrivateMode(true)
+            builder.suspendMediaWhenInactive(true)
+            return GeckoSession(builder.build())
         }
 
         override fun setCallback(callback: IWebView.Callback?) {
@@ -220,24 +228,22 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         override fun setBlockingEnabled(enabled: Boolean) {
-            geckoSession.settings.setBoolean(GeckoSessionSettings.USE_TRACKING_PROTECTION, enabled)
+            geckoSession.settings.useTrackingProtection = enabled
             if (enabled) {
                 updateBlocking()
                 applyAppSettings()
             } else {
                 geckoRuntime!!.settings.javaScriptEnabled = true
                 geckoRuntime!!.settings.webFontsEnabled = true
-                geckoRuntime!!.settings.cookieBehavior = GeckoRuntimeSettings.COOKIE_ACCEPT_ALL
+                geckoRuntime!!.settings.contentBlocking.cookieBehavior = ContentBlocking.COOKIE_ACCEPT_ALL
             }
             callback?.onBlockingStateChanged(enabled)
         }
 
         override fun setRequestDesktop(shouldRequestDesktop: Boolean) {
-            geckoSession.settings.setInt(
-                GeckoSessionSettings.USER_AGENT_MODE,
-                if (shouldRequestDesktop) GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
-                else GeckoSessionSettings.USER_AGENT_MODE_MOBILE
-            )
+            geckoSession.settings.userAgentMode =
+                    if (shouldRequestDesktop) GeckoSessionSettings.USER_AGENT_MODE_DESKTOP
+                    else GeckoSessionSettings.USER_AGENT_MODE_MOBILE
             callback?.onRequestDesktopStateChanged(shouldRequestDesktop)
         }
 
@@ -266,8 +272,13 @@ class GeckoWebViewProvider : IWebViewProvider {
                 context.getString(R.string.pref_key_safe_browsing) -> {
                     val shouldUseSafeBrowsing =
                         Settings.getInstance(context).shouldUseSafeBrowsing()
-                    geckoRuntime!!.settings.blockMalware = shouldUseSafeBrowsing
-                    geckoRuntime!!.settings.blockPhishing = shouldUseSafeBrowsing
+                    var cats = geckoRuntime!!.settings.contentBlocking.categories
+                    if (shouldUseSafeBrowsing) {
+                        cats = cats or ContentBlocking.SB_MALWARE or ContentBlocking.SB_PHISHING
+                    } else {
+                        cats = cats and ContentBlocking.SB_MALWARE.inv() and ContentBlocking.SB_PHISHING.inv()
+                    }
+                    geckoRuntime!!.settings.contentBlocking.categories = cats
                 }
                 else -> return
             }
@@ -284,48 +295,48 @@ class GeckoWebViewProvider : IWebViewProvider {
         }
 
         private fun updateCookieSettings() {
-            geckoRuntime!!.settings.cookieBehavior =
+            geckoRuntime!!.settings.contentBlocking.cookieBehavior =
                     when (Settings.getInstance(context).shouldBlockCookiesValue()) {
                         context.getString(
                             R.string.preference_privacy_should_block_cookies_yes_option
                         ) ->
-                            GeckoRuntimeSettings.COOKIE_ACCEPT_NONE
+                            ContentBlocking.COOKIE_ACCEPT_NONE
                         context.getString(
                             R.string.preference_privacy_should_block_cookies_third_party_tracker_cookies_option
                         ) ->
-                            GeckoRuntimeSettings.COOKIE_ACCEPT_NON_TRACKERS
+                            ContentBlocking.COOKIE_ACCEPT_NON_TRACKERS
                         context.getString(
                             R.string.preference_privacy_should_block_cookies_third_party_only_option
                         ) ->
-                            GeckoRuntimeSettings.COOKIE_ACCEPT_FIRST_PARTY
-                        else -> GeckoRuntimeSettings.COOKIE_ACCEPT_ALL
+                            ContentBlocking.COOKIE_ACCEPT_FIRST_PARTY
+                        else -> ContentBlocking.COOKIE_ACCEPT_ALL
                     }
         }
 
         private fun updateBlocking() {
             val settings = Settings.getInstance(context)
 
-            var categories = 0
+            var categories = geckoRuntime!!.settings.contentBlocking.categories
             if (settings.shouldBlockSocialTrackers()) {
-                categories += GeckoSession.TrackingProtectionDelegate.CATEGORY_SOCIAL
+                categories = categories or ContentBlocking.AT_SOCIAL
             }
             if (settings.shouldBlockAdTrackers()) {
-                categories += GeckoSession.TrackingProtectionDelegate.CATEGORY_AD
+                categories = categories or ContentBlocking.AT_AD
             }
             if (settings.shouldBlockAnalyticTrackers()) {
-                categories += GeckoSession.TrackingProtectionDelegate.CATEGORY_ANALYTIC
+                categories = categories or ContentBlocking.AT_ANALYTIC
             }
             if (settings.shouldBlockOtherTrackers()) {
-                categories += GeckoSession.TrackingProtectionDelegate.CATEGORY_CONTENT
+                categories = categories or ContentBlocking.AT_CONTENT
             }
 
-            geckoRuntime!!.settings.trackingProtectionCategories = categories
+            geckoRuntime!!.settings.contentBlocking.categories = categories
         }
 
         @Suppress("ComplexMethod", "ReturnCount")
         private fun createContentDelegate(): GeckoSession.ContentDelegate {
             return object : GeckoSession.ContentDelegate {
-                override fun onTitleChange(session: GeckoSession, title: String) {
+                override fun onTitleChange(session: GeckoSession, title: String?) {
                     webViewTitle = title
                     callback?.onTitleChanged(title)
                 }
@@ -407,7 +418,7 @@ class GeckoWebViewProvider : IWebViewProvider {
         @Suppress("ComplexMethod")
         private fun createProgressDelegate(): GeckoSession.ProgressDelegate {
             return object : GeckoSession.ProgressDelegate {
-                override fun onProgressChange(session: GeckoSession?, progress: Int) {
+                override fun onProgressChange(session: GeckoSession, progress: Int) {
                     if (progress == PROGRESS_100) {
                         if (UrlUtils.isLocalizedContent(url)) {
                             // When the url is a localized content, then the page is secure
@@ -495,7 +506,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                 }
 
                 override fun onLoadError(
-                    session: GeckoSession?,
+                    session: GeckoSession,
                     uri: String?,
                     webRequestError: WebRequestError
                 ): GeckoResult<String> {
@@ -516,7 +527,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                     throw IllegalStateException()
                 }
 
-                override fun onLocationChange(session: GeckoSession, url: String) {
+                override fun onLocationChange(session: GeckoSession, url: String?) {
                     var desiredUrl = url
                     // Save internal data: urls we should override to present focus:about, focus:rights
                     if (isLoadingInternalUrl) {
@@ -536,7 +547,7 @@ class GeckoWebViewProvider : IWebViewProvider {
                         desiredUrl = LocalizedContent.URL_RIGHTS
                     }
 
-                    currentUrl = desiredUrl
+                    currentUrl = desiredUrl!!
                     callback?.onURLChanged(desiredUrl)
                 }
 
@@ -550,9 +561,11 @@ class GeckoWebViewProvider : IWebViewProvider {
             }
         }
 
-        private fun createTrackingProtectionDelegate(): GeckoSession.TrackingProtectionDelegate {
-            return GeckoSession.TrackingProtectionDelegate { _, _, _ ->
-                callback?.countBlockedTracker()
+        private fun createTrackingProtectionDelegate(): ContentBlocking.Delegate {
+            return object : ContentBlocking.Delegate {
+                override fun onContentBlocked(session: GeckoSession, event: ContentBlocking.BlockEvent) {
+                    callback?.countBlockedTracker()
+                }
             }
         }
 

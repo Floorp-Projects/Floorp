@@ -11,11 +11,8 @@ import mozilla.components.browser.search.provider.AssetsSearchEngineProvider
 import mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.concept.engine.DefaultSettings
-import mozilla.components.concept.engine.Engine
-import mozilla.components.concept.engine.EngineSession
-import mozilla.components.concept.engine.EngineView
-import mozilla.components.concept.engine.Settings
+import mozilla.components.concept.engine.*
+import org.json.JSONObject
 import org.mozilla.focus.search.BingSearchEngineFilter
 import org.mozilla.focus.search.CustomSearchEngineProvider
 import org.mozilla.focus.search.HiddenSearchEngineFilter
@@ -53,11 +50,19 @@ private class DummyEngine : Engine {
         throw NotImplementedError()
     }
 
+    override fun createSessionState(json: JSONObject): EngineSessionState {
+        throw NotImplementedError()
+    }
+
     override fun createView(context: Context, attrs: AttributeSet?): EngineView {
         throw NotImplementedError()
     }
 
     override fun name(): String {
+        throw NotImplementedError()
+    }
+
+    override fun speculativeConnect(url: String) {
         throw NotImplementedError()
     }
 }

@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fretboard.Fretboard
 import mozilla.components.service.fretboard.ValuesProvider
 import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
@@ -89,7 +90,7 @@ class FocusApplication : LocaleAwareApplication(), CoroutineScope {
     private fun loadExperiments() {
         val experimentsFile = File(filesDir, EXPERIMENTS_JSON_FILENAME)
         val experimentSource = KintoExperimentSource(
-            EXPERIMENTS_BASE_URL, EXPERIMENTS_BUCKET_NAME, EXPERIMENTS_COLLECTION_NAME
+            EXPERIMENTS_BASE_URL, EXPERIMENTS_BUCKET_NAME, EXPERIMENTS_COLLECTION_NAME, HttpURLConnectionClient()
         )
         fretboard = Fretboard(experimentSource, FlatFileExperimentStorage(experimentsFile),
             object : ValuesProvider() {

@@ -8,6 +8,7 @@ import android.content.Context
 import kotlinx.coroutines.coroutineScope
 import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.provider.SearchEngineProvider
+import mozilla.components.browser.search.provider.SearchEngineList
 
 /**
  * SearchEngineProvider implementation to load user entered custom search engines.
@@ -15,7 +16,7 @@ import mozilla.components.browser.search.provider.SearchEngineProvider
 class CustomSearchEngineProvider : SearchEngineProvider {
     // Our version of ktlint enforces the wrong modifier order. We need to update the plugin: #2488
     /* ktlint-disable modifier-order */
-    override suspend fun loadSearchEngines(context: Context): List<SearchEngine> = coroutineScope {
-        CustomSearchEngineStore.loadCustomSearchEngines(context)
+    override suspend fun loadSearchEngines(context: Context): SearchEngineList = coroutineScope {
+        SearchEngineList(CustomSearchEngineStore.loadCustomSearchEngines(context), null)
     }
 }

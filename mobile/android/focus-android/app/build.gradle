@@ -19,7 +19,7 @@ android {
         targetSdkVersion 28
         versionCode 11 // This versionCode is "frozen" for local builds. For "release" builds we
                        // override this with a generated versionCode at build time.
-        versionName "8.0.8"
+        versionName "8.0.9"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
         multiDexEnabled true
@@ -198,6 +198,7 @@ dependencies {
     implementation "org.mozilla.components:support-ktx:$mozilla_components_version"
     implementation "org.mozilla.components:support-utils:$mozilla_components_version"
     implementation "org.mozilla.components:lib-crash:$mozilla_components_version"
+    implementation "org.mozilla.components:lib-fetch-httpurlconnection:$mozilla_components_version"
 
     implementation 'com.squareup.okhttp3:okhttp:3.11.0'
 
@@ -208,9 +209,9 @@ dependencies {
     focusImplementation 'com.adjust.sdk:adjust-android:4.11.4'
     focusImplementation 'com.android.installreferrer:installreferrer:1.0' // Required by Adjust
 
-    armImplementation "org.mozilla.geckoview:geckoview-armeabi-v7a:${geckoview_version}"
-    x86Implementation "org.mozilla.geckoview:geckoview-x86:${geckoview_version}"
-    aarch64Implementation "org.mozilla.geckoview:geckoview-arm64-v8a:${geckoview_version}"
+    armImplementation "org.mozilla.geckoview:geckoview-nightly-armeabi-v7a:${geckoview_version}"
+    x86Implementation "org.mozilla.geckoview:geckoview-nightly-x86:${geckoview_version}"
+    aarch64Implementation "org.mozilla.geckoview:geckoview-nightly-arm64-v8a:${geckoview_version}"
     implementation "com.android.support:palette-v7:$support_libraries_version"
 
     testImplementation "org.junit.jupiter:junit-jupiter-api:5.3.1"
