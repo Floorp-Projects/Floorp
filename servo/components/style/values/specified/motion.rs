@@ -23,7 +23,6 @@ use style_traits::{ParseError, StyleParseErrorKind};
     ToAnimatedZero,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 pub enum OffsetPath {

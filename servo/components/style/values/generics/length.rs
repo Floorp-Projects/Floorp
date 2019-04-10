@@ -26,7 +26,6 @@ use style_traits::ParseError;
     ToAnimatedZero,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 #[repr(C, u8)]
@@ -111,7 +110,6 @@ impl<LengthPercentage: Parse> Parse for LengthPercentageOrAuto<LengthPercentage>
     ToAnimatedZero,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 #[repr(C, u8)]
@@ -154,7 +152,6 @@ impl<LengthPercentage> Size<LengthPercentage> {
     ToAnimatedZero,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 #[repr(C, u8)]
@@ -191,7 +188,6 @@ impl<LengthPercentage> MaxSize<LengthPercentage> {
     ToAnimatedZero,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 #[repr(C, u8)]

@@ -228,7 +228,7 @@ impl ToComputedValue for TextOverflow {
 }
 
 bitflags! {
-    #[derive(MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+    #[derive(MallocSizeOf, SpecifiedValueInfo, ToComputedValue, ToShmem)]
     #[value_info(other_values = "none,underline,overline,line-through,blink")]
     #[repr(C)]
     /// Specified keyword values for the text-decoration-line property.
@@ -365,7 +365,6 @@ impl TextDecorationLine {
     SpecifiedValueInfo,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 #[allow(missing_docs)]
@@ -675,7 +674,6 @@ impl Parse for TextEmphasisStyle {
     SpecifiedValueInfo,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 pub enum TextEmphasisHorizontalWritingModeValue {
@@ -697,7 +695,6 @@ pub enum TextEmphasisHorizontalWritingModeValue {
     SpecifiedValueInfo,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 pub enum TextEmphasisVerticalWritingModeValue {
@@ -717,7 +714,6 @@ pub enum TextEmphasisVerticalWritingModeValue {
     SpecifiedValueInfo,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 pub struct TextEmphasisPosition(
@@ -819,7 +815,6 @@ impl From<TextEmphasisPosition> for u8 {
     SpecifiedValueInfo,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 #[allow(missing_docs)]
@@ -848,7 +843,6 @@ pub enum WordBreak {
     SpecifiedValueInfo,
     ToComputedValue,
     ToCss,
-    ToResolvedValue,
     ToShmem,
 )]
 #[allow(missing_docs)]
