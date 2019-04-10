@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __NS_SVGLENGTH2_H__
-#define __NS_SVGLENGTH2_H__
+#ifndef mozilla_SVGAnimatedLength_h
+#define mozilla_SVGAnimatedLength_h
 
 #include "mozilla/Attributes.h"
 #include "mozilla/SMILAttr.h"
@@ -30,11 +30,6 @@ class DOMSVGAnimatedLength;
 class DOMSVGLength;
 class SVGAnimationElement;
 class SVGViewportElement;
-}  // namespace dom
-}  // namespace mozilla
-
-namespace mozilla {
-namespace dom {
 
 class UserSpaceMetrics {
  public:
@@ -83,9 +78,8 @@ class NonSVGFrameUserSpaceMetrics : public UserSpaceMetricsWithSize {
 };
 
 }  // namespace dom
-}  // namespace mozilla
 
-class nsSVGLength2 {
+class SVGAnimatedLength {
   friend class mozilla::dom::DOMSVGAnimatedLength;
   friend class mozilla::dom::DOMSVGLength;
   typedef mozilla::dom::DOMSVGLength DOMSVGLength;
@@ -109,7 +103,7 @@ class nsSVGLength2 {
     mIsBaseSet = false;
   }
 
-  nsSVGLength2& operator=(const nsSVGLength2& aLength) {
+  SVGAnimatedLength& operator=(const SVGAnimatedLength& aLength) {
     mBaseVal = aLength.mBaseVal;
     mAnimVal = aLength.mAnimVal;
     mSpecifiedUnitType = aLength.mSpecifiedUnitType;
@@ -202,13 +196,13 @@ class nsSVGLength2 {
  public:
   struct SMILLength : public SMILAttr {
    public:
-    SMILLength(nsSVGLength2* aVal, SVGElement* aSVGElement)
+    SMILLength(SVGAnimatedLength* aVal, SVGElement* aSVGElement)
         : mVal(aVal), mSVGElement(aSVGElement) {}
 
     // These will stay alive because a SMILAttr only lives as long
     // as the Compositing step, and DOM elements don't get a chance to
     // die during that.
-    nsSVGLength2* mVal;
+    SVGAnimatedLength* mVal;
     SVGElement* mSVGElement;
 
     // SMILAttr methods
@@ -222,4 +216,6 @@ class nsSVGLength2 {
   };
 };
 
-#endif  //  __NS_SVGLENGTH2_H__
+}  // namespace mozilla
+
+#endif  //  mozilla_SVGAnimatedLength_h

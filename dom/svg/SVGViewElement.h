@@ -58,8 +58,9 @@ class SVGViewElement : public SVGViewElementBase {
   static SVGEnumMapping sZoomAndPanMap[];
   static EnumInfo sEnumInfo[1];
 
-  virtual SVGAnimatedViewBox* GetViewBox() override;
-  virtual SVGAnimatedPreserveAspectRatio* GetPreserveAspectRatio() override;
+  virtual SVGAnimatedViewBox* GetAnimatedViewBox() override;
+  virtual SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio()
+      override;
 
   SVGAnimatedViewBox mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;

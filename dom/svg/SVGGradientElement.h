@@ -9,7 +9,7 @@
 
 #include "nsAutoPtr.h"
 #include "SVGAnimatedEnumeration.h"
-#include "nsSVGLength2.h"
+#include "SVGAnimatedLength.h"
 #include "SVGAnimatedString.h"
 #include "SVGAnimatedTransformList.h"
 #include "mozilla/dom/SVGElement.h"
@@ -105,7 +105,7 @@ class SVGLinearGradientElement : public SVGLinearGradientElementBase {
   virtual LengthAttributesInfo GetLengthInfo() override;
 
   enum { ATTR_X1, ATTR_Y1, ATTR_X2, ATTR_Y2 };
-  nsSVGLength2 mLengthAttributes[4];
+  SVGAnimatedLength mLengthAttributes[4];
   static LengthInfo sLengthInfo[4];
 };
 
@@ -140,7 +140,7 @@ class SVGRadialGradientElement : public SVGRadialGradientElementBase {
   virtual LengthAttributesInfo GetLengthInfo() override;
 
   enum { ATTR_CX, ATTR_CY, ATTR_R, ATTR_FX, ATTR_FY, ATTR_FR };
-  nsSVGLength2 mLengthAttributes[6];
+  SVGAnimatedLength mLengthAttributes[6];
   static LengthInfo sLengthInfo[6];
 };
 

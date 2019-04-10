@@ -12,10 +12,9 @@
 #include "SVGAnimatedEnumeration.h"
 #include "SVGAnimatedInteger.h"
 #include "SVGAnimatedIntegerPair.h"
+#include "SVGAnimatedNumber.h"
 #include "SVGAnimatedNumberList.h"
-#include "nsSVGNumber2.h"
 #include "SVGAnimatedString.h"
-#include "SVGAnimatedNumberList.h"
 #include "SVGFilters.h"
 
 nsresult NS_NewSVGFEConvolveMatrixElement(
@@ -80,7 +79,7 @@ class SVGFEConvolveMatrixElement : public SVGFEConvolveMatrixElementBase {
   virtual NumberListAttributesInfo GetNumberListInfo() override;
 
   enum { DIVISOR, BIAS };
-  nsSVGNumber2 mNumberAttributes[2];
+  SVGAnimatedNumber mNumberAttributes[2];
   static NumberInfo sNumberInfo[2];
 
   enum { KERNEL_UNIT_LENGTH };
