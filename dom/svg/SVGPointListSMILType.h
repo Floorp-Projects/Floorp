@@ -45,7 +45,7 @@ class SVGPointListSMILType : public SMILType {
 
  private:
   // Private constructor: prevent instances beyond my singleton.
-  constexpr SVGPointListSMILType() {}
+  constexpr SVGPointListSMILType() = default;
 };
 
 }  // namespace mozilla

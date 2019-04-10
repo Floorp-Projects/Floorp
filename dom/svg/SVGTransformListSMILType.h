@@ -116,7 +116,7 @@ class SVGTransformListSMILType : public SMILType {
 
  private:
   // Private constructor: prevent instances beyond my singleton.
-  constexpr SVGTransformListSMILType() {}
+  constexpr SVGTransformListSMILType() = default;
 };
 
 }  // end namespace mozilla
