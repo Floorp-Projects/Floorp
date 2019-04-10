@@ -73,7 +73,7 @@ this.FirefoxMonitor = {
     this.extension = aExtension;
 
     XPCOMUtils.defineLazyPreferenceGetter(
-      this, "enabled", this.kEnabledPref, false,
+      this, "enabled", this.kEnabledPref, true,
       (pref, oldVal, newVal) => {
         if (newVal) {
           this.startObserving();
