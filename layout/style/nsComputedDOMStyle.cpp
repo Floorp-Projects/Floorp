@@ -1045,12 +1045,6 @@ void nsComputedDOMStyle::SetValueFromComplexColor(
   SetToRGBAColor(aValue, aColor.CalcColor(*mComputedStyle));
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetColor() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  SetToRGBAColor(val, StyleColor()->mColor.ToColor());
-  return val.forget();
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetColumnCount() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
 
@@ -1847,26 +1841,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetScrollSnapPointsY() {
   return GetScrollSnapPoints(StyleDisplay()->mScrollSnapPointsY);
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetScrollbarColor() {
-  const nsStyleUI* ui = StyleUI();
-  if (ui->mScrollbarColor.IsAuto()) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    val->SetIdent(eCSSKeyword_auto);
-    return val.forget();
-  }
-
-  RefPtr<nsDOMCSSValueList> list = GetROCSSValueList(false);
-  auto put = [this, &list](const mozilla::StyleColor& color) {
-    RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-    SetValueFromComplexColor(val, color);
-    list->AppendCSSValue(val.forget());
-  };
-  auto& colors = ui->mScrollbarColor.AsColors();
-  put(colors.thumb);
-  put(colors.track);
-  return list.forget();
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetOutlineWidth() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetAppUnits(StyleOutline()->GetOutlineWidth());
@@ -1930,10 +1904,6 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::GetCSSShadowArray(
   }
 
   return valueList.forget();
-}
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetBoxShadow() {
-  return GetCSSShadowArray(StyleEffects()->mBoxShadow, true);
 }
 
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetInitialLetter() {
@@ -2126,26 +2096,9 @@ already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextOverflow() {
   return valueList.forget();
 }
 
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetTextShadow() {
-  return GetCSSShadowArray(StyleText()->mTextShadow, false);
-}
-
 already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetWebkitTextStrokeWidth() {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
   val->SetAppUnits(StyleText()->mWebkitTextStrokeWidth);
-  return val.forget();
-}
-
-static_assert(NS_STYLE_UNICODE_BIDI_NORMAL == 0,
-              "unicode-bidi style constants not as expected");
-
-already_AddRefed<CSSValue> nsComputedDOMStyle::DoGetCaretColor() {
-  RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  if (StyleUI()->mCaretColor.IsAuto()) {
-    SetToRGBAColor(val, StyleColor()->mColor.ToColor());
-  } else {
-    SetValueFromComplexColor(val, StyleUI()->mCaretColor.AsColor());
-  }
   return val.forget();
 }
 
