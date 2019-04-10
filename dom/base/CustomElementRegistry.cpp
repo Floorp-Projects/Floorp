@@ -1393,7 +1393,7 @@ CustomElementDefinition::CustomElementDefinition(
     : mType(aType),
       mLocalName(aLocalName),
       mNamespaceID(aNamespaceID),
-      mConstructor(new CustomElementConstructor(aConstructor)),
+      mConstructor(aConstructor),
       mObservedAttributes(std::move(aObservedAttributes)),
       mCallbacks(std::move(aCallbacks)) {}
 
