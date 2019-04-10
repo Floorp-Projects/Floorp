@@ -10,9 +10,41 @@ from mach.decorators import (
     CommandArgument,
     CommandProvider,
     Command,
+    SubCommand,
 )
 
 from mozbuild.base import MachCommandBase, MozbuildObject
+
+
+@CommandProvider
+class BustedProvider(object):
+    @Command('busted', category='misc',
+             description='Query known bugs in our tooling, and file new ones.')
+    def busted_default(self):
+        import requests
+        payload = {'include_fields': 'id,summary,last_change_time',
+                   'blocks': 1543241,
+                   'resolution': '---'}
+        response = requests.get('https://bugzilla.mozilla.org/rest/bug', payload)
+        response.raise_for_status()
+        json_response = response.json()
+        if 'bugs' in json_response and len(json_response['bugs']) > 0:
+            # Display most recently modifed bugs first.
+            bugs = sorted(json_response['bugs'], key=lambda item: item['last_change_time'],
+                          reverse=True)
+            for bug in bugs:
+                print("Bug %s - %s" % (bug['id'], bug['summary']))
+        else:
+            print("No known tooling issues found.")
+
+    @SubCommand('busted',
+                'file',
+                description='File a bug for busted tooling.')
+    def busted_file(self):
+        import webbrowser
+        uri = ('https://bugzilla.mozilla.org/enter_bug.cgi?'
+               'product=Firefox%20Build%20System&component=General&blocked=1543241')
+        webbrowser.open_new_tab(uri)
 
 
 @CommandProvider
