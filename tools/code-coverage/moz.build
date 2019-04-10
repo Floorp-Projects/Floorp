@@ -16,7 +16,10 @@ if CONFIG['MOZ_CODE_COVERAGE']:
     SOURCES += [
         'CodeCoverageHandler.cpp',
         'nsCodeCoverage.cpp',
-        'nsCodeCoverageFactory.cpp',
+    ]
+
+    XPCOM_MANIFESTS += [
+        'components.conf',
     ]
 
     EXPORTS.mozilla += [

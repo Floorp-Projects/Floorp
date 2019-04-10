@@ -366,9 +366,6 @@ extern const mozilla::Module kBrowserModule;
 #if defined(MOZ_LAYOUT_DEBUGGER) && !defined(MOZ_WIDGET_ANDROID)
 extern const mozilla::Module kLayoutDebugModule;
 #endif
-#if defined(MOZ_CODE_COVERAGE)
-extern const mozilla::Module kCodeCoverageModule;
-#endif
 
 static nsTArray<const mozilla::Module*>* sExtraStaticModules;
 
@@ -459,9 +456,6 @@ nsresult nsComponentManagerImpl::Init() {
 #endif
 #if defined(MOZ_LAYOUT_DEBUGGER) && !defined(MOZ_WIDGET_ANDROID)
   RegisterModule(&kLayoutDebugModule);
-#endif
-#if defined(MOZ_CODE_COVERAGE)
-  RegisterModule(&kCodeCoverageModule);
 #endif
 
   for (uint32_t i = 0; i < sExtraStaticModules->Length(); ++i) {
