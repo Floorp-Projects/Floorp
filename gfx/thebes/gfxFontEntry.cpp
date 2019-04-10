@@ -24,7 +24,6 @@
 #include "nsUnicodeProperties.h"
 #include "nsMathUtils.h"
 #include "nsBidiUtils.h"
-#include "nsUnicodeRange.h"
 #include "nsStyleConsts.h"
 #include "mozilla/AppUnits.h"
 #include "mozilla/FloatingPoint.h"
@@ -1493,12 +1492,11 @@ void gfxFontFamily::FindFontForChar(GlobalFontMatch* aMatchData) {
       LogModule* log = gfxPlatform::GetLog(eGfxLog_textrun);
 
       if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Debug))) {
-        uint32_t unicodeRange = FindCharUnicodeRange(aMatchData->mCh);
         Script script = GetScriptCode(aMatchData->mCh);
         MOZ_LOG(log, LogLevel::Debug,
                 ("(textrun-systemfallback-fonts) char: u+%6.6x "
-                 "unicode-range: %d script: %d match: [%s]\n",
-                 aMatchData->mCh, unicodeRange, int(script), e->Name().get()));
+                 "script: %d match: [%s]\n",
+                 aMatchData->mCh, int(script), e->Name().get()));
       }
 
       fe = e;
