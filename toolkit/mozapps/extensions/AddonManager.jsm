@@ -2806,11 +2806,6 @@ var AddonManagerPrivate = {
                                .addonIsActive(addonId);
   },
 
-  addonIsBuiltin(addonId) {
-    return AddonManagerInternal._getProviderByName("XPIProvider")
-                               .addonIsBuiltin(addonId);
-  },
-
   /**
    * Gets an array of add-ons which were side-loaded prior to the last
    * startup, and are currently disabled.
