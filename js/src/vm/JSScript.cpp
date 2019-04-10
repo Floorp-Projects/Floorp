@@ -3238,12 +3238,12 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t nscopes,
 
 /* static */ bool PrivateScriptData::InitFromEmitter(
     JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce) {
-  uint32_t nscopes = bce->perScriptData().scopeList().length();
-  uint32_t nconsts = bce->perScriptData().numberList().length();
-  uint32_t nobjects = bce->perScriptData().objectList().length;
-  uint32_t ntrynotes = bce->bytecodeSection().tryNoteList().length();
-  uint32_t nscopenotes = bce->bytecodeSection().scopeNoteList().length();
-  uint32_t nresumeoffsets = bce->bytecodeSection().resumeOffsetList().length();
+  uint32_t nscopes = bce->scopeList.length();
+  uint32_t nconsts = bce->numberList.length();
+  uint32_t nobjects = bce->objectList.length;
+  uint32_t ntrynotes = bce->tryNoteList.length();
+  uint32_t nscopenotes = bce->scopeNoteList.length();
+  uint32_t nresumeoffsets = bce->resumeOffsetList.length();
 
   // Create and initialize PrivateScriptData
   if (!JSScript::createPrivateScriptData(cx, script, nscopes, nconsts, nobjects,
@@ -3254,22 +3254,22 @@ PrivateScriptData* PrivateScriptData::new_(JSContext* cx, uint32_t nscopes,
 
   js::PrivateScriptData* data = script->data_;
   if (nscopes) {
-    bce->perScriptData().scopeList().finish(data->scopes());
+    bce->scopeList.finish(data->scopes());
   }
   if (nconsts) {
-    bce->perScriptData().numberList().finish(data->consts());
+    bce->numberList.finish(data->consts());
   }
   if (nobjects) {
-    bce->perScriptData().objectList().finish(data->objects());
+    bce->objectList.finish(data->objects());
   }
   if (ntrynotes) {
-    bce->bytecodeSection().tryNoteList().finish(data->tryNotes());
+    bce->tryNoteList.finish(data->tryNotes());
   }
   if (nscopenotes) {
-    bce->bytecodeSection().scopeNoteList().finish(data->scopeNotes());
+    bce->scopeNoteList.finish(data->scopeNotes());
   }
   if (nresumeoffsets) {
-    bce->bytecodeSection().resumeOffsetList().finish(data->resumeOffsets());
+    bce->resumeOffsetList.finish(data->resumeOffsets());
   }
 
   return true;
@@ -3565,12 +3565,11 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
       mozilla::MakeScopeExit([&] { script->freeScriptData(); });
 
   /* The counts of indexed things must be checked during code generation. */
-  MOZ_ASSERT(bce->perScriptData().atomIndices()->count() <= INDEX_LIMIT);
-  MOZ_ASSERT(bce->perScriptData().objectList().length <= INDEX_LIMIT);
+  MOZ_ASSERT(bce->atomIndices->count() <= INDEX_LIMIT);
+  MOZ_ASSERT(bce->objectList.length <= INDEX_LIMIT);
 
   uint64_t nslots =
-      bce->maxFixedSlots +
-      static_cast<uint64_t>(bce->bytecodeSection().maxStackDepth());
+      bce->maxFixedSlots + static_cast<uint64_t>(bce->maxStackDepth);
   if (nslots > UINT32_MAX) {
     bce->reportError(nullptr, JSMSG_NEED_DIET, js_script_str);
     return false;
@@ -3582,7 +3581,7 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   script->nfixed_ = bce->maxFixedSlots;
   script->nslots_ = nslots;
   script->bodyScopeIndex_ = bce->bodyScopeIndex;
-  script->numBytecodeTypeSets_ = bce->bytecodeSection().typesetCount();
+  script->numBytecodeTypeSets_ = bce->typesetCount;
 
   // Initialize script flags from BytecodeEmitter
   script->setFlag(ImmutableFlags::Strict, bce->sc->strict());
@@ -3629,7 +3628,7 @@ bool JSScript::fullyInitFromEmitter(JSContext* cx, HandleScript script,
   // Part of the parse result – the scope containing each inner function – must
   // be stored in the inner function itself. Do this now that compilation is
   // complete and can no longer fail.
-  bce->perScriptData().objectList().finishInnerFunctions();
+  bce->objectList.finishInnerFunctions();
 
 #ifdef JS_STRUCTURED_SPEW
   // We want this to happen after line number initialization to allow filtering
@@ -4523,12 +4522,12 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
 
 /* static */ bool SharedScriptData::InitFromEmitter(
     JSContext* cx, js::HandleScript script, frontend::BytecodeEmitter* bce) {
-  uint32_t natoms = bce->perScriptData().atomIndices()->count();
-  uint32_t codeLength = bce->bytecodeSection().code().length();
+  uint32_t natoms = bce->atomIndices->count();
+  uint32_t codeLength = bce->code().length();
 
   // The + 1 is to account for the final SN_MAKE_TERMINATOR that is appended
   // when the notes are copied to their final destination by copySrcNotes.
-  uint32_t noteLength = bce->bytecodeSection().notes().length() + 1;
+  uint32_t noteLength = bce->notes().length() + 1;
 
   // Create and initialize SharedScriptData
   if (!script->createSharedScriptData(cx, codeLength, noteLength, natoms)) {
@@ -4538,9 +4537,9 @@ bool JSScript::hasBreakpointsAt(jsbytecode* pc) {
   js::SharedScriptData* data = script->scriptData_;
 
   // Initialize trailing arrays
-  std::copy_n(bce->bytecodeSection().code().begin(), codeLength, data->code());
+  std::copy_n(bce->code().begin(), codeLength, data->code());
   bce->copySrcNotes(data->notes(), noteLength);
-  InitAtomMap(*bce->perScriptData().atomIndices(), data->atoms());
+  InitAtomMap(*bce->atomIndices, data->atoms());
 
   return true;
 }
