@@ -858,11 +858,18 @@ impl TileCache {
             });
         }
 
-        // Map the picture rect to world space and work out the tiles that we need
-        // in order to ensure the screen is covered.
-        let pic_world_rect = world_mapper
-            .map(&pic_rect)
-            .expect("bug: unable to map picture rect to world");
+        // Map the picture rect to world and device space and work out the tiles
+        // that we need in order to ensure the screen is covered. We haven't done
+        // any snapping yet, so we need to round out in device space to ensure we
+        // cover all pixels the picture may touch.
+        let pic_device_rect = {
+            let unsnapped_world_rect = world_mapper
+                .map(&pic_rect)
+                .expect("bug: unable to map picture rect to world");
+            (unsnapped_world_rect * frame_context.global_device_pixel_scale)
+                .round_out()
+        };
+        let pic_world_rect = pic_device_rect / frame_context.global_device_pixel_scale;
 
         // If the bounding rect of the picture to cache doesn't intersect with
         // the visible world rect at all, just take the screen world rect as
@@ -892,7 +899,6 @@ impl TileCache {
         // given the world reference point constraint.
         let device_ref_point = world_ref_point * frame_context.global_device_pixel_scale;
         let device_world_rect = frame_context.screen_world_rect * frame_context.global_device_pixel_scale;
-        let pic_device_rect = pic_world_rect * frame_context.global_device_pixel_scale;
         let needed_device_rect = pic_device_rect
             .intersection(&device_world_rect)
             .unwrap_or(device_world_rect);
@@ -1733,7 +1739,6 @@ impl<'a> PictureUpdateState<'a> {
                 prim_list,
                 self,
                 frame_context,
-                gpu_cache,
             );
         }
     }
@@ -2190,8 +2195,16 @@ pub struct PicturePrimitive {
     pub spatial_node_index: SpatialNodeIndex,
 
     /// The local rect of this picture. It is built
-    /// dynamically during the first picture traversal.
-    pub local_rect: LayoutRect,
+    /// dynamically when updating visibility. It takes
+    /// into account snapping in device space for its
+    /// children.
+    pub snapped_local_rect: LayoutRect,
+
+    /// The local rect of this picture. It is built
+    /// dynamically during the first picture traversal. It
+    /// does not take into account snapping in device for
+    /// its children.
+    pub unsnapped_local_rect: LayoutRect,
 
     /// If false, this picture needs to (re)build segments
     /// if it supports segment rendering. This can occur
@@ -2216,7 +2229,8 @@ impl PicturePrimitive {
     ) {
         pt.new_level(format!("{:?}", self_index));
         pt.add_item(format!("prim_count: {:?}", self.prim_list.prim_instances.len()));
-        pt.add_item(format!("local_rect: {:?}", self.local_rect));
+        pt.add_item(format!("snapped_local_rect: {:?}", self.snapped_local_rect));
+        pt.add_item(format!("unsnapped_local_rect: {:?}", self.unsnapped_local_rect));
         pt.add_item(format!("spatial_node_index: {:?}", self.spatial_node_index));
         pt.add_item(format!("raster_config: {:?}", self.raster_config));
         pt.add_item(format!("requested_composite_mode: {:?}", self.requested_composite_mode));
@@ -2325,7 +2339,8 @@ impl PicturePrimitive {
             pipeline_id,
             requested_raster_space,
             spatial_node_index,
-            local_rect: LayoutRect::zero(),
+            snapped_local_rect: LayoutRect::zero(),
+            unsnapped_local_rect: LayoutRect::zero(),
             tile_cache,
             options,
             segments_are_valid: false,
@@ -2749,7 +2764,6 @@ impl PicturePrimitive {
         prim_list: PrimitiveList,
         state: &mut PictureUpdateState,
         frame_context: &FrameBuildingContext,
-        gpu_cache: &mut GpuCache,
     ) {
         // Restore the pictures list used during recursion.
         self.prim_list = prim_list;
@@ -2822,22 +2836,10 @@ impl PicturePrimitive {
             let surface_index = state.pop_surface();
             debug_assert_eq!(surface_index, raster_config.surface_index);
 
-            // If the local rect changed (due to transforms in child primitives) then
-            // invalidate the GPU cache location to re-upload the new local rect
-            // and stretch size. Drop shadow filters also depend on the local rect
-            // size for the extra GPU cache data handle.
-            // TODO(gw): In future, if we support specifying a flag which gets the
-            //           stretch size from the segment rect in the shaders, we can
-            //           remove this invalidation here completely.
-            if self.local_rect != surface_rect {
-                if let PictureCompositeMode::Filter(FilterOp::DropShadow(..)) = raster_config.composite_mode {
-                    gpu_cache.invalidate(&self.extra_gpu_data_handle);
-                }
-                // Invalidate any segments built for this picture, since the local
-                // rect has changed.
-                self.segments_are_valid = false;
-                self.local_rect = surface_rect;
-            }
+            // Snapping may change the local rect slightly, and as such should just be
+            // considered an estimated size for determining if we need raster roots and
+            // preparing the tile cache.
+            self.unsnapped_local_rect = surface_rect;
 
             // Check if any of the surfaces can't be rasterized in local space but want to.
             if raster_config.establishes_raster_root {
@@ -2910,7 +2912,7 @@ impl PicturePrimitive {
             frame_context.clip_scroll_tree,
         );
 
-        let pic_rect = PictureRect::from_untyped(&self.local_rect.to_untyped());
+        let pic_rect = PictureRect::from_untyped(&self.snapped_local_rect.to_untyped());
 
         let (clipped, unclipped) = match get_raster_rects(
             pic_rect,
@@ -3072,14 +3074,14 @@ impl PicturePrimitive {
                     // Basic brush primitive header is (see end of prepare_prim_for_render_inner in prim_store.rs)
                     //  [brush specific data]
                     //  [segment_rect, segment data]
-                    let shadow_rect = self.local_rect.translate(&offset);
+                    let shadow_rect = self.snapped_local_rect.translate(&offset);
 
                     // ImageBrush colors
                     request.push(color.premultiplied());
                     request.push(PremultipliedColorF::WHITE);
                     request.push([
-                        self.local_rect.size.width,
-                        self.local_rect.size.height,
+                        self.snapped_local_rect.size.width,
+                        self.snapped_local_rect.size.height,
                         0.0,
                         0.0,
                     ]);
