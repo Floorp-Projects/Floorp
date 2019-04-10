@@ -65,7 +65,7 @@ class DOMSVGTranslatePoint final : public nsISVGPoint {
   RefPtr<SVGSVGElement> mElement;
 
  private:
-  ~DOMSVGTranslatePoint() {}
+  ~DOMSVGTranslatePoint() = default;
 };
 
 typedef SVGViewportElement SVGSVGElementBase;

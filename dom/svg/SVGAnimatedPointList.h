@@ -43,7 +43,7 @@ class SVGAnimatedPointList {
   friend class DOMSVGPointList;
 
  public:
-  SVGAnimatedPointList() {}
+  SVGAnimatedPointList() = default;
 
   /**
    * Because it's so important that mBaseVal and its DOMSVGPointList wrapper

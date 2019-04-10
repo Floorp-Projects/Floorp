@@ -58,7 +58,7 @@ class SVGOrientSMILType : public SMILType {
 
  private:
   // Private constructor: prevent instances beyond my singleton.
-  constexpr SVGOrientSMILType() {}
+  constexpr SVGOrientSMILType() = default;
 };
 
 }  // namespace mozilla
