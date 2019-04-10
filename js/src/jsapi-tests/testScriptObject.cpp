@@ -7,7 +7,7 @@
 
 #include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 
-#include "js/CompilationAndEvaluation.h"  // JS::Compile{,Utf8{Path,File}}
+#include "js/CompilationAndEvaluation.h"  // JS::Compile{,DontInflate,Utf8{Path,File}}
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 
@@ -48,7 +48,7 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScript) {
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
   CHECK(srcBuf.init(cx, code, code_size, JS::SourceOwnership::Borrowed));
 
-  JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
+  JS::RootedScript script(cx, JS::CompileDontInflate(cx, options, srcBuf));
   CHECK(script);
 
   return tryScript(script);
@@ -62,7 +62,7 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScript_empty) {
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
   CHECK(srcBuf.init(cx, "", 0, JS::SourceOwnership::Borrowed));
 
-  JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
+  JS::RootedScript script(cx, JS::CompileDontInflate(cx, options, srcBuf));
   CHECK(script);
 
   return tryScript(script);
@@ -76,7 +76,7 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_CompileScriptForPrincipals) {
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
   CHECK(srcBuf.init(cx, code, code_size, JS::SourceOwnership::Borrowed));
 
-  JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
+  JS::RootedScript script(cx, JS::CompileDontInflate(cx, options, srcBuf));
 
   return tryScript(script);
 }
@@ -223,7 +223,7 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, CloneAndExecuteScript) {
   JS::SourceText<mozilla::Utf8Unit> srcBuf;
   CHECK(srcBuf.init(cx, "val", 3, JS::SourceOwnership::Borrowed));
 
-  JS::RootedScript script(cx, JS::Compile(cx, options, srcBuf));
+  JS::RootedScript script(cx, JS::CompileDontInflate(cx, options, srcBuf));
   CHECK(script);
 
   JS::RootedValue value(cx);
