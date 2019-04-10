@@ -27,7 +27,7 @@ class SVGTransformableElement : public SVGElement {
  public:
   explicit SVGTransformableElement(already_AddRefed<dom::NodeInfo>&& aNodeInfo)
       : SVGElement(std::move(aNodeInfo)) {}
-  virtual ~SVGTransformableElement() {}
+  virtual ~SVGTransformableElement() = default;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override = 0;
 

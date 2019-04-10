@@ -41,7 +41,7 @@ class SVGIntegerPairSMILType : public SMILType {
 
  private:
   // Private constructor: prevent instances beyond my singleton.
-  constexpr SVGIntegerPairSMILType() {}
+  constexpr SVGIntegerPairSMILType() = default;
 };
 
 }  // namespace mozilla

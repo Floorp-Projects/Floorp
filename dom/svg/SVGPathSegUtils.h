@@ -73,7 +73,7 @@ struct SVGPathTraversalState {
  */
 class SVGPathSegUtils {
  private:
-  SVGPathSegUtils() {}  // private to prevent instances
+  SVGPathSegUtils() = default;  // private to prevent instances
 
  public:
   static void GetValueAsString(const float* aSeg, nsAString& aValue);

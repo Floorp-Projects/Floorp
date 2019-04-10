@@ -34,7 +34,7 @@ class SVGComponentTransferFunctionElement
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
       : SVGComponentTransferFunctionElementBase(std::move(aNodeInfo)) {}
 
-  virtual ~SVGComponentTransferFunctionElement() {}
+  virtual ~SVGComponentTransferFunctionElement() = default;
 
  public:
   typedef gfx::ComponentTransferAttributes ComponentTransferAttributes;

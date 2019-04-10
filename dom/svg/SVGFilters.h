@@ -55,7 +55,7 @@ class SVGFE : public SVGFEBase {
 
   explicit SVGFE(already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
       : SVGFEBase(std::move(aNodeInfo)) {}
-  virtual ~SVGFE() {}
+  virtual ~SVGFE() = default;
 
  public:
   typedef mozilla::gfx::PrimitiveAttributes PrimitiveAttributes;
@@ -183,7 +183,7 @@ class SVGFELightingElement : public SVGFELightingElementBase {
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
       : SVGFELightingElementBase(std::move(aNodeInfo)) {}
 
-  virtual ~SVGFELightingElement() {}
+  virtual ~SVGFELightingElement() = default;
 
  public:
   // interfaces:

@@ -33,7 +33,7 @@ class SVGViewportElement;
 
 class UserSpaceMetrics {
  public:
-  virtual ~UserSpaceMetrics() {}
+  virtual ~UserSpaceMetrics() = default;
 
   virtual float GetEmLength() const = 0;
   virtual float GetExLength() const = 0;

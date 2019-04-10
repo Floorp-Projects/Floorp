@@ -91,7 +91,7 @@ class SVGLengthListSMILType : public SMILType {
 
  private:
   // Private constructor: prevent instances beyond my singleton.
-  constexpr SVGLengthListSMILType() {}
+  constexpr SVGLengthListSMILType() = default;
 };
 
 }  // namespace mozilla
