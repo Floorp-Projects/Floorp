@@ -27,8 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #1430 - Adds the Fenix Snackbar
 - #1397 - Adds favicons to the history view
 - #1375 - Added setting for turning off history suggestions
+- #1139 - Resolved a 170ms delay on cold start
 
->>>>>>> For #1397 - Updates changelog
 ### Changed
 - #1429 - Updated site permissions ui for MVP
 ### Removed

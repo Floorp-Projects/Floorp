@@ -4,6 +4,7 @@
 
 private object Versions {
     const val kotlin = "1.3.11"
+    const val coroutines = "1.2.0-alpha-2"
     const val android_gradle_plugin = "3.3.2"
     const val rxAndroid = "2.1.0"
     const val rxKotlin = "2.3.0"
@@ -48,6 +49,7 @@ object Deps {
     const val tools_kotlingradle = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
     const val tools_appservicesgradle = "org.mozilla.appservices:gradle-plugin:${Versions.appservices_gradle_plugin}"
     const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin}"
+    const val kotlin_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:${Versions.coroutines}"
 
     const val allopen = "org.jetbrains.kotlin:kotlin-allopen:${Versions.kotlin}"
 

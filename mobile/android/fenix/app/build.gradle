@@ -118,6 +118,10 @@ android {
     lintOptions {
         lintConfig file("lint.xml")
     }
+
+    packagingOptions {
+        exclude 'META-INF/atomicfu.kotlin_module'
+    }
 }
 
 android.applicationVariants.all { variant ->
@@ -246,6 +250,7 @@ dependencies {
     implementation project(':architecture')
 
     implementation Deps.kotlin_stdlib
+    implementation Deps.kotlin_coroutines
     implementation Deps.androidx_appcompat
     implementation Deps.androidx_constraintlayout
 
