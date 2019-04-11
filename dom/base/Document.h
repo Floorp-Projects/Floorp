@@ -523,8 +523,14 @@ class Document : public nsINode,
     return DocumentOrShadowRoot::SetValueMissingState(aName, aValue);
   }
 
+  nsIPrincipal* EffectiveStoragePrincipal() const;
+
   // nsIScriptObjectPrincipal
   nsIPrincipal* GetPrincipal() final { return NodePrincipal(); }
+
+  nsIPrincipal* GetEffectiveStoragePrincipal() final {
+    return EffectiveStoragePrincipal();
+  }
 
   // EventTarget
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
@@ -725,10 +731,10 @@ class Document : public nsINode,
   void SetReferrer(const nsACString& aReferrer) { mReferrer = aReferrer; }
 
   /**
-   * Set the principal responsible for this document.  Chances are,
-   * you do not want to be using this.
+   * Set the principals responsible for this document.  Chances are, you do not
+   * want to be using this.
    */
-  void SetPrincipal(nsIPrincipal* aPrincipal);
+  void SetPrincipals(nsIPrincipal* aPrincipal, nsIPrincipal* aStoragePrincipal);
 
   /**
    * Get the list of ancestor principals for a document.  This is the same as
@@ -2086,12 +2092,13 @@ class Document : public nsINode,
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 
   /**
-   * Reset this document to aURI, aLoadGroup, and aPrincipal.  aURI must not be
-   * null.  If aPrincipal is null, a codebase principal based on aURI will be
-   * used.
+   * Reset this document to aURI, aLoadGroup, aPrincipal and aStoragePrincipal.
+   * aURI must not be null.  If aPrincipal is null, a codebase principal based
+   * on aURI will be used.
    */
   virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
-                          nsIPrincipal* aPrincipal);
+                          nsIPrincipal* aPrincipal,
+                          nsIPrincipal* aStoragePrincipal);
 
   /**
    * Set the container (docshell) for this document. Virtual so that
@@ -4733,6 +4740,9 @@ class Document : public nsINode,
   nsTabSizes mCachedTabSizes;
 
   bool mInRDMPane;
+
+  // The principal to use for the storage area of this document.
+  nsCOMPtr<nsIPrincipal> mIntrinsicStoragePrincipal;
 
  public:
   // Needs to be public because the bindings code pokes at it.

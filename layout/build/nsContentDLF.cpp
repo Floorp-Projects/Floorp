@@ -277,7 +277,7 @@ already_AddRefed<Document> nsContentDLF::CreateBlankDocument(
   if (!uri) {
     return nullptr;
   }
-  blankDoc->ResetToURI(uri, aLoadGroup, aPrincipal);
+  blankDoc->ResetToURI(uri, aLoadGroup, aPrincipal, aPrincipal);
   blankDoc->SetContainer(aContainer);
 
   // add some simple content structure

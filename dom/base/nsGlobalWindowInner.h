@@ -260,6 +260,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal() override;
 
+  virtual nsIPrincipal* GetEffectiveStoragePrincipal() override;
+
   // nsIDOMWindow
   NS_DECL_NSIDOMWINDOW
 
@@ -1294,6 +1296,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   RefPtr<mozilla::dom::VisualViewport> mVisualViewport;
 
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
+  nsCOMPtr<nsIPrincipal> mDocumentStoragePrincipal;
+
   // mTabChild is only ever populated in the content process.
   nsCOMPtr<nsITabChild> mTabChild;
 

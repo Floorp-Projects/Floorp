@@ -9,10 +9,12 @@ with Files('**'):
 
 EXPORTS.mozilla = [
     'AntiTrackingCommon.h',
+    'StoragePrincipalHelper.h',
 ]
 
 UNIFIED_SOURCES += [
     'AntiTrackingCommon.cpp',
+    'StoragePrincipalHelper.cpp',
 ]
 
 LOCAL_INCLUDES += [

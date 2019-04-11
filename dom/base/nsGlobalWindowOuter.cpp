@@ -476,8 +476,9 @@ class nsOuterWindowProxy : public MaybeCrossOriginObject<js::Wrapper> {
    * "proxy" is the WindowProxy object involved.  It may not be same-compartment
    * with cx.
    */
-  bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
-                                    JS::MutableHandleVector<jsid> props) const override;
+  bool getOwnEnumerablePropertyKeys(
+      JSContext* cx, JS::Handle<JSObject*> proxy,
+      JS::MutableHandleVector<jsid> props) const override;
 
   /**
    * Hook used by SpiderMonkey to implement Object.prototype.toString.
@@ -733,9 +734,9 @@ bool nsOuterWindowProxy::definePropertySameOrigin(
   return true;
 }
 
-bool nsOuterWindowProxy::ownPropertyKeys(JSContext* cx,
-                                         JS::Handle<JSObject*> proxy,
-                                         JS::MutableHandleVector<jsid> props) const {
+bool nsOuterWindowProxy::ownPropertyKeys(
+    JSContext* cx, JS::Handle<JSObject*> proxy,
+    JS::MutableHandleVector<jsid> props) const {
   // Just our indexed stuff followed by our "normal" own property names.
   if (!AppendIndexedPropertyNames(proxy, props)) {
     return false;
@@ -938,7 +939,8 @@ bool nsOuterWindowProxy::set(JSContext* cx, JS::Handle<JSObject*> proxy,
 }
 
 bool nsOuterWindowProxy::getOwnEnumerablePropertyKeys(
-    JSContext* cx, JS::Handle<JSObject*> proxy, JS::MutableHandleVector<jsid> props) const {
+    JSContext* cx, JS::Handle<JSObject*> proxy,
+    JS::MutableHandleVector<jsid> props) const {
   // We could just stop overring getOwnEnumerablePropertyKeys and let our
   // superclasses deal (by falling back on the BaseProxyHandler implementation
   // that uses a combination of ownPropertyKeys and getOwnPropertyDescriptor to
@@ -1401,6 +1403,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mLocalStorage)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSuspendedDoc)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocumentStoragePrincipal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDoc)
 
   // Traverse stuff from nsPIDOMWindow
@@ -1427,6 +1430,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsGlobalWindowOuter)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mLocalStorage)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mSuspendedDoc)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentPrincipal)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocumentStoragePrincipal)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDoc)
 
   // Unlink stuff from nsPIDOMWindow
@@ -1894,6 +1898,8 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
                                              bool aForceReuseInnerWindow) {
   MOZ_ASSERT(mDocumentPrincipal == nullptr,
              "mDocumentPrincipal prematurely set!");
+  MOZ_ASSERT(mDocumentStoragePrincipal == nullptr,
+             "mDocumentStoragePrincipal prematurely set!");
   MOZ_ASSERT(aDocument);
 
   // Bail out early if we're in process of closing down the window.
@@ -2446,6 +2452,7 @@ void nsGlobalWindowOuter::DetachFromDocShell() {
 
     // Remember the document's principal and URI.
     mDocumentPrincipal = mDoc->NodePrincipal();
+    mDocumentStoragePrincipal = mDoc->EffectiveStoragePrincipal();
     mDocumentURI = mDoc->GetDocumentURI();
 
     // Release our document reference
@@ -2756,6 +2763,29 @@ nsIPrincipal* nsGlobalWindowOuter::GetPrincipal() {
 
   if (objPrincipal) {
     return objPrincipal->GetPrincipal();
+  }
+
+  return nullptr;
+}
+
+nsIPrincipal* nsGlobalWindowOuter::GetEffectiveStoragePrincipal() {
+  if (mDoc) {
+    // If we have a document, get the principal from the document
+    return mDoc->EffectiveStoragePrincipal();
+  }
+
+  if (mDocumentStoragePrincipal) {
+    return mDocumentStoragePrincipal;
+  }
+
+  // If we don't have a storage principal and we don't have a document we ask
+  // the parent window for the storage principal.
+
+  nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal =
+      do_QueryInterface(GetParentInternal());
+
+  if (objPrincipal) {
+    return objPrincipal->GetEffectiveStoragePrincipal();
   }
 
   return nullptr;
