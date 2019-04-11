@@ -303,11 +303,11 @@ void nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
   LogicalSize availSize(lineWM, aReflowInput.AvailableISize(),
                         aReflowInput.AvailableBSize());
 
-  // We have a reflow state and a line layout for each RTC.
+  // We have a reflow input and a line layout for each RTC.
   // They are conceptually the state of the RTCs, but we don't actually
   // reflow those RTCs in this code. These two arrays are holders of
-  // the reflow states and line layouts.
-  // Since there are pointers refer to reflow states and line layouts,
+  // the reflow inputs and line layouts.
+  // Since there are pointers refer to reflow inputs and line layouts,
   // it is necessary to guarantee that they won't be moved. For this
   // reason, they are wrapped in UniquePtr here.
   AutoTArray<UniquePtr<ReflowInput>, RTC_ARRAY_SIZE> reflowInputs;

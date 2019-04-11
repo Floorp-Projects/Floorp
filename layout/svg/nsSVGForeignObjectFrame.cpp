@@ -523,7 +523,7 @@ void nsSVGForeignObjectFrame::DoReflow() {
       "style system should ensure that :-moz-svg-foreign-content "
       "does not get styled");
   NS_ASSERTION(reflowInput.ComputedISize() == ISize(wm),
-               "reflow state made child wrong size");
+               "reflow input made child wrong size");
   reflowInput.SetComputedBSize(BSize(wm));
 
   ReflowChild(kid, presContext, desiredSize, reflowInput, 0, 0,

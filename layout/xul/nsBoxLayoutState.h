@@ -58,7 +58,7 @@ class MOZ_STACK_CLASS nsBoxLayoutState {
     nsBoxLayoutState& mState;
   };
 
-  // The HTML reflow state that lives outside the box-block boundary.
+  // The HTML reflow input that lives outside the box-block boundary.
   // May not be set reliably yet.
   const ReflowInput* OuterReflowInput() { return mOuterReflowInput; }
 

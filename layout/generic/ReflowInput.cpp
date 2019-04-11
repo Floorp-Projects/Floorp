@@ -53,7 +53,7 @@ enum eNormalLineHeightControl {
 
 static eNormalLineHeightControl sNormalLineHeightControl = eUninitialized;
 
-// Initialize a <b>root</b> reflow state with a rendering context to
+// Initialize a <b>root</b> reflow input with a rendering context to
 // use for measuring things.
 ReflowInput::ReflowInput(nsPresContext* aPresContext, nsIFrame* aFrame,
                          gfxContext* aRenderingContext,
@@ -177,8 +177,8 @@ SizeComputationInput::SizeComputationInput(
               mFrame->Type(), flags);
 }
 
-// Initialize a reflow state for a child frame's reflow. Some state
-// is copied from the parent reflow state; the remaining state is
+// Initialize a reflow input for a child frame's reflow. Some state
+// is copied from the parent reflow input; the remaining state is
 // computed.
 ReflowInput::ReflowInput(nsPresContext* aPresContext,
                          const ReflowInput& aParentReflowInput,
@@ -207,7 +207,7 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
   AvailableBSize() = aAvailableSpace.BSize(mWritingMode);
 
   if (mWritingMode.IsOrthogonalTo(aParentReflowInput.GetWritingMode())) {
-    // If we're setting up for an orthogonal flow, and the parent reflow state
+    // If we're setting up for an orthogonal flow, and the parent reflow input
     // had a constrained ComputedBSize, we can use that as our AvailableISize
     // in preference to leaving it unconstrained.
     if (AvailableISize() == NS_UNCONSTRAINEDSIZE &&
@@ -302,9 +302,9 @@ void ReflowInput::SetComputedWidth(nscoord aComputedWidth) {
   //    state when reflowing fixed-pos kids.  In that case we actually don't
   //    want to mess with the resize flags, because comparing the frame's rect
   //    to the munged computed width is pointless.
-  // 2) nsFrame::BoxReflow creates a reflow state for its parent.  This reflow
+  // 2) nsFrame::BoxReflow creates a reflow input for its parent.  This reflow
   //    state is not used to reflow the parent, but just as a parent for the
-  //    frame's own reflow state.  So given a nsBoxFrame inside some non-XUL
+  //    frame's own reflow input.  So given a nsBoxFrame inside some non-XUL
   //    (like a text control, for example), we'll end up creating a reflow
   //    state for the parent while the parent is reflowing.
 
@@ -324,9 +324,9 @@ void ReflowInput::SetComputedHeight(nscoord aComputedHeight) {
   // It'd be nice to assert that |frame| is not in reflow, but this fails
   // because:
   //
-  //    nsFrame::BoxReflow creates a reflow state for its parent.  This reflow
+  //    nsFrame::BoxReflow creates a reflow input for its parent.  This reflow
   //    state is not used to reflow the parent, but just as a parent for the
-  //    frame's own reflow state.  So given a nsBoxFrame inside some non-XUL
+  //    frame's own reflow input.  So given a nsBoxFrame inside some non-XUL
   //    (like a text control, for example), we'll end up creating a reflow
   //    state for the parent while the parent is reflowing.
 
@@ -522,7 +522,7 @@ void ReflowInput::InitCBReflowInput() {
 }
 
 /* Check whether CalcQuirkContainingBlockHeight would stop on the
- * given reflow state, using its block as a height.  (essentially
+ * given reflow input, using its block as a height.  (essentially
  * returns false for any case in which CalcQuirkContainingBlockHeight
  * has a "continue" in its main loop.)
  *
@@ -589,8 +589,8 @@ void ReflowInput::InitResizeFlags(nsPresContext* aPresContext,
     bool dirty = nsFontInflationData::UpdateFontInflationDataISizeFor(*this) &&
                  // Avoid running this at the box-to-block interface
                  // (where we shouldn't be inflating anyway, and where
-                 // reflow state construction is probably to construct a
-                 // dummy parent reflow state anyway).
+                 // reflow input construction is probably to construct a
+                 // dummy parent reflow input anyway).
                  !mFlags.mDummyParentReflowInput;
 
     if (dirty || (!mFrame->GetParent() && isIResize)) {
@@ -2270,7 +2270,7 @@ void ReflowInput::InitConstraints(nsPresContext* aPresContext,
     ComputedMinWidth() = ComputedMinHeight() = 0;
     ComputedMaxWidth() = ComputedMaxHeight() = NS_UNCONSTRAINEDSIZE;
   } else {
-    // Get the containing block reflow state
+    // Get the containing block reflow input
     const ReflowInput* cbri = mCBReflowInput;
     MOZ_ASSERT(cbri, "no containing block");
     MOZ_ASSERT(mFrame->GetParent());
@@ -2320,7 +2320,7 @@ void ReflowInput::InitConstraints(nsPresContext* aPresContext,
         if (NS_FRAME_REPLACED(NS_CSS_FRAME_TYPE_INLINE) == mFrameType ||
             NS_FRAME_REPLACED_CONTAINS_BLOCK(NS_CSS_FRAME_TYPE_INLINE) ==
                 mFrameType) {
-          // Get the containing block reflow state
+          // Get the containing block reflow input
           NS_ASSERTION(nullptr != cbri, "no containing block");
           // in quirks mode, get the cb height using the special quirk method
           if (!wm.IsVertical() &&
@@ -2696,7 +2696,7 @@ void ReflowInput::CalculateBlockSideMargins(LayoutFrameType aFrameType) {
   // which is where margins will eventually be applied: we're calculating
   // margins that will be used by the container in its inline direction,
   // which in the case of an orthogonal contained block will correspond to
-  // the block direction of this reflow state. So in the orthogonal-flow
+  // the block direction of this reflow input. So in the orthogonal-flow
   // case, "CalculateBlock*Side*Margins" will actually end up adjusting
   // the BStart/BEnd margins; those are the "sides" of the block from its
   // container's point of view.

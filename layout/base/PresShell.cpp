@@ -9096,7 +9096,7 @@ bool nsIPresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   NS_ASSERTION(!target->GetNextInFlow() && !target->GetPrevInFlow(),
                "reflow roots should never split");
 
-  // Don't pass size directly to the reflow state, since a
+  // Don't pass size directly to the reflow input, since a
   // constrained height implies page/column breaking.
   LogicalSize reflowSize(wm, size.ISize(wm), NS_UNCONSTRAINEDSIZE);
   ReflowInput reflowInput(mPresContext, target, rcx, reflowSize,
@@ -9121,7 +9121,7 @@ bool nsIPresShell::DoReflow(nsIFrame* target, bool aInterruptible,
 
     mLastRootReflowHadUnconstrainedBSize = hasUnconstrainedBSize;
   } else {
-    // Initialize reflow state with current used border and padding,
+    // Initialize reflow input with current used border and padding,
     // in case this was set specially by the parent frame when the reflow root
     // was reflowed by its parent.
     nsMargin currentBorder = target->GetUsedBorder();
@@ -9131,7 +9131,7 @@ bool nsIPresShell::DoReflow(nsIFrame* target, bool aInterruptible,
 
   // fix the computed height
   NS_ASSERTION(reflowInput.ComputedPhysicalMargin() == nsMargin(0, 0, 0, 0),
-               "reflow state should not set margin for reflow roots");
+               "reflow input should not set margin for reflow roots");
   if (size.BSize(wm) != NS_UNCONSTRAINEDSIZE) {
     nscoord computedBSize =
         size.BSize(wm) -
@@ -9142,7 +9142,7 @@ bool nsIPresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   NS_ASSERTION(reflowInput.ComputedISize() ==
                    size.ISize(wm) -
                        reflowInput.ComputedLogicalBorderPadding().IStartEnd(wm),
-               "reflow state computed incorrect inline size");
+               "reflow input computed incorrect inline size");
 
   mPresContext->ReflowStarted(aInterruptible);
   mIsReflowing = true;

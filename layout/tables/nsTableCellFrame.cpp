@@ -130,7 +130,7 @@ void nsTableCellFrame::NotifyPercentBSize(const ReflowInput& aReflowInput) {
   // XXXldb Given the now-stricter |NeedsToObserve|, many if not all of
   // these tests are probably unnecessary.
 
-  // Maybe the cell reflow state; we sure if we're inside the |if|.
+  // Maybe the cell reflow input; we sure if we're inside the |if|.
   const ReflowInput* cellRI = aReflowInput.mCBReflowInput;
 
   if (cellRI && cellRI->mFrame == this &&
@@ -836,7 +836,7 @@ void nsTableCellFrame::Reflow(nsPresContext* aPresContext,
     // will determine how far this is propagated to descendants.
     kidReflowInput.mPercentBSizeObserver = this;
   }
-  // Don't propagate special bsize reflow state to our kids
+  // Don't propagate special bsize reflow input to our kids
   kidReflowInput.mFlags.mSpecialBSizeReflow = false;
 
   if (aReflowInput.mFlags.mSpecialBSizeReflow ||

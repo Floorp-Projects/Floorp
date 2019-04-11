@@ -120,7 +120,7 @@ class nsInlineFrame : public nsContainerFrame {
       mozilla::ServoRestyleState& aRestyleState);
 
  protected:
-  // Additional reflow state used during our reflow methods
+  // Additional reflow input used during our reflow methods
   struct InlineReflowInput {
     nsIFrame* mPrevFrame;
     nsInlineFrame* mNextInFlow;
