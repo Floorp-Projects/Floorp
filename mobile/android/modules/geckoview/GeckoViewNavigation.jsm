@@ -35,6 +35,7 @@ class GeckoViewNavigation extends GeckoViewModule {
     this.registerListener([
       "GeckoView:GoBack",
       "GeckoView:GoForward",
+      "GeckoView:GotoHistoryIndex",
       "GeckoView:LoadUri",
       "GeckoView:Reload",
       "GeckoView:Stop",
@@ -53,6 +54,9 @@ class GeckoViewNavigation extends GeckoViewModule {
         break;
       case "GeckoView:GoForward":
         this.browser.goForward();
+        break;
+      case "GeckoView:GotoHistoryIndex":
+        this.browser.gotoIndex(aData.index);
         break;
       case "GeckoView:LoadUri":
         const { uri, referrer, flags } = aData;
