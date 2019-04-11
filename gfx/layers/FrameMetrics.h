@@ -719,19 +719,24 @@ struct ScrollSnapInfo {
            mScrollSnapIntervalX == aOther.mScrollSnapIntervalX &&
            mScrollSnapIntervalY == aOther.mScrollSnapIntervalY &&
            mScrollSnapDestination == aOther.mScrollSnapDestination &&
-           mScrollSnapCoordinates == aOther.mScrollSnapCoordinates;
+           mScrollSnapCoordinates == aOther.mScrollSnapCoordinates &&
+           mSnapPositionX == aOther.mSnapPositionX &&
+           mSnapPositionY == aOther.mSnapPositionY &&
+           mXRangeWiderThanSnapport == aOther.mXRangeWiderThanSnapport &&
+           mYRangeWiderThanSnapport == aOther.mYRangeWiderThanSnapport &&
+           mSnapportSize == aOther.mSnapportSize;
   }
 
   bool HasScrollSnapping() const {
-    return mScrollSnapTypeY != mozilla::StyleScrollSnapType::None ||
-           mScrollSnapTypeX != mozilla::StyleScrollSnapType::None;
+    return mScrollSnapTypeY != mozilla::StyleScrollSnapStrictness::None ||
+           mScrollSnapTypeX != mozilla::StyleScrollSnapStrictness::None;
   }
 
   // The scroll frame's scroll-snap-type.
-  mozilla::StyleScrollSnapType mScrollSnapTypeX =
-      mozilla::StyleScrollSnapType::None;
-  mozilla::StyleScrollSnapType mScrollSnapTypeY =
-      mozilla::StyleScrollSnapType::None;
+  mozilla::StyleScrollSnapStrictness mScrollSnapTypeX =
+      mozilla::StyleScrollSnapStrictness::None;
+  mozilla::StyleScrollSnapStrictness mScrollSnapTypeY =
+      mozilla::StyleScrollSnapStrictness::None;
 
   // The intervals derived from the scroll frame's scroll-snap-points.
   Maybe<nscoord> mScrollSnapIntervalX;
@@ -744,6 +749,42 @@ struct ScrollSnapInfo {
   // The scroll-snap-coordinates of any descendant frames of the scroll frame,
   // relative to the origin of the scrolled frame.
   nsTArray<nsPoint> mScrollSnapCoordinates;
+
+  // The scroll positions corresponding to scroll-snap-align values.
+  nsTArray<nscoord> mSnapPositionX;
+  nsTArray<nscoord> mSnapPositionY;
+
+  struct ScrollSnapRange {
+    ScrollSnapRange() = default;
+
+    ScrollSnapRange(nscoord aStart, nscoord aEnd)
+        : mStart(aStart), mEnd(aEnd) {}
+
+    nscoord mStart;
+    nscoord mEnd;
+    bool operator==(const ScrollSnapRange& aOther) const {
+      return mStart == aOther.mStart && mEnd == aOther.mEnd;
+    }
+
+    // Returns true if |aPoint| is a valid snap position in this range.
+    bool IsValid(nscoord aPoint, nscoord aSnapportSize) const {
+      MOZ_ASSERT(mEnd - mStart > aSnapportSize);
+      return mStart <= aPoint && aPoint <= mEnd - aSnapportSize;
+    }
+  };
+  // An array of the range that the target element is larger than the snapport
+  // on the axis.
+  // Snap positions in this range will be valid snap positions in the case where
+  // the distance between the closest snap position and the second closest snap
+  // position is still larger than the snapport size.
+  // See https://drafts.csswg.org/css-scroll-snap-1/#snap-overflow
+  //
+  // Note: This range doesn't contain scroll-margin values.
+  nsTArray<ScrollSnapRange> mXRangeWiderThanSnapport;
+  nsTArray<ScrollSnapRange> mYRangeWiderThanSnapport;
+
+  // Note: This snapport size has been already deflated by scroll-padding.
+  nsSize mSnapportSize;
 };
 
 // clang-format off

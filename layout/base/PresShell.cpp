@@ -3374,7 +3374,10 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
     if (gfxPrefs::ScrollBehaviorEnabled() && smoothScroll) {
       scrollMode = ScrollMode::eSmoothMsd;
     }
-    aFrameAsScrollable->ScrollTo(scrollPt, scrollMode, &allowedRange);
+    aFrameAsScrollable->ScrollTo(scrollPt, scrollMode, &allowedRange,
+                                 aFlags & nsIPresShell::SCROLL_SNAP
+                                     ? nsIScrollbarMediator::ENABLE_SNAP
+                                     : nsIScrollbarMediator::DISABLE_SNAP);
   }
 }
 
@@ -3454,6 +3457,14 @@ void nsIPresShell::DoScrollContentIntoView() {
     return;
   }
 
+  // Get the scroll-margin here since |frame| is going to be changed to iterate
+  // over all continuation frames below.
+  nsMargin scrollMargin;
+  if (!(data->mContentToScrollToFlags &
+        nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING)) {
+    scrollMargin = frame->StyleMargin()->GetScrollMargin();
+  }
+
   // This is a two-step process.
   // Step 1: Find the bounds of the rect we want to scroll into view.  For
   //         example, for an inline frame we may want to scroll in the whole
@@ -3479,6 +3490,8 @@ void nsIPresShell::DoScrollContentIntoView() {
     AccumulateFrameBounds(container, frame, useWholeLineHeightForInlines,
                           frameBounds, haveRect, prevBlock, lines, curLine);
   } while ((frame = frame->GetNextContinuation()));
+
+  frameBounds.Inflate(scrollMargin);
 
   ScrollFrameRectIntoView(container, frameBounds, data->mContentScrollVAxis,
                           data->mContentScrollHAxis,
@@ -3522,8 +3535,16 @@ bool nsIPresShell::ScrollFrameRectIntoView(nsIFrame* aFrame,
         }
         targetRect.Inflate(padding);
       }
-      ScrollToShowRect(sf, targetRect - sf->GetScrolledFrame()->GetPosition(),
-                       aVertical, aHorizontal, aFlags);
+
+      targetRect -= sf->GetScrolledFrame()->GetPosition();
+      if (!(aFlags & nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING)) {
+        nsMargin scrollPadding = sf->GetScrollPadding();
+        targetRect.Inflate(scrollPadding);
+        targetRect = targetRect.Intersect(sf->GetScrolledRect());
+      }
+
+      ScrollToShowRect(sf, targetRect, aVertical, aHorizontal, aFlags);
+
       nsPoint newPosition = sf->LastScrollDestination();
       // If the scroll position increased, that means our content moved up,
       // so our rect's offset should decrease
@@ -8455,7 +8476,8 @@ bool PresShell::EventHandler::PrepareToUseCaretPosition(
                                  nsIPresShell::SCROLL_IF_NOT_VISIBLE),
         nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_MINIMUM,
                                  nsIPresShell::SCROLL_IF_NOT_VISIBLE),
-        nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
+        nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
+            nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING);
     NS_ENSURE_SUCCESS(rv, false);
     frame = content->GetPrimaryFrame();
     NS_WARNING_ASSERTION(frame, "No frame for focused content?");
@@ -8513,8 +8535,10 @@ void PresShell::EventHandler::GetCurrentItemAndPositionForElement(
     Element* aFocusedElement, nsIContent** aTargetToUse,
     LayoutDeviceIntPoint& aTargetPt, nsIWidget* aRootWidget) {
   nsCOMPtr<nsIContent> focusedContent = aFocusedElement;
-  mPresShell->ScrollContentIntoView(focusedContent, ScrollAxis(), ScrollAxis(),
-                                    nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
+  mPresShell->ScrollContentIntoView(
+      focusedContent, ScrollAxis(), ScrollAxis(),
+      nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
+          nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING);
 
   nsPresContext* presContext = GetPresContext();
 

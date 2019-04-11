@@ -714,6 +714,13 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleMargin {
     return true;
   }
 
+  nsMargin GetScrollMargin() const {
+    return nsMargin(mScrollMargin.Get(mozilla::eSideTop).ToAppUnits(),
+                    mScrollMargin.Get(mozilla::eSideRight).ToAppUnits(),
+                    mScrollMargin.Get(mozilla::eSideBottom).ToAppUnits(),
+                    mScrollMargin.Get(mozilla::eSideLeft).ToAppUnits());
+  }
+
   // Return true if either the start or end side in the axis is 'auto'.
   // (defined in WritingModes.h since we need the full WritingMode type)
   inline bool HasBlockAxisAuto(mozilla::WritingMode aWM) const;
@@ -1895,8 +1902,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleOverscrollBehavior mOverscrollBehaviorY;
   mozilla::StyleOverflowAnchor mOverflowAnchor;
   mozilla::StyleScrollSnapAlign mScrollSnapAlign;
-  mozilla::StyleScrollSnapType mScrollSnapTypeX;
-  mozilla::StyleScrollSnapType mScrollSnapTypeY;
+  mozilla::StyleScrollSnapType mScrollSnapType;
   nsStyleCoord mScrollSnapPointsX;
   nsStyleCoord mScrollSnapPointsY;
   mozilla::Position mScrollSnapDestination;

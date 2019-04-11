@@ -70,7 +70,6 @@
 }
 
 #placesToolbar > toolbarbutton {
-  list-style-image: url("chrome://browser/skin/places/toolbar.png");
   margin: 4px 4px 5px;
   padding: 0;
   height: 22px;
@@ -78,6 +77,9 @@
 }
 
 #placesToolbar > toolbarbutton > .toolbarbutton-icon {
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
   margin: 1px 4px;
 }
 
@@ -88,7 +90,6 @@
 #placesToolbar > toolbarbutton[type="menu"] > .toolbarbutton-menu-dropmarker {
   list-style-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
   padding: 0;
-  margin-top: 1px;
   margin-inline-end: 2px;
 }
 
@@ -109,41 +110,45 @@
 }
 
 /* back and forward button */
-#back-button:-moz-locale-dir(ltr),
-#forward-button:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-  margin-right: 0;
+#back-button,
+#forward-button {
+  list-style-image: url("chrome://browser/skin/arrow-left.svg");
 }
 
-#forward-button:-moz-locale-dir(ltr),
-#back-button:-moz-locale-dir(rtl) {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-  margin-left: 0;
+#back-button {
+  margin-inline-end: 0 !important; /* override margin from #placesToolbar > toolbarbutton */
+}
+
+#forward-button {
+  margin-inline-start: 0 !important; /* override margin from #placesToolbar > toolbarbutton */
+}
+
+#back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#forward-button:-moz-locale-dir(ltr) > .toolbarbutton-icon {
+  transform: scaleX(-1);
 }
 
 #back-button > .toolbarbutton-icon {
-  margin-inline-start: 3px !important;
-  margin-inline-end: 2px !important;
+  margin-inline: 3px 2px !important;
 }
 
 #forward-button > .toolbarbutton-icon {
-  margin-inline-start: 2px !important;
-  margin-inline-end: 3px !important;
+  margin-inline: 2px 3px !important;
 }
 
 /* organize button */
 #organizeButton {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
+  list-style-image: url("chrome://browser/skin/settings.svg");
 }
 
 /* view button */
 #viewMenu {
-  -moz-image-region: rect(0px, 64px, 16px, 48px);
+  list-style-image: url("chrome://browser/skin/sort.svg");
 }
 
 /* maintenance button */
 #maintenanceButton {
-  -moz-image-region: rect(0px, 80px, 16px, 64px);
+  list-style-image: url("chrome://browser/skin/import-export.svg");
 }
 
 /* Root View */

@@ -309,8 +309,7 @@ button.month-year.active::after {
   margin: var(--spinner-margin-top-bottom) 0;
   cursor: default;
   overflow-y: scroll;
-  scroll-snap-type: mandatory;
-  scroll-snap-points-y: repeat(100%);
+  scroll-snap-type: both mandatory;
 }
 
 .spinner-container > .spinner > div {
@@ -321,7 +320,7 @@ button.month-year.active::after {
   margin-bottom: var(--spinner-item-margin-bottom);
   height: var(--spinner-item-height);
   -moz-user-select: none;
-  scroll-snap-coordinate: 0 0;
+  scroll-snap-align: start;
 }
 
 .spinner-container > .spinner > div::before,

@@ -27,8 +27,6 @@ browser.jar:
 * skin/classic/browser/places/organizer.css                    (places/organizer.css)
   skin/classic/browser/places/toolbarDropMarker.png            (places/toolbarDropMarker.png)
   skin/classic/browser/places/editBookmark.css                 (places/editBookmark.css)
-  skin/classic/browser/places/libraryToolbar.png               (places/libraryToolbar.png)
-  skin/classic/browser/places/allBookmarks.png                 (places/allBookmarks.png)
   skin/classic/browser/preferences/alwaysAsk.png               (preferences/alwaysAsk.png)
   skin/classic/browser/preferences/application.png             (preferences/application.png)
   skin/classic/browser/preferences/saveFile.png                (preferences/saveFile.png)
