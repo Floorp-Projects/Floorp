@@ -193,12 +193,13 @@ class nsPermissionManager final : public nsIPermissionManager,
   }
 
   /**
-   * Initialize the "clear-origin-attributes-data" observing.
-   * Will create a nsPermissionManager instance if needed.
-   * That way, we can prevent have nsPermissionManager created at startup just
-   * to be able to clear data when an application is uninstalled.
+   * Initialize the permission-manager service.
+   * The permission manager is always initialized at startup because when it was
+   * lazy-initialized on demand, it was possible for it to be created once
+   * shutdown had begun, resulting in the manager failing to correctly shutdown
+   * because it missed its shutdown observer notification.
    */
-  static void ClearOriginDataObserverInit();
+  static void Startup();
 
   nsresult RemovePermissionsWithAttributes(
       mozilla::OriginAttributesPattern& aAttrs);
@@ -517,10 +518,6 @@ class nsPermissionManager final : public nsIPermissionManager,
   nsTHashtable<PermissionHashKey> mPermissionTable;
   // a unique, monotonically increasing id used to identify each database entry
   int64_t mLargestID;
-
-  // Initially, |false|. Set to |true| once shutdown has started, to avoid
-  // reopening the database.
-  bool mIsShuttingDown;
 
   nsCOMPtr<nsIPrefBranch> mDefaultPrefBranch;
 
