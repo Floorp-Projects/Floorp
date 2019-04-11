@@ -102,14 +102,14 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
       do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(window);
 
-  // If the window is blocked from accessing storage, do not allow it
-  // to connect to a SharedWorker.  This would potentially allow it
-  // to communicate with other windows that do have storage access.
-  // Allow private browsing, however, as we handle that isolation
-  // via the principal.
   auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
-  if (storageAllowed != nsContentUtils::StorageAccess::eAllow &&
-      storageAllowed != nsContentUtils::StorageAccess::ePrivateBrowsing) {
+  if (storageAllowed == nsContentUtils::StorageAccess::eDeny) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
+
+  if (storageAllowed == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
@@ -174,6 +174,37 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
                                            loadingPrincipalPreloadCSP);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
+  }
+
+  // Here, the StoragePrincipal is always equal to the SharedWorker's principal
+  // because the channel is not opened yet, and, because of this, it's not
+  // classified. We need to force the correct originAttributes.
+  if (storageAllowed == nsContentUtils::StorageAccess::ePartitionedOrDeny) {
+    nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(window);
+    if (!sop) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    nsIPrincipal* windowPrincipal = sop->GetPrincipal();
+    if (!windowPrincipal) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
+    nsIPrincipal* windowStoragePrincipal = sop->GetEffectiveStoragePrincipal();
+    if (!windowStoragePrincipal) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
+    if (!windowPrincipal->Equals(windowStoragePrincipal)) {
+      loadInfo.mStoragePrincipal =
+          BasePrincipal::Cast(loadInfo.mPrincipal)
+              ->CloneForcingOriginAttributes(
+                  BasePrincipal::Cast(windowStoragePrincipal)
+                      ->OriginAttributesRef());
+    }
   }
 
   PrincipalInfo storagePrincipalInfo;
