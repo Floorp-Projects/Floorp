@@ -1,0 +1,26 @@
+{
+  "name": "List.am",
+  "description": "Հանրային զերծ ads մասին: Վաճառք եւ գնման բնակարաններ, կենցաղային իրեր, որոնել աշխատանքի.",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "list-am@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.gif"
+  },
+  "web_accessible_resources": [
+    "favicon.gif"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "List.am",
+      "search_url": "https://www.list.am/category",
+      "search_form": "https://www.list.am/category?q=",
+      "search_url_get_params": "q={searchTerms}"
+    }
+  }
+}

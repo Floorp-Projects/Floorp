@@ -1,0 +1,26 @@
+{
+  "name": "Речник на Portal.BG",
+  "description": "Английско-български речник на Portal.BG",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "portalbgdict@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.png"
+  },
+  "web_accessible_resources": [
+    "favicon.png"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Речник на Portal.BG",
+      "search_url": "https://portal.bg/dict/index.php",
+      "search_form": "https://portal.bg/dict/",
+      "search_url_get_params": "encin=windows-1251&encout=windows-1251&translate=firefox&word={searchTerms}"
+    }
+  }
+}

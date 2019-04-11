@@ -1,0 +1,26 @@
+{
+  "name": "Bookplus.fi",
+  "description": "Pikahaku nettikirjakauppa Bookplus.fi:hin",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "bookplus-fi@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Bookplus.fi",
+      "search_url": "https://www.bookplus.fi/search.php",
+      "search_form": "https://www.bookplus.fi/search.php",
+      "search_url_get_params": "Textfield={searchTerms}&mode=book"
+    }
+  }
+}

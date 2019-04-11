@@ -1,0 +1,26 @@
+{
+  "name": "Kannada Store",
+  "description": "Kanada Store, Online store",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "kannadastore@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.png"
+  },
+  "web_accessible_resources": [
+    "favicon.png"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Kannada Store",
+      "search_url": "https://www.kannadastore.com/advanced_search_result.php",
+      "search_form": "https://www.kannadastore.com/advanced_search_result.php",
+      "search_url_get_params": "keywords={searchTerms}"
+    }
+  }
+}

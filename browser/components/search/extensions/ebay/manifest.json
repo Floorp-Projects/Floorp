@@ -1,0 +1,27 @@
+{
+  "name": "__MSG_extensionName__",
+  "description": "__MSG_extensionDescription__",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "ebay@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "default_locale": "en",
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "__MSG_extensionName__",
+      "search_url": "__MSG_searchUrl__",
+      "search_form": "__MSG_searchForm__",
+      "search_url_get_params": "__MSG_searchUrlGetParams__"
+    }
+  }
+}

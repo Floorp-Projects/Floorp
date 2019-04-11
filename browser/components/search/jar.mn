@@ -7,7 +7,8 @@ browser.jar:
         content/browser/search/autocomplete-popup.js                (content/autocomplete-popup.js)
         content/browser/search/searchbar.js                         (content/searchbar.js)
         content/browser/search/search-one-offs.js                   (content/search-one-offs.js)
-
+        search-extensions/                                          (extensions/**)
         searchplugins/                                              (searchplugins/**)
 
 % resource search-plugins %searchplugins/ contentaccessible=yes
+% resource search-extensions %search-extensions/ contentaccessible=yes
