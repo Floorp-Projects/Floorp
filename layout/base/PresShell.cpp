@@ -3457,6 +3457,14 @@ void nsIPresShell::DoScrollContentIntoView() {
     return;
   }
 
+  // Get the scroll-margin here since |frame| is going to be changed to iterate
+  // over all continuation frames below.
+  nsMargin scrollMargin;
+  if (!(data->mContentToScrollToFlags &
+        nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING)) {
+    scrollMargin = frame->StyleMargin()->GetScrollMargin();
+  }
+
   // This is a two-step process.
   // Step 1: Find the bounds of the rect we want to scroll into view.  For
   //         example, for an inline frame we may want to scroll in the whole
@@ -3482,6 +3490,8 @@ void nsIPresShell::DoScrollContentIntoView() {
     AccumulateFrameBounds(container, frame, useWholeLineHeightForInlines,
                           frameBounds, haveRect, prevBlock, lines, curLine);
   } while ((frame = frame->GetNextContinuation()));
+
+  frameBounds.Inflate(scrollMargin);
 
   ScrollFrameRectIntoView(container, frameBounds, data->mContentScrollVAxis,
                           data->mContentScrollHAxis,
