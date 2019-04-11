@@ -1,0 +1,26 @@
+{
+  "name": "Najdi.si",
+  "description": "Iskalnik Najdi.si",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "najdi-si@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.png"
+  },
+  "web_accessible_resources": [
+    "favicon.png"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Najdi.si",
+      "search_url": "https://www.najdi.si/search.jsp",
+      "search_form": "https://www.najdi.si/",
+      "search_url_get_params": "q={searchTerms}&o=0&foxsbar=ff"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "Amazon.de"
+  },
+  "extensionDescription": {
+    "message": "Amazon.de Suche"
+  },
+  "searchUrl": {
+    "message": "https://www.amazon.de/exec/obidos/external-search/"
+  },
+  "searchForm": {
+    "message": "https://www.amazon.de/"
+  },
+  "searchUrlGetParams": {
+    "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=firefox-de-21&sourceid=Mozilla-search"
+  }
+}

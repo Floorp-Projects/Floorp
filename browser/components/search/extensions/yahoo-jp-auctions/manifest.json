@@ -1,0 +1,26 @@
+{
+  "name": "ヤフオク!",
+  "description": "ヤフオク! 検索",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "yahoo-jp-auctions@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "ヤフオク!",
+      "search_url": "https://auctions.yahoo.co.jp/search/search",
+      "search_form": "https://auctions.yahoo.co.jp/",
+      "search_url_get_params": "p={searchTerms}&ei=EUC-JP&fr=mozff&rls={moz:distributionID}:ja-JP:{moz:official}"
+    }
+  }
+}

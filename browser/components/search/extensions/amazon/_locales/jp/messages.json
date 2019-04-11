@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "Amazon.co.jp"
+  },
+  "extensionDescription": {
+    "message": "Amazon.co.jp Search"
+  },
+  "searchUrl": {
+    "message": "https://www.amazon.co.jp/exec/obidos/external-search/"
+  },
+  "searchForm": {
+    "message": "https://www.amazon.co.jp/"
+  },
+  "searchUrlGetParams": {
+    "message": "field-keywords={searchTerms}&mode=blended&tag=mozillajapan-fx-22&sourceid=Mozilla-search"
+  }
+}

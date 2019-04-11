@@ -1,0 +1,26 @@
+{
+  "name": "Vatera.hu",
+  "description": "Keresés a Vatera.hu piacterén",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "vatera@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Vatera.hu",
+      "search_url": "https://www.vatera.hu/listings/index.php",
+      "search_form": "https://www.vatera.hu/",
+      "search_url_get_params": "q={searchTerms}&c=0&td=on"
+    }
+  }
+}

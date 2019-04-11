@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Wikipedia (as)"
+  },
+  "extensionDescription": {
+    "message": "ৱিকিপিডিয়া, এখন মুক্ত বিশ্বকোষ"
+  },
+  "searchUrl": {
+    "message": "https://as.wikipedia.org/wiki/বিশেষ:সন্ধান"
+  },
+  "searchForm": {
+    "message": "https://as.wikipedia.org/wiki/বিশেষ:সন্ধান?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://as.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

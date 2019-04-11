@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "Amazon.com.au"
+  },
+  "extensionDescription": {
+    "message": "Amazon.com.au Search"
+  },
+  "searchUrl": {
+    "message": "https://www.amazon.com.au/exec/obidos/external-search/"
+  },
+  "searchForm": {
+    "message": "https://www.amazon.com.au/exec/obidos/external-search/?field-keywords={searchTerms}&ie={inputEncoding}&mode=blended"
+  },
+  "searchUrlGetParams": {
+    "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended"
+  }
+}

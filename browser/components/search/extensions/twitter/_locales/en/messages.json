@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "Twitter"
+  },
+  "extensionDescription": {
+    "message": "Realtime Twitter Search"
+  },
+  "searchUrl": {
+    "message": "https://twitter.com/search"
+  },
+  "searchForm": {
+    "message": "https://twitter.com/search?q={searchTerms}&partner=Firefox&source=desktop-search"
+  },
+  "searchUrlGetParams": {
+    "message": "q={searchTerms}&partner=Firefox&source=desktop-search"
+  }
+}

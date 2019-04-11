@@ -1,0 +1,26 @@
+{
+  "name": "DIEC2",
+  "description": "Diccionari de l'Institut d'Estudis Catalans",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "diec2@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.png"
+  },
+  "web_accessible_resources": [
+    "favicon.png"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "DIEC2",
+      "search_url": "https://dlc.iec.cat/results.asp",
+      "search_form": "https://dlc.iec.cat",
+      "search_url_get_params": "txtEntrada={searchTerms}&OperEntrada=0"
+    }
+  }
+}

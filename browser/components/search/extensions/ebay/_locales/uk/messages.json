@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "eBay"
+  },
+  "extensionDescription": {
+    "message": "eBay - Online auctions"
+  },
+  "searchUrl": {
+    "message": "https://rover.ebay.com/rover/1/710-53481-19255-0/1"
+  },
+  "searchForm": {
+    "message": "https://www.ebay.co.uk/"
+  },
+  "searchUrlGetParams": {
+    "message": "ff3=4&toolid=20004&campid=5338192028&customid=&mpre=https://www.ebay.co.uk/sch/{searchTerms}"
+  }
+}

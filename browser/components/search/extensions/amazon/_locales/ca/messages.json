@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "Amazon.ca"
+  },
+  "extensionDescription": {
+    "message": "Amazon.ca Search"
+  },
+  "searchUrl": {
+    "message": "https://www.amazon.ca/exec/obidos/external-search/"
+  },
+  "searchForm": {
+    "message": "https://www.amazon.ca/exec/obidos/external-search/?field-keywords={searchTerms}&ie={inputEncoding}&mode=blended"
+  },
+  "searchUrlGetParams": {
+    "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended"
+  }
+}
