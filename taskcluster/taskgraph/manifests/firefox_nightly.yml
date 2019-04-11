@@ -42,7 +42,6 @@ tasktype_map:
   repackage-signing: repackage
   repackage-signing-msi: repackage
 platform_names:
-  path_platform: ''
   filename_platform:
     by-platform:
       linux-shippable: 'linux-i686'
