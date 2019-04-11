@@ -346,7 +346,7 @@ void Element::Focus(mozilla::ErrorResult& aError) {
     if (fm->CanSkipFocus(this)) {
       fm->NeedsFlushBeforeEventHandling(this);
     } else {
-      aError = fm->SetFocus(this, 0);
+      aError = fm->SetFocus(this, nsIFocusManager::FLAG_BYELEMENTFOCUS);
     }
   }
 }
@@ -777,6 +777,9 @@ void Element::ScrollIntoView(const ScrollIntoViewOptions& aOptions) {
     flags |= nsIPresShell::SCROLL_SMOOTH;
   } else if (aOptions.mBehavior == ScrollBehavior::Auto) {
     flags |= nsIPresShell::SCROLL_SMOOTH_AUTO;
+  }
+  if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
+    flags |= nsIPresShell::SCROLL_SNAP;
   }
 
   presShell->ScrollContentIntoView(

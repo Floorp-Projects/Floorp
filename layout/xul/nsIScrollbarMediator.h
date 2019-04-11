@@ -27,8 +27,10 @@ class nsIScrollbarMediator : public nsQueryFrame {
    * scroll operation to maintain the constraints set by CSS Scroll snapping.
    * The additional scrolling may include asynchronous smooth scrolls that
    * continue to animate after the initial scroll position has been set.
+   * In case of DEFAULT, it means ENABLE_SNAP for CSS scroll snap v1,
+   * DISABLE_SNAP for the old scroll snap.
    */
-  enum ScrollSnapMode { DISABLE_SNAP, ENABLE_SNAP };
+  enum ScrollSnapMode { DEFAULT, DISABLE_SNAP, ENABLE_SNAP };
 
   /**
    * One of the following three methods is called when the scrollbar's button is

@@ -1,0 +1,4 @@
+default-preferences pref(layout.css.scroll-snap-v1.enabled,true)
+
+== scroll-margin-on-anchor.html#target scroll-margin-on-anchor-ref.html
+== scroll-padding-on-anchor.html#target scroll-padding-on-anchor-ref.html

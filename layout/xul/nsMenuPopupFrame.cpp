@@ -1808,7 +1808,8 @@ void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsMenuFrame* aMenuItem) {
         aMenuItem, nsRect(nsPoint(0, 0), aMenuItem->GetRect().Size()),
         nsIPresShell::ScrollAxis(), nsIPresShell::ScrollAxis(),
         nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
-            nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY);
+            nsIPresShell::SCROLL_FIRST_ANCESTOR_ONLY |
+            nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING);
   }
 }
 

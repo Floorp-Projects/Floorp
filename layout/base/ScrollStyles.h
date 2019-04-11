@@ -26,8 +26,8 @@ struct ScrollStyles {
   uint8_t mScrollBehavior;
   StyleOverscrollBehavior mOverscrollBehaviorX;
   StyleOverscrollBehavior mOverscrollBehaviorY;
-  StyleScrollSnapType mScrollSnapTypeX;
-  StyleScrollSnapType mScrollSnapTypeY;
+  StyleScrollSnapStrictness mScrollSnapTypeX;
+  StyleScrollSnapStrictness mScrollSnapTypeY;
   nsStyleCoord mScrollSnapPointsX;
   nsStyleCoord mScrollSnapPointsY;
   LengthPercentage mScrollSnapDestinationX;
@@ -39,15 +39,18 @@ struct ScrollStyles {
         mScrollBehavior(NS_STYLE_SCROLL_BEHAVIOR_AUTO),
         mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
         mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),
-        mScrollSnapTypeX(StyleScrollSnapType::None),
-        mScrollSnapTypeY(StyleScrollSnapType::None),
+        mScrollSnapTypeX(StyleScrollSnapStrictness::None),
+        mScrollSnapTypeY(StyleScrollSnapStrictness::None),
         mScrollSnapPointsX(nsStyleCoord(eStyleUnit_None)),
         mScrollSnapPointsY(nsStyleCoord(eStyleUnit_None)),
         mScrollSnapDestinationX(LengthPercentage::Zero()),
         mScrollSnapDestinationY(LengthPercentage::Zero()) {}
 
-  explicit ScrollStyles(const nsStyleDisplay* aDisplay);
-  ScrollStyles(StyleOverflow aH, StyleOverflow aV, const nsStyleDisplay*);
+  ScrollStyles(WritingMode aWritingMode, const nsStyleDisplay* aDisplay);
+  ScrollStyles(WritingMode aWritingMode, StyleOverflow aH, StyleOverflow aV,
+               const nsStyleDisplay* aDisplay);
+  void InitializeScrollSnapType(WritingMode aWritingMode,
+                                const nsStyleDisplay* aDisplay);
   bool operator==(const ScrollStyles& aStyles) const {
     return aStyles.mHorizontal == mHorizontal &&
            aStyles.mVertical == mVertical &&

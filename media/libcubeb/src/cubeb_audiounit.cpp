@@ -868,7 +868,7 @@ audiounit_reinit_stream_async(cubeb_stream * stm, device_flags_value flags)
 {
   if (std::atomic_exchange(&stm->reinit_pending, true)) {
     // A reinit task is already pending, nothing more to do.
-    ALOG("(%p) re-init stream task already pending, cancelling request ", stm);
+    ALOG("(%p) re-init stream task already pending, cancelling request", stm);
     return;
   }
 
@@ -944,7 +944,7 @@ audiounit_property_listener_callback(AudioObjectID id, UInt32 address_count,
         }
         break;
       case kAudioDevicePropertyDataSource: {
-          LOG("Event[%u] - mSelector == kAudioHardwarePropertyDataSource for id=%d", (unsigned int) i, id);
+          LOG("Event[%u] - mSelector == kAudioDevicePropertyDataSource for id=%d", (unsigned int) i, id);
         }
         break;
       default:
@@ -1314,9 +1314,9 @@ audiounit_get_preferred_sample_rate(cubeb * /* ctx */, uint32_t * rate)
 static cubeb_channel_layout
 audiounit_convert_channel_layout(AudioChannelLayout * layout)
 {
-  // When having on or two channel, force mono or stereo. Some devices (namely,
-  //  Bose QC35, mark 1 and 2), expose a single channel mapped to the right for
-  //  some reason.
+  // When having one or two channel, force mono or stereo. Some devices (namely,
+  // Bose QC35, mark 1 and 2), expose a single channel mapped to the right for
+  // some reason.
   if (layout->mNumberChannelDescriptions == 1) {
     return CUBEB_LAYOUT_MONO;
   } else if (layout->mNumberChannelDescriptions == 2) {
@@ -1611,7 +1611,7 @@ audiounit_create_blank_aggregate_device(AudioObjectID * plugin_id, AudioDeviceID
                                               0, NULL,
                                               &size);
   if (r != noErr) {
-    LOG("AudioHardwareGetPropertyInfo/kAudioHardwarePropertyPlugInForBundleID, rv=%d", r);
+    LOG("AudioObjectGetPropertyDataSize/kAudioHardwarePropertyPlugInForBundleID, rv=%d", r);
     return CUBEB_ERROR;
   }
 
@@ -1629,7 +1629,7 @@ audiounit_create_blank_aggregate_device(AudioObjectID * plugin_id, AudioDeviceID
                                  &size,
                                  &translation_value);
   if (r != noErr) {
-    LOG("AudioHardwareGetProperty/kAudioHardwarePropertyPlugInForBundleID, rv=%d", r);
+    LOG("AudioObjectGetPropertyData/kAudioHardwarePropertyPlugInForBundleID, rv=%d", r);
     return CUBEB_ERROR;
   }
 
@@ -2072,23 +2072,23 @@ audiounit_create_unit(AudioUnit * unit, device_info * device)
   if (device->flags & DEV_INPUT) {
     r = audiounit_enable_unit_scope(unit, io_side::INPUT, ENABLE);
     if (r != CUBEB_OK) {
-      LOG("Failed to enable audiounit input scope ");
+      LOG("Failed to enable audiounit input scope");
       return r;
     }
     r = audiounit_enable_unit_scope(unit, io_side::OUTPUT, DISABLE);
     if (r != CUBEB_OK) {
-      LOG("Failed to disable audiounit output scope ");
+      LOG("Failed to disable audiounit output scope");
       return r;
     }
   } else if (device->flags & DEV_OUTPUT) {
     r = audiounit_enable_unit_scope(unit, io_side::OUTPUT, ENABLE);
     if (r != CUBEB_OK) {
-      LOG("Failed to enable audiounit output scope ");
+      LOG("Failed to enable audiounit output scope");
       return r;
     }
     r = audiounit_enable_unit_scope(unit, io_side::INPUT, DISABLE);
     if (r != CUBEB_OK) {
-      LOG("Failed to disable audiounit input scope ");
+      LOG("Failed to disable audiounit input scope");
       return r;
     }
   } else {
@@ -2588,16 +2588,16 @@ audiounit_setup_stream(cubeb_stream * stm)
   }
 
   /* Latency cannot change if another stream is operating in parallel. In this case
-  * latecy is set to the other stream value. */
+   * latency is set to the other stream value. */
   if (audiounit_active_streams(stm->context) > 1) {
     LOG("(%p) More than one active stream, use global latency.", stm);
     stm->latency_frames = stm->context->global_latency_frames;
   } else {
     /* Silently clamp the latency down to the platform default, because we
-    * synthetize the clock from the callbacks, and we want the clock to update
-    * often. */
+     * synthetize the clock from the callbacks, and we want the clock to update
+     * often. */
     stm->latency_frames = audiounit_clamp_latency(stm, stm->latency_frames);
-    assert(stm->latency_frames); // Ungly error check
+    assert(stm->latency_frames); // Ugly error check
     audiounit_set_global_latency(stm->context, stm->latency_frames);
   }
 

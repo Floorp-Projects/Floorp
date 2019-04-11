@@ -1098,12 +1098,25 @@ VARCACHE_PREF(
   bool, false
 )
 
+#ifdef NIGHTLY_BUILD
+# define PREF_VALUE  true
+#else
+# define PREF_VALUE  false
+#endif
 // Is the CSS Scroll Snap Module Level 1 enabled?
 VARCACHE_PREF(
   "layout.css.scroll-snap-v1.enabled",
    layout_css_scroll_snap_v1_enabled,
-  RelaxedAtomicBool, false
+  RelaxedAtomicBool, PREF_VALUE
 )
+
+// Is support for scroll-snap enabled?
+VARCACHE_PREF(
+  "layout.css.scroll-snap.enabled",
+   layout_css_scroll_snap_enabled,
+  bool, !PREF_VALUE
+)
+#undef PREF_VALUE
 
 // Are shared memory User Agent style sheets enabled?
 VARCACHE_PREF(

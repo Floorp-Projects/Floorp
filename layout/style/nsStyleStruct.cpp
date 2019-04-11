@@ -202,13 +202,25 @@ nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc)
 
 nsChangeHint nsStyleMargin::CalcDifference(
     const nsStyleMargin& aNewData) const {
-  if (mMargin == aNewData.mMargin) {
+  if (mMargin == aNewData.mMargin && mScrollMargin == aNewData.mScrollMargin) {
     return nsChangeHint(0);
   }
-  // Margin differences can't affect descendant intrinsic sizes and
-  // don't need to force children to reflow.
-  return nsChangeHint_NeedReflow | nsChangeHint_ReflowChangesSizeOrPosition |
-         nsChangeHint_ClearAncestorIntrinsics;
+
+  nsChangeHint hint = nsChangeHint(0);
+
+  if (mMargin != aNewData.mMargin) {
+    // Margin differences can't affect descendant intrinsic sizes and
+    // don't need to force children to reflow.
+    hint |= nsChangeHint_NeedReflow | nsChangeHint_ReflowChangesSizeOrPosition |
+            nsChangeHint_ClearAncestorIntrinsics;
+  }
+
+  if (mScrollMargin != aNewData.mScrollMargin) {
+    // FIXME: Bug 1530253 Support re-snapping when scroll-margin changes.
+    hint |= nsChangeHint_NeutralChange;
+  }
+
+  return hint;
 }
 
 nsStylePadding::nsStylePadding(const Document& aDocument)
@@ -224,18 +236,31 @@ nsStylePadding::nsStylePadding(const nsStylePadding& aSrc)
 
 nsChangeHint nsStylePadding::CalcDifference(
     const nsStylePadding& aNewData) const {
-  if (mPadding == aNewData.mPadding) {
+  if (mPadding == aNewData.mPadding &&
+      mScrollPadding == aNewData.mScrollPadding) {
     return nsChangeHint(0);
   }
-  // Padding differences can't affect descendant intrinsic sizes, but do need
-  // to force children to reflow so that we can reposition them, since their
-  // offsets are from our frame bounds but our content rect's position within
-  // those bounds is moving.
-  // FIXME: It would be good to return a weaker hint here that doesn't
-  // force reflow of all descendants, but the hint would need to force
-  // reflow of the frame's children (see how
-  // ReflowInput::InitResizeFlags initializes the inline-resize flag).
-  return NS_STYLE_HINT_REFLOW & ~nsChangeHint_ClearDescendantIntrinsics;
+
+  nsChangeHint hint = nsChangeHint(0);
+
+  if (mPadding != aNewData.mPadding) {
+    // Padding differences can't affect descendant intrinsic sizes, but do need
+    // to force children to reflow so that we can reposition them, since their
+    // offsets are from our frame bounds but our content rect's position within
+    // those bounds is moving.
+    // FIXME: It would be good to return a weaker hint here that doesn't
+    // force reflow of all descendants, but the hint would need to force
+    // reflow of the frame's children (see how
+    // ReflowInput::InitResizeFlags initializes the inline-resize flag).
+    hint |= NS_STYLE_HINT_REFLOW & ~nsChangeHint_ClearDescendantIntrinsics;
+  }
+
+  if (mScrollPadding != aNewData.mScrollPadding) {
+    // FIXME: Bug 1530253 Support re-snapping when scroll-padding changes.
+    hint |= nsChangeHint_NeutralChange;
+  }
+
+  return hint;
 }
 
 static nscoord TwipsPerPixel(const Document& aDocument) {
@@ -2939,8 +2964,8 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
       mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),
       mOverflowAnchor(StyleOverflowAnchor::Auto),
-      mScrollSnapTypeX(StyleScrollSnapType::None),
-      mScrollSnapTypeY(StyleScrollSnapType::None),
+      mScrollSnapType(
+          {StyleScrollSnapAxis::Both, StyleScrollSnapStrictness::None}),
       mScrollSnapPointsX(eStyleUnit_None),
       mScrollSnapPointsY(eStyleUnit_None),
       mScrollSnapDestination(
@@ -3004,8 +3029,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mScrollBehavior(aSource.mScrollBehavior),
       mOverscrollBehaviorX(aSource.mOverscrollBehaviorX),
       mOverscrollBehaviorY(aSource.mOverscrollBehaviorY),
-      mScrollSnapTypeX(aSource.mScrollSnapTypeX),
-      mScrollSnapTypeY(aSource.mScrollSnapTypeY),
+      mScrollSnapType(aSource.mScrollSnapType),
       mScrollSnapPointsX(aSource.mScrollSnapPointsX),
       mScrollSnapPointsY(aSource.mScrollSnapPointsY),
       mScrollSnapDestination(aSource.mScrollSnapDestination),
@@ -3145,8 +3169,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(
       mContain != aNewData.mContain ||
       (mFloat == StyleFloat::None) != (aNewData.mFloat == StyleFloat::None) ||
       mScrollBehavior != aNewData.mScrollBehavior ||
-      mScrollSnapTypeX != aNewData.mScrollSnapTypeX ||
-      mScrollSnapTypeY != aNewData.mScrollSnapTypeY ||
+      mScrollSnapType != aNewData.mScrollSnapType ||
       mScrollSnapPointsX != aNewData.mScrollSnapPointsX ||
       mScrollSnapPointsY != aNewData.mScrollSnapPointsY ||
       mScrollSnapDestination != aNewData.mScrollSnapDestination ||
@@ -3165,6 +3188,11 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     // nsTextControlFrame instead of nsNumberControlFrame if the author
     // specifies 'textfield'.
     return nsChangeHint_ReconstructFrame;
+  }
+
+  if (mScrollSnapAlign != aNewData.mScrollSnapAlign) {
+    // FIXME: Bug 1530253 Support re-snapping when scroll-snap-align changes.
+    hint |= nsChangeHint_NeutralChange;
   }
 
   if (mOverflowX != aNewData.mOverflowX || mOverflowY != aNewData.mOverflowY) {

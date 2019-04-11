@@ -1019,7 +1019,8 @@ bool EventStateManager::LookForAccessKeyAndExecute(
         } else {
           nsIFocusManager* fm = nsFocusManager::GetFocusManager();
           if (fm) {
-            fm->SetFocus(element, nsIFocusManager::FLAG_BYKEY);
+            fm->SetFocus(element, nsIFocusManager::FLAG_BYKEY |
+                                      nsIFocusManager::FLAG_BYELEMENTFOCUS);
             focusChanged = true;
           }
         }
