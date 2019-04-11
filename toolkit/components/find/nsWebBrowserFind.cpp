@@ -764,7 +764,7 @@ nsresult nsWebBrowserFind::OnFind(nsPIDOMWindowOuter* aFoundWindow) {
     // window should already be focused.
     RefPtr<Element> frameElement = aFoundWindow->GetFrameElementInternal();
     if (frameElement) {
-      fm->SetFocus(frameElement, 0);
+      fm->SetFocus(frameElement, nsIFocusManager::FLAG_BYELEMENTFOCUS);
     }
 
     mLastFocusedWindow = do_GetWeakReference(aFoundWindow);

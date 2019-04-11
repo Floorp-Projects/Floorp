@@ -2117,19 +2117,23 @@ void nsFocusManager::FireFocusOrBlurEvent(EventMessage aEventMessage,
 
 void nsFocusManager::ScrollIntoView(nsIPresShell* aPresShell,
                                     nsIContent* aContent, uint32_t aFlags) {
+  MOZ_ASSERT(!(aFlags & FLAG_BYELEMENTFOCUS) ||
+                 !!(aFlags & FLAG_BYELEMENTFOCUS) == !(aFlags & FLAG_NOSCROLL),
+             "FLAG_BYELEMENTFOCUS shouldn't involve with FLAG_NOSCROLL");
   // if the noscroll flag isn't set, scroll the newly focused element into view
-  if (!(aFlags & FLAG_NOSCROLL))
+  if (!(aFlags & FLAG_NOSCROLL)) {
+    uint32_t scrollFlags = nsIPresShell::SCROLL_OVERFLOW_HIDDEN;
+    if (!(aFlags & FLAG_BYELEMENTFOCUS)) {
+      scrollFlags |= nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING;
+    }
     aPresShell->ScrollContentIntoView(
         aContent,
         nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_MINIMUM,
                                  nsIPresShell::SCROLL_IF_NOT_VISIBLE),
         nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_MINIMUM,
                                  nsIPresShell::SCROLL_IF_NOT_VISIBLE),
-        nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
-            // FIXME: Bug 1535232: Change the option depending on call sites,
-            // i.e. don't set the option if this function gets called from
-            // Element.focus().
-            nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING);
+        scrollFlags);
+  }
 }
 
 void nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow) {
