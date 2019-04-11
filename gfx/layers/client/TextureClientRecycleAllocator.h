@@ -58,7 +58,7 @@ class ITextureClientAllocationHelper {
   const TextureAllocationFlags mAllocationFlags;
 };
 
-class YCbCrTextureClientAllocationHelper
+class MOZ_RAII YCbCrTextureClientAllocationHelper
     : public ITextureClientAllocationHelper {
  public:
   YCbCrTextureClientAllocationHelper(const PlanarYCbCrData& aData,

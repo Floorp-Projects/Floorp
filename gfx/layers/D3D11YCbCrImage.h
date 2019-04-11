@@ -22,7 +22,8 @@ class ImageContainer;
 class DXGIYCbCrTextureClient;
 class DXGIYCbCrTextureData;
 
-class DXGIYCbCrTextureAllocationHelper : public ITextureClientAllocationHelper {
+class MOZ_RAII DXGIYCbCrTextureAllocationHelper
+    : public ITextureClientAllocationHelper {
  public:
   DXGIYCbCrTextureAllocationHelper(const PlanarYCbCrData& aData,
                                    TextureFlags aTextureFlags,

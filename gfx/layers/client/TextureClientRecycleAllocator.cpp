@@ -38,7 +38,7 @@ class TextureClientHolder final {
   bool mWillRecycle;
 };
 
-class DefaultTextureClientAllocationHelper
+class MOZ_RAII DefaultTextureClientAllocationHelper
     : public ITextureClientAllocationHelper {
  public:
   DefaultTextureClientAllocationHelper(
