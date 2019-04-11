@@ -20,8 +20,6 @@ function run_test() {
 
   connection.schemaVersion = 3;
   connection.executeSimpleSQL(
-    "DROP TABLE moz_hosts");
-  connection.executeSimpleSQL(
     "CREATE TABLE moz_hosts (" +
       " id INTEGER PRIMARY KEY" +
       ",host TEXT" +
@@ -114,9 +112,6 @@ function run_test() {
                  + data.isInBrowserElement + ")"
     );
   }
-
-  // This will force the permission-manager to reload the data.
-  Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk", "");
 
   let earliestNow = Number(Date.now());
   // Initialize the permission manager service
