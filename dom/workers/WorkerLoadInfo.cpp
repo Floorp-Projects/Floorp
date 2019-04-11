@@ -92,12 +92,14 @@ WorkerLoadInfoData::WorkerLoadInfoData()
       mServiceWorkersTestingInWindow(false),
       mSecureContext(eNotSet) {}
 
-nsresult WorkerLoadInfo::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
-                                                  nsILoadGroup* aLoadGroup) {
+nsresult WorkerLoadInfo::SetPrincipalsOnMainThread(
+    nsIPrincipal* aPrincipal, nsIPrincipal* aStoragePrincipal,
+    nsILoadGroup* aLoadGroup) {
   AssertIsOnMainThread();
   MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(aLoadGroup, aPrincipal));
 
   mPrincipal = aPrincipal;
+  mStoragePrincipal = aStoragePrincipal;
   mPrincipalIsSystem = nsContentUtils::IsSystemPrincipal(aPrincipal);
 
   nsresult rv = aPrincipal->GetCsp(getter_AddRefs(mCSP));
@@ -113,10 +115,19 @@ nsresult WorkerLoadInfo::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
   mLoadGroup = aLoadGroup;
 
   mPrincipalInfo = new PrincipalInfo();
+  mStoragePrincipalInfo = new PrincipalInfo();
   mOriginAttributes = nsContentUtils::GetOriginAttributes(aLoadGroup);
 
   rv = PrincipalToPrincipalInfo(aPrincipal, mPrincipalInfo);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (aPrincipal->Equals(aStoragePrincipal)) {
+    *mStoragePrincipalInfo = *mPrincipalInfo;
+  } else {
+    mStoragePrincipalInfo = new PrincipalInfo();
+    rv = PrincipalToPrincipalInfo(aStoragePrincipal, mStoragePrincipalInfo);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
   rv = nsContentUtils::GetUTFOrigin(aPrincipal, mOrigin);
   NS_ENSURE_SUCCESS(rv, rv);
@@ -124,12 +135,13 @@ nsresult WorkerLoadInfo::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
   return NS_OK;
 }
 
-nsresult WorkerLoadInfo::GetPrincipalAndLoadGroupFromChannel(
+nsresult WorkerLoadInfo::GetPrincipalsAndLoadGroupFromChannel(
     nsIChannel* aChannel, nsIPrincipal** aPrincipalOut,
-    nsILoadGroup** aLoadGroupOut) {
+    nsIPrincipal** aStoragePrincipalOut, nsILoadGroup** aLoadGroupOut) {
   AssertIsOnMainThread();
   MOZ_DIAGNOSTIC_ASSERT(aChannel);
   MOZ_DIAGNOSTIC_ASSERT(aPrincipalOut);
+  MOZ_DIAGNOSTIC_ASSERT(aStoragePrincipalOut);
   MOZ_DIAGNOSTIC_ASSERT(aLoadGroupOut);
 
   // Initial triggering principal should be set
@@ -143,6 +155,11 @@ nsresult WorkerLoadInfo::GetPrincipalAndLoadGroupFromChannel(
       aChannel, getter_AddRefs(channelPrincipal));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsIPrincipal> channelStoragePrincipal;
+  rv = ssm->GetChannelResultStoragePrincipal(
+      aChannel, getter_AddRefs(channelStoragePrincipal));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // Every time we call GetChannelResultPrincipal() it will return a different
   // null principal for a data URL.  We don't want to change the worker's
   // principal again, though.  Instead just keep the original null principal we
@@ -154,6 +171,7 @@ nsresult WorkerLoadInfo::GetPrincipalAndLoadGroupFromChannel(
   if (mPrincipal && mPrincipal->GetIsNullPrincipal() &&
       channelPrincipal->GetIsNullPrincipal()) {
     channelPrincipal = mPrincipal;
+    channelStoragePrincipal = mPrincipal;
   }
 
   nsCOMPtr<nsILoadGroup> channelLoadGroup;
@@ -186,6 +204,7 @@ nsresult WorkerLoadInfo::GetPrincipalAndLoadGroupFromChannel(
         // Assign the system principal to the resource:// worker only if it
         // was loaded from code using the system principal.
         channelPrincipal = mLoadingPrincipal;
+        channelStoragePrincipal = mLoadingPrincipal;
       } else {
         return NS_ERROR_DOM_BAD_URI;
       }
@@ -197,30 +216,35 @@ nsresult WorkerLoadInfo::GetPrincipalAndLoadGroupFromChannel(
   MOZ_ASSERT(NS_LoadGroupMatchesPrincipal(channelLoadGroup, channelPrincipal));
 
   channelPrincipal.forget(aPrincipalOut);
+  channelStoragePrincipal.forget(aStoragePrincipalOut);
   channelLoadGroup.forget(aLoadGroupOut);
 
   return NS_OK;
 }
 
-nsresult WorkerLoadInfo::SetPrincipalFromChannel(nsIChannel* aChannel) {
+nsresult WorkerLoadInfo::SetPrincipalsFromChannel(nsIChannel* aChannel) {
   AssertIsOnMainThread();
 
   nsCOMPtr<nsIPrincipal> principal;
+  nsCOMPtr<nsIPrincipal> storagePrincipal;
   nsCOMPtr<nsILoadGroup> loadGroup;
-  nsresult rv = GetPrincipalAndLoadGroupFromChannel(
-      aChannel, getter_AddRefs(principal), getter_AddRefs(loadGroup));
+  nsresult rv = GetPrincipalsAndLoadGroupFromChannel(
+      aChannel, getter_AddRefs(principal), getter_AddRefs(storagePrincipal),
+      getter_AddRefs(loadGroup));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return SetPrincipalOnMainThread(principal, loadGroup);
+  return SetPrincipalsOnMainThread(principal, storagePrincipal, loadGroup);
 }
 
 bool WorkerLoadInfo::FinalChannelPrincipalIsValid(nsIChannel* aChannel) {
   AssertIsOnMainThread();
 
   nsCOMPtr<nsIPrincipal> principal;
+  nsCOMPtr<nsIPrincipal> storagePrincipal;
   nsCOMPtr<nsILoadGroup> loadGroup;
-  nsresult rv = GetPrincipalAndLoadGroupFromChannel(
-      aChannel, getter_AddRefs(principal), getter_AddRefs(loadGroup));
+  nsresult rv = GetPrincipalsAndLoadGroupFromChannel(
+      aChannel, getter_AddRefs(principal), getter_AddRefs(storagePrincipal),
+      getter_AddRefs(loadGroup));
   NS_ENSURE_SUCCESS(rv, false);
 
   // Verify that the channel is still a null principal.  We don't care
@@ -243,7 +267,10 @@ bool WorkerLoadInfo::FinalChannelPrincipalIsValid(nsIChannel* aChannel) {
 bool WorkerLoadInfo::PrincipalIsValid() const {
   return mPrincipal && mPrincipalInfo &&
          mPrincipalInfo->type() != PrincipalInfo::T__None &&
-         mPrincipalInfo->type() <= PrincipalInfo::T__Last;
+         mPrincipalInfo->type() <= PrincipalInfo::T__Last &&
+         mStoragePrincipal && mStoragePrincipalInfo &&
+         mStoragePrincipalInfo->type() != PrincipalInfo::T__None &&
+         mStoragePrincipalInfo->type() <= PrincipalInfo::T__Last;
 }
 
 bool WorkerLoadInfo::PrincipalURIMatchesScriptURL() {
@@ -312,7 +339,7 @@ bool WorkerLoadInfo::ProxyReleaseMainThreadObjects(
 
 bool WorkerLoadInfo::ProxyReleaseMainThreadObjects(
     WorkerPrivate* aWorkerPrivate, nsCOMPtr<nsILoadGroup>& aLoadGroupToCancel) {
-  static const uint32_t kDoomedCount = 10;
+  static const uint32_t kDoomedCount = 11;
   nsTArray<nsCOMPtr<nsISupports>> doomed(kDoomedCount);
 
   SwapToISupportsArray(mWindow, doomed);
@@ -320,6 +347,7 @@ bool WorkerLoadInfo::ProxyReleaseMainThreadObjects(
   SwapToISupportsArray(mBaseURI, doomed);
   SwapToISupportsArray(mResolvedScriptURI, doomed);
   SwapToISupportsArray(mPrincipal, doomed);
+  SwapToISupportsArray(mStoragePrincipal, doomed);
   SwapToISupportsArray(mLoadingPrincipal, doomed);
   SwapToISupportsArray(mChannel, doomed);
   SwapToISupportsArray(mCSP, doomed);

@@ -176,6 +176,26 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
     return nullptr;
   }
 
+  PrincipalInfo storagePrincipalInfo;
+  if (loadInfo.mPrincipal->Equals(loadInfo.mStoragePrincipal)) {
+    storagePrincipalInfo = principalInfo;
+  } else {
+    aRv = PrincipalToPrincipalInfo(loadInfo.mStoragePrincipal,
+                                   &storagePrincipalInfo);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+  }
+
+  nsTArray<ContentSecurityPolicy> storagePrincipalCSP;
+  nsTArray<ContentSecurityPolicy> storagePrincipalPreloadCSP;
+  aRv = PopulateContentSecurityPolicyArray(loadInfo.mStoragePrincipal,
+                                           storagePrincipalCSP,
+                                           storagePrincipalPreloadCSP);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
   // We don't actually care about this MessageChannel, but we use it to 'steal'
   // its 2 connected ports.
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(window);
@@ -207,7 +227,8 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
   RemoteWorkerData remoteWorkerData(
       nsString(aScriptURL), baseURL, resolvedScriptURL, name,
       loadingPrincipalInfo, loadingPrincipalCSP, loadingPrincipalPreloadCSP,
-      principalInfo, principalCSP, principalPreloadCSP, loadInfo.mDomain,
+      principalInfo, principalCSP, principalPreloadCSP, storagePrincipalInfo,
+      storagePrincipalCSP, storagePrincipalPreloadCSP, loadInfo.mDomain,
       isSecureContext, ipcClientInfo, storageAllowed, true /* sharedWorker */);
 
   PSharedWorkerChild* pActor = actorChild->SendPSharedWorkerConstructor(
