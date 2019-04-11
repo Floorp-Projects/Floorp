@@ -103,16 +103,12 @@ RefPtr<PerformanceInfoPromise> DocGroup::ReportPerformanceInfo() {
     if (!win) {
       continue;
     }
-    nsPIDOMWindowOuter* outer = win->GetOuterWindow();
-    if (!outer) {
-      continue;
-    }
-    top = outer->GetTop();
+    top = win->GetTop();
     if (!top) {
       continue;
     }
     windowID = top->WindowID();
-    isTopLevel = outer->IsTopLevelWindow();
+    isTopLevel = win->IsTopLevelWindow();
     mainThread = AbstractMainThreadFor(TaskCategory::Performance);
     break;
   }

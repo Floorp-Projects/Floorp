@@ -410,8 +410,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   nsIScriptContext* GetContextInternal();
 
-  nsGlobalWindowOuter* GetOuterWindowInternal();
-
   nsGlobalWindowInner* GetCurrentInnerWindowInternal() const;
 
   nsGlobalWindowInner* EnsureInnerWindowInternal();
@@ -1180,10 +1178,6 @@ inline nsGlobalWindowOuter* nsGlobalWindowOuter::GetScriptableTopInternal() {
 
 inline nsIScriptContext* nsGlobalWindowOuter::GetContextInternal() {
   return mContext;
-}
-
-inline nsGlobalWindowOuter* nsGlobalWindowOuter::GetOuterWindowInternal() {
-  return nsGlobalWindowOuter::Cast(GetOuterWindow());
 }
 
 inline nsGlobalWindowInner* nsGlobalWindowOuter::GetCurrentInnerWindowInternal()
