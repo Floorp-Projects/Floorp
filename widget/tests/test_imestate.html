@@ -399,7 +399,7 @@ function runBasicTest(aIsEditable, aInDesignMode, aDescription) {
       description: "input[type=file]",
       focusable: !aInDesignMode,
       focusEventNotFired: aIsEditable && !aInDesignMode,
-      expectedEnabled: kEnabledStateOnReadonlyField },
+      expectedEnabled: kEnabledStateOnNonEditableElement },
     { id: "button",
       description: "input[type=button]",
       focusable: !aInDesignMode,
