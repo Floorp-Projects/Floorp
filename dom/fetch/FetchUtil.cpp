@@ -361,33 +361,14 @@ class JSStreamConsumer final : public nsIInputStreamCallback {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  static bool Start(nsIInputStream* aStream, JS::StreamConsumer* aConsumer,
-                    nsIGlobalObject* aGlobal, WorkerPrivate* aMaybeWorker) {
-    nsresult rv;
-
-    bool nonBlocking = false;
-    rv = aStream->IsNonBlocking(&nonBlocking);
+  static bool Start(nsCOMPtr<nsIInputStream>&& aStream,
+                    JS::StreamConsumer* aConsumer, nsIGlobalObject* aGlobal,
+                    WorkerPrivate* aMaybeWorker) {
+    nsCOMPtr<nsIAsyncInputStream> asyncStream;
+    nsresult rv = NS_MakeAsyncNonBlockingInputStream(
+        aStream.forget(), getter_AddRefs(asyncStream));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return false;
-    }
-
-    // Use a pipe to create an nsIAsyncInputStream if we don't already have one.
-    nsCOMPtr<nsIAsyncInputStream> asyncStream = do_QueryInterface(aStream);
-    if (!asyncStream || !nonBlocking) {
-      nsCOMPtr<nsIAsyncOutputStream> pipe;
-      rv = NS_NewPipe2(getter_AddRefs(asyncStream), getter_AddRefs(pipe), true,
-                       true);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return false;
-      }
-
-      nsCOMPtr<nsIEventTarget> thread =
-          do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID);
-
-      rv = NS_AsyncCopy(aStream, pipe, thread, NS_ASYNCCOPY_VIA_WRITESEGMENTS);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return false;
-      }
     }
 
     RefPtr<JSStreamConsumer> consumer;
@@ -553,7 +534,8 @@ bool FetchUtil::StreamResponseToJS(JSContext* aCx, JS::HandleObject aObj,
 
   nsIGlobalObject* global = xpc::NativeGlobal(js::UncheckedUnwrap(aObj));
 
-  if (!JSStreamConsumer::Start(body, aConsumer, global, aMaybeWorker)) {
+  if (!JSStreamConsumer::Start(std::move(body), aConsumer, global,
+                               aMaybeWorker)) {
     return ThrowException(aCx, JSMSG_OUT_OF_MEMORY);
   }
 
