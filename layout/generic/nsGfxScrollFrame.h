@@ -338,6 +338,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   bool GetSnapPointForDestination(nsIScrollableFrame::ScrollUnit aUnit,
                                   nsPoint aStartPos, nsPoint& aDestination);
 
+  nsMargin GetScrollPadding() const;
+
   nsSize GetLineScrollAmount() const;
   nsSize GetPageScrollAmount() const;
 
@@ -959,6 +961,9 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   virtual nsSize GetPageScrollAmount() const override {
     return mHelper.GetPageScrollAmount();
   }
+  virtual nsMargin GetScrollPadding() const override {
+    return mHelper.GetScrollPadding();
+  }
   /**
    * @note This method might destroy the frame, pres shell and other objects.
    */
@@ -1441,6 +1446,9 @@ class nsXULScrollFrame final : public nsBoxFrame,
   }
   virtual nsSize GetPageScrollAmount() const override {
     return mHelper.GetPageScrollAmount();
+  }
+  virtual nsMargin GetScrollPadding() const override {
+    return mHelper.GetScrollPadding();
   }
   /**
    * @note This method might destroy the frame, pres shell and other objects.

@@ -2125,7 +2125,11 @@ void nsFocusManager::ScrollIntoView(nsIPresShell* aPresShell,
                                  nsIPresShell::SCROLL_IF_NOT_VISIBLE),
         nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_MINIMUM,
                                  nsIPresShell::SCROLL_IF_NOT_VISIBLE),
-        nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
+        nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
+            // FIXME: Bug 1535232: Change the option depending on call sites,
+            // i.e. don't set the option if this function gets called from
+            // Element.focus().
+            nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING);
 }
 
 void nsFocusManager::RaiseWindow(nsPIDOMWindowOuter* aWindow) {

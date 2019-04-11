@@ -6779,6 +6779,23 @@ static nsMargin ResolveScrollPaddingStyle(
                                                  aScrollPortSize));
 }
 
+nsMargin ScrollFrameHelper::GetScrollPadding() const {
+  nsIFrame* styleFrame;
+  if (mIsRoot) {
+    const Element* scrollElement =
+        mOuter->PresContext()->GetViewportScrollStylesOverrideElement();
+    styleFrame = scrollElement ? scrollElement->GetPrimaryFrame() : mOuter;
+  } else {
+    styleFrame = mOuter;
+  }
+  MOZ_ASSERT(styleFrame);
+
+  // The spec says percentage values are relative to the scroll port size.
+  // https://drafts.csswg.org/css-scroll-snap-1/#scroll-padding
+  return ResolveScrollPaddingStyle(styleFrame->StylePadding()->mScrollPadding,
+                                   GetScrollPortRect().Size());
+}
+
 layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
     const Maybe<nsPoint>& aDestination) const {
   ScrollSnapInfo result;
@@ -6812,11 +6829,8 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
   }
 
   if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
-    // The spec says percentage values are relative to the scroll port size.
-    // https://drafts.csswg.org/css-scroll-snap-1/#scroll-padding
     nsRect snapport = GetScrollPortRect();
-    nsMargin scrollPadding = ResolveScrollPaddingStyle(
-        mOuter->StylePadding()->mScrollPadding, snapport.Size());
+    nsMargin scrollPadding = GetScrollPadding();
 
     Maybe<nsRect> snapportOnDestination;
     if (aDestination) {
