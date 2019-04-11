@@ -1779,10 +1779,6 @@ class nsLayoutUtils {
    *   The nsIFrame that we're drawing this image for.
    * @param aImage
    *   The image.
-   * @param aImageSize
-   *  The unscaled size of the image being drawn. (This might be the image's
-   *  size if no scaling occurs, or it might be the image's size if the image is
-   *  a vector image being rendered at that size.)
    * @param aDest
    *  The position and scaled area where one copy of the image should be drawn.
    *  This area represents the image itself in its correct position as defined
@@ -1803,10 +1799,10 @@ class nsLayoutUtils {
    */
   static ImgDrawResult DrawBackgroundImage(
       gfxContext& aContext, nsIFrame* aForFrame, nsPresContext* aPresContext,
-      imgIContainer* aImage, const CSSIntSize& aImageSize,
-      SamplingFilter aSamplingFilter, const nsRect& aDest, const nsRect& aFill,
-      const nsSize& aRepeatSize, const nsPoint& aAnchor, const nsRect& aDirty,
-      uint32_t aImageFlags, ExtendMode aExtendMode, float aOpacity);
+      imgIContainer* aImage, SamplingFilter aSamplingFilter,
+      const nsRect& aDest, const nsRect& aFill, const nsSize& aRepeatSize,
+      const nsPoint& aAnchor, const nsRect& aDirty, uint32_t aImageFlags,
+      ExtendMode aExtendMode, float aOpacity);
 
   /**
    * Draw an image.
