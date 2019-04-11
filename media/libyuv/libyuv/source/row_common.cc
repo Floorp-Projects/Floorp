@@ -1306,6 +1306,86 @@ const struct YuvConstants SIMD_ALIGNED(kYvuH709Constants) = {
 #undef VR
 #undef YG
 
+// BT.2020 YUV to RGB reference
+//  R = (Y - 16) * 1.164384                - V * -1.67867
+//  G = (Y - 16) * 1.164384 - U * 0.187326 - V * -0.65042
+//  B = (Y - 16) * 1.164384 - U * -2.14177
+
+// Y contribution to R,G,B.  Scale and bias.
+#define YG 19003  /* round(1.164384 * 64 * 256 * 256 / 257) */
+#define YGB -1160 /* 1.164384 * 64 * -16 + 64 / 2 */
+
+#define UB -128 /* max(-128, round(-2.142 * 64)) */
+#define UG 12   /* round(0.187326 * 64) */
+#define VG 42   /* round(0.65042 * 64) */
+#define VR -107 /* round(-1.67867 * 64) */
+
+// Bias values to round, and subtract 128 from U and V.
+#define BB (UB * 128 + YGB)
+#define BG (UG * 128 + VG * 128 + YGB)
+#define BR (VR * 128 + YGB)
+
+#if defined(__aarch64__)
+const struct YuvConstants SIMD_ALIGNED(kYuv2020Constants) = {
+    {-UB, -VR, -UB, -VR, -UB, -VR, -UB, -VR},
+    {-UB, -VR, -UB, -VR, -UB, -VR, -UB, -VR},
+    {UG, VG, UG, VG, UG, VG, UG, VG},
+    {UG, VG, UG, VG, UG, VG, UG, VG},
+    {BB, BG, BR, 0, 0, 0, 0, 0},
+    {0x0101 * YG, 0, 0, 0}};
+const struct YuvConstants SIMD_ALIGNED(kYvu2020Constants) = {
+    {-VR, -UB, -VR, -UB, -VR, -UB, -VR, -UB},
+    {-VR, -UB, -VR, -UB, -VR, -UB, -VR, -UB},
+    {VG, UG, VG, UG, VG, UG, VG, UG},
+    {VG, UG, VG, UG, VG, UG, VG, UG},
+    {BR, BG, BB, 0, 0, 0, 0, 0},
+    {0x0101 * YG, 0, 0, 0}};
+#elif defined(__arm__)
+const struct YuvConstants SIMD_ALIGNED(kYuv2020Constants) = {
+    {-UB, -UB, -UB, -UB, -VR, -VR, -VR, -VR, 0, 0, 0, 0, 0, 0, 0, 0},
+    {UG, UG, UG, UG, VG, VG, VG, VG, 0, 0, 0, 0, 0, 0, 0, 0},
+    {BB, BG, BR, 0, 0, 0, 0, 0},
+    {0x0101 * YG, 0, 0, 0}};
+const struct YuvConstants SIMD_ALIGNED(kYvu2020Constants) = {
+    {-VR, -VR, -VR, -VR, -UB, -UB, -UB, -UB, 0, 0, 0, 0, 0, 0, 0, 0},
+    {VG, VG, VG, VG, UG, UG, UG, UG, 0, 0, 0, 0, 0, 0, 0, 0},
+    {BR, BG, BB, 0, 0, 0, 0, 0},
+    {0x0101 * YG, 0, 0, 0}};
+#else
+const struct YuvConstants SIMD_ALIGNED(kYuv2020Constants) = {
+    {UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0,
+     UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0},
+    {UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG,
+     UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG},
+    {0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR,
+     0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR},
+    {BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB},
+    {BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG},
+    {BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR},
+    {YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG}};
+const struct YuvConstants SIMD_ALIGNED(kYvu2020Constants) = {
+    {VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0,
+     VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0, VR, 0},
+    {VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG,
+     VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG, VG, UG},
+    {0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB,
+     0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB, 0, UB},
+    {BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR, BR},
+    {BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG, BG},
+    {BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB, BB},
+    {YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG, YG}};
+#endif
+
+#undef BB
+#undef BG
+#undef BR
+#undef YGB
+#undef UB
+#undef UG
+#undef VG
+#undef VR
+#undef YG
+
 // C reference code that mimics the YUV assembly.
 // Reads 8 bit YUV and leaves result as 16 bit.
 

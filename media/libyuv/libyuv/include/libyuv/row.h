@@ -558,11 +558,13 @@ struct YuvConstants {
 extern const struct YuvConstants SIMD_ALIGNED(kYuvI601Constants);  // BT.601
 extern const struct YuvConstants SIMD_ALIGNED(kYuvJPEGConstants);  // JPeg
 extern const struct YuvConstants SIMD_ALIGNED(kYuvH709Constants);  // BT.709
+extern const struct YuvConstants SIMD_ALIGNED(kYuv2020Constants);  // BT.2020
 
 // Conversion matrix for YVU to BGR
 extern const struct YuvConstants SIMD_ALIGNED(kYvuI601Constants);  // BT.601
 extern const struct YuvConstants SIMD_ALIGNED(kYvuJPEGConstants);  // JPeg
 extern const struct YuvConstants SIMD_ALIGNED(kYvuH709Constants);  // BT.709
+extern const struct YuvConstants SIMD_ALIGNED(kYvu2020Constants);  // BT.2020
 
 #define IS_ALIGNED(p, a) (!((uintptr_t)(p) & ((a)-1)))
 

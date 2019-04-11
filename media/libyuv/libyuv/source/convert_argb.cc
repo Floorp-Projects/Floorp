@@ -226,6 +226,23 @@ int H420ToABGR(const uint8_t* src_y,
                           width, height);
 }
 
+// Convert U420 to ARGB.
+LIBYUV_API
+int U420ToARGB(const uint8_t* src_y,
+               int src_stride_y,
+               const uint8_t* src_u,
+               int src_stride_u,
+               const uint8_t* src_v,
+               int src_stride_v,
+               uint8_t* dst_argb,
+               int dst_stride_argb,
+               int width,
+               int height) {
+  return I420ToARGBMatrix(src_y, src_stride_y, src_u, src_stride_u, src_v,
+                          src_stride_v, dst_argb, dst_stride_argb,
+                          &kYuv2020Constants, width, height);
+}
+
 // Convert I422 to ARGB with matrix
 static int I422ToARGBMatrix(const uint8_t* src_y,
                             int src_stride_y,
@@ -660,6 +677,23 @@ int H010ToABGR(const uint16_t* src_y,
                           width, height);
 }
 
+// Convert U422 to ARGB.
+LIBYUV_API
+int U422ToARGB(const uint8* src_y,
+               int src_stride_y,
+               const uint8* src_u,
+               int src_stride_u,
+               const uint8* src_v,
+               int src_stride_v,
+               uint8* dst_argb,
+               int dst_stride_argb,
+               int width,
+               int height) {
+  return I422ToARGBMatrix(src_y, src_stride_y, src_u, src_stride_u, src_v,
+                          src_stride_v, dst_argb, dst_stride_argb,
+                          &kYuv2020Constants, width, height);
+}
+
 // Convert I444 to ARGB with matrix
 static int I444ToARGBMatrix(const uint8_t* src_y,
                             int src_stride_y,
@@ -768,6 +802,23 @@ int H444ToARGB(const uint8_t* src_y,
   return I444ToARGBMatrix(src_y, src_stride_y, src_u, src_stride_u, src_v,
                           src_stride_v, dst_argb, dst_stride_argb,
                           &kYuvH709Constants, width, height);
+}
+
+// Convert U444 to ARGB.
+LIBYUV_API
+int U444ToARGB(const uint8* src_y,
+               int src_stride_y,
+               const uint8* src_u,
+               int src_stride_u,
+               const uint8* src_v,
+               int src_stride_v,
+               uint8* dst_argb,
+               int dst_stride_argb,
+               int width,
+               int height) {
+  return I444ToARGBMatrix(src_y, src_stride_y, src_u, src_stride_u, src_v,
+                          src_stride_v, dst_argb, dst_stride_argb,
+                          &kYuv2020Constants, width, height);
 }
 
 // Convert I444 to ABGR.
