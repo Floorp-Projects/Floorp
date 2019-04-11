@@ -83,6 +83,15 @@
       </popupnotificationcontent>
     </popupnotification>
 
+    <popupnotification id="addon-install-blocked-notification" hidden="true">
+      <popupnotificationcontent id="addon-install-blocked-content" orient="vertical">
+        <description id="addon-install-blocked-message" class="popup-notification-description"></description>
+        <hbox>
+          <label id="addon-install-blocked-info" class="popup-notification-learnmore-link" is="text-link"/>
+        </hbox>
+      </popupnotificationcontent>
+    </popupnotification>
+
     <popupnotification id="contextual-feature-recommendation-notification" hidden="true">
       <popupnotificationheader id="cfr-notification-header">
         <stack id="cfr-notification-header-stack">
