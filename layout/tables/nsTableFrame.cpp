@@ -1870,7 +1870,7 @@ void nsTableFrame::RequestSpecialBSizeReflow(const ReflowInput& aReflowInput) {
  *
  * 2) After the pass 2 reflow, if the table's NeedToInitiateSpecialReflow(true)
  *    was called, it will do the special bsize reflow, setting the reflow
- *    state's mFlags.mSpecialBSizeReflow to true and mSpecialHeightInitiator to
+ *    input's mFlags.mSpecialBSizeReflow to true and mSpecialHeightInitiator to
  *    itself. It won't do this if IsPrematureSpecialHeightReflow() returns true
  *    because in that case another special bsize reflow will be coming along
  *    with the containing table as the mSpecialHeightInitiator. It is only

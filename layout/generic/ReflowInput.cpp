@@ -299,14 +299,14 @@ void ReflowInput::SetComputedWidth(nscoord aComputedWidth) {
   // two reasons:
   //
   // 1) Viewport frames reset the computed width on a copy of their reflow
-  //    state when reflowing fixed-pos kids.  In that case we actually don't
+  //    input when reflowing fixed-pos kids.  In that case we actually don't
   //    want to mess with the resize flags, because comparing the frame's rect
   //    to the munged computed width is pointless.
   // 2) nsFrame::BoxReflow creates a reflow input for its parent.  This reflow
-  //    state is not used to reflow the parent, but just as a parent for the
+  //    input is not used to reflow the parent, but just as a parent for the
   //    frame's own reflow input.  So given a nsBoxFrame inside some non-XUL
   //    (like a text control, for example), we'll end up creating a reflow
-  //    state for the parent while the parent is reflowing.
+  //    input for the parent while the parent is reflowing.
 
   MOZ_ASSERT(aComputedWidth >= 0, "Invalid computed width");
   if (ComputedWidth() != aComputedWidth) {
@@ -325,10 +325,10 @@ void ReflowInput::SetComputedHeight(nscoord aComputedHeight) {
   // because:
   //
   //    nsFrame::BoxReflow creates a reflow input for its parent.  This reflow
-  //    state is not used to reflow the parent, but just as a parent for the
+  //    input is not used to reflow the parent, but just as a parent for the
   //    frame's own reflow input.  So given a nsBoxFrame inside some non-XUL
   //    (like a text control, for example), we'll end up creating a reflow
-  //    state for the parent while the parent is reflowing.
+  //    input for the parent while the parent is reflowing.
 
   MOZ_ASSERT(aComputedHeight >= 0, "Invalid computed height");
   if (ComputedHeight() != aComputedHeight) {

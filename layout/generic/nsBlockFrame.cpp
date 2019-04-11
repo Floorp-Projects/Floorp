@@ -6074,7 +6074,7 @@ void nsBlockFrame::ReflowFloat(BlockReflowInput& aState,
       aAdjustedAvailableSpace.Size(wm).ConvertTo(aFloat->GetWritingMode(), wm));
 
   // Normally the mIsTopOfPage state is copied from the parent reflow
-  // state.  However, when reflowing a float, if we've placed other
+  // input.  However, when reflowing a float, if we've placed other
   // floats that force this float *down* or *narrower*, we should unset
   // the mIsTopOfPage state.
   // FIXME: This is somewhat redundant with the |isAdjacentWithTop|
