@@ -236,18 +236,31 @@ nsStylePadding::nsStylePadding(const nsStylePadding& aSrc)
 
 nsChangeHint nsStylePadding::CalcDifference(
     const nsStylePadding& aNewData) const {
-  if (mPadding == aNewData.mPadding) {
+  if (mPadding == aNewData.mPadding &&
+      mScrollPadding == aNewData.mScrollPadding) {
     return nsChangeHint(0);
   }
-  // Padding differences can't affect descendant intrinsic sizes, but do need
-  // to force children to reflow so that we can reposition them, since their
-  // offsets are from our frame bounds but our content rect's position within
-  // those bounds is moving.
-  // FIXME: It would be good to return a weaker hint here that doesn't
-  // force reflow of all descendants, but the hint would need to force
-  // reflow of the frame's children (see how
-  // ReflowInput::InitResizeFlags initializes the inline-resize flag).
-  return NS_STYLE_HINT_REFLOW & ~nsChangeHint_ClearDescendantIntrinsics;
+
+  nsChangeHint hint = nsChangeHint(0);
+
+  if (mPadding != aNewData.mPadding) {
+    // Padding differences can't affect descendant intrinsic sizes, but do need
+    // to force children to reflow so that we can reposition them, since their
+    // offsets are from our frame bounds but our content rect's position within
+    // those bounds is moving.
+    // FIXME: It would be good to return a weaker hint here that doesn't
+    // force reflow of all descendants, but the hint would need to force
+    // reflow of the frame's children (see how
+    // ReflowInput::InitResizeFlags initializes the inline-resize flag).
+    hint |= NS_STYLE_HINT_REFLOW & ~nsChangeHint_ClearDescendantIntrinsics;
+  }
+
+  if (mScrollPadding != aNewData.mScrollPadding) {
+    // FIXME: Bug 1530253 Support re-snapping when scroll-padding changes.
+    hint |= nsChangeHint_NeutralChange;
+  }
+
+  return hint;
 }
 
 static nscoord TwipsPerPixel(const Document& aDocument) {
