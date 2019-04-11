@@ -266,12 +266,13 @@ DXGITextureData::DXGITextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
 
 D3D11TextureData::D3D11TextureData(ID3D11Texture2D* aTexture,
                                    gfx::IntSize aSize,
-                                   gfx::SurfaceFormat aFormat, bool aNeedsClear,
-                                   bool aNeedsClearWhite,
-                                   bool aIsForOutOfBandContent)
-    : DXGITextureData(aSize, aFormat, aNeedsClear, aNeedsClearWhite,
-                      aIsForOutOfBandContent),
-      mTexture(aTexture) {
+                                   gfx::SurfaceFormat aFormat,
+                                   TextureAllocationFlags aFlags)
+    : DXGITextureData(aSize, aFormat, aFlags & ALLOC_CLEAR_BUFFER,
+                      aFlags & ALLOC_CLEAR_BUFFER_WHITE,
+                      aFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT),
+      mTexture(aTexture),
+      mAllocationFlags(aFlags) {
   MOZ_ASSERT(aTexture);
   mHasSynchronization = HasKeyedMutex(aTexture);
 }
@@ -387,8 +388,8 @@ bool DXGITextureData::SerializeSpecific(
     return false;
   }
 
-  *aOutDesc =
-      SurfaceDescriptorD3D10((WindowsHandle)sharedHandle, mFormat, mSize);
+  *aOutDesc = SurfaceDescriptorD3D10((WindowsHandle)sharedHandle, mFormat,
+                                     mSize, mYUVColorSpace);
   return true;
 }
 
@@ -534,10 +535,7 @@ DXGITextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
   texture11->SetPrivateDataInterface(
       sD3D11TextureUsage,
       new TextureMemoryMeasurer(newDesc.Width * newDesc.Height * 4));
-  return new D3D11TextureData(texture11, aSize, aFormat,
-                              aFlags & ALLOC_CLEAR_BUFFER,
-                              aFlags & ALLOC_CLEAR_BUFFER_WHITE,
-                              aFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT);
+  return new D3D11TextureData(texture11, aSize, aFormat, aFlags);
 }
 
 DXGITextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
@@ -561,18 +559,6 @@ DXGITextureData* D3D11TextureData::Create(SourceSurface* aSurface,
 void D3D11TextureData::Deallocate(LayersIPCChannel* aAllocator) {
   mDrawTarget = nullptr;
   mTexture = nullptr;
-}
-
-already_AddRefed<TextureClient> CreateD3D11TextureClientWithDevice(
-    IntSize aSize, SurfaceFormat aFormat, TextureFlags aTextureFlags,
-    TextureAllocationFlags aAllocFlags, ID3D11Device* aDevice,
-    LayersIPCChannel* aAllocator) {
-  TextureData* data =
-      D3D11TextureData::Create(aSize, aFormat, aAllocFlags, aDevice);
-  if (!data) {
-    return nullptr;
-  }
-  return MakeAndAddRef<TextureClient>(data, aTextureFlags, aAllocator);
 }
 
 TextureData* D3D11TextureData::CreateSimilar(
@@ -767,6 +753,7 @@ DXGITextureHostD3D11::DXGITextureHostD3D11(
       mSize(aDescriptor.size()),
       mHandle(aDescriptor.handle()),
       mFormat(aDescriptor.format()),
+      mYUVColorSpace(aDescriptor.yUVColorSpace()),
       mIsLocked(false) {}
 
 bool DXGITextureHostD3D11::EnsureTexture() {
@@ -1075,11 +1062,11 @@ void DXGITextureHostD3D11::PushDisplayItems(
     case gfx::SurfaceFormat::P016:
     case gfx::SurfaceFormat::NV12: {
       MOZ_ASSERT(aImageKeys.length() == 2);
-      aBuilder.PushNV12Image(
-          aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
-          GetFormat() == gfx::SurfaceFormat::NV12 ? wr::ColorDepth::Color8
-                                                  : wr::ColorDepth::Color16,
-          wr::ToWrYuvColorSpace(YUVColorSpace::BT601), aFilter);
+      aBuilder.PushNV12Image(aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
+                             GetFormat() == gfx::SurfaceFormat::NV12
+                                 ? wr::ColorDepth::Color8
+                                 : wr::ColorDepth::Color16,
+                             wr::ToWrYuvColorSpace(mYUVColorSpace), aFilter);
       break;
     }
     default: {

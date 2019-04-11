@@ -7,16 +7,17 @@
 #ifndef MOZILLA_GFX_TEXTURED3D11_H
 #define MOZILLA_GFX_TEXTURED3D11_H
 
+#include <d3d11.h>
+#include <vector>
+#include "d3d9.h"
+#include "gfxWindowsPlatform.h"
+#include "mozilla/GfxMessageUtils.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/Compositor.h"
 #include "mozilla/layers/SyncObject.h"
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/layers/TextureHost.h"
-#include "gfxWindowsPlatform.h"
-#include "mozilla/GfxMessageUtils.h"
-#include <d3d11.h>
-#include "d3d9.h"
-#include <vector>
 
 namespace mozilla {
 namespace gl {
@@ -53,6 +54,14 @@ class DXGITextureData : public TextureData {
   static DXGITextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                  TextureAllocationFlags aFlags);
 
+  gfx::YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }
+  void SetYUVColorSpace(gfx::YUVColorSpace aColorSpace) {
+    mYUVColorSpace = aColorSpace;
+  }
+
+  gfx::IntSize GetSize() const { return mSize; }
+  gfx::SurfaceFormat GetSurfaceFormat() const { return mFormat; }
+
  protected:
   bool PrepareDrawTargetInLock(OpenMode aMode);
 
@@ -67,6 +76,7 @@ class DXGITextureData : public TextureData {
   RefPtr<gfx::DrawTarget> mDrawTarget;
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
+  gfx::YUVColorSpace mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
   bool mNeedsClear;
   bool mNeedsClearWhite;
   bool mHasSynchronization;
@@ -103,12 +113,15 @@ class D3D11TextureData : public DXGITextureData {
 
   D3D11TextureData* AsD3D11TextureData() override { return this; }
 
+  TextureAllocationFlags GetTextureAllocationFlags() const {
+    return mAllocationFlags;
+  }
+
   virtual ~D3D11TextureData();
 
  protected:
   D3D11TextureData(ID3D11Texture2D* aTexture, gfx::IntSize aSize,
-                   gfx::SurfaceFormat aFormat, bool aNeedsClear,
-                   bool aNeedsClearWhite, bool aIsForOutOfBandContent);
+                   gfx::SurfaceFormat aFormat, TextureAllocationFlags aFlags);
 
   void GetDXGIResource(IDXGIResource** aOutResource) override;
 
@@ -118,12 +131,8 @@ class D3D11TextureData : public DXGITextureData {
                                  ID3D11Device* aDevice = nullptr);
 
   RefPtr<ID3D11Texture2D> mTexture;
+  const TextureAllocationFlags mAllocationFlags;
 };
-
-already_AddRefed<TextureClient> CreateD3D11extureClientWithDevice(
-    gfx::IntSize aSize, gfx::SurfaceFormat aFormat, TextureFlags aTextureFlags,
-    TextureAllocationFlags aAllocFlags, ID3D11Device* aDevice,
-    LayersIPCChannel* aAllocator);
 
 class DXGIYCbCrTextureData : public TextureData {
   friend class gl::GLBlitHelper;
@@ -310,11 +319,6 @@ class DataTextureSourceD3D11 : public DataTextureSource,
   bool mAllowTextureUploads;
 };
 
-already_AddRefed<TextureClient> CreateD3D11TextureClientWithDevice(
-    gfx::IntSize aSize, gfx::SurfaceFormat aFormat, TextureFlags aTextureFlags,
-    TextureAllocationFlags aAllocFlags, ID3D11Device* aDevice,
-    LayersIPCChannel* aAllocator);
-
 /**
  * A TextureHost for shared D3D11 textures.
  */
@@ -339,6 +343,9 @@ class DXGITextureHostD3D11 : public TextureHost {
   void UnlockWithoutCompositor() override;
 
   gfx::IntSize GetSize() const override { return mSize; }
+  gfx::YUVColorSpace GetYUVColorSpace() const override {
+    return mYUVColorSpace;
+  }
 
   already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
 
@@ -375,6 +382,7 @@ class DXGITextureHostD3D11 : public TextureHost {
   gfx::IntSize mSize;
   WindowsHandle mHandle;
   gfx::SurfaceFormat mFormat;
+  const gfx::YUVColorSpace mYUVColorSpace;
   bool mIsLocked;
 };
 
