@@ -1229,6 +1229,7 @@ class ContentParent final : public PContentParent,
 
   LifecycleState mLifecycleState;
 
+  bool mShuttingDown;
   bool mIsForBrowser;
 
   // Whether this process is recording or replaying its execution, and any
