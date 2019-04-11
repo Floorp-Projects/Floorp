@@ -117,6 +117,22 @@ callback TestOptionalArguments = void(optional DOMString aString,
                                       optional TestInterface? anInterface,
                                       optional TestInterface anotherInterface,
                                       optional long aLong);
+// Callback constructor return value tests
+callback constructor TestVoidConstruction = void(TestDictionaryTypedef arg);
+callback constructor TestIntegerConstruction = unsigned long();
+callback constructor TestBooleanConstruction = boolean(any arg1,
+                                                       optional any arg2);
+callback constructor TestFloatConstruction = unrestricted float(optional object arg1,
+                                                                optional TestDictionaryTypedef arg2);
+callback constructor TestStringConstruction = DOMString(long? arg);
+callback constructor TestEnumConstruction = TestEnum(any... arg);
+callback constructor TestInterfaceConstruction = TestInterface();
+callback constructor TestExternalInterfaceConstruction = TestExternalInterface();
+callback constructor TestCallbackInterfaceConstruction = TestCallbackInterface();
+callback constructor TestCallbackConstruction = TestCallback();
+callback constructor TestObjectConstruction = object();
+callback constructor TestTypedArrayConstruction = ArrayBuffer();
+callback constructor TestSequenceConstruction = sequence<boolean>();
 // If you add a new test callback, add it to the forceCallbackGeneration
 // method on TestInterface so it actually gets tested.
 
@@ -546,7 +562,20 @@ interface TestInterface {
                                TestInterfaceArguments arg22,
                                TestStringEnumArguments arg23,
                                TestObjectArguments arg24,
-                               TestOptionalArguments arg25);
+                               TestOptionalArguments arg25,
+                               TestVoidConstruction arg26,
+                               TestIntegerConstruction arg27,
+                               TestBooleanConstruction arg28,
+                               TestFloatConstruction arg29,
+                               TestStringConstruction arg30,
+                               TestEnumConstruction arg31,
+                               TestInterfaceConstruction arg32,
+                               TestExternalInterfaceConstruction arg33,
+                               TestCallbackInterfaceConstruction arg34,
+                               TestCallbackConstruction arg35,
+                               TestObjectConstruction arg36,
+                               TestTypedArrayConstruction arg37,
+                               TestSequenceConstruction arg38);
 
   // Any types
   void passAny(any arg);
