@@ -286,8 +286,13 @@ set_define('JS_GC_SMALL_CHUNK_SIZE',
 
 # Trace logging.
 # =======================================================
+@depends(milestone)
+def default_trace_logging(milestone):
+    return milestone.is_nightly
+
+
 js_option('--enable-trace-logging',
-          default=depends(when=moz_debug)(lambda: True),
+          default=default_trace_logging,
           help='{Enable|Disable} trace logging')
 
 set_config('ENABLE_TRACE_LOGGING',

@@ -3681,8 +3681,10 @@ void CodeGenerator::visitOsrEntry(LOsrEntry* lir) {
   setOsrEntryOffset(masm.size());
 
 #ifdef JS_TRACE_LOGGING
-  emitTracelogStopEvent(TraceLogger_Baseline);
-  emitTracelogStartEvent(TraceLogger_IonMonkey);
+  if (JS::TraceLoggerSupported()) {
+    emitTracelogStopEvent(TraceLogger_Baseline);
+    emitTracelogStartEvent(TraceLogger_IonMonkey);
+  }
 #endif
 
   // If profiling, save the current frame pointer to a per-thread global field.
@@ -4688,7 +4690,9 @@ void CodeGenerator::visitCallNative(LCallNative* call) {
 
   markSafepointAt(safepointOffset, call);
 
-  emitTracelogStartEvent(TraceLogger_Call);
+  if (JS::TraceLoggerSupported()) {
+    emitTracelogStartEvent(TraceLogger_Call);
+  }
 
   // Construct and execute call.
   masm.setupUnalignedABICall(tempReg);
@@ -4705,7 +4709,9 @@ void CodeGenerator::visitCallNative(LCallNative* call) {
   masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, native), MoveOp::GENERAL,
                    CheckUnsafeCallWithABI::DontCheckHasExitFrame);
 
-  emitTracelogStopEvent(TraceLogger_Call);
+  if (JS::TraceLoggerSupported()) {
+    emitTracelogStopEvent(TraceLogger_Call);
+  }
 
   // Test for failure.
   masm.branchIfFalseBool(ReturnReg, masm.failureLabel());
@@ -10933,6 +10939,7 @@ bool CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints) {
 #ifdef JS_TRACE_LOGGING
   bool TLFailed = false;
 
+  MOZ_ASSERT_IF(!JS::TraceLoggerSupported(), patchableTLEvents_.length() == 0);
   for (uint32_t i = 0; i < patchableTLEvents_.length(); i++) {
     TraceLoggerEvent event(patchableTLEvents_[i].event);
     if (!event.hasTextId() || !ionScript->addTraceLoggerEvent(event)) {
