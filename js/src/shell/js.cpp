@@ -2414,9 +2414,10 @@ JSString* js::shell::FileAsString(JSContext* cx, JS::HandleString pathnameStr) {
     return nullptr;
   }
 
-  UniqueTwoByteChars ucbuf(JS::LossyUTF8CharsToNewTwoByteCharsZ(
-                               cx, JS::UTF8Chars(buf.get(), len), &len)
-                               .get());
+  UniqueTwoByteChars ucbuf(
+      JS::LossyUTF8CharsToNewTwoByteCharsZ(cx, JS::UTF8Chars(buf.get(), len),
+                                           &len, js::MallocArena)
+          .get());
   if (!ucbuf) {
     pathname = JS_EncodeStringToUTF8(cx, pathnameStr);
     if (!pathname) {

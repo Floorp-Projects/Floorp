@@ -2485,7 +2485,8 @@ static bool ReadGeckoProfilingStack(JSContext* cx, unsigned argc, Value* vp) {
           frameKindStr = "unknown";
       }
 
-      UniqueChars label = DuplicateString(cx, frames[i].label);
+      UniqueChars label =
+          DuplicateStringToArena(js::MallocArena, cx, frames[i].label);
       if (!label) {
         return false;
       }
@@ -3547,7 +3548,8 @@ struct FindPathHandler {
 
     // Record how we reached this node. This is the last edge on a
     // shortest path to this node.
-    EdgeName edgeName = DuplicateString(cx, edge.name.get());
+    EdgeName edgeName =
+        DuplicateStringToArena(js::MallocArena, cx, edge.name.get());
     if (!edgeName) {
       return false;
     }
