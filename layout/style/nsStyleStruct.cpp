@@ -202,13 +202,25 @@ nsStyleMargin::nsStyleMargin(const nsStyleMargin& aSrc)
 
 nsChangeHint nsStyleMargin::CalcDifference(
     const nsStyleMargin& aNewData) const {
-  if (mMargin == aNewData.mMargin) {
+  if (mMargin == aNewData.mMargin && mScrollMargin == aNewData.mScrollMargin) {
     return nsChangeHint(0);
   }
-  // Margin differences can't affect descendant intrinsic sizes and
-  // don't need to force children to reflow.
-  return nsChangeHint_NeedReflow | nsChangeHint_ReflowChangesSizeOrPosition |
-         nsChangeHint_ClearAncestorIntrinsics;
+
+  nsChangeHint hint = nsChangeHint(0);
+
+  if (mMargin != aNewData.mMargin) {
+    // Margin differences can't affect descendant intrinsic sizes and
+    // don't need to force children to reflow.
+    hint |= nsChangeHint_NeedReflow | nsChangeHint_ReflowChangesSizeOrPosition |
+            nsChangeHint_ClearAncestorIntrinsics;
+  }
+
+  if (mScrollMargin != aNewData.mScrollMargin) {
+    // FIXME: Bug 1530253 Support re-snapping when scroll-margin changes.
+    hint |= nsChangeHint_NeutralChange;
+  }
+
+  return hint;
 }
 
 nsStylePadding::nsStylePadding(const Document& aDocument)
