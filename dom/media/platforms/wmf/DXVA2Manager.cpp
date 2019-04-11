@@ -4,14 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include <d3d11.h>
 #include "DXVA2Manager.h"
+#include <d3d11.h>
 #include "D3D9SurfaceImage.h"
 #include "DriverCrashGuard.h"
 #include "GfxDriverInfo.h"
 #include "ImageContainer.h"
 #include "MFTDecoder.h"
 #include "MediaTelemetryConstants.h"
+#include "VideoUtils.h"
+#include "WMFUtils.h"
 #include "gfxCrashReporterUtils.h"
 #include "gfxPrefs.h"
 #include "gfxWindowsPlatform.h"
@@ -20,12 +22,11 @@
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/D3D11ShareHandleImage.h"
 #include "mozilla/layers/ImageBridgeChild.h"
-#include "mozilla/layers/TextureForwarder.h"
 #include "mozilla/layers/TextureD3D11.h"
+#include "mozilla/layers/TextureForwarder.h"
+#include "mozilla/mscom/EnsureMTA.h"
 #include "nsPrintfCString.h"
 #include "nsThreadUtils.h"
-#include "VideoUtils.h"
-#include "mozilla/mscom/EnsureMTA.h"
 
 const CLSID CLSID_VideoProcessorMFT = {
     0x88753b26,
@@ -591,7 +592,8 @@ class D3D11DXVA2Manager : public DXVA2Manager {
   HRESULT CopyToBGRATexture(ID3D11Texture2D* aInTexture, const GUID& aSubType,
                             ID3D11Texture2D** aOutTexture) override;
 
-  HRESULT ConfigureForSize(IMFMediaType* aInputType, uint32_t aWidth,
+  HRESULT ConfigureForSize(IMFMediaType* aInputType,
+                           gfx::YUVColorSpace aColorSpace, uint32_t aWidth,
                            uint32_t aHeight) override;
 
   bool IsD3D11() override { return true; }
@@ -623,6 +625,7 @@ class D3D11DXVA2Manager : public DXVA2Manager {
   UINT mDeviceManagerToken = 0;
   RefPtr<IMFMediaType> mInputType;
   GUID mInputSubType;
+  gfx::YUVColorSpace mYUVColorSpace = gfx::YUVColorSpace::BT601;
 };
 
 bool D3D11DXVA2Manager::SupportsConfig(IMFMediaType* aType, float aFramerate) {
@@ -882,9 +885,8 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
   NS_ENSURE_TRUE(aOutImage, E_POINTER);
   MOZ_ASSERT(mTextureClientAllocator);
 
-  RefPtr<D3D11ShareHandleImage> image =
-      new D3D11ShareHandleImage(gfx::IntSize(mWidth, mHeight), aRegion,
-                                mInputSubType, gfx::YUVColorSpace::UNKNOWN);
+  RefPtr<D3D11ShareHandleImage> image = new D3D11ShareHandleImage(
+      gfx::IntSize(mWidth, mHeight), aRegion, mInputSubType, mYUVColorSpace);
 
   // Retrieve the DXGI_FORMAT for the current video sample.
   RefPtr<IMFMediaBuffer> buffer;
@@ -1003,7 +1005,7 @@ D3D11DXVA2Manager::CopyToBGRATexture(ID3D11Texture2D* aInTexture,
     hr = inputType->SetUINT32(MF_MT_ALL_SAMPLES_INDEPENDENT, TRUE);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-    hr = ConfigureForSize(inputType, desc.Width, desc.Height);
+    hr = ConfigureForSize(inputType, mYUVColorSpace, desc.Width, desc.Height);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
   }
 
@@ -1068,13 +1070,15 @@ D3D11DXVA2Manager::CopyToBGRATexture(ID3D11Texture2D* aInTexture,
 }
 
 HRESULT
-D3D11DXVA2Manager::ConfigureForSize(IMFMediaType* aInputType, uint32_t aWidth,
-                                    uint32_t aHeight) {
+D3D11DXVA2Manager::ConfigureForSize(IMFMediaType* aInputType,
+                                    gfx::YUVColorSpace aColorSpace,
+                                    uint32_t aWidth, uint32_t aHeight) {
   GUID subType = {0};
   HRESULT hr = aInputType->GetGUID(MF_MT_SUBTYPE, &subType);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  if (subType == mInputSubType && aWidth == mWidth && aHeight == mHeight) {
+  if (subType == mInputSubType && aWidth == mWidth && aHeight == mHeight &&
+      mYUVColorSpace == aColorSpace) {
     // If the media type hasn't changed, don't reconfigure.
     return S_OK;
   }
@@ -1131,7 +1135,7 @@ D3D11DXVA2Manager::ConfigureForSize(IMFMediaType* aInputType, uint32_t aWidth,
   mHeight = aHeight;
   mInputType = inputType;
   mInputSubType = subType;
-
+  mYUVColorSpace = aColorSpace;
   return S_OK;
 }
 
