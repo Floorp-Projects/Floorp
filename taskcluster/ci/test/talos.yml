@@ -50,6 +50,8 @@ talos-chrome:
     treeherder-symbol: T(c)
     run-on-projects:
         by-test-platform:
+            linux64-ccov/.*: ['try']
+            windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
@@ -66,6 +68,7 @@ talos-damp:
     run-on-projects:
         by-test-platform:
             linux64-ccov/.*: ['try']  # Bug 1407593
+            windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
@@ -79,6 +82,8 @@ talos-dromaeojs:
     treeherder-symbol: T(d)
     run-on-projects:
         by-test-platform:
+            linux64-ccov/.*: ['try']
+            windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
@@ -108,6 +113,8 @@ talos-g1:
     treeherder-symbol: T(g1)
     run-on-projects:
         by-test-platform:
+            linux64-ccov/.*: ['try']
+            windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
@@ -125,6 +132,8 @@ talos-g3:
     treeherder-symbol: T(g3)
     run-on-projects:
         by-test-platform:
+            linux64-ccov/.*: ['try']
+            windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
@@ -139,6 +148,8 @@ talos-g4:
     treeherder-symbol: T(g4)
     run-on-projects:
         by-test-platform:
+            linux64-ccov/.*: ['try']
+            windows10-64-ccov/.*: ['try']
             windows10-64-ux/opt: ['try', 'mozilla-central']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
@@ -157,6 +168,8 @@ talos-g5:
     treeherder-symbol: T(g5)
     run-on-projects:
         by-test-platform:
+            linux64-ccov/.*: ['try']
+            windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
@@ -227,6 +240,8 @@ talos-other:
     treeherder-symbol: T(o)
     run-on-projects:
         by-test-platform:
+            linux64-ccov/.*: ['try']
+            windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
@@ -241,6 +256,8 @@ talos-sessionrestore-many-windows:
     treeherder-symbol: T(smw)
     run-on-projects:
         by-test-platform:
+            linux64-ccov/.*: ['try']
+            windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-central', 'try']
@@ -255,6 +272,8 @@ talos-perf-reftest:
     treeherder-symbol: T(p)
     run-on-projects:
         by-test-platform:
+            linux64-ccov/.*: ['try']
+            windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['trunk', 'try']
@@ -269,6 +288,8 @@ talos-perf-reftest-singletons:
     treeherder-symbol: T(ps)
     run-on-projects:
         by-test-platform:
+            linux64-ccov/.*: ['try']
+            windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['trunk', 'try']
@@ -297,6 +318,8 @@ talos-svgr:
     treeherder-symbol: T(s)
     run-on-projects:
         by-test-platform:
+            linux64-ccov/.*: ['try']
+            windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
@@ -311,6 +334,8 @@ talos-tp5o:
     treeherder-symbol: T(tp)
     run-on-projects:
         by-test-platform:
+            linux64-ccov/.*: ['try']
+            windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['mozilla-beta', 'trunk', 'try']
@@ -325,6 +350,8 @@ talos-tp6:
     treeherder-symbol: T(tp6)
     run-on-projects:
         by-test-platform:
+            linux64-ccov/.*: ['try']
+            windows10-64-ccov/.*: ['try']
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
             default: ['trunk', 'try']
@@ -354,6 +381,8 @@ talos-tabswitch:
     max-run-time: 900
     run-on-projects:
         by-test-platform:
+            linux64-ccov/.*: ['try']
+            windows10-64-ccov/.*: ['try']
             linux64-ccov/.*: ['try']  # Bug 1407593
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
             macosx64(?:-shippable)?(?:-qr)?/opt: ['mozilla-central', 'try']
