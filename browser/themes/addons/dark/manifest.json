@@ -35,5 +35,9 @@
       "sidebar_text": "rgb(249, 249, 250)",
       "sidebar_border": "rgba(255, 255, 255, 0.1)"
     }
+  },
+
+  "theme_experiment": {
+    "stylesheet": "experiment.css"
   }
 }
