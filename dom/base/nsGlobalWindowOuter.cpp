@@ -2552,7 +2552,7 @@ void nsGlobalWindowOuter::UpdateParentTarget() {
   // child global, and if it doesn't have one, just use the chrome event
   // handler itself.
 
-  nsCOMPtr<Element> frameElement = GetOuterWindow()->GetFrameElementInternal();
+  nsCOMPtr<Element> frameElement = GetFrameElementInternal();
   mMessageManager = nsContentUtils::TryGetTabChildGlobal(frameElement);
 
   if (!mMessageManager) {
@@ -2790,7 +2790,7 @@ void nsPIDOMWindowOuter::SetInitialKeyboardIndicators(
   }
 
   nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(
-      GetOuterWindow(), aShowAccelerators, aShowFocusRings);
+      this, aShowAccelerators, aShowFocusRings);
 }
 
 Element* nsPIDOMWindowOuter::GetFrameElementInternal() const {
@@ -2841,7 +2841,7 @@ void nsPIDOMWindowOuter::MaybeNotifyMediaResumedFromBlock(
       aSuspend == nsISuspendedTypes::NONE_SUSPENDED) {
     RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
     if (service) {
-      service->NotifyMediaResumedFromBlock(GetOuterWindow());
+      service->NotifyMediaResumedFromBlock(this);
     }
   }
 }
@@ -2876,14 +2876,14 @@ nsresult nsPIDOMWindowOuter::SetAudioVolume(float aVolume) {
 void nsPIDOMWindowOuter::RefreshMediaElementsVolume() {
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (service) {
-    service->RefreshAgentsVolume(GetOuterWindow());
+    service->RefreshAgentsVolume(this);
   }
 }
 
 void nsPIDOMWindowOuter::RefreshMediaElementsSuspend(SuspendTypes aSuspend) {
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (service) {
-    service->RefreshAgentsSuspend(GetOuterWindow(), aSuspend);
+    service->RefreshAgentsSuspend(this, aSuspend);
   }
 }
 
@@ -3979,7 +3979,7 @@ bool nsGlobalWindowOuter::DispatchResizeEvent(const CSSIntSize& aSize) {
   domEvent->SetTrusted(true);
   domEvent->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
 
-  nsCOMPtr<EventTarget> target = do_QueryInterface(GetOuterWindow());
+  nsCOMPtr<EventTarget> target = this;
   domEvent->SetTarget(target);
 
   return target->DispatchEvent(*domEvent, CallerType::System, IgnoreErrors());
@@ -6262,7 +6262,7 @@ void nsGlobalWindowOuter::ReallyCloseWindow() {
         bool isTab;
         if (rootWin == this || !bwin ||
             (NS_SUCCEEDED(
-                 bwin->IsTabContentWindow(GetOuterWindowInternal(), &isTab)) &&
+                 bwin->IsTabContentWindow(this, &isTab)) &&
              isTab)) {
           treeOwnerAsWin->Destroy();
         }
@@ -6829,7 +6829,7 @@ void nsGlobalWindowOuter::SetKeyboardIndicators(
   }
 
   nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(
-      GetOuterWindow(), aShowAccelerators, aShowFocusRings);
+      this, aShowAccelerators, aShowFocusRings);
 
   bool newShouldShowFocusRing = ShouldShowFocusRing();
   if (mInnerWindow && nsGlobalWindowInner::Cast(mInnerWindow)->mHasFocus &&
@@ -6882,26 +6882,17 @@ nsresult nsGlobalWindowOuter::GetInterfaceInternal(const nsIID& aIID,
   *aSink = nullptr;
 
   if (aIID.Equals(NS_GET_IID(nsIWebNavigation))) {
-    nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-    NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
-
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(outer->mDocShell));
+    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
     webNav.forget(aSink);
   } else if (aIID.Equals(NS_GET_IID(nsIDocShell))) {
-    nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-    NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
-
-    nsCOMPtr<nsIDocShell> docShell = outer->mDocShell;
+    nsCOMPtr<nsIDocShell> docShell = mDocShell;
     docShell.forget(aSink);
   }
 #ifdef NS_PRINTING
   else if (aIID.Equals(NS_GET_IID(nsIWebBrowserPrint))) {
-    nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-    NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
-
-    if (outer->mDocShell) {
+    if (mDocShell) {
       nsCOMPtr<nsIContentViewer> viewer;
-      outer->mDocShell->GetContentViewer(getter_AddRefs(viewer));
+      mDocShell->GetContentViewer(getter_AddRefs(viewer));
       if (viewer) {
         nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint(do_QueryInterface(viewer));
         webBrowserPrint.forget(aSink);
@@ -6910,10 +6901,7 @@ nsresult nsGlobalWindowOuter::GetInterfaceInternal(const nsIID& aIID,
   }
 #endif
   else if (aIID.Equals(NS_GET_IID(nsILoadContext))) {
-    nsGlobalWindowOuter* outer = GetOuterWindowInternal();
-    NS_ENSURE_TRUE(outer, NS_ERROR_NOT_INITIALIZED);
-
-    nsCOMPtr<nsILoadContext> loadContext(do_QueryInterface(outer->mDocShell));
+    nsCOMPtr<nsILoadContext> loadContext(do_QueryInterface(mDocShell));
     loadContext.forget(aSink);
   }
 

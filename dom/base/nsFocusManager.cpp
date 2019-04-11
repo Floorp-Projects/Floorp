@@ -397,8 +397,6 @@ NS_IMETHODIMP nsFocusManager::SetFocusedWindow(
       nsPIDOMWindowOuter::From(aWindowToFocus);
   NS_ENSURE_TRUE(windowToFocus, NS_ERROR_FAILURE);
 
-  windowToFocus = windowToFocus->GetOuterWindow();
-
   nsCOMPtr<Element> frameElement = windowToFocus->GetFrameElementInternal();
   if (frameElement) {
     // pass false for aFocusChanged so that the caret does not get updated
