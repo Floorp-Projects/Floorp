@@ -4,24 +4,20 @@
 "use strict";
 
 function synthesizeMouseOver(element) {
+  info("synthesize mouseover");
   let promise = BrowserTestUtils.waitForEvent(element, "mouseover");
-
-  EventUtils.synthesizeMouse(element, 1, 1, {type: "mouseover"});
-  EventUtils.synthesizeMouse(element, 2, 2, {type: "mousemove"});
-  EventUtils.synthesizeMouse(element, 3, 3, {type: "mousemove"});
-  EventUtils.synthesizeMouse(element, 4, 4, {type: "mousemove"});
-
+  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mouseout"});
+  EventUtils.synthesizeMouseAtCenter(element, {type: "mouseover"});
+  EventUtils.synthesizeMouseAtCenter(element, {type: "mousemove"});
   return promise;
 }
 
 function synthesizeMouseOut(element) {
+  info("synthesize mouseout");
   let promise = BrowserTestUtils.waitForEvent(element, "mouseout");
-
-  EventUtils.synthesizeMouse(element, 0, 0, {type: "mouseout"});
+  EventUtils.synthesizeMouseAtCenter(element, {type: "mouseover"});
+  EventUtils.synthesizeMouseAtCenter(element, {type: "mouseout"});
   EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
-  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
-  EventUtils.synthesizeMouseAtCenter(document.documentElement, {type: "mousemove"});
-
   return promise;
 }
 
@@ -36,6 +32,7 @@ async function expectTooltip(text) {
 
   let popupShownPromise = BrowserTestUtils.waitForEvent(tooltip, "popupshown");
   await synthesizeMouseOver(element);
+  info("awaiting for tooltip popup");
   await popupShownPromise;
 
   is(element.getAttribute("title"), text, "title attribute has expected text");
@@ -66,7 +63,6 @@ add_task(async function() {
 
   // Ensure the URL bar is neither focused nor hovered before we start.
   gBrowser.selectedBrowser.focus();
-  await synthesizeMouseOver(gURLBar.inputField);
   await synthesizeMouseOut(gURLBar.inputField);
 
   gURLBar.value = "short string";

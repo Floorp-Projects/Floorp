@@ -8,6 +8,7 @@
 #define mozilla_dom_VisualViewport_h
 
 #include "mozilla/DOMEventTargetHelper.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/dom/VisualViewportBinding.h"
 #include "Units.h"
 #include "nsIPresShell.h"
@@ -46,10 +47,12 @@ class VisualViewport final : public mozilla::DOMEventTargetHelper {
     NS_DECL_NSIRUNNABLE
     VisualViewportResizeEvent(VisualViewport* aViewport,
                               nsPresContext* aPresContext);
-    void Revoke() { mViewport = nullptr; }
+    bool HasPresContext(nsPresContext* aContext) const;
+    void Revoke();
 
    private:
     VisualViewport* mViewport;
+    WeakPtr<nsPresContext> mPresContext;
   };
 
   class VisualViewportScrollEvent : public Runnable {
@@ -59,12 +62,14 @@ class VisualViewport final : public mozilla::DOMEventTargetHelper {
                               nsPresContext* aPresContext,
                               const nsPoint& aPrevVisualOffset,
                               const nsPoint& aPrevLayoutOffset);
-    void Revoke() { mViewport = nullptr; }
+    bool HasPresContext(nsPresContext* aContext) const;
+    void Revoke();
     nsPoint PrevVisualOffset() const { return mPrevVisualOffset; }
     nsPoint PrevLayoutOffset() const { return mPrevLayoutOffset; }
 
    private:
     VisualViewport* mViewport;
+    WeakPtr<nsPresContext> mPresContext;
     // The VisualViewport "scroll" event is supposed to be fired only when the
     // *relative* offset between visual and layout viewport changes. The two
     // viewports are updated independently from each other, though, so the only

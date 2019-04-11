@@ -179,6 +179,12 @@ static mozilla::Maybe<bool> RunAsLauncherProcess(int& argc, wchar_t** argv) {
                   mozilla::LauncherRegistryInfo::ProcessType::Launcher;
 #endif  // defined(MOZ_LAUNCHER_PROCESS)
 
+  // We must check for force-launcher *after* we do LauncherRegistryInfo checks
+  runAsLauncher |= mozilla::CheckArg(argc, argv, L"force-launcher",
+                                     static_cast<const wchar_t**>(nullptr),
+                                     mozilla::CheckArgFlag::RemoveArg) ==
+                   mozilla::ARG_FOUND;
+
   if (!runAsLauncher) {
     // In this case, we will be proceeding to run as the browser.
     // We should check MOZ_DEBUG_BROWSER_* env vars.

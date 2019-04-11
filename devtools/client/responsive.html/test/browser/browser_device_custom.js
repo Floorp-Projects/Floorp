@@ -88,6 +88,10 @@ addRDMTask(TEST_URL, async function({ ui }) {
   }));
 
   info("Remove previously added custom device");
+  // Close the form since custom device buttons are only shown when form is not open.
+  const cancelButton = document.getElementById("device-form-cancel");
+  cancelButton.click();
+
   const deviceRemoveButton = document.querySelector(".device-remove-button");
   const removed = Promise.all([
     waitUntilState(store, state => state.devices.custom.length == 0),
@@ -97,7 +101,6 @@ addRDMTask(TEST_URL, async function({ ui }) {
   await removed;
 
   info("Close the form before submitting.");
-  document.getElementById("device-form-save").click();
   document.getElementById("device-close-button").click();
 
   info("Ensure custom device was removed from device selector");

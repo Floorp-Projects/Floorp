@@ -37,9 +37,9 @@ function getPushServiceMock() {
 
 add_task(async function test_register_success() {
   await broadcastService._resetListeners();
-  let db = PushServiceWebSocket.newPushDB();
+  const db = PushServiceWebSocket.newPushDB();
   broadcastHandler.reset();
-  let notifications = broadcastHandler.notifications;
+  const notifications = broadcastHandler.notifications;
   let socket;
   registerCleanupFunction(() => { return db.drop().then(_ => db.close()); });
 
@@ -85,7 +85,9 @@ add_task(async function test_register_success() {
 
   await broadcastHandler.wasNotified;
 
-  deepEqual(notifications, [["2018-03-02", "broadcast-test"]], "Broadcast notification didn't get delivered");
+  deepEqual(notifications, [
+    ["2018-03-02", "broadcast-test", { "phase": broadcastService.PHASES.BROADCAST }],
+  ], "Broadcast notification didn't get delivered");
 
   deepEqual(await broadcastService.getListeners(), {
     "broadcast-test": "2018-03-02",
@@ -143,11 +145,65 @@ add_task(async function test_handle_hello_broadcasts() {
 
   await broadcastHandler.wasNotified;
 
-  deepEqual(notifications, [["2018-02-02", "broadcast-test"]], "Broadcast notification on hello was delivered");
+  deepEqual(notifications, [
+    ["2018-02-02", "broadcast-test", { "phase": broadcastService.PHASES.HELLO }],
+  ], "Broadcast notification on hello was delivered");
 
   deepEqual(await broadcastService.getListeners(), {
     "broadcast-test": "2018-02-02",
   }, "Broadcast version wasn't updated");
+});
+
+add_task(async function test_broadcast_context() {
+  await broadcastService._resetListeners();
+  const db = PushServiceWebSocket.newPushDB();
+  broadcastHandler.reset();
+  registerCleanupFunction(() => { return db.drop().then(() => db.close()); });
+
+  const serviceId = "broadcast-test";
+  const version = "2018-02-01";
+  await broadcastService.addListener(serviceId, version, {
+    moduleURI: "resource://test/broadcast_handler.jsm",
+    symbolName: "broadcastHandler",
+  });
+
+  // PushServiceWebSocket._generateID = () => channelID;
+
+  await PushService.init({
+    serverURI: "wss://push.example.org/",
+    db,
+    makeWebSocket(uri) {
+      return new MockWebSocket(uri, {
+        onHello(data) {},
+      });
+    },
+  });
+
+  // Simulate registration.
+  PushServiceWebSocket.sendSubscribeBroadcast(serviceId, version);
+
+  // Simulate broadcast reply received by PushWebSocketListener.
+  const message = JSON.stringify({
+    messageType: "broadcast",
+    broadcasts: {
+      [serviceId]: version,
+    },
+  });
+  PushServiceWebSocket._wsOnMessageAvailable({}, message);
+  await broadcastHandler.wasNotified;
+
+  deepEqual(broadcastHandler.notifications, [
+    [version, serviceId, { phase: broadcastService.PHASES.REGISTER }],
+  ], "Broadcast passes REGISTER context");
+
+  // Simulate broadcast reply, without previous registration.
+  broadcastHandler.reset();
+  PushServiceWebSocket._wsOnMessageAvailable({}, message);
+  await broadcastHandler.wasNotified;
+
+  deepEqual(broadcastHandler.notifications, [
+    [version, serviceId, { phase: broadcastService.PHASES.BROADCAST }],
+  ], "Broadcast passes BROADCAST context");
 });
 
 add_task(async function test_broadcast_unit() {

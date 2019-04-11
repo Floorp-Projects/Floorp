@@ -16,7 +16,7 @@
   --rdm-box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
   --viewport-active-color: #fcfcfc;
   --input-invalid-border-color: var(--red-50);
-  --custom-device-button-hover: var(--grey-10-a20)
+  --custom-device-button-hover: var(--grey-70);
 }
 
 * {
@@ -40,6 +40,10 @@ body,
 #root {
   height: 100%;
   overflow: hidden;
+}
+
+input:-moz-focusring {
+  outline: none;
 }
 
 .text-input {
@@ -442,10 +446,6 @@ body,
   padding: 10px 32px 50px 32px;
 }
 
-.device-modal-content.form-shown {
-  padding-top: 30px;
-}
-
 /* On screens that are >750px*/
 @media (min-width: 750px) {
   #device-form {
@@ -576,15 +576,10 @@ body,
 .device-modal-header {
   display: flex;
   justify-content: space-between;
-  z-index: 1;
 }
 
 .device-modal-header > #device-add-button {
   margin: 30px 75px 0 30px;
-}
-
-.device-modal-header > #device-form {
-  margin-top: 15px;
 }
 
 .device-list {
@@ -618,14 +613,10 @@ body,
   width: 100%;
   background-color: var(--theme-toolbar-background);
   min-height: 150px;
-  padding-left: 20px;
-  padding-bottom: 10px;
+  padding: 15px 0 10px 20px;
   border-bottom: 1px solid var(--theme-splitter-color);
   overflow: auto;
-}
-
-#device-add-button {
-  margin-right: 70px;
+  z-index: 1;
 }
 
 #device-add-button,
@@ -638,12 +629,19 @@ body,
   height: 32px;
 }
 
-#device-editor-remove {
+#device-edit-button::before {
+  background: url("chrome://devtools/skin/images/pencil-icon.svg") no-repeat 0 0;
+}
+
+#device-edit-button,
+#device-edit-remove {
   cursor: pointer;
 }
 
-#device-editor-remove.device-remove-button:focus-within,
-#device-editor-remove.device-remove-button:hover {
+#device-edit-button:focus-within,
+#device-edit-button:hover,
+#device-edit-remove.device-remove-button:focus-within,
+#device-edit-remove.device-remove-button:hover {
   background-color: var(--custom-device-button-hover);
 }
 
@@ -717,8 +715,8 @@ body,
 #device-form #device-form-save {
   background-color: #0060DF;
   color: #fff;
-  border:1px solid #0060DF;
-  width: 50px;
+  border: 1px solid #0060DF;
+  width: 60px;
 }
 
 #device-form-size {

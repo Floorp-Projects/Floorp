@@ -10,6 +10,7 @@ const asyncStorage = require("devtools/shared/async-storage");
 const {
   ADD_DEVICE,
   ADD_DEVICE_TYPE,
+  EDIT_DEVICE,
   LOAD_DEVICE_LIST_START,
   LOAD_DEVICE_LIST_ERROR,
   LOAD_DEVICE_LIST_END,
@@ -19,7 +20,7 @@ const {
 } = require("./index");
 const { post } = require("../utils/message");
 
-const { addDevice, getDevices, removeDevice } = require("devtools/client/shared/devices");
+const { addDevice, editDevice, getDevices, removeDevice } = require("devtools/client/shared/devices");
 const { changeUserAgent, toggleTouchSimulation } = require("./ui");
 const { changeDevice, changePixelRatio } = require("./viewports");
 
@@ -101,6 +102,32 @@ module.exports = {
     return {
       type: ADD_DEVICE_TYPE,
       deviceType,
+    };
+  },
+
+  editCustomDevice(viewport, oldDevice, newDevice) {
+    return async function(dispatch) {
+      // Edit custom device in storage
+      await editDevice(oldDevice, newDevice, "custom");
+      // Notify the window that the device should be updated in the device selector.
+      post(window, {
+        type: "change-device",
+        device: newDevice,
+      });
+
+      // Update UI if the device is selected.
+      if (viewport) {
+        dispatch(changeUserAgent(newDevice.userAgent));
+        dispatch(toggleTouchSimulation(newDevice.touch));
+      }
+
+      dispatch({
+        type: EDIT_DEVICE,
+        deviceType: "custom",
+        viewport,
+        oldDevice,
+        newDevice,
+      });
     };
   },
 

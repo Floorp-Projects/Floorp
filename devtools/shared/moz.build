@@ -47,6 +47,7 @@ DevToolsModules(
     'async-utils.js',
     'base-loader.js',
     'builtin-modules.js',
+    'constants.js',
     'content-observer.js',
     'debounce.js',
     'defer.js',

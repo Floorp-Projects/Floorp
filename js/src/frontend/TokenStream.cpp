@@ -1833,9 +1833,9 @@ GeneralTokenStreamChars<Unit, AnyCharsAccess>::newTokenInternal(
   token->pos = TokenPos(start.offset(), this->sourceUnits.offset());
   MOZ_ASSERT(token->pos.begin <= token->pos.end);
 
-  // NOTE: |token->modifier| and |token->modifierException| are set in
-  //       |newToken()| so that optimized, non-debug code won't do any work
-  //       to pass a modifier-argument that will never be used.
+  // NOTE: |token->modifier| is set in |newToken()| so that optimized,
+  // non-debug code won't do any work to pass a modifier-argument that will
+  // never be used.
 
   return token;
 }
@@ -2950,7 +2950,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         }
 
         // Look for a regexp.
-        if (modifier == Operand) {
+        if (modifier == SlashIsRegExp) {
           return regexpLiteral(start, ttp);
         }
 

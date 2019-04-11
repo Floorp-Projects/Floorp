@@ -511,6 +511,45 @@ function addDeviceInModal(ui, device) {
   return saved;
 }
 
+function editDeviceInModal(ui, device, newDevice) {
+  const { Simulate } =
+    ui.toolWindow.require("devtools/client/shared/vendor/react-dom-test-utils");
+  const { document, store } = ui.toolWindow;
+
+  const nameInput = document.querySelector("#device-form-name input");
+  const [ widthInput, heightInput ] =
+    document.querySelectorAll("#device-form-size input");
+  const pixelRatioInput = document.querySelector("#device-form-pixel-ratio input");
+  const userAgentInput = document.querySelector("#device-form-user-agent input");
+  const touchInput = document.querySelector("#device-form-touch input");
+
+  nameInput.value = newDevice.name;
+  Simulate.change(nameInput);
+  widthInput.value = newDevice.width;
+  Simulate.change(widthInput);
+  Simulate.blur(widthInput);
+  heightInput.value = newDevice.height;
+  Simulate.change(heightInput);
+  Simulate.blur(heightInput);
+  pixelRatioInput.value = newDevice.pixelRatio;
+  Simulate.change(pixelRatioInput);
+  userAgentInput.value = newDevice.userAgent;
+  Simulate.change(userAgentInput);
+  touchInput.checked = newDevice.touch;
+  Simulate.change(touchInput);
+
+  const existingCustomDevices = store.getState().devices.custom.length;
+  const formSave = document.querySelector("#device-form-save");
+
+  const saved = waitUntilState(store, state =>
+    state.devices.custom.length == existingCustomDevices &&
+    state.devices.custom.find(({ name }) => name == newDevice.name) &&
+    !state.devices.custom.find(({ name }) => name == device.name)
+  );
+  Simulate.click(formSave);
+  return saved;
+}
+
 function reloadOnUAChange(enabled) {
   const pref = RELOAD_CONDITION_PREF_PREFIX + "userAgent";
   Services.prefs.setBoolPref(pref, enabled);

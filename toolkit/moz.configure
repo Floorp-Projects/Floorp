@@ -937,9 +937,9 @@ set_define('ENABLE_REMOTE_AGENT', remote)
 # automation, and testing purposes throughout Gecko, Firefox, and Fennec.
 # Marionette lives in ../testing/marionette.
 #
-# Marionette is not really a toolkit feature, as much as a Gecko engine
-# feature.  But it is enabled based on the toolkit (and target), so here
-# it lives.
+# Marionette is not really a toolkit feature, as much as a Gecko
+# engine feature.  But it is enabled based on the toolkit, so here it
+# lives.
 #
 # It also backs ../testing/geckodriver, which is Mozilla's WebDriver
 # implementation.
@@ -947,18 +947,10 @@ set_define('ENABLE_REMOTE_AGENT', remote)
 # For more information, see
 # https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette.
 
-@depends(target)
-def marionette(target):
-    """Enable Marionette by default, except on Android."""
-    if target.os != 'Android':
-        return True
+option('--disable-marionette',
+       help='Disable Marionette remote protocol')
 
-imply_option('--enable-marionette', marionette, reason='Not Android')
-
-option('--enable-marionette',
-       help='Enable Marionette remote protocol')
-
-@depends('--enable-marionette')
+@depends('--disable-marionette')
 def marionette(value):
     if value:
         return True

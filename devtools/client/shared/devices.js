@@ -81,6 +81,29 @@ async function addDevice(device, type = "phones") {
 }
 
 /**
+ * Edit a device from the local catalog.
+ * Returns `true` if the device is edited, `false` otherwise.
+ */
+async function editDevice(oldDevice, newDevice, type = "phones") {
+  await loadLocalDevices();
+  const list = localDevices[type];
+  if (!list) {
+    return false;
+  }
+
+  const index = list.findIndex(entry => entry.name == oldDevice.name);
+  if (index == -1) {
+    return false;
+  }
+
+  // Replace old device info with new one
+  list.splice(index, 1, newDevice);
+  await asyncStorage.setItem(LOCAL_DEVICES, JSON.stringify(localDevices));
+
+  return true;
+}
+
+/**
  * Remove a device from the local catalog.
  * Returns `true` if the device is removed, `false` otherwise.
  */
@@ -136,6 +159,7 @@ function getDeviceString(deviceType) {
 
 module.exports = {
   addDevice,
+  editDevice,
   removeDevice,
   removeLocalDevices,
   getDevices,

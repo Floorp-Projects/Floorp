@@ -18,14 +18,12 @@ const Types = require("../types");
 class DeviceForm extends PureComponent {
   static get propTypes() {
     return {
-      buttonText: PropTypes.string,
       formType: PropTypes.string.isRequired,
       device: PropTypes.shape(Types.device).isRequired,
+      devices: PropTypes.shape(Types.devices).isRequired,
       onSave: PropTypes.func.isRequired,
-      validateName: PropTypes.func.isRequired,
       viewportTemplate: PropTypes.shape(Types.viewport).isRequired,
       onDeviceFormHide: PropTypes.func.isRequired,
-      onDeviceFormShow: PropTypes.func.isRequired,
     };
   }
 
@@ -38,7 +36,6 @@ class DeviceForm extends PureComponent {
     } = this.props.viewportTemplate;
 
     this.state = {
-      isShown: false,
       height,
       width,
     };
@@ -50,8 +47,8 @@ class DeviceForm extends PureComponent {
 
     this.onChangeSize = this.onChangeSize.bind(this);
     this.onDeviceFormHide  = this.onDeviceFormHide.bind(this);
-    this.onDeviceFormShow = this.onDeviceFormShow.bind(this);
     this.onDeviceFormSave = this.onDeviceFormSave.bind(this);
+    this.validateNameField = this.validateNameField.bind(this);
   }
 
   onChangeSize(_, width, height) {
@@ -66,7 +63,7 @@ class DeviceForm extends PureComponent {
       return;
     }
 
-    if (!this.props.validateName(this.nameInputRef.current.value)) {
+    if (!this.validateNameField(this.nameInputRef.current.value, this.props.device)) {
       this.nameInputRef.current
         .setCustomValidity(getStr("responsive.deviceNameAlreadyInUse"));
       return;
@@ -85,43 +82,52 @@ class DeviceForm extends PureComponent {
   }
 
   onDeviceFormHide() {
-    this.setState({ isShown: false });
-
     // Ensure that we have onDeviceFormHide before calling it.
     if (this.props.onDeviceFormHide) {
       this.props.onDeviceFormHide();
     }
   }
 
-  onDeviceFormShow() {
-    this.setState({ isShown: true });
+  /**
+   * Validates the name field's value.
+   *
+   * @param  {String} value
+   *         The input field value for the device name.
+   * @return {Boolean} true if device name is valid, false otherwise.
+   */
+  validateNameField(value) {
+    const nameFieldValue = value.trim();
+    let isValidDeviceName = false;
 
-    // Ensure that we have onDeviceFormShow before calling it.
-    if (this.props.onDeviceFormShow) {
-      this.props.onDeviceFormShow();
+    // If the formType is "add", then we just need to check if a custom device with that
+    // same name exists.
+    if (this.props.formType === "add") {
+      isValidDeviceName = !this.props.devices.custom
+        .find(device => device.name == nameFieldValue);
+    } else {
+      // Otherwise, the formType is "edit". We'd have to find another device that
+      // already has the same name, but not itself, so:
+      // Find the index of the device being edited. Use this index value to distinguish
+      // between the device being edited from other devices in the list.
+      const deviceIndex = this.props.devices.custom.findIndex(({ name }) => {
+        return name === this.props.device.name;
+      });
+
+      isValidDeviceName = !this.props.devices.custom.find((d, index) => {
+        return d.name === nameFieldValue && index !== deviceIndex;
+      });
     }
+
+    return isValidDeviceName;
   }
 
   render() {
-    const { buttonText, device, formType } = this.props;
-    const { isShown, width, height } = this.state;
-
-    if (!isShown) {
-      return (
-        dom.button(
-          {
-            id: `device-${formType}-button`,
-            className: "devtools-button",
-            onClick: this.onDeviceFormShow,
-          },
-          buttonText,
-        )
-      );
-    }
+    const { device, formType } = this.props;
+    const { width, height } = this.state;
 
     return (
       dom.form({ id: "device-form" },
-        dom.label({ id: "device-form-name", className: formType },
+        dom.label({ id: "device-form-name" },
           dom.span({ className: "device-form-label" },
             getStr("responsive.deviceAdderName")
           ),
@@ -172,7 +178,9 @@ class DeviceForm extends PureComponent {
         ),
         dom.div({ className: "device-form-buttons" },
           dom.button({ id: "device-form-save", onClick: this.onDeviceFormSave },
-            getStr("responsive.deviceAdderSave")
+            formType === "add" ?
+              getStr("responsive.deviceAdderSave") :
+              getStr("responsive.deviceFormUpdate")
           ),
           dom.button({ id: "device-form-cancel", onClick: this.onDeviceFormHide },
             getStr("responsive.deviceAdderCancel")

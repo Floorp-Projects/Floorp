@@ -36,7 +36,9 @@ add_task(async function test_hidden() {
   let [addon1, addon2] = await promiseAddonsByIDs(["privileged@tests.mozilla.org",
                                                    "unprivileged@tests.mozilla.org"]);
 
+  ok(addon1.isPrivileged, "Privileged is privileged");
   ok(addon1.hidden, "Privileged extension should be hidden");
+  ok(!addon2.isPrivileged, "Unprivileged extension is not privileged");
   ok(!addon2.hidden, "Unprivileged extension should not be hidden");
 
   await promiseRestartManager();
@@ -44,7 +46,9 @@ add_task(async function test_hidden() {
   ([addon1, addon2] = await promiseAddonsByIDs(["privileged@tests.mozilla.org",
                                                 "unprivileged@tests.mozilla.org"]));
 
+  ok(addon1.isPrivileged, "Privileged is privileged");
   ok(addon1.hidden, "Privileged extension should be hidden");
+  ok(!addon2.isPrivileged, "Unprivileged extension is not privileged");
   ok(!addon2.hidden, "Unprivileged extension should not be hidden");
 
   await promiseShutdownManager();

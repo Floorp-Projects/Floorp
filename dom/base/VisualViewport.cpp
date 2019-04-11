@@ -149,13 +149,19 @@ nsPresContext* VisualViewport::GetPresContext() const {
 /* ================= Resize event handling ================= */
 
 void VisualViewport::PostResizeEvent() {
-  VVP_LOG("%p: PostResizeEvent\n", this);
-  if (mResizeEvent) {
+  VVP_LOG("%p: PostResizeEvent (pre-existing: %d)\n", this, !!mResizeEvent);
+  nsPresContext* presContext = GetPresContext();
+  if (mResizeEvent && mResizeEvent->HasPresContext(presContext)) {
     return;
+  }
+  if (mResizeEvent) {
+    // prescontext changed, so discard the old resize event and queue a new one
+    mResizeEvent->Revoke();
+    mResizeEvent = nullptr;
   }
 
   // The event constructor will register itself with the refresh driver.
-  if (nsPresContext* presContext = GetPresContext()) {
+  if (presContext) {
     mResizeEvent = new VisualViewportResizeEvent(this, presContext);
     VVP_LOG("%p: PostResizeEvent, created new event\n", this);
   }
@@ -164,8 +170,21 @@ void VisualViewport::PostResizeEvent() {
 VisualViewport::VisualViewportResizeEvent::VisualViewportResizeEvent(
     VisualViewport* aViewport, nsPresContext* aPresContext)
     : Runnable("VisualViewport::VisualViewportResizeEvent"),
-      mViewport(aViewport) {
+      mViewport(aViewport),
+      mPresContext(aPresContext) {
+  VVP_LOG("%p: Registering PostResize on %p %p\n", aViewport, aPresContext,
+          aPresContext->RefreshDriver());
   aPresContext->RefreshDriver()->PostVisualViewportResizeEvent(this);
+}
+
+bool VisualViewport::VisualViewportResizeEvent::HasPresContext(
+    nsPresContext* aContext) const {
+  return mPresContext.get() == aContext;
+}
+
+void VisualViewport::VisualViewportResizeEvent::Revoke() {
+  mViewport = nullptr;
+  mPresContext = nullptr;
 }
 
 NS_IMETHODIMP
@@ -197,14 +216,22 @@ void VisualViewport::FireResizeEvent() {
 
 void VisualViewport::PostScrollEvent(const nsPoint& aPrevVisualOffset,
                                      const nsPoint& aPrevLayoutOffset) {
-  VVP_LOG("%p: PostScrollEvent, prevRelativeOffset=%s\n", this,
-          ToString(aPrevVisualOffset - aPrevLayoutOffset).c_str());
-  if (mScrollEvent) {
+  VVP_LOG("%p: PostScrollEvent, prevRelativeOffset=%s (pre-existing: %d)\n",
+          this, ToString(aPrevVisualOffset - aPrevLayoutOffset).c_str(),
+          !!mScrollEvent);
+  nsPresContext* presContext = GetPresContext();
+  if (mScrollEvent && mScrollEvent->HasPresContext(presContext)) {
     return;
   }
 
+  if (mScrollEvent) {
+    // prescontext changed, so discard the old scroll event and queue a new one
+    mScrollEvent->Revoke();
+    mScrollEvent = nullptr;
+  }
+
   // The event constructor will register itself with the refresh driver.
-  if (nsPresContext* presContext = GetPresContext()) {
+  if (presContext) {
     mScrollEvent = new VisualViewportScrollEvent(
         this, presContext, aPrevVisualOffset, aPrevLayoutOffset);
     VVP_LOG("%p: PostScrollEvent, created new event\n", this);
@@ -216,9 +243,22 @@ VisualViewport::VisualViewportScrollEvent::VisualViewportScrollEvent(
     const nsPoint& aPrevVisualOffset, const nsPoint& aPrevLayoutOffset)
     : Runnable("VisualViewport::VisualViewportScrollEvent"),
       mViewport(aViewport),
+      mPresContext(aPresContext),
       mPrevVisualOffset(aPrevVisualOffset),
       mPrevLayoutOffset(aPrevLayoutOffset) {
+  VVP_LOG("%p: Registering PostScroll on %p %p\n", aViewport, aPresContext,
+          aPresContext->RefreshDriver());
   aPresContext->RefreshDriver()->PostVisualViewportScrollEvent(this);
+}
+
+bool VisualViewport::VisualViewportScrollEvent::HasPresContext(
+    nsPresContext* aContext) const {
+  return mPresContext.get() == aContext;
+}
+
+void VisualViewport::VisualViewportScrollEvent::Revoke() {
+  mViewport = nullptr;
+  mPresContext = nullptr;
 }
 
 NS_IMETHODIMP
