@@ -8,6 +8,7 @@
 #include "APZTestCommon.h"
 #include "gfxPrefs.h"
 #include "InputUtils.h"
+#include "mozilla/StaticPrefs.h"
 
 class APZCSnappingTester : public APZCTreeManagerTester {};
 
@@ -26,8 +27,13 @@ TEST_F(APZCSnappingTester, Bug1265510) {
   SetScrollHandoff(layers[1], root);
 
   ScrollSnapInfo snap;
-  snap.mScrollSnapTypeY = StyleScrollSnapType::Mandatory;
-  snap.mScrollSnapIntervalY = Some(100 * AppUnitsPerCSSPixel());
+  snap.mScrollSnapTypeY = StyleScrollSnapStrictness::Mandatory;
+  if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
+    snap.mSnapPositionY.AppendElement(0 * AppUnitsPerCSSPixel());
+    snap.mSnapPositionY.AppendElement(100 * AppUnitsPerCSSPixel());
+  } else {
+    snap.mScrollSnapIntervalY = Some(100 * AppUnitsPerCSSPixel());
+  }
 
   ScrollMetadata metadata = root->GetScrollMetadata(0);
   metadata.SetSnapInfo(ScrollSnapInfo(snap));
@@ -96,8 +102,14 @@ TEST_F(APZCSnappingTester, Snap_After_Pinch) {
 
   // Set up some basic scroll snapping
   ScrollSnapInfo snap;
-  snap.mScrollSnapTypeY = StyleScrollSnapType::Mandatory;
-  snap.mScrollSnapIntervalY = Some(100 * AppUnitsPerCSSPixel());
+  snap.mScrollSnapTypeY = StyleScrollSnapStrictness::Mandatory;
+
+  if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
+    snap.mSnapPositionY.AppendElement(0 * AppUnitsPerCSSPixel());
+    snap.mSnapPositionY.AppendElement(100 * AppUnitsPerCSSPixel());
+  } else {
+    snap.mScrollSnapIntervalY = Some(100 * AppUnitsPerCSSPixel());
+  }
 
   // Save the scroll snap info on the root APZC.
   // Also mark the root APZC as "root content", since APZC only allows

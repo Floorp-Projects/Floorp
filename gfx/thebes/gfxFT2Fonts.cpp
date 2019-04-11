@@ -23,7 +23,6 @@
 #include <locale.h>
 #include "nsGkAtoms.h"
 #include "nsTArray.h"
-#include "nsUnicodeRange.h"
 #include "nsCRT.h"
 #include "nsXULAppAPI.h"
 

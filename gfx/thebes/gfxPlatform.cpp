@@ -83,7 +83,6 @@
 #include "gfxFontMissingGlyphs.h"
 
 #include "nsExceptionHandler.h"
-#include "nsUnicodeRange.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 #include "nsIObserverService.h"
