@@ -149,7 +149,7 @@ var viewport = document.scrollingElement;
     window.scrollTo(0, 0);
     assert_equals(window.scrollX, 0);
     assert_equals(window.scrollY, 0);
-    window.scrollTo(input);
+    window.scrollBy(input);
     assert_equals(window.scrollX, expectedX);
     assert_equals(window.scrollY, expectedY);
   }, `scrollBy(${format_dict(input)}) on window lands on (${expectedX}, ${expectedY})`);
