@@ -778,6 +778,9 @@ void Element::ScrollIntoView(const ScrollIntoViewOptions& aOptions) {
   } else if (aOptions.mBehavior == ScrollBehavior::Auto) {
     flags |= nsIPresShell::SCROLL_SMOOTH_AUTO;
   }
+  if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
+    flags |= nsIPresShell::SCROLL_SNAP;
+  }
 
   presShell->ScrollContentIntoView(
       this, nsIPresShell::ScrollAxis(vpercent, nsIPresShell::SCROLL_ALWAYS),

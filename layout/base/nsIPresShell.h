@@ -778,7 +778,8 @@ class nsIPresShell : public nsStubDocumentObserver {
     SCROLL_OVERFLOW_HIDDEN = 0x02,
     SCROLL_NO_PARENT_FRAMES = 0x04,
     SCROLL_SMOOTH = 0x08,
-    SCROLL_SMOOTH_AUTO = 0x10
+    SCROLL_SMOOTH_AUTO = 0x10,
+    SCROLL_SNAP = 0x20
   };
   /**
    * Scrolls the view of the document so that the given area of a frame
