@@ -1,5 +1,3 @@
-/* import-globals-from antitracking_head.js */
-
 AntiTracking.runTest("BroadcastChannel",
   async _ => {
     try {

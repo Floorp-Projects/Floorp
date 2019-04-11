@@ -16,7 +16,6 @@
 #include "mozilla/LoadInfo.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Monitor.h"
-#include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/TaskQueue.h"
 #include "mozilla/Telemetry.h"
 #include "nsCategoryCache.h"
@@ -1852,14 +1851,13 @@ nsresult NS_LoadPersistentPropertiesFromURISpec(
 
 bool NS_UsePrivateBrowsing(nsIChannel *channel) {
   OriginAttributes attrs;
-  bool result = NS_GetOriginAttributes(channel, attrs, false);
+  bool result = NS_GetOriginAttributes(channel, attrs);
   NS_ENSURE_TRUE(result, result);
   return attrs.mPrivateBrowsingId > 0;
 }
 
 bool NS_GetOriginAttributes(nsIChannel *aChannel,
-                            mozilla::OriginAttributes &aAttributes,
-                            bool aUsingStoragePrincipal) {
+                            mozilla::OriginAttributes &aAttributes) {
   nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
   loadInfo->GetOriginAttributes(&aAttributes);
 
@@ -1875,10 +1873,6 @@ bool NS_GetOriginAttributes(nsIChannel *aChannel,
     isPrivate = loadContext && loadContext->UsePrivateBrowsing();
   }
   aAttributes.SyncAttributesWithPrivateBrowsing(isPrivate);
-
-  if (aUsingStoragePrincipal) {
-    StoragePrincipalHelper::PrepareOriginAttributes(aChannel, aAttributes);
-  }
   return true;
 }
 

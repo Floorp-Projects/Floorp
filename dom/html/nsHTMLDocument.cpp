@@ -222,11 +222,10 @@ void nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) {
 }
 
 void nsHTMLDocument::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
-                                nsIPrincipal* aPrincipal,
-                                nsIPrincipal* aStoragePrincipal) {
+                                nsIPrincipal* aPrincipal) {
   mLoadFlags = nsIRequest::LOAD_NORMAL;
 
-  Document::ResetToURI(aURI, aLoadGroup, aPrincipal, aStoragePrincipal);
+  Document::ResetToURI(aURI, aLoadGroup, aPrincipal);
 
   mImages = nullptr;
   mApplets = nullptr;
@@ -1030,14 +1029,7 @@ void nsHTMLDocument::GetCookie(nsAString& aCookie, ErrorResult& rv) {
     return;
   }
 
-  nsContentUtils::StorageAccess storageAccess =
-      nsContentUtils::StorageAllowedForDocument(this);
-  if (storageAccess == nsContentUtils::StorageAccess::eDeny) {
-    return;
-  }
-
-  if (storageAccess == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
-      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
+  if (nsContentUtils::StorageDisabledByAntiTracking(this, nullptr)) {
     return;
   }
 
@@ -1090,14 +1082,7 @@ void nsHTMLDocument::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
     return;
   }
 
-  nsContentUtils::StorageAccess storageAccess =
-      nsContentUtils::StorageAllowedForDocument(this);
-  if (storageAccess == nsContentUtils::StorageAccess::eDeny) {
-    return;
-  }
-
-  if (storageAccess == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
-      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
+  if (nsContentUtils::StorageDisabledByAntiTracking(this, nullptr)) {
     return;
   }
 

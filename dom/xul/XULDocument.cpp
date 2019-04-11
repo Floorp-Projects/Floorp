@@ -193,8 +193,7 @@ void XULDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) {
 }
 
 void XULDocument::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
-                             nsIPrincipal* aPrincipal,
-                             nsIPrincipal* aStoragePrincipal) {
+                             nsIPrincipal* aPrincipal) {
   MOZ_ASSERT_UNREACHABLE("ResetToURI");
 }
 
@@ -243,21 +242,10 @@ nsresult XULDocument::StartDocumentLoad(const char* aCommand,
 
   // Get the document's principal
   nsCOMPtr<nsIPrincipal> principal;
-  nsCOMPtr<nsIPrincipal> storagePrincipal;
-  rv = nsContentUtils::GetSecurityManager()->GetChannelResultPrincipals(
-      mChannel, getter_AddRefs(principal), getter_AddRefs(storagePrincipal));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  bool equal = principal->Equals(storagePrincipal);
-
+  nsContentUtils::GetSecurityManager()->GetChannelResultPrincipal(
+      mChannel, getter_AddRefs(principal));
   principal = MaybeDowngradePrincipal(principal);
-  if (equal) {
-    storagePrincipal = principal;
-  } else {
-    storagePrincipal = MaybeDowngradePrincipal(storagePrincipal);
-  }
-
-  SetPrincipals(principal, storagePrincipal);
+  SetPrincipal(principal);
 
   ResetStylesheetsToURI(mDocumentURI);
 
