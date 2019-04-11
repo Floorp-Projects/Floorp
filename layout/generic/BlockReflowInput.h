@@ -362,7 +362,7 @@ class BlockReflowInput {
 
   //----------------------------------------
 
-  // Temporary line-reflow state. This state is used during the reflow
+  // Temporary state, for line-reflow. This state is used during the reflow
   // of a given line, but doesn't have meaning before or after.
 
   // The list of floats that are "current-line" floats. These are
