@@ -1603,6 +1603,8 @@ pref("browser.contentblocking.reportBreakage.url", "https://tracking-protection-
 
 pref("browser.contentblocking.introCount", 0);
 
+pref("browser.contentblocking.maxIntroCount", 5);
+
 pref("privacy.trackingprotection.introURL", "https://www.mozilla.org/%LOCALE%/firefox/%VERSION%/content-blocking/start/");
 
 // Always enable newtab segregation using containers
