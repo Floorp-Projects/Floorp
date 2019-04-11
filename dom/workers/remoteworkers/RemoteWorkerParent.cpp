@@ -83,7 +83,10 @@ void RemoteWorkerParent::ActorDestroy(IProtocol::ActorDestroyReason) {
     target->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
   }
 
-  mController = nullptr;
+  if (mController) {
+    mController->ForgetActorAndTerminate();
+    mController = nullptr;
+  }
 }
 
 IPCResult RemoteWorkerParent::RecvCreated(const bool& aStatus) {

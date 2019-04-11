@@ -219,6 +219,20 @@ void RemoteWorkerController::AddPortIdentifier(
   Unused << mActor->SendExecOp(RemoteWorkerPortIdentifierOp(aPortIdentifier));
 }
 
+void RemoteWorkerController::ForgetActorAndTerminate() {
+  AssertIsOnBackgroundThread();
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  // The actor has been destroyed without a proper close() notification. Let's
+  // inform the observer.
+  if (mState == eReady) {
+    mObserver->Terminated();
+  }
+
+  mActor = nullptr;
+  Terminate();
+}
+
 void RemoteWorkerController::Terminate() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(XRE_IsParentProcess());
