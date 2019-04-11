@@ -58,6 +58,7 @@ using mozilla::ArrayLength;
 using mozilla::Atomic;
 using mozilla::BitwiseCast;
 using mozilla::IsAsciiAlpha;
+using mozilla::IsAsciiDigit;
 using mozilla::IsFinite;
 using mozilla::IsNaN;
 using mozilla::NumbersAreIdentical;
@@ -2891,11 +2892,12 @@ static bool ToLocaleFormatHelper(JSContext* cx, HandleObject obj,
     if (strcmp(format, "%x") == 0 && result_len >= 6 &&
         /* Format %x means use OS settings, which may have 2-digit yr, so
            hack end of 3/11/22 or 11.03.22 or 11Mar22 to use 4-digit yr...*/
-        !isdigit(buf[result_len - 3]) && isdigit(buf[result_len - 2]) &&
-        isdigit(buf[result_len - 1]) &&
+        !IsAsciiDigit(buf[result_len - 3]) &&
+        IsAsciiDigit(buf[result_len - 2]) &&
+        IsAsciiDigit(buf[result_len - 1]) &&
         /* ...but not if starts with 4-digit year, like 2022/3/11. */
-        !(isdigit(buf[0]) && isdigit(buf[1]) && isdigit(buf[2]) &&
-          isdigit(buf[3]))) {
+        !(IsAsciiDigit(buf[0]) && IsAsciiDigit(buf[1]) &&
+          IsAsciiDigit(buf[2]) && IsAsciiDigit(buf[3]))) {
       int year = int(YearFromTime(localTime));
       snprintf(buf + (result_len - 2), (sizeof buf) - (result_len - 2), "%d",
                year);
