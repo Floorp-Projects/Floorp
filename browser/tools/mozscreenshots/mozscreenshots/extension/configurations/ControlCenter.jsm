@@ -28,7 +28,7 @@ const TRACKING_PAGE = `http://tracking.example.org/${RESOURCE_PATH}/tracking.htm
 var ControlCenter = {
   init(libDir) {
     // Disable the FTU tours.
-    Services.prefs.setIntPref("browser.contentblocking.introCount", 20);
+    Services.prefs.setIntPref("browser.contentblocking.introCount", 5);
   },
 
   configurations: {
