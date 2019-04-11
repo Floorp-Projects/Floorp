@@ -219,16 +219,9 @@ void SharedWorkerService::GetOrCreateWorkerManagerOnMainThread(
   MOZ_ASSERT(aActor);
 
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIPrincipal> principal =
-      PrincipalInfoToPrincipal(aData.principalInfo(), &rv);
-  if (NS_WARN_IF(!principal)) {
-    ErrorPropagationOnMainThread(aBackgroundEventTarget, aActor, rv);
-    return;
-  }
-
-  rv = PopulatePrincipalContentSecurityPolicy(principal, aData.principalCsp(),
-                                              aData.principalPreloadCsp());
-  if (NS_WARN_IF(NS_FAILED(rv))) {
+  nsCOMPtr<nsIPrincipal> storagePrincipal =
+      PrincipalInfoToPrincipal(aData.storagePrincipalInfo(), &rv);
+  if (NS_WARN_IF(!storagePrincipal)) {
     ErrorPropagationOnMainThread(aBackgroundEventTarget, aActor, rv);
     return;
   }
@@ -255,8 +248,8 @@ void SharedWorkerService::GetOrCreateWorkerManagerOnMainThread(
       DeserializeURI(aData.resolvedScriptURL());
   for (SharedWorkerManager* workerManager : mWorkerManagers) {
     managerHolder = workerManager->MatchOnMainThread(
-        this, aData.domain(), resolvedScriptURL, aData.name(),
-        loadingPrincipal);
+        this, aData.domain(), resolvedScriptURL, aData.name(), loadingPrincipal,
+        BasePrincipal::Cast(storagePrincipal)->OriginAttributesRef());
     if (managerHolder) {
       break;
     }
@@ -264,8 +257,9 @@ void SharedWorkerService::GetOrCreateWorkerManagerOnMainThread(
 
   // Let's create a new one.
   if (!managerHolder) {
-    managerHolder = SharedWorkerManager::Create(this, aBackgroundEventTarget,
-                                                aData, loadingPrincipal);
+    managerHolder = SharedWorkerManager::Create(
+        this, aBackgroundEventTarget, aData, loadingPrincipal,
+        BasePrincipal::Cast(storagePrincipal)->OriginAttributesRef());
 
     mWorkerManagers.AppendElement(managerHolder->Manager());
   } else {
