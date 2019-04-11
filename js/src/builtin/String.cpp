@@ -69,6 +69,7 @@ using JS::SymbolCode;
 
 using mozilla::AsciiAlphanumericToNumber;
 using mozilla::CheckedInt;
+using mozilla::IsAsciiHexDigit;
 using mozilla::IsNaN;
 using mozilla::IsSame;
 using mozilla::PodCopy;
@@ -230,7 +231,8 @@ static inline bool Unhex4(const RangedPtr<const CharT> chars,
                           char16_t* result) {
   CharT a = chars[0], b = chars[1], c = chars[2], d = chars[3];
 
-  if (!(JS7_ISHEX(a) && JS7_ISHEX(b) && JS7_ISHEX(c) && JS7_ISHEX(d))) {
+  if (!(IsAsciiHexDigit(a) && IsAsciiHexDigit(b) && IsAsciiHexDigit(c) &&
+        IsAsciiHexDigit(d))) {
     return false;
   }
 
@@ -247,7 +249,7 @@ static inline bool Unhex2(const RangedPtr<const CharT> chars,
                           char16_t* result) {
   CharT a = chars[0], b = chars[1];
 
-  if (!(JS7_ISHEX(a) && JS7_ISHEX(b))) {
+  if (!(IsAsciiHexDigit(a) && IsAsciiHexDigit(b))) {
     return false;
   }
 
@@ -3980,7 +3982,7 @@ static DecodeResult Decode(StringBuffer& sb, const CharT* chars, size_t length,
         return Decode_BadUri;
       }
 
-      if (!JS7_ISHEX(chars[k + 1]) || !JS7_ISHEX(chars[k + 2])) {
+      if (!IsAsciiHexDigit(chars[k + 1]) || !IsAsciiHexDigit(chars[k + 2])) {
         return Decode_BadUri;
       }
 
@@ -4021,7 +4023,8 @@ static DecodeResult Decode(StringBuffer& sb, const CharT* chars, size_t length,
             return Decode_BadUri;
           }
 
-          if (!JS7_ISHEX(chars[k + 1]) || !JS7_ISHEX(chars[k + 2])) {
+          if (!IsAsciiHexDigit(chars[k + 1]) ||
+              !IsAsciiHexDigit(chars[k + 2])) {
             return Decode_BadUri;
           }
 

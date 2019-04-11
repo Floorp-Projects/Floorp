@@ -1220,7 +1220,7 @@ class SourceUnits {
     char16_t v = 0;
     for (uint8_t i = 0; i < n; i++) {
       auto unit = CodeUnitValue(ptr[i]);
-      if (!JS7_ISHEX(unit)) {
+      if (!mozilla::IsAsciiHexDigit(unit)) {
         return false;
       }
 
