@@ -53,6 +53,7 @@ import java.lang.Void;
 import java.lang.annotation.Annotation;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.util.AbstractSequentialList;
 import java.util.List;
 import java.util.Map;
 import org.json.JSONObject;
@@ -393,6 +394,7 @@ package org.mozilla.geckoview {
     method @AnyThread @NonNull public GeckoResult<String> getUserAgent();
     method @AnyThread public void goBack();
     method @AnyThread public void goForward();
+    method @AnyThread public void gotoHistoryIndex(int);
     method @AnyThread public boolean isOpen();
     method @AnyThread public void loadData(@NonNull byte[], @Nullable String);
     method @AnyThread public void loadString(@NonNull String, @Nullable String);
@@ -478,6 +480,7 @@ package org.mozilla.geckoview {
 
   public static interface GeckoSession.HistoryDelegate {
     method @UiThread @Nullable default public GeckoResult<boolean[]> getVisited(@NonNull GeckoSession, @NonNull String[]);
+    method @UiThread default public void onHistoryStateChange(@NonNull GeckoSession, @NonNull GeckoSession.HistoryDelegate.HistoryList);
     method @UiThread @Nullable default public GeckoResult<Boolean> onVisited(@NonNull GeckoSession, @NonNull String, @Nullable String, int);
     field public static final int VISIT_REDIRECT_PERMANENT = 4;
     field public static final int VISIT_REDIRECT_SOURCE = 8;
@@ -485,6 +488,15 @@ package org.mozilla.geckoview {
     field public static final int VISIT_REDIRECT_TEMPORARY = 2;
     field public static final int VISIT_TOP_LEVEL = 1;
     field public static final int VISIT_UNRECOVERABLE_ERROR = 32;
+  }
+
+  public static interface GeckoSession.HistoryDelegate.HistoryItem {
+    method @AnyThread @NonNull default public String getTitle();
+    method @AnyThread @NonNull default public String getUri();
+  }
+
+  public static interface GeckoSession.HistoryDelegate.HistoryList implements List {
+    method @AnyThread default public int getCurrentIndex();
   }
 
   public static interface GeckoSession.HistoryDelegate.VisitFlags implements Annotation {
@@ -722,7 +734,7 @@ package org.mozilla.geckoview {
     field @NonNull public final String text;
   }
 
-  @AnyThread public static class GeckoSession.SessionState implements Parcelable {
+  @AnyThread public static class GeckoSession.SessionState extends AbstractSequentialList implements GeckoSession.HistoryDelegate.HistoryList Parcelable {
     ctor public SessionState(@NonNull GeckoSession.SessionState);
     method @NonNull public static GeckoSession.SessionState fromString(@NonNull String);
     method public void readFromParcel(@NonNull Parcel);
