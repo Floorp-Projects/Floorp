@@ -9,11 +9,6 @@ package org.mozilla.geckoview;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.ref.WeakReference;
-import java.util.AbstractSequentialList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.NoSuchElementException;
 import java.util.UUID;
 
 import org.json.JSONException;
@@ -607,11 +602,7 @@ public class GeckoSession implements Parcelable {
                     final GeckoBundle update = message.getBundle("data");
                     if (update != null) {
                         mStateCache.updateSessionState(update);
-                        final SessionState state = new SessionState(mStateCache);
-                        delegate.onSessionStateChange(GeckoSession.this, state);
-                        if (update.getBundle("historychange") != null) {
-                            getHistoryDelegate().onHistoryStateChange(GeckoSession.this, state);
-                        }
+                        delegate.onSessionStateChange(GeckoSession.this, new SessionState(mStateCache));
                     }
                 }
             }
@@ -1606,21 +1597,6 @@ public class GeckoSession implements Parcelable {
         mEventDispatcher.dispatch("GeckoView:GoForward", null);
     }
 
-    /**
-     * Navigate to an index in browser history; the index of the currently
-     * viewed page can be retrieved from an up-to-date HistoryList by
-     * calling {@link HistoryList#getCurrentIndex()}.
-     *
-     * @param index The index of the location in browser history you want
-     *              to navigate to.
-     */
-    @AnyThread
-    public void gotoHistoryIndex(final int index) {
-        final GeckoBundle msg = new GeckoBundle(1);
-        msg.putInt("index", index);
-        mEventDispatcher.dispatch("GeckoView:GotoHistoryIndex", msg);
-    }
-
     @Retention(RetentionPolicy.SOURCE)
     @IntDef(flag = true,
             value = {FINDER_FIND_BACKWARDS, FINDER_FIND_LINKS_ONLY,
@@ -1757,109 +1733,8 @@ public class GeckoSession implements Parcelable {
      * Class representing a saved session state.
      */
     @AnyThread
-    public static class SessionState extends AbstractSequentialList<HistoryDelegate.HistoryItem>
-                                     implements HistoryDelegate.HistoryList, Parcelable {
+    public static class SessionState implements Parcelable {
         private GeckoBundle mState;
-
-        private class SessionStateItem implements HistoryDelegate.HistoryItem {
-            private final GeckoBundle mItem;
-
-            private SessionStateItem(final @NonNull GeckoBundle item) {
-                mItem = item;
-            }
-
-            @Override /* HistoryItem */
-            public String getUri() {
-                return mItem.getString("url");
-            }
-
-            @Override /* HistoryItem */
-            public String getTitle() {
-                return mItem.getString("title");
-            }
-        }
-
-        private class SessionStateIterator implements ListIterator<HistoryDelegate.HistoryItem> {
-            private final SessionState mState;
-            private int mIndex;
-
-            private SessionStateIterator(final @NonNull SessionState state) {
-                this(state, 0);
-            }
-
-            private SessionStateIterator(final @NonNull SessionState state, final int index) {
-                mIndex = index;
-                mState = state;
-            }
-
-            @Override /* ListIterator */
-            public void add(final HistoryDelegate.HistoryItem item) {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override /* ListIterator */
-            public boolean hasNext() {
-                final GeckoBundle[] entries = mState.getHistoryEntries();
-
-                if (entries == null) {
-                    Log.w(LOGTAG, "No history entries found.");
-                    return false;
-                }
-
-                if (mIndex >= mState.getHistoryEntries().length) {
-                    return false;
-                }
-                return true;
-            }
-
-            @Override /* ListIterator */
-            public boolean hasPrevious() {
-                if (mIndex <= 0) {
-                    return false;
-                }
-                return true;
-            }
-
-            @Override /* ListIterator */
-            public HistoryDelegate.HistoryItem next() {
-                if (hasNext()) {
-                    mIndex++;
-                    return new SessionStateItem(mState.getHistoryEntries()[mIndex - 1]);
-                } else {
-                    throw new NoSuchElementException();
-                }
-            }
-
-            @Override /* ListIterator */
-            public int nextIndex() {
-                return mIndex;
-            }
-
-            @Override /* ListIterator */
-            public HistoryDelegate.HistoryItem previous() {
-                if (hasPrevious()) {
-                    mIndex--;
-                    return new SessionStateItem(mState.getHistoryEntries()[mIndex]);
-                } else {
-                    throw new NoSuchElementException();
-                }
-            }
-
-            @Override /* ListIterator */
-            public int previousIndex() {
-                return mIndex - 1;
-            }
-
-            @Override /* ListIterator */
-            public void remove() {
-                throw new UnsupportedOperationException();
-            }
-
-            @Override /* ListIterator */
-            public void set(final @NonNull HistoryDelegate.HistoryItem item) {
-                throw new UnsupportedOperationException();
-            }
-        }
 
         private SessionState() {
             mState = new GeckoBundle(3);
@@ -1992,69 +1867,6 @@ public class GeckoSession implements Parcelable {
                 return new SessionState[size];
             }
         };
-
-        @Override /* AbstractSequentialList */
-        public @NonNull HistoryDelegate.HistoryItem get(final int index) {
-            final GeckoBundle[] entries = getHistoryEntries();
-
-            if (entries == null || index < 0 || index >= entries.length) {
-                throw new NoSuchElementException();
-            }
-
-            return new SessionStateItem(entries[index]);
-        }
-
-        @Override /* AbstractSequentialList */
-        public @NonNull Iterator<HistoryDelegate.HistoryItem> iterator() {
-            return listIterator(0);
-        }
-
-        @Override /* AbstractSequentialList */
-        public @NonNull ListIterator<HistoryDelegate.HistoryItem> listIterator(final int index) {
-            return new SessionStateIterator(this, index);
-        }
-
-        @Override /* AbstractSequentialList */
-        public int size() {
-            final GeckoBundle[] entries = getHistoryEntries();
-
-            if (entries == null) {
-                Log.w(LOGTAG, "No history entries found.");
-                return 0;
-            }
-
-            return entries.length;
-        }
-
-        @Override /* HistoryList */
-        public int getCurrentIndex() {
-            final GeckoBundle history = getHistory();
-
-            if (history == null) {
-                throw new IllegalStateException("No history state exists.");
-            }
-
-            return history.getInt("index") + history.getInt("fromIdx");
-        }
-
-        // Some helpers for common code.
-        private GeckoBundle getHistory() {
-            if (mState == null) {
-                return null;
-            }
-
-            return mState.getBundle("history");
-        }
-
-        private GeckoBundle[] getHistoryEntries() {
-            final GeckoBundle history = getHistory();
-
-            if (history == null) {
-                return null;
-            }
-
-            return history.getBundleArray("entries");
-        }
     }
 
     private SessionState mStateCache = new SessionState();
@@ -4843,48 +4655,6 @@ public class GeckoSession implements Parcelable {
      * status for links.
      */
     public interface HistoryDelegate {
-        /**
-         * A representation of an entry in browser history.
-         */
-        public interface HistoryItem {
-            /**
-             * Get the URI of this history element.
-             *
-             * @return A String representing the URI of this history element.
-             */
-            @AnyThread
-            default @NonNull String getUri() {
-                throw new UnsupportedOperationException("HistoryItem.getUri() called on invalid object.");
-            }
-
-            /**
-             * Get the title of this history element.
-             *
-             * @return A String representing the title of this history element.
-             */
-            @AnyThread
-            default @NonNull String getTitle() {
-                throw new UnsupportedOperationException("HistoryItem.getString() called on invalid object.");
-            }
-        }
-
-        /**
-         * A representation of browser history, accessible as a `List`. The list itself
-         * and its entries are immutable; any attempt to mutate will result in an
-         * `UnsupportedOperationException`.
-         */
-        public interface HistoryList extends List<HistoryItem> {
-            /**
-             * Get the current index in browser history.
-             *
-             * @return An int representing the current index in browser history.
-             */
-            @AnyThread
-            default int getCurrentIndex() {
-                throw new UnsupportedOperationException("HistoryList.getCurrentIndex() called on invalid object.");
-            }
-        }
-
         @Retention(RetentionPolicy.SOURCE)
         @IntDef(flag = true,
                 value = { VISIT_TOP_LEVEL,
@@ -4948,8 +4718,5 @@ public class GeckoSession implements Parcelable {
                                                             @NonNull String[] urls) {
             return null;
         }
-
-        @UiThread
-        default void onHistoryStateChange(@NonNull GeckoSession session, @NonNull HistoryList historyList) {}
     }
 }
