@@ -8,5 +8,6 @@
              Let's just ignore issues in the Sentry code since that is a third-party dependency anyways. -->
         <ignore path="**/sentry*.jar" />
     </issue>
+    <issue id="MissingTranslation" severity="ignore" />
 </lint>
 
