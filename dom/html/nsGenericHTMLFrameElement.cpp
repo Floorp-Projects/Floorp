@@ -109,12 +109,8 @@ BrowsingContext* nsGenericHTMLFrameElement::GetContentWindowInternal() {
     return nullptr;
   }
 
-  RefPtr<nsDocShell> doc_shell = mFrameLoader->GetDocShell(IgnoreErrors());
-  if (!doc_shell) {
-    return nullptr;
-  }
-
-  return doc_shell->GetBrowsingContext();
+  RefPtr<BrowsingContext> bc = mFrameLoader->GetBrowsingContext();
+  return bc;
 }
 
 Nullable<WindowProxyHolder> nsGenericHTMLFrameElement::GetContentWindow() {
