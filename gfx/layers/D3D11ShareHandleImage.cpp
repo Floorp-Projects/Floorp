@@ -25,35 +25,16 @@ using namespace gfx;
 
 D3D11ShareHandleImage::D3D11ShareHandleImage(const gfx::IntSize& aSize,
                                              const gfx::IntRect& aRect,
-                                             const GUID& aSourceFormat,
                                              gfx::YUVColorSpace aColorSpace)
     : Image(nullptr, ImageFormat::D3D11_SHARE_HANDLE_TEXTURE),
       mSize(aSize),
       mPictureRect(aRect),
-      mSourceFormat(aSourceFormat),
       mYUVColorSpace(aColorSpace) {}
 
 bool D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator,
                                             ID3D11Device* aDevice) {
   if (aAllocator) {
-    if (mSourceFormat == MFVideoFormat_NV12 &&
-        gfxPrefs::PDMWMFUseNV12Format() &&
-        gfx::DeviceManagerDx::Get()->CanUseNV12()) {
-      mTextureClient = aAllocator->CreateOrRecycleClient(
-          gfx::SurfaceFormat::NV12, mYUVColorSpace, mSize);
-    } else if (((mSourceFormat == MFVideoFormat_P010 &&
-                 gfx::DeviceManagerDx::Get()->CanUseP010()) ||
-                (mSourceFormat == MFVideoFormat_P016 &&
-                 gfx::DeviceManagerDx::Get()->CanUseP016())) &&
-               gfxPrefs::PDMWMFUseNV12Format()) {
-      mTextureClient = aAllocator->CreateOrRecycleClient(
-          mSourceFormat == MFVideoFormat_P010 ? gfx::SurfaceFormat::P010
-                                              : gfx::SurfaceFormat::P016,
-          mYUVColorSpace, mSize);
-    } else {
-      mTextureClient = aAllocator->CreateOrRecycleClient(
-          gfx::SurfaceFormat::B8G8R8A8, gfx::YUVColorSpace::UNKNOWN, mSize);
-    }
+    mTextureClient = aAllocator->CreateOrRecycleClient(mYUVColorSpace, mSize);
     if (mTextureClient) {
       D3D11TextureData* textureData =
           mTextureClient->GetInternalData()->AsD3D11TextureData();
@@ -111,8 +92,7 @@ D3D11ShareHandleImage::GetAsSourceSurface() {
 
     RefPtr<ID3D11Texture2D> outTexture;
 
-    hr = manager->CopyToBGRATexture(texture, mSourceFormat,
-                                    getter_AddRefs(outTexture));
+    hr = manager->CopyToBGRATexture(texture, getter_AddRefs(outTexture));
 
     if (FAILED(hr)) {
       gfxWarning() << "Failed to copy to BGRA texture.";
@@ -239,9 +219,35 @@ class MOZ_RAII D3D11TextureClientAllocationHelper
   const RefPtr<ID3D11Device> mDevice;
 };
 
+D3D11RecycleAllocator::D3D11RecycleAllocator(
+    KnowsCompositor* aAllocator, ID3D11Device* aDevice,
+    gfx::SurfaceFormat aPreferredFormat)
+    : TextureClientRecycleAllocator(aAllocator),
+      mDevice(aDevice),
+      mCanUseNV12(gfxPrefs::PDMWMFUseNV12Format() &&
+                  gfx::DeviceManagerDx::Get()->CanUseNV12()),
+      mCanUseP010(gfxPrefs::PDMWMFUseNV12Format() &&
+                  gfx::DeviceManagerDx::Get()->CanUseP010()),
+      mCanUseP016(gfxPrefs::PDMWMFUseNV12Format() &&
+                  gfx::DeviceManagerDx::Get()->CanUseP016()) {
+  SetPreferredSurfaceFormat(aPreferredFormat);
+}
+
+void D3D11RecycleAllocator::SetPreferredSurfaceFormat(
+    gfx::SurfaceFormat aPreferredFormat) {
+  if ((aPreferredFormat == gfx::SurfaceFormat::NV12 && mCanUseNV12) ||
+      (aPreferredFormat == gfx::SurfaceFormat::P010 && mCanUseP010) ||
+      (aPreferredFormat == gfx::SurfaceFormat::P016 && mCanUseP016)) {
+    mUsableSurfaceFormat = aPreferredFormat;
+    return;
+  }
+  // We can't handle the native source format, set it to BGRA which will
+  // force the caller to convert it later.
+  mUsableSurfaceFormat = gfx::SurfaceFormat::B8G8R8A8;
+}
+
 already_AddRefed<TextureClient> D3D11RecycleAllocator::CreateOrRecycleClient(
-    gfx::SurfaceFormat aFormat, gfx::YUVColorSpace aColorSpace,
-    const gfx::IntSize& aSize) {
+    gfx::YUVColorSpace aColorSpace, const gfx::IntSize& aSize) {
   // When CompositorDevice or ContentDevice is updated,
   // we could not reuse old D3D11Textures. It could cause video flickering.
   RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetImageDevice();
@@ -258,8 +264,8 @@ already_AddRefed<TextureClient> D3D11RecycleAllocator::CreateOrRecycleClient(
     allocFlags = TextureAllocationFlags::ALLOC_MANUAL_SYNCHRONIZATION;
   }
 
-  D3D11TextureClientAllocationHelper helper(aFormat, aColorSpace, aSize,
-                                            allocFlags, mDevice,
+  D3D11TextureClientAllocationHelper helper(mUsableSurfaceFormat, aColorSpace,
+                                            aSize, allocFlags, mDevice,
                                             layers::TextureFlags::DEFAULT);
 
   RefPtr<TextureClient> textureClient = CreateOrRecycle(helper);
