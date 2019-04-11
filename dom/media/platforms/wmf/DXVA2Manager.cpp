@@ -882,8 +882,9 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
   NS_ENSURE_TRUE(aOutImage, E_POINTER);
   MOZ_ASSERT(mTextureClientAllocator);
 
-  RefPtr<D3D11ShareHandleImage> image = new D3D11ShareHandleImage(
-      gfx::IntSize(mWidth, mHeight), aRegion, mInputSubType);
+  RefPtr<D3D11ShareHandleImage> image =
+      new D3D11ShareHandleImage(gfx::IntSize(mWidth, mHeight), aRegion,
+                                mInputSubType, gfx::YUVColorSpace::UNKNOWN);
 
   // Retrieve the DXGI_FORMAT for the current video sample.
   RefPtr<IMFMediaBuffer> buffer;
