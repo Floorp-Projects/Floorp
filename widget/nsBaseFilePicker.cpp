@@ -147,8 +147,7 @@ NS_IMETHODIMP nsBaseFilePicker::Init(mozIDOMWindowProxy* aParent,
 
   mParent = nsPIDOMWindowOuter::From(aParent);
 
-  nsCOMPtr<nsIWidget> widget =
-      WidgetUtils::DOMWindowToWidget(mParent->GetOuterWindow());
+  nsCOMPtr<nsIWidget> widget = WidgetUtils::DOMWindowToWidget(mParent);
   NS_ENSURE_TRUE(widget, NS_ERROR_FAILURE);
 
   mMode = aMode;
