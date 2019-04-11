@@ -13,6 +13,47 @@
 
 namespace mozilla {
 
+namespace {
+
+already_AddRefed<nsIURI> MaybeGetFirstPartyURI(nsIChannel* aChannel) {
+  MOZ_ASSERT(aChannel);
+
+  if (!StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
+    return nullptr;
+  }
+
+  // Let's use the storage principal only if we need to partition the cookie
+  // jar.
+  nsContentUtils::StorageAccess access =
+      nsContentUtils::StorageAllowedForChannel(aChannel);
+  if (access != nsContentUtils::StorageAccess::ePartitionedOrDeny) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
+  if (!httpChannel) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(httpChannel->IsThirdPartyTrackingResource());
+
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+  nsCOMPtr<nsIPrincipal> toplevelPrincipal = loadInfo->GetTopLevelPrincipal();
+  if (!toplevelPrincipal) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIURI> principalURI;
+  nsresult rv = toplevelPrincipal->GetURI(getter_AddRefs(principalURI));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  return principalURI.forget();
+}
+
+}  // namespace
+
 // static
 nsresult StoragePrincipalHelper::Create(nsIChannel* aChannel,
                                         nsIPrincipal* aPrincipal,
@@ -26,35 +67,9 @@ nsresult StoragePrincipalHelper::Create(nsIChannel* aChannel,
     storagePrincipal.forget(aStoragePrincipal);
   });
 
-  if (!StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
+  nsCOMPtr<nsIURI> principalURI = MaybeGetFirstPartyURI(aChannel);
+  if (!principalURI) {
     return NS_OK;
-  }
-
-  // Let's use the storage principal only if we need to partition the cookie
-  // jar.
-  nsContentUtils::StorageAccess access =
-      nsContentUtils::StorageAllowedForChannel(aChannel);
-  if (access != nsContentUtils::StorageAccess::ePartitionedOrDeny) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
-  if (!httpChannel) {
-    return NS_OK;
-  }
-
-  MOZ_ASSERT(httpChannel->IsThirdPartyTrackingResource());
-
-  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
-  nsCOMPtr<nsIPrincipal> toplevelPrincipal = loadInfo->GetTopLevelPrincipal();
-  if (!toplevelPrincipal) {
-    return NS_OK;
-  }
-
-  nsCOMPtr<nsIURI> principalURI;
-  nsresult rv = toplevelPrincipal->GetURI(getter_AddRefs(principalURI));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
   }
 
   scopeExit.release();
@@ -64,6 +79,21 @@ nsresult StoragePrincipalHelper::Create(nsIChannel* aChannel,
           ->CloneForcingFirstPartyDomain(principalURI);
 
   storagePrincipal.forget(aStoragePrincipal);
+  return NS_OK;
+}
+
+// static
+nsresult StoragePrincipalHelper::PrepareOriginAttributes(
+    nsIChannel* aChannel, OriginAttributes& aOriginAttributes) {
+  MOZ_ASSERT(aChannel);
+
+  nsCOMPtr<nsIURI> principalURI = MaybeGetFirstPartyURI(aChannel);
+  if (!principalURI) {
+    return NS_OK;
+  }
+
+  aOriginAttributes.SetFirstPartyDomain(false, principalURI,
+                                        true /* aForced */);
   return NS_OK;
 }
 
