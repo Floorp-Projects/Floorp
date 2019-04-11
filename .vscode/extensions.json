@@ -4,8 +4,6 @@
     "recommendations": [
         // Trim only touched lines.
         "NathanRidley.autotrim",
-        // JS Babel ES6/ES7 syntax hilight.
-        "dzannotti.vscode-babel-coloring",
         // ESLint support.
         "dbaeumer.vscode-eslint",
         // C/C++ language support.
