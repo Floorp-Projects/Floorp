@@ -1208,7 +1208,7 @@ inline bool nsGlobalWindowOuter::IsFrame() {
 
 inline void nsGlobalWindowOuter::MaybeClearInnerWindow(
     nsGlobalWindowInner* aExpectedInner) {
-  if (mInnerWindow == aExpectedInner->AsInner()) {
+  if (mInnerWindow == aExpectedInner) {
     mInnerWindow = nullptr;
   }
 }

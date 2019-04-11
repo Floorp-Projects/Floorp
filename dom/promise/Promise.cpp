@@ -526,7 +526,7 @@ void Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise) {
   js::ErrorReport report(aCx);
   if (report.init(aCx, result, js::ErrorReport::NoSideEffects)) {
     xpcReport->Init(report.report(), report.toStringResult().c_str(), isChrome,
-                    win ? win->AsInner()->WindowID() : 0);
+                    win ? win->WindowID() : 0);
   } else {
     JS_ClearPendingException(aCx);
 
@@ -534,7 +534,7 @@ void Promise::ReportRejectedPromise(JSContext* aCx, JS::HandleObject aPromise) {
     if (result.isObject() &&
         (NS_SUCCEEDED(UNWRAP_OBJECT(DOMException, &result, exn)) ||
          NS_SUCCEEDED(UNWRAP_OBJECT(Exception, &result, exn)))) {
-      xpcReport->Init(aCx, exn, isChrome, win ? win->AsInner()->WindowID() : 0);
+      xpcReport->Init(aCx, exn, isChrome, win ? win->WindowID() : 0);
     } else {
       return;
     }
