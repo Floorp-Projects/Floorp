@@ -3337,10 +3337,9 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       availSpace.BSize(wm) += bStartMargin;
     }
 
-    // construct the html reflow input for the block. ReflowBlock
-    // will initialize it.
-    Maybe<ReflowInput> blockHtmlRI;
-    blockHtmlRI.emplace(
+    // Construct the reflow input for the block.
+    Maybe<ReflowInput> blockReflowInput;
+    blockReflowInput.emplace(
         aState.mPresContext, aState.mReflowInput, frame,
         availSpace.Size(wm).ConvertTo(frame->GetWritingMode(), wm));
 
@@ -3367,16 +3366,16 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       }
 
       if (mayNeedRetry) {
-        blockHtmlRI->mDiscoveredClearance = &clearanceFrame;
+        blockReflowInput->mDiscoveredClearance = &clearanceFrame;
       } else if (!applyBStartMargin) {
-        blockHtmlRI->mDiscoveredClearance =
+        blockReflowInput->mDiscoveredClearance =
             aState.mReflowInput.mDiscoveredClearance;
       }
 
       frameReflowStatus.Reset();
       brc.ReflowBlock(availSpace, applyBStartMargin, aState.mPrevBEndMargin,
                       clearance, aState.IsAdjacentWithTop(), aLine.get(),
-                      *blockHtmlRI, frameReflowStatus, aState);
+                      *blockReflowInput, frameReflowStatus, aState);
 
       // Now the block has a height.  Using that height, get the
       // available space again and call ComputeBlockAvailSpace again.
@@ -3461,8 +3460,8 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
         clearance = 0;
       }
 
-      blockHtmlRI.reset();
-      blockHtmlRI.emplace(
+      blockReflowInput.reset();
+      blockReflowInput.emplace(
           aState.mPresContext, aState.mReflowInput, frame,
           availSpace.Size(wm).ConvertTo(frame->GetWritingMode(), wm));
     } while (true);
@@ -3476,7 +3475,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
 
     aState.mPrevChild = frame;
 
-    if (blockHtmlRI->WillReflowAgainForClearance()) {
+    if (blockReflowInput->WillReflowAgainForClearance()) {
       // If an ancestor of ours is going to reflow for clearance, we
       // need to avoid calling PlaceBlock, because it unsets dirty bits
       // on the child block (both itself, and through its call to
@@ -3514,7 +3513,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       nsCollapsingMargin collapsedBEndMargin;
       nsOverflowAreas overflowAreas;
       *aKeepReflowGoing =
-          brc.PlaceBlock(*blockHtmlRI, forceFit, aLine.get(),
+          brc.PlaceBlock(*blockReflowInput, forceFit, aLine.get(),
                          collapsedBEndMargin, overflowAreas, frameReflowStatus);
       if (!frameReflowStatus.IsFullyComplete() &&
           ShouldAvoidBreakInside(aState.mReflowInput)) {
