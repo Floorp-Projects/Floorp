@@ -76,13 +76,13 @@ class CollectionValidator {
     if (!result.response.success) {
       throw result.response;
     }
+    let maybeYield = Async.jankYielder();
     let cleartexts = [];
-
-    await Async.yieldingForEach(result.records, async (record) => {
+    for (let record of result.records) {
+      await maybeYield();
       await record.decrypt(collectionKey);
       cleartexts.push(record.cleartext);
-    });
-
+    }
     return cleartexts;
   }
 
@@ -144,19 +144,17 @@ class CollectionValidator {
   //   records: Normalized server records,
   //   deletedRecords: Array of ids that were marked as deleted by the server.
   async compareClientWithServer(clientItems, serverItems) {
-    const yieldState = Async.yieldState();
-
+    let maybeYield = Async.jankYielder();
     const clientRecords = [];
-
-    await Async.yieldingForEach(clientItems, item => {
+    for (let item of clientItems) {
+      await maybeYield();
       clientRecords.push(this.normalizeClientItem(item));
-    }, yieldState);
-
+    }
     const serverRecords = [];
-    await Async.yieldingForEach(serverItems, async (item) => {
+    for (let item of serverItems) {
+      await maybeYield();
       serverRecords.push((await this.normalizeServerItem(item)));
-    }, yieldState);
-
+    }
     let problems = this.emptyProblemData();
     let seenServer = new Map();
     let serverDeleted = new Set();
