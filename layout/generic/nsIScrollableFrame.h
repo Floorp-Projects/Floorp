@@ -230,9 +230,14 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
    * range and / or moving in any direction; GetScrollPositionCSSPixels will be
    * exactly aScrollPosition at the end of the scroll animation unless the
    * SMOOTH_MSD animation is interrupted.
+   *
+   * FIXME: Drop |aSnap| argument once after we finished the migration to the
+   * Scroll Snap Module v1. We should alway use ENABLE_SNAP.
    */
   virtual void ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
                                  ScrollMode aMode = ScrollMode::eInstant,
+                                 nsIScrollbarMediator::ScrollSnapMode aSnap =
+                                     nsIScrollbarMediator::DEFAULT,
                                  nsAtom* aOrigin = nullptr) = 0;
   /**
    * @note This method might destroy the frame, pres shell and other objects.
@@ -271,9 +276,15 @@ class nsIScrollableFrame : public nsIScrollbarMediator {
                         nsIScrollbarMediator::ScrollSnapMode aSnap =
                             nsIScrollbarMediator::DISABLE_SNAP) = 0;
 
+  /**
+   * FIXME: Drop |aSnap| argument once after we finished the migration to the
+   * Scroll Snap Module v1. We should alway use ENABLE_SNAP.
+   */
   virtual void ScrollByCSSPixels(const CSSIntPoint& aDelta,
                                  ScrollMode aMode = ScrollMode::eInstant,
-                                 nsAtom* aOrigin = nullptr) = 0;
+                                 nsAtom* aOrigin = nullptr,
+                                 nsIScrollbarMediator::ScrollSnapMode aSnap =
+                                     nsIScrollbarMediator::DEFAULT) = 0;
 
   /**
    * Perform scroll snapping, possibly resulting in a smooth scroll to
