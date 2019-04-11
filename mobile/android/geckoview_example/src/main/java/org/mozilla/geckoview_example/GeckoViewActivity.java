@@ -467,12 +467,6 @@ public class GeckoViewActivity extends AppCompatActivity {
             }
             return GeckoResult.fromValue(visited);
         }
-
-        @Override
-        public void onHistoryStateChange(final GeckoSession session,
-                                         final GeckoSession.HistoryDelegate.HistoryList state) {
-            Log.i(LOGTAG, "History state updated");
-        }
     }
 
     private class ExampleContentDelegate implements GeckoSession.ContentDelegate {
