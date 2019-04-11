@@ -23,9 +23,7 @@ class FilterNodeCapture final : public FilterNode {
   explicit FilterNodeCapture(FilterType aType)
       : mType{aType}, mInputsChanged{true} {}
 
-  virtual FilterBackend GetBackendType() override {
-    return FILTER_BACKEND_CAPTURE;
-  }
+  FilterBackend GetBackendType() override { return FILTER_BACKEND_CAPTURE; }
 
   RefPtr<FilterNode> Validate(DrawTarget *aDT);
 
@@ -38,11 +36,11 @@ class FilterNodeCapture final : public FilterNode {
     }
   }
 
-  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface) override {
+  void SetInput(uint32_t aIndex, SourceSurface *aSurface) override {
     mInputsChanged = true;
     Replace(aIndex, RefPtr<SourceSurface>(aSurface), mInputs);
   }
-  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) override {
+  void SetInput(uint32_t aIndex, FilterNode *aFilter) override {
     mInputsChanged = true;
     Replace(aIndex, RefPtr<FilterNode>(aFilter), mInputs);
   }
@@ -51,45 +49,45 @@ class FilterNodeCapture final : public FilterNode {
       Variant<uint32_t, Float, Point, Matrix5x4, Point3D, Size, IntSize, Color,
               Rect, IntRect, bool, std::vector<Float>, IntPoint, Matrix>;
 
-  virtual void SetAttribute(uint32_t aIndex, uint32_t aValue) override {
+  void SetAttribute(uint32_t aIndex, uint32_t aValue) override {
     Replace(aIndex, aValue, mAttributes);
   }
-  virtual void SetAttribute(uint32_t aIndex, Float aValue) override {
+  void SetAttribute(uint32_t aIndex, Float aValue) override {
     Replace(aIndex, aValue, mAttributes);
   }
-  virtual void SetAttribute(uint32_t aIndex, const Point &aValue) override {
+  void SetAttribute(uint32_t aIndex, const Point &aValue) override {
     Replace(aIndex, aValue, mAttributes);
   }
-  virtual void SetAttribute(uint32_t aIndex, const Matrix5x4 &aValue) override {
+  void SetAttribute(uint32_t aIndex, const Matrix5x4 &aValue) override {
     Replace(aIndex, aValue, mAttributes);
   }
-  virtual void SetAttribute(uint32_t aIndex, const Point3D &aValue) override {
+  void SetAttribute(uint32_t aIndex, const Point3D &aValue) override {
     Replace(aIndex, aValue, mAttributes);
   }
-  virtual void SetAttribute(uint32_t aIndex, const Size &aValue) override {
+  void SetAttribute(uint32_t aIndex, const Size &aValue) override {
     Replace(aIndex, aValue, mAttributes);
   }
-  virtual void SetAttribute(uint32_t aIndex, const IntSize &aValue) override {
+  void SetAttribute(uint32_t aIndex, const IntSize &aValue) override {
     Replace(aIndex, aValue, mAttributes);
   }
-  virtual void SetAttribute(uint32_t aIndex, const Color &aValue) override {
+  void SetAttribute(uint32_t aIndex, const Color &aValue) override {
     Replace(aIndex, aValue, mAttributes);
   }
-  virtual void SetAttribute(uint32_t aIndex, const Rect &aValue) override {
+  void SetAttribute(uint32_t aIndex, const Rect &aValue) override {
     Replace(aIndex, aValue, mAttributes);
   }
-  virtual void SetAttribute(uint32_t aIndex, const IntRect &aValue) override {
+  void SetAttribute(uint32_t aIndex, const IntRect &aValue) override {
     Replace(aIndex, aValue, mAttributes);
   }
-  virtual void SetAttribute(uint32_t aIndex, bool aValue) override {
+  void SetAttribute(uint32_t aIndex, bool aValue) override {
     Replace(aIndex, aValue, mAttributes);
   }
   virtual void SetAttribute(uint32_t aIndex, const Float *aValues,
                             uint32_t aSize) override;
-  virtual void SetAttribute(uint32_t aIndex, const IntPoint &aValue) override {
+  void SetAttribute(uint32_t aIndex, const IntPoint &aValue) override {
     Replace(aIndex, aValue, mAttributes);
   }
-  virtual void SetAttribute(uint32_t aIndex, const Matrix &aValue) override {
+  void SetAttribute(uint32_t aIndex, const Matrix &aValue) override {
     Replace(aIndex, aValue, mAttributes);
   }
 

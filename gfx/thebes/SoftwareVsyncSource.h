@@ -19,19 +19,17 @@ class SoftwareDisplay final : public mozilla::gfx::VsyncSource::Display {
 
  public:
   SoftwareDisplay();
-  virtual void EnableVsync() override;
-  virtual void DisableVsync() override;
-  virtual bool IsVsyncEnabled() override;
+  void EnableVsync() override;
+  void DisableVsync() override;
+  bool IsVsyncEnabled() override;
   bool IsInSoftwareVsyncThread();
-  virtual void NotifyVsync(mozilla::TimeStamp aVsyncTimestamp) override;
-  virtual mozilla::TimeDuration GetVsyncRate() override;
+  void NotifyVsync(mozilla::TimeStamp aVsyncTimestamp) override;
+  mozilla::TimeDuration GetVsyncRate() override;
   void ScheduleNextVsync(mozilla::TimeStamp aVsyncTimestamp);
   void Shutdown() override;
 
- protected:
-  ~SoftwareDisplay();
-
  private:
+  virtual ~SoftwareDisplay();
   mozilla::TimeDuration mVsyncRate;
   // Use a chromium thread because nsITimers* fire on the main thread
   base::Thread* mVsyncThread;
@@ -46,9 +44,9 @@ class SoftwareDisplay final : public mozilla::gfx::VsyncSource::Display {
 class SoftwareVsyncSource : public mozilla::gfx::VsyncSource {
  public:
   SoftwareVsyncSource();
-  ~SoftwareVsyncSource();
+  virtual ~SoftwareVsyncSource();
 
-  virtual Display& GetGlobalDisplay() override {
+  Display& GetGlobalDisplay() override {
     MOZ_ASSERT(mGlobalDisplay != nullptr);
     return *mGlobalDisplay;
   }

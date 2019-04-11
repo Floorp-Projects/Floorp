@@ -358,16 +358,16 @@ Maybe<Rect> UnionMaybeRects(const Maybe<Rect>& a, const Maybe<Rect>& b) {
   }
 }
 
-struct RectCornerRadii {
+struct RectCornerRadii final {
   Size radii[eCornerCount];
 
-  RectCornerRadii() {}
+  RectCornerRadii() = default;
 
   explicit RectCornerRadii(Float radius) {
     NS_FOR_CSS_FULL_CORNERS(i) { radii[i].SizeTo(radius, radius); }
   }
 
-  explicit RectCornerRadii(Float radiusX, Float radiusY) {
+  RectCornerRadii(Float radiusX, Float radiusY) {
     NS_FOR_CSS_FULL_CORNERS(i) { radii[i].SizeTo(radiusX, radiusY); }
   }
 

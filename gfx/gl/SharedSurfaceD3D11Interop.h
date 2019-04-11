@@ -49,25 +49,25 @@ class SharedSurface_D3D11Interop : public SharedSurface {
                              HANDLE dxgiHandle);
 
  public:
-  virtual ~SharedSurface_D3D11Interop() override;
+  virtual ~SharedSurface_D3D11Interop();
 
-  virtual void LockProdImpl() override {}
-  virtual void UnlockProdImpl() override {}
+  void LockProdImpl() override {}
+  void UnlockProdImpl() override {}
 
-  virtual void ProducerAcquireImpl() override;
-  virtual void ProducerReleaseImpl() override;
+  void ProducerAcquireImpl() override;
+  void ProducerReleaseImpl() override;
 
-  virtual GLuint ProdRenderbuffer() override {
+  GLuint ProdRenderbuffer() override {
     MOZ_ASSERT(!mProdTex);
     return mInteropRB;
   }
 
-  virtual GLuint ProdTexture() override {
+  GLuint ProdTexture() override {
     MOZ_ASSERT(mProdTex);
     return mProdTex;
   }
 
-  virtual bool ToSurfaceDescriptor(
+  bool ToSurfaceDescriptor(
       layers::SurfaceDescriptor* const out_descriptor) override;
 };
 
@@ -86,11 +86,10 @@ class SurfaceFactory_D3D11Interop : public SurfaceFactory {
                               DXInterop2Device* interop);
 
  public:
-  virtual ~SurfaceFactory_D3D11Interop() override;
+  virtual ~SurfaceFactory_D3D11Interop();
 
  protected:
-  virtual UniquePtr<SharedSurface> CreateShared(
-      const gfx::IntSize& size) override {
+  UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override {
     bool hasAlpha = mReadCaps.alpha;
     return SharedSurface_D3D11Interop::Create(mInterop, mGL, size, hasAlpha);
   }

@@ -11,7 +11,7 @@ namespace gfx {
 
 class GPUProcessListener {
  public:
-  virtual ~GPUProcessListener() {}
+  virtual ~GPUProcessListener() = default;
 
   // Called when the compositor has died and the rendering stack must be
   // recreated.

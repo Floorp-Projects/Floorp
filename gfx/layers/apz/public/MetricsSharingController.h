@@ -28,7 +28,7 @@ class MetricsSharingController {
                                   uint32_t aApzcId) = 0;
 
  protected:
-  virtual ~MetricsSharingController() {}
+  virtual ~MetricsSharingController() = default;
 };
 
 }  // namespace layers

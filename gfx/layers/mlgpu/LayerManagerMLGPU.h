@@ -31,7 +31,7 @@ struct LayerProperties;
 class LayerManagerMLGPU final : public HostLayerManager {
  public:
   explicit LayerManagerMLGPU(widget::CompositorWidget* aWidget);
-  ~LayerManagerMLGPU();
+  virtual ~LayerManagerMLGPU();
 
   bool Initialize();
   void Destroy() override;

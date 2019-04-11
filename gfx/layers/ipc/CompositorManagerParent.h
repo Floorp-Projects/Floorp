@@ -67,7 +67,7 @@ class CompositorManagerParent final : public PCompositorManagerParent {
 #endif
 
   CompositorManagerParent();
-  ~CompositorManagerParent() override;
+  virtual ~CompositorManagerParent();
 
   void Bind(Endpoint<PCompositorManagerParent>&& aEndpoint);
 

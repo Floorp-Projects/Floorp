@@ -153,7 +153,7 @@ void ImageBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   // forever, waiting for the compositor thread to terminate.
 }
 
-class MOZ_STACK_CLASS AutoImageBridgeParentAsyncMessageSender {
+class MOZ_STACK_CLASS AutoImageBridgeParentAsyncMessageSender final {
  public:
   explicit AutoImageBridgeParentAsyncMessageSender(
       ImageBridgeParent* aImageBridge,

@@ -40,54 +40,49 @@ class HostLayerManager;
 class ImageHost : public CompositableHost, public ImageComposite {
  public:
   explicit ImageHost(const TextureInfo& aTextureInfo);
-  ~ImageHost();
+  virtual ~ImageHost();
 
-  virtual CompositableType GetType() override {
-    return mTextureInfo.mCompositableType;
-  }
-  virtual ImageHost* AsImageHost() override { return this; }
+  CompositableType GetType() override { return mTextureInfo.mCompositableType; }
+  ImageHost* AsImageHost() override { return this; }
 
-  virtual void Composite(
-      Compositor* aCompositor, LayerComposite* aLayer,
-      EffectChain& aEffectChain, float aOpacity,
-      const gfx::Matrix4x4& aTransform,
-      const gfx::SamplingFilter aSamplingFilter, const gfx::IntRect& aClipRect,
-      const nsIntRegion* aVisibleRegion = nullptr,
-      const Maybe<gfx::Polygon>& aGeometry = Nothing()) override;
+  void Composite(Compositor* aCompositor, LayerComposite* aLayer,
+                 EffectChain& aEffectChain, float aOpacity,
+                 const gfx::Matrix4x4& aTransform,
+                 const gfx::SamplingFilter aSamplingFilter,
+                 const gfx::IntRect& aClipRect,
+                 const nsIntRegion* aVisibleRegion = nullptr,
+                 const Maybe<gfx::Polygon>& aGeometry = Nothing()) override;
 
-  virtual void UseTextureHost(const nsTArray<TimedTexture>& aTextures) override;
+  void UseTextureHost(const nsTArray<TimedTexture>& aTextures) override;
 
-  virtual void RemoveTextureHost(TextureHost* aTexture) override;
+  void RemoveTextureHost(TextureHost* aTexture) override;
 
-  virtual TextureHost* GetAsTextureHost(
-      gfx::IntRect* aPictureRect = nullptr) override;
+  TextureHost* GetAsTextureHost(gfx::IntRect* aPictureRect = nullptr) override;
 
-  virtual void Attach(Layer* aLayer, TextureSourceProvider* aProvider,
-                      AttachFlags aFlags = NO_FLAGS) override;
+  void Attach(Layer* aLayer, TextureSourceProvider* aProvider,
+              AttachFlags aFlags = NO_FLAGS) override;
 
-  virtual void SetTextureSourceProvider(
-      TextureSourceProvider* aProvider) override;
+  void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
   gfx::IntSize GetImageSize() override;
 
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
-  virtual void Dump(std::stringstream& aStream, const char* aPrefix = "",
-                    bool aDumpHtml = false) override;
+  void Dump(std::stringstream& aStream, const char* aPrefix = "",
+            bool aDumpHtml = false) override;
 
-  virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
+  already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
 
-  virtual bool Lock() override;
+  bool Lock() override;
 
-  virtual void Unlock() override;
+  void Unlock() override;
 
-  virtual already_AddRefed<TexturedEffect> GenEffect(
+  already_AddRefed<TexturedEffect> GenEffect(
       const gfx::SamplingFilter aSamplingFilter) override;
 
   void SetCurrentTextureHost(TextureHost* aTexture);
 
-  virtual void CleanupResources() override;
+  void CleanupResources() override;
 
   bool IsOpaque();
 
@@ -119,7 +114,7 @@ class ImageHost : public CompositableHost, public ImageComposite {
 
  protected:
   // ImageComposite
-  virtual TimeStamp GetCompositionTime() const override;
+  TimeStamp GetCompositionTime() const override;
 
   // Use a simple RefPtr because the same texture is already held by a
   // a CompositableTextureHostRef in the array of TimedImage.

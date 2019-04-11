@@ -19,15 +19,14 @@ namespace layers {
 
 class D3D11RecycleAllocator : public TextureClientRecycleAllocator {
  public:
-  explicit D3D11RecycleAllocator(KnowsCompositor* aAllocator,
-                                 ID3D11Device* aDevice)
+  D3D11RecycleAllocator(KnowsCompositor* aAllocator, ID3D11Device* aDevice)
       : TextureClientRecycleAllocator(aAllocator), mDevice(aDevice) {}
 
   already_AddRefed<TextureClient> CreateOrRecycleClient(
       gfx::SurfaceFormat aFormat, const gfx::IntSize& aSize);
 
  protected:
-  virtual already_AddRefed<TextureClient> Allocate(
+  already_AddRefed<TextureClient> Allocate(
       gfx::SurfaceFormat aFormat, gfx::IntSize aSize, BackendSelector aSelector,
       TextureFlags aTextureFlags, TextureAllocationFlags aAllocFlags) override;
 
@@ -46,7 +45,7 @@ class D3D11ShareHandleImage final : public Image {
  public:
   D3D11ShareHandleImage(const gfx::IntSize& aSize, const gfx::IntRect& aRect,
                         const GUID& aSourceFormat);
-  virtual ~D3D11ShareHandleImage() {}
+  virtual ~D3D11ShareHandleImage() = default;
 
   bool AllocateTexture(D3D11RecycleAllocator* aAllocator,
                        ID3D11Device* aDevice);

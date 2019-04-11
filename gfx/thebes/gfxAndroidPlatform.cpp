@@ -356,7 +356,7 @@ class AndroidVsyncSource final : public VsyncSource {
   Display& GetGlobalDisplay() final { return GetDisplayInstance(); }
 
  private:
-  virtual ~AndroidVsyncSource() {}
+  virtual ~AndroidVsyncSource() = default;
 
   static Display& GetDisplayInstance() {
     static Display globalDisplay;

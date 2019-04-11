@@ -30,7 +30,7 @@ class GLManager {
  public:
   static GLManager* CreateGLManager(LayerManagerComposite* aManager);
 
-  virtual ~GLManager() {}
+  virtual ~GLManager() = default;
 
   virtual gl::GLContext* gl() const = 0;
   virtual ShaderProgramOGL* GetProgram(GLenum aTarget,

@@ -59,7 +59,7 @@ class LayersIPCChannel : public LayersIPCActor,
   }
 
  protected:
-  virtual ~LayersIPCChannel() {}
+  virtual ~LayersIPCChannel() = default;
 };
 
 /**

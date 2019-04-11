@@ -37,7 +37,7 @@ class DualSurface {
  * case can we be dealing with a 'dual' source (SourceSurfaceDual) and do
  * we need to pass separate patterns into our destination DrawTargets.
  */
-class DualPattern {
+class DualPattern final {
  public:
   inline explicit DualPattern(const Pattern &aPattern)
       : mPatternsInitialized(false) {

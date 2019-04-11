@@ -47,7 +47,7 @@ class LayerTransactionParent final : public PLayerTransactionParent,
                          TimeDuration aVsyncRate);
 
  protected:
-  ~LayerTransactionParent();
+  virtual ~LayerTransactionParent();
 
  public:
   void Destroy();

@@ -92,7 +92,7 @@ class CompositorManagerChild : public PCompositorManagerChild {
   CompositorManagerChild(Endpoint<PCompositorManagerChild>&& aEndpoint,
                          uint64_t aProcessToken, uint32_t aNamespace);
 
-  ~CompositorManagerChild() override {}
+  virtual ~CompositorManagerChild() = default;
 
   void DeallocPCompositorManagerChild() override;
 

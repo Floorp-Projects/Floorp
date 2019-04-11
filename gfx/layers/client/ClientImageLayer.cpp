@@ -37,43 +37,42 @@ class ClientImageLayer : public ImageLayer, public ClientLayer {
     MOZ_COUNT_DTOR(ClientImageLayer);
   }
 
-  virtual void SetContainer(ImageContainer* aContainer) override {
+  void SetContainer(ImageContainer* aContainer) override {
     ImageLayer::SetContainer(aContainer);
     mImageClientTypeContainer = CompositableType::UNKNOWN;
   }
 
-  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override {
+  void SetVisibleRegion(const LayerIntRegion& aRegion) override {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
     ImageLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void RenderLayer() override;
+  void RenderLayer() override;
 
-  virtual void ClearCachedResources() override { DestroyBackBuffer(); }
+  void ClearCachedResources() override { DestroyBackBuffer(); }
 
-  virtual bool SupportsAsyncUpdate() override {
+  bool SupportsAsyncUpdate() override {
     if (GetImageClientType() == CompositableType::IMAGE_BRIDGE) {
       return true;
     }
     return false;
   }
 
-  virtual void HandleMemoryPressure() override {
+  void HandleMemoryPressure() override {
     if (mImageClient) {
       mImageClient->HandleMemoryPressure();
     }
   }
 
-  virtual void FillSpecificAttributes(
-      SpecificLayerAttributes& aAttrs) override {
+  void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) override {
     aAttrs = ImageLayerAttributes(mSamplingFilter, mScaleToSize, mScaleMode);
   }
 
-  virtual Layer* AsLayer() override { return this; }
-  virtual ShadowableLayer* AsShadowableLayer() override { return this; }
+  Layer* AsLayer() override { return this; }
+  ShadowableLayer* AsShadowableLayer() override { return this; }
 
-  virtual void Disconnect() override { DestroyBackBuffer(); }
+  void Disconnect() override { DestroyBackBuffer(); }
 
   void DestroyBackBuffer() {
     if (mImageClient) {
@@ -83,9 +82,7 @@ class ClientImageLayer : public ImageLayer, public ClientLayer {
     }
   }
 
-  virtual CompositableClient* GetCompositableClient() override {
-    return mImageClient;
-  }
+  CompositableClient* GetCompositableClient() override { return mImageClient; }
 
  protected:
   ClientLayerManager* ClientManager() {

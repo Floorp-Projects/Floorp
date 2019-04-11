@@ -38,7 +38,7 @@ class PersistentBufferProvider : public RefCounted<PersistentBufferProvider> {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PersistentBufferProvider)
 
-  virtual ~PersistentBufferProvider() {}
+  virtual ~PersistentBufferProvider() = default;
 
   virtual LayersBackend GetType() { return LayersBackend::LAYERS_NONE; }
 
@@ -95,29 +95,26 @@ class PersistentBufferProviderBasic : public PersistentBufferProvider {
 
   explicit PersistentBufferProviderBasic(gfx::DrawTarget* aTarget);
 
-  virtual LayersBackend GetType() override {
-    return LayersBackend::LAYERS_BASIC;
-  }
+  LayersBackend GetType() override { return LayersBackend::LAYERS_BASIC; }
 
-  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(
+  already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(
       const gfx::IntRect& aPersistedRect) override;
 
-  virtual bool ReturnDrawTarget(already_AddRefed<gfx::DrawTarget> aDT) override;
+  bool ReturnDrawTarget(already_AddRefed<gfx::DrawTarget> aDT) override;
 
-  virtual already_AddRefed<gfx::SourceSurface> BorrowSnapshot() override;
+  already_AddRefed<gfx::SourceSurface> BorrowSnapshot() override;
 
-  virtual void ReturnSnapshot(
-      already_AddRefed<gfx::SourceSurface> aSnapshot) override;
+  void ReturnSnapshot(already_AddRefed<gfx::SourceSurface> aSnapshot) override;
 
-  virtual bool PreservesDrawingState() const override { return true; }
+  bool PreservesDrawingState() const override { return true; }
 
-  virtual void OnShutdown() override { Destroy(); }
+  void OnShutdown() override { Destroy(); }
 
  protected:
   void Destroy();
 
  private:
-  ~PersistentBufferProviderBasic();
+  virtual ~PersistentBufferProviderBasic();
 
   RefPtr<gfx::DrawTarget> mDrawTarget;
   RefPtr<gfx::SourceSurface> mSnapshot;
@@ -137,29 +134,28 @@ class PersistentBufferProviderShared : public PersistentBufferProvider,
       gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
       KnowsCompositor* aKnowsCompositor);
 
-  virtual LayersBackend GetType() override;
+  LayersBackend GetType() override;
 
-  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(
+  already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(
       const gfx::IntRect& aPersistedRect) override;
 
-  virtual bool ReturnDrawTarget(already_AddRefed<gfx::DrawTarget> aDT) override;
+  bool ReturnDrawTarget(already_AddRefed<gfx::DrawTarget> aDT) override;
 
-  virtual already_AddRefed<gfx::SourceSurface> BorrowSnapshot() override;
+  already_AddRefed<gfx::SourceSurface> BorrowSnapshot() override;
 
-  virtual void ReturnSnapshot(
-      already_AddRefed<gfx::SourceSurface> aSnapshot) override;
+  void ReturnSnapshot(already_AddRefed<gfx::SourceSurface> aSnapshot) override;
 
-  virtual TextureClient* GetTextureClient() override;
+  TextureClient* GetTextureClient() override;
 
-  virtual void NotifyInactive() override;
+  void NotifyInactive() override;
 
-  virtual void OnShutdown() override { Destroy(); }
+  void OnShutdown() override { Destroy(); }
 
-  virtual bool SetKnowsCompositor(KnowsCompositor* aKnowsCompositor) override;
+  bool SetKnowsCompositor(KnowsCompositor* aKnowsCompositor) override;
 
-  virtual void ClearCachedResources() override;
+  void ClearCachedResources() override;
 
-  virtual bool PreservesDrawingState() const override { return false; }
+  bool PreservesDrawingState() const override { return false; }
 
  protected:
   PersistentBufferProviderShared(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
@@ -186,7 +182,7 @@ class PersistentBufferProviderShared : public PersistentBufferProvider,
   RefPtr<gfx::SourceSurface> mSnapshot;
 };
 
-struct AutoReturnSnapshot {
+struct AutoReturnSnapshot final {
   PersistentBufferProvider* mBufferProvider;
   RefPtr<gfx::SourceSurface>* mSnapshot;
 

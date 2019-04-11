@@ -22,7 +22,7 @@ class GeckoContentController;
 class APZChild final : public PAPZChild {
  public:
   explicit APZChild(RefPtr<GeckoContentController> aController);
-  ~APZChild();
+  virtual ~APZChild();
 
   mozilla::ipc::IPCResult RecvLayerTransforms(
       const nsTArray<MatrixMessage>& aTransforms);

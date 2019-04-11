@@ -43,18 +43,17 @@ class ClientTiledPaintedLayer : public PaintedLayer, public ClientLayer {
                                        aCreationHint = LayerManager::NONE);
 
  protected:
-  ~ClientTiledPaintedLayer();
+  virtual ~ClientTiledPaintedLayer();
 
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
  public:
   // Override name to distinguish it from ClientPaintedLayer in layer dumps
-  virtual const char* Name() const override { return "TiledPaintedLayer"; }
+  const char* Name() const override { return "TiledPaintedLayer"; }
 
   // PaintedLayer
-  virtual Layer* AsLayer() override { return this; }
-  virtual void InvalidateRegion(const nsIntRegion& aRegion) override {
+  Layer* AsLayer() override { return this; }
+  void InvalidateRegion(const nsIntRegion& aRegion) override {
     mInvalidRegion.Add(aRegion);
     UpdateValidRegionAfterInvalidRegionChanged();
     if (!mLowPrecisionValidRegion.IsEmpty()) {
@@ -65,14 +64,14 @@ class ClientTiledPaintedLayer : public PaintedLayer, public ClientLayer {
   }
 
   // Shadow methods
-  virtual void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) override;
-  virtual ShadowableLayer* AsShadowableLayer() override { return this; }
+  void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) override;
+  ShadowableLayer* AsShadowableLayer() override { return this; }
 
-  virtual void RenderLayer() override;
+  void RenderLayer() override;
 
-  virtual void ClearCachedResources() override;
+  void ClearCachedResources() override;
 
-  virtual void HandleMemoryPressure() override {
+  void HandleMemoryPressure() override {
     if (mContentClient) {
       mContentClient->HandleMemoryPressure();
     }
@@ -87,7 +86,7 @@ class ClientTiledPaintedLayer : public PaintedLayer, public ClientLayer {
                          LayerMetricsWrapper* aOutDisplayPortAncestor,
                          bool* aOutHasTransformAnimation);
 
-  virtual bool IsOptimizedFor(
+  bool IsOptimizedFor(
       LayerManager::PaintedLayerCreationHint aCreationHint) override;
 
  private:

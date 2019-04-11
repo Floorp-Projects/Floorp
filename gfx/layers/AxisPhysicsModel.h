@@ -25,7 +25,7 @@ namespace layers {
 class AxisPhysicsModel {
  public:
   AxisPhysicsModel(double aInitialPosition, double aInitialVelocity);
-  ~AxisPhysicsModel();
+  virtual ~AxisPhysicsModel();
 
   /**
    * Advance the physics simulation.

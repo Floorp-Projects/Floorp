@@ -40,7 +40,7 @@ class ClientMultiTiledLayerBuffer
                    void* aCallbackData,
                    TilePaintFlags aFlags = TilePaintFlags::None) override;
 
-  virtual bool SupportsProgressiveUpdate() override { return true; }
+  bool SupportsProgressiveUpdate() override { return true; }
   /**
    * Performs a progressive update of a given tiled buffer.
    * See ComputeProgressiveUpdateRegion below for parameter documentation.

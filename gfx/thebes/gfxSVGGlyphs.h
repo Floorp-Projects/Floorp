@@ -47,7 +47,7 @@ class gfxSVGGlyphsDocument final : public nsAPostRefreshObserver {
 
   ~gfxSVGGlyphsDocument();
 
-  virtual void DidRefresh() override;
+  void DidRefresh() override;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 

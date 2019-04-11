@@ -31,25 +31,25 @@ class CanvasLayerComposite : public CanvasLayer, public LayerComposite {
   virtual ~CanvasLayerComposite();
 
  public:
-  virtual bool SetCompositableHost(CompositableHost* aHost) override;
+  bool SetCompositableHost(CompositableHost* aHost) override;
 
-  virtual void Disconnect() override { Destroy(); }
+  void Disconnect() override { Destroy(); }
 
-  virtual void SetLayerManager(HostLayerManager* aManager) override;
+  void SetLayerManager(HostLayerManager* aManager) override;
 
-  virtual Layer* GetLayer() override;
-  virtual void RenderLayer(const gfx::IntRect& aClipRect,
-                           const Maybe<gfx::Polygon>& aGeometry) override;
+  Layer* GetLayer() override;
+  void RenderLayer(const gfx::IntRect& aClipRect,
+                   const Maybe<gfx::Polygon>& aGeometry) override;
 
-  virtual void CleanupResources() override;
+  void CleanupResources() override;
 
-  virtual void GenEffectChain(EffectChain& aEffect) override;
+  void GenEffectChain(EffectChain& aEffect) override;
 
   CompositableHost* GetCompositableHost() override;
 
-  virtual HostLayer* AsHostLayer() override { return this; }
+  HostLayer* AsHostLayer() override { return this; }
 
-  virtual const char* Name() const override { return "CanvasLayerComposite"; }
+  const char* Name() const override { return "CanvasLayerComposite"; }
 
  protected:
   CanvasRenderer* CreateCanvasRendererInternal() override {
@@ -57,8 +57,7 @@ class CanvasLayerComposite : public CanvasLayer, public LayerComposite {
     return nullptr;
   }
 
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
  private:
   gfx::SamplingFilter GetSamplingFilter();

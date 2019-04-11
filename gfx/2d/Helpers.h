@@ -12,9 +12,9 @@
 namespace mozilla {
 namespace gfx {
 
-class AutoRestoreTransform {
+class AutoRestoreTransform final {
  public:
-  AutoRestoreTransform() {}
+  AutoRestoreTransform() = default;
 
   explicit AutoRestoreTransform(DrawTarget *aTarget)
       : mDrawTarget(aTarget), mOldTransform(aTarget->GetTransform()) {}
@@ -38,7 +38,7 @@ class AutoRestoreTransform {
   Matrix mOldTransform;
 };
 
-class AutoPopClips {
+class AutoPopClips final {
  public:
   explicit AutoPopClips(DrawTarget *aTarget)
       : mDrawTarget(aTarget), mPushCount(0) {

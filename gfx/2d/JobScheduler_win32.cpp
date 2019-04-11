@@ -22,7 +22,7 @@ class WorkerThreadWin32 : public WorkerThread {
                              static_cast<WorkerThread*>(this), 0, nullptr);
   }
 
-  ~WorkerThreadWin32() {
+  virtual ~WorkerThreadWin32() {
     ::WaitForSingleObject(mThread, INFINITE);
     ::CloseHandle(mThread);
   }

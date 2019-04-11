@@ -28,7 +28,7 @@ class GPUChild final : public PGPUChild, public gfxVarReceiver {
 
  public:
   explicit GPUChild(GPUProcessHost* aHost);
-  ~GPUChild();
+  virtual ~GPUChild();
 
   void Init();
 

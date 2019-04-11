@@ -56,7 +56,7 @@ class gfxDrawable {
 
  protected:
   // Protected destructor, to discourage deletion outside of Release():
-  virtual ~gfxDrawable() {}
+  virtual ~gfxDrawable() = default;
 
   const mozilla::gfx::IntSize mSize;
 };
@@ -70,7 +70,7 @@ class gfxSurfaceDrawable : public gfxDrawable {
   gfxSurfaceDrawable(mozilla::gfx::SourceSurface* aSurface,
                      const mozilla::gfx::IntSize aSize,
                      const gfxMatrix aTransform = gfxMatrix());
-  virtual ~gfxSurfaceDrawable() {}
+  virtual ~gfxSurfaceDrawable() = default;
 
   virtual bool Draw(gfxContext* aContext, const gfxRect& aFillRect,
                     mozilla::gfx::ExtendMode aExtendMode,
@@ -106,7 +106,7 @@ class gfxDrawingCallback {
   NS_INLINE_DECL_REFCOUNTING(gfxDrawingCallback)
  protected:
   // Protected destructor, to discourage deletion outside of Release():
-  virtual ~gfxDrawingCallback() {}
+  virtual ~gfxDrawingCallback() = default;
 
  public:
   /**
@@ -129,7 +129,7 @@ class gfxCallbackDrawable : public gfxDrawable {
  public:
   gfxCallbackDrawable(gfxDrawingCallback* aCallback,
                       const mozilla::gfx::IntSize aSize);
-  virtual ~gfxCallbackDrawable() {}
+  virtual ~gfxCallbackDrawable() = default;
 
   virtual bool Draw(gfxContext* aContext, const gfxRect& aFillRect,
                     mozilla::gfx::ExtendMode aExtendMode,

@@ -36,22 +36,22 @@ class BufferTextureData : public TextureData {
       gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace,
       TextureFlags aTextureFlags);
 
-  virtual bool Lock(OpenMode aMode) override { return true; }
+  bool Lock(OpenMode aMode) override { return true; }
 
-  virtual void Unlock() override {}
+  void Unlock() override {}
 
-  virtual void FillInfo(TextureData::Info& aInfo) const override;
+  void FillInfo(TextureData::Info& aInfo) const override;
 
-  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
+  already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
 
-  virtual bool BorrowMappedData(MappedTextureData& aMap) override;
+  bool BorrowMappedData(MappedTextureData& aMap) override;
 
-  virtual bool BorrowMappedYCbCrData(MappedYCbCrTextureData& aMap) override;
+  bool BorrowMappedYCbCrData(MappedYCbCrTextureData& aMap) override;
 
   // use TextureClient's default implementation
-  virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
+  bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
 
-  virtual BufferTextureData* AsBufferTextureData() override { return this; }
+  BufferTextureData* AsBufferTextureData() override { return this; }
 
   // Don't use this.
   void SetDescriptor(BufferDescriptor&& aDesc);

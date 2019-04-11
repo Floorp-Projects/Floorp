@@ -38,7 +38,7 @@ class ObserverToDestroyFeaturesAlreadyReported final : public nsIObserver {
   ObserverToDestroyFeaturesAlreadyReported() {}
 
  private:
-  virtual ~ObserverToDestroyFeaturesAlreadyReported() {}
+  virtual ~ObserverToDestroyFeaturesAlreadyReported() = default;
 };
 
 NS_IMPL_ISUPPORTS(ObserverToDestroyFeaturesAlreadyReported, nsIObserver)

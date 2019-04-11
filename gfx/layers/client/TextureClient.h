@@ -118,7 +118,7 @@ class TextureReadbackSink {
   virtual void ProcessReadback(gfx::DataSourceSurface* aSourceSurface) = 0;
 
  protected:
-  virtual ~TextureReadbackSink() {}
+  virtual ~TextureReadbackSink() = default;
 };
 
 enum class BackendSelector { Content, Canvas };
@@ -182,7 +182,7 @@ class NonBlockingTextureReadLock;
 // once.
 class TextureReadLock {
  protected:
-  virtual ~TextureReadLock() {}
+  virtual ~TextureReadLock() = default;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureReadLock)
@@ -217,9 +217,7 @@ class NonBlockingTextureReadLock : public TextureReadLock {
 
   static already_AddRefed<TextureReadLock> Create(LayersIPCChannel* aAllocator);
 
-  virtual NonBlockingTextureReadLock* AsNonBlockingLock() override {
-    return this;
-  }
+  NonBlockingTextureReadLock* AsNonBlockingLock() override { return this; }
 };
 
 #ifdef XP_WIN
@@ -329,8 +327,8 @@ class TextureData {
  */
 class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
  public:
-  explicit TextureClient(TextureData* aData, TextureFlags aFlags,
-                         LayersIPCChannel* aAllocator);
+  TextureClient(TextureData* aData, TextureFlags aFlags,
+                LayersIPCChannel* aAllocator);
 
   virtual ~TextureClient();
 
@@ -876,7 +874,7 @@ class MOZ_RAII DualTextureClientAutoLock {
 
 class KeepAlive {
  public:
-  virtual ~KeepAlive() {}
+  virtual ~KeepAlive() = default;
 };
 
 template <typename T>

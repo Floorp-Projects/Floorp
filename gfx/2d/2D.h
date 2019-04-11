@@ -194,7 +194,7 @@ struct DrawSurfaceOptions {
 class GradientStops : public external::AtomicRefCounted<GradientStops> {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GradientStops)
-  virtual ~GradientStops() {}
+  virtual ~GradientStops() = default;
 
   virtual BackendType GetBackendType() const = 0;
   virtual bool IsValid() const { return true; }
@@ -211,12 +211,12 @@ class GradientStops : public external::AtomicRefCounted<GradientStops> {
  */
 class Pattern {
  public:
-  virtual ~Pattern() {}
+  virtual ~Pattern() = default;
 
   virtual PatternType GetType() const = 0;
 
  protected:
-  Pattern() {}
+  Pattern() = default;
 };
 
 class ColorPattern : public Pattern {
@@ -225,7 +225,7 @@ class ColorPattern : public Pattern {
   // creating a ColorPattern.
   explicit ColorPattern(const Color &aColor) : mColor(aColor) {}
 
-  virtual PatternType GetType() const override { return PatternType::COLOR; }
+  PatternType GetType() const override { return PatternType::COLOR; }
 
   Color mColor;
 };
@@ -242,9 +242,7 @@ class LinearGradientPattern : public Pattern {
                         GradientStops *aStops, const Matrix &aMatrix = Matrix())
       : mBegin(aBegin), mEnd(aEnd), mStops(aStops), mMatrix(aMatrix) {}
 
-  virtual PatternType GetType() const override {
-    return PatternType::LINEAR_GRADIENT;
-  }
+  PatternType GetType() const override { return PatternType::LINEAR_GRADIENT; }
 
   Point mBegin;  //!< Start of the linear gradient
   Point mEnd;    /**< End of the linear gradient - NOTE: In the case
@@ -276,9 +274,7 @@ class RadialGradientPattern : public Pattern {
         mStops(aStops),
         mMatrix(aMatrix) {}
 
-  virtual PatternType GetType() const override {
-    return PatternType::RADIAL_GRADIENT;
-  }
+  PatternType GetType() const override { return PatternType::RADIAL_GRADIENT; }
 
   Point mCenter1;  //!< Center of the inner (focal) circle.
   Point mCenter2;  //!< Center of the outer circle.
@@ -308,7 +304,7 @@ class SurfacePattern : public Pattern {
         mMatrix(aMatrix),
         mSamplingRect(aSamplingRect) {}
 
-  virtual PatternType GetType() const override { return PatternType::SURFACE; }
+  PatternType GetType() const override { return PatternType::SURFACE; }
 
   RefPtr<SourceSurface> mSurface;  //!< Surface to use for drawing
   ExtendMode mExtendMode; /**< This determines how the image is extended
@@ -338,7 +334,7 @@ class DrawTargetCaptureImpl;
 class SourceSurface : public external::AtomicRefCounted<SourceSurface> {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(SourceSurface)
-  virtual ~SourceSurface() {}
+  virtual ~SourceSurface() = default;
 
   virtual SurfaceType GetType() const = 0;
   virtual IntSize GetSize() const = 0;
@@ -429,7 +425,7 @@ class DataSourceSurface : public SourceSurface {
    */
   class ScopedMap final {
    public:
-    explicit ScopedMap(DataSourceSurface *aSurface, MapType aType)
+    ScopedMap(DataSourceSurface *aSurface, MapType aType)
         : mSurface(aSurface), mIsMapped(aSurface->Map(aType, &mMap)) {}
 
     ScopedMap(ScopedMap &&aOther)
@@ -484,7 +480,7 @@ class DataSourceSurface : public SourceSurface {
     bool mIsMapped;
   };
 
-  virtual SurfaceType GetType() const override { return SurfaceType::DATA; }
+  SurfaceType GetType() const override { return SurfaceType::DATA; }
   /** @deprecated
    * Get the raw bitmap data of the surface.
    * Can return null if there was OOM allocating surface data.
@@ -535,7 +531,7 @@ class DataSourceSurface : public SourceSurface {
    * The returning surface might be null, because of OOM or gfx device reset.
    * The caller needs to do null-check before using it.
    */
-  virtual already_AddRefed<DataSourceSurface> GetDataSurface() override;
+  already_AddRefed<DataSourceSurface> GetDataSurface() override;
 
   /**
    * Add the size of the underlying data buffer to the aggregate.
@@ -570,7 +566,7 @@ class DataSourceSurface : public SourceSurface {
 class PathSink : public RefCounted<PathSink> {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PathSink)
-  virtual ~PathSink() {}
+  virtual ~PathSink() = default;
 
   /** Move the current point in the path, any figure currently being drawn will
    * be considered closed during fill operations, however when stroking the
@@ -894,7 +890,7 @@ class NativeFontResource
       uint32_t aIndex, const uint8_t *aInstanceData,
       uint32_t aInstanceDataLength) = 0;
 
-  virtual ~NativeFontResource() {}
+  virtual ~NativeFontResource() = default;
 };
 
 class DrawTargetCapture;
@@ -911,7 +907,7 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
       : mTransformDirty(false),
         mPermitSubpixelAA(false),
         mFormat(SurfaceFormat::UNKNOWN) {}
-  virtual ~DrawTarget() {}
+  virtual ~DrawTarget() = default;
 
   virtual bool IsValid() const { return true; };
   virtual DrawTargetType GetType() const = 0;
@@ -1519,7 +1515,7 @@ class DrawTarget : public external::AtomicRefCounted<DrawTarget> {
 
 class DrawTargetCapture : public DrawTarget {
  public:
-  virtual bool IsCaptureDT() const override { return true; }
+  bool IsCaptureDT() const override { return true; }
 
   virtual bool IsEmpty() const = 0;
   virtual void Dump() = 0;
@@ -1530,7 +1526,7 @@ class DrawEventRecorder : public RefCounted<DrawEventRecorder> {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorder)
   // returns true if there were any items in the recording
   virtual bool Finish() = 0;
-  virtual ~DrawEventRecorder() {}
+  virtual ~DrawEventRecorder() = default;
 };
 
 struct Tile {

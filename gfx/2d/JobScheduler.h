@@ -142,7 +142,7 @@ class SetEventJob : public Job {
                        SyncObject* aCompletion = nullptr,
                        WorkerThread* aPinToWorker = nullptr);
 
-  ~SetEventJob();
+  virtual ~SetEventJob();
 
   JobStatus Run() override;
 
@@ -179,7 +179,7 @@ class SyncObject final : public external::AtomicRefCounted<SyncObject> {
   /// using muteces.
   explicit SyncObject(uint32_t aNumPrerequisites = 1);
 
-  ~SyncObject();
+  virtual ~SyncObject();
 
   /// Attempt to register a task.
   ///
@@ -237,7 +237,7 @@ class WorkerThread {
  public:
   static WorkerThread* Create(MultiThreadedJobQueue* aJobQueue);
 
-  virtual ~WorkerThread() {}
+  virtual ~WorkerThread() = default;
 
   void Run();
 

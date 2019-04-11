@@ -31,7 +31,7 @@ class RenderSharedSurfaceTextureHost final : public RenderTextureHost {
   void Unlock() override;
 
  private:
-  ~RenderSharedSurfaceTextureHost() override;
+  virtual ~RenderSharedSurfaceTextureHost();
 
   RefPtr<gfx::SourceSurfaceSharedDataWrapper> mSurface;
   gfx::DataSourceSurface::MappedSurface mMap;

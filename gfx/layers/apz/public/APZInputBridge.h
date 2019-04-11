@@ -111,7 +111,7 @@ class APZInputBridge {
   virtual void UpdateWheelTransaction(LayoutDeviceIntPoint aRefPoint,
                                       EventMessage aEventMessage) = 0;
 
-  virtual ~APZInputBridge() {}
+  virtual ~APZInputBridge() = default;
 };
 
 }  // namespace layers

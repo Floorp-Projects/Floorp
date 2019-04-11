@@ -39,7 +39,7 @@ void FontInfoData::Load() {
 }
 
 class FontInfoLoadCompleteEvent : public Runnable {
-  virtual ~FontInfoLoadCompleteEvent() {}
+  virtual ~FontInfoLoadCompleteEvent() = default;
 
  public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(FontInfoLoadCompleteEvent, Runnable)
@@ -54,7 +54,7 @@ class FontInfoLoadCompleteEvent : public Runnable {
 };
 
 class AsyncFontInfoLoader : public Runnable {
-  virtual ~AsyncFontInfoLoader() {}
+  virtual ~AsyncFontInfoLoader() = default;
 
  public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(AsyncFontInfoLoader, Runnable)
@@ -72,7 +72,7 @@ class AsyncFontInfoLoader : public Runnable {
 };
 
 class ShutdownThreadEvent : public Runnable {
-  virtual ~ShutdownThreadEvent() {}
+  virtual ~ShutdownThreadEvent() = default;
 
  public:
   NS_INLINE_DECL_REFCOUNTING_INHERITED(ShutdownThreadEvent, Runnable)

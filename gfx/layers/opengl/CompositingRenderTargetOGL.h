@@ -81,9 +81,7 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
 
   ~CompositingRenderTargetOGL();
 
-  virtual const char* Name() const override {
-    return "CompositingRenderTargetOGL";
-  }
+  const char* Name() const override { return "CompositingRenderTargetOGL"; }
 
   /**
    * Create a render target around the default FBO, for rendering straight to
@@ -148,7 +146,7 @@ class CompositingRenderTargetOGL : public CompositingRenderTarget {
   }
 
 #ifdef MOZ_DUMP_PAINTING
-  virtual already_AddRefed<gfx::DataSourceSurface> Dump(
+  already_AddRefed<gfx::DataSourceSurface> Dump(
       Compositor* aCompositor) override;
 #endif
 

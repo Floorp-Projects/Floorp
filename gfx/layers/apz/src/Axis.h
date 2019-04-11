@@ -344,39 +344,35 @@ class Axis {
 class AxisX : public Axis {
  public:
   explicit AxisX(AsyncPanZoomController* mAsyncPanZoomController);
-  virtual ParentLayerCoord GetPointOffset(
+  ParentLayerCoord GetPointOffset(
       const ParentLayerPoint& aPoint) const override;
-  virtual ParentLayerCoord GetRectLength(
-      const ParentLayerRect& aRect) const override;
-  virtual ParentLayerCoord GetRectOffset(
-      const ParentLayerRect& aRect) const override;
-  virtual CSSToParentLayerScale GetScaleForAxis(
+  ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const override;
+  ParentLayerCoord GetRectOffset(const ParentLayerRect& aRect) const override;
+  CSSToParentLayerScale GetScaleForAxis(
       const CSSToParentLayerScale2D& aScale) const override;
-  virtual ScreenPoint MakePoint(ScreenCoord aCoord) const override;
-  virtual const char* Name() const override;
+  ScreenPoint MakePoint(ScreenCoord aCoord) const override;
+  const char* Name() const override;
   bool CanScrollTo(Side aSide) const;
 
  private:
-  virtual OverscrollBehavior GetOverscrollBehavior() const override;
+  OverscrollBehavior GetOverscrollBehavior() const override;
 };
 
 class AxisY : public Axis {
  public:
   explicit AxisY(AsyncPanZoomController* mAsyncPanZoomController);
-  virtual ParentLayerCoord GetPointOffset(
+  ParentLayerCoord GetPointOffset(
       const ParentLayerPoint& aPoint) const override;
-  virtual ParentLayerCoord GetRectLength(
-      const ParentLayerRect& aRect) const override;
-  virtual ParentLayerCoord GetRectOffset(
-      const ParentLayerRect& aRect) const override;
-  virtual CSSToParentLayerScale GetScaleForAxis(
+  ParentLayerCoord GetRectLength(const ParentLayerRect& aRect) const override;
+  ParentLayerCoord GetRectOffset(const ParentLayerRect& aRect) const override;
+  CSSToParentLayerScale GetScaleForAxis(
       const CSSToParentLayerScale2D& aScale) const override;
-  virtual ScreenPoint MakePoint(ScreenCoord aCoord) const override;
-  virtual const char* Name() const override;
+  ScreenPoint MakePoint(ScreenCoord aCoord) const override;
+  const char* Name() const override;
   bool CanScrollTo(Side aSide) const;
 
  private:
-  virtual OverscrollBehavior GetOverscrollBehavior() const override;
+  OverscrollBehavior GetOverscrollBehavior() const override;
 };
 
 }  // namespace layers

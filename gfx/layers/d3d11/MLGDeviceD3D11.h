@@ -48,7 +48,7 @@ class MLGRenderTargetD3D11 final : public MLGRenderTarget {
   void ForgetTexture();
 
  private:
-  ~MLGRenderTargetD3D11() override;
+  virtual ~MLGRenderTargetD3D11();
 
  private:
   RefPtr<ID3D11Texture2D> mTexture;
@@ -76,7 +76,7 @@ class MLGSwapChainD3D11 final : public MLGSwapChain {
 
  private:
   MLGSwapChainD3D11(MLGDeviceD3D11* aParent, ID3D11Device* aDevice);
-  ~MLGSwapChainD3D11() override;
+  virtual ~MLGSwapChainD3D11();
 
   bool Initialize(widget::CompositorWidget* aWidget);
   void UpdateBackBufferContents(ID3D11Texture2D* aBack);
@@ -112,7 +112,7 @@ class MLGBufferD3D11 final : public MLGBuffer, public MLGResourceD3D11 {
 
  protected:
   MLGBufferD3D11(ID3D11Buffer* aBuffer, MLGBufferType aType, size_t aSize);
-  ~MLGBufferD3D11() override;
+  virtual ~MLGBufferD3D11();
 
  private:
   RefPtr<ID3D11Buffer> mBuffer;
@@ -144,7 +144,7 @@ class MLGTextureD3D11 final : public MLGTexture, public MLGResourceD3D11 {
 class MLGDeviceD3D11 final : public MLGDevice {
  public:
   explicit MLGDeviceD3D11(ID3D11Device* aDevice);
-  ~MLGDeviceD3D11() override;
+  virtual ~MLGDeviceD3D11();
 
   bool Initialize() override;
 

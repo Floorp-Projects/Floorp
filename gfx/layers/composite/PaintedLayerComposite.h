@@ -36,34 +36,34 @@ class PaintedLayerComposite : public PaintedLayer, public LayerComposite {
   virtual ~PaintedLayerComposite();
 
  public:
-  virtual void Disconnect() override;
+  void Disconnect() override;
 
   CompositableHost* GetCompositableHost() override;
 
-  virtual void Destroy() override;
+  void Destroy() override;
 
-  virtual Layer* GetLayer() override;
+  Layer* GetLayer() override;
 
-  virtual void SetLayerManager(HostLayerManager* aManager) override;
+  void SetLayerManager(HostLayerManager* aManager) override;
 
-  virtual void RenderLayer(const gfx::IntRect& aClipRect,
-                           const Maybe<gfx::Polygon>& aGeometry) override;
+  void RenderLayer(const gfx::IntRect& aClipRect,
+                   const Maybe<gfx::Polygon>& aGeometry) override;
 
-  virtual void CleanupResources() override;
+  void CleanupResources() override;
 
-  virtual bool IsOpaque() override;
+  bool IsOpaque() override;
 
-  virtual void GenEffectChain(EffectChain& aEffect) override;
+  void GenEffectChain(EffectChain& aEffect) override;
 
-  virtual bool SetCompositableHost(CompositableHost* aHost) override;
+  bool SetCompositableHost(CompositableHost* aHost) override;
 
-  virtual HostLayer* AsHostLayer() override { return this; }
+  HostLayer* AsHostLayer() override { return this; }
 
-  virtual void InvalidateRegion(const nsIntRegion& aRegion) override {
+  void InvalidateRegion(const nsIntRegion& aRegion) override {
     MOZ_CRASH("PaintedLayerComposites can't fill invalidated regions");
   }
 
-  const virtual gfx::TiledIntRegion& GetInvalidRegion() override;
+  const gfx::TiledIntRegion& GetInvalidRegion() override;
 
   MOZ_LAYER_DECL_NAME("PaintedLayerComposite", TYPE_PAINTED)
 

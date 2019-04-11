@@ -1071,12 +1071,11 @@ void WebRenderScrollDataCollection::AppendScrollData(
 
 class WebRenderGroupData : public WebRenderUserData {
  public:
-  explicit WebRenderGroupData(RenderRootStateManager* aWRManager,
-                              nsDisplayItem* aItem);
+  WebRenderGroupData(RenderRootStateManager* aWRManager, nsDisplayItem* aItem);
   virtual ~WebRenderGroupData();
 
-  virtual WebRenderGroupData* AsGroupData() override { return this; }
-  virtual UserDataType GetType() override { return UserDataType::eGroup; }
+  WebRenderGroupData* AsGroupData() override { return this; }
+  UserDataType GetType() override { return UserDataType::eGroup; }
   static UserDataType Type() { return UserDataType::eGroup; }
 
   DIGroup mSubGroup;
@@ -2340,7 +2339,7 @@ class WebRenderMaskData : public WebRenderUserData {
     mBlobKey.reset();
   }
 
-  virtual UserDataType GetType() override { return UserDataType::eMask; }
+  UserDataType GetType() override { return UserDataType::eMask; }
   static UserDataType Type() { return UserDataType::eMask; }
 
   Maybe<wr::BlobImageKey> mBlobKey;

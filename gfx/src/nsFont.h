@@ -22,7 +22,7 @@
 struct gfxFontStyle;
 
 // Font structure.
-struct nsFont {
+struct nsFont final {
   typedef mozilla::FontStretch FontStretch;
   typedef mozilla::FontSlantStyle FontSlantStyle;
   typedef mozilla::FontWeight FontWeight;
@@ -108,8 +108,7 @@ struct nsFont {
   nsFont(const nsFont& aFont);
 
   // leave members uninitialized
-  nsFont();
-
+  nsFont() = default;
   ~nsFont();
 
   bool operator==(const nsFont& aOther) const { return Equals(aOther); }

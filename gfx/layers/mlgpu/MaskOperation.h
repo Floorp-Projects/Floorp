@@ -62,7 +62,7 @@ typedef std::vector<MaskTexture> MaskTextureList;
 class MaskCombineOperation final : public MaskOperation {
  public:
   explicit MaskCombineOperation(FrameBuilder* aBuilder);
-  ~MaskCombineOperation() override;
+  virtual ~MaskCombineOperation();
 
   void Init(const MaskTextureList& aTextures);
 

@@ -53,7 +53,7 @@ struct Effect {
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) = 0;
 
  protected:
-  virtual ~Effect() {}
+  virtual ~Effect() = default;
 };
 
 // Render from a texture
@@ -66,10 +66,9 @@ struct TexturedEffect : public Effect {
         mPremultiplied(aPremultiplied),
         mSamplingFilter(aSamplingFilter) {}
 
-  virtual TexturedEffect* AsTexturedEffect() override { return this; }
+  TexturedEffect* AsTexturedEffect() override { return this; }
   virtual const char* Name() = 0;
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
   gfx::Rect mTextureCoords;
   TextureSource* mTexture;
@@ -86,8 +85,7 @@ struct EffectMask : public Effect {
         mSize(aSize),
         mMaskTransform(aMaskTransform) {}
 
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
   TextureSource* mMaskTexture;
   gfx::IntSize mSize;
@@ -99,8 +97,7 @@ struct EffectBlendMode : public Effect {
       : Effect(EffectTypes::BLEND_MODE), mBlendMode(aBlendMode) {}
 
   virtual const char* Name() { return "EffectBlendMode"; }
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
   gfx::CompositionOp mBlendMode;
 };
@@ -112,9 +109,8 @@ struct EffectRenderTarget : public TexturedEffect {
                        gfx::SamplingFilter::LINEAR),
         mRenderTarget(aRenderTarget) {}
 
-  virtual const char* Name() override { return "EffectRenderTarget"; }
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  const char* Name() override { return "EffectRenderTarget"; }
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
   RefPtr<CompositingRenderTarget> mRenderTarget;
 
@@ -129,9 +125,7 @@ struct EffectColorMatrix : public Effect {
   explicit EffectColorMatrix(gfx::Matrix5x4 aMatrix)
       : Effect(EffectTypes::COLOR_MATRIX), mColorMatrix(aMatrix) {}
 
-  virtual const char* Name() { return "EffectColorMatrix"; }
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
   const gfx::Matrix5x4 mColorMatrix;
 };
 
@@ -141,7 +135,7 @@ struct EffectRGB : public TexturedEffect {
       : TexturedEffect(EffectTypes::RGB, aTexture, aPremultiplied,
                        aSamplingFilter) {}
 
-  virtual const char* Name() override { return "EffectRGB"; }
+  const char* Name() override { return "EffectRGB"; }
 };
 
 struct EffectYCbCr : public TexturedEffect {
@@ -151,7 +145,7 @@ struct EffectYCbCr : public TexturedEffect {
         mYUVColorSpace(aYUVColorSpace),
         mColorDepth(aColorDepth) {}
 
-  virtual const char* Name() override { return "EffectYCbCr"; }
+  const char* Name() override { return "EffectYCbCr"; }
 
   gfx::YUVColorSpace mYUVColorSpace;
   gfx::ColorDepth mColorDepth;
@@ -164,7 +158,7 @@ struct EffectNV12 : public EffectYCbCr {
     mType = EffectTypes::NV12;
   }
 
-  virtual const char* Name() override { return "EffectNV12"; }
+  const char* Name() override { return "EffectNV12"; }
 };
 
 struct EffectComponentAlpha : public TexturedEffect {
@@ -175,7 +169,7 @@ struct EffectComponentAlpha : public TexturedEffect {
         mOnBlack(aOnBlack),
         mOnWhite(aOnWhite) {}
 
-  virtual const char* Name() override { return "EffectComponentAlpha"; }
+  const char* Name() override { return "EffectComponentAlpha"; }
 
   TextureSource* mOnBlack;
   TextureSource* mOnWhite;
@@ -185,8 +179,7 @@ struct EffectSolidColor : public Effect {
   explicit EffectSolidColor(const gfx::Color& aColor)
       : Effect(EffectTypes::SOLID_COLOR), mColor(aColor) {}
 
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
   gfx::Color mColor;
 };
