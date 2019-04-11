@@ -118,6 +118,13 @@ function restoreForm() {
   uname.focus();
 }
 
+// Check for expected username/password in form.
+function checkACForm(expectedUsername, expectedPassword) {
+  var formID = uname.parentNode.id;
+  is(uname.value, expectedUsername, "Checking " + formID + " username is: " + expectedUsername);
+  is(pword.value, expectedPassword, "Checking " + formID + " password is: " + expectedPassword);
+}
+
 function sendFakeAutocompleteEvent(element) {
   var acEvent = document.createEvent("HTMLEvents");
   acEvent.initEvent("DOMAutoComplete", true, false);
@@ -137,7 +144,7 @@ add_task(async function test_form1_initial_empty() {
   await SimpleTest.promiseFocus(window);
 
   // Make sure initial form is empty.
-  checkACForm(uname, "", pword, "");
+  checkACForm("", "");
   let popupState = await getPopupState();
   is(popupState.open, false, "Check popup is initially closed");
 });
@@ -161,10 +168,10 @@ add_task(async function test_form1_warning_entry() {
   checkAutoCompleteResults(results, expectedMenuItems, "mochi.test", "Check all menuitems are displayed correctly.");
 
   synthesizeKey("KEY_ArrowDown"); // select insecure warning
-  checkACForm(uname, "", pword, ""); // value shouldn't update just by selecting
+  checkACForm("", ""); // value shouldn't update just by selecting
   synthesizeKey("KEY_Enter");
   await spinEventLoop(); // let focus happen
-  checkACForm(uname, "", pword, "");
+  checkACForm("", "");
 });
 
 add_task(async function test_form1_first_entry() {
@@ -180,10 +187,10 @@ add_task(async function test_form1_first_entry() {
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown"); // first
-  checkACForm(uname, "", pword, ""); // value shouldn't update just by selecting
+  checkACForm("", ""); // value shouldn't update just by selecting
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "tempuser1", pword, "temppass1");
+  checkACForm("tempuser1", "temppass1");
 });
 
 add_task(async function test_form1_second_entry() {
@@ -198,7 +205,7 @@ add_task(async function test_form1_second_entry() {
   synthesizeKey("KEY_ArrowDown"); // second
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "testuser2", pword, "testpass2");
+  checkACForm("testuser2", "testpass2");
 });
 
 add_task(async function test_form1_third_entry() {
@@ -214,7 +221,7 @@ add_task(async function test_form1_third_entry() {
   synthesizeKey("KEY_ArrowDown"); // third
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "testuser3", pword, "testpass3");
+  checkACForm("testuser3", "testpass3");
 });
 
 add_task(async function test_form1_fourth_entry() {
@@ -231,7 +238,7 @@ add_task(async function test_form1_fourth_entry() {
   synthesizeKey("KEY_ArrowDown"); // fourth
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "zzzuser4", pword, "zzzpass4");
+  checkACForm("zzzuser4", "zzzpass4");
 });
 
 add_task(async function test_form1_wraparound_first_entry() {
@@ -253,7 +260,7 @@ add_task(async function test_form1_wraparound_first_entry() {
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "tempuser1", pword, "temppass1");
+  checkACForm("tempuser1", "temppass1");
 });
 
 add_task(async function test_form1_wraparound_up_last_entry() {
@@ -267,7 +274,7 @@ add_task(async function test_form1_wraparound_up_last_entry() {
   synthesizeKey("KEY_ArrowUp"); // last (fourth)
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "zzzuser4", pword, "zzzpass4");
+  checkACForm("zzzuser4", "zzzpass4");
 });
 
 add_task(async function test_form1_wraparound_down_up_up() {
@@ -283,7 +290,7 @@ add_task(async function test_form1_wraparound_down_up_up() {
   synthesizeKey("KEY_ArrowUp"); // select last entry
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "zzzuser4", pword, "zzzpass4");
+  checkACForm("zzzuser4", "zzzpass4");
 });
 
 add_task(async function test_form1_wraparound_up_last() {
@@ -305,7 +312,7 @@ add_task(async function test_form1_wraparound_up_last() {
   synthesizeKey("KEY_ArrowUp"); // last entry
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "zzzuser4", pword, "zzzpass4");
+  checkACForm("zzzuser4", "zzzpass4");
 });
 
 add_task(async function test_form1_fill_username_without_autofill_right() {
@@ -319,7 +326,7 @@ add_task(async function test_form1_fill_username_without_autofill_right() {
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowRight");
   await spinEventLoop();
-  checkACForm(uname, "tempuser1", pword, ""); // empty password
+  checkACForm("tempuser1", ""); // empty password
 });
 
 add_task(async function test_form1_fill_username_without_autofill_left() {
@@ -332,7 +339,7 @@ add_task(async function test_form1_fill_username_without_autofill_left() {
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown"); // first
   synthesizeKey("KEY_ArrowLeft");
-  checkACForm(uname, "tempuser1", pword, ""); // empty password
+  checkACForm("tempuser1", ""); // empty password
 });
 
 add_task(async function test_form1_pageup_first() {
@@ -348,7 +355,7 @@ add_task(async function test_form1_pageup_first() {
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "tempuser1", pword, "temppass1");
+  checkACForm("tempuser1", "temppass1");
 });
 
 add_task(async function test_form1_pagedown_last() {
@@ -364,7 +371,7 @@ add_task(async function test_form1_pagedown_last() {
   synthesizeKey("KEY_ArrowUp"); // skip footer
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "zzzuser4", pword, "zzzpass4");
+  checkACForm("zzzuser4", "zzzpass4");
 });
 
 add_task(async function test_form1_untrusted_event() {
@@ -372,11 +379,11 @@ add_task(async function test_form1_untrusted_event() {
   await spinEventLoop();
 
   // Send a fake (untrusted) event.
-  checkACForm(uname, "", pword, "");
+  checkACForm("", "");
   uname.value = "zzzuser4";
   sendFakeAutocompleteEvent(uname);
   await spinEventLoop();
-  checkACForm(uname, "zzzuser4", pword, "");
+  checkACForm("zzzuser4", "");
 });
 
 add_task(async function test_form1_delete() {
@@ -404,13 +411,13 @@ add_task(async function test_form1_delete() {
   synthesizeKey("KEY_Delete", {shiftKey: true});
   await deletionPromise;
 
-  checkACForm(uname, "", pword, "");
+  checkACForm("", "");
   numLogins = LoginManager.countLogins("http://mochi.test:8888", "", null);
   is(numLogins, 4, "Correct number of logins after deleting one");
   await countChangedPromise;
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "testuser2", pword, "testpass2");
+  checkACForm("testuser2", "testpass2");
 });
 
 add_task(async function test_form1_first_after_deletion() {
@@ -424,7 +431,7 @@ add_task(async function test_form1_first_after_deletion() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "testuser2", pword, "testpass2");
+  checkACForm("testuser2", "testpass2");
 });
 
 add_task(async function test_form1_delete_second() {
@@ -440,12 +447,12 @@ add_task(async function test_form1_delete_second() {
   let storageChanged = promiseStorageChanged(["removeLogin"]);
   synthesizeKey("KEY_Delete", {shiftKey: true});
   await storageChanged;
-  checkACForm(uname, "", pword, "");
+  checkACForm("", "");
   let numLogins = LoginManager.countLogins("http://mochi.test:8888", "", null);
   is(numLogins, 3, "Correct number of logins after deleting one");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "zzzuser4", pword, "zzzpass4");
+  checkACForm("zzzuser4", "zzzpass4");
 });
 
 add_task(async function test_form1_first_after_deletion2() {
@@ -459,7 +466,7 @@ add_task(async function test_form1_first_after_deletion2() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "testuser2", pword, "testpass2");
+  checkACForm("testuser2", "testpass2");
 });
 
 add_task(async function test_form1_delete_last() {
@@ -476,14 +483,14 @@ add_task(async function test_form1_delete_last() {
   let storageChanged = promiseStorageChanged(["removeLogin"]);
   synthesizeKey("KEY_Delete", {shiftKey: true});
   await storageChanged;
-  checkACForm(uname, "", pword, "");
+  checkACForm("", "");
   let numLogins = LoginManager.countLogins("http://mochi.test:8888", "", null);
   is(numLogins, 2, "Correct number of logins after deleting one");
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "testuser2", pword, "testpass2");
+  checkACForm("testuser2", "testpass2");
 });
 
 add_task(async function test_form1_first_after_3_deletions() {
@@ -497,7 +504,7 @@ add_task(async function test_form1_first_after_3_deletions() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "testuser2", pword, "testpass2");
+  checkACForm("testuser2", "testpass2");
 });
 
 add_task(async function test_form1_check_only_entry_remaining() {
@@ -512,7 +519,7 @@ add_task(async function test_form1_check_only_entry_remaining() {
   synthesizeKey("KEY_ArrowDown");
   let storageChanged = promiseStorageChanged(["removeLogin", "removeLogin"]);
   synthesizeKey("KEY_Delete", {shiftKey: true});
-  checkACForm(uname, "", pword, "");
+  checkACForm("", "");
   let numLogins = LoginManager.countLogins("http://mochi.test:8888", "", null);
   is(numLogins, 1, "Correct number of logins after deleting one");
 
@@ -537,7 +544,7 @@ add_task(async function test_form2() {
   // Turn our attention to form2
   uname = $_(2, "uname");
   pword = $_(2, "pword");
-  checkACForm(uname, "singleuser5", pword, "singlepass5");
+  checkACForm("singleuser5", "singlepass5");
 
   restoreForm();
   let shownPromise = promiseACShown();
@@ -547,10 +554,10 @@ add_task(async function test_form2() {
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // Check first entry
   synthesizeKey("KEY_ArrowDown");
-  checkACForm(uname, "", pword, ""); // value shouldn't update
+  checkACForm("", ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "singleuser5", pword, "singlepass5");
+  checkACForm("singleuser5", "singlepass5");
 });
 
 add_task(async function test_form3() {
@@ -563,7 +570,7 @@ add_task(async function test_form3() {
 
   uname = $_(3, "uname");
   pword = $_(3, "pword");
-  checkACForm(uname, "singleuser5", pword, "singlepass5");
+  checkACForm("singleuser5", "singlepass5");
   restoreForm();
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
@@ -572,10 +579,10 @@ add_task(async function test_form3() {
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // Check first entry
   synthesizeKey("KEY_ArrowDown");
-  checkACForm(uname, "", pword, ""); // value shouldn't update
+  checkACForm("", ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "singleuser5", pword, "singlepass5");
+  checkACForm("singleuser5", "singlepass5");
 });
 
 add_task(async function test_form4() {
@@ -588,7 +595,7 @@ add_task(async function test_form4() {
 
   uname = $_(4, "uname");
   pword = $_(4, "pword");
-  checkACForm(uname, "singleuser5", pword, "singlepass5");
+  checkACForm("singleuser5", "singlepass5");
   restoreForm();
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
@@ -597,10 +604,10 @@ add_task(async function test_form4() {
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // Check first entry
   synthesizeKey("KEY_ArrowDown");
-  checkACForm(uname, "", pword, ""); // value shouldn't update
+  checkACForm("", ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "singleuser5", pword, "singlepass5");
+  checkACForm("singleuser5", "singlepass5");
 });
 
 add_task(async function test_form5() {
@@ -613,7 +620,7 @@ add_task(async function test_form5() {
 
   uname = $_(5, "uname");
   pword = $_(5, "pword");
-  checkACForm(uname, "singleuser5", pword, "singlepass5");
+  checkACForm("singleuser5", "singlepass5");
   restoreForm();
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
@@ -622,10 +629,10 @@ add_task(async function test_form5() {
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // Check first entry
   synthesizeKey("KEY_ArrowDown");
-  checkACForm(uname, "", pword, ""); // value shouldn't update
+  checkACForm("", ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "singleuser5", pword, "singlepass5");
+  checkACForm("singleuser5", "singlepass5");
 });
 
 add_task(async function test_form6() {
@@ -641,7 +648,7 @@ add_task(async function test_form6() {
   // that was being suppressed would have been filled in otherwise)
   uname = $_(6, "uname");
   pword = $_(6, "pword");
-  checkACForm(uname, "singleuser5", pword, "singlepass5");
+  checkACForm("singleuser5", "singlepass5");
 });
 
 add_task(async function test_form6_changeUsername() {
@@ -653,7 +660,7 @@ add_task(async function test_form6_changeUsername() {
   // Trigger the 'blur' event on uname
   pword.focus();
   await spinEventLoop();
-  checkACForm(uname, "singleuser5X", pword, "singlepass5");
+  checkACForm("singleuser5X", "singlepass5");
   uname.focus();
 
   let storageChanged = promiseStorageChanged(["removeLogin"]);
@@ -676,7 +683,7 @@ add_task(async function test_form7() {
 
   uname = $_(7, "uname");
   pword = $_(7, "pword");
-  checkACForm(uname, "", pword, "");
+  checkACForm("", "");
 
   // Insert a new username field into the form. We'll then make sure
   // that invoking the autocomplete doesn't try to fill the form.
@@ -703,13 +710,13 @@ add_task(async function test_form7_2() {
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   // Check first entry
   synthesizeKey("KEY_ArrowDown");
-  checkACForm(uname, "", pword, ""); // value shouldn't update
+  checkACForm("", ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   // The form changes, so we expect the old username field to get the
   // selected autocomplete value, but neither the new username field nor
   // the password field should have any values filled in.
   await spinEventLoop();
-  checkACForm(uname, "form7user1", pword, "");
+  checkACForm("form7user1", "");
   is($_(7, "uname2").value, "", "Verifying empty uname2");
   restoreForm(); // clear field, so reloading test doesn't fail
 
@@ -739,23 +746,23 @@ add_task(async function test_form8() {
 
   uname = $_(8, "uname");
   pword = $_(8, "pword");
-  checkACForm(uname, "form8user", pword, "form8pass");
+  checkACForm("form8user", "form8pass");
   restoreForm();
 });
 
 add_task(async function test_form8_blur() {
-  checkACForm(uname, "", pword, "");
+  checkACForm("", "");
   // Focus the previous form to trigger a blur.
   $_(7, "uname").focus();
 });
 
 add_task(async function test_form8_2() {
-  checkACForm(uname, "", pword, "");
+  checkACForm("", "");
   restoreForm();
 });
 
 add_task(async function test_form8_3() {
-  checkACForm(uname, "", pword, "");
+  checkACForm("", "");
 });
 
 add_task(async function test_form9_filtering() {
@@ -791,14 +798,14 @@ add_task(async function test_form9_filtering() {
                            "mochi.test",
                            "Check dropdown is showing login with only one 'A'");
 
-  checkACForm(uname, "form9userAB", pword, "");
+  checkACForm("form9userAB", "");
   uname.focus();
   synthesizeKey("KEY_ArrowLeft");
   shownPromise = promiseACShown();
   synthesizeKey("A", {shiftKey: true});
   results = await shownPromise;
 
-  checkACForm(uname, "form9userAAB", pword, "");
+  checkACForm("form9userAAB", "");
   checkAutoCompleteResults(results,
                            ["This connection is not secure. Logins entered here could be compromised. Learn More", "form9userAAB"],
                            "mochi.test",
@@ -807,7 +814,7 @@ add_task(async function test_form9_filtering() {
   synthesizeKey("KEY_ArrowDown");
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "form9userAAB", pword, "form9pass");
+  checkACForm("form9userAAB", "form9pass");
 });
 
 add_task(async function test_form9_autocomplete_cache() {
@@ -870,26 +877,26 @@ add_task(async function test_form11_recipes() {
   pword.type = "password";
   await promiseFormsProcessed();
   restoreForm();
-  checkACForm(uname, "", pword, "");
+  checkACForm("", "");
   let shownPromise = promiseACShown();
   synthesizeKey("KEY_ArrowDown"); // open
   await shownPromise;
 
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown");
-  checkACForm(uname, "", pword, ""); // value shouldn't update
+  checkACForm("", ""); // value shouldn't update
   synthesizeKey("KEY_Enter");
   await promiseFormsProcessed();
-  checkACForm(uname, "testuser10", pword, "testpass10");
+  checkACForm("testuser10", "testpass10");
 
   // Now test recipes with blur on the username field.
   restoreForm();
-  checkACForm(uname, "", pword, "");
+  checkACForm("", "");
   uname.value = "testuser10";
-  checkACForm(uname, "testuser10", pword, "");
+  checkACForm("testuser10", "");
   synthesizeKey("KEY_Tab");
   await promiseFormsProcessed();
-  checkACForm(uname, "testuser10", pword, "testpass10");
+  checkACForm("testuser10", "testpass10");
   await resetRecipes();
 });
 
@@ -918,11 +925,11 @@ add_task(async function test_form12_formless() {
   checkAutoCompleteResults(results, expectedMenuItems, "mochi.test", "Check all menuitems are displayed correctly.");
   synthesizeKey("KEY_ArrowDown"); // skip insecure warning
   synthesizeKey("KEY_ArrowDown");
-  checkACForm(uname, "", pword, ""); // value shouldn't update
+  checkACForm("", ""); // value shouldn't update
   let processedPromise = promiseFormsProcessed();
   synthesizeKey("KEY_Enter");
   await processedPromise;
-  checkACForm(uname, "testuser10", pword, "testpass10");
+  checkACForm("testuser10", "testpass10");
 });
 
 add_task(async function test_form13_stays_open_upon_empty_search() {
@@ -936,7 +943,7 @@ add_task(async function test_form13_stays_open_upon_empty_search() {
 
   uname = $_(13, "uname");
   pword = $_(13, "pword");
-  checkACForm(uname, "prefilled", pword, "prefilled");
+  checkACForm("prefilled", "prefilled");
 
   uname.scrollIntoView();
   let shownPromise = promiseACShown();
@@ -948,7 +955,7 @@ add_task(async function test_form13_stays_open_upon_empty_search() {
   await spinEventLoop();
   let popupState = await getPopupState();
   is(popupState.open, true, "Check popup is still open");
-  checkACForm(uname, "", pword, "prefilled");
+  checkACForm("", "prefilled");
 
   info("testing password field");
   synthesizeMouseAtCenter(pword, {});
@@ -958,7 +965,7 @@ add_task(async function test_form13_stays_open_upon_empty_search() {
   shownPromise = promiseACShown();
   synthesizeKey("KEY_Delete");
   await shownPromise;
-  checkACForm(uname, "", pword, "");
+  checkACForm("", "");
 });
 </script>
 </pre>
