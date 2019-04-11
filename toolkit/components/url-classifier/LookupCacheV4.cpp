@@ -204,12 +204,6 @@ nsresult LookupCacheV4::Has(const Completion& aCompletion, bool* aHas,
   *aHas = length >= PREFIX_SIZE;
   *aMatchLength = length;
 
-  if (LOG_ENABLED()) {
-    uint32_t prefix = aCompletion.ToUint32();
-    LOG(("Probe in V4 %s: %X, found %d, complete %d", mTableName.get(), prefix,
-         *aHas, length == COMPLETE_SIZE));
-  }
-
   // Check if fullhash match any prefix in the local database
   if (!(*aHas)) {
     return NS_OK;
