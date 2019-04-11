@@ -465,7 +465,7 @@ void WarningOnlyErrorReporter(JSContext* aCx, JSErrorReport* aRep) {
   RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
   nsGlobalWindowInner* win = xpc::CurrentWindowOrNull(aCx);
   xpcReport->Init(aRep, nullptr, nsContentUtils::IsSystemCaller(aCx),
-                  win ? win->AsInner()->WindowID() : 0);
+                  win ? win->WindowID() : 0);
   xpcReport->LogToConsole();
 }
 
@@ -501,8 +501,7 @@ void AutoJSAPI::ReportException() {
     if (mIsMainThread) {
       RefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
 
-      RefPtr<nsGlobalWindowInner> win = xpc::WindowOrNull(errorGlobal);
-      nsPIDOMWindowInner* inner = win ? win->AsInner() : nullptr;
+      RefPtr<nsGlobalWindowInner> inner = xpc::WindowOrNull(errorGlobal);
       bool isChrome = nsContentUtils::IsSystemPrincipal(
           nsContentUtils::ObjectPrincipal(errorGlobal));
       xpcReport->Init(jsReport.report(), jsReport.toStringResult().c_str(),

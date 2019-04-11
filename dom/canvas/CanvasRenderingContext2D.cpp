@@ -4626,7 +4626,7 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
 
   // Flush layout updates
   if (!(aFlags & CanvasRenderingContext2D_Binding::DRAWWINDOW_DO_NOT_FLUSH)) {
-    nsContentUtils::FlushLayoutForTree(aWindow.AsInner()->GetOuterWindow());
+    nsContentUtils::FlushLayoutForTree(aWindow.GetOuterWindow());
   }
 
   CompositionOp op = UsedOperation();

@@ -365,12 +365,7 @@ nsPIDOMWindowInner* PresentationSessionInfo::GetWindow() {
     return nullptr;
   }
 
-  auto window = nsGlobalWindowInner::GetInnerWindowWithId(windowId);
-  if (!window) {
-    return nullptr;
-  }
-
-  return window->AsInner();
+  return nsGlobalWindowInner::GetInnerWindowWithId(windowId);
 }
 
 /* virtual */
