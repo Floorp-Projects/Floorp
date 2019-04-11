@@ -27,7 +27,7 @@ class MLGPUScreenshotGrabberImpl;
  */
 class MLGPUScreenshotGrabber final {
  public:
-  MLGPUScreenshotGrabber();
+  MLGPUScreenshotGrabber() = default;
   ~MLGPUScreenshotGrabber();
 
   // Scale the contents of aTexture into an appropriately sized MLGTexture

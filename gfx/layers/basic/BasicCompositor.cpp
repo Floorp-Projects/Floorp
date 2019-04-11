@@ -34,20 +34,20 @@ namespace layers {
 class DataTextureSourceBasic : public DataTextureSource,
                                public TextureSourceBasic {
  public:
-  virtual const char* Name() const override { return "DataTextureSourceBasic"; }
+  const char* Name() const override { return "DataTextureSourceBasic"; }
 
   explicit DataTextureSourceBasic(DataSourceSurface* aSurface)
       : mSurface(aSurface), mWrappingExistingData(!!aSurface) {}
 
-  virtual DataTextureSource* AsDataTextureSource() override {
+  DataTextureSource* AsDataTextureSource() override {
     // If the texture wraps someone else's memory we'd rather not use it as
     // a DataTextureSource per say (that is call Update on it).
     return mWrappingExistingData ? nullptr : this;
   }
 
-  virtual TextureSourceBasic* AsSourceBasic() override { return this; }
+  TextureSourceBasic* AsSourceBasic() override { return this; }
 
-  virtual gfx::SourceSurface* GetSurface(DrawTarget* aTarget) override {
+  gfx::SourceSurface* GetSurface(DrawTarget* aTarget) override {
     return mSurface;
   }
 
@@ -55,13 +55,13 @@ class DataTextureSourceBasic : public DataTextureSource,
     return mSurface ? mSurface->GetFormat() : gfx::SurfaceFormat::UNKNOWN;
   }
 
-  virtual IntSize GetSize() const override {
+  IntSize GetSize() const override {
     return mSurface ? mSurface->GetSize() : gfx::IntSize(0, 0);
   }
 
-  virtual bool Update(gfx::DataSourceSurface* aSurface,
-                      nsIntRegion* aDestRegion = nullptr,
-                      gfx::IntPoint* aSrcOffset = nullptr) override {
+  bool Update(gfx::DataSourceSurface* aSurface,
+              nsIntRegion* aDestRegion = nullptr,
+              gfx::IntPoint* aSrcOffset = nullptr) override {
     MOZ_ASSERT(!mWrappingExistingData);
     if (mWrappingExistingData) {
       return false;
@@ -70,7 +70,7 @@ class DataTextureSourceBasic : public DataTextureSource,
     return true;
   }
 
-  virtual void DeallocateDeviceData() override {
+  void DeallocateDeviceData() override {
     mSurface = nullptr;
     SetUpdateSerial(0);
   }
@@ -87,7 +87,7 @@ class DataTextureSourceBasic : public DataTextureSource,
 class WrappingTextureSourceYCbCrBasic : public DataTextureSource,
                                         public TextureSourceBasic {
  public:
-  virtual const char* Name() const override {
+  const char* Name() const override {
     return "WrappingTextureSourceYCbCrBasic";
   }
 
@@ -96,16 +96,16 @@ class WrappingTextureSourceYCbCrBasic : public DataTextureSource,
     mFromYCBCR = true;
   }
 
-  virtual DataTextureSource* AsDataTextureSource() override { return this; }
+  DataTextureSource* AsDataTextureSource() override { return this; }
 
-  virtual TextureSourceBasic* AsSourceBasic() override { return this; }
+  TextureSourceBasic* AsSourceBasic() override { return this; }
 
-  virtual WrappingTextureSourceYCbCrBasic* AsWrappingTextureSourceYCbCrBasic()
+  WrappingTextureSourceYCbCrBasic* AsWrappingTextureSourceYCbCrBasic()
       override {
     return this;
   }
 
-  virtual gfx::SourceSurface* GetSurface(DrawTarget* aTarget) override {
+  gfx::SourceSurface* GetSurface(DrawTarget* aTarget) override {
     if (mSurface && !mNeedsUpdate) {
       return mSurface;
     }
@@ -136,7 +136,7 @@ class WrappingTextureSourceYCbCrBasic : public DataTextureSource,
     return gfx::SurfaceFormat::B8G8R8X8;
   }
 
-  virtual IntSize GetSize() const override { return mSize; }
+  IntSize GetSize() const override { return mSize; }
 
   virtual bool Update(gfx::DataSourceSurface* aSurface,
                       nsIntRegion* aDestRegion = nullptr,
@@ -144,13 +144,13 @@ class WrappingTextureSourceYCbCrBasic : public DataTextureSource,
     return false;
   }
 
-  virtual void DeallocateDeviceData() override {
+  void DeallocateDeviceData() override {
     mTexture = nullptr;
     mSurface = nullptr;
     SetUpdateSerial(0);
   }
 
-  virtual void Unbind() override { mNeedsUpdate = true; }
+  void Unbind() override { mNeedsUpdate = true; }
 
   void SetBufferTextureHost(BufferTextureHost* aTexture) override {
     mTexture = aTexture;

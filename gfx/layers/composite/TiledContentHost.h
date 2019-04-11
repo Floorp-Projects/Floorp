@@ -170,7 +170,7 @@ class TiledContentHost : public ContentHost {
   explicit TiledContentHost(const TextureInfo& aTextureInfo);
 
  protected:
-  ~TiledContentHost();
+  virtual ~TiledContentHost();
 
  public:
   // Generate effect for layerscope when using hwc.
@@ -192,8 +192,7 @@ class TiledContentHost : public ContentHost {
     return mTiledBuffer.GetValidRegion();
   }
 
-  virtual void SetTextureSourceProvider(
-      TextureSourceProvider* aProvider) override {
+  void SetTextureSourceProvider(TextureSourceProvider* aProvider) override {
     CompositableHost::SetTextureSourceProvider(aProvider);
     mTiledBuffer.SetTextureSourceProvider(aProvider);
     mLowPrecisionTiledBuffer.SetTextureSourceProvider(aProvider);
@@ -202,33 +201,31 @@ class TiledContentHost : public ContentHost {
   bool UseTiledLayerBuffer(ISurfaceAllocator* aAllocator,
                            const SurfaceDescriptorTiles& aTiledDescriptor);
 
-  virtual void Composite(
-      Compositor* aCompositor, LayerComposite* aLayer,
-      EffectChain& aEffectChain, float aOpacity,
-      const gfx::Matrix4x4& aTransform,
-      const gfx::SamplingFilter aSamplingFilter, const gfx::IntRect& aClipRect,
-      const nsIntRegion* aVisibleRegion = nullptr,
-      const Maybe<gfx::Polygon>& aGeometry = Nothing()) override;
+  void Composite(Compositor* aCompositor, LayerComposite* aLayer,
+                 EffectChain& aEffectChain, float aOpacity,
+                 const gfx::Matrix4x4& aTransform,
+                 const gfx::SamplingFilter aSamplingFilter,
+                 const gfx::IntRect& aClipRect,
+                 const nsIntRegion* aVisibleRegion = nullptr,
+                 const Maybe<gfx::Polygon>& aGeometry = Nothing()) override;
 
-  virtual CompositableType GetType() override {
+  CompositableType GetType() override {
     return CompositableType::CONTENT_TILED;
   }
 
-  virtual TiledContentHost* AsTiledContentHost() override { return this; }
+  TiledContentHost* AsTiledContentHost() override { return this; }
 
-  virtual void Attach(Layer* aLayer, TextureSourceProvider* aProvider,
-                      AttachFlags aFlags = NO_FLAGS) override;
+  void Attach(Layer* aLayer, TextureSourceProvider* aProvider,
+              AttachFlags aFlags = NO_FLAGS) override;
 
-  virtual void Detach(Layer* aLayer = nullptr,
-                      AttachFlags aFlags = NO_FLAGS) override;
+  void Detach(Layer* aLayer = nullptr, AttachFlags aFlags = NO_FLAGS) override;
 
-  virtual void Dump(std::stringstream& aStream, const char* aPrefix = "",
-                    bool aDumpHtml = false) override;
+  void Dump(std::stringstream& aStream, const char* aPrefix = "",
+            bool aDumpHtml = false) override;
 
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
-  virtual void AddAnimationInvalidation(nsIntRegion& aRegion) override;
+  void AddAnimationInvalidation(nsIntRegion& aRegion) override;
 
   TiledLayerBufferComposite& GetLowResBuffer() {
     return mLowPrecisionTiledBuffer;

@@ -198,7 +198,7 @@ class CompositorBridgeParentBase : public PCompositorBridgeParent,
   virtual void AccumulateMemoryReport(wr::MemoryReport*) {}
 
  protected:
-  ~CompositorBridgeParentBase() override;
+  virtual ~CompositorBridgeParentBase();
 
   virtual PAPZParent* AllocPAPZParent(const LayersId& layersId) = 0;
   virtual bool DeallocPAPZParent(PAPZParent* aActor) = 0;
@@ -351,8 +351,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
       const TimeStamp& aRecordingStart) override;
   mozilla::ipc::IPCResult RecvEndRecording() override;
 
-  virtual void NotifyMemoryPressure() override;
-  virtual void AccumulateMemoryReport(wr::MemoryReport*) override;
+  void NotifyMemoryPressure() override;
+  void AccumulateMemoryReport(wr::MemoryReport*) override;
 
   void ActorDestroy(ActorDestroyReason why) override;
 

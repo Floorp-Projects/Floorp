@@ -30,7 +30,7 @@ class CrossProcessPaint;
 /**
  * A fragment of a paint of a cross process document tree.
  */
-class PaintFragment {
+class PaintFragment final {
  public:
   /// Initializes an empty PaintFragment
   PaintFragment() = default;
@@ -74,7 +74,7 @@ class PaintFragment {
 /**
  * An object for painting a cross process document tree.
  */
-class CrossProcessPaint {
+class CrossProcessPaint final {
   NS_INLINE_DECL_REFCOUNTING(CrossProcessPaint);
 
  public:

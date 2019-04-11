@@ -36,7 +36,7 @@ namespace gfx {
  * A spread N makes each output pixel the maximum value of all source
  * pixels within a square of side length 2N+1 centered on the output pixel.
  */
-class GFX2D_API AlphaBoxBlur {
+class GFX2D_API AlphaBoxBlur final {
  public:
   /** Constructs a box blur and computes the backing surface size.
    *

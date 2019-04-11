@@ -55,11 +55,11 @@ class gfxXlibSurface final : public gfxASurface {
 
   virtual ~gfxXlibSurface();
 
-  virtual already_AddRefed<gfxASurface> CreateSimilarSurface(
+  already_AddRefed<gfxASurface> CreateSimilarSurface(
       gfxContentType aType, const mozilla::gfx::IntSize& aSize) override;
-  virtual void Finish() override;
+  void Finish() override;
 
-  virtual const mozilla::gfx::IntSize GetSize() const override;
+  const mozilla::gfx::IntSize GetSize() const override;
 
   Display* XDisplay() { return mDisplay; }
   ::Screen* XScreen();

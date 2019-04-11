@@ -36,9 +36,9 @@ class VRDisplayPuppet : public VRDisplayLocal {
   void ZeroSensor() override;
 
  protected:
-  virtual VRHMDSensorState& GetSensorState() override;
-  virtual void StartPresentation() override;
-  virtual void StopPresentation() override;
+  VRHMDSensorState& GetSensorState() override;
+  void StartPresentation() override;
+  void StopPresentation() override;
 #if defined(XP_WIN)
   virtual bool SubmitFrame(ID3D11Texture2D* aSource, const IntSize& aSize,
                            const gfx::Rect& aLeftEyeRect,
@@ -117,22 +117,22 @@ class VRSystemManagerPuppet : public VRSystemManager {
   void SetPuppetDisplaySensorState(const uint32_t& aDeviceID,
                                    const VRHMDSensorState& aSensorState);
 
-  virtual void Destroy() override;
-  virtual void Shutdown() override;
-  virtual void Enumerate() override;
-  virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) override;
-  virtual bool GetIsPresenting() override;
-  virtual void HandleInput() override;
-  virtual void GetControllers(
+  void Destroy() override;
+  void Shutdown() override;
+  void Enumerate() override;
+  void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) override;
+  bool GetIsPresenting() override;
+  void HandleInput() override;
+  void GetControllers(
       nsTArray<RefPtr<VRControllerHost>>& aControllerResult) override;
-  virtual void ScanForControllers() override;
-  virtual void RemoveControllers() override;
-  virtual void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                             double aIntensity, double aDuration,
-                             const VRManagerPromise& aPromise) override;
-  virtual void StopVibrateHaptic(uint32_t aControllerIdx) override;
-  virtual void NotifyVSync() override;
-  virtual void Run10msTasks() override;
+  void ScanForControllers() override;
+  void RemoveControllers() override;
+  void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+                     double aIntensity, double aDuration,
+                     const VRManagerPromise& aPromise) override;
+  void StopVibrateHaptic(uint32_t aControllerIdx) override;
+  void NotifyVSync() override;
+  void Run10msTasks() override;
 
  protected:
   VRSystemManagerPuppet();

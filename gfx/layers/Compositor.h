@@ -186,7 +186,7 @@ class Compositor : public TextureSourceProvider {
                       CompositorBridgeParent* aParent = nullptr);
 
   virtual bool Initialize(nsCString* const out_failureReason) = 0;
-  virtual void Destroy() override;
+  void Destroy() override;
   bool IsDestroyed() const { return mIsDestroyed; }
 
   virtual void DetachWidget() { mWidget = nullptr; }
@@ -471,7 +471,7 @@ class Compositor : public TextureSourceProvider {
   virtual CompositorD3D11* AsCompositorD3D11() { return nullptr; }
   virtual BasicCompositor* AsBasicCompositor() { return nullptr; }
 
-  virtual Compositor* AsCompositor() override { return this; }
+  Compositor* AsCompositor() override { return this; }
 
   TimeStamp GetLastCompositionEndTime() const override {
     return mLastCompositionEndTime;
@@ -518,7 +518,7 @@ class Compositor : public TextureSourceProvider {
   // A stale Compositor has no CompositorBridgeParent; it will not process
   // frames and should not be used.
   void SetInvalid();
-  virtual bool IsValid() const override;
+  bool IsValid() const override;
   CompositorBridgeParent* GetCompositorBridgeParent() const { return mParent; }
 
  protected:
@@ -636,7 +636,7 @@ class AsyncReadbackBuffer {
 
  protected:
   explicit AsyncReadbackBuffer(const gfx::IntSize& aSize) : mSize(aSize) {}
-  virtual ~AsyncReadbackBuffer() {}
+  virtual ~AsyncReadbackBuffer() = default;
 
   gfx::IntSize mSize;
 };

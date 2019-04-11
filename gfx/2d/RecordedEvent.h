@@ -71,7 +71,7 @@ inline std::string StringFromPtr(ReferencePtr aPtr) {
 
 class Translator {
  public:
-  virtual ~Translator() {}
+  virtual ~Translator() = default;
 
   virtual DrawTarget *LookupDrawTarget(ReferencePtr aRefPtr) = 0;
   virtual Path *LookupPath(ReferencePtr aRefPtr) = 0;
@@ -253,7 +253,7 @@ class RecordedEvent {
   static const uint32_t kTotalEventTypes =
       RecordedEvent::FILTERNODESETINPUT + 1;
 
-  virtual ~RecordedEvent() {}
+  virtual ~RecordedEvent() = default;
 
   static std::string GetEventName(EventType aType);
 

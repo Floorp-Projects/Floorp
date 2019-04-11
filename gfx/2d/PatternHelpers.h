@@ -25,11 +25,11 @@ namespace gfx {
  * particularly desirable to avoid the overhead of allocating on the
  * free-store.
  */
-class GeneralPattern {
+class GeneralPattern final {
  public:
-  explicit GeneralPattern() : mPattern(nullptr) {}
+  explicit GeneralPattern() = default;
 
-  GeneralPattern(const GeneralPattern &aOther) : mPattern(nullptr) {}
+  GeneralPattern(const GeneralPattern &aOther) {}
 
   ~GeneralPattern() {
     if (mPattern) {
@@ -115,7 +115,7 @@ class GeneralPattern {
     AlignedStorage2<RadialGradientPattern> mRadialGradientPattern;
     AlignedStorage2<SurfacePattern> mSurfacePattern;
   };
-  Pattern *mPattern;
+  Pattern *mPattern = nullptr;
 };
 
 }  // namespace gfx

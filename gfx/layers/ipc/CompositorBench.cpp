@@ -33,7 +33,7 @@ class BenchTest {
  public:
   BenchTest(const char* aTestName) : mTestName(aTestName) {}
 
-  virtual ~BenchTest() {}
+  virtual ~BenchTest() = default;
 
   virtual void Setup(Compositor* aCompositor, size_t aStep) {}
   virtual void Teardown(Compositor* aCompositor) {}

@@ -21,7 +21,7 @@ class TextureSource;
 class TextureSourceProvider;
 struct FontBitmapInfo;
 
-class TextRenderer {
+class TextRenderer final {
   ~TextRenderer();
 
  public:
@@ -29,7 +29,7 @@ class TextRenderer {
 
   enum class FontType { Default, FixedWidth, NumTypes };
 
-  explicit TextRenderer() {}
+  TextRenderer() = default;
 
   RefPtr<TextureSource> RenderText(TextureSourceProvider* aProvider,
                                    const std::string& aText, uint32_t aTextSize,

@@ -248,7 +248,7 @@ class GPUProcessManager final : public GPUProcessHost::Listener {
     explicit Observer(GPUProcessManager* aManager);
 
    protected:
-    ~Observer() {}
+    virtual ~Observer() = default;
 
     GPUProcessManager* mManager;
   };

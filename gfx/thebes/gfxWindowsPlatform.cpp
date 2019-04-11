@@ -1922,7 +1922,7 @@ class D3DVsyncSource final : public VsyncSource {
   virtual Display& GetGlobalDisplay() override { return *mPrimaryDisplay; }
 
  private:
-  virtual ~D3DVsyncSource() {}
+  virtual ~D3DVsyncSource() = default;
   RefPtr<D3DVsyncDisplay> mPrimaryDisplay;
 };  // end D3DVsyncSource
 

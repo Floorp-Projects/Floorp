@@ -66,23 +66,21 @@ class ImageLayer : public Layer {
 
   MOZ_LAYER_DECL_NAME("ImageLayer", TYPE_IMAGE)
 
-  virtual void ComputeEffectiveTransforms(
+  void ComputeEffectiveTransforms(
       const gfx::Matrix4x4& aTransformToSurface) override;
 
-  virtual const gfx::Matrix4x4& GetEffectiveTransformForBuffer()
-      const override {
+  const gfx::Matrix4x4& GetEffectiveTransformForBuffer() const override {
     return mEffectiveTransformForBuffer;
   }
 
-  virtual ImageLayer* AsImageLayer() override { return this; }
+  ImageLayer* AsImageLayer() override { return this; }
 
  protected:
   ImageLayer(LayerManager* aManager, void* aImplData);
-  ~ImageLayer();
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
-  virtual void DumpPacket(layerscope::LayersPacket* aPacket,
-                          const void* aParent) override;
+  virtual ~ImageLayer();
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
+  void DumpPacket(layerscope::LayersPacket* aPacket,
+                  const void* aParent) override;
 
   RefPtr<ImageContainer> mContainer;
   gfx::SamplingFilter mSamplingFilter;

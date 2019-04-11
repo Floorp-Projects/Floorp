@@ -19,7 +19,7 @@ namespace layers {
  */
 class LayerUserData {
  public:
-  virtual ~LayerUserData() {}
+  virtual ~LayerUserData() = default;
 };
 
 }  // namespace layers

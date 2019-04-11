@@ -54,23 +54,23 @@ class ClientPaintedLayer : public PaintedLayer, public ClientLayer {
   }
 
  public:
-  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override {
+  void SetVisibleRegion(const LayerIntRegion& aRegion) override {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
     PaintedLayer::SetVisibleRegion(aRegion);
   }
-  virtual void InvalidateRegion(const nsIntRegion& aRegion) override {
+  void InvalidateRegion(const nsIntRegion& aRegion) override {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
     mInvalidRegion.Add(aRegion);
     UpdateValidRegionAfterInvalidRegionChanged();
   }
 
-  virtual void RenderLayer() override { RenderLayerWithReadback(nullptr); }
+  void RenderLayer() override { RenderLayerWithReadback(nullptr); }
 
-  virtual void RenderLayerWithReadback(ReadbackProcessor* aReadback) override;
+  void RenderLayerWithReadback(ReadbackProcessor* aReadback) override;
 
-  virtual void ClearCachedResources() override {
+  void ClearCachedResources() override {
     if (mContentClient) {
       mContentClient->Clear();
     }
@@ -78,14 +78,13 @@ class ClientPaintedLayer : public PaintedLayer, public ClientLayer {
     DestroyBackBuffer();
   }
 
-  virtual void HandleMemoryPressure() override {
+  void HandleMemoryPressure() override {
     if (mContentClient) {
       mContentClient->HandleMemoryPressure();
     }
   }
 
-  virtual void FillSpecificAttributes(
-      SpecificLayerAttributes& aAttrs) override {
+  void FillSpecificAttributes(SpecificLayerAttributes& aAttrs) override {
     aAttrs = PaintedLayerAttributes(GetValidRegion());
   }
 
@@ -93,14 +92,14 @@ class ClientPaintedLayer : public PaintedLayer, public ClientLayer {
     return static_cast<ClientLayerManager*>(mManager);
   }
 
-  virtual Layer* AsLayer() override { return this; }
-  virtual ShadowableLayer* AsShadowableLayer() override { return this; }
+  Layer* AsLayer() override { return this; }
+  ShadowableLayer* AsShadowableLayer() override { return this; }
 
-  virtual CompositableClient* GetCompositableClient() override {
+  CompositableClient* GetCompositableClient() override {
     return mContentClient;
   }
 
-  virtual void Disconnect() override { mContentClient = nullptr; }
+  void Disconnect() override { mContentClient = nullptr; }
 
  protected:
   void RecordThebes();
@@ -111,8 +110,7 @@ class ClientPaintedLayer : public PaintedLayer, public ClientLayer {
   bool UpdatePaintRegion(PaintState& aState);
   void FinishPaintState(PaintState& aState);
 
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
   void DestroyBackBuffer() { mContentClient = nullptr; }
 

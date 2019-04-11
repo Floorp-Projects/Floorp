@@ -82,9 +82,9 @@ class CommandBufferBuilder {
 /// Stores multiple commands to be executed sequencially.
 class DrawingJob : public Job {
  public:
-  ~DrawingJob();
+  virtual ~DrawingJob();
 
-  virtual JobStatus Run() override;
+  JobStatus Run() override;
 
  protected:
   DrawingJob(DrawTarget* aTarget, IntPoint aOffset, SyncObject* aStart,
@@ -107,7 +107,7 @@ class DrawingJob : public Job {
 ///
 /// The builder is a separate object to ensure that commands are not added to a
 /// submitted DrawingJob.
-class DrawingJobBuilder {
+class DrawingJobBuilder final {
  public:
   DrawingJobBuilder();
 

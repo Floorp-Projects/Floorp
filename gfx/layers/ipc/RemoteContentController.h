@@ -38,59 +38,55 @@ class RemoteContentController : public GeckoContentController,
 
   virtual ~RemoteContentController();
 
-  virtual void NotifyLayerTransforms(
+  void NotifyLayerTransforms(
       const nsTArray<MatrixMessage>& aTransforms) override;
 
-  virtual void RequestContentRepaint(const RepaintRequest& aRequest) override;
+  void RequestContentRepaint(const RepaintRequest& aRequest) override;
 
-  virtual void HandleTap(TapType aTapType, const LayoutDevicePoint& aPoint,
-                         Modifiers aModifiers, const ScrollableLayerGuid& aGuid,
-                         uint64_t aInputBlockId) override;
+  void HandleTap(TapType aTapType, const LayoutDevicePoint& aPoint,
+                 Modifiers aModifiers, const ScrollableLayerGuid& aGuid,
+                 uint64_t aInputBlockId) override;
 
-  virtual void NotifyPinchGesture(PinchGestureInput::PinchGestureType aType,
-                                  const ScrollableLayerGuid& aGuid,
-                                  LayoutDeviceCoord aSpanChange,
-                                  Modifiers aModifiers) override;
+  void NotifyPinchGesture(PinchGestureInput::PinchGestureType aType,
+                          const ScrollableLayerGuid& aGuid,
+                          LayoutDeviceCoord aSpanChange,
+                          Modifiers aModifiers) override;
 
-  virtual void PostDelayedTask(already_AddRefed<Runnable> aTask,
-                               int aDelayMs) override;
+  void PostDelayedTask(already_AddRefed<Runnable> aTask, int aDelayMs) override;
 
-  virtual bool IsRepaintThread() override;
+  bool IsRepaintThread() override;
 
-  virtual void DispatchToRepaintThread(
-      already_AddRefed<Runnable> aTask) override;
+  void DispatchToRepaintThread(already_AddRefed<Runnable> aTask) override;
 
-  virtual void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
-                                    APZStateChange aChange, int aArg) override;
+  void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
+                            APZStateChange aChange, int aArg) override;
 
-  virtual void UpdateOverscrollVelocity(float aX, float aY,
-                                        bool aIsRootContent) override;
+  void UpdateOverscrollVelocity(float aX, float aY,
+                                bool aIsRootContent) override;
 
-  virtual void UpdateOverscrollOffset(float aX, float aY,
-                                      bool aIsRootContent) override;
+  void UpdateOverscrollOffset(float aX, float aY, bool aIsRootContent) override;
 
-  virtual void NotifyMozMouseScrollEvent(
-      const ScrollableLayerGuid::ViewID& aScrollId,
-      const nsString& aEvent) override;
+  void NotifyMozMouseScrollEvent(const ScrollableLayerGuid::ViewID& aScrollId,
+                                 const nsString& aEvent) override;
 
-  virtual void NotifyFlushComplete() override;
+  void NotifyFlushComplete() override;
 
-  virtual void NotifyAsyncScrollbarDragInitiated(
+  void NotifyAsyncScrollbarDragInitiated(
       uint64_t aDragBlockId, const ScrollableLayerGuid::ViewID& aScrollId,
       ScrollDirection aDirection) override;
-  virtual void NotifyAsyncScrollbarDragRejected(
+  void NotifyAsyncScrollbarDragRejected(
       const ScrollableLayerGuid::ViewID& aScrollId) override;
 
-  virtual void NotifyAsyncAutoscrollRejected(
+  void NotifyAsyncAutoscrollRejected(
       const ScrollableLayerGuid::ViewID& aScrollId) override;
 
-  virtual void CancelAutoscroll(const ScrollableLayerGuid& aScrollId) override;
+  void CancelAutoscroll(const ScrollableLayerGuid& aScrollId) override;
 
-  virtual void ActorDestroy(ActorDestroyReason aWhy) override;
+  void ActorDestroy(ActorDestroyReason aWhy) override;
 
-  virtual void Destroy() override;
+  void Destroy() override;
 
-  virtual bool IsRemote() override;
+  bool IsRemote() override;
 
  private:
   MessageLoop* mCompositorThread;

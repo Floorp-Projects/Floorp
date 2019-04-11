@@ -25,25 +25,24 @@ class GLManagerCompositor : public GLManager {
   explicit GLManagerCompositor(CompositorOGL* aCompositor)
       : mImpl(aCompositor) {}
 
-  virtual GLContext* gl() const override { return mImpl->gl(); }
+  GLContext* gl() const override { return mImpl->gl(); }
 
-  virtual void ActivateProgram(ShaderProgramOGL* aProg) override {
+  void ActivateProgram(ShaderProgramOGL* aProg) override {
     mImpl->ActivateProgram(aProg);
   }
 
-  virtual ShaderProgramOGL* GetProgram(GLenum aTarget,
-                                       gfx::SurfaceFormat aFormat) override {
+  ShaderProgramOGL* GetProgram(GLenum aTarget,
+                               gfx::SurfaceFormat aFormat) override {
     ShaderConfigOGL config = ShaderConfigFromTargetAndFormat(aTarget, aFormat);
     return mImpl->GetShaderProgramFor(config);
   }
 
-  virtual const gfx::Matrix4x4& GetProjMatrix() const override {
+  const gfx::Matrix4x4& GetProjMatrix() const override {
     return mImpl->GetProjMatrix();
   }
 
-  virtual void BindAndDrawQuad(ShaderProgramOGL* aProg,
-                               const gfx::Rect& aLayerRect,
-                               const gfx::Rect& aTextureRect) override {
+  void BindAndDrawQuad(ShaderProgramOGL* aProg, const gfx::Rect& aLayerRect,
+                       const gfx::Rect& aTextureRect) override {
     mImpl->BindAndDrawQuad(aProg, aLayerRect, aTextureRect);
   }
 

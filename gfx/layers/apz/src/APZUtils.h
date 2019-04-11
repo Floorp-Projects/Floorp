@@ -106,7 +106,7 @@ inline AsyncTransformMatrix CompleteAsyncTransform(
       aMatrix, PixelCastJustification::MultipleAsyncTransforms);
 }
 
-struct TargetConfirmationFlags {
+struct TargetConfirmationFlags final {
   explicit TargetConfirmationFlags(bool aTargetConfirmed)
       : mTargetConfirmed(aTargetConfirmed),
         mRequiresTargetConfirmation(false) {}

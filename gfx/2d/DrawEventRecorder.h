@@ -29,8 +29,8 @@ class DrawEventRecorderPrivate : public DrawEventRecorder {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderPrivate, override)
 
   DrawEventRecorderPrivate();
-  virtual ~DrawEventRecorderPrivate() {}
-  virtual bool Finish() override {
+  virtual ~DrawEventRecorderPrivate() = default;
+  bool Finish() override {
     ClearResources();
     return true;
   }
@@ -136,7 +136,7 @@ class DrawEventRecorderFile : public DrawEventRecorderPrivate {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(DrawEventRecorderFile, override)
   explicit DrawEventRecorderFile(const char_type* aFilename);
-  ~DrawEventRecorderFile();
+  virtual ~DrawEventRecorderFile();
 
   void RecordEvent(const RecordedEvent& aEvent) override;
 
@@ -211,7 +211,7 @@ class DrawEventRecorderMemory : public DrawEventRecorderPrivate {
   MemStream mIndex;
 
  protected:
-  ~DrawEventRecorderMemory(){};
+  virtual ~DrawEventRecorderMemory(){};
 
  private:
   SerializeResourcesFn mSerializeCallback;

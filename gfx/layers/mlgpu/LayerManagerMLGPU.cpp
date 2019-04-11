@@ -216,7 +216,7 @@ void LayerManagerMLGPU::BeginTransactionWithDrawTarget(
 }
 
 // Helper class for making sure textures are unlocked.
-class MOZ_STACK_CLASS AutoUnlockAllTextures {
+class MOZ_STACK_CLASS AutoUnlockAllTextures final {
  public:
   explicit AutoUnlockAllTextures(MLGDevice* aDevice) : mDevice(aDevice) {}
   ~AutoUnlockAllTextures() { mDevice->UnlockAllTextures(); }

@@ -72,8 +72,6 @@ class MLGPUScreenshotGrabberImpl final {
   const IntSize mReadbackTextureSize;
 };
 
-MLGPUScreenshotGrabber::MLGPUScreenshotGrabber() {}
-
 MLGPUScreenshotGrabber::~MLGPUScreenshotGrabber() {}
 
 void MLGPUScreenshotGrabber::MaybeGrabScreenshot(MLGDevice* aDevice,

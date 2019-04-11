@@ -43,7 +43,7 @@ class RecordedEventDerived : public RecordedEvent {
 template <class Derived>
 class RecordedDrawingEvent : public RecordedEventDerived<Derived> {
  public:
-  virtual ReferencePtr GetDestinedDT() override { return mDT; }
+  ReferencePtr GetDestinedDT() override { return mDT; }
 
  protected:
   RecordedDrawingEvent(RecordedEvent::EventType aType, DrawTarget *aTarget)
@@ -54,7 +54,7 @@ class RecordedDrawingEvent : public RecordedEventDerived<Derived> {
   template <class S>
   void Record(S &aStream) const;
 
-  virtual ReferencePtr GetObjectRef() const override;
+  ReferencePtr GetObjectRef() const override;
 
   ReferencePtr mDT;
 };
@@ -74,15 +74,15 @@ class RecordedDrawTargetCreation
         mHasExistingData(aHasExistingData),
         mExistingData(aExistingData) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(
       std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "DrawTarget Creation"; }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "DrawTarget Creation"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
   ReferencePtr mRefPtr;
   BackendType mBackendType;
@@ -106,17 +106,14 @@ class RecordedDrawTargetDestruction
         mRefPtr(aRefPtr),
         mBackendType(BackendType::NONE) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override {
-    return "DrawTarget Destruction";
-  }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "DrawTarget Destruction"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
   ReferencePtr mRefPtr;
 
@@ -139,17 +136,15 @@ class RecordedCreateSimilarDrawTarget
         mSize(aSize),
         mFormat(aFormat) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(
       std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override {
-    return "CreateSimilarDrawTarget";
-  }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "CreateSimilarDrawTarget"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
   ReferencePtr mRefPtr;
   IntSize mSize;
@@ -174,17 +169,15 @@ class RecordedCreateClippedDrawTarget
         mTransform(aTransform),
         mFormat(aFormat) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(
       std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override {
-    return "CreateClippedDrawTarget";
-  }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "CreateClippedDrawTarget"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
   ReferencePtr mRefPtr;
   IntSize mMaxSize;
@@ -216,17 +209,17 @@ class RecordedCreateDrawTargetForFilter
         mSourceRect(aSourceRect),
         mDestPoint(aDestPoint) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(
       std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override {
+  std::string GetName() const override {
     return "CreateSimilarDrawTargetForFilter";
   }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
   ReferencePtr mRefPtr;
   IntSize mMaxSize;
@@ -254,14 +247,13 @@ class RecordedFillRect : public RecordedDrawingEvent<RecordedFillRect> {
     StorePattern(mPattern, aPattern);
   }
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "FillRect"; }
+  std::string GetName() const override { return "FillRect"; }
 
  private:
   friend class RecordedEvent;
@@ -288,14 +280,13 @@ class RecordedStrokeRect : public RecordedDrawingEvent<RecordedStrokeRect> {
     StorePattern(mPattern, aPattern);
   }
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "StrokeRect"; }
+  std::string GetName() const override { return "StrokeRect"; }
 
  private:
   friend class RecordedEvent;
@@ -324,14 +315,13 @@ class RecordedStrokeLine : public RecordedDrawingEvent<RecordedStrokeLine> {
     StorePattern(mPattern, aPattern);
   }
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "StrokeLine"; }
+  std::string GetName() const override { return "StrokeLine"; }
 
  private:
   friend class RecordedEvent;
@@ -357,14 +347,13 @@ class RecordedFill : public RecordedDrawingEvent<RecordedFill> {
     StorePattern(mPattern, aPattern);
   }
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "Fill"; }
+  std::string GetName() const override { return "Fill"; }
 
  private:
   friend class RecordedEvent;
@@ -393,14 +382,13 @@ class RecordedFillGlyphs : public RecordedDrawingEvent<RecordedFillGlyphs> {
   }
   virtual ~RecordedFillGlyphs();
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "FillGlyphs"; }
+  std::string GetName() const override { return "FillGlyphs"; }
 
  private:
   friend class RecordedEvent;
@@ -427,14 +415,13 @@ class RecordedMask : public RecordedDrawingEvent<RecordedMask> {
     StorePattern(mMask, aMask);
   }
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "Mask"; }
+  std::string GetName() const override { return "Mask"; }
 
  private:
   friend class RecordedEvent;
@@ -460,14 +447,14 @@ class RecordedStroke : public RecordedDrawingEvent<RecordedStroke> {
     StorePattern(mPattern, aPattern);
   }
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(
       std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "Stroke"; }
+  std::string GetName() const override { return "Stroke"; }
 
  private:
   friend class RecordedEvent;
@@ -486,14 +473,13 @@ class RecordedClearRect : public RecordedDrawingEvent<RecordedClearRect> {
   RecordedClearRect(DrawTarget *aDT, const Rect &aRect)
       : RecordedDrawingEvent(CLEARRECT, aDT), mRect(aRect) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "ClearRect"; }
+  std::string GetName() const override { return "ClearRect"; }
 
  private:
   friend class RecordedEvent;
@@ -513,14 +499,13 @@ class RecordedCopySurface : public RecordedDrawingEvent<RecordedCopySurface> {
         mSourceRect(aSourceRect),
         mDest(aDest) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "CopySurface"; }
+  std::string GetName() const override { return "CopySurface"; }
 
  private:
   friend class RecordedEvent;
@@ -538,14 +523,13 @@ class RecordedPushClip : public RecordedDrawingEvent<RecordedPushClip> {
   RecordedPushClip(DrawTarget *aDT, ReferencePtr aPath)
       : RecordedDrawingEvent(PUSHCLIP, aDT), mPath(aPath) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "PushClip"; }
+  std::string GetName() const override { return "PushClip"; }
 
  private:
   friend class RecordedEvent;
@@ -561,14 +545,13 @@ class RecordedPushClipRect : public RecordedDrawingEvent<RecordedPushClipRect> {
   RecordedPushClipRect(DrawTarget *aDT, const Rect &aRect)
       : RecordedDrawingEvent(PUSHCLIPRECT, aDT), mRect(aRect) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "PushClipRect"; }
+  std::string GetName() const override { return "PushClipRect"; }
 
  private:
   friend class RecordedEvent;
@@ -584,14 +567,13 @@ class RecordedPopClip : public RecordedDrawingEvent<RecordedPopClip> {
   MOZ_IMPLICIT RecordedPopClip(DrawTarget *aDT)
       : RecordedDrawingEvent(POPCLIP, aDT) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "PopClip"; }
+  std::string GetName() const override { return "PopClip"; }
 
  private:
   friend class RecordedEvent;
@@ -613,14 +595,13 @@ class RecordedPushLayer : public RecordedDrawingEvent<RecordedPushLayer> {
         mBounds(aBounds),
         mCopyBackground(aCopyBackground) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "PushLayer"; }
+  std::string GetName() const override { return "PushLayer"; }
 
  private:
   friend class RecordedEvent;
@@ -652,14 +633,14 @@ class RecordedPushLayerWithBlend
         mCopyBackground(aCopyBackground),
         mCompositionOp(aCompositionOp) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
   virtual void OutputSimpleEventInfo(
       std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "PushLayerWithBlend"; }
+  std::string GetName() const override { return "PushLayerWithBlend"; }
 
  private:
   friend class RecordedEvent;
@@ -681,14 +662,13 @@ class RecordedPopLayer : public RecordedDrawingEvent<RecordedPopLayer> {
   MOZ_IMPLICIT RecordedPopLayer(DrawTarget *aDT)
       : RecordedDrawingEvent(POPLAYER, aDT) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "PopLayer"; }
+  std::string GetName() const override { return "PopLayer"; }
 
  private:
   friend class RecordedEvent;
@@ -702,14 +682,13 @@ class RecordedSetTransform : public RecordedDrawingEvent<RecordedSetTransform> {
   RecordedSetTransform(DrawTarget *aDT, const Matrix &aTransform)
       : RecordedDrawingEvent(SETTRANSFORM, aDT), mTransform(aTransform) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "SetTransform"; }
+  std::string GetName() const override { return "SetTransform"; }
 
   Matrix mTransform;
 
@@ -733,14 +712,13 @@ class RecordedDrawSurface : public RecordedDrawingEvent<RecordedDrawSurface> {
         mDSOptions(aDSOptions),
         mOptions(aOptions) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "DrawSurface"; }
+  std::string GetName() const override { return "DrawSurface"; }
 
  private:
   friend class RecordedEvent;
@@ -767,16 +745,13 @@ class RecordedDrawDependentSurface
         mDSOptions(aDSOptions),
         mOptions(aOptions) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override {
-    return "DrawDependentSurface";
-  }
+  std::string GetName() const override { return "DrawDependentSurface"; }
 
  private:
   friend class RecordedEvent;
@@ -805,16 +780,13 @@ class RecordedDrawSurfaceWithShadow
         mSigma(aSigma),
         mOp(aOp) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override {
-    return "DrawSurfaceWithShadow";
-  }
+  std::string GetName() const override { return "DrawSurfaceWithShadow"; }
 
  private:
   friend class RecordedEvent;
@@ -841,14 +813,13 @@ class RecordedDrawFilter : public RecordedDrawingEvent<RecordedDrawFilter> {
         mDestPoint(aDestPoint),
         mOptions(aOptions) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "DrawFilter"; }
+  std::string GetName() const override { return "DrawFilter"; }
 
  private:
   friend class RecordedEvent;
@@ -867,15 +838,14 @@ class RecordedPathCreation : public RecordedEventDerived<RecordedPathCreation> {
   MOZ_IMPLICIT RecordedPathCreation(PathRecording *aPath);
   ~RecordedPathCreation();
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "Path Creation"; }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "Path Creation"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -894,15 +864,14 @@ class RecordedPathDestruction
   MOZ_IMPLICIT RecordedPathDestruction(PathRecording *aPath)
       : RecordedEventDerived(PATHDESTRUCTION), mRefPtr(aPath) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "Path Destruction"; }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "Path Destruction"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -929,17 +898,14 @@ class RecordedSourceSurfaceCreation
 
   ~RecordedSourceSurfaceCreation();
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override {
-    return "SourceSurface Creation";
-  }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "SourceSurface Creation"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -961,17 +927,14 @@ class RecordedSourceSurfaceDestruction
   MOZ_IMPLICIT RecordedSourceSurfaceDestruction(ReferencePtr aRefPtr)
       : RecordedEventDerived(SOURCESURFACEDESTRUCTION), mRefPtr(aRefPtr) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override {
-    return "SourceSurface Destruction";
-  }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "SourceSurface Destruction"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1023,15 +986,14 @@ class RecordedFilterNodeCreation
 
   ~RecordedFilterNodeCreation();
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "FilterNode Creation"; }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "FilterNode Creation"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1049,17 +1011,14 @@ class RecordedFilterNodeDestruction
   MOZ_IMPLICIT RecordedFilterNodeDestruction(ReferencePtr aRefPtr)
       : RecordedEventDerived(FILTERNODEDESTRUCTION), mRefPtr(aRefPtr) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override {
-    return "FilterNode Destruction";
-  }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "FilterNode Destruction"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1084,17 +1043,14 @@ class RecordedGradientStopsCreation
 
   ~RecordedGradientStopsCreation();
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override {
-    return "GradientStops Creation";
-  }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "GradientStops Creation"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1115,17 +1071,14 @@ class RecordedGradientStopsDestruction
   MOZ_IMPLICIT RecordedGradientStopsDestruction(ReferencePtr aRefPtr)
       : RecordedEventDerived(GRADIENTSTOPSDESTRUCTION), mRefPtr(aRefPtr) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override {
-    return "GradientStops Destruction";
-  }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "GradientStops Destruction"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1141,15 +1094,14 @@ class RecordedSnapshot : public RecordedEventDerived<RecordedSnapshot> {
   RecordedSnapshot(ReferencePtr aRefPtr, DrawTarget *aDT)
       : RecordedEventDerived(SNAPSHOT), mRefPtr(aRefPtr), mDT(aDT) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "Snapshot"; }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "Snapshot"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1172,15 +1124,14 @@ class RecordedIntoLuminanceSource
         mLuminanceType(aLuminanceType),
         mOpacity(aOpacity) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "IntoLuminanceSource"; }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "IntoLuminanceSource"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1211,19 +1162,18 @@ class RecordedFontData : public RecordedEventDerived<RecordedFontData> {
         aUnscaledFont->GetFontFileData(&FontDataProc, this) && mData;
   }
 
-  ~RecordedFontData();
+  virtual ~RecordedFontData();
 
   bool IsValid() const { return mGetFontFileDataSucceeded; }
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "Font Data"; }
-  virtual ReferencePtr GetObjectRef() const override { return nullptr; };
+  std::string GetName() const override { return "Font Data"; }
+  ReferencePtr GetObjectRef() const override { return nullptr; };
 
   void SetFontData(const uint8_t *aData, uint32_t aSize, uint32_t aIndex);
 
@@ -1259,19 +1209,18 @@ class RecordedFontDescriptor
     mHasDesc = aUnscaledFont->GetFontDescriptor(FontDescCb, this);
   }
 
-  ~RecordedFontDescriptor();
+  virtual ~RecordedFontDescriptor();
 
   bool IsValid() const { return mHasDesc; }
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "Font Desc"; }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "Font Desc"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1308,17 +1257,14 @@ class RecordedUnscaledFontCreation
     aUnscaledFont->GetFontInstanceData(FontInstanceDataProc, this);
   }
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override {
-    return "UnscaledFont Creation";
-  }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "UnscaledFont Creation"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
   void SetFontInstanceData(const uint8_t *aData, uint32_t aSize);
 
@@ -1340,16 +1286,13 @@ class RecordedUnscaledFontDestruction
   MOZ_IMPLICIT RecordedUnscaledFontDestruction(ReferencePtr aRefPtr)
       : RecordedEventDerived(UNSCALEDFONTDESTRUCTION), mRefPtr(aRefPtr) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override {
-    return "UnscaledFont Destruction";
-  }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "UnscaledFont Destruction"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1381,15 +1324,14 @@ class RecordedScaledFontCreation
     aScaledFont->GetFontInstanceData(FontInstanceDataProc, this);
   }
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "ScaledFont Creation"; }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "ScaledFont Creation"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
   void SetFontInstanceData(const uint8_t *aData, uint32_t aSize,
                            const FontVariation *aVariations,
@@ -1414,17 +1356,14 @@ class RecordedScaledFontDestruction
   MOZ_IMPLICIT RecordedScaledFontDestruction(ReferencePtr aRefPtr)
       : RecordedEventDerived(SCALEDFONTDESTRUCTION), mRefPtr(aRefPtr) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override {
-    return "ScaledFont Destruction";
-  }
-  virtual ReferencePtr GetObjectRef() const override { return mRefPtr; }
+  std::string GetName() const override { return "ScaledFont Destruction"; }
+  ReferencePtr GetObjectRef() const override { return mRefPtr; }
 
  private:
   friend class RecordedEvent;
@@ -1448,14 +1387,13 @@ class RecordedMaskSurface : public RecordedDrawingEvent<RecordedMaskSurface> {
     StorePattern(mPattern, aPattern);
   }
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
 
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "MaskSurface"; }
+  std::string GetName() const override { return "MaskSurface"; }
 
  private:
   friend class RecordedEvent;
@@ -1510,14 +1448,13 @@ class RecordedFilterNodeSetAttribute
     memcpy(&mPayload.front(), aFloat, sizeof(Float) * aSize);
   }
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "SetAttribute"; }
-  virtual ReferencePtr GetObjectRef() const override { return mNode; }
+  std::string GetName() const override { return "SetAttribute"; }
+  ReferencePtr GetObjectRef() const override { return mNode; }
 
  private:
   friend class RecordedEvent;
@@ -1551,14 +1488,13 @@ class RecordedFilterNodeSetInput
         mInputFilter(nullptr),
         mInputSurface(aInputSurface) {}
 
-  virtual bool PlayEvent(Translator *aTranslator) const override;
+  bool PlayEvent(Translator *aTranslator) const override;
   template <class S>
   void Record(S &aStream) const;
-  virtual void OutputSimpleEventInfo(
-      std::stringstream &aStringStream) const override;
+  void OutputSimpleEventInfo(std::stringstream &aStringStream) const override;
 
-  virtual std::string GetName() const override { return "SetInput"; }
-  virtual ReferencePtr GetObjectRef() const override { return mNode; }
+  std::string GetName() const override { return "SetInput"; }
+  ReferencePtr GetObjectRef() const override { return mNode; }
 
  private:
   friend class RecordedEvent;

@@ -38,7 +38,7 @@ class ClientContainerLayer : public ContainerLayer, public ClientLayer {
   }
 
  public:
-  virtual void RenderLayer() override {
+  void RenderLayer() override {
     RenderMaskLayers(this);
 
     DefaultComputeSupportsComponentAlphaChildren();
@@ -59,12 +59,12 @@ class ClientContainerLayer : public ContainerLayer, public ClientLayer {
     }
   }
 
-  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override {
+  void SetVisibleRegion(const LayerIntRegion& aRegion) override {
     NS_ASSERTION(ClientManager()->InConstruction(),
                  "Can only set properties in construction phase");
     ContainerLayer::SetVisibleRegion(aRegion);
   }
-  virtual bool InsertAfter(Layer* aChild, Layer* aAfter) override {
+  bool InsertAfter(Layer* aChild, Layer* aAfter) override {
     if (!ClientManager()->InConstruction()) {
       NS_ERROR("Can only set properties in construction phase");
       return false;
@@ -80,7 +80,7 @@ class ClientContainerLayer : public ContainerLayer, public ClientLayer {
     return true;
   }
 
-  virtual bool RemoveChild(Layer* aChild) override {
+  bool RemoveChild(Layer* aChild) override {
     if (!ClientManager()->InConstruction()) {
       NS_ERROR("Can only set properties in construction phase");
       return false;
@@ -95,7 +95,7 @@ class ClientContainerLayer : public ContainerLayer, public ClientLayer {
     return true;
   }
 
-  virtual bool RepositionChild(Layer* aChild, Layer* aAfter) override {
+  bool RepositionChild(Layer* aChild, Layer* aAfter) override {
     if (!ClientManager()->InConstruction()) {
       NS_ERROR("Can only set properties in construction phase");
       return false;
@@ -109,10 +109,10 @@ class ClientContainerLayer : public ContainerLayer, public ClientLayer {
     return true;
   }
 
-  virtual Layer* AsLayer() override { return this; }
-  virtual ShadowableLayer* AsShadowableLayer() override { return this; }
+  Layer* AsLayer() override { return this; }
+  ShadowableLayer* AsShadowableLayer() override { return this; }
 
-  virtual void ComputeEffectiveTransforms(
+  void ComputeEffectiveTransforms(
       const gfx::Matrix4x4& aTransformToSurface) override {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
@@ -140,12 +140,12 @@ class ClientRefLayer : public RefLayer, public ClientLayer {
   virtual ~ClientRefLayer() { MOZ_COUNT_DTOR(ClientRefLayer); }
 
  public:
-  virtual Layer* AsLayer() override { return this; }
-  virtual ShadowableLayer* AsShadowableLayer() override { return this; }
+  Layer* AsLayer() override { return this; }
+  ShadowableLayer* AsShadowableLayer() override { return this; }
 
-  virtual void RenderLayer() override {}
+  void RenderLayer() override {}
 
-  virtual void ComputeEffectiveTransforms(
+  void ComputeEffectiveTransforms(
       const gfx::Matrix4x4& aTransformToSurface) override {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }

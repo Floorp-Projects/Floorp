@@ -20,7 +20,7 @@ namespace layers {
 
 struct ShaderBytes;
 
-class DeviceAttachmentsD3D11 {
+class DeviceAttachmentsD3D11 final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DeviceAttachmentsD3D11);
 
  public:

@@ -182,7 +182,7 @@ class ScheduleObserveLayersUpdate : public wr::NotificationHandler {
         mObserverEpoch(aEpoch),
         mIsActive(aIsActive) {}
 
-  virtual void Notify(wr::Checkpoint) override {
+  void Notify(wr::Checkpoint) override {
     CompositorThreadHolder::Loop()->PostTask(
         NewRunnableMethod<LayersId, LayersObserverEpoch, int>(
             "ObserveLayersUpdate", mBridge,
@@ -199,11 +199,11 @@ class ScheduleObserveLayersUpdate : public wr::NotificationHandler {
 
 class SceneBuiltNotification : public wr::NotificationHandler {
  public:
-  explicit SceneBuiltNotification(WebRenderBridgeParent* aParent,
-                                  wr::Epoch aEpoch, TimeStamp aTxnStartTime)
+  SceneBuiltNotification(WebRenderBridgeParent* aParent, wr::Epoch aEpoch,
+                         TimeStamp aTxnStartTime)
       : mParent(aParent), mEpoch(aEpoch), mTxnStartTime(aTxnStartTime) {}
 
-  virtual void Notify(wr::Checkpoint) override {
+  void Notify(wr::Checkpoint) override {
     auto startTime = this->mTxnStartTime;
     RefPtr<WebRenderBridgeParent> parent = mParent;
     wr::Epoch epoch = mEpoch;
@@ -217,9 +217,9 @@ class SceneBuiltNotification : public wr::NotificationHandler {
               ContentFullPaintPayload(const mozilla::TimeStamp& aStartTime,
                                       const mozilla::TimeStamp& aEndTime)
                   : ProfilerMarkerPayload(aStartTime, aEndTime) {}
-              virtual void StreamPayload(SpliceableJSONWriter& aWriter,
-                                         const TimeStamp& aProcessStartTime,
-                                         UniqueStacks& aUniqueStacks) override {
+              void StreamPayload(SpliceableJSONWriter& aWriter,
+                                 const TimeStamp& aProcessStartTime,
+                                 UniqueStacks& aUniqueStacks) override {
                 StreamCommonProps("CONTENT_FULL_PAINT_TIME", aWriter,
                                   aProcessStartTime, aUniqueStacks);
               }
@@ -267,7 +267,7 @@ class WebRenderBridgeParent::ScheduleSharedSurfaceRelease final
   nsTArray<wr::ExternalImageKeyPair> mSurfaces;
 };
 
-class MOZ_STACK_CLASS AutoWebRenderBridgeParentAsyncMessageSender {
+class MOZ_STACK_CLASS AutoWebRenderBridgeParentAsyncMessageSender final {
  public:
   explicit AutoWebRenderBridgeParentAsyncMessageSender(
       WebRenderBridgeParent* aWebRenderBridgeParent,
@@ -356,8 +356,6 @@ WebRenderBridgeParent* WebRenderBridgeParent::CreateDestroyed(
     const wr::PipelineId& aPipelineId) {
   return new WebRenderBridgeParent(aPipelineId);
 }
-
-WebRenderBridgeParent::~WebRenderBridgeParent() {}
 
 mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEnsureConnected(
     TextureFactoryIdentifier* aTextureFactoryIdentifier,

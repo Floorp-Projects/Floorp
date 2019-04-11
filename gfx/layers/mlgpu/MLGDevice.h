@@ -68,7 +68,7 @@ class MLGRenderTarget {
 
  protected:
   explicit MLGRenderTarget(MLGRenderTargetFlags aFlags);
-  virtual ~MLGRenderTarget() {}
+  virtual ~MLGRenderTarget() = default;
 
  protected:
   MLGRenderTargetFlags mFlags;
@@ -80,7 +80,7 @@ class MLGRenderTarget {
 
 class MLGSwapChain {
  protected:
-  virtual ~MLGSwapChain() {}
+  virtual ~MLGSwapChain() = default;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MLGSwapChain)
@@ -142,7 +142,7 @@ class MLGResource {
   virtual MLGResourceD3D11* AsResourceD3D11() { return nullptr; }
 
  protected:
-  virtual ~MLGResource() {}
+  virtual ~MLGResource() = default;
 };
 
 // A buffer for use as a shader input.
@@ -153,7 +153,7 @@ class MLGBuffer : public MLGResource {
   virtual size_t GetSize() const = 0;
 
  protected:
-  ~MLGBuffer() override {}
+  virtual ~MLGBuffer() = default;
 };
 
 // This is a lower-level resource than a TextureSource. It wraps

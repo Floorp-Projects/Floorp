@@ -375,7 +375,7 @@ class OSXVsyncSource final : public VsyncSource {
       mTimer = NS_NewTimer();
     }
 
-    ~OSXDisplay() override { MOZ_ASSERT(NS_IsMainThread()); }
+    virtual ~OSXDisplay() { MOZ_ASSERT(NS_IsMainThread()); }
 
     static void RetryEnableVsync(nsITimer* aTimer, void* aOsxDisplay) {
       MOZ_ASSERT(NS_IsMainThread());
@@ -493,7 +493,7 @@ class OSXVsyncSource final : public VsyncSource {
   };  // OSXDisplay
 
  private:
-  ~OSXVsyncSource() override = default;
+  virtual ~OSXVsyncSource() = default;
 
   OSXDisplay mGlobalDisplay;
 };  // OSXVsyncSource

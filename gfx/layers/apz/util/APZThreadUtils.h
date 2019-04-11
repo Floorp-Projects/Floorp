@@ -60,7 +60,7 @@ class GenericNamedTimerCallbackBase : public nsITimerCallback, public nsINamed {
   NS_DECL_THREADSAFE_ISUPPORTS
 
  protected:
-  virtual ~GenericNamedTimerCallbackBase() {}
+  virtual ~GenericNamedTimerCallbackBase() = default;
 };
 
 // An nsITimerCallback implementation with nsINamed that can be used with any
@@ -68,8 +68,7 @@ class GenericNamedTimerCallbackBase : public nsITimerCallback, public nsINamed {
 template <typename Function>
 class GenericNamedTimerCallback final : public GenericNamedTimerCallbackBase {
  public:
-  explicit GenericNamedTimerCallback(const Function& aFunction,
-                                     const char* aName)
+  GenericNamedTimerCallback(const Function& aFunction, const char* aName)
       : mFunction(aFunction), mName(aName) {}
 
   NS_IMETHOD Notify(nsITimer*) override {

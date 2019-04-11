@@ -43,7 +43,7 @@ class GPUVideoImage final : public Image {
         ImageBridgeChild::GetSingleton().get());
   }
 
-  virtual ~GPUVideoImage() {}
+  virtual ~GPUVideoImage() = default;
 
   gfx::IntSize GetSize() const override { return mSize; }
 

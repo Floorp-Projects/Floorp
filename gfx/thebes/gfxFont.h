@@ -367,7 +367,7 @@ class gfxFontCache final : private gfxFontCacheExpirationTracker {
 
   // This gets called when the timeout has expired on a zero-refcount
   // font; we just delete it.
-  virtual void NotifyExpiredLocked(gfxFont* aFont, const AutoLock&) override {
+  void NotifyExpiredLocked(gfxFont* aFont, const AutoLock&) override {
     NotifyExpired(aFont);
   }
 
@@ -635,7 +635,7 @@ class gfxFontShaper {
     NS_ASSERTION(aFont, "shaper requires a valid font!");
   }
 
-  virtual ~gfxFontShaper() {}
+  virtual ~gfxFontShaper() = default;
 
   // Shape a piece of text and store the resulting glyph data into
   // aShapedText. Parameters aOffset/aLength indicate the range of
@@ -691,7 +691,7 @@ class gfxShapedText {
         mFlags(aFlags),
         mAppUnitsPerDevUnit(aAppUnitsPerDevUnit) {}
 
-  virtual ~gfxShapedText() {}
+  virtual ~gfxShapedText() = default;
 
   /**
    * This class records the information associated with a character in the
@@ -1254,10 +1254,10 @@ class gfxShapedWord final : public gfxShapedText {
   // allocated via malloc.
   void operator delete(void* p) { free(p); }
 
-  virtual const CompressedGlyph* GetCharacterGlyphs() const override {
+  const CompressedGlyph* GetCharacterGlyphs() const override {
     return &mCharGlyphsStorage[0];
   }
-  virtual CompressedGlyph* GetCharacterGlyphs() override {
+  CompressedGlyph* GetCharacterGlyphs() override {
     return &mCharGlyphsStorage[0];
   }
 

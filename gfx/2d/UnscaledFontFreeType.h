@@ -34,7 +34,7 @@ class UnscaledFontFreeType : public UnscaledFont {
         mOwnsFace(false),
         mIndex(0),
         mNativeFontResource(aNativeFontResource) {}
-  ~UnscaledFontFreeType() {
+  virtual ~UnscaledFontFreeType() {
     if (mOwnsFace) {
       Factory::ReleaseFTFace(mFace);
     }

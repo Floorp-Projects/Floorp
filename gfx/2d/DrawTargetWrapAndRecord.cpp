@@ -92,14 +92,12 @@ class SourceSurfaceWrapAndRecord : public SourceSurface {
         RecordedSourceSurfaceDestruction(ReferencePtr(this)));
   }
 
-  virtual SurfaceType GetType() const override {
-    return SurfaceType::RECORDING;
-  }
-  virtual IntSize GetSize() const override { return mFinalSurface->GetSize(); }
-  virtual SurfaceFormat GetFormat() const override {
+  SurfaceType GetType() const override { return SurfaceType::RECORDING; }
+  IntSize GetSize() const override { return mFinalSurface->GetSize(); }
+  SurfaceFormat GetFormat() const override {
     return mFinalSurface->GetFormat();
   }
-  virtual already_AddRefed<DataSourceSurface> GetDataSurface() override {
+  already_AddRefed<DataSourceSurface> GetDataSurface() override {
     return mFinalSurface->GetDataSurface();
   }
 
@@ -123,9 +121,7 @@ class GradientStopsWrapAndRecord : public GradientStops {
         RecordedGradientStopsDestruction(ReferencePtr(this)));
   }
 
-  virtual BackendType GetBackendType() const override {
-    return BackendType::RECORDING;
-  }
+  BackendType GetBackendType() const override { return BackendType::RECORDING; }
 
   RefPtr<GradientStops> mFinalGradientStops;
   RefPtr<DrawEventRecorderPrivate> mRecorder;
@@ -173,25 +169,25 @@ class FilterNodeWrapAndRecord : public FilterNode {
     return static_cast<FilterNodeWrapAndRecord *>(aNode)->mFinalFilterNode;
   }
 
-  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface) override {
+  void SetInput(uint32_t aIndex, SourceSurface *aSurface) override {
     EnsureSurfaceStored(mRecorder, aSurface, "SetInput");
 
     mRecorder->RecordEvent(RecordedFilterNodeSetInput(this, aIndex, aSurface));
     mFinalFilterNode->SetInput(aIndex, GetSourceSurface(aSurface));
   }
-  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) override {
+  void SetInput(uint32_t aIndex, FilterNode *aFilter) override {
     MOZ_ASSERT(mRecorder->HasStoredObject(aFilter));
 
     mRecorder->RecordEvent(RecordedFilterNodeSetInput(this, aIndex, aFilter));
     mFinalFilterNode->SetInput(aIndex, GetFilterNode(aFilter));
   }
 
-#define FORWARD_SET_ATTRIBUTE(type, argtype)                         \
-  virtual void SetAttribute(uint32_t aIndex, type aValue) override { \
-    mRecorder->RecordEvent(RecordedFilterNodeSetAttribute(           \
-        this, aIndex, aValue,                                        \
-        RecordedFilterNodeSetAttribute::ARGTYPE_##argtype));         \
-    mFinalFilterNode->SetAttribute(aIndex, aValue);                  \
+#define FORWARD_SET_ATTRIBUTE(type, argtype)                 \
+  void SetAttribute(uint32_t aIndex, type aValue) override { \
+    mRecorder->RecordEvent(RecordedFilterNodeSetAttribute(   \
+        this, aIndex, aValue,                                \
+        RecordedFilterNodeSetAttribute::ARGTYPE_##argtype)); \
+    mFinalFilterNode->SetAttribute(aIndex, aValue);          \
   }
 
   FORWARD_SET_ATTRIBUTE(bool, BOOL);
@@ -217,15 +213,13 @@ class FilterNodeWrapAndRecord : public FilterNode {
     mFinalFilterNode->SetAttribute(aIndex, aFloat, aSize);
   }
 
-  virtual FilterBackend GetBackendType() override {
-    return FILTER_BACKEND_RECORDING;
-  }
+  FilterBackend GetBackendType() override { return FILTER_BACKEND_RECORDING; }
 
   RefPtr<FilterNode> mFinalFilterNode;
   RefPtr<DrawEventRecorderPrivate> mRecorder;
 };
 
-struct AdjustedPattern {
+struct AdjustedPattern final {
   explicit AdjustedPattern(const Pattern &aPattern) : mPattern(nullptr) {
     mOrigPattern = const_cast<Pattern *>(&aPattern);
   }

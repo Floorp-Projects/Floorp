@@ -182,7 +182,7 @@ class gfxFontInfoLoader {
     explicit ShutdownObserver(gfxFontInfoLoader* aLoader) : mLoader(aLoader) {}
 
    protected:
-    virtual ~ShutdownObserver() {}
+    virtual ~ShutdownObserver() = default;
 
     gfxFontInfoLoader* mLoader;
   };

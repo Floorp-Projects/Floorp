@@ -18,13 +18,13 @@ namespace layers {
 
 class DIBTextureData : public TextureData {
  public:
-  virtual bool Lock(OpenMode) override { return true; }
+  bool Lock(OpenMode) override { return true; }
 
-  virtual void Unlock() override {}
+  void Unlock() override {}
 
-  virtual void FillInfo(TextureData::Info& aInfo) const override;
+  void FillInfo(TextureData::Info& aInfo) const override;
 
-  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
+  already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
 
   static DIBTextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                 LayersIPCChannel* aAllocator);
@@ -52,25 +52,22 @@ class TextureHostDirectUpload : public TextureHost {
                           gfx::IntSize aSize)
       : TextureHost(aFlags), mFormat(aFormat), mSize(aSize), mIsLocked(false) {}
 
-  virtual void DeallocateDeviceData() override;
+  void DeallocateDeviceData() override;
 
-  virtual void SetTextureSourceProvider(
-      TextureSourceProvider* aProvider) override;
+  void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
-  virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
+  gfx::SurfaceFormat GetFormat() const override { return mFormat; }
 
-  virtual gfx::IntSize GetSize() const override { return mSize; }
+  gfx::IntSize GetSize() const override { return mSize; }
 
-  virtual bool Lock() override;
+  bool Lock() override;
 
-  virtual void Unlock() override;
+  void Unlock() override;
 
-  virtual bool HasIntermediateBuffer() const { return true; }
+  bool HasIntermediateBuffer() const { return true; }
 
-  virtual bool BindTextureSource(
-      CompositableTextureSourceRef& aTexture) override;
-  virtual bool AcquireTextureSource(
-      CompositableTextureSourceRef& aTexture) override;
+  bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
+  bool AcquireTextureSource(CompositableTextureSourceRef& aTexture) override;
 
  protected:
   RefPtr<TextureSourceProvider> mProvider;
@@ -84,12 +81,12 @@ class DIBTextureHost : public TextureHostDirectUpload {
  public:
   DIBTextureHost(TextureFlags aFlags, const SurfaceDescriptorDIB& aDescriptor);
 
-  virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
+  already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
     return nullptr;  // TODO: cf bug 872568
   }
 
  protected:
-  virtual void UpdatedInternal(const nsIntRegion* aRegion = nullptr) override;
+  void UpdatedInternal(const nsIntRegion* aRegion = nullptr) override;
 
   RefPtr<gfxWindowsSurface> mSurface;
 };
@@ -100,7 +97,7 @@ class TextureHostFileMapping : public TextureHostDirectUpload {
                          const SurfaceDescriptorFileMapping& aDescriptor);
   ~TextureHostFileMapping();
 
-  virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
+  already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
     MOZ_CRASH("GFX: TextureHostFileMapping::GetAsSurface not implemented");
     // Not implemented! It would be tricky to keep track of the
     // scope of the file mapping. We could do this through UserData
@@ -108,7 +105,7 @@ class TextureHostFileMapping : public TextureHostDirectUpload {
   }
 
  protected:
-  virtual void UpdatedInternal(const nsIntRegion* aRegion = nullptr) override;
+  void UpdatedInternal(const nsIntRegion* aRegion = nullptr) override;
 
   HANDLE mFileMapping;
 };
