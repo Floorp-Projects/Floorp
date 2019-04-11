@@ -577,6 +577,12 @@ var Policies = {
     },
   },
 
+  "ExtensionSettings": {
+    onBeforeAddons(manager, param) {
+      manager.setExtensionSettings(param);
+    },
+  },
+
   "ExtensionUpdate": {
     onBeforeAddons(manager, param) {
       if (!param) {
