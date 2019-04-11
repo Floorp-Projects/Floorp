@@ -1030,7 +1030,14 @@ void nsHTMLDocument::GetCookie(nsAString& aCookie, ErrorResult& rv) {
     return;
   }
 
-  if (nsContentUtils::StorageDisabledByAntiTracking(this, nullptr)) {
+  nsContentUtils::StorageAccess storageAccess =
+      nsContentUtils::StorageAllowedForDocument(this);
+  if (storageAccess == nsContentUtils::StorageAccess::eDeny) {
+    return;
+  }
+
+  if (storageAccess == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
     return;
   }
 
@@ -1083,7 +1090,14 @@ void nsHTMLDocument::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
     return;
   }
 
-  if (nsContentUtils::StorageDisabledByAntiTracking(this, nullptr)) {
+  nsContentUtils::StorageAccess storageAccess =
+      nsContentUtils::StorageAllowedForDocument(this);
+  if (storageAccess == nsContentUtils::StorageAccess::eDeny) {
+    return;
+  }
+
+  if (storageAccess == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
     return;
   }
 
