@@ -6556,11 +6556,10 @@ static void CollectScrollSnapCoordinates(nsIFrame* aFrame,
   }
 }
 
-static layers::ScrollSnapInfo ComputeScrollSnapInfo(
-    const ScrollFrameHelper& aScrollFrame) {
+layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo() const {
   ScrollSnapInfo result;
 
-  ScrollStyles styles = aScrollFrame.GetScrollStylesFromFrame();
+  ScrollStyles styles = GetScrollStylesFromFrame();
 
   if (styles.mScrollSnapTypeY == StyleScrollSnapStrictness::None &&
       styles.mScrollSnapTypeX == StyleScrollSnapStrictness::None) {
@@ -6571,7 +6570,7 @@ static layers::ScrollSnapInfo ComputeScrollSnapInfo(
   result.mScrollSnapTypeX = styles.mScrollSnapTypeX;
   result.mScrollSnapTypeY = styles.mScrollSnapTypeY;
 
-  nsSize scrollPortSize = aScrollFrame.GetScrollPortRect().Size();
+  nsSize scrollPortSize = GetScrollPortRect().Size();
 
   result.mScrollSnapDestination =
       nsPoint(styles.mScrollSnapDestinationX.Resolve(scrollPortSize.width),
@@ -6588,8 +6587,7 @@ static layers::ScrollSnapInfo ComputeScrollSnapInfo(
             scrollPortSize.height));
   }
 
-  CollectScrollSnapCoordinates(aScrollFrame.GetScrolledFrame(),
-                               aScrollFrame.GetScrolledFrame(),
+  CollectScrollSnapCoordinates(mScrolledFrame, mScrolledFrame,
                                result.mScrollSnapCoordinates);
 
   return result;
@@ -6597,7 +6595,7 @@ static layers::ScrollSnapInfo ComputeScrollSnapInfo(
 
 layers::ScrollSnapInfo ScrollFrameHelper::GetScrollSnapInfo() const {
   // TODO(botond): Should we cache it?
-  return ComputeScrollSnapInfo(*this);
+  return ComputeScrollSnapInfo();
 }
 
 bool ScrollFrameHelper::GetSnapPointForDestination(

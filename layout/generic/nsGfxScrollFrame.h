@@ -409,6 +409,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nsIFrame* GetFrameForDir() const;  // helper for Is{Physical,Bidi}LTR to find
                                      // the frame whose directionality we use
 
+  ScrollSnapInfo ComputeScrollSnapInfo() const;
+
  public:
   bool IsScrollbarOnRight() const;
   bool IsScrollingActive(nsDisplayListBuilder* aBuilder) const;
