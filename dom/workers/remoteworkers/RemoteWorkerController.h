@@ -133,6 +133,8 @@ class RemoteWorkerController final {
 
   void WorkerTerminated();
 
+  void ForgetActorAndTerminate();
+
   void Shutdown();
 
   void CreationFailed();
