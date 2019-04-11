@@ -34,7 +34,8 @@ data class EventMetricType<ExtraKeysEnum : Enum<ExtraKeysEnum>>(
     override val category: String,
     override val lifetime: Lifetime,
     override val name: String,
-    override val sendInPings: List<String>
+    override val sendInPings: List<String>,
+    val allowedExtraKeys: List<String> = listOf()
 ) : CommonMetricData {
 
     override val defaultStorageDestinations: List<String> = listOf("events")
@@ -62,14 +63,10 @@ data class EventMetricType<ExtraKeysEnum : Enum<ExtraKeysEnum>>(
             // There are two extra "keys" in play here:
             //   1. The Kotlin enumeration names, in CamelCase
             //   2. The keys sent in the ping, in snake_case
-            // Here we need to get (2) to send in the ping.  We need to use reflection to get
-            // around limitations in Java generics (since the actual enums for the event are in
-            // a template parameter).
+            // Here we need to get (2) to send in the ping.
             if (it.size > 0) {
-                val cls = it.keys.first().javaClass
-                val method = cls.getDeclaredMethod("getValue")
                 it.mapKeys { entry ->
-                    method.invoke(entry.key).toString()
+                    allowedExtraKeys[entry.key.ordinal]
                 }
             } else {
                 null

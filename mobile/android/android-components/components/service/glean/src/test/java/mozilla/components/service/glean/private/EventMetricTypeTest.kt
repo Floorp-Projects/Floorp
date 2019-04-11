@@ -19,17 +19,12 @@ import org.robolectric.RobolectricTestRunner
 import java.lang.NullPointerException
 
 // Declared here, since Kotlin can not declare nested enum classes.
-enum class clickKeys(val value: String) {
-    objectId("object_id")
+enum class clickKeys {
+    objectId
 }
 
-enum class extraKeys(val value: String) {
-    extra1("extra1"),
-    extra2("extra2")
-}
-
-enum class testNameKeys(val value: String) {
-    testName("test_name")
+enum class testNameKeys {
+    testName
 }
 
 @ObsoleteCoroutinesApi
@@ -64,7 +59,8 @@ class EventMetricTypeTest {
             category = "ui",
             lifetime = Lifetime.Ping,
             name = "click",
-            sendInPings = listOf("store1")
+            sendInPings = listOf("store1"),
+            allowedExtraKeys = listOf("object_id")
         )
 
         // Record two events of the same type, with a little delay.
@@ -100,7 +96,8 @@ class EventMetricTypeTest {
             category = "",
             lifetime = Lifetime.Ping,
             name = "click",
-            sendInPings = listOf("store1")
+            sendInPings = listOf("store1"),
+            allowedExtraKeys = listOf("object_id")
         )
 
         // Record two events of the same type, with a little delay.
@@ -166,7 +163,8 @@ class EventMetricTypeTest {
             category = "ui",
             lifetime = Lifetime.Ping,
             name = "click",
-            sendInPings = listOf("store1", "store2")
+            sendInPings = listOf("store1", "store2"),
+            allowedExtraKeys = listOf("object_id")
         )
 
         // Record two events of the same type, with a little delay.
@@ -201,7 +199,8 @@ class EventMetricTypeTest {
             category = "ui",
             lifetime = Lifetime.Ping,
             name = "event_metric",
-            sendInPings = listOf("store1")
+            sendInPings = listOf("store1"),
+            allowedExtraKeys = listOf("test_name")
         )
         assertEquals(true, Glean.getUploadEnabled())
         Glean.setUploadEnabled(true)

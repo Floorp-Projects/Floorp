@@ -31,22 +31,22 @@ import org.robolectric.RobolectricTestRunner
 import java.util.concurrent.TimeUnit
 
 // Declared here, since Kotlin can not declare nested enum classes
-enum class ExtraKeys(val value: String) {
-    Key1("key1"),
-    Key2("key2")
+enum class ExtraKeys {
+    Key1,
+    Key2
 }
 
-enum class SomeExtraKeys(val value: String) {
-    SomeExtra("someExtra")
+enum class SomeExtraKeys {
+    SomeExtra
 }
 
-enum class TestEventNumberKeys(val value: String) {
-    TestEventNumber("test_event_number")
+enum class TestEventNumberKeys {
+    TestEventNumber
 }
 
-enum class TruncatedKeys(val value: String) {
-    Extra1("extra1"),
-    TruncatedExtra("truncatedExtra")
+enum class TruncatedKeys {
+    Extra1,
+    TruncatedExtra
 }
 
 @RunWith(RobolectricTestRunner::class)
@@ -99,7 +99,8 @@ class EventsStorageEngineTest {
             category = "telemetry",
             name = "test_event_with_optional",
             lifetime = Lifetime.Ping,
-            sendInPings = storeNames
+            sendInPings = storeNames,
+            allowedExtraKeys = listOf("key1", "key2")
         )
 
         // Record the event in the stores, providing optional arguments.
@@ -236,7 +237,8 @@ class EventsStorageEngineTest {
             category = "telemetry",
             name = "test_event_clear",
             lifetime = Lifetime.Ping,
-            sendInPings = listOf("store1")
+            sendInPings = listOf("store1"),
+            allowedExtraKeys = listOf("someExtra")
         )
 
         // Record the event in the store, without providing optional arguments.
@@ -266,7 +268,8 @@ class EventsStorageEngineTest {
             category = "ui",
             lifetime = Lifetime.Ping,
             name = "click",
-            sendInPings = listOf("default")
+            sendInPings = listOf("default"),
+            allowedExtraKeys = listOf("test_event_number")
         )
 
         resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
@@ -314,7 +317,8 @@ class EventsStorageEngineTest {
             category = "ui",
             lifetime = Lifetime.Ping,
             name = "testEvent",
-            sendInPings = listOf("store1")
+            sendInPings = listOf("store1"),
+            allowedExtraKeys = listOf("extra1", "truncatedExtra")
         )
 
         val testValue = "LeanGleanByFrank"
@@ -361,7 +365,8 @@ class EventsStorageEngineTest {
             category = "telemetry",
             name = "test_event",
             lifetime = Lifetime.Ping,
-            sendInPings = listOf("store1")
+            sendInPings = listOf("store1"),
+            allowedExtraKeys = listOf("someExtra")
         )
 
         event.record(extra = mapOf(SomeExtraKeys.SomeExtra to "bar"))
@@ -412,7 +417,8 @@ class EventsStorageEngineTest {
             category = "telemetry",
             name = "test_event",
             lifetime = Lifetime.Ping,
-            sendInPings = listOf("store1")
+            sendInPings = listOf("store1"),
+            allowedExtraKeys = listOf("key1", "key2")
         )
 
         // Record the event in the store, without providing optional arguments.
