@@ -25,7 +25,8 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
   explicit OriginAttributes(const OriginAttributesDictionary& aOther)
       : OriginAttributesDictionary(aOther) {}
 
-  void SetFirstPartyDomain(const bool aIsTopLevelDocument, nsIURI* aURI);
+  void SetFirstPartyDomain(const bool aIsTopLevelDocument, nsIURI* aURI,
+                           bool aForced = false);
   void SetFirstPartyDomain(const bool aIsTopLevelDocument,
                            const nsACString& aDomain);
 

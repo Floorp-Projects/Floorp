@@ -2995,7 +2995,7 @@ class nsContentUtils {
    * the window's extant document has not been set yet.  The code in
    * StorageAllowedForWindow(), however, will not work in these cases.
    */
-  static StorageAccess StorageAllowedForDocument(Document* aDoc);
+  static StorageAccess StorageAllowedForDocument(const Document* aDoc);
 
   /*
    * Checks if storage should be allowed for a new window with the given

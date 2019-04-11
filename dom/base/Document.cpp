@@ -1923,23 +1923,32 @@ bool Document::IsVisibleConsideringAncestors() const {
 void Document::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) {
   nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIPrincipal> principal;
+  nsCOMPtr<nsIPrincipal> storagePrincipal;
   if (aChannel) {
     // Note: this code is duplicated in XULDocument::StartDocumentLoad and
-    // nsScriptSecurityManager::GetChannelResultPrincipal.
+    // nsScriptSecurityManager::GetChannelResultPrincipals.
     // Note: this should match nsDocShell::OnLoadingSite
     NS_GetFinalChannelURI(aChannel, getter_AddRefs(uri));
 
     nsIScriptSecurityManager* securityManager =
         nsContentUtils::GetSecurityManager();
     if (securityManager) {
-      securityManager->GetChannelResultPrincipal(aChannel,
-                                                 getter_AddRefs(principal));
+      securityManager->GetChannelResultPrincipals(
+          aChannel, getter_AddRefs(principal),
+          getter_AddRefs(storagePrincipal));
     }
   }
 
-  principal = MaybeDowngradePrincipal(principal);
+  bool equal = principal->Equals(storagePrincipal);
 
-  ResetToURI(uri, aLoadGroup, principal);
+  principal = MaybeDowngradePrincipal(principal);
+  if (equal) {
+    storagePrincipal = principal;
+  } else {
+    storagePrincipal = MaybeDowngradePrincipal(storagePrincipal);
+  }
+
+  ResetToURI(uri, aLoadGroup, principal, storagePrincipal);
 
   // Note that, since mTiming does not change during a reset, the
   // navigationStart time remains unchanged and therefore any future new
@@ -2031,8 +2040,10 @@ void Document::DisconnectNodeTree() {
 }
 
 void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
-                          nsIPrincipal* aPrincipal) {
+                          nsIPrincipal* aPrincipal,
+                          nsIPrincipal* aStoragePrincipal) {
   MOZ_ASSERT(aURI, "Null URI passed to ResetToURI");
+  MOZ_ASSERT(!!aPrincipal == !!aStoragePrincipal);
 
   MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug,
           ("DOCUMENT %p ResetToURI %s", this, aURI->GetSpecOrDefault().get()));
@@ -2062,7 +2073,7 @@ void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
   // This ensures that, during teardown, the document and the dying window
   // (which already nulled out its document pointer and cached the principal)
   // have matching principals.
-  SetPrincipal(nullptr);
+  SetPrincipals(nullptr, nullptr);
 
   // Clear the original URI so SetDocumentURI sets it.
   mOriginalURI = nullptr;
@@ -2110,7 +2121,7 @@ void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
 
   // Now get our new principal
   if (aPrincipal) {
-    SetPrincipal(aPrincipal);
+    SetPrincipals(aPrincipal, aStoragePrincipal);
   } else {
     nsIScriptSecurityManager* securityManager =
         nsContentUtils::GetSecurityManager();
@@ -2130,7 +2141,7 @@ void Document::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
       nsresult rv = securityManager->GetLoadContextCodebasePrincipal(
           mDocumentURI, loadContext, getter_AddRefs(principal));
       if (NS_SUCCEEDED(rv)) {
-        SetPrincipal(principal);
+        SetPrincipals(principal, principal);
       }
     }
   }
@@ -2793,7 +2804,7 @@ nsresult Document::InitCSP(nsIChannel* aChannel) {
   if (needNewNullPrincipal) {
     principal = NullPrincipal::CreateWithInheritedAttributes(principal);
     principal->SetCsp(csp);
-    SetPrincipal(principal);
+    SetPrincipals(principal, principal);
   }
 
   // ----- Enforce frame-ancestor policy on any applied policies
@@ -3017,7 +3028,9 @@ void Document::RemoveFromIdTable(Element* aElement, nsAtom* aId) {
   }
 }
 
-void Document::SetPrincipal(nsIPrincipal* aNewPrincipal) {
+void Document::SetPrincipals(nsIPrincipal* aNewPrincipal,
+                             nsIPrincipal* aNewStoragePrincipal) {
+  MOZ_ASSERT(!!aNewPrincipal == !!aNewStoragePrincipal);
   if (aNewPrincipal && mAllowDNSPrefetch && sDisablePrefetchHTTPSPref) {
     nsCOMPtr<nsIURI> uri;
     aNewPrincipal->GetURI(getter_AddRefs(uri));
@@ -3027,6 +3040,7 @@ void Document::SetPrincipal(nsIPrincipal* aNewPrincipal) {
     }
   }
   mNodeInfoManager->SetDocumentPrincipal(aNewPrincipal);
+  mIntrinsicStoragePrincipal = aNewStoragePrincipal;
 
 #ifdef DEBUG
   // Validate that the docgroup is set correctly by calling its getter and
@@ -8193,7 +8207,8 @@ nsresult Document::CloneDocHelper(Document* clone) const {
     }
     clone->mChannel = channel;
     if (uri) {
-      clone->ResetToURI(uri, loadGroup, NodePrincipal());
+      clone->ResetToURI(uri, loadGroup, NodePrincipal(),
+                        EffectiveStoragePrincipal());
     }
 
     clone->SetContainer(mDocumentContainer);
@@ -8207,7 +8222,7 @@ nsresult Document::CloneDocHelper(Document* clone) const {
   // them.
   clone->SetDocumentURI(Document::GetDocumentURI());
   clone->SetChromeXHRDocURI(mChromeXHRDocURI);
-  clone->SetPrincipal(NodePrincipal());
+  clone->SetPrincipals(NodePrincipal(), EffectiveStoragePrincipal());
   clone->mDocumentBaseURI = mDocumentBaseURI;
   clone->SetChromeXHRDocBaseURI(mChromeXHRDocBaseURI);
 
@@ -12827,6 +12842,24 @@ nsICookieSettings* Document::CookieSettings() {
   }
 
   return mCookieSettings;
+}
+
+nsIPrincipal* Document::EffectiveStoragePrincipal() const {
+  if (!StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
+    return NodePrincipal();
+  }
+
+  nsContentUtils::StorageAccess access =
+      nsContentUtils::StorageAllowedForDocument(this);
+
+  // Let's use the storage principal only if we need to partition the cookie
+  // jar. When the permission is granted, access will be different and the
+  // normal principal will be used.
+  if (access != nsContentUtils::StorageAccess::ePartitionedOrDeny) {
+    return NodePrincipal();
+  }
+
+  return mIntrinsicStoragePrincipal;
 }
 
 }  // namespace dom
