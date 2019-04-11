@@ -157,9 +157,12 @@ struct EffectYCbCr : public TexturedEffect {
   gfx::ColorDepth mColorDepth;
 };
 
-struct EffectNV12 : public TexturedEffect {
-  EffectNV12(TextureSource* aSource, gfx::SamplingFilter aSamplingFilter)
-      : TexturedEffect(EffectTypes::NV12, aSource, false, aSamplingFilter) {}
+struct EffectNV12 : public EffectYCbCr {
+  EffectNV12(TextureSource* aSource, gfx::YUVColorSpace aYUVColorSpace,
+             gfx::ColorDepth aColorDepth, gfx::SamplingFilter aSamplingFilter)
+      : EffectYCbCr(aSource, aYUVColorSpace, aColorDepth, aSamplingFilter) {
+    mType = EffectTypes::NV12;
+  }
 
   virtual const char* Name() override { return "EffectNV12"; }
 };
@@ -204,7 +207,7 @@ struct EffectChain {
  *
  * Note that aFormat can be different form aSource->GetFormat if, we are
  * creating an effect that takes several texture sources (like with YCBCR
- * where aFormat would be FOMRAT_YCBCR and each texture source would be
+ * where aFormat would be FORMAT_YCBCR and each texture source would be
  * a one-channel A8 texture)
  */
 inline already_AddRefed<TexturedEffect> CreateTexturedEffect(
@@ -220,13 +223,12 @@ inline already_AddRefed<TexturedEffect> CreateTexturedEffect(
     case gfx::SurfaceFormat::R8G8B8A8:
       result = new EffectRGB(aSource, isAlphaPremultiplied, aSamplingFilter);
       break;
+    case gfx::SurfaceFormat::YUV:
     case gfx::SurfaceFormat::NV12:
     case gfx::SurfaceFormat::P010:
     case gfx::SurfaceFormat::P016:
-      result = new EffectNV12(aSource, aSamplingFilter);
-      break;
-    case gfx::SurfaceFormat::YUV:
-      MOZ_ASSERT_UNREACHABLE("gfx::SurfaceFormat::YUV is invalid");
+      MOZ_ASSERT_UNREACHABLE(
+          "gfx::SurfaceFormat::YUV/NV12/P010/P016 is invalid");
       break;
     default:
       NS_WARNING("unhandled program type");
@@ -243,13 +245,23 @@ inline already_AddRefed<TexturedEffect> CreateTexturedEffect(
   MOZ_ASSERT(aSource);
 
   RefPtr<TexturedEffect> result;
-  if (aHost->GetReadFormat() == gfx::SurfaceFormat::YUV) {
-    MOZ_ASSERT(aHost->GetYUVColorSpace() != gfx::YUVColorSpace::UNKNOWN);
-    result = new EffectYCbCr(aSource, aHost->GetYUVColorSpace(),
-                             aHost->GetColorDepth(), aSamplingFilter);
-  } else {
-    result = CreateTexturedEffect(aHost->GetReadFormat(), aSource,
-                                  aSamplingFilter, isAlphaPremultiplied);
+
+  switch (aHost->GetReadFormat()) {
+    case gfx::SurfaceFormat::YUV:
+      MOZ_ASSERT(aHost->GetYUVColorSpace() != gfx::YUVColorSpace::UNKNOWN);
+      result = new EffectYCbCr(aSource, aHost->GetYUVColorSpace(),
+                               aHost->GetColorDepth(), aSamplingFilter);
+      break;
+    case gfx::SurfaceFormat::NV12:
+    case gfx::SurfaceFormat::P010:
+    case gfx::SurfaceFormat::P016:
+      result = new EffectNV12(aSource, aHost->GetYUVColorSpace(),
+                              aHost->GetColorDepth(), aSamplingFilter);
+      break;
+    default:
+      result = CreateTexturedEffect(aHost->GetReadFormat(), aSource,
+                                    aSamplingFilter, isAlphaPremultiplied);
+      break;
   }
   return result.forget();
 }
