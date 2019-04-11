@@ -260,8 +260,10 @@ int registerFunctions(sqlite3 *aDB) {
 void caseFunction(sqlite3_context *aCtx, int aArgc, sqlite3_value **aArgv) {
   NS_ASSERTION(1 == aArgc, "Invalid number of arguments!");
 
-  nsAutoString data(
-      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[0])));
+  const char16_t *value =
+      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[0]));
+  nsAutoString data(value,
+                    ::sqlite3_value_bytes16(aArgv[0]) / sizeof(char16_t));
   bool toUpper = ::sqlite3_user_data(aCtx) ? true : false;
 
   if (toUpper)
@@ -270,7 +272,8 @@ void caseFunction(sqlite3_context *aCtx, int aArgc, sqlite3_value **aArgv) {
     ::ToLowerCase(data);
 
   // Set the result.
-  ::sqlite3_result_text16(aCtx, data.get(), -1, SQLITE_TRANSIENT);
+  ::sqlite3_result_text16(aCtx, data.get(), data.Length() * sizeof(char16_t),
+                          SQLITE_TRANSIENT);
 }
 
 /**
@@ -290,10 +293,15 @@ void likeFunction(sqlite3_context *aCtx, int aArgc, sqlite3_value **aArgv) {
   if (!::sqlite3_value_text16(aArgv[0]) || !::sqlite3_value_text16(aArgv[1]))
     return;
 
-  nsDependentString A(
-      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[1])));
-  nsDependentString B(
-      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[0])));
+  const char16_t *a =
+      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[1]));
+  int aLen = ::sqlite3_value_bytes16(aArgv[1]) / sizeof(char16_t);
+  nsDependentString A(a, aLen);
+
+  const char16_t *b =
+      static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[0]));
+  int bLen = ::sqlite3_value_bytes16(aArgv[0]) / sizeof(char16_t);
+  nsDependentString B(b, bLen);
   NS_ASSERTION(!B.IsEmpty(), "LIKE string must not be null!");
 
   char16_t E = 0;
@@ -321,13 +329,13 @@ void levenshteinDistanceFunction(sqlite3_context *aCtx, int aArgc,
     return;
   }
 
-  int aLen = ::sqlite3_value_bytes16(aArgv[0]) / sizeof(char16_t);
   const char16_t *a =
       static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[0]));
+  int aLen = ::sqlite3_value_bytes16(aArgv[0]) / sizeof(char16_t);
 
-  int bLen = ::sqlite3_value_bytes16(aArgv[1]) / sizeof(char16_t);
   const char16_t *b =
       static_cast<const char16_t *>(::sqlite3_value_text16(aArgv[1]));
+  int bLen = ::sqlite3_value_bytes16(aArgv[1]) / sizeof(char16_t);
 
   // Compute the Levenshtein Distance, and return the result (or error).
   int distance = -1;

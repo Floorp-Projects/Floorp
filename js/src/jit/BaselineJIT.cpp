@@ -328,10 +328,11 @@ MethodStatus jit::CanEnterBaselineMethod(JSContext* cx, RunState& state) {
 
 BaselineScript* BaselineScript::New(
     JSScript* jsscript, uint32_t bailoutPrologueOffset,
-    uint32_t debugOsrPrologueOffset, uint32_t debugOsrEpilogueOffset,
-    uint32_t profilerEnterToggleOffset, uint32_t profilerExitToggleOffset,
-    size_t retAddrEntries, size_t pcMappingIndexEntries, size_t pcMappingSize,
-    size_t resumeEntries, size_t traceLoggerToggleOffsetEntries) {
+    uint32_t warmUpCheckPrologueOffset, uint32_t debugOsrPrologueOffset,
+    uint32_t debugOsrEpilogueOffset, uint32_t profilerEnterToggleOffset,
+    uint32_t profilerExitToggleOffset, size_t retAddrEntries,
+    size_t pcMappingIndexEntries, size_t pcMappingSize, size_t resumeEntries,
+    size_t traceLoggerToggleOffsetEntries) {
   static const unsigned DataAlignment = sizeof(uintptr_t);
 
   size_t retAddrEntriesSize = retAddrEntries * sizeof(RetAddrEntry);
@@ -358,9 +359,10 @@ BaselineScript* BaselineScript::New(
   if (!script) {
     return nullptr;
   }
-  new (script) BaselineScript(bailoutPrologueOffset, debugOsrPrologueOffset,
-                              debugOsrEpilogueOffset, profilerEnterToggleOffset,
-                              profilerExitToggleOffset);
+  new (script)
+      BaselineScript(bailoutPrologueOffset, warmUpCheckPrologueOffset,
+                     debugOsrPrologueOffset, debugOsrEpilogueOffset,
+                     profilerEnterToggleOffset, profilerExitToggleOffset);
 
   size_t offsetCursor = sizeof(BaselineScript);
   MOZ_ASSERT(offsetCursor == AlignBytes(sizeof(BaselineScript), DataAlignment));
@@ -496,8 +498,6 @@ CompactBufferReader BaselineScript::pcMappingReader(size_t indexEntry) {
 }
 
 struct ICEntries {
-  using EntryT = ICEntry;
-
   ICScript* const icScript_;
 
   explicit ICEntries(ICScript* icScript) : icScript_(icScript) {}
@@ -507,8 +507,6 @@ struct ICEntries {
 };
 
 struct RetAddrEntries {
-  using EntryT = RetAddrEntry;
-
   BaselineScript* const baseline_;
 
   explicit RetAddrEntries(BaselineScript* baseline) : baseline_(baseline) {}
@@ -547,13 +545,35 @@ RetAddrEntry& BaselineScript::retAddrEntryFromReturnOffset(
   return retAddrEntry(loc);
 }
 
-template <typename Entries, typename ScriptT>
-static inline bool ComputeBinarySearchMid(ScriptT* script, uint32_t pcOffset,
-                                          size_t* loc) {
-  Entries entries(script);
+static bool ComputeBinarySearchMid(ICEntries entries, uint32_t pcOffset,
+                                   size_t* loc) {
   return BinarySearchIf(
       entries, 0, entries.numEntries(),
-      [pcOffset](typename Entries::EntryT& entry) {
+      [pcOffset](const ICEntry& entry) {
+        uint32_t entryOffset = entry.pcOffset();
+        if (pcOffset < entryOffset) {
+          return -1;
+        }
+        if (entryOffset < pcOffset) {
+          return 1;
+        }
+        if (entry.isForPrologue()) {
+          // Prologue ICEntries are used for function argument type checks.
+          // Ignore these entries and return 1 because these entries appear in
+          // the ICEntry list before the other ICEntry (if any) at offset 0.
+          MOZ_ASSERT(entryOffset == 0);
+          return 1;
+        }
+        return 0;
+      },
+      loc);
+}
+
+static bool ComputeBinarySearchMid(RetAddrEntries entries, uint32_t pcOffset,
+                                   size_t* loc) {
+  return BinarySearchIf(
+      entries, 0, entries.numEntries(),
+      [pcOffset](const RetAddrEntry& entry) {
         uint32_t entryOffset = entry.pcOffset();
         if (pcOffset < entryOffset) {
           return -1;
@@ -571,35 +591,20 @@ uint8_t* BaselineScript::returnAddressForEntry(const RetAddrEntry& ent) {
 }
 
 ICEntry* ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset) {
-  // Multiple IC entries can have the same PC offset, but this method only looks
-  // for those which have isForOp() set.
+  // This method ignores prologue IC entries. There can be at most one
+  // non-prologue IC per bytecode op.
+
   size_t mid;
-  if (!ComputeBinarySearchMid<ICEntries>(this, pcOffset, &mid)) {
+  if (!ComputeBinarySearchMid(ICEntries(this), pcOffset, &mid)) {
     return nullptr;
   }
 
   MOZ_ASSERT(mid < numICEntries());
 
-  // Found an IC entry with a matching PC offset.  Search backward, and then
-  // forward from this IC entry, looking for one with the same PC offset which
-  // has isForOp() set.
-  for (size_t i = mid; icEntry(i).pcOffset() == pcOffset; i--) {
-    if (icEntry(i).isForOp()) {
-      return &icEntry(i);
-    }
-    if (i == 0) {
-      break;
-    }
-  }
-  for (size_t i = mid + 1; i < numICEntries(); i++) {
-    if (icEntry(i).pcOffset() != pcOffset) {
-      break;
-    }
-    if (icEntry(i).isForOp()) {
-      return &icEntry(i);
-    }
-  }
-  return nullptr;
+  ICEntry& entry = icEntry(mid);
+  MOZ_ASSERT(!entry.isForPrologue());
+  MOZ_ASSERT(entry.pcOffset() == pcOffset);
+  return &entry;
 }
 
 ICEntry& ICScript::icEntryFromPCOffset(uint32_t pcOffset) {
@@ -618,7 +623,7 @@ ICEntry* ICScript::maybeICEntryFromPCOffset(uint32_t pcOffset,
     ICEntry* lastEntry = &icEntry(numICEntries() - 1);
     ICEntry* curEntry = prevLookedUpEntry;
     while (curEntry >= firstEntry && curEntry <= lastEntry) {
-      if (curEntry->pcOffset() == pcOffset && curEntry->isForOp()) {
+      if (curEntry->pcOffset() == pcOffset && !curEntry->isForPrologue()) {
         return curEntry;
       }
       curEntry++;
@@ -636,10 +641,35 @@ ICEntry& ICScript::icEntryFromPCOffset(uint32_t pcOffset,
   return *entry;
 }
 
+ICEntry* ICScript::interpreterICEntryFromPCOffset(uint32_t pcOffset) {
+  // We have to return the entry to store in BaselineFrame::interpreterICEntry
+  // when resuming in the Baseline Interpreter at pcOffset. The bytecode op at
+  // pcOffset does not necessarily have an ICEntry, so we want to return the
+  // first ICEntry for which the following is true:
+  //
+  //    !entry.isForPrologue() && entry.pcOffset() >= pcOffset
+  //
+  // Fortunately, ComputeBinarySearchMid returns exactly this entry.
+
+  size_t mid;
+  ComputeBinarySearchMid(ICEntries(this), pcOffset, &mid);
+
+  if (mid < numICEntries()) {
+    ICEntry& entry = icEntry(mid);
+    MOZ_ASSERT(!entry.isForPrologue());
+    MOZ_ASSERT(entry.pcOffset() >= pcOffset);
+    return &entry;
+  }
+
+  // Resuming at a pc after the last ICEntry. Just return nullptr:
+  // BaselineFrame::interpreterICEntry will never be used in this case.
+  return nullptr;
+}
+
 RetAddrEntry& BaselineScript::retAddrEntryFromPCOffset(
     uint32_t pcOffset, RetAddrEntry::Kind kind) {
   size_t mid;
-  MOZ_ALWAYS_TRUE(ComputeBinarySearchMid<RetAddrEntries>(this, pcOffset, &mid));
+  MOZ_ALWAYS_TRUE(ComputeBinarySearchMid(RetAddrEntries(this), pcOffset, &mid));
   MOZ_ASSERT(mid < numRetAddrEntries());
 
   for (size_t i = mid; retAddrEntry(i).pcOffset() == pcOffset; i--) {

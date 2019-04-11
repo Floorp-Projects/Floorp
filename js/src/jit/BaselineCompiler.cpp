@@ -277,6 +277,7 @@ MethodStatus BaselineCompiler::compile() {
       script->hasResumeOffsets() ? script->resumeOffsets().size() : 0;
   UniquePtr<BaselineScript> baselineScript(
       BaselineScript::New(script, bailoutPrologueOffset_.offset(),
+                          warmUpCheckPrologueOffset_.offset(),
                           debugOsrPrologueOffset_.offset(),
                           debugOsrEpilogueOffset_.offset(),
                           profilerEnterFrameToggleOffset_.offset(),
@@ -531,13 +532,14 @@ bool BaselineCompilerCodeGen::emitNextIC() {
   } while (entry->pcOffset() < pcOffset);
 
   MOZ_RELEASE_ASSERT(entry->pcOffset() == pcOffset);
-  MOZ_ASSERT_IF(entry->isForOp(), BytecodeOpHasIC(JSOp(*handler.pc())));
+  MOZ_ASSERT_IF(!entry->isForPrologue(), BytecodeOpHasIC(JSOp(*handler.pc())));
 
   CodeOffset callOffset;
   EmitCallIC(masm, entry, &callOffset);
 
-  RetAddrEntry::Kind kind =
-      entry->isForOp() ? RetAddrEntry::Kind::IC : RetAddrEntry::Kind::NonOpIC;
+  RetAddrEntry::Kind kind = entry->isForPrologue()
+                                ? RetAddrEntry::Kind::PrologueIC
+                                : RetAddrEntry::Kind::IC;
 
   if (!handler.retAddrEntries().emplaceBack(pcOffset, kind, callOffset)) {
     ReportOutOfMemory(cx);
@@ -6135,6 +6137,8 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
   if (!emitWarmUpCounterIncrement()) {
     return false;
   }
+
+  warmUpCheckPrologueOffset_ = CodeOffset(masm.currentOffset());
 
   if (!emitArgumentTypeChecks()) {
     return false;

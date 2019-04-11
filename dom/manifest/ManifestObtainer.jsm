@@ -37,12 +37,11 @@ var ManifestObtainer = { // jshint ignore:line
   * @return {Promise<Object>} The processed manifest.
   */
   async browserObtainManifest(aBrowser) {
-    const msgKey = "DOM:ManifestObtainer:Obtain";
     if (!isXULBrowser(aBrowser)) {
       throw new TypeError("Invalid input. Expected XUL browser.");
     }
     const mm = aBrowser.messageManager;
-    const {data: {success, result}} = await PromiseMessage.send(mm, msgKey);
+    const {data: {success, result}} = await PromiseMessage.send(mm, "DOM:ManifestObtainer:Obtain");
     if (!success) {
       const error = toError(result);
       throw error;
@@ -54,17 +53,11 @@ var ManifestObtainer = { // jshint ignore:line
    * @param  {Window} The content Window from which to extract the manifest.
    * @return {Promise<Object>} The processed manifest.
    */
-  async contentObtainManifest(aContent) {
+  contentObtainManifest(aContent) {
     if (!aContent || isXULBrowser(aContent)) {
       throw new TypeError("Invalid input. Expected a DOM Window.");
     }
-    let manifest;
-    try {
-      manifest = await fetchManifest(aContent);
-    } catch (err) {
-      throw err;
-    }
-    return manifest;
+    return fetchManifest(aContent).then(response => processResponse(response, aContent));
   },
 };
 
@@ -97,7 +90,7 @@ function isXULBrowser(aBrowser) {
  * @param {Window} aContentWindow The content window.
  * @return {Promise<Object>} The processed manifest.
  */
-const processResponse = async function(aResp, aContentWindow) {
+async function processResponse(aResp, aContentWindow) {
   const badStatus = aResp.status < 200 || aResp.status >= 300;
   if (aResp.type === "error" || badStatus) {
     const msg =
@@ -112,22 +105,22 @@ const processResponse = async function(aResp, aContentWindow) {
   };
   const manifest = ManifestProcessor.process(args);
   return manifest;
-};
+}
 
 /**
  * Asynchronously fetches a web manifest.
  * @param {Window} a The content Window from where to extract the manifest.
  * @return {Promise<Object>}
  */
-const fetchManifest = async function(aWindow) {
+async function fetchManifest(aWindow) {
   if (!aWindow || aWindow.top !== aWindow) {
-    let msg = "Window must be a top-level browsing context.";
+    const msg = "Window must be a top-level browsing context.";
     throw new Error(msg);
   }
   const elem = aWindow.document.querySelector("link[rel~='manifest']");
   if (!elem || !elem.getAttribute("href")) {
-    let msg = `No manifest to fetch at ${aWindow.location}`;
-    throw new Error(msg);
+    // There is no actual manifest to fetch, we just return null.
+    return new aWindow.Response("null");
   }
   // Throws on malformed URLs
   const manifestURL = new aWindow.URL(elem.href, elem.baseURI);
@@ -139,14 +132,8 @@ const fetchManifest = async function(aWindow) {
   }
   const request = new aWindow.Request(manifestURL, reqInit);
   request.overrideContentPolicyType(Ci.nsIContentPolicy.TYPE_WEB_MANIFEST);
-  let response;
-  try {
-    response = await aWindow.fetch(request);
-  } catch (err) {
-    throw err;
-  }
-  const manifest = await processResponse(response, aWindow);
-  return manifest;
-};
+  // Can reject...
+  return aWindow.fetch(request);
+}
 
 var EXPORTED_SYMBOLS = ["ManifestObtainer"]; // jshint ignore:line

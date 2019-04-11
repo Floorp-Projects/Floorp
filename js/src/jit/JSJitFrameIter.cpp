@@ -121,12 +121,6 @@ void JSJitFrameIter::baselineScriptAndPc(JSScript** scriptRes,
 
   MOZ_ASSERT(pcRes);
 
-  if (baselineFrame()->runningInInterpreter()) {
-    MOZ_ASSERT(baselineFrame()->interpreterScript() == script);
-    *pcRes = baselineFrame()->interpreterPC();
-    return;
-  }
-
   // Use the frame's override pc, if we have one. This should only happen
   // when we're in FinishBailoutToBaseline, handling an exception or toggling
   // debug mode.
@@ -135,7 +129,15 @@ void JSJitFrameIter::baselineScriptAndPc(JSScript** scriptRes,
     return;
   }
 
-  // Else, there must be a VMCallEntry for the current return address.
+  // The Baseline Interpreter stores the bytecode pc in the frame.
+  if (baselineFrame()->runningInInterpreter()) {
+    MOZ_ASSERT(baselineFrame()->interpreterScript() == script);
+    *pcRes = baselineFrame()->interpreterPC();
+    return;
+  }
+
+  // Else, there must be a BaselineScript with a VMCallEntry for the current
+  // return address.
   uint8_t* retAddr = resumePCinCurrentFrame();
   RetAddrEntry& entry =
       script->baselineScript()->retAddrEntryFromReturnAddress(retAddr);

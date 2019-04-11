@@ -41,6 +41,8 @@ const {ValueExtractor} = ChromeUtils.import("resource://gre/modules/ValueExtract
 // ImageObjectProcessor is used to process things like icons and images
 const {ImageObjectProcessor} = ChromeUtils.import("resource://gre/modules/ImageObjectProcessor.jsm");
 
+const domBundle = Services.strings.createBundle("chrome://global/locale/dom/dom.properties");
+
 var ManifestProcessor = { // jshint ignore:line
   get defaultDisplayMode() {
     return "browser";
@@ -60,26 +62,28 @@ var ManifestProcessor = { // jshint ignore:line
   //  * jsonText: the JSON string to be processed.
   //  * manifestURL: the URL of the manifest, to resolve URLs.
   //  * docURL: the URL of the owner doc, for security checks
-  process({
-    jsonText,
-    manifestURL: aManifestURL,
-    docURL: aDocURL,
-  }) {
-    const domBundle = Services.strings.createBundle("chrome://global/locale/dom/dom.properties");
-
+  process(aOptions) {
+    const {
+      jsonText,
+      manifestURL: aManifestURL,
+      docURL: aDocURL,
+    } = aOptions;
     const console = new ConsoleAPI({
       prefix: "Web Manifest",
     });
-    const manifestURL = new URL(aManifestURL);
-    const docURL = new URL(aDocURL);
     let rawManifest = {};
     try {
       rawManifest = JSON.parse(jsonText);
     } catch (e) {}
-    if (typeof rawManifest !== "object" || rawManifest === null) {
+    if (rawManifest === null) {
+      return null;
+    }
+    if (typeof rawManifest !== "object") {
       console.warn(domBundle.GetStringFromName("ManifestShouldBeObject"));
       rawManifest = {};
     }
+    const manifestURL = new URL(aManifestURL);
+    const docURL = new URL(aDocURL);
     const extractor = new ValueExtractor(console, domBundle);
     const imgObjProcessor = new ImageObjectProcessor(console, extractor);
     const processedManifest = {
@@ -256,16 +260,7 @@ var ManifestProcessor = { // jshint ignore:line
         property: "lang",
         expectedType: "string", trim: true,
       };
-      let tag = extractor.extractValue(spec);
-      // TODO: Check if tag is structurally valid.
-      //       Cannot do this because we don't support Intl API on Android.
-      //       https://bugzilla.mozilla.org/show_bug.cgi?id=864843
-      //       https://github.com/tc39/ecma402/issues/5
-      // TODO: perform canonicalization on the tag.
-      //       Can't do this today because there is no direct means to
-      //       access canonicalization algorithms through Intl API.
-      //       https://github.com/tc39/ecma402/issues/5
-      return tag;
+      return extractor.extractLanguageValue(spec);
     }
   },
 };

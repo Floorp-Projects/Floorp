@@ -38,7 +38,6 @@ browser.jar:
         content/browser/browser-ctrlTab.js            (content/browser-ctrlTab.js)
         content/browser/browser-customization.js      (content/browser-customization.js)
         content/browser/browser-data-submission-info-bar.js (content/browser-data-submission-info-bar.js)
-        content/browser/browser-compacttheme.js       (content/browser-compacttheme.js)
         content/browser/browser-contentblocking.js    (content/browser-contentblocking.js)
 #ifndef MOZILLA_OFFICIAL
         content/browser/browser-development-helpers.js (content/browser-development-helpers.js)

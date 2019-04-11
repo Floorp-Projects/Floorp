@@ -13,9 +13,6 @@
 
 using namespace mozilla::safebrowsing;
 
-typedef nsCString _Prefix;
-typedef nsTArray<_Prefix> _PrefixArray;
-
 // Create fullhash by appending random characters.
 static nsCString CreateFullHash(const nsACString& in) {
   nsCString out(in);
@@ -120,44 +117,6 @@ static void DoRandomLookup(LookupCacheV4* cache, uint32_t N,
   }
 }
 
-static void SetupPrefixMap(const _PrefixArray& array, PrefixStringMap& map) {
-  map.Clear();
-
-  // Buckets are keyed by prefix length and contain an array of
-  // all prefixes of that length.
-  nsClassHashtable<nsUint32HashKey, _PrefixArray> table;
-
-  for (uint32_t i = 0; i < array.Length(); i++) {
-    _PrefixArray* prefixes = table.Get(array[i].Length());
-    if (!prefixes) {
-      prefixes = new _PrefixArray();
-      table.Put(array[i].Length(), prefixes);
-    }
-
-    prefixes->AppendElement(array[i]);
-  }
-
-  // The resulting map entries will be a concatenation of all
-  // prefix data for the prefixes of a given size.
-  for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
-    uint32_t size = iter.Key();
-    uint32_t count = iter.Data()->Length();
-
-    _Prefix* str = new _Prefix();
-    str->SetLength(size * count);
-
-    char* dst = str->BeginWriting();
-
-    iter.Data()->Sort();
-    for (uint32_t i = 0; i < count; i++) {
-      memcpy(dst, iter.Data()->ElementAt(i).get(), size);
-      dst += size;
-    }
-
-    map.Put(size, str);
-  }
-}
-
 static already_AddRefed<LookupCacheV4> SetupLookupCache(
     const nsACString& aName) {
   nsCOMPtr<nsIFile> rootDir;
@@ -188,7 +147,7 @@ TEST(UrlClassifierVLPrefixSet, FixedLengthSet)
 
   DoExpectedLookup(cache, array);
   DoRandomLookup(cache, 1000, array);
-  CheckContent(cache, map);
+  CheckContent(cache, array);
 
   // Run random test
   array.Clear();
@@ -201,7 +160,7 @@ TEST(UrlClassifierVLPrefixSet, FixedLengthSet)
 
   DoExpectedLookup(cache, array);
   DoRandomLookup(cache, 1000, array);
-  CheckContent(cache, map);
+  CheckContent(cache, array);
 }
 
 // Test setting prefix set with only 5~32 bytes prefixes
@@ -225,7 +184,7 @@ TEST(UrlClassifierVLPrefixSet, VariableLengthSet)
 
   DoExpectedLookup(cache, array);
   DoRandomLookup(cache, 1000, array);
-  CheckContent(cache, map);
+  CheckContent(cache, array);
 
   // Run random test
   array.Clear();
@@ -238,7 +197,7 @@ TEST(UrlClassifierVLPrefixSet, VariableLengthSet)
 
   DoExpectedLookup(cache, array);
   DoRandomLookup(cache, 1000, array);
-  CheckContent(cache, map);
+  CheckContent(cache, array);
 }
 
 // Test setting prefix set with both 4-bytes prefixes and 5~32 bytes prefixes
@@ -271,7 +230,7 @@ TEST(UrlClassifierVLPrefixSet, MixedPrefixSet)
 
   DoExpectedLookup(cache, array);
   DoRandomLookup(cache, 1000, array);
-  CheckContent(cache, map);
+  CheckContent(cache, array);
 
   // Run random test
   array.Clear();
@@ -284,7 +243,7 @@ TEST(UrlClassifierVLPrefixSet, MixedPrefixSet)
 
   DoExpectedLookup(cache, array);
   DoRandomLookup(cache, 1000, array);
-  CheckContent(cache, map);
+  CheckContent(cache, array);
 }
 
 // Test resetting prefix set
@@ -354,7 +313,7 @@ TEST(UrlClassifierVLPrefixSet, TinyPrefixSet)
 
   DoExpectedLookup(cache, array);
   DoRandomLookup(cache, 1000, array);
-  CheckContent(cache, map);
+  CheckContent(cache, array);
 }
 
 // Test empty prefix set and IsEmpty function
@@ -442,7 +401,7 @@ TEST(UrlClassifierVLPrefixSet, LoadSaveFixedLengthPrefixSet)
 
     DoExpectedLookup(save, array);
     DoRandomLookup(save, 1000, array);
-    CheckContent(save, map);
+    CheckContent(save, array);
 
     NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
     file->Append(NS_LITERAL_STRING("test.vlpset"));
@@ -457,7 +416,7 @@ TEST(UrlClassifierVLPrefixSet, LoadSaveFixedLengthPrefixSet)
 
     DoExpectedLookup(load, array);
     DoRandomLookup(load, 1000, array);
-    CheckContent(load, map);
+    CheckContent(load, array);
   }
 
   file->Remove(false);
@@ -482,7 +441,7 @@ TEST(UrlClassifierVLPrefixSet, LoadSaveVariableLengthPrefixSet)
 
     DoExpectedLookup(save, array);
     DoRandomLookup(save, 1000, array);
-    CheckContent(save, map);
+    CheckContent(save, array);
 
     NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
     file->Append(NS_LITERAL_STRING("test.vlpset"));
@@ -497,7 +456,7 @@ TEST(UrlClassifierVLPrefixSet, LoadSaveVariableLengthPrefixSet)
 
     DoExpectedLookup(load, array);
     DoRandomLookup(load, 1000, array);
-    CheckContent(load, map);
+    CheckContent(load, array);
   }
 
   file->Remove(false);
@@ -524,7 +483,7 @@ TEST(UrlClassifierVLPrefixSet, LoadSavePrefixSet)
 
     DoExpectedLookup(save, array);
     DoRandomLookup(save, 1000, array);
-    CheckContent(save, map);
+    CheckContent(save, array);
 
     NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
     file->Append(NS_LITERAL_STRING("test.vlpset"));
@@ -539,7 +498,7 @@ TEST(UrlClassifierVLPrefixSet, LoadSavePrefixSet)
 
     DoExpectedLookup(load, array);
     DoRandomLookup(load, 1000, array);
-    CheckContent(load, map);
+    CheckContent(load, array);
   }
 
   file->Remove(false);
@@ -570,7 +529,7 @@ TEST(UrlClassifierVLPrefixSet, LoadSaveNoDelta)
 
     DoExpectedLookup(save, array);
     DoRandomLookup(save, 1000, array);
-    CheckContent(save, map);
+    CheckContent(save, array);
 
     NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(file));
     file->Append(NS_LITERAL_STRING("test.vlpset"));
@@ -585,7 +544,7 @@ TEST(UrlClassifierVLPrefixSet, LoadSaveNoDelta)
 
     DoExpectedLookup(load, array);
     DoRandomLookup(load, 1000, array);
-    CheckContent(load, map);
+    CheckContent(load, array);
   }
 
   file->Remove(false);

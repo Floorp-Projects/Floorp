@@ -61,5 +61,19 @@ ValueExtractor.prototype = {
     }
     return color;
   },
+  extractLanguageValue(spec) {
+    let langTag;
+    const value = this.extractValue(spec);
+    if (value !== undefined) {
+      try {
+        langTag = Intl.getCanonicalLocales(value)[0];
+      } catch (err) {
+        console.warn(this.domBundle.formatStringFromName("ManifestLangIsInvalid",
+                                                        [spec.property, value],
+                                                        2));
+      }
+    }
+    return langTag;
+  },
 };
 var EXPORTED_SYMBOLS = ["ValueExtractor"]; // jshint ignore:line

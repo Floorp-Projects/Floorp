@@ -1338,61 +1338,57 @@ void GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes) {
 
     MOZ_ASSERT(it.frame().isBaselineJS() || it.frame().isIonJS());
 
-    // Don't use the return address if the BaselineFrame has an override pc.
-    // The override pc is cheap to get, so we won't benefit from the cache,
-    // and the override pc could change without the return address changing.
+    // Don't use the return address and the cache if the BaselineFrame has an
+    // override pc or if it's running in the Baseline Interpreter. In these
+    // cases the bytecode pc is cheap to get, so we won't benefit from the
+    // cache, and the pc could change without the return address changing.
+    //
     // Moreover, sometimes when an override pc is present during exception
     // handling, the return address is set to nullptr as a sanity check,
     // since we do not return to the frame that threw the exception.
-    if (!it.frame().isBaselineJS() ||
-        !it.frame().baselineFrame()->hasOverridePc()) {
-      retAddr = it.frame().resumePCinCurrentFrame();
-      MOZ_ASSERT(retAddr);
-    } else {
-      retAddr = nullptr;
+    if (it.frame().isBaselineJS() &&
+        (it.frame().baselineFrame()->hasOverridePc() ||
+         it.frame().baselineFrame()->runningInInterpreter())) {
+      it.frame().baselineScriptAndPc(scriptRes, pcRes);
+      return;
     }
+
+    retAddr = it.frame().resumePCinCurrentFrame();
   } else {
     MOZ_ASSERT(it.frame().isBailoutJS());
     retAddr = it.frame().returnAddress();
   }
 
-  uint32_t hash;
-  if (retAddr) {
-    hash = PcScriptCache::Hash(retAddr);
+  MOZ_ASSERT(retAddr);
 
-    // Lazily initialize the cache. The allocation may safely fail and will not
-    // GC.
-    if (MOZ_UNLIKELY(cx->ionPcScriptCache == nullptr)) {
-      cx->ionPcScriptCache =
-          MakeUnique<PcScriptCache>(cx->runtime()->gc.gcNumber());
-    }
+  uint32_t hash = PcScriptCache::Hash(retAddr);
 
-    if (cx->ionPcScriptCache.ref() &&
-        cx->ionPcScriptCache->get(cx->runtime(), hash, retAddr, scriptRes,
-                                  pcRes)) {
-      return;
-    }
+  // Lazily initialize the cache. The allocation may safely fail and will not
+  // GC.
+  if (MOZ_UNLIKELY(cx->ionPcScriptCache == nullptr)) {
+    cx->ionPcScriptCache =
+        MakeUnique<PcScriptCache>(cx->runtime()->gc.gcNumber());
   }
 
-  // Lookup failed: undertake expensive process to recover the innermost inlined
-  // frame.
-  jsbytecode* pc = nullptr;
+  if (cx->ionPcScriptCache.ref() &&
+      cx->ionPcScriptCache->get(cx->runtime(), hash, retAddr, scriptRes,
+                                pcRes)) {
+    return;
+  }
+
+  // Lookup failed: undertake expensive process to determine script and pc.
   if (it.frame().isIonJS() || it.frame().isBailoutJS()) {
     InlineFrameIterator ifi(cx, &it.frame());
     *scriptRes = ifi.script();
-    pc = ifi.pc();
+    *pcRes = ifi.pc();
   } else {
     MOZ_ASSERT(it.frame().isBaselineJS());
-    it.frame().baselineScriptAndPc(scriptRes, &pc);
-  }
-
-  if (pcRes) {
-    *pcRes = pc;
+    it.frame().baselineScriptAndPc(scriptRes, pcRes);
   }
 
   // Add entry to cache.
-  if (retAddr && cx->ionPcScriptCache.ref()) {
-    cx->ionPcScriptCache->add(hash, retAddr, pc, *scriptRes);
+  if (cx->ionPcScriptCache.ref()) {
+    cx->ionPcScriptCache->add(hash, retAddr, *pcRes, *scriptRes);
   }
 }
 
