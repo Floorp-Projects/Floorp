@@ -412,6 +412,7 @@ class VideoData : public MediaData {
   typedef gfx::IntRect IntRect;
   typedef gfx::IntSize IntSize;
   typedef gfx::ColorDepth ColorDepth;
+  typedef gfx::YUVColorSpace YUVColorSpace;
   typedef layers::ImageContainer ImageContainer;
   typedef layers::Image Image;
   typedef layers::PlanarYCbCrImage PlanarYCbCrImage;

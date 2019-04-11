@@ -33,7 +33,7 @@ class BufferTextureData : public TextureData {
   static BufferTextureData* CreateForYCbCr(
       KnowsCompositor* aAllocator, gfx::IntSize aYSize, uint32_t aYStride,
       gfx::IntSize aCbCrSize, uint32_t aCbCrStride, StereoMode aStereoMode,
-      gfx::ColorDepth aColorDepth, YUVColorSpace aYUVColorSpace,
+      gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace,
       TextureFlags aTextureFlags);
 
   virtual bool Lock(OpenMode aMode) override { return true; }
@@ -58,7 +58,7 @@ class BufferTextureData : public TextureData {
 
   Maybe<gfx::IntSize> GetCbCrSize() const;
 
-  Maybe<YUVColorSpace> GetYUVColorSpace() const;
+  Maybe<gfx::YUVColorSpace> GetYUVColorSpace() const;
 
   Maybe<gfx::ColorDepth> GetColorDepth() const;
 

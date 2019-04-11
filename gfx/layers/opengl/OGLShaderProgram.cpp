@@ -1009,7 +1009,7 @@ void ShaderProgramOGL::SetBlurRadius(float aRX, float aRY) {
                   gaussianKernel);
 }
 
-void ShaderProgramOGL::SetYUVColorSpace(YUVColorSpace aYUVColorSpace) {
+void ShaderProgramOGL::SetYUVColorSpace(gfx::YUVColorSpace aYUVColorSpace) {
   const float *yuvToRgb =
       gfxUtils::YuvToRgbMatrix3x3ColumnMajor(aYUVColorSpace);
   SetMatrix3fvUniform(KnownUniform::YuvColorMatrix, yuvToRgb);

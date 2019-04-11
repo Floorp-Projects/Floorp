@@ -134,13 +134,13 @@ class DXGIYCbCrTextureData : public TextureData {
       IDirect3DTexture9* aTextureCr, HANDLE aHandleY, HANDLE aHandleCb,
       HANDLE aHandleCr, const gfx::IntSize& aSize, const gfx::IntSize& aSizeY,
       const gfx::IntSize& aSizeCbCr, gfx::ColorDepth aColorDepth,
-      YUVColorSpace aYUVColorSpace);
+      gfx::YUVColorSpace aYUVColorSpace);
 
   static DXGIYCbCrTextureData* Create(
       ID3D11Texture2D* aTextureCb, ID3D11Texture2D* aTextureY,
       ID3D11Texture2D* aTextureCr, const gfx::IntSize& aSize,
       const gfx::IntSize& aSizeY, const gfx::IntSize& aSizeCbCr,
-      gfx::ColorDepth aColorDepth, YUVColorSpace aYUVColorSpace);
+      gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace);
 
   virtual bool Lock(OpenMode) override { return true; }
 
@@ -172,7 +172,7 @@ class DXGIYCbCrTextureData : public TextureData {
 
   gfx::ColorDepth GetColorDepth() const { return mColorDepth; }
 
-  YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }
+  gfx::YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }
 
   ID3D11Texture2D* GetD3D11Texture(size_t index) {
     return mD3D11Textures[index];
@@ -186,7 +186,7 @@ class DXGIYCbCrTextureData : public TextureData {
   gfx::IntSize mSizeY;
   gfx::IntSize mSizeCbCr;
   gfx::ColorDepth mColorDepth;
-  YUVColorSpace mYUVColorSpace;
+  gfx::YUVColorSpace mYUVColorSpace;
 };
 
 /**
@@ -405,7 +405,7 @@ class DXGIYCbCrTextureHostD3D11 : public TextureHost {
 
   virtual gfx::ColorDepth GetColorDepth() const override { return mColorDepth; }
 
-  virtual YUVColorSpace GetYUVColorSpace() const override {
+  virtual gfx::YUVColorSpace GetYUVColorSpace() const override {
     return mYUVColorSpace;
   }
 
@@ -453,7 +453,7 @@ class DXGIYCbCrTextureHostD3D11 : public TextureHost {
   WindowsHandle mHandles[3];
   bool mIsLocked;
   gfx::ColorDepth mColorDepth;
-  YUVColorSpace mYUVColorSpace;
+  gfx::YUVColorSpace mYUVColorSpace;
 };
 
 class CompositingRenderTargetD3D11 : public CompositingRenderTarget,

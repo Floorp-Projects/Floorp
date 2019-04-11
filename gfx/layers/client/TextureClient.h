@@ -352,7 +352,7 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
   static already_AddRefed<TextureClient> CreateForYCbCr(
       KnowsCompositor* aAllocator, gfx::IntSize aYSize, uint32_t aYStride,
       gfx::IntSize aCbCrSize, uint32_t aCbCrStride, StereoMode aStereoMode,
-      gfx::ColorDepth aColorDepth, YUVColorSpace aYUVColorSpace,
+      gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace,
       TextureFlags aTextureFlags);
 
   // Creates and allocates a TextureClient (can be accessed through raw

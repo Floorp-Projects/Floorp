@@ -69,11 +69,11 @@ void GPUVideoTextureHost::SetTextureSourceProvider(
   }
 }
 
-YUVColorSpace GPUVideoTextureHost::GetYUVColorSpace() const {
+gfx::YUVColorSpace GPUVideoTextureHost::GetYUVColorSpace() const {
   if (mWrappedTextureHost) {
     return mWrappedTextureHost->GetYUVColorSpace();
   }
-  return YUVColorSpace::UNKNOWN;
+  return gfx::YUVColorSpace::UNKNOWN;
 }
 
 gfx::IntSize GPUVideoTextureHost::GetSize() const {

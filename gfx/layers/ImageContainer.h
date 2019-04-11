@@ -734,7 +734,7 @@ struct PlanarYCbCrData {
   uint32_t mPicY;
   gfx::IntSize mPicSize;
   StereoMode mStereoMode;
-  YUVColorSpace mYUVColorSpace;
+  gfx::YUVColorSpace mYUVColorSpace;
   gfx::ColorDepth mColorDepth;
 
   gfx::IntRect GetPictureRect() const {
@@ -756,7 +756,7 @@ struct PlanarYCbCrData {
         mPicY(0),
         mPicSize(0, 0),
         mStereoMode(StereoMode::MONO),
-        mYUVColorSpace(YUVColorSpace::BT601),
+        mYUVColorSpace(gfx::YUVColorSpace::BT601),
         mColorDepth(gfx::ColorDepth::COLOR_8) {}
 };
 

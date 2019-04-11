@@ -99,10 +99,10 @@ void ConvertYCbCrToRGB32(const uint8* y_buf, const uint8* u_buf,
       const uint8* src_u = u_buf + uv_pitch * pic_y + pic_x;
       const uint8* src_v = v_buf + uv_pitch * pic_y + pic_x;
       switch (yuv_color_space) {
-        case mozilla::YUVColorSpace::BT2020:
+        case YUVColorSpace::BT2020:
           fConvertYUVToARGB = libyuv::U444ToARGB;
           break;
-        case mozilla::YUVColorSpace::BT709:
+        case YUVColorSpace::BT709:
           fConvertYUVToARGB = libyuv::H444ToARGB;
           break;
         default:
@@ -120,10 +120,10 @@ void ConvertYCbCrToRGB32(const uint8* y_buf, const uint8* u_buf,
       const uint8* src_u = u_buf + uv_pitch * pic_y + pic_x / 2;
       const uint8* src_v = v_buf + uv_pitch * pic_y + pic_x / 2;
       switch (yuv_color_space) {
-        case mozilla::YUVColorSpace::BT2020:
+        case YUVColorSpace::BT2020:
           fConvertYUVToARGB = libyuv::U422ToARGB;
           break;
-        case mozilla::YUVColorSpace::BT709:
+        case YUVColorSpace::BT709:
           fConvertYUVToARGB = libyuv::H422ToARGB;
           break;
         default:
@@ -142,10 +142,10 @@ void ConvertYCbCrToRGB32(const uint8* y_buf, const uint8* u_buf,
       const uint8* src_u = u_buf + (uv_pitch * pic_y + pic_x) / 2;
       const uint8* src_v = v_buf + (uv_pitch * pic_y + pic_x) / 2;
       switch (yuv_color_space) {
-        case mozilla::YUVColorSpace::BT2020:
+        case YUVColorSpace::BT2020:
           fConvertYUVToARGB = libyuv::U420ToARGB;
           break;
-        case mozilla::YUVColorSpace::BT709:
+        case YUVColorSpace::BT709:
           fConvertYUVToARGB = libyuv::H420ToARGB;
           break;
         default:
