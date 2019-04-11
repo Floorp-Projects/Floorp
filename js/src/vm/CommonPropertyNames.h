@@ -383,7 +383,6 @@
   MACRO(startTimestamp, startTimestamp, "startTimestamp")                      \
   MACRO(state, state, "state")                                                 \
   MACRO(static, static_, "static")                                             \
-  MACRO(status, status, "status")                                              \
   MACRO(std_Function_apply, std_Function_apply, "std_Function_apply")          \
   MACRO(sticky, sticky, "sticky")                                              \
   MACRO(StringIterator, StringIterator, "String Iterator")                     \
