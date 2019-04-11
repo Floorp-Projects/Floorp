@@ -73,7 +73,7 @@ add_task(async function test_new_tab_private() {
 
   verifyPrefSettings(true, false);
 
-  promiseUpdatePrivatePermission(true, extension);
+  await promiseUpdatePrivatePermission(true, extension);
 
   await extension.unload();
 });
