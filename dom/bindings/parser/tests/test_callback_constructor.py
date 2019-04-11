@@ -35,3 +35,29 @@ def WebIDLTest(parser, harness):
 
     callback = results[1]
     harness.ok(callback.isConstructor(), "Callback is constructor")
+
+    parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            [TreatNonObjectAsNull]
+            callback constructor CallbackConstructorType = object ();
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should throw on TreatNonObjectAsNull callback constructors")
+
+    parser.reset()
+    threw = False
+    try:
+        parser.parse("""
+            [MOZ_CAN_RUN_SCRIPT_BOUNDARY]
+            callback constructor CallbackConstructorType = object ();
+        """)
+        results = parser.finish()
+    except:
+        threw = True
+
+    harness.ok(threw, "Should not permit MOZ_CAN_RUN_SCRIPT_BOUNDARY callback constructors")
