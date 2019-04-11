@@ -719,7 +719,9 @@ struct ScrollSnapInfo {
            mScrollSnapIntervalX == aOther.mScrollSnapIntervalX &&
            mScrollSnapIntervalY == aOther.mScrollSnapIntervalY &&
            mScrollSnapDestination == aOther.mScrollSnapDestination &&
-           mScrollSnapCoordinates == aOther.mScrollSnapCoordinates;
+           mScrollSnapCoordinates == aOther.mScrollSnapCoordinates &&
+           mSnapPositionX == aOther.mSnapPositionX &&
+           mSnapPositionY == aOther.mSnapPositionY;
   }
 
   bool HasScrollSnapping() const {
@@ -744,6 +746,10 @@ struct ScrollSnapInfo {
   // The scroll-snap-coordinates of any descendant frames of the scroll frame,
   // relative to the origin of the scrolled frame.
   nsTArray<nsPoint> mScrollSnapCoordinates;
+
+  // The scroll positions corresponding to scroll-snap-align values.
+  nsTArray<nscoord> mSnapPositionX;
+  nsTArray<nscoord> mSnapPositionY;
 };
 
 // clang-format off
