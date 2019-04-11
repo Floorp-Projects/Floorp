@@ -40,9 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Ok, faham",
   "prefs_home_header": "Kandungan Halaman Utama Firefox",
   "prefs_home_description": "Pilih kandungan yang mahu dalam skrin Halaman Utama Firefox.",
-  "prefs_content_discovery_header": "Firefox Home",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num} baris",
   "prefs_search_header": "Carian Web",
   "prefs_topsites_description": "Laman yang anda kerap lawati",
@@ -110,6 +108,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Notis Privasi",
   "firstrun_continue_to_login": "Teruskan",
   "firstrun_skip_login": "Langkau langkah ini",
-  "context_menu_title": "Buka menu",
-  "pocket_learn_more": "Ketahui Selanjutnya"
+  "context_menu_title": "Buka menu"
 };

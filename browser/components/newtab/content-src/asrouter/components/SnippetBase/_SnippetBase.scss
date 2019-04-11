@@ -23,7 +23,7 @@
       text-decoration: underline;
     }
 
-    [lwt-newtab-brighttext]:not(.force-light-theme) & {
+    [lwt-newtab-brighttext] & {
       font-weight: bold;
     }
   }

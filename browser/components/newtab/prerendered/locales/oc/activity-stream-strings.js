@@ -40,9 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Comprés",
   "prefs_home_header": "Contengut de la pagina d’acuèlh de Firefox",
   "prefs_home_description": "Causissètz lo contengut que volètz a la pagina d’acuèlh de Fireofx.",
-  "prefs_content_discovery_header": "Firefox Home",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num} linha;{num} linhas",
   "prefs_search_header": "Recèrca web",
   "prefs_topsites_description": "Los sites que visitatz mai sovent",
@@ -110,6 +108,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Avís de privacitat",
   "firstrun_continue_to_login": "Contunhar",
   "firstrun_skip_login": "Passar aquesta etapa",
-  "context_menu_title": "Dobrir lo menú",
-  "pocket_learn_more": "Ne saber mai"
+  "context_menu_title": "Dobrir lo menú"
 };

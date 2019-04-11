@@ -1,5 +1,7 @@
 import {actionCreators as ac} from "common/Actions.jsm";
 import {connect} from "react-redux";
+import {DSEmptyState} from "../DSEmptyState/DSEmptyState.jsx";
+import {DSImage} from "../DSImage/DSImage.jsx";
 import {DSLinkMenu} from "../DSLinkMenu/DSLinkMenu";
 import {ImpressionStats} from "../../DiscoveryStreamImpressionStats/ImpressionStats";
 import React from "react";
@@ -34,11 +36,11 @@ export class ListItem extends React.PureComponent {
 
   render() {
     return (
-      <li className="ds-list-item">
+      <li className={`ds-list-item${this.props.placeholder ? " placeholder" : ""}`} >
         <SafeAnchor
           className="ds-list-item-link"
           dispatch={this.props.dispatch}
-          onLinkClick={this.onLinkClick}
+          onLinkClick={!this.props.placeholder ? this.onLinkClick : undefined}
           url={this.props.url}>
           <div className="ds-list-item-text">
             <div>
@@ -55,14 +57,14 @@ export class ListItem extends React.PureComponent {
               <span className="ds-list-item-info">{this.props.domain}</span>
             </p>
           </div>
-          <div className="ds-list-image" style={{backgroundImage: `url(${this.props.image_src})`}} />
+          <DSImage extraClassNames="ds-list-image" source={this.props.image_src} rawSource={this.props.raw_image_src} />
           <ImpressionStats
             campaignId={this.props.campaignId}
             rows={[{id: this.props.id, pos: this.props.pos}]}
             dispatch={this.props.dispatch}
             source={this.props.type} />
         </SafeAnchor>
-        <DSLinkMenu
+        {!this.props.placeholder && <DSLinkMenu
           id={this.props.id}
           index={this.props.pos}
           dispatch={this.props.dispatch}
@@ -72,49 +74,73 @@ export class ListItem extends React.PureComponent {
           source={this.props.source}
           type={this.props.type}
           pocket_id={this.props.pocket_id}
-          bookmarkGuid={this.props.bookmarkGuid} />
+          bookmarkGuid={this.props.bookmarkGuid} />}
       </li>
     );
   }
 }
 
+export const PlaceholderListItem = props => <ListItem placeholder={true} />;
+
 /**
  * @note exported for testing only
  */
 export function _List(props) {
+  const renderList = () => {
+    const recs = props.data.recommendations.slice(props.recStartingPoint, props.recStartingPoint + props.items);
+    const recMarkup = [];
+
+    for (let index = 0; index < props.items; index++) {
+      const rec = recs[index];
+      recMarkup.push(rec ? (
+        <ListItem key={`ds-list-item-${index}`}
+        dispatch={props.dispatch}
+        campaignId={rec.campaign_id}
+        domain={rec.domain}
+        excerpt={rec.excerpt}
+        id={rec.id}
+        image_src={rec.image_src}
+        raw_image_src={rec.raw_image_src}
+        pos={rec.pos}
+        title={rec.title}
+        context={rec.context}
+        type={props.type}
+        url={rec.url}
+        pocket_id={rec.pocket_id}
+        bookmarkGuid={rec.bookmarkGuid} />
+      ) : (
+        <PlaceholderListItem key={`ds-list-item-${index}`} />
+      ));
+    }
+
+    const listStyles = [
+      "ds-list",
+      props.fullWidth ? "ds-list-full-width" : "",
+      props.hasBorders ? "ds-list-borders" : "",
+      props.hasImages ? "ds-list-images" : "",
+      props.hasNumbers ? "ds-list-numbers" : "",
+    ];
+
+    return (
+      <ul className={listStyles.join(" ")}>{recMarkup}</ul>
+    );
+  };
+
   const feed = props.data;
   if (!feed || !feed.recommendations) {
     return null;
   }
-  const recs = feed.recommendations;
-  let recMarkup = recs.slice(props.recStartingPoint,
-                             props.recStartingPoint + props.items).map((rec, index) => (
-    <ListItem key={`ds-list-item-${index}`}
-      dispatch={props.dispatch}
-      campaignId={rec.campaign_id}
-      domain={rec.domain}
-      excerpt={rec.excerpt}
-      id={rec.id}
-      image_src={rec.image_src}
-      pos={rec.pos}
-      title={rec.title}
-      context={rec.context}
-      type={props.type}
-      url={rec.url}
-      pocket_id={rec.pocket_id}
-      bookmarkGuid={rec.bookmarkGuid} />
-  ));
-  const listStyles = [
-    "ds-list",
-    props.fullWidth ? "ds-list-full-width" : "",
-    props.hasBorders ? "ds-list-borders" : "",
-    props.hasImages ? "ds-list-images" : "",
-    props.hasNumbers ? "ds-list-numbers" : "",
-  ];
+
+  // Handle the case where a user has dismissed all recommendations
+  const isEmpty = feed.recommendations.length === 0;
+
   return (
     <div>
       {props.header && props.header.title ? <div className="ds-header">{props.header.title}</div> : null }
-      <ul className={listStyles.join(" ")}>{recMarkup}</ul>
+      {isEmpty ?
+        <div className="ds-list empty"><DSEmptyState /></div> :
+        renderList()
+      }
     </div>
   );
 }

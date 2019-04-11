@@ -40,9 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Eey, mi faamii",
   "prefs_home_header": "Loowdi Jaɓɓorgo Firefox",
   "prefs_home_description": "Suɓo hol loowdi njiɗɗaa e yaynirde jaɓɓorgo Firefox maa.",
-  "prefs_content_discovery_header": "Firefox Home",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num} gorol;{num} gorol",
   "prefs_search_header": "Njiilaw Geese",
   "prefs_topsites_description": "Lowe ɗe ɓurɗaa waawde yillaade",
@@ -110,6 +108,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Tintinol Suturo",
   "firstrun_continue_to_login": "Jokku",
   "firstrun_skip_login": "Diw ngal daawal",
-  "context_menu_title": "Uddit cuɓirgol",
-  "pocket_learn_more": "Ɓeydu humpito"
+  "context_menu_title": "Uddit cuɓirgol"
 };

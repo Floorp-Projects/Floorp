@@ -84,7 +84,8 @@ window.gActivityStreamPrerenderedState = {
       "spocs_endpoint": "",
       "lastUpdated": null,
       "data": {},
-      "loaded": false
+      "loaded": false,
+      "frequency_caps": []
     }
   },
   "Search": {
