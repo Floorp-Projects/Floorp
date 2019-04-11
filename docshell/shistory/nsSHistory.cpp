@@ -1195,9 +1195,13 @@ bool nsSHistory::RemoveDuplicate(int32_t aIndex, bool aKeepNext) {
   nsresult rv;
   nsCOMPtr<nsISHEntry> root1, root2;
   rv = GetEntryAtIndex(aIndex, getter_AddRefs(root1));
-  NS_ENSURE_SUCCESS(rv, false);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
   rv = GetEntryAtIndex(compareIndex, getter_AddRefs(root2));
-  NS_ENSURE_SUCCESS(rv, false);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
 
   if (IsSameTree(root1, root2)) {
     mEntries.RemoveElementAt(aIndex);
