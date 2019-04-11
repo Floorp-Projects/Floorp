@@ -298,8 +298,8 @@ class MediaData {
 
   // Return true if the adjusted time is valid. Caller should handle error when
   // the result is invalid.
-  virtual bool AdjustForStartTime(int64_t aStartTime) {
-    mTime -= media::TimeUnit::FromMicroseconds(aStartTime);
+  virtual bool AdjustForStartTime(const media::TimeUnit& aStartTime) {
+    mTime -= aStartTime;
     return mTime.IsValid();
   }
 
@@ -371,7 +371,7 @@ class AudioData : public MediaData {
 
   // Return true if the adjusted time is valid. Caller should handle error when
   // the result is invalid.
-  bool AdjustForStartTime(int64_t aStartTime) override;
+  bool AdjustForStartTime(const media::TimeUnit& aStartTime) override;
 
   const uint32_t mChannels;
   // The AudioConfig::ChannelLayout map. Channels are ordered as per SMPTE
