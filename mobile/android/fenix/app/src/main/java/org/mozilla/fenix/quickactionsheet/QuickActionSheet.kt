@@ -8,7 +8,6 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.widget.LinearLayout
-import androidx.appcompat.widget.AppCompatImageButton
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import androidx.core.widget.NestedScrollView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -18,6 +17,7 @@ import android.animation.ValueAnimator
 import android.os.Bundle
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import android.widget.ImageButton
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import org.mozilla.fenix.utils.Settings
 
@@ -38,7 +38,7 @@ class QuickActionSheet @JvmOverloads constructor(
     }
 
     private fun setupHandle() {
-        val handle = findViewById<AppCompatImageButton>(R.id.quick_action_sheet_handle)
+        val handle = findViewById<ImageButton>(R.id.quick_action_sheet_handle)
         val linearLayout = findViewById<LinearLayout>(R.id.quick_action_sheet)
         val quickActionSheetBehavior = BottomSheetBehavior.from(linearLayout.parent as View) as QuickActionSheetBehavior
 

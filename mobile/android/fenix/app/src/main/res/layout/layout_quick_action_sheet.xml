@@ -2,78 +2,80 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/quick_action_sheet"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/quickActionBackgroundColor">
+    android:background="?attr/quickActionBackgroundColor"
+    android:orientation="vertical">
 
-    <androidx.appcompat.widget.AppCompatImageButton
+    <ImageButton
         android:id="@+id/quick_action_sheet_handle"
         android:layout_width="match_parent"
         android:layout_height="12dp"
-        android:contentDescription="@string/quick_action_sheet_handle"
         android:background="@null"
-        android:src="@drawable/ic_drawer_pull_tab"/>
+        android:contentDescription="@string/quick_action_sheet_handle"
+        android:src="@drawable/ic_drawer_pull_tab" />
 
     <LinearLayout
         android:id="@+id/quick_action_buttons_layout"
-        android:orientation="horizontal"
-        android:layout_gravity="bottom"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/quickActionBackgroundColor">
+        android:layout_gravity="bottom"
+        android:background="@null"
+        android:orientation="horizontal">
 
-        <androidx.appcompat.widget.AppCompatTextView
+        <Button
             android:id="@+id/quick_action_share"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_width="0dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:drawableTop="@drawable/quick_action_icon_share"
             android:drawablePadding="5dp"
-            android:textAlignment="center"
-            android:textSize="12sp"
+            android:text="@string/quick_action_share"
+            android:textAllCaps="false"
             android:textColor="?attr/toolbarTextColor"
-            android:text="@string/quick_action_share"/>
+            android:textSize="12sp" />
 
-        <androidx.appcompat.widget.AppCompatTextView
+        <Button
             android:id="@+id/quick_action_downloads"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_width="0dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:drawableTop="@drawable/library_icon_downloads_circle_background"
             android:drawablePadding="5dp"
-            android:textAlignment="center"
-            android:textSize="12sp"
+            android:text="@string/quick_action_download"
+            android:textAllCaps="false"
             android:textColor="?attr/toolbarTextColor"
-            android:text="@string/quick_action_download"/>
+            android:textSize="12sp" />
 
-        <androidx.appcompat.widget.AppCompatTextView
+        <Button
             android:id="@+id/quick_action_bookmark"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_width="0dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:drawableTop="@drawable/library_icon_bookmarks_circle_background"
             android:drawablePadding="5dp"
-            android:textAlignment="center"
-            android:textSize="12sp"
+            android:text="@string/quick_action_bookmark"
+            android:textAllCaps="false"
             android:textColor="?attr/toolbarTextColor"
-            android:text="@string/quick_action_bookmark"/>
+            android:textSize="12sp" />
 
-        <androidx.appcompat.widget.AppCompatTextView
+        <Button
             android:id="@+id/quick_action_read"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:layout_width="0dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:drawableTop="@drawable/quick_action_icon_read"
             android:drawablePadding="5dp"
-            android:textAlignment="center"
-            android:textSize="12sp"
+            android:text="@string/quick_action_read"
+            android:textAllCaps="false"
             android:textColor="?attr/toolbarTextColor"
-            android:text="@string/quick_action_read"/>
+            android:textSize="12sp" />
     </LinearLayout>
 </LinearLayout>
-
