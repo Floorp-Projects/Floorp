@@ -19,6 +19,9 @@
 # the repo. Unless a later match takes precedence.
 * @mozilla-mobile/act
 
+# Changelog is reviewable by anyone on any team
+/docs/changelog.md @mozilla-mobile
+
 # Glean telemetry library and sample
 /components/service/glean/ @mozilla-mobile/telemetry
 /samples/glean/ @mozilla-mobile/telemetry
