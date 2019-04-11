@@ -19,5 +19,7 @@ dictionary ElementDefinitionOptions {
   DOMString extends;
 };
 
+callback constructor CustomElementConstructor = any ();
+
 [MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback CustomElementCreationCallback = void (DOMString name);
