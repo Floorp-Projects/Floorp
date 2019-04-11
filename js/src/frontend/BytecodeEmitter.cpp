@@ -2367,7 +2367,7 @@ bool BytecodeEmitter::emitSetThis(BinaryNode* setThisNode) {
     return false;
   }
 
-  if (!emitInitializeInstanceFields()) {
+  if (!emitInitializeInstanceFields(IsSuperCall::Yes)) {
     return false;
   }
 
@@ -8105,7 +8105,38 @@ const FieldInitializers& BytecodeEmitter::findFieldInitializersForCall() {
   MOZ_CRASH("Constructor for field initializers not found.");
 }
 
-bool BytecodeEmitter::emitInitializeInstanceFields() {
+bool BytecodeEmitter::emitCopyInitializersToLocalInitializers() {
+  MOZ_ASSERT(sc->asFunctionBox()->isDerivedClassConstructor());
+  if (getFieldInitializers().numFieldInitializers == 0) {
+    return true;
+  }
+
+  NameOpEmitter noe(this, cx->names().dotLocalInitializers,
+                    NameOpEmitter::Kind::Initialize);
+  if (!noe.prepareForRhs()) {
+    //              [stack]
+    return false;
+  }
+
+  if (!emitGetName(cx->names().dotInitializers)) {
+    //              [stack] .initializers
+    return false;
+  }
+
+  if (!noe.emitAssignment()) {
+    //              [stack] .initializers
+    return false;
+  }
+
+  if (!emit1(JSOP_POP)) {
+    //              [stack]
+    return false;
+  }
+
+  return true;
+}
+
+bool BytecodeEmitter::emitInitializeInstanceFields(IsSuperCall isSuperCall) {
   const FieldInitializers& fieldInitializers = findFieldInitializersForCall();
   size_t numFields = fieldInitializers.numFieldInitializers;
 
@@ -8113,9 +8144,16 @@ bool BytecodeEmitter::emitInitializeInstanceFields() {
     return true;
   }
 
-  if (!emitGetName(cx->names().dotInitializers)) {
-    //              [stack] ARRAY
-    return false;
+  if (isSuperCall == IsSuperCall::Yes) {
+    if (!emitGetName(cx->names().dotLocalInitializers)) {
+      //            [stack] ARRAY
+      return false;
+    }
+  } else {
+    if (!emitGetName(cx->names().dotInitializers)) {
+      //            [stack] ARRAY
+      return false;
+    }
   }
 
   for (size_t fieldIndex = 0; fieldIndex < numFields; fieldIndex++) {

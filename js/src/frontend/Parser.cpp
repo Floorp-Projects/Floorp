@@ -1934,6 +1934,13 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
     }
   }
 
+  if (kind == FunctionSyntaxKind::DerivedClassConstructor) {
+    if (!noteDeclaredName(cx_->names().dotLocalInitializers,
+                          DeclarationKind::Var, pos())) {
+      return null();
+    }
+  }
+
   return finishLexicalScope(pc_->varScope(), body);
 }
 
@@ -7057,7 +7064,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
                                              pc_->innermostScope()->id())) {
         return null();
       }
-      if (!noteDeclaredName(cx_->names().dotInitializers, DeclarationKind::Var,
+      if (!noteDeclaredName(cx_->names().dotInitializers, DeclarationKind::Let,
                             namePos)) {
         return null();
       }
@@ -7195,6 +7202,13 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
   // One might expect a noteUsedName(".initializers") here. See comment in
   // GeneralParser<ParseHandler, Unit>::classDefinition on why it's not here.
 
+  if (hasHeritage == HasHeritage::Yes) {
+    if (!noteDeclaredName(cx_->names().dotLocalInitializers,
+                          DeclarationKind::Var, synthesizedBodyPos)) {
+      return null();
+    }
+  }
+
   bool canSkipLazyClosedOverBindings = handler_.canSkipLazyClosedOverBindings();
   if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
     return null();
@@ -7224,6 +7238,10 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
 
     BinaryNodeType setThis = handler_.newSetThis(thisName, superCall);
     if (!setThis) {
+      return null();
+    }
+
+    if (!noteUsedName(cx_->names().dotLocalInitializers)) {
       return null();
     }
 
@@ -8990,6 +9008,10 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
 
         nextMember = handler_.newSetThis(thisName, nextMember);
         if (!nextMember) {
+          return null();
+        }
+
+        if (!noteUsedName(cx_->names().dotLocalInitializers)) {
           return null();
         }
       } else {
