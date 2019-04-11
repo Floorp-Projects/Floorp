@@ -2332,7 +2332,8 @@ bool nsGenericHTMLElement::PerformAccesskey(bool aKeyCausesActivation,
   bool focused = true;
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    fm->SetFocus(this, nsIFocusManager::FLAG_BYKEY);
+    fm->SetFocus(this, nsIFocusManager::FLAG_BYKEY |
+                           nsIFocusManager::FLAG_BYELEMENTFOCUS);
 
     // Return true if the element became the current focus within its window.
     nsPIDOMWindowOuter* window = OwnerDoc()->GetWindow();

@@ -346,7 +346,7 @@ void Element::Focus(mozilla::ErrorResult& aError) {
     if (fm->CanSkipFocus(this)) {
       fm->NeedsFlushBeforeEventHandling(this);
     } else {
-      aError = fm->SetFocus(this, 0);
+      aError = fm->SetFocus(this, nsIFocusManager::FLAG_BYELEMENTFOCUS);
     }
   }
 }
