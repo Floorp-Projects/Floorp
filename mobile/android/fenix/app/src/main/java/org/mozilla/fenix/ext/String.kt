@@ -6,6 +6,9 @@
 
 package org.mozilla.fenix.ext
 
+import java.net.MalformedURLException
+import java.net.URL
+
 /**
  * Replaces the keys with the values with the map provided.
  */
@@ -13,4 +16,13 @@ fun String.replace(pairs: Map<String, String>): String {
     var result = this
     pairs.forEach { (l, r) -> result = result.replace(l, r) }
     return result
+}
+
+fun String?.urlToHost(): String {
+    return try {
+        val url = URL(this)
+        url.host
+    } catch (e: MalformedURLException) {
+        ""
+    }
 }
