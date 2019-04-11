@@ -70,5 +70,5 @@
         android:textSize="18sp"
         app:layout_constraintEnd_toStartOf="@id/history_item_overflow"
         app:layout_constraintStart_toEndOf="@id/history_favicon"
-        app:layout_constraintTop_toTopOf="@id/history_favicon" />
+        app:layout_constraintTop_toTopOf="parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>
