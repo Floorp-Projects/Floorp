@@ -193,7 +193,7 @@ D3D11ShareHandleImage::GetAsSourceSurface() {
 
 ID3D11Texture2D* D3D11ShareHandleImage::GetTexture() const { return mTexture; }
 
-class D3D11TextureClientAllocationHelper
+class MOZ_RAII D3D11TextureClientAllocationHelper
     : public ITextureClientAllocationHelper {
  public:
   D3D11TextureClientAllocationHelper(gfx::SurfaceFormat aFormat,
