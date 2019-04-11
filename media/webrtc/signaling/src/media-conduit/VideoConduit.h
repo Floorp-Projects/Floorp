@@ -280,6 +280,12 @@ class WebrtcVideoConduit
     return Some(RefPtr<VideoSessionConduit>(this));
   }
 
+  void RecordTelemetry() const override {
+    ASSERT_ON_THREAD(mStsThread);
+    mSendStreamStats.RecordTelemetry();
+    mRecvStreamStats.RecordTelemetry();
+  }
+
  private:
   // Don't allow copying/assigning.
   WebrtcVideoConduit(const WebrtcVideoConduit&) = delete;
@@ -322,9 +328,15 @@ class WebrtcVideoConduit
      */
     bool GetVideoStreamStats(double& aOutFrMean, double& aOutFrStdDev,
                              double& aOutBrMean, double& aOutBrStdDev) const;
+
+    /**
+     * Accumulates video quality telemetry
+     */
+    void RecordTelemetry() const;
     const webrtc::RtcpPacketTypeCounter& PacketCounts() const;
     bool Active() const;
     void SetActive(bool aActive);
+    virtual bool IsSend() const { return false; };
 
    protected:
     const nsCOMPtr<nsIEventTarget> mStatsThread;
@@ -332,7 +344,7 @@ class WebrtcVideoConduit
    private:
     bool mActive = false;
     RunningStat mFrameRate;
-    RunningStat mBitrate;
+    RunningStat mBitRate;
     webrtc::RtcpPacketTypeCounter mPacketCounts;
   };
 
@@ -365,6 +377,7 @@ class WebrtcVideoConduit
     uint64_t BytesReceived() const;
     uint32_t PacketsReceived() const;
     Maybe<uint64_t> QpSum() const;
+    bool IsSend() const override { return true; };
 
    private:
     uint32_t mDroppedFrames = 0;

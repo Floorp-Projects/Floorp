@@ -464,6 +464,8 @@ class VideoSessionConduit : public MediaSessionConduit {
                                     uint32_t* discardedPackets,
                                     uint32_t* framesDecoded) = 0;
 
+  virtual void RecordTelemetry() const = 0;
+
  protected:
   /* RTCP feedback settings, for unit testing purposes */
   FrameRequestType mFrameRequestMethod;
