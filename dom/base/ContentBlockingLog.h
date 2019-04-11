@@ -128,6 +128,8 @@ class ContentBlockingLog final {
     }
   }
 
+  void ReportLog();
+
   nsAutoCString Stringify() {
     nsAutoCString buffer;
 
