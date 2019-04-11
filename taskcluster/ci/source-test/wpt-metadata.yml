@@ -1,0 +1,31 @@
+job-defaults:
+    platform: lint/opt
+    treeherder:
+        kind: test
+        tier: 2
+    worker-type: aws-provisioner-v1/gecko-t-linux-xlarge
+    worker:
+        docker-image: {in-tree: "lint"}
+        max-run-time: 1800
+
+summary:
+    description: Summarize wpt metadata
+    treeherder:
+        symbol: wpt-meta
+    index:
+        product: source
+        job-name: source-wpt-metadata-summary
+    run:
+        using: mach
+        mach: wpt-metadata-summary --out-dir=/builds/worker/artifacts
+    worker:
+        artifacts:
+            - type: directory
+              path: /builds/worker/artifacts
+              name: public
+        max-run-time: 2700
+    when:
+        files-changed:
+            - 'testing/web-platform/meta/**'
+            - 'testing/web-platform/mozilla/meta/**'
+            - 'testing/web-platform/metasummary.py'
