@@ -21,7 +21,7 @@ template <typename T>
 struct InternalGCPointerPolicy : public JS::GCPointerPolicy<T> {
   using Type = typename mozilla::RemovePointer<T>::Type;
 
-#define IS_BASE_OF_OR(_1, BaseType, _2) \
+#define IS_BASE_OF_OR(_1, BaseType, _2, _3) \
   mozilla::IsBaseOf<BaseType, Type>::value ||
   static_assert(
       JS_FOR_EACH_TRACEKIND(IS_BASE_OF_OR) false,
