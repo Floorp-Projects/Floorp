@@ -952,12 +952,12 @@ void CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
       SetSamplerForSamplingFilter(texturedEffect->mSamplingFilter);
     } break;
     case EffectTypes::NV12: {
-      TexturedEffect* texturedEffect =
-          static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
+      EffectNV12* effectNV12 =
+          static_cast<EffectNV12*>(aEffectChain.mPrimaryEffect.get());
 
-      pTexCoordRect = &texturedEffect->mTextureCoords;
+      pTexCoordRect = &effectNV12->mTextureCoords;
 
-      TextureSourceD3D11* source = texturedEffect->mTexture->AsSourceD3D11();
+      TextureSourceD3D11* source = effectNV12->mTexture->AsSourceD3D11();
       if (!source) {
         NS_WARNING("Missing texture source!");
         return;
@@ -994,14 +994,13 @@ void CompositorD3D11::DrawGeometry(const Geometry& aGeometry,
       mContext->PSSetShaderResources(TexSlot::Y, 2, views);
 
       const float* yuvToRgb =
-          gfxUtils::YuvToRgbMatrix4x3RowMajor(YUVColorSpace::BT601);
+          gfxUtils::YuvToRgbMatrix4x3RowMajor(effectNV12->mYUVColorSpace);
       memcpy(&mPSConstants.yuvColorMatrix, yuvToRgb,
              sizeof(mPSConstants.yuvColorMatrix));
-      // TOTO: need to handle color depth properly. this assumes data is always
-      // 8 or 16 bits.
-      mPSConstants.vCoefficient[0] = 1.0;
+      mPSConstants.vCoefficient[0] =
+          RescalingFactorForColorDepth(effectNV12->mColorDepth);
 
-      SetSamplerForSamplingFilter(texturedEffect->mSamplingFilter);
+      SetSamplerForSamplingFilter(effectNV12->mSamplingFilter);
     } break;
     case EffectTypes::YCBCR: {
       EffectYCbCr* ycbcrEffect =
