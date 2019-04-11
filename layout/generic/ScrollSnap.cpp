@@ -219,6 +219,16 @@ void CalcSnapPoints::AddEdgeInterval(nscoord aInterval, nscoord aMinPos,
   }
 }
 
+static void ProcessSnapPositions(CalcSnapPoints& aCalcSnapPoints,
+                                 const ScrollSnapInfo& aSnapInfo) {
+  for (auto position : aSnapInfo.mSnapPositionX) {
+    aCalcSnapPoints.AddVerticalEdge(position);
+  }
+  for (auto position : aSnapInfo.mSnapPositionY) {
+    aCalcSnapPoints.AddHorizontalEdge(position);
+  }
+}
+
 static void ProcessScrollSnapCoordinates(
     CalcSnapPoints& aCalcSnapPoint,
     const nsTArray<nsPoint>& aScrollSnapCoordinates,
@@ -241,21 +251,27 @@ Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
     return Nothing();
   }
 
-  nsPoint destPos = aSnapInfo.mScrollSnapDestination;
-
   CalcSnapPoints calcSnapPoints(aUnit, aDestination, aStartPos);
 
-  if (aSnapInfo.mScrollSnapIntervalX.isSome()) {
-    nscoord interval = aSnapInfo.mScrollSnapIntervalX.value();
-    calcSnapPoints.AddVerticalEdgeInterval(aScrollRange, interval, destPos.x);
-  }
-  if (aSnapInfo.mScrollSnapIntervalY.isSome()) {
-    nscoord interval = aSnapInfo.mScrollSnapIntervalY.value();
-    calcSnapPoints.AddHorizontalEdgeInterval(aScrollRange, interval, destPos.y);
+  if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
+    ProcessSnapPositions(calcSnapPoints, aSnapInfo);
+  } else {
+    nsPoint destPos = aSnapInfo.mScrollSnapDestination;
+
+    if (aSnapInfo.mScrollSnapIntervalX.isSome()) {
+      nscoord interval = aSnapInfo.mScrollSnapIntervalX.value();
+      calcSnapPoints.AddVerticalEdgeInterval(aScrollRange, interval, destPos.x);
+    }
+    if (aSnapInfo.mScrollSnapIntervalY.isSome()) {
+      nscoord interval = aSnapInfo.mScrollSnapIntervalY.value();
+      calcSnapPoints.AddHorizontalEdgeInterval(aScrollRange, interval,
+                                               destPos.y);
+    }
+
+    ProcessScrollSnapCoordinates(calcSnapPoints,
+                                 aSnapInfo.mScrollSnapCoordinates, destPos);
   }
 
-  ProcessScrollSnapCoordinates(calcSnapPoints, aSnapInfo.mScrollSnapCoordinates,
-                               destPos);
   bool snapped = false;
   nsPoint finalPos = calcSnapPoints.GetBestEdge();
   nscoord proximityThreshold = gfxPrefs::ScrollSnapProximityThreshold();

@@ -3165,6 +3165,11 @@ nsChangeHint nsStyleDisplay::CalcDifference(
     return nsChangeHint_ReconstructFrame;
   }
 
+  if (mScrollSnapAlign != aNewData.mScrollSnapAlign) {
+    // FIXME: Bug 1530253 Support re-snapping when scroll-snap-align changes.
+    hint |= nsChangeHint_NeutralChange;
+  }
+
   if (mOverflowX != aNewData.mOverflowX || mOverflowY != aNewData.mOverflowY) {
     hint |= nsChangeHint_ScrollbarChange;
   }
