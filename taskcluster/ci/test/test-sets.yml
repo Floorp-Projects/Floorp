@@ -413,6 +413,7 @@ android-x86_64-opt-tests:
     - mochitest
 
 android-x86_64-tests:
+    - gtest
     - jsreftest
     - marionette
     - mochitest-clipboard
