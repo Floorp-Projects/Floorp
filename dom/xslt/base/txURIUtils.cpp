@@ -46,7 +46,6 @@ void URIUtils::resolveHref(const nsAString& href, const nsAString& base,
 void URIUtils::ResetWithSource(Document* aNewDoc, nsINode* aSourceNode) {
   nsCOMPtr<Document> sourceDoc = aSourceNode->OwnerDoc();
   nsIPrincipal* sourcePrincipal = sourceDoc->NodePrincipal();
-  nsIPrincipal* sourceStoragePrincipal = sourceDoc->EffectiveStoragePrincipal();
 
   // Copy the channel and loadgroup from the source document.
   nsCOMPtr<nsILoadGroup> loadGroup = sourceDoc->GetDocumentLoadGroup();
@@ -67,7 +66,7 @@ void URIUtils::ResetWithSource(Document* aNewDoc, nsINode* aSourceNode) {
   }
 
   aNewDoc->Reset(channel, loadGroup);
-  aNewDoc->SetPrincipals(sourcePrincipal, sourceStoragePrincipal);
+  aNewDoc->SetPrincipal(sourcePrincipal);
   aNewDoc->SetBaseURI(sourceDoc->GetDocBaseURI());
 
   // Copy charset

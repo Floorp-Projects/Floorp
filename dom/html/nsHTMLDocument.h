@@ -56,8 +56,7 @@ class nsHTMLDocument : public mozilla::dom::Document, public nsIHTMLDocument {
   // Document
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) override;
   virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
-                          nsIPrincipal* aPrincipal,
-                          nsIPrincipal* aStoragePrincipal) override;
+                          nsIPrincipal* aPrincipal) override;
 
   virtual nsresult StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                                      nsILoadGroup* aLoadGroup,

@@ -1,5 +1,3 @@
-/* import-globals-from antitracking_head.js */
-
 add_task(async function() {
   info("Starting subResources test");
 

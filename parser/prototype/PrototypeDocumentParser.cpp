@@ -84,8 +84,7 @@ PrototypeDocumentParser::Parse(nsIURI* aURL, nsIRequestObserver* aListener,
     mCurrentPrototype = proto;
 
     // Set up the right principal on the document.
-    mDocument->SetPrincipals(proto->DocumentPrincipal(),
-                             proto->DocumentPrincipal());
+    mDocument->SetPrincipal(proto->DocumentPrincipal());
   } else {
     // It's just a vanilla document load. Create a parser to deal
     // with the stream n' stuff.
@@ -186,7 +185,7 @@ nsresult PrototypeDocumentParser::PrepareToLoadPrototype(
     nsXULPrototypeCache::GetInstance()->PutPrototype(mCurrentPrototype);
   }
 
-  mDocument->SetPrincipals(aDocumentPrincipal, aDocumentPrincipal);
+  mDocument->SetPrincipal(aDocumentPrincipal);
 
   // Create a XUL content sink, a parser, and kick off a load for
   // the document.

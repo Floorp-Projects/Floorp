@@ -75,7 +75,6 @@ parent:
                                             bool isForeign,
                                             bool isTrackingResource,
                                             bool firstPartyStorageAccessGranted,
-                                            OriginAttributes aStoragePrincipalAttrs,
                                             nsCString cookieString,
                                             nsCString serverTime,
                                             bool aFromHttp);

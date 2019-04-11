@@ -7,7 +7,6 @@
 #include "nsScriptSecurityManager.h"
 
 #include "mozilla/ArrayUtils.h"
-#include "mozilla/StoragePrincipalHelper.h"
 
 #include "xpcpublic.h"
 #include "XPCWrapper.h"
@@ -244,33 +243,6 @@ nsresult nsScriptSecurityManager::GetChannelResultPrincipalIfNotSandboxed(
     nsIChannel* aChannel, nsIPrincipal** aPrincipal) {
   return GetChannelResultPrincipal(aChannel, aPrincipal,
                                    /*aIgnoreSandboxing*/ true);
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::GetChannelResultStoragePrincipal(
-    nsIChannel* aChannel, nsIPrincipal** aPrincipal) {
-  nsCOMPtr<nsIPrincipal> principal;
-  nsresult rv = GetChannelResultPrincipal(aChannel, getter_AddRefs(principal),
-                                          /*aIgnoreSandboxing*/ false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return StoragePrincipalHelper::Create(aChannel, principal, aPrincipal);
-}
-
-NS_IMETHODIMP
-nsScriptSecurityManager::GetChannelResultPrincipals(
-    nsIChannel* aChannel, nsIPrincipal** aPrincipal,
-    nsIPrincipal** aStoragePrincipal) {
-  nsresult rv = GetChannelResultPrincipal(aChannel, aPrincipal,
-                                          /*aIgnoreSandboxing*/ false);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return StoragePrincipalHelper::Create(aChannel, *aPrincipal,
-                                        aStoragePrincipal);
 }
 
 static void InheritAndSetCSPOnPrincipalIfNeeded(nsIChannel* aChannel,

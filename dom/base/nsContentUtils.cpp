@@ -8226,7 +8226,7 @@ nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForWindow(
 
 // static, public
 nsContentUtils::StorageAccess nsContentUtils::StorageAllowedForDocument(
-    const Document* aDoc) {
+    Document* aDoc) {
   MOZ_ASSERT(aDoc);
 
   if (nsPIDOMWindowInner* inner = aDoc->GetInnerWindow()) {
