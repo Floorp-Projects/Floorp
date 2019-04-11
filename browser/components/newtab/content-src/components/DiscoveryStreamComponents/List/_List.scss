@@ -9,7 +9,7 @@ $item-line-height: 20;
 // Unfortunately the border needs to go _above_ the row gap as currently
 // set up, which means that some refactoring will be required to do this.
 @mixin bottom-border-except-last-grid-row($columns) {
-  .ds-list-item:not(:nth-last-child(-n+#{$columns})) {
+  .ds-list-item:not(.placeholder):not(:nth-last-child(-n+#{$columns})) {
     @include ds-border-bottom;
     margin-bottom: -1px;  // cancel out the pixel we used for the border
     padding-bottom: $bordered-spacing;
@@ -62,6 +62,10 @@ $item-line-height: 20;
       grid-template-columns: repeat(3, 1fr);
     }
 
+    &.empty {
+      grid-template-columns: auto;
+    }
+
     .ds-list-item-excerpt {
       display: none;
     }
@@ -91,7 +95,7 @@ $item-line-height: 20;
     counter-increment: list;
   }
 
-  .ds-list-item-link {
+  .ds-list-item:not(.placeholder) > .ds-list-item-link {
     padding-inline-start: $counter-padded-size;
 
     &::before {
@@ -173,6 +177,21 @@ $item-line-height: 20;
   display: block;
   text-align: start;
 
+  &.placeholder {
+    background: transparent;
+    min-height: $item-image-size;
+    box-shadow: inset $inner-box-shadow;
+    border-radius: 4px;
+
+    .ds-list-item-link {
+      cursor: default;
+    }
+
+    .ds-list-image {
+      opacity: 0;
+    }
+  }
+
   .ds-list-item-link {
     mix-blend-mode: normal;
 
@@ -217,10 +236,14 @@ $item-line-height: 20;
   }
 
   .ds-list-image {
-    @include image-as-background;
     height: $item-image-size;
     margin-inline-start: $item-font-size * 1px;
     min-height: $item-image-size;
+
+    img {
+      border-radius: 4px;
+      box-shadow: inset 0 0 0 0.5px $black-15;
+    }
   }
 
   &:hover {

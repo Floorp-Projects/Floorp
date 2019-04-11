@@ -341,6 +341,7 @@ this.TelemetryFeed = class TelemetryFeed {
       return;
     }
 
+    this.sendDiscoveryStreamLoadedContent(portID, session);
     this.sendDiscoveryStreamImpressions(portID, session);
 
     if (session.perf.visibility_event_rcvd_ts) {
@@ -371,6 +372,34 @@ this.TelemetryFeed = class TelemetryFeed {
 
     Object.keys(impressionSets).forEach(source => {
       const payload = this.createImpressionStats(port, {source, tiles: impressionSets[source]});
+      this.sendEvent(payload);
+      this.sendStructuredIngestionEvent(payload, "impression-stats", "1");
+    });
+  }
+
+  /**
+   * Send loaded content pings for Discovery Stream for a given session.
+   *
+   * @note the loaded content reports are stored in session.loadedContentSets for different
+   * sources, and will be sent separately accordingly.
+   *
+   * @param {String} port  The session port with which this is associated
+   * @param {Object} session  The session object
+   */
+  sendDiscoveryStreamLoadedContent(port, session) {
+    const {loadedContentSets} = session;
+
+    if (!loadedContentSets) {
+      return;
+    }
+
+    Object.keys(loadedContentSets).forEach(source => {
+      const tiles = loadedContentSets[source];
+      const payload = this.createImpressionStats(port, {
+        source,
+        tiles,
+        loaded: tiles.length,
+      });
       this.sendEvent(payload);
       this.sendStructuredIngestionEvent(payload, "impression-stats", "1");
     });
@@ -701,6 +730,9 @@ this.TelemetryFeed = class TelemetryFeed {
       case at.DISCOVERY_STREAM_IMPRESSION_STATS:
         this.handleDiscoveryStreamImpressionStats(au.getPortIdOfSender(action), action.data);
         break;
+      case at.DISCOVERY_STREAM_LOADED_CONTENT:
+        this.handleDiscoveryStreamLoadedContent(au.getPortIdOfSender(action), action.data);
+        break;
       case at.TELEMETRY_UNDESIRED_EVENT:
         this.handleUndesiredEvent(action);
         break;
@@ -740,10 +772,37 @@ this.TelemetryFeed = class TelemetryFeed {
 
     const impressionSets = session.impressionSets || {};
     const impressions = impressionSets[data.source] || [];
-    // The payload might contain other properties, we only need `id` here.
+    // The payload might contain other properties, we need `id` and `pos` here.
     data.tiles.forEach(tile => impressions.push({id: tile.id, pos: tile.pos}));
     impressionSets[data.source] = impressions;
     session.impressionSets = impressionSets;
+  }
+
+  /**
+   * Handle loaded content actions from Discovery Stream. The data will be
+   * stored into the session.loadedContentSets object for the given port, so that
+   * it is sent to the server when the session ends.
+   *
+   * @note session.loadedContentSets will be keyed on `source` of the `data`,
+   * all the data will be appended to an array for the same source.
+   *
+   * @param {String} port  The session port with which this is associated
+   * @param {Object} data  The loaded content structured as {source: "SOURCE", tiles: [{id: 123}]}
+   *
+   */
+  handleDiscoveryStreamLoadedContent(port, data) {
+    let session = this.sessions.get(port);
+
+    if (!session) {
+      throw new Error("Session does not exist.");
+    }
+
+    const loadedContentSets = session.loadedContentSets || {};
+    const loadedContents = loadedContentSets[data.source] || [];
+    // The payload might contain other properties, we need `id` and `pos` here.
+    data.tiles.forEach(tile => loadedContents.push({id: tile.id, pos: tile.pos}));
+    loadedContentSets[data.source] = loadedContents;
+    session.loadedContentSets = loadedContentSets;
   }
 
   /**

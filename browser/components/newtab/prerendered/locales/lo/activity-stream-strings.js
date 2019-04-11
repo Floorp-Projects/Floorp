@@ -40,9 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "ຕົກລົງ, ເຂົ້າໃຈແລ້ວ",
   "prefs_home_header": "ເນື້ອໃນຫນ້າທຳອິດຂອງ Firefox",
   "prefs_home_description": "ເລືອກເນື້ອຫາທີ່ທ່ານຕ້ອງການສະແດງໃນຫນ້າຈໍຫນ້າຫລັກ Firefox ຂອງທ່ານ.",
-  "prefs_content_discovery_header": "Firefox Home",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num} ແຖວ",
   "prefs_search_header": "ຊອກຫາເວັບ",
   "prefs_topsites_description": "ເວັບໄຊທ໌ທີ່ທ່ານເຂົ້າເບິ່ງຫລາຍທີ່ສຸດ",
@@ -110,6 +108,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "ນະໂຍບາຍຄວາມເປັນສ່ວນຕົວ",
   "firstrun_continue_to_login": "ສືບຕໍ່",
   "firstrun_skip_login": "ຂ້າມຂັ້ນຕອນນີ້",
-  "context_menu_title": "Open menu",
-  "pocket_learn_more": "ຮຽນຮູ້ເພີມຕື່ມ"
+  "context_menu_title": "Open menu"
 };

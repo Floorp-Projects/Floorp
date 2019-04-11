@@ -40,7 +40,11 @@ function getStrings(locale, allStrings) {
   const localeFallbacks = [DEFAULT_LOCALE, ...similarLocales, locale];
 
   // Get strings from each locale replacing with those from more desired ones
-  return Object.assign({}, ...localeFallbacks.map(l => allStrings[l]));
+  const desired = Object.assign({}, ...localeFallbacks.map(l => allStrings[l]));
+
+  // Only include strings that are currently used (defined by default locale)
+  return Object.assign({}, ...Object.keys(allStrings[DEFAULT_LOCALE]).map(
+    key => ({[key]: desired[key]})));
 }
 
 /**

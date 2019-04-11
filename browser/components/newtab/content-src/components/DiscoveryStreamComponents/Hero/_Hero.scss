@@ -4,10 +4,6 @@ $card-header-in-hero-line-height: 20;
 .ds-hero {
   position: relative;
 
-  .img {
-    @include image-as-background;
-  }
-
   header {
     font-weight: 600;
   }
@@ -22,7 +18,7 @@ $card-header-in-hero-line-height: 20;
     margin: 4px 0 8px;
   }
 
-  .ds-card {
+  .ds-card:not(.placeholder) {
     border: 0;
     padding-bottom: 20px;
 
@@ -43,6 +39,11 @@ $card-header-in-hero-line-height: 20;
     .img-wrapper {
       margin: 0 0 12px;
     }
+  }
+
+  .ds-card.placeholder {
+    margin-bottom: 20px;
+    padding-bottom: 20px;
   }
 
   .img-wrapper {
@@ -95,6 +96,11 @@ $card-header-in-hero-line-height: 20;
     .img {
       height: 0;
       padding-top: 50%; // 2:1 aspect ratio
+
+      img {
+        border-radius: 4px;
+        box-shadow: inset 0 0 0 0.5px $black-15;
+      }
     }
 
     .meta {
@@ -183,7 +189,7 @@ $card-header-in-hero-line-height: 20;
       @include ds-border-top;
       padding: 20px 0;
 
-      .ds-card:nth-child(-n+2) {
+      .ds-card:not(.placeholder):nth-child(-n+2) {
         @include ds-border-bottom;
         margin-bottom: 20px;
       }
@@ -254,5 +260,9 @@ $card-header-in-hero-line-height: 20;
         }
       }
     }
+  }
+
+  &.empty {
+    grid-template-columns: auto;
   }
 }

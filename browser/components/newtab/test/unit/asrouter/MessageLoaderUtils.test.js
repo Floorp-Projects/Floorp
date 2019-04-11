@@ -2,11 +2,14 @@ import {GlobalOverrider} from "test/unit/utils";
 import {MessageLoaderUtils} from "lib/ASRouter.jsm";
 const {STARTPAGE_VERSION} = MessageLoaderUtils;
 
-const FAKE_STORAGE = {
-  set() {
-    return Promise.resolve();
+const FAKE_OPTIONS = {
+  storage: {
+    set() {
+      return Promise.resolve();
+    },
+    get() { return Promise.resolve(); },
   },
-  get() { return Promise.resolve(); },
+  dispatchToAS: () => {},
 };
 const FAKE_RESPONSE_HEADERS = {get() {}};
 
@@ -31,7 +34,7 @@ describe("MessageLoaderUtils", () => {
       const sourceMessage = {id: "foo"};
       const provider = {id: "provider123", type: "local", messages: [sourceMessage]};
 
-      const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+      const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_OPTIONS);
 
       assert.isArray(result.messages);
       // Does the message have the right properties?
@@ -43,7 +46,7 @@ describe("MessageLoaderUtils", () => {
       const sourceMessage = {id: "foo"};
       const provider = {id: "provider123", type: "local", messages: [sourceMessage], exclude: ["foo"]};
 
-      const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+      const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_OPTIONS);
 
       assert.lengthOf(result.messages, 0);
     });
@@ -52,7 +55,7 @@ describe("MessageLoaderUtils", () => {
       fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve({messages: [sourceMessage]}), headers: FAKE_RESPONSE_HEADERS});
       const provider = {id: "provider123", type: "remote", url: "https://foo.com"};
 
-      const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+      const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_OPTIONS);
       assert.isArray(result.messages);
       // Does the message have the right properties?
       const [message] = result.messages;
@@ -76,23 +79,23 @@ describe("MessageLoaderUtils", () => {
 
       it("should return messages for 200 response", async () => {
         fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(respJson), headers: FAKE_RESPONSE_HEADERS});
-        assertReturnsCorrectMessages(await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE));
+        assertReturnsCorrectMessages(await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_OPTIONS));
       });
 
       it("should return messages for a 302 response with json", async () => {
         fetchStub.resolves({ok: true, status: 302, json: () => Promise.resolve(respJson), headers: FAKE_RESPONSE_HEADERS});
-        assertReturnsCorrectMessages(await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE));
+        assertReturnsCorrectMessages(await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_OPTIONS));
       });
 
       it("should return an empty array for a 204 response", async () => {
         fetchStub.resolves({ok: true, status: 204, json: () => "", headers: FAKE_RESPONSE_HEADERS});
-        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_OPTIONS);
         assert.deepEqual(result.messages, []);
       });
 
       it("should return an empty array for a 500 response", async () => {
         fetchStub.resolves({ok: false, status: 500, json: () => "", headers: FAKE_RESPONSE_HEADERS});
-        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_OPTIONS);
         assert.deepEqual(result.messages, []);
       });
 
@@ -116,7 +119,7 @@ describe("MessageLoaderUtils", () => {
           },
         };
         fetchStub.resolves({ok: true, status: 304, json: () => "", headers: FAKE_RESPONSE_HEADERS});
-        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, fakeStorage);
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, {...FAKE_OPTIONS, storage: fakeStorage});
         assert.equal(result.messages.length, messages.length);
         messages.forEach(message => {
           assert.ok(result.messages.find(m => m.id === message.id));
@@ -125,7 +128,7 @@ describe("MessageLoaderUtils", () => {
 
       it("should return an empty array if json doesn't parse properly", async () => {
         fetchStub.resolves({ok: false, status: 200, json: () => "", headers: FAKE_RESPONSE_HEADERS});
-        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_OPTIONS);
         assert.deepEqual(result.messages, []);
       });
 
@@ -133,7 +136,7 @@ describe("MessageLoaderUtils", () => {
         const err = {};
         sandbox.spy(MessageLoaderUtils, "reportError");
         fetchStub.resolves({ok: true, status: 200, json: sandbox.stub().rejects(err), headers: FAKE_RESPONSE_HEADERS});
-        await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+        await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_OPTIONS);
 
         assert.calledOnce(MessageLoaderUtils.reportError);
         // Report that json parsing failed
@@ -143,7 +146,7 @@ describe("MessageLoaderUtils", () => {
       it("should report missing `messages` with MessageLoaderUtils.reportError", async () => {
         sandbox.spy(MessageLoaderUtils, "reportError");
         fetchStub.resolves({ok: true, status: 200, json: sandbox.stub().resolves({}), headers: FAKE_RESPONSE_HEADERS});
-        await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+        await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_OPTIONS);
 
         assert.calledOnce(MessageLoaderUtils.reportError);
         // Report no messages returned
@@ -153,7 +156,7 @@ describe("MessageLoaderUtils", () => {
       it("should report bad status responses with MessageLoaderUtils.reportError", async () => {
         sandbox.spy(MessageLoaderUtils, "reportError");
         fetchStub.resolves({ok: false, status: 500, json: sandbox.stub().resolves({}), headers: FAKE_RESPONSE_HEADERS});
-        await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+        await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_OPTIONS);
 
         assert.calledOnce(MessageLoaderUtils.reportError);
         // Report no messages returned
@@ -162,7 +165,7 @@ describe("MessageLoaderUtils", () => {
 
       it("should return an empty array if the request rejects", async () => {
         fetchStub.rejects(new Error("something went wrong"));
-        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_OPTIONS);
         assert.deepEqual(result.messages, []);
       });
     });
@@ -186,7 +189,7 @@ describe("MessageLoaderUtils", () => {
             });
           },
         };
-        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, fakeStorage);
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, {...FAKE_OPTIONS, storage: fakeStorage});
         assert.equal(result.messages.length, messages.length);
         messages.forEach(message => {
           assert.ok(result.messages.find(m => m.id === message.id));
@@ -212,7 +215,7 @@ describe("MessageLoaderUtils", () => {
           },
         };
         fetchStub.resolves({ok: true, status: 200, json: () => Promise.resolve(respJson), headers: FAKE_RESPONSE_HEADERS});
-        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, fakeStorage);
+        const result = await MessageLoaderUtils.loadMessagesForProvider(provider, {...FAKE_OPTIONS, storage: fakeStorage});
         assert.equal(result.messages.length, 1);
         assert.equal(result.messages[0].id, testMessage.id);
       });
@@ -220,7 +223,7 @@ describe("MessageLoaderUtils", () => {
     it("should return an empty array for a remote provider with a blank URL without attempting a request", async () => {
       const provider = {id: "provider123", type: "remote", url: ""};
 
-      const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+      const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_OPTIONS);
 
       assert.notCalled(fetchStub);
       assert.deepEqual(result.messages, []);
@@ -243,7 +246,7 @@ describe("MessageLoaderUtils", () => {
         headers: FAKE_RESPONSE_HEADERS,
       });
 
-      const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_STORAGE);
+      const result = await MessageLoaderUtils.loadMessagesForProvider(provider, FAKE_OPTIONS);
 
       assert.propertyVal(result, "lastUpdated", 42);
     });

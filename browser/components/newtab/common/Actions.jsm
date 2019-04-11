@@ -46,7 +46,9 @@ for (const type of [
   "DISCOVERY_STREAM_IMPRESSION_STATS",
   "DISCOVERY_STREAM_LAYOUT_RESET",
   "DISCOVERY_STREAM_LAYOUT_UPDATE",
+  "DISCOVERY_STREAM_LOADED_CONTENT",
   "DISCOVERY_STREAM_OPT_OUT",
+  "DISCOVERY_STREAM_SPOCS_CAPS",
   "DISCOVERY_STREAM_SPOCS_ENDPOINT",
   "DISCOVERY_STREAM_SPOCS_UPDATE",
   "DISCOVERY_STREAM_SPOC_IMPRESSION",
@@ -79,6 +81,7 @@ for (const type of [
   "PLACES_LINK_DELETED",
   "PLACES_SAVED_TO_POCKET",
   "POCKET_CTA",
+  "POCKET_LINK_DELETED_OR_ARCHIVED",
   "POCKET_LOGGED_IN",
   "POCKET_WAITING_FOR_SPOC",
   "PREFS_INITIAL_VALUES",
@@ -351,6 +354,21 @@ function DiscoveryStreamImpressionStats(data, importContext = globalImportContex
   return importContext === UI_CODE ? AlsoToMain(action) : action;
 }
 
+/**
+ * DiscoveryStreamLoadedContent - A telemetry ping indicating a content gets loaded in Discovery Stream.
+ *
+ * @param  {object} data Fields to include in the ping
+ * @param  {int} importContext (For testing) Override the import context for testing.
+ * #return {object} An action. For UI code, a AlsoToMain action.
+ */
+function DiscoveryStreamLoadedContent(data, importContext = globalImportContext) {
+  const action = {
+    type: actionTypes.DISCOVERY_STREAM_LOADED_CONTENT,
+    data,
+  };
+  return importContext === UI_CODE ? AlsoToMain(action) : action;
+}
+
 function SetPref(name, value, importContext = globalImportContext) {
   const action = {type: actionTypes.SET_PREF, data: {name, value}};
   return importContext === UI_CODE ? AlsoToMain(action) : action;
@@ -382,6 +400,7 @@ this.actionCreators = {
   SetPref,
   WebExtEvent,
   DiscoveryStreamImpressionStats,
+  DiscoveryStreamLoadedContent,
 };
 
 // These are helpers to test for certain kinds of actions

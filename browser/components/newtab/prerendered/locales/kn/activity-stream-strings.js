@@ -40,9 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "ಸರಿ, ಗೊತ್ತಾಯಿತು",
   "prefs_home_header": "ಫೈರ್ಫಾಕ್ಸ್ ಮುಖಪುಟದ ವಿಷಯ",
   "prefs_home_description": "Choose what content you want on your Firefox Home screen.",
-  "prefs_content_discovery_header": "Firefox Home",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num} row;{num} rows",
   "prefs_search_header": "ಜಾಲದ ಹುಡುಕಾಟ",
   "prefs_topsites_description": "The sites you visit most",
@@ -110,6 +108,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "ಗೌಪ್ಯತಾ ಸೂಚನೆ",
   "firstrun_continue_to_login": "ಮುಂದುವರೆ",
   "firstrun_skip_login": "ಈ ಹಂತವನ್ನು ಹಾರಿಸಿ",
-  "context_menu_title": "ಮೆನು ತೆರೆ",
-  "pocket_learn_more": "ಇನ್ನಷ್ಟು ತಿಳಿಯಿರಿ"
+  "context_menu_title": "ಮೆನು ತೆರೆ"
 };

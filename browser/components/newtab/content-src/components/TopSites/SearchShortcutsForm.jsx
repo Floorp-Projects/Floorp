@@ -3,7 +3,7 @@ import {FormattedMessage} from "react-intl";
 import React from "react";
 import {TOP_SITES_SOURCE} from "./TopSitesConstants";
 
-class SelectableSearchShortcut extends React.PureComponent {
+export class SelectableSearchShortcut extends React.PureComponent {
   render() {
     const {shortcut, selected} = this.props;
     const imageStyle = {backgroundImage: `url("${shortcut.tippyTopIcon}")`};

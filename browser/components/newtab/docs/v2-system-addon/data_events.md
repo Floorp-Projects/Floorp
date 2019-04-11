@@ -759,6 +759,30 @@ These report any failures during domain affinity v2 calculations, and where it f
 }
 ```
 
+### Discovery Stream loaded content
+
+This reports all the loaded content (a list of `id`s and positions) when the user opens a newtab page and the page becomes visible. Note that this ping is a superset of the Discovery Stream impression ping, as impression pings are also subject to the individual visibility.
+
+```js
+{
+  "action": "activity_stream_impression_stats",
+
+  // Both "client_id" and "session_id" are set to "n/a" in this ping.
+  "client_id": "n/a",
+  "session_id": "n/a",
+  "impression_id": "{005deed0-e3e4-4c02-a041-17405fd703f6}",
+  "addon_version": "20180710100040",
+  "locale": "en-US",
+  "source": ["HERO" | "CARDGRID" | "LIST"],
+  "page": ["about:newtab" | "about:home" | "about:welcome" | "unknown"],
+  "user_prefs": 7,
+
+  // Indicating this is a `loaded content` ping (as opposed to impression) as well as the size of `tiles`
+  "loaded": 3,
+  "tiles": [{"id": 10000, "pos": 0}, {"id": 10001, "pos": 1}, {"id": 10002, "pos": 2}]
+}
+```
+
 ### Discovery Stream performance pings
 
 #### Request time of layout feed in ms
@@ -850,6 +874,7 @@ This reports when the addon fails to initialize
   "value": -1
 }
 ```
+
 ## Activity Stream Router pings
 
 These pings record the impression and user interactions within Activity Stream Router.
@@ -983,5 +1008,22 @@ This reports when an error has occurred when parsing/evaluating a JEXL targeting
   "message_id": "some_message_id",
   "event": "TARGETING_EXPRESSION_ERROR",
   "value": ["MALFORMED_EXPRESSION" | "OTHER_ERROR"]
+}
+```
+
+### Remote Settings error pings
+
+This reports a failure in the Remote Settings loader to load messages for Activity Stream Router.
+
+```js
+{
+  "action": "asrouter_undesired_event",
+  "client_id": "n/a",
+  "addon_version": "20180710100040",
+  "locale": "en-US",
+  "user_prefs": 7,
+  "event": ["ASR_RS_NO_MESSAGES" | "ASR_RS_ERROR"],
+  // The value is set to the ID of the message provider. For example: remote-cfr, remote-onboarding, etc.
+  "value": "REMOTE_PROVIDER_ID"
 }
 ```
