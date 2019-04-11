@@ -6520,12 +6520,148 @@ uint32_t nsIScrollableFrame::GetPerceivedScrollingDirections() const {
 }
 
 /**
+ * Append scroll positions for valid snap positions into |aSnapInfo| if
+ * applicable.
+ */
+static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
+                                         const nsIFrame* aScrolledFrame,
+                                         const nsSize& aSnapportSize,
+                                         ScrollSnapInfo& aSnapInfo) {
+  // FIXME: Bug 1373833: This target rect should be inflated by scroll-margin.
+  nsRect targetRect = nsLayoutUtils::TransformFrameRectToAncestor(
+      aFrame, aFrame->GetRectRelativeToSelf(), aScrolledFrame);
+
+  WritingMode writingMode = aScrolledFrame->GetWritingMode();
+  LogicalRect logicalTargetRect(writingMode, targetRect, aSnapportSize);
+
+  Maybe<nscoord> blockDirectionPosition;
+  Maybe<nscoord> inlineDirectionPosition;
+
+  const nsStyleDisplay* styleDisplay = aFrame->StyleDisplay();
+  nscoord containerBSize =
+      LogicalSize(writingMode, aSnapportSize).BSize(writingMode);
+  switch (styleDisplay->mScrollSnapAlign.block) {
+    case StyleScrollSnapAlignKeyword::None:
+      break;
+    case StyleScrollSnapAlignKeyword::Start:
+      blockDirectionPosition.emplace(logicalTargetRect.BStart(writingMode));
+      break;
+    case StyleScrollSnapAlignKeyword::End:
+      if (writingMode.IsVerticalRL()) {
+        blockDirectionPosition.emplace(containerBSize -
+                                       logicalTargetRect.BEnd(writingMode));
+      } else {
+        // What we need here is the scroll position instead of the snap position
+        // itself, so we need, for example, the top edge of the scroll port
+        // on horizontal-tb when the frame is positioned at the bottom edge of
+        // the scroll port. For this reason we subtract containerBSize from
+        // BEnd of the target.
+        blockDirectionPosition.emplace(logicalTargetRect.BEnd(writingMode) -
+                                       containerBSize);
+      }
+      break;
+    case StyleScrollSnapAlignKeyword::Center: {
+      nscoord targetCenter = (logicalTargetRect.BStart(writingMode) +
+                              logicalTargetRect.BEnd(writingMode)) /
+                             2;
+      nscoord halfSnapportSize = containerBSize / 2;
+      // Get the center of the target to align with the center of the snapport
+      // depending on direction.
+      if (writingMode.IsVerticalRL()) {
+        blockDirectionPosition.emplace(halfSnapportSize - targetCenter);
+      } else {
+        blockDirectionPosition.emplace(targetCenter - halfSnapportSize);
+      }
+      break;
+    }
+  }
+
+  nscoord containerISize =
+      LogicalSize(writingMode, aSnapportSize).ISize(writingMode);
+  switch (styleDisplay->mScrollSnapAlign.inline_) {
+    case StyleScrollSnapAlignKeyword::None:
+      break;
+    case StyleScrollSnapAlignKeyword::Start:
+      inlineDirectionPosition.emplace(logicalTargetRect.IStart(writingMode));
+      break;
+    case StyleScrollSnapAlignKeyword::End:
+      if (writingMode.IsInlineReversed()) {
+        inlineDirectionPosition.emplace(containerISize -
+                                        logicalTargetRect.IEnd(writingMode));
+      } else {
+        // Same as above BEnd case, we subtract containerISize.
+        inlineDirectionPosition.emplace(logicalTargetRect.IEnd(writingMode) -
+                                        containerISize);
+      }
+      break;
+    case StyleScrollSnapAlignKeyword::Center: {
+      nscoord targetCenter = (logicalTargetRect.IStart(writingMode) +
+                              logicalTargetRect.IEnd(writingMode)) /
+                             2;
+      nscoord halfSnapportSize = containerISize / 2;
+      // Get the center of the target to align with the center of the snapport
+      // depending on direction.
+      if (writingMode.IsInlineReversed()) {
+        inlineDirectionPosition.emplace(halfSnapportSize - targetCenter);
+      } else {
+        inlineDirectionPosition.emplace(targetCenter - halfSnapportSize);
+      }
+      break;
+    }
+  }
+
+  if (inlineDirectionPosition) {
+    (writingMode.IsVertical() ? aSnapInfo.mSnapPositionY
+                              : aSnapInfo.mSnapPositionX)
+        .AppendElement(inlineDirectionPosition.value());
+  }
+
+  if (blockDirectionPosition) {
+    (writingMode.IsVertical() ? aSnapInfo.mSnapPositionX
+                              : aSnapInfo.mSnapPositionY)
+        .AppendElement(blockDirectionPosition.value());
+  }
+}
+
+/**
+ * Collect the scroll positions corresponding to snap positions of frames in the
+ * subtree rooted at |aFrame|, relative to |aScrolledFrame|, into |aSnapInfo|.
+ */
+static void CollectScrollPositionsForSnap(nsIFrame* aFrame,
+                                          nsIFrame* aScrolledFrame,
+                                          const nsSize& aSnapportSize,
+                                          ScrollSnapInfo& aSnapInfo) {
+  MOZ_ASSERT(StaticPrefs::layout_css_scroll_snap_v1_enabled());
+
+  nsIFrame::ChildListIterator childLists(aFrame);
+  for (; !childLists.IsDone(); childLists.Next()) {
+    nsFrameList::Enumerator childFrames(childLists.CurrentList());
+    for (; !childFrames.AtEnd(); childFrames.Next()) {
+      nsIFrame* f = childFrames.get();
+
+      const nsStyleDisplay* styleDisplay = f->StyleDisplay();
+      if (styleDisplay->mScrollSnapAlign.inline_ !=
+              StyleScrollSnapAlignKeyword::None ||
+          styleDisplay->mScrollSnapAlign.block !=
+              StyleScrollSnapAlignKeyword::None) {
+        AppendScrollPositionsForSnap(f, aScrolledFrame, aSnapportSize,
+                                     aSnapInfo);
+      }
+      CollectScrollPositionsForSnap(f, aScrolledFrame, aSnapportSize,
+                                    aSnapInfo);
+    }
+  }
+}
+
+/**
  * Collect the scroll-snap-coordinates of frames in the subtree rooted at
  * |aFrame|, relative to |aScrolledFrame|, into |aOutCoords|.
  */
 static void CollectScrollSnapCoordinates(nsIFrame* aFrame,
                                          nsIFrame* aScrolledFrame,
                                          nsTArray<nsPoint>& aOutCoords) {
+  MOZ_ASSERT(!StaticPrefs::layout_css_scroll_snap_v1_enabled());
+
   nsIFrame::ChildListIterator childLists(aFrame);
   for (; !childLists.IsDone(); childLists.Next()) {
     nsFrameList::Enumerator childFrames(childLists.CurrentList());
@@ -6585,6 +6721,12 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo() const {
     result.mScrollSnapIntervalY =
         Some(styles.mScrollSnapPointsY.ComputeCoordPercentCalc(
             scrollPortSize.height));
+  }
+
+  if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
+    CollectScrollPositionsForSnap(mScrolledFrame, mScrolledFrame,
+                                  GetScrollPortRect().Size(), result);
+    return result;
   }
 
   CollectScrollSnapCoordinates(mScrolledFrame, mScrolledFrame,
