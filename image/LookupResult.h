@@ -62,6 +62,13 @@ class MOZ_STACK_CLASS LookupResult {
                "NOT_FOUND or PENDING do not make sense with a surface");
   }
 
+  LookupResult(MatchType aMatchType, const gfx::IntSize& aSuggestedSize)
+      : mMatchType(aMatchType), mSuggestedSize(aSuggestedSize) {
+    MOZ_ASSERT(
+        mMatchType == MatchType::NOT_FOUND || mMatchType == MatchType::PENDING,
+        "Only NOT_FOUND or PENDING make sense with no surface");
+  }
+
   LookupResult(DrawableSurface&& aSurface, MatchType aMatchType,
                const gfx::IntSize& aSuggestedSize)
       : mSurface(std::move(aSurface)),

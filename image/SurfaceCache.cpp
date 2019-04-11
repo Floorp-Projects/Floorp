@@ -511,26 +511,8 @@ class ImageSurfaceCache {
   IntSize SuggestedSize(const IntSize& aSize) const {
     IntSize suggestedSize = SuggestedSizeInternal(aSize);
     if (mIsVectorImage) {
-      // Whether or not we are in factor of 2 mode, vector image rasterization
-      // is clamped at a configured maximum if the caller is willing to accept
-      // substitutes.
-      MOZ_ASSERT(SurfaceCache::IsLegalSize(suggestedSize));
-
-      // If we exceed the maximum, we need to scale the size downwards to fit.
-      // It shouldn't get here if it is significantly larger because
-      // VectorImage::UseSurfaceCacheForSize should prevent us from requesting
-      // a rasterized version of a surface greater than 4x the maximum.
-      int32_t maxSizeKB = gfxPrefs::ImageCacheMaxRasterizedSVGThresholdKB();
-      int32_t proposedKB = suggestedSize.width * suggestedSize.height / 256;
-      if (maxSizeKB >= proposedKB) {
-        return suggestedSize;
-      }
-
-      double scale = sqrt(double(maxSizeKB) / proposedKB);
-      suggestedSize.width = int32_t(scale * suggestedSize.width);
-      suggestedSize.height = int32_t(scale * suggestedSize.height);
+      suggestedSize = SurfaceCache::ClampVectorSize(suggestedSize);
     }
-
     return suggestedSize;
   }
 
@@ -964,7 +946,9 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
     RefPtr<ImageSurfaceCache> cache = GetImageCache(aImageKey);
     if (!cache) {
       // No cached surfaces for this image.
-      return LookupResult(MatchType::NOT_FOUND);
+      return LookupResult(
+          MatchType::NOT_FOUND,
+          SurfaceCache::ClampSize(aImageKey, aSurfaceKey.Size()));
     }
 
     // Repeatedly look up the best match, trying again if the resulting surface
@@ -983,7 +967,7 @@ class SurfaceCacheImpl final : public nsIMemoryReporter {
 
       if (!surface) {
         return LookupResult(
-            matchType);  // Lookup in the per-image cache missed.
+            matchType, suggestedSize);  // Lookup in the per-image cache missed.
       }
 
       drawableSurface = surface->GetDrawableSurface();
@@ -1645,6 +1629,33 @@ bool SurfaceCache::IsLegalSize(const IntSize& aSize) {
     return false;
   }
   return true;
+}
+
+IntSize SurfaceCache::ClampVectorSize(const IntSize& aSize) {
+  // If we exceed the maximum, we need to scale the size downwards to fit.
+  // It shouldn't get here if it is significantly larger because
+  // VectorImage::UseSurfaceCacheForSize should prevent us from requesting
+  // a rasterized version of a surface greater than 4x the maximum.
+  int32_t maxSizeKB = gfxPrefs::ImageCacheMaxRasterizedSVGThresholdKB();
+  if (maxSizeKB <= 0) {
+    return aSize;
+  }
+
+  int32_t proposedKB = int32_t(int64_t(aSize.width) * aSize.height / 256);
+  if (maxSizeKB >= proposedKB) {
+    return aSize;
+  }
+
+  double scale = sqrt(double(maxSizeKB) / proposedKB);
+  return IntSize(int32_t(scale * aSize.width), int32_t(scale * aSize.height));
+}
+
+IntSize SurfaceCache::ClampSize(ImageKey aImageKey, const IntSize& aSize) {
+  if (aImageKey->GetType() != imgIContainer::TYPE_VECTOR) {
+    return aSize;
+  }
+
+  return ClampVectorSize(aSize);
 }
 
 }  // namespace image
