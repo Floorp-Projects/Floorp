@@ -27,6 +27,7 @@ import errno
 import io
 import json
 import os
+import random
 import re
 import shutil
 import socket
@@ -43,6 +44,7 @@ FALLBACK_FINGERPRINT = {
         "sha256:17:38:aa:92:0b:84:3e:aa:8e:52:52:e9:4c:2f:98:a9:0e:bf:6c:3e:e9"
         ":15:ff:0a:29:80:f7:06:02:5b:e8:48"}
 
+HGMOINTERNAL_CONFIG_URL = 'http://taskcluster/secrets/v1/secret/project/taskcluster/gecko/hgmointernal'
 
 CACHE_UID_GID_MISMATCH = '''
 There is a UID/GID mismatch on the cache. This likely means:
@@ -513,6 +515,68 @@ def add_vcs_arguments(parser, project, name):
                         help='Path to sparse profile for %s checkout' % name)
 
 
+def resolve_checkout_url(base_repo, head_repo):
+    """Resolve the Mercurial URL to perform a checkout against, either the
+    public hg.mozilla.org service or a CI-only regional mirror.
+
+    The config will be of the form:
+        {
+            "us-west-2": {  # value of `TASKCLUSTER_WORKER_GROUP`
+                "rate": 0.5,
+                "domain": "us-west-2.hgmointernal.net"
+            },
+            "us-east-1": {...}
+        }
+    """
+    region = os.getenv('TASKCLUSTER_WORKER_GROUP')
+
+    try:
+        print_line(b'vcs', b'fetching hgmointernal config from %s\n' %
+                   HGMOINTERNAL_CONFIG_URL.encode('utf-8'))
+
+        # Get the hgmointernal config Taskcluster secret
+        res = urllib.request.urlopen(HGMOINTERNAL_CONFIG_URL, timeout=10)
+        hgmointernal_config = json.loads(res.read().decode('utf-8'))['secret']
+
+        # Use public hg service if region not yet supported
+        if region not in hgmointernal_config:
+            print_line(b'vcs', b'region %s not yet supported; using public '
+                               b'hg.mozilla.org service\n' % region.encode('utf-8'))
+            return base_repo, head_repo
+
+        # Only send a percentage of traffic to the internal mirror
+        rate = float(hgmointernal_config[region]['rate'])
+
+        if random.random() > rate:
+            print_line(b'vcs', b'hgmointernal rate miss; using '
+                               b'public hg.mozilla.org service\n')
+            return base_repo, head_repo
+
+        print_line(b'vcs', b'hgmointernal rate hit; cloning from '
+                           b'private hgweb mirror\n')
+
+        mirror_domain = hgmointernal_config[region]['domain']
+
+        if base_repo and base_repo.startswith('https://hg.mozilla.org'):
+            base_repo = base_repo.replace('hg.mozilla.org', mirror_domain, 1)
+
+        if head_repo and head_repo.startswith('https://hg.mozilla.org'):
+            head_repo = head_repo.replace('hg.mozilla.org', mirror_domain, 1)
+
+        return base_repo, head_repo
+
+    except (KeyError, ValueError):
+        print_line(b'vcs', b'invalid JSON in hgmointernal config; '
+                           b'falling back to public hg.mozilla.org service\n')
+
+    except (urllib.error.URLError, socket.timeout):
+        print_line(b'vcs', b'Unable to retrieve hgmointernal config using '
+                           b'the secret service; falling back to public hg.mozilla.org '
+                           b'service\n')
+
+    return base_repo, head_repo
+
+
 def collect_vcs_options(args, project):
     checkout = getattr(args, '%s_checkout' % project)
     sparse_profile = getattr(args, '%s_sparse_profile' % project)
@@ -537,6 +601,11 @@ def collect_vcs_options(args, project):
     # with it.
     if base_repo == 'https://hg.mozilla.org/mozilla-central':
         base_repo = 'https://hg.mozilla.org/mozilla-unified'
+
+    # No need to check the hgmointernal config if we aren't performing
+    # a checkout.
+    if checkout:
+        base_repo, head_repo = resolve_checkout_url(base_repo, head_repo)
 
     return {
         'store-path': store_path,
