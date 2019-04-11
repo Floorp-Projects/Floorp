@@ -228,6 +228,11 @@ def create_parser_manifest_update():
     return manifestupdate.create_parser()
 
 
+def create_parser_metadata_summary():
+    import metasummary
+    return metasummary.create_parser()
+
+
 @CommandProvider
 class MachCommands(MachCommandBase):
     def setup(self):
@@ -299,3 +304,12 @@ class MachCommands(MachCommandBase):
         wpt_runner = WebPlatformTestsRunner(wpt_setup)
         logger = wpt_runner.setup_logging(**params)
         return 0 if wpt_runner.update_manifest(logger, **params) else 1
+
+    @Command("wpt-metadata-summary",
+             category="testing",
+             description="Create a json summary of the wpt metadata",
+             parser=create_parser_metadata_summary)
+    def wpt_summary(self, **params):
+        import metasummary
+        wpt_setup = self._spawn(WebPlatformTestsRunnerSetup)
+        return metasummary.run(wpt_setup.topsrcdir, wpt_setup.topobjdir, **params)
