@@ -408,6 +408,14 @@ static void LoadUint24Operand(MacroAssembler& masm, Register pc, size_t offset,
   masm.rshift32(Imm32(8), dest);
 }
 
+static void LoadInlineValueOperand(MacroAssembler& masm, Register pc,
+                                   ValueOperand dest) {
+  // Note: the Value might be unaligned but as above we rely on all our
+  // platforms having appropriate support for unaligned accesses (except for
+  // floating point instructions on ARM).
+  masm.loadValue(Address(pc, sizeof(jsbytecode)), dest);
+}
+
 template <>
 void BaselineCompilerCodeGen::loadScript(Register dest) {
   masm.movePtr(ImmGCPtr(handler.script()), dest);
@@ -2171,7 +2179,9 @@ bool BaselineCompilerCodeGen::emit_JSOP_DOUBLE() {
 
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_DOUBLE() {
-  MOZ_CRASH("NYI: interpreter JSOP_DOUBLE");
+  LoadInlineValueOperand(masm, PCRegAtStart, R0);
+  frame.push(R0);
+  return true;
 }
 
 template <>
