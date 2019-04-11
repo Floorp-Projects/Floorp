@@ -5,24 +5,19 @@
 
 "use strict";
 
-function run_test() {
-  Assert.ok(!Services.search.isInitialized, "search isn't initialized yet");
-
-  run_next_test();
-}
-
 // Override list.json with test data from data/list.json
 // and check that different locale is working
 add_task(async function test_listJSONlocale() {
   let url = "resource://test/data/";
   let resProt = Services.io.getProtocolHandler("resource")
                         .QueryInterface(Ci.nsIResProtocolHandler);
-  resProt.setSubstitution("search-plugins", Services.io.newURI(url));
+  resProt.setSubstitution("search-extensions", Services.io.newURI(url));
 
   Services.locale.availableLocales = ["de"];
   Services.locale.requestedLocales = ["de"];
 
-  await asyncInit();
+  await AddonTestUtils.promiseStartupManager();
+  await Services.search.init();
 
   Assert.ok(Services.search.isInitialized, "search initialized");
 
@@ -34,6 +29,9 @@ add_task(async function test_listJSONlocale() {
 // Check that switching locale switches search engines
 add_task(async function test_listJSONlocaleSwitch() {
   let promise = SearchTestUtils.promiseSearchNotification("reinit-complete");
+
+  let defaultBranch = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
+  defaultBranch.setCharPref("param.code", "good&id=unique");
 
   Services.locale.availableLocales = ["fr"];
   Services.locale.requestedLocales = ["fr"];
@@ -51,7 +49,7 @@ add_task(async function test_listJSONlocaleSwitch() {
 add_task(async function test_listJSONRegionOverride() {
   Services.prefs.setCharPref("browser.search.region", "RU");
 
-  await asyncReInit();
+  await asyncReInit({skipReset: true});
 
   Assert.ok(Services.search.isInitialized, "search initialized");
 

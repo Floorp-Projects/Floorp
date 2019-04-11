@@ -1,3 +1,5 @@
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+
 const kSearchEngineID = "test_urifixup_search_engine";
 const kSearchEngineURL = "http://www.example.org/?search={searchTerms}";
 const kForceHostLookup = "browser.fixup.dns_first_for_single_words";
@@ -492,6 +494,10 @@ function sanitize(input) {
   return input.replace(/\r|\n/g, "").trim();
 }
 
+AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+
 add_task(async function setup() {
   var prefList = ["browser.fixup.typo.scheme", "keyword.enabled",
                   "browser.fixup.domainwhitelist.whitelisted"];
@@ -499,10 +505,12 @@ add_task(async function setup() {
     Services.prefs.setBoolPref(pref, true);
   }
 
+  await AddonTestUtils.promiseStartupManager();
+
   Services.io.getProtocolHandler("resource")
           .QueryInterface(Ci.nsIResProtocolHandler)
-          .setSubstitution("search-plugins",
-                           Services.io.newURI("chrome://mozapps/locale/searchplugins/"));
+          .setSubstitution("search-extensions",
+                           Services.io.newURI("chrome://mozapps/locale/searchextensions/"));
 
   await Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get", kSearchEngineURL);
 

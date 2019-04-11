@@ -30,7 +30,6 @@ add_task(async function test() {
     searchForm: "https://www.ebay.com/",
     hidden: false,
     wrappedJSObject: {
-      "_iconURL": "resource://search-plugins/images/ebay.ico",
       _urls: [
         {
           type: "text/html",

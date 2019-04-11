@@ -17,12 +17,11 @@
  * and configuration of Firefox.
  */
 
-function run_test() {
+add_task(async function setup() {
   do_load_manifest("data/chrome.manifest");
   useHttpServer();
-
-  run_next_test();
-}
+  await AddonTestUtils.promiseStartupManager();
+});
 
 add_task(async function test_nodb_pluschanges() {
   let [engine1, engine2] = await addTestEngines([

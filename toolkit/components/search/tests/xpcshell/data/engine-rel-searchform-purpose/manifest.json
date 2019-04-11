@@ -1,0 +1,41 @@
+{
+  "name": "engine-rel-searchform-purpose",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "engine-rel-searchform-purpose@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "engine-rel-searchform-purpose",
+      "search_url": "https://www.google.com/search",
+      "params": [
+        {
+          "name": "q",
+          "value": "{searchTerms}"
+        },
+        {
+          "name": "channel",
+          "condition": "purpose",
+          "purpose": "contextmenu",
+          "value": "rcs"
+        },
+        {
+          "name": "channel",
+          "condition": "purpose",
+          "purpose": "keyword",
+          "value": "fflb"
+        },
+        {
+          "name": "channel",
+          "condition": "purpose",
+          "purpose": "searchbar",
+          "value": "sb"
+        }
+      ]
+    }
+  }
+}

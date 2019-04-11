@@ -1,14 +1,10 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function run_test() {
-  do_load_manifest("data/chrome.manifest");
-
+add_task(async function setup() {
   configureToLoadJarEngines();
-  Assert.ok(!Services.search.isInitialized);
-
-  run_next_test();
-}
+  await AddonTestUtils.promiseStartupManager();
+});
 
 add_task(async function ignore_cache_files_without_engines() {
   let commitPromise = promiseAfterCache();
@@ -50,7 +46,7 @@ add_task(async function skip_writing_cache_without_engines() {
   Assert.ok(removeCacheFile());
   let resProt = Services.io.getProtocolHandler("resource")
                         .QueryInterface(Ci.nsIResProtocolHandler);
-  resProt.setSubstitution("search-plugins",
+  resProt.setSubstitution("search-extensions",
                           Services.io.newURI("about:blank"));
 
   // Let the async-reInit happen.

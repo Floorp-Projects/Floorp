@@ -1,0 +1,24 @@
+{
+  "name": "TestEngineApp",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "engine-app@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "description": "A test search engine installed in the application directory",
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "TestEngineApp",
+      "search_url": "https://localhost/",
+      "params": [
+        {
+          "name": "q",
+          "value": "{searchTerms}"
+        }
+      ]
+    }
+  }
+}

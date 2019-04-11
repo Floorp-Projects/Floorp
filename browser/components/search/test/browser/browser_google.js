@@ -11,18 +11,11 @@ let expectedEngine = {
   name: "Google",
   alias: null,
   description: "Google Search",
-  searchForm: "https://www.google.com/search?",
+  searchForm: "https://www.google.com/search?client={code}&q=",
   hidden: false,
   wrappedJSObject: {
     queryCharset: "UTF-8",
-    "_iconURL": "resource://search-plugins/images/google.ico",
     _urls: [
-      {
-        type: "application/x-suggestions+json",
-        method: "GET",
-        template: "https://www.google.com/complete/search?client=firefox&q={searchTerms}",
-        params: "",
-      },
       {
         type: "text/html",
         method: "GET",
@@ -36,6 +29,12 @@ let expectedEngine = {
         ],
         mozparams: {
         },
+      },
+      {
+        type: "application/x-suggestions+json",
+        method: "GET",
+        template: "https://www.google.com/complete/search?client=firefox&q={searchTerms}",
+        params: [],
       },
     ],
   },
@@ -53,7 +52,7 @@ add_task(async function test() {
     case "US":
       code = "firefox-b-1-d";
       break;
-    case "DE":
+  case "DE":
       code = "firefox-b-d";
       break;
     case "RU":
@@ -62,14 +61,13 @@ add_task(async function test() {
   }
 
   if (code) {
-    expectedEngine.searchForm += `client=${code}&`;
-    let urlParams = expectedEngine.wrappedJSObject._urls[1].params;
+    let urlParams = expectedEngine.wrappedJSObject._urls[0].params;
     urlParams.unshift({
       name: "client",
       value: code,
     });
+    expectedEngine.searchForm = expectedEngine.searchForm.replace("{code}", code);
   }
-  expectedEngine.searchForm += "q=";
 
   let url;
 

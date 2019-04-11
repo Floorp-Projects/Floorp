@@ -6,6 +6,10 @@
 const SEARCH_SERVICE_TOPIC = "browser-search-service";
 const SEARCH_ENGINE_TOPIC = "browser-search-engine-modified";
 
+add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+});
+
 add_task(async function test_regular_init() {
   await withGeoServer(async function cont(requests) {
     let reloadObserved = false;

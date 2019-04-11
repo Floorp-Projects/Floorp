@@ -217,6 +217,20 @@ interface nsISearchService : nsISupports
   Promise init();
 
   /**
+   * Redo asynchronous initialization
+   *
+   * Exposed for testing initializations
+   */
+  void reInit([optional] in boolean skipRegionCheck);
+
+  /**
+   * Clear locally stored data
+   *
+   * Exposed for testing initializations
+   */
+  void reset();
+
+  /**
    * Determine whether initialization has been completed.
    *
    * Clients of the service can use this attribute to quickly determine whether
@@ -432,6 +446,15 @@ interface nsISearchService : nsISupports
    *         The engine to remove.
    */
   Promise removeEngine(in nsISearchEngine engine);
+
+  /**
+   * Notify nsSearchService that an extension has been removed. Removes any
+   * engines that are associated with that extension.
+   *
+   * @param  id
+   *         The id of the extension.
+   */
+  Promise removeWebExtensionEngine(in AString id);
 
   /**
    * The original Engine object that is the default for this region,
