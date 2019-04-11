@@ -138,7 +138,7 @@ add_task(async function test_otherRedirectURL() {
   await extension.unload();
 });
 
-function background_launchWebAuthFlow({interactive = false, path = "redirect_auto.sjs", params = {}, redirect = true, useRedirectUri = true} = {}) {
+function background_launchWebAuthFlow(interactive, path, redirect = true, useRedirectUri = true) {
   let uri_path = useRedirectUri ? "identity_cb" : "";
   let expected_redirect = `https://35b64b676900f491c00e7f618d43f7040e88422e.example.com/${uri_path}`;
   let base_uri = "https://example.com/tests/toolkit/components/extensions/test/mochitest/";
@@ -146,21 +146,16 @@ function background_launchWebAuthFlow({interactive = false, path = "redirect_aut
   browser.test.assertEq(expected_redirect, redirect_uri, "expected redirect uri matches hash");
   let url = `${base_uri}${path}`;
   if (useRedirectUri) {
-    params.redirect_uri = redirect_uri;
+    url = `${url}?redirect_uri=${encodeURIComponent(redirect_uri)}`;
   } else {
     // We kind of fake it with the redirect url that would normally be configured
     // in the oauth service.  This does still test that the identity service falls back
     // to the extensions redirect url.
-    params.default_redirect = expected_redirect;
+    url = `${url}?default_redirect=${encodeURIComponent(expected_redirect)}`;
   }
   if (!redirect) {
-    params.no_redirect = 1;
+    url = `${url}&no_redirect=1`;
   }
-  let query = [];
-  for (let [param, value] of Object.entries(params)) {
-    query.push(`${param}=${encodeURIComponent(value)}`);
-  }
-  url = `${url}?${query.join("&")}`;
 
   // Ensure we do not start the actual request for the redirect url.
   browser.webRequest.onBeforeRequest.addListener(details => {
@@ -202,7 +197,7 @@ add_task(async function test_autoRedirect() {
         "https://*.example.com/*",
       ],
     },
-    background: `(${background_launchWebAuthFlow})()`,
+    background: `(${background_launchWebAuthFlow})(false, "redirect_auto.sjs")`,
   });
 
   await extension.startup();
@@ -224,7 +219,7 @@ add_task(async function test_autoRedirect_noRedirectURI() {
         "https://*.example.com/*",
       ],
     },
-    background: `(${background_launchWebAuthFlow})({useRedirectUri: false})`,
+    background: `(${background_launchWebAuthFlow})(false, "redirect_auto.sjs", true, false)`,
   });
 
   await extension.startup();
@@ -247,7 +242,7 @@ add_task(async function test_noRedirect() {
         "https://*.example.com/*",
       ],
     },
-    background: `(${background_launchWebAuthFlow})({redirect: false})`,
+    background: `(${background_launchWebAuthFlow})(false, "redirect_auto.sjs", false)`,
   });
 
   await extension.startup();
@@ -273,38 +268,13 @@ add_task(async function test_interaction() {
         "https://*.example.com/*",
       ],
     },
-    background: `(${background_launchWebAuthFlow})({interactive: true, path: "oauth.html"})`,
+    background: `(${background_launchWebAuthFlow})(true, "oauth.html")`,
   });
 
   await extension.startup();
   await extension.awaitMessage("done");
   await extension.unload();
 });
-
-
-// Tests the situation where the oauth provider redirects with a 303.
-add_task(async function test_auto303Redirect() {
-  let extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      "applications": {
-        "gecko": {
-          "id": "identity@mozilla.org",
-        },
-      },
-      "permissions": [
-        "webRequest",
-        "identity",
-        "https://*.example.com/*",
-      ],
-    },
-    background: `(${background_launchWebAuthFlow})({interactive: true, path: "oauth.html", params: {post: 303, server_uri: "redirect_auto.sjs"}})`,
-  });
-
-  await extension.startup();
-  await extension.awaitMessage("done");
-  await extension.unload();
-});
-
 </script>
 
 </body>
