@@ -280,7 +280,7 @@ void js::CheckTracedThing(JSTracer* trc, T thing) {
 }
 
 namespace js {
-#define IMPL_CHECK_TRACED_THING(_, type, __) \
+#define IMPL_CHECK_TRACED_THING(_, type, _1, _2) \
   template void CheckTracedThing<type>(JSTracer*, type*);
 JS_FOR_EACH_TRACEKIND(IMPL_CHECK_TRACED_THING);
 #undef IMPL_CHECK_TRACED_THING
@@ -451,7 +451,7 @@ namespace gc {
   template void TraceRangeInternal<type>(JSTracer*, size_t len, type*,      \
                                          const char*);
 
-#define INSTANTIATE_INTERNAL_TRACE_FUNCTIONS_FROM_TRACEKIND(_1, type, _2) \
+#define INSTANTIATE_INTERNAL_TRACE_FUNCTIONS_FROM_TRACEKIND(_1, type, _2, _3) \
   INSTANTIATE_INTERNAL_TRACE_FUNCTIONS(type*)
 
 JS_FOR_EACH_TRACEKIND(INSTANTIATE_INTERNAL_TRACE_FUNCTIONS_FROM_TRACEKIND)
@@ -550,7 +550,7 @@ void js::TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, Cell** thingp,
 // a sufficiently smart C++ compiler may be able to devirtualize some paths.
 template <typename T>
 void js::gc::TraceEdgeInternal(JSTracer* trc, T* thingp, const char* name) {
-#define IS_SAME_TYPE_OR(name, type, _) mozilla::IsSame<type*, T>::value ||
+#define IS_SAME_TYPE_OR(name, type, _, _1) mozilla::IsSame<type*, T>::value ||
   static_assert(JS_FOR_EACH_TRACEKIND(IS_SAME_TYPE_OR)
                         mozilla::IsSame<T, JS::Value>::value ||
                     mozilla::IsSame<T, jsid>::value ||
@@ -925,7 +925,7 @@ namespace {
 
 template <typename T>
 struct TraceKindCanBeGray {};
-#define EXPAND_TRACEKIND_DEF(_, type, canBeGray)      \
+#define EXPAND_TRACEKIND_DEF(_, type, canBeGray, _1)  \
   template <>                                         \
   struct TraceKindCanBeGray<type> {                   \
     static const bool value = canBeGray;              \
@@ -3177,7 +3177,7 @@ size_t js::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src,
 
 template <typename T>
 static inline void CheckIsMarkedThing(T* thingp) {
-#define IS_SAME_TYPE_OR(name, type, _) mozilla::IsSame<type*, T>::value ||
+#define IS_SAME_TYPE_OR(name, type, _, _1) mozilla::IsSame<type*, T>::value ||
   static_assert(JS_FOR_EACH_TRACEKIND(IS_SAME_TYPE_OR) false,
                 "Only the base cell layout types are allowed into "
                 "marking/tracing internals");
@@ -3357,7 +3357,7 @@ FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(
   template bool IsMarkedBlackInternal(JSRuntime* rt, type* thing); \
   template bool IsAboutToBeFinalizedInternal(type* thingp);
 
-#define INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND(_1, type, _2) \
+#define INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND(_1, type, _2, _3) \
   INSTANTIATE_INTERNAL_MARKING_FUNCTIONS(type*)
 
 JS_FOR_EACH_TRACEKIND(INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND)

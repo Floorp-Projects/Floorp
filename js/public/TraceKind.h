@@ -66,18 +66,6 @@ enum class TraceKind {
 };
 const static uintptr_t OutOfLineTraceKindMask = 0x07;
 
-// Returns true if the JS::TraceKind is one the cycle collector cares about.
-// Everything used as WeakMap key should be listed here, to represent the key
-// in cycle collector's graph, otherwise the key is considered to be pointed
-// from somewhere unknown, and results in leaking the subgraph which contains
-// the key.
-// See the comments in NoteWeakMapsTracer::trace for more details.
-inline constexpr bool IsCCTraceKind(JS::TraceKind aKind) {
-  return aKind == JS::TraceKind::Object || aKind == JS::TraceKind::Script ||
-         aKind == JS::TraceKind::LazyScript || aKind == JS::TraceKind::Scope ||
-         aKind == JS::TraceKind::RegExpShared;
-}
-
 #define ASSERT_TRACE_KIND(tk)                                             \
   static_assert(                                                          \
       (uintptr_t(tk) & OutOfLineTraceKindMask) == OutOfLineTraceKindMask, \
@@ -99,23 +87,45 @@ struct MapTypeToTraceKind {
 
 // When this header is used outside SpiderMonkey, the class definitions are not
 // available, so the following table containing all public GC types is used.
-#define JS_FOR_EACH_TRACEKIND(D)                          \
-  /* name   type    canBeGray */                          \
-  D(BaseShape, js::BaseShape, true)                       \
-  D(JitCode, js::jit::JitCode, true)                      \
-  D(LazyScript, js::LazyScript, true)                     \
-  D(Scope, js::Scope, true)                               \
-  D(Object, JSObject, true)                               \
-  D(ObjectGroup, js::ObjectGroup, true)                   \
-  D(Script, JSScript, true)                               \
-  D(Shape, js::Shape, true)                               \
-  D(String, JSString, false)                              \
-  D(Symbol, JS::Symbol, false)                            \
-  D(BigInt, JS::BigInt, false)                            \
-  D(RegExpShared, js::RegExpShared, true)
+//
+// canBeGray: GC can mark things of this kind gray. The cycle collector
+//            traverses gray GC things when looking for cycles.
+// inCCGraph: Things of this kind are represented as nodes in the CC graph. This
+//            also means they can be used as a keys in WeakMap.
+
+// clang-format off
+#define JS_FOR_EACH_TRACEKIND(D)                                 \
+  /* name         type              canBeGray       inCCGraph */ \
+  D(BaseShape,    js::BaseShape,    true,           false)       \
+  D(JitCode,      js::jit::JitCode, true,           false)       \
+  D(LazyScript,   js::LazyScript,   true,           true)        \
+  D(Scope,        js::Scope,        true,           true)        \
+  D(Object,       JSObject,         true,           true)        \
+  D(ObjectGroup,  js::ObjectGroup,  true,           false)       \
+  D(Script,       JSScript,         true,           true)        \
+  D(Shape,        js::Shape,        true,           false)       \
+  D(String,       JSString,         false,          false)       \
+  D(Symbol,       JS::Symbol,       false,          false)       \
+  D(BigInt,       JS::BigInt,       false,          false)       \
+  D(RegExpShared, js::RegExpShared, true,           true)
+// clang-format on
+
+// Returns true if the JS::TraceKind is represented as a node in cycle collector
+// graph.
+inline constexpr bool IsCCTraceKind(JS::TraceKind aKind) {
+  switch (aKind) {
+#define JS_EXPAND_DEF(name, _1, _2, inCCGraph) \
+    case JS::TraceKind::name: \
+      return inCCGraph;
+      JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
+#undef JS_EXPAND_DEF
+    default:
+      return false;
+  }
+}
 
 // Map from all public types to their trace kind.
-#define JS_EXPAND_DEF(name, type, _)                       \
+#define JS_EXPAND_DEF(name, type, _, _1)                   \
   template <>                                              \
   struct MapTypeToTraceKind<type> {                        \
     static const JS::TraceKind kind = JS::TraceKind::name; \
@@ -128,7 +138,7 @@ JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
 // are designed for use as array keys via EnumeratedArray.
 enum class RootKind : int8_t {
 // These map 1:1 with trace kinds.
-#define EXPAND_ROOT_KIND(name, _0, _1) name,
+#define EXPAND_ROOT_KIND(name, _0, _1, _2) name,
   JS_FOR_EACH_TRACEKIND(EXPAND_ROOT_KIND)
 #undef EXPAND_ROOT_KIND
 
@@ -145,7 +155,7 @@ enum class RootKind : int8_t {
 // Most RootKind correspond directly to a trace kind.
 template <TraceKind traceKind>
 struct MapTraceKindToRootKind {};
-#define JS_EXPAND_DEF(name, _0, _1)                      \
+#define JS_EXPAND_DEF(name, _0, _1, _2)                  \
   template <>                                            \
   struct MapTraceKindToRootKind<JS::TraceKind::name> {   \
     static const JS::RootKind kind = JS::RootKind::name; \
@@ -212,7 +222,7 @@ struct MapTypeToRootKind<JSFunction*> : public MapTypeToRootKind<JSObject*> {};
 template <typename F, typename... Args>
 auto DispatchTraceKindTyped(F f, JS::TraceKind traceKind, Args&&... args) {
   switch (traceKind) {
-#define JS_EXPAND_DEF(name, type, _)                      \
+#define JS_EXPAND_DEF(name, type, _, _1)                   \
   case JS::TraceKind::name:                               \
     return f.JS_DEPENDENT_TEMPLATE_HINT operator()<type>( \
         std::forward<Args>(args)...);
@@ -230,8 +240,8 @@ auto DispatchTraceKindTyped(F f, JS::TraceKind traceKind, Args&&... args) {
 template <typename F>
 auto MapGCThingTyped(void* thing, JS::TraceKind traceKind, F&& f) {
   switch (traceKind) {
-#define JS_EXPAND_DEF(name, type, _) \
-  case JS::TraceKind::name:          \
+#define JS_EXPAND_DEF(name, type, _, _1) \
+  case JS::TraceKind::name:             \
     return f(static_cast<type*>(thing));
     JS_FOR_EACH_TRACEKIND(JS_EXPAND_DEF);
 #undef JS_EXPAND_DEF
