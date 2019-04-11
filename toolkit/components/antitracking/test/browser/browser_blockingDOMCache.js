@@ -1,3 +1,5 @@
+/* import-globals-from antitracking_head.js */
+
 requestLongerTimeout(2);
 
 AntiTracking.runTest("DOM Cache",

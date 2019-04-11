@@ -1,5 +1,7 @@
 /* import-globals-from head.js */
+/* import-globals-from antitracking_head.js */
 /* import-globals-from browser_imageCache4.js */
+
 AntiTracking.runTest("Image cache - should load the image three times.",
   // blocking callback
   async _ => {
