@@ -5443,6 +5443,10 @@ bool BaselineCodeGen<Handler>::emit_JSOP_AWAIT() {
 
 template <typename Handler>
 bool BaselineCodeGen<Handler>::emit_JSOP_AFTERYIELD() {
+  if (!emit_JSOP_JUMPTARGET()) {
+    return false;
+  }
+
   auto ifDebuggee = [this]() {
     frame.assertSyncedStack();
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
