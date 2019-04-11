@@ -103,9 +103,6 @@ class VectorImage final : public ImageResource, public nsIStreamListener {
   already_AddRefed<gfxDrawable> CreateSVGDrawable(
       const SVGDrawingParameters& aParams);
 
-  /// Returns true if we use the surface cache to store rasterized copies.
-  bool UseSurfaceCacheForSize(const IntSize& aSize) const;
-
   /// Rasterize the SVG into a surface. aWillCache will be set to whether or
   /// not the new surface was put into the cache.
   already_AddRefed<SourceSurface> CreateSurface(
