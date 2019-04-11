@@ -1104,6 +1104,7 @@ void CodeGenerator::visitTrunc(LTrunc* lir) {
   const ARMFPRegister input64(input, 64);
   const Register output = ToRegister(lir->output());
   const ARMRegister output32(output, 32);
+  const ARMRegister output64(output, 64);
 
   Label done, zeroCase;
 
@@ -1133,6 +1134,11 @@ void CodeGenerator::visitTrunc(LTrunc* lir) {
     // The use of "lt" instead of "lo" also catches unordered NaN input.
     masm.Fcmp(input64, 0.0);
     bailoutIf(vixl::lt, lir->snapshot());
+
+    // Check explicitly for -0, bitwise.
+    masm.Fmov(output64, input64);
+    bailoutTestPtr(Assembler::Signed, output, output, lir->snapshot());
+    masm.movePtr(ImmPtr(0), output);
   }
 
   masm.bind(&done);
@@ -1172,6 +1178,11 @@ void CodeGenerator::visitTruncF(LTruncF* lir) {
     // The use of "lt" instead of "lo" also catches unordered NaN input.
     masm.Fcmp(input32, 0.0f);
     bailoutIf(vixl::lt, lir->snapshot());
+
+    // Check explicitly for -0, bitwise.
+    masm.Fmov(output32, input32);
+    bailoutTest32(Assembler::Signed, output, output, lir->snapshot());
+    masm.move32(Imm32(0), output);
   }
 
   masm.bind(&done);
