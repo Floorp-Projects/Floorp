@@ -12,8 +12,54 @@ js_option(env='CARGO', nargs=1, help='Path to the Cargo package manager')
 
 rustc = check_prog('RUSTC', ['rustc'], paths=toolchain_search_path,
                    input='RUSTC', allow_missing=True)
-cargo = check_prog('CARGO', ['cargo'], paths=toolchain_search_path,
-                   input='CARGO', allow_missing=True)
+cargo = check_prog('_CARGO', ['cargo'], what='cargo',
+                   paths=toolchain_search_path, input='CARGO',
+                   allow_missing=True)
+
+
+@depends(cargo, host)
+@imports('subprocess')
+@imports(_from='__builtin__', _import='open')
+@imports('os')
+def cargo(cargo, host):
+    # The cargo executable can be either a rustup wrapper, or a real,
+    # plain, cargo. In the former case, on OSX, rustup sets
+    # DYLD_LIBRARY_PATH (at least until
+    # https://github.com/rust-lang/rustup.rs/pull/1752 is merged and shipped)
+    # and that can wreck havoc (see bug 1536486).
+    #
+    # So if we're in that situation, find the corresponding real plain
+    # cargo.
+    #
+    # To achieve that, try to run `cargo +stable`. When it's the rustup
+    # wrapper, it either prints cargo's help and exits with status 0, or print
+    # an error message (error: toolchain 'stable' is not installed) and exits
+    # with status 1. When it's plain cargo, it exits with a different error
+    # message (error: no such subcommand: `+stable`), and exits with status
+    # 101.
+    if host.os == 'OSX':
+        with open(os.devnull, 'wb') as devnull:
+            retcode = subprocess.call(
+                [cargo, '+stable'], stdout=devnull, stderr=devnull)
+        if retcode != 101:
+            # We now proceed to find the real cargo. We're not sure `rustup`
+            # is in $PATH, but we know the cargo executable location, and that
+            # it /is/ rustup, so we can pass it `rustup` as argv[0], which
+            # will make it act as rustup.
+            # Note we could avoid the `cargo +stable` call above, but there's
+            # the possibility that there's a `cargo-which` command that would
+            # not fail with running `cargo which cargo` with a real cargo.
+            out = check_cmd_output('rustup', 'which', 'cargo',
+                                   executable=cargo).rstrip()
+            # If for some reason the above failed to return something, keep the
+            # cargo we found originally.
+            if out:
+                cargo = out
+                log.info('Actually using %s', cargo)
+    return cargo
+
+
+set_config('CARGO', cargo)
 
 
 @depends_if(rustc)
