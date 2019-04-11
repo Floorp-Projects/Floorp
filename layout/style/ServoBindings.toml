@@ -414,6 +414,7 @@ cbindgen-types = [
     { gecko = "StyleOutlineStyle", servo = "values::computed::OutlineStyle" },
     { gecko = "StyleScrollSnapAlign", servo = "values::computed::ScrollSnapAlign" },
     { gecko = "StyleScrollSnapStrictness", servo = "values::computed::ScrollSnapStrictness" },
+    { gecko = "StyleScrollSnapType", servo = "values::computed::ScrollSnapType" },
     { gecko = "StyleResize", servo = "values::computed::Resize" },
     { gecko = "StyleOverflowClipBox", servo = "values::computed::OverflowClipBox" },
     { gecko = "StyleFloat", servo = "values::computed::Float" },

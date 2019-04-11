@@ -1015,26 +1015,27 @@ gfxSize nsPresContext::ScreenSizeInchesForFontInflation(bool* aChanged) {
   return deviceSizeInches;
 }
 
-static bool CheckOverflow(const nsStyleDisplay* aDisplay,
+static bool CheckOverflow(ComputedStyle* aComputedStyle,
                           ScrollStyles* aStyles) {
-  if (aDisplay->mOverflowX == StyleOverflow::Visible &&
-      aDisplay->mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_AUTO &&
-      aDisplay->mOverscrollBehaviorX == StyleOverscrollBehavior::Auto &&
-      aDisplay->mOverscrollBehaviorY == StyleOverscrollBehavior::Auto &&
-      aDisplay->mScrollSnapTypeX == StyleScrollSnapStrictness::None &&
-      aDisplay->mScrollSnapTypeY == StyleScrollSnapStrictness::None &&
-      aDisplay->mScrollSnapPointsX == nsStyleCoord(eStyleUnit_None) &&
-      aDisplay->mScrollSnapPointsY == nsStyleCoord(eStyleUnit_None) &&
-      aDisplay->mScrollSnapDestination.horizontal == LengthPercentage::Zero() &&
-      aDisplay->mScrollSnapDestination.vertical == LengthPercentage::Zero()) {
+  const nsStyleDisplay* display = aComputedStyle->StyleDisplay();
+  if (display->mOverflowX == StyleOverflow::Visible &&
+      display->mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_AUTO &&
+      display->mOverscrollBehaviorX == StyleOverscrollBehavior::Auto &&
+      display->mOverscrollBehaviorY == StyleOverscrollBehavior::Auto &&
+      display->mScrollSnapType.strictness == StyleScrollSnapStrictness::None &&
+      display->mScrollSnapPointsX == nsStyleCoord(eStyleUnit_None) &&
+      display->mScrollSnapPointsY == nsStyleCoord(eStyleUnit_None) &&
+      display->mScrollSnapDestination.horizontal == LengthPercentage::Zero() &&
+      display->mScrollSnapDestination.vertical == LengthPercentage::Zero()) {
     return false;
   }
 
-  if (aDisplay->mOverflowX == StyleOverflow::MozHiddenUnscrollable) {
-    *aStyles =
-        ScrollStyles(StyleOverflow::Hidden, StyleOverflow::Hidden, aDisplay);
+  WritingMode writingMode = WritingMode(aComputedStyle);
+  if (display->mOverflowX == StyleOverflow::MozHiddenUnscrollable) {
+    *aStyles = ScrollStyles(writingMode, StyleOverflow::Hidden,
+                            StyleOverflow::Hidden, display);
   } else {
-    *aStyles = ScrollStyles(aDisplay);
+    *aStyles = ScrollStyles(writingMode, display);
   }
   return true;
 }
@@ -1053,7 +1054,7 @@ static Element* GetPropagatedScrollStylesForViewport(
   // Check the style on the document root element
   ServoStyleSet* styleSet = aPresContext->StyleSet();
   RefPtr<ComputedStyle> rootStyle = styleSet->ResolveStyleLazily(*docElement);
-  if (CheckOverflow(rootStyle->StyleDisplay(), aStyles)) {
+  if (CheckOverflow(rootStyle, aStyles)) {
     // tell caller we stole the overflow style from the root element
     return docElement;
   }
@@ -1083,7 +1084,7 @@ static Element* GetPropagatedScrollStylesForViewport(
   // https://github.com/w3c/csswg-drafts/issues/3779
   RefPtr<ComputedStyle> bodyStyle = styleSet->ResolveStyleLazily(*bodyElement);
 
-  if (CheckOverflow(bodyStyle->StyleDisplay(), aStyles)) {
+  if (CheckOverflow(bodyStyle, aStyles)) {
     // tell caller we stole the overflow style from the body element
     return bodyElement;
   }
