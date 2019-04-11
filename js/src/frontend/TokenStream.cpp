@@ -50,6 +50,7 @@ using mozilla::DecodeOneUtf8CodePoint;
 using mozilla::IsAscii;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
+using mozilla::IsAsciiHexDigit;
 using mozilla::IsTrailingUnit;
 using mozilla::MakeScopeExit;
 using mozilla::MakeSpan;
@@ -1550,7 +1551,7 @@ uint32_t GeneralTokenStreamChars<Unit, AnyCharsAccess>::matchUnicodeEscape(
 
   char16_t v;
   unit = getCodeUnit();
-  if (JS7_ISHEX(unit) && this->sourceUnits.matchHexDigits(3, &v)) {
+  if (IsAsciiHexDigit(unit) && this->sourceUnits.matchHexDigits(3, &v)) {
     *codePoint = (AsciiAlphanumericToNumber(unit) << 12) | v;
     return 5;
   }
@@ -1583,7 +1584,7 @@ GeneralTokenStreamChars<Unit, AnyCharsAccess>::matchExtendedUnicodeEscape(
 
   size_t i = 0;
   uint32_t code = 0;
-  while (JS7_ISHEX(unit) && i < 6) {
+  while (IsAsciiHexDigit(unit) && i < 6) {
     code = (code << 4) | AsciiAlphanumericToNumber(unit);
     unit = getCodeUnit();
     i++;
@@ -2591,7 +2592,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
       if (unit == 'x' || unit == 'X') {
         radix = 16;
         unit = getCodeUnit();
-        if (!JS7_ISHEX(unit)) {
+        if (!IsAsciiHexDigit(unit)) {
           // NOTE: |unit| may be EOF here.
           ungetCodeUnit(unit);
           error(JSMSG_MISSING_HEXDIGITS);
@@ -2601,7 +2602,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         // one past the '0x'
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
-        while (JS7_ISHEX(unit)) {
+        while (IsAsciiHexDigit(unit)) {
           unit = getCodeUnit();
         }
       } else if (unit == 'b' || unit == 'B') {
@@ -3173,7 +3174,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
 
               // Beware: |u3| may be a non-ASCII code point here; if
               // so it'll pass into this |if|-block.
-              if (!JS7_ISHEX(u3)) {
+              if (!IsAsciiHexDigit(u3)) {
                 if (parsingTemplate) {
                   // We put the code unit back so that we read it
                   // on the next pass, which matters if it was
@@ -3224,7 +3225,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
           // template literal, we must defer error reporting because
           // malformed escapes are okay in *tagged* template literals.
           char16_t v;
-          if (JS7_ISHEX(c2) && this->sourceUnits.matchHexDigits(3, &v)) {
+          if (IsAsciiHexDigit(c2) && this->sourceUnits.matchHexDigits(3, &v)) {
             unit = (AsciiAlphanumericToNumber(c2) << 12) | v;
           } else {
             // Beware: |c2| may not be an ASCII code point here!

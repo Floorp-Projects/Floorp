@@ -32,12 +32,9 @@ class JSLinearString;
  * Manually inline isdigit and isxdigit for performance; MSVC doesn't do this
  * for us.
  */
-#define JS7_ISA2F(c) \
-  ((((((unsigned)(c)) - 'a') <= 5) || (((unsigned)(c)) - 'A') <= 5))
 #define JS7_UNDEC(c) ((c) - '0')
 #define JS7_ISOCT(c) ((((unsigned)(c)) - '0') <= 7)
 #define JS7_UNOCT(c) (JS7_UNDEC(c))
-#define JS7_ISHEX(c) ((c) < 128 && (mozilla::IsAsciiDigit(c) || JS7_ISA2F(c)))
 
 static MOZ_ALWAYS_INLINE size_t js_strlen(const char16_t* s) {
   return std::char_traits<char16_t>::length(s);
