@@ -9,6 +9,7 @@
 #include "nsCounterManager.h"
 
 #include "mozilla/Likely.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/WritingModes.h"
 #include "nsBulletFrame.h"  // legacy location for list style type to text code
@@ -197,30 +198,63 @@ void nsCounterList::RecalcAll() {
   }
 }
 
+static bool HasCounters(const nsStyleContent& aStyle) {
+  return aStyle.CounterIncrementCount() || aStyle.CounterResetCount() ||
+         aStyle.CounterSetCount();
+}
+
+// For elements with 'display:list-item' we add a default
+// 'counter-increment:list-item' unless 'counter-increment' already has a value
+// for 'list-item'.
+//
+// https://drafts.csswg.org/css-lists-3/#declaring-a-list-item
+static bool GeneratesListItemIncrement(const nsIFrame* aFrame) {
+  if (aFrame->StyleDisplay()->mDisplay != StyleDisplay::ListItem) {
+    return false;
+  }
+  // FIXME(emilio): Per https://github.com/w3c/csswg-drafts/issues/3766,
+  // this condition should be removed.
+  if (aFrame->Style()->GetPseudoType() != PseudoStyleType::NotPseudo) {
+    return false;
+  }
+  return true;
+}
+
 bool nsCounterManager::AddCounterChanges(nsIFrame* aFrame) {
+  const bool requiresListItemIncrement = GeneratesListItemIncrement(aFrame);
   const nsStyleContent* styleContent = aFrame->StyleContent();
-  if (!styleContent->CounterIncrementCount() &&
-      !styleContent->CounterResetCount() && !styleContent->CounterSetCount()) {
+
+  if (!requiresListItemIncrement && !HasCounters(*styleContent)) {
     MOZ_ASSERT(!aFrame->HasAnyStateBits(NS_FRAME_HAS_CSS_COUNTER_STYLE));
     return false;
   }
 
   aFrame->AddStateBits(NS_FRAME_HAS_CSS_COUNTER_STYLE);
 
+  bool dirty = false;
   // Add in order, resets first, so all the comparisons will be optimized
   // for addition at the end of the list.
-  int32_t i, i_end;
-  bool dirty = false;
-  for (i = 0, i_end = styleContent->CounterResetCount(); i != i_end; ++i) {
+  for (int32_t i : IntegerRange(styleContent->CounterResetCount())) {
     dirty |= AddCounterChangeNode(aFrame, i, styleContent->CounterResetAt(i),
                                   nsCounterChangeNode::RESET);
   }
-  for (i = 0, i_end = styleContent->CounterIncrementCount(); i != i_end; ++i) {
-    dirty |=
-        AddCounterChangeNode(aFrame, i, styleContent->CounterIncrementAt(i),
-                             nsCounterChangeNode::INCREMENT);
+  bool hasListItemIncrement = false;
+  for (int32_t i : IntegerRange(styleContent->CounterIncrementCount())) {
+    const nsStyleCounterData& increment = styleContent->CounterIncrementAt(i);
+    hasListItemIncrement |= increment.mCounter.EqualsLiteral("list-item");
+    dirty |= AddCounterChangeNode(aFrame, i, increment,
+                                  nsCounterChangeNode::INCREMENT);
   }
-  for (i = 0, i_end = styleContent->CounterSetCount(); i != i_end; ++i) {
+  if (requiresListItemIncrement && !hasListItemIncrement) {
+    bool reversed =
+        aFrame->StyleList()->mMozListReversed == StyleMozListReversed::True;
+    nsStyleCounterData listItemIncrement{NS_LITERAL_STRING("list-item"),
+                                         reversed ? -1 : 1};
+    dirty |=
+        AddCounterChangeNode(aFrame, styleContent->CounterIncrementCount() + 1,
+                             listItemIncrement, nsCounterChangeNode::INCREMENT);
+  }
+  for (int32_t i : IntegerRange(styleContent->CounterSetCount())) {
     dirty |= AddCounterChangeNode(aFrame, i, styleContent->CounterSetAt(i),
                                   nsCounterChangeNode::SET);
   }
