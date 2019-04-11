@@ -2966,30 +2966,7 @@ void HTMLInputElement::Focus(ErrorResult& aError) {
     }
   }
 
-  if (mType != NS_FORM_INPUT_FILE) {
-    nsGenericHTMLElement::Focus(aError);
-    return;
-  }
-
-  // For file inputs, focus the first button instead. In the case of there
-  // being two buttons (when the picker is a directory picker) the user can
-  // tab to the next one.
-  nsIFrame* frame = GetPrimaryFrame();
-  if (frame) {
-    for (nsIFrame* childFrame : frame->PrincipalChildList()) {
-      // See if the child is a button control.
-      nsCOMPtr<nsIFormControl> formCtrl =
-          do_QueryInterface(childFrame->GetContent());
-      if (formCtrl && formCtrl->ControlType() == NS_FORM_BUTTON_BUTTON) {
-        nsCOMPtr<Element> element = do_QueryInterface(formCtrl);
-        nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-        if (fm && element) {
-          fm->SetFocus(element, 0);
-        }
-        break;
-      }
-    }
-  }
+  nsGenericHTMLElement::Focus(aError);
 }
 
 #if !defined(ANDROID) && !defined(XP_MACOSX)
@@ -3651,8 +3628,7 @@ bool HTMLInputElement::ShouldPreventDOMActivateDispatch(
 
   return target->GetParent() == this &&
          target->IsRootOfNativeAnonymousSubtree() &&
-         target->AttrValueIs(kNameSpaceID_None, nsGkAtoms::type,
-                             nsGkAtoms::button, eCaseMatters);
+         target->IsHTMLElement(nsGkAtoms::button);
 }
 
 nsresult HTMLInputElement::MaybeInitPickers(EventChainPostVisitor& aVisitor) {
@@ -3910,6 +3886,7 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
               case NS_FORM_INPUT_BUTTON:
               case NS_FORM_INPUT_RESET:
               case NS_FORM_INPUT_SUBMIT:
+              case NS_FORM_INPUT_FILE:
               case NS_FORM_INPUT_IMAGE:  // Bug 34418
               case NS_FORM_INPUT_COLOR: {
                 DispatchSimulatedClick(this, aVisitor.mEvent->IsTrusted(),
@@ -6324,18 +6301,13 @@ bool HTMLInputElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
   const bool defaultFocusable = true;
 #endif
 
-  if (mType == NS_FORM_INPUT_FILE || mType == NS_FORM_INPUT_NUMBER ||
-      mType == NS_FORM_INPUT_TIME || mType == NS_FORM_INPUT_DATE) {
+  if (mType == NS_FORM_INPUT_NUMBER || mType == NS_FORM_INPUT_TIME ||
+      mType == NS_FORM_INPUT_DATE) {
     if (aTabIndex) {
       // We only want our native anonymous child to be tabable to, not ourself.
       *aTabIndex = -1;
     }
-    if (mType == NS_FORM_INPUT_NUMBER || mType == NS_FORM_INPUT_TIME ||
-        mType == NS_FORM_INPUT_DATE) {
-      *aIsFocusable = true;
-    } else {
-      *aIsFocusable = defaultFocusable;
-    }
+    *aIsFocusable = true;
     return true;
   }
 
