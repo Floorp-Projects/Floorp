@@ -651,12 +651,12 @@ struct ParamTraits<mozilla::gfx::ColorDepth>
                                       mozilla::gfx::ColorDepth::COLOR_8,
                                       mozilla::gfx::ColorDepth::UNKNOWN> {};
 
-
 template <>
 struct ParamTraits<mozilla::gfx::YUVColorSpace>
-    : public ContiguousEnumSerializer<mozilla::gfx::YUVColorSpace,
-                                      mozilla::gfx::YUVColorSpace::BT601,
-                                      mozilla::gfx::YUVColorSpace::UNKNOWN> {};
+    : public ContiguousEnumSerializer<
+          mozilla::gfx::YUVColorSpace, mozilla::gfx::YUVColorSpace::BT601,
+          mozilla::gfx::YUVColorSpace::_NUM_COLORSPACE> {};
+
 template <>
 struct ParamTraits<mozilla::StereoMode>
     : public ContiguousEnumSerializer<mozilla::StereoMode,
