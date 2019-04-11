@@ -1095,6 +1095,10 @@ const float kBT709NarrowYCbCrToRGB_RowMajor[16] = {
     1.16438f,  0.00000f, 1.79274f, -0.97295f, 1.16438f, -0.21325f,
     -0.53291f, 0.30148f, 1.16438f, 2.11240f,  0.00000f, -1.13340f,
     0.00000f,  0.00000f, 0.00000f, 1.00000f};
+const float kBT2020NarrowYCbCrToRGB_RowMajor[16] = {
+    1.16438f,  0.00000f, 1.67867f, -0.91569f, 1.16438f, -0.18733f,
+    -0.65042f, 0.34746f, 1.16438f, 2.14177f,  0.00000f, -1.14815f,
+    0.00000f,  0.00000f, 0.00000f, 1.00000f};
 
 /* static */ const float* gfxUtils::YuvToRgbMatrix4x3RowMajor(
     YUVColorSpace aYUVColorSpace) {
@@ -1103,6 +1107,7 @@ const float kBT709NarrowYCbCrToRGB_RowMajor[16] = {
 
   static const float rec601[12] = X(kBT601NarrowYCbCrToRGB_RowMajor);
   static const float rec709[12] = X(kBT709NarrowYCbCrToRGB_RowMajor);
+  static const float rec2020[12] = X(kBT2020NarrowYCbCrToRGB_RowMajor);
 
 #undef X
 
@@ -1111,6 +1116,8 @@ const float kBT709NarrowYCbCrToRGB_RowMajor[16] = {
       return rec601;
     case YUVColorSpace::BT709:
       return rec709;
+    case YUVColorSpace::BT2020:
+      return rec2020;
     default:  // YUVColorSpace::UNKNOWN
       MOZ_ASSERT(false, "unknown aYUVColorSpace");
       return rec601;
@@ -1124,6 +1131,7 @@ const float kBT709NarrowYCbCrToRGB_RowMajor[16] = {
 
   static const float rec601[9] = X(kBT601NarrowYCbCrToRGB_RowMajor);
   static const float rec709[9] = X(kBT709NarrowYCbCrToRGB_RowMajor);
+  static const float rec2020[9] = X(kBT2020NarrowYCbCrToRGB_RowMajor);
 
 #undef X
 
@@ -1132,6 +1140,8 @@ const float kBT709NarrowYCbCrToRGB_RowMajor[16] = {
       return rec601;
     case YUVColorSpace::BT709:
       return rec709;
+    case YUVColorSpace::BT2020:
+      return rec2020;
     default:  // YUVColorSpace::UNKNOWN
       MOZ_ASSERT(false, "unknown aYUVColorSpace");
       return rec601;
@@ -1148,6 +1158,7 @@ const float kBT709NarrowYCbCrToRGB_RowMajor[16] = {
 
   static const float rec601[16] = X(kBT601NarrowYCbCrToRGB_RowMajor);
   static const float rec709[16] = X(kBT709NarrowYCbCrToRGB_RowMajor);
+  static const float rec2020[16] = X(kBT2020NarrowYCbCrToRGB_RowMajor);
 
 #undef X
 
@@ -1156,6 +1167,8 @@ const float kBT709NarrowYCbCrToRGB_RowMajor[16] = {
       return rec601;
     case YUVColorSpace::BT709:
       return rec709;
+    case YUVColorSpace::BT2020:
+      return rec2020;
     default:  // YUVColorSpace::UNKNOWN
       MOZ_ASSERT(false, "unknown aYUVColorSpace");
       return rec601;
