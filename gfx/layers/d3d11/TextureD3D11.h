@@ -51,9 +51,6 @@ class DXGITextureData : public TextureData {
   bool Serialize(SurfaceDescriptor& aOutDescrptor) override;
   void GetSubDescriptor(GPUVideoSubDescriptor* aOutDesc) override;
 
-  static DXGITextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                 TextureAllocationFlags aFlags);
-
   gfx::YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }
   void SetYUVColorSpace(gfx::YUVColorSpace aColorSpace) {
     mYUVColorSpace = aColorSpace;
@@ -86,10 +83,10 @@ class DXGITextureData : public TextureData {
 class D3D11TextureData : public DXGITextureData {
  public:
   // If aDevice is null, use one provided by gfxWindowsPlatform.
-  static DXGITextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+  static D3D11TextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                  TextureAllocationFlags aAllocFlags,
                                  ID3D11Device* aDevice = nullptr);
-  static DXGITextureData* Create(gfx::SourceSurface* aSurface,
+  static D3D11TextureData* Create(gfx::SourceSurface* aSurface,
                                  TextureAllocationFlags aAllocFlags,
                                  ID3D11Device* aDevice = nullptr);
 
@@ -117,15 +114,14 @@ class D3D11TextureData : public DXGITextureData {
     return mAllocationFlags;
   }
 
-  virtual ~D3D11TextureData();
-
  protected:
+  virtual ~D3D11TextureData();
   D3D11TextureData(ID3D11Texture2D* aTexture, gfx::IntSize aSize,
                    gfx::SurfaceFormat aFormat, TextureAllocationFlags aFlags);
 
   void GetDXGIResource(IDXGIResource** aOutResource) override;
 
-  static DXGITextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+  static D3D11TextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                  gfx::SourceSurface* aSurface,
                                  TextureAllocationFlags aAllocFlags,
                                  ID3D11Device* aDevice = nullptr);
