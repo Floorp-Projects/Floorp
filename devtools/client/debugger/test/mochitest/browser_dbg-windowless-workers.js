@@ -1,31 +1,25 @@
 /* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
 /* vim: set ft=javascript ts=2 et sw=2 tw=80: */
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+/* Any copyright is dedicated to the Public Domain.
+ * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Debugger operations may still be in progress when we switch threads.
 const { PromiseTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromiseTestUtils.jsm"
 );
-PromiseTestUtils.whitelistRejectionsGlobally(
-  /Current thread has paused or resumed/
-);
+PromiseTestUtils.whitelistRejectionsGlobally(/Current thread has paused or resumed/);
 PromiseTestUtils.whitelistRejectionsGlobally(/Current thread has changed/);
 
-function assertClass(dbg, selector, className, ...args) {
-  ok(
-    findElement(dbg, selector, ...args).classList.contains(className),
-    `${className} class exists`
+function threadIsPaused(dbg, index) {
+  return findElement(dbg, "threadsPaneItem", index).querySelector(
+    ".pause-badge"
   );
 }
 
-function threadIsPaused(dbg, index) {
-  return ok(findElement(dbg, "threadsPaneItemPause", index));
-}
-
 function threadIsSelected(dbg, index) {
-  return assertClass(dbg, "threadsPaneItem", "selected", index);
+  return findElement(dbg, "threadsPaneItem", index).classList.contains(
+    "selected"
+  );
 }
 
 function getLabel(dbg, index) {
@@ -51,84 +45,82 @@ add_task(async function() {
 
   const workers = await getWorkers(dbg);
   ok(workers.length == 2, "Got two workers");
-  const thread1 = workers[0].actor;
-  const thread2 = workers[1].actor;
+  const worker1Thread = workers[0].actor;
+  const worker2Thread = workers[1].actor;
 
   const mainThreadSource = findSource(dbg, "doc-windowless-workers.html");
 
   await waitForSource(dbg, "simple-worker.js");
   const workerSource = findSource(dbg, "simple-worker.js");
 
-  info("Pause in the main thread");
+  info("Test pausing in the main thread");
   assertNotPaused(dbg);
   await dbg.actions.breakOnNext(getThreadContext(dbg));
   await waitForPaused(dbg, "doc-windowless-workers.html");
   assertPausedAtSourceAndLine(dbg, mainThreadSource.id, 10);
-  threadIsSelected(dbg, 1);
 
-  info("Pause in the first worker");
-  await dbg.actions.selectThread(getContext(dbg), thread1);
+  info("Test pausing in a worker");
+  await dbg.actions.selectThread(getContext(dbg), worker1Thread);
   assertNotPaused(dbg);
   await dbg.actions.breakOnNext(getThreadContext(dbg));
   await waitForPaused(dbg, "simple-worker.js");
-  threadIsSelected(dbg, 2);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 3);
 
-  info("Add a watch expression and view the value");
   await addExpression(dbg, "count");
   is(getLabel(dbg, 1), "count");
   const v = getValue(dbg, 1);
-  ok(v == `${+v}`, "Value of count should be a number");
+  ok(v == "" + +v, "Value of count should be a number");
 
-  info("StepOver in the first worker");
+  info("Test stepping in a worker");
   await stepOver(dbg);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 4);
 
-  info("Ensure that the watch expression has updated");
+  // The watch expression should update with an incremented value.
   await waitUntil(() => {
     const v2 = getValue(dbg, 1);
     return +v2 == +v + 1;
   });
 
-  info("Resume in the first worker");
+  info("Test resuming in a worker");
   await resume(dbg);
   assertNotPaused(dbg);
 
-  info("StepOver in the main thread");
+  info("Test stepping in the main thread");
   dbg.actions.selectThread(getContext(dbg), mainThread);
   await stepOver(dbg);
   assertPausedAtSourceAndLine(dbg, mainThreadSource.id, 11);
 
-  info("Resume in the mainThread");
+  info("Test resuming in the mainThread");
   await resume(dbg);
   assertNotPaused(dbg);
 
-  info("Pause in both workers");
+  info("Test pausing in both workers");
   await addBreakpoint(dbg, "simple-worker", 10);
   invokeInTab("sayHello");
 
-  info("Wait for both workers to pause");
-  // When a thread pauses the current thread changes,
-  // and we don't want to get confused.
-  await waitForPausedThread(dbg, thread1);
-  await waitForPausedThread(dbg, thread2);
-  threadIsPaused(dbg, 2);
-  threadIsPaused(dbg, 3);
+  // Wait for both workers to pause. When a thread pauses the current thread
+  // changes, and we don't want to get confused.
+  const {
+    selectors: { getIsPaused },
+    getState
+  } = dbg;
+  await waitFor(() => {
+    const state = getState();
+    return getIsPaused(state, worker1Thread) && getIsPaused(state, worker2Thread);
+  });
 
-  info("View the first paused thread");
-  dbg.actions.selectThread(getContext(dbg), thread1);
+  dbg.actions.selectThread(getContext(dbg), worker1Thread);
+
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 10);
 
-  info("View the second paused thread");
-  dbg.actions.selectThread(getContext(dbg), thread2);
-  threadIsSelected(dbg, 3);
+  dbg.actions.selectThread(getContext(dbg), worker2Thread);
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 10);
 
-  info("StepOver in second worker and not the first");
+  info("Test stepping in second worker and not the first");
   await stepOver(dbg);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 11);
-  dbg.actions.selectThread(getContext(dbg), thread1);
+  dbg.actions.selectThread(getContext(dbg), worker1Thread);
   assertPausedAtSourceAndLine(dbg, workerSource.id, 10);
 });
