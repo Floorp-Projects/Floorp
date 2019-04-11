@@ -4650,7 +4650,7 @@ void nsFlexContainerFrame::DoFlexLayout(
         if (item->HasIntrinsicRatio()) {
           // For flex items with an aspect ratio, we have to impose an override
           // for the main-size property *before* we even instantiate the reflow
-          // state, in order for aspect ratio calculations to produce the right
+          // input, in order for aspect ratio calculations to produce the right
           // cross size in the reflow input. (For other flex items, it's OK
           // (and cheaper) to impose our main size *after* the reflow input has
           // been constructed, since the main size shouldn't influence anything
