@@ -43,7 +43,6 @@ class DXVA2Manager {
                               layers::Image** aOutImage) = 0;
 
   virtual HRESULT CopyToBGRATexture(ID3D11Texture2D* aInTexture,
-                                    const GUID& aSubType,
                                     ID3D11Texture2D** aOutTexture) {
     // Not implemented!
     MOZ_CRASH("CopyToBGRATexture not implemented on this manager.");

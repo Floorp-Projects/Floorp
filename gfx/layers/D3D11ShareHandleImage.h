@@ -21,19 +21,24 @@ namespace layers {
 
 class D3D11RecycleAllocator final : public TextureClientRecycleAllocator {
  public:
-  D3D11RecycleAllocator(KnowsCompositor* aAllocator, ID3D11Device* aDevice)
-      : TextureClientRecycleAllocator(aAllocator), mDevice(aDevice) {}
+  D3D11RecycleAllocator(KnowsCompositor* aAllocator, ID3D11Device* aDevice,
+                        gfx::SurfaceFormat aPreferredFormat);
 
   already_AddRefed<TextureClient> CreateOrRecycleClient(
-      gfx::SurfaceFormat aFormat, gfx::YUVColorSpace aColorSpace,
-      const gfx::IntSize& aSize);
+      gfx::YUVColorSpace aColorSpace, const gfx::IntSize& aSize);
 
- protected:
-  RefPtr<ID3D11Device> mDevice;
+  void SetPreferredSurfaceFormat(gfx::SurfaceFormat aPreferredFormat);
+
+ private:
+  const RefPtr<ID3D11Device> mDevice;
+  const bool mCanUseNV12;
+  const bool mCanUseP010;
+  const bool mCanUseP016;
   /**
    * Used for checking if CompositorDevice/ContentDevice is updated.
    */
   RefPtr<ID3D11Device> mImageDevice;
+  gfx::SurfaceFormat mUsableSurfaceFormat;
 };
 
 // Image class that wraps a ID3D11Texture2D. This class copies the image
@@ -43,7 +48,6 @@ class D3D11RecycleAllocator final : public TextureClientRecycleAllocator {
 class D3D11ShareHandleImage final : public Image {
  public:
   D3D11ShareHandleImage(const gfx::IntSize& aSize, const gfx::IntRect& aRect,
-                        const GUID& aSourceFormat,
                         gfx::YUVColorSpace aColorSpace);
   virtual ~D3D11ShareHandleImage() = default;
 
@@ -62,7 +66,6 @@ class D3D11ShareHandleImage final : public Image {
  private:
   gfx::IntSize mSize;
   gfx::IntRect mPictureRect;
-  const GUID mSourceFormat;
   gfx::YUVColorSpace mYUVColorSpace;
   RefPtr<TextureClient> mTextureClient;
   RefPtr<ID3D11Texture2D> mTexture;
