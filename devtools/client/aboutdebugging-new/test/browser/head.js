@@ -99,13 +99,20 @@ async function openAboutDevtoolsToolbox(doc, tab, win, targetText = "about:debug
 async function closeAboutDevtoolsToolbox(aboutDebuggingDocument, devtoolsTab, win) {
   info("Close about:devtools-toolbox page");
   const onToolboxDestroyed = gDevTools.once("toolbox-destroyed");
+
+  info("Wait for removeTab");
   await removeTab(devtoolsTab);
+
+  info("Wait for toolbox destroyed");
   await onToolboxDestroyed;
+
   // Changing the tab will also trigger a request to list tabs, so wait until the selected
   // tab has changed to wait for requests to settle.
+  info("Wait until aboutdebugging is selected");
   await waitUntil(() => gBrowser.selectedTab !== devtoolsTab);
 
   // Wait for removing about:devtools-toolbox tab info from about:debugging.
+  info("Wait until about:devtools-toolbox is removed from debug targets");
   await waitUntil(() =>
     !findDebugTargetByText("about:devtools-toolbox?", aboutDebuggingDocument));
 
