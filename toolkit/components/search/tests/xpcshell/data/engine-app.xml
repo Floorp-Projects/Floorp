@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
-<ShortName>TestEngineApp</ShortName>
-<Description>A test search engine installed in the application directory</Description>
-<InputEncoding>ISO-8859-1</InputEncoding>
-<Url type="text/html" method="GET" template="http://localhost/" resultdomain="localhost">
-  <Param name="q" value="{searchTerms}"/>
-</Url>
-</SearchPlugin>

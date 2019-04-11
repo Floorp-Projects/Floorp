@@ -1,0 +1,37 @@
+{
+  "name": "IconsTest",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "engineImages@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "description": "IconsTest. Search by Test.",
+  "icons": {
+    "16": "data:image/x-icon;base64,ico16"
+  },
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "IconsTest",
+      "search_url": "https://www.bing.com/search",
+      "params": [
+        {
+          "name": "q",
+          "value": "{searchTerms}"
+        },
+        {
+          "name": "form",
+          "value": "MOZW"
+        },
+        {
+          "name": "pc",
+          "condition": "pref",
+          "pref": "ms-pc"
+        }
+      ],
+      "suggest_url": "https://api.bing.com/osjson.aspxquery={searchTerms}&form=MOZW"
+    }
+  }
+}

@@ -7,6 +7,10 @@ const kSearchEngineID = "addEngineWithDetails_test_engine";
 const kSearchEngineURL = "http://example.com/?search={searchTerms}";
 const kSearchTerm = "foo";
 
+add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+});
+
 add_task(async function test_addEngineWithDetails() {
   Assert.ok(!Services.search.isInitialized);
 

@@ -25,13 +25,14 @@ var expectedLog = [
   "engine-removed",
 ];
 
-function search_observer(subject, topic, data) {
-  let engine = subject.QueryInterface(Ci.nsISearchEngine);
-  gTestLog.push(data + " for " + engine.name);
+function create_search_observer(resolve) {
+  return function search_observer(subject, topic, data) {
+    let engine = subject.QueryInterface(Ci.nsISearchEngine);
+    gTestLog.push(data + " for " + engine.name);
 
-  info("Observer: " + data + " for " + engine.name);
+    info("Observer: " + data + " for " + engine.name);
 
-  switch (data) {
+    switch (data) {
     case "engine-added":
       let retrievedEngine = Services.search.getEngineByName("Test search engine");
       Assert.equal(engine, retrievedEngine);
@@ -49,21 +50,27 @@ function search_observer(subject, topic, data) {
         Assert.equal(gTestLog[i], expectedLog[i]);
       }
       Assert.equal(gTestLog.length, expectedLog.length);
-      do_test_finished();
+      resolve();
       break;
-  }
+    }
+  };
 }
 
-function run_test() {
-  useHttpServer();
+add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+});
 
-  registerCleanupFunction(function cleanup() {
-    Services.obs.removeObserver(search_observer, "browser-search-engine-modified");
+add_task(async function test_notifications() {
+  return new Promise(resolve => {
+    useHttpServer();
+
+    registerCleanupFunction(function cleanup() {
+      Services.obs.removeObserver(search_observer, "browser-search-engine-modified");
+    });
+
+    let search_observer = create_search_observer(resolve);
+    Services.obs.addObserver(search_observer, "browser-search-engine-modified");
+
+    Services.search.addEngine(gDataUrl + "engine.xml", null, false);
   });
-
-  do_test_pending();
-
-  Services.obs.addObserver(search_observer, "browser-search-engine-modified");
-
-  Services.search.addEngine(gDataUrl + "engine.xml", null, false);
-}
+});

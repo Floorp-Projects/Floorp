@@ -16,6 +16,10 @@ const kSearchEnginePOSTID = "addEngineWithDetails_post_test_engine";
 const kSearchEnginePOSTURL = "http://example.com/";
 const kSearchEnginePOSTData = "search={searchTerms}&extra=more";
 
+add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+});
+
 add_task(async function test_addEngineWithDetails() {
   Assert.ok(!Services.search.isInitialized);
 
