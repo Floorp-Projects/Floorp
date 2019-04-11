@@ -31,9 +31,6 @@ const DB_NAME = "remote-settings";
 
 const TELEMETRY_COMPONENT = "remotesettings";
 
-const INVALID_SIGNATURE_MSG = "Invalid content signature";
-const MISSING_SIGNATURE_MSG = "Missing signature";
-
 XPCOMUtils.defineLazyPreferenceGetter(this, "gServerURL",
                                       "services.settings.server");
 XPCOMUtils.defineLazyPreferenceGetter(this, "gChangesPath",
@@ -85,7 +82,7 @@ async function fetchCollectionSignature(bucket, collection, expectedTimestamp) {
     .collection(collection)
     .getData({ query: { _expected: expectedTimestamp } });
   if (!signaturePayload) {
-    throw new Error(MISSING_SIGNATURE_MSG);
+    throw new RemoteSettingsClient.MissingSignatureError(`${bucket}/${collection}`);
   }
   const { x5u, signature } = signaturePayload;
   const certChainResponse = await fetch(x5u);
@@ -165,8 +162,24 @@ class EventEmitter {
   }
 }
 
+class InvalidSignatureError extends Error {
+  constructor(cid) {
+    super(`Invalid content signature (${cid})`);
+    this.name = "InvalidSignatureError";
+  }
+}
+
+class MissingSignatureError extends Error {
+  constructor(cid) {
+    super(`Missing signature (${cid})`);
+    this.name = "MissingSignatureError";
+  }
+}
 
 class RemoteSettingsClient extends EventEmitter {
+  static get InvalidSignatureError() { return InvalidSignatureError; }
+  static get MissingSignatureError() { return MissingSignatureError; }
+
   constructor(collectionName, { bucketNamePref, signerName, filterFunc, localFields = [], lastCheckTimePref }) {
     super(["sync"]); // emitted events
 
@@ -336,7 +349,7 @@ class RemoteSettingsClient extends EventEmitter {
           throw new Error("Synced failed");
         }
       } catch (e) {
-        if (e.message.includes(INVALID_SIGNATURE_MSG)) {
+        if (e instanceof RemoteSettingsClient.InvalidSignatureError) {
           // Signature verification failed during synchronization.
           reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
           // If sync fails with a signature error, it's likely that our
@@ -353,7 +366,7 @@ class RemoteSettingsClient extends EventEmitter {
           }
         } else {
           // The sync has thrown, it can be related to metadata, network or a general error.
-          if (e.message == MISSING_SIGNATURE_MSG) {
+          if (e instanceof RemoteSettingsClient.MissingSignatureError) {
             // Collection metadata has no signature info, no need to retry.
             reportStatus = UptakeTelemetry.STATUS.SIGNATURE_ERROR;
           } else if (/unparseable/.test(e.message)) {
@@ -444,7 +457,7 @@ class RemoteSettingsClient extends EventEmitter {
                                          "p384ecdsa=" + signature,
                                          certChain,
                                          this.signerName)) {
-      throw new Error(`${INVALID_SIGNATURE_MSG} (${bucket}/${collection})`);
+      throw new RemoteSettingsClient.InvalidSignatureError(`${bucket}/${collection}`);
     }
   }
 
