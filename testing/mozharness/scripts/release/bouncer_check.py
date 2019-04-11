@@ -16,6 +16,7 @@ import sys
 sys.path.insert(1, os.path.dirname(os.path.dirname(sys.path[0])))
 
 from mozharness.base.script import BaseScript
+from mozharness.mozilla.automation import EXIT_STATUS_DICT, TBPL_FAILURE
 
 BOUNCER_URL_PATTERN = "{bouncer_prefix}?product={product}&os={os}&lang={lang}"
 
@@ -96,6 +97,7 @@ class BouncerCheck(BaseScript):
 
     def check_url(self, session, url):
         from redo import retry
+        from requests.exceptions import HTTPError
         try:
             from urllib.parse import urlparse
         except ImportError:
@@ -107,18 +109,25 @@ class BouncerCheck(BaseScript):
             r = session.head(url, verify=True, timeout=10, allow_redirects=True)
             try:
                 r.raise_for_status()
-            except Exception:
+            except HTTPError:
                 self.error("FAIL: {}, status: {}".format(url, r.status_code))
                 raise
 
             final_url = urlparse(r.url)
             if final_url.scheme != 'https':
                 self.error('FAIL: URL scheme is not https: {}'.format(r.url))
+                self.return_code = EXIT_STATUS_DICT[TBPL_FAILURE]
 
             if final_url.netloc not in self.config['cdn_urls']:
                 self.error('FAIL: host not in allowed locations: {}'.format(r.url))
+                self.return_code = EXIT_STATUS_DICT[TBPL_FAILURE]
 
-        retry(do_check_url, sleeptime=3, max_sleeptime=10, attempts=3)
+        try:
+            retry(do_check_url, sleeptime=3, max_sleeptime=10, attempts=3)
+        except HTTPError:
+            # The error was already logged above.
+            self.return_code = EXIT_STATUS_DICT[TBPL_FAILURE]
+            return
 
     def get_urls(self):
         for product in self.config["products"].values():
