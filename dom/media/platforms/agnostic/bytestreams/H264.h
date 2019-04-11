@@ -6,6 +6,7 @@
 #define MP4_DEMUXER_H264_H_
 
 #include "DecoderData.h"
+#include "mozilla/gfx/Types.h"
 
 namespace mozilla {
 class BitReader;
@@ -38,6 +39,9 @@ enum NAL_TYPES {
 struct SPSData {
   bool operator==(const SPSData& aOther) const;
   bool operator!=(const SPSData& aOther) const;
+
+  gfx::YUVColorSpace ColorSpace() const;
+  gfx::ColorDepth ColorDepth() const;
 
   bool valid;
 
