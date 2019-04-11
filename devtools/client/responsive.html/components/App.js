@@ -20,6 +20,7 @@ loader.lazyGetter(this, "DeviceModal",
 const { changeNetworkThrottling } = require("devtools/client/shared/components/throttling/actions");
 const {
   addCustomDevice,
+  editCustomDevice,
   removeCustomDevice,
   updateDeviceDisplayed,
   updateDeviceModal,
@@ -68,6 +69,7 @@ class App extends PureComponent {
     this.onChangeUserAgent = this.onChangeUserAgent.bind(this);
     this.onContentResize = this.onContentResize.bind(this);
     this.onDeviceListUpdate = this.onDeviceListUpdate.bind(this);
+    this.onEditCustomDevice = this.onEditCustomDevice.bind(this);
     this.onExit = this.onExit.bind(this);
     this.onRemoveCustomDevice = this.onRemoveCustomDevice.bind(this);
     this.onRemoveDeviceAssociation = this.onRemoveDeviceAssociation.bind(this);
@@ -164,6 +166,27 @@ class App extends PureComponent {
     updatePreferredDevices(devices);
   }
 
+  onEditCustomDevice(oldDevice, newDevice) {
+    // If the edited device is currently selected, then update its original association
+    // and reset UI state.
+    let viewport = this.props.viewports.find(({ device }) => device === oldDevice.name);
+
+    if (viewport) {
+      viewport = {
+        ...viewport,
+        device: newDevice.name,
+        deviceType: "custom",
+        height: newDevice.height,
+        width: newDevice.width,
+        pixelRatio: newDevice.pixelRatio,
+        touch: newDevice.touch,
+        userAgent: newDevice.userAgent,
+      };
+    }
+
+    this.props.dispatch(editCustomDevice(viewport, oldDevice, newDevice));
+  }
+
   onExit() {
     window.postMessage({ type: "exit" }, "*");
   }
@@ -255,6 +278,7 @@ class App extends PureComponent {
       onChangeUserAgent,
       onContentResize,
       onDeviceListUpdate,
+      onEditCustomDevice,
       onExit,
       onRemoveCustomDevice,
       onRemoveDeviceAssociation,
@@ -322,6 +346,7 @@ class App extends PureComponent {
             devices,
             onAddCustomDevice,
             onDeviceListUpdate,
+            onEditCustomDevice,
             onRemoveCustomDevice,
             onUpdateDeviceDisplayed,
             onUpdateDeviceModal,

@@ -546,7 +546,20 @@ define(function(require, exports, module) {
           member: member,
           columns: this.state.columns,
           id: member.path,
-          ref: row => row && this.rows.push(row),
+          ref: row => {
+            if (!row) {
+              return;
+            }
+
+            const rowEl = findDOMNode(row);
+            if (!rowEl || !rowEl.offsetParent) {
+              // offsetParent returns null when the element has style.display
+              // set to none (done by TreeView filtering).
+              return;
+            }
+
+            this.rows.push(row);
+          },
           onClick: this.onClickRow.bind(this, member.path),
           onContextMenu: this.onContextMenu.bind(this, member),
         });

@@ -644,7 +644,7 @@ static bool GetToken(AsmJSParser<Unit>& parser, TokenKind* tkp) {
   auto& ts = parser.tokenStream;
   TokenKind tk;
   while (true) {
-    if (!ts.getToken(&tk, TokenStreamShared::Operand)) {
+    if (!ts.getToken(&tk, TokenStreamShared::SlashIsRegExp)) {
       return false;
     }
     if (tk != TokenKind::Semi) {
@@ -660,13 +660,13 @@ static bool PeekToken(AsmJSParser<Unit>& parser, TokenKind* tkp) {
   auto& ts = parser.tokenStream;
   TokenKind tk;
   while (true) {
-    if (!ts.peekToken(&tk, TokenStream::Operand)) {
+    if (!ts.peekToken(&tk, TokenStream::SlashIsRegExp)) {
       return false;
     }
     if (tk != TokenKind::Semi) {
       break;
     }
-    ts.consumeKnownToken(TokenKind::Semi, TokenStreamShared::Operand);
+    ts.consumeKnownToken(TokenKind::Semi, TokenStreamShared::SlashIsRegExp);
   }
   *tkp = tk;
   return true;
@@ -2111,7 +2111,7 @@ class MOZ_STACK_CLASS JS_HAZ_ROOTED ModuleValidator
 
     TokenPos pos;
     MOZ_ALWAYS_TRUE(
-        tokenStream().peekTokenPos(&pos, TokenStreamShared::Operand));
+        tokenStream().peekTokenPos(&pos, TokenStreamShared::SlashIsRegExp));
     uint32_t endAfterCurly = pos.end;
     asmJSMetadata_->srcLengthWithRightBrace =
         endAfterCurly - asmJSMetadata_->srcStart;
@@ -3084,7 +3084,7 @@ static bool CheckModuleProcessingDirectives(ModuleValidator<Unit>& m) {
   while (true) {
     bool matched;
     if (!ts.matchToken(&matched, TokenKind::String,
-                       TokenStreamShared::Operand)) {
+                       TokenStreamShared::SlashIsRegExp)) {
       return false;
     }
     if (!matched) {
@@ -5996,14 +5996,14 @@ static bool ParseFunction(ModuleValidator<Unit>& m, FunctionNode** funNodeOut,
   auto& tokenStream = m.tokenStream();
 
   tokenStream.consumeKnownToken(TokenKind::Function,
-                                TokenStreamShared::Operand);
+                                TokenStreamShared::SlashIsRegExp);
 
   auto& anyChars = tokenStream.anyCharsAccess();
   uint32_t toStringStart = anyChars.currentToken().pos.begin;
   *line = anyChars.lineNumber(anyChars.lineToken(toStringStart));
 
   TokenKind tk;
-  if (!tokenStream.getToken(&tk, TokenStreamShared::Operand)) {
+  if (!tokenStream.getToken(&tk, TokenStreamShared::SlashIsRegExp)) {
     return false;
   }
   if (tk == TokenKind::Mul) {

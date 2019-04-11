@@ -18,8 +18,162 @@ if (window.MozXULElement) {
   return;
 }
 
+const MozElements = {};
+window.MozElements = MozElements;
+
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
+const instrumentClasses = !!env.get("MOZ_INSTRUMENT_CUSTOM_ELEMENTS");
+const instrumentedClasses = instrumentClasses ? new Set() : null;
+const instrumentedBaseClasses = instrumentClasses ? new WeakSet() : null;
+
+// If requested, wrap the normal customElements.define to give us a chance
+// to modify the class so we can instrument function calls in local development:
+if (instrumentClasses) {
+  let define = window.customElements.define;
+  window.customElements.define = function(name, c, opts) {
+    instrumentCustomElementClass(c);
+    return define.call(this, name, c, opts);
+  };
+  window.addEventListener("load", () => {
+    MozElements.printInstrumentation(true);
+  }, { once: true, capture: true });
+}
+
+MozElements.printInstrumentation = function(collapsed) {
+  let summaries = [];
+  let totalCalls = 0;
+  let totalTime = 0;
+  for (let c of instrumentedClasses) {
+    let summary = c.__instrumentation_summary;
+    if (summary) {
+      summaries.push(summary);
+      totalCalls += summary.totalCalls;
+      totalTime += summary.totalTime;
+    }
+  }
+  if (summaries.length) {
+    let groupName = `Instrumentation data for custom elements in ${document.documentURI}`;
+    console[collapsed ? "groupCollapsed" : "group"](groupName);
+    console.log(`Total function calls ${totalCalls} and total time spent inside ${totalTime.toFixed(2)}`);
+    for (let summary of summaries) {
+      console.log(`${summary.name} (# instances: ${summary.instances})`);
+      if (Object.keys(summary.data).length > 1) {
+        console.table(summary.data);
+      }
+    }
+    console.groupEnd(groupName);
+  }
+};
+
+function instrumentCustomElementClass(c) {
+  // Climb up prototype chain to see if we inherit from a MozElement.
+  // Keep track of classes to instrument, for example:
+  //   MozMenuCaption->MozMenuBase->BaseText->BaseControl->MozXULElement
+  let inheritsFromBase = instrumentedBaseClasses.has(c);
+  let classesToInstrument = [c];
+  let proto = Object.getPrototypeOf(c);
+  while (proto) {
+    classesToInstrument.push(proto);
+    if (instrumentedBaseClasses.has(proto)) {
+      inheritsFromBase = true;
+      break;
+    }
+    proto = Object.getPrototypeOf(proto);
+  }
+
+  if (inheritsFromBase) {
+    for (let c of classesToInstrument.reverse()) {
+      instrumentIndividualClass(c);
+    }
+  }
+}
+
+function instrumentIndividualClass(c) {
+  if (instrumentedClasses.has((c))) {
+    return;
+  }
+  instrumentedClasses.add((c));
+  let data = { instances: 0 };
+
+  function wrapFunction(name, fn) {
+    return function() {
+      if (!data[name]) {
+        data[name] = {time: 0, calls: 0};
+      }
+      data[name].calls++;
+      let n = performance.now();
+      let r = fn.apply(this, arguments);
+      data[name].time += performance.now() - n;
+      return r;
+    };
+  }
+  function wrapPropertyDescriptor(obj, name) {
+    if (name == "constructor") {
+      return;
+    }
+    let prop = Object.getOwnPropertyDescriptor(obj, name);
+    if (prop.get) {
+      prop.get = wrapFunction(`<get> ${name}`, prop.get);
+    }
+    if (prop.set) {
+      prop.set = wrapFunction(`<set> ${name}`, prop.set);
+    }
+    if (prop.writable && prop.value && prop.value.apply) {
+      prop.value = wrapFunction(name, prop.value);
+    }
+    Object.defineProperty(obj, name, prop);
+  }
+
+  // Handle static properties
+  for (let name of Object.getOwnPropertyNames((c))) {
+    wrapPropertyDescriptor(c, name);
+  }
+
+  // Handle instance properties
+  for (let name of Object.getOwnPropertyNames(c.prototype)) {
+    wrapPropertyDescriptor(c.prototype, name);
+  }
+
+  c.__instrumentation_data = data;
+  Object.defineProperty(c, "__instrumentation_summary", {
+    enumerable: false,
+    configurable: false,
+    get() {
+      if (data.instances == 0) {
+        return null;
+      }
+
+      let clonedData = JSON.parse(JSON.stringify(data));
+      delete clonedData.instances;
+      let totalCalls = 0;
+      let totalTime = 0;
+      for (let d in clonedData) {
+        let {time, calls} = clonedData[d];
+        time = parseFloat(time.toFixed(2));
+        totalCalls += calls;
+        totalTime += time;
+        clonedData[d]["time (ms)"] = time;
+        delete clonedData[d].time;
+        clonedData[d].timePerCall = parseFloat((time / calls).toFixed(4));
+      }
+
+      let timePerCall =  parseFloat((totalTime / totalCalls).toFixed(4));
+      totalTime = parseFloat(totalTime.toFixed(2));
+
+      // Add a spaced-out final row with summed up totals
+      clonedData["\ntotals"]  = { "time (ms)": `\n${totalTime}`, calls: `\n${totalCalls}`, timePerCall: `\n${timePerCall}` };
+      return {
+        instances: data.instances,
+        data: clonedData,
+        name: c.name,
+        totalCalls,
+        totalTime,
+      };
+    },
+  });
+}
 
 // The listener of DOMContentLoaded must be set on window, rather than
 // document, because the window can go away before the event is fired.
@@ -44,9 +198,19 @@ window.addEventListener("DOMContentLoaded", () => {
 const gXULDOMParser = new DOMParser();
 gXULDOMParser.forceEnableXULXBL();
 
-const MozElements = {};
+MozElements.MozElementMixin = Base => {
+  let MozElementBase = class extends Base {
+  constructor() {
+    super();
 
-MozElements.MozElementMixin = Base => class MozElement extends Base {
+    if (instrumentClasses) {
+      let proto = this.constructor;
+      while (proto && proto != Base) {
+        proto.__instrumentation_data.instances++;
+        proto = Object.getPrototypeOf(proto);
+      }
+    }
+  }
   /*
    * A declarative way to wire up attribute inheritance and automatically generate
    * the `observedAttributes` getter.  For example, if you returned:
@@ -372,6 +536,14 @@ MozElements.MozElementMixin = Base => class MozElement extends Base {
       return null;
     };
   }
+  };
+
+  // Rename the class so we can distinguish between MozXULElement and MozXULPopupElement, for example.
+  Object.defineProperty(MozElementBase, "name", {value: `Moz${Base.name}`});
+  if (instrumentedBaseClasses) {
+    instrumentedBaseClasses.add(MozElementBase);
+  }
+  return MozElementBase;
 };
 
 const MozXULElement = MozElements.MozElementMixin(XULElement);
@@ -435,7 +607,7 @@ MozElements.BaseControlMixin = Base => {
 };
 MozElements.BaseControl = MozElements.BaseControlMixin(MozXULElement);
 
-const BaseTextMixin = Base => class extends MozElements.BaseControlMixin(Base) {
+const BaseTextMixin = Base => class BaseText extends MozElements.BaseControlMixin(Base) {
   set label(val) {
     this.setAttribute("label", val);
     return val;
@@ -491,7 +663,6 @@ MozElements.BaseText = BaseTextMixin(MozXULElement);
 
 // Attach the base class to the window so other scripts can use it:
 window.MozXULElement = MozXULElement;
-window.MozElements = MozElements;
 
 customElements.setElementCreationCallback("browser", () => {
   Services.scriptloader.loadSubScript("chrome://global/content/elements/browser-custom-element.js", window);
