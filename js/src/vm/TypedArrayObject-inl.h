@@ -24,6 +24,7 @@
 #include "jit/AtomicOperations.h"
 #include "js/Conversions.h"
 #include "js/Value.h"
+#include "vm/BigIntType.h"
 #include "vm/JSContext.h"
 #include "vm/NativeObject.h"
 
@@ -644,12 +645,28 @@ class ElementSpecific {
   static bool canConvertInfallibly(const Value& v) {
     if (TypeIDOfType<T>::id == Scalar::BigInt64 ||
         TypeIDOfType<T>::id == Scalar::BigUint64) {
-      return false;
+      // Numbers, Null, Undefined, and Symbols throw a TypeError. Strings may
+      // OOM and Objects may have side-effects.
+      return v.isBigInt() || v.isBoolean();
     }
+    // BigInts and Symbols throw a TypeError. Strings may OOM and Objects may
+    // have side-effects.
     return v.isNumber() || v.isBoolean() || v.isNull() || v.isUndefined();
   }
 
   static T infallibleValueToNative(const Value& v) {
+    if (TypeIDOfType<T>::id == Scalar::BigInt64) {
+      if (v.isBigInt()) {
+        return T(BigInt::toInt64(v.toBigInt()));
+      }
+      return T(v.toBoolean());
+    }
+    if (TypeIDOfType<T>::id == Scalar::BigUint64) {
+      if (v.isBigInt()) {
+        return T(BigInt::toUint64(v.toBigInt()));
+      }
+      return T(v.toBoolean());
+    }
     if (v.isInt32()) {
       return T(v.toInt32());
     }
