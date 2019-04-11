@@ -6525,21 +6525,21 @@ uint32_t nsIScrollableFrame::GetPerceivedScrollingDirections() const {
  */
 static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
                                          const nsIFrame* aScrolledFrame,
-                                         const nsSize& aSnapportSize,
                                          ScrollSnapInfo& aSnapInfo) {
   // FIXME: Bug 1373833: This target rect should be inflated by scroll-margin.
   nsRect targetRect = nsLayoutUtils::TransformFrameRectToAncestor(
       aFrame, aFrame->GetRectRelativeToSelf(), aScrolledFrame);
 
   WritingMode writingMode = aScrolledFrame->GetWritingMode();
-  LogicalRect logicalTargetRect(writingMode, targetRect, aSnapportSize);
+  LogicalRect logicalTargetRect(writingMode, targetRect,
+                                aSnapInfo.mSnapportSize);
+  LogicalSize logicalSnapportRect(writingMode, aSnapInfo.mSnapportSize);
 
   Maybe<nscoord> blockDirectionPosition;
   Maybe<nscoord> inlineDirectionPosition;
 
   const nsStyleDisplay* styleDisplay = aFrame->StyleDisplay();
-  nscoord containerBSize =
-      LogicalSize(writingMode, aSnapportSize).BSize(writingMode);
+  nscoord containerBSize = logicalSnapportRect.BSize(writingMode);
   switch (styleDisplay->mScrollSnapAlign.block) {
     case StyleScrollSnapAlignKeyword::None:
       break;
@@ -6576,8 +6576,7 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
     }
   }
 
-  nscoord containerISize =
-      LogicalSize(writingMode, aSnapportSize).ISize(writingMode);
+  nscoord containerISize = logicalSnapportRect.ISize(writingMode);
   switch (styleDisplay->mScrollSnapAlign.inline_) {
     case StyleScrollSnapAlignKeyword::None:
       break;
@@ -6621,6 +6620,15 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
                               : aSnapInfo.mSnapPositionY)
         .AppendElement(blockDirectionPosition.value());
   }
+
+  if (targetRect.width > aSnapInfo.mSnapportSize.width) {
+    aSnapInfo.mXRangeWiderThanSnapport.AppendElement(
+        ScrollSnapInfo::ScrollSnapRange(targetRect.X(), targetRect.XMost()));
+  }
+  if (targetRect.height > aSnapInfo.mSnapportSize.height) {
+    aSnapInfo.mYRangeWiderThanSnapport.AppendElement(
+        ScrollSnapInfo::ScrollSnapRange(targetRect.Y(), targetRect.YMost()));
+  }
 }
 
 /**
@@ -6629,7 +6637,6 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
  */
 static void CollectScrollPositionsForSnap(nsIFrame* aFrame,
                                           nsIFrame* aScrolledFrame,
-                                          const nsSize& aSnapportSize,
                                           ScrollSnapInfo& aSnapInfo) {
   MOZ_ASSERT(StaticPrefs::layout_css_scroll_snap_v1_enabled());
 
@@ -6644,11 +6651,9 @@ static void CollectScrollPositionsForSnap(nsIFrame* aFrame,
               StyleScrollSnapAlignKeyword::None ||
           styleDisplay->mScrollSnapAlign.block !=
               StyleScrollSnapAlignKeyword::None) {
-        AppendScrollPositionsForSnap(f, aScrolledFrame, aSnapportSize,
-                                     aSnapInfo);
+        AppendScrollPositionsForSnap(f, aScrolledFrame, aSnapInfo);
       }
-      CollectScrollPositionsForSnap(f, aScrolledFrame, aSnapportSize,
-                                    aSnapInfo);
+      CollectScrollPositionsForSnap(f, aScrolledFrame, aSnapInfo);
     }
   }
 }
@@ -6724,8 +6729,10 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo() const {
   }
 
   if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
-    CollectScrollPositionsForSnap(mScrolledFrame, mScrolledFrame,
-                                  GetScrollPortRect().Size(), result);
+    // FIXME: Bug 1373832: The snapport should be deflated by scroll-padding.
+    result.mSnapportSize = GetScrollPortRect().Size();
+
+    CollectScrollPositionsForSnap(mScrolledFrame, mScrolledFrame, result);
     return result;
   }
 
