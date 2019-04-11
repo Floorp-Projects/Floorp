@@ -213,8 +213,7 @@ nsresult AppEncodeTo(const StaticMutexAutoLock& lock,
             return NS_ERROR_FAILURE;
           }
           MOZ_ASSERT(index < gOriginsList->Length());
-          size_t shardIndex =
-              ceil(static_cast<double>(index) / PrioEncoder::gNumBooleans);
+          size_t shardIndex = index / PrioEncoder::gNumBooleans;
           MOZ_ASSERT(shardIndex < metricData.Length());
           MOZ_ASSERT(index % PrioEncoder::gNumBooleans <
                      metricData[shardIndex].Length());
@@ -248,8 +247,8 @@ void TelemetryOrigin::InitializeGlobalState() {
   // The contents and order of this array matters.
   // Both ensure a consistent app-encoding.
   gOriginsList = new nsTArray<const char*>({
-      "doubleclick.de",
       "fb.com",
+      "doubleclick.de",
   });
 
   gPrioDatasPerMetric =
