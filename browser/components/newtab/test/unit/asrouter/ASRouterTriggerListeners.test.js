@@ -205,9 +205,9 @@ describe("ASRouterTriggerListeners", () => {
         const browser = {};
         const webProgress = {isTopLevel: true};
         const location = "www.mozilla.org";
-        openURLListener.onLocationChange(browser, webProgress, undefined, {host: location});
+        openURLListener.onLocationChange(browser, webProgress, undefined, {host: location, spec: location});
         assert.calledOnce(newTriggerHandler);
-        assert.calledWithExactly(newTriggerHandler, browser, {id: "openURL", param: "www.mozilla.org"});
+        assert.calledWithExactly(newTriggerHandler, browser, {id: "openURL", param: {host: "www.mozilla.org", url: "www.mozilla.org"}});
       });
       it("should call triggerHandler for a redirect (openURL + frequentVisits)", async () => {
         for (let trigger of [openURLListener, frequentVisitsListener]) {
@@ -240,7 +240,7 @@ describe("ASRouterTriggerListeners", () => {
           }),
         };
         openURLListener.onLocationChange(browser, webProgress, aRequest, aLocationURI);
-        assert.calledWithExactly(newTriggerHandler, browser, {id: "openURL", param: "www.mozilla.org"});
+        assert.calledWithExactly(newTriggerHandler, browser, {id: "openURL", param: {host: "www.mozilla.org", url: "www.mozilla.org"}});
       });
       it("should call triggerHandler for a redirect (openURL + frequentVisits)", async () => {
         for (let trigger of [openURLListener, frequentVisitsListener]) {
@@ -273,7 +273,7 @@ describe("ASRouterTriggerListeners", () => {
           }),
         };
         openURLListener.onLocationChange(browser, webProgress, aRequest, aLocationURI);
-        assert.calledWithExactly(newTriggerHandler, browser, {id: "openURL", param: "www.mozilla.org"});
+        assert.calledWithExactly(newTriggerHandler, browser, {id: "openURL", param: {host: "www.mozilla.org", url: "www.mozilla.org"}});
       });
       it("should fail for subdomains (not redirect)", async () => {
         const newTriggerHandler = sinon.stub();

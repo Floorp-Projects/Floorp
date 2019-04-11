@@ -1,0 +1,26 @@
+.section-empty-state {
+  border: $border-secondary;
+  border-radius: 4px;
+  display: flex;
+  height: $grid-unit;
+  width: 100%;
+
+  .empty-state-message {
+    color: var(--newtab-text-secondary-color);
+    font-size: 14px;
+    line-height: 20px;
+    text-align: center;
+    margin: auto;
+    max-width: 936px;
+  }
+
+  h2 {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  p {
+    margin: 0;
+  }
+}

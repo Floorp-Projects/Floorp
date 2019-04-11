@@ -8,6 +8,7 @@ const {NewTabUtils} = ChromeUtils.import("resource://gre/modules/NewTabUtils.jsm
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
 ChromeUtils.defineModuleGetter(this, "perfService", "resource://activity-stream/common/PerfService.jsm");
+const {UserDomainAffinityProvider} = ChromeUtils.import("resource://activity-stream/lib/UserDomainAffinityProvider.jsm");
 
 const {actionTypes: at, actionCreators: ac} = ChromeUtils.import("resource://activity-stream/common/Actions.jsm");
 const {PersistentCache} = ChromeUtils.import("resource://activity-stream/lib/PersistentCache.jsm");
@@ -18,7 +19,9 @@ const STARTUP_CACHE_EXPIRE_TIME = 7 * 24 * 60 * 60 * 1000; // 1 week
 const COMPONENT_FEEDS_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const SPOCS_FEEDS_UPDATE_TIME = 30 * 60 * 1000; // 30 minutes
 const DEFAULT_RECS_EXPIRE_TIME = 60 * 60 * 1000; // 1 hour
+const MIN_DOMAIN_AFFINITIES_UPDATE_TIME = 12 * 60 * 60 * 1000; // 12 hours
 const MAX_LIFETIME_CAP = 500; // Guard against misconfiguration on the server
+const DEFAULT_MAX_HISTORY_QUERY_RESULTS = 1000;
 const PREF_CONFIG = "discoverystream.config";
 const PREF_ENDPOINTS = "discoverystream.endpoints";
 const PREF_OPT_OUT = "discoverystream.optOut.0";
@@ -72,6 +75,10 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   get showSpocs() {
     // Combine user-set sponsored opt-out with Mozilla-set config
     return this.store.getState().Prefs.values[PREF_SHOW_SPONSORED] && this.config.show_spocs;
+  }
+
+  get personalized() {
+    return this.config.personalized;
   }
 
   setupPrefs() {
@@ -168,6 +175,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
           spocs: layoutResponse.spocs,
           layout: layoutResponse.layout,
         };
+
         await this.cache.set("layout", layout);
       } else {
         Cu.reportError("No response for response.layout prop");
@@ -208,6 +216,19 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
         const feedPromise = this.getComponentFeed(url, isStartup);
         feedPromise.then(feed => {
           newFeeds[url] = this.filterRecommendations(feed);
+
+          // We grab affinities off the first feed for the moment.
+          // Ideally this would be returned from the server on the layout,
+          // or from another endpoint.
+          if (!this.affinities) {
+            const {settings} = feed.data;
+            this.affinities = {
+              timeSegments: settings.timeSegments,
+              parameterSets: settings.domainAffinityParameterSets,
+              maxHistoryQueryResults: settings.maxHistoryQueryResults || DEFAULT_MAX_HISTORY_QUERY_RESULTS,
+              version: settings.version,
+            };
+          }
         }).catch(/* istanbul ignore next */ error => {
           Cu.reportError(`Error trying to load component feed ${url}: ${error}`);
         });
@@ -273,6 +294,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
 
     // Each promise has a catch already built in, so no need to catch here.
     await Promise.all(newFeedsPromises);
+
     if (this.componentFeedFetched) {
       this.cleanUpTopRecImpressionPref(newFeeds);
       this.componentFeedRequestTime = Math.round(perfService.absNow() - start);
@@ -324,6 +346,62 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     });
   }
 
+  async loadAffinityScoresCache() {
+    const cachedData = await this.cache.get() || {};
+    const {affinities} = cachedData;
+    if (this.personalized && affinities && affinities.scores) {
+      this.affinityProvider = new UserDomainAffinityProvider(
+        affinities.timeSegments,
+        affinities.parameterSets,
+        affinities.maxHistoryQueryResults,
+        affinities.version,
+        affinities.scores);
+
+      this.domainAffinitiesLastUpdated = affinities._timestamp;
+    }
+  }
+
+  updateDomainAffinityScores() {
+    if (!this.personalized || !this.affinities || !this.affinities.parameterSets ||
+      Date.now() - this.domainAffinitiesLastUpdated < MIN_DOMAIN_AFFINITIES_UPDATE_TIME) {
+      return;
+    }
+
+    this.affinityProvider = new UserDomainAffinityProvider(
+      this.affinities.timeSegments,
+      this.affinities.parameterSets,
+      this.affinities.maxHistoryQueryResults,
+      this.affinities.version,
+      undefined);
+
+    const affinities = this.affinityProvider.getAffinities();
+    this.domainAffinitiesLastUpdated = Date.now();
+    affinities._timestamp = this.domainAffinitiesLastUpdated;
+    this.cache.set("affinities", affinities);
+  }
+
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "idle-daily":
+        this.updateDomainAffinityScores();
+        break;
+    }
+  }
+
+  scoreItems(item) {
+    item.score = item.item_score;
+    if (item.score !== 0 && !item.score) {
+      item.score = 1;
+    }
+    if (this.personalized && this.affinityProvider) {
+      const scoreResult = this.affinityProvider.calculateItemRelevanceScore(item);
+      if (scoreResult === 0 || scoreResult) {
+        item.score = scoreResult;
+      }
+    }
+    return item;
+  }
+
   filterBlocked(data, type) {
     if (data && data[type] && data[type].length) {
       const filteredItems = data[type].filter(item => !NewTabUtils.blockedLinks.isBlocked({"url": item.url}));
@@ -343,9 +421,16 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       return {
         ...data,
         spocs: data.spocs
-          .map(s => ({...s, score: s.item_score}))
+          // This order of operations is intended.
+          // scoreItems must be first because it creates this.score.
+          .map(item => this.scoreItems(item))
+          // Remove spocs that are scored too low.
           .filter(s => s.score >= s.min_score)
+          // Sort by highest scores.
           .sort((a, b) => b.score - a.score)
+          // This removes campaign dupes.
+          // We do this only after scoring and sorting because that way
+          // we can keep the first item we see, and end up keeping the highest scored.
           .filter(s => {
             if (!campaignMap[s.campaign_id]) {
               campaignMap[s.campaign_id] = 1;
@@ -366,10 +451,20 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     if (data && data.spocs && data.spocs.length) {
       const {spocs} = data;
       const impressions = this.readImpressionsPref(PREF_SPOC_IMPRESSIONS);
-      return {
+      const caps = [];
+      const result = {
         ...data,
-        spocs: spocs.filter(s => this.isBelowFrequencyCap(impressions, s)),
+        spocs: spocs.filter(s => {
+          const isBelow = this.isBelowFrequencyCap(impressions, s);
+          if (!isBelow) {
+            caps.push(s);
+          }
+          return isBelow;
+        }),
       };
+      // send caps to redux
+      this.store.dispatch({type: at.DISCOVERY_STREAM_SPOCS_CAPS, data: caps});
+      return result;
     }
     return data;
   }
@@ -464,6 +559,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
       action => this.store.dispatch(ac.BroadcastToContent(action)) :
       this.store.dispatch;
 
+    this.loadAffinityScoresCache();
     await this.loadLayout(dispatch, isStartup);
     await Promise.all([
       this.loadComponentFeeds(dispatch, isStartup).catch(error => Cu.reportError(`Error trying to load component feeds: ${error}`)),
@@ -472,8 +568,6 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     if (isStartup) {
       await this._maybeUpdateCachedData();
     }
-
-    this.loaded = true;
   }
 
   // We have to rotate stories on the client so that
@@ -576,6 +670,8 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     await this.reportCacheAge();
     const start = perfService.absNow();
     await this.refreshAll({updateOpenTabs: true, isStartup: true});
+    Services.obs.addObserver(this, "idle-daily");
+    this.loaded = true;
     this.totalRequestTime = Math.round(perfService.absNow() - start);
     this.reportRequestTime();
   }
@@ -583,6 +679,9 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
   async reset() {
     this.resetImpressionPrefs();
     await this.resetCache();
+    if (this.loaded) {
+      Services.obs.removeObserver(this, "idle-daily");
+    }
     this.resetState();
   }
 
@@ -590,6 +689,7 @@ this.DiscoveryStreamFeed = class DiscoveryStreamFeed {
     await this.cache.set("layout", {});
     await this.cache.set("feeds", {});
     await this.cache.set("spocs", {});
+    await this.cache.set("affinities", {});
   }
 
   resetImpressionPrefs() {

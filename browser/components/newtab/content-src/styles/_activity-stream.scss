@@ -145,7 +145,6 @@ input {
 @import '../components/PocketLoggedInCta/PocketLoggedInCta';
 @import '../components/MoreRecommendations/MoreRecommendations';
 @import '../components/DiscoveryStreamBase/DiscoveryStreamBase';
-@import '../components/DarkModeMessage/DarkModeMessage';
 
 // Discovery Stream Components
 @import '../components/DiscoveryStreamComponents/CardGrid/CardGrid';
@@ -157,8 +156,10 @@ input {
 @import '../components/DiscoveryStreamComponents/TopSites/TopSites';
 @import '../components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu';
 @import '../components/DiscoveryStreamComponents/DSCard/DSCard';
+@import '../components/DiscoveryStreamComponents/DSImage/DSImage';
 @import '../components/DiscoveryStreamComponents/DSMessage/DSMessage';
 @import '../components/DiscoveryStreamImpressionStats/ImpressionStats';
+@import '../components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState';
 
 // AS Router
 @import '../asrouter/components/Button/Button';

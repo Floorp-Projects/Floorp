@@ -1,3 +1,5 @@
+$ds-width: 936px;
+
 .discovery-stream.ds-layout {
   $columns: 12;
   --gridColumnGap: 48px;
@@ -6,7 +8,7 @@
   grid-template-columns: repeat($columns, 1fr);
   grid-column-gap: var(--gridColumnGap);
   grid-row-gap: var(--gridRowGap);
-  width: 936px;
+  width: $ds-width;
   margin: 0 auto;
 
   @while $columns > 0 {
@@ -25,6 +27,11 @@
 }
 
 .ds-header {
+  margin: 8px 0;
+}
+
+.ds-header,
+.ds-layout .section-title span {
   @include dark-theme-only {
     color: $grey-30;
   }
@@ -33,9 +40,26 @@
   font-size: 13px;
   font-weight: 600;
   line-height: 20px;
-  margin: 8px 0;
 
   .icon {
     fill: var(--newtab-text-secondary-color);
+  }
+}
+
+.collapsible-section.ds-layout {
+  margin: auto;
+  width: $ds-width + 2 * $section-horizontal-padding;
+
+  .section-top-bar {
+    margin-bottom: 0;
+
+    .learn-more-link a span {
+      color: var(--newtab-link-primary-color);
+      font-weight: normal;
+
+      &:-moz-any(:focus, :hover) {
+        text-decoration: underline;
+      }
+    }
   }
 }

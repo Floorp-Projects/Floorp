@@ -39,17 +39,25 @@ function isPrivateWindow(win) {
  * Additionally verify for redirects and check original request URL against
  * the whitelist.
  *
- * @returns {string} - the host that matched the whitelist
+ * @returns {object} - {host, url} pair that matched the whitelist
  */
 function checkURLMatch(aLocationURI, {hosts, matchPatternSet}, aRequest) {
+  // If checks pass we return a match
+  let match;
+  try {
+    match = {host: aLocationURI.host, url: aLocationURI.spec};
+  } catch (e) { // nsIURI.host can throw for non-nsStandardURL nsIURIs
+    return false;
+  }
+
   // Check current location against whitelisted hosts
-  if (hosts.has(aLocationURI.host)) {
-    return aLocationURI.host;
+  if (hosts.has(match.host)) {
+    return match;
   }
 
   if (matchPatternSet) {
-    if (matchPatternSet.matches(aLocationURI.spec)) {
-      return aLocationURI.host;
+    if (matchPatternSet.matches(match.url)) {
+      return match;
     }
   }
 
@@ -62,7 +70,10 @@ function checkURLMatch(aLocationURI, {hosts, matchPatternSet}, aRequest) {
   const originalLocation = aRequest.QueryInterface(Ci.nsIChannel).originalURI;
   // We have been redirected
   if (originalLocation.spec !== aLocationURI.spec) {
-    return hosts.has(originalLocation.host) && originalLocation.host;
+    return hosts.has(originalLocation.host) && {
+      host: originalLocation.host,
+      url: originalLocation.spec,
+    };
   }
 
   return false;
@@ -140,23 +151,15 @@ this.ASRouterTriggerListeners = new Map([
         return;
       }
 
-      let host;
       const {gBrowser} = event.target.ownerGlobal;
-
-      try {
-        // nsIURI.host can throw for non-nsStandardURL nsIURIs.
-        host = gBrowser.currentURI.host;
-      } catch (e) {
-        return; // Couldn't parse location URL
-      }
-
-      if (checkURLMatch(gBrowser.currentURI, {hosts: this._hosts, matchPatternSet: this._matchPatternSet})) {
-        this.triggerHandler(gBrowser.selectedBrowser, host);
+      const match = checkURLMatch(gBrowser.currentURI, {hosts: this._hosts, matchPatternSet: this._matchPatternSet});
+      if (match) {
+        this.triggerHandler(gBrowser.selectedBrowser, match);
       }
     },
 
-    triggerHandler(aBrowser, host) {
-      const updated = this._updateVisits(host);
+    triggerHandler(aBrowser, match) {
+      const updated = this._updateVisits(match.host);
 
       // If the previous visit happend less than FEW_MINUTES ago
       // no updates were made, no need to trigger the handler
@@ -166,30 +169,24 @@ this.ASRouterTriggerListeners = new Map([
 
       this._triggerHandler(aBrowser, {
         id: "frequentVisits",
-        param: host,
+        param: match,
         context: {
           // Remapped to {host, timestamp} because JEXL operators can only
           // filter over collections (arrays of objects)
-          recentVisits: this._visits.get(host).map(timestamp => ({host, timestamp})),
+          recentVisits: this._visits.get(match.host).map(timestamp => ({host: match.host, timestamp})),
         },
       });
     },
 
     onLocationChange(aBrowser, aWebProgress, aRequest, aLocationURI, aFlags) {
-      let host;
-      try {
-        host = aLocationURI ? aLocationURI.host : "";
-      } catch (e) { // about: pages will throw errors
-        return;
-      }
       // Some websites trigger redirect events after they finish loading even
       // though the location remains the same. This results in onLocationChange
       // events to be fired twice.
       const isSameDocument = !!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT);
-      if (host && aWebProgress.isTopLevel && !isSameDocument) {
-        host = checkURLMatch(aLocationURI, {hosts: this._hosts, matchPatternSet: this._matchPatternSet}, aRequest);
-        if (host) {
-          this.triggerHandler(aBrowser, host);
+      if (aWebProgress.isTopLevel && !isSameDocument) {
+        const match = checkURLMatch(aLocationURI, {hosts: this._hosts, matchPatternSet: this._matchPatternSet}, aRequest);
+        if (match) {
+          this.triggerHandler(aBrowser, match);
         }
       }
     },
@@ -303,20 +300,14 @@ this.ASRouterTriggerListeners = new Map([
     },
 
     onLocationChange(aBrowser, aWebProgress, aRequest, aLocationURI, aFlags) {
-      let host;
-      try {
-        host = aLocationURI ? aLocationURI.host : "";
-      } catch (e) { // about: pages throw errors
-        return;
-      }
       // Some websites trigger redirect events after they finish loading even
       // though the location remains the same. This results in onLocationChange
       // events to be fired twice.
       const isSameDocument = !!(aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT);
-      if (host && aWebProgress.isTopLevel && !isSameDocument) {
-        host = checkURLMatch(aLocationURI, {hosts: this._hosts}, aRequest);
-        if (host) {
-          this._triggerHandler(aBrowser, {id: "openURL", param: host});
+      if (aWebProgress.isTopLevel && !isSameDocument) {
+        const match = checkURLMatch(aLocationURI, {hosts: this._hosts}, aRequest);
+        if (match) {
+          this._triggerHandler(aBrowser, {id: "openURL", param: match});
         }
       }
     },
