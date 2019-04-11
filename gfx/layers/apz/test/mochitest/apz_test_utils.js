@@ -702,8 +702,20 @@ function hitTestScrollbar(params) {
   // behaviour on different platforms which makes testing harder.
   var expectedHitInfo = APZHitResultFlags.VISIBLE | APZHitResultFlags.SCROLLBAR;
   if (params.expectThumb) {
+    // The thumb has listeners which are APZ-aware. With WebRender we are able
+    // to losslessly propagate this flag to APZ, but with non-WebRender the area
+    // ends up in the mDispatchToContentRegion which we then convert back to
+    // a IRREGULAR_AREA flag. This still works correctly since IRREGULAR_AREA
+    // will fall back to the main thread for everything.
+    if (config.isWebRender) {
+      expectedHitInfo |= APZHitResultFlags.APZ_AWARE_LISTENERS;
+      if (params.layerState == LayerState.INACTIVE) {
+        expectedHitInfo |= APZHitResultFlags.INACTIVE_SCROLLFRAME;
+      }
+    } else {
+      expectedHitInfo |= APZHitResultFlags.IRREGULAR_AREA;
+    }
     // We do not generate the layers for thumbs on inactive scrollframes.
-    expectedHitInfo |= APZHitResultFlags.DISPATCH_TO_CONTENT;
     if (params.layerState == LayerState.ACTIVE) {
       expectedHitInfo |= APZHitResultFlags.SCROLLBAR_THUMB;
     }
