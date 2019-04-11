@@ -739,7 +739,7 @@ struct ReflowInput : public SizeComputationInput {
   enum {
     // Indicates that the parent of this reflow input is "fake" (see
     // mDummyParentReflowInput in mFlags).
-    DUMMY_PARENT_REFLOW_STATE = (1 << 0),
+    DUMMY_PARENT_REFLOW_INPUT = (1 << 0),
 
     // Indicates that the calling function will initialize the reflow input, and
     // that the constructor should not call Init().
