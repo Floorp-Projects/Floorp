@@ -22,6 +22,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.component_search.*
+import kotlinx.android.synthetic.main.fragment_browser.*
 import kotlinx.android.synthetic.main.fragment_browser.view.*
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.coroutines.CoroutineScope
@@ -243,9 +244,11 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                         .show()
                     activity?.enterToImmersiveMode()
                     toolbar.visibility = View.GONE
+                    nestedScrollQuickAction.visibility = View.GONE
                 } else {
                     activity?.exitImmersiveModeIfNeeded()
                     toolbar.visibility = View.VISIBLE
+                    nestedScrollQuickAction.visibility = View.VISIBLE
                 }
             },
             owner = this,
