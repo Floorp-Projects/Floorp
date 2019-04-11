@@ -5,6 +5,7 @@
 // See bug 1541577 for further details.
 
 let win;
+let popupPromise;
 const exampleURI = Services.io.newURI("http://example.com");
 async function test() {
   waitForExplicitFinish(); // have to call this ourselves because we're async.
@@ -27,6 +28,7 @@ async function test() {
 
   const url = `${TESTROOT}installtrigger.html?${triggers}`;
   BrowserTestUtils.openNewForegroundTab(win.gBrowser, url);
+  popupPromise = BrowserTestUtils.waitForEvent(win.PanelUI.notificationPanel, "popupshown");
 }
 
 function confirm_install(panel) {
@@ -51,7 +53,7 @@ async function finish_test(count) {
 
   // Explicitly click the "OK" button to avoid the panel reopening in the other window once this
   // window closes (see also bug 1535069):
-  await BrowserTestUtils.waitForEvent(win.PanelUI.notificationPanel, "popupshown");
+  await popupPromise;
   win.PanelUI.notificationPanel.querySelector("popupnotification[popupid=addon-installed]").button.click();
 
   // Now finish the test:
