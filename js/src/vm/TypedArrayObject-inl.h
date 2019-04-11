@@ -421,13 +421,12 @@ class ElementSpecific {
       SharedMem<T*> dest =
           target->dataPointerEither().template cast<T*>() + offset;
 
-      MOZ_ASSERT(
-          !canConvertInfallibly(MagicValue(JS_ELEMENTS_HOLE), target->type()),
-          "the following loop must abort on holes");
+      MOZ_ASSERT(!canConvertInfallibly(MagicValue(JS_ELEMENTS_HOLE)),
+                 "the following loop must abort on holes");
 
       const Value* srcValues = source->as<NativeObject>().getDenseElements();
       for (; i < bound; i++) {
-        if (!canConvertInfallibly(srcValues[i], target->type())) {
+        if (!canConvertInfallibly(srcValues[i])) {
           break;
         }
         Ops::store(dest + i, infallibleValueToNative(srcValues[i]));
@@ -486,7 +485,7 @@ class ElementSpecific {
 
     const Value* srcValues = source->getDenseElements();
     for (; i < len; i++) {
-      if (!canConvertInfallibly(srcValues[i], target->type())) {
+      if (!canConvertInfallibly(srcValues[i])) {
         break;
       }
       Ops::store(dest + i, infallibleValueToNative(srcValues[i]));
@@ -642,8 +641,9 @@ class ElementSpecific {
     return true;
   }
 
-  static bool canConvertInfallibly(const Value& v, Scalar::Type type) {
-    if (type == Scalar::BigInt64 || type == Scalar::BigUint64) {
+  static bool canConvertInfallibly(const Value& v) {
+    if (TypeIDOfType<T>::id == Scalar::BigInt64 ||
+        TypeIDOfType<T>::id == Scalar::BigUint64) {
       return false;
     }
     return v.isNumber() || v.isBoolean() || v.isNull() || v.isUndefined();
@@ -670,7 +670,7 @@ class ElementSpecific {
   static bool valueToNative(JSContext* cx, HandleValue v, T* result) {
     MOZ_ASSERT(!v.isMagic());
 
-    if (MOZ_LIKELY(canConvertInfallibly(v, TypeIDOfType<T>::id))) {
+    if (MOZ_LIKELY(canConvertInfallibly(v))) {
       *result = infallibleValueToNative(v);
       return true;
     }
