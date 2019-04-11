@@ -38,11 +38,11 @@ void OriginAttributes::InitPrefs() {
 }
 
 void OriginAttributes::SetFirstPartyDomain(const bool aIsTopLevelDocument,
-                                           nsIURI* aURI) {
+                                           nsIURI* aURI, bool aForced) {
   bool isFirstPartyEnabled = IsFirstPartyEnabled();
 
-  // If the pref is off or this is not a top level load, bail out.
-  if (!isFirstPartyEnabled || !aIsTopLevelDocument) {
+  // If the prefs are off or this is not a top level load, bail out.
+  if ((!isFirstPartyEnabled || !aIsTopLevelDocument) && !aForced) {
     return;
   }
 

@@ -29,6 +29,10 @@ class BackstagePass : public nsIGlobalObject,
 
   virtual nsIPrincipal* GetPrincipal() override { return mPrincipal; }
 
+  virtual nsIPrincipal* GetEffectiveStoragePrincipal() override {
+    return nullptr;
+  }
+
   virtual JSObject* GetGlobalJSObject() override;
 
   void ForgetGlobalObject() { mWrapper = nullptr; }
