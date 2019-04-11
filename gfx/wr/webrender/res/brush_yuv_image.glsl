@@ -13,6 +13,7 @@
 
 #define YUV_COLOR_SPACE_REC601 0
 #define YUV_COLOR_SPACE_REC709 1
+#define YUV_COLOR_SPACE_REC2020 2
 
 #define YUV_FORMAT_NV12 0
 #define YUV_FORMAT_PLANAR 1
@@ -59,7 +60,7 @@ const mat3 YuvColorMatrixRec601 = mat3(
 );
 
 // From Rec709:
-// [R]   [1.1643835616438356,  4.2781193979771426e-17, 1.7927410714285714]   [Y -  16]
+// [R]   [1.1643835616438356,  0.0,                    1.7927410714285714]   [Y -  16]
 // [G] = [1.1643835616438358, -0.21324861427372963,   -0.532909328559444 ] x [U - 128]
 // [B]   [1.1643835616438356,  2.1124017857142854,     0.0               ]   [V - 128]
 //
@@ -70,6 +71,20 @@ const mat3 YuvColorMatrixRec709 = mat3(
     1.16438,  1.16438,  1.16438,
     0.0    , -0.21325,  2.11240,
     1.79274, -0.53291,  0.0
+);
+
+// From Re2020:
+// [R]   [1.16438356164384,  0.0,                    1.678674107142860 ]   [Y -  16]
+// [G] = [1.16438356164384, -0.187326104219343,     -0.650424318505057 ] x [U - 128]
+// [B]   [1.16438356164384,  2.14177232142857,       0.0               ]   [V - 128]
+//
+// For the range [0,1] instead of [0,255]:
+//
+// The matrix is stored in column-major.
+const mat3 YuvColorMatrixRec2020 = mat3(
+    1.16438356164384 ,  1.164383561643840,  1.16438356164384,
+    0.0              , -0.187326104219343,  2.14177232142857,
+    1.67867410714286 , -0.650424318505057,  0.0
 );
 
 void write_uv_rect(
@@ -124,8 +139,10 @@ void brush_vs(
 
     if (prim.color_space == YUV_COLOR_SPACE_REC601) {
       vYuvColorMatrix = YuvColorMatrixRec601;
-    } else {
+    } else if (prim.color_space == YUV_COLOR_SPACE_REC709) {
       vYuvColorMatrix = YuvColorMatrixRec709;
+    } else {
+      vYuvColorMatrix = YuvColorMatrixRec2020;
     }
     vFormat = prim.yuv_format;
 
