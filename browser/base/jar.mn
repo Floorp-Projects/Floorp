@@ -22,7 +22,6 @@ browser.jar:
         content/browser/aboutNetError.xhtml            (content/aboutNetError.xhtml)
         content/browser/aboutNetError.js               (content/aboutNetError.js)
         content/browser/aboutRobots-icon.png          (content/aboutRobots-icon.png)
-        content/browser/aboutRobots-widget-left.png   (content/aboutRobots-widget-left.png)
         content/browser/aboutTabCrashed.css           (content/aboutTabCrashed.css)
         content/browser/aboutTabCrashed.js            (content/aboutTabCrashed.js)
         content/browser/aboutTabCrashed.xhtml         (content/aboutTabCrashed.xhtml)

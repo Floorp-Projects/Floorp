@@ -1,23 +1,15 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!DOCTYPE html [
-  <!ENTITY % htmlDTD
-    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-    "DTD/xhtml1-strict.dtd">
-  %htmlDTD;
-]>
-
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Security-Policy" content="default-src chrome:" />
     <title data-l10n-id="page-title"></title>
-    <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all" />
+    <link rel="stylesheet" href="chrome://global/skin/in-content/info-pages.css" media="all"/>
     <link rel="icon" type="image/png" id="favicon" href="chrome://browser/content/robot.ico"/>
-    <link rel="stylesheet" href="chrome://browser/content/aboutRobots.css" type="text/css"/>
+    <link rel="stylesheet" href="chrome://browser/content/aboutRobots.css"/>
     <linkset>
       <link rel="localization" href="browser/aboutRobots.ftl"/>
     </linkset>
@@ -26,23 +18,23 @@
   <body>
 
     <!-- PAGE CONTAINER (for styling purposes only) -->
-    <div id="errorPageContainer">
+    <div class="container">
 
       <!-- Error Title -->
-      <div id="errorTitle">
-        <h1 id="errorTitleText" data-l10n-id="error-title-text"></h1>
+      <div class="title">
+        <h1 class="title-text" data-l10n-id="error-title-text"></h1>
       </div>
 
       <!-- LONG CONTENT (the section most likely to require scrolling) -->
-      <div id="errorLongContent">
+      <div class="description">
 
         <!-- Short Description -->
-        <div id="errorShortDesc">
+        <div>
           <p id="errorShortDescText" data-l10n-id="error-short-desc-text"></p>
         </div>
 
-        <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
-        <div id="errorLongDesc">
+        <!-- Long Description -->
+        <div>
           <ul>
             <li data-l10n-id="error-long-desc1"></li>
             <li data-l10n-id="error-long-desc2"></li>
@@ -52,19 +44,18 @@
         </div>
 
         <!-- Short Description -->
-        <div id="errorTrailerDesc">
-          <p id="errorTrailerDescText" data-l10n-id="error-trailer-desc-text"></p>
+        <div>
+          <small data-l10n-id="error-trailer-desc-text"></small>
         </div>
 
       </div>
 
       <!-- Button -->
-      <button id="errorTryAgain"
-              data-l10n-id="error-try-again"
-              data-l10n-attrs="label2"></button>
-
-      <img id="widget1" src="chrome://browser/content/aboutRobots-widget-left.png"/>
-      <img id="widget2" src="chrome://browser/content/aboutRobots-widget-left.png"/>
+      <div class="button-container">
+        <button id="errorTryAgain"
+                data-l10n-id="error-try-again"
+                data-l10n-attrs="label2"></button>
+      </div>
     </div>
   </body>
   <script type="application/javascript" src="chrome://browser/content/aboutRobots.js"/>
