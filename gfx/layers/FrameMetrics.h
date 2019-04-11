@@ -721,7 +721,10 @@ struct ScrollSnapInfo {
            mScrollSnapDestination == aOther.mScrollSnapDestination &&
            mScrollSnapCoordinates == aOther.mScrollSnapCoordinates &&
            mSnapPositionX == aOther.mSnapPositionX &&
-           mSnapPositionY == aOther.mSnapPositionY;
+           mSnapPositionY == aOther.mSnapPositionY &&
+           mXRangeWiderThanSnapport == aOther.mXRangeWiderThanSnapport &&
+           mYRangeWiderThanSnapport == aOther.mYRangeWiderThanSnapport &&
+           mSnapportSize == aOther.mSnapportSize;
   }
 
   bool HasScrollSnapping() const {
@@ -750,6 +753,36 @@ struct ScrollSnapInfo {
   // The scroll positions corresponding to scroll-snap-align values.
   nsTArray<nscoord> mSnapPositionX;
   nsTArray<nscoord> mSnapPositionY;
+
+  struct ScrollSnapRange {
+    ScrollSnapRange() = default;
+
+    ScrollSnapRange(nscoord aStart, nscoord aEnd)
+        : mStart(aStart), mEnd(aEnd) {}
+
+    nscoord mStart;
+    nscoord mEnd;
+    bool operator==(const ScrollSnapRange& aOther) const {
+      return mStart == aOther.mStart && mEnd == aOther.mEnd;
+    }
+
+    // Returns true if |aPoint| is a valid snap position in this range.
+    bool IsValid(nscoord aPoint, nscoord aSnapportSize) const {
+      MOZ_ASSERT(mEnd - mStart > aSnapportSize);
+      return mStart <= aPoint && aPoint <= mEnd - aSnapportSize;
+    }
+  };
+  // An array of the range that the target element is larger than the snapport
+  // on the axis.
+  // Snap positions in this range will be valid snap positions in the case where
+  // the distance between the closest snap position and the second closest snap
+  // position is still larger than the snapport size.
+  // See https://drafts.csswg.org/css-scroll-snap-1/#snap-overflow
+  //
+  // Note: This range doesn't contain scroll-margin values.
+  nsTArray<ScrollSnapRange> mXRangeWiderThanSnapport;
+  nsTArray<ScrollSnapRange> mYRangeWiderThanSnapport;
+  nsSize mSnapportSize;
 };
 
 // clang-format off
