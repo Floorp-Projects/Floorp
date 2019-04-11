@@ -183,6 +183,9 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
     mCurrentConfig.mDisplay = info.mDisplay;
     mCurrentConfig.SetImageRect(
         gfx::IntRect(0, 0, info.mImage.width, info.mImage.height));
+    mCurrentConfig.mColorDepth = gfx::ColorDepthForBitDepth(info.mBitDepth);
+    mCurrentConfig.mColorSpace = info.ColorSpace();
+    mCurrentConfig.mFullRange = info.mFullRange;
     mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
 
     return NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
