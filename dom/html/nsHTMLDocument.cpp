@@ -443,7 +443,7 @@ void nsHTMLDocument::TryFallback(int32_t& aCharsetSource,
   aEncoding = FallbackEncoding::FromLocale();
 }
 
-// Using a prototype document is only allowed with chrome privilege.
+// Using a prototype document is currently only allowed with browser.xhtml.
 bool ShouldUsePrototypeDocument(nsIChannel* aChannel, nsIDocShell* aDocShell) {
   if (!aChannel || !aDocShell ||
       !StaticPrefs::dom_prototype_document_cache_enabled()) {
@@ -454,7 +454,9 @@ bool ShouldUsePrototypeDocument(nsIChannel* aChannel, nsIDocShell* aDocShell) {
   }
   nsCOMPtr<nsIURI> originalURI;
   aChannel->GetOriginalURI(getter_AddRefs(originalURI));
-  return IsChromeURI(originalURI);
+  return IsChromeURI(originalURI) &&
+         originalURI->GetSpecOrDefault().EqualsLiteral(
+             BROWSER_CHROME_URL_QUOTED);
 }
 
 nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
@@ -558,7 +560,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     } else {
       mParser->MarkAsNotScriptCreated(aCommand);
     }
-  } else if (xhtml && ShouldUsePrototypeDocument(aChannel, docShell)) {
+  } else if (ShouldUsePrototypeDocument(aChannel, docShell)) {
     loadWithPrototype = true;
     nsCOMPtr<nsIURI> originalURI;
     aChannel->GetOriginalURI(getter_AddRefs(originalURI));
