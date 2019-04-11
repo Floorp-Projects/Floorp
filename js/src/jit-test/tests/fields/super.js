@@ -45,3 +45,13 @@ class H extends Base {
   }
 };
 new H();
+
+class I extends Base {
+  field = 2;
+  constructor() {
+      class Tmp {
+          [super()];
+      }
+  }
+};
+new I();
