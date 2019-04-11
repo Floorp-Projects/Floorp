@@ -178,11 +178,6 @@ http://another-tracking.example.net:80
 http://itisatracker.org:80
 https://itisatracker.org:443
 http://trackertest.org:80
-#
-# Used while testing TLS session ticket resumption for third-party trackers (bug 1500533)
-# (DO NOT USE THIS HOST IN OTHER TESTS!)
-#
-https://tlsresumptiontest.example.org:443
 
 https://malware.example.com:443
 https://unwanted.example.com:443
