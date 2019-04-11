@@ -7,7 +7,6 @@ package mozilla.components.concept.awesomebar
 import android.graphics.Bitmap
 import android.view.View
 import java.util.UUID
-import java.util.zip.CRC32
 
 /**
  * Interface to be implemented by awesome bar implementations.
@@ -92,21 +91,6 @@ interface AwesomeBar {
         val onChipClicked: ((Chip) -> Unit)? = null,
         val score: Int = 0
     ) {
-        /**
-         * A generated unique ID ([Long]), based on the provider and suggestion id (having a reasonable expectation of
-         * generating mostly-non-colliding IDs).
-         */
-        val generatedUniqueId: Long by lazy {
-            // A non-cryptographic "hash-suitable" function is used for speed.
-            // CRC32 is quite fast - several orders of magnitude faster than md5, and likely
-            // good-enough for our purposes (having a reasonable expectation of generating
-            // mostly-non-colliding IDs).
-            val crc32 = CRC32()
-            crc32.update(provider.id.toByteArray())
-            crc32.update(id.toByteArray())
-            crc32.value
-        }
-
         /**
          * Chips are compact actions that are shown as part of a suggestion. For example a [Suggestion] from a search
          * engine may offer multiple search suggestion chips for different search terms.

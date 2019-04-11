@@ -15,6 +15,7 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.spy
@@ -23,6 +24,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.verifyNoMoreInteractions
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import java.lang.IllegalStateException
 import java.util.UUID
 
 @RunWith(RobolectricTestRunner::class)
@@ -145,9 +147,13 @@ class BrowserAwesomeBarTest {
             val adapter: SuggestionsAdapter = mock()
             awesomeBar.suggestionsAdapter = adapter
 
+            assertEquals(PROVIDER_MAX_SUGGESTIONS * INITIAL_NUMBER_OF_PROVIDERS, awesomeBar.uniqueSuggestionIds.maxSize())
             awesomeBar.addProviders(provider1, provider2)
+            assertEquals((PROVIDER_MAX_SUGGESTIONS * 2) * 2, awesomeBar.uniqueSuggestionIds.maxSize())
             awesomeBar.removeProviders(provider2)
+            assertEquals((PROVIDER_MAX_SUGGESTIONS * 1) * 2, awesomeBar.uniqueSuggestionIds.maxSize())
             awesomeBar.addProviders(provider3)
+            assertEquals((PROVIDER_MAX_SUGGESTIONS * 2) * 2, awesomeBar.uniqueSuggestionIds.maxSize())
 
             awesomeBar.onInputStarted()
 
@@ -169,8 +175,14 @@ class BrowserAwesomeBarTest {
             val provider2 = mockProvider()
 
             val awesomeBar = BrowserAwesomeBar(context)
+            assertEquals(PROVIDER_MAX_SUGGESTIONS * INITIAL_NUMBER_OF_PROVIDERS, awesomeBar.uniqueSuggestionIds.maxSize())
             awesomeBar.addProviders(provider1, provider2)
+            assertEquals((PROVIDER_MAX_SUGGESTIONS * 2) * 2, awesomeBar.uniqueSuggestionIds.maxSize())
+
+            // Verify that all cached suggestion IDs are evicted when all providers are removed
+            awesomeBar.uniqueSuggestionIds.put("test", 1)
             awesomeBar.removeAllProviders()
+            assertEquals(0, awesomeBar.uniqueSuggestionIds.size())
 
             awesomeBar.onInputStarted()
 
@@ -337,6 +349,55 @@ class BrowserAwesomeBarTest {
         assertTrue(stopped)
     }
 
+    @Test
+    fun `throw exception if provider returns duplicate IDs`() {
+        val awesomeBar = BrowserAwesomeBar(context)
+
+        val suggestions = listOf(
+            AwesomeBar.Suggestion(id = "dupe", score = 0, provider = BrokenProvider()),
+            AwesomeBar.Suggestion(id = "dupe", score = 0, provider = BrokenProvider())
+        )
+
+        try {
+            awesomeBar.processProviderSuggestions(suggestions)
+            fail("Expected IllegalStateException for duplicate suggestion IDs")
+        } catch (e: IllegalStateException) {
+            assertTrue(e.message!!.contains(BrokenProvider::class.java.simpleName))
+        }
+    }
+
+    @Test
+    fun `get unique suggestion id`() {
+        val awesomeBar = BrowserAwesomeBar(context)
+
+        val suggestion1 = AwesomeBar.Suggestion(id = "http://mozilla.org/1", score = 0, provider = mock())
+        assertEquals(1, awesomeBar.getUniqueSuggestionId(suggestion1))
+
+        val suggestion2 = AwesomeBar.Suggestion(id = "http://mozilla.org/2", score = 0, provider = mock())
+        assertEquals(2, awesomeBar.getUniqueSuggestionId(suggestion2))
+
+        assertEquals(1, awesomeBar.getUniqueSuggestionId(suggestion1))
+
+        val suggestion3 = AwesomeBar.Suggestion(id = "http://mozilla.org/3", score = 0, provider = mock())
+        assertEquals(3, awesomeBar.getUniqueSuggestionId(suggestion3))
+    }
+
+    @Test
+    fun `unique suggestion id cache has sufficient space`() {
+        val awesomeBar = BrowserAwesomeBar(context)
+        val provider = mockProvider()
+
+        awesomeBar.addProviders(provider)
+
+        for (i in 1..PROVIDER_MAX_SUGGESTIONS) {
+            awesomeBar.getUniqueSuggestionId(AwesomeBar.Suggestion(id = "$i", score = 0, provider = provider))
+        }
+
+        awesomeBar.getUniqueSuggestionId(AwesomeBar.Suggestion(id = "21", score = 0, provider = provider))
+
+        assertEquals(1, awesomeBar.getUniqueSuggestionId(AwesomeBar.Suggestion(id = "1", score = 0, provider = provider)))
+    }
+
     private fun mockProvider(): AwesomeBar.SuggestionProvider = spy(object : AwesomeBar.SuggestionProvider {
         override val id: String = UUID.randomUUID().toString()
 
@@ -344,4 +405,12 @@ class BrowserAwesomeBarTest {
             return emptyList()
         }
     })
+
+    class BrokenProvider : AwesomeBar.SuggestionProvider {
+        override val id: String = "Broken"
+
+        override suspend fun onInputChanged(text: String): List<AwesomeBar.Suggestion> {
+            return emptyList()
+        }
+    }
 }

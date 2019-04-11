@@ -12,7 +12,7 @@ import mozilla.components.feature.awesomebar.internal.loadLambda
 import mozilla.components.feature.session.SessionUseCases
 import java.util.UUID
 
-private const val HISTORY_SUGGESTION_LIMIT = 20
+internal const val HISTORY_SUGGESTION_LIMIT = 20
 
 /**
  * A [AwesomeBar.SuggestionProvider] implementation that provides suggestions based on the browsing
@@ -30,7 +30,11 @@ class HistoryStorageSuggestionProvider(
         if (text.isEmpty()) {
             return emptyList()
         }
-        return historyStorage.getSuggestions(text, HISTORY_SUGGESTION_LIMIT).into()
+
+        val suggestions = historyStorage.getSuggestions(text, HISTORY_SUGGESTION_LIMIT)
+        // In case of duplicates we want to pick the suggestion with the highest score.
+        // See: https://github.com/mozilla/application-services/issues/970
+        return suggestions.sortedByDescending { it.score }.distinctBy { it.id }.into()
     }
 
     override val shouldClearSuggestions: Boolean

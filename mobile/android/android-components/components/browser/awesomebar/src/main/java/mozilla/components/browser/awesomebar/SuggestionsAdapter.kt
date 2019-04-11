@@ -108,7 +108,7 @@ internal class SuggestionsAdapter(
 
     override fun getItemId(position: Int): Long {
         val suggestion = suggestions[position]
-        return suggestion.generatedUniqueId
+        return awesomeBar.getUniqueSuggestionId(suggestion)
     }
 
     override fun getItemViewType(position: Int): Int = synchronized(suggestions) {
