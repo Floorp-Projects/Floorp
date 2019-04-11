@@ -43,8 +43,7 @@ RefPtr<ReaderProxy::AudioDataPromise> ReaderProxy::OnAudioDataRequestCompleted(
     RefPtr<AudioData> aAudio) {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
-  aAudio->AdjustForStartTime(StartTime().ToMicroseconds());
-  if (aAudio->mTime.IsValid()) {
+  if (aAudio->AdjustForStartTime(StartTime().ToMicroseconds())) {
     return AudioDataPromise::CreateAndResolve(aAudio.forget(), __func__);
   }
   return AudioDataPromise::CreateAndReject(NS_ERROR_DOM_MEDIA_OVERFLOW_ERR,
@@ -83,8 +82,7 @@ RefPtr<ReaderProxy::VideoDataPromise> ReaderProxy::RequestVideoData(
       ->Then(
           mOwnerThread, __func__,
           [startTime](RefPtr<VideoData> aVideo) {
-            aVideo->AdjustForStartTime(startTime);
-            return aVideo->mTime.IsValid()
+            return aVideo->AdjustForStartTime(startTime)
                        ? VideoDataPromise::CreateAndResolve(aVideo.forget(),
                                                             __func__)
                        : VideoDataPromise::CreateAndReject(
