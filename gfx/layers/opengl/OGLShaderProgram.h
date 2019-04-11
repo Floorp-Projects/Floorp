@@ -231,7 +231,7 @@ class ShaderProgramOGL {
     SetUniform(KnownUniform::MaskCoordMultiplier, 2, f);
   }
 
-  void SetYUVColorSpace(YUVColorSpace aYUVColorSpace);
+  void SetYUVColorSpace(gfx::YUVColorSpace aYUVColorSpace);
 
   // Set whether we want the component alpha shader to return the color
   // vector (pass 1, false) or the alpha vector (pass2, true). With support

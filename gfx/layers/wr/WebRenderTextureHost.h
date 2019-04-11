@@ -52,7 +52,7 @@ class WebRenderTextureHost : public TextureHost {
 
   virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
 
-  virtual YUVColorSpace GetYUVColorSpace() const override;
+  virtual gfx::YUVColorSpace GetYUVColorSpace() const override;
 
   virtual gfx::IntSize GetSize() const override;
 

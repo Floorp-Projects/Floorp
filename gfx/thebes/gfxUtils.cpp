@@ -1101,7 +1101,7 @@ const float kBT2020NarrowYCbCrToRGB_RowMajor[16] = {
     0.00000f,  0.00000f, 0.00000f, 1.00000f};
 
 /* static */ const float* gfxUtils::YuvToRgbMatrix4x3RowMajor(
-    YUVColorSpace aYUVColorSpace) {
+    gfx::YUVColorSpace aYUVColorSpace) {
 #define X(x) \
   { x[0], x[1], x[2], 0.0f, x[4], x[5], x[6], 0.0f, x[8], x[9], x[10], 0.0f }
 
@@ -1112,11 +1112,11 @@ const float kBT2020NarrowYCbCrToRGB_RowMajor[16] = {
 #undef X
 
   switch (aYUVColorSpace) {
-    case YUVColorSpace::BT601:
+    case gfx::YUVColorSpace::BT601:
       return rec601;
-    case YUVColorSpace::BT709:
+    case gfx::YUVColorSpace::BT709:
       return rec709;
-    case YUVColorSpace::BT2020:
+    case gfx::YUVColorSpace::BT2020:
       return rec2020;
     default:  // YUVColorSpace::UNKNOWN
       MOZ_ASSERT(false, "unknown aYUVColorSpace");
@@ -1125,7 +1125,7 @@ const float kBT2020NarrowYCbCrToRGB_RowMajor[16] = {
 }
 
 /* static */ const float* gfxUtils::YuvToRgbMatrix3x3ColumnMajor(
-    YUVColorSpace aYUVColorSpace) {
+    gfx::YUVColorSpace aYUVColorSpace) {
 #define X(x) \
   { x[0], x[4], x[8], x[1], x[5], x[9], x[2], x[6], x[10] }
 
@@ -1136,7 +1136,7 @@ const float kBT2020NarrowYCbCrToRGB_RowMajor[16] = {
 #undef X
 
   switch (aYUVColorSpace) {
-    case YUVColorSpace::BT601:
+    case gfx::YUVColorSpace::BT601:
       return rec601;
     case YUVColorSpace::BT709:
       return rec709;

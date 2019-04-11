@@ -91,7 +91,7 @@ class DrawBlitProg final {
   };
   struct YUVArgs final {
     Mat3 texMatrix1;
-    YUVColorSpace colorSpace;
+    gfx::YUVColorSpace colorSpace;
   };
 
   void Draw(const BaseArgs& args, const YUVArgs* argsYUV = nullptr) const;
@@ -198,7 +198,7 @@ class GLBlitHelper final {
   bool BlitAngleYCbCr(const WindowsHandle (&handleList)[3],
                       const gfx::IntRect& clipRect, const gfx::IntSize& ySize,
                       const gfx::IntSize& uvSize,
-                      const YUVColorSpace colorSpace,
+                      const gfx::YUVColorSpace colorSpace,
                       const gfx::IntSize& destSize, OriginPos destOrigin) const;
 
   bool BlitAnglePlanes(uint8_t numPlanes,

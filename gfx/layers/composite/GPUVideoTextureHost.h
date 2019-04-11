@@ -39,7 +39,7 @@ class GPUVideoTextureHost : public TextureHost {
     return nullptr;  // XXX - implement this (for MOZ_DUMP_PAINTING)
   }
 
-  virtual YUVColorSpace GetYUVColorSpace() const override;
+  virtual gfx::YUVColorSpace GetYUVColorSpace() const override;
 
   virtual gfx::IntSize GetSize() const override;
 

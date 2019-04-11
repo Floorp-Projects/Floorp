@@ -872,13 +872,13 @@ enum class WebRenderError : int8_t {
 };
 
 static inline wr::WrYuvColorSpace ToWrYuvColorSpace(
-    YUVColorSpace aYUVColorSpace) {
+    gfx::YUVColorSpace aYUVColorSpace) {
   switch (aYUVColorSpace) {
-    case YUVColorSpace::BT601:
+    case gfx::YUVColorSpace::BT601:
       return wr::WrYuvColorSpace::Rec601;
-    case YUVColorSpace::BT709:
+    case gfx::YUVColorSpace::BT709:
       return wr::WrYuvColorSpace::Rec709;
-    case YUVColorSpace::BT2020:
+    case gfx::YUVColorSpace::BT2020:
       return wr::WrYuvColorSpace::Rec2020;
     default:
       MOZ_ASSERT_UNREACHABLE("Tried to convert invalid YUVColorSpace.");

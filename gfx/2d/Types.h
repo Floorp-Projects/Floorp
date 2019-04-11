@@ -138,6 +138,14 @@ inline bool IsOpaque(SurfaceFormat aFormat) {
   }
 }
 
+enum class YUVColorSpace : uint8_t {
+  BT601,
+  BT709,
+  BT2020,
+  // This represents the unknown format.
+  UNKNOWN,
+};
+
 enum class ColorDepth : uint8_t {
   COLOR_8,
   COLOR_10,
