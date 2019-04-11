@@ -252,6 +252,8 @@ class AndroidEmulatorTest(TestingMixin, BaseScript, MozbaseMixin, CodeCoverageMi
                 dirs['abs_marionette_tests_dir'],
                 self.config.get('marionette_test_manifest', '')
             ),
+            'gtest_dir': os.path.join(dirs['abs_test_install_dir'], 'gtest',
+                                      'gtest_bin', 'gtest'),
         }
 
         user_paths = self._get_mozharness_test_paths(self.test_suite)

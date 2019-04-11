@@ -8,9 +8,12 @@ job-defaults:
                 default: desktop_unittest.py
         config:
             by-test-platform:
-                android-em.*:
+                android-em-4.*:
                     - android/android_common.py
                     - android/androidarm_4_3.py
+                android-em-7.*:
+                    - android/android_common.py
+                    - android/androidx86_7_0.py
                 android-hw.*:
                     - android/android_common.py
                     - android/android_hw.py
@@ -48,6 +51,10 @@ gtest:
             windows10-64-asan/opt: []  # permafails on asan too
             .*-devedition/.*: []  # don't run on devedition
             default: built-projects
+    target:
+        by-test-platform:
+            android-em-7.*: geckoview-androidTest.apk
+            default: null
     tier:
         by-test-platform:
             windows7-32-shippable.*: 3
