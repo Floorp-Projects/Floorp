@@ -39,6 +39,7 @@
 #include "mozilla/dom/OSFileSystem.h"
 #include "mozilla/dom/Promise.h"
 #include "nsNetUtil.h"
+#include "nsReadableUtils.h"
 
 #define MOZ_CALLS_ENABLED_PREF "dom.datatransfer.mozAtAPIs"
 
@@ -620,7 +621,18 @@ bool DataTransfer::PrincipalMaySetData(const nsAString& aType,
           "DataTransfer");
       return false;
     }
+
+    // Disallow content from creating x-moz-place flavors, so that it cannot
+    // create fake Places smart queries exposing user data, but give a free
+    // pass to WebExtensions.
+    auto principal = BasePrincipal::Cast(aPrincipal);
+    if (!principal->AddonPolicy() &&
+        StringBeginsWith(aType, NS_LITERAL_STRING("text/x-moz-place"))) {
+      NS_WARNING("Disallowing adding moz-place types to DataTransfer");
+      return false;
+    }
   }
+
   return true;
 }
 
