@@ -24,7 +24,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/TextUtils.h"
 
-#include <ctype.h>
 #include <math.h>
 #include <string.h>
 
@@ -2756,7 +2755,7 @@ JSString* DateTimeHelper::timeZoneComment(JSContext* cx, double utcTime,
     bool usetz = true;
     for (size_t i = 0; i < tzlen; i++) {
       char16_t c = tzbuf[i];
-      if (c > 127 || !isprint(c)) {
+      if (!IsAsciiPrintable(c)) {
         usetz = false;
         break;
       }
