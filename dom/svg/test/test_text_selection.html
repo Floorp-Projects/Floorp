@@ -17,7 +17,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=655877
 
 <iframe src="text-helper-selection.svg" width="400" height="300"></iframe>
 
-<pre id="test">
+<br />
+<div id="svg" style="padding-right: 30px;">
+  <div><svg width="36" height="36" viewBox="0 0 36 36"><path d="M6 14l8 8L30 6v8L14 30l-8-8z"></path></svg></div>
+</div>
+This is part of the test
+
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 
@@ -120,6 +125,15 @@ function testSelection() {
   selection_is("squash");
   deselect();
 
+  let svgImg = document.getElementById("svg");
+  synthesizeMouse(svgImg, 10, 10, { type: "mousemove" }, window);
+  synthesizeMouse(svgImg, 10, 10, { type: "mousedown" }, window);
+
+  let rect = svgImg.getBoundingClientRect();
+  synthesizeMouseAtPoint(rect.left + rect.width + 100, rect.top + rect.height + 10, { type: "mousemove" }, window);
+  synthesizeMouseAtPoint(rect.left + rect.width + 100, rect.top + rect.height + 10, { type: "mouseup" }, window);
+  is(window.getSelection().toString(), "\nThis is part of the test ", "The selection is correct");
+
   SimpleTest.finish();
 }
 
@@ -134,6 +148,5 @@ if (/Android/.test(navigator.userAgent)) {
   window.addEventListener("load", runTest);
 }
 </script>
-</pre>
 </body>
 </html>
