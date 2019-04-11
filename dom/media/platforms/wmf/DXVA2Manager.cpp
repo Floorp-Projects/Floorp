@@ -589,7 +589,7 @@ class D3D11DXVA2Manager : public DXVA2Manager {
   HRESULT CopyToImage(IMFSample* aVideoSample, const gfx::IntRect& aRegion,
                       Image** aOutImage) override;
 
-  HRESULT CopyToBGRATexture(ID3D11Texture2D* aInTexture, const GUID& aSubType,
+  HRESULT CopyToBGRATexture(ID3D11Texture2D* aInTexture,
                             ID3D11Texture2D** aOutTexture) override;
 
   HRESULT ConfigureForSize(IMFMediaType* aInputType,
@@ -676,7 +676,8 @@ D3D11DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
     // There's no proper KnowsCompositor for ImageBridge currently (and it
     // implements the interface), so just use that if it's available.
     mTextureClientAllocator = new D3D11RecycleAllocator(
-        layers::ImageBridgeChild::GetSingleton().get(), mDevice);
+        layers::ImageBridgeChild::GetSingleton().get(), mDevice,
+        gfx::SurfaceFormat::NV12);
 
     if (ImageBridgeChild::GetSingleton() && gfxPrefs::PDMWMFUseSyncTexture() &&
         mDevice != DeviceManagerDx::Get()->GetCompositorDevice()) {
@@ -691,8 +692,8 @@ D3D11DXVA2Manager::Init(layers::KnowsCompositor* aKnowsCompositor,
           mDevice);
     }
   } else {
-    mTextureClientAllocator =
-        new D3D11RecycleAllocator(aKnowsCompositor, mDevice);
+    mTextureClientAllocator = new D3D11RecycleAllocator(
+        aKnowsCompositor, mDevice, gfx::SurfaceFormat::NV12);
     if (gfxPrefs::PDMWMFUseSyncTexture()) {
       // We use a syncobject to avoid the cost of the mutex lock when
       // compositing, and because it allows color conversion ocurring directly
@@ -886,7 +887,7 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
   MOZ_ASSERT(mTextureClientAllocator);
 
   RefPtr<D3D11ShareHandleImage> image = new D3D11ShareHandleImage(
-      gfx::IntSize(mWidth, mHeight), aRegion, mInputSubType, mYUVColorSpace);
+      gfx::IntSize(mWidth, mHeight), aRegion, mYUVColorSpace);
 
   // Retrieve the DXGI_FORMAT for the current video sample.
   RefPtr<IMFMediaBuffer> buffer;
@@ -928,6 +929,8 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
       NS_ENSURE_TRUE(mSyncObject, E_FAIL);
     }
 
+    // The D3D11TextureClientAllocator may return a different texture format
+    // than preferred. In which case the destination texture will be BGRA32.
     if (outDesc.Format == inDesc.Format) {
       // Our video frame is stored in a non-sharable ID3D11Texture2D. We need
       // to create a copy of that frame as a sharable resource, save its share
@@ -974,7 +977,6 @@ D3D11DXVA2Manager::CopyToImage(IMFSample* aVideoSample,
 
 HRESULT
 D3D11DXVA2Manager::CopyToBGRATexture(ID3D11Texture2D* aInTexture,
-                                     const GUID& aSubType,
                                      ID3D11Texture2D** aOutTexture) {
   NS_ENSURE_TRUE(aInTexture, E_POINTER);
   NS_ENSURE_TRUE(aOutTexture, E_POINTER);
@@ -995,7 +997,21 @@ D3D11DXVA2Manager::CopyToBGRATexture(ID3D11Texture2D* aInTexture,
     hr = inputType->SetGUID(MF_MT_MAJOR_TYPE, MFMediaType_Video);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-    hr = inputType->SetGUID(MF_MT_SUBTYPE, aSubType);
+    const GUID subType = [&]() {
+      switch (desc.Format) {
+        case DXGI_FORMAT_NV12:
+          return MFVideoFormat_NV12;
+        case DXGI_FORMAT_P010:
+          return MFVideoFormat_P010;
+        case DXGI_FORMAT_P016:
+          return MFVideoFormat_P016;
+        default:
+          MOZ_ASSERT_UNREACHABLE("Unexpected texture type");
+          return MFVideoFormat_NV12;
+      }
+    }();
+
+    hr = inputType->SetGUID(MF_MT_SUBTYPE, subType);
     NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
     hr = inputType->SetUINT32(MF_MT_INTERLACE_MODE,
@@ -1136,6 +1152,21 @@ D3D11DXVA2Manager::ConfigureForSize(IMFMediaType* aInputType,
   mInputType = inputType;
   mInputSubType = subType;
   mYUVColorSpace = aColorSpace;
+  if (mTextureClientAllocator) {
+    gfx::SurfaceFormat format = [&]() {
+      if (subType == MFVideoFormat_NV12) {
+        return gfx::SurfaceFormat::NV12;
+      } else if (subType == MFVideoFormat_P010) {
+        return gfx::SurfaceFormat::P010;
+      } else if (subType == MFVideoFormat_P016) {
+        return gfx::SurfaceFormat::P016;
+      } else {
+        MOZ_ASSERT_UNREACHABLE("Unexpected texture type");
+        return gfx::SurfaceFormat::NV12;
+      }
+    }();
+    mTextureClientAllocator->SetPreferredSurfaceFormat(format);
+  }
   return S_OK;
 }
 
