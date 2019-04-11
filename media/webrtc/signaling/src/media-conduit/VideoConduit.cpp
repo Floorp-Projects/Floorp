@@ -221,7 +221,7 @@ void WebrtcVideoConduit::StreamStatistics::Update(
   ASSERT_ON_THREAD(mStatsThread);
 
   mFrameRate.Push(aFrameRate);
-  mBitrate.Push(aBitrate);
+  mBitRate.Push(aBitrate);
   mPacketCounts = aPacketCounts;
 }
 
@@ -230,14 +230,35 @@ bool WebrtcVideoConduit::StreamStatistics::GetVideoStreamStats(
     double& aOutBrStdDev) const {
   ASSERT_ON_THREAD(mStatsThread);
 
-  if (mFrameRate.NumDataValues() && mBitrate.NumDataValues()) {
+  if (mFrameRate.NumDataValues() && mBitRate.NumDataValues()) {
     aOutFrMean = mFrameRate.Mean();
     aOutFrStdDev = mFrameRate.StandardDeviation();
-    aOutBrMean = mBitrate.Mean();
-    aOutBrStdDev = mBitrate.StandardDeviation();
+    aOutBrMean = mBitRate.Mean();
+    aOutBrStdDev = mBitRate.StandardDeviation();
     return true;
   }
   return false;
+}
+
+void WebrtcVideoConduit::StreamStatistics::RecordTelemetry() const {
+  ASSERT_ON_THREAD(mStatsThread);
+
+  if (!mActive) {
+    return;
+  }
+  using namespace Telemetry;
+  Accumulate(IsSend() ? WEBRTC_VIDEO_ENCODER_BITRATE_AVG_PER_CALL_KBPS
+                      : WEBRTC_VIDEO_DECODER_BITRATE_AVG_PER_CALL_KBPS,
+             mBitRate.Mean() / 1000);
+  Accumulate(IsSend() ? WEBRTC_VIDEO_ENCODER_BITRATE_STD_DEV_PER_CALL_KBPS
+                      : WEBRTC_VIDEO_DECODER_BITRATE_STD_DEV_PER_CALL_KBPS,
+             mBitRate.StandardDeviation() / 1000);
+  Accumulate(IsSend() ? WEBRTC_VIDEO_ENCODER_FRAMERATE_AVG_PER_CALL
+                      : WEBRTC_VIDEO_DECODER_FRAMERATE_AVG_PER_CALL,
+             mFrameRate.Mean());
+  Accumulate(IsSend() ? WEBRTC_VIDEO_ENCODER_FRAMERATE_10X_STD_DEV_PER_CALL
+                      : WEBRTC_VIDEO_DECODER_FRAMERATE_10X_STD_DEV_PER_CALL,
+             mFrameRate.StandardDeviation() * 10);
 }
 
 const webrtc::RtcpPacketTypeCounter&
