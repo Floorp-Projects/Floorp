@@ -17,6 +17,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string>
+#include <type_traits>
 
 #include "jsutil.h"
 #include "NamespaceImports.h"
@@ -26,13 +27,6 @@
 #include "vm/Printer.h"
 
 class JSLinearString;
-
-/*
- * Shorthands for ASCII (7-bit) decimal and hex conversion.
- * Manually inline isdigit and isxdigit for performance; MSVC doesn't do this
- * for us.
- */
-#define JS7_UNDEC(c) ((c) - '0')
 
 static MOZ_ALWAYS_INLINE size_t js_strlen(const char16_t* s) {
   return std::char_traits<char16_t>::length(s);
@@ -47,6 +41,13 @@ extern int32_t js_fputs(const char16_t* s, FILE* f);
 namespace js {
 
 class StringBuffer;
+
+template <typename CharT>
+constexpr uint8_t AsciiDigitToNumber(CharT c) {
+  using UnsignedCharT = std::make_unsigned_t<CharT>;
+  auto uc = static_cast<UnsignedCharT>(c);
+  return uc - '0';
+}
 
 template <typename Char1, typename Char2>
 inline bool EqualChars(const Char1* s1, const Char2* s2, size_t len) {
