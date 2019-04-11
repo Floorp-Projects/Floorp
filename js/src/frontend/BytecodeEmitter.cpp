@@ -7975,7 +7975,7 @@ bool BytecodeEmitter::emitCreateFieldKeys(ListNode* obj) {
   }
 
   if (!emitUint32Operand(JSOP_NEWARRAY, numFieldKeys)) {
-    //            [stack] ARRAY
+    //              [stack] ARRAY
     return false;
   }
 
@@ -8003,12 +8003,12 @@ bool BytecodeEmitter::emitCreateFieldKeys(ListNode* obj) {
   MOZ_ASSERT(curFieldKeyIndex == numFieldKeys);
 
   if (!noe.emitAssignment()) {
-    //            [stack] ARRAY
+    //              [stack] ARRAY
     return false;
   }
 
   if (!emit1(JSOP_POP)) {
-    //            [stack]
+    //              [stack]
     return false;
   }
 
@@ -8035,7 +8035,7 @@ bool BytecodeEmitter::emitCreateFieldInitializers(ListNode* obj) {
   }
 
   if (!emitUint32Operand(JSOP_NEWARRAY, numFields)) {
-    //            [stack] CTOR? OBJ ARRAY
+    //              [stack] CTOR? OBJ ARRAY
     return false;
   }
 
@@ -8048,12 +8048,12 @@ bool BytecodeEmitter::emitCreateFieldInitializers(ListNode* obj) {
       }
 
       if (!emitTree(initializer)) {
-        //        [stack] CTOR? OBJ ARRAY LAMBDA
+        //          [stack] CTOR? OBJ ARRAY LAMBDA
         return false;
       }
 
       if (!emitUint32Operand(JSOP_INITELEM_ARRAY, curFieldIndex)) {
-        //        [stack] CTOR? OBJ ARRAY
+        //          [stack] CTOR? OBJ ARRAY
         return false;
       }
 
@@ -8062,12 +8062,12 @@ bool BytecodeEmitter::emitCreateFieldInitializers(ListNode* obj) {
   }
 
   if (!noe.emitAssignment()) {
-    //            [stack] CTOR? OBJ ARRAY
+    //              [stack] CTOR? OBJ ARRAY
     return false;
   }
 
   if (!emit1(JSOP_POP)) {
-    //            [stack] CTOR? OBJ
+    //              [stack] CTOR? OBJ
     return false;
   }
 
@@ -8683,8 +8683,12 @@ bool BytecodeEmitter::emitClass(
       MOZ_ASSERT(names->outerBinding()->name() == innerName);
       kind = ClassEmitter::Kind::Declaration;
     }
+  }
 
-    if (!ce.emitScopeForNamedClass(classNode->scopeBindings())) {
+  if (!classNode->isEmptyScope()) {
+    if (!ce.emitScope(classNode->scopeBindings(),
+                      classNode->names() ? ClassEmitter::HasName::Yes
+                                         : ClassEmitter::HasName::No)) {
       //            [stack]
       return false;
     }

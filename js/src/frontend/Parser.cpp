@@ -2834,7 +2834,11 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
 
   FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
   if (fun->isClassConstructor()) {
-    syntaxKind = FunctionSyntaxKind::ClassConstructor;
+    if (fun->isDerivedClassConstructor()) {
+      syntaxKind = FunctionSyntaxKind::DerivedClassConstructor;
+    } else {
+      syntaxKind = FunctionSyntaxKind::ClassConstructor;
+    }
   } else if (fun->isMethod()) {
     syntaxKind = FunctionSyntaxKind::Method;
   } else if (fun->isGetter()) {
@@ -6978,7 +6982,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
   NameNodeType innerName;
   Node nameNode = null();
   Node classHeritage = null();
-  Node classBlock = null();
+  LexicalScopeNodeType classBlock = null();
   uint32_t classEndOffset;
   {
     // A named class creates a new lexical scope with a const binding of the
@@ -7170,6 +7174,8 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
   handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
   funbox->function()->setArgCount(0);
   tokenStream.setFunctionStart(funbox);
+
+  pc_->functionScope().useAsVarScope(pc_);
 
   // Push a LexicalScope on to the stack.
   ParseContext::Scope lexicalScope(this);
