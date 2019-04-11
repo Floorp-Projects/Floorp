@@ -5,6 +5,7 @@
 #include "nsIPrefBranch.h"
 #include "nsComponentManager.h"
 #include "mozilla/ModuleUtils.h"
+#include "mozilla/GenericFactory.h"
 #include "../../base/nsPACMan.h"
 
 #define TEST_WPAD_DHCP_OPTION "http://pac/pac.dat"
@@ -56,27 +57,16 @@ nsTestDHCPClient::GetOption(uint8_t option, nsACString& _retval) {
 
 NS_IMPL_ISUPPORTS(nsTestDHCPClient, nsIDHCPClient)
 
-#define NS_TESTDHCPCLIENTSERVICE_CID /* {FEBF1D69-4D7D-4891-9524-045AD18B5592} \
+#define NS_TESTDHCPCLIENTSERVICE_CID /* {FEBF1D69-4D7D-4891-9524-045AD18B5593} \
                                       */                                       \
   {                                                                            \
     0xFEBF1D69, 0x4D7D, 0x4891, {                                              \
-      0x95, 0x24, 0x04, 0x5a, 0xd1, 0x8b, 0x55, 0x92                           \
+      0x95, 0x24, 0x04, 0x5a, 0xd1, 0x8b, 0x55, 0x93                           \
     }                                                                          \
   }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsTestDHCPClient, Init)
 NS_DEFINE_NAMED_CID(NS_TESTDHCPCLIENTSERVICE_CID);
-
-static const mozilla::Module::CIDEntry kSysDHCPClientCIDs[] = {
-    {&kNS_TESTDHCPCLIENTSERVICE_CID, false, nullptr,
-     nsTestDHCPClientConstructor},
-    {nullptr}};
-
-static const mozilla::Module::ContractIDEntry kSysDHCPClientContracts[] = {
-    {NS_DHCPCLIENT_CONTRACTID, &kNS_TESTDHCPCLIENTSERVICE_CID}, {nullptr}};
-
-static const mozilla::Module kSysDHCPClientModule = {
-    mozilla::Module::kVersion, kSysDHCPClientCIDs, kSysDHCPClientContracts};
 
 void SetOptionResult(const char* result) { WPADOptionResult.Assign(result); }
 
@@ -134,8 +124,10 @@ class TestPACMan : public ::testing::Test {
           kNS_TESTDHCPCLIENTSERVICE_CID, factory);
       ASSERT_EQ(NS_OK, rv);
     }
-    nsComponentManagerImpl::gComponentManager->RegisterModule(
-        &kSysDHCPClientModule);
+    factory = new mozilla::GenericFactory(nsTestDHCPClientConstructor);
+    nsComponentManagerImpl::gComponentManager->RegisterFactory(
+        kNS_TESTDHCPCLIENTSERVICE_CID, "nsTestDHCPClient",
+        NS_DHCPCLIENT_CONTRACTID, factory);
 
     mPACMan = new nsPACMan(nullptr);
     mPACMan->SetWPADOverDHCPEnabled(true);
