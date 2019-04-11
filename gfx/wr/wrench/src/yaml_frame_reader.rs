@@ -191,6 +191,7 @@ fn is_image_opaque(format: ImageFormat, bytes: &[u8]) -> bool {
             is_opaque
         }
         ImageFormat::RG8 => true,
+        ImageFormat::RG16 => true,
         ImageFormat::R8 => false,
         ImageFormat::R16 => false,
         ImageFormat::RGBAF32 |

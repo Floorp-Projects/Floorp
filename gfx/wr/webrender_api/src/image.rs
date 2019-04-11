@@ -113,10 +113,14 @@ pub enum ImageFormat {
     /// Two-channels, byte storage. Similar to `R8`, this just means
     /// "two channels" rather than "red and green".
     RG8 = 5,
+    /// Two-channels, byte storage. Similar to `R16`, this just means
+    /// "two channels" rather than "red and green".
+    RG16 = 6,
+
     /// Four channels, signed integer storage.
-    RGBAI32 = 6,
+    RGBAI32 = 7,
     /// Four channels, byte storage.
-    RGBA8 = 7,
+    RGBA8 = 8,
 }
 
 impl ImageFormat {
@@ -128,6 +132,7 @@ impl ImageFormat {
             ImageFormat::BGRA8 => 4,
             ImageFormat::RGBAF32 => 16,
             ImageFormat::RG8 => 2,
+            ImageFormat::RG16 => 4,
             ImageFormat::RGBAI32 => 16,
             ImageFormat::RGBA8 => 4,
         }

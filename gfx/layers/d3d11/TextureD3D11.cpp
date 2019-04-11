@@ -1032,15 +1032,20 @@ void DXGITextureHostD3D11::PushResourceUpdates(
       (aResources.*method)(aImageKeys[0], descriptor, aExtID, bufferType, 0);
       break;
     }
+    case gfx::SurfaceFormat::P010:
+    case gfx::SurfaceFormat::P016:
     case gfx::SurfaceFormat::NV12: {
       MOZ_ASSERT(aImageKeys.length() == 2);
       MOZ_ASSERT(mSize.width % 2 == 0);
       MOZ_ASSERT(mSize.height % 2 == 0);
 
-      // For now, no software decoder can output 10/12 bits NV12 images
-      // So forcing A8 is okay.
-      wr::ImageDescriptor descriptor0(mSize, gfx::SurfaceFormat::A8);
-      wr::ImageDescriptor descriptor1(mSize / 2, gfx::SurfaceFormat::R8G8);
+      wr::ImageDescriptor descriptor0(mSize, mFormat == gfx::SurfaceFormat::NV12
+                                                 ? gfx::SurfaceFormat::A8
+                                                 : gfx::SurfaceFormat::A16);
+      wr::ImageDescriptor descriptor1(mSize / 2,
+                                      mFormat == gfx::SurfaceFormat::NV12
+                                          ? gfx::SurfaceFormat::R8G8
+                                          : gfx::SurfaceFormat::R16G16);
       auto bufferType = wr::WrExternalImageBufferType::TextureExternalHandle;
       (aResources.*method)(aImageKeys[0], descriptor0, aExtID, bufferType, 0);
       (aResources.*method)(aImageKeys[1], descriptor1, aExtID, bufferType, 1);
@@ -1066,21 +1071,15 @@ void DXGITextureHostD3D11::PushDisplayItems(
                          !(mFlags & TextureFlags::NON_PREMULTIPLIED));
       break;
     }
+    case gfx::SurfaceFormat::P010:
+    case gfx::SurfaceFormat::P016:
     case gfx::SurfaceFormat::NV12: {
       MOZ_ASSERT(aImageKeys.length() == 2);
-      aBuilder.PushNV12Image(aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
-                             wr::ColorDepth::Color8,
-                             wr::ToWrYuvColorSpace(YUVColorSpace::BT601),
-                             aFilter);
-      break;
-    }
-    case gfx::SurfaceFormat::P010:
-    case gfx::SurfaceFormat::P016: {
-      MOZ_ASSERT(aImageKeys.length() == 2);
-      aBuilder.PushNV12Image(aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
-                             wr::ColorDepth::Color16,
-                             wr::ToWrYuvColorSpace(YUVColorSpace::BT601),
-                             aFilter);
+      aBuilder.PushNV12Image(
+          aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
+          GetFormat() == gfx::SurfaceFormat::NV12 ? wr::ColorDepth::Color8
+                                                  : wr::ColorDepth::Color16,
+          wr::ToWrYuvColorSpace(YUVColorSpace::BT601), aFilter);
       break;
     }
     default: {
