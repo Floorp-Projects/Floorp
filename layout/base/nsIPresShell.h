@@ -779,7 +779,8 @@ class nsIPresShell : public nsStubDocumentObserver {
     SCROLL_NO_PARENT_FRAMES = 0x04,
     SCROLL_SMOOTH = 0x08,
     SCROLL_SMOOTH_AUTO = 0x10,
-    SCROLL_SNAP = 0x20
+    SCROLL_SNAP = 0x20,
+    SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING = 0x40
   };
   /**
    * Scrolls the view of the document so that the given area of a frame
@@ -798,6 +799,10 @@ class nsIPresShell : public nsStubDocumentObserver {
    * If SCROLL_NO_PARENT_FRAMES is set then we only scroll
    * nodes in this document, not in any parent documents which
    * contain this document in a iframe or the like.
+   * If SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING is set we ignore scroll-margin
+   * value specified for |aFrame| and scroll-padding value for the scroll
+   * container. This option is typically used to locate poped-up frames into
+   * view.
    * @return true if any scrolling happened, false if no scrolling happened
    */
   bool ScrollFrameRectIntoView(nsIFrame* aFrame, const nsRect& aRect,

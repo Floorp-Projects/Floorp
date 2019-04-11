@@ -3525,8 +3525,16 @@ bool nsIPresShell::ScrollFrameRectIntoView(nsIFrame* aFrame,
         }
         targetRect.Inflate(padding);
       }
-      ScrollToShowRect(sf, targetRect - sf->GetScrolledFrame()->GetPosition(),
-                       aVertical, aHorizontal, aFlags);
+
+      targetRect -= sf->GetScrolledFrame()->GetPosition();
+      if (!(aFlags & nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING)) {
+        nsMargin scrollPadding = sf->GetScrollPadding();
+        targetRect.Inflate(scrollPadding);
+        targetRect = targetRect.Intersect(sf->GetScrolledRect());
+      }
+
+      ScrollToShowRect(sf, targetRect, aVertical, aHorizontal, aFlags);
+
       nsPoint newPosition = sf->LastScrollDestination();
       // If the scroll position increased, that means our content moved up,
       // so our rect's offset should decrease
@@ -8458,7 +8466,8 @@ bool PresShell::EventHandler::PrepareToUseCaretPosition(
                                  nsIPresShell::SCROLL_IF_NOT_VISIBLE),
         nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_MINIMUM,
                                  nsIPresShell::SCROLL_IF_NOT_VISIBLE),
-        nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
+        nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
+            nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING);
     NS_ENSURE_SUCCESS(rv, false);
     frame = content->GetPrimaryFrame();
     NS_WARNING_ASSERTION(frame, "No frame for focused content?");
@@ -8516,8 +8525,10 @@ void PresShell::EventHandler::GetCurrentItemAndPositionForElement(
     Element* aFocusedElement, nsIContent** aTargetToUse,
     LayoutDeviceIntPoint& aTargetPt, nsIWidget* aRootWidget) {
   nsCOMPtr<nsIContent> focusedContent = aFocusedElement;
-  mPresShell->ScrollContentIntoView(focusedContent, ScrollAxis(), ScrollAxis(),
-                                    nsIPresShell::SCROLL_OVERFLOW_HIDDEN);
+  mPresShell->ScrollContentIntoView(
+      focusedContent, ScrollAxis(), ScrollAxis(),
+      nsIPresShell::SCROLL_OVERFLOW_HIDDEN |
+          nsIPresShell::SCROLL_IGNORE_SCROLL_MARGIN_AND_PADDING);
 
   nsPresContext* presContext = GetPresContext();
 

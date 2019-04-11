@@ -106,6 +106,9 @@ include css-ruby/reftest.list
 # css required
 include css-required/reftest.list
 
+# css scroll snap
+include css-scroll-snap/reftest.list
+
 # css shapes
 include css-shapes/reftest.list
 
