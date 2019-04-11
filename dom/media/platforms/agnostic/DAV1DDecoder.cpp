@@ -185,10 +185,22 @@ already_AddRefed<VideoData> DAV1DDecoder::ConstructImage(
 
   // On every other case use the default (BT601).
   if (aPicture.seq_hdr->color_description_present) {
-    if (aPicture.seq_hdr->pri == DAV1D_COLOR_PRI_BT709) {
-      b.mYUVColorSpace = YUVColorSpace::BT709;
+    switch (aPicture.seq_hdr->mtrx) {
+      case DAV1D_MC_BT2020_NCL:
+      case DAV1D_MC_BT2020_CL:
+        b.mYUVColorSpace = YUVColorSpace::BT2020;
+        break;
+      case DAV1D_MC_BT601:
+        b.mYUVColorSpace = YUVColorSpace::BT601;
+        break;
+      case DAV1D_MC_BT709:
+      default:
+        // Set 709 as default, as it's the most sane default.
+        b.mYUVColorSpace = YUVColorSpace::BT709;
+        break;
     }
-  } else if (aPicture.p.h >= 720) {
+  } else {
+    // BT709 is the only default that makes sense in a modern video context.
     b.mYUVColorSpace = YUVColorSpace::BT709;
   }
 

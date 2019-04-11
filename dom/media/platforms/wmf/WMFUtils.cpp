@@ -71,6 +71,9 @@ YUVColorSpace GetYUVColorSpace(IMFMediaType* aType) {
   NS_ENSURE_TRUE(SUCCEEDED(hr), YUVColorSpace::BT601);
 
   switch (yuvColorMatrix) {
+    case MFVideoTransferMatrix_BT2020_10:
+    case MFVideoTransferMatrix_BT2020_12:
+      return YUVColorSpace::BT2020;
     case MFVideoTransferMatrix_BT709:
       return YUVColorSpace::BT709;
     case MFVideoTransferMatrix_BT601:
