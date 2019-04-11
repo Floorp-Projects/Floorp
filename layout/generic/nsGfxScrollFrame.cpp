@@ -6542,6 +6542,7 @@ static nsRect InflateByScrollMargin(const nsRect& aTargetRect,
 static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
                                          const nsIFrame* aScrolledFrame,
                                          const nsRect& aScrolledRect,
+                                         const nsMargin& aScrollPadding,
                                          const Maybe<nsRect>& aSnapport,
                                          ScrollSnapInfo& aSnapInfo) {
   nsRect targetRect = nsLayoutUtils::TransformFrameRectToAncestor(
@@ -6566,6 +6567,13 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
 
   targetRect = InflateByScrollMargin(
       targetRect, aFrame->StyleMargin()->mScrollMargin, aScrolledRect);
+
+  // Shift target rect position by the scroll padding to get the padded
+  // position thus we don't need to take account scroll-padding values in
+  // ScrollSnapUtils::GetSnapPointForDestination() when it gets called from
+  // the compositor thread.
+  targetRect.y -= aScrollPadding.top;
+  targetRect.x -= aScrollPadding.left;
 
   WritingMode writingMode = aScrolledFrame->GetWritingMode();
   LogicalRect logicalTargetRect(writingMode, targetRect,
@@ -6668,6 +6676,7 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
 static void CollectScrollPositionsForSnap(nsIFrame* aFrame,
                                           nsIFrame* aScrolledFrame,
                                           const nsRect& aScrolledRect,
+                                          const nsMargin& aScrollPadding,
                                           const Maybe<nsRect>& aSnapport,
                                           ScrollSnapInfo& aSnapInfo) {
   MOZ_ASSERT(StaticPrefs::layout_css_scroll_snap_v1_enabled());
@@ -6684,10 +6693,10 @@ static void CollectScrollPositionsForSnap(nsIFrame* aFrame,
           styleDisplay->mScrollSnapAlign.block !=
               StyleScrollSnapAlignKeyword::None) {
         AppendScrollPositionsForSnap(f, aScrolledFrame, aScrolledRect,
-                                     aSnapport, aSnapInfo);
+                                     aScrollPadding, aSnapport, aSnapInfo);
       }
-      CollectScrollPositionsForSnap(f, aScrolledFrame, aScrolledRect, aSnapport,
-                                    aSnapInfo);
+      CollectScrollPositionsForSnap(f, aScrolledFrame, aScrolledRect,
+                                    aScrollPadding, aSnapport, aSnapInfo);
     }
   }
 }
@@ -6731,6 +6740,45 @@ static void CollectScrollSnapCoordinates(nsIFrame* aFrame,
   }
 }
 
+static nscoord ResolveScrollPaddingStyleValue(
+    const StyleRect<mozilla::NonNegativeLengthPercentageOrAuto>&
+        aScrollPaddingStyle,
+    Side aSide, const nsSize& aScrollPortSize) {
+  if (aScrollPaddingStyle.Get(aSide).IsAuto()) {
+    // https://drafts.csswg.org/css-scroll-snap-1/#valdef-scroll-padding-auto
+    return 0;
+  }
+
+  nscoord percentageBasis;
+  switch (aSide) {
+    case eSideTop:
+    case eSideBottom:
+      percentageBasis = aScrollPortSize.height;
+      break;
+    case eSideLeft:
+    case eSideRight:
+      percentageBasis = aScrollPortSize.width;
+      break;
+  }
+
+  return aScrollPaddingStyle.Get(aSide).AsLengthPercentage().Resolve(
+      percentageBasis);
+}
+
+static nsMargin ResolveScrollPaddingStyle(
+    const StyleRect<mozilla::NonNegativeLengthPercentageOrAuto>&
+        aScrollPaddingStyle,
+    const nsSize& aScrollPortSize) {
+  return nsMargin(ResolveScrollPaddingStyleValue(aScrollPaddingStyle, eSideTop,
+                                                 aScrollPortSize),
+                  ResolveScrollPaddingStyleValue(aScrollPaddingStyle,
+                                                 eSideRight, aScrollPortSize),
+                  ResolveScrollPaddingStyleValue(aScrollPaddingStyle,
+                                                 eSideBottom, aScrollPortSize),
+                  ResolveScrollPaddingStyleValue(aScrollPaddingStyle, eSideLeft,
+                                                 aScrollPortSize));
+}
+
 layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
     const Maybe<nsPoint>& aDestination) const {
   ScrollSnapInfo result;
@@ -6764,22 +6812,30 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
   }
 
   if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
-    // FIXME: Bug 1373832: The snapport should be deflated by scroll-padding.
-    nsSize snapportSize = GetScrollPortRect().Size();
+    // The spec says percentage values are relative to the scroll port size.
+    // https://drafts.csswg.org/css-scroll-snap-1/#scroll-padding
+    nsRect snapport = GetScrollPortRect();
+    nsMargin scrollPadding = ResolveScrollPaddingStyle(
+        mOuter->StylePadding()->mScrollPadding, snapport.Size());
 
     Maybe<nsRect> snapportOnDestination;
     if (aDestination) {
-      snapportOnDestination.emplace(
-          IsPhysicalLTR() ? nsRect(aDestination.value(), snapportSize)
-                          : nsRect(nsPoint(aDestination->x - snapportSize.width,
-                                           aDestination->y),
-                                   snapportSize));
+      if (IsPhysicalLTR()) {
+        snapport.MoveTo(aDestination.value());
+      } else {
+        snapport.MoveTo(
+            nsPoint(aDestination->x - snapport.Size().width, aDestination->y));
+      }
+      snapport.Deflate(scrollPadding);
+      snapportOnDestination.emplace(snapport);
+    } else {
+      snapport.Deflate(scrollPadding);
     }
 
-    result.mSnapportSize = snapportSize;
+    result.mSnapportSize = snapport.Size();
     CollectScrollPositionsForSnap(mScrolledFrame, mScrolledFrame,
-                                  GetScrolledRect(), snapportOnDestination,
-                                  result);
+                                  GetScrolledRect(), scrollPadding,
+                                  snapportOnDestination, result);
     return result;
   }
 
