@@ -43,52 +43,16 @@ class MOZ_RAII AutoTextureLock final {
 
 class CompositorD3D11;
 
-class DXGITextureData : public TextureData {
- public:
-  void FillInfo(TextureData::Info& aInfo) const override;
-
-  bool SerializeSpecific(SurfaceDescriptorD3D10* aOutDesc);
-  bool Serialize(SurfaceDescriptor& aOutDescrptor) override;
-  void GetSubDescriptor(GPUVideoSubDescriptor* aOutDesc) override;
-
-  gfx::YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }
-  void SetYUVColorSpace(gfx::YUVColorSpace aColorSpace) {
-    mYUVColorSpace = aColorSpace;
-  }
-
-  gfx::IntSize GetSize() const { return mSize; }
-  gfx::SurfaceFormat GetSurfaceFormat() const { return mFormat; }
-
- protected:
-  bool PrepareDrawTargetInLock(OpenMode aMode);
-
-  DXGITextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                  bool aNeedsClear, bool aNeedsClearWhite,
-                  bool aIsForOutOfBandContent);
-
-  virtual void GetDXGIResource(IDXGIResource** aOutResource) = 0;
-
-  // Hold on to the DrawTarget because it is expensive to create one each
-  // ::Lock.
-  RefPtr<gfx::DrawTarget> mDrawTarget;
-  gfx::IntSize mSize;
-  gfx::SurfaceFormat mFormat;
-  gfx::YUVColorSpace mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
-  bool mNeedsClear;
-  bool mNeedsClearWhite;
-  bool mHasSynchronization;
-  bool mIsForOutOfBandContent;
-};
-
-class D3D11TextureData : public DXGITextureData {
+class D3D11TextureData final : public TextureData {
  public:
   // If aDevice is null, use one provided by gfxWindowsPlatform.
-  static D3D11TextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                 TextureAllocationFlags aAllocFlags,
-                                 ID3D11Device* aDevice = nullptr);
+  static D3D11TextureData* Create(gfx::IntSize aSize,
+                                  gfx::SurfaceFormat aFormat,
+                                  TextureAllocationFlags aAllocFlags,
+                                  ID3D11Device* aDevice = nullptr);
   static D3D11TextureData* Create(gfx::SourceSurface* aSurface,
-                                 TextureAllocationFlags aAllocFlags,
-                                 ID3D11Device* aDevice = nullptr);
+                                  TextureAllocationFlags aAllocFlags,
+                                  ID3D11Device* aDevice = nullptr);
 
   bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
 
@@ -104,7 +68,7 @@ class D3D11TextureData : public DXGITextureData {
 
   void SyncWithObject(SyncObjectClient* aSyncObject) override;
 
-  ID3D11Texture2D* GetD3D11Texture() { return mTexture; }
+  ID3D11Texture2D* GetD3D11Texture() const { return mTexture; }
 
   void Deallocate(LayersIPCChannel* aAllocator) override;
 
@@ -114,17 +78,46 @@ class D3D11TextureData : public DXGITextureData {
     return mAllocationFlags;
   }
 
- protected:
-  virtual ~D3D11TextureData();
+  void FillInfo(TextureData::Info& aInfo) const override;
+
+  bool Serialize(SurfaceDescriptor& aOutDescrptor) override;
+  void GetSubDescriptor(GPUVideoSubDescriptor* aOutDesc) override;
+
+  gfx::YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }
+  void SetYUVColorSpace(gfx::YUVColorSpace aColorSpace) {
+    mYUVColorSpace = aColorSpace;
+  }
+
+  gfx::IntSize GetSize() const { return mSize; }
+  gfx::SurfaceFormat GetSurfaceFormat() const { return mFormat; }
+
+ private:
   D3D11TextureData(ID3D11Texture2D* aTexture, gfx::IntSize aSize,
                    gfx::SurfaceFormat aFormat, TextureAllocationFlags aFlags);
+  virtual ~D3D11TextureData();
 
-  void GetDXGIResource(IDXGIResource** aOutResource) override;
+  void GetDXGIResource(IDXGIResource** aOutResource);
 
-  static D3D11TextureData* Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                 gfx::SourceSurface* aSurface,
-                                 TextureAllocationFlags aAllocFlags,
-                                 ID3D11Device* aDevice = nullptr);
+  bool PrepareDrawTargetInLock(OpenMode aMode);
+
+  bool SerializeSpecific(SurfaceDescriptorD3D10* aOutDesc);
+
+  static D3D11TextureData* Create(gfx::IntSize aSize,
+                                  gfx::SurfaceFormat aFormat,
+                                  gfx::SourceSurface* aSurface,
+                                  TextureAllocationFlags aAllocFlags,
+                                  ID3D11Device* aDevice = nullptr);
+
+  // Hold on to the DrawTarget because it is expensive to create one each
+  // ::Lock.
+  RefPtr<gfx::DrawTarget> mDrawTarget;
+  gfx::IntSize mSize;
+  gfx::SurfaceFormat mFormat;
+  gfx::YUVColorSpace mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
+  bool mNeedsClear;
+  bool mNeedsClearWhite;
+  bool mHasSynchronization;
+  bool mIsForOutOfBandContent;
 
   RefPtr<ID3D11Texture2D> mTexture;
   const TextureAllocationFlags mAllocationFlags;
