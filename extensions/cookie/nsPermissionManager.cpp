@@ -50,6 +50,10 @@
 
 static mozilla::StaticRefPtr<nsPermissionManager> gPermissionManager;
 
+// Initially, |false|. Set to |true| once shutdown has started, to avoid
+// reopening the database.
+static bool gIsShuttingDown = false;
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -284,27 +288,6 @@ already_AddRefed<nsIPrincipal> GetNextSubDomainPrincipal(
 
   return principal.forget();
 }
-
-class ClearOriginDataObserver final : public nsIObserver {
-  ~ClearOriginDataObserver() {}
-
- public:
-  NS_DECL_ISUPPORTS
-
-  // nsIObserver implementation.
-  NS_IMETHOD
-  Observe(nsISupports* aSubject, const char* aTopic,
-          const char16_t* aData) override {
-    MOZ_ASSERT(!nsCRT::strcmp(aTopic, "clear-origin-attributes-data"));
-
-    nsCOMPtr<nsIPermissionManager> permManager =
-        do_GetService("@mozilla.org/permissionmanager;1");
-    return permManager->RemovePermissionsWithAttributes(
-        nsDependentString(aData));
-  }
-};
-
-NS_IMPL_ISUPPORTS(ClearOriginDataObserver, nsIObserver)
 
 class MOZ_STACK_CLASS UpgradeHostToOriginHelper {
  public:
@@ -838,7 +821,7 @@ NS_IMETHODIMP
 CloseDatabaseListener::Complete(nsresult, nsISupports*) {
   // Help breaking cycles
   RefPtr<nsPermissionManager> manager = mManager.forget();
-  if (mRebuildOnSuccess && !manager->mIsShuttingDown) {
+  if (mRebuildOnSuccess && !gIsShuttingDown) {
     return manager->InitDB(true);
   }
   return NS_OK;
@@ -897,12 +880,9 @@ NS_IMETHODIMP DeleteFromMozHostListener::HandleCompletion(uint16_t aReason) {
 }
 
 /* static */
-void nsPermissionManager::ClearOriginDataObserverInit() {
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-  observerService->AddObserver(new ClearOriginDataObserver(),
-                               "clear-origin-attributes-data",
-                               /* ownsWeak= */ false);
+void nsPermissionManager::Startup() {
+  nsCOMPtr<nsIPermissionManager> permManager =
+      do_GetService("@mozilla.org/permissionmanager;1");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -923,7 +903,7 @@ NS_IMPL_ISUPPORTS(nsPermissionManager, nsIPermissionManager, nsIObserver,
                   nsISupportsWeakReference)
 
 nsPermissionManager::nsPermissionManager()
-    : mMemoryOnlyDB(false), mLargestID(0), mIsShuttingDown(false) {}
+    : mMemoryOnlyDB(false), mLargestID(0) {}
 
 nsPermissionManager::~nsPermissionManager() {
   // NOTE: Make sure to reject each of the promises in mPermissionKeyPromiseMap
@@ -947,6 +927,10 @@ already_AddRefed<nsIPermissionManager>
 nsPermissionManager::GetXPCOMSingleton() {
   if (gPermissionManager) {
     return do_AddRef(gPermissionManager);
+  }
+
+  if (gIsShuttingDown) {
+    return nullptr;
   }
 
   // Create a new singleton nsPermissionManager.
@@ -1002,6 +986,9 @@ nsresult nsPermissionManager::Init() {
   if (observerService) {
     observerService->AddObserver(this, "profile-before-change", true);
     observerService->AddObserver(this, "profile-do-change", true);
+    observerService->AddObserver(this, "testonly-reload-permissions-from-disk",
+                                 true);
+    observerService->AddObserver(this, "clear-origin-attributes-data", true);
   }
 
   // ignore failure here, since it's non-fatal (we can run fine without
@@ -2687,12 +2674,25 @@ NS_IMETHODIMP nsPermissionManager::Observe(nsISupports* aSubject,
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
     // The profile is about to change,
     // or is going away because the application is shutting down.
-    mIsShuttingDown = true;
+    gIsShuttingDown = true;
     RemoveAllFromMemory();
     CloseDB(false);
   } else if (!nsCRT::strcmp(aTopic, "profile-do-change")) {
     // the profile has already changed; init the db from the new location
     InitDB(false);
+  } else if (!nsCRT::strcmp(aTopic, "testonly-reload-permissions-from-disk")) {
+    // Testing mechanism to reload all permissions from disk. Because the
+    // permission manager automatically initializes itself at startup, tests
+    // that directly manipulate the permissions database need some way to reload
+    // the database for their changes to have any effect. This mechanism was
+    // introduced when moving the permissions manager from on-demand startup to
+    // always being initialized. This is not guarded by a pref because it's not
+    // dangerous to reload permissions from disk, just bad for performance.
+    RemoveAllFromMemory();
+    CloseDB(false);
+    InitDB(false);
+  } else if (!nsCRT::strcmp(aTopic, "clear-origin-attributes-data")) {
+    return RemovePermissionsWithAttributes(nsDependentString(someData));
   }
 
   return NS_OK;
