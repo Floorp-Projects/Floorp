@@ -6519,15 +6519,31 @@ uint32_t nsIScrollableFrame::GetPerceivedScrollingDirections() const {
   return directions;
 }
 
+static nsRect InflateByScrollMargin(const nsRect& aTargetRect,
+                                    const StyleRect<StyleLength>& aScrollMargin,
+                                    const nsRect& aScrolledRect) {
+  nsMargin scrollMargin(aScrollMargin.Get(eSideTop).ToAppUnits(),
+                        aScrollMargin.Get(eSideRight).ToAppUnits(),
+                        aScrollMargin.Get(eSideBottom).ToAppUnits(),
+                        aScrollMargin.Get(eSideLeft).ToAppUnits());
+
+  // Inflate the rect by scroll-margin.
+  nsRect result = aTargetRect;
+  result.Inflate(scrollMargin);
+
+  // But don't be beyond the limit boundary.
+  return result.Intersect(aScrolledRect);
+}
+
 /**
  * Append scroll positions for valid snap positions into |aSnapInfo| if
  * applicable.
  */
 static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
                                          const nsIFrame* aScrolledFrame,
+                                         const nsRect& aScrolledRect,
                                          const Maybe<nsRect>& aSnapport,
                                          ScrollSnapInfo& aSnapInfo) {
-  // FIXME: Bug 1373833: This target rect should be inflated by scroll-margin.
   nsRect targetRect = nsLayoutUtils::TransformFrameRectToAncestor(
       aFrame, aFrame->GetRectRelativeToSelf(), aScrolledFrame);
   // Ignore elements outside of the snapport when we scroll to the given
@@ -6536,6 +6552,20 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
   if (aSnapport && !aSnapport->Intersects(targetRect)) {
     return;
   }
+
+  // These snap range shouldn't be involved with scroll-margin since we just
+  // need the visible range of the target element.
+  if (targetRect.width > aSnapInfo.mSnapportSize.width) {
+    aSnapInfo.mXRangeWiderThanSnapport.AppendElement(
+        ScrollSnapInfo::ScrollSnapRange(targetRect.X(), targetRect.XMost()));
+  }
+  if (targetRect.height > aSnapInfo.mSnapportSize.height) {
+    aSnapInfo.mYRangeWiderThanSnapport.AppendElement(
+        ScrollSnapInfo::ScrollSnapRange(targetRect.Y(), targetRect.YMost()));
+  }
+
+  targetRect = InflateByScrollMargin(
+      targetRect, aFrame->StyleMargin()->mScrollMargin, aScrolledRect);
 
   WritingMode writingMode = aScrolledFrame->GetWritingMode();
   LogicalRect logicalTargetRect(writingMode, targetRect,
@@ -6627,15 +6657,6 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
                               : aSnapInfo.mSnapPositionY)
         .AppendElement(blockDirectionPosition.value());
   }
-
-  if (targetRect.width > aSnapInfo.mSnapportSize.width) {
-    aSnapInfo.mXRangeWiderThanSnapport.AppendElement(
-        ScrollSnapInfo::ScrollSnapRange(targetRect.X(), targetRect.XMost()));
-  }
-  if (targetRect.height > aSnapInfo.mSnapportSize.height) {
-    aSnapInfo.mYRangeWiderThanSnapport.AppendElement(
-        ScrollSnapInfo::ScrollSnapRange(targetRect.Y(), targetRect.YMost()));
-  }
 }
 
 /**
@@ -6646,6 +6667,7 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
  */
 static void CollectScrollPositionsForSnap(nsIFrame* aFrame,
                                           nsIFrame* aScrolledFrame,
+                                          const nsRect& aScrolledRect,
                                           const Maybe<nsRect>& aSnapport,
                                           ScrollSnapInfo& aSnapInfo) {
   MOZ_ASSERT(StaticPrefs::layout_css_scroll_snap_v1_enabled());
@@ -6661,9 +6683,11 @@ static void CollectScrollPositionsForSnap(nsIFrame* aFrame,
               StyleScrollSnapAlignKeyword::None ||
           styleDisplay->mScrollSnapAlign.block !=
               StyleScrollSnapAlignKeyword::None) {
-        AppendScrollPositionsForSnap(f, aScrolledFrame, aSnapport, aSnapInfo);
+        AppendScrollPositionsForSnap(f, aScrolledFrame, aScrolledRect,
+                                     aSnapport, aSnapInfo);
       }
-      CollectScrollPositionsForSnap(f, aScrolledFrame, aSnapport, aSnapInfo);
+      CollectScrollPositionsForSnap(f, aScrolledFrame, aScrolledRect, aSnapport,
+                                    aSnapInfo);
     }
   }
 }
@@ -6754,7 +6778,8 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
 
     result.mSnapportSize = snapportSize;
     CollectScrollPositionsForSnap(mScrolledFrame, mScrolledFrame,
-                                  snapportOnDestination, result);
+                                  GetScrolledRect(), snapportOnDestination,
+                                  result);
     return result;
   }
 
