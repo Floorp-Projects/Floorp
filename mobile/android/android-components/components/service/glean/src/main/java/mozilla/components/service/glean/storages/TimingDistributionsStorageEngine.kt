@@ -11,6 +11,7 @@ import mozilla.components.service.glean.error.ErrorRecording
 import mozilla.components.service.glean.private.CommonMetricData
 import mozilla.components.service.glean.private.HistogramType
 import mozilla.components.service.glean.private.TimeUnit
+import mozilla.components.service.glean.utils.getAdjustedTime
 
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.android.org.json.tryGetInt
@@ -76,6 +77,8 @@ internal open class TimingDistributionsStorageEngineImplementation(
             return
         }
 
+        val sampleInUnit = getAdjustedTime(timeUnit, sample)
+
         // Since the custom combiner closure captures this value, we need to just create a dummy
         // value here that won't be used by the combine function, and create a fresh
         // TimingDistributionData for each value that doesn't have an existing current value.
@@ -83,12 +86,12 @@ internal open class TimingDistributionsStorageEngineImplementation(
             timeUnit = timeUnit)
         super.recordMetric(metricData, dummy, null) { currentValue, newValue ->
             currentValue?.let {
-                it.accumulate(sample)
+                it.accumulate(sampleInUnit)
                 it
             } ?: let {
                 val newTD = TimingDistributionData(category = metricData.category, name = metricData.name,
                     timeUnit = timeUnit)
-                newTD.accumulate(sample)
+                newTD.accumulate(sampleInUnit)
                 return@let newTD
             }
         }

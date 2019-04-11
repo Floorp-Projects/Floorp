@@ -329,18 +329,22 @@ rendering:
     ...
 ```
 
-Now you can use the timespan from the application's code:
+Now you can use the timespan from the application's code. Each time interval that
+the timespan metric records must be associated with an object provided by the user.
+This is so that intervals can be measured concurrently.  For example, to measure page
+load time on a number of tabs that are loading at the same time, each time interval
+should be associated with an object that uniquely represents each tab.
 
 ```Kotlin
-import org.mozilla.yourApplication.GleanMetrics.Rendering
+import org.mozilla.yourApplication.GleanMetrics.Pages
 
-Rendering.imageDecodeTime.start() // start the timer
-try {
-   // ... decode an image ...
-} catch (e: Exception) {
-   Rendering.imageDecodeTime.cancel() // cancel the timer -- nothing is recorded
+fun onPageStart(e: Event) {
+    Pages.pageLoad.start(e.target)
 }
-Rendering.imageDecodeTime.stopAndSum() // stop the timer
+
+fun onPageLoaded(e: Event) {
+    Pages.pageLoad.stopAndSum(e.target)
+}
 ```
 
 The time reported in the telemetry ping will be the sum of all of these
@@ -349,13 +353,13 @@ timespans recorded during the lifetime of the ping.
 There are test APIs available too:
 
 ```Kotlin
-import org.mozilla.yourApplication.GleanMetrics.Rendering
+import org.mozilla.yourApplication.GleanMetrics.Pages
 Glean.enableTestingMode()
 
 // Was anything recorded?
-assertTrue(Rendering.imageDecodeTime.testHasValue())
+assertTrue(Pages.pageLoad.testHasValue())
 // Does the timer have the expected value
-assertTrue(Rendering.imageDecodeTime.testGetValue() > 0)
+assertTrue(Pages.pageLoad.testGetValue() > 0)
 ```
 
 ## Timing Distributions
@@ -388,15 +392,22 @@ pages:
 ```
 
 
-Now that the timing distribution is defined in `metrics.yaml` you can use the metric to record data
-in the application code:
+Now you can use the timing distribution from the application's code. Each time interval that
+the timing distribution metric records must be associated with an object provided by the user.
+This is so that intervals can be measured concurrently.  For example, to measure page
+load time on a number of tabs that are loading at the same time, each time interval
+should be associated with an object that uniquely represents each tab.
 
 ```Kotlin
 import org.mozilla.yourApplication.GleanMetrics.Pages
 
-// ...
-pages.pageLoad.accumulate(1L) // Accumulates a sample of 1 millisecond
-pages.pageLoad.accumulate(10L) // Accumulates a sample of 10 milliseconds
+fun onPageStart(e: Event) {
+    Pages.pageLoad.start(e.target)
+}
+
+fun onPageLoaded(e: Event) {
+    Pages.pageLoad.stopAndAccumulate(e.target)
+}
 ```
 
 There are test APIs available too.  For convenience, properties `sum` and `count` are exposed to 

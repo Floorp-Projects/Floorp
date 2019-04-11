@@ -7,6 +7,7 @@ package mozilla.components.service.glean
 import android.content.Context
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import android.os.SystemClock
 import androidx.test.core.app.ApplicationProvider
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
@@ -23,6 +24,7 @@ import mozilla.components.service.glean.ping.PingMaker
 import mozilla.components.service.glean.scheduler.PingUploadWorker
 import mozilla.components.service.glean.storages.ExperimentsStorageEngine
 import mozilla.components.service.glean.storages.StorageEngineManager
+import mozilla.components.service.glean.timing.TimingManager
 import org.json.JSONObject
 import org.junit.Assert
 import org.mockito.ArgumentMatchers
@@ -118,6 +120,8 @@ internal fun resetGlean(
     config: Configuration = Configuration(),
     clearStores: Boolean = true
 ) {
+    TimingManager.getElapsedNanos = { SystemClock.elapsedRealtimeNanos() }
+
     Glean.enableTestingMode()
 
     // We're using the WorkManager in a bunch of places, and glean will crash

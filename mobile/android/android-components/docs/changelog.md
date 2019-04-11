@@ -16,6 +16,11 @@ permalink: /changelog/
   * Added fact emitting.
   * Bugfix to call with app-contributed pending intents from menu items and action buttons.
 
+* **service-glean**
+   * ⚠️ **This is a breaking API change**: Timespan and timing distribution
+     metrics now have a thread-safe API. See `adding-new-metrics.md` for more
+     information.
+     
 # 0.50.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.49.0...v0.50.0)

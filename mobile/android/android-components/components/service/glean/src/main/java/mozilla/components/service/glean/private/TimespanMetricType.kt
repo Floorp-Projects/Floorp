@@ -5,7 +5,9 @@
 package mozilla.components.service.glean.private
 
 import android.support.annotation.VisibleForTesting
+import mozilla.components.service.glean.Dispatchers
 import mozilla.components.service.glean.storages.TimespansStorageEngine
+import mozilla.components.service.glean.timing.TimingManager
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -30,39 +32,58 @@ data class TimespanMetricType(
     private val logger = Logger("glean/TimespanMetricType")
 
     /**
-     * Start tracking time for the provided metric. This records an error if it’s
-     * already tracking time (i.e. start was already called with no corresponding
-     * [stopAndSum]): in that case the original start time will be preserved.
+     * Start tracking time for the provided metric and associated object. This
+     * records an error if it’s already tracking time (i.e. start was already
+     * called with no corresponding [stopAndSum]): in that case the original
+     * start time will be preserved.
+     *
+     * @param anyObject The object to associate with this timing.  This allows
+     * for concurrent timing of events associated with different objects to the
+     * same timespan metric.
      */
-    fun start() {
+    fun start(anyObject: Any) {
         if (!shouldRecord(logger)) {
             return
         }
 
-        TimespansStorageEngine.start(this)
+        TimingManager.start(this, anyObject)
     }
 
     /**
-     * Stop tracking time for the provided metric. Add the elapsed time to the time currently
-     * stored in the metric. This will record an error if no [start] was called.
+     * Stop tracking time for the provided metric and associated object. Add the
+     * elapsed time to the time currently stored in the metric. This will record
+     * an error if no [start] was called.
+     *
+     * @param anyObject The object to associate with this timing.  This allows
+     * for concurrent timing of events associated with different objects to the
+     * same timespan metric.
      */
-    fun stopAndSum() {
+    fun stopAndSum(anyObject: Any) {
         if (!shouldRecord(logger)) {
             return
         }
 
-        TimespansStorageEngine.stopAndSum(this, timeUnit)
+        TimingManager.stop(this, anyObject)?.let { elapsedNanos ->
+            @Suppress("EXPERIMENTAL_API_USAGE")
+            Dispatchers.API.launch {
+                TimespansStorageEngine.sum(this@TimespanMetricType, timeUnit, elapsedNanos)
+            }
+        }
     }
 
     /**
      * Abort a previous [start] call. No error is recorded if no [start] was called.
+     *
+     * @param anyObject The object to associate with this timing.  This allows
+     * for concurrent timing of events associated with different objects to the
+     * same timespan metric.
      */
-    fun cancel() {
+    fun cancel(anyObject: Any) {
         if (!shouldRecord(logger)) {
             return
         }
 
-        TimespansStorageEngine.cancel(this)
+        TimingManager.cancel(this, anyObject)
     }
 
     /**

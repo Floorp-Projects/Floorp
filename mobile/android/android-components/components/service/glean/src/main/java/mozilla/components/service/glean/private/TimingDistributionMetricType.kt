@@ -8,6 +8,7 @@ import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.Dispatchers
 import mozilla.components.service.glean.storages.TimingDistributionData
 import mozilla.components.service.glean.storages.TimingDistributionsStorageEngine
+import mozilla.components.service.glean.timing.TimingManager
 import mozilla.components.support.base.log.logger.Logger
 
 /**
@@ -33,24 +34,63 @@ data class TimingDistributionMetricType(
     private val logger = Logger("glean/TimingDistributionMetricType")
 
     /**
-     * Accumulates a sample value to the timing distribution.
+     * Start tracking time for the provided metric and associated object. This
+     * records an error if it’s already tracking time (i.e. start was already
+     * called with no corresponding [stopAndAccumulate]): in that case the original
+     * start time will be preserved.
      *
-     * @param sample This is the sample to accumulate
+     * @param anyObject The object to associate with this timing.  This allows
+     * for concurrent timing of events associated with different objects to the
+     * same timespan metric.
      */
-    fun accumulate(sample: Long) {
+    fun start(anyObject: Any) {
         if (!shouldRecord(logger)) {
             return
         }
 
-        @Suppress("EXPERIMENTAL_API_USAGE")
-        Dispatchers.API.launch {
-            // Delegate storing the string to the storage engine.
-            TimingDistributionsStorageEngine.accumulate(
-                metricData = this@TimingDistributionMetricType,
-                sample = sample,
-                timeUnit = timeUnit
-            )
+        TimingManager.start(this, anyObject)
+    }
+
+    /**
+     * Stop tracking time for the provided metric and associated object. Add a
+     * count to the corresponding bucket in the timing distribution.
+     * This will record an error if no [start] was called.
+     *
+     * @param anyObject The object to associate with this timing.  This allows
+     * for concurrent timing of events associated with different objects to the
+     * same timespan metric.
+     */
+    fun stopAndAccumulate(anyObject: Any) {
+        if (!shouldRecord(logger)) {
+            return
         }
+
+        TimingManager.stop(this, anyObject)?.let { elapsedNanos ->
+            @Suppress("EXPERIMENTAL_API_USAGE")
+            Dispatchers.API.launch {
+                // Delegate storing the string to the storage engine.
+                TimingDistributionsStorageEngine.accumulate(
+                    metricData = this@TimingDistributionMetricType,
+                    sample = elapsedNanos,
+                    timeUnit = timeUnit
+                )
+            }
+        }
+    }
+
+    /**
+     * Abort a previous [start] call. No error is recorded if no [start] was called.
+     *
+     * @param anyObject The object to associate with this timing.  This allows
+     * for concurrent timing of events associated with different objects to the
+     * same timespan metric.
+     */
+    fun cancel(anyObject: Any) {
+        if (!shouldRecord(logger)) {
+            return
+        }
+
+        TimingManager.cancel(this, anyObject)
     }
 
     /**

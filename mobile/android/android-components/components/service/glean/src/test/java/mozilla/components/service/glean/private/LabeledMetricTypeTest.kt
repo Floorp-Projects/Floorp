@@ -24,6 +24,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import java.util.UUID
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
@@ -296,10 +297,12 @@ class LabeledMetricTypeTest {
             subMetric = timespanMetric
         )
 
-        TimespansStorageEngine.start(labeledTimespanMetric["label1"])
-        TimespansStorageEngine.stopAndSum(labeledTimespanMetric["label1"], TimeUnit.Nanosecond)
-        TimespansStorageEngine.start(labeledTimespanMetric["label2"])
-        TimespansStorageEngine.stopAndSum(labeledTimespanMetric["label2"], TimeUnit.Nanosecond)
+        labeledTimespanMetric["label1"].start(this)
+        labeledTimespanMetric["label1"].stopAndSum(this)
+        labeledTimespanMetric["label2"].start(this)
+        labeledTimespanMetric["label2"].stopAndSum(this)
+
+        assertTrue(labeledTimespanMetric["label1"].testHasValue())
 
         collectAndCheckPingSchema("metrics").getJSONObject("metrics")!!
     }
