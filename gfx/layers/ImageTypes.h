@@ -104,6 +104,7 @@ enum class StereoMode {
 enum class YUVColorSpace {
   BT601,
   BT709,
+  BT2020,
   // This represents the unknown format.
   UNKNOWN,
 };

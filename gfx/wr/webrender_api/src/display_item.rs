@@ -805,6 +805,7 @@ pub struct YuvImageDisplayItem {
 pub enum YuvColorSpace {
     Rec601 = 0,
     Rec709 = 1,
+    Rec2020 = 2,
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
