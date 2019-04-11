@@ -1127,7 +1127,6 @@ linux64-aarch64/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-    run-on-projects: []
     toolchains:
         - linux64-binutils
         - linux64-clang
