@@ -2272,17 +2272,35 @@ static MOZ_MUST_USE bool PerformPromiseAll(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, bool* done);
 
-// ES2016, 25.4.4.1.
-static bool Promise_static_all(JSContext* cx, unsigned argc, Value* vp) {
-  CallArgs args = CallArgsFromVp(argc, vp);
+static MOZ_MUST_USE bool PerformPromiseRace(
+    JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
+    Handle<PromiseCapability> resultCapability, bool* done);
+
+enum class IterationMode { All, Race };
+
+// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+//
+// Unified implementation of
+// 25.6.4.1 Promise.all ( iterable )
+// 25.6.4.3 Promise.race ( iterable )
+static MOZ_MUST_USE bool CommonStaticAllRace(JSContext* cx, CallArgs& args,
+                                             IterationMode mode) {
   HandleValue iterable = args.get(0);
 
   // Step 2 (reordered).
   HandleValue CVal = args.thisv();
   if (!CVal.isObject()) {
+    const char* message;
+    switch (mode) {
+      case IterationMode::All:
+        message = "Receiver of Promise.all call";
+        break;
+      case IterationMode::Race:
+        message = "Receiver of Promise.race call";
+        break;
+    }
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_NOT_NONNULL_OBJECT,
-                              "Receiver of Promise.all call");
+                              JSMSG_NOT_NONNULL_OBJECT, message);
     return false;
   }
 
@@ -2302,16 +2320,32 @@ static bool Promise_static_all(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   if (!iter.valueIsIterable()) {
+    const char* message;
+    switch (mode) {
+      case IterationMode::All:
+        message = "Argument of Promise.all";
+        break;
+      case IterationMode::Race:
+        message = "Argument of Promise.race";
+        break;
+    }
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_ITERABLE,
-                              "Argument of Promise.all");
+                              message);
     return AbruptRejectPromise(cx, args, promiseCapability);
   }
 
   // Step 6 (implicit).
 
   // Step 7.
-  bool done;
-  bool result = PerformPromiseAll(cx, iter, C, promiseCapability, &done);
+  bool done, result;
+  switch (mode) {
+    case IterationMode::All:
+      result = PerformPromiseAll(cx, iter, C, promiseCapability, &done);
+      break;
+    case IterationMode::Race:
+      result = PerformPromiseRace(cx, iter, C, promiseCapability, &done);
+      break;
+  }
 
   // Step 8.
   if (!result) {
@@ -2327,6 +2361,13 @@ static bool Promise_static_all(JSContext* cx, unsigned argc, Value* vp) {
   // Step 9.
   args.rval().setObject(*promiseCapability.promise());
   return true;
+}
+
+// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+// 25.6.4.1 Promise.all ( iterable )
+static bool Promise_static_all(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CommonStaticAllRace(cx, args, IterationMode::All);
 }
 
 static MOZ_MUST_USE bool PerformPromiseThen(
@@ -2545,8 +2586,8 @@ static bool IsPromiseSpecies(JSContext* cx, JSFunction* species);
 template <typename T>
 static MOZ_MUST_USE bool CommonPerformPromiseAllRace(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
-    Handle<PromiseCapability> resultCapability, bool* done,
-    bool resolveReturnsUndefined, T getResolveFun) {
+    HandleObject resultPromise, bool* done, bool resolveReturnsUndefined,
+    T getResolveAndReject) {
   RootedObject promiseCtor(
       cx, GlobalObject::getOrCreatePromiseConstructor(cx, cx->global()));
   if (!promiseCtor) {
@@ -2566,9 +2607,8 @@ static MOZ_MUST_USE bool CommonPerformPromiseAllRace(
   PromiseLookup& promiseLookup = cx->realm()->promiseLookup;
 
   RootedValue CVal(cx, ObjectValue(*C));
-  HandleObject resultPromise = resultCapability.promise();
   RootedValue resolveFunVal(cx);
-  RootedValue rejectFunVal(cx, ObjectValue(*resultCapability.reject()));
+  RootedValue rejectFunVal(cx);
 
   // We're reusing rooted variables in the loop below, so we don't need to
   // declare a gazillion different rooted variables here. Rooted variables
@@ -2657,13 +2697,11 @@ static MOZ_MUST_USE bool CommonPerformPromiseAllRace(
       }
     }
 
-    // Get the resolve function for this iteration.
+    // Get the resolving functions for this iteration.
     // 25.6.4.1.1, steps 6.j-q.
-    JSObject* resolveFun = getResolveFun();
-    if (!resolveFun) {
+    if (!getResolveAndReject(&resolveFunVal, &rejectFunVal)) {
       return false;
     }
-    resolveFunVal.setObject(*resolveFun);
 
     // Call |nextPromise.then| with the provided hooks and add
     // |resultPromise| to the list of dependent promises.
@@ -2820,7 +2858,8 @@ static MOZ_MUST_USE bool CommonPerformPromiseAllRace(
   }
 }
 
-// ES2016, 25.4.4.1.1.
+// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+// 25.6.4.1.1 PerformPromiseAll (iteratorRecord, constructor, resultCapability)
 static MOZ_MUST_USE bool PerformPromiseAll(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, bool* done) {
@@ -2895,7 +2934,9 @@ static MOZ_MUST_USE bool PerformPromiseAll(
   // Step 5.
   uint32_t index = 0;
 
-  auto getResolve = [cx, &valuesArray, &dataHolder, &index]() -> JSObject* {
+  auto getResolveAndReject = [cx, &resultCapability, &valuesArray, &dataHolder,
+                              &index](MutableHandleValue resolveFunVal,
+                                      MutableHandleValue rejectFunVal) {
     // Step 6.h.
     {  // Scope for the AutoRealm we need to work with valuesArray.  We
       // mostly do this for performance; we could go ahead and do the define via
@@ -2903,7 +2944,7 @@ static MOZ_MUST_USE bool PerformPromiseAll(
       AutoRealm ar(cx, valuesArray);
 
       if (!NewbornArrayPush(cx, valuesArray, UndefinedValue())) {
-        return nullptr;
+        return false;
       }
     }
 
@@ -2912,7 +2953,7 @@ static MOZ_MUST_USE bool PerformPromiseAll(
         NewNativeFunction(cx, PromiseAllResolveElementFunction, 1, nullptr,
                           gc::AllocKind::FUNCTION_EXTENDED, GenericObject);
     if (!resolveFunc) {
-      return nullptr;
+      return false;
     }
 
     // Steps 6.l, 6.n-p.
@@ -2930,12 +2971,14 @@ static MOZ_MUST_USE bool PerformPromiseAll(
     index++;
     MOZ_ASSERT(index > 0);
 
-    return resolveFunc;
+    resolveFunVal.setObject(*resolveFunc);
+    rejectFunVal.setObject(*resultCapability.reject());
+    return true;
   };
 
   // Step 6.
-  if (!CommonPerformPromiseAllRace(cx, iterator, C, resultCapability, done,
-                                   true, getResolve)) {
+  if (!CommonPerformPromiseAllRace(cx, iterator, C, resultCapability.promise(),
+                                   done, true, getResolveAndReject)) {
     return false;
   }
 
@@ -3035,68 +3078,15 @@ static bool PromiseAllResolveElementFunction(JSContext* cx, unsigned argc,
   return true;
 }
 
-static MOZ_MUST_USE bool PerformPromiseRace(
-    JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
-    Handle<PromiseCapability> resultCapability, bool* done);
-
-// ES2016, 25.4.4.3.
+// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+// 25.6.4.3 Promise.race ( iterable )
 static bool Promise_static_race(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  HandleValue iterable = args.get(0);
-
-  // Step 2 (reordered).
-  HandleValue CVal = args.thisv();
-  if (!CVal.isObject()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_NOT_NONNULL_OBJECT,
-                              "Receiver of Promise.race call");
-    return false;
-  }
-
-  // Step 1.
-  RootedObject C(cx, &CVal.toObject());
-
-  // Step 3.
-  Rooted<PromiseCapability> promiseCapability(cx);
-  if (!NewPromiseCapability(cx, C, &promiseCapability, false)) {
-    return false;
-  }
-
-  // Steps 4-5.
-  PromiseForOfIterator iter(cx);
-  if (!iter.init(iterable, JS::ForOfIterator::AllowNonIterable)) {
-    return AbruptRejectPromise(cx, args, promiseCapability);
-  }
-
-  if (!iter.valueIsIterable()) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr, JSMSG_NOT_ITERABLE,
-                              "Argument of Promise.race");
-    return AbruptRejectPromise(cx, args, promiseCapability);
-  }
-
-  // Step 6 (implicit).
-
-  // Step 7.
-  bool done;
-  bool result = PerformPromiseRace(cx, iter, C, promiseCapability, &done);
-
-  // Step 8.
-  if (!result) {
-    // Step 8.a.
-    if (!done) {
-      iter.closeThrow();
-    }
-
-    // Step 8.b.
-    return AbruptRejectPromise(cx, args, promiseCapability);
-  }
-
-  // Step 9.
-  args.rval().setObject(*promiseCapability.promise());
-  return true;
+  return CommonStaticAllRace(cx, args, IterationMode::Race);
 }
 
-// ES2016, 25.4.4.3.1.
+// ES2020 draft rev a09fc232c137800dbf51b6204f37fdede4ba1646
+// 25.6.4.3.1 PerformPromiseRace (iteratorRecord, constructor, resultCapability)
 static MOZ_MUST_USE bool PerformPromiseRace(
     JSContext* cx, PromiseForOfIterator& iterator, HandleObject C,
     Handle<PromiseCapability> resultCapability, bool* done) {
@@ -3113,13 +3103,18 @@ static MOZ_MUST_USE bool PerformPromiseRace(
   bool isDefaultResolveFn =
       IsNativeFunction(resultCapability.resolve(), ResolvePromiseFunction);
 
-  auto getResolve = [&resultCapability]() -> JSObject* {
-    return resultCapability.resolve();
+  auto getResolveAndReject = [&resultCapability](
+                                 MutableHandleValue resolveFunVal,
+                                 MutableHandleValue rejectFunVal) {
+    resolveFunVal.setObject(*resultCapability.resolve());
+    rejectFunVal.setObject(*resultCapability.reject());
+    return true;
   };
 
   // Step 3.
-  return CommonPerformPromiseAllRace(cx, iterator, C, resultCapability, done,
-                                     isDefaultResolveFn, getResolve);
+  return CommonPerformPromiseAllRace(cx, iterator, C,
+                                     resultCapability.promise(), done,
+                                     isDefaultResolveFn, getResolveAndReject);
 }
 
 // https://tc39.github.io/ecma262/#sec-promise.reject
