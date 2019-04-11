@@ -8994,70 +8994,327 @@ exports.CSS_PROPERTIES = {
       "unset"
     ]
   },
-  "scroll-snap-coordinate": {
+  "scroll-margin": {
     "isInherited": false,
     "subproperties": [
-      "scroll-snap-coordinate"
+      "scroll-margin-top",
+      "scroll-margin-right",
+      "scroll-margin-bottom",
+      "scroll-margin-left"
     ],
     "supports": [],
     "values": [
-      "bottom",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-margin-block": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-margin-block-start",
+      "scroll-margin-block-end"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-margin-block-end": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-margin-block-end"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-margin-block-start": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-margin-block-start"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-margin-bottom": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-margin-bottom"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-margin-inline": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-margin-inline-start",
+      "scroll-margin-inline-end"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-margin-inline-end": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-margin-inline-end"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-margin-inline-start": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-margin-inline-start"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-margin-left": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-margin-left"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-margin-right": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-margin-right"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-margin-top": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-margin-top"
+    ],
+    "supports": [],
+    "values": [
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-padding": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-padding-top",
+      "scroll-padding-right",
+      "scroll-padding-bottom",
+      "scroll-padding-left"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-padding-block": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-padding-block-start",
+      "scroll-padding-block-end"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-padding-block-end": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-padding-block-end"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-padding-block-start": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-padding-block-start"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-padding-bottom": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-padding-bottom"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-padding-inline": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-padding-inline-start",
+      "scroll-padding-inline-end"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-padding-inline-end": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-padding-inline-end"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-padding-inline-start": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-padding-inline-start"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-padding-left": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-padding-left"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-padding-right": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-padding-right"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-padding-top": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-padding-top"
+    ],
+    "supports": [],
+    "values": [
+      "auto",
+      "inherit",
+      "initial",
+      "revert",
+      "unset"
+    ]
+  },
+  "scroll-snap-align": {
+    "isInherited": false,
+    "subproperties": [
+      "scroll-snap-align"
+    ],
+    "supports": [],
+    "values": [
       "center",
-      "inherit",
-      "initial",
-      "left",
-      "none",
-      "revert",
-      "right",
-      "top",
-      "unset"
-    ]
-  },
-  "scroll-snap-destination": {
-    "isInherited": false,
-    "subproperties": [
-      "scroll-snap-destination"
-    ],
-    "supports": [],
-    "values": [
-      "bottom",
-      "center",
-      "inherit",
-      "initial",
-      "left",
-      "revert",
-      "right",
-      "top",
-      "unset"
-    ]
-  },
-  "scroll-snap-points-x": {
-    "isInherited": false,
-    "subproperties": [
-      "scroll-snap-points-x"
-    ],
-    "supports": [],
-    "values": [
+      "end",
       "inherit",
       "initial",
       "none",
-      "repeat",
       "revert",
-      "unset"
-    ]
-  },
-  "scroll-snap-points-y": {
-    "isInherited": false,
-    "subproperties": [
-      "scroll-snap-points-y"
-    ],
-    "supports": [],
-    "values": [
-      "inherit",
-      "initial",
-      "none",
-      "repeat",
-      "revert",
+      "start",
       "unset"
     ]
   },
@@ -10243,10 +10500,6 @@ exports.PREFERENCES = [
   [
     "scroll-snap-align",
     "layout.css.scroll-snap-v1.enabled"
-  ],
-  [
-    "scroll-snap-type",
-    "layout.css.scroll-snap.enabled"
   ],
   [
     "scrollbar-width",
