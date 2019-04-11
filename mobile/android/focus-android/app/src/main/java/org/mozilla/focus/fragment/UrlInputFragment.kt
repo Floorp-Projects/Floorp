@@ -657,10 +657,14 @@ class UrlInputFragment :
     }
 
     private fun onCommit() {
-        val input = urlView.autocompleteResult!!.text.let {
-            if (it.isEmpty() || !URLUtil.isValidUrl(urlView?.text.toString())) {
-                urlView?.text.toString()
-            } else it
+        val input = if (urlView.autocompleteResult == null) {
+            urlView?.text.toString()
+        } else {
+            urlView.autocompleteResult!!.text.let {
+                if (it.isEmpty() || !URLUtil.isValidUrl(urlView?.text.toString())) {
+                    urlView?.text.toString()
+                } else it
+            }
         }
 
         if (!input.trim { it <= ' ' }.isEmpty()) {
@@ -675,7 +679,9 @@ class UrlInputFragment :
 
             openUrl(url, searchTerms)
 
-            TelemetryWrapper.urlBarEvent(isUrl, urlView.autocompleteResult!!)
+            if (urlView.autocompleteResult != null) {
+                TelemetryWrapper.urlBarEvent(isUrl, urlView.autocompleteResult!!)
+            }
         }
     }
 
