@@ -13,7 +13,6 @@
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
 
-#include <ctype.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -39,8 +38,6 @@ class JSLinearString;
 #define JS7_ISOCT(c) ((((unsigned)(c)) - '0') <= 7)
 #define JS7_UNOCT(c) (JS7_UNDEC(c))
 #define JS7_ISHEX(c) ((c) < 128 && (mozilla::IsAsciiDigit(c) || JS7_ISA2F(c)))
-#define JS7_UNHEX(c) \
-  (unsigned)(mozilla::IsAsciiDigit(c) ? (c) - '0' : 10 + tolower(c) - 'a')
 
 static MOZ_ALWAYS_INLINE size_t js_strlen(const char16_t* s) {
   return std::char_traits<char16_t>::length(s);

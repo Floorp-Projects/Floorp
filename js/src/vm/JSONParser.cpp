@@ -23,6 +23,7 @@
 
 using namespace js;
 
+using mozilla::AsciiAlphanumericToNumber;
 using mozilla::IsAsciiDigit;
 using mozilla::RangedPtr;
 
@@ -222,8 +223,10 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
           error("bad Unicode escape");
           return token(Error);
         }
-        c = (JS7_UNHEX(current[0]) << 12) | (JS7_UNHEX(current[1]) << 8) |
-            (JS7_UNHEX(current[2]) << 4) | (JS7_UNHEX(current[3]));
+        c = (AsciiAlphanumericToNumber(current[0]) << 12) |
+            (AsciiAlphanumericToNumber(current[1]) << 8) |
+            (AsciiAlphanumericToNumber(current[2]) << 4) |
+            (AsciiAlphanumericToNumber(current[3]));
         current += 4;
         break;
 
