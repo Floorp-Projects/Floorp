@@ -12,7 +12,6 @@ UNIFIED_SOURCES += [
     'testExample.cpp',
     'tests.cpp',
     'testStructuredCloneReader.cpp',
-    'testWasm.cpp',
 ]
 
 if CONFIG['JS_BUILD_BINAST']:
