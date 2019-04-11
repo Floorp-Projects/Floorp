@@ -4211,8 +4211,9 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
 
   if (aSnap == nsIScrollableFrame::ENABLE_SNAP) {
     ScrollStyles styles = GetScrollStylesFromFrame();
-    if (styles.mScrollSnapTypeY != StyleScrollSnapType::None ||
-        styles.mScrollSnapTypeX != StyleScrollSnapType::None) {
+
+    if (styles.mScrollSnapTypeY != StyleScrollSnapStrictness::None ||
+        styles.mScrollSnapTypeX != StyleScrollSnapStrictness::None) {
       nscoord appUnitsPerDevPixel =
           mOuter->PresContext()->AppUnitsPerDevPixel();
       deltaMultiplier = nsSize(appUnitsPerDevPixel, appUnitsPerDevPixel);
@@ -6535,8 +6536,8 @@ static layers::ScrollSnapInfo ComputeScrollSnapInfo(
 
   ScrollStyles styles = aScrollFrame.GetScrollStylesFromFrame();
 
-  if (styles.mScrollSnapTypeY == StyleScrollSnapType::None &&
-      styles.mScrollSnapTypeX == StyleScrollSnapType::None) {
+  if (styles.mScrollSnapTypeY == StyleScrollSnapStrictness::None &&
+      styles.mScrollSnapTypeX == StyleScrollSnapStrictness::None) {
     // We won't be snapping, short-circuit the computation.
     return result;
   }
