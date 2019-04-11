@@ -44,6 +44,7 @@
 #include "vm/Realm.h"
 
 using mozilla::ArrayLength;
+using mozilla::AsciiAlphanumericToNumber;
 using mozilla::AssertedCast;
 using mozilla::DecodeOneUtf8CodePoint;
 using mozilla::IsAscii;
@@ -1550,7 +1551,7 @@ uint32_t GeneralTokenStreamChars<Unit, AnyCharsAccess>::matchUnicodeEscape(
   char16_t v;
   unit = getCodeUnit();
   if (JS7_ISHEX(unit) && this->sourceUnits.matchHexDigits(3, &v)) {
-    *codePoint = (JS7_UNHEX(unit) << 12) | v;
+    *codePoint = (AsciiAlphanumericToNumber(unit) << 12) | v;
     return 5;
   }
 
@@ -1583,7 +1584,7 @@ GeneralTokenStreamChars<Unit, AnyCharsAccess>::matchExtendedUnicodeEscape(
   size_t i = 0;
   uint32_t code = 0;
   while (JS7_ISHEX(unit) && i < 6) {
-    code = (code << 4) | JS7_UNHEX(unit);
+    code = (code << 4) | AsciiAlphanumericToNumber(unit);
     unit = getCodeUnit();
     i++;
   }
@@ -3189,7 +3190,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
                 return false;
               }
 
-              code = (code << 4) | JS7_UNHEX(u3);
+              code = (code << 4) | AsciiAlphanumericToNumber(u3);
               if (code > unicode::NonBMPMax) {
                 if (parsingTemplate) {
                   TokenStreamAnyChars& anyChars = anyCharsAccess();
@@ -3224,7 +3225,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
           // malformed escapes are okay in *tagged* template literals.
           char16_t v;
           if (JS7_ISHEX(c2) && this->sourceUnits.matchHexDigits(3, &v)) {
-            unit = (JS7_UNHEX(c2) << 12) | v;
+            unit = (AsciiAlphanumericToNumber(c2) << 12) | v;
           } else {
             // Beware: |c2| may not be an ASCII code point here!
             ungetCodeUnit(c2);

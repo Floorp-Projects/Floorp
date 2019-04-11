@@ -1224,7 +1224,7 @@ class SourceUnits {
         return false;
       }
 
-      v = (v << 4) | JS7_UNHEX(unit);
+      v = (v << 4) | mozilla::AsciiAlphanumericToNumber(unit);
     }
 
     *out = v;
