@@ -160,6 +160,8 @@ inline Maybe<wr::ImageFormat> SurfaceFormatToImageFormat(
       return Some(wr::ImageFormat::R16);
     case gfx::SurfaceFormat::R8G8:
       return Some(wr::ImageFormat::RG8);
+    case gfx::SurfaceFormat::R16G16:
+      return Some(wr::ImageFormat::RG16);
     case gfx::SurfaceFormat::UNKNOWN:
     default:
       return Nothing();
