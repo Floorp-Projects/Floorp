@@ -9453,16 +9453,21 @@ void nsContentUtils::TryToUpgradeElement(Element* aElement) {
 }
 
 MOZ_CAN_RUN_SCRIPT
-static void DoCustomElementCreate(Element** aElement, Document* aDoc,
-                                  NodeInfo* aNodeInfo,
+static void DoCustomElementCreate(Element** aElement, JSContext* aCx,
+                                  Document* aDoc, NodeInfo* aNodeInfo,
                                   CustomElementConstructor* aConstructor,
                                   ErrorResult& aRv) {
-  RefPtr<Element> element = aConstructor->Construct(
-      aRv, "Custom Element Create", CallbackFunction::eRethrowExceptions);
+  JS::Rooted<JS::Value> constructResult(aCx);
+  aConstructor->Construct(&constructResult, aRv, "Custom Element Create",
+                          CallbackFunction::eRethrowExceptions);
   if (aRv.Failed()) {
     return;
   }
 
+  RefPtr<Element> element;
+  // constructResult is an ObjectValue because construction with a callback
+  // always forms the return value from a JSObject.
+  UNWRAP_OBJECT(Element, &constructResult, element);
   if (aNodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
     if (!element || !element->IsHTMLElement()) {
       aRv.ThrowTypeError<MSG_THIS_DOES_NOT_IMPLEMENT_INTERFACE>(
@@ -9621,7 +9626,7 @@ nsresult nsContentUtils::NewXULOrHTMLElement(
     if (synchronousCustomElements) {
       definition->mPrefixStack.AppendElement(nodeInfo->GetPrefixAtom());
       RefPtr<Document> doc = nodeInfo->GetDocument();
-      DoCustomElementCreate(aResult, doc, nodeInfo,
+      DoCustomElementCreate(aResult, cx, doc, nodeInfo,
                             MOZ_KnownLive(definition->mConstructor), rv);
       if (rv.MaybeSetPendingException(cx)) {
         if (nodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {

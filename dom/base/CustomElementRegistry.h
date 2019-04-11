@@ -80,18 +80,6 @@ class CustomElementCallback {
   LifecycleAdoptedCallbackArgs mAdoptedCallbackArgs;
 };
 
-class CustomElementConstructor final : public CallbackFunction {
- public:
-  explicit CustomElementConstructor(CallbackFunction* aOther)
-      : CallbackFunction(aOther) {
-    MOZ_ASSERT(JS::IsConstructor(mCallback));
-  }
-
-  already_AddRefed<Element> Construct(
-      ErrorResult& aRv, const char* aExecutionReason = nullptr,
-      ExceptionHandling aExceptionHandling = eReportExceptions);
-};
-
 // Each custom element has an associated callback queue and an element is
 // being created flag.
 struct CustomElementData {
