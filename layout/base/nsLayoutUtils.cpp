@@ -8,7 +8,6 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BasicEvents.h"
-#include "mozilla/dom/CanvasUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
@@ -7429,10 +7428,9 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
   }
 
   result.mPrincipal = principal.forget();
+  // no images, including SVG images, can load content from another domain.
+  result.mIsWriteOnly = false;
   result.mImageRequest = imgRequest.forget();
-  result.mIsWriteOnly =
-      CanvasUtils::CheckWriteOnlySecurity(result.mCORSUsed, result.mPrincipal);
-
   return result;
 }
 
@@ -7525,8 +7523,7 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
   result.mHasSize = true;
   result.mSize = result.mLayersImage->GetSize();
   result.mPrincipal = principal.forget();
-  result.mIsWriteOnly =
-      CanvasUtils::CheckWriteOnlySecurity(result.mCORSUsed, result.mPrincipal);
+  result.mIsWriteOnly = false;
 
   return result;
 }
