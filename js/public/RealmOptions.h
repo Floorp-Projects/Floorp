@@ -242,6 +242,15 @@ class JS_PUBLIC_API RealmBehaviors {
     return *this;
   }
 
+  // A Realm can stop being "live" in all the ways that matter before its global
+  // is actually GCed.  Consumers that tear down parts of a Realm or its global
+  // before that point should set isNonLive accordingly.
+  bool isNonLive() const { return isNonLive_; }
+  RealmBehaviors& setNonLive() {
+    isNonLive_ = true;
+    return *this;
+  }
+
  private:
   bool discardSource_ = false;
   bool disableLazyParsing_ = false;
@@ -251,6 +260,7 @@ class JS_PUBLIC_API RealmBehaviors {
   // templates, by making JSOP_OBJECT return a clone of the JSScript
   // singleton, instead of returning the value which is baked in the JSScript.
   bool singletonsAsTemplates_ = true;
+  bool isNonLive_ = false;
 };
 
 /**

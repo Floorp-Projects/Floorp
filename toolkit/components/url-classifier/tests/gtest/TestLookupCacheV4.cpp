@@ -120,7 +120,21 @@ TEST(UrlClassifierLookupCacheV4, LoadOldPset)
   RefPtr<LookupCache> cache = classifier->GetLookupCache(GTEST_TABLE, false);
 
   RefPtr<LookupCacheV4> cacheV4 = LookupCache::Cast<LookupCacheV4>(cache);
-  CheckContent(cacheV4, map);
+  CheckContent(cacheV4, array);
 
   oldPsetFile->Remove(false);
+}
+
+TEST(UrlClassifierLookupCacheV4, BuildAPI) {
+  _PrefixArray init = {_Prefix("alph")};
+  RefPtr<LookupCacheV4> cache = SetupLookupCache<LookupCacheV4>(init);
+
+  _PrefixArray update = {_Prefix("beta")};
+  PrefixStringMap map;
+  SetupPrefixMap(update, map);
+
+  cache->Build(map);
+  EXPECT_TRUE(map.IsEmpty());
+
+  CheckContent(cache, update);
 }

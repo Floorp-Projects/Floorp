@@ -19,6 +19,7 @@ job-defaults:
             default: ['try', 'trunk', 'mozilla-beta']
     tier:
         by-test-platform:
+            windows10-aarch64/.*: 2
             windows10-64-ccov/.*: 3
             linux64-ccov/.*: 3
             android-hw-g5.*: 2

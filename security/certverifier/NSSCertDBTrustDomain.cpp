@@ -8,7 +8,6 @@
 
 #include <stdint.h>
 
-#include "CryptoTask.h"
 #include "ExtendedValidation.h"
 #include "NSSErrorsService.h"
 #include "OCSPVerificationTrustDomain.h"
@@ -1281,46 +1280,6 @@ nsresult BuildRevocationCheckArrays(const UniqueCERTCertificate& cert,
   return NS_OK;
 }
 
-// Helper for SaveIntermediateCerts. Does the actual importing work on a
-// background thread so certificate verification can return its result.
-class BackgroundSaveIntermediateCertsTask final : public CryptoTask {
- public:
-  explicit BackgroundSaveIntermediateCertsTask(
-      UniqueCERTCertList&& intermediates)
-      : mIntermediates(std::move(intermediates)) {}
-
- private:
-  virtual nsresult CalculateResult() override {
-    UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
-    if (!slot) {
-      return NS_ERROR_FAILURE;
-    }
-    for (CERTCertListNode* node = CERT_LIST_HEAD(mIntermediates);
-         !CERT_LIST_END(node, mIntermediates); node = CERT_LIST_NEXT(node)) {
-      // This is a best-effort attempt at avoiding unknown issuer errors in the
-      // future, so ignore failures here.
-      nsAutoCString nickname;
-      if (NS_FAILED(DefaultServerNicknameForCert(node->cert, nickname))) {
-        continue;
-      }
-      Unused << PK11_ImportCert(slot.get(), node->cert, CK_INVALID_HANDLE,
-                                nickname.get(), false);
-    }
-    return NS_OK;
-  }
-
-  virtual void CallCallback(nsresult rv) override {
-    nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
-    if (observerService) {
-      observerService->NotifyObservers(nullptr, "psm:intermediate-certs-cached",
-                                       nullptr);
-    }
-  }
-
-  UniqueCERTCertList mIntermediates;
-};
-
 /**
  * Given a list of certificates representing a verified certificate path from an
  * end-entity certificate to a trust anchor, imports the intermediate
@@ -1382,9 +1341,39 @@ void SaveIntermediateCerts(const UniqueCERTCertList& certList) {
   }
 
   if (numIntermediates > 0) {
-    RefPtr<BackgroundSaveIntermediateCertsTask> task =
-        new BackgroundSaveIntermediateCertsTask(std::move(intermediates));
-    Unused << task->Dispatch("ImportInts");
+    nsCOMPtr<nsIRunnable> importCertsRunnable(NS_NewRunnableFunction(
+        "IdleSaveIntermediateCerts",
+        [intermediates = std::move(intermediates)]() -> void {
+          UniquePK11SlotInfo slot(PK11_GetInternalKeySlot());
+          if (!slot) {
+            return;
+          }
+          for (CERTCertListNode* node = CERT_LIST_HEAD(intermediates);
+               !CERT_LIST_END(node, intermediates);
+               node = CERT_LIST_NEXT(node)) {
+            // This is a best-effort attempt at avoiding unknown issuer errors
+            // in the future, so ignore failures here.
+            nsAutoCString nickname;
+            if (NS_FAILED(DefaultServerNicknameForCert(node->cert, nickname))) {
+              continue;
+            }
+            Unused << PK11_ImportCert(slot.get(), node->cert, CK_INVALID_HANDLE,
+                                      nickname.get(), false);
+          }
+
+          nsCOMPtr<nsIRunnable> runnable(NS_NewRunnableFunction(
+              "IdleSaveIntermediateCertsDone", []() -> void {
+                nsCOMPtr<nsIObserverService> observerService =
+                    mozilla::services::GetObserverService();
+                if (observerService) {
+                  observerService->NotifyObservers(
+                      nullptr, "psm:intermediate-certs-cached", nullptr);
+                }
+              }));
+          Unused << NS_DispatchToMainThread(runnable.forget());
+        }));
+    Unused << NS_DispatchToCurrentThreadQueue(importCertsRunnable.forget(),
+                                              EventQueuePriority::Idle);
   }
 }
 

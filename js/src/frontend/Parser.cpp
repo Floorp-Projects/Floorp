@@ -6758,7 +6758,7 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
   }
 
   uint32_t propNameOffset;
-  if (!tokenStream.peekOffset(&propNameOffset)) {
+  if (!tokenStream.peekOffset(&propNameOffset, TokenStream::SlashIsInvalid)) {
     return false;
   }
 
@@ -9616,7 +9616,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
     const Maybe<DeclarationKind>& maybeDecl, ListNodeType propList,
     PropertyType* propType, MutableHandleAtom propAtom) {
   TokenKind ltok;
-  if (!tokenStream.getToken(&ltok)) {
+  if (!tokenStream.getToken(&ltok, TokenStream::SlashIsInvalid)) {
     return null();
   }
 

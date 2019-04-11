@@ -332,10 +332,14 @@ struct Token {
     // InputElementRegExp.)
     SlashIsRegExp,
 
-    // Like SlashIsDiv, but used when actually *neither* a Div token nor a
-    // RegExp token is syntactically valid here. When the parser calls
-    // `getToken(SlashIsInvalid)`, it must be prepared to see either one
-    // (and throw a SyntaxError either way).
+    // Neither a Div token nor a RegExp token is syntactically valid here. When
+    // the parser calls `getToken(SlashIsInvalid)`, it must be prepared to see
+    // either one (and throw a SyntaxError either way).
+    //
+    // It's OK to use SlashIsInvalid to get a token that was originally scanned
+    // with SlashIsDiv or SlashIsRegExp. The reverse--peeking with
+    // SlashIsInvalid, then getting with another mode--is not OK. If either Div
+    // or RegExp is syntactically valid here, use the appropriate modifier.
     SlashIsInvalid,
 
     // Treat subsequent code units as the tail of a template literal, after
@@ -1864,9 +1868,6 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
     // Save the modifier used to get this token, so that if an ungetToken()
     // occurs and then the token is re-gotten (or peeked, etc.), we can
     // assert both gets used compatible modifiers.
-    if (modifier == TokenStreamShared::SlashIsInvalid) {
-      modifier = TokenStreamShared::SlashIsDiv;
-    }
     token->modifier = modifier;
 #endif
 

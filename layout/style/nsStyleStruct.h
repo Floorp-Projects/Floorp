@@ -1311,8 +1311,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStylePosition {
   nsStyleGridLine mGridColumnEnd;
   nsStyleGridLine mGridRowStart;
   nsStyleGridLine mGridRowEnd;
-  nsStyleCoord mColumnGap;  // normal, coord, percent, calc
-  nsStyleCoord mRowGap;     // normal, coord, percent, calc
+  mozilla::NonNegativeLengthPercentageOrNormal mColumnGap;
+  mozilla::NonNegativeLengthPercentageOrNormal mRowGap;
 
   bool OffsetHasPercent(mozilla::Side aSide) const {
     return mOffset.Get(aSide).HasPercent();

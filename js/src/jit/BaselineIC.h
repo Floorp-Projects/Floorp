@@ -220,7 +220,8 @@ class ICEntry {
   // A pointer to the first IC stub for this instruction.
   ICStub* firstStub_;
 
-  // The PC of this IC's bytecode op within the JSScript.
+  // The PC offset of this IC's bytecode op within the JSScript or
+  // ProloguePCOffset if this is a prologue IC.
   uint32_t pcOffset_;
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
@@ -233,11 +234,10 @@ class ICEntry {
 #endif
 
  public:
-  // Non-op ICs are Baseline ICs used for function argument/this type
-  // monitoring in the script's prologue. All other ICs are "for op" ICs.
-  // Note: the last bytecode op in a script is always a return so UINT32_MAX
-  // is never a valid bytecode offset.
-  static constexpr uint32_t NonOpPCOffset = UINT32_MAX;
+  // Prologue ICs are Baseline ICs used for function argument/this type
+  // monitoring in the script's prologue. Note: the last bytecode op in a script
+  // is always a return so UINT32_MAX is never a valid bytecode offset.
+  static constexpr uint32_t ProloguePCOffset = UINT32_MAX;
 
   ICEntry(ICStub* firstStub, uint32_t pcOffset)
       : firstStub_(firstStub), pcOffset_(pcOffset) {}
@@ -252,7 +252,7 @@ class ICEntry {
   void setFirstStub(ICStub* stub) { firstStub_ = stub; }
 
   uint32_t pcOffset() const {
-    return pcOffset_ == NonOpPCOffset ? 0 : pcOffset_;
+    return pcOffset_ == ProloguePCOffset ? 0 : pcOffset_;
   }
   jsbytecode* pc(JSScript* script) const {
     return script->offsetToPC(pcOffset());
@@ -264,7 +264,7 @@ class ICEntry {
 
   inline ICStub** addressOfFirstStub() { return &firstStub_; }
 
-  bool isForOp() const { return pcOffset_ != NonOpPCOffset; }
+  bool isForPrologue() const { return pcOffset_ == ProloguePCOffset; }
 
   void trace(JSTracer* trc);
 };
@@ -354,6 +354,8 @@ class ICScript {
 
   void trace(JSTracer* trc);
   void purgeOptimizedStubs(JSScript* script);
+
+  ICEntry* interpreterICEntryFromPCOffset(uint32_t pcOffset);
 
   ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset);
   ICEntry* maybeICEntryFromPCOffset(uint32_t pcOffset,

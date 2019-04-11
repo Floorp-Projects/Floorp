@@ -425,6 +425,7 @@ cbindgen-types = [
     { gecko = "StyleLengthPercentage", servo = "values::computed::LengthPercentage" },
     { gecko = "StyleNonNegativeLengthPercentage", servo = "values::computed::NonNegativeLengthPercentage" },
     { gecko = "StyleGenericLengthPercentageOrAuto", servo = "values::generics::length::LengthPercentageOrAuto" },
+    { gecko = "StyleGenericLengthPercentageOrNormal", servo = "values::generics::length::LengthPercentageOrNormal" },
     { gecko = "StyleLengthPercentageOrAuto", servo = "values::computed::LengthPercentageOrAuto" },
     { gecko = "StyleNonNegativeLengthPercentageOrAuto", servo = "values::computed::NonNegativeLengthPercentageOrAuto" },
     { gecko = "StyleRect", servo = "values::generics::rect::Rect" },

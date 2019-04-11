@@ -283,10 +283,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   /* Column properties */
   already_AddRefed<CSSValue> DoGetColumnRuleWidth();
 
-  /* CSS Box Alignment properties */
-  already_AddRefed<CSSValue> DoGetColumnGap();
-  already_AddRefed<CSSValue> DoGetRowGap();
-
 
   // For working around a MSVC bug. See related comment in
   // GenerateComputedDOMStyleGenerated.py.
