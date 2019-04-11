@@ -1,5 +1,5 @@
 skip-if(Android&&browserIsRemote) load 675518.html
-load 785753-1.html
+skip load 785753-1.html #bug 1536772
 load 785753-2.html
 load 1274044-1.html
 skip-if(Android) pref(privacy.firstparty.isolate,true) load 1334468-1.html
