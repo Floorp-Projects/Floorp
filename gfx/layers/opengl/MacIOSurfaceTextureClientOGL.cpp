@@ -52,7 +52,7 @@ MacIOSurfaceTextureData* MacIOSurfaceTextureData::Create(const IntSize& aSize,
 bool MacIOSurfaceTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   aOutDescriptor = SurfaceDescriptorMacIOSurface(
       mSurface->GetIOSurfaceID(), mSurface->GetContentsScaleFactor(),
-      !mSurface->HasAlpha());
+      !mSurface->HasAlpha(), mSurface->GetYUVColorSpace());
   return true;
 }
 

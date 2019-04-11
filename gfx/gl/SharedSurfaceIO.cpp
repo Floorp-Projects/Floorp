@@ -156,7 +156,8 @@ bool SharedSurface_IOSurface::ToSurfaceDescriptor(
     layers::SurfaceDescriptor* const out_descriptor) {
   bool isOpaque = !mHasAlpha;
   *out_descriptor = layers::SurfaceDescriptorMacIOSurface(
-      mIOSurf->GetIOSurfaceID(), mIOSurf->GetContentsScaleFactor(), isOpaque);
+      mIOSurf->GetIOSurfaceID(), mIOSurf->GetContentsScaleFactor(), isOpaque,
+      mIOSurf->GetYUVColorSpace());
   return true;
 }
 

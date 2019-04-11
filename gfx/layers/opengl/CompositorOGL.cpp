@@ -1494,7 +1494,7 @@ void CompositorOGL::DrawGeometry(const Geometry& aGeometry,
 
       program->SetNV12TextureUnits(Y, CbCr);
       program->SetTextureTransform(Matrix4x4());
-      program->SetYUVColorSpace(gfx::YUVColorSpace::BT601);
+      program->SetYUVColorSpace(effectNV12->mYUVColorSpace);
 
       if (maskType != MaskType::MaskNone) {
         BindMaskForProgram(program, sourceMask, LOCAL_GL_TEXTURE2,
