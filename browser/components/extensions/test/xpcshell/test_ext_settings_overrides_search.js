@@ -9,7 +9,7 @@ const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 let delay = () => new Promise(resolve => setTimeout(resolve, 0));
 
 const kSearchEngineURL = "https://example.com/?search={searchTerms}";
-const kSearchSuggestURL = "http://example.com/?suggest={searchTerms}";
+const kSearchSuggestURL = "https://example.com/?suggest={searchTerms}";
 const kSearchTerm = "foo";
 const kSearchTermIntl = "日";
 const URLTYPE_SUGGEST_JSON = "application/x-suggestions+json";

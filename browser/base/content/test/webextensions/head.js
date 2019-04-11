@@ -540,7 +540,10 @@ add_task(async function() {
     }
 
     for (let addon of await AddonManager.getAllAddons()) {
-      if (!existingAddons.has(addon.id)) {
+      // Builtin search extensions may have been installed by SearchService
+      // during the test run, ignore those.
+      if (!existingAddons.has(addon.id) &&
+          !(addon.isBuiltin && addon.id.endsWith("@search.mozilla.org"))) {
         ok(false, `Addon ${addon.id} was left installed at the end of the test`);
         await addon.uninstall();
       }
