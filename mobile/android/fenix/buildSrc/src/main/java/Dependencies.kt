@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 private object Versions {
-    const val kotlin = "1.3.11"
+    const val kotlin = "1.3.21"
     const val coroutines = "1.2.0-alpha-2"
     const val android_gradle_plugin = "3.3.2"
     const val rxAndroid = "2.1.0"

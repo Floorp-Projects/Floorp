@@ -15,6 +15,7 @@
 
     <!-- Bookmarks -->
     <color name="bookmark_favicon_background">#DFDFE3</color>
+    <color name="bookmark_multi_select_actionbar">#592ACB</color>
     <color name="bookmark_snackbar_background">#2E0EC1</color>
     <color name="bookmark_selection_appbar_background">#2E0EC1</color>
 
@@ -37,6 +38,7 @@
     <color name="history_header_normal_theme">#696A6A</color>
     <color name="history_title_normal_theme">@color/text_color_normal_theme</color>
     <color name="history_url_normal_theme">#696A6A</color>
+    <color name="bookmark_selection_title_normal_theme">@color/off_white</color>
     <color name="icons_normal_theme">#20123A</color>
     <color name="disabled_icons_normal_theme">#8020233E</color>
     <color name="status_bar_color_normal_theme">@color/off_white</color>
@@ -103,6 +105,7 @@
     <color name="history_header_private_theme">@color/photonGrey40</color>
     <color name="history_title_private_theme">@color/off_white</color>
     <color name="history_url_private_theme">@color/photonGrey40</color>
+    <color name="bookmark_selection_title_private_theme">@color/off_white</color>
     <color name="unloaded_progress_private_theme">#4f4e75</color>
 
     <!-- Library Colors -->

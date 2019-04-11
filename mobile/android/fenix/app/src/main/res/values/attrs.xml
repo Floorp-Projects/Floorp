@@ -58,6 +58,7 @@
     <!-- Bookmarks Fragment -->
     <attr name="bookmarksLabelColor" format="reference" />
     <attr name="bookmarksEditTextColor" format="reference" />
+    <attr name="bookmarkSelectionTitleColor" format="reference"/>
 
     <!-- Library Fragment -->
     <attr name="libraryListItemTextColor" format="reference" />

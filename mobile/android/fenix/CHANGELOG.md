@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #1375 - Added setting for turning off history suggestions
 - #1139 - Resolved a 170ms delay on cold start
 - #176 - Added a swipe to delete gesture on home screen
+- #1539 - Added bookmarks multi-select related features
 
 ### Changed
 - #1429 - Updated site permissions ui for MVP

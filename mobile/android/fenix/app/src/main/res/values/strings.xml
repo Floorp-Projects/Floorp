@@ -305,16 +305,35 @@
     <string name="bookmark_menu_open_in_private_tab_button">Open in private tab</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">Delete</string>
-
+    <!-- Bookmark multi select title in app bar -->
+    <string name="bookmarks_multi_select_title">%1$d selected</string>
+    <!-- Bookmark editing screen title -->
     <string name="edit_bookmark_fragment_title">Edit bookmark</string>
-    <string name="sign_in_button">Sign in to see synced bookmarks</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">Sign in to see synced bookmarks</string>
+    <!-- Bookmark URL editing field label -->
     <string name="bookmark_url_label">URL</string>
+    <!-- Bookmark FOLDER editing field label -->
     <string name="bookmark_folder_label">FOLDER</string>
+    <!-- Bookmark NAME editing field label -->
     <string name="bookmark_name_label">NAME</string>
+    <!-- Bookmark add folder screen title -->
     <string name="bookmark_add_folder_fragment_label">Add folder</string>
+    <!-- Bookmark select folder screen title -->
     <string name="bookmark_select_folder_fragment_label">Select folder</string>
+    <!-- Bookmark editing error missing title -->
     <string name="bookmark_empty_title_error">Must have a title</string>
+    <!-- Bookmark editing error missing or improper URL -->
     <string name="bookmark_invalid_url_error">Invalid URL</string>
+    <!-- Bookmark screen message for empty bookmarks folder -->
     <string name="bookmarks_empty_message">No bookmarks here</string>
+    <!-- Bookmark snackbar message on deletion -->
+    <string name="bookmark_deletion_snackbar_message">Deleted %1$s</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks -->
+    <string name="bookmark_deletion_multiple_snackbar_message">Deleting selected bookmarks</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">UNDO</string>
+
+    <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL copied</string>
 </resources>

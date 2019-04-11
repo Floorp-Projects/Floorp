@@ -126,7 +126,8 @@ class HomeFragment : Fragment(), CoroutineScope {
         view.menuButton.setOnClickListener {
             homeMenu?.menuBuilder?.build(requireContext())?.show(
                 anchor = it,
-                orientation = BrowserMenu.Orientation.DOWN)
+                orientation = BrowserMenu.Orientation.DOWN
+            )
         }
 
         val iconSize = resources.getDimension(R.dimen.preference_icon_drawable_size).toInt()
@@ -186,6 +187,13 @@ class HomeFragment : Fragment(), CoroutineScope {
         sessionObserver?.onSessionsRestored()
     }
 
+    override fun onStop() {
+        sessionObserver?.let {
+            requireComponents.core.sessionManager.unregister(it)
+        }
+        super.onStop()
+    }
+
     @SuppressWarnings("ComplexMethod")
     private fun handleTabAction(action: TabAction) {
         Do exhaustive when (action) {
@@ -225,8 +233,10 @@ class HomeFragment : Fragment(), CoroutineScope {
             is TabAction.PrivateBrowsingLearnMore -> {
                 requireComponents.useCases.tabsUseCases.addPrivateTab
                     .invoke(SupportUtils.getSumoURLForTopic(context!!, SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS))
-                (activity as HomeActivity).openToBrowser(requireComponents.core.sessionManager.selectedSession?.id,
-                    BrowserDirection.FromHome)
+                (activity as HomeActivity).openToBrowser(
+                    requireComponents.core.sessionManager.selectedSession?.id,
+                    BrowserDirection.FromHome
+                )
             }
             is TabAction.Add -> {
                 val directions = HomeFragmentDirections.actionHomeFragmentToSearchFragment(null)

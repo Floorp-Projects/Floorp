@@ -76,6 +76,7 @@
         <!-- Bookmark fragment colors -->
         <item name="bookmarksLabelColor">@color/bookmarks_label_normal_theme</item>
         <item name="bookmarksEditTextColor">@color/bookmarks_edit_normal_theme</item>
+        <item name="bookmarkSelectionTitleColor">@color/bookmark_selection_title_normal_theme</item>
 
         <!-- Library Fragment -->
         <item name="libraryListItemTextColor">@color/library_list_item_text_color_light_mode</item>
@@ -148,6 +149,7 @@
         <!-- Bookmark fragment colors -->
         <item name="bookmarksLabelColor">@color/bookmarks_label_private_theme</item>
         <item name="bookmarksEditTextColor">@color/bookmarks_edit_private_theme</item>
+        <item name="bookmarkSelectionTitleColor">@color/bookmark_selection_title_private_theme</item>
 
         <!-- Library Fragment -->
         <item name="libraryListItemTextColor">@color/off_white</item>
@@ -241,23 +243,24 @@
         <item name="android:progressDrawable">@drawable/progress_gradient</item>
     </style>
 
-        <style name="QuickSettingsText">
-            <item name="android:textColor">?attr/toolbarTextColor</item>
-            <item name="android:textSize">14sp</item>
-            <item name="android:paddingStart">16dp</item>
-            <item name="android:gravity">center_vertical</item>
-            <item name="android:layout_alignParentStart">true</item>
-        </style>
+    <style name="QuickSettingsText">
+        <item name="android:textColor">?attr/toolbarTextColor</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:layout_alignParentStart">true</item>
+    </style>
 
-        <style name="QuickSettingsText.Icon">
-            <item name="android:drawablePadding">8dp</item>
-        </style>
+    <style name="QuickSettingsText.Icon">
+        <item name="android:drawablePadding">8dp</item>
+    </style>
 
-        <style name="QuickSettingsText.PermissionItemEnd">
-            <item name="android:layout_alignParentEnd">true</item>
-            <item name="android:paddingEnd">24dp</item>
-            <item name="android:gravity">end|center_vertical</item>
-            <item name="android:background">?android:attr/selectableItemBackground</item>
-            <item name="android:textColor">@color/photonBlue50</item>
-        </style>
+    <style name="QuickSettingsText.PermissionItemEnd">
+        <item name="android:layout_alignParentEnd">true</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="android:gravity">end|center_vertical</item>
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+        <item name="android:textColor">@color/photonBlue50</item>
+    </style>
+
 </resources>

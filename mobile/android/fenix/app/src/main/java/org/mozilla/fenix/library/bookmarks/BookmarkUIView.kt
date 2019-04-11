@@ -12,6 +12,7 @@ import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import kotlinx.android.synthetic.main.component_bookmark.view.*
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.support.base.feature.BackHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.UIView
@@ -44,7 +45,10 @@ class BookmarkUIView(
     override fun updateView() = Consumer<BookmarkState> {
         canGoBack = !(listOf(null, BookmarkRoot.Root.id).contains(it.tree?.guid))
         bookmarkAdapter.updateData(it.tree, it.mode)
-        mode = it.mode
+        if (it.mode != mode) {
+            mode = it.mode
+            actionEmitter.onNext(BookmarkAction.ModeChanged)
+        }
     }
 
     override fun onBackPressed(): Boolean {
@@ -53,4 +57,6 @@ class BookmarkUIView(
             true
         } else false
     }
+
+    fun getSelected(): Set<BookmarkNode> = bookmarkAdapter.selected
 }
