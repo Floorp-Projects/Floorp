@@ -1,22 +1,22 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-function run_test() {
-  do_test_pending();
+add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+});
 
-  do_load_manifest("data/chrome.manifest");
-
+add_task(async function test_async_distribution() {
   configureToLoadJarEngines();
   installDistributionEngine();
 
   Assert.ok(!Services.search.isInitialized);
 
-  Services.search.init().then(function search_initialized(aStatus) {
+  return Services.search.init().then(function search_initialized(aStatus) {
     Assert.ok(Components.isSuccessCode(aStatus));
     Assert.ok(Services.search.isInitialized);
 
     // test that the engine from the distribution overrides our jar engine
-    Services.search.getEngines().then(engines => {
+    return Services.search.getEngines().then(engines => {
       Assert.equal(engines.length, 1);
 
       let engine = Services.search.getEngineByName("bug645970");
@@ -24,8 +24,6 @@ function run_test() {
 
       // check the engine we have is actually the one from the distribution
       Assert.equal(engine.description, "override");
-
-      do_test_finished();
     });
   });
-}
+});

@@ -37,6 +37,10 @@ function run_test() {
   run_next_test();
 }
 
+add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+});
+
 add_task(async function add_test_engines() {
   let getEngineData = {
     baseURL: gDataUrl,

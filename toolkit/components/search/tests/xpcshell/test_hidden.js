@@ -3,9 +3,7 @@
 
 const kUrlPref = "geoSpecificDefaults.url";
 
-function run_test() {
-  do_load_manifest("data/chrome.manifest");
-
+add_task(async function setup() {
   configureToLoadJarEngines();
 
   // Geo specific defaults won't be fetched if there's no country code.
@@ -24,12 +22,12 @@ function run_test() {
 
   Assert.ok(!Services.search.isInitialized);
 
-  run_next_test();
-}
+  await AddonTestUtils.promiseStartupManager();
+});
 
 add_task(async function async_init() {
   let commitPromise = promiseAfterCache();
-  await asyncInit();
+  await Services.search.init();
 
   let engines = await Services.search.getEngines();
   Assert.equal(engines.length, 1);
@@ -63,7 +61,7 @@ add_task(async function invalid_engine() {
   });
   Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).setCharPref(kUrlPref, url);
 
-  await asyncReInit();
+  await asyncReInit({ waitForRegionFetch: true });
 
   let engines = await Services.search.getEngines();
   Assert.equal(engines.length, 1);

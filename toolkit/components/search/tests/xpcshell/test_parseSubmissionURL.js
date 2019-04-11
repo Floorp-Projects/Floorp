@@ -7,11 +7,10 @@
 
 "use strict";
 
-function run_test() {
+add_task(async function setup() {
   useHttpServer();
-
-  run_next_test();
-}
+  await AddonTestUtils.promiseStartupManager();
+});
 
 add_task(async function test_parseSubmissionURL() {
   // Hide the default engines to prevent them from being used in the search.

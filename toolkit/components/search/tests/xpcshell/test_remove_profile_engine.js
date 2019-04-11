@@ -3,7 +3,7 @@
 
 add_task(async function run_test() {
   // Copy an engine to [profile]/searchplugin/
-  let dir = gProfD.clone();
+  let dir = do_get_profile().clone();
   dir.append("searchplugins");
   if (!dir.exists())
     dir.create(dir.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
@@ -13,7 +13,8 @@ add_task(async function run_test() {
   file.append("bug645970.xml");
   Assert.ok(file.exists());
 
-  await asyncInit();
+  await AddonTestUtils.promiseStartupManager();
+  await Services.search.init();
 
   // Install the same engine through a supported way.
   useHttpServer();

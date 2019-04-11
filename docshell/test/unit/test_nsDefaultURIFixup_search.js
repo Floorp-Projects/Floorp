@@ -1,4 +1,5 @@
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
 
 const kSearchEngineID = "test_urifixup_search_engine";
 const kSearchEngineURL = "http://www.example.org/?search={searchTerms}";
@@ -78,12 +79,18 @@ if (extProtocolSvc && extProtocolSvc.externalProtocolHandlerExists("mailto")) {
 
 var len = data.length;
 
+AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+
 add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+
   Services.prefs.setBoolPref("keyword.enabled", true);
   Services.io.getProtocolHandler("resource")
           .QueryInterface(Ci.nsIResProtocolHandler)
-          .setSubstitution("search-plugins",
-                           Services.io.newURI("chrome://mozapps/locale/searchplugins/"));
+          .setSubstitution("search-extensions",
+                           Services.io.newURI("chrome://mozapps/locale/searchextensions/"));
 
   await Services.search.addEngineWithDetails(kSearchEngineID, "", "", "", "get", kSearchEngineURL);
 

@@ -1,0 +1,26 @@
+{
+  "name": "engine-resourceicon",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "engine-resourceicon@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.png"
+  },
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "engine-resourceicon",
+      "search_url": "https://www.google.com/search",
+      "params": [
+        {
+          "name": "q",
+          "value": "{searchTerms}"
+        }
+      ]
+    }
+  }
+}
