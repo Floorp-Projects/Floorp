@@ -1049,6 +1049,7 @@ var PlacesUtils = {
    * @param   type
    *          The content type of the blob.
    * @returns An array of objects representing each item contained by the source.
+   * @throws if the blob contains invalid data.
    */
   unwrapNodes: function PU_unwrapNodes(blob, type) {
     // We split on "\n"  because the transferable system converts "\r\n" to "\n"
@@ -1079,7 +1080,8 @@ var PlacesUtils = {
             } catch (ex) {}
           }
           // note:  Services.io.newURI() will throw if uriString is not a valid URI
-          if (Services.io.newURI(uriString)) {
+          let uri = Services.io.newURI(uriString);
+          if (Services.io.newURI(uriString) && uri.scheme != "place") {
             nodes.push({ uri: uriString,
                          title: titleString ? titleString : uriString,
                          type: this.TYPE_X_MOZ_URL });
@@ -1092,14 +1094,18 @@ var PlacesUtils = {
         for (let i = 0; i < parts.length; i++) {
           let uriString = parts[i];
           // text/uri-list is converted to TYPE_UNICODE but it could contain
-          // comments line prepended by #, we should skip them
-          if (uriString.substr(0, 1) == "\x23")
+          // comments line prepended by #, we should skip them, as well as
+          // empty uris.
+          if (uriString.substr(0, 1) == "\x23" || uriString == "") {
             continue;
+          }
           // note: Services.io.newURI) will throw if uriString is not a valid URI
-          if (uriString != "" && Services.io.newURI(uriString))
+          let uri = Services.io.newURI(uriString);
+          if (uri.scheme != "place") {
             nodes.push({ uri: uriString,
                          title: uriString,
                          type: this.TYPE_X_MOZ_URL });
+          }
         }
         break;
       }
