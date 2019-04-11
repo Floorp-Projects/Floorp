@@ -978,7 +978,7 @@ static bool AvailableSpaceShrunk(WritingMode aWM,
 
 static LogicalSize CalculateContainingBlockSizeForAbsolutes(
     WritingMode aWM, const ReflowInput& aReflowInput, LogicalSize aFrameSize) {
-  // The issue here is that for a 'height' of 'auto' the reflow state
+  // The issue here is that for a 'height' of 'auto' the reflow input
   // code won't know how to calculate the containing block height
   // because it's calculated bottom up. So we use our own computed
   // size as the dimensions.
@@ -1003,7 +1003,7 @@ static LogicalSize CalculateContainingBlockSizeForAbsolutes(
     // In fact we should be attaching absolute children to the outermost
     // frame and not always sticking them in block frames.
 
-    // First, find the reflow state for the outermost frame for this
+    // First, find the reflow input for the outermost frame for this
     // content, except for fieldsets where the inner anonymous frame has
     // the correct padding area with the legend taken into account.
     const ReflowInput* aLastRI = &aReflowInput;
@@ -1031,7 +1031,7 @@ static LogicalSize CalculateContainingBlockSizeForAbsolutes(
           scrollbars.left = scrollbars.right = 0;
         }
       }
-      // We found a reflow state for the outermost wrapping frame, so use
+      // We found a reflow input for the outermost wrapping frame, so use
       // its computed metrics if available, converted to our writing mode
       WritingMode lastWM = aLastRI->GetWritingMode();
       LogicalSize lastRISize = aLastRI->ComputedSize().ConvertTo(aWM, lastWM);
@@ -1149,7 +1149,7 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   bool blockStartMarginRoot, blockEndMarginRoot;
   IsMarginRoot(&blockStartMarginRoot, &blockEndMarginRoot);
 
-  // Cache the consumed height in the block reflow state so that we don't have
+  // Cache the consumed height in the block reflow input so that we don't have
   // to continually recompute it.
   BlockReflowInput state(*reflowInput, aPresContext, this, blockStartMarginRoot,
                          blockEndMarginRoot, needFloatManager, consumedBSize);
@@ -3193,7 +3193,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
 
       // Setup a reflowInput to get the style computed block-start margin
       // value. We'll use a reason of `resize' so that we don't fudge
-      // any incremental reflow state.
+      // any incremental reflow input.
 
       // The availSpace here is irrelevant to our needs - all we want
       // out if this setup is the block-start margin value which doesn't depend
@@ -3337,7 +3337,7 @@ void nsBlockFrame::ReflowBlockFrame(BlockReflowInput& aState,
       availSpace.BSize(wm) += bStartMargin;
     }
 
-    // construct the html reflow state for the block. ReflowBlock
+    // construct the html reflow input for the block. ReflowBlock
     // will initialize it.
     Maybe<ReflowInput> blockHtmlRI;
     blockHtmlRI.emplace(
