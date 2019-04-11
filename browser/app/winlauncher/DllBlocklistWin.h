@@ -13,7 +13,8 @@
 
 namespace mozilla {
 
-LauncherVoidResult InitializeDllBlocklistOOP(HANDLE aChildProcess);
+LauncherVoidResult InitializeDllBlocklistOOP(const wchar_t* aFullImagePath,
+                                             HANDLE aChildProcess);
 
 }  // namespace mozilla
 
