@@ -73,7 +73,9 @@ static JSScript* CompileUtf8(JSContext* cx,
                              const ReadOnlyCompileOptions& options,
                              const char* bytes, size_t length) {
   auto chars = UniqueTwoByteChars(
-      UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length).get());
+      UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(bytes, length), &length,
+                                  js::MallocArena)
+          .get());
   if (!chars) {
     return nullptr;
   }
@@ -186,7 +188,9 @@ JS_PUBLIC_API bool JS_Utf8BufferIsCompilableUnit(JSContext* cx,
   cx->clearPendingException();
 
   JS::UniqueTwoByteChars chars{
-      UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(utf8, length), &length).get()};
+      UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(utf8, length), &length,
+                                  js::MallocArena)
+          .get()};
   if (!chars) {
     return true;
   }
@@ -592,7 +596,8 @@ JS_PUBLIC_API bool JS::EvaluateUtf8Path(
   auto contents = reinterpret_cast<const char*>(buffer.begin());
   size_t length = buffer.length();
   auto chars = UniqueTwoByteChars(
-      UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(contents, length), &length)
+      UTF8CharsToNewTwoByteCharsZ(cx, UTF8Chars(contents, length), &length,
+                                  js::MallocArena)
           .get());
   if (!chars) {
     return false;

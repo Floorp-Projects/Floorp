@@ -749,7 +749,7 @@ class JSString : public js::gc::Cell {
 class JSRope : public JSString {
   template <typename CharT>
   js::UniquePtr<CharT[], JS::FreePolicy> copyCharsInternal(
-      JSContext* cx, bool nullTerminate) const;
+      JSContext* cx, bool nullTerminate, arena_id_t destArenaId) const;
 
   enum UsingBarrier { WithIncrementalBarrier, NoBarrier };
 
@@ -773,15 +773,18 @@ class JSRope : public JSString {
       size_t length, js::gc::InitialHeap = js::gc::DefaultHeap);
 
   js::UniquePtr<JS::Latin1Char[], JS::FreePolicy> copyLatin1Chars(
-      JSContext* maybecx) const;
-  JS::UniqueTwoByteChars copyTwoByteChars(JSContext* maybecx) const;
+      JSContext* maybecx, arena_id_t destArenaId) const;
+  JS::UniqueTwoByteChars copyTwoByteChars(JSContext* maybecx,
+                                          arena_id_t destArenaId) const;
 
   js::UniquePtr<JS::Latin1Char[], JS::FreePolicy> copyLatin1CharsZ(
-      JSContext* maybecx) const;
-  JS::UniqueTwoByteChars copyTwoByteCharsZ(JSContext* maybecx) const;
+      JSContext* maybecx, arena_id_t destArenaId) const;
+  JS::UniqueTwoByteChars copyTwoByteCharsZ(JSContext* maybecx,
+                                           arena_id_t destArenaId) const;
 
   template <typename CharT>
-  js::UniquePtr<CharT[], JS::FreePolicy> copyChars(JSContext* maybecx) const;
+  js::UniquePtr<CharT[], JS::FreePolicy> copyChars(
+      JSContext* maybecx, arena_id_t destArenaId) const;
 
   // Hash function specific for ropes that avoids allocating a temporary
   // string. There are still allocations internally so it's technically
@@ -1832,14 +1835,15 @@ MOZ_ALWAYS_INLINE const JS::Latin1Char* JSLinearString::chars(
 
 template <>
 MOZ_ALWAYS_INLINE js::UniquePtr<JS::Latin1Char[], JS::FreePolicy>
-JSRope::copyChars<JS::Latin1Char>(JSContext* maybecx) const {
-  return copyLatin1Chars(maybecx);
+JSRope::copyChars<JS::Latin1Char>(JSContext* maybecx,
+                                  arena_id_t destArenaId) const {
+  return copyLatin1Chars(maybecx, destArenaId);
 }
 
 template <>
 MOZ_ALWAYS_INLINE JS::UniqueTwoByteChars JSRope::copyChars<char16_t>(
-    JSContext* maybecx) const {
-  return copyTwoByteChars(maybecx);
+    JSContext* maybecx, arena_id_t destArenaId) const {
+  return copyTwoByteChars(maybecx, destArenaId);
 }
 
 template <>
