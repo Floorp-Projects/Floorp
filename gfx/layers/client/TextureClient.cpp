@@ -1054,7 +1054,7 @@ already_AddRefed<TextureClient> TextureClient::CreateForDrawing(
         DeviceManagerDx::Get()->GetContentDevice())) &&
       aSize.width <= aMaxTextureSize && aSize.height <= aMaxTextureSize &&
       !(aAllocFlags & ALLOC_UPDATE_FROM_SURFACE)) {
-    data = DXGITextureData::Create(aSize, aFormat, aAllocFlags);
+    data = D3D11TextureData::Create(aSize, aFormat, aAllocFlags);
   }
 
   if (aLayersBackend != LayersBackend::LAYERS_WR && !data &&
