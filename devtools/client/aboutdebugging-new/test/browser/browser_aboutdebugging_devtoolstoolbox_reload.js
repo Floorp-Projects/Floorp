@@ -3,23 +3,8 @@
 
 "use strict";
 
-// Test can run for a long time on debug platforms.
-requestLongerTimeout(5);
-
 /* import-globals-from helper-collapsibilities.js */
 Services.scriptloader.loadSubScript(CHROME_URL_ROOT + "helper-collapsibilities.js", this);
-
-const TOOLS = [
-  "inspector",
-  "webconsole",
-  "jsdebugger",
-  "styleeditor",
-  "performance",
-  "memory",
-  "netmonitor",
-  "storage",
-  "accessibility",
-];
 
 /**
  * Test whether about:devtools-toolbox display correctly after reloading.
@@ -28,20 +13,14 @@ add_task(async function() {
   info("Force all debug target panes to be expanded");
   prepareCollapsibilitiesTest();
 
-  for (const toolId of TOOLS) {
-    await testReloadAboutDevToolsToolbox(toolId);
-  }
-});
-
-async function testReloadAboutDevToolsToolbox(toolId) {
   const { document, tab, window } = await openAboutDebugging();
   await selectThisFirefoxPage(document, window.AboutDebugging.store);
   const { devtoolsBrowser, devtoolsTab, devtoolsWindow } =
     await openAboutDevtoolsToolbox(document, tab, window);
 
-  info(`Select tool: ${toolId}`);
+  info("Select webconsole tool");
   const toolbox = getToolbox(devtoolsWindow);
-  await toolbox.selectTool(toolId);
+  await toolbox.selectTool("webconsole");
 
   info("Reload about:devtools-toolbox page");
   devtoolsBrowser.reload();
@@ -54,4 +33,4 @@ async function testReloadAboutDevToolsToolbox(toolId) {
 
   await closeAboutDevtoolsToolbox(document, devtoolsTab, window);
   await removeTab(tab);
-}
+});
