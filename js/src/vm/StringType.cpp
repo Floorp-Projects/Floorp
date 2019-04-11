@@ -1095,14 +1095,14 @@ bool JSFlatString::isIndexSlow(const CharT* s, size_t length,
   RangedPtr<const CharT> cp(s, length + 1);
   const RangedPtr<const CharT> end(s + length, s, length + 1);
 
-  uint32_t index = JS7_UNDEC(*cp++);
+  uint32_t index = AsciiDigitToNumber(*cp++);
   uint32_t oldIndex = 0;
   uint32_t c = 0;
 
   if (index != 0) {
     while (IsAsciiDigit(*cp)) {
       oldIndex = index;
-      c = JS7_UNDEC(*cp);
+      c = AsciiDigitToNumber(*cp);
       index = 10 * index + c;
       cp++;
     }
