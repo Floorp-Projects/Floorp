@@ -45,3 +45,8 @@ UNIFIED_SOURCES += [
     'WasmTypes.cpp',
     'WasmValidate.cpp'
 ]
+
+# Make sure all WebAssembly code is built with libfuzzer
+# coverage instrumentation in FUZZING mode.
+if CONFIG['FUZZING_INTERFACES'] and CONFIG['LIBFUZZER']:
+    include('/tools/fuzzing/libfuzzer-config.mozbuild')
