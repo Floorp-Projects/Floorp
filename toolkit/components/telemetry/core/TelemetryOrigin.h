@@ -34,6 +34,9 @@ void ClearOrigins();
 
 size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf);
 
+// Only to be used for testing.
+size_t SizeOfPrioDatasPerMetric();
+
 }  // namespace TelemetryOrigin
 
 #endif  // TelemetryOrigin_h__
