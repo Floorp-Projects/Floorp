@@ -142,8 +142,9 @@ enum class YUVColorSpace : uint8_t {
   BT601,
   BT709,
   BT2020,
-  // This represents the unknown format.
+  // This represents the unknown format and is a valid value.
   UNKNOWN,
+  _NUM_COLORSPACE
 };
 
 enum class ColorDepth : uint8_t {

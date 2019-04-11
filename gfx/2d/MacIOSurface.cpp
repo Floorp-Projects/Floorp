@@ -280,10 +280,12 @@ void MacIOSurfaceLib::CloseLibrary() {
 }
 
 MacIOSurface::MacIOSurface(IOSurfacePtr aIOSurfacePtr,
-                           double aContentsScaleFactor, bool aHasAlpha)
+                           double aContentsScaleFactor, bool aHasAlpha,
+                           gfx::YUVColorSpace aColorSpace)
     : mIOSurfacePtr(aIOSurfacePtr),
       mContentsScaleFactor(aContentsScaleFactor),
-      mHasAlpha(aHasAlpha) {
+      mHasAlpha(aHasAlpha),
+      mColorSpace(aColorSpace) {
   CFRetain(mIOSurfacePtr);
   IncrementUseCount();
 }
@@ -330,10 +332,6 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateIOSurface(
 
   RefPtr<MacIOSurface> ioSurface =
       new MacIOSurface(surfaceRef, aContentsScaleFactor, aHasAlpha);
-  if (!ioSurface) {
-    ::CFRelease(surfaceRef);
-    return nullptr;
-  }
 
   // Release the IOSurface because MacIOSurface retained it
   CFRelease(surfaceRef);
@@ -342,18 +340,15 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateIOSurface(
 }
 
 already_AddRefed<MacIOSurface> MacIOSurface::LookupSurface(
-    IOSurfaceID aIOSurfaceID, double aContentsScaleFactor, bool aHasAlpha) {
+    IOSurfaceID aIOSurfaceID, double aContentsScaleFactor, bool aHasAlpha,
+    gfx::YUVColorSpace aColorSpace) {
   if (!MacIOSurfaceLib::isInit() || aContentsScaleFactor <= 0) return nullptr;
 
   IOSurfacePtr surfaceRef = MacIOSurfaceLib::IOSurfaceLookup(aIOSurfaceID);
   if (!surfaceRef) return nullptr;
 
-  RefPtr<MacIOSurface> ioSurface =
-      new MacIOSurface(surfaceRef, aContentsScaleFactor, aHasAlpha);
-  if (!ioSurface) {
-    ::CFRelease(surfaceRef);
-    return nullptr;
-  }
+  RefPtr<MacIOSurface> ioSurface = new MacIOSurface(
+      surfaceRef, aContentsScaleFactor, aHasAlpha, aColorSpace);
 
   // Release the IOSurface because MacIOSurface retained it
   CFRelease(surfaceRef);
@@ -609,10 +604,6 @@ already_AddRefed<MacIOSurface> MacIOSurface::IOSurfaceContextGetSurface(
 
   RefPtr<MacIOSurface> ioSurface =
       new MacIOSurface(surfaceRef, aContentsScaleFactor, aHasAlpha);
-  if (!ioSurface) {
-    ::CFRelease(surfaceRef);
-    return nullptr;
-  }
   return ioSurface.forget();
 }
 
