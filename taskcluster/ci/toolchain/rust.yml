@@ -47,12 +47,12 @@ linux64-rust-1.32:
             '--target', 'aarch64-unknown-linux-gnu',
         ]
 
-linux64-rust-1.33:
+linux64-rust-1.34:
     treeherder:
         symbol: TL(rust)
     run:
         arguments: [
-            '--channel', '1.33.0',
+            '--channel', '1.34.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
@@ -96,13 +96,13 @@ linux64-rust-macos-1.32:
             '--target', 'x86_64-apple-darwin',
         ]
 
-linux64-rust-macos-1.33:
+linux64-rust-macos-1.34:
     description: "rust repack with macos-cross support"
     treeherder:
         symbol: TL(rust-macos)
     run:
         arguments: [
-            '--channel', '1.33.0',
+            '--channel', '1.34.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
@@ -121,13 +121,13 @@ linux64-rust-nightly-macos:
             '--target', 'x86_64-apple-darwin',
         ]
 
-linux64-rust-android-1.33:
+linux64-rust-android-1.34:
     description: "rust repack with android-cross support"
     treeherder:
         symbol: TL(rust-android)
     run:
         arguments: [
-            '--channel', '1.33.0',
+            '--channel', '1.34.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'armv7-linux-androideabi',
@@ -155,7 +155,7 @@ win64-rust-1.34:
         symbol: TW64(rust)
     run:
         arguments: [
-            '--channel', 'beta-2019-03-27',
+            '--channel', '1.34.0',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'i686-pc-windows-msvc',
@@ -182,7 +182,7 @@ win64-aarch64-rust:
         symbol: TW64(rust-aarch64)
     run:
         arguments: [
-            '--channel', 'beta-2019-03-27',
+            '--channel', '1.34.0',
             '--host', 'x86_64-pc-windows-msvc',
             '--target', 'x86_64-pc-windows-msvc',
             '--target', 'aarch64-pc-windows-msvc',
@@ -203,12 +203,12 @@ mingw32-rust-1.31:
             '--target', 'x86_64-unknown-linux-gnu',
         ]
 
-mingw32-rust-1.33:
+mingw32-rust-1.34:
     treeherder:
         symbol: TMW(rust)
     run:
         arguments: [
-            '--channel', '1.33.0',
+            '--channel', '1.34.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'i686-unknown-linux-gnu',
             '--target', 'i686-pc-windows-gnu',
