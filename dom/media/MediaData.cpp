@@ -63,7 +63,7 @@ bool AudioData::AdjustForStartTime(int64_t aStartTime) {
   if (mTrimWindow) {
     *mTrimWindow -= startTimeOffset;
   }
-  return MediaData::AdjustForStartTime(aStartTime);
+  return MediaData::AdjustForStartTime(aStartTime) && mOriginalTime.IsValid();
 }
 
 bool AudioData::SetTrimWindow(const media::TimeInterval& aTrim) {
