@@ -6,16 +6,8 @@
    preffed on.  The bulk of the styling is here in the shared file, but
    there are overrides for each platform in their compacttheme.css files. */
 
-:root:-moz-lwtheme {
-  --toolbar-non-lwt-bgcolor: var(--toolbar-bgcolor);
-  --toolbar-non-lwt-textcolor: var(--lwt-text-color);
-  --toolbar-non-lwt-bgimage: none;
-}
-
 :root:-moz-lwtheme-brighttext {
-  /* !important to override LightweightThemeManager.addBuiltInTheme in
-     BrowserGlue.jsm */
+  /* !important to override LightweightThemeConsumer.jsm */
   --autocomplete-popup-background: #2A2A2E !important;
   --autocomplete-popup-highlight-background: #0060DF;
 }
-

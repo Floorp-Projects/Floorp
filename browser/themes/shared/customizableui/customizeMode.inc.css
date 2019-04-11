@@ -13,15 +13,16 @@
 }
 
 #customization-container {
-  background-color: var(--toolbar-non-lwt-bgcolor);
-  background-image: var(--toolbar-non-lwt-bgimage);
-  color: var(--toolbar-non-lwt-textcolor);
-  text-shadow: none;
+  background-color: var(--toolbar-bgcolor);
+  background-image: var(--toolbar-bgimage);
+  color: var(--toolbar-color);
 }
 
 :root[lwtheme-image] #customization-container {
   background-color: transparent;
   background-image: linear-gradient(var(--toolbar-bgcolor), var(--toolbar-non-lwt-bgcolor) 45px);
+  color: var(--toolbar-non-lwt-textcolor);
+  text-shadow: none;
 }
 
 #customization-palette {
