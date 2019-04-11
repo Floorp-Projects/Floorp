@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <type_traits>
 #include <utility>
 
 #include "jsexn.h"
@@ -163,6 +164,20 @@ static uint32_t GetSingleCodePoint(const char16_t** p, const char16_t* end) {
   codePoint = **p;
   (*p)++;
   return codePoint;
+}
+
+template <typename CharT>
+static constexpr bool IsAsciiOctal(CharT c) {
+  using UnsignedCharT = std::make_unsigned_t<CharT>;
+  auto uc = static_cast<UnsignedCharT>(c);
+  return '0' <= uc && uc <= '7';
+}
+
+template <typename CharT>
+static constexpr uint8_t AsciiOctalToNumber(CharT c) {
+  using UnsignedCharT = std::make_unsigned_t<CharT>;
+  auto uc = static_cast<UnsignedCharT>(c);
+  return uc - '0';
 }
 
 namespace js {
@@ -2624,7 +2639,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
       } else if (unit == 'o' || unit == 'O') {
         radix = 8;
         unit = getCodeUnit();
-        if (!JS7_ISOCT(unit)) {
+        if (!IsAsciiOctal(unit)) {
           // NOTE: |unit| may be EOF here.
           ungetCodeUnit(unit);
           error(JSMSG_MISSING_OCTAL_DIGITS);
@@ -2634,7 +2649,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         // one past the '0o'
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
-        while (JS7_ISOCT(unit)) {
+        while (IsAsciiOctal(unit)) {
           unit = getCodeUnit();
         }
       } else if (IsAsciiDigit(unit)) {
@@ -3263,12 +3278,12 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
         }
 
         default: {
-          if (!JS7_ISOCT(unit)) {
+          if (!IsAsciiOctal(unit)) {
             break;
           }
 
           // Octal character specification.
-          int32_t val = JS7_UNOCT(unit);
+          int32_t val = AsciiOctalToNumber(unit);
 
           unit = peekCodeUnit();
           if (MOZ_UNLIKELY(unit == EOF)) {
@@ -3290,8 +3305,8 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
             anyChars.flags.sawOctalEscape = true;
           }
 
-          if (JS7_ISOCT(unit)) {
-            val = 8 * val + JS7_UNOCT(unit);
+          if (IsAsciiOctal(unit)) {
+            val = 8 * val + AsciiOctalToNumber(unit);
             consumeKnownCodeUnit(unit);
 
             unit = peekCodeUnit();
@@ -3300,9 +3315,9 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
               return false;
             }
 
-            if (JS7_ISOCT(unit)) {
+            if (IsAsciiOctal(unit)) {
               int32_t save = val;
-              val = 8 * val + JS7_UNOCT(unit);
+              val = 8 * val + AsciiOctalToNumber(unit);
               if (val <= 0xFF) {
                 consumeKnownCodeUnit(unit);
               } else {

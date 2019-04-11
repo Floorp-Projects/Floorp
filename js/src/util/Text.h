@@ -33,8 +33,6 @@ class JSLinearString;
  * for us.
  */
 #define JS7_UNDEC(c) ((c) - '0')
-#define JS7_ISOCT(c) ((((unsigned)(c)) - '0') <= 7)
-#define JS7_UNOCT(c) (JS7_UNDEC(c))
 
 static MOZ_ALWAYS_INLINE size_t js_strlen(const char16_t* s) {
   return std::char_traits<char16_t>::length(s);
