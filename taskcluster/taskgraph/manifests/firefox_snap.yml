@@ -5,10 +5,6 @@ default_locales:  # Ignored for snap
   - en-US
 tasktype_map:  # Map task reference to task type.
   release-snap-repackage: build
-platform_names:
-  path_platform: ''
-  filename_platform: ''
-  stage_platform: ''
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:
