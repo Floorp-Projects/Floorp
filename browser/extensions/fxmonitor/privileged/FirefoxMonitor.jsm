@@ -248,10 +248,14 @@ this.FirefoxMonitor = {
 
         this.notificationsByWindow.set(win, new Set());
 
-        // Inject our stylesheet.
-        let DOMWindowUtils = win.windowUtils;
-        DOMWindowUtils.loadSheetUsingURIString(this.getURL("privileged/FirefoxMonitor.css"),
-                                               DOMWindowUtils.AUTHOR_SHEET);
+        // Inject our stylesheet. This is queued in order to avoid spinning
+        // a nested event loop during a MozAfterPaint handler.
+        // See bug 1531838 comment 15.
+        Services.tm.dispatchToMainThread(() => {
+          let DOMWindowUtils = win.windowUtils;
+          DOMWindowUtils.loadSheetUsingURIString(this.getURL("privileged/FirefoxMonitor.css"),
+                                                 DOMWindowUtils.AUTHOR_SHEET);
+        });
 
         // Setup the popup notification stuff. First, the URL bar icon:
         let doc = win.document;
@@ -295,9 +299,11 @@ this.FirefoxMonitor = {
           return;
         }
 
-        let DOMWindowUtils = win.windowUtils;
-        DOMWindowUtils.removeSheetUsingURIString(this.getURL("privileged/FirefoxMonitor.css"),
-                                                 DOMWindowUtils.AUTHOR_SHEET);
+        Services.tm.dispatchToMainThread(() => {
+          let DOMWindowUtils = win.windowUtils;
+          DOMWindowUtils.removeSheetUsingURIString(this.getURL("privileged/FirefoxMonitor.css"),
+                                                   DOMWindowUtils.AUTHOR_SHEET);
+        });
 
         this.notificationsByWindow.get(win).forEach(n => {
           n.remove();
