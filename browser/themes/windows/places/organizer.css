@@ -8,15 +8,14 @@
   padding-inline-end: 6px;
 }
 
-#placesToolbar > toolbarbutton[disabled] > .toolbarbutton-icon {
-  opacity: .4;
+#placesToolbar > toolbarbutton > .toolbarbutton-icon {
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
 }
 
-#back-button > .toolbarbutton-icon,
-#forward-button > .toolbarbutton-icon {
-  -moz-context-properties: fill;
-  fill: currentcolor;
-  opacity: 0.65;
+#placesToolbar > toolbarbutton[disabled] > .toolbarbutton-icon {
+  opacity: .4;
 }
 
 #back-button {
@@ -75,38 +74,19 @@
   background-position: left center;
 }
 
-/* organize, view and maintenance buttons icons */
-#organizeButton,
-#viewMenu,
-#maintenanceButton {
-  list-style-image: url("chrome://browser/skin/places/libraryToolbar.png");
-}
-
 /* organize button */
 #organizeButton {
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-#organizeButton:hover,
-#organizeButton[open="true"] {
-  -moz-image-region: rect(16px, 16px, 32px, 0px);
+  list-style-image: url("chrome://browser/skin/settings.svg");
 }
 
 /* view button */
 #viewMenu {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-#viewMenu:hover,
-#viewMenu[open="true"] {
-  -moz-image-region: rect(16px, 32px, 32px, 16px);
+  list-style-image: url("chrome://browser/skin/sort.svg");
 }
 
 /* maintenance button */
 #maintenanceButton {
-  -moz-image-region: rect(0px, 48px, 16px, 32px);
-}
-#maintenanceButton:hover,
-#maintenanceButton[open="true"] {
-  -moz-image-region: rect(16px, 48px, 32px, 32px);
+  list-style-image: url("chrome://browser/skin/import-export.svg");
 }
 
 /* Info box */
