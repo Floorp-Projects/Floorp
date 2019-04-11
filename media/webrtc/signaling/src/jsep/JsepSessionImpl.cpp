@@ -977,6 +977,7 @@ nsresult JsepSessionImpl::HandleNegotiatedSession(
       transceiver->ClearBundleLevel();
       transceiver->mSendTrack.SetActive(false);
       transceiver->mRecvTrack.SetActive(false);
+      transceiver->SetCanRecycle();
       // Do not clear mLevel yet! That will happen on the next negotiation.
       continue;
     }
@@ -1389,7 +1390,7 @@ JsepTransceiver* JsepSessionImpl::GetTransceiverForMid(const std::string& mid) {
 
 JsepTransceiver* JsepSessionImpl::GetTransceiverForLocal(size_t level) {
   if (JsepTransceiver* transceiver = GetTransceiverForLevel(level)) {
-    if (WasMsectionDisabledLastNegotiation(level) && transceiver->IsStopped() &&
+    if (transceiver->CanRecycle() &&
         transceiver->GetMediaType() != SdpMediaSection::kApplication) {
       // Attempt to recycle. If this fails, the old transceiver stays put.
       transceiver->Disassociate();
@@ -1431,8 +1432,7 @@ JsepTransceiver* JsepSessionImpl::GetTransceiverForRemote(
     const SdpMediaSection& msection) {
   size_t level = msection.GetLevel();
   if (JsepTransceiver* transceiver = GetTransceiverForLevel(level)) {
-    if (!WasMsectionDisabledLastNegotiation(level) ||
-        !transceiver->IsStopped()) {
+    if (!transceiver->CanRecycle()) {
       return transceiver;
     }
     transceiver->Disassociate();
@@ -1518,16 +1518,6 @@ nsresult JsepSessionImpl::UpdateTransceiversFromRemoteDescription(
   }
 
   return NS_OK;
-}
-
-bool JsepSessionImpl::WasMsectionDisabledLastNegotiation(size_t level) const {
-  const Sdp* answer(GetAnswer());
-
-  if (answer && (level < answer->GetMediaSectionCount())) {
-    return mSdpHelper.MsectionIsDisabled(answer->GetMediaSection(level));
-  }
-
-  return false;
 }
 
 JsepTransceiver* JsepSessionImpl::FindUnassociatedTransceiver(

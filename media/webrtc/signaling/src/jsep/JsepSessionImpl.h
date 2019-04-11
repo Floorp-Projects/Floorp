@@ -172,7 +172,6 @@ class JsepSessionImpl : public JsepSession {
   nsresult ValidateOffer(const Sdp& offer);
   nsresult ValidateAnswer(const Sdp& offer, const Sdp& answer);
   nsresult UpdateTransceiversFromRemoteDescription(const Sdp& remote);
-  bool WasMsectionDisabledLastNegotiation(size_t level) const;
   JsepTransceiver* GetTransceiverForLevel(size_t level);
   JsepTransceiver* GetTransceiverForMid(const std::string& mid);
   JsepTransceiver* GetTransceiverForLocal(size_t level);
