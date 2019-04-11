@@ -2307,7 +2307,8 @@ bool BytecodeEmitter::emitYieldOp(JSOp op) {
 
   SET_RESUMEINDEX(bytecodeSection().code(off), resumeIndex);
 
-  return emit1(JSOP_AFTERYIELD);
+  ptrdiff_t unusedOffset;
+  return emitJumpTargetOp(JSOP_AFTERYIELD, &unusedOffset);
 }
 
 bool BytecodeEmitter::emitSetThis(BinaryNode* setThisNode) {
