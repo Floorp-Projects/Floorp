@@ -387,9 +387,15 @@ class AddonInternal {
     return this.isCompatibleWith();
   }
 
+  // This matches Extension.isPrivileged with the exception of temporarily installed extensions.
+  get isPrivileged() {
+    return this.signedState === AddonManager.SIGNEDSTATE_PRIVILEGED ||
+           this.signedState === AddonManager.SIGNEDSTATE_SYSTEM ||
+           this.location.isBuiltin;
+  }
+
   get hidden() {
-    return this.location.hidden ||
-           (this._hidden && this.signedState == AddonManager.SIGNEDSTATE_PRIVILEGED);
+    return this.location.hidden || (this._hidden && this.isPrivileged);
   }
 
   set hidden(val) {
@@ -977,6 +983,10 @@ AddonWrapper = class {
     }
 
     return val;
+  }
+
+  get isPrivileged() {
+    return addonFor(this).isPrivileged;
   }
 
   get hidden() {

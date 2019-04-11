@@ -33,6 +33,7 @@ class AndroidMixin(object):
         self.device_ip = os.environ.get('DEVICE_IP', None)
         self.logcat_proc = None
         self.logcat_file = None
+        self.use_gles3 = False
         super(AndroidMixin, self).__init__(**kwargs)
 
     @property
@@ -163,11 +164,12 @@ class AndroidMixin(object):
         else:
             self.warning("Android sdk missing? Not found at %s" % sdk_path)
 
-        # enable EGL 3.0 in advancedFeatures.ini
-        AF_FILE = os.path.join(sdk_path, "advancedFeatures.ini")
-        with open(AF_FILE, 'w') as f:
-            f.write("GLESDynamicVersion=on\n")
-        self.info("set GLESDynamicVersion=on in %s" % AF_FILE)
+        if self.use_gles3:
+            # enable EGL 3.0 in advancedFeatures.ini
+            AF_FILE = os.path.join(sdk_path, "advancedFeatures.ini")
+            with open(AF_FILE, 'w') as f:
+                f.write("GLESDynamicVersion=on\n")
+            self.info("set GLESDynamicVersion=on in %s" % AF_FILE)
 
         # extra diagnostics for kvm acceleration
         emu = self.config.get('emulator_process_name')

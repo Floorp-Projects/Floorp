@@ -48,6 +48,9 @@ createEnum([
   // selected from the device pixel ratio dropdown.
   "CHANGE_PIXEL_RATIO",
 
+  // Edit a device.
+  "EDIT_DEVICE",
+
   // Indicates that the device list is being loaded.
   "LOAD_DEVICE_LIST_START",
 

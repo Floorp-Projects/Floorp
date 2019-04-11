@@ -108,13 +108,14 @@ class AccessibilityRow extends Component {
   }
 
   updateAndScrollIntoViewIfNeeded() {
-    const { dispatch, member, supports } = this.props;
-    if (gToolbox) {
-      dispatch(updateDetails(gToolbox.walker, member.object, supports));
+    const { dispatch, member: { object }, supports } = this.props;
+    if (!gToolbox || !object.actorID) {
+      return;
     }
 
+    dispatch(updateDetails(gToolbox.walker, object, supports));
     this.scrollIntoView();
-    window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_SELECTED, member.object);
+    window.emit(EVENTS.NEW_ACCESSIBLE_FRONT_SELECTED, object);
   }
 
   flashValue() {

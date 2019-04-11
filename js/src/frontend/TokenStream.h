@@ -30,8 +30,8 @@
  * Certain aspects of tokenizing are used everywhere:
  *
  *   * modifiers (used to select which context-sensitive interpretation of a
- *     character should be used to decide what token it is), modifier
- *     exceptions, and modifier assertion handling;
+ *     character should be used to decide what token it is) and modifier
+ *     assertion handling;
  *   * flags on the overall stream (have we encountered any characters on this
  *     line?  have we hit a syntax error?  and so on);
  *   * and certain token-count constants.
@@ -287,25 +287,56 @@ class TokenStreamShared;
 
 struct Token {
  private:
-  // Sometimes the parser needs to inform the tokenizer to interpret
-  // subsequent text in a particular manner: for example, to tokenize a
-  // keyword as an identifier, not as the actual keyword, on the right-hand
-  // side of a dotted property access.  Such information is communicated to
-  // the tokenizer as a Modifier when getting the next token.
+  // The lexical grammar of JavaScript has a quirk around the '/' character.
+  // As the spec puts it:
   //
-  // Ideally this definition would reside in TokenStream as that's the real
-  // user, but the debugging-use of it here causes a cyclic dependency (and
-  // C++ provides no way to forward-declare an enum inside a class).  So
-  // define it here, then typedef it into TokenStream with static consts to
-  // bring the initializers into scope.
+  // > There are several situations where the identification of lexical input
+  // > elements is sensitive to the syntactic grammar context that is consuming
+  // > the input elements. This requires multiple goal symbols for the lexical
+  // > grammar. [...] The InputElementRegExp goal symbol is used in all
+  // > syntactic grammar contexts where a RegularExpressionLiteral is permitted
+  // > [...]  In all other contexts, InputElementDiv is used as the lexical
+  // > goal symbol.
+  //
+  // https://tc39.github.io/ecma262/#sec-lexical-and-regexp-grammars
+  //
+  // What "sensitive to the syntactic grammar context" means is, the parser has
+  // to tell the TokenStream whether to interpret '/' as division or
+  // RegExp. Because only one or the other (or neither) will be legal at that
+  // point in the program, and only the parser knows which one.
+  //
+  // But there's a problem: the parser often gets a token, puts it back, then
+  // consumes it later; or (equivalently) peeks at a token, leaves it, peeks
+  // again later, then finally consumes it. Of course we don't actually re-scan
+  // the token every time; we cache it in the TokenStream. This leads to the
+  // following rule:
+  //
+  // The parser must not pass SlashIsRegExp when getting/peeking at a token
+  // previously scanned with SlashIsDiv; or vice versa.
+  //
+  // That way, code that asks for a SlashIsRegExp mode will never get a cached
+  // Div token. But this rule is easy to screw up, because tokens are so often
+  // peeked at on Parser.cpp line A and consumed on line B, where |A-B| is
+  // thousands of lines. We therefore enforce it with the frontend's most
+  // annoying assertion (in verifyConsistentModifier), and provide
+  // Modifier::SlashIsInvalid to help avoid tripping it.
+  //
+  // This enum belongs in TokenStream, but C++, so we define it here and
+  // typedef it there.
   enum Modifier {
-    // Normal operation.
-    None,
+    // Parse `/` and `/=` as the division operators. (That is, use
+    // InputElementDiv as the goal symbol.)
+    SlashIsDiv,
 
-    // Looking for an operand, not an operator.  In practice, this means
-    // that when '/' is seen, we look for a regexp instead of just returning
-    // Div.
-    Operand,
+    // Parse `/` as the beginning of a RegExp literal. (That is, use
+    // InputElementRegExp.)
+    SlashIsRegExp,
+
+    // Like SlashIsDiv, but used when actually *neither* a Div token nor a
+    // RegExp token is syntactically valid here. When the parser calls
+    // `getToken(SlashIsInvalid)`, it must be prepared to see either one
+    // (and throw a SyntaxError either way).
+    SlashIsInvalid,
 
     // Treat subsequent code units as the tail of a template literal, after
     // a template substitution, beginning with a "}", continuing with zero
@@ -316,37 +347,6 @@ struct Token {
     //   var s = `Hello ${entity}!`;
     //                          ^ TemplateTail context
     TemplateTail,
-  };
-  enum ModifierException {
-    NoException,
-
-    // Used in following 2 cases:
-    // a) After |yield| we look for a token on the same line that starts an
-    // expression (Operand): |yield <expr>|.  If no token is found, the
-    // |yield| stands alone, and the next token on a subsequent line must
-    // be: a comma continuing a comma expression, a semicolon terminating
-    // the statement that ended with |yield|, or the start of another
-    // statement (possibly an expression statement).  The comma/semicolon
-    // cases are gotten as operators (None), contrasting with Operand
-    // earlier.
-    // b) After an arrow function with a block body in an expression
-    // statement, the next token must be: a colon in a conditional
-    // expression, a comma continuing a comma expression, a semicolon
-    // terminating the statement, or the token on a subsequent line that is
-    // the start of another statement (possibly an expression statement).
-    // Colon is gotten as operator (None), and it should only be gotten in
-    // conditional expression and missing it results in SyntaxError.
-    // Comma/semicolon cases are also gotten as operators (None), and 4th
-    // case is gotten after them.  If no comma/semicolon found but EOL,
-    // the next token should be gotten as operand in 4th case (especially
-    // if '/' is the first code unit).  So we should peek the token as
-    // operand before try getting colon/comma/semicolon.
-    // See also the comment in Parser::assignExpr().
-    NoneIsOperand,
-
-    // If a semicolon is inserted automatically, the next token is already
-    // gotten with None, but we expect Operand.
-    OperandIsNone,
   };
   friend class TokenStreamShared;
 
@@ -386,12 +386,6 @@ struct Token {
 #ifdef DEBUG
   /** The modifier used to get this token. */
   Modifier modifier;
-
-  /**
-   * Exception for this modifier to permit modifier mismatches in certain
-   * situations.
-   */
-  ModifierException modifierException;
 #endif
 
   // Mutators
@@ -485,14 +479,10 @@ class TokenStreamShared {
   static constexpr unsigned maxLookahead = 2;
 
   using Modifier = Token::Modifier;
-  static constexpr Modifier None = Token::None;
-  static constexpr Modifier Operand = Token::Operand;
+  static constexpr Modifier SlashIsDiv = Token::SlashIsDiv;
+  static constexpr Modifier SlashIsRegExp = Token::SlashIsRegExp;
+  static constexpr Modifier SlashIsInvalid = Token::SlashIsInvalid;
   static constexpr Modifier TemplateTail = Token::TemplateTail;
-
-  using ModifierException = Token::ModifierException;
-  static constexpr ModifierException NoException = Token::NoException;
-  static constexpr ModifierException NoneIsOperand = Token::NoneIsOperand;
-  static constexpr ModifierException OperandIsNone = Token::OperandIsNone;
 
   static void verifyConsistentModifier(Modifier modifier,
                                        Token lookaheadToken) {
@@ -502,24 +492,16 @@ class TokenStreamShared {
       return;
     }
 
-    if (lookaheadToken.modifierException == OperandIsNone) {
-      // getToken(Operand) permissibly following getToken().
-      if (modifier == Operand && lookaheadToken.modifier == None) {
-        return;
-      }
-    }
-
-    if (lookaheadToken.modifierException == NoneIsOperand) {
-      // getToken() permissibly following getToken(Operand).
-      if (modifier == None && lookaheadToken.modifier == Operand) {
-        return;
-      }
+    if (modifier == SlashIsInvalid &&
+        lookaheadToken.modifier != TemplateTail) {
+      // "Don't care" mode is fine after either SlashIsDiv or SlashIsRegExp.
+      return;
     }
 
     MOZ_ASSERT_UNREACHABLE(
-        "this token was previously looked up with a "
-        "different modifier, potentially making "
-        "tokenization non-deterministic");
+        "This token was scanned with both SlashIsRegExp and SlashIsDiv, indicating "
+        "the parser is confused about which one is allowed here. See comment "
+        "at Token::Modifier.");
 #endif
   }
 };
@@ -656,50 +638,36 @@ class TokenStreamAnyChars : public TokenStreamShared {
   InvalidEscapeType invalidTemplateEscapeType = InvalidEscapeType::None;
 
  public:
-  void addModifierException(ModifierException modifierException) {
+  // Call this immediately after parsing an OrExpression to allow scanning the
+  // next token with SlashIsRegExp without asserting (even though we just
+  // peeked at it in SlashIsDiv mode).
+  //
+  // It's OK to disable the assertion because the places where this is called
+  // have peeked at the next token in SlashIsDiv mode, and checked that it is
+  // *not* a Div token.
+  //
+  // To see why it is necessary to disable the assertion, consider these two
+  // programs:
+  //
+  //     x = arg => q       // per spec, this is all one statement, and the
+  //     /a/g;              // slashes are division operators
+  //
+  //     x = arg => {}      // per spec, ASI at the end of this line
+  //     /a/g;              // and that's a regexp literal
+  //
+  // The first program shows why orExpr() has use SlashIsDiv mode when peeking
+  // ahead for the next operator after parsing `q`. The second program shows
+  // why matchOrInsertSemicolon() must use SlashIsRegExp mode when scanning ahead
+  // for a semicolon.
+  void allowGettingNextTokenWithSlashIsRegExp() {
 #ifdef DEBUG
+    // Check the precondition: Caller already peeked ahead at the next token,
+    // in SlashIsDiv mode, and it is *not* a Div token.
+    MOZ_ASSERT(hasLookahead());
     const Token& next = nextToken();
-
-    // Permit adding the same exception multiple times.  This is important
-    // particularly for Parser::assignExpr's early fast-path cases and
-    // arrow function parsing: we want to add modifier exceptions in the
-    // fast paths, then potentially (but not necessarily) duplicate them
-    // after parsing all of an arrow function.
-    if (next.modifierException == modifierException) {
-      return;
-    }
-
-    if (next.modifierException == NoneIsOperand) {
-      // Token after yield expression without operand already has
-      // NoneIsOperand exception.
-      MOZ_ASSERT(modifierException == OperandIsNone);
-      MOZ_ASSERT(next.type != TokenKind::Div,
-                 "next token requires contextual specifier to be parsed "
-                 "unambiguously");
-
-      // Do not update modifierException.
-      return;
-    }
-
-    MOZ_ASSERT(next.modifierException == NoException);
-    switch (modifierException) {
-      case NoneIsOperand:
-        MOZ_ASSERT(next.modifier == Operand);
-        MOZ_ASSERT(next.type != TokenKind::Div,
-                   "next token requires contextual specifier to be parsed "
-                   "unambiguously");
-        break;
-      case OperandIsNone:
-        MOZ_ASSERT(next.modifier == None);
-        MOZ_ASSERT(
-            next.type != TokenKind::Div && next.type != TokenKind::RegExp,
-            "next token requires contextual specifier to be parsed "
-            "unambiguously");
-        break;
-      default:
-        MOZ_CRASH("unexpected modifier exception");
-    }
-    tokens[nextCursor()].modifierException = modifierException;
+    MOZ_ASSERT(next.modifier == SlashIsDiv);
+    MOZ_ASSERT(next.type != TokenKind::Div);
+    tokens[nextCursor()].modifier = SlashIsRegExp;
 #endif
   }
 
@@ -1896,8 +1864,10 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
     // Save the modifier used to get this token, so that if an ungetToken()
     // occurs and then the token is re-gotten (or peeked, etc.), we can
     // assert both gets used compatible modifiers.
+    if (modifier == TokenStreamShared::SlashIsInvalid) {
+      modifier = TokenStreamShared::SlashIsDiv;
+    }
     token->modifier = modifier;
-    token->modifierException = TokenStreamShared::NoException;
 #endif
 
     return token;
@@ -2015,8 +1985,8 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
 
   void newRegExpToken(JS::RegExpFlags reflags, TokenStart start,
                       TokenKind* out) {
-    Token* token =
-        newToken(TokenKind::RegExp, start, TokenStreamShared::Operand, out);
+    Token* token = newToken(TokenKind::RegExp, start,
+                            TokenStreamShared::SlashIsRegExp, out);
     token->setRegExpFlags(reflags);
   }
 
@@ -2617,7 +2587,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
  public:
   // Advance to the next token.  If the token stream encountered an error,
   // return false.  Otherwise return true and store the token kind in |*ttp|.
-  MOZ_MUST_USE bool getToken(TokenKind* ttp, Modifier modifier = None) {
+  MOZ_MUST_USE bool getToken(TokenKind* ttp, Modifier modifier = SlashIsDiv) {
     // Check for a pushed-back token resulting from mismatching lookahead.
     TokenStreamAnyChars& anyChars = anyCharsAccess();
     if (anyChars.lookahead != 0) {
@@ -2634,7 +2604,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     return getTokenInternal(ttp, modifier);
   }
 
-  MOZ_MUST_USE bool peekToken(TokenKind* ttp, Modifier modifier = None) {
+  MOZ_MUST_USE bool peekToken(TokenKind* ttp, Modifier modifier = SlashIsDiv) {
     TokenStreamAnyChars& anyChars = anyCharsAccess();
     if (anyChars.lookahead > 0) {
       MOZ_ASSERT(!anyChars.flags.hadError);
@@ -2649,7 +2619,8 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     return true;
   }
 
-  MOZ_MUST_USE bool peekTokenPos(TokenPos* posp, Modifier modifier = None) {
+  MOZ_MUST_USE bool peekTokenPos(TokenPos* posp,
+                                 Modifier modifier = SlashIsDiv) {
     TokenStreamAnyChars& anyChars = anyCharsAccess();
     if (anyChars.lookahead == 0) {
       TokenKind tt;
@@ -2666,7 +2637,8 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     return true;
   }
 
-  MOZ_MUST_USE bool peekOffset(uint32_t* offset, Modifier modifier = None) {
+  MOZ_MUST_USE bool peekOffset(uint32_t* offset,
+                               Modifier modifier = SlashIsDiv) {
     TokenPos pos;
     if (!peekTokenPos(&pos, modifier)) {
       return false;
@@ -2682,7 +2654,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
   // currentToken() shouldn't be consulted.  (This is the only place Eol
   // is produced.)
   MOZ_ALWAYS_INLINE MOZ_MUST_USE bool peekTokenSameLine(
-      TokenKind* ttp, Modifier modifier = None) {
+      TokenKind* ttp, Modifier modifier = SlashIsDiv) {
     TokenStreamAnyChars& anyChars = anyCharsAccess();
     const Token& curr = anyChars.currentToken();
 
@@ -2735,7 +2707,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
   // Get the next token from the stream if its kind is |tt|.
   MOZ_MUST_USE bool matchToken(bool* matchedp, TokenKind tt,
-                               Modifier modifier = None) {
+                               Modifier modifier = SlashIsDiv) {
     TokenKind token;
     if (!getToken(&token, modifier)) {
       return false;
@@ -2749,7 +2721,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     return true;
   }
 
-  void consumeKnownToken(TokenKind tt, Modifier modifier = None) {
+  void consumeKnownToken(TokenKind tt, Modifier modifier = SlashIsDiv) {
     bool matched;
     MOZ_ASSERT(anyCharsAccess().hasLookahead());
     MOZ_ALWAYS_TRUE(matchToken(&matched, tt, modifier));
@@ -2765,10 +2737,10 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     *endsExpr = anyCharsAccess().isExprEnding[size_t(tt)];
     if (*endsExpr) {
       // If the next token ends an overall Expression, we'll parse this
-      // Expression without ever invoking Parser::orExpr().  But we need
-      // that function's side effect of adding this modifier exception,
-      // so we have to do it manually here.
-      anyCharsAccess().addModifierException(OperandIsNone);
+      // Expression without ever invoking Parser::orExpr().  But we need that
+      // function's DEBUG-only side effect of marking this token as safe to get
+      // with SlashIsRegExp, so we have to do it manually here.
+      anyCharsAccess().allowGettingNextTokenWithSlashIsRegExp();
     }
     return true;
   }

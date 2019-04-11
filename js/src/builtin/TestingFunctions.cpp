@@ -2685,6 +2685,11 @@ static bool testingFunc_bailAfter(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
+static constexpr unsigned JitWarmupResetLimit = 20;
+static_assert(JitWarmupResetLimit <=
+                  unsigned(JSScript::MutableFlags::WarmupResets_MASK),
+              "JitWarmupResetLimit exceeds max value");
+
 static bool testingFunc_inJit(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
 
@@ -2701,7 +2706,7 @@ static bool testingFunc_inJit(JSContext* cx, unsigned argc, Value* vp) {
     // succeeds. Note: This script may have be inlined into its caller.
     if (iter.isJSJit()) {
       iter.script()->resetWarmUpResetCounter();
-    } else if (iter.script()->getWarmUpResetCount() >= 20) {
+    } else if (iter.script()->getWarmUpResetCount() >= JitWarmupResetLimit) {
       return ReturnStringCopy(
           cx, args, "Compilation is being repeatedly prevented. Giving up.");
     }
@@ -2729,7 +2734,7 @@ static bool testingFunc_inIon(JSContext* cx, unsigned argc, Value* vp) {
     // succeeds. Note: This script may have be inlined into its caller.
     if (iter.isIon()) {
       iter.script()->resetWarmUpResetCounter();
-    } else if (iter.script()->getWarmUpResetCount() >= 20) {
+    } else if (iter.script()->getWarmUpResetCount() >= JitWarmupResetLimit) {
       return ReturnStringCopy(
           cx, args, "Compilation is being repeatedly prevented. Giving up.");
     }
