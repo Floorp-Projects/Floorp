@@ -2434,12 +2434,6 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
 #endif
   MOZ_MAKE_MEM_UNDEFINED(ttp, sizeof(*ttp));
 
-  // Check if in the middle of a template string. Have to get this out of
-  // the way first.
-  if (MOZ_UNLIKELY(modifier == TemplateTail)) {
-    return getStringOrTemplateToken('`', modifier, ttp);
-  }
-
   // This loop runs more than once only when whitespace or comments are
   // encountered.
   do {

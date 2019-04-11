@@ -2489,7 +2489,7 @@ bool GeneralParser<ParseHandler, Unit>::addExprAndGetNextTemplStrToken(
     return false;
   }
 
-  return tokenStream.getToken(ttp, TokenStream::TemplateTail);
+  return tokenStream.getTemplateToken(ttp);
 }
 
 template <class ParseHandler, typename Unit>
