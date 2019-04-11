@@ -67,11 +67,20 @@ interface mozIStorageValueArray : nsISupports {
   boolean getIsNull(in unsigned long aIndex);
 
   /**
-   * Returns a shared string pointer
+   * Returns a shared string pointer.
+   *
+   * @param aIndex
+   *        0-based colummn index.
+   * @param aByteLength
+   *        The number of bytes in the string or blob. This is the same as the
+   *        number of characters for UTF-8 strings, and twice the number of
+   *        characters for UTF-16 strings.
+   * @param aResult
+   *        A pointer to the string or blob.
    */
-  [noscript] void getSharedUTF8String(in unsigned long aIndex, out unsigned long aLength, [shared,retval] out string aResult);
-  [noscript] void getSharedString(in unsigned long aIndex, out unsigned long aLength, [shared,retval] out wstring aResult);
-  [noscript] void getSharedBlob(in unsigned long aIndex, out unsigned long aLength, [shared,retval] out octetPtr aResult);
+  [noscript] void getSharedUTF8String(in unsigned long aIndex, out unsigned long aByteLength, [shared,retval] out string aResult);
+  [noscript] void getSharedString(in unsigned long aIndex, out unsigned long aByteLength, [shared,retval] out wstring aResult);
+  [noscript] void getSharedBlob(in unsigned long aIndex, out unsigned long aByteLength, [shared,retval] out octetPtr aResult);
 
 %{C++
   /**

@@ -670,7 +670,8 @@ Statement::GetString(uint32_t aIndex, nsAString &_value) {
   } else {
     const char16_t *value = static_cast<const char16_t *>(
         ::sqlite3_column_text16(mDBStatement, aIndex));
-    _value.Assign(value, ::sqlite3_column_bytes16(mDBStatement, aIndex) / 2);
+    _value.Assign(value, ::sqlite3_column_bytes16(mDBStatement, aIndex) /
+                             sizeof(char16_t));
   }
   return NS_OK;
 }
@@ -700,8 +701,9 @@ Statement::GetVariant(uint32_t aIndex, nsIVariant **_value) {
     case SQLITE_TEXT: {
       const char16_t *value = static_cast<const char16_t *>(
           ::sqlite3_column_text16(mDBStatement, aIndex));
-      nsDependentString str(value,
-                            ::sqlite3_column_bytes16(mDBStatement, aIndex) / 2);
+      nsDependentString str(
+          value,
+          ::sqlite3_column_bytes16(mDBStatement, aIndex) / sizeof(char16_t));
       variant = new TextVariant(str);
       break;
     }
@@ -751,31 +753,35 @@ Statement::GetBlobAsUTF8String(uint32_t aIndex, nsACString &aValue) {
 }
 
 NS_IMETHODIMP
-Statement::GetSharedUTF8String(uint32_t aIndex, uint32_t *_length,
+Statement::GetSharedUTF8String(uint32_t aIndex, uint32_t *_byteLength,
                                const char **_value) {
-  if (_length) *_length = ::sqlite3_column_bytes(mDBStatement, aIndex);
-
   *_value = reinterpret_cast<const char *>(
       ::sqlite3_column_text(mDBStatement, aIndex));
+  if (_byteLength) {
+    *_byteLength = ::sqlite3_column_bytes(mDBStatement, aIndex);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-Statement::GetSharedString(uint32_t aIndex, uint32_t *_length,
+Statement::GetSharedString(uint32_t aIndex, uint32_t *_byteLength,
                            const char16_t **_value) {
-  if (_length) *_length = ::sqlite3_column_bytes16(mDBStatement, aIndex);
-
   *_value = static_cast<const char16_t *>(
       ::sqlite3_column_text16(mDBStatement, aIndex));
+  if (_byteLength) {
+    *_byteLength = ::sqlite3_column_bytes16(mDBStatement, aIndex);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-Statement::GetSharedBlob(uint32_t aIndex, uint32_t *_size,
+Statement::GetSharedBlob(uint32_t aIndex, uint32_t *_byteLength,
                          const uint8_t **_blob) {
-  *_size = ::sqlite3_column_bytes(mDBStatement, aIndex);
   *_blob =
       static_cast<const uint8_t *>(::sqlite3_column_blob(mDBStatement, aIndex));
+  if (_byteLength) {
+    *_byteLength = ::sqlite3_column_bytes(mDBStatement, aIndex);
+  }
   return NS_OK;
 }
 

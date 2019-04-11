@@ -174,8 +174,11 @@ int Filter(sqlite3_vtab_cursor* aCursor, int aIdxNum, const char* aIdxStr,
     return SQLITE_OK;
   }
 
-  nsDependentString path(
-      reinterpret_cast<const char16_t*>(::sqlite3_value_text16(aArgv[0])));
+  const char16_t* value =
+      static_cast<const char16_t*>(::sqlite3_value_text16(aArgv[0]));
+
+  nsDependentString path(value,
+                         ::sqlite3_value_bytes16(aArgv[0]) / sizeof(char16_t));
 
   nsresult rv = cursor->Init(path);
   NS_ENSURE_SUCCESS(rv, SQLITE_ERROR);

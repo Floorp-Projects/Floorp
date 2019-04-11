@@ -139,9 +139,10 @@ int sqlite3_T_text(sqlite3_context *aCtx, const nsCString &aValue) {
 }
 
 int sqlite3_T_text16(sqlite3_context *aCtx, const nsString &aValue) {
-  ::sqlite3_result_text16(aCtx, aValue.get(),
-                          aValue.Length() * 2,  // Number of bytes.
-                          SQLITE_TRANSIENT);
+  ::sqlite3_result_text16(
+      aCtx, aValue.get(),
+      aValue.Length() * sizeof(char16_t),  // Number of bytes.
+      SQLITE_TRANSIENT);
   return SQLITE_OK;
 }
 

@@ -34,8 +34,10 @@ nsresult Row::initialize(sqlite3_stmt *aStatement) {
         variant = new FloatVariant(::sqlite3_column_double(aStatement, i));
         break;
       case SQLITE_TEXT: {
-        nsDependentString str(static_cast<const char16_t *>(
-            ::sqlite3_column_text16(aStatement, i)));
+        const char16_t *value = static_cast<const char16_t *>(
+            ::sqlite3_column_text16(aStatement, i));
+        nsDependentString str(
+            value, ::sqlite3_column_bytes16(aStatement, i) / sizeof(char16_t));
         variant = new TextVariant(str);
         break;
       }
@@ -43,8 +45,8 @@ nsresult Row::initialize(sqlite3_stmt *aStatement) {
         variant = new NullVariant();
         break;
       case SQLITE_BLOB: {
-        int size = ::sqlite3_column_bytes(aStatement, i);
         const void *data = ::sqlite3_column_blob(aStatement, i);
+        int size = ::sqlite3_column_bytes(aStatement, i);
         variant = new BlobVariant(std::pair<const void *, int>(data, size));
         break;
       }
