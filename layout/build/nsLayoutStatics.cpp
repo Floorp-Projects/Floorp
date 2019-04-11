@@ -256,7 +256,8 @@ nsresult nsLayoutStatics::Initialize() {
 
   ProcessPriorityManager::Init();
 
-  nsPermissionManager::ClearOriginDataObserverInit();
+  nsPermissionManager::Startup();
+
   nsCookieService::AppClearDataObserverInit();
   nsApplicationCacheService::AppClearDataObserverInit();
 
