@@ -155,34 +155,6 @@ CustomElementCallback::CustomElementCallback(
     Element* aThisObject, Document::ElementCallbackType aCallbackType,
     mozilla::dom::CallbackFunction* aCallback)
     : mThisObject(aThisObject), mCallback(aCallback), mType(aCallbackType) {}
-//-----------------------------------------------------
-// CustomElementConstructor
-
-already_AddRefed<Element> CustomElementConstructor::Construct(
-    ErrorResult& aRv, const char* aExecutionReason,
-    ExceptionHandling aExceptionHandling) {
-  CallSetup s(this, aRv, aExecutionReason, aExceptionHandling);
-
-  JSContext* cx = s.GetContext();
-  if (!cx) {
-    MOZ_ASSERT(aRv.Failed());
-    return nullptr;
-  }
-
-  JS::Rooted<JSObject*> result(cx);
-  JS::Rooted<JS::Value> constructor(cx, JS::ObjectValue(*mCallback));
-  if (!JS::Construct(cx, constructor, JS::HandleValueArray::empty(), &result)) {
-    aRv.NoteJSContextException(cx);
-    return nullptr;
-  }
-
-  RefPtr<Element> element;
-  if (NS_FAILED(UNWRAP_OBJECT(Element, &result, element))) {
-    return nullptr;
-  }
-
-  return element.forget();
-}
 
 //-----------------------------------------------------
 // CustomElementData
@@ -1066,15 +1038,20 @@ namespace {
 MOZ_CAN_RUN_SCRIPT
 static void DoUpgrade(Element* aElement, CustomElementConstructor* aConstructor,
                       ErrorResult& aRv) {
+  JS::Rooted<JS::Value> constructResult(RootingCx());
   // Rethrow the exception since it might actually throw the exception from the
   // upgrade steps back out to the caller of document.createElement.
-  RefPtr<Element> constructResult = aConstructor->Construct(
-      aRv, "Custom Element Upgrade", CallbackFunction::eRethrowExceptions);
+  aConstructor->Construct(&constructResult, aRv, "Custom Element Upgrade",
+                          CallbackFunction::eRethrowExceptions);
   if (aRv.Failed()) {
     return;
   }
 
-  if (!constructResult || constructResult.get() != aElement) {
+  Element* element;
+  // constructResult is an ObjectValue because construction with a callback
+  // always forms the return value from a JSObject.
+  if (NS_FAILED(UNWRAP_OBJECT(Element, &constructResult, element)) ||
+      element != aElement) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
