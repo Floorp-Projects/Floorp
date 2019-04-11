@@ -6525,10 +6525,17 @@ uint32_t nsIScrollableFrame::GetPerceivedScrollingDirections() const {
  */
 static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
                                          const nsIFrame* aScrolledFrame,
+                                         const Maybe<nsRect>& aSnapport,
                                          ScrollSnapInfo& aSnapInfo) {
   // FIXME: Bug 1373833: This target rect should be inflated by scroll-margin.
   nsRect targetRect = nsLayoutUtils::TransformFrameRectToAncestor(
       aFrame, aFrame->GetRectRelativeToSelf(), aScrolledFrame);
+  // Ignore elements outside of the snapport when we scroll to the given
+  // destination.
+  // https://drafts.csswg.org/css-scroll-snap-1/#snap-scope
+  if (aSnapport && !aSnapport->Intersects(targetRect)) {
+    return;
+  }
 
   WritingMode writingMode = aScrolledFrame->GetWritingMode();
   LogicalRect logicalTargetRect(writingMode, targetRect,
@@ -6634,9 +6641,12 @@ static void AppendScrollPositionsForSnap(const nsIFrame* aFrame,
 /**
  * Collect the scroll positions corresponding to snap positions of frames in the
  * subtree rooted at |aFrame|, relative to |aScrolledFrame|, into |aSnapInfo|.
+ * If |aSnapport| is given, elements outside of the range of |aSnapport| will be
+ * ignored.
  */
 static void CollectScrollPositionsForSnap(nsIFrame* aFrame,
                                           nsIFrame* aScrolledFrame,
+                                          const Maybe<nsRect>& aSnapport,
                                           ScrollSnapInfo& aSnapInfo) {
   MOZ_ASSERT(StaticPrefs::layout_css_scroll_snap_v1_enabled());
 
@@ -6651,9 +6661,9 @@ static void CollectScrollPositionsForSnap(nsIFrame* aFrame,
               StyleScrollSnapAlignKeyword::None ||
           styleDisplay->mScrollSnapAlign.block !=
               StyleScrollSnapAlignKeyword::None) {
-        AppendScrollPositionsForSnap(f, aScrolledFrame, aSnapInfo);
+        AppendScrollPositionsForSnap(f, aScrolledFrame, aSnapport, aSnapInfo);
       }
-      CollectScrollPositionsForSnap(f, aScrolledFrame, aSnapInfo);
+      CollectScrollPositionsForSnap(f, aScrolledFrame, aSnapport, aSnapInfo);
     }
   }
 }
@@ -6697,7 +6707,8 @@ static void CollectScrollSnapCoordinates(nsIFrame* aFrame,
   }
 }
 
-layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo() const {
+layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo(
+    const Maybe<nsPoint>& aDestination) const {
   ScrollSnapInfo result;
 
   ScrollStyles styles = GetScrollStylesFromFrame();
@@ -6730,9 +6741,20 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo() const {
 
   if (StaticPrefs::layout_css_scroll_snap_v1_enabled()) {
     // FIXME: Bug 1373832: The snapport should be deflated by scroll-padding.
-    result.mSnapportSize = GetScrollPortRect().Size();
+    nsSize snapportSize = GetScrollPortRect().Size();
 
-    CollectScrollPositionsForSnap(mScrolledFrame, mScrolledFrame, result);
+    Maybe<nsRect> snapportOnDestination;
+    if (aDestination) {
+      snapportOnDestination.emplace(
+          IsPhysicalLTR() ? nsRect(aDestination.value(), snapportSize)
+                          : nsRect(nsPoint(aDestination->x - snapportSize.width,
+                                           aDestination->y),
+                                   snapportSize));
+    }
+
+    result.mSnapportSize = snapportSize;
+    CollectScrollPositionsForSnap(mScrolledFrame, mScrolledFrame,
+                                  snapportOnDestination, result);
     return result;
   }
 
@@ -6742,17 +6764,18 @@ layers::ScrollSnapInfo ScrollFrameHelper::ComputeScrollSnapInfo() const {
   return result;
 }
 
-layers::ScrollSnapInfo ScrollFrameHelper::GetScrollSnapInfo() const {
+layers::ScrollSnapInfo ScrollFrameHelper::GetScrollSnapInfo(
+    const Maybe<nsPoint>& aDestination) const {
   // TODO(botond): Should we cache it?
-  return ComputeScrollSnapInfo();
+  return ComputeScrollSnapInfo(aDestination);
 }
 
 bool ScrollFrameHelper::GetSnapPointForDestination(
     nsIScrollableFrame::ScrollUnit aUnit, nsPoint aStartPos,
     nsPoint& aDestination) {
   Maybe<nsPoint> snapPoint = ScrollSnapUtils::GetSnapPointForDestination(
-      GetScrollSnapInfo(), aUnit, GetLayoutScrollRange(), aStartPos,
-      aDestination);
+      GetScrollSnapInfo(Some(aDestination)), aUnit, GetLayoutScrollRange(),
+      aStartPos, aDestination);
   if (snapPoint) {
     aDestination = snapPoint.ref();
     return true;
