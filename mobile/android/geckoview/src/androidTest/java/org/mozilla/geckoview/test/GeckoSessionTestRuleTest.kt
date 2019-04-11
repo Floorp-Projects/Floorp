@@ -66,14 +66,10 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
     fun noPendingCallbacks() {
         // Make sure we don't have unexpected pending callbacks at the start of a test.
         sessionRule.waitUntilCalled(object : Callbacks.All {
-            // There may be extraneous onSessionStateChange and onHistoryStateChange calls
-            // after a test, so ignore the first received.
+            // There may be an extraneous onSessionStateChange call after a test,
+            // so ignore the first received.
             @AssertCalled(count=2)
             override fun onSessionStateChange(session: GeckoSession, state: GeckoSession.SessionState) {
-            }
-
-            @AssertCalled(count = 2)
-            override fun onHistoryStateChange(session: GeckoSession, historyList: GeckoSession.HistoryDelegate.HistoryList) {
             }
         })
     }
@@ -982,14 +978,10 @@ class GeckoSessionTestRuleTest : BaseSessionTest(noErrorCollector = true) {
         sessionRule.createOpenSession()
         // Make sure we don't have unexpected pending callbacks after opening a session.
         sessionRule.waitUntilCalled(object : Callbacks.All {
-            // There may be extraneous onSessionStateChange and onHistoryStateChange calls
-            // after a test, so ignore the first received.
+            // There may be an extraneous onSessionStateChange call after a test,
+            // so ignore the first received.
             @AssertCalled(count=2)
             override fun onSessionStateChange(session: GeckoSession, state: GeckoSession.SessionState) {
-            }
-
-            @AssertCalled(count = 2)
-            override fun onHistoryStateChange(session: GeckoSession, historyList: GeckoSession.HistoryDelegate.HistoryList) {
             }
         })
     }
