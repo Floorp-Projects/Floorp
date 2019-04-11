@@ -456,7 +456,13 @@ void RemoteWorkerChild::CloseWorkerOnMainThread() {
 
   // The holder will be notified by this.
   if (lock->mWorkerState == eRunning) {
-    MOZ_RELEASE_ASSERT(lock->mWorkerPrivate);
+    // FIXME: mWorkerState transition and each state's associated data should
+    // be improved/fixed in bug 1231213. `!lock->mWorkerPrivate` implies that
+    // the worker state is effectively `eTerminated.`
+    if (!lock->mWorkerPrivate) {
+      return;
+    }
+
     lock->mWorkerPrivate->Cancel();
   }
 }
