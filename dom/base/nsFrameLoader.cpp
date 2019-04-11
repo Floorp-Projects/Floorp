@@ -3071,7 +3071,7 @@ void nsFrameLoader::Print(uint64_t aOuterWindowID,
   }
 
   nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint =
-      do_GetInterface(outerWindow->AsOuter());
+      do_GetInterface(ToSupports(outerWindow));
   if (NS_WARN_IF(!webBrowserPrint)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;

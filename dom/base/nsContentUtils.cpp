@@ -4339,8 +4339,7 @@ Document* nsContentUtils::GetSubdocumentWithOuterWindowId(
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindowOuter> outerWindow = window->AsOuter();
-  RefPtr<Document> foundDoc = outerWindow->GetDoc();
+  RefPtr<Document> foundDoc = window->GetDoc();
   if (nsContentUtils::ContentIsCrossDocDescendantOf(foundDoc, aDocument)) {
     // Note that ContentIsCrossDocDescendantOf will return true if
     // foundDoc == aDocument.
@@ -9829,7 +9828,7 @@ bool nsContentUtils::AttemptLargeAllocationLoad(nsIHttpChannel* aChannel) {
     return false;
   }
 
-  TabChild* tabChild = TabChild::GetFrom(outer->AsOuter());
+  TabChild* tabChild = TabChild::GetFrom(outer);
   NS_ENSURE_TRUE(tabChild, false);
 
   if (tabChild->IsAwaitingLargeAlloc()) {

@@ -321,8 +321,7 @@ nsWindowMediator::GetOuterWindowWithId(uint64_t aWindowID,
                                        mozIDOMWindowProxy** aWindow) {
   RefPtr<nsGlobalWindowOuter> window =
       nsGlobalWindowOuter::GetOuterWindowWithId(aWindowID);
-  nsCOMPtr<nsPIDOMWindowOuter> outer = window ? window->AsOuter() : nullptr;
-  outer.forget(aWindow);
+  window.forget(aWindow);
   return NS_OK;
 }
 

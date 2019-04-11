@@ -1192,12 +1192,12 @@ inline nsGlobalWindowInner* nsGlobalWindowOuter::GetCurrentInnerWindowInternal()
 }
 
 inline nsGlobalWindowInner* nsGlobalWindowOuter::EnsureInnerWindowInternal() {
-  return nsGlobalWindowInner::Cast(AsOuter()->EnsureInnerWindow());
+  return nsGlobalWindowInner::Cast(EnsureInnerWindow());
 }
 
 inline bool nsGlobalWindowOuter::IsTopLevelWindow() {
   nsPIDOMWindowOuter* parentWindow = GetScriptableTop();
-  return parentWindow == this->AsOuter();
+  return parentWindow == this;
 }
 
 inline bool nsGlobalWindowOuter::IsPopupSpamWindow() { return mIsPopupSpam; }
