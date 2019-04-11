@@ -16,16 +16,20 @@ enum class OriginMetricID : uint32_t {
   // category: content.blocking
   ContentBlocking_Blocked = 0,
   ContentBlocking_Exempt = 1,
+  ContentBlocking_Blocked_TestOnly = 2,
+  ContentBlocking_Exempt_TestOnly = 3,
   // category: telemetry.test
-  TelemetryTest_Test1 = 2,
-  TelemetryTest_Test2 = 3,
+  TelemetryTest_Test1 = 4,
+  TelemetryTest_Test2 = 5,
   // meta
-  Count = 4,
+  Count = 6,
 };
 
-static const char* const MetricIDToString[4] = {
+static const char* const MetricIDToString[6] = {
     "content.blocking_blocked",
     "content.blocking_exempt",
+    "content.blocking_blocked_TESTONLY",
+    "content.blocking_exempt_TESTONLY",
     "telemetry.test_test1",
     "telemetry.test_test2",
 };

@@ -13,6 +13,8 @@
 #include "nsIServiceManager.h"
 #include "nsComponentManagerUtils.h"
 #include "nsFrameLoader.h"
+#include "nsFrameLoaderOwner.h"
+#include "nsQueryObject.h"
 #include "xpcpublic.h"
 #include "nsIMozBrowserFrame.h"
 #include "mozilla/EventDispatcher.h"

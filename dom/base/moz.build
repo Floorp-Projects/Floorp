@@ -265,6 +265,7 @@ UNIFIED_SOURCES += [
     'ChromeNodeList.cpp',
     'ChromeUtils.cpp',
     'Comment.cpp',
+    'ContentBlockingLog.cpp',
     'ContentFrameMessageManager.cpp',
     'ContentIterator.cpp',
     'ContentProcessMessageManager.cpp',
