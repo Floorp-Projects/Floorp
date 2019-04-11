@@ -129,6 +129,9 @@ class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
       mCurrentConfig.mDisplay.height = spsdata.display_height;
       mCurrentConfig.SetImageRect(
           gfx::IntRect(0, 0, spsdata.pic_width, spsdata.pic_height));
+      mCurrentConfig.mColorDepth = spsdata.ColorDepth();
+      mCurrentConfig.mColorSpace = spsdata.ColorSpace();
+      mCurrentConfig.mFullRange = spsdata.video_full_range_flag;
     }
     mCurrentConfig.mExtraData = aExtraData;
     mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
