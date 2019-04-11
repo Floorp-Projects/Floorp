@@ -963,7 +963,8 @@ class MOZ_RAII AutoSetGeneratorRunning {
         asyncGenState_(static_cast<AsyncGeneratorObject::State>(0)),
         genObj_(cx, genObj) {
     if (genObj) {
-      if (!genObj->isClosed() && genObj->isSuspended()) {
+      if (!genObj->isClosed() && !genObj->isBeforeInitialYield() &&
+          genObj->isSuspended()) {
         // Yielding or awaiting.
         resumeIndex_ = genObj->resumeIndex();
         genObj->setRunning();
@@ -1577,6 +1578,7 @@ static bool CheckResumptionValue(JSContext* cx, AbstractFramePtr frame,
   if (maybeThisv.isSome()) {
     const HandleValue& thisv = maybeThisv.ref();
     if (resumeMode == ResumeMode::Return && vp.isPrimitive()) {
+      // Forcing return from a class constructor. There are rules.
       if (vp.isUndefined()) {
         if (thisv.isMagic(JS_UNINITIALIZED_LEXICAL)) {
           return ThrowUninitializedThis(cx, frame);
@@ -1590,9 +1592,34 @@ static bool CheckResumptionValue(JSContext* cx, AbstractFramePtr frame,
       }
     }
   }
+
+  // Check for forcing return from a generator before the initial yield. This
+  // is not supported because some engine-internal code assumes a call to a
+  // generator will return a GeneratorObject; see bug 1477084.
+  if (resumeMode == ResumeMode::Return && frame && frame.isFunctionFrame() &&
+      frame.callee()->isGenerator()) {
+    Rooted<AbstractGeneratorObject*> genObj(cx);
+    {
+      AutoRealm ar(cx, frame.callee());
+      genObj = GetGeneratorObjectForFrame(cx, frame);
+    }
+
+    if (!genObj || genObj->isBeforeInitialYield()) {
+      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                                JSMSG_DEBUG_FORCED_RETURN_DISALLOWED);
+      return false;
+    }
+  }
+
   return true;
 }
 
+// Last-minute sanity adjustments to resumption.
+//
+// This is called last, as we leave the debugger. It must happen outside the
+// control of the uncaughtExceptionHook, because this code assumes we won't
+// change our minds and continue execution--we must not close the generator
+// object unless we're really going to force-return.
 static void AdjustGeneratorResumptionValue(JSContext* cx,
                                            AbstractFramePtr frame,
                                            ResumeMode& resumeMode,
@@ -1612,10 +1639,11 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
   };
 
   // Treat `{return: <value>}` like a `return` statement. Simulate what the
-  // debuggee would do for an ordinary `return` statement--using a few bytecode
-  // instructions--and it's simpler to do the work manually than to count on
-  // that bytecode sequence existing in the debuggee, somehow jump to it, and
-  // then avoid re-entering the debugger from it.
+  // debuggee would do for an ordinary `return` statement, using a few bytecode
+  // instructions. It's simpler to do the work manually than to count on that
+  // bytecode sequence existing in the debuggee, somehow jump to it, and then
+  // avoid re-entering the debugger from it.
+  //
   // Similarly treat `{throw: <value>}` like a `throw` statement.
   if (frame.callee()->isGenerator()) {
     // Throw doesn't require any special processing for (async) generators.
@@ -1623,30 +1651,34 @@ static void AdjustGeneratorResumptionValue(JSContext* cx,
       return;
     }
 
-    // For (async) generators, that means doing the work below.
+    // Forcing return from a (possibly async) generator.
     Rooted<AbstractGeneratorObject*> genObj(
         cx, GetGeneratorObjectForFrame(cx, frame));
-    if (genObj) {
-      // 1.  `return <value>` creates and returns a new object in non-async
-      //     generators, `{value: <value>, done: true}`.
-      if (!frame.callee()->isAsync() && !genObj->isBeforeInitialYield()) {
-        JSObject* pair = CreateIterResultObject(cx, vp, true);
-        if (!pair) {
-          getAndClearExceptionThenThrow();
-          return;
-        }
-        vp.setObject(*pair);
-      }
 
-      // 2.  The generator must be closed.
-      genObj->setClosed();
-    } else {
-      // We're before the initial yield. Carry on with the forced return.
-      // The debuggee will see a call to a generator returning the
-      // non-generator value *vp.
+    // We already went through CheckResumptionValue, which would have replaced
+    // this invalid resumption value with an error if we were trying to force
+    // return before the initial yield.
+    MOZ_RELEASE_ASSERT(genObj && !genObj->isBeforeInitialYield());
+
+    // 1.  `return <value>` creates and returns a new object,
+    //     `{value: <value>, done: true}`.
+    //
+    // For non-async generators, the iterator result object is created in
+    // bytecode, so we have to simulate that here. For async generators, our
+    // C++ implementation of AsyncGeneratorResolve will do this. So don't do it
+    // twice:
+    if (!frame.callee()->isAsync()) {
+      JSObject* pair = CreateIterResultObject(cx, vp, true);
+      if (!pair) {
+        getAndClearExceptionThenThrow();
+        return;
+      }
+      vp.setObject(*pair);
     }
+
+    // 2.  The generator must be closed.
+    genObj->setClosed();
   } else if (frame.callee()->isAsync()) {
-    // For async functions, that means doing the work below.
     if (AbstractGeneratorObject* genObj =
             GetGeneratorObjectForFrame(cx, frame)) {
       // Throw doesn't require any special processing for async functions when
