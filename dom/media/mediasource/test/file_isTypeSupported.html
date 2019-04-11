@@ -1,0 +1,17 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>MSE: isTypeSupported extended mime extensions</title>
+  </head>
+  <body>
+    <script>
+      window.addEventListener("message", (e) => {
+        const result = MediaSource.isTypeSupported(e.data);
+        const w = window.opener || window.parent;
+        w.postMessage(result, "*");
+      });
+      const w = window.opener || window.parent;
+      w.postMessage("ready", "*");
+    </script>
+  </body>
+</html>
