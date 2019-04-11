@@ -309,7 +309,7 @@ button.month-year.active::after {
   margin: var(--spinner-margin-top-bottom) 0;
   cursor: default;
   overflow-y: scroll;
-  scroll-snap-type: mandatory;
+  scroll-snap-type: both mandatory;
   scroll-snap-points-y: repeat(100%);
 }
 

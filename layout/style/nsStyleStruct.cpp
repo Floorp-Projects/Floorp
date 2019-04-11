@@ -2939,8 +2939,8 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
       mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),
       mOverflowAnchor(StyleOverflowAnchor::Auto),
-      mScrollSnapTypeX(StyleScrollSnapStrictness::None),
-      mScrollSnapTypeY(StyleScrollSnapStrictness::None),
+      mScrollSnapType(
+          {StyleScrollSnapAxis::Both, StyleScrollSnapStrictness::None}),
       mScrollSnapPointsX(eStyleUnit_None),
       mScrollSnapPointsY(eStyleUnit_None),
       mScrollSnapDestination(
@@ -3004,8 +3004,7 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
       mScrollBehavior(aSource.mScrollBehavior),
       mOverscrollBehaviorX(aSource.mOverscrollBehaviorX),
       mOverscrollBehaviorY(aSource.mOverscrollBehaviorY),
-      mScrollSnapTypeX(aSource.mScrollSnapTypeX),
-      mScrollSnapTypeY(aSource.mScrollSnapTypeY),
+      mScrollSnapType(aSource.mScrollSnapType),
       mScrollSnapPointsX(aSource.mScrollSnapPointsX),
       mScrollSnapPointsY(aSource.mScrollSnapPointsY),
       mScrollSnapDestination(aSource.mScrollSnapDestination),
@@ -3145,8 +3144,7 @@ nsChangeHint nsStyleDisplay::CalcDifference(
       mContain != aNewData.mContain ||
       (mFloat == StyleFloat::None) != (aNewData.mFloat == StyleFloat::None) ||
       mScrollBehavior != aNewData.mScrollBehavior ||
-      mScrollSnapTypeX != aNewData.mScrollSnapTypeX ||
-      mScrollSnapTypeY != aNewData.mScrollSnapTypeY ||
+      mScrollSnapType != aNewData.mScrollSnapType ||
       mScrollSnapPointsX != aNewData.mScrollSnapPointsX ||
       mScrollSnapPointsY != aNewData.mScrollSnapPointsY ||
       mScrollSnapDestination != aNewData.mScrollSnapDestination ||

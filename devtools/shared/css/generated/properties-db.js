@@ -3081,8 +3081,7 @@ exports.CSS_PROPERTIES = {
       "offset-path",
       "scroll-behavior",
       "scroll-snap-align",
-      "scroll-snap-type-x",
-      "scroll-snap-type-y",
+      "scroll-snap-type",
       "overscroll-behavior-x",
       "overscroll-behavior-y",
       "isolation",
@@ -9065,50 +9064,21 @@ exports.CSS_PROPERTIES = {
   "scroll-snap-type": {
     "isInherited": false,
     "subproperties": [
-      "scroll-snap-type-x",
-      "scroll-snap-type-y"
+      "scroll-snap-type"
     ],
     "supports": [],
     "values": [
+      "block",
+      "both",
       "inherit",
       "initial",
+      "inline",
       "mandatory",
-      "none",
       "proximity",
       "revert",
-      "unset"
-    ]
-  },
-  "scroll-snap-type-x": {
-    "isInherited": false,
-    "subproperties": [
-      "scroll-snap-type-x"
-    ],
-    "supports": [],
-    "values": [
-      "inherit",
-      "initial",
-      "mandatory",
-      "none",
-      "proximity",
-      "revert",
-      "unset"
-    ]
-  },
-  "scroll-snap-type-y": {
-    "isInherited": false,
-    "subproperties": [
-      "scroll-snap-type-y"
-    ],
-    "supports": [],
-    "values": [
-      "inherit",
-      "initial",
-      "mandatory",
-      "none",
-      "proximity",
-      "revert",
-      "unset"
+      "unset",
+      "x",
+      "y"
     ]
   },
   "scrollbar-color": {
@@ -10275,6 +10245,10 @@ exports.PREFERENCES = [
     "layout.css.scroll-snap-v1.enabled"
   ],
   [
+    "scroll-snap-type",
+    "layout.css.scroll-snap.enabled"
+  ],
+  [
     "scrollbar-width",
     "layout.css.scrollbar-width.enabled"
   ],
@@ -10305,14 +10279,6 @@ exports.PREFERENCES = [
   [
     "overscroll-behavior-y",
     "layout.css.overscroll-behavior.enabled"
-  ],
-  [
-    "scroll-snap-type-x",
-    "layout.css.scroll-snap.enabled"
-  ],
-  [
-    "scroll-snap-type-y",
-    "layout.css.scroll-snap.enabled"
   ],
   [
     "font-variation-settings",
@@ -10437,10 +10403,6 @@ exports.PREFERENCES = [
   [
     "overflow-clip-box",
     "layout.css.overflow-clip-box.enabled"
-  ],
-  [
-    "scroll-snap-type",
-    "layout.css.scroll-snap.enabled"
   ],
   [
     "overscroll-behavior",
