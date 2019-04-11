@@ -41,7 +41,8 @@
  *
  * @return Ok if browser startup should proceed
  */
-static mozilla::LauncherVoidResult PostCreationSetup(HANDLE aChildProcess,
+static mozilla::LauncherVoidResult PostCreationSetup(const wchar_t* aFullImagePath,
+                                                     HANDLE aChildProcess,
                                                      HANDLE aChildMainThread,
                                                      const bool aIsSafeMode) {
   // The launcher process's DLL blocking code is incompatible with ASAN because
@@ -50,7 +51,7 @@ static mozilla::LauncherVoidResult PostCreationSetup(HANDLE aChildProcess,
 #if defined(MOZ_ASAN) || defined(_M_ARM64)
   return mozilla::Ok();
 #else
-  return mozilla::InitializeDllBlocklistOOP(aChildProcess);
+  return mozilla::InitializeDllBlocklistOOP(aFullImagePath, aChildProcess);
 #endif  // defined(MOZ_ASAN) || defined(_M_ARM64)
 }
 
@@ -332,7 +333,8 @@ Maybe<int> LauncherMain(int& argc, wchar_t* argv[],
   nsAutoHandle mainThread(pi.hThread);
 
   LauncherVoidResult setupResult =
-      PostCreationSetup(process.get(), mainThread.get(), isSafeMode.value());
+      PostCreationSetup(argv[0], process.get(), mainThread.get(),
+                        isSafeMode.value());
   if (setupResult.isErr()) {
     HandleLauncherError(setupResult);
     ::TerminateProcess(process.get(), 1);
