@@ -1895,8 +1895,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay {
   mozilla::StyleOverscrollBehavior mOverscrollBehaviorY;
   mozilla::StyleOverflowAnchor mOverflowAnchor;
   mozilla::StyleScrollSnapAlign mScrollSnapAlign;
-  mozilla::StyleScrollSnapType mScrollSnapTypeX;
-  mozilla::StyleScrollSnapType mScrollSnapTypeY;
+  mozilla::StyleScrollSnapStrictness mScrollSnapTypeX;
+  mozilla::StyleScrollSnapStrictness mScrollSnapTypeY;
   nsStyleCoord mScrollSnapPointsX;
   nsStyleCoord mScrollSnapPointsY;
   mozilla::Position mScrollSnapDestination;
