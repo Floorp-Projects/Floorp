@@ -21,7 +21,7 @@ add_task(async function setup() {
     return data == "engine-added";
   });
 
-  const url = "http://test:80/browser/browser/base/content/test/general/POSTSearchEngine.xml";
+  const url = "http://test:80/browser/browser/components/urlbar/tests/browser/POSTSearchEngine.xml";
   await Services.search.addEngine(url, null, false);
 
   let [subject, data] = await engineAddedPromise;
