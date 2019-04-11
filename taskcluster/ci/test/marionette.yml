@@ -22,6 +22,10 @@ job-defaults:
         by-test-platform:
             windows10-aarch64/opt: ['try', 'mozilla-central']
             default: built-projects
+    tier:
+        by-test-platform:
+            windows10-aarch64.*: 2
+            default: default
 
 marionette:
     description: "Marionette unittest run"

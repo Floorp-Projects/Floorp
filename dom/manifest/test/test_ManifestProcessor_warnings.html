@@ -29,10 +29,6 @@ ConsoleAPI.prototype.warn = function(aWarning) {
     warning: "Manifest should be an object.",
   },
   {
-    func: () => data.jsonText = JSON.stringify(null),
-    warning: "Manifest should be an object.",
-  },
-  {
     func: () => data.jsonText = JSON.stringify("a string"),
     warning: "Manifest should be an object.",
   },

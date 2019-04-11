@@ -60,4 +60,5 @@ xpcshell:
     tier:
         by-test-platform:
             windows10-64-asan.*: 3
+            windows10-aarch64.*: 2
             default: default

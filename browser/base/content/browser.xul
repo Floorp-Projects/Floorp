@@ -29,7 +29,6 @@
 <?xml-stylesheet href="chrome://browser/skin/searchbar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/editBookmark.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/skin/compacttheme.css" type="text/css" alternate="yes" title="Light/Dark"?>
 
 # All DTD information is stored in a separate file so that it can be shared by
 # hiddenWindow.xul.
@@ -84,7 +83,6 @@
 <script type="application/javascript">
   Services.scriptloader.loadSubScript("chrome://global/content/contentAreaUtils.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-captivePortal.js", this);
-  Services.scriptloader.loadSubScript("chrome://browser/content/browser-compacttheme.js", this);
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-contentblocking.js", this);
 #ifdef MOZ_DATA_REPORTING
   Services.scriptloader.loadSubScript("chrome://browser/content/browser-data-submission-info-bar.js", this);

@@ -137,11 +137,11 @@ class RetAddrEntry {
 
  public:
   enum class Kind : uint32_t {
-    // A for-op IC.
+    // An IC for a JOF_IC op.
     IC,
 
-    // A non-op IC.
-    NonOpIC,
+    // A prologue IC.
+    PrologueIC,
 
     // A callVM for an op.
     CallVM,
@@ -203,12 +203,6 @@ class RetAddrEntry {
     MOZ_ASSERT(kind_ < uint32_t(Kind::Invalid));
     return Kind(kind_);
   }
-  bool isForOp() const { return kind() == Kind::IC; }
-
-  void setNonICKind(Kind kind) {
-    MOZ_ASSERT(kind != Kind::IC && kind != Kind::NonOpIC);
-    setKind(kind);
-  }
 };
 
 struct BaselineScript final {
@@ -228,6 +222,10 @@ struct BaselineScript final {
   // Early Ion bailouts will enter at this address. This is after frame
   // construction and before environment chain is initialized.
   uint32_t bailoutPrologueOffset_;
+
+  // Baseline Interpreter can enter Baseline Compiler code at this address. This
+  // is right after the warm-up counter check in the prologue.
+  uint32_t warmUpCheckPrologueOffset_;
 
   // Baseline Debug OSR during prologue will enter at this address. This is
   // right after where a debug prologue VM call would have returned.
@@ -320,11 +318,13 @@ struct BaselineScript final {
   // Use BaselineScript::New to create new instances. It will properly
   // allocate trailing objects.
   BaselineScript(uint32_t bailoutPrologueOffset,
+                 uint32_t warmUpCheckPrologueOffset,
                  uint32_t debugOsrPrologueOffset,
                  uint32_t debugOsrEpilogueOffset,
                  uint32_t profilerEnterToggleOffset,
                  uint32_t profilerExitToggleOffset)
       : bailoutPrologueOffset_(bailoutPrologueOffset),
+        warmUpCheckPrologueOffset_(warmUpCheckPrologueOffset),
         debugOsrPrologueOffset_(debugOsrPrologueOffset),
         debugOsrEpilogueOffset_(debugOsrEpilogueOffset),
         profilerEnterToggleOffset_(profilerEnterToggleOffset),
@@ -333,10 +333,11 @@ struct BaselineScript final {
  public:
   static BaselineScript* New(
       JSScript* jsscript, uint32_t bailoutPrologueOffset,
-      uint32_t debugOsrPrologueOffset, uint32_t debugOsrEpilogueOffset,
-      uint32_t profilerEnterToggleOffset, uint32_t profilerExitToggleOffset,
-      size_t retAddrEntries, size_t pcMappingIndexEntries, size_t pcMappingSize,
-      size_t resumeEntries, size_t traceLoggerToggleOffsetEntries);
+      uint32_t warmUpCheckPrologueOffset, uint32_t debugOsrPrologueOffset,
+      uint32_t debugOsrEpilogueOffset, uint32_t profilerEnterToggleOffset,
+      uint32_t profilerExitToggleOffset, size_t retAddrEntries,
+      size_t pcMappingIndexEntries, size_t pcMappingSize, size_t resumeEntries,
+      size_t traceLoggerToggleOffsetEntries);
 
   static void Trace(JSTracer* trc, BaselineScript* script);
   static void Destroy(FreeOp* fop, BaselineScript* script);
@@ -367,6 +368,9 @@ struct BaselineScript final {
 
   uint8_t* bailoutPrologueEntryAddr() const {
     return method_->raw() + bailoutPrologueOffset_;
+  }
+  uint8_t* warmUpCheckPrologueAddr() const {
+    return method_->raw() + warmUpCheckPrologueOffset_;
   }
   uint8_t* debugOsrPrologueEntryAddr() const {
     return method_->raw() + debugOsrPrologueOffset_;

@@ -5498,6 +5498,14 @@ bool Debugger::findAllGlobals(JSContext* cx, unsigned argc, Value* vp) {
         continue;
       }
 
+      if (!r->hasLiveGlobal()) {
+        continue;
+      }
+
+      if (JS::RealmBehaviorsRef(r).isNonLive()) {
+        continue;
+      }
+
       r->compartment()->gcState.scheduledForDestruction = false;
 
       GlobalObject* global = r->maybeGlobal();
@@ -5506,14 +5514,12 @@ bool Debugger::findAllGlobals(JSContext* cx, unsigned argc, Value* vp) {
         continue;
       }
 
-      if (global) {
-        // We pulled |global| out of nowhere, so it's possible that it was
-        // marked gray by XPConnect. Since we're now exposing it to JS code,
-        // we need to mark it black.
-        JS::ExposeObjectToActiveJS(global);
-        if (!globals.append(global)) {
-          return false;
-        }
+      // We pulled |global| out of nowhere, so it's possible that it was
+      // marked gray by XPConnect. Since we're now exposing it to JS code,
+      // we need to mark it black.
+      JS::ExposeObjectToActiveJS(global);
+      if (!globals.append(global)) {
+        return false;
       }
     }
   }

@@ -80,6 +80,7 @@ if __name__ == '__main__':
         print('Usage: align_stack_comment.py FILE',
               file=sys.stderr)
         sys.exit(1)
-    path = sys.argv[1]
 
-    align_stack_comment(path)
+    for path in sys.argv[1:]:
+        print(path)
+        align_stack_comment(path)

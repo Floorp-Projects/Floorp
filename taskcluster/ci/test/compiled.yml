@@ -55,6 +55,7 @@ gtest:
             windows10-64-shippable.*: 3
             windows10-64-pgo.*: 3
             windows10-64-asan.*: 3
+            windows10-aarch64.*: 2
             default: default
 
 jittest:
@@ -109,4 +110,5 @@ jittest:
     tier:
         by-test-platform:
             android-hw.*: 2
+            windows10-aarch64.*: 2
             default: default

@@ -10,6 +10,18 @@ requestLongerTimeout(4);
 const tests = [
   // Fetch tests.
   {
+    body: `<!-- no manifest in document -->`,
+    run(manifest) {
+      is(manifest, null, "Manifest without a href yields a null manifest.");
+    },
+  },
+  {
+    body: `<link rel="manifest">`,
+    run(manifest) {
+      is(manifest, null, "Manifest without a href yields a null manifest.");
+    },
+  },
+  {
     body: `
       <link rel="manifesto" href='resource.sjs?body={"name":"fail"}'>
       <link rel="foo bar manifest bar test" href='resource.sjs?body={"name":"pass-1"}'>

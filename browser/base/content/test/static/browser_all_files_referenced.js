@@ -177,6 +177,10 @@ var whitelist = [
    platforms: ["linux", "win"]},
   // Referenced by the webcompat system addon for localization
   {file: "resource://gre/localization/en-US/toolkit/about/aboutCompat.ftl"},
+  // These files are dynamically injected by LightweightThemeConsumer.jsm
+  // meaning the test doesn't detect them.
+  {file: "resource://app/modules/themes/dark/experiment.css"},
+  {file: "resource://app/modules/themes/light/experiment.css"},
 ];
 
 whitelist = new Set(whitelist.filter(item =>

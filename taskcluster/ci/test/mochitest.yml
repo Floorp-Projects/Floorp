@@ -46,6 +46,7 @@ mochitest:
     tier:
         by-test-platform:
             android-em-7.*/opt: 2
+            windows10-aarch64.*: 2
             default: default
     instance-size:
         by-test-platform:
@@ -92,6 +93,10 @@ mochitest-a11y:
     suite: mochitest/a11y
     treeherder-symbol: M(a11y)
     loopback-video: true
+    tier:
+        by-test-platform:
+            windows10-aarch64.*: 2
+            default: default
     e10s: false
     run-on-projects: built-projects
     mozharness:
@@ -102,6 +107,10 @@ mochitest-browser-chrome:
     suite: mochitest/browser-chrome-chunked
     treeherder-symbol: M(bc)
     loopback-video: true
+    tier:
+        by-test-platform:
+            windows10-aarch64.*: 2
+            default: default
     chunks:
         by-test-platform:
             linux.*/debug: 16
@@ -161,6 +170,10 @@ mochitest-chrome:
     suite: mochitest/chrome
     treeherder-symbol: M(c)
     loopback-video: true
+    tier:
+        by-test-platform:
+            windows10-aarch64.*: 2
+            default: default
     instance-size:
         by-test-platform:
             android-em.*: xlarge
@@ -193,6 +206,10 @@ mochitest-clipboard:
     suite: mochitest/clipboard
     treeherder-symbol: M(cl)
     loopback-video: true
+    tier:
+        by-test-platform:
+            windows10-aarch64.*: 2
+            default: default
     instance-size: xlarge
     max-run-time:
         by-test-platform:
@@ -218,6 +235,10 @@ mochitest-devtools-chrome:
     suite: mochitest/mochitest-devtools-chrome-chunked
     treeherder-symbol: M(dt)
     loopback-video: true
+    tier:
+        by-test-platform:
+            windows10-aarch64.*: 2
+            default: default
     max-run-time:
         by-test-platform:
             windows10-64-ccov/debug: 7200
@@ -262,6 +283,10 @@ mochitest-gpu:
     suite: mochitest/gpu
     treeherder-symbol: M(gpu)
     loopback-video: true
+    tier:
+        by-test-platform:
+            windows10-aarch64.*: 2
+            default: default
     instance-size:
         by-test-platform:
             android-em.*: xlarge
@@ -326,6 +351,7 @@ mochitest-media:
     tier:
         by-test-platform:
             android-hw.*: 2
+            windows10-aarch64.*: 2
             default: default
 
 mochitest-plain-headless:
@@ -340,7 +366,10 @@ mochitest-plain-headless:
     e10s: true
     max-run-time: 5400
     allow-software-gl-layers: false
-    tier: default
+    tier:
+        by-test-platform:
+            windows10-aarch64.*: 2
+            default: default
     mozharness:
         mochitest-flavor: plain
         chunked: true
@@ -379,6 +408,10 @@ mochitest-webgl1-core:
             linux32/debug: both
             default: true
     loopback-video: true
+    tier:
+        by-test-platform:
+            windows10-aarch64.*: 2
+            default: default
     max-run-time:
         by-test-platform:
             windows.*: 5400
@@ -403,6 +436,10 @@ mochitest-webgl1-ext:
             linux32/debug: both
             default: true
     loopback-video: true
+    tier:
+        by-test-platform:
+            windows10-aarch64.*: 2
+            default: default
     max-run-time:
         by-test-platform:
             windows.*: 5400
@@ -426,6 +463,10 @@ mochitest-webgl2-core:
             linux32/debug: both
             default: true
     loopback-video: true
+    tier:
+        by-test-platform:
+            windows10-aarch64.*: 2
+            default: default
     max-run-time:
         by-test-platform:
             windows.*: 5400
@@ -450,6 +491,10 @@ mochitest-webgl2-ext:
             linux32/debug: both
             default: true
     loopback-video: true
+    tier:
+        by-test-platform:
+            windows10-aarch64.*: 2
+            default: default
     max-run-time:
         by-test-platform:
             windows.*: 5400
@@ -472,6 +517,10 @@ mochitest-webgl2-deqp:
             linux32/debug: both
             default: true
     loopback-video: true
+    tier:
+        by-test-platform:
+            windows10-aarch64.*: 2
+            default: default
     max-run-time:
         by-test-platform:
             windows.*: 5400

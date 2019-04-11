@@ -171,7 +171,7 @@ UniquePtr<ICScript> ICScript::create(JSContext* cx, JSScript* script) {
       MOZ_ASSERT(cx->isExceptionPending());
       return false;
     }
-    uint32_t offset = pc ? script->pcToOffset(pc) : ICEntry::NonOpPCOffset;
+    uint32_t offset = pc ? script->pcToOffset(pc) : ICEntry::ProloguePCOffset;
     if (!icEntries.emplaceBack(stub, offset)) {
       ReportOutOfMemory(cx);
       return false;

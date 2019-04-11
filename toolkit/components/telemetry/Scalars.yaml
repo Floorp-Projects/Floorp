@@ -771,7 +771,73 @@ webrtc.peerconnection:
     record_in_processes:
       - 'main'
       - 'content'
-
+  datachannel_created:
+    bug_numbers:
+      - 1518609
+    description: >
+      The number of RTCPeerConnection objects in which a RTCDataChannel was
+      created. This is recorded once for each RTCPeerConnection after the first
+      RTCDataChannel is created.
+    expires: "70"
+    kind: uint
+    notification_emails:
+      - ngrunbaum@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+      - 'content'
+  datachannel_max_retx_used:
+    bug_numbers:
+      - 1518609
+    description: >
+      The number of RTCPeerConnection objects in which one or more
+      RTCDataChannels were created with the legacy maxRetransmitTime option
+      instead of the new, synonymous maxPacketLifeTime option. This is recorded
+      once for each RTCPeerConnection after a RTCDataChannel is created with
+      the maxRetransmitTime option.
+    expires: "70"
+    kind: uint
+    notification_emails:
+      - ngrunbaum@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+      - 'content'
+  datachannel_max_life_used:
+    bug_numbers:
+      - 1518609
+    description: >
+      The number of RTCPeerConnection objects in which one or more RTCDataChannels
+      were created with the maxPacketLifeTime option instead of the deprecated,
+      synonymous maxRetransmitTime option. This is recorded once for each
+      RTCPeerConnection after a RTCDataChannel is created with the
+      maxPacketLifeTime option.
+    expires: "70"
+    kind: uint
+    notification_emails:
+      - ngrunbaum@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+      - 'content'
+  datachannel_max_retx_and_life_used:
+    bug_numbers:
+      - 1518609
+    description: >
+      The number of RTCPeerConnection objects in which one or more RTCDataChannels
+      were created with both maxPacketLifeTime and the deprecated, synonymous
+      maxRetransmitTime option. This is recorded once for each
+      RTCPeerConnection after RTCDataChannels have been created with the
+      maxPacketLifeTime and the maxRetransmitTime options, either together
+      or in seperate invocations.
+    expires: "70"
+    kind: uint
+    notification_emails:
+      - ngrunbaum@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - 'main'
+      - 'content'
 # The following section contains WebRTC nICEr scalars
 # For more info on ICE, see https://tools.ietf.org/html/rfc5245
 # For more info on STUN, see https://tools.ietf.org/html/rfc5389
