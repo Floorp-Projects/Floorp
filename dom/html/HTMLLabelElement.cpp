@@ -56,7 +56,7 @@ void HTMLLabelElement::Focus(ErrorResult& aError) {
   if (fm) {
     RefPtr<Element> elem = GetLabeledElement();
     if (elem) {
-      fm->SetFocus(elem, 0);
+      fm->SetFocus(elem, nsIFocusManager::FLAG_BYELEMENTFOCUS);
     }
   }
 }
@@ -141,6 +141,7 @@ nsresult HTMLLabelElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
                               MouseEvent_Binding::MOZ_SOURCE_TOUCH);
               fm->SetFocus(content,
                            nsIFocusManager::FLAG_BYMOVEFOCUS |
+                               nsIFocusManager::FLAG_BYELEMENTFOCUS |
                                (byMouse ? nsIFocusManager::FLAG_BYMOUSE : 0) |
                                (byTouch ? nsIFocusManager::FLAG_BYTOUCH : 0));
             }
