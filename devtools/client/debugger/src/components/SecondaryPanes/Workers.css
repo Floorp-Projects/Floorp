@@ -2,58 +2,63 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
+.workers-list {
+  padding: 4px 0;
+}
+
 .workers-list * {
+  -moz-user-select: none;
   user-select: none;
 }
 
 .workers-list > .worker {
-  font-size: 1rem;
+  font-size: inherit;
   color: var(--theme-content-color1);
-  padding: 0 0.5em;
-  line-height: 25px;
+  padding: 2px 6px;
+  padding-inline-start: 20px;
+  line-height: 16px;
   position: relative;
   cursor: pointer;
   display: flex;
+  align-items: center;
 }
 
-.workers-list .worker:hover {
+.workers-list > .worker:hover {
   background-color: var(--search-overlays-semitransparent);
 }
 
-.workers-list .worker.selected {
+.workers-list > .worker.selected {
   background-color: var(--tab-line-selected-color);
 }
 
 .workers-list .icon {
-  align-self: center;
+  flex: none;
   margin-inline-end: 4px;
-  margin-inline-start: 2px;
 }
 
-.workers-list .icon .img.worker {
-  margin-top: -1px;
-}
-
-.workers-list .icon .img.file {
-  margin-top: -2px;
+.workers-list .img {
+  display: block;
 }
 
 .workers-list .label {
   display: inline-block;
   flex-grow: 1;
+  flex-shrink: 1;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .workers-list .pause-badge {
-  align-self: center;
+  flex: none;
+  margin-inline-start: 4px;
 }
 
-.workers-list .worker.selected {
+.workers-list > .worker.selected {
   background: var(--theme-selection-background);
-  color: white;
+  color: var(--theme-selection-color);
 }
 
-.workers-list .selected .img.file,
-.workers-list .selected .img.worker,
-.workers-list .selected .pause-badge .img.pause {
-  background: white;
+.workers-list > .worker.selected .img {
+  background-color: currentColor;
 }
