@@ -6,6 +6,7 @@ A client-side telemetry SDK for collecting metrics and sending them to Mozilla's
 - [Before using the library](#before-using-the-library)
 - [Usage](#usage)
     - [Setting up the dependency](#setting-up-the-dependency)
+    - [Setting up the proguard rule](#setting-up-the-proguard-rule)
     - [Integrating with the build system](#integrating-with-the-build-system)
     - [Initializing glean](#initializing-glean)
     - [Adding new metrics](#adding-new-metrics)
@@ -31,6 +32,20 @@ Use Gradle to download the library from [maven.mozilla.org](https://maven.mozill
 
 ```Groovy
 implementation "org.mozilla.components:service-glean:{latest-version}"
+```
+
+### Setting up the proguard rule
+
+Applications that use Glean need to set up a proguard rule to prevent it from
+removing some of the objects created for your application by the Glean code
+generator.
+
+Add the following rule to your `proguard-rules.pro` file, replacing
+`APP_PACKAGE_NAME` with your application's package name:
+
+```
+# Keep code generated from Glean Metrics
+-keep APP_PACKAGE_NAME.GleanMetrics. ** {  *; }
 ```
 
 ### Integrating with the build system
