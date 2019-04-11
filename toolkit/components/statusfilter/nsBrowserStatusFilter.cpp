@@ -161,9 +161,8 @@ nsBrowserStatusFilter::OnStateChange(nsIWebProgress *aWebProgress,
     return NS_OK;
   }
 
-  // Only notify listener for STATE_IS_NETWORK or STATE_IS_REDIRECTED_DOCUMENT
-  if (aStateFlags & STATE_IS_NETWORK ||
-      aStateFlags & STATE_IS_REDIRECTED_DOCUMENT) {
+  // Only notify listener for STATE_IS_NETWORK.
+  if (aStateFlags & STATE_IS_NETWORK) {
     return mListener->OnStateChange(aWebProgress, aRequest, aStateFlags,
                                     aStatus);
   }
