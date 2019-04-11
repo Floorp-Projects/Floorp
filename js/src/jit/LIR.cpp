@@ -8,13 +8,13 @@
 
 #include "mozilla/ScopeExit.h"
 
-#include <ctype.h>
 #include <type_traits>
 
 #include "jit/JitSpewer.h"
 #include "jit/MIR.h"
 #include "jit/MIRGenerator.h"
 #include "js/Printf.h"
+#include "util/Unicode.h"
 
 using namespace js;
 using namespace js::jit;
@@ -334,7 +334,7 @@ void LNode::printName(GenericPrinter& out, Opcode op) {
   const char* name = names[uint32_t(op)];
   size_t len = strlen(name);
   for (size_t i = 0; i < len; i++) {
-    out.printf("%c", tolower(name[i]));
+    out.printf("%c", unicode::ToLowerCase(name[i]));
   }
 }
 
