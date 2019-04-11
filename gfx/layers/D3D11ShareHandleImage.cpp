@@ -224,7 +224,7 @@ class D3D11TextureClientAllocationHelper
 
   already_AddRefed<TextureClient> Allocate(
       KnowsCompositor* aAllocator) override {
-    DXGITextureData* data =
+    D3D11TextureData* data =
         D3D11TextureData::Create(mSize, mFormat, mAllocationFlags, mDevice);
     if (!data) {
       return nullptr;

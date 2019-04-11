@@ -6,21 +6,21 @@
 
 #include "TextureD3D11.h"
 #include "CompositorD3D11.h"
-#include "gfxContext.h"
 #include "Effects.h"
-#include "gfxWindowsPlatform.h"
-#include "gfx2DGlue.h"
-#include "gfxPrefs.h"
+#include "PaintThread.h"
 #include "ReadbackManagerD3D11.h"
+#include "gfx2DGlue.h"
+#include "gfxContext.h"
+#include "gfxPrefs.h"
+#include "gfxWindowsPlatform.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
-#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/webrender/RenderD3D11TextureHostOGL.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
-#include "PaintThread.h"
 
 namespace mozilla {
 
@@ -408,20 +408,28 @@ void DXGITextureData::GetSubDescriptor(GPUVideoSubDescriptor* const aOutDesc) {
   *aOutDesc = std::move(ret);
 }
 
-DXGITextureData* DXGITextureData::Create(IntSize aSize, SurfaceFormat aFormat,
-                                         TextureAllocationFlags aFlags) {
+D3D11TextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
+                                           TextureAllocationFlags aFlags,
+                                           ID3D11Device* aDevice) {
+  return Create(aSize, aFormat, nullptr, aFlags, aDevice);
+}
+
+D3D11TextureData* D3D11TextureData::Create(SourceSurface* aSurface,
+                                           TextureAllocationFlags aFlags,
+                                           ID3D11Device* aDevice) {
+  return Create(aSurface->GetSize(), aSurface->GetFormat(), aSurface, aFlags,
+                aDevice);
+}
+
+D3D11TextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
+                                           SourceSurface* aSurface,
+                                           TextureAllocationFlags aFlags,
+                                           ID3D11Device* aDevice) {
   if (aFormat == SurfaceFormat::A8) {
     // Currently we don't support A8 surfaces. Fallback.
     return nullptr;
   }
 
-  return D3D11TextureData::Create(aSize, aFormat, aFlags);
-}
-
-DXGITextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
-                                          SourceSurface* aSurface,
-                                          TextureAllocationFlags aFlags,
-                                          ID3D11Device* aDevice) {
   // Just grab any device. We never use the immediate context, so the devices
   // are fine to use from any thread.
   RefPtr<ID3D11Device> device = aDevice;
@@ -536,24 +544,6 @@ DXGITextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
       sD3D11TextureUsage,
       new TextureMemoryMeasurer(newDesc.Width * newDesc.Height * 4));
   return new D3D11TextureData(texture11, aSize, aFormat, aFlags);
-}
-
-DXGITextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
-                                          TextureAllocationFlags aFlags,
-                                          ID3D11Device* aDevice) {
-  return D3D11TextureData::Create(aSize, aFormat, nullptr, aFlags, aDevice);
-}
-
-DXGITextureData* D3D11TextureData::Create(SourceSurface* aSurface,
-                                          TextureAllocationFlags aFlags,
-                                          ID3D11Device* aDevice) {
-  if (aSurface->GetFormat() == SurfaceFormat::A8) {
-    // Currently we don't support A8 surfaces. Fallback.
-    return nullptr;
-  }
-
-  return D3D11TextureData::Create(aSurface->GetSize(), aSurface->GetFormat(),
-                                  aSurface, aFlags, aDevice);
 }
 
 void D3D11TextureData::Deallocate(LayersIPCChannel* aAllocator) {
