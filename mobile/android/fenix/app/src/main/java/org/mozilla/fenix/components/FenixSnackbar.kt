@@ -87,7 +87,7 @@ class FenixSnackbar private constructor(
                 }
 
                 if (view is FrameLayout) {
-                    if (view.id == R.id.content) {
+                    if (view.id == android.R.id.content) {
                         return view
                     }
 
