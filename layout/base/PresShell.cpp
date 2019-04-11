@@ -3374,7 +3374,10 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
     if (gfxPrefs::ScrollBehaviorEnabled() && smoothScroll) {
       scrollMode = ScrollMode::eSmoothMsd;
     }
-    aFrameAsScrollable->ScrollTo(scrollPt, scrollMode, &allowedRange);
+    aFrameAsScrollable->ScrollTo(scrollPt, scrollMode, &allowedRange,
+                                 aFlags & nsIPresShell::SCROLL_SNAP
+                                     ? nsIScrollbarMediator::ENABLE_SNAP
+                                     : nsIScrollbarMediator::DISABLE_SNAP);
   }
 }
 
