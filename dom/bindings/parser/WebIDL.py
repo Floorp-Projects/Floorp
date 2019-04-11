@@ -4705,8 +4705,15 @@ class IDLCallback(IDLObjectWithScope):
             if attr.identifier() == "TreatNonCallableAsNull":
                 self._treatNonCallableAsNull = True
             elif attr.identifier() == "TreatNonObjectAsNull":
+                if self._isConstructor:
+                    raise WebIDLError("[TreatNonObjectAsNull] is not supported "
+                                      "on constructors", [self.location])
                 self._treatNonObjectAsNull = True
             elif attr.identifier() == "MOZ_CAN_RUN_SCRIPT_BOUNDARY":
+                if self._isConstructor:
+                    raise WebIDLError("[MOZ_CAN_RUN_SCRIPT_BOUNDARY] is not "
+                                      "permitted on constructors",
+                                      [self.location])
                 self._isRunScriptBoundary = True
             else:
                 unhandledAttrs.append(attr)
