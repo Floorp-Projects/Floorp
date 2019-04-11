@@ -132,7 +132,7 @@
   skin/classic/browser/fxa/fxa-spinner.svg                     (../shared/fxa/fxa-spinner.svg)
   skin/classic/browser/fxa/sync-illustration.svg               (../shared/fxa/sync-illustration.svg)
   skin/classic/browser/fxa/sync-illustration-issue.svg         (../shared/fxa/sync-illustration-issue.svg)
-  
+
   skin/classic/browser/fxa/avatar.svg                          (../shared/fxa/avatar.svg)
   skin/classic/browser/fxa/avatar-confirm.svg                  (../shared/fxa/avatar-confirm.svg)
   skin/classic/browser/fxa/avatar-empty.svg                    (../shared/fxa/avatar-empty.svg)
@@ -150,6 +150,7 @@
   skin/classic/browser/bookmark-animation.svg         (../shared/icons/bookmark-animation.svg)
   skin/classic/browser/bookmark-hollow.svg            (../shared/icons/bookmark-hollow.svg)
   skin/classic/browser/bookmark-star-on-tray.svg      (../shared/icons/bookmark-star-on-tray.svg)
+  skin/classic/browser/bookmarks-toolbar.svg          (../shared/icons/bookmarks-toolbar.svg)
   skin/classic/browser/characterEncoding.svg          (../shared/icons/characterEncoding.svg)
   skin/classic/browser/chevron.svg                    (../shared/icons/chevron.svg)
   skin/classic/browser/chevron-animation.svg          (../shared/icons/chevron-animation.svg)
@@ -169,6 +170,9 @@
   skin/classic/browser/fullscreen-exit.svg            (../shared/icons/fullscreen-exit.svg)
   skin/classic/browser/history.svg                    (../shared/icons/history.svg)
   skin/classic/browser/home.svg                       (../shared/icons/home.svg)
+#ifndef XP_LINUX
+  skin/classic/browser/import-export.svg              (../shared/icons/import-export.svg)
+#endif
   skin/classic/browser/library.svg                    (../shared/icons/library.svg)
   skin/classic/browser/library-bookmark-animation.svg (../shared/icons/library-bookmark-animation.svg)
   skin/classic/browser/library-pocket-animation.svg   (../shared/icons/library-pocket-animation.svg)
@@ -197,13 +201,15 @@
   skin/classic/browser/settings.svg                   (../shared/icons/settings.svg)
   skin/classic/browser/sidebars.svg                   (../shared/icons/sidebars.svg)
   skin/classic/browser/sidebars-right.svg             (../shared/icons/sidebars-right.svg)
+#ifndef XP_LINUX
+  skin/classic/browser/sort.svg                       (../shared/icons/sort.svg)
+#endif
   skin/classic/browser/stop.svg                       (../shared/icons/stop.svg)
   skin/classic/browser/stop-to-reload.svg             (../shared/icons/stop-to-reload.svg)
   skin/classic/browser/sync.svg                       (../shared/icons/sync.svg)
   skin/classic/browser/tab.svg                        (../shared/icons/tab.svg)
   skin/classic/browser/undo.svg                       (../shared/icons/undo.svg)
   skin/classic/browser/unpin-tab.svg                  (../shared/icons/unpin-tab.svg)
-  skin/classic/browser/bookmarks-toolbar.svg          (../shared/icons/bookmarks-toolbar.svg)
   skin/classic/browser/webIDE.svg                     (../shared/icons/webIDE.svg)
   skin/classic/browser/window.svg                     (../shared/icons/window.svg)
   skin/classic/browser/zoom-in.svg                    (../shared/icons/zoom-in.svg)
