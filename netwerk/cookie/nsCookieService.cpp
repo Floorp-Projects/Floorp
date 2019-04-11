@@ -1990,8 +1990,7 @@ nsresult nsCookieService::GetCookieStringCommon(nsIURI *aHostURI,
 
   OriginAttributes attrs;
   if (aChannel) {
-    NS_GetOriginAttributes(aChannel, attrs,
-                           true /* considering storage principal */);
+    NS_GetOriginAttributes(aChannel, attrs);
   }
 
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
@@ -2110,8 +2109,7 @@ nsresult nsCookieService::SetCookieStringCommon(nsIURI *aHostURI,
 
   OriginAttributes attrs;
   if (aChannel) {
-    NS_GetOriginAttributes(aChannel, attrs,
-                           true /* considering storage principal */);
+    NS_GetOriginAttributes(aChannel, attrs);
   }
 
   nsDependentCString cookieString(aCookieHeader);
@@ -4042,12 +4040,6 @@ CookieStatus nsCookieService::CheckPrefs(
   if (aIsForeign && aIsTrackingResource && !aFirstPartyStorageAccessGranted &&
       aCookieSettings->GetCookieBehavior() ==
           nsICookieService::BEHAVIOR_REJECT_TRACKER) {
-    if (StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
-      MOZ_ASSERT(!aOriginAttrs.mFirstPartyDomain.IsEmpty(),
-                 "We must have a StoragePrincipal here!");
-      return STATUS_ACCEPTED;
-    }
-
     COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI,
                       aCookieHeader, "cookies are disabled in trackers");
     *aRejectedReason = nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER;

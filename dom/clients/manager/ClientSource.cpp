@@ -206,8 +206,7 @@ void ClientSource::WorkerExecutionReady(WorkerPrivate* aWorkerPrivate) {
   // execution ready.  We can't reliably determine what our storage policy
   // is before execution ready, unfortunately.
   if (mController.isSome()) {
-    MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate->StorageAccess() >
-                              nsContentUtils::StorageAccess::ePrivateBrowsing ||
+    MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate->IsStorageAllowed() ||
                           StringBeginsWith(aWorkerPrivate->ScriptURL(),
                                            NS_LITERAL_STRING("blob:")));
   }
@@ -381,8 +380,7 @@ void ClientSource::SetController(
         nsContentUtils::StorageAllowedForWindow(GetInnerWindow()) ==
             nsContentUtils::StorageAccess::eAllow);
   } else if (GetWorkerPrivate()) {
-    MOZ_DIAGNOSTIC_ASSERT(GetWorkerPrivate()->StorageAccess() >
-                              nsContentUtils::StorageAccess::ePrivateBrowsing ||
+    MOZ_DIAGNOSTIC_ASSERT(GetWorkerPrivate()->IsStorageAllowed() ||
                           StringBeginsWith(GetWorkerPrivate()->ScriptURL(),
                                            NS_LITERAL_STRING("blob:")));
   }
@@ -437,8 +435,7 @@ RefPtr<ClientOpPromise> ClientSource::Control(
             nsContentUtils::StorageAccess::eAllow;
   } else if (GetWorkerPrivate()) {
     // Local URL workers and workers with access to storage cna be controlled.
-    controlAllowed = GetWorkerPrivate()->StorageAccess() >
-                         nsContentUtils::StorageAccess::ePrivateBrowsing ||
+    controlAllowed = GetWorkerPrivate()->IsStorageAllowed() ||
                      StringBeginsWith(GetWorkerPrivate()->ScriptURL(),
                                       NS_LITERAL_STRING("blob:"));
   }
@@ -651,7 +648,13 @@ nsresult ClientSource::SnapshotState(ClientState* aStateOut) {
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  *aStateOut = ClientState(ClientWorkerState(workerPrivate->StorageAccess()));
+  // Workers only keep a boolean for storage access at the moment.
+  // Map this back to eAllow or eDeny for now.
+  nsContentUtils::StorageAccess storage =
+      workerPrivate->IsStorageAllowed() ? nsContentUtils::StorageAccess::eAllow
+                                        : nsContentUtils::StorageAccess::eDeny;
+
+  *aStateOut = ClientState(ClientWorkerState(storage));
   return NS_OK;
 }
 

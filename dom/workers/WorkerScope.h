@@ -190,8 +190,6 @@ class WorkerGlobalScope : public DOMEventTargetHelper,
   RefPtr<mozilla::dom::ServiceWorkerRegistration>
   GetOrCreateServiceWorkerRegistration(
       const ServiceWorkerRegistrationDescriptor& aDescriptor) override;
-
-  void FirstPartyStorageAccessGranted();
 };
 
 class DedicatedWorkerGlobalScope final : public WorkerGlobalScope {

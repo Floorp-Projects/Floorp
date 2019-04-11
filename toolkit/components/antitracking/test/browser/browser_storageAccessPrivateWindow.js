@@ -1,5 +1,3 @@
-/* import-globals-from antitracking_head.js */
-
 AntiTracking.runTest("Storage Access API called in a private window",
   // blocking callback
   async _ => {

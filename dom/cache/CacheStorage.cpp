@@ -567,23 +567,21 @@ OpenMode CacheStorage::GetOpenMode() const {
 bool CacheStorage::HasStorageAccess() const {
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
 
-  nsContentUtils::StorageAccess access;
-
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
     if (NS_WARN_IF(!window)) {
       return true;
     }
 
-    access = nsContentUtils::StorageAllowedForWindow(window);
-  } else {
-    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(workerPrivate);
-
-    access = workerPrivate->StorageAccess();
+    nsContentUtils::StorageAccess access =
+        nsContentUtils::StorageAllowedForWindow(window);
+    return access > nsContentUtils::StorageAccess::ePrivateBrowsing;
   }
 
-  return access > nsContentUtils::StorageAccess::ePrivateBrowsing;
+  WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+  MOZ_ASSERT(workerPrivate);
+
+  return workerPrivate->IsStorageAllowed();
 }
 
 }  // namespace cache
