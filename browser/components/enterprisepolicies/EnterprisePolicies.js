@@ -298,11 +298,26 @@ EnterprisePoliciesManager.prototype = {
     }
     return null;
   },
+
+  setExtensionSettings(extensionSettings) {
+    ExtensionSettings = extensionSettings;
+  },
+
+  getExtensionSettings(extensionID) {
+    let settings = null;
+    if (extensionID in ExtensionSettings) {
+      settings = ExtensionSettings[extensionID];
+    } else if ("*" in ExtensionSettings) {
+      settings = ExtensionSettings["*"];
+    }
+    return settings;
+  },
 };
 
 let DisallowedFeatures = {};
 let SupportMenu = null;
 let ExtensionPolicies = null;
+let ExtensionSettings = null;
 
 /**
  * areEnterpriseOnlyPoliciesAllowed
