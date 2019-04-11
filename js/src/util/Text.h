@@ -49,6 +49,13 @@ constexpr uint8_t AsciiDigitToNumber(CharT c) {
   return uc - '0';
 }
 
+template <typename CharT>
+static constexpr bool IsAsciiPrintable(CharT c) {
+  using UnsignedCharT = std::make_unsigned_t<CharT>;
+  auto uc = static_cast<UnsignedCharT>(c);
+  return ' ' <= uc && uc <= '~';
+}
+
 template <typename Char1, typename Char2>
 inline bool EqualChars(const Char1* s1, const Char2* s2, size_t len) {
   return mozilla::ArrayEqual(s1, s2, len);
