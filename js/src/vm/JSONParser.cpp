@@ -25,6 +25,7 @@ using namespace js;
 
 using mozilla::AsciiAlphanumericToNumber;
 using mozilla::IsAsciiDigit;
+using mozilla::IsAsciiHexDigit;
 using mozilla::RangedPtr;
 
 JSONParserBase::~JSONParserBase() {
@@ -204,17 +205,17 @@ JSONParserBase::Token JSONParser<CharT>::readString() {
 
       case 'u':
         if (end - current < 4 ||
-            !(JS7_ISHEX(current[0]) && JS7_ISHEX(current[1]) &&
-              JS7_ISHEX(current[2]) && JS7_ISHEX(current[3]))) {
+            !(IsAsciiHexDigit(current[0]) && IsAsciiHexDigit(current[1]) &&
+              IsAsciiHexDigit(current[2]) && IsAsciiHexDigit(current[3]))) {
           // Point to the first non-hexadecimal character (which may be
           // missing).
-          if (current == end || !JS7_ISHEX(current[0])) {
+          if (current == end || !IsAsciiHexDigit(current[0])) {
             ;  // already at correct location
-          } else if (current + 1 == end || !JS7_ISHEX(current[1])) {
+          } else if (current + 1 == end || !IsAsciiHexDigit(current[1])) {
             current += 1;
-          } else if (current + 2 == end || !JS7_ISHEX(current[2])) {
+          } else if (current + 2 == end || !IsAsciiHexDigit(current[2])) {
             current += 2;
-          } else if (current + 3 == end || !JS7_ISHEX(current[3])) {
+          } else if (current + 3 == end || !IsAsciiHexDigit(current[3])) {
             current += 3;
           } else {
             MOZ_CRASH("logic error determining first erroneous character");
