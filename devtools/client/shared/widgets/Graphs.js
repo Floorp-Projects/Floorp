@@ -5,6 +5,7 @@
 
 const { setNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 const { getCurrentZoom } = require("devtools/shared/layout/utils");
+const { DOMHelpers } = require("resource://devtools/client/shared/DOMHelpers.jsm");
 
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/shared/event-emitter");
@@ -1236,19 +1237,23 @@ AbstractCanvasGraph.prototype = {
 AbstractCanvasGraph.createIframe = function(url, parent, callback) {
   const iframe = parent.ownerDocument.createElementNS(HTML_NS, "iframe");
 
-  iframe.addEventListener("DOMContentLoaded", function() {
-    callback(iframe);
-  }, {once: true});
-
   // Setting 100% width on the frame and flex on the parent allows the graph
   // to properly shrink when the window is resized to be smaller.
   iframe.setAttribute("frameborder", "0");
   iframe.style.width = "100%";
   iframe.style.minWidth = "50px";
-  iframe.src = url;
 
   parent.style.display = "flex";
   parent.appendChild(iframe);
+
+  // Use DOMHelpers to wait for the frame load. DOMHelpers relies on chromeEventHandler
+  // so this will still work if DevTools are loaded in a content frame.
+  const domHelper = new DOMHelpers(iframe.contentWindow);
+  domHelper.onceDOMReady(function() {
+    callback(iframe);
+  });
+
+  iframe.src = url;
 };
 
 /**
