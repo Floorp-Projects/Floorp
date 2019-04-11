@@ -644,7 +644,7 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
             continue
 
         # Render all variables for the artifact map
-        platforms = deepcopy(map_config['platform_names'])
+        platforms = deepcopy(map_config.get('platform_names', {}))
         if platform:
             for key in platforms.keys():
                 resolve_keyed_by(platforms, key, key, platform=platform)
@@ -656,13 +656,11 @@ def generate_beetmover_artifact_map(config, job, **kwargs):
             'version': config.params['version'],
             'branch': config.params['project'],
             'build_number': config.params['build_number'],
-            'filename_platform': platforms['filename_platform'],
-            'path_platform': platforms['path_platform'],
-            'stage_platform': platforms['stage_platform'],
             'year': upload_date.year,
             'month': upload_date.strftime("%m"),  # zero-pad the month
             'upload_date': upload_date.strftime("%Y-%m-%d-%H-%M-%S")
         })
+        kwargs.update(**platforms)
         paths = jsone.render(paths, kwargs)
         artifacts.append({
             'taskId': {'task-reference': "<{}>".format(dep)},
@@ -711,7 +709,7 @@ def generate_beetmover_partials_artifact_map(config, job, partials_info, **kwarg
 
     resolve_keyed_by(map_config, 's3_bucket_paths', 's3_bucket_paths', platform=platform)
 
-    platforms = deepcopy(map_config['platform_names'])
+    platforms = deepcopy(map_config.get('platform_names', {}))
     if platform:
         for key in platforms.keys():
             resolve_keyed_by(platforms, key, key, platform=platform)
@@ -790,13 +788,11 @@ def generate_beetmover_partials_artifact_map(config, job, partials_info, **kwarg
                     'version': config.params['version'],
                     'branch': config.params['project'],
                     'build_number': config.params['build_number'],
-                    'filename_platform': platforms['filename_platform'],
-                    'path_platform': platforms['path_platform'],
-                    'stage_platform': platforms['stage_platform'],
                     'year': upload_date.year,
                     'month': upload_date.strftime("%m"),  # zero-pad the month
                     'upload_date': upload_date.strftime("%Y-%m-%d-%H-%M-%S")
                 })
+                kwargs.update(**platforms)
                 paths.update(jsone.render(partials_paths, kwargs))
 
         if not paths:

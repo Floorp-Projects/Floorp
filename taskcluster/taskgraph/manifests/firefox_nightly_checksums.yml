@@ -10,7 +10,6 @@ default_locales:  # if given an empty locale, use these locales
 tasktype_map:  # Map task reference to task type.
   checksums-signing: signing
 platform_names:
-  path_platform: ''
   filename_platform:
     by-platform:
       linux-nightly: 'linux-i686'
@@ -21,7 +20,6 @@ platform_names:
       win64-nightly: 'win64'
       win64-aarch64-nightly: 'win64-aarch64'
       win64-asan-reporter-nightly: 'win64-asan-reporter'
-  stage_platform: ''
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:
