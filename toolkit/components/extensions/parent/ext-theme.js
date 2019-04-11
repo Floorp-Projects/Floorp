@@ -53,9 +53,7 @@ class Theme {
       this.lwtDarkStyles = null;
 
       if (experiment) {
-        const canRunExperiment = AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS &&
-          Services.prefs.getBoolPref("extensions.legacy.enabled");
-        if (canRunExperiment) {
+        if (extension.experimentsAllowed) {
           this.lwtStyles.experimental = {
             colors: {},
             images: {},
