@@ -339,8 +339,7 @@ html|input.urlbar-input {
  * bottom of the nav bar, OSX calculates the panel position with an missing
  * 1px - https://bugzilla.mozilla.org/show_bug.cgi?id=1406353
  */
-#PopupAutoCompleteRichResult,
-#urlbar-results {
+#PopupAutoCompleteRichResult {
   margin-top: 1px;
 }
 
