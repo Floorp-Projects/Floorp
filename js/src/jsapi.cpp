@@ -15,7 +15,6 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/Sprintf.h"
 
-#include <ctype.h>
 #ifdef __linux__
 #  include <dlfcn.h>
 #endif
