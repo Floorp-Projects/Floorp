@@ -414,32 +414,13 @@ var gXPInstallObserver = {
       removeNotificationOnEnd(popup, installInfo.installs);
       break; }
     case "addon-install-blocked": {
-      messageString = gNavigatorBundle.getFormattedString("xpinstallPromptMessage.header", ["<>"]);
-      options.name = options.displayURI.displayHost;
-      // displayURI becomes it's own label, so we unset it for this panel. It will become part of the
-      // messageString above.
-      options.displayURI = undefined;
-
-      options.eventCallback = (topic) => {
-        if (topic !== "showing") {
-          return;
-        }
-        let doc = browser.ownerDocument;
-        let message = doc.getElementById("addon-install-blocked-message");
-        let text = gNavigatorBundle.getString("xpinstallPromptMessage.message");
-        let b = doc.createElementNS("http://www.w3.org/1999/xhtml", "b");
-        b.textContent = options.name;
-        let fragment = BrowserUtils.getLocalizedFragment(doc, text, b);
-        message.appendChild(fragment);
-        let learnMore = doc.getElementById("addon-install-blocked-info");
-        learnMore.textContent = gNavigatorBundle.getString("xpinstallPromptMessage.learnMore");
-        learnMore.setAttribute("href", Services.urlFormatter.formatURLPref("app.support.baseURL") + "unlisted-extensions-risks");
-      };
+      messageString = gNavigatorBundle.getFormattedString("xpinstallPromptMessage",
+                        [brandShortName]);
 
       let secHistogram = Services.telemetry.getHistogramById("SECURITY_UI");
       action = {
-        label: gNavigatorBundle.getString("xpinstallPromptMessage.install"),
-        accessKey: gNavigatorBundle.getString("xpinstallPromptMessage.install.accesskey"),
+        label: gNavigatorBundle.getString("xpinstallPromptAllowButton"),
+        accessKey: gNavigatorBundle.getString("xpinstallPromptAllowButton.accesskey"),
         callback() {
           secHistogram.add(Ci.nsISecurityUITelemetry.WARNING_ADDON_ASKING_PREVENTED_CLICK_THROUGH);
           installInfo.install();
