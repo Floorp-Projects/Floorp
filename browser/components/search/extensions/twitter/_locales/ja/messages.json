@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "Twitter"
+  },
+  "extensionDescription": {
+    "message": "リアルタイム Twitter 検索"
+  },
+  "searchUrl": {
+    "message": "https://twitter.com/search/{searchTerms} lang:ja"
+  },
+  "searchForm": {
+    "message": "https://twitter.com/search/"
+  },
+  "searchUrlGetParams": {
+    "message": "partner=Firefox&source=desktop-search"
+  }
+}

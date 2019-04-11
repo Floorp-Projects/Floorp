@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "Amazon.nl"
+  },
+  "extensionDescription": {
+    "message": "Amazon.nl Search"
+  },
+  "searchUrl": {
+    "message": "https://www.amazon.nl/exec/obidos/external-search/"
+  },
+  "searchForm": {
+    "message": "https://www.amazon.nl/exec/obidos/external-search/?field-keywords={searchTerms}&ie={inputEncoding}&mode=blended"
+  },
+  "searchUrlGetParams": {
+    "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended"
+  }
+}

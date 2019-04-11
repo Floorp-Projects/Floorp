@@ -1,0 +1,28 @@
+{
+  "name": "Parole di Genova",
+  "description": "Parole di Genova, grande dizionario della lingua genovese",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "paroledigenova-lij@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.png"
+  },
+  "web_accessible_resources": [
+    "favicon.png"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Parole di Genova",
+      "search_url": "https://www.paroledigenova.net/it/index.php",
+      "search_form": "https://www.paroledigenova.net/it/index.php?title=Speciale:Ricerca",
+      "search_url_get_params": "search={searchTerms}&fulltext=Ricerca",
+      "suggest_url": "https://www.paroledigenova.net/it/api.php",
+      "suggest_url_get_params": "action=opensearch&search={searchTerms}"
+    }
+  }
+}

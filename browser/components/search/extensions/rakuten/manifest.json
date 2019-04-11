@@ -1,0 +1,26 @@
+{
+  "name": "楽天市場",
+  "description": "楽天市場 商品検索",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "rakuten@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "楽天市場",
+      "search_url": "https://pt.afl.rakuten.co.jp/c/013ca98b.cd7c5f0c/",
+      "search_form": "https://www.rakuten.co.jp/",
+      "search_url_get_params": "sitem={searchTerms}&sv=2&p=0"
+    }
+  }
+}

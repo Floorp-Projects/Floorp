@@ -1,0 +1,26 @@
+{
+  "name": "Diccionariu ALLA",
+  "description": "Diccionariu de la Academia de la Llingua Asturiana",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "diccionariu-alla@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Diccionariu ALLA",
+      "search_url": "https://www.academiadelallingua.com/diccionariu/index.php",
+      "search_form": "https://search.ebay.es/",
+      "search_url_post_params": "pallabra={searchTerms}"
+    }
+  }
+}

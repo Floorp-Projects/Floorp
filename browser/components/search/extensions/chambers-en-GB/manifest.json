@@ -1,0 +1,26 @@
+{
+  "name": "Chambers (UK)",
+  "description": "Chambers 21st Century Dictionary Search",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "chambers-en-GB@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Chambers (UK)",
+      "search_url": "https://chambers.co.uk/search/",
+      "search_form": "https://chambers.co.uk/search/?query={searchTerms}&title=21st&sourceid=Mozilla-search",
+      "search_url_get_params": "query={searchTerms}&title=21st&sourceid=Mozilla-search"
+    }
+  }
+}

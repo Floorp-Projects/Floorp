@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "MercadoLibre Chile"
+  },
+  "extensionDescription": {
+    "message": "MercadoLibre Chile"
+  },
+  "searchUrl": {
+    "message": "https://www.mercadolibre.cl/jm/search"
+  },
+  "searchForm": {
+    "message": "https://www.mercadolibre.cl/"
+  },
+  "searchUrlGetParams": {
+    "message": "as_word={searchTerms}"
+  }
+}

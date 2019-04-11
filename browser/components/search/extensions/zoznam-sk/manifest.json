@@ -1,0 +1,26 @@
+{
+  "name": "Zoznam",
+  "description": "Zoznam slovenskeho internetu",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "zoznam-sk@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.png"
+  },
+  "web_accessible_resources": [
+    "favicon.png"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Zoznam",
+      "search_url": "https://www.zoznam.sk/hladaj.fcgi",
+      "search_form": "https://www.zoznam.sk/",
+      "search_url_get_params": "co=odkazy&s={searchTerms}"
+    }
+  }
+}

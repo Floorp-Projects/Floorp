@@ -1,0 +1,28 @@
+{
+  "name": "Webdunia Search",
+  "description": "Webdunia Search : A Multilingual Search Engine for Indian Content",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "webdunia@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Webdunia Search",
+      "search_url": "https://search.webdunia.com/search.aspx",
+      "search_form": "https://search.webdunia.com/",
+      "search_url_get_params": "q={searchTerms}&FF=SearchBox",
+      "suggest_url": "https://search.webdunia.com/suggestions.aspx",
+      "suggest_url_get_params": "q={searchTerms}&stype=json"
+    }
+  }
+}
