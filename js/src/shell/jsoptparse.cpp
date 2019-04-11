@@ -6,10 +6,11 @@
 
 #include "shell/jsoptparse.h"
 
-#include <ctype.h>
 #include <stdarg.h>
 
 #include "jsutil.h"
+
+#include "util/Unicode.h"
 
 using namespace js;
 using namespace js::cli;
@@ -75,16 +76,16 @@ static void PrintParagraph(const char* text, unsigned startColno,
   }
 
   /* Skip any leading spaces. */
-  while (*it != '\0' && isspace(*it)) {
+  while (*it != '\0' && unicode::IsSpace(*it)) {
     ++it;
   }
 
   while (*it != '\0') {
-    MOZ_ASSERT(!isspace(*it) || *it == '\n');
+    MOZ_ASSERT(!unicode::IsSpace(*it) || *it == '\n');
 
     /* Delimit the current token. */
     const char* limit = it;
-    while (!isspace(*limit) && *limit != '\0') {
+    while (!unicode::IsSpace(*limit) && *limit != '\0') {
       ++limit;
     }
 
