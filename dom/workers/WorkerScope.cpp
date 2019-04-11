@@ -393,14 +393,23 @@ already_AddRefed<IDBFactory> WorkerGlobalScope::GetIndexedDB(
   RefPtr<IDBFactory> indexedDB = mIndexedDB;
 
   if (!indexedDB) {
-    if (mWorkerPrivate->StorageAccess() <=
-        nsContentUtils::StorageAccess::eDeny) {
+    nsContentUtils::StorageAccess access = mWorkerPrivate->StorageAccess();
+
+    if (access == nsContentUtils::StorageAccess::eDeny) {
       NS_WARNING("IndexedDB is not allowed in this worker!");
       aErrorResult = NS_ERROR_DOM_SECURITY_ERR;
       return nullptr;
     }
 
-    const PrincipalInfo& principalInfo = mWorkerPrivate->GetPrincipalInfo();
+    if (access == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+        !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
+      NS_WARNING("IndexedDB is not allowed in this worker!");
+      aErrorResult = NS_ERROR_DOM_SECURITY_ERR;
+      return nullptr;
+    }
+
+    const PrincipalInfo& principalInfo =
+        mWorkerPrivate->GetEffectiveStoragePrincipalInfo();
 
     nsresult rv = IDBFactory::CreateForWorker(this, principalInfo,
                                               mWorkerPrivate->WindowID(),
@@ -486,6 +495,10 @@ WorkerGlobalScope::GetOrCreateServiceWorkerRegistration(
                                                      aDescriptor);
   }
   return ref.forget();
+}
+
+void WorkerGlobalScope::FirstPartyStorageAccessGranted() {
+  mIndexedDB = nullptr;
 }
 
 DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(
