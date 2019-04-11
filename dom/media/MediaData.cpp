@@ -56,12 +56,10 @@ Span<AudioDataValue> AudioData::Data() const {
   return MakeSpan(GetAdjustedData(), mFrames * mChannels);
 }
 
-bool AudioData::AdjustForStartTime(int64_t aStartTime) {
-  const TimeUnit startTimeOffset =
-      media::TimeUnit::FromMicroseconds(aStartTime);
-  mOriginalTime -= startTimeOffset;
+bool AudioData::AdjustForStartTime(const media::TimeUnit& aStartTime) {
+  mOriginalTime -= aStartTime;
   if (mTrimWindow) {
-    *mTrimWindow -= startTimeOffset;
+    *mTrimWindow -= aStartTime;
   }
   return MediaData::AdjustForStartTime(aStartTime) && mOriginalTime.IsValid();
 }
