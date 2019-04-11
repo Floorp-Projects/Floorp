@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "StorageAccessPermissionRequest.h"
+#include "nsGlobalWindowInner.h"
 #include "mozilla/StaticPrefs.h"
 #include <cstdlib>
 
