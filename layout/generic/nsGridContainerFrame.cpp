@@ -3369,7 +3369,7 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
     dummyParentState.emplace(
         pc, parent, aRC,
         LogicalSize(parent->GetWritingMode(), 0, NS_UNCONSTRAINEDSIZE),
-        ReflowInput::DUMMY_PARENT_REFLOW_STATE);
+        ReflowInput::DUMMY_PARENT_REFLOW_INPUT);
     rs = dummyParentState.ptr();
   }
 #ifdef DEBUG

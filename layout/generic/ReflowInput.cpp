@@ -79,7 +79,7 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext, nsIFrame* aFrame,
   mDiscoveredClearance = nullptr;
   mPercentBSizeObserver = nullptr;
 
-  if (aFlags & DUMMY_PARENT_REFLOW_STATE) {
+  if (aFlags & DUMMY_PARENT_REFLOW_INPUT) {
     mFlags.mDummyParentReflowInput = true;
   }
   if (aFlags & COMPUTE_SIZE_SHRINK_WRAP) {
@@ -247,7 +247,7 @@ ReflowInput::ReflowInput(nsPresContext* aPresContext,
           ? aParentReflowInput.mPercentBSizeObserver
           : nullptr;
 
-  if ((aFlags & DUMMY_PARENT_REFLOW_STATE) ||
+  if ((aFlags & DUMMY_PARENT_REFLOW_INPUT) ||
       (mParentReflowInput->mFlags.mDummyParentReflowInput &&
        mFrame->IsTableFrame())) {
     mFlags.mDummyParentReflowInput = true;
