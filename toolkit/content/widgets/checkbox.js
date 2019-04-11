@@ -30,6 +30,7 @@ class MozCheckbox extends MozElements.BaseText {
 
   static get inheritedAttributes() {
     return {
+      ".checkbox-check": "disabled",
       ".checkbox-label": "text=label,accesskey",
       ".checkbox-icon": "src",
     };
