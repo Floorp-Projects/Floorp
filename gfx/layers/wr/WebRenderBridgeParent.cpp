@@ -1849,12 +1849,12 @@ bool WebRenderBridgeParent::SampleAnimations(
       wr::RenderRoot renderRoot = mAnimStorage->AnimationRenderRoot(iter.Key());
       auto& transformArray = aTransformArrays[renderRoot];
       auto& opacityArray = aOpacityArrays[renderRoot];
-      if (value->mType == AnimatedValue::TRANSFORM) {
+      if (value->Is<AnimationTransform>()) {
         transformArray.AppendElement(wr::ToWrTransformProperty(
-            iter.Key(), value->mTransform.mTransformInDevSpace));
-      } else if (value->mType == AnimatedValue::OPACITY) {
+            iter.Key(), value->Transform().mTransformInDevSpace));
+      } else if (value->Is<float>()) {
         opacityArray.AppendElement(
-            wr::ToWrOpacityProperty(iter.Key(), value->mOpacity));
+            wr::ToWrOpacityProperty(iter.Key(), value->Opacity()));
       }
     }
   }
