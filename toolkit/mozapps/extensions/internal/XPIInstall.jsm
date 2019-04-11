@@ -1118,21 +1118,6 @@ class AddonInstall {
   }
 
   /**
-   * Called when we are finished with this install and are ready to remove
-   * any external references to it.
-   */
-  _cleanup() {
-    XPIInstall.installs.delete(this);
-    if (this.addon && this.addon._install) {
-      if (this.addon._install === this) {
-        this.addon._install = null;
-      } else {
-        Cu.reportError(new Error("AddonInstall mismatch"));
-      }
-    }
-  }
-
-  /**
    * Starts installation of this add-on from whatever state it is currently at
    * if possible.
    *
@@ -1193,7 +1178,7 @@ class AddonInstall {
     case AddonManager.STATE_DOWNLOADED:
       logger.debug("Cancelling download of " + this.sourceURI.spec);
       this.state = AddonManager.STATE_CANCELLED;
-      this._cleanup();
+      XPIInstall.installs.delete(this);
       this._callInstallListeners("onDownloadCancelled");
       this.removeTemporaryFile();
       break;
@@ -1203,7 +1188,7 @@ class AddonInstall {
       flushJarCache(xpi);
       this.location.installer.cleanStagingDir([`${this.addon.id}.xpi`]);
       this.state = AddonManager.STATE_CANCELLED;
-      this._cleanup();
+      XPIInstall.installs.delete(this);
 
       if (this.existingAddon) {
         delete this.existingAddon.pendingUpgrade;
@@ -1217,7 +1202,7 @@ class AddonInstall {
     case AddonManager.STATE_POSTPONED:
       logger.debug(`Cancelling postponed install of ${this.addon.id}`);
       this.state = AddonManager.STATE_CANCELLED;
-      this._cleanup();
+      XPIInstall.installs.delete(this);
       this._callInstallListeners("onInstallCancelled");
       this.removeTemporaryFile();
 
@@ -1415,7 +1400,7 @@ class AddonInstall {
         } catch (err) {
           logger.info(`Install of ${this.addon.id} cancelled by user`);
           this.state = AddonManager.STATE_CANCELLED;
-          this._cleanup();
+          XPIInstall.installs.delete(this);
           this._callInstallListeners("onInstallCancelled");
           return;
         }
@@ -1460,7 +1445,7 @@ class AddonInstall {
     if (!this._callInstallListeners("onInstallStarted")) {
       this.state = AddonManager.STATE_DOWNLOADED;
       this.removeTemporaryFile();
-      this._cleanup();
+      XPIInstall.installs.delete(this);
       this._callInstallListeners("onInstallCancelled");
       return;
     }
@@ -1509,7 +1494,8 @@ class AddonInstall {
 
       await this.stageInstall(false, stagedAddon, isUpgrade);
 
-      this._cleanup();
+      // The install is completed so it should be removed from the active list
+      XPIInstall.installs.delete(this);
 
       let install = async () => {
         if (this.existingAddon && this.existingAddon.active && !isUpgrade) {
@@ -1581,6 +1567,7 @@ class AddonInstall {
         recursiveRemove(stagedAddon);
       this.state = AddonManager.STATE_INSTALL_FAILED;
       this.error = AddonManager.ERROR_FILE_ACCESS;
+      XPIInstall.installs.delete(this);
       AddonManagerPrivate.callAddonListeners("onOperationCancelled",
                                              this.addon.wrapper);
       this._callInstallListeners("onInstallFailed");
@@ -1715,7 +1702,7 @@ var LocalAddonInstall = class extends AddonInstall {
       logger.warn("XPI file " + this.file.path + " does not exist");
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
       this.error = AddonManager.ERROR_NETWORK_FAILURE;
-      this._cleanup();
+      XPIInstall.installs.delete(this);
       return;
     }
 
@@ -1731,7 +1718,7 @@ var LocalAddonInstall = class extends AddonInstall {
         logger.warn("Unknown hash algorithm '" + this.hash.algorithm + "' for addon " + this.sourceURI.spec, e);
         this.state = AddonManager.STATE_DOWNLOAD_FAILED;
         this.error = AddonManager.ERROR_INCORRECT_HASH;
-        this._cleanup();
+        XPIInstall.installs.delete(this);
         return;
       }
 
@@ -1743,7 +1730,7 @@ var LocalAddonInstall = class extends AddonInstall {
                     this.hash.data + ")");
         this.state = AddonManager.STATE_DOWNLOAD_FAILED;
         this.error = AddonManager.ERROR_INCORRECT_HASH;
-        this._cleanup();
+        XPIInstall.installs.delete(this);
         return;
       }
     }
@@ -1754,7 +1741,7 @@ var LocalAddonInstall = class extends AddonInstall {
       logger.warn("Invalid XPI", message);
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
       this.error = error;
-      this._cleanup();
+      XPIInstall.installs.delete(this);
       this._callInstallListeners("onNewInstall");
       flushJarCache(this.file);
       return;
@@ -1900,7 +1887,7 @@ var DownloadAddonInstall = class extends AddonInstall {
     if (!this._callInstallListeners("onDownloadStarted")) {
       logger.debug("onDownloadStarted listeners cancelled installation of addon " + this.sourceURI.spec);
       this.state = AddonManager.STATE_CANCELLED;
-      this._cleanup();
+      XPIInstall.installs.delete(this);
       this._callInstallListeners("onDownloadCancelled");
       return;
     }
@@ -1934,7 +1921,7 @@ var DownloadAddonInstall = class extends AddonInstall {
       logger.warn("Failed to start download for addon " + this.sourceURI.spec, e);
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
       this.error = AddonManager.ERROR_FILE_ACCESS;
-      this._cleanup();
+      XPIInstall.installs.delete(this);
       this._callInstallListeners("onDownloadFailed");
       return;
     }
@@ -1966,7 +1953,7 @@ var DownloadAddonInstall = class extends AddonInstall {
       logger.warn("Failed to start download for addon " + this.sourceURI.spec, e);
       this.state = AddonManager.STATE_DOWNLOAD_FAILED;
       this.error = AddonManager.ERROR_NETWORK_FAILURE;
-      this._cleanup();
+      XPIInstall.installs.delete(this);
       this._callInstallListeners("onDownloadFailed");
     }
   }
@@ -2027,7 +2014,7 @@ var DownloadAddonInstall = class extends AddonInstall {
         logger.warn("Unknown hash algorithm '" + this.hash.algorithm + "' for addon " + this.sourceURI.spec, e);
         this.state = AddonManager.STATE_DOWNLOAD_FAILED;
         this.error = AddonManager.ERROR_INCORRECT_HASH;
-        this._cleanup();
+        XPIInstall.installs.delete(this);
         this._callInstallListeners("onDownloadFailed");
         aRequest.cancel(Cr.NS_BINDING_ABORTED);
         return;
@@ -2065,7 +2052,7 @@ var DownloadAddonInstall = class extends AddonInstall {
       if (this.state == AddonManager.STATE_DOWNLOADING) {
         logger.debug("Cancelled download of " + this.sourceURI.spec);
         this.state = AddonManager.STATE_CANCELLED;
-        this._cleanup();
+        XPIInstall.installs.delete(this);
         this._callInstallListeners("onDownloadCancelled");
         // If a listener restarted the download then there is no need to
         // remove the temporary file
@@ -2141,7 +2128,7 @@ var DownloadAddonInstall = class extends AddonInstall {
     logger.warn("Download of " + this.sourceURI.spec + " failed", aError);
     this.state = AddonManager.STATE_DOWNLOAD_FAILED;
     this.error = aReason;
-    this._cleanup();
+    XPIInstall.installs.delete(this);
     this._callInstallListeners("onDownloadFailed");
 
     // If the listener hasn't restarted the download then remove any temporary
@@ -2567,6 +2554,7 @@ function createLocalInstall(file, location, telemetryInfo) {
     return install.init().then(() => install);
   } catch (e) {
     logger.error("Error creating install", e);
+    XPIInstall.installs.delete(this);
     return Promise.resolve(null);
   }
 }
