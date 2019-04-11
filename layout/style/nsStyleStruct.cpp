@@ -2939,8 +2939,8 @@ nsStyleDisplay::nsStyleDisplay(const Document& aDocument)
       mOverscrollBehaviorX(StyleOverscrollBehavior::Auto),
       mOverscrollBehaviorY(StyleOverscrollBehavior::Auto),
       mOverflowAnchor(StyleOverflowAnchor::Auto),
-      mScrollSnapTypeX(StyleScrollSnapType::None),
-      mScrollSnapTypeY(StyleScrollSnapType::None),
+      mScrollSnapTypeX(StyleScrollSnapStrictness::None),
+      mScrollSnapTypeY(StyleScrollSnapStrictness::None),
       mScrollSnapPointsX(eStyleUnit_None),
       mScrollSnapPointsY(eStyleUnit_None),
       mScrollSnapDestination(

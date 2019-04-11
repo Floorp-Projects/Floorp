@@ -87,10 +87,11 @@ struct ParamTraits<mozilla::layers::ScaleMode>
           mozilla::layers::kHighestScaleMode> {};
 
 template <>
-struct ParamTraits<mozilla::StyleScrollSnapType>
+struct ParamTraits<mozilla::StyleScrollSnapStrictness>
     : public ContiguousEnumSerializerInclusive<
-          mozilla::StyleScrollSnapType, mozilla::StyleScrollSnapType::None,
-          mozilla::StyleScrollSnapType::Proximity> {};
+          mozilla::StyleScrollSnapStrictness,
+          mozilla::StyleScrollSnapStrictness::None,
+          mozilla::StyleScrollSnapStrictness::Proximity> {};
 
 template <>
 struct ParamTraits<mozilla::layers::TextureFlags>

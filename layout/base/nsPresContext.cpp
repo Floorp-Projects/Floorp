@@ -1021,8 +1021,8 @@ static bool CheckOverflow(const nsStyleDisplay* aDisplay,
       aDisplay->mScrollBehavior == NS_STYLE_SCROLL_BEHAVIOR_AUTO &&
       aDisplay->mOverscrollBehaviorX == StyleOverscrollBehavior::Auto &&
       aDisplay->mOverscrollBehaviorY == StyleOverscrollBehavior::Auto &&
-      aDisplay->mScrollSnapTypeX == StyleScrollSnapType::None &&
-      aDisplay->mScrollSnapTypeY == StyleScrollSnapType::None &&
+      aDisplay->mScrollSnapTypeX == StyleScrollSnapStrictness::None &&
+      aDisplay->mScrollSnapTypeY == StyleScrollSnapStrictness::None &&
       aDisplay->mScrollSnapPointsX == nsStyleCoord(eStyleUnit_None) &&
       aDisplay->mScrollSnapPointsY == nsStyleCoord(eStyleUnit_None) &&
       aDisplay->mScrollSnapDestination.horizontal == LengthPercentage::Zero() &&

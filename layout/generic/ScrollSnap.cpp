@@ -236,8 +236,8 @@ Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
     const ScrollSnapInfo& aSnapInfo, nsIScrollableFrame::ScrollUnit aUnit,
     const nsRect& aScrollRange, const nsPoint& aStartPos,
     const nsPoint& aDestination) {
-  if (aSnapInfo.mScrollSnapTypeY == StyleScrollSnapType::None &&
-      aSnapInfo.mScrollSnapTypeX == StyleScrollSnapType::None) {
+  if (aSnapInfo.mScrollSnapTypeY == StyleScrollSnapStrictness::None &&
+      aSnapInfo.mScrollSnapTypeX == StyleScrollSnapStrictness::None) {
     return Nothing();
   }
 
@@ -260,13 +260,13 @@ Maybe<nsPoint> ScrollSnapUtils::GetSnapPointForDestination(
   nsPoint finalPos = calcSnapPoints.GetBestEdge();
   nscoord proximityThreshold = gfxPrefs::ScrollSnapProximityThreshold();
   proximityThreshold = nsPresContext::CSSPixelsToAppUnits(proximityThreshold);
-  if (aSnapInfo.mScrollSnapTypeY == StyleScrollSnapType::Proximity &&
+  if (aSnapInfo.mScrollSnapTypeY == StyleScrollSnapStrictness::Proximity &&
       std::abs(aDestination.y - finalPos.y) > proximityThreshold) {
     finalPos.y = aDestination.y;
   } else {
     snapped = true;
   }
-  if (aSnapInfo.mScrollSnapTypeX == StyleScrollSnapType::Proximity &&
+  if (aSnapInfo.mScrollSnapTypeX == StyleScrollSnapStrictness::Proximity &&
       std::abs(aDestination.x - finalPos.x) > proximityThreshold) {
     finalPos.x = aDestination.x;
   } else {
