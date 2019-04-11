@@ -16,7 +16,6 @@
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
-#include <ctype.h>
 #include <limits>
 #include <string.h>
 

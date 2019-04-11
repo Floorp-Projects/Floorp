@@ -11,8 +11,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/TextUtils.h"
 
-#include <ctype.h>
-
 #include "jsnum.h"
 
 #include "builtin/Array.h"
