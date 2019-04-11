@@ -782,6 +782,8 @@ struct ScrollSnapInfo {
   // Note: This range doesn't contain scroll-margin values.
   nsTArray<ScrollSnapRange> mXRangeWiderThanSnapport;
   nsTArray<ScrollSnapRange> mYRangeWiderThanSnapport;
+
+  // Note: This snapport size has been already deflated by scroll-padding.
   nsSize mSnapportSize;
 };
 
