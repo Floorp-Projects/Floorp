@@ -27,6 +27,7 @@ jobs-from:
    - node.yml
    - python.yml
    - webidl.yml
+   - wpt-metadata.yml
    - wpt-manifest.yml
 
 # This is used by run-task based tasks to lookup which build task it
