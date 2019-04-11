@@ -9093,7 +9093,7 @@ nsresult nsDocShell::MaybeHandleSameDocumentNavigation(
       win->DispatchSyncPopState();
     }
 
-    if (needsScrollPosUpdate && win->AsInner()->HasActiveDocument()) {
+    if (needsScrollPosUpdate && win->HasActiveDocument()) {
       SetCurScrollPosEx(bx, by);
     }
 

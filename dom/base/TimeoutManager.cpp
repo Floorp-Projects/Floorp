@@ -122,7 +122,7 @@ bool TimeoutManager::IsActive() const {
   }
 
   // Check if we're playing audio
-  if (mWindow.AsInner()->IsPlayingAudio()) {
+  if (mWindow.IsPlayingAudio()) {
     return true;
   }
 
@@ -1227,7 +1227,7 @@ void TimeoutManager::Resume() {
   // When Suspend() has been called after IsDocumentLoaded(), but the
   // throttle tracking timer never managed to fire, start the timer
   // again.
-  if (mWindow.AsInner()->IsDocumentLoaded() && !mThrottleTimeouts) {
+  if (mWindow.IsDocumentLoaded() && !mThrottleTimeouts) {
     MaybeStartThrottleTimeout();
   }
 
@@ -1328,7 +1328,7 @@ NS_IMPL_ISUPPORTS(ThrottleTimeoutsCallback, nsITimerCallback, nsINamed)
 
 NS_IMETHODIMP
 ThrottleTimeoutsCallback::Notify(nsITimer* aTimer) {
-  mWindow->AsInner()->TimeoutManager().StartThrottlingTimeouts();
+  mWindow->TimeoutManager().StartThrottlingTimeouts();
   mWindow = nullptr;
   return NS_OK;
 }
@@ -1355,16 +1355,16 @@ bool TimeoutManager::BudgetThrottlingEnabled(bool aIsBackground) const {
   }
 
   // Check if there are any active IndexedDB databases
-  if (mWindow.AsInner()->HasActiveIndexedDBDatabases()) {
+  if (mWindow.HasActiveIndexedDBDatabases()) {
     return false;
   }
 
   // Check if we have active PeerConnection
-  if (mWindow.AsInner()->HasActivePeerConnections()) {
+  if (mWindow.HasActivePeerConnections()) {
     return false;
   }
 
-  if (mWindow.AsInner()->HasOpenWebSockets()) {
+  if (mWindow.HasOpenWebSockets()) {
     return false;
   }
 

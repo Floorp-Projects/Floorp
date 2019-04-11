@@ -1812,7 +1812,7 @@ nsresult nsGlobalWindowInner::ExecutionReady() {
   nsresult rv = EnsureClientSource();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = mClientSource->WindowExecutionReady(AsInner());
+  rv = mClientSource->WindowExecutionReady(this);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;

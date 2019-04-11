@@ -2071,7 +2071,7 @@ nsresult nsGlobalWindowOuter::SetNewDocument(Document* aDocument,
       }
     }
 
-    mInnerWindow = newInnerWindow->AsInner();
+    mInnerWindow = newInnerWindow;
     MOZ_ASSERT(mInnerWindow);
     mInnerWindow->TryToCacheTopInnerWindow();
 

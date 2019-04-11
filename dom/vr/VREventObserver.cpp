@@ -93,7 +93,7 @@ void VREventObserver::NotifyAfterLoad() {
 }
 
 void VREventObserver::NotifyVRDisplayMounted(uint32_t aDisplayID) {
-  if (mWindow && mWindow->AsInner()->IsCurrentInnerWindow()) {
+  if (mWindow && mWindow->IsCurrentInnerWindow()) {
     MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
     mWindow->DispatchVRDisplayActivate(aDisplayID,
                                        VRDisplayEventReason::Mounted);
@@ -101,7 +101,7 @@ void VREventObserver::NotifyVRDisplayMounted(uint32_t aDisplayID) {
 }
 
 void VREventObserver::NotifyVRDisplayNavigation(uint32_t aDisplayID) {
-  if (mWindow && mWindow->AsInner()->IsCurrentInnerWindow()) {
+  if (mWindow && mWindow->IsCurrentInnerWindow()) {
     MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
     mWindow->DispatchVRDisplayActivate(aDisplayID,
                                        VRDisplayEventReason::Navigation);
@@ -109,7 +109,7 @@ void VREventObserver::NotifyVRDisplayNavigation(uint32_t aDisplayID) {
 }
 
 void VREventObserver::NotifyVRDisplayRequested(uint32_t aDisplayID) {
-  if (mWindow && mWindow->AsInner()->IsCurrentInnerWindow()) {
+  if (mWindow && mWindow->IsCurrentInnerWindow()) {
     MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
     mWindow->DispatchVRDisplayActivate(aDisplayID,
                                        VRDisplayEventReason::Requested);
@@ -117,7 +117,7 @@ void VREventObserver::NotifyVRDisplayRequested(uint32_t aDisplayID) {
 }
 
 void VREventObserver::NotifyVRDisplayUnmounted(uint32_t aDisplayID) {
-  if (mWindow && mWindow->AsInner()->IsCurrentInnerWindow()) {
+  if (mWindow && mWindow->IsCurrentInnerWindow()) {
     MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
     mWindow->DispatchVRDisplayDeactivate(aDisplayID,
                                          VRDisplayEventReason::Unmounted);
@@ -130,14 +130,14 @@ void VREventObserver::NotifyVRDisplayConnect(uint32_t aDisplayID) {
    * can assume that a newly enumerated display is not presenting WebVR
    * content.
    */
-  if (mWindow && mWindow->AsInner()->IsCurrentInnerWindow()) {
+  if (mWindow && mWindow->IsCurrentInnerWindow()) {
     MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
     mWindow->DispatchVRDisplayConnect(aDisplayID);
   }
 }
 
 void VREventObserver::NotifyVRDisplayDisconnect(uint32_t aDisplayID) {
-  if (mWindow && mWindow->AsInner()->IsCurrentInnerWindow()) {
+  if (mWindow && mWindow->IsCurrentInnerWindow()) {
     mWindow->NotifyActiveVRDisplaysChanged();
     MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
     mWindow->DispatchVRDisplayDisconnect(aDisplayID);
@@ -149,7 +149,7 @@ void VREventObserver::NotifyVRDisplayPresentChange(uint32_t aDisplayID) {
   // to be a 2D view.
   mIs2DView = false;
 
-  if (mWindow && mWindow->AsInner()->IsCurrentInnerWindow()) {
+  if (mWindow && mWindow->IsCurrentInnerWindow()) {
     mWindow->NotifyActiveVRDisplaysChanged();
     MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
     mWindow->DispatchVRDisplayPresentChange(aDisplayID);
@@ -157,7 +157,7 @@ void VREventObserver::NotifyVRDisplayPresentChange(uint32_t aDisplayID) {
 }
 
 void VREventObserver::NotifyPresentationGenerationChanged(uint32_t aDisplayID) {
-  if (mWindow && mWindow->AsInner()->IsCurrentInnerWindow()) {
+  if (mWindow && mWindow->IsCurrentInnerWindow()) {
     mWindow->NotifyPresentationGenerationChanged(aDisplayID);
     MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
   }
