@@ -808,7 +808,7 @@ void nsLineLayout::ReflowFrame(nsIFrame* aFrame, nsReflowStatus& aReflowStatus,
                        "calculation");
   nscoord availableSpaceOnLine = psd->mIEnd - psd->mICoord;
 
-  // Setup reflow state for reflowing the frame
+  // Setup reflow input for reflowing the frame
   Maybe<ReflowInput> reflowInputHolder;
   if (!isText) {
     // Compute the available size for the frame. This available width
@@ -1127,7 +1127,7 @@ void nsLineLayout::AllowForStartMargin(PerFrameData* pfd,
         "have unconstrained inline-size; this should only result from very "
         "large sizes, not attempts at intrinsic inline-size calculation");
     // For inline-ish and text-ish things (which don't compute widths
-    // in the reflow state), adjust available inline-size to account
+    // in the reflow input), adjust available inline-size to account
     // for the start margin. The end margin will be accounted for when
     // we finish flowing the frame.
     WritingMode wm = aReflowInput.GetWritingMode();

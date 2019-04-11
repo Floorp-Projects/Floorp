@@ -381,7 +381,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    * for the flex item at the correct size, and hence can skip its final reflow
    * (but still need to move it to the right final position).
    *
-   * @param aReflowInput    The flex container's reflow state.
+   * @param aReflowInput    The flex container's reflow input.
    * @param aItem           The flex item whose frame should be moved.
    * @param aFramePos       The position where the flex item's frame should
    *                        be placed. (pre-relative positioning)
@@ -398,7 +398,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    *
    * @param aPresContext    The presentation context being used in reflow.
    * @param aAxisTracker    A FlexboxAxisTracker with the flex container's axes.
-   * @param aReflowInput    The flex container's reflow state.
+   * @param aReflowInput    The flex container's reflow input.
    * @param aItem           The flex item to be reflowed.
    * @param aFramePos       The position where the flex item's frame should
    *                        be placed. (pre-relative positioning)

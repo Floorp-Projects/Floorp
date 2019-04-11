@@ -10178,10 +10178,10 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
   if (needsReflow) {
     aDesiredSize.ClearSize();
 
-    // create a reflow state to tell our child to flow at the given size.
+    // create a reflow input to tell our child to flow at the given size.
 
-    // Construct a bogus parent reflow state so that there's a usable
-    // containing block reflow state.
+    // Construct a bogus parent reflow input so that there's a usable
+    // containing block reflow input.
     nsMargin margin(0, 0, 0, 0);
     GetXULMargin(margin);
 
@@ -10219,7 +10219,7 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
     if (outerReflowInput && outerReflowInput->mFrame == parentFrame) {
       // We're a frame (such as a text control frame) that jumps into
       // box reflow and then straight out of it on the child frame.
-      // This means we actually have a real parent reflow state.
+      // This means we actually have a real parent reflow input.
       // nsLayoutUtils::InflationMinFontSizeFor used to need this to be
       // linked up correctly for text control frames, so do so here).
       parentRI = outerReflowInput;
@@ -10227,7 +10227,7 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
       parentRI = &parentReflowInput;
     }
 
-    // XXX Is it OK that this reflow state has only one ancestor?
+    // XXX Is it OK that this reflow input has only one ancestor?
     // (It used to have a bogus parent, skipping all the boxes).
     WritingMode wm = GetWritingMode();
     LogicalSize logicalSize(wm, nsSize(aWidth, aHeight));
@@ -11715,7 +11715,7 @@ void DR_State::FindMatchingRule(DR_FrameTreeNode& aNode) {
 
 DR_FrameTreeNode* DR_State::CreateTreeNode(nsIFrame* aFrame,
                                            const ReflowInput* aReflowInput) {
-  // find the frame of the parent reflow state (usually just the parent of
+  // find the frame of the parent reflow input (usually just the parent of
   // aFrame)
   nsIFrame* parentFrame;
   if (aReflowInput) {

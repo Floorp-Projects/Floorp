@@ -107,7 +107,7 @@ nscoord nsLeafBoxFrame::GetMinISize(gfxContext* aRenderingContext) {
   LogicalSize minSize(wm, GetXULMinSize(state));
 
   // GetXULMinSize returns border-box size, and we want to return content
-  // inline-size.  Since Reflow uses the reflow state's border and padding, we
+  // inline-size.  Since Reflow uses the reflow input's border and padding, we
   // actually just want to subtract what GetXULMinSize added, which is the
   // result of GetXULBorderAndPadding.
   nsMargin bp;
@@ -128,7 +128,7 @@ nscoord nsLeafBoxFrame::GetPrefISize(gfxContext* aRenderingContext) {
   LogicalSize prefSize(wm, GetXULPrefSize(state));
 
   // GetXULPrefSize returns border-box size, and we want to return content
-  // inline-size.  Since Reflow uses the reflow state's border and padding, we
+  // inline-size.  Since Reflow uses the reflow input's border and padding, we
   // actually just want to subtract what GetXULPrefSize added, which is the
   // result of GetXULBorderAndPadding.
   nsMargin bp;
@@ -249,7 +249,7 @@ void nsLeafBoxFrame::Reflow(nsPresContext* aPresContext,
     computedSize.height += m.top + m.bottom;
   }
 
-  // handle reflow state min and max sizes
+  // handle reflow input min and max sizes
   // XXXbz the width handling here seems to be wrong, since
   // mComputedMin/MaxWidth is a content-box size, whole
   // computedSize.width is a border-box size...

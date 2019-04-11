@@ -311,7 +311,7 @@ void nsRubyFrame::ReflowSegment(nsPresContext* aPresContext,
     // handled when reflowing the base containers.
     NS_ASSERTION(textReflowStatus.IsEmpty(),
                  "Ruby text container must not break itself inside");
-    // The metrics is initialized with reflow state of this ruby frame,
+    // The metrics is initialized with reflow input of this ruby frame,
     // hence the writing-mode is tied to rubyWM instead of rtcWM.
     LogicalSize size = textMetrics.Size(rubyWM).ConvertTo(lineWM, rubyWM);
     textContainer->SetSize(lineWM, size);
