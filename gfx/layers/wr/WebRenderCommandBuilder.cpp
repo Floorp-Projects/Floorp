@@ -751,9 +751,10 @@ struct DIGroup {
         LINEAR;  // nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());
     bool backfaceHidden = false;
 
-    // Emit a dispatch-to-content hit test region covering this area
+    // We don't really know the exact shape of this blob because it may contain
+    // SVG shapes so generate an irregular-area hit-test region for it.
     CompositorHitTestInfo hitInfo(CompositorHitTestFlags::eVisibleToHitTest,
-                                  CompositorHitTestFlags::eDispatchToContent);
+                                  CompositorHitTestFlags::eIrregularArea);
 
     // XXX - clipping the item against the paint rect breaks some content.
     // cf. Bug 1455422.

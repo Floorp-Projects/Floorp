@@ -22,33 +22,43 @@ namespace gfx {
 // EnumSet (2 ^ <value of enumerator>), in hexadecimal.
 enum class CompositorHitTestFlags : uint8_t {
   // The frame participates in hit-testing
-  eVisibleToHitTest = 0,  // 0x001
-  // The frame requires main-thread handling for events
-  eDispatchToContent,  // 0x002
+  eVisibleToHitTest = 0,  // 0x0001
+
+  // The frame may have odd shapes that requires the main thread to do accurate
+  // hit-testing.
+  eIrregularArea,  // 0x0002
+  // The frame has APZ-aware listeners and so inputs targeted at this area
+  // need to be handled by the main thread before APZ can use them, as they
+  // might be prevent-defaulted.
+  eApzAwareListeners,  // 0x0004
+  // This is an inactive scrollframe or unlayerized scrollthumb. In this state
+  // it cannot be used by APZ for async scrolling, so APZ will defer to the main
+  // thread.
+  eInactiveScrollframe,  // 0x0008
 
   // The touch action flags are set up so that the default of
   // touch-action:auto on an element leaves all the flags as 0.
-  eTouchActionPanXDisabled,           // 0x004
-  eTouchActionPanYDisabled,           // 0x008
-  eTouchActionPinchZoomDisabled,      // 0x010
-  eTouchActionDoubleTapZoomDisabled,  // 0x020
+  eTouchActionPanXDisabled,           // 0x0010
+  eTouchActionPanYDisabled,           // 0x0020
+  eTouchActionPinchZoomDisabled,      // 0x0040
+  eTouchActionDoubleTapZoomDisabled,  // 0x0080
 
   // The frame is a scrollbar or a subframe inside a scrollbar (including
   // scroll thumbs)
-  eScrollbar,  // 0x040
+  eScrollbar,  // 0x0100
   // The frame is a scrollthumb. If this is set then eScrollbar will also be
   // set, unless gecko somehow generates a scroll thumb without a containing
   // scrollbar.
-  eScrollbarThumb,  // 0x080
+  eScrollbarThumb,  // 0x0200
   // If eScrollbar is set, this flag indicates if the scrollbar is a vertical
   // one (if set) or a horizontal one (if not set)
-  eScrollbarVertical,  // 0x100
+  eScrollbarVertical,  // 0x0400
 
   // Events targeting this frame should only be processed if a target
   // confirmation is received from the main thread. If no such confirmation
   // is received within a timeout period, the event may be dropped.
   // Only meaningful in combination with eDispatchToContent.
-  eRequiresTargetConfirmation,  // 0x200
+  eRequiresTargetConfirmation,  // 0x0800
 };
 
 using CompositorHitTestInfo = EnumSet<CompositorHitTestFlags, uint32_t>;
@@ -62,6 +72,13 @@ constexpr CompositorHitTestInfo CompositorHitTestTouchActionMask(
     CompositorHitTestFlags::eTouchActionPanYDisabled,
     CompositorHitTestFlags::eTouchActionPinchZoomDisabled,
     CompositorHitTestFlags::eTouchActionDoubleTapZoomDisabled);
+
+// Mask to check all the flags that involve APZ waiting for results from the
+// main thread
+constexpr CompositorHitTestInfo CompositorHitTestDispatchToContent(
+    CompositorHitTestFlags::eIrregularArea,
+    CompositorHitTestFlags::eApzAwareListeners,
+    CompositorHitTestFlags::eInactiveScrollframe);
 
 }  // namespace gfx
 

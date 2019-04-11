@@ -115,8 +115,7 @@ struct TargetConfirmationFlags {
       const gfx::CompositorHitTestInfo& aHitTestInfo)
       : mTargetConfirmed(
             (aHitTestInfo != gfx::CompositorHitTestInvisibleToHit) &&
-            !aHitTestInfo.contains(
-                gfx::CompositorHitTestFlags::eDispatchToContent)),
+            (aHitTestInfo & gfx::CompositorHitTestDispatchToContent).isEmpty()),
         mRequiresTargetConfirmation(aHitTestInfo.contains(
             gfx::CompositorHitTestFlags::eRequiresTargetConfirmation)) {}
 

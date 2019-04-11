@@ -25,7 +25,9 @@ function* test(testDriver) {
   var apzaware = document.getElementById("apzaware");
 
   checkHitResult(hitTest(centerOf(scroller)),
-                 APZHitResultFlags.VISIBLE | APZHitResultFlags.DISPATCH_TO_CONTENT,
+                 APZHitResultFlags.VISIBLE |
+                 (config.isWebRender ? APZHitResultFlags.INACTIVE_SCROLLFRAME
+                                     : APZHitResultFlags.IRREGULAR_AREA),
                  utils.getViewId(document.scrollingElement),
                  "inactive scrollframe");
 
@@ -74,7 +76,9 @@ function* test(testDriver) {
   var apzawarePosition = centerOf(apzaware); // main thread position
   apzawarePosition.y -= scrollY; // APZ position
   checkHitResult(hitTest(apzawarePosition),
-                 APZHitResultFlags.VISIBLE | APZHitResultFlags.DISPATCH_TO_CONTENT,
+                 APZHitResultFlags.VISIBLE |
+                 (config.isWebRender ? APZHitResultFlags.APZ_AWARE_LISTENERS
+                                     : APZHitResultFlags.IRREGULAR_AREA),
                  scrollerViewId,
                  "active scrollframe - apzaware block");
 

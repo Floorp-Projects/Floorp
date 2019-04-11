@@ -114,6 +114,12 @@ function* test(testDriver) {
 
   var scrollId = config.utils.getViewId(document.scrollingElement);
 
+  // Elements with APZ aware listeners round-trip through the dispatch-to-content
+  // region and end up as IRREGULAR_AREA when WebRender is disabled.
+  var touchListenerFlag = config.isWebRender
+        ? APZHitResultFlags.APZ_AWARE_LISTENERS
+        : APZHitResultFlags.IRREGULAR_AREA;
+
   checkHitResult(
       hitTest(centerOf("taNone")),
       APZHitResultFlags.VISIBLE |
@@ -237,7 +243,7 @@ function* test(testDriver) {
   checkHitResult(
       hitTest(centerOf("taInnerManipListener")),
       APZHitResultFlags.VISIBLE |
-      APZHitResultFlags.DISPATCH_TO_CONTENT |
+      touchListenerFlag |
       APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
       scrollId,
       "div with touch listener inside touch-action: manipulation");
@@ -245,13 +251,13 @@ function* test(testDriver) {
   checkHitResult(
       hitTest(centerOf("taListener")),
       APZHitResultFlags.VISIBLE |
-      APZHitResultFlags.DISPATCH_TO_CONTENT,
+      touchListenerFlag,
       scrollId,
       "div with touch listener");
   checkHitResult(
       hitTest(centerOf("taInnerListenerPanX")),
       APZHitResultFlags.VISIBLE |
-      APZHitResultFlags.DISPATCH_TO_CONTENT |
+      touchListenerFlag |
       APZHitResultFlags.PAN_Y_DISABLED |
       APZHitResultFlags.PINCH_ZOOM_DISABLED |
       APZHitResultFlags.DOUBLE_TAP_ZOOM_DISABLED,
