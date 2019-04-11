@@ -7635,7 +7635,8 @@ if (IsCSSPropertyPrefEnabled("layout.css.overscroll-behavior.enabled")) {
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.scroll-snap.enabled")) {
+if (IsCSSPropertyPrefEnabled("layout.css.scroll-snap.enabled") &&
+    !IsCSSPropertyPrefEnabled("layout.css.scroll-snap-v1.enabled")) {
   gCSSProperties["scroll-snap-coordinate"] = {
     domProp: "scrollSnapCoordinate",
     inherited: false,

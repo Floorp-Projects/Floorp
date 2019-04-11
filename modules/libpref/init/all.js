@@ -3167,9 +3167,6 @@ pref("layout.css.scroll-behavior.spring-constant", "250.0");
 // at the greatest speed without overshooting.
 pref("layout.css.scroll-behavior.damping-ratio", "1.0");
 
-// Is support for scroll-snap enabled?
-pref("layout.css.scroll-snap.enabled", true);
-
 // Is support for document.fonts enabled?
 pref("layout.css.font-loading-api.enabled", true);
 

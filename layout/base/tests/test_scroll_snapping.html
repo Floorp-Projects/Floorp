@@ -793,6 +793,7 @@ function testScrolling() {
 function doTest() {
   SpecialPowers.pushPrefEnv({
     "set": [["layout.css.scroll-snap.enabled", true],
+            ["layout.css.scroll-snap-v1.enabled", false],
             ["layout.css.scroll-snap.proximity-threshold", 100]]},
     testScrollSnapping);
 }
