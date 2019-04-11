@@ -359,7 +359,8 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for TypedTransform3D<f32, Src, Dst> {
     fn is_simple_translation(&self) -> bool {
         if (self.m11 - 1.0).abs() > NEARLY_ZERO ||
             (self.m22 - 1.0).abs() > NEARLY_ZERO ||
-            (self.m33 - 1.0).abs() > NEARLY_ZERO {
+            (self.m33 - 1.0).abs() > NEARLY_ZERO ||
+            (self.m44 - 1.0).abs() > NEARLY_ZERO {
             return false;
         }
 
