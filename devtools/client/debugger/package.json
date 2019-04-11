@@ -35,7 +35,7 @@
     "test:all": "yarn test; yarn lint; yarn flow",
     "firefox": "start-firefox --start --location https://firefox-devtools.github.io/debugger-examples/",
     "chrome": "start-chrome --location https://firefox-devtools.github.io/debugger-examples/",
-    "watch": "node bin/copy --watch --symlink",
+    "watch": "node bin/watch",
     "copy": "node bin/copy --assets",
     "flow-coverage": "flow-coverage-report --threshold 50 -i 'src/actions/*.js' -i 'src/reducers/*.js' -i 'src/utils/*.js' -i 'src/components/*.js' -i 'src/components/**/*.js' -t html -t text",
     "flow-utils": "flow-coverage-report -i 'src/utils/*.js' -i 'src/utils/**/*.js' -t text",
