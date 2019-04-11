@@ -271,7 +271,7 @@ nsresult RemoteWorkerChild::ExecWorkerOnMainThread(
   info.mDomain = aData.domain();
   info.mPrincipal = principal;
   info.mLoadingPrincipal = loadingPrincipal;
-  info.mStorageAllowed = aData.isStorageAccessAllowed();
+  info.mStorageAccess = aData.storageAccess();
   info.mOriginAttributes =
       BasePrincipal::Cast(principal)->OriginAttributesRef();
   info.mCookieSettings = net::CookieSettings::Create();

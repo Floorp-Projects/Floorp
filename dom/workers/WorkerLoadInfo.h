@@ -112,7 +112,7 @@ struct WorkerLoadInfoData {
   bool mReportCSPViolations;
   bool mXHRParamsAllowed;
   bool mPrincipalIsSystem;
-  bool mStorageAllowed;
+  nsContentUtils::StorageAccess mStorageAccess;
   bool mFirstPartyStorageAccessGranted;
   bool mServiceWorkersTestingInWindow;
   OriginAttributes mOriginAttributes;
