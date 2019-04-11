@@ -270,7 +270,7 @@ already_AddRefed<SourceSurface> D3D11YCbCrImage::GetAsSourceSurface() {
   return surface.forget();
 }
 
-class AutoCheckLockD3D11Texture {
+class AutoCheckLockD3D11Texture final {
  public:
   explicit AutoCheckLockD3D11Texture(ID3D11Texture2D* aTexture)
       : mIsLocked(false) {

@@ -27,7 +27,7 @@ class UnscaledFontMac final : public UnscaledFont {
       : mFont(aFont), mIsDataFont(aIsDataFont), mNeedsCairo(aNeedsCairo) {
     CFRetain(mFont);
   }
-  ~UnscaledFontMac() { CFRelease(mFont); }
+  virtual ~UnscaledFontMac() { CFRelease(mFont); }
 
   FontType GetType() const override { return FontType::MAC; }
 

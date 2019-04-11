@@ -136,7 +136,7 @@ class Transaction {
   Transaction(const Transaction&);
   Transaction& operator=(const Transaction&);
 };
-struct AutoTxnEnd {
+struct AutoTxnEnd final {
   explicit AutoTxnEnd(Transaction* aTxn) : mTxn(aTxn) {}
   ~AutoTxnEnd() { mTxn->End(); }
   Transaction* mTxn;

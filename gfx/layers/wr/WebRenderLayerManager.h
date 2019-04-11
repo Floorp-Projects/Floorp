@@ -57,7 +57,7 @@ class WebRenderLayerManager final : public LayerManager {
   bool Initialize(PCompositorBridgeChild* aCBChild, wr::PipelineId aLayersId,
                   TextureFactoryIdentifier* aTextureFactoryIdentifier);
 
-  virtual void Destroy() override;
+  void Destroy() override;
 
   void DoDestroy(bool aIsSync);
 
@@ -65,35 +65,31 @@ class WebRenderLayerManager final : public LayerManager {
   virtual ~WebRenderLayerManager();
 
  public:
-  virtual KnowsCompositor* AsKnowsCompositor() override;
+  KnowsCompositor* AsKnowsCompositor() override;
   WebRenderLayerManager* AsWebRenderLayerManager() override { return this; }
-  virtual CompositorBridgeChild* GetCompositorBridgeChild() override;
+  CompositorBridgeChild* GetCompositorBridgeChild() override;
 
   // WebRender can handle images larger than the max texture size via tiling.
-  virtual int32_t GetMaxTextureSize() const override { return INT32_MAX; }
+  int32_t GetMaxTextureSize() const override { return INT32_MAX; }
 
-  virtual bool BeginTransactionWithTarget(gfxContext* aTarget,
-                                          const nsCString& aURL) override;
-  virtual bool BeginTransaction(const nsCString& aURL) override;
-  virtual bool EndEmptyTransaction(
-      EndTransactionFlags aFlags = END_DEFAULT) override;
+  bool BeginTransactionWithTarget(gfxContext* aTarget,
+                                  const nsCString& aURL) override;
+  bool BeginTransaction(const nsCString& aURL) override;
+  bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override;
   void EndTransactionWithoutLayer(
       nsDisplayList* aDisplayList, nsDisplayListBuilder* aDisplayListBuilder,
       WrFiltersHolder&& aFilters = WrFiltersHolder(),
       WebRenderBackgroundData* aBackground = nullptr);
-  virtual void EndTransaction(
-      DrawPaintedLayerCallback aCallback, void* aCallbackData,
-      EndTransactionFlags aFlags = END_DEFAULT) override;
+  void EndTransaction(DrawPaintedLayerCallback aCallback, void* aCallbackData,
+                      EndTransactionFlags aFlags = END_DEFAULT) override;
 
-  virtual LayersBackend GetBackendType() override {
-    return LayersBackend::LAYERS_WR;
-  }
-  virtual void GetBackendName(nsAString& name) override {
+  LayersBackend GetBackendType() override { return LayersBackend::LAYERS_WR; }
+  void GetBackendName(nsAString& name) override {
     name.AssignLiteral("WebRender");
   }
-  virtual const char* Name() const override { return "WebRender"; }
+  const char* Name() const override { return "WebRender"; }
 
-  virtual void SetRoot(Layer* aLayer) override;
+  void SetRoot(Layer* aLayer) override;
 
   already_AddRefed<PaintedLayer> CreatePaintedLayer() override {
     return nullptr;
@@ -105,46 +101,42 @@ class WebRenderLayerManager final : public LayerManager {
   already_AddRefed<ColorLayer> CreateColorLayer() override { return nullptr; }
   already_AddRefed<CanvasLayer> CreateCanvasLayer() override { return nullptr; }
 
-  virtual bool NeedsWidgetInvalidation() override { return false; }
+  bool NeedsWidgetInvalidation() override { return false; }
 
-  virtual void SetLayersObserverEpoch(LayersObserverEpoch aEpoch) override;
+  void SetLayersObserverEpoch(LayersObserverEpoch aEpoch) override;
 
-  virtual void DidComposite(TransactionId aTransactionId,
-                            const mozilla::TimeStamp& aCompositeStart,
-                            const mozilla::TimeStamp& aCompositeEnd) override;
+  void DidComposite(TransactionId aTransactionId,
+                    const mozilla::TimeStamp& aCompositeStart,
+                    const mozilla::TimeStamp& aCompositeEnd) override;
 
-  virtual void ClearCachedResources(Layer* aSubtree = nullptr) override;
-  virtual void UpdateTextureFactoryIdentifier(
+  void ClearCachedResources(Layer* aSubtree = nullptr) override;
+  void UpdateTextureFactoryIdentifier(
       const TextureFactoryIdentifier& aNewIdentifier) override;
-  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() override;
+  TextureFactoryIdentifier GetTextureFactoryIdentifier() override;
 
-  virtual void SetTransactionIdAllocator(
-      TransactionIdAllocator* aAllocator) override;
-  virtual TransactionId GetLastTransactionId() override;
+  void SetTransactionIdAllocator(TransactionIdAllocator* aAllocator) override;
+  TransactionId GetLastTransactionId() override;
 
-  virtual void AddDidCompositeObserver(
-      DidCompositeObserver* aObserver) override;
-  virtual void RemoveDidCompositeObserver(
-      DidCompositeObserver* aObserver) override;
+  void AddDidCompositeObserver(DidCompositeObserver* aObserver) override;
+  void RemoveDidCompositeObserver(DidCompositeObserver* aObserver) override;
 
-  virtual void FlushRendering() override;
-  virtual void WaitOnTransactionProcessed() override;
+  void FlushRendering() override;
+  void WaitOnTransactionProcessed() override;
 
-  virtual void SendInvalidRegion(const nsIntRegion& aRegion) override;
+  void SendInvalidRegion(const nsIntRegion& aRegion) override;
 
-  virtual void ScheduleComposite() override;
+  void ScheduleComposite() override;
 
-  virtual void SetNeedsComposite(bool aNeedsComposite) override {
+  void SetNeedsComposite(bool aNeedsComposite) override {
     mNeedsComposite = aNeedsComposite;
   }
-  virtual bool NeedsComposite() const override { return mNeedsComposite; }
-  virtual void SetIsFirstPaint() override { mIsFirstPaint = true; }
-  virtual bool GetIsFirstPaint() const override { return mIsFirstPaint; }
-  virtual void SetFocusTarget(const FocusTarget& aFocusTarget) override;
+  bool NeedsComposite() const override { return mNeedsComposite; }
+  void SetIsFirstPaint() override { mIsFirstPaint = true; }
+  bool GetIsFirstPaint() const override { return mIsFirstPaint; }
+  void SetFocusTarget(const FocusTarget& aFocusTarget) override;
 
-  virtual already_AddRefed<PersistentBufferProvider>
-  CreatePersistentBufferProvider(const gfx::IntSize& aSize,
-                                 gfx::SurfaceFormat aFormat) override;
+  already_AddRefed<PersistentBufferProvider> CreatePersistentBufferProvider(
+      const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat) override;
 
   bool AsyncPanZoomEnabled() const override;
 

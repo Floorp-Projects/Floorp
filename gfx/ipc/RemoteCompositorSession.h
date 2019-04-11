@@ -19,7 +19,7 @@ class RemoteCompositorSession final : public CompositorSession {
                           CompositorWidgetDelegate* aWidgetDelegate,
                           APZCTreeManagerChild* aAPZ,
                           const LayersId& aRootLayerTreeId);
-  ~RemoteCompositorSession() override;
+  virtual ~RemoteCompositorSession();
 
   CompositorBridgeParent* GetInProcessBridge() const override;
   void SetContentController(GeckoContentController* aController) override;

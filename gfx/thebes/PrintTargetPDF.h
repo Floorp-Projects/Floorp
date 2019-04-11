@@ -21,8 +21,8 @@ class PrintTargetPDF final : public PrintTarget {
   static already_AddRefed<PrintTargetPDF> CreateOrNull(
       nsIOutputStream* aStream, const IntSize& aSizeInPoints);
 
-  virtual nsresult EndPage() override;
-  virtual void Finish() override;
+  nsresult EndPage() override;
+  void Finish() override;
 
  private:
   PrintTargetPDF(cairo_surface_t* aCairoSurface, const IntSize& aSize,

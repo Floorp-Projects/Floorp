@@ -19,15 +19,14 @@ class TextureClient;
 
 class D3D9RecycleAllocator : public TextureClientRecycleAllocator {
  public:
-  explicit D3D9RecycleAllocator(KnowsCompositor* aAllocator,
-                                IDirect3DDevice9* aDevice)
+  D3D9RecycleAllocator(KnowsCompositor* aAllocator, IDirect3DDevice9* aDevice)
       : TextureClientRecycleAllocator(aAllocator), mDevice(aDevice) {}
 
   already_AddRefed<TextureClient> CreateOrRecycleClient(
       gfx::SurfaceFormat aFormat, const gfx::IntSize& aSize);
 
  protected:
-  virtual already_AddRefed<TextureClient> Allocate(
+  already_AddRefed<TextureClient> Allocate(
       gfx::SurfaceFormat aFormat, gfx::IntSize aSize, BackendSelector aSelector,
       TextureFlags aTextureFlags, TextureAllocationFlags aAllocFlags) override;
 
@@ -46,17 +45,17 @@ class DXGID3D9TextureData : public TextureData {
                                      TextureFlags aFlags,
                                      IDirect3DDevice9* aDevice);
 
-  ~DXGID3D9TextureData();
+  virtual ~DXGID3D9TextureData();
 
-  virtual void FillInfo(TextureData::Info& aInfo) const override;
+  void FillInfo(TextureData::Info& aInfo) const override;
 
-  virtual bool Lock(OpenMode) override { return true; }
+  bool Lock(OpenMode) override { return true; }
 
-  virtual void Unlock() override {}
+  void Unlock() override {}
 
-  virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
+  bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual void Deallocate(LayersIPCChannel* aAllocator) override {}
+  void Deallocate(LayersIPCChannel* aAllocator) override {}
 
   IDirect3DDevice9* GetD3D9Device() { return mDevice; }
   IDirect3DTexture9* GetD3D9Texture() { return mTexture; }

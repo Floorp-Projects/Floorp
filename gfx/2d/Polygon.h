@@ -157,7 +157,7 @@ class PolygonTyped {
   typedef Point4DTyped<Units> Point4DType;
 
  public:
-  PolygonTyped() {}
+  PolygonTyped() = default;
 
   explicit PolygonTyped(const nsTArray<Point4DType>& aPoints,
                         const Point4DType& aNormal = DefaultNormal())

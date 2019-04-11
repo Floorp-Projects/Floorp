@@ -38,7 +38,7 @@ class MOZ_STACK_CLASS SynchronousTask {
   bool mDone;
 };
 
-class MOZ_STACK_CLASS AutoCompleteTask {
+class MOZ_STACK_CLASS AutoCompleteTask final {
  public:
   explicit AutoCompleteTask(SynchronousTask* aTask)
       : mTask(aTask), mAutoEnter(aTask->mMonitor) {}

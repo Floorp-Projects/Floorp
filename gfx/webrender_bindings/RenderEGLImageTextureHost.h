@@ -24,8 +24,8 @@ class RenderEGLImageTextureHost final : public RenderTextureHostOGL {
                            wr::ImageRendering aRendering) override;
   void Unlock() override;
 
-  virtual gfx::IntSize GetSize(uint8_t aChannelIndex) const override;
-  virtual GLuint GetGLHandle(uint8_t aChannelIndex) const override;
+  gfx::IntSize GetSize(uint8_t aChannelIndex) const override;
+  GLuint GetGLHandle(uint8_t aChannelIndex) const override;
 
  private:
   virtual ~RenderEGLImageTextureHost();

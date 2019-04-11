@@ -212,7 +212,7 @@ typedef mozilla::Tuple<int32_t, std::string, double> LoggingRecordEntry;
 typedef std::vector<LoggingRecordEntry> LoggingRecord;
 class LogForwarder {
  public:
-  virtual ~LogForwarder() {}
+  virtual ~LogForwarder() = default;
   virtual void Log(const std::string& aString) = 0;
   virtual void CrashAction(LogReason aReason) = 0;
   virtual bool UpdateStringsVector(const std::string& aString) = 0;
@@ -257,7 +257,7 @@ void LogWStr(const wchar_t* aStr, std::stringstream& aOut);
 #endif
 
 template <int L, typename Logger = BasicLogger>
-class Log {
+class Log final {
  public:
   // The default is to have the prefix, have the new line, and for critical
   // logs assert on each call.
@@ -931,7 +931,7 @@ class TreeLog {
 };
 
 template <int Level = LOG_DEBUG>
-class TreeAutoIndent {
+class TreeAutoIndent final {
  public:
   explicit TreeAutoIndent(TreeLog<Level>& aTreeLog) : mTreeLog(aTreeLog) {
     mTreeLog.IncreaseIndent();

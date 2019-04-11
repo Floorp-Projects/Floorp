@@ -135,7 +135,7 @@ class IAPZCTreeManager {
  protected:
   // Discourage destruction outside of decref
 
-  virtual ~IAPZCTreeManager() {}
+  virtual ~IAPZCTreeManager() = default;
 };
 
 }  // namespace layers

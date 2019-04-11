@@ -27,13 +27,11 @@ class SourceSurfaceD2D1 : public SourceSurface {
                     DrawTargetD2D1 *aDT = nullptr);
   ~SourceSurfaceD2D1();
 
-  virtual SurfaceType GetType() const override {
-    return SurfaceType::D2D1_1_IMAGE;
-  }
-  virtual IntSize GetSize() const override { return mSize; }
-  virtual SurfaceFormat GetFormat() const override { return mFormat; }
-  virtual bool IsValid() const override;
-  virtual already_AddRefed<DataSourceSurface> GetDataSurface() override;
+  SurfaceType GetType() const override { return SurfaceType::D2D1_1_IMAGE; }
+  IntSize GetSize() const override { return mSize; }
+  SurfaceFormat GetFormat() const override { return mFormat; }
+  bool IsValid() const override;
+  already_AddRefed<DataSourceSurface> GetDataSurface() override;
 
   ID2D1Image *GetImage() { return mImage; }
 
@@ -77,14 +75,14 @@ class DataSourceSurfaceD2D1 : public DataSourceSurface {
   DataSourceSurfaceD2D1(ID2D1Bitmap1 *aMappableBitmap, SurfaceFormat aFormat);
   ~DataSourceSurfaceD2D1();
 
-  virtual SurfaceType GetType() const override { return SurfaceType::DATA; }
-  virtual IntSize GetSize() const override;
-  virtual SurfaceFormat GetFormat() const override { return mFormat; }
-  virtual bool IsValid() const override { return !!mBitmap; }
-  virtual uint8_t *GetData() override;
-  virtual int32_t Stride() override;
-  virtual bool Map(MapType, MappedSurface *aMappedSurface) override;
-  virtual void Unmap() override;
+  SurfaceType GetType() const override { return SurfaceType::DATA; }
+  IntSize GetSize() const override;
+  SurfaceFormat GetFormat() const override { return mFormat; }
+  bool IsValid() const override { return !!mBitmap; }
+  uint8_t *GetData() override;
+  int32_t Stride() override;
+  bool Map(MapType, MappedSurface *aMappedSurface) override;
+  void Unmap() override;
 
  private:
   friend class SourceSurfaceD2DTarget;

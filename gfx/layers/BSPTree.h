@@ -88,7 +88,7 @@ struct BSPTreeNode {
  * https://en.wikipedia.org/wiki/Binary_space_partitioning
  * ftp://ftp.sgi.com/other/bspfaq/faq/bspfaq.html
  */
-class BSPTree {
+class BSPTree final {
  public:
   /**
    * The constructor modifies layers in the given list.

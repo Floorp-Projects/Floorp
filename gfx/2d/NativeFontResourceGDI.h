@@ -31,7 +31,7 @@ class NativeFontResourceGDI final : public NativeFontResource {
   static already_AddRefed<NativeFontResourceGDI> Create(uint8_t* aFontData,
                                                         uint32_t aDataLength);
 
-  ~NativeFontResourceGDI();
+  virtual ~NativeFontResourceGDI();
 
   already_AddRefed<UnscaledFont> CreateUnscaledFont(
       uint32_t aIndex, const uint8_t* aInstanceData,

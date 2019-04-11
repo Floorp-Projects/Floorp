@@ -30,7 +30,7 @@ class RenderTextureHostWrapper final : public RenderTextureHost {
   bool IsInited() { return mInited; }
 
  private:
-  ~RenderTextureHostWrapper() override;
+  virtual ~RenderTextureHostWrapper();
 
   bool mInited;
   bool mLocked;

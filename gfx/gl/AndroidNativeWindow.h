@@ -17,7 +17,7 @@
 namespace mozilla {
 namespace gl {
 
-class AndroidNativeWindow {
+class AndroidNativeWindow final {
  public:
   AndroidNativeWindow() : mNativeWindow(nullptr) {}
 

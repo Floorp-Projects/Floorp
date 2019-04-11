@@ -17,7 +17,7 @@ namespace layers {
 
 class TransactionIdAllocator {
  protected:
-  virtual ~TransactionIdAllocator() {}
+  virtual ~TransactionIdAllocator() = default;
 
  public:
   NS_INLINE_DECL_REFCOUNTING(TransactionIdAllocator)

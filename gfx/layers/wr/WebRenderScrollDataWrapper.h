@@ -40,7 +40,7 @@ namespace layers {
  *
  * Refer to LayerMetricsWrapper.h for actual documentation on the exposed API.
  */
-class MOZ_STACK_CLASS WebRenderScrollDataWrapper {
+class MOZ_STACK_CLASS WebRenderScrollDataWrapper final {
  public:
   // Basic constructor for external callers. Starts the walker at the root of
   // the tree.

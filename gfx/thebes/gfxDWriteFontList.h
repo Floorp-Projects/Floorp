@@ -194,7 +194,7 @@ class gfxDWriteFontEntry : public gfxFontEntry {
 
   virtual ~gfxDWriteFontEntry();
 
-  virtual hb_blob_t* GetFontTable(uint32_t aTableTag) override;
+  hb_blob_t* GetFontTable(uint32_t aTableTag) override;
 
   nsresult ReadCMAP(FontInfoData* aFontInfoData = nullptr);
 
@@ -366,7 +366,7 @@ class gfxDWriteFontList : public gfxPlatformFontList {
   }
 
   // initialize font lists
-  virtual nsresult InitFontListForPlatform() override;
+  nsresult InitFontListForPlatform() override;
 
   gfxFontFamily* CreateFontFamily(const nsACString& aName) const override;
 

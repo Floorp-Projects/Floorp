@@ -894,7 +894,7 @@ class GDIFontInfo : public FontInfoData {
   GDIFontInfo(bool aLoadOtherNames, bool aLoadFaceNames, bool aLoadCmaps)
       : FontInfoData(aLoadOtherNames, aLoadFaceNames, aLoadCmaps) {}
 
-  virtual ~GDIFontInfo() {}
+  virtual ~GDIFontInfo() = default;
 
   virtual void Load() {
     mHdc = GetDC(nullptr);

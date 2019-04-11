@@ -29,86 +29,85 @@ class CompositorD3D11 : public Compositor {
  public:
   CompositorD3D11(CompositorBridgeParent* aParent,
                   widget::CompositorWidget* aWidget);
-  ~CompositorD3D11();
+  virtual ~CompositorD3D11();
 
-  virtual CompositorD3D11* AsCompositorD3D11() override { return this; }
+  CompositorD3D11* AsCompositorD3D11() override { return this; }
 
-  virtual bool Initialize(nsCString* const out_failureReason) override;
+  bool Initialize(nsCString* const out_failureReason) override;
 
-  virtual TextureFactoryIdentifier GetTextureFactoryIdentifier() override;
+  TextureFactoryIdentifier GetTextureFactoryIdentifier() override;
 
-  virtual already_AddRefed<DataTextureSource> CreateDataTextureSource(
+  already_AddRefed<DataTextureSource> CreateDataTextureSource(
       TextureFlags aFlags = TextureFlags::NO_FLAGS) override;
 
-  virtual bool CanUseCanvasLayerForSize(const gfx::IntSize& aSize) override;
+  bool CanUseCanvasLayerForSize(const gfx::IntSize& aSize) override;
   int32_t GetMaxTextureSize() const final;
 
-  virtual void MakeCurrent(MakeCurrentFlags aFlags = 0) override {}
+  void MakeCurrent(MakeCurrentFlags aFlags = 0) override {}
 
-  virtual already_AddRefed<CompositingRenderTarget> CreateRenderTarget(
+  already_AddRefed<CompositingRenderTarget> CreateRenderTarget(
       const gfx::IntRect& aRect, SurfaceInitMode aInit) override;
 
-  virtual already_AddRefed<CompositingRenderTarget>
-  CreateRenderTargetFromSource(const gfx::IntRect& aRect,
-                               const CompositingRenderTarget* aSource,
-                               const gfx::IntPoint& aSourcePoint) override;
+  already_AddRefed<CompositingRenderTarget> CreateRenderTargetFromSource(
+      const gfx::IntRect& aRect, const CompositingRenderTarget* aSource,
+      const gfx::IntPoint& aSourcePoint) override;
 
-  virtual void SetRenderTarget(CompositingRenderTarget* aSurface) override;
-  virtual already_AddRefed<CompositingRenderTarget> GetCurrentRenderTarget()
+  void SetRenderTarget(CompositingRenderTarget* aSurface) override;
+  already_AddRefed<CompositingRenderTarget> GetCurrentRenderTarget()
       const override {
     return do_AddRef(mCurrentRT);
   }
-  virtual already_AddRefed<CompositingRenderTarget> GetWindowRenderTarget()
+  already_AddRefed<CompositingRenderTarget> GetWindowRenderTarget()
       const override;
 
-  virtual bool ReadbackRenderTarget(CompositingRenderTarget* aSource,
-                                    AsyncReadbackBuffer* aDest) override;
-  virtual already_AddRefed<AsyncReadbackBuffer> CreateAsyncReadbackBuffer(
+  bool ReadbackRenderTarget(CompositingRenderTarget* aSource,
+                            AsyncReadbackBuffer* aDest) override;
+  already_AddRefed<AsyncReadbackBuffer> CreateAsyncReadbackBuffer(
       const gfx::IntSize& aSize) override;
 
-  virtual bool BlitRenderTarget(CompositingRenderTarget* aSource,
-                                const gfx::IntSize& aSourceSize,
-                                const gfx::IntSize& aDestSize) override;
+  bool BlitRenderTarget(CompositingRenderTarget* aSource,
+                        const gfx::IntSize& aSourceSize,
+                        const gfx::IntSize& aDestSize) override;
 
-  virtual void SetDestinationSurfaceSize(const gfx::IntSize& aSize) override {}
+  void SetDestinationSurfaceSize(const gfx::IntSize& aSize) override {}
 
   /**
    * Declare an offset to use when rendering layers. This will be ignored when
    * rendering to a target instead of the screen.
    */
-  virtual void SetScreenRenderOffset(const ScreenPoint& aOffset) override {
+  void SetScreenRenderOffset(const ScreenPoint& aOffset) override {
     if (aOffset.x || aOffset.y) {
       MOZ_CRASH("SetScreenRenderOffset not supported by CompositorD3D11.");
     }
     // If the offset is 0, 0 that's okay.
   }
 
-  virtual void ClearRect(const gfx::Rect& aRect) override;
+  void ClearRect(const gfx::Rect& aRect) override;
 
-  virtual void DrawQuad(const gfx::Rect& aRect, const gfx::IntRect& aClipRect,
-                        const EffectChain& aEffectChain, gfx::Float aOpacity,
-                        const gfx::Matrix4x4& aTransform,
-                        const gfx::Rect& aVisibleRect) override;
+  void DrawQuad(const gfx::Rect& aRect, const gfx::IntRect& aClipRect,
+                const EffectChain& aEffectChain, gfx::Float aOpacity,
+                const gfx::Matrix4x4& aTransform,
+                const gfx::Rect& aVisibleRect) override;
 
   /**
    * Start a new frame. If aClipRectIn is null, sets *aClipRectOut to the
    * screen dimensions.
    */
-  virtual void BeginFrame(const nsIntRegion& aInvalidRegion,
-                          const gfx::IntRect* aClipRectIn,
-                          const gfx::IntRect& aRenderBounds,
-                          const nsIntRegion& aOpaqueRegion,
-                          gfx::IntRect* aClipRectOut = nullptr,
-                          gfx::IntRect* aRenderBoundsOut = nullptr) override;
+  void BeginFrame(const nsIntRegion& aInvalidRegion,
+                  const gfx::IntRect* aClipRectIn,
+                  const gfx::IntRect& aRenderBounds,
+                  const nsIntRegion& aOpaqueRegion,
+                  gfx::IntRect* aClipRectOut = nullptr,
+                  gfx::IntRect* aRenderBoundsOut = nullptr) override;
 
   void NormalDrawingDone() override;
 
   /**
    * Flush the current frame to the screen.
    */
-  virtual void EndFrame() override;
+  void EndFrame() override;
 
-  virtual void CancelFrame(bool aNeedFlush = true) override;
+  void CancelFrame(bool aNeedFlush = true) override;
 
   /**
    * Setup the viewport and projection matrix for rendering
@@ -119,15 +118,15 @@ class CompositorD3D11 : public Compositor {
                                const gfx::Matrix4x4& aProjection, float aZNear,
                                float aZFar);
 
-  virtual bool SupportsPartialTextureUpdate() override { return true; }
+  bool SupportsPartialTextureUpdate() override { return true; }
 
-  virtual bool SupportsLayerGeometry() const override;
+  bool SupportsLayerGeometry() const override;
 
 #ifdef MOZ_DUMP_PAINTING
-  virtual const char* Name() const override { return "Direct3D 11"; }
+  const char* Name() const override { return "Direct3D 11"; }
 #endif
 
-  virtual LayersBackend GetBackendType() const override {
+  LayersBackend GetBackendType() const override {
     return LayersBackend::LAYERS_D3D11;
   }
 
@@ -170,13 +169,11 @@ class CompositorD3D11 : public Compositor {
                     RefPtr<ID3D11Texture2D>* aOutTexture,
                     RefPtr<ID3D11ShaderResourceView>* aOutView);
 
-  virtual void DrawTriangles(const nsTArray<gfx::TexturedTriangle>& aTriangles,
-                             const gfx::Rect& aRect,
-                             const gfx::IntRect& aClipRect,
-                             const EffectChain& aEffectChain,
-                             gfx::Float aOpacity,
-                             const gfx::Matrix4x4& aTransform,
-                             const gfx::Rect& aVisibleRect) override;
+  void DrawTriangles(const nsTArray<gfx::TexturedTriangle>& aTriangles,
+                     const gfx::Rect& aRect, const gfx::IntRect& aClipRect,
+                     const EffectChain& aEffectChain, gfx::Float aOpacity,
+                     const gfx::Matrix4x4& aTransform,
+                     const gfx::Rect& aVisibleRect) override;
 
   template <typename Geometry>
   void DrawGeometry(const Geometry& aGeometry, const gfx::Rect& aRect,

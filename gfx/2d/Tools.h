@@ -76,7 +76,7 @@ static inline Float Distance(Point aA, Point aB) {
 }
 
 template <typename T, int alignment = 16>
-struct AlignedArray {
+struct AlignedArray final {
   typedef T value_type;
 
   AlignedArray() : mPtr(nullptr), mStorage(nullptr), mCount(0) {}

@@ -84,7 +84,7 @@ class AsyncReadbackBufferOGL final : public AsyncReadbackBuffer {
   }
 
  protected:
-  ~AsyncReadbackBufferOGL() override;
+  virtual ~AsyncReadbackBufferOGL();
 
  private:
   GLContext* mGL;

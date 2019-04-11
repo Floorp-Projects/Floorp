@@ -65,7 +65,7 @@ class RenderDXGIYCbCrTextureHostOGL final : public RenderTextureHostOGL {
 
   wr::WrExternalImage Lock(uint8_t aChannelIndex, gl::GLContext* aGL,
                            wr::ImageRendering aRendering) override;
-  virtual void Unlock() override;
+  void Unlock() override;
   void ClearCachedResources() override;
 
   virtual gfx::IntSize GetSize(uint8_t aChannelIndex) const;

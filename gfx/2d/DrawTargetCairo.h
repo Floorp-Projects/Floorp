@@ -30,7 +30,7 @@ class GradientStopsCairo : public GradientStops {
     }
   }
 
-  virtual ~GradientStopsCairo() {}
+  virtual ~GradientStopsCairo() = default;
 
   const std::vector<GradientStop> &GetStops() const { return mStops; }
 

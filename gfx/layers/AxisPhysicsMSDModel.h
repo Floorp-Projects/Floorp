@@ -22,7 +22,7 @@ class AxisPhysicsMSDModel : public AxisPhysicsModel {
                       double aInitialVelocity, double aSpringConstant,
                       double aDampingRatio);
 
-  ~AxisPhysicsMSDModel();
+  virtual ~AxisPhysicsMSDModel();
 
   /**
    * Gets the raw destination of this axis at this moment.
@@ -41,7 +41,7 @@ class AxisPhysicsMSDModel : public AxisPhysicsModel {
   bool IsFinished(double aSmallestVisibleIncrement);
 
  protected:
-  virtual double Acceleration(const State &aState) override;
+  double Acceleration(const State &aState) override;
 
  private:
   /**

@@ -335,7 +335,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
       return NS_OK;
     }
 
-    virtual nsresult Cancel() override {
+    nsresult Cancel() override {
       mIsCanceled = true;
 
       return NS_OK;
@@ -479,9 +479,9 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   nsAtom* GetLangGroup(nsAtom* aLanguage);
 
   // gfxFontInfoLoader overrides, used to load in font cmaps
-  virtual void InitLoader() override;
-  virtual bool LoadFontInfo() override;
-  virtual void CleanupLoader() override;
+  void InitLoader() override;
+  bool LoadFontInfo() override;
+  void CleanupLoader() override;
 
   // read the loader initialization prefs, and start it
   void GetPrefsAndStartLoader();

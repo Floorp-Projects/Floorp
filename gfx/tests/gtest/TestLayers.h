@@ -15,8 +15,8 @@ namespace layers {
 
 class TestSurfaceAllocator final : public ISurfaceAllocator {
  public:
-  TestSurfaceAllocator() {}
-  ~TestSurfaceAllocator() override {}
+  TestSurfaceAllocator() = default;
+  virtual ~TestSurfaceAllocator() = default;
 
   bool IsSameProcess() const override { return true; }
 };

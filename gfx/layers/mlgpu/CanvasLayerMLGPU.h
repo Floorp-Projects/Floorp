@@ -27,7 +27,7 @@ class CanvasLayerMLGPU final : public CanvasLayer, public TexturedLayerMLGPU {
   explicit CanvasLayerMLGPU(LayerManagerMLGPU* aManager);
 
  protected:
-  ~CanvasLayerMLGPU() override;
+  virtual ~CanvasLayerMLGPU();
 
  public:
   Layer* GetLayer() override;

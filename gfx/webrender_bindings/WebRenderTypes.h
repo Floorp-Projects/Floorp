@@ -730,7 +730,7 @@ template <typename T>
 struct Vec;
 
 template <>
-struct Vec<uint8_t> {
+struct Vec<uint8_t> final {
   wr::WrVecU8 inner;
   Vec() { SetEmpty(); }
   Vec(Vec&) = delete;

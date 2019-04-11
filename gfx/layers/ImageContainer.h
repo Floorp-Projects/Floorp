@@ -161,7 +161,7 @@ class D3D11YCbCrRecycleAllocator;
 class SurfaceDescriptorBuffer;
 
 struct ImageBackendData {
-  virtual ~ImageBackendData() {}
+  virtual ~ImageBackendData() = default;
 
  protected:
   ImageBackendData() {}
@@ -244,7 +244,7 @@ class Image {
       : mImplData(aImplData), mSerial(++sSerialCounter), mFormat(aFormat) {}
 
   // Protected destructor, to discourage deletion outside of Release():
-  virtual ~Image() {}
+  virtual ~Image() = default;
 
   mozilla::EnumeratedArray<mozilla::layers::LayersBackend,
                            mozilla::layers::LayersBackend::LAYERS_LAST,
@@ -317,7 +317,7 @@ class ImageFactory {
   friend class ImageContainer;
 
   ImageFactory() {}
-  virtual ~ImageFactory() {}
+  virtual ~ImageFactory() = default;
 
   virtual RefPtr<PlanarYCbCrImage> CreatePlanarYCbCrImage(
       const gfx::IntSize& aScaleHint, BufferRecycleBin* aRecycleBin);
@@ -802,7 +802,7 @@ class PlanarYCbCrImage : public Image {
 
   enum { MAX_DIMENSION = 16384 };
 
-  virtual ~PlanarYCbCrImage() {}
+  virtual ~PlanarYCbCrImage() = default;
 
   /**
    * This makes a copy of the data buffers, in order to support functioning

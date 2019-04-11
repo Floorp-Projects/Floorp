@@ -22,8 +22,6 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-gfxAlphaBoxBlur::gfxAlphaBoxBlur() : mData(nullptr), mAccelerated(false) {}
-
 gfxAlphaBoxBlur::~gfxAlphaBoxBlur() {}
 
 already_AddRefed<gfxContext> gfxAlphaBoxBlur::Init(gfxContext* aDestinationCtx,

@@ -548,7 +548,7 @@ TimeStamp AsyncPanZoomController::GetFrameTime() const {
   return treeManagerLocal ? treeManagerLocal->GetFrameTime() : TimeStamp::Now();
 }
 
-class MOZ_STACK_CLASS StateChangeNotificationBlocker {
+class MOZ_STACK_CLASS StateChangeNotificationBlocker final {
  public:
   explicit StateChangeNotificationBlocker(AsyncPanZoomController* aApzc)
       : mApzc(aApzc) {
@@ -581,7 +581,7 @@ class MOZ_STACK_CLASS StateChangeNotificationBlocker {
  * the async layout viewport offset, since modifying the async scroll offset
  * may result in the layout viewport moving as well).
  */
-class MOZ_RAII AutoApplyAsyncTestAttributes {
+class MOZ_RAII AutoApplyAsyncTestAttributes final {
  public:
   explicit AutoApplyAsyncTestAttributes(const AsyncPanZoomController*);
   ~AutoApplyAsyncTestAttributes();

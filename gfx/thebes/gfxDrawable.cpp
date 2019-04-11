@@ -164,7 +164,7 @@ class DrawingCallbackFromDrawable : public gfxDrawingCallback {
     NS_ASSERTION(aDrawable, "aDrawable is null!");
   }
 
-  ~DrawingCallbackFromDrawable() override = default;
+  virtual ~DrawingCallbackFromDrawable() = default;
 
   bool operator()(gfxContext* aContext, const gfxRect& aFillRect,
                   const SamplingFilter aSamplingFilter,
