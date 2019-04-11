@@ -2186,31 +2186,47 @@ void ScrollFrameHelper::ScrollTo(nsPoint aScrollPosition, ScrollMode aMode,
   ScrollToWithOrigin(aScrollPosition, aMode, aOrigin, aRange, aSnap);
 }
 
-void ScrollFrameHelper::ScrollToCSSPixels(const CSSIntPoint& aScrollPosition,
-                                          ScrollMode aMode, nsAtom* aOrigin) {
+static nsIScrollbarMediator::ScrollSnapMode DefaultSnapMode() {
+  return StaticPrefs::layout_css_scroll_snap_v1_enabled()
+             ? nsIScrollableFrame::ENABLE_SNAP
+             : nsIScrollableFrame::DISABLE_SNAP;
+}
+
+void ScrollFrameHelper::ScrollToCSSPixels(
+    const CSSIntPoint& aScrollPosition, ScrollMode aMode,
+    nsIScrollbarMediator::ScrollSnapMode aSnap, nsAtom* aOrigin) {
   nsPoint current = GetScrollPosition();
   CSSIntPoint currentCSSPixels = GetScrollPositionCSSPixels();
   nsPoint pt = CSSPoint::ToAppUnits(aScrollPosition);
   nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
-  nsRect range(pt.x - halfPixel, pt.y - halfPixel, 2 * halfPixel - 1,
-               2 * halfPixel - 1);
-  // XXX I don't think the following blocks are needed anymore, now that
-  // ScrollToImpl simply tries to scroll an integer number of layer
-  // pixels from the current position
-  if (currentCSSPixels.x == aScrollPosition.x) {
-    pt.x = current.x;
-    range.x = pt.x;
-    range.width = 0;
+
+  if (aSnap == nsIScrollableFrame::DEFAULT) {
+    aSnap = DefaultSnapMode();
   }
-  if (currentCSSPixels.y == aScrollPosition.y) {
-    pt.y = current.y;
-    range.y = pt.y;
-    range.height = 0;
+
+  nsRect range;
+  if (aSnap != nsIScrollableFrame::ENABLE_SNAP) {
+    range = nsRect(pt.x - halfPixel, pt.y - halfPixel, 2 * halfPixel - 1,
+                   2 * halfPixel - 1);
+    // XXX I don't think the following blocks are needed anymore, now that
+    // ScrollToImpl simply tries to scroll an integer number of layer
+    // pixels from the current position
+    if (currentCSSPixels.x == aScrollPosition.x) {
+      pt.x = current.x;
+      range.x = pt.x;
+      range.width = 0;
+    }
+    if (currentCSSPixels.y == aScrollPosition.y) {
+      pt.y = current.y;
+      range.y = pt.y;
+      range.height = 0;
+    }
   }
   if (aOrigin == nullptr) {
     aOrigin = nsGkAtoms::other;
   }
-  ScrollTo(pt, aMode, aOrigin, &range);
+  ScrollTo(pt, aMode, aOrigin,
+           aSnap == nsIScrollableFrame::ENABLE_SNAP ? nullptr : &range, aSnap);
   // 'this' might be destroyed here
 }
 
@@ -4260,31 +4276,41 @@ void ScrollFrameHelper::ScrollBy(nsIntPoint aDelta,
   }
 }
 
-void ScrollFrameHelper::ScrollByCSSPixels(const CSSIntPoint& aDelta,
-                                          ScrollMode aMode, nsAtom* aOrigin) {
+void ScrollFrameHelper::ScrollByCSSPixels(
+    const CSSIntPoint& aDelta, ScrollMode aMode, nsAtom* aOrigin,
+    nsIScrollbarMediator::ScrollSnapMode aSnap) {
   nsPoint current = GetScrollPosition();
   nsPoint pt = current + CSSPoint::ToAppUnits(aDelta);
   nscoord halfPixel = nsPresContext::CSSPixelsToAppUnits(0.5f);
-  nsRect range(pt.x - halfPixel, pt.y - halfPixel, 2 * halfPixel - 1,
-               2 * halfPixel - 1);
-  // XXX I don't think the following blocks are needed anymore, now that
-  // ScrollToImpl simply tries to scroll an integer number of layer
-  // pixels from the current position
-  if (aDelta.x == 0.0f) {
-    pt.x = current.x;
-    range.x = pt.x;
-    range.width = 0;
+
+  if (aSnap == nsIScrollableFrame::DEFAULT) {
+    aSnap = DefaultSnapMode();
   }
-  if (aDelta.y == 0.0f) {
-    pt.y = current.y;
-    range.y = pt.y;
-    range.height = 0;
+
+  nsRect range;
+  if (aSnap != nsIScrollableFrame::ENABLE_SNAP) {
+    range = nsRect(pt.x - halfPixel, pt.y - halfPixel, 2 * halfPixel - 1,
+                   2 * halfPixel - 1);
+    // XXX I don't think the following blocks are needed anymore, now that
+    // ScrollToImpl simply tries to scroll an integer number of layer
+    // pixels from the current position
+    if (aDelta.x == 0.0f) {
+      pt.x = current.x;
+      range.x = pt.x;
+      range.width = 0;
+    }
+    if (aDelta.y == 0.0f) {
+      pt.y = current.y;
+      range.y = pt.y;
+      range.height = 0;
+    }
   }
   if (aOrigin == nullptr) {
     aOrigin = nsGkAtoms::other;
   }
-  ScrollToWithOrigin(pt, aMode, aOrigin, &range,
-                     nsIScrollbarMediator::DISABLE_SNAP);
+  ScrollToWithOrigin(
+      pt, aMode, aOrigin,
+      aSnap == nsIScrollableFrame::ENABLE_SNAP ? nullptr : &range, aSnap);
   // 'this' might be destroyed here
 }
 
