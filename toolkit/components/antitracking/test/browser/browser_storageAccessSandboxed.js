@@ -1,3 +1,5 @@
+/* import-globals-from antitracking_head.js */
+
 let counter = 0;
 
 AntiTracking.runTest("Storage Access API called in a sandboxed iframe",
