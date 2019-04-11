@@ -586,7 +586,7 @@ void IdleRequestExecutor::MaybeDispatch(TimeStamp aDelayUntil) {
   mDispatched = true;
 
   nsPIDOMWindowOuter* outer = mWindow->GetOuterWindow();
-  if (outer && outer->AsOuter()->IsBackground()) {
+  if (outer && outer->IsBackground()) {
     // Set a timeout handler with a timeout of 0 ms to throttle idle
     // callback requests coming from a backround window using
     // background timeout throttling.
@@ -837,7 +837,7 @@ class PromiseDocumentFlushedResolver final {
 //*****************************************************************************
 
 nsGlobalWindowInner::nsGlobalWindowInner(nsGlobalWindowOuter* aOuterWindow)
-    : nsPIDOMWindowInner(aOuterWindow->AsOuter()),
+    : nsPIDOMWindowInner(aOuterWindow),
       mozilla::webgpu::InstanceProvider(this),
       mWasOffline(false),
       mHasHadSlowScript(false),
@@ -1835,7 +1835,7 @@ void nsGlobalWindowInner::UpdateParentTarget() {
   if (!eventTarget) {
     nsGlobalWindowOuter* topWin = GetScriptableTopInternal();
     if (topWin) {
-      frameElement = topWin->AsOuter()->GetFrameElementInternal();
+      frameElement = topWin->GetFrameElementInternal();
       eventTarget = nsContentUtils::TryGetTabChildGlobal(frameElement);
     }
   }

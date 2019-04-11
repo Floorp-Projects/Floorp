@@ -78,11 +78,8 @@ nsresult MediaEngineTabVideoSource::InitRunnable::Run() {
       mVideoSource->mWindow = nullptr;
       mVideoSource->mBlackedoutWindow = true;
     } else {
-      nsCOMPtr<nsPIDOMWindowOuter> window = globalWindow->AsOuter();
-      if (window) {
-        mVideoSource->mWindow = window;
-        mVideoSource->mBlackedoutWindow = false;
-      }
+      mVideoSource->mWindow = globalWindow;
+      mVideoSource->mBlackedoutWindow = false;
     }
   }
   if (!mVideoSource->mWindow && !mVideoSource->mBlackedoutWindow) {
