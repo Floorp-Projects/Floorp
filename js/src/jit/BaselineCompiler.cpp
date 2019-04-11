@@ -326,7 +326,9 @@ MethodStatus BaselineCompiler::compile() {
 
 #ifdef JS_TRACE_LOGGING
   // Initialize the tracelogger instrumentation.
-  baselineScript->initTraceLogger(script, traceLoggerToggleOffsets_);
+  if (JS::TraceLoggerSupported()) {
+    baselineScript->initTraceLogger(script, traceLoggerToggleOffsets_);
+  }
 #endif
 
   // Compute yield/await native resume addresses.
@@ -5533,7 +5535,7 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
                  ImmPtr(BASELINE_DISABLED_SCRIPT), &interpret);
 
 #ifdef JS_TRACE_LOGGING
-  if (!emitTraceLoggerResume(scratch1, regs)) {
+  if (JS::TraceLoggerSupported() && !emitTraceLoggerResume(scratch1, regs)) {
     return false;
   }
 #endif
@@ -6115,7 +6117,7 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
   }
 
 #ifdef JS_TRACE_LOGGING
-  if (!emitTraceLoggerEnter()) {
+  if (JS::TraceLoggerSupported() && !emitTraceLoggerEnter()) {
     return false;
   }
 #endif
@@ -6170,7 +6172,7 @@ bool BaselineCodeGen<Handler>::emitEpilogue() {
   masm.bind(&return_);
 
 #ifdef JS_TRACE_LOGGING
-  if (!emitTraceLoggerExit()) {
+  if (JS::TraceLoggerSupported() && !emitTraceLoggerExit()) {
     return false;
   }
 #endif
