@@ -9,6 +9,7 @@
 #include "gtest/gtest.h"
 #include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/Unused.h"
+#include "nsPrintfCString.h"
 
 using namespace mozilla;
 
@@ -186,7 +187,7 @@ void GetOriginSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
 
 /*
  * Extracts the `a` and `b` strings from the prioData snapshot object
- * of length 1. Which looks like:
+ * of any length. Which looks like:
  *
  * [{
  *   encoding: encodingName,
@@ -194,10 +195,11 @@ void GetOriginSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
  *     a: <string>,
  *     b: <string>,
  *   },
- * }]
+ * }, ...]
  */
-void GetEncodedOriginStrings(JSContext* aCx, const nsCString& encoding,
-                             nsAutoJSString& aStr, nsAutoJSString& bStr) {
+void GetEncodedOriginStrings(
+    JSContext* aCx, const nsCString& aEncoding,
+    nsTArray<Tuple<nsCString, nsCString>>& aPrioStrings) {
   JS::RootedValue snapshot(aCx);
   nsresult rv;
   rv = TelemetryOrigin::GetEncodedOriginSnapshot(false /* clear */, aCx,
@@ -213,41 +215,51 @@ void GetEncodedOriginStrings(JSContext* aCx, const nsCString& encoding,
   << "The metric's origins must be in an array.";
 
   uint32_t length = 0;
-  ASSERT_TRUE(JS_GetArrayLength(aCx, prioDataObj, &length) && length == 1)
-  << "Length of returned array must be 1.";
+  ASSERT_TRUE(JS_GetArrayLength(aCx, prioDataObj, &length));
+  ASSERT_TRUE(length > 0)
+  << "Length of returned array must greater than 0";
 
-  JS::RootedValue arrayItem(aCx);
-  ASSERT_TRUE(JS_GetElement(aCx, prioDataObj, 0, &arrayItem));
-  ASSERT_TRUE(arrayItem.isObject());
-  ASSERT_FALSE(arrayItem.isNullOrUndefined());
+  for (auto i = 0u; i < length; ++i) {
+    JS::RootedValue arrayItem(aCx);
+    ASSERT_TRUE(JS_GetElement(aCx, prioDataObj, i, &arrayItem));
+    ASSERT_TRUE(arrayItem.isObject());
+    ASSERT_FALSE(arrayItem.isNullOrUndefined());
 
-  JS::RootedObject arrayItemObj(aCx, &arrayItem.toObject());
+    JS::RootedObject arrayItemObj(aCx, &arrayItem.toObject());
 
-  JS::RootedValue encodingVal(aCx);
-  ASSERT_TRUE(JS_GetProperty(aCx, arrayItemObj, "encoding", &encodingVal));
-  ASSERT_TRUE(encodingVal.isString());
-  nsAutoJSString jsStr;
-  ASSERT_TRUE(jsStr.init(aCx, encodingVal));
-  ASSERT_TRUE(NS_ConvertUTF16toUTF8(jsStr) == encoding)
-  << "Actual 'encoding' (" << NS_ConvertUTF16toUTF8(jsStr).get()
-  << ") must match expected (" << encoding.get();
+    JS::RootedValue encodingVal(aCx);
+    ASSERT_TRUE(JS_GetProperty(aCx, arrayItemObj, "encoding", &encodingVal));
+    ASSERT_TRUE(encodingVal.isString());
+    nsAutoJSString jsStr;
+    ASSERT_TRUE(jsStr.init(aCx, encodingVal));
 
-  JS::RootedValue prioVal(aCx);
-  ASSERT_TRUE(JS_GetProperty(aCx, arrayItemObj, "prio", &prioVal));
-  ASSERT_TRUE(prioVal.isObject());
-  ASSERT_FALSE(prioVal.isNullOrUndefined());
+    nsPrintfCString encoding(aEncoding.get(), i);
+    ASSERT_TRUE(NS_ConvertUTF16toUTF8(jsStr) == encoding)
+    << "Actual 'encoding' (" << NS_ConvertUTF16toUTF8(jsStr).get()
+    << ") must match expected (" << encoding;
 
-  JS::RootedObject prioObj(aCx, &prioVal.toObject());
+    JS::RootedValue prioVal(aCx);
+    ASSERT_TRUE(JS_GetProperty(aCx, arrayItemObj, "prio", &prioVal));
+    ASSERT_TRUE(prioVal.isObject());
+    ASSERT_FALSE(prioVal.isNullOrUndefined());
 
-  JS::RootedValue aVal(aCx);
-  ASSERT_TRUE(JS_GetProperty(aCx, prioObj, "a", &aVal));
-  ASSERT_TRUE(aVal.isString());
-  ASSERT_TRUE(aStr.init(aCx, aVal));
+    JS::RootedObject prioObj(aCx, &prioVal.toObject());
 
-  JS::RootedValue bVal(aCx);
-  ASSERT_TRUE(JS_GetProperty(aCx, prioObj, "b", &bVal));
-  ASSERT_TRUE(bVal.isString());
-  ASSERT_TRUE(bStr.init(aCx, bVal));
+    JS::RootedValue aVal(aCx);
+    nsAutoJSString aStr;
+    ASSERT_TRUE(JS_GetProperty(aCx, prioObj, "a", &aVal));
+    ASSERT_TRUE(aVal.isString());
+    ASSERT_TRUE(aStr.init(aCx, aVal));
+
+    JS::RootedValue bVal(aCx);
+    nsAutoJSString bStr;
+    ASSERT_TRUE(JS_GetProperty(aCx, prioObj, "b", &bVal));
+    ASSERT_TRUE(bVal.isString());
+    ASSERT_TRUE(bStr.init(aCx, bVal));
+
+    aPrioStrings.AppendElement(Tuple<nsCString, nsCString>(
+        NS_ConvertUTF16toUTF8(aStr), NS_ConvertUTF16toUTF8(bStr)));
+  }
 }
 
 void GetEventSnapshot(JSContext* aCx, JS::MutableHandle<JS::Value> aResult,
