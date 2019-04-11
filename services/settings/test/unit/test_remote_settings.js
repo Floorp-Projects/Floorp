@@ -10,6 +10,7 @@ const IS_ANDROID = AppConstants.platform == "android";
 const { RemoteSettings } = ChromeUtils.import("resource://services-settings/remote-settings.js");
 const { Utils } = ChromeUtils.import("resource://services-settings/Utils.jsm");
 const { UptakeTelemetry } = ChromeUtils.import("resource://services-common/uptake-telemetry.js");
+const { TelemetryTestUtils } = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
 
 const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
   "nsIBinaryInputStream", "setInputStream");
@@ -29,6 +30,9 @@ async function clear_state() {
   await collectionWithDump.clear();
 
   Services.prefs.clearUserPref("services.settings.default_bucket");
+
+  // Clear events snapshot.
+  TelemetryTestUtils.assertEvents([], {}, { process: "dummy" });
 }
 
 
@@ -308,16 +312,12 @@ add_task(async function test_telemetry_if_sync_succeeds() {
 add_task(clear_state);
 
 add_task(async function test_synchronization_duration_is_reported_in_uptake_status() {
-  const backup = UptakeTelemetry.report;
-  let reportedDuration = -1;
-  UptakeTelemetry.report = (component, status, { duration }) => {
-    reportedDuration = duration;
-  };
-
   await client.maybeSync(2000);
 
-  UptakeTelemetry.report = backup;
-  Assert.ok(reportedDuration > 0);
+  TelemetryTestUtils.assertEvents([
+    ["uptake.remotecontent.result", "uptake", "remotesettings", UptakeTelemetry.STATUS.SUCCESS,
+      { source: client.identifier, duration: (v) => v > 0, trigger: "manual" }],
+  ]);
 });
 add_task(clear_state);
 
