@@ -20,8 +20,6 @@ add_task(function test() {
 
   let db = Services.storage.openDatabase(GetPermissionsFile(profile));
   db.schemaVersion = 5;
-  db.executeSimpleSQL("DROP TABLE moz_perms");
-  db.executeSimpleSQL("DROP TABLE moz_hosts");
 
   /*
    * V5 table
@@ -101,9 +99,6 @@ add_task(function test() {
   ];
 
   let found = expected.map((it) => 0);
-
-  // This will force the permission-manager to reload the data.
-  Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk", "");
 
   // Force initialization of the nsPermissionManager
   for (let permission of Services.perms.enumerator) {

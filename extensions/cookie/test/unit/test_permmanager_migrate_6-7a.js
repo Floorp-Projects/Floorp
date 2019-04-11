@@ -20,8 +20,6 @@ add_task(async function test() {
 
   let db = Services.storage.openDatabase(GetPermissionsFile(profile));
   db.schemaVersion = 6;
-  db.executeSimpleSQL("DROP TABLE moz_perms");
-  db.executeSimpleSQL("DROP TABLE moz_hosts");
 
   /*
    * V5 table
@@ -219,9 +217,6 @@ add_task(async function test() {
   // Add some places to the places database
   await PlacesTestUtils.addVisits(Services.io.newURI("https://foo.com/some/other/subdirectory"));
   await PlacesTestUtils.addVisits(Services.io.newURI("ftp://some.subdomain.of.foo.com:8000/some/subdirectory"));
-
-  // This will force the permission-manager to reload the data.
-  Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk", "");
 
   // Force initialization of the nsPermissionManager
   for (let permission of Services.perms.enumerator) {
