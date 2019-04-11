@@ -53,17 +53,7 @@ platform_names:
       win64-nightly: 'win64'
       win64-aarch64-nightly: 'win64-aarch64'
       win64-asan-reporter-nightly: 'win64-asan-reporter'
-  filename_platform:
-    by-platform:
-      linux-nightly: 'linux-i686'
-      linux64-nightly: 'linux-x86_64'
-      linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
-      macosx64-nightly: 'mac'
-      win32-nightly: 'win32'
-      win64-nightly: 'win64'
-      win64-aarch64-nightly: 'win64-aarch64'
-      win64-asan-reporter-nightly: 'win64-asan-reporter'
-  stage_platform:
+  tools_platform:
     by-platform:
       linux-nightly: 'linux'
       linux64-nightly: 'linux64'
@@ -72,6 +62,16 @@ platform_names:
       win32-nightly: 'win32'
       win64-nightly: 'win64'
       win64-aarch64-nightly: 'win64-aarch64'
+      win64-asan-reporter-nightly: 'win64-asan-reporter'
+  filename_platform:
+    by-platform:
+      linux-nightly: 'linux'
+      linux64-nightly: 'linux64'
+      linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
+      macosx64-nightly: 'macosx64'
+      win32-nightly: 'win32'
+      win64-nightly: 'win64'
+      win64-aarch64-nightly: 'win64_aarch64'
       win64-asan-reporter-nightly: 'win64-asan-reporter'
 
 default: &default
@@ -163,8 +163,8 @@ mapping:
     <<: *default
     description: "File containing the buildID"
     locale_prefix: ''
-    pretty_name: ${stage_platform}_info.txt
-    checksums_path: ${stage_platform}_info.txt
+    pretty_name: ${filename_platform}_info.txt
+    checksums_path: ${filename_platform}_info.txt
     destinations:
       - ${version}-candidates/build${build_number}
   mozharness.zip:
@@ -176,8 +176,8 @@ mapping:
     <<: *default
     description: "Set of shells to allow test snippets of Javascript code without needing to reload the page"
     locale_prefix: ''
-    pretty_name: jsshell-${filename_platform}.zip
-    checksums_path: jsshell/jsshell-${filename_platform}.zip
+    pretty_name: jsshell-${path_platform}.zip
+    checksums_path: jsshell/jsshell-${path_platform}.zip
     destinations:
       - ${version}-candidates/build${build_number}/jsshell
   target.langpack.xpi:
@@ -203,8 +203,8 @@ mapping:
     description: "Alongside `mbsdiff`, a tool used to generate partials"
     locale_prefix: ''
     source_path_modifier: 'host/bin'
-    pretty_name: ${stage_platform}/mar
-    checksums_path: mar-tools/${stage_platform}/mar
+    pretty_name: ${tools_platform}/mar
+    checksums_path: mar-tools/${tools_platform}/mar
     not_for_platforms:
       - win32-nightly
       - win64-nightly
@@ -216,8 +216,8 @@ mapping:
     description: "Alongside `mar`, a tool used to generate partials"
     locale_prefix: ''
     source_path_modifier: 'host/bin'
-    pretty_name: ${stage_platform}/mbsdiff
-    checksums_path: mar-tools/${stage_platform}/mbsdiff
+    pretty_name: ${tools_platform}/mbsdiff
+    checksums_path: mar-tools/${tools_platform}/mbsdiff
     not_for_platforms:
       - win32-nightly
       - win64-nightly
@@ -229,8 +229,8 @@ mapping:
     description: "Alongside `mbsdiff.exe`, a tool used to generate partials for Windows platforms"
     locale_prefix: ''
     source_path_modifier: 'host/bin'
-    pretty_name: ${stage_platform}/mar.exe
-    checksums_path: mar-tools/${stage_platform}/mar.exe
+    pretty_name: ${tools_platform}/mar.exe
+    checksums_path: mar-tools/${tools_platform}/mar.exe
     only_for_platforms:
       - win32-nightly
       - win64-nightly
@@ -242,8 +242,8 @@ mapping:
     locale_prefix: ''
     description: "Alongside `mar.exe`, a tool used to generate partials for Windows platforms"
     source_path_modifier: 'host/bin'
-    pretty_name: ${stage_platform}/mbsdiff.exe
-    checksums_path: mar-tools/${stage_platform}/mbsdiff.exe
+    pretty_name: ${tools_platform}/mbsdiff.exe
+    checksums_path: mar-tools/${tools_platform}/mbsdiff.exe
     only_for_platforms:
       - win32-nightly
       - win64-nightly
