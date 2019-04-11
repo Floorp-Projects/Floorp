@@ -27,7 +27,7 @@ class GleanApplication : Application() {
         // not be activated before this, so it's important to do this early.
         Experiments.initialize(applicationContext)
 
-        Test.testTimespan.start()
+        Test.testTimespan.start(applicationContext)
 
         // Set a sample value for a metric.
         Basic.os.set("Android")

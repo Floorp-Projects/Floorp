@@ -49,7 +49,7 @@ open class MainActivity : AppCompatActivity() {
             Glean.handleBackgroundEvent()
         }
 
-        Test.testTimespan.stopAndSum()
+        Test.testTimespan.stopAndSum(applicationContext)
 
         // Update some metrics from a third-party library
         SamplesGleanLibrary.recordMetric()
