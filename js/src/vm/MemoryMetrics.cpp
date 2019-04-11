@@ -76,7 +76,8 @@ static bool EqualStringsPure(JSString* s1, JSString* s2) {
   if (s1->isLinear()) {
     c1 = s1->asLinear().chars<Char1>(nogc);
   } else {
-    ownedChars1 = s1->asRope().copyChars<Char1>(/* tcx */ nullptr);
+    ownedChars1 =
+        s1->asRope().copyChars<Char1>(/* tcx */ nullptr, js::MallocArena);
     if (!ownedChars1) {
       MOZ_CRASH("oom");
     }
@@ -88,7 +89,8 @@ static bool EqualStringsPure(JSString* s1, JSString* s2) {
   if (s2->isLinear()) {
     c2 = s2->asLinear().chars<Char2>(nogc);
   } else {
-    ownedChars2 = s2->asRope().copyChars<Char2>(/* tcx */ nullptr);
+    ownedChars2 =
+        s2->asRope().copyChars<Char2>(/* tcx */ nullptr, js::MallocArena);
     if (!ownedChars2) {
       MOZ_CRASH("oom");
     }
@@ -126,7 +128,8 @@ static void StoreStringChars(char* buffer, size_t bufferSize, JSString* str) {
   if (str->isLinear()) {
     chars = str->asLinear().chars<CharT>(nogc);
   } else {
-    ownedChars = str->asRope().copyChars<CharT>(/* tcx */ nullptr);
+    ownedChars =
+        str->asRope().copyChars<CharT>(/* tcx */ nullptr, js::MallocArena);
     if (!ownedChars) {
       MOZ_CRASH("oom");
     }

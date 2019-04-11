@@ -57,58 +57,88 @@ int32_t js_fputs(const char16_t* s, FILE* f) {
   return 1;
 }
 
-UniqueChars js::DuplicateString(JSContext* cx, const char* s) {
+UniqueChars js::DuplicateStringToArena(arena_id_t destArenaId, JSContext* cx,
+                                       const char* s) {
   size_t n = strlen(s) + 1;
-  auto ret = cx->make_pod_array<char>(n);
+  auto ret = cx->make_pod_array<char>(n, destArenaId);
   if (!ret) {
     return ret;
   }
   PodCopy(ret.get(), s, n);
   return ret;
+}
+
+UniqueTwoByteChars js::DuplicateStringToArena(arena_id_t destArenaId,
+                                              JSContext* cx,
+                                              const char16_t* s) {
+  size_t n = js_strlen(s) + 1;
+  auto ret = cx->make_pod_array<char16_t>(n, destArenaId);
+  if (!ret) {
+    return ret;
+  }
+  PodCopy(ret.get(), s, n);
+  return ret;
+}
+
+UniqueChars js::DuplicateStringToArena(arena_id_t destArenaId, const char* s) {
+  size_t n = strlen(s) + 1;
+  UniqueChars ret(js_pod_arena_malloc<char>(destArenaId, n));
+  if (!ret) {
+    return ret;
+  }
+  PodCopy(ret.get(), s, n);
+  return ret;
+}
+
+UniqueChars js::DuplicateStringToArena(arena_id_t destArenaId, const char* s,
+                                       size_t n) {
+  UniqueChars ret(js_pod_arena_malloc<char>(destArenaId, n + 1));
+  if (!ret) {
+    return nullptr;
+  }
+  PodCopy(ret.get(), s, n);
+  ret[n] = 0;
+  return ret;
+}
+
+UniqueTwoByteChars js::DuplicateStringToArena(arena_id_t destArenaId,
+                                              const char16_t* s) {
+  return DuplicateStringToArena(destArenaId, s, js_strlen(s));
+}
+
+UniqueTwoByteChars js::DuplicateStringToArena(arena_id_t destArenaId,
+                                              const char16_t* s, size_t n) {
+  UniqueTwoByteChars ret(js_pod_arena_malloc<char16_t>(destArenaId, n + 1));
+  if (!ret) {
+    return nullptr;
+  }
+  PodCopy(ret.get(), s, n);
+  ret[n] = 0;
+  return ret;
+}
+
+UniqueChars js::DuplicateString(JSContext* cx, const char* s) {
+  return DuplicateStringToArena(js::MallocArena, cx, s);
 }
 
 UniqueTwoByteChars js::DuplicateString(JSContext* cx, const char16_t* s) {
-  size_t n = js_strlen(s) + 1;
-  auto ret = cx->make_pod_array<char16_t>(n);
-  if (!ret) {
-    return ret;
-  }
-  PodCopy(ret.get(), s, n);
-  return ret;
+  return DuplicateStringToArena(js::MallocArena, cx, s);
 }
 
 UniqueChars js::DuplicateString(const char* s) {
-  size_t n = strlen(s) + 1;
-  UniqueChars ret(js_pod_malloc<char>(n));
-  if (!ret) {
-    return ret;
-  }
-  PodCopy(ret.get(), s, n);
-  return ret;
+  return DuplicateStringToArena(js::MallocArena, s);
 }
 
 UniqueChars js::DuplicateString(const char* s, size_t n) {
-  UniqueChars ret(js_pod_malloc<char>(n + 1));
-  if (!ret) {
-    return nullptr;
-  }
-  PodCopy(ret.get(), s, n);
-  ret[n] = 0;
-  return ret;
+  return DuplicateStringToArena(js::MallocArena, s, n);
 }
 
 UniqueTwoByteChars js::DuplicateString(const char16_t* s) {
-  return DuplicateString(s, js_strlen(s));
+  return DuplicateStringToArena(js::MallocArena, s);
 }
 
 UniqueTwoByteChars js::DuplicateString(const char16_t* s, size_t n) {
-  UniqueTwoByteChars ret(js_pod_malloc<char16_t>(n + 1));
-  if (!ret) {
-    return nullptr;
-  }
-  PodCopy(ret.get(), s, n);
-  ret[n] = 0;
-  return ret;
+  return DuplicateStringToArena(js::MallocArena, s, n);
 }
 
 char16_t* js::InflateString(JSContext* cx, const char* bytes, size_t length) {

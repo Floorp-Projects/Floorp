@@ -423,7 +423,7 @@ static void CopyAndInflateUTF8IntoBuffer(JSContext* cx, const InputCharsT src,
 
 template <OnUTF8Error ErrorAction, typename CharsT, class InputCharsT>
 static CharsT InflateUTF8StringHelper(JSContext* cx, const InputCharsT src,
-                                      size_t* outlen) {
+                                      size_t* outlen, arena_id_t destArenaId) {
   using CharT = typename CharsT::CharT;
   static_assert(std::is_same<CharT, char16_t>::value ||
                     std::is_same<CharT, Latin1Char>::value,
@@ -443,7 +443,9 @@ static CharsT InflateUTF8StringHelper(JSContext* cx, const InputCharsT src,
   }
   *outlen = len;
 
-  CharT* dst = cx->template pod_malloc<CharT>(*outlen + 1);  // +1 for NUL
+  CharT* dst =
+      cx->template pod_malloc<CharT>(*outlen + 1, destArenaId);  // +1 for NUL
+
   if (!dst) {
     ReportOutOfMemory(cx);
     return CharsT();
@@ -460,38 +462,43 @@ static CharsT InflateUTF8StringHelper(JSContext* cx, const InputCharsT src,
 
 TwoByteCharsZ JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx,
                                               const UTF8Chars utf8,
-                                              size_t* outlen) {
-  return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(cx, utf8,
-                                                                    outlen);
+                                              size_t* outlen,
+                                              arena_id_t destArenaId) {
+  return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(
+      cx, utf8, outlen, destArenaId);
 }
 
 TwoByteCharsZ JS::WTF8CharsToNewTwoByteCharsZ(JSContext* cx,
                                               const WTF8Chars wtf8,
-                                              size_t* outlen) {
-  return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(cx, wtf8,
-                                                                    outlen);
+                                              size_t* outlen,
+                                              arena_id_t destArenaId) {
+  return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(
+      cx, wtf8, outlen, destArenaId);
 }
 
 TwoByteCharsZ JS::UTF8CharsToNewTwoByteCharsZ(JSContext* cx,
                                               const ConstUTF8CharsZ& utf8,
-                                              size_t* outlen) {
+                                              size_t* outlen,
+                                              arena_id_t destArenaId) {
   UTF8Chars chars(utf8.c_str(), strlen(utf8.c_str()));
-  return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(cx, chars,
-                                                                    outlen);
+  return InflateUTF8StringHelper<OnUTF8Error::Throw, TwoByteCharsZ>(
+      cx, chars, outlen, destArenaId);
 }
 
 TwoByteCharsZ JS::LossyUTF8CharsToNewTwoByteCharsZ(JSContext* cx,
                                                    const JS::UTF8Chars utf8,
-                                                   size_t* outlen) {
+                                                   size_t* outlen,
+                                                   arena_id_t destArenaId) {
   return InflateUTF8StringHelper<OnUTF8Error::InsertReplacementCharacter,
-                                 TwoByteCharsZ>(cx, utf8, outlen);
+                                 TwoByteCharsZ>(cx, utf8, outlen, destArenaId);
 }
 
 TwoByteCharsZ JS::LossyUTF8CharsToNewTwoByteCharsZ(
-    JSContext* cx, const JS::ConstUTF8CharsZ& utf8, size_t* outlen) {
+    JSContext* cx, const JS::ConstUTF8CharsZ& utf8, size_t* outlen,
+    arena_id_t destArenaId) {
   UTF8Chars chars(utf8.c_str(), strlen(utf8.c_str()));
   return InflateUTF8StringHelper<OnUTF8Error::InsertReplacementCharacter,
-                                 TwoByteCharsZ>(cx, chars, outlen);
+                                 TwoByteCharsZ>(cx, chars, outlen, destArenaId);
 }
 
 static void UpdateSmallestEncodingForChar(char16_t c,
@@ -522,16 +529,18 @@ JS::SmallestEncoding JS::FindSmallestEncoding(UTF8Chars utf8) {
 }
 
 Latin1CharsZ JS::UTF8CharsToNewLatin1CharsZ(JSContext* cx, const UTF8Chars utf8,
-                                            size_t* outlen) {
-  return InflateUTF8StringHelper<OnUTF8Error::Throw, Latin1CharsZ>(cx, utf8,
-                                                                   outlen);
+                                            size_t* outlen,
+                                            arena_id_t destArenaId) {
+  return InflateUTF8StringHelper<OnUTF8Error::Throw, Latin1CharsZ>(
+      cx, utf8, outlen, destArenaId);
 }
 
 Latin1CharsZ JS::LossyUTF8CharsToNewLatin1CharsZ(JSContext* cx,
                                                  const UTF8Chars utf8,
-                                                 size_t* outlen) {
+                                                 size_t* outlen,
+                                                 arena_id_t destArenaId) {
   return InflateUTF8StringHelper<OnUTF8Error::InsertQuestionMark, Latin1CharsZ>(
-      cx, utf8, outlen);
+      cx, utf8, outlen, destArenaId);
 }
 
 /**
