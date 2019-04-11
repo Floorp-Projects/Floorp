@@ -121,16 +121,25 @@ int RunGTestFunc(int* argc, char** argv) {
     // C++ unittests
     crashreporter = do_GetService("@mozilla.org/toolkit/crash-reporter;1");
     if (crashreporter) {
-      std::cerr << "Setting up crash reporting" << std::endl;
-
-      nsCOMPtr<nsIProperties> dirsvc =
-          do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
-      nsCOMPtr<nsIFile> cwd;
-      nsresult rv = dirsvc->Get(NS_OS_CURRENT_WORKING_DIR, NS_GET_IID(nsIFile),
-                                getter_AddRefs(cwd));
-      MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+      printf_stderr("Setting up crash reporting\n");
+      char* path = PR_GetEnv("MOZ_GTEST_MINIDUMPS_PATH");
+      nsCOMPtr<nsIFile> file;
+      if (path) {
+        nsresult rv = NS_NewLocalFile(NS_ConvertUTF8toUTF16(path), true,
+                                      getter_AddRefs(file));
+        if (NS_FAILED(rv)) {
+          printf_stderr("Ignoring invalid MOZ_GTEST_MINIDUMPS_PATH\n");
+        }
+      }
+      if (!file) {
+        nsCOMPtr<nsIProperties> dirsvc =
+            do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
+        nsresult rv = dirsvc->Get(NS_OS_CURRENT_WORKING_DIR, NS_GET_IID(nsIFile),
+                                  getter_AddRefs(file));
+        MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+      }
       crashreporter->SetEnabled(true);
-      crashreporter->SetMinidumpPath(cwd);
+      crashreporter->SetMinidumpPath(file);
     }
   }
 
