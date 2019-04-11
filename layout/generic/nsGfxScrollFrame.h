@@ -409,7 +409,8 @@ class ScrollFrameHelper : public nsIReflowCallback {
   nsIFrame* GetFrameForDir() const;  // helper for Is{Physical,Bidi}LTR to find
                                      // the frame whose directionality we use
 
-  ScrollSnapInfo ComputeScrollSnapInfo() const;
+  ScrollSnapInfo ComputeScrollSnapInfo(
+      const Maybe<nsPoint>& aDestination) const;
 
  public:
   bool IsScrollbarOnRight() const;
@@ -473,7 +474,11 @@ class ScrollFrameHelper : public nsIReflowCallback {
 
   bool UsesContainerScrolling() const;
 
-  ScrollSnapInfo GetScrollSnapInfo() const;
+  // In the case where |aDestination| is given, elements which are entirely out
+  // of view when the scroll position is moved to |aDestination| are not going
+  // to be used for snap positions.
+  ScrollSnapInfo GetScrollSnapInfo(
+      const mozilla::Maybe<nsPoint>& aDestination) const;
 
   bool DecideScrollableLayer(nsDisplayListBuilder* aBuilder,
                              nsRect* aVisibleRect, nsRect* aDirtyRect,
@@ -1182,7 +1187,7 @@ class nsHTMLScrollFrame : public nsContainerFrame,
   }
 
   ScrollSnapInfo GetScrollSnapInfo() const override {
-    return mHelper.GetScrollSnapInfo();
+    return mHelper.GetScrollSnapInfo(Nothing());
   }
 
   virtual bool DragScroll(mozilla::WidgetEvent* aEvent) override {
@@ -1668,7 +1673,7 @@ class nsXULScrollFrame final : public nsBoxFrame,
   }
 
   ScrollSnapInfo GetScrollSnapInfo() const override {
-    return mHelper.GetScrollSnapInfo();
+    return mHelper.GetScrollSnapInfo(Nothing());
   }
 
   virtual bool DragScroll(mozilla::WidgetEvent* aEvent) override {
