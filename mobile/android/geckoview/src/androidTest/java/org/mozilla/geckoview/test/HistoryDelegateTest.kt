@@ -14,7 +14,6 @@ import android.support.test.runner.AndroidJUnit4
 import org.hamcrest.Matchers.*
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mozilla.geckoview.test.util.Callbacks
 
 @RunWith(AndroidJUnit4::class)
 @MediumTest
@@ -129,91 +128,5 @@ class HistoryDelegateTest : BaseSessionTest() {
             sessionRule.waitForChromeJS("getLinkColor('#bugzilla')") as String,
             equalTo(UNVISITED_COLOR)
         )
-    }
-
-    @Test fun onHistoryStateChange() {
-        sessionRule.session.loadTestPath(HELLO_HTML_PATH)
-
-        sessionRule.waitUntilCalled(object : Callbacks.HistoryDelegate {
-            @AssertCalled(count = 1)
-            override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
-                assertThat("History should have one entry", state.size,
-                        equalTo(1))
-                assertThat("URLs should match", state[state.currentIndex].uri,
-                        endsWith(HELLO_HTML_PATH))
-                assertThat("History index should be 0", state.currentIndex,
-                        equalTo(0))
-            }
-        })
-
-        sessionRule.session.loadTestPath(HELLO2_HTML_PATH)
-
-        sessionRule.waitUntilCalled(object : Callbacks.HistoryDelegate {
-            @AssertCalled(count = 1)
-            override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
-                assertThat("History should have two entries", state.size,
-                        equalTo(2))
-                assertThat("URLs should match", state[state.currentIndex].uri,
-                        endsWith(HELLO2_HTML_PATH))
-                assertThat("History index should be 1", state.currentIndex,
-                        equalTo(1))
-            }
-        })
-
-        sessionRule.session.goBack()
-
-        sessionRule.waitUntilCalled(object : Callbacks.HistoryDelegate {
-            @AssertCalled(count = 1)
-            override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
-                assertThat("History should have two entries", state.size,
-                        equalTo(2))
-                assertThat("URLs should match", state[state.currentIndex].uri,
-                        endsWith(HELLO_HTML_PATH))
-                assertThat("History index should be 0", state.currentIndex,
-                        equalTo(0))
-            }
-        })
-
-        sessionRule.session.goForward()
-
-        sessionRule.waitUntilCalled(object : Callbacks.HistoryDelegate {
-            @AssertCalled(count = 1)
-            override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
-                assertThat("History should have two entries", state.size,
-                        equalTo(2))
-                assertThat("URLs should match", state[state.currentIndex].uri,
-                        endsWith(HELLO2_HTML_PATH))
-                assertThat("History index should be 1", state.currentIndex,
-                        equalTo(1))
-            }
-        })
-
-        sessionRule.session.gotoHistoryIndex(0)
-
-        sessionRule.waitUntilCalled(object : Callbacks.HistoryDelegate {
-            @AssertCalled(count = 1)
-            override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
-                assertThat("History should have two entries", state.size,
-                        equalTo(2))
-                assertThat("URLs should match", state[state.currentIndex].uri,
-                        endsWith(HELLO_HTML_PATH))
-                assertThat("History index should be 1", state.currentIndex,
-                        equalTo(0))
-            }
-        })
-
-        sessionRule.session.gotoHistoryIndex(1)
-
-        sessionRule.waitUntilCalled(object : Callbacks.HistoryDelegate {
-            @AssertCalled(count = 1)
-            override fun onHistoryStateChange(session: GeckoSession, state: GeckoSession.HistoryDelegate.HistoryList) {
-                assertThat("History should have two entries", state.size,
-                        equalTo(2))
-                assertThat("URLs should match", state[state.currentIndex].uri,
-                        endsWith(HELLO2_HTML_PATH))
-                assertThat("History index should be 1", state.currentIndex,
-                        equalTo(1))
-            }
-        })
     }
 }

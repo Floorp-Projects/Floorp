@@ -50,12 +50,6 @@ exclude: true
 
 - Removed all `org.mozilla.gecko` references in the API.
 
-- Added `HistoryItem` and `HistoryList` interfaces and `onHistoryStateChange` to 
-  [`HistoryDelegate`][68.11] and added `gotoHistoryIndex` to [`GeckoSession`][68.12].
-
-[68.11]: ../GeckoSession.HistoryDelegate.html
-[68.12]: ../GeckoSession.html
-
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -262,4 +256,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 437e1c98a06571fd92c242e027494ec6947a4a9b
+[api-version]: 6a931a2d4f327a5b4be2ff75c83c5a53eb610854
