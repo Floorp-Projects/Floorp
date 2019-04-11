@@ -10905,20 +10905,21 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
   // Anything that didn't match the above conditions is visible to hit-testing.
   result = CompositorHitTestFlags::eVisibleToHitTest;
 
-  if (aBuilder->IsBuildingNonLayerizedScrollbar() ||
-      aBuilder->GetAncestorHasApzAwareEventHandler()) {
+  if (aBuilder->IsBuildingNonLayerizedScrollbar()) {
     // Scrollbars may be painted into a layer below the actual layer they will
     // scroll, and therefore wheel events may be dispatched to the outer frame
     // instead of the intended scrollframe. To address this, we force a d-t-c
     // region on scrollbar frames that won't be placed in their own layer. See
     // bug 1213324 for details.
-    result += CompositorHitTestFlags::eDispatchToContent;
+    result += CompositorHitTestFlags::eInactiveScrollframe;
+  } else if (aBuilder->GetAncestorHasApzAwareEventHandler()) {
+    result += CompositorHitTestFlags::eApzAwareListeners;
   } else if (IsObjectFrame()) {
     // If the frame is a plugin frame and wants to handle wheel events as
     // default action, we should add the frame to dispatch-to-content region.
     nsPluginFrame* pluginFrame = do_QueryFrame(this);
     if (pluginFrame && pluginFrame->WantsToHandleWheelEventAsDefaultAction()) {
-      result += CompositorHitTestFlags::eDispatchToContent;
+      result += CompositorHitTestFlags::eApzAwareListeners;
     }
   }
 
@@ -10985,7 +10986,7 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
       if (thumbGetsLayer) {
         result += CompositorHitTestFlags::eScrollbarThumb;
       } else {
-        result += CompositorHitTestFlags::eDispatchToContent;
+        result += CompositorHitTestFlags::eInactiveScrollframe;
       }
     }
 
