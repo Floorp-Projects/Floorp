@@ -50,11 +50,45 @@
 
     <fragment
         android:id="@+id/SitePermissionsManagePhoneFeature"
-        android:name="org.mozilla.fenix.settings.SitePermissionsManagePhoneFeature"
+        android:name="org.mozilla.fenix.settings.SitePermissionsManagePhoneFeatureFragment"
         tools:layout="@layout/fragment_manage_site_permissions_feature_phone">
         <argument
             android:name="permission"
             app:argType="integer"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/sitePermissionsExceptionsFragment"
+        android:name="org.mozilla.fenix.settings.SitePermissionsExceptionsFragment"
+        android:label="@string/preference_exceptions"
+        tools:layout="@layout/fragment_site_permissions_exceptions">
+        <action
+            android:id="@+id/action_site_permissions_to_exceptions_to_site_permissions_details"
+            app:destination="@id/sitePermissionsDetailsExceptionsFragment"
+            app:popUpTo="@+id/sitePermissionsExceptionsFragment"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/sitePermissionsDetailsExceptionsFragment"
+        android:name="org.mozilla.fenix.settings.SitePermissionsDetailsExceptionsFragment"
+        tools:layout="@xml/site_permissions_details_exceptions_preferences">
+        <action
+            android:id="@+id/action_site_permissions_to_exceptions_to_manage_phone_feature"
+            app:destination="@id/sitePermissionsManageExceptionsPhoneFeatureFragment"
+            app:popUpTo="@+id/sitePermissionsDetailsExceptionsFragment"/>
+        <argument android:name="sitePermissions"
+            app:argType="mozilla.components.feature.sitepermissions.SitePermissions"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/sitePermissionsManageExceptionsPhoneFeatureFragment"
+        android:name="org.mozilla.fenix.settings.SitePermissionsManageExceptionsPhoneFeatureFragment"
+        tools:layout="@layout/fragment_manage_site_permissions_feature_phone">
+        <argument
+            android:name="phoneFeatureId"
+            app:argType="integer"/>
+        <argument android:name="sitePermissions"
+            app:argType="mozilla.components.feature.sitepermissions.SitePermissions"/>
     </fragment>
 
     <fragment
@@ -202,13 +236,16 @@
     <fragment android:id="@+id/dataChoicesFragment" android:name="org.mozilla.fenix.settings.DataChoicesFragment"
               android:label="DataChoicesFragment"/>
     <fragment
-        android:id="@+id/sitePermissionsFragment"
-        android:name="org.mozilla.fenix.settings.SitePermissionsFragment"
-        android:label="@string/preferences_site_permissions">
-
+         android:id="@+id/sitePermissionsFragment"
+         android:name="org.mozilla.fenix.settings.SitePermissionsFragment"
+         android:label="@string/preferences_site_permissions">
         <action
             android:id="@+id/action_site_permissions_to_manage_phone_features"
             app:destination="@id/SitePermissionsManagePhoneFeature"
+            app:popUpTo="@id/sitePermissionsFragment"/>
+        <action
+            android:id="@+id/action_site_permissions_to_exceptions"
+            app:destination="@id/sitePermissionsExceptionsFragment"
             app:popUpTo="@id/sitePermissionsFragment"/>
     </fragment>
 

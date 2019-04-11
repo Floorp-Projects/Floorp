@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.settings
 
-import android.Manifest
 import android.Manifest.permission.ACCESS_COARSE_LOCATION
 import android.Manifest.permission.ACCESS_FINE_LOCATION
 import android.Manifest.permission.RECORD_AUDIO
@@ -13,16 +12,17 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.support.ktx.android.content.isPermissionGranted
 import org.mozilla.fenix.utils.Settings
 
+const val ID_CAMERA_PERMISSION = 0
+const val ID_LOCATION_PERMISSION = 1
+const val ID_MICROPHONE_PERMISSION = 2
+const val ID_NOTIFICATION_PERMISSION = 3
+private const val CAMERA_PERMISSION = android.Manifest.permission.CAMERA
+
 enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) {
-    CAMERA(SitePermissionsManagePhoneFeature.CAMERA_PERMISSION, arrayOf(Manifest.permission.CAMERA)),
-    LOCATION(
-        SitePermissionsManagePhoneFeature.LOCATION_PERMISSION, arrayOf(
-            ACCESS_COARSE_LOCATION,
-            ACCESS_FINE_LOCATION
-        )
-    ),
-    MICROPHONE(SitePermissionsManagePhoneFeature.MICROPHONE_PERMISSION, arrayOf(RECORD_AUDIO)),
-    NOTIFICATION(SitePermissionsManagePhoneFeature.NOTIFICATION_PERMISSION, emptyArray());
+    CAMERA(ID_CAMERA_PERMISSION, arrayOf(CAMERA_PERMISSION)),
+    LOCATION(ID_LOCATION_PERMISSION, arrayOf(ACCESS_COARSE_LOCATION, ACCESS_FINE_LOCATION)),
+    MICROPHONE(ID_MICROPHONE_PERMISSION, arrayOf(RECORD_AUDIO)),
+    NOTIFICATION(ID_NOTIFICATION_PERMISSION, emptyArray());
 
     @Suppress("SpreadOperator")
     fun isAndroidPermissionGranted(context: Context): Boolean {
@@ -33,54 +33,56 @@ enum class PhoneFeature(val id: Int, val androidPermissionsList: Array<String>) 
         return context.isPermissionGranted(*permissions)
     }
 
-    fun getActionLabel(context: Context, sitePermissions: SitePermissions? = null, settings: Settings): String {
-        return when (this) {
+    fun getActionLabel(context: Context, sitePermissions: SitePermissions? = null, settings: Settings? = null): String {
+        val label = when (this) {
             CAMERA -> {
                 sitePermissions?.camera?.toString(context) ?: settings
-                    .getSitePermissionsPhoneFeatureCameraAction()
-                    .toString(context)
+                    ?.getSitePermissionsPhoneFeatureCameraAction()
+                    ?.toString(context)
             }
             LOCATION -> {
                 sitePermissions?.location?.toString(context) ?: settings
-                    .getSitePermissionsPhoneFeatureLocation()
-                    .toString(context)
+                    ?.getSitePermissionsPhoneFeatureLocation()
+                    ?.toString(context)
             }
             MICROPHONE -> {
                 sitePermissions?.microphone?.toString(context) ?: settings
-                    .getSitePermissionsPhoneFeatureMicrophoneAction()
-                    .toString(context)
+                    ?.getSitePermissionsPhoneFeatureMicrophoneAction()
+                    ?.toString(context)
             }
             NOTIFICATION -> {
                 sitePermissions?.notification?.toString(context) ?: settings
-                    .getSitePermissionsPhoneFeatureNotificationAction()
-                    .toString(context)
+                    ?.getSitePermissionsPhoneFeatureNotificationAction()
+                    ?.toString(context)
             }
         }
+        return requireNotNull(label)
     }
 
-    fun getStatus(sitePermissions: SitePermissions? = null, settings: Settings): SitePermissions.Status {
-        return when (this) {
+    fun getStatus(sitePermissions: SitePermissions? = null, settings: Settings? = null): SitePermissions.Status {
+        val status = when (this) {
             CAMERA -> {
                 sitePermissions?.camera ?: settings
-                    .getSitePermissionsPhoneFeatureCameraAction()
-                    .toStatus()
+                    ?.getSitePermissionsPhoneFeatureCameraAction()
+                    ?.toStatus()
             }
             LOCATION -> {
                 sitePermissions?.location ?: settings
-                    .getSitePermissionsPhoneFeatureLocation()
-                    .toStatus()
+                    ?.getSitePermissionsPhoneFeatureLocation()
+                    ?.toStatus()
             }
             MICROPHONE -> {
                 sitePermissions?.microphone ?: settings
-                    .getSitePermissionsPhoneFeatureMicrophoneAction()
-                    .toStatus()
+                    ?.getSitePermissionsPhoneFeatureMicrophoneAction()
+                    ?.toStatus()
             }
             NOTIFICATION -> {
                 sitePermissions?.notification ?: settings
-                    .getSitePermissionsPhoneFeatureNotificationAction()
-                    .toStatus()
+                    ?.getSitePermissionsPhoneFeatureNotificationAction()
+                    ?.toStatus()
             }
         }
+        return requireNotNull(status)
     }
 
     companion object {

@@ -27,6 +27,8 @@
     <dimen name="radio_button_preference_drawable_padding">16dp</dimen>
     <dimen name="radio_button_preference_vertical">12dp</dimen>
     <dimen name="phone_feature_label_recommended_text_size">14sp</dimen>
+    <dimen name="site_permissions_exceptions_item_text_size">18sp</dimen>
+    <dimen name="site_permissions_exceptions_item_height">56dp</dimen>
 
     <!--Quick Settings-->
     <dimen name="quicksettings_item_height">46dp</dimen>

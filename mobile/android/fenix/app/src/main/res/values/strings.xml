@@ -336,4 +336,42 @@
 
     <!-- Message for copying the URL via long press on the toolbar -->
     <string name="url_copied">URL copied</string>
+
+
+    <!-- Site Permissions -->
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">Go to Settings</string>
+
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">Quick settings sheet</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">Recommended</string>
+    <!-- button that allows editing site permissions settings -->
+    <string name="quick_settings_sheet_manage_site_permissions">Manage site permissions</string>
+    <!-- Button label for clear all the information of a site permissions-->
+    <string name="clear_permissions">Clear permissions</string>
+    <!-- Button label for clear a site permissions-->
+    <string name="clear_permission">Clear permission</string>
+    <!-- Button label for clear all the information fall all sites-->
+    <string name="clear_permissions_on_all_sites">Clear permissions on all sites</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">Camera</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">Microphone</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">Location</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">Notification</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">Ask to allow</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">Blocked</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">Allowed</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">Blocked by Android</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">Exceptions</string>
 </resources>

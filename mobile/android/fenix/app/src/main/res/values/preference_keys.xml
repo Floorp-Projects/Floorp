@@ -49,6 +49,7 @@
     <string name="pref_key_phone_feature_microphone" translatable="false">pref_key_phone_feature_microphone</string>
     <string name="pref_key_phone_feature_notification" translatable="false">pref_key_phone_feature_notification</string>
     <string name="pref_key_category_phone_feature" translatable="false">pref_key_category_phone_feature</string>
+    <string name="pref_key_exceptions_clear_site_permissions" translatable="false">pref_key_exceptions_clear_site_permissions</string>
 
     <!-- Theme Settings -->
     <string name="pref_key_light_theme" translatable="false">pref_key_light_theme</string>

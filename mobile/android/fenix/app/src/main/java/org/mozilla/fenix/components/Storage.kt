@@ -5,6 +5,7 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
+import androidx.paging.DataSource
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissions.Status
 import mozilla.components.feature.sitepermissions.SitePermissionsStorage
@@ -40,5 +41,17 @@ class Storage(private val context: Context) {
 
     fun updateSitePermissions(sitePermissions: SitePermissions) {
         permissionsStorage.update(sitePermissions)
+    }
+
+    fun getSitePermissionsPaged(): DataSource.Factory<Int, SitePermissions> {
+        return permissionsStorage.getSitePermissionsPaged()
+    }
+
+    fun deleteSitePermissions(sitePermissions: SitePermissions) {
+        permissionsStorage.remove(sitePermissions)
+    }
+
+    fun deleteAllSitePermissions() {
+        permissionsStorage.removeAll()
     }
 }
