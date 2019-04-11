@@ -19,7 +19,7 @@
 var testCases = [
   {
     "description"             : "Proximity + Within proximity => Snaps to point (Right)",
-    "scrollSnapType"          : "proximity",
+    "scrollSnapType"          : "both proximity",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -34,7 +34,7 @@ var testCases = [
 
   {
     "description"             : "Proximity + Within proximity => Snaps to point (Left)",
-    "scrollSnapType"          : "proximity",
+    "scrollSnapType"          : "both proximity",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -49,7 +49,7 @@ var testCases = [
 
   {
     "description"             : "Proximity + Within proximity => Snaps to point (Up)",
-    "scrollSnapType"          : "proximity",
+    "scrollSnapType"          : "both proximity",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -64,7 +64,7 @@ var testCases = [
 
   {
     "description"             : "Proximity + Within proximity => Snaps to point (Down)",
-    "scrollSnapType"          : "proximity",
+    "scrollSnapType"          : "both proximity",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -79,7 +79,7 @@ var testCases = [
 
   {
     "description"             : "Proximity + Beyond proximity => Does not snap to point (Right)",
-    "scrollSnapType"          : "proximity",
+    "scrollSnapType"          : "both proximity",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -94,7 +94,7 @@ var testCases = [
 
   {
     "description"             : "Proximity + Beyond proximity => Does not snap to point (Left)",
-    "scrollSnapType"          : "proximity",
+    "scrollSnapType"          : "both proximity",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -109,7 +109,7 @@ var testCases = [
 
   {
     "description"             : "Proximity + Beyond proximity => Does not snap to point (Up)",
-    "scrollSnapType"          : "proximity",
+    "scrollSnapType"          : "both proximity",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -124,7 +124,7 @@ var testCases = [
 
   {
     "description"             : "Proximity + Beyond proximity => Does not snap to point (Down)",
-    "scrollSnapType"          : "proximity",
+    "scrollSnapType"          : "both proximity",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -139,7 +139,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + Beyond proximity => Snaps to point (Right)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -154,7 +154,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + Beyond proximity => Snaps to point (Left)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -169,7 +169,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + Beyond proximity => Snaps to point (Up)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -184,7 +184,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + Beyond proximity => Snaps to point (Down)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -199,7 +199,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + No snap points => Does not snap or scroll (Left)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -214,7 +214,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + No snap points => Does not snap or scroll (Right)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -229,7 +229,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + No snap points => Does not snap or scroll (Up)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -244,7 +244,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + No snap points => Does not snap or scroll (Down)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -259,7 +259,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-y + scroll-snap-destination + Start of page + No snap point at start of page => Does not snap to top of page (Up)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "repeat(500px)",
     "scrollSnapDestination"   : "25px 25px",
@@ -274,7 +274,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-y + scroll-snap-destination + Start of page + No snap point at start of page => Does not snap to top of page (Page Up)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "repeat(500px)",
     "scrollSnapDestination"   : "25px 25px",
@@ -289,7 +289,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-y + scroll-snap-destination + Start of page + No snap point at start of page => Snaps to highest snap point (Home)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "repeat(500px)",
     "scrollSnapDestination"   : "25px 25px",
@@ -304,7 +304,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-x + scroll-snap-destination + Start of page + No snap point at start of page => Does not snap to left of page (Left)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "repeat(500px)",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "25px 25px",
@@ -319,7 +319,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-y + negative scroll-snap-destination + End of page + No snap point at end of page => Does not snap to end of page (Down)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "repeat(500px)",
     "scrollSnapDestination"   : "-25px -25px",
@@ -334,7 +334,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-y + negative scroll-snap-destination + End of page + No snap point at end of page => Does not snap to end of page (Page Down)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "repeat(500px)",
     "scrollSnapDestination"   : "-25px -25px",
@@ -349,7 +349,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-y + negative scroll-snap-destination + End of page + No snap point at end of page => Snaps to lowest snap point (End)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "repeat(500px)",
     "scrollSnapDestination"   : "-25px -25px",
@@ -364,7 +364,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-coordinate + No snap point at start of page => Does not snap to top of page (Home)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -379,7 +379,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-coordinate + No snap point at end of page => Does not snap to end of page (End)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -394,7 +394,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-y greater than scrolling rect + positive non-zero scroll-snap-destination => No snap points, does not scroll or snap (Left)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "repeat(1500px)",
     "scrollSnapDestination"   : "25px 25px",
@@ -409,7 +409,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-y greater than scrolling rect + positive non-zero scroll-snap-destination => No snap points, does not scroll or snap (Right)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "repeat(1500px)",
     "scrollSnapDestination"   : "25px 25px",
@@ -424,7 +424,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-y greater than scrolling rect + positive non-zero scroll-snap-destination => No snap points, does not scroll or snap (Up)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "repeat(1500px)",
     "scrollSnapDestination"   : "25px 25px",
@@ -439,7 +439,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-y greater than scrolling rect + positive non-zero scroll-snap-destination => No snap points, does not scroll or snap (Down)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "repeat(1500px)",
     "scrollSnapDestination"   : "25px 25px",
@@ -454,7 +454,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-{x|y} + scroll-snap-coordinate with two points => Interval and element snapping points are combined. Test 1 snap point generated by scroll-snap-points-{x|y} and two generated by scroll-snap-coordinate, ensure that they are evaluated as snap points. (Right #1)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "repeat(200px)",
     "scrollSnapPointsY"       : "repeat(200px)",
     "scrollSnapDestination"   : "0px 0px",
@@ -469,7 +469,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-{x|y} + scroll-snap-coordinate with two points => Interval and element snapping points are combined. Test 1 snap point generated by scroll-snap-points-{x|y} and two generated by scroll-snap-coordinate, ensure that they are evaluated as snap points. (Right #2)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "repeat(200px)",
     "scrollSnapPointsY"       : "repeat(200px)",
     "scrollSnapDestination"   : "0px 0px",
@@ -485,7 +485,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-{x|y} + scroll-snap-coordinate with two points => Interval and element snapping points are combined. Test 1 snap point generated by scroll-snap-points-{x|y} and two generated by scroll-snap-coordinate, ensure that they are evaluated as snap points. (Right #3)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "repeat(200px)",
     "scrollSnapPointsY"       : "repeat(200px)",
     "scrollSnapDestination"   : "0px 0px",
@@ -500,7 +500,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-{x|y} + scroll-snap-coordinate with two points => Interval and element snapping points are combined. Test 1 snap point generated by scroll-snap-points-{x|y} and two generated by scroll-snap-coordinate, ensure that they are evaluated as snap points. (Up #1)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "repeat(200px)",
     "scrollSnapPointsY"       : "repeat(200px)",
     "scrollSnapDestination"   : "0px 0px",
@@ -515,7 +515,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-{x|y} + scroll-snap-coordinate with two points => Interval and element snapping points are combined. Test 1 snap point generated by scroll-snap-points-{x|y} and two generated by scroll-snap-coordinate, ensure that they are evaluated as snap points. (Up #2)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "repeat(200px)",
     "scrollSnapPointsY"       : "repeat(200px)",
     "scrollSnapDestination"   : "0px 0px",
@@ -530,7 +530,7 @@ var testCases = [
 
   {
     "description"             : "Mandatory + scroll-snap-points-{x|y} + scroll-snap-coordinate with two points => Interval and element snapping points are combined. Test 1 snap point generated by scroll-snap-points-{x|y} and two generated by scroll-snap-coordinate, ensure that they are evaluated as snap points. (Up #3)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "repeat(200px)",
     "scrollSnapPointsY"       : "repeat(200px)",
     "scrollSnapDestination"   : "0px 0px",
@@ -545,7 +545,7 @@ var testCases = [
 
   {
     "description"             : "Ensure that when paging down/up that the next snap point in the direction of the scroll is selected rather than a closer point in the opposite direction (page Down)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -560,7 +560,7 @@ var testCases = [
 
   {
     "description"             : "Ensure that when paging down/up that the next snap point in the direction of the scroll is selected rather than a closer point in the opposite direction (Page Up)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -575,7 +575,7 @@ var testCases = [
 
   {
     "description"             : "Ensure that when paging down/up that the farthest snap point before the destination is selected and prioritized over a snap point that is past the destination, even if the snap point past the destination is closer to the destination.  Setup - two snap points between current position and destination and one snap point past the destination which is closer than any of the other points. Scrollable rect size is 500px. (Page Down)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -590,7 +590,7 @@ var testCases = [
 
   {
     "description"             : "Ensure that when paging down/up that the farthest snap point before the destination is selected and prioritized over a snap point that is past the destination, even if the snap point past the destination is closer to the destination.  Setup - two snap points between current position and destination and one snap point past the destination which is closer than any of the other points. Scrollable rect size is 500px. (Page Up)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -605,7 +605,7 @@ var testCases = [
 
   {
     "description"             : "Ensure that when paging down/up that the closest snap point past the destination is selected when no snap points exist between the starting position and the destination.  Additionally, a snap point closer to the destination than the one past the snap point, but not in the scrolling direction, must not be selected.  Setup - Two snap points beyond the destination and one snap point in the opposite direction of scrolling which is closest to the destination. Scrollable rect size is 500px. (Page Down)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -620,7 +620,7 @@ var testCases = [
 
   {
     "description"             : "Ensure that when paging down/up that the closest snap point past the destination is selected when no snap points exist between the starting position and the destination.  Additionally, a snap point closer to the destination than the one past the snap point, but not in the scrolling direction, must not be selected.  Setup - Two snap points beyond the destination and one snap point in the opposite direction of scrolling which is closest to the destination. Scrollable rect size is 500px. (Page Up)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -635,7 +635,7 @@ var testCases = [
 
   {
     "description"             : "Ensure that when scrolling by lines up,down,left,or right, that the closest snap point to the destination in the direction of travel is selected.  Setup - Two snap points in the direction of travel and one in the opposite direction.  Snap point in opposite direction is closest to the destination but must not be selected. (Down)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -650,7 +650,7 @@ var testCases = [
 
   {
     "description"             : "Ensure that when scrolling by lines up,down,left,or right, that the closest snap point to the destination in the direction of travel is selected.  Setup - Two snap points in the direction of travel and one in the opposite direction.  Snap point in opposite direction is closest to the destination but must not be selected. (Up)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",
@@ -665,7 +665,7 @@ var testCases = [
 
   {
     "description"             : "Ensure that when scrolling by lines up,down,left,or right, that the closest snap point to the destination in the direction of travel is selected.  Setup - Two snap points in the direction of travel and one in the opposite direction.  Snap point in opposite direction is closest to the destination but must not be selected. (Left)",
-    "scrollSnapType"          : "mandatory",
+    "scrollSnapType"          : "both mandatory",
     "scrollSnapPointsX"       : "none",
     "scrollSnapPointsY"       : "none",
     "scrollSnapDestination"   : "0px 0px",

@@ -243,7 +243,7 @@ function doTest() {
   lastScrollLeft = sc.scrollLeft;
 
   sc.scrollTo(testCase.startScroll.x, testCase.startScroll.y);
-  sc.style.scrollSnapType = "mandatory";
+  sc.style.scrollSnapType = "both mandatory";
   sd.style.scrollSnapCoordinate = testCase.snapCoord;
 
   synthesizeMouse(sc,

@@ -4034,7 +4034,7 @@ ScrollStyles ScrollFrameHelper::GetScrollStylesFromFrame() const {
 
   if (!mIsRoot) {
     const nsStyleDisplay* disp = mOuter->StyleDisplay();
-    return ScrollStyles(disp);
+    return ScrollStyles(mOuter->GetWritingMode(), disp);
   }
 
   ScrollStyles result = presContext->GetViewportScrollStylesOverride();

@@ -46,8 +46,11 @@ struct ScrollStyles {
         mScrollSnapDestinationX(LengthPercentage::Zero()),
         mScrollSnapDestinationY(LengthPercentage::Zero()) {}
 
-  explicit ScrollStyles(const nsStyleDisplay* aDisplay);
-  ScrollStyles(StyleOverflow aH, StyleOverflow aV, const nsStyleDisplay*);
+  ScrollStyles(WritingMode aWritingMode, const nsStyleDisplay* aDisplay);
+  ScrollStyles(WritingMode aWritingMode, StyleOverflow aH, StyleOverflow aV,
+               const nsStyleDisplay* aDisplay);
+  void InitializeScrollSnapType(WritingMode aWritingMode,
+                                const nsStyleDisplay* aDisplay);
   bool operator==(const ScrollStyles& aStyles) const {
     return aStyles.mHorizontal == mHorizontal &&
            aStyles.mVertical == mVertical &&
