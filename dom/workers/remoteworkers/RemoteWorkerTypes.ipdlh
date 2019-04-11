@@ -38,6 +38,10 @@ struct RemoteWorkerData
   ContentSecurityPolicy[] principalCsp;
   ContentSecurityPolicy[] principalPreloadCsp;
 
+  PrincipalInfo storagePrincipalInfo;
+  ContentSecurityPolicy[] storagePrincipalCsp;
+  ContentSecurityPolicy[] storagePrincipalPreloadCsp;
+
   nsCString domain;
 
   bool isSecureContext;
