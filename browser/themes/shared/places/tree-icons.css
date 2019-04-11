@@ -45,7 +45,7 @@ treechildren::-moz-tree-image(query) {
 }
 
 treechildren::-moz-tree-image(query, OrganizerQuery_allbms_____v) {
-  list-style-image: url("chrome://browser/skin/places/allBookmarks.png");
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
 }
 
 treechildren::-moz-tree-image(query, OrganizerQuery_downloads__v) {

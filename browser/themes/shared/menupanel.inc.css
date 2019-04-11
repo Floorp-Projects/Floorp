@@ -127,11 +127,11 @@
   list-style-image: url("chrome://browser/skin/bookmarks-toolbar.svg");
 }
 
-#appMenu-library-bookmarks-button,
 #panelMenuBookmarkThisPage {
   list-style-image: url("chrome://browser/skin/bookmark-hollow.svg");
 }
 
+#appMenu-library-bookmarks-button,
 #panelMenuBookmarkThisPage[starred] {
   list-style-image: url("chrome://browser/skin/bookmark.svg");
 }

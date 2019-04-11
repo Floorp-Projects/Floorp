@@ -21,10 +21,8 @@ browser.jar:
   skin/classic/browser/monitor-border.png
   skin/classic/browser/notification-icons/geo-blocked.svg  (notification-icons/geo-blocked.svg)
   skin/classic/browser/notification-icons/geo.svg          (notification-icons/geo.svg)
-  skin/classic/browser/places/allBookmarks.png              (places/allBookmarks.png)
 * skin/classic/browser/places/sidebar.css                   (places/sidebar.css)
   skin/classic/browser/places/organizer.css                 (places/organizer.css)
-  skin/classic/browser/places/toolbar.png                   (places/toolbar.png)
   skin/classic/browser/places/toolbarDropMarker.png         (places/toolbarDropMarker.png)
   skin/classic/browser/places/editBookmark.css              (places/editBookmark.css)
   skin/classic/browser/preferences/alwaysAsk.png            (preferences/alwaysAsk.png)
