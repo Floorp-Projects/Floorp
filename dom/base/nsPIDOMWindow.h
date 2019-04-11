@@ -688,9 +688,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOWOUTER_IID)
 
-  nsPIDOMWindowOuter* AsOuter() { return this; }
-  const nsPIDOMWindowOuter* AsOuter() const { return this; }
-
   nsPIDOMWindowOuter* GetOuterWindow() const {
     return const_cast<nsPIDOMWindowOuter*>(this);
   }
