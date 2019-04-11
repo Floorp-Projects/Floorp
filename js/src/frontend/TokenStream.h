@@ -341,16 +341,6 @@ struct Token {
     // SlashIsInvalid, then getting with another mode--is not OK. If either Div
     // or RegExp is syntactically valid here, use the appropriate modifier.
     SlashIsInvalid,
-
-    // Treat subsequent code units as the tail of a template literal, after
-    // a template substitution, beginning with a "}", continuing with zero
-    // or more template literal code units, and ending with either "${" or
-    // the end of the template literal.  For example:
-    //
-    //   var entity = "world";
-    //   var s = `Hello ${entity}!`;
-    //                          ^ TemplateTail context
-    TemplateTail,
   };
   friend class TokenStreamShared;
 
@@ -486,27 +476,14 @@ class TokenStreamShared {
   static constexpr Modifier SlashIsDiv = Token::SlashIsDiv;
   static constexpr Modifier SlashIsRegExp = Token::SlashIsRegExp;
   static constexpr Modifier SlashIsInvalid = Token::SlashIsInvalid;
-  static constexpr Modifier TemplateTail = Token::TemplateTail;
 
   static void verifyConsistentModifier(Modifier modifier,
-                                       Token lookaheadToken) {
-#ifdef DEBUG
-    // Easy case: modifiers match.
-    if (modifier == lookaheadToken.modifier) {
-      return;
-    }
-
-    if (modifier == SlashIsInvalid &&
-        lookaheadToken.modifier != TemplateTail) {
-      // "Don't care" mode is fine after either SlashIsDiv or SlashIsRegExp.
-      return;
-    }
-
-    MOZ_ASSERT_UNREACHABLE(
-        "This token was scanned with both SlashIsRegExp and SlashIsDiv, indicating "
-        "the parser is confused about which one is allowed here. See comment "
-        "at Token::Modifier.");
-#endif
+                                       const Token& nextToken) {
+    MOZ_ASSERT(
+        modifier == nextToken.modifier || modifier == SlashIsInvalid,
+        "This token was scanned with both SlashIsRegExp and SlashIsDiv, "
+        "indicating the parser is confused about how to handle a slash here. "
+        "See comment at Token::Modifier.");
   }
 };
 
@@ -2769,6 +2746,29 @@ class MOZ_STACK_CLASS TokenStreamSpecific
 
   MOZ_MUST_USE bool getStringOrTemplateToken(char untilChar, Modifier modifier,
                                              TokenKind* out);
+
+  // Parse a TemplateMiddle or TemplateTail token (one of the string-like parts
+  // of a template string) after already consuming the leading `RightCurly`.
+  // (The spec says the `}` is the first character of the TemplateMiddle/
+  // TemplateTail, but we treat it as a separate token because that's much
+  // easier to implement in both TokenStream and the parser.)
+  //
+  // This consumes a token and sets the current token, like `getToken()`.  It
+  // doesn't take a Modifier because there's no risk of encountering a division
+  // operator or RegExp literal.
+  //
+  // On success, `*ttp` is either `TokenKind::TemplateHead` (if we got a
+  // TemplateMiddle token) or `TokenKind::NoSubsTemplate` (if we got a
+  // TemplateTail). That may seem strange; there are four different template
+  // token types in the spec, but we only use two. We use `TemplateHead` for
+  // TemplateMiddle because both end with `...${`, and `NoSubsTemplate` for
+  // TemplateTail because both contain the end of the template, including the
+  // closing quote mark. They're not treated differently, either in the parser
+  // or in the tokenizer.
+  MOZ_MUST_USE bool getTemplateToken(TokenKind* ttp) {
+    MOZ_ASSERT(anyCharsAccess().currentToken().type == TokenKind::RightCurly);
+    return getStringOrTemplateToken('`', SlashIsInvalid, ttp);
+  }
 
   MOZ_MUST_USE bool getDirectives(bool isMultiline, bool shouldWarnDeprecated);
   MOZ_MUST_USE bool getDirective(
