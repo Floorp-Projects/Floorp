@@ -254,23 +254,15 @@ static void UnlockD3DTexture(T* aTexture) {
   }
 }
 
-DXGITextureData::DXGITextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                 bool aNeedsClear, bool aNeedsClearWhite,
-                                 bool aIsForOutOfBandContent)
-    : mSize(aSize),
-      mFormat(aFormat),
-      mNeedsClear(aNeedsClear),
-      mNeedsClearWhite(aNeedsClearWhite),
-      mHasSynchronization(false),
-      mIsForOutOfBandContent(aIsForOutOfBandContent) {}
-
 D3D11TextureData::D3D11TextureData(ID3D11Texture2D* aTexture,
                                    gfx::IntSize aSize,
                                    gfx::SurfaceFormat aFormat,
                                    TextureAllocationFlags aFlags)
-    : DXGITextureData(aSize, aFormat, aFlags & ALLOC_CLEAR_BUFFER,
-                      aFlags & ALLOC_CLEAR_BUFFER_WHITE,
-                      aFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT),
+    : mSize(aSize),
+      mFormat(aFormat),
+      mNeedsClear(aFlags & ALLOC_CLEAR_BUFFER),
+      mNeedsClearWhite(aFlags & ALLOC_CLEAR_BUFFER_WHITE),
+      mIsForOutOfBandContent(aFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT),
       mTexture(aTexture),
       mAllocationFlags(aFlags) {
   MOZ_ASSERT(aTexture);
@@ -325,7 +317,7 @@ bool D3D11TextureData::Lock(OpenMode aMode) {
   return true;
 }
 
-bool DXGITextureData::PrepareDrawTargetInLock(OpenMode aMode) {
+bool D3D11TextureData::PrepareDrawTargetInLock(OpenMode aMode) {
   // Make sure that successful write-lock means we will have a DrawTarget to
   // write into.
   if (!mDrawTarget &&
@@ -354,7 +346,7 @@ bool DXGITextureData::PrepareDrawTargetInLock(OpenMode aMode) {
 
 void D3D11TextureData::Unlock() { UnlockD3DTexture(mTexture.get()); }
 
-void DXGITextureData::FillInfo(TextureData::Info& aInfo) const {
+void D3D11TextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = mSize;
   aInfo.format = mFormat;
   aInfo.supportsMoz2D = true;
@@ -374,7 +366,7 @@ void D3D11TextureData::SyncWithObject(SyncObjectClient* aSyncObject) {
   sync->RegisterTexture(mTexture);
 }
 
-bool DXGITextureData::SerializeSpecific(
+bool D3D11TextureData::SerializeSpecific(
     SurfaceDescriptorD3D10* const aOutDesc) {
   RefPtr<IDXGIResource> resource;
   GetDXGIResource((IDXGIResource**)getter_AddRefs(resource));
@@ -393,7 +385,7 @@ bool DXGITextureData::SerializeSpecific(
   return true;
 }
 
-bool DXGITextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
+bool D3D11TextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   SurfaceDescriptorD3D10 desc;
   if (!SerializeSpecific(&desc)) return false;
 
@@ -401,7 +393,7 @@ bool DXGITextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   return true;
 }
 
-void DXGITextureData::GetSubDescriptor(GPUVideoSubDescriptor* const aOutDesc) {
+void D3D11TextureData::GetSubDescriptor(GPUVideoSubDescriptor* const aOutDesc) {
   SurfaceDescriptorD3D10 ret;
   if (!SerializeSpecific(&ret)) return;
 
