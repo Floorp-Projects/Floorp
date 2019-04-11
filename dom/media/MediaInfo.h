@@ -247,7 +247,7 @@ class VideoInfo : public TrackInfo {
   // Should be 8, 10 or 12. Default value is 8.
   gfx::ColorDepth mColorDepth = gfx::ColorDepth::COLOR_8;
 
-  YUVColorSpace mColorSpace = YUVColorSpace::UNKNOWN;
+  gfx::YUVColorSpace mColorSpace = gfx::YUVColorSpace::UNKNOWN;
 
   // True indicates no restriction on Y, U, V values (otherwise 16-235 for 8
   // bits etc)

@@ -168,11 +168,11 @@ class gfxUtils {
   static void ClearThebesSurface(gfxASurface* aSurface);
 
   static const float* YuvToRgbMatrix4x3RowMajor(
-      mozilla::YUVColorSpace aYUVColorSpace);
+      mozilla::gfx::YUVColorSpace aYUVColorSpace);
   static const float* YuvToRgbMatrix3x3ColumnMajor(
-      mozilla::YUVColorSpace aYUVColorSpace);
+      mozilla::gfx::YUVColorSpace aYUVColorSpace);
   static const float* YuvToRgbMatrix4x4ColumnMajor(
-      mozilla::YUVColorSpace aYUVColorSpace);
+      mozilla::gfx::YUVColorSpace aYUVColorSpace);
 
   /**
    * Creates a copy of aSurface, but having the SurfaceFormat aFormat.

@@ -229,7 +229,7 @@ bool GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
 
   const auto srcOrigin = OriginPos::BottomLeft;
   const gfx::IntRect clipRect(0, 0, clipSize.width, clipSize.height);
-  const auto colorSpace = YUVColorSpace::BT601;
+  const auto colorSpace = gfx::YUVColorSpace::BT601;
 
   if (format != gfx::SurfaceFormat::NV12 &&
       format != gfx::SurfaceFormat::P010 &&
@@ -286,7 +286,7 @@ bool GLBlitHelper::BlitAngleYCbCr(const WindowsHandle (&handleList)[3],
                                   const gfx::IntRect& clipRect,
                                   const gfx::IntSize& ySize,
                                   const gfx::IntSize& uvSize,
-                                  const YUVColorSpace colorSpace,
+                                  const gfx::YUVColorSpace colorSpace,
                                   const gfx::IntSize& destSize,
                                   const OriginPos destOrigin) const {
   const auto& d3d = GetD3D11();

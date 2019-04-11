@@ -927,7 +927,7 @@ bool GLBlitHelper::BlitImage(layers::MacIOSurfaceImage* const srcImage,
   baseArgs.destSize = destSize;
 
   DrawBlitProg::YUVArgs yuvArgs;
-  yuvArgs.colorSpace = YUVColorSpace::BT601;
+  yuvArgs.colorSpace = gfx::YUVColorSpace::BT601;
 
   const DrawBlitProg::YUVArgs* pYuvArgs = nullptr;
 

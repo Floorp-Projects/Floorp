@@ -60,7 +60,7 @@ gfx::IntSize SizeFromBufferDescriptor(const BufferDescriptor& aDescriptor);
 Maybe<gfx::IntSize> CbCrSizeFromBufferDescriptor(
     const BufferDescriptor& aDescriptor);
 
-Maybe<YUVColorSpace> YUVColorSpaceFromBufferDescriptor(
+Maybe<gfx::YUVColorSpace> YUVColorSpaceFromBufferDescriptor(
     const BufferDescriptor& aDescriptor);
 
 Maybe<gfx::ColorDepth> ColorDepthFromBufferDescriptor(

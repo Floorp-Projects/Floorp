@@ -1231,7 +1231,7 @@ already_AddRefed<TextureClient> TextureClient::CreateForRawBufferAccess(
 already_AddRefed<TextureClient> TextureClient::CreateForYCbCr(
     KnowsCompositor* aAllocator, gfx::IntSize aYSize, uint32_t aYStride,
     gfx::IntSize aCbCrSize, uint32_t aCbCrStride, StereoMode aStereoMode,
-    gfx::ColorDepth aColorDepth, YUVColorSpace aYUVColorSpace,
+    gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace,
     TextureFlags aTextureFlags) {
   if (!aAllocator || !aAllocator->GetLayersIPCActor()->IPCOpen()) {
     return nullptr;

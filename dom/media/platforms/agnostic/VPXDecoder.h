@@ -80,18 +80,18 @@ class VPXDecoder : public MediaDataDecoder,
     */
     int mColorSpace = 1;  // CS_BT_601
 
-    YUVColorSpace ColorSpace() const {
+    gfx::YUVColorSpace ColorSpace() const {
       switch (mColorSpace) {
         case 1:
         case 3:
         case 4:
-          return YUVColorSpace::BT601;
+          return gfx::YUVColorSpace::BT601;
         case 2:
-          return YUVColorSpace::BT709;
+          return gfx::YUVColorSpace::BT709;
         case 5:
-          return YUVColorSpace::BT2020;
+          return gfx::YUVColorSpace::BT2020;
         default:
-          return YUVColorSpace::UNKNOWN;
+          return gfx::YUVColorSpace::UNKNOWN;
       }
     }
 
