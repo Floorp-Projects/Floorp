@@ -20,7 +20,6 @@
 #include "mozilla/Utf8.h"
 
 #include <algorithm>
-#include <ctype.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
