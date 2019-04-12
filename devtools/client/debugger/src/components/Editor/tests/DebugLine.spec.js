@@ -10,7 +10,7 @@ import { shallow } from "enzyme";
 
 import DebugLine from "../DebugLine";
 
-import { makeSource } from "../../../utils/test-head";
+import { createSourceObject } from "../../../utils/test-head";
 import { setDocument, toEditorLine } from "../../../utils/editor";
 
 function createMockDocument(clear) {
@@ -31,7 +31,7 @@ function generateDefaults(editor, overrides) {
       why: { type: "breakpoint" }
     },
     frame: null,
-    source: makeSource("foo"),
+    source: createSourceObject("foo"),
     ...overrides
   };
 }
@@ -65,7 +65,7 @@ describe("DebugLine Component", () => {
   describe("pausing at the first location", () => {
     it("should show a new debug line", async () => {
       const { component, props, doc } = render({
-        source: makeSource("foo", { loadedState: "loaded" })
+        source: createSourceObject("foo", { loadedState: "loaded" })
       });
       const line = 2;
       const frame = createFrame(line);
@@ -81,7 +81,7 @@ describe("DebugLine Component", () => {
     describe("pausing at a new location", () => {
       it("should replace the first debug line", async () => {
         const { props, component, clear, doc } = render({
-          source: makeSource("foo", { loadedState: "loaded" })
+          source: createSourceObject("foo", { loadedState: "loaded" })
         });
 
         component.instance().debugExpression = { clear: jest.fn() };

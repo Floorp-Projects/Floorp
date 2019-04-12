@@ -51,7 +51,7 @@ describe("navigation", () => {
     const { dispatch, getState, cx } = createStore(threadClient);
     const mockQuery = "foo";
 
-    await dispatch(actions.newSource(makeSource("foo1")));
+    await dispatch(actions.newGeneratedSource(makeSource("foo1")));
     await dispatch(actions.searchSources(cx, mockQuery));
 
     let results = getTextSearchResults(getState());
