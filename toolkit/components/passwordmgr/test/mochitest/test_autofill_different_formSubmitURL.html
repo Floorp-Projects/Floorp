@@ -30,6 +30,15 @@ let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@moz
 <script class="testbody" type="text/javascript">
 let iframe = SpecialPowers.wrap(document.getElementsByTagName("iframe")[0]);
 
+// Check for expected username/password in form.
+function checkACForm(expectedUsername, expectedPassword) {
+  let iframeDoc = iframe.contentDocument;
+  let uname = iframeDoc.getElementById("form-basic-username");
+  let pword = iframeDoc.getElementById("form-basic-password");
+  let formID = uname.parentNode.id;
+  is(uname.value, expectedUsername, "Checking " + formID + " username");
+  is(pword.value, expectedPassword, "Checking " + formID + " password");
+}
 async function prepareLoginsAndProcessForm(url, logins = []) {
   LoginManager.removeAllLogins();
 
@@ -51,10 +60,7 @@ add_task(async function test_formSubmitURL_wildcard_should_autofill() {
                     "name2", "pass2", "uname", "pword"),
   ]);
 
-  let iframeDoc = iframe.contentDocument;
-  let uname = iframeDoc.getElementById("form-basic-username");
-  let pword = iframeDoc.getElementById("form-basic-password");
-  checkACForm(uname, "name2", pword, "pass2");
+  checkACForm("name2", "pass2");
 });
 
 add_task(async function test_formSubmitURL_different_shouldnt_autofill() {
@@ -63,10 +69,7 @@ add_task(async function test_formSubmitURL_different_shouldnt_autofill() {
                     "name2", "pass2", "uname", "pword"),
   ]);
 
-  let iframeDoc = iframe.contentDocument;
-  let uname = iframeDoc.getElementById("form-basic-username");
-  let pword = iframeDoc.getElementById("form-basic-password");
-  checkACForm(uname, "", pword, "");
+  checkACForm("", "");
 });
 
 </script>
