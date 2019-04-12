@@ -1,5 +1,5 @@
-commit 26eea4948c743417c8aa9d1e7fd900d1fb57fbdc
-Author: Yoshito Umaoka <yoshito_umaoka@us.ibm.com>
-Date:   Wed Jan 2 17:39:20 2019 -0500
+commit a1dd3c5661404aa93924e737aeb86acf130b8889
+Author: yumaoka <y.umaoka@gmail.com>
+Date:   Tue Mar 26 19:02:10 2019 -0400
 
-    ICU time zone data updates for tzdata 2018i (including 2018h changes)
+    ICU-20522 tzdata2019a updates
