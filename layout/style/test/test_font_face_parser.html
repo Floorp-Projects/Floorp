@@ -332,6 +332,8 @@ function runTest() {
         var s = sheet.cssRules[0].style;
         var n = 0;
 
+        is(s.getPropertyValue("pointless"), "", "Unknown descriptors don't assert");
+
         // everything is set that should be
         for (var name in d) {
           is(s.getPropertyValue(name), d[name],

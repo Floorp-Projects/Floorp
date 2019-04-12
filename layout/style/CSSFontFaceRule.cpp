@@ -56,7 +56,10 @@ NS_IMETHODIMP
 CSSFontFaceRuleDecl::GetPropertyValue(const nsAString& aPropName,
                                       nsAString& aResult) {
   aResult.Truncate();
-  GetPropertyValue(nsCSSProps::LookupFontDesc(aPropName), aResult);
+  nsCSSFontDesc descID = nsCSSProps::LookupFontDesc(aPropName);
+  if (descID != eCSSFontDesc_UNKNOWN) {
+    GetPropertyValue(descID, aResult);
+  }
   return NS_OK;
 }
 
