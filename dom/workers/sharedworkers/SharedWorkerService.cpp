@@ -218,6 +218,10 @@ void SharedWorkerService::GetOrCreateWorkerManagerOnMainThread(
   MOZ_ASSERT(aBackgroundEventTarget);
   MOZ_ASSERT(aActor);
 
+  auto closeMessagePortIdentifier = MakeScopeExit([&] {
+    MessagePort::ForceClose(aPortIdentifier);
+  });
+
   nsresult rv = NS_OK;
   nsCOMPtr<nsIPrincipal> principal =
       PrincipalInfoToPrincipal(aData.principalInfo(), &rv);
@@ -284,6 +288,8 @@ void SharedWorkerService::GetOrCreateWorkerManagerOnMainThread(
   RefPtr<WorkerManagerCreatedRunnable> r = new WorkerManagerCreatedRunnable(
       wrapper.forget(), aActor, aData, aWindowID, aPortIdentifier);
   aBackgroundEventTarget->Dispatch(r.forget(), NS_DISPATCH_NORMAL);
+
+  closeMessagePortIdentifier.release();
 }
 
 void SharedWorkerService::ErrorPropagationOnMainThread(
