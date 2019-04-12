@@ -16,7 +16,7 @@ import type {
   FrameId,
   ActorId,
   Script,
-  Source,
+  QueuedSourceData,
   Pause,
   PendingLocation,
   Frame,
@@ -186,7 +186,7 @@ export type TabPayload = {
 export type Actions = {
   paused: Pause => void,
   resumed: ResumedPacket => void,
-  newSources: (Source[]) => void,
+  newQueuedSources: (QueuedSourceData[]) => void,
   fetchEventListeners: () => void,
   updateWorkers: () => void
 };

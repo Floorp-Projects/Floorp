@@ -5,30 +5,30 @@
 // @flow
 
 import { throttle } from "lodash";
-import type { Source } from "../types";
+import type { QueuedSourceData } from "../types";
 
-let newSources;
+let newQueuedSources;
 let queuedSources;
 let currentWork;
 
 async function dispatchNewSources() {
   const sources = queuedSources;
   queuedSources = [];
-  currentWork = await newSources(sources);
+  currentWork = await newQueuedSources(sources);
 }
 
 const queue = throttle(dispatchNewSources, 100);
 
 export default {
   initialize: (actions: Object) => {
-    newSources = actions.newSources;
+    newQueuedSources = actions.newQueuedSources;
     queuedSources = [];
   },
-  queue: (source: Source) => {
+  queue: (source: QueuedSourceData) => {
     queuedSources.push(source);
     queue();
   },
-  queueSources: (sources: Source[]) => {
+  queueSources: (sources: QueuedSourceData[]) => {
     if (sources.length > 0) {
       queuedSources = queuedSources.concat(sources);
       queue();
