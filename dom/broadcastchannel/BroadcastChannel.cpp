@@ -48,11 +48,12 @@ class BroadcastChannelMessage final : public StructuredCloneDataNoTransfers {
 
 namespace {
 
-nsIPrincipal* GetPrincipalFromThreadSafeWorkerRef(
+nsIPrincipal* GetStoragePrincipalFromThreadSafeWorkerRef(
     ThreadSafeWorkerRef* aWorkerRef) {
-  nsIPrincipal* principal = aWorkerRef->Private()->GetPrincipal();
-  if (principal) {
-    return principal;
+  nsIPrincipal* storagePrincipal =
+      aWorkerRef->Private()->GetEffectiveStoragePrincipal();
+  if (storagePrincipal) {
+    return storagePrincipal;
   }
 
   // Walk up to our containing page
@@ -61,19 +62,19 @@ nsIPrincipal* GetPrincipalFromThreadSafeWorkerRef(
     wp = wp->GetParent();
   }
 
-  return wp->GetPrincipal();
+  return wp->GetEffectiveStoragePrincipal();
 }
 
 class InitializeRunnable final : public WorkerMainThreadRunnable {
  public:
   InitializeRunnable(ThreadSafeWorkerRef* aWorkerRef, nsACString& aOrigin,
-                     PrincipalInfo& aPrincipalInfo, ErrorResult& aRv)
+                     PrincipalInfo& aStoragePrincipalInfo, ErrorResult& aRv)
       : WorkerMainThreadRunnable(
             aWorkerRef->Private(),
             NS_LITERAL_CSTRING("BroadcastChannel :: Initialize")),
         mWorkerRef(aWorkerRef),
         mOrigin(aOrigin),
-        mPrincipalInfo(aPrincipalInfo),
+        mStoragePrincipalInfo(aStoragePrincipalInfo),
         mRv(aRv) {
     MOZ_ASSERT(mWorkerRef);
   }
@@ -81,18 +82,19 @@ class InitializeRunnable final : public WorkerMainThreadRunnable {
   bool MainThreadRun() override {
     MOZ_ASSERT(NS_IsMainThread());
 
-    nsIPrincipal* principal = GetPrincipalFromThreadSafeWorkerRef(mWorkerRef);
-    if (!principal) {
+    nsIPrincipal* storagePrincipal =
+        GetStoragePrincipalFromThreadSafeWorkerRef(mWorkerRef);
+    if (!storagePrincipal) {
       mRv.Throw(NS_ERROR_FAILURE);
       return true;
     }
 
-    mRv = PrincipalToPrincipalInfo(principal, &mPrincipalInfo);
+    mRv = PrincipalToPrincipalInfo(storagePrincipal, &mStoragePrincipalInfo);
     if (NS_WARN_IF(mRv.Failed())) {
       return true;
     }
 
-    mRv = principal->GetOrigin(mOrigin);
+    mRv = storagePrincipal->GetOrigin(mOrigin);
     if (NS_WARN_IF(mRv.Failed())) {
       return true;
     }
@@ -115,7 +117,7 @@ class InitializeRunnable final : public WorkerMainThreadRunnable {
  private:
   RefPtr<ThreadSafeWorkerRef> mWorkerRef;
   nsACString& mOrigin;
-  PrincipalInfo& mPrincipalInfo;
+  PrincipalInfo& mStoragePrincipalInfo;
   ErrorResult& mRv;
 };
 
@@ -227,7 +229,7 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
   RefPtr<BroadcastChannel> bc = new BroadcastChannel(global, aChannel);
 
   nsAutoCString origin;
-  PrincipalInfo principalInfo;
+  PrincipalInfo storagePrincipalInfo;
 
   nsContentUtils::StorageAccess storageAccess;
 
@@ -245,18 +247,24 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
       return nullptr;
     }
 
-    nsIPrincipal* principal = incumbent->PrincipalOrNull();
-    if (!principal) {
+    nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(incumbent);
+    if (NS_WARN_IF(!sop)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    nsIPrincipal* storagePrincipal = sop->GetEffectiveStoragePrincipal();
+    if (!storagePrincipal) {
       aRv.Throw(NS_ERROR_UNEXPECTED);
       return nullptr;
     }
 
-    aRv = principal->GetOrigin(origin);
+    aRv = storagePrincipal->GetOrigin(origin);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
 
-    aRv = PrincipalToPrincipalInfo(principal, &principalInfo);
+    aRv = PrincipalToPrincipalInfo(storagePrincipal, &storagePrincipalInfo);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
@@ -280,19 +288,21 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
     RefPtr<ThreadSafeWorkerRef> tsr = new ThreadSafeWorkerRef(workerRef);
 
     RefPtr<InitializeRunnable> runnable =
-        new InitializeRunnable(tsr, origin, principalInfo, aRv);
+        new InitializeRunnable(tsr, origin, storagePrincipalInfo, aRv);
     runnable->Dispatch(Canceling, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }
 
     storageAccess = workerPrivate->StorageAccess();
-    bc->mWorkerRef = std::move(workerRef);
+    bc->mWorkerRef = workerRef;
   }
 
   // We want to allow opaque origins.
-  if (principalInfo.type() != PrincipalInfo::TNullPrincipalInfo &&
-      storageAccess <= nsContentUtils::StorageAccess::eDeny) {
+  if (storagePrincipalInfo.type() != PrincipalInfo::TNullPrincipalInfo &&
+      (storageAccess == nsContentUtils::StorageAccess::eDeny ||
+       (storageAccess == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+        !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()))) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
@@ -306,7 +316,7 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
   }
 
   PBroadcastChannelChild* actor = actorChild->SendPBroadcastChannelConstructor(
-      principalInfo, origin, nsString(aChannel));
+      storagePrincipalInfo, origin, nsString(aChannel));
 
   bc->mActor = static_cast<BroadcastChannelChild*>(actor);
   MOZ_ASSERT(bc->mActor);
