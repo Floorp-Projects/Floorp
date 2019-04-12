@@ -10,6 +10,9 @@
 // private windows wouldn't send any blocking notifications as they don't have
 // storage access in the first place.
 
+/* import-globals-from antitracking_head.js */
+
+"use strict";
 add_task(async _ => {
   let uri = Services.io.newURI("https://example.net");
   Services.perms.add(uri, "trackingprotection-pb",
