@@ -9,6 +9,7 @@
 #include "nsObjCExceptions.h"
 #include "nsCocoaUtils.h"
 #include "nsThreadUtils.h"
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/nsSynthVoiceRegistry.h"
 #include "mozilla/dom/nsSpeechTask.h"
 #include "mozilla/Preferences.h"
@@ -412,6 +413,7 @@ OSXSpeechSynthesizerService* OSXSpeechSynthesizerService::GetInstance() {
     RefPtr<OSXSpeechSynthesizerService> speechService = new OSXSpeechSynthesizerService();
     if (speechService->Init()) {
       sSingleton = speechService;
+      ClearOnShutdown(&sSingleton);
     }
   }
   return sSingleton;
@@ -420,13 +422,6 @@ OSXSpeechSynthesizerService* OSXSpeechSynthesizerService::GetInstance() {
 already_AddRefed<OSXSpeechSynthesizerService> OSXSpeechSynthesizerService::GetInstanceForService() {
   RefPtr<OSXSpeechSynthesizerService> speechService = GetInstance();
   return speechService.forget();
-}
-
-void OSXSpeechSynthesizerService::Shutdown() {
-  if (!sSingleton) {
-    return;
-  }
-  sSingleton = nullptr;
 }
 
 }  // namespace dom

@@ -30,7 +30,7 @@ BEGIN_TEST(testBug795104) {
   opts.setNoScriptRval(true);
 
   JS::RootedValue unused(cx);
-  CHECK(JS::EvaluateUtf8(cx, opts, s, strLen, &unused));
+  CHECK(JS::Evaluate(cx, opts, srcBuf, &unused));
 
   JS::RootedFunction fun(cx);
   JS::RootedObjectVector emptyScopeChain(cx);

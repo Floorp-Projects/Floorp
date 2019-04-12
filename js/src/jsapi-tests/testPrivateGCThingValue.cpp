@@ -5,10 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
+#include "mozilla/Utf8.h"        // mozilla::Utf8Unit
+
 #include "jsapi.h"
 
-#include "js/CompilationAndEvaluation.h"
+#include "js/CompilationAndEvaluation.h"  // JS::CompileDontInflate
 #include "js/HeapAPI.h"
+#include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 
 class TestTracer : public JS::CallbackTracer {
@@ -37,13 +41,16 @@ BEGIN_TEST(testPrivateGCThingValue) {
   CHECK(obj);
 
   // Make a JSScript to stick into a PrivateGCThingValue.
-  const char code[] = "'objet petit a'";
+  static const char code[] = "'objet petit a'";
 
   JS::CompileOptions options(cx);
   options.setFileAndLine(__FILE__, __LINE__);
 
-  JS::RootedScript script(cx,
-                          JS::CompileUtf8(cx, options, code, sizeof(code) - 1));
+  JS::SourceText<mozilla::Utf8Unit> srcBuf;
+  CHECK(srcBuf.init(cx, code, mozilla::ArrayLength(code) - 1,
+                    JS::SourceOwnership::Borrowed));
+
+  JS::RootedScript script(cx, JS::CompileDontInflate(cx, options, srcBuf));
   CHECK(script);
   JS_SetReservedSlot(obj, 0, PrivateGCThingValue(script));
 
