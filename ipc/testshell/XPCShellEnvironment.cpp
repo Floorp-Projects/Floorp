@@ -17,14 +17,15 @@
 
 #include "jsapi.h"
 #include "js/CharacterEncoding.h"
-#include "js/CompilationAndEvaluation.h"
+#include "js/CompilationAndEvaluation.h"  // JS::Compile{,Utf8File}
 #include "js/PropertySpec.h"
-#include "js/SourceText.h"
+#include "js/SourceText.h"  // JS::Source{Ownership,Text}
 
 #include "xpcpublic.h"
 
 #include "XPCShellEnvironment.h"
 
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
 #include "mozilla/XPCOM.h"
 
 #include "nsIChannel.h"
@@ -288,9 +289,12 @@ void XPCShellEnvironment::ProcessFile(JSContext *cx, const char *filename,
     JS::CompileOptions options(cx);
     options.setFileAndLine("typein", startline);
 
-    JS::Rooted<JSScript *> script(
-        cx, JS::CompileUtf8(cx, options, buffer, strlen(buffer)));
-    if (script) {
+    JS::SourceText<mozilla::Utf8Unit> srcBuf;
+    JS::Rooted<JSScript *> script(cx);
+
+    if (srcBuf.init(cx, buffer, strlen(buffer),
+                    JS::SourceOwnership::Borrowed) &&
+        (script = JS::CompileDontInflate(cx, options, srcBuf))) {
       ok = JS_ExecuteScript(cx, script, &result);
       if (ok && !result.isUndefined()) {
         /* Suppress warnings from JS::ToString(). */

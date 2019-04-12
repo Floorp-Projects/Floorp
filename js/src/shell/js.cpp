@@ -18,6 +18,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Utf8.h"
 #include "mozilla/Variant.h"
 
 #include <chrono>
@@ -162,6 +163,7 @@ using mozilla::Nothing;
 using mozilla::NumberEqualsInt32;
 using mozilla::TimeDuration;
 using mozilla::TimeStamp;
+using mozilla::Utf8Unit;
 using mozilla::Variant;
 
 // Avoid an unnecessary NSPR dependency on Linux and OS X just for the shell.
@@ -972,8 +974,13 @@ static bool InitModuleLoader(JSContext* cx) {
   options.werrorOption = true;
   options.strictOption = true;
 
+  JS::SourceText<Utf8Unit> srcBuf;
+  if (!srcBuf.init(cx, std::move(src), srcLen)) {
+    return false;
+  }
+
   RootedValue rv(cx);
-  return JS::EvaluateUtf8(cx, options, src.get(), srcLen, &rv);
+  return JS::Evaluate(cx, options, srcBuf, &rv);
 }
 
 static bool GetModuleImportHook(JSContext* cx,
@@ -1294,7 +1301,12 @@ static MOZ_MUST_USE bool EvalUtf8AndPrint(JSContext* cx, const char* bytes,
       .setIsRunOnce(true)
       .setFileAndLine("typein", lineno);
 
-  RootedScript script(cx, JS::CompileUtf8(cx, options, bytes, length));
+  JS::SourceText<Utf8Unit> srcBuf;
+  if (!srcBuf.init(cx, bytes, length, JS::SourceOwnership::Borrowed)) {
+    return false;
+  }
+
+  RootedScript script(cx, JS::CompileDontInflate(cx, options, srcBuf));
   if (!script) {
     return false;
   }
@@ -10130,8 +10142,13 @@ static MOZ_MUST_USE bool ProcessArgs(JSContext* cx, OptionParser* op) {
       JS::CompileOptions opts(cx);
       opts.setFileAndLine("-e", 1);
 
+      JS::SourceText<Utf8Unit> srcBuf;
+      if (!srcBuf.init(cx, code, strlen(code), JS::SourceOwnership::Borrowed)) {
+        return false;
+      }
+
       RootedValue rval(cx);
-      if (!JS::EvaluateUtf8(cx, opts, code, strlen(code), &rval)) {
+      if (!JS::Evaluate(cx, opts, srcBuf, &rval)) {
         return false;
       }
 

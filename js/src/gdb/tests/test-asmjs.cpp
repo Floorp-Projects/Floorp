@@ -3,8 +3,10 @@
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"
 #include "js/RootingAPI.h"
+#include "js/SourceText.h"
 #include "js/Value.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Utf8.h"
 
 #include <string.h>
 
@@ -29,9 +31,12 @@ FRAGMENT(asmjs, segfault) {
   opts.setFileAndLine(__FILE__, line0 + 1);
   opts.asmJSOption = JS::AsmJSOption::Enabled;
 
+  JS::SourceText<mozilla::Utf8Unit> srcBuf;
   JS::Rooted<JS::Value> rval(cx);
-  bool ok = JS::EvaluateUtf8(cx, opts, chars, mozilla::ArrayLength(chars) - 1,
-                             &rval);
+
+  bool ok = srcBuf.init(cx, chars, mozilla::ArrayLength(chars) - 1,
+                        JS::SourceOwnership::Borrowed) &&
+            JS::Evaluate(cx, opts, srcBuf, &rval);
 
   breakpoint();
 

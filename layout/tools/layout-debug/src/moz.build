@@ -10,14 +10,13 @@ XPIDL_SOURCES += [
 
 XPIDL_MODULE = 'layout_debug'
 
-EXPORTS += [
-    'nsLayoutDebugCIID.h',
-]
-
 UNIFIED_SOURCES += [
-    'nsDebugFactory.cpp',
     'nsLayoutDebugCLH.cpp',
     'nsLayoutDebuggingTools.cpp',
+]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

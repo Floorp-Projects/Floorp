@@ -9,7 +9,8 @@
 #include "jspubtd.h"
 
 #include "gc/Heap.h"
-#include "js/CompilationAndEvaluation.h"
+#include "js/CompilationAndEvaluation.h"  // JS::CompileDontInflate
+#include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 
 JS::GCCellPtr GivesAndTakesCells(JS::GCCellPtr cell) { return cell; }
@@ -25,7 +26,10 @@ BEGIN_TEST(testGCCellPtr) {
 
   JS::CompileOptions opts(cx);
 
-  JS::RootedScript script(cx, JS::CompileUtf8(cx, opts, code, strlen(code)));
+  JS::SourceText<mozilla::Utf8Unit> srcBuf;
+  CHECK(srcBuf.init(cx, code, strlen(code), JS::SourceOwnership::Borrowed));
+
+  JS::RootedScript script(cx, JS::CompileDontInflate(cx, opts, srcBuf));
   CHECK(script);
 
   CHECK(!JS::GCCellPtr(nullptr));
