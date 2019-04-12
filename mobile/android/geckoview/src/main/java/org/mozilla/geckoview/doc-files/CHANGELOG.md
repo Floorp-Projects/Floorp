@@ -54,6 +54,12 @@ exclude: true
 
 [68.11]: ../ContentBlocking.html#AT_FINGERPRINTING
 
+- Added `HistoryItem` and `HistoryList` interfaces and `onHistoryStateChange` to 
+  [`HistoryDelegate`][68.12] and added `gotoHistoryIndex` to [`GeckoSession`][68.13].
+
+[68.12]: ../GeckoSession.HistoryDelegate.html
+[68.13]: ../GeckoSession.html
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -260,4 +266,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: d5ed0fdce17acf10935d3b203f3627a1261bc855
+[api-version]: 7cba6fdca8edb1858d73704a06dad936f78c9f64
