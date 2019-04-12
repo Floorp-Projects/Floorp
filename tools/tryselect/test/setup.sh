@@ -2,6 +2,10 @@ export topsrcdir=$TESTDIR/../../../
 export MOZBUILD_STATE_PATH=$TMP/mozbuild
 export MACH_TRY_PRESET_PATHS=$MOZBUILD_STATE_PATH/try_presets.yml
 
+# This helps to find fzf when running these tests locally, since normally fzf
+# would be found via MOZBUILD_STATE_PATH pointing to $HOME/.mozbuild
+export PATH=$PATH:$HOME/.mozbuild/fzf/bin
+
 export MACHRC=$TMP/machrc
 cat > $MACHRC << EOF
 [try]
