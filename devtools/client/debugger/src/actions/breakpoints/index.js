@@ -247,7 +247,8 @@ export function toggleBreakpointAtLine(cx: Context, line: number) {
 export function addBreakpointAtLine(
   cx: Context,
   line: number,
-  shouldLog: ?boolean = false
+  shouldLog: boolean = false,
+  disabled: boolean = false
 ) {
   return ({ dispatch, getState, client, sourceMaps }: ThunkArgs) => {
     const state = getState();
@@ -268,7 +269,7 @@ export function addBreakpointAtLine(
       options.logValue = "displayName";
     }
 
-    return dispatch(addBreakpoint(cx, breakpointLocation, options));
+    return dispatch(addBreakpoint(cx, breakpointLocation, options, disabled));
   };
 }
 
