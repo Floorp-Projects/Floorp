@@ -10,6 +10,7 @@
 #include "MediaStreamGraph.h"
 #include "MediaStreamListener.h"
 #include "AudioSegment.h"
+#include "mozilla/MozPromise.h"
 
 namespace mozilla {
 
@@ -22,12 +23,14 @@ class SpeechRecognition;
 class SpeechTrackListener : public MediaStreamTrackListener {
  public:
   explicit SpeechTrackListener(SpeechRecognition* aRecognition);
-  ~SpeechTrackListener();
+  ~SpeechTrackListener() = default;
 
   void NotifyQueuedChanges(MediaStreamGraph* aGraph, StreamTime aTrackOffset,
                            const MediaSegment& aQueuedMedia) override;
 
   void NotifyEnded() override;
+
+  void NotifyRemoved() override;
 
  private:
   template <typename SampleFormatType>
@@ -35,6 +38,10 @@ class SpeechTrackListener : public MediaStreamTrackListener {
                                     SampleFormatType* aData,
                                     TrackRate aTrackRate);
   RefPtr<SpeechRecognition> mRecognition;
+  MozPromiseHolder<GenericNonExclusivePromise> mRemovedHolder;
+
+ public:
+  const RefPtr<GenericNonExclusivePromise> mRemovedPromise;
 };
 
 }  // namespace dom
