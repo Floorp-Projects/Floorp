@@ -1106,11 +1106,12 @@ class Document : public nsINode,
   /**
    * Set the tracking cookies blocked flag for this document.
    */
-  void SetHasTrackingCookiesBlocked(bool aHasTrackingCookiesBlocked,
-                                    const nsACString& aOriginBlocked) {
+  void SetHasTrackingCookiesBlocked(
+      bool aHasTrackingCookiesBlocked, const nsACString& aOriginBlocked,
+      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason) {
     RecordContentBlockingLog(
         aOriginBlocked, nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
-        aHasTrackingCookiesBlocked);
+        aHasTrackingCookiesBlocked, aReason);
   }
 
   /**
@@ -3840,9 +3841,11 @@ class Document : public nsINode,
                                        bool aUpdateCSSLoader);
 
  private:
-  void RecordContentBlockingLog(const nsACString& aOrigin, uint32_t aType,
-                                bool aBlocked) {
-    mContentBlockingLog.RecordLog(aOrigin, aType, aBlocked);
+  void RecordContentBlockingLog(
+      const nsACString& aOrigin, uint32_t aType, bool aBlocked,
+      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason =
+          Nothing()) {
+    mContentBlockingLog.RecordLog(aOrigin, aType, aBlocked, aReason);
   }
 
   mutable std::bitset<eDeprecatedOperationCount> mDeprecationWarnedAbout;

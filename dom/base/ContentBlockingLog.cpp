@@ -92,16 +92,43 @@ void ContentBlockingLog::ReportLog() {
         continue;
       }
 
-      bool isBlocked = logEntry.mBlocked;
-      auto metricId = isBlocked
-                          ? Telemetry::OriginMetricID::ContentBlocking_Blocked
-                          : Telemetry::OriginMetricID::ContentBlocking_Exempt;
-      if (StaticPrefs::telemetry_origin_telemetry_test_mode_enabled()) {
-        metricId =
-            isBlocked
-                ? Telemetry::OriginMetricID::ContentBlocking_Blocked_TestOnly
-                : Telemetry::OriginMetricID::ContentBlocking_Exempt_TestOnly;
+      const bool isBlocked = logEntry.mBlocked;
+      Maybe<StorageAccessGrantedReason> reason = logEntry.mReason;
+      const bool testMode =
+          StaticPrefs::telemetry_origin_telemetry_test_mode_enabled();
+
+      using OriginMetricID = Telemetry::OriginMetricID;
+      OriginMetricID metricId =
+          testMode ? OriginMetricID::ContentBlocking_Blocked_TestOnly
+                   : OriginMetricID::ContentBlocking_Blocked;
+      if (!isBlocked) {
+        MOZ_ASSERT(reason.isSome());
+        switch (reason.value()) {
+          case StorageAccessGrantedReason::eStorageAccessAPI:
+            metricId =
+                testMode
+                    ? OriginMetricID::
+                          ContentBlocking_StorageAccessAPIExempt_TestOnly
+                    : OriginMetricID::ContentBlocking_StorageAccessAPIExempt;
+            break;
+          case StorageAccessGrantedReason::eOpenerAfterUserInteraction:
+            metricId =
+                testMode
+                    ? OriginMetricID::
+                          ContentBlocking_OpenerAfterUserInteractionExempt_TestOnly
+                    : OriginMetricID::
+                          ContentBlocking_OpenerAfterUserInteractionExempt;
+            break;
+          case StorageAccessGrantedReason::eOpener:
+            metricId =
+                testMode ? OriginMetricID::ContentBlocking_OpenerExempt_TestOnly
+                         : OriginMetricID::ContentBlocking_OpenerExempt;
+            break;
+          default:
+            MOZ_ASSERT_UNREACHABLE("Unknown StorageAccessGrantedReason");
+        }
       }
+
       Telemetry::RecordOrigin(metricId, originEntry.mOrigin);
       break;
     }
