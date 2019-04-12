@@ -22,12 +22,12 @@ job-defaults:
         tier: 1
 
 jobs:
-    linux64/pgo:
+    linux64-shippable/opt:
         description: "Linux64 Instrumented"
         shipping-phase: build
         shipping-product: firefox
         treeherder:
-            platform: linux64/pgo
+            platform: linux64-shippable/opt
         worker-type: aws-provisioner-v1/gecko-{level}-b-linux
         worker:
             max-run-time: 7200
