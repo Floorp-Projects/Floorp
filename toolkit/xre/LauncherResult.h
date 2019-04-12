@@ -66,6 +66,9 @@ using LauncherVoidResult = LauncherResult<Ok>;
 #  define LAUNCHER_ERROR_FROM_HRESULT(hresult) \
     ::mozilla::Err(::mozilla::WindowsError::FromHResult(hresult))
 
+#  define LAUNCHER_ERROR_FROM_MOZ_WINDOWS_ERROR(err) \
+    ::mozilla::Err(err)
+
 #else
 
 #  define LAUNCHER_ERROR_GENERIC()           \

@@ -79,6 +79,10 @@ VOID NTAPI RtlAcquireSRWLockExclusive(PSRWLOCK aLock);
 
 VOID NTAPI RtlReleaseSRWLockExclusive(PSRWLOCK aLock);
 
+NTSTATUS NTAPI NtReadVirtualMemory(HANDLE aProcessHandle, PVOID aBaseAddress,
+                                   PVOID aBuffer, SIZE_T aNumBytesToRead,
+                                   PSIZE_T aNumBytesRead);
+
 }  // extern "C"
 
 #endif  // !defined(MOZILLA_INTERNAL_API)
@@ -244,15 +248,45 @@ class MOZ_RAII PEHeaders final {
   };
 
  public:
-  explicit PEHeaders(void* aBaseAddress)
-      : PEHeaders(reinterpret_cast<PIMAGE_DOS_HEADER>(aBaseAddress)) {}
-
   // The lowest two bits of an HMODULE are used as flags. Stripping those bits
   // from the HMODULE yields the base address of the binary's memory mapping.
   // (See LoadLibraryEx docs on MSDN)
+  static PIMAGE_DOS_HEADER HModuleToBaseAddr(HMODULE aModule) {
+    return reinterpret_cast<PIMAGE_DOS_HEADER>(
+        reinterpret_cast<uintptr_t>(aModule) & ~uintptr_t(3));
+  }
+
+  explicit PEHeaders(void* aBaseAddress)
+      : PEHeaders(reinterpret_cast<PIMAGE_DOS_HEADER>(aBaseAddress)) {}
+
   explicit PEHeaders(HMODULE aModule)
-      : PEHeaders(reinterpret_cast<PIMAGE_DOS_HEADER>(
-            reinterpret_cast<uintptr_t>(aModule) & ~uintptr_t(3))) {}
+      : PEHeaders(HModuleToBaseAddr(aModule)) {}
+
+  explicit PEHeaders(PIMAGE_DOS_HEADER aMzHeader)
+      : mMzHeader(aMzHeader), mPeHeader(nullptr), mImageLimit(nullptr) {
+    if (!mMzHeader || mMzHeader->e_magic != IMAGE_DOS_SIGNATURE) {
+      return;
+    }
+
+    mPeHeader = RVAToPtrUnchecked<PIMAGE_NT_HEADERS>(mMzHeader->e_lfanew);
+    if (!mPeHeader || mPeHeader->Signature != IMAGE_NT_SIGNATURE) {
+      return;
+    }
+
+    if (mPeHeader->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC) {
+      return;
+    }
+
+    DWORD imageSize = mPeHeader->OptionalHeader.SizeOfImage;
+    // This is a coarse-grained check to ensure that the image size is
+    // reasonable. It we aren't big enough to contain headers, we have a
+    // problem!
+    if (imageSize < sizeof(IMAGE_DOS_HEADER) + sizeof(IMAGE_NT_HEADERS)) {
+      return;
+    }
+
+    mImageLimit = RVAToPtrUnchecked<void*>(imageSize - 1UL);
+  }
 
   explicit operator bool() const { return !!mImageLimit; }
 
@@ -293,6 +327,32 @@ class MOZ_RAII PEHeaders final {
   PIMAGE_RESOURCE_DIRECTORY GetResourceTable() {
     return GetImageDirectoryEntry<PIMAGE_RESOURCE_DIRECTORY>(
         IMAGE_DIRECTORY_ENTRY_RESOURCE);
+  }
+
+  PIMAGE_DATA_DIRECTORY GetImageDirectoryEntryPtr(
+      const uint32_t aDirectoryIndex,
+      uint32_t* aOutRva = nullptr) const {
+    if (aOutRva) {
+      *aOutRva = 0;
+    }
+
+    IMAGE_OPTIONAL_HEADER& optionalHeader = mPeHeader->OptionalHeader;
+
+    const uint32_t maxIndex = std::min(optionalHeader.NumberOfRvaAndSizes,
+                                       DWORD(IMAGE_NUMBEROF_DIRECTORY_ENTRIES));
+    if (aDirectoryIndex >= maxIndex) {
+      return nullptr;
+    }
+
+    PIMAGE_DATA_DIRECTORY dirEntry =
+      &optionalHeader.DataDirectory[aDirectoryIndex];
+    if (aOutRva) {
+      *aOutRva = reinterpret_cast<char*>(dirEntry) -
+                 reinterpret_cast<char*>(mMzHeader);
+      MOZ_ASSERT(*aOutRva);
+    }
+
+    return dirEntry;
   }
 
   bool GetVersionInfo(uint64_t& aOutVersion) {
@@ -340,6 +400,40 @@ class MOZ_RAII PEHeaders final {
     }
 
     return nullptr;
+  }
+
+  struct IATThunks {
+    IATThunks(PIMAGE_THUNK_DATA aFirstThunk, ptrdiff_t aNumThunks)
+      : mFirstThunk(aFirstThunk), mNumThunks(aNumThunks) {}
+
+    size_t Length() const {
+      return size_t(mNumThunks) * sizeof(IMAGE_THUNK_DATA);
+    }
+
+    PIMAGE_THUNK_DATA mFirstThunk;
+    ptrdiff_t mNumThunks;
+  };
+
+  Maybe<IATThunks> GetIATThunksForModule(const char* aModuleNameASCII) {
+    PIMAGE_IMPORT_DESCRIPTOR impDesc = GetIATForModule(aModuleNameASCII);
+    if (!impDesc) {
+      return Nothing();
+    }
+
+    auto firstIatThunk =
+        this->template RVAToPtr<PIMAGE_THUNK_DATA>(impDesc->FirstThunk);
+    if (!firstIatThunk) {
+      return Nothing();
+    }
+
+    // Find the length by iterating through the table until we find a null entry
+    PIMAGE_THUNK_DATA curIatThunk = firstIatThunk;
+    while (IsValid(curIatThunk)) {
+      ++curIatThunk;
+    }
+
+    ptrdiff_t thunkCount = curIatThunk - firstIatThunk;
+    return Some(IATThunks(firstIatThunk, thunkCount));
   }
 
   /**
@@ -394,48 +488,17 @@ class MOZ_RAII PEHeaders final {
   }
 
  private:
-  explicit PEHeaders(PIMAGE_DOS_HEADER aMzHeader)
-      : mMzHeader(aMzHeader), mPeHeader(nullptr), mImageLimit(nullptr) {
-    if (!mMzHeader || mMzHeader->e_magic != IMAGE_DOS_SIGNATURE) {
-      return;
-    }
-
-    mPeHeader = RVAToPtrUnchecked<PIMAGE_NT_HEADERS>(mMzHeader->e_lfanew);
-    if (!mPeHeader || mPeHeader->Signature != IMAGE_NT_SIGNATURE) {
-      return;
-    }
-
-    if (mPeHeader->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR_MAGIC) {
-      return;
-    }
-
-    DWORD imageSize = mPeHeader->OptionalHeader.SizeOfImage;
-    // This is a coarse-grained check to ensure that the image size is
-    // reasonable. It we aren't big enough to contain headers, we have a
-    // problem!
-    if (imageSize < sizeof(IMAGE_DOS_HEADER) + sizeof(IMAGE_NT_HEADERS)) {
-      return;
-    }
-
-    mImageLimit = RVAToPtrUnchecked<void*>(imageSize - 1UL);
-  }
-
   template <typename T>
   T GetImageDirectoryEntry(const uint32_t aDirectoryIndex) {
-    IMAGE_OPTIONAL_HEADER& optionalHeader = mPeHeader->OptionalHeader;
-
-    const uint32_t maxIndex = std::min(optionalHeader.NumberOfRvaAndSizes,
-                                       DWORD(IMAGE_NUMBEROF_DIRECTORY_ENTRIES));
-    if (aDirectoryIndex >= maxIndex) {
+    PIMAGE_DATA_DIRECTORY dirEntry = GetImageDirectoryEntryPtr(aDirectoryIndex);
+    if (!dirEntry) {
       return nullptr;
     }
 
-    IMAGE_DATA_DIRECTORY& dirEntry =
-        optionalHeader.DataDirectory[aDirectoryIndex];
-    return RVAToPtr<T>(dirEntry.VirtualAddress);
+    return RVAToPtr<T>(dirEntry->VirtualAddress);
   }
 
-  // This private overload does not have bounds checks, because we need to be
+  // This private variant does not have bounds checks, because we need to be
   // able to resolve the bounds themselves.
   template <typename T, typename R>
   T RVAToPtrUnchecked(R aRva) {
@@ -545,6 +608,83 @@ inline LauncherResult<DWORD> GetParentProcessId() {
   }
 
   return static_cast<DWORD>(pbi.InheritedFromUniqueProcessId & 0xFFFFFFFF);
+}
+
+struct DataDirectoryEntry : public _IMAGE_DATA_DIRECTORY {
+  DataDirectoryEntry() : _IMAGE_DATA_DIRECTORY() {
+  }
+
+  MOZ_IMPLICIT DataDirectoryEntry(const _IMAGE_DATA_DIRECTORY& aOther)
+    : _IMAGE_DATA_DIRECTORY(aOther) {
+  }
+
+  DataDirectoryEntry(const DataDirectoryEntry& aOther) = default;
+};
+
+inline LauncherResult<void*> GetProcessPebPtr(HANDLE aProcess) {
+  ULONG returnLength;
+  PROCESS_BASIC_INFORMATION pbi;
+  NTSTATUS status = ::NtQueryInformationProcess(aProcess,
+      ProcessBasicInformation, &pbi, sizeof(pbi), &returnLength);
+  if (!NT_SUCCESS(status)) {
+    return LAUNCHER_ERROR_FROM_NTSTATUS(status);
+  }
+
+  return pbi.PebBaseAddress;
+}
+
+/**
+ * This function relies on a specific offset into the mostly-undocumented PEB
+ * structure. The risk is reduced thanks to the fact that the Chromium sandbox
+ * relies on the location of this field. It is unlikely to change at this point.
+ * To further reduce the risk, we also check for the magic 'MZ' signature that
+ * should indicate the beginning of a PE image.
+ */
+inline LauncherResult<HMODULE> GetProcessExeModule(HANDLE aProcess) {
+  LauncherResult<void*> ppeb = GetProcessPebPtr(aProcess);
+  if (ppeb.isErr()) {
+    return LAUNCHER_ERROR_FROM_RESULT(ppeb);
+  }
+
+  PEB peb;
+  SIZE_T bytesRead;
+
+#if defined(MOZILLA_INTERNAL_API)
+  if (!::ReadProcessMemory(aProcess, ppeb.unwrap(), &peb, sizeof(peb),
+                           &bytesRead) || bytesRead != sizeof(peb)) {
+    return LAUNCHER_ERROR_FROM_LAST();
+  }
+#else
+  NTSTATUS ntStatus = ::NtReadVirtualMemory(aProcess, ppeb.unwrap(), &peb,
+                                            sizeof(peb), &bytesRead);
+  if (!NT_SUCCESS(ntStatus) || bytesRead != sizeof(peb)) {
+    return LAUNCHER_ERROR_FROM_NTSTATUS(ntStatus);
+  }
+#endif
+
+  // peb.ImageBaseAddress
+  void* baseAddress = peb.Reserved3[1];
+
+  char mzMagic[2];
+#if defined(MOZILLA_INTERNAL_API)
+  if (!::ReadProcessMemory(aProcess, baseAddress, mzMagic, sizeof(mzMagic),
+                           &bytesRead) || bytesRead != sizeof(mzMagic)) {
+    return LAUNCHER_ERROR_FROM_LAST();
+  }
+#else
+  ntStatus = ::NtReadVirtualMemory(aProcess, baseAddress, mzMagic,
+                                   sizeof(mzMagic), &bytesRead);
+  if (!NT_SUCCESS(ntStatus) || bytesRead != sizeof(mzMagic)) {
+    return LAUNCHER_ERROR_FROM_NTSTATUS(ntStatus);
+  }
+#endif
+
+  MOZ_ASSERT(mzMagic[0] == 'M' && mzMagic[1] == 'Z');
+  if (mzMagic[0] != 'M' || mzMagic[1] != 'Z') {
+    return LAUNCHER_ERROR_FROM_WIN32(ERROR_BAD_EXE_FORMAT);
+  }
+
+  return static_cast<HMODULE>(baseAddress);
 }
 
 }  // namespace nt
