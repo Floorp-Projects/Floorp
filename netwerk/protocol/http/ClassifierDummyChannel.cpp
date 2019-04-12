@@ -619,7 +619,7 @@ ClassifierDummyChannel::SetNavigationStartTimeStamp(
 }
 
 NS_IMETHODIMP
-ClassifierDummyChannel::CancelByChannelClassifier(nsresult aErrorCode) {
+ClassifierDummyChannel::CancelByURLClassifier(nsresult aErrorCode) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
