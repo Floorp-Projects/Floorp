@@ -336,6 +336,9 @@ class ModuleEntry(object):
         elif self.external:
             res += ('      nsCOMPtr<nsISupports> inst = '
                     'mozCreateComponent<%s>();\n' % self.type)
+            # The custom constructor may return null, so check before calling
+            # any methods.
+            res += '      NS_ENSURE_TRUE(inst, NS_ERROR_FAILURE);\n'
         else:
             res += '      RefPtr<%s> inst = ' % self.type
 
