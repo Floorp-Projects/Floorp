@@ -5355,11 +5355,18 @@ void nsGlobalWindowOuter::FirePopupBlockedEvent(
   aDoc->DispatchEvent(*event);
 }
 
-void nsGlobalWindowOuter::NotifyContentBlockingEvent(unsigned aEvent,
-                                                     nsIChannel* aChannel,
-                                                     bool aBlocked,
-                                                     nsIURI* aURIHint) {
+void nsGlobalWindowOuter::NotifyContentBlockingEvent(
+    unsigned aEvent, nsIChannel* aChannel, bool aBlocked, nsIURI* aURIHint,
+    const mozilla::Maybe<AntiTrackingCommon::StorageAccessGrantedReason>&
+        aReason) {
   MOZ_ASSERT(aURIHint);
+  MOZ_ASSERT_IF(aBlocked, aReason.isNothing());
+  MOZ_ASSERT_IF(aEvent != nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
+                aReason.isNothing());
+  MOZ_ASSERT_IF(
+      !aBlocked &&
+          aEvent == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
+      aReason.isSome());
 
   nsCOMPtr<nsIDocShell> docShell = GetDocShell();
   if (!docShell) {
@@ -5381,7 +5388,7 @@ void nsGlobalWindowOuter::NotifyContentBlockingEvent(unsigned aEvent,
 
   nsCOMPtr<nsIRunnable> func = NS_NewRunnableFunction(
       "NotifyContentBlockingEventDelayed",
-      [doc, docShell, uri, channel, aEvent, aBlocked]() {
+      [doc, docShell, uri, channel, aEvent, aBlocked, aReason]() {
         // This event might come after the user has navigated to another
         // page. To prevent showing the TrackingProtection UI on the wrong
         // page, we need to check that the loading URI for the channel is
@@ -5448,7 +5455,7 @@ void nsGlobalWindowOuter::NotifyContentBlockingEvent(unsigned aEvent,
           }
         } else if (aEvent ==
                    nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER) {
-          doc->SetHasTrackingCookiesBlocked(aBlocked, origin);
+          doc->SetHasTrackingCookiesBlocked(aBlocked, origin, aReason);
           if (!aBlocked) {
             unblocked = !doc->GetHasTrackingCookiesBlocked();
           }

@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_ContentBlockingLog_h
 #define mozilla_dom_ContentBlockingLog_h
 
+#include "mozilla/AntiTrackingCommon.h"
 #include "mozilla/JSONWriter.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/StaticPrefs.h"
@@ -20,10 +21,14 @@ namespace mozilla {
 namespace dom {
 
 class ContentBlockingLog final {
+  typedef AntiTrackingCommon::StorageAccessGrantedReason
+      StorageAccessGrantedReason;
+
   struct LogEntry {
     uint32_t mType;
     uint32_t mRepeatCount;
     bool mBlocked;
+    Maybe<AntiTrackingCommon::StorageAccessGrantedReason> mReason;
   };
 
   struct OriginDataEntry {
@@ -68,7 +73,18 @@ class ContentBlockingLog final {
   ContentBlockingLog() = default;
   ~ContentBlockingLog() = default;
 
-  void RecordLog(const nsACString& aOrigin, uint32_t aType, bool aBlocked) {
+  void RecordLog(
+      const nsACString& aOrigin, uint32_t aType, bool aBlocked,
+      const Maybe<AntiTrackingCommon::StorageAccessGrantedReason>& aReason) {
+    MOZ_ASSERT_IF(aBlocked, aReason.isNothing());
+    MOZ_ASSERT_IF(
+        aType != nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
+        aReason.isNothing());
+    MOZ_ASSERT_IF(
+        !aBlocked &&
+            aType == nsIWebProgressListener::STATE_COOKIES_BLOCKED_TRACKER,
+        aReason.isSome());
+
     if (aOrigin.IsVoid()) {
       return;
     }
@@ -96,6 +112,8 @@ class ContentBlockingLog final {
         if (last.mType == aType && last.mBlocked == aBlocked) {
           ++last.mRepeatCount;
           // Don't record recorded events.  This helps compress our log.
+          // We don't care about if the the reason is the same, just keep the
+          // first one.
           return;
         }
       }
@@ -105,7 +123,7 @@ class ContentBlockingLog final {
         // Cap the size at the maximum length adjustable by the pref
         entry.mData->mLogs.RemoveElementAt(0);
       }
-      entry.mData->mLogs.AppendElement(LogEntry{aType, 1u, aBlocked});
+      entry.mData->mLogs.AppendElement(LogEntry{aType, 1u, aBlocked, aReason});
       return;
     }
 
@@ -124,7 +142,7 @@ class ContentBlockingLog final {
       MOZ_ASSERT(entry->mData->mHasCookiesLoaded.isNothing());
       entry->mData->mHasCookiesLoaded.emplace(aBlocked);
     } else {
-      entry->mData->mLogs.AppendElement(LogEntry{aType, 1u, aBlocked});
+      entry->mData->mLogs.AppendElement(LogEntry{aType, 1u, aBlocked, aReason});
     }
   }
 
@@ -167,6 +185,9 @@ class ContentBlockingLog final {
           w.IntElement(item.mType);
           w.BoolElement(item.mBlocked);
           w.IntElement(item.mRepeatCount);
+          if (item.mReason.isSome()) {
+            w.IntElement(item.mReason.value());
+          }
         }
         w.EndArray();
       }
