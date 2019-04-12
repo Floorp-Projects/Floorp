@@ -54,6 +54,7 @@
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsParent.h"
 #include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamParent.h"
+#include "mozilla/dom/quota/CheckedUnsafePtr.h"
 #include "mozilla/dom/quota/Client.h"
 #include "mozilla/dom/quota/FileStreams.h"
 #include "mozilla/dom/quota/OriginScope.h"
@@ -5661,7 +5662,9 @@ class WaitForTransactionsHelper final : public Runnable {
   NS_DECL_NSIRUNNABLE
 };
 
-class Database final : public PBackgroundIDBDatabaseParent {
+class Database final
+    : public PBackgroundIDBDatabaseParent,
+      public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
   friend class VersionChangeTransaction;
 
   class StartTransactionOp;
@@ -6458,9 +6461,11 @@ class MutableFile : public BackgroundMutableFileParentBase {
   mozilla::ipc::IPCResult RecvGetFileId(int64_t* aFileId) override;
 };
 
-class FactoryOp : public DatabaseOperationBase,
-                  public OpenDirectoryListener,
-                  public PBackgroundIDBFactoryRequestParent {
+class FactoryOp
+    : public DatabaseOperationBase,
+      public OpenDirectoryListener,
+      public PBackgroundIDBFactoryRequestParent,
+      public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
  public:
   struct MaybeBlockedDatabaseInfo;
 
@@ -6557,6 +6562,7 @@ class FactoryOp : public DatabaseOperationBase,
   nsCString mDatabaseId;
   nsString mDatabaseFilePath;
   State mState;
+  bool mWaitingForPermissionRetry;
   bool mEnforcingQuota;
   const bool mDeleting;
   bool mChromeWriteAccessAllowed;
@@ -6598,6 +6604,8 @@ class FactoryOp : public DatabaseOperationBase,
   nsresult Open();
 
   nsresult ChallengePermission();
+
+  void PermissionRetry();
 
   nsresult RetryCheckPermission();
 
@@ -7689,7 +7697,7 @@ struct DatabaseActorInfo final {
   friend class nsAutoPtr<DatabaseActorInfo>;
 
   RefPtr<FullDatabaseMetadata> mMetadata;
-  nsTArray<Database*> mLiveDatabases;
+  nsTArray<CheckedUnsafePtr<Database>> mLiveDatabases;
   RefPtr<FactoryOp> mWaitingFactoryOp;
 
   DatabaseActorInfo(FullDatabaseMetadata* aMetadata, Database* aDatabase)
@@ -8940,7 +8948,7 @@ nsresult RemoveDatabaseFilesAndDirectory(nsIFile* aBaseDirectory,
 // Counts the number of "live" Factory, FactoryOp and Database instances.
 uint64_t gBusyCount = 0;
 
-typedef nsTArray<RefPtr<FactoryOp>> FactoryOpArray;
+typedef nsTArray<CheckedUnsafePtr<FactoryOp>> FactoryOpArray;
 
 StaticAutoPtr<FactoryOpArray> gFactoryOps;
 
@@ -17162,7 +17170,7 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
     static bool IsSafeToRunMaintenance(const nsAString& aDatabasePath) {
       if (gFactoryOps) {
         for (uint32_t index = gFactoryOps->Length(); index > 0; index--) {
-          RefPtr<FactoryOp>& existingOp = (*gFactoryOps)[index - 1];
+          CheckedUnsafePtr<FactoryOp>& existingOp = (*gFactoryOps)[index - 1];
 
           if (!existingOp->DatabaseFilePathIsKnown()) {
             continue;
@@ -19042,6 +19050,7 @@ FactoryOp::FactoryOp(Factory* aFactory,
       mContentParent(std::move(aContentParent)),
       mCommonParams(aCommonParams),
       mState(State::Initial),
+      mWaitingForPermissionRetry(false),
       mEnforcingQuota(true),
       mDeleting(aDeleting),
       mChromeWriteAccessAllowed(false),
@@ -19128,7 +19137,22 @@ nsresult FactoryOp::ChallengePermission() {
     return NS_ERROR_FAILURE;
   }
 
+  mWaitingForPermissionRetry = true;
+
   return NS_OK;
+}
+
+void FactoryOp::PermissionRetry() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::PermissionChallenge);
+
+  mContentParent = BackgroundParent::GetContentParent(Manager()->Manager());
+
+  mState = State::PermissionRetry;
+
+  mWaitingForPermissionRetry = false;
+
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
 }
 
 nsresult FactoryOp::RetryCheckPermission() {
@@ -19181,7 +19205,7 @@ nsresult FactoryOp::DirectoryOpen() {
   bool delayed = false;
   bool foundThis = false;
   for (uint32_t index = gFactoryOps->Length(); index > 0; index--) {
-    RefPtr<FactoryOp>& existingOp = (*gFactoryOps)[index - 1];
+    CheckedUnsafePtr<FactoryOp>& existingOp = (*gFactoryOps)[index - 1];
 
     if (existingOp == this) {
       foundThis = true;
@@ -19742,17 +19766,30 @@ void FactoryOp::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnBackgroundThread();
 
   NoteActorDestroyed();
+
+  // Assume ActorDestroy can happen at any time, so we can't probe the current
+  // state since mState can be modified on any thread (only one thread at a time
+  // based on the state machine).  However we can use mWaitingForPermissionRetry
+  // which is only touched on the owning thread.  If mWaitingForPermissionRetry
+  // is true, we can also modify mState since we are guaranteed that there are
+  // no pending runnables which would probe mState to decide what code needs to
+  // run (there shouldn't be any running runnables on other threads either).
+
+  if (mWaitingForPermissionRetry) {
+    PermissionRetry();
+  }
+
+  // We don't have to handle the case when mWaitingForPermissionRetry is not
+  // true since it means that either nothing has been initialized yet, so
+  // nothing to cleanup or there are pending runnables that will detect that the
+  // actor has been destroyed and cleanup accordingly.
 }
 
 mozilla::ipc::IPCResult FactoryOp::RecvPermissionRetry() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(!IsActorDestroyed());
-  MOZ_ASSERT(mState == State::PermissionChallenge);
 
-  mContentParent = BackgroundParent::GetContentParent(Manager()->Manager());
-
-  mState = State::PermissionRetry;
-  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(this));
+  PermissionRetry();
 
   return IPC_OK();
 }

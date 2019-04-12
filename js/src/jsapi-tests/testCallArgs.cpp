@@ -2,7 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "js/CompilationAndEvaluation.h"
+#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
+
+#include "js/CompilationAndEvaluation.h"  // JS::Evaluate
+#include "js/SourceText.h"                // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 
 static bool CustomNative(JSContext* cx, unsigned argc, JS::Value* vp) {
@@ -24,8 +27,12 @@ BEGIN_TEST(testCallArgs_isConstructing_native) {
   opts.setFileAndLine(__FILE__, __LINE__ + 4);
 
   JS::RootedValue result(cx);
+
   static const char code[] = "new customNative();";
-  CHECK(!JS::EvaluateUtf8(cx, opts, code, strlen(code), &result));
+  JS::SourceText<mozilla::Utf8Unit> srcBuf;
+  CHECK(srcBuf.init(cx, code, strlen(code), JS::SourceOwnership::Borrowed));
+
+  CHECK(!JS::Evaluate(cx, opts, srcBuf, &result));
 
   CHECK(JS_IsExceptionPending(cx));
   JS_ClearPendingException(cx);

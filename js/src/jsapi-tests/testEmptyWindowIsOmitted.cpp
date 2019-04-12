@@ -11,7 +11,7 @@
 #include "jsfriendapi.h"
 
 #include "js/CharacterEncoding.h"
-#include "js/CompilationAndEvaluation.h"
+#include "js/CompilationAndEvaluation.h"  // JS::Compile{,DontInflate}
 #include "js/SourceText.h"
 #include "jsapi-tests/tests.h"
 #include "vm/ErrorReporting.h"

@@ -11,7 +11,7 @@
 #include "jsfriendapi.h"
 
 #include "js/CharacterEncoding.h"
-#include "js/CompilationAndEvaluation.h"
+#include "js/CompilationAndEvaluation.h"  // JS::CompileDontInflate
 #include "js/SourceText.h"
 #include "jsapi-tests/tests.h"
 #include "vm/ErrorReporting.h"
@@ -186,7 +186,11 @@ bool testBadUtf8(const char (&chars)[N], unsigned errorNumber,
   JS::Rooted<JSScript*> script(cx);
   {
     JS::CompileOptions options(cx);
-    script = JS::CompileUtf8DontInflate(cx, options, chars, N - 1);
+
+    JS::SourceText<mozilla::Utf8Unit> srcBuf;
+    CHECK(srcBuf.init(cx, chars, N - 1, JS::SourceOwnership::Borrowed));
+
+    script = JS::CompileDontInflate(cx, options, srcBuf);
     CHECK(!script);
   }
 
@@ -266,7 +270,11 @@ bool testContext(const char (&chars)[N],
   JS::Rooted<JSScript*> script(cx);
   {
     JS::CompileOptions options(cx);
-    script = JS::CompileUtf8DontInflate(cx, options, chars, N - 1);
+
+    JS::SourceText<mozilla::Utf8Unit> srcBuf;
+    CHECK(srcBuf.init(cx, chars, N - 1, JS::SourceOwnership::Borrowed));
+
+    script = JS::CompileDontInflate(cx, options, srcBuf);
     CHECK(!script);
   }
 

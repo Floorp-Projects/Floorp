@@ -265,6 +265,11 @@ add_task(async function testDisabledBrowserLanguages() {
   // pl is now available since it is available remotely.
   assertAvailableLocales(available, ["fr", "pl"]);
 
+  let installId = null;
+  AddonTestUtils.promiseInstallEvent("onInstallEnded").then(([install]) => {
+    installId = install.installId;
+  });
+
   // Add pl.
   await selectLocale("pl", available, selected, dialogDoc);
   assertLocaleOrder(selected, "pl,en-US,he");
@@ -276,7 +281,6 @@ add_task(async function testDisabledBrowserLanguages() {
 
   let dialogId = getDialogId(dialogDoc);
   ok(dialogId, "There's a dialogId");
-  let {installId} = pl.install;
   ok(installId, "There's an installId");
 
   await Promise.all(addons.map(addon => addon.uninstall()));
@@ -505,8 +509,15 @@ add_task(async function testInstallFromAMO() {
   let dicts = await AddonManager.getAddonsByTypes(["dictionary"]);
   is(dicts.length, 0, "There are no installed dictionaries");
 
+  let installId = null;
+  AddonTestUtils.promiseInstallEvent("onInstallEnded").then(([install]) => {
+    installId = install.installId;
+  });
+
   // Add Polish, this will install the langpack.
   await selectLocale("pl", available, selected, dialogDoc);
+
+  ok(installId, "We got an installId for the langpack installation");
 
   let langpack = await AddonManager.getAddonByID(langpackId("pl"));
   Assert.deepEqual(
@@ -542,7 +553,6 @@ add_task(async function testInstallFromAMO() {
 
   // Disable the Polish langpack.
   langpack = await AddonManager.getAddonByID("langpack-pl@firefox.mozilla.org");
-  let installId = langpack.install.installId;
   await langpack.disable();
 
   ({dialogDoc, available, selected} = await openDialog(doc, true));
@@ -565,7 +575,6 @@ add_task(async function testInstallFromAMO() {
 
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 
-  ok(installId, "The langpack has an installId");
   assertTelemetryRecorded([
     // First dialog installs a locale and accepts.
     ["search", "main", firstDialogId],
