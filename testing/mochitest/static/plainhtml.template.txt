@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <title><!-- TODO: insert title here --></title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
-  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
   <script>
     ok(true, "TODO: implement the test");
   </script>
