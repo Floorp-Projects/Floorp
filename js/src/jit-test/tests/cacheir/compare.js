@@ -281,3 +281,12 @@ warmup(String_String_SNE1, [["", "", false], ["a", "a", false], ["aa", "aa", fal
                             ["a", "b", true], ["b", "a", true],
                             ["a", "ab", true], ["ab", "a", true],
                            ]);
+
+// IsHTMLDDA internal slot
+// https://tc39.github.io/ecma262/#sec-IsHTMLDDA-internal-slot
+var IsHTMLDDA_EQ1 = (a, b) => a == b;
+warmup(IsHTMLDDA_EQ1, [[createIsHTMLDDA(), null, true],
+                       [createIsHTMLDDA(), undefined, true],
+                       [null, createIsHTMLDDA(), true],
+                       [undefined, createIsHTMLDDA(), true],
+                      ]);
