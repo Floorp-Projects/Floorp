@@ -381,7 +381,6 @@ talos-tabswitch:
     max-run-time: 900
     run-on-projects:
         by-test-platform:
-            linux64-ccov/.*: ['try']
             windows10-64-ccov/.*: ['try']
             linux64-ccov/.*: ['try']  # Bug 1407593
             (?:windows10-64|windows7-32|linux64)(?:-qr)?/opt: ['mozilla-central', 'try']
