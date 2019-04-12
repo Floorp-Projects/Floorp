@@ -21,7 +21,7 @@ NS_INTERFACE_MAP_END
 
 SpeechGrammar::SpeechGrammar(nsISupports* aParent) : mParent(aParent) {}
 
-SpeechGrammar::~SpeechGrammar() {}
+SpeechGrammar::~SpeechGrammar() = default;
 
 already_AddRefed<SpeechGrammar> SpeechGrammar::Constructor(
     const GlobalObject& aGlobal, ErrorResult& aRv) {

@@ -24,7 +24,7 @@ NS_INTERFACE_MAP_END
 
 SpeechGrammarList::SpeechGrammarList(nsISupports* aParent) : mParent(aParent) {}
 
-SpeechGrammarList::~SpeechGrammarList() {}
+SpeechGrammarList::~SpeechGrammarList() = default;
 
 already_AddRefed<SpeechGrammarList> SpeechGrammarList::Constructor(
     const GlobalObject& aGlobal, ErrorResult& aRv) {
