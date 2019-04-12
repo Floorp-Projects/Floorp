@@ -21,11 +21,12 @@ class mozEnglishWordUtils final {
 
   /**
    * Given a unicode string and an offset, find the beginning and end of the
-   * next word. begin and end are -1 if there are no words remaining in the
-   * string. This should really be folded into the Line/WordBreaker.
+   * next word. Return false, begin and end are -1 if there are no words
+   * remaining in the string. This should really be folded into the
+   * Line/WordBreaker.
    */
-  nsresult FindNextWord(const char16_t* word, uint32_t length, uint32_t offset,
-                        int32_t* begin, int32_t* end);
+  bool FindNextWord(const nsAString& aWord, uint32_t offset, int32_t* begin,
+                    int32_t* end);
 
  protected:
   virtual ~mozEnglishWordUtils();

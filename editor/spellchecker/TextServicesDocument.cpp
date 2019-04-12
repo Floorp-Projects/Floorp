@@ -323,15 +323,13 @@ nsresult TextServicesDocument::SetFilterType(uint32_t aFilterType) {
   return NS_OK;
 }
 
-nsresult TextServicesDocument::GetCurrentTextBlock(nsString* aStr) {
-  NS_ENSURE_TRUE(aStr, NS_ERROR_NULL_POINTER);
-
-  aStr->Truncate();
+nsresult TextServicesDocument::GetCurrentTextBlock(nsAString& aStr) {
+  aStr.Truncate();
 
   NS_ENSURE_TRUE(mFilteredIter, NS_ERROR_FAILURE);
 
   nsresult rv = CreateOffsetTable(&mOffsetTable, mFilteredIter,
-                                  &mIteratorStatus, mExtent, aStr);
+                                  &mIteratorStatus, mExtent, &aStr);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -1064,11 +1062,7 @@ nsresult TextServicesDocument::DeleteSelection() {
   return rv;
 }
 
-nsresult TextServicesDocument::InsertText(const nsString* aText) {
-  if (NS_WARN_IF(!aText)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
+nsresult TextServicesDocument::InsertText(const nsAString& aText) {
   if (NS_WARN_IF(!mTextEditor) || NS_WARN_IF(!SelectionIsValid())) {
     return NS_ERROR_FAILURE;
   }
@@ -1097,12 +1091,12 @@ nsresult TextServicesDocument::InsertText(const nsString* aText) {
   // the instance with local variable here.
   AutoTransactionBatchExternal treatAsOneTransaction(*mTextEditor);
 
-  nsresult rv = mTextEditor->InsertTextAsAction(*aText);
+  nsresult rv = mTextEditor->InsertTextAsAction(aText);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  int32_t strLength = aText->Length();
+  int32_t strLength = aText.Length();
 
   OffsetEntry* itEntry;
   OffsetEntry* entry = mOffsetTable[mSelStartIndex];
@@ -2479,7 +2473,7 @@ nsresult TextServicesDocument::GetFirstTextNodeInNextBlock(
 nsresult TextServicesDocument::CreateOffsetTable(
     nsTArray<OffsetEntry*>* aOffsetTable,
     FilteredContentIterator* aFilteredIter, IteratorStatus* aIteratorStatus,
-    nsRange* aIterRange, nsString* aStr) {
+    nsRange* aIterRange, nsAString* aStr) {
   nsCOMPtr<nsIContent> first;
   nsCOMPtr<nsIContent> prev;
 
