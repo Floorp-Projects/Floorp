@@ -24,6 +24,7 @@
 #include "jit/AtomicOperations.h"
 #include "js/Conversions.h"
 #include "js/Value.h"
+#include "vm/BigIntType.h"
 #include "vm/JSContext.h"
 #include "vm/NativeObject.h"
 
@@ -421,13 +422,12 @@ class ElementSpecific {
       SharedMem<T*> dest =
           target->dataPointerEither().template cast<T*>() + offset;
 
-      MOZ_ASSERT(
-          !canConvertInfallibly(MagicValue(JS_ELEMENTS_HOLE), target->type()),
-          "the following loop must abort on holes");
+      MOZ_ASSERT(!canConvertInfallibly(MagicValue(JS_ELEMENTS_HOLE)),
+                 "the following loop must abort on holes");
 
       const Value* srcValues = source->as<NativeObject>().getDenseElements();
       for (; i < bound; i++) {
-        if (!canConvertInfallibly(srcValues[i], target->type())) {
+        if (!canConvertInfallibly(srcValues[i])) {
           break;
         }
         Ops::store(dest + i, infallibleValueToNative(srcValues[i]));
@@ -486,7 +486,7 @@ class ElementSpecific {
 
     const Value* srcValues = source->getDenseElements();
     for (; i < len; i++) {
-      if (!canConvertInfallibly(srcValues[i], target->type())) {
+      if (!canConvertInfallibly(srcValues[i])) {
         break;
       }
       Ops::store(dest + i, infallibleValueToNative(srcValues[i]));
@@ -642,14 +642,31 @@ class ElementSpecific {
     return true;
   }
 
-  static bool canConvertInfallibly(const Value& v, Scalar::Type type) {
-    if (type == Scalar::BigInt64 || type == Scalar::BigUint64) {
-      return false;
+  static bool canConvertInfallibly(const Value& v) {
+    if (TypeIDOfType<T>::id == Scalar::BigInt64 ||
+        TypeIDOfType<T>::id == Scalar::BigUint64) {
+      // Numbers, Null, Undefined, and Symbols throw a TypeError. Strings may
+      // OOM and Objects may have side-effects.
+      return v.isBigInt() || v.isBoolean();
     }
+    // BigInts and Symbols throw a TypeError. Strings may OOM and Objects may
+    // have side-effects.
     return v.isNumber() || v.isBoolean() || v.isNull() || v.isUndefined();
   }
 
   static T infallibleValueToNative(const Value& v) {
+    if (TypeIDOfType<T>::id == Scalar::BigInt64) {
+      if (v.isBigInt()) {
+        return T(BigInt::toInt64(v.toBigInt()));
+      }
+      return T(v.toBoolean());
+    }
+    if (TypeIDOfType<T>::id == Scalar::BigUint64) {
+      if (v.isBigInt()) {
+        return T(BigInt::toUint64(v.toBigInt()));
+      }
+      return T(v.toBoolean());
+    }
     if (v.isInt32()) {
       return T(v.toInt32());
     }
@@ -670,7 +687,7 @@ class ElementSpecific {
   static bool valueToNative(JSContext* cx, HandleValue v, T* result) {
     MOZ_ASSERT(!v.isMagic());
 
-    if (MOZ_LIKELY(canConvertInfallibly(v, TypeIDOfType<T>::id))) {
+    if (MOZ_LIKELY(canConvertInfallibly(v))) {
       *result = infallibleValueToNative(v);
       return true;
     }

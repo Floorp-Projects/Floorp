@@ -12,6 +12,7 @@ const {
   remoteSettingsBroadcastHandler,
   BROADCAST_ID,
 } = ChromeUtils.import("resource://services-settings/remote-settings.js");
+const { TelemetryTestUtils } = ChromeUtils.import("resource://testing-common/TelemetryTestUtils.jsm");
 
 
 const IS_ANDROID = AppConstants.platform == "android";
@@ -39,6 +40,9 @@ async function clear_state() {
   Services.prefs.setIntPref(PREF_LAST_UPDATE, 0);
   Services.prefs.setIntPref(PREF_CLOCK_SKEW_SECONDS, 0);
   Services.prefs.clearUserPref(PREF_LAST_ETAG);
+
+  // Clear events snapshot.
+  TelemetryTestUtils.assertEvents([], {}, {process: "dummy"});
 }
 
 function serveChangesEntries(serverTime, entries) {
@@ -306,18 +310,15 @@ add_task(async function test_age_of_data_is_reported_in_uptake_status() {
     bucket: "main",
     collection: "some-entry",
   }]));
-  const backup = UptakeTelemetry.report;
-  let reportedAge;
-  UptakeTelemetry.report = (component, status, { age }) => {
-    if (age) {
-      reportedAge = age;
-    }
-  };
 
   await RemoteSettings.pollChanges();
 
-  Assert.equal(reportedAge, 3600);
-  UptakeTelemetry.report = backup;
+  TelemetryTestUtils.assertEvents([
+    ["uptake.remotecontent.result", "uptake", "remotesettings", UptakeTelemetry.STATUS.SUCCESS,
+      { source: TELEMETRY_HISTOGRAM_POLL_KEY, age: "3600", trigger: "manual" }],
+    ["uptake.remotecontent.result", "uptake", "remotesettings", UptakeTelemetry.STATUS.SUCCESS,
+      { source: TELEMETRY_HISTOGRAM_SYNC_KEY, duration: () => true, trigger: "manual" }],
+  ]);
 });
 add_task(clear_state);
 
@@ -334,19 +335,14 @@ add_task(async function test_synchronization_duration_is_reported_in_uptake_stat
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   c.maybeSync = () => new Promise(resolve => setTimeout(resolve, 1000));
 
-  const backup = UptakeTelemetry.report;
-  let reportedStatus;
-  let reportedDuration = -1;
-  UptakeTelemetry.report = (component, status, { duration }) => {
-    reportedStatus = status;
-    reportedDuration = duration;
-  };
-
   await RemoteSettings.pollChanges();
 
-  UptakeTelemetry.report = backup;
-  Assert.ok(reportedDuration >= 1000);
-  Assert.equal(reportedStatus, "success");
+  TelemetryTestUtils.assertEvents([
+    ["uptake.remotecontent.result", "uptake", "remotesettings", "success",
+      { source: TELEMETRY_HISTOGRAM_POLL_KEY, age: () => true, trigger: "manual" }],
+    ["uptake.remotecontent.result", "uptake", "remotesettings", "success",
+      { source: TELEMETRY_HISTOGRAM_SYNC_KEY, duration: (v) => v >= 1000, trigger: "manual" }],
+  ]);
 });
 add_task(clear_state);
 

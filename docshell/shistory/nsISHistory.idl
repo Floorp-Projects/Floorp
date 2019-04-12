@@ -149,10 +149,11 @@ interface nsISHistory: nsISupports
   void addEntry(in nsISHEntry aEntry, in boolean aPersist);
 
   /**
-   * Sets the toplevel docshell object to which this SHistory object belongs to.
+   * Clear the reference to the toplevel docshell object that this SHistory
+   * object belongs to.
    */
   [noscript, notxpcom]
-  void setRootDocShell(in nsIDocShell rootDocShell);
+  void ClearRootDocShell();
 
   /**
    * Update the index maintained by sessionHistory
@@ -171,15 +172,9 @@ interface nsISHistory: nsISupports
    * Notifies all registered session history listeners about an impending
    * reload.
    *
-   * @param aReloadURI        The URI of the document to be reloaded.
-   * @param aReloadFlags      Flags that indicate how the document is to be
-   *                          refreshed. See constants on the nsIWebNavigation
-   *                          interface.
-   *
    * @return                  Whether the operation can proceed.
    */
-  boolean notifyOnHistoryReload(in nsIURI aReloadURI,
-                                in unsigned long aReloadFlags);
+  boolean notifyOnHistoryReload();
 
   /**
    * Evict content viewers which don't lie in the "safe" range around aIndex.

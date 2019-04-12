@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Vikipediya (crh)"
+  },
+  "extensionDescription": {
+    "message": "Vikipediya, Azat Entsiklopediya"
+  },
+  "searchUrl": {
+    "message": "https://crh.wikipedia.org/wiki/Mahsus:Search"
+  },
+  "searchForm": {
+    "message": "https://crh.wikipedia.org/wiki/Mahsus:Search?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://crh.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

@@ -44,7 +44,7 @@ class CompositorManagerChild;
 class ImageContainer;
 class RenderRootStateManager;
 
-class SharedSurfacesChild final {
+class SharedSurfacesChild {
  public:
   /**
    * Request that the surface be mapped into the compositor thread's memory
@@ -116,7 +116,7 @@ class SharedSurfacesChild final {
    public:
     ImageKeyData(RenderRootStateManager* aManager,
                  const wr::ImageKey& aImageKey);
-    ~ImageKeyData();
+    virtual ~ImageKeyData();
 
     ImageKeyData(ImageKeyData&& aOther);
     ImageKeyData& operator=(ImageKeyData&& aOther);
@@ -194,7 +194,7 @@ class AnimationImageKeyData final : public SharedSurfacesChild::ImageKeyData {
   AnimationImageKeyData(RenderRootStateManager* aManager,
                         const wr::ImageKey& aImageKey);
 
-  ~AnimationImageKeyData();
+  virtual ~AnimationImageKeyData();
 
   AnimationImageKeyData(AnimationImageKeyData&& aOther);
   AnimationImageKeyData& operator=(AnimationImageKeyData&& aOther);
@@ -211,7 +211,7 @@ class SharedSurfacesAnimation final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedSurfacesAnimation)
 
-  SharedSurfacesAnimation() {}
+  SharedSurfacesAnimation() = default;
 
   void Destroy();
 

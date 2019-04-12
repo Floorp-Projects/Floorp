@@ -229,8 +229,11 @@ const nsIID
 
 namespace mozilla {
 
-RTCStatsQuery::RTCStatsQuery(bool internal)
-    : internalStats(internal), grabAllLevels(false), now(0.0) {}
+RTCStatsQuery::RTCStatsQuery(bool aInternal, bool aRecordTelemetry)
+    : internalStats(aInternal),
+      recordTelemetry(aRecordTelemetry),
+      grabAllLevels(false),
+      now(0.0) {}
 
 RTCStatsQuery::~RTCStatsQuery() {}
 
@@ -1552,7 +1555,7 @@ NS_IMETHODIMP
 PeerConnectionImpl::GetStats(MediaStreamTrack* aSelector) {
   PC_AUTO_ENTER_API_CALL(true);
 
-  GetStats(aSelector, false)
+  GetStats(aSelector, false, false)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [handle = mHandle](UniquePtr<RTCStatsQuery>&& aQuery) {
@@ -2655,8 +2658,10 @@ void PeerConnectionImpl::UpdateDefaultCandidate(
 }
 
 RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::GetStats(
-    dom::MediaStreamTrack* aSelector, bool aInternalStats) {
-  UniquePtr<RTCStatsQuery> query(new RTCStatsQuery(aInternalStats));
+    dom::MediaStreamTrack* aSelector, bool aInternalStats,
+    bool aRecordTelemetry) {
+  UniquePtr<RTCStatsQuery> query(
+      new RTCStatsQuery(aInternalStats, aRecordTelemetry));
   nsresult rv = BuildStatsQuery_m(aSelector, query.get());
   if (NS_FAILED(rv)) {
     return RTCStatsQueryPromise::CreateAndReject(rv, __func__);
@@ -2747,6 +2752,11 @@ RefPtr<RTCStatsQueryPromise> PeerConnectionImpl::ExecuteStatsQuery_s(
     }
     const MediaPipeline& mp = *aPipelines[p];
     auto asVideo = mp.Conduit()->AsVideoSessionConduit();
+
+    if (query->recordTelemetry && asVideo) {
+      asVideo.value()->RecordTelemetry();
+    }
+
     nsString kind = asVideo.isNothing() ? NS_LITERAL_STRING("audio")
                                         : NS_LITERAL_STRING("video");
     nsString idstr = kind + NS_LITERAL_STRING("_");

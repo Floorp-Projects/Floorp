@@ -30,19 +30,10 @@ add_task(async function test() {
   const EXPECTED_ENGINE = {
     name: "Amazon.com",
     alias: null,
-    description: "Amazon.com Search",
-    searchForm: "https://www.amazon.com/exec/obidos/external-search/?field-keywords=&ie=UTF-8&mode=blended&tag=mozilla-20&sourceid=Mozilla-search",
     hidden: false,
     wrappedJSObject: {
       queryCharset: "UTF-8",
-      "_iconURL": "resource://search-plugins/images/amazon.ico",
       _urls: [
-        {
-          type: "application/x-suggestions+json",
-          method: "GET",
-          template: "https://completion.amazon.com/search/complete?q={searchTerms}&search-alias=aps&mkt=1",
-          params: "",
-        },
         {
           type: "text/html",
           method: "GET",
@@ -75,6 +66,11 @@ add_task(async function test() {
             },
           ],
           mozparams: {},
+        },
+        {
+          type: "application/x-suggestions+json",
+          method: "GET",
+          template: "https://completion.amazon.com/search/complete?q={searchTerms}&search-alias=aps&mkt=1",
         },
       ],
     },

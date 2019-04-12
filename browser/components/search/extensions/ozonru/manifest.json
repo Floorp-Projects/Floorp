@@ -1,0 +1,28 @@
+{
+  "name": "OZON.ru",
+  "description": "OZON.ru provider",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "ozonru@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "OZON.ru",
+      "search_url": "https://www.ozon.ru/?",
+      "search_form": "https://www.ozon.ru/",
+      "search_url_get_params": "context=search&text={searchTerms}&from=firefox",
+      "suggest_url": "https://www.ozon.ru/JSONSuggestionHandler.ashx",
+      "suggest_url_get_params": "text={searchTerms}&from=firefox"
+    }
+  }
+}

@@ -346,7 +346,7 @@ void nsInlineFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     DrainSelfOverflowListInternal(aReflowInput.mLineLayout->GetInFirstLine());
   }
 
-  // Set our own reflow state (additional state above and beyond aReflowInput).
+  // Set our own reflow input (additional state above and beyond aReflowInput).
   InlineReflowInput irs;
   irs.mPrevFrame = nullptr;
   irs.mLineContainer = aReflowInput.mLineLayout->LineContainerFrame();
@@ -1014,7 +1014,7 @@ void nsFirstLineFrame::Reflow(nsPresContext* aPresContext,
   // It's also possible that we have an overflow list for ourselves.
   DrainSelfOverflowList();
 
-  // Set our own reflow state (additional state above and beyond aReflowInput).
+  // Set our own reflow input (additional state above and beyond aReflowInput).
   InlineReflowInput irs;
   irs.mPrevFrame = nullptr;
   irs.mLineContainer = aReflowInput.mLineLayout->LineContainerFrame();

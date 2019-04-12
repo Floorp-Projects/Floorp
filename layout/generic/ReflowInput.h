@@ -41,7 +41,7 @@ NumericType NS_CSS_MINMAX(NumericType aValue, NumericType aMinValue,
 }
 
 /**
- * CSS Frame type. Included as part of the reflow state.
+ * CSS Frame type. Included as part of the reflow input.
  */
 typedef uint32_t nsCSSFrameType;
 
@@ -228,7 +228,7 @@ struct SizeComputationInput {
     // BSize.
     bool mIsFlexContainerMeasuringBSize : 1;
 
-    // a "fake" reflow state made in order to be the parent of a real one
+    // a "fake" reflow input made in order to be the parent of a real one
     bool mDummyParentReflowInput : 1;
 
     // Should this frame reflow its place-holder children? If the available
@@ -350,8 +350,8 @@ struct SizeComputationInput {
  * @see nsIFrame#Reflow()
  */
 struct ReflowInput : public SizeComputationInput {
-  // the reflow states are linked together. this is the pointer to the
-  // parent's reflow state
+  // the reflow inputs are linked together. this is the pointer to the
+  // parent's reflow input
   const ReflowInput* mParentReflowInput;
 
   // A non-owning pointer to the float manager associated with this area,
@@ -361,8 +361,8 @@ struct ReflowInput : public SizeComputationInput {
   // LineLayout object (only for inline reflow; set to nullptr otherwise)
   nsLineLayout* mLineLayout;
 
-  // The appropriate reflow state for the containing block (for
-  // percentage widths, etc.) of this reflow state's frame.
+  // The appropriate reflow input for the containing block (for
+  // percentage widths, etc.) of this reflow input's frame.
   const ReflowInput* mCBReflowInput;
 
   // The type of frame, from css's perspective. This value is
@@ -658,7 +658,7 @@ struct ReflowInput : public SizeComputationInput {
 
   ReflowInputFlags mFlags;
 
-  // This value keeps track of how deeply nested a given reflow state
+  // This value keeps track of how deeply nested a given reflow input
   // is from the top of the frame tree.
   int16_t mReflowDepth;
 
@@ -699,10 +699,10 @@ struct ReflowInput : public SizeComputationInput {
   // call Init as desired...
 
   /**
-   * Initialize a ROOT reflow state.
+   * Initialize a ROOT reflow input.
    *
    * @param aPresContext Must be equal to aFrame->PresContext().
-   * @param aFrame The frame for whose reflow state is being constructed.
+   * @param aFrame The frame for whose reflow input is being constructed.
    * @param aRenderingContext The rendering context to be used for measurements.
    * @param aAvailableSpace See comments for availableHeight and availableWidth
    *        members.
@@ -714,13 +714,13 @@ struct ReflowInput : public SizeComputationInput {
               const mozilla::LogicalSize& aAvailableSpace, uint32_t aFlags = 0);
 
   /**
-   * Initialize a reflow state for a child frame's reflow. Some parts of the
-   * state are copied from the parent's reflow state. The remainder is computed.
+   * Initialize a reflow input for a child frame's reflow. Some parts of the
+   * state are copied from the parent's reflow input. The remainder is computed.
    *
    * @param aPresContext Must be equal to aFrame->PresContext().
    * @param aParentReflowInput A reference to an ReflowInput object that
    *        is to be the parent of this object.
-   * @param aFrame The frame for whose reflow state is being constructed.
+   * @param aFrame The frame for whose reflow input is being constructed.
    * @param aAvailableSpace See comments for availableHeight and availableWidth
    *        members.
    * @param aContainingBlockSize An optional size, in app units, specifying
@@ -737,11 +737,11 @@ struct ReflowInput : public SizeComputationInput {
 
   // Values for |aFlags| passed to constructor
   enum {
-    // Indicates that the parent of this reflow state is "fake" (see
+    // Indicates that the parent of this reflow input is "fake" (see
     // mDummyParentReflowInput in mFlags).
-    DUMMY_PARENT_REFLOW_STATE = (1 << 0),
+    DUMMY_PARENT_REFLOW_INPUT = (1 << 0),
 
-    // Indicates that the calling function will initialize the reflow state, and
+    // Indicates that the calling function will initialize the reflow input, and
     // that the constructor should not call Init().
     CALLER_WILL_INIT = (1 << 1),
 
@@ -778,7 +778,7 @@ struct ReflowInput : public SizeComputationInput {
 
   /**
    * Find the content isize of our containing block for the given writing mode,
-   * which need not be the same as the reflow state's mode.
+   * which need not be the same as the reflow input's mode.
    */
   nscoord GetContainingBlockContentISize(
       mozilla::WritingMode aWritingMode) const;
@@ -789,7 +789,7 @@ struct ReflowInput : public SizeComputationInput {
   nscoord CalcLineHeight() const;
 
   /**
-   * Same as CalcLineHeight() above, but doesn't need a reflow state.
+   * Same as CalcLineHeight() above, but doesn't need a reflow input.
    *
    * @param aBlockBSize The computed block size of the content rect of the block
    *                     that the line should fill.
@@ -913,7 +913,7 @@ struct ReflowInput : public SizeComputationInput {
 
   void SetComputedBSizeWithoutResettingResizeFlags(nscoord aComputedBSize) {
     // Viewport frames reset the computed block size on a copy of their reflow
-    // state when reflowing fixed-pos kids.  In that case we actually don't
+    // input when reflowing fixed-pos kids.  In that case we actually don't
     // want to mess with the resize flags, because comparing the frame's rect
     // to the munged computed isize is pointless.
     ComputedBSize() = aComputedBSize;

@@ -13,11 +13,10 @@
  * and configuration of Firefox.
  */
 
-function run_test() {
+add_task(async function setup() {
   useHttpServer();
-
-  run_next_test();
-}
+  await AddonTestUtils.promiseStartupManager();
+});
 
 add_task(async function test_save_sorted_engines() {
   let [engine1, engine2] = await addTestEngines([

@@ -23,7 +23,7 @@ class ImageComposite {
   static const float BIAS_TIME_MS;
 
   explicit ImageComposite();
-  ~ImageComposite();
+  virtual ~ImageComposite();
 
   int32_t GetFrameID() {
     const TimedImage* img = ChooseImage();

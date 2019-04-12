@@ -29,6 +29,7 @@ use std::mem::{self, ManuallyDrop};
 #[cfg(feature = "servo")]
 use std::slice;
 use style_traits::{CssWriter, ParseError, ToCss};
+#[cfg(feature = "gecko")]
 use to_shmem::{SharedMemoryBuilder, ToShmem};
 
 pub use crate::values::computed::Length as MozScriptMinSize;
@@ -40,7 +41,9 @@ pub use crate::values::specified::font::{XLang, XTextZoom};
 /// https://drafts.csswg.org/css-fonts-4/#propdef-font-weight
 ///
 /// This is effectively just a `Number`.
-#[derive(Clone, ComputeSquaredDistance, Copy, Debug, MallocSizeOf, PartialEq, ToCss, ToResolvedValue)]
+#[derive(
+    Clone, ComputeSquaredDistance, Copy, Debug, MallocSizeOf, PartialEq, ToCss, ToResolvedValue,
+)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 pub struct FontWeight(pub Number);
 
@@ -190,7 +193,9 @@ impl FontFamily {
     /// Get default font family as `serif` which is a generic font-family
     pub fn serif() -> Self {
         FontFamily {
-            families: FontFamilyList::new(Box::new([SingleFontFamily::Generic(GenericFontFamily::Serif)])),
+            families: FontFamilyList::new(Box::new([SingleFontFamily::Generic(
+                GenericFontFamily::Serif,
+            )])),
             is_system_font: false,
         }
     }
@@ -280,7 +285,7 @@ pub enum FontFamilyNameSyntax {
     Identifiers,
 }
 
-#[derive(Clone, Debug, Eq, MallocSizeOf, PartialEq, ToCss, ToResolvedValue)]
+#[derive(Clone, Debug, Eq, MallocSizeOf, PartialEq, ToCss, ToResolvedValue, ToShmem)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize, Hash))]
 /// A set of faces that vary in weight, width or slope.
 pub enum SingleFontFamily {
@@ -295,7 +300,10 @@ pub enum SingleFontFamily {
 /// The order here is important, if you change it make sure that
 /// `gfxPlatformFontList.h`s ranged array and `gfxFontFamilyList`'s
 /// sSingleGenerics are updated as well.
-#[derive(Clone, Copy, Debug, Eq, Hash, MallocSizeOf, PartialEq, Parse, ToCss, ToResolvedValue)]
+#[derive(
+    Clone, Copy, Debug, Eq, Hash, MallocSizeOf, PartialEq, Parse, ToCss, ToResolvedValue, ToShmem,
+)]
+#[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 #[repr(u8)]
 #[allow(missing_docs)]
 pub enum GenericFontFamily {
@@ -369,6 +377,35 @@ impl SingleFontFamily {
         }))
     }
 
+    #[cfg(feature = "servo")]
+    /// Get the corresponding font-family with Atom
+    pub fn from_atom(input: Atom) -> SingleFontFamily {
+        match input {
+            atom!("serif") => return SingleFontFamily::Generic(GenericFontFamily::Serif),
+            atom!("sans-serif") => return SingleFontFamily::Generic(GenericFontFamily::SansSerif),
+            atom!("cursive") => return SingleFontFamily::Generic(GenericFontFamily::Cursive),
+            atom!("fantasy") => return SingleFontFamily::Generic(GenericFontFamily::Fantasy),
+            atom!("monospace") => return SingleFontFamily::Generic(GenericFontFamily::Monospace),
+            _ => {},
+        }
+
+        match_ignore_ascii_case! { &input,
+            "serif" => return SingleFontFamily::Generic(GenericFontFamily::Serif),
+            "sans-serif" => return SingleFontFamily::Generic(GenericFontFamily::SansSerif),
+            "cursive" => return SingleFontFamily::Generic(GenericFontFamily::Cursive),
+            "fantasy" => return SingleFontFamily::Generic(GenericFontFamily::Fantasy),
+            "monospace" => return SingleFontFamily::Generic(GenericFontFamily::Monospace),
+            _ => {}
+        }
+
+        // We don't know if it's quoted or not. So we set it to
+        // quoted by default.
+        SingleFontFamily::FamilyName(FamilyName {
+            name: input,
+            syntax: FontFamilyNameSyntax::Quoted,
+        })
+    }
+
     #[cfg(feature = "gecko")]
     /// Get the corresponding font-family with family name
     fn from_font_family_name(family: &structs::FontFamilyName) -> SingleFontFamily {
@@ -385,7 +422,7 @@ impl SingleFontFamily {
 }
 
 #[cfg(feature = "servo")]
-#[derive(Clone, Debug, Eq, Hash, MallocSizeOf, PartialEq, ToResolvedValue)]
+#[derive(Clone, Debug, Eq, Hash, MallocSizeOf, PartialEq, ToResolvedValue, ToShmem)]
 /// A list of SingleFontFamily
 pub struct FontFamilyList(Box<[SingleFontFamily]>);
 
@@ -427,8 +464,10 @@ impl PartialEq for FontFamilyList {
             return false;
         }
         for (a, b) in self_list.mNames.iter().zip(other_list.mNames.iter()) {
-            if a.mSyntax != b.mSyntax || a.mName.mRawPtr != b.mName.mRawPtr ||
-                a.mGeneric != b.mGeneric {
+            if a.mSyntax != b.mSyntax ||
+                a.mName.mRawPtr != b.mName.mRawPtr ||
+                a.mGeneric != b.mGeneric
+            {
                 return false;
             }
         }
@@ -459,19 +498,15 @@ impl FontFamilyList {
 
         for family in families.iter() {
             match *family {
-                SingleFontFamily::FamilyName(ref f) => {
-                    unsafe {
-                        bindings::Gecko_nsTArray_FontFamilyName_AppendNamed(
-                            names,
-                            f.name.as_ptr(),
-                            f.syntax,
-                        );
-                    }
+                SingleFontFamily::FamilyName(ref f) => unsafe {
+                    bindings::Gecko_nsTArray_FontFamilyName_AppendNamed(
+                        names,
+                        f.name.as_ptr(),
+                        f.syntax,
+                    );
                 },
-                SingleFontFamily::Generic(family) => {
-                    unsafe {
-                        bindings::Gecko_nsTArray_FontFamilyName_AppendGeneric(names, family);
-                    }
+                SingleFontFamily::Generic(family) => unsafe {
+                    bindings::Gecko_nsTArray_FontFamilyName_AppendGeneric(names, family);
                 },
             }
         }
@@ -499,7 +534,7 @@ impl FontFamilyList {
         let mut iter = self.iter();
         if let Some(SingleFontFamily::Generic(f)) = iter.next() {
             if iter.next().is_none() {
-                return Some(f);
+                return Some(f.clone());
             }
         }
         None
@@ -547,7 +582,17 @@ impl<'a> Iterator for FontFamilyNameIter<'a> {
 }
 
 /// Preserve the readability of text when font fallback occurs
-#[derive(Animate, Clone, ComputeSquaredDistance, Copy, Debug, MallocSizeOf, PartialEq, ToCss, ToResolvedValue)]
+#[derive(
+    Animate,
+    Clone,
+    ComputeSquaredDistance,
+    Copy,
+    Debug,
+    MallocSizeOf,
+    PartialEq,
+    ToCss,
+    ToResolvedValue,
+)]
 pub enum FontSizeAdjust {
     #[animation(error)]
     /// None variant
@@ -831,7 +876,9 @@ impl ToCss for FontStyle {
 /// A value for the font-stretch property per:
 ///
 /// https://drafts.csswg.org/css-fonts-4/#propdef-font-stretch
-#[derive(Clone, ComputeSquaredDistance, Copy, Debug, MallocSizeOf, PartialEq, ToCss, ToResolvedValue)]
+#[derive(
+    Clone, ComputeSquaredDistance, Copy, Debug, MallocSizeOf, PartialEq, ToCss, ToResolvedValue,
+)]
 #[cfg_attr(feature = "servo", derive(Deserialize, Serialize))]
 pub struct FontStretch(pub NonNegativePercentage);
 

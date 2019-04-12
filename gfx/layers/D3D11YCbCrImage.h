@@ -22,7 +22,8 @@ class ImageContainer;
 class DXGIYCbCrTextureClient;
 class DXGIYCbCrTextureData;
 
-class DXGIYCbCrTextureAllocationHelper : public ITextureClientAllocationHelper {
+class MOZ_RAII DXGIYCbCrTextureAllocationHelper
+    : public ITextureClientAllocationHelper {
  public:
   DXGIYCbCrTextureAllocationHelper(const PlanarYCbCrData& aData,
                                    TextureFlags aTextureFlags,
@@ -78,7 +79,7 @@ class D3D11YCbCrImage : public Image {
   gfx::IntSize mCbCrSize;
   gfx::IntRect mPictureRect;
   gfx::ColorDepth mColorDepth;
-  YUVColorSpace mColorSpace;
+  gfx::YUVColorSpace mColorSpace;
   RefPtr<TextureClient> mTextureClient;
 };
 

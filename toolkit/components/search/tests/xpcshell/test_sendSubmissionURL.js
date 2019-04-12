@@ -27,6 +27,10 @@ const SUBMISSION_NO = new Map([
   ["Other2 Test", "https://googlebutnotgoogle.com?q={searchTerms}"],
 ]);
 
+add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+});
+
 async function addAndMakeDefault(name, searchURL) {
   await Services.search.addEngineWithDetails(name, null, null, null, "GET", searchURL);
   let engine = Services.search.getEngineByName(name);

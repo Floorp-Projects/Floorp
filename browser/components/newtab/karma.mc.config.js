@@ -81,10 +81,10 @@ module.exports = function(config) {
               branches: 84,
             },
             "content-src/components/DiscoveryStreamComponents/**/*.jsx": {
-              statements: 0,
-              lines: 0,
-              functions: 0,
-              branches: 0,
+              statements: 65.2,
+              lines: 65.2,
+              functions: 50,
+              branches: 50,
             },
             "content-src/asrouter/**/*.jsx": {
               statements: 57,
@@ -92,11 +92,17 @@ module.exports = function(config) {
               functions: 60,
               branches: 50,
             },
-            "content-src/components/**/*.jsx": {
+            "content-src/components/ASRouterAdmin/*.jsx": {
               statements: 0,
               lines: 0,
               functions: 0,
               branches: 0,
+            },
+            "content-src/components/**/*.jsx": {
+              statements: 51.1,
+              lines: 53.6,
+              functions: 31.2,
+              branches: 31.2,
             },
           },
         },

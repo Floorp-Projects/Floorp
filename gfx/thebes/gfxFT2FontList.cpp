@@ -877,7 +877,7 @@ class WillShutdownObserver : public nsIObserver {
   }
 
  protected:
-  virtual ~WillShutdownObserver() {}
+  virtual ~WillShutdownObserver() = default;
 
   gfxFT2FontList* mFontList;
 };

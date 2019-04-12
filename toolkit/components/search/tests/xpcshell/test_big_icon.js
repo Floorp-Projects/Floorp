@@ -6,7 +6,8 @@
 add_task(async function test_big_icon() {
   let srv = useHttpServer();
   srv.registerContentType("ico", "image/x-icon");
-  await asyncInit();
+  await AddonTestUtils.promiseStartupManager();
+  await Services.search.init();
 
   let promiseChanged = TestUtils.topicObserved("browser-search-engine-modified",
     (engine, verb) => {

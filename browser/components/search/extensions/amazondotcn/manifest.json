@@ -1,0 +1,26 @@
+{
+  "name": "亚马逊",
+  "description": "亚马逊搜索",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "amazondotcn@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "亚马逊",
+      "search_url": "https://www.amazon.cn/mn/searchApp",
+      "search_form": "https://www.amazon.cn/",
+      "search_url_get_params": "keywords={searchTerms}&ix=sunray&pageletid=headsearch&searchType=&Go.x=0&Go.y=0&bestSaleNum=0"
+    }
+  }
+}

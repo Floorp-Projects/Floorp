@@ -29,7 +29,7 @@ class B;
 
 class Base {
  public:
-  virtual ~Base() {}
+  virtual ~Base() = default;
   virtual A* AsA() { return nullptr; }
   virtual B* AsB() { return nullptr; }
 };

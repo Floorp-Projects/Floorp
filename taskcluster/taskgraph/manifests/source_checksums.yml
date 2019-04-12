@@ -11,10 +11,6 @@ default_locales:  # if given an empty locale, use these locales
   - en-US
 tasktype_map:  # Map task reference to task type.
   release-source-checksums-signing: signing
-platform_names:
-  path_platform: ''
-  filename_platform: ''
-  stage_platform: ''
 
 # A default entry, which the mappings below extend and override.
 # Final 'destinations' will be the product of:

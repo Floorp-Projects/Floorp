@@ -26,7 +26,7 @@ add_task(async function setup() {
 add_task(async function test_extension_setting_moz_params() {
   let defaultBranch = Services.prefs.getDefaultBranch("browser.search.");
   defaultBranch.setCharPref("param.code", "good");
-
+  Services.prefs.setCharPref("extensions.installedDistroAddon.test@mochitest", "foo");
   // These params are conditional based on how search is initiated.
   let mozParams = [
     {name: "test-0", condition: "purpose", purpose: "contextmenu", value: "0"},
@@ -93,6 +93,7 @@ add_task(async function test_extension_setting_moz_params_fail() {
   // Ensure that the test infra does not automatically make
   // this privileged.
   AddonTestUtils.usePrivilegedSignatures = false;
+  Services.prefs.setCharPref("extensions.installedDistroAddon.test@mochitest", "");
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {

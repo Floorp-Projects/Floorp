@@ -50,6 +50,10 @@ function countCookieEntries() {
 }
 
 add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+});
+
+add_task(async function setup() {
   Services.prefs.setBoolPref("browser.search.suggest.enabled", true);
 
   registerCleanupFunction(async function cleanup() {

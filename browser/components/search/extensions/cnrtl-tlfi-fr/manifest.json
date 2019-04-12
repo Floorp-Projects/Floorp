@@ -1,0 +1,27 @@
+{
+  "name": "Portail Lexical - CNRTL",
+  "description": "Centre National de Ressources Textuelles et Lexicales",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "cnrtl-tlfi-fr@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Portail Lexical - CNRTL",
+      "search_url": "https://www.cnrtl.fr/lexicographie/{searchTerms}",
+      "search_form": "https://www.cnrtl.fr/lexicographie/",
+      "suggest_url": "https://www.cnrtl.fr/utilities/OPEN",
+      "suggest_url_get_params": "query={searchTerms}"
+    }
+  }
+}

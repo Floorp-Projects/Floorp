@@ -196,11 +196,11 @@
 #include "mozilla/Move.h"
 #include "mozilla/Range.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TypeTraits.h"
 #include "mozilla/Unused.h"
 
-#include <ctype.h>
 #include <initializer_list>
 #include <string.h>
 #ifndef XP_WIN
@@ -1158,7 +1158,7 @@ static bool ParseZealModeNumericParam(CharRange text, uint32_t* paramOut) {
   }
 
   for (auto c : text) {
-    if (!isdigit(c)) {
+    if (!mozilla::IsAsciiDigit(c)) {
       return false;
     }
   }

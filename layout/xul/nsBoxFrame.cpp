@@ -522,7 +522,7 @@ nscoord nsBoxFrame::GetMinISize(gfxContext* aRenderingContext) {
   nsSize minSize = GetXULMinSize(state);
 
   // GetXULMinSize returns border-box width, and we want to return content
-  // width.  Since Reflow uses the reflow state's border and padding, we
+  // width.  Since Reflow uses the reflow input's border and padding, we
   // actually just want to subtract what GetXULMinSize added, which is the
   // result of GetXULBorderAndPadding.
   nsMargin bp;
@@ -543,7 +543,7 @@ nscoord nsBoxFrame::GetPrefISize(gfxContext* aRenderingContext) {
   nsSize prefSize = GetXULPrefSize(state);
 
   // GetXULPrefSize returns border-box width, and we want to return content
-  // width.  Since Reflow uses the reflow state's border and padding, we
+  // width.  Since Reflow uses the reflow input's border and padding, we
   // actually just want to subtract what GetXULPrefSize added, which is the
   // result of GetXULBorderAndPadding.
   nsMargin bp;

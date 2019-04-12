@@ -751,9 +751,10 @@ struct DIGroup {
         LINEAR;  // nsLayoutUtils::GetSamplingFilterForFrame(aItem->Frame());
     bool backfaceHidden = false;
 
-    // Emit a dispatch-to-content hit test region covering this area
+    // We don't really know the exact shape of this blob because it may contain
+    // SVG shapes so generate an irregular-area hit-test region for it.
     CompositorHitTestInfo hitInfo(CompositorHitTestFlags::eVisibleToHitTest,
-                                  CompositorHitTestFlags::eDispatchToContent);
+                                  CompositorHitTestFlags::eIrregularArea);
 
     // XXX - clipping the item against the paint rect breaks some content.
     // cf. Bug 1455422.
@@ -1070,12 +1071,11 @@ void WebRenderScrollDataCollection::AppendScrollData(
 
 class WebRenderGroupData : public WebRenderUserData {
  public:
-  explicit WebRenderGroupData(RenderRootStateManager* aWRManager,
-                              nsDisplayItem* aItem);
+  WebRenderGroupData(RenderRootStateManager* aWRManager, nsDisplayItem* aItem);
   virtual ~WebRenderGroupData();
 
-  virtual WebRenderGroupData* AsGroupData() override { return this; }
-  virtual UserDataType GetType() override { return UserDataType::eGroup; }
+  WebRenderGroupData* AsGroupData() override { return this; }
+  UserDataType GetType() override { return UserDataType::eGroup; }
   static UserDataType Type() { return UserDataType::eGroup; }
 
   DIGroup mSubGroup;
@@ -2339,7 +2339,7 @@ class WebRenderMaskData : public WebRenderUserData {
     mBlobKey.reset();
   }
 
-  virtual UserDataType GetType() override { return UserDataType::eMask; }
+  UserDataType GetType() override { return UserDataType::eMask; }
   static UserDataType Type() { return UserDataType::eMask; }
 
   Maybe<wr::BlobImageKey> mBlobKey;

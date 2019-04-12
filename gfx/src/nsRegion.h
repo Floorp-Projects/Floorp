@@ -537,7 +537,7 @@ class nsRegion {
 #ifdef DEBUG_REGIONS
   class OperationStringGenerator {
    public:
-    virtual ~OperationStringGenerator() {}
+    virtual ~OperationStringGenerator() = default;
 
     virtual void OutputOp() = 0;
   };

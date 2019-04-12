@@ -1089,6 +1089,17 @@ describe("TelemetryFeed", () => {
 
       assert.calledWith(instance.handleDiscoveryStreamImpressionStats, "port123", data);
     });
+    it("should call .handleDiscoveryStreamLoadedContent on a DISCOVERY_STREAM_LOADED_CONTENT action", () => {
+      const session = {};
+      sandbox.stub(instance.sessions, "get").returns(session);
+      const data = {source: "foo", tiles: [{id: 1}]};
+      const action = {type: at.DISCOVERY_STREAM_LOADED_CONTENT, data};
+      sandbox.spy(instance, "handleDiscoveryStreamLoadedContent");
+
+      instance.onAction(ac.AlsoToMain(action, "port123"));
+
+      assert.calledWith(instance.handleDiscoveryStreamLoadedContent, "port123", data);
+    });
   });
   describe("#handlePagePrerendered", () => {
     it("should not throw if there is no session for the given port ID", () => {
@@ -1212,6 +1223,40 @@ describe("TelemetryFeed", () => {
       assert.calledTwice(spy);
     });
   });
+  describe("#sendDiscoveryStreamLoadedContent", () => {
+    it("should not send loaded content pings if there is no loaded content data", () => {
+      const spy = sandbox.spy(instance, "sendEvent");
+      const session = {};
+      instance.sendDiscoveryStreamLoadedContent("foo", session);
+
+      assert.notCalled(spy);
+    });
+    it("should send loaded content pings if there is loaded content data", () => {
+      const spy = sandbox.spy(instance, "sendEvent");
+      const session = {
+        loadedContentSets: {
+          source_foo: [{id: 1, pos: 0}, {id: 2, pos: 1}],
+          source_bar: [{id: 3, pos: 0}, {id: 4, pos: 1}],
+        },
+      };
+      instance.sendDiscoveryStreamLoadedContent("foo", session);
+
+      assert.calledTwice(spy);
+
+      let [payload] = spy.firstCall.args;
+      let sources = new Set([]);
+      sources.add(payload.source);
+      assert.equal(payload.loaded, 2);
+      assert.deepEqual(payload.tiles, session.loadedContentSets[payload.source]);
+
+      [payload] = spy.secondCall.args;
+      sources.add(payload.source);
+      assert.equal(payload.loaded, 2);
+      assert.deepEqual(payload.tiles, session.loadedContentSets[payload.source]);
+
+      assert.deepEqual(sources, new Set(["source_foo", "source_bar"]));
+    });
+  });
   describe("#handleDiscoveryStreamImpressionStats", () => {
     it("should throw for a missing session", () => {
       assert.throws(() => {
@@ -1240,6 +1285,36 @@ describe("TelemetryFeed", () => {
       assert.equal(Object.keys(session.impressionSets).length, 2);
       assert.deepEqual(session.impressionSets.foo, [{id: 1, pos: 0}, {id: 2, pos: 1}]);
       assert.deepEqual(session.impressionSets.bar, [{id: 3, pos: 2}]);
+    });
+  });
+  describe("#handleDiscoveryStreamLoadedContent", () => {
+    it("should throw for a missing session", () => {
+      assert.throws(() => {
+        instance.handleDiscoveryStreamLoadedContent("a_missing_port", {});
+      }, "Session does not exist.");
+    });
+    it("should store loaded content to loadedContentSets", () => {
+      const session = instance.addSession("new_session", "about:newtab");
+      instance.handleDiscoveryStreamLoadedContent("new_session",
+        {source: "foo", tiles: [{id: 1, pos: 0}]});
+
+      assert.equal(Object.keys(session.loadedContentSets).length, 1);
+      assert.deepEqual(session.loadedContentSets.foo, [{id: 1, pos: 0}]);
+
+      // Add another ping with the same source
+      instance.handleDiscoveryStreamLoadedContent("new_session",
+        {source: "foo", tiles: [{id: 2, pos: 1}]});
+
+      assert.deepEqual(session.loadedContentSets.foo,
+        [{id: 1, pos: 0}, {id: 2, pos: 1}]);
+
+      // Add another ping with a different source
+      instance.handleDiscoveryStreamLoadedContent("new_session",
+        {source: "bar", tiles: [{id: 3, pos: 2}]});
+
+      assert.equal(Object.keys(session.loadedContentSets).length, 2);
+      assert.deepEqual(session.loadedContentSets.foo, [{id: 1, pos: 0}, {id: 2, pos: 1}]);
+      assert.deepEqual(session.loadedContentSets.bar, [{id: 3, pos: 2}]);
     });
   });
   describe("#_generateStructuredIngestionEndpoint", () => {

@@ -371,7 +371,6 @@ nsresult LookupCache::GetLookupFragments(const nsACString& aSpec,
       key.Assign(hosts[hostIndex]);
       key.Append('/');
       key.Append(paths[pathIndex]);
-      LOG(("Checking fragment %s", key.get()));
 
       aFragments->AppendElement(key);
     }
@@ -557,9 +556,6 @@ nsresult LookupCacheV2::Has(const Completion& aCompletion, bool* aHas,
   if (*aHas && !(*aConfirmed)) {
     rv = CheckCache(aCompletion, aHas, aConfirmed);
   }
-
-  LOG(("Probe in %s: %X, has %d, confirmed %d", mTableName.get(), prefix, *aHas,
-       *aConfirmed));
 
   return rv;
 }

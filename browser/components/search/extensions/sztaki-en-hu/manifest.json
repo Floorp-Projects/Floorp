@@ -1,0 +1,26 @@
+{
+  "name": "SZTAKI angol-magyar",
+  "description": "Keresés a SZTAKI angol-magyar szótárában",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "sztaki-en-hu@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "SZTAKI angol-magyar",
+      "search_url": "https://szotar.sztaki.hu/search",
+      "search_form": "https://szotar.sztaki.hu/",
+      "search_url_get_params": "searchWord={searchTerms}&fromlang=hun&tolang=eng&ignoreAccents=1&langcode=hu&viewMode=full&u=0&searchMode=WORD_PREFIX"
+    }
+  }
+}

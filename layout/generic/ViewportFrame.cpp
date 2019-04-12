@@ -329,7 +329,7 @@ void ViewportFrame::Reflow(nsPresContext* aPresContext,
   aDesiredSize.SetOverflowAreasToDesiredBounds();
 
   if (HasAbsolutelyPositionedChildren()) {
-    // Make a copy of the reflow state and change the computed width and height
+    // Make a copy of the reflow input and change the computed width and height
     // to reflect the available space for the fixed items
     ReflowInput reflowInput(aReflowInput);
 

@@ -387,7 +387,7 @@ static cairo_surface_t* GetCairoSurfaceForSourceSurface(
 // An RAII class to temporarily clear any device offset set
 // on a surface. Note that this does not take a reference to the
 // surface.
-class AutoClearDeviceOffset {
+class AutoClearDeviceOffset final {
  public:
   explicit AutoClearDeviceOffset(SourceSurface* aSurface)
       : mSurface(nullptr), mX(0), mY(0) {

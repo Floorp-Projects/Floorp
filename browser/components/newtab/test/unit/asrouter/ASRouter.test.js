@@ -179,7 +179,6 @@ describe("ASRouter", () => {
       assert.equal(Router.state.previousSessionEnd, previousSessionEnd);
     });
     it("should dispatch a AS_ROUTER_INITIALIZED event to AS with ASRouterPreferences.specialConditions", async () => {
-      assert.calledOnce(Router.dispatchToAS);
       assert.calledWith(Router.dispatchToAS, ac.BroadcastToContent({type: "AS_ROUTER_INITIALIZED", data: ASRouterPreferences.specialConditions}));
     });
   });
@@ -345,9 +344,23 @@ describe("ASRouter", () => {
       assert.calledWithExactly(ASRouterTriggerListeners.get("openURL").init,
         Router._triggerHandler, ["www.example.com"], undefined);
     });
-    it("should gracefully handle RemoteSettings blowing up", async () => {
+    it("should gracefully handle RemoteSettings blowing up and dispatch undesired event", async () => {
       sandbox.stub(MessageLoaderUtils, "_getRemoteSettingsMessages").rejects("fake error");
       await createRouterAndInit();
+      assert.calledWith(Router.dispatchToAS, {
+        data: {action: "asrouter_undesired_event", event: "ASR_RS_ERROR", value: "remotey-settingsy"},
+        meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
+        type: "AS_ROUTER_TELEMETRY_USER_EVENT",
+      });
+    });
+    it("should dispatch undesired event if RemoteSettings returns no messages", async () => {
+      sandbox.stub(MessageLoaderUtils, "_getRemoteSettingsMessages").resolves([]);
+      await createRouterAndInit();
+      assert.calledWith(Router.dispatchToAS, {
+        data: {action: "asrouter_undesired_event", event: "ASR_RS_NO_MESSAGES", value: "remotey-settingsy"},
+        meta: {from: "ActivityStream:Content", to: "ActivityStream:Main"},
+        type: "AS_ROUTER_TELEMETRY_USER_EVENT",
+      });
     });
   });
 
@@ -863,7 +876,7 @@ describe("ASRouter", () => {
         sandbox.stub(CFRPageActions, "addRecommendation");
         const testMessage = {id: "foo", template: "cfr_doorhanger"};
         await Router.setState({messages: [testMessage]});
-        await Router._sendMessageToTarget(testMessage, {}, {}, false);
+        await Router._sendMessageToTarget(testMessage, {}, {param: {}}, false);
 
         assert.calledOnce(CFRPageActions.addRecommendation);
       });
@@ -924,7 +937,7 @@ describe("ASRouter", () => {
     describe("#onMessage: OPEN_PREFERENCES_PAGE", () => {
       it("should call openPreferences with the correct params on OPEN_PREFERENCES_PAGE", async () => {
         let [testMessage] = Router.state.messages;
-        testMessage.button_action = {type: "OPEN_PREFERENCES_PAGE", data: {category: "something", origin: "o"}};
+        testMessage.button_action = {type: "OPEN_PREFERENCES_PAGE", data: {category: "something"}};
         const msg = fakeExecuteUserAction(testMessage.button_action);
         await Router.onMessage(msg);
 
@@ -1215,7 +1228,7 @@ describe("ASRouter", () => {
           style: {setProperty: sandbox.stub()},
           addEventListener: sandbox.stub(),
         });
-        const data = {param: "mozilla.com"};
+        const data = {param: {host: "mozilla.com", url: "https://mozilla.com"}};
         const target = {
           sendAsyncMessage: sandbox.stub(),
           documentURI: {scheme: "https", host: "mozilla.com"},

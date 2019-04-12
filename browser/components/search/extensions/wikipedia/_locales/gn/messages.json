@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Vikipetã (gn)"
+  },
+  "extensionDescription": {
+    "message": "Vikipetã, opaite tembikuaa hekosãsóva renda"
+  },
+  "searchUrl": {
+    "message": "https://gn.wikipedia.org/wiki/Mba'echĩchĩ:Buscar"
+  },
+  "searchForm": {
+    "message": "https://gn.wikipedia.org/wiki/Mba'echĩchĩ:Buscar?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://gn.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

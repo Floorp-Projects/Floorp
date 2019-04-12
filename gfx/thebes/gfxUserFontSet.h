@@ -34,7 +34,7 @@ class gfxFontFaceBufferSource {
   virtual void TakeBuffer(uint8_t*& aBuffer, uint32_t& aLength) = 0;
 
  protected:
-  virtual ~gfxFontFaceBufferSource() {}
+  virtual ~gfxFontFaceBufferSource() = default;
 };
 
 // parsed CSS @font-face rule information
@@ -106,7 +106,7 @@ class gfxUserFontData {
         mCompression(kUnknownCompression),
         mPrivate(false),
         mIsBuffer(false) {}
-  virtual ~gfxUserFontData() {}
+  virtual ~gfxUserFontData() = default;
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
@@ -327,7 +327,7 @@ class gfxUserFontSet {
     // Helper that we use to observe the empty-cache notification
     // from nsICacheService.
     class Flusher : public nsIObserver {
-      virtual ~Flusher() {}
+      virtual ~Flusher() = default;
 
      public:
       NS_DECL_ISUPPORTS

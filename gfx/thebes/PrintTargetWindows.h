@@ -21,13 +21,13 @@ class PrintTargetWindows final : public PrintTarget {
  public:
   static already_AddRefed<PrintTargetWindows> CreateOrNull(HDC aDC);
 
-  virtual nsresult BeginPrinting(const nsAString& aTitle,
-                                 const nsAString& aPrintToFileName,
-                                 int32_t aStartPage, int32_t aEndPage) override;
-  virtual nsresult EndPrinting() override;
-  virtual nsresult AbortPrinting() override;
-  virtual nsresult BeginPage() override;
-  virtual nsresult EndPage() override;
+  nsresult BeginPrinting(const nsAString& aTitle,
+                         const nsAString& aPrintToFileName, int32_t aStartPage,
+                         int32_t aEndPage) override;
+  nsresult EndPrinting() override;
+  nsresult AbortPrinting() override;
+  nsresult BeginPage() override;
+  nsresult EndPage() override;
 
  private:
   PrintTargetWindows(cairo_surface_t* aCairoSurface, const IntSize& aSize,

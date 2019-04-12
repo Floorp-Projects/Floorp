@@ -52,7 +52,7 @@ enum class CommandType : int8_t {
 
 class DrawingCommand {
  public:
-  virtual ~DrawingCommand() {}
+  virtual ~DrawingCommand() = default;
 
   virtual CommandType GetType() const = 0;
   virtual void ExecuteOnDT(DrawTarget* aDT,

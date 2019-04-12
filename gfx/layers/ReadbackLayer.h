@@ -37,7 +37,7 @@ class LayersPacket;
 class ReadbackSink {
  public:
   ReadbackSink() {}
-  virtual ~ReadbackSink() {}
+  virtual ~ReadbackSink() = default;
 
   /**
    * Sends an update to indicate that the background is currently unknown.

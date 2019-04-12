@@ -41,7 +41,7 @@ typedef std::function<void(const ScrollableLayerGuid&,
  * A content-side component that keeps track of state for handling APZ
  * gestures and sending APZ notifications.
  */
-class APZEventState {
+class APZEventState final {
   typedef GeckoContentController::APZStateChange APZStateChange;
   typedef ScrollableLayerGuid::ViewID ViewID;
 

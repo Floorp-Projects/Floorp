@@ -19,7 +19,7 @@ class RenderViewMLGPU;
 class ContainerLayerMLGPU final : public ContainerLayer, public LayerMLGPU {
  public:
   explicit ContainerLayerMLGPU(LayerManagerMLGPU* aManager);
-  ~ContainerLayerMLGPU() override;
+  virtual ~ContainerLayerMLGPU();
 
   MOZ_LAYER_DECL_NAME("ContainerLayerMLGPU", TYPE_CONTAINER)
 

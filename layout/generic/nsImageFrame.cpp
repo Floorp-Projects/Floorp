@@ -114,7 +114,7 @@ nsIIOService* nsImageFrame::sIOService;
 // This is used by nsImageFrame::ShouldCreateImageFrameFor and should
 // not be used for layout decisions.
 static bool HaveSpecifiedSize(const nsStylePosition* aStylePosition) {
-  // check the width and height values in the reflow state's style struct
+  // check the width and height values in the reflow input's style struct
   // - if width and height are specified as either coord or percentage, then
   //   the size of the image frame is constrained
   return aStylePosition->mWidth.IsLengthPercentage() &&

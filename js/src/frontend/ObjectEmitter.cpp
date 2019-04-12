@@ -483,20 +483,24 @@ ClassEmitter::ClassEmitter(BytecodeEmitter* bce)
   isClass_ = true;
 }
 
-bool ClassEmitter::emitScopeForNamedClass(
-    JS::Handle<LexicalScope::Data*> scopeBindings) {
+bool ClassEmitter::emitScope(JS::Handle<LexicalScope::Data*> scopeBindings,
+                             HasName hasName) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
   MOZ_ASSERT(classState_ == ClassState::Start);
 
-  tdzCacheForInnerName_.emplace(bce_);
-  innerNameScope_.emplace(bce_);
-  if (!innerNameScope_->enterLexical(bce_, ScopeKind::Lexical, scopeBindings)) {
+  if (hasName == HasName::Yes) {
+    tdzCacheForInnerName_.emplace(bce_);
+  }
+
+  innerScope_.emplace(bce_);
+  if (!innerScope_->enterLexical(bce_, ScopeKind::Lexical, scopeBindings)) {
     return false;
   }
 
 #ifdef DEBUG
   classState_ = ClassState::Scope;
 #endif
+
   return true;
 }
 
@@ -766,17 +770,17 @@ bool ClassEmitter::emitEnd(Kind kind) {
 
   if (name_) {
     MOZ_ASSERT(tdzCacheForInnerName_.isSome());
-    MOZ_ASSERT(innerNameScope_.isSome());
+    MOZ_ASSERT(innerScope_.isSome());
 
     if (!bce_->emitLexicalInitialization(name_)) {
       //            [stack] CTOR
       return false;
     }
 
-    if (!innerNameScope_->leave(bce_)) {
+    if (!innerScope_->leave(bce_)) {
       return false;
     }
-    innerNameScope_.reset();
+    innerScope_.reset();
 
     if (kind == Kind::Declaration) {
       if (!bce_->emitLexicalInitialization(name_)) {
@@ -792,9 +796,18 @@ bool ClassEmitter::emitEnd(Kind kind) {
     }
 
     tdzCacheForInnerName_.reset();
+  } else if (innerScope_.isSome()) {
+    //              [stack] CTOR
+    MOZ_ASSERT(kind == Kind::Expression);
+    MOZ_ASSERT(tdzCacheForInnerName_.isNothing());
+
+    if (!innerScope_->leave(bce_)) {
+      return false;
+    }
+    innerScope_.reset();
   } else {
     //              [stack] CTOR
-
+    MOZ_ASSERT(kind == Kind::Expression);
     MOZ_ASSERT(tdzCacheForInnerName_.isNothing());
   }
 

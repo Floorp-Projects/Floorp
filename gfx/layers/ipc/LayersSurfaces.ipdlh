@@ -6,9 +6,9 @@ using struct gfxPoint from "gfxPoint.h";
 using nsIntRegion from "nsRegion.h";
 using struct mozilla::layers::SurfaceDescriptorX11 from "gfxipc/ShadowLayerUtils.h";
 using mozilla::StereoMode from "ImageTypes.h";
-using mozilla::YUVColorSpace from "ImageTypes.h";
 using struct mozilla::null_t from "ipc/IPCMessageUtils.h";
 using mozilla::WindowsHandle from "ipc/IPCMessageUtils.h";
+using mozilla::gfx::YUVColorSpace from "mozilla/gfx/Types.h";
 using mozilla::gfx::ColorDepth from "mozilla/gfx/Types.h";
 using mozilla::gfx::SurfaceFormat from "mozilla/gfx/Types.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
@@ -34,6 +34,7 @@ struct SurfaceDescriptorD3D10 {
   WindowsHandle handle;
   SurfaceFormat format;
   IntSize size;
+  YUVColorSpace yUVColorSpace;
 };
 
 struct SurfaceDescriptorDXGIYCbCr {
@@ -51,6 +52,7 @@ struct SurfaceDescriptorMacIOSurface {
   uint32_t surfaceId;
   double scaleFactor;
   bool isOpaque;
+  YUVColorSpace yUVColorSpace;
 };
 
 struct SurfaceTextureDescriptor {

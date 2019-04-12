@@ -37,4 +37,15 @@ interface nsIEnterprisePolicies : nsISupports
    * @returns A JS object that contains the storage or null if unavailable.
    */
   jsval getExtensionPolicy(in ACString extensionID);
+
+  /**
+   * Retrieves the ExtensionSettings policy for the given extensionID.
+   *
+   * If there is no policy for the extension, it returns the global policy.
+   *
+   * If there is no global policy, it returns null.
+   *
+   * @returns A JS object that settings or null if unavailable.
+   */
+  jsval getExtensionSettings(in ACString extensionID);
 };

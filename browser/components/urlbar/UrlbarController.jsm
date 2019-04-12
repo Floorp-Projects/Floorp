@@ -317,7 +317,7 @@ class UrlbarController {
             break;
           }
           if (executeAction) {
-            this.input.startQuery();
+            this.input.startQuery({ searchString: this.input.textValue });
           }
         }
         event.preventDefault();

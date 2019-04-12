@@ -132,6 +132,7 @@ JS_PUBLIC_API const char* JS::InformalValueTypeName(const Value& v) {
     case ValueType::Object:
       return v.toObject().getClass()->name;
     case ValueType::Magic:
+      return "magic";
     case ValueType::PrivateGCThing:
       break;
   }

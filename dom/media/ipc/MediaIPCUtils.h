@@ -26,17 +26,33 @@ struct ParamTraits<mozilla::VideoInfo> {
     WriteParam(aMsg, aParam.mStereoMode);
     WriteParam(aMsg, aParam.mImage);
     WriteParam(aMsg, aParam.ImageRect());
+    WriteParam(aMsg, *aParam.mCodecSpecificConfig);
+    WriteParam(aMsg, *aParam.mExtraData);
+    WriteParam(aMsg, aParam.mRotation);
+    WriteParam(aMsg, aParam.mColorDepth);
+    WriteParam(aMsg, aParam.mColorSpace);
+    WriteParam(aMsg, aParam.mFullRange);
+    WriteParam(aMsg, aParam.HasAlpha());
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
                    paramType* aResult) {
     mozilla::gfx::IntRect imageRect;
+    bool alphaPresent;
     if (ReadParam(aMsg, aIter, &aResult->mMimeType) &&
         ReadParam(aMsg, aIter, &aResult->mDisplay) &&
         ReadParam(aMsg, aIter, &aResult->mStereoMode) &&
         ReadParam(aMsg, aIter, &aResult->mImage) &&
-        ReadParam(aMsg, aIter, &imageRect)) {
+        ReadParam(aMsg, aIter, &imageRect) &&
+        ReadParam(aMsg, aIter, aResult->mCodecSpecificConfig.get()) &&
+        ReadParam(aMsg, aIter, aResult->mExtraData.get()) &&
+        ReadParam(aMsg, aIter, &aResult->mRotation) &&
+        ReadParam(aMsg, aIter, &aResult->mColorDepth) &&
+        ReadParam(aMsg, aIter, &aResult->mColorSpace) &&
+        ReadParam(aMsg, aIter, &aResult->mFullRange) &&
+        ReadParam(aMsg, aIter, &alphaPresent)) {
       aResult->SetImageRect(imageRect);
+      aResult->SetAlpha(alphaPresent);
       return true;
     }
     return false;
@@ -49,6 +65,12 @@ struct ParamTraits<mozilla::TrackInfo::TrackType>
           mozilla::TrackInfo::TrackType,
           mozilla::TrackInfo::TrackType::kUndefinedTrack,
           mozilla::TrackInfo::TrackType::kTextTrack> {};
+
+template <>
+struct ParamTraits<mozilla::VideoInfo::Rotation>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::VideoInfo::Rotation, mozilla::VideoInfo::Rotation::kDegree_0,
+          mozilla::VideoInfo::Rotation::kDegree_270> {};
 
 template <>
 struct ParamTraits<mozilla::MediaByteBuffer>

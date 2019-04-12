@@ -260,9 +260,16 @@ CompositorHitTestInfo HitTestingTreeNode::HitTest(
 
   result = CompositorHitTestFlags::eVisibleToHitTest;
 
-  if ((mOverride & EventRegionsOverride::ForceDispatchToContent) ||
-      mEventRegions.mDispatchToContentHitRegion.Contains(point.x, point.y)) {
-    result += CompositorHitTestFlags::eDispatchToContent;
+  if (mOverride & EventRegionsOverride::ForceDispatchToContent) {
+    result += CompositorHitTestFlags::eApzAwareListeners;
+  }
+  if (mEventRegions.mDispatchToContentHitRegion.Contains(point.x, point.y)) {
+    // Technically this might be some combination of eInactiveScrollframe,
+    // eApzAwareListeners, and eIrregularArea, because the round-trip through
+    // mEventRegions is lossy. We just convert it back to eIrregularArea
+    // because that's the most conservative option (i.e. eIrregularArea makes
+    // APZ rely on the main thread for everything).
+    result += CompositorHitTestFlags::eIrregularArea;
     if (mEventRegions.mDTCRequiresTargetConfirmation) {
       result += CompositorHitTestFlags::eRequiresTargetConfirmation;
     }

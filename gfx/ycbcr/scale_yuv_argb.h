@@ -14,7 +14,7 @@
 #include "libyuv/basic_types.h"
 #include "libyuv/scale.h"  // For FilterMode
 
-#include "ImageTypes.h" // For YUVColorSpace
+#include "mozilla/gfx/Types.h" // For YUVColorSpace
 
 #ifdef __cplusplus
 namespace libyuv {
@@ -25,7 +25,7 @@ int YUVToARGBScale(const uint8* src_y, int src_stride_y,
                    const uint8* src_u, int src_stride_u,
                    const uint8* src_v, int src_stride_v,
                    uint32 src_fourcc,
-                   mozilla::YUVColorSpace yuv_color_space,
+                   mozilla::gfx::YUVColorSpace yuv_color_space,
                    int src_width, int src_height,
                    uint8* dst_argb, int dst_stride_argb,
                    int dst_width, int dst_height,

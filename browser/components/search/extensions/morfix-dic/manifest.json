@@ -1,0 +1,26 @@
+{
+  "name": "מילון מורפיקס",
+  "description": "",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "morfix-dic@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "מילון מורפיקס",
+      "search_url": "https://milon.morfix.co.il/default.aspx",
+      "search_form": "https://milon.morfix.co.il/",
+      "search_url_get_params": "q={searchTerms}"
+    }
+  }
+}

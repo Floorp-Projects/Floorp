@@ -429,7 +429,7 @@ nsDocShell::~nsDocShell() {
   Destroy();
 
   if (mSessionHistory) {
-    mSessionHistory->LegacySHistory()->SetRootDocShell(nullptr);
+    mSessionHistory->LegacySHistory()->ClearRootDocShell();
   }
 
   if (--gDocShellCount == 0) {
@@ -4545,8 +4545,7 @@ nsDocShell::Reload(uint32_t aReloadFlags) {
   RefPtr<ChildSHistory> rootSH = GetRootSessionHistory();
   bool canReload = true;
   if (rootSH) {
-    rootSH->LegacySHistory()->NotifyOnHistoryReload(mCurrentURI, aReloadFlags,
-                                                    &canReload);
+    rootSH->LegacySHistory()->NotifyOnHistoryReload(&canReload);
   }
 
   if (!canReload) {

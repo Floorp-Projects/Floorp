@@ -20,9 +20,9 @@ class ClientReadbackLayer : public ReadbackLayer, public ClientLayer {
     mImplData = static_cast<ClientLayer*>(this);
   }
 
-  virtual ShadowableLayer* AsShadowableLayer() override { return this; }
-  virtual Layer* AsLayer() override { return this; }
-  virtual void RenderLayer() override {}
+  ShadowableLayer* AsShadowableLayer() override { return this; }
+  Layer* AsLayer() override { return this; }
+  void RenderLayer() override {}
 };
 
 }  // namespace layers

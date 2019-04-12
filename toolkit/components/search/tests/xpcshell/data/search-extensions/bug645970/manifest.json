@@ -1,0 +1,29 @@
+{
+  "name": "bug645970",
+  "manifest_version": 2,
+  "version": "1.0",
+  "description": "bug645970",
+  "applications": {
+    "gecko": {
+      "id": "bug645970@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "bug645970",
+      "search_url": "https://ar.wikipedia.org/wiki/%D8%AE%D8%A7%D8%B5:%D8%A8%D8%AD%D8%AB",
+      "params": [
+        {
+          "name": "search",
+          "value": "{searchTerms}"
+        },
+        {
+          "name": "sourceId",
+          "value": "Mozilla-search"
+        }
+      ],
+      "suggest_url": "https://ar.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+    }
+  }
+}

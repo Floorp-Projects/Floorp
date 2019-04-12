@@ -91,7 +91,7 @@ class VsyncSource {
   void Shutdown();
 
  protected:
-  virtual ~VsyncSource() {}
+  virtual ~VsyncSource() = default;
 };
 
 }  // namespace gfx

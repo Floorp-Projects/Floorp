@@ -870,7 +870,7 @@ void nsContainerFrame::ReflowChild(
     const WritingMode& aWM, const LogicalPoint& aPos,
     const nsSize& aContainerSize, uint32_t aFlags, nsReflowStatus& aStatus,
     nsOverflowContinuationTracker* aTracker) {
-  MOZ_ASSERT(aReflowInput.mFrame == aKidFrame, "bad reflow state");
+  MOZ_ASSERT(aReflowInput.mFrame == aKidFrame, "bad reflow input");
   if (aWM.IsVerticalRL() || (!aWM.IsVertical() && !aWM.IsBidiLTR())) {
     NS_ASSERTION(aContainerSize.width != NS_UNCONSTRAINEDSIZE,
                  "ReflowChild with unconstrained container width!");
@@ -916,7 +916,7 @@ void nsContainerFrame::ReflowChild(nsIFrame* aKidFrame,
                                    nscoord aY, uint32_t aFlags,
                                    nsReflowStatus& aStatus,
                                    nsOverflowContinuationTracker* aTracker) {
-  MOZ_ASSERT(aReflowInput.mFrame == aKidFrame, "bad reflow state");
+  MOZ_ASSERT(aReflowInput.mFrame == aKidFrame, "bad reflow input");
 
   // Position the child frame and its view if requested.
   if (NS_FRAME_NO_MOVE_FRAME != (aFlags & NS_FRAME_NO_MOVE_FRAME)) {

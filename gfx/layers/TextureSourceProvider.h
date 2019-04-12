@@ -105,7 +105,7 @@ class TextureSourceProvider {
   virtual bool IsValid() const = 0;
 
  public:
-  class MOZ_STACK_CLASS AutoReadUnlockTextures {
+  class MOZ_STACK_CLASS AutoReadUnlockTextures final {
    public:
     explicit AutoReadUnlockTextures(TextureSourceProvider* aProvider)
         : mProvider(aProvider) {}

@@ -96,6 +96,11 @@ TimeUnit AudioSink::GetPosition() {
     TimeUnit pos = TimeUnit::FromMicroseconds(tmp);
     NS_ASSERTION(pos >= mLastGoodPosition,
                  "AudioStream position shouldn't go backward");
+    TimeUnit tmp = mStartTime + pos;
+    if (!tmp.IsValid()) {
+      mErrored = true;
+      return mStartTime + mLastGoodPosition;
+    }
     // Update the last good position when we got a good one.
     if (pos >= mLastGoodPosition) {
       mLastGoodPosition = pos;

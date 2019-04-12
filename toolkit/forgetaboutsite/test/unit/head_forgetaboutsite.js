@@ -9,14 +9,13 @@ var profileDir = do_get_profile();
 /**
  * Removes any files that could make our tests fail.
  */
-function cleanUp() {
+async function cleanUp() {
   const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
   let files = [
     "places.sqlite",
     "cookies.sqlite",
     "signons.sqlite",
-    "permissions.sqlite",
   ];
 
   for (let i = 0; i < files.length; i++) {
@@ -25,5 +24,9 @@ function cleanUp() {
     if (file.exists())
       file.remove(false);
   }
+
+  await new Promise(resolve => {
+    Services.clearData.deleteData(Ci.nsIClearDataService.CLEAR_PERMISSIONS, value => resolve());
+  });
 }
 cleanUp();

@@ -297,25 +297,29 @@ static MOZ_ALWAYS_INLINE bool AllocChars(JSString* str, size_t length,
   return *chars != nullptr;
 }
 
-UniqueLatin1Chars JSRope::copyLatin1CharsZ(JSContext* maybecx) const {
-  return copyCharsInternal<Latin1Char>(maybecx, true);
+UniqueLatin1Chars JSRope::copyLatin1CharsZ(JSContext* maybecx,
+                                           arena_id_t destArenaId) const {
+  return copyCharsInternal<Latin1Char>(maybecx, true, destArenaId);
 }
 
-UniqueTwoByteChars JSRope::copyTwoByteCharsZ(JSContext* maybecx) const {
-  return copyCharsInternal<char16_t>(maybecx, true);
+UniqueTwoByteChars JSRope::copyTwoByteCharsZ(JSContext* maybecx,
+                                             arena_id_t destArenaId) const {
+  return copyCharsInternal<char16_t>(maybecx, true, destArenaId);
 }
 
-UniqueLatin1Chars JSRope::copyLatin1Chars(JSContext* maybecx) const {
-  return copyCharsInternal<Latin1Char>(maybecx, false);
+UniqueLatin1Chars JSRope::copyLatin1Chars(JSContext* maybecx,
+                                          arena_id_t destArenaId) const {
+  return copyCharsInternal<Latin1Char>(maybecx, false, destArenaId);
 }
 
-UniqueTwoByteChars JSRope::copyTwoByteChars(JSContext* maybecx) const {
-  return copyCharsInternal<char16_t>(maybecx, false);
+UniqueTwoByteChars JSRope::copyTwoByteChars(JSContext* maybecx,
+                                            arena_id_t destArenaId) const {
+  return copyCharsInternal<char16_t>(maybecx, false, destArenaId);
 }
 
 template <typename CharT>
 UniquePtr<CharT[], JS::FreePolicy> JSRope::copyCharsInternal(
-    JSContext* maybecx, bool nullTerminate) const {
+    JSContext* maybecx, bool nullTerminate, arena_id_t destArenaId) const {
   // Left-leaning ropes are far more common than right-leaning ropes, so
   // perform a non-destructive traversal of the rope, right node first,
   // splatting each node's characters into a contiguous buffer.
@@ -324,9 +328,9 @@ UniquePtr<CharT[], JS::FreePolicy> JSRope::copyCharsInternal(
 
   UniquePtr<CharT[], JS::FreePolicy> out;
   if (maybecx) {
-    out.reset(maybecx->pod_malloc<CharT>(n + 1));
+    out.reset(maybecx->pod_malloc<CharT>(n + 1, destArenaId));
   } else {
-    out.reset(js_pod_malloc<CharT>(n + 1));
+    out.reset(js_pod_arena_malloc<CharT>(destArenaId, n + 1));
   }
 
   if (!out) {
@@ -1095,14 +1099,14 @@ bool JSFlatString::isIndexSlow(const CharT* s, size_t length,
   RangedPtr<const CharT> cp(s, length + 1);
   const RangedPtr<const CharT> end(s + length, s, length + 1);
 
-  uint32_t index = JS7_UNDEC(*cp++);
+  uint32_t index = AsciiDigitToNumber(*cp++);
   uint32_t oldIndex = 0;
   uint32_t c = 0;
 
   if (index != 0) {
     while (IsAsciiDigit(*cp)) {
       oldIndex = index;
-      c = JS7_UNDEC(*cp);
+      c = AsciiDigitToNumber(*cp);
       index = 10 * index + c;
       cp++;
     }
@@ -1841,7 +1845,7 @@ JSFlatString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8) {
   size_t length;
   if (encoding == JS::SmallestEncoding::Latin1) {
     UniqueLatin1Chars latin1(
-        UTF8CharsToNewLatin1CharsZ(cx, utf8, &length).get());
+        UTF8CharsToNewLatin1CharsZ(cx, utf8, &length, js::MallocArena).get());
     if (!latin1) {
       return nullptr;
     }
@@ -1852,7 +1856,7 @@ JSFlatString* NewStringCopyUTF8N(JSContext* cx, const JS::UTF8Chars utf8) {
   MOZ_ASSERT(encoding == JS::SmallestEncoding::UTF16);
 
   UniqueTwoByteChars utf16(
-      UTF8CharsToNewTwoByteCharsZ(cx, utf8, &length).get());
+      UTF8CharsToNewTwoByteCharsZ(cx, utf8, &length, js::MallocArena).get());
   if (!utf16) {
     return nullptr;
   }

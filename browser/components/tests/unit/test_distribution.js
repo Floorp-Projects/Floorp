@@ -13,6 +13,22 @@ if (commonFile) {
   Services.scriptloader.loadSubScript(uri.spec, this);
 }
 
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const { PromiseTestUtils } = ChromeUtils.import("resource://testing-common/PromiseTestUtils.jsm");
+
+AddonTestUtils.init(this);
+AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
+
+add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+});
+
+// This test causes BrowserGlue to start but not fully initialise, when the
+// AddonManager shuts down BrowserGlue will then try to uninit which will
+// cause AutoComplete.jsm to throw an error.
+// TODO: Fix in https://bugzilla.mozilla.org/show_bug.cgi?id=1543112.
+PromiseTestUtils.whitelistRejectionsGlobally(/Component returned failure code/);
+
 const TOPICDATA_DISTRIBUTION_CUSTOMIZATION = "force-distribution-customization";
 const TOPIC_BROWSERGLUE_TEST = "browser-glue-test";
 

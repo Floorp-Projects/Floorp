@@ -40,9 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Sige, nakuha ko",
   "prefs_home_header": "Nilalaman ng Home ng Firefox",
   "prefs_home_description": "Piliin kung anong nilalaman ang gusto mo sa iyong screen ng Home ng Firefox.",
-  "prefs_content_discovery_header": "Firefox Home",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num} hilera;{num} mga hilera",
   "prefs_search_header": "Paghahanap sa Web",
   "prefs_topsites_description": "Ang mga site na iyong pinupuntahan",
@@ -110,6 +108,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Abisong Pangbribasiya",
   "firstrun_continue_to_login": "Magpatuloy",
   "firstrun_skip_login": "Laktawan ang hakbang na ito",
-  "context_menu_title": "Buksan ang menu",
-  "pocket_learn_more": "Alamin Pa"
+  "context_menu_title": "Buksan ang menu"
 };

@@ -1,4 +1,4 @@
-export const selectLayoutRender = (state, rickRollCache) => {
+export const selectLayoutRender = (state, prefs, rickRollCache) => {
   const {layout, feeds, spocs} = state;
   let spocIndex = 0;
   let bufferRollCache = [];
@@ -38,13 +38,25 @@ export const selectLayoutRender = (state, rickRollCache) => {
   }
 
   const positions = {};
+  const DS_COMPONENTS = ["Message", "SectionTitle", "Navigation",
+    "CardGrid", "Hero", "HorizontalRule", "List"];
+
+  const filterArray = [];
+
+  if (!prefs["feeds.topsites"]) {
+    filterArray.push("TopSites");
+  }
+
+  if (!prefs["feeds.section.topstories"]) {
+    filterArray.push(...DS_COMPONENTS);
+  }
 
   return layout.map(row => ({
     ...row,
 
-    // Loops through all the components and adds a .data property
+    // Loops through desired components and adds a .data property
     // containing data from feeds
-    components: row.components.map(component => {
+    components: row.components.filter(c => !filterArray.includes(c.type)).map(component => {
       if (!component.feed || !feeds.data[component.feed.url]) {
         return component;
       }
@@ -81,5 +93,5 @@ export const selectLayoutRender = (state, rickRollCache) => {
 
       return {...component, data};
     }),
-  }));
+  })).filter(row => row.components.length);
 };

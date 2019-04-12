@@ -52,7 +52,7 @@ class WebRenderThreadPool {
   wr::WrThreadPool* mThreadPool;
 };
 
-class WebRenderProgramCache {
+class WebRenderProgramCache final {
  public:
   explicit WebRenderProgramCache(wr::WrThreadPool* aThreadPool);
 
@@ -64,7 +64,7 @@ class WebRenderProgramCache {
   wr::WrProgramCache* mProgramCache;
 };
 
-class WebRenderShaders {
+class WebRenderShaders final {
  public:
   WebRenderShaders(gl::GLContext* gl, WebRenderProgramCache* programCache);
   ~WebRenderShaders();
@@ -76,7 +76,7 @@ class WebRenderShaders {
   wr::WrShaders* mShaders;
 };
 
-class WebRenderPipelineInfo {
+class WebRenderPipelineInfo final {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(WebRenderPipelineInfo);
 
  public:
@@ -96,7 +96,7 @@ class WebRenderPipelineInfo {
 /// messages to preserve ordering.
 class RendererEvent {
  public:
-  virtual ~RendererEvent() {}
+  virtual ~RendererEvent() = default;
   virtual void Run(RenderThread& aRenderThread, wr::WindowId aWindow) = 0;
 };
 

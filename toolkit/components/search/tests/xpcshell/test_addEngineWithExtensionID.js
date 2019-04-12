@@ -4,11 +4,15 @@
 "use strict";
 
 const kSearchEngineID = "addEngineWithDetails_test_engine";
-const kSearchEngineURL = "http://example.com/?search={searchTerms}";
+const kSearchEngineURL = "https://example.com/?search={searchTerms}";
 const kSearchTerm = "foo";
 const kExtensionID1 = "extension1@mozilla.com";
 const kExtensionID2 = "extension2@mozilla.com";
 const kExtension2LoadPath = "[http]localhost/test-search-engine.xml:extension2@mozilla.com";
+
+add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+});
 
 add_task(async function test_addEngineWithDetailsWithExtensionID() {
   Assert.ok(!Services.search.isInitialized);

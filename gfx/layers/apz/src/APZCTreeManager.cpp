@@ -1627,7 +1627,10 @@ static TouchBehaviorFlags ConvertToTouchBehavior(
   TouchBehaviorFlags result = AllowedTouchBehavior::UNKNOWN;
   if (info == CompositorHitTestInvisibleToHit) {
     result = AllowedTouchBehavior::NONE;
-  } else if (info.contains(CompositorHitTestFlags::eDispatchToContent)) {
+  } else if (info.contains(CompositorHitTestFlags::eIrregularArea)) {
+    // Note that eApzAwareListeners and eInactiveScrollframe are similar
+    // to eIrregularArea in some respects, but are not relevant for the
+    // purposes of this function, which deals specifically with touch-action.
     result = AllowedTouchBehavior::UNKNOWN;
   } else {
     result = AllowedTouchBehavior::VERTICAL_PAN |

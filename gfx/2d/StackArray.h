@@ -9,7 +9,7 @@
  */
 
 template <class T, size_t size>
-class StackArray {
+class StackArray final {
  public:
   explicit StackArray(size_t count) {
     if (count > size) {

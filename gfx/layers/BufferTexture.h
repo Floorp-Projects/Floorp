@@ -33,32 +33,32 @@ class BufferTextureData : public TextureData {
   static BufferTextureData* CreateForYCbCr(
       KnowsCompositor* aAllocator, gfx::IntSize aYSize, uint32_t aYStride,
       gfx::IntSize aCbCrSize, uint32_t aCbCrStride, StereoMode aStereoMode,
-      gfx::ColorDepth aColorDepth, YUVColorSpace aYUVColorSpace,
+      gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace,
       TextureFlags aTextureFlags);
 
-  virtual bool Lock(OpenMode aMode) override { return true; }
+  bool Lock(OpenMode aMode) override { return true; }
 
-  virtual void Unlock() override {}
+  void Unlock() override {}
 
-  virtual void FillInfo(TextureData::Info& aInfo) const override;
+  void FillInfo(TextureData::Info& aInfo) const override;
 
-  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
+  already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
 
-  virtual bool BorrowMappedData(MappedTextureData& aMap) override;
+  bool BorrowMappedData(MappedTextureData& aMap) override;
 
-  virtual bool BorrowMappedYCbCrData(MappedYCbCrTextureData& aMap) override;
+  bool BorrowMappedYCbCrData(MappedYCbCrTextureData& aMap) override;
 
   // use TextureClient's default implementation
-  virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
+  bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
 
-  virtual BufferTextureData* AsBufferTextureData() override { return this; }
+  BufferTextureData* AsBufferTextureData() override { return this; }
 
   // Don't use this.
   void SetDescriptor(BufferDescriptor&& aDesc);
 
   Maybe<gfx::IntSize> GetCbCrSize() const;
 
-  Maybe<YUVColorSpace> GetYUVColorSpace() const;
+  Maybe<gfx::YUVColorSpace> GetYUVColorSpace() const;
 
   Maybe<gfx::ColorDepth> GetColorDepth() const;
 

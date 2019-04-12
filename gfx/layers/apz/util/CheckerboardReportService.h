@@ -51,7 +51,7 @@ class CheckerboardEventStorage {
  private:
   /* Stuff for refcounted singleton */
   CheckerboardEventStorage() {}
-  virtual ~CheckerboardEventStorage() {}
+  virtual ~CheckerboardEventStorage() = default;
 
   static StaticRefPtr<CheckerboardEventStorage> sInstance;
 
@@ -127,7 +127,7 @@ class CheckerboardReportService : public nsWrapperCache {
   void FlushActiveReports();
 
  private:
-  virtual ~CheckerboardReportService() {}
+  virtual ~CheckerboardReportService() = default;
 
   nsCOMPtr<nsISupports> mParent;
 };

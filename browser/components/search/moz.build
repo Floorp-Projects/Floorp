@@ -13,6 +13,8 @@ BROWSER_CHROME_MANIFESTS += [
     'test/browser/google_codes/browser.ini',
 ]
 
+MARIONETTE_LAYOUT_MANIFESTS += ['test/marionette/manifest.ini']
+
 XPCSHELL_TESTS_MANIFESTS += ['test/unit/xpcshell.ini']
 
 JAR_MANIFESTS += ['jar.mn']

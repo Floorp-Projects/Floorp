@@ -5,11 +5,10 @@
 
 "use strict";
 
-function run_test() {
+add_task(async function setup() {
   useHttpServer();
-
-  run_next_test();
-}
+  await AddonTestUtils.promiseStartupManager();
+});
 
 add_task(async function test_installedresourceicon() {
   let [engine1, engine2] = await addTestEngines([

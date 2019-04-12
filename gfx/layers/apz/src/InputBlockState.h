@@ -49,8 +49,8 @@ class InputBlockState : public RefCounted<InputBlockState> {
     eConfirmed
   };
 
-  explicit InputBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
-                           TargetConfirmationFlags aFlags);
+  InputBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
+                  TargetConfirmationFlags aFlags);
   virtual ~InputBlockState() = default;
 
   virtual CancelableBlockState* AsCancelableBlock() { return nullptr; }

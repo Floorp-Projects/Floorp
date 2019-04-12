@@ -1,0 +1,26 @@
+{
+  "name": "Ceneje.si",
+  "description": "Iskalnik Ceneje.si",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "ceneji@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.png"
+  },
+  "web_accessible_resources": [
+    "favicon.png"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Ceneje.si",
+      "search_url": "https://www.ceneje.si/search_new.aspx",
+      "search_form": "https://www.ceneje.si",
+      "search_url_get_params": "q={searchTerms}&FF-SearchBox=1"
+    }
+  }
+}

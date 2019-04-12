@@ -7,35 +7,41 @@
 #ifndef GFX_D311_SHARE_HANDLE_IMAGE_H
 #define GFX_D311_SHARE_HANDLE_IMAGE_H
 
-#include "mozilla/RefPtr.h"
 #include "ImageContainer.h"
 #include "d3d11.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/RefPtr.h"
+#include "mozilla/gfx/Types.h"
 #include "mozilla/layers/TextureClient.h"
-#include "mozilla/layers/TextureD3D11.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
+#include "mozilla/layers/TextureD3D11.h"
 
 namespace mozilla {
+namespace gl {
+class GLBlitHelper;
+}
 namespace layers {
 
-class D3D11RecycleAllocator : public TextureClientRecycleAllocator {
+class D3D11RecycleAllocator final : public TextureClientRecycleAllocator {
  public:
-  explicit D3D11RecycleAllocator(KnowsCompositor* aAllocator,
-                                 ID3D11Device* aDevice)
-      : TextureClientRecycleAllocator(aAllocator), mDevice(aDevice) {}
+  D3D11RecycleAllocator(KnowsCompositor* aAllocator, ID3D11Device* aDevice,
+                        gfx::SurfaceFormat aPreferredFormat);
 
   already_AddRefed<TextureClient> CreateOrRecycleClient(
-      gfx::SurfaceFormat aFormat, const gfx::IntSize& aSize);
+      gfx::YUVColorSpace aColorSpace, const gfx::IntSize& aSize);
 
- protected:
-  virtual already_AddRefed<TextureClient> Allocate(
-      gfx::SurfaceFormat aFormat, gfx::IntSize aSize, BackendSelector aSelector,
-      TextureFlags aTextureFlags, TextureAllocationFlags aAllocFlags) override;
+  void SetPreferredSurfaceFormat(gfx::SurfaceFormat aPreferredFormat);
 
-  RefPtr<ID3D11Device> mDevice;
+ private:
+  const RefPtr<ID3D11Device> mDevice;
+  const bool mCanUseNV12;
+  const bool mCanUseP010;
+  const bool mCanUseP016;
   /**
    * Used for checking if CompositorDevice/ContentDevice is updated.
    */
   RefPtr<ID3D11Device> mImageDevice;
+  gfx::SurfaceFormat mUsableSurfaceFormat;
 };
 
 // Image class that wraps a ID3D11Texture2D. This class copies the image
@@ -45,8 +51,8 @@ class D3D11RecycleAllocator : public TextureClientRecycleAllocator {
 class D3D11ShareHandleImage final : public Image {
  public:
   D3D11ShareHandleImage(const gfx::IntSize& aSize, const gfx::IntRect& aRect,
-                        const GUID& aSourceFormat);
-  virtual ~D3D11ShareHandleImage() {}
+                        gfx::YUVColorSpace aColorSpace);
+  virtual ~D3D11ShareHandleImage() = default;
 
   bool AllocateTexture(D3D11RecycleAllocator* aAllocator,
                        ID3D11Device* aDevice);
@@ -58,10 +64,20 @@ class D3D11ShareHandleImage final : public Image {
 
   ID3D11Texture2D* GetTexture() const;
 
+  gfx::YUVColorSpace GetYUVColorSpace() const { return mYUVColorSpace; }
+
  private:
+  friend class gl::GLBlitHelper;
+  D3D11TextureData* GetData() const {
+    if (!mTextureClient) {
+      return nullptr;
+    }
+    return mTextureClient->GetInternalData()->AsD3D11TextureData();
+  }
+
   gfx::IntSize mSize;
   gfx::IntRect mPictureRect;
-  const GUID mSourceFormat;
+  gfx::YUVColorSpace mYUVColorSpace;
   RefPtr<TextureClient> mTextureClient;
   RefPtr<ID3D11Texture2D> mTexture;
 };

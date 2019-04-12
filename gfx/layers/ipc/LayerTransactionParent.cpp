@@ -112,7 +112,7 @@ void LayerTransactionParent::Destroy() {
   mAnimStorage = nullptr;
 }
 
-class MOZ_STACK_CLASS AutoLayerTransactionParentAsyncMessageSender {
+class MOZ_STACK_CLASS AutoLayerTransactionParentAsyncMessageSender final {
  public:
   explicit AutoLayerTransactionParentAsyncMessageSender(
       LayerTransactionParent* aLayerTransaction,

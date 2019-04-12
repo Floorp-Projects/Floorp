@@ -70,9 +70,6 @@ const ThemeVariableMap = [
   ["--autocomplete-popup-color", {
     lwtProperty: "popup_text",
   }],
-  ["--autocomplete-popup-border-color", {
-    lwtProperty: "popup_border",
-  }],
   ["--autocomplete-popup-highlight-background", {
     lwtProperty: "popup_highlight",
   }],

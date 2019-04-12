@@ -1505,7 +1505,7 @@ class DirectWriteFontInfo : public FontInfoData {
   {
   }
 
-  virtual ~DirectWriteFontInfo() {}
+  virtual ~DirectWriteFontInfo() = default;
 
   // loads font data for all members of a given family
   virtual void LoadFontFamilyData(const nsACString& aFamilyName);
@@ -1729,7 +1729,7 @@ class BundledFontFileEnumerator : public IDWriteFontFileEnumerator {
   BundledFontFileEnumerator(const BundledFontFileEnumerator&) = delete;
   BundledFontFileEnumerator& operator=(const BundledFontFileEnumerator&) =
       delete;
-  virtual ~BundledFontFileEnumerator() {}
+  virtual ~BundledFontFileEnumerator() = default;
 
   RefPtr<IDWriteFactory> mFactory;
 
@@ -1788,7 +1788,7 @@ class BundledFontLoader : public IDWriteFontCollectionLoader {
  private:
   BundledFontLoader(const BundledFontLoader&) = delete;
   BundledFontLoader& operator=(const BundledFontLoader&) = delete;
-  virtual ~BundledFontLoader() {}
+  virtual ~BundledFontLoader() = default;
 };
 
 IFACEMETHODIMP

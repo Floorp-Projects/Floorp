@@ -19,7 +19,7 @@ class MLGBuffer;
 class MLGDevice;
 
 // Cache MLGBuffers based on how long ago they were last used.
-class BufferCache {
+class BufferCache final {
  public:
   explicit BufferCache(MLGDevice* aDevice);
   ~BufferCache();

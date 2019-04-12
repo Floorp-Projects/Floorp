@@ -118,7 +118,7 @@ class TextureReadbackSink {
   virtual void ProcessReadback(gfx::DataSourceSurface* aSourceSurface) = 0;
 
  protected:
-  virtual ~TextureReadbackSink() {}
+  virtual ~TextureReadbackSink() = default;
 };
 
 enum class BackendSelector { Content, Canvas };
@@ -182,7 +182,7 @@ class NonBlockingTextureReadLock;
 // once.
 class TextureReadLock {
  protected:
-  virtual ~TextureReadLock() {}
+  virtual ~TextureReadLock() = default;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureReadLock)
@@ -217,9 +217,7 @@ class NonBlockingTextureReadLock : public TextureReadLock {
 
   static already_AddRefed<TextureReadLock> Create(LayersIPCChannel* aAllocator);
 
-  virtual NonBlockingTextureReadLock* AsNonBlockingLock() override {
-    return this;
-  }
+  NonBlockingTextureReadLock* AsNonBlockingLock() override { return this; }
 };
 
 #ifdef XP_WIN
@@ -329,8 +327,8 @@ class TextureData {
  */
 class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
  public:
-  explicit TextureClient(TextureData* aData, TextureFlags aFlags,
-                         LayersIPCChannel* aAllocator);
+  TextureClient(TextureData* aData, TextureFlags aFlags,
+                LayersIPCChannel* aAllocator);
 
   virtual ~TextureClient();
 
@@ -352,7 +350,7 @@ class TextureClient : public AtomicRefCountedWithFinalize<TextureClient> {
   static already_AddRefed<TextureClient> CreateForYCbCr(
       KnowsCompositor* aAllocator, gfx::IntSize aYSize, uint32_t aYStride,
       gfx::IntSize aCbCrSize, uint32_t aCbCrStride, StereoMode aStereoMode,
-      gfx::ColorDepth aColorDepth, YUVColorSpace aYUVColorSpace,
+      gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace,
       TextureFlags aTextureFlags);
 
   // Creates and allocates a TextureClient (can be accessed through raw
@@ -876,7 +874,7 @@ class MOZ_RAII DualTextureClientAutoLock {
 
 class KeepAlive {
  public:
-  virtual ~KeepAlive() {}
+  virtual ~KeepAlive() = default;
 };
 
 template <typename T>

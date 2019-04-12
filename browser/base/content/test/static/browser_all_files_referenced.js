@@ -43,8 +43,8 @@ var gExceptionPaths = [
   // paths will be concatenated in FormAutofillUtils.jsm based on different country/region.
   "resource://formautofill/addressmetadata/",
 
-  // Exclude all search-plugins because they aren't referenced by filename
-  "resource://search-plugins/",
+  // Exclude all search-extensions because they aren't referenced by filename
+  "resource://search-extensions/",
 ];
 
 // These are not part of the omni.ja file, so we find them only when running
@@ -177,10 +177,6 @@ var whitelist = [
    platforms: ["linux", "win"]},
   // Referenced by the webcompat system addon for localization
   {file: "resource://gre/localization/en-US/toolkit/about/aboutCompat.ftl"},
-  // These files are dynamically injected by LightweightThemeConsumer.jsm
-  // meaning the test doesn't detect them.
-  {file: "resource://app/modules/themes/dark/experiment.css"},
-  {file: "resource://app/modules/themes/light/experiment.css"},
 ];
 
 whitelist = new Set(whitelist.filter(item =>
@@ -341,6 +337,11 @@ async function parseJsonManifest(uri) {
         gReferencesFromCode.set(script, null);
       }
     }
+  }
+
+  if (data.theme_experiment && data.theme_experiment.stylesheet) {
+    let stylesheet = uri.resolve(data.theme_experiment.stylesheet);
+    gReferencesFromCode.set(stylesheet, null);
   }
 
   return null;

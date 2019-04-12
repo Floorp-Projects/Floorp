@@ -153,7 +153,7 @@ void nsFirstLetterFrame::Reflow(nsPresContext* aPresContext,
 
   nsIFrame* kid = mFrames.FirstChild();
 
-  // Setup reflow state for our child
+  // Setup reflow input for our child
   WritingMode wm = aReflowInput.GetWritingMode();
   LogicalSize availSize = aReflowInput.AvailableSize();
   const LogicalMargin& bp = aReflowInput.ComputedLogicalBorderPadding();

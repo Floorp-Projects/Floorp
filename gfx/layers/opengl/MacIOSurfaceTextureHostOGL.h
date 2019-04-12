@@ -7,10 +7,10 @@
 #ifndef MOZILLA_GFX_MACIOSURFACETEXTUREHOSTOGL_H
 #define MOZILLA_GFX_MACIOSURFACETEXTUREHOSTOGL_H
 
+#include "MacIOSurfaceHelpers.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/layers/CompositorOGL.h"
 #include "mozilla/layers/TextureHostOGL.h"
-#include "mozilla/gfx/2D.h"
-#include "MacIOSurfaceHelpers.h"
 
 class MacIOSurface;
 
@@ -29,23 +29,21 @@ class MacIOSurfaceTextureHostOGL : public TextureHost {
   virtual ~MacIOSurfaceTextureHostOGL();
 
   // MacIOSurfaceTextureSourceOGL doesn't own any GL texture
-  virtual void DeallocateDeviceData() override {}
+  void DeallocateDeviceData() override {}
 
-  virtual void SetTextureSourceProvider(
-      TextureSourceProvider* aProvider) override;
+  void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
-  virtual bool Lock() override;
+  bool Lock() override;
 
-  virtual gfx::SurfaceFormat GetFormat() const override;
-  virtual gfx::SurfaceFormat GetReadFormat() const override;
+  gfx::SurfaceFormat GetFormat() const override;
+  gfx::SurfaceFormat GetReadFormat() const override;
 
-  virtual bool BindTextureSource(
-      CompositableTextureSourceRef& aTexture) override {
+  bool BindTextureSource(CompositableTextureSourceRef& aTexture) override {
     aTexture = mTextureSource;
     return !!aTexture;
   }
 
-  virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
+  already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override {
     RefPtr<gfx::SourceSurface> surf =
         CreateSourceSurfaceFromMacIOSurface(GetMacIOSurface());
     return surf->GetDataSurface();
@@ -53,33 +51,34 @@ class MacIOSurfaceTextureHostOGL : public TextureHost {
 
   gl::GLContext* gl() const;
 
-  virtual gfx::IntSize GetSize() const override;
+  gfx::IntSize GetSize() const override;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() override { return "MacIOSurfaceTextureHostOGL"; }
+  const char* Name() override { return "MacIOSurfaceTextureHostOGL"; }
 #endif
 
-  virtual MacIOSurfaceTextureHostOGL* AsMacIOSurfaceTextureHost() override {
+  MacIOSurfaceTextureHostOGL* AsMacIOSurfaceTextureHost() override {
     return this;
   }
 
-  virtual MacIOSurface* GetMacIOSurface() override { return mSurface; }
+  MacIOSurface* GetMacIOSurface() override { return mSurface; }
 
-  virtual void CreateRenderTexture(
+  void CreateRenderTexture(
       const wr::ExternalImageId& aExternalImageId) override;
 
-  virtual uint32_t NumSubTextures() const override;
+  uint32_t NumSubTextures() const override;
 
-  virtual void PushResourceUpdates(wr::TransactionBuilder& aResources,
-                                   ResourceUpdateOp aOp,
-                                   const Range<wr::ImageKey>& aImageKeys,
-                                   const wr::ExternalImageId& aExtID) override;
+  void PushResourceUpdates(wr::TransactionBuilder& aResources,
+                           ResourceUpdateOp aOp,
+                           const Range<wr::ImageKey>& aImageKeys,
+                           const wr::ExternalImageId& aExtID) override;
 
-  virtual void PushDisplayItems(wr::DisplayListBuilder& aBuilder,
-                                const wr::LayoutRect& aBounds,
-                                const wr::LayoutRect& aClip,
-                                wr::ImageRendering aFilter,
-                                const Range<wr::ImageKey>& aImageKeys) override;
+  void PushDisplayItems(wr::DisplayListBuilder& aBuilder,
+                        const wr::LayoutRect& aBounds,
+                        const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
+                        const Range<wr::ImageKey>& aImageKeys) override;
+
+  gfx::YUVColorSpace GetYUVColorSpace() const override;
 
  protected:
   GLTextureSource* CreateTextureSourceForPlane(size_t aPlane);

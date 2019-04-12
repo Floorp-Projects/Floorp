@@ -10,12 +10,12 @@
 #include <CoreFoundation/CFDictionary.h>  // For CFDictionaryRef
 #include <CoreMedia/CoreMedia.h>          // For CMVideoFormatDescriptionRef
 #include <VideoToolbox/VideoToolbox.h>    // For VTDecompressionSessionRef
-
 #include "PlatformDecoderModule.h"
-#include "mozilla/Atomics.h"
-#include "nsIThread.h"
 #include "ReorderQueue.h"
 #include "TimeUnits.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/gfx/Types.h"
+#include "nsIThread.h"
 
 namespace mozilla {
 
@@ -88,6 +88,7 @@ class AppleVTDecoder : public MediaDataDecoder,
   const uint32_t mPictureHeight;
   const uint32_t mDisplayWidth;
   const uint32_t mDisplayHeight;
+  const gfx::YUVColorSpace mColorSpace;
 
   // Method to set up the decompression session.
   MediaResult InitializeSession();

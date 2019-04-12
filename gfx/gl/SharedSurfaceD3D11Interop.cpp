@@ -466,8 +466,8 @@ bool SharedSurface_D3D11Interop::ToSurfaceDescriptor(
     layers::SurfaceDescriptor* const out_descriptor) {
   const auto format =
       (mHasAlpha ? gfx::SurfaceFormat::B8G8R8A8 : gfx::SurfaceFormat::B8G8R8X8);
-  *out_descriptor =
-      layers::SurfaceDescriptorD3D10(WindowsHandle(mDXGIHandle), format, mSize);
+  *out_descriptor = layers::SurfaceDescriptorD3D10(
+      WindowsHandle(mDXGIHandle), format, mSize, gfx::YUVColorSpace::UNKNOWN);
   return true;
 }
 

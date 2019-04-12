@@ -11,7 +11,6 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/TimeStamp.h"
 
-#include <ctype.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <type_traits>

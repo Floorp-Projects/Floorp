@@ -725,8 +725,9 @@ static bool SampleAnimations(Layer* aLayer,
                                                                 transformData);
             Matrix4x4 transformInDevice = FrameTransformToTransformInDevice(
                 frameTransform, layer, transformData);
-            MOZ_ASSERT(previousValue->mTransform.mTransformInDevSpace
-                           .FuzzyEqualsMultiplicative(transformInDevice));
+            MOZ_ASSERT(previousValue->Transform()
+                           .mTransformInDevSpace.FuzzyEqualsMultiplicative(
+                               transformInDevice));
 #endif
             // In the case of transform we have to set the unchanged
             // transform value again because APZC might have modified the
@@ -739,7 +740,7 @@ static bool SampleAnimations(Layer* aLayer,
                 // layer tree cache. So for the safety, in the case where we
                 // have no previous animation value, we set non-animating value
                 // instead.
-                previousValue ? previousValue->mTransform.mTransformInDevSpace
+                previousValue ? previousValue->Transform().mTransformInDevSpace
                               : layer->GetBaseTransform());
             break;
           }

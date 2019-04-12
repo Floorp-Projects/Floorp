@@ -38,7 +38,7 @@ class StrokeOptionsCommand : public DrawingCommand {
     }
   }
 
-  virtual ~StrokeOptionsCommand() {}
+  virtual ~StrokeOptionsCommand() = default;
 
  protected:
   StrokeOptions mStrokeOptions;
@@ -867,8 +867,7 @@ class SetTransformCommand : public DrawingCommand {
     CLONE_INTO(SetTransformCommand)(mTransform);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT,
-                           const Matrix* aMatrix) const override {
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix* aMatrix) const override {
     if (aMatrix) {
       aDT->SetTransform(mTransform * (*aMatrix));
     } else {
@@ -902,8 +901,7 @@ class SetPermitSubpixelAACommand : public DrawingCommand {
     CLONE_INTO(SetPermitSubpixelAACommand)(mPermitSubpixelAA);
   }
 
-  virtual void ExecuteOnDT(DrawTarget* aDT,
-                           const Matrix* aMatrix) const override {
+  void ExecuteOnDT(DrawTarget* aDT, const Matrix* aMatrix) const override {
     aDT->SetPermitSubpixelAA(mPermitSubpixelAA);
   }
 
@@ -921,7 +919,7 @@ class SetPermitSubpixelAACommand : public DrawingCommand {
 
 class FlushCommand : public DrawingCommand {
  public:
-  explicit FlushCommand() {}
+  FlushCommand() = default;
 
   CommandType GetType() const override { return FlushCommand::Type; }
 

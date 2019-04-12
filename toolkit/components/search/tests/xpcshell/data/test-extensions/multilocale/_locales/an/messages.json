@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "Multilocale AN"
+  },
+  "extensionDescription": {
+    "message": "A enciclopedia Libre"
+  },
+  "url_lang": {
+    "message": "an"
+  },
+  "searchUrl": {
+    "message": "https://an.wikipedia.org/wiki/Especial:Mirar"
+  },
+  "suggestUrl": {
+    "message": "https://an.wikipedia.org/w/api.php"
+  }
+}

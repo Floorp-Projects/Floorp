@@ -154,7 +154,7 @@ BufferTextureData* BufferTextureData::CreateInternal(
 BufferTextureData* BufferTextureData::CreateForYCbCr(
     KnowsCompositor* aAllocator, gfx::IntSize aYSize, uint32_t aYStride,
     gfx::IntSize aCbCrSize, uint32_t aCbCrStride, StereoMode aStereoMode,
-    gfx::ColorDepth aColorDepth, YUVColorSpace aYUVColorSpace,
+    gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace,
     TextureFlags aTextureFlags) {
   uint32_t bufSize = ImageDataSerializer::ComputeYCbCrBufferSize(
       aYSize, aYStride, aCbCrSize, aCbCrStride);
@@ -224,7 +224,7 @@ Maybe<gfx::IntSize> BufferTextureData::GetCbCrSize() const {
   return ImageDataSerializer::CbCrSizeFromBufferDescriptor(mDescriptor);
 }
 
-Maybe<YUVColorSpace> BufferTextureData::GetYUVColorSpace() const {
+Maybe<gfx::YUVColorSpace> BufferTextureData::GetYUVColorSpace() const {
   return ImageDataSerializer::YUVColorSpaceFromBufferDescriptor(mDescriptor);
 }
 

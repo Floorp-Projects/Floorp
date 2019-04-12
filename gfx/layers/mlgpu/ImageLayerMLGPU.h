@@ -36,7 +36,7 @@ class ImageLayerMLGPU final : public ImageLayer, public TexturedLayerMLGPU {
   MOZ_LAYER_DECL_NAME("ImageLayerMLGPU", TYPE_IMAGE)
 
  protected:
-  ~ImageLayerMLGPU() override;
+  virtual ~ImageLayerMLGPU();
 
   void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
   void CleanupResources();

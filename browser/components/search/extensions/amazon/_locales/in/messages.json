@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "Amazon.in"
+  },
+  "extensionDescription": {
+    "message": "Amazon.in Search"
+  },
+  "searchUrl": {
+    "message": "https://www.amazon.in/exec/obidos/external-search/"
+  },
+  "searchForm": {
+    "message": "https://www.amazon.in/"
+  },
+  "searchUrlGetParams": {
+    "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&sourceid=Mozilla-search"
+  }
+}

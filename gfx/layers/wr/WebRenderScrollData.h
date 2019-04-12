@@ -40,7 +40,7 @@ class WebRenderScrollData;
 // each layer in the layer tree and sent over PWebRenderBridge to the APZ code.
 // Each WebRenderLayerScrollData is conceptually associated with an "owning"
 // WebRenderScrollData.
-class WebRenderLayerScrollData {
+class WebRenderLayerScrollData final {
  public:
   WebRenderLayerScrollData();  // needed for IPC purposes
   ~WebRenderLayerScrollData();
@@ -161,11 +161,10 @@ class WebRenderLayerScrollData {
 // is created for each transaction sent over PWebRenderBridge. It is populated
 // with information from the WebRender layer tree on the client side and the
 // information is used by APZ on the parent side.
-class WebRenderScrollData {
+class WebRenderScrollData final {
  public:
   WebRenderScrollData();
   explicit WebRenderScrollData(WebRenderLayerManager* aManager);
-  ~WebRenderScrollData();
 
   WebRenderLayerManager* GetManager() const;
 
