@@ -138,7 +138,7 @@ public:
 
 typedef Types<ElfClass32, ElfClass64> ElfClasses;
 
-TYPED_TEST_CASE(FileIDTest, ElfClasses);
+TYPED_TEST_SUITE(FileIDTest, ElfClasses);
 
 TYPED_TEST(FileIDTest, ElfClass) {
   const char expected_identifier_string[] =

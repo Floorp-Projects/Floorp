@@ -118,6 +118,15 @@ var test_bookmarks = {
 // Exported bookmarks file pointer.
 var bookmarksExportedFile;
 
+add_task(async function test_import_bookmarks_disallowed_url() {
+  await Assert.rejects(BookmarkJSONUtils.importFromURL("http://example.com/bookmarks.json"),
+    /importFromURL can only be used with/,
+    "Should reject importing from an http based url");
+  await Assert.rejects(BookmarkJSONUtils.importFromURL("https://example.com/bookmarks.json"),
+    /importFromURL can only be used with/,
+    "Should reject importing from an https based url");
+});
+
 add_task(async function test_import_bookmarks() {
   let bookmarksFile = OS.Path.join(do_get_cwd().path, "bookmarks.json");
 

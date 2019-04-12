@@ -1012,8 +1012,6 @@ class IonBuilder : public MIRGenerator,
     return actionableAbortScript_ != nullptr;
   }
 
-  TraceLoggerThread* traceLogger() { return TraceLoggerForCurrentThread(); }
-
   void actionableAbortLocationAndMessage(JSScript** abortScript,
                                          jsbytecode** abortPc,
                                          const char** abortMessage) {

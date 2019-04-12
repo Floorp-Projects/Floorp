@@ -85,7 +85,7 @@ class DumpSymbols : public Test {
 
 typedef Types<ElfClass32, ElfClass64> ElfClasses;
 
-TYPED_TEST_CASE(DumpSymbols, ElfClasses);
+TYPED_TEST_SUITE(DumpSymbols, ElfClasses);
 
 TYPED_TEST(DumpSymbols, Invalid) {
   Elf32_Ehdr header;

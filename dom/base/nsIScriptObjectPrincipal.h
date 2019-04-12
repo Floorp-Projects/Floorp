@@ -26,6 +26,8 @@ class nsIScriptObjectPrincipal : public nsISupports {
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ISCRIPTOBJECTPRINCIPAL_IID)
 
   virtual nsIPrincipal* GetPrincipal() = 0;
+
+  virtual nsIPrincipal* GetEffectiveStoragePrincipal() = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIScriptObjectPrincipal,

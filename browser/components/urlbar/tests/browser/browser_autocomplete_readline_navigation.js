@@ -58,6 +58,4 @@ add_task(async function() {
   info("Ctrl-p to select the previous item");
   EventUtils.synthesizeKey("p", {ctrlKey: true});
   assertSelected(0);
-
-  await UrlbarTestUtils.promisePopupClose(window);
 });

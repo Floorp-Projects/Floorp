@@ -205,7 +205,7 @@ namespace jit {
   _(JSOP_YIELD)                 \
   _(JSOP_AWAIT)                 \
   _(JSOP_TRYSKIPAWAIT)          \
-  _(JSOP_DEBUGAFTERYIELD)       \
+  _(JSOP_AFTERYIELD)            \
   _(JSOP_FINALYIELDRVAL)        \
   _(JSOP_RESUME)                \
   _(JSOP_ASYNCAWAIT)            \

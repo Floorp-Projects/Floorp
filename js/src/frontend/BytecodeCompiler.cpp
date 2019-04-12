@@ -315,6 +315,10 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx,
                                            const ErrorReporter& errorReporter)
 #ifdef JS_TRACE_LOGGING
     : logger_(TraceLoggerForCurrentThread(cx)) {
+  if (!logger_) {
+    return;
+  }
+
   // If the tokenizer hasn't yet gotten any tokens, use the line and column
   // numbers from CompileOptions.
   uint32_t line, column;
@@ -340,6 +344,10 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx,
                                            FunctionBox* funbox)
 #ifdef JS_TRACE_LOGGING
     : logger_(TraceLoggerForCurrentThread(cx)) {
+  if (!logger_) {
+    return;
+  }
+
   frontendEvent_.emplace(TraceLogger_Frontend, errorReporter.getFilename(),
                          funbox->startLine, funbox->startColumn);
   frontendLog_.emplace(logger_, *frontendEvent_);
@@ -356,6 +364,10 @@ AutoFrontendTraceLog::AutoFrontendTraceLog(JSContext* cx,
                                            ParseNode* pn)
 #ifdef JS_TRACE_LOGGING
     : logger_(TraceLoggerForCurrentThread(cx)) {
+  if (!logger_) {
+    return;
+  }
+
   uint32_t line, column;
   errorReporter.lineAndColumnAt(pn->pn_pos.begin, &line, &column);
   frontendEvent_.emplace(TraceLogger_Frontend, errorReporter.getFilename(),

@@ -102,14 +102,14 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
       do_QueryInterface(aGlobal.GetAsSupports());
   MOZ_ASSERT(window);
 
-  // If the window is blocked from accessing storage, do not allow it
-  // to connect to a SharedWorker.  This would potentially allow it
-  // to communicate with other windows that do have storage access.
-  // Allow private browsing, however, as we handle that isolation
-  // via the principal.
   auto storageAllowed = nsContentUtils::StorageAllowedForWindow(window);
-  if (storageAllowed != nsContentUtils::StorageAccess::eAllow &&
-      storageAllowed != nsContentUtils::StorageAccess::ePrivateBrowsing) {
+  if (storageAllowed == nsContentUtils::StorageAccess::eDeny) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
+  }
+
+  if (storageAllowed == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
     aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
     return nullptr;
   }
@@ -176,6 +176,57 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
     return nullptr;
   }
 
+  // Here, the StoragePrincipal is always equal to the SharedWorker's principal
+  // because the channel is not opened yet, and, because of this, it's not
+  // classified. We need to force the correct originAttributes.
+  if (storageAllowed == nsContentUtils::StorageAccess::ePartitionedOrDeny) {
+    nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(window);
+    if (!sop) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+
+    nsIPrincipal* windowPrincipal = sop->GetPrincipal();
+    if (!windowPrincipal) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
+    nsIPrincipal* windowStoragePrincipal = sop->GetEffectiveStoragePrincipal();
+    if (!windowStoragePrincipal) {
+      aRv.Throw(NS_ERROR_UNEXPECTED);
+      return nullptr;
+    }
+
+    if (!windowPrincipal->Equals(windowStoragePrincipal)) {
+      loadInfo.mStoragePrincipal =
+          BasePrincipal::Cast(loadInfo.mPrincipal)
+              ->CloneForcingOriginAttributes(
+                  BasePrincipal::Cast(windowStoragePrincipal)
+                      ->OriginAttributesRef());
+    }
+  }
+
+  PrincipalInfo storagePrincipalInfo;
+  if (loadInfo.mPrincipal->Equals(loadInfo.mStoragePrincipal)) {
+    storagePrincipalInfo = principalInfo;
+  } else {
+    aRv = PrincipalToPrincipalInfo(loadInfo.mStoragePrincipal,
+                                   &storagePrincipalInfo);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
+  }
+
+  nsTArray<ContentSecurityPolicy> storagePrincipalCSP;
+  nsTArray<ContentSecurityPolicy> storagePrincipalPreloadCSP;
+  aRv = PopulateContentSecurityPolicyArray(loadInfo.mStoragePrincipal,
+                                           storagePrincipalCSP,
+                                           storagePrincipalPreloadCSP);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
   // We don't actually care about this MessageChannel, but we use it to 'steal'
   // its 2 connected ports.
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(window);
@@ -204,15 +255,12 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
     ipcClientInfo.emplace(clientInfo.value().ToIPC());
   }
 
-  bool storageAccessAllowed =
-      storageAllowed > nsContentUtils::StorageAccess::eDeny;
-
   RemoteWorkerData remoteWorkerData(
       nsString(aScriptURL), baseURL, resolvedScriptURL, name,
       loadingPrincipalInfo, loadingPrincipalCSP, loadingPrincipalPreloadCSP,
-      principalInfo, principalCSP, principalPreloadCSP, loadInfo.mDomain,
-      isSecureContext, ipcClientInfo, storageAccessAllowed,
-      true /* sharedWorker */);
+      principalInfo, principalCSP, principalPreloadCSP, storagePrincipalInfo,
+      storagePrincipalCSP, storagePrincipalPreloadCSP, loadInfo.mDomain,
+      isSecureContext, ipcClientInfo, storageAllowed, true /* sharedWorker */);
 
   PSharedWorkerChild* pActor = actorChild->SendPSharedWorkerConstructor(
       remoteWorkerData, loadInfo.mWindowID, portIdentifier);

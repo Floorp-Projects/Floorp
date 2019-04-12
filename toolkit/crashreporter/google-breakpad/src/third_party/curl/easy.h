@@ -7,11 +7,11 @@
  *                            | (__| |_| |  _ <| |___
  *                             \___|\___/|_| \_\_____|
  *
- * Copyright (C) 1998 - 2008, Daniel Stenberg, <daniel@haxx.se>, et al.
+ * Copyright (C) 1998 - 2016, Daniel Stenberg, <daniel@haxx.se>, et al.
  *
  * This software is licensed as described in the file COPYING, which
  * you should have received as part of this distribution. The terms
- * are also available at http://curl.haxx.se/docs/copyright.html.
+ * are also available at https://curl.haxx.se/docs/copyright.html.
  *
  * You may opt to use, copy, modify, merge, publish, distribute and/or sell
  * copies of the Software, and permit persons to whom the Software is
@@ -20,7 +20,6 @@
  * This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF ANY
  * KIND, either express or implied.
  *
- * $Id: easy.h,v 1.14 2008-05-12 21:43:28 bagder Exp $
  ***************************************************************************/
 #ifdef  __cplusplus
 extern "C" {
@@ -54,12 +53,12 @@ CURL_EXTERN CURLcode curl_easy_getinfo(CURL *curl, CURLINFO info, ...);
  *
  * Creates a new curl session handle with the same options set for the handle
  * passed in. Duplicating a handle could only be a matter of cloning data and
- * options, internal state info and things like persistant connections cannot
- * be transfered. It is useful in multithreaded applications when you can run
+ * options, internal state info and things like persistent connections cannot
+ * be transferred. It is useful in multithreaded applications when you can run
  * curl_easy_duphandle() for each new thread to avoid a series of identical
  * curl_easy_setopt() invokes in every thread.
  */
-CURL_EXTERN CURL* curl_easy_duphandle(CURL *curl);
+CURL_EXTERN CURL *curl_easy_duphandle(CURL *curl);
 
 /*
  * NAME curl_easy_reset()
@@ -95,6 +94,16 @@ CURL_EXTERN CURLcode curl_easy_recv(CURL *curl, void *buffer, size_t buflen,
  */
 CURL_EXTERN CURLcode curl_easy_send(CURL *curl, const void *buffer,
                                     size_t buflen, size_t *n);
+
+
+/*
+ * NAME curl_easy_upkeep()
+ *
+ * DESCRIPTION
+ *
+ * Performs connection upkeep for the given session handle.
+ */
+CURL_EXTERN CURLcode curl_easy_upkeep(CURL *curl);
 
 #ifdef  __cplusplus
 }

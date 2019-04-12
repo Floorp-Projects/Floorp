@@ -47,6 +47,7 @@
 #include "mozilla/AccessibleCaretEventHub.h"
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ElementBinding.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/HTMLSlotElement.h"
@@ -2115,9 +2116,6 @@ void nsFocusManager::FireFocusOrBlurEvent(EventMessage aEventMessage,
 
 void nsFocusManager::ScrollIntoView(nsIPresShell* aPresShell,
                                     nsIContent* aContent, uint32_t aFlags) {
-  MOZ_ASSERT(!(aFlags & FLAG_BYELEMENTFOCUS) ||
-                 !!(aFlags & FLAG_BYELEMENTFOCUS) == !(aFlags & FLAG_NOSCROLL),
-             "FLAG_BYELEMENTFOCUS shouldn't involve with FLAG_NOSCROLL");
   // if the noscroll flag isn't set, scroll the newly focused element into view
   if (!(aFlags & FLAG_NOSCROLL)) {
     uint32_t scrollFlags = nsIPresShell::SCROLL_OVERFLOW_HIDDEN;
@@ -2862,6 +2860,11 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
   }
 
   return NS_OK;
+}
+
+uint32_t nsFocusManager::FocusOptionsToFocusManagerFlags(
+    const mozilla::dom::FocusOptions& aOptions) {
+  return aOptions.mPreventScroll ? nsIFocusManager::FLAG_NOSCROLL : 0;
 }
 
 static bool IsHostOrSlot(const nsIContent* aContent) {

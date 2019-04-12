@@ -13,7 +13,6 @@
 
 #include "nsIBaseWindow.h"
 #include "nsIDocShell.h"
-#include "nsPIDOMWindow.h"
 #include "mozilla/ModuleUtils.h"
 #include "nsIServiceManager.h"
 #include "nsIAppShellService.h"

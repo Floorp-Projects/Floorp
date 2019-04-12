@@ -1346,17 +1346,20 @@ struct ObjectGroupRealm::AllocationSiteKey
     proto = std::move(key.proto);
   }
 
-  static inline uint32_t hash(AllocationSiteKey key) {
-    return uint32_t(
-        size_t(key.script.unbarrieredGet()->offsetToPC(key.offset)) ^ key.kind ^
-        MovableCellHasher<JSObject*>::hash(key.proto.unbarrieredGet()));
+  static inline HashNumber hash(const AllocationSiteKey& key) {
+    JSScript* script = key.script.unbarrieredGet();
+    JSObject* proto = key.proto.unbarrieredGet();
+    HashNumber hash = mozilla::HashGeneric(key.offset, key.kind);
+    hash = mozilla::AddToHash(hash, MovableCellHasher<JSScript*>::hash(script));
+    hash = mozilla::AddToHash(hash, MovableCellHasher<JSObject*>::hash(proto));
+    return hash;
   }
 
   static inline bool match(const AllocationSiteKey& a,
                            const AllocationSiteKey& b) {
-    return DefaultHasher<JSScript*>::match(a.script.unbarrieredGet(),
-                                           b.script.unbarrieredGet()) &&
-           a.offset == b.offset && a.kind == b.kind &&
+    return a.offset == b.offset && a.kind == b.kind &&
+           MovableCellHasher<JSScript*>::match(a.script.unbarrieredGet(),
+                                               b.script.unbarrieredGet()) &&
            MovableCellHasher<JSObject*>::match(a.proto, b.proto);
   }
 

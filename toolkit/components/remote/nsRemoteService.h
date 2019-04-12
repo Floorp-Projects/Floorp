@@ -11,7 +11,6 @@
 #include "nsRemoteServer.h"
 #include "nsIObserverService.h"
 #include "nsIObserver.h"
-#include "nsPIDOMWindow.h"
 #include "mozilla/UniquePtr.h"
 #include "nsIFile.h"
 #include "nsProfileLock.h"

@@ -216,7 +216,6 @@ pthread_mutex_t g_handler_stack_mutex_ = PTHREAD_MUTEX_INITIALIZER;
 ExceptionHandler::CrashContext g_crash_context_;
 
 FirstChanceHandler g_first_chance_handler_ = nullptr;
-FirstChanceHandlerDeprecated g_first_chance_handler_deprecated_ = nullptr;
 bool g_skip_sigill_ = false;
 }  // namespace
 
@@ -347,11 +346,6 @@ void ExceptionHandler::SignalHandler(int sig, siginfo_t* info, void* uc) {
   // chance to handle and recover from these signals first.
   if (g_first_chance_handler_ != nullptr &&
       g_first_chance_handler_(sig, info, uc)) {
-    return;
-  }
-
-  if (g_first_chance_handler_deprecated_ != nullptr &&
-      g_first_chance_handler_deprecated_(sig, info, uc)) {
     return;
   }
 
@@ -832,13 +826,7 @@ bool ExceptionHandler::WriteMinidumpForChild(pid_t child,
 }
 
 void SetFirstChanceExceptionHandler(FirstChanceHandler callback) {
-  g_first_chance_handler_deprecated_ = nullptr;
   g_first_chance_handler_ = callback;
-}
-
-void SetFirstChanceExceptionHandler(FirstChanceHandlerDeprecated callback) {
-  g_first_chance_handler_ = nullptr;
-  g_first_chance_handler_deprecated_ = callback;
 }
 
 }  // namespace google_breakpad

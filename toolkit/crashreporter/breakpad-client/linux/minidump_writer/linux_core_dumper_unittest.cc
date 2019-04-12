@@ -109,7 +109,7 @@ TEST(LinuxCoreDumperTest, VerifyDumpWithMultipleThreads) {
   EXPECT_TRUE(dumper.ThreadsSuspend());
   EXPECT_TRUE(dumper.ThreadsResume());
 
-  // LinuxCoreDumper cannot determine the crash address and thus it always
+  // Linux does not set the crash address with SIGABRT, so make sure it always
   // sets the crash address to 0.
   EXPECT_EQ(0U, dumper.crash_address());
   EXPECT_EQ(kCrashSignal, dumper.crash_signal());
@@ -125,4 +125,64 @@ TEST(LinuxCoreDumperTest, VerifyDumpWithMultipleThreads) {
     EXPECT_TRUE(dumper.GetStackInfo(&stack, &stack_len, info.stack_pointer));
     EXPECT_EQ(getpid(), info.ppid);
   }
+}
+
+TEST(LinuxCoreDumperTest, VerifyExceptionDetails) {
+  CrashGenerator crash_generator;
+  if (!crash_generator.HasDefaultCorePattern()) {
+    fprintf(stderr, "LinuxCoreDumperTest.VerifyDumpWithMultipleThreads test "
+            "is skipped due to non-default core pattern\n");
+    return;
+  }
+
+#ifndef si_syscall
+  fprintf(stderr, "LinuxCoreDumperTest.VerifyDumpWithMultipleThreads test is "
+          "skipped due to old kernel/C library headers\n");
+  return;
+#endif
+
+  const unsigned kNumOfThreads = 2;
+  const unsigned kCrashThread = 1;
+  const int kCrashSignal = SIGSYS;
+  pid_t child_pid;
+  ASSERT_TRUE(crash_generator.CreateChildCrash(kNumOfThreads, kCrashThread,
+                                               kCrashSignal, &child_pid));
+
+  const string core_file = crash_generator.GetCoreFilePath();
+  const string procfs_path = crash_generator.GetDirectoryOfProcFilesCopy();
+
+#if defined(__ANDROID__)
+  struct stat st;
+  if (stat(core_file.c_str(), &st) != 0) {
+    fprintf(stderr, "LinuxCoreDumperTest.VerifyExceptionDetails test is "
+            "skipped due to no core file being generated");
+    return;
+  }
+#endif
+
+  LinuxCoreDumper dumper(child_pid, core_file.c_str(), procfs_path.c_str());
+
+  EXPECT_TRUE(dumper.Init());
+
+  EXPECT_TRUE(dumper.IsPostMortem());
+
+#if defined(__ANDROID__)
+  // TODO: For some reason, Android doesn't seem to pass this.
+  if (!dumper.crash_address()) {
+    fprintf(stderr, "LinuxCoreDumperTest.VerifyExceptionDetails test is "
+            "skipped due to missing signal details on Android");
+    return;
+  }
+#endif
+
+  // Check the exception details.
+  EXPECT_NE(0U, dumper.crash_address());
+  EXPECT_EQ(kCrashSignal, dumper.crash_signal());
+  EXPECT_EQ(crash_generator.GetThreadId(kCrashThread),
+            dumper.crash_thread());
+
+  // We check the length, but not the actual fields.  We sent SIGSYS ourselves
+  // instead of the kernel, so the extended fields are garbage.
+  const std::vector<uint64_t> info(dumper.crash_exception_info());
+  EXPECT_EQ(2U, info.size());
 }

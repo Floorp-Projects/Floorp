@@ -82,8 +82,6 @@ interface XULElement : Element {
   [SetterThrows]
   attribute long tabIndex;
   [Throws]
-  void                      focus();
-  [Throws]
   void                      blur();
   [NeedsCallerType]
   void                      click();
@@ -102,5 +100,6 @@ interface XULElement : Element {
 };
 
 XULElement implements GlobalEventHandlers;
+XULElement implements HTMLOrSVGOrXULElementMixin;
 XULElement implements TouchEventHandlers;
 XULElement implements OnErrorEventHandlerForNodes;

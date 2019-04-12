@@ -155,6 +155,18 @@ interface Element : Node {
   DOMMatrixReadOnly getTransformToViewport();
 };
 
+// https://html.spec.whatwg.org/#focus-management-apis
+dictionary FocusOptions {
+  boolean preventScroll = false;
+};
+
+// TODO(mbrodesser): once https://bugzilla.mozilla.org/show_bug.cgi?id=1414372
+// is fixed, mixin should be used.
+[NoInterfaceObject] interface HTMLOrSVGOrXULElementMixin {
+  [Throws]
+  void focus(optional FocusOptions options);
+};
+
 // http://dev.w3.org/csswg/cssom-view/
 enum ScrollLogicalPosition { "start", "center", "end", "nearest" };
 dictionary ScrollIntoViewOptions : ScrollOptions {

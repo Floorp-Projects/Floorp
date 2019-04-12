@@ -197,12 +197,30 @@ interface nsIScriptSecurityManager : nsISupports
                             in nsIURI aTargetURI,
                             in boolean reportError,
                             in boolean fromPrivateWindow);
+
     /**
      * Get the principal for the given channel.  This will typically be the
      * channel owner if there is one, and the codebase principal for the
      * channel's URI otherwise.  aChannel must not be null.
      */
     nsIPrincipal getChannelResultPrincipal(in nsIChannel aChannel);
+
+    /**
+     * Get the storage principal for the given channel.  This is basically the
+     * same of getChannelResultPrincipal() execept for trackers, where we
+     * return a principal with a different OriginAttributes.
+     */
+    nsIPrincipal getChannelResultStoragePrincipal(in nsIChannel aChannel);
+
+    /**
+     * This method does getChannelResultPrincipal() +
+     * getChannelResultStoragePrincipal().
+     * This method is mainly done for Document::Reset(). There are no other
+     * reasons to use this method.
+     */
+    void getChannelResultPrincipals(in nsIChannel aChannel,
+                                    out nsIPrincipal aPrincipal,
+                                    out nsIPrincipal aStoragePrincipal);
 
     /**
      * Temporary API until bug 1220687 is fixed.
