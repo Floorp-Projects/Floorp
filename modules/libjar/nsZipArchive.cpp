@@ -20,6 +20,7 @@
 #include "plstr.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Logging.h"
+#include "mozilla/MemUtils.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "stdlib.h"
 #include "nsDirectoryService.h"
@@ -650,32 +651,8 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc *aFd) {
       xtolong(startp + centralOffset) == CENTRALSIG) {
     // Success means optimized jar layout from bug 559961 is in effect
     uint32_t readaheadLength = xtolong(startp);
-    if (readaheadLength) {
-#if defined(XP_SOLARIS)
-      posix_madvise(const_cast<uint8_t *>(startp), readaheadLength,
-                    POSIX_MADV_WILLNEED);
-#elif defined(XP_UNIX)
-      madvise(const_cast<uint8_t *>(startp), readaheadLength, MADV_WILLNEED);
-#elif defined(XP_WIN)
-      static auto prefetchVirtualMemory =
-          reinterpret_cast<BOOL(WINAPI *)(HANDLE, ULONG_PTR, PVOID, ULONG)>(
-              GetProcAddress(GetModuleHandle(L"kernel32.dll"),
-                             "PrefetchVirtualMemory"));
-      if (prefetchVirtualMemory) {
-        // Normally, we'd use WIN32_MEMORY_RANGE_ENTRY, but that requires
-        // a different _WIN32_WINNT value before including windows.h, but
-        // that causes complications with unified sources. It's a simple
-        // enough struct anyways.
-        struct {
-          PVOID VirtualAddress;
-          SIZE_T NumberOfBytes;
-        } entry;
-        entry.VirtualAddress = const_cast<uint8_t *>(startp);
-        entry.NumberOfBytes = readaheadLength;
-        prefetchVirtualMemory(GetCurrentProcess(), 1, &entry, 0);
-      }
-#endif
-    }
+    mozilla::MaybePrefetchMemory(const_cast<uint8_t *>(startp),
+                                 readaheadLength);
   } else {
     for (buf = endp - ZIPEND_SIZE; buf > startp; buf--) {
       if (xtolong(buf) == ENDSIG) {
