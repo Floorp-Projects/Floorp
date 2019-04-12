@@ -1,5 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /*
  * Test reloading:
@@ -11,7 +12,7 @@ async function waitForBreakpoint(dbg, location) {
   return waitForState(
     dbg,
     state => {
-      return dbg.selectors.getBreakpoint(dbg.getState(), location);
+      return dbg.selectors.getBreakpoint(location);
     },
     "Waiting for breakpoint"
   );
@@ -32,7 +33,7 @@ add_task(async function() {
 
   await waitForBreakpoint(dbg, location);
 
-  const breakpointList = dbg.selectors.getBreakpointsList(dbg.getState());
+  const breakpointList = dbg.selectors.getBreakpointsList();
   const breakpoint = breakpointList[0];
 
   is(breakpointList.length, 1);

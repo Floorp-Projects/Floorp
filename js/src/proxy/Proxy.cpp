@@ -443,7 +443,8 @@ bool Proxy::getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
   return handler->getOwnEnumerablePropertyKeys(cx, proxy, props);
 }
 
-bool Proxy::enumerate(JSContext* cx, HandleObject proxy, MutableHandleIdVector props) {
+bool Proxy::enumerate(JSContext* cx, HandleObject proxy,
+                      MutableHandleIdVector props) {
   if (!CheckRecursionLimit(cx)) {
     return false;
   }

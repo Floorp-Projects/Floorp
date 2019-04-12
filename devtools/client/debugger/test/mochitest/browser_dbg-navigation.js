@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function countSources(dbg) {
-  return dbg.selectors.getSourceCount(dbg.getState());
+  return dbg.selectors.getSourceCount();
 }
 
 const sources = [
@@ -41,7 +41,7 @@ add_task(async function() {
 
   await navigate(dbg, "doc-scripts.html", ...sources);
   is(countSources(dbg), 5, "5 sources are loaded.");
-  ok(!getIsPaused(getState(), getCurrentThread(getState())), "Is not paused");
+  ok(!getIsPaused(getCurrentThread()), "Is not paused");
 
   await navigate(dbg, "doc-scripts.html", ...sources);
   is(countSources(dbg), 5, "5 sources are loaded.");
@@ -51,8 +51,5 @@ add_task(async function() {
   await reload(dbg, "long.js");
   await waitForSelectedSource(dbg, "long.js");
 
-  ok(
-    getSelectedSource(getState()).url.includes("long.js"),
-    "Selected source is long.js"
-  );
+  ok(getSelectedSource().url.includes("long.js"), "Selected source is long.js");
 });

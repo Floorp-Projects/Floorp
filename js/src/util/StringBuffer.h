@@ -278,8 +278,7 @@ class StringBuffer {
 
 class JSStringBuilder : public StringBuffer {
  public:
-  explicit JSStringBuilder(JSContext* cx)
-      : StringBuffer(cx) {}
+  explicit JSStringBuilder(JSContext* cx) : StringBuffer(cx) {}
 
   /*
    * Creates a string from the characters in this buffer, then (regardless

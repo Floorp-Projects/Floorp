@@ -22,6 +22,7 @@ from .prefs import Preferences
 
 __all__ = ['BaseProfile',
            'ChromeProfile',
+           'ChromiumProfile',
            'Profile',
            'FirefoxProfile',
            'ThunderbirdProfile',
@@ -448,7 +449,7 @@ class ThunderbirdProfile(Profile):
     }
 
 
-class ChromeProfile(BaseProfile):
+class ChromiumProfile(BaseProfile):
     preference_file_names = ('Preferences',)
 
     class AddonManager(list):
@@ -463,7 +464,7 @@ class ChromeProfile(BaseProfile):
             return False
 
     def __init__(self, **kwargs):
-        super(ChromeProfile, self).__init__(**kwargs)
+        super(ChromiumProfile, self).__init__(**kwargs)
 
         if self.create_new:
             self.profile = os.path.join(self.profile, 'Default')
@@ -495,8 +496,15 @@ class ChromeProfile(BaseProfile):
             fh.write(prefstr)
 
 
+class ChromeProfile(ChromiumProfile):
+    # update this if Google Chrome requires more
+    # specific profiles
+    pass
+
+
 profile_class = {
     'chrome': ChromeProfile,
+    'chromium': ChromiumProfile,
     'firefox': FirefoxProfile,
     'thunderbird': ThunderbirdProfile,
 }

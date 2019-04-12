@@ -1,5 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /**
  * This if the debugger's layout is correctly modified when the toolbox's
@@ -29,14 +30,13 @@ add_task(async function() {
 });
 
 async function testLayout(dbg, orientation, host) {
-  const { panel, toolbox } = dbg;
   info(`Switching to ${host} ${orientation}.`);
 
   await switchHost(dbg, host);
   await resizeToolboxWindow(dbg, host);
   return waitForState(
     dbg,
-    state => dbg.selectors.getOrientation(state) == orientation
+    state => dbg.selectors.getOrientation() == orientation
   );
 }
 

@@ -480,8 +480,7 @@ bool GLContextEGL::RenewSurface(CompositorWidget* aWidget) {
   const bool ok = MakeCurrent(true);
   MOZ_ASSERT(ok);
 #if defined(MOZ_WAYLAND)
-  if (mSurface &&
-      !GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+  if (mSurface && !GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
     const auto* egl = gl::GLLibraryEGL::Get();
     // Make eglSwapBuffers() non-blocking on wayland
     egl->fSwapInterval(EGL_DISPLAY(), 0);

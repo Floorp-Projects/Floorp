@@ -86,8 +86,9 @@ class JS_FRIEND_API ForwardingProxyHandler : public BaseProxyHandler {
   /* SpiderMonkey extensions. */
   virtual bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id,
                       bool* bp) const override;
-  virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
-                                            MutableHandleIdVector props) const override;
+  virtual bool getOwnEnumerablePropertyKeys(
+      JSContext* cx, HandleObject proxy,
+      MutableHandleIdVector props) const override;
   virtual bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
                           const CallArgs& args) const override;
   virtual bool hasInstance(JSContext* cx, HandleObject proxy,
@@ -226,8 +227,9 @@ class JS_FRIEND_API CrossCompartmentWrapper : public Wrapper {
   /* SpiderMonkey extensions. */
   virtual bool hasOwn(JSContext* cx, HandleObject wrapper, HandleId id,
                       bool* bp) const override;
-  virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject wrapper,
-                                            MutableHandleIdVector props) const override;
+  virtual bool getOwnEnumerablePropertyKeys(
+      JSContext* cx, HandleObject wrapper,
+      MutableHandleIdVector props) const override;
   virtual bool nativeCall(JSContext* cx, IsAcceptableThis test, NativeImpl impl,
                           const CallArgs& args) const override;
   virtual bool hasInstance(JSContext* cx, HandleObject wrapper,
@@ -296,8 +298,9 @@ class JS_FRIEND_API OpaqueCrossCompartmentWrapper
   /* SpiderMonkey extensions. */
   virtual bool hasOwn(JSContext* cx, HandleObject wrapper, HandleId id,
                       bool* bp) const override;
-  virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject wrapper,
-                                            MutableHandleIdVector props) const override;
+  virtual bool getOwnEnumerablePropertyKeys(
+      JSContext* cx, HandleObject wrapper,
+      MutableHandleIdVector props) const override;
   virtual bool getBuiltinClass(JSContext* cx, HandleObject wrapper,
                                ESClass* cls) const override;
   virtual bool isArray(JSContext* cx, HandleObject obj,

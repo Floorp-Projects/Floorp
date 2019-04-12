@@ -3144,7 +3144,7 @@ bool AsyncPanZoomController::AttemptScroll(
 #endif
         bool displacementIsUserVisible = true;
 
-        { // Release the APZC lock before calling ToScreenCoordinates which
+        {  // Release the APZC lock before calling ToScreenCoordinates which
           // acquires the APZ tree lock. Note that this just unlocks the mutex
           // once, so if we're locking it multiple times on the callstack then
           // this will be insufficient.
@@ -3359,7 +3359,7 @@ void AsyncPanZoomController::HandleFlingOverscroll(
     ParentLayerPoint residualVelocity =
         treeManagerLocal->DispatchFling(this, handoffState);
     FLING_LOG("APZC %p left with residual velocity %s\n", this,
-        Stringify(residualVelocity).c_str());
+              Stringify(residualVelocity).c_str());
     if (!IsZero(residualVelocity) && IsPannable() &&
         gfxPrefs::APZOverscrollEnabled()) {
       // Obey overscroll-behavior.
@@ -4820,8 +4820,8 @@ void AsyncPanZoomController::ZoomToRect(CSSRect aRect, const uint32_t aFlags) {
         std::max(mZoomConstraints.mMinZoom.scale,
                  std::max(compositionBounds.Width() / cssPageRect.Width(),
                           compositionBounds.Height() / cssPageRect.Height())));
-    CSSToParentLayerScale localMaxZoom
-        = std::max(localMinZoom, mZoomConstraints.mMaxZoom);
+    CSSToParentLayerScale localMaxZoom =
+        std::max(localMinZoom, mZoomConstraints.mMaxZoom);
 
     if (!aRect.IsEmpty()) {
       // Intersect the zoom-to-rect to the CSS rect to make sure it fits.

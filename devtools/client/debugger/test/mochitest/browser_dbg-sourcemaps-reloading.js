@@ -6,7 +6,7 @@ requestLongerTimeout(2);
 async function waitForBreakpointCount(dbg, count) {
   return waitForState(
     dbg,
-    state => dbg.selectors.getBreakpointCount(state) === count
+    state => dbg.selectors.getBreakpointCount() === count
   );
 }
 
@@ -14,8 +14,7 @@ add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
   const dbg = await initDebugger("doc-sourcemaps.html");
   const {
-    selectors: { getBreakpoint, getBreakpointCount },
-    getState
+    selectors: { getBreakpoint, getBreakpointCount }
   } = dbg;
 
   await waitForSources(dbg, "entry.js", "output.js", "times2.js", "opts.js");
@@ -42,15 +41,15 @@ add_task(async function() {
   assertPausedLocation(dbg);
 
   await waitForBreakpointCount(dbg, 2);
-  is(getBreakpointCount(getState()), 2, "Three breakpoints exist");
+  is(getBreakpointCount(), 2, "Three breakpoints exist");
 
   ok(
-    getBreakpoint(getState(), { sourceId: entrySrc.id, line: 15, column: 0 }),
+    getBreakpoint({ sourceId: entrySrc.id, line: 15, column: 0 }),
     "Breakpoint has correct line"
   );
 
   ok(
-    getBreakpoint(getState(), {
+    getBreakpoint({
       sourceId: entrySrc.id,
       line: 15,
       column: 0,

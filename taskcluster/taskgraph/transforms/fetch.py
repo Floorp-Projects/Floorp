@@ -258,7 +258,11 @@ def create_chromium_fetch_task(config, job):
             task,
             cache_type=CACHE_TYPE,
             cache_name=cache_name,
-            digest_data=["revision={}".format(revision), "platform={}".format(platform)],
+            digest_data=[
+                "revision={}".format(revision),
+                "platform={}".format(platform),
+                "artifact_name={}".format(artifact_name),
+            ],
         )
 
     return task

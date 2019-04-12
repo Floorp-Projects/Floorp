@@ -107,7 +107,7 @@ static gboolean ReportCompleted(gpointer success) {
   return FALSE;
 }
 
-#  define HTTP_PROXY_DIR "/system/http_proxy"
+#define HTTP_PROXY_DIR "/system/http_proxy"
 
 void LoadProxyinfo() {
   class GConfClient;

@@ -1,5 +1,5 @@
 {
-    "configure-args": "--enable-fuzzing --enable-debug-symbols='-gline-tables-only -gdwarf-2' --disable-jemalloc --disable-stdcxx-compat --enable-address-sanitizer --enable-ctypes --enable-nspr-build",
+    "configure-args": "--enable-fuzzing --enable-gczeal --enable-debug-symbols='-gline-tables-only -gdwarf-2' --disable-jemalloc --disable-stdcxx-compat --enable-address-sanitizer --enable-ctypes --enable-nspr-build",
     "optimize": true,
     "debug": false,
     "compiler": "clang",

@@ -1677,6 +1677,8 @@ class StaticAnalysis(MachCommandBase):
     # File contaning all paths to exclude from formatting
     _format_ignore_file = '.clang-format-ignore'
 
+    _clang_tidy_config = None
+
     @Command('static-analysis', category='testing',
              description='Run C++ static analysis checks')
     def static_analysis(self):
@@ -1724,9 +1726,17 @@ class StaticAnalysis(MachCommandBase):
         self._set_log_level(verbose)
         self.log_manager.enable_all_structured_loggers()
 
+        rc = self._get_clang_tools(verbose=verbose)
+        if rc != 0:
+            return rc
+
+        if self._is_version_eligible() is False:
+            self.log(logging.ERROR, 'static-analysis', {}, "You're using an old version of clang-format binary."
+                            " Please update to a more recent one by running: './mach bootstrap'")
+            return 1
+
         rc = self._build_compile_db(verbose=verbose)
         rc = rc or self._build_export(jobs=jobs, verbose=verbose)
-        rc = rc or self._get_clang_tools(verbose=verbose)
         if rc != 0:
             return rc
 
@@ -1753,7 +1763,8 @@ class StaticAnalysis(MachCommandBase):
 
         cwd = self.topobjdir
         self._compilation_commands_path = self.topobjdir
-        self._clang_tidy_config = self._get_clang_tidy_config()
+        if self._clang_tidy_config is None:
+            self._clang_tidy_config = self._get_clang_tidy_config()
         args = self._get_clang_tidy_command(
             checks=checks, header_filter=header_filter, sources=source, jobs=jobs, fix=fix)
 
@@ -2202,6 +2213,34 @@ class StaticAnalysis(MachCommandBase):
                   ' values for the rest of the analysis.')
             return None
         return config
+
+    def _is_version_eligible(self):
+        # make sure that we've cached self._clang_tidy_config
+        if self._clang_tidy_config is None:
+            self._clang_tidy_config = self._get_clang_tidy_config()
+
+        version = None
+        if 'package_version' in self._clang_tidy_config:
+            version = self._clang_tidy_config['package_version']
+        else:
+            self.log(logging.ERROR, 'static-analysis', {}, "Unable to find 'package_version' in the config.yml")
+            return False
+
+        # Because the fact that we ship together clang-tidy and clang-format
+        # we are sure that these two will always share the same version.
+        # Thus in order to determine that the version is compatible we only
+        # need to check one of them, going with clang-format
+        cmd = [self._clang_format_path, '--version']
+        try:
+            output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).decode('utf-8')
+            version_string = 'clang-format version ' + version
+            if output.startswith(version_string):
+                return True
+        except subprocess.CalledProcessError as e:
+            self.log(logging.ERROR, 'static-analysis', {},
+                     "Error determining the version clang-tidy/format binary, please see the attached exception: \n{}".format(e.output))
+
+        return False
 
     def _get_clang_tidy_command(self, checks, header_filter, sources, jobs, fix):
 
@@ -2754,6 +2793,11 @@ class StaticAnalysis(MachCommandBase):
             rc = self._get_clang_tools(verbose=verbose)
             if rc != 0:
                 return rc
+
+        if self._is_version_eligible() is False:
+            self.log(logging.ERROR, 'static-analysis', {}, "You're using an old version of clang-format binary."
+                            " Please update to a more recent one by running: './mach bootstrap'")
+            return 1
 
         if path is None:
             return self._run_clang_format_diff(self._clang_format_diff,

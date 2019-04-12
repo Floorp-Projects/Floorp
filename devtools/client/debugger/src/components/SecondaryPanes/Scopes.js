@@ -15,7 +15,7 @@ import {
   getOriginalFrameScope,
   getIsPaused,
   getPauseReason,
-  getMapScopes,
+  isMapScopesEnabled,
   getCurrentThread
 } from "../../selectors";
 import { getScopes } from "../../utils/pause/scopes";
@@ -36,7 +36,7 @@ type Props = {
   originalFrameScopes: Object | null,
   isLoading: boolean,
   why: Why,
-  shouldMapScopes: boolean,
+  mapScopesEnabled: boolean,
   openLink: typeof actions.openLink,
   openElementInInspector: typeof actions.openElementInInspectorCommand,
   highlightDomElement: typeof actions.highlightDomElement,
@@ -115,12 +115,12 @@ class Scopes extends PureComponent<Props, State> {
       openElementInInspector,
       highlightDomElement,
       unHighlightDomElement,
-      shouldMapScopes
+      mapScopesEnabled
     } = this.props;
     const { originalScopes, generatedScopes, showOriginal } = this.state;
 
     const scopes =
-      (showOriginal && shouldMapScopes && originalScopes) || generatedScopes;
+      (showOriginal && mapScopesEnabled && originalScopes) || generatedScopes;
 
     if (scopes && !isLoading) {
       return (
@@ -192,7 +192,7 @@ const mapStateToProps = state => {
 
   return {
     selectedFrame,
-    shouldMapScopes: getMapScopes(state),
+    mapScopesEnabled: isMapScopesEnabled(state),
     isPaused: getIsPaused(state, thread),
     isLoading: generatedPending || originalPending,
     why: getPauseReason(state, thread),

@@ -33,22 +33,22 @@ CHROMIUM_INFO = {
     'linux': {
         'platform': 'Linux_x64',
         'archive': 'chrome-linux.zip',
-        'result': 'chrome-linux.tar.bz2'
+        'result': 'chromium-linux.tar.bz2'
     },
     'win32': {
         'platform': 'Win_x64',
         'archive': 'chrome-win.zip',
-        'result': 'chrome-win32.tar.bz2'
+        'result': 'chromium-win32.tar.bz2'
     },
     'win64': {
         'platform': 'Win_x64',
         'archive': 'chrome-win.zip',
-        'result': 'chrome-win64.tar.bz2'
+        'result': 'chromium-win64.tar.bz2'
     },
     'mac': {
         'platform': 'Mac',
         'archive': 'chrome-mac.zip',
-        'result': 'chrome-mac.tar.bz2'
+        'result': 'chromium-mac.tar.bz2'
     }
 }
 
@@ -137,7 +137,7 @@ def build_chromium_archive(platform, revision=None):
 
     # Make a temporary location for the file
     tmppath = tempfile.mkdtemp()
-    tmpzip = os.path.join(tmppath, 'tmp-chrome.zip')
+    tmpzip = os.path.join(tmppath, 'tmp-chromium.zip')
 
     revision = fetch_chromium_build(platform, revision, tmpzip)
 
@@ -160,8 +160,8 @@ def build_chromium_archive(platform, revision=None):
             "Could not find any directories after extraction of chromium zip."
         )
 
-    chrome_dir = os.path.join(tmppath, dirs[0])
-    revision_file = os.path.join(chrome_dir, '.REVISION')
+    chromium_dir = os.path.join(tmppath, dirs[0])
+    revision_file = os.path.join(chromium_dir, '.REVISION')
     with open(revision_file, 'w+') as f:
         f.write(str(revision))
 

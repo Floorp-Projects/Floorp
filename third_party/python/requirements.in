@@ -1,4 +1,5 @@
 attrs==18.1.0
+biplist==1.0.3
 blessings==1.7
 jsmin==2.1.0
 json-e==2.7.0

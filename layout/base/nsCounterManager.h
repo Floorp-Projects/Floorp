@@ -118,12 +118,12 @@ struct nsCounterChangeNode : public nsCounterNode {
                       int32_t aPropIndex)
       : nsCounterNode(  // Fake a content index for resets, increments and sets
                         // that comes before all the real content, with
-                        // the resets first, in order, and then the increments and
-                        // then the sets.
-            aPropIndex + (aChangeType == RESET
-                              ? (INT32_MIN)
-                              : (aChangeType == INCREMENT ? ((INT32_MIN / 3) * 2)
-                                                          : INT32_MIN / 3)),
+                        // the resets first, in order, and then the increments
+                        // and then the sets.
+            aPropIndex + (aChangeType == RESET ? (INT32_MIN)
+                                               : (aChangeType == INCREMENT
+                                                      ? ((INT32_MIN / 3) * 2)
+                                                      : INT32_MIN / 3)),
             aChangeType),
         mChangeValue(aChangeValue) {
     NS_ASSERTION(aPropIndex >= 0, "out of range");

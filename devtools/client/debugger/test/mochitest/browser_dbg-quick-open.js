@@ -1,25 +1,18 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function assertEnabled(dbg) {
-  is(
-    dbg.selectors.getQuickOpenEnabled(dbg.getState()),
-    true,
-    "quickOpen enabled"
-  );
+  is(dbg.selectors.getQuickOpenEnabled(), true, "quickOpen enabled");
 }
 
 function assertDisabled(dbg) {
-  is(
-    dbg.selectors.getQuickOpenEnabled(dbg.getState()),
-    false,
-    "quickOpen disabled"
-  );
+  is(dbg.selectors.getQuickOpenEnabled(), false, "quickOpen disabled");
 }
 
 function assertLine(dbg, lineNumber) {
   is(
-    dbg.selectors.getSelectedLocation(dbg.getState()).line,
+    dbg.selectors.getSelectedLocation().line,
     lineNumber,
     `goto line is ${lineNumber}`
   );
@@ -27,7 +20,7 @@ function assertLine(dbg, lineNumber) {
 
 function assertColumn(dbg, columnNumber) {
   is(
-    dbg.selectors.getSelectedLocation(dbg.getState()).column,
+    dbg.selectors.getSelectedLocation().column,
     columnNumber,
     `goto column is ${columnNumber}`
   );
@@ -57,9 +50,12 @@ function findResultEl(dbg, index = 1) {
   return waitForElementWithSelector(dbg, `.result-item:nth-child(${index})`);
 }
 
-async function assertResultIsTab(dbg, index)  {
+async function assertResultIsTab(dbg, index) {
   const el = await findResultEl(dbg, index);
-  ok(el && !!el.querySelector('.tab.result-item-icon'), 'Result should be a tab');
+  ok(
+    el && !!el.querySelector(".tab.result-item-icon"),
+    "Result should be a tab"
+  );
 }
 
 // Testing quick open
@@ -88,7 +84,9 @@ add_task(async function() {
   await assertResultIsTab(dbg, 1);
   pressKey(dbg, "Tab");
 
-  info("Testing arrow keys in source search and check to see if source is selected");
+  info(
+    "Testing arrow keys in source search and check to see if source is selected"
+  );
   quickOpen(dbg, "sw2");
   is(resultCount(dbg), 1, "one file results");
   pressKey(dbg, "Down");

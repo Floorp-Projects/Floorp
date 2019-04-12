@@ -4,9 +4,9 @@
 // This source map does not have source contents, so it's fetched separately
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
-  await pushPref("devtools.debugger.features.map-scopes", true);
-
   const dbg = await initDebugger("doc-sourcemaps3.html");
+  dbg.actions.toggleMapScopes();
+
   const {
     selectors: { getBreakpoint, getBreakpointCount },
     getState
@@ -28,7 +28,6 @@ add_task(async function() {
   // should not pause
   is(isPaused(dbg), false);
 
-
   // unblackbox
   await clickElement(dbg, "blackbox");
   await waitForDispatch(dbg, "BLACKBOX");
@@ -38,5 +37,5 @@ add_task(async function() {
   // should pause
   await waitForPaused(dbg);
 
-  ok(true, "blackbox works")
+  ok(true, "blackbox works");
 });

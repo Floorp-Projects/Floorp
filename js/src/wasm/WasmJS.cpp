@@ -241,7 +241,7 @@ static bool GetProperty(JSContext* cx, HandleObject obj, const char* chars,
 }
 
 bool js::wasm::GetImports(JSContext* cx, const Module& module,
-                       HandleObject importObj, ImportValues* imports) {
+                          HandleObject importObj, ImportValues* imports) {
   if (!module.imports().empty() && !importObj) {
     return ThrowBadImportArg(cx);
   }

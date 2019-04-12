@@ -1756,9 +1756,8 @@ void gfxFontGroup::AddPlatformFont(const nsACString& aName, bool aQuotedName,
   // Not known in the user font set ==> check system fonts
   gfxPlatformFontList::PlatformFontList()->FindAndAddFamilies(
       aName, &aFamilyList,
-      aQuotedName
-        ? gfxPlatformFontList::FindFamiliesFlags::eQuotedFamilyName
-        : gfxPlatformFontList::FindFamiliesFlags(0),
+      aQuotedName ? gfxPlatformFontList::FindFamiliesFlags::eQuotedFamilyName
+                  : gfxPlatformFontList::FindFamiliesFlags(0),
       &mStyle, mDevToCssSize);
 }
 

@@ -598,9 +598,7 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist) {
 }
 
 NS_IMETHODIMP_(void)
-nsSHistory::ClearRootDocShell() {
-  mRootDocShell = nullptr;
-}
+nsSHistory::ClearRootDocShell() { mRootDocShell = nullptr; }
 
 /* Get size of the history list */
 NS_IMETHODIMP

@@ -6,7 +6,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
-#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
+#include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 
 #include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/SourceText.h"                // JS::Source{Ownership,Text}

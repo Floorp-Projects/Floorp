@@ -51,7 +51,7 @@ async function disableBreakpoint(dbg, index) {
   selectContextMenuItem(dbg, selectors.disableItem);
 
   await waitForState(dbg, state => {
-    const bp = dbg.selectors.getBreakpointsList(state)[index];
+    const bp = dbg.selectors.getBreakpointsList()[index];
     return bp.disabled;
   });
 
