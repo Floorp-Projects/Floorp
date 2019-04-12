@@ -662,6 +662,11 @@ class WorkerPrivate : public RelativeTimeline {
     return mLoadInfo.mPrincipal;
   }
 
+  nsIPrincipal* GetEffectiveStoragePrincipal() const {
+    AssertIsOnMainThread();
+    return mLoadInfo.mStoragePrincipal;
+  }
+
   nsIPrincipal* GetLoadingPrincipal() const {
     AssertIsOnMainThread();
     return mLoadInfo.mLoadingPrincipal;
@@ -678,6 +683,10 @@ class WorkerPrivate : public RelativeTimeline {
 
   const mozilla::ipc::PrincipalInfo& GetPrincipalInfo() const {
     return *mLoadInfo.mPrincipalInfo;
+  }
+
+  const mozilla::ipc::PrincipalInfo& GetEffectiveStoragePrincipalInfo() const {
+    return *mLoadInfo.mStoragePrincipalInfo;
   }
 
   already_AddRefed<nsIChannel> ForgetWorkerChannel() {
@@ -788,10 +797,11 @@ class WorkerPrivate : public RelativeTimeline {
 
   void CycleCollect(bool aDummy);
 
-  nsresult SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
-                                    nsILoadGroup* aLoadGroup);
+  nsresult SetPrincipalsOnMainThread(nsIPrincipal* aPrincipal,
+                                     nsIPrincipal* aStoragePrincipal,
+                                     nsILoadGroup* aLoadGroup);
 
-  nsresult SetPrincipalFromChannel(nsIChannel* aChannel);
+  nsresult SetPrincipalsFromChannel(nsIChannel* aChannel);
 
   bool FinalChannelPrincipalIsValid(nsIChannel* aChannel);
 
