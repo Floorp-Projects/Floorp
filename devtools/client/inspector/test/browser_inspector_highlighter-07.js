@@ -25,7 +25,6 @@ function waitForPaused(dbg) {
   });
 }
 
-
 const IFRAME_SRC = "<style>" +
     "body {" +
       "margin:0;" +
