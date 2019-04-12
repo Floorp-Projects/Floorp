@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #ifdef mozilla_StartupTimeline_Event
-  // clang-format off
+// clang-format off
   mozilla_StartupTimeline_Event(PROCESS_CREATION, "process")
   mozilla_StartupTimeline_Event(START, "start")
   mozilla_StartupTimeline_Event(MAIN, "main")
@@ -27,7 +27,7 @@
   // of shutdown
   mozilla_StartupTimeline_Event(QUIT_APPLICATION, "quitApplication")
   mozilla_StartupTimeline_Event(PROFILE_BEFORE_CHANGE, "profileBeforeChange")
-  // clang-format on
+// clang-format on
 #else
 
 #  ifndef mozilla_StartupTimeline

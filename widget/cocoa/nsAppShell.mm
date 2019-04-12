@@ -292,9 +292,8 @@ nsresult nsAppShell::Init() {
   mAutoreleasePools = ::CFArrayCreateMutable(nullptr, 0, nullptr);
   NS_ENSURE_STATE(mAutoreleasePools);
 
-  bool isNSApplicationProcessType =
-      (XRE_GetProcessType() != GeckoProcessType_RDD) &&
-      (XRE_GetProcessType() != GeckoProcessType_Socket);
+  bool isNSApplicationProcessType = (XRE_GetProcessType() != GeckoProcessType_RDD) &&
+                                    (XRE_GetProcessType() != GeckoProcessType_Socket);
 
   if (isNSApplicationProcessType) {
     // Get the path of the nib file, which lives in the GRE location

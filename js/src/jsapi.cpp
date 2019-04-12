@@ -984,10 +984,9 @@ static bool EnumerateStandardClasses(JSContext* cx, JS::HandleObject obj,
   return true;
 }
 
-JS_PUBLIC_API bool JS_NewEnumerateStandardClasses(JSContext* cx,
-                                                  JS::HandleObject obj,
-                                                  JS::MutableHandleIdVector properties,
-                                                  bool enumerableOnly) {
+JS_PUBLIC_API bool JS_NewEnumerateStandardClasses(
+    JSContext* cx, JS::HandleObject obj, JS::MutableHandleIdVector properties,
+    bool enumerableOnly) {
   return EnumerateStandardClasses(cx, obj, properties, enumerableOnly, false);
 }
 
@@ -4992,9 +4991,7 @@ JS_PUBLIC_API void JS_ClearPendingException(JSContext* cx) {
   cx->clearPendingException();
 }
 
-JS_PUBLIC_API JSObject*
-JS::GetPendingExceptionStack(JSContext* cx)
-{
+JS_PUBLIC_API JSObject* JS::GetPendingExceptionStack(JSContext* cx) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   return cx->getPendingExceptionStack();

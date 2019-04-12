@@ -32,7 +32,7 @@ class GamepadRemapper {
                                   double aValue) const = 0;
   virtual void RemapButtonEvent(uint32_t aIndex, uint32_t aButton,
                                 bool aPressed) const = 0;
-  
+
  protected:
   GamepadRemapper() = default;
   virtual ~GamepadRemapper() = default;

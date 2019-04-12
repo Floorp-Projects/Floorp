@@ -349,6 +349,17 @@ config = {
                 "--log-raw-level=%(log_raw_level)s",
             ],
         },
+        "gtest": {
+            "run_filename": "remotegtests.py",
+            "testsdir": "gtest",
+            "install": True,
+            "options": [
+                "--symbols-path=%(symbols_path)s",
+                "--libxul=%(gtest_dir)s/libxul.so",
+                "--package=%(app)s",
+                "--deviceSerial=%(device_serial)s",
+            ],
+        },
 
     },  # end suite_definitions
 }

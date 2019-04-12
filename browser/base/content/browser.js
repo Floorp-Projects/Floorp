@@ -194,13 +194,16 @@ XPCOMUtils.defineLazyGetter(this, "gURLBar", () => gURLBarHandler.urlbar);
  * customization or when the quantumbar pref changes.
  */
 var gURLBarHandler = {
+  toggleQuantumBarAttribute() {
+    this.textbox = document.getElementById("urlbar");
+    this.textbox.setAttribute("quantumbar", this.quantumbar);
+  },
+
   /**
    * The urlbar binding or object.
    */
   get urlbar() {
     if (!this._urlbar) {
-      this.textbox = document.getElementById("urlbar");
-      this._updateBinding();
       if (this.quantumbar) {
         this._urlbar = new UrlbarInput({textbox: this.textbox});
         if (this._lastValue) {
@@ -213,6 +216,18 @@ var gURLBarHandler = {
       gBrowser.tabContainer.addEventListener("TabSelect", this._urlbar);
     }
     return this._urlbar;
+  },
+
+  /**
+   * Forwards to gURLBar.formatValue(), if the binding has been applied already.
+   * This is necessary until the Quantum Bar is not the default and we allow
+   * to dynamically switch between it and the legacy implementation, because the
+   * binding is only applied before the initial xul layout.
+   */
+  formatValue() {
+    if (typeof this.textbox.formatValue == "function") {
+      this.textbox.formatValue();
+    }
   },
 
   /**
@@ -1349,6 +1364,9 @@ var gBrowserInit = {
   },
 
   onBeforeInitialXULLayout() {
+    // Dynamically switch on-off the Quantum Bar based on prefs.
+    gURLBarHandler.toggleQuantumBarAttribute();
+
     // Set a sane starting width/height for all resolutions on new profiles.
     if (Services.prefs.getBoolPref("privacy.resistFingerprinting")) {
       // When the fingerprinting resistance is enabled, making sure that we don't
@@ -5183,7 +5201,7 @@ var XULBrowserWindow = {
 
     // Make sure the "https" part of the URL is striked out or not,
     // depending on the current mixed active content blocking state.
-    gURLBar.formatValue();
+    gURLBarHandler.formatValue();
 
     try {
       uri = Services.uriFixup.createExposableURI(uri);

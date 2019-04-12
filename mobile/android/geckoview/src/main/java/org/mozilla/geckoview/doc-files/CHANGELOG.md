@@ -50,6 +50,10 @@ exclude: true
 
 - Removed all `org.mozilla.gecko` references in the API.
 
+- Added [`ContentBlocking#AT_FINGERPRINTING`][68.11] to block fingerprinting trackers.
+
+[68.11]: ../ContentBlocking.html#AT_FINGERPRINTING
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -256,4 +260,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 6a931a2d4f327a5b4be2ff75c83c5a53eb610854
+[api-version]: d5ed0fdce17acf10935d3b203f3627a1261bc855

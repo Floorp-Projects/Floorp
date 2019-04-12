@@ -3058,7 +3058,8 @@ static MOZ_MUST_USE bool ReadableStreamDefaultControllerEnqueue(
     if (!success) {
       RootedValue exn(cx);
       RootedSavedFrame stack(cx);
-      if (!cx->isExceptionPending() || !GetAndClearExceptionAndStack(cx, &exn, &stack)) {
+      if (!cx->isExceptionPending() ||
+          !GetAndClearExceptionAndStack(cx, &exn, &stack)) {
         // Uncatchable error. Die immediately without erroring the
         // stream.
         return false;
@@ -3882,7 +3883,8 @@ static MOZ_MUST_USE bool ReadableByteStreamControllerClose(
           JSMSG_READABLEBYTESTREAMCONTROLLER_CLOSE_PENDING_PULL);
       RootedValue e(cx);
       RootedSavedFrame stack(cx);
-      if (!cx->isExceptionPending() || !GetAndClearExceptionAndStack(cx, &e, &stack)) {
+      if (!cx->isExceptionPending() ||
+          !GetAndClearExceptionAndStack(cx, &e, &stack)) {
         // Uncatchable error. Die immediately without erroring the
         // stream.
         return false;

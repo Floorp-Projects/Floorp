@@ -1,5 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 /**
  * Helper method to create a "dbg" context for other tools to use
@@ -8,14 +9,9 @@
 function createDebuggerContext(toolbox) {
   const panel = toolbox.getPanel("jsdebugger");
   const win = panel.panelWin;
-  const { store, client, selectors, actions } = panel.getVarsForTests();
 
   return {
-    actions: actions,
-    selectors: selectors,
-    getState: store.getState,
-    store: store,
-    client: client,
+    ...win.dbg,
     toolbox: toolbox,
     win: win,
     panel: panel

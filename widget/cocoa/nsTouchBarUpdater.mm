@@ -22,7 +22,8 @@
 NS_IMPL_ISUPPORTS(nsTouchBarUpdater, nsITouchBarUpdater);
 
 NS_IMETHODIMP
-nsTouchBarUpdater::UpdateTouchBarInputs(nsIBaseWindow* aWindow, const nsTArray<RefPtr<nsITouchBarInput>>& aInputs) {
+nsTouchBarUpdater::UpdateTouchBarInputs(nsIBaseWindow* aWindow,
+                                        const nsTArray<RefPtr<nsITouchBarInput>>& aInputs) {
   nsCOMPtr<nsIWidget> widget = nullptr;
   aWindow->GetMainWidget(getter_AddRefs(widget));
   if (!widget) {

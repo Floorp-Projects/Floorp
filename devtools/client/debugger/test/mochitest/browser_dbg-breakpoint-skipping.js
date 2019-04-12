@@ -1,9 +1,10 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 function skipPausing(dbg) {
   clickElementWithSelector(dbg, ".command-bar-skip-pausing");
-  return waitForState(dbg, state => dbg.selectors.getSkipPausing(state))
+  return waitForState(dbg, state => dbg.selectors.getSkipPausing());
 }
 
 /*
@@ -12,8 +13,8 @@ function skipPausing(dbg) {
  */
 
 add_task(async function() {
-  let dbg = await initDebugger("doc-scripts.html");
-  await selectSource(dbg, "simple3")
+  const dbg = await initDebugger("doc-scripts.html");
+  await selectSource(dbg, "simple3");
   await addBreakpoint(dbg, "simple3", 2);
 
   await skipPausing(dbg);

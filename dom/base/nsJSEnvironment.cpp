@@ -499,8 +499,8 @@ void DispatchScriptErrorEvent(nsPIDOMWindowInner* win,
                               xpc::ErrorReport* xpcReport,
                               JS::Handle<JS::Value> exception,
                               JS::Handle<JSObject*> exceptionStack) {
-  nsContentUtils::AddScriptRunner(
-      new ScriptErrorEvent(win, rootingCx, xpcReport, exception, exceptionStack));
+  nsContentUtils::AddScriptRunner(new ScriptErrorEvent(
+      win, rootingCx, xpcReport, exception, exceptionStack));
 }
 
 } /* namespace xpc */

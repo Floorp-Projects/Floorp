@@ -420,7 +420,8 @@ nsresult Classifier::CheckURIFragments(
         urlIdx = i;
       }
     }
-    LOG(("Checking table %s, URL is %s", aTable.BeginReading(), aSpecFragments[urlIdx].get()));
+    LOG(("Checking table %s, URL is %s", aTable.BeginReading(),
+         aSpecFragments[urlIdx].get()));
   }
 
   RefPtr<LookupCache> cache = GetLookupCache(aTable);
@@ -446,10 +447,10 @@ nsresult Classifier::CheckURIFragments(
       if (LOG_ENABLED()) {
         nsAutoCString checking;
         lookupHash.ToHexString(checking);
-        LOG(("Found a result in fragment %s, hash %s (%X)", aSpecFragments[i].get(),
-             checking.get(), lookupHash.ToUint32()));
-        LOG(("Result %s, match %d-bytes prefix", confirmed ? "confirmed." : "Not confirmed.",
-             matchLength));
+        LOG(("Found a result in fragment %s, hash %s (%X)",
+             aSpecFragments[i].get(), checking.get(), lookupHash.ToUint32()));
+        LOG(("Result %s, match %d-bytes prefix",
+             confirmed ? "confirmed." : "Not confirmed.", matchLength));
       }
 
       result->hash.complete = lookupHash;

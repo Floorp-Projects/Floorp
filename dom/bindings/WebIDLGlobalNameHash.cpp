@@ -243,8 +243,8 @@ bool WebIDLGlobalNameHash::ResolveForSystemGlobal(JSContext* aCx,
 
 /* static */
 bool WebIDLGlobalNameHash::NewEnumerateSystemGlobal(
-    JSContext* aCx, JS::Handle<JSObject*> aObj, JS::MutableHandleVector<jsid> aProperties,
-    bool aEnumerableOnly) {
+    JSContext* aCx, JS::Handle<JSObject*> aObj,
+    JS::MutableHandleVector<jsid> aProperties, bool aEnumerableOnly) {
   MOZ_ASSERT(JS_IsGlobalObject(aObj));
 
   if (!JS_NewEnumerateStandardClasses(aCx, aObj, aProperties,

@@ -69,7 +69,6 @@ static Maybe<LayerRect> ApplyParentLayerToLayerTransform(
 
 static LayerToParentLayerMatrix4x4 GetTransformToAncestorsParentLayer(
     Layer* aStart, const LayerMetricsWrapper& aAncestor) {
-
   // If the ancestor layer Combines3DTransformWithAncestors, then the
   // scroll offset is contained in the transform of the layer at the
   // root of the 3D context. So we must first find that layer, then

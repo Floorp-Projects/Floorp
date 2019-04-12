@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-// GECKO_PROCESS_TYPE(enum-name, string-name, XRE_Is${NAME}Process, process-bin-type)
-// Note that string-name is exposed to various things like telemetry
-// and the crash reporter, so it should not be changed casually.
+// GECKO_PROCESS_TYPE(enum-name, string-name, XRE_Is${NAME}Process,
+// process-bin-type) Note that string-name is exposed to various things like
+// telemetry and the crash reporter, so it should not be changed casually.
 //
 // process-bin-type should be either Self or PluginContainer, and determines
 // whether the child process may be started using the same binary as the parent
@@ -35,4 +35,5 @@ GECKO_PROCESS_TYPE(VR, "vr", VR, Self)
 GECKO_PROCESS_TYPE(RDD, "rdd", RDD, Self)
 // Socket process
 GECKO_PROCESS_TYPE(Socket, "socket", Socket, Self)
-GECKO_PROCESS_TYPE(RemoteSandboxBroker, "sandbox", RemoteSandboxBroker, PluginContainer)
+GECKO_PROCESS_TYPE(RemoteSandboxBroker, "sandbox", RemoteSandboxBroker,
+                   PluginContainer)

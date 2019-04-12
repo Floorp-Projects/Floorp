@@ -70,8 +70,8 @@ nscolor StyleColor::CalcColor(const StyleRGBA& aForegroundColor) const {
   }
   MOZ_ASSERT(IsComplex());
   const auto& complex = AsComplex();
-  return LinearBlendColors(complex.color, complex.ratios.bg,
-                           aForegroundColor, complex.ratios.fg);
+  return LinearBlendColors(complex.color, complex.ratios.bg, aForegroundColor,
+                           complex.ratios.fg);
 }
 
 template <>

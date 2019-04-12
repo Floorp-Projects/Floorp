@@ -5,7 +5,13 @@
 // Tests that the source tree works.
 
 add_task(async function() {
-  const dbg = await initDebugger("doc-sources.html", "simple1", "simple2", "nested-source", "long.js");
+  const dbg = await initDebugger(
+    "doc-sources.html",
+    "simple1",
+    "simple2",
+    "nested-source",
+    "long.js"
+  );
   const {
     selectors: { getSelectedSource },
     getState
@@ -29,7 +35,7 @@ add_task(async function() {
 
   const focusedNode = findElementWithSelector(dbg, ".sources-list .focused");
   const fourthNode = findElement(dbg, "sourceNode", 4);
-  const selectedSource = getSelectedSource(getState()).url;
+  const selectedSource = getSelectedSource().url;
 
   ok(fourthNode.classList.contains("focused"), "4th node is focused");
   ok(selectedSource.includes("nested-source.js"), "nested-source is selected");

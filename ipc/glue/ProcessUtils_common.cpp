@@ -70,8 +70,7 @@ void SharedPreferenceSerializer::AddSharedPrefCmdLineArgs(
   aExtraOpts.push_back("-prefsHandle");
   aExtraOpts.push_back(formatPtrArg(prefsHandle).get());
   aExtraOpts.push_back("-prefMapHandle");
-  aExtraOpts.push_back(
-      formatPtrArg(GetPrefMapHandle().get()).get());
+  aExtraOpts.push_back(formatPtrArg(GetPrefMapHandle().get()).get());
 #else
   // In contrast, Unix fds are per-process. So remap the fd to a fixed one that
   // will be used in the child.
@@ -90,7 +89,6 @@ void SharedPreferenceSerializer::AddSharedPrefCmdLineArgs(
   aExtraOpts.push_back("-prefMapSize");
   aExtraOpts.push_back(formatPtrArg(GetPrefMapSize()).get());
 }
-
 
 #ifdef ANDROID
 static int gPrefsFd = -1;

@@ -47,7 +47,7 @@ class nsWaylandDisplay {
   void SetPrimarySelectionDeviceManager(
       gtk_primary_selection_device_manager* aPrimarySelectionDeviceManager);
 
-private:
+ private:
   PRThread* mThreadId;
   wl_display* mDisplay;
   wl_event_queue* mEventQueue;
@@ -56,7 +56,7 @@ private:
   wl_seat* mSeat;
   wl_shm* mShm;
   gtk_primary_selection_device_manager* mPrimarySelectionDeviceManager;
-  wl_registry *mRegistry;
+  wl_registry* mRegistry;
 };
 
 nsWaylandDisplay* WaylandDisplayGet(GdkDisplay* aGdkDisplay = nullptr);
