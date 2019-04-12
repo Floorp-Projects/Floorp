@@ -1296,7 +1296,9 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       // referrer logic depends on the WorkerPrivate principal having a URL
       // that matches the worker script URL.  If bug 1340694 is ever fixed
       // this can be removed.
-      // TODO: storagePrincipal here?
+      // XXX: force the storagePrincipal to be equal to the response one. This
+      // is OK for now because we don't want to expose storagePrincipal
+      // functionality in ServiceWorkers yet.
       rv = mWorkerPrivate->SetPrincipalsOnMainThread(
           responsePrincipal, responsePrincipal, loadGroup);
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));

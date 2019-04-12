@@ -1729,6 +1729,10 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   }
   info.mLoadingPrincipal = info.mPrincipal;
 
+  // StoragePrincipal for ServiceWorkers is equal to mPrincipal because, at the
+  // moment, ServiceWorkers are not exposed in partitioned contexts.
+  info.mStoragePrincipal = info.mPrincipal;
+
   info.mStorageAccess =
       nsContentUtils::StorageAllowedForServiceWorker(info.mPrincipal);
 
