@@ -72,7 +72,7 @@ def _get_required_architectures(project):
         'android-x86-nightly',
         'android-x86_64-nightly',
     }
-    if project in ('mozilla-central', 'try'):
+    if project in ('mozilla-central', 'mozilla-beta', 'try'):
         architectures.add('android-aarch64-nightly')
 
     return architectures
