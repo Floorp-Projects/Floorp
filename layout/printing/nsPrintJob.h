@@ -59,21 +59,23 @@ class nsPrintJob final : public nsIObserver,
 
   NS_DECL_NSIWEBPROGRESSLISTENER
 
-  // Old nsIWebBrowserPrint methods; not cleaned up yet
-  NS_IMETHOD Print(nsIPrintSettings* aPrintSettings,
-                   nsIWebProgressListener* aWebProgressListener);
-  NS_IMETHOD PrintPreview(nsIPrintSettings* aPrintSettings,
-                          mozIDOMWindowProxy* aChildDOMWin,
-                          nsIWebProgressListener* aWebProgressListener);
-  NS_IMETHOD GetIsFramesetDocument(bool* aIsFramesetDocument);
-  NS_IMETHOD GetIsIFrameSelected(bool* aIsIFrameSelected);
-  NS_IMETHOD GetIsRangeSelection(bool* aIsRangeSelection);
-  NS_IMETHOD GetIsFramesetFrameSelected(bool* aIsFramesetFrameSelected);
-  NS_IMETHOD GetPrintPreviewNumPages(int32_t* aPrintPreviewNumPages);
-  NS_IMETHOD EnumerateDocumentNames(uint32_t* aCount, char16_t*** aResult);
-  NS_IMETHOD GetDoingPrint(bool* aDoingPrint);
-  NS_IMETHOD GetDoingPrintPreview(bool* aDoingPrintPreview);
-  NS_IMETHOD GetCurrentPrintSettings(nsIPrintSettings** aCurrentPrintSettings);
+  // Our nsIWebBrowserPrint implementation defers to these methods.
+  nsresult Print(nsIPrintSettings* aPrintSettings,
+                 nsIWebProgressListener* aWebProgressListener);
+  nsresult PrintPreview(nsIPrintSettings* aPrintSettings,
+                        mozIDOMWindowProxy* aChildDOMWin,
+                        nsIWebProgressListener* aWebProgressListener);
+  bool IsDoingPrint() const { return mIsDoingPrinting; }
+  bool IsDoingPrintPreview() const { return mIsDoingPrintPreview; }
+  bool IsFramesetDocument() const;
+  bool IsIFrameSelected();
+  bool IsRangeSelection();
+  bool IsFramesetFrameSelected() const;
+  /// If the returned value is not greater than zero, an error occurred.
+  int32_t GetPrintPreviewNumPages();
+  /// Callers are responsible for free'ing aResult.
+  nsresult EnumerateDocumentNames(uint32_t* aCount, char16_t*** aResult);
+  already_AddRefed<nsIPrintSettings> GetCurrentPrintSettings();
 
   // This enum tells indicates what the default should be for the title
   // if the title from the document is null
@@ -147,13 +149,13 @@ class nsPrintJob final : public nsIObserver,
   // Timer Methods
   nsresult StartPagePrintTimer(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
-  bool IsWindowsInOurSubTree(nsPIDOMWindowOuter* aDOMWindow);
+  bool IsWindowsInOurSubTree(nsPIDOMWindowOuter* aDOMWindow) const;
   bool IsThereAnIFrameSelected(nsIDocShell* aDocShell,
                                nsPIDOMWindowOuter* aDOMWin,
                                bool& aIsParentFrameSet);
 
   // get the currently infocus frame for the document viewer
-  already_AddRefed<nsPIDOMWindowOuter> FindFocusedDOMWindow();
+  already_AddRefed<nsPIDOMWindowOuter> FindFocusedDOMWindow() const;
 
   void GetDisplayTitleAndURL(const mozilla::UniquePtr<nsPrintObject>& aPO,
                              nsAString& aTitle, nsAString& aURLStr,
