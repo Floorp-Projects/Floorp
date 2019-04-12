@@ -19,8 +19,7 @@ class Services(
         FirefoxAccountsAuthFeature(
             accountManager,
             tabsUseCases,
-            redirectUrl = BackgroundServices.REDIRECT_URL,
-            successPath = BackgroundServices.SUCCESS_PATH
+            redirectUrl = BackgroundServices.REDIRECT_URL
         )
     }
 }

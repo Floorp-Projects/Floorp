@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #1139 - Resolved a 170ms delay on cold start
 - #176 - Added a swipe to delete gesture on home screen
 - #1539 - Added bookmarks multi-select related features
+- #1603 - Remove deprecated success path for Firefox Accounts login
 
 ### Changed
 - #1429 - Updated site permissions ui for MVP
