@@ -127,7 +127,10 @@ const MIRROR_SCHEMA_VERSION = 4;
 const DEFAULT_MAX_FRECENCIES_TO_RECALCULATE = 400;
 
 // Use a shared jankYielder in these functions
-XPCOMUtils.defineLazyGetter(this, "yieldState", () => Async.yieldState());
+XPCOMUtils.defineLazyGetter(this, "maybeYield", () => Async.jankYielder());
+function yieldingIterator(collection) {
+  return Async.yieldingIterator(collection, maybeYield);
+}
 
 /** Adapts a `Log.jsm` logger to a `mozISyncedBookmarksMirrorLogger`. */
 class MirrorLoggerAdapter {
@@ -401,7 +404,7 @@ class SyncedBookmarksMirror {
     await this.db.executeBeforeShutdown(
       "SyncedBookmarksMirror: store",
       db => db.executeTransaction(async () => {
-        await Async.yieldingForEach(records, async (record) => {
+        for await (let record of yieldingIterator(records)) {
           let guid = PlacesSyncUtils.bookmarks.recordIdToGuid(record.id);
           if (guid == PlacesUtils.bookmarks.rootGuid) {
             // The engine should hard DELETE Places roots from the server.
@@ -411,32 +414,32 @@ class SyncedBookmarksMirror {
           switch (record.type) {
             case "bookmark":
               await this.storeRemoteBookmark(record, options);
-              return;
+              continue;
 
             case "query":
               await this.storeRemoteQuery(record, options);
-              return;
+              continue;
 
             case "folder":
               await this.storeRemoteFolder(record, options);
-              return;
+              continue;
 
             case "livemark":
               await this.storeRemoteLivemark(record, options);
-              return;
+              continue;
 
             case "separator":
               await this.storeRemoteSeparator(record, options);
-              return;
+              continue;
 
             default:
               if (record.deleted) {
                 await this.storeRemoteTombstone(record, options);
-                return;
+                continue;
               }
           }
           MirrorLog.warn("Ignoring record with unknown type", record.type);
-        }, yieldState);
+        }
       }
     ));
   }
@@ -919,7 +922,7 @@ class SyncedBookmarksMirror {
       ORDER BY guid`,
       { rootGuid: PlacesUtils.bookmarks.rootGuid });
 
-    await Async.yieldingForEach(orphanRows, row => {
+    for await (let row of yieldingIterator(orphanRows)) {
       let guid = row.getResultByName("guid");
       let missingParent = row.getResultByName("missingParent");
       if (missingParent) {
@@ -933,7 +936,7 @@ class SyncedBookmarksMirror {
       if (parentWithGaps) {
         infos.parentsWithGaps.push(guid);
       }
-    }, yieldState);
+    }
 
     return infos;
   }
@@ -996,7 +999,7 @@ class SyncedBookmarksMirror {
       { syncStatus: PlacesUtils.bookmarks.SYNC_STATUS.NORMAL,
         rootGuid: PlacesUtils.bookmarks.rootGuid });
 
-    await Async.yieldingForEach(problemRows, row => {
+    for await (let row of yieldingIterator(problemRows)) {
       let guid = row.getResultByName("guid");
       let missingLocal = row.getResultByName("missingLocal");
       if (missingLocal) {
@@ -1010,7 +1013,7 @@ class SyncedBookmarksMirror {
       if (wrongSyncStatus) {
         infos.wrongSyncStatus.push(guid);
       }
-    }, yieldState);
+    }
 
     return infos;
   }
@@ -1088,7 +1091,7 @@ class SyncedBookmarksMirror {
       SELECT parentId, guid FROM structureToUpload
       ORDER BY parentId, position`);
 
-    await Async.yieldingForEach(childGuidRows, row => {
+    for await (let row of yieldingIterator(childGuidRows)) {
       let localParentId = row.getResultByName("parentId");
       let childRecordId = PlacesSyncUtils.bookmarks.guidToRecordId(
         row.getResultByName("guid"));
@@ -1098,12 +1101,12 @@ class SyncedBookmarksMirror {
       } else {
         childRecordIdsByLocalParentId.set(localParentId, [childRecordId]);
       }
-    }, yieldState);
+    }
 
     let tagRows = await this.db.execute(`
       SELECT id, tag FROM tagsToUpload`);
 
-    await Async.yieldingForEach(tagRows, row => {
+    for await (let row of yieldingIterator(tagRows)) {
       let localId = row.getResultByName("id");
       let tag = row.getResultByName("tag");
       let tags = tagsByLocalId.get(localId);
@@ -1112,7 +1115,7 @@ class SyncedBookmarksMirror {
       } else {
         tagsByLocalId.set(localId, [tag]);
       }
-    }, yieldState);
+    }
 
     let itemRows = await this.db.execute(`
       SELECT id, syncChangeCounter, guid, isDeleted, type, isQuery,
@@ -1121,7 +1124,7 @@ class SyncedBookmarksMirror {
              IFNULL(parentTitle, "") AS parentTitle, dateAdded
       FROM itemsToUpload`);
 
-    await Async.yieldingForEach(itemRows, row => {
+    for await (let row of yieldingIterator(itemRows)) {
       let syncChangeCounter = row.getResultByName("syncChangeCounter");
 
       let guid = row.getResultByName("guid");
@@ -1134,7 +1137,7 @@ class SyncedBookmarksMirror {
           id: recordId,
           deleted: true,
         });
-        return;
+        continue;
       }
 
       let parentGuid = row.getResultByName("parentGuid");
@@ -1169,7 +1172,7 @@ class SyncedBookmarksMirror {
             };
             changeRecords[recordId] = new BookmarkChangeRecord(
               syncChangeCounter, queryCleartext);
-            return;
+            continue;
           }
 
           let bookmarkCleartext = {
@@ -1193,7 +1196,7 @@ class SyncedBookmarksMirror {
           }
           changeRecords[recordId] = new BookmarkChangeRecord(
             syncChangeCounter, bookmarkCleartext);
-          return;
+          continue;
         }
 
         case PlacesUtils.bookmarks.TYPE_FOLDER: {
@@ -1211,7 +1214,7 @@ class SyncedBookmarksMirror {
           folderCleartext.children = childRecordIds || [];
           changeRecords[recordId] = new BookmarkChangeRecord(
             syncChangeCounter, folderCleartext);
-          return;
+          continue;
         }
 
         case PlacesUtils.bookmarks.TYPE_SEPARATOR: {
@@ -1227,13 +1230,13 @@ class SyncedBookmarksMirror {
           };
           changeRecords[recordId] = new BookmarkChangeRecord(
             syncChangeCounter, separatorCleartext);
-          return;
+          continue;
         }
 
         default:
           throw new TypeError("Can't create record for unknown Places item");
       }
-    }, yieldState);
+    }
 
     return changeRecords;
   }
@@ -2130,7 +2133,7 @@ class BookmarkObserverRecorder {
       FROM itemsRemoved v
       LEFT JOIN moz_places h ON h.id = v.placeId
       ORDER BY v.level DESC, v.parentId, v.position`);
-    await Async.yieldingForEach(removedItemRows, row => {
+    for await (let row of yieldingIterator(removedItemRows)) {
       let info = {
         id: row.getResultByName("id"),
         parentId: row.getResultByName("parentId"),
@@ -2142,7 +2145,7 @@ class BookmarkObserverRecorder {
         isUntagging: row.getResultByName("isUntagging"),
       };
       this.noteItemRemoved(info);
-    }, yieldState);
+    }
 
     MirrorLog.trace("Recording observer notifications for changed GUIDs");
     let changedGuidRows = await this.db.execute(`
@@ -2152,7 +2155,7 @@ class BookmarkObserverRecorder {
       JOIN moz_bookmarks b ON b.id = c.itemId
       JOIN moz_bookmarks p ON p.id = b.parent
       ORDER BY c.level, p.id, b.position`);
-    await Async.yieldingForEach(changedGuidRows, row => {
+    for await (let row of yieldingIterator(changedGuidRows)) {
       let info = {
         id: row.getResultByName("id"),
         lastModified: row.getResultByName("lastModified"),
@@ -2163,7 +2166,7 @@ class BookmarkObserverRecorder {
         parentGuid: row.getResultByName("parentGuid"),
       };
       this.noteGuidChanged(info);
-    }, yieldState);
+    }
 
     MirrorLog.trace("Recording observer notifications for new items");
     let newItemRows = await this.db.execute(`
@@ -2175,7 +2178,7 @@ class BookmarkObserverRecorder {
       JOIN moz_bookmarks p ON p.id = b.parent
       LEFT JOIN moz_places h ON h.id = b.fk
       ORDER BY n.level, p.id, b.position`);
-    await Async.yieldingForEach(newItemRows, row => {
+    for await (let row of yieldingIterator(newItemRows)) {
       let info = {
         id: row.getResultByName("id"),
         parentId: row.getResultByName("parentId"),
@@ -2189,7 +2192,7 @@ class BookmarkObserverRecorder {
         isTagging: row.getResultByName("isTagging"),
       };
       this.noteItemAdded(info);
-    }, yieldState);
+    }
 
     MirrorLog.trace("Recording observer notifications for moved items");
     let movedItemRows = await this.db.execute(`
@@ -2201,7 +2204,7 @@ class BookmarkObserverRecorder {
       JOIN moz_bookmarks p ON p.id = b.parent
       LEFT JOIN moz_places h ON h.id = b.fk
       ORDER BY c.level, newParentId, newPosition`);
-    await Async.yieldingForEach(movedItemRows, row => {
+    for await (let row of yieldingIterator(movedItemRows)) {
       let info = {
         id: row.getResultByName("id"),
         guid: row.getResultByName("guid"),
@@ -2215,7 +2218,7 @@ class BookmarkObserverRecorder {
         urlHref: row.getResultByName("url"),
       };
       this.noteItemMoved(info);
-    }, yieldState);
+    }
 
     MirrorLog.trace("Recording observer notifications for changed items");
     let changedItemRows = await this.db.execute(`
@@ -2230,7 +2233,7 @@ class BookmarkObserverRecorder {
       LEFT JOIN moz_places h ON h.id = b.fk
       LEFT JOIN moz_places i ON i.id = c.oldPlaceId
       ORDER BY c.level, p.id, b.position`);
-    await Async.yieldingForEach(changedItemRows, row => {
+    for await (let row of yieldingIterator(changedItemRows)) {
       let info = {
         id: row.getResultByName("id"),
         guid: row.getResultByName("guid"),
@@ -2244,7 +2247,7 @@ class BookmarkObserverRecorder {
         parentGuid: row.getResultByName("parentGuid"),
       };
       this.noteItemChanged(info);
-    }, yieldState);
+    }
 
     MirrorLog.trace("Recording notifications for changed keywords");
     let keywordsChangedRows = await this.db.execute(`
@@ -2331,18 +2334,18 @@ class BookmarkObserverRecorder {
     for (let observer of observers) {
       this.notifyObserver(observer, "onBeginUpdateBatch");
     }
-    await Async.yieldingForEach(this.bookmarkObserverNotifications, info => {
+    for await (let info of yieldingIterator(this.bookmarkObserverNotifications)) {
       if (info instanceof PlacesEvent) {
         PlacesObservers.notifyListeners([info]);
       } else {
         for (let observer of observers) {
           if (info.isTagging && observer.skipTags) {
-            return;
+            continue;
           }
           this.notifyObserver(observer, info.name, info.args);
         }
       }
-    }, yieldState);
+    }
     for (let observer of observers) {
       this.notifyObserver(observer, "onEndUpdateBatch");
     }
