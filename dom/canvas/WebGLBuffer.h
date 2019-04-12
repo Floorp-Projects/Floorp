@@ -49,8 +49,8 @@ class WebGLBuffer final : public nsWrapperCache,
                                JS::Handle<JSObject*> givenProto) override;
 
   bool ValidateCanBindToTarget(GLenum target);
-  void BufferData(GLenum target, size_t size, const void* data, GLenum usage);
-  void BufferSubData(GLenum target, size_t dstByteOffset, size_t dataLen,
+  void BufferData(GLenum target, uint64_t size, const void* data, GLenum usage);
+  void BufferSubData(GLenum target, uint64_t dstByteOffset, uint64_t dataLen,
                      const void* data) const;
 
   ////
