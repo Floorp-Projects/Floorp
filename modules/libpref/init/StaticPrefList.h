@@ -2233,6 +2233,12 @@ VARCACHE_PREF(
   RelaxedAtomicBool, false
 )
 
+VARCACHE_PREF(
+  "privacy.storagePrincipal.enabledForTrackers",
+   privacy_storagePrincipal_enabledForTrackers,
+  RelaxedAtomicBool, false
+)
+
 // Password protection
 VARCACHE_PREF(
   "browser.safebrowsing.passwords.enabled",
