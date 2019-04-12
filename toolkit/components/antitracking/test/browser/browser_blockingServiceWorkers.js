@@ -1,3 +1,5 @@
+/* import-globals-from antitracking_head.js */
+
 AntiTracking.runTest("ServiceWorkers",
   async _ => {
     await navigator.serviceWorker.register("empty.js").then(
