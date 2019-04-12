@@ -13,6 +13,7 @@ unset HOST_CC
 unset HOST_CXX
 unset LINKER
 unset RUSTC
+unset RUSTFLAGS
 unset CARGO
 unset RUSTDOC
 unset RUSTFMT
