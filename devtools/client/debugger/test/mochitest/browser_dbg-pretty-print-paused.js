@@ -22,6 +22,7 @@ add_task(async function() {
     state => dbg.selectors.getSelectedFrame(thread).location.line == 18
   );
   assertPausedLocation(dbg);
+  await waitForBreakpoint(dbg, "math.min.js:formatted", 18);
   await assertEditorBreakpoint(dbg, 18, true);
 
   await resume(dbg);
