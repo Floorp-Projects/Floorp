@@ -13,11 +13,14 @@ namespace mozilla {
 namespace dom {
 
 SpeechTrackListener::SpeechTrackListener(SpeechRecognition* aRecognition)
-    : mRecognition(aRecognition) {}
-
-SpeechTrackListener::~SpeechTrackListener() {
-  NS_ReleaseOnMainThreadSystemGroup("SpeechTrackListener::mRecognition",
-                                    mRecognition.forget());
+    : mRecognition(aRecognition),
+      mRemovedPromise(
+          mRemovedHolder.Ensure("SpeechTrackListener::mRemovedPromise")) {
+  MOZ_ASSERT(NS_IsMainThread());
+  mRemovedPromise->Then(GetCurrentThreadSerialEventTarget(), __func__,
+                        [self = RefPtr<SpeechTrackListener>(this), this] {
+                          mRecognition = nullptr;
+                        });
 }
 
 void SpeechTrackListener::NotifyQueuedChanges(
@@ -77,6 +80,10 @@ void SpeechTrackListener::ConvertAndDispatchAudioChunk(int aDuration,
 
 void SpeechTrackListener::NotifyEnded() {
   // TODO dispatch SpeechEnd event so services can be informed
+}
+
+void SpeechTrackListener::NotifyRemoved() {
+  mRemovedHolder.ResolveIfExists(true, __func__);
 }
 
 }  // namespace dom
