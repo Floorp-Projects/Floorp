@@ -265,8 +265,8 @@ bool XPCConvert::NativeData2JS(JSContext* cx, MutableHandleValue d,
         using UniqueLatin1Chars =
             js::UniquePtr<JS::Latin1Char[], JS::FreePolicy>;
 
-        UniqueLatin1Chars buffer(
-            static_cast<JS::Latin1Char*>(JS_malloc(cx, allocLen.value())));
+        UniqueLatin1Chars buffer(static_cast<JS::Latin1Char*>(
+            JS_string_malloc(cx, allocLen.value())));
         if (!buffer) {
           return false;
         }
@@ -299,7 +299,7 @@ bool XPCConvert::NativeData2JS(JSContext* cx, MutableHandleValue d,
       }
 
       JS::UniqueTwoByteChars buffer(
-          static_cast<char16_t*>(JS_malloc(cx, allocLen.value())));
+          static_cast<char16_t*>(JS_string_malloc(cx, allocLen.value())));
       if (!buffer) {
         return false;
       }

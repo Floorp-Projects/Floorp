@@ -43,6 +43,18 @@ extern JS_PUBLIC_API void* JS_realloc(JSContext* cx, void* p, size_t oldBytes,
 extern JS_PUBLIC_API void JS_free(JSContext* cx, void* p);
 
 /**
+ * Same as above, but for buffers that will be used with the BYOB
+ * (Bring Your Own Buffer) JSString creation functions, such as
+ * JS_NewLatin1String and JS_NewUCString
+ */
+extern JS_PUBLIC_API void* JS_string_malloc(JSContext* cx, size_t nbytes);
+
+extern JS_PUBLIC_API void* JS_string_realloc(JSContext* cx, void* p,
+                                             size_t oldBytes, size_t newBytes);
+
+extern JS_PUBLIC_API void JS_string_free(JSContext* cx, void* p);
+
+/**
  * A wrapper for |js_free(p)| that may delay |js_free(p)| invocation as a
  * performance optimization as specified by the given JSFreeOp instance.
  */
