@@ -200,7 +200,7 @@ WebAuthnManager::~WebAuthnManager() {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mTransaction.isSome()) {
-    RejectTransaction(NS_ERROR_ABORT);
+    ClearTransaction();
   }
 
   if (mChild) {
