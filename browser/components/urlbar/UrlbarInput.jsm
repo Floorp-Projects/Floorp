@@ -136,6 +136,13 @@ class UrlbarInput {
       return new UrlbarValueFormatter(this);
     });
 
+    // If the toolbar is not visible in this window or the urlbar is readonly,
+    // we'll stop here, so that most properties of the input object are valid,
+    // but we won't handle events.
+    if (!this.window.toolbar.visible || this.hasAttribute("readonly")) {
+      return;
+    }
+
     // The event bufferer can be used to defer events that may affect users
     // muscle memory; for example quickly pressing DOWN+ENTER should end up
     // on a predictable result, regardless of the search status. The event
@@ -208,7 +215,10 @@ class UrlbarInput {
    * Applies styling to the text in the urlbar input, depending on the text.
    */
   formatValue() {
-    this.valueFormatter.update();
+    // The editor may not exist if the toolbar is not visible.
+    if (this.editor) {
+      this.valueFormatter.update();
+    }
   }
 
   /**
