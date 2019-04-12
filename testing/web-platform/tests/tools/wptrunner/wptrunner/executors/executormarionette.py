@@ -897,7 +897,8 @@ class InternalRefTestImplementation(RefTestImplementation):
                 # with after closing a window we need to give a new window
                 # focus
                 handles = self.executor.protocol.marionette.window_handles
-                self.executor.protocol.marionette.switch_to_window(handles[0])
+                if handles:
+                    self.executor.protocol.marionette.switch_to_window(handles[0])
         except Exception as e:
             # Ignore errors during teardown
             self.logger.warning(traceback.format_exc(e))
