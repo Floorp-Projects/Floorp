@@ -40,6 +40,7 @@ namespace dom {
 
 class GlobalObject;
 class AudioStreamTrack;
+class SpeechRecognitionShutdownBlocker;
 class SpeechEvent;
 class SpeechTrackListener;
 
@@ -186,6 +187,7 @@ class SpeechRecognition final : public DOMEventTargetHelper,
   RefPtr<DOMMediaStream> mStream;
   RefPtr<AudioStreamTrack> mTrack;
   RefPtr<SpeechTrackListener> mSpeechListener;
+  RefPtr<SpeechRecognitionShutdownBlocker> mShutdownBlocker;
   nsCOMPtr<nsISpeechRecognitionService> mRecognitionService;
 
   FSMState mCurrentState;
