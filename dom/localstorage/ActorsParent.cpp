@@ -1600,7 +1600,8 @@ class ConnectionThread final {
  * Snapshot instances Checkpoint their mutations locally accumulated in the
  * child LSSnapshots.
  */
-class Datastore final {
+class Datastore final
+    : public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {
   RefPtr<DirectoryLock> mDirectoryLock;
   RefPtr<Connection> mConnection;
   RefPtr<QuotaObject> mQuotaObject;
@@ -1692,17 +1693,9 @@ class Datastore final {
 
   void NoteFinishedPreparedDatastore(PreparedDatastore* aPreparedDatastore);
 
-#ifdef DEBUG
-  bool HasLivePreparedDatastores() const;
-#endif
-
   void NoteLiveDatabase(Database* aDatabase);
 
   void NoteFinishedDatabase(Database* aDatabase);
-
-#ifdef DEBUG
-  bool HasLiveDatabases() const;
-#endif
 
   void NoteActiveDatabase(Database* aDatabase);
 
@@ -2286,6 +2279,7 @@ class PrepareDatastoreOp
   int64_t mUsage;
   int64_t mSizeOfKeys;
   int64_t mSizeOfItems;
+  uint64_t mDatastoreId;
   NestedState mNestedState;
   const bool mCreateIfNotExists;
   bool mDatabaseNotAvailable;
@@ -2736,7 +2730,22 @@ typedef nsTArray<CheckedUnsafePtr<PrepareDatastoreOp>> PrepareDatastoreOpArray;
 
 StaticAutoPtr<PrepareDatastoreOpArray> gPrepareDatastoreOps;
 
-typedef nsDataHashtable<nsCStringHashKey, Datastore*> DatastoreHashtable;
+// nsCStringHashKey with disabled memmove
+class nsCStringHashKeyDM : public nsCStringHashKey {
+ public:
+  explicit nsCStringHashKeyDM(const nsCStringHashKey::KeyTypePointer aKey)
+      : nsCStringHashKey(aKey) {}
+  enum { ALLOW_MEMMOVE = false };
+};
+
+// When CheckedUnsafePtr's checking is enabled, it's necessary to ensure that
+// the hashtable uses the copy constructor instead of memmove for moving entries
+// since memmove will break CheckedUnsafePtr in a memory-corrupting way.
+typedef std::conditional<DiagnosticAssertEnabled::value, nsCStringHashKeyDM,
+                         nsCStringHashKey>::type DatastoreHashKey;
+
+typedef nsDataHashtable<DatastoreHashKey, CheckedUnsafePtr<Datastore>>
+    DatastoreHashtable;
 
 StaticAutoPtr<DatastoreHashtable> gDatastores;
 
@@ -4443,6 +4452,8 @@ Datastore::~Datastore() {
 void Datastore::Close() {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(!mClosed);
+  MOZ_ASSERT(!mPrepareDatastoreOps.Count());
+  MOZ_ASSERT(!mPreparedDatastores.Count());
   MOZ_ASSERT(!mDatabases.Count());
   MOZ_ASSERT(mDirectoryLock);
 
@@ -4528,14 +4539,6 @@ void Datastore::NoteFinishedPreparedDatastore(
   MaybeClose();
 }
 
-#ifdef DEBUG
-bool Datastore::HasLivePreparedDatastores() const {
-  AssertIsOnBackgroundThread();
-
-  return mPreparedDatastores.Count();
-}
-#endif
-
 void Datastore::NoteLiveDatabase(Database* aDatabase) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aDatabase);
@@ -4558,14 +4561,6 @@ void Datastore::NoteFinishedDatabase(Database* aDatabase) {
 
   MaybeClose();
 }
-
-#ifdef DEBUG
-bool Datastore::HasLiveDatabases() const {
-  AssertIsOnBackgroundThread();
-
-  return mDatabases.Count();
-}
-#endif
 
 void Datastore::NoteActiveDatabase(Database* aDatabase) {
   AssertIsOnBackgroundThread();
@@ -5941,6 +5936,7 @@ PrepareDatastoreOp::PrepareDatastoreOp(
       mUsage(0),
       mSizeOfKeys(0),
       mSizeOfItems(0),
+      mDatastoreId(0),
       mNestedState(NestedState::BeforeNesting),
       mCreateIfNotExists(aParams.type() ==
                          LSRequestParams::TLSRequestPrepareDatastoreParams),
@@ -6747,16 +6743,16 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
     gDatastores->Put(mOrigin, mDatastore);
   }
 
-  uint64_t datastoreId = ++gLastDatastoreId;
+  mDatastoreId = ++gLastDatastoreId;
 
   nsAutoPtr<PreparedDatastore> preparedDatastore(
-      new PreparedDatastore(mDatastore, mContentParentId, mOrigin, datastoreId,
+      new PreparedDatastore(mDatastore, mContentParentId, mOrigin, mDatastoreId,
                             /* aForPreload */ !mCreateIfNotExists));
 
   if (!gPreparedDatastores) {
     gPreparedDatastores = new PreparedDatastoreHashtable();
   }
-  gPreparedDatastores->Put(datastoreId, preparedDatastore);
+  gPreparedDatastores->Put(mDatastoreId, preparedDatastore);
 
   if (mInvalidated) {
     preparedDatastore->Invalidate();
@@ -6766,7 +6762,7 @@ void PrepareDatastoreOp::GetResponse(LSRequestResponse& aResponse) {
 
   if (mCreateIfNotExists) {
     LSRequestPrepareDatastoreResponse prepareDatastoreResponse;
-    prepareDatastoreResponse.datastoreId() = datastoreId;
+    prepareDatastoreResponse.datastoreId() = mDatastoreId;
 
     aResponse = prepareDatastoreResponse;
   } else {
@@ -6780,14 +6776,20 @@ void PrepareDatastoreOp::Cleanup() {
   AssertIsOnOwningThread();
 
   if (mDatastore) {
+    MOZ_ASSERT(mDatastoreId > 0);
     MOZ_ASSERT(!mDirectoryLock);
     MOZ_ASSERT(!mConnection);
 
     if (NS_FAILED(ResultCode())) {
-      MOZ_ASSERT(!mDatastore->IsClosed());
-      MOZ_ASSERT(!mDatastore->HasLiveDatabases());
-      MOZ_ASSERT(!mDatastore->HasLivePreparedDatastores());
-      mDatastore->Close();
+      // Just in case we failed to send datastoreId to the child, we need to
+      // destroy prepared datastore, otherwise it won't be destroyed until the
+      // timer fires (after 20 seconds).
+      MOZ_ASSERT(gPreparedDatastores);
+      MOZ_ASSERT(gPreparedDatastores->Get(mDatastoreId));
+
+      nsAutoPtr<PreparedDatastore> preparedDatastore;
+      gPreparedDatastores->Remove(mDatastoreId, &preparedDatastore);
+      MOZ_ASSERT(preparedDatastore);
     }
 
     // Make sure to release the datastore on this thread.

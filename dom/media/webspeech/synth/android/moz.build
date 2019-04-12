@@ -7,9 +7,13 @@
 EXPORTS.mozilla.dom += ['SpeechSynthesisService.h']
 
 UNIFIED_SOURCES += [
-  'AndroidSpeechModule.cpp',
-  'SpeechSynthesisService.cpp'
+    'SpeechSynthesisService.cpp',
 ]
+
+XPCOM_MANIFESTS += [
+    'components.conf',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'

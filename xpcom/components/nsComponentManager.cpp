@@ -351,40 +351,17 @@ nsComponentManagerImpl::nsComponentManagerImpl()
       mStatus(NOT_INITIALIZED) {}
 
 extern const mozilla::Module kNeckoModule;
-#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_ANDROID)
-extern const mozilla::Module kSpeechSynthModule;
-#endif
 extern const mozilla::Module kPowerManagerModule;
 extern const mozilla::Module kContentProcessWidgetModule;
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_UIKIT)
+#if defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_UIKIT)
 extern const mozilla::Module kWidgetModule;
 #endif
 extern const mozilla::Module kLayoutModule;
 extern const mozilla::Module kKeyValueModule;
 extern const mozilla::Module kXREModule;
 extern const mozilla::Module kEmbeddingModule;
-#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_ANDROID)
-extern const mozilla::Module kSysProxyModule;
-#endif
-#if defined(XP_WIN)
-namespace mozilla {
-namespace toolkit {
-namespace system {
-namespace windowsDHCPClient {
-extern const mozilla::Module kSysDHCPClientModule;
-}
-}  // namespace system
-}  // namespace toolkit
-}  // namespace mozilla
-#endif
 #if defined(MOZ_WIDGET_ANDROID)
 extern const mozilla::Module kBrowserModule;
-#endif
-#if defined(MOZ_LAYOUT_DEBUGGER) && !defined(MOZ_WIDGET_ANDROID)
-extern const mozilla::Module kLayoutDebugModule;
-#endif
-#if defined(MOZ_CODE_COVERAGE)
-extern const mozilla::Module kCodeCoverageModule;
 #endif
 
 static nsTArray<const mozilla::Module*>* sExtraStaticModules;
@@ -462,32 +439,17 @@ nsresult nsComponentManagerImpl::Init() {
 
   RegisterModule(&kXPCOMModule);
   RegisterModule(&kNeckoModule);
-#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_ANDROID)
-  RegisterModule(&kSpeechSynthModule);
-#endif
   RegisterModule(&kPowerManagerModule);
   RegisterModule(&kContentProcessWidgetModule);
-#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_UIKIT)
+#if defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_UIKIT)
   RegisterModule(&kWidgetModule);
 #endif
   RegisterModule(&kLayoutModule);
   RegisterModule(&kKeyValueModule);
   RegisterModule(&kXREModule);
   RegisterModule(&kEmbeddingModule);
-#if defined(XP_WIN) || defined(MOZ_WIDGET_COCOA) || defined(MOZ_WIDGET_ANDROID)
-  RegisterModule(&kSysProxyModule);
-#endif
-#if defined(XP_WIN)
-  RegisterModule(&mozilla::toolkit::system::windowsDHCPClient::kSysDHCPClientModule);
-#endif
 #if defined(MOZ_WIDGET_ANDROID)
   RegisterModule(&kBrowserModule);
-#endif
-#if defined(MOZ_LAYOUT_DEBUGGER) && !defined(MOZ_WIDGET_ANDROID)
-  RegisterModule(&kLayoutDebugModule);
-#endif
-#if defined(MOZ_CODE_COVERAGE)
-  RegisterModule(&kCodeCoverageModule);
 #endif
 
   for (uint32_t i = 0; i < sExtraStaticModules->Length(); ++i) {

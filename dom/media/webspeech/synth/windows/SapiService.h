@@ -33,8 +33,6 @@ class SapiService final : public nsISpeechService, public nsIObserver {
   static SapiService* GetInstance();
   static already_AddRefed<SapiService> GetInstanceForService();
 
-  static void Shutdown();
-
   static void __stdcall SpeechEventCallback(WPARAM aWParam, LPARAM aLParam);
 
  private:

@@ -4,12 +4,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "mozilla/ArrayUtils.h"  // mozilla::ArrayLength
+#include "mozilla/Utf8.h"        // mozilla::Utf8Unit
+
 #include "jsfriendapi.h"
 #include "builtin/String.h"
 
 #include "builtin/TestingFunctions.h"
-#include "js/CompilationAndEvaluation.h"
+#include "js/CompilationAndEvaluation.h"  // JS::Evaluate
 #include "js/SavedFrameAPI.h"
+#include "js/SourceText.h"  // JS::Source{Ownership,Text}
 #include "jsapi-tests/tests.h"
 #include "vm/ArrayObject.h"
 #include "vm/Realm.h"
@@ -98,12 +102,12 @@ BEGIN_TEST(testSavedStacks_RangeBasedForLoops) {
   CHECK(rf == nullptr);
 
   // Stack string
-  const char* SpiderMonkeyStack =
+  static const char SpiderMonkeyStack[] =
       "three@filename.js:4:14\n"
       "two@filename.js:5:6\n"
       "one@filename.js:6:4\n"
       "@filename.js:7:2\n";
-  const char* V8Stack =
+  static const char V8Stack[] =
       "    at three (filename.js:4:14)\n"
       "    at two (filename.js:5:6)\n"
       "    at one (filename.js:6:4)\n"
@@ -154,7 +158,7 @@ BEGIN_TEST(testSavedStacks_ErrorStackSpiderMonkey) {
   JS::RootedString stack(cx, val.toString());
 
   // Stack string
-  const char* SpiderMonkeyStack =
+  static const char SpiderMonkeyStack[] =
       "three@filename.js:4:14\n"
       "two@filename.js:5:6\n"
       "one@filename.js:6:4\n"
@@ -185,7 +189,7 @@ BEGIN_TEST(testSavedStacks_ErrorStackV8) {
   JS::RootedString stack(cx, val.toString());
 
   // Stack string
-  const char* V8Stack =
+  static const char V8Stack[] =
       "Error: foo\n"
       "    at three (filename.js:4:14)\n"
       "    at two (filename.js:5:6)\n"
@@ -300,21 +304,26 @@ BEGIN_TEST(test_JS_GetPendingExceptionStack)
 
   JSPrincipals* principals = cx->realm()->principals();
 
-  const char* sourceText =
-  //            1         2         3
-  //   123456789012345678901234567890123456789
-    "(function one() {                      \n"  // 1
-    "  (function two() {                    \n"  // 2
-    "    (function three() {                \n"  // 3
-    "      throw 5;                         \n"  // 4
-    "    }());                              \n"  // 5
-    "  }());                                \n"  // 6
-    "}())                                   \n"; // 7
+  static const char sourceText[] =
+      //          1         2         3
+      // 123456789012345678901234567890123456789
+      "(function one() {                      \n"   // 1
+      "  (function two() {                    \n"   // 2
+      "    (function three() {                \n"   // 3
+      "      throw 5;                         \n"   // 4
+      "    }());                              \n"   // 5
+      "  }());                                \n"   // 6
+      "}())                                   \n";  // 7
 
-  JS::RootedValue val(cx);
   JS::CompileOptions opts(cx);
   opts.setFileAndLine("filename.js", 1U);
-  bool ok = JS::EvaluateUtf8(cx, opts, sourceText, strlen(sourceText), &val);
+
+  JS::SourceText<mozilla::Utf8Unit> srcBuf;
+  CHECK(srcBuf.init(cx, sourceText, mozilla::ArrayLength(sourceText) - 1,
+                    JS::SourceOwnership::Borrowed));
+
+  JS::RootedValue val(cx);
+  bool ok = JS::Evaluate(cx, opts, srcBuf, &val);
 
   CHECK(!ok);
   CHECK(JS_IsExceptionPending(cx));
