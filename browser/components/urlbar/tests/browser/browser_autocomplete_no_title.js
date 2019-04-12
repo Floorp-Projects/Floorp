@@ -22,6 +22,4 @@
   let result = await UrlbarTestUtils.getDetailsOfResultAt(window, 1);
   Assert.equal(result.displayed.title, "bug1060642.example.com",
     "Result title should be as expected");
-
-  await UrlbarTestUtils.promisePopupClose(window);
 });

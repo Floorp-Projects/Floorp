@@ -26,3 +26,9 @@ Services.scriptloader.loadSubScript(
   this);
 
 const {sinon} = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+
+registerCleanupFunction(async () => {
+  // Ensure the Urlbar popup is always closed at the end of a test, to save having
+  // to do it within each test.
+  await UrlbarTestUtils.promisePopupClose(window);
+});

@@ -26,8 +26,6 @@ add_task(async function prepare() {
     // Clicking suggestions causes visits to search results pages, so clear that
     // history now.
     await PlacesUtils.history.clear();
-
-    await UrlbarTestUtils.promisePopupClose(window);
   });
 });
 
@@ -93,8 +91,6 @@ add_task(async function copySuggestionText() {
   await new Promise((resolve, reject) => waitForClipboard(suggestion, function() {
     goDoCommand("cmd_copy");
   }, resolve, reject));
-  await UrlbarTestUtils.promisePopupClose(window, () =>
-    EventUtils.synthesizeKey("KEY_Escape"));
 });
 
 async function getFirstSuggestion() {

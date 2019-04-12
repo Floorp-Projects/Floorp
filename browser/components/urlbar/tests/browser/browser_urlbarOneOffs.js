@@ -17,7 +17,6 @@ add_task(async function init() {
   await Services.search.moveEngine(engine, 0);
 
   registerCleanupFunction(async function() {
-    await hidePopup();
     await PlacesUtils.history.clear();
   });
 

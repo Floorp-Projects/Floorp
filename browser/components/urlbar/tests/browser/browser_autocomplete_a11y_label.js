@@ -70,5 +70,4 @@ add_task(async function searchSuggestions() {
     }
   }
   Assert.ok(expectedSearches.length == 0);
-  await UrlbarTestUtils.promisePopupClose(window);
 });
