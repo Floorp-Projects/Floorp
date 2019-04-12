@@ -71,7 +71,7 @@ nsPrintSettingsServiceWin::SerializeToPrintData(nsIPrintSettings* aSettings,
       size_t devModeTotalSize = devMode->dmSize + devMode->dmDriverExtra;
       size_t msgTotalSize = sizeof(PrintData) + devModeTotalSize;
 
-      if (msgTotalSize > IPC::MAX_MESSAGE_SIZE) {
+      if (msgTotalSize > IPC::Channel::kMaximumMessageSize / 2) {
         return NS_ERROR_FAILURE;
       }
 
