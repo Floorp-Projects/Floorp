@@ -45,3 +45,5 @@ pref("browser.safebrowsing.features.trackingProtection.update", true);
 
 // Enable cryptomining protection blocklist updates
 pref("browser.safebrowsing.features.cryptomining.update", true);
+// Enable fingerprinting protection blocklist updates
+pref("browser.safebrowsing.features.fingerprinting.update", true);
