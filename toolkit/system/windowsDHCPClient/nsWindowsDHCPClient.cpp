@@ -12,7 +12,7 @@
 #include "nsNetCID.h"
 #include "nsString.h"
 #include "mozilla/Logging.h"
-#include "mozilla/ModuleUtils.h"
+#include "mozilla/Components.h"
 
 namespace mozilla {
 namespace toolkit {
@@ -28,8 +28,6 @@ LazyLogModule gDhcpLog("windowsDHCPClient");
   255  // this is the maximum option length in DHCP V4 and 6
 
 NS_IMPL_ISUPPORTS(nsWindowsDHCPClient, nsIDHCPClient)
-
-nsresult nsWindowsDHCPClient::Init() { return NS_OK; }
 
 NS_IMETHODIMP
 nsWindowsDHCPClient::GetOption(uint8_t aOption, nsACString& aRetVal) {
@@ -72,28 +70,6 @@ nsWindowsDHCPClient::GetOption(uint8_t aOption, nsACString& aRetVal) {
   aRetVal.Assign(optionValue.data(), sizeOptionValue);
   return NS_OK;
 }
-
-/* {FEBF1D69-4D7D-4891-9524-045AD18B5592} */
-#define NS_WINDOWSDHCPCLIENTSERVICE_CID              \
-  {                                                  \
-    0xFEBF1D69, 0x4D7D, 0x4891, {                    \
-      0x95, 0x24, 0x04, 0x5a, 0xd1, 0x8b, 0x55, 0x92 \
-    }                                                \
-  }
-
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowsDHCPClient, Init)
-NS_DEFINE_NAMED_CID(NS_WINDOWSDHCPCLIENTSERVICE_CID);
-
-static const mozilla::Module::CIDEntry kSysDHCPClientCIDs[] = {
-    {&kNS_WINDOWSDHCPCLIENTSERVICE_CID, false, nullptr,
-     nsWindowsDHCPClientConstructor},
-    {nullptr}};
-
-static const mozilla::Module::ContractIDEntry kSysDHCPClientContracts[] = {
-    {NS_DHCPCLIENT_CONTRACTID, &kNS_WINDOWSDHCPCLIENTSERVICE_CID}, {nullptr}};
-
-extern const mozilla::Module kSysDHCPClientModule = {
-    mozilla::Module::kVersion, kSysDHCPClientCIDs, kSysDHCPClientContracts};
 
 }  // namespace windowsDHCPClient
 }  // namespace system
