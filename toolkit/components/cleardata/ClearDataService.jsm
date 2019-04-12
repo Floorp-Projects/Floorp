@@ -37,8 +37,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "sas",
 const CookieCleaner = {
   deleteByHost(aHost, aOriginAttributes) {
     return new Promise(aResolve => {
-      Services.cookies.removeCookiesWithOriginAttributes(JSON.stringify(aOriginAttributes),
-                                                         aHost);
+      Services.cookies.removeCookiesFromRootDomain(aHost,
+                                                   JSON.stringify(aOriginAttributes));
       aResolve();
     });
   },

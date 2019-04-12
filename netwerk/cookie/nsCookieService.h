@@ -387,6 +387,10 @@ class nsCookieService final : public nsICookieService,
                   bool aBlocked);
 
  protected:
+  nsresult RemoveCookiesFromRootDomain(
+      const nsACString &aHost,
+      const mozilla::OriginAttributesPattern &aPattern);
+
   // cached members.
   nsCOMPtr<nsICookiePermission> mPermissionService;
   nsCOMPtr<mozIThirdPartyUtil> mThirdPartyUtil;
