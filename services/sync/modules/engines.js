@@ -308,8 +308,9 @@ Store.prototype = {
    */
   async applyIncomingBatch(records) {
     let failed = [];
-
-    await Async.yieldingForEach(records, async (record) => {
+    let maybeYield = Async.jankYielder();
+    for (let record of records) {
+      await maybeYield();
       try {
         await this.applyIncoming(record);
       } catch (ex) {
@@ -325,8 +326,7 @@ Store.prototype = {
         this._log.warn("Failed to apply incoming record " + record.id, ex);
         failed.push(record.id);
       }
-    });
-
+    }
     return failed;
   },
 
@@ -1184,7 +1184,9 @@ SyncEngine.prototype = {
         throw response;
       }
 
-      await Async.yieldingForEach(records, async (record) => {
+      let maybeYield = Async.jankYielder();
+      for (let record of records) {
+        await maybeYield();
         downloadedIDs.add(record.id);
 
         if (record.modified < oldestModified) {
@@ -1195,14 +1197,14 @@ SyncEngine.prototype = {
         if (error) {
           failedInCurrentSync.add(record.id);
           count.failed++;
-          return;
+          continue;
         }
         if (!shouldApply) {
           count.reconciled++;
-          return;
+          continue;
         }
         recordsToApply.push(record);
-      });
+      }
 
       let failedToApply = await this._applyRecords(recordsToApply);
       Utils.setAddAll(failedInCurrentSync, failedToApply);
@@ -1277,23 +1279,25 @@ SyncEngine.prototype = {
         throw response;
       }
 
+      let maybeYield = Async.jankYielder();
       let backfilledRecordsToApply = [];
       let failedInBackfill = [];
 
-      await Async.yieldingForEach(records, async (record) => {
+      for (let record of records) {
+        await maybeYield();
+
         let { shouldApply, error } = await this._maybeReconcile(record);
         if (error) {
           failedInBackfill.push(record.id);
           count.failed++;
-          return;
+          continue;
         }
         if (!shouldApply) {
           count.reconciled++;
-          return;
+          continue;
         }
         backfilledRecordsToApply.push(record);
-      });
-
+      }
       let failedToApply = await this._applyRecords(backfilledRecordsToApply);
       failedInBackfill.push(...failedToApply);
 
