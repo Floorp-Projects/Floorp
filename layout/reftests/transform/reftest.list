@@ -147,3 +147,5 @@ fuzzy-if(d2d,0-1,0-5) fuzzy-if(skiaContent,0-26,0-208) == table-overflowed-by-an
 fails == translate-rounding-3.html translate-rounding-viewport-ref.html # bug 1397146
 == invalidate-transform-1.html invalidate-transform-1-ref.html
 == invalidate-svg-scale-1.html invalidate-svg-scale-1-ref.html
+# Bug 1526847
+pref(layout.css.individual-transform.enabled,true) == animate-layer-scale-inherit-4.html animate-layer-scale-inherit-4-ref.html
