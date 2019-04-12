@@ -4540,7 +4540,7 @@ HttpBaseChannel::GetNativeServerTiming(
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::CancelByChannelClassifier(nsresult aErrorCode) {
+HttpBaseChannel::CancelByURLClassifier(nsresult aErrorCode) {
   MOZ_ASSERT(
       UrlClassifierFeatureFactory::IsClassifierBlockingErrorCode(aErrorCode));
   return Cancel(aErrorCode);

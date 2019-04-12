@@ -364,7 +364,7 @@ interface nsIHttpChannelInternal : nsISupports
      * be called by the channel classifier.  Please DO NOT use this API if you
      * don't know whether you should be using it.
      */
-    [noscript] void cancelByChannelClassifier(in nsresult aErrorCode);
+    [noscript] void cancelByURLClassifier(in nsresult aErrorCode);
 
     /**
      * The channel will be loaded over IPv6, disabling IPv4.
