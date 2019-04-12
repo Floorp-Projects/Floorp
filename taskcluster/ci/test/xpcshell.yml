@@ -43,7 +43,7 @@ xpcshell:
             android-em-4.3-arm7-api-16/debug: 12
             macosx.*: 1
             windows.*: 1
-            windows10-aarch64/opt: 8
+            windows10-aarch64/opt: 3
             windows10-64-ccov/debug: 8
             macosx64-ccov/debug: 8
             default: 8
