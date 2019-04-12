@@ -5,17 +5,29 @@
 // @flow
 // This module converts Firefox specific types to the generic types
 
-import { isUrlExtension } from "../../utils/source";
-
-import type { Frame, Source, ThreadId } from "../../types";
+import type { Frame, ThreadId, GeneratedSourceData } from "../../types";
 import type {
   PausedPacket,
   FramesResponse,
   FramePacket,
-  SourcePayload
+  SourcePayload,
+  ThreadClient
 } from "./types";
 
 import { clientCommands } from "./commands";
+
+export function prepareSourcePayload(
+  client: ThreadClient,
+  source: SourcePayload
+): GeneratedSourceData {
+  // We populate the set of sources as soon as we hear about them. Note that
+  // this means that we have seen an actor, but it might still be in the
+  // debounced queue for creation, so the Redux store itself might not have
+  // a source actor with this ID yet.
+  clientCommands.registerSourceActor(source.actor, makeSourceId(source));
+
+  return { thread: client.actor, source };
+}
 
 export function createFrame(thread: ThreadId, frame: FramePacket): ?Frame {
   if (!frame) {
@@ -40,37 +52,8 @@ export function createFrame(thread: ThreadId, frame: FramePacket): ?Frame {
   };
 }
 
-function makeSourceId(source) {
+export function makeSourceId(source: SourcePayload) {
   return source.url ? `sourceURL-${source.url}` : `source-${source.actor}`;
-}
-
-export function createSource(
-  thread: string,
-  source: SourcePayload,
-  { supportsWasm }: { supportsWasm: boolean }
-): Source {
-  const id = makeSourceId(source);
-  const sourceActor = {
-    actor: source.actor,
-    source: id,
-    thread
-  };
-  const createdSource: any = {
-    id,
-    url: source.url,
-    relativeUrl: source.url,
-    isPrettyPrinted: false,
-    sourceMapURL: source.sourceMapURL,
-    introductionUrl: source.introductionUrl,
-    introductionType: source.introductionType,
-    isBlackBoxed: false,
-    loadedState: "unloaded",
-    isWasm: supportsWasm && source.introductionType === "wasm",
-    isExtension: (source.url && isUrlExtension(source.url)) || false,
-    actors: [sourceActor]
-  };
-  clientCommands.registerSourceActor(sourceActor);
-  return createdSource;
 }
 
 export function createPause(

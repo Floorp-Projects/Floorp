@@ -53,14 +53,14 @@ export async function onConnect(connection: any, actions: Object) {
   // the debugger (if it's paused already, or if loading the page from
   // bfcache) so explicity fire `newSource` events for all returned
   // sources.
-  const sources = await clientCommands.fetchSources();
+  const sourceInfo = await clientCommands.fetchSources();
   const traits = tabTarget.traits;
   await actions.connect(
     tabTarget.url,
     threadClient.actor,
     traits && traits.canRewind
   );
-  await actions.newSources(sources);
+  await actions.newGeneratedSources(sourceInfo);
 
   // If the threadClient is already paused, make sure to show a
   // paused state.

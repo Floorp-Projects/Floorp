@@ -4,6 +4,8 @@
 
 // @flow
 
+import type { SourcePayload } from "./client/firefox/types";
+
 export type SearchModifiers = {
   caseSensitive: boolean,
   wholeWord: boolean,
@@ -49,12 +51,17 @@ export type ActorId = string;
 
 export type QueuedSourceData =
   | { type: "original", data: OriginalSourceData }
-  | { type: "generated", data: Source };
+  | { type: "generated", data: GeneratedSourceData };
 
 export type OriginalSourceData = {|
   id: string,
   url: string
 |};
+
+export type GeneratedSourceData = {
+  thread: ThreadId,
+  source: SourcePayload
+};
 
 export type SourceActorLocation = {|
   +sourceActor: SourceActor,
