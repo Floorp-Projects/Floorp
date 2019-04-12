@@ -44,6 +44,7 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticPrefs.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -799,9 +800,10 @@ void nsHostResolver::Shutdown() {
   pendingQLow.clear();
   evictionQ.clear();
 
-  // Shutdown the resolver threads, but with a timeout of 20 seconds.
+  // Shutdown the resolver threads, but with a timeout of 2 seconds (prefable).
   // If the timeout is exceeded, any stuck threads will be leaked.
-  mResolverThreads->ShutdownWithTimeout(20 * 1000);
+  mResolverThreads->ShutdownWithTimeout(
+      StaticPrefs::network_dns_resolver_shutdown_timeout_ms());
 
   {
     mozilla::DebugOnly<nsresult> rv = GetAddrInfoShutdown();
