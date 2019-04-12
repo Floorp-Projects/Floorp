@@ -119,7 +119,7 @@
     "eslint-plugin-babel": "^5.0.0",
     "eslint-plugin-file-header": "0.0.1",
     "eslint-plugin-flowtype": "^3.0.0",
-    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-import": "^2.16.0",
     "eslint-plugin-jest": "^21.15.1",
     "eslint-plugin-jsx-a11y": "^6.1.2",
     "eslint-plugin-mozilla": "1.1.3",
