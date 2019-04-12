@@ -19,7 +19,6 @@ from .util import (
     title='OpenH264 Binaries',
     symbol='h264',
     description="Action to prepare openh264 binaries for shipping",
-    kind='hook',
     context=[],
 )
 def openh264_action(parameters, graph_config, input, task_group_id, task_id):
