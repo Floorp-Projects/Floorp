@@ -455,6 +455,28 @@ BasePrincipal::CloneStrippingUserContextIdAndFirstPartyDomain() {
   return BasePrincipal::CreateCodebasePrincipal(uri, attrs);
 }
 
+already_AddRefed<BasePrincipal> BasePrincipal::CloneForcingFirstPartyDomain(
+    nsIURI* aURI) {
+  if (NS_WARN_IF(!IsCodebasePrincipal())) {
+    return nullptr;
+  }
+
+  OriginAttributes attrs = OriginAttributesRef();
+  // XXX this is slow. Maybe we should consider to make it faster.
+  attrs.SetFirstPartyDomain(false, aURI, true /* aForced */);
+
+  nsAutoCString originNoSuffix;
+  nsresult rv = GetOriginNoSuffix(originNoSuffix);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  nsIURI* uri = static_cast<ContentPrincipal*>(this)->mCodebase;
+  RefPtr<ContentPrincipal> copy = new ContentPrincipal();
+  rv = copy->Init(uri, attrs, originNoSuffix);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return copy.forget();
+}
+
 extensions::WebExtensionPolicy* BasePrincipal::ContentScriptAddonPolicy() {
   if (!Is<ExpandedPrincipal>()) {
     return nullptr;

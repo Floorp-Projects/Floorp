@@ -169,6 +169,8 @@ class BasePrincipal : public nsJSPrincipals {
   already_AddRefed<BasePrincipal>
   CloneStrippingUserContextIdAndFirstPartyDomain();
 
+  already_AddRefed<BasePrincipal> CloneForcingFirstPartyDomain(nsIURI* aURI);
+
   // If this is an add-on content script principal, returns its AddonPolicy.
   // Otherwise returns null.
   extensions::WebExtensionPolicy* ContentScriptAddonPolicy();

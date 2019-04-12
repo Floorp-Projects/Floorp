@@ -15,6 +15,7 @@
  * https://wicg.github.io/feature-policy/#policy
  */
 
+interface Principal;
 interface WindowProxy;
 interface nsISupports;
 interface URI;
@@ -357,6 +358,10 @@ partial interface Document {
   // Creates a new XUL element regardless of the document's default type.
   [CEReactions, NewObject, Throws, Func="IsChromeOrXBL"]
   Element createXULElement(DOMString localName, optional (ElementCreationOptions or DOMString) options);
+
+  // The principal to use for the storage area of this document
+  [ChromeOnly]
+  readonly attribute Principal effectiveStoragePrincipal;
 
   // Touch bits
   // XXXbz I can't find the sane spec for this stuff, so just cribbing

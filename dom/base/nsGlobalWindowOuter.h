@@ -247,6 +247,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal() override;
 
+  virtual nsIPrincipal* GetEffectiveStoragePrincipal() override;
+
   // nsIDOMWindow
   NS_DECL_NSIDOMWINDOW
 
@@ -1098,6 +1100,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   RefPtr<mozilla::dom::Storage> mLocalStorage;
 
   nsCOMPtr<nsIPrincipal> mDocumentPrincipal;
+  nsCOMPtr<nsIPrincipal> mDocumentStoragePrincipal;
 
 #ifdef DEBUG
   uint32_t mSerial;
