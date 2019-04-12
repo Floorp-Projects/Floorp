@@ -235,6 +235,7 @@ impl PrimitiveHeaders {
         self.headers_float.push(PrimitiveHeaderF {
             local_rect: prim_header.local_rect,
             local_clip_rect: prim_header.local_clip_rect,
+            snap_offsets: prim_header.snap_offsets,
         });
 
         self.headers_int.push(PrimitiveHeaderI {
@@ -255,6 +256,7 @@ impl PrimitiveHeaders {
 pub struct PrimitiveHeader {
     pub local_rect: LayoutRect,
     pub local_clip_rect: LayoutRect,
+    pub snap_offsets: SnapOffsets,
     pub task_address: RenderTaskAddress,
     pub specific_prim_address: GpuCacheAddress,
     pub transform_id: TransformPaletteId,
@@ -268,6 +270,7 @@ pub struct PrimitiveHeader {
 pub struct PrimitiveHeaderF {
     pub local_rect: LayoutRect,
     pub local_clip_rect: LayoutRect,
+    pub snap_offsets: SnapOffsets,
 }
 
 // i32 parts of a primitive header
@@ -363,8 +366,6 @@ bitflags! {
         const SEGMENT_REPEAT_Y = 0x8;
         /// The extra segment data is a texel rect.
         const SEGMENT_TEXEL_RECT = 0x10;
-        /// Snap to the primitive rect instead of the visible rect.
-        const SNAP_TO_PRIMITIVE = 0x20;
     }
 }
 
@@ -627,6 +628,11 @@ impl SnapOffsets {
             top_left: DeviceVector2D::zero(),
             bottom_right: DeviceVector2D::zero(),
         }
+    }
+
+    pub fn is_empty(&self) -> bool {
+        let zero = DeviceVector2D::zero();
+        self.top_left == zero && self.bottom_right == zero
     }
 }
 
