@@ -45,6 +45,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     ]
     EXPORTS.mozilla += [
         'DynamicallyLinkedFunctionPtr.h',
+        'ImportDir.h',
         'NativeNt.h',
         'WindowsMapRemoteView.h',
     ]
