@@ -221,12 +221,7 @@ function CanonicalizeTimeZoneName(timeZone) {
 
     // Step 3.
     if (ianaTimeZone === "Etc/UTC" || ianaTimeZone === "Etc/GMT") {
-        // ICU/CLDR canonicalizes Etc/UCT to Etc/GMT, but following IANA and
-        // ECMA-402 to the letter means Etc/UCT is a separate time zone.
-        if (timeZone === "Etc/UCT" || timeZone === "UCT")
-            ianaTimeZone = "Etc/UCT";
-        else
-            ianaTimeZone = "UTC";
+        ianaTimeZone = "UTC";
     }
 
     // Step 4.
