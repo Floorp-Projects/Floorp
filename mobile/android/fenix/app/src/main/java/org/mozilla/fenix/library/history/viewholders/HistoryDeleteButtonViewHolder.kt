@@ -33,7 +33,7 @@ class HistoryDeleteButtonViewHolder(
         }
     }
     fun bind(mode: HistoryState.Mode) {
-        val mode = mode
+        this.mode = mode
 
         val text = if (mode is HistoryState.Mode.Editing && mode.selectedItems.isNotEmpty()) {
             textView.context.resources.getString(
