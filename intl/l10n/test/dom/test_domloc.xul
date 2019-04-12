@@ -25,6 +25,7 @@ file-menu =
 new-tab =
     .label = New Tab
     .accesskey = N
+container = Some text with an <image data-l10n-name="foo"> inside it.
 `);
     yield bundle;
   }
@@ -47,6 +48,9 @@ new-tab =
 
     is(document.getElementById('new-tab').getAttribute('label'), 'New Tab');
     is(document.getElementById('new-tab').getAttribute('accesskey'), 'N');
+
+    ok(document.querySelector("image"),
+       "Image should still be present after localization.");
     SimpleTest.finish();
   }
 
@@ -54,6 +58,7 @@ new-tab =
 
   ]]>
   </script>
+  <description data-l10n-id="container"><image data-l10n-name="foo"/></description>
 
   <menubar id="main-menubar">
     <menu id="file-menu" data-l10n-id="file-menu">

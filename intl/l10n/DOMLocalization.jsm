@@ -214,7 +214,11 @@ function namedChildFrom(sourceElement, translatedChild) {
     return textNode(translatedChild);
   }
 
-  if (sourceChild.localName !== translatedChild.localName) {
+  if (sourceChild.localName !== translatedChild.localName &&
+      // Create a specific exception for img vs. image mismatches,
+      // see bug 1543493
+      !(translatedChild.localName == "img" &&
+        sourceChild.localName == "image")) {
     console.warn(
       `An element named "${childName}" was found in the translation ` +
       `but its type ${translatedChild.localName} didn't match the ` +
