@@ -3360,6 +3360,11 @@ void WorkerPrivate::PropagateFirstPartyStorageAccessGrantedInternal() {
 
   mLoadInfo.mFirstPartyStorageAccessGranted = true;
 
+  WorkerGlobalScope* globalScope = GlobalScope();
+  if (globalScope) {
+    globalScope->FirstPartyStorageAccessGranted();
+  }
+
   for (uint32_t index = 0; index < data->mChildWorkers.Length(); index++) {
     data->mChildWorkers[index]->PropagateFirstPartyStorageAccessGranted();
   }
