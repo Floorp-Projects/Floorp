@@ -52,8 +52,6 @@ void TCPServerSocketParent::Init() {
 }
 
 nsresult TCPServerSocketParent::SendCallbackAccept(TCPSocketParent* socket) {
-  socket->AddIPDLReference();
-
   nsresult rv;
 
   nsString host;
@@ -72,6 +70,10 @@ nsresult TCPServerSocketParent::SendCallbackAccept(TCPSocketParent* socket) {
 
   if (mNeckoParent) {
     if (mNeckoParent->SendPTCPSocketConstructor(socket, host, port)) {
+      // Call |AddIPDLReference| after the consructor message is sent
+      // successfully, otherwise |socket| could be leaked.
+      socket->AddIPDLReference();
+
       mozilla::Unused << PTCPServerSocketParent::SendCallbackAccept(socket);
     } else {
       NS_ERROR("Sending data from PTCPSocketParent was failed.");
