@@ -22,11 +22,13 @@ namespace dom {
 // static
 already_AddRefed<SharedWorkerManagerHolder> SharedWorkerManager::Create(
     SharedWorkerService* aService, nsIEventTarget* aPBackgroundEventTarget,
-    const RemoteWorkerData& aData, nsIPrincipal* aLoadingPrincipal) {
+    const RemoteWorkerData& aData, nsIPrincipal* aLoadingPrincipal,
+    const OriginAttributes& aStoragePrincipalAttrs) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<SharedWorkerManager> manager = new SharedWorkerManager(
-      aPBackgroundEventTarget, aData, aLoadingPrincipal);
+  RefPtr<SharedWorkerManager> manager =
+      new SharedWorkerManager(aPBackgroundEventTarget, aData, aLoadingPrincipal,
+                              aStoragePrincipalAttrs);
 
   RefPtr<SharedWorkerManagerHolder> holder =
       new SharedWorkerManagerHolder(manager, aService);
@@ -35,10 +37,12 @@ already_AddRefed<SharedWorkerManagerHolder> SharedWorkerManager::Create(
 
 SharedWorkerManager::SharedWorkerManager(
     nsIEventTarget* aPBackgroundEventTarget, const RemoteWorkerData& aData,
-    nsIPrincipal* aLoadingPrincipal)
+    nsIPrincipal* aLoadingPrincipal,
+    const OriginAttributes& aStoragePrincipalAttrs)
     : mPBackgroundEventTarget(aPBackgroundEventTarget),
       mLoadingPrincipal(aLoadingPrincipal),
       mDomain(aData.domain()),
+      mStoragePrincipalAttrs(aStoragePrincipalAttrs),
       mResolvedScriptURL(DeserializeURI(aData.resolvedScriptURL())),
       mName(aData.name()),
       mIsSecureContext(aData.isSecureContext()),
@@ -80,11 +84,10 @@ bool SharedWorkerManager::MaybeCreateRemoteWorker(
 }
 
 already_AddRefed<SharedWorkerManagerHolder>
-SharedWorkerManager::MatchOnMainThread(SharedWorkerService* aService,
-                                       const nsACString& aDomain,
-                                       nsIURI* aScriptURL,
-                                       const nsAString& aName,
-                                       nsIPrincipal* aLoadingPrincipal) {
+SharedWorkerManager::MatchOnMainThread(
+    SharedWorkerService* aService, const nsACString& aDomain,
+    nsIURI* aScriptURL, const nsAString& aName, nsIPrincipal* aLoadingPrincipal,
+    const OriginAttributes& aStoragePrincipalAttrs) {
   MOZ_ASSERT(NS_IsMainThread());
 
   bool urlEquals;
@@ -96,7 +99,8 @@ SharedWorkerManager::MatchOnMainThread(SharedWorkerService* aService,
                // We want to be sure that the window's principal subsumes the
                // SharedWorker's loading principal and vice versa.
                mLoadingPrincipal->Subsumes(aLoadingPrincipal) &&
-               aLoadingPrincipal->Subsumes(mLoadingPrincipal);
+               aLoadingPrincipal->Subsumes(mLoadingPrincipal) &&
+               mStoragePrincipalAttrs == aStoragePrincipalAttrs;
   if (!match) {
     return nullptr;
   }
