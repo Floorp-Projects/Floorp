@@ -99,15 +99,22 @@ already_AddRefed<CSSValue> GetBackgroundList(
 }
 
 // Whether aDocument needs to restyle for aElement
-static bool DocumentNeedsRestyle(const Document* aDocument, Element* aElement,
-                                 nsAtom* aPseudo) {
-  PresShell* presShell = aDocument->GetPresShell();
-  if (!presShell) {
-    return true;
+static bool ElementNeedsRestyle(Element* aElement, nsAtom* aPseudo) {
+  const Document* doc = aElement->GetComposedDoc();
+  if (!doc) {
+    // If the element is out of the document we don't return styles for it, so
+    // nothing to do.
+    return false;
   }
 
-  nsPresContext* presContext = presShell->GetPresContext();
-  MOZ_ASSERT(presContext);
+  PresShell* presShell = doc->GetPresShell();
+  if (!presShell) {
+    // If there's no pres-shell we'll just either mint a new style from our
+    // caller document, or return no styles, so nothing to do (unless our owner
+    // element needs to get restyled, which could cause us to gain a pres shell,
+    // but the caller checks that).
+    return false;
+  }
 
   // Unfortunately we don't know if the sheet change affects mElement or not, so
   // just assume it will and that we need to flush normally.
@@ -115,6 +122,9 @@ static bool DocumentNeedsRestyle(const Document* aDocument, Element* aElement,
   if (styleSet->StyleSheetsHaveChanged()) {
     return true;
   }
+
+  nsPresContext* presContext = presShell->GetPresContext();
+  MOZ_ASSERT(presContext);
 
   // Pending media query updates can definitely change style on the element. For
   // example, if you change the zoom factor and then call getComputedStyle, you
@@ -151,7 +161,7 @@ static bool DocumentNeedsRestyle(const Document* aDocument, Element* aElement,
   restyleManager->ProcessAllPendingAttributeAndStateInvalidations();
 
   if (!presContext->EffectCompositor()->HasPendingStyleUpdates() &&
-      !aDocument->GetServoRestyleRoot()) {
+      !doc->GetServoRestyleRoot()) {
     return false;
   }
 
@@ -765,29 +775,21 @@ void nsComputedDOMStyle::SetFrameComputedStyle(mozilla::ComputedStyle* aStyle,
   mPresShellId = mPresShell->GetPresShellId();
 }
 
-bool nsComputedDOMStyle::NeedsToFlush(Document* aDocument) const {
-  // If mElement is not in the same document, we could do some checks to know if
-  // there are some pending restyles can be ignored across documents (since we
-  // will use the caller document's style), but it can be complicated and should
-  // be an edge case, so we just don't bother to do the optimization in this
-  // case.
-  //
-  // FIXME(emilio): This is likely to want GetComposedDoc() instead of
-  // OwnerDoc().
-  if (aDocument != mElement->OwnerDoc()) {
+bool nsComputedDOMStyle::NeedsToFlush() const {
+  // We always compute styles from the element's owner document.
+  if (ElementNeedsRestyle(mElement, mPseudo)) {
     return true;
   }
-  if (DocumentNeedsRestyle(aDocument, mElement, mPseudo)) {
-    return true;
-  }
+
+  Document* doc = mElement->OwnerDoc();
   // If parent document is there, also needs to check if there is some change
   // that needs to flush this document (e.g. size change for iframe).
-  while (Document* parentDocument = aDocument->GetParentDocument()) {
-    Element* element = parentDocument->FindContentForSubDocument(aDocument);
-    if (DocumentNeedsRestyle(parentDocument, element, nullptr)) {
+  while (Document* parentDocument = doc->GetParentDocument()) {
+    Element* element = parentDocument->FindContentForSubDocument(doc);
+    if (ElementNeedsRestyle(element, nullptr)) {
       return true;
     }
-    aDocument = parentDocument;
+    doc = parentDocument;
   }
 
   return false;
@@ -806,7 +808,7 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush) {
   //  * https://github.com/w3c/csswg-drafts/issues/1548
 
   // If the property we are computing relies on layout, then we must flush.
-  const bool needsToFlush = aNeedsLayoutFlush || NeedsToFlush(document);
+  const bool needsToFlush = aNeedsLayoutFlush || NeedsToFlush();
   if (needsToFlush) {
     // Flush _before_ getting the presshell, since that could create a new
     // presshell.  Also note that we want to flush the style on the document
