@@ -12,7 +12,9 @@ async function evalInConsoleAtPoint(
   statements
 ) {
   const filename = `${target}://./${fixture}/input.`;
-  const fnName = (target + "-" + fixture).replace(/-([a-z])/g, (s, c) => c.toUpperCase());
+  const fnName = (target + "-" + fixture).replace(/-([a-z])/g, (s, c) =>
+    c.toUpperCase()
+  );
 
   await invokeWithBreakpoint(
     dbg,
@@ -44,14 +46,16 @@ async function assertConsoleEval(dbg, statements) {
 }
 
 add_task(async function() {
-  await pushPref("devtools.debugger.features.map-scopes", true);
-
   const dbg = await initDebugger("doc-sourcemapped.html");
-  await evalInConsoleAtPoint(dbg, "webpack3-babel6", "eval-maps", { line: 14, column: 4 }, [
-    "one === 1",
-    "two === 4",
-    "three === 5"
-  ]);
+  dbg.actions.toggleMapScopes();
+
+  await evalInConsoleAtPoint(
+    dbg,
+    "webpack3-babel6",
+    "eval-maps",
+    { line: 14, column: 4 },
+    ["one === 1", "two === 4", "three === 5"]
+  );
 
   await evalInConsoleAtPoint(
     dbg,
@@ -79,8 +83,11 @@ add_task(async function() {
     [`aVar === "var3"`, `aLet === "let3"`, `aConst === "const3"`]
   );
 
-  await evalInConsoleAtPoint(dbg, "webpack3-babel6", "babel-classes", { line: 8, column: 16 }, [
-    `this.hasOwnProperty("bound")`,
-  ]);
-
+  await evalInConsoleAtPoint(
+    dbg,
+    "webpack3-babel6",
+    "babel-classes",
+    { line: 8, column: 16 },
+    [`this.hasOwnProperty("bound")`]
+  );
 });

@@ -4,6 +4,7 @@
 
 add_task(async function() {
   const dbg = await initDebugger("doc-react.html", "App.js");
+  dbg.actions.toggleMapScopes();
 
   await selectSource(dbg, "App.js");
   await addBreakpoint(dbg, "App.js", 11);
@@ -12,12 +13,8 @@ add_task(async function() {
   invokeInTab("clickButton");
   await waitForPaused(dbg);
 
-  const {
-    selectors: { getSelectedScopeMappings, getCurrentThread }
-  } = dbg;
-
   await waitForState(dbg, state =>
-    getSelectedScopeMappings(getCurrentThread())
+    dbg.selectors.getSelectedScopeMappings(dbg.selectors.getCurrentThread())
   );
 
   await assertPreviewTextValue(dbg, 10, 22, {

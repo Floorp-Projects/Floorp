@@ -310,11 +310,6 @@ function getVisibleSelectedFrameLine(dbg) {
  * @static
  */
 function assertPausedLocation(dbg) {
-  const {
-    selectors: { getSelectedSource },
-    getState
-  } = dbg;
-
   ok(isSelectedFrameSelected(dbg), "top frame's source is selected");
 
   // Check the pause location
@@ -383,14 +378,14 @@ function assertDebugLine(dbg, line) {
  * @static
  */
 function assertHighlightLocation(dbg, source, line) {
-  const {
-    selectors: { getSelectedSource },
-    getState
-  } = dbg;
   source = findSource(dbg, source);
 
   // Check the selected source
-  is(getSelectedSource().url, source.url, "source url is correct");
+  is(
+    dbg.selectors.getSelectedSource().url,
+    source.url,
+    "source url is correct"
+  );
 
   // Check the highlight line
   const lineEl = findElement(dbg, "highlightLine");
@@ -417,23 +412,14 @@ function assertHighlightLocation(dbg, source, line) {
  * @static
  */
 function isPaused(dbg) {
-  const {
-    selectors: { getIsPaused, getCurrentThread },
-    getState
-  } = dbg;
-  return getIsPaused(getCurrentThread());
+  return dbg.selectors.getIsPaused(dbg.selectors.getCurrentThread());
 }
 
 // Make sure the debugger is paused at a certain source ID and line.
 function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine) {
   assertPaused(dbg);
 
-  const {
-    selectors: { getCurrentThreadFrames },
-    getState
-  } = dbg;
-
-  const frames = getCurrentThreadFrames();
+  const frames = dbg.selectors.getCurrentThreadFrames();
   ok(frames.length >= 1, "Got at least one frame");
   const { sourceId, line } = frames[0].location;
   ok(sourceId == expectedSourceId, "Frame has correct source");
@@ -556,7 +542,7 @@ function clearDebuggerPreferences() {
   Services.prefs.clearUserPref("devtools.debugger.call-stack-visible");
   Services.prefs.clearUserPref("devtools.debugger.scopes-visible");
   Services.prefs.clearUserPref("devtools.debugger.skip-pausing");
-  pushPref("devtools.debugger.map-scopes-enabled", true);
+  Services.prefs.clearUserPref("devtools.debugger.map-scopes-enabled");
 }
 
 /**
@@ -846,19 +832,14 @@ function setBreakpointOptions(dbg, source, line, column, options) {
 }
 
 function findBreakpoint(dbg, url, line) {
-  const {
-    selectors: { getBreakpoint, getBreakpointsList },
-    getState
-  } = dbg;
   const source = findSource(dbg, url);
   const column = getFirstBreakpointColumn(dbg, { line, sourceId: source.id });
-  return getBreakpoint({ sourceId: source.id, line, column });
+  return dbg.selectors.getBreakpoint({ sourceId: source.id, line, column });
 }
 
 async function loadAndAddBreakpoint(dbg, filename, line, column) {
   const {
-    selectors: { getBreakpoint, getBreakpointCount, getBreakpointsMap },
-    getState
+    selectors: { getBreakpoint, getBreakpointCount, getBreakpointsMap }
   } = dbg;
 
   await waitForSources(dbg, filename);
@@ -894,11 +875,6 @@ async function invokeWithBreakpoint(
   { line, column },
   handler
 ) {
-  const {
-    selectors: { getBreakpointCount },
-    getState
-  } = dbg;
-
   const source = await loadAndAddBreakpoint(dbg, filename, line, column);
 
   const invokeResult = invokeInTab(fnName);
@@ -916,7 +892,7 @@ async function invokeWithBreakpoint(
 
   await removeBreakpoint(dbg, source.id, line, column);
 
-  is(getBreakpointCount(), 0, "Breakpoint reverted");
+  is(dbg.selectors.getBreakpointCount(), 0, "Breakpoint reverted");
 
   await handler(source);
 
@@ -1210,6 +1186,7 @@ const selectors = {
   scopeNode: i => `.scopes-list .tree-node:nth-child(${i}) .object-label`,
   scopeValue: i =>
     `.scopes-list .tree-node:nth-child(${i}) .object-delimiter + *`,
+  mapScopesCheckbox: ".map-scopes-header input",
   frame: i => `.frames [role="list"] [role="listitem"]:nth-child(${i})`,
   frames: '.frames [role="list"] [role="listitem"]',
   gutter: i => `.CodeMirror-code *:nth-child(${i}) .CodeMirror-linenumber`,
@@ -1557,22 +1534,27 @@ async function assertPreviewTooltip(dbg, line, column, { result, expression }) {
   is(preview.expression, expression, "Preview.expression");
 }
 
+async function hoverOnToken(dbg, line, column, selector) {
+  await tryHovering(dbg, line, column, selector);
+  return dbg.selectors.getPreview();
+}
+
+function getPreviewProperty(preview, field) {
+  const properties =
+    preview.result.preview.ownProperties || preview.result.preview.items;
+  const property = properties[field];
+  return property.value || property;
+}
+
 async function assertPreviewPopup(
   dbg,
   line,
   column,
   { field, value, expression }
 ) {
-  await tryHovering(dbg, line, column, "popup");
+  const preview = await hoverOnToken(dbg, line, column, "popup");
+  is(`${getPreviewProperty(preview, field)}`, value, "Preview.result");
 
-  const preview = dbg.selectors.getPreview();
-
-  const properties =
-    preview.result.preview.ownProperties || preview.result.preview.items;
-  const property = properties[field];
-  const propertyValue = property.value || property;
-
-  is(`${propertyValue}`, value, "Preview.result");
   is(preview.updating, false, "Preview.updating");
   is(preview.expression, expression, "Preview.expression");
 }

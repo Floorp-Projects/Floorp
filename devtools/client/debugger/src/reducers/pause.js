@@ -623,7 +623,7 @@ export function getSkipPausing(state: OuterState) {
   return state.pause.skipPausing;
 }
 
-export function getMapScopes(state: OuterState) {
+export function isMapScopesEnabled(state: OuterState) {
   return state.pause.mapScopes;
 }
 
