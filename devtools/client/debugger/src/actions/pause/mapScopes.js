@@ -6,7 +6,7 @@
 
 import {
   getSource,
-  getMapScopes,
+  isMapScopesEnabled,
   getSelectedFrame,
   getSelectedGeneratedScope,
   getSelectedOriginalScope,
@@ -16,7 +16,6 @@ import { loadSourceText } from "../sources/loadSourceText";
 import { PROMISE } from "../utils/middleware/promise";
 import assert from "../../utils/assert";
 
-import { features } from "../../utils/prefs";
 import { log } from "../../utils/log";
 import { isGenerated, isOriginal } from "../../utils/source";
 import type { Frame, Scope, ThreadContext } from "../../types";
@@ -27,7 +26,7 @@ import { buildMappedScopes } from "../../utils/pause/mapScopes";
 
 export function toggleMapScopes() {
   return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
-    if (getMapScopes(getState())) {
+    if (isMapScopesEnabled(getState())) {
       return dispatch({ type: "TOGGLE_MAP_SCOPES", mapScopes: false });
     }
 
@@ -71,7 +70,7 @@ export function mapScopes(
       frame,
       [PROMISE]: (async function() {
         if (
-          !features.mapScopes ||
+          !isMapScopesEnabled(getState()) ||
           !source ||
           !generatedSource ||
           generatedSource.isWasm ||

@@ -16,7 +16,7 @@ const ACTIVE_TARGETS = new Set([
   "rollup",
   // "rollup-babel6",
   // "rollup-babel7",
-  "parcel",
+  "parcel"
 ]);
 
 const ACTIVE_FIXTURES = [
@@ -42,10 +42,16 @@ const ACTIVE_FIXTURES = [
   testWebpackFunctions,
   testESModules,
   testESModulesCJS,
-  testESModulesES6,
+  testESModulesES6
 ];
 
-async function breakpointScopes(dbg, target, fixture, { line, column }, scopes) {
+async function breakpointScopes(
+  dbg,
+  target,
+  fixture,
+  { line, column },
+  scopes
+) {
   if (!ACTIVE_TARGETS.has(target)) return;
 
   const filename = `${target}://./${fixture}/input.`;
@@ -65,9 +71,8 @@ async function breakpointScopes(dbg, target, fixture, { line, column }, scopes) 
 }
 
 add_task(async function() {
-  await pushPref("devtools.debugger.features.map-scopes", true);
-
   const dbg = await initDebugger("doc-sourcemapped.html");
+  dbg.actions.toggleMapScopes();
 
   for (const fixture of ACTIVE_FIXTURES) {
     await fixture(dbg);
@@ -87,8 +92,8 @@ function targetToFlags(target) {
   const webpack4ImportGetter = isWebpack4 ? "Getter" : null;
   const maybeLineStart = col => col;
   const defaultExport = isWebpack4
-      ? name => `${name}()`
-      : name => [name, "(optimized away)"];
+    ? name => `${name}()`
+    : name => [name, "(optimized away)"];
 
   return {
     isRollup,
@@ -98,11 +103,13 @@ function targetToFlags(target) {
     webpackImportGetter,
     webpack4ImportGetter,
     maybeLineStart,
-    defaultExport,
+    defaultExport
   };
 }
 function pairToFnName(target, fixture) {
-  return (target + "-" + fixture).replace(/-([a-z])/g, (s, c) => c.toUpperCase());
+  return (target + "-" + fixture).replace(/-([a-z])/g, (s, c) =>
+    c.toUpperCase()
+  );
 }
 
 function runtimeFunctionName(target, fixture) {
@@ -116,8 +123,10 @@ function webpackModule(target, fixture, optimizedOut) {
   return [
     runtimeFunctionName(target, fixture),
     ["__webpack_exports__", optimizedOut ? "(optimized away)" : "{\u2026}"],
-    optimizedOut ? ["__webpack_require__", "(optimized away)"] : "__webpack_require__()",
-    ["arguments", optimizedOut ? "(unavailable)" : "Arguments"],
+    optimizedOut
+      ? ["__webpack_require__", "(optimized away)"]
+      : "__webpack_require__()",
+    ["arguments", optimizedOut ? "(unavailable)" : "Arguments"]
   ];
 }
 
@@ -130,17 +139,23 @@ async function testBabelBindingsWithFlow(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
     const { webpackImportGetter } = targetToFlags(target);
 
-    await breakpointScopes(dbg, target, "babel-bindings-with-flow", { line: 9, column: 2 }, [
-      "root",
-      ["value", '"a-named"'],
-      "Module",
-      ["aNamed", webpackImportGetter || '"a-named"'],
-      "root()",
-    ]);
+    await breakpointScopes(
+      dbg,
+      target,
+      "babel-bindings-with-flow",
+      { line: 9, column: 2 },
+      [
+        "root",
+        ["value", '"a-named"'],
+        "Module",
+        ["aNamed", webpackImportGetter || '"a-named"'],
+        "root()"
+      ]
+    );
   }
 }
 
@@ -153,7 +168,7 @@ async function testBabelFlowtypeBindings(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
     const { webpackImportGetter } = targetToFlags(target);
 
@@ -177,10 +192,7 @@ async function testEvalMaps(dbg) {
   // never loading. I'm not sure what causes that. If we observe flakiness in CI,
   // we should consider disabling this test for now.
 
-  for (const target of [
-    "webpack3",
-    "webpack4",
-  ]) {
+  for (const target of ["webpack3", "webpack4"]) {
     const { defaultExport } = targetToFlags(target);
 
     await breakpointScopes(dbg, target, "eval-maps", { line: 14, column: 4 }, [
@@ -196,7 +208,7 @@ async function testEvalMaps(dbg) {
       ["one", "1"],
       ...webpackModule(target, "eval-maps", true /* optimized out */),
       ["module", "(optimized away)"],
-      defaultExport("root"),
+      defaultExport("root")
     ]);
   }
 
@@ -208,30 +220,38 @@ async function testEvalMaps(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
-    const { defaultExport, rollupOptimized, webpackImportGetter, maybeLineStart } = targetToFlags(target);
+    const {
+      defaultExport,
+      rollupOptimized,
+      webpackImportGetter,
+      maybeLineStart
+    } = targetToFlags(target);
 
-    await breakpointScopes(dbg, target, "eval-maps", { line: 14, column: maybeLineStart(4) }, [
-      "Block",
-      ["three", "5"],
-      ["two", "4"],
-      "Function Body",
-      ["three", rollupOptimized || "3"],
-      ["two", rollupOptimized || "2"],
-      "root",
-      ["one", "1"],
-      "Module",
-      defaultExport("root"),
-    ]);
+    await breakpointScopes(
+      dbg,
+      target,
+      "eval-maps",
+      { line: 14, column: maybeLineStart(4) },
+      [
+        "Block",
+        ["three", "5"],
+        ["two", "4"],
+        "Function Body",
+        ["three", rollupOptimized || "3"],
+        ["two", rollupOptimized || "2"],
+        "root",
+        ["one", "1"],
+        "Module",
+        defaultExport("root")
+      ]
+    );
   }
 }
 
 async function testForOf(dbg) {
-  for (const target of [
-    "webpack3",
-    "webpack4",
-  ]) {
+  for (const target of ["webpack3", "webpack4"]) {
     const { defaultExport } = targetToFlags(target);
 
     await breakpointScopes(dbg, target, "for-of", { line: 5, column: 0 }, [
@@ -257,50 +277,64 @@ async function testForOf(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
-    const { defaultExport, rollupOptimized, webpackImportGetter, maybeLineStart } = targetToFlags(target);
+    const {
+      defaultExport,
+      rollupOptimized,
+      webpackImportGetter,
+      maybeLineStart
+    } = targetToFlags(target);
 
-    await breakpointScopes(dbg, target, "for-of", { line: 5, column: maybeLineStart(4) }, [
-      "For",
-      ["x", "1"],
-      "forOf",
-      "doThing()",
-      "Module",
-      defaultExport("forOf"),
-      "mod"
-    ]);
+    await breakpointScopes(
+      dbg,
+      target,
+      "for-of",
+      { line: 5, column: maybeLineStart(4) },
+      [
+        "For",
+        ["x", "1"],
+        "forOf",
+        "doThing()",
+        "Module",
+        defaultExport("forOf"),
+        "mod"
+      ]
+    );
   }
 }
 
 async function testShadowedVars(dbg) {
-  for (const target of [
-    "webpack3",
-    "webpack4",
-  ]) {
-    await breakpointScopes(dbg, target, "shadowed-vars", { line: 18, column: 0 }, [
-      "Block",
-      ["<this>", "Window"],
-      ["aConst", '"const3"'],
-      ["aLet", '"let3"'],
+  for (const target of ["webpack3", "webpack4"]) {
+    await breakpointScopes(
+      dbg,
+      target,
+      "shadowed-vars",
+      { line: 18, column: 0 },
+      [
+        "Block",
+        ["<this>", "Window"],
+        ["aConst", '"const3"'],
+        ["aLet", '"let3"'],
 
-      "Block",
-      ["aConst", '"const2"'],
-      ["aLet", '"let2"'],
-      "Outer()",
+        "Block",
+        ["aConst", '"const2"'],
+        ["aLet", '"let2"'],
+        "Outer()",
 
-      "Block",
-      ["aConst", '"const1"'],
-      ["aLet", '"let1"'],
-      "Outer()",
+        "Block",
+        ["aConst", '"const1"'],
+        ["aLet", '"let1"'],
+        "Outer()",
 
-      "Block",
-      ["arguments", "Arguments"],
-      ["aVar", '"var3"'],
+        "Block",
+        ["arguments", "Arguments"],
+        ["aVar", '"var3"'],
 
-      ...webpackModule(target, "shadowed-vars", true /* optimizedOut */),
-      ["module", "(optimized away)"],
-    ]);
+        ...webpackModule(target, "shadowed-vars", true /* optimizedOut */),
+        ["module", "(optimized away)"]
+      ]
+    );
   }
 
   for (const target of [
@@ -311,35 +345,45 @@ async function testShadowedVars(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
-    const { isParcel, rollupOptimized, webpackImportGetter, maybeLineStart } = targetToFlags(target);
+    const {
+      isParcel,
+      rollupOptimized,
+      webpackImportGetter,
+      maybeLineStart
+    } = targetToFlags(target);
 
-    await breakpointScopes(dbg, target, "shadowed-vars", { line: 18, column: maybeLineStart(6) }, [
-      "Block",
-      ["aConst", rollupOptimized || '"const3"'],
-      ["aLet", rollupOptimized || '"let3"'],
-      "Block",
-      ["aConst", rollupOptimized || '"const2"'],
-      ["aLet", rollupOptimized || '"let2"'],
-      isParcel ?
-        "Outer()" :
-        rollupOptimized ? ["Outer", rollupOptimized ] : "Outer:_Outer()",
-      "Function Body",
-      ["aConst", rollupOptimized || '"const1"'],
-      ["aLet", rollupOptimized || '"let1"'],
-      rollupOptimized ? ["Outer", rollupOptimized ] : "Outer()",
-      "default",
-      ["aVar", rollupOptimized || '"var3"']
-    ]);
+    await breakpointScopes(
+      dbg,
+      target,
+      "shadowed-vars",
+      { line: 18, column: maybeLineStart(6) },
+      [
+        "Block",
+        ["aConst", rollupOptimized || '"const3"'],
+        ["aLet", rollupOptimized || '"let3"'],
+        "Block",
+        ["aConst", rollupOptimized || '"const2"'],
+        ["aLet", rollupOptimized || '"let2"'],
+        isParcel
+          ? "Outer()"
+          : rollupOptimized
+            ? ["Outer", rollupOptimized]
+            : "Outer:_Outer()",
+        "Function Body",
+        ["aConst", rollupOptimized || '"const1"'],
+        ["aLet", rollupOptimized || '"let1"'],
+        rollupOptimized ? ["Outer", rollupOptimized] : "Outer()",
+        "default",
+        ["aVar", rollupOptimized || '"var3"']
+      ]
+    );
   }
 }
 
 async function testLineStartBindingsES6(dbg) {
-  for (const target of [
-    "webpack3",
-    "webpack4",
-  ]) {
+  for (const target of ["webpack3", "webpack4"]) {
     await breakpointScopes(
       dbg,
       target,
@@ -357,7 +401,11 @@ async function testLineStartBindingsES6(dbg) {
         ["aFunc", "(optimized away)"],
         ["arguments", "(unavailable)"],
 
-        ...webpackModule(target, "line-start-bindings-es6", true /* optimizedOut */),
+        ...webpackModule(
+          target,
+          "line-start-bindings-es6",
+          true /* optimizedOut */
+        ),
         ["module", "(optimized away)"],
         "root()"
       ]
@@ -372,9 +420,13 @@ async function testLineStartBindingsES6(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
-    const { rollupOptimized, webpackImportGetter, maybeLineStart } = targetToFlags(target);
+    const {
+      rollupOptimized,
+      webpackImportGetter,
+      maybeLineStart
+    } = targetToFlags(target);
 
     await breakpointScopes(
       dbg,
@@ -396,10 +448,7 @@ async function testLineStartBindingsES6(dbg) {
 }
 
 async function testThisArgumentsBindings(dbg) {
-  for (const target of [
-    "webpack3",
-    "webpack4",
-  ]) {
+  for (const target of ["webpack3", "webpack4"]) {
     await breakpointScopes(
       dbg,
       target,
@@ -415,7 +464,11 @@ async function testThisArgumentsBindings(dbg) {
         "root",
         ["arguments", "Arguments"],
         "fn()",
-        ...webpackModule(target, "this-arguments-bindings", true /* optimizedOut */),
+        ...webpackModule(
+          target,
+          "this-arguments-bindings",
+          true /* optimizedOut */
+        ),
         ["module", "(optimized away)"],
         "root()"
       ]
@@ -439,7 +492,11 @@ async function testThisArgumentsBindings(dbg) {
         "root",
         ["arguments", "Arguments"],
         "fn()",
-        ...webpackModule(target, "this-arguments-bindings", true /* optimizedOut */),
+        ...webpackModule(
+          target,
+          "this-arguments-bindings",
+          true /* optimizedOut */
+        ),
         ["module", "(optimized away)"],
         "root()"
       ]
@@ -454,9 +511,14 @@ async function testThisArgumentsBindings(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
-    const { isParcel, rollupOptimized, webpackImportGetter, maybeLineStart } = targetToFlags(target);
+    const {
+      isParcel,
+      rollupOptimized,
+      webpackImportGetter,
+      maybeLineStart
+    } = targetToFlags(target);
 
     await breakpointScopes(
       dbg,
@@ -466,7 +528,10 @@ async function testThisArgumentsBindings(dbg) {
       [
         "Function Body",
         ["<this>", '"this-value"'],
-        ["arrow", (target === "rollup" || isParcel) ? "(uninitialized)" : "undefined"],
+        [
+          "arrow",
+          target === "rollup" || isParcel ? "(uninitialized)" : "undefined"
+        ],
         "fn",
         ["arg", '"arg-value"'],
         ["arguments", "Arguments"],
@@ -487,7 +552,9 @@ async function testThisArgumentsBindings(dbg) {
         ["<this>", '"this-value"'],
         ["argArrow", '"arrow-arg"'],
         "Function Body",
-        (target === "rollup" || isParcel) ? ["arrow", "(optimized away)"] : "arrow()",
+        target === "rollup" || isParcel
+          ? ["arrow", "(optimized away)"]
+          : "arrow()",
         "fn",
         ["arg", '"arg-value"'],
         ["arguments", "Arguments"],
@@ -501,10 +568,7 @@ async function testThisArgumentsBindings(dbg) {
 }
 
 async function testClasses(dbg) {
-  for (const target of [
-    "webpack3",
-    "webpack4",
-  ]) {
+  for (const target of ["webpack3", "webpack4"]) {
     await breakpointScopes(dbg, target, "classes", { line: 6, column: 0 }, [
       "Block",
       ["<this>", "{}"],
@@ -551,42 +615,60 @@ async function testClasses(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
-    const { isParcel, rollupOptimized, webpackImportGetter, maybeLineStart } = targetToFlags(target);
+    const {
+      isParcel,
+      rollupOptimized,
+      webpackImportGetter,
+      maybeLineStart
+    } = targetToFlags(target);
 
-    await breakpointScopes(dbg, target, "classes", { line: 6, column: maybeLineStart(6) }, [
-      "Class",
-      (target === "rollup" || isParcel) ? ["Thing", "(optimized away)"] : "Thing()",
-      "Function Body",
-      "Another()",
-      "one",
-      (target === "rollup" || isParcel) ? ["Thing", "(optimized away)"] : "Thing()",
-      "Module",
-      "root()"
-    ]);
+    await breakpointScopes(
+      dbg,
+      target,
+      "classes",
+      { line: 6, column: maybeLineStart(6) },
+      [
+        "Class",
+        target === "rollup" || isParcel
+          ? ["Thing", "(optimized away)"]
+          : "Thing()",
+        "Function Body",
+        "Another()",
+        "one",
+        target === "rollup" || isParcel
+          ? ["Thing", "(optimized away)"]
+          : "Thing()",
+        "Module",
+        "root()"
+      ]
+    );
 
-    await breakpointScopes(dbg, target, "classes", { line: 16, column: maybeLineStart(6) }, [
-      "Function Body",
-      ["three", rollupOptimized || "3"],
-      ["two", rollupOptimized || "2"],
-      "Class",
-      "Another()",
-      "Function Body",
-      "Another()",
-      ["one", "1"],
-      "Thing()",
-      "Module",
-      "root()"
-    ]);
+    await breakpointScopes(
+      dbg,
+      target,
+      "classes",
+      { line: 16, column: maybeLineStart(6) },
+      [
+        "Function Body",
+        ["three", rollupOptimized || "3"],
+        ["two", rollupOptimized || "2"],
+        "Class",
+        "Another()",
+        "Function Body",
+        "Another()",
+        ["one", "1"],
+        "Thing()",
+        "Module",
+        "root()"
+      ]
+    );
   }
 }
 
 async function testForLoops(dbg) {
-  for (const target of [
-    "webpack3",
-    "webpack4",
-  ]) {
+  for (const target of ["webpack3", "webpack4"]) {
     await breakpointScopes(dbg, target, "for-loops", { line: 5, column: 0 }, [
       "Block",
       ["<this>", "Window"],
@@ -633,42 +715,61 @@ async function testForLoops(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
-    const { rollupOptimized, webpackImportGetter, maybeLineStart } = targetToFlags(target);
+    const {
+      rollupOptimized,
+      webpackImportGetter,
+      maybeLineStart
+    } = targetToFlags(target);
 
-    await breakpointScopes(dbg, target, "for-loops", { line: 5, column: maybeLineStart(4) }, [
-      "For",
-      ["i", "1"],
-      "Function Body",
-      ["i", rollupOptimized || "0"],
-      "Module",
-      "root()"
-    ]);
-    await breakpointScopes(dbg, target, "for-loops", { line: 9, column: maybeLineStart(4) }, [
-      "For",
-      ["i", '"2"'],
-      "Function Body",
-      ["i", rollupOptimized || "0"],
-      "Module",
-      "root()"
-    ]);
-    await breakpointScopes(dbg, target, "for-loops", { line: 13, column: maybeLineStart(4) }, [
-      "For",
-      ["i", target === "rollup" ? "3" : rollupOptimized || "3"],
-      "Function Body",
-      ["i", rollupOptimized || "0"],
-      "Module",
-      "root()"
-    ]);
+    await breakpointScopes(
+      dbg,
+      target,
+      "for-loops",
+      { line: 5, column: maybeLineStart(4) },
+      [
+        "For",
+        ["i", "1"],
+        "Function Body",
+        ["i", rollupOptimized || "0"],
+        "Module",
+        "root()"
+      ]
+    );
+    await breakpointScopes(
+      dbg,
+      target,
+      "for-loops",
+      { line: 9, column: maybeLineStart(4) },
+      [
+        "For",
+        ["i", '"2"'],
+        "Function Body",
+        ["i", rollupOptimized || "0"],
+        "Module",
+        "root()"
+      ]
+    );
+    await breakpointScopes(
+      dbg,
+      target,
+      "for-loops",
+      { line: 13, column: maybeLineStart(4) },
+      [
+        "For",
+        ["i", target === "rollup" ? "3" : rollupOptimized || "3"],
+        "Function Body",
+        ["i", rollupOptimized || "0"],
+        "Module",
+        "root()"
+      ]
+    );
   }
 }
 
 async function testFunctions(dbg) {
-  for (const target of [
-    "webpack3",
-    "webpack4",
-  ]) {
+  for (const target of ["webpack3", "webpack4"]) {
     await breakpointScopes(dbg, target, "functions", { line: 6, column: 0 }, [
       "Block",
       ["<this>", "(optimized away)"],
@@ -703,36 +804,46 @@ async function testFunctions(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
-    const { isParcel, rollupOptimized, webpackImportGetter, maybeLineStart } = targetToFlags(target);
+    const {
+      isParcel,
+      rollupOptimized,
+      webpackImportGetter,
+      maybeLineStart
+    } = targetToFlags(target);
 
-    await breakpointScopes(dbg, target, "functions", { line: 6, column: maybeLineStart(8) }, [
-      "arrow",
-      ["p3", "undefined"],
-      "Function Body",
-      "arrow()",
-      "inner",
-      ["p2", "undefined"],
-      "Function Expression",
-      "inner()",
-      "Function Body",
-      (target === "rollup" || isParcel) ? ["inner", "(optimized away)"] : "inner()",
-      "decl",
-      ["p1", "undefined"],
-      "root",
-      "decl()",
-      "Module",
-      "root()"
-    ]);
+    await breakpointScopes(
+      dbg,
+      target,
+      "functions",
+      { line: 6, column: maybeLineStart(8) },
+      [
+        "arrow",
+        ["p3", "undefined"],
+        "Function Body",
+        "arrow()",
+        "inner",
+        ["p2", "undefined"],
+        "Function Expression",
+        "inner()",
+        "Function Body",
+        target === "rollup" || isParcel
+          ? ["inner", "(optimized away)"]
+          : "inner()",
+        "decl",
+        ["p1", "undefined"],
+        "root",
+        "decl()",
+        "Module",
+        "root()"
+      ]
+    );
   }
 }
 
 async function testSwitches(dbg) {
-  for (const target of [
-    "webpack3",
-    "webpack4",
-  ]) {
+  for (const target of ["webpack3", "webpack4"]) {
     await breakpointScopes(dbg, target, "switches", { line: 7, column: 0 }, [
       "Block",
       ["<this>", "Window"],
@@ -770,37 +881,50 @@ async function testSwitches(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
-    const { rollupOptimized, webpackImportGetter, maybeLineStart } = targetToFlags(target);
+    const {
+      rollupOptimized,
+      webpackImportGetter,
+      maybeLineStart
+    } = targetToFlags(target);
 
-    await breakpointScopes(dbg, target, "switches", { line: 7, column: maybeLineStart(6) }, [
-      "Switch",
-      ["val", rollupOptimized || "2"],
-      "Function Body",
-      ["val", rollupOptimized || "1"],
-      "Module",
-      "root()"
-    ]);
+    await breakpointScopes(
+      dbg,
+      target,
+      "switches",
+      { line: 7, column: maybeLineStart(6) },
+      [
+        "Switch",
+        ["val", rollupOptimized || "2"],
+        "Function Body",
+        ["val", rollupOptimized || "1"],
+        "Module",
+        "root()"
+      ]
+    );
 
-    await breakpointScopes(dbg, target, "switches", { line: 10, column: maybeLineStart(6) }, [
-      "Block",
-      ["val", rollupOptimized || "3"],
-      "Switch",
-      ["val", rollupOptimized || "2"],
-      "Function Body",
-      ["val", rollupOptimized || "1"],
-      "Module",
-      "root()"
-    ]);
+    await breakpointScopes(
+      dbg,
+      target,
+      "switches",
+      { line: 10, column: maybeLineStart(6) },
+      [
+        "Block",
+        ["val", rollupOptimized || "3"],
+        "Switch",
+        ["val", rollupOptimized || "2"],
+        "Function Body",
+        ["val", rollupOptimized || "1"],
+        "Module",
+        "root()"
+      ]
+    );
   }
 }
 
 async function testTryCatches(dbg) {
-  for (const target of [
-    "webpack3",
-    "webpack4",
-  ]) {
+  for (const target of ["webpack3", "webpack4"]) {
     await breakpointScopes(dbg, target, "try-catches", { line: 8, column: 0 }, [
       "Block",
       ["<this>", "Window"],
@@ -825,41 +949,54 @@ async function testTryCatches(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
-    const { rollupOptimized, webpackImportGetter, maybeLineStart } = targetToFlags(target);
+    const {
+      rollupOptimized,
+      webpackImportGetter,
+      maybeLineStart
+    } = targetToFlags(target);
 
-    await breakpointScopes(dbg, target, "try-catches", { line: 8, column: maybeLineStart(4) }, [
-      "Block",
-      ["two", rollupOptimized || "2"],
-      "Catch",
-      ["err", '"AnError"'],
-      "Function Body",
-      ["one", rollupOptimized || "1"],
-      "Module",
-      "root()"
-    ]);
+    await breakpointScopes(
+      dbg,
+      target,
+      "try-catches",
+      { line: 8, column: maybeLineStart(4) },
+      [
+        "Block",
+        ["two", rollupOptimized || "2"],
+        "Catch",
+        ["err", '"AnError"'],
+        "Function Body",
+        ["one", rollupOptimized || "1"],
+        "Module",
+        "root()"
+      ]
+    );
   }
 }
 
 async function testLexAndNonlex(dbg) {
-  for (const target of [
-    "webpack3",
-    "webpack4",
-  ]) {
-    await breakpointScopes(dbg, target, "lex-and-nonlex", { line: 3, column: 0 }, [
-      "Block",
-      ["<this>", "undefined"],
-      ["arguments", "Arguments"],
-      "Block",
-      "Thing()",
-      "Block",
-      ["arguments", "(unavailable)"],
-      ["someHelper", "(optimized away)"],
-      ...webpackModule(target, "lex-and-nonlex", true /* optimizedOut */),
-      ["module", "(optimized away)"],
-      "root()"
-    ]);
+  for (const target of ["webpack3", "webpack4"]) {
+    await breakpointScopes(
+      dbg,
+      target,
+      "lex-and-nonlex",
+      { line: 3, column: 0 },
+      [
+        "Block",
+        ["<this>", "undefined"],
+        ["arguments", "Arguments"],
+        "Block",
+        "Thing()",
+        "Block",
+        ["arguments", "(unavailable)"],
+        ["someHelper", "(optimized away)"],
+        ...webpackModule(target, "lex-and-nonlex", true /* optimizedOut */),
+        ["module", "(optimized away)"],
+        "root()"
+      ]
+    );
   }
 
   for (const target of [
@@ -870,58 +1007,73 @@ async function testLexAndNonlex(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
-    const { isParcel, rollupOptimized, webpackImportGetter, maybeLineStart } = targetToFlags(target);
+    const {
+      isParcel,
+      rollupOptimized,
+      webpackImportGetter,
+      maybeLineStart
+    } = targetToFlags(target);
 
-    await breakpointScopes(dbg, target, "lex-and-nonlex", { line: 3, column: maybeLineStart(4) }, [
-      "Function Body",
-      "Thing()",
-      "root",
-      (target === "rollup" || isParcel) ? ["someHelper", "(optimized away)"] : "someHelper()",
-      "Module",
-      "root()"
-    ]);
+    await breakpointScopes(
+      dbg,
+      target,
+      "lex-and-nonlex",
+      { line: 3, column: maybeLineStart(4) },
+      [
+        "Function Body",
+        "Thing()",
+        "root",
+        target === "rollup" || isParcel
+          ? ["someHelper", "(optimized away)"]
+          : "someHelper()",
+        "Module",
+        "root()"
+      ]
+    );
   }
 }
 
 async function testTypescriptClasses(dbg) {
   // Typescript is not available on the Babel builds.
-  for (const target of [
-    "parcel",
-    "webpack3",
-    "webpack4",
-    "rollup",
-  ]) {
+  for (const target of ["parcel", "webpack3", "webpack4", "rollup"]) {
     const { isRollup, isParcel, rollupOptimized } = targetToFlags(target);
 
-    await breakpointScopes(dbg, target, "typescript-classes", { line: 50, column: 2 }, [
-      "Module",
-      "AnotherThing()",
-      "AppComponent()",
-      "decoratorFactory()",
-      rollupOptimized ? ["def", rollupOptimized] : "def()",
-      rollupOptimized ? ["ExportedOther", rollupOptimized] : "ExportedOther()",
-      rollupOptimized ? ["ExpressionClass", rollupOptimized] : "ExpressionClass:Foo()",
-      "fn()",
-      // Rollup optimizes out the 'ns' reference here, but when it does, it leave a mapping
-      // pointed at a location that is super weird, so it ends up being unmapped instead
-      // be "(optimized out)".
-      // Parcel converts the "ns;" mapping into a single full-line mapping, for some reason.
-      // That may have to do with https://github.com/parcel-bundler/parcel/pull/1755#discussion_r205584159
-      // though it's not 100% clear.
-      ["ns", (isRollup || isParcel) ? "(unmapped)" : "{\u2026}"],
-      "SubDecl()",
-      "SubVar:SubExpr()"
-    ]);
+    await breakpointScopes(
+      dbg,
+      target,
+      "typescript-classes",
+      { line: 50, column: 2 },
+      [
+        "Module",
+        "AnotherThing()",
+        "AppComponent()",
+        "decoratorFactory()",
+        rollupOptimized ? ["def", rollupOptimized] : "def()",
+        rollupOptimized
+          ? ["ExportedOther", rollupOptimized]
+          : "ExportedOther()",
+        rollupOptimized
+          ? ["ExpressionClass", rollupOptimized]
+          : "ExpressionClass:Foo()",
+        "fn()",
+        // Rollup optimizes out the 'ns' reference here, but when it does, it leave a mapping
+        // pointed at a location that is super weird, so it ends up being unmapped instead
+        // be "(optimized out)".
+        // Parcel converts the "ns;" mapping into a single full-line mapping, for some reason.
+        // That may have to do with https://github.com/parcel-bundler/parcel/pull/1755#discussion_r205584159
+        // though it's not 100% clear.
+        ["ns", isRollup || isParcel ? "(unmapped)" : "{\u2026}"],
+        "SubDecl()",
+        "SubVar:SubExpr()"
+      ]
+    );
   }
 }
 
 async function testTypeModule(dbg) {
-  for (const target of [
-    "webpack3",
-    "webpack4",
-  ]) {
+  for (const target of ["webpack3", "webpack4"]) {
     await breakpointScopes(dbg, target, "type-module", { line: 7, column: 0 }, [
       "Block",
       ["<this>", "Window"],
@@ -943,39 +1095,52 @@ async function testTypeModule(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
-    const { rollupOptimized, webpackImportGetter, maybeLineStart } = targetToFlags(target);
+    const {
+      rollupOptimized,
+      webpackImportGetter,
+      maybeLineStart
+    } = targetToFlags(target);
 
-    await breakpointScopes(dbg, target, "type-module", { line: 7, column: maybeLineStart(2) }, [
-      "Module",
-      ["alsoModuleScoped", "2"],
-      ["moduleScoped", "1"],
-      "thirdModuleScoped()"
-    ]);
+    await breakpointScopes(
+      dbg,
+      target,
+      "type-module",
+      { line: 7, column: maybeLineStart(2) },
+      [
+        "Module",
+        ["alsoModuleScoped", "2"],
+        ["moduleScoped", "1"],
+        "thirdModuleScoped()"
+      ]
+    );
   }
 }
 
 async function testTypeScriptCJS(dbg) {
-  for (const target of [
-    "webpack3",
-    "webpack4",
-  ]) {
-    await breakpointScopes(dbg, target, "type-script-cjs", { line: 7, column: 0 }, [
-      "Block",
-      ["<this>", "Window"],
-      ["arguments", "Arguments"],
-      "Block",
-      "alsoModuleScopes",
+  for (const target of ["webpack3", "webpack4"]) {
+    await breakpointScopes(
+      dbg,
+      target,
+      "type-script-cjs",
+      { line: 7, column: 0 },
+      [
+        "Block",
+        ["<this>", "Window"],
+        ["arguments", "Arguments"],
+        "Block",
+        "alsoModuleScopes",
 
-      runtimeFunctionName(target, "type-script-cjs"),
-      ["arguments", "(unavailable)"],
-      ["exports", "(optimized away)"],
-      ["module", "(optimized away)"],
-      "moduleScoped",
-      "nonModules",
-      "thirdModuleScoped",
-    ]);
+        runtimeFunctionName(target, "type-script-cjs"),
+        ["arguments", "(unavailable)"],
+        ["exports", "(optimized away)"],
+        ["module", "(optimized away)"],
+        "moduleScoped",
+        "nonModules",
+        "thirdModuleScoped"
+      ]
+    );
   }
 
   // CJS does not work on Rollup.
@@ -984,15 +1149,21 @@ async function testTypeScriptCJS(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
-    await breakpointScopes(dbg, target, "type-script-cjs", { line: 7, column: 2 }, [
-      "Module",
-      "alsoModuleScopes",
-      "moduleScoped",
-      "nonModules",
-      "thirdModuleScoped",
-    ]);
+    await breakpointScopes(
+      dbg,
+      target,
+      "type-script-cjs",
+      { line: 7, column: 2 },
+      [
+        "Module",
+        "alsoModuleScopes",
+        "moduleScoped",
+        "nonModules",
+        "thirdModuleScoped"
+      ]
+    );
   }
 }
 
@@ -1003,7 +1174,7 @@ async function testOutOfOrderDeclarationsCJS(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
     await breakpointScopes(
       dbg,
@@ -1026,7 +1197,12 @@ async function testOutOfOrderDeclarationsCJS(dbg) {
         // making us use the first, optimized-out binding. Given that imports
         // are almost never the last thing in a file though, this is probably not
         // a huge deal for now.
-        ["aDefault", target.match(/webpack(3|4)-babel7/) ? '"a-default"' : "(optimized away)"],
+        [
+          "aDefault",
+          target.match(/webpack(3|4)-babel7/)
+            ? '"a-default"'
+            : "(optimized away)"
+        ],
         ["root", "(optimized away)"],
         ["val", "(optimized away)"]
       ]
@@ -1035,10 +1211,7 @@ async function testOutOfOrderDeclarationsCJS(dbg) {
 }
 
 async function testModulesCJS(dbg) {
-  for (const target of [
-    "webpack3",
-    "webpack4",
-  ]) {
+  for (const target of ["webpack3", "webpack4"]) {
     await breakpointScopes(dbg, target, "modules-cjs", { line: 7, column: 0 }, [
       "Block",
       ["<this>", "Window"],
@@ -1060,7 +1233,7 @@ async function testModulesCJS(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
     await breakpointScopes(dbg, target, "modules-cjs", { line: 7, column: 2 }, [
       "Module",
@@ -1134,24 +1307,27 @@ async function testWebpackLineMappings(dbg) {
 }
 
 async function testWebpackFunctions(dbg) {
-  for (const target of [
-    "webpack3",
-    "webpack4",
-  ]) {
+  for (const target of ["webpack3", "webpack4"]) {
     const { defaultExport } = targetToFlags(target);
 
-    await breakpointScopes(dbg, target, "webpack-functions", { line: 4, column: 0 }, [
-      "Block",
-      ["<this>", "{\u2026}"],
-      ["arguments", "Arguments"],
-      ["x", "4"],
-      runtimeFunctionName(target, "webpack-functions"),
-      ["__webpack_exports__", "(optimized away)"],
-      ["__webpack_require__", "(optimized away)"],
-      ["arguments", "(unavailable)"],
-      ["module", "{\u2026}"],
-      defaultExport("root")
-    ]);
+    await breakpointScopes(
+      dbg,
+      target,
+      "webpack-functions",
+      { line: 4, column: 0 },
+      [
+        "Block",
+        ["<this>", "{\u2026}"],
+        ["arguments", "Arguments"],
+        ["x", "4"],
+        runtimeFunctionName(target, "webpack-functions"),
+        ["__webpack_exports__", "(optimized away)"],
+        ["__webpack_require__", "(optimized away)"],
+        ["arguments", "(unavailable)"],
+        ["module", "{\u2026}"],
+        defaultExport("root")
+      ]
+    );
   }
 }
 
@@ -1182,7 +1358,7 @@ async function testESModules(dbg) {
       "arguments",
       "example",
       "module",
-      "root()",
+      "root()"
     ]
   );
 
@@ -1212,7 +1388,7 @@ async function testESModules(dbg) {
       "arguments",
       "example()",
       "module",
-      "root()",
+      "root()"
     ]
   );
 
@@ -1222,9 +1398,13 @@ async function testESModules(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
-    const { defaultExport, webpackImportGetter, maybeLineStart } = targetToFlags(target);
+    const {
+      defaultExport,
+      webpackImportGetter,
+      maybeLineStart
+    } = targetToFlags(target);
 
     await breakpointScopes(
       dbg,
@@ -1253,43 +1433,33 @@ async function testESModules(dbg) {
     );
   }
 
-  for (const target of [
-    "rollup-babel6",
-    "rollup-babel7",
-  ]) {
+  for (const target of ["rollup-babel6", "rollup-babel7"]) {
     // This test currently bails out because Babel does not map function calls
     // fully and includes the () of the call in the range of the identifier.
     // this means that Rollup, has to map locations for calls to imports,
     // it can fail. This will be addressed in Babel eventually.
-    await breakpointScopes(
-      dbg,
-      target,
-      "esmodules",
-      { line: 20, column: 2 },
-      [
-        "root",
-        ["<this>", "Window"],
-        ["arguments", "Arguments"],
-        runtimeFunctionName(target, "esmodules"),
-        ["aDefault", '"a-default"'],
-        ["aDefault2", '"a-default2"'],
-        ["aDefault3", '"a-default3"'],
-        ["aNamed", '"a-named"'],
-        ["aNamed$1", '(optimized away)'],
-        ["aNamed2", '"a-named2"'],
-        ["aNamed3", '"a-named3"'],
-        ["aNamespace", "{\u2026}"],
-        ["arguments", "(unavailable)"],
-        ["mod4", "(optimized away)"],
-        ["original", '"an-original"'],
-        ["original$1", '"an-original2"'],
-        ["original$2", '"an-original3"'],
-        "root()"
-      ]
-    );
+    await breakpointScopes(dbg, target, "esmodules", { line: 20, column: 2 }, [
+      "root",
+      ["<this>", "Window"],
+      ["arguments", "Arguments"],
+      runtimeFunctionName(target, "esmodules"),
+      ["aDefault", '"a-default"'],
+      ["aDefault2", '"a-default2"'],
+      ["aDefault3", '"a-default3"'],
+      ["aNamed", '"a-named"'],
+      ["aNamed$1", "(optimized away)"],
+      ["aNamed2", '"a-named2"'],
+      ["aNamed3", '"a-named3"'],
+      ["aNamespace", "{\u2026}"],
+      ["arguments", "(unavailable)"],
+      ["mod4", "(optimized away)"],
+      ["original", '"an-original"'],
+      ["original$1", '"an-original2"'],
+      ["original$2", '"an-original3"'],
+      "root()"
+    ]);
   }
 }
-
 
 async function testESModulesCJS(dbg) {
   await breakpointScopes(
@@ -1318,7 +1488,7 @@ async function testESModulesCJS(dbg) {
       "arguments",
       "example",
       "module",
-      "root()",
+      "root()"
     ]
   );
 
@@ -1348,7 +1518,7 @@ async function testESModulesCJS(dbg) {
       "arguments",
       "example()",
       "module",
-      "root()",
+      "root()"
     ]
   );
 
@@ -1358,7 +1528,7 @@ async function testESModulesCJS(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
     await breakpointScopes(
       dbg,
@@ -1366,7 +1536,7 @@ async function testESModulesCJS(dbg) {
       "esmodules-cjs",
       { line: 20, column: 2 },
       [
-      "Module",
+        "Module",
         ["aDefault", '"a-default"'],
         ["aDefault2", '"a-default2"'],
         ["aDefault3", '"a-default3"'],
@@ -1415,7 +1585,7 @@ async function testESModulesES6(dbg) {
       "arguments",
       "example",
       "module",
-      "root()",
+      "root()"
     ]
   );
 
@@ -1445,7 +1615,7 @@ async function testESModulesES6(dbg) {
       "arguments",
       "example()",
       "module",
-      "root()",
+      "root()"
     ]
   );
 
@@ -1455,9 +1625,13 @@ async function testESModulesES6(dbg) {
     "webpack3-babel6",
     "webpack3-babel7",
     "webpack4-babel6",
-    "webpack4-babel7",
+    "webpack4-babel7"
   ]) {
-    const { defaultExport, webpack4ImportGetter, maybeLineStart } = targetToFlags(target);
+    const {
+      defaultExport,
+      webpack4ImportGetter,
+      maybeLineStart
+    } = targetToFlags(target);
 
     await breakpointScopes(
       dbg,
@@ -1486,10 +1660,7 @@ async function testESModulesES6(dbg) {
     );
   }
 
-  for (const target of [
-    "rollup-babel6",
-    "rollup-babel7",
-  ]) {
+  for (const target of ["rollup-babel6", "rollup-babel7"]) {
     // This test currently bails out because Babel does not map function calls
     // fully and includes the () of the call in the range of the identifier.
     // this means that Rollup, has to map locations for calls to imports,
