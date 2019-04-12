@@ -17,6 +17,7 @@ from taskgraph.transforms.job.common import (
     docker_worker_add_tooltool,
     support_vcs_checkout,
 )
+import json
 import os
 
 VARIANTS = [
@@ -149,14 +150,15 @@ def mozharness_test_on_docker(config, job, taskdesc):
     else:
         env['MOZHARNESS_URL'] = {'task-reference': mozharness_url}
 
+    extra_config = {
+        'installer_url': installer_url,
+        'test_packages_url': test_packages_url(taskdesc),
+    }
+    env['EXTRA_MOZHARNESS_CONFIG'] = {'task-reference': json.dumps(extra_config)}
+
     command.extend([
         '--',
         '{workdir}/bin/test-linux.sh'.format(**run),
-    ])
-
-    command.extend([
-        {"task-reference": "--installer-url=" + installer_url},
-        {"task-reference": "--test-packages-url=" + test_packages_url(taskdesc)},
     ])
     command.extend(mozharness.get('extra-options', []))
 
@@ -255,6 +257,12 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             'XPC_SERVICE_NAME': '0',
         })
 
+    extra_config = {
+        'installer_url': installer_url,
+        'test_packages_url': test_packages_url(taskdesc),
+    }
+    env['EXTRA_MOZHARNESS_CONFIG'] = {'task-reference': json.dumps(extra_config)}
+
     if is_windows:
         mh_command = [
             'c:\\mozilla-build\\python\\python.exe',
@@ -275,8 +283,6 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             cfg_path = normpath(cfg_path)
         mh_command.extend(['--cfg', cfg_path])
     mh_command.extend(mozharness.get('extra-options', []))
-    mh_command.extend(['--installer-url', installer_url])
-    mh_command.extend(['--test-packages-url', test_packages_url(taskdesc)])
     if mozharness.get('download-symbols'):
         if isinstance(mozharness['download-symbols'], basestring):
             mh_command.extend(['--download-symbols', mozharness['download-symbols']])
@@ -313,16 +319,9 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     }]
 
     if is_windows:
-        worker['command'] = [
-            {'task-reference': ' '.join(mh_command)}
-        ]
+        worker['command'] = [' '.join(mh_command)]
     else:  # is_macosx
-        mh_command_task_ref = []
-        for token in mh_command:
-            mh_command_task_ref.append({'task-reference': token})
-        worker['command'] = [
-            mh_command_task_ref
-        ]
+        worker['command'] = [mh_command]
 
 
 @run_job_using('script-engine-autophone', 'mozharness-test', schema=mozharness_test_run_schema)
@@ -384,16 +383,18 @@ def mozharness_test_on_script_engine_autophone(config, job, taskdesc):
     if is_talos:
         env['NEED_XVFB'] = 'false'
 
+    extra_config = {
+        'installer_url': installer_url,
+        'test_packages_url': test_packages_url(taskdesc),
+    }
+    env['EXTRA_MOZHARNESS_CONFIG'] = {'task-reference': json.dumps(extra_config)}
+
     script = 'test-linux.sh'
     worker['context'] = '{}/raw-file/{}/taskcluster/scripts/tester/{}'.format(
         config.params['head_repository'], config.params['head_rev'], script
     )
 
     command = worker['command'] = ["./{}".format(script)]
-    command.extend([
-        {"task-reference": "--installer-url=" + installer_url},
-        {"task-reference": "--test-packages-url=" + test_packages_url(taskdesc)},
-    ])
     if mozharness.get('include-blob-upload-branch'):
         command.append('--blob-upload-branch=' + config.params['project'])
     command.extend(mozharness.get('extra-options', []))
