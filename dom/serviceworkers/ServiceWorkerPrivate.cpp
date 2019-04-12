@@ -1729,10 +1729,8 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   }
   info.mLoadingPrincipal = info.mPrincipal;
 
-  nsContentUtils::StorageAccess access =
+  info.mStorageAccess =
       nsContentUtils::StorageAllowedForServiceWorker(info.mPrincipal);
-  info.mStorageAllowed =
-      access > nsContentUtils::StorageAccess::ePrivateBrowsing;
 
   info.mCookieSettings = mozilla::net::CookieSettings::Create();
   MOZ_ASSERT(info.mCookieSettings);
