@@ -330,6 +330,7 @@ nsresult TCPSocketParent::GetPort(uint16_t* aPort) {
 
 void TCPSocketParent::ActorDestroy(ActorDestroyReason why) {
   if (mSocket) {
+    mSocket->SetSocketBridgeParent(nullptr);
     mSocket->Close();
   }
   mSocket = nullptr;
