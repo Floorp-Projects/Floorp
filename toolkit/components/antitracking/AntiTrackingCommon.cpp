@@ -896,7 +896,8 @@ AntiTrackingCommon::AddFirstPartyStorageAccessGrantedFor(
     nsIChannel* channel =
         pwin->GetCurrentInnerWindow()->GetExtantDoc()->GetChannel();
 
-    pwin->NotifyContentBlockingEvent(blockReason, channel, false, trackingURI);
+    pwin->NotifyContentBlockingEvent(blockReason, channel, false, trackingURI,
+                                     Some(aReason));
 
     ReportUnblockingToConsole(parentWindow,
                               NS_ConvertUTF8toUTF16(trackingOrigin),

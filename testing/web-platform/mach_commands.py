@@ -196,7 +196,6 @@ class WebPlatformTestsUpdater(MozbuildObject):
 #            pdb.post_mortem()
 
 
-
 def create_parser_update():
     from update import updatecommandline
     return updatecommandline.create_parser()
@@ -231,6 +230,13 @@ def create_parser_manifest_update():
 def create_parser_metadata_summary():
     import metasummary
     return metasummary.create_parser()
+
+
+def create_parser_serve():
+    sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                                    "tests", "tools")))
+    import serve
+    return serve.serve.get_parser()
 
 
 @CommandProvider
@@ -303,7 +309,21 @@ class MachCommands(MachCommandBase):
         wpt_setup = self._spawn(WebPlatformTestsRunnerSetup)
         wpt_runner = WebPlatformTestsRunner(wpt_setup)
         logger = wpt_runner.setup_logging(**params)
+        logger.warning("The wpt manifest is now automatically updated, "
+                       "so running this command is usually unnecessary")
         return 0 if wpt_runner.update_manifest(logger, **params) else 1
+
+    @Command("wpt-serve",
+             category="testing",
+             description="Run the wpt server",
+             parser=create_parser_serve)
+    def wpt_manifest_serve(self, **params):
+        self.setup()
+        import logging
+        logger = logging.getLogger("web-platform-tests")
+        logger.addHandler(logging.StreamHandler(sys.stdout))
+        import serve
+        return 0 if serve.serve.run(**params) else 1
 
     @Command("wpt-metadata-summary",
              category="testing",

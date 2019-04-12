@@ -1,3 +1,5 @@
+/* import-globals-from antitracking_head.js */
+
 AntiTracking.runTest("localStorage and Storage Access API",
   async _ => {
     /* import-globals-from storageAccessAPIHelpers.js */

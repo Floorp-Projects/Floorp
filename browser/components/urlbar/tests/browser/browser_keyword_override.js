@@ -57,6 +57,4 @@
   }
 
   EventUtils.synthesizeKey("VK_SHIFT", { type: "keyup" });
-
-  await UrlbarTestUtils.promisePopupClose(window);
 });

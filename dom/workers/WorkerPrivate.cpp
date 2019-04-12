@@ -1932,13 +1932,15 @@ void WorkerPrivate::SetBaseURI(nsIURI* aBaseURI) {
   nsContentUtils::GetUTFOrigin(aBaseURI, mLocationInfo.mOrigin);
 }
 
-nsresult WorkerPrivate::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
-                                                 nsILoadGroup* aLoadGroup) {
-  return mLoadInfo.SetPrincipalOnMainThread(aPrincipal, aLoadGroup);
+nsresult WorkerPrivate::SetPrincipalsOnMainThread(
+    nsIPrincipal* aPrincipal, nsIPrincipal* aStoragePrincipal,
+    nsILoadGroup* aLoadGroup) {
+  return mLoadInfo.SetPrincipalsOnMainThread(aPrincipal, aStoragePrincipal,
+                                             aLoadGroup);
 }
 
-nsresult WorkerPrivate::SetPrincipalFromChannel(nsIChannel* aChannel) {
-  return mLoadInfo.SetPrincipalFromChannel(aChannel);
+nsresult WorkerPrivate::SetPrincipalsFromChannel(nsIChannel* aChannel) {
+  return mLoadInfo.SetPrincipalsFromChannel(aChannel);
 }
 
 bool WorkerPrivate::FinalChannelPrincipalIsValid(nsIChannel* aChannel) {
@@ -2355,7 +2357,7 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     loadInfo.mDomain = aParent->Domain();
     loadInfo.mFromWindow = aParent->IsFromWindow();
     loadInfo.mWindowID = aParent->WindowID();
-    loadInfo.mStorageAllowed = aParent->IsStorageAllowed();
+    loadInfo.mStorageAccess = aParent->StorageAccess();
     loadInfo.mOriginAttributes = aParent->GetOriginAttributes();
     loadInfo.mServiceWorkersTestingInWindow =
         aParent->ServiceWorkersTestingInWindow();
@@ -2482,9 +2484,8 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
 
       loadInfo.mFromWindow = true;
       loadInfo.mWindowID = globalWindow->WindowID();
-      nsContentUtils::StorageAccess access =
+      loadInfo.mStorageAccess =
           nsContentUtils::StorageAllowedForWindow(globalWindow);
-      loadInfo.mStorageAllowed = access > nsContentUtils::StorageAccess::eDeny;
       loadInfo.mCookieSettings = document->CookieSettings();
       loadInfo.mOriginAttributes =
           nsContentUtils::GetOriginAttributes(document);
@@ -2530,7 +2531,7 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
       loadInfo.mXHRParamsAllowed = true;
       loadInfo.mFromWindow = false;
       loadInfo.mWindowID = UINT64_MAX;
-      loadInfo.mStorageAllowed = true;
+      loadInfo.mStorageAccess = nsContentUtils::StorageAccess::eAllow;
       loadInfo.mCookieSettings = mozilla::net::CookieSettings::Create();
       MOZ_ASSERT(loadInfo.mCookieSettings);
 
@@ -2563,7 +2564,7 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
                                getter_AddRefs(loadInfo.mResolvedScriptURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = loadInfo.SetPrincipalFromChannel(loadInfo.mChannel);
+    rv = loadInfo.SetPrincipalsFromChannel(loadInfo.mChannel);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -3358,6 +3359,11 @@ void WorkerPrivate::PropagateFirstPartyStorageAccessGrantedInternal() {
   MOZ_ACCESS_THREAD_BOUND(mWorkerThreadAccessible, data);
 
   mLoadInfo.mFirstPartyStorageAccessGranted = true;
+
+  WorkerGlobalScope* globalScope = GlobalScope();
+  if (globalScope) {
+    globalScope->FirstPartyStorageAccessGranted();
+  }
 
   for (uint32_t index = 0; index < data->mChildWorkers.Length(); index++) {
     data->mChildWorkers[index]->PropagateFirstPartyStorageAccessGranted();

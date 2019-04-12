@@ -326,7 +326,9 @@ MethodStatus BaselineCompiler::compile() {
 
 #ifdef JS_TRACE_LOGGING
   // Initialize the tracelogger instrumentation.
-  baselineScript->initTraceLogger(script, traceLoggerToggleOffsets_);
+  if (JS::TraceLoggerSupported()) {
+    baselineScript->initTraceLogger(script, traceLoggerToggleOffsets_);
+  }
 #endif
 
   // Compute yield/await native resume addresses.
@@ -406,6 +408,14 @@ static void LoadUint24Operand(MacroAssembler& masm, Register pc, size_t offset,
   // Load the opcode and operand, then left shift to discard the opcode.
   masm.load32(Address(pc, offset), dest);
   masm.rshift32(Imm32(8), dest);
+}
+
+static void LoadInlineValueOperand(MacroAssembler& masm, Register pc,
+                                   ValueOperand dest) {
+  // Note: the Value might be unaligned but as above we rely on all our
+  // platforms having appropriate support for unaligned accesses (except for
+  // floating point instructions on ARM).
+  masm.loadValue(Address(pc, sizeof(jsbytecode)), dest);
 }
 
 template <>
@@ -2171,7 +2181,9 @@ bool BaselineCompilerCodeGen::emit_JSOP_DOUBLE() {
 
 template <>
 bool BaselineInterpreterCodeGen::emit_JSOP_DOUBLE() {
-  MOZ_CRASH("NYI: interpreter JSOP_DOUBLE");
+  LoadInlineValueOperand(masm, PCRegAtStart, R0);
+  frame.push(R0);
+  return true;
 }
 
 template <>
@@ -5442,7 +5454,11 @@ bool BaselineCodeGen<Handler>::emit_JSOP_AWAIT() {
 }
 
 template <typename Handler>
-bool BaselineCodeGen<Handler>::emit_JSOP_DEBUGAFTERYIELD() {
+bool BaselineCodeGen<Handler>::emit_JSOP_AFTERYIELD() {
+  if (!emit_JSOP_JUMPTARGET()) {
+    return false;
+  }
+
   auto ifDebuggee = [this]() {
     frame.assertSyncedStack();
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
@@ -5519,7 +5535,7 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
                  ImmPtr(BASELINE_DISABLED_SCRIPT), &interpret);
 
 #ifdef JS_TRACE_LOGGING
-  if (!emitTraceLoggerResume(scratch1, regs)) {
+  if (JS::TraceLoggerSupported() && !emitTraceLoggerResume(scratch1, regs)) {
     return false;
   }
 #endif
@@ -6101,7 +6117,7 @@ bool BaselineCodeGen<Handler>::emitPrologue() {
   }
 
 #ifdef JS_TRACE_LOGGING
-  if (!emitTraceLoggerEnter()) {
+  if (JS::TraceLoggerSupported() && !emitTraceLoggerEnter()) {
     return false;
   }
 #endif
@@ -6156,7 +6172,7 @@ bool BaselineCodeGen<Handler>::emitEpilogue() {
   masm.bind(&return_);
 
 #ifdef JS_TRACE_LOGGING
-  if (!emitTraceLoggerExit()) {
+  if (JS::TraceLoggerSupported() && !emitTraceLoggerExit()) {
     return false;
   }
 #endif

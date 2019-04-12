@@ -2245,15 +2245,17 @@
      */ \
     MACRO(JSOP_FORCEINTERPRETER, 207, "forceinterpreter", NULL, 1, 0, 0, JOF_BYTE) \
     /*
-     * Bytecode emitted after 'yield' expressions to help the Debugger fix up
-     * the frame in the JITs. No-op in the interpreter.
+     * Bytecode emitted after 'yield' expressions. This is useful for the
+     * Debugger and AbstractGeneratorObject::isAfterYieldOrAwait. It's treated
+     * as jump target op so that the Baseline Interpreter can efficiently
+     * restore the frame's interpreterICEntry when resuming a generator.
      *
-     *   Category: Operators
-     *   Type: Debugger
-     *   Operands:
+     *   Category: Statements
+     *   Type: Generator
+     *   Operands: uint32_t icIndex
      *   Stack: =>
      */ \
-    MACRO(JSOP_DEBUGAFTERYIELD, 208, "debugafteryield", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(JSOP_AFTERYIELD, 208, "afteryield", NULL, 5, 0, 0, JOF_ICINDEX) \
     /*
      * Pops the generator and the return value 'promise', stops interpretation
      * and returns 'promise'. Pushes resolved value onto the stack.

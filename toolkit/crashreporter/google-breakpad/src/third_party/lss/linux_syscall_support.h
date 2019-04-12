@@ -1964,7 +1964,7 @@ struct kernel_statfs {
         __asm__ volatile(LSS_ENTRYPOINT                                       \
                          : "=a" (__res)                                       \
                          : "0" (__NR_##name)                                  \
-                         : "memory");                                         \
+                         : "esp", "memory");                                  \
         LSS_RETURN(type,__res);                                               \
       }
     #undef  _syscall1
@@ -2405,7 +2405,7 @@ struct kernel_statfs {
                                "d"(LSS_SYSCALL_ARG(parent_tidptr)),
                                "r"(LSS_SYSCALL_ARG(newtls)),
                                "r"(LSS_SYSCALL_ARG(child_tidptr))
-                             : "memory", "r8", "r10", "r11", "rcx");
+                             : "rsp", "memory", "r8", "r10", "r11", "rcx");
       }
       LSS_RETURN(int, __res);
     }

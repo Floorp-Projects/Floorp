@@ -28,24 +28,29 @@
 
 using namespace js;
 
-TraceLoggerThreadState* traceLoggerState = nullptr;
+static TraceLoggerThreadState* traceLoggerState = nullptr;
 
-static bool EnsureTraceLoggerState() {
-  if (MOZ_LIKELY(traceLoggerState)) {
+static bool getTraceLoggerSupported() {
+  char* str = getenv("JS_TRACE_LOGGING");
+
+  if (!str) {
+    // Default to unsupported.
+    return false;
+  }
+
+  if (strcmp(str, "false") == 0 || strcmp(str, "no") == 0 ||
+      strcmp(str, "0") == 0) {
+    return false;
+  }
+
+  if (strcmp(str, "true") == 0 || strcmp(str, "yes") == 0 ||
+      strcmp(str, "1") == 0) {
     return true;
   }
 
-  traceLoggerState = js_new<TraceLoggerThreadState>();
-  if (!traceLoggerState) {
-    return false;
-  }
-
-  if (!traceLoggerState->init()) {
-    DestroyTraceLoggerThreadState();
-    return false;
-  }
-
-  return true;
+  fprintf(stderr, "Warning: I didn't understand JS_TRACE_LOGGING=\"%s\"\n",
+          str);
+  return false;
 }
 
 size_t js::SizeOfTraceLogState(mozilla::MallocSizeOf mallocSizeOf) {
@@ -75,9 +80,7 @@ bool js::CurrentThreadOwnsTraceLoggerThreadStateLock() {
 #endif
 
 void js::DestroyTraceLogger(TraceLoggerThread* logger) {
-  if (!EnsureTraceLoggerState()) {
-    return;
-  }
+  MOZ_ASSERT(traceLoggerState);
   traceLoggerState->destroyLogger(logger);
 }
 
@@ -1280,7 +1283,7 @@ void TraceLoggerThreadState::disableTextId(JSContext* cx, uint32_t textId) {
 }
 
 TraceLoggerThread* js::TraceLoggerForCurrentThread(JSContext* maybecx) {
-  if (!EnsureTraceLoggerState()) {
+  if (!traceLoggerState) {
     return nullptr;
   }
   return traceLoggerState->forCurrentThread(maybecx);
@@ -1337,20 +1340,20 @@ void TraceLoggerThreadState::destroyLogger(TraceLoggerThread* logger) {
 }
 
 bool js::TraceLogTextIdEnabled(uint32_t textId) {
-  if (!EnsureTraceLoggerState()) {
+  if (!traceLoggerState) {
     return false;
   }
   return traceLoggerState->isTextIdEnabled(textId);
 }
 
 void js::TraceLogEnableTextId(JSContext* cx, uint32_t textId) {
-  if (!EnsureTraceLoggerState()) {
+  if (!traceLoggerState) {
     return;
   }
   traceLoggerState->enableTextId(cx, textId);
 }
 void js::TraceLogDisableTextId(JSContext* cx, uint32_t textId) {
-  if (!EnsureTraceLoggerState()) {
+  if (!traceLoggerState) {
     return;
   }
   traceLoggerState->disableTextId(cx, textId);
@@ -1422,10 +1425,32 @@ TraceLoggerEvent::TraceLoggerEvent(const TraceLoggerEvent& other)
   }
 }
 
+JS_PUBLIC_API bool JS::InitTraceLogger() {
+  MOZ_RELEASE_ASSERT(!traceLoggerState);
+
+  if (!getTraceLoggerSupported()) {
+    return true;
+  }
+
+  traceLoggerState = js_new<TraceLoggerThreadState>();
+  if (!traceLoggerState) {
+    return false;
+  }
+
+  if (!traceLoggerState->init()) {
+    DestroyTraceLoggerThreadState();
+    return false;
+  }
+
+  return true;
+}
+
+JS_PUBLIC_API bool JS::TraceLoggerSupported() { return traceLoggerState; }
+
 JS_PUBLIC_API void JS::ResetTraceLogger(void) { js::ResetTraceLogger(); }
 
 JS_PUBLIC_API void JS::StartTraceLogger(JSContext* cx) {
-  if (!EnsureTraceLoggerState()) {
+  if (!traceLoggerState) {
     return;
   }
 

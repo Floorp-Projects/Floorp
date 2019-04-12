@@ -93,6 +93,24 @@ def is_lzma_compressed_mar(mar):
     return result
 
 
+def validate_mar_channel_id(mar, channel_ids):
+    log.info("Checking %s for MAR_CHANNEL_ID %s", mar, channel_ids)
+    # We may get a string with a list representation, or a single entry string.
+    channel_ids = set(channel_ids.split(','))
+
+    product_info = MarReader(open(mar, 'rb')).productinfo
+    if not isinstance(product_info, tuple):
+        raise ValueError("Malformed product information in mar: {}".format(product_info))
+
+    found_channel_ids = set(product_info[1].split(','))
+
+    if not found_channel_ids.issubset(channel_ids):
+        raise ValueError("MAR_CHANNEL_ID mismatch, {} not in {}".format(
+            product_info[1], channel_ids))
+
+    log.info("%s channel %s in %s", mar, product_info[1], channel_ids)
+
+
 @redo.retriable()
 def get_secret(secret_name):
     secrets_url = "http://taskcluster/secrets/v1/secret/{}"
@@ -230,6 +248,7 @@ async def generate_partial(work_env, from_dir, to_dir, dest_mar, mar_data,
     cmd = " ".join([make_incremental_update, dest_mar, from_dir, to_dir])
 
     await run_command(cmd, cwd=work_env.workdir, env=env, label=dest_mar.split('/')[-1])
+    validate_mar_channel_id(dest_mar, mar_data["ACCEPTED_MAR_CHANNEL_IDS"])
 
 
 def get_hash(path, hash_type="sha512"):
@@ -310,7 +329,7 @@ async def manage_partial(partial_def, filename_template, artifacts_dir,
 
     complete_mars = {}
     use_old_format = False
-
+    check_channels_in_files = list()
     for mar_type, f in (("from", partial_def["from_mar"]), ("to", partial_def["to_mar"])):
         dest = os.path.join(work_env.workdir, "{}.mar".format(mar_type))
         unpack_dir = os.path.join(work_env.workdir, mar_type)
@@ -329,6 +348,8 @@ async def manage_partial(partial_def, filename_template, artifacts_dir,
 
         with ddstats.timer('mar.unpack.time'):
             await unpack(work_env, dest, unpack_dir)
+
+        check_channels_in_files.append(dest)
 
         if mar_type == 'from':
             version = get_option(unpack_dir, filename="application.ini",
@@ -370,6 +391,10 @@ async def manage_partial(partial_def, filename_template, artifacts_dir,
     # Override ACCEPTED_MAR_CHANNEL_IDS if needed
     if "ACCEPTED_MAR_CHANNEL_IDS" in os.environ:
         mar_data["ACCEPTED_MAR_CHANNEL_IDS"] = os.environ["ACCEPTED_MAR_CHANNEL_IDS"]
+
+    for filename in check_channels_in_files:
+        validate_mar_channel_id(filename, mar_data["ACCEPTED_MAR_CHANNEL_IDS"])
+
     for field in ("update_number", "previousVersion", "previousBuildNumber",
                   "toVersion", "toBuildNumber"):
         if field in partial_def:

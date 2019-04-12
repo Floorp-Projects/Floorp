@@ -4122,12 +4122,13 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       ADVANCE_AND_DISPATCH(0);
     }
 
-    CASE(JSOP_DEBUGAFTERYIELD) {
-      // No-op in the interpreter, as AbstractGeneratorObject::resume takes care
-      // of fixing up InterpreterFrames.
+    CASE(JSOP_AFTERYIELD) {
+      // AbstractGeneratorObject::resume takes care of setting the frame's
+      // debuggee flag.
       MOZ_ASSERT_IF(REGS.fp()->script()->isDebuggee(), REGS.fp()->isDebuggee());
+      COUNT_COVERAGE();
     }
-    END_CASE(JSOP_DEBUGAFTERYIELD)
+    END_CASE(JSOP_AFTERYIELD)
 
     CASE(JSOP_FINALYIELDRVAL) {
       ReservedRooted<JSObject*> gen(&rootObject0, &REGS.sp[-1].toObject());

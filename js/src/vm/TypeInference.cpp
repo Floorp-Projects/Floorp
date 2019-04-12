@@ -3475,7 +3475,7 @@ void js::TypeMonitorResult(JSContext* cx, JSScript* script, jsbytecode* pc,
     return;
   }
 
-  if (!script->hasBaselineScript()) {
+  if (!script->types()) {
     return;
   }
 

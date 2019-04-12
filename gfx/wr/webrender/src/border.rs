@@ -11,7 +11,7 @@ use display_list_flattener::DisplayListFlattener;
 use gpu_types::{BorderInstance, BorderSegment, BrushFlags};
 use prim_store::{BorderSegmentInfo, BrushSegment, NinePatchDescriptor};
 use prim_store::{EdgeAaSegmentMask, ScrollNodeAndClipChain};
-use prim_store::borders::NormalBorderPrim;
+use prim_store::borders::{NormalBorderPrim, NormalBorderData};
 use util::{lerp, RectHelpers};
 
 // Using 2048 as the maximum radius in device space before which we
@@ -872,21 +872,13 @@ pub fn create_border_segments(
 /// resolution and stretching them, so they will have the right shape, but
 /// blurrier.
 pub fn get_max_scale_for_border(
-    radii: &BorderRadius,
-    widths: &LayoutSideOffsets
+    border_data: &NormalBorderData,
 ) -> LayoutToDeviceScale {
-    let r = radii.top_left.width
-        .max(radii.top_left.height)
-        .max(radii.top_right.width)
-        .max(radii.top_right.height)
-        .max(radii.bottom_left.width)
-        .max(radii.bottom_left.height)
-        .max(radii.bottom_right.width)
-        .max(radii.bottom_right.height)
-        .max(widths.top)
-        .max(widths.bottom)
-        .max(widths.left)
-        .max(widths.right);
+    let mut r = 1.0;
+    for segment in &border_data.border_segments {
+        let size = segment.local_task_size;
+        r = size.width.max(size.height.max(r));
+    }
 
     LayoutToDeviceScale::new(MAX_BORDER_RESOLUTION as f32 / r)
 }

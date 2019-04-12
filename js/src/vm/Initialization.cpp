@@ -151,6 +151,10 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
   RETURN_IF_FAIL(js::jit::SimulatorProcess::initialize());
 #endif
 
+#ifdef JS_TRACE_LOGGING
+  RETURN_IF_FAIL(JS::InitTraceLogger());
+#endif
+
   libraryInitState = InitState::Running;
   return nullptr;
 }

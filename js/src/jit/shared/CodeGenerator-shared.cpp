@@ -133,7 +133,10 @@ bool CodeGeneratorShared::generatePrologue() {
   masm.reserveStack(frameSize());
   masm.checkStackAlignment();
 
-  emitTracelogIonStart();
+  if (JS::TraceLoggerSupported()) {
+    emitTracelogIonStart();
+  }
+
   return true;
 }
 
@@ -141,7 +144,9 @@ bool CodeGeneratorShared::generateEpilogue() {
   MOZ_ASSERT(!gen->compilingWasm());
   masm.bind(&returnLabel_);
 
-  emitTracelogIonStop();
+  if (JS::TraceLoggerSupported()) {
+    emitTracelogIonStop();
+  }
 
   masm.freeStack(frameSize());
   MOZ_ASSERT(masm.framePushed() == 0);

@@ -69,7 +69,11 @@ add_task(async function() {
   await rendered;
   ok(true, "Waterfall rerenders after its corresponding pane is shown.");
 
-  is(updatedWaterfall, 3, "WaterfallView rerendered 3 times.");
+  // The WaterfallView is rerendered on window resize. Loading the other graphs can
+  // trigger a window resize and increase the total number of rerenders.
+  // See Bug 1532993#c12.
+  ok((updatedWaterfall === 3) || (updatedWaterfall === 4),
+    "WaterfallView rerendered 3 or 4 times.");
   is(updatedCallTree, 2, "JsCallTreeView rerendered 2 times.");
   is(updatedFlameGraph, 2, "JsFlameGraphView rerendered 2 times.");
 

@@ -23,7 +23,8 @@ class HTMLLegendElement final : public nsGenericHTMLElement {
   NS_IMPL_FROMNODE_HTML_WITH_TAG(HTMLLegendElement, legend)
 
   using nsGenericHTMLElement::Focus;
-  virtual void Focus(ErrorResult& aError) override;
+  virtual void Focus(const FocusOptions& aOptions,
+                     ErrorResult& aError) override;
 
   virtual bool PerformAccesskey(bool aKeyCausesActivation,
                                 bool aIsTrustedEvent) override;

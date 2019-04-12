@@ -71,7 +71,7 @@ impl Hg {
             .output()
             .ok()
             .and_then(|r| String::from_utf8(r.stdout).ok())
-            .map(|s| s.trim_right().into())
+            .map(|s| s.trim_end().into())
     }
 }
 
@@ -99,7 +99,7 @@ impl Git {
             .output()
             .ok()
             .and_then(|r| String::from_utf8(r.stdout).ok())
-            .map(|s| s.trim_right().into())
+            .map(|s| s.trim_end().into())
     }
 
     fn to_hg_sha(&self, git_sha: String) -> Option<String> {

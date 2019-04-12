@@ -1729,10 +1729,12 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   }
   info.mLoadingPrincipal = info.mPrincipal;
 
-  nsContentUtils::StorageAccess access =
+  // StoragePrincipal for ServiceWorkers is equal to mPrincipal because, at the
+  // moment, ServiceWorkers are not exposed in partitioned contexts.
+  info.mStoragePrincipal = info.mPrincipal;
+
+  info.mStorageAccess =
       nsContentUtils::StorageAllowedForServiceWorker(info.mPrincipal);
-  info.mStorageAllowed =
-      access > nsContentUtils::StorageAccess::ePrivateBrowsing;
 
   info.mCookieSettings = mozilla::net::CookieSettings::Create();
   MOZ_ASSERT(info.mCookieSettings);
@@ -1753,7 +1755,8 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
 
   WorkerPrivate::OverrideLoadInfoLoadGroup(info, info.mPrincipal);
 
-  rv = info.SetPrincipalOnMainThread(info.mPrincipal, info.mLoadGroup);
+  rv = info.SetPrincipalsOnMainThread(info.mPrincipal, info.mStoragePrincipal,
+                                      info.mLoadGroup);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }

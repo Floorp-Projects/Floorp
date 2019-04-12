@@ -2522,7 +2522,7 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
     case JSOP_YIELD:
     case JSOP_FINALYIELDRVAL:
     case JSOP_RESUME:
-    case JSOP_DEBUGAFTERYIELD:
+    case JSOP_AFTERYIELD:
     case JSOP_AWAIT:
     case JSOP_TRYSKIPAWAIT:
     case JSOP_GENERATOR:
@@ -2564,7 +2564,8 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
 }
 
 AbortReasonOr<Ok> IonBuilder::restartLoop(const CFGBlock* cfgHeader) {
-  AutoTraceLog logCompile(traceLogger(), TraceLogger_IonBuilderRestartLoop);
+  AutoTraceLog logCompile(TraceLoggerForCurrentThread(),
+                          TraceLogger_IonBuilderRestartLoop);
 
   spew("New types at loop header, restarting loop body");
 

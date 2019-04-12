@@ -103,8 +103,27 @@ already_AddRefed<nsISpeechRecognitionService> GetSpeechRecognitionService(
   return recognitionService.forget();
 }
 
+class SpeechRecognitionShutdownBlocker : public media::ShutdownBlocker {
+ public:
+  explicit SpeechRecognitionShutdownBlocker(SpeechRecognition* aRecognition)
+      : media::ShutdownBlocker(NS_LITERAL_STRING("SpeechRecognition shutdown")),
+        mRecognition(aRecognition) {}
+
+  NS_IMETHOD BlockShutdown(nsIAsyncShutdownClient*) override {
+    MOZ_ASSERT(NS_IsMainThread());
+
+    // AbortSilently will eventually clear the blocker.
+    mRecognition->Abort();
+    return NS_OK;
+  }
+
+ private:
+  const RefPtr<SpeechRecognition> mRecognition;
+};
+
 NS_IMPL_CYCLE_COLLECTION_INHERITED(SpeechRecognition, DOMEventTargetHelper,
-                                   mTrack, mSpeechGrammarList)
+                                   mStream, mTrack, mRecognitionService,
+                                   mSpeechGrammarList)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SpeechRecognition)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
@@ -535,6 +554,11 @@ SpeechRecognition::StartRecording(RefPtr<AudioStreamTrack>& aTrack) {
   mSpeechListener = new SpeechTrackListener(this);
   mTrack->AddListener(mSpeechListener);
 
+  mShutdownBlocker = MakeAndAddRef<SpeechRecognitionShutdownBlocker>(this);
+  RefPtr<nsIAsyncShutdownClient> shutdown = media::GetShutdownBarrier();
+  shutdown->AddBlocker(mShutdownBlocker, NS_LITERAL_STRING(__FILE__), __LINE__,
+                       NS_LITERAL_STRING("SpeechRecognition shutdown"));
+
   mEndpointer.StartSession();
 
   return mSpeechDetectionTimer->Init(this, kSPEECH_DETECTION_TIMEOUT_MS,
@@ -543,9 +567,20 @@ SpeechRecognition::StartRecording(RefPtr<AudioStreamTrack>& aTrack) {
 
 NS_IMETHODIMP
 SpeechRecognition::StopRecording() {
-  // we only really need to remove the listener explicitly when testing,
-  // as our JS code still holds a reference to mTrack and only assigning
-  // it to nullptr isn't guaranteed to free the stream and the listener.
+  if (mShutdownBlocker) {
+    // Block shutdown until the speech track listener has been removed from the
+    // MSG, as it holds a reference to us, and we reference the world, which we
+    // don't want to leak.
+    mSpeechListener->mRemovedPromise->Then(
+        GetCurrentThreadSerialEventTarget(), __func__,
+        [blocker = std::move(mShutdownBlocker)] {
+          RefPtr<nsIAsyncShutdownClient> shutdown = media::GetShutdownBarrier();
+          nsresult rv = shutdown->RemoveBlocker(blocker);
+          MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+        });
+  }
+  MOZ_ASSERT(!mShutdownBlocker);
+
   mStream->UnregisterTrackListener(this);
   mTrack->RemoveListener(mSpeechListener);
   mStream = nullptr;

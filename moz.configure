@@ -320,15 +320,16 @@ option('--disable-gtest-in-build',
        when='--enable-compile-environment')
 
 # Determine whether to build the gtest xul. This happens in automation
-# on Android and Desktop platforms with the exception of Windows PGO, where
-# linking xul-gtest.dll takes too long.
+# on Android and Desktop platforms with the exception of:
+#  - Windows PGO, where linking xul-gtest.dll takes too long;
+#  - Android other than x86_64, where gtest is not required.
 @depends('MOZ_PGO', build_project, target, 'MOZ_AUTOMATION', '--disable-gtest-in-build',
          enable_tests, when='--enable-compile-environment')
 def build_gtest(pgo, build_project, target, automation, enabled, enable_tests):
     if not enable_tests or not enabled:
         return None
     if (automation and build_project in ('browser', 'mobile/android') and
-        not (pgo and target.os == 'WINNT')):
+        not ((pgo and target.os == 'WINNT') or (target.os == 'Android' and target.cpu != 'x86_64'))):
         return True
 
 set_config('LINK_GTEST_DURING_COMPILE', build_gtest)

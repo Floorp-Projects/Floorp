@@ -30,6 +30,10 @@
   --theme-toolbar-hover: var(--grey-20);
   --theme-toolbar-hover-active: var(--grey-20);
 
+  /* Buttons */
+  --theme-button-background: rgba(12, 12, 13, 0.05);
+  --theme-button-active-background: rgba(12, 12, 13, 0.1);
+
   /* Selection */
   --theme-selection-background: var(--blue-55);
   --theme-selection-background-hover: #F0F9FE;
@@ -118,6 +122,10 @@
   --theme-toolbar-background-alt: var(--grey-85);
   --theme-toolbar-hover: #252526;
   --theme-toolbar-hover-active: #252526;
+
+  /* Buttons */
+  --theme-button-background: rgba(249, 249, 250, 0.1);
+  --theme-button-active-background: rgba(249, 249, 250, 0.15);
 
   /* Selection */
   --theme-selection-background: #204E8A;
@@ -245,8 +253,6 @@
   --yellow-80: #715100;
 
   --grey-10: #f9f9fa;
-  --grey-10-a10: rgba(249, 249, 250, 0.1);
-  --grey-10-a15: rgba(249, 249, 250, 0.15);
   --grey-20: #ededf0;
   --grey-25: #e0e0e2;
   --grey-30: #d7d7db;
@@ -259,6 +265,4 @@
   --grey-80: #2a2a2e;
   --grey-85: #1b1b1d;
   --grey-90: #0c0c0d;
-  --grey-90-a05: rgba(12, 12, 13, 0.05);
-  --grey-90-a10: rgba(12, 12, 13, 0.1);
 }
