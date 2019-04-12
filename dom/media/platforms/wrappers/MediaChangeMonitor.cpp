@@ -129,6 +129,9 @@ class H264ChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
       mCurrentConfig.mDisplay.height = spsdata.display_height;
       mCurrentConfig.SetImageRect(
           gfx::IntRect(0, 0, spsdata.pic_width, spsdata.pic_height));
+      mCurrentConfig.mColorDepth = spsdata.ColorDepth();
+      mCurrentConfig.mColorSpace = spsdata.ColorSpace();
+      mCurrentConfig.mFullRange = spsdata.video_full_range_flag;
     }
     mCurrentConfig.mExtraData = aExtraData;
     mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
@@ -171,21 +174,27 @@ class VPXChangeMonitor : public MediaChangeMonitor::CodecChangeMonitor {
       return NS_ERROR_DOM_MEDIA_DECODE_ERR;
     }
 
-    if (!mInfo) {
-      mInfo = Some(info);
-      return NS_OK;
-    }
-    if (mInfo.ref().IsCompatible(info)) {
-      return NS_OK;
+    nsresult rv = NS_OK;
+    if (mInfo) {
+      if (mInfo.ref().IsCompatible(info)) {
+        return rv;
+      }
+      mCurrentConfig.mImage = info.mImage;
+      mCurrentConfig.mDisplay = info.mDisplay;
+      mCurrentConfig.SetImageRect(
+          gfx::IntRect(0, 0, info.mImage.width, info.mImage.height));
+      rv = NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
     }
     mInfo = Some(info);
-    mCurrentConfig.mImage = info.mImage;
-    mCurrentConfig.mDisplay = info.mDisplay;
-    mCurrentConfig.SetImageRect(
-        gfx::IntRect(0, 0, info.mImage.width, info.mImage.height));
+    // For the first frame, we leave the mDisplay/mImage untouched as they
+    // contain aspect ratio (AR) information set by the demuxer.
+    // The AR data isn't found in the VP8/VP9 bytestream.
+    mCurrentConfig.mColorDepth = gfx::ColorDepthForBitDepth(info.mBitDepth);
+    mCurrentConfig.mColorSpace = info.ColorSpace();
+    mCurrentConfig.mFullRange = info.mFullRange;
     mTrackInfo = new TrackInfoSharedPtr(mCurrentConfig, mStreamID++);
 
-    return NS_ERROR_DOM_MEDIA_NEED_NEW_DECODER;
+    return rv;
   }
 
   const TrackInfo& Config() const override { return mCurrentConfig; }

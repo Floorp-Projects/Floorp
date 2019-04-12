@@ -81,14 +81,14 @@ class FilterNodeConvolveD2D1 : public FilterNodeD2D1 {
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeConvolveD2D1, override)
   explicit FilterNodeConvolveD2D1(ID2D1DeviceContext *aDC);
 
-  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) override;
+  void SetInput(uint32_t aIndex, FilterNode *aFilter) override;
 
-  virtual void SetAttribute(uint32_t aIndex, uint32_t aValue) override;
-  virtual void SetAttribute(uint32_t aIndex, const IntSize &aValue) override;
-  virtual void SetAttribute(uint32_t aIndex, const IntPoint &aValue) override;
-  virtual void SetAttribute(uint32_t aIndex, const IntRect &aValue) override;
+  void SetAttribute(uint32_t aIndex, uint32_t aValue) override;
+  void SetAttribute(uint32_t aIndex, const IntSize &aValue) override;
+  void SetAttribute(uint32_t aIndex, const IntPoint &aValue) override;
+  void SetAttribute(uint32_t aIndex, const IntRect &aValue) override;
 
-  virtual ID2D1Effect *InputEffect() override;
+  ID2D1Effect *InputEffect() override;
 
  private:
   using FilterNode::SetAttribute;
@@ -109,10 +109,10 @@ class FilterNodeConvolveD2D1 : public FilterNodeD2D1 {
 class FilterNodeOpacityD2D1 : public FilterNodeD2D1 {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNodeOpacityD2D1, override)
-  explicit FilterNodeOpacityD2D1(ID2D1Effect *aEffect, FilterType aType)
+  FilterNodeOpacityD2D1(ID2D1Effect *aEffect, FilterType aType)
       : FilterNodeD2D1(aEffect, aType) {}
 
-  virtual void SetAttribute(uint32_t aIndex, Float aValue) override;
+  void SetAttribute(uint32_t aIndex, Float aValue) override;
 };
 
 class FilterNodeExtendInputAdapterD2D1 : public FilterNodeD2D1 {
@@ -123,10 +123,8 @@ class FilterNodeExtendInputAdapterD2D1 : public FilterNodeD2D1 {
                                    FilterNodeD2D1 *aFilterNode,
                                    FilterType aType);
 
-  virtual ID2D1Effect *InputEffect() override {
-    return mExtendInputEffect.get();
-  }
-  virtual ID2D1Effect *OutputEffect() override {
+  ID2D1Effect *InputEffect() override { return mExtendInputEffect.get(); }
+  ID2D1Effect *OutputEffect() override {
     return mWrappedFilterNode->OutputEffect();
   }
 
@@ -143,10 +141,8 @@ class FilterNodePremultiplyAdapterD2D1 : public FilterNodeD2D1 {
                                    FilterNodeD2D1 *aFilterNode,
                                    FilterType aType);
 
-  virtual ID2D1Effect *InputEffect() override {
-    return mPrePremultiplyEffect.get();
-  }
-  virtual ID2D1Effect *OutputEffect() override {
+  ID2D1Effect *InputEffect() override { return mPrePremultiplyEffect.get(); }
+  ID2D1Effect *OutputEffect() override {
     return mPostUnpremultiplyEffect.get();
   }
 

@@ -21,14 +21,14 @@ class BasicCanvasLayer : public CanvasLayer, public BasicImplData {
   explicit BasicCanvasLayer(BasicLayerManager* aLayerManager)
       : CanvasLayer(aLayerManager, static_cast<BasicImplData*>(this)) {}
 
-  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override {
+  void SetVisibleRegion(const LayerIntRegion& aRegion) override {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
     CanvasLayer::SetVisibleRegion(aRegion);
   }
 
-  virtual void Paint(gfx::DrawTarget* aDT, const gfx::Point& aDeviceOffset,
-                     Layer* aMaskLayer) override;
+  void Paint(gfx::DrawTarget* aDT, const gfx::Point& aDeviceOffset,
+             Layer* aMaskLayer) override;
 
  protected:
   BasicLayerManager* BasicManager() {

@@ -30,6 +30,8 @@ describe("PlacesFeed", () => {
         deleteHistoryEntry: sandbox.spy(),
         blockURL: sandbox.spy(),
         addPocketEntry: sandbox.spy(() => Promise.resolve()),
+        deletePocketEntry: sandbox.spy(() => Promise.resolve()),
+        archivePocketEntry: sandbox.spy(() => Promise.resolve()),
       },
     });
     sandbox.stub(global.PlacesUtils.bookmarks, "TYPE_BOOKMARK").value(TYPE_BOOKMARK);
@@ -305,6 +307,52 @@ describe("PlacesFeed", () => {
       };
       await feed.saveToPocket(action.data.site, action._target.browser);
       assert.notCalled(feed.store.dispatch);
+    });
+    it("should call deleteFromPocket on DELETE_FROM_POCKET", () => {
+      sandbox.stub(feed, "deleteFromPocket");
+      feed.onAction({type: at.DELETE_FROM_POCKET, data: {pocket_id: 12345}});
+
+      assert.calledOnce(feed.deleteFromPocket);
+      assert.calledWithExactly(feed.deleteFromPocket, 12345);
+    });
+    it("should catch if deletePocketEntry throws", async () => {
+      const e = new Error("Error");
+      global.NewTabUtils.activityStreamLinks.deletePocketEntry = sandbox.stub().rejects(e);
+      await feed.deleteFromPocket(12345);
+
+      assert.calledWith(global.Cu.reportError, e);
+    });
+    it("should call NewTabUtils.deletePocketEntry and dispatch POCKET_LINK_DELETED_OR_ARCHIVED when deleting from Pocket", async () => {
+      await feed.deleteFromPocket(12345);
+
+      assert.calledOnce(global.NewTabUtils.activityStreamLinks.deletePocketEntry);
+      assert.calledWith(global.NewTabUtils.activityStreamLinks.deletePocketEntry, 12345);
+
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWith(feed.store.dispatch, {type: at.POCKET_LINK_DELETED_OR_ARCHIVED});
+    });
+    it("should call archiveFromPocket on ARCHIVE_FROM_POCKET", async () => {
+      sandbox.stub(feed, "archiveFromPocket");
+      await feed.onAction({type: at.ARCHIVE_FROM_POCKET, data: {pocket_id: 12345}});
+
+      assert.calledOnce(feed.archiveFromPocket);
+      assert.calledWithExactly(feed.archiveFromPocket, 12345);
+    });
+    it("should catch if archiveFromPocket throws", async () => {
+      const e = new Error("Error");
+      global.NewTabUtils.activityStreamLinks.archivePocketEntry = sandbox.stub().rejects(e);
+      await feed.archiveFromPocket(12345);
+
+      assert.calledWith(global.Cu.reportError, e);
+    });
+    it("should call NewTabUtils.archivePocketEntry and dispatch POCKET_LINK_DELETED_OR_ARCHIVED when archiving from Pocket", async () => {
+      await feed.archiveFromPocket(12345);
+
+      assert.calledOnce(global.NewTabUtils.activityStreamLinks.archivePocketEntry);
+      assert.calledWith(global.NewTabUtils.activityStreamLinks.archivePocketEntry, 12345);
+
+      assert.calledOnce(feed.store.dispatch);
+      assert.calledWith(feed.store.dispatch, {type: at.POCKET_LINK_DELETED_OR_ARCHIVED});
     });
     it("should call handoffSearchToAwesomebar on HANDOFF_SEARCH_TO_AWESOMEBAR", () => {
       const action = {

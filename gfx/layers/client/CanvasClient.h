@@ -58,7 +58,7 @@ class CanvasClient : public CompositableClient {
     mTextureFlags = aFlags;
   }
 
-  virtual ~CanvasClient() {}
+  virtual ~CanvasClient() = default;
 
   virtual void Clear(){};
 
@@ -66,7 +66,7 @@ class CanvasClient : public CompositableClient {
                       ShareableCanvasRenderer* aCanvasRenderer,
                       wr::RenderRoot aRenderRoot) = 0;
 
-  virtual bool AddTextureClient(TextureClient* aTexture) override {
+  bool AddTextureClient(TextureClient* aTexture) override {
     ++mFrameID;
     return CompositableClient::AddTextureClient(aTexture);
   }
@@ -93,22 +93,21 @@ class CanvasClient2D : public CanvasClient {
     return TextureInfo(CompositableType::IMAGE, mTextureFlags);
   }
 
-  virtual void Clear() override {
+  void Clear() override {
     mBackBuffer = mFrontBuffer = mBufferProviderTexture = nullptr;
   }
 
-  virtual void Update(gfx::IntSize aSize,
-                      ShareableCanvasRenderer* aCanvasRenderer,
-                      wr::RenderRoot aRenderRoot) override;
+  void Update(gfx::IntSize aSize, ShareableCanvasRenderer* aCanvasRenderer,
+              wr::RenderRoot aRenderRoot) override;
 
-  virtual void UpdateFromTexture(TextureClient* aBuffer,
-                                 wr::RenderRoot aRenderRoot) override;
+  void UpdateFromTexture(TextureClient* aBuffer,
+                         wr::RenderRoot aRenderRoot) override;
 
-  virtual bool AddTextureClient(TextureClient* aTexture) override {
+  bool AddTextureClient(TextureClient* aTexture) override {
     return CanvasClient::AddTextureClient(aTexture);
   }
 
-  virtual void OnDetach() override { mBackBuffer = mFrontBuffer = nullptr; }
+  void OnDetach() override { mBackBuffer = mFrontBuffer = nullptr; }
 
  private:
   already_AddRefed<TextureClient> CreateTextureClientForCanvas(
@@ -142,22 +141,21 @@ class CanvasClientSharedSurface : public CanvasClient {
 
   ~CanvasClientSharedSurface();
 
-  virtual TextureInfo GetTextureInfo() const override {
+  TextureInfo GetTextureInfo() const override {
     return TextureInfo(CompositableType::IMAGE);
   }
 
-  virtual void Clear() override { ClearSurfaces(); }
+  void Clear() override { ClearSurfaces(); }
 
-  virtual void Update(gfx::IntSize aSize,
-                      ShareableCanvasRenderer* aCanvasRenderer,
-                      wr::RenderRoot aRenderRoot) override;
+  void Update(gfx::IntSize aSize, ShareableCanvasRenderer* aCanvasRenderer,
+              wr::RenderRoot aRenderRoot) override;
   void UpdateRenderer(gfx::IntSize aSize, Renderer& aRenderer);
 
-  virtual void UpdateAsync(AsyncCanvasRenderer* aRenderer) override;
+  void UpdateAsync(AsyncCanvasRenderer* aRenderer) override;
 
-  virtual void Updated(wr::RenderRoot aRenderRoot) override;
+  void Updated(wr::RenderRoot aRenderRoot) override;
 
-  virtual void OnDetach() override;
+  void OnDetach() override;
 };
 
 /**
@@ -175,11 +173,10 @@ class CanvasClientBridge final : public CanvasClient {
     return TextureInfo(CompositableType::IMAGE);
   }
 
-  virtual void Update(gfx::IntSize aSize,
-                      ShareableCanvasRenderer* aCanvasRenderer,
-                      wr::RenderRoot aRenderRoot) override {}
+  void Update(gfx::IntSize aSize, ShareableCanvasRenderer* aCanvasRenderer,
+              wr::RenderRoot aRenderRoot) override {}
 
-  virtual void UpdateAsync(AsyncCanvasRenderer* aRenderer) override;
+  void UpdateAsync(AsyncCanvasRenderer* aRenderer) override;
 
   void SetLayer(ShadowableLayer* aLayer) { mLayer = aLayer; }
 

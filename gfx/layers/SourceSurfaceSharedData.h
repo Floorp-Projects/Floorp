@@ -279,7 +279,7 @@ class SourceSurfaceSharedData final : public DataSourceSurface {
  private:
   friend class SourceSurfaceSharedDataWrapper;
 
-  ~SourceSurfaceSharedData() override {}
+  virtual ~SourceSurfaceSharedData() = default;
 
   void LockHandle() {
     MutexAutoLock lock(mMutex);

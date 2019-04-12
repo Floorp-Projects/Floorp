@@ -182,8 +182,8 @@ class gfxUnknownSurface : public gfxASurface {
     Init(surf, true);
   }
 
-  virtual ~gfxUnknownSurface() {}
-  virtual const mozilla::gfx::IntSize GetSize() const override { return mSize; }
+  virtual ~gfxUnknownSurface() = default;
+  const mozilla::gfx::IntSize GetSize() const override { return mSize; }
 
  private:
   mozilla::gfx::IntSize mSize;

@@ -26,34 +26,34 @@ class ColorLayerComposite : public ColorLayer, public LayerComposite {
   }
 
  protected:
-  ~ColorLayerComposite() {
+  virtual ~ColorLayerComposite() {
     MOZ_COUNT_DTOR(ColorLayerComposite);
     Destroy();
   }
 
  public:
   // LayerComposite Implementation
-  virtual Layer* GetLayer() override { return this; }
+  Layer* GetLayer() override { return this; }
 
-  virtual void SetLayerManager(HostLayerManager* aManager) override {
+  void SetLayerManager(HostLayerManager* aManager) override {
     LayerComposite::SetLayerManager(aManager);
     mManager = aManager;
   }
 
-  virtual void Destroy() override { mDestroyed = true; }
+  void Destroy() override { mDestroyed = true; }
 
-  virtual void RenderLayer(const gfx::IntRect& aClipRect,
-                           const Maybe<gfx::Polygon>& aGeometry) override;
+  void RenderLayer(const gfx::IntRect& aClipRect,
+                   const Maybe<gfx::Polygon>& aGeometry) override;
 
-  virtual void CleanupResources() override{};
+  void CleanupResources() override{};
 
-  virtual void GenEffectChain(EffectChain& aEffect) override;
+  void GenEffectChain(EffectChain& aEffect) override;
 
   CompositableHost* GetCompositableHost() override { return nullptr; }
 
-  virtual HostLayer* AsHostLayer() override { return this; }
+  HostLayer* AsHostLayer() override { return this; }
 
-  virtual const char* Name() const override { return "ColorLayerComposite"; }
+  const char* Name() const override { return "ColorLayerComposite"; }
 };
 
 }  // namespace layers

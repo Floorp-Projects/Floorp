@@ -8,6 +8,8 @@
 
 "use strict";
 
+const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+
 function getPostDataString(aIS) {
   if (!aIS)
     return null;
@@ -100,6 +102,14 @@ var testData = [
   [{keyword: "http://gavinsharp.com"},
    new keywordResult(null, null, true)],
 ];
+
+AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
+
+add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+});
 
 add_task(async function test_getshortcutoruri() {
   await setupKeywords();

@@ -617,59 +617,12 @@ describe("Highlights Feed", () => {
       assert.calledOnce(feed.fetchHighlights);
       assert.calledWithExactly(feed.fetchHighlights, {broadcast: false});
     });
-    it("should call deleteFromPocket on DELETE_FROM_POCKET", () => {
-      sandbox.stub(feed, "deleteFromPocket");
-      feed.onAction({type: at.DELETE_FROM_POCKET, data: {pocket_id: 12345}});
-
-      assert.calledOnce(feed.deleteFromPocket);
-      assert.calledWithExactly(feed.deleteFromPocket, 12345);
-    });
-    it("should call fetchHighlights when deleting from Pocket", async () => {
+    it("should call fetchHighlights when deleting or archiving from Pocket", async () => {
       feed.fetchHighlights = sinon.spy();
-      await feed.deleteFromPocket(12345);
+      feed.onAction({type: at.POCKET_LINK_DELETED_OR_ARCHIVED, data: {pocket_id: 12345}});
 
       assert.calledOnce(feed.fetchHighlights);
       assert.calledWithExactly(feed.fetchHighlights, {broadcast: true});
-    });
-    it("should catch if deletePocketEntry throws", async () => {
-      sandbox.spy(global.Cu, "reportError");
-      fakeNewTabUtils.activityStreamLinks.deletePocketEntry = sandbox.stub().rejects("not ok");
-      await feed.deleteFromPocket(12345);
-
-      assert.calledOnce(global.Cu.reportError);
-    });
-    it("should call NewTabUtils.deletePocketEntry when deleting from Pocket", async () => {
-      await feed.deleteFromPocket(12345);
-
-      assert.calledOnce(global.NewTabUtils.activityStreamLinks.deletePocketEntry);
-      assert.calledWith(global.NewTabUtils.activityStreamLinks.deletePocketEntry, 12345);
-    });
-    it("should call archiveFromPocket on ARCHIVE_FROM_POCKET", () => {
-      sandbox.stub(feed, "archiveFromPocket");
-      feed.onAction({type: at.ARCHIVE_FROM_POCKET, data: {pocket_id: 12345}});
-
-      assert.calledOnce(feed.archiveFromPocket);
-      assert.calledWithExactly(feed.archiveFromPocket, 12345);
-    });
-    it("should call fetchHighlights when archiving from Pocket", async () => {
-      feed.fetchHighlights = sinon.spy();
-      await feed.archiveFromPocket(12345);
-
-      assert.calledOnce(feed.fetchHighlights);
-      assert.calledWithExactly(feed.fetchHighlights, {broadcast: true});
-    });
-    it("should catch if archiveFromPocket throws", async () => {
-      sandbox.spy(global.Cu, "reportError");
-      fakeNewTabUtils.activityStreamLinks.archivePocketEntry = sandbox.stub().rejects("not ok");
-      await feed.archiveFromPocket(12345);
-
-      assert.calledOnce(global.Cu.reportError);
-    });
-    it("should call NewTabUtils.archivePocketEntry when deleting from Pocket", async () => {
-      await feed.archiveFromPocket(12345);
-
-      assert.calledOnce(global.NewTabUtils.activityStreamLinks.archivePocketEntry);
-      assert.calledWith(global.NewTabUtils.activityStreamLinks.archivePocketEntry, 12345);
     });
   });
 });

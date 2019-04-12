@@ -108,7 +108,7 @@ class ISurfaceAllocator {
  protected:
   void Finalize() {}
 
-  virtual ~ISurfaceAllocator() {}
+  virtual ~ISurfaceAllocator() = default;
 };
 
 /// Methods that are specific to the client/child side.
@@ -116,7 +116,7 @@ class ClientIPCAllocator : public ISurfaceAllocator {
  public:
   ClientIPCAllocator() {}
 
-  virtual ClientIPCAllocator* AsClientAllocator() override { return this; }
+  ClientIPCAllocator* AsClientAllocator() override { return this; }
 
   virtual base::ProcessId GetParentPid() const = 0;
 
@@ -130,7 +130,7 @@ class HostIPCAllocator : public ISurfaceAllocator {
  public:
   HostIPCAllocator() {}
 
-  virtual HostIPCAllocator* AsHostIPCAllocator() override { return this; }
+  HostIPCAllocator* AsHostIPCAllocator() override { return this; }
 
   /**
    * Get child side's process Id.
@@ -280,12 +280,11 @@ class FixedSizeSmallShmemSectionAllocator final : public ShmemSectionAllocator {
 
   ~FixedSizeSmallShmemSectionAllocator();
 
-  virtual bool AllocShmemSection(uint32_t aSize,
-                                 ShmemSection* aShmemSection) override;
+  bool AllocShmemSection(uint32_t aSize, ShmemSection* aShmemSection) override;
 
-  virtual void DeallocShmemSection(ShmemSection& aShmemSection) override;
+  void DeallocShmemSection(ShmemSection& aShmemSection) override;
 
-  virtual void MemoryPressure() override { ShrinkShmemSectionHeap(); }
+  void MemoryPressure() override { ShrinkShmemSectionHeap(); }
 
   // can be called on the compositor process.
   static void FreeShmemSection(ShmemSection& aShmemSection);

@@ -712,7 +712,7 @@ class gfxMacFontFamily : public gfxFontFamily {
   explicit gfxMacFontFamily(const nsACString& aName, double aSizeHint)
       : gfxFontFamily(aName), mSizeHint(aSizeHint) {}
 
-  virtual ~gfxMacFontFamily() {}
+  virtual ~gfxMacFontFamily() = default;
 
   virtual void LocalizedName(nsACString& aLocalizedName);
 
@@ -876,7 +876,7 @@ class gfxSingleFaceMacFontFamily : public gfxFontFamily {
     mFaceNamesInitialized = true;  // omit from face name lists
   }
 
-  virtual ~gfxSingleFaceMacFontFamily() {}
+  virtual ~gfxSingleFaceMacFontFamily() = default;
 
   virtual void LocalizedName(nsACString& aLocalizedName);
 
@@ -1538,7 +1538,7 @@ class MacFontInfo : public FontInfoData {
   MacFontInfo(bool aLoadOtherNames, bool aLoadFaceNames, bool aLoadCmaps)
       : FontInfoData(aLoadOtherNames, aLoadFaceNames, aLoadCmaps) {}
 
-  virtual ~MacFontInfo() {}
+  virtual ~MacFontInfo() = default;
 
   virtual void Load() {
     nsAutoreleasePool localPool;

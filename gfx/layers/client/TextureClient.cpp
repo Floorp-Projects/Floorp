@@ -1054,7 +1054,7 @@ already_AddRefed<TextureClient> TextureClient::CreateForDrawing(
         DeviceManagerDx::Get()->GetContentDevice())) &&
       aSize.width <= aMaxTextureSize && aSize.height <= aMaxTextureSize &&
       !(aAllocFlags & ALLOC_UPDATE_FROM_SURFACE)) {
-    data = DXGITextureData::Create(aSize, aFormat, aAllocFlags);
+    data = D3D11TextureData::Create(aSize, aFormat, aAllocFlags);
   }
 
   if (aLayersBackend != LayersBackend::LAYERS_WR && !data &&
@@ -1231,7 +1231,7 @@ already_AddRefed<TextureClient> TextureClient::CreateForRawBufferAccess(
 already_AddRefed<TextureClient> TextureClient::CreateForYCbCr(
     KnowsCompositor* aAllocator, gfx::IntSize aYSize, uint32_t aYStride,
     gfx::IntSize aCbCrSize, uint32_t aCbCrStride, StereoMode aStereoMode,
-    gfx::ColorDepth aColorDepth, YUVColorSpace aYUVColorSpace,
+    gfx::ColorDepth aColorDepth, gfx::YUVColorSpace aYUVColorSpace,
     TextureFlags aTextureFlags) {
   if (!aAllocator || !aAllocator->GetLayersIPCActor()->IPCOpen()) {
     return nullptr;
@@ -1374,20 +1374,19 @@ class MemoryTextureReadLock : public NonBlockingTextureReadLock {
  public:
   MemoryTextureReadLock();
 
-  ~MemoryTextureReadLock();
+  virtual ~MemoryTextureReadLock();
 
-  virtual bool ReadLock() override;
+  bool ReadLock() override;
 
-  virtual int32_t ReadUnlock() override;
+  int32_t ReadUnlock() override;
 
-  virtual int32_t GetReadCount() override;
+  int32_t GetReadCount() override;
 
-  virtual LockType GetType() override { return TYPE_NONBLOCKING_MEMORY; }
+  LockType GetType() override { return TYPE_NONBLOCKING_MEMORY; }
 
-  virtual bool IsValid() const override { return true; };
+  bool IsValid() const override { return true; };
 
-  virtual bool Serialize(ReadLockDescriptor& aOutput,
-                         base::ProcessId aOther) override;
+  bool Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther) override;
 
   Atomic<int32_t> mReadCount;
 };
@@ -1408,20 +1407,19 @@ class ShmemTextureReadLock : public NonBlockingTextureReadLock {
 
   explicit ShmemTextureReadLock(LayersIPCChannel* aAllocator);
 
-  ~ShmemTextureReadLock();
+  virtual ~ShmemTextureReadLock();
 
-  virtual bool ReadLock() override;
+  bool ReadLock() override;
 
-  virtual int32_t ReadUnlock() override;
+  int32_t ReadUnlock() override;
 
-  virtual int32_t GetReadCount() override;
+  int32_t GetReadCount() override;
 
-  virtual bool IsValid() const override { return mAllocSuccess; };
+  bool IsValid() const override { return mAllocSuccess; };
 
-  virtual LockType GetType() override { return TYPE_NONBLOCKING_SHMEM; }
+  LockType GetType() override { return TYPE_NONBLOCKING_SHMEM; }
 
-  virtual bool Serialize(ReadLockDescriptor& aOutput,
-                         base::ProcessId aOther) override;
+  bool Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther) override;
 
   mozilla::layers::ShmemSection& GetShmemSection() { return mShmemSection; }
 
@@ -1449,31 +1447,30 @@ class CrossProcessSemaphoreReadLock : public TextureReadLock {
   explicit CrossProcessSemaphoreReadLock(CrossProcessSemaphoreHandle aHandle)
       : mSemaphore(CrossProcessSemaphore::Create(aHandle)), mShared(false) {}
 
-  virtual bool ReadLock() override {
+  bool ReadLock() override {
     if (!IsValid()) {
       return false;
     }
     return mSemaphore->Wait();
   }
-  virtual bool TryReadLock(TimeDuration aTimeout) override {
+  bool TryReadLock(TimeDuration aTimeout) override {
     if (!IsValid()) {
       return false;
     }
     return mSemaphore->Wait(Some(aTimeout));
   }
-  virtual int32_t ReadUnlock() override {
+  int32_t ReadUnlock() override {
     if (!IsValid()) {
       return 1;
     }
     mSemaphore->Signal();
     return 1;
   }
-  virtual bool IsValid() const override { return !!mSemaphore; }
+  bool IsValid() const override { return !!mSemaphore; }
 
-  virtual bool Serialize(ReadLockDescriptor& aOutput,
-                         base::ProcessId aOther) override;
+  bool Serialize(ReadLockDescriptor& aOutput, base::ProcessId aOther) override;
 
-  virtual LockType GetType() override { return TYPE_CROSS_PROCESS_SEMAPHORE; }
+  LockType GetType() override { return TYPE_CROSS_PROCESS_SEMAPHORE; }
 
   UniquePtr<CrossProcessSemaphore> mSemaphore;
   bool mShared;

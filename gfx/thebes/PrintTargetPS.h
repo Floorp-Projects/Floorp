@@ -27,10 +27,10 @@ class PrintTargetPS final : public PrintTarget {
   virtual nsresult BeginPrinting(const nsAString& aTitle,
                                  const nsAString& aPrintToFileName,
                                  int32_t aStartPage, int32_t aEndPage) override;
-  virtual nsresult EndPage() override;
-  virtual void Finish() override;
+  nsresult EndPage() override;
+  void Finish() override;
 
-  virtual bool GetRotateForLandscape() { return (mOrientation == LANDSCAPE); }
+  bool GetRotateForLandscape() { return (mOrientation == LANDSCAPE); }
 
  private:
   PrintTargetPS(cairo_surface_t* aCairoSurface, const IntSize& aSize,

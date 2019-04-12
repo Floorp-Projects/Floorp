@@ -288,7 +288,7 @@ class SurfaceFactory : public SupportsWeakPtr<SurfaceFactory> {
   bool Recycle(layers::SharedSurfaceTextureClient* texClient);
 };
 
-class ScopedReadbackFB {
+class ScopedReadbackFB final {
   GLContext* const mGL;
   ScopedBindFramebuffer mAutoFB;
   GLuint mTempFB = 0;

@@ -209,7 +209,7 @@ class GeckoContentController {
 
  protected:
   // Protected destructor, to discourage deletion outside of Release():
-  virtual ~GeckoContentController() {}
+  virtual ~GeckoContentController() = default;
 };
 
 }  // namespace layers

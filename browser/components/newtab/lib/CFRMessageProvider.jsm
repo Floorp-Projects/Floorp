@@ -86,7 +86,7 @@ const CFR_MESSAGES = [
           label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
           action: {
             type: "OPEN_PREFERENCES_PAGE",
-            data: {category: "general-cfraddons", origin: "CFR"},
+            data: {category: "general-cfraddons"},
           },
         }],
       },
@@ -138,7 +138,7 @@ const CFR_MESSAGES = [
           label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
           action: {
             type: "OPEN_PREFERENCES_PAGE",
-            data: {category: "general-cfraddons", origin: "CFR"},
+            data: {category: "general-cfraddons"},
           },
         }],
       },
@@ -190,7 +190,7 @@ const CFR_MESSAGES = [
           label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
           action: {
             type: "OPEN_PREFERENCES_PAGE",
-            data: {category: "general-cfraddons", origin: "CFR"},
+            data: {category: "general-cfraddons"},
           },
         }],
       },
@@ -243,7 +243,7 @@ const CFR_MESSAGES = [
           label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
           action: {
             type: "OPEN_PREFERENCES_PAGE",
-            data: {category: "general-cfraddons", origin: "CFR"},
+            data: {category: "general-cfraddons"},
           },
         }],
       },
@@ -296,7 +296,7 @@ const CFR_MESSAGES = [
           label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
           action: {
             type: "OPEN_PREFERENCES_PAGE",
-            data: {category: "general-cfraddons", origin: "CFR"},
+            data: {category: "general-cfraddons"},
           },
         }],
       },
@@ -345,7 +345,7 @@ const CFR_MESSAGES = [
           label: {string_id: "cfr-doorhanger-extension-manage-settings-button"},
           action: {
             type: "OPEN_PREFERENCES_PAGE",
-            data: {category: "general-cfrfeatures", origin: "CFR"},
+            data: {category: "general-cfrfeatures"},
           },
         }],
       },

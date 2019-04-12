@@ -1700,7 +1700,7 @@ struct nsGridContainerFrame::Tracks {
  * to grow a row.  mOriginalRowData is setup by the first-in-flow and
  * not modified after that.  It's used for undoing the changes to mRows.
  * mCols, mGridItems, mAbsPosItems are used for initializing the grid
- * reflow state for continuations, see GridReflowInput::Initialize below.
+ * reflow input for continuations, see GridReflowInput::Initialize below.
  */
 struct nsGridContainerFrame::SharedGridData {
   SharedGridData()
@@ -1889,7 +1889,7 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowInput {
 
   /**
    * @note mReflowInput may be null when using the 2nd ctor above. In this case
-   * we'll construct a dummy parent reflow state if we need it to calculate
+   * we'll construct a dummy parent reflow input if we need it to calculate
    * min/max-content contributions when sizing tracks.
    */
   const ReflowInput* const mReflowInput;
@@ -3369,7 +3369,7 @@ static nscoord MeasuringReflow(nsIFrame* aChild,
     dummyParentState.emplace(
         pc, parent, aRC,
         LogicalSize(parent->GetWritingMode(), 0, NS_UNCONSTRAINEDSIZE),
-        ReflowInput::DUMMY_PARENT_REFLOW_STATE);
+        ReflowInput::DUMMY_PARENT_REFLOW_INPUT);
     rs = dummyParentState.ptr();
   }
 #ifdef DEBUG
@@ -4662,7 +4662,7 @@ LogicalRect nsGridContainerFrame::GridReflowInput::ContainingBlockForAbsPos(
 
 /**
  * Return a Fragmentainer object if we have a fragmentainer frame in our
- * ancestor chain of containing block (CB) reflow states.  We'll only
+ * ancestor chain of containing block (CB) reflow inputs.  We'll only
  * continue traversing the ancestor chain as long as the CBs have
  * the same writing-mode and have overflow:visible.
  */
@@ -5205,7 +5205,7 @@ nscoord nsGridContainerFrame::ReflowRowsInFragmentainer(
       }
     }
 
-    // aFragmentainer.mIsTopOfPage is propagated to the child reflow state.
+    // aFragmentainer.mIsTopOfPage is propagated to the child reflow input.
     // When it's false the child may request InlineBreak::Before.  We set it
     // to false when the row is growable (as determined in the CSS Grid
     // Fragmentation spec) and there is a non-zero space between it and the

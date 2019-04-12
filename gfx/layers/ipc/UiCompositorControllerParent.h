@@ -71,7 +71,7 @@ class UiCompositorControllerParent final
 
  private:
   explicit UiCompositorControllerParent(const LayersId& aRootLayerTreeId);
-  ~UiCompositorControllerParent();
+  virtual ~UiCompositorControllerParent();
   void InitializeForSameProcess();
   void InitializeForOutOfProcess();
   void Initialize();

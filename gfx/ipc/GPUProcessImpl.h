@@ -21,7 +21,7 @@ namespace gfx {
 class GPUProcessImpl final : public ipc::ProcessChild {
  public:
   explicit GPUProcessImpl(ProcessId aParentPid);
-  ~GPUProcessImpl();
+  virtual ~GPUProcessImpl();
 
   bool Init(int aArgc, char* aArgv[]) override;
   void CleanUp() override;

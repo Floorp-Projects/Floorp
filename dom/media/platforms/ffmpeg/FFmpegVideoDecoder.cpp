@@ -367,17 +367,23 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImage(
   }
   if (mLib->av_frame_get_colorspace) {
     switch (mLib->av_frame_get_colorspace(mFrame)) {
+#if LIBAVCODEC_VERSION_MAJOR >= 55
+      case AVCOL_SPC_BT2020_NCL:
+      case AVCOL_SPC_BT2020_CL:
+        b.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
+        break;
+#endif
       case AVCOL_SPC_BT709:
-        b.mYUVColorSpace = YUVColorSpace::BT709;
+        b.mYUVColorSpace = gfx::YUVColorSpace::BT709;
         break;
       case AVCOL_SPC_SMPTE170M:
       case AVCOL_SPC_BT470BG:
-        b.mYUVColorSpace = YUVColorSpace::BT601;
+        b.mYUVColorSpace = gfx::YUVColorSpace::BT601;
         break;
       case AVCOL_SPC_UNSPECIFIED:
 #if LIBAVCODEC_VERSION_MAJOR >= 55
         if (mCodecContext->codec_id == AV_CODEC_ID_VP9) {
-          b.mYUVColorSpace = YUVColorSpace::BT709;
+          b.mYUVColorSpace = gfx::YUVColorSpace::BT709;
         }
 #endif
         break;

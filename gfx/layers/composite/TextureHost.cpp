@@ -75,10 +75,10 @@ namespace layers {
  */
 class TextureParent : public ParentActor<PTextureParent> {
  public:
-  explicit TextureParent(HostIPCAllocator* aAllocator, uint64_t aSerial,
-                         const wr::MaybeExternalImageId& aExternalImageId);
+  TextureParent(HostIPCAllocator* aAllocator, uint64_t aSerial,
+                const wr::MaybeExternalImageId& aExternalImageId);
 
-  ~TextureParent();
+  virtual ~TextureParent();
 
   bool Init(const SurfaceDescriptor& aSharedData,
             const ReadLockDescriptor& aReadLock,
@@ -86,12 +86,12 @@ class TextureParent : public ParentActor<PTextureParent> {
 
   void NotifyNotUsed(uint64_t aTransactionId);
 
-  virtual mozilla::ipc::IPCResult RecvRecycleTexture(
+  mozilla::ipc::IPCResult RecvRecycleTexture(
       const TextureFlags& aTextureFlags) final;
 
   TextureHost* GetTextureHost() { return mTextureHost; }
 
-  virtual void Destroy() override;
+  void Destroy() override;
 
   uint64_t GetSerial() const { return mSerial; }
 
@@ -450,12 +450,6 @@ void TextureHost::Updated(const nsIntRegion* aRegion) {
 TextureSource::TextureSource() : mCompositableCount(0) {}
 
 TextureSource::~TextureSource() {}
-
-const char* TextureSource::Name() const {
-  MOZ_CRASH("GFX: TextureSource without class name");
-  return "TextureSource";
-}
-
 BufferTextureHost::BufferTextureHost(const BufferDescriptor& aDesc,
                                      TextureFlags aFlags)
     : TextureHost(aFlags),
@@ -867,12 +861,12 @@ gfx::SurfaceFormat BufferTextureHost::GetFormat() const {
   return mFormat;
 }
 
-YUVColorSpace BufferTextureHost::GetYUVColorSpace() const {
+gfx::YUVColorSpace BufferTextureHost::GetYUVColorSpace() const {
   if (mFormat == gfx::SurfaceFormat::YUV) {
     const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
     return desc.yUVColorSpace();
   }
-  return YUVColorSpace::UNKNOWN;
+  return gfx::YUVColorSpace::UNKNOWN;
 }
 
 gfx::ColorDepth BufferTextureHost::GetColorDepth() const {

@@ -46,7 +46,7 @@ class LayerTransactionChild : public PLayerTransactionChild {
  protected:
   explicit LayerTransactionChild(const LayersId& aId)
       : mForwarder(nullptr), mIPCOpen(false), mDestroyed(false), mId(aId) {}
-  ~LayerTransactionChild() {}
+  virtual ~LayerTransactionChild() = default;
 
   void ActorDestroy(ActorDestroyReason why) override;
 

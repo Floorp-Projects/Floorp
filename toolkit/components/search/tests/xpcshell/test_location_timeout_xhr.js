@@ -29,7 +29,11 @@ function verifyProbeSum(probe, sum) {
   equal(snapshot.sum, sum, probe);
 }
 
-function run_test() {
+add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+});
+
+add_task(async function test_location_timeout_xhr() {
   let resolveContinuePromise;
   let continuePromise = new Promise(resolve => {
     resolveContinuePromise = resolve;
@@ -41,41 +45,40 @@ function run_test() {
   // The timeout for the timer.
   Services.prefs.setIntPref("browser.search.geoip.timeout", 10);
   let promiseXHRStarted = SearchTestUtils.promiseSearchNotification("geoip-lookup-xhr-starting");
-  Services.search.init().then(() => {
-    ok(!Services.prefs.prefHasUserValue("browser.search.region"), "should be no region pref");
-    // should be no result recorded at all.
-    checkCountryResultTelemetry(null);
+  await Services.search.init();
+  ok(!Services.prefs.prefHasUserValue("browser.search.region"), "should be no region pref");
+  // should be no result recorded at all.
+  checkCountryResultTelemetry(null);
 
-    // should have set the flag indicating we saw a timeout.
-    let histogram = Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_TIMEOUT");
-    let snapshot = histogram.snapshot();
-    deepEqual(snapshot.values, {0: 0, 1: 1, 2: 0});
+  // should have set the flag indicating we saw a timeout.
+  let histogram = Services.telemetry.getHistogramById("SEARCH_SERVICE_COUNTRY_TIMEOUT");
+  let snapshot = histogram.snapshot();
+  deepEqual(snapshot.values, {0: 0, 1: 1, 2: 0});
 
-    // should not have SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS recorded as our
-    // test server is still blocked on our promise.
-    verifyProbeSum("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS", 0);
+  // should not have SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS recorded as our
+  // test server is still blocked on our promise.
+  verifyProbeSum("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS", 0);
 
-    promiseXHRStarted.then(xhr => {
-      // Set the timeout on the xhr object to an extremely low value, so it
-      // should timeout immediately.
-      xhr.timeout = 10;
-      // wait for the xhr timeout to fire.
-      SearchTestUtils.promiseSearchNotification("geoip-lookup-xhr-complete").then(() => {
-        // should have the XHR timeout recorded.
-        checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.XHRTIMEOUT);
-        // still should not have a report of how long the response took as we
-        // only record that on success responses.
-        verifyProbeSum("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS", 0);
-        // and we still don't know the country code or region.
-        ok(!Services.prefs.prefHasUserValue("browser.search.region"), "should be no region pref");
+  promiseXHRStarted.then(xhr => {
+    // Set the timeout on the xhr object to an extremely low value, so it
+    // should timeout immediately.
+    xhr.timeout = 10;
+    // wait for the xhr timeout to fire.
+    SearchTestUtils.promiseSearchNotification("geoip-lookup-xhr-complete").then(() => {
+      // should have the XHR timeout recorded.
+      checkCountryResultTelemetry(TELEMETRY_RESULT_ENUM.XHRTIMEOUT);
+      // still should not have a report of how long the response took as we
+      // only record that on success responses.
+      verifyProbeSum("SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS", 0);
+      // and we still don't know the country code or region.
+      ok(!Services.prefs.prefHasUserValue("browser.search.region"), "should be no region pref");
 
-        // unblock the server even though nothing is listening.
-        resolveContinuePromise();
+      // unblock the server even though nothing is listening.
+      resolveContinuePromise();
 
-        do_test_finished();
-        server.stop(run_next_test);
+      return new Promise(resolve => {
+        server.stop(resolve);
       });
     });
   });
-  do_test_pending();
-}
+});

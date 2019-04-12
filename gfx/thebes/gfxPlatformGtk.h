@@ -34,20 +34,18 @@ class gfxPlatformGtk : public gfxPlatform {
   void ReadSystemFontList(
       InfallibleTArray<mozilla::dom::SystemFontListEntry>* retValue) override;
 
-  virtual already_AddRefed<gfxASurface> CreateOffscreenSurface(
+  already_AddRefed<gfxASurface> CreateOffscreenSurface(
       const IntSize& aSize, gfxImageFormat aFormat) override;
 
-  virtual nsresult GetFontList(nsAtom* aLangGroup,
-                               const nsACString& aGenericFamily,
-                               nsTArray<nsString>& aListOfFonts) override;
+  nsresult GetFontList(nsAtom* aLangGroup, const nsACString& aGenericFamily,
+                       nsTArray<nsString>& aListOfFonts) override;
 
-  virtual nsresult UpdateFontList() override;
+  nsresult UpdateFontList() override;
 
-  virtual void GetCommonFallbackFonts(
-      uint32_t aCh, uint32_t aNextCh, Script aRunScript,
-      nsTArray<const char*>& aFontList) override;
+  void GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh, Script aRunScript,
+                              nsTArray<const char*>& aFontList) override;
 
-  virtual gfxPlatformFontList* CreatePlatformFontList() override;
+  gfxPlatformFontList* CreatePlatformFontList() override;
 
   gfxFontGroup* CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
                                 const gfxFontStyle* aStyle,
@@ -58,7 +56,7 @@ class gfxPlatformGtk : public gfxPlatform {
   /**
    * Calls XFlush if xrender is enabled.
    */
-  virtual void FlushContentDrawing() override;
+  void FlushContentDrawing() override;
 
   FT_Library GetFTLibrary() override;
 
@@ -66,7 +64,7 @@ class gfxPlatformGtk : public gfxPlatform {
   static double GetFontScaleFactor();
 
 #ifdef MOZ_X11
-  virtual void GetAzureBackendInfo(mozilla::widget::InfoObject& aObj) override {
+  void GetAzureBackendInfo(mozilla::widget::InfoObject& aObj) override {
     gfxPlatform::GetAzureBackendInfo(aObj);
     aObj.DefineProperty("CairoUseXRender", mozilla::gfx::gfxVars::UseXRender());
   }
@@ -74,7 +72,7 @@ class gfxPlatformGtk : public gfxPlatform {
 
   bool UseImageOffscreenSurfaces();
 
-  virtual gfxImageFormat GetOffscreenFormat() override;
+  gfxImageFormat GetOffscreenFormat() override;
 
   bool SupportsApzWheelInput() const override { return true; }
 
@@ -113,7 +111,7 @@ class gfxPlatformGtk : public gfxPlatform {
   int8_t mMaxGenericSubstitutions;
 
  private:
-  virtual void GetPlatformCMSOutputProfile(void*& mem, size_t& size) override;
+  void GetPlatformCMSOutputProfile(void*& mem, size_t& size) override;
 
 #ifdef MOZ_X11
   Display* mCompositorDisplay;

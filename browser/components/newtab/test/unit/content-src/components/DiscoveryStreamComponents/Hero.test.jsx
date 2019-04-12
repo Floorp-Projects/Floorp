@@ -1,4 +1,5 @@
-import {DSCard} from "content-src/components/DiscoveryStreamComponents/DSCard/DSCard";
+import {DSCard, PlaceholderDSCard} from "content-src/components/DiscoveryStreamComponents/DSCard/DSCard";
+import {DSEmptyState} from "content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState";
 import {Hero} from "content-src/components/DiscoveryStreamComponents/Hero/Hero";
 import {List} from "content-src/components/DiscoveryStreamComponents/List/List";
 import React from "react";
@@ -24,6 +25,23 @@ describe("<Hero>", () => {
     assert.lengthOf(wrapper.find("a"), 0);
   });
 
+  it("should return Empty State for no recommendations", () => {
+    const heroProps = {
+      data: {recommendations: []},
+      header: {title: "headerTitle"},
+    };
+
+    const wrapper = shallow(<Hero {...heroProps} />);
+    const dsEmptyState = wrapper.find(DSEmptyState);
+    const dsHeader = wrapper.find(".ds-header");
+    const dsHero = wrapper.find(".ds-hero.empty");
+
+    assert.ok(wrapper.exists());
+    assert.lengthOf(dsEmptyState, 1);
+    assert.lengthOf(dsHeader, 1);
+    assert.lengthOf(dsHero, 1);
+  });
+
   it("should render a hero link with expected url", () => {
     const wrapper = shallow(<Hero {...DEFAULT_PROPS} />);
 
@@ -45,6 +63,16 @@ describe("<Hero>", () => {
       const wrapper = shallow(<Hero {...DEFAULT_PROPS} items={2} />);
 
       assert.equal(wrapper.find(DSCard).prop("url"), DEFAULT_PROPS.data.recommendations[1].url);
+    });
+
+    it("should return PlaceholderDSCard for recommendations less than items", () => {
+      const wrapper = shallow(<Hero {...DEFAULT_PROPS} items={4} />);
+
+      const dsCard = wrapper.find(DSCard);
+      assert.lengthOf(dsCard, 2);
+
+      const placeholderDSCard = wrapper.find(PlaceholderDSCard);
+      assert.lengthOf(placeholderDSCard, 1);
     });
   });
 

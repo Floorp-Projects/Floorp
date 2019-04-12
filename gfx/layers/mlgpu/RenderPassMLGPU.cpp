@@ -705,16 +705,11 @@ bool VideoRenderPass::AddToPass(LayerMLGPU* aLayer, ItemInfo& aItem) {
 void VideoRenderPass::SetupPipeline() {
   YUVColorSpace colorSpace = YUVColorSpace::UNKNOWN;
   switch (mHost->GetReadFormat()) {
-    case SurfaceFormat::YUV: {
-      colorSpace = mHost->GetYUVColorSpace();
-      break;
-    }
+    case SurfaceFormat::YUV:
     case SurfaceFormat::NV12:
     case SurfaceFormat::P010:
     case SurfaceFormat::P016:
-      // TODO. BT601 is very unlikely to be the right value for high-def
-      // content.
-      colorSpace = YUVColorSpace::BT601;
+      colorSpace = mHost->GetYUVColorSpace();
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("Unexpected surface format in VideoRenderPass");

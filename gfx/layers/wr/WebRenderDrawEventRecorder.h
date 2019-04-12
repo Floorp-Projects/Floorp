@@ -30,7 +30,7 @@ class WebRenderDrawEventRecorder final : public gfx::DrawEventRecorderMemory {
                                    const char* aReason) final;
 
  private:
-  ~WebRenderDrawEventRecorder() override {}
+  virtual ~WebRenderDrawEventRecorder() = default;
 };
 
 class WebRenderTranslator final : public gfx::InlineTranslator {

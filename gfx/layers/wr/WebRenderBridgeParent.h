@@ -271,7 +271,7 @@ class WebRenderBridgeParent final
   class ScheduleSharedSurfaceRelease;
 
   explicit WebRenderBridgeParent(const wr::PipelineId& aPipelineId);
-  virtual ~WebRenderBridgeParent();
+  virtual ~WebRenderBridgeParent() = default;
 
   wr::WebRenderAPI* Api(wr::RenderRoot aRenderRoot) {
     if (IsRootWebRenderBridgeParent()) {

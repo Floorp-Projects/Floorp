@@ -862,8 +862,6 @@ function checkEnvironmentData(data, options = {}) {
 }
 
 add_task(async function setup() {
-  // Load a custom manifest to provide search engine loading from JAR files.
-  do_load_manifest("chrome.manifest");
   registerFakeSysInfo();
   spoofGfxAdapter();
   do_get_profile();
@@ -1527,19 +1525,21 @@ add_task(async function test_collectionWithbrokenAddonData() {
 add_task(async function test_defaultSearchEngine() {
   // Check that no default engine is in the environment before the search service is
   // initialized.
+  let searchExtensions = do_get_cwd();
+  searchExtensions.append("data");
+  searchExtensions.append("search-extensions");
+  let resProt = Services.io.getProtocolHandler("resource")
+                        .QueryInterface(Ci.nsIResProtocolHandler);
+  resProt.setSubstitution("search-extensions",
+                          Services.io.newURI("file://" + searchExtensions.path));
 
   let data = await TelemetryEnvironment.testCleanRestart().onInitialized();
   checkEnvironmentData(data);
   Assert.ok(!("defaultSearchEngine" in data.settings));
   Assert.ok(!("defaultSearchEngineData" in data.settings));
 
-  // Load the engines definitions from a custom JAR file: that's needed so that
+  // Load the engines definitions from a xpcshell data: that's needed so that
   // the search provider reports an engine identifier.
-  let url = "chrome://testsearchplugin/locale/searchplugins/";
-  let resProt = Services.io.getProtocolHandler("resource")
-                        .QueryInterface(Ci.nsIResProtocolHandler);
-  resProt.setSubstitution("search-plugins",
-                          Services.io.newURI(url));
 
   // Initialize the search service.
   await Services.search.init();
@@ -1551,10 +1551,10 @@ add_task(async function test_defaultSearchEngine() {
   checkEnvironmentData(data);
   Assert.equal(data.settings.defaultSearchEngine, "telemetrySearchIdentifier");
   let expectedSearchEngineData = {
-    name: "telemetrySearchIdentifier",
-    loadPath: "jar:[other]/searchTest.jar!testsearchplugin/telemetrySearchIdentifier.xml",
-    origin: "default",
-    submissionURL: "http://ar.wikipedia.org/wiki/%D8%AE%D8%A7%D8%B5:%D8%A8%D8%AD%D8%AB?search=&sourceid=Mozilla-search",
+    "name": "telemetrySearchIdentifier",
+    "loadPath": "[other]addEngineWithDetails:telemetrySearchIdentifier@search.mozilla.org",
+    "origin": "default",
+    "submissionURL": "https://ar.wikipedia.org/wiki/%D8%AE%D8%A7%D8%B5:%D8%A8%D8%AD%D8%AB?search=&sourceId=Mozilla-search",
   };
   Assert.deepEqual(data.settings.defaultSearchEngineData, expectedSearchEngineData);
 

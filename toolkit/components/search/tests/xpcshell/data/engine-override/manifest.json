@@ -1,0 +1,24 @@
+{
+  "name": "bug645970",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "engine-override@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "description": "override",
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "bug645970",
+      "search_url": "https://searchtest.local",
+      "params": [
+        {
+          "name": "search",
+          "value": "{searchTerms}"
+        }
+      ]
+    }
+  }
+}

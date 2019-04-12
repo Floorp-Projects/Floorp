@@ -9,8 +9,6 @@ const PROGRESS_NOTIFICATION = "addon-progress";
 
 const CHROMEROOT = extractChromeRoot(gTestPath);
 
-var gApp = document.getElementById("bundle_brand").getString("brandShortName");
-
 AddonTestUtils.initMochitest(this);
 AddonTestUtils.hookAMTelemetryEvents();
 
@@ -274,11 +272,10 @@ async function test_blockedInstall() {
   let panel = await notificationPromise;
 
   let notification = panel.childNodes[0];
-  is(notification.button.label, "Allow", "Should have seen the right button");
-  is(notification.getAttribute("origin"), "example.com",
-     "Should have seen the right origin host");
-  is(notification.getAttribute("label"),
-     gApp + " prevented this site from asking you to install software on your computer.",
+  is(notification.button.label, "Continue to Installation", "Should have seen the right button");
+  let message = panel.ownerDocument.getElementById("addon-install-blocked-message");
+  is(message.textContent,
+     "You are attempting to install an add-on from example.com. Make sure you trust this site before continuing.",
      "Should have seen the right message");
 
   let dialogPromise = waitForInstallDialog();

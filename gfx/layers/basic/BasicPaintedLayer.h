@@ -31,8 +31,7 @@ class BasicPaintedLayer : public PaintedLayer, public BasicImplData {
   typedef ContentClient::PaintState PaintState;
   typedef ContentClient::ContentType ContentType;
 
-  explicit BasicPaintedLayer(BasicLayerManager* aLayerManager,
-                             gfx::BackendType aBackend)
+  BasicPaintedLayer(BasicLayerManager* aLayerManager, gfx::BackendType aBackend)
       : PaintedLayer(aLayerManager, static_cast<BasicImplData*>(this)),
         mContentClient(nullptr),
         mBackend(aBackend) {
@@ -43,34 +42,33 @@ class BasicPaintedLayer : public PaintedLayer, public BasicImplData {
   virtual ~BasicPaintedLayer() { MOZ_COUNT_DTOR(BasicPaintedLayer); }
 
  public:
-  virtual void SetVisibleRegion(const LayerIntRegion& aRegion) override {
+  void SetVisibleRegion(const LayerIntRegion& aRegion) override {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
     PaintedLayer::SetVisibleRegion(aRegion);
   }
-  virtual void InvalidateRegion(const nsIntRegion& aRegion) override {
+  void InvalidateRegion(const nsIntRegion& aRegion) override {
     NS_ASSERTION(BasicManager()->InConstruction(),
                  "Can only set properties in construction phase");
     mInvalidRegion.Add(aRegion);
     UpdateValidRegionAfterInvalidRegionChanged();
   }
 
-  virtual void PaintThebes(gfxContext* aContext, Layer* aMaskLayer,
-                           LayerManager::DrawPaintedLayerCallback aCallback,
-                           void* aCallbackData) override;
+  void PaintThebes(gfxContext* aContext, Layer* aMaskLayer,
+                   LayerManager::DrawPaintedLayerCallback aCallback,
+                   void* aCallbackData) override;
 
-  virtual void Validate(LayerManager::DrawPaintedLayerCallback aCallback,
-                        void* aCallbackData,
-                        ReadbackProcessor* aReadback) override;
+  void Validate(LayerManager::DrawPaintedLayerCallback aCallback,
+                void* aCallbackData, ReadbackProcessor* aReadback) override;
 
-  virtual void ClearCachedResources() override {
+  void ClearCachedResources() override {
     if (mContentClient) {
       mContentClient->Clear();
     }
     ClearValidRegion();
   }
 
-  virtual void ComputeEffectiveTransforms(
+  void ComputeEffectiveTransforms(
       const gfx::Matrix4x4& aTransformToSurface) override {
     if (!BasicManager()->IsRetained()) {
       // Don't do any snapping of our transform, since we're just going to

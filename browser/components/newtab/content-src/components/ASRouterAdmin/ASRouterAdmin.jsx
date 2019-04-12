@@ -31,11 +31,33 @@ const LAYOUT_VARIANTS = {
   "dev-test-all": "A little bit of everything. Good layout for testing all components",
   "dev-test-feeds": "Stress testing for slow feeds",
 };
-class DiscoveryStreamAdmin extends React.PureComponent {
+
+export class ToggleSpocButton extends React.PureComponent {
+  constructor(props) {
+    super(props);
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick() {
+    this.props.onClick(this.props.spoc);
+  }
+
+  render() {
+    return (
+      <button onClick={this.handleClick}>collapse/open</button>
+    );
+  }
+}
+
+export class DiscoveryStreamAdmin extends React.PureComponent {
   constructor(props) {
     super(props);
     this.onEnableToggle = this.onEnableToggle.bind(this);
     this.changeEndpointVariant = this.changeEndpointVariant.bind(this);
+    this.onSpocToggle = this.onSpocToggle.bind(this);
+    this.state = {
+      toggledSpocs: {},
+    };
   }
 
   get isOptedOut() {
@@ -79,6 +101,63 @@ class DiscoveryStreamAdmin extends React.PureComponent {
     return isMatch;
   }
 
+  renderSpocs() {
+    const {spocs} = this.props.state;
+    let spocsData = [];
+    if (spocs.data && spocs.data.spocs && spocs.data.spocs.length) {
+      spocsData = spocs.data.spocs;
+    }
+
+    return (
+      <React.Fragment>
+        <table><tbody>
+          <Row>
+            <td className="min">spocs_endpoint</td>
+            <td>{spocs.spocs_endpoint}</td>
+          </Row>
+          <Row>
+            <td className="min">Data last fetched</td>
+            <td>{relativeTime(spocs.lastUpdated)}</td>
+          </Row>
+        </tbody></table>
+        <h4>Spoc data</h4>
+        <table><tbody>
+          {spocsData.map(spoc => this.renderSpocData(spoc))}
+        </tbody></table>
+        <h4>Spoc frequency caps</h4>
+        <table><tbody>
+          {spocs.frequency_caps.map(spoc => this.renderSpocData(spoc))}
+        </tbody></table>
+      </React.Fragment>
+    );
+  }
+
+  onSpocToggle(spoc) {
+    const {toggledSpocs} = this.state;
+    this.setState({
+      toggledSpocs: {
+        ...toggledSpocs,
+        [spoc.id]: !toggledSpocs[spoc.id],
+      },
+    });
+  }
+
+  renderSpocData(spoc) {
+    let spocData = "";
+    if (this.state.toggledSpocs[spoc.id]) {
+      spocData = JSON.stringify(spoc, null, 2);
+    }
+    return (<tr className="message-item" key={spoc.id}>
+      <td className="message-id">
+        <span>{spoc.id} <br /></span>
+        <ToggleSpocButton spoc={spoc} onClick={this.onSpocToggle} />
+      </td>
+      <td className="message-summary">
+        <pre>{spocData}</pre>
+      </td>
+    </tr>);
+  }
+
   renderFeed(feed) {
     const {feeds} = this.props.state;
     if (!feed.url) {
@@ -100,7 +179,6 @@ class DiscoveryStreamAdmin extends React.PureComponent {
 
   render() {
     const {isOptedOut} = this;
-
     const {config, lastUpdated, layout} = this.props.state;
     return (<div>
 
@@ -133,6 +211,9 @@ class DiscoveryStreamAdmin extends React.PureComponent {
           ))}
         </div>
       ))}
+
+      <h3>Spocs</h3>
+      {this.renderSpocs()}
     </div>);
   }
 }

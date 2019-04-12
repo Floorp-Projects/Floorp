@@ -402,6 +402,7 @@ ProgramProfileOGL ProgramProfileOGL::GetProfileFor(ShaderConfigOGL aConfig) {
   } else if (aConfig.mFeatures & ENABLE_TEXTURE_NV12) {
     fs << "uniform " << sampler2D << " uYTexture;" << endl;
     fs << "uniform " << sampler2D << " uCbTexture;" << endl;
+    fs << "uniform mat3 uYuvColorMatrix;" << endl;
   } else if (aConfig.mFeatures & ENABLE_TEXTURE_COMPONENT_ALPHA) {
     fs << "uniform " << sampler2D << " uBlackTexture;" << endl;
     fs << "uniform " << sampler2D << " uWhiteTexture;" << endl;
@@ -1009,7 +1010,7 @@ void ShaderProgramOGL::SetBlurRadius(float aRX, float aRY) {
                   gaussianKernel);
 }
 
-void ShaderProgramOGL::SetYUVColorSpace(YUVColorSpace aYUVColorSpace) {
+void ShaderProgramOGL::SetYUVColorSpace(gfx::YUVColorSpace aYUVColorSpace) {
   const float *yuvToRgb =
       gfxUtils::YuvToRgbMatrix3x3ColumnMajor(aYUVColorSpace);
   SetMatrix3fvUniform(KnownUniform::YuvColorMatrix, yuvToRgb);

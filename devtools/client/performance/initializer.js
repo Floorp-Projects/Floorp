@@ -26,24 +26,6 @@ const { WaterfallView } = require("./views/details-waterfall");
 const EVENTS = require("./events");
 
 /**
- * Initializes the profiler controller and views.
- */
-const startupPerformance = async function(toolbox, target, front) {
-  await PerformanceController.initialize(toolbox, target, front);
-  await PerformanceView.initialize();
-  PerformanceController.enableFrontEventListeners();
-};
-
-/**
- * Destroys the profiler controller and views.
- */
-const shutdownPerformance = async function() {
-  await PerformanceController.destroy();
-  await PerformanceView.destroy();
-  PerformanceController.disableFrontEventListeners();
-};
-
-/**
  * The performance panel used to only share modules through references on the window
  * object. We started cleaning this up and to require() explicitly in Bug 1524982, but
  * some modules and tests are still relying on those references so we keep exposing them
@@ -62,8 +44,6 @@ window.RecordingsView = RecordingsView;
 window.ToolbarView = ToolbarView;
 window.WaterfallView = WaterfallView;
 
-window.shutdownPerformance = shutdownPerformance;
-window.startupPerformance = startupPerformance;
 window.EVENTS = EVENTS;
 
 /**

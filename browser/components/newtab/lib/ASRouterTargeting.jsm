@@ -335,12 +335,18 @@ this.ASRouterTargeting = {
   isTriggerMatch(trigger = {}, candidateMessageTrigger = {}) {
     if (trigger.id !== candidateMessageTrigger.id) {
       return false;
-    } else if (!candidateMessageTrigger.params) {
-      return true;
-    } else if (candidateMessageTrigger.patterns) {
+    } else if (!candidateMessageTrigger.params && !candidateMessageTrigger.patterns) {
       return true;
     }
-    return candidateMessageTrigger.params.includes(trigger.param);
+
+    if (!trigger.param) {
+      return false;
+    }
+
+    return (candidateMessageTrigger.params &&
+      candidateMessageTrigger.params.includes(trigger.param.host)) ||
+      (candidateMessageTrigger.patterns &&
+        new MatchPatternSet(candidateMessageTrigger.patterns).matches(trigger.param.url));
   },
 
   /**

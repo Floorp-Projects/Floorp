@@ -60,6 +60,35 @@ export class ImpressionStats extends React.PureComponent {
     }
   }
 
+  // This checks if the given cards are the same as those in the last loaded content ping.
+  // If so, it should not send the same loaded content ping again.
+  _needsLoadedContent(cards) {
+    if (!this.loadedContentGuids || (this.loadedContentGuids.length !== cards.length)) {
+      return true;
+    }
+
+    for (let i = 0; i < cards.length; i++) {
+      if (cards[i].id !== this.loadedContentGuids[i]) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  _dispatchLoadedContent() {
+    const {props} = this;
+    const cards = props.rows;
+
+    if (this._needsLoadedContent(cards)) {
+      props.dispatch(ac.DiscoveryStreamLoadedContent({
+        source: props.source.toUpperCase(),
+        tiles: cards.map(link => ({id: link.id, pos: link.pos})),
+      }));
+      this.loadedContentGuids = cards.map(link => link.id);
+    }
+  }
+
   setImpressionObserverOrAddListener() {
     const {props} = this;
 
@@ -68,6 +97,8 @@ export class ImpressionStats extends React.PureComponent {
     }
 
     if (props.document.visibilityState === VISIBLE) {
+      // Send the loaded content ping once the page is visible.
+      this._dispatchLoadedContent();
       this.setImpressionObserver();
     } else {
       // We should only ever send the latest impression stats ping, so remove any
@@ -78,6 +109,8 @@ export class ImpressionStats extends React.PureComponent {
 
       this._onVisibilityChange = () => {
         if (props.document.visibilityState === VISIBLE) {
+          // Send the loaded content ping once the page is visible.
+          this._dispatchLoadedContent();
           this.setImpressionObserver();
           props.document.removeEventListener(VISIBILITY_CHANGE_EVENT, this._onVisibilityChange);
         }

@@ -166,9 +166,9 @@ class WebRenderBridgeChild final : public PWebRenderBridgeChild,
 
   ipc::IShmemAllocator* GetShmemAllocator();
 
-  virtual bool IsThreadSafe() const override { return false; }
+  bool IsThreadSafe() const override { return false; }
 
-  virtual RefPtr<KnowsCompositor> GetForMedia() override;
+  RefPtr<KnowsCompositor> GetForMedia() override;
 
   /// Alloc a specific type of shmem that is intended for use in
   /// IpcResourceUpdateQueue only, and cache at most one of them,

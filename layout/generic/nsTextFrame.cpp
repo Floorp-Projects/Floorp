@@ -8696,7 +8696,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // Set up flags and clear out state
   /////////////////////////////////////////////////////////////////////
 
-  // Clear out the reflow state flags in mState. We also clear the whitespace
+  // Clear out the reflow input flags in mState. We also clear the whitespace
   // flags because this can change whether the frame maps whitespace-only text
   // or not. We also clear the flag that tracks whether we had a pending
   // reflow request from CharacterDataChanged (since we're reflowing now).

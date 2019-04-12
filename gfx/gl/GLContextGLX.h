@@ -33,11 +33,9 @@ class GLContextGLX : public GLContext {
       ScopedXFree<GLXFBConfig>* const out_scopedConfigArr,
       GLXFBConfig* const out_config, int* const out_visid, bool aWebRender);
 
-  ~GLContextGLX() override;
+  virtual ~GLContextGLX();
 
-  virtual GLContextType GetContextType() const override {
-    return GLContextType::GLX;
-  }
+  GLContextType GetContextType() const override { return GLContextType::GLX; }
 
   static GLContextGLX* Cast(GLContext* gl) {
     MOZ_ASSERT(gl->GetContextType() == GLContextType::GLX);
@@ -46,17 +44,17 @@ class GLContextGLX : public GLContext {
 
   bool Init() override;
 
-  virtual bool MakeCurrentImpl() const override;
+  bool MakeCurrentImpl() const override;
 
-  virtual bool IsCurrentImpl() const override;
+  bool IsCurrentImpl() const override;
 
   Maybe<SymbolLoader> GetSymbolLoader() const override;
 
-  virtual bool IsDoubleBuffered() const override;
+  bool IsDoubleBuffered() const override;
 
-  virtual bool SwapBuffers() override;
+  bool SwapBuffers() override;
 
-  virtual void GetWSIInfo(nsCString* const out) const override;
+  void GetWSIInfo(nsCString* const out) const override;
 
   // Overrides the current GLXDrawable backing the context and makes the
   // context current.

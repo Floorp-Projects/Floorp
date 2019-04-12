@@ -1,0 +1,58 @@
+{
+  "name": "Plain",
+  "description": "Plain Engine",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "plainengine@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Plain",
+      "search_url": "https://duckduckgo.com/",
+      "params": [
+        {
+          "name": "q",
+          "value": "{searchTerms}"
+        },
+        {
+          "name": "t",
+          "condition": "purpose",
+          "purpose": "contextmenu",
+          "value": "ffcm"
+        },
+        {
+          "name": "t",
+          "condition": "purpose",
+          "purpose": "keyword",
+          "value": "ffab"
+        },
+        {
+          "name": "t",
+          "condition": "purpose",
+          "purpose": "searchbar",
+          "value": "ffsb"
+        },
+        {
+          "name": "t",
+          "condition": "purpose",
+          "purpose": "homepage",
+          "value": "ffhp"
+        },
+        {
+          "name": "t",
+          "condition": "purpose",
+          "purpose": "newtab",
+          "value": "ffnt"
+        }
+      ],
+      "suggest_url": "https://ac.duckduckgo.com/ac/q={searchTerms}&type=list"
+    }
+  }
+}

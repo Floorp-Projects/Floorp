@@ -1,0 +1,14 @@
+{
+  "extensionName": {
+    "message": "bol.com"
+  },
+  "extensionDescription": {
+    "message": "Sykje by bol.com"
+  },
+  "searchUrl": {
+    "message": "https://www.bol.com/nl/s/algemeen/zoekresultaten/Ntt/{searchTerms}/Ntk/media_all/Nty/1/suggestedFor/{searchTerms}/N/0/Ne/0/search/true/searchType/qck/index.html"
+  },
+  "searchForm": {
+    "message": "https://www.bol.com/"
+  }
+}

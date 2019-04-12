@@ -21,6 +21,7 @@ add_task(async function shutdown_during_search_provider_startup() {
     manifest: {
       chrome_settings_overrides: {
         search_provider: {
+          is_default: true,
           name: "dummy name",
           search_url: "https://example.com/",
         },

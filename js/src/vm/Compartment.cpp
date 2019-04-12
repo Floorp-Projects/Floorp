@@ -112,7 +112,7 @@ static JSString* CopyStringPure(JSContext* cx, JSString* str) {
 
   if (str->hasLatin1Chars()) {
     UniquePtr<Latin1Char[], JS::FreePolicy> copiedChars =
-        str->asRope().copyLatin1CharsZ(cx);
+        str->asRope().copyLatin1CharsZ(cx, js::MallocArena);
     if (!copiedChars) {
       return nullptr;
     }
@@ -120,7 +120,8 @@ static JSString* CopyStringPure(JSContext* cx, JSString* str) {
     return NewString<CanGC>(cx, std::move(copiedChars), len);
   }
 
-  UniqueTwoByteChars copiedChars = str->asRope().copyTwoByteCharsZ(cx);
+  UniqueTwoByteChars copiedChars =
+      str->asRope().copyTwoByteCharsZ(cx, js::MallocArena);
   if (!copiedChars) {
     return nullptr;
   }

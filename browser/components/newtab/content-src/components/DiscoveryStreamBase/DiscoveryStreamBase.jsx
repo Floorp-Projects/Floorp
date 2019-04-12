@@ -1,4 +1,5 @@
 import {CardGrid} from "content-src/components/DiscoveryStreamComponents/CardGrid/CardGrid";
+import {CollapsibleSection} from "content-src/components/CollapsibleSection/CollapsibleSection";
 import {connect} from "react-redux";
 import {DSMessage} from "content-src/components/DiscoveryStreamComponents/DSMessage/DSMessage";
 import {Hero} from "content-src/components/DiscoveryStreamComponents/Hero/Hero";
@@ -167,14 +168,79 @@ export class _DiscoveryStreamBase extends React.PureComponent {
 
   render() {
     // Select layout render data by adding spocs and position to recommendations
-    const layoutRender = selectLayoutRender(this.props.DiscoveryStream, rickRollCache);
-    const styles = [];
-    const {spocs, feeds} = this.props.DiscoveryStream;
-
+    const layoutRender = selectLayoutRender(this.props.DiscoveryStream, this.props.Prefs.values, rickRollCache);
+    const {config, feeds, spocs} = this.props.DiscoveryStream;
     if (!spocs.loaded || !feeds.loaded) {
       return null;
     }
 
+    // Allow rendering without extracting special components
+    if (!config.collapsible) {
+      return this.renderLayout(layoutRender);
+    }
+
+    // Find the first component of a type and remove it from layout
+    const extractComponent = type => {
+      for (const [rowIndex, row] of Object.entries(layoutRender)) {
+        for (const [index, component] of Object.entries(row.components)) {
+          if (component.type === type) {
+            // Remove the row if it was the only component or the single item
+            if (row.components.length === 1) {
+              layoutRender.splice(rowIndex, 1);
+            } else {
+              row.components.splice(index, 1);
+            }
+            return component;
+          }
+        }
+      }
+      return null;
+    };
+
+    // Get "topstories" Section state for default values
+    const topStories = this.props.Sections.find(s => s.id === "topstories");
+
+    // Extract TopSites to render before the rest and Message to use for header
+    const topSites = extractComponent("TopSites");
+    const message = extractComponent("Message") || {
+      header: {
+        link_text: topStories.learnMore.link.id,
+        link_url: topStories.learnMore.link.href,
+        title: topStories.title,
+      },
+    };
+
+    // Render a DS-style TopSites then the rest if any in a collapsible section
+    return (
+      <React.Fragment>
+        {topSites && this.renderLayout([{
+          width: 12,
+          components: [topSites],
+        }])}
+        {layoutRender.length > 0 && <CollapsibleSection
+          className="ds-layout"
+          collapsed={topStories.pref.collapsed}
+          dispatch={this.props.dispatch}
+          icon={topStories.icon}
+          id={topStories.id}
+          isFixed={true}
+          learnMore={{
+            link: {
+              href: message.header.link_url,
+              id: message.header.link_text,
+            },
+          }}
+          privacyNoticeURL={topStories.privacyNoticeURL}
+          showPrefName={topStories.pref.feed}
+          title={message.header.title}>
+          {this.renderLayout(layoutRender)}
+        </CollapsibleSection>}
+      </React.Fragment>
+    );
+  }
+
+  renderLayout(layoutRender) {
+    const styles = [];
     return (
       <div className="discovery-stream ds-layout">
         {layoutRender.map((row, rowIndex) => (
@@ -197,4 +263,6 @@ export class _DiscoveryStreamBase extends React.PureComponent {
 
 export const DiscoveryStreamBase = connect(state => ({
   DiscoveryStream: state.DiscoveryStream,
+  Prefs: state.Prefs,
+  Sections: state.Sections,
 }))(_DiscoveryStreamBase);

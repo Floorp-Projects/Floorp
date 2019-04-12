@@ -144,12 +144,12 @@ bool nsBlockReflowContext::ComputeCollapsedBStartMargin(
           // generational collapse is required we need to compute the
           // child blocks margin and so in so that we can look into
           // it. For its margins to be computed we need to have a reflow
-          // state for it.
+          // input for it.
 
-          // We may have to construct an extra reflow state here if
+          // We may have to construct an extra reflow input here if
           // we drilled down through a block wrapper. At the moment
           // we can only drill down one level so we only have to support
-          // one extra reflow state.
+          // one extra reflow input.
           const ReflowInput* outerReflowInput = &aRI;
           if (frame != aRI.mFrame) {
             NS_ASSERTION(frame->GetParent() == aRI.mFrame,

@@ -7667,10 +7667,11 @@ bool CData::GetRuntime(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 typedef JS::TwoByteCharsZ (*InflateUTF8Method)(JSContext*, const JS::UTF8Chars,
-                                               size_t*);
+                                               size_t*, arena_id_t);
 
 static bool ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8,
-                             unsigned argc, Value* vp, const char* funName) {
+                             unsigned argc, Value* vp, const char* funName,
+                             arena_id_t destArenaId) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 0) {
     return ArgumentLengthError(cx, funName, "no", "s");
@@ -7743,7 +7744,8 @@ static bool ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8,
 
       // Determine the length.
       UniqueTwoByteChars dst(
-          inflateUTF8(cx, JS::UTF8Chars(bytes, length), &length).get());
+          inflateUTF8(cx, JS::UTF8Chars(bytes, length), &length, destArenaId)
+              .get());
       if (!dst) {
         return false;
       }
@@ -7779,19 +7781,21 @@ static bool ReadStringCommon(JSContext* cx, InflateUTF8Method inflateUTF8,
 
 bool CData::ReadString(JSContext* cx, unsigned argc, Value* vp) {
   return ReadStringCommon(cx, JS::UTF8CharsToNewTwoByteCharsZ, argc, vp,
-                          "CData.prototype.readString");
+                          "CData.prototype.readString", js::MallocArena);
 }
 
 bool CDataFinalizer::Methods::ReadString(JSContext* cx, unsigned argc,
                                          Value* vp) {
   return ReadStringCommon(cx, JS::UTF8CharsToNewTwoByteCharsZ, argc, vp,
-                          "CDataFinalizer.prototype.readString");
+                          "CDataFinalizer.prototype.readString",
+                          js::MallocArena);
 }
 
 bool CData::ReadStringReplaceMalformed(JSContext* cx, unsigned argc,
                                        Value* vp) {
   return ReadStringCommon(cx, JS::LossyUTF8CharsToNewTwoByteCharsZ, argc, vp,
-                          "CData.prototype.readStringReplaceMalformed");
+                          "CData.prototype.readStringReplaceMalformed",
+                          js::MallocArena);
 }
 
 JSString* CData::GetSourceString(JSContext* cx, HandleObject typeObj,

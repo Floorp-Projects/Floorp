@@ -18,7 +18,6 @@
 #include "mozilla/Vector.h"
 
 #include <algorithm>
-#include <ctype.h>
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>

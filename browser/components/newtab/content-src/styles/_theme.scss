@@ -78,7 +78,7 @@ body {
   --newtab-snippets-background-color: #{$white};
   --newtab-snippets-hairline-color: transparent;
 
-  &[lwt-newtab-brighttext]:not(.force-light-theme) {
+  &[lwt-newtab-brighttext] {
     // General styles
     --newtab-background-color: #{$grey-80};
     --newtab-border-primary-color: #{$grey-10-80};

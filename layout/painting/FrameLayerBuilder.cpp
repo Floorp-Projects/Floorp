@@ -3950,7 +3950,8 @@ void PaintedLayerData::AccumulateHitTestItem(ContainerState* aState,
     mHitRegion.OrWith(area);
   }
 
-  if (flags.contains(CompositorHitTestFlags::eDispatchToContent)) {
+  const auto dtcFlags = flags & CompositorHitTestDispatchToContent;
+  if (!dtcFlags.isEmpty()) {
     mDispatchToContentHitRegion.OrWith(area);
 
     if (flags.contains(CompositorHitTestFlags::eRequiresTargetConfirmation)) {

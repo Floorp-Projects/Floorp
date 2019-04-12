@@ -53,7 +53,7 @@ struct Effect {
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) = 0;
 
  protected:
-  virtual ~Effect() {}
+  virtual ~Effect() = default;
 };
 
 // Render from a texture
@@ -66,10 +66,9 @@ struct TexturedEffect : public Effect {
         mPremultiplied(aPremultiplied),
         mSamplingFilter(aSamplingFilter) {}
 
-  virtual TexturedEffect* AsTexturedEffect() override { return this; }
+  TexturedEffect* AsTexturedEffect() override { return this; }
   virtual const char* Name() = 0;
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
   gfx::Rect mTextureCoords;
   TextureSource* mTexture;
@@ -86,8 +85,7 @@ struct EffectMask : public Effect {
         mSize(aSize),
         mMaskTransform(aMaskTransform) {}
 
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
   TextureSource* mMaskTexture;
   gfx::IntSize mSize;
@@ -99,8 +97,7 @@ struct EffectBlendMode : public Effect {
       : Effect(EffectTypes::BLEND_MODE), mBlendMode(aBlendMode) {}
 
   virtual const char* Name() { return "EffectBlendMode"; }
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
   gfx::CompositionOp mBlendMode;
 };
@@ -112,9 +109,8 @@ struct EffectRenderTarget : public TexturedEffect {
                        gfx::SamplingFilter::LINEAR),
         mRenderTarget(aRenderTarget) {}
 
-  virtual const char* Name() override { return "EffectRenderTarget"; }
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  const char* Name() override { return "EffectRenderTarget"; }
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
   RefPtr<CompositingRenderTarget> mRenderTarget;
 
@@ -129,9 +125,7 @@ struct EffectColorMatrix : public Effect {
   explicit EffectColorMatrix(gfx::Matrix5x4 aMatrix)
       : Effect(EffectTypes::COLOR_MATRIX), mColorMatrix(aMatrix) {}
 
-  virtual const char* Name() { return "EffectColorMatrix"; }
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
   const gfx::Matrix5x4 mColorMatrix;
 };
 
@@ -141,27 +135,30 @@ struct EffectRGB : public TexturedEffect {
       : TexturedEffect(EffectTypes::RGB, aTexture, aPremultiplied,
                        aSamplingFilter) {}
 
-  virtual const char* Name() override { return "EffectRGB"; }
+  const char* Name() override { return "EffectRGB"; }
 };
 
 struct EffectYCbCr : public TexturedEffect {
-  EffectYCbCr(TextureSource* aSource, YUVColorSpace aYUVColorSpace,
+  EffectYCbCr(TextureSource* aSource, gfx::YUVColorSpace aYUVColorSpace,
               gfx::ColorDepth aColorDepth, gfx::SamplingFilter aSamplingFilter)
       : TexturedEffect(EffectTypes::YCBCR, aSource, false, aSamplingFilter),
         mYUVColorSpace(aYUVColorSpace),
         mColorDepth(aColorDepth) {}
 
-  virtual const char* Name() override { return "EffectYCbCr"; }
+  const char* Name() override { return "EffectYCbCr"; }
 
-  YUVColorSpace mYUVColorSpace;
+  gfx::YUVColorSpace mYUVColorSpace;
   gfx::ColorDepth mColorDepth;
 };
 
-struct EffectNV12 : public TexturedEffect {
-  EffectNV12(TextureSource* aSource, gfx::SamplingFilter aSamplingFilter)
-      : TexturedEffect(EffectTypes::NV12, aSource, false, aSamplingFilter) {}
+struct EffectNV12 : public EffectYCbCr {
+  EffectNV12(TextureSource* aSource, gfx::YUVColorSpace aYUVColorSpace,
+             gfx::ColorDepth aColorDepth, gfx::SamplingFilter aSamplingFilter)
+      : EffectYCbCr(aSource, aYUVColorSpace, aColorDepth, aSamplingFilter) {
+    mType = EffectTypes::NV12;
+  }
 
-  virtual const char* Name() override { return "EffectNV12"; }
+  const char* Name() override { return "EffectNV12"; }
 };
 
 struct EffectComponentAlpha : public TexturedEffect {
@@ -172,7 +169,7 @@ struct EffectComponentAlpha : public TexturedEffect {
         mOnBlack(aOnBlack),
         mOnWhite(aOnWhite) {}
 
-  virtual const char* Name() override { return "EffectComponentAlpha"; }
+  const char* Name() override { return "EffectComponentAlpha"; }
 
   TextureSource* mOnBlack;
   TextureSource* mOnWhite;
@@ -182,8 +179,7 @@ struct EffectSolidColor : public Effect {
   explicit EffectSolidColor(const gfx::Color& aColor)
       : Effect(EffectTypes::SOLID_COLOR), mColor(aColor) {}
 
-  virtual void PrintInfo(std::stringstream& aStream,
-                         const char* aPrefix) override;
+  void PrintInfo(std::stringstream& aStream, const char* aPrefix) override;
 
   gfx::Color mColor;
 };
@@ -204,7 +200,7 @@ struct EffectChain {
  *
  * Note that aFormat can be different form aSource->GetFormat if, we are
  * creating an effect that takes several texture sources (like with YCBCR
- * where aFormat would be FOMRAT_YCBCR and each texture source would be
+ * where aFormat would be FORMAT_YCBCR and each texture source would be
  * a one-channel A8 texture)
  */
 inline already_AddRefed<TexturedEffect> CreateTexturedEffect(
@@ -220,13 +216,12 @@ inline already_AddRefed<TexturedEffect> CreateTexturedEffect(
     case gfx::SurfaceFormat::R8G8B8A8:
       result = new EffectRGB(aSource, isAlphaPremultiplied, aSamplingFilter);
       break;
+    case gfx::SurfaceFormat::YUV:
     case gfx::SurfaceFormat::NV12:
     case gfx::SurfaceFormat::P010:
     case gfx::SurfaceFormat::P016:
-      result = new EffectNV12(aSource, aSamplingFilter);
-      break;
-    case gfx::SurfaceFormat::YUV:
-      MOZ_ASSERT_UNREACHABLE("gfx::SurfaceFormat::YUV is invalid");
+      MOZ_ASSERT_UNREACHABLE(
+          "gfx::SurfaceFormat::YUV/NV12/P010/P016 is invalid");
       break;
     default:
       NS_WARNING("unhandled program type");
@@ -243,13 +238,23 @@ inline already_AddRefed<TexturedEffect> CreateTexturedEffect(
   MOZ_ASSERT(aSource);
 
   RefPtr<TexturedEffect> result;
-  if (aHost->GetReadFormat() == gfx::SurfaceFormat::YUV) {
-    MOZ_ASSERT(aHost->GetYUVColorSpace() != YUVColorSpace::UNKNOWN);
-    result = new EffectYCbCr(aSource, aHost->GetYUVColorSpace(),
-                             aHost->GetColorDepth(), aSamplingFilter);
-  } else {
-    result = CreateTexturedEffect(aHost->GetReadFormat(), aSource,
-                                  aSamplingFilter, isAlphaPremultiplied);
+
+  switch (aHost->GetReadFormat()) {
+    case gfx::SurfaceFormat::YUV:
+      MOZ_ASSERT(aHost->GetYUVColorSpace() != gfx::YUVColorSpace::UNKNOWN);
+      result = new EffectYCbCr(aSource, aHost->GetYUVColorSpace(),
+                               aHost->GetColorDepth(), aSamplingFilter);
+      break;
+    case gfx::SurfaceFormat::NV12:
+    case gfx::SurfaceFormat::P010:
+    case gfx::SurfaceFormat::P016:
+      result = new EffectNV12(aSource, aHost->GetYUVColorSpace(),
+                              aHost->GetColorDepth(), aSamplingFilter);
+      break;
+    default:
+      result = CreateTexturedEffect(aHost->GetReadFormat(), aSource,
+                                    aSamplingFilter, isAlphaPremultiplied);
+      break;
   }
   return result.forget();
 }

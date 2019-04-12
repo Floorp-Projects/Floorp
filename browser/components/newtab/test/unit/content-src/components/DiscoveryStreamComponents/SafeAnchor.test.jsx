@@ -4,11 +4,14 @@ import {shallow} from "enzyme";
 
 describe("Discovery Stream <SafeAnchor>", () => {
   let warnStub;
+  let sandbox;
   beforeEach(() => {
     warnStub = sinon.stub(console, "warn");
+    sandbox = sinon.createSandbox();
   });
   afterEach(() => {
     warnStub.restore();
+    sandbox.restore();
   });
   it("should render with anchor", () => {
     const wrapper = shallow(<SafeAnchor />);
@@ -31,5 +34,23 @@ describe("Discovery Stream <SafeAnchor>", () => {
     const wrapper = shallow(<SafeAnchor url="" />);
     assert.equal(wrapper.find("a").prop("href"), "");
     assert.notCalled(warnStub);
+  });
+  it("should dispatch an event on click", () => {
+    const dispatchStub = sandbox.stub();
+    const fakeEvent = {preventDefault: sandbox.stub(), currentTarget: {}};
+    const wrapper = shallow(<SafeAnchor dispatch={dispatchStub} />);
+
+    wrapper.find("a").simulate("click", fakeEvent);
+
+    assert.calledOnce(dispatchStub);
+    assert.calledOnce(fakeEvent.preventDefault);
+  });
+  it("should call onLinkClick if provided", () => {
+    const onLinkClickStub = sandbox.stub();
+    const wrapper = shallow(<SafeAnchor onLinkClick={onLinkClickStub} />);
+
+    wrapper.find("a").simulate("click");
+
+    assert.calledOnce(onLinkClickStub);
   });
 });

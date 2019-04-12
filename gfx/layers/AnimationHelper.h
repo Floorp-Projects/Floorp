@@ -13,6 +13,7 @@
 #include "mozilla/webrender/WebRenderTypes.h"  // for RenderRoot
 #include "mozilla/TimeStamp.h"                 // for TimeStamp
 #include "mozilla/TimingParams.h"
+#include "mozilla/Variant.h"
 #include "X11UndefineNone.h"
 
 namespace mozilla {
@@ -87,33 +88,32 @@ struct AnimationTransform {
   TransformData mData;
 };
 
-struct AnimatedValue {
-  enum { TRANSFORM, OPACITY, COLOR, NONE } mType{NONE};
+struct AnimatedValue final {
+  typedef Variant<AnimationTransform, float, nscolor> AnimatedValueType;
 
-  union {
-    AnimationTransform mTransform;
-    float mOpacity;
-    nscolor mColor;
-  };
+  const AnimatedValueType& Value() const { return mValue; }
+  const AnimationTransform& Transform() const {
+    return mValue.as<AnimationTransform>();
+  }
+  const float& Opacity() const { return mValue.as<float>(); }
+  const nscolor& Color() const { return mValue.as<nscolor>(); }
+  template <typename T>
+  bool Is() const {
+    return mValue.is<T>();
+  }
 
   AnimatedValue(gfx::Matrix4x4&& aTransformInDevSpace,
                 gfx::Matrix4x4&& aFrameTransform, const TransformData& aData)
-      : mType(AnimatedValue::TRANSFORM), mOpacity(0.0) {
-    mTransform.mTransformInDevSpace = std::move(aTransformInDevSpace);
-    mTransform.mFrameTransform = std::move(aFrameTransform);
-    mTransform.mData = aData;
-  }
+      : mValue(
+            AsVariant(AnimationTransform{std::move(aTransformInDevSpace),
+                                         std::move(aFrameTransform), aData})) {}
 
-  explicit AnimatedValue(const float& aValue)
-      : mType(AnimatedValue::OPACITY), mOpacity(aValue) {}
+  explicit AnimatedValue(const float& aValue) : mValue(AsVariant(aValue)) {}
 
-  explicit AnimatedValue(nscolor aValue)
-      : mType(AnimatedValue::COLOR), mColor(aValue) {}
-
-  ~AnimatedValue() {}
+  explicit AnimatedValue(nscolor aValue) : mValue(AsVariant(aValue)) {}
 
  private:
-  AnimatedValue() = delete;
+  AnimatedValueType mValue;
 };
 
 // CompositorAnimationStorage stores the animations and animated values

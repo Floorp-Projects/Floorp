@@ -54,7 +54,7 @@ class NewRenderer : public RendererEvent {
 
   ~NewRenderer() { MOZ_COUNT_DTOR(NewRenderer); }
 
-  virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
+  void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
     layers::AutoCompleteTask complete(mTask);
 
     UniquePtr<RenderCompositor> compositor =
@@ -130,9 +130,9 @@ class RemoveRenderer : public RendererEvent {
     MOZ_COUNT_CTOR(RemoveRenderer);
   }
 
-  ~RemoveRenderer() { MOZ_COUNT_DTOR(RemoveRenderer); }
+  virtual ~RemoveRenderer() { MOZ_COUNT_DTOR(RemoveRenderer); }
 
-  virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
+  void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
     aRenderThread.RemoveRenderer(aWindowId);
     layers::AutoCompleteTask complete(mTask);
   }
@@ -394,9 +394,9 @@ void WebRenderAPI::Readback(const TimeStamp& aStartTime, gfx::IntSize size,
       MOZ_COUNT_CTOR(Readback);
     }
 
-    ~Readback() { MOZ_COUNT_DTOR(Readback); }
+    virtual ~Readback() { MOZ_COUNT_DTOR(Readback); }
 
-    virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
+    void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
       aRenderThread.UpdateAndRender(aWindowId, VsyncId(), mStartTime,
                                     /* aRender */ true, Some(mSize),
                                     Some(mBuffer), false);
@@ -434,9 +434,9 @@ void WebRenderAPI::Pause() {
       MOZ_COUNT_CTOR(PauseEvent);
     }
 
-    ~PauseEvent() { MOZ_COUNT_DTOR(PauseEvent); }
+    virtual ~PauseEvent() { MOZ_COUNT_DTOR(PauseEvent); }
 
-    virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
+    void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
       aRenderThread.Pause(aWindowId);
       layers::AutoCompleteTask complete(mTask);
     }
@@ -462,9 +462,9 @@ bool WebRenderAPI::Resume() {
       MOZ_COUNT_CTOR(ResumeEvent);
     }
 
-    ~ResumeEvent() { MOZ_COUNT_DTOR(ResumeEvent); }
+    virtual ~ResumeEvent() { MOZ_COUNT_DTOR(ResumeEvent); }
 
-    virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
+    void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
       *mResult = aRenderThread.Resume(aWindowId);
       layers::AutoCompleteTask complete(mTask);
     }
@@ -506,9 +506,9 @@ void WebRenderAPI::WaitFlushed() {
       MOZ_COUNT_CTOR(WaitFlushedEvent);
     }
 
-    ~WaitFlushedEvent() { MOZ_COUNT_DTOR(WaitFlushedEvent); }
+    virtual ~WaitFlushedEvent() { MOZ_COUNT_DTOR(WaitFlushedEvent); }
 
-    virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
+    void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
       layers::AutoCompleteTask complete(mTask);
     }
 
@@ -643,9 +643,9 @@ class FrameStartTime : public RendererEvent {
     MOZ_COUNT_CTOR(FrameStartTime);
   }
 
-  ~FrameStartTime() { MOZ_COUNT_DTOR(FrameStartTime); }
+  virtual ~FrameStartTime() { MOZ_COUNT_DTOR(FrameStartTime); }
 
-  virtual void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
+  void Run(RenderThread& aRenderThread, WindowId aWindowId) override {
     auto renderer = aRenderThread.GetRenderer(aWindowId);
     if (renderer) {
       renderer->SetFrameStartTime(mTime);

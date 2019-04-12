@@ -1,0 +1,26 @@
+{
+  "name": "GujaratiLexicon.com",
+  "description": "English - Gujarati dictionary on www.gujaratilexicon.com",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "gujaratilexicon@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "GujaratiLexicon.com",
+      "search_url": "https://www.gujaratilexicon.com/index.php",
+      "search_form": "https://www.gujaratilexicon.com/index.php?action=dictionary&chngdictype=EG",
+      "search_url_get_params": "action=dictionary&mode=search&type=1&dictype=EG&sitem={searchTerms}"
+    }
+  }
+}

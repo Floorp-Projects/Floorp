@@ -6,21 +6,21 @@
 
 #include "TextureD3D11.h"
 #include "CompositorD3D11.h"
-#include "gfxContext.h"
 #include "Effects.h"
-#include "gfxWindowsPlatform.h"
-#include "gfx2DGlue.h"
-#include "gfxPrefs.h"
+#include "PaintThread.h"
 #include "ReadbackManagerD3D11.h"
+#include "gfx2DGlue.h"
+#include "gfxContext.h"
+#include "gfxPrefs.h"
+#include "gfxWindowsPlatform.h"
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/gfx/DeviceManagerDx.h"
-#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/gfx/gfxVars.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/webrender/RenderD3D11TextureHostOGL.h"
 #include "mozilla/webrender/RenderThread.h"
 #include "mozilla/webrender/WebRenderAPI.h"
-#include "PaintThread.h"
 
 namespace mozilla {
 
@@ -254,24 +254,17 @@ static void UnlockD3DTexture(T* aTexture) {
   }
 }
 
-DXGITextureData::DXGITextureData(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                 bool aNeedsClear, bool aNeedsClearWhite,
-                                 bool aIsForOutOfBandContent)
-    : mSize(aSize),
-      mFormat(aFormat),
-      mNeedsClear(aNeedsClear),
-      mNeedsClearWhite(aNeedsClearWhite),
-      mHasSynchronization(false),
-      mIsForOutOfBandContent(aIsForOutOfBandContent) {}
-
 D3D11TextureData::D3D11TextureData(ID3D11Texture2D* aTexture,
                                    gfx::IntSize aSize,
-                                   gfx::SurfaceFormat aFormat, bool aNeedsClear,
-                                   bool aNeedsClearWhite,
-                                   bool aIsForOutOfBandContent)
-    : DXGITextureData(aSize, aFormat, aNeedsClear, aNeedsClearWhite,
-                      aIsForOutOfBandContent),
-      mTexture(aTexture) {
+                                   gfx::SurfaceFormat aFormat,
+                                   TextureAllocationFlags aFlags)
+    : mSize(aSize),
+      mFormat(aFormat),
+      mNeedsClear(aFlags & ALLOC_CLEAR_BUFFER),
+      mNeedsClearWhite(aFlags & ALLOC_CLEAR_BUFFER_WHITE),
+      mIsForOutOfBandContent(aFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT),
+      mTexture(aTexture),
+      mAllocationFlags(aFlags) {
   MOZ_ASSERT(aTexture);
   mHasSynchronization = HasKeyedMutex(aTexture);
 }
@@ -324,7 +317,7 @@ bool D3D11TextureData::Lock(OpenMode aMode) {
   return true;
 }
 
-bool DXGITextureData::PrepareDrawTargetInLock(OpenMode aMode) {
+bool D3D11TextureData::PrepareDrawTargetInLock(OpenMode aMode) {
   // Make sure that successful write-lock means we will have a DrawTarget to
   // write into.
   if (!mDrawTarget &&
@@ -353,7 +346,7 @@ bool DXGITextureData::PrepareDrawTargetInLock(OpenMode aMode) {
 
 void D3D11TextureData::Unlock() { UnlockD3DTexture(mTexture.get()); }
 
-void DXGITextureData::FillInfo(TextureData::Info& aInfo) const {
+void D3D11TextureData::FillInfo(TextureData::Info& aInfo) const {
   aInfo.size = mSize;
   aInfo.format = mFormat;
   aInfo.supportsMoz2D = true;
@@ -373,7 +366,7 @@ void D3D11TextureData::SyncWithObject(SyncObjectClient* aSyncObject) {
   sync->RegisterTexture(mTexture);
 }
 
-bool DXGITextureData::SerializeSpecific(
+bool D3D11TextureData::SerializeSpecific(
     SurfaceDescriptorD3D10* const aOutDesc) {
   RefPtr<IDXGIResource> resource;
   GetDXGIResource((IDXGIResource**)getter_AddRefs(resource));
@@ -387,12 +380,12 @@ bool DXGITextureData::SerializeSpecific(
     return false;
   }
 
-  *aOutDesc =
-      SurfaceDescriptorD3D10((WindowsHandle)sharedHandle, mFormat, mSize);
+  *aOutDesc = SurfaceDescriptorD3D10((WindowsHandle)sharedHandle, mFormat,
+                                     mSize, mYUVColorSpace);
   return true;
 }
 
-bool DXGITextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
+bool D3D11TextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   SurfaceDescriptorD3D10 desc;
   if (!SerializeSpecific(&desc)) return false;
 
@@ -400,27 +393,35 @@ bool DXGITextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
   return true;
 }
 
-void DXGITextureData::GetSubDescriptor(GPUVideoSubDescriptor* const aOutDesc) {
+void D3D11TextureData::GetSubDescriptor(GPUVideoSubDescriptor* const aOutDesc) {
   SurfaceDescriptorD3D10 ret;
   if (!SerializeSpecific(&ret)) return;
 
   *aOutDesc = std::move(ret);
 }
 
-DXGITextureData* DXGITextureData::Create(IntSize aSize, SurfaceFormat aFormat,
-                                         TextureAllocationFlags aFlags) {
+D3D11TextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
+                                           TextureAllocationFlags aFlags,
+                                           ID3D11Device* aDevice) {
+  return Create(aSize, aFormat, nullptr, aFlags, aDevice);
+}
+
+D3D11TextureData* D3D11TextureData::Create(SourceSurface* aSurface,
+                                           TextureAllocationFlags aFlags,
+                                           ID3D11Device* aDevice) {
+  return Create(aSurface->GetSize(), aSurface->GetFormat(), aSurface, aFlags,
+                aDevice);
+}
+
+D3D11TextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
+                                           SourceSurface* aSurface,
+                                           TextureAllocationFlags aFlags,
+                                           ID3D11Device* aDevice) {
   if (aFormat == SurfaceFormat::A8) {
     // Currently we don't support A8 surfaces. Fallback.
     return nullptr;
   }
 
-  return D3D11TextureData::Create(aSize, aFormat, aFlags);
-}
-
-DXGITextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
-                                          SourceSurface* aSurface,
-                                          TextureAllocationFlags aFlags,
-                                          ID3D11Device* aDevice) {
   // Just grab any device. We never use the immediate context, so the devices
   // are fine to use from any thread.
   RefPtr<ID3D11Device> device = aDevice;
@@ -534,45 +535,12 @@ DXGITextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
   texture11->SetPrivateDataInterface(
       sD3D11TextureUsage,
       new TextureMemoryMeasurer(newDesc.Width * newDesc.Height * 4));
-  return new D3D11TextureData(texture11, aSize, aFormat,
-                              aFlags & ALLOC_CLEAR_BUFFER,
-                              aFlags & ALLOC_CLEAR_BUFFER_WHITE,
-                              aFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT);
-}
-
-DXGITextureData* D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat,
-                                          TextureAllocationFlags aFlags,
-                                          ID3D11Device* aDevice) {
-  return D3D11TextureData::Create(aSize, aFormat, nullptr, aFlags, aDevice);
-}
-
-DXGITextureData* D3D11TextureData::Create(SourceSurface* aSurface,
-                                          TextureAllocationFlags aFlags,
-                                          ID3D11Device* aDevice) {
-  if (aSurface->GetFormat() == SurfaceFormat::A8) {
-    // Currently we don't support A8 surfaces. Fallback.
-    return nullptr;
-  }
-
-  return D3D11TextureData::Create(aSurface->GetSize(), aSurface->GetFormat(),
-                                  aSurface, aFlags, aDevice);
+  return new D3D11TextureData(texture11, aSize, aFormat, aFlags);
 }
 
 void D3D11TextureData::Deallocate(LayersIPCChannel* aAllocator) {
   mDrawTarget = nullptr;
   mTexture = nullptr;
-}
-
-already_AddRefed<TextureClient> CreateD3D11TextureClientWithDevice(
-    IntSize aSize, SurfaceFormat aFormat, TextureFlags aTextureFlags,
-    TextureAllocationFlags aAllocFlags, ID3D11Device* aDevice,
-    LayersIPCChannel* aAllocator) {
-  TextureData* data =
-      D3D11TextureData::Create(aSize, aFormat, aAllocFlags, aDevice);
-  if (!data) {
-    return nullptr;
-  }
-  return MakeAndAddRef<TextureClient>(data, aTextureFlags, aAllocator);
 }
 
 TextureData* D3D11TextureData::CreateSimilar(
@@ -767,6 +735,7 @@ DXGITextureHostD3D11::DXGITextureHostD3D11(
       mSize(aDescriptor.size()),
       mHandle(aDescriptor.handle()),
       mFormat(aDescriptor.format()),
+      mYUVColorSpace(aDescriptor.yUVColorSpace()),
       mIsLocked(false) {}
 
 bool DXGITextureHostD3D11::EnsureTexture() {
@@ -1032,15 +1001,20 @@ void DXGITextureHostD3D11::PushResourceUpdates(
       (aResources.*method)(aImageKeys[0], descriptor, aExtID, bufferType, 0);
       break;
     }
+    case gfx::SurfaceFormat::P010:
+    case gfx::SurfaceFormat::P016:
     case gfx::SurfaceFormat::NV12: {
       MOZ_ASSERT(aImageKeys.length() == 2);
       MOZ_ASSERT(mSize.width % 2 == 0);
       MOZ_ASSERT(mSize.height % 2 == 0);
 
-      // For now, no software decoder can output 10/12 bits NV12 images
-      // So forcing A8 is okay.
-      wr::ImageDescriptor descriptor0(mSize, gfx::SurfaceFormat::A8);
-      wr::ImageDescriptor descriptor1(mSize / 2, gfx::SurfaceFormat::R8G8);
+      wr::ImageDescriptor descriptor0(mSize, mFormat == gfx::SurfaceFormat::NV12
+                                                 ? gfx::SurfaceFormat::A8
+                                                 : gfx::SurfaceFormat::A16);
+      wr::ImageDescriptor descriptor1(mSize / 2,
+                                      mFormat == gfx::SurfaceFormat::NV12
+                                          ? gfx::SurfaceFormat::R8G8
+                                          : gfx::SurfaceFormat::R16G16);
       auto bufferType = wr::WrExternalImageBufferType::TextureExternalHandle;
       (aResources.*method)(aImageKeys[0], descriptor0, aExtID, bufferType, 0);
       (aResources.*method)(aImageKeys[1], descriptor1, aExtID, bufferType, 1);
@@ -1066,21 +1040,15 @@ void DXGITextureHostD3D11::PushDisplayItems(
                          !(mFlags & TextureFlags::NON_PREMULTIPLIED));
       break;
     }
+    case gfx::SurfaceFormat::P010:
+    case gfx::SurfaceFormat::P016:
     case gfx::SurfaceFormat::NV12: {
       MOZ_ASSERT(aImageKeys.length() == 2);
       aBuilder.PushNV12Image(aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
-                             wr::ColorDepth::Color8,
-                             wr::ToWrYuvColorSpace(YUVColorSpace::BT601),
-                             aFilter);
-      break;
-    }
-    case gfx::SurfaceFormat::P010:
-    case gfx::SurfaceFormat::P016: {
-      MOZ_ASSERT(aImageKeys.length() == 2);
-      aBuilder.PushNV12Image(aBounds, aClip, true, aImageKeys[0], aImageKeys[1],
-                             wr::ColorDepth::Color16,
-                             wr::ToWrYuvColorSpace(YUVColorSpace::BT601),
-                             aFilter);
+                             GetFormat() == gfx::SurfaceFormat::NV12
+                                 ? wr::ColorDepth::Color8
+                                 : wr::ColorDepth::Color16,
+                             wr::ToWrYuvColorSpace(mYUVColorSpace), aFilter);
       break;
     }
     default: {

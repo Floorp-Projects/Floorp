@@ -23,7 +23,7 @@ class PrintTargetRecording final : public PrintTarget {
   static already_AddRefed<PrintTargetRecording> CreateOrNull(
       const IntSize& aSize);
 
-  virtual already_AddRefed<DrawTarget> MakeDrawTarget(
+  already_AddRefed<DrawTarget> MakeDrawTarget(
       const IntSize& aSize, DrawEventRecorder* aRecorder = nullptr) override;
 
  private:

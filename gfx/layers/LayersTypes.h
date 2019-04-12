@@ -365,7 +365,7 @@ typedef Maybe<LayerRect> MaybeLayerRect;
 // This is used to communicate Layers across IPC channels. The Handle is valid
 // for layers in the same PLayerTransaction. Handles are created by
 // ClientLayerManager, and are cached in LayerTransactionParent on first use.
-class LayerHandle {
+class LayerHandle final {
   friend struct IPC::ParamTraits<mozilla::layers::LayerHandle>;
 
  public:
@@ -387,7 +387,7 @@ class LayerHandle {
 // valid for layers in the same PLayerTransaction or PImageBridge. Handles are
 // created by ClientLayerManager or ImageBridgeChild, and are cached in the
 // parent side on first use.
-class CompositableHandle {
+class CompositableHandle final {
   friend struct IPC::ParamTraits<mozilla::layers::CompositableHandle>;
 
  public:

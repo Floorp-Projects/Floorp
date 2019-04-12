@@ -64,6 +64,7 @@ const INITIAL_STATE = {
       lastUpdated: null,
       data: {}, // {spocs: []}
       loaded: false,
+      frequency_caps: [],
     },
   },
   Search: {
@@ -501,6 +502,14 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
           ...prevState.feeds,
           data: action.data || prevState.feeds.data,
           loaded: true,
+        },
+      };
+    case at.DISCOVERY_STREAM_SPOCS_CAPS:
+      return {
+        ...prevState,
+        spocs: {
+          ...prevState.spocs,
+          frequency_caps: action.data,
         },
       };
     case at.DISCOVERY_STREAM_SPOCS_ENDPOINT:

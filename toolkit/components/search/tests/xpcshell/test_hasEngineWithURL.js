@@ -35,8 +35,8 @@ add_task(async function test_hasEngineWithURL() {
   useHttpServer();
 
   info("Test starting");
-  // Avoid deprecated synchronous initialization.
-  await asyncInit();
+  await AddonTestUtils.promiseStartupManager();
+  await Services.search.init();
 
   // Setup various Engine definitions for method tests.
   let UNSORTED_ENGINE = {

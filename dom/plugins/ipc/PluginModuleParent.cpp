@@ -401,11 +401,13 @@ void PluginModuleContentParent::Initialize(
 
   moduleMapping->SetChannelOpened();
 
-  // Request Windows message deferral behavior on our channel. This
-  // applies to the top level and all sub plugin protocols since they
-  // all share the same channel.
-  parent->GetIPCChannel()->SetChannelFlags(
-      MessageChannel::REQUIRE_DEFERRED_MESSAGE_PROTECTION);
+  if (XRE_UseNativeEventProcessing()) {
+    // If we're processing native events in our message pump, request Windows
+    // message deferral behavior on our channel. This applies to the top level
+    // and all sub plugin protocols since they all share the same channel.
+    parent->GetIPCChannel()->SetChannelFlags(
+        MessageChannel::REQUIRE_DEFERRED_MESSAGE_PROTECTION);
+  }
 
   TimeoutChanged(kContentTimeoutPref, parent);
 

@@ -30,7 +30,7 @@ class RecordedFrame {
   TimeStamp GetTimeStamp() { return mTimeStamp; }
 
  protected:
-  virtual ~RecordedFrame() {}
+  virtual ~RecordedFrame() = default;
   RecordedFrame(const TimeStamp& aTimeStamp) : mTimeStamp(aTimeStamp) {}
 
  private:

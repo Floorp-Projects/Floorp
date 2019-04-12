@@ -20,7 +20,7 @@ namespace layers {
 // or work improperly with APZ enabled. This class helps us detect such an
 // effect so that we can warn the author and/or take other preventative
 // measures.
-class MOZ_STACK_CLASS ScrollLinkedEffectDetector {
+class MOZ_STACK_CLASS ScrollLinkedEffectDetector final {
  private:
   static uint32_t sDepth;
   static bool sFoundScrollLinkedEffect;

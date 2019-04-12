@@ -40,9 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "'Nga garaj da'nga ruaj",
   "prefs_home_header": "Sa nū riña pagina ayi'ì Firefox",
   "prefs_home_description": "Gini'iaj ahuin si ruat gini'iaj riña Firefox.",
-  "prefs_content_discovery_header": "Firefox Home",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num}dukuáan;{num}ga'ì dukuáan",
   "prefs_search_header": "Nana'uì' web",
   "prefs_topsites_description": "Riña gaché nu yitïnjt",
@@ -110,6 +108,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Notisia huìi",
   "firstrun_continue_to_login": "Gun' ne' ñaan",
   "firstrun_skip_login": "Gūej yichrá chrēj nan",
-  "context_menu_title": "Na'nïn' menû",
-  "pocket_learn_more": "Gahuin chrūn doj"
+  "context_menu_title": "Na'nïn' menû"
 };

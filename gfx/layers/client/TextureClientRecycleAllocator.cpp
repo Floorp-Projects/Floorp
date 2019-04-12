@@ -16,8 +16,8 @@ namespace layers {
 
 // Used to keep TextureClient's reference count stable as not to disrupt
 // recycling.
-class TextureClientHolder {
-  ~TextureClientHolder() {}
+class TextureClientHolder final {
+  ~TextureClientHolder() = default;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureClientHolder)
@@ -38,7 +38,7 @@ class TextureClientHolder {
   bool mWillRecycle;
 };
 
-class DefaultTextureClientAllocationHelper
+class MOZ_RAII DefaultTextureClientAllocationHelper
     : public ITextureClientAllocationHelper {
  public:
   DefaultTextureClientAllocationHelper(

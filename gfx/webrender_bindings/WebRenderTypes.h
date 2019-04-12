@@ -160,6 +160,8 @@ inline Maybe<wr::ImageFormat> SurfaceFormatToImageFormat(
       return Some(wr::ImageFormat::R16);
     case gfx::SurfaceFormat::R8G8:
       return Some(wr::ImageFormat::RG8);
+    case gfx::SurfaceFormat::R16G16:
+      return Some(wr::ImageFormat::RG16);
     case gfx::SurfaceFormat::UNKNOWN:
     default:
       return Nothing();
@@ -730,7 +732,7 @@ template <typename T>
 struct Vec;
 
 template <>
-struct Vec<uint8_t> {
+struct Vec<uint8_t> final {
   wr::WrVecU8 inner;
   Vec() { SetEmpty(); }
   Vec(Vec&) = delete;
@@ -872,12 +874,14 @@ enum class WebRenderError : int8_t {
 };
 
 static inline wr::WrYuvColorSpace ToWrYuvColorSpace(
-    YUVColorSpace aYUVColorSpace) {
+    gfx::YUVColorSpace aYUVColorSpace) {
   switch (aYUVColorSpace) {
-    case YUVColorSpace::BT601:
+    case gfx::YUVColorSpace::BT601:
       return wr::WrYuvColorSpace::Rec601;
-    case YUVColorSpace::BT709:
+    case gfx::YUVColorSpace::BT709:
       return wr::WrYuvColorSpace::Rec709;
+    case gfx::YUVColorSpace::BT2020:
+      return wr::WrYuvColorSpace::Rec2020;
     default:
       MOZ_ASSERT_UNREACHABLE("Tried to convert invalid YUVColorSpace.");
   }

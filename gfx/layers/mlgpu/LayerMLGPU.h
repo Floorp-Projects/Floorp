@@ -86,7 +86,7 @@ class LayerMLGPU : public HostLayer {
   virtual bool OnPrepareToRender(FrameBuilder* aBuilder) { return true; }
 
   virtual void ClearCachedResources() {}
-  virtual CompositableHost* GetCompositableHost() override { return nullptr; }
+  CompositableHost* GetCompositableHost() override { return nullptr; }
 
  protected:
   LayerMLGPU(LayerManagerMLGPU* aManager);
@@ -120,7 +120,7 @@ class LayerMLGPU : public HostLayer {
 class RefLayerMLGPU final : public RefLayer, public LayerMLGPU {
  public:
   explicit RefLayerMLGPU(LayerManagerMLGPU* aManager);
-  ~RefLayerMLGPU() override;
+  virtual ~RefLayerMLGPU();
 
   // Layer
   HostLayer* AsHostLayer() override { return this; }
@@ -141,7 +141,7 @@ class RefLayerMLGPU final : public RefLayer, public LayerMLGPU {
 class ColorLayerMLGPU final : public ColorLayer, public LayerMLGPU {
  public:
   explicit ColorLayerMLGPU(LayerManagerMLGPU* aManager);
-  ~ColorLayerMLGPU() override;
+  virtual ~ColorLayerMLGPU();
 
   // LayerMLGPU
   bool IsContentOpaque() override { return mColor.a >= 1.0f; }

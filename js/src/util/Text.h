@@ -13,11 +13,11 @@
 #include "mozilla/TextUtils.h"
 #include "mozilla/Utf8.h"
 
-#include <ctype.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string>
+#include <type_traits>
 
 #include "jsutil.h"
 #include "NamespaceImports.h"
@@ -27,20 +27,6 @@
 #include "vm/Printer.h"
 
 class JSLinearString;
-
-/*
- * Shorthands for ASCII (7-bit) decimal and hex conversion.
- * Manually inline isdigit and isxdigit for performance; MSVC doesn't do this
- * for us.
- */
-#define JS7_ISA2F(c) \
-  ((((((unsigned)(c)) - 'a') <= 5) || (((unsigned)(c)) - 'A') <= 5))
-#define JS7_UNDEC(c) ((c) - '0')
-#define JS7_ISOCT(c) ((((unsigned)(c)) - '0') <= 7)
-#define JS7_UNOCT(c) (JS7_UNDEC(c))
-#define JS7_ISHEX(c) ((c) < 128 && (mozilla::IsAsciiDigit(c) || JS7_ISA2F(c)))
-#define JS7_UNHEX(c) \
-  (unsigned)(mozilla::IsAsciiDigit(c) ? (c) - '0' : 10 + tolower(c) - 'a')
 
 static MOZ_ALWAYS_INLINE size_t js_strlen(const char16_t* s) {
   return std::char_traits<char16_t>::length(s);
@@ -55,6 +41,20 @@ extern int32_t js_fputs(const char16_t* s, FILE* f);
 namespace js {
 
 class StringBuffer;
+
+template <typename CharT>
+constexpr uint8_t AsciiDigitToNumber(CharT c) {
+  using UnsignedCharT = std::make_unsigned_t<CharT>;
+  auto uc = static_cast<UnsignedCharT>(c);
+  return uc - '0';
+}
+
+template <typename CharT>
+static constexpr bool IsAsciiPrintable(CharT c) {
+  using UnsignedCharT = std::make_unsigned_t<CharT>;
+  auto uc = static_cast<UnsignedCharT>(c);
+  return ' ' <= uc && uc <= '~';
+}
 
 template <typename Char1, typename Char2>
 inline bool EqualChars(const Char1* s1, const Char2* s2, size_t len) {
@@ -87,6 +87,29 @@ static inline const CharT* SkipSpace(const CharT* s, const CharT* end) {
 
   return s;
 }
+
+extern UniqueChars DuplicateStringToArena(arena_id_t destArenaId, JSContext* cx,
+                                          const char* s);
+
+extern UniqueTwoByteChars DuplicateStringToArena(arena_id_t destArenaId,
+                                                 JSContext* cx,
+                                                 const char16_t* s);
+
+/*
+ * These variants do not report OOMs, you must arrange for OOMs to be reported
+ * yourself.
+ */
+extern UniqueChars DuplicateStringToArena(arena_id_t destArenaId,
+                                          const char* s);
+
+extern UniqueChars DuplicateStringToArena(arena_id_t destArenaId, const char* s,
+                                          size_t n);
+
+extern UniqueTwoByteChars DuplicateStringToArena(arena_id_t destArenaId,
+                                                 const char16_t* s);
+
+extern UniqueTwoByteChars DuplicateStringToArena(arena_id_t destArenaId,
+                                                 const char16_t* s, size_t n);
 
 extern UniqueChars DuplicateString(JSContext* cx, const char* s);
 

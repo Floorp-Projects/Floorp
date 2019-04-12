@@ -74,11 +74,11 @@ already_AddRefed<gfx::DataSourceSurface> WebRenderTextureHost::GetAsSurface() {
 void WebRenderTextureHost::SetTextureSourceProvider(
     TextureSourceProvider* aProvider) {}
 
-YUVColorSpace WebRenderTextureHost::GetYUVColorSpace() const {
+gfx::YUVColorSpace WebRenderTextureHost::GetYUVColorSpace() const {
   if (mWrappedTextureHost) {
     return mWrappedTextureHost->GetYUVColorSpace();
   }
-  return YUVColorSpace::UNKNOWN;
+  return gfx::YUVColorSpace::UNKNOWN;
 }
 
 gfx::IntSize WebRenderTextureHost::GetSize() const {

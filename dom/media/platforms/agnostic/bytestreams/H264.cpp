@@ -2,17 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/ArrayUtils.h"
-#include "mozilla/PodOperations.h"
-#include "mozilla/ResultExtensions.h"
+#include "H264.h"
+#include <cmath>
+#include <limits>
+#include "AnnexB.h"
 #include "BitReader.h"
 #include "BitWriter.h"
 #include "BufferReader.h"
 #include "ByteWriter.h"
-#include "AnnexB.h"
-#include "H264.h"
-#include <limits>
-#include <cmath>
+#include "mozilla/ArrayUtils.h"
+#include "mozilla/PodOperations.h"
+#include "mozilla/ResultExtensions.h"
 
 #define READSE(var, min, max)     \
   {                               \
@@ -118,6 +118,205 @@ bool SPSData::operator==(const SPSData& aOther) const {
 
 bool SPSData::operator!=(const SPSData& aOther) const {
   return !(operator==(aOther));
+}
+
+// Described in ISO 23001-8:2016
+// Table 2
+enum class PrimaryID : uint8_t {
+  INVALID = 0,
+  BT709 = 1,
+  UNSPECIFIED = 2,
+  BT470M = 4,
+  BT470BG = 5,
+  SMPTE170M = 6,
+  SMPTE240M = 7,
+  FILM = 8,
+  BT2020 = 9,
+  SMPTEST428_1 = 10,
+  SMPTEST431_2 = 11,
+  SMPTEST432_1 = 12,
+  EBU_3213_E = 22
+};
+
+// Table 3
+enum class TransferID : uint8_t {
+  INVALID = 0,
+  BT709 = 1,
+  UNSPECIFIED = 2,
+  GAMMA22 = 4,
+  GAMMA28 = 5,
+  SMPTE170M = 6,
+  SMPTE240M = 7,
+  LINEAR = 8,
+  LOG = 9,
+  LOG_SQRT = 10,
+  IEC61966_2_4 = 11,
+  BT1361_ECG = 12,
+  IEC61966_2_1 = 13,
+  BT2020_10 = 14,
+  BT2020_12 = 15,
+  SMPTEST2084 = 16,
+  SMPTEST428_1 = 17,
+
+  // Not yet standardized
+  ARIB_STD_B67 = 18,  // AKA hybrid-log gamma, HLG.
+};
+
+// Table 4
+enum class MatrixID : uint8_t {
+  RGB = 0,
+  BT709 = 1,
+  UNSPECIFIED = 2,
+  FCC = 4,
+  BT470BG = 5,
+  SMPTE170M = 6,
+  SMPTE240M = 7,
+  YCOCG = 8,
+  BT2020_NCL = 9,
+  BT2020_CL = 10,
+  YDZDX = 11,
+  INVALID = 255,
+};
+
+static PrimaryID GetPrimaryID(int aPrimary) {
+  if (aPrimary < 1 || aPrimary > 22 || aPrimary == 3) {
+    return PrimaryID::INVALID;
+  }
+  if (aPrimary > 12 && aPrimary < 22) {
+    return PrimaryID::INVALID;
+  }
+  return static_cast<PrimaryID>(aPrimary);
+}
+
+static TransferID GetTransferID(int aTransfer) {
+  if (aTransfer < 1 || aTransfer > 18 || aTransfer == 3) {
+    return TransferID::INVALID;
+  }
+  return static_cast<TransferID>(aTransfer);
+}
+
+static MatrixID GetMatrixID(int aMatrix) {
+  if (aMatrix < 0 || aMatrix > 11 || aMatrix == 3) {
+    return MatrixID::INVALID;
+  }
+  return static_cast<MatrixID>(aMatrix);
+}
+
+gfx::YUVColorSpace SPSData::ColorSpace() const {
+  // Bitfield, note that guesses with higher values take precedence over
+  // guesses with lower values.
+  enum Guess {
+    GUESS_BT601 = 1 << 0,
+    GUESS_BT709 = 1 << 1,
+    GUESS_BT2020 = 1 << 2,
+  };
+
+  uint32_t guess = 0;
+
+  switch (GetPrimaryID(colour_primaries)) {
+    case PrimaryID::BT709:
+      guess |= GUESS_BT709;
+      break;
+    case PrimaryID::BT470M:
+    case PrimaryID::BT470BG:
+    case PrimaryID::SMPTE170M:
+    case PrimaryID::SMPTE240M:
+      guess |= GUESS_BT601;
+      break;
+    case PrimaryID::BT2020:
+      guess |= GUESS_BT2020;
+      break;
+    case PrimaryID::FILM:
+    case PrimaryID::SMPTEST428_1:
+    case PrimaryID::SMPTEST431_2:
+    case PrimaryID::SMPTEST432_1:
+    case PrimaryID::EBU_3213_E:
+    case PrimaryID::INVALID:
+    case PrimaryID::UNSPECIFIED:
+      break;
+  }
+
+  switch (GetTransferID(transfer_characteristics)) {
+    case TransferID::BT709:
+      guess |= GUESS_BT709;
+      break;
+    case TransferID::GAMMA22:
+    case TransferID::GAMMA28:
+    case TransferID::SMPTE170M:
+    case TransferID::SMPTE240M:
+      guess |= GUESS_BT601;
+      break;
+    case TransferID::BT2020_10:
+    case TransferID::BT2020_12:
+      guess |= GUESS_BT2020;
+      break;
+    case TransferID::LINEAR:
+    case TransferID::LOG:
+    case TransferID::LOG_SQRT:
+    case TransferID::IEC61966_2_4:
+    case TransferID::BT1361_ECG:
+    case TransferID::IEC61966_2_1:
+    case TransferID::SMPTEST2084:
+    case TransferID::SMPTEST428_1:
+    case TransferID::ARIB_STD_B67:
+    case TransferID::INVALID:
+    case TransferID::UNSPECIFIED:
+      break;
+  }
+
+  switch (GetMatrixID(matrix_coefficients)) {
+    case MatrixID::BT709:
+      guess |= GUESS_BT709;
+      break;
+    case MatrixID::BT470BG:
+    case MatrixID::SMPTE170M:
+    case MatrixID::SMPTE240M:
+      guess |= GUESS_BT601;
+      break;
+    case MatrixID::BT2020_NCL:
+    case MatrixID::BT2020_CL:
+      guess |= GUESS_BT2020;
+      break;
+    case MatrixID::RGB:
+    case MatrixID::FCC:
+    case MatrixID::YCOCG:
+    case MatrixID::YDZDX:
+    case MatrixID::INVALID:
+    case MatrixID::UNSPECIFIED:
+      break;
+  }
+
+  // Removes lowest bit until only a single bit remains.
+  while (guess & (guess - 1)) {
+    guess &= guess - 1;
+  }
+  if (!guess) {
+    // A better default to BT601 which should die a slow death.
+    guess = GUESS_BT709;
+  }
+
+  switch (guess) {
+    case GUESS_BT601:
+      return gfx::YUVColorSpace::BT601;
+    case GUESS_BT709:
+      return gfx::YUVColorSpace::BT709;
+    case GUESS_BT2020:
+      return gfx::YUVColorSpace::BT2020;
+    default:
+      MOZ_ASSERT_UNREACHABLE(
+          "not possible to get here but makes compiler happy");
+      return gfx::YUVColorSpace::UNKNOWN;
+  }
+}
+
+gfx::ColorDepth SPSData::ColorDepth() const {
+  if (bit_depth_luma_minus8 != 0 && bit_depth_luma_minus8 != 2 &&
+      bit_depth_luma_minus8 != 4) {
+    // We don't know what that is, just assume 8 bits to prevent decoding
+    // regressions if we ever encounter those.
+    return gfx::ColorDepth::COLOR_8;
+  }
+  return gfx::ColorDepthForBitDepth(bit_depth_luma_minus8 + 8);
 }
 
 // SPSNAL and SPSNALIterator do not own their data.

@@ -4,19 +4,19 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WMF.h"
 #include "D3D11ShareHandleImage.h"
+#include <memory>
+#include "DXVA2Manager.h"
+#include "WMF.h"
+#include "d3d11.h"
 #include "gfxImageSurface.h"
+#include "gfxPrefs.h"
 #include "gfxWindowsPlatform.h"
-#include "mozilla/layers/TextureClient.h"
-#include "mozilla/layers/TextureD3D11.h"
+#include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
-#include "mozilla/gfx/DeviceManagerDx.h"
-#include "d3d11.h"
-#include "gfxPrefs.h"
-#include "DXVA2Manager.h"
-#include <memory>
+#include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/TextureD3D11.h"
 
 namespace mozilla {
 namespace layers {
@@ -25,39 +25,20 @@ using namespace gfx;
 
 D3D11ShareHandleImage::D3D11ShareHandleImage(const gfx::IntSize& aSize,
                                              const gfx::IntRect& aRect,
-                                             const GUID& aSourceFormat)
+                                             gfx::YUVColorSpace aColorSpace)
     : Image(nullptr, ImageFormat::D3D11_SHARE_HANDLE_TEXTURE),
       mSize(aSize),
       mPictureRect(aRect),
-      mSourceFormat(aSourceFormat)
-
-{}
+      mYUVColorSpace(aColorSpace) {}
 
 bool D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator,
                                             ID3D11Device* aDevice) {
   if (aAllocator) {
-    if (mSourceFormat == MFVideoFormat_NV12 &&
-        gfxPrefs::PDMWMFUseNV12Format() &&
-        gfx::DeviceManagerDx::Get()->CanUseNV12()) {
-      mTextureClient =
-          aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::NV12, mSize);
-    } else if (((mSourceFormat == MFVideoFormat_P010 &&
-                 gfx::DeviceManagerDx::Get()->CanUseP010()) ||
-                (mSourceFormat == MFVideoFormat_P016 &&
-                 gfx::DeviceManagerDx::Get()->CanUseP016())) &&
-               gfxPrefs::PDMWMFUseNV12Format()) {
-      mTextureClient = aAllocator->CreateOrRecycleClient(
-          mSourceFormat == MFVideoFormat_P010 ? gfx::SurfaceFormat::P010
-                                              : gfx::SurfaceFormat::P016,
-          mSize);
-    } else {
-      mTextureClient = aAllocator->CreateOrRecycleClient(
-          gfx::SurfaceFormat::B8G8R8A8, mSize);
-    }
+    mTextureClient = aAllocator->CreateOrRecycleClient(mYUVColorSpace, mSize);
     if (mTextureClient) {
-      mTexture =
-          static_cast<D3D11TextureData*>(mTextureClient->GetInternalData())
-              ->GetD3D11Texture();
+      D3D11TextureData* textureData = GetData();
+      MOZ_DIAGNOSTIC_ASSERT(textureData, "Wrong TextureDataType");
+      mTexture = textureData->GetD3D11Texture();
       return true;
     }
     return false;
@@ -110,8 +91,7 @@ D3D11ShareHandleImage::GetAsSourceSurface() {
 
     RefPtr<ID3D11Texture2D> outTexture;
 
-    hr = manager->CopyToBGRATexture(texture, mSourceFormat,
-                                    getter_AddRefs(outTexture));
+    hr = manager->CopyToBGRATexture(texture, getter_AddRefs(outTexture));
 
     if (FAILED(hr)) {
       gfxWarning() << "Failed to copy to BGRA texture.";
@@ -192,16 +172,81 @@ D3D11ShareHandleImage::GetAsSourceSurface() {
 
 ID3D11Texture2D* D3D11ShareHandleImage::GetTexture() const { return mTexture; }
 
-already_AddRefed<TextureClient> D3D11RecycleAllocator::Allocate(
-    gfx::SurfaceFormat aFormat, gfx::IntSize aSize, BackendSelector aSelector,
-    TextureFlags aTextureFlags, TextureAllocationFlags aAllocFlags) {
-  return CreateD3D11TextureClientWithDevice(
-      aSize, aFormat, aTextureFlags, aAllocFlags, mDevice,
-      mSurfaceAllocator->GetTextureForwarder());
+class MOZ_RAII D3D11TextureClientAllocationHelper
+    : public ITextureClientAllocationHelper {
+ public:
+  D3D11TextureClientAllocationHelper(gfx::SurfaceFormat aFormat,
+                                     gfx::YUVColorSpace aColorSpace,
+                                     const gfx::IntSize& aSize,
+                                     TextureAllocationFlags aAllocFlags,
+                                     ID3D11Device* aDevice,
+                                     TextureFlags aTextureFlags)
+      : ITextureClientAllocationHelper(aFormat, aSize, BackendSelector::Content,
+                                       aTextureFlags, aAllocFlags),
+        mYUVColorSpace(aColorSpace),
+        mDevice(aDevice) {}
+
+  bool IsCompatible(TextureClient* aTextureClient) override {
+    D3D11TextureData* textureData =
+        aTextureClient->GetInternalData()->AsD3D11TextureData();
+    if (!textureData || aTextureClient->GetFormat() != mFormat ||
+        aTextureClient->GetSize() != mSize) {
+      return false;
+    }
+    // TODO: Should we also check for change in the allocation flags if RGBA?
+    return (aTextureClient->GetFormat() != gfx::SurfaceFormat::NV12 &&
+            aTextureClient->GetFormat() != gfx::SurfaceFormat::P010 &&
+            aTextureClient->GetFormat() != gfx::SurfaceFormat::P016) ||
+           (textureData->GetYUVColorSpace() == mYUVColorSpace &&
+            textureData->GetTextureAllocationFlags() == mAllocationFlags);
+  }
+
+  already_AddRefed<TextureClient> Allocate(
+      KnowsCompositor* aAllocator) override {
+    D3D11TextureData* data =
+        D3D11TextureData::Create(mSize, mFormat, mAllocationFlags, mDevice);
+    if (!data) {
+      return nullptr;
+    }
+    data->SetYUVColorSpace(mYUVColorSpace);
+    return MakeAndAddRef<TextureClient>(data, mTextureFlags,
+                                        aAllocator->GetTextureForwarder());
+  }
+
+ private:
+  gfx::YUVColorSpace mYUVColorSpace;
+  const RefPtr<ID3D11Device> mDevice;
+};
+
+D3D11RecycleAllocator::D3D11RecycleAllocator(
+    KnowsCompositor* aAllocator, ID3D11Device* aDevice,
+    gfx::SurfaceFormat aPreferredFormat)
+    : TextureClientRecycleAllocator(aAllocator),
+      mDevice(aDevice),
+      mCanUseNV12(gfxPrefs::PDMWMFUseNV12Format() &&
+                  gfx::DeviceManagerDx::Get()->CanUseNV12()),
+      mCanUseP010(gfxPrefs::PDMWMFUseNV12Format() &&
+                  gfx::DeviceManagerDx::Get()->CanUseP010()),
+      mCanUseP016(gfxPrefs::PDMWMFUseNV12Format() &&
+                  gfx::DeviceManagerDx::Get()->CanUseP016()) {
+  SetPreferredSurfaceFormat(aPreferredFormat);
+}
+
+void D3D11RecycleAllocator::SetPreferredSurfaceFormat(
+    gfx::SurfaceFormat aPreferredFormat) {
+  if ((aPreferredFormat == gfx::SurfaceFormat::NV12 && mCanUseNV12) ||
+      (aPreferredFormat == gfx::SurfaceFormat::P010 && mCanUseP010) ||
+      (aPreferredFormat == gfx::SurfaceFormat::P016 && mCanUseP016)) {
+    mUsableSurfaceFormat = aPreferredFormat;
+    return;
+  }
+  // We can't handle the native source format, set it to BGRA which will
+  // force the caller to convert it later.
+  mUsableSurfaceFormat = gfx::SurfaceFormat::B8G8R8A8;
 }
 
 already_AddRefed<TextureClient> D3D11RecycleAllocator::CreateOrRecycleClient(
-    gfx::SurfaceFormat aFormat, const gfx::IntSize& aSize) {
+    gfx::YUVColorSpace aColorSpace, const gfx::IntSize& aSize) {
   // When CompositorDevice or ContentDevice is updated,
   // we could not reuse old D3D11Textures. It could cause video flickering.
   RefPtr<ID3D11Device> device = gfx::DeviceManagerDx::Get()->GetImageDevice();
@@ -217,9 +262,12 @@ already_AddRefed<TextureClient> D3D11RecycleAllocator::CreateOrRecycleClient(
     // in practice.
     allocFlags = TextureAllocationFlags::ALLOC_MANUAL_SYNCHRONIZATION;
   }
-  RefPtr<TextureClient> textureClient =
-      CreateOrRecycle(aFormat, aSize, BackendSelector::Content,
-                      layers::TextureFlags::DEFAULT, allocFlags);
+
+  D3D11TextureClientAllocationHelper helper(mUsableSurfaceFormat, aColorSpace,
+                                            aSize, allocFlags, mDevice,
+                                            layers::TextureFlags::DEFAULT);
+
+  RefPtr<TextureClient> textureClient = CreateOrRecycle(helper);
   return textureClient.forget();
 }
 

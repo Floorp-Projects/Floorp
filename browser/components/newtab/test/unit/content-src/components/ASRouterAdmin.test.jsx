@@ -1,4 +1,4 @@
-import {ASRouterAdminInner} from "content-src/components/ASRouterAdmin/ASRouterAdmin";
+import {ASRouterAdminInner, DiscoveryStreamAdmin, ToggleSpocButton} from "content-src/components/ASRouterAdmin/ASRouterAdmin";
 import {GlobalOverrider} from "test/unit/utils";
 import React from "react";
 import {shallow} from "enzyme";
@@ -66,6 +66,10 @@ describe("ASRouterAdmin", () => {
     it("should render a pocket section for pocket route", () => {
       wrapper = shallow(<ASRouterAdminInner location={{routes: ["pocket"]}} Sections={[]} />);
       assert.equal(wrapper.find("h2").at(0).text(), "Pocket");
+    });
+    it("should render a DS section for DS route", () => {
+      wrapper = shallow(<ASRouterAdminInner location={{routes: ["ds"]}} Sections={[]} Prefs={{}} />);
+      assert.equal(wrapper.find("h2").at(0).text(), "Discovery Stream");
     });
     it("should render two error messages", () => {
       wrapper = shallow(<ASRouterAdminInner location={{routes: ["errors"]}} Sections={[]} />);
@@ -163,6 +167,56 @@ describe("ASRouterAdmin", () => {
 
         assert.lengthOf(wrapper.find(".message-id"), 0);
       });
+    });
+  });
+  describe("#DiscoveryStream", () => {
+    it("should render a DiscoveryStreamAdmin component", () => {
+      wrapper = shallow(<DiscoveryStreamAdmin otherPrefs={{}} state={{
+        config: {
+          enabled: true,
+          layout_endpint: "",
+        },
+        layout: [],
+        spocs: {
+          frequency_caps: [],
+        },
+      }} />);
+      assert.equal(wrapper.find("h3").at(0).text(), "Endpoint variant");
+    });
+    it("should render a spoc in DiscoveryStreamAdmin component", () => {
+      wrapper = shallow(<DiscoveryStreamAdmin otherPrefs={{}} state={{
+        config: {
+          enabled: true,
+          layout_endpint: "",
+        },
+        layout: [],
+        spocs: {
+          frequency_caps: [],
+          data: {
+            spocs: [{
+              id: 12345,
+            }],
+          },
+        },
+      }} />);
+      wrapper.instance().onSpocToggle({id: 12345});
+      const messageSummary = wrapper.find(".message-summary").at(0);
+      const pre = messageSummary.find("pre").at(0);
+      const spocText = pre.text();
+      assert.equal(spocText, "{\n  \"id\": 12345\n}");
+    });
+  });
+  describe("#ToggleSpocButton", () => {
+    it("should render a DiscoveryStreamAdmin component", async () => {
+      let result = "";
+      function onClick(spoc) {
+        result = spoc;
+      }
+
+      wrapper = shallow(<ToggleSpocButton spoc="spoc" onClick={onClick} />);
+      wrapper.find("button").simulate("click");
+
+      assert.equal(result, "spoc");
     });
   });
 });

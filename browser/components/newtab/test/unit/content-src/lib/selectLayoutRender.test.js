@@ -21,7 +21,7 @@ describe("selectLayoutRender", () => {
   });
 
   it("should return an empty array given initial state", () => {
-    const result = selectLayoutRender(store.getState().DiscoveryStream, []);
+    const result = selectLayoutRender(store.getState().DiscoveryStream, {}, []);
     assert.deepEqual(result, []);
   });
 
@@ -29,7 +29,7 @@ describe("selectLayoutRender", () => {
     store.dispatch({type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: {layout: FAKE_LAYOUT}});
     store.dispatch({type: at.DISCOVERY_STREAM_FEEDS_UPDATE, data: FAKE_FEEDS});
 
-    const result = selectLayoutRender(store.getState().DiscoveryStream, []);
+    const result = selectLayoutRender(store.getState().DiscoveryStream, {}, []);
 
     assert.lengthOf(result, 1);
     assert.propertyVal(result[0], "width", 3);
@@ -40,7 +40,7 @@ describe("selectLayoutRender", () => {
     store.dispatch({type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: {layout: FAKE_LAYOUT}});
     store.dispatch({type: at.DISCOVERY_STREAM_FEEDS_UPDATE, data: {}});
 
-    const result = selectLayoutRender(store.getState().DiscoveryStream, []);
+    const result = selectLayoutRender(store.getState().DiscoveryStream, {}, []);
 
     assert.lengthOf(result, 1);
     assert.propertyVal(result[0], "width", 3);
@@ -52,7 +52,7 @@ describe("selectLayoutRender", () => {
     store.dispatch({type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: {layout: fakeLayout}});
     store.dispatch({type: at.DISCOVERY_STREAM_FEEDS_UPDATE, data: FAKE_FEEDS});
 
-    const result = selectLayoutRender(store.getState().DiscoveryStream, []);
+    const result = selectLayoutRender(store.getState().DiscoveryStream, {}, []);
 
     assert.deepEqual(result[0].components[0].data, {recommendations: ["bar"]});
   });
@@ -67,7 +67,7 @@ describe("selectLayoutRender", () => {
     store.dispatch({type: at.DISCOVERY_STREAM_SPOCS_UPDATE, data: fakeSpocsData});
     const randomStub = globals.sandbox.stub(global.Math, "random").returns(0.1);
 
-    const result = selectLayoutRender(store.getState().DiscoveryStream, []);
+    const result = selectLayoutRender(store.getState().DiscoveryStream, {}, []);
 
     assert.calledTwice(randomStub);
     assert.lengthOf(result, 1);
@@ -87,7 +87,7 @@ describe("selectLayoutRender", () => {
     store.dispatch({type: at.DISCOVERY_STREAM_SPOCS_UPDATE, data: fakeSpocsData});
     const randomStub = globals.sandbox.stub(global.Math, "random").returns(0.6);
 
-    const result = selectLayoutRender(store.getState().DiscoveryStream, []);
+    const result = selectLayoutRender(store.getState().DiscoveryStream, {}, []);
 
     assert.calledTwice(randomStub);
     assert.lengthOf(result, 1);
@@ -105,7 +105,7 @@ describe("selectLayoutRender", () => {
     store.dispatch({type: at.DISCOVERY_STREAM_SPOCS_UPDATE, data: fakeSpocsData});
     const randomStub = globals.sandbox.stub(global.Math, "random");
 
-    const result = selectLayoutRender(store.getState().DiscoveryStream, [0.4, 0.3]);
+    const result = selectLayoutRender(store.getState().DiscoveryStream, {}, [0.4, 0.3]);
 
     assert.notCalled(randomStub);
     assert.lengthOf(result, 1);
@@ -125,7 +125,7 @@ describe("selectLayoutRender", () => {
     store.dispatch({type: at.DISCOVERY_STREAM_SPOCS_UPDATE, data: fakeSpocsData});
     const randomStub = globals.sandbox.stub(global.Math, "random");
 
-    const result = selectLayoutRender(store.getState().DiscoveryStream, [0.6, 0.7]);
+    const result = selectLayoutRender(store.getState().DiscoveryStream, {}, [0.6, 0.7]);
 
     assert.notCalled(randomStub);
     assert.lengthOf(result, 1);
@@ -143,7 +143,7 @@ describe("selectLayoutRender", () => {
     store.dispatch({type: at.DISCOVERY_STREAM_SPOCS_UPDATE, data: fakeSpocsData});
     const randomStub = globals.sandbox.stub(global.Math, "random");
 
-    const result = selectLayoutRender(store.getState().DiscoveryStream, [0.7, 0.2]);
+    const result = selectLayoutRender(store.getState().DiscoveryStream, {}, [0.7, 0.2]);
 
     assert.notCalled(randomStub);
     assert.lengthOf(result, 1);
@@ -164,7 +164,7 @@ describe("selectLayoutRender", () => {
     store.dispatch({type: at.DISCOVERY_STREAM_LAYOUT_UPDATE, data: {layout: fakeLayout}});
     store.dispatch({type: at.DISCOVERY_STREAM_FEEDS_UPDATE, data: fakeFeeds});
 
-    const result = selectLayoutRender(store.getState().DiscoveryStream, []);
+    const result = selectLayoutRender(store.getState().DiscoveryStream, {}, []);
 
     const {recommendations} = result[0].components[0].data;
     assert.equal(recommendations.length, 4);

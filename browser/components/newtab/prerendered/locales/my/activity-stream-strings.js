@@ -40,9 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "ကောင်းပြီ၊ ရပါပြီ။",
   "prefs_home_header": "Firefox Home Content",
   "prefs_home_description": "Choose what content you want on your Firefox Home screen.",
-  "prefs_content_discovery_header": "Firefox Home",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num} row;{num} rows",
   "prefs_search_header": "Web Search",
   "prefs_topsites_description": "The sites you visit most",
@@ -110,6 +108,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "Privacy Notice",
   "firstrun_continue_to_login": "ဆက်၍",
   "firstrun_skip_login": "ဒီအဆင့်ကို ကျော်ပါ",
-  "context_menu_title": "မီနူးကို ဖွင့်ပါ",
-  "pocket_learn_more": "ပိုမိုလေ့လာရန်"
+  "context_menu_title": "မီနူးကို ဖွင့်ပါ"
 };

@@ -10,12 +10,11 @@
  * - search.json.mozlz4 is created.
  */
 
-function run_test() {
+add_task(async function setup() {
   do_load_manifest("data/chrome.manifest");
   useHttpServer();
-
-  run_next_test();
-}
+  await AddonTestUtils.promiseStartupManager();
+});
 
 add_task(async function test_nocache() {
   let search = Services.search;
@@ -28,7 +27,7 @@ add_task(async function test_nocache() {
   await afterCachePromise;
 
   // Check that search.json.mozlz4 has been created.
-  let cacheFile = gProfD.clone();
+  let cacheFile = do_get_profile().clone();
   cacheFile.append(CACHE_FILENAME);
   Assert.ok(cacheFile.exists());
 

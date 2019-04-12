@@ -12,10 +12,7 @@ pub fn derive(mut input: syn::DeriveInput) -> TokenStream {
     let attrs = cg::parse_input_attrs::<ShmemInputAttrs>(&input);
     if !attrs.no_bounds {
         for param in input.generics.type_params() {
-            cg::add_predicate(
-                &mut where_clause,
-                parse_quote!(#param: ::to_shmem::ToShmem),
-            );
+            cg::add_predicate(&mut where_clause, parse_quote!(#param: ::to_shmem::ToShmem));
         }
     }
     for variant in Structure::new(&input).variants() {
@@ -23,10 +20,7 @@ pub fn derive(mut input: syn::DeriveInput) -> TokenStream {
             let attrs = cg::parse_field_attrs::<ShmemFieldAttrs>(&binding.ast());
             if attrs.field_bound {
                 let ty = &binding.ast().ty;
-                cg::add_predicate(
-                    &mut where_clause,
-                    parse_quote!(#ty: ::to_shmem::ToShmem),
-                )
+                cg::add_predicate(&mut where_clause, parse_quote!(#ty: ::to_shmem::ToShmem))
             }
         }
     }
@@ -46,7 +40,7 @@ pub fn derive(mut input: syn::DeriveInput) -> TokenStream {
 
     quote! {
         impl #impl_generics ::to_shmem::ToShmem for #name #ty_generics #where_clause {
-            #[allow(unused_variables)]
+            #[allow(unused_variables, unreachable_code)]
             fn to_shmem(
                 &self,
                 builder: &mut ::to_shmem::SharedMemoryBuilder,

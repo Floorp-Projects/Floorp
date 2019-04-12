@@ -18,6 +18,7 @@
 #  endif
 #  include <stdarg.h>
 
+#  include "util/Text.h"
 #  include "vm/JSFunction.h"
 #  include "vm/JSObject.h"
 #  include "vm/JSScript.h"
@@ -109,7 +110,7 @@ static void QuoteString(GenericPrinter& out, const CharT* s, size_t length) {
     if (c == '"' || c == '\\') {
       out.printf("\\");
       out.printf("%c", char(c));
-    } else if (c < ' ' || c >= 127 || !isprint(c)) {
+    } else if (!IsAsciiPrintable(c)) {
       out.printf("\\u%04x", c);
     } else {
       out.printf("%c", char(c));

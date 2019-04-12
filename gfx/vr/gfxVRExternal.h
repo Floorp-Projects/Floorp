@@ -86,22 +86,22 @@ class VRSystemManagerExternal : public VRSystemManager {
   static already_AddRefed<VRSystemManagerExternal> Create(
       VRExternalShmem* aAPIShmem = nullptr);
 
-  virtual void Destroy() override;
-  virtual void Shutdown() override;
-  virtual void Run100msTasks() override;
-  virtual void Enumerate() override;
-  virtual bool ShouldInhibitEnumeration() override;
-  virtual void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) override;
-  virtual bool GetIsPresenting() override;
-  virtual void HandleInput() override;
-  virtual void GetControllers(
+  void Destroy() override;
+  void Shutdown() override;
+  void Run100msTasks() override;
+  void Enumerate() override;
+  bool ShouldInhibitEnumeration() override;
+  void GetHMDs(nsTArray<RefPtr<VRDisplayHost>>& aHMDResult) override;
+  bool GetIsPresenting() override;
+  void HandleInput() override;
+  void GetControllers(
       nsTArray<RefPtr<VRControllerHost>>& aControllerResult) override;
-  virtual void ScanForControllers() override;
-  virtual void RemoveControllers() override;
-  virtual void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
-                             double aIntensity, double aDuration,
-                             const VRManagerPromise& aPromise) override;
-  virtual void StopVibrateHaptic(uint32_t aControllerIdx) override;
+  void ScanForControllers() override;
+  void RemoveControllers() override;
+  void VibrateHaptic(uint32_t aControllerIdx, uint32_t aHapticIndex,
+                     double aIntensity, double aDuration,
+                     const VRManagerPromise& aPromise) override;
+  void StopVibrateHaptic(uint32_t aControllerIdx) override;
 #if defined(MOZ_WIDGET_ANDROID)
   bool PullState(VRDisplayState* aDisplayState,
                  VRHMDSensorState* aSensorState = nullptr,

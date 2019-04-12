@@ -227,7 +227,7 @@ static bool StringIsArrayIndexHelper(const CharT* s, uint32_t length,
   }
 
   uint32_t c = 0, previous = 0;
-  uint32_t index = JS7_UNDEC(*s++);
+  uint32_t index = AsciiDigitToNumber(*s++);
 
   /* Don't allow leading zeros. */
   if (index == 0 && s != end) {
@@ -240,7 +240,7 @@ static bool StringIsArrayIndexHelper(const CharT* s, uint32_t length,
     }
 
     previous = index;
-    c = JS7_UNDEC(*s);
+    c = AsciiDigitToNumber(*s);
     index = 10 * index + c;
   }
 

@@ -105,10 +105,10 @@ class gfxWindowsPlatform : public gfxPlatform {
     return (gfxWindowsPlatform*)gfxPlatform::GetPlatform();
   }
 
-  virtual void EnsureDevicesInitialized() override;
-  virtual bool DevicesInitialized() override;
+  void EnsureDevicesInitialized() override;
+  bool DevicesInitialized() override;
 
-  virtual gfxPlatformFontList* CreatePlatformFontList() override;
+  gfxPlatformFontList* CreatePlatformFontList() override;
 
   virtual already_AddRefed<gfxASurface> CreateOffscreenSurface(
       const IntSize& aSize, gfxImageFormat aFormat) override;
@@ -148,9 +148,8 @@ class gfxWindowsPlatform : public gfxPlatform {
    */
   void VerifyD2DDevice(bool aAttemptForce);
 
-  virtual void GetCommonFallbackFonts(
-      uint32_t aCh, uint32_t aNextCh, Script aRunScript,
-      nsTArray<const char*>& aFontList) override;
+  void GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh, Script aRunScript,
+                              nsTArray<const char*>& aFontList) override;
 
   gfxFontGroup* CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
                                 const gfxFontStyle* aStyle,
@@ -158,9 +157,9 @@ class gfxWindowsPlatform : public gfxPlatform {
                                 gfxUserFontSet* aUserFontSet,
                                 gfxFloat aDevToCssSize) override;
 
-  virtual bool CanUseHardwareVideoDecoding() override;
+  bool CanUseHardwareVideoDecoding() override;
 
-  virtual void CompositorUpdated() override;
+  void CompositorUpdated() override;
 
   bool DidRenderingDeviceReset(
       DeviceResetReason* aResetReason = nullptr) override;
@@ -177,7 +176,7 @@ class gfxWindowsPlatform : public gfxPlatform {
   // returns ClearType tuning information for each display
   static void GetCleartypeParams(nsTArray<ClearTypeParameterInfo>& aParams);
 
-  virtual void FontsPrefsChanged(const char* aPref) override;
+  void FontsPrefsChanged(const char* aPref) override;
 
   void SetupClearTypeParams();
 
@@ -204,8 +203,8 @@ class gfxWindowsPlatform : public gfxPlatform {
   bool HandleDeviceReset();
   void UpdateBackendPrefs();
 
-  virtual already_AddRefed<mozilla::gfx::VsyncSource>
-  CreateHardwareVsyncSource() override;
+  already_AddRefed<mozilla::gfx::VsyncSource> CreateHardwareVsyncSource()
+      override;
   static mozilla::Atomic<size_t> sD3D11SharedTextures;
   static mozilla::Atomic<size_t> sD3D9SharedTextures;
 
@@ -219,7 +218,7 @@ class gfxWindowsPlatform : public gfxPlatform {
   bool AccelerateLayersByDefault() override { return true; }
   void GetAcceleratedCompositorBackends(
       nsTArray<mozilla::layers::LayersBackend>& aBackends) override;
-  virtual void GetPlatformCMSOutputProfile(void*& mem, size_t& size) override;
+  void GetPlatformCMSOutputProfile(void*& mem, size_t& size) override;
 
   void ImportGPUDeviceData(const mozilla::gfx::GPUDeviceData& aData) override;
   void ImportContentDeviceData(

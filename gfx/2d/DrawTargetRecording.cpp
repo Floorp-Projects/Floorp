@@ -69,12 +69,10 @@ class SourceSurfaceRecording : public SourceSurface {
         RecordedSourceSurfaceDestruction(ReferencePtr(this)));
   }
 
-  virtual SurfaceType GetType() const override {
-    return SurfaceType::RECORDING;
-  }
-  virtual IntSize GetSize() const override { return mSize; }
-  virtual SurfaceFormat GetFormat() const override { return mFormat; }
-  virtual already_AddRefed<DataSourceSurface> GetDataSurface() override {
+  SurfaceType GetType() const override { return SurfaceType::RECORDING; }
+  IntSize GetSize() const override { return mSize; }
+  SurfaceFormat GetFormat() const override { return mFormat; }
+  already_AddRefed<DataSourceSurface> GetDataSurface() override {
     return nullptr;
   }
 
@@ -109,13 +107,11 @@ class DataSourceSurfaceRecording : public DataSourceSurface {
     return nullptr;
   }
 
-  virtual SurfaceType GetType() const override {
-    return SurfaceType::RECORDING;
-  }
-  virtual IntSize GetSize() const override { return mSize; }
-  virtual int32_t Stride() override { return mStride; }
-  virtual SurfaceFormat GetFormat() const override { return mFormat; }
-  virtual uint8_t *GetData() override { return mData.get(); }
+  SurfaceType GetType() const override { return SurfaceType::RECORDING; }
+  IntSize GetSize() const override { return mSize; }
+  int32_t Stride() override { return mStride; }
+  SurfaceFormat GetFormat() const override { return mFormat; }
+  uint8_t *GetData() override { return mData.get(); }
 
   UniquePtr<uint8_t[]> mData;
   IntSize mSize;
@@ -132,15 +128,13 @@ class GradientStopsRecording : public GradientStops {
     mRecorder->AddStoredObject(this);
   }
 
-  ~GradientStopsRecording() {
+  virtual ~GradientStopsRecording() {
     mRecorder->RemoveStoredObject(this);
     mRecorder->RecordEvent(
         RecordedGradientStopsDestruction(ReferencePtr(this)));
   }
 
-  virtual BackendType GetBackendType() const override {
-    return BackendType::RECORDING;
-  }
+  BackendType GetBackendType() const override { return BackendType::RECORDING; }
 
   RefPtr<DrawEventRecorderPrivate> mRecorder;
 };
@@ -155,27 +149,27 @@ class FilterNodeRecording : public FilterNode {
     mRecorder->AddStoredObject(this);
   }
 
-  ~FilterNodeRecording() {
+  virtual ~FilterNodeRecording() {
     mRecorder->RemoveStoredObject(this);
     mRecorder->RecordEvent(RecordedFilterNodeDestruction(ReferencePtr(this)));
   }
 
-  virtual void SetInput(uint32_t aIndex, SourceSurface *aSurface) override {
+  void SetInput(uint32_t aIndex, SourceSurface *aSurface) override {
     EnsureSurfaceStoredRecording(mRecorder, aSurface, "SetInput");
 
     mRecorder->RecordEvent(RecordedFilterNodeSetInput(this, aIndex, aSurface));
   }
-  virtual void SetInput(uint32_t aIndex, FilterNode *aFilter) override {
+  void SetInput(uint32_t aIndex, FilterNode *aFilter) override {
     MOZ_ASSERT(mRecorder->HasStoredObject(aFilter));
 
     mRecorder->RecordEvent(RecordedFilterNodeSetInput(this, aIndex, aFilter));
   }
 
-#define FORWARD_SET_ATTRIBUTE(type, argtype)                         \
-  virtual void SetAttribute(uint32_t aIndex, type aValue) override { \
-    mRecorder->RecordEvent(RecordedFilterNodeSetAttribute(           \
-        this, aIndex, aValue,                                        \
-        RecordedFilterNodeSetAttribute::ARGTYPE_##argtype));         \
+#define FORWARD_SET_ATTRIBUTE(type, argtype)                 \
+  void SetAttribute(uint32_t aIndex, type aValue) override { \
+    mRecorder->RecordEvent(RecordedFilterNodeSetAttribute(   \
+        this, aIndex, aValue,                                \
+        RecordedFilterNodeSetAttribute::ARGTYPE_##argtype)); \
   }
 
   FORWARD_SET_ATTRIBUTE(bool, BOOL);
@@ -194,15 +188,13 @@ class FilterNodeRecording : public FilterNode {
 
 #undef FORWARD_SET_ATTRIBUTE
 
-  virtual void SetAttribute(uint32_t aIndex, const Float *aFloat,
-                            uint32_t aSize) override {
+  void SetAttribute(uint32_t aIndex, const Float *aFloat,
+                    uint32_t aSize) override {
     mRecorder->RecordEvent(
         RecordedFilterNodeSetAttribute(this, aIndex, aFloat, aSize));
   }
 
-  virtual FilterBackend GetBackendType() override {
-    return FILTER_BACKEND_RECORDING;
-  }
+  FilterBackend GetBackendType() override { return FILTER_BACKEND_RECORDING; }
 
   RefPtr<DrawEventRecorderPrivate> mRecorder;
 };

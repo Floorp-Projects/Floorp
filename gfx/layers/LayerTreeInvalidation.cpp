@@ -173,7 +173,7 @@ struct LayerPropertiesBase : public LayerProperties {
         mUseClipRect(false) {
     MOZ_COUNT_CTOR(LayerPropertiesBase);
   }
-  ~LayerPropertiesBase() override { MOZ_COUNT_DTOR(LayerPropertiesBase); }
+  virtual ~LayerPropertiesBase() { MOZ_COUNT_DTOR(LayerPropertiesBase); }
 
  protected:
   LayerPropertiesBase(const LayerPropertiesBase& a) = delete;

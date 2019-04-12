@@ -143,6 +143,13 @@ class MediaCodecs {
   nsString mCodecs;
 };
 
+// Electro-Optical Transfer Functions
+enum class EOTF {
+  UNSPECIFIED = -1,
+  NOT_SUPPORTED = 0,
+  BT709 = 1,
+};
+
 // Class containing pre-parsed media MIME type parameters, e.g.:
 // MIME type/subtype, optional codecs, etc.
 class MediaExtendedMIMEType {
@@ -165,6 +172,9 @@ class MediaExtendedMIMEType {
   Maybe<int32_t> GetBitrate() const { return GetMaybeNumber(mBitrate); }
   Maybe<int32_t> GetChannels() const { return GetMaybeNumber(mChannels); }
   Maybe<int32_t> GetSamplerate() const { return GetMaybeNumber(mSamplerate); }
+  Maybe<EOTF> GetEOTF() const {
+    return (mEOTF == EOTF::UNSPECIFIED) ? Nothing() : Some(mEOTF);
+  }
 
   // Original string. Note that "type/subtype" may not be lowercase,
   // use Type().AsString() instead to get the normalized "type/subtype".
@@ -187,7 +197,8 @@ class MediaExtendedMIMEType {
   MediaExtendedMIMEType(const nsACString& aOriginalString,
                         const nsACString& aMIMEType, bool aHaveCodecs,
                         const nsAString& aCodecs, int32_t aWidth,
-                        int32_t aHeight, double aFramerate, int32_t aBitrate);
+                        int32_t aHeight, double aFramerate, int32_t aBitrate,
+                        EOTF aEOTF = EOTF::UNSPECIFIED, int32_t aChannels = -1);
   MediaExtendedMIMEType(const nsACString& aOriginalString,
                         const nsACString& aMIMEType, bool aHaveCodecs,
                         const nsAString& aCodecs, int32_t aChannels,
@@ -206,6 +217,7 @@ class MediaExtendedMIMEType {
   int32_t mWidth = -1;     // -1 if not provided.
   int32_t mHeight = -1;    // -1 if not provided.
   double mFramerate = -1;  // -1 if not provided.
+  EOTF mEOTF = EOTF::UNSPECIFIED;
   // For audio
   int32_t mChannels = -1;    // -1 if not provided.
   int32_t mSamplerate = -1;  // -1 if not provided.

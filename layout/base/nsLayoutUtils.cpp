@@ -4753,7 +4753,7 @@ static bool GetPercentBSize(const LengthPercentage& aStyle, nsIFrame* aFrame,
              "GetAbsoluteCoord should have handled this");
 
   // During reflow, nsHTMLScrollFrame::ReflowScrolledFrame uses
-  // SetComputedHeight on the reflow state for its child to propagate its
+  // SetComputedHeight on the reflow input for its child to propagate its
   // computed height to the scrolled content. So here we skip to the scroll
   // frame that contains this scrolled content in order to get the same
   // behavior as layout when computing percentage heights.
@@ -6902,10 +6902,10 @@ nsPoint nsLayoutUtils::GetBackgroundFirstTilePos(const nsPoint& aDest,
 /* static */
 ImgDrawResult nsLayoutUtils::DrawBackgroundImage(
     gfxContext& aContext, nsIFrame* aForFrame, nsPresContext* aPresContext,
-    imgIContainer* aImage, const CSSIntSize& aImageSize,
-    SamplingFilter aSamplingFilter, const nsRect& aDest, const nsRect& aFill,
-    const nsSize& aRepeatSize, const nsPoint& aAnchor, const nsRect& aDirty,
-    uint32_t aImageFlags, ExtendMode aExtendMode, float aOpacity) {
+    imgIContainer* aImage, SamplingFilter aSamplingFilter, const nsRect& aDest,
+    const nsRect& aFill, const nsSize& aRepeatSize, const nsPoint& aAnchor,
+    const nsRect& aDirty, uint32_t aImageFlags, ExtendMode aExtendMode,
+    float aOpacity) {
   AUTO_PROFILER_LABEL("nsLayoutUtils::DrawBackgroundImage",
                       GRAPHICS_Rasterization);
 

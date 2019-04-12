@@ -45,7 +45,7 @@
                   "suggest_url": {
                     "type": "string",
                     "optional": true,
-                    "format": "url",
+                    "pattern": "^https://.*$|^$",
                     "preprocess": "localize"
                   },
                   "instant_url": {
@@ -62,11 +62,23 @@
                     "preprocess": "localize",
                     "deprecated": "Unsupported on Firefox at this time."
                   },
+                  "search_url_get_params": {
+                    "type": "string",
+                    "optional": true,
+                    "preprocess": "localize",
+                    "description": "GET parameters to the search_url as a query string."
+                  },
                   "search_url_post_params": {
                     "type": "string",
                     "optional": true,
                     "preprocess": "localize",
                     "description": "POST parameters to the search_url as a query string."
+                  },
+                  "suggest_url_get_params": {
+                    "type": "string",
+                    "optional": true,
+                    "preprocess": "localize",
+                    "description": "GET parameters to the suggest_url as a query string."
                   },
                   "suggest_url_post_params": {
                     "type": "string",
@@ -85,6 +97,13 @@
                     "optional": true,
                     "preprocess": "localize",
                     "deprecated": "Unsupported on Firefox at this time."
+                  },
+                  "search_form": {
+                    "type": "string",
+                    "optional": true,
+                    "format": "url",
+                    "pattern": "^https://.*$",
+                    "preprocess": "localize"
                   },
                   "alternate_urls": {
                     "type": "array",
@@ -141,7 +160,8 @@
                         "value": {
                           "type": "string",
                           "optional": true,
-                          "description": "A url parameter value."
+                          "description": "A url parameter value.",
+                          "preprocess": "localize"
                         }
                       }
                     },
