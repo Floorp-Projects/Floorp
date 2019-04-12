@@ -1,0 +1,53 @@
+{
+  "guid": "root________",
+  "index": 0,
+  "id": 1,
+  "type": "text/x-moz-place-container",
+  "dateAdded": 1554906792778,
+  "lastModified": 1554906792778,
+  "root": "placesRoot",
+  "children": [{
+    "guid": "unfiled_____",
+    "index": 0,
+    "id": 2,
+    "type": "text/x-moz-place-container",
+    "dateAdded": 1554906792778,
+    "lastModified": 1554906792778,
+    "root": "unfiledBookmarksFolder",
+    "children": [
+      {
+        "guid": "___guid1____",
+        "index": 0,
+        "id": 3,
+        "charset": "UTF-16",
+        "tags": "tag0",
+        "type": "text/x-moz-place",
+        "dateAdded": 1554906792778,
+        "lastModified": 1554906792778,
+        "uri": "http://test0.com/"
+      },
+      {
+        "guid": "___guid2____",
+        "index": 1,
+        "id": 4,
+        "charset": "UTF-16",
+        "tags": "tag1,a0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789",
+        "type": "text/x-moz-place",
+        "dateAdded": 1554906792778,
+        "lastModified": 1554906792778,
+        "uri": "http://test1.com/"
+      },
+      {
+        "guid": "___guid3____",
+        "index": 2,
+        "id": 5,
+        "charset": "UTF-16",
+        "tags": "tag2",
+        "type": "text/x-moz-place",
+        "dateAdded": 1554906792778,
+        "lastModified": 1554906792778,
+        "uri": "http://test2.com/"
+      }
+    ]
+  }]
+}
