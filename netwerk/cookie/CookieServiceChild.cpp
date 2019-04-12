@@ -13,6 +13,7 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/SystemGroup.h"
+#include "mozilla/StoragePrincipalHelper.h"
 #include "nsCookie.h"
 #include "nsCookieService.h"
 #include "nsContentUtils.h"
@@ -175,6 +176,7 @@ void CookieServiceChild::TrackCookieLoad(nsIChannel *aChannel) {
     }
   }
   mozilla::OriginAttributes attrs = loadInfo->GetOriginAttributes();
+  StoragePrincipalHelper::PrepareOriginAttributes(aChannel, attrs);
   URIParams uriParams;
   SerializeURI(uri, uriParams);
   bool isSafeTopLevelNav = NS_IsSafeTopLevelNav(aChannel);
@@ -294,6 +296,7 @@ void CookieServiceChild::GetCookieStringFromCookieHashTable(
   if (aChannel) {
     loadInfo = aChannel->LoadInfo();
     attrs = loadInfo->GetOriginAttributes();
+    StoragePrincipalHelper::PrepareOriginAttributes(aChannel, attrs);
   }
 
   nsCookieService::GetBaseDomain(TLDService, aHostURI, baseDomain,
@@ -562,6 +565,7 @@ nsresult CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
 
     MOZ_ASSERT(loadInfo);
     attrs = loadInfo->GetOriginAttributes();
+    StoragePrincipalHelper::PrepareOriginAttributes(aChannel, attrs);
   } else {
     SerializeURI(nullptr, channelURIParams);
   }
@@ -573,7 +577,7 @@ nsresult CookieServiceChild::SetCookieStringInternal(nsIURI *aHostURI,
   if (mIPCOpen) {
     SendSetCookieString(hostURIParams, channelURIParams, optionalLoadInfoArgs,
                         isForeign, isTrackingResource,
-                        firstPartyStorageAccessGranted, cookieString,
+                        firstPartyStorageAccessGranted, attrs, cookieString,
                         stringServerTime, aFromHttp);
   }
 

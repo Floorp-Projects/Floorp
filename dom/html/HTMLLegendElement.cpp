@@ -68,7 +68,8 @@ void HTMLLegendElement::UnbindFromTree(bool aDeep, bool aNullParent) {
   nsGenericHTMLElement::UnbindFromTree(aDeep, aNullParent);
 }
 
-void HTMLLegendElement::Focus(ErrorResult& aError) {
+void HTMLLegendElement::Focus(const FocusOptions& aOptions,
+                              ErrorResult& aError) {
   nsIFrame* frame = GetPrimaryFrame();
   if (!frame) {
     return;
@@ -76,7 +77,7 @@ void HTMLLegendElement::Focus(ErrorResult& aError) {
 
   int32_t tabIndex;
   if (frame->IsFocusable(&tabIndex, false)) {
-    nsGenericHTMLElement::Focus(aError);
+    nsGenericHTMLElement::Focus(aOptions, aError);
     return;
   }
 
@@ -88,17 +89,20 @@ void HTMLLegendElement::Focus(ErrorResult& aError) {
   }
 
   RefPtr<Element> result;
-  aError = fm->MoveFocus(nullptr, this, nsIFocusManager::MOVEFOCUS_FORWARD,
-                         nsIFocusManager::FLAG_NOPARENTFRAME |
-                             nsIFocusManager::FLAG_BYELEMENTFOCUS,
-                         getter_AddRefs(result));
+  aError = fm->MoveFocus(
+      nullptr, this, nsIFocusManager::MOVEFOCUS_FORWARD,
+      nsIFocusManager::FLAG_NOPARENTFRAME |
+          nsIFocusManager::FLAG_BYELEMENTFOCUS |
+          nsFocusManager::FocusOptionsToFocusManagerFlags(aOptions),
+      getter_AddRefs(result));
 }
 
 bool HTMLLegendElement::PerformAccesskey(bool aKeyCausesActivation,
                                          bool aIsTrustedEvent) {
-  // just use the same behaviour as the focus method
+  FocusOptions options;
   ErrorResult rv;
-  Focus(rv);
+
+  Focus(options, rv);
   return NS_SUCCEEDED(rv.StealNSResult());
 }
 

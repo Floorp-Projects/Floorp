@@ -15,21 +15,29 @@ namespace Telemetry {
 enum class OriginMetricID : uint32_t {
   // category: content.blocking
   ContentBlocking_Blocked = 0,
-  ContentBlocking_Exempt = 1,
-  ContentBlocking_Blocked_TestOnly = 2,
-  ContentBlocking_Exempt_TestOnly = 3,
+  ContentBlocking_Blocked_TestOnly = 1,
+  ContentBlocking_StorageAccessAPIExempt = 2,
+  ContentBlocking_StorageAccessAPIExempt_TestOnly = 3,
+  ContentBlocking_OpenerAfterUserInteractionExempt = 4,
+  ContentBlocking_OpenerAfterUserInteractionExempt_TestOnly = 5,
+  ContentBlocking_OpenerExempt = 6,
+  ContentBlocking_OpenerExempt_TestOnly = 7,
   // category: telemetry.test
-  TelemetryTest_Test1 = 4,
-  TelemetryTest_Test2 = 5,
+  TelemetryTest_Test1 = 8,
+  TelemetryTest_Test2 = 9,
   // meta
-  Count = 6,
+  Count = 10,
 };
 
-static const char* const MetricIDToString[6] = {
+static const char* const MetricIDToString[10] = {
     "content.blocking_blocked",
-    "content.blocking_exempt",
     "content.blocking_blocked_TESTONLY",
-    "content.blocking_exempt_TESTONLY",
+    "content.blocking_storage_access_api_exempt",
+    "content.blocking_storage_access_api_exempt_TESTONLY",
+    "content.blocking_opener_after_user_interaction_exempt",
+    "content.blocking_opener_after_user_interaction_exempt_TESTONLY",
+    "content.blocking_opener_exempt",
+    "content.blocking_opener_exempt_TESTONLY",
     "telemetry.test_test1",
     "telemetry.test_test2",
 };

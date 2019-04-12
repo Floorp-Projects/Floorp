@@ -23,7 +23,7 @@ NS_INTERFACE_MAP_END
 SpeechRecognitionResult::SpeechRecognitionResult(SpeechRecognition* aParent)
     : mParent(aParent) {}
 
-SpeechRecognitionResult::~SpeechRecognitionResult() {}
+SpeechRecognitionResult::~SpeechRecognitionResult() = default;
 
 JSObject* SpeechRecognitionResult::WrapObject(
     JSContext* aCx, JS::Handle<JSObject*> aGivenProto) {

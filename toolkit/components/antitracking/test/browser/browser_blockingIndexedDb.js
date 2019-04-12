@@ -1,3 +1,5 @@
+/* import-globals-from antitracking_head.js */
+
 AntiTracking.runTest("IndexedDB",
   // blocking callback
   async _ => {

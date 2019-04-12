@@ -567,6 +567,7 @@
   border-left: 3px solid transparent;
   clear: both;
   padding-left: 28px;
+  overflow-wrap: break-word;
 }
 
 .ruleview-propertycontainer  > * {

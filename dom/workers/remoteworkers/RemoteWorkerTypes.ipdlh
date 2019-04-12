@@ -7,6 +7,7 @@ include PBackgroundSharedTypes;
 include URIParams;
 
 using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
+using nsContentUtils::StorageAccess from "mozilla/dom/ClientIPCUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -37,13 +38,17 @@ struct RemoteWorkerData
   ContentSecurityPolicy[] principalCsp;
   ContentSecurityPolicy[] principalPreloadCsp;
 
+  PrincipalInfo storagePrincipalInfo;
+  ContentSecurityPolicy[] storagePrincipalCsp;
+  ContentSecurityPolicy[] storagePrincipalPreloadCsp;
+
   nsCString domain;
 
   bool isSecureContext;
 
   IPCClientInfo? clientInfo;
 
-  bool isStorageAccessAllowed;
+  StorageAccess storageAccess;
 
   bool isSharedWorker;
 };

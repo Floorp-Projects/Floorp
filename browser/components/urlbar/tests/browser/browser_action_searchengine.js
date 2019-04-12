@@ -50,6 +50,4 @@ add_task(async function() {
 
   Assert.equal(gBrowser.selectedBrowser.currentURI.spec,
     "http://example.com/?q=open+a+search", "Should have loaded the correct page");
-
-  await UrlbarTestUtils.promisePopupClose(window);
 });

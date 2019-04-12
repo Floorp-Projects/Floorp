@@ -334,7 +334,7 @@ static void PatchBaselineFramesForDebugMode(
   //  D. From the debug prologue.
   //  E. From the debug epilogue.
   //  G. From GeneratorThrowOrReturn
-  //  K. From a JSOP_DEBUGAFTERYIELD instruction.
+  //  K. From a JSOP_AFTERYIELD instruction.
   //
   // Cycles (On to Off to On)+ or (Off to On to Off)+:
   //  F. Undo cases B, C, D, E, I or J above on previously patched yet unpopped
@@ -510,10 +510,9 @@ static void PatchBaselineFramesForDebugMode(
             // Case K above.
             //
             // Resume at the next instruction.
-            MOZ_ASSERT(*pc == JSOP_DEBUGAFTERYIELD);
-            recompInfo->resumeAddr =
-                bl->nativeCodeForPC(script, pc + JSOP_DEBUGAFTERYIELD_LENGTH,
-                                    &recompInfo->slotInfo);
+            MOZ_ASSERT(*pc == JSOP_AFTERYIELD);
+            recompInfo->resumeAddr = bl->nativeCodeForPC(
+                script, pc + JSOP_AFTERYIELD_LENGTH, &recompInfo->slotInfo);
             popFrameReg = true;
             break;
 

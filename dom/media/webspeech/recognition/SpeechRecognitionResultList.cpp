@@ -26,7 +26,7 @@ SpeechRecognitionResultList::SpeechRecognitionResultList(
     SpeechRecognition* aParent)
     : mParent(aParent) {}
 
-SpeechRecognitionResultList::~SpeechRecognitionResultList() {}
+SpeechRecognitionResultList::~SpeechRecognitionResultList() = default;
 
 nsISupports* SpeechRecognitionResultList::GetParentObject() const {
   return static_cast<DOMEventTargetHelper*>(mParent.get());

@@ -26,7 +26,8 @@ class XMLDocument : public Document {
 
   virtual void Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) override;
   virtual void ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
-                          nsIPrincipal* aPrincipal) override;
+                          nsIPrincipal* aPrincipal,
+                          nsIPrincipal* aStoragePrincipal) override;
 
   virtual void SetSuppressParserErrorElement(bool aSuppress) override;
   virtual bool SuppressParserErrorElement() override;

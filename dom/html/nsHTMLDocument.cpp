@@ -222,10 +222,11 @@ void nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) {
 }
 
 void nsHTMLDocument::ResetToURI(nsIURI* aURI, nsILoadGroup* aLoadGroup,
-                                nsIPrincipal* aPrincipal) {
+                                nsIPrincipal* aPrincipal,
+                                nsIPrincipal* aStoragePrincipal) {
   mLoadFlags = nsIRequest::LOAD_NORMAL;
 
-  Document::ResetToURI(aURI, aLoadGroup, aPrincipal);
+  Document::ResetToURI(aURI, aLoadGroup, aPrincipal, aStoragePrincipal);
 
   mImages = nullptr;
   mApplets = nullptr;
@@ -1029,7 +1030,14 @@ void nsHTMLDocument::GetCookie(nsAString& aCookie, ErrorResult& rv) {
     return;
   }
 
-  if (nsContentUtils::StorageDisabledByAntiTracking(this, nullptr)) {
+  nsContentUtils::StorageAccess storageAccess =
+      nsContentUtils::StorageAllowedForDocument(this);
+  if (storageAccess == nsContentUtils::StorageAccess::eDeny) {
+    return;
+  }
+
+  if (storageAccess == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
     return;
   }
 
@@ -1082,7 +1090,14 @@ void nsHTMLDocument::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
     return;
   }
 
-  if (nsContentUtils::StorageDisabledByAntiTracking(this, nullptr)) {
+  nsContentUtils::StorageAccess storageAccess =
+      nsContentUtils::StorageAllowedForDocument(this);
+  if (storageAccess == nsContentUtils::StorageAccess::eDeny) {
+    return;
+  }
+
+  if (storageAccess == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
     return;
   }
 

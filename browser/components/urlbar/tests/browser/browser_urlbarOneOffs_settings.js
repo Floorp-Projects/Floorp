@@ -15,7 +15,6 @@ add_task(async function init() {
   gMaxResults = Services.prefs.getIntPref("browser.urlbar.maxRichResults");
 
   registerCleanupFunction(async function() {
-    await UrlbarTestUtils.promisePopupClose(window);
     await PlacesUtils.history.clear();
   });
 
