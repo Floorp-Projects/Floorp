@@ -151,13 +151,10 @@ nsresult WorkerLoadInfo::GetPrincipalsAndLoadGroupFromChannel(
   MOZ_DIAGNOSTIC_ASSERT(ssm);
 
   nsCOMPtr<nsIPrincipal> channelPrincipal;
-  nsresult rv = ssm->GetChannelResultPrincipal(
-      aChannel, getter_AddRefs(channelPrincipal));
-  NS_ENSURE_SUCCESS(rv, rv);
-
   nsCOMPtr<nsIPrincipal> channelStoragePrincipal;
-  rv = ssm->GetChannelResultStoragePrincipal(
-      aChannel, getter_AddRefs(channelStoragePrincipal));
+  nsresult rv = ssm->GetChannelResultPrincipals(
+      aChannel, getter_AddRefs(channelPrincipal),
+      getter_AddRefs(channelStoragePrincipal));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Every time we call GetChannelResultPrincipal() it will return a different
