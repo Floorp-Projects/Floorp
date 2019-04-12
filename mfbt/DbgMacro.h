@@ -89,7 +89,7 @@ template <typename T>
 auto&& MozDbg(const char* aFile, int aLine, const char* aExpression,
               T&& aValue) {
   std::ostringstream s;
-  s << '[' << aFile << ':' << aLine << "] " << aExpression << " = ";
+  s << "[MozDbg] [" << aFile << ':' << aLine << "] " << aExpression << " = ";
   mozilla::DebugValue(s, std::forward<T>(aValue));
   s << '\n';
   fputs(s.str().c_str(), stderr);
