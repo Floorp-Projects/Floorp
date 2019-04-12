@@ -216,8 +216,17 @@ open class GleanInternalAPI internal constructor () {
         val newClientId = uuidClientInfoSnapshot?.get("client_id")
         if (newClientId == null) {
             val uuidPingInfoSnapshot = UuidsStorageEngine.getSnapshot("glean_ping_info", false)
-            uuidPingInfoSnapshot?.get("client_id")?.let {
-                UuidsStorageEngine.record(GleanInternalMetrics.clientId, it)
+            val legacyClientId = uuidPingInfoSnapshot?.get("client_id")
+            if (legacyClientId != null) {
+                UuidsStorageEngine.record(GleanInternalMetrics.clientId, legacyClientId)
+            } else {
+                // Apparently, this is a very old build that was already run
+                // at least once and has a different name for the underlying
+                // UUID storage engine persistence (i.e. UuidStorageEngine.xml
+                // vs using the full class name with the namespace).
+                // This should be mostly devs and super early adopters, so just regenerate
+                // the data.
+                UuidsStorageEngine.record(GleanInternalMetrics.clientId, UUID.randomUUID())
             }
         }
 
@@ -225,10 +234,22 @@ open class GleanInternalAPI internal constructor () {
         val newFirstRunDate = datetimeClientInfoSnapshot?.get("first_run_date")
         if (newFirstRunDate == null) {
             val datetimePingInfoSnapshot = DatetimesStorageEngine.getSnapshot("glean_ping_info", false)
+            var firstRunDateSet = false
             datetimePingInfoSnapshot?.get("first_run_date")?.let {
-                parseISOTimeString(it)?.let {
-                    DatetimesStorageEngine.set(GleanInternalMetrics.firstRunDate, it)
+                parseISOTimeString(it)?.let { parsedDate ->
+                    DatetimesStorageEngine.set(GleanInternalMetrics.firstRunDate, parsedDate)
+                    firstRunDateSet = true
                 }
+            }
+
+            if (!firstRunDateSet) {
+                // Apparently, this is a very old build that was already run
+                // at least once and has a different name for the underlying
+                // Datetime storage engine persistence (i.e. DatetimeStorageEngine.xml
+                // vs using the full class name with the namespace).
+                // This should be mostly devs and super early adopters, so just regenerate
+                // the data.
+                DatetimesStorageEngine.set(GleanInternalMetrics.firstRunDate)
             }
         }
     }
