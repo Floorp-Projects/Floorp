@@ -14,7 +14,8 @@ import {
   getSelectedScopeMappings,
   getSelectedFrameBindings,
   getCurrentThread,
-  getIsPaused
+  getIsPaused,
+  isMapScopesEnabled
 } from "../selectors";
 import { PROMISE } from "./utils/middleware/promise";
 import { wrapExpression } from "../utils/expressions";
@@ -177,10 +178,9 @@ function evaluateExpression(cx: ThreadContext, expression: Expression) {
  */
 export function getMappedExpression(expression: string) {
   return async function({ dispatch, getState, client, sourceMaps }: ThunkArgs) {
-    const state = getState();
     const thread = getCurrentThread(getState());
-    const mappings = getSelectedScopeMappings(state, thread);
-    const bindings = getSelectedFrameBindings(state, thread);
+    const mappings = getSelectedScopeMappings(getState(), thread);
+    const bindings = getSelectedFrameBindings(getState(), thread);
 
     // We bail early if we do not need to map the expression. This is important
     // because mapping an expression can be slow if the parser worker is
@@ -189,7 +189,8 @@ export function getMappedExpression(expression: string) {
     // 1. there are no mappings - we do not need to map original expressions
     // 2. does not contain `await` - we do not need to map top level awaits
     // 3. does not contain `=` - we do not need to map assignments
-    if (!mappings && !expression.match(/(await|=)/)) {
+    const shouldMapScopes = isMapScopesEnabled(getState()) && mappings;
+    if (!shouldMapScopes && !expression.match(/(await|=)/)) {
       return null;
     }
 
@@ -197,7 +198,7 @@ export function getMappedExpression(expression: string) {
       expression,
       mappings,
       bindings || [],
-      features.mapExpressionBindings && getIsPaused(state, thread),
+      features.mapExpressionBindings && getIsPaused(getState(), thread),
       features.mapAwaitExpression
     );
   };

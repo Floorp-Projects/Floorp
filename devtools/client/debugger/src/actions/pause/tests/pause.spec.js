@@ -100,7 +100,6 @@ function createPauseInfo(
 function resumedPacket() {
   return { from: "FakeThread", type: "resumed" };
 }
-
 describe("pause", () => {
   describe("stepping", () => {
     it("should set and clear the command", async () => {
