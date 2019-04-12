@@ -6897,6 +6897,9 @@ void nsGlobalWindowInner::StorageAccessGranted() {
       object->EnsureObserver();
     }
   }
+
+  // Reset the IndexedDB factory.
+  mIndexedDB = nullptr;
 }
 
 mozilla::dom::TabGroup* nsPIDOMWindowInner::TabGroup() {
