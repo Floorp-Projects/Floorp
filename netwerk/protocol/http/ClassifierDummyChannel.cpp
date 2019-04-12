@@ -476,10 +476,14 @@ ClassifierDummyChannel::SetBeConservative(bool aBeConservative) {
 }
 
 NS_IMETHODIMP
-ClassifierDummyChannel::GetTrr(bool* aTrr) { return NS_ERROR_NOT_IMPLEMENTED; }
+ClassifierDummyChannel::GetIsTRRServiceChannel(bool* aTrr) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
-ClassifierDummyChannel::SetTrr(bool aTrr) { return NS_ERROR_NOT_IMPLEMENTED; }
+ClassifierDummyChannel::SetIsTRRServiceChannel(bool aTrr) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP
 ClassifierDummyChannel::GetTlsFlags(uint32_t* aTlsFlags) {
