@@ -1132,6 +1132,23 @@ JS_PUBLIC_API void* JS_realloc(JSContext* cx, void* p, size_t oldBytes,
 
 JS_PUBLIC_API void JS_free(JSContext* cx, void* p) { return js_free(p); }
 
+JS_PUBLIC_API void* JS_string_malloc(JSContext* cx, size_t nbytes) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  return static_cast<void*>(
+      cx->maybe_pod_malloc<uint8_t>(nbytes, js::MallocArena));
+}
+
+JS_PUBLIC_API void* JS_string_realloc(JSContext* cx, void* p, size_t oldBytes,
+                                      size_t newBytes) {
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  return static_cast<void*>(cx->maybe_pod_realloc<uint8_t>(
+      static_cast<uint8_t*>(p), oldBytes, newBytes, js::MallocArena));
+}
+
+JS_PUBLIC_API void JS_string_free(JSContext* cx, void* p) { return js_free(p); }
+
 JS_PUBLIC_API void JS_freeop(JSFreeOp* fop, void* p) {
   return FreeOp::get(fop)->free_(p);
 }
