@@ -29,7 +29,7 @@ jobs-from:
     - misc.yml
     - mochitest.yml
     - raptor.yml
-    - raptor-chrome.yml
+    - raptor-chromium.yml
     - reftest.yml
     - talos.yml
     - web-platform.yml

@@ -46,6 +46,15 @@ VALID_MANIFESTS = [{'apps': 'firefox',
                     'lower_is_better': False,
                     'alert_threshold': 2.0,
                     'manifest': 'valid_details_1'},
+                   {'apps': 'chromium',
+                    'type': 'benchmark',
+                    'page_cycles': 5,
+                    'test_url': 'http://www.test-url/goes/here',
+                    'measure': 'fcp',
+                    'unit': 'score',
+                    'lower_is_better': False,
+                    'alert_threshold': 2.0,
+                    'manifest': 'valid_details_1'},
                    {'apps': 'geckoview',
                     'type': 'pageload',
                     'cold': True,
@@ -80,6 +89,16 @@ INVALID_MANIFESTS = [{'apps': 'firefox',
                       'alert_threshold': 2.0,
                       'playback': 'mitmproxy',
                       'manifest': 'invalid_details_1'},
+                     {'apps': 'chromium',
+                      'type': 'pageload',
+                      'page_cycles': 25,
+                      'test_url': 'http://www.test-url/goes/here',
+                      'measure': 'fnbpaint, fcp',
+                      'unit': 'ms',
+                      'lower_is_better': True,
+                      'alert_threshold': 2.0,
+                      'playback': 'mitmproxy',
+                      'manifest': 'invalid_details_1'},
                      {'apps': 'firefox',
                       'type': 'pageload',
                       'page_cycles': 25,
@@ -96,7 +115,7 @@ INVALID_MANIFESTS = [{'apps': 'firefox',
                       'manifest': 'invalid_details_2'}]
 
 
-@pytest.mark.parametrize('app', ['firefox', 'chrome', 'geckoview', 'refbrow', 'fenix'])
+@pytest.mark.parametrize('app', ['firefox', 'chrome', 'chromium', 'geckoview', 'refbrow', 'fenix'])
 def test_get_browser_test_list(app):
     test_list = get_browser_test_list(app, run_local=True)
     if app != "fenix":

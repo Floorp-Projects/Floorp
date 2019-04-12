@@ -8,24 +8,34 @@ import os
 
 from mozlog.commandline import add_logging_group
 
-
+(FIREFOX,
+ CHROME,
+ CHROMIUM) = DESKTOP_APPS = ["firefox", "chrome", "chromium"]
+(FENNEC,
+ GECKOVIEW,
+ REFBROW,
+ FENIX) = FIREFOX_ANDROID_APPS = ["fennec", "geckoview", "refbrow", "fenix"]
+CHROMIUM_DISTROS = [CHROME, CHROMIUM]
 APPS = {
-    "firefox": {
+    FIREFOX: {
         "long_name": "Firefox Desktop"},
-    "chrome": {
+    CHROME: {
         "long_name": "Google Chrome Desktop"},
-    "fennec": {
+    CHROMIUM: {
+        "long_name": "Google Chromium Desktop"},
+    FENNEC: {
         "long_name": "Firefox Fennec on Android"},
-    "geckoview": {
+    GECKOVIEW: {
         "long_name": "Firefox Geckoview on Android",
         "default_activity": "GeckoViewActivity"},
-    "refbrow": {
+    REFBROW: {
         "long_name": "Firefox Android Components Reference Browser",
         "default_activity": "BrowserTestActivity"},
-    "fenix": {
+    FENIX: {
         "long_name": "Firefox Android Fenix Browser",
         "default_activity": "HomeActivity"}
 }
+INTEGRATED_APPS = list(APPS.keys())
 
 
 def print_all_activities():
@@ -114,7 +124,7 @@ def verify_options(parser, args):
         parser.error("--binary is required!")
 
     # if running on a desktop browser make sure the binary exists
-    if args.app in ["firefox", "chrome"]:
+    if args.app in DESKTOP_APPS:
         if not os.path.isfile(args.binary):
             parser.error("{binary} does not exist!".format(**ctx))
 
@@ -161,13 +171,17 @@ class _StopAction(argparse.Action):
 
 
 class _PrintTests(_StopAction):
+    def __init__(self, integrated_apps=INTEGRATED_APPS, *args, **kwargs):
+        super(_PrintTests, self).__init__(*args, **kwargs)
+        self.integrated_apps = integrated_apps
+
     def __call__(self, parser, namespace, values, option_string=None):
         from manifestparser import TestManifest
 
         here = os.path.abspath(os.path.dirname(__file__))
         raptor_ini = os.path.join(here, 'raptor.ini')
 
-        for _app in ["firefox", "chrome", "fennec", "geckoview", "refbrow", "fenix"]:
+        for _app in self.integrated_apps:
             test_manifest = TestManifest([raptor_ini], strict=False)
             info = {"app": _app}
             available_tests = test_manifest.active_tests(exists=False,
