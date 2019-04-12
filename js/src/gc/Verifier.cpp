@@ -763,7 +763,7 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
                                       Cell* value) {
   bool ok = true;
 
-  DebugOnly<Zone*> zone = map->zone();
+  Zone* zone = map->zone();
   MOZ_ASSERT(CurrentThreadCanAccessZone(zone));
   MOZ_ASSERT(zone->isGCMarking());
 
