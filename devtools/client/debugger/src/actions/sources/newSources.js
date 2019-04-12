@@ -258,7 +258,7 @@ export function newOriginalSources(sourceInfo: Array<OriginalSourceData>) {
       actors: []
     }));
 
-    return dispatch(newSources(sources));
+    return dispatch(newInnerSources(sources));
   };
 }
 
@@ -268,12 +268,11 @@ export function newGeneratedSource(sourceInfo: GeneratedSourceData) {
     return sources[0];
   };
 }
-
 export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
   return async ({ dispatch, client }: ThunkArgs) => {
     const supportsWasm = client.hasWasmSupport();
-    const sources: Array<Source> = sourceInfo.map(({ thread, source }) => {
-      const id = makeSourceId(source);
+    const sources: Array<Source> = sourceInfo.map(({ thread, source, id }) => {
+      id = id || makeSourceId(source);
       const sourceActor = {
         actor: source.actor,
         source: id,
@@ -296,22 +295,11 @@ export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
       return createdSource;
     });
 
-    return dispatch(newSources(sources));
+    return dispatch(newInnerSources(sources));
   };
 }
 
-/**
- * Handler for the debugger client's unsolicited newSource notification.
- * @memberof actions/sources
- * @static
- */
-export function newSource(source: Source) {
-  return async ({ dispatch }: ThunkArgs) => {
-    await dispatch(newSources([source]));
-  };
-}
-
-export function newSources(sources: Source[]) {
+function newInnerSources(sources: Source[]) {
   return async ({ dispatch, getState }: ThunkArgs) => {
     const cx = getContext(getState());
 

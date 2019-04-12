@@ -5,7 +5,7 @@
 // @flow
 
 import { findEmptyLines } from "../empty-lines";
-import { makeSource } from "../test-head";
+import { createSourceObject } from "../test-head";
 
 function ml(gLine) {
   const generatedLocation = { line: gLine, column: 0, sourceId: "foo" };
@@ -14,19 +14,19 @@ function ml(gLine) {
 
 describe("emptyLines", () => {
   it("no positions", () => {
-    const source = makeSource("foo", { text: "\n" });
+    const source = createSourceObject("foo", { text: "\n" });
     const lines = findEmptyLines(source, []);
     expect(lines).toEqual([1, 2]);
   });
 
   it("one position", () => {
-    const source = makeSource("foo", { text: "\n" });
+    const source = createSourceObject("foo", { text: "\n" });
     const lines = findEmptyLines(source, [ml(1)]);
     expect(lines).toEqual([2]);
   });
 
   it("outside positions are not included", () => {
-    const source = makeSource("foo", { text: "\n" });
+    const source = createSourceObject("foo", { text: "\n" });
     const lines = findEmptyLines(source, [ml(10)]);
     expect(lines).toEqual([1, 2]);
   });

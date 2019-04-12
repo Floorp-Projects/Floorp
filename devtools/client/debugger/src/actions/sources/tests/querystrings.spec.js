@@ -18,9 +18,9 @@ import { sourceThreadClient as threadClient } from "../../tests/helpers/threadCl
 describe("sources - sources with querystrings", () => {
   it("should find two sources when same source with querystring", async () => {
     const { dispatch, getState } = createStore(threadClient);
-    await dispatch(actions.newSource(makeSource("base.js?v=1")));
-    await dispatch(actions.newSource(makeSource("base.js?v=2")));
-    await dispatch(actions.newSource(makeSource("diff.js?v=1")));
+    await dispatch(actions.newGeneratedSource(makeSource("base.js?v=1")));
+    await dispatch(actions.newGeneratedSource(makeSource("base.js?v=2")));
+    await dispatch(actions.newGeneratedSource(makeSource("diff.js?v=1")));
 
     expect(
       getSourcesUrlsInSources(

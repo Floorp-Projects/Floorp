@@ -16,8 +16,9 @@ describe("blackbox", () => {
     const store = createStore({ blackBox: async () => true });
     const { dispatch, getState, cx } = store;
 
-    const foo1Source = makeSource("foo1");
-    await dispatch(actions.newSource(foo1Source));
+    const foo1Source = await dispatch(
+      actions.newGeneratedSource(makeSource("foo1"))
+    );
     await dispatch(actions.toggleBlackBox(cx, foo1Source));
 
     const fooSource = selectors.getSource(getState(), "foo1");

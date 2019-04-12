@@ -23,8 +23,9 @@ describe("loadSourceText", () => {
     const store = createStore(sourceThreadClient);
     const { dispatch, getState, cx } = store;
 
-    const foo1Source = makeSource("foo1");
-    await dispatch(actions.newSource(foo1Source));
+    const foo1Source = await dispatch(
+      actions.newGeneratedSource(makeSource("foo1"))
+    );
     await dispatch(actions.loadSourceText({ cx, source: foo1Source }));
     const fooSource = selectors.getSource(getState(), "foo1");
 
@@ -33,8 +34,9 @@ describe("loadSourceText", () => {
     }
     expect(fooSource.text.indexOf("return foo1")).not.toBe(-1);
 
-    const baseFoo2Source = makeSource("foo2");
-    await dispatch(actions.newSource(baseFoo2Source));
+    const baseFoo2Source = await dispatch(
+      actions.newGeneratedSource(makeSource("foo2"))
+    );
     await dispatch(actions.loadSourceText({ cx, source: baseFoo2Source }));
     const foo2Source = selectors.getSource(getState(), "foo2");
 
@@ -45,9 +47,6 @@ describe("loadSourceText", () => {
   });
 
   it("should update breakpoint text when a source loads", async () => {
-    const fooOrigSource = makeOriginalSource("fooGen");
-    const fooGenSource = makeSource("fooGen");
-
     const fooOrigContent = createSource("fooOrig", "var fooOrig = 42;");
     const fooGenContent = createSource("fooGen", "var fooGen = 42;");
 
@@ -75,8 +74,12 @@ describe("loadSourceText", () => {
     );
     const { cx, dispatch, getState } = store;
 
-    await dispatch(actions.newSource(fooOrigSource));
-    await dispatch(actions.newSource(fooGenSource));
+    const fooGenSource = await dispatch(
+      actions.newGeneratedSource(makeSource("fooGen"))
+    );
+    const fooOrigSource = await dispatch(
+      actions.newOriginalSource(makeOriginalSource(fooGenSource))
+    );
 
     const location = {
       sourceId: fooOrigSource.id,
@@ -115,9 +118,10 @@ describe("loadSourceText", () => {
       getBreakpointPositions: async () => ({})
     });
     const id = "foo";
-    const baseSource = makeSource(id, { loadedState: "unloaded" });
 
-    await dispatch(actions.newSource(baseSource));
+    await dispatch(
+      actions.newGeneratedSource(makeSource(id, { loadedState: "unloaded" }))
+    );
 
     let source = selectors.getSourceFromId(getState(), id);
     dispatch(actions.loadSourceText({ cx, source }));
@@ -148,9 +152,10 @@ describe("loadSourceText", () => {
       getBreakpointPositions: async () => ({})
     });
     const id = "foo";
-    const baseSource = makeSource(id, { loadedState: "unloaded" });
 
-    await dispatch(actions.newSource(baseSource));
+    await dispatch(
+      actions.newGeneratedSource(makeSource(id, { loadedState: "unloaded" }))
+    );
     let source = selectors.getSourceFromId(getState(), id);
     const loading = dispatch(actions.loadSourceText({ cx, source }));
 
@@ -171,8 +176,9 @@ describe("loadSourceText", () => {
   it("should cache subsequent source text loads", async () => {
     const { dispatch, getState, cx } = createStore(sourceThreadClient);
 
-    const source = makeSource("foo1");
-    dispatch(actions.newSource(source));
+    const source = await dispatch(
+      actions.newGeneratedSource(makeSource("foo1"))
+    );
     await dispatch(actions.loadSourceText({ cx, source }));
     const prevSource = selectors.getSourceFromId(getState(), "foo1");
 
@@ -186,8 +192,9 @@ describe("loadSourceText", () => {
     const store = createStore(sourceThreadClient);
     const { dispatch, cx } = store;
 
-    const source = makeSource("foo2");
-    await dispatch(actions.newSource(source));
+    const source = await dispatch(
+      actions.newGeneratedSource(makeSource("foo2"))
+    );
 
     const wasLoading = watchForState(store, state => {
       const fooSource = selectors.getSource(state, "foo2");
@@ -202,8 +209,9 @@ describe("loadSourceText", () => {
   it("should indicate an errored source text", async () => {
     const { dispatch, getState, cx } = createStore(sourceThreadClient);
 
-    const source = makeSource("bad-id");
-    await dispatch(actions.newSource(source));
+    const source = await dispatch(
+      actions.newGeneratedSource(makeSource("bad-id"))
+    );
     await dispatch(actions.loadSourceText({ cx, source }));
     const badSource = selectors.getSource(getState(), "bad-id");
 

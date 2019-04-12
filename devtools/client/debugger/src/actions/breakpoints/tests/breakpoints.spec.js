@@ -31,8 +31,7 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/a"
     };
 
-    const source = makeSource("a");
-    await dispatch(actions.newSource(source));
+    const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
     await dispatch(actions.loadSourceText({ cx, source }));
     await dispatch(
       actions.setSelectedLocation(cx, source, {
@@ -61,8 +60,7 @@ describe("breakpoints", () => {
       column: 1,
       sourceUrl: "http://localhost:8000/examples/a"
     };
-    const source = makeSource("a");
-    await dispatch(actions.newSource(source));
+    const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
     await dispatch(actions.loadSourceText({ cx, source }));
     await dispatch(
       actions.setSelectedLocation(cx, source, {
@@ -88,8 +86,7 @@ describe("breakpoints", () => {
       column: 1,
       sourceUrl: "http://localhost:8000/examples/a"
     };
-    const source = makeSource("a");
-    await dispatch(actions.newSource(source));
+    const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
     await dispatch(actions.loadSourceText({ cx, source }));
     await dispatch(
       actions.setSelectedLocation(cx, source, {
@@ -122,8 +119,7 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/a"
     };
 
-    const source = makeSource("a");
-    await dispatch(actions.newSource(source));
+    const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
     await dispatch(actions.loadSourceText({ cx, source }));
     await dispatch(
       actions.setSelectedLocation(cx, source, {
@@ -161,12 +157,10 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/b"
     };
 
-    const aSource = makeSource("a");
-    await dispatch(actions.newSource(aSource));
+    const aSource = await dispatch(actions.newGeneratedSource(makeSource("a")));
     await dispatch(actions.loadSourceText({ cx, source: aSource }));
 
-    const bSource = makeSource("b");
-    await dispatch(actions.newSource(bSource));
+    const bSource = await dispatch(actions.newGeneratedSource(makeSource("b")));
     await dispatch(actions.loadSourceText({ cx, source: bSource }));
 
     await dispatch(
@@ -208,12 +202,10 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/b"
     };
 
-    const aSource = makeSource("a");
-    await dispatch(actions.newSource(aSource));
+    const aSource = await dispatch(actions.newGeneratedSource(makeSource("a")));
     await dispatch(actions.loadSourceText({ cx, source: aSource }));
 
-    const bSource = makeSource("b");
-    await dispatch(actions.newSource(bSource));
+    const bSource = await dispatch(actions.newGeneratedSource(makeSource("b")));
     await dispatch(actions.loadSourceText({ cx, source: bSource }));
 
     await dispatch(actions.addBreakpoint(cx, loc1));
@@ -241,8 +233,7 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/a"
     };
 
-    const aSource = makeSource("a");
-    await dispatch(actions.newSource(aSource));
+    const aSource = await dispatch(actions.newGeneratedSource(makeSource("a")));
     await dispatch(actions.loadSourceText({ cx, source: aSource }));
 
     await dispatch(actions.addBreakpoint(cx, loc));
@@ -285,12 +276,10 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/b"
     };
 
-    const aSource = makeSource("a");
-    await dispatch(actions.newSource(aSource));
+    const aSource = await dispatch(actions.newGeneratedSource(makeSource("a")));
     await dispatch(actions.loadSourceText({ cx, source: aSource }));
 
-    const bSource = makeSource("b");
-    await dispatch(actions.newSource(bSource));
+    const bSource = await dispatch(actions.newGeneratedSource(makeSource("b")));
     await dispatch(actions.loadSourceText({ cx, source: bSource }));
 
     await dispatch(actions.addBreakpoint(cx, loc1));
@@ -318,8 +307,9 @@ describe("breakpoints", () => {
 
     const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
 
-    const source = makeSource("foo1");
-    await dispatch(actions.newSource(source));
+    const source = await dispatch(
+      actions.newGeneratedSource(makeSource("foo1"))
+    );
     await dispatch(actions.loadSourceText({ cx, source }));
 
     await dispatch(actions.selectLocation(cx, loc));
@@ -338,8 +328,9 @@ describe("breakpoints", () => {
 
     const { dispatch, getState, cx } = createStore(mockClient({ "5": [1] }));
 
-    const source = makeSource("foo1");
-    await dispatch(actions.newSource(source));
+    const source = await dispatch(
+      actions.newGeneratedSource(makeSource("foo1"))
+    );
     await dispatch(actions.loadSourceText({ cx, source }));
 
     await dispatch(actions.selectLocation(cx, { sourceId: "foo1", line: 1 }));
@@ -366,8 +357,7 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/a"
     };
 
-    const source = makeSource("a");
-    await dispatch(actions.newSource(source));
+    const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
     await dispatch(actions.loadSourceText({ cx, source }));
 
     await dispatch(actions.addBreakpoint(cx, loc));
@@ -396,8 +386,7 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/a"
     };
 
-    const source = makeSource("a");
-    await dispatch(actions.newSource(source));
+    const source = await dispatch(actions.newGeneratedSource(makeSource("a")));
     await dispatch(actions.loadSourceText({ cx, source }));
 
     await dispatch(actions.addBreakpoint(cx, loc));
@@ -434,8 +423,9 @@ describe("breakpoints", () => {
       sourceUrl: "http://localhost:8000/examples/a.js"
     };
 
-    const source = makeSource("a.js");
-    await dispatch(actions.newSource(source));
+    const source = await dispatch(
+      actions.newGeneratedSource(makeSource("a.js"))
+    );
     await dispatch(actions.loadSourceText({ cx, source }));
 
     await dispatch(actions.addBreakpoint(cx, loc));

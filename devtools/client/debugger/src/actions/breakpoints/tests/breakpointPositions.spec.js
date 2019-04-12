@@ -19,7 +19,7 @@ describe("breakpointPositions", () => {
     });
 
     const { dispatch, getState, cx } = store;
-    await dispatch(actions.newSource(makeSource("foo")));
+    await dispatch(actions.newGeneratedSource(makeSource("foo")));
 
     dispatch(actions.setBreakpointPositions({ cx, sourceId: "foo" }));
 
@@ -59,7 +59,7 @@ describe("breakpointPositions", () => {
     });
 
     const { dispatch, getState, cx } = store;
-    await dispatch(actions.newSource(makeSource("foo")));
+    await dispatch(actions.newGeneratedSource(makeSource("foo")));
 
     dispatch(actions.setBreakpointPositions({ cx, sourceId: "foo" }));
     dispatch(actions.setBreakpointPositions({ cx, sourceId: "foo" }));

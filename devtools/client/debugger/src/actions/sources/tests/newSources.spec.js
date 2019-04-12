@@ -9,6 +9,7 @@ import {
   selectors,
   createStore,
   makeSource,
+  makeSourceURL,
   waitForState
 } from "../../../utils/test-head";
 const {
@@ -25,8 +26,8 @@ import { sourceThreadClient as threadClient } from "../../tests/helpers/threadCl
 describe("sources - new sources", () => {
   it("should add sources to state", async () => {
     const { dispatch, getState } = createStore(threadClient);
-    await dispatch(actions.newSource(makeSource("base.js")));
-    await dispatch(actions.newSource(makeSource("jquery.js")));
+    await dispatch(actions.newGeneratedSource(makeSource("base.js")));
+    await dispatch(actions.newGeneratedSource(makeSource("jquery.js")));
 
     expect(getSourceCount(getState())).toEqual(2);
     const base = getSource(getState(), "base.js");
@@ -38,19 +39,21 @@ describe("sources - new sources", () => {
   it("should not add multiple identical sources", async () => {
     const { dispatch, getState } = createStore(threadClient);
 
-    await dispatch(actions.newSource(makeSource("base.js")));
-    await dispatch(actions.newSource(makeSource("base.js")));
+    await dispatch(actions.newGeneratedSource(makeSource("base.js")));
+    await dispatch(actions.newGeneratedSource(makeSource("base.js")));
 
     expect(getSourceCount(getState())).toEqual(1);
   });
 
   it("should automatically select a pending source", async () => {
     const { dispatch, getState, cx } = createStore(threadClient);
-    const baseSource = makeSource("base.js");
-    await dispatch(actions.selectSourceURL(cx, baseSource.url));
+    const baseSourceURL = makeSourceURL("base.js");
+    await dispatch(actions.selectSourceURL(cx, baseSourceURL));
 
     expect(getSelectedSource(getState())).toBe(undefined);
-    await dispatch(actions.newSource(baseSource));
+    const baseSource = await dispatch(
+      actions.newGeneratedSource(makeSource("base.js"))
+    );
 
     const selected = getSelectedSource(getState());
     expect(selected && selected.url).toBe(baseSource.url);
@@ -66,8 +69,11 @@ describe("sources - new sources", () => {
       }
     );
 
-    const baseSource = makeSource("base.js", { sourceMapURL: "base.js.map" });
-    await dispatch(actions.newSource(baseSource));
+    await dispatch(
+      actions.newGeneratedSource(
+        makeSource("base.js", { sourceMapURL: "base.js.map" })
+      )
+    );
     const magic = getSourceByURL(getState(), "magic.js");
     expect(magic && magic.url).toEqual("magic.js");
   });
@@ -84,7 +90,7 @@ describe("sources - new sources", () => {
       }
     );
 
-    await dispatch(actions.newSource(makeSource("base.js")));
+    await dispatch(actions.newGeneratedSource(makeSource("base.js")));
     expect(getOriginalURLs).not.toHaveBeenCalled();
   });
 
@@ -98,8 +104,11 @@ describe("sources - new sources", () => {
         getOriginalLocations: async items => items
       }
     );
-    const baseSource = makeSource("base.js", { sourceMapURL: "base.js.map" });
-    await dispatch(actions.newSource(baseSource));
+    await dispatch(
+      actions.newGeneratedSource(
+        makeSource("base.js", { sourceMapURL: "base.js.map" })
+      )
+    );
     expect(getSourceCount(getState())).toEqual(1);
     const base = getSource(getState(), "base.js");
     expect(base && base.id).toEqual("base.js");
@@ -124,10 +133,13 @@ describe("sources - new sources", () => {
       }
     );
     const { dispatch, getState } = dbg;
-    const fooSource = makeSource("foo.js", { sourceMapURL: "foo.js.map" });
-    const barSource = makeSource("bar.js", { sourceMapURL: "bar.js.map" });
-    const bazzSource = makeSource("bazz.js", { sourceMapURL: "bazz.js.map" });
-    await dispatch(actions.newSources([fooSource, barSource, bazzSource]));
+    await dispatch(
+      actions.newGeneratedSources([
+        makeSource("foo.js", { sourceMapURL: "foo.js.map" }),
+        makeSource("bar.js", { sourceMapURL: "bar.js.map" }),
+        makeSource("bazz.js", { sourceMapURL: "bazz.js.map" })
+      ])
+    );
     await sourceQueue.flush();
     await waitForState(dbg, state => getSourceCount(state) == 5);
     expect(getSourceCount(getState())).toEqual(5);
@@ -142,9 +154,9 @@ describe("sources - new sources", () => {
       querystring`, async () => {
       const { getSourcesUrlsInSources } = selectors;
       const { dispatch, getState } = createStore(threadClient);
-      await dispatch(actions.newSource(makeSource("base.js?v=1")));
-      await dispatch(actions.newSource(makeSource("base.js?v=2")));
-      await dispatch(actions.newSource(makeSource("diff.js?v=1")));
+      await dispatch(actions.newGeneratedSource(makeSource("base.js?v=1")));
+      await dispatch(actions.newGeneratedSource(makeSource("base.js?v=2")));
+      await dispatch(actions.newGeneratedSource(makeSource("diff.js?v=1")));
 
       const base1 = "http://localhost:8000/examples/base.js?v=1";
       const diff1 = "http://localhost:8000/examples/diff.js?v=1";
@@ -154,7 +166,7 @@ describe("sources - new sources", () => {
       expect(getSourcesUrlsInSources(getState(), base1)).toMatchSnapshot();
 
       expect(getSourcesUrlsInSources(getState(), diff1)).toHaveLength(1);
-      await dispatch(actions.newSource(makeSource("diff.js?v=2")));
+      await dispatch(actions.newGeneratedSource(makeSource("diff.js?v=2")));
       expect(getSourcesUrlsInSources(getState(), diff2)).toHaveLength(2);
       expect(getSourcesUrlsInSources(getState(), diff1)).toHaveLength(2);
     });

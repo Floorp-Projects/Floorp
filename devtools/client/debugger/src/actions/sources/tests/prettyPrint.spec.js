@@ -14,12 +14,11 @@ import { createPrettySource } from "../prettyPrint";
 import { sourceThreadClient } from "../../tests/helpers/threadClient.js";
 
 describe("sources - pretty print", () => {
-  const { dispatch, getState, cx } = createStore(sourceThreadClient);
-
   it("returns a pretty source for a minified file", async () => {
+    const { dispatch, getState, cx } = createStore(sourceThreadClient);
+
     const url = "base.js";
-    const source = makeSource(url);
-    await dispatch(actions.newSource(source));
+    const source = await dispatch(actions.newGeneratedSource(makeSource(url)));
     await dispatch(createPrettySource(cx, source.id));
 
     const prettyURL = `${source.url}:formatted`;
@@ -30,13 +29,25 @@ describe("sources - pretty print", () => {
   });
 
   it("should create a source when first toggling pretty print", async () => {
-    const source = makeSource("foobar.js", { loadedState: "loaded" });
+    const { dispatch, getState, cx } = createStore(sourceThreadClient);
+
+    const source = await dispatch(
+      actions.newGeneratedSource(makeSource("foobar.js"))
+    );
+    await dispatch(actions.loadSourceText({ cx, source }));
+
     await dispatch(actions.togglePrettyPrint(cx, source.id));
     expect(selectors.getSourceCount(getState())).toEqual(2);
   });
 
   it("should not make a second source when toggling pretty print", async () => {
-    const source = makeSource("foobar.js", { loadedState: "loaded" });
+    const { dispatch, getState, cx } = createStore(sourceThreadClient);
+
+    const source = await dispatch(
+      actions.newGeneratedSource(makeSource("foobar.js"))
+    );
+    await dispatch(actions.loadSourceText({ cx, source }));
+
     await dispatch(actions.togglePrettyPrint(cx, source.id));
     expect(selectors.getSourceCount(getState())).toEqual(2);
     await dispatch(actions.togglePrettyPrint(cx, source.id));

@@ -122,7 +122,7 @@ describe("expressions", () => {
     await createFrames(getState, dispatch);
 
     const cx = selectors.getThreadContext(getState());
-    await dispatch(actions.newSource(makeSource("source")));
+    await dispatch(actions.newGeneratedSource(makeSource("source")));
     await dispatch(actions.addExpression(cx, "foo"));
     await dispatch(actions.addExpression(cx, "bar"));
 
@@ -144,8 +144,8 @@ describe("expressions", () => {
 
 async function createFrames(getState, dispatch) {
   const frame = makeMockFrame();
-  await dispatch(actions.newSource(makeSource("example.js")));
-  await dispatch(actions.newSource(makeSource("source")));
+  await dispatch(actions.newGeneratedSource(makeSource("example.js")));
+  await dispatch(actions.newGeneratedSource(makeSource("source")));
 
   await dispatch(
     actions.paused({
