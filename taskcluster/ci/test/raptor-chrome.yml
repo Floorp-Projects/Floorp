@@ -32,18 +32,15 @@ job-defaults:
                 default:
                     - raptor/linux_config.py
     fetches:
-        by-test-platform:
-            win.*64.*:
-                fetch:
+        fetch:
+            by-test-platform:
+                win.*64.*:
                     - win64-chromium
-            win.*32.*:
-                fetch:
+                win.*32.*:
                     - win32-chromium
-            macosx.*:
-                fetch:
+                macosx.*:
                     - mac-chromium
-            default:
-                fetch:
+                default:
                     - linux64-chromium
 
 raptor-tp6-1-chrome:
@@ -212,21 +209,18 @@ raptor-unity-webgl-chrome:
             - --test=raptor-unity-webgl
             - --app=chrome
     fetches:
-        by-test-platform:
-            win.*64.*:
-                fetch:
+        fetch:
+            by-test-platform:
+                win.*64.*:
                     - win64-chromium
                     - unity-webgl
-            win.*32.*:
-                fetch:
+                win.*32.*:
                     - win32-chromium
                     - unity-webgl
-            macosx.*:
-                fetch:
+                macosx.*:
                     - mac-chromium
                     - unity-webgl
-            default:
-                fetch:
+                default:
                     - linux64-chromium
                     - unity-webgl
 
@@ -239,21 +233,18 @@ raptor-wasm-misc-chrome:
             - --test=raptor-wasm-misc
             - --app=chrome
     fetches:
-        by-test-platform:
-            win.*64.*:
-                fetch:
+        fetch:
+            by-test-platform:
+                win.*64.*:
                     - win64-chromium
                     - wasm-misc
-            win.*32.*:
-                fetch:
+                win.*32.*:
                     - win32-chromium
                     - wasm-misc
-            macosx.*:
-                fetch:
+                macosx.*:
                     - mac-chromium
                     - wasm-misc
-            default:
-                fetch:
+                default:
                     - linux64-chromium
                     - wasm-misc
 
@@ -267,21 +258,18 @@ raptor-assorted-dom-chrome:
             - --test=raptor-assorted-dom
             - --app=chrome
     fetches:
-        by-test-platform:
-            win.*64.*:
-                fetch:
+        fetch:
+            by-test-platform:
+                win.*64.*:
                     - win64-chromium
                     - assorted-dom
-            win.*32.*:
-                fetch:
+                win.*32.*:
                     - win32-chromium
                     - assorted-dom
-            macosx.*:
-                fetch:
+                macosx.*:
                     - mac-chromium
                     - assorted-dom
-            default:
-                fetch:
+                default:
                     - linux64-chromium
                     - assorted-dom
 
