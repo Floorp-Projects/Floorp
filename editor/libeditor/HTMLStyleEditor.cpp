@@ -634,7 +634,8 @@ nsresult HTMLEditor::SplitStyleAbovePoint(
         // node is href - test if really <a href=...
         (aProperty == nsGkAtoms::href && HTMLEditUtils::IsLink(node)) ||
         // or node is any prop, and we asked to split them all
-        (!aProperty && NodeIsProperty(*node)) ||
+        (!aProperty && node->IsElement() && IsEditable(node) &&
+         HTMLEditUtils::IsRemovableInlineStyleElement(*node->AsElement())) ||
         // or the style is specified in the style attribute
         isSet) {
       // Found a style node we need to split
@@ -757,11 +758,6 @@ nsresult HTMLEditor::ClearStyle(nsCOMPtr<nsINode>* aNode, int32_t* aOffset,
   return NS_OK;
 }
 
-bool HTMLEditor::NodeIsProperty(nsINode& aNode) {
-  return IsContainer(&aNode) && IsEditable(&aNode) && !IsBlockNode(&aNode) &&
-         !aNode.IsHTMLElement(nsGkAtoms::a);
-}
-
 nsresult HTMLEditor::RemoveStyleInside(nsIContent& aNode, nsAtom* aProperty,
                                        nsAtom* aAttribute,
                                        const bool aChildrenOnly /* = false */) {
@@ -788,7 +784,8 @@ nsresult HTMLEditor::RemoveStyleInside(nsIContent& aNode, nsAtom* aProperty,
        // and for named anchors
        (aProperty == nsGkAtoms::name && HTMLEditUtils::IsNamedAnchor(&aNode)) ||
        // or node is any prop and we asked for that
-       (!aProperty && NodeIsProperty(aNode)))) {
+       (!aProperty && IsEditable(&aNode) &&
+        HTMLEditUtils::IsRemovableInlineStyleElement(*aNode.AsElement())))) {
     // if we weren't passed an attribute, then we want to
     // remove any matching inlinestyles entirely
     if (!aAttribute) {
