@@ -47,6 +47,10 @@ export type SourceId = string;
  */
 export type ActorId = string;
 
+export type QueuedSourceData =
+  | { type: "original", data: Source }
+  | { type: "generated", data: Source };
+
 export type SourceActorLocation = {|
   +sourceActor: SourceActor,
   +line: number,
