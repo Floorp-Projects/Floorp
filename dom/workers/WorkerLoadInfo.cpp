@@ -87,7 +87,7 @@ WorkerLoadInfoData::WorkerLoadInfoData()
       mReportCSPViolations(false),
       mXHRParamsAllowed(false),
       mPrincipalIsSystem(false),
-      mStorageAllowed(false),
+      mStorageAccess(nsContentUtils::StorageAccess::eDeny),
       mFirstPartyStorageAccessGranted(false),
       mServiceWorkersTestingInWindow(false),
       mSecureContext(eNotSet) {}
