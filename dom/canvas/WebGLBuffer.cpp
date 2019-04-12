@@ -84,7 +84,7 @@ static bool ValidateBufferUsageEnum(WebGLContext* webgl, GLenum usage) {
   return false;
 }
 
-void WebGLBuffer::BufferData(GLenum target, size_t size, const void* data,
+void WebGLBuffer::BufferData(GLenum target, uint64_t size, const void* data,
                              GLenum usage) {
   // Careful: data.Length() could conceivably be any uint32_t, but GLsizeiptr
   // is like intptr_t.
@@ -106,7 +106,7 @@ void WebGLBuffer::BufferData(GLenum target, size_t size, const void* data,
   UniqueBuffer newIndexCache;
   if (target == LOCAL_GL_ELEMENT_ARRAY_BUFFER &&
       mContext->mNeedsIndexValidation) {
-    newIndexCache = malloc(size);
+    newIndexCache = malloc(AssertedCast<size_t>(size));
     if (!newIndexCache) {
       mContext->ErrorOutOfMemory("Failed to alloc index cache.");
       return;
@@ -151,12 +151,13 @@ void WebGLBuffer::BufferData(GLenum target, size_t size, const void* data,
   ResetLastUpdateFenceId();
 }
 
-void WebGLBuffer::BufferSubData(GLenum target, size_t dstByteOffset,
-                                size_t dataLen, const void* data) const {
+void WebGLBuffer::BufferSubData(GLenum target, uint64_t dstByteOffset,
+                                uint64_t dataLen, const void* data) const {
   if (!ValidateRange(dstByteOffset, dataLen)) return;
 
-  if (!CheckedInt<GLintptr>(dataLen).isValid())
-    return mContext->ErrorOutOfMemory("Size too large.");
+  if (!CheckedInt<GLintptr>(dstByteOffset).isValid() ||
+      !CheckedInt<GLsizeiptr>(dataLen).isValid())
+    return mContext->ErrorOutOfMemory("offset or size too large for platform.");
 
   ////
 

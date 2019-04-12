@@ -4,18 +4,13 @@ geckodriver
 Proxy for using W3C [WebDriver] compatible clients to interact with
 Gecko-based browsers.
 
-This program provides the HTTP API described by the [WebDriver protocol]
-to communicate with Gecko browsers, such as Firefox.  It translates calls
-into the [Firefox remote protocol] by acting as a proxy between the local-
-and remote ends.
-
-geckodriver’s [source code] is made available under the [Mozilla
-Public License].
+This program provides the HTTP API described by the [WebDriver
+protocol] to communicate with Gecko browsers, such as Firefox.  It
+translates calls into the [Marionette remote protocol] by acting
+as a proxy between the local- and remote ends.
 
 [WebDriver protocol]: https://w3c.github.io/webdriver/#protocol
-[Firefox remote protocol]: https://firefox-source-docs.mozilla.org/testing/marionette/Protocol.html
-[source code]: https://hg.mozilla.org/mozilla-unified/file/tip/testing/geckodriver
-[Mozilla Public License]: https://www.mozilla.org/en-US/MPL/2.0/
+[Marionette remote protocol]: https://firefox-source-docs.mozilla.org/testing/marionette/
 [WebDriver]: https://developer.mozilla.org/en-US/docs/Web/WebDriver
 
 
@@ -52,17 +47,23 @@ Documentation
   * [Analyzing crash data from Firefox](https://firefox-source-docs.mozilla.org/testing/geckodriver/CrashReports.html)
 
 * [Contributing](https://firefox-source-docs.mozilla.org/testing/geckodriver/#for-developers)
+  * [Building](https://firefox-source-docs.mozilla.org/testing/geckodriver/Building.html)
+  * [Testing](https://firefox-source-docs.mozilla.org/testing/geckodriver/Testing.html)
+  * [Releasing](https://firefox-source-docs.mozilla.org/testing/geckodriver/Releasing.html)
+  * [Self-serving an ARM build](https://firefox-source-docs.mozilla.org/testing/geckodriver/ARM.html)
 
 
 Source code
 -----------
 
-geckodriver’s canonical source code can be found in [mozilla-central].
-We only use this GitHub repository for issue tracking and making releases.
-See our [contribution documentation] for more information.
+geckodriver is made available under the [Mozilla Public License].
 
+Its source code can be found in [mozilla-central] under testing/geckodriver.
+This GitHub repository is only used for issue tracking and making releases.
+
+[source code]: https://hg.mozilla.org/mozilla-unified/file/tip/testing/geckodriver
+[Mozilla Public License]: https://www.mozilla.org/en-US/MPL/2.0/
 [mozilla-central]: https://hg.mozilla.org/mozilla-central/file/tip/testing/geckodriver
-[contribution documentation]: https://firefox-source-docs.mozilla.org/testing/geckodriver/#for-developers
 
 
 Contact
