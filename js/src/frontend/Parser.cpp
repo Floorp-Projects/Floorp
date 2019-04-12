@@ -3772,8 +3772,9 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
       TokenPos namePos = anyChars.nextToken().pos;
 
       PropertyType propType;
-      Node propName = propertyName(yieldHandling, PropertyNameInPattern,
-                                   declKind, literal, &propType, &propAtom);
+      Node propName =
+          propertyOrMethodName(yieldHandling, PropertyNameInPattern, declKind,
+                               literal, &propType, &propAtom);
       if (!propName) {
         return null();
       }
@@ -6775,9 +6776,9 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
 
   RootedAtom propAtom(cx_);
   PropertyType propType;
-  Node propName = propertyName(yieldHandling, PropertyNameInClass,
-                               /* maybeDecl = */ Nothing(), classMembers,
-                               &propType, &propAtom);
+  Node propName = propertyOrMethodName(yieldHandling, PropertyNameInClass,
+                                       /* maybeDecl = */ Nothing(),
+                                       classMembers, &propType, &propAtom);
   if (!propName) {
     return false;
   }
@@ -9642,6 +9643,63 @@ template <class ParseHandler, typename Unit>
 typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
     YieldHandling yieldHandling, PropertyNameContext propertyNameContext,
     const Maybe<DeclarationKind>& maybeDecl, ListNodeType propList,
+    MutableHandleAtom propAtom) {
+  // PropertyName[Yield, Await]:
+  //   LiteralPropertyName
+  //   ComputedPropertyName[?Yield, ?Await]
+  //
+  // LiteralPropertyName:
+  //   IdentifierName
+  //   StringLiteral
+  //   NumericLiteral
+  TokenKind ltok = anyChars.currentToken().type;
+
+  propAtom.set(nullptr);
+  switch (ltok) {
+    case TokenKind::Number:
+      propAtom.set(NumberToAtom(cx_, anyChars.currentToken().number()));
+      if (!propAtom.get()) {
+        return null();
+      }
+      return newNumber(anyChars.currentToken());
+
+    case TokenKind::String: {
+      propAtom.set(anyChars.currentToken().atom());
+      uint32_t index;
+      if (propAtom->isIndex(&index)) {
+        return handler_.newNumber(index, NoDecimal, pos());
+      }
+      return stringLiteral();
+    }
+
+    case TokenKind::LeftBracket:
+      return computedPropertyName(yieldHandling, maybeDecl, propertyNameContext,
+                                  propList);
+
+    default: {
+      if (!TokenKindIsPossibleIdentifierName(ltok)) {
+        error(JSMSG_UNEXPECTED_TOKEN, "property name", TokenKindToDesc(ltok));
+        return null();
+      }
+
+      propAtom.set(anyChars.currentName());
+      return handler_.newObjectLiteralPropertyName(propAtom, pos());
+    }
+  }
+}
+
+// True if `kind` can be the first token of a PropertyName.
+static bool TokenKindCanStartPropertyName(TokenKind tt) {
+  return TokenKindIsPossibleIdentifierName(tt) || tt == TokenKind::String ||
+         tt == TokenKind::Number || tt == TokenKind::LeftBracket ||
+         tt == TokenKind::Mul;
+}
+
+template <class ParseHandler, typename Unit>
+typename ParseHandler::Node
+GeneralParser<ParseHandler, Unit>::propertyOrMethodName(
+    YieldHandling yieldHandling, PropertyNameContext propertyNameContext,
+    const Maybe<DeclarationKind>& maybeDecl, ListNodeType propList,
     PropertyType* propType, MutableHandleAtom propAtom) {
   // We're parsing an object literal, class, or destructuring pattern;
   // propertyNameContext tells which one. This method parses any of the
@@ -9669,20 +9727,6 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
   // The caller must check `*propType` and throw if whatever we parsed isn't
   // allowed here (for example, a getter in a destructuring pattern).
   //
-  // The nonterminal PropertyName comes from the standard:
-  //
-  //     PropertyName[Yield, Await]:
-  //       LiteralPropertyName
-  //       ComputedPropertyName[?Yield, ?Await]
-  //
-  //     LiteralPropertyName:
-  //       IdentifierName
-  //       StringLiteral
-  //       NumericLiteral
-  //
-  //     ComputedPropertyName[Yield, Await]:
-  //       [ AssignmentExpression[+In, ?Yield, ?Await] ]
-  //
   // This method does *not* match `static` (allowed in classes) or `...`
   // (allowed in object literals and patterns). The caller must take care of
   // those before calling this method.
@@ -9695,9 +9739,12 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
   MOZ_ASSERT(ltok != TokenKind::RightCurly,
              "caller should have handled TokenKind::RightCurly");
 
-  // Accept `async` and/or `*`, indicating an async or generator method.
+  // Accept `async` and/or `*`, indicating an async or generator method;
+  // or `get` or `set`, indicating an accessor.
   bool isGenerator = false;
   bool isAsync = false;
+  bool isGetter = false;
+  bool isSetter = false;
 
   if (ltok == TokenKind::Async) {
     // `async` is also a PropertyName by itself (it's a conditional keyword),
@@ -9706,9 +9753,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
     if (!tokenStream.peekTokenSameLine(&tt)) {
       return null();
     }
-    if (tt == TokenKind::String || tt == TokenKind::Number ||
-        tt == TokenKind::LeftBracket || TokenKindIsPossibleIdentifierName(tt) ||
-        tt == TokenKind::Mul) {
+    if (TokenKindCanStartPropertyName(tt)) {
       isAsync = true;
       tokenStream.consumeKnownToken(tt);
       ltok = tt;
@@ -9722,117 +9767,25 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
     }
   }
 
-  // Parse the PropertyName itself at last.
-  propAtom.set(nullptr);
-  Node propName;
-  switch (ltok) {
-    case TokenKind::Number:
-      propAtom.set(NumberToAtom(cx_, anyChars.currentToken().number()));
-      if (!propAtom.get()) {
-        return null();
-      }
-      propName = newNumber(anyChars.currentToken());
-      if (!propName) {
-        return null();
-      }
-      break;
-
-    case TokenKind::String: {
-      propAtom.set(anyChars.currentToken().atom());
-      uint32_t index;
-      if (propAtom->isIndex(&index)) {
-        propName = handler_.newNumber(index, NoDecimal, pos());
-        if (!propName) {
-          return null();
-        }
-        break;
-      }
-      propName = stringLiteral();
-      if (!propName) {
-        return null();
-      }
-      break;
+  if (!isAsync && !isGenerator &&
+      (ltok == TokenKind::Get || ltok == TokenKind::Set)) {
+    // We have parsed |get| or |set|. Look for an accessor property
+    // name next.
+    TokenKind tt;
+    if (!tokenStream.peekToken(&tt)) {
+      return null();
     }
-
-    case TokenKind::LeftBracket:
-      propName = computedPropertyName(yieldHandling, maybeDecl,
-                                      propertyNameContext, propList);
-      if (!propName) {
-        return null();
-      }
-      break;
-
-    default: {
-      if (!TokenKindIsPossibleIdentifierName(ltok)) {
-        error(JSMSG_UNEXPECTED_TOKEN, "property name", TokenKindToDesc(ltok));
-        return null();
-      }
-
-      propAtom.set(anyChars.currentName());
-
-      // Do not look for accessor syntax on generator or async methods.
-      if (isGenerator || isAsync ||
-          !(ltok == TokenKind::Get || ltok == TokenKind::Set)) {
-        propName = handler_.newObjectLiteralPropertyName(propAtom, pos());
-        if (!propName) {
-          return null();
-        }
-        break;
-      }
-
-      *propType =
-          ltok == TokenKind::Get ? PropertyType::Getter : PropertyType::Setter;
-
-      // We have parsed |get| or |set|. Look for an accessor property
-      // name next.
-      TokenKind tt;
-      if (!tokenStream.peekToken(&tt)) {
-        return null();
-      }
-      if (TokenKindIsPossibleIdentifierName(tt)) {
-        tokenStream.consumeKnownToken(tt);
-
-        propAtom.set(anyChars.currentName());
-        return handler_.newObjectLiteralPropertyName(propAtom, pos());
-      }
-      if (tt == TokenKind::String) {
-        tokenStream.consumeKnownToken(TokenKind::String);
-
-        propAtom.set(anyChars.currentToken().atom());
-
-        uint32_t index;
-        if (propAtom->isIndex(&index)) {
-          propAtom.set(NumberToAtom(cx_, index));
-          if (!propAtom.get()) {
-            return null();
-          }
-          return handler_.newNumber(index, NoDecimal, pos());
-        }
-        return stringLiteral();
-      }
-      if (tt == TokenKind::Number) {
-        tokenStream.consumeKnownToken(TokenKind::Number);
-
-        propAtom.set(NumberToAtom(cx_, anyChars.currentToken().number()));
-        if (!propAtom.get()) {
-          return null();
-        }
-        return newNumber(anyChars.currentToken());
-      }
-      if (tt == TokenKind::LeftBracket) {
-        tokenStream.consumeKnownToken(TokenKind::LeftBracket);
-
-        return computedPropertyName(yieldHandling, maybeDecl,
-                                    propertyNameContext, propList);
-      }
-
-      // Not an accessor property after all.
-      propName = handler_.newObjectLiteralPropertyName(propAtom.get(), pos());
-      if (!propName) {
-        return null();
-      }
-      break;
+    if (TokenKindCanStartPropertyName(tt)) {
+      tokenStream.consumeKnownToken(tt);
+      isGetter = (ltok == TokenKind::Get);
+      isSetter = (ltok == TokenKind::Set);
     }
+  }
+
+  Node propName = propertyName(yieldHandling, propertyNameContext, maybeDecl,
+                               propList, propAtom);
+  if (!propName) {
+    return null();
   }
 
   // Grab the next token following the property/method name.
@@ -9843,7 +9796,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
   }
 
   if (tt == TokenKind::Colon) {
-    if (isGenerator || isAsync) {
+    if (isGenerator || isAsync || isGetter || isSetter) {
       error(JSMSG_BAD_PROP_ID);
       return null();
     }
@@ -9853,7 +9806,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
 
   if (propertyNameContext == PropertyNameInClass &&
       (tt == TokenKind::Semi || tt == TokenKind::Assign)) {
-    if (isGenerator || isAsync) {
+    if (isGenerator || isAsync || isGetter || isSetter) {
       error(JSMSG_BAD_PROP_ID);
       return null();
     }
@@ -9865,7 +9818,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
   if (TokenKindIsPossibleIdentifierName(ltok) &&
       (tt == TokenKind::Comma || tt == TokenKind::RightCurly ||
        tt == TokenKind::Assign)) {
-    if (isGenerator || isAsync) {
+    if (isGenerator || isAsync || isGetter || isSetter) {
       error(JSMSG_BAD_PROP_ID);
       return null();
     }
@@ -9885,6 +9838,10 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
       *propType = PropertyType::GeneratorMethod;
     } else if (isAsync) {
       *propType = PropertyType::AsyncMethod;
+    } else if (isGetter) {
+      *propType = PropertyType::Getter;
+    } else if (isSetter) {
+      *propType = PropertyType::Setter;
     } else {
       *propType = PropertyType::Method;
     }
@@ -9977,8 +9934,9 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
       TokenPos namePos = anyChars.nextToken().pos;
 
       PropertyType propType;
-      Node propName = propertyName(yieldHandling, PropertyNameInLiteral,
-                                   declKind, literal, &propType, &propAtom);
+      Node propName =
+          propertyOrMethodName(yieldHandling, PropertyNameInLiteral, declKind,
+                               literal, &propType, &propAtom);
       if (!propName) {
         return null();
       }
