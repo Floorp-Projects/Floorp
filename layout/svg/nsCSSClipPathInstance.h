@@ -33,7 +33,7 @@ class nsCSSClipPathInstance {
 
  private:
   explicit nsCSSClipPathInstance(nsIFrame* aFrame,
-                                 const StyleShapeSource aClipPathStyle)
+                                 const StyleShapeSource& aClipPathStyle)
       : mTargetFrame(aFrame), mClipPathStyle(aClipPathStyle) {}
 
   already_AddRefed<Path> CreateClipPath(DrawTarget* aDrawTarget);
