@@ -2559,8 +2559,7 @@ impl PrimitiveStore {
                 // Pick the maximum dimension as scale
                 let world_scale = LayoutToWorldScale::new(scale_width.max(scale_height));
                 let mut scale = world_scale * device_pixel_scale;
-                let max_scale = get_max_scale_for_border(&border_data.border.radius,
-                                                         &border_data.widths);
+                let max_scale = get_max_scale_for_border(border_data);
                 scale.0 = scale.0.min(max_scale.0);
 
                 // For each edge and corner, request the render task by content key
