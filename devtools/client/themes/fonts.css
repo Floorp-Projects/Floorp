@@ -127,7 +127,6 @@
 .font-family-name {
   margin-bottom: 0.2em;
   font-size: 1.2em;
-  padding: 0 3px;
 }
 
 .font-group {
@@ -136,12 +135,6 @@
 
 .font-group .font-name {
   white-space: unset;
-  padding: 3px;
-  border-radius: 3px;
-}
-
-.font-group .font-name:hover {
-  background-color: var(--theme-selection-background-hover);
 }
 
 .font-group .font-name::after {
@@ -150,6 +143,20 @@
 
 .font-group .font-name:nth-last-child(1)::after {
   content: "";
+}
+
+/* Make font-name hoverable as doing so highlights text runs in the page.
+   The hit target is 3px around the font name, which is why we offset them with a -3px
+   horizontal margin so they appear at the same place as they normall would. */
+
+.font-name {
+  padding: 3px;
+  margin-inline-start: -3px;
+  border-radius: 3px;
+}
+
+.font-name:hover {
+  background-color: var(--theme-selection-background-hover);
 }
 
 .font-css-code {
