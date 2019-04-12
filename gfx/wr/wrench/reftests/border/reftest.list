@@ -28,3 +28,4 @@ platform(linux,mac) == border-dashed-dotted-caching.yaml border-dashed-dotted-ca
 != small-inset-outset.yaml small-inset-outset-notref.yaml
 == no-aa.yaml green-square.yaml
 border-double-1px.yaml border-double-1px-ref.yaml
+== max-scale.yaml max-scale-ref.yaml
