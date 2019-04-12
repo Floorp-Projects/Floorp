@@ -1224,6 +1224,7 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
       helperThread_(nullptr),
       options_(options),
       freeLists_(nullptr),
+      defaultFreeOp_(runtime, true),
       jitActivation(nullptr),
       activation_(nullptr),
       profilingActivation_(nullptr),
