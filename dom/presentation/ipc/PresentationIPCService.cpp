@@ -64,7 +64,7 @@ PresentationIPCService::StartSession(
   }
 
   nsPIDOMWindowInner* window =
-      nsGlobalWindowInner::GetInnerWindowWithId(aWindowId)->AsInner();
+      nsGlobalWindowInner::GetInnerWindowWithId(aWindowId);
   TabId tabId = TabParent::GetTabIdFrom(window->GetDocShell());
 
   return SendRequest(

@@ -620,7 +620,7 @@ nsDocShell::GetInterface(const nsIID& aIID, void** aSink) {
     // Get the an auth prompter for our window so that the parenting
     // of the dialogs works as it should when using tabs.
     nsIPrompt* prompt;
-    rv = wwatch->GetNewPrompter(mScriptGlobal->AsOuter(), &prompt);
+    rv = wwatch->GetNewPrompter(mScriptGlobal, &prompt);
     NS_ENSURE_SUCCESS(rv, rv);
 
     *aSink = prompt;
@@ -1001,8 +1001,7 @@ bool nsDocShell::MaybeInitTiming() {
   bool canBeReset = false;
 
   if (mScriptGlobal && mBlankTiming) {
-    nsPIDOMWindowInner* innerWin =
-        mScriptGlobal->AsOuter()->GetCurrentInnerWindow();
+    nsPIDOMWindowInner* innerWin = mScriptGlobal->GetCurrentInnerWindow();
     if (innerWin && innerWin->GetPerformance()) {
       mTiming = innerWin->GetPerformance()->GetDOMTiming();
       mBlankTiming = false;
@@ -1663,8 +1662,7 @@ nsDocShell::SetAllowMedia(bool aAllowMedia) {
 
   // Mute or unmute audio contexts attached to the inner window.
   if (mScriptGlobal) {
-    if (nsPIDOMWindowInner* innerWin =
-            mScriptGlobal->AsOuter()->GetCurrentInnerWindow()) {
+    if (nsPIDOMWindowInner* innerWin = mScriptGlobal->GetCurrentInnerWindow()) {
       if (aAllowMedia) {
         innerWin->UnmuteAudioContexts();
       } else {
@@ -2647,10 +2645,7 @@ nsresult nsDocShell::SetDocLoaderParent(nsDocLoader* aParent) {
 
   // Inform windows when they're being removed from their parent.
   if (!aParent && mScriptGlobal) {
-    nsCOMPtr<nsPIDOMWindowOuter> window = mScriptGlobal->AsOuter();
-    MOZ_ASSERT(window);
-    auto* win = nsGlobalWindowOuter::Cast(window);
-    win->ParentWindowChanged();
+    mScriptGlobal->ParentWindowChanged();
   }
 
   NS_ASSERTION(mInheritPrivateBrowsingId || wasPrivate == UsePrivateBrowsing(),
@@ -3629,7 +3624,7 @@ nsPIDOMWindowOuter* nsDocShell::GetWindow() {
   if (NS_FAILED(EnsureScriptEnvironment())) {
     return nullptr;
   }
-  return mScriptGlobal->AsOuter();
+  return mScriptGlobal;
 }
 
 NS_IMETHODIMP
@@ -3639,7 +3634,7 @@ nsDocShell::GetDomWindow(mozIDOMWindowProxy** aWindow) {
   nsresult rv = EnsureScriptEnvironment();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsPIDOMWindowOuter> window = mScriptGlobal->AsOuter();
+  RefPtr<nsGlobalWindowOuter> window = mScriptGlobal;
   window.forget(aWindow);
   return NS_OK;
 }
@@ -8561,7 +8556,7 @@ uint32_t nsDocShell::DetermineContentType() {
   }
 
   nsCOMPtr<Element> requestingElement =
-      mScriptGlobal->AsOuter()->GetFrameElementInternal();
+      mScriptGlobal->GetFrameElementInternal();
   if (requestingElement) {
     return requestingElement->IsHTMLElement(nsGkAtoms::iframe)
                ? nsIContentPolicy::TYPE_INTERNAL_IFRAME
@@ -8621,15 +8616,14 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState,
       // sorts.
       // For the toplevel window cases, requestingElement will be null.
       nsCOMPtr<Element> requestingElement =
-          mScriptGlobal->AsOuter()->GetFrameElementInternal();
+          mScriptGlobal->GetFrameElementInternal();
       requestingContext = requestingElement;
     }
 
     // Ideally we should use the same loadinfo as within DoURILoad which
     // should match this one when both are applicable.
-    nsCOMPtr<nsPIDOMWindowOuter> loadingWindow = mScriptGlobal->AsOuter();
     nsCOMPtr<nsILoadInfo> secCheckLoadInfo = new LoadInfo(
-        loadingWindow, aLoadState->TriggeringPrincipal(), requestingContext,
+        mScriptGlobal, aLoadState->TriggeringPrincipal(), requestingContext,
         nsILoadInfo::SEC_ONLY_FOR_EXPLICIT_CONTENTSEC_CHECK);
 
     // Since Content Policy checks are performed within docShell as well as
@@ -9099,7 +9093,7 @@ nsresult nsDocShell::MaybeHandleSameDocumentNavigation(
       win->DispatchSyncPopState();
     }
 
-    if (needsScrollPosUpdate && win->AsInner()->HasActiveDocument()) {
+    if (needsScrollPosUpdate && win->HasActiveDocument()) {
       SetCurScrollPosEx(bx, by);
     }
 
@@ -9622,7 +9616,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
         // events
         if (PopupBlocker::GetPopupControlState() <= PopupBlocker::openBlocked) {
           nsCOMPtr<nsINode> loadingNode =
-              mScriptGlobal->AsOuter()->GetFrameElementInternal();
+              mScriptGlobal->GetFrameElementInternal();
           popupBlocked = !PopupBlocker::TryUsePopupOpeningToken(
               loadingNode ? loadingNode->NodePrincipal() : nullptr);
         } else if (mIsActive &&
@@ -9630,7 +9624,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
           popupBlocked = false;
         } else {
           nsCOMPtr<nsINode> loadingNode =
-              mScriptGlobal->AsOuter()->GetFrameElementInternal();
+              mScriptGlobal->GetFrameElementInternal();
           if (loadingNode) {
             popupBlocked = !PopupBlocker::CanShowPopupByPermission(
                 loadingNode->NodePrincipal());
@@ -9719,7 +9713,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   if (contentPolicyType == nsIContentPolicy::TYPE_DOCUMENT) {
     loadingNode = nullptr;
     loadingPrincipal = nullptr;
-    loadingWindow = mScriptGlobal->AsOuter();
+    loadingWindow = mScriptGlobal;
     if (XRE_IsContentProcess()) {
       // In e10s the child process doesn't have access to the element that
       // contains the browsing context (because that element is in the chrome
@@ -9736,7 +9730,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     }
   } else {
     loadingWindow = nullptr;
-    loadingNode = mScriptGlobal->AsOuter()->GetFrameElementInternal();
+    loadingNode = mScriptGlobal->GetFrameElementInternal();
     if (loadingNode) {
       // If we have a loading node, then use that as our loadingPrincipal.
       loadingPrincipal = loadingNode->NodePrincipal();
@@ -12196,7 +12190,7 @@ nsDocShell::GetAuthPrompt(uint32_t aPromptReason, const nsIID& aIID,
   // Get the an auth prompter for our window so that the parenting
   // of the dialogs works as it should when using tabs.
 
-  return wwatch->GetPrompt(mScriptGlobal->AsOuter(), aIID,
+  return wwatch->GetPrompt(mScriptGlobal, aIID,
                            reinterpret_cast<void**>(aResult));
 }
 
@@ -12637,7 +12631,7 @@ nsDocShell::OnLinkClickSync(
   nsPIDOMWindowInner* refererInner = refererDoc->GetInnerWindow();
   NS_ENSURE_TRUE(refererInner, NS_ERROR_UNEXPECTED);
   if (!mScriptGlobal ||
-      mScriptGlobal->AsOuter()->GetCurrentInnerWindow() != refererInner) {
+      mScriptGlobal->GetCurrentInnerWindow() != refererInner) {
     // We're no longer the current inner window
     return NS_OK;
   }

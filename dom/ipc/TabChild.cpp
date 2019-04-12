@@ -2242,7 +2242,7 @@ mozilla::ipc::IPCResult TabChild::RecvPrint(const uint64_t& aOuterWindowID,
   }
 
   nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint =
-      do_GetInterface(outerWindow->AsOuter());
+      do_GetInterface(ToSupports(outerWindow));
   if (NS_WARN_IF(!webBrowserPrint)) {
     return IPC_OK();
   }

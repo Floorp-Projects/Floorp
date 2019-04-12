@@ -145,9 +145,6 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOWINNER_IID)
 
-  nsPIDOMWindowInner* AsInner() { return this; }
-  const nsPIDOMWindowInner* AsInner() const { return this; }
-
   nsIGlobalObject* AsGlobal();
   const nsIGlobalObject* AsGlobal() const;
 
@@ -687,13 +684,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_PIDOMWINDOWOUTER_IID)
-
-  nsPIDOMWindowOuter* AsOuter() { return this; }
-  const nsPIDOMWindowOuter* AsOuter() const { return this; }
-
-  nsPIDOMWindowOuter* GetOuterWindow() const {
-    return const_cast<nsPIDOMWindowOuter*>(this);
-  }
 
   static nsPIDOMWindowOuter* From(mozIDOMWindowProxy* aFrom) {
     return static_cast<nsPIDOMWindowOuter*>(aFrom);

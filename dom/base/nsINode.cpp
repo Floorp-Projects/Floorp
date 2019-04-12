@@ -1045,10 +1045,11 @@ EventListenerManager* nsINode::GetExistingListenerManager() const {
 
 nsPIDOMWindowOuter* nsINode::GetOwnerGlobalForBindingsInternal() {
   bool dummy;
+  // FIXME(bz): This cast is a bit bogus.  See
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1515709
   auto* window = static_cast<nsGlobalWindowInner*>(
       OwnerDoc()->GetScriptHandlingObject(dummy));
-  return window ? nsPIDOMWindowOuter::GetFromCurrentInner(window->AsInner())
-                : nullptr;
+  return window ? nsPIDOMWindowOuter::GetFromCurrentInner(window) : nullptr;
 }
 
 nsIGlobalObject* nsINode::GetOwnerGlobal() const {

@@ -15,7 +15,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/CustomElementRegistryBinding.h"
 #include "mozilla/dom/Element.h"
-#include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/WebComponentsBinding.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsGenericHTMLElement.h"
@@ -30,7 +29,6 @@ struct ElementDefinitionOptions;
 class CallbackFunction;
 class CustomElementReaction;
 class DocGroup;
-class Function;
 class Promise;
 
 struct LifecycleCallbackArgs {
@@ -78,17 +76,6 @@ class CustomElementCallback {
   // used by the attribute changed callback.
   LifecycleCallbackArgs mArgs;
   LifecycleAdoptedCallbackArgs mAdoptedCallbackArgs;
-};
-
-class CustomElementConstructor final : public CallbackFunction {
- public:
-  explicit CustomElementConstructor(CallbackFunction* aOther)
-      : CallbackFunction(aOther) {
-    MOZ_ASSERT(JS::IsConstructor(mCallback));
-  }
-
-  already_AddRefed<Element> Construct(const char* aExecutionReason,
-                                      ErrorResult& aRv);
 };
 
 // Each custom element has an associated callback queue and an element is
@@ -147,7 +134,8 @@ struct CustomElementDefinition {
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(CustomElementDefinition)
 
   CustomElementDefinition(nsAtom* aType, nsAtom* aLocalName,
-                          int32_t aNamespaceID, Function* aConstructor,
+                          int32_t aNamespaceID,
+                          CustomElementConstructor* aConstructor,
                           nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
                           UniquePtr<LifecycleCallbacks>&& aCallbacks);
 
@@ -562,7 +550,7 @@ class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
                                JS::Handle<JSObject*> aGivenProto) override;
 
   void Define(JSContext* aCx, const nsAString& aName,
-              Function& aFunctionConstructor,
+              CustomElementConstructor& aFunctionConstructor,
               const ElementDefinitionOptions& aOptions, ErrorResult& aRv);
 
   void Get(JSContext* cx, const nsAString& name,

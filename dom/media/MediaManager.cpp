@@ -536,7 +536,7 @@ class GetUserMediaWindowListener {
       auto* globalWindow = nsGlobalWindowInner::GetInnerWindowWithId(mWindowID);
       if (globalWindow) {
         auto req = MakeRefPtr<GetUserMediaRequest>(
-            globalWindow->AsInner(), VoidString(), VoidString(),
+            globalWindow, VoidString(), VoidString(),
             EventStateManager::IsHandlingUserInput());
         obs->NotifyObservers(req, "recording-device-stopped", nullptr);
       }
@@ -587,9 +587,7 @@ class GetUserMediaWindowListener {
 
       if (revokeVideoPermission) {
         nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-        auto* globalWindow =
-            nsGlobalWindowInner::GetInnerWindowWithId(mWindowID);
-        auto* window = globalWindow ? globalWindow->AsInner() : nullptr;
+        auto* window = nsGlobalWindowInner::GetInnerWindowWithId(mWindowID);
         auto req = MakeRefPtr<GetUserMediaRequest>(
             window, removedRawId, removedSourceType,
             EventStateManager::IsHandlingUserInput());
@@ -616,10 +614,7 @@ class GetUserMediaWindowListener {
 
       if (revokeAudioPermission) {
         nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
-        auto* globalWindow =
-            nsGlobalWindowInner::GetInnerWindowWithId(mWindowID);
-        nsPIDOMWindowInner* window =
-            globalWindow ? globalWindow->AsInner() : nullptr;
+        auto* window = nsGlobalWindowInner::GetInnerWindowWithId(mWindowID);
         auto req = MakeRefPtr<GetUserMediaRequest>(
             window, removedRawId, removedSourceType,
             EventStateManager::IsHandlingUserInput());
@@ -1102,10 +1097,8 @@ class GetUserMediaStreamRunnable : public Runnable {
   Run() override {
     MOZ_ASSERT(NS_IsMainThread());
     LOG("GetUserMediaStreamRunnable::Run()");
-    nsGlobalWindowInner* globalWindow =
+    nsGlobalWindowInner* window =
         nsGlobalWindowInner::GetInnerWindowWithId(mWindowID);
-    nsPIDOMWindowInner* window =
-        globalWindow ? globalWindow->AsInner() : nullptr;
 
     // We're on main-thread, and the windowlist can only
     // be invalidated from the main-thread (see OnNavigation)
@@ -2217,7 +2210,7 @@ void MediaManager::OnDeviceChange() {
                          iter.Next()) {
                       nsGlobalWindowInner* window = iter.Data();
                       self->IterateWindowListeners(
-                          window->AsInner(),
+                          window,
                           [&id](const RefPtr<GetUserMediaWindowListener>&
                                     aListener) { aListener->StopRawID(id); });
                     }
@@ -2748,10 +2741,8 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
             LOG("GetUserMedia: post enumeration promise success callback "
                 "starting");
             // Ensure that our windowID is still good.
-            auto* globalWindow =
-                nsGlobalWindowInner::GetInnerWindowWithId(windowID);
             RefPtr<nsPIDOMWindowInner> window =
-                globalWindow ? globalWindow->AsInner() : nullptr;
+                nsGlobalWindowInner::GetInnerWindowWithId(windowID);
             if (!window || !self->IsWindowListenerStillActive(windowListener)) {
               LOG("GetUserMedia: bad window (%" PRIu64
                   ") in post enumeration success callback!",
@@ -2778,10 +2769,8 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                 "callback!");
 
             // Ensure that the window is still good.
-            auto* globalWindow =
-                nsGlobalWindowInner::GetInnerWindowWithId(windowID);
             RefPtr<nsPIDOMWindowInner> window =
-                globalWindow ? globalWindow->AsInner() : nullptr;
+                nsGlobalWindowInner::GetInnerWindowWithId(windowID);
             if (!window || !self->IsWindowListenerStillActive(windowListener)) {
               LOG("GetUserMedia: bad window (%" PRIu64
                   ") in post enumeration success callback 2!",
@@ -3084,8 +3073,7 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateDevicesImpl(
       static_cast<uint8_t>(aAudioInputType),
       static_cast<uint8_t>(aVideoInputEnumType),
       static_cast<uint8_t>(aAudioInputEnumType));
-  auto* window =
-      nsGlobalWindowInner::GetInnerWindowWithId(aWindowId)->AsInner();
+  auto* window = nsGlobalWindowInner::GetInnerWindowWithId(aWindowId);
 
   // To get a device list anonymized for a particular origin, we must:
   // 1. Get an origin-key (for either regular or private browsing)
@@ -3399,10 +3387,9 @@ void MediaManager::OnNavigation(uint64_t aWindowID) {
   auto* window = nsGlobalWindowInner::GetInnerWindowWithId(aWindowID);
   if (window) {
     IterateWindowListeners(
-        window->AsInner(),
-        [self = RefPtr<MediaManager>(this),
-         windowID = DebugOnly<decltype(aWindowID)>(aWindowID)](
-            const RefPtr<GetUserMediaWindowListener>& aListener) {
+        window, [self = RefPtr<MediaManager>(this),
+                 windowID = DebugOnly<decltype(aWindowID)>(aWindowID)](
+                    const RefPtr<GetUserMediaWindowListener>& aListener) {
           aListener->RemoveAll();
           MOZ_ASSERT(!self->GetWindowListener(windowID));
         });
@@ -3455,7 +3442,7 @@ void MediaManager::RemoveWindowID(uint64_t aWindowId) {
     return;
   }
 
-  auto* outer = window->AsInner()->GetOuterWindow();
+  auto* outer = window->GetOuterWindow();
   if (!outer) {
     LOG("No outer window for inner %" PRIu64, aWindowId);
     return;
@@ -3832,7 +3819,7 @@ nsresult MediaManager::GetActiveMediaCaptureWindows(nsIArray** aArray) {
       continue;
     }
 
-    auto* window = nsGlobalWindowInner::GetInnerWindowWithId(id)->AsInner();
+    auto* window = nsGlobalWindowInner::GetInnerWindowWithId(id);
     MOZ_ASSERT(window);
     // XXXkhuey ...
     if (!window) {
@@ -3840,7 +3827,7 @@ nsresult MediaManager::GetActiveMediaCaptureWindows(nsIArray** aArray) {
     }
 
     if (winListener->CapturingVideo() || winListener->CapturingAudio()) {
-      array->AppendElement(window);
+      array->AppendElement(ToSupports(window));
     }
   }
 
@@ -3937,8 +3924,7 @@ void MediaManager::StopScreensharing(uint64_t aWindowID) {
     return;
   }
   IterateWindowListeners(
-      window->AsInner(),
-      [](const RefPtr<GetUserMediaWindowListener>& aListener) {
+      window, [](const RefPtr<GetUserMediaWindowListener>& aListener) {
         aListener->StopSharing();
       });
 }
@@ -4477,8 +4463,7 @@ void SourceListener::StopSharing() {
   if (mAudioDeviceState && mAudioDeviceState->mDevice->GetMediaSource() ==
                                MediaSourceEnum::AudioCapture) {
     uint64_t windowID = mWindowListener->WindowID();
-    auto* window =
-        nsGlobalWindowInner::GetInnerWindowWithId(windowID)->AsInner();
+    auto* window = nsGlobalWindowInner::GetInnerWindowWithId(windowID);
     MOZ_RELEASE_ASSERT(window);
     window->SetAudioCapture(false);
     MediaStreamGraph* graph = mStream->Graph();
@@ -4676,8 +4661,7 @@ void GetUserMediaWindowListener::NotifyChrome() {
           return;
         }
 
-        nsresult rv =
-            MediaManager::NotifyRecordingStatusChange(window->AsInner());
+        nsresult rv = MediaManager::NotifyRecordingStatusChange(window);
         if (NS_FAILED(rv)) {
           MOZ_ASSERT_UNREACHABLE("Should be able to notify chrome");
           return;

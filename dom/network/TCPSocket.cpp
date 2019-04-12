@@ -386,7 +386,7 @@ void TCPSocket::NotifyCopyComplete(nsresult aStatus) {
   }
   mBufferedAmount = bufferedAmount;
 
-  if (mSocketBridgeParent) {
+  if (mSocketBridgeParent && mSocketBridgeParent->IPCOpen()) {
     mozilla::Unused << mSocketBridgeParent->SendUpdateBufferedAmount(
         BufferedAmount(), mTrackingNumber);
   }
@@ -446,7 +446,7 @@ void TCPSocket::ActivateTLS() {
 
 NS_IMETHODIMP
 TCPSocket::FireErrorEvent(const nsAString& aName, const nsAString& aType) {
-  if (mSocketBridgeParent) {
+  if (mSocketBridgeParent && mSocketBridgeParent->IPCOpen()) {
     mSocketBridgeParent->FireErrorEvent(aName, aType, mReadyState);
     return NS_OK;
   }
@@ -467,7 +467,7 @@ TCPSocket::FireErrorEvent(const nsAString& aName, const nsAString& aType) {
 
 NS_IMETHODIMP
 TCPSocket::FireEvent(const nsAString& aType) {
-  if (mSocketBridgeParent) {
+  if (mSocketBridgeParent && mSocketBridgeParent->IPCOpen()) {
     mSocketBridgeParent->FireEvent(aType, mReadyState);
     return NS_OK;
   }
@@ -944,7 +944,7 @@ TCPSocket::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream,
     MOZ_ASSERT(actual == aCount);
     buffer.SetLength(actual);
 
-    if (mSocketBridgeParent) {
+    if (mSocketBridgeParent && mSocketBridgeParent->IPCOpen()) {
       mSocketBridgeParent->FireArrayBufferDataEvent(buffer, mReadyState);
       return NS_OK;
     }
@@ -967,7 +967,7 @@ TCPSocket::OnDataAvailable(nsIRequest* aRequest, nsIInputStream* aStream,
   nsresult rv = mInputStreamScriptable->ReadBytes(aCount, data);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mSocketBridgeParent) {
+  if (mSocketBridgeParent && mSocketBridgeParent->IPCOpen()) {
     mSocketBridgeParent->FireStringDataEvent(data, mReadyState);
     return NS_OK;
   }
@@ -1006,6 +1006,8 @@ TCPSocket::OnStopRequest(nsIRequest* aRequest, nsresult aStatus) {
 }
 
 void TCPSocket::SetSocketBridgeParent(TCPSocketParent* aBridgeParent) {
+  MOZ_ASSERT(NS_IsMainThread());
+
   mSocketBridgeParent = aBridgeParent;
 }
 
