@@ -37,7 +37,7 @@ Array [
     "source": Object {
       "actors": Array [
         Object {
-          "actor": "a-actor",
+          "actor": "a-1-actor",
           "source": "a",
           "thread": "FakeThread",
         },
@@ -131,7 +131,7 @@ Array [
     "source": Object {
       "actors": Array [
         Object {
-          "actor": "a-actor",
+          "actor": "a-1-actor",
           "source": "a",
           "thread": "FakeThread",
         },

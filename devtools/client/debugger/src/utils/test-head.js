@@ -127,31 +127,55 @@ function makeSourceURL(filename: string) {
   return `http://localhost:8000/examples/${filename}`;
 }
 
+type MakeSourceProps = {
+  sourceMapURL?: string,
+  introductionType?: string,
+  introductionUrl?: string,
+  isBlackBoxed?: boolean
+};
+function createMakeSource(): (
+  // The name of the file that this actor is part of.
+  name: string,
+  props?: MakeSourceProps
+) => GeneratedSourceData {
+  const indicies = {};
+
+  return function(name, props = {}) {
+    const index = (indicies[name] | 0) + 1;
+    indicies[name] = index;
+
+    return {
+      id: name,
+      thread: "FakeThread",
+      source: {
+        actor: `${name}-${index}-actor`,
+        url: `http://localhost:8000/examples/${name}`,
+        sourceMapURL: props.sourceMapURL || null,
+        introductionType: props.introductionType || null,
+        introductionUrl: props.introductionUrl || null,
+        isBlackBoxed: !!props.isBlackBoxed
+      }
+    };
+  };
+}
+
 /**
  * @memberof utils/test-head
  * @static
  */
-function makeSource(
-  name: string,
-  props: {
-    sourceMapURL?: string,
-    introductionType?: string,
-    introductionUrl?: string,
-    isBlackBoxed?: boolean
-  } = {}
-): GeneratedSourceData {
-  return {
-    id: name,
-    thread: "FakeThread",
-    source: {
-      actor: `${name}-actor`,
-      url: `http://localhost:8000/examples/${name}`,
-      sourceMapURL: props.sourceMapURL || null,
-      introductionType: props.introductionType || null,
-      introductionUrl: props.introductionUrl || null,
-      isBlackBoxed: !!props.isBlackBoxed
-    }
-  };
+let creator;
+beforeEach(() => {
+  creator = createMakeSource();
+});
+afterEach(() => {
+  creator = null;
+});
+function makeSource(name: string, props?: MakeSourceProps) {
+  if (!creator) {
+    throw new Error("makeSource() cannot be called outside of a test");
+  }
+
+  return creator(name, props);
 }
 
 function makeOriginalSource(source: Source): OriginalSourceData {
@@ -251,6 +275,7 @@ export {
   makeFrame,
   createSourceObject,
   createOriginalSourceObject,
+  createMakeSource,
   makeSourceURL,
   makeSource,
   makeOriginalSource,
