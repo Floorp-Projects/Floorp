@@ -10,7 +10,9 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.Deferred
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fretboard.Fretboard
 import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
@@ -28,11 +30,18 @@ import java.io.File
 @SuppressLint("Registered")
 open class FenixApplication : Application() {
     lateinit var fretboard: Fretboard
+    lateinit var experimentLoader: Deferred<Boolean>
+    var experimentLoaderComplete: Boolean = false
 
     val components by lazy { Components(this) }
 
     override fun onCreate() {
         super.onCreate()
+
+        // loadExperiments does things that run in parallel with the rest of setup.
+        // Call the function as early as possible so there's maximum overlap.
+        experimentLoader = loadExperiments()
+
         setDayNightTheme()
         val megazordEnabled = setupMegazord()
         setupLogging(megazordEnabled)
@@ -47,9 +56,39 @@ open class FenixApplication : Application() {
         }
 
         setupLeakCanary()
-        loadExperiments()
         if (Settings.getInstance(this).isTelemetryEnabled) {
             components.analytics.metrics.start()
+        }
+    }
+
+    /**
+     * Wait until all experiments are loaded
+     *
+     * This function will cause the caller to block until the experiments are loaded.
+     * It could be used in any number of reasons, but the most likely scenario is that
+     * a calling function needs to access the loaded experiments and wants to
+     * make sure that the experiments are loaded from the server before doing so.
+     *
+     * Because this function is synchronized, it can only be accessed by one thread
+     * at a time. Anyone trying to check the loaded status will wait if someone is
+     * already waiting. This is okay because the thread waiting for access to the
+     * function will immediately see that the loader is complete upon gaining the
+     * opportunity to run the function.
+     */
+    @Synchronized
+    public fun waitForExperimentsToLoad() {
+
+        // Do we know that we are already complete?
+        if (!experimentLoaderComplete) {
+            // No? Have we completed since the last call?
+            if (!experimentLoader.isCompleted) {
+                // No? Well, let's wait.
+                runBlocking {
+                    experimentLoader.await()
+                }
+            }
+            // Set this so we don't have to wait on the next call.
+            experimentLoaderComplete = true
         }
     }
 
@@ -73,22 +112,23 @@ open class FenixApplication : Application() {
         }
     }
 
-    private fun loadExperiments() {
-        val experimentsFile = File(filesDir, EXPERIMENTS_JSON_FILENAME)
-        val experimentSource = KintoExperimentSource(
-            EXPERIMENTS_BASE_URL,
-            EXPERIMENTS_BUCKET_NAME,
-            EXPERIMENTS_COLLECTION_NAME,
-            // TODO Switch back to components.core.client (see https://github.com/mozilla-mobile/fenix/issues/1329)
-            HttpURLConnectionClient()
-        )
-        // TODO add ValueProvider to keep clientID in sync with Glean when ready
-        fretboard = Fretboard(experimentSource, FlatFileExperimentStorage(experimentsFile))
-        fretboard.loadExperiments()
-        Logger.debug("Bucket is ${fretboard.getUserBucket(this@FenixApplication)}")
-        Logger.debug("Experiments active: ${fretboard.getExperimentsMap(this@FenixApplication)}")
-        GlobalScope.launch(Dispatchers.IO) {
+    private fun loadExperiments(): Deferred<Boolean> {
+        return GlobalScope.async(Dispatchers.IO) {
+            val experimentsFile = File(filesDir, EXPERIMENTS_JSON_FILENAME)
+            val experimentSource = KintoExperimentSource(
+                EXPERIMENTS_BASE_URL,
+                EXPERIMENTS_BUCKET_NAME,
+                EXPERIMENTS_COLLECTION_NAME,
+                // TODO Switch back to components.core.client (see https://github.com/mozilla-mobile/fenix/issues/1329)
+                HttpURLConnectionClient()
+            )
+            // TODO add ValueProvider to keep clientID in sync with Glean when ready
+            fretboard = Fretboard(experimentSource, FlatFileExperimentStorage(experimentsFile))
+            fretboard.loadExperiments()
+            Logger.debug("Bucket is ${fretboard.getUserBucket(this@FenixApplication)}")
+            Logger.debug("Experiments active: ${fretboard.getExperimentsMap(this@FenixApplication)}")
             fretboard.updateExperiments()
+            return@async true
         }
     }
 
