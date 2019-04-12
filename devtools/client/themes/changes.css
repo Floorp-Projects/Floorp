@@ -145,6 +145,10 @@
   display: block;
 }
 
+.changes__declaration {
+  overflow-wrap: break-word;
+}
+
 .changes__declaration-name {
   margin-left: 10px;
 }
