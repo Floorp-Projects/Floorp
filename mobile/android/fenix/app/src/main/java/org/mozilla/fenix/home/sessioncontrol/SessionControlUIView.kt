@@ -22,7 +22,7 @@ private fun SessionControlState.toAdapterList(): List<AdapterItem> {
 
     if (tabs.isNotEmpty()) {
         items.add(AdapterItem.TabHeader)
-        tabs.map(AdapterItem::TabItem).forEach { items.add(it) }
+        tabs.reversed().map(AdapterItem::TabItem).forEach { items.add(it) }
         items.add(if (mode == Mode.Private) AdapterItem.DeleteTabs else AdapterItem.ArchiveTabs)
     } else {
         if (mode == Mode.Private) {
