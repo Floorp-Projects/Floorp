@@ -283,7 +283,6 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   /* Column properties */
   already_AddRefed<CSSValue> DoGetColumnRuleWidth();
 
-
   // For working around a MSVC bug. See related comment in
   // GenerateComputedDOMStyleGenerated.py.
   already_AddRefed<CSSValue> DummyGetter();
@@ -390,9 +389,9 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   void BasicShapeRadiiToString(nsAString& aCssText,
                                const mozilla::BorderRadius&);
 
-  // Find out if we can safely skip flushing for aDocument (i.e. pending
-  // restyles does not affect mContent).
-  bool NeedsToFlush(Document*) const;
+  // Find out if we can safely skip flushing (i.e. pending restyles do not
+  // affect mElement).
+  bool NeedsToFlush() const;
 
   static ComputedStyleMap* GetComputedStyleMap();
 
