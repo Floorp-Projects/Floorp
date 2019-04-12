@@ -118,8 +118,8 @@ function update(
     case "ADD_SOURCES":
       return addSources(state, action.sources);
 
-    case "SET_WORKERS":
-      return updateWorkers(state, action);
+    case "REMOVE_WORKERS":
+      return removeWorkers(state, action);
 
     case "SET_SELECTED_LOCATION":
       location = {
@@ -294,14 +294,11 @@ function addSources(state: SourcesState, sources: Source[]) {
  * - filter source actor lists so that missing threads no longer appear
  * - NOTE: we do not remove sources for destroyed threads
  */
-function updateWorkers(state: SourcesState, action: Object) {
-  const threads = [
-    action.mainThread,
-    ...action.workers.map(({ actor }) => actor)
-  ];
+function removeWorkers(state: SourcesState, action: Object) {
+  const { workers } = action;
 
   return updateAllSources(state, source => ({
-    actors: source.actors.filter(({ thread }) => threads.includes(thread))
+    actors: source.actors.filter(({ thread }) => !workers.includes(thread))
   }));
 }
 

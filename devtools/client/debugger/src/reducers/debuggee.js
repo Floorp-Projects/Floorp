@@ -34,8 +34,17 @@ export default function debuggee(
         ...state,
         mainThread: action.mainThread
       };
-    case "SET_WORKERS":
-      return { ...state, workers: action.workers };
+    case "INSERT_WORKERS":
+      return {
+        ...state,
+        workers: [...state.workers, ...action.workers]
+      };
+    case "REMOVE_WORKERS":
+      const { workers } = action;
+      return {
+        ...state,
+        workers: state.workers.filter(w => !workers.includes(w.actor))
+      };
     case "NAVIGATE":
       return {
         ...initialDebuggeeState(),
