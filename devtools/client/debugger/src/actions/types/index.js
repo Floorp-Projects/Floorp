@@ -4,7 +4,7 @@
 
 // @flow
 
-import type { WorkerList, MainThread, Context } from "../../types";
+import type { WorkerList, MainThread, Context, ThreadId } from "../../types";
 import type { State } from "../../reducers/types";
 import type { MatchedLocations } from "../../reducers/file-search";
 import type { TreeNode } from "../../utils/sources-tree/types";
@@ -127,15 +127,19 @@ export type QuickOpenAction =
 
 export type DebuggeeAction =
   | {|
-      +type: "SET_WORKERS",
+      +type: "INSERT_WORKERS",
       +cx: Context,
-      +workers: WorkerList,
-      +mainThread: string
+      +workers: WorkerList
+    |}
+  | {|
+      +type: "REMOVE_WORKERS",
+      +cx: Context,
+      +workers: Array<ThreadId>
     |}
   | {|
       +type: "SELECT_THREAD",
       +cx: Context,
-      +thread: string
+      +thread: ThreadId
     |};
 
 export type {
