@@ -189,6 +189,12 @@ LoadInfo::LoadInfo(
                        !nsContentUtils::IsInPrivateBrowsing(doc))) {
             mTopLevelStorageAreaPrincipal = innerWindow->GetPrincipal();
           }
+
+          // If this is the first level iframe, innerWindow is our top-level
+          // principal.
+          if (!mTopLevelPrincipal) {
+            mTopLevelPrincipal = innerWindow->GetPrincipal();
+          }
         }
 
         mDocumentHasLoaded = innerWindow->IsDocumentLoaded();
