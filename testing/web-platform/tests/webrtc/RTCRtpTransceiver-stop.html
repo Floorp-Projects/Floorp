@@ -59,7 +59,7 @@ promise_test(async (t)=> {
 
     const offer = await pc1.createOffer();
 
-    assert_true(offer.sdp.includes("a=sendonly"), "The audio m-section should be sendonly");
+    assert_true(offer.sdp.includes("a=inactive"), "The audio m-section should be inactive");
 }, "A stopped sendonly transceiver should generate an inactive m-section in the offer");
 
 promise_test(async (t)=> {
