@@ -40,7 +40,7 @@ fuzzy(0-13,0-9445) fuzzy-if(d2d,0-13,0-10926) fuzzy-if(webrender,14-15,11263-132
 == overflow-not-scrollable-2.html overflow-not-scrollable-2-ref.html
 fuzzy-if(webrender,0-1,0-655) == 611574-1.html 611574-1-ref.html
 fuzzy-if(webrender,0-4,0-144) == 611574-2.html 611574-2-ref.html
-fuzzy-if(winWidget,0-5,0-30) fuzzy-if(skiaContent,0-16,0-10) fuzzy-if(webrender,20-34,82-84) == fieldset.html fieldset-ref.html # minor anti-aliasing problem on Windows
+fuzzy-if(winWidget,0-5,0-30) fuzzy-if(skiaContent,0-16,0-10) == fieldset.html fieldset-ref.html # minor anti-aliasing problem on Windows
 fuzzy-if(winWidget,0-5,0-30) fuzzy-if(skiaContent,0-16,0-10) fails-if(webrender) == fieldset-inset.html fieldset-inset-ref.html # minor anti-aliasing problem on Windows
 == 1178575.html 1178575-ref.html
 == 1178575-2.html 1178575-2-ref.html
