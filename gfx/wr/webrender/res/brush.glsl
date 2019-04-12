@@ -24,7 +24,6 @@ void brush_vs(
 #define BRUSH_FLAG_SEGMENT_REPEAT_X             4
 #define BRUSH_FLAG_SEGMENT_REPEAT_Y             8
 #define BRUSH_FLAG_TEXEL_RECT                  16
-#define BRUSH_FLAG_SNAP_TO_PRIMITIVE           32
 
 #define INVALID_SEGMENT_INDEX                   0xffff
 
@@ -65,7 +64,6 @@ void main(void) {
 
     // Write the normal vertex information out.
     if (transform.is_axis_aligned) {
-        bool snap_to_primitive = (brush_flags & BRUSH_FLAG_SNAP_TO_PRIMITIVE) != 0;
         vi = write_vertex(
             segment_rect,
             ph.local_clip_rect,
@@ -73,7 +71,7 @@ void main(void) {
             transform,
             pic_task,
             ph.local_rect,
-            snap_to_primitive
+            ph.snap_offsets
         );
 
         // TODO(gw): transform bounds may be referenced by
