@@ -13,6 +13,8 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/AntiTrackingCommon.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/TaskCategory.h"
 #include "js/TypeDecls.h"
 #include "nsRefPtrHashtable.h"
@@ -1002,8 +1004,11 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
                                      const nsAString& aPopupWindowName,
                                      const nsAString& aPopupWindowFeatures) = 0;
 
-  virtual void NotifyContentBlockingEvent(unsigned aEvent, nsIChannel* aChannel,
-                                          bool aBlocked, nsIURI* aURIHint) = 0;
+  virtual void NotifyContentBlockingEvent(
+      unsigned aEvent, nsIChannel* aChannel, bool aBlocked, nsIURI* aURIHint,
+      const mozilla::Maybe<
+          mozilla::AntiTrackingCommon::StorageAccessGrantedReason>& aReason =
+          mozilla::Nothing()) = 0;
 
   // WebIDL-ish APIs
   void MarkUncollectableForCCGeneration(uint32_t aGeneration) {

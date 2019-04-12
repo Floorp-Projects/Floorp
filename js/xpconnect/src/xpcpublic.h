@@ -19,7 +19,6 @@
 #include "nsIURI.h"
 #include "nsIPrincipal.h"
 #include "nsIGlobalObject.h"
-#include "nsPIDOMWindow.h"
 #include "nsWrapperCache.h"
 #include "nsString.h"
 #include "nsTArray.h"
@@ -31,6 +30,7 @@
 #include "mozilla/Preferences.h"
 
 class nsGlobalWindowInner;
+class nsIGlobalObject;
 class nsIPrincipal;
 class nsIHandleReportCallback;
 struct nsXPTInterfaceInfo;
