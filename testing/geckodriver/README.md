@@ -61,12 +61,11 @@ Documentation
 Source code
 -----------
 
-geckodriver’s canonical source code can be found in [mozilla-central].
-We only use this GitHub repository for issue tracking and making releases.
-See our [contribution documentation] for more information.
+geckodriver’s source code is in [mozilla-central] under testing/geckodriver.
+This GitHub repository is only used for issue tracking and making releases.
+
 
 [mozilla-central]: https://hg.mozilla.org/mozilla-central/file/tip/testing/geckodriver
-[contribution documentation]: https://firefox-source-docs.mozilla.org/testing/geckodriver/#for-developers
 
 
 Contact
