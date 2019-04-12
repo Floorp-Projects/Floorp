@@ -13,6 +13,8 @@ import org.mozilla.fenix.GleanMetrics.FindInPage
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.QuickActionSheet
 import org.mozilla.fenix.GleanMetrics.Metrics
+import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
+import org.mozilla.fenix.ext.components
 
 private class EventWrapper<T : Enum<T>>(
     private val recorder: ((Map<T, String>?) -> Unit),
@@ -117,6 +119,18 @@ class GleanMetricsService(private val context: Context) : MetricsService {
 
         Metrics.apply {
             defaultBrowser.set(Browsers.all(context).isDefaultBrowser)
+        }
+
+        SearchDefaultEngine.apply {
+            val defaultEngine = context
+                .components
+                .search
+                .searchEngineManager
+                .defaultSearchEngine ?: return@apply
+
+            code.set(defaultEngine.identifier)
+            name.set(defaultEngine.name)
+            submissionUrl.set(defaultEngine.buildSearchUrl(""))
         }
 
         initialized = true
