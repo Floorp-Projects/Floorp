@@ -9,7 +9,7 @@ import sourceQueue from "../utils/source-queue";
 import { getSources } from "../reducers/sources";
 import { waitForMs } from "../utils/utils";
 
-import { newSources } from "./sources";
+import { newGeneratedSources } from "./sources";
 import { updateWorkers } from "./debuggee";
 
 import {
@@ -83,7 +83,7 @@ export function navigated() {
     await waitForMs(100);
     if (Object.keys(getSources(getState())).length == 0) {
       const sources = await client.fetchSources();
-      dispatch(newSources(sources));
+      dispatch(newGeneratedSources(sources));
     }
     panel.emit("reloaded");
   };

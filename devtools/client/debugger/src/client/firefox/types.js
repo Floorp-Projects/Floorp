@@ -16,11 +16,11 @@ import type {
   FrameId,
   ActorId,
   Script,
-  QueuedSourceData,
   Pause,
   PendingLocation,
   Frame,
   SourceId,
+  QueuedSourceData,
   Worker,
   Range
 } from "../../types";

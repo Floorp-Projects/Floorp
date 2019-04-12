@@ -12,6 +12,7 @@
 import { generatedToOriginalId } from "devtools-source-map";
 import { flatten } from "lodash";
 
+import { makeSourceId } from "../../client/firefox/create";
 import { toggleBlackBox } from "./blackbox";
 import { syncBreakpoint, setBreakpointPositions } from "../breakpoints";
 import { loadSourceText } from "./loadSourceText";
@@ -21,7 +22,8 @@ import {
   getRawSourceURL,
   isPrettyURL,
   isOriginal,
-  isInlineScript
+  isInlineScript,
+  isUrlExtension
 } from "../../utils/source";
 import {
   getBlackBoxList,
@@ -40,6 +42,7 @@ import type {
   SourceId,
   Context,
   OriginalSourceData,
+  GeneratedSourceData,
   QueuedSourceData
 } from "../../types";
 import type { Action, ThunkArgs } from "../types";
@@ -223,8 +226,9 @@ export function newQueuedSources(sourceInfo: Array<QueuedSourceData>) {
         original.push(source.data);
       }
     }
+
     if (generated.length > 0) {
-      await dispatch(newSources(generated));
+      await dispatch(newGeneratedSources(generated));
     }
     if (original.length > 0) {
       await dispatch(newOriginalSources(original));
@@ -253,6 +257,44 @@ export function newOriginalSources(sourceInfo: Array<OriginalSourceData>) {
       isExtension: false,
       actors: []
     }));
+
+    return dispatch(newSources(sources));
+  };
+}
+
+export function newGeneratedSource(sourceInfo: GeneratedSourceData) {
+  return async ({ dispatch }: ThunkArgs) => {
+    const sources = await dispatch(newGeneratedSources([sourceInfo]));
+    return sources[0];
+  };
+}
+
+export function newGeneratedSources(sourceInfo: Array<GeneratedSourceData>) {
+  return async ({ dispatch, client }: ThunkArgs) => {
+    const supportsWasm = client.hasWasmSupport();
+    const sources: Array<Source> = sourceInfo.map(({ thread, source }) => {
+      const id = makeSourceId(source);
+      const sourceActor = {
+        actor: source.actor,
+        source: id,
+        thread
+      };
+      const createdSource: any = {
+        id,
+        url: source.url,
+        relativeUrl: source.url,
+        isPrettyPrinted: false,
+        sourceMapURL: source.sourceMapURL,
+        introductionUrl: source.introductionUrl,
+        introductionType: source.introductionType,
+        isBlackBoxed: false,
+        loadedState: "unloaded",
+        isWasm: !!supportsWasm && source.introductionType === "wasm",
+        isExtension: (source.url && isUrlExtension(source.url)) || false,
+        actors: [sourceActor]
+      };
+      return createdSource;
+    });
 
     return dispatch(newSources(sources));
   };
