@@ -122,6 +122,11 @@ toolbar[mode="text"] .toolbarbutton-text {
   list-style-image: url("moz-icon://stock/gtk-orientation-landscape?size=button");
 }
 
+#print-preview-portrait-button > .toolbarbutton-icon,
+#print-preview-landscape-button > .toolbarbutton-icon {
+  margin-inline-end: 2px;
+}
+
 html|*#print-preview-pageNumber {
   /* 3 chars + (3px border + 1px padding) on both sides */
   width: calc(8px + 3ch);
