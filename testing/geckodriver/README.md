@@ -9,13 +9,8 @@ to communicate with Gecko browsers, such as Firefox.  It translates calls
 into the [Firefox remote protocol] by acting as a proxy between the local-
 and remote ends.
 
-geckodriver’s [source code] is made available under the [Mozilla
-Public License].
-
 [WebDriver protocol]: https://w3c.github.io/webdriver/#protocol
-[Firefox remote protocol]: https://firefox-source-docs.mozilla.org/testing/marionette/Protocol.html
-[source code]: https://hg.mozilla.org/mozilla-unified/file/tip/testing/geckodriver
-[Mozilla Public License]: https://www.mozilla.org/en-US/MPL/2.0/
+[Firefox remote protocol]: https://firefox-source-docs.mozilla.org/testing/marionette/Protocol.htm
 [WebDriver]: https://developer.mozilla.org/en-US/docs/Web/WebDriver
 
 
@@ -61,10 +56,13 @@ Documentation
 Source code
 -----------
 
-geckodriver’s source code is in [mozilla-central] under testing/geckodriver.
+geckodriver is made available under the [Mozilla Public License].
+
+Its source code can be found in [mozilla-central] under testing/geckodriver.
 This GitHub repository is only used for issue tracking and making releases.
 
-
+[source code]: https://hg.mozilla.org/mozilla-unified/file/tip/testing/geckodriver
+[Mozilla Public License]: https://www.mozilla.org/en-US/MPL/2.0/
 [mozilla-central]: https://hg.mozilla.org/mozilla-central/file/tip/testing/geckodriver
 
 
