@@ -85,6 +85,19 @@ js::AutoAllocInAtomsZone::~AutoAllocInAtomsZone() {
   cx_->leaveAtomsZone(origin_);
 }
 
+js::AutoMaybeLeaveAtomsZone::AutoMaybeLeaveAtomsZone(JSContext* cx)
+    : cx_(cx), wasInAtomsZone_(cx->zone() && cx->zone()->isAtomsZone()) {
+  if (wasInAtomsZone_) {
+    cx_->leaveAtomsZone(nullptr);
+  }
+}
+
+js::AutoMaybeLeaveAtomsZone::~AutoMaybeLeaveAtomsZone() {
+  if (wasInAtomsZone_) {
+    cx_->enterAtomsZone();
+  }
+}
+
 js::AutoRealmUnchecked::AutoRealmUnchecked(JSContext* cx, JS::Realm* target)
     : AutoRealm(cx, target) {}
 
