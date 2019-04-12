@@ -19,9 +19,6 @@ add_task(async function prepare() {
     // Clicking urlbar results causes visits to their associated pages, so clear
     // that history now.
     await PlacesUtils.history.clear();
-
-    // Make sure the popup is closed for the next test.
-    await UrlbarTestUtils.promisePopupClose(window);
   });
 
   // Move the mouse away from the urlbar one-offs so that a one-off engine is

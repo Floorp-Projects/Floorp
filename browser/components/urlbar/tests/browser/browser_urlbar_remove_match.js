@@ -66,8 +66,6 @@ add_task(async function test_remove_bookmark_doesnt() {
   await new Promise(resolve => setTimeout(resolve, 0));
   await PlacesTestUtils.promiseAsyncUpdates();
 
-  await UrlbarTestUtils.promisePopupClose(window);
-
   Assert.ok(await PlacesUtils.bookmarks.fetch({url: TEST_URL}),
     "Should still have the URL bookmarked.");
 });

@@ -66,6 +66,5 @@ add_task(async function() {
       "Should have the correct url");
   }
 
-  await UrlbarTestUtils.promisePopupClose(window);
   gBrowser.removeTab(tab);
 });

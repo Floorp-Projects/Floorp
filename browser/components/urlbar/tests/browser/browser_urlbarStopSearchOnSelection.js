@@ -32,8 +32,6 @@ add_task(async function init() {
   registerCleanupFunction(async () => {
     await Services.search.setDefault(oldDefaultEngine);
     await PlacesUtils.history.clear();
-    // Make sure the popup is closed for the next test.
-    await UrlbarTestUtils.promisePopupClose(window);
   });
 });
 

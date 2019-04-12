@@ -22,5 +22,4 @@
                "Result title should be limited");
   Assert.equal(result.displayed.url.length, UrlbarUtils.MAX_TEXT_LENGTH,
                "Result url should be limited");
-  await UrlbarTestUtils.promisePopupClose(window);
 });

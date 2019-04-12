@@ -28,6 +28,5 @@ add_task(async function noAutofillWhenCaretNotAtEnd() {
   Assert.equal(gURLBar.selectionStart, 1);
   Assert.equal(gURLBar.selectionEnd, 1);
 
-  await UrlbarTestUtils.promisePopupClose(window);
   await PlacesUtils.history.clear();
 });
