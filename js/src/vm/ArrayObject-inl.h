@@ -9,6 +9,7 @@
 
 #include "vm/ArrayObject.h"
 
+#include "gc/Allocator.h"
 #include "gc/GCTrace.h"
 #include "vm/StringType.h"
 

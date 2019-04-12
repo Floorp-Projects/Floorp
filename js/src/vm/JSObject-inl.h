@@ -9,29 +9,16 @@
 
 #include "vm/JSObject.h"
 
-#include "mozilla/DebugOnly.h"
-
-#include "jsfriendapi.h"
-
-#include "builtin/MapObject.h"
-#include "builtin/TypedObject.h"
-#include "gc/Allocator.h"
 #include "gc/FreeOp.h"
 #include "vm/ArrayObject.h"
-#include "vm/DateObject.h"
 #include "vm/EnvironmentObject.h"
 #include "vm/JSFunction.h"
-#include "vm/NumberObject.h"
 #include "vm/Probes.h"
-#include "vm/StringObject.h"
-#include "vm/TypedArrayObject.h"
 
 #include "gc/Marking-inl.h"
 #include "gc/ObjectKind-inl.h"
-#include "vm/JSAtom-inl.h"
 #include "vm/ObjectOperations-inl.h"  // js::MaybeHasInterestingSymbolProperty
 #include "vm/Realm-inl.h"
-#include "vm/TypeInference-inl.h"
 
 inline void JSObject::finalize(js::FreeOp* fop) {
   js::probes::FinalizeObject(this);
