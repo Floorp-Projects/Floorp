@@ -706,6 +706,10 @@ class nsHttpChannel final : public HttpBaseChannel,
   // Used to suspend any newly created pumps in mCallOnResume handler.
   uint32_t mAsyncResumePending : 1;
 
+  // If the request was performed to a TRR resolved IP address.
+  // Will be false if loaded from the cache.
+  uint32_t mResolvedByTRR : 1;
+
   nsTArray<nsContinueRedirectionFunc> mRedirectFuncStack;
 
   // Needed for accurate DNS timing
