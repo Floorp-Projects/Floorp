@@ -948,7 +948,7 @@ void nsFrameLoader::Hide() {
 
   if (!mDocShell) return;
 
-  docShell->MaybeClearStorageAccessFlag();
+  mDocShell->MaybeClearStorageAccessFlag();
 
   nsCOMPtr<nsIContentViewer> contentViewer;
   mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
