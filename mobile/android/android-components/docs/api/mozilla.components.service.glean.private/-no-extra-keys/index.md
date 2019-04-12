@@ -2,7 +2,7 @@
 
 # NoExtraKeys
 
-`enum class NoExtraKeys` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/EventMetricType.kt#L21)
+`enum class NoExtraKeys` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/EventMetricType.kt#L19)
 
 An enum with no values for convenient use as the default set of extra keys
 that an [EventMetricType](../-event-metric-type/index.md) can accept.

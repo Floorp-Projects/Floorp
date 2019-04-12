@@ -2,7 +2,7 @@
 
 # StringMetricType
 
-`data class StringMetricType : `[`CommonMetricData`](../-common-metric-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/StringMetricType.kt#L23)
+`data class StringMetricType : `[`CommonMetricData`](../-common-metric-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/StringMetricType.kt#L21)
 
 This implements the developer facing API for recording string metrics.
 

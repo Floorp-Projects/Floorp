@@ -2,7 +2,7 @@
 
 # BooleanMetricType
 
-`data class BooleanMetricType : `[`CommonMetricData`](../-common-metric-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/BooleanMetricType.kt#L22)
+`data class BooleanMetricType : `[`CommonMetricData`](../-common-metric-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/BooleanMetricType.kt#L20)
 
 This implements the developer facing API for recording boolean metrics.
 

@@ -2,7 +2,7 @@
 
 # CommonMetricData
 
-`interface CommonMetricData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/CommonMetricData.kt#L34)
+`interface CommonMetricData` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/CommonMetricData.kt#L32)
 
 This defines the common set of data shared across all the different
 metric types.

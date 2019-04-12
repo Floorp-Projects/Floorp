@@ -2,7 +2,7 @@
 
 # DatetimeMetricType
 
-`data class DatetimeMetricType : `[`CommonMetricData`](../-common-metric-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/DatetimeMetricType.kt#L23)
+`data class DatetimeMetricType : `[`CommonMetricData`](../-common-metric-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/DatetimeMetricType.kt#L21)
 
 This implements the developer facing API for recording datetime metrics.
 

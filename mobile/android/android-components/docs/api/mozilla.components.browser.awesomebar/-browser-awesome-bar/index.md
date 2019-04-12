@@ -2,7 +2,7 @@
 
 # BrowserAwesomeBar
 
-`class BrowserAwesomeBar : RecyclerView, `[`AwesomeBar`](../../mozilla.components.concept.awesomebar/-awesome-bar/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/awesomebar/src/main/java/mozilla/components/browser/awesomebar/BrowserAwesomeBar.kt#L34)
+`class BrowserAwesomeBar : RecyclerView, `[`AwesomeBar`](../../mozilla.components.concept.awesomebar/-awesome-bar/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/browser/awesomebar/src/main/java/mozilla/components/browser/awesomebar/BrowserAwesomeBar.kt#L40)
 
 A customizable [AwesomeBar](../../mozilla.components.concept.awesomebar/-awesome-bar/index.md) implementation.
 
@@ -24,6 +24,7 @@ A customizable [AwesomeBar](../../mozilla.components.concept.awesomebar/-awesome
 | Name | Summary |
 |---|---|
 | [addProviders](add-providers.md) | `fun addProviders(vararg providers: `[`SuggestionProvider`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Adds the following [SuggestionProvider](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion-provider/index.md) instances to be queried for [Suggestion](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion/index.md)s whenever the text changes. |
+| [getUniqueSuggestionId](get-unique-suggestion-id.md) | `fun getUniqueSuggestionId(suggestion: `[`Suggestion`](../../mozilla.components.concept.awesomebar/-awesome-bar/-suggestion/index.md)`): `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)<br>Returns a unique suggestion ID to make sure ID's can't collide across providers. This method is not thread-safe and must be invoked on the main thread. |
 | [onDetachedFromWindow](on-detached-from-window.md) | `fun onDetachedFromWindow(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html) |
 | [onInputCancelled](on-input-cancelled.md) | `fun onInputCancelled(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Fired when the user has cancelled their interaction with the awesome bar. |
 | [onInputChanged](on-input-changed.md) | `fun onInputChanged(text: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Fired whenever the user changes their input, after they have started interacting with the awesome bar. |

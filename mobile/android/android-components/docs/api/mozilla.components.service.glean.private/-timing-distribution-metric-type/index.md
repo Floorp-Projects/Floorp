@@ -2,7 +2,7 @@
 
 # TimingDistributionMetricType
 
-`data class TimingDistributionMetricType : `[`CommonMetricData`](../-common-metric-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/TimingDistributionMetricType.kt#L24)
+`data class TimingDistributionMetricType : `[`CommonMetricData`](../-common-metric-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/TimingDistributionMetricType.kt#L22)
 
 This implements the developer facing API for recording timing distribution metrics.
 

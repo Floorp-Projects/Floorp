@@ -2,7 +2,7 @@
 
 # Application
 
-`Application` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/CommonMetricData.kt#L22)
+`Application` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/CommonMetricData.kt#L21)
 
 The metric is reset on application restart
 

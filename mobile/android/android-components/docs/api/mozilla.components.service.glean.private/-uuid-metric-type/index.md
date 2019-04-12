@@ -2,7 +2,7 @@
 
 # UuidMetricType
 
-`data class UuidMetricType : `[`CommonMetricData`](../-common-metric-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/UuidMetricType.kt#L24)
+`data class UuidMetricType : `[`CommonMetricData`](../-common-metric-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/UuidMetricType.kt#L22)
 
 This implements the developer facing API for recording uuids.
 

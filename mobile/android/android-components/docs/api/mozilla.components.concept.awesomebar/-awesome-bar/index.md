@@ -2,7 +2,7 @@
 
 # AwesomeBar
 
-`interface AwesomeBar` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L20)
+`interface AwesomeBar` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L19)
 
 Interface to be implemented by awesome bar implementations.
 

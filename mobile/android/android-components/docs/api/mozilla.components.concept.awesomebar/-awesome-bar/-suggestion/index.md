@@ -2,7 +2,7 @@
 
 # Suggestion
 
-`data class Suggestion` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L83)
+`data class Suggestion` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/concept/awesomebar/src/main/java/mozilla/components/concept/awesomebar/AwesomeBar.kt#L82)
 
 A [Suggestion](./index.md) to be displayed by an [AwesomeBar](../index.md) implementation.
 
@@ -26,7 +26,6 @@ A [Suggestion](./index.md) to be displayed by an [AwesomeBar](../index.md) imple
 | [chips](chips.md) | `val chips: `[`List`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-list/index.html)`<`[`Chip`](-chip/index.md)`>`<br>A list of [Chip](-chip/index.md) instances to be displayed. |
 | [description](description.md) | `val description: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)`?`<br>A user-readable description for the [Suggestion](./index.md). |
 | [flags](flags.md) | `val flags: `[`Set`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-set/index.html)`<`[`Flag`](-flag/index.md)`>`<br>A set of [Flag](-flag/index.md) values for this [Suggestion](./index.md). |
-| [generatedUniqueId](generated-unique-id.md) | `val generatedUniqueId: `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)<br>A generated unique ID ([Long](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)), based on the provider and suggestion id (having a reasonable expectation of generating mostly-non-colliding IDs). |
 | [icon](icon.md) | `val icon: suspend (width: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`, height: `[`Int`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html)`) -> `[`Bitmap`](https://developer.android.com/reference/android/graphics/Bitmap.html)`?`<br>A lambda that can be invoked by the [AwesomeBar](../index.md) implementation to receive an icon [Bitmap](https://developer.android.com/reference/android/graphics/Bitmap.html) for this [Suggestion](./index.md). The [AwesomeBar](../index.md) will pass in its desired width and height for the Bitmap. |
 | [id](id.md) | `val id: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>A unique ID (provider scope) identifying this [Suggestion](./index.md). A stable ID but different data indicates to the [AwesomeBar](../index.md) that this is the same [Suggestion](./index.md) with new data. This will affect how the [AwesomeBar](../index.md) animates showing the new suggestion. |
 | [onChipClicked](on-chip-clicked.md) | `val onChipClicked: (`[`Chip`](-chip/index.md)`) -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>A callback to be executed when a [Chip](-chip/index.md) was clicked by the user. |
