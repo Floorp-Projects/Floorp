@@ -75,6 +75,23 @@ bool ScaledFontFreeType::GetWRFontInstanceOptions(
   return true;
 }
 
+FT_Face UnscaledFontFreeType::InitFace() {
+  if (mFace) {
+    return mFace;
+  }
+  if (mFile.empty()) {
+    return nullptr;
+  }
+  FT_Face face = Factory::NewFTFace(nullptr, mFile.c_str(), mIndex);
+  if (!face) {
+    gfxWarning() << "Failed initializing FreeType face from filename";
+    return nullptr;
+  }
+  mOwnsFace = true;
+  mFace = face;
+  return mFace;
+}
+
 static cairo_user_data_key_t sNativeFontResourceKey;
 
 static void ReleaseNativeFontResource(void* aData) {
@@ -91,7 +108,7 @@ already_AddRefed<ScaledFont> UnscaledFontFreeType::CreateScaledFont(
     Float aGlyphSize, const uint8_t* aInstanceData,
     uint32_t aInstanceDataLength, const FontVariation* aVariations,
     uint32_t aNumVariations) {
-  FT_Face face = GetFace();
+  FT_Face face = InitFace();
   if (!face) {
     gfxWarning() << "Attempted to deserialize FreeType scaled font without "
                     "FreeType face";
