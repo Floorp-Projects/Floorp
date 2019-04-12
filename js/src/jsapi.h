@@ -2781,7 +2781,7 @@ extern JS_PUBLIC_API bool JS_GetPendingException(JSContext* cx,
 
 namespace JS {
 
-enum class ExceptionStackBehavior: bool {
+enum class ExceptionStackBehavior : bool {
   // Do not capture any stack.
   DoNotCapture,
 
@@ -2790,11 +2790,11 @@ enum class ExceptionStackBehavior: bool {
   Capture
 };
 
-} // namespace JS
+}  // namespace JS
 
-extern JS_PUBLIC_API void JS_SetPendingException(JSContext* cx,
-                                                 JS::HandleValue v,
-                                                 JS::ExceptionStackBehavior behavior = JS::ExceptionStackBehavior::Capture);
+extern JS_PUBLIC_API void JS_SetPendingException(
+    JSContext* cx, JS::HandleValue v,
+    JS::ExceptionStackBehavior behavior = JS::ExceptionStackBehavior::Capture);
 
 extern JS_PUBLIC_API void JS_ClearPendingException(JSContext* cx);
 

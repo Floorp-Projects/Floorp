@@ -228,9 +228,8 @@ bool js::SetPropertyIgnoringNamedGetter(JSContext* cx, HandleObject obj,
   return result.succeed();
 }
 
-bool BaseProxyHandler::getOwnEnumerablePropertyKeys(JSContext* cx,
-                                                    HandleObject proxy,
-                                                    MutableHandleIdVector props) const {
+bool BaseProxyHandler::getOwnEnumerablePropertyKeys(
+    JSContext* cx, HandleObject proxy, MutableHandleIdVector props) const {
   assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
   MOZ_ASSERT(props.length() == 0);
 

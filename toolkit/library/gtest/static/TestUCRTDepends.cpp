@@ -37,7 +37,8 @@ static LPWSTR GetModuleFileDir(HMODULE module, LPWSTR path, DWORD size) {
 
 // Make sure that Universal CRT forwarder DLLs are not in app directory if it
 // is in Api Sets.
-TEST(TestUCRTDepends, AppDir) {
+TEST(TestUCRTDepends, AppDir)
+{
   WCHAR appdir[MAX_PATH];
   ASSERT_TRUE(GetModuleFileDir(nullptr, appdir, MAX_PATH));
 
@@ -95,7 +96,8 @@ TEST(TestUCRTDepends, AppDir) {
 
 // Make sure that we do not depend on Universal CRT forwarder DLLs in the
 // system directory.
-TEST(TestUCRTDepends, SystemDir) {
+TEST(TestUCRTDepends, SystemDir)
+{
   WCHAR appdir[MAX_PATH];
   ASSERT_TRUE(GetModuleFileDir(nullptr, appdir, MAX_PATH));
 

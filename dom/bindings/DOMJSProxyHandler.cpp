@@ -253,9 +253,9 @@ bool DOMProxyHandler::delete_(JSContext* cx, JS::Handle<JSObject*> proxy,
   return result.succeed();
 }
 
-bool BaseDOMProxyHandler::ownPropertyKeys(JSContext* cx,
-                                          JS::Handle<JSObject*> proxy,
-                                          JS::MutableHandleVector<jsid> props) const {
+bool BaseDOMProxyHandler::ownPropertyKeys(
+    JSContext* cx, JS::Handle<JSObject*> proxy,
+    JS::MutableHandleVector<jsid> props) const {
   return ownPropNames(cx, proxy,
                       JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, props);
 }
@@ -269,7 +269,8 @@ bool BaseDOMProxyHandler::getPrototypeIfOrdinary(
 }
 
 bool BaseDOMProxyHandler::getOwnEnumerablePropertyKeys(
-    JSContext* cx, JS::Handle<JSObject*> proxy, JS::MutableHandleVector<jsid> props) const {
+    JSContext* cx, JS::Handle<JSObject*> proxy,
+    JS::MutableHandleVector<jsid> props) const {
   return ownPropNames(cx, proxy, JSITER_OWNONLY, props);
 }
 

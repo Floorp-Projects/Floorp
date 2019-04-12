@@ -49,9 +49,7 @@ struct FontFamilyName final {
 
   bool IsGeneric() const { return !IsNamed(); }
 
-  bool IsQuoted() const {
-    return mSyntax == StyleFontFamilyNameSyntax::Quoted;
-  }
+  bool IsQuoted() const { return mSyntax == StyleFontFamilyNameSyntax::Quoted; }
 
   void AppendToString(nsACString& aFamilyList, bool aQuotes = true) const {
     if (IsNamed()) {

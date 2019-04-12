@@ -59,8 +59,8 @@ bool ForwardingProxyHandler::defineProperty(JSContext* cx, HandleObject proxy,
   return DefineProperty(cx, target, id, desc, result);
 }
 
-bool ForwardingProxyHandler::ownPropertyKeys(JSContext* cx, HandleObject proxy,
-                                             MutableHandleIdVector props) const {
+bool ForwardingProxyHandler::ownPropertyKeys(
+    JSContext* cx, HandleObject proxy, MutableHandleIdVector props) const {
   assertEnteredPolicy(cx, proxy, JSID_VOID, ENUMERATE);
   RootedObject target(cx, proxy->as<ProxyObject>().target());
   return GetPropertyKeys(

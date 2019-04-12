@@ -310,14 +310,15 @@ dbus_done:
 
 // check GSettings
 #define GSETINGS_A11Y_INTERFACE "org.gnome.desktop.interface"
-#define GSETINGS_A11Y_KEY       "toolkit-accessibility"
+#define GSETINGS_A11Y_KEY "toolkit-accessibility"
   nsCOMPtr<nsIGSettingsService> gsettings =
       do_GetService(NS_GSETTINGSSERVICE_CONTRACTID);
   nsCOMPtr<nsIGSettingsCollection> a11y_settings;
 
   if (gsettings) {
-    gsettings->GetCollectionForSchema(NS_LITERAL_CSTRING(GSETINGS_A11Y_INTERFACE),
-                                      getter_AddRefs(a11y_settings));
+    gsettings->GetCollectionForSchema(
+        NS_LITERAL_CSTRING(GSETINGS_A11Y_INTERFACE),
+        getter_AddRefs(a11y_settings));
     if (a11y_settings) {
       a11y_settings->GetBoolean(NS_LITERAL_CSTRING(GSETINGS_A11Y_KEY),
                                 &sShouldEnable);

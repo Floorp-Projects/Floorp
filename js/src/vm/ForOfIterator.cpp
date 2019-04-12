@@ -163,7 +163,8 @@ void ForOfIterator::closeThrow() {
   RootedValue completionException(cx_);
   RootedSavedFrame completionExceptionStack(cx_);
   if (cx_->isExceptionPending()) {
-    if (!GetAndClearExceptionAndStack(cx_, &completionException, &completionExceptionStack)) {
+    if (!GetAndClearExceptionAndStack(cx_, &completionException,
+                                      &completionExceptionStack)) {
       completionException.setUndefined();
       completionExceptionStack = nullptr;
     }

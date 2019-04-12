@@ -638,8 +638,8 @@ class TokenStreamAnyChars : public TokenStreamShared {
   //
   // The first program shows why orExpr() has use SlashIsDiv mode when peeking
   // ahead for the next operator after parsing `q`. The second program shows
-  // why matchOrInsertSemicolon() must use SlashIsRegExp mode when scanning ahead
-  // for a semicolon.
+  // why matchOrInsertSemicolon() must use SlashIsRegExp mode when scanning
+  // ahead for a semicolon.
   void allowGettingNextTokenWithSlashIsRegExp() {
 #ifdef DEBUG
     // Check the precondition: Caller already peeked ahead at the next token,

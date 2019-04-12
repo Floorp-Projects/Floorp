@@ -310,9 +310,7 @@ class GCRuntime {
   bool isForegroundSweeping() const { return state() == State::Sweep; }
   bool isBackgroundSweeping() { return sweepTask.isRunning(); }
   void waitBackgroundSweepEnd();
-  void waitBackgroundAllocEnd() {
-    allocTask.cancelAndWait();
-  }
+  void waitBackgroundAllocEnd() { allocTask.cancelAndWait(); }
   void waitBackgroundFreeEnd();
 
   void lockGC() { lock.lock(); }

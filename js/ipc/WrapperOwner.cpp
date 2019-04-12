@@ -111,8 +111,9 @@ class CPOWProxyHandler : public BaseProxyHandler {
 
   virtual bool hasOwn(JSContext* cx, HandleObject proxy, HandleId id,
                       bool* bp) const override;
-  virtual bool getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy,
-                                            MutableHandleIdVector props) const override;
+  virtual bool getOwnEnumerablePropertyKeys(
+      JSContext* cx, HandleObject proxy,
+      MutableHandleIdVector props) const override;
   virtual bool hasInstance(JSContext* cx, HandleObject proxy,
                            MutableHandleValue v, bool* bp) const override;
   virtual bool getBuiltinClass(JSContext* cx, HandleObject obj,
@@ -516,9 +517,8 @@ bool WrapperOwner::set(JSContext* cx, JS::HandleObject proxy, JS::HandleId id,
   return ok(cx, status, result);
 }
 
-bool CPOWProxyHandler::getOwnEnumerablePropertyKeys(JSContext* cx,
-                                                    HandleObject proxy,
-                                                    MutableHandleIdVector props) const {
+bool CPOWProxyHandler::getOwnEnumerablePropertyKeys(
+    JSContext* cx, HandleObject proxy, MutableHandleIdVector props) const {
   FORWARD(getOwnEnumerablePropertyKeys, (cx, proxy, props), false);
 }
 
@@ -889,7 +889,8 @@ void WrapperOwner::updatePointer(JSObject* obj, const JSObject* old) {
 }
 
 bool WrapperOwner::getPropertyKeys(JSContext* cx, HandleObject proxy,
-                                   uint32_t flags, MutableHandleIdVector props) {
+                                   uint32_t flags,
+                                   MutableHandleIdVector props) {
   ObjectId objId = idOf(proxy);
 
   ReturnStatus status;
