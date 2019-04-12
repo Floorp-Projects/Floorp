@@ -1932,13 +1932,15 @@ void WorkerPrivate::SetBaseURI(nsIURI* aBaseURI) {
   nsContentUtils::GetUTFOrigin(aBaseURI, mLocationInfo.mOrigin);
 }
 
-nsresult WorkerPrivate::SetPrincipalOnMainThread(nsIPrincipal* aPrincipal,
-                                                 nsILoadGroup* aLoadGroup) {
-  return mLoadInfo.SetPrincipalOnMainThread(aPrincipal, aLoadGroup);
+nsresult WorkerPrivate::SetPrincipalsOnMainThread(
+    nsIPrincipal* aPrincipal, nsIPrincipal* aStoragePrincipal,
+    nsILoadGroup* aLoadGroup) {
+  return mLoadInfo.SetPrincipalsOnMainThread(aPrincipal, aStoragePrincipal,
+                                             aLoadGroup);
 }
 
-nsresult WorkerPrivate::SetPrincipalFromChannel(nsIChannel* aChannel) {
-  return mLoadInfo.SetPrincipalFromChannel(aChannel);
+nsresult WorkerPrivate::SetPrincipalsFromChannel(nsIChannel* aChannel) {
+  return mLoadInfo.SetPrincipalsFromChannel(aChannel);
 }
 
 bool WorkerPrivate::FinalChannelPrincipalIsValid(nsIChannel* aChannel) {
@@ -2562,7 +2564,7 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
                                getter_AddRefs(loadInfo.mResolvedScriptURI));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    rv = loadInfo.SetPrincipalFromChannel(loadInfo.mChannel);
+    rv = loadInfo.SetPrincipalsFromChannel(loadInfo.mChannel);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 

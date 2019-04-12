@@ -1188,7 +1188,7 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       // URL must exactly match the final worker script URL in order to
       // properly set the referrer header on fetch/xhr requests.  If bug 1340694
       // is ever fixed this can be removed.
-      rv = mWorkerPrivate->SetPrincipalFromChannel(channel);
+      rv = mWorkerPrivate->SetPrincipalsFromChannel(channel);
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsCOMPtr<nsIContentSecurityPolicy> csp = mWorkerPrivate->GetCSP();
@@ -1296,8 +1296,9 @@ class ScriptLoaderRunnable final : public nsIRunnable, public nsINamed {
       // referrer logic depends on the WorkerPrivate principal having a URL
       // that matches the worker script URL.  If bug 1340694 is ever fixed
       // this can be removed.
-      rv = mWorkerPrivate->SetPrincipalOnMainThread(responsePrincipal,
-                                                    loadGroup);
+      // TODO: storagePrincipal here?
+      rv = mWorkerPrivate->SetPrincipalsOnMainThread(
+          responsePrincipal, responsePrincipal, loadGroup);
       MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
 
       rv = mWorkerPrivate->SetCSPFromHeaderValues(aCSPHeaderValue,
@@ -1841,7 +1842,7 @@ class ChannelGetterRunnable final : public WorkerMainThreadRunnable {
         getter_AddRefs(channel));
     NS_ENSURE_SUCCESS(mResult, true);
 
-    mResult = mLoadInfo.SetPrincipalFromChannel(channel);
+    mResult = mLoadInfo.SetPrincipalsFromChannel(channel);
     NS_ENSURE_SUCCESS(mResult, true);
 
     mLoadInfo.mChannel = channel.forget();
