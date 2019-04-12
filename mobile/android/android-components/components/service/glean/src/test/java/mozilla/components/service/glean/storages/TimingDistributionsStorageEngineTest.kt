@@ -14,6 +14,7 @@ import mozilla.components.service.glean.private.TimingDistributionMetricType
 import mozilla.components.service.glean.error.ErrorRecording
 import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.timing.TimingManager
+import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
@@ -31,6 +32,11 @@ class TimingDistributionsStorageEngineTest {
     @Before
     fun setUp() {
         resetGlean()
+    }
+
+    @After
+    fun reset() {
+        TimingManager.testResetTimeSource()
     }
 
     @Test

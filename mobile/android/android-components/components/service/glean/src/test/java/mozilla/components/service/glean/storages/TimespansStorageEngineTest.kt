@@ -11,6 +11,7 @@ import mozilla.components.service.glean.private.TimeUnit
 import mozilla.components.service.glean.private.TimespanMetricType
 import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.timing.TimingManager
+import org.junit.After
 
 import org.junit.Before
 import org.junit.Test
@@ -30,6 +31,11 @@ class TimespansStorageEngineTest {
         resetGlean()
         TimespansStorageEngine.applicationContext = ApplicationProvider.getApplicationContext()
         TimespansStorageEngine.clearAllStores()
+    }
+
+    @After
+    fun reset() {
+        TimingManager.testResetTimeSource()
     }
 
     @Test

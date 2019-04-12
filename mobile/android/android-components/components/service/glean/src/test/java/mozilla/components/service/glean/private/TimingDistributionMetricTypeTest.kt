@@ -8,6 +8,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.ObsoleteCoroutinesApi
 import mozilla.components.service.glean.resetGlean
 import mozilla.components.service.glean.timing.TimingManager
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertFalse
@@ -25,6 +26,11 @@ class TimingDistributionMetricTypeTest {
     @Before
     fun setUp() {
         resetGlean()
+    }
+
+    @After
+    fun reset() {
+        TimingManager.testResetTimeSource()
     }
 
     @Test

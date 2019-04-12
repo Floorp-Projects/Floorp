@@ -39,16 +39,16 @@ data class TimingDistributionMetricType(
      * called with no corresponding [stopAndAccumulate]): in that case the original
      * start time will be preserved.
      *
-     * @param anyObject The object to associate with this timing.  This allows
+     * @param timerId The object to associate with this timing.  This allows
      * for concurrent timing of events associated with different objects to the
      * same timespan metric.
      */
-    fun start(anyObject: Any) {
+    fun start(timerId: Any) {
         if (!shouldRecord(logger)) {
             return
         }
 
-        TimingManager.start(this, anyObject)
+        TimingManager.start(this, timerId)
     }
 
     /**
@@ -56,16 +56,16 @@ data class TimingDistributionMetricType(
      * count to the corresponding bucket in the timing distribution.
      * This will record an error if no [start] was called.
      *
-     * @param anyObject The object to associate with this timing.  This allows
+     * @param timerId The object to associate with this timing.  This allows
      * for concurrent timing of events associated with different objects to the
      * same timespan metric.
      */
-    fun stopAndAccumulate(anyObject: Any) {
+    fun stopAndAccumulate(timerId: Any) {
         if (!shouldRecord(logger)) {
             return
         }
 
-        TimingManager.stop(this, anyObject)?.let { elapsedNanos ->
+        TimingManager.stop(this, timerId)?.let { elapsedNanos ->
             @Suppress("EXPERIMENTAL_API_USAGE")
             Dispatchers.API.launch {
                 // Delegate storing the string to the storage engine.
@@ -81,16 +81,16 @@ data class TimingDistributionMetricType(
     /**
      * Abort a previous [start] call. No error is recorded if no [start] was called.
      *
-     * @param anyObject The object to associate with this timing.  This allows
+     * @param timerId The object to associate with this timing.  This allows
      * for concurrent timing of events associated with different objects to the
      * same timespan metric.
      */
-    fun cancel(anyObject: Any) {
+    fun cancel(timerId: Any) {
         if (!shouldRecord(logger)) {
             return
         }
 
-        TimingManager.cancel(this, anyObject)
+        TimingManager.cancel(this, timerId)
     }
 
     /**

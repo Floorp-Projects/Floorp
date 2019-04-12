@@ -5,6 +5,7 @@
 package mozilla.components.service.glean.timing
 
 import android.os.SystemClock
+import android.support.annotation.VisibleForTesting
 import mozilla.components.service.glean.error.ErrorRecording
 import mozilla.components.service.glean.error.ErrorRecording.recordError
 import mozilla.components.service.glean.private.CommonMetricData
@@ -43,14 +44,14 @@ internal object TimingManager {
      * preserved.
      *
      * @param metricData The metric managing the timing. Used for error reporting.
-     * @param anyObject The object to associate with this timing.
+     * @param timerId The object to associate with this timing.
      */
-    public fun start(metricData: CommonMetricData, anyObject: Any) {
+    public fun start(metricData: CommonMetricData, timerId: Any) {
         val startTime = getElapsedNanos()
         val metricName = metricData.identifier
 
         uncommittedStartTimes[metricName]?.let { metricTimings ->
-            if (anyObject in metricTimings) {
+            if (timerId in metricTimings) {
                 recordError(
                     metricData,
                     ErrorRecording.ErrorType.InvalidValue,
@@ -62,7 +63,7 @@ internal object TimingManager {
         }
 
         synchronized(this) {
-            uncommittedStartTimes.getOrPut(metricName, { WeakHashMap<Any, Long>() })[anyObject] = startTime
+            uncommittedStartTimes.getOrPut(metricName, { WeakHashMap<Any, Long>() })[timerId] = startTime
         }
     }
 
@@ -71,15 +72,15 @@ internal object TimingManager {
      * an error if no [start] was called.
      *
      * @param metricData The metric managing the timing. Used for error reporting.
-     * @param anyObject The object to associate with this timing.
+     * @param timerId The object to associate with this timing.
      * @return The length of the timespan, in nanoseconds, or null if called on a stopped timer.
      */
-    public fun stop(metricData: CommonMetricData, anyObject: Any): Long? {
+    public fun stop(metricData: CommonMetricData, timerId: Any): Long? {
         val stopTime = getElapsedNanos()
 
         return synchronized(this) {
             val metricName = metricData.identifier
-            uncommittedStartTimes[metricName]?.remove(anyObject)?.let { startTime ->
+            uncommittedStartTimes[metricName]?.remove(timerId)?.let { startTime ->
                 stopTime - startTime
             } ?: run {
                 recordError(
@@ -96,12 +97,21 @@ internal object TimingManager {
     /**
      * Abort a previous [start] call. No error is recorded if no [start] was called.
      *
-     * @param anyObject The object to associate with this timing.
+     * @param timerId The object to associate with this timing.
      */
-    public fun cancel(metricData: CommonMetricData, anyObject: Any) {
+    public fun cancel(metricData: CommonMetricData, timerId: Any) {
         synchronized(this) {
             val metricName = metricData.identifier
-            uncommittedStartTimes[metricName]?.remove(anyObject)
+            uncommittedStartTimes[metricName]?.remove(timerId)
         }
+    }
+
+    /**
+     * Reset the source of timing back to the default after it's been overridden. Use
+     * for testing only.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    internal fun testResetTimeSource() {
+        TimingManager.getElapsedNanos = { SystemClock.elapsedRealtimeNanos() }
     }
 }

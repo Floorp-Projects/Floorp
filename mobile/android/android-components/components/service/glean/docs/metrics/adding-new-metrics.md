@@ -316,34 +316,40 @@ of 500 nanoseconds will be truncated to 0 microseconds.
 
 ### Usage
 
-Say you're adding a new timespan for the time spent decoding images. First you need
+Say you're adding a new timespan for the time spent logging into the app. First you need
 to add an entry for the counter to the `metrics.yaml` file:
 
 ```YAML
-rendering:
-  image_decode_time:
+auth:
+  login_time:
     type: timespan
     description: >
-      Measures the time spent decoding images.
-    time_unit: microseconds
+      Measures the time spent logging in.
+    time_unit: milliseconds
     ...
 ```
 
-Now you can use the timespan from the application's code. Each time interval that
-the timespan metric records must be associated with an object provided by the user.
-This is so that intervals can be measured concurrently.  For example, to measure page
-load time on a number of tabs that are loading at the same time, each time interval
-should be associated with an object that uniquely represents each tab.
+Now you can use the timespan from the application's code. Each time interval
+that the timespan metric records must be associated with an object provided by
+the user. This is so that intervals can be measured concurrently. In our example
+using login time, this might be an object representing the login UI page.
 
 ```Kotlin
-import org.mozilla.yourApplication.GleanMetrics.Pages
+import org.mozilla.yourApplication.GleanMetrics.Auth
 
-fun onPageStart(e: Event) {
-    Pages.pageLoad.start(e.target)
+fun onShowLogin(e: Event) {
+    Auth.loginTime.start(e.target)
+    // ...
 }
 
-fun onPageLoaded(e: Event) {
-    Pages.pageLoad.stopAndSum(e.target)
+fun onLogin(e: Event) {
+    Auth.loginTime.stop(e.target)
+    // ...
+}
+
+fun onLoginCancel(e: Event) {
+    Auth.loginTime.cancel(e.tart)
+    // ...
 }
 ```
 
@@ -353,13 +359,13 @@ timespans recorded during the lifetime of the ping.
 There are test APIs available too:
 
 ```Kotlin
-import org.mozilla.yourApplication.GleanMetrics.Pages
+import org.mozilla.yourApplication.GleanMetrics.Auth
 Glean.enableTestingMode()
 
 // Was anything recorded?
-assertTrue(Pages.pageLoad.testHasValue())
+assertTrue(Auth.loginTime.testHasValue())
 // Does the timer have the expected value
-assertTrue(Pages.pageLoad.testGetValue() > 0)
+assertTrue(Auth.loginTime.testGetValue() > 0)
 ```
 
 ## Timing Distributions

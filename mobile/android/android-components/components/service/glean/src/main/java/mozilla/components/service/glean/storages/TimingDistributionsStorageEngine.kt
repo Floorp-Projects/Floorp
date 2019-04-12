@@ -84,7 +84,7 @@ internal open class TimingDistributionsStorageEngineImplementation(
         // TimingDistributionData for each value that doesn't have an existing current value.
         val dummy = TimingDistributionData(category = metricData.category, name = metricData.name,
             timeUnit = timeUnit)
-        super.recordMetric(metricData, dummy, null) { currentValue, newValue ->
+        super.recordMetric(metricData, dummy, null) { currentValue, _ ->
             currentValue?.let {
                 it.accumulate(sampleInUnit)
                 it
