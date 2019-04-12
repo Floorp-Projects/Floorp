@@ -198,6 +198,8 @@ class ModuleNamespaceObject : public ProxyObject {
     static const char family;
   };
 
+  bool hasBindings() const;
+
  public:
   static const ProxyHandler proxyHandler;
 };
