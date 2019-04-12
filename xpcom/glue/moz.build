@@ -8,5 +8,4 @@ DIRS += ['standalone']
 
 EXPORTS.mozilla += [
     'FileUtils.h',
-    'MemUtils.h',
 ]

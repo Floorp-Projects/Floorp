@@ -123,12 +123,10 @@ static void AppendDependentLib(LibHandleType aLibHandle) {
   sTop = d;
 }
 
-static bool ReadDependentCB(pathstr_t aDependentLib,
-                            LibLoadingStrategy aLibLoadingStrategy) {
+static bool ReadDependentCB(pathstr_t aDependentLib) {
 #ifndef MOZ_LINKER
-  if (aLibLoadingStrategy == LibLoadingStrategy::ReadAhead) {
-    ReadAheadLib(aDependentLib);
-  }
+  // We do this unconditionally because of data in bug 771745
+  ReadAheadLib(aDependentLib);
 #endif
   LibHandleType libHandle = GetLibHandle(aDependentLib);
   if (libHandle) {
@@ -139,12 +137,11 @@ static bool ReadDependentCB(pathstr_t aDependentLib,
 }
 
 #ifdef XP_WIN
-static bool ReadDependentCB(const char* aDependentLib,
-                            LibLoadingStrategy aLibLoadingStrategy) {
+static bool ReadDependentCB(const char* aDependentLib) {
   wchar_t wideDependentLib[MAX_PATH];
   MultiByteToWideChar(CP_UTF8, 0, aDependentLib, -1, wideDependentLib,
                       MAX_PATH);
-  return ReadDependentCB(wideDependentLib, aLibLoadingStrategy);
+  return ReadDependentCB(wideDependentLib);
 }
 
 inline FILE* TS_tfopen(const char* path, const wchar_t* mode) {
@@ -201,10 +198,9 @@ static const char* ns_strrpbrk(const char* string, const char* strCharSet) {
 }
 #endif
 
-static nsresult XPCOMGlueLoad(const char* aXPCOMFile,
-                              LibLoadingStrategy aLibLoadingStrategy) {
+static nsresult XPCOMGlueLoad(const char* aXPCOMFile) {
 #ifdef MOZ_LINKER
-  if (!ReadDependentCB(aXPCOMFile, aLibLoadingStrategy)) {
+  if (!ReadDependentCB(aXPCOMFile)) {
     return NS_ERROR_FAILURE;
   }
 #else
@@ -300,7 +296,7 @@ static nsresult XPCOMGlueLoad(const char* aXPCOMFile,
     }
 
     strcpy(cursor, buffer);
-    if (!ReadDependentCB(xpcomDir, aLibLoadingStrategy)) {
+    if (!ReadDependentCB(xpcomDir)) {
       XPCOMGlueUnload();
       return NS_ERROR_FAILURE;
     }
@@ -346,8 +342,7 @@ class GSliceInit {
 
 namespace mozilla {
 
-Bootstrap::UniquePtr GetBootstrap(const char* aXPCOMFile,
-                                  LibLoadingStrategy aLibLoadingStrategy) {
+Bootstrap::UniquePtr GetBootstrap(const char* aXPCOMFile) {
 #ifdef MOZ_GSLICE_INIT
   GSliceInit gSliceInit;
 #endif
@@ -368,7 +363,7 @@ Bootstrap::UniquePtr GetBootstrap(const char* aXPCOMFile,
   memcpy(file.get(), aXPCOMFile, base_len);
   memcpy(file.get() + base_len, XPCOM_DLL, sizeof(XPCOM_DLL));
 
-  if (NS_FAILED(XPCOMGlueLoad(file.get(), aLibLoadingStrategy))) {
+  if (NS_FAILED(XPCOMGlueLoad(file.get()))) {
     return nullptr;
   }
 
