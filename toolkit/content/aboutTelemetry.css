@@ -40,7 +40,7 @@ body {
   left: 0;
 }
 
-body[dir=rtl] #category-raw{
+body:dir(rtl) #category-raw{
   right: 0;
 }
 
@@ -92,7 +92,7 @@ body[dir=rtl] #category-raw{
   fill: currentColor;
 }
 
-body[dir=rtl] .dropdown {
+body:dir(rtl) .dropdown {
   background-position-x: left 8px;
 }
 
@@ -188,7 +188,6 @@ section:not(.active) {
   position: fixed;
   z-index: 2;
   top: 32px;
-  left: 12px;
   border-radius: 2px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.25);
   display: flex;
@@ -197,6 +196,14 @@ section:not(.active) {
   background-color: white;
   border: 1px solid var(--in-content-box-border-color);
   margin: 12px 0px;
+}
+
+#ping-picker:dir(ltr) {
+  left: 12px;
+}
+
+#ping-picker:dir(rtl) {
+  right: 12px;
 }
 
 #ping-picker .title {
@@ -236,7 +243,7 @@ section:not(.active) {
 }
 
 
-body[dir="rtl"] .histogram {
+body:dir(rtl) .histogram {
   float: right;
 }
 
@@ -280,7 +287,7 @@ body[dir="rtl"] .histogram {
   font-family: monospace;
 }
 
-body[dir="rtl"] .bar {
+body:dir(rtl) .bar {
   float: right;
 }
 
@@ -321,7 +328,7 @@ th {
   padding: 0.5em 0;
 }
 
-body[dir="rtl"] th {
+body:dir(rtl) th {
   text-align: right;
 }
 
@@ -331,7 +338,7 @@ caption {
   margin: 0.5em 0 0.5em 0;
 }
 
-body[dir="rtl"] caption {
+body:dir(rtl) caption {
   text-align: right;
 }
 
@@ -342,7 +349,7 @@ body[dir="rtl"] caption {
   right: 1px;
 }
 
-body[dir="rtl"] .copy-node {
+body:dir(rtl) .copy-node {
   left: 1px;
 }
 
