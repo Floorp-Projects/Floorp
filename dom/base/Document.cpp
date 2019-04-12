@@ -8845,8 +8845,9 @@ class nsAutoFocusEvent : public Runnable {
       return NS_OK;
     }
 
-    mozilla::ErrorResult rv;
-    mElement->Focus(rv);
+    FocusOptions options;
+    ErrorResult rv;
+    mElement->Focus(options, rv);
     return rv.StealNSResult();
   }
 

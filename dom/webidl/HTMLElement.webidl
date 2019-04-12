@@ -36,8 +36,6 @@ interface HTMLElement : Element {
   [CEReactions, SetterThrows, Pure]
            attribute long tabIndex;
   [Throws]
-  void focus();
-  [Throws]
   void blur();
   [CEReactions, SetterThrows, Pure]
            attribute DOMString accessKey;
@@ -93,6 +91,7 @@ interface TouchEventHandlers {
 };
 
 HTMLElement implements GlobalEventHandlers;
+HTMLElement implements HTMLOrSVGOrXULElementMixin;
 HTMLElement implements DocumentAndElementEventHandlers;
 HTMLElement implements TouchEventHandlers;
 HTMLElement implements OnErrorEventHandlerForNodes;
