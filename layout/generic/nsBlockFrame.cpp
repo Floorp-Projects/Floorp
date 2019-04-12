@@ -4730,18 +4730,24 @@ bool nsBlockFrame::DrainOverflowLines() {
       // Make the overflow out-of-flow frames mine too.
       nsAutoOOFFrameList oofs(prevBlock);
       if (oofs.mList.NotEmpty()) {
-        // In case we own a next-in-flow of any of the drained frames, then
-        // those are now not PUSHED_FLOATs anymore.
+        // In case we own any next-in-flows of any of the drained frames, then
+        // move those to the PushedFloat list.
+        nsFrameList pushedFloats;
         for (nsFrameList::Enumerator e(oofs.mList); !e.AtEnd(); e.Next()) {
           nsIFrame* nif = e.get()->GetNextInFlow();
           for (; nif && nif->GetParent() == this; nif = nif->GetNextInFlow()) {
-            MOZ_ASSERT(mFloats.ContainsFrame(nif));
-            nif->RemoveStateBits(NS_FRAME_IS_PUSHED_FLOAT);
+            MOZ_ASSERT(nif->HasAnyStateBits(NS_FRAME_IS_PUSHED_FLOAT));
+            RemoveFloat(nif);
+            pushedFloats.AppendFrame(nullptr, nif);
           }
         }
         ReparentFrames(oofs.mList, prevBlock, this,
                        ReparentingDirection::Forwards);
         mFloats.InsertFrames(nullptr, nullptr, oofs.mList);
+        if (!pushedFloats.IsEmpty()) {
+          nsFrameList* pf = EnsurePushedFloats();
+          pf->InsertFrames(nullptr, nullptr, pushedFloats);
+        }
       }
 
       if (!mLines.empty()) {
