@@ -12,10 +12,15 @@ class nsIPrincipal;
 
 namespace mozilla {
 
+class OriginAttributes;
+
 class StoragePrincipalHelper final {
  public:
   static nsresult Create(nsIChannel* aChannel, nsIPrincipal* aPrincipal,
                          nsIPrincipal** aStoragePrincipal);
+
+  static nsresult PrepareOriginAttributes(nsIChannel* aChannel,
+                                          OriginAttributes& aOriginAttributes);
 };
 
 }  // namespace mozilla
