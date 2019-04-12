@@ -2564,7 +2564,8 @@ AbortReasonOr<Ok> IonBuilder::inspectOpcode(JSOp op) {
 }
 
 AbortReasonOr<Ok> IonBuilder::restartLoop(const CFGBlock* cfgHeader) {
-  AutoTraceLog logCompile(traceLogger(), TraceLogger_IonBuilderRestartLoop);
+  AutoTraceLog logCompile(TraceLoggerForCurrentThread(),
+                          TraceLogger_IonBuilderRestartLoop);
 
   spew("New types at loop header, restarting loop body");
 
