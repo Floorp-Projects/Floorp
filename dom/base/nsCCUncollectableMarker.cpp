@@ -183,16 +183,14 @@ void MarkContentViewer(nsIContentViewer* aViewer, bool aCleanupJS) {
       if (elm) {
         elm->MarkForCC();
       }
-      nsCOMPtr<EventTarget> win = do_QueryInterface(doc->GetInnerWindow());
+      RefPtr<nsGlobalWindowInner> win =
+          nsGlobalWindowInner::Cast(doc->GetInnerWindow());
       if (win) {
         elm = win->GetExistingListenerManager();
         if (elm) {
           elm->MarkForCC();
         }
-        static_cast<nsGlobalWindowInner*>(win.get())
-            ->AsInner()
-            ->TimeoutManager()
-            .UnmarkGrayTimers();
+        win->TimeoutManager().UnmarkGrayTimers();
       }
     }
   }

@@ -75,12 +75,7 @@ bool AddonManagerWebAPI::IsValidSite(nsIURI* uri) {
 
 bool AddonManagerWebAPI::IsAPIEnabled(JSContext* aCx, JSObject* aGlobal) {
   MOZ_DIAGNOSTIC_ASSERT(JS_IsGlobalObject(aGlobal));
-  nsGlobalWindowInner* global = xpc::WindowOrNull(aGlobal);
-  if (!global) {
-    return false;
-  }
-
-  nsCOMPtr<nsPIDOMWindowInner> win = global->AsInner();
+  nsCOMPtr<nsPIDOMWindowInner> win = xpc::WindowOrNull(aGlobal);
   if (!win) {
     return false;
   }

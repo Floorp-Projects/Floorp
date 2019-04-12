@@ -49,7 +49,7 @@ bool nsPIDOMWindowInner::IsHandlingResizeEvent() const {
 }
 
 bool nsPIDOMWindowInner::IsCurrentInnerWindow() const {
-  return mOuterWindow && mOuterWindow->GetCurrentInnerWindow() == AsInner();
+  return mOuterWindow && mOuterWindow->GetCurrentInnerWindow() == this;
 }
 
 bool nsPIDOMWindowInner::HasActiveDocument() {

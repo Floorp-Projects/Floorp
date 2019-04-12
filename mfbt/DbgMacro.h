@@ -15,32 +15,32 @@
 #include <stdio.h>
 #include <sstream>
 
+template <typename T>
+class nsTSubstring;
+
 namespace mozilla {
 
 namespace detail {
 
-// Predicate to check whether T can be dereferenced and then inserted into an
-// ostream.
+// Predicate to check whether T can be inserted into an ostream.
 template <typename T, typename = decltype(std::declval<std::ostream&>()
-                                          << *std::declval<T>())>
-std::true_type supports_os_deref_test(const T&);
-std::false_type supports_os_deref_test(...);
+                                          << std::declval<T>())>
+std::true_type supports_os_test(const T&);
+std::false_type supports_os_test(...);
 
 template <typename T>
-using supports_os_deref = decltype(supports_os_deref_test(std::declval<T>()));
+using supports_os = decltype(supports_os_test(std::declval<T>()));
 
 }  // namespace detail
 
 // Helper function to write a value to an ostream.
 //
-// This handles pointer values where the type being pointed to supports
-// operator<<, and we write out the value being pointed to in addition to the
-// pointer value.
+// This handles pointer values where the type being pointed to supports being
+// inserted into an ostream, and we write out the value being pointed to in
+// addition to the pointer value.
 template <typename T>
-auto DebugValue(std::ostream& aOut, T&& aValue) -> std::enable_if_t<
-    std::is_pointer<typename std::remove_reference<T>::type>::value &&
-        mozilla::detail::supports_os_deref<T>::value,
-    std::ostream&> {
+auto DebugValue(std::ostream& aOut, T* aValue)
+    -> std::enable_if_t<mozilla::detail::supports_os<T>::value, std::ostream&> {
   if (aValue) {
     aOut << *aValue << " @ " << aValue;
   } else {
@@ -51,12 +51,34 @@ auto DebugValue(std::ostream& aOut, T&& aValue) -> std::enable_if_t<
 
 // Helper function to write a value to an ostream.
 //
-// This handles all other types by calling into operator<<.
+// This handles all pointer types that cannot be dereferenced and inserted into
+// an ostream.
 template <typename T>
-auto DebugValue(std::ostream& aOut, T&& aValue) -> std::enable_if_t<
-    !(std::is_pointer<typename std::remove_reference<T>::type>::value &&
-      mozilla::detail::supports_os_deref<T>::value),
-    std::ostream&> {
+auto DebugValue(std::ostream& aOut, T* aValue)
+    -> std::enable_if_t<!mozilla::detail::supports_os<T>::value,
+                        std::ostream&> {
+  return aOut << aValue;
+}
+
+// Helper function to write a value to an ostream.
+//
+// This handles XPCOM string types.
+template <typename T>
+auto DebugValue(std::ostream& aOut, const T& aValue)
+    -> std::enable_if_t<std::is_base_of<nsTSubstring<char>, T>::value ||
+                            std::is_base_of<nsTSubstring<char16_t>, T>::value,
+                        std::ostream&> {
+  return aOut << '"' << aValue << '"';
+}
+
+// Helper function to write a value to an ostream.
+//
+// This handles all other types.
+template <typename T>
+auto DebugValue(std::ostream& aOut, const T& aValue)
+    -> std::enable_if_t<!std::is_base_of<nsTSubstring<char>, T>::value &&
+                            !std::is_base_of<nsTSubstring<char16_t>, T>::value,
+                        std::ostream&> {
   return aOut << aValue;
 }
 

@@ -7,11 +7,13 @@
 #include "mozilla/dom/DocGroup.h"
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/TabGroup.h"
+#include "mozilla/AbstractThread.h"
 #include "mozilla/PerformanceUtils.h"
 #include "mozilla/StaticPrefs.h"
 #include "mozilla/Telemetry.h"
 #include "nsIDocShell.h"
 #include "nsDOMMutationObserver.h"
+#include "nsProxyRelease.h"
 #if defined(XP_WIN)
 #  include <processthreadsapi.h>  // for GetCurrentProcessId()
 #else
@@ -101,16 +103,12 @@ RefPtr<PerformanceInfoPromise> DocGroup::ReportPerformanceInfo() {
     if (!win) {
       continue;
     }
-    nsPIDOMWindowOuter* outer = win->GetOuterWindow();
-    if (!outer) {
-      continue;
-    }
-    top = outer->GetTop();
+    top = win->GetTop();
     if (!top) {
       continue;
     }
     windowID = top->WindowID();
-    isTopLevel = outer->IsTopLevelWindow();
+    isTopLevel = win->IsTopLevelWindow();
     mainThread = AbstractMainThreadFor(TaskCategory::Performance);
     break;
   }

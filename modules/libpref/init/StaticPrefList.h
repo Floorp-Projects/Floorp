@@ -2490,6 +2490,24 @@ VARCACHE_PREF(
   RelaxedAtomicBool, true
 )
 
+// Whether origin telemetry should be enabled
+// NOTE: if telemetry.origin_telemetry_test_mode.enabled is enabled, this pref
+//       won't have any effect.
+VARCACHE_PREF(
+  "privacy.trackingprotection.origin_telemetry.enabled",
+   privacy_trackingprotection_origin_telemetry_enabled,
+  RelaxedAtomicBool, false
+)
+
+// Enable origin telemetry test mode or not
+// NOTE: turning this on will override the
+//       privacy.trackingprotection.origin_telemetry.enabled pref.
+VARCACHE_PREF(
+  "telemetry.origin_telemetry_test_mode.enabled",
+   telemetry_origin_telemetry_test_mode_enabled,
+  RelaxedAtomicBool, false
+)
+
 //---------------------------------------------------------------------------
 // End of prefs
 //---------------------------------------------------------------------------

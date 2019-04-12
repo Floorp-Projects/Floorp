@@ -12,10 +12,19 @@ class nsAtom;
 class nsINode;
 
 namespace mozilla {
+namespace dom {
+class Element;
+}  // namespace dom
 
 class HTMLEditUtils final {
  public:
   static bool IsInlineStyle(nsINode* aNode);
+  /**
+   * IsRemovableInlineStyleElement() returns true if aElement is an inline
+   * element and can be removed or split to in order to modifying inline
+   * styles.
+   */
+  static bool IsRemovableInlineStyleElement(dom::Element& aElement);
   static bool IsFormatNode(nsINode* aNode);
   static bool IsNodeThatCanOutdent(nsINode* aNode);
   static bool IsHeader(nsINode& aNode);
