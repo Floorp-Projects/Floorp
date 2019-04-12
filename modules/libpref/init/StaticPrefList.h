@@ -2071,6 +2071,13 @@ VARCACHE_PREF(
    uint32_t, 0
 )
 
+// Max time to shutdown the resolver threads
+VARCACHE_PREF(
+  "network.dns.resolver_shutdown_timeout_ms",
+   network_dns_resolver_shutdown_timeout_ms,
+   uint32_t, 2000
+)
+
 //---------------------------------------------------------------------------
 // ContentSessionStore prefs
 //---------------------------------------------------------------------------
