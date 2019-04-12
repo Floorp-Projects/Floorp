@@ -9643,6 +9643,50 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
     YieldHandling yieldHandling, PropertyNameContext propertyNameContext,
     const Maybe<DeclarationKind>& maybeDecl, ListNodeType propList,
     PropertyType* propType, MutableHandleAtom propAtom) {
+  // We're parsing an object literal, class, or destructuring pattern;
+  // propertyNameContext tells which one. This method parses any of the
+  // following, storing the corresponding PropertyType in `*propType` to tell
+  // the caller what we parsed:
+  //
+  //     async [no LineTerminator here] PropertyName
+  //                            ==> PropertyType::AsyncMethod
+  //     async [no LineTerminator here] * PropertyName
+  //                            ==> PropertyType::AsyncGeneratorMethod
+  //     * PropertyName         ==> PropertyType::GeneratorMethod
+  //     get PropertyName       ==> PropertyType::Getter
+  //     set PropertyName       ==> PropertyType::Setter
+  //     PropertyName :         ==> PropertyType::Normal
+  //     PropertyName           ==> see below
+  //
+  // In the last case, where there's not a `:` token to consume, we peek at
+  // (but don't consume) the next token to decide how to set `*propType`.
+  //
+  //     `=` or `;`             ==> PropertyType::Field (classes only)
+  //     `=`                    ==> PropertyType::CoverInitializedName
+  //     `,` or `}`             ==> PropertyType::Shorthand
+  //     `(`                    ==> PropertyType::Method
+  //
+  // The caller must check `*propType` and throw if whatever we parsed isn't
+  // allowed here (for example, a getter in a destructuring pattern).
+  //
+  // The nonterminal PropertyName comes from the standard:
+  //
+  //     PropertyName[Yield, Await]:
+  //       LiteralPropertyName
+  //       ComputedPropertyName[?Yield, ?Await]
+  //
+  //     LiteralPropertyName:
+  //       IdentifierName
+  //       StringLiteral
+  //       NumericLiteral
+  //
+  //     ComputedPropertyName[Yield, Await]:
+  //       [ AssignmentExpression[+In, ?Yield, ?Await] ]
+  //
+  // This method does *not* match `static` (allowed in classes) or `...`
+  // (allowed in object literals and patterns). The caller must take care of
+  // those before calling this method.
+
   TokenKind ltok;
   if (!tokenStream.getToken(&ltok, TokenStream::SlashIsInvalid)) {
     return null();
@@ -9651,27 +9695,13 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
   MOZ_ASSERT(ltok != TokenKind::RightCurly,
              "caller should have handled TokenKind::RightCurly");
 
+  // Accept `async` and/or `*`, indicating an async or generator method.
   bool isGenerator = false;
   bool isAsync = false;
 
   if (ltok == TokenKind::Async) {
-    // AsyncMethod[Yield, Await]:
-    //   async [no LineTerminator here] PropertyName[?Yield, ?Await] ...
-    //
-    //  AsyncGeneratorMethod[Yield, Await]:
-    //    async [no LineTerminator here] * PropertyName[?Yield, ?Await] ...
-    //
-    // PropertyName:
-    //   LiteralPropertyName
-    //   ComputedPropertyName[?Yield, ?Await]
-    //
-    // LiteralPropertyName:
-    //   IdentifierName
-    //   StringLiteral
-    //   NumericLiteral
-    //
-    // ComputedPropertyName[Yield, Await]:
-    //   [ ...
+    // `async` is also a PropertyName by itself (it's a conditional keyword),
+    // so peek at the next token to see if we're really looking at a method.
     TokenKind tt = TokenKind::Eof;
     if (!tokenStream.peekTokenSameLine(&tt)) {
       return null();
@@ -9692,6 +9722,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
     }
   }
 
+  // Parse the PropertyName itself at last.
   propAtom.set(nullptr);
   Node propName;
   switch (ltok) {
@@ -9738,6 +9769,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
       }
 
       propAtom.set(anyChars.currentName());
+
       // Do not look for accessor syntax on generator or async methods.
       if (isGenerator || isAsync ||
           !(ltok == TokenKind::Get || ltok == TokenKind::Set)) {
@@ -9803,6 +9835,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
     }
   }
 
+  // Grab the next token following the property/method name.
+  // (If this isn't a colon, we're going to either put it back or throw.)
   TokenKind tt;
   if (!tokenStream.getToken(&tt)) {
     return null();
