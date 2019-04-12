@@ -31,12 +31,12 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-async function blockedIconShown(browser) {
-  // May need to wait for `GloballyAutoplayBlocked` event before showing icon.
-  if (BrowserTestUtils.is_hidden(autoplayBlockedIcon())) {
-    await BrowserTestUtils.waitForEvent(browser, "GloballyAutoplayBlocked");
-  }
-  ok(!BrowserTestUtils.is_hidden(autoplayBlockedIcon()), "Blocked icon is shown");
+async function blockedIconShown() {
+  await TestUtils.waitForCondition(() => {
+    return BrowserTestUtils.is_visible(autoplayBlockedIcon());
+  });
+
+  ok(BrowserTestUtils.is_visible(autoplayBlockedIcon()), "Blocked icon is shown");
 }
 
 add_task(async function setup() {
@@ -66,7 +66,7 @@ add_task(async function testMainViewVisible() {
     let permissionsList = document.getElementById("identity-popup-permission-list");
     let emptyLabel = permissionsList.nextElementSibling.nextElementSibling;
 
-    await blockedIconShown(browser);
+    await blockedIconShown();
 
     await openIdentityPopup();
     ok(BrowserTestUtils.is_hidden(emptyLabel), "List of permissions is not empty");
@@ -104,7 +104,7 @@ add_task(async function testGloballyBlockedOnNewWindow() {
   let uri = Services.io.newURI(AUTOPLAY_PAGE);
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, uri.spec);
-  await blockedIconShown(tab.linkedBrowser);
+  await blockedIconShown();
 
   Assert.deepEqual(SitePermissions.get(uri, AUTOPLAY_PERM, tab.linkedBrowser), {
     state: SitePermissions.BLOCK,
@@ -130,7 +130,7 @@ add_task(async function testBFCache() {
 
   await BrowserTestUtils.withNewTab("about:home", async function(browser) {
     await BrowserTestUtils.loadURI(browser, AUTOPLAY_PAGE);
-    await blockedIconShown(browser);
+    await blockedIconShown();
 
     gBrowser.goBack();
     await TestUtils.waitForCondition(() => {
@@ -143,7 +143,7 @@ add_task(async function testBFCache() {
     await ContentTask.spawn(browser, null, () => {
       content.history.forward();
     });
-    await blockedIconShown(browser);
+    await blockedIconShown();
   });
 
   Services.perms.removeAll();
@@ -154,7 +154,7 @@ add_task(async function testChangingBlockingSettingDuringNavigation() {
 
   await BrowserTestUtils.withNewTab("about:home", async function(browser) {
     await BrowserTestUtils.loadURI(browser, AUTOPLAY_PAGE);
-    await blockedIconShown(browser);
+    await blockedIconShown();
     Services.prefs.setIntPref(AUTOPLAY_PREF, Ci.nsIAutoplay.ALLOWED);
 
     gBrowser.goBack();
@@ -180,13 +180,15 @@ add_task(async function testSlowLoadingPage() {
 
   let tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:home");
   let tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, SLOW_AUTOPLAY_PAGE);
+  await blockedIconShown();
+
   await BrowserTestUtils.switchTab(gBrowser, tab1);
   // Wait until the blocked icon is hidden by switching tabs
   await TestUtils.waitForCondition(() => {
     return BrowserTestUtils.is_hidden(autoplayBlockedIcon());
   });
   await BrowserTestUtils.switchTab(gBrowser, tab2);
-  await blockedIconShown(tab2.linkedBrowser);
+  await blockedIconShown();
 
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
