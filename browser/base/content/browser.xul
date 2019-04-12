@@ -841,7 +841,6 @@
                      defaultPlaceholder="&urlbar.placeholder2;"
                      focused="true"
                      type="autocomplete"
-                     quantumbar="false"
                      autocompletesearch="unifiedcomplete"
                      autocompletesearchparam="enable-actions"
                      autocompletepopup="PopupAutoCompleteRichResult"

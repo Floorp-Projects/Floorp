@@ -582,7 +582,10 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
       -->
       <method name="formatValue">
         <body><![CDATA[
-          this.valueFormatter.update();
+          // The editor may not exist if the toolbar is not visible.
+          if (this.editor) {
+            this.valueFormatter.update();
+          }
         ]]></body>
       </method>
 
