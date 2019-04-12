@@ -82,6 +82,7 @@ import kotlin.coroutines.CoroutineContext
 class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     private lateinit var toolbarComponent: ToolbarComponent
 
+    private var sessionObserver: Session.Observer? = null
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
     private val contextMenuFeature = ViewBoundFeatureWrapper<ContextMenuFeature>()
     private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()
@@ -130,14 +131,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             )
 
             (layoutParams as CoordinatorLayout.LayoutParams).apply {
-                // Stop toolbar from collapsing if TalkBack is enabled
-                val accessibilityManager = context
-                    ?.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-
-                if (!accessibilityManager.isTouchExplorationEnabled) {
-                    behavior = BrowserToolbarBottomBehavior(view.context, null)
-                }
-
                 gravity = Gravity.BOTTOM
                 height = (resources.displayMetrics.density * TOOLBAR_HEIGHT).toInt()
             }
@@ -289,6 +282,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
     @Suppress("ComplexMethod")
     override fun onStart() {
         super.onStart()
+        sessionObserver = subscribeToSession()
         getAutoDisposeObservable<SearchAction>()
             .subscribe {
                 when (it) {
@@ -368,6 +362,13 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 }
             }
         assignSitePermissionsRules()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        sessionObserver?.let {
+            requireComponents.core.sessionManager.selectedSession?.unregister(it)
+        }
     }
 
     override fun onBackPressed(): Boolean {
@@ -518,6 +519,34 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val uri = Uri.parse(url)
         clipBoard.primaryClip = ClipData.newRawUri("Uri", uri)
+    }
+
+    private fun subscribeToSession(): Session.Observer {
+        val observer = object : Session.Observer {
+            override fun onLoadingStateChanged(session: Session, loading: Boolean) {
+                super.onLoadingStateChanged(session, loading)
+                setToolbarBehavior(loading)
+            }
+        }
+        requireComponents.core.sessionManager.selectedSession?.register(observer)
+        return observer
+    }
+
+    private fun setToolbarBehavior(loading: Boolean) {
+        val toolbarView = toolbarComponent.uiView.view
+        (toolbarView.layoutParams as CoordinatorLayout.LayoutParams).apply {
+            // Stop toolbar from collapsing if TalkBack is enabled or page is loading
+            val accessibilityManager = context
+                ?.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+            if (!accessibilityManager.isTouchExplorationEnabled) {
+                if (!loading) {
+                    behavior = BrowserToolbarBottomBehavior(context, null)
+                } else {
+                    (behavior as? BrowserToolbarBottomBehavior)?.forceExpand(toolbarView)
+                    behavior = null
+                }
+            }
+        }
     }
 
     companion object {

@@ -44,6 +44,10 @@ class BrowserToolbarBottomBehavior(
         duration = SNAP_ANIMATION_DURATION
     }
 
+    fun forceExpand(view: View) {
+        animateSnap(view, SnapDirection.UP)
+    }
+
     override fun onStartNestedScroll(
         coordinatorLayout: CoordinatorLayout,
         child: BrowserToolbar,
