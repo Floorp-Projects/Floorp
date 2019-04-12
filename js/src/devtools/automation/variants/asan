@@ -1,5 +1,5 @@
 {
-    "configure-args": "--enable-debug-symbols='-gline-tables-only' --disable-jemalloc --enable-address-sanitizer",
+    "configure-args": "--enable-debug-symbols='-gline-tables-only' --enable-gczeal --disable-jemalloc --enable-address-sanitizer",
     "optimize": true,
     "debug": false,
     "compiler": "clang",
