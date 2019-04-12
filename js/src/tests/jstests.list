@@ -558,60 +558,6 @@ skip script test262/intl402/Intl/getCanonicalLocales/non-iana-canon.js
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1508684
 skip script test262/language/expressions/import.meta/syntax/invalid-assignment-target-update-expr.js
 
-# https://bugzilla.mozilla.org/show_bug.cgi?id=1529772
-skip script test262/language/expressions/class/elements/after-same-line-gen-literal-names-asi.js
-skip script test262/language/expressions/class/elements/after-same-line-method-literal-names-asi.js
-skip script test262/language/expressions/class/elements/after-same-line-static-async-gen-literal-names-asi.js
-skip script test262/language/expressions/class/elements/after-same-line-static-async-method-literal-names-asi.js
-skip script test262/language/expressions/class/elements/after-same-line-static-gen-literal-names-asi.js
-skip script test262/language/expressions/class/elements/after-same-line-static-method-literal-names-asi.js
-skip script test262/language/expressions/class/elements/multiple-definitions-computed-names.js
-skip script test262/language/expressions/class/elements/multiple-definitions-literal-names-asi.js
-skip script test262/language/expressions/class/elements/multiple-definitions-rs-field-identifier.js
-skip script test262/language/expressions/class/elements/multiple-stacked-definitions-computed-names.js
-skip script test262/language/expressions/class/elements/multiple-stacked-definitions-literal-names-asi.js
-skip script test262/language/expressions/class/elements/multiple-stacked-definitions-rs-field-identifier.js
-skip script test262/language/expressions/class/elements/new-no-sc-line-method-computed-names.js
-skip script test262/language/expressions/class/elements/new-no-sc-line-method-literal-names-asi.js
-skip script test262/language/expressions/class/elements/new-no-sc-line-method-rs-field-identifier.js
-skip script test262/language/expressions/class/elements/new-sc-line-gen-literal-names-asi.js
-skip script test262/language/expressions/class/elements/new-sc-line-method-literal-names-asi.js
-skip script test262/language/expressions/class/elements/regular-definitions-computed-names.js
-skip script test262/language/expressions/class/elements/regular-definitions-literal-names-asi.js
-skip script test262/language/expressions/class/elements/regular-definitions-rs-field-identifier.js
-skip script test262/language/expressions/class/elements/same-line-async-gen-literal-names-asi.js
-skip script test262/language/expressions/class/elements/same-line-async-method-literal-names-asi.js
-skip script test262/language/expressions/class/elements/same-line-gen-literal-names-asi.js
-skip script test262/language/expressions/class/elements/same-line-method-literal-names-asi.js
-skip script test262/language/expressions/class/elements/syntax/valid/grammar-fields-multi-line.js
-skip script test262/language/expressions/class/elements/wrapped-in-sc-literal-names-asi.js
-skip script test262/language/statements/class/elements/after-same-line-gen-literal-names-asi.js
-skip script test262/language/statements/class/elements/after-same-line-method-literal-names-asi.js
-skip script test262/language/statements/class/elements/after-same-line-static-async-gen-literal-names-asi.js
-skip script test262/language/statements/class/elements/after-same-line-static-async-method-literal-names-asi.js
-skip script test262/language/statements/class/elements/after-same-line-static-gen-literal-names-asi.js
-skip script test262/language/statements/class/elements/after-same-line-static-method-literal-names-asi.js
-skip script test262/language/statements/class/elements/multiple-definitions-computed-names.js
-skip script test262/language/statements/class/elements/multiple-definitions-literal-names-asi.js
-skip script test262/language/statements/class/elements/multiple-definitions-rs-field-identifier.js
-skip script test262/language/statements/class/elements/multiple-stacked-definitions-computed-names.js
-skip script test262/language/statements/class/elements/multiple-stacked-definitions-literal-names-asi.js
-skip script test262/language/statements/class/elements/multiple-stacked-definitions-rs-field-identifier.js
-skip script test262/language/statements/class/elements/new-no-sc-line-method-computed-names.js
-skip script test262/language/statements/class/elements/new-no-sc-line-method-literal-names-asi.js
-skip script test262/language/statements/class/elements/new-no-sc-line-method-rs-field-identifier.js
-skip script test262/language/statements/class/elements/new-sc-line-gen-literal-names-asi.js
-skip script test262/language/statements/class/elements/new-sc-line-method-literal-names-asi.js
-skip script test262/language/statements/class/elements/regular-definitions-computed-names.js
-skip script test262/language/statements/class/elements/regular-definitions-literal-names-asi.js
-skip script test262/language/statements/class/elements/regular-definitions-rs-field-identifier.js
-skip script test262/language/statements/class/elements/same-line-async-gen-literal-names-asi.js
-skip script test262/language/statements/class/elements/same-line-async-method-literal-names-asi.js
-skip script test262/language/statements/class/elements/same-line-gen-literal-names-asi.js
-skip script test262/language/statements/class/elements/same-line-method-literal-names-asi.js
-skip script test262/language/statements/class/elements/syntax/valid/grammar-fields-multi-line.js
-skip script test262/language/statements/class/elements/wrapped-in-sc-literal-names-asi.js
-
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1542406
 skip script test262/language/expressions/class/elements/derived-cls-direct-eval-err-contains-supercall-1.js
 skip script test262/language/expressions/class/elements/derived-cls-direct-eval-err-contains-supercall-2.js
