@@ -56,6 +56,10 @@
         android:title="@string/preferences_category_advanced"
         app:iconSpaceReserved="false">
         <androidx.preference.Preference
+            android:icon="@drawable/ic_tracking_protection"
+            android:key="@string/pref_key_tracking_protection_settings"
+            android:title="@string/preferences_tracking_protection" />
+        <androidx.preference.Preference
             android:icon="@drawable/ic_permission"
             android:key="@string/pref_key_site_permissions"
             android:title="@string/preferences_site_permissions" />

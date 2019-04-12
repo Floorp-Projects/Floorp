@@ -156,6 +156,15 @@
     <string name="sync_never_synced_summary">Last synced: never</string>
 
     <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection settings -->
+    <string name="preferences_tracking_protection_settings">Tracking Protection</string>
+    <!-- Preference switch for tracking protection -->
+    <string name="preferences_tracking_protection">Tracking Protection</string>
+    <!-- Preference switch description for tracking protection -->
+    <string name="preferences_tracking_protection_description">Block content and scripts that track you online</string>
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">Exceptions</string>
+
     <!-- Preference switch for Telemetry -->
     <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for crash reporter -->

@@ -79,6 +79,12 @@ class Settings private constructor(context: Context) {
             false
         )
 
+    val shouldUseTrackingProtection: Boolean
+        get() = preferences.getBoolean(
+            appContext.getPreferenceKey(R.string.pref_key_tracking_protection),
+            true
+        )
+
     val shouldUseAutoBatteryTheme: Boolean
         get() = preferences.getBoolean(
             appContext.getPreferenceKey(R.string.pref_key_auto_battery_theme),

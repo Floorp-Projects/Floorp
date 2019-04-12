@@ -47,6 +47,7 @@ import org.mozilla.fenix.R.string.pref_key_theme
 import org.mozilla.fenix.R.string.pref_key_account
 import org.mozilla.fenix.R.string.pref_key_account_category
 import org.mozilla.fenix.R.string.pref_key_search_engine_settings
+import org.mozilla.fenix.R.string.pref_key_tracking_protection_settings
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 
 @SuppressWarnings("TooManyFunctions")
@@ -98,6 +99,9 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
         when (preference.key) {
             resources.getString(pref_key_search_engine_settings) -> {
                 navigateToSearchEngineSettings()
+            }
+            resources.getString(pref_key_tracking_protection_settings) -> {
+                navigateToTrackingProtectionSettings()
             }
             resources.getString(pref_key_site_permissions) -> {
                 navigateToSitePermissions()
@@ -218,6 +222,11 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
 
     private fun navigateToSearchEngineSettings() {
         val directions = SettingsFragmentDirections.actionSettingsFragmentToSearchEngineFragment()
+        Navigation.findNavController(view!!).navigate(directions)
+    }
+
+    private fun navigateToTrackingProtectionSettings() {
+        val directions = SettingsFragmentDirections.actionSettingsFragmentToTrackingProtectionFragment()
         Navigation.findNavController(view!!).navigate(directions)
     }
 
