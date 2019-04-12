@@ -127,6 +127,11 @@ toolbar[mode="text"] .toolbarbutton-text {
   -moz-image-region: rect(0px 32px 16px 16px);
 }
 
+#print-preview-portrait-button > .toolbarbutton-icon,
+#print-preview-landscape-button > .toolbarbutton-icon {
+  margin-inline-end: 2px;
+}
+
 html|*#print-preview-pageNumber {
   /* 3 chars + (3px border + 1px padding) on both sides */
   width: calc(8px + 3ch);
