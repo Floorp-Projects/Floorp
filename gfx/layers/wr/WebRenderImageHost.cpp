@@ -163,14 +163,6 @@ void WebRenderImageHost::SetCurrentTextureHost(TextureHost* aTexture) {
   if (aTexture == mCurrentTextureHost.get()) {
     return;
   }
-
-  if (aTexture && aTexture->AsWebRenderTextureHost()) {
-    // If WebRenderTextureHost wraps SurfaceTextureHost, it is important to call
-    // PrepareForUse for each texture that we receive.
-    // See RenderAndroidSurfaceTextureHostOGL::PrepareForUse.
-    aTexture->AsWebRenderTextureHost()->PrepareForUse();
-  }
-
   mCurrentTextureHost = aTexture;
 }
 
