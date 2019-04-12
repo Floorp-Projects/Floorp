@@ -34,8 +34,6 @@ class TCPSocketParentBase : public nsISupports {
   void AddIPDLReference();
   void ReleaseIPDLReference();
 
-  bool IPCOpen() const { return mIPCOpen; }
-
  protected:
   TCPSocketParentBase();
   virtual ~TCPSocketParentBase();
