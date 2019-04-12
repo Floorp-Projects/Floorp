@@ -1653,9 +1653,12 @@ void ScriptSourceObject::setPrivate(JSRuntime* rt, const Value& value) {
 }
 
 /* static */
-bool JSScript::loadSource(JSContext* cx, ScriptSource* ss, bool* worked) {
-  MOZ_ASSERT(!ss->hasSourceText());
-  *worked = false;
+bool JSScript::tryLoadSource(JSContext* cx, ScriptSource* ss, bool* loaded) {
+  *loaded = ss->hasSourceText();
+  if (*loaded) {
+    return true;
+  }
+
   if (!cx->runtime()->sourceHook.ref() || !ss->sourceRetrievable()) {
     return true;
   }
@@ -1674,7 +1677,7 @@ bool JSScript::loadSource(JSContext* cx, ScriptSource* ss, bool* worked) {
     return false;
   }
 
-  *worked = true;
+  *loaded = true;
   return true;
 }
 
