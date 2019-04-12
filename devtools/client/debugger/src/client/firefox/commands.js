@@ -4,7 +4,7 @@
 
 // @flow
 
-import { createSource, createWorker } from "./create";
+import { prepareSourcePayload, createWorker } from "./create";
 import { supportsWorkers, updateWorkerClients } from "./workers";
 import { features } from "../../utils/prefs";
 
@@ -16,6 +16,7 @@ import type {
   EventListenerBreakpoints,
   Frame,
   FrameId,
+  GeneratedSourceData,
   Script,
   SourceId,
   SourceActor,
@@ -58,6 +59,10 @@ function setupCommands(dependencies: Dependencies) {
   workerClients = {};
   sourceActors = {};
   breakpoints = {};
+}
+
+function hasWasmSupport() {
+  return supportsWasm;
 }
 
 function createObjectClient(grip: Grip) {
@@ -374,29 +379,20 @@ function pauseGrip(thread: string, func: Function): ObjectClient {
   return lookupThreadClient(thread).pauseGrip(func);
 }
 
-function registerSourceActor(sourceActor: SourceActor) {
-  sourceActors[sourceActor.actor] = sourceActor.source;
+function registerSourceActor(sourceActorId: string, sourceId: SourceId) {
+  sourceActors[sourceActorId] = sourceId;
 }
 
-async function createSources(client: ThreadClient) {
+async function getSources(
+  client: ThreadClient
+): Promise<Array<GeneratedSourceData>> {
   const { sources }: SourcesPacket = await client.getSources();
-  if (!sources) {
-    return null;
-  }
-  return sources.map(packet =>
-    createSource(client.actor, packet, { supportsWasm })
-  );
+
+  return sources.map(source => prepareSourcePayload(client, source));
 }
 
-async function fetchSources(): Promise<any[]> {
-  const sources = await createSources(threadClient);
-
-  // NOTE: this happens when we fetch sources and then immediately navigate
-  if (!sources) {
-    return [];
-  }
-
-  return sources;
+async function fetchSources(): Promise<Array<GeneratedSourceData>> {
+  return getSources(threadClient);
 }
 
 function getSourceForActor(actor: ActorId) {
@@ -426,7 +422,7 @@ async function fetchWorkers(): Promise<Worker[]> {
     for (const actor of workerNames) {
       if (!workerClients[actor]) {
         const client = newWorkerClients[actor].thread;
-        createSources(client);
+        getSources(client);
       }
     }
 
@@ -515,7 +511,8 @@ const clientCommands = {
   setSkipPausing,
   setEventListenerBreakpoints,
   waitForWorkers,
-  detachWorkers
+  detachWorkers,
+  hasWasmSupport
 };
 
 export { setupCommands, clientCommands };
