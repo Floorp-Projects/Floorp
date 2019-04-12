@@ -12,6 +12,7 @@ import os
 import subprocess
 import sys
 import types
+import errno
 try:
     from shutil import which
 except ImportError:
