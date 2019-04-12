@@ -38,13 +38,6 @@
   }
 }
 
-@media (-moz-windows-default-theme) {
-  .menu-accel,
-  .menu-iconic-accel {
-    color: graytext;
-  }
-}
-
 @media (-moz-windows-compositor) {
   @media not (-moz-os-version: windows-win7) {
     @media not (-moz-os-version: windows-win8) {
