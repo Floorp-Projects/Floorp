@@ -1,0 +1,44 @@
+<html>
+<head>
+  <title>3rd party content!</title>
+  <script type="text/javascript" src="https://example.com/browser/toolkit/components/antitracking/test/browser/storageAccessAPIHelpers.js"></script>
+</head>
+<body>
+<h1>Here the 3rd party content!</h1>
+<script>
+
+function info(msg) {
+  parent.postMessage({ type: "info", msg }, "*");
+}
+
+function ok(what, msg) {
+  parent.postMessage({ type: "ok", what: !!what, msg }, "*");
+}
+
+function is(a, b, msg) {
+  ok(a === b, msg);
+}
+
+onmessage = function(e) {
+  let data = e.data;
+  let runnableStr = `(() => {return (${data});})();`;
+  let runnable = eval(runnableStr); // eslint-disable-line no-eval
+
+  let win = window.open("3rdPartyStorageWO.html");
+  win.onload = async _ => {
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await noStorageAccessInitially();
+
+    await runnable.call(this, this, win, false /* allowed */);
+    /* import-globals-from storageAccessAPIHelpers.js */
+    await callRequestStorageAccess();
+    await runnable.call(this, this, win, true /* allowed */);
+
+    win.close();
+    parent.postMessage({ type: "finish" }, "*");
+  };
+};
+
+</script>
+</body>
+</html>
