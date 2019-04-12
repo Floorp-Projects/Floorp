@@ -164,7 +164,7 @@ static const double MAX_PLAYBACKRATE = 16.0;
 // muted
 static const double THRESHOLD_HIGH_PLAYBACKRATE_AUDIO = 4.0;
 // Threshold under which audio is muted
-static const double THRESHOLD_LOW_PLAYBACKRATE_AUDIO = 0.5;
+static const double THRESHOLD_LOW_PLAYBACKRATE_AUDIO = 0.25;
 
 static double ClampPlaybackRate(double aPlaybackRate) {
   MOZ_ASSERT(aPlaybackRate >= 0.0);
