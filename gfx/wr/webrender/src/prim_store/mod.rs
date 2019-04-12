@@ -3459,7 +3459,6 @@ impl PrimitiveInstance {
         segment_instances_store: &mut SegmentInstanceStorage,
         clip_mask_instances: &mut Vec<ClipMaskKind>,
         unclipped: &DeviceRect,
-        prim_snap_offsets: SnapOffsets,
         device_pixel_scale: DevicePixelScale,
     ) -> bool {
         let segments = match self.kind {
@@ -3569,7 +3568,7 @@ impl PrimitiveInstance {
                 frame_state,
                 &mut data_stores.clip,
                 unclipped,
-                prim_snap_offsets,
+                prim_info.snap_offsets,
                 device_pixel_scale,
             );
             clip_mask_instances.push(clip_mask_kind);
@@ -3610,7 +3609,7 @@ impl PrimitiveInstance {
                     frame_state,
                     &mut data_stores.clip,
                     unclipped,
-                    prim_snap_offsets,
+                    prim_info.snap_offsets,
                     device_pixel_scale,
                 );
                 clip_mask_instances.push(clip_mask_kind);
@@ -3638,18 +3637,13 @@ impl PrimitiveInstance {
             println!("\tupdating clip task with pic rect {:?}", prim_info.clip_chain.pic_clip_rect);
         }
 
-        // Get the device space rect for the primitive if it was unclipped,
-        // including any snap offsets applied to the corners.
-        let (unclipped, prim_snap_offsets) = match get_unclipped_device_rect(
-            self.spatial_node_index,
-            root_spatial_node_index,
+        // Get the device space rect for the primitive if it was unclipped.
+        let unclipped = match get_unclipped_device_rect(
             prim_info.clip_chain.pic_clip_rect,
             &pic_state.map_pic_to_raster,
             device_pixel_scale,
-            frame_context,
-            frame_state,
         ) {
-            Some(info) => info,
+            Some(rect) => rect,
             None => return,
         };
 
@@ -3676,7 +3670,6 @@ impl PrimitiveInstance {
             &mut scratch.segment_instances,
             &mut scratch.clip_mask_instances,
             &unclipped,
-            prim_snap_offsets,
             device_pixel_scale,
         ) {
             if self.is_chased() {
@@ -3691,7 +3684,7 @@ impl PrimitiveInstance {
             // snap offsets.
             if let Some((device_rect, snap_offsets)) = get_clipped_device_rect(
                 &unclipped,
-                prim_snap_offsets,
+                prim_info.snap_offsets,
                 &pic_state.map_raster_to_world,
                 prim_info.clipped_world_rect,
                 device_pixel_scale,
@@ -3731,8 +3724,7 @@ fn mix(x: f32, y: f32, a: f32) -> f32 {
 }
 
 /// Given a point within a local rectangle, and the device space corners
-/// of a snapped primitive, return the snap offsets. This *must* exactly
-/// match the logic in the GLSL compute_snap_offset_impl function.
+/// of a snapped primitive, return the snap offsets.
 fn compute_snap_offset_impl<PixelSpace>(
     reference_pos: TypedPoint2D<f32, PixelSpace>,
     reference_rect: TypedRect<f32, PixelSpace>,
@@ -3760,59 +3752,55 @@ fn compute_snap_offset_impl<PixelSpace>(
     )
 }
 
+/// Given the snapping offsets for a primitive rectangle, recompute
+/// the snapping offsets to be relative to given local rectangle.
+/// This *must* exactly match the logic in the GLSL
+/// compute_snap_offset function.
+pub fn recompute_snap_offsets<PixelSpace>(
+    local_rect: TypedRect<f32, PixelSpace>,
+    prim_rect: TypedRect<f32, PixelSpace>,
+    snap_offsets: SnapOffsets,
+) -> SnapOffsets
+{
+    if prim_rect.is_empty() || snap_offsets.is_empty() {
+        return SnapOffsets::empty();
+    }
+
+    let normalized_top_left = TypedPoint2D::<f32, PixelSpace>::new(
+        (local_rect.origin.x - prim_rect.origin.x) / prim_rect.size.width,
+        (local_rect.origin.y - prim_rect.origin.y) / prim_rect.size.height,
+    );
+
+    let normalized_bottom_right = TypedPoint2D::<f32, PixelSpace>::new(
+        (local_rect.origin.x + local_rect.size.width - prim_rect.origin.x) / prim_rect.size.width,
+        (local_rect.origin.y + local_rect.size.height - prim_rect.origin.y) / prim_rect.size.height,
+    );
+
+    let top_left = DeviceVector2D::new(
+        mix(snap_offsets.top_left.x, snap_offsets.bottom_right.x, normalized_top_left.x),
+        mix(snap_offsets.top_left.y, snap_offsets.bottom_right.y, normalized_top_left.y),
+    );
+
+    let bottom_right = DeviceVector2D::new(
+        mix(snap_offsets.top_left.x, snap_offsets.bottom_right.x, normalized_bottom_right.x),
+        mix(snap_offsets.top_left.y, snap_offsets.bottom_right.y, normalized_bottom_right.y),
+    );
+
+    SnapOffsets {
+        top_left,
+        bottom_right,
+    }
+}
+
 /// Retrieve the exact unsnapped device space rectangle for a primitive.
-/// If the transform is axis-aligned, compute the snapping offsets that
-/// the shaders will apply.
 fn get_unclipped_device_rect(
-    prim_spatial_node_index: SpatialNodeIndex,
-    root_spatial_node_index: SpatialNodeIndex,
     prim_rect: PictureRect,
     map_to_raster: &SpaceMapper<PicturePixel, RasterPixel>,
     device_pixel_scale: DevicePixelScale,
-    frame_context: &FrameBuildingContext,
-    frame_state: &mut FrameBuildingState,
-) -> Option<(DeviceRect, SnapOffsets)> {
-    let unclipped_raster_rect = map_to_raster.map(&prim_rect)?;
-
-    let unclipped_device_rect = {
-        let world_rect = unclipped_raster_rect * TypedScale::new(1.0);
-        let device_rect = world_rect * device_pixel_scale;
-        device_rect
-    };
-
-    let transform_id = frame_state.transforms.get_id(
-        prim_spatial_node_index,
-        root_spatial_node_index,
-        frame_context.clip_scroll_tree,
-    );
-
-    match transform_id.transform_kind() {
-        TransformedRectKind::AxisAligned => {
-            let top_left = compute_snap_offset_impl(
-                prim_rect.origin,
-                prim_rect,
-                unclipped_device_rect.origin,
-                unclipped_device_rect.bottom_right(),
-            );
-
-            let bottom_right = compute_snap_offset_impl(
-                prim_rect.bottom_right(),
-                prim_rect,
-                unclipped_device_rect.origin,
-                unclipped_device_rect.bottom_right(),
-            );
-
-            let snap_offsets = SnapOffsets {
-                top_left,
-                bottom_right,
-            };
-
-            Some((unclipped_device_rect, snap_offsets))
-        }
-        TransformedRectKind::Complex => {
-            Some((unclipped_device_rect, SnapOffsets::empty()))
-        }
-    }
+) -> Option<DeviceRect> {
+    let raster_rect = map_to_raster.map(&prim_rect)?;
+    let world_rect = raster_rect * TypedScale::new(1.0);
+    Some(world_rect * device_pixel_scale)
 }
 
 /// Given an unclipped device rect, try to find a minimal device space
