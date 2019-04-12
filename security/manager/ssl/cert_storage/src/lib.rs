@@ -84,7 +84,7 @@ struct EnvAndStore {
 struct SecurityState {
     profile_path: PathBuf,
     env_and_store: Option<EnvAndStore>,
-    int_prefs: HashMap<String, i32>,
+    int_prefs: HashMap<String, u32>,
 }
 
 impl SecurityState {
@@ -408,7 +408,7 @@ impl SecurityState {
         )
     }
 
-    pub fn pref_seen(&mut self, name: &str, value: i32) {
+    pub fn pref_seen(&mut self, name: &str, value: u32) {
         self.int_prefs.insert(name.to_owned(), value);
     }
 }
@@ -458,7 +458,8 @@ fn get_path_from_directory_service(key: &str) -> Result<PathBuf, SecurityStateEr
 }
 
 fn get_profile_path() -> Result<PathBuf, SecurityStateError> {
-    Ok(get_path_from_directory_service("ProfD").or_else(|_| get_path_from_directory_service("TmpD"))?)
+    Ok(get_path_from_directory_service("ProfD")
+        .or_else(|_| get_path_from_directory_service("TmpD"))?)
 }
 
 fn get_store_path(profile_path: &PathBuf) -> Result<PathBuf, SecurityStateError> {
@@ -493,7 +494,7 @@ fn do_construct_cert_storage(
     };
 }
 
-fn read_int_pref(name: &str) -> Result<i32, SecurityStateError> {
+fn read_int_pref(name: &str) -> Result<u32, SecurityStateError> {
     let pref_service = match xpcom::services::get_PreferencesService() {
         Some(ps) => ps,
         _ => {
@@ -512,16 +513,20 @@ fn read_int_pref(name: &str) -> Result<i32, SecurityStateError> {
         _ => return Err(SecurityStateError::from("could not build pref name string")),
     };
 
-    let mut pref_value: i32 = -1;
-
+    let mut pref_value: i32 = 0;
     // We can't use GetIntPrefWithDefault because optional_argc is not
     // supported. No matter, we can just check for failure and ignore
     // any NS_ERROR_UNEXPECTED result.
     let res = unsafe { (*prefs).GetIntPref((&pref_name).as_ptr(), (&mut pref_value) as *mut i32) };
-    match res {
-        NS_OK => Ok(pref_value),
-        NS_ERROR_UNEXPECTED => Ok(pref_value),
-        _ => Err(SecurityStateError::from("could not read pref")),
+    let pref_value = match res {
+        NS_OK => pref_value,
+        NS_ERROR_UNEXPECTED => 0,
+        _ => return Err(SecurityStateError::from("could not read pref")),
+    };
+    if pref_value < 0 {
+        Ok(0)
+    } else {
+        Ok(pref_value as u32)
     }
 }
 
@@ -741,7 +746,7 @@ impl CertStorage {
         let runnable = try_ns!(TaskRunnable::new("SetRevocationBySubjectAndPubKey", task));
         try_ns!(runnable.dispatch(&*thread));
         NS_OK
-   }
+    }
 
     unsafe fn SetEnrollment(
         &self,
@@ -960,8 +965,6 @@ impl CertStorage {
     ) -> nserror::nsresult {
         match CStr::from_ptr(topic).to_str() {
             Ok("nsPref:changed") => {
-                let mut pref_value: i32 = 0;
-
                 let prefs: RefPtr<nsIPrefBranch> = match (*subject).query_interface() {
                     Some(pb) => pb,
                     _ => return NS_ERROR_FAILURE,
@@ -982,11 +985,12 @@ impl CertStorage {
                     _ => return NS_ERROR_FAILURE,
                 };
 
+                let mut pref_value: i32 = 0;
                 let res = prefs.GetIntPref((&pref_name).as_ptr(), (&mut pref_value) as *mut i32);
-
                 if !res.succeeded() {
                     return res;
                 }
+                let pref_value = if pref_value < 0 { 0 } else { pref_value as u32 };
 
                 let mut ss = try_ns!(self.security_state.write());
                 // This doesn't use the db -> don't need to make sure it's open.
