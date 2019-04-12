@@ -24,11 +24,11 @@ interface SVGElement : Element {
 
   [SetterThrows, Pure]
         attribute long tabIndex;
-  [Throws] void focus();
   [Throws] void blur();
 };
 
 SVGElement implements GlobalEventHandlers;
+SVGElement implements HTMLOrSVGOrXULElementMixin;
 SVGElement implements DocumentAndElementEventHandlers;
 SVGElement implements TouchEventHandlers;
 SVGElement implements OnErrorEventHandlerForNodes;

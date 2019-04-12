@@ -151,7 +151,8 @@ interface nsIFocusManager : nsISupports
   const unsigned long FLAG_RAISE = 1;
 
   /**
-   * Do not scroll the element to focus into view
+   * Do not scroll the element to focus into view. If FLAG_BYELEMENTFOCUS is
+   * set too, the latter is ignored.
    */
   const unsigned long FLAG_NOSCROLL = 2;
 
@@ -211,7 +212,7 @@ interface nsIFocusManager : nsISupports
    * functionalities since we need to factor scroll-margin and scroll-padding
    * values into the position where we scroll to the element by the
    * Element.focus() call.
-   * NOTE: This flag shouldn't be specified with FLAG_NOSCROLL.
+   * NOTE: This flag is ignored if FLAG_NOSCROLL is set too.
    */
   const unsigned long FLAG_BYELEMENTFOCUS = 0x400000;
 
