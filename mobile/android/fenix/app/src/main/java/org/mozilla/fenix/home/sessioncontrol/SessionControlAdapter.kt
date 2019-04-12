@@ -62,7 +62,10 @@ class SessionControlAdapter(
             TabHeaderViewHolder.LAYOUT_ID -> TabHeaderViewHolder(view, actionEmitter)
             TabViewHolder.LAYOUT_ID -> TabViewHolder(view, actionEmitter, job)
             ArchiveTabsViewHolder.LAYOUT_ID -> ArchiveTabsViewHolder(view, actionEmitter)
-            PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> PrivateBrowsingDescriptionViewHolder(view, actionEmitter)
+            PrivateBrowsingDescriptionViewHolder.LAYOUT_ID -> PrivateBrowsingDescriptionViewHolder(
+                view,
+                actionEmitter
+            )
             DeleteTabsViewHolder.LAYOUT_ID -> DeleteTabsViewHolder(view, actionEmitter)
             SessionHeaderViewHolder.LAYOUT_ID -> SessionHeaderViewHolder(view)
             SessionPlaceholderViewHolder.LAYOUT_ID -> SessionPlaceholderViewHolder(view)
@@ -87,7 +90,10 @@ class SessionControlAdapter(
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder) {
-            is TabViewHolder -> holder.bindSession((items[position] as AdapterItem.TabItem).tab, position)
+            is TabViewHolder -> holder.bindSession(
+                (items[position] as AdapterItem.TabItem).tab,
+                position
+            )
             is SessionViewHolder -> holder.bind((items[position] as AdapterItem.SessionItem).session)
         }
     }

@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #1397 - Adds favicons to the history view
 - #1375 - Added setting for turning off history suggestions
 - #1139 - Resolved a 170ms delay on cold start
+- #176 - Added a swipe to delete gesture on home screen
 
 ### Changed
 - #1429 - Updated site permissions ui for MVP

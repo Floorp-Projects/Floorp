@@ -89,7 +89,7 @@ class SessionViewHolder(
     private val actionEmitter: Observer<SessionControlAction>,
     override val containerView: View? = view
 ) : RecyclerView.ViewHolder(view), LayoutContainer {
-    private var session: ArchivedSession? = null
+    internal var session: ArchivedSession? = null
 
     init {
         session_item.setOnClickListener {

@@ -13,6 +13,7 @@ import io.reactivex.Observer
 import io.reactivex.functions.Consumer
 import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.UIView
+import androidx.recyclerview.widget.ItemTouchHelper
 
 // Convert HomeState into a data structure HomeAdapter understands
 @SuppressWarnings("ComplexMethod")
@@ -62,6 +63,13 @@ class SessionControlUIView(
         view.apply {
             adapter = sessionControlAdapter
             layoutManager = LinearLayoutManager(container.context)
+            val itemTouchHelper =
+                ItemTouchHelper(
+                    SwipeToDeleteCallback(
+                        actionEmitter
+                    )
+                )
+            itemTouchHelper.attachToRecyclerView(this)
         }
     }
 
