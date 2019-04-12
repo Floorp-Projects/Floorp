@@ -1,0 +1,10 @@
+[
+  {
+    "size": 4214850,
+    "visibility": "public",
+    "digest": "4d4e15097e14c7dc2a1199ccc2f3ee73fb292d1fcfa361776fc37e8b245d4ce5db8c2d79b9a79c32db4f9fdbc223df74f0173dd21a079397dcf859a34f7bcb84",
+    "algorithm": "sha512",
+    "filename": "mitmproxy-tp6-linkedin.zip",
+    "unpack": true
+  }
+]
