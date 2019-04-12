@@ -114,7 +114,12 @@ class RaptorRunner(MozbuildObject):
                     shutil.copytree(path, dest)
 
     def make_config(self):
-        default_actions = ['populate-webroot', 'install-chrome', 'create-virtualenv', 'run-tests']
+        default_actions = [
+            'populate-webroot',
+            'install-chromium-distribution',
+            'create-virtualenv',
+            'run-tests'
+        ]
         self.config = {
             'run_local': True,
             'binary_path': self.binary_path,

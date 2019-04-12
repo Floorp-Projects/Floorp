@@ -7,22 +7,22 @@ linux64-chromium:
     description: 'Linux64 Chromium Fetch'
     fetch:
         platform: linux
-        artifact-name: chrome-linux.tar.bz2
+        artifact-name: chromium-linux.tar.bz2
 
 win32-chromium:
     description: 'Windows32 Chromium Fetch'
     fetch:
         platform: win32
-        artifact-name: chrome-win32.tar.bz2
+        artifact-name: chromium-win32.tar.bz2
 
 win64-chromium:
     description: 'Windows64 Chromium Fetch'
     fetch:
         platform: win64
-        artifact-name: chrome-win64.tar.bz2
+        artifact-name: chromium-win64.tar.bz2
 
 mac-chromium:
     description: 'MacOSX Chromium Fetch'
     fetch:
         platform: mac
-        artifact-name: chrome-mac.tar.bz2
+        artifact-name: chromium-mac.tar.bz2
