@@ -33,7 +33,6 @@ events:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
   entered_url:
@@ -48,7 +47,6 @@ events:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
   performed_search:
@@ -65,7 +63,6 @@ events:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
   browser_menu_action:
@@ -83,7 +80,6 @@ events:
     data_reviews:
     - TBD
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
   ss_menu_opened:
@@ -95,7 +91,6 @@ events:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
   ss_menu_closed:
@@ -107,7 +102,6 @@ events:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
   ss_selected:
@@ -122,7 +116,6 @@ events:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1202#issuecomment-476870449
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
 
@@ -136,7 +129,6 @@ crash_reporter:
       data_reviews:
       - TBD
       notification_emails:
-      - telemetry-client-dev@mozilla.com
       - fenix-core@mozilla.com
       expires: "2020-03-01"
     closed:
@@ -151,7 +143,6 @@ crash_reporter:
       data_reviews:
       - TBD
       notification_emails:
-      - telemetry-client-dev@mozilla.com
       - fenix-core@mozilla.com
       expires: "2020-03-01"
 
@@ -173,7 +164,6 @@ context_menu:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
 
@@ -187,7 +177,7 @@ find_in_page:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
-    - telemetry-client-dev@mozilla.com
+    - fenix-core@mozilla.com
     expires: "2020-03-01"
   closed:
     type: event
@@ -198,7 +188,6 @@ find_in_page:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
   next_result:
@@ -210,7 +199,6 @@ find_in_page:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
   previous_result:
@@ -222,7 +210,6 @@ find_in_page:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
   searched_page:
@@ -234,7 +221,6 @@ find_in_page:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1344#issuecomment-479285010
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
 
@@ -248,7 +234,6 @@ quick_action_sheet:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1362#issuecomment-479668466
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
   closed:
@@ -260,7 +245,7 @@ quick_action_sheet:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1362#issuecomment-479668466
     notification_emails:
-    - telemetry-client-dev@mozilla.com
+
     - fenix-core@mozilla.com
     expires: "2020-03-01"
   share_tapped:
@@ -272,7 +257,6 @@ quick_action_sheet:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1362#issuecomment-479668466
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
   bookmark_tapped:
@@ -284,7 +268,6 @@ quick_action_sheet:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1362#issuecomment-479668466
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
   download_tapped:
@@ -296,7 +279,6 @@ quick_action_sheet:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1362#issuecomment-479668466
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
   read_tapped:
@@ -308,7 +290,6 @@ quick_action_sheet:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1362#issuecomment-479668466
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
 
@@ -324,6 +305,6 @@ metrics:
     data_reviews:
     - https://github.com/mozilla-mobile/fenix/pull/1067#issuecomment-474598673
     notification_emails:
-    - telemetry-client-dev@mozilla.com
     - fenix-core@mozilla.com
     expires: "2020-03-01"
+
