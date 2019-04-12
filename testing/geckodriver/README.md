@@ -52,6 +52,10 @@ Documentation
   * [Analyzing crash data from Firefox](https://firefox-source-docs.mozilla.org/testing/geckodriver/CrashReports.html)
 
 * [Contributing](https://firefox-source-docs.mozilla.org/testing/geckodriver/#for-developers)
+  * [Building](https://firefox-source-docs.mozilla.org/testing/geckodriver/Building.html)
+  * [Testing](https://firefox-source-docs.mozilla.org/testing/geckodriver/Testing.html)
+  * [Releasing](https://firefox-source-docs.mozilla.org/testing/geckodriver/Releasing.html)
+  * [Self-serving an ARM build](https://firefox-source-docs.mozilla.org/testing/geckodriver/ARM.html)
 
 
 Source code
