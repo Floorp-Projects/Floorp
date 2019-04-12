@@ -59,15 +59,21 @@ data class EventMetricType<ExtraKeysEnum : Enum<ExtraKeysEnum>>(
         val monotonicElapsed = SystemClock.elapsedRealtime()
 
         // Convert the extra key enums to strings before passing to the storage engine
-        val extraStrings = extra?.let {
+        val extraStrings = extra?.let { extra ->
             // There are two extra "keys" in play here:
             //   1. The Kotlin enumeration names, in CamelCase
             //   2. The keys sent in the ping, in snake_case
             // Here we need to get (2) to send in the ping.
-            if (it.size > 0) {
-                it.mapKeys { entry ->
-                    allowedExtraKeys[entry.key.ordinal]
+            if (extra.size > 0) {
+                val result = mutableMapOf<String, String>()
+                for ((k, v) in extra) {
+                    allowedExtraKeys.getOrNull(k.ordinal)?.let { stringKey ->
+                        result[stringKey] = v
+                    } ?: run {
+                        logger.debug("No string value for enum ${k.ordinal}")
+                    }
                 }
+                result
             } else {
                 null
             }
