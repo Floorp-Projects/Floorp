@@ -2355,7 +2355,7 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
     loadInfo.mDomain = aParent->Domain();
     loadInfo.mFromWindow = aParent->IsFromWindow();
     loadInfo.mWindowID = aParent->WindowID();
-    loadInfo.mStorageAllowed = aParent->IsStorageAllowed();
+    loadInfo.mStorageAccess = aParent->StorageAccess();
     loadInfo.mOriginAttributes = aParent->GetOriginAttributes();
     loadInfo.mServiceWorkersTestingInWindow =
         aParent->ServiceWorkersTestingInWindow();
@@ -2482,9 +2482,8 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
 
       loadInfo.mFromWindow = true;
       loadInfo.mWindowID = globalWindow->WindowID();
-      nsContentUtils::StorageAccess access =
+      loadInfo.mStorageAccess =
           nsContentUtils::StorageAllowedForWindow(globalWindow);
-      loadInfo.mStorageAllowed = access > nsContentUtils::StorageAccess::eDeny;
       loadInfo.mCookieSettings = document->CookieSettings();
       loadInfo.mOriginAttributes =
           nsContentUtils::GetOriginAttributes(document);
@@ -2530,7 +2529,7 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
       loadInfo.mXHRParamsAllowed = true;
       loadInfo.mFromWindow = false;
       loadInfo.mWindowID = UINT64_MAX;
-      loadInfo.mStorageAllowed = true;
+      loadInfo.mStorageAccess = nsContentUtils::StorageAccess::eAllow;
       loadInfo.mCookieSettings = mozilla::net::CookieSettings::Create();
       MOZ_ASSERT(loadInfo.mCookieSettings);
 

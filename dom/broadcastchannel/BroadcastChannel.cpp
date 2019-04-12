@@ -229,6 +229,8 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
   nsAutoCString origin;
   PrincipalInfo principalInfo;
 
+  nsContentUtils::StorageAccess storageAccess;
+
   if (NS_IsMainThread()) {
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global);
     if (NS_WARN_IF(!window)) {
@@ -249,14 +251,6 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
       return nullptr;
     }
 
-    // We want to allow opaque origins.
-    if (!principal->GetIsNullPrincipal() &&
-        nsContentUtils::StorageAllowedForWindow(window) <=
-            nsContentUtils::StorageAccess::eDeny) {
-      aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-      return nullptr;
-    }
-
     aRv = principal->GetOrigin(origin);
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
@@ -266,6 +260,8 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
+
+    storageAccess = nsContentUtils::StorageAllowedForWindow(window);
   } else {
     JSContext* cx = aGlobal.Context();
 
@@ -290,13 +286,15 @@ already_AddRefed<BroadcastChannel> BroadcastChannel::Constructor(
       return nullptr;
     }
 
-    if (principalInfo.type() != PrincipalInfo::TNullPrincipalInfo &&
-        !workerPrivate->IsStorageAllowed()) {
-      aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
-      return nullptr;
-    }
-
+    storageAccess = workerPrivate->StorageAccess();
     bc->mWorkerRef = std::move(workerRef);
+  }
+
+  // We want to allow opaque origins.
+  if (principalInfo.type() != PrincipalInfo::TNullPrincipalInfo &&
+      storageAccess <= nsContentUtils::StorageAccess::eDeny) {
+    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return nullptr;
   }
 
   // Register this component to PBackground.
