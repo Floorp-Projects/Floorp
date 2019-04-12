@@ -76,7 +76,8 @@ bool AppendCrossOriginWhitelistedPropNames(JSContext* cx,
 }
 
 template <typename Policy>
-static bool Filter(JSContext* cx, HandleObject wrapper, MutableHandleIdVector props) {
+static bool Filter(JSContext* cx, HandleObject wrapper,
+                   MutableHandleIdVector props) {
   size_t w = 0;
   RootedId id(cx);
   for (size_t n = 0; n < props.length(); ++n) {
@@ -162,9 +163,9 @@ bool FilteringWrapper<Base, Policy>::getOwnEnumerablePropertyKeys(
 }
 
 template <typename Base, typename Policy>
-bool FilteringWrapper<Base, Policy>::enumerate(JSContext* cx,
-                                               HandleObject wrapper,
-                                               JS::MutableHandleIdVector props) const {
+bool FilteringWrapper<Base, Policy>::enumerate(
+    JSContext* cx, HandleObject wrapper,
+    JS::MutableHandleIdVector props) const {
   assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
   // Trigger the default proxy enumerate trap, which will use
   // js::GetPropertyKeys for the list of (censored) ids.

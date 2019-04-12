@@ -53,9 +53,8 @@ void VRGPUChild::Shutdown() {
 
 void VRGPUChild::ActorDestroy(ActorDestroyReason aWhy) {
   VRManager* vm = VRManager::Get();
-  CompositorThreadHolder::Loop()->PostTask(NewRunnableMethod(
-    "VRGPUChild::ActorDestroy",
-    vm, &VRManager::Shutdown));
+  CompositorThreadHolder::Loop()->PostTask(
+      NewRunnableMethod("VRGPUChild::ActorDestroy", vm, &VRManager::Shutdown));
 
   mClosed = true;
 }

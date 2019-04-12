@@ -1,5 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests loading sourcemapped sources, setting breakpoints, and
 // inspecting restored scopes.
@@ -8,13 +9,13 @@ requestLongerTimeout(2);
 // This source map does not have source contents, so it's fetched separately
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
-  await pushPref("devtools.debugger.features.map-scopes", true);
-
-  const dbg = await initDebugger("doc-sourcemaps3.html", "bundle.js", "sorted.js", "test.js");
-  const {
-    selectors: { getBreakpoint, getBreakpointCount },
-    getState
-  } = dbg;
+  const dbg = await initDebugger(
+    "doc-sourcemaps3.html",
+    "bundle.js",
+    "sorted.js",
+    "test.js"
+  );
+  dbg.actions.toggleMapScopes();
 
   ok(true, "Original sources exist");
   const sortedSrc = findSource(dbg, "sorted.js");
@@ -23,9 +24,9 @@ add_task(async function() {
 
   // Test that breakpoint is not off by a line.
   await addBreakpoint(dbg, sortedSrc, 9, 4);
-  is(getBreakpointCount(getState()), 1, "One breakpoint exists");
+  is(dbg.selectors.getBreakpointCount(), 1, "One breakpoint exists");
   ok(
-    getBreakpoint(getState(), { sourceId: sortedSrc.id, line: 9, column: 4 }),
+    dbg.selectors.getBreakpoint({ sourceId: sortedSrc.id, line: 9, column: 4 }),
     "Breakpoint has correct line"
   );
 

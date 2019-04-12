@@ -16,7 +16,7 @@ import {
   getBreakpointsDisabled,
   getExpressions,
   getIsWaitingOnBreak,
-  getMapScopes,
+  isMapScopesEnabled,
   getSelectedFrame,
   getShouldPauseOnExceptions,
   getShouldPauseOnCaughtExceptions,
@@ -81,7 +81,7 @@ type Props = {
   selectedFrame: ?Frame,
   breakpointsDisabled: boolean,
   isWaitingOnBreak: boolean,
-  shouldMapScopes: boolean,
+  mapScopesEnabled: boolean,
   shouldPauseOnExceptions: boolean,
   shouldPauseOnCaughtExceptions: boolean,
   workers: WorkerList,
@@ -225,13 +225,9 @@ class SecondaryPanes extends Component<Props, State> {
   }
 
   getScopesButtons() {
-    const { selectedFrame, shouldMapScopes } = this.props;
+    const { selectedFrame, mapScopesEnabled } = this.props;
 
-    if (
-      !features.mapScopes ||
-      !selectedFrame ||
-      isGeneratedId(selectedFrame.location.sourceId)
-    ) {
+    if (!selectedFrame || isGeneratedId(selectedFrame.location.sourceId)) {
       return null;
     }
 
@@ -244,7 +240,7 @@ class SecondaryPanes extends Component<Props, State> {
         >
           <input
             type="checkbox"
-            checked={shouldMapScopes ? "checked" : ""}
+            checked={mapScopesEnabled ? "checked" : ""}
             onChange={e => this.props.toggleMapScopes()}
           />
           {L10N.getStr("scopes.map.label")}
@@ -472,7 +468,7 @@ const mapStateToProps = state => {
     breakpointsDisabled: getBreakpointsDisabled(state),
     isWaitingOnBreak: getIsWaitingOnBreak(state, thread),
     selectedFrame: getSelectedFrame(state, thread),
-    shouldMapScopes: getMapScopes(state),
+    mapScopesEnabled: isMapScopesEnabled(state),
     shouldPauseOnExceptions: getShouldPauseOnExceptions(state),
     shouldPauseOnCaughtExceptions: getShouldPauseOnCaughtExceptions(state),
     workers: getWorkers(state)

@@ -4699,8 +4699,9 @@ bool nsBlockFrame::DrainOverflowLines() {
                      ReparentingDirection::Forwards);
 
       // Collect overflow containers from our [Excess]OverflowContainers lists
-      // that are continuations from the frames we picked up from our prev-in-flow.
-      // We'll append these to mFrames to ensure the continuations are ordered.
+      // that are continuations from the frames we picked up from our
+      // prev-in-flow. We'll append these to mFrames to ensure the continuations
+      // are ordered.
       auto HasOverflowContainers = [this]() -> bool {
         return GetPropTableFrames(OverflowContainersProperty()) ||
                GetPropTableFrames(ExcessOverflowContainersProperty());

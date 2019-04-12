@@ -46,7 +46,9 @@ except ImportError:
     build = None
 
 from benchmark import Benchmark
-from cmdline import parse_args
+from cmdline import (parse_args,
+                     FIREFOX_ANDROID_APPS,
+                     CHROMIUM_DISTROS)
 from control_server import RaptorControlServer
 from gen_test_config import gen_test_config
 from outputhandler import OutputHandler
@@ -93,7 +95,7 @@ class Raptor(object):
         self.post_startup_delay = post_startup_delay
         self.device = None
         self.profile_class = app
-        self.firefox_android_apps = ['fennec', 'geckoview', 'refbrow', 'fenix']
+        self.firefox_android_apps = FIREFOX_ANDROID_APPS
 
         # debug mode is currently only supported when running locally
         self.debug_mode = debug_mode if self.config['run_local'] else False
@@ -241,7 +243,8 @@ class Raptor(object):
             self.profile.addons.remove_addon(self.webext_id)
 
         # for chrome the addon is just a list (appended to cmd line)
-        if self.config['app'] in ["chrome", "chrome-android"]:
+        chrome_apps = CHROMIUM_DISTROS + ["chrome-android", "chromium-android"]
+        if self.config['app'] in chrome_apps:
             self.profile.addons.remove(self.raptor_webext)
 
     def set_test_browser_prefs(self, test_prefs):
@@ -829,7 +832,7 @@ def main(args=sys.argv[1:]):
 
     if args.app == "firefox":
         raptor_class = RaptorDesktopFirefox
-    elif args.app == "chrome":
+    elif args.app in CHROMIUM_DISTROS:
         raptor_class = RaptorDesktopChrome
     else:
         raptor_class = RaptorAndroid

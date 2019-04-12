@@ -79,6 +79,11 @@ public class ContentBlocking {
         /* package */ final Pref<String> mCmList = new Pref<String>(
             "urlclassifier.features.cryptomining.blacklistTables",
             ContentBlocking.catToCmListPref(NONE));
+        /* package */ final Pref<Boolean> mFp = new Pref<Boolean>(
+            "privacy.trackingprotection.fingerprinting.enabled", false);
+        /* package */ final Pref<String> mFpList = new Pref<String>(
+            "urlclassifier.features.fingerprinting.blacklistTables",
+            ContentBlocking.catToFpListPref(NONE));
 
         /* package */ final Pref<Boolean> mSbMalware = new Pref<Boolean>(
             "browser.safebrowsing.malware.enabled", true);
@@ -139,6 +144,9 @@ public class ContentBlocking {
             mCm.commit(ContentBlocking.catToCmPref(cat));
             mCmList.commit(ContentBlocking.catToCmListPref(cat));
 
+            mFp.commit(ContentBlocking.catToFpPref(cat));
+            mFpList.commit(ContentBlocking.catToFpListPref(cat));
+
             mSbMalware.commit(ContentBlocking.catToSbMalware(cat));
             mSbPhishing.commit(ContentBlocking.catToSbPhishing(cat));
             return this;
@@ -150,10 +158,11 @@ public class ContentBlocking {
          * @return The categories of resources to be blocked.
          */
         public @Category int getCategories() {
-            return ContentBlocking.atListToCat(mAt.get())
-                   | ContentBlocking.cmListToCat(mCmList.get())
-                   | ContentBlocking.sbMalwareToCat(mSbMalware.get())
-                   | ContentBlocking.sbPhishingToCat(mSbPhishing.get());
+            return ContentBlocking.atListToCat(mAt.get()) |
+                   ContentBlocking.cmListToCat(mCmList.get()) |
+                   ContentBlocking.fpListToCat(mFpList.get()) |
+                   ContentBlocking.sbMalwareToCat(mSbMalware.get()) |
+                   ContentBlocking.sbPhishingToCat(mSbPhishing.get());
         }
 
         /**
@@ -205,7 +214,8 @@ public class ContentBlocking {
     @Retention(RetentionPolicy.SOURCE)
     @IntDef(flag = true,
             value = { NONE, AT_AD, AT_ANALYTIC, AT_SOCIAL, AT_CONTENT,
-                      AT_TEST, AT_CRYPTOMINING, AT_DEFAULT, AT_STRICT,
+                      AT_TEST, AT_CRYPTOMINING, AT_FINGERPRINTING,
+                      AT_DEFAULT, AT_STRICT,
                       SB_MALWARE, SB_UNWANTED,
                       SB_HARMFUL, SB_PHISHING,
                       CB_DEFAULT, CB_STRICT })
@@ -246,6 +256,11 @@ public class ContentBlocking {
     public static final int AT_CRYPTOMINING = 1 << 6;
 
     /**
+     * Block fingerprinting trackers.
+     */
+    public static final int AT_FINGERPRINTING = 1 << 7;
+
+    /**
      * Block ad, analytic, social and test trackers.
      */
     public static final int AT_DEFAULT =
@@ -256,7 +271,7 @@ public class ContentBlocking {
      * May cause issues with some web sites.
      */
     public static final int AT_STRICT =
-        AT_DEFAULT | AT_CONTENT | AT_CRYPTOMINING;
+        AT_DEFAULT | AT_CONTENT | AT_CRYPTOMINING | AT_FINGERPRINTING;
 
     // Safe browsing
     /**
@@ -388,7 +403,8 @@ public class ContentBlocking {
 
             if (matchedList != null) {
                 cats = ContentBlocking.atListToCat(matchedList) |
-                       ContentBlocking.cmListToCat(matchedList);
+                       ContentBlocking.cmListToCat(matchedList) |
+                       ContentBlocking.fpListToCat(matchedList);
             } else if (error != 0L) {
                 cats = ContentBlocking.errorToCat(error);
             }
@@ -423,6 +439,8 @@ public class ContentBlocking {
     private static final String CONTENT = "content-track-digest256";
     private static final String CRYPTOMINING =
         "base-cryptomining-track-digest256";
+    private static final String FINGERPRINTING =
+        "base-fingerprinting-track-digest256";
 
     /* package */ static @Category int sbMalwareToCat(final boolean enabled) {
         return enabled ? (SB_MALWARE | SB_UNWANTED | SB_HARMFUL)
@@ -478,6 +496,27 @@ public class ContentBlocking {
             builder.append(CRYPTOMINING);
         }
         return builder.toString();
+    }
+
+    /* package */ static boolean catToFpPref(@Category final int cat) {
+        return (cat & AT_FINGERPRINTING) != 0;
+    }
+
+    /* package */ static String catToFpListPref(@Category final int cat) {
+        StringBuilder builder = new StringBuilder();
+
+        if ((cat & AT_FINGERPRINTING) != 0) {
+            builder.append(FINGERPRINTING);
+        }
+        return builder.toString();
+    }
+
+    /* package */ static @Category int fpListToCat(final String list) {
+        int cat = 0;
+        if (list.indexOf(FINGERPRINTING) != -1) {
+            cat |= AT_FINGERPRINTING;
+        }
+        return cat;
     }
 
     /* package */ static @Category int atListToCat(final String list) {

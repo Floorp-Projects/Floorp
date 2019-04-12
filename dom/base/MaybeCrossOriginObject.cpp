@@ -435,9 +435,9 @@ bool MaybeCrossOriginObject<Base>::defineProperty(
 }
 
 template <typename Base>
-bool MaybeCrossOriginObject<Base>::enumerate(JSContext* cx,
-                                             JS::Handle<JSObject*> proxy,
-                                             JS::MutableHandleVector<jsid> props) const {
+bool MaybeCrossOriginObject<Base>::enumerate(
+    JSContext* cx, JS::Handle<JSObject*> proxy,
+    JS::MutableHandleVector<jsid> props) const {
   // Just get the property keys from ourselves, in whatever Realm we happen to
   // be in. It's important to not enter the Realm of "proxy" here, because that
   // would affect the list of keys we claim to have. We wrap the proxy in the

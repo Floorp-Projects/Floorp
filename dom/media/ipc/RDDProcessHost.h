@@ -17,7 +17,7 @@ namespace mozilla {
 namespace ipc {
 class SharedPreferenceSerializer;
 }
-}
+}  // namespace mozilla
 class nsITimer;
 
 namespace mozilla {

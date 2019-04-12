@@ -45,8 +45,9 @@ class RemoteOuterWindowProxy
                        JS::MutableHandleVector<jsid> aProps) const final;
 
   // SpiderMonkey extensions
-  bool getOwnEnumerablePropertyKeys(JSContext* cx, JS::Handle<JSObject*> proxy,
-                                    JS::MutableHandleVector<jsid> props) const final;
+  bool getOwnEnumerablePropertyKeys(
+      JSContext* cx, JS::Handle<JSObject*> proxy,
+      JS::MutableHandleVector<jsid> props) const final;
 
   void NoteChildren(JSObject* aProxy,
                     nsCycleCollectionTraversalCallback& aCb) const override {
@@ -140,9 +141,9 @@ bool AppendIndexedPropertyNames(JSContext* aCx, BrowsingContext* aContext,
   return true;
 }
 
-bool RemoteOuterWindowProxy::ownPropertyKeys(JSContext* aCx,
-                                             JS::Handle<JSObject*> aProxy,
-                                             JS::MutableHandleVector<jsid> aProps) const {
+bool RemoteOuterWindowProxy::ownPropertyKeys(
+    JSContext* aCx, JS::Handle<JSObject*> aProxy,
+    JS::MutableHandleVector<jsid> aProps) const {
   BrowsingContext* bc = GetBrowsingContext(aProxy);
 
   // https://html.spec.whatwg.org/multipage/window-object.html#windowproxy-ownpropertykeys:crossoriginownpropertykeys-(-o-)

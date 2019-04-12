@@ -275,7 +275,7 @@ nsresult TRR::SendHTTPRequest() {
   // update with each HEADERS or reply to a DATA with a WINDOW UPDATE
   rv = internalChannel->SetInitialRwin(127 * 1024);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = internalChannel->SetTrr(true);
+  rv = internalChannel->SetIsTRRServiceChannel(true);
   NS_ENSURE_SUCCESS(rv, rv);
 
   mAllowRFC1918 = gTRRService->AllowRFC1918();

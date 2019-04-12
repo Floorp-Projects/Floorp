@@ -13,6 +13,7 @@ from mozdevice import ADBDevice
 from mozprofile import (
     Profile,
     ChromeProfile,
+    ChromiumProfile,
     FirefoxProfile,
     ThunderbirdProfile
 )
@@ -23,6 +24,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 def get_app_context(appname):
     context_map = {
         'chrome': ChromeContext,
+        'chromium': ChromiumContext,
         'default': DefaultContext,
         'fennec': FennecContext,
         'firefox': FirefoxContext,
@@ -148,3 +150,7 @@ class ThunderbirdContext(object):
 
 class ChromeContext(object):
     profile_class = ChromeProfile
+
+
+class ChromiumContext(object):
+    profile_class = ChromiumProfile

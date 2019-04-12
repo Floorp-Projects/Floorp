@@ -60,9 +60,8 @@ bool CrossCompartmentWrapper::defineProperty(JSContext* cx,
          Wrapper::defineProperty(cx, wrapper, id, desc2, result), NOTHING);
 }
 
-bool CrossCompartmentWrapper::ownPropertyKeys(JSContext* cx,
-                                              HandleObject wrapper,
-                                              MutableHandleIdVector props) const {
+bool CrossCompartmentWrapper::ownPropertyKeys(
+    JSContext* cx, HandleObject wrapper, MutableHandleIdVector props) const {
   PIERCE(cx, wrapper, NOTHING, Wrapper::ownPropertyKeys(cx, wrapper, props),
          MarkAtoms(cx, props));
 }

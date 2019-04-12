@@ -180,8 +180,7 @@ class ServoStyleSet {
   //
   // TODO(emilio): Element argument should be `const`.
   already_AddRefed<ComputedStyle> ResolveStyleLazily(
-      dom::Element&,
-      PseudoStyleType = PseudoStyleType::NotPseudo,
+      dom::Element&, PseudoStyleType = PseudoStyleType::NotPseudo,
       StyleRuleInclusion = StyleRuleInclusion::All);
 
   // Get a ComputedStyle for an anonymous box. The pseudo type must be an

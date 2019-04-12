@@ -4723,11 +4723,13 @@ AttachDecision CallIRGenerator::tryAttachStringSplit() {
                                      js::intrinsic_StringSplitString);
 
   // Ensure arg0 is a string.
-  ValOperandId arg0ValId = writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
+  ValOperandId arg0ValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg0, argc_);
   StringOperandId arg0StrId = writer.guardIsString(arg0ValId);
 
   // Ensure arg1 is a string.
-  ValOperandId arg1ValId = writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
+  ValOperandId arg1ValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::Arg1, argc_);
   StringOperandId arg1StrId = writer.guardIsString(arg1ValId);
 
   // Call custom string splitter VM-function.
@@ -4794,7 +4796,8 @@ AttachDecision CallIRGenerator::tryAttachArrayPush() {
   writer.guardSpecificNativeFunction(calleeObjId, js::array_push);
 
   // Guard this is an array object.
-  ValOperandId thisValId = writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
+  ValOperandId thisValId =
+      writer.loadArgumentFixedSlot(ArgumentKind::This, argc_);
   ObjOperandId thisObjId = writer.guardIsObject(thisValId);
 
   // This is a soft assert, documenting the fact that we pass 'true'

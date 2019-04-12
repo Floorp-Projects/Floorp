@@ -287,9 +287,9 @@ nsresult ImageEncoder::GetInputStream(int32_t aWidth, int32_t aHeight,
                                       imgIEncoder* aEncoder,
                                       const nsAString& aEncoderOptions,
                                       nsIInputStream** aStream) {
-  nsresult rv = aEncoder->InitFromData(aImageBuffer, aWidth * aHeight * 4,
-                                       aWidth, aHeight, aWidth * 4, aFormat,
-                                       aEncoderOptions);
+  nsresult rv =
+      aEncoder->InitFromData(aImageBuffer, aWidth * aHeight * 4, aWidth,
+                             aHeight, aWidth * 4, aFormat, aEncoderOptions);
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<imgIEncoder> encoder(aEncoder);
@@ -317,9 +317,9 @@ nsresult ImageEncoder::ExtractDataInternal(
       return NS_ERROR_INVALID_ARG;
     }
 
-    rv = ImageEncoder::GetInputStream(
-        aSize.width, aSize.height, aImageBuffer, aFormat, aEncoder,
-        aOptions, getter_AddRefs(imgStream));
+    rv = ImageEncoder::GetInputStream(aSize.width, aSize.height, aImageBuffer,
+                                      aFormat, aEncoder, aOptions,
+                                      getter_AddRefs(imgStream));
   } else if (aContext && !aUsePlaceholder) {
     NS_ConvertUTF16toUTF8 encoderType(aType);
     rv = aContext->GetInputStream(encoderType.get(), aOptions,

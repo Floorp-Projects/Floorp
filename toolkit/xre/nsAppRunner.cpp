@@ -1264,8 +1264,7 @@ static const mozilla::Module::CIDEntry kXRECIDs[] = {
     {nullptr}};
 
 static const mozilla::Module::ContractIDEntry kXREContracts[] = {
-    {NS_PROFILESERVICE_CONTRACTID, &kProfileServiceCID},
-    {nullptr}};
+    {NS_PROFILESERVICE_CONTRACTID, &kProfileServiceCID}, {nullptr}};
 
 extern const mozilla::Module kXREModule = {mozilla::Module::kVersion, kXRECIDs,
                                            kXREContracts};
@@ -5065,7 +5064,8 @@ void XRE_EnableSameExecutableForContentProc() {
   }
 }
 
-mozilla::BinPathType XRE_GetChildProcBinPathType(GeckoProcessType aProcessType) {
+mozilla::BinPathType XRE_GetChildProcBinPathType(
+    GeckoProcessType aProcessType) {
   MOZ_ASSERT(aProcessType != GeckoProcessType_Default);
 
   if (!gRunSelfAsContentProc) {
@@ -5074,8 +5074,8 @@ mozilla::BinPathType XRE_GetChildProcBinPathType(GeckoProcessType aProcessType) 
 
   switch (aProcessType) {
 #define GECKO_PROCESS_TYPE(enum_name, string_name, xre_name, bin_type) \
-    case GeckoProcessType_##enum_name:                                 \
-      return BinPathType::bin_type;
+  case GeckoProcessType_##enum_name:                                   \
+    return BinPathType::bin_type;
 #include "mozilla/GeckoProcessTypes.h"
 #undef GECKO_PROCESS_TYPE
     default:

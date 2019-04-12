@@ -12,18 +12,18 @@ async function waitForBreakpoint(dbg, location) {
   return waitForState(
     dbg,
     state => {
-      return dbg.selectors.getBreakpoint(dbg.getState(), location);
+      return dbg.selectors.getBreakpoint(location);
     },
     "Waiting for breakpoint"
   );
 }
 
 function getBreakpoints(dbg) {
-  return dbg.selectors.getBreakpointsList(dbg.getState());
+  return dbg.selectors.getBreakpointsList();
 }
 
 function getBreakpointCount(dbg) {
-  return dbg.selectors.getBreakpointCount(dbg.getState());
+  return dbg.selectors.getBreakpointCount();
 }
 
 add_task(async function() {
@@ -39,7 +39,7 @@ add_task(async function() {
   is(breakpoint.location.line, 6);
 
   info("Reload with a new version of the file");
-  let syncBp = waitForDispatch(dbg, "SET_BREAKPOINT");
+  const syncBp = waitForDispatch(dbg, "SET_BREAKPOINT");
   await navigate(dbg, "doc-sourcemaps-reload2.html", "v1.js");
 
   await syncBp;

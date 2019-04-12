@@ -56,7 +56,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
           }],
         [["--app"],
          {"default": "firefox",
-          "choices": ["firefox", "chrome", "geckoview", "fennec", "refbrow", "fenix"],
+          "choices": ["firefox", "chrome", "chromium", "fennec", "geckoview", "refbrow", "fenix"],
           "dest": "app",
           "help": "name of the application we are testing (default: firefox)"
           }],
@@ -158,7 +158,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         kwargs.setdefault('all_actions', ['clobber',
                                           'download-and-extract',
                                           'populate-webroot',
-                                          'install-chrome',
+                                          'install-chromium-distribution',
                                           'create-virtualenv',
                                           'install',
                                           'run-tests',
@@ -166,7 +166,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         kwargs.setdefault('default_actions', ['clobber',
                                               'download-and-extract',
                                               'populate-webroot',
-                                              'install-chrome',
+                                              'install-chromium-distribution',
                                               'create-virtualenv',
                                               'install',
                                               'run-tests',
@@ -258,38 +258,59 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         self.abs_dirs = abs_dirs
         return self.abs_dirs
 
-    def install_chrome(self):
-        '''install google chrome in production; installation
+    def install_chromium_distribution(self):
+        '''install Google Chromium distribution in production; installation
         requirements depend on the platform'''
-        if self.app != "chrome":
-            self.info("Google Chrome is not required")
+        linux, mac, win = 'linux', 'mac', 'win'
+        chrome, chromium = 'chrome', 'chromium'
+
+        available_chromium_dists = [chrome, chromium]
+        binary_location = {
+            chromium: {
+                linux: ['chrome-linux', 'chrome'],
+                mac: ['chrome-mac', 'Chromium.app', 'Contents', 'MacOS', 'Chromium'],
+                win: ['chrome-win', 'Chrome.exe']
+            },
+        }
+
+        if self.app == "chrome":
+            # remove this condition when integrating Google Chrome
+            raise ValueError("Google Chrome not currently integrated!")
+
+        if self.app not in available_chromium_dists:
+            self.info("Google Chrome or Chromium distributions are not required.")
             return
+
+        chromium_dist = self.app
 
         if self.config.get("run_local"):
-            self.info("expecting Google Chrome to be pre-installed locally")
+            self.info("expecting %s to be pre-installed locally" % chromium_dist)
             return
 
-        self.info("Getting fetched chromium build")
-        self.chrome_dest = os.path.normpath(os.path.abspath(os.environ['MOZ_FETCHES_DIR']))
+        self.info("Getting fetched %s build" % chromium_dist)
+        self.chromium_dist_dest = os.path.normpath(os.path.abspath(os.environ['MOZ_FETCHES_DIR']))
 
-        if 'mac' in self.platform_name():
-            self.chrome_path = os.path.join(self.chrome_dest, 'chrome-mac', 'Chromium.app',
-                                            'Contents', 'MacOS', 'Chromium')
+        if mac in self.platform_name():
+            self.chromium_dist_path = os.path.join(self.chromium_dist_dest,
+                                                   *binary_location[chromium_dist][mac])
 
-        elif 'linux' in self.platform_name():
-            self.chrome_path = os.path.join(self.chrome_dest, 'chrome-linux', 'chrome')
+        elif linux in self.platform_name():
+            self.chromium_dist_path = os.path.join(self.chromium_dist_dest,
+                                                   *binary_location[chromium_dist][linux])
 
         else:
-            self.chrome_path = os.path.join(self.chrome_dest, 'chrome-win', 'Chrome.exe')
+            self.chromium_dist_path = os.path.join(self.chromium_dist_dest,
+                                                   *binary_location[chromium_dist][win])
 
-        self.info("chrome dest is: %s" % self.chrome_dest)
-        self.info("chrome path is: %s" % self.chrome_path)
+        self.info("%s dest is: %s" % (chromium_dist, self.chromium_dist_dest))
+        self.info("%s path is: %s" % (chromium_dist, self.chromium_dist_path))
 
         # now ensure chrome binary exists
-        if os.path.exists(self.chrome_path):
-            self.info("successfully installed Google Chrome to: %s" % self.chrome_path)
+        if os.path.exists(self.chromium_dist_path):
+            self.info("successfully installed %s to: %s"
+                      % (chromium_dist, self.chromium_dist_path))
         else:
-            self.info("abort: failed to install Google Chrome")
+            self.info("abort: failed to install %s" % chromium_dist)
 
     def raptor_options(self, args=None, **kw):
         """return options to raptor"""
@@ -314,7 +335,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             if not self.run_local:
                 # when running locally we already set the chrome binary above in init; here
                 # in production we aready installed chrome, so set the binary path to our install
-                kw_options['binary'] = self.chrome_path
+                kw_options['binary'] = self.chromium_dist_path
 
         # options overwritten from **kw
         if 'test' in self.config:

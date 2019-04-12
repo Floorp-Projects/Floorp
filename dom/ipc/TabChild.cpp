@@ -1463,7 +1463,8 @@ void TabChild::ProcessPendingCoalescedMouseDataAndDispatchEvents() {
   }
 }
 
-LayoutDeviceToLayoutDeviceMatrix4x4 TabChild::GetChildToParentConversionMatrix() const {
+LayoutDeviceToLayoutDeviceMatrix4x4 TabChild::GetChildToParentConversionMatrix()
+    const {
   if (mChildToParentConversionMatrix) {
     return *mChildToParentConversionMatrix;
   }

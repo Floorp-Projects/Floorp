@@ -1,5 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests the search bar correctly responds to queries, enter, shift enter
 
@@ -8,7 +9,7 @@ function waitForSearchState(dbg) {
 }
 
 function getFocusedEl(dbg) {
-  let doc = dbg.win.document;
+  const doc = dbg.win.document;
   return doc.activeElement;
 }
 
@@ -24,11 +25,11 @@ add_task(async function() {
 
   const cm = getCM(dbg);
   pressKey(dbg, "fileSearch");
-  is(dbg.selectors.getActiveSearch(dbg.getState()), "file");
+  is(dbg.selectors.getActiveSearch(), "file");
 
   // test closing and re-opening
   pressKey(dbg, "Escape");
-  is(dbg.selectors.getActiveSearch(dbg.getState()), null);
+  is(dbg.selectors.getActiveSearch(), null);
 
   pressKey(dbg, "fileSearch");
 

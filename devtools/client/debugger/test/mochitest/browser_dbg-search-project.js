@@ -6,20 +6,17 @@ function openProjectSearch(dbg) {
   synthesizeKeyShortcut("CmdOrCtrl+Shift+F");
   return waitForState(
     dbg,
-    state => dbg.selectors.getActiveSearch(state) === "project"
+    state => dbg.selectors.getActiveSearch() === "project"
   );
 }
 
 function closeProjectSearch(dbg) {
   pressKey(dbg, "Escape");
-  return waitForState(dbg, state => !dbg.selectors.getActiveSearch(state));
+  return waitForState(dbg, state => !dbg.selectors.getActiveSearch());
 }
 
 async function selectResult(dbg) {
-  const select = waitForState(
-    dbg,
-    () => !dbg.selectors.getActiveSearch(dbg.getState())
-  );
+  const select = waitForState(dbg, () => !dbg.selectors.getActiveSearch());
   await clickElement(dbg, "fileMatch");
   return select;
 }
@@ -30,7 +27,7 @@ function getExpandedResultsCount(dbg) {
 
 function getResultsFiles(dbg) {
   const matches = dbg.selectors
-    .getTextSearchResults(dbg.getState())
+    .getTextSearchResults()
     .map(file => file.matches);
 
   return [...matches].length;
@@ -54,9 +51,9 @@ add_task(async function() {
 
   await selectResult(dbg);
 
-  is(dbg.selectors.getActiveSearch(dbg.getState()), null);
+  is(dbg.selectors.getActiveSearch(), null);
 
-  const selectedSource = dbg.selectors.getSelectedSource(dbg.getState());
+  const selectedSource = dbg.selectors.getSelectedSource();
   ok(selectedSource.url.includes("switching-01"));
   await waitForLoadedSource(dbg, "switching-01");
 });

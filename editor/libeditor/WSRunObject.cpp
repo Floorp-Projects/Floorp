@@ -247,9 +247,9 @@ already_AddRefed<Element> WSRunObject::InsertBreak(
   return newBrElement.forget();
 }
 
-nsresult WSRunObject::InsertText(
-    Document& aDocument, const nsAString& aStringToInsert,
-    EditorRawDOMPoint* aPointAfterInsertedString)
+nsresult WSRunObject::InsertText(Document& aDocument,
+                                 const nsAString& aStringToInsert,
+                                 EditorRawDOMPoint* aPointAfterInsertedString)
     MOZ_CAN_RUN_SCRIPT_FOR_DEFINITION {
   // MOOSE: for now, we always assume non-PRE formatting.  Fix this later.
   // meanwhile, the pre case is handled in WillInsertText in

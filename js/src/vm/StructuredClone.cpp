@@ -1329,8 +1329,8 @@ bool JSStructuredCloneWriter::startObject(HandleObject obj, bool* backref) {
 }
 
 static bool TryAppendNativeProperties(JSContext* cx, HandleObject obj,
-                                      MutableHandleIdVector entries, size_t* properties,
-                                      bool* optimized) {
+                                      MutableHandleIdVector entries,
+                                      size_t* properties, bool* optimized) {
   *optimized = false;
 
   if (!obj->isNative()) {

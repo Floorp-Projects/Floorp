@@ -42,6 +42,7 @@ class TestBrowserThread(threading.Thread):
 @pytest.mark.parametrize("raptor_class, app_name", [
                          [RaptorDesktopFirefox, "firefox"],
                          [RaptorDesktopChrome, "chrome"],
+                         [RaptorDesktopChrome, "chromium"],
                          [RaptorAndroid, "fennec"],
                          [RaptorAndroid, "geckoview"],
                          ])
@@ -93,6 +94,7 @@ def test_start_and_stop_server(raptor):
 @pytest.mark.parametrize('app', [
     'firefox',
     pytest.mark.xfail('chrome'),
+    pytest.mark.xfail('chromium'),
 ])
 def test_start_browser(get_binary, app):
     binary = get_binary(app)

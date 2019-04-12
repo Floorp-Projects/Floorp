@@ -54,9 +54,9 @@ async function findNewLocation(
   const symbols: LoadedSymbols = await thunkArgs.dispatch(
     setSymbols({ cx, source })
   );
-  const func = findFunctionByName(symbols, name, index);
+  const func = symbols ? findFunctionByName(symbols, name, index) : null;
 
-  // Fallback onto the location line, if we do not find a function is not found
+  // Fallback onto the location line, if we do not find a function.
   let line = location.line;
   if (func) {
     line = func.location.start.line + offset.line;

@@ -7,6 +7,8 @@
 #ifndef MOZILLA_GFX_SCALEFACTOR_H_
 #define MOZILLA_GFX_SCALEFACTOR_H_
 
+#include <ostream>
+
 #include "mozilla/Attributes.h"
 
 #include "gfxPoint.h"
@@ -80,6 +82,11 @@ struct ScaleFactor {
   ScaleFactor<other, dst> operator*(
       const ScaleFactor<other, src>& aOther) const {
     return ScaleFactor<other, dst>(scale * aOther.scale);
+  }
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+                                  const ScaleFactor<src, dst>& aSF) {
+    return aStream << aSF.scale;
   }
 };
 

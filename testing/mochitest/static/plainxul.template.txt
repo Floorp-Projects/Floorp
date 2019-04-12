@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
-<?xml-stylesheet type="text/css" href="/tests/SimpleTest/test.css"?>
+<?xml-stylesheet href="chrome://global/skin"?>
+<?xml-stylesheet href="/tests/SimpleTest/test.css"?>
 <window title="TODO: Insert title here"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
