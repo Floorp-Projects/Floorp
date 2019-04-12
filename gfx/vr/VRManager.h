@@ -68,6 +68,7 @@ class VRManager {
                         const TimeDuration& aTimeout);
 
   void Shutdown();
+  bool IsPresenting();
 
  protected:
   VRManager();
