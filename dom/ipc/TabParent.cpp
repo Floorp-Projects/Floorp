@@ -1041,7 +1041,8 @@ IPCResult TabParent::RecvPBrowserBridgeConstructor(
     const nsString& aRemoteType, BrowsingContext* aBrowsingContext,
     const uint32_t& aChromeFlags) {
   static_cast<BrowserBridgeParent*>(aActor)->Init(
-      aName, aRemoteType, CanonicalBrowsingContext::Cast(aBrowsingContext), aChromeFlags);
+      aName, aRemoteType, CanonicalBrowsingContext::Cast(aBrowsingContext),
+      aChromeFlags);
   return IPC_OK();
 }
 
@@ -1360,9 +1361,10 @@ class SynthesizedEventObserver : public nsIObserver {
 
     if (mTabParent->IsDestroyed()) {
       // If this happens it's probably a bug in the test that's triggering this.
-      NS_WARNING("TabParent was unexpectedly destroyed during event synthesization!");
+      NS_WARNING(
+          "TabParent was unexpectedly destroyed during event synthesization!");
     } else if (!mTabParent->SendNativeSynthesisResponse(mObserverId,
-                                                 nsCString(aTopic))) {
+                                                        nsCString(aTopic))) {
       NS_WARNING("Unable to send native event synthesization response!");
     }
     // Null out tabparent to indicate we already sent the response

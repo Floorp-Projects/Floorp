@@ -2192,7 +2192,8 @@ inline bool IdEquals(jsid id, const char* string) {
          JS_FlatStringEqualsAscii(JSID_TO_FLAT_STRING(id), string);
 }
 
-inline bool AddStringToIDVector(JSContext* cx, JS::MutableHandleVector<jsid> vector,
+inline bool AddStringToIDVector(JSContext* cx,
+                                JS::MutableHandleVector<jsid> vector,
                                 const char* name) {
   return vector.growBy(1) &&
          AtomizeAndPinJSString(cx, *(vector[vector.length() - 1]).address(),
@@ -2778,7 +2779,8 @@ bool ResolveGlobal(JSContext* aCx, JS::Handle<JSObject*> aObj,
 bool MayResolveGlobal(const JSAtomState& aNames, jsid aId, JSObject* aMaybeObj);
 
 bool EnumerateGlobal(JSContext* aCx, JS::HandleObject aObj,
-                     JS::MutableHandleVector<jsid> aProperties, bool aEnumerableOnly);
+                     JS::MutableHandleVector<jsid> aProperties,
+                     bool aEnumerableOnly);
 
 struct CreateGlobalOptionsGeneric {
   static void TraceGlobal(JSTracer* aTrc, JSObject* aObj) {

@@ -97,14 +97,16 @@ class GenericFlingAnimation : public AsyncPanZoomAnimation,
         (now - mApzc.mLastFlingTime).ToMilliseconds() <
             gfxPrefs::APZFlingAccelInterval() &&
         velocity.Length() >= gfxPrefs::APZFlingAccelMinVelocity()) {
-      if (velocity.x != 0 && SameDirection(velocity.x, mApzc.mLastFlingVelocity.x)) {
+      if (velocity.x != 0 &&
+          SameDirection(velocity.x, mApzc.mLastFlingVelocity.x)) {
         velocity.x = Accelerate(velocity.x, mApzc.mLastFlingVelocity.x);
         FLING_LOG("%p Applying fling x-acceleration from %f to %f (delta %f)\n",
                   &mApzc, mApzc.mX.GetVelocity(), velocity.x,
                   mApzc.mLastFlingVelocity.x);
         mApzc.mX.SetVelocity(velocity.x);
       }
-      if (velocity.y != 0 && SameDirection(velocity.y, mApzc.mLastFlingVelocity.y)) {
+      if (velocity.y != 0 &&
+          SameDirection(velocity.y, mApzc.mLastFlingVelocity.y)) {
         velocity.y = Accelerate(velocity.y, mApzc.mLastFlingVelocity.y);
         FLING_LOG("%p Applying fling y-acceleration from %f to %f (delta %f)\n",
                   &mApzc, mApzc.mY.GetVelocity(), velocity.y,

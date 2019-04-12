@@ -629,7 +629,8 @@ static void WaylandBufferDelayCommitHandler(WindowSurfaceWayland** aSurface) {
   }
 }
 
-void WindowSurfaceWayland::CalcRectScale(LayoutDeviceIntRect& aRect, int aScale) {
+void WindowSurfaceWayland::CalcRectScale(LayoutDeviceIntRect& aRect,
+                                         int aScale) {
   if (aRect.x & 0x1) {
     aRect.width += 1;
   }
@@ -640,10 +641,10 @@ void WindowSurfaceWayland::CalcRectScale(LayoutDeviceIntRect& aRect, int aScale)
   }
   aRect.y = aRect.y / aScale;
 
-  aRect.width = (aRect.width & 0x1) ? aRect.width / aScale + 1 :
-                                      aRect.width / aScale;
-  aRect.height = (aRect.height & 0x1) ? aRect.height / aScale + 1 :
-                                        aRect.height / aScale;
+  aRect.width =
+      (aRect.width & 0x1) ? aRect.width / aScale + 1 : aRect.width / aScale;
+  aRect.height =
+      (aRect.height & 0x1) ? aRect.height / aScale + 1 : aRect.height / aScale;
 }
 
 void WindowSurfaceWayland::CommitWaylandBuffer() {

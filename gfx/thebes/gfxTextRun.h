@@ -1256,8 +1256,7 @@ class gfxFontGroup final : public gfxTextRunFactory {
   // helper methods for looking up fonts
 
   // lookup and add a font with a given name (i.e. *not* a generic!)
-  void AddPlatformFont(const nsACString& aName,
-                       bool aQuotedName,
+  void AddPlatformFont(const nsACString& aName, bool aQuotedName,
                        nsTArray<FamilyAndGeneric>& aFamilyList);
 
   // do style selection and add entries to list

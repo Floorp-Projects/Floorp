@@ -125,7 +125,8 @@ TEST(UrlClassifierLookupCacheV4, LoadOldPset)
   oldPsetFile->Remove(false);
 }
 
-TEST(UrlClassifierLookupCacheV4, BuildAPI) {
+TEST(UrlClassifierLookupCacheV4, BuildAPI)
+{
   _PrefixArray init = {_Prefix("alph")};
   RefPtr<LookupCacheV4> cache = SetupLookupCache<LookupCacheV4>(init);
 

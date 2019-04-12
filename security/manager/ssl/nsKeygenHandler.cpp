@@ -700,8 +700,7 @@ nsresult nsKeygenFormProcessor::ProcessValueIPC(const nsAString& aOldValue,
                                                 const nsAString& aKeyType,
                                                 const nsAString& aKeyParams,
                                                 nsAString& newValue) {
-  return GetPublicKey(aOldValue, aChallenge, aKeyType,
-                      newValue, aKeyParams);
+  return GetPublicKey(aOldValue, aChallenge, aKeyType, newValue, aKeyParams);
 }
 
 nsresult nsKeygenFormProcessor::ProvideContent(const nsAString& aFormType,

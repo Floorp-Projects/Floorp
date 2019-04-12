@@ -60,7 +60,6 @@ class VRDisplayHost {
   bool GetIsConnected();
   void ShutdownSubmitThread();
 
-
   class AutoRestoreRenderState {
    public:
     explicit AutoRestoreRenderState(VRDisplayHost* aDisplay);

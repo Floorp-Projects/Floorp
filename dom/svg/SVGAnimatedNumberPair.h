@@ -82,7 +82,7 @@ class SVGAnimatedNumberPair {
     virtual ~DOMAnimatedNumber();
 
     SVGAnimatedNumberPair* mVal;  // kept alive because it belongs to content
-    PairIndex mIndex;     // are we the first or second number
+    PairIndex mIndex;             // are we the first or second number
 
     virtual float BaseVal() override { return mVal->GetBaseValue(mIndex); }
     virtual void SetBaseVal(float aValue) override {

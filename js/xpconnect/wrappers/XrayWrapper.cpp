@@ -1713,7 +1713,8 @@ bool DOMXrayTraits::defineProperty(JSContext* cx, HandleObject wrapper,
 }
 
 bool DOMXrayTraits::enumerateNames(JSContext* cx, HandleObject wrapper,
-                                   unsigned flags, MutableHandleIdVector props) {
+                                   unsigned flags,
+                                   MutableHandleIdVector props) {
   // Put the indexed properties for a window first.
   nsGlobalWindowInner* win = AsWindow(cx, wrapper);
   if (win) {
@@ -2032,9 +2033,8 @@ bool XrayWrapper<Base, Traits>::defineProperty(JSContext* cx,
 }
 
 template <typename Base, typename Traits>
-bool XrayWrapper<Base, Traits>::ownPropertyKeys(JSContext* cx,
-                                                HandleObject wrapper,
-                                                MutableHandleIdVector props) const {
+bool XrayWrapper<Base, Traits>::ownPropertyKeys(
+    JSContext* cx, HandleObject wrapper, MutableHandleIdVector props) const {
   assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
   return getPropertyKeys(
       cx, wrapper, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS, props);
@@ -2134,8 +2134,9 @@ bool XrayWrapper<Base, Traits>::getOwnEnumerablePropertyKeys(
 }
 
 template <typename Base, typename Traits>
-bool XrayWrapper<Base, Traits>::enumerate(JSContext* cx, HandleObject wrapper,
-                                          JS::MutableHandleIdVector props) const {
+bool XrayWrapper<Base, Traits>::enumerate(
+    JSContext* cx, HandleObject wrapper,
+    JS::MutableHandleIdVector props) const {
   MOZ_CRASH("Shouldn't be called: we return true for hasPrototype()");
 }
 
@@ -2292,10 +2293,9 @@ bool XrayWrapper<Base, Traits>::setImmutablePrototype(JSContext* cx,
 }
 
 template <typename Base, typename Traits>
-bool XrayWrapper<Base, Traits>::getPropertyKeys(JSContext* cx,
-                                                HandleObject wrapper,
-                                                unsigned flags,
-                                                MutableHandleIdVector props) const {
+bool XrayWrapper<Base, Traits>::getPropertyKeys(
+    JSContext* cx, HandleObject wrapper, unsigned flags,
+    MutableHandleIdVector props) const {
   assertEnteredPolicy(cx, wrapper, JSID_VOID, BaseProxyHandler::ENUMERATE);
 
   // Enumerate expando properties first. Note that the expando object lives

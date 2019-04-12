@@ -30,7 +30,8 @@ bool XPC_WN_Helper_Enumerate(JSContext* cx, JS::HandleObject obj);
 bool XPC_WN_Shared_Enumerate(JSContext* cx, JS::HandleObject obj);
 
 bool XPC_WN_NewEnumerate(JSContext* cx, JS::HandleObject obj,
-                         JS::MutableHandleIdVector properties, bool enumerableOnly);
+                         JS::MutableHandleIdVector properties,
+                         bool enumerableOnly);
 
 bool XPC_WN_Helper_Resolve(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
                            bool* resolvedp);

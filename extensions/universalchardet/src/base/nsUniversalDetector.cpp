@@ -45,7 +45,7 @@ void nsUniversalDetector::Reset() {
   }
 
   if (mEscCharSetProber) {
-    mEscCharSetProber->Reset(); 
+    mEscCharSetProber->Reset();
   }
 }
 
@@ -136,12 +136,12 @@ nsresult nsUniversalDetector::HandleData(const char* aBuf, uint32_t aLen) {
       }
       break;
     case eHighbyte:
-          st = mMultibyteProber->HandleData(aBuf, aLen);
-          if (st == eFoundIt) {
-            mDone = true;
-            mDetectedCharset = mMultibyteProber->GetCharSetName();
-            return NS_OK;
-          }
+      st = mMultibyteProber->HandleData(aBuf, aLen);
+      if (st == eFoundIt) {
+        mDone = true;
+        mDetectedCharset = mMultibyteProber->GetCharSetName();
+        return NS_OK;
+      }
       break;
 
     default:     // pure ascii

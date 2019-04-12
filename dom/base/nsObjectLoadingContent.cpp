@@ -3508,10 +3508,9 @@ bool nsObjectLoadingContent::MayResolve(jsid aId) {
   return true;
 }
 
-void nsObjectLoadingContent::GetOwnPropertyNames(JSContext* aCx,
-                                                 JS::MutableHandleVector<jsid> /* unused */,
-                                                 bool /* unused */,
-                                                 ErrorResult& aRv) {
+void nsObjectLoadingContent::GetOwnPropertyNames(
+    JSContext* aCx, JS::MutableHandleVector<jsid> /* unused */,
+    bool /* unused */, ErrorResult& aRv) {
   // Just like DoResolve, just make sure we're instantiated.  That will do
   // the work our Enumerate hook needs to do.  This purposefully does not fire
   // for xray resolves, see bug 967694

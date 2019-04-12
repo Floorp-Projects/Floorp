@@ -642,7 +642,8 @@ class TabChild final : public TabChildBase,
 
   // The transform from the coordinate space of this TabChild to the coordinate
   // space of the native window its TabParent is in.
-  mozilla::LayoutDeviceToLayoutDeviceMatrix4x4 GetChildToParentConversionMatrix() const;
+  mozilla::LayoutDeviceToLayoutDeviceMatrix4x4
+  GetChildToParentConversionMatrix() const;
 
   // Prepare to dispatch all coalesced mousemove events. We'll move all data
   // in mCoalescedMouseData to a nsDeque; then we start processing them. We

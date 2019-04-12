@@ -1134,8 +1134,8 @@ static bool IsItemProbablyActive(nsDisplayItem* aItem,
       /* BLEND_MODE needs to be active if it might have a previous sibling
        * that is active. We use the activeness of the parent as a rough
        * proxy for this situation. */
-      return aParentActive || HasActiveChildren(*aItem->GetChildren(),
-                                                aDisplayListBuilder);
+      return aParentActive ||
+             HasActiveChildren(*aItem->GetChildren(), aDisplayListBuilder);
     }
     case DisplayItemType::TYPE_WRAP_LIST:
     case DisplayItemType::TYPE_PERSPECTIVE: {
