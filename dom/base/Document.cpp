@@ -1441,6 +1441,10 @@ Document::~Document() {
 
   ReportUseCounters();
 
+  if (!nsContentUtils::IsInPrivateBrowsing(this)) {
+    mContentBlockingLog.ReportLog();
+  }
+
   mInDestructor = true;
   mInUnlinkOrDeletion = true;
 

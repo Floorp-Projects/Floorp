@@ -76,6 +76,10 @@
 #include "nsDisplayList.h"
 #include "nsTransitionManager.h"
 
+#if defined(MOZ_WIDGET_ANDROID)
+#  include "VRManager.h"
+#endif    // defined(MOZ_WIDGET_ANDROID)
+
 #ifdef MOZ_XUL
 #  include "nsXULPopupManager.h"
 #endif
@@ -1746,6 +1750,14 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     // Try to survive this by just ignoring the refresh tick.
     return;
   }
+
+#if defined(MOZ_WIDGET_ANDROID)
+  gfx::VRManager* vm = gfx::VRManager::Get();
+  if (vm->IsPresenting()) {
+    RunFrameRequestCallbacks(aNowTime);
+    return;
+  }
+#endif    // defined(MOZ_WIDGET_ANDROID)
 
   AUTO_PROFILER_LABEL("nsRefreshDriver::Tick", LAYOUT);
 

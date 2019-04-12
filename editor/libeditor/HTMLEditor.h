@@ -2108,7 +2108,6 @@ class HTMLEditor final : public TextEditor,
                              nsAtom* aAttribute,
                              const bool aChildrenOnly = false);
 
-  bool NodeIsProperty(nsINode& aNode);
   bool IsAtFrontOfNode(nsINode& aNode, int32_t aOffset);
   bool IsAtEndOfNode(nsINode& aNode, int32_t aOffset);
   bool IsOnlyAttribute(const Element* aElement, nsAtom* aAttribute);

@@ -188,7 +188,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     if (win) {
       // We don't want to run script in windows that have been navigated away
       // from.
-      if (!win->AsInner()->HasActiveDocument()) {
+      if (!win->HasActiveDocument()) {
         aRv.ThrowDOMException(
             NS_ERROR_DOM_NOT_SUPPORTED_ERR,
             NS_LITERAL_CSTRING("Refusing to execute function from window "

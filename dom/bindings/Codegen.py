@@ -16276,9 +16276,12 @@ class CGCallback(CGClass):
 class CGCallbackFunction(CGCallback):
     def __init__(self, callback, descriptorProvider):
         self.callback = callback
+        if callback.isConstructor():
+            methods=[ConstructCallback(callback, descriptorProvider)]
+        else:
+            methods=[CallCallback(callback, descriptorProvider)]
         CGCallback.__init__(self, callback, descriptorProvider,
-                            "CallbackFunction",
-                            methods=[CallCallback(callback, descriptorProvider)])
+                            "CallbackFunction", methods)
 
     def getConstructors(self):
         return CGCallback.getConstructors(self) + [
@@ -16483,7 +16486,7 @@ class CallbackMember(CGNativeMember):
 
         return setupCall + declRval + argvDecl + convertArgs + doCall + returnResult
 
-    def getResultConversion(self):
+    def getResultConversion(self, isDefinitelyObject=False):
         replacements = {
             "val": "rval",
             "holderName": "rvalHolder",
@@ -16503,6 +16506,7 @@ class CallbackMember(CGNativeMember):
         convertType = instantiateJSToNativeConversion(
             getJSToNativeConversionInfo(self.retvalType,
                                         self.descriptorProvider,
+                                        isDefinitelyObject=isDefinitelyObject,
                                         exceptionCode=self.exceptionCode,
                                         isCallbackReturnValue=isCallbackReturnValue,
                                         # Allow returning a callback type that
@@ -16670,6 +16674,45 @@ class CallbackMember(CGNativeMember):
                               "that.  %s" %
                               (type, idlObject.identifier.name,
                                idlObject.location))
+
+
+class ConstructCallback(CallbackMember):
+    def __init__(self, callback, descriptorProvider):
+        self.callback = callback
+        CallbackMember.__init__(self, callback.signatures()[0], "Construct",
+                                descriptorProvider, needThisHandling=False,
+                                canRunScript=True)
+
+    def getRvalDecl(self):
+        # Box constructedObj for getJSToNativeConversionInfo().
+        return "JS::Rooted<JS::Value> rval(cx, JS::UndefinedValue());\n"
+
+    def getCall(self):
+        if self.argCount > 0:
+            args = "JS::HandleValueArray::subarray(argv, 0, argc)"
+        else:
+            args = "JS::HandleValueArray::empty()"
+
+        return fill(
+            """
+            JS::Rooted<JS::Value> constructor(cx, JS::ObjectValue(*mCallback));
+            JS::Rooted<JSObject*> constructedObj(cx);
+            if (!JS::Construct(cx, constructor,
+                          ${args}, &constructedObj)) {
+              aRv.NoteJSContextException(cx);
+              return${errorReturn};
+            }
+            rval.setObject(*constructedObj);
+            """,
+            args=args,
+            errorReturn=self.getDefaultRetval())
+
+    def getResultConversion(self):
+        return CallbackMember.getResultConversion(self,
+                                                  isDefinitelyObject=True);
+
+    def getPrettyName(self):
+        return self.callback.identifier.name
 
 
 class CallbackMethod(CallbackMember):

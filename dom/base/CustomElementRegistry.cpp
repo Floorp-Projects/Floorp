@@ -155,34 +155,6 @@ CustomElementCallback::CustomElementCallback(
     Element* aThisObject, Document::ElementCallbackType aCallbackType,
     mozilla::dom::CallbackFunction* aCallback)
     : mThisObject(aThisObject), mCallback(aCallback), mType(aCallbackType) {}
-//-----------------------------------------------------
-// CustomElementConstructor
-
-already_AddRefed<Element> CustomElementConstructor::Construct(
-    const char* aExecutionReason, ErrorResult& aRv) {
-  CallSetup s(this, aRv, aExecutionReason,
-              CallbackFunction::eRethrowExceptions);
-
-  JSContext* cx = s.GetContext();
-  if (!cx) {
-    MOZ_ASSERT(aRv.Failed());
-    return nullptr;
-  }
-
-  JS::Rooted<JSObject*> result(cx);
-  JS::Rooted<JS::Value> constructor(cx, JS::ObjectValue(*mCallback));
-  if (!JS::Construct(cx, constructor, JS::HandleValueArray::empty(), &result)) {
-    aRv.NoteJSContextException(cx);
-    return nullptr;
-  }
-
-  RefPtr<Element> element;
-  if (NS_FAILED(UNWRAP_OBJECT(Element, &result, element))) {
-    return nullptr;
-  }
-
-  return element.forget();
-}
 
 //-----------------------------------------------------
 // CustomElementData
@@ -665,10 +637,10 @@ int32_t CustomElementRegistry::InferNamespace(
 }
 
 // https://html.spec.whatwg.org/multipage/scripting.html#element-definition
-void CustomElementRegistry::Define(JSContext* aCx, const nsAString& aName,
-                                   Function& aFunctionConstructor,
-                                   const ElementDefinitionOptions& aOptions,
-                                   ErrorResult& aRv) {
+void CustomElementRegistry::Define(
+    JSContext* aCx, const nsAString& aName,
+    CustomElementConstructor& aFunctionConstructor,
+    const ElementDefinitionOptions& aOptions, ErrorResult& aRv) {
   JS::Rooted<JSObject*> constructor(aCx, aFunctionConstructor.CallableOrNull());
 
   // We need to do a dynamic unwrap in order to throw the right exception.  We
@@ -1066,15 +1038,20 @@ namespace {
 MOZ_CAN_RUN_SCRIPT
 static void DoUpgrade(Element* aElement, CustomElementConstructor* aConstructor,
                       ErrorResult& aRv) {
+  JS::Rooted<JS::Value> constructResult(RootingCx());
   // Rethrow the exception since it might actually throw the exception from the
   // upgrade steps back out to the caller of document.createElement.
-  RefPtr<Element> constructResult =
-      aConstructor->Construct("Custom Element Upgrade", aRv);
+  aConstructor->Construct(&constructResult, aRv, "Custom Element Upgrade",
+                          CallbackFunction::eRethrowExceptions);
   if (aRv.Failed()) {
     return;
   }
 
-  if (!constructResult || constructResult.get() != aElement) {
+  Element* element;
+  // constructResult is an ObjectValue because construction with a callback
+  // always forms the return value from a JSObject.
+  if (NS_FAILED(UNWRAP_OBJECT(Element, &constructResult, element)) ||
+      element != aElement) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -1410,12 +1387,13 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(CustomElementDefinition, Release)
 
 CustomElementDefinition::CustomElementDefinition(
     nsAtom* aType, nsAtom* aLocalName, int32_t aNamespaceID,
-    Function* aConstructor, nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
+    CustomElementConstructor* aConstructor,
+    nsTArray<RefPtr<nsAtom>>&& aObservedAttributes,
     UniquePtr<LifecycleCallbacks>&& aCallbacks)
     : mType(aType),
       mLocalName(aLocalName),
       mNamespaceID(aNamespaceID),
-      mConstructor(new CustomElementConstructor(aConstructor)),
+      mConstructor(aConstructor),
       mObservedAttributes(std::move(aObservedAttributes)),
       mCallbacks(std::move(aCallbacks)) {}
 

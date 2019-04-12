@@ -1336,8 +1336,7 @@ nsXPCComponents_Utils::ReportError(HandleValue error, HandleValue stack,
     return NS_OK;
   }
 
-  nsGlobalWindowInner* globalWin = CurrentWindowOrNull(cx);
-  nsPIDOMWindowInner* win = globalWin ? globalWin->AsInner() : nullptr;
+  nsGlobalWindowInner* win = CurrentWindowOrNull(cx);
   const uint64_t innerWindowID = win ? win->WindowID() : 0;
 
   RootedObject errorObj(cx, error.isObject() ? &error.toObject() : nullptr);

@@ -157,7 +157,7 @@ PostMessageEvent::Run() {
 
   StructuredCloneHolder* holder;
   if (mHolder.constructed<StructuredCloneHolder>()) {
-    mHolder.ref<StructuredCloneHolder>().Read(targetWindow->AsInner(), cx,
+    mHolder.ref<StructuredCloneHolder>().Read(ToSupports(targetWindow), cx,
                                               &messageData, rv);
     holder = &mHolder.ref<StructuredCloneHolder>();
   } else {
@@ -223,7 +223,7 @@ void PostMessageEvent::Dispatch(nsGlobalWindowInner* aTargetWindow,
   WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
 
   nsEventStatus status = nsEventStatus_eIgnore;
-  EventDispatcher::Dispatch(aTargetWindow->AsInner(), presContext,
+  EventDispatcher::Dispatch(ToSupports(aTargetWindow), presContext,
                             internalEvent, aEvent, &status);
 }
 

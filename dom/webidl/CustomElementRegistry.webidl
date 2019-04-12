@@ -5,7 +5,7 @@
 // https://html.spec.whatwg.org/#dom-window-customelements
 interface CustomElementRegistry {
   [CEReactions, Throws, UseCounter]
-  void define(DOMString name, Function functionConstructor,
+  void define(DOMString name, CustomElementConstructor functionConstructor,
               optional ElementDefinitionOptions options);
   [ChromeOnly, Throws]
   void setElementCreationCallback(DOMString name, CustomElementCreationCallback callback);
@@ -18,6 +18,8 @@ interface CustomElementRegistry {
 dictionary ElementDefinitionOptions {
   DOMString extends;
 };
+
+callback constructor CustomElementConstructor = any ();
 
 [MOZ_CAN_RUN_SCRIPT_BOUNDARY]
 callback CustomElementCreationCallback = void (DOMString name);

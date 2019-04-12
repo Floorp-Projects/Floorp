@@ -127,9 +127,8 @@ class NS_ConvertUTF8toUTF16 : public nsAutoString {
 // MOZ_DBG support
 
 inline std::ostream& operator<<(std::ostream& aOut, const nsACString& aString) {
-  aOut << '"';
   aOut.write(aString.Data(), aString.Length());
-  return aOut << '"';
+  return aOut;
 }
 
 inline std::ostream& operator<<(std::ostream& aOut, const nsAString& aString) {
