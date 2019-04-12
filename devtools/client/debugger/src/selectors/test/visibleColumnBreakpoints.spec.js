@@ -73,7 +73,7 @@ describe("getFirstBreakpointPosition", () => {
     const store = createStore();
     const { dispatch, getState } = store;
 
-    await dispatch(actions.newSource(makeSource("foo1")));
+    await dispatch(actions.newGeneratedSource(makeSource("foo1")));
 
     const source = selectors.getSourceFromId(getState(), "foo1");
     dispatch({

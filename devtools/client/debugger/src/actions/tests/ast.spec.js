@@ -67,8 +67,9 @@ describe("ast", () => {
       it("should be able to set symbols", async () => {
         const store = createStore(threadClient);
         const { dispatch, getState, cx } = store;
-        const base = makeSource("base.js");
-        await dispatch(actions.newSource(base));
+        const base = await dispatch(
+          actions.newGeneratedSource(makeSource("base.js"))
+        );
         await dispatch(actions.loadSourceText({ cx, source: base }));
 
         const loadedSource = selectors.getSourceFromId(getState(), base.id);
@@ -83,8 +84,9 @@ describe("ast", () => {
     describe("when the source is not loaded", () => {
       it("should return null", async () => {
         const { getState, dispatch } = createStore(threadClient);
-        const base = makeSource("base.js");
-        await dispatch(actions.newSource(base));
+        const base = await dispatch(
+          actions.newGeneratedSource(makeSource("base.js"))
+        );
 
         const baseSymbols = getSymbols(getState(), base);
         expect(baseSymbols).toEqual(null);
@@ -103,11 +105,14 @@ describe("ast", () => {
       it("should detect react components", async () => {
         const store = createStore(threadClient, {}, sourceMaps);
         const { cx, dispatch, getState } = store;
-        const source = makeOriginalSource("reactComponent.js");
 
-        await dispatch(actions.newSource(makeSource("reactComponent.js")));
+        const genSource = await dispatch(
+          actions.newGeneratedSource(makeSource("reactComponent.js"))
+        );
 
-        await dispatch(actions.newSource(source));
+        const source = await dispatch(
+          actions.newOriginalSource(makeOriginalSource(genSource))
+        );
 
         await dispatch(actions.loadSourceText({ cx, source }));
         const loadedSource = selectors.getSourceFromId(getState(), source.id);
@@ -119,8 +124,9 @@ describe("ast", () => {
       it("should not give false positive on non react components", async () => {
         const store = createStore(threadClient);
         const { cx, dispatch, getState } = store;
-        const base = makeSource("base.js");
-        await dispatch(actions.newSource(base));
+        const base = await dispatch(
+          actions.newGeneratedSource(makeSource("base.js"))
+        );
         await dispatch(actions.loadSourceText({ cx, source: base }));
         await dispatch(actions.setSymbols({ cx, source: base }));
 
@@ -137,8 +143,9 @@ describe("ast", () => {
     it("with selected line", async () => {
       const store = createStore(threadClient);
       const { dispatch, getState, cx } = store;
-      const source = makeSource("scopes.js");
-      await dispatch(actions.newSource(source));
+      const source = await dispatch(
+        actions.newGeneratedSource(makeSource("scopes.js"))
+      );
 
       await dispatch(
         actions.selectLocation(cx, { sourceId: "scopes.js", line: 5 })
@@ -174,8 +181,7 @@ describe("ast", () => {
 
     it("without a selected line", async () => {
       const { dispatch, getState, cx } = createStore(threadClient);
-      const base = makeSource("base.js");
-      await dispatch(actions.newSource(base));
+      await dispatch(actions.newGeneratedSource(makeSource("base.js")));
       await dispatch(actions.selectSource(cx, "base.js"));
 
       const locations = getOutOfScopeLocations(getState());

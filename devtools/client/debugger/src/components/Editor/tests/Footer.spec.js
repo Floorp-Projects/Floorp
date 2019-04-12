@@ -9,7 +9,7 @@ import React from "react";
 import { shallow } from "enzyme";
 
 import SourceFooter from "../Footer";
-import { makeSource } from "../../../utils/test-head";
+import { createSourceObject } from "../../../utils/test-head";
 import { setDocument } from "../../../utils/editor";
 
 function createMockDocument(clear, position) {
@@ -29,7 +29,7 @@ function generateDefaults(overrides) {
       }
     },
     endPanelCollapsed: false,
-    selectedSource: makeSource("foo"),
+    selectedSource: createSourceObject("foo"),
     ...overrides
   };
 }

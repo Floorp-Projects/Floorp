@@ -18,8 +18,9 @@ describe("closing tabs", () => {
   it("closing a tab", async () => {
     const { dispatch, getState, cx } = createStore(threadClient);
 
-    const fooSource = makeSource("foo.js");
-    await dispatch(actions.newSource(fooSource));
+    const fooSource = await dispatch(
+      actions.newGeneratedSource(makeSource("foo.js"))
+    );
     await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
     dispatch(actions.closeTab(cx, fooSource));
 
@@ -30,9 +31,10 @@ describe("closing tabs", () => {
   it("closing the inactive tab", async () => {
     const { dispatch, getState, cx } = createStore(threadClient);
 
-    const fooSource = makeSource("foo.js");
-    await dispatch(actions.newSource(fooSource));
-    await dispatch(actions.newSource(makeSource("bar.js")));
+    const fooSource = await dispatch(
+      actions.newGeneratedSource(makeSource("foo.js"))
+    );
+    await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
     await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
     await dispatch(actions.selectLocation(cx, { sourceId: "bar.js", line: 1 }));
     dispatch(actions.closeTab(cx, fooSource));
@@ -45,8 +47,9 @@ describe("closing tabs", () => {
   it("closing the only tab", async () => {
     const { dispatch, getState, cx } = createStore(threadClient);
 
-    const fooSource = makeSource("foo.js");
-    await dispatch(actions.newSource(fooSource));
+    const fooSource = await dispatch(
+      actions.newGeneratedSource(makeSource("foo.js"))
+    );
     await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
     dispatch(actions.closeTab(cx, fooSource));
 
@@ -57,9 +60,10 @@ describe("closing tabs", () => {
   it("closing the active tab", async () => {
     const { dispatch, getState, cx } = createStore(threadClient);
 
-    const barSource = makeSource("bar.js");
-    await dispatch(actions.newSource(makeSource("foo.js")));
-    await dispatch(actions.newSource(barSource));
+    await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
+    const barSource = await dispatch(
+      actions.newGeneratedSource(makeSource("bar.js"))
+    );
     await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
     await dispatch(actions.selectLocation(cx, { sourceId: "bar.js", line: 1 }));
     await dispatch(actions.closeTab(cx, barSource));
@@ -72,11 +76,9 @@ describe("closing tabs", () => {
   it("closing many inactive tabs", async () => {
     const { dispatch, getState, cx } = createStore(threadClient);
 
-    const fooSource = makeSource("foo.js");
-    const barSource = makeSource("bar.js");
-    await dispatch(actions.newSource(fooSource));
-    await dispatch(actions.newSource(barSource));
-    await dispatch(actions.newSource(makeSource("bazz.js")));
+    await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
+    await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
+    await dispatch(actions.newGeneratedSource(makeSource("bazz.js")));
     await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
     await dispatch(actions.selectLocation(cx, { sourceId: "bar.js", line: 1 }));
     await dispatch(
@@ -97,9 +99,9 @@ describe("closing tabs", () => {
   it("closing many tabs including the active tab", async () => {
     const { dispatch, getState, cx } = createStore(threadClient);
 
-    await dispatch(actions.newSource(makeSource("foo.js")));
-    await dispatch(actions.newSource(makeSource("bar.js")));
-    await dispatch(actions.newSource(makeSource("bazz.js")));
+    await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
+    await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
+    await dispatch(actions.newGeneratedSource(makeSource("bazz.js")));
     await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
     await dispatch(actions.selectLocation(cx, { sourceId: "bar.js", line: 1 }));
     await dispatch(
@@ -119,8 +121,8 @@ describe("closing tabs", () => {
   it("closing all the tabs", async () => {
     const { dispatch, getState, cx } = createStore(threadClient);
 
-    await dispatch(actions.newSource(makeSource("foo.js")));
-    await dispatch(actions.newSource(makeSource("bar.js")));
+    await dispatch(actions.newGeneratedSource(makeSource("foo.js")));
+    await dispatch(actions.newGeneratedSource(makeSource("bar.js")));
     await dispatch(actions.selectLocation(cx, { sourceId: "foo.js", line: 1 }));
     await dispatch(actions.selectLocation(cx, { sourceId: "bar.js", line: 1 }));
     await dispatch(

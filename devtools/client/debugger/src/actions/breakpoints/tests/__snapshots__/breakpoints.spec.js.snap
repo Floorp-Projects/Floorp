@@ -44,7 +44,15 @@ Array [
       ],
       "contentType": "text/javascript",
       "id": "a",
+      "introductionType": null,
+      "introductionUrl": null,
+      "isBlackBoxed": false,
+      "isExtension": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
       "loadedState": "loaded",
+      "relativeUrl": "http://localhost:8000/examples/a",
+      "sourceMapURL": null,
       "text": "function a() {
   return a 
 }",
@@ -130,7 +138,15 @@ Array [
       ],
       "contentType": "text/javascript",
       "id": "a",
+      "introductionType": null,
+      "introductionUrl": null,
+      "isBlackBoxed": false,
+      "isExtension": false,
+      "isPrettyPrinted": false,
+      "isWasm": false,
       "loadedState": "loaded",
+      "relativeUrl": "http://localhost:8000/examples/a",
+      "sourceMapURL": null,
       "text": "function a() {
   return a 
 }",
