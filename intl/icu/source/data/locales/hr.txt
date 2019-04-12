@@ -1579,7 +1579,7 @@ hr{
                     "Taishō",
                     "Shōwa",
                     "Heisei",
-                    "Qqqq",
+                    "Reiwa",
                 }
             }
         }

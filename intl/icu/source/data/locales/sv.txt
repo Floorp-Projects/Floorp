@@ -1638,7 +1638,7 @@ sv{
                     "Taishō",
                     "Shōwa",
                     "Heisei",
-                    "Qqqq",
+                    "Reiwa",
                 }
             }
         }

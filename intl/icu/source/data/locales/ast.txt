@@ -2304,7 +2304,7 @@ ast{
                     "Taishō",
                     "e. Shōwa",
                     "Heisei",
-                    "Qqqq",
+                    "Reiwa",
                 }
                 narrow{
                     "Taika",
@@ -2543,7 +2543,7 @@ ast{
                     "T",
                     "S",
                     "H",
-                    "Q",
+                    "R",
                 }
                 wide{
                     "Taika (645–650)",
@@ -2782,7 +2782,7 @@ ast{
                     "Taishō",
                     "era Shōwa",
                     "Heisei",
-                    "Qqqq",
+                    "Reiwa",
                 }
             }
             intervalFormats{

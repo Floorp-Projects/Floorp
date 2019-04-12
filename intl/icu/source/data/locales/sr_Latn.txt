@@ -1259,7 +1259,7 @@ sr_Latn{
                     "Taišo",
                     "Šova",
                     "Haisei",
-                    "Qqqq",
+                    "Reiva",
                 }
             }
         }

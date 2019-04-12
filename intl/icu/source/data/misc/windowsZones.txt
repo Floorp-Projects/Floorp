@@ -17,8 +17,8 @@ windowsZones:table(nofallback){
         "Alaskan Standard Time"{
             001{"America/Anchorage"}
             US{
-                "America/Anchorage America/Juneau America/Metlakatla America/Nome Ame"
-                "rica/Sitka America/Yakutat"
+                "America/Anchorage America/Juneau America/Nome America/Sitka America/"
+                "Yakutat"
             }
         }
         "Aleutian Standard Time"{
@@ -130,7 +130,7 @@ windowsZones:table(nofallback){
             CN{"Asia/Urumqi"}
             IO{"Indian/Chagos"}
             KG{"Asia/Bishkek"}
-            KZ{"Asia/Almaty Asia/Qyzylorda"}
+            KZ{"Asia/Almaty Asia/Qostanay"}
             ZZ{"Etc/GMT-6"}
         }
         "Central Brazilian Standard Time"{
@@ -468,7 +468,7 @@ windowsZones:table(nofallback){
         "Pacific Standard Time"{
             001{"America/Los_Angeles"}
             CA{"America/Vancouver America/Dawson America/Whitehorse"}
-            US{"America/Los_Angeles"}
+            US{"America/Los_Angeles America/Metlakatla"}
             ZZ{"PST8PDT"}
         }
         "Pakistan Standard Time"{
@@ -779,7 +779,7 @@ windowsZones:table(nofallback){
         "West Asia Standard Time"{
             001{"Asia/Tashkent"}
             AQ{"Antarctica/Mawson"}
-            KZ{"Asia/Oral Asia/Aqtau Asia/Aqtobe Asia/Atyrau"}
+            KZ{"Asia/Oral Asia/Aqtau Asia/Aqtobe Asia/Atyrau Asia/Qyzylorda"}
             MV{"Indian/Maldives"}
             TF{"Indian/Kerguelen"}
             TJ{"Asia/Dushanbe"}
