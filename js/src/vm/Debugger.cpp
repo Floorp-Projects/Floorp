@@ -2059,7 +2059,7 @@ ResumeMode Debugger::fireEnterFrame(JSContext* cx, MutableHandleValue vp) {
 
 #if DEBUG
   // Assert that the hook won't be able to re-enter the generator.
-  if (iter.hasScript() && *iter.pc() == JSOP_DEBUGAFTERYIELD) {
+  if (iter.hasScript() && *iter.pc() == JSOP_AFTERYIELD) {
     auto* genObj = GetGeneratorObjectForFrame(cx, iter.abstractFramePtr());
     MOZ_ASSERT(genObj->isRunning() || genObj->isClosing());
   }

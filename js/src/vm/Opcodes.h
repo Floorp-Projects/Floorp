@@ -2253,7 +2253,7 @@
      *   Operands:
      *   Stack: =>
      */ \
-    MACRO(JSOP_DEBUGAFTERYIELD, 208, "debugafteryield", NULL, 1, 0, 0, JOF_BYTE) \
+    MACRO(JSOP_AFTERYIELD, 208, "afteryield", NULL, 1, 0, 0, JOF_BYTE) \
     /*
      * Pops the generator and the return value 'promise', stops interpretation
      * and returns 'promise'. Pushes resolved value onto the stack.

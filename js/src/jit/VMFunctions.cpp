@@ -1009,7 +1009,7 @@ bool DebugAfterYield(JSContext* cx, BaselineFrame* frame, jsbytecode* pc,
   // The BaselineFrame has just been constructed by JSOP_RESUME in the
   // caller. We need to set its debuggee flag as necessary.
   //
-  // If a breakpoint is set on JSOP_DEBUGAFTERYIELD, or stepping is enabled,
+  // If a breakpoint is set on JSOP_AFTERYIELD, or stepping is enabled,
   // we may already have done this work. Don't fire onEnterFrame again.
   if (frame->script()->isDebuggee() && !frame->isDebuggee()) {
     frame->setIsDebuggee();
@@ -1124,8 +1124,8 @@ bool HandleDebugTrap(JSContext* cx, BaselineFrame* frame, uint8_t* retAddr,
       script->baselineScript()->retAddrEntryFromReturnAddress(retAddr).pc(
           script);
 
-  if (*pc == JSOP_DEBUGAFTERYIELD) {
-    // JSOP_DEBUGAFTERYIELD will set the frame's debuggee flag and call the
+  if (*pc == JSOP_AFTERYIELD) {
+    // JSOP_AFTERYIELD will set the frame's debuggee flag and call the
     // onEnterFrame handler, but if we set a breakpoint there we have to do
     // it now.
     MOZ_ASSERT(!frame->isDebuggee());
