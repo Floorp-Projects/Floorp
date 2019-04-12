@@ -48,21 +48,21 @@ internal object TimingManager {
      */
     public fun start(metricData: CommonMetricData, timerId: Any) {
         val startTime = getElapsedNanos()
-        val metricName = metricData.identifier
-
-        uncommittedStartTimes[metricName]?.let { metricTimings ->
-            if (timerId in metricTimings) {
-                recordError(
-                    metricData,
-                    ErrorRecording.ErrorType.InvalidValue,
-                    "Timespan already started",
-                    logger
-                )
-                return
-            }
-        }
 
         synchronized(this) {
+            val metricName = metricData.identifier
+            uncommittedStartTimes[metricName]?.let { metricTimings ->
+                if (timerId in metricTimings) {
+                    recordError(
+                        metricData,
+                        ErrorRecording.ErrorType.InvalidValue,
+                        "Timespan already started",
+                        logger
+                    )
+                    return
+                }
+            }
+
             uncommittedStartTimes.getOrPut(metricName, { WeakHashMap<Any, Long>() })[timerId] = startTime
         }
     }
