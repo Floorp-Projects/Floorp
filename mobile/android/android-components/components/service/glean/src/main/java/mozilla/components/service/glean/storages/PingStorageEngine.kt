@@ -37,36 +37,37 @@ internal class PingStorageEngine(context: Context) {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     val storageDirectory: File = File(context.applicationInfo.dataDir, PING_STORAGE_DIRECTORY)
 
+    // The cache directory is used to temporarily write ping files before they are moved
+    // to the final [PING_STORAGE_DIRECTORY]. This directory is still app-private, so
+    // saving pings there it's still safe.
+    private val cacheDirectory: File = context.cacheDir
+
     companion object {
         // Since ping file names are UUIDs, this matches UUIDs for filtering purposes
         private const val FILE_PATTERN =
             "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
         // Base directory for storing serialized pings
         private const val PING_STORAGE_DIRECTORY = "${Glean.GLEAN_DATA_DIR}/pending_pings"
-        // The job timeout is useful in tests, which are usually running on CI
-        // infrastructure. The timeout needs to be reasonably high to account for
-        // slow or under-stress hardware.
-        private const val JOB_TIMEOUT_MS = 500L
     }
 
     /**
      * Function to store the ping to file to the application's storage directory
      *
      * @param uuidFileName UUID that will represent the file named used to store the ping
-     * @param pingPath String representing the upload path used for uploading the ping
+     * @param uploadPath String representing the upload path used for uploading the ping
      * @param pingData Serialized JSON string representing the ping payload
      */
-    fun store(uuidFileName: UUID, pingPath: String, pingData: String): Job {
-        logger.debug("Storing ping $uuidFileName in $pingPath")
+    fun store(uuidFileName: UUID, uploadPath: String, pingData: String): Job {
         return GlobalScope.launch(KotlinDispatchers.IO) {
             // Check that the director exists and create it if needed
             ensureDirectoryExists(storageDirectory)
 
             // Build the file path for the ping, using the UUID from the path for the file name
             val pingFile = File(storageDirectory, uuidFileName.toString())
+            logger.debug("Storing ping $uuidFileName at ${pingFile.absolutePath}")
 
             // Write ping to file
-            writePingToFile(pingFile, pingPath, pingData)
+            writePingToFile(pingFile, uploadPath, pingData)
         }
     }
 
@@ -146,20 +147,31 @@ internal class PingStorageEngine(context: Context) {
      * Serializes the upload path and data to a file to persist data for the upload worker to use.
      *
      * @param pingFile The file to write the path and data to
-     * @param pingPath The upload path to serialize
+     * @param uploadPath The upload path to serialize
      * @param pingData The ping data to serialize
      */
-    private fun writePingToFile(pingFile: File, pingPath: String, pingData: String) {
-        FileOutputStream(pingFile, true).bufferedWriter().use {
+    private fun writePingToFile(pingFile: File, uploadPath: String, pingData: String) {
+        // Store data to a temporary file.
+        val temporaryFile = File.createTempFile("glean-ping", ".tmp", cacheDirectory)
+
+        // Write the ping content data to the temp file.
+        FileOutputStream(temporaryFile, true).bufferedWriter().use {
             try {
-                it.write(pingPath)
+                it.write(uploadPath)
                 it.newLine()
                 it.write(pingData)
                 it.newLine()
                 it.flush()
             } catch (e: IOException) {
                 logger.warn("IOException while writing ping to file", e)
+                return
             }
+        }
+
+        // Nothing weird happened, move the file to the final location. This could still
+        // fail, but there's really no way for us to do something about it.
+        if (!temporaryFile.renameTo(pingFile)) {
+            logger.warn("Unable to move ${temporaryFile.absolutePath} to ${pingFile.absolutePath}")
         }
     }
 }
