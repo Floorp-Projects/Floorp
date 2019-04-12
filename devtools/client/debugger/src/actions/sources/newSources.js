@@ -35,28 +35,14 @@ import {
 import { prefs } from "../../utils/prefs";
 import sourceQueue from "../../utils/source-queue";
 
-import type { Source, SourceId, Context, QueuedSourceData } from "../../types";
+import type {
+  Source,
+  SourceId,
+  Context,
+  OriginalSourceData,
+  QueuedSourceData
+} from "../../types";
 import type { Action, ThunkArgs } from "../types";
-
-function createOriginalSource(
-  originalUrl,
-  generatedSource,
-  sourceMaps
-): Source {
-  return {
-    url: originalUrl,
-    relativeUrl: originalUrl,
-    id: generatedToOriginalId(generatedSource.id, originalUrl),
-    isPrettyPrinted: false,
-    isWasm: false,
-    isBlackBoxed: false,
-    loadedState: "unloaded",
-    introductionUrl: null,
-    introductionType: undefined,
-    isExtension: false,
-    actors: []
-  };
-}
 
 function loadSourceMaps(cx: Context, sources: Source[]) {
   return async function({
@@ -145,7 +131,10 @@ function loadSourceMap(cx: Context, sourceId: SourceId) {
       return [];
     }
 
-    return urls.map(url => createOriginalSource(url, source, sourceMaps));
+    return urls.map(url => ({
+      id: generatedToOriginalId(source.id, url),
+      url
+    }));
   };
 }
 
@@ -225,9 +214,47 @@ function restoreBlackBoxedSources(cx: Context, sources: Source[]) {
 
 export function newQueuedSources(sourceInfo: Array<QueuedSourceData>) {
   return async ({ dispatch }: ThunkArgs) => {
-    const sources = sourceInfo.map(s => s.data);
+    const generated = [];
+    const original = [];
+    for (const source of sourceInfo) {
+      if (source.type === "generated") {
+        generated.push(source.data);
+      } else {
+        original.push(source.data);
+      }
+    }
+    if (generated.length > 0) {
+      await dispatch(newSources(generated));
+    }
+    if (original.length > 0) {
+      await dispatch(newOriginalSources(original));
+    }
+  };
+}
 
-    await dispatch(newSources(sources));
+export function newOriginalSource(sourceInfo: OriginalSourceData) {
+  return async ({ dispatch }: ThunkArgs) => {
+    const sources = await dispatch(newOriginalSources([sourceInfo]));
+    return sources[0];
+  };
+}
+export function newOriginalSources(sourceInfo: Array<OriginalSourceData>) {
+  return async ({ dispatch }: ThunkArgs) => {
+    const sources = sourceInfo.map(({ id, url }) => ({
+      id,
+      url,
+      relativeUrl: url,
+      isPrettyPrinted: false,
+      isWasm: false,
+      isBlackBoxed: false,
+      loadedState: "unloaded",
+      introductionUrl: null,
+      introductionType: undefined,
+      isExtension: false,
+      actors: []
+    }));
+
+    return dispatch(newSources(sources));
   };
 }
 
@@ -271,5 +298,7 @@ export function newSources(sources: Source[]) {
 
     dispatch(restoreBlackBoxedSources(cx, _newSources));
     dispatch(loadSourceMaps(cx, _newSources));
+
+    return sources;
   };
 }
