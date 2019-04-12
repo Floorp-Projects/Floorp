@@ -16,6 +16,7 @@ from mozprofile import (
     BaseProfile,
     Profile,
     ChromeProfile,
+    ChromiumProfile,
     FirefoxProfile,
     ThunderbirdProfile,
     create_profile,
@@ -44,6 +45,7 @@ def test_with_profile_should_cleanup_even_on_exception():
 
 @pytest.mark.parametrize('app,cls', [
     ('chrome', ChromeProfile),
+    ('chromium', ChromiumProfile),
     ('firefox', FirefoxProfile),
     ('thunderbird', ThunderbirdProfile),
     ('unknown', None)
@@ -65,6 +67,7 @@ def test_create_profile(tmpdir, app, cls):
 @pytest.mark.parametrize('cls', [
     Profile,
     ChromeProfile,
+    ChromiumProfile,
 ])
 def test_merge_profile(cls):
     profile = cls(preferences={'foo': 'bar'})
