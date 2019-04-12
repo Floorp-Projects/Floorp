@@ -414,6 +414,11 @@ IndirectBindingMap& ModuleNamespaceObject::bindings() {
   return *bindings;
 }
 
+bool ModuleNamespaceObject::hasBindings() const {
+  // Import bindings may not be present if we hit OOM in initialization.
+  return !GetProxyReservedSlot(this, BindingsSlot).isUndefined();
+}
+
 bool ModuleNamespaceObject::addBinding(JSContext* cx, HandleAtom exportedName,
                                        HandleModuleObject targetModule,
                                        HandleAtom localName) {
@@ -666,13 +671,19 @@ bool ModuleNamespaceObject::ProxyHandler::ownPropertyKeys(
 void ModuleNamespaceObject::ProxyHandler::trace(JSTracer* trc,
                                                 JSObject* proxy) const {
   auto& self = proxy->as<ModuleNamespaceObject>();
-  self.bindings().trace(trc);
+
+  if (self.hasBindings()) {
+    self.bindings().trace(trc);
+  }
 }
 
 void ModuleNamespaceObject::ProxyHandler::finalize(JSFreeOp* fop,
                                                    JSObject* proxy) const {
   auto& self = proxy->as<ModuleNamespaceObject>();
-  js_delete(&self.bindings());
+
+  if (self.hasBindings()) {
+    js_delete(&self.bindings());
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////
