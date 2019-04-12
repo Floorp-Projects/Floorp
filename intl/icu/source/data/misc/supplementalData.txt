@@ -1263,7 +1263,6 @@ supplementalData:table(nofallback){
                     }
                 }
                 236{
-                    named{"false"}
                     start:intvector{
                         2019,
                         5,
