@@ -312,7 +312,7 @@ class SourcesTree extends Component<Props, State> {
 
     if (worker) {
       return (
-        <div className="node thread-header">
+        <div className="node thread-header" key="thread-header">
           <AccessibleImage className="worker" />
           <span className="label">{getDisplayName(worker)}</span>
         </div>
@@ -320,7 +320,7 @@ class SourcesTree extends Component<Props, State> {
     }
 
     return (
-      <div className="node thread-header">
+      <div className="node thread-header" key="thread-header">
         <AccessibleImage className={"file"} />
         <span className="label">{L10N.getStr("mainThread")}</span>
       </div>
