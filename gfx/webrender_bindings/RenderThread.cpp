@@ -869,7 +869,7 @@ static already_AddRefed<gl::GLContext> CreateGLContextANGLE() {
 }
 #endif
 
-#ifdef MOZ_WIDGET_ANDROID
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WAYLAND)
 static already_AddRefed<gl::GLContext> CreateGLContextEGL() {
   nsCString discardFailureId;
   if (!gl::GLLibraryEGL::EnsureInitialized(/* forceAccel */ true,
@@ -897,8 +897,12 @@ static already_AddRefed<gl::GLContext> CreateGLContext() {
   }
 #endif
 
-#ifdef MOZ_WIDGET_ANDROID
-  return CreateGLContextEGL();
+#if defined(MOZ_WIDGET_ANDROID)
+    return CreateGLContextEGL();
+#elif defined(MOZ_WAYLAND)
+  if (!GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+    return CreateGLContextEGL();
+  }
 #endif
   // We currently only support a shared GLContext
   // with ANGLE.
