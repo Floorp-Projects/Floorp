@@ -38,7 +38,7 @@ class RenderAndroidSurfaceTextureHostOGL final : public RenderTextureHostOGL {
 
   const mozilla::java::GeckoSurfaceTexture::GlobalRef mSurfTex;
   const gfx::IntSize mSize;
-  // XXX const bool mContinuousUpdate;
+  const bool mContinuousUpdate;
   // XXX const bool mIgnoreTransform;
   bool mIsPrepared;
   bool mAttachedToGLContext;
