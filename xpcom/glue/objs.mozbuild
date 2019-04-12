@@ -6,7 +6,6 @@
 
 xpcom_glue_src_lcppsrcs = [
     'FileUtils.cpp',
-    'MemUtils.cpp',
     'XREAppData.cpp',
 ]
 
