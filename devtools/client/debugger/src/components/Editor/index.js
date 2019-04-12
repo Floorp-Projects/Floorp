@@ -418,7 +418,7 @@ class Editor extends PureComponent<Props, State> {
       return continueToHere(cx, sourceLine);
     }
 
-    return addBreakpointAtLine(cx, sourceLine, ev.altKey);
+    return addBreakpointAtLine(cx, sourceLine, ev.altKey, ev.shiftKey);
   };
 
   onGutterContextMenu = (event: MouseEvent) => {
