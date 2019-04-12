@@ -8,6 +8,7 @@ from mozbuild.backend.test_manifest import TestManifestBackend
 from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
 from mozbuild.frontend.emitter import TreeMetadataEmitter
 from mozbuild.frontend.reader import BuildReader, EmptyConfig
+import mozpack.path as mozpath
 
 
 def gen_test_backend():
@@ -15,6 +16,13 @@ def gen_test_backend():
     try:
         config = build_obj.config_environment
     except BuildEnvironmentNotFoundException:
+        # Create a stub config.status file, since the TestManifest backend needs
+        # to be re-created if configure runs. If the file doesn't exist,
+        # mozbuild continually thinks the TestManifest backend is out of date
+        # and tries to regenerate it.
+        config_status = mozpath.join(build_obj.topobjdir, 'config.status')
+        open(config_status, 'w').close()
+
         print("No build detected, test metadata may be incomplete.")
 
         # If 'JS_STANDALONE' is set, tests that don't require an objdir won't
