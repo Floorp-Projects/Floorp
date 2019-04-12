@@ -4,7 +4,7 @@
 
 use api::BorderRadius;
 use api::units::*;
-use euclid::{Point2D, Rect, Size2D, TypedPoint2D, TypedRect, TypedSize2D, Vector2D};
+use euclid::{TypedPoint2D, TypedRect, TypedSize2D, Vector2D};
 use euclid::{TypedTransform2D, TypedTransform3D, TypedVector2D, TypedScale};
 use malloc_size_of::{MallocShallowSizeOf, MallocSizeOf, MallocSizeOfOps};
 use plane_split::{Clipper, Polygon};
@@ -413,12 +413,6 @@ impl<U> RectHelpers<U> for TypedRect<f32, U> {
     fn is_well_formed_and_nonempty(&self) -> bool {
         self.size.width > 0.0 && self.size.height > 0.0
     }
-}
-
-#[allow(dead_code)]
-#[inline]
-pub fn rect_from_points_f(x0: f32, y0: f32, x1: f32, y1: f32) -> Rect<f32> {
-    Rect::new(Point2D::new(x0, y0), Size2D::new(x1 - x0, y1 - y0))
 }
 
 pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
