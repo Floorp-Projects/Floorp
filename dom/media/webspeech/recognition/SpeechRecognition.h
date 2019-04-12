@@ -237,7 +237,7 @@ class SpeechRecognition final : public DOMEventTargetHelper,
                                const nsAString& aEventName);
 
   const char* GetName(FSMState aId);
-  const char* GetName(SpeechEvent* aId);
+  const char* GetName(SpeechEvent* aEvent);
 };
 
 class SpeechEvent : public Runnable {

@@ -23,9 +23,9 @@ using namespace dom;
 NS_IMPL_ISUPPORTS(FakeSpeechRecognitionService, nsISpeechRecognitionService,
                   nsIObserver)
 
-FakeSpeechRecognitionService::FakeSpeechRecognitionService() {}
+FakeSpeechRecognitionService::FakeSpeechRecognitionService() = default;
 
-FakeSpeechRecognitionService::~FakeSpeechRecognitionService() {}
+FakeSpeechRecognitionService::~FakeSpeechRecognitionService() = default;
 
 NS_IMETHODIMP
 FakeSpeechRecognitionService::Initialize(
