@@ -987,9 +987,8 @@ nsresult nsPrintJob::DoCommonPrint(bool aIsPrintPreview,
 }
 
 //---------------------------------------------------------------------------------
-NS_IMETHODIMP
-nsPrintJob::Print(nsIPrintSettings* aPrintSettings,
-                  nsIWebProgressListener* aWebProgressListener) {
+nsresult nsPrintJob::Print(nsIPrintSettings* aPrintSettings,
+                           nsIWebProgressListener* aWebProgressListener) {
   // If we have a print preview document, use that instead of the original
   // mDocument. That way animated images etc. get printed using the same state
   // as in print preview.
@@ -1000,10 +999,9 @@ nsPrintJob::Print(nsIPrintSettings* aPrintSettings,
   return CommonPrint(false, aPrintSettings, aWebProgressListener, doc);
 }
 
-NS_IMETHODIMP
-nsPrintJob::PrintPreview(nsIPrintSettings* aPrintSettings,
-                         mozIDOMWindowProxy* aChildDOMWin,
-                         nsIWebProgressListener* aWebProgressListener) {
+nsresult nsPrintJob::PrintPreview(
+    nsIPrintSettings* aPrintSettings, mozIDOMWindowProxy* aChildDOMWin,
+    nsIWebProgressListener* aWebProgressListener) {
   // Get the DocShell and see if it is busy
   // (We can't Print Preview this document if it is still busy)
   nsCOMPtr<nsIDocShell> docShell(do_QueryReferent(mContainer));
@@ -1026,18 +1024,13 @@ nsPrintJob::PrintPreview(nsIPrintSettings* aPrintSettings,
 }
 
 //----------------------------------------------------------------------------------
-NS_IMETHODIMP
-nsPrintJob::GetIsFramesetDocument(bool* aIsFramesetDocument) {
+bool nsPrintJob::IsFramesetDocument() const {
   nsCOMPtr<nsIDocShell> webContainer(do_QueryReferent(mContainer));
-  *aIsFramesetDocument = IsParentAFrameSet(webContainer);
-  return NS_OK;
+  return IsParentAFrameSet(webContainer);
 }
 
 //----------------------------------------------------------------------------------
-NS_IMETHODIMP
-nsPrintJob::GetIsIFrameSelected(bool* aIsIFrameSelected) {
-  *aIsIFrameSelected = false;
-
+bool nsPrintJob::IsIFrameSelected() {
   // Get the docshell for this documentviewer
   nsCOMPtr<nsIDocShell> webContainer(do_QueryReferent(mContainer));
   // Get the currently focused window
@@ -1047,56 +1040,48 @@ nsPrintJob::GetIsIFrameSelected(bool* aIsIFrameSelected) {
     // Also, check to see if the currently focus docshell
     // is a child of this docshell
     bool isParentFrameSet;
-    *aIsIFrameSelected = IsThereAnIFrameSelected(webContainer, currentFocusWin,
-                                                 isParentFrameSet);
+    return IsThereAnIFrameSelected(webContainer, currentFocusWin,
+                                   isParentFrameSet);
   }
-  return NS_OK;
+  return false;
 }
 
 //----------------------------------------------------------------------------------
-NS_IMETHODIMP
-nsPrintJob::GetIsRangeSelection(bool* aIsRangeSelection) {
+bool nsPrintJob::IsRangeSelection() {
   // Get the currently focused window
   nsCOMPtr<nsPIDOMWindowOuter> currentFocusWin = FindFocusedDOMWindow();
-  *aIsRangeSelection = IsThereARangeSelection(currentFocusWin);
-  return NS_OK;
+  return IsThereARangeSelection(currentFocusWin);
 }
 
 //----------------------------------------------------------------------------------
-NS_IMETHODIMP
-nsPrintJob::GetIsFramesetFrameSelected(bool* aIsFramesetFrameSelected) {
+bool nsPrintJob::IsFramesetFrameSelected() const {
   // Get the currently focused window
   nsCOMPtr<nsPIDOMWindowOuter> currentFocusWin = FindFocusedDOMWindow();
-  *aIsFramesetFrameSelected = currentFocusWin != nullptr;
-  return NS_OK;
+  return currentFocusWin != nullptr;
 }
 
 //----------------------------------------------------------------------------------
-NS_IMETHODIMP
-nsPrintJob::GetPrintPreviewNumPages(int32_t* aPrintPreviewNumPages) {
-  NS_ENSURE_ARG_POINTER(aPrintPreviewNumPages);
-
-  nsIFrame* seqFrame = nullptr;
-  *aPrintPreviewNumPages = 0;
-
+int32_t nsPrintJob::GetPrintPreviewNumPages() {
   // When calling this function, the FinishPrintPreview() function might not
   // been called as there are still some
   RefPtr<nsPrintData> printData = mPrtPreview ? mPrtPreview : mPrt;
   if (NS_WARN_IF(!printData)) {
-    return NS_ERROR_FAILURE;
+    return 0;
   }
-  nsresult rv = GetSeqFrameAndCountPagesInternal(
-      printData->mPrintObject, seqFrame, *aPrintPreviewNumPages);
+  nsIFrame* seqFrame = nullptr;
+  int32_t numPages = 0;
+  nsresult rv = GetSeqFrameAndCountPagesInternal(printData->mPrintObject,
+                                                 seqFrame, numPages);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return NS_ERROR_FAILURE;
+    return 0;
   }
-  return NS_OK;
+  return numPages;
 }
 
 //----------------------------------------------------------------------------------
 // Enumerate all the documents for their titles
-NS_IMETHODIMP
-nsPrintJob::EnumerateDocumentNames(uint32_t* aCount, char16_t*** aResult) {
+nsresult nsPrintJob::EnumerateDocumentNames(uint32_t* aCount,
+                                            char16_t*** aResult) {
   NS_ENSURE_ARG(aCount);
   NS_ENSURE_ARG_POINTER(aResult);
 
@@ -1140,37 +1125,14 @@ nsresult nsPrintJob::GetGlobalPrintSettings(
 }
 
 //----------------------------------------------------------------------------------
-NS_IMETHODIMP
-nsPrintJob::GetDoingPrint(bool* aDoingPrint) {
-  NS_ENSURE_ARG_POINTER(aDoingPrint);
-  *aDoingPrint = mIsDoingPrinting;
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------------------
-NS_IMETHODIMP
-nsPrintJob::GetDoingPrintPreview(bool* aDoingPrintPreview) {
-  NS_ENSURE_ARG_POINTER(aDoingPrintPreview);
-  *aDoingPrintPreview = mIsDoingPrintPreview;
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------------------
-NS_IMETHODIMP
-nsPrintJob::GetCurrentPrintSettings(nsIPrintSettings** aCurrentPrintSettings) {
-  NS_ENSURE_ARG_POINTER(aCurrentPrintSettings);
-
+already_AddRefed<nsIPrintSettings> nsPrintJob::GetCurrentPrintSettings() {
   if (mPrt) {
-    *aCurrentPrintSettings = mPrt->mPrintSettings;
-
-  } else if (mPrtPreview) {
-    *aCurrentPrintSettings = mPrtPreview->mPrintSettings;
-
-  } else {
-    *aCurrentPrintSettings = nullptr;
+    return do_AddRef(mPrt->mPrintSettings);
   }
-  NS_IF_ADDREF(*aCurrentPrintSettings);
-  return NS_OK;
+  if (mPrtPreview) {
+    return do_AddRef(mPrtPreview->mPrintSettings);
+  }
+  return nullptr;
 }
 
 //-----------------------------------------------------------------
@@ -2854,7 +2816,7 @@ void nsPrintJob::CleanupDocTitleArray(char16_t**& aArray, int32_t& aCount) {
 /** ---------------------------------------------------
  *  Get the Focused Frame for a documentviewer
  */
-already_AddRefed<nsPIDOMWindowOuter> nsPrintJob::FindFocusedDOMWindow() {
+already_AddRefed<nsPIDOMWindowOuter> nsPrintJob::FindFocusedDOMWindow() const {
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   NS_ENSURE_TRUE(fm, nullptr);
 
@@ -2878,7 +2840,7 @@ already_AddRefed<nsPIDOMWindowOuter> nsPrintJob::FindFocusedDOMWindow() {
 }
 
 //---------------------------------------------------------------------
-bool nsPrintJob::IsWindowsInOurSubTree(nsPIDOMWindowOuter* window) {
+bool nsPrintJob::IsWindowsInOurSubTree(nsPIDOMWindowOuter* window) const {
   bool found = false;
 
   // now check to make sure it is in "our" tree of docshells
