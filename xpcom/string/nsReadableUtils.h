@@ -322,6 +322,75 @@ inline void LossyAppendUTF16toASCII(mozilla::Span<const char16_t> aSource,
   }
 }
 
+// Latin1 to UTF-8
+// Interpret each incoming unsigned byte value as a Unicode scalar value (not
+// windows-1252!).
+// If the input is ASCII, the heap-allocated nsStringBuffer is shared if
+// possible.
+
+inline MOZ_MUST_USE bool CopyLatin1toUTF8(const nsACString& aSource,
+                                          nsACString& aDest,
+                                          const mozilla::fallible_t&) {
+  return nscstring_fallible_append_latin1_to_utf8_check(&aDest, &aSource, 0);
+}
+
+inline void CopyLatin1toUTF8(const nsACString& aSource, nsACString& aDest) {
+  if (MOZ_UNLIKELY(!CopyLatin1toUTF8(aSource, aDest, mozilla::fallible))) {
+    aDest.AllocFailed(aSource.Length());
+  }
+}
+
+inline MOZ_MUST_USE bool AppendLatin1toUTF8(const nsACString& aSource,
+                                            nsACString& aDest,
+                                            const mozilla::fallible_t&) {
+  return nscstring_fallible_append_latin1_to_utf8_check(&aDest, &aSource,
+                                                        aDest.Length());
+}
+
+inline void AppendLatin1toUTF8(const nsACString& aSource, nsACString& aDest) {
+  if (MOZ_UNLIKELY(!AppendLatin1toUTF8(aSource, aDest, mozilla::fallible))) {
+    aDest.AllocFailed(aDest.Length() + aSource.Length());
+  }
+}
+
+// UTF-8 to Latin1
+// If all code points in the input are below U+0100, represents each scalar
+// value as an unsigned byte. (This is not windows-1252!) If there are code
+// points above U+00FF, memory-safely produces garbage in release builds and
+// asserts in debug builds. The nature of the garbage may differ
+// based on CPU architecture and must not be relied upon.
+// If the input is ASCII, the heap-allocated nsStringBuffer is shared if
+// possible.
+
+inline MOZ_MUST_USE bool LossyCopyUTF8toLatin1(const nsACString& aSource,
+                                               nsACString& aDest,
+                                               const mozilla::fallible_t&) {
+  return nscstring_fallible_append_utf8_to_latin1_lossy_check(&aDest, &aSource,
+                                                              0);
+}
+
+inline void LossyCopyUTF8toLatin1(const nsACString& aSource,
+                                  nsACString& aDest) {
+  if (MOZ_UNLIKELY(!LossyCopyUTF8toLatin1(aSource, aDest, mozilla::fallible))) {
+    aDest.AllocFailed(aSource.Length());
+  }
+}
+
+inline MOZ_MUST_USE bool LossyAppendUTF8toLatin1(const nsACString& aSource,
+                                                 nsACString& aDest,
+                                                 const mozilla::fallible_t&) {
+  return nscstring_fallible_append_utf8_to_latin1_lossy_check(&aDest, &aSource,
+                                                              aDest.Length());
+}
+
+inline void LossyAppendUTF8toLatin1(const nsACString& aSource,
+                                    nsACString& aDest) {
+  if (MOZ_UNLIKELY(
+          !LossyAppendUTF8toLatin1(aSource, aDest, mozilla::fallible))) {
+    aDest.AllocFailed(aDest.Length() + aSource.Length());
+  }
+}
+
 /**
  * Returns a new |char| buffer containing a zero-terminated copy of |aSource|.
  *
