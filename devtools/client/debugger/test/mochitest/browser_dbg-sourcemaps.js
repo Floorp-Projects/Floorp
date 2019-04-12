@@ -13,7 +13,7 @@ function assertBreakpointExists(dbg, source, line) {
   } = dbg;
 
   ok(
-    getBreakpoint(getState(), { sourceId: source.id, line }),
+    getBreakpoint({ sourceId: source.id, line }),
     "Breakpoint has correct line"
   );
 }
@@ -45,7 +45,7 @@ async function waitForBreakpointCount(dbg, count) {
     selectors: { getBreakpointCount },
     getState
   } = dbg;
-  await waitForState(dbg, state => getBreakpointCount(getState()) == count);
+  await waitForState(dbg, state => getBreakpointCount() == count);
 }
 
 add_task(async function() {
@@ -77,7 +77,7 @@ add_task(async function() {
 
   await clickGutter(dbg, 70);
   await waitForBreakpointCount(dbg, 0);
-  is(dbg.selectors.getBreakpointCount(getState()), 0, "No breakpoints exists");
+  is(dbg.selectors.getBreakpointCount(), 0, "No breakpoints exists");
 
   const entrySrc = findSource(dbg, "entry.js");
 
@@ -91,7 +91,7 @@ add_task(async function() {
 
   // Test breaking on a breakpoint
   await addBreakpoint(dbg, "entry.js", 15);
-  is(getBreakpointCount(getState()), 1, "One breakpoint exists");
+  is(getBreakpointCount(), 1, "One breakpoint exists");
   assertBreakpointExists(dbg, entrySrc, 15);
 
   invokeInTab("keepMeAlive");

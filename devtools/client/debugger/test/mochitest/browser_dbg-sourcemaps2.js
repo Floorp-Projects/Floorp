@@ -1,5 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 requestLongerTimeout(2);
 
 function assertBpInGutter(dbg, lineNumber) {
@@ -18,7 +19,11 @@ function assertBpInGutter(dbg, lineNumber) {
 // This source map does not have source contents, so it's fetched separately
 add_task(async function() {
   // NOTE: the CORS call makes the test run times inconsistent
-  const dbg = await initDebugger("doc-sourcemaps2.html", "main.js", "main.min.js");
+  const dbg = await initDebugger(
+    "doc-sourcemaps2.html",
+    "main.js",
+    "main.min.js"
+  );
   const {
     selectors: { getBreakpoint, getBreakpointCount },
     getState
@@ -31,9 +36,9 @@ add_task(async function() {
 
   // Test that breakpoint is not off by a line.
   await addBreakpoint(dbg, mainSrc, 4, 2);
-  is(getBreakpointCount(getState()), 1, "One breakpoint exists");
+  is(getBreakpointCount(), 1, "One breakpoint exists");
   ok(
-    getBreakpoint(getState(), { sourceId: mainSrc.id, line: 4, column: 2 }),
+    getBreakpoint({ sourceId: mainSrc.id, line: 4, column: 2 }),
     "Breakpoint has correct line"
   );
 

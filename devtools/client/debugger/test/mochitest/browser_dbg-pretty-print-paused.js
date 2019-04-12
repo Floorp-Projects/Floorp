@@ -6,7 +6,7 @@
 
 add_task(async function() {
   const dbg = await initDebugger("doc-minified.html", "math.min.js");
-  const thread = dbg.selectors.getCurrentThread(dbg.getState());
+  const thread = dbg.selectors.getCurrentThread();
 
   await selectSource(dbg, "math.min.js");
   await addBreakpoint(dbg, "math.min.js", 2);
@@ -19,7 +19,7 @@ add_task(async function() {
   await waitForSelectedSource(dbg, "math.min.js:formatted");
   await waitForState(
     dbg,
-    state => dbg.selectors.getSelectedFrame(state, thread).location.line == 18
+    state => dbg.selectors.getSelectedFrame(thread).location.line == 18
   );
   assertPausedLocation(dbg);
   await assertEditorBreakpoint(dbg, 18, true);

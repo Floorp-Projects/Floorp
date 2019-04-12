@@ -9,8 +9,9 @@
 "use strict";
 /* import-globals-from head.js*/
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/mochitest/test-autocomplete-in-stackframe.html";
+const TEST_URI =
+  "http://example.com/browser/devtools/client/webconsole/" +
+  "test/mochitest/test-autocomplete-in-stackframe.html";
 
 requestLongerTimeout(20);
 
@@ -26,9 +27,7 @@ add_task(async function() {
 async function performTests() {
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
-  const {
-    autocompletePopup: popup,
-  } = jsterm;
+  const { autocompletePopup: popup } = jsterm;
 
   const target = await TargetFactory.forTab(gBrowser.selectedTab);
   const toolbox = gDevTools.getToolbox(target);
@@ -46,19 +45,27 @@ async function performTests() {
 
   // Test if 'foo' gives 'foo1' but not 'foo2' or 'foo3'
   await jstermComplete("foo");
-  is(getPopupLabels(popup).join("-"), "foo1-foo1Obj",
-    `"foo" gave the expected suggestions`);
+  is(
+    getPopupLabels(popup).join("-"),
+    "foo1-foo1Obj",
+    `"foo" gave the expected suggestions`
+  );
 
   // Test if 'foo1Obj.' gives 'prop1' and 'prop2'
   await jstermComplete("foo1Obj.");
   checkInputCompletionValue(hud, "        prop1", "foo1Obj completion");
-  is(getPopupLabels(popup).join("-"), "prop1-prop2",
-    `"foo1Obj." gave the expected suggestions`);
+  is(
+    getPopupLabels(popup).join("-"),
+    "prop1-prop2",
+    `"foo1Obj." gave the expected suggestions`
+  );
 
   // Test if 'foo1Obj.prop2.' gives 'prop21'
   await jstermComplete("foo1Obj.prop2.");
-  ok(getPopupLabels(popup).includes("prop21"),
-    `"foo1Obj.prop2." gave the expected suggestions`);
+  ok(
+    getPopupLabels(popup).includes("prop21"),
+    `"foo1Obj.prop2." gave the expected suggestions`
+  );
 
   info("Opening Debugger");
   await openDebugger();
@@ -66,7 +73,7 @@ async function performTests() {
 
   info("Waiting for pause");
   await pauseDebugger(dbg);
-  const stackFrames = dbg.selectors.getCallStackFrames(dbg.getState());
+  const stackFrames = dbg.selectors.getCallStackFrames();
 
   info("Opening Console again");
   await toolbox.selectTool("webconsole");
@@ -74,8 +81,11 @@ async function performTests() {
   // Test if 'foo' gives 'foo3' and 'foo1' but not 'foo2', since we are paused in
   // the `secondCall` function (called by `firstCall`, which we call in `pauseDebugger`).
   await jstermComplete("foo");
-  is(getPopupLabels(popup).join("-"), "foo1-foo1Obj-foo3-foo3Obj",
-    `"foo" gave the expected suggestions`);
+  is(
+    getPopupLabels(popup).join("-"),
+    "foo1-foo1Obj-foo3-foo3Obj",
+    `"foo" gave the expected suggestions`
+  );
 
   await openDebugger();
 
@@ -88,8 +98,11 @@ async function performTests() {
   // Test if 'foo' gives 'foo2' and 'foo1' but not 'foo3', since we are now in the
   // `firstCall` frame.
   await jstermComplete("foo");
-  is(getPopupLabels(popup).join("-"), "foo1-foo1Obj-foo2-foo2Obj",
-    `"foo" gave the expected suggestions`);
+  is(
+    getPopupLabels(popup).join("-"),
+    "foo1-foo1Obj-foo2-foo2Obj",
+    `"foo" gave the expected suggestions`
+  );
 
   // Test if 'foo2Obj.' gives 'prop1'
   await jstermComplete("foo2Obj.");

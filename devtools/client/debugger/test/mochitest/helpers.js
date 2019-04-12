@@ -121,7 +121,7 @@ function waitForThreadEvents(dbg, eventName) {
 }
 
 /**
- * Waits for `predicate(state)` to be true. `state` is the redux app state.
+ * Waits for `predicate()` to be true. `state` is the redux app state.
  *
  * @memberof mochitest/waits
  * @param {Object} dbg
@@ -224,7 +224,7 @@ function assertClass(el, className, exists = true) {
 
 function waitForSelectedLocation(dbg, line) {
   return waitForState(dbg, state => {
-    const location = dbg.selectors.getSelectedLocation(state);
+    const location = dbg.selectors.getSelectedLocation();
     return location && location.line == line;
   });
 }
@@ -239,7 +239,7 @@ function waitForSelectedSource(dbg, url) {
   return waitForState(
     dbg,
     state => {
-      const source = getSelectedSource(state);
+      const source = getSelectedSource();
       const isLoaded = source && sourceUtils.isLoaded(source);
       if (!isLoaded) {
         return false;
@@ -254,9 +254,7 @@ function waitForSelectedSource(dbg, url) {
         return false;
       }
 
-      return (
-        hasSymbols(state, source) && hasBreakpointPositions(state, source.id)
-      );
+      return hasSymbols(source) && hasBreakpointPositions(source.id);
     },
     "selected source"
   );
@@ -289,20 +287,16 @@ function assertEmptyLines(dbg, lines) {
     return every(subArray, subItem => superArray.includes(subItem));
   }
 
-  const sourceId = dbg.selectors.getSelectedSourceId(dbg.store.getState());
-  const emptyLines = dbg.selectors.getEmptyLines(
-    dbg.store.getState(),
-    sourceId
-  );
+  const sourceId = dbg.selectors.getSelectedSourceId();
+  const emptyLines = dbg.selectors.getEmptyLines(sourceId);
   ok(subset(lines, emptyLines), "empty lines should match");
 }
 
 function getVisibleSelectedFrameLine(dbg) {
   const {
-    selectors: { getVisibleSelectedFrame },
-    getState
+    selectors: { getVisibleSelectedFrame }
   } = dbg;
-  const frame = getVisibleSelectedFrame(getState());
+  const frame = getVisibleSelectedFrame();
   return frame && frame.location.line;
 }
 
@@ -321,10 +315,7 @@ function assertPausedLocation(dbg) {
     getState
   } = dbg;
 
-  ok(
-    isSelectedFrameSelected(dbg, getState()),
-    "top frame's source is selected"
-  );
+  ok(isSelectedFrameSelected(dbg), "top frame's source is selected");
 
   // Check the pause location
   const pauseLine = getVisibleSelectedFrameLine(dbg);
@@ -336,7 +327,7 @@ function assertPausedLocation(dbg) {
 function assertDebugLine(dbg, line) {
   // Check the debug line
   const lineInfo = getCM(dbg).lineInfo(line - 1);
-  const source = dbg.selectors.getSelectedSource(dbg.getState());
+  const source = dbg.selectors.getSelectedSource();
   if (source && source.loadedState == "loading") {
     const url = source.url;
     ok(
@@ -399,7 +390,7 @@ function assertHighlightLocation(dbg, source, line) {
   source = findSource(dbg, source);
 
   // Check the selected source
-  is(getSelectedSource(getState()).url, source.url, "source url is correct");
+  is(getSelectedSource().url, source.url, "source url is correct");
 
   // Check the highlight line
   const lineEl = findElement(dbg, "highlightLine");
@@ -430,7 +421,7 @@ function isPaused(dbg) {
     selectors: { getIsPaused, getCurrentThread },
     getState
   } = dbg;
-  return getIsPaused(getState(), getCurrentThread(getState()));
+  return getIsPaused(getCurrentThread());
 }
 
 // Make sure the debugger is paused at a certain source ID and line.
@@ -442,7 +433,7 @@ function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine) {
     getState
   } = dbg;
 
-  const frames = getCurrentThreadFrames(getState());
+  const frames = getCurrentThreadFrames();
   ok(frames.length >= 1, "Got at least one frame");
   const { sourceId, line } = frames[0].location;
   ok(sourceId == expectedSourceId, "Frame has correct source");
@@ -452,13 +443,7 @@ function assertPausedAtSourceAndLine(dbg, expectedSourceId, expectedLine) {
 // Get any workers associated with the debugger.
 async function getWorkers(dbg) {
   await dbg.actions.updateWorkers();
-
-  const {
-    selectors: { getWorkers },
-    getState
-  } = dbg;
-
-  return getWorkers(getState());
+  return dbg.selectors.getWorkers();
 }
 
 async function waitForLoadedScopes(dbg) {
@@ -471,7 +456,7 @@ async function waitForLoadedScopes(dbg) {
 function waitForBreakpointCount(dbg, count) {
   return waitForState(
     dbg,
-    state => dbg.selectors.getBreakpointCount(state) == count
+    state => dbg.selectors.getBreakpointCount() == count
   );
 }
 
@@ -491,8 +476,7 @@ async function waitForPaused(dbg, url) {
 
   await waitForState(
     dbg,
-    state =>
-      isPaused(dbg) && !!getSelectedScope(state, getCurrentThread(state)),
+    state => isPaused(dbg) && !!getSelectedScope(getCurrentThread()),
     "paused"
   );
 
@@ -503,7 +487,7 @@ async function waitForPaused(dbg, url) {
 function waitForCondition(dbg, condition) {
   return waitForState(dbg, state =>
     dbg.selectors
-      .getBreakpointsList(state)
+      .getBreakpointsList()
       .find(bp => bp.options.condition == condition)
   );
 }
@@ -511,13 +495,13 @@ function waitForCondition(dbg, condition) {
 function waitForLog(dbg, logValue) {
   return waitForState(dbg, state =>
     dbg.selectors
-      .getBreakpointsList(state)
+      .getBreakpointsList()
       .find(bp => bp.options.logValue == logValue)
   );
 }
 
 async function waitForPausedThread(dbg, thread) {
-  return waitForState(dbg, state => dbg.selectors.getIsPaused(state, thread));
+  return waitForState(dbg, state => dbg.selectors.getIsPaused(thread));
 }
 
 /*
@@ -539,12 +523,12 @@ function waitForTime(ms) {
 }
 
 function isSelectedFrameSelected(dbg, state) {
-  const frame = dbg.selectors.getVisibleSelectedFrame(state);
+  const frame = dbg.selectors.getVisibleSelectedFrame();
 
   // Make sure the source text is completely loaded for the
   // source we are paused in.
   const sourceId = frame.location.sourceId;
-  const source = dbg.selectors.getSelectedSource(state);
+  const source = dbg.selectors.getSelectedSource();
 
   if (!source) {
     return false;
@@ -633,7 +617,7 @@ function findSource(dbg, url, { silent } = { silent: false }) {
     return source;
   }
 
-  const sources = Object.values(dbg.selectors.getSources(dbg.getState()));
+  const sources = Object.values(dbg.selectors.getSources());
   const source = sources.find(s => (s.url || "").includes(url));
 
   if (!source) {
@@ -663,7 +647,7 @@ function waitForLoadedSources(dbg) {
   return waitForState(
     dbg,
     state => {
-      const sources = Object.values(dbg.selectors.getSources(state));
+      const sources = Object.values(dbg.selectors.getSources());
       return !sources.some(source => source.loadedState == "loading");
     },
     "loaded source"
@@ -671,11 +655,11 @@ function waitForLoadedSources(dbg) {
 }
 
 function getContext(dbg) {
-  return dbg.selectors.getContext(dbg.getState());
+  return dbg.selectors.getContext();
 }
 
 function getThreadContext(dbg) {
-  return dbg.selectors.getThreadContext(dbg.getState());
+  return dbg.selectors.getThreadContext();
 }
 
 /**
@@ -806,8 +790,8 @@ async function navigate(dbg, url, ...sources) {
 
 function getFirstBreakpointColumn(dbg, { line, sourceId }) {
   const { getSource, getFirstBreakpointPosition } = dbg.selectors;
-  const source = getSource(dbg.getState(), sourceId);
-  const position = getFirstBreakpointPosition(dbg.getState(), {
+  const source = getSource(sourceId);
+  const position = getFirstBreakpointPosition({
     line,
     sourceId
   });
@@ -829,14 +813,14 @@ function getFirstBreakpointColumn(dbg, { line, sourceId }) {
 async function addBreakpoint(dbg, source, line, column, options) {
   source = findSource(dbg, source);
   const sourceId = source.id;
-  const bpCount = dbg.selectors.getBreakpointCount(dbg.getState());
+  const bpCount = dbg.selectors.getBreakpointCount();
   await dbg.actions.addBreakpoint(
     getContext(dbg),
     { sourceId, line, column },
     options
   );
   is(
-    dbg.selectors.getBreakpointCount(dbg.getState()),
+    dbg.selectors.getBreakpointCount(),
     bpCount + 1,
     "a new breakpoint was created"
   );
@@ -846,7 +830,7 @@ function disableBreakpoint(dbg, source, line, column) {
   column =
     column || getFirstBreakpointColumn(dbg, { line, sourceId: source.id });
   const location = { sourceId: source.id, sourceUrl: source.url, line, column };
-  const bp = dbg.selectors.getBreakpointForLocation(dbg.getState(), location);
+  const bp = dbg.selectors.getBreakpointForLocation(location);
   return dbg.actions.disableBreakpoint(getContext(dbg), bp);
 }
 
@@ -868,7 +852,7 @@ function findBreakpoint(dbg, url, line) {
   } = dbg;
   const source = findSource(dbg, url);
   const column = getFirstBreakpointColumn(dbg, { line, sourceId: source.id });
-  return getBreakpoint(getState(), { sourceId: source.id, line, column });
+  return getBreakpoint({ sourceId: source.id, line, column });
 }
 
 async function loadAndAddBreakpoint(dbg, filename, line, column) {
@@ -887,9 +871,9 @@ async function loadAndAddBreakpoint(dbg, filename, line, column) {
   // Test that breakpoint is not off by a line.
   await addBreakpoint(dbg, source, line, column);
 
-  is(getBreakpointCount(getState()), 1, "One breakpoint exists");
-  if (!getBreakpoint(getState(), { sourceId: source.id, line, column })) {
-    const breakpoints = getBreakpointsMap(getState());
+  is(getBreakpointCount(), 1, "One breakpoint exists");
+  if (!getBreakpoint({ sourceId: source.id, line, column })) {
+    const breakpoints = getBreakpointsMap();
     const id = Object.keys(breakpoints).pop();
     const loc = breakpoints[id].location;
     ok(
@@ -932,18 +916,19 @@ async function invokeWithBreakpoint(
 
   await removeBreakpoint(dbg, source.id, line, column);
 
-  is(getBreakpointCount(getState()), 0, "Breakpoint reverted");
+  is(getBreakpointCount(), 0, "Breakpoint reverted");
 
   await handler(source);
 
   await resume(dbg);
 
+  // eslint-disable-next-line max-len
   // If the invoke errored later somehow, capture here so the error is reported nicely.
   await invokeResult;
 }
 
 function prettyPrint(dbg) {
-  const sourceId = dbg.selectors.getSelectedSourceId(dbg.store.getState());
+  const sourceId = dbg.selectors.getSelectedSourceId();
   return dbg.actions.togglePrettyPrint(getContext(dbg), sourceId);
 }
 
@@ -992,10 +977,10 @@ async function assertScopes(dbg, items) {
  * @static
  */
 function removeBreakpoint(dbg, sourceId, line, column) {
-  const source = dbg.selectors.getSource(dbg.getState(), sourceId);
+  const source = dbg.selectors.getSource(sourceId);
   column = column || getFirstBreakpointColumn(dbg, { line, sourceId });
   const location = { sourceId, sourceUrl: source.url, line, column };
-  const bp = dbg.selectors.getBreakpointForLocation(dbg.getState(), location);
+  const bp = dbg.selectors.getBreakpointForLocation(location);
   return dbg.actions.removeBreakpoint(getContext(dbg), bp);
 }
 
@@ -1024,11 +1009,7 @@ function waitForActive(dbg) {
   const {
     selectors: { getIsPaused, getCurrentThread }
   } = dbg;
-  return waitForState(
-    dbg,
-    state => !getIsPaused(state, getCurrentThread(state)),
-    "active"
-  );
+  return waitForState(dbg, state => !getIsPaused(getCurrentThread()), "active");
 }
 
 // Helpers
@@ -1050,7 +1031,7 @@ function invokeInTab(fnc, ...args) {
     fnc,
     args
   }) {
-    return content.wrappedJSObject[fnc](...args); // max-len
+    return content.wrappedJSObject[fnc](...args);
   });
 }
 
@@ -1203,6 +1184,7 @@ const selectors = {
   expressionNode: i =>
     `.expressions-list .expression-container:nth-child(${i}) .object-label`,
   expressionValue: i =>
+    // eslint-disable-next-line max-len
     `.expressions-list .expression-container:nth-child(${i}) .object-delimiter + *`,
   expressionClose: i =>
     `.expressions-list .expression-container:nth-child(${i}) .close`,
@@ -1559,7 +1541,7 @@ async function assertPreviewTextValue(dbg, line, column, { text, expression }) {
 
   ok(previewEl.innerText.includes(text), "Preview text shown to user");
 
-  const preview = dbg.selectors.getPreview(dbg.getState());
+  const preview = dbg.selectors.getPreview();
   is(preview.updating, false, "Preview.updating");
   is(preview.expression, expression, "Preview.expression");
 }
@@ -1569,7 +1551,7 @@ async function assertPreviewTooltip(dbg, line, column, { result, expression }) {
 
   is(previewEl.innerText, result, "Preview text shown to user");
 
-  const preview = dbg.selectors.getPreview(dbg.getState());
+  const preview = dbg.selectors.getPreview();
   is(`${preview.result}`, result, "Preview.result");
   is(preview.updating, false, "Preview.updating");
   is(preview.expression, expression, "Preview.expression");
@@ -1583,7 +1565,7 @@ async function assertPreviewPopup(
 ) {
   await tryHovering(dbg, line, column, "popup");
 
-  const preview = dbg.selectors.getPreview(dbg.getState());
+  const preview = dbg.selectors.getPreview();
 
   const properties =
     preview.result.preview.ownProperties || preview.result.preview.items;
@@ -1627,7 +1609,7 @@ async function waitForBreakableLine(dbg, source, lineNumber) {
       const currentSource = findSource(dbg, source);
 
       const emptyLines =
-        currentSource && dbg.selectors.getEmptyLines(state, currentSource.id);
+        currentSource && dbg.selectors.getEmptyLines(currentSource.id);
 
       return emptyLines && !emptyLines.includes(lineNumber);
     },
