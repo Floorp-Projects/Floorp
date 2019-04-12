@@ -44,14 +44,14 @@ class ToolbarMenu(
             primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_back,
             primaryContentDescription = context.getString(R.string.browser_menu_back),
             primaryImageTintResource = DefaultThemeManager.resolveAttribute(
-                R.attr.browserToolbarMenuIcons,
+                R.attr.primaryText,
                 context
             ),
             isInPrimaryState = {
                 context.components.core.sessionManager.selectedSession?.canGoBack ?: true
             },
             secondaryImageTintResource = DefaultThemeManager.resolveAttribute(
-                R.attr.disabledIconColor,
+                R.attr.secondaryText,
                 context
             ),
             disableInSecondaryState = true
@@ -63,14 +63,14 @@ class ToolbarMenu(
             primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
             primaryContentDescription = context.getString(R.string.browser_menu_forward),
             primaryImageTintResource = DefaultThemeManager.resolveAttribute(
-                R.attr.browserToolbarMenuIcons,
+                R.attr.primaryText,
                 context
             ),
             isInPrimaryState = {
                 context.components.core.sessionManager.selectedSession?.canGoForward ?: true
             },
             secondaryImageTintResource = DefaultThemeManager.resolveAttribute(
-                R.attr.disabledIconColor,
+                R.attr.secondaryText,
                 context
             ),
             disableInSecondaryState = true
@@ -82,7 +82,7 @@ class ToolbarMenu(
             primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
             primaryContentDescription = context.getString(R.string.browser_menu_refresh),
             primaryImageTintResource = DefaultThemeManager.resolveAttribute(
-                R.attr.browserToolbarMenuIcons,
+                R.attr.primaryText,
                 context
             ),
             isInPrimaryState = {
@@ -92,7 +92,7 @@ class ToolbarMenu(
             secondaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
             secondaryContentDescription = context.getString(R.string.browser_menu_stop),
             secondaryImageTintResource = DefaultThemeManager.resolveAttribute(
-                R.attr.browserToolbarMenuIcons,
+                R.attr.primaryText,
                 context
             ),
             disableInSecondaryState = false
@@ -112,7 +112,7 @@ class ToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_help),
                 R.drawable.ic_help,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
                 onItemTapped.invoke(Item.Help)
             },
@@ -120,7 +120,7 @@ class ToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_settings),
                 R.drawable.ic_settings,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
                 onItemTapped.invoke(Item.Settings)
             },
@@ -128,7 +128,7 @@ class ToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_library),
                 R.drawable.ic_library,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
                 onItemTapped.invoke(Item.Library)
             },
@@ -143,7 +143,7 @@ class ToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_find_in_page),
                 R.drawable.mozac_ic_search,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
                 onItemTapped.invoke(Item.FindInPage)
             },
@@ -151,7 +151,7 @@ class ToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_private_tab),
                 R.drawable.ic_private_browsing,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
                 onItemTapped.invoke(Item.NewPrivateTab)
             },
@@ -159,7 +159,7 @@ class ToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_new_tab),
                 R.drawable.ic_new,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
                 onItemTapped.invoke(Item.NewTab)
             },
@@ -167,7 +167,7 @@ class ToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_share),
                 R.drawable.mozac_ic_share,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
                 onItemTapped.invoke(Item.Share)
             },
@@ -175,7 +175,7 @@ class ToolbarMenu(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_report_issue),
                 R.drawable.ic_report_issues,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
                 onItemTapped.invoke(Item.ReportIssue)
             },

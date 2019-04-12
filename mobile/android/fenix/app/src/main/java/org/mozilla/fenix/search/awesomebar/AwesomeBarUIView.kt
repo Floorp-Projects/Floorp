@@ -93,7 +93,7 @@ class AwesomeBarUIView(
             draw?.setColorFilter(
                 ContextCompat.getColor(
                     this,
-                    DefaultThemeManager.resolveAttribute(R.attr.searchShortcutsTextColor, this)
+                    DefaultThemeManager.resolveAttribute(R.attr.primaryText, this)
                 ), PorterDuff.Mode.SRC_IN
             )
             clipboardSuggestionProvider = ClipboardSuggestionProvider(
@@ -122,7 +122,7 @@ class AwesomeBarUIView(
                 draw?.setColorFilter(
                     ContextCompat.getColor(
                         this,
-                        DefaultThemeManager.resolveAttribute(R.attr.searchShortcutsTextColor, this)
+                        DefaultThemeManager.resolveAttribute(R.attr.primaryText, this)
                     ), PorterDuff.Mode.SRC_IN
                 )
                 defaultSearchSuggestionProvider =
@@ -175,7 +175,7 @@ class AwesomeBarUIView(
             draw?.setColorFilter(
                 ContextCompat.getColor(
                     this,
-                    DefaultThemeManager.resolveAttribute(R.attr.searchShortcutsTextColor, this)
+                    DefaultThemeManager.resolveAttribute(R.attr.primaryText, this)
                 ), PorterDuff.Mode.SRC_IN
             )
 

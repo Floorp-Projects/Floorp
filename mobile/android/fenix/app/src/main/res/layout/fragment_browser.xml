@@ -21,7 +21,7 @@
         android:id="@+id/nestedScrollQuickAction"
         android:layout_width="match_parent"
         android:layout_height="80dp"
-        android:background="?attr/quickActionBackgroundColor"
+        android:background="?foundation"
         android:clipToPadding="true"
         app:behavior_hideable="true"
         app:behavior_peekHeight="15dp"
@@ -32,9 +32,9 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:layout_gravity="bottom"
-        android:background="?attr/browserToolbarBackground"
-        mozac:findInPageResultCountTextColor="?attr/browserToolbarIcons"
-        mozac:findInPageButtonsTint="?attr/browserToolbarIcons"
+        android:background="?foundation"
+        mozac:findInPageResultCountTextColor="?primaryText"
+        mozac:findInPageButtonsTint="?primaryText"
         android:visibility="gone"
         app:layout_behavior="org.mozilla.fenix.components.FindInPageBarBehavior" />
 

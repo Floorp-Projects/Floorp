@@ -24,7 +24,7 @@
         android:layout_marginStart="23dp"
         android:ellipsize="none"
         android:scrollHorizontally="false"
-        android:textColor="@color/session_list_empty_fg"
+        android:textColor="?primaryText"
         android:textSize="16sp"
         android:text="@string/sessions_intro_description"
         app:layout_constraintVertical_bias="0"

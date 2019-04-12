@@ -144,7 +144,7 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.bookmarks_edit, menu)
         menu.findItem(R.id.delete_bookmark_button).icon.colorFilter =
-            PorterDuffColorFilter(R.attr.iconColor.getColorFromAttr(context!!), PorterDuff.Mode.SRC_IN)
+            PorterDuffColorFilter(R.attr.primaryText.getColorFromAttr(context!!), PorterDuff.Mode.SRC_IN)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

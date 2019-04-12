@@ -124,7 +124,7 @@ class SelectBookmarkFolderFragment : Fragment(), CoroutineScope, AccountObserver
         if (!visitedAddBookmark) {
             inflater.inflate(R.menu.bookmarks_select_folder, menu)
             menu.findItem(R.id.add_folder_button).icon.colorFilter =
-                PorterDuffColorFilter(R.attr.iconColor.getColorFromAttr(context!!), PorterDuff.Mode.SRC_IN)
+                PorterDuffColorFilter(R.attr.primaryText.getColorFromAttr(context!!), PorterDuff.Mode.SRC_IN)
         }
     }
 

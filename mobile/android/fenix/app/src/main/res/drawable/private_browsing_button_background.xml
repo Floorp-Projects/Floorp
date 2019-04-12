@@ -6,13 +6,13 @@
         android:color="?android:attr/colorControlHighlight">
     <item android:id="@android:id/mask">
         <shape>
-            <solid android:color="@color/private_browsing_primary" />
+            <solid android:color="?accentBright" />
             <corners android:radius="32dp" />
         </shape>
     </item>
     <item>
         <shape>
-            <solid android:color="@color/private_browsing_primary" />
+            <solid android:color="?accentBright" />
             <corners android:radius="32dp" />
         </shape>
     </item>

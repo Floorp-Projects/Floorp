@@ -10,7 +10,7 @@
     android:layout_marginTop="16dp"
     android:layout_marginBottom="16dp"
     android:background="@drawable/button_background"
-    android:backgroundTint="@color/save_session_button_color"
+    android:backgroundTint="?accent"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?android:attr/selectableItemBackground"
@@ -22,12 +22,12 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:clickable="false"
-        android:drawableTint="@color/save_session_button_text_color"
+        android:drawableTint="@color/foundation_light_theme"
         android:drawableStart="@drawable/ic_archive"
         android:drawablePadding="8dp"
         android:focusable="false"
         android:gravity="center"
         android:textStyle="bold"
         android:text="@string/session_save"
-        android:textColor="@color/save_session_button_text_color" />
+        android:textColor="@color/foundation_light_theme"/>
 </FrameLayout>

@@ -109,14 +109,14 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                             null
                         )
                     ) getString(R.string.library_bookmarks) else currentRoot!!.title
-                toolbar.setBackgroundColor(R.attr.toolbarColor.getColorFromAttr(context!!))
-                toolbar.setTitleTextColor(R.attr.toolbarTextColor.getColorFromAttr(context!!))
+                toolbar.setBackgroundColor(R.attr.foundation.getColorFromAttr(context!!))
+                toolbar.setTitleTextColor(R.attr.primaryText.getColorFromAttr(context!!))
             }
             is BookmarkState.Mode.Selecting -> {
                 inflater.inflate(R.menu.bookmarks_select_multi, menu)
                 activity?.title = getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size)
                 val colorFilter =
-                    PorterDuffColorFilter(ContextCompat.getColor(context!!, R.color.off_white), PorterDuff.Mode.SRC_IN)
+                    PorterDuffColorFilter(R.attr.primaryText.getColorFromAttr(context!!), PorterDuff.Mode.SRC_IN)
                 themeToolbar(toolbar, colorFilter)
             }
         }
@@ -127,7 +127,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
         colorFilter: PorterDuffColorFilter
     ) {
         toolbar.setBackgroundColor(ContextCompat.getColor(context!!, R.color.bookmark_multi_select_actionbar))
-        toolbar.setTitleTextColor(ContextCompat.getColor(context!!, R.color.off_white))
+        toolbar.setTitleTextColor(R.attr.primaryText.getColorFromAttr(context!!))
         toolbar.overflowIcon?.colorFilter = colorFilter
         (0 until toolbar.childCount).forEach {
             when (val item = toolbar.getChildAt(it)) {

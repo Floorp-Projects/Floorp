@@ -126,7 +126,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
             setBackgroundColor(
                 ContextCompat.getColor(
                     view.context,
-                    DefaultThemeManager.resolveAttribute(R.attr.browserToolbarBackground, context)
+                    DefaultThemeManager.resolveAttribute(R.attr.foundation, context)
                 )
             )
 

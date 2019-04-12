@@ -11,7 +11,7 @@
     android:orientation="vertical">
     <TextView xmlns:android="http://schemas.android.com/apk/res/android"
         android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
-        android:textColor="?attr/toolbarTextColor"
+        android:textColor="?primaryText"
         android:text="@string/private_browsing_title"
         android:layout_marginBottom="8dp"
         android:layout_width="wrap_content"
@@ -24,6 +24,6 @@
         android:gravity="center_vertical"
         android:scrollHorizontally="false"
         android:text="@string/private_browsing_explanation"
-        android:textColor="@color/off_white"
+        android:textColor="?primaryText"
         android:textSize="14sp" />
 </LinearLayout>

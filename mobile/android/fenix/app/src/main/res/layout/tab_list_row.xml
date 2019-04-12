@@ -12,7 +12,7 @@
     android:clipToPadding="false"
     android:focusable="true"
     android:foreground="?android:attr/selectableItemBackground"
-    app:cardBackgroundColor="?attr/sessionBackgroundColor"
+    app:cardBackgroundColor="?foundation"
     app:cardCornerRadius="@dimen/tab_corner_radius"
     app:cardElevation="5dp">
 
@@ -40,7 +40,7 @@
             android:ellipsize="none"
             android:requiresFadingEdge="horizontal"
             android:singleLine="true"
-            android:textColor="?attr/primaryTextColor"
+            android:textColor="?primaryText"
             android:textSize="16sp"
             app:layout_constraintEnd_toStartOf="@id/close_tab_button"
             app:layout_constraintHorizontal_bias="0"

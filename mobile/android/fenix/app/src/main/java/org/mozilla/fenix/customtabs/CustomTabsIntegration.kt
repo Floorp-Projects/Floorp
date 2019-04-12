@@ -40,14 +40,14 @@ class CustomTabsIntegration(
             primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_back,
             primaryContentDescription = context.getString(R.string.browser_menu_back),
             primaryImageTintResource = DefaultThemeManager.resolveAttribute(
-                R.attr.browserToolbarMenuIcons,
+                R.attr.primaryText,
                 context
             ),
             isInPrimaryState = {
                 context.components.core.sessionManager.selectedSession?.canGoBack ?: true
             },
             secondaryImageTintResource = DefaultThemeManager.resolveAttribute(
-                R.attr.disabledIconColor,
+                R.attr.secondaryText,
                 context
             ),
             disableInSecondaryState = true
@@ -59,14 +59,14 @@ class CustomTabsIntegration(
             primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_forward,
             primaryContentDescription = context.getString(R.string.browser_menu_forward),
             primaryImageTintResource = DefaultThemeManager.resolveAttribute(
-                R.attr.browserToolbarMenuIcons,
+                R.attr.primaryText,
                 context
             ),
             isInPrimaryState = {
                 context.components.core.sessionManager.selectedSession?.canGoForward ?: true
             },
             secondaryImageTintResource = DefaultThemeManager.resolveAttribute(
-                R.attr.disabledIconColor,
+                R.attr.secondaryText,
                 context
             ),
             disableInSecondaryState = true
@@ -78,7 +78,7 @@ class CustomTabsIntegration(
             primaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_refresh,
             primaryContentDescription = context.getString(R.string.browser_menu_refresh),
             primaryImageTintResource = DefaultThemeManager.resolveAttribute(
-                R.attr.browserToolbarMenuIcons,
+                R.attr.primaryText,
                 context
             ),
             isInPrimaryState = {
@@ -88,7 +88,7 @@ class CustomTabsIntegration(
             secondaryImageResource = mozilla.components.ui.icons.R.drawable.mozac_ic_stop,
             secondaryContentDescription = context.getString(R.string.browser_menu_stop),
             secondaryImageTintResource = DefaultThemeManager.resolveAttribute(
-                R.attr.browserToolbarMenuIcons,
+                R.attr.primaryText,
                 context
             ),
             disableInSecondaryState = false
@@ -111,7 +111,7 @@ class CustomTabsIntegration(
                     context.getString(R.string.browser_menu_powered_by, appName).toUpperCase()
                 }(),
                 ToolbarMenu.CAPTION_TEXT_SIZE,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
             ),
             BrowserMenuDivider(),
             SimpleBrowserMenuItem(
@@ -120,7 +120,7 @@ class CustomTabsIntegration(
                     context.getString(R.string.browser_menu_open_in_fenix, appName)
                 }(),
                 textColorResource = DefaultThemeManager.resolveAttribute(
-                    R.attr.browserToolbarMenuIcons,
+                    R.attr.primaryText,
                     context
                 )
             ) {
@@ -129,7 +129,7 @@ class CustomTabsIntegration(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_find_in_page),
                 R.drawable.mozac_ic_search,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
                 onItemTapped.invoke(ToolbarMenu.Item.FindInPage)
             },
@@ -140,7 +140,7 @@ class CustomTabsIntegration(
             BrowserMenuImageText(
                 context.getString(R.string.browser_menu_share),
                 R.drawable.mozac_ic_share,
-                DefaultThemeManager.resolveAttribute(R.attr.browserToolbarMenuIcons, context)
+                DefaultThemeManager.resolveAttribute(R.attr.primaryText, context)
             ) {
                 onItemTapped.invoke(ToolbarMenu.Item.Share)
             },

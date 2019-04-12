@@ -70,7 +70,7 @@ class ShortcutEngineManager(
             awesomeBarUIView.search_shortcuts_button.compoundDrawables[0]?.setTint(
                 ContextCompat.getColor(
                     this,
-                    DefaultThemeManager.resolveAttribute(R.attr.pillWrapperBackground, this)
+                    DefaultThemeManager.resolveAttribute(R.attr.foundation, this)
                 )
             )
 
@@ -85,7 +85,7 @@ class ShortcutEngineManager(
             awesomeBarUIView.search_shortcuts_button.compoundDrawables[0]?.setTint(
                 ContextCompat.getColor(
                     this,
-                    DefaultThemeManager.resolveAttribute(R.attr.searchShortcutsTextColor, this)
+                    DefaultThemeManager.resolveAttribute(R.attr.primaryText, this)
                 )
             )
 

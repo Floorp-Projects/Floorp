@@ -12,7 +12,6 @@ import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
-import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.home.sessioncontrol.viewholders.SessionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabViewHolder
@@ -130,7 +129,7 @@ class SwipeToDeleteCallback(
             val textPaint = Paint()
             textPaint.color = ContextCompat.getColor(
                 context,
-                DefaultThemeManager.resolveAttribute(R.attr.deleteColor, context)
+                R.color.delete_color
             )
             textPaint.textSize = TEXT_SIZE
             val textX = iconLeft - TEXT_MARGIN_X

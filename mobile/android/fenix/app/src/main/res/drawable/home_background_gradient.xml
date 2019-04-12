@@ -7,8 +7,8 @@
         <shape>
             <gradient
                     android:angle="270"
-                    android:startColor="?attr/homeBackgroundTopGradient"
-                    android:endColor="?attr/homeBackgroundBottomGradient"
+                    android:startColor="?foundation"
+                    android:endColor="?above"
                     android:type="linear" />
         </shape>
     </item>

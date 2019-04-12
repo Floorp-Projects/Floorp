@@ -12,7 +12,7 @@
     android:clickable="true"
     android:focusable="true"
     android:foreground="?android:attr/selectableItemBackground"
-    app:cardBackgroundColor="@color/sessionBackgroundColor_normal_theme"
+    app:cardBackgroundColor="?foundation"
     app:cardCornerRadius="10dp"
     app:cardElevation="5dp">
 
@@ -38,7 +38,7 @@
             android:layout_marginEnd="12dp"
             android:layout_marginBottom="5dp"
             android:textAppearance="@style/Header14TextStyle"
-            android:textColor="?attr/primaryTextColor"
+            android:textColor="?primaryText"
             android:textSize="16sp"
             app:layout_constraintEnd_toStartOf="@id/session_card_overflow_button"
             app:layout_constraintStart_toEndOf="@+id/session_card_thumbnail"
@@ -49,7 +49,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-            android:textColor="?attr/secondaryTextColor"
+            android:textColor="?secondaryText"
             app:layout_constraintEnd_toEndOf="@id/session_card_timestamp"
             app:layout_constraintStart_toStartOf="@id/session_card_timestamp"
             app:layout_constraintTop_toBottomOf="@+id/session_card_timestamp" />
@@ -59,7 +59,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
-            android:textColor="?attr/secondaryTextColor"
+            android:textColor="?secondaryText"
             app:layout_constraintStart_toStartOf="@id/session_card_titles"
             app:layout_constraintTop_toBottomOf="@+id/session_card_titles" />
 
@@ -77,7 +77,7 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/content_description_session_menu"
             android:src="@drawable/ic_menu"
-            android:tint="?attr/toolbarTextColor"
+            android:tint="?primaryText"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -91,5 +91,5 @@
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/content_description_session_share"
         android:src="@drawable/ic_send"
-        android:tint="?attr/toolbarTextColor" />
+        android:tint="?primaryText" />
 </androidx.cardview.widget.CardView>

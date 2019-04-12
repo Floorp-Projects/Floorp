@@ -144,7 +144,6 @@ class HomeFragment : Fragment(), CoroutineScope {
 
         val isPrivate = (activity as HomeActivity).browsingModeManager.isPrivate
 
-        view.toolbar_wrapper.isPrivateModeEnabled = isPrivate
         privateBrowsingButton.contentDescription = contentDescriptionForPrivateBrowsingButton(isPrivate)
 
         privateBrowsingButton.setOnClickListener {

@@ -7,7 +7,7 @@
     android:id="@+id/quick_action_sheet"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="?attr/quickActionBackgroundColor"
+    android:background="?foundation"
     android:orientation="vertical">
 
     <ImageButton
@@ -31,12 +31,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="?selectableItemBackgroundBorderless"
             android:drawableTop="@drawable/quick_action_icon_share"
             android:drawablePadding="5dp"
             android:text="@string/quick_action_share"
             android:textAllCaps="false"
-            android:textColor="?attr/toolbarTextColor"
+            android:textColor="?primaryText"
             android:textSize="12sp" />
 
         <Button
@@ -44,12 +44,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="?selectableItemBackgroundBorderless"
             android:drawableTop="@drawable/library_icon_downloads_circle_background"
             android:drawablePadding="5dp"
             android:text="@string/quick_action_download"
             android:textAllCaps="false"
-            android:textColor="?attr/toolbarTextColor"
+            android:textColor="?primaryText"
             android:textSize="12sp" />
 
         <Button
@@ -57,12 +57,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="?selectableItemBackgroundBorderless"
             android:drawableTop="@drawable/library_icon_bookmarks_circle_background"
             android:drawablePadding="5dp"
             android:text="@string/quick_action_bookmark"
             android:textAllCaps="false"
-            android:textColor="?attr/toolbarTextColor"
+            android:textColor="?primaryText"
             android:textSize="12sp" />
 
         <Button
@@ -70,12 +70,12 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:background="?attr/selectableItemBackgroundBorderless"
+            android:background="?selectableItemBackgroundBorderless"
             android:drawableTop="@drawable/quick_action_icon_read"
             android:drawablePadding="5dp"
             android:text="@string/quick_action_read"
             android:textAllCaps="false"
-            android:textColor="?attr/toolbarTextColor"
+            android:textColor="?primaryText"
             android:textSize="12sp" />
     </LinearLayout>
 </LinearLayout>

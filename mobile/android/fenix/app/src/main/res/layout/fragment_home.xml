@@ -12,7 +12,7 @@
         android:id="@+id/homeLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="?attr/homeBackgroundGradient"
+        android:background="@drawable/home_background_gradient"
         app:layoutDescription="@xml/home_scene"
         tools:context=".home.HomeFragment">
         <ImageButton
@@ -22,7 +22,7 @@
             android:layout_marginTop="16dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_menu"
-            android:tint="?attr/menuButtonTint"
+            android:tint="?primaryText"
             android:contentDescription="@string/content_description_menu"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -31,8 +31,9 @@
             android:id="@+id/privateBrowsingButton"
             android:layout_width="@dimen/glyph_button_height"
             android:layout_height="@dimen/glyph_button_height"
-            android:background="?attr/privateBrowsingButtonBackground"
+            android:background="?privateBrowsingButtonBackground"
             android:src="@drawable/ic_private_browsing"
+            android:tint="?primaryText"
             android:contentDescription="@string/content_description_private_browsing_button"
             app:layout_constraintEnd_toStartOf="@id/menuButton"
             app:layout_constraintTop_toTopOf="@id/menuButton" />
@@ -43,7 +44,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
             android:layout_marginTop="42dp"
-            android:src="?attr/fenixLogo"
+            android:src="?fenixLogo"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/menuButton" />
 
@@ -55,7 +56,7 @@
             android:layout_marginTop="64dp"
             android:layout_marginStart="16dp"
             android:elevation="@dimen/toolbar_elevation"
-            android:background="?attr/toolbarWrapperBackground"
+            android:background="@drawable/home_search_background_normal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/wordmark">
@@ -73,7 +74,7 @@
                 android:focusable="true"
                 android:gravity="center_vertical"
                 android:text="@string/search_hint"
-                android:textColor="?attr/toolbarTextColor"
+                android:textColor="?primaryText"
                 android:textSize="14sp" />
         </org.mozilla.fenix.home.SearchView>
 
@@ -81,7 +82,7 @@
             android:id="@+id/homeDivider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:background="?attr/homeDividerColor"
+            android:background="?neutral"
             app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"

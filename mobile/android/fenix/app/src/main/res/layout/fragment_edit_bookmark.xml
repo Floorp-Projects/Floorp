@@ -15,7 +15,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:text="@string/bookmark_name_label"
-        android:textColor="?attr/bookmarksLabelColor"
+        android:textColor="?primaryText"
         android:textSize="12sp"
         android:textAllCaps="true"/>
 
@@ -25,7 +25,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:textSize="15sp"
-        android:textColor="?attr/bookmarksEditTextColor"
+        android:textColor="?secondaryText"
         tools:text="Internet for people, not profit -- Mozilla"
         android:inputType="textAutoComplete"/>
 
@@ -35,7 +35,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="@string/bookmark_url_label"
-        android:textColor="?attr/bookmarksLabelColor"
+        android:textColor="?primaryText"
         android:textSize="12sp"
         android:textAllCaps="true"/>
 
@@ -45,7 +45,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:textSize="15sp"
-        android:textColor="?attr/bookmarksEditTextColor"
+        android:textColor="?secondaryText"
         tools:text="https://www.mozilla.org/en-US/"
         android:inputType="textUri"/>
 
@@ -55,7 +55,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:text="@string/bookmark_folder_label"
-        android:textColor="?attr/bookmarksLabelColor"
+        android:textColor="?primaryText"
         android:textSize="12sp"
         android:textAllCaps="true"/>
 
@@ -65,10 +65,10 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:textSize="16sp"
-        android:textColor="?attr/bookmarksEditTextColor"
+        android:textColor="?secondaryText"
         android:drawableStart="@drawable/ic_folder_icon"
         android:drawablePadding="10dp"
-        android:drawableTint="?attr/iconColor"
+        android:drawableTint="?primaryText"
         tools:text="Mobile Bookmarks"
         tools:targetApi="m" />
 

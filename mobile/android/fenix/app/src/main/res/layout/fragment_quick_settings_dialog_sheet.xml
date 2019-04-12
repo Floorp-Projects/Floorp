@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:contentDescription="@string/quick_settings_sheet"
-        android:background="?attr/toolbarColor">
+        android:background="?foundation">
 
     <TextView
             android:id="@+id/url"
@@ -40,7 +40,7 @@
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"
             android:layout_height="1dp"
-            android:background="?attr/homeDividerColor"
+            android:background="?neutral"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/security_info"/>
 

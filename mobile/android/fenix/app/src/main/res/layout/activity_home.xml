@@ -16,7 +16,7 @@
         app:titleMarginStart="16dp"
         app:titleMarginEnd="16dp"
         app:titleTextAppearance="@style/ToolbarTitleTextStyle"
-        android:background="?attr/toolbarColor"
+        android:background="?foundation"
         android:elevation="8dp"/>
 
     <fragment

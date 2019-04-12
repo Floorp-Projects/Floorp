@@ -59,15 +59,15 @@ class ToolbarComponent(
     private fun applyTheme() {
         getView().suggestionBackgroundColor = ContextCompat.getColor(
             container.context,
-            DefaultThemeManager.resolveAttribute(R.attr.suggestionBackground, container.context)
+            R.color.suggestion_highlight_color
         )
         getView().textColor = ContextCompat.getColor(
             container.context,
-            DefaultThemeManager.resolveAttribute(R.attr.awesomeBarTitleTextColor, container.context)
+            DefaultThemeManager.resolveAttribute(R.attr.primaryText, container.context)
         )
         getView().hintColor = ContextCompat.getColor(
             container.context,
-            DefaultThemeManager.resolveAttribute(R.attr.awesomeBarDescriptionTextColor, container.context)
+            DefaultThemeManager.resolveAttribute(R.attr.secondaryText, container.context)
         )
     }
 }

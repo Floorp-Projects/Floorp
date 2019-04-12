@@ -23,6 +23,6 @@
         android:layout_gravity="center"
         android:text="@string/bookmarks_empty_message"
         android:visibility="gone"
-        android:textColor="?attr/bookmarksLabelColor"/>
+        android:textColor="?primaryText"/>
 
 </FrameLayout>

@@ -10,7 +10,7 @@
     android:layout_marginTop="16dp"
     android:layout_marginBottom="16dp"
     android:background="@drawable/button_background"
-    android:backgroundTint="@color/delete_session_button_background"
+    android:backgroundTint="?neutral"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?android:attr/selectableItemBackground"
@@ -28,6 +28,6 @@
         android:textStyle="bold"
         android:gravity="center"
         android:text="@string/session_delete"
-        android:textColor="@color/color_primary_dark"
+        android:textColor="@color/primary_text_light_theme"
         android:textSize="16sp" />
 </FrameLayout>

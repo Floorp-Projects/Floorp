@@ -49,7 +49,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
             drawable?.setColorFilter(
                 ContextCompat.getColor(
                     context!!,
-                    DefaultThemeManager.resolveAttribute(R.attr.iconColor, context!!)
+                    DefaultThemeManager.resolveAttribute(R.attr.accent, context!!)
                 ), PorterDuff.Mode.SRC_IN
             )
             setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
@@ -69,7 +69,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
             drawable?.setColorFilter(
                 ContextCompat.getColor(
                     context!!,
-                    DefaultThemeManager.resolveAttribute(R.attr.deleteColor, context!!)
+                    R.color.delete_color
                 ), PorterDuff.Mode.SRC_IN
             )
             setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
@@ -80,7 +80,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
             drawable?.setColorFilter(
                 ContextCompat.getColor(
                     context!!,
-                    DefaultThemeManager.resolveAttribute(R.attr.iconColor, context!!)
+                    DefaultThemeManager.resolveAttribute(R.attr.primaryText, context!!)
                 ), PorterDuff.Mode.SRC_IN
             )
             setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)

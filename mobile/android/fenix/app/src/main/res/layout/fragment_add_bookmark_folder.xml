@@ -16,7 +16,7 @@
         android:layout_marginTop="16dp"
         android:text="@string/bookmark_name_label"
         android:textAllCaps="true"
-        android:textColor="?attr/bookmarksLabelColor"
+        android:textColor="?primaryText"
         android:textSize="12sp" />
 
     <EditText
@@ -25,7 +25,7 @@
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
         android:inputType="textAutoComplete"
-        android:textColor="?attr/bookmarksEditTextColor"
+        android:textColor="?secondaryText"
         android:textSize="15sp"
         tools:text="News" />
 
@@ -36,7 +36,7 @@
         android:layout_marginTop="8dp"
         android:text="@string/bookmark_folder_label"
         android:textAllCaps="true"
-        android:textColor="?attr/bookmarksLabelColor"
+        android:textColor="?primaryText"
         android:textSize="12sp" />
 
     <TextView
@@ -46,8 +46,8 @@
         android:layout_marginTop="8dp"
         android:drawableStart="@drawable/ic_folder_icon"
         android:drawablePadding="10dp"
-        android:drawableTint="?attr/iconColor"
-        android:textColor="?attr/bookmarksEditTextColor"
+        android:drawableTint="?primaryText"
+        android:textColor="?secondaryText"
         android:textSize="16sp"
         tools:targetApi="m"
         tools:text="Mobile Bookmarks" />

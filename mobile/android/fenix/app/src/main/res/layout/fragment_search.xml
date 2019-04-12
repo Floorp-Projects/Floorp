@@ -9,7 +9,7 @@
     android:layout_height="match_parent"
     tools:context=".search.SearchFragment"
     android:id="@+id/search_layout"
-    android:background="?attr/searchBackground">
+    android:background="?above">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/toolbar_wrapper"
@@ -18,7 +18,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
         android:layout_marginEnd="16dp"
-        android:background="?attr/toolbarWrapperBackground"
+        android:background="@drawable/home_search_background_dark"
         android:outlineProvider="paddedBounds"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -53,7 +53,7 @@
             android:textAllCaps="true"
             android:textStyle="bold"
             android:textSize="12sp"
-            android:textColor="?attr/awesomeBarDescriptionTextColor"
+            android:textColor="?secondaryText"
             android:letterSpacing="0.15"
             android:text="@string/search_shortcuts_search_with"
             app:layout_constraintTop_toBottomOf="@id/toolbar_wrapper"
@@ -61,7 +61,7 @@
 
     <LinearLayout
         android:id="@+id/pill_wrapper"
-        android:background="?attr/pillWrapperBackground"
+        android:background="?foundation"
         android:elevation="10dp"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

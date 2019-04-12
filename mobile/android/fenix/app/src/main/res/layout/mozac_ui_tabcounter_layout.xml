@@ -21,7 +21,7 @@
             android:layout_height="24dp"
             android:contentDescription="@string/mozac_ui_tabcounter_description"
             android:src="@drawable/mozac_ui_tabcounter_box"
-            android:tint="?attr/browserToolbarIcons" />
+            android:tint="?primaryText" />
 
         <!-- This text size auto adjusts based on num digits in `TabCounter` -->
         <TextView
@@ -31,7 +31,7 @@
             android:layout_gravity="center"
             android:layout_marginTop="1dp"
             android:layout_marginEnd="1dp"
-            android:textColor="?attr/browserToolbarIcons"
+            android:textColor="?primaryText"
             android:textSize="12sp"
             android:textStyle="bold"
             tools:text="16" />
