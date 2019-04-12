@@ -315,7 +315,7 @@ bool AbstractGeneratorObject::isAfterYieldOrAwait(JSOp op) {
   JSScript* script = callee().nonLazyScript();
   jsbytecode* code = script->code();
   uint32_t nextOffset = script->resumeOffsets()[resumeIndex()];
-  if (code[nextOffset] != JSOP_DEBUGAFTERYIELD) {
+  if (code[nextOffset] != JSOP_AFTERYIELD) {
     return false;
   }
 

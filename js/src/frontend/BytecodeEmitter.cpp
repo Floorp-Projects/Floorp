@@ -2307,7 +2307,7 @@ bool BytecodeEmitter::emitYieldOp(JSOp op) {
 
   SET_RESUMEINDEX(bytecodeSection().code(off), resumeIndex);
 
-  return emit1(JSOP_DEBUGAFTERYIELD);
+  return emit1(JSOP_AFTERYIELD);
 }
 
 bool BytecodeEmitter::emitSetThis(BinaryNode* setThisNode) {
