@@ -15,9 +15,6 @@ add_task(async function init() {
   registerCleanupFunction(async function() {
     let engine = Services.search.getEngineByName("Test");
     await Services.search.removeEngine(engine);
-    // Make sure the popup is closed for the next test.
-    gURLBar.handleRevert();
-    await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
   });
 
   // Search results aren't shown in quantumbar unless search suggestions are

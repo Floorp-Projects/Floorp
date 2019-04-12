@@ -21,7 +21,6 @@ add_task(async function init() {
     Services.prefs.clearUserPref("timesBeforeHidingSuggestionsHint");
 
     gURLBar.handleRevert();
-    await UrlbarTestUtils.promisePopupClose(window);
   });
 });
 
