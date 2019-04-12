@@ -1,5 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Test that an error while loading a sourcemap does not break
 // debugging.
@@ -20,5 +21,5 @@ add_task(async function() {
 
   // Make sure that only the single generated source exists. The
   // sourcemap failed to download.
-  is(dbg.selectors.getSourceCount(dbg.getState()), 1, "Only 1 source exists");
+  is(dbg.selectors.getSourceCount(), 1, "Only 1 source exists");
 });

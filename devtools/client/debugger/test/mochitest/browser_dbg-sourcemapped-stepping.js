@@ -1,12 +1,15 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests for stepping through Babel's compile output.
 requestLongerTimeout(4);
 
 async function breakpointSteps(dbg, target, fixture, { line, column }, steps) {
   const filename = `${target}://./${fixture}/input.`;
-  const fnName = (target + "-" + fixture).replace(/-([a-z])/g, (s, c) => c.toUpperCase());
+  const fnName = `${target}-${fixture}`.replace(/-([a-z])/g, (s, c) =>
+    c.toUpperCase()
+  );
 
   await invokeWithBreakpoint(
     dbg,
@@ -39,7 +42,7 @@ async function runSteps(dbg, source, steps) {
         throw new Error("Unknown stepping type");
     }
 
-    const { location } = getVisibleSelectedFrame(getState());
+    const { location } = getVisibleSelectedFrame();
 
     is(location.sourceId, source.id, `Step ${i} has correct sourceId`);
     is(location.line, position.line, `Step ${i} has correct line`);

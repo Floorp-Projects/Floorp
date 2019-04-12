@@ -1,5 +1,6 @@
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // Tests the breakpoints are hit in various situations.
 
@@ -25,12 +26,12 @@ add_task(async function() {
   assertPausedLocation(dbg);
   await resume(dbg);
 
-  info('Create an eval script that pauses itself.')
+  info("Create an eval script that pauses itself.");
   invokeInTab("doEval");
   await waitForPaused(dbg);
 
   await resume(dbg);
-  const source = getSelectedSource(getState())
+  const source = getSelectedSource();
   ok(!source.url, "It is an eval source");
 
   await addBreakpoint(dbg, source, 5);
