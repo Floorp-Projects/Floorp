@@ -465,13 +465,22 @@ already_AddRefed<BasePrincipal> BasePrincipal::CloneForcingFirstPartyDomain(
   // XXX this is slow. Maybe we should consider to make it faster.
   attrs.SetFirstPartyDomain(false, aURI, true /* aForced */);
 
+  return CloneForcingOriginAttributes(attrs);
+}
+
+already_AddRefed<BasePrincipal> BasePrincipal::CloneForcingOriginAttributes(
+    const OriginAttributes& aOriginAttributes) {
+  if (NS_WARN_IF(!IsCodebasePrincipal())) {
+    return nullptr;
+  }
+
   nsAutoCString originNoSuffix;
   nsresult rv = GetOriginNoSuffix(originNoSuffix);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsIURI* uri = static_cast<ContentPrincipal*>(this)->mCodebase;
   RefPtr<ContentPrincipal> copy = new ContentPrincipal();
-  rv = copy->Init(uri, attrs, originNoSuffix);
+  rv = copy->Init(uri, aOriginAttributes, originNoSuffix);
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   return copy.forget();
