@@ -66,12 +66,12 @@ void Axis::UpdateWithTouchAtDevicePoint(ParentLayerCoord aPos,
   mPos = aPos;
 
   AXIS_LOG("%p|%s got position %f\n", mAsyncPanZoomController, Name(),
-      mPos.value);
+           mPos.value);
   if (Maybe<float> newVelocity =
           mVelocityTracker->AddPosition(aPos, aTimestampMs)) {
     mVelocity = mAxisLocked ? 0 : *newVelocity;
     AXIS_LOG("%p|%s velocity from tracker is %f\n", mAsyncPanZoomController,
-        Name(), mVelocity);
+             Name(), mVelocity);
   }
 }
 

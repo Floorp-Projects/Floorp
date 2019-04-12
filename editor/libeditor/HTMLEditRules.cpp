@@ -341,7 +341,8 @@ nsresult HTMLEditRules::BeforeEdit(EditSubAction aEditSubAction,
     if (HTMLEditorRef().GetCompositionStartPoint().IsSet()) {
       // If there is composition string, let's remember current composition
       // range.
-      mRangeItem->StoreRange(HTMLEditorRef().GetCompositionStartPoint(), HTMLEditorRef().GetCompositionEndPoint());
+      mRangeItem->StoreRange(HTMLEditorRef().GetCompositionStartPoint(),
+                             HTMLEditorRef().GetCompositionEndPoint());
     } else {
       // Get the selection location
       if (!SelectionRefPtr()->RangeCount()) {

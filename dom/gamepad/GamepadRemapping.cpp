@@ -77,46 +77,42 @@ void FetchDpadFromAxis(uint32_t aIndex, double dir) {
 }
 
 class DefaultRemapper final : public GamepadRemapper {
-  public:
-    virtual uint32_t GetAxisCount() const override {
-      return numAxes;
-    }
+ public:
+  virtual uint32_t GetAxisCount() const override { return numAxes; }
 
-    virtual uint32_t GetButtonCount() const override {
-      return numButtons;
-    }
+  virtual uint32_t GetButtonCount() const override { return numButtons; }
 
-    virtual void SetAxisCount(uint32_t aAxisCount) override {
-      numAxes = aAxisCount;
-    }
+  virtual void SetAxisCount(uint32_t aAxisCount) override {
+    numAxes = aAxisCount;
+  }
 
-    virtual void SetButtonCount(uint32_t aButtonCount) override {
-      numButtons = aButtonCount;
-    }
+  virtual void SetButtonCount(uint32_t aButtonCount) override {
+    numButtons = aButtonCount;
+  }
 
-    virtual void RemapAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
+  virtual void RemapAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
                                   double aValue) const override {
-      RefPtr<GamepadPlatformService> service =
-          GamepadPlatformService::GetParentService();
-      if (!service) {
-        return;
-      }                             
-      service->NewAxisMoveEvent(aIndex, aAxis, aValue);
+    RefPtr<GamepadPlatformService> service =
+        GamepadPlatformService::GetParentService();
+    if (!service) {
+      return;
     }
+    service->NewAxisMoveEvent(aIndex, aAxis, aValue);
+  }
 
-    virtual void RemapButtonEvent(uint32_t aIndex, uint32_t aButton,
-                                  bool aPressed) const override {
-      RefPtr<GamepadPlatformService> service =
-          GamepadPlatformService::GetParentService();
-      if (!service) {
-        return;
-      }
-      service->NewButtonEvent(aIndex, aButton, aPressed);
+  virtual void RemapButtonEvent(uint32_t aIndex, uint32_t aButton,
+                                bool aPressed) const override {
+    RefPtr<GamepadPlatformService> service =
+        GamepadPlatformService::GetParentService();
+    if (!service) {
+      return;
     }
+    service->NewButtonEvent(aIndex, aButton, aPressed);
+  }
 
-  private:
-    uint32_t numAxes;
-    uint32_t numButtons;
+ private:
+  uint32_t numAxes;
+  uint32_t numButtons;
 };
 
 class Dualshock4Remapper final : public GamepadRemapper {
@@ -180,29 +176,26 @@ class Dualshock4Remapper final : public GamepadRemapper {
       return;
     }
 
-    const std::vector<uint32_t> buttonMapping = {
-      BUTTON_INDEX_TERTIARY,
-      BUTTON_INDEX_PRIMARY,
-      BUTTON_INDEX_SECONDARY,
-      BUTTON_INDEX_QUATERNARY,
-      BUTTON_INDEX_LEFT_SHOULDER,
-      BUTTON_INDEX_RIGHT_SHOULDER,
-      BUTTON_INDEX_LEFT_TRIGGER,
-      BUTTON_INDEX_RIGHT_TRIGGER,
-      BUTTON_INDEX_BACK_SELECT,
-      BUTTON_INDEX_START,
-      BUTTON_INDEX_LEFT_THUMBSTICK,
-      BUTTON_INDEX_RIGHT_THUMBSTICK,
-      BUTTON_INDEX_META,
-      DUALSHOCK_BUTTON_TOUCHPAD
-    };
+    const std::vector<uint32_t> buttonMapping = {BUTTON_INDEX_TERTIARY,
+                                                 BUTTON_INDEX_PRIMARY,
+                                                 BUTTON_INDEX_SECONDARY,
+                                                 BUTTON_INDEX_QUATERNARY,
+                                                 BUTTON_INDEX_LEFT_SHOULDER,
+                                                 BUTTON_INDEX_RIGHT_SHOULDER,
+                                                 BUTTON_INDEX_LEFT_TRIGGER,
+                                                 BUTTON_INDEX_RIGHT_TRIGGER,
+                                                 BUTTON_INDEX_BACK_SELECT,
+                                                 BUTTON_INDEX_START,
+                                                 BUTTON_INDEX_LEFT_THUMBSTICK,
+                                                 BUTTON_INDEX_RIGHT_THUMBSTICK,
+                                                 BUTTON_INDEX_META,
+                                                 DUALSHOCK_BUTTON_TOUCHPAD};
 
     if (buttonMapping.size() <= aIndex) {
-      NS_WARNING(
-            nsPrintfCString(
-                "Button idx '%d' doesn't support in Dualshock4Remapper().",
-                aButton)
-                .get());
+      NS_WARNING(nsPrintfCString(
+                     "Button idx '%d' doesn't support in Dualshock4Remapper().",
+                     aButton)
+                     .get());
       return;
     }
 
@@ -216,13 +209,12 @@ class Dualshock4Remapper final : public GamepadRemapper {
   };
 };
 
-already_AddRefed<GamepadRemapper> GetGamepadRemapper(const uint16_t aVendorId,
-                                                     const uint16_t aProductId) {
+already_AddRefed<GamepadRemapper> GetGamepadRemapper(
+    const uint16_t aVendorId, const uint16_t aProductId) {
   const std::vector<GamepadRemappingData> remappingRules = {
       {GamepadId::kSonyDualshock4, new Dualshock4Remapper()},
       {GamepadId::kSonyDualshock4Slim, new Dualshock4Remapper()},
-      {GamepadId::kSonyDualshock4USBReceiver, new Dualshock4Remapper()}
-  };
+      {GamepadId::kSonyDualshock4USBReceiver, new Dualshock4Remapper()}};
   const GamepadId id = static_cast<GamepadId>((aVendorId << 16) | aProductId);
 
   for (uint32_t i = 0; i < remappingRules.size(); ++i) {

@@ -116,8 +116,7 @@ static void global_registry_handler(void *data, wl_registry *registry,
                                     uint32_t id, const char *interface,
                                     uint32_t version) {
   auto display = reinterpret_cast<nsWaylandDisplay *>(data);
-  if (!display)
-    return;
+  if (!display) return;
 
   if (strcmp(interface, "wl_shm") == 0) {
     auto shm = static_cast<wl_shm *>(
@@ -168,7 +167,7 @@ bool nsWaylandDisplay::Matches(wl_display *aDisplay) {
   return mThreadId == PR_GetCurrentThread() && aDisplay == mDisplay;
 }
 
-nsWaylandDisplay::nsWaylandDisplay(wl_display* aDisplay)
+nsWaylandDisplay::nsWaylandDisplay(wl_display *aDisplay)
     : mThreadId(PR_GetCurrentThread()),
       mDisplay(aDisplay),
       mEventQueue(nullptr),

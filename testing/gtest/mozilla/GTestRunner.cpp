@@ -28,9 +28,10 @@ using ::testing::UnitTest;
 namespace mozilla {
 
 #ifdef ANDROID
-  #define MOZ_STDOUT_PRINT(...) __android_log_print(ANDROID_LOG_INFO, "gtest", __VA_ARGS__);
+#  define MOZ_STDOUT_PRINT(...) \
+    __android_log_print(ANDROID_LOG_INFO, "gtest", __VA_ARGS__);
 #else
-  #define MOZ_STDOUT_PRINT(...) printf(__VA_ARGS__);
+#  define MOZ_STDOUT_PRINT(...) printf(__VA_ARGS__);
 #endif
 
 #define MOZ_PRINT(...)              \
@@ -53,8 +54,8 @@ class MozillaPrinter : public EmptyTestEventListener {
   }
   virtual void OnTestProgramEnd(const UnitTest& aUnitTest) override {
     MOZ_PRINT("TEST-%s | GTest unit test: %s\n",
-           aUnitTest.Passed() ? "PASS" : "UNEXPECTED-FAIL",
-           aUnitTest.Passed() ? "passed" : "failed");
+              aUnitTest.Passed() ? "PASS" : "UNEXPECTED-FAIL",
+              aUnitTest.Passed() ? "passed" : "failed");
     MOZ_PRINT("Passed: %d\n", aUnitTest.successful_test_count());
     MOZ_PRINT("Failed: %d\n", aUnitTest.failed_test_count());
     if (mLogFile) {
@@ -65,21 +66,21 @@ class MozillaPrinter : public EmptyTestEventListener {
   virtual void OnTestStart(const TestInfo& aTestInfo) override {
     mTestInfo = &aTestInfo;
     MOZ_PRINT("TEST-START | %s.%s\n", mTestInfo->test_case_name(),
-           mTestInfo->name());
+              mTestInfo->name());
   }
   virtual void OnTestPartResult(
       const TestPartResult& aTestPartResult) override {
     MOZ_PRINT("TEST-%s | %s.%s | %s @ %s:%i\n",
-           !aTestPartResult.failed() ? "PASS" : "UNEXPECTED-FAIL",
-           mTestInfo ? mTestInfo->test_case_name() : "?",
-           mTestInfo ? mTestInfo->name() : "?", aTestPartResult.summary(),
-           aTestPartResult.file_name(), aTestPartResult.line_number());
+              !aTestPartResult.failed() ? "PASS" : "UNEXPECTED-FAIL",
+              mTestInfo ? mTestInfo->test_case_name() : "?",
+              mTestInfo ? mTestInfo->name() : "?", aTestPartResult.summary(),
+              aTestPartResult.file_name(), aTestPartResult.line_number());
   }
   virtual void OnTestEnd(const TestInfo& aTestInfo) override {
     MOZ_PRINT("TEST-%s | %s.%s | test completed (time: %llims)\n",
-           aTestInfo.result()->Passed() ? "PASS" : "UNEXPECTED-FAIL",
-           aTestInfo.test_case_name(), aTestInfo.name(),
-           aTestInfo.result()->elapsed_time());
+              aTestInfo.result()->Passed() ? "PASS" : "UNEXPECTED-FAIL",
+              aTestInfo.test_case_name(), aTestInfo.name(),
+              aTestInfo.result()->elapsed_time());
     MOZ_ASSERT(&aTestInfo == mTestInfo);
     mTestInfo = nullptr;
   }
@@ -134,8 +135,8 @@ int RunGTestFunc(int* argc, char** argv) {
       if (!file) {
         nsCOMPtr<nsIProperties> dirsvc =
             do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID);
-        nsresult rv = dirsvc->Get(NS_OS_CURRENT_WORKING_DIR, NS_GET_IID(nsIFile),
-                                  getter_AddRefs(file));
+        nsresult rv = dirsvc->Get(NS_OS_CURRENT_WORKING_DIR,
+                                  NS_GET_IID(nsIFile), getter_AddRefs(file));
         MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
       }
       crashreporter->SetEnabled(true);

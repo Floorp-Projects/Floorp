@@ -543,7 +543,8 @@ static bool Snapshot(JSContext* cx, HandleObject pobj_, unsigned flags,
 }
 
 JS_FRIEND_API bool js::GetPropertyKeys(JSContext* cx, HandleObject obj,
-                                       unsigned flags, MutableHandleIdVector props) {
+                                       unsigned flags,
+                                       MutableHandleIdVector props) {
   return Snapshot(cx, obj,
                   flags & (JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS |
                            JSITER_SYMBOLSONLY),
@@ -592,8 +593,8 @@ static PropertyIteratorObject* NewPropertyIteratorObject(JSContext* cx) {
 }
 
 static PropertyIteratorObject* CreatePropertyIterator(
-    JSContext* cx, Handle<JSObject*> objBeingIterated,
-    HandleIdVector props, uint32_t numGuards, uint32_t guardKey) {
+    JSContext* cx, Handle<JSObject*> objBeingIterated, HandleIdVector props,
+    uint32_t numGuards, uint32_t guardKey) {
   Rooted<PropertyIteratorObject*> propIter(cx, NewPropertyIteratorObject(cx));
   if (!propIter) {
     return nullptr;

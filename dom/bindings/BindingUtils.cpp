@@ -1870,7 +1870,8 @@ bool XrayAppendPropertyKeys<ConstantSpec>(
 
 bool XrayOwnPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
                          JS::Handle<JSObject*> obj, unsigned flags,
-                         JS::MutableHandleVector<jsid> props, DOMObjectType type,
+                         JS::MutableHandleVector<jsid> props,
+                         DOMObjectType type,
                          const NativeProperties* nativeProperties) {
   MOZ_ASSERT(type != eNamedPropertiesObject);
 
@@ -1902,7 +1903,8 @@ bool XrayOwnPropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
 bool XrayOwnNativePropertyKeys(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                const NativePropertyHooks* nativePropertyHooks,
                                DOMObjectType type, JS::Handle<JSObject*> obj,
-                               unsigned flags, JS::MutableHandleVector<jsid> props) {
+                               unsigned flags,
+                               JS::MutableHandleVector<jsid> props) {
   MOZ_ASSERT(type != eNamedPropertiesObject);
 
   if (type == eInterface &&
@@ -2739,7 +2741,8 @@ bool MayResolveGlobal(const JSAtomState& aNames, jsid aId,
 }
 
 bool EnumerateGlobal(JSContext* aCx, JS::HandleObject aObj,
-                     JS::MutableHandleVector<jsid> aProperties, bool aEnumerableOnly) {
+                     JS::MutableHandleVector<jsid> aProperties,
+                     bool aEnumerableOnly) {
   MOZ_ASSERT(JS_IsGlobalObject(aObj),
              "Should have a global here, since we plan to enumerate standard "
              "classes!");

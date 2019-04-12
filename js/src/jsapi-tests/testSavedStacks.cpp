@@ -298,8 +298,7 @@ BEGIN_TEST(testSavedStacks_selfHostedFrames) {
 }
 END_TEST(testSavedStacks_selfHostedFrames)
 
-BEGIN_TEST(test_JS_GetPendingExceptionStack)
-{
+BEGIN_TEST(test_JS_GetPendingExceptionStack) {
   CHECK(js::DefineTestingFunctions(cx, global, false, false));
 
   JSPrincipals* principals = cx->realm()->principals();
@@ -343,21 +342,20 @@ BEGIN_TEST(test_JS_GetPendingExceptionStack)
     uint32_t column;
     const char* source;
     const char* functionDisplayName;
-  } expected[] = {
-    { 4, 7, "filename.js", "three" },
-    { 5, 6, "filename.js", "two" },
-    { 6, 4, "filename.js", "one" },
-    { 7, 2, "filename.js", nullptr }
-  };
+  } expected[] = {{4, 7, "filename.js", "three"},
+                  {5, 6, "filename.js", "two"},
+                  {6, 4, "filename.js", "one"},
+                  {7, 2, "filename.js", nullptr}};
 
   size_t i = 0;
-  for (JS::Handle<js::SavedFrame*> frame : js::SavedFrame::RootedRange(cx, savedFrameStack)) {
+  for (JS::Handle<js::SavedFrame*> frame :
+       js::SavedFrame::RootedRange(cx, savedFrameStack)) {
     CHECK(i < 4);
 
     // Line
     uint32_t line = 123;
-    JS::SavedFrameResult result = JS::GetSavedFrameLine(cx, principals, frame, &line,
-                                                        JS::SavedFrameSelfHosted::Exclude);
+    JS::SavedFrameResult result = JS::GetSavedFrameLine(
+        cx, principals, frame, &line, JS::SavedFrameSelfHosted::Exclude);
     CHECK(result == JS::SavedFrameResult::Ok);
     CHECK_EQUAL(line, expected[i].line);
 
@@ -370,15 +368,16 @@ BEGIN_TEST(test_JS_GetPendingExceptionStack)
 
     // Source
     JS::RootedString str(cx);
-    result = JS::GetSavedFrameSource(cx, principals, frame, &str, JS::SavedFrameSelfHosted::Exclude);
+    result = JS::GetSavedFrameSource(cx, principals, frame, &str,
+                                     JS::SavedFrameSelfHosted::Exclude);
     CHECK(result == JS::SavedFrameResult::Ok);
     JSLinearString* linear = str->ensureLinear(cx);
     CHECK(linear);
     CHECK(js::StringEqualsAscii(linear, expected[i].source));
 
     // Function display name
-    result = JS::GetSavedFrameFunctionDisplayName(cx, principals, frame, &str,
-                                                  JS::SavedFrameSelfHosted::Exclude);
+    result = JS::GetSavedFrameFunctionDisplayName(
+        cx, principals, frame, &str, JS::SavedFrameSelfHosted::Exclude);
     CHECK(result == JS::SavedFrameResult::Ok);
     if (auto expectedName = expected[i].functionDisplayName) {
       CHECK(str);
