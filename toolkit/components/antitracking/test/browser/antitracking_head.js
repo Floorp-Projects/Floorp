@@ -454,7 +454,6 @@ this.AntiTracking = {
           content.addEventListener("message", function msg(event) {
             if (event.data.type == "finish") {
               content.removeEventListener("message", msg);
-              resolve();
               return;
             }
 
