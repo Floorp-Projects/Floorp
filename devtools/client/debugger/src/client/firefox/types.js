@@ -89,14 +89,11 @@ export type FramePacket = {
  */
 export type SourcePayload = {
   actor: ActorId,
-  generatedUrl?: URL,
-  introductionType: string,
-  introductionUrl?: URL,
+  url: URL | null,
   isBlackBoxed: boolean,
-  isPrettyPrinted: boolean,
-  isSourceMapped: boolean,
-  sourceMapURL?: URL,
-  url: URL
+  sourceMapURL: URL | null,
+  introductionUrl: URL | null,
+  introductionType: string | null
 };
 
 /**
