@@ -170,7 +170,7 @@ UrlClassifierFeatureCryptominingProtection::ProcessChannel(
   nsCOMPtr<nsIHttpChannelInternal> httpChannel = do_QueryInterface(aChannel);
 
   if (httpChannel) {
-    Unused << httpChannel->CancelByChannelClassifier(NS_ERROR_CRYPTOMINING_URI);
+    Unused << httpChannel->CancelByURLClassifier(NS_ERROR_CRYPTOMINING_URI);
   } else {
     Unused << aChannel->Cancel(NS_ERROR_CRYPTOMINING_URI);
   }
