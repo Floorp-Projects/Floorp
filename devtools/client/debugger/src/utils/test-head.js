@@ -42,7 +42,8 @@ function createStore(client: any, initialState: any = {}, sourceMapsMock: any) {
   })(combineReducers(reducers), initialState);
   sourceQueue.clear();
   sourceQueue.initialize({
-    newSources: sources => store.dispatch(actions.newSources(sources))
+    newQueuedSources: sources =>
+      store.dispatch(actions.newQueuedSources(sources))
   });
 
   store.thunkArgs = () => ({

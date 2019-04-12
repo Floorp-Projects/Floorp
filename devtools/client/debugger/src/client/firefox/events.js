@@ -102,7 +102,10 @@ function newSource(
   _: "newSource",
   { source }: SourcePacket
 ) {
-  sourceQueue.queue(createSource(threadClient.actor, source, { supportsWasm }));
+  sourceQueue.queue({
+    type: "generated",
+    data: createSource(threadClient.actor, source, { supportsWasm })
+  });
 }
 
 function workerListChanged() {

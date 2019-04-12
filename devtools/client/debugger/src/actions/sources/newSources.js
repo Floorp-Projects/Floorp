@@ -35,7 +35,7 @@ import {
 import { prefs } from "../../utils/prefs";
 import sourceQueue from "../../utils/source-queue";
 
-import type { Source, SourceId, Context } from "../../types";
+import type { Source, SourceId, Context, QueuedSourceData } from "../../types";
 import type { Action, ThunkArgs } from "../types";
 
 function createOriginalSource(
@@ -66,7 +66,12 @@ function loadSourceMaps(cx: Context, sources: Source[]) {
     const sourceList = await Promise.all(
       sources.map(async ({ id }) => {
         const originalSources = await dispatch(loadSourceMap(cx, id));
-        sourceQueue.queueSources(originalSources);
+        sourceQueue.queueSources(
+          originalSources.map(data => ({
+            type: "original",
+            data
+          }))
+        );
         return originalSources;
       })
     );
@@ -215,6 +220,14 @@ function restoreBlackBoxedSources(cx: Context, sources: Source[]) {
         dispatch(toggleBlackBox(cx, source));
       }
     }
+  };
+}
+
+export function newQueuedSources(sourceInfo: Array<QueuedSourceData>) {
+  return async ({ dispatch }: ThunkArgs) => {
+    const sources = sourceInfo.map(s => s.data);
+
+    await dispatch(newSources(sources));
   };
 }
 
