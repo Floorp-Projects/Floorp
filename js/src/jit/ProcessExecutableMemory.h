@@ -19,7 +19,11 @@ namespace jit {
 #if JS_BITS_PER_WORD == 32
 static const size_t MaxCodeBytesPerProcess = 140 * 1024 * 1024;
 #else
-static const size_t MaxCodeBytesPerProcess = 1 * 1024 * 1024 * 1024;
+// This is the largest number which satisfies various alignment static
+// asserts that is <= INT32_MAX. The INT32_MAX limit is required for making a
+// single call to RtlInstallFunctionTableCallback(). (This limit could be
+// relaxed in the future by making multiple calls.)
+static const size_t MaxCodeBytesPerProcess = 2044 * 1024 * 1024;
 #endif
 
 // Limit on the number of bytes of code memory per buffer.  This limit comes

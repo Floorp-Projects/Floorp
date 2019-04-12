@@ -5,12 +5,14 @@
  * Test that invalid engine files with xml extensions will not break
  * initialization. See Bug 940446.
  */
-function run_test() {
-  do_test_pending();
+add_task(async function setup() {
+  await AddonTestUtils.promiseStartupManager();
+});
 
+add_task(async function test_invalid_engine_from_dir() {
   Assert.ok(!Services.search.isInitialized);
 
-  let engineFile = gProfD.clone();
+  let engineFile = do_get_profile().clone();
   engineFile.append("searchplugins");
   engineFile.append("test-search-engine.xml");
   engineFile.parent.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
@@ -19,12 +21,5 @@ function run_test() {
   let engineTemplateFile = do_get_file("data/invalid-engine.xml");
   engineTemplateFile.copyTo(engineFile.parent, "test-search-engine.xml");
 
-  Services.search.init().then(function search_initialized(aStatus) {
-    // The invalid engine should have been skipped and should not
-    // have caused an exception.
-    Assert.ok(Components.isSuccessCode(aStatus));
-    Assert.ok(Services.search.isInitialized);
-
-    do_test_finished();
-  });
-}
+  await Services.search.init();
+});

@@ -25,7 +25,6 @@ const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const { webExtensionTargetSpec } = require("devtools/shared/specs/targets/webextension");
 
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/thread", true);
-loader.lazyRequireGetter(this, "ChromeUtils");
 const FALLBACK_DOC_MESSAGE = "Your addon does not have any document opened yet.";
 
 /**
@@ -344,11 +343,6 @@ webExtensionTargetPrototype._shouldAddNewGlobalAsDebuggee = function(newGlobal) 
       // window navigated away since the sandbox was created, it can throw a security
       // exception during this property check as the sandbox no longer has access to
       // its own proto.
-      return false;
-    }
-
-    // Filter out any global which contains a XUL document.
-    if (ChromeUtils.getClassName(global.document) == "XULDocument") {
       return false;
     }
 

@@ -35,7 +35,7 @@ void AndroidSurfaceTexture::GetTransformMatrix(
   env->ReleaseFloatArrayElements(jarray.Get(), array, 0);
 }
 
-class SharedGL {
+class SharedGL final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedGL);
 

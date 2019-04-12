@@ -1,0 +1,32 @@
+{
+  "name": "Test search engine (fr)",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "engine-fr@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "description": "A test search engine (based on Google search for a different locale)",
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Test search engine (fr)",
+      "search_url": "https://www.google.fr/search",
+      "params": [
+        {
+          "name": "q",
+          "value": "{searchTerms}"
+        },
+        {
+          "name": "ie",
+          "value": "iso-8859-1"
+        },
+        {
+          "name": "oe",
+          "value": "iso-8859-1"
+        }
+      ]
+    }
+  }
+}

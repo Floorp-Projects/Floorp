@@ -16,6 +16,8 @@ extern crate cssparser;
 extern crate servo_arc;
 extern crate smallbitvec;
 extern crate smallvec;
+#[cfg(feature = "string_cache")]
+extern crate string_cache;
 extern crate thin_slice;
 
 use servo_arc::{Arc, ThinArc};
@@ -24,17 +26,17 @@ use smallvec::{Array, SmallVec};
 use std::alloc::Layout;
 #[cfg(debug_assertions)]
 use std::any::TypeId;
-use std::isize;
 #[cfg(debug_assertions)]
 use std::collections::HashSet;
 use std::ffi::CString;
+use std::isize;
 use std::marker::PhantomData;
 use std::mem::{self, ManuallyDrop};
 use std::num::Wrapping;
 use std::ops::Range;
+use std::os::raw::c_char;
 #[cfg(debug_assertions)]
 use std::os::raw::c_void;
-use std::os::raw::c_char;
 use std::ptr::{self, NonNull};
 use std::slice;
 use std::str;
@@ -166,7 +168,7 @@ impl SharedMemoryBuilder {
 
         // Reserve space for the padding.
         let start = self.index.checked_add(padding).unwrap();
-        assert!(start <= std::isize::MAX as usize);  // for the cast below
+        assert!(start <= std::isize::MAX as usize); // for the cast below
 
         // Reserve space for the value.
         let end = start.checked_add(layout.size()).unwrap();
@@ -193,19 +195,36 @@ pub trait ToShmem: Sized {
 
 #[macro_export]
 macro_rules! impl_trivial_to_shmem {
-    ($($ty:ty),*) => {$(
-        impl $crate::ToShmem for $ty {
-            fn to_shmem(
-                &self,
-                _builder: &mut $crate::SharedMemoryBuilder,
-            ) -> ::std::mem::ManuallyDrop<Self> {
-                ::std::mem::ManuallyDrop::new(*self)
+    ($($ty:ty),*) => {
+        $(
+            impl $crate::ToShmem for $ty {
+                fn to_shmem(
+                    &self,
+                    _builder: &mut $crate::SharedMemoryBuilder,
+                ) -> ::std::mem::ManuallyDrop<Self> {
+                    ::std::mem::ManuallyDrop::new(*self)
+                }
             }
-        }
-    )*};
+        )*
+    };
 }
 
-impl_trivial_to_shmem!((), bool, f32, f64, i8, i16, i32, i64, u8, u16, u32, u64, isize, usize);
+impl_trivial_to_shmem!(
+    (),
+    bool,
+    f32,
+    f64,
+    i8,
+    i16,
+    i32,
+    i64,
+    u8,
+    u16,
+    u32,
+    u64,
+    isize,
+    usize
+);
 
 impl_trivial_to_shmem!(cssparser::RGBA);
 impl_trivial_to_shmem!(cssparser::SourceLocation);
@@ -424,7 +443,9 @@ impl<T: 'static + ToShmem> ToShmem for Arc<T> {
         #[cfg(debug_assertions)]
         assert!(
             !builder.shared_values.contains(&self.heap_ptr()) ||
-            builder.allowed_duplication_types.contains(&TypeId::of::<T>()),
+                builder
+                    .allowed_duplication_types
+                    .contains(&TypeId::of::<T>()),
             "ToShmem failed for Arc<T>: encountered a value of type T with multiple references \
              and which has not been explicitly allowed with an add_allowed_duplication_type call",
         );
@@ -463,11 +484,7 @@ impl<H: 'static + ToShmem, T: 'static + ToShmem> ToShmem for ThinArc<H, T> {
         // Make a clone of the Arc-owned header and slice values with all of
         // their heap allocations placed in the shared memory buffer.
         let header = self.header.header.to_shmem(builder);
-        let values: Vec<ManuallyDrop<T>> = self
-            .slice
-            .iter()
-            .map(|v| v.to_shmem(builder))
-            .collect();
+        let values: Vec<ManuallyDrop<T>> = self.slice.iter().map(|v| v.to_shmem(builder)).collect();
 
         // Create a new ThinArc with the shared value and have it place
         // its ArcInner in the shared memory buffer.
@@ -499,12 +516,27 @@ impl ToShmem for SmallBitVec {
                     let src = vs.as_ptr() as *const usize;
                     ptr::copy(src, dest, len);
 
-                    let dest_slice = Box::from_raw(slice::from_raw_parts_mut(dest, len) as *mut [usize]);
+                    let dest_slice =
+                        Box::from_raw(slice::from_raw_parts_mut(dest, len) as *mut [usize]);
                     InternalStorage::Spilled(dest_slice)
                 }
-            }
+            },
             InternalStorage::Inline(x) => InternalStorage::Inline(x),
         };
         ManuallyDrop::new(unsafe { SmallBitVec::from_storage(storage) })
+    }
+}
+
+#[cfg(feature = "string_cache")]
+impl<Static: string_cache::StaticAtomSet> ToShmem for string_cache::Atom<Static> {
+    fn to_shmem(&self, _: &mut SharedMemoryBuilder) -> ManuallyDrop<Self> {
+        // NOTE(emilio): In practice, this can be implemented trivially if
+        // string_cache could expose the implementation detail of static atoms
+        // being an index into the static table (and panicking in the
+        // non-static, non-inline cases).
+        unimplemented!(
+            "If servo wants to share stylesheets across processes, \
+             then ToShmem for Atom needs to be implemented"
+        )
     }
 }

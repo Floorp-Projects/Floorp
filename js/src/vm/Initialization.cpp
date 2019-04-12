@@ -9,8 +9,7 @@
 #include "js/Initialization.h"
 
 #include "mozilla/Assertions.h"
-
-#include <ctype.h>
+#include "mozilla/TextUtils.h"
 
 #include "jstypes.h"
 
@@ -46,7 +45,7 @@ InitState JS::detail::libraryInitState;
 static unsigned MessageParameterCount(const char* format) {
   unsigned numfmtspecs = 0;
   for (const char* fmt = format; *fmt != '\0'; fmt++) {
-    if (*fmt == '{' && isdigit(fmt[1])) {
+    if (*fmt == '{' && mozilla::IsAsciiDigit(fmt[1])) {
       ++numfmtspecs;
     }
   }

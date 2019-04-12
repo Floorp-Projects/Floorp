@@ -1,0 +1,26 @@
+{
+  "name": "Allegro",
+  "description": "Wyszukiwanie w aukcjach Allegro",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "allegro-pl@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Allegro",
+      "search_url": "https://allegro.pl/listing/listing.php",
+      "search_form": "https://allegro.pl",
+      "search_url_get_params": "string={searchTerms}&sourceid=Mozilla-search"
+    }
+  }
+}

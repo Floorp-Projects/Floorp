@@ -24,7 +24,7 @@ class CompositorController {
   virtual void ScheduleShowAllPluginWindows() = 0;
 
  protected:
-  virtual ~CompositorController() {}
+  virtual ~CompositorController() = default;
 };
 
 }  // namespace layers

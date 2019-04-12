@@ -135,11 +135,11 @@ function* test(testDriver) {
     // dispatch-to-content.
     if (testId == 1 || testId == 2) {
       checkHitResult(hitTest({x: bounds.right - verticalScrollbarWidth - 1, y: bounds.y + 1}),
-                     APZHitResultFlags.VISIBLE | APZHitResultFlags.DISPATCH_TO_CONTENT,
+                     APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
                      rootViewId,
                      `top right of scroller in testcase ${testId}`);
       checkHitResult(hitTest({x: bounds.right - verticalScrollbarWidth - 1, y: bounds.bottom - horizontalScrollbarHeight - 1}),
-                     APZHitResultFlags.VISIBLE | APZHitResultFlags.DISPATCH_TO_CONTENT,
+                     APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
                      rootViewId,
                      `bottom right of scroller in testcase ${testId}`);
     } else {
@@ -154,7 +154,7 @@ function* test(testDriver) {
     }
 
     checkHitResult(hitTest({x: bounds.right - 1, y: bounds.y + (bounds.height / 2)}),
-                   APZHitResultFlags.VISIBLE | APZHitResultFlags.DISPATCH_TO_CONTENT,
+                   APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
                    rootViewId,
                    `middle right of scroller in testcase ${testId}`);
   }

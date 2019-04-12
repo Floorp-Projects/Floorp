@@ -1,0 +1,17 @@
+{
+  "name": "engine-rel-searchform-post.xml",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "engine-rel-searchform-post@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "engine-rel-searchform-post.xml",
+      "search_url": "https://engine-rel-searchform-post.xml/POST"
+    }
+  }
+}

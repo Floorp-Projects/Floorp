@@ -1,0 +1,141 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>MSE: isTypeSupported extended mime extensions</title>
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <pre id="test">
+      <script class="testbody" type="text/javascript">
+
+        SimpleTest.waitForExplicitFinish();
+
+        // Returns a promise that resolves with the next message received on
+        // our window.
+        function nextMessage() {
+          return new Promise((resolve, reject) => {
+            const f = (event) => {
+              window.removeEventListener("message", f);
+              resolve(event);
+            };
+            window.addEventListener("message", f);
+          });
+        }
+
+        // Tests YouTube's MIME type extensions. Runs through the list of cases
+        // and checks that the MIME extensions are only supported on a YouTube
+        // origin, where supported means we check the invalid cases and reject
+        // them.
+        async function runTest() {
+          const supportedCases = [
+            'video/mp4; codecs="avc1.42001E"',
+            'audio/mp4; codecs="mp4a.40.2"',
+            'video/webm; codecs="vp09.02.51.10.01.09.16.09"',
+            'audio/webm; codecs="opus"',
+            'audio/webm; codecs="opus"; channels=2',
+            'video/webm; codecs="vp9"',
+            'video/webm; codecs="vp9"; width=640',
+            'video/webm; codecs="vp9"',
+            'video/webm; codecs="vp9"; height=360',
+            'video/webm; codecs="vp9"',
+            'video/webm; codecs="vp9"; framerate=30',
+            'video/webm; codecs="vp9"; width=3840; height=2160; bitrate=2000000',
+            'video/mp4; codecs="avc1.4d4015"; width=426; height=240; framerate=24',
+            'video/mp4; codecs="avc1.4d401e"; width=640; height=360; framerate=24',
+            'video/mp4; codecs="avc1.4d401e"; width=854; height=480; framerate=24',
+            'video/mp4; codecs="avc1.4d401f"; width=1280; height=720; framerate=24',
+            'video/mp4; codecs="avc1.640028"; width=1920; height=1080; framerate=24',
+            'audio/mp4; codecs="mp4a.40.2"; channels=2',
+            'video/mp4; codecs="avc1.4d400c"; width=256; height=144; framerate=24',
+            'audio/webm; codecs="vorbis"; channels=2',
+            'video/webm; codecs="vp9"',
+            'video/webm; codecs="vp9"; eotf=bt709',
+            'video/webm; codecs="vp09.00.51.08.01.01.01.01"; width=426; height=240; framerate=24',
+            'video/webm; codecs="vp09.00.51.08.01.01.01.01"; width=640; height=360; framerate=24',
+            'video/webm; codecs="vp09.00.51.08.01.01.01.01"; width=854; height=480; framerate=24',
+            'video/webm; codecs="vp09.00.51.08.01.01.01.01"; width=1280; height=720; framerate=24',
+            'video/webm; codecs="vp09.00.51.08.01.01.01.01"; width=1920; height=1080; framerate=24',
+            'audio/webm; codecs="opus"; channels=2',
+            'audio/webm; codecs="opus"; channels=2',
+            'audio/webm; codecs="opus"; channels=2',
+            'video/webm; codecs="vp09.00.51.08.01.01.01.01"; width=2560; height=1440; framerate=24',
+            'video/webm; codecs="vp09.00.51.08.01.01.01.01"; width=3840; height=2160; framerate=24',
+            'video/mp4; codecs="av01.0.05M.08"; width=256; height=144; framerate=24',
+            'video/mp4; codecs="av01.0.05M.08"; width=426; height=240; framerate=24',
+            'video/mp4; codecs="av01.0.05M.08"; width=640; height=360; framerate=24',
+            'video/mp4; codecs="av01.0.05M.08"; width=854; height=480; framerate=24',
+            'video/mp4; codecs="av01.0.05M.08"; width=1280; height=720; framerate=24',
+            'video/mp4; codecs="avc1.4d4015"; width=426; height=240; framerate=25',
+            'video/mp4; codecs="avc1.4d401e"; width=640; height=360; framerate=25',
+            'video/mp4; codecs="avc1.4d401e"; width=854; height=480; framerate=25',
+            'video/mp4; codecs="avc1.4d401f"; width=1280; height=720; framerate=25',
+            'video/mp4; codecs="avc1.640028"; width=1920; height=1080; framerate=25',
+            'audio/mp4; codecs="mp4a.40.2"; channels=2',
+            'video/mp4; codecs="avc1.4d400c"; width=256; height=144; framerate=25',
+            'audio/webm; codecs="vorbis"; channels=2',
+            'video/webm; codecs="vp09.00.51.08.01.01.01.01"; width=426; height=240; framerate=25',
+            'video/webm; codecs="vp09.00.51.08.01.01.01.01"; width=640; height=360; framerate=25',
+            'video/webm; codecs="vp09.00.51.08.01.01.01.01"; width=854; height=480; framerate=25',
+            'video/webm; codecs="vp09.00.51.08.01.01.01.01"; width=1280; height=720; framerate=25',
+            'video/webm; codecs="vp09.00.51.08.01.01.01.01"; width=1920; height=1080; framerate=25',
+            'audio/webm; codecs="opus"; channels=2',
+            'audio/webm; codecs="opus"; channels=2',
+            'audio/webm; codecs="opus"; channels=2',
+          ];
+
+          const unsupportedOnYTCases = [
+            'audio/webm; codecs="opus"; channels=99',
+            'video/webm; codecs="vp9"; width=99999',
+            'video/webm; codecs="vp9"; height=99999',
+            'video/webm; codecs="vp9"; framerate=9999',
+            'video/webm; codecs="vp9"; width=3840; height=2160; bitrate=20000000',
+            'video/webm; codecs="vp9"; eotf=catavision',
+          ];
+
+          const unsupportedCases = [
+            'video/webm; codecs="vp09.02.51.10.01.09.99.99"',
+          ];
+
+          const frame = document.getElementById("frame");
+
+          const supportedOnYT = async (t) => {
+            // Sends a message to the YouTube iframe, which runs the check there.
+            const m = nextMessage();
+            frame.contentWindow.postMessage(t, "*");
+            const result = await m;
+            return result.data;
+          };
+
+          for (const t of supportedCases) {
+            ok(MediaSource.isTypeSupported(t), "Case '" + t + "' supported in non-YouTube origin");
+            is(await supportedOnYT(t), true, "Case '" + t + "' supported in YouTube origin");
+          }
+
+          for (const t of unsupportedOnYTCases) {
+            ok(MediaSource.isTypeSupported(t), "Case '" + t + "' supported in non-YouTube origin");
+            is(await supportedOnYT(t), false, "Case '" + t + "' *not* supported in YouTube origin");
+          }
+
+          for (const t of unsupportedCases) {
+            ok(!MediaSource.isTypeSupported(t), "Case '" + t + "' *not* supported in non-YouTube origin");
+            is(await supportedOnYT(t), false, "Case '" + t + "' *not* supported in YouTube origin");
+          }
+
+          SimpleTest.finish();
+        }
+
+        // Start the test once the child fake YouTube origin frame has signaled
+        // it's ready to receive requests.
+        nextMessage().then(runTest);
+
+        const f = document.createElement("iframe");
+        f.id = "frame";
+        f.src = "http://mochitest.youtube.com:443/tests/dom/media/mediasource/test/file_isTypeSupported.html";
+        document.getElementById("test").appendChild(f);
+
+
+      </script>
+      </pre>
+  </body>
+</html>

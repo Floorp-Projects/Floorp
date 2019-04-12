@@ -4692,20 +4692,20 @@ Tab.prototype = {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
   },
 
-  OnHistoryReload: function(reloadURI, reloadFlags) {
+  OnHistoryReload: function() {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
     return true;
   },
 
-  OnHistoryGotoIndex: function(index, gotoURI) {
+  OnHistoryGotoIndex: function() {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
   },
 
-  OnHistoryPurge: function(numEntries) {
+  OnHistoryPurge: function() {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
   },
 
-  OnHistoryReplaceEntry: function(index) {
+  OnHistoryReplaceEntry: function() {
     Services.obs.notifyObservers(this.browser, "Content:HistoryChange");
   },
 

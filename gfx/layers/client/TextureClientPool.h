@@ -24,7 +24,7 @@ class TextureReadLock;
 
 class TextureClientAllocator {
  protected:
-  virtual ~TextureClientAllocator() {}
+  virtual ~TextureClientAllocator() = default;
 
  public:
   NS_INLINE_DECL_REFCOUNTING(TextureClientAllocator)

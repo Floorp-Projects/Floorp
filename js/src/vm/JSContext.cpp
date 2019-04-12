@@ -14,9 +14,9 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Sprintf.h"
+#include "mozilla/TextUtils.h"
 #include "mozilla/Unused.h"
 
-#include <ctype.h>
 #include <stdarg.h>
 #include <string.h>
 #ifdef ANDROID
@@ -737,8 +737,8 @@ bool ExpandErrorArgumentsHelper(JSContext* cx, JSErrorCallback callback,
         fmt = efs->format;
         while (*fmt) {
           if (*fmt == '{') {
-            if (isdigit(fmt[1])) {
-              int d = JS7_UNDEC(fmt[1]);
+            if (mozilla::IsAsciiDigit(fmt[1])) {
+              int d = AsciiDigitToNumber(fmt[1]);
               MOZ_RELEASE_ASSERT(d < args.count());
               strncpy(out, args.args(d), args.lengths(d));
               out += args.lengths(d);

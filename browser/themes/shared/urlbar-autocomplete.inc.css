@@ -10,9 +10,8 @@
 %define urlbarViewFaviconOffset (@urlbarViewPadding@ + 16px /* type icon width */ + @urlbarViewIconMarginEnd@)
 
 :root {
-  --autocomplete-popup-background: -moz-field;
-  --autocomplete-popup-color: -moz-fieldtext;
-  --autocomplete-popup-border-color: ThreeDShadow;
+  --autocomplete-popup-background: var(--arrowpanel-background);
+  --autocomplete-popup-color: var(--arrowpanel-color);
   --autocomplete-popup-highlight-background: Highlight;
   --autocomplete-popup-highlight-color: HighlightText;
 }
@@ -31,7 +30,9 @@
   -moz-appearance: none;
   background: var(--autocomplete-popup-background);
   color: var(--autocomplete-popup-color);
-  border: 1px solid var(--autocomplete-popup-border-color);
+  border: 1px solid var(--chrome-content-separator-color);
+  border-left-style: none;
+  border-right-style: none;
 }
 
 .urlbarView-body-inner {
@@ -192,7 +193,7 @@
 #PopupSearchAutoComplete {
   background: var(--autocomplete-popup-background);
   color: var(--autocomplete-popup-color);
-  border-color: var(--autocomplete-popup-border-color);
+  border-color: var(--arrowpanel-border-color);
 }
 
 #PopupAutoCompleteRichResult .autocomplete-richlistbox {

@@ -189,9 +189,9 @@ class CompositableClient {
  * Helper to call RemoveTexture at the end of a scope.
  */
 struct AutoRemoveTexture {
-  explicit AutoRemoveTexture(CompositableClient* aCompositable,
-                             wr::RenderRoot aRenderRoot,
-                             TextureClient* aTexture = nullptr)
+  AutoRemoveTexture(CompositableClient* aCompositable,
+                    wr::RenderRoot aRenderRoot,
+                    TextureClient* aTexture = nullptr)
       : mTexture(aTexture),
         mCompositable(aCompositable),
         mRenderRoot(aRenderRoot) {}

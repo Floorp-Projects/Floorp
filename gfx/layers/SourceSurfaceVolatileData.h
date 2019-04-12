@@ -84,7 +84,7 @@ class SourceSurfaceVolatileData : public DataSourceSurface {
   }
 
  private:
-  ~SourceSurfaceVolatileData() override {}
+  virtual ~SourceSurfaceVolatileData() = default;
 
   Mutex mMutex;
   int32_t mStride;

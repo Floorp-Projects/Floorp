@@ -1,4 +1,6 @@
-import {_List as List, ListItem} from "content-src/components/DiscoveryStreamComponents/List/List";
+import {_List as List, ListItem, PlaceholderListItem} from "content-src/components/DiscoveryStreamComponents/List/List";
+import {DSEmptyState} from "content-src/components/DiscoveryStreamComponents/DSEmptyState/DSEmptyState";
+import {DSLinkMenu} from "content-src/components/DiscoveryStreamComponents/DSLinkMenu/DSLinkMenu";
 import {GlobalOverrider} from "test/unit/utils";
 import React from "react";
 import {shallow} from "enzyme";
@@ -26,6 +28,23 @@ describe("<List> presentation component", () => {
     assert.isNull(wrapper.getElement());
   });
 
+  it("should return Empty State for no recommendations", () => {
+    const ListProps = {
+      data: {recommendations: []},
+      header: {title: "headerTitle"},
+    };
+
+    const wrapper = shallow(<List {...ListProps} />);
+    const dsEmptyState = wrapper.find(DSEmptyState);
+    const dsHeader = wrapper.find(".ds-header");
+    const dsList = wrapper.find(".ds-list.empty");
+
+    assert.ok(wrapper.exists());
+    assert.lengthOf(dsEmptyState, 1);
+    assert.lengthOf(dsHeader, 1);
+    assert.lengthOf(dsList, 1);
+  });
+
   it("should return something containing a <ul> if props are valid", () => {
     const wrapper = shallow(<List {...ValidListProps} />);
 
@@ -46,6 +65,16 @@ describe("<List> presentation component", () => {
 
     const listItem = wrapper.find(ListItem);
     assert.lengthOf(listItem, 1);
+  });
+
+  it("should return PlaceHolderListItem for recommendations less than items", () => {
+    const wrapper = shallow(<List {...ValidListProps} items={4} />);
+
+    const listItem = wrapper.find(ListItem);
+    assert.lengthOf(listItem, 3);
+
+    const placeholderListItem = wrapper.find(PlaceholderListItem);
+    assert.lengthOf(placeholderListItem, 1);
   });
 
   it("should return fewer ListItems for starting point", () => {
@@ -102,13 +131,6 @@ describe("<ListItem> presentation component", () => {
     assert.lengthOf(anchors, 1);
   });
 
-  it("should include an background image of props.image_src", () => {
-    const wrapper = shallow(<ListItem {...ValidListItemProps} />);
-
-    const imageStyle = wrapper.find(".ds-list-image").prop("style");
-    assert.propertyVal(imageStyle, "backgroundImage", `url(${ValidListItemProps.image_src})`);
-  });
-
   it("should not contain 'span.ds-list-item-context' without props.context", () => {
     const wrapper = shallow(<ListItem {...ValidListItemProps} />);
 
@@ -121,5 +143,37 @@ describe("<ListItem> presentation component", () => {
 
     const contextEl = wrapper.find("span.ds-list-item-context");
     assert.lengthOf(contextEl, 1);
+  });
+});
+
+describe("<PlaceholderListItem> component", () => {
+  it("should have placeholder prop", () => {
+    const wrapper = shallow(<PlaceholderListItem />);
+    const listItem = wrapper.find(ListItem);
+    assert.lengthOf(listItem, 1);
+
+    const placeholder = wrapper.find(ListItem).prop("placeholder");
+    assert.isTrue(placeholder);
+  });
+
+  it("should contain placeholder listitem", () => {
+    const wrapper = shallow(<ListItem placeholder={true} />);
+    const listItem = wrapper.find("li.ds-list-item.placeholder");
+    assert.lengthOf(listItem, 1);
+  });
+
+  it("should not be clickable", () => {
+    const wrapper = shallow(<ListItem placeholder={true} />);
+    const anchor = wrapper.find("SafeAnchor.ds-list-item-link");
+    assert.lengthOf(anchor, 1);
+
+    const linkClick = anchor.prop("onLinkClick");
+    assert.isUndefined(linkClick);
+  });
+
+  it("should not have context menu", () => {
+    const wrapper = shallow(<ListItem placeholder={true} />);
+    const linkMenu = wrapper.find(DSLinkMenu);
+    assert.lengthOf(linkMenu, 0);
   });
 });

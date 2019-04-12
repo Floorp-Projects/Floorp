@@ -22,7 +22,7 @@ class WorkerThreadPosix : public WorkerThread {
                    static_cast<WorkerThread*>(this));
   }
 
-  ~WorkerThreadPosix() override { pthread_join(mThread, nullptr); }
+  virtual ~WorkerThreadPosix() { pthread_join(mThread, nullptr); }
 
   void SetName(const char*) override {
     // XXX - temporarily disabled, see bug 1209039

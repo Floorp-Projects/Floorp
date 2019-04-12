@@ -13,6 +13,7 @@
 #include "GPUVideoImage.h"
 #include "ScopedGLHelpers.h"
 
+#include "mozilla/layers/D3D11ShareHandleImage.h"
 #include "mozilla/layers/D3D11YCbCrImage.h"
 #include "mozilla/layers/TextureD3D11.h"
 
@@ -201,6 +202,20 @@ bool GLBlitHelper::BlitImage(layers::GPUVideoImage* const srcImage,
 
 // -------------------------------------
 
+bool GLBlitHelper::BlitImage(layers::D3D11ShareHandleImage* const srcImage,
+                             const gfx::IntSize& destSize,
+                             const OriginPos destOrigin) const {
+  const auto& data = srcImage->GetData();
+  if (!data) return false;
+
+  layers::SurfaceDescriptorD3D10 desc;
+  if (!data->SerializeSpecific(&desc)) return false;
+
+  return BlitDescriptor(desc, destSize, destOrigin);
+}
+
+// -------------------------------------
+
 bool GLBlitHelper::BlitImage(layers::D3D11YCbCrImage* const srcImage,
                              const gfx::IntSize& destSize,
                              const OriginPos destOrigin) const {
@@ -229,7 +244,7 @@ bool GLBlitHelper::BlitDescriptor(const layers::SurfaceDescriptorD3D10& desc,
 
   const auto srcOrigin = OriginPos::BottomLeft;
   const gfx::IntRect clipRect(0, 0, clipSize.width, clipSize.height);
-  const auto colorSpace = YUVColorSpace::BT601;
+  const auto colorSpace = desc.yUVColorSpace();
 
   if (format != gfx::SurfaceFormat::NV12 &&
       format != gfx::SurfaceFormat::P010 &&
@@ -286,7 +301,7 @@ bool GLBlitHelper::BlitAngleYCbCr(const WindowsHandle (&handleList)[3],
                                   const gfx::IntRect& clipRect,
                                   const gfx::IntSize& ySize,
                                   const gfx::IntSize& uvSize,
-                                  const YUVColorSpace colorSpace,
+                                  const gfx::YUVColorSpace colorSpace,
                                   const gfx::IntSize& destSize,
                                   const OriginPos destOrigin) const {
   const auto& d3d = GetD3D11();

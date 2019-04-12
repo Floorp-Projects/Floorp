@@ -36,9 +36,9 @@ gfx::SurfaceFormat MacIOSurfaceTextureSourceBasic::GetFormat() const {
 MacIOSurfaceTextureHostBasic::MacIOSurfaceTextureHostBasic(
     TextureFlags aFlags, const SurfaceDescriptorMacIOSurface& aDescriptor)
     : TextureHost(aFlags) {
-  mSurface = MacIOSurface::LookupSurface(aDescriptor.surfaceId(),
-                                         aDescriptor.scaleFactor(),
-                                         !aDescriptor.isOpaque());
+  mSurface = MacIOSurface::LookupSurface(
+      aDescriptor.surfaceId(), aDescriptor.scaleFactor(),
+      !aDescriptor.isOpaque(), aDescriptor.yUVColorSpace());
 }
 
 gfx::SourceSurface* MacIOSurfaceTextureSourceBasic::GetSurface(

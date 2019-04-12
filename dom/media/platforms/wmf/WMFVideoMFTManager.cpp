@@ -136,7 +136,9 @@ WMFVideoMFTManager::WMFVideoMFTManager(
       mImageSize(aConfig.mImage),
       mDecodedImageSize(aConfig.mImage),
       mVideoStride(0),
-      mYUVColorSpace(YUVColorSpace::BT601),
+      mColorSpace(aConfig.mColorSpace != gfx::YUVColorSpace::UNKNOWN
+                      ? Some(aConfig.mColorSpace)
+                      : Nothing()),
       mImageContainer(aImageContainer),
       mKnowsCompositor(aKnowsCompositor),
       mDXVAEnabled(aDXVAEnabled &&
@@ -657,15 +659,14 @@ MediaResult WMFVideoMFTManager::InitInternal() {
       (mUseHwAccel ? "Yes" : "No"));
 
   if (mUseHwAccel) {
-    hr = mDXVA2Manager->ConfigureForSize(outputType,
-                                         mVideoInfo.ImageRect().width,
-                                         mVideoInfo.ImageRect().height);
+    hr = mDXVA2Manager->ConfigureForSize(
+        outputType, mColorSpace.refOr(gfx::YUVColorSpace::BT601),
+        mVideoInfo.ImageRect().width, mVideoInfo.ImageRect().height);
     NS_ENSURE_TRUE(SUCCEEDED(hr),
                    MediaResult(NS_ERROR_DOM_MEDIA_FATAL_ERR,
                                RESULT_DETAIL("Fail to configure image size for "
                                              "DXVA2Manager.")));
   } else {
-    mYUVColorSpace = GetYUVColorSpace(outputType);
     GetDefaultStride(outputType, mVideoInfo.ImageRect().width, &mVideoStride);
   }
   LOG("WMFVideoMFTManager frame geometry stride=%u picture=(%d, %d, %d, %d) "
@@ -755,6 +756,12 @@ WMFVideoMFTManager::Input(MediaRawData* aSample) {
       &inputSample);
   NS_ENSURE_TRUE(SUCCEEDED(hr) && inputSample != nullptr, hr);
 
+  if (!mColorSpace && aSample->mTrackInfo) {
+    // The colorspace definition is found in the H264 SPS NAL, available out of
+    // band, while for VP9 it's only available within the VP9 bytestream.
+    // The info would have been updated by the MediaChangeMonitor.
+    mColorSpace = Some(aSample->mTrackInfo->GetAsVideoInfo()->mColorSpace);
+  }
   mLastDuration = aSample->mDuration;
 
   // Forward sample data to the decoder.
@@ -922,7 +929,7 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   }
 
   // YuvColorSpace
-  b.mYUVColorSpace = mYUVColorSpace;
+  b.mYUVColorSpace = *mColorSpace;
   b.mColorDepth = colorDepth;
 
   TimeUnit pts = GetSampleTime(aSample);
@@ -1034,13 +1041,12 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset, RefPtr<MediaData>& aOutData) {
       NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
       if (mUseHwAccel) {
-        hr = mDXVA2Manager->ConfigureForSize(outputType,
-                                             mVideoInfo.ImageRect().width,
-                                             mVideoInfo.ImageRect().height);
+        hr = mDXVA2Manager->ConfigureForSize(
+            outputType, mColorSpace.refOr(gfx::YUVColorSpace::BT601),
+            mVideoInfo.ImageRect().width, mVideoInfo.ImageRect().height);
         NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
       } else {
         // The stride may have changed, recheck for it.
-        mYUVColorSpace = GetYUVColorSpace(outputType);
         hr = GetDefaultStride(outputType, mVideoInfo.ImageRect().width,
                               &mVideoStride);
         NS_ENSURE_TRUE(SUCCEEDED(hr), hr);

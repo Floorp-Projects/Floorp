@@ -370,7 +370,7 @@ enum OpacityInputs { IN_OPACITY_IN = 0 };
 class FilterNode : public external::AtomicRefCounted<FilterNode> {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(FilterNode)
-  virtual ~FilterNode() {}
+  virtual ~FilterNode() = default;
 
   virtual FilterBackend GetBackendType() = 0;
 

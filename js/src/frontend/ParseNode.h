@@ -2064,13 +2064,11 @@ class ClassNames : public BinaryNode {
 
 class ClassNode : public TernaryNode {
  public:
-  ClassNode(ParseNode* names, ParseNode* heritage, ParseNode* membersOrBlock,
-            const TokenPos& pos)
-      : TernaryNode(ParseNodeKind::ClassDecl, names, heritage, membersOrBlock,
+  ClassNode(ParseNode* names, ParseNode* heritage,
+            LexicalScopeNode* memberBlock, const TokenPos& pos)
+      : TernaryNode(ParseNodeKind::ClassDecl, names, heritage, memberBlock,
                     pos) {
     MOZ_ASSERT_IF(names, names->is<ClassNames>());
-    MOZ_ASSERT(membersOrBlock->is<LexicalScopeNode>() ||
-               membersOrBlock->isKind(ParseNodeKind::ClassMemberList));
   }
 
   static bool test(const ParseNode& node) {
@@ -2084,15 +2082,14 @@ class ClassNode : public TernaryNode {
   }
   ParseNode* heritage() const { return kid2(); }
   ListNode* memberList() const {
-    ParseNode* membersOrBlock = kid3();
-    if (membersOrBlock->isKind(ParseNodeKind::ClassMemberList)) {
-      return &membersOrBlock->as<ListNode>();
-    }
-
     ListNode* list =
-        &membersOrBlock->as<LexicalScopeNode>().scopeBody()->as<ListNode>();
+        &kid3()->as<LexicalScopeNode>().scopeBody()->as<ListNode>();
     MOZ_ASSERT(list->isKind(ParseNodeKind::ClassMemberList));
     return list;
+  }
+  bool isEmptyScope() const {
+    ParseNode* scope = kid3();
+    return scope->as<LexicalScopeNode>().isEmptyScope();
   }
   Handle<LexicalScope::Data*> scopeBindings() const {
     ParseNode* scope = kid3();

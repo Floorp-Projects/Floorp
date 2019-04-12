@@ -67,8 +67,8 @@ class AsyncCompositionManager final {
  public:
   NS_INLINE_DECL_REFCOUNTING(AsyncCompositionManager)
 
-  explicit AsyncCompositionManager(CompositorBridgeParent* aParent,
-                                   HostLayerManager* aManager);
+  AsyncCompositionManager(CompositorBridgeParent* aParent,
+                          HostLayerManager* aManager);
 
   /**
    * This forces the is-first-paint flag to true. This is intended to

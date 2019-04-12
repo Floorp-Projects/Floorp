@@ -7,6 +7,7 @@
 const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 const { remoteClientManager } =
   require("devtools/client/shared/remote-debugging/remote-client-manager");
+const Services = require("Services");
 
 const { l10n } = require("../modules/l10n");
 
@@ -42,11 +43,24 @@ const {
 
 const Actions = require("./index");
 
+function getTabForUrl(url) {
+  for (const navigator of Services.wm.getEnumerator("navigator:browser")) {
+    for (const browser of navigator.gBrowser.browsers) {
+      if (browser.contentWindow && browser.contentWindow.location.href === url) {
+        return navigator.gBrowser.getTabForBrowser(browser);
+      }
+    }
+  }
+
+  return null;
+}
+
 function inspectDebugTarget(type, id) {
   return async (dispatch, getState) => {
     const runtime = getCurrentRuntime(getState().runtimes);
     const remoteId = remoteClientManager.getRemoteId(runtime.id, runtime.type);
 
+    let url;
     if (runtime.id === RUNTIMES.THIS_FIREFOX && type !== DEBUG_TARGETS.WORKER) {
       // Even when debugging on This Firefox we need to re-use the client since the worker
       // actor is cached in the client instance. Instead we should pass an id that does
@@ -57,10 +71,18 @@ function inspectDebugTarget(type, id) {
       // updated so this is not an issue. On remote runtimes however, trying to inspect a
       // worker a second time after closing the corresponding about:devtools-toolbox tab
       // will fail. See Bug 1534201.
-      window.open(`about:devtools-toolbox?type=${type}&id=${id}`);
+      url = `about:devtools-toolbox?type=${type}&id=${id}`;
     } else {
-      window.open(`about:devtools-toolbox?type=${type}&id=${id}` +
-                  `&remoteId=${remoteId}`);
+      url = `about:devtools-toolbox?type=${type}&id=${id}&remoteId=${remoteId}`;
+    }
+
+    const existingTab = getTabForUrl(url);
+    if (existingTab) {
+      const navigator = existingTab.ownerGlobal;
+      navigator.gBrowser.selectedTab = existingTab;
+      navigator.focus();
+    } else {
+      window.open(url);
     }
 
     dispatch(Actions.recordTelemetryEvent("inspect", {

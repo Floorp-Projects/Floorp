@@ -318,7 +318,7 @@ static void RunStatsQuery(
         aPcIdFilter.EqualsASCII(pc.GetIdAsAscii().c_str())) {
       if (pc.HasMedia()) {
         promises.AppendElement(
-            pc.GetStats(nullptr, true)
+            pc.GetStats(nullptr, true, false)
                 ->Then(
                     GetMainThreadSerialEventTarget(), __func__,
                     [=](UniquePtr<RTCStatsQuery>&& aQuery) {
@@ -1050,7 +1050,7 @@ void WebrtcGlobalInformation::StoreLongTermICEStatistics(
     return;
   }
 
-  aPc.GetStats(nullptr, true)
+  aPc.GetStats(nullptr, true, false)
       ->Then(
           GetMainThreadSerialEventTarget(), __func__,
           [=](UniquePtr<RTCStatsQuery>&& aQuery) {

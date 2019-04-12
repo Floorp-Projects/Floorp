@@ -1,0 +1,17 @@
+{
+  "extensionName": {
+    "message": "Amazon.com.br"
+  },
+  "extensionDescription": {
+    "message": "Amazon.com.br Search"
+  },
+  "searchUrl": {
+    "message": "https://www.amazon.com.br/exec/obidos/external-search/"
+  },
+  "searchForm": {
+    "message": "https://www.amazon.com.br/exec/obidos/external-search/?field-keywords={searchTerms}&ie={inputEncoding}&mode=blended"
+  },
+  "searchUrlGetParams": {
+    "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended"
+  }
+}

@@ -5,7 +5,8 @@ const kSelectedEnginePref = "browser.search.selectedEngine";
 
 // Check that the default engine matches the defaultenginename pref
 add_task(async function test_defaultEngine() {
-  await asyncInit();
+  await AddonTestUtils.promiseStartupManager();
+  await Services.search.init();
   await installTestEngine();
 
   Assert.equal(Services.search.defaultEngine.name, getDefaultEngineName());
@@ -143,7 +144,7 @@ add_task(async function test_fallback_kept_after_restart() {
 function run_test() {
   Assert.ok(!Services.search.isInitialized);
 
-  let engineDummyFile = gProfD.clone();
+  let engineDummyFile = do_get_profile().clone();
   engineDummyFile.append("searchplugins");
   engineDummyFile.append("test-search-engine.xml");
   let engineDir = engineDummyFile.parent;

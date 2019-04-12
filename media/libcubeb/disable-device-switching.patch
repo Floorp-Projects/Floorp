@@ -1,3 +1,34 @@
+diff --git a/media/libcubeb/include/cubeb.h b/media/libcubeb/include/cubeb.h
+--- a/media/libcubeb/include/cubeb.h
++++ b/media/libcubeb/include/cubeb.h
+@@ -216,20 +216,23 @@ enum {
+                          CHANNEL_FRONT_CENTER | CHANNEL_LOW_FREQUENCY |
+                          CHANNEL_BACK_LEFT | CHANNEL_BACK_RIGHT |
+                          CHANNEL_SIDE_LEFT | CHANNEL_SIDE_RIGHT,
+ };
+ 
+ /** Miscellaneous stream preferences. */
+ typedef enum {
+   CUBEB_STREAM_PREF_NONE     = 0x00, /**< No stream preferences are requested. */
+-  CUBEB_STREAM_PREF_LOOPBACK = 0x01 /**< Request a loopback stream. Should be
+-                                         specified on the input params and an
+-                                         output device to loopback from should
+-                                         be passed in place of an input device. */
++  CUBEB_STREAM_PREF_LOOPBACK = 0x01, /**< Request a loopback stream. Should be
++                                          specified on the input params and an
++                                          output device to loopback from should
++                                          be passed in place of an input device. */
++  CUBEB_STREAM_PREF_DISABLE_DEVICE_SWITCHING = 0x02, /**< Disable switching
++                                                          default device on OS
++                                                          changes. */
+ } cubeb_stream_prefs;
+ 
+ /** Stream format initialization parameters. */
+ typedef struct {
+   cubeb_sample_format format;   /**< Requested sample format.  One of
+                                      #cubeb_sample_format. */
+   uint32_t rate;                /**< Requested sample rate.  Valid range is [1000, 192000]. */
+   uint32_t channels;            /**< Requested channel count.  Valid range is [1, 8]. */
 diff --git a/media/libcubeb/src/cubeb_wasapi.cpp b/media/libcubeb/src/cubeb_wasapi.cpp
 --- a/media/libcubeb/src/cubeb_wasapi.cpp
 +++ b/media/libcubeb/src/cubeb_wasapi.cpp
@@ -54,26 +85,3 @@ diff --git a/media/libcubeb/src/cubeb_wasapi.cpp b/media/libcubeb/src/cubeb_wasa
    // The variables intialized in wasapi_stream_init,
    // must be destroyed in wasapi_stream_destroy.
    stm->linear_input_buffer.reset();
-diff --git a/media/libcubeb/include/cubeb.h b/media/libcubeb/include/cubeb.h
---- a/media/libcubeb/include/cubeb.h
-+++ a/media/libcubeb/include/cubeb.h
-@@ -222,16 +222,19 @@
- 
- /** Miscellaneous stream preferences. */
- typedef enum {
-   CUBEB_STREAM_PREF_NONE     = 0x00, /**< No stream preferences are requested. */
-   CUBEB_STREAM_PREF_LOOPBACK = 0x01, /**< Request a loopback stream. Should be
-                                          specified on the input params and an
-                                          output device to loopback from should
-                                          be passed in place of an input device. */
-+  CUBEB_STREAM_PREF_DISABLE_DEVICE_SWITCHING = 0x02, /**< Disable switching
-+                                                          default device on OS
-+                                                          changes. */
-   CUBEB_STREAM_PREF_VOICE = 0x04  /**< This stream is going to transport voice data.
-                                        Depending on the backend and platform, this can
-                                        change the audio input or output devices
-                                        selected, as well as the quality of the stream,
-                                        for example to accomodate bluetooth SCO modes on
-                                        bluetooth devices. */
- } cubeb_stream_prefs;
- 

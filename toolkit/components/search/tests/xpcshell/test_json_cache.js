@@ -7,6 +7,8 @@
 
 "use strict";
 
+var {getAppInfo} = ChromeUtils.import("resource://testing-common/AppInfo.jsm");
+
 var cacheTemplate, appPluginsPath, profPlugins;
 
 /**
@@ -17,7 +19,7 @@ function run_test() {
   cacheTemplate = readJSONFile(cacheTemplateFile);
   cacheTemplate.buildID = getAppInfo().platformBuildID;
 
-  let engineFile = gProfD.clone();
+  let engineFile = do_get_profile().clone();
   engineFile.append("searchplugins");
   engineFile.append("test-search-engine.xml");
   engineFile.parent.create(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
@@ -69,7 +71,7 @@ add_test(function test_cached_engine_properties() {
 add_test(function test_cache_write() {
   info("test cache writing");
 
-  let cache = gProfD.clone();
+  let cache = do_get_profile().clone();
   cache.append(CACHE_FILENAME);
   Assert.ok(!cache.exists());
 

@@ -54,7 +54,7 @@ class nsAutoRefTraits<FcConfig> : public nsPointerRefTraits<FcConfig> {
 // each cairo font created from that font entry contains a
 // FTUserFontDataRef with a refptr to that same FTUserFontData object.
 
-class FTUserFontData {
+class FTUserFontData final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(FTUserFontData)
 
@@ -248,7 +248,7 @@ class gfxFontconfigFont : public gfxFT2FontBase {
       gfxFloat aAdjustedSize, gfxFontEntry* aFontEntry,
       const gfxFontStyle* aFontStyle);
 
-  virtual FontType GetType() const override { return FONT_TYPE_FONTCONFIG; }
+  FontType GetType() const override { return FONT_TYPE_FONTCONFIG; }
   virtual FcPattern* GetPattern() const { return mPattern; }
 
   virtual already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
@@ -269,7 +269,7 @@ class gfxFcPlatformFontList : public gfxPlatformFontList {
   }
 
   // initialize font lists
-  virtual nsresult InitFontListForPlatform() override;
+  nsresult InitFontListForPlatform() override;
 
   void GetFontList(nsAtom* aLangGroup, const nsACString& aGenericFamily,
                    nsTArray<nsString>& aListOfFonts) override;

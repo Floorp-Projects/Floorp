@@ -20,11 +20,11 @@
 #include "mozilla/Utf8.h"
 
 #include <algorithm>
-#include <ctype.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <type_traits>
 #include <utility>
 
 #include "jsexn.h"
@@ -44,11 +44,13 @@
 #include "vm/Realm.h"
 
 using mozilla::ArrayLength;
+using mozilla::AsciiAlphanumericToNumber;
 using mozilla::AssertedCast;
 using mozilla::DecodeOneUtf8CodePoint;
 using mozilla::IsAscii;
 using mozilla::IsAsciiAlpha;
 using mozilla::IsAsciiDigit;
+using mozilla::IsAsciiHexDigit;
 using mozilla::IsTrailingUnit;
 using mozilla::MakeScopeExit;
 using mozilla::MakeSpan;
@@ -161,6 +163,20 @@ static uint32_t GetSingleCodePoint(const char16_t** p, const char16_t* end) {
   codePoint = **p;
   (*p)++;
   return codePoint;
+}
+
+template <typename CharT>
+static constexpr bool IsAsciiOctal(CharT c) {
+  using UnsignedCharT = std::make_unsigned_t<CharT>;
+  auto uc = static_cast<UnsignedCharT>(c);
+  return '0' <= uc && uc <= '7';
+}
+
+template <typename CharT>
+static constexpr uint8_t AsciiOctalToNumber(CharT c) {
+  using UnsignedCharT = std::make_unsigned_t<CharT>;
+  auto uc = static_cast<UnsignedCharT>(c);
+  return uc - '0';
 }
 
 namespace js {
@@ -1549,8 +1565,8 @@ uint32_t GeneralTokenStreamChars<Unit, AnyCharsAccess>::matchUnicodeEscape(
 
   char16_t v;
   unit = getCodeUnit();
-  if (JS7_ISHEX(unit) && this->sourceUnits.matchHexDigits(3, &v)) {
-    *codePoint = (JS7_UNHEX(unit) << 12) | v;
+  if (IsAsciiHexDigit(unit) && this->sourceUnits.matchHexDigits(3, &v)) {
+    *codePoint = (AsciiAlphanumericToNumber(unit) << 12) | v;
     return 5;
   }
 
@@ -1582,8 +1598,8 @@ GeneralTokenStreamChars<Unit, AnyCharsAccess>::matchExtendedUnicodeEscape(
 
   size_t i = 0;
   uint32_t code = 0;
-  while (JS7_ISHEX(unit) && i < 6) {
-    code = (code << 4) | JS7_UNHEX(unit);
+  while (IsAsciiHexDigit(unit) && i < 6) {
+    code = (code << 4) | AsciiAlphanumericToNumber(unit);
     unit = getCodeUnit();
     i++;
   }
@@ -2434,12 +2450,6 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
 #endif
   MOZ_MAKE_MEM_UNDEFINED(ttp, sizeof(*ttp));
 
-  // Check if in the middle of a template string. Have to get this out of
-  // the way first.
-  if (MOZ_UNLIKELY(modifier == TemplateTail)) {
-    return getStringOrTemplateToken('`', modifier, ttp);
-  }
-
   // This loop runs more than once only when whitespace or comments are
   // encountered.
   do {
@@ -2596,7 +2606,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
       if (unit == 'x' || unit == 'X') {
         radix = 16;
         unit = getCodeUnit();
-        if (!JS7_ISHEX(unit)) {
+        if (!IsAsciiHexDigit(unit)) {
           // NOTE: |unit| may be EOF here.
           ungetCodeUnit(unit);
           error(JSMSG_MISSING_HEXDIGITS);
@@ -2606,7 +2616,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         // one past the '0x'
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
-        while (JS7_ISHEX(unit)) {
+        while (IsAsciiHexDigit(unit)) {
           unit = getCodeUnit();
         }
       } else if (unit == 'b' || unit == 'B') {
@@ -2628,7 +2638,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
       } else if (unit == 'o' || unit == 'O') {
         radix = 8;
         unit = getCodeUnit();
-        if (!JS7_ISOCT(unit)) {
+        if (!IsAsciiOctal(unit)) {
           // NOTE: |unit| may be EOF here.
           ungetCodeUnit(unit);
           error(JSMSG_MISSING_OCTAL_DIGITS);
@@ -2638,7 +2648,7 @@ MOZ_MUST_USE bool TokenStreamSpecific<Unit, AnyCharsAccess>::getTokenInternal(
         // one past the '0o'
         numStart = this->sourceUnits.addressOfNextCodeUnit() - 1;
 
-        while (JS7_ISOCT(unit)) {
+        while (IsAsciiOctal(unit)) {
           unit = getCodeUnit();
         }
       } else if (IsAsciiDigit(unit)) {
@@ -3178,7 +3188,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
 
               // Beware: |u3| may be a non-ASCII code point here; if
               // so it'll pass into this |if|-block.
-              if (!JS7_ISHEX(u3)) {
+              if (!IsAsciiHexDigit(u3)) {
                 if (parsingTemplate) {
                   // We put the code unit back so that we read it
                   // on the next pass, which matters if it was
@@ -3195,7 +3205,7 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
                 return false;
               }
 
-              code = (code << 4) | JS7_UNHEX(u3);
+              code = (code << 4) | AsciiAlphanumericToNumber(u3);
               if (code > unicode::NonBMPMax) {
                 if (parsingTemplate) {
                   TokenStreamAnyChars& anyChars = anyCharsAccess();
@@ -3229,8 +3239,8 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
           // template literal, we must defer error reporting because
           // malformed escapes are okay in *tagged* template literals.
           char16_t v;
-          if (JS7_ISHEX(c2) && this->sourceUnits.matchHexDigits(3, &v)) {
-            unit = (JS7_UNHEX(c2) << 12) | v;
+          if (IsAsciiHexDigit(c2) && this->sourceUnits.matchHexDigits(3, &v)) {
+            unit = (AsciiAlphanumericToNumber(c2) << 12) | v;
           } else {
             // Beware: |c2| may not be an ASCII code point here!
             ungetCodeUnit(c2);
@@ -3267,12 +3277,12 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
         }
 
         default: {
-          if (!JS7_ISOCT(unit)) {
+          if (!IsAsciiOctal(unit)) {
             break;
           }
 
           // Octal character specification.
-          int32_t val = JS7_UNOCT(unit);
+          int32_t val = AsciiOctalToNumber(unit);
 
           unit = peekCodeUnit();
           if (MOZ_UNLIKELY(unit == EOF)) {
@@ -3294,8 +3304,8 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
             anyChars.flags.sawOctalEscape = true;
           }
 
-          if (JS7_ISOCT(unit)) {
-            val = 8 * val + JS7_UNOCT(unit);
+          if (IsAsciiOctal(unit)) {
+            val = 8 * val + AsciiOctalToNumber(unit);
             consumeKnownCodeUnit(unit);
 
             unit = peekCodeUnit();
@@ -3304,9 +3314,9 @@ bool TokenStreamSpecific<Unit, AnyCharsAccess>::getStringOrTemplateToken(
               return false;
             }
 
-            if (JS7_ISOCT(unit)) {
+            if (IsAsciiOctal(unit)) {
               int32_t save = val;
-              val = 8 * val + JS7_UNOCT(unit);
+              val = 8 * val + AsciiOctalToNumber(unit);
               if (val <= 0xFF) {
                 consumeKnownCodeUnit(unit);
               } else {

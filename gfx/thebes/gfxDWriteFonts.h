@@ -38,41 +38,41 @@ class gfxDWriteFont : public gfxFont {
   mozilla::UniquePtr<gfxFont> CopyWithAntialiasOption(
       AntialiasOption anAAOption) override;
 
-  virtual uint32_t GetSpaceGlyph() override;
+  uint32_t GetSpaceGlyph() override;
 
-  virtual bool SetupCairoFont(DrawTarget *aDrawTarget) override;
+  bool SetupCairoFont(DrawTarget *aDrawTarget) override;
 
-  virtual bool AllowSubpixelAA() override { return mAllowManualShowGlyphs; }
+  bool AllowSubpixelAA() override { return mAllowManualShowGlyphs; }
 
   bool IsValid() const;
 
   IDWriteFontFace *GetFontFace();
 
   /* override Measure to add padding for antialiasing */
-  virtual RunMetrics Measure(
-      const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
-      BoundingBoxType aBoundingBoxType,
-      DrawTarget *aDrawTargetForTightBoundingBox, Spacing *aSpacing,
-      mozilla::gfx::ShapedTextFlags aOrientation) override;
+  RunMetrics Measure(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
+                     BoundingBoxType aBoundingBoxType,
+                     DrawTarget *aDrawTargetForTightBoundingBox,
+                     Spacing *aSpacing,
+                     mozilla::gfx::ShapedTextFlags aOrientation) override;
 
-  virtual bool ProvidesGlyphWidths() const override;
+  bool ProvidesGlyphWidths() const override;
 
-  virtual int32_t GetGlyphWidth(uint16_t aGID) override;
+  int32_t GetGlyphWidth(uint16_t aGID) override;
 
-  virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                      FontCacheSizes *aSizes) const override;
-  virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                      FontCacheSizes *aSizes) const override;
+  void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                              FontCacheSizes *aSizes) const override;
+  void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                              FontCacheSizes *aSizes) const override;
 
-  virtual FontType GetType() const override { return FONT_TYPE_DWRITE; }
+  FontType GetType() const override { return FONT_TYPE_DWRITE; }
 
-  virtual already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
+  already_AddRefed<mozilla::gfx::ScaledFont> GetScaledFont(
       mozilla::gfx::DrawTarget *aTarget) override;
 
  protected:
   cairo_scaled_font_t *InitCairoScaledFont();
 
-  virtual const Metrics &GetHorizontalMetrics() override;
+  const Metrics &GetHorizontalMetrics() override;
 
   bool GetFakeMetricsForArialBlack(DWRITE_FONT_METRICS *aFontMetrics);
 

@@ -84,31 +84,67 @@ def get_test_parser():
 
 
 ADD_TEST_SUPPORTED_SUITES = ['mochitest-chrome', 'mochitest-plain', 'mochitest-browser',
+                             'web-platform-tests-testharness', 'web-platform-tests-reftest',
                              'xpcshell']
 ADD_TEST_SUPPORTED_DOCS = ['js', 'html', 'xhtml', 'xul']
+
+SUITE_SYNONYMS = {
+    "wpt": "web-platform-tests-testharness",
+    "wpt-testharness": "web-platform-tests-testharness",
+    "wpt-reftest": "web-platform-tests-reftest"
+}
+
+MISSING_ARG = object()
+
+
+def create_parser_addtest():
+    import addtest
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--suite',
+                        choices=sorted(ADD_TEST_SUPPORTED_SUITES + SUITE_SYNONYMS.keys()),
+                        help='suite for the test. '
+                        'If you pass a `test` argument this will be determined '
+                        'based on the filename and the folder it is in')
+    parser.add_argument('-o', '--overwrite',
+                        action='store_true',
+                        help='Overwrite an existing file if it exists.')
+    parser.add_argument('--doc',
+                        choices=ADD_TEST_SUPPORTED_DOCS,
+                        help='Document type for the test (if applicable).'
+                        'If you pass a `test` argument this will be determined '
+                        'based on the filename.')
+    parser.add_argument("-e", "--editor", action="store", nargs="?",
+                        default=MISSING_ARG, help="Open the created file(s) in an editor; if a "
+                        "binary is supplied it will be used otherwise the default editor for "
+                        "your environment will be opened")
+
+    for base_suite in addtest.TEST_CREATORS:
+        cls = addtest.TEST_CREATORS[base_suite]
+        if hasattr(cls, "get_parser"):
+            group = parser.add_argument_group(base_suite)
+            cls.get_parser(group)
+
+    parser.add_argument('test',
+                        nargs='?',
+                        help=('Test to create.'))
+    return parser
 
 
 @CommandProvider
 class AddTest(MachCommandBase):
     @Command('addtest', category='testing',
-             description='Generate tests based on templates')
-    @CommandArgument('--suite',
-                     choices=ADD_TEST_SUPPORTED_SUITES,
-                     help='suite for the test (currently only mochitests and xpcshell '
-                          'are supported). If you pass a `test` argument this will be determined'
-                          'based on the filename and the folder it is in')
-    @CommandArgument('-o', '--overwrite',
-                     action='store_true',
-                     help='Overwrite an existing file if it exists.')
-    @CommandArgument('--doc',
-                     choices=ADD_TEST_SUPPORTED_DOCS,
-                     help='Document type for the test (if applicable).'
-                          'If you pass a `test` argument this will be determined'
-                          'based on the filename.')
-    @CommandArgument('test',
-                     nargs='?',
-                     help=('Test to create.'))
-    def addtest(self, suite=None, doc=None, overwrite=False, test=None):
+             description='Generate tests based on templates',
+             parser=create_parser_addtest)
+    def addtest(self, suite=None, test=None, doc=None, overwrite=False,
+                editor=MISSING_ARG, **kwargs):
+        import addtest
+
+        if not suite and not test:
+            return create_parser_addtest().parse_args(["--help"])
+
+        if suite in SUITE_SYNONYMS:
+            suite = SUITE_SYNONYMS[suite]
+
         if test:
             if not overwrite and os.path.isfile(os.path.abspath(test)):
                 print("Error: can't generate a test that already exists:", test)
@@ -142,34 +178,63 @@ class AddTest(MachCommandBase):
                   "({}) or pass in the `doc` argument".format(ADD_TEST_SUPPORTED_DOCS))
             return 1
 
-        from addtest import (
-            MochitestCreator,
-            XpcshellCreator,
-        )
-        creator = None
-        if suite == "xpcshell":
-            creator = XpcshellCreator()
-        elif suite in ("mochitest-browser", "mochitest-chrome", "mochitest-plain"):
-            creator = MochitestCreator()
-        else:
+        creator_cls = addtest.creator_for_suite(suite)
+
+        if creator_cls is None:
             print("Sorry, `addtest` doesn't currently know how to add {}".format(suite))
             return 1
 
-        if (test):
-            print("Adding a test at {} (suite `{}`)".format(test, suite))
+        creator = creator_cls(self.topsrcdir, test, suite, doc, **kwargs)
 
-            adding_error = creator.add_test(test, suite, doc)
+        creator.check_args()
 
-            if adding_error:
-                print("Error adding test: {}".format(adding_error))
-                return 1
+        paths = []
+        for path, template in creator:
+            if (path):
+                paths.append(path)
+                print("Adding a test file at {} (suite `{}`)".format(path, suite))
+
+                try:
+                    os.makedirs(os.path.dirname(path))
+                except OSError:
+                    pass
+
+                with open(path, "w") as f:
+                    f.write(template)
+            else:
+                # write to stdout if you passed only suite and doc and not a file path
+                print(template)
+
+        if test:
+            creator.update_manifest()
+
+            # Small hack, should really do this better
+            if suite.startswith("wpt-"):
+                suite = "web-platform-tests"
 
             mach_command = TEST_SUITES[suite]["mach_command"]
             print('Please make sure to add the new test to your commit. '
                   'You can now run the test with:\n    ./mach {} {}'.format(mach_command, test))
-        else:
-            # write to stdout if you passed only suite and doc and not a file path
-            print(creator.get_template_contents(suite, doc))
+
+        if editor is not MISSING_ARG:
+            if editor is not None:
+                editor = editor
+            elif "VISUAL" in os.environ:
+                editor = os.environ["VISUAL"]
+            elif "EDITOR" in os.environ:
+                editor = os.environ["EDITOR"]
+            else:
+                print('Unable to determine editor; please specify a binary')
+                editor = None
+
+            proc = None
+            if editor:
+                import subprocess
+                proc = subprocess.Popen("%s %s" % (editor, " ".join(paths)), shell=True)
+
+            if proc:
+                proc.wait()
+
         return 0
 
     def guess_doc(self, abs_test):
@@ -189,7 +254,16 @@ class AddTest(MachCommandBase):
         has_plain_ini = os.path.isfile(os.path.join(parent, "mochitest.ini"))
         has_xpcshell_ini = os.path.isfile(os.path.join(parent, "xpcshell.ini"))
 
-        if filename.startswith("test_") and has_xpcshell_ini and self.guess_doc(abs_test) == "js":
+        in_wpt_folder = abs_test.startswith(
+            os.path.abspath(os.path.join("testing", "web-platform")))
+
+        if in_wpt_folder:
+            guessed_suite = "web-platform-tests-testharness"
+            if "/css/" in abs_test:
+                guessed_suite = "web-platform-tests-reftest"
+        elif (filename.startswith("test_") and
+              has_xpcshell_ini and
+              self.guess_doc(abs_test) == "js"):
             guessed_suite = "xpcshell"
         else:
             if filename.startswith("browser_") and has_browser_ini:

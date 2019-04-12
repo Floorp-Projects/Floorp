@@ -40,9 +40,7 @@ window.gActivityStreamStrings = {
   "section_disclaimer_topstories_buttontext": "Ясно, разбрах",
   "prefs_home_header": "Начална страница на Firefox",
   "prefs_home_description": "Изберете съдържанието, което искате да виждате на началната страница на Firefox.",
-  "prefs_content_discovery_header": "Firefox Home",
   "prefs_content_discovery_description": "Content Discovery in Firefox Home allows you to discover high-quality, relevant articles from across the web.",
-  "prefs_content_discovery_button": "Turn Off Content Discovery",
   "prefs_section_rows_option": "{num} ред;{num} реда",
   "prefs_search_header": "Търсене в Мрежата",
   "prefs_topsites_description": "Най-посещаваните от вас страници",
@@ -110,6 +108,5 @@ window.gActivityStreamStrings = {
   "firstrun_privacy_notice": "политиката за лични данни",
   "firstrun_continue_to_login": "Продължаване",
   "firstrun_skip_login": "Пропускане",
-  "context_menu_title": "Open menu",
-  "pocket_learn_more": "Научете повече"
+  "context_menu_title": "Open menu"
 };

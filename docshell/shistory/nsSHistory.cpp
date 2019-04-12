@@ -162,36 +162,18 @@ nsSHistoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
   return NS_OK;
 }
 
-namespace {
-
-already_AddRefed<nsIContentViewer> GetContentViewerForEntry(
-    nsISHEntry* aEntry) {
-  nsCOMPtr<nsISHEntry> ownerEntry;
-  nsCOMPtr<nsIContentViewer> viewer;
-  aEntry->GetAnyContentViewer(getter_AddRefs(ownerEntry),
-                              getter_AddRefs(viewer));
-  return viewer.forget();
-}
-
-}  // namespace
-
 void nsSHistory::EvictContentViewerForEntry(nsISHEntry* aEntry) {
-  nsCOMPtr<nsIContentViewer> viewer;
-  nsCOMPtr<nsISHEntry> ownerEntry;
-  aEntry->GetAnyContentViewer(getter_AddRefs(ownerEntry),
-                              getter_AddRefs(viewer));
+  nsCOMPtr<nsIContentViewer> viewer = aEntry->GetContentViewer();
   if (viewer) {
-    NS_ASSERTION(ownerEntry, "Content viewer exists but its SHEntry is null");
-
     LOG_SHENTRY_SPEC(("Evicting content viewer 0x%p for "
                       "owning SHEntry 0x%p at %s.",
-                      viewer.get(), ownerEntry.get(), _spec),
-                     ownerEntry);
+                      viewer.get(), aEntry, _spec),
+                     aEntry);
 
     // Drop the presentation state before destroying the viewer, so that
     // document teardown is able to correctly persist the state.
-    ownerEntry->SetContentViewer(nullptr);
-    ownerEntry->SyncPresentationState();
+    aEntry->SetContentViewer(nullptr);
+    aEntry->SyncPresentationState();
     viewer->Destroy();
   }
 
@@ -203,10 +185,32 @@ void nsSHistory::EvictContentViewerForEntry(nsISHEntry* aEntry) {
   }
 }
 
-nsSHistory::nsSHistory()
-    : mIndex(-1), mRequestedIndex(-1), mRootDocShell(nullptr) {
+nsSHistory::nsSHistory(nsDocShell* aRootDocShell)
+    : mIndex(-1), mRequestedIndex(-1), mRootDocShell(aRootDocShell) {
   // Add this new SHistory object to the list
   gSHistoryList.insertBack(this);
+
+  // Init mHistoryTracker on setting mRootDocShell so we can bind its event
+  // target to the tabGroup.
+  nsCOMPtr<nsPIDOMWindowOuter> win = mRootDocShell->GetWindow();
+  if (win) {
+    // Seamonkey moves shistory between <xul:browser>s when restoring a tab.
+    // Let's try not to break our friend too badly...
+    if (mHistoryTracker) {
+      NS_WARNING(
+          "Change the root docshell of a shistory is unsafe and "
+          "potentially problematic.");
+      mHistoryTracker->AgeAllGenerations();
+    }
+
+    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(win);
+
+    mHistoryTracker = mozilla::MakeUnique<HistoryTracker>(
+        this,
+        mozilla::Preferences::GetUint(CONTENT_VIEWER_TIMEOUT_SECONDS,
+                                      CONTENT_VIEWER_TIMEOUT_SECONDS_DEFAULT),
+        global->EventTargetFor(mozilla::TaskCategory::Other));
+  }
 }
 
 nsSHistory::~nsSHistory() {}
@@ -568,7 +572,7 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist) {
   }
 
   if (currentTxn && !currentTxn->GetPersist()) {
-    NOTIFY_LISTENERS(OnHistoryReplaceEntry, (mIndex));
+    NOTIFY_LISTENERS(OnHistoryReplaceEntry, ());
     aSHEntry->SetPersist(aPersist);
     mEntries[mIndex] = aSHEntry;
     return NS_OK;
@@ -591,6 +595,11 @@ nsSHistory::AddEntry(nsISHEntry* aSHEntry, bool aPersist) {
   }
 
   return NS_OK;
+}
+
+NS_IMETHODIMP_(void)
+nsSHistory::ClearRootDocShell() {
+  mRootDocShell = nullptr;
 }
 
 /* Get size of the history list */
@@ -698,7 +707,7 @@ nsSHistory::PurgeHistory(int32_t aNumEntries) {
 
   aNumEntries = std::min(aNumEntries, Length());
 
-  NOTIFY_LISTENERS(OnHistoryPurge, (aNumEntries));
+  NOTIFY_LISTENERS(OnHistoryPurge, ());
 
   // Remove the first `aNumEntries` entries.
   mEntries.RemoveElementsAt(0, aNumEntries);
@@ -763,7 +772,7 @@ nsSHistory::ReplaceEntry(int32_t aIndex, nsISHEntry* aReplaceEntry) {
 
   aReplaceEntry->SetSHistory(this);
 
-  NOTIFY_LISTENERS(OnHistoryReplaceEntry, (aIndex));
+  NOTIFY_LISTENERS(OnHistoryReplaceEntry, ());
 
   aReplaceEntry->SetPersist(true);
   mEntries[aIndex] = aReplaceEntry;
@@ -772,10 +781,8 @@ nsSHistory::ReplaceEntry(int32_t aIndex, nsISHEntry* aReplaceEntry) {
 }
 
 NS_IMETHODIMP
-nsSHistory::NotifyOnHistoryReload(nsIURI* aReloadURI, uint32_t aReloadFlags,
-                                  bool* aCanReload) {
-  NOTIFY_LISTENERS_CANCELABLE(OnHistoryReload, *aCanReload,
-                              (aReloadURI, aReloadFlags, aCanReload));
+nsSHistory::NotifyOnHistoryReload(bool* aCanReload) {
+  NOTIFY_LISTENERS_CANCELABLE(OnHistoryReload, *aCanReload, (aCanReload));
   return NS_OK;
 }
 
@@ -817,14 +824,8 @@ nsresult nsSHistory::Reload(uint32_t aReloadFlags) {
   }
 
   // We are reloading. Send Reload notifications.
-  // nsDocShellLoadFlagType is not public, where as nsIWebNavigation
-  // is public. So send the reload notifications with the
-  // nsIWebNavigation flags.
   bool canNavigate = true;
-  nsCOMPtr<nsIURI> currentURI;
-  GetCurrentURI(getter_AddRefs(currentURI));
-  NOTIFY_LISTENERS_CANCELABLE(OnHistoryReload, canNavigate,
-                              (currentURI, aReloadFlags, &canNavigate));
+  NOTIFY_LISTENERS_CANCELABLE(OnHistoryReload, canNavigate, (&canNavigate));
   if (!canNavigate) {
     return NS_OK;
   }
@@ -835,9 +836,7 @@ nsresult nsSHistory::Reload(uint32_t aReloadFlags) {
 NS_IMETHODIMP
 nsSHistory::ReloadCurrentEntry() {
   // Notify listeners
-  nsCOMPtr<nsIURI> currentURI;
-  GetCurrentURI(getter_AddRefs(currentURI));
-  NOTIFY_LISTENERS(OnHistoryGotoIndex, (mIndex, currentURI));
+  NOTIFY_LISTENERS(OnHistoryGotoIndex, ());
 
   return LoadEntry(mIndex, LOAD_HISTORY, HIST_CMD_RELOAD);
 }
@@ -897,7 +896,7 @@ void nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex) {
   // if it appears outside this range.
   nsCOMArray<nsIContentViewer> safeViewers;
   for (int32_t i = startSafeIndex; i <= endSafeIndex; i++) {
-    nsCOMPtr<nsIContentViewer> viewer = GetContentViewerForEntry(mEntries[i]);
+    nsCOMPtr<nsIContentViewer> viewer = mEntries[i]->GetContentViewer();
     safeViewers.AppendObject(viewer);
   }
 
@@ -906,7 +905,7 @@ void nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex) {
   // copy of Length(), because the length might change between iterations.)
   for (int32_t i = 0; i < Length(); i++) {
     nsCOMPtr<nsISHEntry> entry = mEntries[i];
-    nsCOMPtr<nsIContentViewer> viewer = GetContentViewerForEntry(entry);
+    nsCOMPtr<nsIContentViewer> viewer = entry->GetContentViewer();
     if (safeViewers.IndexOf(viewer) == -1) {
       EvictContentViewerForEntry(entry);
     }
@@ -920,12 +919,10 @@ class EntryAndDistance {
   EntryAndDistance(nsSHistory* aSHistory, nsISHEntry* aEntry, uint32_t aDist)
       : mSHistory(aSHistory),
         mEntry(aEntry),
-        mLastTouched(0),
+        mViewer(aEntry->GetContentViewer()),
+        mLastTouched(mEntry->GetLastTouched()),
         mDistance(aDist) {
-    mViewer = GetContentViewerForEntry(aEntry);
     NS_ASSERTION(mViewer, "Entry should have a content viewer");
-
-    mLastTouched = mEntry->GetLastTouched();
   }
 
   bool operator<(const EntryAndDistance& aOther) const {
@@ -985,8 +982,7 @@ void nsSHistory::GloballyEvictContentViewers() {
     shist->WindowIndices(shist->mIndex, &startIndex, &endIndex);
     for (int32_t i = startIndex; i <= endIndex; i++) {
       nsCOMPtr<nsISHEntry> entry = shist->mEntries[i];
-      nsCOMPtr<nsIContentViewer> contentViewer =
-          GetContentViewerForEntry(entry);
+      nsCOMPtr<nsIContentViewer> contentViewer = entry->GetContentViewer();
 
       if (contentViewer) {
         // Because one content viewer might belong to multiple SHEntries, we
@@ -1112,8 +1108,7 @@ void nsSHistory::GloballyEvictAllContentViewers() {
   sHistoryMaxTotalViewers = maxViewers;
 }
 
-void GetDynamicChildren(nsISHEntry* aEntry, nsTArray<nsID>& aDocshellIDs,
-                        bool aOnlyTopLevelDynamic) {
+void GetDynamicChildren(nsISHEntry* aEntry, nsTArray<nsID>& aDocshellIDs) {
   int32_t count = aEntry->GetChildCount();
   for (int32_t i = 0; i < count; ++i) {
     nsCOMPtr<nsISHEntry> child;
@@ -1123,9 +1118,8 @@ void GetDynamicChildren(nsISHEntry* aEntry, nsTArray<nsID>& aDocshellIDs,
       if (dynAdded) {
         nsID docshellID = child->DocshellID();
         aDocshellIDs.AppendElement(docshellID);
-      }
-      if (!dynAdded || !aOnlyTopLevelDynamic) {
-        GetDynamicChildren(child, aDocshellIDs, aOnlyTopLevelDynamic);
+      } else {
+        GetDynamicChildren(child, aDocshellIDs);
       }
     }
   }
@@ -1201,9 +1195,13 @@ bool nsSHistory::RemoveDuplicate(int32_t aIndex, bool aKeepNext) {
   nsresult rv;
   nsCOMPtr<nsISHEntry> root1, root2;
   rv = GetEntryAtIndex(aIndex, getter_AddRefs(root1));
-  NS_ENSURE_SUCCESS(rv, false);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
   rv = GetEntryAtIndex(compareIndex, getter_AddRefs(root2));
-  NS_ENSURE_SUCCESS(rv, false);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
 
   if (IsSameTree(root1, root2)) {
     mEntries.RemoveElementAt(aIndex);
@@ -1269,7 +1267,7 @@ void nsSHistory::RemoveDynEntries(int32_t aIndex, nsISHEntry* aEntry) {
 
   if (entry) {
     AutoTArray<nsID, 16> toBeRemovedEntries;
-    GetDynamicChildren(entry, toBeRemovedEntries, true);
+    GetDynamicChildren(entry, toBeRemovedEntries);
     if (toBeRemovedEntries.Length()) {
       RemoveEntries(toBeRemovedEntries, aIndex);
     }
@@ -1294,20 +1292,6 @@ nsSHistory::UpdateIndex() {
 
   mRequestedIndex = -1;
   return NS_OK;
-}
-
-nsresult nsSHistory::GetCurrentURI(nsIURI** aResultURI) {
-  NS_ENSURE_ARG_POINTER(aResultURI);
-  nsresult rv;
-
-  nsCOMPtr<nsISHEntry> currentEntry;
-  rv = GetEntryAtIndex(mIndex, getter_AddRefs(currentEntry));
-  if (NS_FAILED(rv) && !currentEntry) {
-    return rv;
-  }
-  nsCOMPtr<nsIURI> uri = currentEntry->GetURI();
-  uri.forget(aResultURI);
-  return rv;
 }
 
 NS_IMETHODIMP
@@ -1364,7 +1348,7 @@ nsresult nsSHistory::LoadEntry(int32_t aIndex, long aLoadType,
   // Send appropriate listener notifications.
   if (aHistCmd == HIST_CMD_GOTOINDEX) {
     // We are going somewhere else. This is not reload either
-    NOTIFY_LISTENERS(OnHistoryGotoIndex, (aIndex, nextURI));
+    NOTIFY_LISTENERS(OnHistoryGotoIndex, ());
   }
 
   if (mRequestedIndex == mIndex) {
@@ -1501,35 +1485,4 @@ nsresult nsSHistory::InitiateLoad(nsISHEntry* aFrameEntry,
 
   // Time to initiate a document load
   return aFrameDS->LoadURI(loadState);
-}
-
-NS_IMETHODIMP_(void)
-nsSHistory::SetRootDocShell(nsIDocShell* aDocShell) {
-  mRootDocShell = aDocShell;
-
-  // Init mHistoryTracker on setting mRootDocShell so we can bind its event
-  // target to the tabGroup.
-  if (mRootDocShell) {
-    nsCOMPtr<nsPIDOMWindowOuter> win = mRootDocShell->GetWindow();
-    if (!win) {
-      return;
-    }
-
-    // Seamonkey moves shistory between <xul:browser>s when restoring a tab.
-    // Let's try not to break our friend too badly...
-    if (mHistoryTracker) {
-      NS_WARNING(
-          "Change the root docshell of a shistory is unsafe and "
-          "potentially problematic.");
-      mHistoryTracker->AgeAllGenerations();
-    }
-
-    nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(win);
-
-    mHistoryTracker = mozilla::MakeUnique<HistoryTracker>(
-        this,
-        mozilla::Preferences::GetUint(CONTENT_VIEWER_TIMEOUT_SECONDS,
-                                      CONTENT_VIEWER_TIMEOUT_SECONDS_DEFAULT),
-        global->EventTargetFor(mozilla::TaskCategory::Other));
-  }
 }

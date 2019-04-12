@@ -619,7 +619,7 @@ class GtkVsyncSource final : public VsyncSource {
     }
 
    private:
-    virtual ~GLXDisplay() {}
+    virtual ~GLXDisplay() = default;
 
     void RunVsync() {
       MOZ_ASSERT(!NS_IsMainThread());

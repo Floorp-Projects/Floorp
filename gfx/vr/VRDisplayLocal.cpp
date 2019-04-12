@@ -5,18 +5,18 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "VRDisplayLocal.h"
+#include "VRThread.h"
 #include "gfxPrefs.h"
 #include "gfxVR.h"
 #include "ipc/VRLayerParent.h"
-#include "mozilla/layers/TextureHost.h"
 #include "mozilla/dom/GamepadBinding.h"  // For GamepadMappingType
-#include "VRThread.h"
+#include "mozilla/layers/TextureHost.h"
 
 #if defined(XP_WIN)
 
 #  include <d3d11.h>
-#  include "gfxWindowsPlatform.h"
 #  include "../layers/d3d11/CompositorD3D11.h"
+#  include "gfxWindowsPlatform.h"
 #  include "mozilla/gfx/DeviceManagerDx.h"
 #  include "mozilla/layers/TextureD3D11.h"
 
@@ -95,8 +95,9 @@ bool VRDisplayLocal::SubmitFrame(const layers::SurfaceDescriptor& aTexture,
 #elif defined(XP_MACOSX)
     case SurfaceDescriptor::TSurfaceDescriptorMacIOSurface: {
       const auto& desc = aTexture.get_SurfaceDescriptorMacIOSurface();
-      RefPtr<MacIOSurface> surf = MacIOSurface::LookupSurface(
-          desc.surfaceId(), desc.scaleFactor(), !desc.isOpaque());
+      RefPtr<MacIOSurface> surf =
+          MacIOSurface::LookupSurface(desc.surfaceId(), desc.scaleFactor(),
+                                      !desc.isOpaque(), desc.yUVColorSpace());
       if (!surf) {
         NS_WARNING("VRDisplayHost::SubmitFrame failed to get a MacIOSurface");
         return false;

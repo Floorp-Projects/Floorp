@@ -46,9 +46,7 @@ function makeBookmark({ breakpoint }, { onClick, onContextMenu }) {
     disabled: isDisabled
   });
 
-  if (condition) {
-    bp.setAttribute("title", condition);
-  }
+  bp.setAttribute("title", logValue || condition || "");
   bp.onclick = onClick;
 
   // NOTE: flow does not know about oncontextmenu

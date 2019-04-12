@@ -25,7 +25,7 @@ namespace layers {
  * Manages setting and clearing the ':active' CSS pseudostate in the presence
  * of touch input.
  */
-class ActiveElementManager {
+class ActiveElementManager final {
   ~ActiveElementManager();
 
  public:

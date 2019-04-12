@@ -24,10 +24,10 @@ var prompt = {
 MockRegistrar.register("@mozilla.org/embedcomp/prompt-service;1", promptService);
 MockRegistrar.register("@mozilla.org/prompter;1", prompt);
 
-
 // First test inits the search service
 add_task(async function init_search_service() {
   useHttpServer();
+  await AddonTestUtils.promiseStartupManager();
 });
 
 // Simple test of the search callback

@@ -45,7 +45,9 @@ add_task(async function do_test() {
   // Set the preference used by the permission manager so the file is read.
   Services.prefs.setCharPref("permissions.manager.defaultsUrl", "file://" + file.path);
 
-  // initialize the permission manager service - it will read that default.
+  // This will force the permission-manager to reload the data.
+  Services.obs.notifyObservers(null, "testonly-reload-permissions-from-disk", "");
+
   let pm = Cc["@mozilla.org/permissionmanager;1"].
            getService(Ci.nsIPermissionManager);
 

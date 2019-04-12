@@ -70,10 +70,10 @@ class FT2FontEntry : public gfxFontEntry {
 
   nsresult ReadCMAP(FontInfoData* aFontInfoData = nullptr) override;
 
-  virtual hb_blob_t* GetFontTable(uint32_t aTableTag) override;
+  hb_blob_t* GetFontTable(uint32_t aTableTag) override;
 
-  virtual nsresult CopyFontTable(uint32_t aTableTag,
-                                 nsTArray<uint8_t>& aBuffer) override;
+  nsresult CopyFontTable(uint32_t aTableTag,
+                         nsTArray<uint8_t>& aBuffer) override;
 
   bool HasVariations() override;
   void GetVariationAxes(
@@ -87,10 +87,10 @@ class FT2FontEntry : public gfxFontEntry {
 
   FT_MM_Var* GetMMVar() override;
 
-  virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                      FontListSizes* aSizes) const override;
-  virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                      FontListSizes* aSizes) const override;
+  void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                              FontListSizes* aSizes) const override;
+  void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
+                              FontListSizes* aSizes) const override;
 
   FT_Face mFTFace;
   cairo_font_face_t* mFontFace;
@@ -120,16 +120,17 @@ class gfxFT2FontList : public gfxPlatformFontList {
   gfxFT2FontList();
   virtual ~gfxFT2FontList();
 
-  virtual gfxFontEntry* LookupLocalFont(
-      const nsACString& aFontName, WeightRange aWeightForEntry,
-      StretchRange aStretchForEntry, SlantStyleRange aStyleForEntry) override;
+  gfxFontEntry* LookupLocalFont(const nsACString& aFontName,
+                                WeightRange aWeightForEntry,
+                                StretchRange aStretchForEntry,
+                                SlantStyleRange aStyleForEntry) override;
 
-  virtual gfxFontEntry* MakePlatformFont(const nsACString& aFontName,
-                                         WeightRange aWeightForEntry,
-                                         StretchRange aStretchForEntry,
-                                         SlantStyleRange aStyleForEntry,
-                                         const uint8_t* aFontData,
-                                         uint32_t aLength) override;
+  gfxFontEntry* MakePlatformFont(const nsACString& aFontName,
+                                 WeightRange aWeightForEntry,
+                                 StretchRange aStretchForEntry,
+                                 SlantStyleRange aStyleForEntry,
+                                 const uint8_t* aFontData,
+                                 uint32_t aLength) override;
 
   void GetSystemFontList(InfallibleTArray<FontListEntry>* retValue);
 
@@ -138,7 +139,7 @@ class gfxFT2FontList : public gfxPlatformFontList {
         gfxPlatformFontList::PlatformFontList());
   }
 
-  virtual void GetFontFamilyList(
+  void GetFontFamilyList(
       nsTArray<RefPtr<gfxFontFamily> >& aFamilyArray) override;
 
   gfxFontFamily* CreateFontFamily(const nsACString& aName) const override;
@@ -149,7 +150,7 @@ class gfxFT2FontList : public gfxPlatformFontList {
   typedef enum { kUnknown, kStandard } StandardFile;
 
   // initialize font lists
-  virtual nsresult InitFontListForPlatform() override;
+  nsresult InitFontListForPlatform() override;
 
   void AppendFaceFromFontListEntry(const FontListEntry& aFLE,
                                    StandardFile aStdFile);

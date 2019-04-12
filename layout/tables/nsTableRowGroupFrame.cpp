@@ -29,7 +29,7 @@ using namespace mozilla::layout;
 namespace mozilla {
 
 struct TableRowGroupReflowInput {
-  const ReflowInput& reflowInput;  // Our reflow state
+  const ReflowInput& reflowInput;  // Our reflow input
 
   nsTableFrame* tableFrame;
 
@@ -258,7 +258,7 @@ nsIFrame::LogicalSides nsTableRowGroupFrame::GetLogicalSkipSides(
   return skip;
 }
 
-// Position and size aKidFrame and update our reflow state.
+// Position and size aKidFrame and update our reflow input.
 void nsTableRowGroupFrame::PlaceChild(
     nsPresContext* aPresContext, TableRowGroupReflowInput& aReflowInput,
     nsIFrame* aKidFrame, WritingMode aWM, const LogicalPoint& aKidPosition,

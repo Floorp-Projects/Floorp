@@ -1,0 +1,26 @@
+{
+  "name": "leit.is",
+  "description": "leit.is - Íslensk leitarvél",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "leit-is@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "leit.is",
+      "search_url": "https://leit.is/leita",
+      "search_form": "https://leit.is/",
+      "search_url_get_params": "utf-8=✓&search={searchTerms}"
+    }
+  }
+}

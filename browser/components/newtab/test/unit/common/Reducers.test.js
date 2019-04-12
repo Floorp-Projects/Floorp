@@ -711,6 +711,7 @@ describe("Reducers", () => {
         data: [1, 2, 3],
         lastUpdated: 123,
         loaded: true,
+        frequency_caps: [],
       });
     });
     it("should handle no data from DISCOVERY_STREAM_SPOCS_UPDATE", () => {

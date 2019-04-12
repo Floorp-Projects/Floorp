@@ -3,14 +3,11 @@
 
 "use strict";
 
-function run_test() {
+add_task(async function test_paramSubstitution() {
   useHttpServer();
 
-  run_next_test();
-}
-
-add_task(async function test_paramSubstitution() {
-  await asyncInit();
+  await AddonTestUtils.promiseStartupManager();
+  await Services.search.init();
 
   let prefix = "http://test.moz/search?q=";
   let [engine] = await addTestEngines([

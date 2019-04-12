@@ -23,7 +23,7 @@ struct PlanarYCbCrData;
 
 class ITextureClientRecycleAllocator {
  protected:
-  virtual ~ITextureClientRecycleAllocator() {}
+  virtual ~ITextureClientRecycleAllocator() = default;
 
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(ITextureClientRecycleAllocator)
@@ -58,7 +58,7 @@ class ITextureClientAllocationHelper {
   const TextureAllocationFlags mAllocationFlags;
 };
 
-class YCbCrTextureClientAllocationHelper
+class MOZ_RAII YCbCrTextureClientAllocationHelper
     : public ITextureClientAllocationHelper {
  public:
   YCbCrTextureClientAllocationHelper(const PlanarYCbCrData& aData,

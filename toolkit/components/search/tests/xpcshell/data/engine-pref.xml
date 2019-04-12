@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
-<ShortName>engine-pref</ShortName>
-<Url type="text/html" method="GET" template="http://www.google.com/search">
-  <Param name="q" value="{searchTerms}"/>
-  <!-- Dynamic parameters -->
-  <MozParam name="code" condition="pref" pref="code"/>
-</Url>
-</SearchPlugin>

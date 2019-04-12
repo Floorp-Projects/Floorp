@@ -326,7 +326,8 @@ class FullParseHandler {
                           TokenPos(begin, begin + 1));
   }
 
-  ClassNodeType newClass(Node name, Node heritage, Node memberBlock,
+  ClassNodeType newClass(Node name, Node heritage,
+                         LexicalScopeNodeType memberBlock,
                          const TokenPos& pos) {
     return new_<ClassNode>(name, heritage, memberBlock, pos);
   }

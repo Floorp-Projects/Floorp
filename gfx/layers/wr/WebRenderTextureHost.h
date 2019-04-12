@@ -28,16 +28,15 @@ class WebRenderTextureHost : public TextureHost {
                        wr::ExternalImageId& aExternalImageId);
   virtual ~WebRenderTextureHost();
 
-  virtual void DeallocateDeviceData() override {}
+  void DeallocateDeviceData() override {}
 
-  virtual void SetTextureSourceProvider(
-      TextureSourceProvider* aProvider) override;
+  void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
-  virtual bool Lock() override;
+  bool Lock() override;
 
-  virtual void Unlock() override;
+  void Unlock() override;
 
-  virtual gfx::SurfaceFormat GetFormat() const override;
+  gfx::SurfaceFormat GetFormat() const override;
 
   virtual void NotifyNotUsed() override;
 
@@ -45,24 +44,21 @@ class WebRenderTextureHost : public TextureHost {
   // textureHosts use their special data representation internally, but we could
   // treat these textureHost as the read-format when we read them.
   // Please check TextureHost::GetReadFormat().
-  virtual gfx::SurfaceFormat GetReadFormat() const override;
+  gfx::SurfaceFormat GetReadFormat() const override;
 
-  virtual bool BindTextureSource(
-      CompositableTextureSourceRef& aTexture) override;
+  bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
 
-  virtual already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
+  already_AddRefed<gfx::DataSourceSurface> GetAsSurface() override;
 
-  virtual YUVColorSpace GetYUVColorSpace() const override;
+  gfx::YUVColorSpace GetYUVColorSpace() const override;
 
-  virtual gfx::IntSize GetSize() const override;
+  gfx::IntSize GetSize() const override;
 
 #ifdef MOZ_LAYERS_HAVE_LOG
-  virtual const char* Name() override { return "WebRenderTextureHost"; }
+  const char* Name() override { return "WebRenderTextureHost"; }
 #endif
 
-  virtual WebRenderTextureHost* AsWebRenderTextureHost() override {
-    return this;
-  }
+  WebRenderTextureHost* AsWebRenderTextureHost() override { return this; }
 
   virtual void PrepareForUse();
 
@@ -70,22 +66,21 @@ class WebRenderTextureHost : public TextureHost {
 
   int32_t GetRGBStride();
 
-  virtual bool HasIntermediateBuffer() const override;
+  bool HasIntermediateBuffer() const override;
 
-  virtual uint32_t NumSubTextures() const override;
+  uint32_t NumSubTextures() const override;
 
-  virtual void PushResourceUpdates(wr::TransactionBuilder& aResources,
-                                   ResourceUpdateOp aOp,
-                                   const Range<wr::ImageKey>& aImageKeys,
-                                   const wr::ExternalImageId& aExtID) override;
+  void PushResourceUpdates(wr::TransactionBuilder& aResources,
+                           ResourceUpdateOp aOp,
+                           const Range<wr::ImageKey>& aImageKeys,
+                           const wr::ExternalImageId& aExtID) override;
 
-  virtual void PushDisplayItems(wr::DisplayListBuilder& aBuilder,
-                                const wr::LayoutRect& aBounds,
-                                const wr::LayoutRect& aClip,
-                                wr::ImageRendering aFilter,
-                                const Range<wr::ImageKey>& aImageKeys) override;
+  void PushDisplayItems(wr::DisplayListBuilder& aBuilder,
+                        const wr::LayoutRect& aBounds,
+                        const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
+                        const Range<wr::ImageKey>& aImageKeys) override;
 
-  virtual bool SupportsWrNativeTexture() override;
+  bool SupportsWrNativeTexture() override;
 
  protected:
   void CreateRenderTextureHost(const SurfaceDescriptor& aDesc,

@@ -3,7 +3,6 @@ import {addLocaleData, injectIntl, IntlProvider} from "react-intl";
 import {ASRouterAdmin} from "content-src/components/ASRouterAdmin/ASRouterAdmin";
 import {ConfirmDialog} from "content-src/components/ConfirmDialog/ConfirmDialog";
 import {connect} from "react-redux";
-import {DarkModeMessage} from "content-src/components/DarkModeMessage/DarkModeMessage";
 import {DiscoveryStreamBase} from "content-src/components/DiscoveryStreamBase/DiscoveryStreamBase";
 import {ErrorBoundary} from "content-src/components/ErrorBoundary/ErrorBoundary";
 import {ManualMigration} from "content-src/components/ManualMigration/ManualMigration";
@@ -176,7 +175,6 @@ export class BaseContent extends React.PureComponent {
                 }
               {isDiscoveryStream ? (
                 <ErrorBoundary className="borderless-error">
-                  {prefs.darkModeMessage && <DarkModeMessage />}
                   <DiscoveryStreamBase />
                 </ErrorBoundary>) : <Sections />}
               <PrefsButton onClick={this.openPreferences} />

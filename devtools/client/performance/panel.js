@@ -49,10 +49,13 @@ PerformancePanel.prototype = {
       console.error("No PerformanceFront found in toolbox.");
     }
 
-    const { startupPerformance, PerformanceController, EVENTS } = this.panelWin;
+    const { PerformanceController, PerformanceView, EVENTS } = this.panelWin;
     PerformanceController.on(EVENTS.RECORDING_ADDED, this._checkRecordingStatus);
     PerformanceController.on(EVENTS.RECORDING_STATE_CHANGE, this._checkRecordingStatus);
-    await startupPerformance(this.toolbox, this.target, front);
+
+    await PerformanceController.initialize(this.toolbox, this.target, front);
+    await PerformanceView.initialize();
+    PerformanceController.enableFrontEventListeners();
 
     // Fire this once incase we have an in-progress recording (console profile)
     // that caused this start up, and no state change yet, so we can highlight the
@@ -80,10 +83,13 @@ PerformancePanel.prototype = {
       return;
     }
 
-    const { shutdownPerformance, PerformanceController, EVENTS } = this.panelWin;
+    const { PerformanceController, PerformanceView, EVENTS } = this.panelWin;
     PerformanceController.off(EVENTS.RECORDING_ADDED, this._checkRecordingStatus);
     PerformanceController.off(EVENTS.RECORDING_STATE_CHANGE, this._checkRecordingStatus);
-    await shutdownPerformance();
+
+    await PerformanceController.destroy();
+    await PerformanceView.destroy();
+    PerformanceController.disableFrontEventListeners();
 
     this.emit("destroyed");
     this._destroyed = true;

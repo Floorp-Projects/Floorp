@@ -35,7 +35,8 @@ function run_test() {
 }
 
 add_task(async function test_svg_icon() {
-  await asyncInit();
+  await AddonTestUtils.promiseStartupManager();
+  await Services.search.init();
 
   let [engine] = await addTestEngines([
     { name: "SVGIcon", details: [url, "", "SVG icon", "GET",

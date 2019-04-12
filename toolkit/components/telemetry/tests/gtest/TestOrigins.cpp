@@ -27,7 +27,7 @@ TEST_F(TelemetryTestFixture, RecordOrigin) {
 
   Unused << mTelemetry->ClearOrigins();
 
-  const nsLiteralCString doubleclick("doubleclick.de");
+  const nsLiteralCString doubleclick("doubleclick.net");
   const nsLiteralCString telemetryTest1("telemetry.test_test1");
 
   Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclick);
@@ -64,7 +64,7 @@ TEST_F(TelemetryTestFixture, RecordOriginTwiceAndClear) {
 
   Unused << mTelemetry->ClearOrigins();
 
-  const nsLiteralCString doubleclick("doubleclick.de");
+  const nsLiteralCString doubleclick("doubleclick.net");
   const nsLiteralCString telemetryTest1("telemetry.test_test1");
 
   Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclick);
@@ -150,7 +150,7 @@ TEST_F(TelemetryTestFixture, EncodedSnapshot) {
 
   Unused << mTelemetry->ClearOrigins();
 
-  const nsLiteralCString doubleclick("doubleclick.de");
+  const nsLiteralCString doubleclick("doubleclick.net");
   const nsLiteralCString telemetryTest1("telemetry.test_test1");
 
   Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, doubleclick);
@@ -164,25 +164,33 @@ TEST_F(TelemetryTestFixture, EncodedSnapshot) {
   Preferences::SetCString("prio.publicKeyA", prioKeyA);
   Preferences::SetCString("prio.publicKeyB", prioKeyB);
 
-  nsAutoJSString aStr;
-  nsAutoJSString bStr;
-  GetEncodedOriginStrings(aCx, telemetryTest1 + NS_LITERAL_CSTRING("-0"), aStr,
-                          bStr);
+  nsTArray<Tuple<nsCString, nsCString>> firstStrings;
+  GetEncodedOriginStrings(aCx, telemetryTest1 + NS_LITERAL_CSTRING("-%u"),
+                          firstStrings);
 
   // Now snapshot a second time and ensure the encoded payloads change.
-  nsAutoJSString secondAStr;
-  nsAutoJSString secondBStr;
-  GetEncodedOriginStrings(aCx, telemetryTest1 + NS_LITERAL_CSTRING("-0"),
-                          secondAStr, secondBStr);
+  nsTArray<Tuple<nsCString, nsCString>> secondStrings;
+  GetEncodedOriginStrings(aCx, telemetryTest1 + NS_LITERAL_CSTRING("-%u"),
+                          secondStrings);
 
-  ASSERT_TRUE(aStr != secondAStr)
-  << "aStr (" << NS_ConvertUTF16toUTF8(aStr).get()
-  << ") must not equal secondAStr (" << NS_ConvertUTF16toUTF8(secondAStr).get()
-  << ")";
-  ASSERT_TRUE(bStr != secondBStr)
-  << "bStr (" << NS_ConvertUTF16toUTF8(bStr).get()
-  << ") must not equal secondBStr (" << NS_ConvertUTF16toUTF8(secondBStr).get()
-  << ")";
+  const auto sizeOfPrioDatasPerMetric =
+      TelemetryOrigin::SizeOfPrioDatasPerMetric();
+  ASSERT_EQ(sizeOfPrioDatasPerMetric, firstStrings.Length());
+  ASSERT_EQ(sizeOfPrioDatasPerMetric, secondStrings.Length());
+
+  for (size_t i = 0; i < sizeOfPrioDatasPerMetric; ++i) {
+    auto& aStr = Get<0>(firstStrings[i]);
+    auto& bStr = Get<1>(firstStrings[i]);
+    auto& secondAStr = Get<0>(secondStrings[i]);
+    auto& secondBStr = Get<1>(secondStrings[i]);
+
+    ASSERT_TRUE(aStr != secondAStr)
+    << "aStr (" << aStr.get() << ") must not equal secondAStr ("
+    << secondAStr.get() << ")";
+    ASSERT_TRUE(bStr != secondBStr)
+    << "bStr (" << bStr.get() << ") must not equal secondBStr ("
+    << secondBStr.get() << ")";
+  }
 }
 
 class MockObserver final : public nsIObserver {
@@ -208,7 +216,7 @@ TEST_F(TelemetryTestFixture, OriginTelemetryNotifiesTopic) {
   Unused << mTelemetry->ClearOrigins();
 
   const char* kTopic = "origin-telemetry-storage-limit-reached";
-  NS_NAMED_LITERAL_CSTRING(doubleclick, "doubleclick.de");
+  NS_NAMED_LITERAL_CSTRING(doubleclick, "doubleclick.net");
   NS_NAMED_LITERAL_CSTRING(fb, "fb.com");
 
   MockObserver* mo = new MockObserver();
@@ -219,8 +227,9 @@ TEST_F(TelemetryTestFixture, OriginTelemetryNotifiesTopic) {
   ASSERT_TRUE(os);
   os->AddObserver(nsMo, kTopic, false);
 
-  for (int i = 0; i < 10; ++i) {
-    if (i < 9) {
+  const size_t size = ceil(10.0 / TelemetryOrigin::SizeOfPrioDatasPerMetric());
+  for (size_t i = 0; i < size; ++i) {
+    if (i < size - 1) {
       // Let's ensure we only notify the once.
       Telemetry::RecordOrigin(OriginMetricID::TelemetryTest_Test1, fb);
     }

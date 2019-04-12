@@ -313,6 +313,20 @@
       }
     },
 
+    "ExtensionSettings": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": {
+          "type": "object",
+          "properties": {
+            "blocked_install_message": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+
     "ExtensionUpdate": {
       "type": "boolean"
     },

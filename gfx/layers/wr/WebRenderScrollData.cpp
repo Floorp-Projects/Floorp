@@ -144,8 +144,6 @@ WebRenderScrollData::WebRenderScrollData()
 WebRenderScrollData::WebRenderScrollData(WebRenderLayerManager* aManager)
     : mManager(aManager), mIsFirstPaint(false), mPaintSequenceNumber(0) {}
 
-WebRenderScrollData::~WebRenderScrollData() {}
-
 WebRenderLayerManager* WebRenderScrollData::GetManager() const {
   return mManager;
 }

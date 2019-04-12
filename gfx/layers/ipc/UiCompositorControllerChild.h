@@ -56,7 +56,7 @@ class UiCompositorControllerChild final
   void ActorDestroy(ActorDestroyReason aWhy) override;
   void DeallocPUiCompositorControllerChild() override;
   void ProcessingError(Result aCode, const char* aReason) override;
-  virtual void HandleFatalError(const char* aMsg) const override;
+  void HandleFatalError(const char* aMsg) const override;
   mozilla::ipc::IPCResult RecvToolbarAnimatorMessageFromCompositor(
       const int32_t& aMessage);
   mozilla::ipc::IPCResult RecvRootFrameMetrics(const ScreenPoint& aScrollOffset,
@@ -66,7 +66,7 @@ class UiCompositorControllerChild final
 
  private:
   explicit UiCompositorControllerChild(const uint64_t& aProcessToken);
-  ~UiCompositorControllerChild();
+  virtual ~UiCompositorControllerChild();
   void OpenForSameProcess();
   void OpenForGPUProcess(Endpoint<PUiCompositorControllerChild>&& aEndpoint);
   void SendCachedValues();

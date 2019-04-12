@@ -519,24 +519,25 @@ class UrlbarInput {
    *   The last key the user entered (as a key code).
    * @param {string} [options.searchString]
    *   The search string.  If not given, the current input value is used.
-   *   Otherwise, the current input value must start with this value.  The
-   *   intended use for this parameter is related to the autofill placeholder.
-   *   When the placeholder is autofilled before the new search starts, the
-   *   current input value will be the entire autofilled placeholder, not the
-   *   value the user typed, which is the value we should search with.
-   * @param {boolean} [resetSearchState]
+   *   Otherwise, the current input value must start with this value.
+   * @param {boolean} [options.resetSearchState]
    *   If this is the first search of a user interaction with the input, set
    *   this to true (the default) so that search-related state from the previous
    *   interaction doesn't interfere with the new interaction.  Otherwise set it
    *   to false so that state is maintained during a single interaction.  The
    *   intended use for this parameter is that it should be set to false when
    *   this method is called due to input events.
+   * @param {boolean} [options.allowEmptyInput]
+   *   If true and the search string is empty, then the input will become empty
+   *   when no result is selected.  If false, the input will continue showing
+   *   the last non-empty search string when no result is selected.
    */
   startQuery({
     allowAutofill = true,
     lastKey = null,
     searchString = null,
     resetSearchState = true,
+    allowEmptyInput = true,
   } = {}) {
     if (this._suppressStartQuery) {
       return;
@@ -552,7 +553,10 @@ class UrlbarInput {
     } else if (!this.textValue.startsWith(searchString)) {
       throw new Error("The current value doesn't start with the search string");
     }
-    this._lastSearchString = searchString;
+
+    if (searchString || allowEmptyInput) {
+      this._lastSearchString = searchString;
+    }
 
     // TODO (Bug 1522902): This promise is necessary for tests, because some
     // tests are not listening for completion when starting a query through
@@ -1211,7 +1215,7 @@ class UrlbarInput {
       if (this.view.isOpen) {
         this.view.close();
       } else {
-        this.startQuery();
+        this.startQuery({ allowEmptyInput: false });
       }
     }
   }

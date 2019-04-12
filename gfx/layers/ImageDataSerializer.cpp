@@ -158,7 +158,7 @@ Maybe<gfx::IntSize> CbCrSizeFromBufferDescriptor(
   }
 }
 
-Maybe<YUVColorSpace> YUVColorSpaceFromBufferDescriptor(
+Maybe<gfx::YUVColorSpace> YUVColorSpaceFromBufferDescriptor(
     const BufferDescriptor& aDescriptor) {
   switch (aDescriptor.type()) {
     case BufferDescriptor::TRGBDescriptor:

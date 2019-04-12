@@ -21,12 +21,12 @@ class TiledLayerBufferComposite;
 class PaintedLayerMLGPU final : public PaintedLayer, public LayerMLGPU {
  public:
   explicit PaintedLayerMLGPU(LayerManagerMLGPU* aManager);
-  ~PaintedLayerMLGPU() override;
+  virtual ~PaintedLayerMLGPU();
 
   // Layer
   HostLayer* AsHostLayer() override { return this; }
   PaintedLayerMLGPU* AsPaintedLayerMLGPU() override { return this; }
-  virtual Layer* GetLayer() override { return this; }
+  Layer* GetLayer() override { return this; }
   bool SetCompositableHost(CompositableHost*) override;
   CompositableHost* GetCompositableHost() override;
   void Disconnect() override;

@@ -10091,7 +10091,7 @@ nsresult nsFrame::DoXULLayout(nsBoxLayoutState& aState) {
     ReflowInput reflowInput(aState.PresContext(), this,
                             aState.GetRenderingContext(),
                             LogicalSize(ourWM, ISize(), NS_UNCONSTRAINEDSIZE),
-                            ReflowInput::DUMMY_PARENT_REFLOW_STATE);
+                            ReflowInput::DUMMY_PARENT_REFLOW_INPUT);
 
     AddStateBits(NS_FRAME_IN_REFLOW);
     // Set up a |reflowStatus| to pass into ReflowAbsoluteFrames
@@ -10178,10 +10178,10 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
   if (needsReflow) {
     aDesiredSize.ClearSize();
 
-    // create a reflow state to tell our child to flow at the given size.
+    // create a reflow input to tell our child to flow at the given size.
 
-    // Construct a bogus parent reflow state so that there's a usable
-    // containing block reflow state.
+    // Construct a bogus parent reflow input so that there's a usable
+    // containing block reflow input.
     nsMargin margin(0, 0, 0, 0);
     GetXULMargin(margin);
 
@@ -10195,7 +10195,7 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
     WritingMode parentWM = parentFrame->GetWritingMode();
     ReflowInput parentReflowInput(aPresContext, parentFrame, aRenderingContext,
                                   LogicalSize(parentWM, parentSize),
-                                  ReflowInput::DUMMY_PARENT_REFLOW_STATE);
+                                  ReflowInput::DUMMY_PARENT_REFLOW_INPUT);
 
     // This may not do very much useful, but it's probably worth trying.
     if (parentSize.width != NS_INTRINSICSIZE)
@@ -10219,7 +10219,7 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
     if (outerReflowInput && outerReflowInput->mFrame == parentFrame) {
       // We're a frame (such as a text control frame) that jumps into
       // box reflow and then straight out of it on the child frame.
-      // This means we actually have a real parent reflow state.
+      // This means we actually have a real parent reflow input.
       // nsLayoutUtils::InflationMinFontSizeFor used to need this to be
       // linked up correctly for text control frames, so do so here).
       parentRI = outerReflowInput;
@@ -10227,13 +10227,13 @@ void nsFrame::BoxReflow(nsBoxLayoutState& aState, nsPresContext* aPresContext,
       parentRI = &parentReflowInput;
     }
 
-    // XXX Is it OK that this reflow state has only one ancestor?
+    // XXX Is it OK that this reflow input has only one ancestor?
     // (It used to have a bogus parent, skipping all the boxes).
     WritingMode wm = GetWritingMode();
     LogicalSize logicalSize(wm, nsSize(aWidth, aHeight));
     logicalSize.BSize(wm) = NS_INTRINSICSIZE;
     ReflowInput reflowInput(aPresContext, *parentRI, this, logicalSize, nullptr,
-                            ReflowInput::DUMMY_PARENT_REFLOW_STATE);
+                            ReflowInput::DUMMY_PARENT_REFLOW_INPUT);
 
     // XXX_jwir3: This is somewhat fishy. If this is actually changing the value
     //            here (which it might be), then we should make sure that it's
@@ -10905,20 +10905,21 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
   // Anything that didn't match the above conditions is visible to hit-testing.
   result = CompositorHitTestFlags::eVisibleToHitTest;
 
-  if (aBuilder->IsBuildingNonLayerizedScrollbar() ||
-      aBuilder->GetAncestorHasApzAwareEventHandler()) {
+  if (aBuilder->IsBuildingNonLayerizedScrollbar()) {
     // Scrollbars may be painted into a layer below the actual layer they will
     // scroll, and therefore wheel events may be dispatched to the outer frame
     // instead of the intended scrollframe. To address this, we force a d-t-c
     // region on scrollbar frames that won't be placed in their own layer. See
     // bug 1213324 for details.
-    result += CompositorHitTestFlags::eDispatchToContent;
+    result += CompositorHitTestFlags::eInactiveScrollframe;
+  } else if (aBuilder->GetAncestorHasApzAwareEventHandler()) {
+    result += CompositorHitTestFlags::eApzAwareListeners;
   } else if (IsObjectFrame()) {
     // If the frame is a plugin frame and wants to handle wheel events as
     // default action, we should add the frame to dispatch-to-content region.
     nsPluginFrame* pluginFrame = do_QueryFrame(this);
     if (pluginFrame && pluginFrame->WantsToHandleWheelEventAsDefaultAction()) {
-      result += CompositorHitTestFlags::eDispatchToContent;
+      result += CompositorHitTestFlags::eApzAwareListeners;
     }
   }
 
@@ -10985,7 +10986,7 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
       if (thumbGetsLayer) {
         result += CompositorHitTestFlags::eScrollbarThumb;
       } else {
-        result += CompositorHitTestFlags::eDispatchToContent;
+        result += CompositorHitTestFlags::eInactiveScrollframe;
       }
     }
 
@@ -11714,7 +11715,7 @@ void DR_State::FindMatchingRule(DR_FrameTreeNode& aNode) {
 
 DR_FrameTreeNode* DR_State::CreateTreeNode(nsIFrame* aFrame,
                                            const ReflowInput* aReflowInput) {
-  // find the frame of the parent reflow state (usually just the parent of
+  // find the frame of the parent reflow input (usually just the parent of
   // aFrame)
   nsIFrame* parentFrame;
   if (aReflowInput) {

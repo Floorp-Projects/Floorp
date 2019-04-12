@@ -66,7 +66,7 @@ class VideoBridgeChild final : public PVideoBridgeChild,
 
  private:
   VideoBridgeChild();
-  ~VideoBridgeChild();
+  virtual ~VideoBridgeChild();
 
   RefPtr<VideoBridgeChild> mIPDLSelfRef;
   MessageLoop* mMessageLoop;

@@ -1,0 +1,28 @@
+{
+  "name": "engine-pref",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "engine-pref@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "engine-pref",
+      "search_url": "https://www.google.com/search",
+      "params": [
+        {
+          "name": "q",
+          "value": "{searchTerms}"
+        },
+        {
+          "name": "code",
+          "condition": "pref",
+          "pref": "code"
+        }
+      ]
+    }
+  }
+}

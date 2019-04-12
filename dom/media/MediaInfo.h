@@ -157,17 +157,7 @@ class VideoInfo : public TrackInfo {
         mRotation(kDegree_0),
         mImageRect(gfx::IntRect(gfx::IntPoint(), aSize)) {}
 
-  VideoInfo(const VideoInfo& aOther)
-      : TrackInfo(aOther),
-        mDisplay(aOther.mDisplay),
-        mStereoMode(aOther.mStereoMode),
-        mImage(aOther.mImage),
-        mCodecSpecificConfig(aOther.mCodecSpecificConfig),
-        mExtraData(aOther.mExtraData),
-        mRotation(aOther.mRotation),
-        mColorDepth(aOther.mColorDepth),
-        mImageRect(aOther.mImageRect),
-        mAlphaPresent(aOther.mAlphaPresent) {}
+  VideoInfo(const VideoInfo& aOther) = default;
 
   bool operator==(const VideoInfo& rhs) const;
 
@@ -257,6 +247,12 @@ class VideoInfo : public TrackInfo {
   // Should be 8, 10 or 12. Default value is 8.
   gfx::ColorDepth mColorDepth = gfx::ColorDepth::COLOR_8;
 
+  gfx::YUVColorSpace mColorSpace = gfx::YUVColorSpace::UNKNOWN;
+
+  // True indicates no restriction on Y, U, V values (otherwise 16-235 for 8
+  // bits etc)
+  bool mFullRange = false;
+
  private:
   // mImage may be cropped; currently only used with the WebM container.
   // A negative width or height indicate that no cropping is to occur.
@@ -281,16 +277,7 @@ class AudioInfo : public TrackInfo {
         mCodecSpecificConfig(new MediaByteBuffer),
         mExtraData(new MediaByteBuffer) {}
 
-  AudioInfo(const AudioInfo& aOther)
-      : TrackInfo(aOther),
-        mRate(aOther.mRate),
-        mChannels(aOther.mChannels),
-        mChannelMap(aOther.mChannelMap),
-        mBitDepth(aOther.mBitDepth),
-        mProfile(aOther.mProfile),
-        mExtendedProfile(aOther.mExtendedProfile),
-        mCodecSpecificConfig(aOther.mCodecSpecificConfig),
-        mExtraData(aOther.mExtraData) {}
+  AudioInfo(const AudioInfo& aOther) = default;
 
   bool operator==(const AudioInfo& rhs) const;
 

@@ -40,9 +40,8 @@ class CompositorVsyncScheduler {
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorVsyncScheduler)
 
  public:
-  explicit CompositorVsyncScheduler(
-      CompositorVsyncSchedulerOwner* aVsyncSchedulerOwner,
-      widget::CompositorWidget* aWidget);
+  CompositorVsyncScheduler(CompositorVsyncSchedulerOwner* aVsyncSchedulerOwner,
+                           widget::CompositorWidget* aWidget);
 
   /**
    * Notify this class of a vsync. This will trigger a composite if one is
@@ -133,7 +132,7 @@ class CompositorVsyncScheduler {
   class Observer final : public VsyncObserver {
    public:
     explicit Observer(CompositorVsyncScheduler* aOwner);
-    virtual bool NotifyVsync(const VsyncEvent& aVsync) override;
+    bool NotifyVsync(const VsyncEvent& aVsync) override;
     void Destroy();
 
    private:

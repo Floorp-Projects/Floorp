@@ -39,7 +39,7 @@ class ParentActor : public Protocol {
 
   typedef ipc::IProtocol::ActorDestroyReason Why;
 
-  virtual void ActorDestroy(Why) override { DestroyIfNeeded(); }
+  void ActorDestroy(Why) override { DestroyIfNeeded(); }
 
  protected:
   void DestroyIfNeeded() {

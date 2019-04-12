@@ -76,7 +76,7 @@ class WebRenderScrollDataCollection {
   wr::RenderRootArray<bool> mSeenRenderRoot;
 };
 
-class WebRenderCommandBuilder {
+class WebRenderCommandBuilder final {
   typedef nsTHashtable<nsRefPtrHashKey<WebRenderUserData>>
       WebRenderUserDataRefTable;
   typedef nsTHashtable<nsRefPtrHashKey<WebRenderCanvasData>> CanvasDataSet;

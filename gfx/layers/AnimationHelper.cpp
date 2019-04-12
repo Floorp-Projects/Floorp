@@ -50,37 +50,28 @@ OMTAValue CompositorAnimationStorage::GetOMTAValue(const uint64_t& aId) const {
     return omtaValue;
   }
 
-  switch (animatedValue->mType) {
-    case AnimatedValue::COLOR:
-      omtaValue = animatedValue->mColor;
-      break;
-    case AnimatedValue::OPACITY:
-      omtaValue = animatedValue->mOpacity;
-      break;
-    case AnimatedValue::TRANSFORM: {
-      gfx::Matrix4x4 transform = animatedValue->mTransform.mFrameTransform;
-      const TransformData& data = animatedValue->mTransform.mData;
-      float scale = data.appUnitsPerDevPixel();
-      gfx::Point3D transformOrigin = data.transformOrigin();
+  animatedValue->Value().match(
+      [&](const AnimationTransform& aTransform) {
+        gfx::Matrix4x4 transform = aTransform.mFrameTransform;
+        const TransformData& data = aTransform.mData;
+        float scale = data.appUnitsPerDevPixel();
+        gfx::Point3D transformOrigin = data.transformOrigin();
 
-      // Undo the rebasing applied by
-      // nsDisplayTransform::GetResultingTransformMatrixInternal
-      transform.ChangeBasis(-transformOrigin);
+        // Undo the rebasing applied by
+        // nsDisplayTransform::GetResultingTransformMatrixInternal
+        transform.ChangeBasis(-transformOrigin);
 
-      // Convert to CSS pixels (this undoes the operations performed by
-      // nsStyleTransformMatrix::ProcessTranslatePart which is called from
-      // nsDisplayTransform::GetResultingTransformMatrix)
-      double devPerCss = double(scale) / double(AppUnitsPerCSSPixel());
-      transform._41 *= devPerCss;
-      transform._42 *= devPerCss;
-      transform._43 *= devPerCss;
-      omtaValue = transform;
-      break;
-    }
-    case AnimatedValue::NONE:
-      break;
-  }
-
+        // Convert to CSS pixels (this undoes the operations performed by
+        // nsStyleTransformMatrix::ProcessTranslatePart which is called from
+        // nsDisplayTransform::GetResultingTransformMatrix)
+        double devPerCss = double(scale) / double(AppUnitsPerCSSPixel());
+        transform._41 *= devPerCss;
+        transform._42 *= devPerCss;
+        transform._43 *= devPerCss;
+        omtaValue = transform;
+      },
+      [&](const float& aOpacity) { omtaValue = aOpacity; },
+      [&](const nscolor& aColor) { omtaValue = aColor; });
   return omtaValue;
 }
 
@@ -92,10 +83,9 @@ void CompositorAnimationStorage::SetAnimatedValue(
   AnimatedValue* value = mAnimatedValues.LookupOrAdd(
       aId, std::move(aTransformInDevSpace), std::move(aFrameTransform), aData);
   if (count == mAnimatedValues.Count()) {
-    MOZ_ASSERT(value->mType == AnimatedValue::TRANSFORM);
-    value->mTransform.mTransformInDevSpace = std::move(aTransformInDevSpace);
-    value->mTransform.mFrameTransform = std::move(aFrameTransform);
-    value->mTransform.mData = aData;
+    MOZ_ASSERT(value->Is<AnimationTransform>());
+    *value = AnimatedValue(std::move(aTransformInDevSpace),
+                           std::move(aFrameTransform), aData);
   }
 }
 
@@ -113,8 +103,8 @@ void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
   auto count = mAnimatedValues.Count();
   AnimatedValue* value = mAnimatedValues.LookupOrAdd(aId, aColor);
   if (count == mAnimatedValues.Count()) {
-    MOZ_ASSERT(value->mType == AnimatedValue::COLOR);
-    value->mColor = aColor;
+    MOZ_ASSERT(value->Is<nscolor>());
+    *value = AnimatedValue(aColor);
   }
 }
 
@@ -124,8 +114,8 @@ void CompositorAnimationStorage::SetAnimatedValue(uint64_t aId,
   auto count = mAnimatedValues.Count();
   AnimatedValue* value = mAnimatedValues.LookupOrAdd(aId, aOpacity);
   if (count == mAnimatedValues.Count()) {
-    MOZ_ASSERT(value->mType == AnimatedValue::OPACITY);
-    value->mOpacity = aOpacity;
+    MOZ_ASSERT(value->Is<float>());
+    *value = AnimatedValue(aOpacity);
   }
 }
 

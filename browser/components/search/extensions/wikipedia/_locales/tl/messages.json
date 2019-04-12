@@ -1,0 +1,20 @@
+{
+  "extensionName": {
+    "message": "Wikipedia (tl)"
+  },
+  "extensionDescription": {
+    "message": "Wikipedia, ang malayang ensiklopedya"
+  },
+  "searchUrl": {
+    "message": "https://tl.wikipedia.org/wiki/Natatangi:Maghanap"
+  },
+  "searchForm": {
+    "message": "https://tl.wikipedia.org/wiki/Natatangi:Maghanap?search={searchTerms}&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://tl.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
+  },
+  "searchUrlGetParams": {
+    "message": "search={searchTerms}&sourceid=Mozilla-search"
+  }
+}

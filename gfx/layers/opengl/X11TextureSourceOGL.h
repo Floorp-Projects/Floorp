@@ -23,29 +23,26 @@ class X11TextureSourceOGL : public TextureSourceOGL, public X11TextureSource {
   X11TextureSourceOGL(CompositorOGL* aCompositor, gfxXlibSurface* aSurface);
   ~X11TextureSourceOGL();
 
-  virtual X11TextureSourceOGL* AsSourceOGL() override { return this; }
+  X11TextureSourceOGL* AsSourceOGL() override { return this; }
 
-  virtual bool IsValid() const override { return !!gl(); };
+  bool IsValid() const override { return !!gl(); };
 
-  virtual void BindTexture(GLenum aTextureUnit,
-                           gfx::SamplingFilter aSamplingFilter) override;
+  void BindTexture(GLenum aTextureUnit,
+                   gfx::SamplingFilter aSamplingFilter) override;
 
-  virtual gfx::IntSize GetSize() const override;
+  gfx::IntSize GetSize() const override;
 
-  virtual GLenum GetTextureTarget() const override {
-    return LOCAL_GL_TEXTURE_2D;
-  }
+  GLenum GetTextureTarget() const override { return LOCAL_GL_TEXTURE_2D; }
 
-  virtual gfx::SurfaceFormat GetFormat() const override;
+  gfx::SurfaceFormat GetFormat() const override;
 
-  virtual GLenum GetWrapMode() const override { return LOCAL_GL_CLAMP_TO_EDGE; }
+  GLenum GetWrapMode() const override { return LOCAL_GL_CLAMP_TO_EDGE; }
 
-  virtual void DeallocateDeviceData() override;
+  void DeallocateDeviceData() override;
 
-  virtual void SetTextureSourceProvider(
-      TextureSourceProvider* aProvider) override;
+  void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
-  virtual void Updated() override { mUpdated = true; }
+  void Updated() override { mUpdated = true; }
 
   gl::GLContext* gl() const { return mGL; }
 

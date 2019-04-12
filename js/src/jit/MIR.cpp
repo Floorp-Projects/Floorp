@@ -12,8 +12,6 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/MathAlgorithms.h"
 
-#include <ctype.h>
-
 #include "jslibmath.h"
 
 #include "builtin/RegExp.h"
@@ -26,6 +24,7 @@
 #include "jit/RangeAnalysis.h"
 #include "js/Conversions.h"
 #include "util/Text.h"
+#include "util/Unicode.h"
 #include "wasm/WasmCode.h"
 
 #include "builtin/Boolean-inl.h"
@@ -81,7 +80,7 @@ void MDefinition::PrintOpcodeName(GenericPrinter& out, Opcode op) {
   const char* name = OpcodeName(op);
   size_t len = strlen(name);
   for (size_t i = 0; i < len; i++) {
-    out.printf("%c", tolower(name[i]));
+    out.printf("%c", unicode::ToLowerCase(name[i]));
   }
 }
 #endif

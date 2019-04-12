@@ -1,0 +1,43 @@
+{
+  "name": "mozSearch",
+  "description": "mozSearch Engine",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "mozsearch-engine@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "mozSearch",
+      "search_url": "https://example.com:443/browser/browser/components/search/test/browser/",
+      "params": [
+        {
+          "name": "test",
+          "value": "{searchTerms}"
+        },
+        {
+          "name": "ie",
+          "value": "utf-8"
+        },
+        {
+          "name": "channel",
+          "condition": "purpose",
+          "purpose": "contextmenu",
+          "value": "contextsearch"
+        },
+        {
+          "name": "channel",
+          "condition": "purpose",
+          "purpose": "keyword",
+          "value": "keywordsearch"
+        }
+      ]
+    }
+  }
+}

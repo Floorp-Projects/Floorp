@@ -18,14 +18,17 @@ class TestSearchCounts(TelemetryTestCase):
         """Retrieve the identifier of the default search engine."""
 
         script = """\
+        let [resolve] = arguments;
         let searchService = Components.classes[
                 "@mozilla.org/browser/search-service;1"]
             .getService(Components.interfaces.nsISearchService);
-        return searchService.defaultEngine.identifier;
+        return searchService.init().then(function () {
+          resolve(searchService.defaultEngine.identifier);
+        });
         """
 
         with self.marionette.using_context(self.marionette.CONTEXT_CHROME):
-            return self.marionette.execute_script(textwrap.dedent(script))
+            return self.marionette.execute_async_script(textwrap.dedent(script))
 
     def setUp(self):
         """Set up the test case and store the identifier of the default

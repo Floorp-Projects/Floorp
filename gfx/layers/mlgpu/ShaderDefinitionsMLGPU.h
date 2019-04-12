@@ -103,7 +103,7 @@ static inline nsTArray<gfx::IntRect> ToRectArray(const T& aRegion) {
 }
 
 struct SimpleTraits {
-  explicit SimpleTraits(const ItemInfo& aItem, const gfx::Rect& aRect)
+  SimpleTraits(const ItemInfo& aItem, const gfx::Rect& aRect)
       : mItem(aItem), mRect(aRect) {}
 
   // Helper nonce structs so functions can break vertex data up by each

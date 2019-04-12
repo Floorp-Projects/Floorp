@@ -108,8 +108,8 @@ static already_AddRefed<TextureClient> CreateTextureClientWithBackend(
   if (aLayersBackend == LayersBackend::LAYERS_D3D11 &&
       (moz2DBackend == BackendType::DIRECT2D ||
        moz2DBackend == BackendType::DIRECT2D1_1)) {
-    // Create DXGITextureData.
-    data = DXGITextureData::Create(size, format, allocFlags);
+    // Create D3D11TextureData.
+    data = D3D11TextureData::Create(size, format, allocFlags);
   } else if (!data && format == SurfaceFormat::B8G8R8X8 &&
              moz2DBackend == BackendType::CAIRO) {
     // Create DIBTextureData.

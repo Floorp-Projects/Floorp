@@ -1,0 +1,26 @@
+{
+  "name": "Elebila",
+  "description": "Euskarazko bilatzailea.",
+  "manifest_version": 2,
+  "version": "1.0",
+  "applications": {
+    "gecko": {
+      "id": "elebila@search.mozilla.org"
+    }
+  },
+  "hidden": true,
+  "icons": {
+    "16": "favicon.ico"
+  },
+  "web_accessible_resources": [
+    "favicon.ico"
+  ],
+  "chrome_settings_overrides": {
+    "search_provider": {
+      "name": "Elebila",
+      "search_url": "https://elebila.elhuyar.eus/search/",
+      "search_form": "https://elebila.elhuyar.eus",
+      "search_url_get_params": "opensearch=on&lang=eu&bilatu={searchTerms}"
+    }
+  }
+}

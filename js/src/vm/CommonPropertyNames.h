@@ -121,6 +121,7 @@
   MACRO(dotGenerator, dotGenerator, ".generator")                              \
   MACRO(dotThis, dotThis, ".this")                                             \
   MACRO(dotInitializers, dotInitializers, ".initializers")                     \
+  MACRO(dotLocalInitializers, dotLocalInitializers, ".localInitializers")      \
   MACRO(dotFieldKeys, dotFieldKeys, ".fieldKeys")                              \
   MACRO(each, each, "each")                                                    \
   MACRO(elementType, elementType, "elementType")                               \
@@ -383,6 +384,7 @@
   MACRO(startTimestamp, startTimestamp, "startTimestamp")                      \
   MACRO(state, state, "state")                                                 \
   MACRO(static, static_, "static")                                             \
+  MACRO(status, status, "status")                                              \
   MACRO(std_Function_apply, std_Function_apply, "std_Function_apply")          \
   MACRO(sticky, sticky, "sticky")                                              \
   MACRO(StringIterator, StringIterator, "String Iterator")                     \

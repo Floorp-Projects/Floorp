@@ -40,7 +40,7 @@ namespace gfx {
 // Simple helper class to automatically release a CFObject when it goes out
 // of scope.
 template <class T>
-class AutoRelease {
+class AutoRelease final {
  public:
   explicit AutoRelease(T aObject) : mObject(aObject) {}
 
@@ -230,7 +230,7 @@ static int maxPow2LessThan(int a) {
   return shift;
 }
 
-struct writeBuf {
+struct writeBuf final {
   explicit writeBuf(int size) {
     this->data = new unsigned char[size];
     this->offset = 0;
