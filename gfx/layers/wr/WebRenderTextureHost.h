@@ -60,7 +60,7 @@ class WebRenderTextureHost : public TextureHost {
 
   WebRenderTextureHost* AsWebRenderTextureHost() override { return this; }
 
-  virtual void PrepareForUse();
+  virtual void PrepareForUse() override;
 
   wr::ExternalImageId GetExternalImageKey() { return mExternalImageId; }
 
