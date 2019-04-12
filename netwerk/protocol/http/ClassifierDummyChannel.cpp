@@ -486,6 +486,11 @@ ClassifierDummyChannel::SetIsTRRServiceChannel(bool aTrr) {
 }
 
 NS_IMETHODIMP
+ClassifierDummyChannel::GetIsResolvedByTRR(bool* aResolvedByTRR) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 ClassifierDummyChannel::GetTlsFlags(uint32_t* aTlsFlags) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
