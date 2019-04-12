@@ -46,11 +46,11 @@ var BookmarkJSONUtils = Object.freeze({
   /**
    * Import bookmarks from a url.
    *
-   * @param aSpec
+   * @param {string} aSpec
    *        url of the bookmark data.
-   * @param [options.replace]
+   * @param {boolean} [options.replace]
    *        Whether we should erase existing bookmarks before importing.
-   * @param [options.source]
+   * @param {PlacesUtils.bookmarks.SOURCES} [options.source]
    *        The bookmark change source, used to determine the sync status for
    *        imported bookmarks. Defaults to `RESTORE` if `replace = true`, or
    *        `IMPORT` otherwise.
@@ -73,6 +73,7 @@ var BookmarkJSONUtils = Object.freeze({
     } catch (ex) {
       Cu.reportError("Failed to restore bookmarks from " + aSpec + ": " + ex);
       notifyObservers(PlacesUtils.TOPIC_BOOKMARKS_RESTORE_FAILED, aReplace);
+      throw ex;
     }
   },
 
@@ -174,7 +175,7 @@ BookmarkImporter.prototype = {
   /**
    * Import bookmarks from a url.
    *
-   * @param aSpec
+   * @param {string} aSpec
    *        url of the bookmark data.
    *
    * @return {Promise}
@@ -182,6 +183,10 @@ BookmarkImporter.prototype = {
    * @rejects JavaScript exception.
    */
   async importFromURL(spec) {
+    if (!spec.startsWith("chrome://") &&
+        !spec.startsWith("file://")) {
+      throw new Error("importFromURL can only be used with chrome:// and file:// URLs");
+    }
     let nodes = await (await fetch(spec)).json();
 
     if (!nodes.children || !nodes.children.length) {
