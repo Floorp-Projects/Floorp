@@ -594,11 +594,16 @@ void ElfLoader::Init() {
     self_elf = LoadedElf::Create(info.dli_fname, info.dli_fbase);
   }
 #if defined(ANDROID)
-  if (dladdr(FunctionPtr(syscall), &info) != 0) {
-    libc = LoadedElf::Create(info.dli_fname, info.dli_fbase);
-  }
-  if (dladdr(FunctionPtr<int (*)(double)>(isnan), &info) != 0) {
-    libm = LoadedElf::Create(info.dli_fname, info.dli_fbase);
+  // On Android < 5.0, resolving weak symbols via dlsym doesn't work.
+  // The weak symbols Gecko uses are in either libc or libm, so we
+  // wrap those such that this linker does symbol resolution for them.
+  if (GetAndroidSDKVersion() < 21) {
+    if (dladdr(FunctionPtr(syscall), &info) != 0) {
+      libc = LoadedElf::Create(info.dli_fname, info.dli_fbase);
+    }
+    if (dladdr(FunctionPtr<int (*)(double)>(isnan), &info) != 0) {
+      libm = LoadedElf::Create(info.dli_fname, info.dli_fbase);
+    }
   }
 #endif
 }
