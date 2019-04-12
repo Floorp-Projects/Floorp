@@ -869,9 +869,10 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
   bool addParentheses =
       haveSource && isToSource && (fun->isLambda() && !fun->isArrow());
 
-  if (haveSource && !script->scriptSource()->hasSourceText() &&
-      !JSScript::loadSource(cx, script->scriptSource(), &haveSource)) {
-    return nullptr;
+  if (haveSource) {
+    if (!JSScript::tryLoadSource(cx, script->scriptSource(), &haveSource)) {
+      return nullptr;
+    }
   }
 
   // Fast path for the common case, to avoid StringBuffer overhead.
