@@ -83,6 +83,7 @@ class SessionAccessibility final
   void SendScrollingEvent(AccessibleWrap* aAccessible, int32_t aScrollX,
                           int32_t aScrollY, int32_t aMaxScrollX,
                           int32_t aMaxScrollY);
+  MOZ_CAN_RUN_SCRIPT
   void SendAccessibilityFocusedEvent(AccessibleWrap* aAccessible);
   void SendHoverEnterEvent(AccessibleWrap* aAccessible);
   void SendTextSelectionChangedEvent(AccessibleWrap* aAccessible,

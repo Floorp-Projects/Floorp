@@ -90,7 +90,11 @@ inline bool Accessible::IsDefunct() const {
 }
 
 inline void Accessible::ScrollTo(uint32_t aHow) const {
-  if (mContent) nsCoreUtils::ScrollTo(mDoc->PresShell(), mContent, aHow);
+  if (mContent) {
+    nsCOMPtr<nsIPresShell> presShell = mDoc->PresShell();
+    nsCOMPtr<nsIContent> content = mContent;
+    nsCoreUtils::ScrollTo(presShell, content, aHow);
+  }
 }
 
 inline bool Accessible::InsertAfter(Accessible* aNewChild,

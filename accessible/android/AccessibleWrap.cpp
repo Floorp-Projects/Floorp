@@ -104,7 +104,7 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
     }
   }
 
-  SessionAccessibility* sessionAcc =
+  RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(accessible);
   if (!sessionAcc) {
     return NS_OK;
@@ -116,7 +116,8 @@ nsresult AccessibleWrap::HandleAccEvent(AccEvent* aEvent) {
       break;
     case nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED: {
       AccVCChangeEvent* vcEvent = downcast_accEvent(aEvent);
-      auto newPosition = static_cast<AccessibleWrap*>(vcEvent->NewAccessible());
+      RefPtr<AccessibleWrap> newPosition =
+          static_cast<AccessibleWrap*>(vcEvent->NewAccessible());
       auto oldPosition = static_cast<AccessibleWrap*>(vcEvent->OldAccessible());
 
       if (sessionAcc && newPosition) {

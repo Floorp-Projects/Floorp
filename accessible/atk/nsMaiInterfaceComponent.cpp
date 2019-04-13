@@ -47,10 +47,10 @@ static gboolean grabFocusCB(AtkComponent* aComponent) {
 }
 
 // ScrollType is compatible
+MOZ_CAN_RUN_SCRIPT_BOUNDARY
 static gboolean scrollToCB(AtkComponent* aComponent, AtkScrollType type) {
   AtkObject* atkObject = ATK_OBJECT(aComponent);
-  AccessibleWrap* accWrap = GetAccessibleWrap(atkObject);
-  if (accWrap) {
+  if (RefPtr<AccessibleWrap> accWrap = GetAccessibleWrap(atkObject)) {
     accWrap->ScrollTo(type);
     return TRUE;
   }

@@ -123,7 +123,7 @@ void a11y::ProxyVirtualCursorChangeEvent(
     return;
   }
 
-  SessionAccessibility* sessionAcc =
+  RefPtr<SessionAccessibility> sessionAcc =
       SessionAccessibility::GetInstanceFor(aTarget);
 
   if (!sessionAcc) {
@@ -134,7 +134,8 @@ void a11y::ProxyVirtualCursorChangeEvent(
     if (aReason == nsIAccessiblePivot::REASON_POINT) {
       sessionAcc->SendHoverEnterEvent(WrapperFor(aNewPosition));
     } else {
-      sessionAcc->SendAccessibilityFocusedEvent(WrapperFor(aNewPosition));
+      RefPtr<AccessibleWrap> wrapperForNewPosition = WrapperFor(aNewPosition);
+      sessionAcc->SendAccessibilityFocusedEvent(wrapperForNewPosition);
     }
   }
 

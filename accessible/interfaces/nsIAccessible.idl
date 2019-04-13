@@ -285,6 +285,7 @@ interface nsIAccessible : nsISupports
    *                     the screen (see nsIAccessibleScrollType for
    *                     available constants).
    */
+  [can_run_script]
   void scrollTo(in unsigned long aScrollType);
 
   /**

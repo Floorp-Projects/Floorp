@@ -542,6 +542,7 @@ class Accessible : public nsISupports {
   /**
    * Scroll the accessible into view.
    */
+  MOZ_CAN_RUN_SCRIPT
   virtual void ScrollTo(uint32_t aHow) const;
 
   /**
@@ -1104,6 +1105,7 @@ class Accessible : public nsISupports {
   /**
    * Dispatch click event.
    */
+  MOZ_CAN_RUN_SCRIPT
   virtual void DispatchClickEvent(nsIContent* aContent,
                                   uint32_t aActionIndex) const;
 

@@ -735,7 +735,8 @@ xpcAccessible::ScrollTo(uint32_t aHow) {
     proxy->ScrollTo(aHow);
 #endif
   } else {
-    Intl()->ScrollTo(aHow);
+    RefPtr<Accessible> intl = Intl();
+    intl->ScrollTo(aHow);
   }
 
   return NS_OK;

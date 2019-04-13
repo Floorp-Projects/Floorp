@@ -641,7 +641,9 @@ void XULTreeGridCellAccessible::DispatchClickEvent(
     nsIContent* aContent, uint32_t aActionIndex) const {
   if (IsDefunct()) return;
 
-  nsCoreUtils::DispatchClickEvent(mTree, mRow, mColumn);
+  RefPtr<dom::XULTreeElement> tree = mTree;
+  RefPtr<nsTreeColumn> column = mColumn;
+  nsCoreUtils::DispatchClickEvent(tree, mRow, column);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

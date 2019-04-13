@@ -262,7 +262,8 @@ sdnAccessible::get_computedStyleForProperties(
   return S_OK;
 }
 
-STDMETHODIMP
+// XXX Use MOZ_CAN_RUN_SCRIPT_BOUNDARY for now due to bug 1543294.
+MOZ_CAN_RUN_SCRIPT_BOUNDARY STDMETHODIMP
 sdnAccessible::scrollTo(boolean aScrollTopLeft) {
   DocAccessible* document = GetDocument();
   if (!document)  // that's IsDefunct check
@@ -274,7 +275,9 @@ sdnAccessible::scrollTo(boolean aScrollTopLeft) {
                             ? nsIAccessibleScrollType::SCROLL_TYPE_TOP_LEFT
                             : nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_RIGHT;
 
-  nsCoreUtils::ScrollTo(document->PresShell(), mNode->AsContent(), scrollType);
+  nsCOMPtr<nsIPresShell> presShell = document->PresShell();
+  nsCOMPtr<nsIContent> content = mNode->AsContent();
+  nsCoreUtils::ScrollTo(presShell, content, scrollType);
   return S_OK;
 }
 

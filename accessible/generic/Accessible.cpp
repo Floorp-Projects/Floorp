@@ -1800,9 +1800,12 @@ void Accessible::DoCommand(nsIContent* aContent, uint32_t aActionIndex) const {
           mContent(aContent),
           mIdx(aIdx) {}
 
-    NS_IMETHOD Run() override {
-      if (mAcc) mAcc->DispatchClickEvent(mContent, mIdx);
-
+    // XXX Cannot mark as MOZ_CAN_RUN_SCRIPT because the base class change
+    //     requires too big changes across a lot of modules.
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
+      if (mAcc) {
+        MOZ_KnownLive(mAcc)->DispatchClickEvent(MOZ_KnownLive(mContent), mIdx);
+      }
       return NS_OK;
     }
 

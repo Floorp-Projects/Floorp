@@ -43,6 +43,7 @@ class ProxyAccessibleWrap : public AccessibleWrap {
 
   virtual nsIntRect Bounds() const override;
 
+  MOZ_CAN_RUN_SCRIPT
   virtual void ScrollTo(uint32_t aHow) const override;
 
   virtual uint8_t ActionCount() const override;

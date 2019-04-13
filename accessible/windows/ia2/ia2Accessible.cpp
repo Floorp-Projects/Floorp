@@ -180,14 +180,16 @@ ia2Accessible::role(long* aRole) {
   return S_OK;
 }
 
-STDMETHODIMP
+// XXX Use MOZ_CAN_RUN_SCRIPT_BOUNDARY for now due to bug 1543294.
+MOZ_CAN_RUN_SCRIPT_BOUNDARY STDMETHODIMP
 ia2Accessible::scrollTo(enum IA2ScrollType aScrollType) {
   AccessibleWrap* acc = static_cast<AccessibleWrap*>(this);
   if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   MOZ_ASSERT(!acc->IsProxy());
-  nsCoreUtils::ScrollTo(acc->Document()->PresShell(), acc->GetContent(),
-                        aScrollType);
+  nsCOMPtr<nsIPresShell> presShell = acc->Document()->PresShell();
+  nsCOMPtr<nsIContent> content = acc->GetContent();
+  nsCoreUtils::ScrollTo(presShell, content, aScrollType);
 
   return S_OK;
 }
