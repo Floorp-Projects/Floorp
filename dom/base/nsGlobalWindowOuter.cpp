@@ -3816,13 +3816,13 @@ nsresult nsGlobalWindowOuter::SetDocShellWidthAndHeight(int32_t aInnerWidth,
                                                         int32_t aInnerHeight) {
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_FAILURE);
 
+  nsCOMPtr<nsIDocShell> docShell = mDocShell;
   nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-  mDocShell->GetTreeOwner(getter_AddRefs(treeOwner));
+  docShell->GetTreeOwner(getter_AddRefs(treeOwner));
   NS_ENSURE_TRUE(treeOwner, NS_ERROR_FAILURE);
 
-  NS_ENSURE_SUCCESS(
-      treeOwner->SizeShellTo(mDocShell, aInnerWidth, aInnerHeight),
-      NS_ERROR_FAILURE);
+  NS_ENSURE_SUCCESS(treeOwner->SizeShellTo(docShell, aInnerWidth, aInnerHeight),
+                    NS_ERROR_FAILURE);
 
   return NS_OK;
 }
@@ -5331,8 +5331,9 @@ void nsGlobalWindowOuter::SizeToContentOuter(CallerType aCallerType,
 
   nsIntSize newDevSize(CSSToDevIntPixels(cssSize));
 
+  nsCOMPtr<nsIDocShell> docShell = mDocShell;
   aError =
-      treeOwner->SizeShellTo(mDocShell, newDevSize.width, newDevSize.height);
+      treeOwner->SizeShellTo(docShell, newDevSize.width, newDevSize.height);
 }
 
 already_AddRefed<nsPIWindowRoot> nsGlobalWindowOuter::GetTopWindowRoot() {
