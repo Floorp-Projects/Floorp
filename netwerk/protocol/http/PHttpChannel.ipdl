@@ -126,7 +126,6 @@ child:
                        int64_t             altDataLength,
                        bool                deliveringAltData,
                        bool                applyConversion,
-                       bool                isResolvedByTRR,
                        ResourceTimingStruct timing);
 
   // Used to cancel child channel if we hit errors during creating and

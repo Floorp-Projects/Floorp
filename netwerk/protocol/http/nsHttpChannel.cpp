@@ -617,7 +617,7 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
     }
   }
 
-  if (mIsTRRServiceChannel) {
+  if (mTRR) {
     mCaps |= NS_HTTP_LARGE_KEEPALIVE | NS_HTTP_DISABLE_TRR;
   }
 
@@ -632,7 +632,7 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
   mConnectionInfo->SetBeConservative((mCaps & NS_HTTP_BE_CONSERVATIVE) ||
                                      mBeConservative);
   mConnectionInfo->SetTlsFlags(mTlsFlags);
-  mConnectionInfo->SetIsTrrServiceChannel(mIsTRRServiceChannel);
+  mConnectionInfo->SetTrrUsed(mTRR);
   mConnectionInfo->SetTrrDisabled(mCaps & NS_HTTP_DISABLE_TRR);
   mConnectionInfo->SetIPv4Disabled(mCaps & NS_HTTP_DISABLE_IPV4);
   mConnectionInfo->SetIPv6Disabled(mCaps & NS_HTTP_DISABLE_IPV6);
@@ -4037,7 +4037,7 @@ nsresult nsHttpChannel::OpenCacheEntryInternal(
   if (mPostID) {
     extension.Append(nsPrintfCString("%d", mPostID));
   }
-  if (mIsTRRServiceChannel) {
+  if (mTRR) {
     extension.Append("TRR");
   }
 
@@ -8429,15 +8429,11 @@ nsHttpChannel::OnTransportStatus(nsITransport *trans, nsresult status,
       status == NS_NET_STATUS_WAITING_FOR) {
     if (mTransaction) {
       mTransaction->GetNetworkAddresses(mSelfAddr, mPeerAddr);
-      mResolvedByTRR = mTransaction->ResolvedByTRR();
     } else {
       nsCOMPtr<nsISocketTransport> socketTransport = do_QueryInterface(trans);
       if (socketTransport) {
         socketTransport->GetSelfAddr(&mSelfAddr);
         socketTransport->GetPeerAddr(&mPeerAddr);
-        bool isTrr = false;
-        socketTransport->ResolvedByTRR(&isTrr);
-        mResolvedByTRR = isTrr;
       }
     }
   }
