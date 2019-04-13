@@ -710,6 +710,7 @@ class Selection final : public nsSupportsWeakReference,
    */
   nsresult GetTableSelectionType(nsRange* aRange,
                                  TableSelection* aTableSelectionType);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult GetTableCellLocationFromRange(nsRange* aRange,
                                          TableSelection* aSelectionType,
                                          int32_t* aRow, int32_t* aCol);

@@ -321,7 +321,7 @@ void nsTypeAheadFind::PlayNotFoundSound() {
   }
 }
 
-nsresult nsTypeAheadFind::FindItNow(nsIPresShell* aPresShell, bool aIsLinksOnly,
+nsresult nsTypeAheadFind::FindItNow(bool aIsLinksOnly,
                                     bool aIsFirstVisiblePreferred,
                                     bool aFindPrev, uint16_t* aResult) {
   *aResult = FIND_NOTFOUND;
@@ -338,12 +338,9 @@ nsresult nsTypeAheadFind::FindItNow(nsIPresShell* aPresShell, bool aIsLinksOnly,
     mPresShell = do_GetWeakReference(startingPresShell);
   }
 
-  nsCOMPtr<nsIPresShell> presShell(aPresShell);
-
+  nsCOMPtr<nsIPresShell> presShell = startingPresShell;
   if (!presShell) {
-    presShell = startingPresShell;  // this is the current document
-
-    if (!presShell) return NS_ERROR_FAILURE;
+    return NS_ERROR_FAILURE;
   }
 
   // There could be unflushed notifications which hide textareas or other
@@ -951,7 +948,7 @@ nsTypeAheadFind::FindAgain(bool aFindBackwards, bool aLinksOnly,
   if (!mTypeAheadBuffer.IsEmpty())
     // Beware! This may flush notifications via synchronous
     // ScrollSelectionIntoView.
-    FindItNow(nullptr, aLinksOnly, false, aFindBackwards, aResult);
+    FindItNow(aLinksOnly, false, aFindBackwards, aResult);
 
   return NS_OK;
 }
@@ -1064,8 +1061,7 @@ nsTypeAheadFind::Find(const nsAString& aSearchString, bool aLinksOnly,
   // ----------- Find the text! ---------------------
   // Beware! This may flush notifications via synchronous
   // ScrollSelectionIntoView.
-  nsresult rv =
-      FindItNow(nullptr, aLinksOnly, isFirstVisiblePreferred, false, aResult);
+  nsresult rv = FindItNow(aLinksOnly, isFirstVisiblePreferred, false, aResult);
 
   // ---------Handle success or failure ---------------
   if (NS_SUCCEEDED(rv)) {

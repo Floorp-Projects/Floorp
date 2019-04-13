@@ -539,8 +539,7 @@ nsMenuPopupFrame* nsXULPopupManager::GetPopupFrameForContent(
   if (aShouldFlush) {
     Document* document = aContent->GetUncomposedDoc();
     if (document) {
-      RefPtr<PresShell> presShell = document->GetPresShell();
-      if (presShell) {
+      if (RefPtr<PresShell> presShell = document->GetPresShell()) {
         presShell->FlushPendingNotifications(FlushType::Layout);
       }
     }
@@ -972,9 +971,9 @@ void nsXULPopupManager::HidePopup(nsIContent* aPopup, bool aHideChain,
           deselectMenu, aIsCancel);
       aPopup->OwnerDoc()->Dispatch(TaskCategory::Other, event.forget());
     } else {
-      FirePopupHidingEvent(popupToHide, nextPopup, lastPopup,
-                           popupFrame->PresContext(), popupFrame->PopupType(),
-                           deselectMenu, aIsCancel);
+      RefPtr<nsPresContext> presContext = popupFrame->PresContext();
+      FirePopupHidingEvent(popupToHide, nextPopup, lastPopup, presContext,
+                           popupFrame->PopupType(), deselectMenu, aIsCancel);
     }
   }
 }
@@ -1093,9 +1092,9 @@ void nsXULPopupManager::HidePopupCallback(
       if (state == ePopupHiding) return;
       if (state != ePopupInvisible) popupFrame->SetPopupState(ePopupHiding);
 
-      FirePopupHidingEvent(popupToHide, nextPopup, aLastPopup,
-                           popupFrame->PresContext(), foundMenu->PopupType(),
-                           aDeselectMenu, false);
+      RefPtr<nsPresContext> presContext = popupFrame->PresContext();
+      FirePopupHidingEvent(popupToHide, nextPopup, aLastPopup, presContext,
+                           foundMenu->PopupType(), aDeselectMenu, false);
     }
   }
 }
@@ -1553,8 +1552,9 @@ already_AddRefed<nsINode> nsXULPopupManager::GetLastTriggerNode(
   // the list of open popups.
   if (mOpeningPopup && mOpeningPopup->GetUncomposedDoc() == aDocument &&
       aIsTooltip == mOpeningPopup->IsXULElement(nsGkAtoms::tooltip)) {
+    nsCOMPtr<nsIContent> openingPopup = mOpeningPopup;
     node = nsMenuPopupFrame::GetTriggerContent(
-        GetPopupFrameForContent(mOpeningPopup, false));
+        GetPopupFrameForContent(openingPopup, false));
   } else {
     nsMenuChainItem* item = mPopups;
     while (item) {
@@ -2557,17 +2557,17 @@ nsXULPopupShowingEvent::Run() {
 
 NS_IMETHODIMP
 nsXULPopupHidingEvent::Run() {
-  nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
-
+  RefPtr<nsXULPopupManager> pm = nsXULPopupManager::GetInstance();
   Document* document = mPopup->GetUncomposedDoc();
   if (pm && document) {
-    nsPresContext* context = document->GetPresContext();
-    if (context) {
-      pm->FirePopupHidingEvent(mPopup, mNextPopup, mLastPopup, context,
+    if (RefPtr<nsPresContext> presContext = document->GetPresContext()) {
+      nsCOMPtr<nsIContent> popup = mPopup;
+      nsCOMPtr<nsIContent> nextPopup = mNextPopup;
+      nsCOMPtr<nsIContent> lastPopup = mLastPopup;
+      pm->FirePopupHidingEvent(popup, nextPopup, lastPopup, presContext,
                                mPopupType, mDeselectMenu, mIsRollup);
     }
   }
-
   return NS_OK;
 }
 

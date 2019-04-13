@@ -21,9 +21,11 @@
 #include "nsRect.h"
 
 class nsIFrame;
-class nsIPresShell;
 
 namespace mozilla {
+
+class PresShell;
+
 namespace dom {
 
 class Element;
@@ -41,10 +43,8 @@ class BoxObject : public nsPIBoxObject, public nsWrapperCache {
   virtual void Clear() override;
   virtual void ClearCachedValues() override;
 
-  nsIFrame* GetFrame(bool aFlushLayout);
-  nsIPresShell* GetPresShell(bool aFlushLayout);
-  nsresult GetOffsetRect(nsIntRect& aRect);
-  nsresult GetScreenPosition(nsIntPoint& aPoint);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult GetOffsetRect(nsIntRect& aRect);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult GetScreenPosition(nsIntPoint& aPoint);
 
   // Given a parent frame and a child frame, find the frame whose
   // next sibling is the given child frame and return its element
@@ -81,6 +81,11 @@ class BoxObject : public nsPIBoxObject, public nsWrapperCache {
 
  protected:
   virtual ~BoxObject();
+
+  nsIFrame* GetFrame() const;
+  MOZ_CAN_RUN_SCRIPT nsIFrame* GetFrameWithFlushPendingNotifications();
+  PresShell* GetPresShell() const;
+  MOZ_CAN_RUN_SCRIPT PresShell* GetPresShellWithFlushPendingNotifications();
 
   nsAutoPtr<nsInterfaceHashtable<nsStringHashKey, nsISupports>> mPropertyTable;
 

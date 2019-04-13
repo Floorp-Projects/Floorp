@@ -1761,9 +1761,9 @@ bool TextEditor::FireClipboardEvent(EventMessage aEventMessage,
     return false;
   }
 
-  if (!nsCopySupport::FireClipboardEvent(aEventMessage, aSelectionType,
-                                         presShell, SelectionRefPtr(),
-                                         aActionTaken)) {
+  if (!nsCopySupport::FireClipboardEvent(
+          aEventMessage, aSelectionType, presShell,
+          MOZ_KnownLive(SelectionRefPtr()), aActionTaken)) {
     return false;
   }
 

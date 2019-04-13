@@ -394,6 +394,7 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame {
    * exception is text in a textPath where we need to ignore characters that
    * fall off the end of the textPath path.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult GetSubStringLengthSlowFallback(nsIContent* aContent,
                                           uint32_t charnum, uint32_t nchars,
                                           float* aResult);

@@ -478,7 +478,7 @@ class MOZ_STACK_CLASS nsPresShellEventCB : public EventDispatchingCallback {
         // layout. Bring layout up-to-date now so that GetCurrentEventFrame()
         // below will return a real frame and we don't have to worry about
         // destroying it by flushing later.
-        mPresShell->FlushPendingNotifications(FlushType::Layout);
+        MOZ_KnownLive(mPresShell)->FlushPendingNotifications(FlushType::Layout);
       } else if (aVisitor.mEvent->mMessage == eWheel &&
                  aVisitor.mEventStatus != nsEventStatus_eConsumeNoDefault) {
         nsIFrame* frame = mPresShell->GetCurrentEventFrame();
@@ -6737,7 +6737,7 @@ bool PresShell::EventHandler::MaybeFlushPendingNotifications(
       uint64_t framesConstructedCount = presContext->FramesConstructedCount();
       uint64_t framesReflowedCount = presContext->FramesReflowedCount();
 
-      mPresShell->FlushPendingNotifications(FlushType::Layout);
+      MOZ_KnownLive(mPresShell)->FlushPendingNotifications(FlushType::Layout);
       return framesConstructedCount != presContext->FramesConstructedCount() ||
              framesReflowedCount != presContext->FramesReflowedCount();
     }
