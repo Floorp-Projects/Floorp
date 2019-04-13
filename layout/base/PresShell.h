@@ -364,6 +364,13 @@ class PresShell final : public nsIPresShell,
   MOZ_CAN_RUN_SCRIPT bool ProcessReflowCommands(bool aInterruptible);
 
   /**
+   * Callback handler for whether reflow happened.
+   *
+   * @param aInterruptible Whether or not reflow interruption is allowed.
+   */
+  MOZ_CAN_RUN_SCRIPT void DidDoReflow(bool aInterruptible);
+
+  /**
    * Initialize cached font inflation preference values and do an initial
    * computation to determine if font inflation is enabled.
    *
