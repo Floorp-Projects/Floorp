@@ -68,7 +68,6 @@ addon-list .addon.card {
 .addon-name {
   font-size: 16px;
   font-weight: 600;
-  color: var(--grey-90);
   line-height: 22px;
   /* Subtract the top line-height so the text and icon align at the top. */
   margin-top: -3px;
@@ -194,6 +193,8 @@ button[action="more-options"] {
   width: 24px;
   height: 24px;
   margin: 0;
+  -moz-context-properties: fill;
+  fill: currentColor;
   background: url("chrome://global/skin/icons/more.svg") no-repeat center center;
 }
 
