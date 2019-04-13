@@ -1,0 +1,83 @@
+/**
+ * We add the #picture-in-picture-flyout-container and
+ * #picture-in-picture-toggle IDs here so that it's easier to read these
+ * property values in script, since they're AnonymousContent, and we need
+ * IDs and can't use classes to query AnonymousContent property values.
+ */
+#picture-in-picture-flyout-container:-moz-native-anonymous,
+#picture-in-picture-toggle:-moz-native-anonymous,
+.picture-in-picture-toggle-button:-moz-native-anonymous {
+  --pip-toggle-bgcolor: rgb(0, 96, 223);
+  --pip-toggle-text-and-icon-color: rgb(255, 255, 255);
+  --pip-toggle-padding: 5px;
+  --pip-toggle-icon-width-height: 16px;
+}
+
+.picture-in-picture-toggle-button:-moz-native-anonymous {
+  -moz-appearance: none;
+  display: flex;
+  position: absolute;
+  background-color: var(--pip-toggle-bgcolor);
+  border: 0;
+  padding: var(--pip-toggle-padding);
+  color: var(--pip-toggle-text-and-icon-color);
+  transform: translateX(0);
+  transition: transform 350ms linear;
+  min-width: max-content;
+  pointer-events: auto;
+  opacity: 0.8;
+}
+
+.picture-in-picture-toggle-button:-moz-native-anonymous:hover,
+.picture-in-picture-toggle-button:-moz-native-anonymous:active {
+  opacity: 1;
+  background-color: var(--pip-toggle-bgcolor);
+  color: var(--pip-toggle-text-and-icon-color);
+  padding: var(--pip-toggle-padding);
+}
+
+#picture-in-picture-flyout-container[hidden]:-moz-native-anonymous,
+.picture-in-picture-toggle-button[hidden]:-moz-native-anonymous {
+  display: none;
+}
+
+.picture-in-picture-toggle-button:-moz-native-anonymous > .icon {
+  display: inline-block;
+  background-image: url(chrome://global/skin/media/pictureinpicture.svg);
+  background-position: center left;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill, stroke;
+  fill: var(--pip-toggle-text-and-icon-color);
+  stroke: var(--pip-toggle-text-and-icon-color);
+  width: var(--pip-toggle-icon-width-height);
+  height: var(--pip-toggle-icon-width-height);
+  min-width: max-content;
+  pointer-events: none;
+}
+
+.picture-in-picture-toggle-button:-moz-native-anonymous > .label {
+  margin-left: var(--pip-toggle-padding);
+  min-width: max-content;
+  pointer-events: none;
+}
+
+#picture-in-picture-flyout-container:-moz-native-anonymous {
+  position: absolute;
+  /**
+   * A higher z-index makes sure that the flyout always appears on top of the
+   * other toggle, so that we avoid seeing double-toggles.
+   */
+  z-index: 2;
+  overflow: hidden;
+  /**
+   * This places the container for the flyout in the position where the flyout
+   * eventually ends up. This, coupled with the overflow: hidden, gives the
+   * effect that the flyout is sliding out from the edge of the video.
+   */
+  transform: translateX(calc(-100% + var(--pip-toggle-icon-width-height) + 2 * var(--pip-toggle-padding)));
+}
+
+#picture-in-picture-flyout-container:-moz-native-anonymous > .picture-in-picture-toggle-button {
+  position: relative;
+  opacity: 1;
+}
