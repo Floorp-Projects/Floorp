@@ -3903,7 +3903,7 @@ void nsIPresShell::CancelPostedReflowCallbacks() {
   }
 }
 
-void nsIPresShell::HandlePostedReflowCallbacks(bool aInterruptible) {
+void PresShell::HandlePostedReflowCallbacks(bool aInterruptible) {
   bool shouldFlush = false;
 
   while (mFirstCallbackEventRequest) {
