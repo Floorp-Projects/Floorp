@@ -6,7 +6,9 @@
 
 #include "nsMai.h"
 #include "DocAccessibleWrap.h"
+#include "mozilla/PresShell.h"
 
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -14,7 +16,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 DocAccessibleWrap::DocAccessibleWrap(dom::Document* aDocument,
-                                     nsIPresShell* aPresShell)
+                                     PresShell* aPresShell)
     : DocAccessible(aDocument, aPresShell), mActivated(false) {}
 
 DocAccessibleWrap::~DocAccessibleWrap() {}

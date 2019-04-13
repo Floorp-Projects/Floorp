@@ -13,6 +13,7 @@
 
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/Telemetry.h"
 
 using namespace mozilla;
@@ -24,7 +25,7 @@ using namespace mozilla::dom;
 ////////////////////////////////////////////////////////////////////////////////
 
 NotificationController::NotificationController(DocAccessible* aDocument,
-                                               nsIPresShell* aPresShell)
+                                               PresShell* aPresShell)
     : EventQueue(aDocument),
       mObservingState(eNotObservingRefresh),
       mPresShell(aPresShell),

@@ -7,7 +7,6 @@
 
 interface nsIAccessible;
 interface nsIWeakReference;
-interface nsIPresShell;
 interface nsIAccessiblePivot;
 
 webidl Node;

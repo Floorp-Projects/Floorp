@@ -10,11 +10,14 @@
 #include "nsITimer.h"
 
 namespace mozilla {
+
+class PresShell;
+
 namespace a11y {
 
 class DocAccessibleWrap : public DocAccessible {
  public:
-  DocAccessibleWrap(Document* aDocument, nsIPresShell* aPresShell);
+  DocAccessibleWrap(Document* aDocument, PresShell* aPresShell);
   virtual ~DocAccessibleWrap();
 
   virtual nsresult HandleAccEvent(AccEvent* aEvent) override;

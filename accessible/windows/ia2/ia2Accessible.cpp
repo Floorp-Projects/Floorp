@@ -22,6 +22,7 @@
 #include "TextRange-inl.h"
 #include "nsAccessibilityService.h"
 
+#include "mozilla/PresShell.h"
 #include "nsIPersistentProperties2.h"
 #include "nsISimpleEnumerator.h"
 
@@ -187,7 +188,7 @@ ia2Accessible::scrollTo(enum IA2ScrollType aScrollType) {
   if (acc->IsDefunct()) return CO_E_OBJNOTCONNECTED;
 
   MOZ_ASSERT(!acc->IsProxy());
-  nsCOMPtr<nsIPresShell> presShell = acc->Document()->PresShell();
+  RefPtr<PresShell> presShell = acc->Document()->PresShellPtr();
   nsCOMPtr<nsIContent> content = acc->GetContent();
   nsCoreUtils::ScrollTo(presShell, content, aScrollType);
 
