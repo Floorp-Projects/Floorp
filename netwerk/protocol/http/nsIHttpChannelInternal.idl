@@ -243,14 +243,7 @@ interface nsIHttpChannelInternal : nsISupports
      * True if channel is used by the internal trusted recursive resolver
      * This flag places data for the request in a cache segment specific to TRR
      */
-    [noscript, must_use] attribute boolean isTRRServiceChannel;
-
-    /**
-     * If the channel's remote IP was resolved using TRR.
-     * Is false for resources loaded from the cache or resources that have an
-     * IP literal host.
-     */
-    [noscript, must_use] readonly attribute boolean isResolvedByTRR;
+    [noscript, must_use] attribute boolean trr;
 
     /**
      * An opaque flags for non-standard behavior of the TLS system.

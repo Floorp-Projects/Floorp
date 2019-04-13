@@ -95,7 +95,7 @@ class PreEffectsVisualOverflowCollector : public nsLayoutUtils::BoxCallback {
     if (nsSVGIntegrationUtils::UsingOverflowAffectingEffects(aFrame) &&
         !aInReflow) {
       nsOverflowAreas* preTransformOverflows =
-          aFrame->GetProperty(aFrame->PreTransformOverflowAreasProperty());
+          aFrame->GetProperty(nsIFrame::PreTransformOverflowAreasProperty());
 
       MOZ_ASSERT(!preTransformOverflows,
                  "GetVisualOverflowRect() won't return the pre-effects rect!");

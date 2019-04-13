@@ -276,9 +276,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   NS_IMETHOD SetAllowAltSvc(bool aAllowAltSvc) override;
   NS_IMETHOD GetBeConservative(bool *aBeConservative) override;
   NS_IMETHOD SetBeConservative(bool aBeConservative) override;
-  NS_IMETHOD GetIsTRRServiceChannel(bool *aTRR) override;
-  NS_IMETHOD SetIsTRRServiceChannel(bool aTRR) override;
-  NS_IMETHOD GetIsResolvedByTRR(bool *aResolvedByTRR) override;
+  NS_IMETHOD GetTrr(bool *aTRR) override;
+  NS_IMETHOD SetTrr(bool aTRR) override;
   NS_IMETHOD GetTlsFlags(uint32_t *aTlsFlags) override;
   NS_IMETHOD SetTlsFlags(uint32_t aTlsFlags) override;
   NS_IMETHOD GetApiRedirectToURI(nsIURI **aApiRedirectToURI) override;
@@ -702,12 +701,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // classification. If this is changed or removed, make sure we also update
   // NS_ShouldClassifyChannel accordingly !!!
   uint32_t mBeConservative : 1;
-  // If the current channel is used to as a TRR connection.
-  uint32_t mIsTRRServiceChannel : 1;
-  // If the request was performed to a TRR resolved IP address.
-  // Will be false if loading the resource does not create a connection
-  // (for example when it's loaded from the cache).
-  uint32_t mResolvedByTRR : 1;
+  uint32_t mTRR : 1;
   uint32_t mResponseTimeoutEnabled : 1;
   // A flag that should be false only if a cross-domain redirect occurred
   uint32_t mAllRedirectsSameOrigin : 1;
