@@ -145,8 +145,6 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   bool IsCloningElementVisually() const { return !!mVisualCloneTarget; }
 
-  void TogglePictureInPicture(ErrorResult& rv);
-
  protected:
   virtual ~HTMLVideoElement();
 

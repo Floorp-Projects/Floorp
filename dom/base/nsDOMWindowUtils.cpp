@@ -1155,8 +1155,7 @@ NS_IMETHODIMP
 nsDOMWindowUtils::NodesFromRect(float aX, float aY, float aTopSize,
                                 float aRightSize, float aBottomSize,
                                 float aLeftSize, bool aIgnoreRootScrollFrame,
-                                bool aFlushLayout, bool aOnlyVisible,
-                                nsINodeList** aReturn) {
+                                bool aFlushLayout, nsINodeList** aReturn) {
   nsCOMPtr<Document> doc = GetDocument();
   NS_ENSURE_STATE(doc);
 
@@ -1166,8 +1165,7 @@ nsDOMWindowUtils::NodesFromRect(float aX, float aY, float aTopSize,
 
   AutoTArray<RefPtr<nsINode>, 8> nodes;
   doc->NodesFromRect(aX, aY, aTopSize, aRightSize, aBottomSize, aLeftSize,
-                     aIgnoreRootScrollFrame, aFlushLayout, aOnlyVisible,
-                     nodes);
+                     aIgnoreRootScrollFrame, aFlushLayout, nodes);
   list->SetCapacity(nodes.Length());
   for (auto& node : nodes) {
     list->AppendElement(node->AsContent());
