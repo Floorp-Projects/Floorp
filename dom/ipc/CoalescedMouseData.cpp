@@ -8,6 +8,8 @@
 #include "CoalescedMouseData.h"
 #include "TabChild.h"
 
+#include "mozilla/PresShell.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -92,7 +94,7 @@ void CoalescedMouseMoveFlusher::RemoveObserver() {
 }
 
 nsRefreshDriver* CoalescedMouseMoveFlusher::GetRefreshDriver() {
-  nsCOMPtr<nsIPresShell> presShell = mTabChild->GetPresShell();
+  PresShell* presShell = mTabChild->GetTopLevelPresShell();
   if (!presShell || !presShell->GetPresContext() ||
       !presShell->GetPresContext()->RefreshDriver()) {
     return nullptr;
