@@ -17,6 +17,7 @@
 #include "States.h"
 #include "TreeWalker.h"
 
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLTableElement.h"
 #include "nsIHTMLCollection.h"
 #include "mozilla/dom/Document.h"
@@ -699,7 +700,7 @@ nsresult HTMLTableAccessible::AddRowOrColumnToSelection(
   else
     count = RowCount();
 
-  nsIPresShell* presShell(mDoc->PresShell());
+  PresShell* presShell = mDoc->PresShellPtr();
   RefPtr<nsFrameSelection> tableSelection =
       const_cast<nsFrameSelection*>(presShell->ConstFrameSelection());
 
@@ -721,7 +722,7 @@ nsresult HTMLTableAccessible::RemoveRowsOrColumnsFromSelection(
   nsTableWrapperFrame* tableFrame = do_QueryFrame(mContent->GetPrimaryFrame());
   if (!tableFrame) return NS_OK;
 
-  nsIPresShell* presShell(mDoc->PresShell());
+  PresShell* presShell = mDoc->PresShellPtr();
   RefPtr<nsFrameSelection> tableSelection =
       const_cast<nsFrameSelection*>(presShell->ConstFrameSelection());
 

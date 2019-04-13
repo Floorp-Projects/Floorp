@@ -10,11 +10,13 @@
 #include "DocAccessibleParent.h"
 #include "ProxyAccessibleWrap.h"
 #include "SessionAccessibility.h"
+#include "mozilla/PresShell.h"
 
+using namespace mozilla;
 using namespace mozilla::a11y;
 
-RootAccessibleWrap::RootAccessibleWrap(mozilla::dom::Document* aDoc,
-                                       nsIPresShell* aPresShell)
+RootAccessibleWrap::RootAccessibleWrap(dom::Document* aDoc,
+                                       PresShell* aPresShell)
     : RootAccessible(aDoc, aPresShell) {}
 
 RootAccessibleWrap::~RootAccessibleWrap() {}

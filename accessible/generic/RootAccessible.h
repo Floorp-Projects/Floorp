@@ -12,13 +12,16 @@
 #include "nsIDOMEventListener.h"
 
 namespace mozilla {
+
+class PresShell;
+
 namespace a11y {
 
 class RootAccessible : public DocAccessibleWrap, public nsIDOMEventListener {
   NS_DECL_ISUPPORTS_INHERITED
 
  public:
-  RootAccessible(dom::Document* aDocument, nsIPresShell* aPresShell);
+  RootAccessible(dom::Document* aDocument, PresShell* aPresShell);
 
   // nsIDOMEventListener
   NS_DECL_NSIDOMEVENTLISTENER

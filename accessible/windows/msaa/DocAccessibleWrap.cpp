@@ -7,6 +7,7 @@
 #include "DocAccessibleWrap.h"
 
 #include "Compatibility.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/TabChild.h"
 #include "DocAccessibleChild.h"
 #include "nsWinUtils.h"
@@ -26,7 +27,7 @@ using namespace mozilla::a11y;
 ////////////////////////////////////////////////////////////////////////////////
 
 DocAccessibleWrap::DocAccessibleWrap(dom::Document* aDocument,
-                                     nsIPresShell* aPresShell)
+                                     PresShell* aPresShell)
     : DocAccessible(aDocument, aPresShell), mHWND(nullptr) {}
 
 DocAccessibleWrap::~DocAccessibleWrap() {}

@@ -1418,7 +1418,7 @@ int32_t HyperTextAccessible::CaretLineNumber() {
 LayoutDeviceIntRect HyperTextAccessible::GetCaretRect(nsIWidget** aWidget) {
   *aWidget = nullptr;
 
-  RefPtr<nsCaret> caret = mDoc->PresShell()->GetCaret();
+  RefPtr<nsCaret> caret = mDoc->PresShellPtr()->GetCaret();
   NS_ENSURE_TRUE(caret, LayoutDeviceIntRect());
 
   bool isVisible = caret->IsVisible();

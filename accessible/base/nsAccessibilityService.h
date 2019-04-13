@@ -158,38 +158,38 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
    * Notification used to update the accessible tree when deck panel is
    * switched.
    */
-  void DeckPanelSwitched(nsIPresShell* aPresShell, nsIContent* aDeckNode,
+  void DeckPanelSwitched(mozilla::PresShell* aPresShell, nsIContent* aDeckNode,
                          nsIFrame* aPrevBoxFrame, nsIFrame* aCurrentBoxFrame);
 
   /**
    * Notification used to update the accessible tree when new content is
    * inserted.
    */
-  void ContentRangeInserted(nsIPresShell* aPresShell, nsIContent* aStartChild,
-                            nsIContent* aEndChild);
+  void ContentRangeInserted(mozilla::PresShell* aPresShell,
+                            nsIContent* aStartChild, nsIContent* aEndChild);
 
   /**
    * Notification used to update the accessible tree when content is removed.
    */
-  void ContentRemoved(nsIPresShell* aPresShell, nsIContent* aChild);
+  void ContentRemoved(mozilla::PresShell* aPresShell, nsIContent* aChild);
 
-  void UpdateText(nsIPresShell* aPresShell, nsIContent* aContent);
+  void UpdateText(mozilla::PresShell* aPresShell, nsIContent* aContent);
 
   /**
    * Update XUL:tree accessible tree when treeview is changed.
    */
-  void TreeViewChanged(nsIPresShell* aPresShell, nsIContent* aContent,
+  void TreeViewChanged(mozilla::PresShell* aPresShell, nsIContent* aContent,
                        nsITreeView* aView);
 
   /**
    * Notify of input@type="element" value change.
    */
-  void RangeValueChanged(nsIPresShell* aPresShell, nsIContent* aContent);
+  void RangeValueChanged(mozilla::PresShell* aPresShell, nsIContent* aContent);
 
   /**
    * Update list bullet accessible.
    */
-  void UpdateListBullet(nsIPresShell* aPresShell,
+  void UpdateListBullet(mozilla::PresShell* aPresShell,
                         nsIContent* aHTMLListItemContent, bool aHasBullet);
 
   /**
@@ -200,7 +200,7 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
   /**
    * Update the label accessible tree when rendered @value is changed.
    */
-  void UpdateLabelValue(nsIPresShell* aPresShell, nsIContent* aLabelElm,
+  void UpdateLabelValue(mozilla::PresShell* aPresShell, nsIContent* aLabelElm,
                         const nsString& aNewValue);
 
   /**
@@ -212,12 +212,12 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
   /**
    * Notify that presshell is activated.
    */
-  void PresShellActivated(nsIPresShell* aPresShell);
+  void PresShellActivated(mozilla::PresShell* aPresShell);
 
   /**
    * Recreate an accessible for the given content node in the presshell.
    */
-  void RecreateAccessible(nsIPresShell* aPresShell, nsIContent* aContent);
+  void RecreateAccessible(mozilla::PresShell* aPresShell, nsIContent* aContent);
 
   void FireAccessibleEvent(uint32_t aEvent, Accessible* aTarget);
 
