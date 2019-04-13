@@ -245,8 +245,9 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvScrollTo(
     const uint64_t& aID, const uint32_t& aScrollType) {
   Accessible* acc = IdToAccessible(aID);
   if (acc) {
-    nsCoreUtils::ScrollTo(acc->Document()->PresShell(), acc->GetContent(),
-                          aScrollType);
+    nsCOMPtr<nsIPresShell> presShell = acc->Document()->PresShell();
+    nsCOMPtr<nsIContent> content = acc->GetContent();
+    nsCoreUtils::ScrollTo(presShell, content, aScrollType);
   }
 
   return IPC_OK();

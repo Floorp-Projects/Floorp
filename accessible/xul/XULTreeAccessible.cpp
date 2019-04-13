@@ -850,7 +850,10 @@ void XULTreeItemAccessibleBase::DispatchClickEvent(
     pseudoElm = NS_LITERAL_STRING("twisty");
   }
 
-  if (column) nsCoreUtils::DispatchClickEvent(mTree, mRow, column, pseudoElm);
+  if (column) {
+    RefPtr<dom::XULTreeElement> tree = mTree;
+    nsCoreUtils::DispatchClickEvent(tree, mRow, column, pseudoElm);
+  }
 }
 
 Accessible* XULTreeItemAccessibleBase::GetSiblingAtOffset(
