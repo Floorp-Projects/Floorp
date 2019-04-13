@@ -232,6 +232,9 @@
         <action
             android:id="@+id/action_settingsFragment_to_themeFragment"
             app:destination="@id/themeFragment" />
+        <action
+            android:id="@+id/action_settingsFragment_to_trackingProtectionFragment"
+            app:destination="@id/trackingProtectionFragment" />
     </fragment>
     <fragment android:id="@+id/dataChoicesFragment" android:name="org.mozilla.fenix.settings.DataChoicesFragment"
               android:label="DataChoicesFragment"/>
@@ -277,4 +280,8 @@
         android:id="@+id/themeFragment"
         android:name="org.mozilla.fenix.settings.ThemeFragment"
         android:label="ThemeFragment" />
+    <fragment
+        android:id="@+id/trackingProtectionFragment"
+        android:name="org.mozilla.fenix.settings.TrackingProtectionFragment"
+        android:label="TrackingProtectionFragment" />
 </navigation>

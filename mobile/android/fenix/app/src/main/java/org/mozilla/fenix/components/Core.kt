@@ -5,10 +5,8 @@
 package org.mozilla.fenix.components
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.content.res.Configuration
 import android.os.Bundle
-import android.preference.PreferenceManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -60,13 +58,11 @@ class Core(private val context: Context) {
      * configuration (see build variants).
      */
     val engine: Engine by lazy {
-        val prefs = PreferenceManager.getDefaultSharedPreferences(context)
-
         val defaultSettings = DefaultSettings(
             requestInterceptor = AppRequestInterceptor(context),
             remoteDebuggingEnabled = Settings.getInstance(context).isRemoteDebuggingEnabled,
             testingModeEnabled = false,
-            trackingProtectionPolicy = createTrackingProtectionPolicy(prefs),
+            trackingProtectionPolicy = createTrackingProtectionPolicy(),
             historyTrackingDelegate = HistoryDelegate(historyStorage)
         )
 
@@ -133,17 +129,14 @@ class Core(private val context: Context) {
     /**
      * Constructs a [TrackingProtectionPolicy] based on current preferences.
      *
-     * @param prefs the shared preferences to use when reading tracking
-     * protection settings.
      * @param normalMode whether or not tracking protection should be enabled
      * in normal browsing mode, defaults to the current preference value.
      * @param privateMode whether or not tracking protection should be enabled
      * in private browsing mode, default to the current preference value.
      * @return the constructed tracking protection policy based on preferences.
      */
-    fun createTrackingProtectionPolicy(
-        prefs: SharedPreferences = PreferenceManager.getDefaultSharedPreferences(context),
-        normalMode: Boolean = true,
+    private fun createTrackingProtectionPolicy(
+        normalMode: Boolean = Settings.getInstance(context).shouldUseTrackingProtection,
         privateMode: Boolean = true
     ): TrackingProtectionPolicy {
         val trackingProtectionPolicy = TrackingProtectionPolicy.select(
@@ -158,6 +151,11 @@ class Core(private val context: Context) {
             !normalMode && privateMode -> trackingProtectionPolicy.forPrivateSessionsOnly()
             else -> TrackingProtectionPolicy.none()
         }
+    }
+
+    fun updateTrackingProtection(newValue: Boolean) {
+        engine.settings.trackingProtectionPolicy =
+            createTrackingProtectionPolicy(normalMode = newValue)
     }
 
     /**

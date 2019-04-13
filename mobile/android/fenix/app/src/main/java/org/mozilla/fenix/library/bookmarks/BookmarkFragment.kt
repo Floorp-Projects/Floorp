@@ -31,7 +31,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import mozilla.components.concept.storage.BookmarkNode
@@ -45,9 +44,11 @@ import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.ext.allowUndo
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.ext.share
+import org.mozilla.fenix.ext.urlToHost
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
@@ -216,7 +217,10 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                         }
                     }
                     is BookmarkAction.Delete -> {
-                        launch(IO) {
+                        allowUndo(
+                            view!!, getString(R.string.bookmark_deletion_snackbar_message, it.item.url.urlToHost()),
+                            getString(R.string.bookmark_undo_deletion)
+                        ) {
                             requireComponents.core.bookmarksStorage.deleteNode(it.item.guid)
                             refreshBookmarks()
                         }
@@ -277,16 +281,13 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                 true
             }
             R.id.delete_bookmarks_multi_select -> {
-                val deleteJob = launch(IO) {
-                    delay(bookmarkDeletionDelay)
+                allowUndo(
+                    view!!, getString(R.string.bookmark_deletion_multiple_snackbar_message),
+                    getString(R.string.bookmark_undo_deletion)
+                ) {
                     deleteSelectedBookmarks()
                     refreshBookmarks()
                 }
-                FenixSnackbar.make(view!!, FenixSnackbar.LENGTH_LONG)
-                    .setText(getString(R.string.bookmark_deletion_multiple_snackbar_message))
-                    .setAction(getString(R.string.bookmark_undo_deletion)) {
-                        deleteJob.cancel()
-                    }.show()
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -343,9 +344,5 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
         val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val uri = Uri.parse(url)
         clipBoard.primaryClip = ClipData.newRawUri("Uri", uri)
-    }
-
-    companion object {
-        private const val bookmarkDeletionDelay = 3000L
     }
 }

@@ -56,4 +56,9 @@
     <string name="pref_key_dark_theme" translatable="false">pref_key_dark_theme</string>
     <string name="pref_key_auto_battery_theme" translatable="false">pref_key_auto_battery_theme</string>
     <string name="pref_key_follow_device_theme" translatable="false">pref_key_follow_device_theme</string>
+
+    <!-- Tracking Protection Settings -->
+    <string name="pref_key_tracking_protection_settings" translatable="false">pref_key_tracking_protection_settings</string>
+    <string name="pref_key_tracking_protection" translatable="false">pref_key_tracking_protection</string>
+    <string name="pref_key_tracking_protection_exceptions" translatable="false">pref_key_tracking_protection_exceptions</string>
 </resources>

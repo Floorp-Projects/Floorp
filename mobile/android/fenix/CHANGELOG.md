@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #176 - Added a swipe to delete gesture on home screen
 - #1539 - Added bookmarks multi-select related features
 - #1603 - Remove deprecated success path for Firefox Accounts login
+- #619 - Sets toolbar behavior based on accessibility and if session is loading
+- #1571 - Added a snackbar for undoing bookmark deletion
 - #1079 - Managing site permissions exceptions
 
 ### Changed
