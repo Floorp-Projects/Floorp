@@ -118,7 +118,6 @@ nsDNSRecord::IsTRR(bool *retval) {
   }
   return NS_OK;
 }
-
 NS_IMETHODIMP
 nsDNSRecord::GetNextAddr(uint16_t port, NetAddr *addr) {
   if (mDone) {

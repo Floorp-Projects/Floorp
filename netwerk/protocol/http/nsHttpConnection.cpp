@@ -139,7 +139,7 @@ nsHttpConnection::~nsHttpConnection() {
     }
 
     MOZ_ASSERT(ci);
-    if (ci->GetIsTrrServiceChannel()) {
+    if (ci->GetTrrUsed()) {
       Telemetry::Accumulate(Telemetry::DNS_TRR_REQUEST_PER_CONN,
                             mHttp1xTransactionCount);
     }
