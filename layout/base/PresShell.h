@@ -370,6 +370,8 @@ class PresShell final : public nsIPresShell,
    */
   MOZ_CAN_RUN_SCRIPT void DidDoReflow(bool aInterruptible);
 
+  MOZ_CAN_RUN_SCRIPT void HandlePostedReflowCallbacks(bool aInterruptible);
+
   /**
    * Initialize cached font inflation preference values and do an initial
    * computation to determine if font inflation is enabled.

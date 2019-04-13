@@ -645,8 +645,6 @@ class nsIPresShell : public nsStubDocumentObserver {
   nsresult PostReflowCallback(nsIReflowCallback* aCallback);
   void CancelReflowCallback(nsIReflowCallback* aCallback);
 
-  void HandlePostedReflowCallbacks(bool aInterruptible);
-
   void ScheduleBeforeFirstPaint();
   void UnsuppressAndInvalidate();
 
