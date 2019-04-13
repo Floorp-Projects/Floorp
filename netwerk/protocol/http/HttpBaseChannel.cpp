@@ -196,8 +196,7 @@ HttpBaseChannel::HttpBaseChannel()
       mAllowSpdy(true),
       mAllowAltSvc(true),
       mBeConservative(false),
-      mIsTRRServiceChannel(false),
-      mResolvedByTRR(false),
+      mTRR(false),
       mResponseTimeoutEnabled(true),
       mAllRedirectsSameOrigin(true),
       mAllRedirectsPassTimingAllowCheck(true),
@@ -2702,23 +2701,16 @@ HttpBaseChannel::SetBeConservative(bool aBeConservative) {
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::GetIsTRRServiceChannel(bool* aIsTRRServiceChannel) {
-  NS_ENSURE_ARG_POINTER(aIsTRRServiceChannel);
+HttpBaseChannel::GetTrr(bool* aTRR) {
+  NS_ENSURE_ARG_POINTER(aTRR);
 
-  *aIsTRRServiceChannel = mIsTRRServiceChannel;
+  *aTRR = mTRR;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::SetIsTRRServiceChannel(bool aIsTRRServiceChannel) {
-  mIsTRRServiceChannel = aIsTRRServiceChannel;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HttpBaseChannel::GetIsResolvedByTRR(bool* aResolvedByTRR) {
-  NS_ENSURE_ARG_POINTER(aResolvedByTRR);
-  *aResolvedByTRR = mResolvedByTRR;
+HttpBaseChannel::SetTrr(bool aTRR) {
+  mTRR = aTRR;
   return NS_OK;
 }
 
@@ -3585,7 +3577,7 @@ nsresult HttpBaseChannel::SetupReplacementChannel(nsIURI* newURI,
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     rv = httpInternal->SetBeConservative(mBeConservative);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    rv = httpInternal->SetIsTRRServiceChannel(mIsTRRServiceChannel);
+    rv = httpInternal->SetTrr(mTRR);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     rv = httpInternal->SetTlsFlags(mTlsFlags);
     MOZ_ASSERT(NS_SUCCEEDED(rv));

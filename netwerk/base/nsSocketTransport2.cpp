@@ -708,7 +708,6 @@ nsSocketTransport::nsSocketTransport()
       mInputClosed(true),
       mOutputClosed(true),
       mResolving(false),
-      mResolvedByTRR(false),
       mDNSLookupStatus(NS_OK),
       mDNSARequestFinished(0),
       mEsniQueried(false),
@@ -1804,7 +1803,6 @@ bool nsSocketTransport::RecoverFromError() {
     // try next ip address only if past the resolver stage...
     if (mState == STATE_CONNECTING && mDNSRecord) {
       nsresult rv = mDNSRecord->GetNextAddr(SocketPort(), &mNetAddr);
-      mDNSRecord->IsTRR(&mResolvedByTRR);
       if (NS_SUCCEEDED(rv)) {
         SOCKET_LOG(("  trying again with next ip address\n"));
         tryAgain = true;
@@ -2098,7 +2096,6 @@ void nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status,
       mDNSTxtRequest = nullptr;
       if (mDNSRecord) {
         mDNSRecord->GetNextAddr(SocketPort(), &mNetAddr);
-        mDNSRecord->IsTRR(&mResolvedByTRR);
       }
       // status contains DNS lookup status
       if (NS_FAILED(status)) {
@@ -3523,12 +3520,6 @@ nsSocketTransport::GetResetIPFamilyPreference(bool *aReset) {
 NS_IMETHODIMP
 nsSocketTransport::GetEsniUsed(bool *aEsniUsed) {
   *aEsniUsed = mEsniUsed;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsSocketTransport::ResolvedByTRR(bool *aResolvedByTRR) {
-  *aResolvedByTRR = mResolvedByTRR;
   return NS_OK;
 }
 

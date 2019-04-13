@@ -784,7 +784,7 @@ already_AddRefed<gfx::Path> SVGContentUtils::GetPath(
   SVGPathData pathData;
   SVGPathDataParser parser(aPathString, &pathData);
   if (!parser.Parse()) {
-    return NULL;
+    return nullptr;
   }
 
   RefPtr<DrawTarget> drawTarget =

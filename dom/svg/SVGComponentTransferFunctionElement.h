@@ -21,9 +21,9 @@
 
 namespace mozilla {
 
-class DOMSVGAnimatedNumberList;
-
 namespace dom {
+
+class DOMSVGAnimatedNumberList;
 
 typedef SVGFEUnstyledElement SVGComponentTransferFunctionElementBase;
 

@@ -3677,7 +3677,7 @@ uint32_t SVGTextFrame::GetNumberOfChars(nsIContent* aContent) {
 float SVGTextFrame::GetComputedTextLength(nsIContent* aContent) {
   UpdateGlyphPositioning();
 
-  float cssPxPerDevPx = PresContext()->AppUnitsToFloatCSSPixels(
+  float cssPxPerDevPx = nsPresContext::AppUnitsToFloatCSSPixels(
       PresContext()->AppUnitsPerDevPixel());
 
   nscoord length = 0;

@@ -636,7 +636,7 @@ gfxMatrix nsSVGPatternFrame::ConstructCTM(const SVGAnimatedViewBox &aViewBox,
   if (!aViewBox.IsExplicitlySet()) {
     return gfxMatrix(scaleX, 0.0, 0.0, scaleY, 0.0, 0.0);
   }
-  const SVGViewBox viewBox = aViewBox.GetAnimValue();
+  const SVGViewBox& viewBox = aViewBox.GetAnimValue();
 
   if (viewBox.height <= 0.0f || viewBox.width <= 0.0f) {
     return gfxMatrix(0.0, 0.0, 0.0, 0.0, 0.0, 0.0);  // singular

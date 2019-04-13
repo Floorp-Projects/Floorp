@@ -860,7 +860,7 @@ gfxMatrix nsSVGOuterSVGFrame::GetCanvasTM() {
   if (!mCanvasTM) {
     SVGSVGElement* content = static_cast<SVGSVGElement*>(GetContent());
 
-    float devPxPerCSSPx = 1.0f / PresContext()->AppUnitsToFloatCSSPixels(
+    float devPxPerCSSPx = 1.0f / nsPresContext::AppUnitsToFloatCSSPixels(
                                      PresContext()->AppUnitsPerDevPixel());
 
     gfxMatrix tm = content->PrependLocalTransformsTo(
