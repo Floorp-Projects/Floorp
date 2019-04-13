@@ -1672,12 +1672,26 @@ class ScriptSource::LoadSourceMatcher {
     return sourceAlreadyLoaded();
   }
 
-  bool operator()(const Retrievable<Utf8Unit>&) {
-    MOZ_CRASH("retrievable UTF-8 not implemented yet -- but soon!");
-    return false;
-  }
+  template <typename Unit>
+  bool operator()(const Retrievable<Unit>&) {
+    // Establish the default outcome first.
+    *loaded_ = false;
 
-  bool operator()(const Retrievable<char16_t>&) { return tryLoadingSource(); }
+    MOZ_ASSERT(ss_->sourceRetrievable(),
+               "should be retrievable if Retrievable");
+
+    if (!cx_->runtime()->sourceHook.ref()) {
+      return true;
+    }
+
+    // The argument here is just for overloading -- its value doesn't matter.
+    if (!tryLoadAndSetSource(Unit('0'))) {
+      return false;
+    }
+
+    *loaded_ = true;
+    return true;
+  }
 
   bool operator()(const Missing&) const {
     MOZ_ASSERT(!ss_->sourceRetrievable(),
@@ -1699,32 +1713,26 @@ class ScriptSource::LoadSourceMatcher {
     return true;
   }
 
-  bool tryLoadingSource() const {
-    // Establish the default outcome first.
-    *loaded_ = false;
-
-    if (!cx_->runtime()->sourceHook.ref() || !ss_->sourceRetrievable()) {
-      return true;
-    }
-
-    char16_t* src = nullptr;
+  bool tryLoadAndSetSource(const Utf8Unit&) const {
+    char* utf8Source;
     size_t length;
-    if (!cx_->runtime()->sourceHook->load(cx_, ss_->filename(), &src,
-                                          &length)) {
-      return false;
-    }
-    if (!src) {
-      return true;
-    }
+    return cx_->runtime()->sourceHook->load(cx_, ss_->filename(), nullptr,
+                                            &utf8Source, &length) &&
+           utf8Source &&
+           ss_->setRetrievedSource(
+               cx_,
+               EntryUnits<Utf8Unit>(reinterpret_cast<Utf8Unit*>(utf8Source)),
+               length);
+  }
 
-    // XXX On-demand source is currently only UTF-16.  Perhaps it should be
-    //     changed to UTF-8, or UTF-8 be allowed in addition to UTF-16?
-    if (!ss_->setRetrievedSource(cx_, EntryUnits<char16_t>(src), length)) {
-      return false;
-    }
-
-    *loaded_ = true;
-    return true;
+  bool tryLoadAndSetSource(const char16_t&) const {
+    char16_t* utf16Source;
+    size_t length;
+    return cx_->runtime()->sourceHook->load(cx_, ss_->filename(), &utf16Source,
+                                            nullptr, &length) &&
+           utf16Source &&
+           ss_->setRetrievedSource(cx_, EntryUnits<char16_t>(utf16Source),
+                                   length);
   }
 };
 
@@ -2926,12 +2934,18 @@ XDRResult ScriptSource::xdrData(XDRState<mode>* const xdr,
     }
 
     case DataType::RetrievableUtf8: {
-      ss->data = SourceType(Retrievable<Utf8Unit>());
+      if (mode == XDR_DECODE) {
+        MOZ_ASSERT(ss->data.is<Missing>());
+        ss->data = SourceType(Retrievable<Utf8Unit>());
+      }
       return Ok();
     }
 
     case DataType::RetrievableUtf16: {
-      ss->data = SourceType(Retrievable<char16_t>());
+      if (mode == XDR_DECODE) {
+        MOZ_ASSERT(ss->data.is<Missing>());
+        ss->data = SourceType(Retrievable<char16_t>());
+      }
       return Ok();
     }
 
