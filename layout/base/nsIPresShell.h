@@ -1459,14 +1459,6 @@ class nsIPresShell : public nsStubDocumentObserver {
                                nsEventStatus* aEventStatus) = 0;
   virtual bool ShouldIgnoreInvalidation() = 0;
   /**
-   * Notify that we're going to call Paint with PAINT_LAYERS
-   * on the pres shell for a widget (which might not be this one, since
-   * WillPaint is called on all presshells in the same toplevel window as the
-   * painted widget). This is issued at a time when it's safe to modify
-   * widget geometry.
-   */
-  virtual void WillPaint() = 0;
-  /**
    * Notify that we're going to call Paint with PAINT_COMPOSITE.
    * Fires on the presshell for the painted widget.
    * This is issued at a time when it's safe to modify widget geometry.
