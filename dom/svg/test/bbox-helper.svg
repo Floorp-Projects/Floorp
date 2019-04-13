@@ -7,9 +7,10 @@
   <text id="b" x="20" y="20">b</text>
   <text id="a" x="20" y="30">a</text>
   <text id="y" x="20" y="40">y</text>
-  <text id="tspan">
-    <tspan x="20" y="20">b</tspan>
+  <text id="tspantext1">
+    <tspan id="tspan1" x="20" y="20">b</tspan>
   </text>
+  <text id="tspantext2" x="20" y="20">ABC<tspan id="tspan2">ABC</tspan></text>
   <text id="text" x="20" y="60">text</text>
   <!-- &#8206; is the same as the HTML &lrm; -->
   <text id="lrmText" x="20" y="60">&#8206;text</text>
