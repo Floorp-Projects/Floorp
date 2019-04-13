@@ -4097,19 +4097,7 @@ nsresult HTMLMediaElement::BindToTree(Document* aDocument, nsIContent* aParent,
   if (IsInComposedDoc()) {
     // Construct Shadow Root so web content can be hidden in the DOM.
     AttachAndSetUAShadowRoot();
-#ifdef ANDROID
     NotifyUAWidgetSetupOrChange();
-#else
-    // We don't want to call into JS if the website never asks for native
-    // video controls.
-    // If controls attribute is set later, controls is constructed lazily
-    // with the UAWidgetAttributeChanged event.
-    // This only applies to Desktop because on Fennec we would need to show
-    // an UI if the video is blocked.
-    if (Controls()) {
-      NotifyUAWidgetSetupOrChange();
-    }
-#endif
   }
 
   mUnboundFromTree = false;
