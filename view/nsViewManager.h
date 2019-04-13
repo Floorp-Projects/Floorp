@@ -20,7 +20,10 @@ class nsIWidget;
 struct nsRect;
 class nsRegion;
 class nsDeviceContext;
-class nsIPresShell;
+
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
 
 class nsViewManager final {
   ~nsViewManager();
@@ -223,12 +226,12 @@ class nsViewManager final {
    * Set the presshell associated with this manager
    * @param aPresShell - new presshell
    */
-  void SetPresShell(nsIPresShell* aPresShell) { mPresShell = aPresShell; }
+  void SetPresShell(mozilla::PresShell* aPresShell) { mPresShell = aPresShell; }
 
   /**
    * Get the pres shell associated with this manager
    */
-  nsIPresShell* GetPresShell() { return mPresShell; }
+  mozilla::PresShell* GetPresShell() const { return mPresShell; }
 
   /**
    * Get the device context associated with this manager
@@ -385,7 +388,7 @@ class nsViewManager final {
   void PostPendingUpdate();
 
   RefPtr<nsDeviceContext> mContext;
-  nsIPresShell* mPresShell;
+  mozilla::PresShell* mPresShell;
 
   // The size for a resize that we delayed until the root view becomes
   // visible again.

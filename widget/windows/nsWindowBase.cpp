@@ -7,11 +7,11 @@
 
 #include "gfxPrefs.h"
 #include "mozilla/MiscEvents.h"
+#include "mozilla/PresShell.h"
 #include "KeyboardLayout.h"
 #include "WinUtils.h"
 #include "npapi.h"
 #include "nsAutoPtr.h"
-#include "nsIPresShell.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -109,8 +109,7 @@ bool nsWindowBase::InjectTouchPoint(uint32_t aId, LayoutDeviceIntPoint& aPoint,
 
 void nsWindowBase::ChangedDPI() {
   if (mWidgetListener) {
-    nsIPresShell* presShell = mWidgetListener->GetPresShell();
-    if (presShell) {
+    if (PresShell* presShell = mWidgetListener->GetPresShell()) {
       presShell->BackingScaleFactorChanged();
     }
   }

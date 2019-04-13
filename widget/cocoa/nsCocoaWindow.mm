@@ -33,7 +33,6 @@
 #include "nsCocoaFeatures.h"
 #include "nsIScreenManager.h"
 #include "nsIWidgetListener.h"
-#include "nsIPresShell.h"
 #include "VibrancyManager.h"
 
 #include "gfxPlatform.h"
@@ -43,6 +42,7 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include <algorithm>
 
 namespace mozilla {
@@ -1616,8 +1616,7 @@ void nsCocoaWindow::BackingScaleFactorChanged() {
     return;
   }
 
-  nsIPresShell* presShell = mWidgetListener->GetPresShell();
-  if (presShell) {
+  if (PresShell* presShell = mWidgetListener->GetPresShell()) {
     presShell->BackingScaleFactorChanged();
   }
   mWidgetListener->UIResolutionChanged();
