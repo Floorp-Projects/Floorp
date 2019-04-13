@@ -1774,8 +1774,8 @@ class nsIPresShell : public nsStubDocumentObserver {
       FrameMetrics::ScrollOffsetUpdateType aUpdateType);
 
 #ifdef DEBUG
-  bool VerifyIncrementalReflow();
-  void DoVerifyReflow();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY bool VerifyIncrementalReflow();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void DoVerifyReflow();
   void VerifyHasDirtyRootAncestor(nsIFrame* aFrame);
   void ShowEventTargetDebug();
 
