@@ -8,11 +8,13 @@
 
 #include <errno.h>
 #include <stdio.h>
+#include <inttypes.h>
 
 #include "nscore.h"
 #include "private/pprio.h"
 #include "prmem.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/MemUtils.h"
 
 #if defined(XP_MACOSX)
 #  include <fcntl.h>
@@ -32,7 +34,8 @@
 #  include <sys/types.h>
 #  include <sys/stat.h>
 #elif defined(XP_WIN)
-#  include <windows.h>
+#  include <nsWindowsHelpers.h>
+#  include <mozilla/ScopeExit.h>
 #endif
 
 // Functions that are not to be used in standalone glue must be implemented
@@ -355,7 +358,37 @@ void mozilla::ReadAheadLib(mozilla::pathstr_t aFilePath) {
     return;
   }
 #if defined(XP_WIN)
-  ReadAheadFile(aFilePath);
+  nsAutoHandle fd(CreateFileW(aFilePath, GENERIC_READ,
+                              FILE_SHARE_READ, nullptr, OPEN_EXISTING,
+                              FILE_FLAG_SEQUENTIAL_SCAN, nullptr));
+  if (!fd) {
+    return;
+  }
+  LARGE_INTEGER fileSize = {};
+  BOOL success = GetFileSizeEx(fd, &fileSize);
+  if (!success || !fileSize.QuadPart ||
+      fileSize.QuadPart > std::numeric_limits<size_t>::max()) {
+    return;
+  }
+
+  nsAutoHandle mapping(CreateFileMapping(fd, nullptr,
+                                         SEC_IMAGE | PAGE_READONLY,
+                                         0, 0, nullptr));
+
+  if (!mapping) {
+    return;
+  }
+
+  PVOID data = MapViewOfFile(mapping, FILE_MAP_READ, 0, 0, (size_t)fileSize.QuadPart);
+  auto guard = MakeScopeExit([=]() { UnmapViewOfFile(data); });
+
+  if (data && !MaybePrefetchMemory((uint8_t*)data, (size_t)fileSize.QuadPart)) {
+    volatile uint8_t read = 0;
+    for(size_t i = 0; i < (size_t)fileSize.QuadPart; i += 4096) {
+      read += ((uint8_t*)data)[i];
+    }
+  }
+
 #elif defined(LINUX) && !defined(ANDROID)
   int fd = open(aFilePath, O_RDONLY);
   if (fd < 0) {
