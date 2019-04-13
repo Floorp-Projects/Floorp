@@ -59,6 +59,8 @@ class nsNSSSocketInfo final : public mozilla::psm::TransportSecurityInfo,
   void SetNegotiatedNPN(const char* value, uint32_t length);
   void SetEarlyDataAccepted(bool aAccepted);
 
+  void SetResumed(bool aResumed);
+
   void SetHandshakeCompleted();
   bool IsHandshakeCompleted() const { return mHandshakeCompleted; }
   void NoteTimeUntilReady();
@@ -181,6 +183,7 @@ class nsNSSSocketInfo final : public mozilla::psm::TransportSecurityInfo,
   bool mSentClientCert;
   bool mNotedTimeUntilReady;
   bool mFailedVerification;
+  mozilla::Atomic<bool, mozilla::Relaxed> mResumed;
 
   // True when SSL layer has indicated an "SSL short write", i.e. need
   // to call on send one or more times to push all pending data to write.

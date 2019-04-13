@@ -694,6 +694,7 @@ static void PreliminaryHandshakeDone(PRFileDesc* fd) {
   if (SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo)) == SECSuccess) {
     infoObject->SetSSLVersionUsed(channelInfo.protocolVersion);
     infoObject->SetEarlyDataAccepted(channelInfo.earlyDataAccepted);
+    infoObject->SetResumed(channelInfo.resumed);
 
     SSLCipherSuiteInfo cipherInfo;
     if (SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
