@@ -576,6 +576,7 @@ class nsIPresShell : public nsStubDocumentObserver {
    * Implementation methods for FlushPendingNotifications.
    */
   virtual void DoFlushPendingNotifications(mozilla::FlushType aType) = 0;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   virtual void DoFlushPendingNotifications(mozilla::ChangesToFlush aType) = 0;
 
  public:
@@ -1814,9 +1815,6 @@ class nsIPresShell : public nsStubDocumentObserver {
    * @param aInterruptible Whether or not reflow interruption is allowed.
    */
   void DidDoReflow(bool aInterruptible);
-  // ProcessReflowCommands returns whether we processed all our dirty roots
-  // without interruptions.
-  bool ProcessReflowCommands(bool aInterruptible);
   // The callback for the mReflowContinueTimer timer.
   static void sReflowContinueCallback(nsITimer* aTimer, void* aPresShell);
   bool ScheduleReflowOffTimer();
