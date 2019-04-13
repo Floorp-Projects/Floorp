@@ -57,8 +57,9 @@ nsView::nsView(nsViewManager* aViewManager, nsViewVisibility aVisibility)
 }
 
 void nsView::DropMouseGrabbing() {
-  nsIPresShell* presShell = mViewManager->GetPresShell();
-  if (presShell) presShell->ClearMouseCaptureOnView(this);
+  if (PresShell* presShell = mViewManager->GetPresShell()) {
+    presShell->ClearMouseCaptureOnView(this);
+  }
 }
 
 nsView::~nsView() {
@@ -925,9 +926,7 @@ static bool IsPopupWidget(nsIWidget* aWidget) {
   return (aWidget->WindowType() == eWindowType_popup);
 }
 
-nsIPresShell* nsView::GetPresShell() {
-  return GetViewManager()->GetPresShell();
-}
+PresShell* nsView::GetPresShell() { return GetViewManager()->GetPresShell(); }
 
 bool nsView::WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
@@ -955,7 +954,7 @@ bool nsView::WindowResized(nsIWidget* aWidget, int32_t aWidth,
 
     nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
     if (pm) {
-      nsIPresShell* presShell = mViewManager->GetPresShell();
+      PresShell* presShell = mViewManager->GetPresShell();
       if (presShell && presShell->GetDocument()) {
         pm->AdjustPopupsOnWindowChange(presShell);
       }
@@ -1007,38 +1006,40 @@ void nsView::DidPaintWindow() {
 void nsView::DidCompositeWindow(mozilla::layers::TransactionId aTransactionId,
                                 const TimeStamp& aCompositeStart,
                                 const TimeStamp& aCompositeEnd) {
-  nsIPresShell* presShell = mViewManager->GetPresShell();
-  if (presShell) {
-    nsAutoScriptBlocker scriptBlocker;
+  PresShell* presShell = mViewManager->GetPresShell();
+  if (!presShell) {
+    return;
+  }
 
-    nsPresContext* context = presShell->GetPresContext();
-    nsRootPresContext* rootContext = context->GetRootPresContext();
-    if (rootContext) {
-      rootContext->NotifyDidPaintForSubtree(aTransactionId, aCompositeEnd);
-    }
+  nsAutoScriptBlocker scriptBlocker;
 
-    // If the two timestamps are identical, this was likely a fake composite
-    // event which wouldn't be terribly useful to display.
-    if (aCompositeStart == aCompositeEnd) {
-      return;
-    }
+  nsPresContext* context = presShell->GetPresContext();
+  nsRootPresContext* rootContext = context->GetRootPresContext();
+  if (rootContext) {
+    rootContext->NotifyDidPaintForSubtree(aTransactionId, aCompositeEnd);
+  }
 
-    nsIDocShell* docShell = context->GetDocShell();
-    RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+  // If the two timestamps are identical, this was likely a fake composite
+  // event which wouldn't be terribly useful to display.
+  if (aCompositeStart == aCompositeEnd) {
+    return;
+  }
 
-    if (timelines && timelines->HasConsumer(docShell)) {
-      timelines->AddMarkerForDocShell(
-          docShell, MakeUnique<CompositeTimelineMarker>(
-                        aCompositeStart, MarkerTracingType::START));
-      timelines->AddMarkerForDocShell(
-          docShell, MakeUnique<CompositeTimelineMarker>(
-                        aCompositeEnd, MarkerTracingType::END));
-    }
+  nsIDocShell* docShell = context->GetDocShell();
+  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+
+  if (timelines && timelines->HasConsumer(docShell)) {
+    timelines->AddMarkerForDocShell(
+        docShell, MakeUnique<CompositeTimelineMarker>(
+                      aCompositeStart, MarkerTracingType::START));
+    timelines->AddMarkerForDocShell(
+        docShell, MakeUnique<CompositeTimelineMarker>(aCompositeEnd,
+                                                      MarkerTracingType::END));
   }
 }
 
 void nsView::RequestRepaint() {
-  nsIPresShell* presShell = mViewManager->GetPresShell();
+  PresShell* presShell = mViewManager->GetPresShell();
   if (presShell) {
     presShell->ScheduleViewManagerFlush();
   }

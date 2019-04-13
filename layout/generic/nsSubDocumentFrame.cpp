@@ -56,8 +56,8 @@ static Document* GetDocumentFromView(nsView* aView) {
   MOZ_ASSERT(aView, "null view");
 
   nsViewManager* vm = aView->GetViewManager();
-  nsIPresShell* ps = vm ? vm->GetPresShell() : nullptr;
-  return ps ? ps->GetDocument() : nullptr;
+  PresShell* presShell = vm ? vm->GetPresShell() : nullptr;
+  return presShell ? presShell->GetDocument() : nullptr;
 }
 
 nsSubDocumentFrame::nsSubDocumentFrame(ComputedStyle* aStyle,

@@ -1152,7 +1152,7 @@ bool nsBaseWidget::ShowContextMenuAfterMouseUp() {
 
 Document* nsBaseWidget::GetDocument() const {
   if (mWidgetListener) {
-    if (nsIPresShell* presShell = mWidgetListener->GetPresShell()) {
+    if (PresShell* presShell = mWidgetListener->GetPresShell()) {
       return presShell->GetDocument();
     }
   }
@@ -1671,8 +1671,7 @@ void nsBaseWidget::NotifyPresShell(NotificationFunc aNotificationFunc) {
     return;
   }
 
-  nsIPresShell* presShell = mWidgetListener->GetPresShell();
-  if (presShell) {
+  if (PresShell* presShell = mWidgetListener->GetPresShell()) {
     (presShell->*aNotificationFunc)();
   }
 }

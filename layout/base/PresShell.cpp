@@ -5443,8 +5443,7 @@ void PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll) {
   // XXX set event.mModifiers ?
   // XXX mnakano I think that we should get the latest information from widget.
 
-  nsCOMPtr<nsIPresShell> shell = pointVM->GetPresShell();
-  if (shell) {
+  if (RefPtr<PresShell> presShell = pointVM->GetPresShell()) {
     // Since this gets run in a refresh tick there isn't an InputAPZContext on
     // the stack from the nsBaseWidget. We need to simulate one with at least
     // the correct target guid, so that the correct callback transform gets
@@ -5452,7 +5451,7 @@ void PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll) {
     // to 0 because this is a synthetic event which doesn't really belong to any
     // input block. Same for the APZ response field.
     InputAPZContext apzContext(mMouseEventTargetGuid, 0, nsEventStatus_eIgnore);
-    shell->DispatchSynthMouseMove(&event);
+    presShell->DispatchSynthMouseMove(&event);
   }
 
   if (!aFromScroll) {
@@ -5523,7 +5522,7 @@ void PresShell::ClearApproximateFrameVisibilityVisited(nsView* aView,
                                                        bool aClear) {
   nsViewManager* vm = aView->GetViewManager();
   if (aClear) {
-    PresShell* presShell = static_cast<PresShell*>(vm->GetPresShell());
+    PresShell* presShell = vm->GetPresShell();
     if (!presShell->mApproximateFrameVisibilityVisited) {
       presShell->ClearApproximatelyVisibleFramesList();
     }

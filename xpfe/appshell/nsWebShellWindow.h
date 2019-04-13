@@ -20,6 +20,7 @@ class nsIURI;
 struct nsWidgetInitData;
 
 namespace mozilla {
+class PresShell;
 class WebShellWindowTimerCallback;
 }  // namespace mozilla
 
@@ -37,7 +38,7 @@ class nsWebShellWindow final : public nsXULWindow,
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual nsIXULWindow* GetXULWindow() override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
-    virtual nsIPresShell* GetPresShell() override;
+    virtual mozilla::PresShell* GetPresShell() override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual bool WindowMoved(nsIWidget* aWidget, int32_t x, int32_t y) override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
@@ -95,7 +96,7 @@ class nsWebShellWindow final : public nsXULWindow,
 
   // nsIWidgetListener methods for WidgetListenerDelegate.
   nsIXULWindow* GetXULWindow() { return this; }
-  nsIPresShell* GetPresShell();
+  mozilla::PresShell* GetPresShell();
   MOZ_CAN_RUN_SCRIPT
   bool WindowMoved(nsIWidget* aWidget, int32_t aX, int32_t aY);
   MOZ_CAN_RUN_SCRIPT

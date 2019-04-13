@@ -16,6 +16,7 @@
 
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/WheelHandlingHelper.h"  // for WheelDeltaAdjustmentStrategy
@@ -41,7 +42,6 @@
 #include "nsGfxCIID.h"
 #include "nsStyleConsts.h"
 #include "nsIWidgetListener.h"
-#include "nsIPresShell.h"
 #include "nsIScreen.h"
 
 #include "nsDragService.h"
@@ -813,8 +813,7 @@ void nsChildView::BackingScaleFactorChanged() {
   mBounds = nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, newScale);
 
   if (mWidgetListener && !mWidgetListener->GetXULWindow()) {
-    nsIPresShell* presShell = mWidgetListener->GetPresShell();
-    if (presShell) {
+    if (PresShell* presShell = mWidgetListener->GetPresShell()) {
       presShell->BackingScaleFactorChanged();
     }
   }
@@ -3154,10 +3153,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
   [self systemMetricsChanged];
 
   if (mGeckoChild) {
-    nsIWidgetListener* listener = mGeckoChild->GetWidgetListener();
-    if (listener) {
-      nsIPresShell* presShell = listener->GetPresShell();
-      if (presShell) {
+    if (nsIWidgetListener* listener = mGeckoChild->GetWidgetListener()) {
+      if (PresShell* presShell = listener->GetPresShell()) {
         presShell->ReconstructFrames();
       }
     }

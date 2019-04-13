@@ -257,9 +257,10 @@ nsresult nsWebShellWindow::Initialize(
   return rv;
 }
 
-nsIPresShell* nsWebShellWindow::GetPresShell() {
-  if (!mDocShell) return nullptr;
-
+PresShell* nsWebShellWindow::GetPresShell() {
+  if (!mDocShell) {
+    return nullptr;
+  }
   return mDocShell->GetPresShell();
 }
 
@@ -368,8 +369,7 @@ void nsWebShellWindow::SizeModeChanged(nsSizeMode sizeMode) {
     ourWindow->DispatchCustomEvent(NS_LITERAL_STRING("sizemodechange"));
   }
 
-  nsIPresShell* presShell;
-  if ((presShell = GetPresShell())) {
+  if (PresShell* presShell = GetPresShell()) {
     presShell->GetPresContext()->SizeModeChanged(sizeMode);
   }
 
@@ -734,7 +734,7 @@ nsIXULWindow* nsWebShellWindow::WidgetListenerDelegate::GetXULWindow() {
   return mWebShellWindow->GetXULWindow();
 }
 
-nsIPresShell* nsWebShellWindow::WidgetListenerDelegate::GetPresShell() {
+PresShell* nsWebShellWindow::WidgetListenerDelegate::GetPresShell() {
   return mWebShellWindow->GetPresShell();
 }
 

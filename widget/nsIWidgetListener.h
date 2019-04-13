@@ -15,9 +15,12 @@
 #include "Units.h"
 
 class nsView;
-class nsIPresShell;
 class nsIWidget;
 class nsIXULWindow;
+
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
 
 /**
  * sizemode is an adjunct to widget size
@@ -56,7 +59,7 @@ class nsIWidgetListener {
   /**
    * Return the presshell for this widget listener.
    */
-  virtual nsIPresShell* GetPresShell();
+  virtual mozilla::PresShell* GetPresShell();
 
   /**
    * Called when a window is moved to location (x, y). Returns true if the
