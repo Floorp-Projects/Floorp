@@ -2880,9 +2880,10 @@ static nsresult ReadSourceFromFilename(JSContext* cx, const char* filename,
     ptr += bytesRead;
   }
 
+  size_t bytesAllocated;
   if (utf8Source) {
     // |buf| is already UTF-8, so we can directly return it.
-    *len = rawLen;
+    *len = bytesAllocated = rawLen;
     *utf8Source = buf.release();
   } else {
     MOZ_ASSERT(twoByteSource != nullptr);
@@ -2898,14 +2899,14 @@ static nsresult ReadSourceFromFilename(JSContext* cx, const char* filename,
     if (!*twoByteSource) {
       return NS_ERROR_FAILURE;
     }
+
+    bytesAllocated = *len * sizeof(char16_t);
   }
 
   // Historically this method used JS_malloc() which updates the GC memory
   // accounting.  Since ConvertToUTF16() and js::MakeUnique now use js_malloc()
   // instead we update the accounting manually after the fact.
-  //
-  // XXX jwalden Should this be |*len * sizeof(char16_t)| in the UTF-16 case?
-  JS_updateMallocCounter(cx, *len);
+  JS_updateMallocCounter(cx, bytesAllocated);
 
   return NS_OK;
 }
