@@ -338,7 +338,7 @@ class nsViewManager final {
   /**
    * Call WillPaint() on all view observers under this vm root.
    */
-  void CallWillPaintOnObservers();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void CallWillPaintOnObservers();
   void ReparentChildWidgets(nsView* aView, nsIWidget* aNewWidget);
   void ReparentWidgets(nsView* aView, nsView* aParent);
   void InvalidateWidgetArea(nsView* aWidgetView,
