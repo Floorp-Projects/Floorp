@@ -1274,7 +1274,7 @@ mozilla::ipc::IPCResult TabChild::RecvHandleTap(
   // to be refcounted. This function can run script, which may trigger a nested
   // event loop, which may release this, so we hold a strong reference here.
   RefPtr<TabChild> kungFuDeathGrip(this);
-  PresShell* presShell = GetTopLevelPresShell();
+  RefPtr<PresShell> presShell = GetTopLevelPresShell();
   if (!presShell) {
     return IPC_OK();
   }
@@ -1303,18 +1303,14 @@ mozilla::ipc::IPCResult TabChild::RecvHandleTap(
     case GeckoContentController::TapType::eLongTap:
       if (mTabChildMessageManager) {
         RefPtr<APZEventState> eventState(mAPZEventState);
-        // XXX ProcessLongTap() requires nsCOMPtr<nsIPresShell&>.
-        nsCOMPtr<nsIPresShell> iPresShell = presShell;
-        eventState->ProcessLongTap(iPresShell, point, scale, aModifiers, aGuid,
+        eventState->ProcessLongTap(presShell, point, scale, aModifiers, aGuid,
                                    aInputBlockId);
       }
       break;
     case GeckoContentController::TapType::eLongTapUp:
       if (mTabChildMessageManager) {
         RefPtr<APZEventState> eventState(mAPZEventState);
-        // XXX ProcessLongTapUp() requires nsCOMPtr<nsIPresShell&>.
-        nsCOMPtr<nsIPresShell> iPresShell = presShell;
-        eventState->ProcessLongTapUp(iPresShell, point, scale, aModifiers);
+        eventState->ProcessLongTapUp(presShell, point, scale, aModifiers);
       }
       break;
   }
@@ -1423,8 +1419,7 @@ mozilla::ipc::IPCResult TabChild::RecvMouseEvent(
   // to be refcounted. This function can run script, which may trigger a nested
   // event loop, which may release this, so we hold a strong reference here.
   RefPtr<TabChild> kungFuDeathGrip(this);
-  // XXX DispatchMouseEvent() requires nsCOMPtr<nsIPresShell>&.
-  nsCOMPtr<nsIPresShell> presShell = GetTopLevelPresShell();
+  RefPtr<PresShell> presShell = GetTopLevelPresShell();
   APZCCallbackHelper::DispatchMouseEvent(
       presShell, aType, CSSPoint(aX, aY), aButton, aClickCount, aModifiers,
       aIgnoreRootScrollFrame, MouseEvent_Binding::MOZ_SOURCE_UNKNOWN,

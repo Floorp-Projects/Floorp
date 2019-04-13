@@ -14,11 +14,11 @@
 
 class nsIDOMWindowUtils;
 
-class nsIPresShell;
 class nsIWidget;
 class MessageLoop;
 
 namespace mozilla {
+class PresShell;
 namespace dom {
 class Document;
 }
@@ -85,7 +85,7 @@ class ChromeProcessController : public mozilla::layers::GeckoContentController {
   MessageLoop* mUILoop;
 
   void InitializeRoot();
-  nsIPresShell* GetPresShell() const;
+  PresShell* GetPresShell() const;
   dom::Document* GetRootDocument() const;
   dom::Document* GetRootContentDocument(
       const ScrollableLayerGuid::ViewID& aScrollId) const;
