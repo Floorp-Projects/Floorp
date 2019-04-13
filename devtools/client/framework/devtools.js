@@ -457,7 +457,9 @@ DevTools.prototype = {
         await toolbox.switchHost(hostType);
       }
 
-      if (toolId != null && toolbox.currentToolId != toolId) {
+      if (toolId != null) {
+        // selectTool will either select the tool if not currently selected, or wait for
+        // the tool to be loaded if needed.
         await toolbox.selectTool(toolId, reason);
       }
 
