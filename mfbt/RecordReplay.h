@@ -316,7 +316,7 @@ MFBT_API bool ShouldUpdateProgressCounter(const char* aURL);
 // kind.
 MFBT_API bool DefineRecordReplayControlObject(JSContext* aCx, JSObject* aObj);
 
-// Notify the infrastructure that some URL which contains JavaScript is
+// Notify the infrastructure that some URL which contains JavaScript or CSS is
 // being parsed. This is used to provide the complete contents of the URL to
 // devtools code when it is inspecting the state of this process; that devtools
 // code can't simply fetch the URL itself since it may have been changed since
