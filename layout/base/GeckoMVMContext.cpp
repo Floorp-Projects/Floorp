@@ -162,7 +162,8 @@ void GeckoMVMContext::UpdateDisplayPortMargins() {
 
 void GeckoMVMContext::Reflow(const CSSSize& aNewSize, const CSSSize& aOldSize) {
   MOZ_ASSERT(mPresShell);
-  mPresShell->ResizeReflowIgnoreOverride(
+  nsCOMPtr<nsIPresShell> presShell = mPresShell;
+  presShell->ResizeReflowIgnoreOverride(
       nsPresContext::CSSPixelsToAppUnits(aNewSize.width),
       nsPresContext::CSSPixelsToAppUnits(aNewSize.height),
       nsPresContext::CSSPixelsToAppUnits(aOldSize.width),
