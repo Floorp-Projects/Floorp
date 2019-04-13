@@ -18,6 +18,7 @@
 #include "mozilla/layers/PLayerTransactionChild.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextComposition.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
@@ -403,7 +404,7 @@ nsEventStatus PuppetWidget::DispatchInputEvent(WidgetInputEvent* aEvent) {
     return nsEventStatus_eIgnore;
   }
 
-  if (nsCOMPtr<nsIPresShell> presShell = mTabChild->GetPresShell()) {
+  if (PresShell* presShell = mTabChild->GetTopLevelPresShell()) {
     // Because the root resolution is conceptually at the parent/child process
     // boundary, we need to apply that resolution here because we're sending
     // the event from the child to the parent process.
