@@ -2057,6 +2057,7 @@ class Document : public nsINode,
    * or not.
    * If in doublt, use the above FlushPendingNotifications.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void FlushPendingNotifications(ChangesToFlush aFlush);
 
   /**

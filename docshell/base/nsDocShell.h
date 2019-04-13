@@ -590,6 +590,7 @@ class nsDocShell final : public nsDocLoader,
 
   // Helper method that is called when a new document (including any
   // sub-documents - ie. frames) has been completely loaded.
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult EndPageLoad(nsIWebProgress* aProgress, nsIChannel* aChannel,
                        nsresult aResult);
 

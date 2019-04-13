@@ -42,7 +42,7 @@ interface nsIContentViewer : nsISupports
   attribute nsIDocShell container;
 
   [noscript,notxpcom,nostdcall] void loadStart(in Document aDoc);
-  void loadComplete(in nsresult aStatus);
+  [can_run_script] void loadComplete(in nsresult aStatus);
   [notxpcom,nostdcall] readonly attribute boolean loadCompleted;
 
   [notxpcom,nostdcall] readonly attribute boolean isStopped;

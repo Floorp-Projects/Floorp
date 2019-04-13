@@ -82,17 +82,24 @@ void BoxObject::Clear() {
 
 void BoxObject::ClearCachedValues() {}
 
-nsIFrame* BoxObject::GetFrame(bool aFlushLayout) {
-  nsIPresShell* shell = GetPresShell(aFlushLayout);
-  if (!shell) return nullptr;
-
-  if (!aFlushLayout) {
-    // If we didn't flush layout when getting the presshell, we should at least
-    // flush to make sure our frame model is up to date.
-    // XXXbz should flush on document, no?  Except people call this from
-    // frame code, maybe?
-    shell->FlushPendingNotifications(FlushType::Frames);
+nsIFrame* BoxObject::GetFrame() const {
+  if (!GetPresShell() || !mContent) {
+    return nullptr;
   }
+  return mContent->GetPrimaryFrame();
+}
+
+nsIFrame* BoxObject::GetFrameWithFlushPendingNotifications() {
+  RefPtr<PresShell> presShell = GetPresShellWithFlushPendingNotifications();
+  if (!presShell) {
+    return nullptr;
+  }
+
+  // If we didn't flush layout when getting the presshell, we should at least
+  // flush to make sure our frame model is up to date.
+  // XXXbz should flush on document, no?  Except people call this from
+  // frame code, maybe?
+  presShell->FlushPendingNotifications(FlushType::Frames);
 
   // The flush might have killed mContent.
   if (!mContent) {
@@ -102,7 +109,20 @@ nsIFrame* BoxObject::GetFrame(bool aFlushLayout) {
   return mContent->GetPrimaryFrame();
 }
 
-nsIPresShell* BoxObject::GetPresShell(bool aFlushLayout) {
+PresShell* BoxObject::GetPresShell() const {
+  if (!mContent) {
+    return nullptr;
+  }
+
+  Document* doc = mContent->GetComposedDoc();
+  if (!doc) {
+    return nullptr;
+  }
+
+  return doc->GetPresShell();
+}
+
+PresShell* BoxObject::GetPresShellWithFlushPendingNotifications() {
   if (!mContent) {
     return nullptr;
   }
@@ -112,9 +132,7 @@ nsIPresShell* BoxObject::GetPresShell(bool aFlushLayout) {
     return nullptr;
   }
 
-  if (aFlushLayout) {
-    doc->FlushPendingNotifications(FlushType::Layout);
-  }
+  doc->FlushPendingNotifications(FlushType::Layout);
 
   return doc->GetPresShell();
 }
@@ -125,7 +143,7 @@ nsresult BoxObject::GetOffsetRect(nsIntRect& aRect) {
   if (!mContent) return NS_ERROR_NOT_INITIALIZED;
 
   // Get the Frame for our content
-  nsIFrame* frame = GetFrame(true);
+  nsIFrame* frame = GetFrameWithFlushPendingNotifications();
   if (frame) {
     // Get its origin
     nsPoint origin = frame->GetPositionIgnoringScrolling();
@@ -182,7 +200,7 @@ nsresult BoxObject::GetScreenPosition(nsIntPoint& aPoint) {
 
   if (!mContent) return NS_ERROR_NOT_INITIALIZED;
 
-  nsIFrame* frame = GetFrame(true);
+  nsIFrame* frame = GetFrameWithFlushPendingNotifications();
   if (frame) {
     CSSIntRect rect = frame->GetScreenRect();
     aPoint.x = rect.x;
@@ -321,7 +339,7 @@ BoxObject::RemoveProperty(const char16_t* aPropertyName) {
 }
 
 Element* BoxObject::GetParentBox() {
-  nsIFrame* frame = GetFrame(false);
+  nsIFrame* frame = GetFrame();
   if (!frame) {
     return nullptr;
   }
@@ -341,7 +359,7 @@ Element* BoxObject::GetParentBox() {
 }
 
 Element* BoxObject::GetFirstChild() {
-  nsIFrame* frame = GetFrame(false);
+  nsIFrame* frame = GetFrame();
   if (!frame) {
     return nullptr;
   }
@@ -360,7 +378,7 @@ Element* BoxObject::GetFirstChild() {
 }
 
 Element* BoxObject::GetLastChild() {
-  nsIFrame* frame = GetFrame(false);
+  nsIFrame* frame = GetFrame();
   if (!frame) {
     return nullptr;
   }
@@ -368,7 +386,7 @@ Element* BoxObject::GetLastChild() {
 }
 
 Element* BoxObject::GetNextSibling() {
-  nsIFrame* frame = GetFrame(false);
+  nsIFrame* frame = GetFrame();
   if (!frame) {
     return nullptr;
   }
@@ -387,7 +405,7 @@ Element* BoxObject::GetNextSibling() {
 }
 
 Element* BoxObject::GetPreviousSibling() {
-  nsIFrame* frame = GetFrame(false);
+  nsIFrame* frame = GetFrame();
   if (!frame) {
     return nullptr;
   }

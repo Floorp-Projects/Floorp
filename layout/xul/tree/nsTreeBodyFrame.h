@@ -348,7 +348,7 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
                             AutoWeakFrame& aWeakColumnsFrame);
 
   // Check overflow and generate events.
-  void CheckOverflow(const ScrollParts& aParts);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void CheckOverflow(const ScrollParts& aParts);
 
   // Calls UpdateScrollbars, Invalidate aNeedsFullInvalidation if true,
   // InvalidateScrollbars and finally CheckOverflow.
