@@ -13,9 +13,10 @@
 #include "nsView.h"
 #include "nsIWidget.h"
 
+using namespace mozilla;
 using namespace mozilla::a11y;
 
-RootAccessibleWrap::RootAccessibleWrap(mozilla::dom::Document* aDocument, nsIPresShell* aPresShell)
+RootAccessibleWrap::RootAccessibleWrap(dom::Document* aDocument, PresShell* aPresShell)
     : RootAccessible(aDocument, aPresShell) {}
 
 RootAccessibleWrap::~RootAccessibleWrap() {}

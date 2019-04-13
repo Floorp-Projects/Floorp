@@ -41,11 +41,15 @@ class DocManager : public nsIWebProgressListener,
   /**
    * Return document accessible for the given presshell.
    */
-  DocAccessible* GetDocAccessible(const nsIPresShell* aPresShell) {
-    if (!aPresShell) return nullptr;
+  DocAccessible* GetDocAccessible(const PresShell* aPresShell) {
+    if (!aPresShell) {
+      return nullptr;
+    }
 
     DocAccessible* doc = aPresShell->GetDocAccessible();
-    if (doc) return doc;
+    if (doc) {
+      return doc;
+    }
 
     return GetDocAccessible(aPresShell->GetDocument());
   }

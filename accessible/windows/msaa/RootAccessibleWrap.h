@@ -10,11 +10,14 @@
 #include "RootAccessible.h"
 
 namespace mozilla {
+
+class PresShell;
+
 namespace a11y {
 
 class RootAccessibleWrap : public RootAccessible {
  public:
-  RootAccessibleWrap(dom::Document* aDocument, nsIPresShell* aPresShell);
+  RootAccessibleWrap(dom::Document* aDocument, PresShell* aPresShell);
   virtual ~RootAccessibleWrap();
 
   // RootAccessible

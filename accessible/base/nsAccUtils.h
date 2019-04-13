@@ -18,6 +18,8 @@
 
 namespace mozilla {
 
+class PresShell;
+
 namespace dom {
 class Element;
 }
@@ -114,8 +116,8 @@ class nsAccUtils {
    * Return document accessible for the given DOM node.
    */
   static DocAccessible* GetDocAccessibleFor(nsINode* aNode) {
-    nsIPresShell* presShell = nsCoreUtils::GetPresShellFor(aNode);
-    return GetAccService()->GetDocAccessible(presShell);
+    return GetAccService()->GetDocAccessible(
+        nsCoreUtils::GetPresShellFor(aNode));
   }
 
   /**

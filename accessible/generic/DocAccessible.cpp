@@ -70,7 +70,8 @@ static const uint32_t kRelationAttrsLen = ArrayLength(kRelationAttrs);
 ////////////////////////////////////////////////////////////////////////////////
 // Constructor/desctructor
 
-DocAccessible::DocAccessible(dom::Document* aDocument, nsIPresShell* aPresShell)
+DocAccessible::DocAccessible(dom::Document* aDocument,
+                             PresShell* aPresShell)
     :  // XXX don't pass a document to the Accessible constructor so that we
        // don't set mDoc until our vtable is fully setup.  If we set mDoc before
        // setting up the vtable we will call Accessible::AddRef() but not the
@@ -379,8 +380,9 @@ void DocAccessible::Init() {
 }
 
 void DocAccessible::Shutdown() {
-  if (!mPresShell)  // already shutdown
+  if (!mPresShell) {  // already shutdown
     return;
+  }
 
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eDocDestroy))
@@ -452,7 +454,9 @@ void DocAccessible::Shutdown() {
 
 nsIFrame* DocAccessible::GetFrame() const {
   nsIFrame* root = nullptr;
-  if (mPresShell) root = mPresShell->GetRootFrame();
+  if (mPresShell) {
+    root = mPresShell->GetRootFrame();
+  }
 
   return root;
 }
@@ -466,7 +470,7 @@ nsRect DocAccessible::RelativeBounds(nsIFrame** aRelativeFrame) const {
 
   nsRect bounds;
   while (document) {
-    mozilla::PresShell* presShell = document->GetPresShell();
+    PresShell* presShell = document->GetPresShell();
     if (!presShell) {
       return nsRect();
     }
@@ -1103,7 +1107,9 @@ nsresult DocAccessible::HandleAccEvent(AccEvent* aEvent) {
 // Public members
 
 void* DocAccessible::GetNativeWindow() const {
-  if (!mPresShell) return nullptr;
+  if (!mPresShell) {
+    return nullptr;
+  }
 
   nsViewManager* vm = mPresShell->GetViewManager();
   if (!vm) return nullptr;

@@ -15,6 +15,7 @@
 #include "nsViewManager.h"
 #include "nsIPersistentProperties2.h"
 
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/a11y/DocAccessibleParent.h"
 #include "mozilla/a11y/DocManager.h"
@@ -133,8 +134,7 @@ SessionAccessibility* SessionAccessibility::GetInstanceFor(
 SessionAccessibility* SessionAccessibility::GetInstanceFor(
     Accessible* aAccessible) {
   RootAccessible* rootAcc = aAccessible->RootAccessible();
-  nsIPresShell* shell = rootAcc->PresShell();
-  nsViewManager* vm = shell->GetViewManager();
+  nsViewManager* vm = rootAcc->PresShellPtr()->GetViewManager();
   if (!vm) {
     return nullptr;
   }

@@ -21,6 +21,7 @@
 #include "mozilla/dom/BorrowedAttrInfo.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/ErrorResult.h"
+#include "mozilla/PresShell.h"
 
 using namespace mozilla;
 using namespace mozilla::a11y;
@@ -275,7 +276,7 @@ sdnAccessible::scrollTo(boolean aScrollTopLeft) {
                             ? nsIAccessibleScrollType::SCROLL_TYPE_TOP_LEFT
                             : nsIAccessibleScrollType::SCROLL_TYPE_BOTTOM_RIGHT;
 
-  nsCOMPtr<nsIPresShell> presShell = document->PresShell();
+  RefPtr<PresShell> presShell = document->PresShellPtr();
   nsCOMPtr<nsIContent> content = mNode->AsContent();
   nsCoreUtils::ScrollTo(presShell, content, scrollType);
   return S_OK;

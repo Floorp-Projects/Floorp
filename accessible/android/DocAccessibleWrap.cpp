@@ -13,7 +13,9 @@
 #include "nsAccUtils.h"
 #include "nsIPersistentProperties2.h"
 #include "SessionAccessibility.h"
+#include "mozilla/PresShell.h"
 
+using namespace mozilla;
 using namespace mozilla::a11y;
 
 const uint32_t kCacheRefreshInterval = 500;
@@ -22,8 +24,7 @@ const uint32_t kCacheRefreshInterval = 500;
 // DocAccessibleWrap
 ////////////////////////////////////////////////////////////////////////////////
 
-DocAccessibleWrap::DocAccessibleWrap(Document* aDocument,
-                                     nsIPresShell* aPresShell)
+DocAccessibleWrap::DocAccessibleWrap(Document* aDocument, PresShell* aPresShell)
     : DocAccessible(aDocument, aPresShell) {
   nsCOMPtr<nsIDocShellTreeItem> treeItem(aDocument->GetDocShell());
 
@@ -84,14 +85,11 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
                                               void* aDocAccParam) {
   RefPtr<DocAccessibleWrap> docAcc(
       dont_AddRef(reinterpret_cast<DocAccessibleWrap*>(aDocAccParam)));
-  if (!docAcc) {
+  if (!docAcc || docAcc->HasShutdown()) {
     return;
   }
 
-  nsIPresShell* presShell = docAcc->PresShell();
-  if (!presShell) {
-    return;
-  }
+  PresShell* presShell = docAcc->PresShellPtr();
   nsIFrame* rootFrame = presShell->GetRootFrame();
   if (!rootFrame) {
     return;

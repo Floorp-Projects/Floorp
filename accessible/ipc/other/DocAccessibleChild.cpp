@@ -21,6 +21,7 @@
 #ifdef MOZ_ACCESSIBILITY_ATK
 #  include "AccessibleWrap.h"
 #endif
+#include "mozilla/PresShell.h"
 
 namespace mozilla {
 namespace a11y {
@@ -245,7 +246,7 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvScrollTo(
     const uint64_t& aID, const uint32_t& aScrollType) {
   Accessible* acc = IdToAccessible(aID);
   if (acc) {
-    nsCOMPtr<nsIPresShell> presShell = acc->Document()->PresShell();
+    RefPtr<PresShell> presShell = acc->Document()->PresShellPtr();
     nsCOMPtr<nsIContent> content = acc->GetContent();
     nsCoreUtils::ScrollTo(presShell, content, aScrollType);
   }

@@ -115,7 +115,7 @@ void nsCoreUtils::DispatchClickEvent(XULTreeElement *aTree, int32_t aRowIndex,
 
 void nsCoreUtils::DispatchMouseEvent(EventMessage aMessage, int32_t aX,
                                      int32_t aY, nsIContent *aContent,
-                                     nsIFrame *aFrame, nsIPresShell *aPresShell,
+                                     nsIFrame *aFrame, PresShell *aPresShell,
                                      nsIWidget *aRootWidget) {
   WidgetMouseEvent event(true, aMessage, aRootWidget, WidgetMouseEvent::eReal,
                          WidgetMouseEvent::eNormal);
@@ -133,7 +133,7 @@ void nsCoreUtils::DispatchMouseEvent(EventMessage aMessage, int32_t aX,
 
 void nsCoreUtils::DispatchTouchEvent(EventMessage aMessage, int32_t aX,
                                      int32_t aY, nsIContent *aContent,
-                                     nsIFrame *aFrame, nsIPresShell *aPresShell,
+                                     nsIFrame *aFrame, PresShell *aPresShell,
                                      nsIWidget *aRootWidget) {
   nsIDocShell *docShell = nullptr;
   if (aPresShell->GetDocument()) {
@@ -505,7 +505,7 @@ bool nsCoreUtils::IsColumnHidden(nsTreeColumn *aColumn) {
                               nsGkAtoms::_true, eCaseMatters);
 }
 
-void nsCoreUtils::ScrollTo(nsIPresShell *aPresShell, nsIContent *aContent,
+void nsCoreUtils::ScrollTo(PresShell *aPresShell, nsIContent *aContent,
                            uint32_t aScrollType) {
   nsIPresShell::ScrollAxis vertical, horizontal;
   ConvertScrollTypeToPercents(aScrollType, &vertical, &horizontal);

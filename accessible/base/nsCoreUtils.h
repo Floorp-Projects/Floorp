@@ -7,7 +7,6 @@
 #define nsCoreUtils_h_
 
 #include "mozilla/EventForwards.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/dom/Element.h"
 #include "nsIAccessibleEvent.h"
 #include "nsIContent.h"
@@ -23,6 +22,7 @@ class nsIDocShell;
 class nsIWidget;
 
 namespace mozilla {
+class PresShell;
 namespace dom {
 class XULTreeElement;
 }
@@ -33,6 +33,7 @@ class XULTreeElement;
  */
 class nsCoreUtils {
  public:
+  typedef mozilla::PresShell PresShell;
   typedef mozilla::dom::Document Document;
 
   /**
@@ -74,7 +75,7 @@ class nsCoreUtils {
   MOZ_CAN_RUN_SCRIPT
   static void DispatchMouseEvent(mozilla::EventMessage aMessage, int32_t aX,
                                  int32_t aY, nsIContent *aContent,
-                                 nsIFrame *aFrame, nsIPresShell *aPresShell,
+                                 nsIFrame *aFrame, PresShell *aPresShell,
                                  nsIWidget *aRootWidget);
 
   /**
@@ -91,7 +92,7 @@ class nsCoreUtils {
   MOZ_CAN_RUN_SCRIPT
   static void DispatchTouchEvent(mozilla::EventMessage aMessage, int32_t aX,
                                  int32_t aY, nsIContent *aContent,
-                                 nsIFrame *aFrame, nsIPresShell *aPresShell,
+                                 nsIFrame *aFrame, PresShell *aPresShell,
                                  nsIWidget *aRootWidget);
 
   /**
@@ -214,7 +215,7 @@ class nsCoreUtils {
   /**
    * Return presShell for the document containing the given DOM node.
    */
-  static nsIPresShell *GetPresShellFor(nsINode *aNode) {
+  static PresShell *GetPresShellFor(nsINode *aNode) {
     return aNode->OwnerDoc()->GetPresShell();
   }
 
@@ -286,7 +287,7 @@ class nsCoreUtils {
    * Scroll content into view.
    */
   MOZ_CAN_RUN_SCRIPT
-  static void ScrollTo(nsIPresShell *aPresShell, nsIContent *aContent,
+  static void ScrollTo(PresShell *aPresShell, nsIContent *aContent,
                        uint32_t aScrollType);
 
   /**
