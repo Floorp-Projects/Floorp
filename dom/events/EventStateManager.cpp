@@ -1149,22 +1149,25 @@ bool EventStateManager::WalkESMTreeToHandleAccessKey(
 
     nsCOMPtr<nsIDocShell> subDS = do_QueryInterface(subShellItem);
     if (subDS && IsShellVisible(subDS)) {
-      nsCOMPtr<nsIPresShell> subPS = subDS->GetPresShell();
+      // Guarantee subPresShell lifetime while we're handling access key
+      // since somebody may assume that it won't be deleted before the
+      // corresponding nsPresContext and EventStateManager.
+      RefPtr<PresShell> subPresShell = subDS->GetPresShell();
 
       // Docshells need not have a presshell (eg. display:none
       // iframes, docshells in transition between documents, etc).
-      if (!subPS) {
+      if (!subPresShell) {
         // Oh, well.  Just move on to the next child
         continue;
       }
 
-      nsPresContext* subPC = subPS->GetPresContext();
+      RefPtr<nsPresContext> subPresContext = subPresShell->GetPresContext();
 
-      EventStateManager* esm =
-          static_cast<EventStateManager*>(subPC->EventStateManager());
+      RefPtr<EventStateManager> esm =
+          static_cast<EventStateManager*>(subPresContext->EventStateManager());
 
       if (esm && esm->WalkESMTreeToHandleAccessKey(
-                     aEvent, subPC, aAccessCharCodes, nullptr,
+                     aEvent, subPresContext, aAccessCharCodes, nullptr,
                      eAccessKeyProcessingDown, aExecute)) {
         return true;
       }
@@ -1177,16 +1180,21 @@ bool EventStateManager::WalkESMTreeToHandleAccessKey(
     docShell->GetParent(getter_AddRefs(parentShellItem));
     nsCOMPtr<nsIDocShell> parentDS = do_QueryInterface(parentShellItem);
     if (parentDS) {
-      nsCOMPtr<nsIPresShell> parentPS = parentDS->GetPresShell();
-      NS_ASSERTION(parentPS, "Our PresShell exists but the parent's does not?");
+      // Guarantee parentPresShell lifetime while we're handling access key
+      // since somebody may assume that it won't be deleted before the
+      // corresponding nsPresContext and EventStateManager.
+      RefPtr<PresShell> parentPresShell = parentDS->GetPresShell();
+      NS_ASSERTION(parentPresShell,
+                   "Our PresShell exists but the parent's does not?");
 
-      nsPresContext* parentPC = parentPS->GetPresContext();
-      NS_ASSERTION(parentPC, "PresShell without PresContext");
+      RefPtr<nsPresContext> parentPresContext =
+          parentPresShell->GetPresContext();
+      NS_ASSERTION(parentPresContext, "PresShell without PresContext");
 
-      EventStateManager* esm =
-          static_cast<EventStateManager*>(parentPC->EventStateManager());
+      RefPtr<EventStateManager> esm = static_cast<EventStateManager*>(
+          parentPresContext->EventStateManager());
       if (esm && esm->WalkESMTreeToHandleAccessKey(
-                     aEvent, parentPC, aAccessCharCodes, docShell,
+                     aEvent, parentPresContext, aAccessCharCodes, docShell,
                      eAccessKeyProcessingDown, aExecute)) {
         return true;
       }

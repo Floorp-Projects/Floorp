@@ -14,6 +14,9 @@
 #include "nsIPresShell.h"
 
 namespace mozilla {
+
+class PresShell;
+
 namespace dom {
 
 /* Visual Viewport API spec:
@@ -89,7 +92,7 @@ class VisualViewport final : public mozilla::DOMEventTargetHelper {
   CSSSize VisualViewportSize() const;
   CSSPoint VisualViewportOffset() const;
   CSSPoint LayoutViewportOffset() const;
-  nsIPresShell* GetPresShell() const;
+  PresShell* GetPresShell() const;
   nsPresContext* GetPresContext() const;
 
   void FireResizeEvent();

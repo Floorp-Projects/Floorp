@@ -14,12 +14,12 @@
 #include "nsString.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 
 #include "nsControllerCommandTable.h"
 #include "nsCommandParams.h"
 
 #include "nsPIDOMWindow.h"
-#include "nsIPresShell.h"
 #include "nsIDocShell.h"
 #include "nsISelectionController.h"
 #include "nsIWebNavigation.h"
@@ -129,7 +129,7 @@ class nsSelectionCommandsBase : public nsIControllerCommand {
   virtual ~nsSelectionCommandsBase() {}
 
   static nsresult GetPresShellFromWindow(nsPIDOMWindowOuter *aWindow,
-                                         nsIPresShell **aPresShell);
+                                         PresShell **aPresShell);
   static nsresult GetSelectionControllerFromWindow(
       nsPIDOMWindowOuter *aWindow, nsISelectionController **aSelCon);
 
@@ -207,7 +207,7 @@ nsSelectionCommandsBase::DoCommandParams(const char *aCommandName,
 // protected methods
 
 nsresult nsSelectionCommandsBase::GetPresShellFromWindow(
-    nsPIDOMWindowOuter *aWindow, nsIPresShell **aPresShell) {
+    nsPIDOMWindowOuter *aWindow, PresShell **aPresShell) {
   *aPresShell = nullptr;
   NS_ENSURE_TRUE(aWindow, NS_ERROR_FAILURE);
 
@@ -220,13 +220,14 @@ nsresult nsSelectionCommandsBase::GetPresShellFromWindow(
 
 nsresult nsSelectionCommandsBase::GetSelectionControllerFromWindow(
     nsPIDOMWindowOuter *aWindow, nsISelectionController **aSelCon) {
-  *aSelCon = nullptr;
-
-  nsCOMPtr<nsIPresShell> presShell;
+  RefPtr<PresShell> presShell;
   GetPresShellFromWindow(aWindow, getter_AddRefs(presShell));
-  if (presShell) return CallQueryInterface(presShell, aSelCon);
-
-  return NS_ERROR_FAILURE;
+  if (!presShell) {
+    *aSelCon = nullptr;
+    return NS_ERROR_FAILURE;
+  }
+  *aSelCon = presShell.forget().take();
+  return NS_OK;
 }
 
 #if 0
@@ -511,7 +512,7 @@ nsresult nsClipboardCommand::DoCommand(const char *aCommandName,
   nsIDocShell *docShell = window->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
+  RefPtr<PresShell> presShell = docShell->GetPresShell();
   NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
 
   EventMessage eventMessage = eCopy;
@@ -930,7 +931,7 @@ nsLookUpDictionaryCommand::DoCommandParams(const char *aCommandName,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
+  PresShell *presShell = docShell->GetPresShell();
   if (NS_WARN_IF(!presShell)) {
     return NS_ERROR_FAILURE;
   }

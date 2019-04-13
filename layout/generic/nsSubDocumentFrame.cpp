@@ -236,7 +236,7 @@ nsIPresShell* nsSubDocumentFrame::GetSubdocumentPresShellForPainting(
       if (!mFrameLoader) return nullptr;
       nsIDocShell* docShell = mFrameLoader->GetDocShell(IgnoreErrors());
       if (!docShell) return nullptr;
-      presShell = static_cast<mozilla::PresShell*>(docShell->GetPresShell());
+      presShell = docShell->GetPresShell();
     }
   }
 
@@ -1246,10 +1246,8 @@ nsIFrame* nsSubDocumentFrame::ObtainIntrinsicSizeFrame() {
     // Try to get an nsIFrame for our sub-document's document element
     nsIFrame* subDocRoot = nullptr;
 
-    nsIDocShell* docShell = GetDocShell();
-    if (docShell) {
-      nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
-      if (presShell) {
+    if (nsIDocShell* docShell = GetDocShell()) {
+      if (mozilla::PresShell* presShell = docShell->GetPresShell()) {
         nsIScrollableFrame* scrollable =
             presShell->GetRootScrollFrameAsScrollable();
         if (scrollable) {

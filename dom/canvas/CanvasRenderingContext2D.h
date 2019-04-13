@@ -391,7 +391,7 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
   /**
    * Gets the pres shell from either the canvas element or the doc shell
    */
-  nsIPresShell* GetPresShell() final {
+  PresShell* GetPresShell() final {
     if (mCanvasElement) {
       return mCanvasElement->OwnerDoc()->GetPresShell();
     }

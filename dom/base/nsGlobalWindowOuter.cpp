@@ -1585,12 +1585,11 @@ void nsGlobalWindowOuter::SetInitialPrincipalToSubject() {
     mDoc->SetIsInitialDocument(true);
   }
 
-  nsCOMPtr<nsIPresShell> shell = GetDocShell()->GetPresShell();
-
-  if (shell && !shell->DidInitialize()) {
+  RefPtr<PresShell> presShell = GetDocShell()->GetPresShell();
+  if (presShell && !presShell->DidInitialize()) {
     // Ensure that if someone plays with this document they will get
     // layout happening.
-    shell->Initialize();
+    presShell->Initialize();
   }
 }
 
@@ -3373,7 +3372,7 @@ nsresult nsGlobalWindowOuter::GetInnerSize(CSSIntSize& aSize) {
   NS_ENSURE_STATE(mDocShell);
 
   RefPtr<nsPresContext> presContext = mDocShell->GetPresContext();
-  RefPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
+  PresShell* presShell = mDocShell->GetPresShell();
 
   if (!presContext || !presShell) {
     aSize = CSSIntSize(0, 0);
@@ -3416,7 +3415,7 @@ void nsGlobalWindowOuter::SetInnerWidthOuter(int32_t aInnerWidth,
   }
 
   CheckSecurityWidthAndHeight(&aInnerWidth, nullptr, aCallerType);
-  RefPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
+  RefPtr<PresShell> presShell = mDocShell->GetPresShell();
 
   // Setting inner width should set the visual viewport. Most of the
   // time, this is the same as the CSS viewport, and when we set one,
@@ -3478,7 +3477,7 @@ void nsGlobalWindowOuter::SetInnerHeightOuter(int32_t aInnerHeight,
   }
 
   CheckSecurityWidthAndHeight(nullptr, &aInnerHeight, aCallerType);
-  RefPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
+  RefPtr<PresShell> presShell = mDocShell->GetPresShell();
 
   // Setting inner height should set the visual viewport. Most of the
   // time, this is the same as the CSS viewport, and when we set one,
@@ -3655,7 +3654,7 @@ nsRect nsGlobalWindowOuter::GetInnerScreenRect() {
     return nsRect();
   }
 
-  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
+  PresShell* presShell = mDocShell->GetPresShell();
   if (!presShell) {
     return nsRect();
   }
@@ -3720,7 +3719,7 @@ uint64_t nsGlobalWindowOuter::GetMozPaintCountOuter() {
     return 0;
   }
 
-  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
+  PresShell* presShell = mDocShell->GetPresShell();
   return presShell ? presShell->GetPaintCount() : 0;
 }
 
@@ -4064,7 +4063,7 @@ already_AddRefed<nsIWidget> nsGlobalWindowOuter::GetMainWidget() {
 nsIWidget* nsGlobalWindowOuter::GetNearestWidget() const {
   nsIDocShell* docShell = GetDocShell();
   NS_ENSURE_TRUE(docShell, nullptr);
-  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
+  PresShell* presShell = docShell->GetPresShell();
   NS_ENSURE_TRUE(presShell, nullptr);
   nsIFrame* rootFrame = presShell->GetRootFrame();
   NS_ENSURE_TRUE(rootFrame, nullptr);
@@ -4440,9 +4439,9 @@ bool nsGlobalWindowOuter::SetWidgetFullscreen(FullscreenReason aReason,
 
   if (!NS_WARN_IF(!IsChromeWindow())) {
     if (!NS_WARN_IF(mChromeFields.mFullscreenPresShell)) {
-      if (nsIPresShell* shell = mDocShell->GetPresShell()) {
-        if (nsRefreshDriver* rd = shell->GetRefreshDriver()) {
-          mChromeFields.mFullscreenPresShell = do_GetWeakReference(shell);
+      if (PresShell* presShell = mDocShell->GetPresShell()) {
+        if (nsRefreshDriver* rd = presShell->GetRefreshDriver()) {
+          mChromeFields.mFullscreenPresShell = do_GetWeakReference(presShell);
           MOZ_ASSERT(mChromeFields.mFullscreenPresShell);
           rd->SetIsResizeSuppressed();
           rd->Freeze();
@@ -4568,9 +4567,10 @@ void nsGlobalWindowOuter::EnsureReflowFlushAndPaint() {
 
   if (!mDocShell) return;
 
-  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
-
-  if (!presShell) return;
+  RefPtr<PresShell> presShell = mDocShell->GetPresShell();
+  if (!presShell) {
+    return;
+  }
 
   // Flush pending reflows.
   if (mDoc) {
@@ -4919,23 +4919,9 @@ void nsGlobalWindowOuter::FocusOuter() {
     return;
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
   // Don't look for a presshell if we're a root chrome window that's got
   // about:blank loaded.  We don't want to focus our widget in that case.
   // XXXbz should we really be checking for IsInitialDocument() instead?
-  bool lookForPresShell = true;
-  if (mDocShell->ItemType() == nsIDocShellTreeItem::typeChrome &&
-      GetPrivateRoot() == this && mDoc) {
-    nsIURI* ourURI = mDoc->GetDocumentURI();
-    if (ourURI) {
-      lookForPresShell = !NS_IsAboutBlank(ourURI);
-    }
-  }
-
-  if (lookForPresShell) {
-    presShell = mDocShell->GetEldestPresShell();
-  }
-
   nsCOMPtr<nsIDocShellTreeItem> parentDsti;
   mDocShell->GetParent(getter_AddRefs(parentDsti));
 
@@ -6563,7 +6549,7 @@ Selection* nsGlobalWindowOuter::GetSelectionOuter() {
     return nullptr;
   }
 
-  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
+  PresShell* presShell = mDocShell->GetPresShell();
   if (!presShell) {
     return nullptr;
   }
@@ -7323,7 +7309,7 @@ nsIScrollableFrame* nsGlobalWindowOuter::GetScrollFrame() {
     return nullptr;
   }
 
-  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
+  PresShell* presShell = mDocShell->GetPresShell();
   if (presShell) {
     return presShell->GetRootScrollFrameAsScrollable();
   }
@@ -7498,7 +7484,7 @@ void nsGlobalWindowOuter::SetCursorOuter(const nsAString& aCursor,
 
   if (presContext) {
     // Need root widget.
-    nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
+    PresShell* presShell = mDocShell->GetPresShell();
     if (!presShell) {
       aError.Throw(NS_ERROR_FAILURE);
       return;

@@ -6,6 +6,7 @@
 #include "RootAccessible.h"
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/PresShell.h"  // for nsAccUtils::GetDocAccessibleFor()
 
 #define CreateEvent CreateEventA
 

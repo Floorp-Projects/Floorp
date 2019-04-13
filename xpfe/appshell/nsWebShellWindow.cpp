@@ -51,7 +51,6 @@
 #include "nsIScriptSecurityManager.h"
 
 // For calculating size
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 
 #include "nsIBaseWindow.h"
@@ -62,6 +61,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/LoadURIOptionsBinding.h"
@@ -307,7 +307,7 @@ bool nsWebShellWindow::RequestWindowClose(nsIWidget* aWidget) {
                                                 : nullptr);
   nsCOMPtr<EventTarget> eventTarget = do_QueryInterface(window);
 
-  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
+  RefPtr<PresShell> presShell = mDocShell->GetPresShell();
   if (!presShell) {
     mozilla::DebugOnly<bool> dying;
     MOZ_ASSERT(NS_SUCCEEDED(mDocShell->IsBeingDestroyed(&dying)) && dying,
