@@ -6,6 +6,7 @@
 
 /* Per JSRuntime object */
 
+#include "mozilla/ArrayUtils.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
 
@@ -2797,7 +2798,14 @@ static bool PreserveWrapper(JSContext* cx, JS::Handle<JSObject*> obj) {
 }
 
 static nsresult ReadSourceFromFilename(JSContext* cx, const char* filename,
-                                       char16_t** src, size_t* len) {
+                                       char16_t** twoByteSource,
+                                       char** utf8Source, size_t* len) {
+  MOZ_ASSERT(*len == 0);
+  MOZ_ASSERT((twoByteSource != nullptr) != (utf8Source != nullptr),
+             "must be called requesting only one of UTF-8 or UTF-16 source");
+  MOZ_ASSERT_IF(twoByteSource, !*twoByteSource);
+  MOZ_ASSERT_IF(utf8Source, !*utf8Source);
+
   nsresult rv;
 
   // mozJSSubScriptLoader prefixes the filenames of the scripts it loads with
@@ -2852,18 +2860,19 @@ static nsresult ReadSourceFromFilename(JSContext* cx, const char* filename,
     return NS_ERROR_FILE_TOO_BIG;
   }
 
-  // Allocate an internal buf the size of the file.
-  auto buf = MakeUniqueFallible<unsigned char[]>(rawLen);
+  // Allocate a buffer the size of the file to initially fill with the UTF-8
+  // contents of the file.  Use the JS allocator so that if UTF-8 source was
+  // requested, we can return this memory directly.
+  JS::UniqueChars buf(js_pod_malloc<char>(rawLen));
   if (!buf) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  unsigned char* ptr = buf.get();
-  unsigned char* end = ptr + rawLen;
+  char* ptr = buf.get();
+  char* end = ptr + rawLen;
   while (ptr < end) {
     uint32_t bytesRead;
-    rv =
-        scriptStream->Read(reinterpret_cast<char*>(ptr), end - ptr, &bytesRead);
+    rv = scriptStream->Read(ptr, PointerRangeSize(ptr, end), &bytesRead);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -2871,18 +2880,31 @@ static nsresult ReadSourceFromFilename(JSContext* cx, const char* filename,
     ptr += bytesRead;
   }
 
-  rv = ScriptLoader::ConvertToUTF16(scriptChannel, buf.get(), rawLen,
-                                    NS_LITERAL_STRING("UTF-8"), nullptr, *src,
-                                    *len);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (utf8Source) {
+    // |buf| is already UTF-8, so we can directly return it.
+    *len = rawLen;
+    *utf8Source = buf.release();
+  } else {
+    MOZ_ASSERT(twoByteSource != nullptr);
 
-  if (!*src) {
-    return NS_ERROR_FAILURE;
+    // |buf| can't be directly returned -- convert it to UTF-16.
+
+    // On success this overwrites |*twoByteSource| and |*len|.
+    rv = ScriptLoader::ConvertToUTF16(
+        scriptChannel, reinterpret_cast<const unsigned char*>(buf.get()),
+        rawLen, NS_LITERAL_STRING("UTF-8"), nullptr, *twoByteSource, *len);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (!*twoByteSource) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   // Historically this method used JS_malloc() which updates the GC memory
-  // accounting.  Since ConvertToUTF16() now uses js_malloc() instead we
-  // update the accounting manually after the fact.
+  // accounting.  Since ConvertToUTF16() and js::MakeUnique now use js_malloc()
+  // instead we update the accounting manually after the fact.
+  //
+  // XXX jwalden Should this be |*len * sizeof(char16_t)| in the UTF-16 case?
   JS_updateMallocCounter(cx, *len);
 
   return NS_OK;
@@ -2892,10 +2914,17 @@ static nsresult ReadSourceFromFilename(JSContext* cx, const char* filename,
 // the source for a chrome JS function. See the comment in the XPCJSRuntime
 // constructor.
 class XPCJSSourceHook : public js::SourceHook {
-  bool load(JSContext* cx, const char* filename, char16_t** src,
-            size_t* length) override {
-    *src = nullptr;
+  bool load(JSContext* cx, const char* filename, char16_t** twoByteSource,
+            char** utf8Source, size_t* length) override {
+    MOZ_ASSERT((twoByteSource != nullptr) != (utf8Source != nullptr),
+               "must be called requesting only one of UTF-8 or UTF-16 source");
+
     *length = 0;
+    if (twoByteSource) {
+      *twoByteSource = nullptr;
+    } else {
+      *utf8Source = nullptr;
+    }
 
     if (!nsContentUtils::IsSystemCaller(cx)) {
       return true;
@@ -2905,7 +2934,8 @@ class XPCJSSourceHook : public js::SourceHook {
       return true;
     }
 
-    nsresult rv = ReadSourceFromFilename(cx, filename, src, length);
+    nsresult rv =
+        ReadSourceFromFilename(cx, filename, twoByteSource, utf8Source, length);
     if (NS_FAILED(rv)) {
       xpc::Throw(cx, rv);
       return false;

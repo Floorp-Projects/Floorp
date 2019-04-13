@@ -401,11 +401,19 @@ class SourceHook {
   virtual ~SourceHook() {}
 
   /**
-   * Set |*src| and |*length| to refer to the source code for |filename|.
-   * On success, the caller owns the buffer to which |*src| points, and
-   * should use JS_free to free it.
+   * Attempt to load the source for |filename|.
+   *
+   * On success, return true and store an owning pointer to the UTF-8 or UTF-16
+   * contents of the file in whichever of |twoByteSource| or |utf8Source| is
+   * non-null.  (Exactly one of these will be non-null.)  This pointer must be
+   * |js_free|'d when it is no longer needed.
+   *
+   * On failure, return false.  The contents of whichever of |twoByteSource| or
+   * |utf8Source| was initially non-null are unspecified and must not be
+   * |js_free|'d.
    */
-  virtual bool load(JSContext* cx, const char* filename, char16_t** src,
+  virtual bool load(JSContext* cx, const char* filename,
+                    char16_t** twoByteSource, char** utf8Source,
                     size_t* length) = 0;
 };
 
