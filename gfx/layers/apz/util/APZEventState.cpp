@@ -17,6 +17,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Move.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/layers/APZCCallbackHelper.h"
 #include "nsCOMPtr.h"
@@ -212,10 +213,11 @@ void APZEventState::ProcessSingleTap(const CSSPoint& aPoint,
   }
 }
 
-bool APZEventState::FireContextmenuEvents(
-    const nsCOMPtr<nsIPresShell>& aPresShell, const CSSPoint& aPoint,
-    const CSSToLayoutDeviceScale& aScale, Modifiers aModifiers,
-    const nsCOMPtr<nsIWidget>& aWidget) {
+bool APZEventState::FireContextmenuEvents(PresShell* aPresShell,
+                                          const CSSPoint& aPoint,
+                                          const CSSToLayoutDeviceScale& aScale,
+                                          Modifiers aModifiers,
+                                          const nsCOMPtr<nsIWidget>& aWidget) {
   // Synthesize mousemove event for allowing users to emulate to move mouse
   // cursor over the element.  As a result, users can open submenu UI which
   // is opened when mouse cursor is moved over a link (i.e., it's a case that
@@ -256,7 +258,7 @@ bool APZEventState::FireContextmenuEvents(
   return eventHandled;
 }
 
-void APZEventState::ProcessLongTap(const nsCOMPtr<nsIPresShell>& aPresShell,
+void APZEventState::ProcessLongTap(PresShell* aPresShell,
                                    const CSSPoint& aPoint,
                                    const CSSToLayoutDeviceScale& aScale,
                                    Modifiers aModifiers,
@@ -300,7 +302,7 @@ void APZEventState::ProcessLongTap(const nsCOMPtr<nsIPresShell>& aPresShell,
   }
 }
 
-void APZEventState::ProcessLongTapUp(const nsCOMPtr<nsIPresShell>& aPresShell,
+void APZEventState::ProcessLongTapUp(PresShell* aPresShell,
                                      const CSSPoint& aPoint,
                                      const CSSToLayoutDeviceScale& aScale,
                                      Modifiers aModifiers) {
