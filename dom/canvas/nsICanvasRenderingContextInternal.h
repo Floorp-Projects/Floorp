@@ -28,6 +28,7 @@
 class nsDisplayListBuilder;
 
 namespace mozilla {
+class PresShell;
 namespace layers {
 class CanvasLayer;
 class CanvasRenderer;
@@ -57,7 +58,7 @@ class nsICanvasRenderingContextInternal : public nsISupports,
     AddPostRefreshObserverIfNecessary();
   }
 
-  virtual nsIPresShell* GetPresShell() {
+  virtual mozilla::PresShell* GetPresShell() {
     if (mCanvasElement) {
       return mCanvasElement->OwnerDoc()->GetPresShell();
     }

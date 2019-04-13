@@ -501,7 +501,7 @@ class PresShell final : public nsIPresShell,
   void QueryIsActive();
   nsresult UpdateImageLockingState();
 
-  already_AddRefed<nsIPresShell> GetParentPresShellForEventHandling();
+  already_AddRefed<PresShell> GetParentPresShellForEventHandling();
 
   /**
    * EventHandler is implementation of nsIPresShell::HandleEvent().
@@ -1273,7 +1273,7 @@ class PresShell final : public nsIPresShell,
     already_AddRefed<nsPIDOMWindowOuter> GetFocusedDOMWindowInOurWindow() {
       return mPresShell->GetFocusedDOMWindowInOurWindow();
     }
-    already_AddRefed<nsIPresShell> GetParentPresShellForEventHandling() {
+    already_AddRefed<PresShell> GetParentPresShellForEventHandling() {
       return mPresShell->GetParentPresShellForEventHandling();
     }
     void PushDelayedEventIntoQueue(UniquePtr<DelayedEvent>&& aDelayedEvent) {

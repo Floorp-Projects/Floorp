@@ -4230,8 +4230,10 @@ void nsGlobalWindowInner::UpdateCanvasFocus(bool aFocusChanged,
   docShell->GetEditable(&editable);
   if (editable) return;
 
-  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
-  if (!presShell || !mDoc) return;
+  PresShell* presShell = docShell->GetPresShell();
+  if (!presShell || !mDoc) {
+    return;
+  }
 
   Element* rootElement = mDoc->GetRootElement();
   if (rootElement) {

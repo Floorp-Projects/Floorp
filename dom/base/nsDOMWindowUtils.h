@@ -14,13 +14,13 @@
 #include "mozilla/BasicEvents.h"
 
 class nsGlobalWindowOuter;
-class nsIPresShell;
 class nsIWidget;
 class nsPresContext;
 class nsView;
 struct nsPoint;
 
 namespace mozilla {
+class PresShell;
 namespace dom {
 class Document;
 class Element;
@@ -77,7 +77,7 @@ class nsDOMWindowUtils final : public nsIDOMWindowUtils,
   nsIWidget* GetWidget(nsPoint* aOffset = nullptr);
   nsIWidget* GetWidgetForElement(mozilla::dom::Element* aElement);
 
-  nsIPresShell* GetPresShell();
+  mozilla::PresShell* GetPresShell();
   nsPresContext* GetPresContext();
   mozilla::dom::Document* GetDocument();
   mozilla::layers::LayerTransactionChild* GetLayerTransaction();

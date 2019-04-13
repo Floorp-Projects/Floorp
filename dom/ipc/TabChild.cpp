@@ -2437,7 +2437,7 @@ mozilla::ipc::IPCResult TabChild::RecvRenderLayers(
     // a content viewer if one doesn't exist yet. Creating a content viewer can
     // cause JS to run, which we want to avoid. nsIDocShell::GetPresShell
     // returns null if no content viewer exists yet.
-    if (nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell()) {
+    if (RefPtr<PresShell> presShell = docShell->GetPresShell()) {
       presShell->SetIsActive(true);
 
       if (nsIFrame* root = presShell->GetRootFrame()) {
@@ -2752,7 +2752,7 @@ void TabChild::MakeHidden() {
     // here because that would create a content viewer if one doesn't exist yet.
     // Creating a content viewer can cause JS to run, which we want to avoid.
     // nsIDocShell::GetPresShell returns null if no content viewer exists yet.
-    if (nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell()) {
+    if (RefPtr<PresShell> presShell = docShell->GetPresShell()) {
       if (nsPresContext* presContext = presShell->GetPresContext()) {
         nsRootPresContext* rootPresContext = presContext->GetRootPresContext();
         nsIFrame* rootFrame = presShell->GetRootFrame();
@@ -2957,7 +2957,7 @@ void TabChild::SchedulePaint() {
   // a content viewer if one doesn't exist yet. Creating a content viewer can
   // cause JS to run, which we want to avoid. nsIDocShell::GetPresShell
   // returns null if no content viewer exists yet.
-  if (nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell()) {
+  if (RefPtr<PresShell> presShell = docShell->GetPresShell()) {
     if (nsIFrame* root = presShell->GetRootFrame()) {
       root->SchedulePaint();
     }

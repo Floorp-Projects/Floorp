@@ -17,11 +17,11 @@
 #include "nsIURI.h"
 class nsCommandManager;
 class nsPresContext;
-class nsIPresShell;
 class nsDocShellLoadState;
 namespace mozilla {
 class Encoding;
 class HTMLEditor;
+class PresShell;
 namespace dom {
 class BrowsingContext;
 class ClientSource;
@@ -34,8 +34,8 @@ class ClientSource;
  */
 
 [ptr] native nsPresContext(nsPresContext);
-[ptr] native nsIPresShell(nsIPresShell);
 [ptr] native nsCommandManager(nsCommandManager);
+[ptr] native PresShell(mozilla::PresShell);
 [ref] native MaybeURI(mozilla::Maybe<nsCOMPtr<nsIURI>>);
 [ref] native Encoding(const mozilla::Encoding*);
       native UniqueClientSource(mozilla::UniquePtr<mozilla::dom::ClientSource>);
@@ -149,13 +149,13 @@ interface nsIDocShell : nsIDocShellTreeItem
   /**
    * Presentation shell for the currently loaded document.  This may be null.
    */
-  [notxpcom,nostdcall] readonly attribute nsIPresShell presShell;
+  [notxpcom,nostdcall] readonly attribute PresShell presShell;
 
   /**
    * Presentation shell for the oldest document, if this docshell is
    * currently transitioning between documents.
    */
-  [notxpcom,nostdcall] readonly attribute nsIPresShell eldestPresShell;
+  [notxpcom,nostdcall] readonly attribute PresShell eldestPresShell;
 
   /**
    * Content Viewer that is currently loaded for this DocShell.  This may

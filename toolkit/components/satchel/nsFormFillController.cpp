@@ -9,6 +9,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/EventListenerManager.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"  // for Event
 #include "mozilla/dom/HTMLInputElement.h"
@@ -17,6 +18,7 @@
 #include "mozilla/dom/MouseEvent.h"
 #include "mozilla/dom/PageTransitionEvent.h"
 #include "mozilla/Logging.h"
+#include "mozilla/PresShell.h"
 #include "nsIFormAutoComplete.h"
 #include "nsIInputListAutoComplete.h"
 #include "nsIAutoCompleteSimpleResult.h"
@@ -29,9 +31,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIWebNavigation.h"
 #include "nsIContentViewer.h"
-#include "mozilla/dom/Document.h"
 #include "nsIContent.h"
-#include "nsIPresShell.h"
 #include "nsRect.h"
 #include "nsILoginManager.h"
 #include "nsToolkitCompsCID.h"
@@ -378,7 +378,7 @@ nsFormFillController::SetPopupOpen(bool aPopupOpen) {
       NS_ENSURE_STATE(content);
       nsCOMPtr<nsIDocShell> docShell = GetDocShellForInput(mFocusedInput);
       NS_ENSURE_STATE(docShell);
-      nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
+      RefPtr<PresShell> presShell = docShell->GetPresShell();
       NS_ENSURE_STATE(presShell);
       presShell->ScrollContentIntoView(
           content,
