@@ -1461,9 +1461,6 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   ResourceTimingStruct timing;
   GetTimingAttributes(mChannel, timing);
 
-  bool isResolvedByTRR = false;
-  chan->GetIsResolvedByTRR(&isResolvedByTRR);
-
   rv = NS_OK;
   if (mIPCClosed ||
       !SendOnStartRequest(
@@ -1473,7 +1470,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
           cacheEntryId, fetchCount, expirationTime, cachedCharset,
           secInfoSerialization, chan->GetSelfAddr(), chan->GetPeerAddr(),
           redirectCount, cacheKey, altDataType, altDataLen, deliveringAltData,
-          applyConversion, isResolvedByTRR, timing)) {
+          applyConversion, timing)) {
     rv = NS_ERROR_UNEXPECTED;
   }
   requestHead->Exit();

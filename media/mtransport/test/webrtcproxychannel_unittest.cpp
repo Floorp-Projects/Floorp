@@ -182,10 +182,6 @@ class FakeSocketTransportProvider : public nsISocketTransport {
     MOZ_ASSERT(false);
     return NS_OK;
   }
-  NS_IMETHOD ResolvedByTRR(bool *aResolvedByTRR) override {
-    MOZ_ASSERT(false);
-    return NS_OK;
-  }
 
   // nsITransport
   NS_IMETHOD OpenInputStream(uint32_t aFlags, uint32_t aSegmentSize,
