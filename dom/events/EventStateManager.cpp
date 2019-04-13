@@ -5052,7 +5052,8 @@ nsresult EventStateManager::HandleMiddleClickPaste(
   nsCOMPtr<nsIContent> container;
   int32_t offset;
   nsLayoutUtils::GetContainerAndOffsetAtEvent(
-      aPresShell, aMouseEvent, getter_AddRefs(container), &offset);
+      static_cast<PresShell*>(aPresShell), aMouseEvent,
+      getter_AddRefs(container), &offset);
   if (container) {
     // XXX If readonly or disabled <input> or <textarea> in contenteditable
     //     designMode editor is clicked, the point is in the editor.
@@ -5078,7 +5079,8 @@ nsresult EventStateManager::HandleMiddleClickPaste(
   // Fire ePaste event by ourselves since we need to dispatch "paste" event
   // even if the middle click event was consumed for compatibility with
   // Chromium.
-  if (!nsCopySupport::FireClipboardEvent(ePaste, clipboardType, aPresShell,
+  if (!nsCopySupport::FireClipboardEvent(ePaste, clipboardType,
+                                         static_cast<PresShell*>(aPresShell),
                                          selection)) {
     *aStatus = nsEventStatus_eConsumeNoDefault;
     return NS_OK;

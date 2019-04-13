@@ -197,6 +197,7 @@ class nsFlexContainerFrame final : public nsContainerFrame {
    *         as its content insertion frame.
    * @note this might destroy layout/style data since it may flush layout.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static nsFlexContainerFrame* GetFlexFrameWithComputedInfo(nsIFrame* aFrame);
 
   /**

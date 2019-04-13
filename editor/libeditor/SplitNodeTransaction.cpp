@@ -80,21 +80,23 @@ SplitNodeTransaction::DoTransaction() {
   }
 
   // Insert the new node
-  mEditorBase->DoSplitNode(EditorDOMPoint(mStartOfRightNode), *mNewLeftNode,
-                           error);
+  RefPtr<EditorBase> editorBase = mEditorBase;
+  nsCOMPtr<nsIContent> newLeftNode = mNewLeftNode;
+  editorBase->DoSplitNode(EditorDOMPoint(mStartOfRightNode), *newLeftNode,
+                          error);
   if (NS_WARN_IF(error.Failed())) {
     return error.StealNSResult();
   }
 
-  if (!mEditorBase->AllowsTransactionsToChangeSelection()) {
+  if (!editorBase->AllowsTransactionsToChangeSelection()) {
     return NS_OK;
   }
 
   NS_WARNING_ASSERTION(
-      !mEditorBase->Destroyed(),
+      !editorBase->Destroyed(),
       "The editor has gone but SplitNodeTransaction keeps trying to modify "
       "Selection");
-  RefPtr<Selection> selection = mEditorBase->GetSelection();
+  RefPtr<Selection> selection = editorBase->GetSelection();
   if (NS_WARN_IF(!selection)) {
     return NS_ERROR_FAILURE;
   }

@@ -106,6 +106,7 @@ interface nsIDOMWindowUtils : nsISupports {
   /**
    * Force a synchronous layer transaction for this window if necessary.
    */
+  [can_run_script]
   void updateLayerTree();
 
   /**

@@ -2270,7 +2270,7 @@ nsIFrame* nsLayoutUtils::GetPopupFrameForEventCoordinates(
   return nullptr;
 }
 
-void nsLayoutUtils::GetContainerAndOffsetAtEvent(nsIPresShell* aPresShell,
+void nsLayoutUtils::GetContainerAndOffsetAtEvent(PresShell* aPresShell,
                                                  const WidgetEvent* aEvent,
                                                  nsIContent** aContainer,
                                                  int32_t* aOffset) {

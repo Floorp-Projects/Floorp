@@ -552,6 +552,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
                                nsIContent* aOverrideClickTarget);
 
   void EnsureDocument(nsPresContext* aPresContext);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void FlushPendingEvents(nsPresContext* aPresContext);
 
   /**

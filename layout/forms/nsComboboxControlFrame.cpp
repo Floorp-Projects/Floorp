@@ -508,7 +508,7 @@ class nsAsyncResize : public Runnable {
  public:
   explicit nsAsyncResize(nsComboboxControlFrame* aFrame)
       : mozilla::Runnable("nsAsyncResize"), mFrame(aFrame) {}
-  NS_IMETHOD Run() override {
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
     if (mFrame.IsAlive()) {
       nsComboboxControlFrame* combo =
           static_cast<nsComboboxControlFrame*>(mFrame.GetFrame());

@@ -251,7 +251,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // Used when content is causing a FrameLoader to be created, and
   // needs to try forcing layout to flush in order to get accurate
   // dimensions for the content area.
-  void ForceLayoutIfNecessary();
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void ForceLayoutIfNecessary();
 
   // The guts of an nsFrameLoaderOwner::SwapFrameLoader implementation.  A
   // frame loader owner needs to call this, and pass in the two references to

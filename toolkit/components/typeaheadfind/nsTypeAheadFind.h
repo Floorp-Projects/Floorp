@@ -66,9 +66,9 @@ class nsTypeAheadFind : public nsITypeAheadFind,
                       bool *aUsesIndependentSelection);
   bool IsRangeRendered(nsIPresShell *aPresShell, nsPresContext *aPresContext,
                        nsRange *aRange);
-  nsresult FindItNow(nsIPresShell *aPresShell, bool aIsLinksOnly,
-                     bool aIsFirstVisiblePreferred, bool aFindPrev,
-                     uint16_t *aResult);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  nsresult FindItNow(bool aIsLinksOnly, bool aIsFirstVisiblePreferred,
+                     bool aFindPrev, uint16_t *aResult);
   nsresult GetSearchContainers(nsISupports *aContainer,
                                nsISelectionController *aSelectionController,
                                bool aIsFirstVisiblePreferred, bool aFindPrev,

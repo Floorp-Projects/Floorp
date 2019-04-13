@@ -555,6 +555,7 @@ class nsIPresShell : public nsStubDocumentObserver {
    *
    * @param aType the type of notifications to flush
    */
+  MOZ_CAN_RUN_SCRIPT
   void FlushPendingNotifications(mozilla::FlushType aType) {
     if (!NeedFlush(aType)) {
       return;
@@ -563,6 +564,7 @@ class nsIPresShell : public nsStubDocumentObserver {
     DoFlushPendingNotifications(aType);
   }
 
+  MOZ_CAN_RUN_SCRIPT
   void FlushPendingNotifications(mozilla::ChangesToFlush aType) {
     if (!NeedFlush(aType.mFlushType)) {
       return;
@@ -575,8 +577,9 @@ class nsIPresShell : public nsStubDocumentObserver {
   /**
    * Implementation methods for FlushPendingNotifications.
    */
+  MOZ_CAN_RUN_SCRIPT
   virtual void DoFlushPendingNotifications(mozilla::FlushType aType) = 0;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  MOZ_CAN_RUN_SCRIPT
   virtual void DoFlushPendingNotifications(mozilla::ChangesToFlush aType) = 0;
 
  public:

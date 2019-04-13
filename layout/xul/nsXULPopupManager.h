@@ -672,6 +672,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   ~nsXULPopupManager();
 
   // get the nsMenuPopupFrame, if any, for the given content node
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsMenuPopupFrame* GetPopupFrameForContent(nsIContent* aContent,
                                             bool aShouldFlush);
 
@@ -729,6 +730,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
    * aDeselectMenu - true to unhighlight the menu when hiding it
    * aIsCancel - true if this popup is hiding due to being cancelled.
    */
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void FirePopupHidingEvent(nsIContent* aPopup, nsIContent* aNextPopup,
                             nsIContent* aLastPopup, nsPresContext* aPresContext,
                             nsPopupType aPopupType, bool aDeselectMenu,

@@ -121,6 +121,7 @@ class nsPrintJob final : public nsIObserver,
   nsresult ReflowDocList(const mozilla::UniquePtr<nsPrintObject>& aPO,
                          bool aSetPixelScale);
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult ReflowPrintObject(const mozilla::UniquePtr<nsPrintObject>& aPO);
 
   void CheckForChildFrameSets(const mozilla::UniquePtr<nsPrintObject>& aPO);
@@ -203,6 +204,7 @@ class nsPrintJob final : public nsIObserver,
   nsView* GetParentViewForRoot();
   bool DoSetPixelScale();
   void UpdateZoomRatio(nsPrintObject* aPO, bool aSetPixelScale);
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult ReconstructAndReflow(bool aDoSetPixelScale);
   nsresult UpdateSelectionAndShrinkPrintObject(nsPrintObject* aPO,
                                                bool aDocumentIsTopLevel);

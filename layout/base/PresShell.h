@@ -104,8 +104,9 @@ class PresShell final : public nsIPresShell,
       nscoord aWidth, nscoord aHeight, nscoord aOldWidth, nscoord aOldHeight,
       ResizeReflowOptions aOptions = ResizeReflowOptions::eBSizeExact) override;
 
+  MOZ_CAN_RUN_SCRIPT
   void DoFlushPendingNotifications(FlushType aType) override;
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  MOZ_CAN_RUN_SCRIPT
   void DoFlushPendingNotifications(ChangesToFlush aType) override;
 
   nsRectVisibility GetRectVisibility(nsIFrame* aFrame, const nsRect& aRect,

@@ -62,6 +62,7 @@ struct nsOverflowAreas;
 
 namespace mozilla {
 class ComputedStyle;
+class PresShell;
 enum class PseudoStyleType : uint8_t;
 class EventListenerManager;
 enum class LayoutFrameType : uint8_t;
@@ -796,7 +797,7 @@ class nsLayoutUtils {
    *                        Set nullptr if you don't need this.
    */
   MOZ_CAN_RUN_SCRIPT
-  static void GetContainerAndOffsetAtEvent(nsIPresShell* aPresShell,
+  static void GetContainerAndOffsetAtEvent(mozilla::PresShell* aPresShell,
                                            const mozilla::WidgetEvent* aEvent,
                                            nsIContent** aContainer,
                                            int32_t* aOffset);

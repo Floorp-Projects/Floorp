@@ -515,7 +515,7 @@ class nsFrameSelection final {
    * @param aAmount     amount of movement (char/line; word/page; eol/doc)
    * @param aExtend     continue selection
    */
-  /*unsafe*/
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult PhysicalMove(int16_t aDirection, int16_t aAmount, bool aExtend);
 
   /**
