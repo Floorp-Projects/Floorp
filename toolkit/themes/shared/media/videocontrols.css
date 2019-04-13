@@ -28,6 +28,10 @@
   --track-size: 5px;
   --thumb-size: 13px;
   --label-font-size: 13px;
+  --pip-toggle-bgcolor: rgb(0, 96, 223);
+  --pip-toggle-text-and-icon-color: rgb(255, 255, 255);
+  --pip-toggle-padding: 5px;
+  --pip-toggle-icon-width-height: 16px;
 }
 .controlsContainer.touch {
   --clickToPlay-size: 64px;
@@ -65,7 +69,8 @@
 }
 
 .controlsContainer [hidden],
-.controlBar[hidden] {
+.controlBar[hidden],
+.pictureInPictureToggleButton[hidden] {
   display: none;
 }
 
@@ -431,6 +436,44 @@
   -moz-context-properties: fill, stroke;
   fill: #fff;
   stroke: #fff;
+}
+
+.pictureInPictureToggleButton {
+  display: flex;
+  -moz-appearance: none;
+  position: absolute;
+  background-color: var(--pip-toggle-bgcolor);
+  color: var(--pip-toggle-text-and-icon-color);
+  border: 0;
+  padding: var(--pip-toggle-padding);
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: opacity 160ms linear;
+  min-width: max-content;
+  pointer-events: auto;
+  opacity: 0;
+}
+
+.pictureInPictureToggleIcon {
+  display: inline-block;
+  background-image: url(chrome://global/skin/media/pictureinpicture.svg);
+  background-position: center left;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill, stroke;
+  fill: var(--pip-toggle-text-and-icon-color);
+  stroke: var(--pip-toggle-text-and-icon-color);
+  width: var(--pip-toggle-icon-width-height);
+  height: var(--pip-toggle-icon-width-height);
+  min-width: max-content;
+}
+
+.controlsOverlay:hover > .pictureInPictureToggleButton {
+  opacity: 0.8;
+}
+
+.controlsOverlay:hover > .pictureInPictureToggleButton:hover {
+  opacity: 1;
 }
 
 /* Overlay Play button */
