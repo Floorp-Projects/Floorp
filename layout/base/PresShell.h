@@ -100,7 +100,7 @@ class PresShell final : public nsIPresShell,
       nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0,
       nscoord aOldHeight = 0,
       ResizeReflowOptions aOptions = ResizeReflowOptions::eBSizeExact) override;
-  nsresult ResizeReflowIgnoreOverride(
+  MOZ_CAN_RUN_SCRIPT nsresult ResizeReflowIgnoreOverride(
       nscoord aWidth, nscoord aHeight, nscoord aOldWidth, nscoord aOldHeight,
       ResizeReflowOptions aOptions = ResizeReflowOptions::eBSizeExact) override;
 
