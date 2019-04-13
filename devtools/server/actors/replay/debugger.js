@@ -939,9 +939,6 @@ ReplayDebuggerObject.prototype = {
   get parameterNames() { return this._data.parameterNames; },
   get script() { return this._dbg._getScript(this._data.script); },
   get environment() { return this._dbg._getObject(this._data.environment); },
-  get boundTargetFunction() { return this.isBoundFunction ? NYI() : undefined; },
-  get boundThis() { return this.isBoundFunction ? NYI() : undefined; },
-  get boundArguments() { return this.isBoundFunction ? NYI() : undefined; },
   get isProxy() { return this._data.isProxy; },
   get proto() { return this._dbg._getObject(this._data.proto); },
 
@@ -1023,6 +1020,27 @@ ReplayDebuggerObject.prototype = {
   get proxyHandler() {
     this._ensureProxyData();
     return this._dbg._convertValue(this._proxyData.handler);
+  },
+
+  get boundTargetFunction() {
+    if (this.isBoundFunction) {
+      return this._dbg._getObject(this._data.boundTargetFunction);
+    }
+    return undefined;
+  },
+
+  get boundThis() {
+    if (this.isBoundFunction) {
+      return this._dbg._convertValue(this._data.boundThis);
+    }
+    return undefined;
+  },
+
+  get boundArguments() {
+    if (this.isBoundFunction) {
+      return this._dbg._getObject(this._data.boundArguments);
+    }
+    return undefined;
   },
 
   call(thisv, ...args) {
