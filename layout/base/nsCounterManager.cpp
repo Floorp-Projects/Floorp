@@ -203,25 +203,19 @@ static bool HasCounters(const nsStyleContent& aStyle) {
          aStyle.CounterSetCount();
 }
 
-// For elements with 'display:list-item' we add a default
-// 'counter-increment:list-item' unless 'counter-increment' already has a value
-// for 'list-item'.
-//
-// https://drafts.csswg.org/css-lists-3/#declaring-a-list-item
-static bool GeneratesListItemIncrement(const nsIFrame* aFrame) {
-  if (aFrame->StyleDisplay()->mDisplay != StyleDisplay::ListItem) {
-    return false;
-  }
-  // FIXME(emilio): Per https://github.com/w3c/csswg-drafts/issues/3766,
-  // this condition should be removed.
-  if (aFrame->Style()->GetPseudoType() != PseudoStyleType::NotPseudo) {
-    return false;
-  }
-  return true;
-}
-
 bool nsCounterManager::AddCounterChanges(nsIFrame* aFrame) {
-  const bool requiresListItemIncrement = GeneratesListItemIncrement(aFrame);
+  // For elements with 'display:list-item' we add a default
+  // 'counter-increment:list-item' unless 'counter-increment' already has a
+  // value for 'list-item'.
+  //
+  // https://drafts.csswg.org/css-lists-3/#declaring-a-list-item
+  //
+  // We inherit `display` for some anonymous boxes, but we don't want them to
+  // increment the list-item counter.
+  const bool requiresListItemIncrement =
+      aFrame->StyleDisplay()->mDisplay == StyleDisplay::ListItem &&
+      !aFrame->Style()->IsAnonBox();
+
   const nsStyleContent* styleContent = aFrame->StyleContent();
 
   if (!requiresListItemIncrement && !HasCounters(*styleContent)) {
