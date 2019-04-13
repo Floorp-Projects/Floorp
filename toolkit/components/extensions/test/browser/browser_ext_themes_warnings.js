@@ -73,11 +73,7 @@ add_task(async function test_dynamic_theme() {
 });
 
 add_task(async function test_experiment() {
-  if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
-    await SpecialPowers.pushPrefEnv({
-      set: [["extensions.legacy.enabled", true]],
-    });
-  }
+  Services.prefs.setBoolPref("extensions.legacy.enabled", true);
 
   info("Testing that experiments are handled correctly when legacy pref is enabled");
 
@@ -111,9 +107,7 @@ add_task(async function test_experiment() {
 
   info("Testing that experiments are handled correctly when legacy pref is disabled");
 
-  if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
-    await SpecialPowers.popPrefEnv();
-  }
+  Services.prefs.setBoolPref("extensions.legacy.enabled", false);
 
   extension = ExtensionTestUtils.loadExtension({
     manifest: {
