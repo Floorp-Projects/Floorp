@@ -812,12 +812,12 @@ LoginManagerPrompter.prototype = {
     this._openerBrowser = aOpenerBrowser;
   },
 
-  promptToSavePassword(aLogin, dismissed) {
+  promptToSavePassword(aLogin) {
     this.log("promptToSavePassword");
     var notifyObj = this._getPopupNote();
     if (notifyObj) {
       this._showLoginCaptureDoorhanger(aLogin, "password-save", {
-        dismissed: this._inPrivateBrowsing || dismissed,
+        dismissed: this._inPrivateBrowsing,
       });
       Services.obs.notifyObservers(aLogin, "passwordmgr-prompt-save");
     } else {
@@ -1176,17 +1176,14 @@ LoginManagerPrompter.prototype = {
    *                       The old login we may want to update.
    * @param {nsILoginInfo} aNewLogin
    *                       The new login from the page form.
-   * @param dismissed
-   *        A boolean indicating if the prompt should be automatically
-   *        dismissed on being shown.
    */
-  promptToChangePassword(aOldLogin, aNewLogin, dismissed) {
+  promptToChangePassword(aOldLogin, aNewLogin) {
     this.log("promptToChangePassword");
     let notifyObj = this._getPopupNote();
 
     if (notifyObj) {
       this._showChangeLoginNotification(notifyObj, aOldLogin,
-                                        aNewLogin, dismissed);
+                                        aNewLogin);
     } else {
       this._showChangeLoginDialog(aOldLogin, aNewLogin);
     }
@@ -1203,16 +1200,13 @@ LoginManagerPrompter.prototype = {
    *
    * @param aNewLogin
    *        The login object with the changes we want to make.
-   * @param dismissed
-   *        A boolean indicating if the prompt should be automatically
-   *        dismissed on being shown.
    */
-  _showChangeLoginNotification(aNotifyObj, aOldLogin, aNewLogin, dismissed = false) {
+  _showChangeLoginNotification(aNotifyObj, aOldLogin, aNewLogin) {
     aOldLogin.hostname = aNewLogin.hostname;
     aOldLogin.formSubmitURL = aNewLogin.formSubmitURL;
     aOldLogin.password = aNewLogin.password;
     aOldLogin.username = aNewLogin.username;
-    this._showLoginCaptureDoorhanger(aOldLogin, "password-change", {dismissed});
+    this._showLoginCaptureDoorhanger(aOldLogin, "password-change");
 
     let oldGUID = aOldLogin.QueryInterface(Ci.nsILoginMetaInfo).guid;
     Services.obs.notifyObservers(aNewLogin, "passwordmgr-prompt-change", oldGUID);
