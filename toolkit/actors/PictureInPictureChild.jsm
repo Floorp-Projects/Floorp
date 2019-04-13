@@ -7,11 +7,14 @@
 var EXPORTED_SYMBOLS = ["PictureInPictureChild", "PictureInPictureToggleChild"];
 
 const {ActorChild} = ChromeUtils.import("resource://gre/modules/ActorChild.jsm");
+const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 
 ChromeUtils.defineModuleGetter(this, "DeferredTask",
   "resource://gre/modules/DeferredTask.jsm");
 ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
+
+XPCOMUtils.defineLazyGlobalGetters(this, ["InspectorUtils"]);
 
 const TOGGLE_ENABLED_PREF =
   "media.videocontrols.picture-in-picture.video-toggle.enabled";
@@ -104,7 +107,7 @@ class PictureInPictureToggleChild extends ActorChild {
     if (!state.intersectionObserver) {
       let fn = this.onIntersection.bind(this);
       state.intersectionObserver = new this.content.IntersectionObserver(fn, {
-        threshold: [0.0, 1.0],
+        threshold: [0.0, 0.5],
       });
     }
 
@@ -123,13 +126,7 @@ class PictureInPictureToggleChild extends ActorChild {
    * this registered video.
    */
   worthTracking(intersectionEntry) {
-    let video = intersectionEntry.target;
-    let rect = video.ownerGlobal.windowUtils.getBoundsWithoutFlushing(video);
-    let intRect = intersectionEntry.intersectionRect;
-
-    return intersectionEntry.isIntersecting &&
-           rect.width == intRect.width &&
-           rect.height == intRect.height;
+    return intersectionEntry.isIntersecting;
   }
 
   /**
@@ -247,7 +244,7 @@ class PictureInPictureToggleChild extends ActorChild {
     for (let element of elements) {
       if (state.weakVisibleVideos.has(element) &&
           !element.isCloningElementVisually) {
-        this.onMouseOverVideo(element);
+        this.onMouseOverVideo(element, event);
         return;
       }
     }
@@ -264,15 +261,62 @@ class PictureInPictureToggleChild extends ActorChild {
    *
    * @param {Element} video The video the mouse is over.
    */
-  onMouseOverVideo(video) {
+  onMouseOverVideo(video, event) {
     let state = this.docState;
     let oldOverVideo = state.weakOverVideo && state.weakOverVideo.get();
-    if (oldOverVideo && oldOverVideo == video) {
+    let shadowRoot = video.openOrClosedShadowRoot;
+
+    // It seems from automated testing that if it's still very early on in the
+    // lifecycle of a <video> element, it might not yet have a shadowRoot,
+    // in which case, we can bail out here early.
+    if (!shadowRoot) {
+      if (oldOverVideo) {
+        // We also clear the hover state on the old video we were hovering,
+        // if there was one.
+        this.onMouseLeaveVideo(oldOverVideo);
+      }
+
       return;
     }
 
+    let toggle = shadowRoot.getElementById("pictureInPictureToggleButton");
+
+    if (oldOverVideo) {
+      if (oldOverVideo == video) {
+        // If we're still hovering the old video, we might have entered or
+        // exited the toggle region.
+        this.checkHoverToggle(toggle, event);
+        return;
+      }
+
+      // We had an old video that we were hovering, and we're not hovering
+      // it anymore. Let's leave it.
+      this.onMouseLeaveVideo(oldOverVideo);
+    }
+
     state.weakOverVideo = Cu.getWeakReference(video);
-    // Stubbed out for a later patch in this series.
+    let controlsOverlay = shadowRoot.querySelector(".controlsOverlay");
+    InspectorUtils.addPseudoClassLock(controlsOverlay, ":hover");
+
+    // Now that we're hovering the video, we'll check to see if we're
+    // hovering the toggle too.
+    this.checkHoverToggle(toggle, event);
+  }
+
+  /**
+   * Checks if a mouse event is happening over a toggle element. If it is,
+   * sets the :hover pseudoclass on it. Otherwise, it clears the :hover
+   * pseudoclass.
+   *
+   * @param {Element} toggle The Picture-in-Picture toggle to check.
+   * @param {MouseEvent} event A MouseEvent to test.
+   */
+  checkHoverToggle(toggle, event) {
+    if (this.isMouseOverToggle(toggle, event)) {
+      InspectorUtils.addPseudoClassLock(toggle, ":hover");
+    } else {
+      InspectorUtils.removePseudoClassLock(toggle, ":hover");
+    }
   }
 
   /**
@@ -282,7 +326,36 @@ class PictureInPictureToggleChild extends ActorChild {
    * @param {Element} video The video that the mouse left.
    */
   onMouseLeaveVideo(video) {
-    // Stubbed out for a later patch in this series.
+    let state = this.docState;
+    let shadowRoot = video.openOrClosedShadowRoot;
+
+    if (shadowRoot) {
+      let controlsOverlay = shadowRoot.querySelector(".controlsOverlay");
+      let toggle = shadowRoot.getElementById("pictureInPictureToggleButton");
+      InspectorUtils.removePseudoClassLock(controlsOverlay, ":hover");
+      InspectorUtils.removePseudoClassLock(toggle, ":hover");
+    }
+
+    state.weakOverVideo = null;
+  }
+
+  /**
+   * Given a reference to a Picture-in-Picture toggle element, determines
+   * if a MouseEvent event is occurring within its bounds.
+   *
+   * @param {Element} toggle The Picture-in-Picture toggle.
+   * @param {MouseEvent} event A MouseEvent to test.
+   *
+   * @return {Boolean}
+   */
+  isMouseOverToggle(toggle, event) {
+    let toggleRect =
+      toggle.ownerGlobal.windowUtils.getBoundsWithoutFlushing(toggle);
+    let { clientX, clientY } = event;
+    return clientX >= toggleRect.left &&
+           clientX <= toggleRect.right &&
+           clientY >= toggleRect.top &&
+           clientY <= toggleRect.bottom;
   }
 }
 
