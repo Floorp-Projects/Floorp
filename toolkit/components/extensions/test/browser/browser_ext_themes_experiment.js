@@ -3,11 +3,9 @@
 // This test checks whether the theme experiments work
 
 add_task(async function setup() {
-  if (AppConstants.MOZ_ALLOW_LEGACY_EXTENSIONS) {
-    await SpecialPowers.pushPrefEnv({
-      set: [["extensions.legacy.enabled", true]],
-    });
-  }
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.legacy.enabled", true]],
+  });
 });
 
 add_task(async function test_experiment_static_theme() {
