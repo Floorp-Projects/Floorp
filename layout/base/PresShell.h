@@ -199,7 +199,14 @@ class PresShell final : public nsIPresShell,
                                     dom::Event* aEvent,
                                     nsEventStatus* aStatus) override;
   bool ShouldIgnoreInvalidation() override;
-  void WillPaint() override;
+  /**
+   * Notify that we're going to call Paint with PAINT_LAYERS
+   * on the pres shell for a widget (which might not be this one, since
+   * WillPaint is called on all presshells in the same toplevel window as the
+   * painted widget). This is issued at a time when it's safe to modify
+   * widget geometry.
+   */
+  MOZ_CAN_RUN_SCRIPT void WillPaint();
   void WillPaintWindow() override;
   void DidPaintWindow() override;
   void ScheduleViewManagerFlush(PaintType aType = PAINT_DEFAULT) override;
