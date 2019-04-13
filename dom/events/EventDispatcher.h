@@ -307,6 +307,7 @@ class EventChainPostVisitor : public mozilla::EventChainVisitor {
  */
 class MOZ_STACK_CLASS EventDispatchingCallback {
  public:
+  MOZ_CAN_RUN_SCRIPT
   virtual void HandleEvent(EventChainPostVisitor& aVisitor) = 0;
 };
 

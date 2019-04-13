@@ -468,6 +468,7 @@ class MOZ_STACK_CLASS nsPresShellEventCB : public EventDispatchingCallback {
  public:
   explicit nsPresShellEventCB(PresShell* aPresShell) : mPresShell(aPresShell) {}
 
+  MOZ_CAN_RUN_SCRIPT
   virtual void HandleEvent(EventChainPostVisitor& aVisitor) override {
     if (aVisitor.mPresContext && aVisitor.mEvent->mClass != eBasicEventClass) {
       if (aVisitor.mEvent->mMessage == eMouseDown ||
