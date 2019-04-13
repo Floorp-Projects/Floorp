@@ -5072,9 +5072,7 @@ static bool IsTransparentContainerElement(nsPresContext* aPresContext) {
   if (tab) {
     // Check if presShell is the top PresShell. Only the top can
     // influence the canvas background color.
-    PresShell* presShell = aPresContext->GetPresShell();
-    nsCOMPtr<nsIPresShell> topPresShell = tab->GetPresShell();
-    if (presShell != topPresShell) {
+    if (aPresContext->GetPresShell() != tab->GetTopLevelPresShell()) {
       tab = nullptr;
     }
   }
@@ -10755,7 +10753,7 @@ bool nsIPresShell::DetermineFontSizeInflationState() {
 
   // Force-enabling font inflation always trumps the heuristics here.
   if (!FontSizeInflationForceEnabled()) {
-    if (TabChild* tab = TabChild::GetFrom(this)) {
+    if (TabChild* tab = TabChild::GetFrom(static_cast<PresShell*>(this))) {
       // We're in a child process.  Cancel inflation if we're not
       // async-pan zoomed.
       if (!tab->AsyncPanZoomEnabled()) {

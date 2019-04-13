@@ -101,7 +101,8 @@ bool nsContentSecurityManager::AllowTopLevelNavigationToDataURI(
   nsCOMPtr<nsITabChild> tabChild = do_QueryInterface(context);
   nsCOMPtr<Document> doc;
   if (tabChild) {
-    doc = static_cast<mozilla::dom::TabChild*>(tabChild.get())->GetDocument();
+    doc = static_cast<mozilla::dom::TabChild*>(tabChild.get())
+              ->GetTopLevelDocument();
   }
   NS_ConvertUTF8toUTF16 specUTF16(NS_UnescapeURL(dataSpec));
   const char16_t* params[] = {specUTF16.get()};
