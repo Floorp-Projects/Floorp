@@ -354,6 +354,7 @@ class nsDocumentViewer final : public nsIContentViewer,
   already_AddRefed<nsINode> GetPopupLinkNode();
   already_AddRefed<nsIImageLoadingContent> GetPopupImageNode();
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult GetContentSizeInternal(int32_t* aWidth, int32_t* aHeight,
                                   nscoord aMaxWidth, nscoord aMaxHeight);
 
