@@ -8,6 +8,7 @@
 
 #include "InputData.h"
 #include "mozilla/FlushType.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TouchEvents.h"
 #include "mozilla/dom/SimpleGestureEventBinding.h"
@@ -27,7 +28,7 @@ namespace mozilla {
 
 static already_AddRefed<nsRefreshDriver> GetRefreshDriver(nsIWidget& aWidget) {
   nsIWidgetListener* widgetListener = aWidget.GetWidgetListener();
-  nsIPresShell* presShell = widgetListener ? widgetListener->GetPresShell() : nullptr;
+  PresShell* presShell = widgetListener ? widgetListener->GetPresShell() : nullptr;
   nsPresContext* presContext = presShell ? presShell->GetPresContext() : nullptr;
   RefPtr<nsRefreshDriver> refreshDriver = presContext ? presContext->RefreshDriver() : nullptr;
   return refreshDriver.forget();
