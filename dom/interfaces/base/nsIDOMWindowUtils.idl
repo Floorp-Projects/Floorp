@@ -745,6 +745,8 @@ interface nsIDOMWindowUtils : nsISupports {
    *        frame when retrieving the element. If false, this method returns
    *        null for coordinates outside of the viewport.
    * @param aFlushLayout flushes layout if true. Otherwise, no flush occurs.
+   * @param aOnlyVisible Set to true if you only want nodes that pass a visibility
+   *        hit test.
    */
   NodeList nodesFromRect(in float aX,
                          in float aY,
@@ -753,7 +755,8 @@ interface nsIDOMWindowUtils : nsISupports {
                          in float aBottomSize,
                          in float aLeftSize,
                          in boolean aIgnoreRootScrollFrame,
-                         in boolean aFlushLayout);
+                         in boolean aFlushLayout,
+                         in boolean aOnlyVisible);
 
 
   /**
