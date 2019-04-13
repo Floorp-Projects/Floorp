@@ -362,7 +362,6 @@ void DocumentOrShadowRoot::NodesFromRect(float aX, float aY, float aTopSize,
                                          float aLeftSize,
                                          bool aIgnoreRootScrollFrame,
                                          bool aFlushLayout,
-                                         bool aOnlyVisible,
                                          nsTArray<RefPtr<nsINode>>& aReturn) {
   // Following the same behavior of elementFromPoint,
   // we don't return anything if either coord is negative
@@ -380,9 +379,6 @@ void DocumentOrShadowRoot::NodesFromRect(float aX, float aY, float aTopSize,
   EnumSet<FrameForPointOption> options;
   if (aIgnoreRootScrollFrame) {
     options += FrameForPointOption::IgnoreRootScrollFrame;
-  }
-  if (aOnlyVisible) {
-    options += FrameForPointOption::OnlyVisible;
   }
 
   auto flush = aFlushLayout ? FlushLayout::Yes : FlushLayout::No;

@@ -13,8 +13,20 @@
 
   let dwu = window.windowUtils;
 
+  /*
+    NodeList nodesFromRect(in float aX,
+                           in float aY,
+                           in float aTopSize, 
+                           in float aRightSize,
+                           in float aBottomSize,
+                           in float aLeftSize,
+                           in boolean aIgnoreRootScrollFrame,
+                           in boolean aFlushLayout);
+
+  */
+
   function check(x, y, top, right, bottom, left, list) {
-    let nodes = dwu.nodesFromRect(x, y, top, right, bottom, left, true, false, false);
+    let nodes = dwu.nodesFromRect(x, y, top, right, bottom, left, true, false);
     
     list.push(e.body);
     list.push(e.html);
