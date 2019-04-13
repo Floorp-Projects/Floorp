@@ -1809,12 +1809,6 @@ class nsIPresShell : public nsStubDocumentObserver {
 
   DOMHighResTimeStamp GetPerformanceNowUnclamped();
 
-  /**
-   * Callback handler for whether reflow happened.
-   *
-   * @param aInterruptible Whether or not reflow interruption is allowed.
-   */
-  void DidDoReflow(bool aInterruptible);
   // The callback for the mReflowContinueTimer timer.
   static void sReflowContinueCallback(nsITimer* aTimer, void* aPresShell);
   bool ScheduleReflowOffTimer();
