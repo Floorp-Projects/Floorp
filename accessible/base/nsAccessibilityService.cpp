@@ -339,8 +339,8 @@ void nsAccessibilityService::FireAccessibleEvent(uint32_t aEvent,
 }
 
 Accessible* nsAccessibilityService::GetRootDocumentAccessible(
-    nsIPresShell* aPresShell, bool aCanCreate) {
-  nsIPresShell* ps = aPresShell;
+    PresShell* aPresShell, bool aCanCreate) {
+  PresShell* presShell = aPresShell;
   Document* documentNode = aPresShell->GetDocument();
   if (documentNode) {
     nsCOMPtr<nsIDocShellTreeItem> treeItem(documentNode->GetDocShell());
@@ -349,10 +349,11 @@ Accessible* nsAccessibilityService::GetRootDocumentAccessible(
       treeItem->GetRootTreeItem(getter_AddRefs(rootTreeItem));
       if (treeItem != rootTreeItem) {
         nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(rootTreeItem));
-        ps = docShell->GetPresShell();
+        presShell = docShell->GetPresShell();
       }
 
-      return aCanCreate ? GetDocAccessible(ps) : ps->GetDocAccessible();
+      return aCanCreate ? GetDocAccessible(presShell)
+                        : presShell->GetDocAccessible();
     }
   }
   return nullptr;

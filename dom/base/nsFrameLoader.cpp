@@ -87,7 +87,6 @@
 #include "mozilla/gfx/CrossProcessPaint.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 #include "mozilla/layout/RenderFrame.h"
-#include "mozilla/PresShell.h"
 #include "mozilla/ServoCSSParser.h"
 #include "mozilla/ServoStyleSet.h"
 #include "nsGenericHTMLFrameElement.h"
@@ -754,8 +753,7 @@ bool nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
   mDocShell->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
                                             scrollbarPrefY);
 
-  nsCOMPtr<nsIPresShell> presShell = mDocShell->GetPresShell();
-  if (presShell) {
+  if (PresShell* presShell = mDocShell->GetPresShell()) {
     // Ensure root scroll frame is reflowed in case scroll preferences or
     // margins have changed
     nsIFrame* rootScrollFrame = presShell->GetRootScrollFrame();
@@ -783,8 +781,7 @@ bool nsFrameLoader::Show(int32_t marginWidth, int32_t marginHeight,
   // sub-document. This shouldn't be necessary, but given the way our
   // editor works, it is. See
   // https://bugzilla.mozilla.org/show_bug.cgi?id=284245
-  presShell = mDocShell->GetPresShell();
-  if (presShell) {
+  if (RefPtr<PresShell> presShell = mDocShell->GetPresShell()) {
     Document* doc = presShell->GetDocument();
     nsHTMLDocument* htmlDoc =
         doc && doc->IsHTMLOrXHTML() ? doc->AsHTMLDocument() : nullptr;

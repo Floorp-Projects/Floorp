@@ -6227,9 +6227,9 @@ already_AddRefed<nsPIDOMWindowOuter> PresShell::GetRootWindow() {
 
   // If we don't have DOM window, we're zombie, we should find the root window
   // with our parent shell.
-  nsCOMPtr<nsIPresShell> parent = GetParentPresShellForEventHandling();
-  NS_ENSURE_TRUE(parent, nullptr);
-  return parent->GetRootWindow();
+  RefPtr<PresShell> parentPresShell = GetParentPresShellForEventHandling();
+  NS_ENSURE_TRUE(parentPresShell, nullptr);
+  return parentPresShell->GetRootWindow();
 }
 
 already_AddRefed<nsPIDOMWindowOuter>
@@ -6255,7 +6255,7 @@ already_AddRefed<nsIContent> nsIPresShell::GetFocusedContentInOurWindow()
   return nullptr;
 }
 
-already_AddRefed<nsIPresShell> PresShell::GetParentPresShellForEventHandling() {
+already_AddRefed<PresShell> PresShell::GetParentPresShellForEventHandling() {
   NS_ENSURE_TRUE(mPresContext, nullptr);
 
   // Now, find the parent pres shell and send the event there
@@ -6272,7 +6272,7 @@ already_AddRefed<nsIPresShell> PresShell::GetParentPresShellForEventHandling() {
   nsCOMPtr<nsIDocShell> parentDocShell = do_QueryInterface(parentTreeItem);
   NS_ENSURE_TRUE(parentDocShell && treeItem != parentTreeItem, nullptr);
 
-  nsCOMPtr<nsIPresShell> parentPresShell = parentDocShell->GetPresShell();
+  RefPtr<PresShell> parentPresShell = parentDocShell->GetPresShell();
   return parentPresShell.forget();
 }
 
@@ -6283,7 +6283,7 @@ nsresult PresShell::EventHandler::RetargetEventToParent(
   // or a root content is not present.
   // That way at least the UI key bindings can work.
 
-  nsCOMPtr<nsIPresShell> parentPresShell = GetParentPresShellForEventHandling();
+  RefPtr<PresShell> parentPresShell = GetParentPresShellForEventHandling();
   NS_ENSURE_TRUE(parentPresShell, NS_ERROR_FAILURE);
 
   // Fake the event as though it's from the parent pres shell's root frame.

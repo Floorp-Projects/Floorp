@@ -7,6 +7,7 @@
 #include "VisualViewport.h"
 
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ToString.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDocShell.h"
@@ -59,8 +60,7 @@ void VisualViewport::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
 CSSSize VisualViewport::VisualViewportSize() const {
   CSSSize size = CSSSize(0, 0);
 
-  nsIPresShell* presShell = GetPresShell();
-  if (presShell) {
+  if (PresShell* presShell = GetPresShell()) {
     if (presShell->IsVisualViewportSizeSet()) {
       size = CSSRect::FromAppUnits(presShell->GetVisualViewportSize());
     } else {
@@ -85,8 +85,7 @@ double VisualViewport::Height() const {
 
 double VisualViewport::Scale() const {
   double scale = 1;
-  nsIPresShell* presShell = GetPresShell();
-  if (presShell) {
+  if (PresShell* presShell = GetPresShell()) {
     scale = presShell->GetResolution();
   }
   return scale;
@@ -95,8 +94,7 @@ double VisualViewport::Scale() const {
 CSSPoint VisualViewport::VisualViewportOffset() const {
   CSSPoint offset = CSSPoint(0, 0);
 
-  nsIPresShell* presShell = GetPresShell();
-  if (presShell) {
+  if (PresShell* presShell = GetPresShell()) {
     offset = CSSPoint::FromAppUnits(presShell->GetVisualViewportOffset());
   }
   return offset;
@@ -105,7 +103,7 @@ CSSPoint VisualViewport::VisualViewportOffset() const {
 CSSPoint VisualViewport::LayoutViewportOffset() const {
   CSSPoint offset = CSSPoint(0, 0);
 
-  if (nsIPresShell* presShell = GetPresShell()) {
+  if (PresShell* presShell = GetPresShell()) {
     offset = CSSPoint::FromAppUnits(presShell->GetLayoutViewportOffset());
   }
   return offset;
@@ -123,7 +121,7 @@ double VisualViewport::OffsetTop() const {
   return PageTop() - LayoutViewportOffset().Y();
 }
 
-nsIPresShell* VisualViewport::GetPresShell() const {
+PresShell* VisualViewport::GetPresShell() const {
   nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
   if (!window) {
     return nullptr;
@@ -138,7 +136,7 @@ nsIPresShell* VisualViewport::GetPresShell() const {
 }
 
 nsPresContext* VisualViewport::GetPresContext() const {
-  nsIPresShell* presShell = GetPresShell();
+  PresShell* presShell = GetPresShell();
   if (!presShell) {
     return nullptr;
   }
@@ -276,7 +274,7 @@ void VisualViewport::FireScrollEvent() {
   mScrollEvent->Revoke();
   mScrollEvent = nullptr;
 
-  if (nsIPresShell* presShell = GetPresShell()) {
+  if (PresShell* presShell = GetPresShell()) {
     if (presShell->GetVisualViewportOffset() != prevVisualOffset) {
       // The internal event will be fired whenever the visual viewport's
       // *absolute* offset changed, i.e. relative to the page.

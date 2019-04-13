@@ -26,6 +26,8 @@ class nsITreeView;
 
 namespace mozilla {
 
+class PresShell;
+
 namespace dom {
 class DOMStringList;
 }
@@ -108,7 +110,7 @@ class nsAccessibilityService final : public mozilla::a11y::DocManager,
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIOBSERVER
 
-  Accessible* GetRootDocumentAccessible(nsIPresShell* aPresShell,
+  Accessible* GetRootDocumentAccessible(mozilla::PresShell* aPresShell,
                                         bool aCanCreate);
   already_AddRefed<Accessible> CreatePluginAccessible(nsPluginFrame* aFrame,
                                                       nsIContent* aContent,

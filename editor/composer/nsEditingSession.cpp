@@ -364,8 +364,7 @@ nsEditingSession::SetupEditorOnWindow(mozIDOMWindowProxy* aWindow) {
   //  only if we haven't found some error above,
   nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-  RefPtr<PresShell> presShell =
-      static_cast<PresShell*>(docShell->GetPresShell());
+  RefPtr<PresShell> presShell = docShell->GetPresShell();
   if (NS_WARN_IF(!presShell)) {
     return NS_ERROR_FAILURE;
   }
@@ -1200,8 +1199,7 @@ void nsEditingSession::RestoreAnimationMode(nsPIDOMWindowOuter* aWindow) {
 
   nsCOMPtr<nsIDocShell> docShell = aWindow ? aWindow->GetDocShell() : nullptr;
   NS_ENSURE_TRUE_VOID(docShell);
-  RefPtr<PresShell> presShell =
-      static_cast<PresShell*>(docShell->GetPresShell());
+  RefPtr<PresShell> presShell = docShell->GetPresShell();
   if (NS_WARN_IF(!presShell)) {
     return;
   }
@@ -1291,8 +1289,7 @@ nsresult nsEditingSession::ReattachToWindow(mozIDOMWindowProxy* aWindow) {
 
   if (!mInteractive) {
     // Disable animation of images in this document:
-    RefPtr<PresShell> presShell =
-        static_cast<PresShell*>(docShell->GetPresShell());
+    RefPtr<PresShell> presShell = docShell->GetPresShell();
     if (NS_WARN_IF(!presShell)) {
       return NS_ERROR_FAILURE;
     }

@@ -219,9 +219,7 @@ nsTypeAheadFind::SetDocShell(nsIDocShell* aDocShell) {
   mWebBrowserFind = do_GetInterface(aDocShell);
   NS_ENSURE_TRUE(mWebBrowserFind, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIPresShell> presShell;
-  presShell = aDocShell->GetPresShell();
-  mPresShell = do_GetWeakReference(presShell);
+  mPresShell = do_GetWeakReference(aDocShell->GetPresShell());
 
   ReleaseStrongMemberVariables();
   return NS_OK;
@@ -745,7 +743,7 @@ nsresult nsTypeAheadFind::GetSearchContainers(
   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(aContainer));
   if (!docShell) return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIPresShell> presShell = docShell->GetPresShell();
+  RefPtr<PresShell> presShell = docShell->GetPresShell();
 
   RefPtr<nsPresContext> presContext = docShell->GetPresContext();
 

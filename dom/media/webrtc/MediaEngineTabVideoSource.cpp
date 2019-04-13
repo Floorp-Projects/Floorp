@@ -9,12 +9,12 @@
 #include "mozilla/gfx/DataSurfaceHelpers.h"
 #include "mozilla/layers/SharedRGBImage.h"
 #include "mozilla/layers/TextureClient.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "nsGlobalWindow.h"
 #include "nsIDocShell.h"
-#include "nsIPresShell.h"
 #include "nsPresContext.h"
 #include "gfxContext.h"
 #include "gfx2DGlue.h"
@@ -296,7 +296,7 @@ void MediaEngineTabVideoSource::Draw() {
     }
   }
 
-  nsCOMPtr<nsIPresShell> presShell;
+  RefPtr<PresShell> presShell;
   if (mWindow) {
     nsIDocShell* docshell = mWindow->GetDocShell();
     if (docshell) {
