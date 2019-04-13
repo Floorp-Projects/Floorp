@@ -212,14 +212,14 @@ static int do_main(int argc, char* argv[], char* envp[]) {
   return gBootstrap->XRE_main(argc, argv, config);
 }
 
-static nsresult InitXPCOMGlue() {
+static nsresult InitXPCOMGlue(LibLoadingStrategy aLibLoadingStrategy) {
   UniqueFreePtr<char> exePath = BinaryPath::Get();
   if (!exePath) {
     Output("Couldn't find the application directory.\n");
     return NS_ERROR_FAILURE;
   }
 
-  gBootstrap = mozilla::GetBootstrap(exePath.get());
+  gBootstrap = mozilla::GetBootstrap(exePath.get(), aLibLoadingStrategy);
   if (!gBootstrap) {
     Output("Couldn't load XPCOM.\n");
     return NS_ERROR_FAILURE;
@@ -255,7 +255,7 @@ int main(int argc, char* argv[], char* envp[]) {
     }
 #  endif
 
-    nsresult rv = InitXPCOMGlue();
+    nsresult rv = InitXPCOMGlue(LibLoadingStrategy::NoReadAhead);
     if (NS_FAILED(rv)) {
       return 255;
     }
@@ -277,7 +277,7 @@ int main(int argc, char* argv[], char* envp[]) {
   DllBlocklist_Initialize(gBlocklistInitFlags);
 #endif
 
-  nsresult rv = InitXPCOMGlue();
+  nsresult rv = InitXPCOMGlue(LibLoadingStrategy::ReadAhead);
   if (NS_FAILED(rv)) {
     return 255;
   }
