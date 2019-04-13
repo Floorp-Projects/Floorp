@@ -105,6 +105,7 @@ class PresShell final : public nsIPresShell,
       ResizeReflowOptions aOptions = ResizeReflowOptions::eBSizeExact) override;
 
   void DoFlushPendingNotifications(FlushType aType) override;
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void DoFlushPendingNotifications(ChangesToFlush aType) override;
 
   nsRectVisibility GetRectVisibility(nsIFrame* aFrame, const nsRect& aRect,
@@ -357,6 +358,10 @@ class PresShell final : public nsIPresShell,
   ~PresShell();
 
   friend class ::AutoPointerEventTargetUpdater;
+
+  // ProcessReflowCommands returns whether we processed all our dirty roots
+  // without interruptions.
+  MOZ_CAN_RUN_SCRIPT bool ProcessReflowCommands(bool aInterruptible);
 
   /**
    * Initialize cached font inflation preference values and do an initial
