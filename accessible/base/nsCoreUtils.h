@@ -55,7 +55,7 @@ class nsCoreUtils {
    * @param  aPseudoElm   [in] pseudo element inside the cell, see
    *                       XULTreeElement for available values
    */
-  MOZ_CAN_RUN_SCRIPT_BOUNDARY
+  MOZ_CAN_RUN_SCRIPT
   static void DispatchClickEvent(mozilla::dom::XULTreeElement *aTree,
                                  int32_t aRowIndex, nsTreeColumn *aColumn,
                                  const nsAString &aPseudoElt = EmptyString());
@@ -71,6 +71,7 @@ class nsCoreUtils {
    * @param aPresShell   [in] the presshell for the element
    * @param aRootWidget  [in] the root widget of the element
    */
+  MOZ_CAN_RUN_SCRIPT
   static void DispatchMouseEvent(mozilla::EventMessage aMessage, int32_t aX,
                                  int32_t aY, nsIContent *aContent,
                                  nsIFrame *aFrame, nsIPresShell *aPresShell,
@@ -87,6 +88,7 @@ class nsCoreUtils {
    * @param aPresShell   [in] the presshell for the element
    * @param aRootWidget  [in] the root widget of the element
    */
+  MOZ_CAN_RUN_SCRIPT
   static void DispatchTouchEvent(mozilla::EventMessage aMessage, int32_t aX,
                                  int32_t aY, nsIContent *aContent,
                                  nsIFrame *aFrame, nsIPresShell *aPresShell,
@@ -283,6 +285,7 @@ class nsCoreUtils {
   /**
    * Scroll content into view.
    */
+  MOZ_CAN_RUN_SCRIPT
   static void ScrollTo(nsIPresShell *aPresShell, nsIContent *aContent,
                        uint32_t aScrollType);
 

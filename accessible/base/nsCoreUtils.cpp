@@ -95,7 +95,8 @@ void nsCoreUtils::DispatchClickEvent(XULTreeElement *aTree, int32_t aRowIndex,
   nsIFrame *rootFrame = presShell->GetRootFrame();
 
   nsPoint offset;
-  nsIWidget *rootWidget = rootFrame->GetView()->GetNearestWidget(&offset);
+  nsCOMPtr<nsIWidget> rootWidget =
+      rootFrame->GetView()->GetNearestWidget(&offset);
 
   RefPtr<nsPresContext> presContext = presShell->GetPresContext();
 
