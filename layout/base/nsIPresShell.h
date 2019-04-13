@@ -341,7 +341,7 @@ class nsIPresShell : public nsStubDocumentObserver {
    * Reflow the frame model into a new width and height.  The
    * coordinates for aWidth and aHeight must be in standard nscoord's.
    */
-  virtual nsresult ResizeReflow(
+  MOZ_CAN_RUN_SCRIPT virtual nsresult ResizeReflow(
       nscoord aWidth, nscoord aHeight, nscoord aOldWidth = 0,
       nscoord aOldHeight = 0,
       ResizeReflowOptions aOptions = ResizeReflowOptions::eBSizeExact) = 0;

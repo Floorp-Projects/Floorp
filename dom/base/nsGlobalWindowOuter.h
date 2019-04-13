@@ -600,6 +600,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   double GetScrollXOuter();
   double GetScrollYOuter();
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void SizeToContentOuter(mozilla::dom::CallerType aCallerType,
                           mozilla::ErrorResult& aError);
   nsIControllers* GetControllersOuter(mozilla::ErrorResult& aError);
@@ -850,6 +851,7 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
   // Arguments to this function should have values in app units
   void SetCSSViewportWidthAndHeight(nscoord width, nscoord height);
   // Arguments to this function should have values in device pixels
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult SetDocShellWidthAndHeight(int32_t width, int32_t height);
 
   static bool CanSetProperty(const char* aPrefName);

@@ -360,6 +360,7 @@ class nsViewManager final {
    */
   LayoutDeviceIntRect ViewToWidget(nsView* aView, const nsRect& aRect) const;
 
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY
   void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight);
   bool ShouldDelayResize() const;
 
