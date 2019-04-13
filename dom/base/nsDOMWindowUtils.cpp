@@ -669,7 +669,7 @@ nsDOMWindowUtils::SendMouseEventCommon(
     float aPressure, unsigned short aInputSourceArg, uint32_t aPointerId,
     bool aToWindow, bool* aPreventDefault, bool aIsDOMEventSynthesized,
     bool aIsWidgetEventSynthesized, int32_t aButtons) {
-  nsCOMPtr<nsIPresShell> presShell = GetPresShell();
+  RefPtr<PresShell> presShell = GetPresShell();
   return nsContentUtils::SendMouseEvent(
       presShell, aType, aX, aY, aButton, aButtons, aClickCount, aModifiers,
       aIgnoreRootScrollFrame, aPressure, aInputSourceArg, aPointerId, aToWindow,

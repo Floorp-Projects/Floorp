@@ -27,6 +27,9 @@ template <class T>
 class nsCOMPtr;
 
 namespace mozilla {
+
+class PresShell;
+
 namespace layers {
 
 typedef std::function<void(uint64_t, const nsTArray<TouchBehaviorFlags>&)>
@@ -134,10 +137,9 @@ class APZCCallbackHelper {
    * Return whether or not any listeners have called preventDefault on the
    * event. */
   MOZ_CAN_RUN_SCRIPT
-  static bool DispatchMouseEvent(const nsCOMPtr<nsIPresShell>& aPresShell,
-                                 const nsString& aType, const CSSPoint& aPoint,
-                                 int32_t aButton, int32_t aClickCount,
-                                 int32_t aModifiers,
+  static bool DispatchMouseEvent(PresShell* aPresShell, const nsString& aType,
+                                 const CSSPoint& aPoint, int32_t aButton,
+                                 int32_t aClickCount, int32_t aModifiers,
                                  bool aIgnoreRootScrollFrame,
                                  unsigned short aInputSourceArg,
                                  uint32_t aPointerId);
