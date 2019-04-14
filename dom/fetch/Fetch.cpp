@@ -1187,7 +1187,8 @@ void FetchBody<Derived>::SetMimeType() {
   // HTTP ABNF states Content-Type may have only one value.
   // This is from the "parse a header value" of the fetch spec.
   if (!contentTypeValues.IsVoid() && contentTypeValues.Find(",") == -1) {
-    mMimeType = contentTypeValues;
+    // Convert from a bytestring to a UTF8 CString.
+    CopyLatin1toUTF8(contentTypeValues, mMimeType);
     ToLowerCase(mMimeType);
   }
 }
