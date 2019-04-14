@@ -28,8 +28,7 @@ FINAL_TARGET_FILES.features['fxmonitor@mozilla.org']['privileged'] += [
 
 FINAL_TARGET_FILES.features['fxmonitor@mozilla.org']['privileged']['subscripts'] += [
   'privileged/subscripts/EveryWindow.jsm',
-  'privileged/subscripts/Globals.jsm',
-  'privileged/subscripts/PanelUI.jsm'
+  'privileged/subscripts/Globals.jsm'
 ]
 
 with Files('**'):
