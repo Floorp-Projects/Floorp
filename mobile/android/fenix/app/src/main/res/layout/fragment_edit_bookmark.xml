@@ -17,9 +17,10 @@
         android:text="@string/bookmark_name_label"
         android:textColor="?primaryText"
         android:textSize="12sp"
-        android:textAllCaps="true"/>
+        android:textAllCaps="true"
+        android:labelFor="@id/bookmark_name_edit" />
 
-    <EditText
+    <org.mozilla.fenix.utils.ClearableEditText
         android:id="@+id/bookmark_name_edit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -27,7 +28,7 @@
         android:textSize="15sp"
         android:textColor="?secondaryText"
         tools:text="Internet for people, not profit -- Mozilla"
-        android:inputType="textAutoComplete"/>
+        android:inputType="textAutoComplete" />
 
     <TextView
         android:id="@+id/bookmark_url_label"
@@ -37,9 +38,10 @@
         android:text="@string/bookmark_url_label"
         android:textColor="?primaryText"
         android:textSize="12sp"
-        android:textAllCaps="true"/>
+        android:textAllCaps="true"
+        android:labelFor="@id/bookmark_url_edit" />
 
-    <EditText
+    <org.mozilla.fenix.utils.ClearableEditText
         android:id="@+id/bookmark_url_edit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -57,7 +59,8 @@
         android:text="@string/bookmark_folder_label"
         android:textColor="?primaryText"
         android:textSize="12sp"
-        android:textAllCaps="true"/>
+        android:textAllCaps="true"
+        android:labelFor="@id/bookmark_folder_selector" />
 
     <TextView
         android:id="@+id/bookmark_folder_selector"

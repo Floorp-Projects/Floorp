@@ -26,10 +26,10 @@ import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.fragment_edit_bookmark.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.UrlParseFailed
 import mozilla.components.concept.storage.BookmarkInfo
@@ -39,7 +39,6 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
-import java.lang.IllegalArgumentException
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
 
@@ -52,7 +51,7 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
     private var bookmarkParent: BookmarkNode? = null
 
     override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + job
+        get() = Main + job
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -84,8 +83,8 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
                         bookmark_url_edit.visibility = View.GONE
                         bookmark_url_label.visibility = View.GONE
                     }
-                    BookmarkNodeType.ITEM -> {}
-                    BookmarkNodeType.SEPARATOR -> {}
+                    BookmarkNodeType.ITEM -> {
+                    }
                     else -> throw IllegalArgumentException()
                 }
                 bookmark_name_edit.setText(bookmarkNode!!.title)
@@ -110,7 +109,9 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
     }
 
     override fun onPause() {
-        updateBookmarkNode(Pair(bookmark_name_edit.text, bookmark_url_edit.text))
+        launch {
+            updateBookmarkNode(Pair(bookmark_name_edit.text.toString(), bookmark_url_edit.text.toString()))
+        }
         super.onPause()
     }
 
@@ -119,19 +120,16 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
             bookmark_name_edit.textChanges().skipInitialValue(),
             bookmark_url_edit.textChanges().skipInitialValue(),
             BiFunction { name: CharSequence, url: CharSequence ->
-                Pair(name, url)
+                Pair(name.toString(), url.toString())
             })
-            .filter { it.first.isNotBlank() && it.second.isNotBlank() }
+            .filter { it.first.isNotBlank() }
             .debounce(debouncePeriodInMs, TimeUnit.MILLISECONDS)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .`as`(AutoDispose.autoDisposable(AndroidLifecycleScopeProvider.from(this@EditBookmarkFragment)))
             .subscribe {
-                try {
-                    bookmark_url_edit.error = null
+                launch(IO) {
                     updateBookmarkNode(it)
-                } catch (e: UrlParseFailed) {
-                    bookmark_url_edit.error = getString(R.string.bookmark_invalid_url_error)
                 }
             }
     }
@@ -162,17 +160,23 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
         }
     }
 
-    private fun updateBookmarkNode(pair: Pair<CharSequence, CharSequence>) {
-        launch(IO) {
+    private suspend fun updateBookmarkNode(pair: Pair<String, String>) {
+        try {
             requireComponents.core.bookmarksStorage.updateNode(
                 guidToEdit,
                 BookmarkInfo(
                     sharedViewModel.selectedFolder?.guid ?: bookmarkNode!!.parentGuid,
                     bookmarkNode!!.position,
-                    pair.first.toString(),
-                    if (bookmarkNode?.type == BookmarkNodeType.ITEM) pair.second.toString() else null
+                    pair.first,
+                    if (bookmarkNode?.type == BookmarkNodeType.ITEM) pair.second else null
                 )
             )
+        } catch (e: UrlParseFailed) {
+            coroutineScope {
+                launch(Main) {
+                    bookmark_url_edit.error = getString(R.string.bookmark_invalid_url_error)
+                }
+            }
         }
     }
 

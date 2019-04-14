@@ -91,7 +91,7 @@ class AddBookmarkFolderFragment : Fragment(), CoroutineScope {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.confirm_add_folder_button -> {
-                if (bookmark_add_folder_title_edit.text.isEmpty()) {
+                if (bookmark_add_folder_title_edit.text.isNullOrEmpty()) {
                     bookmark_add_folder_title_edit.error = getString(R.string.bookmark_empty_title_error)
                     return true
                 }

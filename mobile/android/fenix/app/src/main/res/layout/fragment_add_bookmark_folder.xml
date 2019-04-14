@@ -17,9 +17,10 @@
         android:text="@string/bookmark_name_label"
         android:textAllCaps="true"
         android:textColor="?primaryText"
-        android:textSize="12sp" />
+        android:textSize="12sp"
+        android:labelFor="@id/bookmark_add_folder_title_edit" />
 
-    <EditText
+    <org.mozilla.fenix.utils.ClearableEditText
         android:id="@+id/bookmark_add_folder_title_edit"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
