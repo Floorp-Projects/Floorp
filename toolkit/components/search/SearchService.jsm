@@ -177,7 +177,7 @@ const SEARCH_GEO_DEFAULT_UPDATE_INTERVAL = 2592000; // 30 days.
 // This is to be removed in https://bugzilla.mozilla.org/show_bug.cgi?id=1532246
 const MULTI_LOCALE_ENGINES = [
   "amazon", "amazondotcom", "bolcom", "ebay", "google", "markplaats",
-  "mercadolibre", "twitter", "wikipedia", "wiktionary", "multilocale",
+  "mercadolibre", "twitter", "wikipedia", "wiktionary", "yandex", "multilocale",
 ];
 
 // A tag to denote when we are using the "default_locale" of an engine
