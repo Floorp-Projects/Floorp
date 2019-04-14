@@ -241,12 +241,17 @@ this.FirefoxMonitor = {
     EveryWindow.registerCallback(
       this.kNotificationID,
       (win) => {
+        if (this.notificationsByWindow.has(win)) {
+          // We've already set up this window.
+          return;
+        }
+
+        this.notificationsByWindow.set(win, new Set());
+
         // Inject our stylesheet.
         let DOMWindowUtils = win.windowUtils;
         DOMWindowUtils.loadSheetUsingURIString(this.getURL("privileged/FirefoxMonitor.css"),
                                                DOMWindowUtils.AUTHOR_SHEET);
-
-        this.notificationsByWindow.set(win, new Set());
 
         // Setup the popup notification stuff. First, the URL bar icon:
         let doc = win.document;
