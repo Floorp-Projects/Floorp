@@ -2141,7 +2141,7 @@ already_AddRefed<gfxTextRun> BuildTextRunsScanner::BuildTextRunForFrames(
     lastComputedStyle = f->Style();
     // Detect use of text-transform or font-variant anywhere in the run
     textStyle = f->StyleText();
-    if (NS_STYLE_TEXT_TRANSFORM_NONE != textStyle->mTextTransform ||
+    if (!textStyle->mTextTransform.IsNone() ||
         // text-combine-upright requires converting from full-width
         // characters to non-full-width correspendent in some cases.
         lastComputedStyle->IsTextCombined()) {
@@ -2633,7 +2633,7 @@ void BuildTextRunsScanner::SetupBreakSinksForTextRun(gfxTextRun* aTextRun,
     if (aTextRun->GetFlags2() & nsTextFrameUtils::Flags::TEXT_NO_BREAKS) {
       flags |= nsLineBreaker::BREAK_SKIP_SETTING_NO_BREAKS;
     }
-    if (textStyle->mTextTransform == NS_STYLE_TEXT_TRANSFORM_CAPITALIZE) {
+    if (textStyle->mTextTransform.case_ == StyleTextTransformCase::Capitalize) {
       flags |= nsLineBreaker::BREAK_NEED_CAPITALIZATION;
     }
     if (textStyle->mHyphens == StyleHyphens::Auto) {
@@ -9400,7 +9400,7 @@ static void TransformChars(nsTextFrame* aFrame, const nsStyleText* aStyle,
                            int32_t aFragLen, nsAString& aOut) {
   nsAutoString fragString;
   char16_t* out;
-  if (aStyle->mTextTransform == NS_STYLE_TEXT_TRANSFORM_NONE) {
+  if (aStyle->mTextTransform.IsNone()) {
     // No text-transform, so we can copy directly to the output string.
     aOut.SetLength(aOut.Length() + aFragLen);
     out = aOut.EndWriting() - aFragLen;
@@ -9420,7 +9420,7 @@ static void TransformChars(nsTextFrame* aFrame, const nsStyleText* aStyle,
     out[i] = ch;
   }
 
-  if (aStyle->mTextTransform != NS_STYLE_TEXT_TRANSFORM_NONE) {
+  if (!aStyle->mTextTransform.IsNone()) {
     MOZ_ASSERT(aTextRun->GetFlags2() &
                nsTextFrameUtils::Flags::TEXT_IS_TRANSFORMED);
     if (aTextRun->GetFlags2() & nsTextFrameUtils::Flags::TEXT_IS_TRANSFORMED) {
