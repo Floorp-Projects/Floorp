@@ -52,7 +52,6 @@ import org.mozilla.fenix.ext.urlToHost
 import org.mozilla.fenix.mvi.ActionBusFactory
 import org.mozilla.fenix.mvi.getAutoDisposeObservable
 import org.mozilla.fenix.mvi.getManagedEmitter
-import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import kotlin.coroutines.CoroutineContext
 
 @SuppressWarnings("TooManyFunctions")
@@ -114,9 +113,18 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
             }
             is BookmarkState.Mode.Selecting -> {
                 inflater.inflate(R.menu.bookmarks_select_multi, menu)
-                activity?.title = getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size)
                 val colorFilter =
                     PorterDuffColorFilter(R.attr.primaryText.getColorFromAttr(context!!), PorterDuff.Mode.SRC_IN)
+
+                val enableEditButton = mode.selectedItems.size == 1
+                menu.findItem(R.id.edit_bookmark_multi_select).run {
+                    isVisible = enableEditButton
+                    if (enableEditButton) {
+                        icon.colorFilter = colorFilter
+                    }
+                }
+
+                activity?.title = getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size)
                 themeToolbar(toolbar, colorFilter)
             }
         }
@@ -264,8 +272,13 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                     .navigate(BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
                 true
             }
-            R.id.share_bookmarks_multi_select -> {
-                ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "1539")
+            R.id.edit_bookmark_multi_select -> {
+                val bookmark = getSelectedBookmarks().first()
+                Navigation.findNavController(requireActivity(), R.id.container)
+                    .navigate(
+                        BookmarkFragmentDirections
+                            .actionBookmarkFragmentToBookmarkEditFragment(bookmark.guid)
+                    )
                 true
             }
             R.id.open_bookmarks_in_private_tabs_multi_select -> {
