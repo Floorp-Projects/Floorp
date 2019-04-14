@@ -8,7 +8,7 @@
   --drag-drop-transition-duration: .3s;
 }
 
-#main-window[customizing] .customization-target:not(#widget-overflow-fixed-list) {
+:root[customizing] .customization-target:not(#widget-overflow-fixed-list) {
   min-width: 100px;
 }
 
