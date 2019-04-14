@@ -82,6 +82,7 @@ class SETA(object):
                              kwargs={'timeout': 60, 'headers': ''})
             task_list = json.loads(response.content).get('jobtypes', '')
 
+            high_value_tasks = set([])
             if type(task_list) == dict and len(task_list) > 0:
                 if type(task_list.values()[0]) == list and len(task_list.values()[0]) > 0:
                     high_value_tasks = set(task_list.values()[0])
