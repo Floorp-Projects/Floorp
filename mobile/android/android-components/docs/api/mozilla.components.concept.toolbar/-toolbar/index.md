@@ -24,6 +24,7 @@ Interface to be implemented by components that provide browser toolbar functiona
 |---|---|
 | [private](private.md) | `abstract var private: `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Sets/gets private mode. |
 | [siteSecure](site-secure.md) | `abstract var siteSecure: `[`SiteSecurity`](-site-security/index.md)<br>Sets/Gets the site security to be displayed on the toolbar. |
+| [title](title.md) | `abstract var title: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)<br>Sets/Gets the title to be displayed on the toolbar. |
 | [url](url.md) | `abstract var url: `[`CharSequence`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-char-sequence/index.html)<br>Sets/Gets the URL to be displayed on the toolbar. |
 
 ### Functions

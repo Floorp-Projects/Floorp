@@ -10,6 +10,7 @@ Feature implementation for connecting a toolbar implementation with the session 
 
 | Name | Summary |
 |---|---|
+| [RenderStyle](-render-style/index.md) | `sealed class RenderStyle`<br>Controls how the url should be styled |
 | [UrlRenderConfiguration](-url-render-configuration/index.md) | `data class UrlRenderConfiguration`<br>Configuration that controls how URLs are rendered. |
 
 ### Constructors
