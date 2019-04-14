@@ -3005,7 +3005,7 @@ nsRect nsLayoutUtils::TransformFrameRectToAncestor(
     // |result| from TransformFrameRectFromTextChild() is in user space (css
     // pixel), should convert to device pixel
     float devPixelPerCSSPixel =
-        1.f * AppUnitsPerCSSPixel() / srcAppUnitsPerDevPixel;
+        float(AppUnitsPerCSSPixel()) / srcAppUnitsPerDevPixel;
     result.Scale(devPixelPerCSSPixel);
 
     result = TransformGfxRectToAncestor(
