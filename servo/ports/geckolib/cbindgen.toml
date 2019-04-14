@@ -107,6 +107,7 @@ include = [
   "TouchAction",
   "WillChangeBits",
   "TextDecorationLine",
+  "TextTransform",
   "MozListReversed",
   "Owned",
   "OwnedOrNull",
@@ -265,6 +266,11 @@ renaming_overrides_prefixing = true
   static inline StyleRestyleHint RestyleSubtree();
   static inline StyleRestyleHint RecascadeSubtree();
   static inline StyleRestyleHint ForAnimations();
+"""
+
+"TextTransform" = """
+  static inline StyleTextTransform None();
+  inline bool IsNone() const;
 """
 
 # TODO(emilio): Add hooks to cbindgen to be able to generate MOZ_MUST_USE_TYPE
