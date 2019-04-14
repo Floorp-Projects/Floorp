@@ -5350,10 +5350,8 @@ gfxRect SVGTextFrame::TransformFrameRectFromTextChild(
     if (rectInFrameUserSpace.IntersectRect(
             rectInFrameUserSpace,
             run.GetFrameUserSpaceRect(presContext, flags).ToThebesRect())) {
-      // Transform it up to user space of the <text>, also taking into
-      // account the font size scale.
+      // Transform it up to user space of the <text>
       gfxMatrix m = run.GetTransformFromRunUserSpaceToUserSpace(presContext);
-      m.PreScale(mFontSizeScaleFactor, mFontSizeScaleFactor);
       gfxRect rectInUserSpace = m.TransformRect(rectInFrameUserSpace);
 
       // Union it into the result.
