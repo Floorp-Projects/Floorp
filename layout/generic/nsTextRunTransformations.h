@@ -34,7 +34,7 @@ struct nsTransformedCharStyle final {
   RefPtr<nsAtom> mLanguage;
   RefPtr<nsPresContext> mPresContext;
   float mScriptSizeMultiplier;
-  uint8_t mTextTransform;
+  mozilla::StyleTextTransform mTextTransform;
   uint8_t mMathVariant;
   bool mExplicitLanguage;
   bool mForceNonFullWidth = false;

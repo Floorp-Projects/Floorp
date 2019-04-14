@@ -3744,10 +3744,10 @@ static bool AreShadowArraysEqual(nsCSSShadowArray* lhs, nsCSSShadowArray* rhs) {
 //
 
 nsStyleText::nsStyleText(const Document& aDocument)
-    : mTextAlign(NS_STYLE_TEXT_ALIGN_START),
+    : mTextTransform(StyleTextTransform::None()),
+      mTextAlign(NS_STYLE_TEXT_ALIGN_START),
       mTextAlignLast(NS_STYLE_TEXT_ALIGN_AUTO),
       mTextJustify(StyleTextJustify::Auto),
-      mTextTransform(NS_STYLE_TEXT_TRANSFORM_NONE),
       mWhiteSpace(StyleWhiteSpace::Normal),
       mHyphens(StyleHyphens::Manual),
       mRubyAlign(NS_STYLE_RUBY_ALIGN_SPACE_AROUND),
@@ -3778,10 +3778,10 @@ nsStyleText::nsStyleText(const Document& aDocument)
 }
 
 nsStyleText::nsStyleText(const nsStyleText& aSource)
-    : mTextAlign(aSource.mTextAlign),
+    : mTextTransform(aSource.mTextTransform),
+      mTextAlign(aSource.mTextAlign),
       mTextAlignLast(aSource.mTextAlignLast),
       mTextJustify(aSource.mTextJustify),
-      mTextTransform(aSource.mTextTransform),
       mWhiteSpace(aSource.mWhiteSpace),
       mWordBreak(aSource.mWordBreak),
       mOverflowWrap(aSource.mOverflowWrap),

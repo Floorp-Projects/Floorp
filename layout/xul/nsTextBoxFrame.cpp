@@ -879,15 +879,15 @@ void nsTextBoxFrame::RecomputeTitle() {
 
   // This doesn't handle language-specific uppercasing/lowercasing
   // rules, unlike textruns.
-  uint8_t textTransform = StyleText()->mTextTransform;
-  if (textTransform == NS_STYLE_TEXT_TRANSFORM_UPPERCASE) {
+  StyleTextTransform textTransform = StyleText()->mTextTransform;
+  if (textTransform.case_ == StyleTextTransformCase::Uppercase) {
     ToUpperCase(mTitle);
-  } else if (textTransform == NS_STYLE_TEXT_TRANSFORM_LOWERCASE) {
+  } else if (textTransform.case_ == StyleTextTransformCase::Lowercase) {
     ToLowerCase(mTitle);
   }
-  // We can't handle NS_STYLE_TEXT_TRANSFORM_CAPITALIZE because we
+  // We can't handle StyleTextTransformCase::Capitalize because we
   // have no clue about word boundaries here.  We also don't handle
-  // NS_STYLE_TEXT_TRANSFORM_FULL_WIDTH.
+  // the full-width or full-size-kana transforms.
 }
 
 void nsTextBoxFrame::DidSetComputedStyle(ComputedStyle* aOldComputedStyle) {

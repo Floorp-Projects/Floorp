@@ -459,6 +459,7 @@ cbindgen-types = [
     { gecko = "StyleTouchAction", servo = "values::computed::TouchAction" },
     { gecko = "StyleWillChangeBits", servo = "values::specified::box_::WillChangeBits" },
     { gecko = "StyleTextDecorationLine", servo = "values::computed::TextDecorationLine" },
+    { gecko = "StyleTextTransform", servo = "values::computed::TextTransform" },
     { gecko = "StyleMozListReversed", servo = "values::computed::MozListReversed" },
     { gecko = "StyleOwned", servo = "gecko_bindings::sugar::ownership::Owned" },
     { gecko = "StyleOwnedOrNull", servo = "gecko_bindings::sugar::ownership::OwnedOrNull" },
