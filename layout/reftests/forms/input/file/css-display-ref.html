@@ -1,0 +1,54 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Reference: File input with CSS display</title>
+<link rel="author" title="Mats Palmgren" href="mailto:mats@mozilla.com">
+<style>
+input {
+  height: 3em;
+}
+.grid  { display: block; }
+.flex  { display: block; }
+.block { display: block; }
+.table { display: block; }
+.columns { display: block; }
+.n { -webkit-appearance:none; appearance:none; }
+</style>
+<body>
+  <input type="file" class="grid">
+  <input type="file" class="flex">
+  <input type="file" class="block">
+  <input type="file" class="table">
+  <input type="file" class="columns">
+
+  A<input type="file">
+  <input type="file" class="inline">
+  <input type="file" class="inline-grid">
+  <input type="file" class="inline-flex">
+  <input type="file" class="inline-block">
+  <input type="file" class="inline-table">
+  <input type="file" class="inline-columns">
+
+  A<input disabled type="file">
+  <input disabled type="file" class="inline">
+  <input disabled type="file" class="inline-grid">
+  <input disabled type="file" class="inline-flex">
+  <input disabled type="file" class="inline-block">
+  <input disabled type="file" class="inline-table">
+  <input disabled type="file" class="inline-columns">
+
+  A<input type="file" class="n">
+  <input type="file" class="n inline">
+  <input type="file" class="n inline-grid">
+  <input type="file" class="n inline-flex">
+  <input type="file" class="n inline-block">
+  <input type="file" class="n inline-table">
+  <input type="file" class="n inline-columns">
+
+  A<input disabled type="file" class="n">
+  <input disabled type="file" class="n inline">
+  <input disabled type="file" class="n inline-grid">
+  <input disabled type="file" class="n inline-flex">
+  <input disabled type="file" class="n inline-block">
+  <input disabled type="file" class="n inline-table">
+  <input disabled type="file" class="n inline-columns">
+</body>
