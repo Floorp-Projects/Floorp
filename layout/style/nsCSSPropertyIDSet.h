@@ -7,15 +7,16 @@
 #ifndef nsCSSPropertyIDSet_h__
 #define nsCSSPropertyIDSet_h__
 
-#include "mozilla/ArrayUtils.h"
-
-#include "nsCSSPropertyID.h"
-#include <limits.h>  // for CHAR_BIT
 #include <initializer_list>
+#include <limits.h>  // for CHAR_BIT
+#include <ostream>
 
+#include "mozilla/ArrayUtils.h"
 // For COMPOSITOR_ANIMATABLE_PROPERTY_LIST and
 // COMPOSITOR_ANIMATABLE_PROPERTY_LIST_LENGTH
 #include "mozilla/CompositorAnimatableProperties.h"
+#include "nsCSSProps.h"  // For operator<< for nsCSSPropertyID
+#include "nsCSSPropertyID.h"
 
 /**
  * nsCSSPropertyIDSet maintains a set of non-shorthand CSS properties.  In
@@ -269,5 +270,16 @@ class nsCSSPropertyIDSet {
  private:
   property_set_type mProperties[kChunkCount];
 };
+
+// MOZ_DBG support
+
+inline std::ostream& operator<<(std::ostream& aOut,
+                                const nsCSSPropertyIDSet& aPropertySet) {
+  AutoTArray<nsCSSPropertyID, 16> properties;
+  for (nsCSSPropertyID property : aPropertySet) {
+    properties.AppendElement(property);
+  }
+  return aOut << properties;
+}
 
 #endif /* !defined(nsCSSPropertyIDSet_h__) */

@@ -35,6 +35,9 @@ $property_ids
   eCSSPropertyExtra_variable,
 };
 
+// MOZ_DBG support is defined in nsCSSProps.h since it depends on
+// nsCSSProps::GetStringValue
+
 const nsCSSPropertyID
   eCSSProperty_COUNT_no_shorthands = $longhand_count;
 const nsCSSPropertyID
