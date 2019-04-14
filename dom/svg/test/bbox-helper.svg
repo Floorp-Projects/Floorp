@@ -4,12 +4,13 @@
     <foreignObject id="fO" x="10" y="10" width="100" height="100"/>
     <image id="i" x="10" y="10" width="100" height="100"/>
   </g>
-  <text id="b" x="20" y="20">b</text>
+  <text id="b" x="100" y="100">abcdef</text>
   <text id="a" x="20" y="30">a</text>
   <text id="y" x="20" y="40">y</text>
-  <text id="tspan">
-    <tspan x="20" y="20">b</tspan>
+  <text id="tspantext1">
+    <tspan id="tspan1" x="100" y="100">abcdef</tspan>
   </text>
+  <text id="tspantext2" x="100" y="100">ABCEDF<tspan id="tspan2">ABCEDF</tspan></text>
   <text id="text" x="20" y="60">text</text>
   <!-- &#8206; is the same as the HTML &lrm; -->
   <text id="lrmText" x="20" y="60">&#8206;text</text>
