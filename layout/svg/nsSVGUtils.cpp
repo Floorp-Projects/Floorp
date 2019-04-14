@@ -335,7 +335,7 @@ nsIFrame* nsSVGUtils::GetOuterSVGFrameAndCoveredRegion(nsIFrame* aFrame,
 
     float appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
     float devPixelPerCSSPixel =
-        1.0 * AppUnitsPerCSSPixel() / appUnitsPerDevPixel;
+        float(AppUnitsPerCSSPixel()) / appUnitsPerDevPixel;
 
     // The matrix that GetBBox accepts should operate on "user space",
     // i.e. with CSS pixel unit.
