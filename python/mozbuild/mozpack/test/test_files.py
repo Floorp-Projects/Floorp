@@ -165,7 +165,7 @@ class TestDest(TestWithTmpDir):
 
 rand = b''.join(random.choice(
     b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-                for i in xrange(131597))
+                for i in six.moves.xrange(131597))
 samples = [
     b'',
     b'test',
@@ -715,7 +715,7 @@ class TestDeflatedFile(TestWithTmpDir):
             for content in samples:
                 name = b''.join(random.choice(
                     b'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
-                    for i in xrange(8))
+                    for i in range(8))
                 jar.add(name, content, compress=True)
                 contents[name] = content
 
