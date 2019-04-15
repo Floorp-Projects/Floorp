@@ -58,13 +58,16 @@ class MergedListUnits {};
 template <typename Units>
 struct Index {
   Index() : val(0) {}
-  explicit Index(size_t aVal) : val(aVal) {}
+  explicit Index(size_t aVal) : val(aVal) {
+    MOZ_RELEASE_ASSERT(aVal < std::numeric_limits<uint32_t>::max(),
+                       "List index overflowed");
+  }
 
   bool operator==(const Index<Units>& aOther) const {
     return val == aOther.val;
   }
 
-  size_t val;
+  uint32_t val;
 };
 typedef Index<OldListUnits> OldListIndex;
 typedef Index<MergedListUnits> MergedListIndex;
@@ -163,10 +166,10 @@ struct OldItemInfo {
   bool IsChanged();
 
   nsDisplayItem* mItem;
+  nsTArray<MergedListIndex> mDirectPredecessors;
+  MergedListIndex mIndex;
   bool mUsed;
   bool mDiscarded;
-  MergedListIndex mIndex;
-  nsTArray<MergedListIndex> mDirectPredecessors;
 };
 
 #endif  // RETAINEDDISPLAYLISTHELPERS_H_
