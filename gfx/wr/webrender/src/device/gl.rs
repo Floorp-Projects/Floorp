@@ -685,6 +685,7 @@ pub struct BoundPBO<'a> {
 impl<'a> Drop for BoundPBO<'a> {
     fn drop(&mut self) {
         self.device.gl.unmap_buffer(gl::PIXEL_PACK_BUFFER);
+        self.device.gl.bind_buffer(gl::PIXEL_PACK_BUFFER, 0);
     }
 }
 
@@ -2407,6 +2408,8 @@ impl Device {
     }
 
     pub fn map_pbo_for_readback<'a>(&'a mut self, pbo: &'a PBO) -> Option<BoundPBO<'a>> {
+        self.gl.bind_buffer(gl::PIXEL_PACK_BUFFER, pbo.id);
+
         let buf_ptr = match self.gl.get_type() {
             gl::GlType::Gl => {
                 self.gl.map_buffer(gl::PIXEL_PACK_BUFFER, gl::READ_ONLY)
