@@ -14,17 +14,16 @@ import type { TreeDirectory } from "./types";
 
 type Params = {
   sources: SourcesMap,
-  debuggeeUrl: string,
-  projectRoot: string
+  debuggeeUrl: string
 };
 
-export function createTree({ sources, debuggeeUrl, projectRoot }: Params) {
+export function createTree({ sources, debuggeeUrl }: Params) {
   const uncollapsedTree = createDirectoryNode("root", "", []);
   const debuggeeHost = getDomain(debuggeeUrl);
 
   for (const sourceId in sources) {
     const source = sources[sourceId];
-    addToTree(uncollapsedTree, source, debuggeeHost, projectRoot);
+    addToTree(uncollapsedTree, source, debuggeeHost);
   }
 
   const sourceTree = collapseTree((uncollapsedTree: TreeDirectory));
