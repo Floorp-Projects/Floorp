@@ -405,29 +405,17 @@ def load_wpt_tests(xul_tester, requested_paths, excluded_paths, update_manifest=
 
         return os.path.join(wpt, os.path.dirname(test_path), script)
 
-    tests = []
-    for test in loader.tests["testharness"]:
-        test_path = os.path.relpath(test.path, wpt)
-        scripts = [resolve(test_path, s) for s in test.scripts]
-        extra_helper_paths_for_test = extra_helper_paths + scripts,
-
-        # We must create at least one test with the default options, along with
-        # one test for each option given in a test-also annotation.
-        options = [None]
-        for m in test.itermeta():
-            if m.has_key("test-also"):  # NOQA: W601
-                options += m.get("test-also").split()
-        for option in options:
-            test_case = RefTestCase(
-                wpt,
-                test_path,
-                extra_helper_paths=extra_helper_paths_for_test[:],
-                wpt=test
-            )
-            if option:
-                test_case.options.append(option)
-            tests.append(test_case)
-    return tests
+    return [
+        RefTestCase(
+            wpt,
+            test_path,
+            extra_helper_paths=extra_helper_paths + [resolve(test_path, s) for s in test.scripts],
+            wpt=test
+        )
+        for test_path, test in (
+            (os.path.relpath(test.path, wpt), test) for test in loader.tests["testharness"]
+        )
+    ]
 
 
 def load_tests(options, requested_paths, excluded_paths):
