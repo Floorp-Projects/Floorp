@@ -435,7 +435,7 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     needsOwnLayer = true;
   }
 
-  if (subdocRootFrame && aBuilder->IsRetainingDisplayList()) {
+  if (aBuilder->IsRetainingDisplayList()) {
     // Caret frame changed, rebuild the entire subdoc.
     // We could just invalidate the old and new frame
     // areas and save some work here. RetainedDisplayListBuilder
@@ -443,7 +443,6 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     // subdocs in advance.
     if (mPreviousCaret != aBuilder->GetCaretFrame()) {
       dirty = visible;
-      aBuilder->MarkFrameModifiedDuringBuilding(subdocRootFrame);
       aBuilder->RebuildAllItemsInCurrentSubtree();
       // Mark the old caret frame as invalid so that we remove the
       // old nsDisplayCaret. We don't mark the current frame as invalid
