@@ -429,8 +429,15 @@ var LoginManagerContent = {
     if (!event.isTrusted) {
       return;
     }
+    let isMasterPasswordSet = Services.cpmm.sharedData.get("isMasterPasswordSet");
     let document = event.target.ownerDocument;
-    if (document.visibilityState == "visible") {
+
+    // don't attempt to defer handling when a master password is set
+    // Showing the MP modal as soon as possible minimizes its interference with tab interactions
+    // See bug 1539091 and bug 1538460.
+    log("onDOMFormHasPassword, visibilityState:", document.visibilityState,
+        "isMasterPasswordSet:", isMasterPasswordSet);
+    if (document.visibilityState == "visible" || isMasterPasswordSet) {
       this._processDOMFormHasPasswordEvent(event);
     } else {
       // wait until the document becomes visible before handling this event
@@ -459,7 +466,14 @@ var LoginManagerContent = {
     }
 
     let document = pwField.ownerDocument;
-    if (document.visibilityState == "visible") {
+    let isMasterPasswordSet = Services.cpmm.sharedData.get("isMasterPasswordSet");
+    log("onDOMInputPasswordAdded, visibilityState:", document.visibilityState,
+        "isMasterPasswordSet:", isMasterPasswordSet);
+
+    // don't attempt to defer handling when a master password is set
+    // Showing the MP modal as soon as possible minimizes its interference with tab interactions
+    // See bug 1539091 and bug 1538460.
+    if (document.visibilityState == "visible" || isMasterPasswordSet) {
       this._processDOMInputPasswordAddedEvent(event, topWindow);
     } else {
       // wait until the document becomes visible before handling this event

@@ -95,11 +95,14 @@ LoginManager.prototype = {
     Services.obs.addObserver(this._observer, "gather-telemetry");
   },
 
-
   _initStorage() {
     this._storage = Cc["@mozilla.org/login-manager/storage/default;1"]
                     .createInstance(Ci.nsILoginManagerStorage);
     this.initializationPromise = this._storage.initialize();
+    this.initializationPromise.then(() => {
+      log.debug("initializationPromise is resolved, updating isMasterPasswordSet in sharedData");
+      Services.ppmm.sharedData.set("isMasterPasswordSet", LoginHelper.isMasterPasswordSet());
+    });
   },
 
 
