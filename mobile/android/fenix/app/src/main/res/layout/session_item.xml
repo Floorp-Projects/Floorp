@@ -77,7 +77,6 @@
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/content_description_session_menu"
             android:src="@drawable/ic_menu"
-            android:tint="?primaryText"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -90,6 +89,5 @@
         android:layout_gravity="bottom|end"
         android:background="?android:attr/selectableItemBackgroundBorderless"
         android:contentDescription="@string/content_description_session_share"
-        android:src="@drawable/ic_send"
-        android:tint="?primaryText" />
+        android:src="@drawable/ic_send"/>
 </androidx.cardview.widget.CardView>

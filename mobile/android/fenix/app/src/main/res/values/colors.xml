@@ -14,7 +14,7 @@
     <color name="neutral_light_theme">@color/photonGrey20</color>
 
     <!-- Dark theme color palette -->
-    <color name="primary_text_dark_theme">#FBEBFE</color>
+    <color name="primary_text_dark_theme">#FBFBFE</color>
     <color name="secondary_text_dark_theme">#A4A3AA</color>
     <color name="foundation_dark_theme">#1C1B22</color>
     <color name="above_dark_theme">#32313C</color>

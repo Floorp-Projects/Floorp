@@ -54,7 +54,6 @@
         android:layout_margin="10dp"
         android:contentDescription="@string/bookmark_menu_content_description"
         android:src="@drawable/ic_menu"
-        android:tint="?primaryText"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

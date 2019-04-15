@@ -22,7 +22,6 @@
             android:layout_marginTop="16dp"
             android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_menu"
-            android:tint="?primaryText"
             android:contentDescription="@string/content_description_menu"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -33,7 +32,6 @@
             android:layout_height="@dimen/glyph_button_height"
             android:background="?privateBrowsingButtonBackground"
             android:src="@drawable/ic_private_browsing"
-            android:tint="?primaryText"
             android:contentDescription="@string/content_description_private_browsing_button"
             app:layout_constraintEnd_toStartOf="@id/menuButton"
             app:layout_constraintTop_toTopOf="@id/menuButton" />
