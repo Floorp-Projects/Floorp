@@ -171,7 +171,7 @@ android-x86-nightly/opt:
     index:
         product: mobile
         job-name: android-x86-opt
-        type: nightly
+        type: android-nightly
     treeherder:
         platform: android-4-2-x86/opt
         symbol: N
@@ -393,7 +393,7 @@ android-api-16-nightly/opt:
     index:
         product: mobile
         job-name: android-api-16-opt
-        type: nightly-with-multi-l10n
+        type: android-nightly-with-multi-l10n
     treeherder:
         platform: android-4-0-armv7-api16/opt
         symbol: N
@@ -562,7 +562,7 @@ android-aarch64-nightly/opt:
     index:
         product: mobile
         job-name: android-aarch64-opt
-        type: nightly
+        type: android-nightly
     treeherder:
         platform: android-5-0-aarch64/opt
         symbol: N
@@ -676,7 +676,7 @@ android-x86_64-nightly/opt:
     index:
         product: mobile
         job-name: android-x86_64-opt
-        type: nightly
+        type: android-nightly
     treeherder:
         platform: android-5-0-x86_64/opt
         symbol: N
