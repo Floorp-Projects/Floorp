@@ -144,7 +144,12 @@ add_task(async function test_remotetab() {
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
   let p = BrowserTestUtils.browserLoaded(tab.linkedBrowser);
-  await UrlbarTestUtils.promiseAutocompleteResultPopup(window, "example", waitForFocus, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: "example",
+    fireInputEvent: true,
+  });
   EventUtils.synthesizeKey("KEY_ArrowDown");
   EventUtils.synthesizeKey("KEY_Enter");
   await p;

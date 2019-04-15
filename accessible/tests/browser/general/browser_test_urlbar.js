@@ -13,7 +13,11 @@ add_task(async function testAutocompleteRichResult() {
   let accService = await initAccessibilityService();
 
   info("Opening the URL bar and entering a key to show the PopupAutoCompleteRichResult panel");
-  await UrlbarTestUtils.promiseAutocompleteResultPopup(window, "a", waitForFocus);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: "a"
+  });
 
   info("Waiting for accessibility to be created for the richlistbox");
   let resultsView;

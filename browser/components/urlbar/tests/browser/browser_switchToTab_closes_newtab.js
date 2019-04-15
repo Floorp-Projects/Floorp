@@ -31,7 +31,11 @@ add_task(async function test_switchToTab_closes() {
       return event.originalTarget == baseTab;
     });
 
-  await UrlbarTestUtils.promiseAutocompleteResultPopup(window, "dummy", waitForFocus);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: "dummy",
+  });
 
   // The first result is the heuristic, the second will be the switch to tab.
   let element = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
