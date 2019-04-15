@@ -6,7 +6,7 @@
   -->
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" width="400" height="400">
 
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
 
 <script>
 SimpleTest.waitForExplicitFinish();

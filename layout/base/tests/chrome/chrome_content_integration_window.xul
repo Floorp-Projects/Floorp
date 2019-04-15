@@ -4,7 +4,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTests()"
         style="background:black; -moz-appearance:none;">
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
 
   <stack style="height:300px; width:200px;">
     <!-- the bottom 100px is a strip of black that should be vixible through the content iframe -->
