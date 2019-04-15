@@ -646,7 +646,7 @@ void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   }
 
   ImgDrawResult result = static_cast<nsBulletFrame*>(mFrame)->PaintBullet(
-      *aCtx, ToReferenceFrame(), GetPaintRect(), flags, mDisableSubpixelAA);
+      *aCtx, ToReferenceFrame(), GetPaintRect(), flags, IsSubpixelAADisabled());
 
   nsDisplayBulletGeometry::UpdateDrawResult(this, result);
 }
