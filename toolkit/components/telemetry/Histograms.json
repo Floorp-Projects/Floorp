@@ -6026,6 +6026,62 @@
     "description": "Update: the update action was initiated from the PanelUI application update menu item.",
     "labels": ["restart", "available", "manual"]
   },
+  "UPDATE_CAN_USE_BITS_EXTERNAL": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": [
+      "CanUseBits",
+      "NoBits_NotWindows",
+      "NoBits_FeatureOff",
+      "NoBits_Pref",
+      "NoBits_Proxy",
+      "NoBits_OtherUser"
+    ],
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1343669, 1540193, 1520321],
+    "description": "Update: Whether BITS could be used to download updates (externally initiated)"
+  },
+  "UPDATE_CAN_USE_BITS_NOTIFY": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": [
+      "CanUseBits",
+      "NoBits_NotWindows",
+      "NoBits_FeatureOff",
+      "NoBits_Pref",
+      "NoBits_Proxy",
+      "NoBits_OtherUser"
+    ],
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1343669, 1540193, 1520321],
+    "description": "Update: Whether BITS could be used to download updates (timer initiated)"
+  },
+  "UPDATE_BITS_RESULT_COMPLETE": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 99,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1343669, 1540193, 1520321],
+    "description": "Update: Result code from downloading a complete update via BITS",
+    "operating_systems": ["windows"]
+  },
+  "UPDATE_BITS_RESULT_PARTIAL": {
+    "record_in_processes": ["main"],
+    "alert_emails": ["application-update-telemetry-alerts@mozilla.com", "rstrong@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 99,
+    "releaseChannelCollection": "opt-out",
+    "bug_numbers": [1343669, 1540193, 1520321],
+    "description": "Update: Result code from downloading a partial update via BITS",
+    "operating_systems": ["windows"]
+  },
   "THUNDERBIRD_GLODA_SIZE_MB": {
     "record_in_processes": ["main", "content"],
     "expires_in_version": "never",
