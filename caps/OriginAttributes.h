@@ -50,8 +50,7 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
            mInIsolatedMozBrowser == aOther.mInIsolatedMozBrowser &&
            mUserContextId == aOther.mUserContextId &&
            mPrivateBrowsingId == aOther.mPrivateBrowsingId &&
-           mFirstPartyDomain == aOther.mFirstPartyDomain &&
-           mGeckoViewSessionContextId == aOther.mGeckoViewSessionContextId;
+           mFirstPartyDomain == aOther.mFirstPartyDomain;
   }
 
   bool operator!=(const OriginAttributes& aOther) const {
@@ -62,8 +61,7 @@ class OriginAttributes : public dom::OriginAttributesDictionary {
     return mAppId == aOther.mAppId &&
            mInIsolatedMozBrowser == aOther.mInIsolatedMozBrowser &&
            mUserContextId == aOther.mUserContextId &&
-           mPrivateBrowsingId == aOther.mPrivateBrowsingId &&
-           mGeckoViewSessionContextId == aOther.mGeckoViewSessionContextId;
+           mPrivateBrowsingId == aOther.mPrivateBrowsingId;
   }
 
   // Serializes/Deserializes non-default values into the suffix format, i.e.
@@ -155,11 +153,6 @@ class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
       return false;
     }
 
-    if (mGeckoViewSessionContextId.WasPassed() &&
-        mGeckoViewSessionContextId.Value() != aAttrs.mGeckoViewSessionContextId) {
-      return false;
-    }
-
     return true;
   }
 
@@ -188,11 +181,6 @@ class OriginAttributesPattern : public dom::OriginAttributesPatternDictionary {
 
     if (mFirstPartyDomain.WasPassed() && aOther.mFirstPartyDomain.WasPassed() &&
         mFirstPartyDomain.Value() != aOther.mFirstPartyDomain.Value()) {
-      return false;
-    }
-
-    if (mGeckoViewSessionContextId.WasPassed() && aOther.mGeckoViewSessionContextId.WasPassed() &&
-        mGeckoViewSessionContextId.Value() != aOther.mGeckoViewSessionContextId.Value()) {
       return false;
     }
 
