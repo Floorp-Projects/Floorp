@@ -188,9 +188,13 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     mozharness = test['mozharness']
     worker = taskdesc['worker']
 
+    bitbar_script = 'test-linux.sh'
+    bitbar_wrapper = '/builds/taskcluster/script.py'
+
     is_macosx = worker['os'] == 'macosx'
     is_windows = worker['os'] == 'windows'
-    is_linux = worker['os'] == 'linux'
+    is_linux = worker['os'] == 'linux' or worker['os'] == 'linux-bitbar'
+    is_bitbar = worker['os'] == 'linux-bitbar'
     assert is_macosx or is_windows or is_linux
 
     artifacts = [
@@ -208,6 +212,25 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             'path': 'build/blobber_upload_dir',
             'type': 'directory'
         })
+
+    if is_bitbar:
+        artifacts = [
+            {
+                'name': 'public/test/',
+                'path': 'artifacts/public',
+                'type': 'directory'
+            },
+            {
+                'name': 'public/logs/',
+                'path': 'workspace/logs',
+                'type': 'directory'
+            },
+            {
+                'name': 'public/test_info/',
+                'path': 'workspace/build/blobber_upload_dir',
+                'type': 'directory'
+            },
+        ]
 
     if 'installer-url' in mozharness:
         installer_url = mozharness['installer-url']
@@ -256,6 +279,20 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             'XPC_FLAGS': '0x0',
             'XPC_SERVICE_NAME': '0',
         })
+    elif is_bitbar:
+        env.update({
+            'MOZHARNESS_CONFIG': ' '.join(mozharness['config']),
+            'MOZHARNESS_SCRIPT': mozharness['script'],
+            'MOZHARNESS_URL': {'artifact-reference': '<build/public/build/mozharness.zip>'},
+            'MOZILLA_BUILD_URL': {'task-reference': installer_url},
+            "MOZ_NO_REMOTE": '1',
+            "NEED_XVFB": "false",
+            "XPCOM_DEBUG_BREAK": 'warn',
+            "NO_FAIL_ON_TEST_ERRORS": '1',
+            "MOZ_HIDE_RESULTS_TABLE": '1',
+            "MOZ_NODE_PATH": "/usr/local/bin/node",
+            'TASKCLUSTER_WORKER_TYPE': job['worker-type'],
+        })
 
     extra_config = {
         'installer_url': installer_url,
@@ -268,6 +305,12 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
             'c:\\mozilla-build\\python\\python.exe',
             '-u',
             'mozharness\\scripts\\' + normpath(mozharness['script'])
+        ]
+    if is_bitbar:
+        mh_command = [
+            bitbar_wrapper,
+            'bash',
+            "./{}".format(bitbar_script)
         ]
     else:
         # is_linux or is_macosx
@@ -317,6 +360,16 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
         },
         'format': 'zip'
     }]
+    if is_bitbar:
+        a_url = '{}/raw-file/{}/taskcluster/scripts/tester/{}'.format(
+            config.params['head_repository'], config.params['head_rev'], bitbar_script
+        )
+        worker['mounts'] = [{
+            'file': bitbar_script,
+            'content': {
+                'url': a_url,
+            },
+        }]
 
     if is_windows:
         worker['command'] = [' '.join(mh_command)]
