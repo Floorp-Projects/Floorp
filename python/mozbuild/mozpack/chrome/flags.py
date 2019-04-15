@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import re
+import six
 from distutils.version import LooseVersion
 from mozpack.errors import errors
 from collections import OrderedDict
@@ -262,7 +263,7 @@ class Flags(OrderedDict):
             flags.match(application='foo', appversion='3.5') returns True
             flags.match(application='foo', appversion='3.0') returns False
         '''
-        for name, value in filter.iteritems():
+        for name, value in six.iteritems(filter):
             if name not in self:
                 continue
             if not self[name].matches(value):

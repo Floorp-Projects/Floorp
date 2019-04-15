@@ -9,6 +9,7 @@ import struct
 import subprocess
 import zlib
 import os
+import six
 from zipfile import (
     ZIP_STORED,
     ZIP_DEFLATED,
@@ -96,7 +97,7 @@ class JarStruct(object):
         # For all fields used as other fields sizes, keep track of their value
         # separately.
         sizes = dict((t, 0) for t in self.size_fields)
-        for name, t in self.STRUCT.iteritems():
+        for name, t in six.iteritems(self.STRUCT):
             if t in JarStruct.TYPE_MAPPING:
                 value, size = JarStruct.get_data(t, data[offset:])
             else:
@@ -115,7 +116,7 @@ class JarStruct(object):
         Initialize an instance with empty fields.
         '''
         self.signature = self.MAGIC
-        for name, t in self.STRUCT.iteritems():
+        for name, t in six.iteritems(self.STRUCT):
             if name in self.size_fields:
                 continue
             self._values[name] = 0 if t in JarStruct.TYPE_MAPPING else ''
@@ -140,9 +141,10 @@ class JarStruct(object):
         from self.STRUCT.
         '''
         serialized = struct.pack(b'<I', self.signature)
-        sizes = dict((t, name) for name, t in self.STRUCT.iteritems()
+        sizes = dict((t, name)
+                     for name, t in six.iteritems(self.STRUCT)
                      if t not in JarStruct.TYPE_MAPPING)
-        for name, t in self.STRUCT.iteritems():
+        for name, t in six.iteritems(self.STRUCT):
             if t in JarStruct.TYPE_MAPPING:
                 format, size = JarStruct.TYPE_MAPPING[t]
                 if name in sizes:
@@ -161,7 +163,7 @@ class JarStruct(object):
         variable length fields.
         '''
         size = JarStruct.TYPE_MAPPING['uint32'][1]
-        for name, type in self.STRUCT.iteritems():
+        for name, type in six.iteritems(self.STRUCT):
             if type in JarStruct.TYPE_MAPPING:
                 size += JarStruct.TYPE_MAPPING[type][1]
             else:
@@ -182,7 +184,7 @@ class JarStruct(object):
         return key in self._values
 
     def __iter__(self):
-        return self._values.iteritems()
+        return six.iteritems(self._values)
 
     def __repr__(self):
         return "<%s %s>" % (self.__class__.__name__,

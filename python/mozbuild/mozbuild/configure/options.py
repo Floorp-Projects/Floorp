@@ -5,6 +5,7 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import os
+import six
 import sys
 import types
 from collections import OrderedDict
@@ -132,7 +133,7 @@ class ConflictingOptionError(InvalidOptionError):
         if format_data:
             message = message.format(**format_data)
         super(ConflictingOptionError, self).__init__(message)
-        for k, v in format_data.iteritems():
+        for k, v in six.iteritems(format_data):
             setattr(self, k, v)
 
 
