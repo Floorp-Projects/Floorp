@@ -138,9 +138,10 @@ class HttpChannelChild final : public PHttpChannelChild,
       const nsresult& channelStatus, const nsHttpResponseHead& responseHead,
       const bool& useResponseHead, const nsHttpHeaderArray& requestHeaders,
       const ParentLoadInfoForwarderArgs& loadInfoForwarder,
-      const bool& isFromCache, const bool& cacheEntryAvailable,
-      const uint64_t& cacheEntryId, const int32_t& cacheFetchCount,
-      const uint32_t& cacheExpirationTime, const nsCString& cachedCharset,
+      const bool& isFromCache, const bool& isRacing,
+      const bool& cacheEntryAvailable, const uint64_t& cacheEntryId,
+      const int32_t& cacheFetchCount, const uint32_t& cacheExpirationTime,
+      const nsCString& cachedCharset,
       const nsCString& securityInfoSerialization, const NetAddr& selfAddr,
       const NetAddr& peerAddr, const int16_t& redirectCount,
       const uint32_t& cacheKey, const nsCString& altDataType,
@@ -402,6 +403,7 @@ class HttpChannelChild final : public PHttpChannelChild,
   Atomic<bool, ReleaseAcquire> mFlushedForDiversion;
 
   Atomic<bool, SequentiallyConsistent> mIsFromCache;
+  Atomic<bool, SequentiallyConsistent> mIsRacing;
   // Set if we get the result and cache |mNeedToReportBytesRead|
   Atomic<bool, SequentiallyConsistent> mCacheNeedToReportBytesReadInitialized;
   // True if we need to tell the parent the size of unreported received data
@@ -463,9 +465,10 @@ class HttpChannelChild final : public PHttpChannelChild,
       const nsresult& channelStatus, const nsHttpResponseHead& responseHead,
       const bool& useResponseHead, const nsHttpHeaderArray& requestHeaders,
       const ParentLoadInfoForwarderArgs& loadInfoForwarder,
-      const bool& isFromCache, const bool& cacheEntryAvailable,
-      const uint64_t& cacheEntryId, const int32_t& cacheFetchCount,
-      const uint32_t& cacheExpirationTime, const nsCString& cachedCharset,
+      const bool& isFromCache, const bool& isRacing,
+      const bool& cacheEntryAvailable, const uint64_t& cacheEntryId,
+      const int32_t& cacheFetchCount, const uint32_t& cacheExpirationTime,
+      const nsCString& cachedCharset,
       const nsCString& securityInfoSerialization, const NetAddr& selfAddr,
       const NetAddr& peerAddr, const uint32_t& cacheKey,
       const nsCString& altDataType, const int64_t& altDataLen,

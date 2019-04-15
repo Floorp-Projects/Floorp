@@ -112,6 +112,7 @@ child:
                        nsHttpHeaderArray   requestHeaders,
                        ParentLoadInfoForwarderArgs loadInfoForwarder,
                        bool                isFromCache,
+                       bool                isRacing,
                        bool                cacheEntryAvailable,
                        uint64_t            cacheEntryId,
                        int32_t             cacheFetchCount,
