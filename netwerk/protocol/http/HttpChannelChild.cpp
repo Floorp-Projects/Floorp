@@ -2664,6 +2664,7 @@ nsresult HttpChannelChild::ContinueAsyncOpen() {
   SerializeURI(mOriginalURI, openArgs.original());
   SerializeURI(mDocumentURI, openArgs.doc());
   SerializeURI(mOriginalReferrer, openArgs.originalReferrer());
+  openArgs.originalReferrerPolicy() = mOriginalReferrerPolicy;
   openArgs.referrerPolicy() = mReferrerPolicy;
   SerializeURI(mAPIRedirectToURI, openArgs.apiRedirectTo());
   openArgs.loadFlags() = mLoadFlags;
