@@ -123,8 +123,8 @@ return /******/ (function(modules) { // webpackBootstrap
 "use strict";
 
 
-var pdfjsVersion = '2.2.129';
-var pdfjsBuild = '725a6959';
+var pdfjsVersion = '2.2.145';
+var pdfjsBuild = '8bbae798';
 
 var pdfjsSharedUtil = __w_pdfjs_require__(1);
 
@@ -1303,7 +1303,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise('GetDocRequest', {
     docId,
-    apiVersion: '2.2.129',
+    apiVersion: '2.2.145',
     source: {
       data: source.data,
       url: source.url,
@@ -2381,6 +2381,11 @@ class WorkerTransport {
 
       const rangeReader = this._networkStream.getRangeReader(data.begin, data.end);
 
+      if (!rangeReader) {
+        sink.close();
+        return;
+      }
+
       sink.onPull = () => {
         rangeReader.read().then(function ({
           value,
@@ -3083,9 +3088,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.2.129';
+const version = '2.2.145';
 exports.version = version;
-const build = '725a6959';
+const build = '8bbae798';
 exports.build = build;
 
 /***/ }),
@@ -7392,6 +7397,11 @@ var PDFDataTransportStream = function PDFDataTransportStreamClosure() {
         (0, _util.assert)(found);
       }
     },
+
+    get _progressiveDataLength() {
+      return this._fullRequestReader ? this._fullRequestReader._loaded : 0;
+    },
+
     _onProgress: function PDFDataTransportStream_onDataProgress(evt) {
       if (evt.total === undefined && this._rangeReaders.length > 0) {
         var firstReader = this._rangeReaders[0];
@@ -7436,6 +7446,10 @@ var PDFDataTransportStream = function PDFDataTransportStreamClosure() {
       return new PDFDataTransportStreamReader(this, queuedChunks, this._progressiveDone);
     },
     getRangeReader: function PDFDataTransportStream_getRangeReader(begin, end) {
+      if (end <= this._progressiveDataLength) {
+        return null;
+      }
+
       var reader = new PDFDataTransportStreamRangeReader(this, begin, end);
 
       this._pdfDataRangeTransport.requestDataRange(begin, end);
@@ -7464,6 +7478,12 @@ var PDFDataTransportStream = function PDFDataTransportStreamClosure() {
     this._done = progressiveDone || false;
     this._filename = null;
     this._queuedChunks = queuedChunks || [];
+    this._loaded = 0;
+
+    for (const chunk of this._queuedChunks) {
+      this._loaded += chunk.byteLength;
+    }
+
     this._requests = [];
     this._headersReady = Promise.resolve();
     stream._fullRequestReader = this;
@@ -7483,10 +7503,11 @@ var PDFDataTransportStream = function PDFDataTransportStreamClosure() {
           value: chunk,
           done: false
         });
-        return;
+      } else {
+        this._queuedChunks.push(chunk);
       }
 
-      this._queuedChunks.push(chunk);
+      this._loaded += chunk.byteLength;
     },
 
     get headersReady() {
@@ -8825,6 +8846,9 @@ class AnnotationElementFactory {
       case _util.AnnotationType.POPUP:
         return new PopupAnnotationElement(parameters);
 
+      case _util.AnnotationType.FREETEXT:
+        return new FreeTextAnnotationElement(parameters);
+
       case _util.AnnotationType.LINE:
         return new LineAnnotationElement(parameters);
 
@@ -8836,6 +8860,9 @@ class AnnotationElementFactory {
 
       case _util.AnnotationType.POLYLINE:
         return new PolylineAnnotationElement(parameters);
+
+      case _util.AnnotationType.CARET:
+        return new CaretAnnotationElement(parameters);
 
       case _util.AnnotationType.INK:
         return new InkAnnotationElement(parameters);
@@ -9367,6 +9394,24 @@ class PopupElement {
 
 }
 
+class FreeTextAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable, true);
+  }
+
+  render() {
+    this.container.className = 'freeTextAnnotation';
+
+    if (!this.data.hasPopup) {
+      this._createPopup(this.container, null, this.data);
+    }
+
+    return this.container;
+  }
+
+}
+
 class LineAnnotationElement extends AnnotationElement {
   constructor(parameters) {
     let isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
@@ -9503,6 +9548,24 @@ class PolygonAnnotationElement extends PolylineAnnotationElement {
     super(parameters);
     this.containerClassName = 'polygonAnnotation';
     this.svgElementName = 'svg:polygon';
+  }
+
+}
+
+class CaretAnnotationElement extends AnnotationElement {
+  constructor(parameters) {
+    const isRenderable = !!(parameters.data.hasPopup || parameters.data.title || parameters.data.contents);
+    super(parameters, isRenderable, true);
+  }
+
+  render() {
+    this.container.className = 'caretAnnotation';
+
+    if (!this.data.hasPopup) {
+      this._createPopup(this.container, null, this.data);
+    }
+
+    return this.container;
   }
 
 }
