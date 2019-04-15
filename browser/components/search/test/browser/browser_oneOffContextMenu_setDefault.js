@@ -147,7 +147,11 @@ async function openPopupAndGetEngineButton(isSearch, popup, oneOffInstance, base
     EventUtils.synthesizeMouseAtCenter(searchIcon, {});
     await promise;
   } else {
-    await UrlbarTestUtils.promiseAutocompleteResultPopup(window, "a", waitForFocus);
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      waitForFocus,
+      value: "a",
+    });
   }
 
   const contextMenu = oneOffInstance.contextMenuPopup;
