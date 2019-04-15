@@ -128,6 +128,10 @@ subprojects {
                     // With our L10N process its totally possible to have missing or (temporarily) extra translations.
                     disable 'MissingTranslation', 'ExtraTranslation'
                 }
+
+                packagingOptions {
+                    exclude 'META-INF/atomicfu.kotlin_module'
+                }
             }
 
             if (project.hasProperty("coverage") && project.name != "support-test") {

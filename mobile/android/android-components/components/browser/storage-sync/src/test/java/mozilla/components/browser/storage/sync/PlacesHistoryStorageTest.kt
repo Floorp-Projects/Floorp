@@ -19,6 +19,7 @@ import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
@@ -379,7 +380,11 @@ class PlacesHistoryStorageTest {
         val storage = TestablePlacesHistoryStorage(conn)
 
         val result = storage.sync(AuthInfo("kid", "token", "key", "serverUrl"))
-        assertEquals(SyncStatus.Error(exception), result)
+
+        assertTrue(result is SyncStatus.Error)
+
+        val error = result as SyncStatus.Error
+        assertEquals("test error", error.exception.message)
     }
 
     @Test

@@ -4,8 +4,8 @@
 
 // Synchronized version numbers for dependencies used by (some) modules
 object Versions {
-    const val kotlin = "1.3.21"
-    const val coroutines = "1.1.1"
+    const val kotlin = "1.3.30"
+    const val coroutines = "1.2.0"
 
     const val androidx_test = "1.1.0"
     const val androidx_runner = "1.1.0"

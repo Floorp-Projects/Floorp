@@ -5,20 +5,21 @@
 package mozilla.components.service.fxa
 
 import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.support.test.any
+import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.mock
-import org.junit.Test
-
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
+import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyString
@@ -27,9 +28,7 @@ import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
-
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 
 // Same as the actual account manager, except we get to control how FirefoxAccountShaped instances
 // are created. This is necessary because due to some build issues (native dependencies not available
@@ -53,6 +52,9 @@ class TestableFxaAccountManager(
 
 @RunWith(RobolectricTestRunner::class)
 class FxaAccountManagerTest {
+    private val context: Context
+        get() = ApplicationProvider.getApplicationContext()
+
     @Test
     fun `state transitions`() {
         // State 'Start'.
@@ -117,7 +119,7 @@ class FxaAccountManagerTest {
         `when`(accountStorage.read()).thenThrow(readException)
 
         val manager = TestableFxaAccountManager(
-            RuntimeEnvironment.application,
+            context,
             Config.release("dummyId", "bad://url"),
             arrayOf("profile"),
             accountStorage
@@ -162,7 +164,7 @@ class FxaAccountManagerTest {
         `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
-                RuntimeEnvironment.application,
+                context,
                 Config.release("dummyId", "bad://url"),
                 arrayOf("profile"),
                 accountStorage
@@ -197,7 +199,7 @@ class FxaAccountManagerTest {
         `when`(accountStorage.read()).thenReturn(mockAccount)
 
         val manager = TestableFxaAccountManager(
-                RuntimeEnvironment.application,
+                context,
                 Config.release("dummyId", "bad://url"),
                 arrayOf("profile"),
                 accountStorage
@@ -337,7 +339,7 @@ class FxaAccountManagerTest {
                 manager.beginAuthenticationAsync().await()
                 fail()
             } catch (e: FxaNetworkException) {
-                assertEquals(fxaException, e)
+                assertEquals(fxaException.message, e.message)
             }
         }
         // Confirm that account state observable doesn't receive authentication errors.
@@ -392,7 +394,7 @@ class FxaAccountManagerTest {
                 manager.beginAuthenticationAsync(pairingUrl = "auth://pairing").await()
                 fail()
             } catch (e: FxaNetworkException) {
-                assertEquals(fxaException, e)
+                assertEquals(fxaException.message, e.message)
             }
         }
         // Confirm that account state observable doesn't receive authentication errors.
@@ -449,7 +451,7 @@ class FxaAccountManagerTest {
         `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
-                RuntimeEnvironment.application,
+                context,
                 Config.release("dummyId", "bad://url"),
                 arrayOf("profile", "test-scope"),
                 accountStorage
@@ -485,7 +487,10 @@ class FxaAccountManagerTest {
         verify(accountStorage, times(1)).write(mockAccount)
         verify(accountStorage, never()).clear()
 
-        verify(accountObserver, times(1)).onError(fxaException)
+        val captor = argumentCaptor<FxaException>()
+        verify(accountObserver, times(1)).onError(captor.capture())
+        assertEquals(fxaException.message, captor.value.message)
+
         verify(accountObserver, times(1)).onAuthenticated(mockAccount)
         verify(accountObserver, never()).onProfileUpdated(any())
         verify(accountObserver, never()).onLoggedOut()
@@ -531,7 +536,7 @@ class FxaAccountManagerTest {
         `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
-                RuntimeEnvironment.application,
+                context,
                 Config.release("dummyId", "bad://url"),
                 arrayOf("profile", "test-scope"),
                 accountStorage
@@ -573,7 +578,7 @@ class FxaAccountManagerTest {
         `when`(accountStorage.read()).thenReturn(null)
 
         val manager = TestableFxaAccountManager(
-                RuntimeEnvironment.application,
+                context,
                 Config.release("dummyId", "bad://url"),
                 arrayOf("profile", "test-scope"),
                 accountStorage
