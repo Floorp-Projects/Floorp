@@ -270,7 +270,8 @@ class nsTextFrame : public nsFrame {
       TrailingWhitespace aTrimTrailingWhitespace =
           TrailingWhitespace::TRIM_TRAILING_WHITESPACE) final;
 
-  nsOverflowAreas RecomputeOverflow(nsIFrame* aBlockFrame);
+  nsOverflowAreas RecomputeOverflow(nsIFrame* aBlockFrame,
+                                    bool aIncludeShadows = true);
 
   enum TextRunType {
     // Anything in reflow (but not intrinsic width calculation) or
@@ -589,6 +590,8 @@ class nsTextFrame : public nsFrame {
   bool IsInitialLetterChild() const;
 
   bool ComputeCustomOverflow(nsOverflowAreas& aOverflowAreas) final;
+  bool ComputeCustomOverflowInternal(nsOverflowAreas& aOverflowAreas,
+                                     bool aIncludeShadows);
 
   void AssignJustificationGaps(const mozilla::JustificationAssignment& aAssign);
   mozilla::JustificationAssignment GetJustificationAssignment() const;
@@ -608,6 +611,8 @@ class nsTextFrame : public nsFrame {
     mFontMetrics = aMetrics;
   }
   nsFontMetrics* InflatedFontMetrics() const { return mFontMetrics; }
+
+  nsRect WebRenderBounds();
 
  protected:
   virtual ~nsTextFrame();
@@ -646,7 +651,8 @@ class nsTextFrame : public nsFrame {
   void UnionAdditionalOverflow(nsPresContext* aPresContext, nsIFrame* aBlock,
                                PropertyProvider& aProvider,
                                nsRect* aVisualOverflowRect,
-                               bool aIncludeTextDecorations);
+                               bool aIncludeTextDecorations,
+                               bool aIncludeShadows);
 
   // Update information of emphasis marks, and return the visial
   // overflow rect of the emphasis marks.
