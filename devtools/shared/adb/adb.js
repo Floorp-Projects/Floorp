@@ -10,7 +10,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const { adbProcess } = require("devtools/shared/adb/adb-process");
 const { adbAddon } = require("devtools/shared/adb/adb-addon");
 const AdbDevice = require("devtools/shared/adb/adb-device");
-const { AdbRuntime, UnknownAdbRuntime } = require("devtools/shared/adb/adb-runtime");
+const { AdbRuntime } = require("devtools/shared/adb/adb-runtime");
 const { TrackDevicesCommand } = require("devtools/shared/adb/commands/track-devices");
 
 // Duration in milliseconds of the runtime polling. We resort to polling here because we
@@ -68,6 +68,10 @@ class Adb extends EventEmitter {
     return this._runtimes;
   }
 
+  getDevices() {
+    return [...this._devices.values()];
+  }
+
   async _startTracking() {
     this._isTrackingDevices = true;
     await adbProcess.start();
@@ -115,9 +119,6 @@ class Adb extends EventEmitter {
 
   async _getDeviceRuntimes(device) {
     const socketPaths = [...await device.getRuntimeSocketPaths()];
-    if (socketPaths.length === 0) {
-      return [new UnknownAdbRuntime(device)];
-    }
     return socketPaths.map(socketPath => new AdbRuntime(device, socketPath));
   }
 }
