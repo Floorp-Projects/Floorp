@@ -134,10 +134,10 @@ bool HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs) {
       const HttpChannelOpenArgs& a = aArgs.get_HttpChannelOpenArgs();
       return DoAsyncOpen(
           a.uri(), a.original(), a.doc(), a.originalReferrer(),
-          a.referrerPolicy(), a.apiRedirectTo(), a.topWindowURI(),
-          a.loadFlags(), a.requestHeaders(), a.requestMethod(),
-          a.uploadStream(), a.uploadStreamHasHeaders(), a.priority(),
-          a.classOfService(), a.redirectionLimit(), a.allowSTS(),
+          a.originalReferrerPolicy(), a.referrerPolicy(), a.apiRedirectTo(),
+          a.topWindowURI(), a.loadFlags(), a.requestHeaders(),
+          a.requestMethod(), a.uploadStream(), a.uploadStreamHasHeaders(),
+          a.priority(), a.classOfService(), a.redirectionLimit(), a.allowSTS(),
           a.thirdPartyFlags(), a.resumeAt(), a.startPos(), a.entityID(),
           a.chooseApplicationCache(), a.appCacheClientID(), a.allowSpdy(),
           a.allowAltSvc(), a.beConservative(), a.tlsFlags(), a.loadInfo(),
@@ -385,7 +385,8 @@ bool HttpChannelParent::DoAsyncOpen(
     const URIParams& aURI, const Maybe<URIParams>& aOriginalURI,
     const Maybe<URIParams>& aDocURI,
     const Maybe<URIParams>& aOriginalReferrerURI,
-    const uint32_t& aReferrerPolicy, const Maybe<URIParams>& aAPIRedirectToURI,
+    const uint32_t& aOriginalReferrerPolicy, const uint32_t& aReferrerPolicy,
+    const Maybe<URIParams>& aAPIRedirectToURI,
     const Maybe<URIParams>& aTopWindowURI, const uint32_t& aLoadFlags,
     const RequestHeaderTuples& requestHeaders, const nsCString& requestMethod,
     const Maybe<IPCStream>& uploadStream, const bool& uploadStreamHasHeaders,
@@ -483,8 +484,8 @@ bool HttpChannelParent::DoAsyncOpen(
   if (originalUri) httpChannel->SetOriginalURI(originalUri);
   if (docUri) httpChannel->SetDocumentURI(docUri);
   if (referrerUri) {
-    rv = httpChannel->SetReferrerWithPolicyInternal(referrerUri,
-                                                    aReferrerPolicy);
+    rv = httpChannel->SetReferrerWithPolicyInternal(
+        referrerUri, aOriginalReferrerPolicy, aReferrerPolicy);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
   }
   if (apiRedirectToUri) httpChannel->RedirectTo(apiRedirectToUri);
