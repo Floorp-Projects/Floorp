@@ -43,6 +43,8 @@ NS_IMPL_ISUPPORTS(EditorCommandBase, nsIControllerCommand)
  * mozilla::UndoCommand
  ******************************************************************************/
 
+StaticRefPtr<UndoCommand> UndoCommand::sInstance;
+
 NS_IMETHODIMP
 UndoCommand::IsCommandEnabled(const char* aCommandName,
                               nsISupports* aCommandRefCon, bool* aIsEnabled) {
@@ -96,6 +98,8 @@ UndoCommand::GetCommandStateParams(const char* aCommandName,
 /******************************************************************************
  * mozilla::RedoCommand
  ******************************************************************************/
+
+StaticRefPtr<RedoCommand> RedoCommand::sInstance;
 
 NS_IMETHODIMP
 RedoCommand::IsCommandEnabled(const char* aCommandName,
@@ -151,6 +155,8 @@ RedoCommand::GetCommandStateParams(const char* aCommandName,
  * mozilla::CutCommand
  ******************************************************************************/
 
+StaticRefPtr<CutCommand> CutCommand::sInstance;
+
 NS_IMETHODIMP
 CutCommand::IsCommandEnabled(const char* aCommandName,
                              nsISupports* aCommandRefCon, bool* aIsEnabled) {
@@ -201,6 +207,8 @@ CutCommand::GetCommandStateParams(const char* aCommandName,
 /******************************************************************************
  * mozilla::CutOrDeleteCommand
  ******************************************************************************/
+
+StaticRefPtr<CutOrDeleteCommand> CutOrDeleteCommand::sInstance;
 
 NS_IMETHODIMP
 CutOrDeleteCommand::IsCommandEnabled(const char* aCommandName,
@@ -261,6 +269,8 @@ CutOrDeleteCommand::GetCommandStateParams(const char* aCommandName,
  * mozilla::CopyCommand
  ******************************************************************************/
 
+StaticRefPtr<CopyCommand> CopyCommand::sInstance;
+
 NS_IMETHODIMP
 CopyCommand::IsCommandEnabled(const char* aCommandName,
                               nsISupports* aCommandRefCon, bool* aIsEnabled) {
@@ -307,6 +317,8 @@ CopyCommand::GetCommandStateParams(const char* aCommandName,
 /******************************************************************************
  * mozilla::CopyOrDeleteCommand
  ******************************************************************************/
+
+StaticRefPtr<CopyOrDeleteCommand> CopyOrDeleteCommand::sInstance;
 
 NS_IMETHODIMP
 CopyOrDeleteCommand::IsCommandEnabled(const char* aCommandName,
@@ -368,6 +380,8 @@ CopyOrDeleteCommand::GetCommandStateParams(const char* aCommandName,
  * mozilla::PasteCommand
  ******************************************************************************/
 
+StaticRefPtr<PasteCommand> PasteCommand::sInstance;
+
 NS_IMETHODIMP
 PasteCommand::IsCommandEnabled(const char* aCommandName,
                                nsISupports* aCommandRefCon, bool* aIsEnabled) {
@@ -421,6 +435,8 @@ PasteCommand::GetCommandStateParams(const char* aCommandName,
 /******************************************************************************
  * mozilla::PasteTransferableCommand
  ******************************************************************************/
+
+StaticRefPtr<PasteTransferableCommand> PasteTransferableCommand::sInstance;
 
 NS_IMETHODIMP
 PasteTransferableCommand::IsCommandEnabled(const char* aCommandName,
@@ -514,6 +530,8 @@ PasteTransferableCommand::GetCommandStateParams(const char* aCommandName,
  * mozilla::SwitchTextDirectionCommand
  ******************************************************************************/
 
+StaticRefPtr<SwitchTextDirectionCommand> SwitchTextDirectionCommand::sInstance;
+
 NS_IMETHODIMP
 SwitchTextDirectionCommand::IsCommandEnabled(const char* aCommandName,
                                              nsISupports* aCommandRefCon,
@@ -565,6 +583,8 @@ SwitchTextDirectionCommand::GetCommandStateParams(const char* aCommandName,
 /******************************************************************************
  * mozilla::DeleteCommand
  ******************************************************************************/
+
+StaticRefPtr<DeleteCommand> DeleteCommand::sInstance;
 
 NS_IMETHODIMP
 DeleteCommand::IsCommandEnabled(const char* aCommandName,
@@ -658,6 +678,8 @@ DeleteCommand::GetCommandStateParams(const char* aCommandName,
  * mozilla::SelectAllCommand
  ******************************************************************************/
 
+StaticRefPtr<SelectAllCommand> SelectAllCommand::sInstance;
+
 NS_IMETHODIMP
 SelectAllCommand::IsCommandEnabled(const char* aCommandName,
                                    nsISupports* aCommandRefCon,
@@ -717,6 +739,8 @@ SelectAllCommand::GetCommandStateParams(const char* aCommandName,
 /******************************************************************************
  * mozilla::SelectionMoveCommands
  ******************************************************************************/
+
+StaticRefPtr<SelectionMoveCommands> SelectionMoveCommands::sInstance;
 
 NS_IMETHODIMP
 SelectionMoveCommands::IsCommandEnabled(const char* aCommandName,
@@ -862,6 +886,8 @@ SelectionMoveCommands::GetCommandStateParams(const char* aCommandName,
  * mozilla::InsertPlaintextCommand
  ******************************************************************************/
 
+StaticRefPtr<InsertPlaintextCommand> InsertPlaintextCommand::sInstance;
+
 NS_IMETHODIMP
 InsertPlaintextCommand::IsCommandEnabled(const char* aCommandName,
                                          nsISupports* aCommandRefCon,
@@ -951,6 +977,8 @@ InsertPlaintextCommand::GetCommandStateParams(const char* aCommandName,
  * mozilla::InsertParagraphCommand
  ******************************************************************************/
 
+StaticRefPtr<InsertParagraphCommand> InsertParagraphCommand::sInstance;
+
 NS_IMETHODIMP
 InsertParagraphCommand::IsCommandEnabled(const char* aCommandName,
                                          nsISupports* aCommandRefCon,
@@ -1009,6 +1037,8 @@ InsertParagraphCommand::GetCommandStateParams(const char* aCommandName,
  * mozilla::InsertLineBreakCommand
  ******************************************************************************/
 
+StaticRefPtr<InsertLineBreakCommand> InsertLineBreakCommand::sInstance;
+
 NS_IMETHODIMP
 InsertLineBreakCommand::IsCommandEnabled(const char* aCommandName,
                                          nsISupports* aCommandRefCon,
@@ -1066,6 +1096,8 @@ InsertLineBreakCommand::GetCommandStateParams(const char* aCommandName,
 /******************************************************************************
  * mozilla::PasteQuotationCommand
  ******************************************************************************/
+
+StaticRefPtr<PasteQuotationCommand> PasteQuotationCommand::sInstance;
 
 NS_IMETHODIMP
 PasteQuotationCommand::IsCommandEnabled(const char* aCommandName,
