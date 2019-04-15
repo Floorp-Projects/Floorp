@@ -1,0 +1,27 @@
+<!-- Quirks mode on purpose -->
+<html>
+  <head>
+    <title>Testcase bug 322678 - Crash [@ nsIFrame::GetParent] with evil testcase position:relative/absolute/display:table-column, etc</title>
+    <script>
+    function run(){
+      document.body.offsetHeight;
+      document.getElementById('one').removeAttribute('style');
+      document.body.offsetHeight;
+      document.getElementById('two').removeAttribute('style');
+      document.body.offsetHeight;
+    }
+    </script>
+  </head>
+  <body onload="run();">
+    <span>
+      <div style="position: relative;">
+        <span style="position: absolute;"></span>
+      </div>
+
+      <span id="one" style="display: table-column;">
+        <span id="two" style="display: block; position: relative;">
+        </span>
+      </span><u style="display: table-cell;">  </u>
+    </span>
+  </body>
+</html>
