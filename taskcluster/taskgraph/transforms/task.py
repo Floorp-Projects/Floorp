@@ -665,7 +665,7 @@ def build_docker_worker_payload(config, task, task_def):
 
 
 @payload_builder('generic-worker', schema={
-    Required('os'): Any('windows', 'macosx', 'linux'),
+    Required('os'): Any('windows', 'macosx', 'linux', 'linux-bitbar'),
     # see http://schemas.taskcluster.net/generic-worker/v1/payload.json
     # and https://docs.taskcluster.net/reference/workers/generic-worker/payload
 
