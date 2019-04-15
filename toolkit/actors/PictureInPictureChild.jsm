@@ -299,7 +299,7 @@ class PictureInPictureToggleChild extends ActorChild {
     // since document.elementsFromPoint always flushes layout. The 1's in that
     // function call are for the size of the rect that we want, which is 1x1.
     let elements = winUtils.nodesFromRect(clientX, clientY, 1, 1, 1, 1, true,
-                                          false);
+                                          false, false);
 
     for (let element of elements) {
       if (state.weakVisibleVideos.has(element) &&
