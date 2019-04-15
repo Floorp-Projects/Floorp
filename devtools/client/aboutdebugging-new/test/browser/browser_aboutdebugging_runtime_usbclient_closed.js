@@ -29,9 +29,7 @@ add_task(async function testUsbDeviceUnplugged() {
   info("Simulate a device unplugged");
   mocks.removeUSBRuntime(USB_RUNTIME_ID);
   mocks.emitUSBUpdate();
-
-  info("Wait until the sidebar item for this runtime disappears");
-  await waitUntil(() => !findSidebarItemByText(USB_DEVICE_NAME, document));
+  await waitUntilUsbDeviceIsUnplugged(USB_DEVICE_NAME, document);
 
   is(document.location.hash, `#/runtime/this-firefox`,
     "Redirection to the default page (this-firefox)");

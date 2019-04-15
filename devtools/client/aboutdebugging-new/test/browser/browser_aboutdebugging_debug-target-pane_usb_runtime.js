@@ -53,9 +53,7 @@ async function checkTargetPanes({ enableLocalTabs }, mocks) {
   info("Remove USB runtime");
   mocks.removeUSBRuntime(RUNTIME_ID);
   mocks.emitUSBUpdate();
-
-  info("Wait until the USB sidebar item disappears");
-  await waitUntil(() => !findSidebarItemByText(RUNTIME_DEVICE_NAME, document));
+  await waitUntilUsbDeviceIsUnplugged(RUNTIME_DEVICE_NAME, document);
 
   await removeTab(tab);
 }

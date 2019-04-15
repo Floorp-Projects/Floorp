@@ -6,13 +6,13 @@
 /* import-globals-from ../../../shared/test/shared-head.js */
 
 const MOCKS_ROOT = CHROME_URL_ROOT + "mocks/";
+/* import-globals-from mocks/helper-adb-mock.js */
+Services.scriptloader.loadSubScript(MOCKS_ROOT + "helper-adb-mock.js", this);
 /* import-globals-from mocks/helper-client-wrapper-mock.js */
 Services.scriptloader.loadSubScript(MOCKS_ROOT + "helper-client-wrapper-mock.js", this);
 /* import-globals-from mocks/helper-runtime-client-factory-mock.js */
 Services.scriptloader.loadSubScript(MOCKS_ROOT + "helper-runtime-client-factory-mock.js",
   this);
-/* import-globals-from mocks/helper-usb-runtimes-mock.js */
-Services.scriptloader.loadSubScript(MOCKS_ROOT + "helper-usb-runtimes-mock.js", this);
 
 const { RUNTIMES } = require("devtools/client/aboutdebugging-new/src/constants");
 
@@ -23,21 +23,27 @@ const { RUNTIMES } = require("devtools/client/aboutdebugging-new/src/constants")
  */
 class Mocks {
   constructor() {
-    // Setup the usb-runtimes mock to rely on the internal _usbRuntimes array.
-    this.usbRuntimesMock = createUsbRuntimesMock();
+    // Setup the adb mock to rely on internal arrays.
+    this.adbMock = createAdbMock();
     this._usbRuntimes = [];
-    this.usbRuntimesMock.getUSBRuntimes = () => {
+    this._usbDevices = [];
+    this.adbMock.adb.getRuntimes = () => {
       return this._usbRuntimes;
     };
+    this.adbMock.adb.getDevices = () => {
+      const runtimeDevices = this._usbRuntimes.map(r => {
+        return { id: r.deviceId, name: r.deviceName };
+      });
+      return runtimeDevices.concat(this._usbDevices);
+    };
 
-    // refreshUSBRuntimes normally starts scan, which should ultimately fire the
-    // "runtime-list-updated" event.
-    this.usbRuntimesMock.refreshUSBRuntimes = () => {
+    // adb.updateRuntimes should ultimately fire the "runtime-list-updated" event.
+    this.adbMock.adb.updateRuntimes = () => {
       this.emitUSBUpdate();
     };
 
     // Prepare a fake observer to be able to emit events from this mock.
-    this._observerMock = addObserverMock(this.usbRuntimesMock);
+    this._observerMock = addObserverMock(this.adbMock.adb);
 
     // Setup the runtime-client-factory mock to rely on the internal _clients map.
     this.runtimeClientFactoryMock = createRuntimeClientFactoryMock();
@@ -65,12 +71,12 @@ class Mocks {
   }
 
   enableMocks() {
-    enableUsbRuntimesMock(this.usbRuntimesMock);
+    enableAdbMock(this.adbMock);
     enableRuntimeClientFactoryMock(this.runtimeClientFactoryMock);
   }
 
   disableMocks() {
-    disableUsbRuntimesMock();
+    disableAdbMock();
     disableRuntimeClientFactoryMock();
 
     for (const host of Object.keys(this._clients[RUNTIMES.NETWORK])) {
@@ -115,6 +121,7 @@ class Mocks {
    *        The id of the runtime.
    * @param {Object} optional object used to create the fake runtime & device
    *        - channel: {String} Release channel, for instance "release", "nightly"
+   *        - deviceId: {String} Device id
    *        - deviceName: {String} Device name
    *        - isUnknown: {Function} should return a boolean, true for unknown runtimes
    *        - name: {String} Application name, for instance "Firefox"
@@ -129,13 +136,8 @@ class Mocks {
     this._usbRuntimes.push({
       id: id,
       socketPath: runtimeInfo.socketPath || "test/path",
+      deviceId: runtimeInfo.deviceId || "test device id",
       deviceName: runtimeInfo.deviceName || "test device name",
-      get isUnknown() {
-        return runtimeInfo.isUnknown || false;
-      },
-      get isUnplugged() {
-        return runtimeInfo.isUnplugged || false;
-      },
       shortName: runtimeInfo.shortName || "testshort",
     });
 
@@ -156,6 +158,19 @@ class Mocks {
   removeUSBRuntime(id) {
     this._usbRuntimes = this._usbRuntimes.filter(runtime => runtime.id !== id);
     delete this._clients[RUNTIMES.USB][id];
+  }
+
+  addDevice(deviceId, deviceName) {
+    this._usbDevices.push({
+      id: deviceId,
+      name: deviceName,
+    });
+  }
+
+  removeDevice(deviceId) {
+    this._usbDevices = this._usbDevices.filter(d => {
+      return d.id !== deviceId;
+    });
   }
 
   removeRuntime(id) {

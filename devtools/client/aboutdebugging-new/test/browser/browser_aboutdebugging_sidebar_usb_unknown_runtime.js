@@ -4,6 +4,9 @@
 "use strict";
 
 const RUNTIME_NAME = "Firefox 123";
+const DEVICE_NAME = "DEVICE_NAME";
+const DEVICE_ID = "DEVICE_ID";
+const RUNTIME_ID = "RUNTIME_ID";
 
 // Test that unknown runtimes:
 // - are displayed without a connect button.
@@ -13,22 +16,14 @@ add_task(async function() {
   const mocks = new Mocks();
   const { document, tab } = await openAboutDebugging();
 
-  info("Create a mocked unknown runtime");
-  let isUnknown = true;
-  mocks.createUSBRuntime("test_device_id", {
-    get isUnknown() {
-      return isUnknown;
-    },
-    // Here shortName would rather be Unknown Runtime from adb-runtime, but we only want
-    // to check the runtime name does not appear in the UI.
-    shortName: RUNTIME_NAME,
-  });
+  info("Create a device without a corresponding runtime");
+  mocks.addDevice(DEVICE_ID, DEVICE_NAME);
   mocks.emitUSBUpdate();
 
   info("Wait until the USB sidebar item appears");
-  await waitUntil(() => findSidebarItemByText("test device name", document));
+  await waitUntil(() => findSidebarItemByText(DEVICE_NAME, document));
 
-  const usbRuntimeSidebarItem = findSidebarItemByText("test device name", document);
+  const usbRuntimeSidebarItem = findSidebarItemByText(DEVICE_NAME, document);
 
   const itemText = usbRuntimeSidebarItem.textContent;
   ok(itemText.includes("Waiting for browser"), "Sidebar item shows Waiting for browser");
@@ -40,14 +35,19 @@ add_task(async function() {
   const hasLink = usbRuntimeSidebarItem.querySelector(".js-sidebar-link");
   ok(!hasLink, "Unknown runtime is not selectable");
 
-  info("Update the runtime to return false for isUnknown() and emit update event");
-  isUnknown = false;
+  info("Add a valid runtime for the same device id and emit update event");
+  mocks.createUSBRuntime(RUNTIME_ID, {
+    deviceId: DEVICE_ID,
+    deviceName: DEVICE_NAME,
+    shortName: RUNTIME_NAME,
+  });
+  mocks.removeDevice(DEVICE_ID);
   mocks.emitUSBUpdate();
 
   info("Wait until connect button appears for the USB runtime");
   let updatedSidebarItem = null;
   await waitUntil(() => {
-    updatedSidebarItem = findSidebarItemByText("test device name", document);
+    updatedSidebarItem = findSidebarItemByText(DEVICE_NAME, document);
     return updatedSidebarItem && updatedSidebarItem.querySelector(".js-connect-button");
   });
 
