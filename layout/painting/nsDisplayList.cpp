@@ -10284,3 +10284,52 @@ PaintTelemetry::AutoRecord::~AutoRecord() {
 }
 
 }  // namespace mozilla
+
+nsDisplayListBuilder::AutoBuildingDisplayList::AutoBuildingDisplayList(
+    nsDisplayListBuilder* aBuilder, nsIFrame* aForChild,
+    const nsRect& aVisibleRect, const nsRect& aDirtyRect,
+    const bool aIsTransformed)
+    : mBuilder(aBuilder),
+      mPrevFrame(aBuilder->mCurrentFrame),
+      mPrevReferenceFrame(aBuilder->mCurrentReferenceFrame),
+      mPrevHitTestArea(aBuilder->mHitTestArea),
+      mPrevHitTestInfo(aBuilder->mHitTestInfo),
+      mPrevOffset(aBuilder->mCurrentOffsetToReferenceFrame),
+      mPrevVisibleRect(aBuilder->mVisibleRect),
+      mPrevDirtyRect(aBuilder->mDirtyRect),
+      mPrevAGR(aBuilder->mCurrentAGR),
+      mPrevAncestorHasApzAwareEventHandler(
+          aBuilder->mAncestorHasApzAwareEventHandler),
+      mPrevBuildingInvisibleItems(aBuilder->mBuildingInvisibleItems),
+      mPrevInInvalidSubtree(aBuilder->mInInvalidSubtree) {
+  if (aIsTransformed) {
+    aBuilder->mCurrentOffsetToReferenceFrame = nsPoint();
+    aBuilder->mCurrentReferenceFrame = aForChild;
+  } else if (aBuilder->mCurrentFrame == aForChild->GetParent()) {
+    aBuilder->mCurrentOffsetToReferenceFrame += aForChild->GetPosition();
+  } else {
+    aBuilder->mCurrentReferenceFrame = aBuilder->FindReferenceFrameFor(
+        aForChild, &aBuilder->mCurrentOffsetToReferenceFrame);
+  }
+
+  bool isAsync;
+  mCurrentAGRState = aBuilder->IsAnimatedGeometryRoot(aForChild, isAsync);
+
+  if (aBuilder->mCurrentFrame == aForChild->GetParent()) {
+    if (mCurrentAGRState == AGR_YES) {
+      aBuilder->mCurrentAGR =
+          aBuilder->WrapAGRForFrame(aForChild, isAsync, aBuilder->mCurrentAGR);
+    }
+  } else if (aBuilder->mCurrentFrame != aForChild) {
+    aBuilder->mCurrentAGR = aBuilder->FindAnimatedGeometryRootFor(aForChild);
+  }
+
+  MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(
+      aBuilder->RootReferenceFrame(), *aBuilder->mCurrentAGR));
+  aBuilder->mInInvalidSubtree =
+      aBuilder->mInInvalidSubtree || aForChild->IsFrameModified();
+  aBuilder->mCurrentFrame = aForChild;
+  aBuilder->mVisibleRect = aVisibleRect;
+  aBuilder->mDirtyRect =
+      aBuilder->mInInvalidSubtree ? aVisibleRect : aDirtyRect;
+}
