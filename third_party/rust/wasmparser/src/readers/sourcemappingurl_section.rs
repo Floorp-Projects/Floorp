@@ -18,7 +18,7 @@ use super::{BinaryReader, BinaryReaderError, Result};
 pub(crate) fn read_sourcemappingurl_section_content<'a>(
     data: &'a [u8],
     offset: usize,
-) -> Result<&'a [u8]> {
+) -> Result<&'a str> {
     let mut reader = BinaryReader::new_with_offset(data, offset);
     let url = reader.read_string()?;
     if !reader.eof() {

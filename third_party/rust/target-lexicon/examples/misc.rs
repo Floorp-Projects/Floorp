@@ -1,6 +1,6 @@
 extern crate target_lexicon;
 
-use std::str::FromStr;
+use core::str::FromStr;
 use target_lexicon::{Triple, HOST};
 
 fn main() {

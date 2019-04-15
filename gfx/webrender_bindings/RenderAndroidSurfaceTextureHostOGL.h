@@ -36,11 +36,15 @@ class RenderAndroidSurfaceTextureHostOGL final : public RenderTextureHostOGL {
   void DeleteTextureHandle();
   bool EnsureAttachedToGLContext();
 
+  enum PrepareStatus { STATUS_NONE, STATUS_PREPARE_NEEDED, STATUS_PREPARED };
+
   const mozilla::java::GeckoSurfaceTexture::GlobalRef mSurfTex;
   const gfx::IntSize mSize;
+  // mContinuousUpdate was used for rendering video in the past.
+  // It is not used on current gecko.
   const bool mContinuousUpdate;
   // XXX const bool mIgnoreTransform;
-  bool mIsPrepared;
+  PrepareStatus mPrepareStatus;
   bool mAttachedToGLContext;
 
   RefPtr<gl::GLContext> mGL;

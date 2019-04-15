@@ -16,6 +16,4 @@ pub enum ParseError {
     UnrecognizedBinaryFormat(String),
     #[fail(display = "Unrecognized field: {}", _0)]
     UnrecognizedField(String),
-    #[fail(display = "\"none\" requires an explicit binary format")]
-    NoneWithoutBinaryFormat,
 }

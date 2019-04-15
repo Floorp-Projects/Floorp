@@ -22,9 +22,9 @@ git = "https://github.com/hsivonen/packed_simd"
 branch = "rust_1_32"
 replace-with = "vendored-sources"
 
-[source."https://github.com/CraneStation/target-lexicon"]
-git = "https://github.com/glandium/target-lexicon"
-branch = "thumbv7neon-v0.2"
+[source."https://github.com/CraneStation/Cranelift"]
+git = "https://github.com/CraneStation/Cranelift"
+rev = "542d799dd7a3b2cc15b91eefdcd85cace8fe5cee"
 replace-with = "vendored-sources"
 
 [source.vendored-sources]
