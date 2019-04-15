@@ -1171,4 +1171,75 @@ class NavigationDelegateTest : BaseSessionTest() {
         mainSession.loadTestPath(HELLO_HTML_PATH)
         sessionRule.waitForPageStop()
     }
+
+    @WithDevToolsAPI
+    @Test fun sessionContextId() {
+        val session1 = sessionRule.createOpenSession(
+                GeckoSessionSettings.Builder(mainSession.settings)
+                .contextId("1")
+                .build())
+        session1.loadTestPath(STORAGE_TITLE_HTML_PATH + "?ctx1")
+        session1.waitForPageStop()
+
+        session1.forCallbacksDuringWait(object: Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onTitleChange(session: GeckoSession, title: String?) {
+                assertThat("Title should not be empty", title, not(isEmptyOrNullString()))
+                assertThat("Title should match", title,
+                           equalTo("storage=ctx1"))
+            }
+        })
+
+        session1.loadTestPath(STORAGE_TITLE_HTML_PATH)
+        session1.waitForPageStop()
+
+        session1.forCallbacksDuringWait(object: Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onTitleChange(session: GeckoSession, title: String?) {
+                assertThat("Title should not be empty", title, not(isEmptyOrNullString()))
+                assertThat("Title should match", title,
+                           equalTo("storage=ctx1"))
+            }
+        })
+
+        val session2 = sessionRule.createOpenSession(
+                GeckoSessionSettings.Builder(mainSession.settings)
+                .contextId("2")
+                .build())
+        session2.loadTestPath(STORAGE_TITLE_HTML_PATH)
+        session2.waitForPageStop()
+
+        session2.forCallbacksDuringWait(object: Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onTitleChange(session: GeckoSession, title: String?) {
+                assertThat("Title should not be empty", title, not(isEmptyOrNullString()))
+                assertThat("Title should match", title,
+                           equalTo("storage=null"))
+            }
+        })
+
+        session2.loadTestPath(STORAGE_TITLE_HTML_PATH + "?ctx2")
+        session2.waitForPageStop()
+
+        session2.forCallbacksDuringWait(object: Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onTitleChange(session: GeckoSession, title: String?) {
+                assertThat("Title should not be empty", title, not(isEmptyOrNullString()))
+                assertThat("Title should match", title,
+                           equalTo("storage=ctx2"))
+            }
+        })
+
+        session1.loadTestPath(STORAGE_TITLE_HTML_PATH)
+        session1.waitForPageStop()
+
+        session1.forCallbacksDuringWait(object: Callbacks.ContentDelegate {
+            @AssertCalled(count = 1)
+            override fun onTitleChange(session: GeckoSession, title: String?) {
+                assertThat("Title should not be empty", title, not(isEmptyOrNullString()))
+                assertThat("Title should match", title,
+                           equalTo("storage=ctx1"))
+            }
+        })
+    }
 }
