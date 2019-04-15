@@ -370,7 +370,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                                                     )
                                             )
                                     }
-                                    .setText(getString(R.string.bookmark_created_snackbar))
+                                    .setText(getString(R.string.bookmark_saved_snackbar))
                                     .show()
                             }
                         }

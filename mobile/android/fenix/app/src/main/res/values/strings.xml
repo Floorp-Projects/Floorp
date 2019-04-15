@@ -295,8 +295,10 @@
     <string name="bookmark_select_folder">Select folder</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Add folder</string>
+    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_created_snackbar">Bookmark created.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Bookmark saved!</string>
+    <string name="bookmark_saved_snackbar">Bookmark saved!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">EDIT</string>
 
