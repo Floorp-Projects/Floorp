@@ -8,8 +8,8 @@ async function readWriteTest(textInput) {
   promise_test(async t => {
     await navigator.clipboard.writeText(textInput);
     const blobsOutput = await navigator.clipboard.read();
-    assert_equals(blobsOutput.length, 1);
-    const blobOutput = blobsOutput[0];
+    assert_equals(Object.keys(blobsOutput).length, 1);
+    const blobOutput = blobsOutput["text/plain"];
     assert_equals(blobOutput.type, "text/plain");
 
     const textOutput = await (new Response(blobOutput)).text();
