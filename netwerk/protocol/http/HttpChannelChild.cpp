@@ -174,6 +174,7 @@ HttpChannelChild::HttpChannelChild()
       mDivertingToParent(false),
       mFlushedForDiversion(false),
       mIsFromCache(false),
+      mIsRacing(false),
       mCacheNeedToReportBytesReadInitialized(false),
       mNeedToReportBytesRead(true),
       mCacheEntryAvailable(false),
@@ -399,9 +400,10 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild> {
       const nsHttpResponseHead& aResponseHead, const bool& aUseResponseHead,
       const nsHttpHeaderArray& aRequestHeaders,
       const ParentLoadInfoForwarderArgs& loadInfoForwarder,
-      const bool& aIsFromCache, const bool& aCacheEntryAvailable,
-      const uint64_t& aCacheEntryId, const int32_t& aCacheFetchCount,
-      const uint32_t& aCacheExpirationTime, const nsCString& aCachedCharset,
+      const bool& aIsFromCache, const bool& aIsRacing,
+      const bool& aCacheEntryAvailable, const uint64_t& aCacheEntryId,
+      const int32_t& aCacheFetchCount, const uint32_t& aCacheExpirationTime,
+      const nsCString& aCachedCharset,
       const nsCString& aSecurityInfoSerialization, const NetAddr& aSelfAddr,
       const NetAddr& aPeerAddr, const uint32_t& aCacheKey,
       const nsCString& altDataType, const int64_t& altDataLen,
@@ -414,6 +416,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild> {
         mUseResponseHead(aUseResponseHead),
         mApplyConversion(aApplyConversion),
         mIsFromCache(aIsFromCache),
+        mIsRacing(aIsRacing),
         mCacheEntryAvailable(aCacheEntryAvailable),
         mCacheEntryId(aCacheEntryId),
         mCacheFetchCount(aCacheFetchCount),
@@ -433,8 +436,8 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild> {
     LOG(("StartRequestEvent [this=%p]\n", mChild));
     mChild->OnStartRequest(
         mChannelStatus, mResponseHead, mUseResponseHead, mRequestHeaders,
-        mLoadInfoForwarder, mIsFromCache, mCacheEntryAvailable, mCacheEntryId,
-        mCacheFetchCount, mCacheExpirationTime, mCachedCharset,
+        mLoadInfoForwarder, mIsFromCache, mIsRacing, mCacheEntryAvailable,
+        mCacheEntryId, mCacheFetchCount, mCacheExpirationTime, mCachedCharset,
         mSecurityInfoSerialization, mSelfAddr, mPeerAddr, mCacheKey,
         mAltDataType, mAltDataLen, mDeliveringAltData, mApplyConversion,
         mTiming);
@@ -447,6 +450,7 @@ class StartRequestEvent : public NeckoTargetChannelEvent<HttpChannelChild> {
   bool mUseResponseHead;
   bool mApplyConversion;
   bool mIsFromCache;
+  bool mIsRacing;
   bool mCacheEntryAvailable;
   uint64_t mCacheEntryId;
   int32_t mCacheFetchCount;
@@ -467,14 +471,15 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
     const nsresult& channelStatus, const nsHttpResponseHead& responseHead,
     const bool& useResponseHead, const nsHttpHeaderArray& requestHeaders,
     const ParentLoadInfoForwarderArgs& loadInfoForwarder,
-    const bool& isFromCache, const bool& cacheEntryAvailable,
-    const uint64_t& cacheEntryId, const int32_t& cacheFetchCount,
-    const uint32_t& cacheExpirationTime, const nsCString& cachedCharset,
-    const nsCString& securityInfoSerialization, const NetAddr& selfAddr,
-    const NetAddr& peerAddr, const int16_t& redirectCount,
-    const uint32_t& cacheKey, const nsCString& altDataType,
-    const int64_t& altDataLen, const bool& deliveringAltData,
-    const bool& aApplyConversion, const ResourceTimingStruct& aTiming) {
+    const bool& isFromCache, const bool& isRacing,
+    const bool& cacheEntryAvailable, const uint64_t& cacheEntryId,
+    const int32_t& cacheFetchCount, const uint32_t& cacheExpirationTime,
+    const nsCString& cachedCharset, const nsCString& securityInfoSerialization,
+    const NetAddr& selfAddr, const NetAddr& peerAddr,
+    const int16_t& redirectCount, const uint32_t& cacheKey,
+    const nsCString& altDataType, const int64_t& altDataLen,
+    const bool& deliveringAltData, const bool& aApplyConversion,
+    const ResourceTimingStruct& aTiming) {
   AUTO_PROFILER_LABEL("HttpChannelChild::RecvOnStartRequest", NETWORK);
   LOG(("HttpChannelChild::RecvOnStartRequest [this=%p]\n", this));
   // mFlushedForDiversion and mDivertingToParent should NEVER be set at this
@@ -490,8 +495,8 @@ mozilla::ipc::IPCResult HttpChannelChild::RecvOnStartRequest(
 
   mEventQ->RunOrEnqueue(new StartRequestEvent(
       this, channelStatus, responseHead, useResponseHead, requestHeaders,
-      loadInfoForwarder, isFromCache, cacheEntryAvailable, cacheEntryId,
-      cacheFetchCount, cacheExpirationTime, cachedCharset,
+      loadInfoForwarder, isFromCache, isRacing, cacheEntryAvailable,
+      cacheEntryId, cacheFetchCount, cacheExpirationTime, cachedCharset,
       securityInfoSerialization, selfAddr, peerAddr, cacheKey, altDataType,
       altDataLen, deliveringAltData, aApplyConversion, aTiming));
 
@@ -520,11 +525,11 @@ void HttpChannelChild::OnStartRequest(
     const nsresult& channelStatus, const nsHttpResponseHead& responseHead,
     const bool& useResponseHead, const nsHttpHeaderArray& requestHeaders,
     const ParentLoadInfoForwarderArgs& loadInfoForwarder,
-    const bool& isFromCache, const bool& cacheEntryAvailable,
-    const uint64_t& cacheEntryId, const int32_t& cacheFetchCount,
-    const uint32_t& cacheExpirationTime, const nsCString& cachedCharset,
-    const nsCString& securityInfoSerialization, const NetAddr& selfAddr,
-    const NetAddr& peerAddr, const uint32_t& cacheKey,
+    const bool& isFromCache, const bool& isRacing,
+    const bool& cacheEntryAvailable, const uint64_t& cacheEntryId,
+    const int32_t& cacheFetchCount, const uint32_t& cacheExpirationTime,
+    const nsCString& cachedCharset, const nsCString& securityInfoSerialization,
+    const NetAddr& selfAddr, const NetAddr& peerAddr, const uint32_t& cacheKey,
     const nsCString& altDataType, const int64_t& altDataLen,
     const bool& deliveringAltData, const bool& aApplyConversion,
     const ResourceTimingStruct& aTiming) {
@@ -569,6 +574,7 @@ void HttpChannelChild::OnStartRequest(
   ipc::MergeParentLoadInfoForwarder(loadInfoForwarder, mLoadInfo);
 
   mIsFromCache = isFromCache;
+  mIsRacing = isRacing;
   mCacheEntryAvailable = cacheEntryAvailable;
   mCacheEntryId = cacheEntryId;
   mCacheFetchCount = cacheFetchCount;
@@ -2997,6 +3003,15 @@ HttpChannelChild::GetCacheEntryId(uint64_t* aCacheEntryId) {
   }
 
   *aCacheEntryId = mCacheEntryId;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpChannelChild::IsRacing(bool* aIsRacing) {
+  if (!mAfterOnStartRequestBegun) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  *aIsRacing = mIsRacing;
   return NS_OK;
 }
 
