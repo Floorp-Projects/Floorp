@@ -141,8 +141,7 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
   MOZ_RELEASE_ASSERT(aList->mOldItems.IsEmpty());
   while (nsDisplayItem* item = aList->RemoveBottom()) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-    item->mMergedItem = false;
-    item->mPreProcessedItem = true;
+    item->SetMergedPreProcessed(false, true);
 #endif
 
     if (item->HasDeletedFrame() || !item->CanBeReused()) {
@@ -496,12 +495,11 @@ class MergeState {
     for (nsDisplayItem* i : *items) {
       if (i->Frame() == aItem->Frame() &&
           i->GetPerFrameKey() == aItem->GetPerFrameKey()) {
-        MOZ_DIAGNOSTIC_ASSERT(!i->mMergedItem);
+        MOZ_DIAGNOSTIC_ASSERT(!i->IsMergedItem());
       }
     }
 
-    aItem->mMergedItem = true;
-    aItem->mPreProcessedItem = false;
+    aItem->SetMergedPreProcessed(true, false);
 #endif
 
     mMergedItems.AppendToTop(aItem);
