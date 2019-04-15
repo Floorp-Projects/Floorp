@@ -43,11 +43,11 @@ firefox_ui_tests_config_options = [
         'default': False,
         'help': 'Only show what was going to be tested.',
     }],
-    [["--e10s"], {
+    [["--disable-e10s"], {
         'dest': 'e10s',
-        'action': 'store_true',
-        'default': False,
-        'help': 'Enable multi-process (e10s) mode when running tests.',
+        'action': 'store_false',
+        'default': True,
+        'help': 'Disable multi-process (e10s) mode when running tests.',
     }],
     [['--symbols-path=SYMBOLS_PATH'], {
         'dest': 'symbols_path',
@@ -237,7 +237,6 @@ class FirefoxUITests(TestingMixin, VCSToolsScript, CodeCoverageMixin):
         # Collect all pass-through harness options to the script
         cmd.extend(self.query_harness_args())
 
-        # Translate deprecated --e10s flag
         if not self.config.get('e10s'):
             cmd.append('--disable-e10s')
 

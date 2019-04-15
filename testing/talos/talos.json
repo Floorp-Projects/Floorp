@@ -1,66 +1,66 @@
 {
     "suites": {
-        "bcv-e10s": {
+        "bcv": {
             "tests": ["basic_compositor_video"]
         },
-        "chromez-e10s": {
+        "chromez": {
             "tests": ["about_preferences_basic", "tresize"]
         },
-        "dromaeojs-e10s": {
+        "dromaeojs": {
             "tests": ["dromaeo_css", "kraken"]
         },
-        "flex-e10s": {
+        "flex": {
             "tests": ["tart_flex", "ts_paint_flex"]
         },
-        "other-e10s": {
+        "other": {
             "tests": ["a11yr", "ts_paint", "tpaint", "twinopen", "sessionrestore", "sessionrestore_no_auto_restore", "tabpaint", "cpstartup", "startup_about_home_paint"]
         },
-        "sessionrestore-many-windows-e10s": {
+        "sessionrestore-many-windows": {
             "tests": ["sessionrestore_many_windows"]
         },
-        "g1-e10s": {
+        "g1": {
             "tests": ["tp5o_scroll", "glterrain"],
             "pagesets_name": "tp5n.zip"
         },
-        "damp-e10s": {
+        "damp": {
             "tests": ["damp"],
             "pagesets_name": "tp5n.zip"
         },
-        "tabswitch-e10s": {
+        "tabswitch": {
             "tests": ["tabswitch"],
             "pagesets_name": "tp5n.zip"
         },
-        "g3-e10s": {
+        "g3": {
             "tests": ["dromaeo_dom"]
         },
-        "g4-e10s": {
+        "g4": {
             "tests": ["glvideo", "displaylist_mutate", "rasterflood_svg", "rasterflood_gradient"]
         },
-        "g5-e10s": {
+        "g5": {
             "tests": ["ts_paint_webext", "tp5o_webext"],
             "pagesets_name": "tp5n.zip"
         },
-        "motionmark-e10s": {
+        "motionmark": {
             "tests": ["motionmark_animometer", "motionmark_htmlsuite", "JetStream", "ARES6"],
             "benchmark_zip": "jetstream.zip"
         },
-        "svgr-e10s": {
+        "svgr": {
             "tests": ["tsvgx", "tsvgr_opacity", "tart", "tscrollx", "tsvg_static"]
         },
-        "perf-reftest-e10s": {
+        "perf-reftest": {
             "tests": ["perf_reftest"]
         },
-        "perf-reftest-singletons-e10s": {
+        "perf-reftest-singletons": {
             "tests": ["perf_reftest_singletons"]
         },
-        "speedometer-e10s": {
+        "speedometer": {
             "tests": ["speedometer", "stylebench"]
         },
-        "tp5o-e10s": {
+        "tp5o": {
             "tests": ["tp5o"],
             "pagesets_name": "tp5n.zip"
         },
-        "xperf-e10s": {
+        "xperf": {
             "tests": ["tp5n"],
             "pagesets_name": "tp5n.zip",
             "talos_options": [
@@ -68,7 +68,7 @@
                 "\"c:/Program Files (x86)/Windows Kits/10/Windows Performance Toolkit/xperf.exe\""
             ]
         },
-        "tp6-e10s": {
+        "tp6": {
             "tests": ["tp6_youtube", "tp6_amazon", "tp6_facebook"],
             "mitmproxy_release_bin_osx": "mitmproxy-2.0.2-osx.tar.gz",
             "mitmproxy_release_bin_linux64": "mitmproxy-2.0.2-linux.tar.gz",
@@ -79,7 +79,7 @@
                 "--firstNonBlankPaint"
             ]
         },
-        "tp6-stylo-threads-e10s": {
+        "tp6-stylo-threads": {
             "tests": ["tp6_youtube", "tp6_amazon", "tp6_facebook"],
             "mitmproxy_release_bin_osx": "mitmproxy-2.0.2-osx.tar.gz",
             "mitmproxy_release_bin_linux64": "mitmproxy-2.0.2-linux.tar.gz",
@@ -91,10 +91,10 @@
                 "--firstNonBlankPaint"
             ]
         },
-        "h1-e10s": {
+        "h1": {
             "tests": ["ts_paint_heavy"]
         },
-        "h2-e10s": {
+        "h2": {
             "tests": ["tp6_google_heavy", "tp6_youtube_heavy", "tp6_amazon_heavy", "tp6_facebook_heavy"],
             "mitmproxy_release_bin_osx": "mitmproxy-2.0.2-osx.tar.gz",
             "mitmproxy_release_bin_linux64": "mitmproxy-2.0.2-linux.tar.gz",

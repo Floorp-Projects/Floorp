@@ -151,12 +151,11 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
             "default": 0,
             "help": "The interval between samples taken by the profiler (milliseconds)"
         }],
-        [["--e10s"], {
+        [["--disable-e10s"], {
             "dest": "e10s",
-            "action": "store_true",
-            "default": False,
-            "help": "we should have --disable-e10s, but instead we assume non-e10s and use "
-            "--e10s to help"
+            "action": "store_false",
+            "default": True,
+            "help": "Run without multiple processes (e10s)."
         }],
         [["--enable-webrender"], {
             "action": "store_true",
@@ -335,8 +334,6 @@ class Talos(TestingMixin, MercurialScript, TooltoolMixin,
         kw_options = {'executablePath': binary_path}
         if 'suite' in self.config:
             kw_options['suite'] = self.config['suite']
-            if self.config.get('e10s', False):
-                kw_options['suite'] = "%s-e10s" % self.config['suite']
         if self.config.get('title'):
             kw_options['title'] = self.config['title']
         if self.symbols_path:
