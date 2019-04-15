@@ -47,9 +47,7 @@ describe("sources tree", () => {
       ];
 
       const tree = createDirectoryNode("root", "", []);
-      sources.forEach(source =>
-        addToTree(tree, source, "http://example.com/", "")
-      );
+      sources.forEach(source => addToTree(tree, source, "http://example.com/"));
       sortEntireTree(tree);
       const [bFolderNode, aFileNode] = tree.contents[0].contents;
       const [cFolderNode] = bFolderNode.contents;

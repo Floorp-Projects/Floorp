@@ -118,8 +118,7 @@ class SourcesTree extends Component<Props, State> {
       return this.setState(
         createTree({
           sources: nextProps.sources,
-          debuggeeUrl: nextProps.debuggeeUrl,
-          projectRoot: nextProps.projectRoot
+          debuggeeUrl: nextProps.debuggeeUrl
         })
       );
     }
@@ -148,7 +147,6 @@ class SourcesTree extends Component<Props, State> {
           newSources: nextProps.sources,
           prevSources: sources,
           debuggeeUrl,
-          projectRoot,
           uncollapsedTree,
           sourceTree
         })
