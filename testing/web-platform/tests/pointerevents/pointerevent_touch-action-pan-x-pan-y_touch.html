@@ -1,31 +1,28 @@
 <!doctype html>
 <html>
     <head>
-        <title>Change touch-action on pointerdown</title>
+        <title>touch-action: pan-x pan-y</title>
         <meta name="viewport" content="width=device-width">
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <script src="pointerevent_support.js"></script>
         <style>
             #target0 {
-            background: black;
             width: 700px;
             height: 430px;
-            color: white;
-            overflow-y: auto;
-            overflow-x: auto;
-            white-space: nowrap;
+            touch-action: pan-x pan-y;
             }
         </style>
     </head>
     <body onload="run()">
         <h1>Pointer Events touch-action attribute support</h1>
-        <h4>Test Description: Press and hold your touch. Try to scroll text in any direction.
-            Then release your touch and try to scroll again. Expected: no panning.
-        </h4>
+        <h4 id="desc">Test Description: Try to scroll text DOWN. Wait for description update. Expected: pan enabled</h4>
         <p>Note: this test is for touch-devices only</p>
-        <div id="target0" style="touch-action: auto;">
+        <div id="target0">
             <p>
                 Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diem
                 nonummy nibh euismod tincidunt ut lacreet dolore magna aliguam erat volutpat.
@@ -82,51 +79,57 @@
         <script type='text/javascript'>
             var detected_pointertypes = {};
 
-            var styleIsChanged = false;
-            var scrollIsReceived = false;
-            var firstTouchCompleted = false;
-            var countToPass = 50;
+            var xScrollIsReceived = false;
+            var yScrollIsReceived = false;
             var xScr0, yScr0, xScr1, yScr1;
 
-            setup({ explicit_done: true });
             add_completion_callback(showPointerTypes);
 
             function run() {
                 var target0 = document.getElementById("target0");
 
-                on_event(target0, 'scroll', function(event) {
-                    if(!scrollIsReceived && firstTouchCompleted) {
-                        test(function() {
-                            failOnScroll();
-                        }, "scroll was received while shouldn't");
-                        scrollIsReceived = true;
-                    }
-                    done();
-                });
+                var test_touchaction = async_test("touch-action attribute test");
+
+                xScr0 = target0.scrollLeft;
+                yScr0 = target0.scrollTop;
 
                 on_event(target0, 'pointerdown', function(event) {
                     detected_pointertypes[event.pointerType] = true;
-                    if(!styleIsChanged) {
-                        var before = document.getElementById('target0').style.touchAction;
+                });
 
-                        document.getElementById('target0').style.touchAction = 'none';
+                on_event(target0, 'scroll', function(event) {
+                    xScr1 = target0.scrollLeft;
+                    yScr1 = target0.scrollTop;
 
-                        var after = document.getElementById('target0').style.touchAction;
+                    if(xScr1 != xScr0) {
+                        xScrollIsReceived = true;
+                    }
 
-                        test(function() {
-                            assert_true(before != after, "touch-action was changed");
-                        }, "touch-action was changed");
+                    if(yScr1 != yScr0) {
+                        test_touchaction.step(function () {
+                            yScrollIsReceived = true;
+                            assert_true(true, "y-scroll received.");
+                        });
+                        updateDescriptionNextStep();
+                    }
 
-                        styleIsChanged = true;
+                    if(xScrollIsReceived && yScrollIsReceived) {
+                        updateDescriptionComplete();
                     }
                 });
 
-                on_event(target0, 'pointerup', function(event) {
-                    firstTouchCompleted = true;
+                // Inject touch inputs and wait for all the actions finish to end the test.
+                touchScrollInTarget(target0, 'down').then(function() {
+                    return touchScrollInTarget(target0, 'right');
+                }).then(function() {
+                    test_touchaction.step(function () {
+                        assert_true(xScrollIsReceived && yScrollIsReceived, "x-scroll and y-scroll should be received before the test finishes");
+                    }, "x-scroll and y-scroll should be received before the test finishes");
+                    test_touchaction.done();
                 });
             }
         </script>
-        <h1>touch-action: auto to none</h1>
+        <h1>touch-action: pan-x pan-y</h1>
         <div id="complete-notice">
             <p>The following pointer types were detected: <span id="pointertype-log"></span>.</p>
         </div>
