@@ -134,7 +134,7 @@ class ActionsManager {
     this.finalized = true;
 
     // Finalize local actions
-    for (const action of Object.values(this.localActions)) {
+    for (const action of new Set(Object.values(this.localActions))) {
       action.finalize();
     }
 
