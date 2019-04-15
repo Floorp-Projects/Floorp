@@ -940,30 +940,8 @@ you can use these alternative items. Otherwise, their values should be empty.  -
 <!ENTITY emeLearnMoreContextMenu.label            "Learn more about DRM…">
 <!ENTITY emeLearnMoreContextMenu.accesskey        "D">
 
-<!ENTITY updateAvailable.message "Update your &brandShorterName; for the latest in speed and privacy.">
-<!ENTITY updateAvailable.whatsnew.label "See what’s new.">
-<!ENTITY updateAvailable.header.message "A new &brandShorterName; update is available.">
-<!ENTITY updateAvailable.acceptButton.label "Download Update">
-<!ENTITY updateAvailable.acceptButton.accesskey "D">
-<!ENTITY updateAvailable.cancelButton.label "Not Now">
-<!ENTITY updateAvailable.cancelButton.accesskey "N">
 <!ENTITY updateAvailable.panelUI.label "Download &brandShorterName; update">
-
-<!ENTITY updateManual.message "Download a fresh copy of &brandShorterName; and we’ll help you to install it.">
-<!ENTITY updateManual.whatsnew.label "See what’s new.">
-<!ENTITY updateManual.header.message "&brandShorterName; can’t update to the latest version.">
-<!ENTITY updateManual.acceptButton.label "Download &brandShorterName;">
-<!ENTITY updateManual.acceptButton.accesskey "D">
-<!ENTITY updateManual.cancelButton.label "Not Now">
-<!ENTITY updateManual.cancelButton.accesskey "N">
 <!ENTITY updateManual.panelUI.label "Download a fresh copy of &brandShorterName;">
-
-<!ENTITY updateRestart.message2 "After a quick restart, &brandShorterName; will restore all your open tabs and windows that are not in Private Browsing mode.">
-<!ENTITY updateRestart.header.message2 "Restart to update &brandShorterName;.">
-<!ENTITY updateRestart.acceptButton.label "Restart and Restore">
-<!ENTITY updateRestart.acceptButton.accesskey "R">
-<!ENTITY updateRestart.cancelButton.label "Not Now">
-<!ENTITY updateRestart.cancelButton.accesskey "N">
 <!ENTITY updateRestart.panelUI.label2 "Restart to update &brandShorterName;">
 
 <!ENTITY newTabControlled.header.message "Your New Tab has changed.">
@@ -1002,18 +980,3 @@ you can use these alternative items. Otherwise, their values should be empty.  -
      used as a textual label for the indicator used by assistive technology
      users. -->
 <!ENTITY accessibilityIndicator.tooltip "Accessibility Features Enabled">
-
-<!-- LOCALIZATION NOTE: (addonPostInstallMessage.label):
-     The first <image> tag is replaced with the icon for the add-ons menu.
-     The second <image> tag is replaced with the icon for the toolbar menu. -->
-<!ENTITY addonPostInstallMessage.label "Manage your add-ons by clicking <image class='addon-addon-icon'/> in the <image class='addon-toolbar-icon'/> menu.">
-<!ENTITY addonPostInstall.incognito.checkbox.label "Allow this extension to run in Private Windows">
-<!ENTITY addonPostInstall.incognito.checkbox.accesskey "A">
-
-<!ENTITY addonPrivateBrowsing.header2.label "Change to extensions in Private Windows">
-<!ENTITY addonPrivateBrowsing.body2.label "Any new extensions you add to &brandShorterName; won’t work in Private Windows unless you allow this in the settings.">
-<!ENTITY addonPrivateBrowsing.learnMore.label "Learn how to manage extension settings">
-<!ENTITY addonPrivateBrowsing.okButton.label "Okay, Got It">
-<!ENTITY addonPrivateBrowsing.okButton.accesskey "O">
-<!ENTITY addonPrivateBrowsing.manageButton.label "Manage Extensions">
-<!ENTITY addonPrivateBrowsing.manageButton.accesskey "M">

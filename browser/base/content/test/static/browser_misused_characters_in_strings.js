@@ -100,10 +100,6 @@ let gWhitelist = [{
     file: "pocket.properties",
     key: "tos",
     type: "double-quote",
-  }, {
-    file: "browser.dtd",
-    key: "addonPostInstallMessage.label",
-    type: "single-quote",
   },
 ];
 
