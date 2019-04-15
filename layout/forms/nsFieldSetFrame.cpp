@@ -167,15 +167,36 @@ bool nsDisplayFieldSetBorder::CreateWebRenderCommands(
   auto frame = static_cast<nsFieldSetFrame*>(mFrame);
   auto offset = ToReferenceFrame();
   nsRect rect;
+  Maybe<wr::SpaceAndClipChainHelper> clipOut;
 
   if (nsIFrame* legend = frame->GetLegend()) {
     rect = frame->VisualBorderRectRelativeToSelf() + offset;
 
-    // Legends require a "negative" clip around the text, which WR doesn't
-    // support yet.
     nsRect legendRect = legend->GetNormalRect() + offset;
+
+    // Make sure we clip all of the border in case the legend is smaller.
+    nscoord borderTopWidth = frame->GetUsedBorder().top;
+    if (legendRect.height < borderTopWidth) {
+      legendRect.height = borderTopWidth;
+      legendRect.y = offset.y;
+    }
+
     if (!legendRect.IsEmpty()) {
-      return false;
+      // We need to clip out the part of the border where the legend would go
+      auto appUnitsPerDevPixel = frame->PresContext()->AppUnitsPerDevPixel();
+      auto layoutRect = wr::ToRoundedLayoutRect(
+          LayoutDeviceRect::FromAppUnits(rect, appUnitsPerDevPixel));
+
+      wr::ComplexClipRegion region;
+      region.rect = wr::ToRoundedLayoutRect(
+          LayoutDeviceRect::FromAppUnits(legendRect, appUnitsPerDevPixel));
+      region.mode = wr::ClipMode::ClipOut;
+      region.radii = wr::EmptyBorderRadius();
+      nsTArray<mozilla::wr::ComplexClipRegion> array{region};
+
+      auto clip = aBuilder.DefineClip(Nothing(), layoutRect, &array, nullptr);
+      auto clipChain = aBuilder.DefineClipChain({clip});
+      clipOut.emplace(aBuilder, clipChain);
     }
   } else {
     rect = nsRect(offset, frame->GetRect().Size());
