@@ -34,7 +34,6 @@ export function updateTree({
   newSources,
   prevSources,
   debuggeeUrl,
-  projectRoot,
   uncollapsedTree,
   sourceTree
 }: Params) {
@@ -42,7 +41,7 @@ export function updateTree({
   const debuggeeHost = getDomain(debuggeeUrl);
 
   for (const source of newSet) {
-    addToTree(uncollapsedTree, source, debuggeeHost, projectRoot);
+    addToTree(uncollapsedTree, source, debuggeeHost);
   }
 
   const newSourceTree = collapseTree(uncollapsedTree);
