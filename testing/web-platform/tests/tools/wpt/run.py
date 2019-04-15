@@ -266,7 +266,7 @@ class Chrome(BrowserSetup):
 
                 if install:
                     logger.info("Downloading chromedriver")
-                    webdriver_binary = self.browser.install_webdriver(dest=self.venv.bin_path)
+                    webdriver_binary = self.browser.install_webdriver(dest=self.venv.bin_path, browser_binary=kwargs["binary"])
             else:
                 logger.info("Using webdriver binary %s" % webdriver_binary)
 
