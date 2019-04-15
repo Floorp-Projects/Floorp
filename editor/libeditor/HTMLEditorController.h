@@ -18,6 +18,7 @@ class HTMLEditorController final {
       nsControllerCommandTable* aCommandTable);
   static nsresult RegisterHTMLEditorCommands(
       nsControllerCommandTable* aCommandTable);
+  static void Shutdown();
 };
 
 }  // namespace mozilla
