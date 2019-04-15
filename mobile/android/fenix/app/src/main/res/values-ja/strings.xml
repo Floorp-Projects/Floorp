@@ -4,297 +4,298 @@
 
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
-    <string name="content_description_menu">Weitere Optionen</string>
+    <string name="content_description_menu">他のオプション</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_private_browsing_button">Privates Surfen aktivieren</string>
+    <string name="content_description_private_browsing_button">プライベートブラウジングを有効にします</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
-    <string name="content_description_disable_private_browsing_button">Privates Surfen deaktivieren</string>
+    <string name="content_description_disable_private_browsing_button">プライベートブラウジングを無効にします</string>
     <!-- Placeholder text shown in the search bar before a user enters text -->
-    <string name="search_hint">Suche oder Adresse</string>
+    <string name="search_hint">検索語またはアドレスを入力</string>
 
     <!-- Private Browsing -->
     <!-- Title for private session option -->
-    <string name="private_browsing_title">Dies ist eine private Sitzung</string>
+    <string name="private_browsing_title">プライベートセッションです</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="private_browsing_explanation">%1$s leert die eingegebenen Suchbegriffe und besuchten Webseiten beim Beenden der privaten Sitzung. Das macht Sie gegenüber Website-Betreibern und Internetanbietern nicht anonym, aber erleichtert es Ihnen, dass andere Nutzer dieses Geräts Ihre Aktivitäten nicht einsehen können.\n\nHäufige Irrtümer über den privaten Modus</string>
+    <string name="private_browsing_explanation">%1$s のプライベートセッションを閉じると、検索履歴やブラウジング履歴が消去されます。これは、ウェブサイトやインターネットサービスプロバイダーに対してユーザーの行動を匿名化するものではなく、この端末を使う他者に対して、オンラインでの行動を隠すだけです。\n\nプライベートブラウジングについての誤解</string>
     <!-- Delete session button to erase your history in a private session -->
-    <string name="private_browsing_delete_session">Sitzung löschen</string>
+    <string name="private_browsing_delete_session">セッションを削除</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Offene Tabs</string>
+    <string name="browser_tabs_button">タブを開きます</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
-    <string name="browser_menu_back">Zurück</string>
+    <string name="browser_menu_back">戻る</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
-    <string name="browser_menu_forward">Vor</string>
+    <string name="browser_menu_forward">進む</string>
     <!-- Content description (not visible, for screen readers etc.): Refresh current website -->
-    <string name="browser_menu_refresh">Aktualisieren</string>
+    <string name="browser_menu_refresh">更新</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
-    <string name="browser_menu_stop">Anhalten</string>
+    <string name="browser_menu_stop">中止</string>
     <!-- Browser menu button that sends a user to help articles -->
-    <string name="browser_menu_help">Hilfe</string>
+    <string name="browser_menu_help">ヘルプ</string>
     <!-- Browser menu button that opens the settings menu -->
-    <string name="browser_menu_settings">Einstellungen</string>
+    <string name="browser_menu_settings">設定</string>
     <!-- Browser menu button that opens a user's library -->
-    <string name="browser_menu_library">Bibliothek</string>
+    <string name="browser_menu_library">ライブラリー</string>
     <!-- Browser menu toggle that requests a desktop site -->
-    <string name="browser_menu_desktop_site">Desktop-Website</string>
+    <string name="browser_menu_desktop_site">デスクトップサイト</string>
     <!-- Browser menu button that opens the find in page menu -->
-    <string name="browser_menu_find_in_page">In Seite suchen</string>
+    <string name="browser_menu_find_in_page">ページ内検索</string>
     <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">Privater Tab</string>
+    <string name="browser_menu_private_tab">プライベートタブ</string>
     <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Neuer Tab</string>
+    <string name="browser_menu_new_tab">新しいタブ</string>
     <!-- Browser menu button that opens a dialog to report issues with the current site -->
-    <string name="browser_menu_report_issue">Website-Problem melden</string>
+    <string name="browser_menu_report_issue">サイトの問題を報告</string>
     <!-- Browser menu button that open a share menu to share the current site -->
-    <string name="browser_menu_share">Teilen</string>
+    <string name="browser_menu_share">共有</string>
     <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">Teilen mit…</string>
+    <string name="menu_share_with">共有先…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="browser_menu_open_in_fenix">In %1$s öffnen</string>
+    <string name="browser_menu_open_in_fenix">%1$s で開く</string>
     <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="browser_menu_powered_by">BEREITGESTELLT VON %1$s</string>
+    <string name="browser_menu_powered_by">POWERED BY %1$s</string>
 
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
-    <string name="search_scan_button">Scannen</string>
+    <string name="search_scan_button">スキャン</string>
     <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">Tastenkombinationen</string>
+    <string name="search_shortcuts_button">ショートカット</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
-    <string name="search_shortcuts_engine_settings">Suchmaschinen-Einstellungen</string>
+    <string name="search_shortcuts_engine_settings">検索エンジンの設定</string>
     <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">Suchen mit</string>
+    <string name="search_shortcuts_search_with">検索:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
-    <string name="awesomebar_clipboard_title">Link aus Zwischenablage einfügen</string>
+    <string name="awesomebar_clipboard_title">クリップボードからリンクを入力</string>
 
     <!-- Settings Fragment -->
     <!-- Title for the settings page-->
-    <string name="settings">Einstellungen</string>
+    <string name="settings">設定</string>
 
     <!-- Preferences -->
     <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">Grundlagen</string>
+    <string name="preferences_category_basics">基本設定</string>
+
     <!-- Preference category for all links about Fenix -->
-    <string name="preferences_category_about">Über</string>
+    <string name="preferences_category_about">製品情報</string>
     <!-- Preference for settings related to changing the default search engine -->
-    <string name="preferences_search_engine">Suchmaschine</string>
+    <string name="preferences_search_engine">検索エンジン</string>
     <!-- Preference linking to help about Fenix -->
-    <string name="preferences_help">Hilfe</string>
+    <string name="preferences_help">ヘルプ</string>
     <!-- Preference link to rating Fenix on the Play Store -->
-    <string name="preferences_rate">Bei Google Play bewerten</string>
+    <string name="preferences_rate">Google Play で評価する</string>
     <!-- Preference for giving feedback about Fenix -->
-    <string name="preferences_feedback">Feedback senden</string>
+    <string name="preferences_feedback">フィードバック提供</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
-    <string name="preferences_about">Über %1$s</string>
+    <string name="preferences_about">%1$s について</string>
     <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">Passwörter</string>
+    <string name="preferences_passwords">パスワード</string>
     <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">Kreditkarten und Adressen</string>
+    <string name="preferences_credit_cards_addresses">クレジットカードと住所</string>
     <!-- Preference for settings related to changing the default browser -->
-    <string name="preferences_set_as_default_browser">Als Standardbrowser festlegen</string>
+    <string name="preferences_set_as_default_browser">既定のブラウザーに設定</string>
     <!-- Preference category for advanced settings -->
-    <string name="preferences_category_advanced">Erweitert</string>
+    <string name="preferences_category_advanced">詳細設定</string>
     <!-- Preference for advanced site permissions -->
-    <string name="preferences_site_permissions">Website-Berechtigungen</string>
+    <string name="preferences_site_permissions">サイトの許可設定</string>
     <!-- Preference for accessibility -->
-    <string name="preferences_accessibility">Barrierefreiheit</string>
+    <string name="preferences_accessibility">アクセシビリティ</string>
     <!-- Preference category for account information -->
-    <string name="preferences_category_account">Konto</string>
+    <string name="preferences_category_account">アカウント</string>
     <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">Anmelden</string>
+    <string name="preferences_sign_in">ログイン</string>
     <!-- Preference for changing default theme to dark or light mode -->
-    <string name="preferences_theme">Theme</string>
+    <string name="preferences_theme">テーマ</string>
     <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Synchronisieren Sie Lesezeichen, Chronik und mehr mit Ihrem Firefox-Konto</string>
+    <string name="preferences_sign_in_description">ブックマーク、履歴などを Firefox アカウントと同期します</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox-Konto</string>
+    <string name="preferences_account_default_name">Firefox アカウント</string>
     <!-- Preference for language -->
-    <string name="preferences_language">Sprache</string>
+    <string name="preferences_language">言語</string>
     <!-- Preference for data choices -->
-    <string name="preferences_data_choices">Datenübermittlung</string>
+    <string name="preferences_data_choices">データの選択</string>
     <!-- Preference category for developer tools -->
-    <string name="developer_tools_category">Entwicklerwerkzeuge</string>
+    <string name="developer_tools_category">開発者ツール</string>
     <!-- Preference for developers -->
-    <string name="preferences_remote_debugging">Externes Debugging über USB</string>
+    <string name="preferences_remote_debugging">USB 経由でリモートデバッグする</string>
     <!-- Preference title for switch preference to show search suggestions -->
-    <string name="preferences_show_search_suggestions">Suchvorschläge anzeigen</string>
+    <string name="preferences_show_search_suggestions">検索語句の候補を表示</string>
     <!-- Preference for account settings -->
-    <string name="preferences_account_settings">Kontoeinstellungen</string>
+    <string name="preferences_account_settings">アカウント設定</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
-    <string name="preferences_sync_now">Jetzt synchronisieren</string>
+    <string name="preferences_sync_now">今すぐ同期</string>
     <!-- Preference category for sync -->
-    <string name="preferences_sync_category">Auswählen, was synchronisiert werden soll</string>
-
+    <string name="preferences_sync_category">同期するデータの選択</string>
     <!-- Preference for syncing history -->
-    <string name="preferences_sync_history">Chronik</string>
+    <string name="preferences_sync_history">履歴</string>
     <!-- Preference for signing out -->
-    <string name="preferences_sign_out">Abmelden</string>
+    <string name="preferences_sign_out">ログアウト</string>
     <!-- Label indicating that sync is in progress -->
-    <string name="sync_syncing">Synchronisation läuft</string>
+    <string name="sync_syncing">同期中</string>
     <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
-    <string name="sync_failed_summary">Synchronisierung fehlgeschlagen. Letzte erfolgreiche Synchronisation: %s</string>
+    <string name="sync_failed_summary">同期に失敗しました。最終同期日時: ％s</string>
     <!-- Label summary showing never synced -->
-    <string name="sync_failed_never_synced_summary">Synchronisierung fehlgeschlagen. Zuletzt synchronisiert: nie</string>
+    <string name="sync_failed_never_synced_summary">同期に失敗しました。最終同期日時: なし</string>
     <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
-    <string name="sync_last_synced_summary">Letzte Synchronisation: %@</string>
+    <string name="sync_last_synced_summary">最終同期日時: %s</string>
     <!-- Label summary showing never synced -->
-    <string name="sync_never_synced_summary">Letzte Synchronisierung: nie</string>
+    <string name="sync_never_synced_summary">最終同期日時: なし</string>
 
     <!-- Advanced Preferences -->
     <!-- Preference switch for Telemetry -->
-    <string name="preferences_telemetry">Telemetrie</string>
+    <string name="preferences_telemetry">Telemetry</string>
     <!-- Preference switch for crash reporter -->
-    <string name="preferences_crash_reporter">Absturzmelder</string>
+    <string name="preferences_crash_reporter">クラッシュレポーター</string>
     <!-- Preference switch for Mozilla location service -->
-    <string name="preferences_mozilla_location_service">Mozilla-Location-Service</string>
+    <string name="preferences_mozilla_location_service">Mozilla 位置情報サービス</string>
     <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preferences_fenix_health_report">Gesundheitsbericht zu %s</string>
+    <string name="preferences_fenix_health_report">％s ヘルスレポート</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
-    <string name="preference_light_theme">Hell</string>
+    <string name="preference_light_theme">Light</string>
     <!-- Preference for using dark theme -->
-    <string name="preference_dark_theme">Dunkel</string>
+    <string name="preference_dark_theme">Dark</string>
     <!-- Preference for using using dark or light theme automatically set by battery -->
-    <string name="preference_auto_battery_theme">Durch Energiespareinstellungen festgelegt</string>
+    <string name="preference_auto_battery_theme">バッテリーセーバーで設定</string>
     <!-- Preference for using following device theme -->
-    <string name="preference_follow_device_theme">Geräte-Theme beachten</string>
+    <string name="preference_follow_device_theme">端末のテーマに従う</string>
 
     <!-- Quick Action Sheet -->
     <!-- Button in the browser chrome to share the current page -->
-    <string name="quick_action_share">Teilen</string>
+    <string name="quick_action_share">共有</string>
     <!-- Button in the browser chrome to download the current page -->
-    <string name="quick_action_download">Herunterladen</string>
+    <string name="quick_action_download">ダウンロード</string>
     <!-- Button in the browser chrome in the browser to bookmark the current page -->
-    <string name="quick_action_bookmark">Als Lesezeichen hinzufügen</string>
+    <string name="quick_action_bookmark">ブックマーク</string>
     <!-- Button in the browser chrome in the browser to put the the current page in reader mode -->
-    <string name="quick_action_read">Lesen</string>
+    <string name="quick_action_read">リーダーモード</string>
     <!-- Content description (not visible, for screen readers etc.): Quick action sheet handle to provide users
         with shortcuts to commonly used actions such as Share, Bookmark etc.. -->
-    <string name="quick_action_sheet_handle">Schnellaktionen</string>
+    <string name="quick_action_sheet_handle">クイックアクション</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
-    <string name="library_sessions">Sitzungen</string>
+    <string name="library_sessions">セッション</string>
     <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">Bildschirmfotos</string>
+    <string name="library_screenshots">スクリーンショット</string>
     <!-- Option in Library to open Downloads page -->
-    <string name="library_downloads">Downloads</string>
+    <string name="library_downloads">ダウンロード</string>
     <!-- Option in library to open Bookmarks page -->
-    <string name="library_bookmarks">Lesezeichen</string>
+    <string name="library_bookmarks">ブックマーク</string>
     <!-- Option in Library to open History page -->
-    <string name="library_history">Chronik</string>
+    <string name="library_history">履歴</string>
     <!-- Option in Library to open Reading List -->
-    <string name="library_reading_list">Leseliste</string>
+    <string name="library_reading_list">リーディングリスト</string>
     <!-- Menu Item Label for Search in Library -->
-    <string name="library_search">Suchen</string>
+    <string name="library_search">検索</string>
     <!-- Library Page Title -->
-    <string name="library_title">Bibliothek</string>
+    <string name="library_title">ブラウジングライブラリー</string>
     <!-- Settings Page Title -->
-    <string name="settings_title">Einstellungen</string>
+    <string name="settings_title">設定</string>
     <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">Menüpunkt „Chronik“</string>
+    <string name="content_description_history_menu">履歴項目メニュー</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
-    <string name="content_description_close_button">Schließen</string>
+    <string name="content_description_close_button">閉じる</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs in the current session -->
-    <string name="tabs_header_title">Aktuelle Sitzung</string>
+    <string name="tabs_header_title">現在のセッション</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">Private Sitzung</string>
+    <string name="tabs_header_private_title">プライベートセッション</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
-    <string name="add_tab">Tab hinzufügen</string>
+    <string name="add_tab">タブを追加</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
-    <string name="close_tab">Tab schließen</string>
+    <string name="close_tab">タブを閉じる</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Tab-Menü</string>
+    <string name="tab_menu">タブメニュー</string>
     <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string name="current_session_delete">Löschen</string>
+    <string name="current_session_delete">削除</string>
     <!-- Button in the current session menu. Saves the session when pressed -->
-    <string name="current_session_save">Speichern</string>
+    <string name="current_session_save">保存</string>
     <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_share">Teilen</string>
+    <string name="current_session_share">共有</string>
+
     <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string name="current_session_image">Grafik zu aktueller Sitzung</string>
+    <string name="current_session_image">現在のセッションイメージ</string>
     <!-- Text for the button to save a session -->
-    <string name="session_save">Sitzung speichern</string>
+    <string name="session_save">セッションを保存</string>
     <!-- Text for the button to delete a session -->
-    <string name="session_delete">Sitzung löschen</string>
+    <string name="session_delete">セッションを削除</string>
     <!-- Text for the button to delete a single session -->
-    <string name="session_item_delete">Löschen</string>
+    <string name="session_item_delete">削除</string>
     <!-- Text to tell the user how many more tabs this session has.
         The first parameter is a digit that shows the cardinal number of how many additional tabs the session has. -->
-    <string name="session_items_more">%1$d Websites…</string>
+    <string name="session_items_more">%1$d サイト…</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
-    <string name="history_delete_all">Chronik löschen</string>
+    <string name="history_delete_all">履歴を削除</string>
     <!-- Text for the button to delete a single history item -->
-    <string name="history_delete_item">Löschen</string>
+    <string name="history_delete_item">削除</string>
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
-    <string name="history_delete_some">%1$d Elemente löschen</string>
+    <string name="history_delete_some">%1$d 項目を削除</string>
     <!-- Text for the header that groups the history for Today -->
-    <string name="history_today">Heute</string>
+    <string name="history_today">今日</string>
     <!-- Text for the header that groups the history the past week -->
-    <string name="history_this_week">Diese Woche</string>
+    <string name="history_this_week">今週</string>
     <!-- Text for the header that groups the history the past month -->
-    <string name="history_this_month">Dieser Monat</string>
+    <string name="history_this_month">今月</string>
     <!-- Text for the header that groups the history older than the last month -->
-    <string name="history_older">Älter</string>
+    <string name="history_older">古い</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
-    <string name="full_screen_notification">Vollbildmodus wird gestartet</string>
+    <string name="full_screen_notification">全画面表示モードです</string>
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
-    <string name="tab_crash_title">Es tut uns leid. %1$s kann diesen Tab nicht wiederherstellen</string>
+    <string name="tab_crash_title">申し訳ありません。%1$s がタブを復元できませんでした</string>
     <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">Sie können versuchen, diesen Tab hier wiederherzustellen oder zu schließen.</string>
+    <string name="tab_crash_description">以下でタブの復元を試みるか、このタブを閉じてください。</string>
     <!-- Send crash report checkbox text on the tab crash page -->
-    <string name="tab_crash_send_report">Absturzbericht an Mozilla senden</string>
+    <string name="tab_crash_send_report">クラッシュレポートを Mozilla に送信する</string>
     <!-- Close tab button text on the tab crash page -->
-    <string name="tab_crash_close">Tab schließen</string>
+    <string name="tab_crash_close">タブを閉じる</string>
     <!-- Restore tab button text on the tab crash page -->
-    <string name="tab_crash_restore">Tab wiederherstellen</string>
+    <string name="tab_crash_restore">タブを復元</string>
 
     <!-- Content Description for session item menu button -->
-    <string name="content_description_session_menu">Sitzungsoptionen</string>
+    <string name="content_description_session_menu">セッションのオプション</string>
 
     <!-- Content Description for session item share button -->
-    <string name="content_description_session_share">Sitzung teilen</string>
+    <string name="content_description_session_share">セッションを共有</string>
 
     <!-- Content description for bookmarks library menu -->
-    <string name="bookmark_menu_content_description">Lesezeichen-Menü</string>
+    <string name="bookmark_menu_content_description">ブックマークメニュー</string>
     <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Lesezeichen bearbeiten</string>
+    <string name="bookmark_edit">ブックマークを編集</string>
     <!-- Screen title for selecting a bookmarks folder -->
-    <string name="bookmark_select_folder">Ordner auswählen</string>
+    <string name="bookmark_select_folder">フォルダー選択</string>
     <!-- Screen title for adding a bookmarks folder -->
-    <string name="bookmark_add_folder">Ordner hinzufügen</string>
+    <string name="bookmark_add_folder">フォルダー追加</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Lesezeichen erstellt.</string>
+    <string name="bookmark_created_snackbar">ブックマークを作成しました。</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
-    <string name="edit_bookmark_snackbar_action">BEARBEITEN</string>
+    <string name="edit_bookmark_snackbar_action">編集</string>
 
     <!-- Bookmark overflow menu edit button -->
-    <string name="bookmark_menu_edit_button">Bearbeiten</string>
+    <string name="bookmark_menu_edit_button">編集</string>
     <!-- Bookmark overflow menu select button -->
-    <string name="bookmark_menu_select_button">Auswählen</string>
+    <string name="bookmark_menu_select_button">選択</string>
     <!-- Bookmark overflow menu copy button -->
-    <string name="bookmark_menu_copy_button">Kopieren</string>
+    <string name="bookmark_menu_copy_button">コピー</string>
     <!-- Bookmark overflow menu share button -->
-    <string name="bookmark_menu_share_button">Teilen</string>
+    <string name="bookmark_menu_share_button">共有</string>
     <!-- Bookmark overflow menu open in new tab button -->
-    <string name="bookmark_menu_open_in_new_tab_button">In neuem Tab öffnen</string>
+    <string name="bookmark_menu_open_in_new_tab_button">新しいタブで開く</string>
     <!-- Bookmark overflow menu open in private tab button -->
-    <string name="bookmark_menu_open_in_private_tab_button">In privatem Tab öffnen</string>
+    <string name="bookmark_menu_open_in_private_tab_button">プライベートタブで開く</string>
     <!-- Bookmark overflow menu delete button -->
-    <string name="bookmark_menu_delete_button">Löschen</string>
+    <string name="bookmark_menu_delete_button">削除</string>
 </resources>

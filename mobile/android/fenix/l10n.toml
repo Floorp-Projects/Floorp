@@ -2,6 +2,14 @@
 basepath = "."
 
 locales = [
+  "de",
+  "es",
+  "fr",
+  "it",
+  "ja",
+  "ko",
+  "zh-CN",
+  "zh-TW",
 ]
 
 # Expose the following branches to localization
