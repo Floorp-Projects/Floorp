@@ -176,7 +176,7 @@ config("debug") {
     # Enable libstdc++ debugging facilities to help catch problems early, see
     # http://crbug.com/65151 .
     # TODO(phajdan.jr): Should we enable this for all of POSIX?
-    defines += [ "_GLIBCXX_DEBUG=1" ]
+    #defines += [ "_GLIBCXX_DEBUG=1" ]
   }
 }
 
