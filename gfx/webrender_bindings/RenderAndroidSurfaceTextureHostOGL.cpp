@@ -19,17 +19,13 @@ RenderAndroidSurfaceTextureHostOGL::RenderAndroidSurfaceTextureHostOGL(
     : mSurfTex(aSurfTex),
       mSize(aSize),
       mContinuousUpdate(aContinuousUpdate),
-      mIsPrepared(false),
+      mPrepareStatus(STATUS_NONE),
       mAttachedToGLContext(false) {
   MOZ_COUNT_CTOR_INHERITED(RenderAndroidSurfaceTextureHostOGL,
                            RenderTextureHostOGL);
 
   if (mSurfTex) {
     mSurfTex->IncrementUse();
-  }
-
-  if (mSurfTex && !mSurfTex->IsSingleBuffer()) {
-    mIsPrepared = true;
   }
 }
 
@@ -87,10 +83,13 @@ wr::WrExternalImage RenderAndroidSurfaceTextureHostOGL::Lock(
   if (mContinuousUpdate) {
     MOZ_ASSERT(!mSurfTex->IsSingleBuffer());
     mSurfTex->UpdateTexImage();
-  } else if (!mSurfTex->IsSingleBuffer()) {
-    // Always calling UpdateTexImage() is not good.
-    // XXX Bug 1543846 will update this.
+  } else if (mPrepareStatus == STATUS_PREPARE_NEEDED) {
+    MOZ_ASSERT(!mSurfTex->IsSingleBuffer());
+    // When SurfaceTexture is not single buffer mode, call UpdateTexImage() once
+    // just before rendering. During playing video, one SurfaceTexture is used
+    // for all RenderAndroidSurfaceTextureHostOGLs of video.
     mSurfTex->UpdateTexImage();
+    mPrepareStatus = STATUS_PREPARED;
   }
 
   return NativeTextureToWrExternalImage(mSurfTex->GetTexName(), 0, 0,
@@ -135,19 +134,28 @@ bool RenderAndroidSurfaceTextureHostOGL::EnsureAttachedToGLContext() {
 }
 
 void RenderAndroidSurfaceTextureHostOGL::PrepareForUse() {
-  // When SurfaceTexture is single buffer mode, UpdateTexImage neeeds to be
+  // When SurfaceTexture is single buffer mode, UpdateTexImage needs to be
   // called only once for each publish. If UpdateTexImage is called more
   // than once, it causes hang on puglish side. And UpdateTexImage needs to
   // be called on render thread, since the SurfaceTexture is consumed on render
   // thread.
 
   MOZ_ASSERT(RenderThread::IsInRenderThread());
+  MOZ_ASSERT(mPrepareStatus == STATUS_NONE);
 
   EnsureAttachedToGLContext();
 
-  if (mSurfTex && mSurfTex->IsSingleBuffer() && !mIsPrepared) {
+  if (mContinuousUpdate) {
+    return;
+  }
+
+  mPrepareStatus = STATUS_PREPARE_NEEDED;
+
+  if (mSurfTex && mSurfTex->IsSingleBuffer()) {
+    // When SurfaceTexture is single buffer mode, it is OK to call
+    // UpdateTexImage() here.
     mSurfTex->UpdateTexImage();
-    mIsPrepared = true;
+    mPrepareStatus = STATUS_PREPARED;
   }
 }
 
@@ -156,11 +164,19 @@ void RenderAndroidSurfaceTextureHostOGL::NotifyNotUsed() {
 
   EnsureAttachedToGLContext();
 
-  if (mSurfTex && mSurfTex->IsSingleBuffer() && mIsPrepared) {
+  if (mSurfTex && mSurfTex->IsSingleBuffer() &&
+      mPrepareStatus == STATUS_PREPARED) {
+    // Release SurfaceTexture's buffer to client side.
     mGL->MakeCurrent();
     mSurfTex->ReleaseTexImage();
-    mIsPrepared = false;
+  } else if (mSurfTex && mPrepareStatus == STATUS_PREPARE_NEEDED) {
+    // This could happen when video frame was skipped. UpdateTexImage() neeeds
+    // to be called for adjusting SurfaceTexture's buffer status.
+    MOZ_ASSERT(!mSurfTex->IsSingleBuffer());
+    mSurfTex->UpdateTexImage();
   }
+
+  mPrepareStatus = STATUS_NONE;
 }
 
 }  // namespace wr
