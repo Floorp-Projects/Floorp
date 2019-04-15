@@ -284,6 +284,9 @@ class Chrome(BrowserSetup):
         # Allow WebRTC tests to call getUserMedia.
         kwargs["binary_args"] += ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"]
 
+        # Shorten delay for Reporting <https://w3c.github.io/reporting/>.
+        kwargs["binary_args"].append("--short-reporting-delay")
+
 
 class ChromeAndroid(BrowserSetup):
     name = "chrome_android"
