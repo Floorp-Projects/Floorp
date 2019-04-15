@@ -863,6 +863,12 @@ impl RenderBackend {
             while let Ok(msg) = self.scene_rx.try_recv() {
                 match msg {
                     SceneBuilderResult::Transactions(mut txns, result_tx) => {
+                        self.resource_cache.before_frames(SystemTime::now());
+                        self.maybe_force_nop_documents(
+                            &mut frame_counter,
+                            &mut profile_counters,
+                            |document_id| txns.iter().any(|txn| txn.document_id == document_id));
+
                         for mut txn in txns.drain(..) {
                             let has_built_scene = txn.built_scene.is_some();
                             if let Some(doc) = self.documents.get_mut(&txn.document_id) {
@@ -915,6 +921,7 @@ impl RenderBackend {
                                 has_built_scene,
                             );
                         }
+                        self.resource_cache.after_frames();
                     },
                     SceneBuilderResult::FlushComplete(tx) => {
                         tx.send(()).ok();
@@ -1274,6 +1281,12 @@ impl RenderBackend {
                 }
             }
         } else {
+            self.resource_cache.before_frames(SystemTime::now());
+            self.maybe_force_nop_documents(
+                frame_counter,
+                profile_counters,
+                |document_id| txns.iter().any(|txn| txn.document_id == document_id));
+
             for mut txn in txns {
                 self.update_document(
                     txn.document_id,
@@ -1288,6 +1301,8 @@ impl RenderBackend {
                     false
                 );                
             }
+
+            self.resource_cache.after_frames();
             return;
         }
 
@@ -1298,6 +1313,38 @@ impl RenderBackend {
         };
 
         tx.send(SceneBuilderRequest::Transactions(txns)).unwrap();
+    }
+
+    /// In certain cases, resources shared by multiple documents have to run
+    /// maintenance operations, like cleaning up unused cache items. In those
+    /// cases, we are forced to build frames for all documents, however we
+    /// may not have a transaction ready for every document - this method
+    /// calls update_document with the details of a fake, nop transaction just
+    /// to force a frame build.
+    fn maybe_force_nop_documents<F>(&mut self,
+                                    frame_counter: &mut u32,
+                                    profile_counters: &mut BackendProfileCounters,
+                                    document_already_present: F) where
+        F: Fn(DocumentId) -> bool {
+        if self.resource_cache.requires_frame_build() {
+            let nop_documents : Vec<DocumentId> = self.documents.keys()
+                .cloned()
+                .filter(|key| !document_already_present(*key))
+                .collect();
+            for &document_id in &nop_documents {
+                self.update_document(
+                    document_id,
+                    Vec::default(),
+                    None,
+                    Vec::default(),
+                    Vec::default(),
+                    false,
+                    false,
+                    frame_counter,
+                    profile_counters,
+                    false);
+            }
+        }
     }
 
     fn update_document(
@@ -1368,7 +1415,8 @@ impl RenderBackend {
         }
 
         // Avoid re-building the frame if the current built frame is still valid.
-        let build_frame = render_frame && !doc.frame_is_valid;
+        let build_frame = (render_frame && !doc.frame_is_valid) ||
+            self.resource_cache.requires_frame_build();
 
         // Request composite is true when we want to composite frame even when
         // there is no frame update. This happens when video frame is updated under
