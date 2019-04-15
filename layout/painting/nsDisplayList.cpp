@@ -10285,10 +10285,31 @@ PaintTelemetry::AutoRecord::~AutoRecord() {
 
 }  // namespace mozilla
 
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+static nsIFrame* GetSelfOrPlaceholderFor(nsIFrame* aFrame) {
+  if (aFrame->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
+    return aFrame;
+  }
+
+  if ((aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
+      !aFrame->GetPrevInFlow()) {
+    return aFrame->GetPlaceholderFrame();
+  }
+
+  return aFrame;
+}
+
+static nsIFrame* GetAncestorFor(nsIFrame* aFrame) {
+  nsIFrame* f = GetSelfOrPlaceholderFor(aFrame);
+  MOZ_ASSERT(f);
+  return nsLayoutUtils::GetCrossDocParentFrame(f);
+}
+#endif
+
 nsDisplayListBuilder::AutoBuildingDisplayList::AutoBuildingDisplayList(
     nsDisplayListBuilder* aBuilder, nsIFrame* aForChild,
     const nsRect& aVisibleRect, const nsRect& aDirtyRect,
-    const bool aIsTransformed)
+    const bool aIsTransformed, RecalcInInvalidSubtree aRecalcInvalidSubtree)
     : mBuilder(aBuilder),
       mPrevFrame(aBuilder->mCurrentFrame),
       mPrevReferenceFrame(aBuilder->mCurrentReferenceFrame),
@@ -10302,6 +10323,15 @@ nsDisplayListBuilder::AutoBuildingDisplayList::AutoBuildingDisplayList(
           aBuilder->mAncestorHasApzAwareEventHandler),
       mPrevBuildingInvisibleItems(aBuilder->mBuildingInvisibleItems),
       mPrevInInvalidSubtree(aBuilder->mInInvalidSubtree) {
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
+  // Validate that aForChild is being visited from it's parent frame if
+  // recalculation of mInInvalidSubtree isn't requested.
+  const nsIFrame* ancestor = GetAncestorFor(aForChild);
+  MOZ_DIAGNOSTIC_ASSERT(aRecalcInvalidSubtree ==
+                            nsDisplayListBuilder::RIIS_YES ||
+                        aForChild == mPrevFrame || ancestor == mPrevFrame);
+#endif
+
   if (aIsTransformed) {
     aBuilder->mCurrentOffsetToReferenceFrame = nsPoint();
     aBuilder->mCurrentReferenceFrame = aForChild;
@@ -10326,8 +10356,12 @@ nsDisplayListBuilder::AutoBuildingDisplayList::AutoBuildingDisplayList(
 
   MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(
       aBuilder->RootReferenceFrame(), *aBuilder->mCurrentAGR));
-  aBuilder->mInInvalidSubtree =
-      aBuilder->mInInvalidSubtree || aForChild->IsFrameModified();
+  if (!aRecalcInvalidSubtree) {
+    aBuilder->mInInvalidSubtree = aBuilder->mInInvalidSubtree ||
+      aForChild->IsFrameModified();
+  } else {
+    aBuilder->mInInvalidSubtree = AnyContentAncestorModified(aForChild);
+  }
   aBuilder->mCurrentFrame = aForChild;
   aBuilder->mVisibleRect = aVisibleRect;
   aBuilder->mDirtyRect =
