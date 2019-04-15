@@ -14,6 +14,7 @@ class UAWidgetsChild extends ActorChild {
     super(dispatcher);
 
     this.widgets = new WeakMap();
+    this.prefsCache = new Map();
   }
 
   handleEvent(aEvent) {
@@ -49,6 +50,7 @@ class UAWidgetsChild extends ActorChild {
   setupWidget(aElement) {
     let uri;
     let widgetName;
+    let prefKeys = [];
     switch (aElement.localName) {
       case "video":
       case "audio":
@@ -89,7 +91,9 @@ class UAWidgetsChild extends ActorChild {
       Services.scriptloader.loadSubScript(uri, sandbox);
     }
 
-    let widget = new sandbox[widgetName](shadowRoot);
+    let prefs = Cu.cloneInto(this.getPrefsForUAWidget(widgetName, prefKeys), sandbox);
+
+    let widget = new sandbox[widgetName](shadowRoot, prefs);
     if (!isSystemPrincipal) {
       widget = widget.wrappedJSObject;
     }
@@ -114,5 +118,33 @@ class UAWidgetsChild extends ActorChild {
       }
     }
     this.widgets.delete(aElement);
+  }
+
+  getPrefsForUAWidget(aWidgetName, aPrefKeys) {
+    let result = this.prefsCache.get(aWidgetName);
+    if (result) {
+      return result;
+    }
+
+    result = {};
+    for (let key of aPrefKeys) {
+      switch (Services.prefs.getPrefType(key)) {
+        case Ci.nsIPrefBranch.PREF_BOOL: {
+          result[key] = Services.prefs.getBoolPref(key);
+          break;
+        }
+        case Ci.nsIPrefBranch.PREF_INT: {
+          result[key] = Services.prefs.getIntPref(key);
+          break;
+        }
+        case Ci.nsIPrefBranch.PREF_STRING: {
+          result[key] = Services.prefs.getStringPref(key);
+          break;
+        }
+      }
+    }
+
+    this.prefsCache.set(aWidgetName, result);
+    return result;
   }
 }
