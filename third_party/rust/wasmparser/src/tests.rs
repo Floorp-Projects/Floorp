@@ -27,6 +27,8 @@ mod simple_tests {
         operator_config: OperatorValidatorConfig {
             enable_threads: true,
             enable_reference_types: true,
+            enable_simd: true,
+            enable_bulk_memory: true,
         },
         mutable_global_imports: true,
     });

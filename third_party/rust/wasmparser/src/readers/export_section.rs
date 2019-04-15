@@ -20,7 +20,7 @@ use super::{
 
 #[derive(Debug, Copy, Clone)]
 pub struct Export<'a> {
-    pub field: &'a [u8],
+    pub field: &'a str,
     pub kind: ExternalKind,
     pub index: u32,
 }

@@ -29,7 +29,7 @@ use binary_reader::BinaryReader;
 
 use primitives::{
     BinaryReaderError, ExternalKind, FuncType, GlobalType, ImportSectionEntryType, MemoryImmediate,
-    MemoryType, Operator, ResizableLimits, Result, SectionCode, TableType, Type,
+    MemoryType, Operator, ResizableLimits, Result, SIMDLineIndex, SectionCode, TableType, Type,
 };
 
 use parser::{Parser, ParserInput, ParserState, WasmDecoder};
@@ -128,6 +128,7 @@ enum SectionOrderState {
     Export,
     Start,
     Element,
+    DataCount,
     Code,
     Data,
 }
@@ -146,6 +147,7 @@ impl SectionOrderState {
             SectionCode::Element => Some(SectionOrderState::Element),
             SectionCode::Code => Some(SectionOrderState::Code),
             SectionCode::Data => Some(SectionOrderState::Data),
+            SectionCode::DataCount => Some(SectionOrderState::DataCount),
             _ => None,
         }
     }
@@ -302,6 +304,8 @@ pub trait WasmModuleResources {
     fn memories(&self) -> &[MemoryType];
     fn globals(&self) -> &[GlobalType];
     fn func_type_indices(&self) -> &[u32];
+    fn element_count(&self) -> u32;
+    fn data_count(&self) -> u32;
 }
 
 type OperatorValidatorResult<T> = result::Result<T, &'static str>;
@@ -310,11 +314,15 @@ type OperatorValidatorResult<T> = result::Result<T, &'static str>;
 pub struct OperatorValidatorConfig {
     pub enable_threads: bool,
     pub enable_reference_types: bool,
+    pub enable_simd: bool,
+    pub enable_bulk_memory: bool,
 }
 
 const DEFAULT_OPERATOR_VALIDATOR_CONFIG: OperatorValidatorConfig = OperatorValidatorConfig {
     enable_threads: false,
     enable_reference_types: false,
+    enable_simd: false,
+    enable_bulk_memory: false,
 };
 
 struct OperatorValidator {
@@ -453,7 +461,7 @@ impl OperatorValidator {
         }
         let block = func_state.block_at(relative_depth as usize);
         if block.jump_to_top {
-            if !func_state.assert_last_block_stack_len_exact(reserve_items) {
+            if !func_state.assert_block_stack_len(0, reserve_items) {
                 return Err("stack size does not match target loop type");
             }
             return Ok(());
@@ -549,12 +557,33 @@ impl OperatorValidator {
         Ok(())
     }
 
+    fn check_simd_enabled(&self) -> OperatorValidatorResult<()> {
+        if !self.config.enable_simd {
+            return Err("SIMD support is not enabled");
+        }
+        Ok(())
+    }
+
+    fn check_bulk_memory_enabled(&self) -> OperatorValidatorResult<()> {
+        if !self.config.enable_bulk_memory {
+            return Err("bulk memory support is not enabled");
+        }
+        Ok(())
+    }
+
     fn check_shared_memarg_wo_align(
         &self,
         _: &MemoryImmediate,
         resources: &WasmModuleResources,
     ) -> OperatorValidatorResult<()> {
         self.check_shared_memory_index(0, resources)?;
+        Ok(())
+    }
+
+    fn check_simd_line_index(&self, index: SIMDLineIndex, max: u8) -> OperatorValidatorResult<()> {
+        if index >= max {
+            return Err("SIMD index out of bounds");
+        }
         Ok(())
     }
 
@@ -1244,6 +1273,338 @@ impl OperatorValidator {
                 self.check_operands(func_state, &[Type::AnyRef])?;
                 OperatorAction::ChangeFrameWithType(0, Type::I32)
             }
+            Operator::V128Load { ref memarg } => {
+                self.check_simd_enabled()?;
+                self.check_memarg(memarg, 4, resources)?;
+                self.check_operands_1(func_state, Type::I32)?;
+                OperatorAction::ChangeFrameWithType(1, Type::V128)
+            }
+            Operator::V128Store { ref memarg } => {
+                self.check_simd_enabled()?;
+                self.check_memarg(memarg, 4, resources)?;
+                self.check_operands_2(func_state, Type::I32, Type::V128)?;
+                OperatorAction::ChangeFrame(2)
+            }
+            Operator::V128Const { .. } => {
+                self.check_simd_enabled()?;
+                OperatorAction::ChangeFrameWithType(0, Type::V128)
+            }
+            Operator::V8x16Shuffle { ref lines } => {
+                self.check_simd_enabled()?;
+                self.check_operands_2(func_state, Type::V128, Type::V128)?;
+                for i in lines {
+                    self.check_simd_line_index(*i, 32)?;
+                }
+                OperatorAction::ChangeFrameWithType(2, Type::V128)
+            }
+            Operator::I8x16Splat | Operator::I16x8Splat | Operator::I32x4Splat => {
+                self.check_simd_enabled()?;
+                self.check_operands_1(func_state, Type::I32)?;
+                OperatorAction::ChangeFrameWithType(1, Type::V128)
+            }
+            Operator::I64x2Splat => {
+                self.check_simd_enabled()?;
+                self.check_operands_1(func_state, Type::I64)?;
+                OperatorAction::ChangeFrameWithType(1, Type::V128)
+            }
+            Operator::F32x4Splat => {
+                self.check_simd_enabled()?;
+                self.check_operands_1(func_state, Type::F32)?;
+                OperatorAction::ChangeFrameWithType(1, Type::V128)
+            }
+            Operator::F64x2Splat => {
+                self.check_simd_enabled()?;
+                self.check_operands_1(func_state, Type::F64)?;
+                OperatorAction::ChangeFrameWithType(1, Type::V128)
+            }
+            Operator::I8x16ExtractLaneS { line } | Operator::I8x16ExtractLaneU { line } => {
+                self.check_simd_enabled()?;
+                self.check_simd_line_index(line, 16)?;
+                self.check_operands_1(func_state, Type::V128)?;
+                OperatorAction::ChangeFrameWithType(1, Type::I32)
+            }
+            Operator::I16x8ExtractLaneS { line } | Operator::I16x8ExtractLaneU { line } => {
+                self.check_simd_enabled()?;
+                self.check_simd_line_index(line, 8)?;
+                self.check_operands_1(func_state, Type::V128)?;
+                OperatorAction::ChangeFrameWithType(1, Type::I32)
+            }
+            Operator::I32x4ExtractLane { line } => {
+                self.check_simd_enabled()?;
+                self.check_simd_line_index(line, 4)?;
+                self.check_operands_1(func_state, Type::V128)?;
+                OperatorAction::ChangeFrameWithType(1, Type::I32)
+            }
+            Operator::I8x16ReplaceLane { line } => {
+                self.check_simd_enabled()?;
+                self.check_simd_line_index(line, 16)?;
+                self.check_operands_2(func_state, Type::V128, Type::I32)?;
+                OperatorAction::ChangeFrameWithType(2, Type::V128)
+            }
+            Operator::I16x8ReplaceLane { line } => {
+                self.check_simd_enabled()?;
+                self.check_simd_line_index(line, 8)?;
+                self.check_operands_2(func_state, Type::V128, Type::I32)?;
+                OperatorAction::ChangeFrameWithType(2, Type::V128)
+            }
+            Operator::I32x4ReplaceLane { line } => {
+                self.check_simd_enabled()?;
+                self.check_simd_line_index(line, 4)?;
+                self.check_operands_2(func_state, Type::V128, Type::I32)?;
+                OperatorAction::ChangeFrameWithType(2, Type::V128)
+            }
+            Operator::I64x2ExtractLane { line } => {
+                self.check_simd_enabled()?;
+                self.check_simd_line_index(line, 2)?;
+                self.check_operands_1(func_state, Type::V128)?;
+                OperatorAction::ChangeFrameWithType(1, Type::I64)
+            }
+            Operator::I64x2ReplaceLane { line } => {
+                self.check_simd_enabled()?;
+                self.check_simd_line_index(line, 2)?;
+                self.check_operands_2(func_state, Type::V128, Type::I64)?;
+                OperatorAction::ChangeFrameWithType(2, Type::V128)
+            }
+            Operator::F32x4ExtractLane { line } => {
+                self.check_simd_enabled()?;
+                self.check_simd_line_index(line, 4)?;
+                self.check_operands_1(func_state, Type::V128)?;
+                OperatorAction::ChangeFrameWithType(1, Type::F32)
+            }
+            Operator::F32x4ReplaceLane { line } => {
+                self.check_simd_enabled()?;
+                self.check_simd_line_index(line, 4)?;
+                self.check_operands_2(func_state, Type::V128, Type::F32)?;
+                OperatorAction::ChangeFrameWithType(2, Type::V128)
+            }
+            Operator::F64x2ExtractLane { line } => {
+                self.check_simd_enabled()?;
+                self.check_simd_line_index(line, 2)?;
+                self.check_operands_1(func_state, Type::V128)?;
+                OperatorAction::ChangeFrameWithType(1, Type::F64)
+            }
+            Operator::F64x2ReplaceLane { line } => {
+                self.check_simd_enabled()?;
+                self.check_simd_line_index(line, 2)?;
+                self.check_operands_2(func_state, Type::V128, Type::F64)?;
+                OperatorAction::ChangeFrameWithType(2, Type::V128)
+            }
+            Operator::I8x16Eq
+            | Operator::I8x16Ne
+            | Operator::I8x16LtS
+            | Operator::I8x16LtU
+            | Operator::I8x16GtS
+            | Operator::I8x16GtU
+            | Operator::I8x16LeS
+            | Operator::I8x16LeU
+            | Operator::I8x16GeS
+            | Operator::I8x16GeU
+            | Operator::I16x8Eq
+            | Operator::I16x8Ne
+            | Operator::I16x8LtS
+            | Operator::I16x8LtU
+            | Operator::I16x8GtS
+            | Operator::I16x8GtU
+            | Operator::I16x8LeS
+            | Operator::I16x8LeU
+            | Operator::I16x8GeS
+            | Operator::I16x8GeU
+            | Operator::I32x4Eq
+            | Operator::I32x4Ne
+            | Operator::I32x4LtS
+            | Operator::I32x4LtU
+            | Operator::I32x4GtS
+            | Operator::I32x4GtU
+            | Operator::I32x4LeS
+            | Operator::I32x4LeU
+            | Operator::I32x4GeS
+            | Operator::I32x4GeU
+            | Operator::F32x4Eq
+            | Operator::F32x4Ne
+            | Operator::F32x4Lt
+            | Operator::F32x4Gt
+            | Operator::F32x4Le
+            | Operator::F32x4Ge
+            | Operator::F64x2Eq
+            | Operator::F64x2Ne
+            | Operator::F64x2Lt
+            | Operator::F64x2Gt
+            | Operator::F64x2Le
+            | Operator::F64x2Ge
+            | Operator::V128And
+            | Operator::V128Or
+            | Operator::V128Xor
+            | Operator::I8x16Add
+            | Operator::I8x16AddSaturateS
+            | Operator::I8x16AddSaturateU
+            | Operator::I8x16Sub
+            | Operator::I8x16SubSaturateS
+            | Operator::I8x16SubSaturateU
+            | Operator::I8x16Mul
+            | Operator::I16x8Add
+            | Operator::I16x8AddSaturateS
+            | Operator::I16x8AddSaturateU
+            | Operator::I16x8Sub
+            | Operator::I16x8SubSaturateS
+            | Operator::I16x8SubSaturateU
+            | Operator::I16x8Mul
+            | Operator::I32x4Add
+            | Operator::I32x4Sub
+            | Operator::I32x4Mul
+            | Operator::I64x2Add
+            | Operator::I64x2Sub
+            | Operator::F32x4Add
+            | Operator::F32x4Sub
+            | Operator::F32x4Mul
+            | Operator::F32x4Div
+            | Operator::F32x4Min
+            | Operator::F32x4Max
+            | Operator::F64x2Add
+            | Operator::F64x2Sub
+            | Operator::F64x2Mul
+            | Operator::F64x2Div
+            | Operator::F64x2Min
+            | Operator::F64x2Max => {
+                self.check_simd_enabled()?;
+                self.check_operands_2(func_state, Type::V128, Type::V128)?;
+                OperatorAction::ChangeFrameWithType(2, Type::V128)
+            }
+            Operator::V128Not
+            | Operator::I8x16Neg
+            | Operator::I16x8Neg
+            | Operator::I32x4Neg
+            | Operator::I64x2Neg
+            | Operator::F32x4Abs
+            | Operator::F32x4Neg
+            | Operator::F32x4Sqrt
+            | Operator::F64x2Abs
+            | Operator::F64x2Neg
+            | Operator::F64x2Sqrt
+            | Operator::I32x4TruncSF32x4Sat
+            | Operator::I32x4TruncUF32x4Sat
+            | Operator::I64x2TruncSF64x2Sat
+            | Operator::I64x2TruncUF64x2Sat
+            | Operator::F32x4ConvertSI32x4
+            | Operator::F32x4ConvertUI32x4
+            | Operator::F64x2ConvertSI64x2
+            | Operator::F64x2ConvertUI64x2 => {
+                self.check_simd_enabled()?;
+                self.check_operands_1(func_state, Type::V128)?;
+                OperatorAction::ChangeFrameWithType(1, Type::V128)
+            }
+            Operator::V128Bitselect => {
+                self.check_simd_enabled()?;
+                self.check_operands(func_state, &[Type::V128, Type::V128, Type::V128])?;
+                OperatorAction::ChangeFrameWithType(2, Type::V128)
+            }
+            Operator::I8x16AnyTrue
+            | Operator::I8x16AllTrue
+            | Operator::I16x8AnyTrue
+            | Operator::I16x8AllTrue
+            | Operator::I32x4AnyTrue
+            | Operator::I32x4AllTrue
+            | Operator::I64x2AnyTrue
+            | Operator::I64x2AllTrue => {
+                self.check_simd_enabled()?;
+                self.check_operands_1(func_state, Type::V128)?;
+                OperatorAction::ChangeFrameWithType(1, Type::I32)
+            }
+            Operator::I8x16Shl
+            | Operator::I8x16ShrS
+            | Operator::I8x16ShrU
+            | Operator::I16x8Shl
+            | Operator::I16x8ShrS
+            | Operator::I16x8ShrU
+            | Operator::I32x4Shl
+            | Operator::I32x4ShrS
+            | Operator::I32x4ShrU
+            | Operator::I64x2Shl
+            | Operator::I64x2ShrS
+            | Operator::I64x2ShrU => {
+                self.check_simd_enabled()?;
+                self.check_operands_2(func_state, Type::V128, Type::I32)?;
+                OperatorAction::ChangeFrameWithType(1, Type::V128)
+            }
+
+            Operator::MemoryInit { segment } => {
+                self.check_bulk_memory_enabled()?;
+                if segment >= resources.data_count() {
+                    return Err("segment index out of bounds");
+                }
+                self.check_memory_index(0, resources)?;
+                self.check_operands(func_state, &[Type::I32, Type::I32, Type::I32])?;
+                OperatorAction::ChangeFrame(3)
+            }
+            Operator::DataDrop { segment } => {
+                self.check_bulk_memory_enabled()?;
+                if segment >= resources.data_count() {
+                    return Err("segment index out of bounds");
+                }
+                OperatorAction::None
+            }
+            Operator::MemoryCopy | Operator::MemoryFill => {
+                self.check_bulk_memory_enabled()?;
+                self.check_memory_index(0, resources)?;
+                self.check_operands(func_state, &[Type::I32, Type::I32, Type::I32])?;
+                OperatorAction::ChangeFrame(3)
+            }
+            Operator::TableInit { segment } => {
+                self.check_bulk_memory_enabled()?;
+                if segment >= resources.element_count() {
+                    return Err("segment index out of bounds");
+                }
+                if 0 >= resources.tables().len() {
+                    return Err("table index out of bounds");
+                }
+                self.check_operands(func_state, &[Type::I32, Type::I32, Type::I32])?;
+                OperatorAction::ChangeFrame(3)
+            }
+            Operator::ElemDrop { segment } => {
+                self.check_bulk_memory_enabled()?;
+                if segment >= resources.element_count() {
+                    return Err("segment index out of bounds");
+                }
+                OperatorAction::None
+            }
+            Operator::TableCopy => {
+                self.check_bulk_memory_enabled()?;
+                if 0 >= resources.tables().len() {
+                    return Err("table index out of bounds");
+                }
+                self.check_operands(func_state, &[Type::I32, Type::I32, Type::I32])?;
+                OperatorAction::ChangeFrame(3)
+            }
+            Operator::TableGet { table } => {
+                self.check_reference_types_enabled()?;
+                if table as usize >= resources.tables().len() {
+                    return Err("table index out of bounds");
+                }
+                self.check_operands(func_state, &[Type::I32])?;
+                OperatorAction::ChangeFrameWithType(1, Type::AnyRef)
+            }
+            Operator::TableSet { table } => {
+                self.check_reference_types_enabled()?;
+                if table as usize >= resources.tables().len() {
+                    return Err("table index out of bounds");
+                }
+                self.check_operands(func_state, &[Type::I32, Type::AnyRef])?;
+                OperatorAction::ChangeFrame(2)
+            }
+            Operator::TableGrow { table } => {
+                self.check_reference_types_enabled()?;
+                if table as usize >= resources.tables().len() {
+                    return Err("table index out of bounds");
+                }
+                self.check_operands(func_state, &[Type::I32])?;
+                OperatorAction::ChangeFrameWithType(1, Type::I32)
+            }
+            Operator::TableSize { table } => {
+                self.check_reference_types_enabled()?;
+                if table as usize >= resources.tables().len() {
+                    return Err("table index out of bounds");
+                }
+                OperatorAction::ChangeFrameWithType(1, Type::I32)
+            }
         })
     }
 
@@ -1278,11 +1639,14 @@ pub struct ValidatingParser<'a> {
     tables: Vec<TableType>,
     memories: Vec<MemoryType>,
     globals: Vec<GlobalType>,
+    element_count: u32,
+    data_count: Option<u32>,
+    data_found: u32,
     func_type_indices: Vec<u32>,
     current_func_index: u32,
     func_imports_count: u32,
     init_expression_state: Option<InitExpressionState>,
-    exported_names: HashSet<Vec<u8>>,
+    exported_names: HashSet<String>,
     current_operator_validator: Option<OperatorValidator>,
     config: ValidatingParserConfig,
 }
@@ -1307,6 +1671,14 @@ impl<'a> WasmModuleResources for ValidatingParser<'a> {
     fn func_type_indices(&self) -> &[u32] {
         &self.func_type_indices
     }
+
+    fn element_count(&self) -> u32 {
+        self.element_count
+    }
+
+    fn data_count(&self) -> u32 {
+        self.data_count.unwrap_or(0)
+    }
 }
 
 impl<'a> ValidatingParser<'a> {
@@ -1327,6 +1699,9 @@ impl<'a> ValidatingParser<'a> {
             init_expression_state: None,
             exported_names: HashSet::new(),
             config: config.unwrap_or(DEFAULT_VALIDATING_PARSER_CONFIG),
+            element_count: 0,
+            data_count: None,
+            data_found: 0,
         }
     }
 
@@ -1344,19 +1719,9 @@ impl<'a> ValidatingParser<'a> {
         }))
     }
 
-    fn check_utf8(&self, bytes: &[u8]) -> ValidatorResult<'a, ()> {
-        match str::from_utf8(bytes) {
-            Ok(_) => Ok(()),
-            Err(utf8_error) => match utf8_error.error_len() {
-                None => self.create_error("Invalid utf-8: unexpected end of string"),
-                Some(_) => self.create_error("Invalid utf-8: unexpected byte"),
-            },
-        }
-    }
-
     fn check_value_type(&self, ty: Type) -> ValidatorResult<'a, ()> {
         match ty {
-            Type::I32 | Type::I64 | Type::F32 | Type::F64 => Ok(()),
+            Type::I32 | Type::I64 | Type::F32 | Type::F64 | Type::V128 => Ok(()),
             _ => self.create_error("invalid value type"),
         }
     }
@@ -1413,14 +1778,7 @@ impl<'a> ValidatingParser<'a> {
         self.check_value_type(global_type.content_type)
     }
 
-    fn check_import_entry(
-        &self,
-        module: &[u8],
-        field: &[u8],
-        import_type: &ImportSectionEntryType,
-    ) -> ValidatorResult<'a, ()> {
-        self.check_utf8(module)?;
-        self.check_utf8(field)?;
+    fn check_import_entry(&self, import_type: &ImportSectionEntryType) -> ValidatorResult<'a, ()> {
         match *import_type {
             ImportSectionEntryType::Function(type_index) => {
                 if self.func_type_indices.len() >= MAX_WASM_FUNCTIONS {
@@ -1481,12 +1839,11 @@ impl<'a> ValidatingParser<'a> {
 
     fn check_export_entry(
         &self,
-        field: &[u8],
+        field: &str,
         kind: ExternalKind,
         index: u32,
     ) -> ValidatorResult<'a, ()> {
-        self.check_utf8(field)?;
-        if self.exported_names.contains(&Vec::from(field)) {
+        if self.exported_names.contains(field) {
             return self.create_error("non-unique export name");
         }
         match kind {
@@ -1532,9 +1889,6 @@ impl<'a> ValidatingParser<'a> {
 
     fn process_begin_section(&self, code: &SectionCode) -> ValidatorResult<'a, SectionOrderState> {
         let order_state = SectionOrderState::from_section_code(code);
-        if let SectionCode::Custom { name, .. } = *code {
-            self.check_utf8(name)?;
-        }
         Ok(match self.section_order_state {
             SectionOrderState::Initial => {
                 if order_state.is_none() {
@@ -1582,12 +1936,8 @@ impl<'a> ValidatingParser<'a> {
                     self.types.push(func_type.clone());
                 }
             }
-            ParserState::ImportSectionEntry {
-                module,
-                field,
-                ref ty,
-            } => {
-                let check = self.check_import_entry(module, field, ty);
+            ParserState::ImportSectionEntry { ref ty, .. } => {
+                let check = self.check_import_entry(ty);
                 if check.is_err() {
                     self.validation_error = check.err();
                 } else {
@@ -1666,12 +2016,19 @@ impl<'a> ValidatingParser<'a> {
             }
             ParserState::ExportSectionEntry { field, kind, index } => {
                 self.validation_error = self.check_export_entry(field, kind, index).err();
-                self.exported_names.insert(Vec::from(field));
+                self.exported_names.insert(field.to_string());
             }
             ParserState::StartSectionEntry(func_index) => {
                 self.validation_error = self.check_start(func_index).err();
             }
-            ParserState::BeginElementSectionEntry(table_index) => {
+            ParserState::DataCountSectionEntry(count) => {
+                self.data_count = Some(count);
+            }
+            ParserState::BeginPassiveElementSectionEntry(_ty) => {
+                self.element_count += 1;
+            }
+            ParserState::BeginActiveElementSectionEntry(table_index) => {
+                self.element_count += 1;
                 if table_index as usize >= self.tables.len() {
                     self.validation_error =
                         self.create_validation_error("element section table index out of bounds");
@@ -1738,7 +2095,10 @@ impl<'a> ValidatingParser<'a> {
                 self.current_func_index += 1;
                 self.current_operator_validator = None;
             }
-            ParserState::BeginDataSectionEntry(memory_index) => {
+            ParserState::BeginDataSectionEntryBody(_) => {
+                self.data_found += 1;
+            }
+            ParserState::BeginActiveDataSectionEntry(memory_index) => {
                 if memory_index as usize >= self.memories.len() {
                     self.validation_error =
                         self.create_validation_error("data section memory index out of bounds");
@@ -1748,6 +2108,22 @@ impl<'a> ValidatingParser<'a> {
                         global_count: self.globals.len(),
                         validated: false,
                     });
+                }
+            }
+            ParserState::EndWasm => {
+                if self.func_type_indices.len()
+                    != self.current_func_index as usize + self.func_imports_count as usize
+                {
+                    self.validation_error = self.create_validation_error(
+                        "function and code section have inconsistent lengths",
+                    );
+                }
+                if let Some(data_count) = self.data_count {
+                    if data_count != self.data_found {
+                        self.validation_error = self.create_validation_error(
+                            "data count section and passive data mismatch",
+                        );
+                    }
                 }
             }
             _ => (),

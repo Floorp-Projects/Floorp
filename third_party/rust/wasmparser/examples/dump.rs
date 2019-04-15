@@ -9,10 +9,6 @@ use wasmparser::Parser;
 use wasmparser::ParserState;
 use wasmparser::WasmDecoder;
 
-fn get_name(bytes: &[u8]) -> &str {
-    str::from_utf8(bytes).ok().unwrap()
-}
-
 fn main() {
     let args = env::args().collect::<Vec<_>>();
     if args.len() != 2 {
@@ -32,9 +28,7 @@ fn main() {
             } => {
                 println!(
                     "ExportSectionEntry {{ field: \"{}\", kind: {:?}, index: {} }}",
-                    get_name(field),
-                    kind,
-                    index
+                    field, kind, index
                 );
             }
             ParserState::ImportSectionEntry {
@@ -44,9 +38,7 @@ fn main() {
             } => {
                 println!(
                     "ImportSectionEntry {{ module: \"{}\", field: \"{}\", ty: {:?} }}",
-                    get_name(module),
-                    get_name(field),
-                    ty
+                    module, field, ty
                 );
             }
             ParserState::EndWasm => break,

@@ -20,10 +20,11 @@ use super::{
 };
 
 use super::{
-    read_sourcemappingurl_section_content, read_start_section_content, CodeSectionReader,
-    DataSectionReader, ElementSectionReader, ExportSectionReader, FunctionSectionReader,
-    GlobalSectionReader, ImportSectionReader, LinkingSectionReader, MemorySectionReader,
-    NameSectionReader, RelocSectionReader, TableSectionReader, TypeSectionReader,
+    read_data_count_section_content, read_sourcemappingurl_section_content,
+    read_start_section_content, CodeSectionReader, DataSectionReader, ElementSectionReader,
+    ExportSectionReader, FunctionSectionReader, GlobalSectionReader, ImportSectionReader,
+    LinkingSectionReader, MemorySectionReader, NameSectionReader, ProducersSectionReader,
+    RelocSectionReader, TableSectionReader, TypeSectionReader,
 };
 
 #[derive(Debug)]
@@ -167,6 +168,19 @@ impl<'a> Section<'a> {
         }
     }
 
+    pub fn get_producers_section_reader<'b>(&self) -> Result<ProducersSectionReader<'b>>
+    where
+        'a: 'b,
+    {
+        match self.code {
+            SectionCode::Custom {
+                kind: CustomSectionKind::Producers,
+                ..
+            } => ProducersSectionReader::new(self.data, self.offset),
+            _ => panic!("Invalid state for get_producers_section_reader"),
+        }
+    }
+
     pub fn get_linking_section_reader<'b>(&self) -> Result<LinkingSectionReader<'b>>
     where
         'a: 'b,
@@ -200,7 +214,14 @@ impl<'a> Section<'a> {
         }
     }
 
-    pub fn get_sourcemappingurl_section_content<'b>(&self) -> Result<&'b [u8]>
+    pub fn get_data_count_section_content(&self) -> Result<u32> {
+        match self.code {
+            SectionCode::DataCount => read_data_count_section_content(self.data, self.offset),
+            _ => panic!("Invalid state for get_data_count_section_content"),
+        }
+    }
+
+    pub fn get_sourcemappingurl_section_content<'b>(&self) -> Result<&'b str>
     where
         'a: 'b,
     {
@@ -220,7 +241,7 @@ impl<'a> Section<'a> {
         BinaryReader::new_with_offset(self.data, self.offset)
     }
 
-    pub(crate) fn get_range(&self) -> Range {
+    pub fn range(&self) -> Range {
         Range {
             start: self.offset,
             end: self.offset + self.data.len(),
