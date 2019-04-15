@@ -13150,7 +13150,7 @@
     "description": "Time spent in the paint pipeline for content in milliseconds."
   },
   "CONTENT_FULL_PAINT_TIME": {
-    "record_in_processes": ["main", "content"],
+    "record_in_processes": ["main", "content", "gpu"],
     "alert_emails": ["gfx-telemetry-alerts@mozilla.com", "jmuizelaar@mozilla.com", "dbolter@mozilla.com"],
     "bug_numbers": [1505858],
     "expires_in_version": "never",
