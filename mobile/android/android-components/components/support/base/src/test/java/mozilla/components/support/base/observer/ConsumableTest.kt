@@ -209,6 +209,50 @@ class ConsumableTest {
     }
 
     @Test
+    fun `callback gets invoked if value gets consumed`() {
+        var callbackInvoked = false
+
+        val consumable = Consumable.from(42) {
+            callbackInvoked = true
+        }
+
+        consumable.consume { false }
+
+        assertFalse(callbackInvoked)
+
+        consumable.consume { true }
+
+        assertTrue(callbackInvoked)
+    }
+
+    @Test
+    fun `callback gets invoked if one consumer in list consumes value`() {
+        var callbackInvoked = false
+
+        val consumable = Consumable.from(42) {
+            callbackInvoked = true
+        }
+
+        consumable.consumeBy(listOf<(Int) -> Boolean>(
+            { false },
+            { false },
+            { false },
+            { false }
+        ))
+
+        assertFalse(callbackInvoked)
+
+        consumable.consumeBy(listOf<(Int) -> Boolean>(
+            { false },
+            { false },
+            { true },
+            { false }
+        ))
+
+        assertTrue(callbackInvoked)
+    }
+
+    @Test
     fun `stream gets consumed in insertion order`() {
         val stream = Consumable.stream(1, 2, 3)
         val consumed = mutableListOf<Int>()

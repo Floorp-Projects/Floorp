@@ -6,9 +6,13 @@ package mozilla.components.support.base.observer
 
 /**
  * A generic wrapper for values that can get consumed.
+ *
+ * @param value The value to be wrapped.
+ * @param onConsume A callback that gets invoked if the wrapped value gets consumed.
  */
 class Consumable<T> private constructor(
-    internal var value: T?
+    internal var value: T?,
+    private val onConsume: (() -> Unit)? = null
 ) {
     /**
      * Invokes the given lambda and marks the value as consumed if the lambda returns true.
@@ -17,6 +21,7 @@ class Consumable<T> private constructor(
     fun consume(consumer: (value: T) -> Boolean): Boolean {
         return if (value?.let(consumer) == true) {
             value = null
+            onConsume?.invoke()
             true
         } else {
             false
@@ -34,6 +39,7 @@ class Consumable<T> private constructor(
 
         return if (results.contains(true)) {
             this.value = null
+            onConsume?.invoke()
             true
         } else {
             false
@@ -50,7 +56,7 @@ class Consumable<T> private constructor(
         /**
          * Creates a new Consumable wrapping the given value.
          */
-        fun <T> from(value: T): Consumable<T> = Consumable(value)
+        fun <T> from(value: T, onConsume: (() -> Unit)? = null): Consumable<T> = Consumable(value, onConsume)
 
         /**
          * Creates a new Consumable stream for the provided values.

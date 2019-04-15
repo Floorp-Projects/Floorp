@@ -45,7 +45,16 @@ permalink: /changelog/
    language specific headers to websites. Implementation in `browser-engine-gecko-nightly`.
 
 * **service-firefox-accounts**
-   *  The service no longer accepts a `successPath` option. Instead the service uses the OAuth `redirectUri`.
+   * The service no longer accepts a `successPath` option. Instead the service uses the OAuth `redirectUri`.
+
+* **support-base**
+  * Added optional callback to `Consumable` to get invoked once value gets consumed:
+
+  ```kotlin
+  val consumable = Consumable.from(42) {
+    // Value got consumed.
+  }
+  ```
 
 # 0.49.0
 
