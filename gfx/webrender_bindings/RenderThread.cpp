@@ -941,30 +941,41 @@ void wr_notifier_external_event(mozilla::wr::WrWindowId aWindowId,
 }
 
 void wr_schedule_render(mozilla::wr::WrWindowId aWindowId,
-                        mozilla::wr::WrDocumentId aDocumentId) {
+                        const mozilla::wr::WrDocumentId* aDocumentIds,
+                        size_t aDocumentIdsCount) {
   RefPtr<mozilla::layers::CompositorBridgeParent> cbp = mozilla::layers::
       CompositorBridgeParent::GetCompositorBridgeParentFromWindowId(aWindowId);
   if (cbp) {
-    cbp->ScheduleRenderOnCompositorThread(
-        Some(wr::RenderRootFromId(aDocumentId)));
+    InfallibleTArray<wr::RenderRoot> renderRoots;
+    renderRoots.SetLength(aDocumentIdsCount);
+    for (size_t i = 0; i < aDocumentIdsCount; ++i) {
+      renderRoots[i] = wr::RenderRootFromId(aDocumentIds[i]);
+    }
+    cbp->ScheduleRenderOnCompositorThread(renderRoots);
   }
 }
 
 static void NotifyDidSceneBuild(RefPtr<layers::CompositorBridgeParent> aBridge,
-                                wr::DocumentId aRenderRootId,
+                                const nsTArray<wr::RenderRoot>& aRenderRoots,
                                 RefPtr<wr::WebRenderPipelineInfo> aInfo) {
-  aBridge->NotifyDidSceneBuild(wr::RenderRootFromId(aRenderRootId), aInfo);
+  aBridge->NotifyDidSceneBuild(aRenderRoots, aInfo);
 }
 
 void wr_finished_scene_build(mozilla::wr::WrWindowId aWindowId,
-                             mozilla::wr::WrDocumentId aDocumentId,
+                             const mozilla::wr::WrDocumentId* aDocumentIds,
+                             size_t aDocumentIdsCount,
                              mozilla::wr::WrPipelineInfo aInfo) {
   RefPtr<mozilla::layers::CompositorBridgeParent> cbp = mozilla::layers::
       CompositorBridgeParent::GetCompositorBridgeParentFromWindowId(aWindowId);
   RefPtr<wr::WebRenderPipelineInfo> info = new wr::WebRenderPipelineInfo(aInfo);
   if (cbp) {
+    InfallibleTArray<wr::RenderRoot> renderRoots;
+    renderRoots.SetLength(aDocumentIdsCount);
+    for (size_t i = 0; i < aDocumentIdsCount; ++i) {
+      renderRoots[i] = wr::RenderRootFromId(aDocumentIds[i]);
+    }
     layers::CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
-        "NotifyDidSceneBuild", &NotifyDidSceneBuild, cbp, aDocumentId, info));
+        "NotifyDidSceneBuild", &NotifyDidSceneBuild, cbp, renderRoots, info));
   }
 }
 

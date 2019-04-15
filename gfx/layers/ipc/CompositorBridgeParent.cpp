@@ -650,11 +650,11 @@ void CompositorBridgeParent::ActorDestroy(ActorDestroyReason why) {
 }
 
 void CompositorBridgeParent::ScheduleRenderOnCompositorThread(
-    const Maybe<wr::RenderRoot>& aRenderRoot) {
+    const nsTArray<wr::RenderRoot>& aRenderRoots) {
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(NewRunnableMethod<Maybe<wr::RenderRoot>>(
+  CompositorLoop()->PostTask(NewRunnableMethod<nsTArray<wr::RenderRoot>>(
       "layers::CompositorBridgeParent::ScheduleComposition", this,
-      &CompositorBridgeParent::ScheduleComposition, aRenderRoot));
+      &CompositorBridgeParent::ScheduleComposition, aRenderRoots));
 }
 
 void CompositorBridgeParent::InvalidateOnCompositorThread() {
@@ -864,18 +864,14 @@ void CompositorBridgeParent::NotifyShadowTreeTransaction(
 }
 
 void CompositorBridgeParent::ScheduleComposition(
-    const Maybe<wr::RenderRoot>& aRenderRoot) {
+    const nsTArray<wr::RenderRoot>& aRenderRoots) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (mPaused) {
     return;
   }
 
   if (mWrBridge) {
-    if (aRenderRoot.isSome()) {
-      mWrBridge->ScheduleGenerateFrame(aRenderRoot);
-    } else {
-      mWrBridge->ScheduleGenerateFrameAllRenderRoots();
-    }
+    mWrBridge->ScheduleGenerateFrame(aRenderRoots);
   } else {
     mCompositorScheduler->ScheduleComposition();
   }
@@ -2064,14 +2060,15 @@ void CompositorBridgeParent::DidComposite(const VsyncId& aId,
 }
 
 void CompositorBridgeParent::NotifyDidSceneBuild(
-    wr::RenderRoot aRenderRoot, RefPtr<wr::WebRenderPipelineInfo> aInfo) {
+    const nsTArray<wr::RenderRoot>& aRenderRoots,
+    RefPtr<wr::WebRenderPipelineInfo> aInfo) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (mPaused) {
     return;
   }
 
   if (mWrBridge) {
-    mWrBridge->NotifyDidSceneBuild(aRenderRoot, aInfo);
+    mWrBridge->NotifyDidSceneBuild(aRenderRoots, aInfo);
   } else {
     mCompositorScheduler->ScheduleComposition();
   }
