@@ -14,7 +14,7 @@ class TestParent extends JSWindowActorParent {
     this.wrappedJSObject = this;
   }
 
-  recvAsyncMessage(aMessage) {
+  receiveMessage(aMessage) {
     switch (aMessage.name) {
       case "init":
         aMessage.data.initial =  true;
