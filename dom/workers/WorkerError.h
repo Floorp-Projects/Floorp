@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/WorkerCommon.h"
 #include "jsapi.h"
+#include "WorkerRef.h"
 
 namespace mozilla {
 
@@ -37,7 +38,9 @@ class WorkerErrorNote : public WorkerErrorBase {
 
 class WorkerPrivate;
 
-class WorkerErrorReport : public WorkerErrorBase {
+// The StructuredCloneHolder superclass is used to encode the error's stack
+// data, if there is any.
+class WorkerErrorReport : public WorkerErrorBase, public StructuredCloneHolder {
  public:
   nsString mLine;
   uint32_t mFlags;
@@ -45,7 +48,13 @@ class WorkerErrorReport : public WorkerErrorBase {
   bool mMutedError;
   nsTArray<WorkerErrorNote> mNotes;
 
-  WorkerErrorReport() : mFlags(0), mExnType(JSEXN_ERR), mMutedError(false) {}
+  // Hold a reference on the originating worker until the error has been
+  // processed.
+  RefPtr<ThreadSafeWorkerRef> mWorkerRef;
+
+  // Create a new error report. aWorkerPrivate represents the worker where the
+  // error originated.
+  explicit WorkerErrorReport(WorkerPrivate* aWorkerPrivate);
 
   void AssignErrorReport(JSErrorReport* aReport);
 
@@ -54,15 +63,17 @@ class WorkerErrorReport : public WorkerErrorBase {
   // (if any).
   static void ReportError(
       JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aFireAtScope,
-      DOMEventTargetHelper* aTarget, const WorkerErrorReport& aReport,
+      DOMEventTargetHelper* aTarget, UniquePtr<WorkerErrorReport> aReport,
       uint64_t aInnerWindowId,
       JS::Handle<JS::Value> aException = JS::NullHandleValue);
 
-  static void LogErrorToConsole(const WorkerErrorReport& aReport,
+  static void LogErrorToConsole(JSContext* aCx, WorkerErrorReport& aReport,
                                 uint64_t aInnerWindowId);
 
   static void LogErrorToConsole(const mozilla::dom::ErrorData& aReport,
-                                uint64_t aInnerWindowId);
+                                uint64_t aInnerWindowId,
+                                JS::HandleObject aStack = nullptr,
+                                JS::HandleObject aStackGlobal = nullptr);
 
   static void CreateAndDispatchGenericErrorRunnableToParent(
       WorkerPrivate* aWorkerPrivate);
