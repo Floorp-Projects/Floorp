@@ -1416,7 +1416,8 @@ impl RenderBackend {
 
         // Avoid re-building the frame if the current built frame is still valid.
         let build_frame = (render_frame && !doc.frame_is_valid) ||
-            self.resource_cache.requires_frame_build();
+            self.resource_cache.requires_frame_build() &&
+            doc.frame_builder.is_some();
 
         // Request composite is true when we want to composite frame even when
         // there is no frame update. This happens when video frame is updated under
