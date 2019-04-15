@@ -21,7 +21,6 @@
 #include <memory>
 #include <utility>
 
-#include "absl/memory/memory.h"
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
 #include "rtc_base/checks.h"
@@ -36,8 +35,6 @@ const char kDesktopRequestObjectPath[] =
 const char kSessionInterfaceName[] = "org.freedesktop.portal.Session";
 const char kRequestInterfaceName[] = "org.freedesktop.portal.Request";
 const char kScreenCastInterfaceName[] = "org.freedesktop.portal.ScreenCast";
-
-const int kBytesPerPixel = 4;
 
 // static
 void BaseCapturerPipeWire::OnStateChanged(void* data,
