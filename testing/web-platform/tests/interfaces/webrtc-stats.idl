@@ -72,6 +72,7 @@ dictionary RTCInboundRtpStreamStats : RTCReceivedRtpStreamStats {
              DOMHighResTimeStamp lastPacketReceivedTimestamp;
              double averageRtcpInterval;
              unsigned long fecPacketsReceived;
+             unsigned long fecPacketsDiscarded;
              unsigned long long bytesReceived;
              unsigned long packetsFailedDecryption;
              unsigned long packetsDuplicated;
