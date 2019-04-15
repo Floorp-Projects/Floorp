@@ -27,6 +27,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "jit/arm64/vixl/Debugger-vixl.h"
+#include "jit/arm64/vixl/MozCachingDecoder.h"
 #include "jit/arm64/vixl/Simulator-vixl.h"
 #include "jit/IonTypes.h"
 #include "js/UniquePtr.h"
@@ -154,13 +155,20 @@ void Simulator::init(Decoder* decoder, FILE* stream) {
 
 Simulator* Simulator::Current() {
   JSContext* cx = js::TlsContext.get();
-  MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(cx->runtime()));
+  if (!cx) {
+    return nullptr;
+  }
+  JSRuntime* rt = cx->runtime();
+  if (!rt) {
+    return nullptr;
+  }
+  MOZ_ASSERT(js::CurrentThreadCanAccessRuntime(rt));
   return cx->simulator();
 }
 
 
 Simulator* Simulator::Create() {
-  Decoder *decoder = js_new<vixl::Decoder>();
+  Decoder *decoder = js_new<Decoder>();
   if (!decoder)
     return nullptr;
 
@@ -168,14 +176,25 @@ Simulator* Simulator::Create() {
   // FIXME: We should free it at some point.
   // FIXME: Note that it can't be stored in the SimulatorRuntime due to lifetime conflicts.
   js::UniquePtr<Simulator> sim;
-  if (getenv("USE_DEBUGGER") != nullptr)
+  if (getenv("USE_DEBUGGER") != nullptr) {
     sim.reset(js_new<Debugger>(decoder, stdout));
-  else
+  } else {
     sim.reset(js_new<Simulator>(decoder, stdout));
+  }
 
   // Check if Simulator:init ran out of memory.
-  if (sim && sim->oom())
+  if (sim && sim->oom()) {
     return nullptr;
+  }
+
+#ifdef JS_CACHE_SIMULATOR_ARM64
+  // Register the simulator in the Simulator process to handle cache flushes
+  // across threads.
+  js::jit::AutoLockSimulatorCache alsc;
+  if (!SimulatorProcess::registerSimulator(sim.get())) {
+    return nullptr;
+  }
+#endif
 
   return sim.release();
 }
@@ -285,20 +304,6 @@ int64_t Simulator::call(uint8_t* entry, int argument_count, ...) {
 }
 
 
-// Protects the icache and redirection properties of the simulator.
-class AutoLockSimulatorCache : public js::LockGuard<js::Mutex>
-{
-  friend class Simulator;
-  using Base = js::LockGuard<js::Mutex>;
-
- public:
-  explicit AutoLockSimulatorCache()
-    : Base(SimulatorProcess::singleton_->lock_)
-  {
-  }
-};
-
-
 // When the generated code calls a VM function (masm.callWithABI) we need to
 // call that function instead of trying to execute it with the simulator
 // (because it's x64 code instead of AArch64 code). We do that by redirecting the VM
@@ -315,7 +320,6 @@ class Redirection
     next_(nullptr)
   {
     next_ = SimulatorProcess::redirection();
-    // TODO: Flush ICache?
     SimulatorProcess::setRedirection(this);
 
     Instruction* instr = (Instruction*)(&svcInstruction_);
@@ -328,7 +332,7 @@ class Redirection
   ABIFunctionType type() const { return type_; }
 
   static Redirection* Get(void* nativeFunction, ABIFunctionType type) {
-    AutoLockSimulatorCache alsr;
+    js::jit::AutoLockSimulatorCache alsr;
 
     // TODO: Store srt_ in the simulator for this assertion.
     // VIXL_ASSERT_IF(pt->simulator(), pt->simulator()->srt_ == srt);
@@ -713,9 +717,127 @@ Simulator::VisitCallRedirection(const Instruction* instr)
     printf("SVCRET\n");
 }
 
+#ifdef JS_CACHE_SIMULATOR_ARM64
+void
+Simulator::FlushICache()
+{
+  // Flush the caches recorded by the current thread as well as what got
+  // recorded from other threads before this call.
+  auto& vec = SimulatorProcess::getICacheFlushes(this);
+  for (auto& flush : vec) {
+    decoder_->FlushICache(flush.start, flush.length);
+  }
+  vec.clear();
+}
+
+void CachingDecoder::Decode(const Instruction* instr) {
+  InstDecodedKind state;
+  if (lastPage_ && lastPage_->contains(instr)) {
+    state = lastPage_->decode(instr);
+  } else {
+    uintptr_t key = SinglePageDecodeCache::PageStart(instr);
+    ICacheMap::AddPtr p = iCache_.lookupForAdd(key);
+    if (p) {
+      lastPage_ = p->value();
+      state = lastPage_->decode(instr);
+    } else {
+      js::AutoEnterOOMUnsafeRegion oomUnsafe;
+      SinglePageDecodeCache* newPage = js_new<SinglePageDecodeCache>(instr);
+      if (!newPage || !iCache_.add(p, key, newPage)) {
+        oomUnsafe.crash("Simulator SinglePageDecodeCache");
+      }
+      lastPage_ = newPage;
+      state = InstDecodedKind::NotDecodedYet;
+    }
+  }
+
+  switch (state) {
+  case InstDecodedKind::NotDecodedYet: {
+    cachingDecoder_.setDecodePtr(lastPage_->decodePtr(instr));
+    this->Decoder::Decode(instr);
+    break;
+  }
+#define CASE(A) \
+  case InstDecodedKind::A: { \
+    Visit##A(instr); \
+    break; \
+  }
+
+  VISITOR_LIST(CASE)
+#undef CASE
+  }
+}
+
+void CachingDecoder::FlushICache(void* start, size_t size) {
+  MOZ_ASSERT(uintptr_t(start) % vixl::kInstructionSize == 0);
+  MOZ_ASSERT(size % vixl::kInstructionSize == 0);
+  const uint8_t* it = reinterpret_cast<const uint8_t*>(start);
+  const uint8_t* end = it + size;
+  SinglePageDecodeCache* last = nullptr;
+  for (; it < end; it += vixl::kInstructionSize) {
+    auto instr = reinterpret_cast<const Instruction*>(it);
+    if (last && last->contains(instr)) {
+      last->clearDecode(instr);
+    } else {
+      uintptr_t key = SinglePageDecodeCache::PageStart(instr);
+      ICacheMap::Ptr p = iCache_.lookup(key);
+      if (p) {
+        last = p->value();
+        last->clearDecode(instr);
+      }
+    }
+  }
+}
+#endif
 
 }  // namespace vixl
 
+namespace js {
+namespace jit {
+
+#ifdef JS_CACHE_SIMULATOR_ARM64
+void SimulatorProcess::recordICacheFlush(void* start, size_t length) {
+  MOZ_ASSERT(singleton_->lock_.ownedByCurrentThread());
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  ICacheFlush range{start, length};
+  for (auto& s : singleton_->pendingFlushes_) {
+    if (!s.records.append(range)) {
+      oomUnsafe.crash("Simulator recordFlushICache");
+    }
+  }
+}
+
+SimulatorProcess::ICacheFlushes& SimulatorProcess::getICacheFlushes(Simulator* sim) {
+  MOZ_ASSERT(singleton_->lock_.ownedByCurrentThread());
+  for (auto& s : singleton_->pendingFlushes_) {
+    if (s.thread == sim) {
+      return s.records;
+    }
+  }
+  MOZ_CRASH("Simulator is not registered in the SimulatorProcess");
+}
+
+bool SimulatorProcess::registerSimulator(Simulator* sim) {
+  MOZ_ASSERT(singleton_->lock_.ownedByCurrentThread());
+  ICacheFlushes empty;
+  SimFlushes simFlushes{sim, std::move(empty)};
+  return singleton_->pendingFlushes_.append(std::move(simFlushes));
+}
+
+void SimulatorProcess::unregisterSimulator(Simulator* sim) {
+  MOZ_ASSERT(singleton_->lock_.ownedByCurrentThread());
+  for (auto& s : singleton_->pendingFlushes_) {
+    if (s.thread == sim) {
+      singleton_->pendingFlushes_.erase(&s);
+      return;
+    }
+  }
+  MOZ_CRASH("Simulator is not registered in the SimulatorProcess");
+}
+#endif // !JS_CACHE_SIMULATOR_ARM64
+
+} // namespace jit
+} // namespace js
 
 vixl::Simulator* JSContext::simulator() const {
   return simulator_;
