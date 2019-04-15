@@ -13,6 +13,13 @@ function testElements(baseid, callback)
       continue;
     }
 
+    // Ignore content inside a <button>  This can be removed if/when
+    // button switches to use shadow DOM.
+    let buttonParent = element.closest("button");
+    if (buttonParent && buttonParent !== element) {
+      continue;
+    }
+
     testElement(element);
   }
 

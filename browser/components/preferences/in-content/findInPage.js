@@ -332,6 +332,7 @@ var gSearchResultsPane = {
   async searchWithinNode(nodeObject, searchPhrase) {
     let matchesFound = false;
     if (nodeObject.childElementCount == 0 ||
+        nodeObject.tagName == "button" ||
         nodeObject.tagName == "label" ||
         nodeObject.tagName == "description" ||
         nodeObject.tagName == "menulist") {
