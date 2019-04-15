@@ -40,10 +40,10 @@ promise_test(async t => {
   const blobInput = await loadBlob('resources/greenbox.png');
 
   assert_equals(blobInput.type, "image/png");
-  await navigator.clipboard.write([blobInput]);
+  await navigator.clipboard.write({"image/png" : blobInput});
   const blobsOutput = await navigator.clipboard.read();
-  assert_equals(blobsOutput.length, 1);
-  const blobOutput = blobsOutput[0];
+  assert_equals(Object.keys(blobsOutput).length, 1);
+  const blobOutput = blobsOutput["image/png"];
   assert_equals(blobOutput.type, "image/png");
 
   document.getElementById('image-on-clipboard').src =
