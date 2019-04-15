@@ -25,9 +25,8 @@ add_task(async function() {
 
   const usbRuntimeSidebarItem = findSidebarItemByText(DEVICE_NAME, document);
 
-  const itemText = usbRuntimeSidebarItem.textContent;
-  ok(itemText.includes("Waiting for browser"), "Sidebar item shows Waiting for browser");
-  ok(!itemText.includes(RUNTIME_NAME), "Sidebar item does not show the runtime name");
+  ok(usbRuntimeSidebarItem.querySelector(".qa-runtime-item-waiting-for-browser"),
+    "Sidebar item shows as `Waiting for browser`");
 
   const hasConnectButton = usbRuntimeSidebarItem.querySelector(".js-connect-button");
   ok(!hasConnectButton, "Connect button is not displayed");
@@ -51,8 +50,8 @@ add_task(async function() {
     return updatedSidebarItem && updatedSidebarItem.querySelector(".js-connect-button");
   });
 
-  const updatedText = updatedSidebarItem.textContent;
-  ok(updatedText.includes(RUNTIME_NAME), "Sidebar item shows the runtime name");
+  ok(updatedSidebarItem.querySelector(".qa-runtime-item-standard"),
+    "Sidebar item for the USB runtime is now a standard sidebar item");
 
   await removeTab(tab);
 });

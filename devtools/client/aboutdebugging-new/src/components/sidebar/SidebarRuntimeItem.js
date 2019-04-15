@@ -115,13 +115,16 @@ class SidebarRuntimeItem extends PureComponent {
   renderName() {
     const { deviceName, getString, isUnknown, isUnplugged, name } = this.props;
 
-    let displayName;
+    let displayName, qaClassName;
     if (isUnplugged) {
       displayName = getString("about-debugging-sidebar-runtime-item-unplugged");
+      qaClassName = "qa-runtime-item-unplugged";
     } else if (isUnknown) {
       displayName = getString("about-debugging-sidebar-runtime-item-waiting-for-browser");
+      qaClassName = "qa-runtime-item-waiting-for-browser";
     } else {
       displayName = name;
+      qaClassName = "qa-runtime-item-standard";
     }
 
     const localizationId = deviceName
@@ -140,7 +143,7 @@ class SidebarRuntimeItem extends PureComponent {
         dom.br({}),
         dom.span(
           {
-            className: "sidebar-runtime-item__runtime__details",
+            className: `sidebar-runtime-item__runtime__details ${qaClassName}`,
           },
           displayName,
         ),

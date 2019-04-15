@@ -317,7 +317,6 @@ function waitUntilUsbDeviceIsUnplugged(deviceName, aboutDebuggingDocument) {
   info("Wait until the USB sidebar item appears as unplugged");
   return waitUntil(() => {
     const sidebarItem = findSidebarItemByText(deviceName, aboutDebuggingDocument);
-    const isUnplugged = sidebarItem.textContent.includes("Unplugged");
-    return isUnplugged;
+    return !!sidebarItem.querySelector(".qa-runtime-item-unplugged");
   });
 }
