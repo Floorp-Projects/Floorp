@@ -1537,10 +1537,14 @@ pref("browser.ping-centre.production.endpoint", "https://tiles.services.mozilla.
 // Enable GMP support in the addon manager.
 pref("media.gmp-provider.enabled", true);
 
+#ifdef EARLY_BETA_OR_EARLIER
 // Enable blocking access to storage from tracking resources only in nightly
 // and early beta. By default the value is 0: BEHAVIOR_ACCEPT
-#ifdef EARLY_BETA_OR_EARLIER
 pref("network.cookie.cookieBehavior", 4 /* BEHAVIOR_REJECT_TRACKER */);
+// Enable fingerprinting blocking by default only in nightly and early beta.
+pref("privacy.trackingprotection.fingerprinting.enabled", true);
+// Enable cryptomining blocking by default only in nightly and early beta.
+pref("privacy.trackingprotection.cryptomining.enabled", true);
 #endif
 
 pref("browser.contentblocking.allowlist.storage.enabled", true);
@@ -1580,12 +1584,13 @@ pref("browser.contentblocking.fingerprinting.preferences.ui.enabled", true);
 //     "cookieBehavior3": cookie behaviour BEHAVIOR_LIMIT_FOREIGN
 //     "cookieBehavior4": cookie behaviour BEHAVIOR_REJECT_TRACKER
 // One value from each section must be included in each browser.contentblocking.features.* pref.
-pref("browser.contentblocking.features.strict", "tp,tpPrivate,cookieBehavior4,-cm,-fp");
-
+pref("browser.contentblocking.features.strict", "tp,tpPrivate,cookieBehavior4,cm,fp");
 // Enable blocking access to storage from tracking resources only in nightly
 // and early beta. By default the value is "cookieBehavior0": BEHAVIOR_ACCEPT
+// Enable cryptomining blocking in standard in nightly and early beta.
+// Enable fingerprinting blocking in standard in nightly and early beta.
 #ifdef EARLY_BETA_OR_EARLIER
-pref("browser.contentblocking.features.standard", "-tp,tpPrivate,cookieBehavior4,-cm,-fp");
+pref("browser.contentblocking.features.standard", "-tp,tpPrivate,cookieBehavior4,cm,fp");
 #else
 pref("browser.contentblocking.features.standard", "-tp,tpPrivate,cookieBehavior0,-cm,-fp");
 #endif
