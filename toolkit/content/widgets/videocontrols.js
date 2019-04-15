@@ -12,8 +12,9 @@
  * according to the value of the "controls" property.
  */
 this.VideoControlsWidget = class {
-  constructor(shadowRoot) {
+  constructor(shadowRoot, prefs) {
     this.shadowRoot = shadowRoot;
+    this.prefs = prefs;
     this.element = shadowRoot.host;
     this.document = this.element.ownerDocument;
     this.window = this.document.defaultView;
@@ -67,7 +68,7 @@ this.VideoControlsWidget = class {
       this.shadowRoot.firstChild.remove();
     }
     if (newImpl) {
-      this.impl = new newImpl(this.shadowRoot);
+      this.impl = new newImpl(this.shadowRoot, this.prefs);
       this.impl.onsetup();
     } else {
       this.impl = undefined;
@@ -89,8 +90,9 @@ this.VideoControlsWidget = class {
 };
 
 this.VideoControlsImplWidget = class {
-  constructor(shadowRoot) {
+  constructor(shadowRoot, prefs) {
     this.shadowRoot = shadowRoot;
+    this.prefs = prefs;
     this.element = shadowRoot.host;
     this.document = this.element.ownerDocument;
     this.window = this.document.defaultView;
@@ -1943,13 +1945,18 @@ this.VideoControlsImplWidget = class {
         }
       },
 
-      init(shadowRoot) {
+      get pipToggleEnabled() {
+        return this.prefs["media.videocontrols.picture-in-picture.video-toggle.enabled"];
+      },
+
+      init(shadowRoot, prefs) {
         this.shadowRoot = shadowRoot;
         this.video = this.installReflowCallValidator(shadowRoot.host);
         this.videocontrols = this.installReflowCallValidator(shadowRoot.firstChild);
         this.document = this.videocontrols.ownerDocument;
         this.window = this.document.defaultView;
         this.shadowRoot = shadowRoot;
+        this.prefs = prefs;
 
         this.controlsContainer = this.shadowRoot.getElementById("controlsContainer");
         this.statusIcon = this.shadowRoot.getElementById("statusIcon");
@@ -2210,7 +2217,7 @@ this.VideoControlsImplWidget = class {
       },
     };
 
-    this.Utils.init(this.shadowRoot);
+    this.Utils.init(this.shadowRoot, this.prefs);
     if (this.Utils.isTouchControls) {
       this.TouchUtils.init(this.shadowRoot, this.Utils);
     }
@@ -2468,8 +2475,9 @@ this.NoControlsMobileImplWidget = class {
 };
 
 this.NoControlsPictureInPictureImplWidget = class {
-  constructor(shadowRoot) {
+  constructor(shadowRoot, prefs) {
     this.shadowRoot = shadowRoot;
+    this.prefs = prefs;
     this.element = shadowRoot.host;
     this.document = this.element.ownerDocument;
     this.window = this.document.defaultView;
