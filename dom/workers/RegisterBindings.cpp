@@ -48,6 +48,10 @@ bool WorkerPrivate::RegisterDebuggerBindings(JSContext* aCx,
     return false;
   }
 
+  if (!ChromeUtils_Binding::GetConstructorObject(aCx)) {
+    return false;
+  }
+
   if (!JS_DefineDebuggerObject(aCx, aGlobal)) {
     return false;
   }
