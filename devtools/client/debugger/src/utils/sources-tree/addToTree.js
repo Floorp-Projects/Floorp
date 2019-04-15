@@ -157,7 +157,8 @@ function addSourceToNode(
 export function addToTree(
   tree: TreeDirectory,
   source: Source,
-  debuggeeHost: ?string
+  debuggeeHost: ?string,
+  projectRoot: string
 ) {
   const url = getURL(source, debuggeeHost);
 
