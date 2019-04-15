@@ -41,8 +41,11 @@ WeakMap<K, V>::WeakMap(JSContext* cx, JSObject* memOf)
     : Base(cx->zone()), WeakMapBase(memOf, cx->zone()) {
   using ElemType = typename K::ElementType;
   using NonPtrType = typename mozilla::RemovePointer<ElemType>::Type;
+
   // The object's TraceKind needs to be added to CC graph if this object is
-  // used as a WeakMap key. See the comments for IsCCTraceKind for details.
+  // used as a WeakMap key, otherwise the key is considered to be pointed from
+  // somewhere unknown, and results in leaking the subgraph which contains the
+  // key. See the comments in NoteWeakMapsTracer::trace for more details.
   static_assert(JS::IsCCTraceKind(NonPtrType::TraceKind),
                 "Object's TraceKind should be added to CC graph.");
 
