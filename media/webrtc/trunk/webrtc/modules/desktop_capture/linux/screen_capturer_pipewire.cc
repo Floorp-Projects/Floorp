@@ -12,8 +12,6 @@
 
 #include <memory>
 
-#include "absl/memory/memory.h"
-
 namespace webrtc {
 
 ScreenCapturerPipeWire::ScreenCapturerPipeWire()
@@ -24,7 +22,7 @@ ScreenCapturerPipeWire::~ScreenCapturerPipeWire() {}
 std::unique_ptr<DesktopCapturer>
 ScreenCapturerPipeWire::CreateRawScreenCapturer(
     const DesktopCaptureOptions& options) {
-  return absl::make_unique<ScreenCapturerPipeWire>();
+  return std::make_unique<ScreenCapturerPipeWire>();
 }
 
 }  // namespace webrtc
