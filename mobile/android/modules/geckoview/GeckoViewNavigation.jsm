@@ -52,7 +52,7 @@ class GeckoViewNavigation extends GeckoViewModule {
       this.browser.webNavigation.setOriginAttributesBeforeLoading({
         geckoViewSessionContextId: this.settings.sessionContextId,
         privateBrowsingId: PrivateBrowsingUtils.isBrowserPrivate(this.browser)
-                           ? 1 : 0,
+          ? 1 : 0,
       });
     }
   }
