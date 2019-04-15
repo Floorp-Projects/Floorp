@@ -78,7 +78,6 @@ import org.mozilla.geckoview.ScreenLength;
 import org.mozilla.geckoview.SessionAccessibility;
 import org.mozilla.geckoview.SessionFinder;
 import org.mozilla.geckoview.SessionTextInput;
-import org.mozilla.geckoview.StorageController;
 import org.mozilla.geckoview.WebExtension;
 import org.mozilla.geckoview.WebMessage;
 import org.mozilla.geckoview.WebRequest;
@@ -267,6 +266,7 @@ package org.mozilla.geckoview {
   }
 
   public final class GeckoRuntime implements Parcelable {
+    ctor public GeckoRuntime();
     method @UiThread public void attachTo(@NonNull Context);
     method @UiThread public void configurationChanged(@NonNull Configuration);
     method @UiThread @NonNull public static GeckoRuntime create(@NonNull Context);
@@ -275,7 +275,6 @@ package org.mozilla.geckoview {
     method @UiThread @Nullable public GeckoRuntime.Delegate getDelegate();
     method @UiThread @Nullable public File getProfileDir();
     method @AnyThread @NonNull public GeckoRuntimeSettings getSettings();
-    method @AnyThread @NonNull public StorageController getStorageController();
     method @UiThread @NonNull public RuntimeTelemetry getTelemetry();
     method @UiThread public void orientationChanged();
     method @UiThread public void orientationChanged(int);
@@ -783,7 +782,6 @@ package org.mozilla.geckoview {
     ctor public GeckoSessionSettings(@NonNull GeckoSessionSettings);
     method public boolean getAllowJavascript();
     method @Nullable public String getChromeUri();
-    method @Nullable public String getContextId();
     method public int getDisplayMode();
     method public boolean getFullAccessibilityTree();
     method public int getScreenId();
@@ -821,7 +819,6 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoSessionSettings.Builder allowJavascript(boolean);
     method @NonNull public GeckoSessionSettings build();
     method @NonNull public GeckoSessionSettings.Builder chromeUri(@NonNull String);
-    method @NonNull public GeckoSessionSettings.Builder contextId(@Nullable String);
     method @NonNull public GeckoSessionSettings.Builder displayMode(int);
     method @NonNull public GeckoSessionSettings.Builder fullAccessibilityTree(boolean);
     method @NonNull public GeckoSessionSettings.Builder screenId(int);
@@ -1030,12 +1027,6 @@ package org.mozilla.geckoview {
     method @UiThread public void onProvideAutofillVirtualStructure(@NonNull ViewStructure, int);
     method @UiThread public void setDelegate(@Nullable GeckoSession.TextInputDelegate);
     method @UiThread public synchronized void setView(@Nullable View);
-  }
-
-  public final class StorageController {
-    ctor public StorageController();
-    method @AnyThread public void clearAllSessionContextData();
-    method @AnyThread public void clearSessionContextData(@NonNull String);
   }
 
   public class WebExtension {
