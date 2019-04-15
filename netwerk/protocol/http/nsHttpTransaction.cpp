@@ -146,8 +146,7 @@ nsHttpTransaction::nsHttpTransaction()
       m0RTTInProgress(false),
       mDoNotTryEarlyData(false),
       mEarlyDataDisposition(EARLY_NONE),
-      mFastOpenStatus(TFO_NOT_TRIED),
-      mTrafficCategory(HttpTrafficCategory::eInvalid) {
+      mFastOpenStatus(TFO_NOT_TRIED) {
   this->mSelfAddr.inet = {};
   this->mPeerAddr.inet = {};
   LOG(("Creating nsHttpTransaction @%p\n", this));
@@ -262,8 +261,7 @@ nsresult nsHttpTransaction::Init(
     nsIInputStream *requestBody, uint64_t requestContentLength,
     bool requestBodyHasHeaders, nsIEventTarget *target,
     nsIInterfaceRequestor *callbacks, nsITransportEventSink *eventsink,
-    uint64_t topLevelOuterContentWindowId, HttpTrafficCategory trafficCategory,
-    nsIAsyncInputStream **responseBody) {
+    uint64_t topLevelOuterContentWindowId, nsIAsyncInputStream **responseBody) {
   nsresult rv;
 
   LOG1(("nsHttpTransaction::Init [this=%p caps=%x]\n", this, caps));
@@ -275,8 +273,6 @@ nsresult nsHttpTransaction::Init(
 
   mTopLevelOuterContentWindowId = topLevelOuterContentWindowId;
   LOG(("  window-id = %" PRIx64, mTopLevelOuterContentWindowId));
-
-  mTrafficCategory = trafficCategory;
 
   mActivityDistributor = services::GetActivityDistributor();
   if (!mActivityDistributor) {
@@ -526,16 +522,6 @@ void nsHttpTransaction::OnActivated() {
 
   if (mActivated) {
     return;
-  }
-
-  if (mTrafficCategory != HttpTrafficCategory::eInvalid) {
-    HttpTrafficAnalyzer *hta = gHttpHandler->GetHttpTrafficAnalyzer();
-    if (hta) {
-      hta->IncrementHttpTransaction(mTrafficCategory);
-    }
-    if (mConnection) {
-      mConnection->SetTrafficCategory(mTrafficCategory);
-    }
   }
 
   if (mConnection && mRequestHead &&
@@ -1184,14 +1170,6 @@ void nsHttpTransaction::Close(nsresult reason) {
     const TimingStruct timings = Timings();
     if (timings.responseEnd.IsNull() && !timings.responseStart.IsNull()) {
       SetResponseEnd(TimeStamp::Now());
-    }
-  }
-
-  if (mTrafficCategory != HttpTrafficCategory::eInvalid) {
-    HttpTrafficAnalyzer *hta = gHttpHandler->GetHttpTrafficAnalyzer();
-    if (hta) {
-      hta->AccumulateHttpTransferredSize(mTrafficCategory, mTransferSize,
-                                         mContentRead);
     }
   }
 
