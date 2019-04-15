@@ -109,6 +109,8 @@
 
     --in-content-category-text-selected: var(--blue-40);
     --in-content-link-color: var(--blue-40);
+
+    --in-content-tab-color: var(--in-content-page-color);
   }
 }
 }
