@@ -739,6 +739,43 @@ nsSHEntry::GetChildAt(int32_t aIndex, nsISHEntry** aResult) {
   return NS_OK;
 }
 
+NS_IMETHODIMP_(void)
+nsSHEntry::GetChildSHEntryIfHasNoDynamicallyAddedChild(int32_t aChildOffset,
+                                                       nsISHEntry** aChild) {
+  *aChild = nullptr;
+
+  bool dynamicallyAddedChild = false;
+  HasDynamicallyAddedChild(&dynamicallyAddedChild);
+  if (dynamicallyAddedChild) {
+    return;
+  }
+
+  // If the user did a shift-reload on this frameset page,
+  // we don't want to load the subframes from history.
+  if (IsForceReloadType(mLoadType) || mLoadType == LOAD_REFRESH) {
+    return;
+  }
+
+  /* Before looking for the subframe's url, check
+   * the expiration status of the parent. If the parent
+   * has expired from cache, then subframes will not be
+   * loaded from history in certain situations.
+   * If the user pressed reload and the parent frame has expired
+   *  from cache, we do not want to load the child frame from history.
+   */
+  if (mShared->mExpired && (mLoadType == LOAD_RELOAD_NORMAL)) {
+    // The parent has expired. Return null.
+    *aChild = nullptr;
+    return;
+  }
+  // Get the child subframe from session history.
+  GetChildAt(aChildOffset, aChild);
+  if (*aChild) {
+    // Set the parent's Load Type on the child
+    (*aChild)->SetLoadType(mLoadType);
+  }
+}
+
 NS_IMETHODIMP
 nsSHEntry::ReplaceChild(nsISHEntry* aNewEntry) {
   NS_ENSURE_STATE(aNewEntry);

@@ -400,6 +400,14 @@ interface nsISHEntry : nsISupports
     nsISHEntry GetChildAt(in long aIndex);
 
     /**
+     * If this entry has no dynamically added child, get the child SHEntry 
+     * at the given offset. The loadtype of the returned entry is set 
+     * to its parent's loadtype.
+     */
+    [notxpcom] void GetChildSHEntryIfHasNoDynamicallyAddedChild(in long aChildOffset,
+                                                                out nsISHEntry aChild);
+
+    /**
      * Replaces a child which is for the same docshell as aNewChild
      * with aNewChild.
      * @throw if nothing was replaced.
