@@ -2651,6 +2651,30 @@ update:
     record_in_processes:
       - main
 
+  bitshresult:
+    bug_numbers:
+      - 1343669
+      - 1540193
+      - 1520321
+    description: >
+      If a BITS download fails on the Windows side (that is to say, BITS
+      ecounters an error rather than Firefox failing to interact with BITS),
+      it will likely give an hresult error indicating what happened. This probe
+      reports those error codes to allow us to see if BITS is commonly failing
+      on some systems. This probe is keyed on the type of update download,
+      either "PARTIAL" or "COMPLETE".
+    expires: never
+    kind: uint
+    keyed: true
+    notification_emails:
+      - application-update-telemetry-alerts@mozilla.com
+      - rstrong@mozilla.com
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+    operating_systems:
+      - windows
+
 # The following section contains search counters.
 browser.search:
   with_ads:
