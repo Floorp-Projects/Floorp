@@ -39,9 +39,15 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
   RefPtr<dom::BrowsingContext> bc = docshell->GetBrowsingContext();
   RefPtr<WindowGlobalChild> wgc = new WindowGlobalChild(aWindow, bc);
 
+  // If we have already closed our browsing context, return a pre-closed
+  // WindowGlobalChild actor.
+  if (bc->GetClosed()) {
+    wgc->ActorDestroy(FailedConstructor);
+    return wgc.forget();
+  }
+
   WindowGlobalInit init(principal, bc, wgc->mInnerWindowId,
                         wgc->mOuterWindowId);
-
   // Send the link constructor over PInProcessChild or PBrowser.
   if (XRE_IsParentProcess()) {
     InProcessChild* ipc = InProcessChild::Singleton();
