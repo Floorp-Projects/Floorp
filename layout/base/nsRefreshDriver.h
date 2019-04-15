@@ -415,8 +415,8 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
    */
   static mozilla::Maybe<mozilla::TimeStamp> GetNextTickHint();
 
-  static void DispatchIdleRunnableAfterTick(nsIRunnable* aRunnable,
-                                            uint32_t aDelay);
+  static void DispatchIdleRunnableAfterTickUnlessExists(nsIRunnable* aRunnable,
+                                                        uint32_t aDelay);
   static void CancelIdleRunnable(nsIRunnable* aRunnable);
 
   void NotifyDOMContentLoaded();

@@ -7,8 +7,10 @@
 
 #include "mozilla/dom/JSWindowActorService.h"
 #include "mozilla/dom/ChromeUtilsBinding.h"
+#include "mozilla/dom/EventListenerBinding.h"
 #include "mozilla/dom/EventTargetBinding.h"
 #include "mozilla/dom/EventTarget.h"
+#include "mozilla/dom/JSWindowActorBinding.h"
 #include "mozilla/dom/PContent.h"
 #include "mozilla/StaticPtr.h"
 #include "mozJSComponentLoader.h"
@@ -19,66 +21,6 @@ namespace mozilla {
 namespace dom {
 namespace {
 StaticRefPtr<JSWindowActorService> gJSWindowActorService;
-}
-
-/**
- * Helper for calling a named method on a JS Window Actor object with a single
- * parameter.
- *
- * It will do the following:
- *  1. Enter the actor object's compartment.
- *  2. Convert the given parameter into a JS parameter with ToJSValue.
- *  3. Call the named method, passing the single parameter.
- *  4. Place the return value in aRetVal.
- *
- * If an error occurs during this process, this method clears any pending
- * exceptions, and returns a nsresult.
- */
-template <typename T>
-nsresult CallJSActorMethod(nsWrapperCache* aActor, const char* aName,
-                           T& aNativeArg, JS::MutableHandleValue aRetVal) {
-  // FIXME(nika): We should avoid atomizing and interning the |aName| strings
-  // every time we do this call. Given the limited set of possible IDs, it would
-  // be better to cache the `jsid` values.
-
-  aRetVal.setUndefined();
-
-  // Get the wrapper for our actor. If we don't have a wrapper, the target
-  // method won't be defined on it. so there's no reason to continue.
-  JS::Rooted<JSObject*> actor(RootingCx(), aActor->GetWrapper());
-  if (NS_WARN_IF(!actor)) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  // Enter the realm of our actor object to begin running script.
-  AutoEntryScript aes(actor, "CallJSActorMethod");
-  JSContext* cx = aes.cx();
-  JSAutoRealm ar(cx, actor);
-
-  // Get the method we want to call, and produce NS_ERROR_NOT_IMPLEMENTED if
-  // it is not present.
-  JS::Rooted<JS::Value> func(cx);
-  if (NS_WARN_IF(!JS_GetProperty(cx, actor, aName, &func) ||
-                 func.isPrimitive())) {
-    JS_ClearPendingException(cx);
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  // Convert the native argument to a JS value.
-  JS::Rooted<JS::Value> argv(cx);
-  if (NS_WARN_IF(!ToJSValue(cx, aNativeArg, &argv))) {
-    JS_ClearPendingException(cx);
-    return NS_ERROR_FAILURE;
-  }
-
-  // Call our method.
-  if (NS_WARN_IF(!JS_CallFunctionValue(cx, actor, func,
-                                       JS::HandleValueArray(argv), aRetVal))) {
-    JS_ClearPendingException(cx);
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
 }
 
 /**
@@ -300,9 +242,13 @@ NS_IMETHODIMP JSWindowActorProtocol::HandleEvent(Event* aEvent) {
     return rv;
   }
 
-  // Call the "handleEvent" method on our actor.
-  JS::Rooted<JS::Value> dummy(RootingCx());
-  return CallJSActorMethod(actor, "handleEvent", aEvent, &dummy);
+  // Build our event listener & call it.
+  JS::Rooted<JSObject*> global(RootingCx(),
+                               JS::GetNonCCWObjectGlobal(actor->GetWrapper()));
+  RefPtr<EventListener> eventListener =
+      new EventListener(actor->GetWrapper(), global, nullptr, nullptr);
+  eventListener->HandleEvent(*aEvent, "JSWindowActorProtocol::HandleEvent");
+  return NS_OK;
 }
 
 NS_IMETHODIMP JSWindowActorProtocol::Observe(nsISupports* aSubject,
@@ -331,44 +277,13 @@ NS_IMETHODIMP JSWindowActorProtocol::Observe(nsISupports* aSubject,
     return rv;
   }
 
-  // Get the wrapper for our actor. If we don't have a wrapper, the target
-  // method won't be defined on it. so there's no reason to continue.
-  JS::Rooted<JSObject*> obj(RootingCx(), actor->GetWrapper());
-  if (NS_WARN_IF(!obj)) {
-    return NS_ERROR_NOT_IMPLEMENTED;
-  }
-
-  // Enter the realm of our actor object to begin running script.
-  AutoEntryScript aes(obj, "JSWindowActorProtocol::Observe");
-  JSContext* cx = aes.cx();
-  JSAutoRealm ar(cx, obj);
-
-  JS::AutoValueArray<3> argv(cx);
-  if (NS_WARN_IF(
-          !ToJSValue(cx, aSubject, argv[0]) ||
-          !NonVoidByteStringToJsval(cx, nsDependentCString(aTopic), argv[1]))) {
-    JS_ClearPendingException(cx);
-    return NS_ERROR_FAILURE;
-  }
-
-  // aData is an optional parameter.
-  if (aData) {
-    if (NS_WARN_IF(!ToJSValue(cx, nsDependentString(aData), argv[2]))) {
-      JS_ClearPendingException(cx);
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    argv[2].setNull();
-  }
-
-  // Call the "observe" method on our actor.
-  JS::Rooted<JS::Value> dummy(cx);
-  if (NS_WARN_IF(!JS_CallFunctionName(cx, obj, "observe",
-                                      JS::HandleValueArray(argv), &dummy))) {
-    JS_ClearPendingException(cx);
-    return NS_ERROR_FAILURE;
-  }
-
+  // Build a observer callback.
+  JS::Rooted<JSObject*> global(RootingCx(),
+                               JS::GetNonCCWObjectGlobal(actor->GetWrapper()));
+  RefPtr<MozObserverCallback> observerCallback =
+      new MozObserverCallback(actor->GetWrapper(), global, nullptr, nullptr);
+  observerCallback->Observe(aSubject, nsDependentCString(aTopic),
+                            aData ? nsDependentString(aData) : VoidString());
   return NS_OK;
 }
 
@@ -657,18 +572,13 @@ void JSWindowActorService::ReceiveMessage(nsISupports* aTarget,
   argument.mJson = json;
   argument.mSync = false;
 
-  JS::RootedValue argv(cx);
-  if (NS_WARN_IF(!ToJSValue(cx, argument, &argv))) {
-    return;
-  }
+  JS::Rooted<JSObject*> global(cx, JS::GetNonCCWObjectGlobal(aObj));
+  RefPtr<MessageListener> messageListener =
+      new MessageListener(aObj, global, nullptr, nullptr);
 
-  // Now that we have finished, call the recvAsyncMessage callback.
-  JS::RootedValue dummy(cx);
-  if (NS_WARN_IF(!JS_CallFunctionName(cx, aObj, "recvAsyncMessage",
-                                      JS::HandleValueArray(argv), &dummy))) {
-    JS_ClearPendingException(cx);
-    return;
-  }
+  JS::Rooted<JS::Value> dummy(cx);
+  messageListener->ReceiveMessage(argument, &dummy,
+                                  "JSWindowActorService::ReceiveMessage");
 }
 
 void JSWindowActorService::RegisterWindowRoot(EventTarget* aRoot) {
@@ -681,8 +591,8 @@ void JSWindowActorService::RegisterWindowRoot(EventTarget* aRoot) {
   }
 }
 
-/* static */ void JSWindowActorService::UnregisterWindowRoot(
-    EventTarget* aRoot) {
+/* static */
+void JSWindowActorService::UnregisterWindowRoot(EventTarget* aRoot) {
   if (gJSWindowActorService) {
     // NOTE: No need to unregister listeners here, as the root is going away.
     gJSWindowActorService->mRoots.RemoveElement(aRoot);

@@ -798,8 +798,7 @@ linux64-asan/debug:
 
 linux64-shippable/opt:
     description: "Linux64 Shippable"
-    # Disabled because bug 1516114 shows up much more often
-    # use-pgo: true
+    use-pgo: true
     attributes:
         shippable: true
         enable-full-crashsymbols: true
@@ -811,9 +810,7 @@ linux64-shippable/opt:
         type: shippable
     treeherder:
         platform: linux64-shippable/opt
-        # Bug 1516114
-        symbol: B
-        # symbol: Bpgo(B)
+        symbol: Bpgo(B)
     worker-type: aws-provisioner-v1/gecko-{level}-b-linux
     worker:
         max-run-time: 9000
@@ -828,8 +825,7 @@ linux64-shippable/opt:
         secrets: true
         tooltool-downloads: public
         need-xvfb: true
-        # Bug 1516114
-        # mozconfig-variant: profile-use
+        mozconfig-variant: profile-use
     toolchains:
         - linux64-binutils
         - linux64-clang

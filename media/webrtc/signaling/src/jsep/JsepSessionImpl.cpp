@@ -350,7 +350,7 @@ JsepSession::Result JsepSessionImpl::CreateOffer(
     const JsepOfferOptions& options, std::string* offer) {
   mLastError.clear();
 
-  if (mState != kJsepStateStable) {
+  if (mState != kJsepStateStable && mState != kJsepStateHaveLocalOffer) {
     JSEP_SET_ERROR("Cannot create offer in state " << GetStateStr(mState));
     // Spec doesn't seem to say this is an error. It probably should.
     return dom::PCError::InvalidStateError;
@@ -642,6 +642,11 @@ JsepSession::Result JsepSessionImpl::SetLocalDescription(
       if (sdp.empty()) {
         sdp = mGeneratedOffer->ToString();
       }
+      if (mState == kJsepStateHaveLocalOffer) {
+        // Rollback previous offer before applying the new one.
+        SetLocalDescription(kJsepSdpRollback, "");
+        MOZ_ASSERT(mState == kJsepStateStable);
+      }
       break;
     case kJsepSdpAnswer:
     case kJsepSdpPranswer:
@@ -789,6 +794,12 @@ JsepSession::Result JsepSessionImpl::SetRemoteDescription(
   MOZ_MTLOG(ML_DEBUG, "[" << mName << "]: SetRemoteDescription type=" << type
                           << "\nSDP=\n"
                           << sdp);
+
+  if (mState == kJsepStateHaveRemoteOffer && type == kJsepSdpOffer) {
+    // Rollback previous offer before applying the new one.
+    SetRemoteDescription(kJsepSdpRollback, "");
+    MOZ_ASSERT(mState == kJsepStateStable);
+  }
 
   if (type == kJsepSdpRollback) {
     if (mState != kJsepStateHaveRemoteOffer) {
@@ -966,6 +977,7 @@ nsresult JsepSessionImpl::HandleNegotiatedSession(
       transceiver->ClearBundleLevel();
       transceiver->mSendTrack.SetActive(false);
       transceiver->mRecvTrack.SetActive(false);
+      transceiver->SetCanRecycle();
       // Do not clear mLevel yet! That will happen on the next negotiation.
       continue;
     }
@@ -1378,7 +1390,7 @@ JsepTransceiver* JsepSessionImpl::GetTransceiverForMid(const std::string& mid) {
 
 JsepTransceiver* JsepSessionImpl::GetTransceiverForLocal(size_t level) {
   if (JsepTransceiver* transceiver = GetTransceiverForLevel(level)) {
-    if (WasMsectionDisabledLastNegotiation(level) && transceiver->IsStopped() &&
+    if (transceiver->CanRecycle() &&
         transceiver->GetMediaType() != SdpMediaSection::kApplication) {
       // Attempt to recycle. If this fails, the old transceiver stays put.
       transceiver->Disassociate();
@@ -1420,8 +1432,7 @@ JsepTransceiver* JsepSessionImpl::GetTransceiverForRemote(
     const SdpMediaSection& msection) {
   size_t level = msection.GetLevel();
   if (JsepTransceiver* transceiver = GetTransceiverForLevel(level)) {
-    if (!WasMsectionDisabledLastNegotiation(level) ||
-        !transceiver->IsStopped()) {
+    if (!transceiver->CanRecycle()) {
       return transceiver;
     }
     transceiver->Disassociate();
@@ -1509,16 +1520,6 @@ nsresult JsepSessionImpl::UpdateTransceiversFromRemoteDescription(
   return NS_OK;
 }
 
-bool JsepSessionImpl::WasMsectionDisabledLastNegotiation(size_t level) const {
-  const Sdp* answer(GetAnswer());
-
-  if (answer && (level < answer->GetMediaSectionCount())) {
-    return mSdpHelper.MsectionIsDisabled(answer->GetMediaSection(level));
-  }
-
-  return false;
-}
-
 JsepTransceiver* JsepSessionImpl::FindUnassociatedTransceiver(
     SdpMediaSection::MediaType type, bool magic) {
   // Look through transceivers that are not mapped to an m-section
@@ -1542,7 +1543,7 @@ void JsepSessionImpl::RollbackLocalOffer() {
   for (size_t i = 0; i < mTransceivers.size(); ++i) {
     RefPtr<JsepTransceiver>& transceiver(mTransceivers[i]);
     if (i < mOldTransceivers.size()) {
-      transceiver->Rollback(*mOldTransceivers[i]);
+      transceiver->Rollback(*mOldTransceivers[i], false);
       continue;
     }
 
@@ -1550,7 +1551,7 @@ void JsepSessionImpl::RollbackLocalOffer() {
         new JsepTransceiver(transceiver->GetMediaType()));
     temp->mSendTrack.PopulateCodecs(mSupportedCodecs);
     temp->mRecvTrack.PopulateCodecs(mSupportedCodecs);
-    transceiver->Rollback(*temp);
+    transceiver->Rollback(*temp, false);
   }
 
   mOldTransceivers.clear();
@@ -1560,7 +1561,7 @@ void JsepSessionImpl::RollbackRemoteOffer() {
   for (size_t i = 0; i < mTransceivers.size(); ++i) {
     RefPtr<JsepTransceiver>& transceiver(mTransceivers[i]);
     if (i < mOldTransceivers.size()) {
-      transceiver->Rollback(*mOldTransceivers[i]);
+      transceiver->Rollback(*mOldTransceivers[i], true);
       continue;
     }
 
@@ -1574,7 +1575,7 @@ void JsepSessionImpl::RollbackRemoteOffer() {
         new JsepTransceiver(transceiver->GetMediaType()));
     temp->mSendTrack.PopulateCodecs(mSupportedCodecs);
     temp->mRecvTrack.PopulateCodecs(mSupportedCodecs);
-    transceiver->Rollback(*temp);
+    transceiver->Rollback(*temp, true);
 
     if (shouldRemove) {
       transceiver->Stop();

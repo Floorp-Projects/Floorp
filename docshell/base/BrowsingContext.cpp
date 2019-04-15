@@ -65,7 +65,7 @@ static void Register(BrowsingContext* aBrowsingContext) {
   aBrowsingContext->Group()->Register(aBrowsingContext);
 }
 
-BrowsingContext* BrowsingContext::TopLevelBrowsingContext() {
+BrowsingContext* BrowsingContext::Top() {
   BrowsingContext* bc = this;
   while (bc->mParent) {
     bc = bc->mParent;
@@ -307,6 +307,10 @@ void BrowsingContext::CacheChildren(bool aFromIPC) {
 
 bool BrowsingContext::IsCached() { return sCachedBrowsingContexts->has(Id()); }
 
+bool BrowsingContext::HasOpener() const {
+  return sBrowsingContexts->has(mOpenerId);
+}
+
 void BrowsingContext::GetChildren(
     nsTArray<RefPtr<BrowsingContext>>& aChildren) {
   MOZ_ALWAYS_TRUE(aChildren.AppendElements(mChildren));
@@ -413,7 +417,7 @@ BrowsingContext* BrowsingContext::FindWithSpecialName(const nsAString& aName) {
   }
 
   if (aName.LowerCaseEqualsLiteral("_top")) {
-    BrowsingContext* top = TopLevelBrowsingContext();
+    BrowsingContext* top = Top();
 
     return CanAccess(top) ? top : nullptr;
   }
@@ -490,7 +494,7 @@ void BrowsingContext::NotifyUserGestureActivation() {
   // We would set the user gesture activation flag on the top level browsing
   // context, which would automatically be sync to other top level browsing
   // contexts which are in the different process.
-  RefPtr<BrowsingContext> topLevelBC = TopLevelBrowsingContext();
+  RefPtr<BrowsingContext> topLevelBC = Top();
   USER_ACTIVATION_LOG("Get top level browsing context 0x%08" PRIx64,
                       topLevelBC->Id());
   topLevelBC->SetIsActivatedByUserGesture(true);
@@ -500,14 +504,14 @@ void BrowsingContext::NotifyResetUserGestureActivation() {
   // We would reset the user gesture activation flag on the top level browsing
   // context, which would automatically be sync to other top level browsing
   // contexts which are in the different process.
-  RefPtr<BrowsingContext> topLevelBC = TopLevelBrowsingContext();
+  RefPtr<BrowsingContext> topLevelBC = Top();
   USER_ACTIVATION_LOG("Get top level browsing context 0x%08" PRIx64,
                       topLevelBC->Id());
   topLevelBC->SetIsActivatedByUserGesture(false);
 }
 
 bool BrowsingContext::GetUserGestureActivation() {
-  RefPtr<BrowsingContext> topLevelBC = TopLevelBrowsingContext();
+  RefPtr<BrowsingContext> topLevelBC = Top();
   return topLevelBC->GetIsActivatedByUserGesture();
 }
 
@@ -602,7 +606,7 @@ void BrowsingContext::Blur(ErrorResult& aError) {
 Nullable<WindowProxyHolder> BrowsingContext::GetTop(ErrorResult& aError) {
   // We never return null or throw an error, but the implementation in
   // nsGlobalWindow does and we need to use the same signature.
-  return WindowProxyHolder(TopLevelBrowsingContext());
+  return WindowProxyHolder(Top());
 }
 
 void BrowsingContext::GetOpener(JSContext* aCx,
@@ -833,12 +837,12 @@ bool IPDLParamTraits<dom::BrowsingContext>::Read(
   }
 
   if (id == 0) {
-    aResult = nullptr;
+    *aResult = nullptr;
     return true;
   }
 
   *aResult = dom::BrowsingContext::Get(id);
-  MOZ_ASSERT(aResult, "Deserialized absent BrowsingContext!");
+  MOZ_ASSERT(*aResult, "Deserialized absent BrowsingContext!");
 
   // If this is an in-process actor, free the reference taken in ::Write().
   if (!aActor->GetIPCChannel()->IsCrossProcess()) {
@@ -846,7 +850,7 @@ bool IPDLParamTraits<dom::BrowsingContext>::Read(
     NS_IF_RELEASE(bc);
   }
 
-  return aResult != nullptr;
+  return *aResult != nullptr;
 }
 
 void IPDLParamTraits<dom::BrowsingContext::Transaction>::Write(

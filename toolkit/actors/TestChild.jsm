@@ -11,7 +11,7 @@ class TestChild extends JSWindowActorChild {
      super();
   }
 
-  recvAsyncMessage(aMessage) {
+  receiveMessage(aMessage) {
     switch (aMessage.name) {
       case "toChild":
         aMessage.data.toChild = true;

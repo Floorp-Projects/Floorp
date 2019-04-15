@@ -121,6 +121,7 @@ class BrowsingContext : public nsWrapperCache,
   // null if it's not.
   nsIDocShell* GetDocShell() { return mDocShell; }
   void SetDocShell(nsIDocShell* aDocShell);
+  void ClearDocShell() { mDocShell = nullptr; }
 
   // Get the outer window object for this BrowsingContext if it is in-process
   // and still has a docshell, or null otherwise.
@@ -156,10 +157,14 @@ class BrowsingContext : public nsWrapperCache,
 
   BrowsingContext* GetParent() const { return mParent; }
 
+  BrowsingContext* Top();
+
   already_AddRefed<BrowsingContext> GetOpener() const { return Get(mOpenerId); }
   void SetOpener(BrowsingContext* aOpener) {
     SetOpenerId(aOpener ? aOpener->Id() : 0);
   }
+
+  bool HasOpener() const;
 
   void GetChildren(nsTArray<RefPtr<BrowsingContext>>& aChildren);
 
@@ -383,8 +388,6 @@ class BrowsingContext : public nsWrapperCache,
   // This should be called if the window proxy object is finalized, or it can't
   // reach its browsing context anymore.
   void ClearWindowProxy() { mWindowProxy = nullptr; }
-
-  BrowsingContext* TopLevelBrowsingContext();
 
   friend class Location;
   friend class RemoteLocationProxy;

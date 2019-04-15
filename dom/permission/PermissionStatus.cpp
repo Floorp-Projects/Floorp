@@ -11,6 +11,7 @@
 #include "nsIPermissionManager.h"
 #include "PermissionObserver.h"
 #include "PermissionUtils.h"
+#include "nsPermission.h"
 
 namespace mozilla {
 namespace dom {
@@ -96,8 +97,7 @@ already_AddRefed<nsIPrincipal> PermissionStatus::GetPrincipal() const {
   }
 
   nsCOMPtr<nsIPrincipal> principal =
-      mozilla::BasePrincipal::Cast(doc->NodePrincipal())
-          ->CloneStrippingUserContextIdAndFirstPartyDomain();
+      nsPermission::ClonePrincipalForPermission(doc->NodePrincipal());
   NS_ENSURE_TRUE(principal, nullptr);
 
   return principal.forget();
