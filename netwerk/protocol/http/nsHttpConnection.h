@@ -17,7 +17,6 @@
 #include "mozilla/Mutex.h"
 #include "ARefBase.h"
 #include "TimingStruct.h"
-#include "HttpTrafficAnalyzer.h"
 
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
@@ -252,8 +251,6 @@ class nsHttpConnection final : public nsAHttpSegmentReader,
   // HTTP/2 websocket support
   bool CanAcceptWebsocket();
 
-  void SetTrafficCategory(HttpTrafficCategory aCategory);
-
  private:
   // Value (set in mTCPKeepaliveConfig) indicates which set of prefs to use.
   enum TCPKeepaliveConfig {
@@ -439,8 +436,6 @@ class nsHttpConnection final : public nsAHttpSegmentReader,
  private:
   TimingStruct mBootstrappedTimings;
   bool mBootstrappedTimingsSet;
-
-  nsTArray<HttpTrafficCategory> mTrafficCategory;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsHttpConnection, NS_HTTPCONNECTION_IID)
