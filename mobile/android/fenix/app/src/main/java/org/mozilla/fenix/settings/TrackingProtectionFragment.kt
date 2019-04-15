@@ -31,7 +31,15 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
         val preferenceTP = findPreference<Preference>(trackingProtectionKey)
         preferenceTP?.onPreferenceChangeListener =
             Preference.OnPreferenceChangeListener { _, newValue ->
-                requireComponents.core.updateTrackingProtection(newValue as Boolean)
+                with(requireComponents.core) {
+                    val policy =
+                        createTrackingProtectionPolicy(newValue as Boolean)
+                    engine.settings.trackingProtectionPolicy = policy
+
+                    with(sessionManager) {
+                        sessions.forEach { getEngineSession(it)?.enableTrackingProtection(policy) }
+                    }
+                }
                 true
             }
 

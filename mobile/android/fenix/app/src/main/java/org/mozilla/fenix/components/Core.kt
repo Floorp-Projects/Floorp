@@ -135,7 +135,7 @@ class Core(private val context: Context) {
      * in private browsing mode, default to the current preference value.
      * @return the constructed tracking protection policy based on preferences.
      */
-    private fun createTrackingProtectionPolicy(
+    fun createTrackingProtectionPolicy(
         normalMode: Boolean = Settings.getInstance(context).shouldUseTrackingProtection,
         privateMode: Boolean = true
     ): TrackingProtectionPolicy {
@@ -151,11 +151,6 @@ class Core(private val context: Context) {
             !normalMode && privateMode -> trackingProtectionPolicy.forPrivateSessionsOnly()
             else -> TrackingProtectionPolicy.none()
         }
-    }
-
-    fun updateTrackingProtection(newValue: Boolean) {
-        engine.settings.trackingProtectionPolicy =
-            createTrackingProtectionPolicy(normalMode = newValue)
     }
 
     /**
