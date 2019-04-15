@@ -784,9 +784,10 @@ static void AssertSystemPrincipalMustNotLoadRemoteDocuments(
   static bool recvdPrefValue = false;
   if (!recvdPrefValue) {
     nsAutoCString discoveryURLString;
-    Preferences::GetCString("extensions.webservice.discoverURL", discoveryURLString);
-    // discoverURL is by default suffixed with parameters in path like /%LOCALE%/
-    // so, we use the prePath for comparison
+    Preferences::GetCString("extensions.webservice.discoverURL",
+                            discoveryURLString);
+    // discoverURL is by default suffixed with parameters in path like
+    // /%LOCALE%/ so, we use the prePath for comparison
     nsCOMPtr<nsIURI> discoveryURL;
     NS_NewURI(getter_AddRefs(discoveryURL), discoveryURLString);
     if (discoveryURL) {
