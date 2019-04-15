@@ -69,10 +69,7 @@ add_task(async function() {
   info("Remove a USB runtime");
   mocks.removeUSBRuntime(RUNTIME_ID);
   mocks.emitUSBUpdate();
-
-  info("Wait until the USB sidebar item disappears");
-  await waitUntil(() => !findSidebarItemByText(RUNTIME_DEVICE_NAME, document) &&
-                      !findSidebarItemByText(RUNTIME_SHORT_NAME, document));
+  await waitUntilUsbDeviceIsUnplugged(RUNTIME_DEVICE_NAME, document);
 
   await removeTab(tab);
 });
