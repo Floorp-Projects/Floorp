@@ -16,7 +16,9 @@ add_task(async function() {
   info("Create a mocked unknown runtime");
   let isUnknown = true;
   mocks.createUSBRuntime("test_device_id", {
-    isUnknown: () => isUnknown,
+    get isUnknown() {
+      return isUnknown;
+    },
     // Here shortName would rather be Unknown Runtime from adb-runtime, but we only want
     // to check the runtime name does not appear in the UI.
     shortName: RUNTIME_NAME,
