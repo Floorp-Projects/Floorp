@@ -115,11 +115,11 @@ class DesktopUnittest(TestingMixin, MercurialScript, MozbaseMixin,
                     "in the config file. You do not need to specify "
                     "any other suites.\nBeware, this may take a while ;)"}
          ],
-        [['--e10s', ], {
-            "action": "store_true",
+        [['--disable-e10s', ], {
+            "action": "store_false",
             "dest": "e10s",
-            "default": False,
-            "help": "Run tests with multiple processes."}
+            "default": True,
+            "help": "Run tests without multiple processes (e10s)."}
          ],
         [['--headless', ], {
             "action": "store_true",

@@ -39,11 +39,11 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
             "dest": "test_type",
             "help": "Specify the test types to run."}
          ],
-        [['--e10s'], {
-            "action": "store_true",
+        [['--disable-e10s'], {
+            "action": "store_false",
             "dest": "e10s",
-            "default": False,
-            "help": "Run with e10s enabled"}
+            "default": True,
+            "help": "Run without e10s enabled"}
          ],
         [["--total-chunks"], {
             "action": "store",

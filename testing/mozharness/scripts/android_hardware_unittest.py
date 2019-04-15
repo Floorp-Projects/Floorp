@@ -72,11 +72,11 @@ class AndroidHardwareTest(TestingMixin, BaseScript, MozbaseMixin,
          "help": "Set log level (debug|info|warning|error|critical|fatal)",
          }
     ], [
-        ['--e10s', ],
-        {"action": "store_true",
+        ['--disable-e10s', ],
+        {"action": "store_false",
          "dest": "e10s",
-         "default": False,
-         "help": "Run tests with multiple processes.",
+         "default": True,
+         "help": "Run tests without multiple processes (e10s).",
          }
     ]] + copy.deepcopy(testing_config_options)
 

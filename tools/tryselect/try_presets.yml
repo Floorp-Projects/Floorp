@@ -17,7 +17,7 @@ debugger-tests:
         - "'debugger"
         - "'mozlint-eslint"
         - "!asan 'devtools !shippable | 'linux32 | 'macosx64"
-        - "!android !asan 'linux32 | 'macosx64 | !shippable 'mochitest-chrome | 'mochitest-clipboard-e10s"
+        - "!android !asan 'linux32 | 'macosx64 | !shippable 'mochitest-chrome | 'mochitest-clipboard"
         - "!asan !shippable 'linux64/ 'xpcshell"
         - "!qr !macosx !shippable 'damp"
 
@@ -43,4 +43,4 @@ sample-suites:
         - ^test- -1$
         # Only run a single talos + raptor suite per platform
         - ^test- !1$ !2$ !3$ !4$ !5$ !6$ !7$ !8$ !9$ !0$ !raptor !talos
-        - ^test- 'raptor-speedometer | 'talos-g1-e10s
+        - ^test- 'raptor-speedometer | 'talos-g1

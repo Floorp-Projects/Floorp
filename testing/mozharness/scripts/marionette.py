@@ -84,11 +84,11 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin,
          "help": "Number of this chunk",
          }
      ], [
-        ["--e10s"],
-        {"action": "store_true",
+        ["--disable-e10s"],
+        {"action": "store_false",
          "dest": "e10s",
-         "default": False,
-         "help": "Run tests with multiple processes. (Desktop builds only)",
+         "default": True,
+         "help": "Run tests without multiple processes (e10s). (Desktop builds only)",
          }
     ], [
         ["--headless"],
