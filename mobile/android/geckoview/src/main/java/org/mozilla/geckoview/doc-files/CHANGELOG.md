@@ -63,14 +63,6 @@ exclude: true
 - [`GeckoView`][65.5] will not create a [`GeckoSession`][65.9] anymore when
   attached to a window without a session.
 
-- Added API for session context assignment
-  [`GeckoSessionSettings.Builder.contextId`][68.14] and deletion of data
-  related to a session context
-  [`StorageController.clearSessionContextData`][68.15].
-
-[68.14]: ../GeckoSessionSettings.Builder.html#contextId-
-[68.15]: ../StorageController.html#clearSessionContextData-java.lang.String-
-
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -277,4 +269,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: fa2863734daac0ec5cb0671b030139de3aac5029
+[api-version]: 7cba6fdca8edb1858d73704a06dad936f78c9f64

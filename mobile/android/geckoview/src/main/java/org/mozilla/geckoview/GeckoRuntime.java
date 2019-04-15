@@ -87,12 +87,6 @@ public final class GeckoRuntime implements Parcelable {
      */
     public static final String EXTRA_CRASH_FATAL = "fatal";
 
-    private final StorageController mStorageController;
-
-    private GeckoRuntime() {
-        mStorageController = new StorageController();
-    }
-
     private static GeckoRuntime sDefaultRuntime;
 
     /**
@@ -456,17 +450,6 @@ public final class GeckoRuntime implements Parcelable {
     public void orientationChanged(final int newOrientation) {
         ThreadUtils.assertOnUiThread();
         GeckoScreenOrientation.getInstance().update(newOrientation);
-    }
-
-
-    /**
-     * Get the storage controller for this runtime.
-     *
-     * @return The {@link StorageController} for this instance.
-     */
-    @AnyThread
-    public @NonNull StorageController getStorageController() {
-        return mStorageController;
     }
 
     @Override // Parcelable

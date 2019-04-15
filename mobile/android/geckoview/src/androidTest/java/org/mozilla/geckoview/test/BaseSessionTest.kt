@@ -54,7 +54,6 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val AUTOPLAY_PATH = "/assets/www/autoplay.html"
         const val SCROLL_TEST_PATH = "/assets/www/scroll.html"
         const val COLORS_HTML_PATH = "/assets/www/colors.html"
-        const val STORAGE_TITLE_HTML_PATH = "/assets/www/reflect_local_storage_into_title.html"
     }
 
     @get:Rule val sessionRule = GeckoSessionTestRule()
