@@ -577,6 +577,7 @@ SpeechRecognition::StopRecording() {
           RefPtr<nsIAsyncShutdownClient> shutdown = media::GetShutdownBarrier();
           nsresult rv = shutdown->RemoveBlocker(blocker);
           MOZ_DIAGNOSTIC_ASSERT(NS_SUCCEEDED(rv));
+          Unused << rv;
         });
   }
   MOZ_ASSERT(!mShutdownBlocker);
