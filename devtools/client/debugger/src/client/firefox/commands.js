@@ -512,7 +512,8 @@ const clientCommands = {
   setEventListenerBreakpoints,
   waitForWorkers,
   detachWorkers,
-  hasWasmSupport
+  hasWasmSupport,
+  lookupConsoleClient
 };
 
 export { setupCommands, clientCommands };
