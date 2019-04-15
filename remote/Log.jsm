@@ -6,8 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["Log"];
 
-const {Preferences} = ChromeUtils.import("resource://gre/modules/Preferences.jsm");
 const {Log: StdLog} = ChromeUtils.import("resource://gre/modules/Log.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const LOG_LEVEL = "remote.log.level";
 
@@ -23,6 +23,9 @@ class Log {
   }
 
   static get verbose() {
-    return StdLog.Level[Preferences.get(LOG_LEVEL)] >= StdLog.Level.Info;
+    // we can't use Preferences.jsm before first paint,
+    // see ../browser/base/content/test/performance/browser_startup.js
+    const level = Services.prefs.getStringPref(LOG_LEVEL, "Info");
+    return StdLog.Level[level] >= StdLog.Level.Info;
   }
 }

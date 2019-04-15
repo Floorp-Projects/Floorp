@@ -4,6 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+interface nsISupports;
+
 [NoInterfaceObject]
 interface JSWindowActor {
   [Throws]
@@ -23,3 +25,12 @@ interface JSWindowActorChild {
   readonly attribute WindowGlobalChild manager;
 };
 JSWindowActorChild implements JSWindowActor;
+
+// WebIDL callback interface version of the nsIObserver interface for use when
+// calling the observe method on JSWindowActors.
+//
+// NOTE: This isn't marked as ChromeOnly, as it has no interface object, and
+// thus cannot be conditionally exposed.
+callback interface MozObserverCallback {
+  void observe(nsISupports subject, ByteString topic, DOMString? data);
+};

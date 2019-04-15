@@ -109,12 +109,8 @@ BrowsingContext* nsGenericHTMLFrameElement::GetContentWindowInternal() {
     return nullptr;
   }
 
-  RefPtr<nsDocShell> doc_shell = mFrameLoader->GetDocShell(IgnoreErrors());
-  if (!doc_shell) {
-    return nullptr;
-  }
-
-  return doc_shell->GetBrowsingContext();
+  RefPtr<BrowsingContext> bc = mFrameLoader->GetBrowsingContext();
+  return bc;
 }
 
 Nullable<WindowProxyHolder> nsGenericHTMLFrameElement::GetContentWindow() {
@@ -133,9 +129,7 @@ void nsGenericHTMLFrameElement::EnsureFrameLoader() {
 
   // Strangely enough, this method doesn't actually ensure that the
   // frameloader exists.  It's more of a best-effort kind of thing.
-  mFrameLoader = nsFrameLoader::Create(
-      this, mOpenerWindow ? mOpenerWindow->GetDOMWindow() : nullptr,
-      mNetworkCreated);
+  mFrameLoader = nsFrameLoader::Create(this, mOpenerWindow, mNetworkCreated);
 }
 
 nsresult nsGenericHTMLFrameElement::CreateRemoteFrameLoader(

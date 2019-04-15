@@ -69,7 +69,11 @@ add_task(async function test_unrestored_tabs_listed() {
   });
 
   info("Searching open pages.");
-  await UrlbarTestUtils.promiseAutocompleteResultPopup(window, RESTRICT_TOKEN_OPENPAGE, waitForFocus);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: RESTRICT_TOKEN_OPENPAGE,
+  });
   const total = UrlbarTestUtils.getResultCount(window);
   info(`Found ${total} matches`);
   const quantumbar = UrlbarPrefs.get("quantumbar");
