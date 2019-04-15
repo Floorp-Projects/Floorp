@@ -1400,38 +1400,70 @@ var PanelView = class extends AssociatedToNode {
   }
 
   /**
-   * Array of enabled elements that can be selected with the keyboard. This
-   * means all buttons, menulists, and text links including the back button.
-   *
-   * This list is cached until the view is closed, so elements that become
-   * enabled later may not be navigable.
+   * Determine whether an element can only be navigated to with tab/shift+tab,
+   * not the arrow keys.
    */
-  get _navigableElements() {
-    if (this.__navigableElements) {
-      return this.__navigableElements;
-    }
+  _isNavigableWithTabOnly(element) {
+    let tag = element.localName;
+    return tag == "menulist" || tag == "textbox" || tag == "input"
+           || tag == "textarea";
+  }
 
-    let navigableElements = Array.from(this.node.querySelectorAll(
-      ":-moz-any(button,toolbarbutton,menulist,.text-link,.navigable):not([disabled])"));
-    return this.__navigableElements = navigableElements.filter(element => {
-      // Set the "tabindex" attribute to make sure the element is focusable.
-      if (!element.hasAttribute("tabindex")) {
-        element.setAttribute("tabindex", "0");
+  /**
+   * Make a TreeWalker for keyboard navigation.
+   *
+   * @param {Boolean} arrowKey If `true`, elements only navigable with tab are
+   *        excluded.
+   */
+  _makeNavigableTreeWalker(arrowKey) {
+    let filter = node => {
+      if (node.disabled) {
+        return NodeFilter.FILTER_REJECT;
       }
-      if (element.hasAttribute("disabled")) {
-        return false;
+      let bounds = this._getBoundsWithoutFlushing(node);
+      if (bounds.width == 0 || bounds.height == 0) {
+        return NodeFilter.FILTER_REJECT;
       }
-      let bounds = this._getBoundsWithoutFlushing(element);
-      return bounds.width > 0 && bounds.height > 0;
-    });
+      if (node.tagName == "button" || node.tagName == "toolbarbutton" ||
+          node.classList.contains("text-link") ||
+          node.classList.contains("navigable") ||
+          (!arrowKey && this._isNavigableWithTabOnly(node))) {
+        // Set the tabindex attribute to make sure the node is focusable.
+        if (!node.hasAttribute("tabindex")) {
+          node.setAttribute("tabindex", "-1");
+        }
+        return NodeFilter.FILTER_ACCEPT;
+      }
+      return NodeFilter.FILTER_SKIP;
+    };
+    return this.document.createTreeWalker(this.node, NodeFilter.SHOW_ELEMENT,
+      filter);
+  }
+
+  /**
+   * Get a TreeWalker which finds elements navigable with tab/shift+tab.
+   */
+  get _tabNavigableWalker() {
+    if (!this.__tabNavigableWalker) {
+      this.__tabNavigableWalker = this._makeNavigableTreeWalker(false);
+    }
+    return this.__tabNavigableWalker;
+  }
+
+  /**
+   * Get a TreeWalker which finds elements navigable with up/down arrow keys.
+   */
+  get _arrowNavigableWalker() {
+    if (!this.__arrowNavigableWalker) {
+      this.__arrowNavigableWalker = this._makeNavigableTreeWalker(true);
+    }
+    return this.__arrowNavigableWalker;
   }
 
   /**
    * Element that is currently selected with the keyboard, or null if no element
    * is selected. Since the reference is held weakly, it can become null or
    * undefined at any time.
-   *
-   * The element is usually, but not necessarily, among the _navigableElements.
    */
   get selectedElement() {
     return this._selectedElement && this._selectedElement.get();
@@ -1447,18 +1479,30 @@ var PanelView = class extends AssociatedToNode {
   /**
    * Focuses and moves keyboard selection to the first navigable element.
    * This is a no-op if there are no navigable elements.
+   *
+   * @param {Boolean} homeKey   `true` if this is for the home key.
    */
-  focusFirstNavigableElement() {
-    this.selectedElement = this._navigableElements[0];
+  focusFirstNavigableElement(homeKey = false) {
+    // The home key is conceptually similar to the up/down arrow keys.
+    let walker = homeKey ?
+      this._arrowNavigableWalker : this._tabNavigableWalker;
+    walker.currentNode = walker.root;
+    this.selectedElement = walker.firstChild();
     this.focusSelectedElement();
   }
 
   /**
    * Focuses and moves keyboard selection to the last navigable element.
    * This is a no-op if there are no navigable elements.
+   *
+   * @param {Boolean} endKey   `true` if this is for the end key.
    */
-  focusLastNavigableElement() {
-    this.selectedElement = this._navigableElements[this._navigableElements.length - 1];
+  focusLastNavigableElement(endKey = false) {
+    // The end key is conceptually similar to the up/down arrow keys.
+    let walker = endKey ?
+      this._arrowNavigableWalker : this._tabNavigableWalker;
+    walker.currentNode = walker.root;
+    this.selectedElement = walker.lastChild();
     this.focusSelectedElement();
   }
 
@@ -1466,54 +1510,26 @@ var PanelView = class extends AssociatedToNode {
    * Based on going up or down, select the previous or next focusable element.
    *
    * @param {Boolean} isDown   whether we're going down (true) or up (false).
+   * @param {Boolean} arrowKey   `true` if this is for the up/down arrow keys.
    *
    * @return {DOMNode} the element we selected.
    */
-  moveSelection(isDown) {
-    let buttons = this._navigableElements;
-    let lastSelected = this.selectedElement;
-    let newButton = null;
-    let maxIdx = buttons.length - 1;
-    if (lastSelected) {
-      let buttonIndex = buttons.indexOf(lastSelected);
-      if (buttonIndex != -1) {
-        // Buttons may get selected whilst the panel is shown, so add an extra
-        // check here.
-        do {
-          buttonIndex = buttonIndex + (isDown ? 1 : -1);
-        } while (buttons[buttonIndex] && buttons[buttonIndex].disabled);
-        if (isDown && buttonIndex > maxIdx)
-          buttonIndex = 0;
-        else if (!isDown && buttonIndex < 0)
-          buttonIndex = maxIdx;
-        newButton = buttons[buttonIndex];
-      } else {
-        // The previously selected item is no longer selectable. Find the next item:
-        let allButtons = lastSelected.closest("panelview").getElementsByTagName("toolbarbutton");
-        let maxAllButtonIdx = allButtons.length - 1;
-        let allButtonIndex = allButtons.indexOf(lastSelected);
-        while (allButtonIndex >= 0 && allButtonIndex <= maxAllButtonIdx) {
-          allButtonIndex++;
-          // Check if the next button is in the list of focusable buttons.
-          buttonIndex = buttons.indexOf(allButtons[allButtonIndex]);
-          if (buttonIndex != -1) {
-            // If it is, just use that button if we were going down, or the previous one
-            // otherwise. If this was the first button, newButton will end up undefined,
-            // which is fine because we'll fall back to using the last button at the
-            // bottom of this method.
-            newButton = buttons[isDown ? buttonIndex : buttonIndex - 1];
-            break;
-          }
-        }
-      }
+  moveSelection(isDown, arrowKey = false) {
+    let walker = arrowKey ?
+      this._arrowNavigableWalker : this._tabNavigableWalker;
+    let oldSel = this.selectedElement;
+    let newSel;
+    if (oldSel) {
+      walker.currentNode = oldSel;
+      newSel = isDown ? walker.nextNode() : walker.previousNode();
     }
-
     // If we couldn't find something, select the first or last item:
-    if (!newButton) {
-      newButton = buttons[isDown ? 0 : maxIdx];
+    if (!newSel) {
+      walker.currentNode = walker.root;
+      newSel = isDown ? walker.firstChild() : walker.lastChild();
     }
-    this.selectedElement = newButton;
-    return newButton;
+    this.selectedElement = newSel;
+    return newSel;
   }
 
   /**
@@ -1538,38 +1554,70 @@ var PanelView = class extends AssociatedToNode {
       return;
     }
 
-    let buttons = this._navigableElements;
-    if (!buttons.length) {
-      return;
-    }
-
     let stop = () => {
       event.stopPropagation();
       event.preventDefault();
+    };
+
+    // If the focused element is only navigable with tab, it wants the arrow
+    // keys, etc. We shouldn't handle any keys except tab and shift+tab.
+    // We make a function for this for performance reasons: we only want to
+    // check this for keys we potentially care about, not *all* keys.
+    let tabOnly = () => {
+      // We use the real focus rather than this.selectedElement because focus
+      // might have been moved without keyboard navigation (e.g. mouse click)
+      // and this.selectedElement is only updated for keyboard navigation.
+      let focus = this.document.activeElement;
+      if (!focus) {
+        return false;
+      }
+      // Make sure the focus is actually inside the panel.
+      // (It might not be if the panel was opened with the mouse.)
+      // We use Node.compareDocumentPosition because Node.contains doesn't
+      // behave as expected for anonymous content; e.g. the input inside a
+      // textbox.
+      if (!(this.node.compareDocumentPosition(focus)
+            & Node.DOCUMENT_POSITION_CONTAINED_BY)) {
+        return false;
+      }
+      return this._isNavigableWithTabOnly(focus);
     };
 
     let keyCode = event.code;
     switch (keyCode) {
       case "ArrowDown":
       case "ArrowUp":
+        if (tabOnly()) {
+          break;
+        }
+        // Fall-through...
       case "Tab": {
         stop();
         let isDown = (keyCode == "ArrowDown") ||
                      (keyCode == "Tab" && !event.shiftKey);
-        let button = this.moveSelection(isDown);
+        let button = this.moveSelection(isDown, keyCode != "Tab");
         button.focus();
         break;
       }
       case "Home":
+        if (tabOnly()) {
+          break;
+        }
         stop();
-        this.focusFirstNavigableElement();
+        this.focusFirstNavigableElement(true);
         break;
       case "End":
+        if (tabOnly()) {
+          break;
+        }
         stop();
-        this.focusLastNavigableElement();
+        this.focusLastNavigableElement(true);
         break;
       case "ArrowLeft":
       case "ArrowRight": {
+        if (tabOnly()) {
+          break;
+        }
         stop();
         if ((!this.window.RTL_UI && keyCode == "ArrowLeft") ||
             (this.window.RTL_UI && keyCode == "ArrowRight")) {
@@ -1586,6 +1634,9 @@ var PanelView = class extends AssociatedToNode {
       }
       case "Space":
       case "Enter": {
+        if (tabOnly()) {
+          break;
+        }
         let button = this.selectedElement;
         if (!button)
           break;
@@ -1618,7 +1669,6 @@ var PanelView = class extends AssociatedToNode {
    * Clear all traces of keyboard navigation happening right now.
    */
   clearNavigation() {
-    delete this.__navigableElements;
     let selected = this.selectedElement;
     if (selected) {
       selected.blur();
