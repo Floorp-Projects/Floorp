@@ -2378,7 +2378,7 @@ class nsStyleContentData {
   }
 
   struct CounterFunction {
-    nsString mIdent;
+    RefPtr<nsAtom> mIdent;
     // This is only used when it is a counters() function.
     nsString mSeparator;
     mozilla::CounterStylePtr mCounterStyle;
@@ -2440,7 +2440,7 @@ class nsStyleContentData {
 };
 
 struct nsStyleCounterData {
-  nsString mCounter;
+  RefPtr<nsAtom> mCounter;
   int32_t mValue;
 
   bool operator==(const nsStyleCounterData& aOther) const {
@@ -2489,7 +2489,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleContent {
     mIncrements.SetLength(aCount);
   }
 
-  void SetCounterIncrementAt(uint32_t aIndex, const nsString& aCounter,
+  void SetCounterIncrementAt(uint32_t aIndex, nsAtom* aCounter,
                              int32_t aIncrement) {
     mIncrements[aIndex].mCounter = aCounter;
     mIncrements[aIndex].mValue = aIncrement;
@@ -2505,8 +2505,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleContent {
     mResets.SetLength(aCount);
   }
 
-  void SetCounterResetAt(uint32_t aIndex, const nsString& aCounter,
-                         int32_t aValue) {
+  void SetCounterResetAt(uint32_t aIndex, nsAtom* aCounter, int32_t aValue) {
     mResets[aIndex].mCounter = aCounter;
     mResets[aIndex].mValue = aValue;
   }
@@ -2521,8 +2520,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleContent {
     mSets.SetLength(aCount);
   }
 
-  void SetCounterSetAt(uint32_t aIndex, const nsString& aCounter,
-                       int32_t aValue) {
+  void SetCounterSetAt(uint32_t aIndex, nsAtom* aCounter, int32_t aValue) {
     mSets[aIndex].mCounter = aCounter;
     mSets[aIndex].mValue = aValue;
   }

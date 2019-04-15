@@ -214,7 +214,7 @@ class nsCounterManager {
 
   // Gets the appropriate counter list, creating it if necessary.
   // Guaranteed to return non-null. (Uses an infallible hashtable API.)
-  nsCounterList* CounterListFor(const nsAString& aCounterName);
+  nsCounterList* CounterListFor(nsAtom* aCounterName);
 
   // Clean up data in any dirty counter lists.
   void RecalcAll();
@@ -262,7 +262,7 @@ class nsCounterManager {
                             const nsStyleCounterData& aCounterData,
                             nsCounterNode::Type aType);
 
-  nsClassHashtable<nsStringHashKey, nsCounterList> mNames;
+  nsClassHashtable<nsRefPtrHashKey<nsAtom>, nsCounterList> mNames;
 };
 
 #endif /* nsCounterManager_h_ */
