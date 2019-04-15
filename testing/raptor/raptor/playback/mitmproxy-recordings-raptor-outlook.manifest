@@ -1,0 +1,10 @@
+[
+  {
+    "size": 12179560,
+    "visibility": "public",
+    "digest": "24f431940afdf1687cab2dd3a2519203f73309535ab60c4f4275d53a5c9145875b8b48c739383318e3e5e52cb9ef4c29e475eec2c4d75e3871aa49938622597c",
+    "algorithm": "sha512",
+    "filename": "mitmproxy-tp6-outlook.zip",
+    "unpack": true
+  }
+]
