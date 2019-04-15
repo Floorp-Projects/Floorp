@@ -9556,8 +9556,7 @@ inline void nsCSSFrameConstructor::ConstructFramesFromItemList(
             StyleMozListReversed::True &&
         iter.item().mComputedStyle->StyleDisplay()->mDisplay ==
             StyleDisplay::ListItem) {
-      auto* list =
-          mCounterManager.CounterListFor(NS_LITERAL_STRING("list-item"));
+      auto* list = mCounterManager.CounterListFor(nsGkAtoms::list_item);
       list->SetDirty();
       CountersDirty();
       listItemListIsDirty = true;
