@@ -307,6 +307,10 @@ void BrowsingContext::CacheChildren(bool aFromIPC) {
 
 bool BrowsingContext::IsCached() { return sCachedBrowsingContexts->has(Id()); }
 
+bool BrowsingContext::HasOpener() const {
+  return sBrowsingContexts->has(mOpenerId);
+}
+
 void BrowsingContext::GetChildren(
     nsTArray<RefPtr<BrowsingContext>>& aChildren) {
   MOZ_ALWAYS_TRUE(aChildren.AppendElements(mChildren));
