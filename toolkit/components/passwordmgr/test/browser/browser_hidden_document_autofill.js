@@ -129,55 +129,46 @@ testUrls.forEach(testUrl => {
   });
 });
 
-add_task(async function test_defer_autofill_with_masterpassword() {
+add_task(async function test_immediate_autofill_with_masterpassword() {
   // Set master password prompt timeout to 3s.
   // If this test goes intermittent, you likely have to increase this value.
   await SpecialPowers.pushPrefEnv({set: [["signon.masterPasswordReprompt.timeout_ms", 3000]]});
-  LoginTestUtils.masterPassword.enable();
 
-  registerCleanupFunction(function() {
+  LoginTestUtils.masterPassword.enable();
+  await LoginTestUtils.reloadData();
+  info(`Have enabled masterPassword, now isLoggedIn? ${Services.logins.isLoggedIn}`);
+
+  registerCleanupFunction(async function() {
     LoginTestUtils.masterPassword.disable();
+    await LoginTestUtils.reloadData();
   });
 
-  let result, tab1Visibility, dialogObserved;
+  let dialogResult, tab1Visibility, dialogObserved;
+
   // open 2 tabs
   const tab1 = await BrowserTestUtils.openNewForegroundTab(gBrowser, INITIAL_URL);
   const tab2 = await BrowserTestUtils.openNewForegroundTab(gBrowser, INITIAL_URL);
 
-  info("sanity check by first loading a form into the visible tab");
-  is(await getDocumentVisibilityState(tab2.linkedBrowser),
-     "visible", "The second tab should be visible");
-  result = { wasShown: false };
-
-  dialogObserved = observeMasterPasswordDialog(tab2.ownerGlobal, result);
-  await BrowserTestUtils.loadURI(tab2.linkedBrowser, FORM_URL);
-  await dialogObserved;
-  ok(result.wasShown, "Dialog should be shown when form is loaded into a visible document");
-
   info("load a background login form tab with a matching saved login " +
        "and wait to see if the master password dialog is shown");
-  // confirm document is hidden
+  is(await getDocumentVisibilityState(tab2.linkedBrowser),
+     "visible", "The second tab should be visible");
+
   tab1Visibility = await getDocumentVisibilityState(tab1.linkedBrowser);
   is(tab1Visibility, "hidden", "The first tab should be backgrounded");
-  result = { wasShown: false };
 
-  dialogObserved = observeMasterPasswordDialog(tab1.ownerGlobal, result);
+  dialogResult = { wasShown: false };
+  dialogObserved = observeMasterPasswordDialog(tab1.ownerGlobal, dialogResult);
+
+  // In this case we will try to autofill while hidden, so look for the passwordmgr-processed-form
+  // to be observed
+  await addContentObserver(tab1.linkedBrowser, "passwordmgr-processed-form");
   await BrowserTestUtils.loadURI(tab1.linkedBrowser, FORM_URL);
-  await dialogObserved;
-  ok(!result.wasShown, "Dialog should not be shown when form is loaded into a hidden document");
+  let wasProcessed = getContentObserverResult(tab1.linkedBrowser, "passwordmgr-processed-form");
+  await Promise.all([dialogObserved, wasProcessed]);
 
-  info("switch to the form tab " +
-       "and confirm the master password dialog is then shown");
-  tab1Visibility = await getDocumentVisibilityState(tab1.linkedBrowser);
-  is(tab1Visibility, "hidden", "The first tab should be backgrounded");
-  result = { wasShown: false };
-
-  dialogObserved = observeMasterPasswordDialog(tab1.ownerGlobal, result);
-  await BrowserTestUtils.switchTab(gBrowser, tab1);
-  await dialogObserved;
-  tab1Visibility = await getDocumentVisibilityState(tab1.linkedBrowser);
-  is(tab1Visibility, "visible", "The first tab should be foreground");
-  ok(result.wasShown, "Dialog should be shown when input's document becomes visible");
+  ok(wasProcessed, "Observer should be notified when form is loaded into a hidden document");
+  ok(dialogResult && dialogResult.wasShown, "MP Dialog should be shown when form is loaded into a hidden document");
 
   gBrowser.removeTab(tab1);
   gBrowser.removeTab(tab2);
