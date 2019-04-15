@@ -5,13 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 UNIFIED_SOURCES += [
+    'TestMultiWriterQueue.cpp',
     'TestRollingNumber.cpp',
 ]
-
-if CONFIG['OS_TARGET'] != 'Android':
-    UNIFIED_SOURCES += [
-        'TestMultiWriterQueue.cpp',
-    ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
