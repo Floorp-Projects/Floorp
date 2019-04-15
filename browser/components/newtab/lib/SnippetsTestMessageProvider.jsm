@@ -247,6 +247,16 @@ const MESSAGES = () => ([
       "section_title_url": "https://www.mozilla.org/about",
     },
   },
+  {
+    "id": "SIMPLE_BELOW_SEARCH_TEST_1",
+    "template": "simple_below_search_snippet",
+    "content": {
+      "icon": TEST_ICON,
+      "text": "Securely store passwords, bookmarks, and more with a Firefox Account. <syncLink>Sign up</syncLink>",
+      "links": {"syncLink": {"url": "https://www.mozilla.org/en-US/firefox/accounts"}},
+      "block_button_text": "Block",
+    },
+  },
 ]);
 
 const SnippetsTestMessageProvider = {

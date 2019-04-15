@@ -43,8 +43,10 @@ const PINNED_TABS_TARGET_SITES = [
   "outlook.live.com", "facebook.com", "www.facebook.com", "twitter.com", "www.twitter.com",
   "reddit.com", "www.reddit.com", "github.com", "www.github.com", "youtube.com", "www.youtube.com",
   "feedly.com", "www.feedly.com", "drive.google.com", "amazon.com", "www.amazon.com",
-  "messages.android.com",
+  "messages.android.com", "amazon.ca", "www.amazon.ca", "amazon.com.au", "www.amazon.com.au",
+  "amazon.co.uk", "www.amazon.co.uk", "amazon.fr", "www.amazon.fr", "amazon.de", "www.amazon.de",
 ];
+const PINNED_TABS_TARGET_LOCALES = ["en-US", "en-CA", "en-AU", "en-GB", "en-ZA", "en-NZ", "fr", "de"];
 
 const CFR_MESSAGES = [
   {
@@ -350,7 +352,7 @@ const CFR_MESSAGES = [
         }],
       },
     },
-    targeting: `locale == "en-US" && !hasPinnedTabs && recentVisits[.timestamp > (currentDate|date - 3600 * 1000 * 1)]|length >= 3`,
+    targeting: `locale in ${JSON.stringify(PINNED_TABS_TARGET_LOCALES)} && !hasPinnedTabs && recentVisits[.timestamp > (currentDate|date - 3600 * 1000 * 1)]|length >= 3`,
     frequency: {lifetime: 3},
     trigger: {id: "frequentVisits", params: PINNED_TABS_TARGET_SITES},
   },
