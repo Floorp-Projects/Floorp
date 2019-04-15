@@ -9,7 +9,7 @@
 */
 #include "modules/desktop_capture/app_capturer.h"
 #include "modules/desktop_capture/shared_desktop_frame.h"
-#include "modules/desktop_capture/x11/shared_x_util.h"
+#include "modules/desktop_capture/linux/shared_x_util.h"
 
 #include <assert.h>
 #include <string.h>
@@ -23,9 +23,9 @@
 
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_frame.h"
-#include "modules/desktop_capture/x11/shared_x_display.h"
-#include "modules/desktop_capture/x11/x_error_trap.h"
-#include "modules/desktop_capture/x11/x_server_pixel_buffer.h"
+#include "modules/desktop_capture/linux/shared_x_display.h"
+#include "modules/desktop_capture/linux/x_error_trap.h"
+#include "modules/desktop_capture/linux/x_server_pixel_buffer.h"
 #include "rtc_base/logging.h"
 
 namespace webrtc {

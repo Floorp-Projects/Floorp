@@ -12,7 +12,7 @@
 #define WEBRTC_MODULES_DESKTOP_CAPTURE_X11_SHARED_X_UTIL_H_
 
 #include "system_wrappers/include/atomic32.h"
-#include "modules/desktop_capture/x11/shared_x_display.h"
+#include "modules/desktop_capture/linux/shared_x_display.h"
 #include <unistd.h>
 #include <string.h>
 

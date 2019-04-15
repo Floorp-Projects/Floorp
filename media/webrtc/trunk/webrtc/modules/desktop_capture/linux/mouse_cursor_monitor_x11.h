@@ -23,7 +23,8 @@ namespace webrtc {
 class MouseCursorMonitorX11 : public MouseCursorMonitor,
                               public SharedXDisplay::XEventHandler {
  public:
-  MouseCursorMonitorX11(const DesktopCaptureOptions& options, Window window);
+  MouseCursorMonitorX11(const DesktopCaptureOptions& options, Window window,
+                        Window inner_window);
   ~MouseCursorMonitorX11() override;
 
   static MouseCursorMonitor* CreateForWindow(
@@ -51,6 +52,7 @@ class MouseCursorMonitorX11 : public MouseCursorMonitor,
   Callback* callback_;
   Mode mode_;
   Window window_;
+  Window inner_window_;
 
   bool have_xfixes_;
   int xfixes_event_base_;
