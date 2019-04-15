@@ -22,8 +22,6 @@ def getAppVersionWithoutMilestone() {
 // We take something like 58.1.2a1 and come out with 5800102
 // This gives us 3 digits for the major number, and 2 digits
 // each for the minor and build number. Beta and Release
-//
-// This must be synchronized with _compute_gecko_version(...) in /taskcluster/taskgraph/transforms/task.py
 def computeVersionCode() {
     String appVersion = getAppVersionWithoutMilestone()
 
