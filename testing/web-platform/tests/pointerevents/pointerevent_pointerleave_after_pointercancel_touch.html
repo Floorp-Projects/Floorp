@@ -6,6 +6,9 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <!-- Additional helper script for common checks across event types -->
         <script type="text/javascript" src="pointerevent_support.js"></script>
     </head>
@@ -44,7 +47,6 @@
                                     assert_equals(event.isPrimary, pointercancel_event.isPrimary, "isPrimary is same for pointercancel and pointerleave");
                                 });
                                 eventTested = true;
-                                test_pointerleave.done();
                             }
                         }
                         else {
@@ -53,6 +55,14 @@
                             }, "pointerleave received before pointercancel");
                         }
                     }
+                });
+
+                // Inject touch inputs and wait for all the actions finish to end the test.
+                touchScrollInTarget(target0, 'down').then(function() {
+                    test_pointerleave.step(function () {
+                        assert_true(eventTested, "pointerleave should be received before the test finishes");
+                    }, "pointerleave should be received before the test finishes");
+                    test_pointerleave.done();
                 });
             }
 
