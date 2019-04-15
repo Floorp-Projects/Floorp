@@ -21,7 +21,7 @@ linux64-sccache:
     run:
         toolchain-artifact: public/build/sccache2.tar.xz
     toolchains:
-        - linux64-rust-1.28
+        - linux64-rust-1.34
         - linux64-binutils
 
 win64-sccache:
@@ -35,4 +35,4 @@ win64-sccache:
     run:
         toolchain-artifact: public/build/sccache2.tar.bz2
     toolchains:
-        - win64-rust-1.28
+        - win64-rust-1.34
