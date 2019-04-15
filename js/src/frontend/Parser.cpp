@@ -9713,10 +9713,11 @@ GeneralParser<ParseHandler, Unit>::propertyOrMethodName(
   // In the last case, where there's not a `:` token to consume, we peek at
   // (but don't consume) the next token to decide how to set `*propType`.
   //
-  //     `=` or `;`             ==> PropertyType::Field (classes only)
-  //     `=`                    ==> PropertyType::CoverInitializedName
   //     `,` or `}`             ==> PropertyType::Shorthand
   //     `(`                    ==> PropertyType::Method
+  //     `=`, not in a class    ==> PropertyType::CoverInitializedName
+  //     '=', in a class        ==> PropertyType::Field
+  //     any token, in a class  ==> PropertyType::Field (ASI)
   //
   // The caller must check `*propType` and throw if whatever we parsed isn't
   // allowed here (for example, a getter in a destructuring pattern).
@@ -9798,18 +9799,8 @@ GeneralParser<ParseHandler, Unit>::propertyOrMethodName(
     return propName;
   }
 
-  if (propertyNameContext == PropertyNameInClass &&
-      (tt == TokenKind::Semi || tt == TokenKind::Assign)) {
-    if (isGenerator || isAsync || isGetter || isSetter) {
-      error(JSMSG_BAD_PROP_ID);
-      return null();
-    }
-    anyChars.ungetToken();
-    *propType = PropertyType::Field;
-    return propName;
-  }
-
-  if (TokenKindIsPossibleIdentifierName(ltok) &&
+  if (propertyNameContext != PropertyNameInClass &&
+      TokenKindIsPossibleIdentifierName(ltok) &&
       (tt == TokenKind::Comma || tt == TokenKind::RightCurly ||
        tt == TokenKind::Assign)) {
     if (isGenerator || isAsync || isGetter || isSetter) {
@@ -9839,6 +9830,16 @@ GeneralParser<ParseHandler, Unit>::propertyOrMethodName(
     } else {
       *propType = PropertyType::Method;
     }
+    return propName;
+  }
+
+  if (propertyNameContext == PropertyNameInClass) {
+    if (isGenerator || isAsync || isGetter || isSetter) {
+      error(JSMSG_BAD_PROP_ID);
+      return null();
+    }
+    anyChars.ungetToken();
+    *propType = PropertyType::Field;
     return propName;
   }
 
