@@ -1,8 +1,22 @@
 [package]
 name = "bitsdownload"
 version = "0.1.0"
-authors = ["nobody@mozilla.org"]
+authors = ["Kirk Steuber <bytesized@mozilla.com>"]
 license = "MPL-2.0"
 
 [dependencies]
 bits_client = { path = "./bits_client" }
+comedy = "0.1.0"
+crossbeam-utils = "0.6.3"
+failure_derive = "0.1.3"
+libc = "0.2"
+log = "0.4"
+moz_task = { path = "../../../xpcom/rust/moz_task" }
+nserror = { path = "../../../xpcom/rust/nserror" }
+nsstring = { path = "../../../xpcom/rust/nsstring" }
+xpcom = { path = "../../../xpcom/rust/xpcom" }
+
+[dependencies.failure]
+version = "0.1.3"
+features = ["derive"]
+default_features = false
