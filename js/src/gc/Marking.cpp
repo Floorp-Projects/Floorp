@@ -280,7 +280,7 @@ void js::CheckTracedThing(JSTracer* trc, T thing) {
 }
 
 namespace js {
-#define IMPL_CHECK_TRACED_THING(_, type, __) \
+#define IMPL_CHECK_TRACED_THING(_, type, _1, _2) \
   template void CheckTracedThing<type>(JSTracer*, type*);
 JS_FOR_EACH_TRACEKIND(IMPL_CHECK_TRACED_THING);
 #undef IMPL_CHECK_TRACED_THING
@@ -451,7 +451,7 @@ namespace gc {
   template void TraceRangeInternal<type>(JSTracer*, size_t len, type*,      \
                                          const char*);
 
-#define INSTANTIATE_INTERNAL_TRACE_FUNCTIONS_FROM_TRACEKIND(_1, type, _2) \
+#define INSTANTIATE_INTERNAL_TRACE_FUNCTIONS_FROM_TRACEKIND(_1, type, _2, _3) \
   INSTANTIATE_INTERNAL_TRACE_FUNCTIONS(type*)
 
 JS_FOR_EACH_TRACEKIND(INSTANTIATE_INTERNAL_TRACE_FUNCTIONS_FROM_TRACEKIND)
@@ -550,7 +550,7 @@ void js::TraceManuallyBarrieredGenericPointerEdge(JSTracer* trc, Cell** thingp,
 // a sufficiently smart C++ compiler may be able to devirtualize some paths.
 template <typename T>
 void js::gc::TraceEdgeInternal(JSTracer* trc, T* thingp, const char* name) {
-#define IS_SAME_TYPE_OR(name, type, _) mozilla::IsSame<type*, T>::value ||
+#define IS_SAME_TYPE_OR(name, type, _, _1) mozilla::IsSame<type*, T>::value ||
   static_assert(JS_FOR_EACH_TRACEKIND(IS_SAME_TYPE_OR)
                         mozilla::IsSame<T, JS::Value>::value ||
                     mozilla::IsSame<T, jsid>::value ||
@@ -924,31 +924,27 @@ void js::GCMarker::traverseEdge(S source, const T& thing) {
 namespace {
 
 template <typename T>
-struct TypeParticipatesInCC {};
-#define EXPAND_PARTICIPATES_IN_CC(_, type, addToCCKind) \
-  template <>                                           \
-  struct TypeParticipatesInCC<type> {                   \
-    static const bool value = addToCCKind;              \
+struct TraceKindCanBeGray {};
+#define EXPAND_TRACEKIND_DEF(_, type, canBeGray, _1)  \
+  template <>                                         \
+  struct TraceKindCanBeGray<type> {                   \
+    static const bool value = canBeGray;              \
   };
-JS_FOR_EACH_TRACEKIND(EXPAND_PARTICIPATES_IN_CC)
-#undef EXPAND_PARTICIPATES_IN_CC
+JS_FOR_EACH_TRACEKIND(EXPAND_TRACEKIND_DEF)
+#undef EXPAND_TRACEKIND_DEF
 
 }  // namespace
 
-#ifdef DEBUG
-
-struct ParticipatesInCCFunctor {
+struct TraceKindCanBeGrayFunctor {
   template <typename T>
   bool operator()() {
-    return TypeParticipatesInCC<T>::value;
+    return TraceKindCanBeGray<T>::value;
   }
 };
 
-static bool TraceKindParticipatesInCC(JS::TraceKind kind) {
-  return DispatchTraceKindTyped(ParticipatesInCCFunctor(), kind);
+static bool TraceKindCanBeMarkedGray(JS::TraceKind kind) {
+  return DispatchTraceKindTyped(TraceKindCanBeGrayFunctor(), kind);
 }
-
-#endif  // DEBUG
 
 template <typename T>
 bool js::GCMarker::mark(T* thing) {
@@ -959,7 +955,7 @@ bool js::GCMarker::mark(T* thing) {
   TenuredCell* cell = TenuredCell::fromPointer(thing);
 
   MarkColor color =
-      TypeParticipatesInCC<T>::value ? markColor() : MarkColor::Black;
+      TraceKindCanBeGray<T>::value ? markColor() : MarkColor::Black;
   markCount++;
   return cell->markIfUnmarked(color);
 }
@@ -2502,7 +2498,7 @@ void GCMarker::delayMarkingChildren(Cell* cell) {
 
 void GCMarker::markDelayedChildren(Arena* arena, MarkColor color) {
   JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
-  MOZ_ASSERT_IF(color == MarkColor::Gray, TraceKindParticipatesInCC(kind));
+  MOZ_ASSERT_IF(color == MarkColor::Gray, TraceKindCanBeMarkedGray(kind));
 
   AutoSetMarkColor setColor(*this, color);
   for (ArenaCellIterUnderGC i(arena); !i.done(); i.next()) {
@@ -3181,7 +3177,7 @@ size_t js::TenuringTracer::moveStringToTenured(JSString* dst, JSString* src,
 
 template <typename T>
 static inline void CheckIsMarkedThing(T* thingp) {
-#define IS_SAME_TYPE_OR(name, type, _) mozilla::IsSame<type*, T>::value ||
+#define IS_SAME_TYPE_OR(name, type, _, _1) mozilla::IsSame<type*, T>::value ||
   static_assert(JS_FOR_EACH_TRACEKIND(IS_SAME_TYPE_OR) false,
                 "Only the base cell layout types are allowed into "
                 "marking/tracing internals");
@@ -3361,7 +3357,7 @@ FOR_EACH_PUBLIC_TAGGED_GC_POINTER_TYPE(
   template bool IsMarkedBlackInternal(JSRuntime* rt, type* thing); \
   template bool IsAboutToBeFinalizedInternal(type* thingp);
 
-#define INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND(_1, type, _2) \
+#define INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND(_1, type, _2, _3) \
   INSTANTIATE_INTERNAL_MARKING_FUNCTIONS(type*)
 
 JS_FOR_EACH_TRACEKIND(INSTANTIATE_INTERNAL_MARKING_FUNCTIONS_FROM_TRACEKIND)
@@ -3445,24 +3441,13 @@ class UnmarkGrayTracer : public JS::CallbackTracer {
 #endif
 };
 
-static bool IsCCTraceKindInternal(JS::TraceKind kind) {
-  switch (kind) {
-#define EXPAND_IS_CC_TRACE_KIND(name, _, addToCCKind) \
-  case JS::TraceKind::name:                           \
-    return addToCCKind;
-    JS_FOR_EACH_TRACEKIND(EXPAND_IS_CC_TRACE_KIND)
-    default:
-      MOZ_CRASH("Unexpected trace kind");
-  }
-}
-
 void UnmarkGrayTracer::onChild(const JS::GCCellPtr& thing) {
   Cell* cell = thing.asCell();
 
   // Cells in the nursery cannot be gray, and nor can certain kinds of tenured
   // cells. These must necessarily point only to black edges.
   if (!cell->isTenured() ||
-      !IsCCTraceKindInternal(cell->asTenured().getTraceKind())) {
+      !TraceKindCanBeMarkedGray(cell->asTenured().getTraceKind())) {
 #ifdef DEBUG
     MOZ_ASSERT(!cell->isMarkedGray());
     AssertNonGrayTracer nongray(runtime());

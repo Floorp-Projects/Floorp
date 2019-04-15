@@ -45,7 +45,7 @@ T* DoCallback(JS::CallbackTracer* trc, T** thingp, const char* name) {
   trc->dispatchToOnEdge(thingp);
   return *thingp;
 }
-#define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(name, type, _) \
+#define INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS(name, type, _, _1) \
   template type* DoCallback<type>(JS::CallbackTracer*, type**, const char*);
 JS_FOR_EACH_TRACEKIND(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS);
 #undef INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS

@@ -73,7 +73,7 @@ static inline void TraceExactStackRootList(JSTracer* trc,
 
 static inline void TraceStackRoots(JSTracer* trc,
                                    JS::RootedListHeads& stackRoots) {
-#define TRACE_ROOTS(name, type, _)                                    \
+#define TRACE_ROOTS(name, type, _, _1)                                 \
   TraceExactStackRootList<type*>(trc, stackRoots[JS::RootKind::name], \
                                  "exact-" #name);
   JS_FOR_EACH_TRACEKIND(TRACE_ROOTS)
@@ -108,7 +108,7 @@ static inline void TracePersistentRootedList(
 }
 
 void JSRuntime::tracePersistentRoots(JSTracer* trc) {
-#define TRACE_ROOTS(name, type, _)                                           \
+#define TRACE_ROOTS(name, type, _, _1)                                        \
   TracePersistentRootedList<type*>(trc, heapRoots.ref()[JS::RootKind::name], \
                                    "persistent-" #name);
   JS_FOR_EACH_TRACEKIND(TRACE_ROOTS)
@@ -140,7 +140,7 @@ static void FinishPersistentRootedChain(
 }
 
 void JSRuntime::finishPersistentRoots() {
-#define FINISH_ROOT_LIST(name, type, _) \
+#define FINISH_ROOT_LIST(name, type, _, _1) \
   FinishPersistentRootedChain<type*>(heapRoots.ref()[JS::RootKind::name]);
   JS_FOR_EACH_TRACEKIND(FINISH_ROOT_LIST)
 #undef FINISH_ROOT_LIST
