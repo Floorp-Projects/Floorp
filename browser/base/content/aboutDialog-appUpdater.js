@@ -295,7 +295,6 @@ appUpdater.prototype =
     this.update.QueryInterface(Ci.nsIWritablePropertyBag);
     this.update.setProperty("foregroundDownload", "true");
 
-    this.aus.pauseDownload();
     let state = this.aus.downloadUpdate(this.update, false);
     if (state == "failed") {
       this.selectPanel("downloadFailed");

@@ -346,9 +346,12 @@ interface nsIApplicationUpdateService : nsISupports
   nsIFile getUpdatesDirectory();
 
   /**
-   * Pauses the active update download process
+   * Stop the active update download process. This is the equivalent of
+   * calling nsIRequest::Cancel on the download's nsIRequest. When downloading
+   * with nsIIncrementalDownload, this will leave the partial download in place.
+   * When downloading with BITS, any partial download progress will be removed.
    */
-  void pauseDownload();
+  void stopDownload();
 
   /**
    * Whether or not there is an download happening at the moment.

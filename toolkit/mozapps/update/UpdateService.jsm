@@ -8,6 +8,8 @@
 
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const {AUSTLMY} = ChromeUtils.import("resource://gre/modules/UpdateTelemetry.jsm");
+const {Bits, BitsRequest} =
+  ChromeUtils.import("resource://gre/modules/Bits.jsm");
 const {FileUtils} = ChromeUtils.import("resource://gre/modules/FileUtils.jsm");
 const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -30,6 +32,7 @@ const UPDATESERVICE_CID = Components.ID("{B3C290A6-3943-4B89-8BBE-C01EB7B3B311}"
 const PREF_APP_UPDATE_ALTWINDOWTYPE        = "app.update.altwindowtype";
 const PREF_APP_UPDATE_BACKGROUNDERRORS     = "app.update.backgroundErrors";
 const PREF_APP_UPDATE_BACKGROUNDMAXERRORS  = "app.update.backgroundMaxErrors";
+const PREF_APP_UPDATE_BITS_ENABLED         = "app.update.BITS.enabled";
 const PREF_APP_UPDATE_CANCELATIONS         = "app.update.cancelations";
 const PREF_APP_UPDATE_CANCELATIONS_OSX     = "app.update.cancelations.osx";
 const PREF_APP_UPDATE_CANCELATIONS_OSX_MAX = "app.update.cancelations.osx.max";
@@ -56,6 +59,7 @@ const PREF_APP_UPDATE_SOCKET_RETRYTIMEOUT  = "app.update.socket.retryTimeout";
 const PREF_APP_UPDATE_STAGING_ENABLED      = "app.update.staging.enabled";
 const PREF_APP_UPDATE_URL                  = "app.update.url";
 const PREF_APP_UPDATE_URL_DETAILS          = "app.update.url.details";
+const PREF_NETWORK_PROXY_TYPE              = "network.proxy.type";
 
 const URI_BRAND_PROPERTIES      = "chrome://branding/locale/brand.properties";
 const URI_UPDATE_HISTORY_DIALOG = "chrome://mozapps/content/update/history.xul";
@@ -92,6 +96,13 @@ const STATE_APPLIED_SERVICE = "applied-service";
 const STATE_SUCCEEDED       = "succeeded";
 const STATE_DOWNLOAD_FAILED = "download-failed";
 const STATE_FAILED          = "failed";
+
+// These value control how frequently we get updates from the BITS client on
+// the progress made downloading. The difference between the two is that the
+// active interval is the one used when the user is watching. The idle interval
+// is the one used when no one is watching.
+const BITS_IDLE_POLL_RATE_MS = 1000;
+const BITS_ACTIVE_POLL_RATE_MS = 200;
 
 // The values below used by this code are from common/updatererrors.h
 const WRITE_ERROR                          = 7;
@@ -169,6 +180,11 @@ const NETWORK_ERROR_OFFLINE             = 111;
 // Error codes should be < 1000. Errors above 1000 represent http status codes
 const HTTP_ERROR_OFFSET                 = 1000;
 
+// The is an HRESULT error that may be returned from the BITS interface
+// indicating that access was denied. Often, this error code is returned when
+// attempting to access a job created by a different user.
+const HRESULT_E_ACCESSDENIED            = -2147024891;
+
 const DOWNLOAD_CHUNK_SIZE           = 300000; // bytes
 
 const UPDATE_WINDOW_NAME      = "Update:Wizard";
@@ -212,6 +228,11 @@ var gUpdateMutexHandle = null;
 var gUpdateDirPermissionFixAttempted = false;
 // This is used for serializing writes to the update log file
 var gLogfileWritePromise;
+// This value will be set to true if it appears that BITS is being used by
+// another user to download updates. We don't really want two users using BITS
+// at once. Computers with many users (ex: a school computer), should not end
+// up with dozens of BITS jobs.
+var gBITSInUseByAnotherUser = false;
 
 XPCOMUtils.defineLazyGetter(this, "gLogEnabled", function aus_gLogEnabled() {
   return Services.prefs.getBoolPref(PREF_APP_UPDATE_LOG, false) ||
@@ -532,6 +553,47 @@ function getCanStageUpdates() {
   }
 
   return gCanStageUpdatesSession;
+}
+
+/*
+ * Whether or not the application can use BITS to download updates.
+ *
+ * @return A string with one of these values:
+ *           CanUseBits
+ *           NoBits_NotWindows
+ *           NoBits_FeatureOff
+ *           NoBits_Pref
+ *           NoBits_Proxy
+ *           NoBits_OtherUser
+ */
+function getCanUseBits() {
+  if (AppConstants.platform != "win") {
+    LOG("getCanUseBits - Not using BITS because this is not Windows");
+    return "NoBits_NotWindows";
+  }
+  if (!AppConstants.MOZ_BITS_DOWNLOAD) {
+    LOG("getCanUseBits - Not using BITS because the feature is disabled");
+    return "NoBits_FeatureOff";
+  }
+  if (!Services.prefs.getBoolPref(PREF_APP_UPDATE_BITS_ENABLED, true)) {
+    LOG("getCanUseBits - Not using BITS. Disabled by pref.");
+    return "NoBits_Pref";
+  }
+  if (gBITSInUseByAnotherUser) {
+    LOG("getCanUseBits - Not using BITS. Already in use by another user");
+    return "NoBits_OtherUser";
+  }
+  // Firefox support for passing proxies to BITS is still rudimentary.
+  // For now, disable BITS support on configurations that are not using the
+  // standard system proxy.
+  let defaultProxy = Ci.nsIProtocolProxyService.PROXYCONFIG_SYSTEM;
+  if (Services.prefs.getIntPref(PREF_NETWORK_PROXY_TYPE, defaultProxy) !=
+      defaultProxy) {
+    LOG("getCanUseBits - Not using BITS because of proxy usage");
+    return "NoBits_Proxy";
+  }
+  LOG("getCanUseBits - BITS can be used to download updates");
+  return "CanUseBits";
 }
 
 /**
@@ -1861,7 +1923,15 @@ UpdateService.prototype = {
           this._retryTimer.cancel();
         }
 
-        this.pauseDownload();
+        // When downloading an update with nsIIncrementalDownload the download
+        // is stopped when the quit-application observer notification is
+        // received and networking hasn't started to shutdown. The download will
+        // be resumed the next time the application starts. Downloads using
+        // Windows BITS are not stopped since they don't require Firefox to be
+        // running to perform the download.
+        if (this._downloader && !this._downloader.usingBits) {
+          this.stopDownload();
+        }
         // Prevent leaking the downloader (bug 454964)
         this._downloader = null;
         // In case an update check is in progress.
@@ -2705,10 +2775,10 @@ UpdateService.prototype = {
 
     // If a download request is in progress vs. a download ready to resume
     if (this.isDownloading) {
-      if (update.isCompleteUpdate == this._downloader.isCompleteUpdate &&
-          background == this._downloader.background) {
+      if (update.isCompleteUpdate == this._downloader.isCompleteUpdate) {
         LOG("UpdateService:downloadUpdate - no support for downloading more " +
             "than one update at a time");
+        this._downloader.background = background;
         return readStatusFile(getUpdatesDir());
       }
       this._downloader.cancel();
@@ -2720,15 +2790,17 @@ UpdateService.prototype = {
   /**
    * See nsIUpdateService.idl
    */
-  pauseDownload: function AUS_pauseDownload() {
+  stopDownload: function AUS_stopDownload() {
     if (this.isDownloading) {
       this._downloader.cancel();
     } else if (this._retryTimer) {
-      // Download status is still consider as 'downloading' during retry.
+      // Download status is still considered as 'downloading' during retry.
       // We need to cancel both retry and download at this stage.
       this._retryTimer.cancel();
       this._retryTimer = null;
-      this._downloader.cancel();
+      if (this._downloader) {
+        this._downloader.cancel();
+      }
     }
   },
 
@@ -2748,6 +2820,7 @@ UpdateService.prototype = {
     if (!gLogEnabled) {
       return;
     }
+    LOG("Logging current UpdateService status:");
     // These getters print their own logging
     this.canCheckForUpdates;
     this.canApplyUpdates;
@@ -2756,9 +2829,28 @@ UpdateService.prototype = {
     LOG("Update being handled by other instance: " +
         this.isOtherInstanceHandlingUpdates);
     LOG("Downloading: " + !!this.isDownloading);
-    if (this._downloader) {
+    if (this._downloader && this._downloader.isBusy) {
       LOG("Downloading complete update: " + this._downloader.isCompleteUpdate);
+      LOG("Downloader using BITS: " + this._downloader.usingBits);
+      if (this._downloader._patch) {
+        // This will print its own logging
+        this._downloader._canUseBits(this._downloader._patch);
+
+        // Downloader calls QueryInterface(Ci.nsIWritablePropertyBag) on
+        // its _patch member as soon as it is assigned, so no need to do so
+        // again here.
+        let bitsResult = this._downloader._patch.getProperty("bitsResult");
+        if (bitsResult != null) {
+          LOG("Patch BITS result: " + bitsResult);
+        }
+        let internalResult =
+          this._downloader._patch.getProperty("internalResult");
+        if (internalResult != null) {
+          LOG("Patch nsIIncrementalDownload result: " + internalResult);
+        }
+      }
     }
+    LOG("End of UpdateService status");
   },
 
   classID: UPDATESERVICE_CID,
@@ -3090,8 +3182,6 @@ UpdateManager.prototype = {
         handleFallbackToCompleteUpdate(update, true);
       }
 
-      // This can be removed after the update ui under update/content is
-      // removed.
       update.QueryInterface(Ci.nsIWritablePropertyBag);
       update.setProperty("stagingFailed", "true");
     }
@@ -3517,7 +3607,7 @@ Downloader.prototype = {
   _update: null,
 
   /**
-   * The nsIIncrementalDownload object handling the download
+   * The nsIRequest object handling the download.
    */
   _request: null,
 
@@ -3529,14 +3619,49 @@ Downloader.prototype = {
   isCompleteUpdate: null,
 
   /**
-   * Cancels the active download.
+   * We get the nsIRequest from nsIBITS asynchronously. When downloadUpdate has
+   * been called, but this._request is not yet valid, _pendingRequest will be
+   * a promise that will resolve when this._request has been set.
    */
-  cancel: function Downloader_cancel(cancelError) {
+  _pendingRequest: null,
+
+  /**
+   * BITS receives progress notifications slowly, unless a user is watching.
+   * This tracks what frequency notifications are happening at.
+   *
+   * This is needed because BITS downloads are started asynchronously.
+   * Specifically, this is needed to prevent a situation where the download is
+   * still starting (Downloader._pendingRequest has not resolved) when the first
+   * observer registers itself. Without this variable, there is no way of
+   * knowing whether the download was started as Active or Idle and, therefore,
+   * we don't know if we need to start Active mode when _pendingRequest
+   * resolves.
+   */
+  _bitsActiveNotifications: false,
+
+  /**
+   * Cancels the active download.
+   *
+   * For a BITS download, this will cancel and remove the download job. For
+   * an nsIIncrementalDownload, this will stop the download, but leaves the
+   * data around to allow the transfer to be resumed later.
+   */
+  cancel: async function Downloader_cancel(cancelError) {
     LOG("Downloader: cancel");
     if (cancelError === undefined) {
       cancelError = Cr.NS_BINDING_ABORTED;
     }
-    if (this._request && this._request instanceof Ci.nsIRequest) {
+    if (this.usingBits) {
+      if (this._pendingRequest) {
+        await this._pendingRequest;
+      }
+      if (this._patch.getProperty("bitsId") != null) {
+        // Make sure that we don't try to resume this download after it was
+        // cancelled.
+        this._patch.deleteProperty("bitsId");
+      }
+      await this._request.cancelAsync(cancelError);
+    } else if (this._request && this._request instanceof Ci.nsIRequest) {
       this._request.cancel(cancelError);
     }
   },
@@ -3566,7 +3691,8 @@ Downloader.prototype = {
       return false;
     }
 
-    let destination = this._request.destination;
+    let destination = getUpdatesDir();
+    destination.append(FILE_UPDATE_MAR);
 
     // Ensure that the file size matches the expected file size.
     if (destination.fileSize != this._patch.size) {
@@ -3632,6 +3758,16 @@ Downloader.prototype = {
         return null;
       }
 
+      selectedPatch.QueryInterface(Ci.nsIWritablePropertyBag);
+      if (selectedPatch.getProperty("bitsResult") != null &&
+          selectedPatch.getProperty("internalResult") == null &&
+          selectedPatch.getProperty("stagingFailed") != null) {
+        LOG("Downloader:_selectPatch - Falling back to non-BITS download " +
+            "mechanism due to existing BITS result: " +
+            selectedPatch.getProperty("bitsResult"));
+        return selectedPatch;
+      }
+
       if (update && selectedPatch.type == "complete") {
         // This is a pretty fatal error.  Just bail.
         LOG("Downloader:_selectPatch - failed to apply complete patch!");
@@ -3666,7 +3802,7 @@ Downloader.prototype = {
     if (selectedPatch)
       selectedPatch.selected = true;
 
-    update.isCompleteUpdate = useComplete;
+    update.isCompleteUpdate = (selectedPatch.type == "complete");
 
     // Reset the Active Update object on the Update Manager and flush the
     // Active Update DB.
@@ -3681,7 +3817,29 @@ Downloader.prototype = {
    * Whether or not we are currently downloading something.
    */
   get isBusy() {
-    return this._request != null;
+    return this._request != null || this._pendingRequest != null;
+  },
+
+  get usingBits() {
+    return this._pendingRequest != null || this._request instanceof BitsRequest;
+  },
+
+  /**
+   * Returns true if the specified patch can be downloaded with BITS.
+   */
+  _canUseBits: function Downloader__canUseBits(patch) {
+    if (getCanUseBits() != "CanUseBits") {
+      // This will have printed its own logging. No need to print more.
+      return false;
+    }
+    // Regardless of success or failure, don't download the same patch with BITS
+    // twice.
+    if (patch.getProperty("bitsResult") != null) {
+      LOG("Downloader:_canUseBits - Not using BITS because it was already tried");
+      return false;
+    }
+    LOG("Downloader:_canUseBits - Patch is able to use BITS download");
+    return true;
   },
 
   /**
@@ -3709,22 +3867,124 @@ Downloader.prototype = {
       AUSTLMY.pingDownloadCode(undefined, AUSTLMY.DWNLD_ERR_NO_UPDATE_PATCH);
       return readStatusFile(updateDir);
     }
+    // this._patch implements nsIWritablePropertyBag. Expose that interface
+    // immediately after a patch is assigned so that this._patch.getProperty
+    // and this._patch.setProperty can always safely be called.
+    this._patch.QueryInterface(Ci.nsIWritablePropertyBag);
     this.isCompleteUpdate = this._patch.type == "complete";
 
-    let patchFile = getUpdatesDir().clone();
-    patchFile.append(FILE_UPDATE_MAR);
+    if (!this._canUseBits(this._patch)) {
+      let patchFile = getUpdatesDir().clone();
+      patchFile.append(FILE_UPDATE_MAR);
 
-    // The interval is 0 since there is no need to throttle downloads.
-    let interval = 0;
+      // The interval is 0 since there is no need to throttle downloads.
+      let interval = 0;
 
-    LOG("Downloader:downloadUpdate - url: " + this._patch.URL + ", path: " +
-        patchFile.path + ", interval: " + interval);
-    var uri = Services.io.newURI(this._patch.URL);
+      LOG("Downloader:downloadUpdate - Starting nsIIncrementalDownload with " +
+          "url: " + this._patch.URL + ", path: " + patchFile.path +
+          ", interval: " + interval);
+      let uri = Services.io.newURI(this._patch.URL);
 
-    this._request = Cc["@mozilla.org/network/incremental-download;1"].
-                    createInstance(Ci.nsIIncrementalDownload);
-    this._request.init(uri, patchFile, DOWNLOAD_CHUNK_SIZE, interval);
-    this._request.start(this, null);
+      this._request = Cc["@mozilla.org/network/incremental-download;1"].
+                      createInstance(Ci.nsIIncrementalDownload);
+      this._request.init(uri, patchFile, DOWNLOAD_CHUNK_SIZE, interval);
+      this._request.start(this, null);
+    } else {
+      let monitorInterval = BITS_IDLE_POLL_RATE_MS;
+      this._bitsActiveNotifications = false;
+      // The monitor's timeout should be much greater than the longest monitor
+      // poll interval. If the timeout is too short, delay in the pipe to the
+      // update agent might cause BITS to falsely report an error, causing an
+      // unnecessary fallback to nsIIncrementalDownload.
+      let monitorTimeout = Math.max(10 * monitorInterval, 10 * 60 * 1000);
+      if (this.hasDownloadListeners) {
+        monitorInterval = BITS_ACTIVE_POLL_RATE_MS;
+        this._bitsActiveNotifications = true;
+      }
+
+      let updateRootDir = FileUtils.getDir("UpdRootD", [], true);
+      let jobName = "MozillaUpdate " + updateRootDir.leafName;
+      let updatePath = updateDir.path;
+      if (!Bits.initialized) {
+        Bits.init(jobName, updatePath, monitorTimeout);
+      }
+
+      let bitsId = this._patch.getProperty("bitsId");
+      if (bitsId) {
+        LOG("Downloader:downloadUpdate - Connecting to in-progress download. " +
+            "BITS ID: " + bitsId);
+
+        this._pendingRequest = Bits.monitorDownload(bitsId, monitorInterval,
+                                                    this, null);
+      } else {
+        LOG("Downloader:downloadUpdate - Starting BITS download with url: " +
+            this._patch.URL + ", updateDir: " + updatePath + ", filename: " +
+            FILE_UPDATE_MAR);
+
+        this._pendingRequest = Bits.startDownload(this._patch.URL,
+                                                  FILE_UPDATE_MAR,
+                                                  Ci.nsIBits.PROXY_PRECONFIG,
+                                                  monitorInterval, this, null);
+      }
+      this._pendingRequest = this._pendingRequest.then(request => {
+        this._request = request;
+        this._patch.setProperty("bitsId", request.bitsId);
+
+        LOG("Downloader:downloadUpdate - BITS download running. BITS ID: " +
+            request.bitsId);
+
+        if (this.hasDownloadListeners) {
+          this._maybeStartActiveNotifications();
+        } else {
+          this._maybeStopActiveNotifications();
+        }
+
+        Cc["@mozilla.org/updates/update-manager;1"].
+          getService(Ci.nsIUpdateManager).saveUpdates();
+        this._pendingRequest = null;
+      }, error => {
+        if (error.type == Ci.nsIBits.ERROR_TYPE_FAILED_TO_GET_BITS_JOB &&
+            error.action == Ci.nsIBits.ERROR_ACTION_MONITOR_DOWNLOAD &&
+            error.stage == Ci.nsIBits.ERROR_STAGE_BITS_CLIENT &&
+            error.codeType == Ci.nsIBits.ERROR_CODE_TYPE_HRESULT &&
+            error.code == HRESULT_E_ACCESSDENIED) {
+          LOG("Downloader:downloadUpdate - Failed to connect to existing " +
+              "BITS job. It is likely owned by another user.");
+          // This isn't really a failure code since the BITS job may be working
+          // just fine on another account, so convert this to a code that
+          // indicates that. This will make it easier to identify in telemetry.
+          error.type = Ci.nsIBits.ERROR_TYPE_ACCESS_DENIED_EXPECTED;
+          error.codeType = Ci.nsIBits.ERROR_CODE_TYPE_NONE;
+          error.code = null;
+          // When we detect this situation, disable BITS until Firefox shuts
+          // down. There are a couple of reasons for this. First, without any
+          // kind of flag, we enter an infinite loop here where we keep trying
+          // BITS over and over again (normally setting bitsResult prevents
+          // this, but we don't know the result of the BITS job, so we don't
+          // want to set that). Second, since we are trying to update, this
+          // process must have the update mutex. We don't ever give up the
+          // update mutex, so even if the other user starts Firefox, they will
+          // not complete the BITS job while this Firefox instance is around.
+          gBITSInUseByAnotherUser = true;
+        } else {
+          this._patch.setProperty("bitsResult", Cr.NS_ERROR_FAILURE);
+          Cc["@mozilla.org/updates/update-manager;1"].
+            getService(Ci.nsIUpdateManager).saveUpdates();
+
+          LOG("Downloader:downloadUpdate - Failed to start to BITS job. " +
+              "Error: " + error);
+        }
+
+        this._pendingRequest = null;
+        // Try download again with nsIIncrementalDownload
+        // The update status file has already had STATE_DOWNLOADING written to
+        // it. If the downloadUpdate call below returns early, that status
+        // should probably be rewritten. However, the only conditions that might
+        // cause it to return early would have prevented this code from running.
+        // So it should be fine.
+        this.downloadUpdate(this._update);
+      });
+    }
 
     writeStatusFile(updateDir, STATE_DOWNLOADING);
     if (this._patch.state != STATE_DOWNLOADING) {
@@ -3753,6 +4013,9 @@ Downloader.prototype = {
         return;
     }
     this._listeners.push(listener);
+
+    // Increase the status update frequency when someone starts listening
+    this._maybeStartActiveNotifications();
   },
 
   /**
@@ -3767,6 +4030,50 @@ Downloader.prototype = {
         return;
       }
     }
+
+    // Decrease the status update frequency when no one is listening
+    if (this._listeners.length == 0) {
+      this._maybeStopActiveNotifications();
+    }
+  },
+
+  /**
+   * Returns a boolean indicating whether there are any download listeners
+   */
+  get hasDownloadListeners() {
+    return this._listeners.length > 0;
+  },
+
+  /**
+   * This speeds up BITS progress notifications in response to a user watching
+   * the notifications.
+   */
+  _maybeStartActiveNotifications: async function Downloader__maybeStartActiveNotifications() {
+    if (this.usingBits && !this._bitsActiveNotifications &&
+        this.hasDownloadListeners && this._request) {
+      LOG("Downloader:_maybeStartActiveNotifications - Starting active " +
+          "notifications");
+      await this._request.changeMonitorInterval(BITS_ACTIVE_POLL_RATE_MS).catch(error => {
+        LOG("Downloader:_maybeStartActiveNotifications - Failed to increase " +
+            "status update frequency. Error: " + error);
+      });
+    }
+  },
+
+  /**
+   * This slows down BITS progress notifications in response to a user no longer
+   * watching the notifications.
+   */
+  _maybeStopActiveNotifications: async function Downloader__maybeStopActiveNotifications() {
+    if (this.usingBits && this._bitsActiveNotifications &&
+        !this.hasDownloadListeners && this._request) {
+      LOG("Downloader:_maybeStopActiveNotifications - Stopping active " +
+          "notifications");
+      await this._request.changeMonitorInterval(BITS_IDLE_POLL_RATE_MS).catch(error => {
+        LOG("Downloader:_maybeStopActiveNotifications - Failed to decrease " +
+            "status update frequency: " + error);
+      });
+    }
   },
 
   /**
@@ -3775,16 +4082,18 @@ Downloader.prototype = {
    *          The nsIRequest object for the transfer
    */
   onStartRequest: function Downloader_onStartRequest(request) {
-    if (request instanceof Ci.nsIIncrementalDownload)
+    if (!this.usingBits) {
       LOG("Downloader:onStartRequest - original URI spec: " + request.URI.spec +
           ", final URI spec: " + request.finalURI.spec);
-    // Set finalURL in onStartRequest if it is different.
-    if (this._patch.finalURL != request.finalURI.spec) {
-      this._patch.finalURL = request.finalURI.spec;
-      Cc["@mozilla.org/updates/update-manager;1"].
-        getService(Ci.nsIUpdateManager).saveUpdates();
+      // Set finalURL in onStartRequest if it is different.
+      if (this._patch.finalURL != request.finalURI.spec) {
+        this._patch.finalURL = request.finalURI.spec;
+        Cc["@mozilla.org/updates/update-manager;1"].
+          getService(Ci.nsIUpdateManager).saveUpdates();
+      }
     }
 
+    // Make shallow copy in case listeners remove themselves when called.
     let listeners = this._listeners.concat();
     let listenerCount = listeners.length;
     for (let i = 0; i < listenerCount; ++i) {
@@ -3803,7 +4112,7 @@ Downloader.prototype = {
    * @param   maxProgress
    *          The total number of bytes that must be transferred
    */
-    onProgress: function Downloader_onProgress(request, context, progress,
+  onProgress: function Downloader_onProgress(request, context, progress,
                                              maxProgress) {
     LOG("Downloader:onProgress - progress: " + progress + "/" + maxProgress);
 
@@ -3816,7 +4125,10 @@ Downloader.prototype = {
       return;
     }
 
-    if (maxProgress != this._patch.size) {
+    // Wait until the transfer has started (progress > 0) to verify maxProgress
+    // so that we don't check it before it is available (in which case, -1 would
+    // have been passed).
+    if (progress > 0 && maxProgress != this._patch.size) {
       LOG("Downloader:onProgress - maxProgress: " + maxProgress +
           " is not equal to expected patch size: " + this._patch.size);
       AUSTLMY.pingDownloadCode(this.isCompleteUpdate,
@@ -3825,6 +4137,7 @@ Downloader.prototype = {
       return;
     }
 
+    // Make shallow copy in case listeners remove themselves when called.
     var listeners = this._listeners.concat();
     var listenerCount = listeners.length;
     for (var i = 0; i < listenerCount; ++i) {
@@ -3851,6 +4164,7 @@ Downloader.prototype = {
     LOG("Downloader:onStatus - status: " + status + ", statusText: " +
         statusText);
 
+    // Make shallow copy in case listeners remove themselves when called.
     var listeners = this._listeners.concat();
     var listenerCount = listeners.length;
     for (var i = 0; i < listenerCount; ++i) {
@@ -3868,10 +4182,38 @@ Downloader.prototype = {
    *          Status code containing the reason for the cessation.
    */
    /* eslint-disable-next-line complexity */
-  onStopRequest: function Downloader_onStopRequest(request, status) {
-    if (request instanceof Ci.nsIIncrementalDownload)
-      LOG("Downloader:onStopRequest - original URI spec: " + request.URI.spec +
-          ", final URI spec: " + request.finalURI.spec + ", status: " + status);
+  onStopRequest: async function Downloader_onStopRequest(request, status) {
+    if (!this.usingBits) {
+      LOG("Downloader:onStopRequest - downloader: nsIIncrementalDownload, " +
+          "original URI spec: " + request.URI.spec + ", final URI spec: " +
+          request.finalURI.spec + ", status: " + status);
+    } else {
+      LOG("Downloader:onStopRequest - downloader: BITS, status: " + status);
+    }
+
+    if (this.usingBits) {
+      if (Components.isSuccessCode(status)) {
+        try {
+          await request.complete();
+        } catch (e) {
+          LOG("Downloader:onStopRequest - Unable to complete BITS download: " +
+              e);
+          status = Cr.NS_ERROR_FAILURE;
+        }
+      } else {
+        // BITS jobs that failed to complete should still have cancel called on
+        // them to remove the job.
+        try {
+          await request.cancelAsync();
+        } catch (e) {
+          // This will fail if the job stopped because it was cancelled.
+          // Even if this is a "real" error, there isn't really anything to do
+          // about it, and it's not really a big problem. It just means that the
+          // BITS job will stay around until it is removed automatically
+          // (default of 90 days).
+        }
+      }
+    }
 
     // XXX ehsan shouldShowPrompt should always be false here.
     // But what happens when there is already a UI showing?
@@ -3939,6 +4281,7 @@ Downloader.prototype = {
                                AUSTLMY.DWNLD_RETRY_OFFLINE);
       shouldRegisterOnlineObserver = true;
       deleteActiveUpdate = false;
+
     // Each of NS_ERROR_NET_TIMEOUT, ERROR_CONNECTION_REFUSED,
     // NS_ERROR_NET_RESET and NS_ERROR_DOCUMENT_NOT_CACHED can be returned
     // when disconnecting the internet while a download of a MAR is in
@@ -3995,31 +4338,43 @@ Downloader.prototype = {
 
       deleteActiveUpdate = true;
     }
-    let saveUpdate = false;
+    if (!this.usingBits) {
+      this._patch.setProperty("internalResult", status);
+    } else {
+      this._patch.setProperty("bitsResult", status);
+
+      // If we failed when using BITS, we want to override the retry decision
+      // since we need to retry with nsIncrementalDownload before we give up.
+      // However, if the download was cancelled, don't retry. If the transfer
+      // was cancelled, we don't want it to restart on its own.
+      if (!Components.isSuccessCode(status) &&
+          status != Cr.NS_BINDING_ABORTED &&
+          status != Cr.NS_ERROR_ABORT) {
+        deleteActiveUpdate = false;
+        shouldRetrySoon = true;
+      }
+    }
+
     LOG("Downloader:onStopRequest - setting state to: " + state);
     if (this._patch.state != state) {
-      saveUpdate = true;
       this._patch.state = state;
     }
     var um = Cc["@mozilla.org/updates/update-manager;1"].
              getService(Ci.nsIUpdateManager);
     if (deleteActiveUpdate) {
-      saveUpdate = true;
       this._update.installDate = (new Date()).getTime();
       // Setting |activeUpdate| to null will move the active update to the
       // update history.
       um.activeUpdate = null;
     } else if (um.activeUpdate && um.activeUpdate.state != state) {
-      saveUpdate = true;
       um.activeUpdate.state = state;
     }
-    if (saveUpdate) {
-      um.saveUpdates();
-    }
+    um.saveUpdates();
 
     // Only notify listeners about the stopped state if we
     // aren't handling an internal retry.
     if (!shouldRetrySoon && !shouldRegisterOnlineObserver) {
+      // Make shallow copy in case listeners remove themselves when called.
       var listeners = this._listeners.concat();
       var listenerCount = listeners.length;
       for (var i = 0; i < listenerCount; ++i) {
@@ -4031,8 +4386,21 @@ Downloader.prototype = {
 
     if (state == STATE_DOWNLOAD_FAILED) {
       var allFailed = true;
+      // If we haven't already, attempt to download without BITS
+      if (request instanceof BitsRequest) {
+        LOG("Downloader:onStopRequest - BITS download failed. Falling back " +
+            "to nsIIncrementalDownload");
+        let updateStatus = this.downloadUpdate(this._update);
+        if (updateStatus == STATE_NONE) {
+          cleanupActiveUpdate();
+        } else {
+          allFailed = false;
+        }
+      }
+
       // Check if there is a complete update patch that can be downloaded.
-      if (!this._update.isCompleteUpdate && this._update.patchCount == 2) {
+      if (allFailed && !this._update.isCompleteUpdate &&
+          this._update.patchCount == 2) {
         LOG("Downloader:onStopRequest - verification of patch failed, " +
             "downloading complete update patch");
         this._update.isCompleteUpdate = true;
