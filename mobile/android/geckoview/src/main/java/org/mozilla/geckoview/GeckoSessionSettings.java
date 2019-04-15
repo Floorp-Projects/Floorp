@@ -86,6 +86,10 @@ public final class GeckoSessionSettings implements Parcelable {
          * between sessions, only sessions that share the same ID share storage
          * data.
          *
+         * Warning: Storage data is collected persistently for each context,
+         * to delete context data, call {@link StorageController#clearSessionContextData}
+         * for the given context.
+         *
          * @param value The custom context ID.
          *              The default ID is null, which removes isolation for this
          *              instance.
