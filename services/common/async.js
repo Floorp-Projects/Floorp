@@ -161,30 +161,6 @@ var Async = {
     return false;
   },
 
-  /**
-   * Turn a synchronous iterator/iterable into an async iterator that yields in
-   * the same manner as Async.yieldingForEach.
-   *
-   * @param iterable {Iterable}
-   *        The iterable or iterator that should be wrapped.
-   *
-   * @param yieldEvery {number|object}
-   *        Either an existing Async.yieldState to use, or a number to provide as
-   *        the argument to async.yieldState.
-   */
-  async* yieldingIterator(iterable, yieldEvery = 50) {
-    const yieldState = typeof yieldEvery === "number" ? Async.yieldState(yieldEvery) : yieldEvery;
-
-    for (const item of iterable) {
-      yield item;
-
-      if (yieldState.shouldYield()) {
-        await Async.promiseYield();
-        Async.checkAppReady();
-      }
-    }
-  },
-
   asyncQueueCaller(log) {
     return new AsyncQueueCaller(log);
   },
