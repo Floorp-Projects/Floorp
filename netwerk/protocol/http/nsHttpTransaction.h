@@ -80,13 +80,15 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   //        wait on this input stream for data.  on first notification,
   //        headers should be available (check transaction status).
   //
-  MOZ_MUST_USE nsresult
-  Init(uint32_t caps, nsHttpConnectionInfo *connInfo,
-       nsHttpRequestHead *reqHeaders, nsIInputStream *reqBody,
-       uint64_t reqContentLength, bool reqBodyIncludesHeaders,
-       nsIEventTarget *consumerTarget, nsIInterfaceRequestor *callbacks,
-       nsITransportEventSink *eventsink, uint64_t topLevelOuterContentWindowId,
-       HttpTrafficCategory trafficCategory, nsIAsyncInputStream **responseBody);
+  MOZ_MUST_USE nsresult Init(uint32_t caps, nsHttpConnectionInfo *connInfo,
+                             nsHttpRequestHead *reqHeaders,
+                             nsIInputStream *reqBody, uint64_t reqContentLength,
+                             bool reqBodyIncludesHeaders,
+                             nsIEventTarget *consumerTarget,
+                             nsIInterfaceRequestor *callbacks,
+                             nsITransportEventSink *eventsink,
+                             uint64_t topLevelOuterContentWindowId,
+                             nsIAsyncInputStream **responseBody);
 
   void OnActivated() override;
 
@@ -482,8 +484,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
 
   // H2 websocket support
   RefPtr<SpdyConnectTransaction> mH2WSTransaction;
-
-  HttpTrafficCategory mTrafficCategory;
 };
 
 }  // namespace net

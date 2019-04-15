@@ -1980,19 +1980,6 @@ VARCACHE_PREF(
   bool, false
 )
 
-// Telemetry of traffic categories
-VARCACHE_PREF(
-  "network.traffic_analyzer.enabled",
-  network_traffic_analyzer_enabled,
-  RelaxedAtomicBool, false
-)
-
-VARCACHE_PREF(
-  "network.delay.tracking.load",
-   network_delay_tracking_load,
-   uint32_t, 0
-)
-
 //---------------------------------------------------------------------------
 // ContentSessionStore prefs
 //---------------------------------------------------------------------------
