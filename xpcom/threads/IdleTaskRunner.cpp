@@ -119,7 +119,7 @@ void IdleTaskRunner::Schedule(bool aAllowIdleDispatch) {
   TimeStamp hint = nsRefreshDriver::GetIdleDeadlineHint(now);
   if (hint != now) {
     // RefreshDriver is ticking, let it schedule the idle dispatch.
-    nsRefreshDriver::DispatchIdleRunnableAfterTick(this, mDelay);
+    nsRefreshDriver::DispatchIdleRunnableAfterTickUnlessExists(this, mDelay);
     // Ensure we get called at some point, even if RefreshDriver is stopped.
     SetTimerInternal(mDelay);
   } else {
