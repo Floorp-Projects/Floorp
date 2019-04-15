@@ -1653,7 +1653,7 @@ void ScriptSourceObject::setPrivate(JSRuntime* rt, const Value& value) {
 }
 
 /* static */
-bool JSScript::loadSource(JSContext* cx, ScriptSource* ss, bool* loaded) {
+bool ScriptSource::loadSource(JSContext* cx, ScriptSource* ss, bool* loaded) {
   *loaded = ss->hasSourceText();
   if (*loaded) {
     return true;

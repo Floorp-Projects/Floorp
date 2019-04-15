@@ -870,7 +870,7 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
       haveSource && isToSource && (fun->isLambda() && !fun->isArrow());
 
   if (haveSource) {
-    if (!JSScript::loadSource(cx, script->scriptSource(), &haveSource)) {
+    if (!ScriptSource::loadSource(cx, script->scriptSource(), &haveSource)) {
       return nullptr;
     }
   }

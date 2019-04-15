@@ -8412,7 +8412,7 @@ class DebuggerSourceGetTextMatcher {
   ReturnType match(HandleScriptSourceObject sourceObject) {
     ScriptSource* ss = sourceObject->source();
     bool hasSourceText;
-    if (!JSScript::loadSource(cx_, ss, &hasSourceText)) {
+    if (!ScriptSource::loadSource(cx_, ss, &hasSourceText)) {
       return nullptr;
     }
     if (!hasSourceText) {
