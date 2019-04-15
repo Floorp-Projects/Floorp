@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+
+<!--
+see version 1 of this test for details
+-->
+
+<html class="reftest-wait"><head>
+<script type="text/javascript">
+function onload() {
+  var range = document.createRange();
+  range.selectNodeContents(document.getElementById("selectMe"));
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+
+  document.documentElement.className = '';
+}
+</script>
+<style>
+body {
+    font-size: 60px;
+    position: absolute;
+    margin: 0px;
+    padding: 0px;
+}
+div {
+    position: absolute;
+    margin: 0px;
+    padding: 0px;
+}
+div::selection {
+    /* hide all selection boxes for convenience */
+    background-color: transparent;
+}
+#shadow6 {
+    top: 200px;
+    left: 200px;
+}
+#shadow6::selection {
+    color: transparent;
+    text-shadow: 30px 0px 0px green;
+}
+#shadow7 {
+    top: 200px;
+    left: 500px;
+}
+#shadow7::selection {
+    color: transparent;
+    text-shadow: 30px 0px 5px green;
+}
+</style>
+</head><body id="selectMe" onload="onload()">
+    <div id="shadow6">hello&nbsp;i</div>
+    <div id="shadow7">hello&nbsp;i</div>
+</body></html>
