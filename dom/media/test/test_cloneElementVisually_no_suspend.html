@@ -56,7 +56,11 @@ add_task(async () => {
       suspendTimerFired = true;
     }
     originalVideo.addEventListener("mozstartvideosuspendtimer", listener);
-    originalVideo.setVisible(false);
+
+    // Have to do this to access normally-preffed off binding methods for some
+    // reason.
+    // See bug 1544257.
+    SpecialPowers.wrap(originalVideo).setVisible(false);
 
     await waitForEventOnce(originalVideo, "ended");
 
@@ -65,7 +69,10 @@ add_task(async () => {
     ok(!suspendTimerFired,
        "mozstartvideosuspendtimer should not have fired.");
 
-    originalVideo.setVisible(true);
+    // Have to do this to access normally-preffed off binding methods for some
+    // reason.
+    // See bug 1544257.
+    SpecialPowers.wrap(originalVideo).setVisible(true);
   });
 
   await originalVideo.play();

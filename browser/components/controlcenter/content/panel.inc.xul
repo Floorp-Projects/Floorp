@@ -13,8 +13,7 @@
        orient="vertical">
 
   <panelmultiview id="identity-popup-multiView"
-                  mainViewId="identity-popup-mainView"
-                  disablekeynav="true">
+                  mainViewId="identity-popup-mainView">
     <panelview id="identity-popup-mainView"
                descriptionheightworkaround="true">
       <vbox id="identity-popup-mainView-panel-header">
