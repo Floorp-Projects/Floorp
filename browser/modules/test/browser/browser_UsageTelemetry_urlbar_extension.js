@@ -120,8 +120,12 @@ add_task(async function test_extension() {
 
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:blank");
 
-  await UrlbarTestUtils.promiseAutocompleteResultPopup(window, "omniboxtest ",
-    waitForFocus, true);
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value: "omniboxtest ",
+    fireInputEvent: true,
+  });
   EventUtils.synthesizeKey("KEY_Enter");
 
   assertSearchTelemetryEmpty(histograms.search_hist);

@@ -146,9 +146,9 @@ class UrlbarController {
       TelemetryStopwatch.finish(TELEMETRY_6_FIRST_RESULTS, queryContext);
     }
 
-    if (queryContext.lastResultCount == 0) {
-      if (queryContext.results.length && queryContext.results[0].autofill) {
-        this.input.setValueFromResult(queryContext.results[0]);
+    if (queryContext.lastResultCount == 0 && queryContext.results.length) {
+      if (queryContext.results[0].autofill) {
+        this.input.autofillFirstResult(queryContext.results[0]);
       }
       // The first time we receive results try to connect to the heuristic
       // result.

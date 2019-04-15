@@ -10,8 +10,12 @@ ChromeUtils.defineModuleGetter(this, "UrlbarTestUtils",
 const SUGGEST_URLBAR_PREF = "browser.urlbar.suggest.searches";
 const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
-function promiseAutocompleteResultPopup(inputText) {
-  return UrlbarTestUtils.promiseAutocompleteResultPopup(window, inputText, waitForFocus);
+function promiseAutocompleteResultPopup(value) {
+  return UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    waitForFocus,
+    value,
+  });
 }
 
 async function addBookmark(bookmark) {
@@ -131,7 +135,7 @@ add_task(async function test_webnavigation_urlbar_typed_closed_popup_transitions
   await SimpleTest.promiseFocus(window);
 
   await extension.awaitMessage("ready");
-  await UrlbarTestUtils.promiseAutocompleteResultPopup(window, "http://example.com/?q=typedClosed", waitForFocus);
+  await promiseAutocompleteResultPopup("http://example.com/?q=typedClosed");
   await UrlbarTestUtils.promiseSearchComplete(window);
   // Closing the popup forces a different code route that handles no results
   // being displayed.

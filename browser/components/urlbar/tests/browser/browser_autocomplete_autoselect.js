@@ -59,7 +59,7 @@ add_task(async function() {
   });
   await PlacesTestUtils.addVisits(visits);
 
-  await promiseAutocompleteResultPopup("example.com/autocomplete");
+  await promiseAutocompleteResultPopup("example.com/autocomplete", window, true);
 
   let resultCount = await UrlbarTestUtils.getResultCount(window);
 

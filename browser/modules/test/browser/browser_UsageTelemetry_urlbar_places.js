@@ -20,8 +20,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   URLBAR_SELECTED_RESULT_METHODS: "resource:///modules/BrowserUsageTelemetry.jsm",
 });
 
-function searchInAwesomebar(inputText, win = window) {
-  return UrlbarTestUtils.promiseAutocompleteResultPopup(win, inputText, waitForFocus, true);
+function searchInAwesomebar(value, win = window) {
+  return UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: win,
+    waitForFocus,
+    value,
+    fireInputEvent: true,
+  });
 }
 
 function assertSearchTelemetryEmpty(search_hist) {
