@@ -34,10 +34,6 @@ const PICTURE_TILE_FORMAT: ImageFormat = ImageFormat::BGRA8;
 const TEXTURE_REGION_PIXELS: usize =
     (TEXTURE_REGION_DIMENSIONS as usize) * (TEXTURE_REGION_DIMENSIONS as usize);
 
-// The minimum number of bytes that we must be able to reclaim in order
-// to justify clearing the entire shared cache in order to shrink it.
-const RECLAIM_THRESHOLD_BYTES: usize = 5 * 1024 * 1024;
-
 /// Items in the texture cache can either be standalone textures,
 /// or a sub-rect inside the shared cache.
 #[derive(Debug)]
@@ -516,10 +512,6 @@ pub struct TextureCache {
     /// begin_frame and moved back in end_frame to solve borrow checker issues.
     /// We should try removing this when we require a rustc with NLL.
     doc_data: PerDocumentData,
-
-    /// This indicates that we performed a cleanup operation which requires all
-    /// documents to build a frame.
-    require_frame_build: bool,
 }
 
 impl TextureCache {
@@ -589,7 +581,6 @@ impl TextureCache {
             now: FrameStamp::INVALID,
             per_doc_data: FastHashMap::default(),
             doc_data: PerDocumentData::new(),
-            require_frame_build: false,
         }
     }
 
@@ -611,6 +602,13 @@ impl TextureCache {
 
     /// Clear all entries of the specified kind.
     fn clear_kind(&mut self, kind: EntryKind) {
+        // This pref just helps us avoid crashes when we begin using multiple documents.
+        // What we need to do for clear to work correctly with multiple documents is
+        // to ensure that we generate frames for all documents whenever we do this.
+        if self.debug_flags.contains(DebugFlags::TEXTURE_CACHE_DBG_DISABLE_SHRINK) {
+            return;
+        }
+
         let mut per_doc_data = mem::replace(&mut self.per_doc_data, FastHashMap::default());
         for (&_, doc_data) in per_doc_data.iter_mut() {
             let entry_handles = mem::replace(
@@ -625,7 +623,6 @@ impl TextureCache {
             }
         }
         self.per_doc_data = per_doc_data;
-        self.require_frame_build = true;
     }
 
     fn clear_standalone(&mut self) {
@@ -643,6 +640,9 @@ impl TextureCache {
     }
 
     fn clear_shared(&mut self) {
+        if self.debug_flags.contains(DebugFlags::TEXTURE_CACHE_DBG_DISABLE_SHRINK) {
+            return;
+        }
         self.unset_doc_data();
         self.clear_kind(EntryKind::Shared);
         self.shared_textures.clear(&mut self.pending_updates);
@@ -669,58 +669,21 @@ impl TextureCache {
                                  mem::replace(&mut self.doc_data, PerDocumentData::new()));
     }
 
-    pub fn before_frames(&mut self, time: SystemTime) {
-        self.maybe_reclaim_shared_memory(time);
-    }
-
-    pub fn after_frames(&mut self) {
-        self.require_frame_build = false;
-    }
-
-    pub fn requires_frame_build(&self) -> bool {
-        return self.require_frame_build;
-    }
-
     /// Called at the beginning of each frame.
     pub fn begin_frame(&mut self, stamp: FrameStamp) {
         debug_assert!(!self.now.is_valid());
         self.now = stamp;
         self.set_doc_data();
-        self.maybe_do_periodic_gc();
+        self.maybe_reclaim_shared_cache_memory();
     }
 
-    fn maybe_reclaim_shared_memory(&mut self, time: SystemTime) {
-        // If we've had a sufficient number of unused layers for a sufficiently
-        // long time, just blow the whole cache away to shrink it.
-        //
-        // We could do this more intelligently with a resize+blit, but that would
-        // add complexity for a rare case.
-        //
-        // This function must be called before the first begin_frame() for a group
-        // of documents, otherwise documents could end up ignoring the
-        // self.require_frame_build flag which is set if we end up calling
-        // clear_shared.
-        debug_assert!(!self.now.is_valid());
-        if self.shared_textures.empty_region_bytes() >= RECLAIM_THRESHOLD_BYTES {
-            self.reached_reclaim_threshold.get_or_insert(time);
-        } else {
-            self.reached_reclaim_threshold = None;
-        }
-        if let Some(t) = self.reached_reclaim_threshold {
-            let dur = time.duration_since(t).unwrap_or(Duration::default());
-            if dur >= Duration::from_secs(5) {
-                self.clear_shared();
-                self.reached_reclaim_threshold = None;
-            }
-        }
-    }
-
-    /// Called at the beginning of each frame to periodically GC by expiring
-    /// old shared entries. If necessary, the shared memory opened up as a
-    /// result of expiring these entries will be reclaimed before the next
-    /// group of document frames.
-    fn maybe_do_periodic_gc(&mut self) {
+    /// Called at the beginning of each frame to periodically GC and reclaim
+    /// storage if the cache has grown too large.
+    fn maybe_reclaim_shared_cache_memory(&mut self) {
         debug_assert!(self.now.is_valid());
+        // The minimum number of bytes that we must be able to reclaim in order
+        // to justify clearing the entire shared cache in order to shrink it.
+        const RECLAIM_THRESHOLD_BYTES: usize = 5 * 1024 * 1024;
 
         // Normally the shared cache only gets GCed when we fail to allocate.
         // However, we also perform a periodic, conservative GC to ensure that
@@ -737,6 +700,28 @@ impl TextureCache {
                 .max_time_s(10)
                 .build();
             self.maybe_expire_old_shared_entries(threshold);
+        }
+
+        // If we've had a sufficient number of unused layers for a sufficiently
+        // long time, just blow the whole cache away to shrink it.
+        //
+        // We could do this more intelligently with a resize+blit, but that would
+        // add complexity for a rare case.
+        //
+        // This block of code is broken with multiple documents, and should be
+        // moved out into a section that runs before building any frames in a
+        // group of documents.
+        if self.shared_textures.empty_region_bytes() >= RECLAIM_THRESHOLD_BYTES {
+            self.reached_reclaim_threshold.get_or_insert(self.now.time());
+        } else {
+            self.reached_reclaim_threshold = None;
+        }
+        if let Some(t) = self.reached_reclaim_threshold {
+            let dur = self.now.time().duration_since(t).unwrap_or(Duration::default());
+            if dur >= Duration::from_secs(5) {
+                self.clear_shared();
+                self.reached_reclaim_threshold = None;
+            }
         }
     }
 

@@ -42,7 +42,6 @@ use std::os::raw::c_void;
 #[cfg(any(feature = "capture", feature = "replay"))]
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
-use std::time::SystemTime;
 use texture_cache::{TextureCache, TextureCacheHandle, Eviction};
 use util::drain_filter;
 
@@ -1567,18 +1566,6 @@ impl ResourceCache {
                 tiling: image_template.tiling,
             }
         })
-    }
-
-    pub fn before_frames(&mut self, time: SystemTime) {
-        self.texture_cache.before_frames(time);
-    }
-
-    pub fn after_frames(&mut self) {
-        self.texture_cache.after_frames();
-    }
-
-    pub fn requires_frame_build(&self) -> bool {
-        self.texture_cache.requires_frame_build()
     }
 
     pub fn begin_frame(&mut self, stamp: FrameStamp) {

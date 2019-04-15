@@ -231,7 +231,6 @@ class WebRenderBridgeParent final
    * want to trigger AsyncImagePipelines update checks.
    */
   void ScheduleGenerateFrame(const Maybe<wr::RenderRoot>& aRenderRoot);
-  void ScheduleGenerateFrame(const nsTArray<wr::RenderRoot>& aRenderRoots);
   void ScheduleGenerateFrameAllRenderRoots();
 
   /**
@@ -242,7 +241,7 @@ class WebRenderBridgeParent final
    */
   void ScheduleForcedGenerateFrame();
 
-  void NotifyDidSceneBuild(const nsTArray<wr::RenderRoot>& aRenderRoots,
+  void NotifyDidSceneBuild(wr::RenderRoot aRenderRoot,
                            RefPtr<wr::WebRenderPipelineInfo> aInfo);
 
   wr::Epoch UpdateWebRender(

@@ -439,11 +439,6 @@ impl Transaction {
     }
 }
 
-pub struct DocumentTransaction {
-    pub document_id: DocumentId,
-    pub transaction: Transaction,
-}
-
 /// Represents a transaction in the format sent through the channel.
 #[derive(Clone, Deserialize, Serialize)]
 pub struct TransactionMsg {
@@ -731,7 +726,7 @@ pub enum ApiMsg {
     /// Adds a new document with given initial size.
     AddDocument(DocumentId, FramebufferIntSize, DocumentLayer),
     /// A message targeted at a particular document.
-    UpdateDocuments(Vec<DocumentId>, Vec<TransactionMsg>),
+    UpdateDocument(DocumentId, TransactionMsg),
     /// Deletes an existing document.
     DeleteDocument(DocumentId),
     /// An opaque handle that must be passed to the render notifier. It is used by Gecko
@@ -763,7 +758,7 @@ impl fmt::Debug for ApiMsg {
             ApiMsg::CloneApi(..) => "ApiMsg::CloneApi",
             ApiMsg::CloneApiByClient(..) => "ApiMsg::CloneApiByClient",
             ApiMsg::AddDocument(..) => "ApiMsg::AddDocument",
-            ApiMsg::UpdateDocuments(..) => "ApiMsg::UpdateDocuments",
+            ApiMsg::UpdateDocument(..) => "ApiMsg::UpdateDocument",
             ApiMsg::DeleteDocument(..) => "ApiMsg::DeleteDocument",
             ApiMsg::ExternalEvent(..) => "ApiMsg::ExternalEvent",
             ApiMsg::ClearNamespace(..) => "ApiMsg::ClearNamespace",
@@ -1051,14 +1046,15 @@ bitflags! {
         const TEXTURE_CACHE_DBG_CLEAR_EVICTED = 1 << 14;
         /// Show picture caching debug overlay
         const PICTURE_CACHING_DBG   = 1 << 15;
+        const TEXTURE_CACHE_DBG_DISABLE_SHRINK = 1 << 16;
         /// Highlight all primitives with colors based on kind.
-        const PRIMITIVE_DBG = 1 << 16;
+        const PRIMITIVE_DBG = 1 << 17;
         /// Draw a zoom widget showing part of the framebuffer zoomed in.
-        const ZOOM_DBG = 1 << 17;
+        const ZOOM_DBG = 1 << 18;
         /// Scale the debug renderer down for a smaller screen. This will disrupt
         /// any mapping between debug display items and page content, so shouldn't
         /// be used with overlays like the picture caching or primitive display.
-        const SMALL_SCREEN = 1 << 18;
+        const SMALL_SCREEN = 1 << 19;
     }
 }
 
@@ -1220,7 +1216,7 @@ impl RenderApi {
         // `RenderApi` instances for layout and compositor.
         //assert_eq!(document_id.0, self.namespace_id);
         self.api_sender
-            .send(ApiMsg::UpdateDocuments(vec![document_id], vec![TransactionMsg::scene_message(msg)]))
+            .send(ApiMsg::UpdateDocument(document_id, TransactionMsg::scene_message(msg)))
             .unwrap()
     }
 
@@ -1230,7 +1226,7 @@ impl RenderApi {
         // `RenderApi` instances for layout and compositor.
         //assert_eq!(document_id.0, self.namespace_id);
         self.api_sender
-            .send(ApiMsg::UpdateDocuments(vec![document_id], vec![TransactionMsg::frame_message(msg)]))
+            .send(ApiMsg::UpdateDocument(document_id, TransactionMsg::frame_message(msg)))
             .unwrap()
     }
 
@@ -1239,24 +1235,7 @@ impl RenderApi {
         for payload in payloads {
             self.payload_sender.send_payload(payload).unwrap();
         }
-        self.api_sender.send(ApiMsg::UpdateDocuments(vec![document_id], vec![msg])).unwrap();
-    }
-
-    pub fn send_transactions(&self, document_ids: Vec<DocumentId>, mut transactions: Vec<Transaction>) {
-        debug_assert!(document_ids.len() == transactions.len());
-        let length = document_ids.len();
-        let (msgs, mut document_payloads) = transactions.drain(..)
-            .fold((Vec::with_capacity(length), Vec::with_capacity(length)),
-                  |(mut msgs, mut document_payloads), transaction| {
-                    let (msg, payloads) = transaction.finalize();
-                    msgs.push(msg);
-                    document_payloads.push(payloads);
-                    (msgs, document_payloads)
-                  });
-        for payload in document_payloads.drain(..).flatten() {
-            self.payload_sender.send_payload(payload).unwrap();
-        }
-        self.api_sender.send(ApiMsg::UpdateDocuments(document_ids.clone(), msgs)).unwrap();
+        self.api_sender.send(ApiMsg::UpdateDocument(document_id, msg)).unwrap();
     }
 
     /// Does a hit test on display items in the specified document, at the given
