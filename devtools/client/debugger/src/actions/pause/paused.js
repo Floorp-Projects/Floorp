@@ -7,7 +7,6 @@ import {
   getHiddenBreakpoint,
   isEvaluatingExpression,
   getSelectedFrame,
-  wasStepping,
   getThreadContext
 } from "../../selectors";
 
@@ -15,7 +14,6 @@ import { mapFrames } from ".";
 import { removeBreakpoint } from "../breakpoints";
 import { evaluateExpressions } from "../expressions";
 import { selectLocation } from "../sources";
-import { togglePaneCollapse } from "../ui";
 import assert from "../../utils/assert";
 
 import { fetchScopes } from "./fetchScopes";
@@ -58,10 +56,6 @@ export function paused(pauseInfo: Pause) {
     const selectedFrame = getSelectedFrame(getState(), thread);
     if (selectedFrame) {
       await dispatch(selectLocation(cx, selectedFrame.location));
-    }
-
-    if (!wasStepping(getState(), thread)) {
-      dispatch(togglePaneCollapse("end", false));
     }
 
     await dispatch(fetchScopes(cx));
