@@ -55,10 +55,10 @@ function check_status() {
   Assert.notEqual(status, STATE_DOWNLOADING,
                   "the update state" + MSG_SHOULD_EQUAL);
 
-  // Pause the download and reload the Update Manager with an empty update so
+  // Cancel the download and reload the Update Manager with an empty update so
   // the Application Update Service doesn't write the update xml files during
   // xpcom-shutdown which will leave behind the test directory.
-  gAUS.pauseDownload();
+  gAUS.stopDownload();
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), true);
   writeUpdatesToXMLFile(getLocalUpdatesXMLString(""), false);
   reloadUpdateManagerData();

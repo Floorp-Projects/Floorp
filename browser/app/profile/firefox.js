@@ -168,6 +168,11 @@ pref("app.update.idletime", 60);
 pref("app.update.service.enabled", true);
 #endif
 
+#ifdef XP_WIN
+// This pref prevents BITS from being used by Firefox to download updates.
+pref("app.update.BITS.enabled", false);
+#endif
+
 // Symmetric (can be overridden by individual extensions) update preferences.
 // e.g.
 //  extensions.{GUID}.update.enabled

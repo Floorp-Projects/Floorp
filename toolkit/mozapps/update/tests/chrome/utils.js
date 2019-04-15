@@ -843,6 +843,7 @@ function setupPrefs() {
   Services.prefs.setIntPref(PREF_APP_UPDATE_PROMPTWAITTIME, 0);
   Services.prefs.setBoolPref(PREF_APP_UPDATE_SILENT, false);
   Services.prefs.setBoolPref(PREF_APP_UPDATE_DOORHANGER, false);
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_BITS_ENABLED, false);
 }
 
 /**
@@ -907,6 +908,10 @@ function resetPrefs() {
 
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_DOORHANGER)) {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_DOORHANGER);
+  }
+
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_BITS_ENABLED)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_BITS_ENABLED);
   }
 }
 
