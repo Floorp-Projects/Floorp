@@ -28,6 +28,7 @@ use resource_cache::{AsyncBlobImageInfo, FontInstanceMap};
 use render_backend::DocumentView;
 use renderer::{PipelineInfo, SceneBuilderHooks};
 use scene::Scene;
+use std::iter;
 use std::sync::mpsc::{channel, Receiver, Sender};
 use std::mem::replace;
 use time::precise_time_ns;
@@ -136,7 +137,7 @@ pub struct BuiltScene {
 
 // Message from render backend to scene builder.
 pub enum SceneBuilderRequest {
-    Transaction(Box<Transaction>),
+    Transactions(Vec<Box<Transaction>>),
     ExternalEvent(ExternalEvent),
     DeleteDocument(DocumentId),
     WakeUp,
@@ -155,7 +156,7 @@ pub enum SceneBuilderRequest {
 
 // Message from scene builder to render backend.
 pub enum SceneBuilderResult {
-    Transaction(Box<BuiltTransaction>, Option<Sender<SceneSwapResult>>),
+    Transactions(Vec<Box<BuiltTransaction>>, Option<Sender<SceneSwapResult>>),
     ExternalEvent(ExternalEvent),
     FlushComplete(MsgSender<()>),
     ClearNamespace(IdNamespace),
@@ -321,9 +322,11 @@ impl SceneBuilder {
                 Ok(SceneBuilderRequest::Flush(tx)) => {
                     self.send(SceneBuilderResult::FlushComplete(tx));
                 }
-                Ok(SceneBuilderRequest::Transaction(mut txn)) => {
-                    let built_txn = self.process_transaction(&mut txn);
-                    self.forward_built_transaction(built_txn);
+                Ok(SceneBuilderRequest::Transactions(mut txns)) => {
+                    let built_txns : Vec<Box<BuiltTransaction>> = txns.iter_mut()
+                        .map(|txn| self.process_transaction(txn))
+                        .collect();
+                    self.forward_built_transactions(built_txns);
                 }
                 Ok(SceneBuilderRequest::DeleteDocument(document_id)) => {
                     self.documents.remove(&document_id);
@@ -429,7 +432,7 @@ impl SceneBuilder {
                 },
             );
 
-            let txn = Box::new(BuiltTransaction {
+            let txns = vec![Box::new(BuiltTransaction {
                 document_id: item.document_id,
                 render_frame: item.build_frame,
                 invalidate_rendered_frame: false,
@@ -443,9 +446,9 @@ impl SceneBuilder {
                 scene_build_start_time,
                 scene_build_end_time: precise_time_ns(),
                 interner_updates,
-            });
+            })];
 
-            self.forward_built_transaction(txn);
+            self.forward_built_transactions(txns);
         }
     }
 
@@ -550,36 +553,49 @@ impl SceneBuilder {
         })
     }
 
-    /// Send the result of process_transaction back to the render backend.
-    fn forward_built_transaction(&mut self, txn: Box<BuiltTransaction>) {
-        // We only need the pipeline info and the result channel if we
-        // have a hook callback *and* if this transaction actually built
-        // a new scene that is going to get swapped in. In other cases
-        // pipeline_info can be None and we can avoid some overhead from
-        // invoking the hooks and blocking on the channel.
-        let (pipeline_info, result_tx, result_rx) = match (&self.hooks, &txn.built_scene) {
-            (&Some(ref hooks), &Some(ref built)) => {
-                let info = PipelineInfo {
-                    epochs: built.scene.pipeline_epochs.iter()
-                        .map(|(&pipeline_id, &epoch)| ((pipeline_id, txn.document_id), epoch))
-                        .collect(),
-                    removed_pipelines: txn.removed_pipelines.clone(),
-                };
-                let (tx, rx) = channel();
+    /// Send the results of process_transaction back to the render backend.
+    fn forward_built_transactions(&mut self, txns: Vec<Box<BuiltTransaction>>) {
+        let (pipeline_info, result_tx, result_rx) = match &self.hooks {
+            &Some(ref hooks) => {
+                if txns.iter().any(|txn| txn.built_scene.is_some()) {
+                    let info = PipelineInfo {
+                        epochs: txns.iter()
+                            .filter(|txn| txn.built_scene.is_some())
+                            .map(|txn| {
+                                txn.built_scene.as_ref().unwrap()
+                                    .scene.pipeline_epochs.iter()
+                                    .zip(iter::repeat(txn.document_id))
+                                    .map(|((&pipeline_id, &epoch), document_id)| ((pipeline_id, document_id), epoch))
+                            }).flatten().collect(),
+                        removed_pipelines: txns.iter()
+                            .map(|txn| txn.removed_pipelines.clone())
+                            .flatten().collect(),
+                    };
 
-                hooks.pre_scene_swap(txn.scene_build_end_time - txn.scene_build_start_time);
+                    let (tx, rx) = channel();
+                    let txn = txns.iter().find(|txn| txn.built_scene.is_some()).unwrap();
+                    hooks.pre_scene_swap(txn.scene_build_end_time - txn.scene_build_start_time);
 
-                (Some(info), Some(tx), Some(rx))
+                    (Some(info), Some(tx), Some(rx))
+                } else {
+                    (None, None, None)
+                }
             }
-            _ => (None, None, None),
+            _ => (None, None, None)
         };
 
-        let document_id = txn.document_id;
         let scene_swap_start_time = precise_time_ns();
-        let has_resources_updates = !txn.resource_updates.is_empty();
-        let invalidate_rendered_frame = txn.invalidate_rendered_frame;
+        let document_ids = txns.iter().map(|txn| txn.document_id).collect();
+        let have_resources_updates : Vec<DocumentId> = if pipeline_info.is_none() {
+            txns.iter()
+                .filter(|txn| !txn.resource_updates.is_empty() || txn.invalidate_rendered_frame)
+                .map(|txn| txn.document_id.clone())
+                .collect()
+        } else {
+            Vec::new()
+        };
 
-        self.tx.send(SceneBuilderResult::Transaction(txn, result_tx)).unwrap();
+        self.tx.send(SceneBuilderResult::Transactions(txns, result_tx)).unwrap();
 
         let _ = self.api_tx.send(ApiMsg::WakeUp);
 
@@ -587,7 +603,7 @@ impl SceneBuilder {
             // Block until the swap is done, then invoke the hook.
             let swap_result = result_rx.unwrap().recv();
             let scene_swap_time = precise_time_ns() - scene_swap_start_time;
-            self.hooks.as_ref().unwrap().post_scene_swap(document_id,
+            self.hooks.as_ref().unwrap().post_scene_swap(&document_ids,
                                                          pipeline_info, scene_swap_time);
             // Once the hook is done, allow the RB thread to resume
             match swap_result {
@@ -596,9 +612,9 @@ impl SceneBuilder {
                 },
                 _ => (),
             };
-        } else if has_resources_updates || invalidate_rendered_frame {
+        } else if !have_resources_updates.is_empty() {
             if let &Some(ref hooks) = &self.hooks {
-                hooks.post_resource_update(document_id);
+                hooks.post_resource_update(&have_resources_updates);
             }
         } else {
             if let &Some(ref hooks) = &self.hooks {
@@ -634,9 +650,11 @@ impl LowPrioritySceneBuilder {
     pub fn run(&mut self) {
         loop {
             match self.rx.recv() {
-                Ok(SceneBuilderRequest::Transaction(txn)) => {
-                    let txn = self.process_transaction(txn);
-                    self.tx.send(SceneBuilderRequest::Transaction(txn)).unwrap();
+                Ok(SceneBuilderRequest::Transactions(mut txns)) => {
+                    let txns : Vec<Box<Transaction>> = txns.drain(..)
+                        .map(|txn| self.process_transaction(txn))
+                        .collect();
+                    self.tx.send(SceneBuilderRequest::Transactions(txns)).unwrap();
                 }
                 Ok(SceneBuilderRequest::DeleteDocument(document_id)) => {
                     self.tx.send(SceneBuilderRequest::DeleteDocument(document_id)).unwrap();

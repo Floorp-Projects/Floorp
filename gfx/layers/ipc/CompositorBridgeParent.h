@@ -399,7 +399,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
                               TimeStamp& aCompositeStart,
                               TimeStamp& aRenderStart, TimeStamp& aCompositeEnd,
                               wr::RendererStats* aStats = nullptr);
-  void NotifyDidSceneBuild(wr::RenderRoot aRenderRoot,
+  void NotifyDidSceneBuild(const nsTArray<wr::RenderRoot>& aRenderRoots,
                            RefPtr<wr::WebRenderPipelineInfo> aInfo);
   RefPtr<AsyncImagePipelineManager> GetAsyncImagePipelineManager() const;
 
@@ -427,7 +427,8 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
   // Can be called from any thread
   void ScheduleRenderOnCompositorThread(
-      const Maybe<wr::RenderRoot>& aRenderRoot = Nothing()) override;
+      const nsTArray<wr::RenderRoot>& aRenderRoots =
+          nsTArray<wr::RenderRoot>()) override;
   void SchedulePauseOnCompositorThread();
   void InvalidateOnCompositorThread();
   /**
@@ -437,8 +438,9 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
   bool ScheduleResumeOnCompositorThread();
   bool ScheduleResumeOnCompositorThread(int x, int y, int width, int height);
 
-  void ScheduleComposition(
-      const Maybe<wr::RenderRoot>& aRenderRoot = Nothing());
+  void ScheduleComposition(const nsTArray<wr::RenderRoot>& aRenderRoots =
+                               nsTArray<wr::RenderRoot>());
+
   void NotifyShadowTreeTransaction(LayersId aId, bool aIsFirstPaint,
                                    const FocusTarget& aFocusTarget,
                                    bool aScheduleComposite,

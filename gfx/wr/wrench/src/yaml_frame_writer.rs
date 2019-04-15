@@ -443,6 +443,46 @@ impl YamlFrameWriterReceiver {
             scene: Scene::new(),
         }
     }
+
+    fn update_document(&mut self, txn: &TransactionMsg) {
+        self.frame_writer.update_resources(&txn.resource_updates);
+        for doc_msg in &txn.scene_ops {
+            match *doc_msg {
+                SceneMsg::SetDisplayList {
+                    ref epoch,
+                    ref pipeline_id,
+                    ref background,
+                    ref viewport_size,
+                    ref list_descriptor,
+                    ..
+                } => {
+                    self.frame_writer.begin_write_display_list(
+                        &mut self.scene,
+                        epoch,
+                        pipeline_id,
+                        background,
+                        viewport_size,
+                        list_descriptor,
+                    );
+                }
+                SceneMsg::SetRootPipeline(ref pipeline_id) => {
+                    self.scene.set_root_pipeline_id(pipeline_id.clone());
+                }
+                SceneMsg::RemovePipeline(ref pipeline_id) => {
+                    self.scene.remove_pipeline(pipeline_id);
+                }
+                _ => {}
+            }
+        }
+        for doc_msg in &txn.frame_ops {
+            match *doc_msg {
+                FrameMsg::UpdateDynamicProperties(ref properties) => {
+                    self.scene.properties.set_properties(properties);
+                }
+                _ => {}
+            }
+        }
+    }
 }
 
 impl fmt::Debug for YamlFrameWriterReceiver {
@@ -1234,43 +1274,9 @@ impl webrender::ApiRecordingReceiver for YamlFrameWriterReceiver {
             ApiMsg::UpdateResources(ref updates) => {
                 self.frame_writer.update_resources(updates);
             }
-            ApiMsg::UpdateDocument(_, ref txn) => {
-                self.frame_writer.update_resources(&txn.resource_updates);
-                for doc_msg in &txn.scene_ops {
-                    match *doc_msg {
-                        SceneMsg::SetDisplayList {
-                            ref epoch,
-                            ref pipeline_id,
-                            ref background,
-                            ref viewport_size,
-                            ref list_descriptor,
-                            ..
-                        } => {
-                            self.frame_writer.begin_write_display_list(
-                                &mut self.scene,
-                                epoch,
-                                pipeline_id,
-                                background,
-                                viewport_size,
-                                list_descriptor,
-                            );
-                        }
-                        SceneMsg::SetRootPipeline(ref pipeline_id) => {
-                            self.scene.set_root_pipeline_id(pipeline_id.clone());
-                        }
-                        SceneMsg::RemovePipeline(ref pipeline_id) => {
-                            self.scene.remove_pipeline(pipeline_id);
-                        }
-                        _ => {}
-                    }
-                }
-                for doc_msg in &txn.frame_ops {
-                    match *doc_msg {
-                        FrameMsg::UpdateDynamicProperties(ref properties) => {
-                            self.scene.properties.set_properties(properties);
-                        }
-                        _ => {}
-                    }
+            ApiMsg::UpdateDocuments(_, ref txns) => {
+                for txn in txns {
+                    self.update_document(txn);
                 }
             }
             _ => {}

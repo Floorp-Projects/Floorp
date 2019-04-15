@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::{ApiMsg, FrameMsg, SceneMsg};
+use api::{ApiMsg, FrameMsg, SceneMsg, TransactionMsg};
 use bincode::serialize;
 use byteorder::{LittleEndian, WriteBytesExt};
 use std::any::TypeId;
@@ -61,32 +61,41 @@ impl ApiRecordingReceiver for BinaryRecorder {
     }
 }
 
+fn should_record_transaction_msg(msgs: &TransactionMsg) -> bool {
+    if msgs.generate_frame {
+        return true;
+    }
+
+    for msg in &msgs.scene_ops {
+        match *msg {
+            SceneMsg::SetDisplayList { .. } |
+            SceneMsg::SetRootPipeline { .. } => return true,
+            _ => {}
+        }
+    }
+
+    for msg in &msgs.frame_ops {
+        match *msg {
+            FrameMsg::GetScrollNodeState(..) |
+            FrameMsg::HitTest(..) => {}
+            _ => return true,
+        }
+    }
+
+    false
+}
+
 pub fn should_record_msg(msg: &ApiMsg) -> bool {
     match *msg {
         ApiMsg::UpdateResources(..) |
         ApiMsg::AddDocument { .. } |
         ApiMsg::DeleteDocument(..) => true,
-        ApiMsg::UpdateDocument(_, ref msgs) => {
-            if msgs.generate_frame {
-                return true;
-            }
-
-            for msg in &msgs.scene_ops {
-                match *msg {
-                    SceneMsg::SetDisplayList { .. } |
-                    SceneMsg::SetRootPipeline { .. } => return true,
-                    _ => {}
+        ApiMsg::UpdateDocuments(_, ref msgs) => {
+            for msg in msgs {
+                if should_record_transaction_msg(msg) {
+                    return true;
                 }
             }
-
-            for msg in &msgs.frame_ops {
-                match *msg {
-                    FrameMsg::GetScrollNodeState(..) |
-                    FrameMsg::HitTest(..) => {}
-                    _ => return true,
-                }
-            }
-
             false
         }
         _ => false,
