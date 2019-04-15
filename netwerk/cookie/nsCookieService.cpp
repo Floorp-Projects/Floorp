@@ -4791,6 +4791,82 @@ nsresult nsCookieService::RemoveCookiesWithOriginAttributes(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsCookieService::RemoveCookiesFromRootDomain(const nsACString &aHost,
+                                             const nsAString &aPattern) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  mozilla::OriginAttributesPattern pattern;
+  if (!pattern.Init(aPattern)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return RemoveCookiesFromRootDomain(aHost, pattern);
+}
+
+nsresult nsCookieService::RemoveCookiesFromRootDomain(
+    const nsACString &aHost, const mozilla::OriginAttributesPattern &aPattern) {
+  nsAutoCString host(aHost);
+  nsresult rv = NormalizeHost(host);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsAutoCString baseDomain;
+  rv = GetBaseDomainFromHost(mTLDService, host, baseDomain);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mDBState) {
+    NS_WARNING("No DBState! Profile already close?");
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  EnsureReadComplete(true);
+
+  AutoRestore<DBState *> savePrevDBState(mDBState);
+  mDBState = (aPattern.mPrivateBrowsingId.WasPassed() &&
+              aPattern.mPrivateBrowsingId.Value() > 0)
+                 ? mPrivateDBState
+                 : mDefaultDBState;
+
+  mozStorageTransaction transaction(mDBState->dbConn, false);
+  // Iterate the hash table of nsCookieEntry.
+  for (auto iter = mDBState->hostTable.Iter(); !iter.Done(); iter.Next()) {
+    nsCookieEntry *entry = iter.Get();
+
+    if (!baseDomain.Equals(entry->mBaseDomain)) {
+      continue;
+    }
+
+    if (!aPattern.Matches(entry->mOriginAttributes)) {
+      continue;
+    }
+
+    uint32_t cookiesCount = entry->GetCookies().Length();
+    for (nsCookieEntry::IndexType i = cookiesCount; i != 0; --i) {
+      nsListIter iter(entry, i - 1);
+      RefPtr<nsCookie> cookie = iter.Cookie();
+
+      bool hasRootDomain = false;
+      rv = mTLDService->HasRootDomain(cookie->Host(), aHost, &hasRootDomain);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      if (!hasRootDomain) {
+        continue;
+      }
+
+      // Remove the cookie.
+      RemoveCookieFromList(iter);
+
+      if (cookie) {
+        NotifyChanged(cookie, u"deleted");
+      }
+    }
+  }
+  rv = transaction.Commit();
+  MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+  return NS_OK;
+}
+
 // find an secure cookie specified by host and name
 bool nsCookieService::FindSecureCookie(const nsCookieKey &aKey,
                                        nsCookie *aCookie) {
