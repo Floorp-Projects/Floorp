@@ -15,17 +15,14 @@
 
 use super::{BinaryReader, BinaryReaderError, Result};
 
-pub(crate) fn read_sourcemappingurl_section_content<'a>(
-    data: &'a [u8],
-    offset: usize,
-) -> Result<&'a str> {
+pub(crate) fn read_data_count_section_content(data: &[u8], offset: usize) -> Result<u32> {
     let mut reader = BinaryReader::new_with_offset(data, offset);
-    let url = reader.read_string()?;
+    let count = reader.read_var_u32()?;
     if !reader.eof() {
         return Err(BinaryReaderError {
-            message: "Unexpected content in the sourceMappingURL section",
+            message: "Unexpected content in the data count section",
             offset: offset + reader.position,
         });
     }
-    Ok(url)
+    Ok(count)
 }

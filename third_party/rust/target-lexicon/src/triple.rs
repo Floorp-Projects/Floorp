@@ -1,12 +1,12 @@
 // This file defines the `Triple` type and support code shared by all targets.
 
-use parse_error::ParseError;
-use std::borrow::ToOwned;
-use std::fmt;
-use std::str::FromStr;
-use targets::{
+use crate::parse_error::ParseError;
+use crate::targets::{
     default_binary_format, Architecture, BinaryFormat, Environment, OperatingSystem, Vendor,
 };
+use core::fmt;
+use core::str::FromStr;
+use std::borrow::ToOwned;
 
 /// The target memory endianness.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
@@ -155,17 +155,24 @@ impl fmt::Display for Triple {
 
         write!(f, "{}", self.architecture)?;
         if self.vendor == Vendor::Unknown
-            && self.operating_system == OperatingSystem::Unknown
-            && (self.environment != Environment::Unknown
-                || self.binary_format != implied_binary_format)
+            && ((self.operating_system == OperatingSystem::Linux
+                && (self.environment == Environment::Android
+                    || self.environment == Environment::Androideabi))
+                || self.operating_system == OperatingSystem::Fuchsia
+                || (self.operating_system == OperatingSystem::None_
+                    && (self.architecture == Architecture::Armebv7r
+                        || self.architecture == Architecture::Armv7r
+                        || self.architecture == Architecture::Thumbv6m
+                        || self.architecture == Architecture::Thumbv7em
+                        || self.architecture == Architecture::Thumbv7m
+                        || self.architecture == Architecture::Thumbv8mBase
+                        || self.architecture == Architecture::Thumbv8mMain
+                        || self.architecture == Architecture::Msp430)))
         {
-            // "none" is special-case shorthand for unknown vendor and unknown operating system.
-            f.write_str("-none")?;
-        } else if self.operating_system == OperatingSystem::Linux
-            && (self.environment == Environment::Android
-                || self.environment == Environment::Androideabi)
-        {
-            // As a special case, omit the vendor for Android targets.
+            // As a special case, omit the vendor for Android, Fuchsia, and sometimes
+            // None_, depending on the hardware architecture. This logic is entirely
+            // ad-hoc, and is just sufficient to handle the current set of recognized
+            // triples.
             write!(f, "-{}", self.operating_system)?;
         } else {
             write!(f, "-{}-{}", self.vendor, self.operating_system)?;
@@ -203,16 +210,7 @@ impl FromStr for Triple {
         let mut has_vendor = false;
         let mut has_operating_system = false;
         if let Some(s) = current_part {
-            // "none" is special-case shorthand for unknown vendor and unknown operating system.
-            if s == "none" {
-                has_operating_system = true;
-                has_vendor = true;
-                current_part = parts.next();
-                // "none" requires an explicit environment or binary format.
-                if current_part.is_none() {
-                    return Err(ParseError::NoneWithoutBinaryFormat);
-                }
-            } else if let Ok(vendor) = Vendor::from_str(s) {
+            if let Ok(vendor) = Vendor::from_str(s) {
                 has_vendor = true;
                 result.vendor = vendor;
                 current_part = parts.next();
