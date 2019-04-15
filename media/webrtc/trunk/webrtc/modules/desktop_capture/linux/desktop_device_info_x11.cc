@@ -2,13 +2,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "modules/desktop_capture/x11/desktop_device_info_x11.h"
+#include "modules/desktop_capture/linux/desktop_device_info_x11.h"
 #include <inttypes.h>
 #include <unistd.h>
 #include <stdio.h>
-#include "modules/desktop_capture/x11/shared_x_util.h"
-#include "modules/desktop_capture/x11/x_error_trap.h"
-#include "modules/desktop_capture/x11/x_server_pixel_buffer.h"
+#include "modules/desktop_capture/linux/shared_x_util.h"
+#include "modules/desktop_capture/linux/x_error_trap.h"
+#include "modules/desktop_capture/linux/x_server_pixel_buffer.h"
+#include "rtc_base/logging.h"
 
 namespace webrtc {
 
