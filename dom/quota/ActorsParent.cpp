@@ -4092,7 +4092,8 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
 
     Atomic<bool> dummy(false);
     rv = mClients[clientType]->InitOrigin(aPersistenceType, aGroup, aOrigin,
-                                          /* aCanceled */ dummy, usageInfo);
+                                          /* aCanceled */ dummy, usageInfo,
+                                          /* aForGetUsage */ false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       // error should have reported in InitOrigin
       RECORD_IN_NIGHTLY(statusKeeper, rv);
@@ -7080,7 +7081,7 @@ nsresult QuotaUsageRequestBase::GetUsageForOrigin(
                                        mCanceled, aUsageInfo);
       } else {
         rv = client->InitOrigin(aPersistenceType, aGroup, aOrigin, mCanceled,
-                                aUsageInfo);
+                                aUsageInfo, /* aForGetUsage */ true);
       }
       NS_ENSURE_SUCCESS(rv, rv);
     }

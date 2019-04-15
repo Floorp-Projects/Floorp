@@ -2645,8 +2645,8 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   nsresult InitOrigin(PersistenceType aPersistenceType,
                       const nsACString& aGroup, const nsACString& aOrigin,
-                      const AtomicBool& aCanceled,
-                      UsageInfo* aUsageInfo) override;
+                      const AtomicBool& aCanceled, UsageInfo* aUsageInfo,
+                      bool aForGetUsage) override;
 
   nsresult GetUsageForOrigin(PersistenceType aPersistenceType,
                              const nsACString& aGroup,
@@ -7531,7 +7531,7 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
                                  const nsACString& aGroup,
                                  const nsACString& aOrigin,
                                  const AtomicBool& aCanceled,
-                                 UsageInfo* aUsageInfo) {
+                                 UsageInfo* aUsageInfo, bool aForGetUsage) {
   AssertIsOnIOThread();
   MOZ_ASSERT(aPersistenceType == PERSISTENCE_TYPE_DEFAULT);
 
@@ -7696,7 +7696,9 @@ nsresult QuotaClient::InitOrigin(PersistenceType aPersistenceType,
 
     MOZ_ASSERT(usage >= 0);
 
-    InitUsageForOrigin(aOrigin, usage);
+    if (!aForGetUsage) {
+      InitUsageForOrigin(aOrigin, usage);
+    }
 
     aUsageInfo->AppendToDatabaseUsage(uint64_t(usage));
   } else if (usageFileExists) {
