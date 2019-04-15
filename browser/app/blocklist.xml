@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1554976164809" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1555100575898" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2781,6 +2781,38 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="0d86ba71-7baa-4cb3-b3b8-da4ccdfa36b9" id="/^((\{0913599d-3094-44a7-8cc2-b8467d5afc7c\})|(\{7bee7f1b-d8ad-424d-807d-e69e6634988e\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="fc38e782-d55b-4fb7-8f9c-374aa18af09c" id="/^((\{61f433aa-45fd-42a9-9c90-c1d7820661d5\})|(\{86cd46b6-433a-439c-bff2-722846709f44\})|(\{98e126a4-4e70-4300-b893-3b2cca19bc9b\})|(\{8f42dc3a-1c46-4fc2-8c7f-dd76a63b1cf7\})|(\{a24d3582-2fc2-475c-8440-335736e17c6e\})|(\{cf0b5280-cd08-465d-ad7d-70308538f30a\})|(\{936f3c79-5dc9-4694-bca8-47932de3357a\})|(\{e48d5888-8736-4858-83ba-e816378ffef8\})|(\{5305f89c-ceec-4217-8bae-c9c376c7462b\})|(\{a2ac47e5-d225-4718-9b57-18a932f87610\})|(\{79f60f07-6aee-42cd-9105-c0a52f401316\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="6fd3ab94-8e38-47f3-b129-3ca8396d0a22" id="{be6ab6a9-7004-4c5c-8df9-8d36122d8b14}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="036e2e7d-5403-49be-92cf-b5187ceef7ec" id="/^((\{b37f383f-e60f-4eb1-ac0f-9147e0e8f2f7\})|(\{8ad567d2-3fe2-446b-bce9-a3acbe878dba\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="03554696-58fe-4b90-89d1-72b72f88f82e" id="/^((\{8220ccaf-15a4-4f47-a670-a4119a4296a4\})|(\{9da72c11-44d7-423c-b19c-c75cd6188c3e\})|(\{99d0e4d0-c5ef-4567-b74c-80c5ed21ad99\}))$/">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="ea00841e-8dc2-4e11-9119-7a599e47d800" id="{608f71eb-5bd6-45d8-bc93-b9e812cf17b7}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="53ef1aad-7bdb-4f4e-8d46-55d6ec2d78ab" id="H.264.Addon.Test@firefox.com">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="371796e4-387a-4dd0-9ddc-47ba1dd85be7" id="{132cb2fd-a6ae-45d2-84cf-b48d591f037d}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="3a921aa8-d44a-4272-be63-0fd102577f59" id="{d8b03707-e39f-4b17-8e56-56354fb14af5}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
