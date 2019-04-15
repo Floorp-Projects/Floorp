@@ -135,7 +135,7 @@ void AssertUniqueItem(nsDisplayItem* aItem) {
   for (nsDisplayItem* i : *items) {
     if (i != aItem && !i->HasDeletedFrame() && i->Frame() == aItem->Frame() &&
         i->GetPerFrameKey() == aItem->GetPerFrameKey()) {
-      if (i->mPreProcessedItem) {
+      if (i->IsPreProcessedItem()) {
         continue;
       }
       MOZ_DIAGNOSTIC_ASSERT(false, "Duplicate display item!");
@@ -3171,18 +3171,9 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
 nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                              const ActiveScrolledRoot* aActiveScrolledRoot)
     : mFrame(aFrame),
+      mItemFlags(),
       mActiveScrolledRoot(aActiveScrolledRoot),
-      mAnimatedGeometryRoot(nullptr),
-      mForceNotVisible(aBuilder->IsBuildingInvisibleItems()),
-      mDisableSubpixelAA(false),
-      mReusedItem(false),
-      mPaintRectValid(false),
-      mCanBeReused(true)
-#ifdef MOZ_DUMP_PAINTING
-      ,
-      mPainted(false)
-#endif
-{
+      mAnimatedGeometryRoot(nullptr) {
   MOZ_COUNT_CTOR(nsDisplayItem);
   if (aBuilder->IsRetainingDisplayList()) {
     mFrame->AddDisplayItem(this);
@@ -3208,9 +3199,12 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
   SetBuildingRect(visible);
 
   const nsStyleDisplay* disp = mFrame->StyleDisplay();
-  mBackfaceIsHidden = mFrame->BackfaceIsHidden(disp);
-  mCombines3DTransformWithAncestors =
-      mFrame->Combines3DTransformWithAncestors(disp);
+  if (mFrame->BackfaceIsHidden(disp)) {
+    mItemFlags += ItemFlag::BackfaceHidden;
+  }
+  if (mFrame->Combines3DTransformWithAncestors(disp)) {
+    mItemFlags += ItemFlag::Combines3DTransformWithAncestors;
+  }
 }
 
 /* static */
@@ -3236,7 +3230,7 @@ bool nsDisplayItem::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
 bool nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
                                         nsRegion* aVisibleRegion) {
-  if (mForceNotVisible && !GetSameCoordinateSystemChildren()) {
+  if (ForceNotVisible() && !GetSameCoordinateSystemChildren()) {
     // mForceNotVisible wants to ensure that this display item doesn't render
     // anything itself. If this item has contents, then we obviously want to
     // render those, so we don't need this check in that case.
@@ -8944,7 +8938,7 @@ void nsDisplayText::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   AUTO_PROFILER_LABEL("nsDisplayText::Paint", GRAPHICS);
 
   DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
-                                                    mDisableSubpixelAA);
+                                                    IsSubpixelAADisabled());
   RenderToContext(aCtx, aBuilder);
 }
 
