@@ -95,7 +95,9 @@ public class Tabs implements BundleEventListener {
     // Used to indicate a new tab should be appended to the current tabs.
     public static final int NEW_LAST_INDEX = -1;
 
-    private static final AtomicInteger sTabId = new AtomicInteger(0);
+    // Bug 1410749: Desktop numbers tabs starting from 1, and various Webextension bits have
+    // inherited that assumption and treat 0 as an invalid tab.
+    private static final AtomicInteger sTabId = new AtomicInteger(1);
     private volatile boolean mInitialTabsAdded;
 
     private Context mAppContext;
