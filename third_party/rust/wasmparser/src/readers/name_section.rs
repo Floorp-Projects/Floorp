@@ -24,7 +24,7 @@ pub struct ModuleName<'a> {
 }
 
 impl<'a> ModuleName<'a> {
-    pub fn get_name<'b>(&self) -> Result<&'b [u8]>
+    pub fn get_name<'b>(&self) -> Result<&'b str>
     where
         'a: 'b,
     {

@@ -1,21 +1,76 @@
+use std::collections::HashMap;
+use std::hash::Hash;
 use std::slice;
 
+/// Collect items into the `table` list, removing duplicates.
+pub struct UniqueTable<'entries, T: Eq + Hash> {
+    table: Vec<&'entries T>,
+    map: HashMap<&'entries T, usize>,
+}
+
+impl<'entries, T: Eq + Hash> UniqueTable<'entries, T> {
+    pub fn new() -> Self {
+        Self {
+            table: Vec::new(),
+            map: HashMap::new(),
+        }
+    }
+
+    pub fn add(&mut self, entry: &'entries T) -> usize {
+        match self.map.get(&entry) {
+            None => {
+                let i = self.table.len();
+                self.table.push(entry);
+                self.map.insert(entry, i);
+                i
+            }
+            Some(&i) => i,
+        }
+    }
+
+    pub fn len(&self) -> usize {
+        self.table.len()
+    }
+    pub fn iter(&self) -> slice::Iter<&'entries T> {
+        self.table.iter()
+    }
+}
+
 /// A table of sequences which tries to avoid common subsequences.
-pub struct UniqueTable<T: PartialEq + Clone> {
+pub struct UniqueSeqTable<T: PartialEq + Clone> {
     table: Vec<T>,
 }
 
-impl<T: PartialEq + Clone> UniqueTable<T> {
+impl<T: PartialEq + Clone> UniqueSeqTable<T> {
     pub fn new() -> Self {
         Self { table: Vec::new() }
     }
     pub fn add(&mut self, values: &Vec<T>) -> usize {
+        if values.len() == 0 {
+            return 0;
+        }
         if let Some(offset) = find_subsequence(values, &self.table) {
             offset
         } else {
-            let offset = self.table.len();
-            self.table.extend((*values).clone());
-            offset
+            let table_len = self.table.len();
+
+            // Try to put in common the last elements of the table if they're a prefix of the new
+            // sequence.
+            //
+            // We know there wasn't a full match, so the best prefix we can hope to find contains
+            // all the values but the last one.
+            let mut start_from = usize::min(table_len, values.len() - 1);
+            while start_from != 0 {
+                // Loop invariant: start_from <= table_len, so table_len - start_from >= 0.
+                if values[0..start_from] == self.table[table_len - start_from..table_len] {
+                    break;
+                }
+                start_from -= 1;
+            }
+
+            self.table
+                .extend(values[start_from..values.len()].iter().cloned());
+            table_len - start_from
         }
     }
     pub fn len(&self) -> usize {
@@ -35,17 +90,10 @@ fn find_subsequence<T: PartialEq>(sub: &Vec<T>, whole: &Vec<T>) -> Option<usize>
     if whole.len() < sub.len() {
         return None;
     }
-    let max = whole.len() + 1 - sub.len();
-    for i in 0..max {
-        let mut found: Option<usize> = Some(i);
-        for j in 0..sub.len() {
-            if sub[j] != whole[i + j] {
-                found = None;
-                break;
-            }
-        }
-        if found.is_some() {
-            return found;
+    let max = whole.len() - sub.len();
+    for i in 0..max + 1 {
+        if whole[i..i + sub.len()] == sub[..] {
+            return Some(i);
         }
     }
     return None;
@@ -65,4 +113,25 @@ fn test_find_subsequence() {
         find_subsequence(&vec![1, 1, 3], &vec![1, 1, 1, 3, 3]),
         Some(1)
     );
+}
+
+#[test]
+fn test_optimal_add() {
+    let mut seq_table = UniqueSeqTable::new();
+    // [0, 1, 2, 3]
+    assert_eq!(seq_table.add(&vec![0, 1, 2, 3]), 0);
+    assert_eq!(seq_table.add(&vec![0, 1, 2, 3]), 0);
+    assert_eq!(seq_table.add(&vec![1, 2, 3]), 1);
+    assert_eq!(seq_table.add(&vec![2, 3]), 2);
+    assert_eq!(seq_table.len(), 4);
+    // [0, 1, 2, 3, 4]
+    assert_eq!(seq_table.add(&vec![2, 3, 4]), 2);
+    assert_eq!(seq_table.len(), 5);
+    // [0, 1, 2, 3, 4, 6, 5, 7]
+    assert_eq!(seq_table.add(&vec![4, 6, 5, 7]), 4);
+    assert_eq!(seq_table.len(), 8);
+    // [0, 1, 2, 3, 4, 6, 5, 7, 8, 2, 3, 4]
+    assert_eq!(seq_table.add(&vec![8, 2, 3, 4]), 8);
+    assert_eq!(seq_table.add(&vec![8]), 8);
+    assert_eq!(seq_table.len(), 12);
 }

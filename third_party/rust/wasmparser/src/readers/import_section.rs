@@ -20,8 +20,8 @@ use super::{
 
 #[derive(Debug, Copy, Clone)]
 pub struct Import<'a> {
-    pub module: &'a [u8],
-    pub field: &'a [u8],
+    pub module: &'a str,
+    pub field: &'a str,
     pub ty: ImportSectionEntryType,
 }
 

@@ -476,11 +476,17 @@ class BaselineCodeGen {
   MOZ_MUST_USE bool emitStackCheck();
   MOZ_MUST_USE bool emitArgumentTypeChecks();
   MOZ_MUST_USE bool emitDebugPrologue();
+
+  template <typename F1, typename F2>
+  MOZ_MUST_USE bool initEnvironmentChainHelper(const F1& initFunctionEnv,
+                                               const F2& initGlobalOrEvalEnv,
+                                               Register scratch);
   MOZ_MUST_USE bool initEnvironmentChain();
 
   MOZ_MUST_USE bool emitTraceLoggerEnter();
   MOZ_MUST_USE bool emitTraceLoggerExit();
 
+  void emitInitFrameFields();
   void emitIsDebuggeeCheck();
   void emitInitializeLocals();
   void emitPreInitEnvironmentChain(Register nonFunctionEnv);

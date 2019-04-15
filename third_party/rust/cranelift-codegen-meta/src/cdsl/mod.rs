@@ -3,10 +3,15 @@
 //! This module defines the classes that are used to define Cranelift
 //! instructions and other entities.
 
+pub mod formats;
+pub mod inst;
 pub mod isa;
+pub mod operands;
 pub mod regs;
 pub mod settings;
+pub mod type_inference;
 pub mod types;
+pub mod typevar;
 
 /// A macro that converts boolean settings into predicates to look more natural.
 #[macro_export]
