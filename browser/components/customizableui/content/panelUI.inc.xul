@@ -97,54 +97,45 @@
        role="alert">
   <popupnotification id="appMenu-update-available-notification"
                      popupid="update-available"
-                     label="&updateAvailable.header.message;"
-                     buttonlabel="&updateAvailable.acceptButton.label;"
-                     buttonaccesskey="&updateAvailable.acceptButton.accesskey;"
+                     data-lazy-l10n-id="appmenu-update-available"
+                     data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
                      closebuttonhidden="true"
-                     secondarybuttonlabel="&updateAvailable.cancelButton.label;"
-                     secondarybuttonaccesskey="&updateAvailable.cancelButton.accesskey;"
                      dropmarkerhidden="true"
                      checkboxhidden="true"
                      buttonhighlight="true"
                      hidden="true">
     <popupnotificationcontent id="update-available-notification-content" orient="vertical">
-      <description id="update-available-description">&updateAvailable.message;</description>
-      <label id="update-available-whats-new" is="text-link" value="&updateAvailable.whatsnew.label;" />
+      <description id="update-available-description" data-lazy-l10n-id="appmenu-update-available-message"></description>
+      <label id="update-available-whats-new" is="text-link" data-lazy-l10n-id="appmenu-update-whats-new"/>
     </popupnotificationcontent>
   </popupnotification>
 
   <popupnotification id="appMenu-update-manual-notification"
                      popupid="update-manual"
-                     label="&updateManual.header.message;"
-                     buttonlabel="&updateManual.acceptButton.label;"
-                     buttonaccesskey="&updateManual.acceptButton.accesskey;"
+                     data-lazy-l10n-id="appmenu-update-manual"
+                     data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
                      closebuttonhidden="true"
-                     secondarybuttonlabel="&updateManual.cancelButton.label;"
-                     secondarybuttonaccesskey="&updateManual.cancelButton.accesskey;"
                      dropmarkerhidden="true"
                      checkboxhidden="true"
                      buttonhighlight="true"
                      hidden="true">
     <popupnotificationcontent id="update-manual-notification-content" orient="vertical">
-      <description id="update-manual-description">&updateManual.message;</description>
-      <label id="update-manual-whats-new" is="text-link" value="&updateManual.whatsnew.label;" />
+      <description id="update-manual-description" data-lazy-l10n-id="appmenu-update-manual-message"></description>
+      <label id="update-manual-whats-new" is="text-link"  data-lazy-l10n-id="appmenu-update-whats-new"/>
     </popupnotificationcontent>
   </popupnotification>
 
   <popupnotification id="appMenu-update-restart-notification"
                      popupid="update-restart"
-                     label="&updateRestart.header.message2;"
-                     buttonlabel="&updateRestart.acceptButton.label;"
-                     buttonaccesskey="&updateRestart.acceptButton.accesskey;"
+                     data-lazy-l10n-id="appmenu-update-restart"
+                     data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
                      closebuttonhidden="true"
-                     secondarybuttonlabel="&updateRestart.cancelButton.label;"
-                     secondarybuttonaccesskey="&updateRestart.cancelButton.accesskey;"
                      dropmarkerhidden="true"
                      checkboxhidden="true"
                      buttonhighlight="true"
                      hidden="true">
     <popupnotificationcontent id="update-restart-notification-content" orient="vertical">
-      <description id="update-restart-description">&updateRestart.message2;</description>
+      <description id="update-restart-description" data-lazy-l10n-id="appmenu-update-restart-message"></description>
     </popupnotificationcontent>
   </popupnotification>
 
@@ -152,37 +143,36 @@
                      popupid="addon-installed"
                      closebuttonhidden="true"
                      secondarybuttonhidden="true"
-                     buttonlabel="&addonPrivateBrowsing.okButton.label;"
-                     buttonaccesskey="&addonPrivateBrowsing.okButton.accesskey;"
+                     data-lazy-l10n-id="appmenu-addon-private-browsing-installed"
+                     data-l10n-attrs="buttonlabel, buttonaccesskey"
                      dropmarkerhidden="true"
                      checkboxhidden="true"
                      buttonhighlight="true"
                      hidden="true">
     <popupnotificationcontent class="addon-installed-notification-content" orient="vertical">
-      <description>&addonPostInstallMessage.label;</description>
+      <description id="addon-install-description" data-lazy-l10n-id="appmenu-addon-post-install-message">
+        <image data-l10n-name="addon-install-icon" class="addon-addon-icon"></image>
+        <image data-l10n-name="addon-menu-icon" class="addon-toolbar-icon"></image>
+      </description>
       <checkbox id="addon-incognito-checkbox"
-                label="&addonPostInstall.incognito.checkbox.label;"
-                accesskey="&addonPostInstall.incognito.checkbox.accesskey;"/>
+                data-lazy-l10n-id="appmenu-addon-post-install-incognito-checkbox"/>
     </popupnotificationcontent>
   </popupnotification>
 
   <popupnotification id="appMenu-addon-private-browsing-notification"
                      popupid="addon-private-browsing"
-                     label="&addonPrivateBrowsing.header2.label;"
+                     data-lazy-l10n-id="appmenu-addon-private-browsing"
+                     data-l10n-attrs="buttonlabel, buttonaccesskey, secondarybuttonlabel, secondarybuttonaccesskey"
                      closebuttonhidden="true"
                      secondarybuttonhidden="false"
-                     buttonlabel="&addonPrivateBrowsing.manageButton.label;"
-                     buttonaccesskey="&addonPrivateBrowsing.manageButton.accesskey;"
-                     secondarybuttonlabel="&addonPrivateBrowsing.okButton.label;"
-                     secondarybuttonaccesskey="&addonPrivateBrowsing.okButton.accesskey;"
                      dropmarkerhidden="true"
                      checkboxhidden="true"
                      buttonhighlight="true"
                      hidden="true">
     <popupnotificationcontent class="addon-private-browsing-notification-content" orient="vertical">
-      <description>&addonPrivateBrowsing.body2.label;</description>
+      <description id="addon-private-browsing-description" data-lazy-l10n-id="appmenu-addon-private-browsing-message"></description>
       <label id="addon-private-browsing-learn-more"
-             class="text-link" is="text-link">&addonPrivateBrowsing.learnMore.label;</label>
+             class="text-link" is="text-link" data-lazy-l10n-id="appmenu-addon-private-browsing-learn-more"></label>
     </popupnotificationcontent>
   </popupnotification>
 </panel>
