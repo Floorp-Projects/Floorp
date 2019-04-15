@@ -691,6 +691,10 @@ class ScriptSource {
    */
   static constexpr size_t MinimumCompressibleLength = 256;
 
+ private:
+  class LoadSourceMatcher;
+
+ public:
   // Attempt to load usable source for |ss| -- source text on which substring
   // operations and the like can be performed.  On success return true and set
   // |*loaded| to indicate whether usable source could be loaded; otherwise
