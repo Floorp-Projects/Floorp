@@ -130,6 +130,7 @@ const networkEventSpec = generateActorSpec({
       updateType: Arg(0, "string"),
 
       state: Option(1, "string"),
+      isRacing: Option(1, "boolean"),
     },
 
     "network-event-update:response-content": {
