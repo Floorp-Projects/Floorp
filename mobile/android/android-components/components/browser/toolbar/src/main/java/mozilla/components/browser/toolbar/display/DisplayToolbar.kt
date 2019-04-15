@@ -326,8 +326,8 @@ internal class DisplayToolbar(
         val height = MeasureSpec.getSize(heightMeasureSpec)
 
         val fixedHeightSpec = MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
-        val halfFixedHeightSpec = MeasureSpec
-                .makeMeasureSpec(height / MEASURED_HEIGHT_DENOMINATOR, MeasureSpec.EXACTLY)
+        val thirdFixedHeightSpec = MeasureSpec
+                .makeMeasureSpec(height / MEASURED_HEIGHT_THIRD_DENOMINATOR, MeasureSpec.EXACTLY)
         setMeasuredDimension(width, height)
 
         // The icon and menu fill the whole height and have a square shape
@@ -348,9 +348,10 @@ internal class DisplayToolbar(
         val urlWidthSpec = MeasureSpec.makeMeasureSpec(urlWidth, MeasureSpec.EXACTLY)
 
         if (titleView.isVisible()) {
-            // With a title view, the url and title split the rest of the space vertically
-            titleView.measure(urlWidthSpec, halfFixedHeightSpec)
-            urlView.measure(urlWidthSpec, halfFixedHeightSpec)
+            /* With a title view, the url and title split the rest of the space vertically. The
+            title view and url should be centered as a singular unit in the middle third. */
+            titleView.measure(urlWidthSpec, thirdFixedHeightSpec)
+            urlView.measure(urlWidthSpec, thirdFixedHeightSpec)
         } else {
             // With no title view, the url view takes up the rest of the space
             urlView.measure(urlWidthSpec, fixedHeightSpec)
@@ -500,6 +501,7 @@ internal class DisplayToolbar(
     }
 
     companion object {
+        internal const val MEASURED_HEIGHT_THIRD_DENOMINATOR = 3
         internal const val MEASURED_HEIGHT_DENOMINATOR = 2
         internal const val URL_FADING_EDGE_SIZE_DP = 24
 
