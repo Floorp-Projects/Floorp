@@ -24,7 +24,7 @@ add_task(async function test_empty_password() {
                             async function() {
                               let doc = content.document;
                               doc.getElementById("form-basic-username").value = "username";
-                              doc.getElementById("form-basic-password").value = "p";
+                              doc.getElementById("form-basic-password").value = "pw";
                               doc.getElementById("form-basic").submit();
                             });
     await promiseShown;
@@ -35,6 +35,7 @@ add_task(async function test_empty_password() {
     // Synthesize input to empty the field
     passwordTextbox.focus();
     await EventUtils.synthesizeKey("KEY_ArrowRight");
+    await EventUtils.synthesizeKey("KEY_Backspace");
     await EventUtils.synthesizeKey("KEY_Backspace");
 
     let mainActionButton = notificationElement.button;
@@ -60,7 +61,7 @@ add_task(async function test_toggle_password() {
                             async function() {
                               let doc = content.document;
                               doc.getElementById("form-basic-username").value = "username";
-                              doc.getElementById("form-basic-password").value = "p";
+                              doc.getElementById("form-basic-password").value = "pw";
                               doc.getElementById("form-basic").submit();
                             });
     await promiseShown;
@@ -99,7 +100,7 @@ add_task(async function test_checkbox_disabled_if_has_master_password() {
     await ContentTask.spawn(browser, null, async function() {
       let doc = content.document;
       doc.getElementById("form-basic-username").value = "username";
-      doc.getElementById("form-basic-password").value = "p";
+      doc.getElementById("form-basic-password").value = "pass";
       doc.getElementById("form-basic").submit();
     });
     await promiseShown;
