@@ -75,7 +75,7 @@ class JarStruct(object):
         an instance with empty fields.
         '''
         assert self.MAGIC and isinstance(self.STRUCT, OrderedDict)
-        self.size_fields = set(t for t in self.STRUCT.itervalues()
+        self.size_fields = set(t for t in six.itervalues(self.STRUCT)
                                if t not in JarStruct.TYPE_MAPPING)
         self._values = {}
         if data:
@@ -381,7 +381,7 @@ class JarReader(object):
         entries = self.entries
         if not entries:
             return JAR_STORED
-        return max(f['compression'] for f in entries.itervalues())
+        return max(f['compression'] for f in six.itervalues(entries))
 
     @property
     def entries(self):
@@ -459,7 +459,7 @@ class JarReader(object):
             for file in jarReader:
                 ...
         '''
-        for entry in self.entries.itervalues():
+        for entry in six.itervalues(self.entries):
             yield self._getreader(entry)
 
     def __getitem__(self, name):
@@ -553,7 +553,7 @@ class JarWriter(object):
         headers = {}
         preload_size = 0
         # Prepare central directory entries
-        for entry, content in self._contents.itervalues():
+        for entry, content in six.itervalues(self._contents):
             header = JarLocalFileHeader()
             for name in entry.STRUCT:
                 if name in header:
@@ -576,18 +576,18 @@ class JarWriter(object):
             offset = end['cdir_size'] + end['cdir_offset'] + end.size
             preload_size += offset
             self._data.write(struct.pack('<I', preload_size))
-            for entry, _ in self._contents.itervalues():
+            for entry, _ in six.itervalues(self._contents):
                 entry['offset'] += offset
                 self._data.write(entry.serialize())
             self._data.write(end.serialize())
         # Store local file entries followed by compressed data
-        for entry, content in self._contents.itervalues():
+        for entry, content in six.itervalues(self._contents):
             self._data.write(headers[entry].serialize())
             self._data.write(content)
         # On non optimized archives, store the central directory entries.
         if not preload_size:
             end['cdir_offset'] = offset
-            for entry, _ in self._contents.itervalues():
+            for entry, _ in six.itervalues(self._contents):
                 self._data.write(entry.serialize())
         # Store the end of central directory.
         self._data.write(end.serialize())
