@@ -416,7 +416,7 @@ class LinkFlags(BaseCompileFlags):
                 not self._context.config.substs.get('MOZ_DEBUG')]):
 
             if self._context.config.substs.get('MOZ_OPTIMIZE'):
-                flags.append('-OPT:REF')
+                flags.append('-OPT:REF,ICF')
 
         return flags
 
