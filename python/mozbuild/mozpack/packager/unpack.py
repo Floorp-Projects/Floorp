@@ -24,7 +24,7 @@ from mozpack.copier import (
 )
 from mozpack.packager import SimplePackager
 from mozpack.packager.formats import FlatFormatter
-from urlparse import urlparse
+from six.moves.urllib.parse import urlparse
 
 
 class UnpackFinder(BaseFinder):
