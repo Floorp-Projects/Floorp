@@ -2502,32 +2502,29 @@ impl PicturePrimitive {
         };
         let world_rect = world_rect.cast();
 
-        match transform.transform_kind() {
-            TransformedRectKind::AxisAligned => {
-                let inv_transform = transforms
-                    .get_world_inv_transform(prim_instance.spatial_node_index);
-                let polygon = Polygon::from_transformed_rect_with_inverse(
+        if transform.is_simple_translation() {
+            let inv_transform = transforms
+                .get_world_inv_transform(prim_instance.spatial_node_index);
+            let polygon = Polygon::from_transformed_rect_with_inverse(
+                local_rect,
+                &matrix,
+                &inv_transform.cast(),
+                plane_split_anchor,
+            ).unwrap();
+            splitter.add(polygon);
+        } else {
+            let mut clipper = Clipper::new();
+            let results = clipper.clip_transformed(
+                Polygon::from_rect(
                     local_rect,
-                    &matrix,
-                    &inv_transform.cast(),
                     plane_split_anchor,
-                ).unwrap();
-                splitter.add(polygon);
-            }
-            TransformedRectKind::Complex => {
-                let mut clipper = Clipper::new();
-                let results = clipper.clip_transformed(
-                    Polygon::from_rect(
-                        local_rect,
-                        plane_split_anchor,
-                    ),
-                    &matrix,
-                    Some(world_rect),
-                );
-                if let Ok(results) = results {
-                    for poly in results {
-                        splitter.add(poly);
-                    }
+                ),
+                &matrix,
+                Some(world_rect),
+            );
+            if let Ok(results) = results {
+                for poly in results {
+                    splitter.add(poly);
                 }
             }
         }
