@@ -206,3 +206,62 @@ def rerun_action(parameters, graph_config, input, task_group_id, task_id):
         return
     taskcluster.rerun_task(task_id)
     logger.info('Reran {}'.format(label))
+
+
+@register_callback_action(
+    title='Retrigger',
+    name='retrigger-multiple',
+    symbol='rt',
+    generic=True,
+    description=(
+        'Create a clone of the task.'
+    ),
+    context=[],
+    schema={
+        "type": "object",
+        "properties": {
+            "requests": {
+                "type": "array",
+                "items": {
+                    "tasks": {
+                        "type": "array",
+                        'description': 'An array of task labels',
+                        'items': {
+                            'type': 'string'
+                        }
+                    },
+                    "times": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 100,
+                        "title": "Times",
+                        "description": "How many times to run each task.",
+                    },
+                    "additionalProperties": False,
+                },
+            },
+            "additionalProperties": False,
+        },
+    },
+)
+def retrigger_multiple(parameters, graph_config, input, task_group_id, task_id):
+    decision_task_id, full_task_graph, label_to_taskid = fetch_graph_and_labels(
+        parameters, graph_config)
+
+    suffixes = []
+    for i, request in enumerate(input.get('requests', [])):
+        times = request.get('times', 1)
+        for j in xrange(times):
+            suffix = '{}-{}'.format(i, j)
+            suffixes.append(suffix)
+            create_tasks(
+                graph_config,
+                request.get('tasks'),
+                full_task_graph,
+                label_to_taskid,
+                parameters,
+                decision_task_id,
+                suffix,
+            )
+
+    combine_task_graph_files(suffixes)
