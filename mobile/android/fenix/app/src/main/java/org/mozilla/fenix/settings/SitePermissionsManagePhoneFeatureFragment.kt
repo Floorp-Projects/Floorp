@@ -9,7 +9,6 @@ import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-import org.mozilla.fenix.utils.Settings
 import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned.SPAN_EXCLUSIVE_INCLUSIVE
@@ -17,49 +16,47 @@ import android.text.style.AbsoluteSizeSpan
 import android.text.style.ForegroundColorSpan
 import android.view.LayoutInflater
 import android.view.View
-import android.view.View.VISIBLE
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.RadioButton
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.text.HtmlCompat
-import androidx.core.text.HtmlCompat.FROM_HTML_MODE_COMPACT
 import androidx.fragment.app.Fragment
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
-import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
 import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.ASK_TO_ALLOW
+import mozilla.components.feature.sitepermissions.SitePermissionsRules.Action.BLOCKED
 import org.mozilla.fenix.R
+import org.mozilla.fenix.utils.Settings
 
-class SitePermissionsManagePhoneFeature : Fragment() {
-
+@SuppressWarnings("TooManyFunctions")
+class SitePermissionsManagePhoneFeatureFragment : Fragment() {
     private lateinit var phoneFeature: PhoneFeature
     private lateinit var settings: Settings
+    private lateinit var blockedByAndroidView: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        phoneFeature = SitePermissionsManagePhoneFeatureArgs
+        phoneFeature = SitePermissionsManagePhoneFeatureFragmentArgs
             .fromBundle(requireArguments())
             .permission.toPhoneFeature()
 
-        (activity as AppCompatActivity).title = phoneFeature.label
+        (activity as AppCompatActivity).title = phoneFeature.getLabel(requireContext())
         (activity as AppCompatActivity).supportActionBar?.show()
         settings = Settings.getInstance(requireContext())
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val rootView = inflater.inflate(R.layout.fragment_manage_site_permissions_feature_phone, container, false)
 
         initAskToAllowRadio(rootView)
         initBlockRadio(rootView)
-        initBockedByAndroidContainer(rootView)
+        bindBlockedByAndroidContainer(rootView)
 
         return rootView
+    }
+    override fun onResume() {
+        super.onResume()
+        initBlockedByAndroidView(phoneFeature, blockedByAndroidView)
     }
 
     private fun initAskToAllowRadio(rootView: View) {
@@ -108,33 +105,10 @@ class SitePermissionsManagePhoneFeature : Fragment() {
         radio.restoreState(BLOCKED)
     }
 
-    private fun initBockedByAndroidContainer(rootView: View) {
-        if (!phoneFeature.isAndroidPermissionGranted) {
-            val containerView = rootView.findViewById<View>(R.id.permissions_blocked_container)
-            containerView.visibility = VISIBLE
-
-            val descriptionLabel = rootView.findViewById<TextView>(R.id.blocked_by_android_explanation_label)
-            val text = getString(R.string.phone_feature_blocked_by_android_explanation, phoneFeature.label)
-            descriptionLabel.text = HtmlCompat.fromHtml(text, FROM_HTML_MODE_COMPACT)
-
-            initSettingsButton(rootView)
-        }
+    private fun bindBlockedByAndroidContainer(rootView: View) {
+        blockedByAndroidView = rootView.findViewById<View>(R.id.permissions_blocked_container)
+        initSettingsButton(blockedByAndroidView)
     }
-
-    private val PhoneFeature.label: String
-        get() {
-            return when (this) {
-                PhoneFeature.CAMERA -> getString(R.string.preference_phone_feature_camera)
-                PhoneFeature.LOCATION -> getString(R.string.preference_phone_feature_location)
-                PhoneFeature.MICROPHONE -> getString(R.string.preference_phone_feature_microphone)
-                PhoneFeature.NOTIFICATION -> getString(R.string.preference_phone_feature_notification)
-            }
-        }
-
-    private val PhoneFeature.isAndroidPermissionGranted: Boolean
-        get() {
-            return this.isAndroidPermissionGranted(requireContext())
-        }
 
     private fun Int.toPhoneFeature(): PhoneFeature {
         return requireNotNull(PhoneFeature.values().find { feature ->
@@ -175,12 +149,5 @@ class SitePermissionsManagePhoneFeature : Fragment() {
             PhoneFeature.MICROPHONE -> settings.setSitePermissionsPhoneFeatureMicrophoneAction(action)
             PhoneFeature.NOTIFICATION -> settings.setSitePermissionsPhoneFeatureNotificationAction(action)
         }
-    }
-
-    companion object {
-        const val CAMERA_PERMISSION = 0
-        const val LOCATION_PERMISSION = 1
-        const val MICROPHONE_PERMISSION = 2
-        const val NOTIFICATION_PERMISSION = 3
     }
 }

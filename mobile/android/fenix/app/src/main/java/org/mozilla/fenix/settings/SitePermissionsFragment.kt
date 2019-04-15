@@ -38,6 +38,18 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
     private fun setupPreferences() {
 
         bindCategoryPhoneFeatures()
+        bindExceptions()
+    }
+
+    private fun bindExceptions() {
+        val keyExceptions = getString(R.string.pref_key_show_site_exceptions)
+        val exceptionsCategory = requireNotNull<Preference>(findPreference(keyExceptions))
+
+        exceptionsCategory.onPreferenceClickListener = OnPreferenceClickListener {
+            val directions = SitePermissionsFragmentDirections.actionSitePermissionsToExceptions()
+            Navigation.findNavController(view!!).navigate(directions)
+            true
+        }
     }
 
     private fun bindCategoryPhoneFeatures() {
@@ -66,22 +78,13 @@ class SitePermissionsFragment : PreferenceFragmentCompat() {
     }
 
     private fun initPhoneFeature(phoneFeature: PhoneFeature, summary: String) {
-        val keyPreference = getPreferenceKeyBy(phoneFeature)
+        val keyPreference = phoneFeature.getPreferenceKey(requireContext())
         val cameraPhoneFeatures: Preference = requireNotNull(findPreference(keyPreference))
         cameraPhoneFeatures.summary = summary
 
         cameraPhoneFeatures.onPreferenceClickListener = OnPreferenceClickListener {
             navigateToPhoneFeature(phoneFeature)
             true
-        }
-    }
-
-    private fun getPreferenceKeyBy(phoneFeature: PhoneFeature): String {
-        return when (phoneFeature) {
-            CAMERA -> getString(R.string.pref_key_phone_feature_camera)
-            LOCATION -> getString(R.string.pref_key_phone_feature_location)
-            MICROPHONE -> getString(R.string.pref_key_phone_feature_microphone)
-            NOTIFICATION -> getString(R.string.pref_key_phone_feature_notification)
         }
     }
 

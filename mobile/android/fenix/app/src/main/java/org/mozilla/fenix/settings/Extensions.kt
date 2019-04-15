@@ -5,6 +5,9 @@
 package org.mozilla.fenix.settings
 
 import android.content.Context
+import android.view.View
+import android.widget.TextView
+import androidx.core.text.HtmlCompat
 import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissionsRules
 import org.mozilla.fenix.R
@@ -71,5 +74,39 @@ fun SitePermissions.toggle(featurePhone: PhoneFeature): SitePermissions {
                 notification = notification.toggle()
             )
         }
+    }
+}
+
+fun PhoneFeature.getLabel(context: Context): String {
+    return when (this) {
+        PhoneFeature.CAMERA -> context.getString(R.string.preference_phone_feature_camera)
+        PhoneFeature.LOCATION -> context.getString(R.string.preference_phone_feature_location)
+        PhoneFeature.MICROPHONE -> context.getString(R.string.preference_phone_feature_microphone)
+        PhoneFeature.NOTIFICATION -> context.getString(R.string.preference_phone_feature_notification)
+    }
+}
+
+fun PhoneFeature.getPreferenceKey(context: Context): String {
+    return when (this) {
+        PhoneFeature.CAMERA -> context.getString(R.string.pref_key_phone_feature_camera)
+        PhoneFeature.LOCATION -> context.getString(R.string.pref_key_phone_feature_location)
+        PhoneFeature.MICROPHONE -> context.getString(R.string.pref_key_phone_feature_microphone)
+        PhoneFeature.NOTIFICATION -> context.getString(R.string.pref_key_phone_feature_notification)
+    }
+}
+
+fun initBlockedByAndroidView(phoneFeature: PhoneFeature, blockedByAndroidView: View) {
+    val context = blockedByAndroidView.context
+    if (!phoneFeature.isAndroidPermissionGranted(context)) {
+        blockedByAndroidView.visibility = View.VISIBLE
+
+        val descriptionLabel = blockedByAndroidView.findViewById<TextView>(R.id.blocked_by_android_explanation_label)
+        val text = context.getString(
+            R.string.phone_feature_blocked_by_android_explanation,
+            phoneFeature.getLabel(context)
+        )
+        descriptionLabel.text = HtmlCompat.fromHtml(text, HtmlCompat.FROM_HTML_MODE_COMPACT)
+    } else {
+        blockedByAndroidView.visibility = View.GONE
     }
 }
