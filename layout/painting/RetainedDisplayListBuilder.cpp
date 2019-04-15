@@ -144,7 +144,7 @@ bool RetainedDisplayListBuilder::PreProcessDisplayList(
     item->SetMergedPreProcessed(false, true);
 #endif
 
-    if (item->HasDeletedFrame() || !item->CanBeReused()) {
+    if (!item->CanBeReused() || item->HasDeletedFrame()) {
       size_t i = aList->mOldItems.Length();
       aList->mOldItems.AppendElement(OldItemInfo(nullptr));
       item->Destroy(&mBuilder);
@@ -291,7 +291,7 @@ void OldItemInfo::Discard(RetainedDisplayListBuilder* aBuilder,
 }
 
 bool OldItemInfo::IsChanged() {
-  return !mItem || mItem->HasDeletedFrame() || !mItem->CanBeReused();
+  return !mItem || !mItem->CanBeReused() || mItem->HasDeletedFrame();
 }
 
 /**
