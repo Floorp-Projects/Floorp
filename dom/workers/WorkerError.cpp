@@ -28,135 +28,12 @@ namespace dom {
 namespace {
 
 class ReportErrorRunnable final : public WorkerDebuggeeRunnable {
-  WorkerErrorReport mReport;
+  UniquePtr<WorkerErrorReport> mReport;
 
  public:
-  // aWorkerPrivate is the worker thread we're on (or the main thread, if null)
-  // aTarget is the worker object that we are going to fire an error at
-  // (if any).
-  static void ReportError(
-      JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aFireAtScope,
-      DOMEventTargetHelper* aTarget, const WorkerErrorReport& aReport,
-      uint64_t aInnerWindowId,
-      JS::Handle<JS::Value> aException = JS::NullHandleValue) {
-    if (aWorkerPrivate) {
-      aWorkerPrivate->AssertIsOnWorkerThread();
-    } else {
-      AssertIsOnMainThread();
-    }
-
-    // We should not fire error events for warnings but instead make sure that
-    // they show up in the error console.
-    if (!JSREPORT_IS_WARNING(aReport.mFlags)) {
-      // First fire an ErrorEvent at the worker.
-      RootedDictionary<ErrorEventInit> init(aCx);
-
-      if (aReport.mMutedError) {
-        init.mMessage.AssignLiteral("Script error.");
-      } else {
-        init.mMessage = aReport.mMessage;
-        init.mFilename = aReport.mFilename;
-        init.mLineno = aReport.mLineNumber;
-        init.mError = aException;
-      }
-
-      init.mCancelable = true;
-      init.mBubbles = false;
-
-      if (aTarget) {
-        RefPtr<ErrorEvent> event =
-            ErrorEvent::Constructor(aTarget, NS_LITERAL_STRING("error"), init);
-        event->SetTrusted(true);
-
-        bool defaultActionEnabled =
-            aTarget->DispatchEvent(*event, CallerType::System, IgnoreErrors());
-        if (!defaultActionEnabled) {
-          return;
-        }
-      }
-
-      // Now fire an event at the global object, but don't do that if the error
-      // code is too much recursion and this is the same script threw the error.
-      // XXXbz the interaction of this with worker errors seems kinda broken.
-      // An overrecursion in the debugger or debugger sandbox will get turned
-      // into an error event on our parent worker!
-      // https://bugzilla.mozilla.org/show_bug.cgi?id=1271441 tracks making this
-      // better.
-      if (aFireAtScope &&
-          (aTarget || aReport.mErrorNumber != JSMSG_OVER_RECURSED)) {
-        JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
-        NS_ASSERTION(global, "This should never be null!");
-
-        nsEventStatus status = nsEventStatus_eIgnore;
-
-        if (aWorkerPrivate) {
-          WorkerGlobalScope* globalScope = nullptr;
-          UNWRAP_OBJECT(WorkerGlobalScope, &global, globalScope);
-
-          if (!globalScope) {
-            WorkerDebuggerGlobalScope* globalScope = nullptr;
-            UNWRAP_OBJECT(WorkerDebuggerGlobalScope, &global, globalScope);
-
-            MOZ_ASSERT_IF(globalScope,
-                          globalScope->GetWrapperPreserveColor() == global);
-            if (globalScope || IsWorkerDebuggerSandbox(global)) {
-              aWorkerPrivate->ReportErrorToDebugger(
-                  aReport.mFilename, aReport.mLineNumber, aReport.mMessage);
-              return;
-            }
-
-            MOZ_ASSERT(SimpleGlobalObject::SimpleGlobalType(global) ==
-                       SimpleGlobalObject::GlobalType::BindingDetail);
-            // XXXbz We should really log this to console, but unwinding out of
-            // this stuff without ending up firing any events is ... hard.  Just
-            // return for now.
-            // https://bugzilla.mozilla.org/show_bug.cgi?id=1271441 tracks
-            // making this better.
-            return;
-          }
-
-          MOZ_ASSERT(globalScope->GetWrapperPreserveColor() == global);
-
-          RefPtr<ErrorEvent> event = ErrorEvent::Constructor(
-              aTarget, NS_LITERAL_STRING("error"), init);
-          event->SetTrusted(true);
-
-          if (NS_FAILED(EventDispatcher::DispatchDOMEvent(
-                  ToSupports(globalScope), nullptr, event, nullptr, &status))) {
-            NS_WARNING("Failed to dispatch worker thread error event!");
-            status = nsEventStatus_eIgnore;
-          }
-        } else if (nsGlobalWindowInner* win = xpc::WindowOrNull(global)) {
-          MOZ_ASSERT(NS_IsMainThread());
-
-          if (!win->HandleScriptError(init, &status)) {
-            NS_WARNING("Failed to dispatch main thread error event!");
-            status = nsEventStatus_eIgnore;
-          }
-        }
-
-        // Was preventDefault() called?
-        if (status == nsEventStatus_eConsumeNoDefault) {
-          return;
-        }
-      }
-    }
-
-    // Now fire a runnable to do the same on the parent's thread if we can.
-    if (aWorkerPrivate) {
-      RefPtr<ReportErrorRunnable> runnable =
-          new ReportErrorRunnable(aWorkerPrivate, aReport);
-      runnable->Dispatch();
-      return;
-    }
-
-    // Otherwise log an error to the error console.
-    WorkerErrorReport::LogErrorToConsole(aReport, aInnerWindowId);
-  }
-
   ReportErrorRunnable(WorkerPrivate* aWorkerPrivate,
-                      const WorkerErrorReport& aReport)
-      : WorkerDebuggeeRunnable(aWorkerPrivate), mReport(aReport) {}
+                      UniquePtr<WorkerErrorReport> aReport)
+      : WorkerDebuggeeRunnable(aWorkerPrivate), mReport(std::move(aReport)) {}
 
  private:
   virtual void PostDispatch(WorkerPrivate* aWorkerPrivate,
@@ -194,7 +71,7 @@ class ReportErrorRunnable final : public WorkerDebuggeeRunnable {
 
       if (aWorkerPrivate->IsSharedWorker()) {
         aWorkerPrivate->GetRemoteWorkerController()
-            ->ErrorPropagationOnMainThread(&mReport,
+            ->ErrorPropagationOnMainThread(mReport.get(),
                                            /* isErrorEvent */ true);
         return true;
       }
@@ -207,10 +84,10 @@ class ReportErrorRunnable final : public WorkerDebuggeeRunnable {
         if (swm) {
           swm->HandleError(aCx, aWorkerPrivate->GetPrincipal(),
                            aWorkerPrivate->ServiceWorkerScope(),
-                           aWorkerPrivate->ScriptURL(), mReport.mMessage,
-                           mReport.mFilename, mReport.mLine,
-                           mReport.mLineNumber, mReport.mColumnNumber,
-                           mReport.mFlags, mReport.mExnType);
+                           aWorkerPrivate->ScriptURL(), mReport->mMessage,
+                           mReport->mFilename, mReport->mLine,
+                           mReport->mLineNumber, mReport->mColumnNumber,
+                           mReport->mFlags, mReport->mExnType);
         }
         return true;
       }
@@ -230,8 +107,9 @@ class ReportErrorRunnable final : public WorkerDebuggeeRunnable {
       return true;
     }
 
-    ReportError(aCx, parent, fireAtScope,
-                aWorkerPrivate->ParentEventTargetRef(), mReport, innerWindowId);
+    WorkerErrorReport::ReportError(aCx, parent, fireAtScope,
+                                   aWorkerPrivate->ParentEventTargetRef(),
+                                   std::move(mReport), innerWindowId);
     return true;
   }
 };
@@ -321,6 +199,19 @@ void WorkerErrorNote::AssignErrorNote(JSErrorNotes::Note* aNote) {
   xpc::ErrorNote::ErrorNoteToMessageString(aNote, mMessage);
 }
 
+WorkerErrorReport::WorkerErrorReport(WorkerPrivate* aWorkerPrivate)
+  : StructuredCloneHolder(CloningSupported, TransferringNotSupported,
+                          StructuredCloneScope::SameProcessDifferentThread),
+    mFlags(0), mExnType(JSEXN_ERR), mMutedError(false) {
+  if (aWorkerPrivate) {
+    RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
+        aWorkerPrivate, "WorkerErrorReport");
+    if (workerRef) {
+      mWorkerRef = new ThreadSafeWorkerRef(workerRef);
+    }
+  }
+}
+
 void WorkerErrorReport::AssignErrorReport(JSErrorReport* aReport) {
   WorkerErrorBase::AssignErrorBase(aReport);
   xpc::ErrorReport::ErrorReportToMessageString(aReport, mMessage);
@@ -350,7 +241,7 @@ void WorkerErrorReport::AssignErrorReport(JSErrorReport* aReport) {
 /* static */
 void WorkerErrorReport::ReportError(
     JSContext* aCx, WorkerPrivate* aWorkerPrivate, bool aFireAtScope,
-    DOMEventTargetHelper* aTarget, const WorkerErrorReport& aReport,
+    DOMEventTargetHelper* aTarget, UniquePtr<WorkerErrorReport> aReport,
     uint64_t aInnerWindowId, JS::Handle<JS::Value> aException) {
   if (aWorkerPrivate) {
     aWorkerPrivate->AssertIsOnWorkerThread();
@@ -360,16 +251,16 @@ void WorkerErrorReport::ReportError(
 
   // We should not fire error events for warnings but instead make sure that
   // they show up in the error console.
-  if (!JSREPORT_IS_WARNING(aReport.mFlags)) {
+  if (!JSREPORT_IS_WARNING(aReport->mFlags)) {
     // First fire an ErrorEvent at the worker.
     RootedDictionary<ErrorEventInit> init(aCx);
 
-    if (aReport.mMutedError) {
+    if (aReport->mMutedError) {
       init.mMessage.AssignLiteral("Script error.");
     } else {
-      init.mMessage = aReport.mMessage;
-      init.mFilename = aReport.mFilename;
-      init.mLineno = aReport.mLineNumber;
+      init.mMessage = aReport->mMessage;
+      init.mFilename = aReport->mFilename;
+      init.mLineno = aReport->mLineNumber;
       init.mError = aException;
     }
 
@@ -396,7 +287,7 @@ void WorkerErrorReport::ReportError(
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1271441 tracks making this
     // better.
     if (aFireAtScope &&
-        (aTarget || aReport.mErrorNumber != JSMSG_OVER_RECURSED)) {
+        (aTarget || aReport->mErrorNumber != JSMSG_OVER_RECURSED)) {
       JS::Rooted<JSObject*> global(aCx, JS::CurrentGlobalOrNull(aCx));
       NS_ASSERTION(global, "This should never be null!");
 
@@ -414,7 +305,7 @@ void WorkerErrorReport::ReportError(
                         globalScope->GetWrapperPreserveColor() == global);
           if (globalScope || IsWorkerDebuggerSandbox(global)) {
             aWorkerPrivate->ReportErrorToDebugger(
-                aReport.mFilename, aReport.mLineNumber, aReport.mMessage);
+                aReport->mFilename, aReport->mLineNumber, aReport->mMessage);
             return;
           }
 
@@ -458,17 +349,18 @@ void WorkerErrorReport::ReportError(
   // Now fire a runnable to do the same on the parent's thread if we can.
   if (aWorkerPrivate) {
     RefPtr<ReportErrorRunnable> runnable =
-        new ReportErrorRunnable(aWorkerPrivate, aReport);
+        new ReportErrorRunnable(aWorkerPrivate, std::move(aReport));
     runnable->Dispatch();
     return;
   }
 
   // Otherwise log an error to the error console.
-  WorkerErrorReport::LogErrorToConsole(aReport, aInnerWindowId);
+  WorkerErrorReport::LogErrorToConsole(aCx, *aReport, aInnerWindowId);
 }
 
 /* static */
-void WorkerErrorReport::LogErrorToConsole(const WorkerErrorReport& aReport,
+void WorkerErrorReport::LogErrorToConsole(JSContext* aCx,
+                                          WorkerErrorReport& aReport,
                                           uint64_t aInnerWindowId) {
   nsTArray<ErrorDataNote> notes;
   for (size_t i = 0, len = aReport.mNotes.Length(); i < len; i++) {
@@ -477,18 +369,42 @@ void WorkerErrorReport::LogErrorToConsole(const WorkerErrorReport& aReport,
                                       note.mMessage, note.mFilename));
   }
 
+  // Read any stack associated with the report.
+  JS::RootedValue stackValue(aCx);
+  if (aReport.HasData() && aReport.mWorkerRef) {
+    nsIPrincipal* principal = aReport.mWorkerRef->Private()->GetPrincipal();
+    nsJSPrincipals::AutoSetActiveWorkerPrincipal set(principal);
+    aReport.Read(xpc::CurrentNativeGlobal(aCx), aCx, &stackValue,
+                 IgnoreErrors());
+  }
+  JS::RootedObject stack(aCx);
+  JS::RootedObject stackGlobal(aCx);
+  if (stackValue.isObject()) {
+    stack = &stackValue.toObject();
+    stackGlobal = JS::CurrentGlobalOrNull(aCx);
+    MOZ_ASSERT(stackGlobal);
+  }
+
   ErrorData errorData(aReport.mLineNumber, aReport.mColumnNumber,
                       aReport.mFlags, aReport.mMessage, aReport.mFilename,
                       aReport.mLine, notes);
-  LogErrorToConsole(errorData, aInnerWindowId);
+  LogErrorToConsole(errorData, aInnerWindowId, stack, stackGlobal);
 }
 
 /* static */
 void WorkerErrorReport::LogErrorToConsole(const ErrorData& aReport,
-                                          uint64_t aInnerWindowId) {
+                                          uint64_t aInnerWindowId,
+                                          JS::HandleObject aStack,
+                                          JS::HandleObject aStackGlobal) {
   AssertIsOnMainThread();
 
-  RefPtr<nsScriptErrorBase> scriptError = new nsScriptError();
+  RefPtr<nsScriptErrorBase> scriptError;
+  if (aStack) {
+    scriptError = new nsScriptErrorWithStack(aStack, aStackGlobal);
+  } else {
+    scriptError = new nsScriptError();
+  }
+
   NS_WARNING_ASSERTION(scriptError, "Failed to create script error!");
 
   if (scriptError) {

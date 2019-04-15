@@ -24,6 +24,17 @@ class nsJSPrincipals : public nsIPrincipal, public JSPrincipals {
                                      uint32_t aTag,
                                      JSPrincipals** aOutPrincipals);
 
+  // This class is used on the main thread to specify which principal to use
+  // when reading principals data that was set on a DOM worker thread.
+  // DOM workers do not use principals from Gecko's point of view, and any
+  // JSPrincipals used internally will be a shared singleton object. When that
+  // singleton is written out and later read on the main thread, we substitute
+  // the principal specified with this class.
+  struct MOZ_RAII AutoSetActiveWorkerPrincipal {
+    explicit AutoSetActiveWorkerPrincipal(nsIPrincipal* aPrincipal);
+    ~AutoSetActiveWorkerPrincipal();
+  };
+
   bool write(JSContext* aCx, JSStructuredCloneWriter* aWriter) final;
 
   /*
