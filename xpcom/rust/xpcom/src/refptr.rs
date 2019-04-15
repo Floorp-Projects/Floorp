@@ -5,6 +5,7 @@
 use std::mem;
 use std::ptr;
 use std::ops::Deref;
+use std::fmt;
 use std::marker::PhantomData;
 use std::cell::Cell;
 use std::sync::atomic::{self, AtomicUsize, Ordering};
@@ -109,6 +110,12 @@ impl <T: RefCounted + 'static> Clone for RefPtr<T> {
     #[inline]
     fn clone(&self) -> RefPtr<T> {
         RefPtr::new(self)
+    }
+}
+
+impl <T: RefCounted + 'static + fmt::Debug> fmt::Debug for RefPtr<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "RefPtr<{:?}>", self.deref())
     }
 }
 
