@@ -457,7 +457,7 @@ class nsDisplayHeaderFooter final : public nsDisplayItem {
     MOZ_ASSERT(pageFrame, "We should have an nsPageFrame");
 #endif
     static_cast<nsPageFrame*>(mFrame)->PaintHeaderFooter(
-        *aCtx, ToReferenceFrame(), IsSubpixelAADisabled());
+        *aCtx, ToReferenceFrame(), mDisableSubpixelAA);
   }
   NS_DISPLAY_DECL_NAME("HeaderFooter", TYPE_HEADER_FOOTER)
 
@@ -524,12 +524,8 @@ void nsPageFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     while ((page = GetNextPage(page)) != nullptr) {
       nsRect childVisible = visibleRect + child->GetOffsetTo(page);
 
-      // This function jumps into random frames that may not be descendants of
-      // aBuilder->mCurrentFrame, so aBuilder->mInInvalidSubtree is unrelated.
-      // Request recalculation of mInInvalidSubtree.
       nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
-          aBuilder, page, childVisible, childVisible,
-          nsDisplayListBuilder::RIIS_YES);
+          aBuilder, page, childVisible, childVisible);
       BuildDisplayListForExtraPage(aBuilder, this, page, &content);
     }
 

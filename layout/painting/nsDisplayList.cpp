@@ -101,7 +101,6 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/layers/WebRenderScrollData.h"
-#include "mozilla/layout/RenderFrame.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -136,7 +135,7 @@ void AssertUniqueItem(nsDisplayItem* aItem) {
   for (nsDisplayItem* i : *items) {
     if (i != aItem && !i->HasDeletedFrame() && i->Frame() == aItem->Frame() &&
         i->GetPerFrameKey() == aItem->GetPerFrameKey()) {
-      if (i->IsPreProcessedItem()) {
+      if (i->mPreProcessedItem) {
         continue;
       }
       MOZ_DIAGNOSTIC_ASSERT(false, "Duplicate display item!");
@@ -3172,9 +3171,18 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame)
 nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
                              const ActiveScrolledRoot* aActiveScrolledRoot)
     : mFrame(aFrame),
-      mItemFlags(),
       mActiveScrolledRoot(aActiveScrolledRoot),
-      mAnimatedGeometryRoot(nullptr) {
+      mAnimatedGeometryRoot(nullptr),
+      mForceNotVisible(aBuilder->IsBuildingInvisibleItems()),
+      mDisableSubpixelAA(false),
+      mReusedItem(false),
+      mPaintRectValid(false),
+      mCanBeReused(true)
+#ifdef MOZ_DUMP_PAINTING
+      ,
+      mPainted(false)
+#endif
+{
   MOZ_COUNT_CTOR(nsDisplayItem);
   if (aBuilder->IsRetainingDisplayList()) {
     mFrame->AddDisplayItem(this);
@@ -3200,12 +3208,9 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
   SetBuildingRect(visible);
 
   const nsStyleDisplay* disp = mFrame->StyleDisplay();
-  if (mFrame->BackfaceIsHidden(disp)) {
-    mItemFlags += ItemFlag::BackfaceHidden;
-  }
-  if (mFrame->Combines3DTransformWithAncestors(disp)) {
-    mItemFlags += ItemFlag::Combines3DTransformWithAncestors;
-  }
+  mBackfaceIsHidden = mFrame->BackfaceIsHidden(disp);
+  mCombines3DTransformWithAncestors =
+      mFrame->Combines3DTransformWithAncestors(disp);
 }
 
 /* static */
@@ -3221,24 +3226,6 @@ bool nsDisplayItem::ForceActiveLayers() {
   return sForce;
 }
 
-bool nsDisplayItem::HasModifiedFrame() const {
-  return mItemFlags.contains(ItemFlag::ModifiedFrame);
-}
-
-void nsDisplayItem::SetModifiedFrame(bool aModified) {
-  if (aModified) {
-    mItemFlags += ItemFlag::ModifiedFrame;
-  } else {
-    mItemFlags -= ItemFlag::ModifiedFrame;
-  }
-}
-
-bool nsDisplayItem::HasDeletedFrame() const {
-  return mItemFlags.contains(ItemFlag::DeletedFrame) ||
-         (GetType() == DisplayItemType::TYPE_REMOTE &&
-          !static_cast<const nsDisplayRemote*>(this)->GetFrameLoader());
-}
-
 int32_t nsDisplayItem::ZIndex() const { return mFrame->ZIndex(); }
 
 bool nsDisplayItem::ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -3249,7 +3236,7 @@ bool nsDisplayItem::ComputeVisibility(nsDisplayListBuilder* aBuilder,
 
 bool nsDisplayItem::RecomputeVisibility(nsDisplayListBuilder* aBuilder,
                                         nsRegion* aVisibleRegion) {
-  if (ForceNotVisible() && !GetSameCoordinateSystemChildren()) {
+  if (mForceNotVisible && !GetSameCoordinateSystemChildren()) {
     // mForceNotVisible wants to ensure that this display item doesn't render
     // anything itself. If this item has contents, then we obviously want to
     // render those, so we don't need this check in that case.
@@ -3313,8 +3300,6 @@ void nsDisplayItem::FuseClipChainUpTo(nsDisplayListBuilder* aBuilder,
     mClip = nullptr;
   }
 }
-
-void nsDisplayItem::SetDeletedFrame() { mItemFlags += ItemFlag::DeletedFrame; }
 
 bool nsDisplayItem::ShouldUseAdvancedLayer(LayerManager* aManager,
                                            PrefFunc aFunc) const {
@@ -6713,10 +6698,13 @@ nsIFrame* nsDisplaySubDocument::FrameForInvalidation() const {
   return mSubDocFrame ? mSubDocFrame : mFrame;
 }
 
+bool nsDisplaySubDocument::HasDeletedFrame() const {
+  return !mSubDocFrame || nsDisplayItem::HasDeletedFrame();
+}
+
 void nsDisplaySubDocument::RemoveFrame(nsIFrame* aFrame) {
   if (aFrame == mSubDocFrame) {
     mSubDocFrame = nullptr;
-    SetDeletedFrame();
   }
   nsDisplayItem::RemoveFrame(aFrame);
 }
@@ -8956,7 +8944,7 @@ void nsDisplayText::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   AUTO_PROFILER_LABEL("nsDisplayText::Paint", GRAPHICS);
 
   DrawTargetAutoDisableSubpixelAntialiasing disable(aCtx->GetDrawTarget(),
-                                                    IsSubpixelAADisabled());
+                                                    mDisableSubpixelAA);
   RenderToContext(aCtx, aBuilder);
 }
 
@@ -10284,86 +10272,3 @@ PaintTelemetry::AutoRecord::~AutoRecord() {
 }
 
 }  // namespace mozilla
-
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-static nsIFrame* GetSelfOrPlaceholderFor(nsIFrame* aFrame) {
-  if (aFrame->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
-    return aFrame;
-  }
-
-  if ((aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
-      !aFrame->GetPrevInFlow()) {
-    return aFrame->GetPlaceholderFrame();
-  }
-
-  return aFrame;
-}
-
-static nsIFrame* GetAncestorFor(nsIFrame* aFrame) {
-  nsIFrame* f = GetSelfOrPlaceholderFor(aFrame);
-  MOZ_ASSERT(f);
-  return nsLayoutUtils::GetCrossDocParentFrame(f);
-}
-#endif
-
-nsDisplayListBuilder::AutoBuildingDisplayList::AutoBuildingDisplayList(
-    nsDisplayListBuilder* aBuilder, nsIFrame* aForChild,
-    const nsRect& aVisibleRect, const nsRect& aDirtyRect,
-    const bool aIsTransformed, RecalcInInvalidSubtree aRecalcInvalidSubtree)
-    : mBuilder(aBuilder),
-      mPrevFrame(aBuilder->mCurrentFrame),
-      mPrevReferenceFrame(aBuilder->mCurrentReferenceFrame),
-      mPrevHitTestArea(aBuilder->mHitTestArea),
-      mPrevHitTestInfo(aBuilder->mHitTestInfo),
-      mPrevOffset(aBuilder->mCurrentOffsetToReferenceFrame),
-      mPrevVisibleRect(aBuilder->mVisibleRect),
-      mPrevDirtyRect(aBuilder->mDirtyRect),
-      mPrevAGR(aBuilder->mCurrentAGR),
-      mPrevAncestorHasApzAwareEventHandler(
-          aBuilder->mAncestorHasApzAwareEventHandler),
-      mPrevBuildingInvisibleItems(aBuilder->mBuildingInvisibleItems),
-      mPrevInInvalidSubtree(aBuilder->mInInvalidSubtree) {
-#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
-  // Validate that aForChild is being visited from it's parent frame if
-  // recalculation of mInInvalidSubtree isn't requested.
-  const nsIFrame* ancestor = GetAncestorFor(aForChild);
-  MOZ_DIAGNOSTIC_ASSERT(aRecalcInvalidSubtree ==
-                            nsDisplayListBuilder::RIIS_YES ||
-                        aForChild == mPrevFrame || ancestor == mPrevFrame);
-#endif
-
-  if (aIsTransformed) {
-    aBuilder->mCurrentOffsetToReferenceFrame = nsPoint();
-    aBuilder->mCurrentReferenceFrame = aForChild;
-  } else if (aBuilder->mCurrentFrame == aForChild->GetParent()) {
-    aBuilder->mCurrentOffsetToReferenceFrame += aForChild->GetPosition();
-  } else {
-    aBuilder->mCurrentReferenceFrame = aBuilder->FindReferenceFrameFor(
-        aForChild, &aBuilder->mCurrentOffsetToReferenceFrame);
-  }
-
-  bool isAsync;
-  mCurrentAGRState = aBuilder->IsAnimatedGeometryRoot(aForChild, isAsync);
-
-  if (aBuilder->mCurrentFrame == aForChild->GetParent()) {
-    if (mCurrentAGRState == AGR_YES) {
-      aBuilder->mCurrentAGR =
-          aBuilder->WrapAGRForFrame(aForChild, isAsync, aBuilder->mCurrentAGR);
-    }
-  } else if (aBuilder->mCurrentFrame != aForChild) {
-    aBuilder->mCurrentAGR = aBuilder->FindAnimatedGeometryRootFor(aForChild);
-  }
-
-  MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(
-      aBuilder->RootReferenceFrame(), *aBuilder->mCurrentAGR));
-  if (!aRecalcInvalidSubtree) {
-    aBuilder->mInInvalidSubtree = aBuilder->mInInvalidSubtree ||
-      aForChild->IsFrameModified();
-  } else {
-    aBuilder->mInInvalidSubtree = AnyContentAncestorModified(aForChild);
-  }
-  aBuilder->mCurrentFrame = aForChild;
-  aBuilder->mVisibleRect = aVisibleRect;
-  aBuilder->mDirtyRect =
-      aBuilder->mInInvalidSubtree ? aVisibleRect : aDirtyRect;
-}
