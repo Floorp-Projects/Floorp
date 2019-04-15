@@ -3764,6 +3764,12 @@ void ScrollFrameHelper::MaybeAddTopLayerItems(nsDisplayListBuilder* aBuilder,
       nsDisplayList topLayerList;
       viewportFrame->BuildDisplayListForTopLayer(aBuilder, &topLayerList);
       if (!topLayerList.IsEmpty()) {
+        // This function jumps into random frames that may not be descendants of
+        // aBuilder->mCurrentFrame, so aBuilder->mInInvalidSubtree is unrelated.
+        // Request recalculation of mInInvalidSubtree.
+        nsDisplayListBuilder::AutoBuildingDisplayList buildingDisplayList(
+            aBuilder, viewportFrame, nsDisplayListBuilder::RIIS_YES);
+
         // Wrap the whole top layer in a single item with maximum z-index,
         // and append it at the very end, so that it stays at the topmost.
         nsDisplayWrapList* wrapList = MakeDisplayItem<nsDisplayWrapList>(

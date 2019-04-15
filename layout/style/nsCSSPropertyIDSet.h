@@ -7,15 +7,16 @@
 #ifndef nsCSSPropertyIDSet_h__
 #define nsCSSPropertyIDSet_h__
 
-#include "mozilla/ArrayUtils.h"
-
-#include "nsCSSPropertyID.h"
-#include <limits.h>  // for CHAR_BIT
 #include <initializer_list>
+#include <limits.h>  // for CHAR_BIT
+#include <ostream>
 
+#include "mozilla/ArrayUtils.h"
 // For COMPOSITOR_ANIMATABLE_PROPERTY_LIST and
 // COMPOSITOR_ANIMATABLE_PROPERTY_LIST_LENGTH
 #include "mozilla/CompositorAnimatableProperties.h"
+#include "nsCSSProps.h"  // For operator<< for nsCSSPropertyID
+#include "nsCSSPropertyID.h"
 
 /**
  * nsCSSPropertyIDSet maintains a set of non-shorthand CSS properties.  In
@@ -188,8 +189,97 @@ class nsCSSPropertyIDSet {
     return nsCSSPropertyID(aChunk * kBitsInChunk + aBit);
   }
 
+  // Iterator for use in range-based for loops
+  class Iterator {
+   public:
+    Iterator(Iterator&& aOther)
+        : mPropertySet(aOther.mPropertySet),
+          mChunk(aOther.mChunk),
+          mBit(aOther.mBit) {}
+
+    static Iterator BeginIterator(const nsCSSPropertyIDSet& aPropertySet) {
+      Iterator result(aPropertySet);
+
+      // Search for the first property.
+      // Unsigned integer overflow is defined so the following is safe.
+      result.mBit = -1;
+      ++result;
+
+      return result;
+    }
+
+    static Iterator EndIterator(const nsCSSPropertyIDSet& aPropertySet) {
+      Iterator result(aPropertySet);
+      result.mChunk = kChunkCount;
+      result.mBit = 0;
+      return result;
+    }
+
+    bool operator!=(const Iterator& aOther) const {
+      return mChunk != aOther.mChunk || mBit != aOther.mBit;
+    }
+
+    Iterator& operator++() {
+      MOZ_ASSERT(mChunk < kChunkCount, "Should not iterate beyond end");
+
+      do {
+        mBit++;
+      } while (mBit < kBitsInChunk &&
+               !mPropertySet.HasPropertyAt(mChunk, mBit));
+      if (mBit != kBitsInChunk) {
+        return *this;
+      }
+
+      do {
+        mChunk++;
+      } while (mChunk < kChunkCount &&
+               !mPropertySet.HasPropertyInChunk(mChunk));
+      mBit = 0;
+      if (mChunk != kChunkCount) {
+        while (mBit < kBitsInChunk &&
+               !mPropertySet.HasPropertyAt(mChunk, mBit)) {
+          mBit++;
+        }
+      }
+
+      return *this;
+    }
+
+    nsCSSPropertyID operator*() {
+      MOZ_ASSERT(mChunk < kChunkCount, "Should not dereference beyond end");
+      return nsCSSPropertyIDSet::CSSPropertyAt(mChunk, mBit);
+    }
+
+   private:
+    explicit Iterator(const nsCSSPropertyIDSet& aPropertySet)
+        : mPropertySet(aPropertySet) {}
+
+    Iterator() = delete;
+    Iterator(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&) = delete;
+    Iterator& operator=(const Iterator&&) = delete;
+
+    const nsCSSPropertyIDSet& mPropertySet;
+    size_t mChunk = 0;
+    size_t mBit = 0;
+  };
+
+  Iterator begin() const { return Iterator::BeginIterator(*this); }
+  Iterator end() const { return Iterator::EndIterator(*this); }
+
  private:
   property_set_type mProperties[kChunkCount];
 };
+
+// MOZ_DBG support
+
+inline std::ostream& operator<<(std::ostream& aOut,
+                                const nsCSSPropertyIDSet& aPropertySet) {
+  AutoTArray<nsCSSPropertyID, 16> properties;
+  for (nsCSSPropertyID property : aPropertySet) {
+    properties.AppendElement(property);
+  }
+  return aOut << properties;
+}
 
 #endif /* !defined(nsCSSPropertyIDSet_h__) */

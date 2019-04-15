@@ -106,8 +106,11 @@ static void BuildDisplayListForTopLayerFrame(nsDisplayListBuilder* aBuilder,
     asrSetter.SetCurrentActiveScrolledRoot(
         savedOutOfFlowData->mContainingBlockActiveScrolledRoot);
   }
+  // This function jumps into random frames that may not be descendants of
+  // aBuilder->mCurrentFrame, so aBuilder->mInInvalidSubtree is unrelated.
+  // Request recalculation of mInInvalidSubtree.
   nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
-      aBuilder, aFrame, visible, dirty);
+      aBuilder, aFrame, visible, dirty, nsDisplayListBuilder::RIIS_YES);
 
   nsDisplayList list;
   aFrame->BuildDisplayListForStackingContext(aBuilder, &list);
@@ -153,8 +156,10 @@ void ViewportFrame::BuildDisplayListForTopLayer(nsDisplayListBuilder* aBuilder,
         nsIFrame* backdropFrame =
             static_cast<nsPlaceholderFrame*>(backdropPh)->GetOutOfFlowFrame();
         MOZ_ASSERT(backdropFrame);
+
         BuildDisplayListForTopLayerFrame(aBuilder, backdropFrame, aList);
       }
+
       BuildDisplayListForTopLayerFrame(aBuilder, frame, aList);
     }
   }

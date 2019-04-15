@@ -30,6 +30,11 @@
     info(`Found  ${audioDevices.length} output devices`);
     ok(audioDevices.length > 0, "More than one output device found");
 
+    // Have to do this to access normally-preffed off binding methods for some
+    // reason.
+    // See bug 1544257.
+    audio = SpecialPowers.wrap(audio);
+
     is(audio.sinkId, "", "Initial value is empty string");
 
     const p = audio.setSinkId(audioDevices[0].deviceId);
