@@ -701,10 +701,12 @@ class ScriptSource {
   // return false.
   static bool loadSource(JSContext* cx, ScriptSource* ss, bool* loaded);
 
+  // Assign source data from |srcBuf| to this recently-created |ScriptSource|.
   template <typename Unit>
-  MOZ_MUST_USE bool setSourceCopy(JSContext* cx, JS::SourceText<Unit>& srcBuf);
+  MOZ_MUST_USE bool assignSource(JSContext* cx,
+                                 const JS::ReadOnlyCompileOptions& options,
+                                 JS::SourceText<Unit>& srcBuf);
 
-  void setSourceRetrievable() { sourceRetrievable_ = true; }
   bool sourceRetrievable() const { return sourceRetrievable_; }
   bool hasSourceText() const {
     return hasUncompressedSource() || hasCompressedSource();
