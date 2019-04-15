@@ -91,13 +91,20 @@ add_task(async function testEnterKeyBehaviors() {
     "First button in help view should be a back button");
 
   // For posterity, check navigating the subview using up/ down arrow keys as well.
+  // When opening a subview, the first control *after* the Back button gets
+  // focus.
+  EventUtils.synthesizeKey("KEY_ArrowUp");
+  focusedElement = document.commandDispatcher.focusedElement;
+  Assert.equal(focusedElement, helpButtons[0],
+    "The Back button should be focused after navigating upward");
   for (let i = helpButtons.length - 1; i >= 0; --i) {
     let button = helpButtons[i];
     if (button.disabled)
       continue;
     EventUtils.synthesizeKey("KEY_ArrowUp");
     focusedElement = document.commandDispatcher.focusedElement;
-    Assert.equal(focusedElement, button, "The first button should be focused after navigating upward");
+    Assert.equal(focusedElement, button,
+      "The previous button should be focused after navigating upward");
   }
 
   // Make sure the back button is in focus again.

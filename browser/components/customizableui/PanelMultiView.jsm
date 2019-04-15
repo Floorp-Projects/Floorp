@@ -644,6 +644,10 @@ var PanelMultiView = class extends AssociatedToNode {
     if (!prevPanelView.active) {
       return;
     }
+    // If prevPanelView._doingKeyboardActivation is true, it will be reset to
+    // false synchronously. Therefore, we must capture it before we use any
+    // "await" statements.
+    let doingKeyboardActivation = prevPanelView._doingKeyboardActivation;
     // Marking the view that is about to scrolled out of the visible area as
     // inactive will prevent re-entrancy and also disable keyboard navigation.
     // From this point onwards, "await" statements can be used safely.
@@ -692,6 +696,7 @@ var PanelMultiView = class extends AssociatedToNode {
       }
     }
 
+    nextPanelView.focusWhenActive = doingKeyboardActivation;
     this._activateView(nextPanelView);
   }
 
@@ -814,7 +819,7 @@ var PanelMultiView = class extends AssociatedToNode {
     if (panelView.isOpenIn(this)) {
       panelView.active = true;
       if (panelView.focusWhenActive) {
-        panelView.focusFirstNavigableElement();
+        panelView.focusFirstNavigableElement(false, true);
         panelView.focusWhenActive = false;
       }
       panelView.dispatchCustomEvent("ViewShown");
@@ -1481,13 +1486,19 @@ var PanelView = class extends AssociatedToNode {
    * This is a no-op if there are no navigable elements.
    *
    * @param {Boolean} homeKey   `true` if this is for the home key.
+   * @param {Boolean} skipBack   `true` if the Back button should be skipped.
    */
-  focusFirstNavigableElement(homeKey = false) {
+  focusFirstNavigableElement(homeKey = false, skipBack = false) {
     // The home key is conceptually similar to the up/down arrow keys.
     let walker = homeKey ?
       this._arrowNavigableWalker : this._tabNavigableWalker;
     walker.currentNode = walker.root;
     this.selectedElement = walker.firstChild();
+    if (skipBack && walker.currentNode
+        && walker.currentNode.classList.contains("subviewbutton-back")
+        && walker.nextNode()) {
+      this.selectedElement = walker.currentNode;
+    }
     this.focusSelectedElement();
   }
 
@@ -1642,6 +1653,7 @@ var PanelView = class extends AssociatedToNode {
           break;
         stop();
 
+        this._doingKeyboardActivation = true;
         // Unfortunately, 'tabindex' doesn't execute the default action, so
         // we explicitly do this here.
         // We are sending a command event and then a click event.
@@ -1650,6 +1662,7 @@ var PanelView = class extends AssociatedToNode {
         button.doCommand();
         let clickEvent = new event.target.ownerGlobal.MouseEvent("click", {"bubbles": true});
         button.dispatchEvent(clickEvent);
+        this._doingKeyboardActivation = false;
         break;
       }
     }
