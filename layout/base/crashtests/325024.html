@@ -1,0 +1,20 @@
+<html><head>
+<title>Testcase bug 325024 - Crash with evil testcase, using object, display: table-column, etc</title>
+</head>
+<body>
+<object>
+<div>Mozilla should not crash on this page</div>
+<span style="display: table-column;">
+<span style="display: block;"></span>
+</span><span style="display: table-cell;">
+</span>
+<isindex style="position: absolute; ">
+</object>
+
+<script>
+document.body.getElementsByTagName('*')[2].removeAttribute('style');
+document.body.offsetHeight;
+document.body.getElementsByTagName('*')[3].removeAttribute('style');
+document.body.offsetHeight;
+</script>
+</body></html>

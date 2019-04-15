@@ -1,0 +1,25 @@
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        class="reftest-wait"
+        title="Testcase bug 325218 - Crash with evil xul testcase, using box, tooltip, object, etc">
+<html:span>
+  <box>
+    <tooltip/>
+  </box>
+
+  <html:td/><html:object style="display: none;">This should not crash Mozilla
+      <html:span style="display: table;"/>
+  </html:object>
+</html:span>
+
+<html:script>
+function doe(){
+  document.getElementsByTagName('html:object')[0].removeAttribute('style');
+  document.getElementsByTagName('html:object')[0].offsetHeight;
+  document.getElementsByTagName('html:span')[1].removeAttribute('style');
+  document.getElementsByTagName('html:object')[0].setAttribute('style', 'text-decoration: underline');
+  document.documentElement.removeAttribute("class");
+}
+setTimeout(doe,50);
+</html:script>
+</window>
