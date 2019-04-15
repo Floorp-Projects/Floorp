@@ -12,7 +12,7 @@
 
 [package]
 name = "wasmparser"
-version = "0.23.0"
+version = "0.29.2"
 authors = ["Yury Delendik <ydelendik@mozilla.com>"]
 exclude = ["fuzz/**/*", "tests/**/*"]
 description = "A simple event-driven library for parsing WebAssembly binary files.\n"

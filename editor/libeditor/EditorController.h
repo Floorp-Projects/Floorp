@@ -22,6 +22,7 @@ class EditorController final {
       nsControllerCommandTable* aCommandTable);
   static nsresult RegisterEditingCommands(
       nsControllerCommandTable* aCommandTable);
+  static void Shutdown();
 };
 
 }  // namespace mozilla
