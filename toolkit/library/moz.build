@@ -192,6 +192,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
     OS_LIBS += [
         'crypt32',
         'shell32',
+        'ntdll',
         'ole32',
         'version',
         'winspool',
