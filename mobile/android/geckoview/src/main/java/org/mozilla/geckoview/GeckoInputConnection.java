@@ -326,6 +326,28 @@ import java.lang.reflect.Proxy;
         });
     }
 
+    @Override // SessionTextInput.EditableListener
+    public void onDiscardComposition() {
+        final View view = getView();
+        if (view == null) {
+            return;
+        }
+
+        // InputMethodManager.updateSelection will remove composition
+        // on most IMEs. But ATOK series do nothing. So we have to
+        // restart input method to remove composition as workaround.
+        if (!InputMethods.needsRestartInput(InputMethods.getCurrentInputMethod(view.getContext()))) {
+            return;
+        }
+
+        view.post(new Runnable() {
+            @Override
+            public void run() {
+                getInputDelegate().restartInput(mSession, GeckoSession.TextInputDelegate.RESTART_REASON_CONTENT_CHANGE);
+            }
+        });
+    }
+
     @TargetApi(21)
     @Override // SessionTextInput.EditableListener
     public void updateCompositionRects(final RectF[] rects) {

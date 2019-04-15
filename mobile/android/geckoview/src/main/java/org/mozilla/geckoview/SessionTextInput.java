@@ -112,6 +112,7 @@ public final class SessionTextInput {
                               String actionHint, int flag);
         void onSelectionChange();
         void onTextChange();
+        void onDiscardComposition();
         void onDefaultKeyEvent(KeyEvent event);
         void updateCompositionRects(final RectF[] aRects);
     }
@@ -206,17 +207,8 @@ public final class SessionTextInput {
             if (imm != null) {
                 // When composition start and end is -1,
                 // InputMethodManager.updateSelection will remove composition
-                // on most IMEs. But ATOK series do nothing. So we have to
-                // restart input method to remove composition as workaround.
-                if (compositionStart < 0 && compositionEnd < 0 &&
-                    InputMethods.needsRestartInput(
-                        InputMethods.getCurrentInputMethod(view.getContext()))) {
-                    try {
-                        imm.restartInput(view);
-                    } catch (RuntimeException e) {
-                        Log.e(LOGTAG, "Error restarting input", e);
-                    }
-                }
+                // on most IMEs. If not working, we have to add a workaround
+                // to EditableListener.onDiscardComposition.
                 imm.updateSelection(view, selStart, selEnd, compositionStart, compositionEnd);
             }
         }

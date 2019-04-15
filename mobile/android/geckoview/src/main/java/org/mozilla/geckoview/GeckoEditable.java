@@ -311,6 +311,38 @@ import android.view.inputmethod.EditorInfo;
             return mShadowText;
         }
 
+        /**
+         * Check whether we are currently discarding the composition. It means that shadow text has composition,
+         * but current text has no composition. So syncShadowText will discard composition.
+         *
+         * @return true if discarding composition
+         */
+        private boolean isDiscardingComposition() {
+            boolean wasComposing = false;
+            Object[] spans = mShadowText.getSpans(0, mShadowText.length(), Object.class);
+            for (final Object span : spans) {
+                if ((mShadowText.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
+                    wasComposing = true;
+                    break;
+                }
+            }
+
+            if (!wasComposing) {
+                return false;
+            }
+
+            boolean isComposing = false;
+            spans = mCurrentText.getSpans(0, mCurrentText.length(), Object.class);
+            for (final Object span : spans) {
+                if ((mCurrentText.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
+                    isComposing = true;
+                    break;
+                }
+            }
+
+            return !isComposing;
+        }
+
         public synchronized void syncShadowText(
                 final SessionTextInput.EditableListener listener) {
             if (DEBUG) {
@@ -331,6 +363,12 @@ import android.view.inputmethod.EditorInfo;
                     listener.onSelectionChange();
                 }
                 return;
+            }
+
+            if (isDiscardingComposition()) {
+                if (listener != null) {
+                    listener.onDiscardComposition();
+                }
             }
 
             // Copy the portion of the current text that has changed over to the shadow
