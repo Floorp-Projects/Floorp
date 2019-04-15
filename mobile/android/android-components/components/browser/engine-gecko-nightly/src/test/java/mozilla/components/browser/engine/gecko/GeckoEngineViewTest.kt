@@ -4,13 +4,12 @@
 
 package mozilla.components.browser.engine.gecko
 
+import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
-import androidx.test.core.app.ApplicationProvider
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -19,14 +18,14 @@ import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-@Ignore
 class GeckoEngineViewTest {
 
     private val context: Context
-        get() = ApplicationProvider.getApplicationContext()
+        get() = Robolectric.buildActivity(Activity::class.java).get()
 
     @Test
     fun render() {

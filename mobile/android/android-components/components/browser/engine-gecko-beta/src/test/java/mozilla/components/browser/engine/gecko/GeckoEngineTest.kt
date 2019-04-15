@@ -4,8 +4,8 @@
 
 package mozilla.components.browser.engine.gecko
 
+import android.app.Activity
 import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.UnsupportedSettingException
@@ -18,7 +18,6 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.`when`
@@ -30,6 +29,7 @@ import org.mozilla.geckoview.GeckoRuntime
 import org.mozilla.geckoview.GeckoRuntimeSettings
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
+import org.robolectric.Robolectric
 import org.robolectric.RobolectricTestRunner
 import java.io.IOException
 import org.mozilla.geckoview.WebExtension as GeckoWebExtension
@@ -41,10 +41,9 @@ class GeckoEngineTest {
     private val context: Context = mock(Context::class.java)
 
     @Test
-    @Ignore
     fun createView() {
         assertTrue(GeckoEngine(context, runtime = runtime).createView(
-            ApplicationProvider.getApplicationContext()
+            Robolectric.buildActivity(Activity::class.java).get()
         ) is GeckoEngineView)
     }
 
