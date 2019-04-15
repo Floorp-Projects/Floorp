@@ -3660,7 +3660,7 @@ JS_PUBLIC_API JSString* JS_DecompileScript(JSContext* cx, HandleScript script) {
     return JS_DecompileFunction(cx, fun);
   }
   bool haveSource;
-  if (!JSScript::tryLoadSource(cx, script->scriptSource(), &haveSource)) {
+  if (!JSScript::loadSource(cx, script->scriptSource(), &haveSource)) {
     return nullptr;
   }
   return haveSource ? JSScript::sourceData(cx, script)
