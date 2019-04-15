@@ -240,12 +240,11 @@ void MouseCursorMonitorX11::CaptureCursor() {
    std::unique_ptr<DesktopFrame> image(
        new BasicDesktopFrame(DesktopSize(img->width, img->height)));
 
-  // Xlib stores 32-bit data in longs, even if longs are 64-bits long.
-  unsigned long* src = img->pixels;
+  uint64_t* src = reinterpret_cast<uint64_t*>(img->pixels);
   uint32_t* dst = reinterpret_cast<uint32_t*>(image->data());
   uint32_t* dst_end = dst + (img->width * img->height);
   while (dst < dst_end) {
-    *dst++ = static_cast<uint32_t>(*src++);
+    *dst++ = *src++;
   }
 
   DesktopVector hotspot(std::min(img->width, img->xhot),
@@ -267,7 +266,7 @@ MouseCursorMonitor* MouseCursorMonitor::CreateForWindow(
   return new MouseCursorMonitorX11(options, outer_window, window);
 }
 
-MouseCursorMonitor* MouseCursorMonitor::CreateForScreen(
+MouseCursorMonitor* MouseCursorMonitorX11::CreateForScreen(
     const DesktopCaptureOptions& options,
     ScreenId screen) {
   if (!options.x_display())
@@ -276,7 +275,7 @@ MouseCursorMonitor* MouseCursorMonitor::CreateForScreen(
   return new MouseCursorMonitorX11(options, window, window);
 }
 
-std::unique_ptr<MouseCursorMonitor> MouseCursorMonitor::Create(
+std::unique_ptr<MouseCursorMonitor> MouseCursorMonitorX11::Create(
     const DesktopCaptureOptions& options) {
   return std::unique_ptr<MouseCursorMonitor>(
       CreateForScreen(options, kFullDesktopScreenId));

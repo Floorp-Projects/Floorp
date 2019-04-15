@@ -14,7 +14,7 @@
 #include "rtc_base/scoped_ref_ptr.h"
 
 #if defined(USE_X11)
-#include "modules/desktop_capture/x11/shared_x_display.h"
+#include "modules/desktop_capture/linux/shared_x_display.h"
 #endif
 
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
@@ -113,6 +113,11 @@ class DesktopCaptureOptions {
   }
 #endif
 
+#if defined(WEBRTC_USE_PIPEWIRE)
+  bool allow_pipewire() const { return allow_pipewire_; }
+  void set_allow_pipewire(bool allow) { allow_pipewire_ = allow; }
+#endif
+
  private:
 #if defined(USE_X11)
   rtc::scoped_refptr<SharedXDisplay> x_display_;
@@ -135,6 +140,9 @@ class DesktopCaptureOptions {
 #endif
   bool disable_effects_ = true;
   bool detect_updated_region_ = false;
+#if defined(WEBRTC_USE_PIPEWIRE)
+  bool allow_pipewire_ = false;
+#endif
 };
 
 }  // namespace webrtc
