@@ -33,7 +33,7 @@
     // Have to do this to access normally-preffed off binding methods for some
     // reason.
     // See bug 1544257.
-    let audio = SpecialPowers.wrap(audio);
+    audio = SpecialPowers.wrap(audio);
 
     is(audio.sinkId, "", "Initial value is empty string");
 
