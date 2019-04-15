@@ -20,9 +20,17 @@ use super::{
 
 #[derive(Debug, Copy, Clone)]
 pub struct Data<'a> {
-    pub memory_index: u32,
-    pub init_expr: InitExpr<'a>,
+    pub kind: DataKind<'a>,
     pub data: &'a [u8],
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum DataKind<'a> {
+    Passive,
+    Active {
+        memory_index: u32,
+        init_expr: InitExpr<'a>,
+    },
 }
 
 pub struct DataSectionReader<'a> {
@@ -64,7 +72,7 @@ impl<'a> DataSectionReader<'a> {
     /// #     0x05, 0x03, 0x01, 0x00, 0x02,
     /// #     0x0a, 0x05, 0x01, 0x03, 0x00, 0x01, 0x0b,
     /// #     0x0b, 0x0b, 0x01, 0x00, 0x41, 0x80, 0x08, 0x0b, 0x04, 0x00, 0x00, 0x00, 0x00];
-    /// use wasmparser::ModuleReader;
+    /// use wasmparser::{ModuleReader, DataKind};
     /// let mut reader = ModuleReader::new(data).expect("module reader");
     /// let section = reader.read().expect("type section");
     /// let section = reader.read().expect("function section");
@@ -75,32 +83,48 @@ impl<'a> DataSectionReader<'a> {
     /// for _ in 0..data_reader.get_count() {
     ///     let data = data_reader.read().expect("data");
     ///     println!("Data: {:?}", data);
-    ///     let mut init_expr_reader = data.init_expr.get_binary_reader();
-    ///     let op = init_expr_reader.read_operator().expect("op");
-    ///     println!("Init const: {:?}", op);
+    ///     if let DataKind::Active { init_expr, .. } = data.kind {
+    ///         let mut init_expr_reader = init_expr.get_binary_reader();
+    ///         let op = init_expr_reader.read_operator().expect("op");
+    ///         println!("Init const: {:?}", op);
+    ///     }
     /// }
     /// ```
     pub fn read<'b>(&mut self) -> Result<Data<'b>>
     where
         'a: 'b,
     {
-        let memory_index = self.reader.read_var_u32()?;
-        let init_expr = {
-            let expr_offset = self.reader.position;
-            self.reader.skip_init_expr()?;
-            let data = &self.reader.buffer[expr_offset..self.reader.position];
-            InitExpr::new(data, self.reader.original_offset + expr_offset)
+        let flags = self.reader.read_var_u32()?;
+        let kind = if flags == 1 {
+            DataKind::Passive
+        } else {
+            let memory_index = match flags {
+                0 => 0,
+                2 => self.reader.read_var_u32()?,
+                _ => {
+                    return Err(BinaryReaderError {
+                        message: "invalid flags byte in data segment",
+                        offset: self.reader.original_position() - 1,
+                    });
+                }
+            };
+            let init_expr = {
+                let expr_offset = self.reader.position;
+                self.reader.skip_init_expr()?;
+                let data = &self.reader.buffer[expr_offset..self.reader.position];
+                InitExpr::new(data, self.reader.original_offset + expr_offset)
+            };
+            DataKind::Active {
+                memory_index,
+                init_expr,
+            }
         };
         let data_len = self.reader.read_var_u32()? as usize;
         let data_end = self.reader.position + data_len;
         self.verify_data_end(data_end)?;
         let data = &self.reader.buffer[self.reader.position..data_end];
         self.reader.skip_to(data_end);
-        Ok(Data {
-            memory_index,
-            init_expr,
-            data,
-        })
+        Ok(Data { kind, data })
     }
 }
 

@@ -14,14 +14,23 @@
  */
 
 use super::{
-    BinaryReader, InitExpr, Result, SectionIteratorLimited, SectionReader, SectionWithLimitedItems,
+    BinaryReader, BinaryReaderError, InitExpr, Result, SectionIteratorLimited, SectionReader,
+    SectionWithLimitedItems, Type,
 };
 
 #[derive(Debug, Copy, Clone)]
 pub struct Element<'a> {
-    pub table_index: u32,
-    pub init_expr: InitExpr<'a>,
+    pub kind: ElementKind<'a>,
     pub items: ElementItems<'a>,
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum ElementKind<'a> {
+    Passive(Type),
+    Active {
+        table_index: u32,
+        init_expr: InitExpr<'a>,
+    },
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -129,7 +138,7 @@ impl<'a> ElementSectionReader<'a> {
     /// #     0x05, 0x03, 0x01, 0x00, 0x02,
     /// #     0x09, 0x07, 0x01, 0x00, 0x41, 0x00, 0x0B, 0x01, 0x00,
     /// #     0x0a, 0x05, 0x01, 0x03, 0x00, 0x01, 0x0b];
-    /// use wasmparser::ModuleReader;
+    /// use wasmparser::{ModuleReader, ElementKind};
     ///use wasmparser::Result;
     /// let mut reader = ModuleReader::new(data).expect("module reader");
     /// let section = reader.read().expect("type section");
@@ -140,9 +149,11 @@ impl<'a> ElementSectionReader<'a> {
     /// for _ in 0..element_reader.get_count() {
     ///     let element = element_reader.read().expect("element");
     ///     println!("Element: {:?}", element);
-    ///     let mut init_expr_reader = element.init_expr.get_binary_reader();
-    ///     let op = init_expr_reader.read_operator().expect("op");
-    ///     println!("Init const: {:?}", op);
+    ///     if let ElementKind::Active { init_expr, .. } = element.kind {
+    ///         let mut init_expr_reader = init_expr.get_binary_reader();
+    ///         let op = init_expr_reader.read_operator().expect("op");
+    ///         println!("Init const: {:?}", op);
+    ///     }
     ///     let mut items_reader = element.items.get_items_reader().expect("items reader");
     ///     for _ in 0..items_reader.get_count() {
     ///         let item = items_reader.read().expect("item");
@@ -154,12 +165,31 @@ impl<'a> ElementSectionReader<'a> {
     where
         'a: 'b,
     {
-        let table_index = self.reader.read_var_u32()?;
-        let init_expr = {
-            let expr_offset = self.reader.position;
-            self.reader.skip_init_expr()?;
-            let data = &self.reader.buffer[expr_offset..self.reader.position];
-            InitExpr::new(data, self.reader.original_offset + expr_offset)
+        let flags = self.reader.read_var_u32()?;
+        let kind = if flags == 1 {
+            let ty = self.reader.read_type()?;
+            ElementKind::Passive(ty)
+        } else {
+            let table_index = match flags {
+                0 => 0,
+                2 => self.reader.read_var_u32()?,
+                _ => {
+                    return Err(BinaryReaderError {
+                        message: "invalid flags byte in element segment",
+                        offset: self.reader.original_position() - 1,
+                    });
+                }
+            };
+            let init_expr = {
+                let expr_offset = self.reader.position;
+                self.reader.skip_init_expr()?;
+                let data = &self.reader.buffer[expr_offset..self.reader.position];
+                InitExpr::new(data, self.reader.original_offset + expr_offset)
+            };
+            ElementKind::Active {
+                table_index,
+                init_expr,
+            }
         };
         let data_start = self.reader.position;
         let items_count = self.reader.read_var_u32()?;
@@ -171,11 +201,7 @@ impl<'a> ElementSectionReader<'a> {
             offset: self.reader.original_offset + data_start,
             data: &self.reader.buffer[data_start..data_end],
         };
-        Ok(Element {
-            table_index,
-            init_expr,
-            items,
-        })
+        Ok(Element { kind, items })
     }
 }
 

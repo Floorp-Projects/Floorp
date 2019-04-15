@@ -2391,6 +2391,11 @@ void Document::CompatibilityModeChanged() {
   MOZ_ASSERT(IsHTMLOrXHTML());
   CSSLoader()->SetCompatibilityMode(mCompatMode);
   mStyleSet->CompatibilityModeChanged();
+  if (PresShell* presShell = GetPresShell()) {
+    // Selectors may have become case-sensitive / case-insensitive, the stylist
+    // has already performed the relevant invalidation.
+    presShell->EnsureStyleFlush();
+  }
   if (!mStyleSetFilled) {
     MOZ_ASSERT(!mQuirkSheetAdded);
     return;

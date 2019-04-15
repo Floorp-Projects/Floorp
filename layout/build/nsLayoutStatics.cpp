@@ -107,7 +107,9 @@
 #include "DecoderDoctorLogger.h"
 #include "MediaDecoder.h"
 #include "mozilla/ClearSiteData.h"
+#include "mozilla/EditorController.h"
 #include "mozilla/Fuzzyfox.h"
+#include "mozilla/HTMLEditorController.h"
 #include "mozilla/ServoBindings.h"
 #include "mozilla/StaticPresData.h"
 #include "mozilla/dom/WebIDLGlobalNameHash.h"
@@ -343,6 +345,8 @@ void nsLayoutStatics::Shutdown() {
   Attr::Shutdown();
   PopupBlocker::Shutdown();
   IMEStateManager::Shutdown();
+  EditorController::Shutdown();
+  HTMLEditorController::Shutdown();
   nsMediaFeatures::Shutdown();
   nsHTMLDNSPrefetch::Shutdown();
   nsCSSRendering::Shutdown();

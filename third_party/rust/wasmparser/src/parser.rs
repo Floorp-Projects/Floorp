@@ -28,11 +28,11 @@ use primitives::{
 };
 
 use readers::{
-    CodeSectionReader, Data, DataSectionReader, Element, ElementItems, ElementSectionReader,
-    Export, ExportSectionReader, FunctionBody, FunctionSectionReader, Global, GlobalSectionReader,
-    Import, ImportSectionReader, LinkingSectionReader, MemorySectionReader, ModuleReader, Name,
-    NameSectionReader, NamingReader, OperatorsReader, Reloc, RelocSectionReader, Section,
-    SectionReader, TableSectionReader, TypeSectionReader,
+    CodeSectionReader, Data, DataKind, DataSectionReader, Element, ElementItems, ElementKind,
+    ElementSectionReader, Export, ExportSectionReader, FunctionBody, FunctionSectionReader, Global,
+    GlobalSectionReader, Import, ImportSectionReader, LinkingSectionReader, MemorySectionReader,
+    ModuleReader, Name, NameSectionReader, NamingReader, OperatorsReader, Reloc,
+    RelocSectionReader, Section, SectionReader, TableSectionReader, TypeSectionReader,
 };
 
 use binary_reader::{BinaryReader, Range};
@@ -47,7 +47,7 @@ pub struct LocalName<'a> {
 
 #[derive(Debug)]
 pub enum NameEntry<'a> {
-    Module(&'a [u8]),
+    Module(&'a str),
     Function(Box<[Naming<'a>]>),
     Local(Box<[LocalName<'a>]>),
 }
@@ -86,20 +86,21 @@ pub enum ParserState<'a> {
 
     TypeSectionEntry(FuncType),
     ImportSectionEntry {
-        module: &'a [u8],
-        field: &'a [u8],
+        module: &'a str,
+        field: &'a str,
         ty: ImportSectionEntryType,
     },
     FunctionSectionEntry(u32),
     TableSectionEntry(TableType),
     MemorySectionEntry(MemoryType),
     ExportSectionEntry {
-        field: &'a [u8],
+        field: &'a str,
         kind: ExternalKind,
         index: u32,
     },
     NameSectionEntry(NameEntry<'a>),
     StartSectionEntry(u32),
+    DataCountSectionEntry(u32),
 
     BeginInitExpressionBody,
     InitExpressionOperator(Operator<'a>),
@@ -115,11 +116,13 @@ pub enum ParserState<'a> {
     EndFunctionBody,
     SkippingFunctionBody,
 
-    BeginElementSectionEntry(u32),
+    BeginPassiveElementSectionEntry(Type),
+    BeginActiveElementSectionEntry(u32),
     ElementSectionEntryBody(Box<[u32]>),
     EndElementSectionEntry,
 
-    BeginDataSectionEntry(u32),
+    BeginPassiveDataSectionEntry,
+    BeginActiveDataSectionEntry(u32),
     EndDataSectionEntry,
     BeginDataSectionEntryBody(u32),
     DataSectionEntryBodyChunk(&'a [u8]),
@@ -132,7 +135,7 @@ pub enum ParserState<'a> {
     RelocSectionEntry(RelocEntry),
     LinkingSectionEntry(LinkingType),
 
-    SourceMappingURL(&'a [u8]),
+    SourceMappingURL(&'a str),
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -269,33 +272,33 @@ impl<'a> Parser<'a> {
             ParserSectionReader::CodeSectionReader(ref reader) => return reader.original_position(),
             ParserSectionReader::DataSectionReader(ref reader) => return reader.original_position(),
             ParserSectionReader::ElementSectionReader(ref reader) => {
-                return reader.original_position()
+                return reader.original_position();
             }
             ParserSectionReader::ExportSectionReader(ref reader) => {
-                return reader.original_position()
+                return reader.original_position();
             }
             ParserSectionReader::FunctionSectionReader(ref reader) => {
-                return reader.original_position()
+                return reader.original_position();
             }
             ParserSectionReader::GlobalSectionReader(ref reader) => {
-                return reader.original_position()
+                return reader.original_position();
             }
             ParserSectionReader::ImportSectionReader(ref reader) => {
-                return reader.original_position()
+                return reader.original_position();
             }
             ParserSectionReader::MemorySectionReader(ref reader) => {
-                return reader.original_position()
+                return reader.original_position();
             }
             ParserSectionReader::TableSectionReader(ref reader) => {
-                return reader.original_position()
+                return reader.original_position();
             }
             ParserSectionReader::TypeSectionReader(ref reader) => return reader.original_position(),
             ParserSectionReader::NameSectionReader(ref reader) => return reader.original_position(),
             ParserSectionReader::LinkingSectionReader(ref reader) => {
-                return reader.original_position()
+                return reader.original_position();
             }
             ParserSectionReader::RelocSectionReader(ref reader) => {
-                return reader.original_position()
+                return reader.original_position();
             }
             _ => (),
         };
@@ -317,7 +320,7 @@ impl<'a> Parser<'a> {
     fn read_section_header(&mut self) -> Result<()> {
         let section = self.module_reader.as_mut().expect("module reader").read()?;
         let code = section.code;
-        let range = section.get_range();
+        let range = section.range();
         self.current_section = Some(section);
         self.state = ParserState::BeginSection { code, range };
         Ok(())
@@ -408,13 +411,19 @@ impl<'a> Parser<'a> {
         if self.section_entries_left == 0 {
             return self.check_section_end();
         }
-        let Element {
-            table_index,
-            init_expr,
-            items,
-        } = section_reader!(self, ElementSectionReader).read()?;
-        self.state = ParserState::BeginElementSectionEntry(table_index);
-        self.operators_reader = Some(init_expr.get_operators_reader());
+        let Element { kind, items } = section_reader!(self, ElementSectionReader).read()?;
+        match kind {
+            ElementKind::Passive(ty) => {
+                self.state = ParserState::BeginPassiveElementSectionEntry(ty);
+            }
+            ElementKind::Active {
+                table_index,
+                init_expr,
+            } => {
+                self.state = ParserState::BeginActiveElementSectionEntry(table_index);
+                self.operators_reader = Some(init_expr.get_operators_reader());
+            }
+        }
         self.element_items = Some(items);
         self.section_entries_left -= 1;
         Ok(())
@@ -447,7 +456,7 @@ impl<'a> Parser<'a> {
             return self.check_section_end();
         }
         let function_body = section_reader!(self, CodeSectionReader).read()?;
-        let range = function_body.get_range();
+        let range = function_body.range();
         self.state = ParserState::BeginFunctionBody { range };
         self.current_function_body = Some(function_body);
         self.section_entries_left -= 1;
@@ -529,13 +538,19 @@ impl<'a> Parser<'a> {
         if self.section_entries_left == 0 {
             return self.check_section_end();
         }
-        let Data {
-            memory_index,
-            init_expr,
-            data,
-        } = section_reader!(self, DataSectionReader).read()?;
-        self.state = ParserState::BeginDataSectionEntry(memory_index);
-        self.operators_reader = Some(init_expr.get_operators_reader());
+        let Data { kind, data } = section_reader!(self, DataSectionReader).read()?;
+        match kind {
+            DataKind::Passive => {
+                self.state = ParserState::BeginPassiveDataSectionEntry;
+            }
+            DataKind::Active {
+                memory_index,
+                init_expr,
+            } => {
+                self.state = ParserState::BeginActiveDataSectionEntry(memory_index);
+                self.operators_reader = Some(init_expr.get_operators_reader());
+            }
+        }
         self.current_data_segment = Some(data);
         self.section_entries_left -= 1;
         Ok(())
@@ -732,6 +747,17 @@ impl<'a> Parser<'a> {
                 self.state = ParserState::StartSectionEntry(func_index);
             }
             ParserState::BeginSection {
+                code: SectionCode::DataCount,
+                ..
+            } => {
+                let func_index = self
+                    .current_section
+                    .as_ref()
+                    .expect("section")
+                    .get_data_count_section_content()?;
+                self.state = ParserState::DataCountSectionEntry(func_index);
+            }
+            ParserState::BeginSection {
                 code: SectionCode::Custom { .. },
                 ..
             } => {
@@ -774,7 +800,8 @@ impl<'a> Parser<'a> {
                 start_section_reader!(self, LinkingSectionReader, get_linking_section_reader);
                 self.read_linking_entry()?;
             }
-            ParserState::ReadingCustomSection(CustomSectionKind::Unknown) => {
+            ParserState::ReadingCustomSection(CustomSectionKind::Producers)
+            | ParserState::ReadingCustomSection(CustomSectionKind::Unknown) => {
                 self.create_custom_section_binary_reader();
                 self.read_section_body_bytes()?;
             }
@@ -875,13 +902,17 @@ impl<'a> Parser<'a> {
                 self.read_init_expression_body(InitExpressionContinuation::GlobalSection)
             }
             ParserState::EndGlobalSectionEntry => self.read_global_entry()?,
-            ParserState::BeginElementSectionEntry(_) => {
+            ParserState::BeginPassiveElementSectionEntry(_) => self.read_element_entry_body()?,
+            ParserState::BeginActiveElementSectionEntry(_) => {
                 self.read_init_expression_body(InitExpressionContinuation::ElementSection)
             }
             ParserState::BeginInitExpressionBody | ParserState::InitExpressionOperator(_) => {
                 self.read_init_expression_operator()?
             }
-            ParserState::BeginDataSectionEntry(_) => {
+            ParserState::BeginPassiveDataSectionEntry => {
+                self.read_data_entry_body()?;
+            }
+            ParserState::BeginActiveDataSectionEntry(_) => {
                 self.read_init_expression_body(InitExpressionContinuation::DataSection)
             }
             ParserState::EndInitExpressionBody => {
@@ -917,6 +948,7 @@ impl<'a> Parser<'a> {
             }
             ParserState::EndElementSectionEntry => self.read_element_entry()?,
             ParserState::StartSectionEntry(_) => self.position_to_section_end()?,
+            ParserState::DataCountSectionEntry(_) => self.position_to_section_end()?,
             ParserState::NameSectionEntry(_) => self.read_name_entry()?,
             ParserState::SourceMappingURL(_) => self.position_to_section_end()?,
             ParserState::RelocSectionHeader(_) => {

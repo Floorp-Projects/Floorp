@@ -32,6 +32,7 @@
                   "*://*.instagram.com/*",
                   "*://*.jianshu.com/*",
                   "*://*.linkedin.com/*",
+                  "*://*.live.com/*",
                   "*://*.microsoft.com/*",
                   "*://*.paypal.com/*",
                   "*://*.pinterest.com/*",
