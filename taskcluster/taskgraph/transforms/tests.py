@@ -977,27 +977,22 @@ def split_e10s(config, tests):
     for test in tests:
         e10s = test['e10s']
 
-        test['e10s'] = False
-        test['attributes']['e10s'] = False
+        test['e10s'] = True
+        test['attributes']['e10s'] = True
 
         if e10s == 'both':
             yield copy.deepcopy(test)
-            e10s = True
-        if e10s:
-            test['test-name'] += '-e10s'
-            test['try-name'] += '-e10s'
-            test['e10s'] = True
-            test['attributes']['e10s'] = True
+            e10s = False
+        if not e10s:
+            test['test-name'] += '-1proc'
+            test['try-name'] += '-1proc'
+            test['e10s'] = False
+            test['attributes']['e10s'] = False
             group, symbol = split_symbol(test['treeherder-symbol'])
             if group != '?':
-                group += '-e10s'
+                group += '-1proc'
             test['treeherder-symbol'] = join_symbol(group, symbol)
-            if test['suite'] == 'talos' or test['suite'] == 'raptor':
-                for i, option in enumerate(test['mozharness']['extra-options']):
-                    if option.startswith('--suite='):
-                        test['mozharness']['extra-options'][i] += '-e10s'
-            else:
-                test['mozharness']['extra-options'].append('--e10s')
+            test['mozharness']['extra-options'].append('--disable-e10s')
         yield test
 
 

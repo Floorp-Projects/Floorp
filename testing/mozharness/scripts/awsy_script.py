@@ -38,11 +38,11 @@ external_tools_path = os.path.join(scripts_path, 'external_tools')
 
 class AWSY(TestingMixin, MercurialScript, TooltoolMixin, CodeCoverageMixin):
     config_options = [
-        [["--e10s"],
-         {"action": "store_true",
+        [["--disable-e10s"],
+         {"action": "store_false",
           "dest": "e10s",
-          "default": False,
-          "help": "Run tests with multiple processes. (Desktop builds only)",
+          "default": True,
+          "help": "Run tests without multiple processes (e10s). (Desktop builds only)",
           }],
         [["--single-stylo-traversal"],
          {"action": "store_true",
