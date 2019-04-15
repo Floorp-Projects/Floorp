@@ -5008,6 +5008,22 @@ JS_PUBLIC_API void JS_ClearPendingException(JSContext* cx) {
   cx->clearPendingException();
 }
 
+JS_PUBLIC_API void
+JS::SetPendingExceptionAndStack(JSContext* cx, HandleValue value,
+                                HandleObject stack)
+{
+  AssertHeapIsIdle();
+  CHECK_THREAD(cx);
+  cx->releaseCheck(value);
+  cx->releaseCheck(stack);
+
+  RootedSavedFrame nstack(cx);
+  if (stack) {
+    nstack = &UncheckedUnwrap(stack)->as<SavedFrame>();
+  }
+  cx->setPendingException(value, nstack);
+}
+
 JS_PUBLIC_API JSObject* JS::GetPendingExceptionStack(JSContext* cx) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
