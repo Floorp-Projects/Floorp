@@ -790,6 +790,8 @@ var gIdentityHandler = {
 
     // Update per-site permissions section.
     this.updateSitePermissions();
+
+    ContentBlocking.toggleReportBreakageButton();
   },
 
   setURI(uri) {
