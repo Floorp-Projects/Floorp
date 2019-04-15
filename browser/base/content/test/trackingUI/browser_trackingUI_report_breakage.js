@@ -10,6 +10,7 @@ const COOKIE_PAGE = "http://not-tracking.example.com/browser/browser/base/conten
 const CM_PREF = "privacy.trackingprotection.cryptomining.enabled";
 const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
 const TP_PREF = "privacy.trackingprotection.enabled";
+const CB_PREF = "network.cookie.cookieBehavior";
 
 const PREF_REPORT_BREAKAGE_ENABLED = "browser.contentblocking.reportBreakage.enabled";
 const PREF_REPORT_BREAKAGE_URL = "browser.contentblocking.reportBreakage.url";
@@ -29,6 +30,7 @@ add_task(async function setup() {
 
     // Clear prefs that are touched in this test again for sanity.
     Services.prefs.clearUserPref(TP_PREF);
+    Services.prefs.clearUserPref(CB_PREF);
     Services.prefs.clearUserPref(FP_PREF);
     Services.prefs.clearUserPref(CM_PREF);
     Services.prefs.clearUserPref(PREF_REPORT_BREAKAGE_ENABLED);
@@ -167,7 +169,19 @@ add_task(async function testTP() {
   Services.prefs.clearUserPref(TP_PREF);
 });
 
+add_task(async function testCR() {
+  Services.prefs.setIntPref(CB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
+  // Make sure that we correctly strip the query.
+  let url = COOKIE_PAGE + "?a=b&1=abc&unicode=🦊";
+  await BrowserTestUtils.withNewTab(url, async function() {
+    await testReportBreakage(COOKIE_PAGE, "cookierestrictions");
+  });
+
+  Services.prefs.clearUserPref(CB_PREF);
+});
+
 add_task(async function testFP() {
+  Services.prefs.setIntPref(CB_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT);
   Services.prefs.setBoolPref(FP_PREF, true);
   // Make sure that we correctly strip the query.
   let url = TRACKING_PAGE + "?a=b&1=abc&unicode=🦊";
@@ -176,14 +190,15 @@ add_task(async function testFP() {
       content.postMessage("fingerprinting", "*");
     });
 
-    // Without TP, we will have a cookie restrictions entry for trackertest.org.
-    await testReportBreakage(TRACKING_PAGE, "cookierestrictions,fingerprinting");
+    await testReportBreakage(TRACKING_PAGE, "fingerprinting");
   });
 
   Services.prefs.clearUserPref(FP_PREF);
+  Services.prefs.clearUserPref(CB_PREF);
 });
 
 add_task(async function testCM() {
+  Services.prefs.setIntPref(CB_PREF, Ci.nsICookieService.BEHAVIOR_ACCEPT);
   Services.prefs.setBoolPref(CM_PREF, true);
   // Make sure that we correctly strip the query.
   let url = TRACKING_PAGE + "?a=b&1=abc&unicode=🦊";
@@ -192,11 +207,11 @@ add_task(async function testCM() {
       content.postMessage("cryptomining", "*");
     });
 
-    // Without TP, we will have a cookie restrictions entry for trackertest.org.
-    await testReportBreakage(TRACKING_PAGE, "cookierestrictions,cryptomining");
+    await testReportBreakage(TRACKING_PAGE, "cryptomining");
   });
 
   Services.prefs.clearUserPref(CM_PREF);
+  Services.prefs.clearUserPref(CB_PREF);
 });
 
 async function testReportBreakage(url, tags) {
@@ -258,7 +273,7 @@ async function testReportBreakage(url, tags) {
 
       Assert.deepEqual(sections, [
         "",
-        "Content-Disposition: form-data; name=\"title\"\r\n\r\ntracking.example.org\r\n",
+        `Content-Disposition: form-data; name=\"title\"\r\n\r\n${Services.io.newURI(reportURL).host}\r\n`,
         "Content-Disposition: form-data; name=\"body\"\r\n\r\n" +
         `Full URL: ${reportURL + "?"}\r\n` +
         `userAgent: ${navigator.userAgent}\r\n\r\n` +
