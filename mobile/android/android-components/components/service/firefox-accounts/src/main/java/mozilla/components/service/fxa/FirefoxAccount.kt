@@ -42,8 +42,10 @@ class FirefoxAccount internal constructor(private val inner: InternalFxAcct) : O
      * Note that it is not necessary to `close` the Config if this constructor is used (however
      * doing so will not cause an error).
      */
-    constructor(config: Config, persistCallback: PersistCallback? = null)
-            : this(InternalFxAcct(config, persistCallback))
+    constructor(
+        config: Config,
+        persistCallback: PersistCallback? = null
+    ) : this(InternalFxAcct(config, persistCallback))
 
     override fun close() {
         job.cancel()

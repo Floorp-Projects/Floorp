@@ -78,8 +78,7 @@ private val registry = ObserverRegistry<SyncStatusObserver>()
  * - periodic sync is requested to stop
  */
 @SuppressWarnings("TooManyFunctions")
-abstract class GeneralSyncManager
-: SyncManager, Observable<SyncStatusObserver> by registry, SyncStatusObserver {
+abstract class GeneralSyncManager : SyncManager, Observable<SyncStatusObserver> by registry, SyncStatusObserver {
     companion object {
         // Periodically sync in the background, to make our syncs a little more incremental.
         // This isn't strictly necessary, and could be considered an optimization.

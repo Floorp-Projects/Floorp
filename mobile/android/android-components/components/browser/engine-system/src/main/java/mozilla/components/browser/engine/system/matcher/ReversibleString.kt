@@ -41,9 +41,11 @@ abstract class ReversibleString private constructor(
             ReverseString(string, offsetStart, offsetEnd)
         }
 
-    private class ForwardString(string: String, offsetStart: Int, offsetEnd: Int)
-        : ReversibleString(string, offsetStart, offsetEnd
-    ) {
+    private class ForwardString(
+        string: String,
+        offsetStart: Int,
+        offsetEnd: Int
+    ) : ReversibleString(string, offsetStart, offsetEnd) {
         override val isReversed: Boolean = false
 
         override fun charAt(position: Int): Char {
@@ -58,9 +60,11 @@ abstract class ReversibleString private constructor(
         }
     }
 
-    private class ReverseString(string: String, offsetStart: Int, offsetEnd: Int)
-        : ReversibleString(string, offsetStart, offsetEnd
-    ) {
+    private class ReverseString(
+        string: String,
+        offsetStart: Int,
+        offsetEnd: Int
+    ) : ReversibleString(string, offsetStart, offsetEnd) {
         override val isReversed: Boolean = true
 
         override fun charAt(position: Int): Char {

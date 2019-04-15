@@ -87,7 +87,7 @@ class ICOIconDecoderTest {
 
         entries
             .sortedBy { entry -> entry.width }
-            . forEachIndexed { index, entry -> assertEquals(expectedEntries[index], entry) }
+            .forEachIndexed { index, entry -> assertEquals(expectedEntries[index], entry) }
     }
 
     @Test
@@ -114,7 +114,7 @@ class ICOIconDecoderTest {
 
         entries
             .sortedByDescending { entry -> entry.width }
-            . forEachIndexed { index, entry -> assertEquals(expectedEntries[index], entry) }
+            .forEachIndexed { index, entry -> assertEquals(expectedEntries[index], entry) }
     }
 
     private fun loadIcon(fileName: String): ByteArray =
