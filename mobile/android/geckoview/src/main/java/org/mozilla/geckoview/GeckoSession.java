@@ -604,13 +604,14 @@ public class GeckoSession implements Parcelable {
                     final GeckoBundle identity = message.getBundle("identity");
                     delegate.onSecurityChange(GeckoSession.this, new ProgressDelegate.SecurityInformation(identity));
                 } else if ("GeckoView:StateUpdated".equals(event)) {
+                    final HistoryDelegate historyDelegate = getHistoryDelegate();
                     final GeckoBundle update = message.getBundle("data");
                     if (update != null) {
                         mStateCache.updateSessionState(update);
                         final SessionState state = new SessionState(mStateCache);
                         delegate.onSessionStateChange(GeckoSession.this, state);
-                        if (update.getBundle("historychange") != null) {
-                            getHistoryDelegate().onHistoryStateChange(GeckoSession.this, state);
+                        if (historyDelegate != null && update.getBundle("historychange") != null) {
+                            historyDelegate.onHistoryStateChange(GeckoSession.this, state);
                         }
                     }
                 }
@@ -1609,7 +1610,7 @@ public class GeckoSession implements Parcelable {
     /**
      * Navigate to an index in browser history; the index of the currently
      * viewed page can be retrieved from an up-to-date HistoryList by
-     * calling {@link HistoryList#getCurrentIndex()}.
+     * calling {@link HistoryDelegate.HistoryList#getCurrentIndex()}.
      *
      * @param index The index of the location in browser history you want
      *              to navigate to.
