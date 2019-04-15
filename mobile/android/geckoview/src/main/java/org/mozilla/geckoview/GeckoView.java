@@ -32,6 +32,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.UiThread;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.util.SparseArray;
 import android.util.TypedValue;
 import android.view.KeyEvent;
@@ -264,6 +265,9 @@ public class GeckoView extends FrameLayout {
      * this before {@link #setSession(GeckoSession)} if there is already an open session
      * set for this instance.
      *
+     * Note: this method does not close the session and the session remains active. The
+     * caller is responsible for calling {@link GeckoSession#close()} when appropriate.
+     *
      * @return The {@link GeckoSession} that was set for this instance. May be null.
      */
     @UiThread
@@ -427,7 +431,8 @@ public class GeckoView extends FrameLayout {
     @Override
     public void onAttachedToWindow() {
         if (mSession == null) {
-            setSession(new GeckoSession(), GeckoRuntime.getDefault(getContext()));
+            Log.w(LOGTAG, "No GeckoSession attached to this GeckoView instance. Call setSession to attach a GeckoSession to this instance.");
+            return;
         }
 
         if (!mSession.isOpen()) {
