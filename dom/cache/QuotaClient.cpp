@@ -144,7 +144,8 @@ class CacheQuotaClient final : public Client {
                               const nsACString& aGroup,
                               const nsACString& aOrigin,
                               const AtomicBool& aCanceled,
-                              UsageInfo* aUsageInfo) override {
+                              UsageInfo* aUsageInfo,
+                              bool aForGetUsage) override {
     AssertIsOnIOThread();
 
     // The QuotaManager passes a nullptr UsageInfo if there is no quota being
