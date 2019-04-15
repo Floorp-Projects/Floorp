@@ -214,14 +214,20 @@ void RetainedDisplayListBuilder::IncrementSubDocPresShellPaintCount(
 }
 
 bool AnyContentAncestorModified(nsIFrame* aFrame, nsIFrame* aStopAtFrame) {
-  for (nsIFrame* f = aFrame; f;
-       f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f)) {
+  nsIFrame* f = aFrame;
+  while (f) {
     if (f->IsFrameModified()) {
       return true;
     }
 
     if (aStopAtFrame && f == aStopAtFrame) {
       break;
+    }
+
+    if (f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
+      f = f->GetParent();
+    } else {
+      f = nsLayoutUtils::GetParentOrPlaceholderForCrossDoc(f);
     }
   }
 
