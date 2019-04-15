@@ -16,7 +16,7 @@ class UsbRuntime {
     this.deviceName = adbRuntime.deviceName;
     this.shortName = adbRuntime.shortName;
     this.socketPath = adbRuntime.socketPath;
-    this.isUnknown = false;
+    this.isUnavailable = false;
     this.isUnplugged = false;
   }
 }
@@ -25,14 +25,14 @@ class UsbRuntime {
  * Used when a device was detected, meaning USB debugging is enabled on the device, but no
  * runtime/browser is available for connection.
  */
-class UnknownUsbRuntime {
+class UnavailableUsbRuntime {
   constructor(adbDevice) {
-    this.id = adbDevice.id + "|unknown";
+    this.id = adbDevice.id + "|unavailable";
     this.deviceId = adbDevice.id;
     this.deviceName = adbDevice.name;
-    this.shortName = "Unknown runtime";
+    this.shortName = "Unavailable runtime";
     this.socketPath = null;
-    this.isUnknown = true;
+    this.isUnavailable = true;
     this.isUnplugged = false;
   }
 }
@@ -48,7 +48,7 @@ class UnpluggedUsbRuntime {
     this.deviceName = deviceName;
     this.shortName = "Unplugged runtime";
     this.socketPath = null;
-    this.isUnknown = true;
+    this.isUnavailable = true;
     this.isUnplugged = true;
   }
 }
@@ -74,20 +74,20 @@ async function getUSBRuntimes() {
 
   // Get devices found by ADB, but without any available runtime.
   const runtimeDevices = runtimes.map(r => r.deviceId);
-  const unknownRuntimes = adb.getDevices()
+  const unavailableRuntimes = adb.getDevices()
     .filter(d => !runtimeDevices.includes(d.id))
-    .map(d => new UnknownUsbRuntime(d));
+    .map(d => new UnavailableUsbRuntime(d));
 
-  // Add all devices to the map of known devices.
-  const allRuntimes = runtimes.concat(unknownRuntimes);
+  // Add all devices to the map detected devices.
+  const allRuntimes = runtimes.concat(unavailableRuntimes);
   for (const runtime of allRuntimes) {
     devices.set(runtime.deviceId, runtime.deviceName);
   }
 
   // Get devices previously found by ADB but no longer available.
   const currentDevices = allRuntimes.map(r => r.deviceId);
-  const knownDevices = [...devices.keys()];
-  const unpluggedDevices = knownDevices.filter(id => !currentDevices.includes(id));
+  const detectedDevices = [...devices.keys()];
+  const unpluggedDevices = detectedDevices.filter(id => !currentDevices.includes(id));
   const unpluggedRuntimes = unpluggedDevices.map(deviceId => {
     const deviceName = devices.get(deviceId);
     return new UnpluggedUsbRuntime(deviceId, deviceName);
