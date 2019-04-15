@@ -6,6 +6,7 @@
 # in the file PATENTS.  All contributing project authors may
 # be found in the AUTHORS file in the root of the source tree.
 
+import("//build/config/linux/pkg_config.gni")
 import("//build/config/ui.gni")
 import("../../webrtc.gni")
 
@@ -151,6 +152,23 @@ if (rtc_include_tests) {
       "../../rtc_base:rtc_base_approved",
       "../../test:test_support",
     ]
+  }
+}
+
+if (is_linux) {
+  if (rtc_use_pipewire) {
+    pkg_config("pipewire") {
+      packages = [ "libpipewire-0.2" ]
+
+      defines = [ "WEBRTC_USE_PIPEWIRE" ]
+    }
+
+    pkg_config("gio") {
+      packages = [
+        "gio-2.0",
+        "gio-unix-2.0",
+      ]
+    }
   }
 }
 

@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/desktop_capture/x11/window_list_utils.h"
+#include "modules/desktop_capture/linux/window_list_utils.h"
 
 #include <string.h>
 #include <X11/Xlib.h>
@@ -17,7 +17,7 @@
 
 #include <algorithm>
 
-#include "modules/desktop_capture/x11/x_error_trap.h"
+#include "modules/desktop_capture/linux/x_error_trap.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/constructormagic.h"
 #include "rtc_base/logging.h"

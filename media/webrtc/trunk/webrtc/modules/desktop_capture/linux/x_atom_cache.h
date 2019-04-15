@@ -8,8 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_DESKTOP_CAPTURE_X11_X_ATOM_CACHE_H_
-#define MODULES_DESKTOP_CAPTURE_X11_X_ATOM_CACHE_H_
+#ifndef MODULES_DESKTOP_CAPTURE_LINUX_X_ATOM_CACHE_H_
+#define MODULES_DESKTOP_CAPTURE_LINUX_X_ATOM_CACHE_H_
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -40,4 +40,4 @@ class XAtomCache final {
 
 }  // namespace webrtc
 
-#endif  // MODULES_DESKTOP_CAPTURE_X11_X_ATOM_CACHE_H_
+#endif  // MODULES_DESKTOP_CAPTURE_LINUX_X_ATOM_CACHE_H_
