@@ -108,7 +108,7 @@ bool WindowCapturerLinux::GetSourceList(SourceList* sources) {
                        });
 }
 
-bool WindowCapturerLinux::SelectSource(SourceId id) {
+bool WindowCapturerX11::SelectSource(SourceId id) {
   if (!x_server_pixel_buffer_.Init(display(), id))
     return false;
 
@@ -129,7 +129,7 @@ bool WindowCapturerLinux::SelectSource(SourceId id) {
   return true;
 }
 
-bool WindowCapturerLinux::FocusOnSelectedSource() {
+bool WindowCapturerX11::FocusOnSelectedSource() {
   if (!selected_window_)
     return false;
 
@@ -251,7 +251,7 @@ bool WindowCapturerLinux::HandleXEvent(const XEvent& event) {
   return false;
 }
 
-bool WindowCapturerLinux::GetWindowTitle(::Window window, std::string* title) {
+bool WindowCapturerX11::GetWindowTitle(::Window window, std::string* title) {
   int status;
   bool result = false;
   XTextProperty window_name;

@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/desktop_capture/x11/x_atom_cache.h"
+#include "modules/desktop_capture/linux/x_atom_cache.h"
 
 #include "rtc_base/checks.h"
 
