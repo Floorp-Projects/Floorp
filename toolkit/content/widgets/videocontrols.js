@@ -267,6 +267,10 @@ this.VideoControlsImplWidget = class {
           this.setShowPictureInPictureMessage(true);
         }
 
+        if (!this.pipToggleEnabled || this.isShowingPictureInPictureMessage) {
+          this.pictureInPictureToggleButton.setAttribute("hidden", true);
+        }
+
         let adjustableControls = [
           ...this.prioritizedControls,
           this.controlBar,
@@ -668,6 +672,9 @@ this.VideoControlsImplWidget = class {
               case this.videocontrols:
                 // Prevent any click event within media controls from dispatching through to video.
                 aEvent.stopPropagation();
+                break;
+              case this.pictureInPictureToggleButton:
+                this.video.togglePictureInPicture();
                 break;
             }
             break;
@@ -1982,6 +1989,8 @@ this.VideoControlsImplWidget = class {
         this.castingButton = this.shadowRoot.getElementById("castingButton");
         this.closedCaptionButton = this.shadowRoot.getElementById("closedCaptionButton");
         this.textTrackList = this.shadowRoot.getElementById("textTrackList");
+        this.pictureInPictureToggleButton =
+          this.shadowRoot.getElementById("pictureInPictureToggleButton");
 
         if (this.positionDurationBox) {
           this.durationSpan = this.positionDurationBox.getElementsByTagName("span")[0];
@@ -2069,6 +2078,8 @@ this.VideoControlsImplWidget = class {
           { el: this.video.textTracks, type: "change" },
 
           { el: this.video, type: "media-videoCasting", touchOnly: true },
+
+          { el: this.pictureInPictureToggleButton, type: "click" },
         ];
 
         for (let { el, type, nonTouchOnly = false, touchOnly = false,
@@ -2259,6 +2270,10 @@ this.VideoControlsImplWidget = class {
               <div id="controlsSpacer" class="controlsSpacer stackItem" role="none"></div>
               <div id="clickToPlay" class="clickToPlay" hidden="true"></div>
             </div>
+
+            <button id="pictureInPictureToggleButton" class="pictureInPictureToggleButton">
+              <div id="pictureInPictureToggleIcon" class="pictureInPictureToggleIcon"></div>
+            </button>
 
             <div id="controlBar" class="controlBar" role="none" hidden="true">
               <button id="playButton"

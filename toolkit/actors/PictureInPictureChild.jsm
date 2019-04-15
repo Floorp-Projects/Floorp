@@ -108,6 +108,7 @@ class PictureInPictureToggleChild extends ActorChild {
       case "canplay": {
         if (this.toggleEnabled &&
             event.target instanceof this.content.HTMLVideoElement &&
+            !event.target.controls &&
             event.target.ownerDocument == this.content.document) {
           this.registerVideo(event.target);
         }
