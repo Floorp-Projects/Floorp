@@ -190,6 +190,35 @@ if (AppConstants.MOZ_BUILD_APP === "browser") {
     Services.telemetry.clearEvents();
   });
 
+  // Bug 1536877
+  add_task(async function test_telemetry_record_event_value_must_be_string() {
+    Services.telemetry.clearEvents();
+    Services.telemetry.setEventRecordingEnabled("telemetry.test", true);
+
+    await run({
+      backgroundScript: async () => {
+        try {
+          await browser.telemetry.recordEvent("telemetry.test", "test1", "object1", "value1");
+          browser.test.notifyPass("record_event_string_value");
+        } catch (ex) {
+          browser.test.fail(`Unexpected exception raised during record_event_value_must_be_string: ${ex}`);
+          browser.test.notifyPass("record_event_string_value");
+          throw ex;
+        }
+      },
+      doneSignal: "record_event_string_value",
+    });
+
+    let events = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
+    equal(events.parent.length, 1);
+    equal(events.parent[0][1], "telemetry.test");
+    equal(events.parent[0][3], "object1");
+    equal(events.parent[0][4], "value1");
+
+    Services.telemetry.setEventRecordingEnabled("telemetry.test", false);
+    Services.telemetry.clearEvents();
+  });
+
   add_task(async function test_telemetry_register_scalars_string() {
     Services.telemetry.clearScalars();
 
