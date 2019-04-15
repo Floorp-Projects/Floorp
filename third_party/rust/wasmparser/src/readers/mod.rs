@@ -24,11 +24,14 @@ use super::SectionHeader;
 pub use self::code_section::CodeSectionReader;
 pub use self::code_section::FunctionBody;
 pub use self::code_section::LocalsReader;
+use self::data_count_section::read_data_count_section_content;
 pub use self::data_section::Data;
+pub use self::data_section::DataKind;
 pub use self::data_section::DataSectionReader;
 pub use self::element_section::Element;
 pub use self::element_section::ElementItems;
 pub use self::element_section::ElementItemsReader;
+pub use self::element_section::ElementKind;
 pub use self::element_section::ElementSectionReader;
 pub use self::export_section::Export;
 pub use self::export_section::ExportSectionReader;
@@ -57,6 +60,10 @@ pub use self::name_section::Name;
 pub use self::name_section::NameSectionReader;
 pub use self::name_section::NamingReader;
 
+pub use self::producers_section::ProducersField;
+pub use self::producers_section::ProducersFieldValue;
+pub use self::producers_section::ProducersSectionReader;
+
 pub use self::linking_section::LinkingSectionReader;
 
 pub use self::reloc_section::Reloc;
@@ -67,6 +74,7 @@ use self::sourcemappingurl_section::read_sourcemappingurl_section_content;
 pub use self::operators::OperatorsReader;
 
 mod code_section;
+mod data_count_section;
 mod data_section;
 mod element_section;
 mod export_section;
@@ -79,6 +87,7 @@ mod memory_section;
 mod module;
 mod name_section;
 mod operators;
+mod producers_section;
 mod reloc_section;
 mod section_reader;
 mod sourcemappingurl_section;

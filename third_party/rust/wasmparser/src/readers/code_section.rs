@@ -64,7 +64,7 @@ impl<'a> FunctionBody<'a> {
         Ok(OperatorsReader::new(&self.data[pos..], self.offset + pos))
     }
 
-    pub(crate) fn get_range(&self) -> Range {
+    pub fn range(&self) -> Range {
         Range {
             start: self.offset,
             end: self.offset + self.data.len(),

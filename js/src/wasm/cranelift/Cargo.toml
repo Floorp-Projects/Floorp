@@ -8,9 +8,16 @@ crate-type = ["rlib"]
 name = "baldrdash"
 
 [dependencies]
-cranelift-codegen = { version = "0.29.0", default-features = false }
-cranelift-wasm = "0.29.0"
-target-lexicon = "0.2.0"
+# The build system redirects the versions of cranelift-codegen and
+# cranelift-wasm to pinned commits. If you want to update Cranelift in Gecko,
+# you should update the following files:
+# - $TOP_LEVEL/Cargo.toml, look for the revision (rev) hashes of both cranelift
+# dependencies (codegen and wasm).
+# - $TOP_LEVEL/.cargo/config.in, look for the revision (rev) field of the
+# Cranelift source.
+cranelift-codegen = { version = "0.30", default-features = false }
+cranelift-wasm = "0.30"
+target-lexicon = "0.4.0"
 log = { version = "0.4.6", default-features = false, features = ["release_max_level_info"] }
 env_logger = "0.5.6"
 

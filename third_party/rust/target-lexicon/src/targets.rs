@@ -1,8 +1,8 @@
 // This file defines all the identifier enums and target-aware logic.
 
-use std::fmt;
-use std::str::FromStr;
-use triple::{Endianness, PointerWidth, Triple};
+use crate::triple::{Endianness, PointerWidth, Triple};
+use core::fmt;
+use core::str::FromStr;
 
 /// The "architecture" field, which in some cases also specifies a specific
 /// subarchitecture.
@@ -12,9 +12,12 @@ pub enum Architecture {
     Unknown,
     Aarch64,
     Arm,
+    Armebv7r,
     Armv4t,
     Armv5te,
+    Armv6,
     Armv7,
+    Armv7r,
     Armv7s,
     Asmjs,
     I386,
@@ -29,15 +32,20 @@ pub enum Architecture {
     Powerpc64,
     Powerpc64le,
     Riscv32,
+    Riscv32imac,
+    Riscv32imc,
     Riscv64,
     S390x,
     Sparc,
     Sparc64,
     Sparcv9,
     Thumbv6m,
+    Thumbv7a,
     Thumbv7em,
     Thumbv7m,
     Thumbv7neon,
+    Thumbv8mBase,
+    Thumbv8mMain,
     Wasm32,
     X86_64,
 }
@@ -50,6 +58,7 @@ pub enum Vendor {
     Unknown,
     Apple,
     Experimental,
+    Fortanix,
     Pc,
     Rumprun,
     Sun,
@@ -69,14 +78,17 @@ pub enum OperatingSystem {
     Freebsd,
     Fuchsia,
     Haiku,
+    Hermit,
     Ios,
     L4re,
     Linux,
     Nebulet,
     Netbsd,
+    None_,
     Openbsd,
     Redox,
     Solaris,
+    Uefi,
     Windows,
 }
 
@@ -102,6 +114,7 @@ pub enum Environment {
     Musleabihf,
     Msvc,
     Uclibc,
+    Sgx,
 }
 
 /// The "binary format" field, which is usually omitted, and the binary format
@@ -125,7 +138,9 @@ impl Architecture {
             | Architecture::Arm
             | Architecture::Armv4t
             | Architecture::Armv5te
+            | Architecture::Armv6
             | Architecture::Armv7
+            | Architecture::Armv7r
             | Architecture::Armv7s
             | Architecture::Asmjs
             | Architecture::I386
@@ -136,14 +151,20 @@ impl Architecture {
             | Architecture::Msp430
             | Architecture::Powerpc64le
             | Architecture::Riscv32
+            | Architecture::Riscv32imac
+            | Architecture::Riscv32imc
             | Architecture::Riscv64
             | Architecture::Thumbv6m
+            | Architecture::Thumbv7a
             | Architecture::Thumbv7em
             | Architecture::Thumbv7m
             | Architecture::Thumbv7neon
+            | Architecture::Thumbv8mBase
+            | Architecture::Thumbv8mMain
             | Architecture::Wasm32
             | Architecture::X86_64 => Ok(Endianness::Little),
-            Architecture::Mips
+            Architecture::Armebv7r
+            | Architecture::Mips
             | Architecture::Mips64
             | Architecture::Powerpc
             | Architecture::Powerpc64
@@ -160,9 +181,12 @@ impl Architecture {
             Architecture::Unknown => Err(()),
             Architecture::Msp430 => Ok(PointerWidth::U16),
             Architecture::Arm
+            | Architecture::Armebv7r
             | Architecture::Armv4t
             | Architecture::Armv5te
+            | Architecture::Armv6
             | Architecture::Armv7
+            | Architecture::Armv7r
             | Architecture::Armv7s
             | Architecture::Asmjs
             | Architecture::I386
@@ -170,11 +194,16 @@ impl Architecture {
             | Architecture::I686
             | Architecture::Mipsel
             | Architecture::Riscv32
+            | Architecture::Riscv32imac
+            | Architecture::Riscv32imc
             | Architecture::Sparc
             | Architecture::Thumbv6m
+            | Architecture::Thumbv7a
             | Architecture::Thumbv7em
             | Architecture::Thumbv7m
             | Architecture::Thumbv7neon
+            | Architecture::Thumbv8mBase
+            | Architecture::Thumbv8mMain
             | Architecture::Wasm32
             | Architecture::Mips
             | Architecture::Powerpc => Ok(PointerWidth::U32),
@@ -196,6 +225,7 @@ impl Architecture {
 /// `binary_format` field.
 pub fn default_binary_format(triple: &Triple) -> BinaryFormat {
     match triple.operating_system {
+        OperatingSystem::None_ => BinaryFormat::Unknown,
         OperatingSystem::Darwin | OperatingSystem::Ios => BinaryFormat::Macho,
         OperatingSystem::Windows => BinaryFormat::Coff,
         OperatingSystem::Nebulet | OperatingSystem::Emscripten | OperatingSystem::Unknown => {
@@ -214,9 +244,12 @@ impl fmt::Display for Architecture {
             Architecture::Unknown => "unknown",
             Architecture::Aarch64 => "aarch64",
             Architecture::Arm => "arm",
+            Architecture::Armebv7r => "armebv7r",
             Architecture::Armv4t => "armv4t",
             Architecture::Armv5te => "armv5te",
+            Architecture::Armv6 => "armv6",
             Architecture::Armv7 => "armv7",
+            Architecture::Armv7r => "armv7r",
             Architecture::Armv7s => "armv7s",
             Architecture::Asmjs => "asmjs",
             Architecture::I386 => "i386",
@@ -231,15 +264,20 @@ impl fmt::Display for Architecture {
             Architecture::Powerpc64 => "powerpc64",
             Architecture::Powerpc64le => "powerpc64le",
             Architecture::Riscv32 => "riscv32",
+            Architecture::Riscv32imac => "riscv32imac",
+            Architecture::Riscv32imc => "riscv32imc",
             Architecture::Riscv64 => "riscv64",
             Architecture::S390x => "s390x",
             Architecture::Sparc => "sparc",
             Architecture::Sparc64 => "sparc64",
             Architecture::Sparcv9 => "sparcv9",
             Architecture::Thumbv6m => "thumbv6m",
+            Architecture::Thumbv7a => "thumbv7a",
             Architecture::Thumbv7em => "thumbv7em",
             Architecture::Thumbv7m => "thumbv7m",
             Architecture::Thumbv7neon => "thumbv7neon",
+            Architecture::Thumbv8mBase => "thumbv8m.base",
+            Architecture::Thumbv8mMain => "thumbv8m.main",
             Architecture::Wasm32 => "wasm32",
             Architecture::X86_64 => "x86_64",
         };
@@ -255,9 +293,12 @@ impl FromStr for Architecture {
             "unknown" => Architecture::Unknown,
             "aarch64" => Architecture::Aarch64,
             "arm" => Architecture::Arm,
+            "armebv7r" => Architecture::Armebv7r,
             "armv4t" => Architecture::Armv4t,
             "armv5te" => Architecture::Armv5te,
+            "armv6" => Architecture::Armv6,
             "armv7" => Architecture::Armv7,
+            "armv7r" => Architecture::Armv7r,
             "armv7s" => Architecture::Armv7s,
             "asmjs" => Architecture::Asmjs,
             "i386" => Architecture::I386,
@@ -272,15 +313,20 @@ impl FromStr for Architecture {
             "powerpc64" => Architecture::Powerpc64,
             "powerpc64le" => Architecture::Powerpc64le,
             "riscv32" => Architecture::Riscv32,
+            "riscv32imac" => Architecture::Riscv32imac,
+            "riscv32imc" => Architecture::Riscv32imc,
             "riscv64" => Architecture::Riscv64,
             "s390x" => Architecture::S390x,
             "sparc" => Architecture::Sparc,
             "sparc64" => Architecture::Sparc64,
             "sparcv9" => Architecture::Sparcv9,
             "thumbv6m" => Architecture::Thumbv6m,
+            "thumbv7a" => Architecture::Thumbv7a,
             "thumbv7em" => Architecture::Thumbv7em,
             "thumbv7m" => Architecture::Thumbv7m,
             "thumbv7neon" => Architecture::Thumbv7neon,
+            "thumbv8m.base" => Architecture::Thumbv8mBase,
+            "thumbv8m.main" => Architecture::Thumbv8mMain,
             "wasm32" => Architecture::Wasm32,
             "x86_64" => Architecture::X86_64,
             _ => return Err(()),
@@ -294,6 +340,7 @@ impl fmt::Display for Vendor {
             Vendor::Unknown => "unknown",
             Vendor::Apple => "apple",
             Vendor::Experimental => "experimental",
+            Vendor::Fortanix => "fortanix",
             Vendor::Pc => "pc",
             Vendor::Rumprun => "rumprun",
             Vendor::Sun => "sun",
@@ -310,6 +357,7 @@ impl FromStr for Vendor {
             "unknown" => Vendor::Unknown,
             "apple" => Vendor::Apple,
             "experimental" => Vendor::Experimental,
+            "fortanix" => Vendor::Fortanix,
             "pc" => Vendor::Pc,
             "rumprun" => Vendor::Rumprun,
             "sun" => Vendor::Sun,
@@ -330,14 +378,17 @@ impl fmt::Display for OperatingSystem {
             OperatingSystem::Freebsd => "freebsd",
             OperatingSystem::Fuchsia => "fuchsia",
             OperatingSystem::Haiku => "haiku",
+            OperatingSystem::Hermit => "hermit",
             OperatingSystem::Ios => "ios",
             OperatingSystem::L4re => "l4re",
             OperatingSystem::Linux => "linux",
             OperatingSystem::Nebulet => "nebulet",
             OperatingSystem::Netbsd => "netbsd",
+            OperatingSystem::None_ => "none",
             OperatingSystem::Openbsd => "openbsd",
             OperatingSystem::Redox => "redox",
             OperatingSystem::Solaris => "solaris",
+            OperatingSystem::Uefi => "uefi",
             OperatingSystem::Windows => "windows",
         };
         f.write_str(s)
@@ -358,14 +409,17 @@ impl FromStr for OperatingSystem {
             "freebsd" => OperatingSystem::Freebsd,
             "fuchsia" => OperatingSystem::Fuchsia,
             "haiku" => OperatingSystem::Haiku,
+            "hermit" => OperatingSystem::Hermit,
             "ios" => OperatingSystem::Ios,
             "l4re" => OperatingSystem::L4re,
             "linux" => OperatingSystem::Linux,
             "nebulet" => OperatingSystem::Nebulet,
             "netbsd" => OperatingSystem::Netbsd,
+            "none" => OperatingSystem::None_,
             "openbsd" => OperatingSystem::Openbsd,
             "redox" => OperatingSystem::Redox,
             "solaris" => OperatingSystem::Solaris,
+            "uefi" => OperatingSystem::Uefi,
             "windows" => OperatingSystem::Windows,
             _ => return Err(()),
         })
@@ -391,6 +445,7 @@ impl fmt::Display for Environment {
             Environment::Musleabihf => "musleabihf",
             Environment::Msvc => "msvc",
             Environment::Uclibc => "uclibc",
+            Environment::Sgx => "sgx",
         };
         f.write_str(s)
     }
@@ -417,6 +472,7 @@ impl FromStr for Environment {
             "musleabihf" => Environment::Musleabihf,
             "msvc" => Environment::Msvc,
             "uclibc" => Environment::Uclibc,
+            "sgx" => Environment::Sgx,
             _ => return Err(()),
         })
     }
@@ -461,72 +517,19 @@ mod tests {
         // "rustup target list" and "rustc --print target-list".
         let targets = [
             "aarch64-apple-ios",
+            "aarch64-fuchsia",
             "aarch64-linux-android",
-            "aarch64-unknown-fuchsia",
-            "aarch64-unknown-linux-gnu",
-            "aarch64-unknown-linux-musl",
-            "arm-linux-androideabi",
-            "arm-unknown-linux-gnueabi",
-            "arm-unknown-linux-gnueabihf",
-            "arm-unknown-linux-musleabi",
-            "arm-unknown-linux-musleabihf",
-            "armv5te-unknown-linux-gnueabi",
-            "armv7-apple-ios",
-            "armv7-linux-androideabi",
-            "armv7-unknown-linux-gnueabihf",
-            "armv7-unknown-linux-musleabihf",
-            "armv7s-apple-ios",
-            "asmjs-unknown-emscripten",
-            "i386-apple-ios",
-            "i586-pc-windows-msvc",
-            "i586-unknown-linux-gnu",
-            "i586-unknown-linux-musl",
-            "i686-apple-darwin",
-            "i686-linux-android",
-            "i686-pc-windows-gnu",
-            "i686-pc-windows-msvc",
-            "i686-unknown-freebsd",
-            "i686-unknown-linux-gnu",
-            "i686-unknown-linux-musl",
-            "mips-unknown-linux-gnu",
-            "mips-unknown-linux-musl",
-            "mips64-unknown-linux-gnuabi64",
-            "mips64el-unknown-linux-gnuabi64",
-            "mipsel-unknown-linux-gnu",
-            "mipsel-unknown-linux-musl",
-            "powerpc-unknown-linux-gnu",
-            "powerpc64-unknown-linux-gnu",
-            "powerpc64le-unknown-linux-gnu",
-            "s390x-unknown-linux-gnu",
-            "sparc64-unknown-linux-gnu",
-            "sparcv9-sun-solaris",
-            "thumbv6m-none-eabi",
-            "thumbv7em-none-eabi",
-            "thumbv7em-none-eabihf",
-            "thumbv7m-none-eabi",
-            "wasm32-unknown-emscripten",
-            "wasm32-unknown-unknown",
-            "x86_64-apple-darwin",
-            "x86_64-apple-ios",
-            "x86_64-linux-android",
-            "x86_64-pc-windows-gnu",
-            "x86_64-pc-windows-msvc",
-            "x86_64-rumprun-netbsd",
-            "x86_64-sun-solaris",
-            "x86_64-unknown-cloudabi",
-            "x86_64-unknown-freebsd",
-            "x86_64-unknown-fuchsia",
-            "x86_64-unknown-linux-gnu",
-            "x86_64-unknown-linux-gnux32",
-            "x86_64-unknown-linux-musl",
-            "x86_64-unknown-netbsd",
-            "x86_64-unknown-redox",
-            "aarch64-linux-android",
+            "aarch64-pc-windows-msvc",
             "aarch64-unknown-cloudabi",
             "aarch64-unknown-freebsd",
-            "aarch64-unknown-fuchsia",
+            "aarch64-unknown-hermit",
             "aarch64-unknown-linux-gnu",
             "aarch64-unknown-linux-musl",
+            "aarch64-unknown-netbsd",
+            "aarch64-unknown-none",
+            "aarch64-unknown-openbsd",
+            "armebv7r-none-eabi",
+            "armebv7r-none-eabihf",
             "arm-linux-androideabi",
             "arm-unknown-linux-gnueabi",
             "arm-unknown-linux-gnueabihf",
@@ -534,11 +537,19 @@ mod tests {
             "arm-unknown-linux-musleabihf",
             "armv4t-unknown-linux-gnueabi",
             "armv5te-unknown-linux-gnueabi",
+            "armv5te-unknown-linux-musleabi",
+            "armv6-unknown-netbsd-eabihf",
+            "armv7-apple-ios",
             "armv7-linux-androideabi",
+            "armv7r-none-eabi",
+            "armv7r-none-eabihf",
+            "armv7s-apple-ios",
             "armv7-unknown-cloudabi-eabihf",
             "armv7-unknown-linux-gnueabihf",
             "armv7-unknown-linux-musleabihf",
+            "armv7-unknown-netbsd-eabihf",
             "asmjs-unknown-emscripten",
+            "i386-apple-ios",
             "i586-pc-windows-msvc",
             "i586-unknown-linux-gnu",
             "i586-unknown-linux-musl",
@@ -554,33 +565,47 @@ mod tests {
             "i686-unknown-linux-musl",
             "i686-unknown-netbsd",
             "i686-unknown-openbsd",
-            "mips-unknown-linux-gnu",
-            "mips-unknown-linux-musl",
-            "mips-unknown-linux-uclibc",
-            "mips64-unknown-linux-gnuabi64",
             "mips64el-unknown-linux-gnuabi64",
+            "mips64-unknown-linux-gnuabi64",
             "mipsel-unknown-linux-gnu",
             "mipsel-unknown-linux-musl",
             "mipsel-unknown-linux-uclibc",
+            "mips-unknown-linux-gnu",
+            "mips-unknown-linux-musl",
+            "mips-unknown-linux-uclibc",
             "msp430-none-elf",
+            "powerpc64le-unknown-linux-gnu",
+            "powerpc64le-unknown-linux-musl",
+            "powerpc64-unknown-linux-gnu",
+            "powerpc64-unknown-linux-musl",
             "powerpc-unknown-linux-gnu",
             "powerpc-unknown-linux-gnuspe",
+            "powerpc-unknown-linux-musl",
             "powerpc-unknown-netbsd",
-            "powerpc64-unknown-linux-gnu",
-            "powerpc64le-unknown-linux-gnu",
+            "riscv32imac-unknown-none-elf",
+            "riscv32imc-unknown-none-elf",
             "s390x-unknown-linux-gnu",
-            "sparc-unknown-linux-gnu",
             "sparc64-unknown-linux-gnu",
             "sparc64-unknown-netbsd",
+            "sparc-unknown-linux-gnu",
             "sparcv9-sun-solaris",
             "thumbv6m-none-eabi",
+            "thumbv7a-pc-windows-msvc",
             "thumbv7em-none-eabi",
             "thumbv7em-none-eabihf",
             "thumbv7m-none-eabi",
+            "thumbv7neon-linux-androideabi",
+            "thumbv7neon-unknown-linux-gnueabihf",
+            "thumbv8m.base-none-eabi",
+            "thumbv8m.main-none-eabi",
+            "thumbv8m.main-none-eabihf",
             "wasm32-experimental-emscripten",
             "wasm32-unknown-emscripten",
             "wasm32-unknown-unknown",
             "x86_64-apple-darwin",
+            "x86_64-apple-ios",
+            "x86_64-fortanix-unknown-sgx",
+            "x86_64-fuchsia",
             "x86_64-linux-android",
             "x86_64-pc-windows-gnu",
             "x86_64-pc-windows-msvc",
@@ -590,8 +615,8 @@ mod tests {
             "x86_64-unknown-cloudabi",
             "x86_64-unknown-dragonfly",
             "x86_64-unknown-freebsd",
-            "x86_64-unknown-fuchsia",
             "x86_64-unknown-haiku",
+            "x86_64-unknown-hermit",
             "x86_64-unknown-l4re-uclibc",
             "x86_64-unknown-linux-gnu",
             "x86_64-unknown-linux-gnux32",
@@ -599,6 +624,7 @@ mod tests {
             "x86_64-unknown-netbsd",
             "x86_64-unknown-openbsd",
             "x86_64-unknown-redox",
+            "x86_64-unknown-uefi",
         ];
 
         for target in targets.iter() {

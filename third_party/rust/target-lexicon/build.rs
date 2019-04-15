@@ -36,7 +36,7 @@ mod parse_error {
     }
 }
 
-use triple::{Endianness, PointerWidth, Triple};
+use self::triple::{Endianness, PointerWidth, Triple};
 
 /// Assuming `target` is a path to a custom target json config file, open it
 /// and build a `Triple` using its contents.
