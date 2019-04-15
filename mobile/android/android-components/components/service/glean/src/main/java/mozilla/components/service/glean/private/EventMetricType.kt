@@ -49,6 +49,7 @@ data class EventMetricType<ExtraKeysEnum : Enum<ExtraKeysEnum>>(
      *              identifiers. This is used for events where additional richer context is needed.
      *              The maximum length for values is defined by [MAX_LENGTH_EXTRA_KEY_VALUE]
      */
+    @Suppress("NestedBlockDepth")
     fun record(extra: Map<ExtraKeysEnum, String>? = null) {
         if (!shouldRecord(logger)) {
             return
