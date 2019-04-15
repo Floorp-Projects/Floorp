@@ -1359,8 +1359,12 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   Node propertyName(YieldHandling yieldHandling,
                     PropertyNameContext propertyNameContext,
                     const mozilla::Maybe<DeclarationKind>& maybeDecl,
-                    ListNodeType propList, PropertyType* propType,
-                    MutableHandleAtom propAtom);
+                    ListNodeType propList, MutableHandleAtom propAtom);
+  Node propertyOrMethodName(YieldHandling yieldHandling,
+                            PropertyNameContext propertyNameContext,
+                            const mozilla::Maybe<DeclarationKind>& maybeDecl,
+                            ListNodeType propList, PropertyType* propType,
+                            MutableHandleAtom propAtom);
   UnaryNodeType computedPropertyName(
       YieldHandling yieldHandling,
       const mozilla::Maybe<DeclarationKind>& maybeDecl,
