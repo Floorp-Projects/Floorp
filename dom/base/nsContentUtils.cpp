@@ -9575,11 +9575,12 @@ nsresult nsContentUtils::NewXULOrHTMLElement(
     if (aFromParser == dom::NOT_FROM_PARSER) {
       global = GetEntryGlobal();
 
-      // XUL documents always use NOT_FROM_PARSER for non-XUL elements. We can
-      // get the global from the document in that case.
+      // Documents created from the PrototypeDocumentSink always use
+      // NOT_FROM_PARSER for non-XUL elements. We can get the global from the
+      // document in that case.
       if (!global) {
         Document* doc = nodeInfo->GetDocument();
-        if (doc && doc->IsXULDocument()) {
+        if (doc && doc->HasPrototypeDocument()) {
           global = doc->GetScopeObject();
         }
       }
