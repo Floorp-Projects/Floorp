@@ -237,50 +237,6 @@ add_task(async function tabsSendMessageNoExceptionOnNonExistentTab() {
   await extension.unload();
 });
 
-
-add_task(async function tabsSendAndReceiveMessageTabId0() {
-  let extension = ExtensionTestUtils.loadExtension({
-    manifest: {
-      "permissions": ["tabs", "<all_urls>"],
-    },
-
-    async background() {
-      function contentScriptCode() {
-        browser.runtime.onMessage.addListener(msg => {
-          browser.test.assertEq(msg, "message to tabId 0",
-                                "Got the expected message from the background page");
-
-          return Promise.resolve("reply to background page");
-        });
-        browser.runtime.sendMessage("message from tabId 0");
-      }
-
-      await browser.runtime.onMessage.addListener(async (msg, sender) => {
-        browser.test.assertEq("message from tabId 0", msg,
-                              "Got the expected message from a content script");
-        browser.test.assertTrue(sender.tab,
-                                "Got a sender.tab object as expected");
-        browser.test.assertEq(0, sender.tab.id,
-                              "Got a sender.tab object with tab.id == 0");
-
-        const reply = await browser.tabs.sendMessage(0, "message to tabId 0");
-
-        browser.test.assertEq("reply to background page", reply);
-
-        browser.test.notifyPass("tabs.messaging.tab0");
-      });
-
-      await browser.tabs.executeScript(0, {code: `new ${contentScriptCode}`});
-    },
-  });
-
-  await extension.startup();
-
-  await extension.awaitFinish("tabs.messaging.tab0");
-
-  await extension.unload();
-});
-
 </script>
 
 </body>
