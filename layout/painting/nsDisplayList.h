@@ -2190,6 +2190,7 @@ class nsDisplayItem : public nsDisplayItemLink {
     if (mFrame && aFrame == mFrame) {
       MOZ_ASSERT(!mFrame->HasDisplayItem(this));
       mFrame = nullptr;
+      SetDeletedFrame();
       SetDisplayItemData(nullptr, nullptr);
     }
   }
@@ -2301,7 +2302,7 @@ class nsDisplayItem : public nsDisplayItemLink {
    */
   virtual nsIFrame* FrameForInvalidation() const { return mFrame; }
 
-  virtual bool HasDeletedFrame() const { return !mFrame; }
+  bool HasDeletedFrame() const;
 
   virtual nsIFrame* StyleFrame() const { return mFrame; }
 
@@ -2989,11 +2990,14 @@ class nsDisplayItem : public nsDisplayItemLink {
 #endif
 
  protected:
+  void SetDeletedFrame();
+
   typedef bool (*PrefFunc)(void);
   bool ShouldUseAdvancedLayer(LayerManager* aManager, PrefFunc aFunc) const;
   bool CanUseAdvancedLayer(LayerManager* aManager) const;
 
   enum class ItemFlag {
+    DeletedFrame,
     ForceNotVisible,
     DisableSubpixelAA,
     CantBeReused,
@@ -4543,13 +4547,10 @@ class nsDisplayTableBackgroundImage : public nsDisplayBackgroundImage {
 
   nsIFrame* FrameForInvalidation() const override { return mStyleFrame; }
 
-  bool HasDeletedFrame() const override {
-    return !mStyleFrame || nsDisplayBackgroundImage::HasDeletedFrame();
-  }
-
   void RemoveFrame(nsIFrame* aFrame) override {
     if (aFrame == mStyleFrame) {
       mStyleFrame = nullptr;
+      SetDeletedFrame();
     }
     nsDisplayBackgroundImage::RemoveFrame(aFrame);
   }
@@ -4674,13 +4675,10 @@ class nsDisplayTableThemedBackground : public nsDisplayThemedBackground {
 
   nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
-  bool HasDeletedFrame() const override {
-    return !mAncestorFrame || nsDisplayThemedBackground::HasDeletedFrame();
-  }
-
   void RemoveFrame(nsIFrame* aFrame) override {
     if (aFrame == mAncestorFrame) {
       mAncestorFrame = nullptr;
+      SetDeletedFrame();
     }
     nsDisplayThemedBackground::RemoveFrame(aFrame);
   }
@@ -4854,13 +4852,10 @@ class nsDisplayTableBackgroundColor : public nsDisplayBackgroundColor {
 
   nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
-  bool HasDeletedFrame() const override {
-    return !mAncestorFrame || nsDisplayBackgroundColor::HasDeletedFrame();
-  }
-
   void RemoveFrame(nsIFrame* aFrame) override {
     if (aFrame == mAncestorFrame) {
       mAncestorFrame = nullptr;
+      SetDeletedFrame();
     }
     nsDisplayBackgroundColor::RemoveFrame(aFrame);
   }
@@ -5676,13 +5671,10 @@ class nsDisplayTableBlendMode : public nsDisplayBlendMode {
 
   nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
-  bool HasDeletedFrame() const override {
-    return !mAncestorFrame || nsDisplayBlendMode::HasDeletedFrame();
-  }
-
   void RemoveFrame(nsIFrame* aFrame) override {
     if (aFrame == mAncestorFrame) {
       mAncestorFrame = nullptr;
+      SetDeletedFrame();
     }
     nsDisplayBlendMode::RemoveFrame(aFrame);
   }
@@ -5783,13 +5775,10 @@ class nsDisplayTableBlendContainer : public nsDisplayBlendContainer {
 
   nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
-  bool HasDeletedFrame() const override {
-    return !mAncestorFrame || nsDisplayBlendContainer::HasDeletedFrame();
-  }
-
   void RemoveFrame(nsIFrame* aFrame) override {
     if (aFrame == mAncestorFrame) {
       mAncestorFrame = nullptr;
+      SetDeletedFrame();
     }
     nsDisplayBlendContainer::RemoveFrame(aFrame);
   }
@@ -6016,7 +6005,6 @@ class nsDisplaySubDocument : public nsDisplayOwnLayer {
       const ContainerLayerParameters& aContainerParameters);
 
   nsIFrame* FrameForInvalidation() const override;
-  bool HasDeletedFrame() const override;
   void RemoveFrame(nsIFrame* aFrame) override;
 
   void Disown();
@@ -6198,13 +6186,10 @@ class nsDisplayTableFixedPosition : public nsDisplayFixedPosition {
 
   nsIFrame* FrameForInvalidation() const override { return mAncestorFrame; }
 
-  bool HasDeletedFrame() const override {
-    return !mAncestorFrame || nsDisplayFixedPosition::HasDeletedFrame();
-  }
-
   void RemoveFrame(nsIFrame* aFrame) override {
     if (aFrame == mAncestorFrame) {
       mAncestorFrame = nullptr;
+      SetDeletedFrame();
     }
     nsDisplayFixedPosition::RemoveFrame(aFrame);
   }

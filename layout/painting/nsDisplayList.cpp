@@ -101,6 +101,7 @@
 #include "mozilla/layers/WebRenderLayerManager.h"
 #include "mozilla/layers/WebRenderMessages.h"
 #include "mozilla/layers/WebRenderScrollData.h"
+#include "mozilla/layout/RenderFrame.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -3220,6 +3221,12 @@ bool nsDisplayItem::ForceActiveLayers() {
   return sForce;
 }
 
+bool nsDisplayItem::HasDeletedFrame() const {
+  return mItemFlags.contains(ItemFlag::DeletedFrame) ||
+         (GetType() == DisplayItemType::TYPE_REMOTE &&
+          !static_cast<const nsDisplayRemote*>(this)->GetFrameLoader());
+}
+
 int32_t nsDisplayItem::ZIndex() const { return mFrame->ZIndex(); }
 
 bool nsDisplayItem::ComputeVisibility(nsDisplayListBuilder* aBuilder,
@@ -3294,6 +3301,8 @@ void nsDisplayItem::FuseClipChainUpTo(nsDisplayListBuilder* aBuilder,
     mClip = nullptr;
   }
 }
+
+void nsDisplayItem::SetDeletedFrame() { mItemFlags += ItemFlag::DeletedFrame; }
 
 bool nsDisplayItem::ShouldUseAdvancedLayer(LayerManager* aManager,
                                            PrefFunc aFunc) const {
@@ -6692,13 +6701,10 @@ nsIFrame* nsDisplaySubDocument::FrameForInvalidation() const {
   return mSubDocFrame ? mSubDocFrame : mFrame;
 }
 
-bool nsDisplaySubDocument::HasDeletedFrame() const {
-  return !mSubDocFrame || nsDisplayItem::HasDeletedFrame();
-}
-
 void nsDisplaySubDocument::RemoveFrame(nsIFrame* aFrame) {
   if (aFrame == mSubDocFrame) {
     mSubDocFrame = nullptr;
+    SetDeletedFrame();
   }
   nsDisplayItem::RemoveFrame(aFrame);
 }
