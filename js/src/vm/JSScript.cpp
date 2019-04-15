@@ -1652,33 +1652,67 @@ void ScriptSourceObject::setPrivate(JSRuntime* rt, const Value& value) {
   rt->addRefScriptPrivate(value);
 }
 
+class ScriptSource::LoadSourceMatcher {
+  JSContext* const cx_;
+  ScriptSource* const ss_;
+  bool* const loaded_;
+
+ public:
+  explicit LoadSourceMatcher(JSContext* cx, ScriptSource* ss, bool* loaded)
+      : cx_(cx), ss_(ss), loaded_(loaded) {}
+
+  template <typename Unit>
+  bool operator()(const Compressed<Unit>&) const {
+    return sourceAlreadyLoaded();
+  }
+
+  template <typename Unit>
+  bool operator()(const Uncompressed<Unit>&) const {
+    return sourceAlreadyLoaded();
+  }
+
+  bool operator()(const Missing&) const { return tryLoadingSource(); }
+
+  bool operator()(const BinAST&) const { return tryLoadingSource(); }
+
+ private:
+  bool sourceAlreadyLoaded() const {
+    *loaded_ = true;
+    return true;
+  }
+
+  bool tryLoadingSource() const {
+    // Establish the default outcome first.
+    *loaded_ = false;
+
+    if (!cx_->runtime()->sourceHook.ref() || !ss_->sourceRetrievable()) {
+      return true;
+    }
+
+    char16_t* src = nullptr;
+    size_t length;
+    if (!cx_->runtime()->sourceHook->load(cx_, ss_->filename(), &src,
+                                          &length)) {
+      return false;
+    }
+    if (!src) {
+      return true;
+    }
+
+    // XXX On-demand source is currently only UTF-16.  Perhaps it should be
+    //     changed to UTF-8, or UTF-8 be allowed in addition to UTF-16?
+    if (!ss_->setSource(cx_, EntryUnits<char16_t>(src), length)) {
+      return false;
+    }
+
+    *loaded_ = true;
+    return true;
+  }
+};
+
 /* static */
 bool ScriptSource::loadSource(JSContext* cx, ScriptSource* ss, bool* loaded) {
-  *loaded = ss->hasSourceText();
-  if (*loaded) {
-    return true;
-  }
-
-  if (!cx->runtime()->sourceHook.ref() || !ss->sourceRetrievable()) {
-    return true;
-  }
-  char16_t* src = nullptr;
-  size_t length;
-  if (!cx->runtime()->sourceHook->load(cx, ss->filename(), &src, &length)) {
-    return false;
-  }
-  if (!src) {
-    return true;
-  }
-
-  // XXX On-demand source is currently only UTF-16.  Perhaps it should be
-  //     changed to UTF-8, or UTF-8 be allowed in addition to UTF-16?
-  if (!ss->setSource(cx, EntryUnits<char16_t>(src), length)) {
-    return false;
-  }
-
-  *loaded = true;
-  return true;
+  return ss->data.match(LoadSourceMatcher(cx, ss, loaded));
 }
 
 /* static */
