@@ -248,7 +248,7 @@ DownloadsPlacesView.prototype = {
       let winUtils = window.windowUtils;
       let nodes = winUtils.nodesFromRect(rlbRect.left, rlbRect.top,
                                          0, rlbRect.width, rlbRect.height, 0,
-                                         true, false);
+                                         true, false, false);
       // nodesFromRect returns nodes in z-index order, and for the same z-index
       // sorts them in inverted DOM order, thus starting from the one that would
       // be on top.
