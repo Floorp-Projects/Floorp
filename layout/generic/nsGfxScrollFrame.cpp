@@ -6776,11 +6776,12 @@ static nsMargin ResolveScrollPaddingStyle(
 }
 
 nsMargin ScrollFrameHelper::GetScrollPadding() const {
-  nsIFrame* styleFrame;
+  nsIFrame* styleFrame = nullptr;
   if (mIsRoot) {
-    const Element* scrollElement =
-        mOuter->PresContext()->GetViewportScrollStylesOverrideElement();
-    styleFrame = scrollElement ? scrollElement->GetPrimaryFrame() : mOuter;
+    if (const Element* rootElement =
+            mOuter->PresContext()->Document()->GetRootElement()) {
+      styleFrame = rootElement->GetPrimaryFrame();
+    }
   } else {
     styleFrame = mOuter;
   }
