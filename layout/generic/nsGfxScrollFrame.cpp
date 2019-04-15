@@ -6785,7 +6785,10 @@ nsMargin ScrollFrameHelper::GetScrollPadding() const {
   } else {
     styleFrame = mOuter;
   }
-  MOZ_ASSERT(styleFrame);
+
+  if (!styleFrame) {
+    return nsMargin();
+  }
 
   // The spec says percentage values are relative to the scroll port size.
   // https://drafts.csswg.org/css-scroll-snap-1/#scroll-padding
