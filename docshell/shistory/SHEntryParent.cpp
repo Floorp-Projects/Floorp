@@ -516,6 +516,15 @@ bool SHEntryParent::RecvGetChildAt(const int32_t& aIndex,
   return true;
 }
 
+bool SHEntryParent::RecvGetChildSHEntryIfHasNoDynamicallyAddedChild(
+    const int32_t& aChildOffset, MaybeNewPSHEntry* aChild) {
+  nsCOMPtr<nsISHEntry> child;
+  mEntry->GetChildSHEntryIfHasNoDynamicallyAddedChild(aChildOffset,
+                                                      getter_AddRefs(child));
+  GetOrCreate(child, aChild);
+  return true;
+}
+
 bool SHEntryParent::RecvReplaceChild(PSHEntryParent* aNewChild,
                                      nsresult* aResult) {
   *aResult =

@@ -835,15 +835,14 @@ void nsDocShell::MaybeHandleSubframeHistory(nsDocShellLoadState* aLoadState) {
   bool dynamicallyAddedChild = mDynamicallyCreated;
 
   if (!dynamicallyAddedChild && !oshe && currentSH) {
-    currentSH->HasDynamicallyAddedChild(&dynamicallyAddedChild);
-  }
-
-  if (!dynamicallyAddedChild) {
     // Only use the old SHEntry, if we're sure enough that
     // it wasn't originally for some other frame.
     nsCOMPtr<nsISHEntry> shEntry;
-    parentDS->GetChildSHEntry(mChildOffset, getter_AddRefs(shEntry));
-    aLoadState->SetSHEntry(shEntry);
+    currentSH->GetChildSHEntryIfHasNoDynamicallyAddedChild(
+        mChildOffset, getter_AddRefs(shEntry));
+    if (shEntry) {
+      aLoadState->SetSHEntry(shEntry);
+    }
   }
 
   // Make some decisions on the child frame's loadType based on the
@@ -3274,52 +3273,6 @@ nsDocShell::FindChildWithName(const nsAString& aName, bool aRecurse,
     }
   }
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::GetChildSHEntry(int32_t aChildOffset, nsISHEntry** aResult) {
-  nsresult rv = NS_OK;
-
-  NS_ENSURE_ARG_POINTER(aResult);
-  *aResult = nullptr;
-
-  // A nsISHEntry for a child is *only* available when the parent is in
-  // the progress of loading a document too...
-
-  if (mLSHE) {
-    /* Before looking for the subframe's url, check
-     * the expiration status of the parent. If the parent
-     * has expired from cache, then subframes will not be
-     * loaded from history in certain situations.
-     */
-    bool parentExpired = mLSHE->GetExpirationStatus();
-
-    /* Get the parent's Load Type so that it can be set on the child too.
-     * By default give a loadHistory value
-     */
-    uint32_t loadType = mLSHE->GetLoadType();
-    // If the user did a shift-reload on this frameset page,
-    // we don't want to load the subframes from history.
-    if (IsForceReloadType(loadType) || loadType == LOAD_REFRESH) {
-      return rv;
-    }
-
-    /* If the user pressed reload and the parent frame has expired
-     *  from cache, we do not want to load the child frame from history.
-     */
-    if (parentExpired && (loadType == LOAD_RELOAD_NORMAL)) {
-      // The parent has expired. Return null.
-      *aResult = nullptr;
-      return rv;
-    }
-
-    // Get the child subframe from session history.
-    rv = mLSHE->GetChildAt(aChildOffset, aResult);
-    if (*aResult) {
-      (*aResult)->SetLoadType(loadType);
-    }
-  }
-  return rv;
 }
 
 NS_IMETHODIMP
