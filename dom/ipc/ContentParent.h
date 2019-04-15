@@ -208,6 +208,7 @@ class ContentParent final : public PContentParent,
    */
   static TabParent* CreateBrowser(const TabContext& aContext,
                                   Element* aFrameElement,
+                                  BrowsingContext* aBrowsingContext,
                                   ContentParent* aOpenerContentParent,
                                   TabParent* aSameTabGroupAs,
                                   uint64_t aNextTabParentId);
