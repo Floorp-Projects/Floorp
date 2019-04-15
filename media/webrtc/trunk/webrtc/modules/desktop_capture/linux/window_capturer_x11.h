@@ -49,6 +49,9 @@ class WindowCapturerX11 : public DesktopCapturer,
   // Returns window title for the specified X |window|.
   bool GetWindowTitle(::Window window, std::string* title);
 
+  // Returns the id of the owning process.
+  int GetWindowProcessID(::Window window);
+
   Callback* callback_ = nullptr;
 
   rtc::scoped_refptr<SharedXDisplay> x_display_;

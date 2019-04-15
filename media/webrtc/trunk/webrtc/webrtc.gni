@@ -70,6 +70,9 @@ declare_args() {
   # Set this to true to enable BWE test logging.
   rtc_enable_bwe_test_logging = false
 
+  # Set this to use PipeWire on the Wayland display server.
+  rtc_use_pipewire = false
+
   rtc_enable_android_opensl = false
 
   # Link-Time Optimizations.
@@ -196,7 +199,8 @@ rtc_libyuv_dir = "/media/libyuv/libyuv"
 rtc_opus_dir = "//third_party/opus"
 
 # Desktop capturer is supported only on Windows, OSX and Linux.
-rtc_desktop_capture_supported = is_win || is_mac || (is_linux && use_x11) || is_bsd
+rtc_desktop_capture_supported =
+    is_win || is_mac || (is_linux && use_x11) || is_bsd || rtc_use_pipewire
 
 ###############################################################################
 # Templates
