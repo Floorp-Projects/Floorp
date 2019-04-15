@@ -2027,9 +2027,10 @@ JSFunction* ParserBase::newFunction(HandleAtom atom, FunctionSyntaxKind kind,
 }
 
 template <class ParseHandler, typename Unit>
-bool GeneralParser<ParseHandler, Unit>::matchOrInsertSemicolon() {
+bool GeneralParser<ParseHandler, Unit>::matchOrInsertSemicolon(
+    Modifier modifier /* = TokenStream::SlashIsRegExp */) {
   TokenKind tt = TokenKind::Eof;
-  if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
+  if (!tokenStream.peekTokenSameLine(&tt, modifier)) {
     return false;
   }
   if (tt != TokenKind::Eof && tt != TokenKind::Eol && tt != TokenKind::Semi &&
@@ -2057,13 +2058,12 @@ bool GeneralParser<ParseHandler, Unit>::matchOrInsertSemicolon() {
     }
 
     /* Advance the scanner for proper error location reporting. */
-    tokenStream.consumeKnownToken(tt, TokenStream::SlashIsRegExp);
+    tokenStream.consumeKnownToken(tt, modifier);
     error(JSMSG_UNEXPECTED_TOKEN_NO_EXPECT, TokenKindToDesc(tt));
     return false;
   }
   bool matched;
-  return tokenStream.matchToken(&matched, TokenKind::Semi,
-                                TokenStream::SlashIsRegExp);
+  return tokenStream.matchToken(&matched, TokenKind::Semi, modifier);
 }
 
 bool ParserBase::leaveInnerFunction(ParseContext* outerpc) {
@@ -6811,13 +6811,7 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       return false;
     }
 
-    if (!tokenStream.getToken(&tt, TokenStream::SlashIsInvalid)) {
-      return false;
-    }
-
-    // TODO(khyperia): Implement ASI
-    if (tt != TokenKind::Semi) {
-      error(JSMSG_MISSING_SEMI_FIELD);
+    if (!matchOrInsertSemicolon(TokenStream::SlashIsInvalid)) {
       return false;
     }
 
