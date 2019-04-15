@@ -1,0 +1,128 @@
+{
+  "title": "CFRFxABookmark",
+  "description": "A message shown in the bookmark panel when user adds or edits a bookmark",
+  "version": "1.0.0",
+  "type": "object",
+  "definitions": {
+    "plainText": {
+      "description": "Plain text (no HTML allowed)",
+      "type": "string"
+    },
+    "richText": {
+      "description": "Text with HTML subset allowed: i, b, u, strong, em, br",
+      "type": "string"
+    },
+    "link_url": {
+      "description": "Target for links or buttons",
+      "type": "string",
+      "format": "uri"
+    }
+  },
+  "properties": {
+    "title": {
+      "description": "Shown at the top of the message in the largest font size.",
+      "oneOf": [
+        {
+          "allOf": [
+            {"$ref": "#/definitions/richText"},
+            {"description": "Message to be shown"}
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "string_id": {
+              "type": "string",
+              "description": "Fluent id of localized string"
+            }
+          },
+          "required": ["string_id"]
+        }
+      ]
+    },
+    "text": {
+      "description": "Longest part of the message, below the title, provides explanation.",
+      "oneOf": [
+        {
+          "allOf": [
+            {"$ref": "#/definitions/richText"},
+            {"description": "Message to be shown"}
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "string_id": {
+              "type": "string",
+              "description": "Fluent id of localized string"
+            }
+          },
+          "required": ["string_id"]
+        }
+      ]
+    },
+    "link": {
+      "description": "Link shown at the bottom of the message, call to action",
+      "properties": {
+        "text": {
+          "description": "Message shown as part of anchor tag",
+          "oneOf": [
+            {
+              "allOf": [
+                {"$ref": "#/definitions/richText"},
+                {"description": "Message to be shown"}
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "string_id": {
+                  "type": "string",
+                  "description": "Fluent id of localized string"
+                }
+              },
+              "required": ["string_id"]
+            }
+          ] 
+        },
+        "url": {
+          "description": "Value for href attribute of the anchor",
+          "allOf": [
+            {"$ref": "#/definitions/link_url"},
+            {"description": "Link that opens in a new tab"}
+          ]
+        }
+      },
+      "required": ["text", "url"]
+    },
+    "info_icon": {
+      "type": "object",
+      "description": "The small icon displayed in the top right corner of the panel. Not configurable, only the tooltip text." ,
+      "properties": {
+        "tooltiptext": {
+          "oneOf": [
+            {
+              "allOf": [
+                {"$ref": "#/definitions/plainText"},
+                {"description": "Message to be shown"}
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "string_id": {
+                  "type": "string",
+                  "description": "Fluent id of localized string"
+                }
+              },
+              "required": ["string_id"]
+            }
+          ]
+        }
+      },
+      "required": ["tooltiptext"]
+    }
+  },
+  "additionalProperties": false,
+  "required": ["title", "text", "link", "info_icon"]
+}

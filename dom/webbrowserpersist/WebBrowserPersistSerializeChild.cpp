@@ -9,7 +9,6 @@
 #include <algorithm>
 
 #include "nsThreadUtils.h"
-#include "ipc/IPCMessageUtils.h"
 
 namespace mozilla {
 
@@ -82,6 +81,10 @@ WebBrowserPersistSerializeChild::Write(const char* aBuf, uint32_t aCount,
   // refcounting.
   MOZ_RELEASE_ASSERT(NS_IsMainThread(), "Fix this class to be thread-safe.");
 
+  // Limit the message size to 64k because large messages are
+  // potentially bad for the latency of other messages on the same channel.
+  static const uint32_t kMaxWrite = 65536;
+
   // Work around bug 1181433 by sending multiple messages if
   // necessary to write the entire aCount bytes, even though
   // nsIOutputStream.idl says we're allowed to do a short write.
@@ -89,7 +92,7 @@ WebBrowserPersistSerializeChild::Write(const char* aBuf, uint32_t aCount,
   uint32_t count = aCount;
   *aWritten = 0;
   while (count > 0) {
-    uint32_t toWrite = std::min(IPC::MAX_MESSAGE_SIZE, count);
+    uint32_t toWrite = std::min(kMaxWrite, count);
     nsTArray<uint8_t> arrayBuf;
     // It would be nice if this extra copy could be avoided.
     arrayBuf.AppendElements(buf, toWrite);

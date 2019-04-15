@@ -47,6 +47,9 @@ add_task(async function() {
   let frameLoader = SpecialPowers.wrap(iframe).frameLoader;
   is(frameLoader.docShell, null);
   is(frameLoader.tabParent, null);
+  let browsingContext = frameLoader.browsingContext;
+  isnot(browsingContext, null);
+  is(browsingContext.docShell, null);
 
   await contentCreated;
 

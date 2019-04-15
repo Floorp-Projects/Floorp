@@ -55,11 +55,15 @@ function promiseSearchComplete(win = window, dontAnimate = false) {
   return UrlbarTestUtils.promiseSearchComplete(win, dontAnimate);
 }
 
-function promiseAutocompleteResultPopup(inputText,
+function promiseAutocompleteResultPopup(value,
                                         win = window,
                                         fireInputEvent = false) {
-  return UrlbarTestUtils.promiseAutocompleteResultPopup(win, inputText,
-    waitForFocus, fireInputEvent);
+  return UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window: win,
+    waitForFocus,
+    value,
+    fireInputEvent,
+  });
 }
 
 async function waitForAutocompleteResultAt(index) {

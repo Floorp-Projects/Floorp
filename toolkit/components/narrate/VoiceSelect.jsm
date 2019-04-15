@@ -88,6 +88,7 @@ VoiceSelect.prototype = {
 
     switch (evt.type) {
       case "click":
+        target = target.closest(".option, .select-toggle") || target;
         if (target.classList.contains("option")) {
           if (!target.classList.contains("selected")) {
             this.selected = target;

@@ -39,6 +39,10 @@ void nsFrameLoaderOwner::ChangeRemoteness(
   RefPtr<Element> owner = do_QueryObject(this);
   MOZ_ASSERT(owner);
   mFrameLoader = nsFrameLoader::Create(owner, aOptions);
+
+  if (NS_WARN_IF(!mFrameLoader)) {
+    return;
+  }
   mFrameLoader->LoadFrame(false);
 
   // Now that we've got a new FrameLoader, we need to reset our

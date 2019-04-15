@@ -60,8 +60,15 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
 
   RefPtr<WindowGlobalChild> wgc = new WindowGlobalChild(aWindow, bc);
 
-  WindowGlobalInit init(principal, bc, wgc->mInnerWindowId,
-                        wgc->mOuterWindowId);
+  // If we have already closed our browsing context, return a pre-closed
+  // WindowGlobalChild actor.
+  if (bc->GetClosed()) {
+    wgc->ActorDestroy(FailedConstructor);
+    return wgc.forget();
+  }
+
+  WindowGlobalInit init(principal, aWindow->GetDocumentURI(), bc,
+                        wgc->mInnerWindowId, wgc->mOuterWindowId);
 
   // Send the link constructor over PInProcessChild or PBrowser.
   if (XRE_IsParentProcess()) {
@@ -91,8 +98,6 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::Create(
   MOZ_RELEASE_ASSERT(!entry, "Duplicate WindowGlobalChild entry for ID!");
   entry.OrInsert([&] { return wgc; });
 
-  // Send down our initial document URI.
-  wgc->SendUpdateDocumentURI(aWindow->GetDocumentURI());
   return wgc.forget();
 }
 

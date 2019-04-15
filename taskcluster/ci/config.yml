@@ -293,6 +293,11 @@ workers:
             implementation: script-engine-autophone
             os: linux
             worker-type: 'gecko-{alias}'
+        t-bitbar-gw.*:
+            provisioner: proj-autophone
+            implementation: generic-worker
+            os: linux-bitbar
+            worker-type: 'gecko-{alias}'
         t-linux(-large|-xlarge):
             provisioner: aws-provisioner-v1
             implementation: docker-worker

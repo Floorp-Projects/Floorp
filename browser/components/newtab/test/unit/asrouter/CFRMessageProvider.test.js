@@ -32,14 +32,16 @@ describe("CFRMessageProvider", () => {
       }
     }
   });
-  it("should restrict all messages to `en` locale for now", () => {
-    for (const message of messages) {
-      if (message.id !== "PIN_TAB") {
-        assert.include(message.targeting, `localeLanguageCode == "en"`);
-      } else {
-        assert.include(message.targeting, `locale == "en-US"`);
-      }
+  it("should restrict all messages to `en` locale for now (PIN TAB is handled separately)", () => {
+    for (const message of messages.filter(m => m.id !== "PIN_TAB")) {
+      assert.include(message.targeting, `localeLanguageCode == "en"`);
     }
+  });
+  it("should restrict locale for PIN_TAB message", () => {
+    const pinTabMessage = messages.find(m => m.id === "PIN_TAB");
+
+    // 6 en-* locales, fr and de
+    assert.lengthOf(pinTabMessage.targeting.match(/en-|fr|de/g), 8);
   });
   it("should contain `www.` version of the hosts", () => {
     const pinTabMessage = messages.find(m => m.id === "PIN_TAB");

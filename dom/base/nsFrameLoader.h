@@ -20,6 +20,7 @@
 #include "nsIURI.h"
 #include "nsFrameMessageManager.h"
 #include "mozilla/dom/BindingUtils.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/ParentSHistory.h"
 #include "mozilla/Attributes.h"
@@ -49,7 +50,6 @@ namespace mozilla {
 class OriginAttributes;
 
 namespace dom {
-class BrowsingContext;
 class ChromeMessageSender;
 class ContentParent;
 class InProcessTabChildMessageManager;
@@ -99,7 +99,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
  public:
   // Called by Frame Elements to create a new FrameLoader.
   static nsFrameLoader* Create(mozilla::dom::Element* aOwner,
-                               nsPIDOMWindowOuter* aOpener,
+                               mozilla::dom::BrowsingContext* aOpener,
                                bool aNetworkCreated);
 
   // Called by nsFrameLoaderOwner::ChangeRemoteness when switching out
@@ -118,7 +118,9 @@ class nsFrameLoader final : public nsStubMutationObserver,
   void StartDestroy();
   void DestroyDocShell();
   void DestroyComplete();
-  nsIDocShell* GetExistingDocShell() { return mDocShell; }
+  nsIDocShell* GetExistingDocShell() const {
+    return mBrowsingContext ? mBrowsingContext->GetDocShell() : nullptr;
+  }
   mozilla::dom::InProcessTabChildMessageManager* GetTabChildMessageManager()
       const {
     return mChildMessageManager;
@@ -368,9 +370,11 @@ class nsFrameLoader final : public nsStubMutationObserver,
                                JS::Handle<JSObject*> aGivenProto) override;
 
  private:
-  nsFrameLoader(mozilla::dom::Element* aOwner, nsPIDOMWindowOuter* aOpener,
+  nsFrameLoader(mozilla::dom::Element* aOwner,
+                mozilla::dom::BrowsingContext* aBrowsingContext,
                 bool aNetworkCreated);
   nsFrameLoader(mozilla::dom::Element* aOwner,
+                mozilla::dom::BrowsingContext* aBrowsingContext,
                 const mozilla::dom::RemotenessOptions& aOptions);
   ~nsFrameLoader();
 
@@ -400,6 +404,10 @@ class nsFrameLoader final : public nsStubMutationObserver,
   nsresult MaybeCreateDocShell();
   nsresult EnsureMessageManager();
   nsresult ReallyLoadFrameScripts();
+  nsDocShell* GetDocShell() const {
+    return mBrowsingContext ? nsDocShell::Cast(mBrowsingContext->GetDocShell())
+                            : nullptr;
+  }
 
   // Updates the subdocument position and size. This gets called only
   // when we have our own in-process DocShell.
@@ -443,7 +451,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   nsresult PopulateUserContextIdFromAttribute(mozilla::OriginAttributes& aAttr);
 
-  RefPtr<nsDocShell> mDocShell;
+  RefPtr<mozilla::dom::BrowsingContext> mBrowsingContext;
   nsCOMPtr<nsIURI> mURIToLoad;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
   nsCOMPtr<nsIContentSecurityPolicy> mCsp;
@@ -463,9 +471,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // enables us to detect whether the frame has moved documents during
   // a reframe, so that we know not to restore the presentation.
   RefPtr<Document> mContainerDocWhileDetached;
-
-  // An opener window which should be used when the docshell is created.
-  nsCOMPtr<nsPIDOMWindowOuter> mOpener;
 
   RefPtr<TabParent> mRemoteBrowser;
   uint64_t mChildID;

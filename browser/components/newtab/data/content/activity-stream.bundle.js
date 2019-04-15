@@ -9760,8 +9760,53 @@ const SendToDeviceSnippet = props => {
     processFormData: processFormData
   }));
 };
+// CONCATENATED MODULE: ./content-src/asrouter/templates/SimpleBelowSearchSnippet/SimpleBelowSearchSnippet.jsx
+function SimpleBelowSearchSnippet_extends() { SimpleBelowSearchSnippet_extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return SimpleBelowSearchSnippet_extends.apply(this, arguments); }
+
+
+
+
+
+const SimpleBelowSearchSnippet_DEFAULT_ICON_PATH = "chrome://branding/content/icon64.png";
+class SimpleBelowSearchSnippet_SimpleBelowSearchSnippet extends external_React_default.a.PureComponent {
+  renderText() {
+    const {
+      props
+    } = this;
+    return external_React_default.a.createElement(RichText["RichText"], {
+      text: props.content.text,
+      customElements: this.props.customElements,
+      localization_id: "text",
+      links: props.content.links,
+      sendClick: props.sendClick
+    });
+  }
+
+  render() {
+    const {
+      props
+    } = this;
+    let className = "SimpleBelowSearchSnippet";
+
+    if (props.className) {
+      className += ` ${props.className}`;
+    }
+
+    return external_React_default.a.createElement(SnippetBase_SnippetBase, SimpleBelowSearchSnippet_extends({}, props, {
+      className: className,
+      textStyle: this.props.textStyle
+    }), external_React_default.a.createElement("img", {
+      src: Object(template_utils["safeURI"])(props.content.icon) || SimpleBelowSearchSnippet_DEFAULT_ICON_PATH,
+      className: "icon"
+    }), external_React_default.a.createElement("div", null, external_React_default.a.createElement("p", {
+      className: "body"
+    }, this.renderText()), this.props.extraContent));
+  }
+
+}
 // CONCATENATED MODULE: ./content-src/asrouter/templates/template-manifest.jsx
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SnippetsTemplates", function() { return SnippetsTemplates; });
+
 
 
 
@@ -9773,7 +9818,8 @@ const SnippetsTemplates = {
   newsletter_snippet: NewsletterSnippet,
   fxa_signup_snippet: FXASignupSnippet,
   send_to_device_snippet: SendToDeviceSnippet,
-  eoy_snippet: EOYSnippet
+  eoy_snippet: EOYSnippet,
+  simple_below_search_snippet: SimpleBelowSearchSnippet_SimpleBelowSearchSnippet
 };
 
 /***/ }),

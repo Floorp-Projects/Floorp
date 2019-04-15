@@ -23,6 +23,12 @@ class nsPermission : public nsIPermission {
                                                uint32_t aExpireType,
                                                int64_t aExpireTime);
 
+  // This method creates a new nsIPrincipal with a stripped OriginAttributes (no
+  // userContextId, and no FirstPartyDomain) and a codebase equal to the origin
+  // of 'aPrincipal'.
+  static already_AddRefed<nsIPrincipal> ClonePrincipalForPermission(
+      nsIPrincipal* aPrincipal);
+
  protected:
   nsPermission(nsIPrincipal* aPrincipal, const nsACString& aType,
                uint32_t aCapability, uint32_t aExpireType, int64_t aExpireTime);

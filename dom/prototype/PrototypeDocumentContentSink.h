@@ -183,11 +183,17 @@ class PrototypeDocumentContentSink final : public nsIStreamLoaderObserver,
   nsresult CreateAndInsertPI(const nsXULPrototypePI* aProtoPI);
   nsresult ExecuteScript(nsXULPrototypeScript* aScript);
   nsresult LoadScript(nsXULPrototypeScript* aScriptProto, bool* aBlock);
+
+  /**
+   * A wrapper around ResumeWalkInternal to report walking errors.
+   */
+  nsresult ResumeWalk();
+
   /**
    * Resume (or initiate) an interrupted (or newly prepared)
    * prototype walk.
    */
-  nsresult ResumeWalk();
+  nsresult ResumeWalkInternal();
 
   /**
    * Called at the end of ResumeWalk(), from StyleSheetLoaded(),

@@ -734,8 +734,11 @@ async function runUrlbarTest(useAwesomebar,
         await waitExtra();
       }
     } else {
-      await UrlbarTestUtils.promiseAutocompleteResultPopup(win, URLBar.value,
-                                                           SimpleTest.waitForFocus);
+      await UrlbarTestUtils.promiseAutocompleteResultPopup({
+        window: win,
+        waitForFocus: SimpleTest.waitForFocus,
+        value: URLBar.value,
+      });
       await waitExtra();
     }
 

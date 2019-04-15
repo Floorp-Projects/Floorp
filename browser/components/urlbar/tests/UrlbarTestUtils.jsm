@@ -36,24 +36,38 @@ var UrlbarTestUtils = {
 
   /**
    * Starts a search for a given string and waits for the search to be complete.
-   * @param {object} win The window containing the urlbar
-   * @param {string} inputText the search string
-   * @param {function} waitForFocus The Simpletest function
-   * @param {boolean} fireInputEvent whether an input event should be used when
-   *        starting the query (necessary to set userTypedValued)
+   * @param {object} options.window The window containing the urlbar
+   * @param {string} options.value the search string
+   * @param {function} options.waitForFocus The SimpleTest function
+   * @param {boolean} [options.fireInputEvent] whether an input event should be
+   *        used when starting the query (simulates the user's typing, sets
+   *        userTypedValued, etc.)
+   * @param {number} [options.selectionStart] The input's selectionStart
+   * @param {number} [options.selectionEnd] The input's selectionEnd
    */
-  async promiseAutocompleteResultPopup(win, inputText, waitForFocus, fireInputEvent = false) {
-    let urlbar = getUrlbarAbstraction(win);
+  async promiseAutocompleteResultPopup({
+    window,
+    value,
+    waitForFocus,
+    fireInputEvent = false,
+    selectionStart = -1,
+    selectionEnd = -1,
+  } = {}) {
+    let urlbar = getUrlbarAbstraction(window);
     let restoreAnimationsFn = urlbar.disableAnimations();
-    await new Promise(resolve => waitForFocus(resolve, win));
+    await new Promise(resolve => waitForFocus(resolve, window));
     let lastSearchString = urlbar.lastSearchString;
     urlbar.focus();
-    urlbar.value = inputText;
+    urlbar.value = value;
+    if (selectionStart >= 0 && selectionEnd >= 0) {
+      urlbar.selectionEnd = selectionEnd;
+      urlbar.selectionStart = selectionStart;
+    }
     if (fireInputEvent) {
       // This is necessary to get the urlbar to set gBrowser.userTypedValue.
       urlbar.fireInputEvent();
     } else {
-      win.gURLBar.setAttribute("pageproxystate", "invalid");
+      window.gURLBar.setAttribute("pageproxystate", "invalid");
     }
     // An input event will start a new search, with a couple of exceptions, so
     // be careful not to call startSearch if we fired an input event since that
@@ -63,11 +77,11 @@ var UrlbarTestUtils = {
     // directly then.  The second exception is when searching with the legacy
     // urlbar and an empty string.
     if (!fireInputEvent ||
-        inputText == lastSearchString ||
-        (!urlbar.quantumbar && !inputText)) {
-      urlbar.startSearch(inputText);
+        value == lastSearchString ||
+        (!urlbar.quantumbar && !value)) {
+      urlbar.startSearch(value, selectionStart, selectionEnd);
     }
-    return this.promiseSearchComplete(win, restoreAnimationsFn);
+    return this.promiseSearchComplete(window, restoreAnimationsFn);
   },
 
   /**
@@ -339,9 +353,13 @@ class UrlbarAbstraction {
     return this.oneOffSearchButtons.style.display != "none";
   }
 
-  startSearch(text) {
+  startSearch(text, selectionStart = -1, selectionEnd = -1) {
     if (this.quantumbar) {
       this.urlbar.value = text;
+      if (selectionStart >= 0 && selectionEnd >= 0) {
+        this.urlbar.selectionEnd = selectionEnd;
+        this.urlbar.selectionStart = selectionStart;
+      }
       this.urlbar.setAttribute("pageproxystate", "invalid");
       this.urlbar.startQuery();
     } else {

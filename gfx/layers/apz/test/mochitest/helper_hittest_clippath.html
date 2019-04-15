@@ -1,0 +1,103 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Hit-testing an iframe covered by an element with a clip-path</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<style>
+    html, body { margin: 0; }
+    #clipped {
+        width: 400px;
+        height: 400px;
+        background-color: green;
+        position: absolute;
+        top: 100px;
+        left: 100px;
+        clip-path: circle(150px);
+    }
+    iframe {
+        width: 400px;
+        height: 300px;
+        border: 0px solid black;
+    }
+</style>
+</head>
+<body style="height: 5000px">
+<iframe id="sub" srcdoc="<!DOCTYPE html><body style='height: 5000px'><div style='position: absolute; top: 150px; left: 150px; width: 300px; height: 300px; background-color: blue;'></div>
+when this page loads, the blue rect should be behind the green circle. mousing over the area with the blue rect and scrolling with the wheel or trackpad should cause the iframe to scroll."></iframe>
+<div id="clipped"></div>
+<script>
+
+function* test(testDriver) {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  // layerize the iframe
+  var subwindow = document.getElementById("sub").contentWindow;
+  var subscroller = subwindow.document.scrollingElement;
+  var subutils = SpecialPowers.getDOMWindowUtils(subwindow);
+  subutils.setDisplayPortForElement(0, 0, 400, 1000, subscroller, 1);
+  yield waitForApzFlushedRepaints(testDriver);
+
+  var rootViewId = utils.getViewId(document.scrollingElement);
+  var iframeViewId = subutils.getViewId(subscroller);
+
+  checkHitResult(hitTest({ x: 10, y: 10 }),
+      APZHitResultFlags.VISIBLE,
+      iframeViewId,
+      "(simple) uninteresting point inside the iframe");
+  checkHitResult(hitTest({ x: 500, y: 10 }),
+      APZHitResultFlags.VISIBLE,
+      rootViewId,
+      "(simple) uninteresting point in the root scroller");
+  checkHitResult(hitTest({ x: 110, y: 110 }),
+      APZHitResultFlags.VISIBLE,
+      iframeViewId,
+      "(simple) point in the iframe behind overlaying div, but outside the bounding box of the clip path");
+  checkHitResult(hitTest({ x: 160, y: 160 }),
+      config.isWebRender ? APZHitResultFlags.VISIBLE
+                         : APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
+      config.isWebRender ? iframeViewId : rootViewId,
+      "(simple) point in the iframe behind overlaying div, inside the bounding box of the clip path, but outside the actual clip shape");
+  checkHitResult(hitTest({ x: 300, y: 200 }),
+      config.isWebRender ? APZHitResultFlags.VISIBLE
+                         : APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
+      rootViewId,
+      "(simple) point inside the clip shape of the overlaying div");
+
+  // Now we turn the "simple" clip-path that WR can handle into a more complex
+  // one that needs a mask. Then run the checks again; the expected results for
+  // WR are slightly different
+  document.getElementById("clipped").style.clipPath = "polygon(50px 200px, 75px 75px, 200px 50px, 350px 200px, 200px 350px)";
+  yield waitForApzFlushedRepaints(testDriver);
+
+  checkHitResult(hitTest({ x: 10, y: 10 }),
+      APZHitResultFlags.VISIBLE,
+      iframeViewId,
+      "(complex) uninteresting point inside the iframe");
+  checkHitResult(hitTest({ x: 500, y: 10 }),
+      APZHitResultFlags.VISIBLE,
+      rootViewId,
+      "(complex) uninteresting point in the root scroller");
+  checkHitResult(hitTest({ x: 110, y: 110 }),
+      APZHitResultFlags.VISIBLE,
+      iframeViewId,
+      "(complex) point in the iframe behind overlaying div, but outside the bounding box of the clip path");
+  checkHitResult(hitTest({ x: 160, y: 160 }),
+      APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
+      rootViewId,
+      "(complex) point in the iframe behind overlaying div, inside the bounding box of the clip path, but outside the actual clip shape");
+  checkHitResult(hitTest({ x: 300, y: 200 }),
+      APZHitResultFlags.VISIBLE | APZHitResultFlags.IRREGULAR_AREA,
+      rootViewId,
+      "(complex) point inside the clip shape of the overlaying div");
+}
+
+waitUntilApzStable()
+    .then(runContinuation(test))
+    .then(subtestDone);
+</script>
+</body></html>

@@ -23,16 +23,34 @@ nsPermission::nsPermission(nsIPrincipal* aPrincipal, const nsACString& aType,
       mExpireType(aExpireType),
       mExpireTime(aExpireTime) {}
 
+already_AddRefed<nsIPrincipal> nsPermission::ClonePrincipalForPermission(
+    nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(aPrincipal);
+
+  mozilla::OriginAttributes attrs = aPrincipal->OriginAttributesRef();
+  attrs.StripAttributes(mozilla::OriginAttributes::STRIP_USER_CONTEXT_ID |
+                        mozilla::OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
+
+  nsAutoCString originNoSuffix;
+  nsresult rv = aPrincipal->GetOriginNoSuffix(originNoSuffix);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  nsCOMPtr<nsIURI> uri;
+  rv = NS_NewURI(getter_AddRefs(uri), originNoSuffix);
+  NS_ENSURE_SUCCESS(rv, nullptr);
+
+  return mozilla::BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+}
+
 already_AddRefed<nsPermission> nsPermission::Create(nsIPrincipal* aPrincipal,
                                                     const nsACString& aType,
                                                     uint32_t aCapability,
                                                     uint32_t aExpireType,
                                                     int64_t aExpireTime) {
   NS_ENSURE_TRUE(aPrincipal, nullptr);
-  nsCOMPtr<nsIPrincipal> principal =
-      mozilla::BasePrincipal::Cast(aPrincipal)
-          ->CloneStrippingUserContextIdAndFirstPartyDomain();
 
+  nsCOMPtr<nsIPrincipal> principal =
+      nsPermission::ClonePrincipalForPermission(aPrincipal);
   NS_ENSURE_TRUE(principal, nullptr);
 
   RefPtr<nsPermission> permission =
@@ -80,9 +98,7 @@ nsPermission::Matches(nsIPrincipal* aPrincipal, bool aExactHost,
   *aMatches = false;
 
   nsCOMPtr<nsIPrincipal> principal =
-      mozilla::BasePrincipal::Cast(aPrincipal)
-          ->CloneStrippingUserContextIdAndFirstPartyDomain();
-
+      nsPermission::ClonePrincipalForPermission(aPrincipal);
   if (!principal) {
     *aMatches = false;
     return NS_OK;

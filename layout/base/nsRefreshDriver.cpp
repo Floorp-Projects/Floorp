@@ -1713,10 +1713,16 @@ struct RunnableWithDelay {
 
 static AutoTArray<RunnableWithDelay, 8>* sPendingIdleRunnables = nullptr;
 
-void nsRefreshDriver::DispatchIdleRunnableAfterTick(nsIRunnable* aRunnable,
-                                                    uint32_t aDelay) {
+void nsRefreshDriver::DispatchIdleRunnableAfterTickUnlessExists(
+    nsIRunnable* aRunnable, uint32_t aDelay) {
   if (!sPendingIdleRunnables) {
     sPendingIdleRunnables = new AutoTArray<RunnableWithDelay, 8>();
+  } else {
+    for (uint32_t i = 0; i < sPendingIdleRunnables->Length(); ++i) {
+      if ((*sPendingIdleRunnables)[i].mRunnable == aRunnable) {
+        return;
+      }
+    }
   }
 
   RunnableWithDelay rwd = {aRunnable, aDelay};

@@ -16,6 +16,8 @@ interface BrowsingContext {
 
   readonly attribute BrowsingContext? parent;
 
+  readonly attribute BrowsingContext top;
+
   sequence<BrowsingContext> getChildren();
 
   readonly attribute nsIDocShell? docShell;

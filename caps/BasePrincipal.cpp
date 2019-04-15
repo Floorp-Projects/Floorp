@@ -438,23 +438,6 @@ already_AddRefed<BasePrincipal> BasePrincipal::CreateCodebasePrincipal(
   return BasePrincipal::CreateCodebasePrincipal(uri, attrs);
 }
 
-already_AddRefed<BasePrincipal>
-BasePrincipal::CloneStrippingUserContextIdAndFirstPartyDomain() {
-  OriginAttributes attrs = OriginAttributesRef();
-  attrs.StripAttributes(OriginAttributes::STRIP_USER_CONTEXT_ID |
-                        OriginAttributes::STRIP_FIRST_PARTY_DOMAIN);
-
-  nsAutoCString originNoSuffix;
-  nsresult rv = GetOriginNoSuffix(originNoSuffix);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  nsCOMPtr<nsIURI> uri;
-  rv = NS_NewURI(getter_AddRefs(uri), originNoSuffix);
-  NS_ENSURE_SUCCESS(rv, nullptr);
-
-  return BasePrincipal::CreateCodebasePrincipal(uri, attrs);
-}
-
 already_AddRefed<BasePrincipal> BasePrincipal::CloneForcingFirstPartyDomain(
     nsIURI* aURI) {
   if (NS_WARN_IF(!IsCodebasePrincipal())) {

@@ -60,6 +60,9 @@ exclude: true
 [68.12]: ../GeckoSession.HistoryDelegate.html
 [68.13]: ../GeckoSession.html
 
+- [`GeckoView`][65.5] will not create a [`GeckoSession`][65.9] anymore when
+  attached to a window without a session.
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings

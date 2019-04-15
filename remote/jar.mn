@@ -46,9 +46,6 @@ remote.jar:
 
   # transport layer
   content/server/HTTPD.jsm (../netwerk/test/httpserver/httpd.js)
-  content/server/Packet.jsm (server/Packet.jsm)
-  content/server/Socket.jsm (server/Socket.jsm)
   content/server/Stream.jsm (server/Stream.jsm)
-  content/server/Transport.jsm (server/Transport.jsm)
   content/server/WebSocket.jsm (server/WebSocket.jsm)
   content/server/WebSocketTransport.jsm (server/WebSocketTransport.jsm)

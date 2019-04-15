@@ -10904,6 +10904,15 @@ CompositorHitTestInfo nsIFrame::GetCompositorHitTestInfo(
 
   // Anything that didn't match the above conditions is visible to hit-testing.
   result = CompositorHitTestFlags::eVisibleToHitTest;
+  if (nsSVGIntegrationUtils::UsingMaskOrClipPathForFrame(this)) {
+    // If WebRender is enabled, simple clip-paths can be converted into WR
+    // clips that WR knows how to hit-test against, so we don't need to mark
+    // it as an irregular area.
+    if (!gfxVars::UseWebRender() ||
+        !nsSVGIntegrationUtils::UsingSimpleClipPathForFrame(this)) {
+      result += CompositorHitTestFlags::eIrregularArea;
+    }
+  }
 
   if (aBuilder->IsBuildingNonLayerizedScrollbar()) {
     // Scrollbars may be painted into a layer below the actual layer they will
