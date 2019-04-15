@@ -55,7 +55,7 @@ namespace gc {
 template <JS::TraceKind kind>
 struct MapTraceKindToType {};
 
-#define DEFINE_TRACE_KIND_MAP(name, type, _)       \
+#define DEFINE_TRACE_KIND_MAP(name, type, _, _1)   \
   template <>                                      \
   struct MapTraceKindToType<JS::TraceKind::name> { \
     using Type = type;                             \
