@@ -1723,7 +1723,6 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
 
 // static
 bool InterSliceGCRunnerFired(TimeStamp aDeadline, void* aData) {
-  nsJSContext::KillInterSliceGCRunner();
   MOZ_ASSERT(sActiveIntersliceGCBudget > 0);
   // We use longer budgets when the CC has been locked out but the CC has tried
   // to run since that means we may have significant amount garbage to collect
@@ -1775,8 +1774,12 @@ bool InterSliceGCRunnerFired(TimeStamp aDeadline, void* aData) {
 // static
 void GCTimerFired(nsITimer* aTimer, void* aClosure) {
   nsJSContext::KillGCTimer();
-  nsJSContext::KillInterSliceGCRunner();
   if (sShuttingDown) {
+    nsJSContext::KillInterSliceGCRunner();
+    return;
+  }
+
+  if (sInterSliceGCRunner) {
     return;
   }
 
@@ -1786,7 +1789,7 @@ void GCTimerFired(nsITimer* aTimer, void* aClosure) {
         return InterSliceGCRunnerFired(aDeadline, aClosure);
       },
       "GCTimerFired::InterSliceGCRunnerFired", NS_INTERSLICE_GC_DELAY,
-      sActiveIntersliceGCBudget, false, [] { return sShuttingDown; },
+      sActiveIntersliceGCBudget, true, [] { return sShuttingDown; },
       TaskCategory::GarbageCollection);
 }
 
@@ -2241,15 +2244,18 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
       sGCUnnotifiedTotalTime +=
           aDesc.lastSliceEnd(aCx) - aDesc.lastSliceStart(aCx);
 
-      // Schedule another GC slice if the GC has more work to do.
-      nsJSContext::KillInterSliceGCRunner();
-      if (!sShuttingDown && !aDesc.isComplete_) {
+      if (sShuttingDown || aDesc.isComplete_) {
+        nsJSContext::KillInterSliceGCRunner();
+      } else if (!sInterSliceGCRunner) {
+        // If incremental GC wasn't triggered by GCTimerFired, we may not
+        // have a runner to ensure all the slices are handled. So, create
+        // the runner here.
         sInterSliceGCRunner = IdleTaskRunner::Create(
             [](TimeStamp aDeadline) {
               return InterSliceGCRunnerFired(aDeadline, nullptr);
             },
             "DOMGCSliceCallback::InterSliceGCRunnerFired",
-            NS_INTERSLICE_GC_DELAY, sActiveIntersliceGCBudget, false,
+            NS_INTERSLICE_GC_DELAY, sActiveIntersliceGCBudget, true,
             [] { return sShuttingDown; }, TaskCategory::GarbageCollection);
       }
 
