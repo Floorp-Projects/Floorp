@@ -29,7 +29,6 @@ class ShortcutsSuggestionProvider(
             suggestions.add(
                 AwesomeBar.Suggestion(
                     provider = this,
-                    id = id,
                     icon = { _, _ ->
                         it.icon
                     },
@@ -43,7 +42,6 @@ class ShortcutsSuggestionProvider(
         suggestions.add(
             AwesomeBar.Suggestion(
                 provider = this,
-                id = id,
                 icon = { _, _ ->
                     context.getDrawable(R.drawable.ic_settings)?.toBitmap()
                 },
