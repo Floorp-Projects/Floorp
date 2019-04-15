@@ -56,6 +56,9 @@ class UAWidgetsChild extends ActorChild {
       case "audio":
         uri = "chrome://global/content/elements/videocontrols.js";
         widgetName = "VideoControlsWidget";
+        prefKeys = [
+          "media.videocontrols.picture-in-picture.video-toggle.enabled",
+        ];
         break;
       case "input":
         uri = "chrome://global/content/elements/datetimebox.js";
