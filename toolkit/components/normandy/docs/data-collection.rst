@@ -16,18 +16,26 @@ reported under the key ``normandy/runner``:
 
 .. data:: RUNNER_INVALID_SIGNATURE
 
+   :Telemetry value: signature_error
+
    Normandy failed to verify the signature of the fetched recipes.
 
 .. data:: RUNNER_NETWORK_ERROR
+
+   :Telemetry value: network_error
 
    There was a network-related error while fetching recipes.
 
 .. data:: RUNNER_SERVER_ERROR
 
+   :Telemetry value: server_error
+
    The data returned by the server when fetching the recipe is invalid in some
    way.
 
 .. data:: RUNNER_SUCCESS
+
+   :Telemetry value: success
 
    The operation completed successfully. Individual failures with actions and
    recipes may have been reported separately.
@@ -40,22 +48,32 @@ following statuses is reported under the key
 
 .. data:: ACTION_NETWORK_ERROR
 
+   :Telemetry value: network_error
+
    There was a network-related error while fetching actions
 
 .. data:: ACTION_PRE_EXECUTION_ERROR
+
+   :Telemetry value: custom_1_error
 
    There was an error while running the pre-execution hook for the action.
 
 .. data:: ACTION_POST_EXECUTION_ERROR
 
+   :Telemetry value: custom_2_error
+
    There was an error while running the post-execution hook for the action.
 
 .. data:: ACTION_SERVER_ERROR
+
+   :Telemetry value: server_error
 
    The data returned by the server when fetching the action is invalid in some
    way.
 
 .. data:: ACTION_SUCCESS
+
+   :Telemetry value: success
 
    The operation completed successfully. Individual failures with recipes may
    be reported separately.
@@ -67,18 +85,45 @@ reported under the key ``normandy/recipe/<recipe id>``:
 
 .. data:: RECIPE_ACTION_DISABLED
 
+   :Telemetry value: custom_1_error
+
    The action for this recipe failed in some way and was disabled, so the recipe
    could not be executed.
 
+.. data:: RECIPE_DIDNT_MATCH_FILTER
+
+   :Telemetry value: backoff
+
+   The recipe included a Jexl filter that the client did not match, so
+   the recipe was not executed.
+
 .. data:: RECIPE_EXECUTION_ERROR
+
+   :Telemetry value: apply_error
 
    An error occurred while executing the recipe.
 
+.. data:: RECIPE_FILTER_BROKEN
+
+   :Telemetry value: content_error
+
+   An error occurred while evaluating the Jexl filter for this
+   recipe. Sometimes this represents a bug in the Jexl filter
+   parser/evaluator, such as in `bug 1477156
+   <https://bugzilla.mozilla.org/show_bug.cgi?id=1477156>`_, or it can
+   represent an error fetching some data that a Jexl recipe needs such
+   as `bug 1447804
+   <https://bugzilla.mozilla.org/show_bug.cgi?id=1447804>`_.
+
 .. data:: RECIPE_INVALID_ACTION
+
+   :Telemetry value: download_error
 
    The action specified by the recipe was invalid and it could not be executed.
 
 .. data:: RECIPE_SUCCESS
+
+   :Telemetry value: success
 
    The recipe was executed successfully.
 
