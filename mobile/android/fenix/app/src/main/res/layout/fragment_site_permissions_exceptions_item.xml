@@ -11,7 +11,7 @@
         android:textSize="@dimen/site_permissions_exceptions_item_text_size"
         android:drawablePadding="16dp"
         android:drawableStart="@drawable/ic_internet"
-        android:textColor="?attr/toolbarTextColor"
+        android:textColor="?primaryText"
         android:gravity="start|center_vertical"
         android:paddingStart="24dp"
         android:paddingEnd="24dp"

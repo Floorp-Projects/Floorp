@@ -84,7 +84,7 @@
 
     <style name="SitePermissionButton" parent="Widget.AppCompat.Button">
         <item name="android:textAllCaps">false</item>
-        <item name="android:textColor">?attr/toolbarTextColor</item>
+        <item name="android:textColor">?primaryText</item>
         <item name="android:paddingStart">24dp</item>
         <item name="android:paddingEnd">24dp</item>
     </style>
