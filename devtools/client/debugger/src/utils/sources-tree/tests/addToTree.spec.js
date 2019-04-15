@@ -106,6 +106,7 @@ describe("sources-tree", () => {
       const tree = createDirectoryNode("root", "", []);
 
       addToTree(tree, source1, "http://example.com/", "");
+      console.log(formatTree(tree));
       expect(formatTree(tree)).toMatchSnapshot();
     });
 
