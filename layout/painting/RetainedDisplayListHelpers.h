@@ -139,7 +139,8 @@ struct RetainedDisplayListBuilder;
 class nsDisplayItem;
 
 struct OldItemInfo {
-  explicit OldItemInfo(nsDisplayItem* aItem);
+  explicit OldItemInfo(nsDisplayItem* aItem)
+      : mItem(aItem), mUsed(false), mDiscarded(false) {}
 
   void AddedToMergedList(MergedListIndex aIndex) {
     MOZ_ASSERT(!IsUsed());
@@ -167,8 +168,5 @@ struct OldItemInfo {
   MergedListIndex mIndex;
   nsTArray<MergedListIndex> mDirectPredecessors;
 };
-
-bool AnyContentAncestorModified(nsIFrame* aFrame,
-                                nsIFrame* aStopAtFrame = nullptr);
 
 #endif  // RETAINEDDISPLAYLISTHELPERS_H_

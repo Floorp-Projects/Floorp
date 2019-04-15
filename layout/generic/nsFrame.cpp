@@ -3807,15 +3807,8 @@ void nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder* aBuilder,
   NS_ASSERTION(!isStackingContext || pseudoStackingContext,
                "Stacking contexts must also be pseudo-stacking-contexts");
 
-  // nsBlockFrame paints pushed floats directly, rather than through their
-  // placeholder, which is why we force a recallculation of InInvalidSubtree
-  // state.
-  auto recalcInInvalidSubtree =
-      (child->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT)
-          ? nsDisplayListBuilder::RIIS_YES
-          : nsDisplayListBuilder::RIIS_NO;
   nsDisplayListBuilder::AutoBuildingDisplayList buildingForChild(
-      aBuilder, child, visible, dirty, recalcInInvalidSubtree);
+      aBuilder, child, visible, dirty);
   DisplayListClipState::AutoClipMultiple clipState(aBuilder);
   nsDisplayListBuilder::AutoCurrentActiveScrolledRootSetter asrSetter(aBuilder);
   CheckForApzAwareEventHandlers(aBuilder, child);
