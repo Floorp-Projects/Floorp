@@ -34,7 +34,6 @@ UNIFIED_SOURCES += [
     'TestNSPRLogModulesParser.cpp',
     'TestObserverArray.cpp',
     'TestObserverService.cpp',
-    'TestPipes.cpp',
     'TestPLDHash.cpp',
     'TestPriorityQueue.cpp',
     'TestRacingServiceManager.cpp',
@@ -65,6 +64,7 @@ if CONFIG['OS_TARGET'] != 'Android':
     UNIFIED_SOURCES += [
         'TestAtoms.cpp',
         'TestBase64.cpp',
+        'TestPipes.cpp',
         'TestStrings.cpp',
         'TestThreads.cpp',
         'TestTimers.cpp',
