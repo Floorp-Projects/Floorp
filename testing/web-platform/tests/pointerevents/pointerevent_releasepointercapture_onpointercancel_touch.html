@@ -6,6 +6,9 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <script src="pointerevent_support.js"></script>
     </head>
     <body class="scrollable">
@@ -22,6 +25,7 @@
 
         <script type='text/javascript'>
             var pointercancelGot = false;
+            var lostpointercaptureGot = false;
             var count=0;
             var event_log = [];
             var detected_pointertypes = {};
@@ -57,12 +61,20 @@
                     test_pointerEvent.step(function () {
                         assert_true(pointercancelGot, "pointercancel was received before lostpointercapture");
                     });
-                    test_pointerEvent.done();
+                    lostpointercaptureGot = true;
                 });
 
                 on_event(target0, 'pointercancel', function(e) {
                     event_log.push('pointercancel@target0');
                     pointercancelGot = true;
+                });
+
+                // Inject touch inputs and wait for all the actions finish to end the test.
+                touchScrollInTarget(target0, 'down').then(function() {
+                    test_pointerEvent.step(function () {
+                        assert_true(lostpointercaptureGot, "lostpointercapture should be received before the test finishes");
+                    }, "lostpointercapture should be received before the test finishes");
+                    test_pointerEvent.done();
                 });
             }
         </script>
