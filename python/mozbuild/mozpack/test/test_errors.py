@@ -11,13 +11,13 @@ from mozpack.errors import (
 )
 import unittest
 import mozunit
+import six
 import sys
-from cStringIO import StringIO
 
 
 class TestErrors(object):
     def setUp(self):
-        errors.out = StringIO()
+        errors.out = six.moves.cStringIO()
         errors.ignore_errors(False)
 
     def tearDown(self):
