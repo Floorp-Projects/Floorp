@@ -1094,11 +1094,48 @@ void DisplayListBuilder::PushShadow(const wr::LayoutRect& aRect,
                                     const wr::LayoutRect& aClip,
                                     bool aIsBackfaceVisible,
                                     const wr::Shadow& aShadow) {
-  wr_dp_push_shadow(mWrState, aRect, MergeClipLeaf(aClip), aIsBackfaceVisible,
+  // Local clip_rects are translated inside of shadows, as they are assumed to
+  // be part of the element drawing itself, and not a parent frame clipping it.
+  // As such, it is not sound to apply the MergeClipLeaf optimization inside of
+  // shadows. So we disable the optimization when we encounter a shadow.
+  // Shadows don't span frames, so we don't have to worry about MergeClipLeaf
+  // being re-enabled mid-shadow. The optimization is restored in PopAllShadows.
+  SuspendClipLeafMerging();
+  wr_dp_push_shadow(mWrState, aRect, aClip, aIsBackfaceVisible,
                     &mCurrentSpaceAndClipChain, aShadow);
 }
 
-void DisplayListBuilder::PopAllShadows() { wr_dp_pop_all_shadows(mWrState); }
+void DisplayListBuilder::PopAllShadows() {
+  wr_dp_pop_all_shadows(mWrState);
+  ResumeClipLeafMerging();
+}
+
+void DisplayListBuilder::SuspendClipLeafMerging() {
+  if (mClipChainLeaf) {
+    // No one should reinitialize mClipChainLeaf while we're suspended
+    MOZ_ASSERT(!mSuspendedClipChainLeaf);
+
+    mSuspendedClipChainLeaf = mClipChainLeaf;
+    mSuspendedSpaceAndClipChain = Some(mCurrentSpaceAndClipChain);
+
+    // Clip is implicitly parented by mCurrentSpaceAndClipChain
+    auto clipId = DefineClip(Nothing(), *mClipChainLeaf);
+    auto clipChainId = DefineClipChain({ clipId });
+
+    mCurrentSpaceAndClipChain.clip_chain = clipChainId.id;
+    mClipChainLeaf = Nothing();
+  }
+}
+
+void DisplayListBuilder::ResumeClipLeafMerging() {
+  if (mSuspendedClipChainLeaf) {
+    mCurrentSpaceAndClipChain = *mSuspendedSpaceAndClipChain;
+    mClipChainLeaf = mSuspendedClipChainLeaf;
+
+    mSuspendedClipChainLeaf = Nothing();
+    mSuspendedSpaceAndClipChain = Nothing();
+  }
+}
 
 void DisplayListBuilder::PushBoxShadow(
     const wr::LayoutRect& aRect, const wr::LayoutRect& aClip,
