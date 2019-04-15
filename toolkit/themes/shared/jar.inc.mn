@@ -112,6 +112,5 @@ toolkit.jar:
   skin/classic/global/plugins/contentPluginCrashed.png      (../../shared/plugins/contentPluginCrashed.png)
   skin/classic/global/plugins/contentPluginStripe.png       (../../shared/plugins/contentPluginStripe.png)
   skin/classic/global/pictureinpicture/player.css           (../../shared/pictureinpicture/player.css)
-  skin/classic/global/pictureinpicture/toggle.css           (../../shared/pictureinpicture/toggle.css)
   skin/classic/global/media/pictureinpicture.svg            (../../shared/media/pictureinpicture.svg)
 
