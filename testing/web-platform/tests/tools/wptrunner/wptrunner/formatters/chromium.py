@@ -88,7 +88,7 @@ class ChromiumFormatter(base.BaseFormatter):
         final_result = {
             # There are some required fields that we just hard-code.
             "interrupted": False,
-            "path_delimeter": "/",
+            "path_delimiter": "/",
             "version": 3,
             "seconds_since_epoch": self.start_timestamp_seconds,
             "num_failures_by_type": self.num_failures_by_status,

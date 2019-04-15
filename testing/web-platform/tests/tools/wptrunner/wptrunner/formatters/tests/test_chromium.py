@@ -35,7 +35,7 @@ def test_chromium_required_fields(capfd):
 
     # Check for existence of required fields
     assert "interrupted" in output_obj
-    assert "path_delimeter" in output_obj
+    assert "path_delimiter" in output_obj
     assert "version" in output_obj
     assert "num_failures_by_type" in output_obj
     assert "tests" in output_obj
