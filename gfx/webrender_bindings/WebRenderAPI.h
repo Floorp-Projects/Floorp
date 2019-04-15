@@ -654,6 +654,14 @@ class MOZ_RAII SpaceAndClipChainHelper final {
     aBuilder.mCurrentSpaceAndClipChain.space = aSpatialId;
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
+  SpaceAndClipChainHelper(DisplayListBuilder& aBuilder,
+                          wr::WrClipChainId aClipChainId
+                              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+      : mBuilder(aBuilder),
+        mOldSpaceAndClipChain(aBuilder.mCurrentSpaceAndClipChain) {
+    aBuilder.mCurrentSpaceAndClipChain.clip_chain = aClipChainId.id;
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
 
   ~SpaceAndClipChainHelper() {
     mBuilder.mCurrentSpaceAndClipChain = mOldSpaceAndClipChain;
