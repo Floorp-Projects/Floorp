@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+
+<!--
+This is a bunch of tests that verify we properly handle weird corner cases
+in shadow bounding boxes.
+
+Problem 1: parts of text that are seemingly hidden (as in overflow:hidden)
+may actually be visible in shadows, because they include an offset. We can
+mess this up in two ways:
+
+    1a. we completely culled a glyph from existence for being out of view
+
+    1b. we have all the glyphs but are clipping parts out in the shadow
+
+Problem 2: shadows that are defined by the ::selection pseudo-class are
+trapped inside the local selection rect of the item. This means they
+*can and should* sometimes get weirdly clipped (shadow6 and shadow7 in
+version 2 of this test). Also just more generally selections take a bunch
+of special paths in text styling so they are included to make sure both
+paths are tested.
+
+We messed all of these up for webrender because it handles shadows in a very
+different way from non-webrender.
+
+The selection-box is inherently implementation-specific, so I apologize in
+advanced if this test breaks when you tweak how selections work. Hopefully
+only shadow6 needs to be tweaked?
+-->
+
+<html class="reftest-wait"><head>
+<script type="text/javascript">
+function onload() {
+  var range = document.createRange();
+  range.selectNodeContents(document.getElementById("selectMe"));
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+
+  document.documentElement.className = '';
+}
+</script>
+<style>
+body {
+    font-size: 60px;
+    position: absolute;
+    margin: 0px;
+    padding: 0px;
+}
+div {
+    position: absolute;
+    margin: 0px;
+    padding: 0px;
+}
+div::selection {
+    /* hide all selection boxes for convenience */
+    background-color: transparent;
+}
+#shadow1 {
+    text-shadow: 80px 50px 0px;
+    top: -30px;
+    left: -60px;
+}
+#shadow2 {
+    text-shadow: 80px 50px 10px;
+    top: 100px;
+    left: -60px;
+}
+#shadow3 {
+    text-shadow: 80px 50px 10px;
+    top: -30px;
+    left: 100px;
+}
+#shadow4 {
+    top: 200px;
+    left: -60px;
+}
+#shadow4::selection {
+    text-shadow: 20px 5px 10px;
+}
+#shadow5 {
+    top: -30px;
+    left: 250px;
+}
+#shadow5::selection {
+    text-shadow: 20px 5px 10px;
+}
+</style>
+</head><body id="selectMe" onload="onload()">
+    <div id="shadow1">hello</div>
+    <div id="shadow2">hello</div>
+    <div id="shadow3">hello</div>
+    <div id="shadow4">hello&nbsp;&nbsp;</div>
+    <div id="shadow5">hello&nbsp;&nbsp;</div>
+</body></html>
