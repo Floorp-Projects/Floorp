@@ -9,6 +9,7 @@ import inspect
 import logging
 import os
 import re
+import six
 import sys
 import types
 from collections import OrderedDict
@@ -664,7 +665,7 @@ class ConfigureSandbox(dict):
         '''
         when = self._normalize_when(kwargs.get('when'), 'option')
         args = [self._resolve(arg) for arg in args]
-        kwargs = {k: self._resolve(v) for k, v in kwargs.iteritems()
+        kwargs = {k: self._resolve(v) for k, v in six.iteritems(kwargs)
                   if k != 'when'}
         option = Option(*args, **kwargs)
         if when:
@@ -762,7 +763,7 @@ class ConfigureSandbox(dict):
                 (k[:-len('_impl')], getattr(self, k))
                 for k in dir(self) if k.endswith('_impl') and k != 'template_impl'
             )
-            glob.update((k, v) for k, v in self.iteritems() if k not in glob)
+            glob.update((k, v) for k, v in six.iteritems(self) if k not in glob)
 
         template = self._prepare_function(func, update_globals)
 
@@ -787,7 +788,7 @@ class ConfigureSandbox(dict):
             def wrapper(*args, **kwargs):
                 args = [maybe_prepare_function(arg) for arg in args]
                 kwargs = {k: maybe_prepare_function(v)
-                          for k, v in kwargs.iteritems()}
+                          for k, v in kwargs.items()}
                 ret = template(*args, **kwargs)
                 if isfunction(ret):
                     # We can't expect the sandboxed code to think about all the
@@ -1055,7 +1056,8 @@ class ConfigureSandbox(dict):
             return func
 
         glob = SandboxedGlobal(
-            (k, v) for k, v in func.func_globals.iteritems()
+            (k, v)
+            for k, v in six.iteritems(func.func_globals)
             if (inspect.isfunction(v) and v not in self._templates) or (
                 inspect.isclass(v) and issubclass(v, Exception))
         )

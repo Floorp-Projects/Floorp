@@ -19,6 +19,7 @@ import mozpack.path as mozpath
 import unittest
 import mozunit
 import os
+import six
 import stat
 from mozpack.errors import ErrorMessage
 from mozpack.test.test_files import (
@@ -130,7 +131,7 @@ class TestFileRegistry(BaseTestFileRegistry, unittest.TestCase):
             'bar': [],
         }
         reg = FileRegistry()
-        for path, parts in cases.iteritems():
+        for path, parts in six.iteritems(cases):
             self.assertEqual(reg._partial_paths(path), parts)
 
     def test_file_registry(self):
