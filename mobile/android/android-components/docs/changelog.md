@@ -23,6 +23,9 @@ permalink: /changelog/
 * **browser-icons**
   * ⚠️ **This is a breaking API change**: Creating a `BrowserIcons` instance requires a `Client` object (from `concept-fetch`) now.
 
+* **browser-engine-gecko-nightly**:
+  * Added new content blocking category for [fingerprinting](https://en.wikipedia.org/wiki/Device_fingerprint): `TrackingProtectionPolicy.FINGERPRINTING`.
+
 * **feature-findinpage**
    * Find in Page now emits facts
 

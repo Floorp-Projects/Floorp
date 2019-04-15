@@ -113,7 +113,8 @@ class GeckoEngineTest {
                 TrackingProtectionPolicy.ANALYTICS,
                 TrackingProtectionPolicy.CONTENT,
                 TrackingProtectionPolicy.TEST,
-                TrackingProtectionPolicy.CRYPTOMINING
+                TrackingProtectionPolicy.CRYPTOMINING,
+                TrackingProtectionPolicy.FINGERPRINTING
         ).categories, contentBlockingSettings.categories)
         assertEquals(defaultSettings.trackingProtectionPolicy, TrackingProtectionPolicy.all())
 
@@ -160,7 +161,8 @@ class GeckoEngineTest {
             TrackingProtectionPolicy.ANALYTICS,
             TrackingProtectionPolicy.CONTENT,
             TrackingProtectionPolicy.TEST,
-            TrackingProtectionPolicy.CRYPTOMINING
+            TrackingProtectionPolicy.CRYPTOMINING,
+            TrackingProtectionPolicy.FINGERPRINTING
         ).categories, contentBlockingSettings.categories)
         assertTrue(engine.settings.testingModeEnabled)
         assertEquals("test-ua", engine.settings.userAgentString)

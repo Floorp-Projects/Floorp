@@ -761,6 +761,7 @@ class GeckoEngineSessionTest {
         assertEquals(TrackingProtectionPolicy.SOCIAL, ContentBlocking.AT_SOCIAL)
         assertEquals(TrackingProtectionPolicy.TEST, ContentBlocking.AT_TEST)
         assertEquals(TrackingProtectionPolicy.CRYPTOMINING, ContentBlocking.AT_CRYPTOMINING)
+        assertEquals(TrackingProtectionPolicy.FINGERPRINTING, ContentBlocking.AT_FINGERPRINTING)
 
         assertEquals(TrackingProtectionPolicy.all().categories, ContentBlocking.AT_STRICT)
     }

@@ -340,7 +340,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
 
     private fun GeckoChoice.toChoice(): Choice {
         val choiceChildren = items?.map { it.toChoice() }?.toTypedArray()
-        return Choice(id, !disabled, label ?: "", selected, separator, choiceChildren)
+        return Choice(id, !disabled, label, selected, separator, choiceChildren)
     }
 
     /**
