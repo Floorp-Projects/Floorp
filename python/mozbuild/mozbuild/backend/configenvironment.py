@@ -5,11 +5,12 @@
 from __future__ import absolute_import, print_function
 
 import os
+import six
 import sys
 import json
 
 from collections import Iterable, OrderedDict
-from types import StringTypes, ModuleType
+from types import ModuleType
 
 import mozpack.path as mozpath
 
@@ -157,7 +158,7 @@ class ConfigEnvironment(object):
         )
 
         def serialize(name, obj):
-            if isinstance(obj, StringTypes):
+            if isinstance(obj, six.string_types):
                 return obj
             if isinstance(obj, Iterable):
                 return ' '.join(obj)
@@ -203,7 +204,7 @@ class ConfigEnvironment(object):
                     return v.decode('utf-8', 'replace')
 
         for k, v in self.substs.items():
-            if not isinstance(v, StringTypes):
+            if not isinstance(v, six.string_types):
                 if isinstance(v, Iterable):
                     type(v)(decode(i) for i in v)
             elif not isinstance(v, text_type):
