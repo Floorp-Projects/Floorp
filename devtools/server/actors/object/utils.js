@@ -59,6 +59,16 @@ function makeDebuggeeValueIfNeeded(obj, value) {
 }
 
 /**
+ * Convert a debuggee value into the underlying raw object, if needed.
+ */
+function unwrapDebuggeeValue(value) {
+  if (value && typeof value == "object") {
+    return value.unsafeDereference();
+  }
+  return value;
+}
+
+/**
  * Create a grip for the given debuggee value.  If the value is an
  * object, will create an actor with the given lifetime.
  */
@@ -232,6 +242,7 @@ function getStorageLength(object) {
 module.exports = {
   getPromiseState,
   makeDebuggeeValueIfNeeded,
+  unwrapDebuggeeValue,
   createValueGrip,
   stringIsLong,
   isTypedArray,

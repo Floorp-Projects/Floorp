@@ -767,7 +767,7 @@ errorOnFlag(exports, "wantVerbose");
 // avoids the use of unsafeDeference. This is useful for example in workers,
 // where unsafeDereference will return an opaque security wrapper to the
 // referent.
-function callPropertyOnObject(object, name) {
+function callPropertyOnObject(object, name, ...args) {
   // Find the property.
   let descriptor;
   let proto = object;
@@ -787,7 +787,7 @@ function callPropertyOnObject(object, name) {
   }
 
   // Call the property.
-  const result = value.call(object);
+  const result = value.call(object, ...args);
   if (result === null) {
     throw new Error("Code was terminated.");
   }
