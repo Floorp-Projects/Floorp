@@ -7,7 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=670817
 <window title="Mozilla Bug 987849"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
 <body xmlns="http://www.w3.org/1999/xhtml">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=987849">Mozilla Bug 987849</a>

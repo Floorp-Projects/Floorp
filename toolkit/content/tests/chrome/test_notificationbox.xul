@@ -6,7 +6,7 @@
   -->
 <window title="Notification Box" width="500" height="600"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>  
 
   <vbox id="nb"/>
   <menupopup id="menupopup" onpopupshown="this.hidePopup()" onpopuphidden="checkPopupClosed()">

@@ -8,7 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=695639
 <window title="Mozilla Bug 695639"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="RunTest();">
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="application/javascript">
   <![CDATA[
   /** Test for Bug 695639 - check that GetFontFacesForText handles wrapped lines properly **/

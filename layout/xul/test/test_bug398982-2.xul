@@ -7,7 +7,7 @@
 <!--
 https://bugzilla.mozilla.org/show_bug.cgi?id=398982
 -->
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
 <popupgroup style="position: absolute; ">
 <tooltip type="zzz">

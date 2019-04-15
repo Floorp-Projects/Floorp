@@ -7,8 +7,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469774
 <window title="Mozilla Bug 469774"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
 
 <vbox height="50"/>
 

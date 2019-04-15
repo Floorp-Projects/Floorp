@@ -8,7 +8,7 @@
 https://bugzilla.mozilla.org/show_bug.cgi?id=372685
 -->
 
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
 <menuitem id="a" style="display: -moz-stack;">
 <box id="b" style="display: -moz-popup; ">
