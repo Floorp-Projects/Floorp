@@ -342,11 +342,12 @@ class UrlbarView {
     this.panel.removeAttribute("actionoverride");
 
     // Make the panel span the width of the window.
+    let px = number => number.toFixed(2) + "px";
     let documentRect =
       this._getBoundsWithoutFlushing(this.document.documentElement);
     let width = documentRect.right - documentRect.left;
     this.panel.setAttribute("width", width);
-    this._mainContainer.style.maxWidth = width + "px";
+    this._mainContainer.style.maxWidth = px(width);
 
     // Keep the popup items' site icons aligned with the input's identity
     // icon if it's not too far from the edge of the window.  We define
@@ -374,22 +375,22 @@ class UrlbarView {
                     documentRect.right - identityRect.right :
                     identityRect.left;
 
-      this.panel.style.setProperty("--item-padding-start", Math.round(start) + "px");
-      this.panel.style.setProperty("--item-padding-end", Math.round(endOffset) + "px");
+      this.panel.style.setProperty("--item-padding-start", px(start));
+      this.panel.style.setProperty("--item-padding-end", px(endOffset));
       contentWidth -= start + endOffset;
     } else {
       this.panel.style.removeProperty("--item-padding-start");
       this.panel.style.removeProperty("--item-padding-end");
     }
-    this.panel.style.setProperty("--item-content-width", Math.round(contentWidth) + "px");
+    this.panel.style.setProperty("--item-content-width", px(contentWidth));
 
     // Align the panel with the input's parent toolbar.
     let toolbarRect =
       this._getBoundsWithoutFlushing(this.input.textbox.closest("toolbar"));
-    this.panel.style.marginInlineStart = Math.round(this.window.RTL_UI ?
+    this.panel.style.marginInlineStart = px(this.window.RTL_UI ?
       inputRect.right - documentRect.right :
-      documentRect.left - inputRect.left) + "px";
-    this.panel.style.marginTop = Math.round(inputRect.top - toolbarRect.top) + "px";
+      documentRect.left - inputRect.left);
+    this.panel.style.marginTop = px(inputRect.top - toolbarRect.top);
 
     this.panel.openPopup(this.input.textbox, "after_start");
   }
