@@ -2231,8 +2231,20 @@ MOZ_MUST_USE bool ScriptSource::setCompressedSource(JSContext* cx,
 }
 
 template <typename Unit>
-bool ScriptSource::setSourceCopy(JSContext* cx, SourceText<Unit>& srcBuf) {
-  MOZ_ASSERT(!hasSourceText());
+bool ScriptSource::assignSource(JSContext* cx,
+                                const ReadOnlyCompileOptions& options,
+                                SourceText<Unit>& srcBuf) {
+  MOZ_ASSERT(data.is<Missing>(),
+             "source assignment should only occur on fresh ScriptSources");
+
+  if (cx->realm()->behaviors().discardSource()) {
+    return true;
+  }
+
+  if (options.sourceIsLazy) {
+    sourceRetrievable_ = true;
+    return true;
+  }
 
   JSRuntime* runtime = cx->zone()->runtimeFromAnyThread();
   auto& cache = runtime->sharedImmutableStrings();
@@ -2251,10 +2263,12 @@ bool ScriptSource::setSourceCopy(JSContext* cx, SourceText<Unit>& srcBuf) {
   return true;
 }
 
-template bool ScriptSource::setSourceCopy(JSContext* cx,
-                                          SourceText<char16_t>& srcBuf);
-template bool ScriptSource::setSourceCopy(JSContext* cx,
-                                          SourceText<Utf8Unit>& srcBuf);
+template bool ScriptSource::assignSource(JSContext* cx,
+                                         const ReadOnlyCompileOptions& options,
+                                         SourceText<char16_t>& srcBuf);
+template bool ScriptSource::assignSource(JSContext* cx,
+                                         const ReadOnlyCompileOptions& options,
+                                         SourceText<Utf8Unit>& srcBuf);
 
 void ScriptSource::trace(JSTracer* trc) {
 #ifdef JS_BUILD_BINAST
