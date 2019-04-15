@@ -32,7 +32,7 @@ class SidebarRuntimeItem extends PureComponent {
       isConnectionFailed: PropTypes.bool.isRequired,
       isConnectionNotResponding: PropTypes.bool.isRequired,
       isSelected: PropTypes.bool.isRequired,
-      isUnknown: PropTypes.bool.isRequired,
+      isUnavailable: PropTypes.bool.isRequired,
       isUnplugged: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
       runtimeId: PropTypes.string.isRequired,
@@ -113,13 +113,13 @@ class SidebarRuntimeItem extends PureComponent {
   }
 
   renderName() {
-    const { deviceName, getString, isUnknown, isUnplugged, name } = this.props;
+    const { deviceName, getString, isUnavailable, isUnplugged, name } = this.props;
 
     let displayName, qaClassName;
     if (isUnplugged) {
       displayName = getString("about-debugging-sidebar-runtime-item-unplugged");
       qaClassName = "qa-runtime-item-unplugged";
-    } else if (isUnknown) {
+    } else if (isUnavailable) {
       displayName = getString("about-debugging-sidebar-runtime-item-waiting-for-browser");
       qaClassName = "qa-runtime-item-waiting-for-browser";
     } else {
@@ -177,7 +177,7 @@ class SidebarRuntimeItem extends PureComponent {
       icon,
       isConnected,
       isSelected,
-      isUnknown,
+      isUnavailable,
       runtimeId,
     } = this.props;
 
@@ -206,7 +206,7 @@ class SidebarRuntimeItem extends PureComponent {
             }
           ),
           this.renderName(),
-          !isUnknown && !isConnected ? this.renderConnectButton() : null
+          !isUnavailable && !isConnected ? this.renderConnectButton() : null
         ),
       ),
       this.renderConnectionError(),

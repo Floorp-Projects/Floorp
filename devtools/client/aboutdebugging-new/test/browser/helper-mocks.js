@@ -123,7 +123,6 @@ class Mocks {
    *        - channel: {String} Release channel, for instance "release", "nightly"
    *        - deviceId: {String} Device id
    *        - deviceName: {String} Device name
-   *        - isUnknown: {Function} should return a boolean, true for unknown runtimes
    *        - name: {String} Application name, for instance "Firefox"
    *        - shortName: {String} Short name for the device
    *        - socketPath: {String} (should only be used for connecting, so not here)
