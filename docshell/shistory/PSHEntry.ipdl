@@ -101,6 +101,7 @@ parent:
   sync AddChild(nullable PSHEntry childEntry, int32_t offset, bool useRemoteSubframes) returns (nsresult result);
   sync RemoveChild(PSHEntry childEntry) returns (nsresult result);
   sync GetChildAt(int32_t index) returns (MaybeNewPSHEntry childEntry);
+  sync GetChildSHEntryIfHasNoDynamicallyAddedChild(int32_t childOffset) returns (MaybeNewPSHEntry childEntry);
   sync ReplaceChild(PSHEntry newChildEntry) returns (nsresult result);
   sync ClearEntry(uint64_t aNewSharedID);
   sync CreateLoadInfo() returns (nsDocShellLoadState loadState);

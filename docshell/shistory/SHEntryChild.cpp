@@ -794,6 +794,14 @@ SHEntryChild::GetChildAt(int32_t aIndex, nsISHEntry** aResult) {
   return NS_OK;
 }
 
+NS_IMETHODIMP_(void)
+SHEntryChild::GetChildSHEntryIfHasNoDynamicallyAddedChild(int32_t aChildOffset,
+                                                          nsISHEntry** aChild) {
+  MaybeNewPSHEntry child;
+  SendGetChildSHEntryIfHasNoDynamicallyAddedChild(aChildOffset, &child);
+  *aChild = SHEntryChild::GetOrCreate(child).take();
+}
+
 NS_IMETHODIMP
 SHEntryChild::ReplaceChild(nsISHEntry* aNewEntry) {
   nsresult rv;
