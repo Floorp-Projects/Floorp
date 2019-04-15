@@ -110,25 +110,26 @@ private class FenixSnackbarCallback(
 ) : com.google.android.material.snackbar.ContentViewCallback {
 
     override fun animateContentIn(delay: Int, duration: Int) {
-        content.scaleY = minScaleY
+        content.translationY = (content.height).toFloat()
         content.animate().apply {
-            scaleY(maxScaleY)
-            setDuration(duration.toLong())
+            translationY(defaultYTranslation)
+            setDuration(animateInDuration)
             startDelay = delay.toLong()
         }
     }
 
     override fun animateContentOut(delay: Int, duration: Int) {
-        content.scaleY = maxScaleY
+        content.translationY = defaultYTranslation
         content.animate().apply {
-            scaleY(minScaleY)
-            setDuration(duration.toLong())
+            translationY((content.height).toFloat())
+            setDuration(animateOutDuration)
             startDelay = delay.toLong()
         }
     }
 
     companion object {
-        private const val minScaleY = 0f
-        private const val maxScaleY = 1f
+        private const val defaultYTranslation = 0f
+        private const val animateInDuration = 200L
+        private const val animateOutDuration = 150L
     }
 }
