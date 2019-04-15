@@ -6,6 +6,9 @@
         <link rel="stylesheet" type="text/css" href="pointerevent_styles.css">
         <script src="/resources/testharness.js"></script>
         <script src="/resources/testharnessreport.js"></script>
+        <script src="/resources/testdriver.js"></script>
+        <script src="/resources/testdriver-actions.js"></script>
+        <script src="/resources/testdriver-vendor.js"></script>
         <script src="pointerevent_support.js"></script>
         <style>
             #divParent {
@@ -114,9 +117,18 @@
                     }
 
                     if(xScrollIsReceived && yScrollIsReceived) {
-                        test_touchaction.done();
                         updateDescriptionComplete();
                     }
+                });
+
+                // Inject touch inputs and wait for all the actions finish to end the test.
+                touchScrollInTarget(target0, 'down').then(function() {
+                    return touchScrollInTarget(target0, 'right');
+                }).then(function() {
+                    test_touchaction.step(function () {
+                        assert_true(xScrollIsReceived && yScrollIsReceived, "x-scroll and y-scroll should be received before the test finishes");
+                    }, "x-scroll and y-scroll should be received before the test finishes");
+                    test_touchaction.done();
                 });
             }
 
