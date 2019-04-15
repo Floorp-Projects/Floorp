@@ -33,13 +33,17 @@ class nsISupports;
 
 namespace mozilla {
 
-/**
+/*****************************************************************************
+ * mozilla::SetDocumentStateCommand
+ *
  *  Commands for document state that may be changed via doCommandParams
  *  As of 11/11/02, this is just "cmd_setDocumentModified"
- *  Note that you can use the same command class, nsSetDocumentStateCommand,
+ *  Note that you can use the same command class, SetDocumentStateCommand,
  *    for more than one of this type of command
  *    We check the input command param for different behavior
- */
+ *****************************************************************************/
+
+StaticRefPtr<SetDocumentStateCommand> SetDocumentStateCommand::sInstance;
 
 NS_IMETHODIMP
 SetDocumentStateCommand::IsCommandEnabled(const char* aCommandName,
@@ -404,13 +408,15 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/**
+/*****************************************************************************
+ * mozilla::DocumentStateCommand
+ *
  * Commands just for state notification
  *  As of 11/21/02, possible commands are:
  *    "obs_documentCreated"
  *    "obs_documentWillBeDestroyed"
  *    "obs_documentLocationChanged"
- *  Note that you can use the same command class, nsDocumentStateCommand
+ *  Note that you can use the same command class, DocumentStateCommand
  *    for these or future observer commands.
  *    We check the input command param for different behavior
  *
@@ -437,8 +443,9 @@ SetDocumentStateCommand::GetCommandStateParams(const char* aCommandName,
  *     e.g., any creation state codes when creating an editor are
  *     supplied for "obs_documentCreated" command in the
  *     "state_data" param's value
- *
- */
+ *****************************************************************************/
+
+StaticRefPtr<DocumentStateCommand> DocumentStateCommand::sInstance;
 
 NS_IMETHODIMP
 DocumentStateCommand::IsCommandEnabled(const char* aCommandName,

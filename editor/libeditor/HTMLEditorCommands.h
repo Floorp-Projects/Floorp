@@ -6,8 +6,10 @@
 #ifndef mozilla_HTMLEditorCommands_h_
 #define mozilla_HTMLEditorCommands_h_
 
+#include "mozilla/StaticPtr.h"
 #include "nsIControllerCommand.h"
 #include "nsISupportsImpl.h"  // for NS_DECL_ISUPPORTS_INHERITED, etc
+#include "nsRefPtrHashtable.h"
 #include "nsStringFwd.h"
 #include "nscore.h"  // for nsresult, NS_IMETHOD
 
@@ -18,130 +20,215 @@ class nsISupports;
 namespace mozilla {
 class HTMLEditor;
 
-// This is a virtual base class for commands registered with the composer
-// controller. Note that such commands are instantiated once per composer, so
-// can store state. Also note that IsCommandEnabled can be called with an editor
-// that may not have an editor yet (because the document is loading). Most
-// commands will want to return false in this case. Don't hold on to any
-// references to the editor or document from your command. This will cause
-// leaks. Also, be aware that the document the editor is editing can change
-// under you (if the user Reverts the file, for instance).
+// This is a base class for commands registered with window which includes
+// HTMLEditor.  Like editor commands, these command classes are also designed
+// as singleton classes.  So, MUST be stateless.  Also note that
+// IsCommandEnabled can be called with an editor that may not have an editor
+// yet (because the document is loading).  Most commands will want to return
+// false in this case.  Don't hold on to any references to the editor or
+// document from your command.  This will cause leaks.  Also, be aware that
+// the document the editor is editing can change under you (if the user
+// Reverts the file, for instance).
 class HTMLEditorCommandBase : public nsIControllerCommand {
- protected:
-  virtual ~HTMLEditorCommandBase() {}
-
  public:
-  HTMLEditorCommandBase();
-
   // nsISupports
   NS_DECL_ISUPPORTS
+
+ protected:
+  HTMLEditorCommandBase() = default;
+  virtual ~HTMLEditorCommandBase() = default;
 };
 
-#define NS_DECL_COMPOSER_COMMAND(_cmd)              \
+#define NS_DECL_HTML_EDITOR_COMMAND(_cmd)           \
   class _cmd final : public HTMLEditorCommandBase { \
    public:                                          \
     NS_DECL_NSICONTROLLERCOMMAND                    \
+                                                    \
+    static _cmd* GetInstance() {                    \
+      if (!sInstance) {                             \
+        sInstance = new _cmd();                     \
+      }                                             \
+      return sInstance;                             \
+    }                                               \
+                                                    \
+    static void Shutdown() { sInstance = nullptr; } \
+                                                    \
+   private:                                         \
+    static StaticRefPtr<_cmd> sInstance;            \
   };
+
+#define NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(_cmd) \
+ public:                                            \
+  static _cmd* GetInstance() {                      \
+    if (!sInstance) {                               \
+      sInstance = new _cmd();                       \
+    }                                               \
+    return sInstance;                               \
+  }                                                 \
+                                                    \
+  static void Shutdown() { sInstance = nullptr; }   \
+                                                    \
+ private:                                           \
+  static StaticRefPtr<_cmd> sInstance;
 
 // virtual base class for commands that need to save and update Boolean state
 // (like styles etc)
 class StateUpdatingCommandBase : public HTMLEditorCommandBase {
  public:
-  explicit StateUpdatingCommandBase(nsAtom* aTagName);
-
   NS_INLINE_DECL_REFCOUNTING_INHERITED(StateUpdatingCommandBase,
                                        HTMLEditorCommandBase)
 
   NS_DECL_NSICONTROLLERCOMMAND
 
  protected:
-  virtual ~StateUpdatingCommandBase();
+  StateUpdatingCommandBase() = default;
+  virtual ~StateUpdatingCommandBase() { sTagNameTable.Clear(); }
 
   // get the current state (on or off) for this style or block format
   MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
       virtual nsresult
-      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) = 0;
+      GetCurrentState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
+                      nsICommandParams* aParams) = 0;
 
   // add/remove the style
   MOZ_CAN_RUN_SCRIPT
-  virtual nsresult ToggleState(HTMLEditor* aHTMLEditor) = 0;
+  virtual nsresult ToggleState(nsAtom* aTagName, HTMLEditor* aHTMLEditor) = 0;
 
- protected:
-  nsAtom* mTagName;
+  static already_AddRefed<nsAtom> TagName(const char* aCommandName) {
+    MOZ_DIAGNOSTIC_ASSERT(aCommandName);
+    if (NS_WARN_IF(!aCommandName)) {
+      return nullptr;
+    }
+    if (!sTagNameTable.Count()) {
+      sTagNameTable.Put("cmd_bold", nsGkAtoms::b);
+      sTagNameTable.Put("cmd_italic", nsGkAtoms::i);
+      sTagNameTable.Put("cmd_underline", nsGkAtoms::u);
+      sTagNameTable.Put("cmd_tt", nsGkAtoms::tt);
+      sTagNameTable.Put("cmd_strikethrough", nsGkAtoms::strike);
+      sTagNameTable.Put("cmd_superscript", nsGkAtoms::sup);
+      sTagNameTable.Put("cmd_subscript", nsGkAtoms::sub);
+      sTagNameTable.Put("cmd_nobreak", nsGkAtoms::nobr);
+      sTagNameTable.Put("cmd_em", nsGkAtoms::em);
+      sTagNameTable.Put("cmd_strong", nsGkAtoms::strong);
+      sTagNameTable.Put("cmd_cite", nsGkAtoms::cite);
+      sTagNameTable.Put("cmd_abbr", nsGkAtoms::abbr);
+      sTagNameTable.Put("cmd_acronym", nsGkAtoms::acronym);
+      sTagNameTable.Put("cmd_code", nsGkAtoms::code);
+      sTagNameTable.Put("cmd_samp", nsGkAtoms::samp);
+      sTagNameTable.Put("cmd_var", nsGkAtoms::var);
+      sTagNameTable.Put("cmd_removeLinks", nsGkAtoms::href);
+      sTagNameTable.Put("cmd_ol", nsGkAtoms::ol);
+      sTagNameTable.Put("cmd_ul", nsGkAtoms::ul);
+      sTagNameTable.Put("cmd_dt", nsGkAtoms::dt);
+      sTagNameTable.Put("cmd_dd", nsGkAtoms::dd);
+      sTagNameTable.Put("cmd_absPos", nsGkAtoms::_empty);
+    }
+    RefPtr<nsAtom> tagName = sTagNameTable.Get(aCommandName);
+    MOZ_DIAGNOSTIC_ASSERT(tagName);
+    return tagName.forget();
+  }
+
+  static nsRefPtrHashtable<nsCharPtrHashKey, nsAtom> sTagNameTable;
 };
 
 // Shared class for the various style updating commands like bold, italics etc.
 // Suitable for commands whose state is either 'on' or 'off'.
 class StyleUpdatingCommand final : public StateUpdatingCommandBase {
  public:
-  explicit StyleUpdatingCommand(nsAtom* aTagName);
+  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(StyleUpdatingCommand)
 
  protected:
+  StyleUpdatingCommand() = default;
+  virtual ~StyleUpdatingCommand() = default;
+
   // get the current state (on or off) for this style or block format
   MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
       nsresult
-      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
+      GetCurrentState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
+                      nsICommandParams* aParams) final;
 
   // add/remove the style
   MOZ_CAN_RUN_SCRIPT
-  nsresult ToggleState(HTMLEditor* aHTMLEditor) final;
+  nsresult ToggleState(nsAtom* aTagName, HTMLEditor* aHTMLEditor) final;
 };
 
 class InsertTagCommand final : public HTMLEditorCommandBase {
  public:
-  explicit InsertTagCommand(nsAtom* aTagName);
-
   NS_INLINE_DECL_REFCOUNTING_INHERITED(InsertTagCommand, HTMLEditorCommandBase)
 
   NS_DECL_NSICONTROLLERCOMMAND
+  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(InsertTagCommand)
 
  protected:
-  virtual ~InsertTagCommand();
+  InsertTagCommand() = default;
+  virtual ~InsertTagCommand() { sTagNameTable.Clear(); }
 
-  nsAtom* mTagName;
+  static already_AddRefed<nsAtom> TagName(const char* aCommandName) {
+    MOZ_DIAGNOSTIC_ASSERT(aCommandName);
+    if (NS_WARN_IF(!aCommandName)) {
+      return nullptr;
+    }
+    if (!sTagNameTable.Count()) {
+      sTagNameTable.Put("cmd_insertLinkNoUI", nsGkAtoms::a);
+      sTagNameTable.Put("cmd_insertImageNoUI", nsGkAtoms::img);
+      sTagNameTable.Put("cmd_insertHR", nsGkAtoms::hr);
+    }
+    RefPtr<nsAtom> tagName = sTagNameTable.Get(aCommandName);
+    MOZ_DIAGNOSTIC_ASSERT(tagName);
+    return tagName.forget();
+  }
+
+  static nsRefPtrHashtable<nsCharPtrHashKey, nsAtom> sTagNameTable;
 };
 
 class ListCommand final : public StateUpdatingCommandBase {
  public:
-  explicit ListCommand(nsAtom* aTagName);
+  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(ListCommand)
 
  protected:
+  ListCommand() = default;
+  virtual ~ListCommand() = default;
+
   // get the current state (on or off) for this style or block format
   MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
       nsresult
-      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
+      GetCurrentState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
+                      nsICommandParams* aParams) final;
 
   // add/remove the style
   MOZ_CAN_RUN_SCRIPT
-  nsresult ToggleState(HTMLEditor* aHTMLEditor) final;
+  nsresult ToggleState(nsAtom* aTagName, HTMLEditor* aHTMLEditor) final;
 };
 
 class ListItemCommand final : public StateUpdatingCommandBase {
  public:
-  explicit ListItemCommand(nsAtom* aTagName);
+  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(ListItemCommand)
 
  protected:
+  ListItemCommand() = default;
+  virtual ~ListItemCommand() = default;
+
   // get the current state (on or off) for this style or block format
   MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
       nsresult
-      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
+      GetCurrentState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
+                      nsICommandParams* aParams) final;
 
   // add/remove the style
   MOZ_CAN_RUN_SCRIPT
-  nsresult ToggleState(HTMLEditor* aHTMLEditor) final;
+  nsresult ToggleState(nsAtom* aTagName, HTMLEditor* aHTMLEditor) final;
 };
 
 // Base class for commands whose state consists of a string (e.g. para format)
 class MultiStateCommandBase : public HTMLEditorCommandBase {
  public:
-  MultiStateCommandBase();
-
   NS_INLINE_DECL_REFCOUNTING_INHERITED(MultiStateCommandBase,
                                        HTMLEditorCommandBase)
   NS_DECL_NSICONTROLLERCOMMAND
 
  protected:
-  virtual ~MultiStateCommandBase();
+  MultiStateCommandBase() = default;
+  virtual ~MultiStateCommandBase() = default;
 
   MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
       virtual nsresult
@@ -153,9 +240,12 @@ class MultiStateCommandBase : public HTMLEditorCommandBase {
 
 class ParagraphStateCommand final : public MultiStateCommandBase {
  public:
-  ParagraphStateCommand();
+  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(ParagraphStateCommand)
 
  protected:
+  ParagraphStateCommand() = default;
+  virtual ~ParagraphStateCommand() = default;
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
       nsresult
       GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
@@ -165,9 +255,12 @@ class ParagraphStateCommand final : public MultiStateCommandBase {
 
 class FontFaceStateCommand final : public MultiStateCommandBase {
  public:
-  FontFaceStateCommand();
+  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(FontFaceStateCommand)
 
  protected:
+  FontFaceStateCommand() = default;
+  virtual ~FontFaceStateCommand() = default;
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
       nsresult
       GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
@@ -177,9 +270,12 @@ class FontFaceStateCommand final : public MultiStateCommandBase {
 
 class FontSizeStateCommand final : public MultiStateCommandBase {
  public:
-  FontSizeStateCommand();
+  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(FontSizeStateCommand)
 
  protected:
+  FontSizeStateCommand() = default;
+  virtual ~FontSizeStateCommand() = default;
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
       nsresult
       GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
@@ -189,9 +285,12 @@ class FontSizeStateCommand final : public MultiStateCommandBase {
 
 class HighlightColorStateCommand final : public MultiStateCommandBase {
  public:
-  HighlightColorStateCommand();
+  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(HighlightColorStateCommand)
 
  protected:
+  HighlightColorStateCommand() = default;
+  virtual ~HighlightColorStateCommand() = default;
+
   NS_IMETHOD IsCommandEnabled(const char* aCommandName,
                               nsISupports* aCommandRefCon, bool* _retval) final;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
@@ -203,9 +302,12 @@ class HighlightColorStateCommand final : public MultiStateCommandBase {
 
 class FontColorStateCommand final : public MultiStateCommandBase {
  public:
-  FontColorStateCommand();
+  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(FontColorStateCommand)
 
  protected:
+  FontColorStateCommand() = default;
+  virtual ~FontColorStateCommand() = default;
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
       nsresult
       GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
@@ -215,9 +317,12 @@ class FontColorStateCommand final : public MultiStateCommandBase {
 
 class AlignCommand final : public MultiStateCommandBase {
  public:
-  AlignCommand();
+  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(AlignCommand)
 
  protected:
+  AlignCommand() = default;
+  virtual ~AlignCommand() = default;
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
       nsresult
       GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
@@ -227,9 +332,12 @@ class AlignCommand final : public MultiStateCommandBase {
 
 class BackgroundColorStateCommand final : public MultiStateCommandBase {
  public:
-  BackgroundColorStateCommand();
+  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(BackgroundColorStateCommand)
 
  protected:
+  BackgroundColorStateCommand() = default;
+  virtual ~BackgroundColorStateCommand() = default;
+
   MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
       nsresult
       GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
@@ -239,42 +347,46 @@ class BackgroundColorStateCommand final : public MultiStateCommandBase {
 
 class AbsolutePositioningCommand final : public StateUpdatingCommandBase {
  public:
-  AbsolutePositioningCommand();
+  NS_DECL_HTML_EDITOR_COMMAND_SINGLETON(AbsolutePositioningCommand)
 
  protected:
+  AbsolutePositioningCommand() = default;
+  virtual ~AbsolutePositioningCommand() = default;
+
   NS_IMETHOD IsCommandEnabled(const char* aCommandName,
                               nsISupports* aCommandRefCon, bool* _retval) final;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY  // XXX Needs to change nsIControllerCommand.idl
       nsresult
-      GetCurrentState(HTMLEditor* aHTMLEditor, nsICommandParams* aParams) final;
+      GetCurrentState(nsAtom* aTagName, HTMLEditor* aHTMLEditor,
+                      nsICommandParams* aParams) final;
   MOZ_CAN_RUN_SCRIPT
-  nsresult ToggleState(HTMLEditor* aHTMLEditor) final;
+  nsresult ToggleState(nsAtom* aTagName, HTMLEditor* aHTMLEditor) final;
 };
 
 // composer commands
 
-NS_DECL_COMPOSER_COMMAND(DocumentStateCommand)
-NS_DECL_COMPOSER_COMMAND(SetDocumentStateCommand)
+NS_DECL_HTML_EDITOR_COMMAND(DocumentStateCommand)
+NS_DECL_HTML_EDITOR_COMMAND(SetDocumentStateCommand)
 
-NS_DECL_COMPOSER_COMMAND(DecreaseZIndexCommand)
-NS_DECL_COMPOSER_COMMAND(IncreaseZIndexCommand)
+NS_DECL_HTML_EDITOR_COMMAND(DecreaseZIndexCommand)
+NS_DECL_HTML_EDITOR_COMMAND(IncreaseZIndexCommand)
 
 // Generic commands
 
 // Edit menu
-NS_DECL_COMPOSER_COMMAND(PasteNoFormattingCommand)
+NS_DECL_HTML_EDITOR_COMMAND(PasteNoFormattingCommand)
 
 // Block transformations
-NS_DECL_COMPOSER_COMMAND(IndentCommand)
-NS_DECL_COMPOSER_COMMAND(OutdentCommand)
+NS_DECL_HTML_EDITOR_COMMAND(IndentCommand)
+NS_DECL_HTML_EDITOR_COMMAND(OutdentCommand)
 
-NS_DECL_COMPOSER_COMMAND(RemoveListCommand)
-NS_DECL_COMPOSER_COMMAND(RemoveStylesCommand)
-NS_DECL_COMPOSER_COMMAND(IncreaseFontSizeCommand)
-NS_DECL_COMPOSER_COMMAND(DecreaseFontSizeCommand)
+NS_DECL_HTML_EDITOR_COMMAND(RemoveListCommand)
+NS_DECL_HTML_EDITOR_COMMAND(RemoveStylesCommand)
+NS_DECL_HTML_EDITOR_COMMAND(IncreaseFontSizeCommand)
+NS_DECL_HTML_EDITOR_COMMAND(DecreaseFontSizeCommand)
 
 // Insert content commands
-NS_DECL_COMPOSER_COMMAND(InsertHTMLCommand)
+NS_DECL_HTML_EDITOR_COMMAND(InsertHTMLCommand)
 
 }  // namespace mozilla
 
