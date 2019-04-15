@@ -31,6 +31,10 @@ class AdbRuntime {
     return `Firefox ${this._channel()}`;
   }
 
+  get socketPath() {
+    return this._socketPath;
+  }
+
   get name() {
     return `${this.shortName} on Android (${this.deviceName})`;
   }
@@ -41,10 +45,6 @@ class AdbRuntime {
       connection.port = port;
       connection.connect();
     });
-  }
-
-  isUnknown() {
-    return false;
   }
 
   _channel() {
@@ -77,31 +77,3 @@ class AdbRuntime {
   }
 }
 exports.AdbRuntime = AdbRuntime;
-
-/**
- * UnknownAdbRuntime instance will be used to represent devices which have USB debugging
- * enabled but where Firefox (or another debuggable gecko-based runtime) is either not
- * started or not ready for USB debugging.
- */
-class UnknownAdbRuntime extends AdbRuntime {
-  constructor(adbDevice) {
-    super(adbDevice);
-  }
-
-  get id() {
-    return this._adbDevice.id;
-  }
-
-  get shortName() {
-    return "Unknown runtime";
-  }
-
-  connect(connection) {
-    throw new Error("Cannot connect on unknown runtime");
-  }
-
-  isUnknown() {
-    return true;
-  }
-}
-exports.UnknownAdbRuntime = UnknownAdbRuntime;

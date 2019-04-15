@@ -128,9 +128,11 @@ class Mocks {
     // Add a new runtime to the list of scanned runtimes.
     this._usbRuntimes.push({
       id: id,
-      _socketPath: runtimeInfo.socketPath || "test/path",
+      socketPath: runtimeInfo.socketPath || "test/path",
       deviceName: runtimeInfo.deviceName || "test device name",
-      isUnknown: runtimeInfo.isUnknown || (() => false),
+      get isUnknown() {
+        return runtimeInfo.isUnknown || false;
+      },
       shortName: runtimeInfo.shortName || "testshort",
     });
 
