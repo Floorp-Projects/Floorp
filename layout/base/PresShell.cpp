@@ -946,6 +946,11 @@ void PresShell::Init(Document* aDocument, nsPresContext* aPresContext,
 
   mPresContext->DeviceContext()->InitFontCache();
 
+  // FIXME(emilio, bug 1544185): Some Android code somehow depends on the shell
+  // being eagerly registered as a style flush observer. This shouldn't be
+  // needed otherwise.
+  EnsureStyleFlush();
+
   // Add the preference style sheet.
   UpdatePreferenceStyles();
 
