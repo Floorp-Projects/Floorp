@@ -64,13 +64,14 @@ interface Engine {
      * @param ext the [WebExtension] to install.
      * @param onSuccess (optional) callback invoked if the extension was installed successfully.
      * @param onError (optional) callback invoked if there was an error installing the extension.
-     * @throws UnsupportedOperationException if this engine doesn't support web extensions.
+     * This callback is invoked with an [UnsupportedOperationException] in case the engine doesn't
+     * have web extension support.
      */
     fun installWebExtension(
         ext: WebExtension,
         onSuccess: ((WebExtension) -> Unit) = { },
         onError: ((WebExtension, Throwable) -> Unit) = { _, _ -> }
-    ): Unit = throw UnsupportedOperationException("Web extension support is not available in this engine")
+    ): Unit = onError(ext, UnsupportedOperationException("Web extension support is not available in this engine"))
 
     /**
      * Provides access to the settings of this engine.
