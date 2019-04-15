@@ -85,8 +85,8 @@ class PictureInPictureToggleChild extends ActorChild {
         }
         break;
       }
-      case "click": {
-        // Stubbed out for later patch in this series
+      case "mousedown": {
+        this.onMouseDown(event);
         break;
       }
       case "mousemove": {
@@ -189,9 +189,12 @@ class PictureInPictureToggleChild extends ActorChild {
       }, MOUSEMOVE_PROCESSING_DELAY_MS);
     }
     this.content.document.addEventListener("mousemove", this,
-                                           { mozSystemGroup: true });
-    this.content.document.addEventListener("click", this,
-                                           { mozSystemGroup: true });
+                                           { mozSystemGroup: true, capture: true });
+    // We want to try to cancel the mouse events from continuing
+    // on into content if the user has clicked on the toggle, so
+    // we don't use the mozSystemGroup here.
+    this.content.document.addEventListener("mousedown", this,
+                                           { capture: true });
   }
 
   /**
@@ -203,12 +206,62 @@ class PictureInPictureToggleChild extends ActorChild {
     let state = this.docState;
     state.mousemoveDeferredTask.disarm();
     this.content.document.removeEventListener("mousemove", this,
-                                              { mozSystemGroup: true });
-    this.content.document.removeEventListener("click", this,
-                                              { mozSystemGroup: true });
+                                              { mozSystemGroup: true, capture: true });
+    this.content.document.removeEventListener("mousedown", this,
+                                              { capture: true });
     let oldOverVideo = state.weakOverVideo && state.weakOverVideo.get();
     if (oldOverVideo) {
       this.onMouseLeaveVideo(oldOverVideo);
+    }
+  }
+
+  /**
+   * If we're tracking <video> elements, this mousedown event handler is run anytime
+   * a mousedown occurs on the document. This function is responsible for checking
+   * if the user clicked on the Picture-in-Picture toggle. It does this by first
+   * checking if the video is visible beneath the point that was clicked. Then
+   * it tests whether or not the mousedown occurred within the rectangle of the
+   * toggle. If so, the event's default behaviour and propagation are stopped,
+   * and Picture-in-Picture is triggered.
+   *
+   * @param {Event} event The mousemove event.
+   */
+  onMouseDown(event) {
+    let state = this.docState;
+    let video = state.weakOverVideo && state.weakOverVideo.get();
+    if (!video) {
+      return;
+    }
+
+    let shadowRoot = video.openOrClosedShadowRoot;
+    if (!shadowRoot) {
+      return;
+    }
+
+    let { clientX, clientY } = event;
+    let winUtils = this.content.windowUtils;
+    // We use winUtils.nodesFromRect instead of document.elementsFromPoint,
+    // since document.elementsFromPoint always flushes layout. The 1's in that
+    // function call are for the size of the rect that we want, which is 1x1.
+    //
+    // We pass the aOnlyVisible boolean argument to check that the video isn't
+    // occluded by anything visible at the point of mousedown. If it is, we'll
+    // ignore the mousedown.
+    let elements = winUtils.nodesFromRect(clientX, clientY, 1, 1, 1, 1, true,
+                                          false, true /* aOnlyVisible */);
+    if (!Array.from(elements).includes(video)) {
+      return;
+    }
+
+    let toggle = shadowRoot.getElementById("pictureInPictureToggleButton");
+    if (this.isMouseOverToggle(toggle, event)) {
+      event.preventDefault();
+      event.stopPropagation();
+      let pipEvent =
+        new this.content.CustomEvent("MozTogglePictureInPicture", {
+          bubbles: true,
+        });
+      video.dispatchEvent(pipEvent);
     }
   }
 
