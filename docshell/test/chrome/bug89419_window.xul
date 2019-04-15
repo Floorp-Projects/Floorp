@@ -14,7 +14,7 @@
   <script type="text/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/specialpowers.js"/>
   <script type="application/javascript" src="docshell_helpers.js" />
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
 
   <script type="application/javascript"><![CDATA[
     // Define the generator-iterator for the tests.
