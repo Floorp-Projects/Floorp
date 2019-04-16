@@ -16,6 +16,8 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 job-defaults:
+    attributes:
+        retrigger: true
     treeherder:
         kind: build
         tier: 1
