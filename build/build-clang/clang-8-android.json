@@ -42,6 +42,15 @@
           "/builds/worker/workspace/build/src/android-ndk/sysroot/usr/include"
         ],
         "api_level": 21
+      },
+      "x86_64-linux-android": {
+        "ndk_toolchain": "/builds/worker/workspace/build/src/android-ndk/toolchains/x86_64-4.9/prebuilt/linux-x86_64",
+        "ndk_sysroot": "/builds/worker/workspace/build/src/android-ndk/platforms/android-21/arch-x86_64",
+        "ndk_includes": [
+          "/builds/worker/workspace/build/src/android-ndk/sysroot/usr/include/x86_64-linux-android",
+          "/builds/worker/workspace/build/src/android-ndk/sysroot/usr/include"
+        ],
+        "api_level": 21
       }
     },
     "patches": [
