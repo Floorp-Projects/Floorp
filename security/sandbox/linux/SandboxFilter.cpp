@@ -629,6 +629,13 @@ class SandboxPolicyCommon : public SandboxPolicyBase {
       case __NR_getrandom:
         return Allow();
 
+#ifdef DESKTOP
+        // Bug 1543858: glibc's qsort calls sysinfo to check the
+        // memory size; it falls back to assuming there's enough RAM.
+      case __NR_sysinfo:
+        return Error(EPERM);
+#endif
+
 #ifdef MOZ_ASAN
         // ASAN's error reporter wants to know if stderr is a tty.
       case __NR_ioctl: {
