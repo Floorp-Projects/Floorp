@@ -8,7 +8,13 @@ const {
   workerUtils: { WorkerDispatcher }
 } = require("devtools-utils");
 
-import type { SourceLocation, Source, SourceId } from "../../../src/types";
+import type {
+  OriginalFrame,
+  Range,
+  SourceLocation,
+  Source,
+  SourceId
+} from "../../../src/types";
 import type { SourceMapConsumer } from "source-map";
 import type { locationOptions } from "./source-map";
 
@@ -87,18 +93,7 @@ export const getGeneratedRangesForOriginal = async (
   sourceId: SourceId,
   url: string,
   mergeUnmappedRegions?: boolean
-): Promise<
-  Array<{
-    start: {
-      line: number,
-      column: number
-    },
-    end: {
-      line: number,
-      column: number
-    }
-  }>
-> =>
+): Promise<Range[]> =>
   dispatcher.invoke(
     "getGeneratedRangesForOriginal",
     sourceId,
@@ -108,8 +103,7 @@ export const getGeneratedRangesForOriginal = async (
 
 export const getFileGeneratedRange = async (
   originalSource: Source
-): Promise<?{ start: any, end: any }> =>
-  dispatcher.invoke("getFileGeneratedRange", originalSource);
+): Promise<Range> => dispatcher.invoke("getFileGeneratedRange", originalSource);
 
 export const getLocationScopes = dispatcher.task("getLocationScopes");
 
@@ -137,10 +131,8 @@ export const hasMappedSource = async (
 
 export const getOriginalStackFrames = async (
   generatedLocation: SourceLocation
-): Promise<?Array<{
-  displayName: string,
-  location?: SourceLocation
-}>> => dispatcher.invoke("getOriginalStackFrames", generatedLocation);
+): Promise<?Array<OriginalFrame>> =>
+  dispatcher.invoke("getOriginalStackFrames", generatedLocation);
 
 export {
   originalToGeneratedId,
