@@ -158,6 +158,7 @@
     const onDataChannel = t.unreached_func('datachannel event should not be fired');
 
     localPc.createDataChannel('test', {
+      id: 1,
       negotiated: true
     });
 
