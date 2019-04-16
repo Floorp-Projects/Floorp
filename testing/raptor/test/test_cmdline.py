@@ -16,7 +16,8 @@ def test_verify_options(filedir):
                      page_cycles=1,
                      page_timeout=60000,
                      debug='True',
-                     power_test=False)
+                     power_test=False,
+                     memory_test=False)
     parser = ArgumentParser()
 
     with pytest.raises(SystemExit):
@@ -31,7 +32,8 @@ def test_verify_options(filedir):
                      gecko_profile='False',
                      is_release_build=False,
                      host='sophie',
-                     power_test=False)
+                     power_test=False,
+                     memory_test=False)
     verify_options(parser, args)  # assert no exception
 
     args = Namespace(app='refbrow',
@@ -40,7 +42,8 @@ def test_verify_options(filedir):
                      gecko_profile='False',
                      is_release_build=False,
                      host='sophie',
-                     power_test=False)
+                     power_test=False,
+                     memory_test=False)
     verify_options(parser, args)  # assert no exception
 
     args = Namespace(app='fenix',
@@ -49,7 +52,8 @@ def test_verify_options(filedir):
                      gecko_profile='False',
                      is_release_build=False,
                      host='sophie',
-                     power_test=False)
+                     power_test=False,
+                     memory_test=False)
     verify_options(parser, args)  # assert no exception
 
     args = Namespace(app='refbrow',
@@ -58,7 +62,8 @@ def test_verify_options(filedir):
                      gecko_profile='False',
                      is_release_build=False,
                      host='sophie',
-                     power_test=False)
+                     power_test=False,
+                     memory_test=False)
     parser = ArgumentParser()
 
     verify_options(parser, args)  # also will work as uses default activity
