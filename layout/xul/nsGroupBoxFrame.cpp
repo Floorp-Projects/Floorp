@@ -9,10 +9,11 @@
 #include "nsBoxFrame.h"
 
 #include "gfxContext.h"
+#include "mozilla/ComputedStyle.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/gfx/2D.h"
 #include "nsCSSRendering.h"
 #include "nsLayoutUtils.h"
-#include "mozilla/ComputedStyle.h"
 #include "nsDisplayList.h"
 
 using namespace mozilla;
@@ -86,7 +87,7 @@ public:
 };
 */
 
-nsIFrame* NS_NewGroupBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewGroupBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsGroupBoxFrame(aStyle, aPresShell->GetPresContext());
 }
 

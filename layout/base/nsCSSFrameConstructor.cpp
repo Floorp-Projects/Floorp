@@ -131,56 +131,49 @@ using namespace mozilla::dom;
 // An alias for convenience.
 static const nsIFrame::ChildListID kPrincipalList = nsIFrame::kPrincipalList;
 
-nsIFrame* NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell,
-                                ComputedStyle* aStyle);
+nsIFrame* NS_NewHTMLCanvasFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewHTMLVideoFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewHTMLVideoFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsContainerFrame* NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewSVGOuterSVGFrame(PresShell* aPresShell,
                                          ComputedStyle* aStyle);
-nsContainerFrame* NS_NewSVGOuterSVGAnonChildFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewSVGOuterSVGAnonChildFrame(PresShell* aPresShell,
                                                   ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGGeometryFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGGFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewSVGInnerSVGFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGGeometryFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGGFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGGenericContainerFrame(PresShell* aPresShell,
                                          ComputedStyle* aStyle);
-nsContainerFrame* NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewSVGForeignObjectFrame(PresShell* aPresShell,
                                               ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGAFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGSymbolFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGTextFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
-                                  ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGUseFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGViewFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-extern nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewSVGAFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGSwitchFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGSymbolFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGTextFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGContainerFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGUseFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGViewFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+extern nsIFrame* NS_NewSVGLinearGradientFrame(PresShell* aPresShell,
                                               ComputedStyle* aStyle);
-extern nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell,
+extern nsIFrame* NS_NewSVGRadialGradientFrame(PresShell* aPresShell,
                                               ComputedStyle* aStyle);
-extern nsIFrame* NS_NewSVGStopFrame(nsIPresShell* aPresShell,
+extern nsIFrame* NS_NewSVGStopFrame(PresShell* aPresShell,
                                     ComputedStyle* aStyle);
-nsContainerFrame* NS_NewSVGMarkerFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewSVGMarkerFrame(PresShell* aPresShell,
                                        ComputedStyle* aStyle);
-nsContainerFrame* NS_NewSVGMarkerAnonChildFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewSVGMarkerAnonChildFrame(PresShell* aPresShell,
                                                 ComputedStyle* aStyle);
-extern nsIFrame* NS_NewSVGImageFrame(nsIPresShell* aPresShell,
+extern nsIFrame* NS_NewSVGImageFrame(PresShell* aPresShell,
                                      ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGClipPathFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGFilterFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGPatternFrame(nsIPresShell* aPresShell,
-                                ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGMaskFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewSVGClipPathFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGFilterFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGPatternFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGMaskFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGFEContainerFrame(PresShell* aPresShell,
                                     ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGFELeafFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGFEImageFrame(nsIPresShell* aPresShell,
-                                ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewSVGFELeafFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGFEImageFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGFEUnstyledLeafFrame(PresShell* aPresShell,
                                        ComputedStyle* aStyle);
 
 #include "mozilla/dom/NodeInfo.h"
@@ -218,74 +211,71 @@ static FrameCtorDebugFlags gFlags[] = {
 
 //------------------------------------------------------------------
 
-nsContainerFrame* NS_NewRootBoxFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewRootBoxFrame(PresShell* aPresShell,
                                      ComputedStyle* aStyle);
 
-nsContainerFrame* NS_NewDocElementBoxFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewDocElementBoxFrame(PresShell* aPresShell,
                                            ComputedStyle* aStyle);
 
-nsIFrame* NS_NewDeckFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewDeckFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewLeafBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewLeafBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewStackFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewStackFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewRangeFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewRangeFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewImageBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewImageBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewTextBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewTextBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewGroupBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewGroupBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewButtonBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewButtonBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewSplitterFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSplitterFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewMenuPopupFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewMenuPopupFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewPopupSetFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewPopupSetFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewMenuFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle,
+nsIFrame* NS_NewMenuFrame(PresShell* aPresShell, ComputedStyle* aStyle,
                           uint32_t aFlags);
 
-nsIFrame* NS_NewMenuBarFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewMenuBarFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewTreeBodyFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewTreeBodyFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 // grid
-nsresult NS_NewGridLayout2(nsIPresShell* aPresShell, nsBoxLayout** aNewLayout);
-nsIFrame* NS_NewGridRowLeafFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle);
-nsIFrame* NS_NewGridRowGroupFrame(nsIPresShell* aPresShell,
-                                  ComputedStyle* aStyle);
+nsresult NS_NewGridLayout2(nsBoxLayout** aNewLayout);
+nsIFrame* NS_NewGridRowLeafFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewGridRowGroupFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 // end grid
 
-nsIFrame* NS_NewTitleBarFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewTitleBarFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewResizerFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 #endif
 
-nsHTMLScrollFrame* NS_NewHTMLScrollFrame(nsIPresShell* aPresShell,
+nsHTMLScrollFrame* NS_NewHTMLScrollFrame(PresShell* aPresShell,
                                          ComputedStyle* aStyle, bool aIsRoot);
 
-nsXULScrollFrame* NS_NewXULScrollFrame(nsIPresShell* aPresShell,
+nsXULScrollFrame* NS_NewXULScrollFrame(PresShell* aPresShell,
                                        ComputedStyle* aStyle, bool aIsRoot,
                                        bool aClipAllDescendants);
 
-nsIFrame* NS_NewSliderFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSliderFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewScrollbarFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewScrollbarFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewScrollbarButtonFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewScrollbarButtonFrame(PresShell* aPresShell,
                                      ComputedStyle* aStyle);
 
-nsIFrame* NS_NewImageFrameForContentProperty(nsIPresShell*, ComputedStyle*);
+nsIFrame* NS_NewImageFrameForContentProperty(PresShell*, ComputedStyle*);
 
-nsIFrame* NS_NewImageFrameForGeneratedContentIndex(nsIPresShell*,
-                                                   ComputedStyle*);
+nsIFrame* NS_NewImageFrameForGeneratedContentIndex(PresShell*, ComputedStyle*);
 
 // Returns true if aFrame is an anonymous flex/grid item.
 static inline bool IsAnonymousFlexOrGridItem(const nsIFrame* aFrame) {
@@ -3952,10 +3942,10 @@ static bool IsXULDisplayType(const nsStyleDisplay* aDisplay) {
 #define SCROLLABLE_ABSPOS_CONTAINER_XUL_DISPLAY_CREATE(_display, _func) \
   FCDATA_FOR_DISPLAY(_display, SCROLLABLE_ABSPOS_CONTAINER_XUL_FCDATA(_func))
 
-static nsIFrame* NS_NewGridBoxFrame(nsIPresShell* aPresShell,
+static nsIFrame* NS_NewGridBoxFrame(PresShell* aPresShell,
                                     ComputedStyle* aComputedStyle) {
   nsCOMPtr<nsBoxLayout> layout;
-  NS_NewGridLayout2(aPresShell, getter_AddRefs(layout));
+  NS_NewGridLayout2(getter_AddRefs(layout));
   return NS_NewBoxFrame(aPresShell, aComputedStyle, false, layout);
 }
 
@@ -4062,7 +4052,7 @@ nsCSSFrameConstructor::FindXULLabelData(const Element& aElement,
   return &sLabelData;
 }
 
-static nsIFrame* NS_NewXULDescriptionFrame(nsIPresShell* aPresShell,
+static nsIFrame* NS_NewXULDescriptionFrame(PresShell* aPresShell,
                                            ComputedStyle* aContext) {
   // XXXbz do we really need to set up the block formatting context root? If the
   // parent is not a block we'll get it anyway, and if it is, do we want it?

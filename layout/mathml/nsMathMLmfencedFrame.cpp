@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gfxContext.h"
+#include "mozilla/PresShell.h"
 #include "nsMathMLmfencedFrame.h"
 #include "nsMathMLChar.h"
 #include <algorithm>
@@ -17,7 +18,7 @@ using mozilla::gfx::DrawTarget;
 // <mfenced> -- surround content with a pair of fences
 //
 
-nsIFrame* NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewMathMLmfencedFrame(PresShell* aPresShell,
                                    ComputedStyle* aStyle) {
   return new (aPresShell)
       nsMathMLmfencedFrame(aStyle, aPresShell->GetPresContext());

@@ -37,7 +37,7 @@ NS_QUERYFRAME_HEAD(nsSVGImageFrame)
   NS_QUERYFRAME_ENTRY(nsSVGImageFrame)
 NS_QUERYFRAME_TAIL_INHERITING(SVGGeometryFrame)
 
-nsIFrame* NS_NewSVGImageFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewSVGImageFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsSVGImageFrame(aStyle, aPresShell->GetPresContext());
 }
 

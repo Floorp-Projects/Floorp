@@ -41,6 +41,7 @@ class PluginBackgroundSink;
 class nsPluginInstanceOwner;
 
 namespace mozilla {
+class PresShell;
 namespace layers {
 class ImageContainer;
 class Layer;
@@ -69,7 +70,7 @@ class nsPluginFrame final : public nsFrame,
   NS_DECL_FRAMEARENA_HELPERS(nsPluginFrame)
   NS_DECL_QUERYFRAME
 
-  friend nsIFrame* NS_NewObjectFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewObjectFrame(mozilla::PresShell* aPresShell,
                                      ComputedStyle* aStyle);
 
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,

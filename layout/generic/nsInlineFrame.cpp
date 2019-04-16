@@ -9,6 +9,11 @@
 #include "nsInlineFrame.h"
 
 #include "gfxContext.h"
+#include "mozilla/ComputedStyle.h"
+#include "mozilla/Likely.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/RestyleManager.h"
+#include "mozilla/ServoStyleSet.h"
 #include "nsLineLayout.h"
 #include "nsBlockFrame.h"
 #include "nsPlaceholderFrame.h"
@@ -16,13 +21,9 @@
 #include "nsPresContext.h"
 #include "nsPresContextInlines.h"
 #include "nsCSSAnonBoxes.h"
-#include "mozilla/RestyleManager.h"
 #include "nsDisplayList.h"
-#include "mozilla/Likely.h"
 #include "SVGTextFrame.h"
 #include "nsStyleChangeList.h"
-#include "mozilla/ComputedStyle.h"
-#include "mozilla/ServoStyleSet.h"
 
 #ifdef DEBUG
 #  undef NOISY_PUSHING
@@ -35,8 +36,7 @@ using namespace mozilla::layout;
 
 // Basic nsInlineFrame methods
 
-nsInlineFrame* NS_NewInlineFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle) {
+nsInlineFrame* NS_NewInlineFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsInlineFrame(aStyle, aPresShell->GetPresContext());
 }
 
@@ -932,7 +932,7 @@ void nsInlineFrame::UpdateStyleOfOwnedAnonBoxesForIBSplit(
 
 // nsLineFrame implementation
 
-nsFirstLineFrame* NS_NewFirstLineFrame(nsIPresShell* aPresShell,
+nsFirstLineFrame* NS_NewFirstLineFrame(PresShell* aPresShell,
                                        ComputedStyle* aStyle) {
   return new (aPresShell)
       nsFirstLineFrame(aStyle, aPresShell->GetPresContext());

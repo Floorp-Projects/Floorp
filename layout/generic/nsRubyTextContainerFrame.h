@@ -11,11 +11,15 @@
 
 #include "nsBlockFrame.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 /**
  * Factory function.
  * @return a newly allocated nsRubyTextContainerFrame (infallible)
  */
-nsContainerFrame* NS_NewRubyTextContainerFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewRubyTextContainerFrame(mozilla::PresShell* aPresShell,
                                                mozilla::ComputedStyle* aStyle);
 
 class nsRubyTextContainerFrame final : public nsContainerFrame {
@@ -48,7 +52,7 @@ class nsRubyTextContainerFrame final : public nsContainerFrame {
 
  protected:
   friend nsContainerFrame* NS_NewRubyTextContainerFrame(
-      nsIPresShell* aPresShell, ComputedStyle* aStyle);
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
   explicit nsRubyTextContainerFrame(ComputedStyle* aStyle,
                                     nsPresContext* aPresContext)

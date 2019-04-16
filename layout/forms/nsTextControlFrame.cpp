@@ -51,8 +51,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsIFrame* NS_NewTextControlFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle) {
+nsIFrame* NS_NewTextControlFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       nsTextControlFrame(aStyle, aPresShell->GetPresContext());
 }

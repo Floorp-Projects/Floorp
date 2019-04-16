@@ -9,11 +9,15 @@
 #include "mozilla/Attributes.h"
 #include "nsBlockFrame.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 class nsSelectsAreaFrame final : public nsBlockFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsSelectsAreaFrame)
 
-  friend nsContainerFrame* NS_NewSelectsAreaFrame(nsIPresShell* aShell,
+  friend nsContainerFrame* NS_NewSelectsAreaFrame(mozilla::PresShell* aShell,
                                                   ComputedStyle* aStyle,
                                                   nsFrameState aFlags);
 

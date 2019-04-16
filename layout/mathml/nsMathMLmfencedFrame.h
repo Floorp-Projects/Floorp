@@ -12,6 +12,10 @@
 
 class nsFontMetrics;
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 //
 // <mfenced> -- surround content with a pair of fences
 //
@@ -20,7 +24,7 @@ class nsMathMLmfencedFrame final : public nsMathMLContainerFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmfencedFrame)
 
-  friend nsIFrame* NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewMathMLmfencedFrame(mozilla::PresShell* aPresShell,
                                             ComputedStyle* aStyle);
 
   void DestroyFrom(nsIFrame* aDestructRoot,

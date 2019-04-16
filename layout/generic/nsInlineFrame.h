@@ -14,6 +14,10 @@
 
 class nsLineLayout;
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 /**
  * Inline frame class.
  *
@@ -25,7 +29,7 @@ class nsInlineFrame : public nsContainerFrame {
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsInlineFrame)
 
-  friend nsInlineFrame* NS_NewInlineFrame(nsIPresShell* aPresShell,
+  friend nsInlineFrame* NS_NewInlineFrame(mozilla::PresShell* aPresShell,
                                           ComputedStyle* aStyle);
 
   // nsIFrame overrides
@@ -187,7 +191,7 @@ class nsFirstLineFrame final : public nsInlineFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsFirstLineFrame)
 
-  friend nsFirstLineFrame* NS_NewFirstLineFrame(nsIPresShell* aPresShell,
+  friend nsFirstLineFrame* NS_NewFirstLineFrame(mozilla::PresShell* aPresShell,
                                                 ComputedStyle* aStyle);
 
 #ifdef DEBUG_FRAME_DUMP

@@ -195,7 +195,7 @@ nsSplitterFrameInner::State nsSplitterFrameInner::GetState() {
 //
 // Creates a new Toolbar frame and returns it
 //
-nsIFrame* NS_NewSplitterFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewSplitterFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsSplitterFrame(aStyle, aPresShell->GetPresContext());
 }
 

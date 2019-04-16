@@ -12,11 +12,15 @@
 #include "nsInlineFrame.h"
 #include "RubyUtils.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 /**
  * Factory function.
  * @return a newly allocated nsRubyFrame (infallible)
  */
-nsContainerFrame* NS_NewRubyFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewRubyFrame(mozilla::PresShell* aPresShell,
                                   mozilla::ComputedStyle* aStyle);
 
 class nsRubyFrame final : public nsInlineFrame {
@@ -41,7 +45,7 @@ class nsRubyFrame final : public nsInlineFrame {
   mozilla::RubyBlockLeadings GetBlockLeadings() const { return mLeadings; }
 
  protected:
-  friend nsContainerFrame* NS_NewRubyFrame(nsIPresShell* aPresShell,
+  friend nsContainerFrame* NS_NewRubyFrame(mozilla::PresShell* aPresShell,
                                            ComputedStyle* aStyle);
   explicit nsRubyFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsInlineFrame(aStyle, aPresContext, kClassID) {}

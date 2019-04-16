@@ -6,6 +6,7 @@
 
 #include "nsLegendFrame.h"
 
+#include "mozilla/PresShell.h"
 #include "ComputedStyle.h"
 #include "nsIContent.h"
 #include "nsGenericHTMLElement.h"
@@ -18,7 +19,7 @@
 
 using namespace mozilla;
 
-nsIFrame* NS_NewLegendFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewLegendFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
 #ifdef DEBUG
   const nsStyleDisplay* disp = aStyle->StyleDisplay();
   NS_ASSERTION(!disp->IsAbsolutelyPositionedStyle() && !disp->IsFloatingStyle(),

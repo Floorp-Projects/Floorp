@@ -6,13 +6,14 @@
 
 #include "ColumnSetWrapperFrame.h"
 
+#include "mozilla/PresShell.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
 #include "nsIFrameInlines.h"
 
 using namespace mozilla;
 
-nsBlockFrame* NS_NewColumnSetWrapperFrame(nsIPresShell* aPresShell,
+nsBlockFrame* NS_NewColumnSetWrapperFrame(PresShell* aPresShell,
                                           ComputedStyle* aStyle,
                                           nsFrameState aStateFlags) {
   ColumnSetWrapperFrame* frame = new (aPresShell)

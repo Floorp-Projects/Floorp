@@ -3,23 +3,23 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#include "mozilla/PresShell.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/FromParser.h"
+#include "mozilla/dom/NodeInfo.h"
 #include "nsHTMLParts.h"
 #include "nsContainerFrame.h"
 #include "nsCSSRendering.h"
-#include "mozilla/dom/Document.h"
 #include "nsPageFrame.h"
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
-#include "nsIPresShell.h"
 #include "nsBoxFrame.h"
 #include "nsStackLayout.h"
 #include "nsIAnonymousContentCreator.h"
-#include "mozilla/dom/NodeInfo.h"
 #include "nsIServiceManager.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/dom/FromParser.h"
 
 //#define DEBUG_REFLOW
 
@@ -32,7 +32,7 @@ class nsDocElementBoxFrame final : public nsBoxFrame,
   virtual void DestroyFrom(nsIFrame* aDestructRoot,
                            PostDestroyData& aPostDestroyData) override;
 
-  friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewBoxFrame(mozilla::PresShell* aPresShell,
                                   ComputedStyle* aStyle);
 
   explicit nsDocElementBoxFrame(ComputedStyle* aStyle,
@@ -65,7 +65,7 @@ class nsDocElementBoxFrame final : public nsBoxFrame,
 
 //----------------------------------------------------------------------
 
-nsContainerFrame* NS_NewDocElementBoxFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewDocElementBoxFrame(PresShell* aPresShell,
                                            ComputedStyle* aStyle) {
   return new (aPresShell)
       nsDocElementBoxFrame(aStyle, aPresShell->GetPresContext());

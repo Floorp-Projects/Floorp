@@ -8,12 +8,13 @@
 #include "nsSVGGFrame.h"
 
 // Keep others in (case-insensitive) order:
+#include "mozilla/PresShell.h"
 #include "nsGkAtoms.h"
-#include "SVGTransformableElement.h"
 #include "nsIFrame.h"
-#include "SVGGraphicsElement.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
+#include "SVGGraphicsElement.h"
+#include "SVGTransformableElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -21,7 +22,7 @@ using namespace mozilla::dom;
 //----------------------------------------------------------------------
 // Implementation
 
-nsIFrame* NS_NewSVGGFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewSVGGFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsSVGGFrame(aStyle, aPresShell->GetPresContext());
 }
 

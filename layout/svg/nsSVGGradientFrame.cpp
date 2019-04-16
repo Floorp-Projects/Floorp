@@ -11,6 +11,7 @@
 // Keep others in (case-insensitive) order:
 #include "AutoReferenceChainGuard.h"
 #include "gfxPattern.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/SVGGradientElement.h"
 #include "mozilla/dom/SVGGradientElementBinding.h"
 #include "mozilla/dom/SVGStopElement.h"
@@ -594,7 +595,7 @@ already_AddRefed<gfxPattern> nsSVGRadialGradientFrame::CreateGradient() {
 // Public functions
 // -------------------------------------------------------------------------
 
-nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewSVGLinearGradientFrame(mozilla::PresShell* aPresShell,
                                        ComputedStyle* aStyle) {
   return new (aPresShell)
       nsSVGLinearGradientFrame(aStyle, aPresShell->GetPresContext());
@@ -602,7 +603,7 @@ nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell,
 
 NS_IMPL_FRAMEARENA_HELPERS(nsSVGLinearGradientFrame)
 
-nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewSVGRadialGradientFrame(mozilla::PresShell* aPresShell,
                                        ComputedStyle* aStyle) {
   return new (aPresShell)
       nsSVGRadialGradientFrame(aStyle, aPresShell->GetPresContext());

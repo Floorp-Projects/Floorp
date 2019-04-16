@@ -20,6 +20,7 @@ class gfxContext;
 
 namespace mozilla {
 
+class PresShell;
 class SVGGeometryFrame;
 
 struct SVGMark;
@@ -34,7 +35,7 @@ class nsSVGMarkerFrame final : public nsSVGContainerFrame {
   typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
   friend class nsSVGMarkerAnonChildFrame;
-  friend nsContainerFrame* NS_NewSVGMarkerFrame(nsIPresShell* aPresShell,
+  friend nsContainerFrame* NS_NewSVGMarkerFrame(mozilla::PresShell* aPresShell,
                                                 ComputedStyle* aStyle);
 
  protected:
@@ -129,7 +130,7 @@ class nsSVGMarkerFrame final : public nsSVGContainerFrame {
 
 class nsSVGMarkerAnonChildFrame final : public nsSVGDisplayContainerFrame {
   friend nsContainerFrame* NS_NewSVGMarkerAnonChildFrame(
-      nsIPresShell* aPresShell, ComputedStyle* aStyle);
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
   explicit nsSVGMarkerAnonChildFrame(ComputedStyle* aStyle,
                                      nsPresContext* aPresContext)

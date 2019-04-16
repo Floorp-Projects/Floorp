@@ -22,6 +22,7 @@
 #include "nsCOMPtr.h"
 
 namespace mozilla {
+class PresShell;
 namespace dom {
 struct DateTimeValue;
 }  // namespace dom
@@ -34,7 +35,7 @@ class nsDateTimeControlFrame final : public nsContainerFrame {
                                   nsPresContext* aPresContext);
 
  public:
-  friend nsIFrame* NS_NewDateTimeControlFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewDateTimeControlFrame(mozilla::PresShell* aPresShell,
                                               ComputedStyle* aStyle);
 
   void ContentStatesChanged(mozilla::EventStates aStates) override;

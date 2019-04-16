@@ -59,7 +59,7 @@ bool nsTextBoxFrame::gAccessKeyPrefInitialized = false;
 bool nsTextBoxFrame::gInsertSeparatorBeforeAccessKey = false;
 bool nsTextBoxFrame::gInsertSeparatorPrefInitialized = false;
 
-nsIFrame* NS_NewTextBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewTextBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsTextBoxFrame(aStyle, aPresShell->GetPresContext());
 }
 

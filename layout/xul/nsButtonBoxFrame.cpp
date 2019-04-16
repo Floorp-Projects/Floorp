@@ -49,8 +49,7 @@ nsresult nsButtonBoxFrame::nsButtonBoxListener::HandleEvent(
 //
 // Creates a new Button frame and returns it
 //
-nsIFrame* NS_NewButtonBoxFrame(nsIPresShell* aPresShell,
-                               ComputedStyle* aStyle) {
+nsIFrame* NS_NewButtonBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       nsButtonBoxFrame(aStyle, aPresShell->GetPresContext());
 }

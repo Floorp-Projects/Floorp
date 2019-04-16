@@ -10,6 +10,10 @@
 #include "mozilla/Attributes.h"
 #include "nsMathMLContainerFrame.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 //
 // <mmultiscripts> -- attach prescripts and tensor indices to a base
 // <msub> -- attach a subscript to a base
@@ -21,8 +25,8 @@ class nsMathMLmmultiscriptsFrame final : public nsMathMLContainerFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmmultiscriptsFrame)
 
-  friend nsIFrame* NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell,
-                                                  ComputedStyle* aStyle);
+  friend nsIFrame* NS_NewMathMLmmultiscriptsFrame(
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
   NS_IMETHOD
   TransmitAutomaticData() override;

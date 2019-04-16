@@ -5,13 +5,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsImageFrame.h"
+
+#include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "nsIFormControlFrame.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsStyleConsts.h"
 #include "nsCheckboxRadioFrame.h"
 #include "nsLayoutUtils.h"
-#include "mozilla/MouseEvents.h"
 #include "nsIContent.h"
 
 using namespace mozilla;
@@ -71,7 +73,7 @@ void nsImageControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
   nsImageFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
-nsIFrame* NS_NewImageControlFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewImageControlFrame(PresShell* aPresShell,
                                   ComputedStyle* aStyle) {
   return new (aPresShell)
       nsImageControlFrame(aStyle, aPresShell->GetPresContext());

@@ -19,9 +19,12 @@
 class gfxContext;
 class nsFrameList;
 class nsIContent;
-class nsIPresShell;
 
 struct nsRect;
+
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
 
 /**
  * Base class for SVG container frames. Frame sub-classes that do not
@@ -36,7 +39,7 @@ struct nsRect;
  * warning comment for nsSVGDisplayContainerFrame below).
  */
 class nsSVGContainerFrame : public nsContainerFrame {
-  friend nsIFrame* NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewSVGContainerFrame(mozilla::PresShell* aPresShell,
                                            ComputedStyle* aStyle);
 
  protected:

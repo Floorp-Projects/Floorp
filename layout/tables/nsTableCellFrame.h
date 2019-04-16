@@ -16,6 +16,10 @@
 #include "nsTableRowFrame.h"
 #include "mozilla/WritingModes.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 /**
  * nsTableCellFrame
  * data structure to maintain information about a single table cell's frame
@@ -33,7 +37,7 @@ class nsTableCellFrame : public nsContainerFrame,
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
 
-  friend nsTableCellFrame* NS_NewTableCellFrame(nsIPresShell* aPresShell,
+  friend nsTableCellFrame* NS_NewTableCellFrame(mozilla::PresShell* aPresShell,
                                                 ComputedStyle* aStyle,
                                                 nsTableFrame* aTableFrame);
 

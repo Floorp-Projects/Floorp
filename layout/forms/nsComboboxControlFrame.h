@@ -38,6 +38,7 @@ class nsIScrollableFrame;
 class nsTextNode;
 
 namespace mozilla {
+class PresShell;
 namespace gfx {
 class DrawTarget;
 }  // namespace gfx
@@ -53,7 +54,8 @@ class nsComboboxControlFrame final : public nsBlockFrame,
 
  public:
   friend nsComboboxControlFrame* NS_NewComboboxControlFrame(
-      nsIPresShell* aPresShell, ComputedStyle* aStyle, nsFrameState aFlags);
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle,
+      nsFrameState aFlags);
   friend class nsComboboxDisplayFrame;
 
   explicit nsComboboxControlFrame(ComputedStyle* aStyle,

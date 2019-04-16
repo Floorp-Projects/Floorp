@@ -25,7 +25,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsIFrame* NS_NewProgressFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewProgressFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsProgressFrame(aStyle, aPresShell->GetPresContext());
 }
 

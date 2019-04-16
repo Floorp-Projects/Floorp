@@ -11,6 +11,7 @@
 // See documentation in associated header file
 //
 
+#include "mozilla/PresShell.h"
 #include "nsGridRowGroupFrame.h"
 #include "nsGridRowLeafLayout.h"
 #include "nsGridRow.h"
@@ -21,7 +22,7 @@ using namespace mozilla;
 
 already_AddRefed<nsBoxLayout> NS_NewGridRowGroupLayout();
 
-nsIFrame* NS_NewGridRowGroupFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewGridRowGroupFrame(PresShell* aPresShell,
                                   ComputedStyle* aStyle) {
   nsCOMPtr<nsBoxLayout> layout = NS_NewGridRowGroupLayout();
   return new (aPresShell)

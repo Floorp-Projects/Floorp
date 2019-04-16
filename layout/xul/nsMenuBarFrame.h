@@ -22,12 +22,13 @@
 class nsIContent;
 
 namespace mozilla {
+class PresShell;
 namespace dom {
 class KeyboardEvent;
 }  // namespace dom
 }  // namespace mozilla
 
-nsIFrame* NS_NewMenuBarFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewMenuBarFrame(mozilla::PresShell* aPresShell,
                              mozilla::ComputedStyle* aStyle);
 
 class nsMenuBarFrame final : public nsBoxFrame, public nsMenuParent {

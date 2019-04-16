@@ -15,13 +15,13 @@
 #include "nsBox.h"
 #include "mozilla/Logging.h"
 
-#include "nsIPresShell.h"
 #include "mozilla/ReflowInput.h"
 #include "nsHTMLParts.h"
 #include "nsISelectionDisplay.h"
 
 namespace mozilla {
 enum class TableSelection : uint32_t;
+class PresShell;
 }  // namespace mozilla
 
 /**
@@ -131,7 +131,7 @@ class nsFrame : public nsBox {
    * Create a new "empty" frame that maps a given piece of content into a
    * 0,0 area.
    */
-  friend nsIFrame* NS_NewEmptyFrame(nsIPresShell* aShell,
+  friend nsIFrame* NS_NewEmptyFrame(mozilla::PresShell* aShell,
                                     ComputedStyle* aStyle);
 
  private:

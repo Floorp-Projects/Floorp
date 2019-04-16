@@ -38,7 +38,7 @@ using namespace mozilla;
 //
 // Creates a new Resizer frame and returns it
 //
-nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewResizerFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsResizerFrame(aStyle, aPresShell->GetPresContext());
 }
 

@@ -9,6 +9,7 @@
 #include "nsRubyTextFrame.h"
 
 #include "mozilla/ComputedStyle.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/WritingModes.h"
 #include "nsLineLayout.h"
 #include "nsPresContext.h"
@@ -26,7 +27,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsRubyContentFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsRubyTextFrame)
 
-nsContainerFrame* NS_NewRubyTextFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewRubyTextFrame(PresShell* aPresShell,
                                       ComputedStyle* aStyle) {
   return new (aPresShell) nsRubyTextFrame(aStyle, aPresShell->GetPresContext());
 }

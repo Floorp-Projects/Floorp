@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMathMLmrowFrame.h"
+
+#include "mozilla/PresShell.h"
 #include "mozilla/gfx/2D.h"
 
 using namespace mozilla;
@@ -13,8 +15,7 @@ using namespace mozilla;
 // <mrow> -- horizontally group any number of subexpressions - implementation
 //
 
-nsIFrame* NS_NewMathMLmrowFrame(nsIPresShell* aPresShell,
-                                ComputedStyle* aStyle) {
+nsIFrame* NS_NewMathMLmrowFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       nsMathMLmrowFrame(aStyle, aPresShell->GetPresContext());
 }

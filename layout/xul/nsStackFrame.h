@@ -18,11 +18,15 @@ one time. So the can be flipped though like a Stack of cards.
 #include "mozilla/Attributes.h"
 #include "nsBoxFrame.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 class nsStackFrame final : public nsBoxFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsStackFrame)
 
-  friend nsIFrame* NS_NewStackFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewStackFrame(mozilla::PresShell* aPresShell,
                                     ComputedStyle* aStyle);
 
 #ifdef DEBUG_FRAME_DUMP

@@ -13,6 +13,10 @@
 
 class nsTableColFrame;
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 /**
  * nsTableColGroupFrame
  * data structure to maintain information about a single table cell's frame
@@ -29,7 +33,7 @@ class nsTableColGroupFrame final : public nsContainerFrame {
    * @return           the frame that was created
    */
   friend nsTableColGroupFrame* NS_NewTableColGroupFrame(
-      nsIPresShell* aPresShell, ComputedStyle* aStyle);
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
   // nsIFrame overrides
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,

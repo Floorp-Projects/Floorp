@@ -11,6 +11,10 @@
 #include "mozilla/EnumSet.h"
 #include "nsMathMLContainerFrame.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 //
 // <menclose> -- enclose content with a stretching symbol such
 // as a long division sign.
@@ -46,7 +50,7 @@ class nsMathMLmencloseFrame : public nsMathMLContainerFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmencloseFrame)
 
-  friend nsIFrame* NS_NewMathMLmencloseFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewMathMLmencloseFrame(mozilla::PresShell* aPresShell,
                                              ComputedStyle* aStyle);
 
   virtual nsresult Place(DrawTarget* aDrawTarget, bool aPlaceOrigin,
