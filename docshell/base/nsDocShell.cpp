@@ -9900,8 +9900,11 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
   nsCOMPtr<nsIContentSecurityPolicy> csp;
   aLoadState->TriggeringPrincipal()->GetCsp(getter_AddRefs(csp));
 #ifdef DEBUG
-  nsCOMPtr<nsIContentSecurityPolicy> argsCSP = aLoadState->Csp();
-  MOZ_ASSERT(nsCSPContext::Equals(csp, argsCSP));
+  if (!aLoadState->TriggeringPrincipal()->GetIsNullPrincipal()) {
+    // After Bug 965637 we can remove that assertion anyway.
+    nsCOMPtr<nsIContentSecurityPolicy> argsCSP = aLoadState->Csp();
+    MOZ_ASSERT(nsCSPContext::Equals(csp, argsCSP));
+  }
 #endif
 
   if (csp) {
