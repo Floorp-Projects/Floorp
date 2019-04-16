@@ -33,6 +33,7 @@
     <string name="pref_key_sync_now" translatable="false">pref_key_sync_now</string>
     <string name="pref_key_sync_history" translatable="false">pref_key_sync_history</string>
     <string name="pref_key_sign_out" translatable="false">pref_key_sign_out</string>
+    <string name="pref_key_cached_account" translatable="false">pref_key_cached_account</string>
 
     <!-- Search Settings -->
     <string name="pref_key_show_search_suggestions" translatable="false">pref_key_show_search_suggestions</string>

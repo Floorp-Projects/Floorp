@@ -100,6 +100,9 @@ class Settings private constructor(context: Context) {
             else -> appContext.getString(R.string.preference_light_theme)
         }
 
+    val hasCachedAccount: Boolean
+        get() = preferences.getBoolean(appContext.getPreferenceKey(R.string.pref_key_cached_account), false)
+
     private val autoBounceQuickActionSheetCount: Int
         get() = (preferences.getInt(appContext.getPreferenceKey(R.string.pref_key_bounce_quick_action), 0))
 
@@ -170,6 +173,12 @@ class Settings private constructor(context: Context) {
             location = getSitePermissionsPhoneFeatureLocation(),
             camera = getSitePermissionsPhoneFeatureCameraAction()
         )
+    }
+
+    fun setHasCachedAccount(isCached: Boolean) {
+        preferences.edit()
+            .putBoolean(appContext.getPreferenceKey(R.string.pref_key_cached_account), isCached)
+            .apply()
     }
 
     private val SitePermissionsRules.Action.id: Int
