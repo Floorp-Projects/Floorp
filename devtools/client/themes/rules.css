@@ -651,18 +651,30 @@
 
 #ruleview-add-rule-button::before {
   background-image: url("chrome://devtools/skin/images/add.svg");
+  background-position: center;
+  background-size: 14px;
 }
 
 #pseudo-class-panel-toggle::before {
-  background-image: url("chrome://devtools/skin/images/pseudo-class.svg");
+  content: ":hov";
 }
 
 #class-panel-toggle::before {
   content: ".cls";
 }
 
+#pseudo-class-panel-toggle::before,
+#class-panel-toggle::before {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
 #print-simulation-toggle::before {
   background-image: url("chrome://devtools/skin/images/rules-view-print-simulation.svg");
+  background-position: center;
+  background-size: 14px;
 }
 
 .flash-out {
