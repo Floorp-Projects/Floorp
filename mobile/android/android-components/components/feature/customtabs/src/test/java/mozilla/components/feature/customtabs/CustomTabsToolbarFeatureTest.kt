@@ -213,7 +213,7 @@ class CustomTabsToolbarFeatureTest {
 
         feature.initialize(session)
 
-        verify(feature).addActionButton(null)
+        verify(feature).addActionButton(any(), any())
     }
 
     @Test
@@ -229,8 +229,9 @@ class CustomTabsToolbarFeatureTest {
         val pendingIntent: PendingIntent = mock()
 
         `when`(session.customTabConfig).thenReturn(customTabConfig)
+        `when`(session.url).thenReturn("https://example.com")
 
-        feature.addActionButton(null)
+        feature.addActionButton(session, null)
 
         verify(toolbar, never()).addBrowserAction(any())
 
@@ -240,13 +241,13 @@ class CustomTabsToolbarFeatureTest {
         `when`(actionConfig.pendingIntent).thenReturn(pendingIntent)
         `when`(actionConfig.icon).thenReturn(closeButtonIcon)
 
-        feature.addActionButton(actionConfig)
+        feature.addActionButton(session, actionConfig)
 
         verify(toolbar).addBrowserAction(captor.capture())
 
         val button = captor.value.createView(FrameLayout(RuntimeEnvironment.application))
         button.performClick()
-        verify(pendingIntent).send()
+        verify(pendingIntent).send(any(), anyInt(), any())
     }
 
     @Test
@@ -261,13 +262,13 @@ class CustomTabsToolbarFeatureTest {
 
         feature.initialize(session)
 
-        verify(feature, never()).addMenuItems(anyList())
+        verify(feature, never()).addMenuItems(any(), anyList())
 
         `when`(customTabConfig.menuItems).thenReturn(listOf(CustomTabMenuItem("Share", mock())))
 
         feature.initialize(session)
 
-        verify(feature).addMenuItems(anyList())
+        verify(feature).addMenuItems(any(), anyList())
     }
 
     @Test
@@ -281,7 +282,7 @@ class CustomTabsToolbarFeatureTest {
         `when`(session.customTabConfig).thenReturn(customTabConfig)
         `when`(customTabConfig.menuItems).thenReturn(emptyList())
 
-        feature.addMenuItems(listOf(CustomTabMenuItem("Share", mock())))
+        feature.addMenuItems(session, listOf(CustomTabMenuItem("Share", mock())))
 
         verify(toolbar).setMenuBuilder(captor.capture())
         assertEquals(1, captor.value.items.size)
@@ -299,7 +300,7 @@ class CustomTabsToolbarFeatureTest {
         `when`(customTabConfig.menuItems).thenReturn(emptyList())
         `when`(builder.items).thenReturn(listOf(mock(), mock()))
 
-        feature.addMenuItems(listOf(CustomTabMenuItem("Share", mock())))
+        feature.addMenuItems(session, listOf(CustomTabMenuItem("Share", mock())))
 
         verify(toolbar).setMenuBuilder(captor.capture())
 

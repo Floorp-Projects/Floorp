@@ -6,9 +6,11 @@
 
 package mozilla.components.feature.customtabs
 
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
+import android.net.Uri
 import android.support.annotation.VisibleForTesting
 import android.support.v4.content.ContextCompat
 import mozilla.components.browser.menu.BrowserMenuBuilder
@@ -63,11 +65,11 @@ class CustomTabsToolbarFeature(
             // Add navigation close action
             addCloseButton(config.closeButtonIcon)
             // Add action button
-            addActionButton(config.actionButtonConfig)
+            addActionButton(session, config.actionButtonConfig)
             // Show share button
             if (config.showShareMenuItem) addShareButton(session)
             // Add menu items
-            if (config.menuItems.isNotEmpty()) addMenuItems(config.menuItems)
+            if (config.menuItems.isNotEmpty()) addMenuItems(session, config.menuItems)
 
             // Explicitly set the title regardless of the customTabConfig settings
             toolbar.titleTextSize = TITLE_TEXT_SIZE
@@ -109,14 +111,18 @@ class CustomTabsToolbarFeature(
     }
 
     @VisibleForTesting
-    internal fun addActionButton(buttonConfig: CustomTabActionButtonConfig?) {
+    internal fun addActionButton(session: Session, buttonConfig: CustomTabActionButtonConfig?) {
         buttonConfig?.let { config ->
             val button = Toolbar.ActionButton(
                 BitmapDrawable(context.resources, config.icon),
                 config.description
             ) {
                 emitActionButtonFact()
-                config.pendingIntent.send()
+                config.pendingIntent.send(
+                    context,
+                    0,
+                    Intent(null, Uri.parse(session.url))
+                )
             }
 
             toolbar.addBrowserAction(button)
@@ -138,9 +144,15 @@ class CustomTabsToolbarFeature(
     }
 
     @VisibleForTesting
-    internal fun addMenuItems(menuItems: List<CustomTabMenuItem>) {
+    internal fun addMenuItems(session: Session, menuItems: List<CustomTabMenuItem>) {
         menuItems.map {
-            SimpleBrowserMenuItem(it.name) { it.pendingIntent.send() }
+            SimpleBrowserMenuItem(it.name) {
+                it.pendingIntent.send(
+                    context,
+                    0,
+                    Intent(null, Uri.parse(session.url))
+                )
+            }
         }.also { items ->
             val combinedItems = menuBuilder?.let { builder -> builder.items + items } ?: items
             val combinedExtras = menuBuilder?.let {

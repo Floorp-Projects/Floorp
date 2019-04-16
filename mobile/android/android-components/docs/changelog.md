@@ -14,6 +14,7 @@ permalink: /changelog/
 
 * **feature-customtabs**
   * Added fact emitting.
+  * Bugfix to call with app-contributed pending intents from menu items and action buttons.
 
 # 0.50.0
 
