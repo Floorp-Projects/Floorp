@@ -71,7 +71,7 @@ class RuntimePage extends PureComponent {
       case DEBUG_TARGETS.EXTENSION:
         return "chrome://devtools/skin/images/debugging-addons.svg";
       case DEBUG_TARGETS.PROCESS:
-        return "chrome://devtools/skin/images/settings.svg";
+        return "chrome://devtools/skin/images/aboutdebugging-process-icon.svg";
       case DEBUG_TARGETS.TAB:
         return "chrome://devtools/skin/images/debugging-tabs.svg";
       case DEBUG_TARGETS.WORKER:
