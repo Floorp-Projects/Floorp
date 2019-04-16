@@ -87,19 +87,6 @@ module.exports = {
   }, {
     // TODO: Bug 1246594. Empty this list once the rule has landed for all dirs
     "files": [
-      "toolkit/components/aboutmemory/content/aboutMemory.js",
-      "toolkit/components/captivedetect/test/unit/test_multiple_requests.js",
-      "toolkit/components/cleardata/ServiceWorkerCleanUp.jsm",
-      "toolkit/components/ctypes/**",
-      "toolkit/components/downloads/**",
-      "toolkit/components/places/tests/**",
-      "toolkit/components/processsingleton/MainProcessSingleton.jsm",
-      "toolkit/components/prompts/**",
-      "toolkit/components/search/SearchService.jsm",
-      "toolkit/components/telemetry/app/TelemetryEnvironment.jsm",
-      "toolkit/content/**",
-      "toolkit/modules/**",
-      "toolkit/mozapps/**",
       "tools/leak-gauge/leak-gauge.html",
       "xpcom/tests/unit/test_iniParser.js",
     ],

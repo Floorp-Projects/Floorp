@@ -34,7 +34,7 @@ function runTest(event) {
 
     default:
       ok(false, "unexpected test #" + testnum + " w/ event " + event.type);
-      throw "unexpected test #" + testnum + " w/ event " + event.type;
+      throw new Error(`unexpected test #${testnum} w/ event ${event.type}`);
   }
 
   testnum++;
