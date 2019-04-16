@@ -51,12 +51,6 @@ TextureClient* SharedPlanarYCbCrImage::GetTextureClient(
   return mTextureClient.get();
 }
 
-uint8_t* SharedPlanarYCbCrImage::GetBuffer() const {
-  // This should never be used
-  MOZ_ASSERT(false);
-  return nullptr;
-}
-
 already_AddRefed<gfx::SourceSurface>
 SharedPlanarYCbCrImage::GetAsSourceSurface() {
   if (!IsValid()) {
