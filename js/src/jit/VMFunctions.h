@@ -944,7 +944,7 @@ MOZ_MUST_USE bool DebugAfterYield(JSContext* cx, BaselineFrame* frame,
 MOZ_MUST_USE bool GeneratorThrowOrReturn(
     JSContext* cx, BaselineFrame* frame,
     Handle<AbstractGeneratorObject*> genObj, HandleValue arg,
-    uint32_t resumeKind);
+    uint32_t resumeKindArg);
 
 MOZ_MUST_USE bool GlobalNameConflictsCheckFromIon(JSContext* cx,
                                                   HandleScript script);
