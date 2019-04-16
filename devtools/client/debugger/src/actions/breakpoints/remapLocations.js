@@ -4,12 +4,14 @@
 
 // @flow
 
+import typeof SourceMaps from "devtools-source-map";
+
 import type { Breakpoint } from "../../types";
 
 export default function remapLocations(
   breakpoints: Breakpoint[],
   sourceId: string,
-  sourceMaps: Object
+  sourceMaps: SourceMaps
 ) {
   const sourceBreakpoints: Promise<Breakpoint>[] = breakpoints.map(
     async breakpoint => {
