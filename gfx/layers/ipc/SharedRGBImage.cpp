@@ -102,14 +102,6 @@ bool SharedRGBImage::Allocate(gfx::IntSize aSize, gfx::SurfaceFormat aFormat) {
   return !!mTextureClient;
 }
 
-uint8_t* SharedRGBImage::GetBuffer() const {
-  MappedTextureData mapped;
-  if (mTextureClient && mTextureClient->BorrowMappedData(mapped)) {
-    return mapped.data;
-  }
-  return 0;
-}
-
 gfx::IntSize SharedRGBImage::GetSize() const { return mSize; }
 
 TextureClient* SharedRGBImage::GetTextureClient(KnowsCompositor* aForwarder) {
