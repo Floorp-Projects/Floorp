@@ -35,8 +35,9 @@ jobs-from:
     - web-platform.yml
     - xpcshell.yml
 
-
 job-defaults:
+    attributes:
+        retrigger: true
     require-signed-extensions:
         by-release-type:
             release|esr.*: true

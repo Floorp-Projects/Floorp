@@ -14,6 +14,10 @@ transforms:
     - taskgraph.transforms.job:transforms
     - taskgraph.transforms.task:transforms
 
+job-defaults:
+    attributes:
+        retrigger: true
+
 jobs:
     linux64-valgrind/opt:
         description: "Linux64 Valgrind Opt"

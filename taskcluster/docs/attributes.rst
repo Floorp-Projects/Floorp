@@ -302,3 +302,7 @@ If a task set this boolean attribute to `true`, it will be processed by the code
 review bot, the task will ran for every new Phabricator diff.
 Any supported and detected issue will be automatically reported on the
 Phabricator revision.
+
+retrigger
+=========
+Whether the task can be retriggered, or if it needs to be re-run.

@@ -1637,10 +1637,13 @@ def build_task(config, tasks):
             task['priority'] = get_default_priority(config.graph_config, config.params['project'])
 
         tags = task.get('tags', {})
+        attributes = task.get('attributes', {})
+
         tags.update({
             'createdForUser': config.params['owner'],
             'kind': config.kind,
             'label': task['label'],
+            'retrigger': 'true' if attributes.get('retrigger', False) else 'false'
         })
 
         task_def = {
@@ -1675,7 +1678,6 @@ def build_task(config, tasks):
         # add the payload and adjust anything else as required (e.g., scopes)
         payload_builders[task['worker']['implementation']](config, task, task_def)
 
-        attributes = task.get('attributes', {})
         # Resolve run-on-projects
         build_platform = attributes.get('build_platform')
         resolve_keyed_by(task, 'run-on-projects', item_name=task['label'],

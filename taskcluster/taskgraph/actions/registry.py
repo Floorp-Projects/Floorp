@@ -278,6 +278,7 @@ def register_callback_action(name, title, symbol, description, order=10000,
 
         mem['registered'] = True
         callbacks[cb_name] = cb
+        return cb
     return register_callback
 
 

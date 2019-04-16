@@ -15,6 +15,8 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 job-defaults:
+    attributes:
+        retrigger: true
     index:
         product: firefox
     worker:
