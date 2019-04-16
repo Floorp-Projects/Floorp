@@ -25,6 +25,8 @@
   --accessible-label-background-color: white;
   --accessible-label-border-color: #CACAD1;
   --accessible-label-color: var(--grey-60);
+  /* Similarly to webconsole, add more padding before the toolbar group. */
+  --separator-inline-margin: 5px;
 }
 
 :root.theme-dark {
@@ -79,6 +81,19 @@ body {
   color: var(--theme-toolbar-color);
 }
 
+.devtools-button,
+.toggle-button {
+  cursor: pointer;
+}
+
+.mainFrame .devtools-button.devtools-throbber::before,
+.mainFrame .toggle-button.devtools-throbber::before {
+  /* Default for .devtools-throbber is set to 1em which is too big for the
+     devtools toolbar. */
+  height: 9px;
+  width: 9px;
+}
+
 .split-box.horz {
   height: calc(100vh - var(--accessibility-toolbar-height));
 }
@@ -114,6 +129,8 @@ body {
 .devtools-toolbar {
   display: flex;
   align-items: center;
+  font: message-box;
+  font-size: var(--accessibility-font-size);
 }
 
 .devtools-toolbar .help {
@@ -309,26 +326,52 @@ body {
   color: var(--theme-toolbar-color);
 }
 
+.badge.toggle-button,
 .mainFrame .treeTable .treeRow .badges .badge {
   background-color: var(--badge-interactive-background-color);
   color: var(--badge-interactive-color);
-  border: 1px solid var(--accessible-label-border-color);
   border-radius: 3px;
   padding: 0px 2px;
   margin-inline-start: 5px;
 }
 
+.badge.toggle-button {
+  border: 1px solid transparent;
+  color: var(--theme-body-color);
+}
+
+.devtools-toolbar .badge.toggle-button:focus {
+  outline: 2px solid var(--accessibility-toolbar-focus);
+  outline-offset: -2px;
+  box-shadow: 0 0 0 2px var(--accessibility-toolbar-focus-alpha30);
+  -moz-outline-radius: 2px;
+}
+
+.mainFrame .treeTable .treeRow .badges .badge {
+  border: 1px solid var(--accessible-label-border-color);
+}
+
 .mainFrame .treeTable:focus .treeRow.selected .badges .badge {
   background-color: var(--badge-interactive-background-color);
-  border-color: var(--accessible-label-border-color);
+  border: 1px solid var(--accessible-label-border-color);
   color: var(--badge-interactive-color);
 }
 
+.badge.toggle-button.checked,
 .mainFrame .treeTable:focus .treeRow.selected .badges .badge.checked,
 .mainFrame .treeTable .treeRow .badges .badge.checked {
   background-color: var(--badge-active-background-color);
-  border-color: var(--badge-active-border-color);
   color: var(--theme-selection-color);
+}
+
+.mainFrame .treeTable .treeRow .badges .badge.checked {
+  border: 1px solid var(--badge-active-border-color);
+}
+
+/* Avoid having a default dotted border on keyboard focus since we provide focus
+   styling*/
+.badge.toggle-button::-moz-focus-inner {
+  border: none;
 }
 
 /* Right Sidebar */
