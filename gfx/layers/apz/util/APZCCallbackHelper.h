@@ -18,7 +18,6 @@
 #include <functional>
 
 class nsIContent;
-class nsIPresShell;
 class nsIScrollableFrame;
 class nsIWidget;
 template <class T>
@@ -38,7 +37,7 @@ typedef std::function<void(uint64_t, const nsTArray<TouchBehaviorFlags>&)>
 /* Refer to documentation on SendSetTargetAPZCNotification for this class */
 class DisplayportSetListener : public nsAPostRefreshObserver {
  public:
-  DisplayportSetListener(nsIWidget* aWidget, nsIPresShell* aPresShell,
+  DisplayportSetListener(nsIWidget* aWidget, PresShell* aPresShell,
                          const uint64_t& aInputBlockId,
                          const nsTArray<SLGuidAndRenderRoot>& aTargets);
   virtual ~DisplayportSetListener();
@@ -47,7 +46,7 @@ class DisplayportSetListener : public nsAPostRefreshObserver {
 
  private:
   RefPtr<nsIWidget> mWidget;
-  RefPtr<nsIPresShell> mPresShell;
+  RefPtr<PresShell> mPresShell;
   uint64_t mInputBlockId;
   nsTArray<SLGuidAndRenderRoot> mTargets;
 };
@@ -89,7 +88,7 @@ class APZCCallbackHelper {
 
   /* Initialize a zero-margin displayport on the root document element of the
      given presShell. */
-  static void InitializeRootDisplayport(nsIPresShell* aPresShell);
+  static void InitializeRootDisplayport(PresShell* aPresShell);
 
   /* Get the pres context associated with the document enclosing |aContent|. */
   static nsPresContext* GetPresContextForContent(nsIContent* aContent);
@@ -183,7 +182,7 @@ class APZCCallbackHelper {
       const ScrollableLayerGuid::ViewID& aScrollId, const nsString& aEvent);
 
   /* Notify content that the repaint flush is complete. */
-  static void NotifyFlushComplete(nsIPresShell* aShell);
+  static void NotifyFlushComplete(PresShell* aPresShell);
 
   static void NotifyAsyncScrollbarDragInitiated(
       uint64_t aDragBlockId, const ScrollableLayerGuid::ViewID& aScrollId,
