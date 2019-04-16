@@ -87,7 +87,6 @@ module.exports = {
   }, {
     // TODO: Bug 1246594. Empty this list once the rule has landed for all dirs
     "files": [
-      "tools/leak-gauge/leak-gauge.html",
       "xpcom/tests/unit/test_iniParser.js",
     ],
     "rules": {
