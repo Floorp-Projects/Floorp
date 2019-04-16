@@ -11,7 +11,7 @@
 #include "mozilla/dom/TabParent.h"           // for TabParent
 #include "mozilla/EventDispatcher.h"         // for EventDispatcher
 #include "mozilla/layout/RenderFrame.h"      // For RenderFrame
-#include "mozilla/PresShell.h"               // For PresShell and nsIPresShell
+#include "mozilla/PresShell.h"               // For PresShell
 #include "nsIContentInlines.h"               // for nsINode::IsEditable()
 #include "nsLayoutUtils.h"                   // for nsLayoutUtils
 
@@ -32,8 +32,7 @@ using namespace mozilla::layout;
 namespace mozilla {
 namespace layers {
 
-static already_AddRefed<nsIPresShell> GetRetargetEventPresShell(
-    nsIPresShell* aRootPresShell) {
+static PresShell* GetRetargetEventPresShell(PresShell* aRootPresShell) {
   MOZ_ASSERT(aRootPresShell);
 
   // Use the last focused window in this PresShell and its
@@ -49,8 +48,7 @@ static already_AddRefed<nsIPresShell> GetRetargetEventPresShell(
     return nullptr;
   }
 
-  nsCOMPtr<nsIPresShell> presShell = retargetEventDoc->GetPresShell();
-  return presShell.forget();
+  return retargetEventDoc->GetPresShell();
 }
 
 static bool HasListenersForKeyEvents(nsIContent* aContent) {
@@ -99,7 +97,7 @@ FocusTarget::FocusTarget()
       mFocusHasKeyEventListeners(false),
       mData(AsVariant(NoFocusTarget())) {}
 
-FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
+FocusTarget::FocusTarget(PresShell* aRootPresShell,
                          uint64_t aFocusSequenceNumber)
     : mSequenceNumber(aFocusSequenceNumber),
       mFocusHasKeyEventListeners(false),
@@ -108,7 +106,7 @@ FocusTarget::FocusTarget(nsIPresShell* aRootPresShell,
   MOZ_ASSERT(NS_IsMainThread());
 
   // Key events can be retargeted to a child PresShell when there is an iframe
-  nsCOMPtr<nsIPresShell> presShell = GetRetargetEventPresShell(aRootPresShell);
+  RefPtr<PresShell> presShell = GetRetargetEventPresShell(aRootPresShell);
 
   if (!presShell) {
     FT_LOG("Creating nil target with seq=%" PRIu64
