@@ -6,6 +6,7 @@
 
 #include "nsMathMLmspaceFrame.h"
 #include "nsMathMLElement.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/gfx/2D.h"
 #include <algorithm>
 
@@ -15,7 +16,7 @@ using namespace mozilla;
 // <mspace> -- space - implementation
 //
 
-nsIFrame* NS_NewMathMLmspaceFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewMathMLmspaceFrame(PresShell* aPresShell,
                                   ComputedStyle* aStyle) {
   return new (aPresShell)
       nsMathMLmspaceFrame(aStyle, aPresShell->GetPresContext());

@@ -23,10 +23,10 @@ class nsFrameSelection;
 class nsIContent;
 class nsIFrame;
 class nsINode;
-class nsIPresShell;
 class nsITimer;
 
 namespace mozilla {
+class PresShell;
 namespace gfx {
 class DrawTarget;
 }  // namespace gfx
@@ -47,7 +47,7 @@ class nsCaret final : public nsISelectionListener {
 
   typedef mozilla::CaretAssociationHint CaretAssociationHint;
 
-  nsresult Init(nsIPresShell* inPresShell);
+  nsresult Init(mozilla::PresShell* aPresShell);
   void Terminate();
 
   void SetSelection(mozilla::dom::Selection* aDOMSel);

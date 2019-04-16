@@ -57,6 +57,8 @@ class CompositorManagerParent final : public PCompositorManagerParent {
   PCompositorBridgeParent* AllocPCompositorBridgeParent(
       const CompositorBridgeOptions& aOpt);
 
+  static void NotifyWebRenderError(wr::WebRenderError aError);
+
  private:
   static StaticRefPtr<CompositorManagerParent> sInstance;
   static StaticMutex sMutex;

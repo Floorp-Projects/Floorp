@@ -6,7 +6,7 @@
   onload="setTimeout(runTest, 0);"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
 
 <!--
   This tests checks that preventDefault can be called on a popupshowing

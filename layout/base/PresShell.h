@@ -604,8 +604,7 @@ class PresShell final : public nsIPresShell,
 
    private:
     static bool InZombieDocument(nsIContent* aContent);
-    static nsIFrame* GetNearestFrameContainingPresShell(
-        nsIPresShell* aPresShell);
+    static nsIFrame* GetNearestFrameContainingPresShell(PresShell* aPresShell);
     static already_AddRefed<nsIURI> GetDocumentURIToCompareWithBlacklist(
         PresShell& aPresShell);
 

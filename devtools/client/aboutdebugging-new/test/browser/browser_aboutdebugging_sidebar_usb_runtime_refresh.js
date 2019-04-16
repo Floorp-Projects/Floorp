@@ -31,8 +31,8 @@ add_task(async function() {
     deviceName: OTHER_RUNTIME_APP_NAME,
   });
 
-  // Mock the refreshUSBRuntimes to emit an update.
-  mocks.usbRuntimesMock.refreshUSBRuntimes = () => mocks.emitUSBUpdate();
+  // adb.updateRuntimes should ultimately fire the "runtime-list-updated" event.
+  mocks.adbMock.adb.updateRuntimes = () => mocks.emitUSBUpdate();
   document.querySelector(".js-refresh-devices-button").click();
 
   info(`Wait until the sidebar item for ${OTHER_RUNTIME_APP_NAME} appears`);

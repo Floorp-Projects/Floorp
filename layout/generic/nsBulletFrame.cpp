@@ -55,7 +55,7 @@ using namespace mozilla::image;
 using namespace mozilla::layout;
 using mozilla::dom::Document;
 
-nsIFrame* NS_NewBulletFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewBulletFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsBulletFrame(aStyle, aPresShell->GetPresContext());
 }
 

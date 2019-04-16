@@ -28,12 +28,15 @@ class gfxContext;
 class nsDisplaySVGGeometry;
 class nsAtom;
 class nsIFrame;
-class nsIPresShell;
 class nsSVGMarkerFrame;
 
 struct nsRect;
 
-nsIFrame* NS_NewSVGGeometryFrame(nsIPresShell* aPresShell,
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
+nsIFrame* NS_NewSVGGeometryFrame(mozilla::PresShell* aPresShell,
                                  mozilla::ComputedStyle* aStyle);
 
 namespace mozilla {
@@ -41,7 +44,7 @@ namespace mozilla {
 class SVGGeometryFrame : public nsFrame, public nsSVGDisplayableFrame {
   typedef mozilla::gfx::DrawTarget DrawTarget;
 
-  friend nsIFrame* ::NS_NewSVGGeometryFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* ::NS_NewSVGGeometryFrame(mozilla::PresShell* aPresShell,
                                             ComputedStyle* aStyle);
 
   friend class ::nsDisplaySVGGeometry;

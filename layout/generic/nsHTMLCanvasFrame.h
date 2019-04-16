@@ -15,6 +15,7 @@
 #include "FrameLayerBuilder.h"
 
 namespace mozilla {
+class PresShell;
 namespace layers {
 class Layer;
 class LayerManager;
@@ -25,7 +26,7 @@ class WebRenderCanvasData;
 class nsPresContext;
 class nsDisplayItem;
 
-nsIFrame* NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewHTMLCanvasFrame(PresShell* aPresShell,
                                 mozilla::ComputedStyle* aStyle);
 
 class nsHTMLCanvasFrame final : public nsContainerFrame {

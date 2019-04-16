@@ -7,7 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=467442
 <window title="Mozilla Bug 467442"
         onload="onload()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
   <!-- test code goes here -->
   <popupset>

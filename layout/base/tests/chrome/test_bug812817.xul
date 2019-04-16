@@ -8,8 +8,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=812817
 <window title="Mozilla Bug 812817"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="doTest()">
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 <panel id="panel" width="200" height="200" onpopupshown="continueTest()">
 </panel>
 <body xmlns="http://www.w3.org/1999/xhtml">

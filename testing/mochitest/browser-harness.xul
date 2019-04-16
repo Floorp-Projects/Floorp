@@ -9,13 +9,13 @@
         onload="TestStart();"
         title="Browser chrome tests"
         width="1024">
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/LogController.js"/>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/StructuredLog.jsm"/>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/TestRunner.js"/>
-  <script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"/>
-  <script type="application/javascript" src="chrome://mochikit/content/manifestLibrary.js" />
-  <script type="application/javascript" src="chrome://mochikit/content/chunkifyTests.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/LogController.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/StructuredLog.jsm"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/TestRunner.js"/>
+  <script src="chrome://mochikit/content/chrome-harness.js"/>
+  <script src="chrome://mochikit/content/manifestLibrary.js" />
+  <script src="chrome://mochikit/content/chunkifyTests.js"/>
   <style xmlns="http://www.w3.org/1999/xhtml"><![CDATA[
     #results {
       margin: 5px;

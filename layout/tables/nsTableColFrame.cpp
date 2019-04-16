@@ -6,12 +6,13 @@
 #include "nsTableColFrame.h"
 #include "nsTableFrame.h"
 #include "nsContainerFrame.h"
-#include "mozilla/ComputedStyle.h"
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsGkAtoms.h"
 #include "nsCSSRendering.h"
 #include "nsIContent.h"
+#include "mozilla/ComputedStyle.h"
+#include "mozilla/PresShell.h"
 
 using namespace mozilla;
 
@@ -154,7 +155,7 @@ void nsTableColFrame::Dump(int32_t aIndent) {
 #endif
 /* ----- global methods ----- */
 
-nsTableColFrame* NS_NewTableColFrame(nsIPresShell* aPresShell,
+nsTableColFrame* NS_NewTableColFrame(PresShell* aPresShell,
                                      ComputedStyle* aStyle) {
   return new (aPresShell) nsTableColFrame(aStyle, aPresShell->GetPresContext());
 }

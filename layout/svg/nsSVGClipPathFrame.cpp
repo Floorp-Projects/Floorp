@@ -11,6 +11,7 @@
 #include "AutoReferenceChainGuard.h"
 #include "ImgDrawResult.h"
 #include "gfxContext.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/SVGClipPathElement.h"
 #include "nsGkAtoms.h"
 #include "SVGObserverUtils.h"
@@ -26,8 +27,7 @@ using namespace mozilla::image;
 //----------------------------------------------------------------------
 // Implementation
 
-nsIFrame* NS_NewSVGClipPathFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle) {
+nsIFrame* NS_NewSVGClipPathFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       nsSVGClipPathFrame(aStyle, aPresShell->GetPresContext());
 }

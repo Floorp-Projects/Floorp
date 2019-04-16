@@ -80,7 +80,7 @@ class nsListEventListener final : public nsIDOMEventListener {
 };
 
 //---------------------------------------------------------
-nsContainerFrame* NS_NewListControlFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewListControlFrame(PresShell* aPresShell,
                                          ComputedStyle* aStyle) {
   nsListControlFrame* it =
       new (aPresShell) nsListControlFrame(aStyle, aPresShell->GetPresContext());

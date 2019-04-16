@@ -11,6 +11,7 @@
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
 
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLVideoElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/layers/RenderRootStateManager.h"
@@ -34,8 +35,7 @@ using namespace mozilla::layers;
 using namespace mozilla::dom;
 using namespace mozilla::gfx;
 
-nsIFrame* NS_NewHTMLVideoFrame(nsIPresShell* aPresShell,
-                               ComputedStyle* aStyle) {
+nsIFrame* NS_NewHTMLVideoFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsVideoFrame(aStyle, aPresShell->GetPresContext());
 }
 

@@ -110,7 +110,7 @@ static uint32_t GetOverflowChange(const nsRect& aCurScrolledRect,
 
 //----------nsHTMLScrollFrame-------------------------------------------
 
-nsHTMLScrollFrame* NS_NewHTMLScrollFrame(nsIPresShell* aPresShell,
+nsHTMLScrollFrame* NS_NewHTMLScrollFrame(PresShell* aPresShell,
                                          ComputedStyle* aStyle, bool aIsRoot) {
   return new (aPresShell)
       nsHTMLScrollFrame(aStyle, aPresShell->GetPresContext(), aIsRoot);
@@ -1214,7 +1214,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 //----------nsXULScrollFrame-------------------------------------------
 
-nsXULScrollFrame* NS_NewXULScrollFrame(nsIPresShell* aPresShell,
+nsXULScrollFrame* NS_NewXULScrollFrame(PresShell* aPresShell,
                                        ComputedStyle* aStyle, bool aIsRoot,
                                        bool aClipAllDescendants) {
   return new (aPresShell) nsXULScrollFrame(aStyle, aPresShell->GetPresContext(),

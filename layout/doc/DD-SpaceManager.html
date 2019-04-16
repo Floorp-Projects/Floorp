@@ -64,7 +64,7 @@ impact intervals.
  */
 class nsSpaceManager {
 public:
-  nsSpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame);
+  nsSpaceManager(PresShell* aPresShell, nsIFrame* aFrame);
   ~nsSpaceManager();
 
   void* operator new(size_t aSize);
@@ -328,7 +328,7 @@ private:
  space of this Space Manager is relative to the frame passed in to the constructor.
 </p>
  
-<pre>  nsSpaceManager(nsIPresShell* aPresShell, nsIFrame* aFrame);
+<pre>  nsSpaceManager(PresShell* aPresShell, nsIFrame* aFrame);
   ~nsSpaceManager();
 </pre>
 <p>

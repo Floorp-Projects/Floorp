@@ -159,7 +159,8 @@ function createThisFirefoxRuntime() {
       isConnecting: false,
       isConnectionFailed: false,
       isConnectionNotResponding: false,
-      isUnknown: false,
+      isUnavailable: false,
+      isUnplugged: false,
       name: l10n.getString("about-debugging-this-firefox-runtime-name"),
       type: RUNTIMES.THIS_FIREFOX,
     };
@@ -320,7 +321,8 @@ function updateNetworkRuntimes(locations) {
       isConnecting: false,
       isConnectionFailed: false,
       isConnectionNotResponding: false,
-      isUnknown: false,
+      isUnavailable: false,
+      isUnplugged: false,
       name: location,
       type: RUNTIMES.NETWORK,
     };
@@ -331,9 +333,9 @@ function updateNetworkRuntimes(locations) {
 function updateUSBRuntimes(adbRuntimes) {
   const runtimes = adbRuntimes.map(adbRuntime => {
     // Set connectionParameters only for known runtimes.
-    const socketPath = adbRuntime._socketPath;
+    const socketPath = adbRuntime.socketPath;
     const deviceId = adbRuntime.deviceId;
-    const connectionParameters = adbRuntime.isUnknown() ? null : { deviceId, socketPath };
+    const connectionParameters = socketPath ? { deviceId, socketPath } : null;
     return {
       id: adbRuntime.id,
       extra: {
@@ -343,7 +345,8 @@ function updateUSBRuntimes(adbRuntimes) {
       isConnecting: false,
       isConnectionFailed: false,
       isConnectionNotResponding: false,
-      isUnknown: adbRuntime.isUnknown(),
+      isUnavailable: adbRuntime.isUnavailable,
+      isUnplugged: adbRuntime.isUnplugged,
       name: adbRuntime.shortName,
       type: RUNTIMES.USB,
     };

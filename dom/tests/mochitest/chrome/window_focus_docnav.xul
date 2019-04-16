@@ -4,8 +4,7 @@
 <window onload="start()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script type="application/javascript"
-        src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
 <textbox id="textbox1"/>
 <textbox id="textbox2"/>

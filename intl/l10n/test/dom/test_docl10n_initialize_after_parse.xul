@@ -7,8 +7,7 @@
         xmlns:html="http://www.w3.org/1999/xhtml"
         title="Test lazy injecting l10n resource links in XHTML environment">
 
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script type="application/javascript">
   <![CDATA[
   SimpleTest.waitForExplicitFinish();

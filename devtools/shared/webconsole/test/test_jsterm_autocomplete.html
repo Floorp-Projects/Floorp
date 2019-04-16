@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf8">
   <title>Test for JavaScript terminal functionality</title>
-  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="common.js"></script>
   <!-- Any copyright is dedicated to the Public Domain.
      - http://creativecommons.org/publicdomain/zero/1.0/ -->
@@ -346,22 +346,22 @@
   async function doInsensitiveAutocomplete(client) {
     info("test autocomplete for 'window.insensitiveTestCase.'");
     let {matches} = await client.autocomplete("window.insensitiveTestCase.");
-    is(matches.join("-"), "prop-pröp-PROP-PRÖP-Prop",
+    is(matches.join("-"), "prop-pröp-Prop-PROP-PRÖP",
       "autocomplete returns the expected items, in the expected order");
 
     info("test autocomplete for 'window.insensitiveTestCase.p'");
     matches = (await client.autocomplete("window.insensitiveTestCase.p")).matches;
-    is(matches.join("-"), "prop-pröp-PROP-PRÖP-Prop",
+    is(matches.join("-"), "prop-pröp-Prop-PROP-PRÖP",
       "autocomplete is case-insensitive when first letter is lowercased");
 
     info("test autocomplete for 'window.insensitiveTestCase.pRoP'");
     matches = (await client.autocomplete("window.insensitiveTestCase.pRoP")).matches;
-    is(matches.join("-"), "prop-PROP-Prop",
+    is(matches.join("-"), "prop-Prop-PROP",
       "autocomplete is case-insensitive when first letter is lowercased");
 
     info("test autocomplete for 'window.insensitiveTestCase.P'");
     matches = (await client.autocomplete("window.insensitiveTestCase.P")).matches;
-    is(matches.join("-"), "PROP-PRÖP-Prop",
+    is(matches.join("-"), "Prop-PROP-PRÖP",
       "autocomplete is case-sensitive when first letter is uppercased");
 
     info("test autocomplete for 'window.insensitiveTestCase.PROP'");
@@ -421,7 +421,7 @@
     res = await client.autocomplete("window.elementAccessTestCase[`d");
     is(
       res.matches.join("|"),
-      "`da\"ta\"test`|`da'ta'test`|`da\\`ta\\`test`|`data-test`|`dataTest`",
+      "`da'ta'test`|`da\"ta\"test`|`da\\`ta\\`test`|`data-test`|`dataTest`",
       "autocomplete returns the expected items, wrapped in the same quotes the user entered");
     is(res.isElementAccess, true);
 

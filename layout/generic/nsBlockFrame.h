@@ -44,6 +44,7 @@ enum class LineReflowStatus {
 class nsBlockInFlowLineIterator;
 namespace mozilla {
 class BlockReflowInput;
+class PresShell;
 class ServoRestyleState;
 class ServoStyleSet;
 }  // namespace mozilla
@@ -101,7 +102,7 @@ class nsBlockFrame : public nsContainerFrame {
     return mLines.rbegin(aList);
   }
 
-  friend nsBlockFrame* NS_NewBlockFrame(nsIPresShell* aPresShell,
+  friend nsBlockFrame* NS_NewBlockFrame(mozilla::PresShell* aPresShell,
                                         ComputedStyle* aStyle);
 
   // nsQueryFrame

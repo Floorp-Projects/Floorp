@@ -30,6 +30,7 @@ class nsOverflowChecker;
 class nsTreeImageListener;
 
 namespace mozilla {
+class PresShell;
 namespace layout {
 class ScrollbarActivity;
 }  // namespace layout
@@ -167,7 +168,7 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
 
   virtual void DidSetComputedStyle(ComputedStyle* aOldComputedStyle) override;
 
-  friend nsIFrame* NS_NewTreeBodyFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewTreeBodyFrame(mozilla::PresShell* aPresShell);
   friend class nsTreeColumn;
 
   struct ScrollParts {

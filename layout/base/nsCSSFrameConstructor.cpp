@@ -131,56 +131,49 @@ using namespace mozilla::dom;
 // An alias for convenience.
 static const nsIFrame::ChildListID kPrincipalList = nsIFrame::kPrincipalList;
 
-nsIFrame* NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell,
-                                ComputedStyle* aStyle);
+nsIFrame* NS_NewHTMLCanvasFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewHTMLVideoFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewHTMLVideoFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsContainerFrame* NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewSVGOuterSVGFrame(PresShell* aPresShell,
                                          ComputedStyle* aStyle);
-nsContainerFrame* NS_NewSVGOuterSVGAnonChildFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewSVGOuterSVGAnonChildFrame(PresShell* aPresShell,
                                                   ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGGeometryFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGGFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewSVGInnerSVGFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGGeometryFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGGFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGGenericContainerFrame(PresShell* aPresShell,
                                          ComputedStyle* aStyle);
-nsContainerFrame* NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewSVGForeignObjectFrame(PresShell* aPresShell,
                                               ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGAFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGSwitchFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGSymbolFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGTextFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
-                                  ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGUseFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGViewFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-extern nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewSVGAFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGSwitchFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGSymbolFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGTextFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGContainerFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGUseFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGViewFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+extern nsIFrame* NS_NewSVGLinearGradientFrame(PresShell* aPresShell,
                                               ComputedStyle* aStyle);
-extern nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell,
+extern nsIFrame* NS_NewSVGRadialGradientFrame(PresShell* aPresShell,
                                               ComputedStyle* aStyle);
-extern nsIFrame* NS_NewSVGStopFrame(nsIPresShell* aPresShell,
+extern nsIFrame* NS_NewSVGStopFrame(PresShell* aPresShell,
                                     ComputedStyle* aStyle);
-nsContainerFrame* NS_NewSVGMarkerFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewSVGMarkerFrame(PresShell* aPresShell,
                                        ComputedStyle* aStyle);
-nsContainerFrame* NS_NewSVGMarkerAnonChildFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewSVGMarkerAnonChildFrame(PresShell* aPresShell,
                                                 ComputedStyle* aStyle);
-extern nsIFrame* NS_NewSVGImageFrame(nsIPresShell* aPresShell,
+extern nsIFrame* NS_NewSVGImageFrame(PresShell* aPresShell,
                                      ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGClipPathFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGFilterFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGPatternFrame(nsIPresShell* aPresShell,
-                                ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGMaskFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGFEContainerFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewSVGClipPathFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGFilterFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGPatternFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGMaskFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGFEContainerFrame(PresShell* aPresShell,
                                     ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGFELeafFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGFEImageFrame(nsIPresShell* aPresShell,
-                                ComputedStyle* aStyle);
-nsIFrame* NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewSVGFELeafFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGFEImageFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSVGFEUnstyledLeafFrame(PresShell* aPresShell,
                                        ComputedStyle* aStyle);
 
 #include "mozilla/dom/NodeInfo.h"
@@ -218,74 +211,71 @@ static FrameCtorDebugFlags gFlags[] = {
 
 //------------------------------------------------------------------
 
-nsContainerFrame* NS_NewRootBoxFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewRootBoxFrame(PresShell* aPresShell,
                                      ComputedStyle* aStyle);
 
-nsContainerFrame* NS_NewDocElementBoxFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewDocElementBoxFrame(PresShell* aPresShell,
                                            ComputedStyle* aStyle);
 
-nsIFrame* NS_NewDeckFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewDeckFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewLeafBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewLeafBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewStackFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewStackFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewRangeFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewRangeFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewImageBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewImageBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewTextBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewTextBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewGroupBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewGroupBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewButtonBoxFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewButtonBoxFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewSplitterFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSplitterFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewMenuPopupFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewMenuPopupFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewPopupSetFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewPopupSetFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewMenuFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle,
+nsIFrame* NS_NewMenuFrame(PresShell* aPresShell, ComputedStyle* aStyle,
                           uint32_t aFlags);
 
-nsIFrame* NS_NewMenuBarFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewMenuBarFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewTreeBodyFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewTreeBodyFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 // grid
-nsresult NS_NewGridLayout2(nsIPresShell* aPresShell, nsBoxLayout** aNewLayout);
-nsIFrame* NS_NewGridRowLeafFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle);
-nsIFrame* NS_NewGridRowGroupFrame(nsIPresShell* aPresShell,
-                                  ComputedStyle* aStyle);
+nsresult NS_NewGridLayout2(nsBoxLayout** aNewLayout);
+nsIFrame* NS_NewGridRowLeafFrame(PresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewGridRowGroupFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 // end grid
 
-nsIFrame* NS_NewTitleBarFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewTitleBarFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewResizerFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewResizerFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
 #endif
 
-nsHTMLScrollFrame* NS_NewHTMLScrollFrame(nsIPresShell* aPresShell,
+nsHTMLScrollFrame* NS_NewHTMLScrollFrame(PresShell* aPresShell,
                                          ComputedStyle* aStyle, bool aIsRoot);
 
-nsXULScrollFrame* NS_NewXULScrollFrame(nsIPresShell* aPresShell,
+nsXULScrollFrame* NS_NewXULScrollFrame(PresShell* aPresShell,
                                        ComputedStyle* aStyle, bool aIsRoot,
                                        bool aClipAllDescendants);
 
-nsIFrame* NS_NewSliderFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewSliderFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewScrollbarFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle);
+nsIFrame* NS_NewScrollbarFrame(PresShell* aPresShell, ComputedStyle* aStyle);
 
-nsIFrame* NS_NewScrollbarButtonFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewScrollbarButtonFrame(PresShell* aPresShell,
                                      ComputedStyle* aStyle);
 
-nsIFrame* NS_NewImageFrameForContentProperty(nsIPresShell*, ComputedStyle*);
+nsIFrame* NS_NewImageFrameForContentProperty(PresShell*, ComputedStyle*);
 
-nsIFrame* NS_NewImageFrameForGeneratedContentIndex(nsIPresShell*,
-                                                   ComputedStyle*);
+nsIFrame* NS_NewImageFrameForGeneratedContentIndex(PresShell*, ComputedStyle*);
 
 // Returns true if aFrame is an anonymous flex/grid item.
 static inline bool IsAnonymousFlexOrGridItem(const nsIFrame* aFrame) {
@@ -690,7 +680,7 @@ class MOZ_STACK_CLASS nsFrameConstructorState {
   typedef nsIFrame::ChildListID ChildListID;
 
   nsPresContext* mPresContext;
-  nsIPresShell* mPresShell;
+  PresShell* mPresShell;
   nsFrameManager* mFrameManager;
 
 #ifdef MOZ_XUL
@@ -741,12 +731,12 @@ class MOZ_STACK_CLASS nsFrameConstructorState {
   // Constructor
   // Use the passed-in history state.
   nsFrameConstructorState(
-      nsIPresShell* aPresShell, nsContainerFrame* aFixedContainingBlock,
+      PresShell* aPresShell, nsContainerFrame* aFixedContainingBlock,
       nsContainerFrame* aAbsoluteContainingBlock,
       nsContainerFrame* aFloatContainingBlock,
       already_AddRefed<nsILayoutHistoryState> aHistoryState);
   // Get the history state from the pres context's pres shell.
-  nsFrameConstructorState(nsIPresShell* aPresShell,
+  nsFrameConstructorState(PresShell* aPresShell,
                           nsContainerFrame* aFixedContainingBlock,
                           nsContainerFrame* aAbsoluteContainingBlock,
                           nsContainerFrame* aFloatContainingBlock);
@@ -905,7 +895,7 @@ class MOZ_STACK_CLASS nsFrameConstructorState {
 };
 
 nsFrameConstructorState::nsFrameConstructorState(
-    nsIPresShell* aPresShell, nsContainerFrame* aFixedContainingBlock,
+    PresShell* aPresShell, nsContainerFrame* aFixedContainingBlock,
     nsContainerFrame* aAbsoluteContainingBlock,
     nsContainerFrame* aFloatContainingBlock,
     already_AddRefed<nsILayoutHistoryState> aHistoryState)
@@ -943,7 +933,7 @@ nsFrameConstructorState::nsFrameConstructorState(
 }
 
 nsFrameConstructorState::nsFrameConstructorState(
-    nsIPresShell* aPresShell, nsContainerFrame* aFixedContainingBlock,
+    PresShell* aPresShell, nsContainerFrame* aFixedContainingBlock,
     nsContainerFrame* aAbsoluteContainingBlock,
     nsContainerFrame* aFloatContainingBlock)
     : nsFrameConstructorState(
@@ -1470,7 +1460,7 @@ static bool ShouldCreateImageFrameForContent(const Element& aElement,
 //----------------------------------------------------------------------
 
 nsCSSFrameConstructor::nsCSSFrameConstructor(Document* aDocument,
-                                             nsIPresShell* aPresShell)
+                                             PresShell* aPresShell)
     : nsFrameManager(aPresShell),
       mDocument(aDocument),
       mRootElementFrame(nullptr),
@@ -2737,7 +2727,7 @@ void nsCSSFrameConstructor::ConstructAnonymousContentForCanvas(
 }
 
 nsContainerFrame* nsCSSFrameConstructor::ConstructPageFrame(
-    nsIPresShell* aPresShell, nsContainerFrame* aParentFrame,
+    PresShell* aPresShell, nsContainerFrame* aParentFrame,
     nsIFrame* aPrevPageFrame, nsContainerFrame*& aCanvasFrame) {
   ComputedStyle* parentComputedStyle = aParentFrame->Style();
   ServoStyleSet* styleSet = aPresShell->StyleSet();
@@ -2793,7 +2783,7 @@ nsContainerFrame* nsCSSFrameConstructor::ConstructPageFrame(
 
 /* static */
 nsIFrame* nsCSSFrameConstructor::CreatePlaceholderFrameFor(
-    nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame* aFrame,
+    PresShell* aPresShell, nsIContent* aContent, nsIFrame* aFrame,
     nsContainerFrame* aParentFrame, nsIFrame* aPrevInFlow,
     nsFrameState aTypeBit) {
   RefPtr<ComputedStyle> placeholderStyle =
@@ -3952,10 +3942,10 @@ static bool IsXULDisplayType(const nsStyleDisplay* aDisplay) {
 #define SCROLLABLE_ABSPOS_CONTAINER_XUL_DISPLAY_CREATE(_display, _func) \
   FCDATA_FOR_DISPLAY(_display, SCROLLABLE_ABSPOS_CONTAINER_XUL_FCDATA(_func))
 
-static nsIFrame* NS_NewGridBoxFrame(nsIPresShell* aPresShell,
+static nsIFrame* NS_NewGridBoxFrame(PresShell* aPresShell,
                                     ComputedStyle* aComputedStyle) {
   nsCOMPtr<nsBoxLayout> layout;
-  NS_NewGridLayout2(aPresShell, getter_AddRefs(layout));
+  NS_NewGridLayout2(getter_AddRefs(layout));
   return NS_NewBoxFrame(aPresShell, aComputedStyle, false, layout);
 }
 
@@ -4062,7 +4052,7 @@ nsCSSFrameConstructor::FindXULLabelData(const Element& aElement,
   return &sLabelData;
 }
 
-static nsIFrame* NS_NewXULDescriptionFrame(nsIPresShell* aPresShell,
+static nsIFrame* NS_NewXULDescriptionFrame(PresShell* aPresShell,
                                            ComputedStyle* aContext) {
   // XXXbz do we really need to set up the block formatting context root? If the
   // parent is not a block we'll get it anyway, and if it is, do we want it?
@@ -6335,7 +6325,7 @@ static bool IsSpecialFramesetChild(nsIContent* aContent) {
   return aContent->IsAnyOfHTMLElements(nsGkAtoms::frameset, nsGkAtoms::frame);
 }
 
-static void InvalidateCanvasIfNeeded(nsIPresShell* presShell, nsIContent* node);
+static void InvalidateCanvasIfNeeded(PresShell* aPresShell, nsIContent* aNode);
 
 void nsCSSFrameConstructor::AddTextItemIfNeeded(
     nsFrameConstructorState& aState, const InsertionPoint& aInsertion,
@@ -6919,8 +6909,7 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
 
 #ifdef ACCESSIBILITY
   if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
-    accService->ContentRangeInserted(static_cast<PresShell*>(mPresShell),
-                                     aFirstNewContent, nullptr);
+    accService->ContentRangeInserted(mPresShell, aFirstNewContent, nullptr);
   }
 #endif
 }
@@ -7032,8 +7021,7 @@ void nsCSSFrameConstructor::ContentRangeInserted(
 
 #ifdef ACCESSIBILITY
     if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
-      accService->ContentRangeInserted(static_cast<PresShell*>(mPresShell),
-                                       aStartChild, aEndChild);
+      accService->ContentRangeInserted(mPresShell, aStartChild, aEndChild);
     }
 #endif
 
@@ -7399,8 +7387,7 @@ void nsCSSFrameConstructor::ContentRangeInserted(
 
 #ifdef ACCESSIBILITY
   if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
-    accService->ContentRangeInserted(static_cast<PresShell*>(mPresShell),
-                                     aStartChild, aEndChild);
+    accService->ContentRangeInserted(mPresShell, aStartChild, aEndChild);
   }
 #endif
 }
@@ -7600,7 +7587,7 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
 
 #ifdef ACCESSIBILITY
     if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
-      accService->ContentRemoved(static_cast<PresShell*>(mPresShell), aChild);
+      accService->ContentRemoved(mPresShell, aChild);
     }
 #endif
 
@@ -7743,15 +7730,14 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
  * @param aFrame a frame for a content node about to be removed or a frame that
  *               was just created for a content node that was inserted.
  */
-static void InvalidateCanvasIfNeeded(nsIPresShell* presShell,
-                                     nsIContent* node) {
-  MOZ_ASSERT(presShell->GetRootFrame(), "What happened here?");
-  MOZ_ASSERT(presShell->GetPresContext(), "Say what?");
+static void InvalidateCanvasIfNeeded(PresShell* aPresShell, nsIContent* aNode) {
+  MOZ_ASSERT(aPresShell->GetRootFrame(), "What happened here?");
+  MOZ_ASSERT(aPresShell->GetPresContext(), "Say what?");
 
   //  Note that both in ContentRemoved and ContentInserted the content node
   //  will still have the right parent pointer, so looking at that is ok.
 
-  nsIContent* parent = node->GetParent();
+  nsIContent* parent = aNode->GetParent();
   if (parent) {
     // Has a parent; might not be what we want
     nsIContent* grandParent = parent->GetParent();
@@ -7761,7 +7747,7 @@ static void InvalidateCanvasIfNeeded(nsIPresShell* presShell,
     }
 
     // Check whether it's an HTML body
-    if (!node->IsHTMLElement(nsGkAtoms::body)) {
+    if (!aNode->IsHTMLElement(nsGkAtoms::body)) {
       return;
     }
   }
@@ -7771,7 +7757,7 @@ static void InvalidateCanvasIfNeeded(nsIPresShell* presShell,
   // XHTML or something), but chances are we want to.  Play it safe.
   // Invalidate the viewport.
 
-  nsIFrame* rootFrame = presShell->GetRootFrame();
+  nsIFrame* rootFrame = aPresShell->GetRootFrame();
   rootFrame->InvalidateFrameSubtree();
 }
 
@@ -7926,7 +7912,7 @@ void nsCSSFrameConstructor::GetAlternateTextFor(Element* aElement, nsAtom* aTag,
 }
 
 nsIFrame* nsCSSFrameConstructor::CreateContinuingOuterTableFrame(
-    nsIPresShell* aPresShell, nsPresContext* aPresContext, nsIFrame* aFrame,
+    PresShell* aPresShell, nsPresContext* aPresContext, nsIFrame* aFrame,
     nsContainerFrame* aParentFrame, nsIContent* aContent,
     ComputedStyle* aComputedStyle) {
   nsTableWrapperFrame* newFrame =
@@ -7955,7 +7941,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingOuterTableFrame(
 }
 
 nsIFrame* nsCSSFrameConstructor::CreateContinuingTableFrame(
-    nsIPresShell* aPresShell, nsIFrame* aFrame, nsContainerFrame* aParentFrame,
+    PresShell* aPresShell, nsIFrame* aFrame, nsContainerFrame* aParentFrame,
     nsIContent* aContent, ComputedStyle* aComputedStyle) {
   nsTableFrame* newFrame = NS_NewTableFrame(aPresShell, aComputedStyle);
 
@@ -8016,7 +8002,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingTableFrame(
 nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
     nsPresContext* aPresContext, nsIFrame* aFrame,
     nsContainerFrame* aParentFrame, bool aIsFluid) {
-  nsIPresShell* shell = aPresContext->PresShell();
+  PresShell* presShell = aPresContext->PresShell();
   ComputedStyle* computedStyle = aFrame->Style();
   nsIFrame* newFrame = nullptr;
   nsIFrame* nextContinuation = aFrame->GetNextContinuation();
@@ -8027,49 +8013,49 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
   nsIContent* content = aFrame->GetContent();
 
   if (LayoutFrameType::Text == frameType) {
-    newFrame = NS_NewContinuingTextFrame(shell, computedStyle);
+    newFrame = NS_NewContinuingTextFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::Inline == frameType) {
-    newFrame = NS_NewInlineFrame(shell, computedStyle);
+    newFrame = NS_NewInlineFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::Block == frameType) {
     MOZ_ASSERT(!aFrame->IsTableCaption(),
                "no support for fragmenting table captions yet");
-    newFrame = NS_NewBlockFrame(shell, computedStyle);
+    newFrame = NS_NewBlockFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
 #ifdef MOZ_XUL
   } else if (LayoutFrameType::XULLabel == frameType) {
-    newFrame = NS_NewXULLabelFrame(shell, computedStyle);
+    newFrame = NS_NewXULLabelFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
 #endif
   } else if (LayoutFrameType::ColumnSetWrapper == frameType) {
     newFrame =
-        NS_NewColumnSetWrapperFrame(shell, computedStyle, nsFrameState(0));
+        NS_NewColumnSetWrapperFrame(presShell, computedStyle, nsFrameState(0));
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::ColumnSet == frameType) {
     MOZ_ASSERT(!aFrame->IsTableCaption(),
                "no support for fragmenting table captions yet");
-    newFrame = NS_NewColumnSetFrame(shell, computedStyle, nsFrameState(0));
+    newFrame = NS_NewColumnSetFrame(presShell, computedStyle, nsFrameState(0));
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::Page == frameType) {
     nsContainerFrame* canvasFrame;
-    newFrame = ConstructPageFrame(shell, aParentFrame, aFrame, canvasFrame);
+    newFrame = ConstructPageFrame(presShell, aParentFrame, aFrame, canvasFrame);
   } else if (LayoutFrameType::TableWrapper == frameType) {
     newFrame = CreateContinuingOuterTableFrame(
-        shell, aPresContext, aFrame, aParentFrame, content, computedStyle);
+        presShell, aPresContext, aFrame, aParentFrame, content, computedStyle);
 
   } else if (LayoutFrameType::Table == frameType) {
-    newFrame = CreateContinuingTableFrame(shell, aFrame, aParentFrame, content,
-                                          computedStyle);
+    newFrame = CreateContinuingTableFrame(presShell, aFrame, aParentFrame,
+                                          content, computedStyle);
 
   } else if (LayoutFrameType::TableRowGroup == frameType) {
-    newFrame = NS_NewTableRowGroupFrame(shell, computedStyle);
+    newFrame = NS_NewTableRowGroupFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
     if (newFrame->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
       nsTableFrame::RegisterPositionedTablePart(newFrame);
     }
   } else if (LayoutFrameType::TableRow == frameType) {
-    nsTableRowFrame* rowFrame = NS_NewTableRowFrame(shell, computedStyle);
+    nsTableRowFrame* rowFrame = NS_NewTableRowFrame(presShell, computedStyle);
 
     rowFrame->Init(content, aParentFrame, aFrame);
     if (rowFrame->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
@@ -8099,7 +8085,7 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
     nsTableFrame* tableFrame =
         static_cast<nsTableRowFrame*>(aParentFrame)->GetTableFrame();
     nsTableCellFrame* cellFrame =
-        NS_NewTableCellFrame(shell, computedStyle, tableFrame);
+        NS_NewTableCellFrame(presShell, computedStyle, tableFrame);
 
     cellFrame->Init(content, aParentFrame, aFrame);
     if (cellFrame->GetStateBits() & NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN) {
@@ -8114,20 +8100,20 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
     SetInitialSingleChild(cellFrame, continuingBlockFrame);
     newFrame = cellFrame;
   } else if (LayoutFrameType::Line == frameType) {
-    newFrame = NS_NewFirstLineFrame(shell, computedStyle);
+    newFrame = NS_NewFirstLineFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::Letter == frameType) {
-    newFrame = NS_NewFirstLetterFrame(shell, computedStyle);
+    newFrame = NS_NewFirstLetterFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::Image == frameType) {
     auto* imageFrame = static_cast<nsImageFrame*>(aFrame);
-    newFrame = imageFrame->CreateContinuingFrame(shell, computedStyle);
+    newFrame = imageFrame->CreateContinuingFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::ImageControl == frameType) {
-    newFrame = NS_NewImageControlFrame(shell, computedStyle);
+    newFrame = NS_NewImageControlFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::FieldSet == frameType) {
-    nsContainerFrame* fieldset = NS_NewFieldSetFrame(shell, computedStyle);
+    nsContainerFrame* fieldset = NS_NewFieldSetFrame(presShell, computedStyle);
 
     fieldset->Init(content, aParentFrame, aFrame);
 
@@ -8145,25 +8131,25 @@ nsIFrame* nsCSSFrameConstructor::CreateContinuingFrame(
     }
     newFrame = fieldset;
   } else if (LayoutFrameType::Legend == frameType) {
-    newFrame = NS_NewLegendFrame(shell, computedStyle);
+    newFrame = NS_NewLegendFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::FlexContainer == frameType) {
-    newFrame = NS_NewFlexContainerFrame(shell, computedStyle);
+    newFrame = NS_NewFlexContainerFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::GridContainer == frameType) {
-    newFrame = NS_NewGridContainerFrame(shell, computedStyle);
+    newFrame = NS_NewGridContainerFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::Ruby == frameType) {
-    newFrame = NS_NewRubyFrame(shell, computedStyle);
+    newFrame = NS_NewRubyFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::RubyBaseContainer == frameType) {
-    newFrame = NS_NewRubyBaseContainerFrame(shell, computedStyle);
+    newFrame = NS_NewRubyBaseContainerFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::RubyTextContainer == frameType) {
-    newFrame = NS_NewRubyTextContainerFrame(shell, computedStyle);
+    newFrame = NS_NewRubyTextContainerFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else if (LayoutFrameType::Details == frameType) {
-    newFrame = NS_NewDetailsFrame(shell, computedStyle);
+    newFrame = NS_NewDetailsFrame(presShell, computedStyle);
     newFrame->Init(content, aParentFrame, aFrame);
   } else {
     MOZ_CRASH("unexpected frame type");
@@ -10307,7 +10293,7 @@ static void ClearHasFirstLetterChildFrom(nsContainerFrame* aParentFrame) {
 }
 
 void nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
-    nsIPresShell* aPresShell, nsIFrame* aBlockFrame) {
+    PresShell* aPresShell, nsIFrame* aBlockFrame) {
   // Look for the first letter frame on the kFloatList, then kPushedFloatsList.
   nsIFrame* floatFrame =
       ::FindFirstLetterFrame(aBlockFrame, nsIFrame::kFloatList);
@@ -10395,7 +10381,7 @@ void nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
 }
 
 void nsCSSFrameConstructor::RemoveFirstLetterFrames(
-    nsIPresShell* aPresShell, nsContainerFrame* aFrame,
+    PresShell* aPresShell, nsContainerFrame* aFrame,
     nsContainerFrame* aBlockFrame, bool* aStopLooking) {
   nsIFrame* prevSibling = nullptr;
   nsIFrame* kid = aFrame->PrincipalChildList().FirstChild();
@@ -10464,7 +10450,7 @@ void nsCSSFrameConstructor::RemoveFirstLetterFrames(
   }
 }
 
-void nsCSSFrameConstructor::RemoveLetterFrames(nsIPresShell* aPresShell,
+void nsCSSFrameConstructor::RemoveLetterFrames(PresShell* aPresShell,
                                                nsContainerFrame* aBlockFrame) {
   aBlockFrame =
       static_cast<nsContainerFrame*>(aBlockFrame->FirstContinuation());
@@ -11735,8 +11721,7 @@ void nsCSSFrameConstructor::GenerateChildFrames(nsContainerFrame* aFrame) {
 #ifdef ACCESSIBILITY
   if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
     if (nsIContent* child = aFrame->GetContent()->GetFirstChild()) {
-      accService->ContentRangeInserted(static_cast<PresShell*>(mPresShell),
-                                       child, nullptr);
+      accService->ContentRangeInserted(mPresShell, child, nullptr);
     }
   }
 #endif

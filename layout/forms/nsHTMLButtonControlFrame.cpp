@@ -6,6 +6,7 @@
 
 #include "nsHTMLButtonControlFrame.h"
 
+#include "mozilla/PresShell.h"
 #include "nsContainerFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIFrameInlines.h"
@@ -20,7 +21,7 @@
 
 using namespace mozilla;
 
-nsContainerFrame* NS_NewHTMLButtonControlFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewHTMLButtonControlFrame(PresShell* aPresShell,
                                                ComputedStyle* aStyle) {
   return new (aPresShell)
       nsHTMLButtonControlFrame(aStyle, aPresShell->GetPresContext());

@@ -32,7 +32,8 @@ class SidebarRuntimeItem extends PureComponent {
       isConnectionFailed: PropTypes.bool.isRequired,
       isConnectionNotResponding: PropTypes.bool.isRequired,
       isSelected: PropTypes.bool.isRequired,
-      isUnknown: PropTypes.bool.isRequired,
+      isUnavailable: PropTypes.bool.isRequired,
+      isUnplugged: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
       runtimeId: PropTypes.string.isRequired,
     };
@@ -112,10 +113,19 @@ class SidebarRuntimeItem extends PureComponent {
   }
 
   renderName() {
-    const { deviceName, getString, isUnknown, name } = this.props;
+    const { deviceName, getString, isUnavailable, isUnplugged, name } = this.props;
 
-    const displayName = isUnknown ?
-      getString("about-debugging-sidebar-runtime-item-waiting-for-browser") : name;
+    let displayName, qaClassName;
+    if (isUnplugged) {
+      displayName = getString("about-debugging-sidebar-runtime-item-unplugged");
+      qaClassName = "qa-runtime-item-unplugged";
+    } else if (isUnavailable) {
+      displayName = getString("about-debugging-sidebar-runtime-item-waiting-for-browser");
+      qaClassName = "qa-runtime-item-waiting-for-browser";
+    } else {
+      displayName = name;
+      qaClassName = "qa-runtime-item-standard";
+    }
 
     const localizationId = deviceName
       ? "about-debugging-sidebar-runtime-item-name"
@@ -133,7 +143,7 @@ class SidebarRuntimeItem extends PureComponent {
         dom.br({}),
         dom.span(
           {
-            className: "sidebar-runtime-item__runtime__details",
+            className: `sidebar-runtime-item__runtime__details ${qaClassName}`,
           },
           displayName,
         ),
@@ -167,7 +177,7 @@ class SidebarRuntimeItem extends PureComponent {
       icon,
       isConnected,
       isSelected,
-      isUnknown,
+      isUnavailable,
       runtimeId,
     } = this.props;
 
@@ -196,7 +206,7 @@ class SidebarRuntimeItem extends PureComponent {
             }
           ),
           this.renderName(),
-          !isUnknown && !isConnected ? this.renderConnectButton() : null
+          !isUnavailable && !isConnected ? this.renderConnectButton() : null
         ),
       ),
       this.renderConnectionError(),

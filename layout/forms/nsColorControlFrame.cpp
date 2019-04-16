@@ -12,6 +12,7 @@
 #include "nsCheckboxRadioFrame.h"
 #include "nsGkAtoms.h"
 #include "nsIFormControl.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/Document.h"
 
@@ -25,7 +26,7 @@ nsColorControlFrame::nsColorControlFrame(ComputedStyle* aStyle,
                                          nsPresContext* aPresContext)
     : nsHTMLButtonControlFrame(aStyle, aPresContext, kClassID) {}
 
-nsIFrame* NS_NewColorControlFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewColorControlFrame(PresShell* aPresShell,
                                   ComputedStyle* aStyle) {
   return new (aPresShell)
       nsColorControlFrame(aStyle, aPresShell->GetPresContext());

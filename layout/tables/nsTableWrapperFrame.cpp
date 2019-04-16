@@ -1008,7 +1008,7 @@ nsIContent* nsTableWrapperFrame::GetCellAt(uint32_t aRowIdx,
   return cell->GetContent();
 }
 
-nsTableWrapperFrame* NS_NewTableWrapperFrame(nsIPresShell* aPresShell,
+nsTableWrapperFrame* NS_NewTableWrapperFrame(PresShell* aPresShell,
                                              ComputedStyle* aStyle) {
   return new (aPresShell)
       nsTableWrapperFrame(aStyle, aPresShell->GetPresContext());

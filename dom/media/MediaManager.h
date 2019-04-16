@@ -183,16 +183,15 @@ class MediaManager final : public nsIMediaManagerService,
     MOZ_ASSERT(NS_IsMainThread());
     return mActiveWindows.GetWeak(aWindowId);
   }
-  void AddWindowID(uint64_t aWindowId, GetUserMediaWindowListener* aListener);
+  void AddWindowID(uint64_t aWindowId,
+                   RefPtr<GetUserMediaWindowListener> aListener);
   void RemoveWindowID(uint64_t aWindowId);
   void SendPendingGUMRequest();
   bool IsWindowStillActive(uint64_t aWindowId) {
     return !!GetWindowListener(aWindowId);
   }
-  bool IsWindowListenerStillActive(GetUserMediaWindowListener* aListener);
-  // Note: also calls aListener->Remove(), even if inactive
-  void RemoveFromWindowList(uint64_t aWindowID,
-                            GetUserMediaWindowListener* aListener);
+  bool IsWindowListenerStillActive(
+      const RefPtr<GetUserMediaWindowListener>& aListener);
 
   typedef dom::NavigatorUserMediaSuccessCallback GetUserMediaSuccessCallback;
   typedef dom::NavigatorUserMediaErrorCallback GetUserMediaErrorCallback;

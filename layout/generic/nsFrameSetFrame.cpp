@@ -1259,7 +1259,7 @@ void nsHTMLFramesetFrame::EndMouseDrag(nsPresContext* aPresContext) {
   gDragInProgress = false;
 }
 
-nsIFrame* NS_NewHTMLFramesetFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewHTMLFramesetFrame(PresShell* aPresShell,
                                   ComputedStyle* aStyle) {
 #ifdef DEBUG
   const nsStyleDisplay* disp = aStyle->StyleDisplay();

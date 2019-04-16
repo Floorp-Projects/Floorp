@@ -4,7 +4,7 @@
 
 <window align="start" title="XUL stack tests" onload="runTest()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
   <!-- a * before an expected value means an offset from the right or bottom edge -->
   <stack id="stack">

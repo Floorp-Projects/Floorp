@@ -8,8 +8,7 @@
         onload="setTimeout(nextTest,0);"
         title="bug 514732 test">
 
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/docshell_helpers.js">
+  <script src="chrome://mochikit/content/tests/SimpleTest/docshell_helpers.js">
   </script>
 
   <script type="application/javascript"><![CDATA[

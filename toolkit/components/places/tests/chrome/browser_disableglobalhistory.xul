@@ -4,8 +4,7 @@
 <window title="Test disableglobalhistory attribute on remote browsers"
         onload="run_test()"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
 
   <browser id="inprocess_disabled" src="about:blank" type="content" disableglobalhistory="true" />
   <browser id="inprocess_enabled" src="about:blank" type="content" />

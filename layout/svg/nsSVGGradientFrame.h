@@ -18,9 +18,9 @@
 class gfxPattern;
 class nsAtom;
 class nsIContent;
-class nsIPresShell;
 
 namespace mozilla {
+class PresShell;
 class SVGAnimatedTransformList;
 
 namespace dom {
@@ -109,7 +109,7 @@ class nsSVGGradientFrame : public nsSVGPaintServerFrame {
 // -------------------------------------------------------------------------
 
 class nsSVGLinearGradientFrame final : public nsSVGGradientFrame {
-  friend nsIFrame* NS_NewSVGLinearGradientFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewSVGLinearGradientFrame(mozilla::PresShell* aPresShell,
                                                 ComputedStyle* aStyle);
 
  protected:
@@ -149,7 +149,7 @@ class nsSVGLinearGradientFrame final : public nsSVGGradientFrame {
 // -------------------------------------------------------------------------
 
 class nsSVGRadialGradientFrame final : public nsSVGGradientFrame {
-  friend nsIFrame* NS_NewSVGRadialGradientFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewSVGRadialGradientFrame(mozilla::PresShell* aPresShell,
                                                 ComputedStyle* aStyle);
 
  protected:

@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMathMLmrootFrame.h"
+
+#include "mozilla/PresShell.h"
 #include "nsPresContext.h"
 #include <algorithm>
 #include "gfxContext.h"
@@ -21,8 +23,7 @@ using namespace mozilla;
 
 static const char16_t kSqrChar = char16_t(0x221A);
 
-nsIFrame* NS_NewMathMLmrootFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle) {
+nsIFrame* NS_NewMathMLmrootFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       nsMathMLmrootFrame(aStyle, aPresShell->GetPresContext());
 }

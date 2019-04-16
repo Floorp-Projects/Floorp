@@ -12,11 +12,12 @@
 //
 
 #include "nsStackFrame.h"
+
 #include "mozilla/ComputedStyle.h"
+#include "mozilla/PresShell.h"
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
-#include "nsIPresShell.h"
 #include "nsCSSRendering.h"
 #include "nsBoxLayoutState.h"
 #include "nsStackLayout.h"
@@ -24,7 +25,7 @@
 
 using namespace mozilla;
 
-nsIFrame* NS_NewStackFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewStackFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsStackFrame(aStyle, aPresShell->GetPresContext());
 }
 

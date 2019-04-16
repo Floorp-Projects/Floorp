@@ -37,7 +37,7 @@
 
 using namespace mozilla;
 
-nsIFrame* NS_NewDeckFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewDeckFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsDeckFrame(aStyle, aPresShell->GetPresContext());
 }
 

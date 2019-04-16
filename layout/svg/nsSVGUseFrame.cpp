@@ -6,6 +6,7 @@
 
 #include "nsSVGUseFrame.h"
 
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/MutationEvent.h"
 #include "mozilla/dom/SVGUseElement.h"
 #include "SVGObserverUtils.h"
@@ -16,7 +17,7 @@ using namespace mozilla::dom;
 //----------------------------------------------------------------------
 // Implementation
 
-nsIFrame* NS_NewSVGUseFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewSVGUseFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsSVGUseFrame(aStyle, aPresShell->GetPresContext());
 }
 

@@ -1631,7 +1631,7 @@ bool nsTableRowGroupFrame::HasInternalBreakAfter() const {
 }
 /* ----- global methods ----- */
 
-nsTableRowGroupFrame* NS_NewTableRowGroupFrame(nsIPresShell* aPresShell,
+nsTableRowGroupFrame* NS_NewTableRowGroupFrame(PresShell* aPresShell,
                                                ComputedStyle* aStyle) {
   return new (aPresShell)
       nsTableRowGroupFrame(aStyle, aPresShell->GetPresContext());

@@ -1681,7 +1681,7 @@ void nsPluginFrame::EndSwapDocShells(nsISupports* aSupports, void*) {
   }
 }
 
-nsIFrame* NS_NewObjectFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewObjectFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsPluginFrame(aStyle, aPresShell->GetPresContext());
 }
 

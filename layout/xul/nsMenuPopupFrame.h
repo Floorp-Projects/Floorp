@@ -29,6 +29,7 @@
 class nsIWidget;
 
 namespace mozilla {
+class PresShell;
 namespace dom {
 class KeyboardEvent;
 }  // namespace dom
@@ -137,7 +138,7 @@ enum MenuPopupAnchorType {
 #define POPUPPOSITION_HFLIP(v) (v ^ 1)
 #define POPUPPOSITION_VFLIP(v) (v ^ 2)
 
-nsIFrame* NS_NewMenuPopupFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewMenuPopupFrame(mozilla::PresShell* aPresShell,
                                mozilla::ComputedStyle* aStyle);
 
 class nsView;

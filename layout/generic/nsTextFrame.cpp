@@ -4356,7 +4356,7 @@ class nsContinuingTextFrame final : public nsTextFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsContinuingTextFrame)
 
-  friend nsIFrame* NS_NewContinuingTextFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewContinuingTextFrame(mozilla::PresShell* aPresShell,
                                              ComputedStyle* aStyle);
 
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -4567,13 +4567,13 @@ static void VerifyNotDirty(nsFrameState state) {
 #  define DEBUG_VERIFY_NOT_DIRTY(state)
 #endif
 
-nsIFrame* NS_NewTextFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewTextFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsTextFrame(aStyle, aPresShell->GetPresContext());
 }
 
 NS_IMPL_FRAMEARENA_HELPERS(nsTextFrame)
 
-nsIFrame* NS_NewContinuingTextFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewContinuingTextFrame(PresShell* aPresShell,
                                     ComputedStyle* aStyle) {
   return new (aPresShell)
       nsContinuingTextFrame(aStyle, aPresShell->GetPresContext());

@@ -27,6 +27,7 @@ namespace mozilla {
 
 class CharIterator;
 class nsISVGPoint;
+class PresShell;
 class TextFrameIterator;
 class TextNodeCorrespondenceRecorder;
 struct TextRenderedRun;
@@ -158,7 +159,7 @@ class GlyphMetricsUpdater : public Runnable {
  * PaintText so that we can fill the text geometry with SVG paint servers.
  */
 class SVGTextFrame final : public nsSVGDisplayContainerFrame {
-  friend nsIFrame* NS_NewSVGTextFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewSVGTextFrame(mozilla::PresShell* aPresShell,
                                       ComputedStyle* aStyle);
 
   friend class mozilla::CharIterator;

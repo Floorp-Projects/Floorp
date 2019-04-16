@@ -11,7 +11,11 @@
 #include "nsAtom.h"
 #include "nsBoxFrame.h"
 
-nsIFrame* NS_NewPopupSetFrame(nsIPresShell* aPresShell,
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
+nsIFrame* NS_NewPopupSetFrame(mozilla::PresShell* aPresShell,
                               mozilla::ComputedStyle* aStyle);
 
 class nsPopupSetFrame final : public nsBoxFrame {

@@ -221,8 +221,8 @@ using media::Refcountable;
 static Atomic<bool> sHasShutdown;
 
 struct DeviceState {
-  DeviceState(const RefPtr<MediaDevice>& aDevice, bool aOffWhileDisabled)
-      : mOffWhileDisabled(aOffWhileDisabled), mDevice(aDevice) {
+  DeviceState(RefPtr<MediaDevice> aDevice, bool aOffWhileDisabled)
+      : mOffWhileDisabled(aOffWhileDisabled), mDevice(std::move(aDevice)) {
     MOZ_ASSERT(mDevice);
   }
 
@@ -326,8 +326,9 @@ class SourceListener : public SupportsWeakPtr<SourceListener> {
   /**
    * Marks this listener as active and adds itself as a listener to aStream.
    */
-  void Activate(SourceMediaStream* aStream, MediaDevice* aAudioDevice,
-                MediaDevice* aVideoDevice);
+  void Activate(RefPtr<SourceMediaStream> aStream,
+                RefPtr<MediaDevice> aAudioDevice,
+                RefPtr<MediaDevice> aVideoDevice);
 
   /**
    * Posts a task to initialize and start all associated devices.
@@ -474,7 +475,7 @@ class GetUserMediaWindowListener {
   /**
    * Registers an inactive gUM source listener for this WindowListener.
    */
-  void Register(SourceListener* aListener) {
+  void Register(RefPtr<SourceListener> aListener) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aListener);
     MOZ_ASSERT(!aListener->Activated());
@@ -482,15 +483,17 @@ class GetUserMediaWindowListener {
     MOZ_ASSERT(!mActiveListeners.Contains(aListener), "Already activated");
 
     aListener->Register(this);
-    mInactiveListeners.AppendElement(aListener);
+    mInactiveListeners.AppendElement(std::move(aListener));
   }
 
   /**
    * Activates an already registered and inactive gUM source listener for this
    * WindowListener.
    */
-  void Activate(SourceListener* aListener, SourceMediaStream* aStream,
-                MediaDevice* aAudioDevice, MediaDevice* aVideoDevice) {
+  void Activate(RefPtr<SourceListener> aListener,
+                RefPtr<SourceMediaStream> aStream,
+                RefPtr<MediaDevice> aAudioDevice,
+                RefPtr<MediaDevice> aVideoDevice) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aListener);
     MOZ_ASSERT(!aListener->Activated());
@@ -499,8 +502,9 @@ class GetUserMediaWindowListener {
     MOZ_ASSERT(!mActiveListeners.Contains(aListener), "Already activated");
 
     mInactiveListeners.RemoveElement(aListener);
-    aListener->Activate(aStream, aAudioDevice, aVideoDevice);
-    mActiveListeners.AppendElement(do_AddRef(aListener));
+    aListener->Activate(std::move(aStream), std::move(aAudioDevice),
+                        std::move(aVideoDevice));
+    mActiveListeners.AppendElement(std::move(aListener));
   }
 
   /**
@@ -550,7 +554,7 @@ class GetUserMediaWindowListener {
     mgr->RemoveWindowID(mWindowID);
   }
 
-  bool Remove(SourceListener* aListener) {
+  bool Remove(const RefPtr<SourceListener>& aListener) {
     MOZ_ASSERT(NS_IsMainThread());
 
     if (!mInactiveListeners.RemoveElement(aListener) &&
@@ -565,7 +569,8 @@ class GetUserMediaWindowListener {
                "A SourceListener should only be once in one of "
                "mInactiveListeners and mActiveListeners");
 
-    LOG("GUMWindowListener %p stopping SourceListener %p.", this, aListener);
+    LOG("GUMWindowListener %p stopping SourceListener %p.", this,
+        aListener.get());
     aListener->Stop();
 
     if (MediaDevice* removedDevice = aListener->GetVideoDevice()) {
@@ -967,20 +972,22 @@ class GetUserMediaStreamRunnable : public Runnable {
  public:
   GetUserMediaStreamRunnable(
       MozPromiseHolder<MediaManager::StreamPromise>&& aHolder,
-      uint64_t aWindowID, GetUserMediaWindowListener* aWindowListener,
-      SourceListener* aSourceListener, const ipc::PrincipalInfo& aPrincipalInfo,
-      const MediaStreamConstraints& aConstraints, MediaDevice* aAudioDevice,
-      MediaDevice* aVideoDevice, PeerIdentity* aPeerIdentity, bool aIsChrome)
+      uint64_t aWindowID, RefPtr<GetUserMediaWindowListener> aWindowListener,
+      RefPtr<SourceListener> aSourceListener,
+      const ipc::PrincipalInfo& aPrincipalInfo,
+      const MediaStreamConstraints& aConstraints,
+      RefPtr<MediaDevice> aAudioDevice, RefPtr<MediaDevice> aVideoDevice,
+      RefPtr<PeerIdentity> aPeerIdentity, bool aIsChrome)
       : Runnable("GetUserMediaStreamRunnable"),
         mHolder(std::move(aHolder)),
         mConstraints(aConstraints),
-        mAudioDevice(aAudioDevice),
-        mVideoDevice(aVideoDevice),
+        mAudioDevice(std::move(aAudioDevice)),
+        mVideoDevice(std::move(aVideoDevice)),
         mWindowID(aWindowID),
-        mWindowListener(aWindowListener),
-        mSourceListener(aSourceListener),
+        mWindowListener(std::move(aWindowListener)),
+        mSourceListener(std::move(aSourceListener)),
         mPrincipalInfo(aPrincipalInfo),
-        mPeerIdentity(aPeerIdentity),
+        mPeerIdentity(std::move(aPeerIdentity)),
         mManager(MediaManager::GetInstance()) {}
 
   ~GetUserMediaStreamRunnable() {
@@ -991,20 +998,20 @@ class GetUserMediaStreamRunnable : public Runnable {
   class TracksCreatedListener : public MediaStreamTrackListener {
    public:
     TracksCreatedListener(
-        MediaManager* aManager,
+        RefPtr<MediaManager> aManager,
         MozPromiseHolder<MediaManager::StreamPromise>&& aHolder,
-        GetUserMediaWindowListener* aWindowListener, uint64_t aWindowID,
-        DOMMediaStream* aStream, MediaStreamTrack* aTrack,
+        RefPtr<GetUserMediaWindowListener> aWindowListener, uint64_t aWindowID,
+        RefPtr<DOMMediaStream> aStream, RefPtr<MediaStreamTrack> aTrack,
         RefPtr<GenericNonExclusivePromise>&& aFirstFramePromise)
-        : mWindowListener(aWindowListener),
+        : mWindowListener(std::move(aWindowListener)),
           mHolder(std::move(aHolder)),
-          mManager(aManager),
+          mManager(std::move(aManager)),
           mWindowID(aWindowID),
           mGraph(aTrack->GraphImpl()),
           mStream(new nsMainThreadPtrHolder<DOMMediaStream>(
-              "TracksCreatedListener::mStream", aStream)),
+              "TracksCreatedListener::mStream", aStream.forget())),
           mTrack(new nsMainThreadPtrHolder<MediaStreamTrack>(
-              "TracksCreatedListener::mTrack", aTrack)),
+              "TracksCreatedListener::mTrack", aTrack.forget())),
           mFirstFramePromise(aFirstFramePromise) {}
 
     ~TracksCreatedListener() {
@@ -1142,13 +1149,13 @@ class GetUserMediaStreamRunnable : public Runnable {
        public:
         LocalTrackSource(nsIPrincipal* aPrincipal, const nsString& aLabel,
                          const RefPtr<SourceListener>& aListener,
-                         const MediaSourceEnum aSource, const TrackID aTrackID,
-                         const PeerIdentity* aPeerIdentity)
+                         MediaSourceEnum aSource, TrackID aTrackID,
+                         RefPtr<PeerIdentity> aPeerIdentity)
             : MediaStreamTrackSource(aPrincipal, aLabel),
               mListener(aListener.get()),
               mSource(aSource),
               mTrackID(aTrackID),
-              mPeerIdentity(aPeerIdentity) {}
+              mPeerIdentity(std::move(aPeerIdentity)) {}
 
         MediaSourceEnum GetMediaSource() const override { return mSource; }
 
@@ -1460,8 +1467,8 @@ class GetUserMediaTask : public Runnable {
   GetUserMediaTask(const MediaStreamConstraints& aConstraints,
                    MozPromiseHolder<MediaManager::StreamPromise>&& aHolder,
                    uint64_t aWindowID,
-                   GetUserMediaWindowListener* aWindowListener,
-                   SourceListener* aSourceListener,
+                   RefPtr<GetUserMediaWindowListener> aWindowListener,
+                   RefPtr<SourceListener> aSourceListener,
                    const MediaEnginePrefs& aPrefs,
                    const ipc::PrincipalInfo& aPrincipalInfo, bool aIsChrome,
                    RefPtr<MediaManager::MediaDeviceSetRefCnt>&& aMediaDeviceSet,
@@ -1470,8 +1477,8 @@ class GetUserMediaTask : public Runnable {
         mConstraints(aConstraints),
         mHolder(std::move(aHolder)),
         mWindowID(aWindowID),
-        mWindowListener(aWindowListener),
-        mSourceListener(aSourceListener),
+        mWindowListener(std::move(aWindowListener)),
+        mSourceListener(std::move(aSourceListener)),
         mPrefs(aPrefs),
         mPrincipalInfo(aPrincipalInfo),
         mIsChrome(aIsChrome),
@@ -1607,14 +1614,14 @@ class GetUserMediaTask : public Runnable {
 
   const MediaStreamConstraints& GetConstraints() { return mConstraints; }
 
-  nsresult SetAudioDevice(MediaDevice* aAudioDevice) {
-    mAudioDevice = aAudioDevice;
+  nsresult SetAudioDevice(RefPtr<MediaDevice> aAudioDevice) {
+    mAudioDevice = std::move(aAudioDevice);
     mDeviceChosen = true;
     return NS_OK;
   }
 
-  nsresult SetVideoDevice(MediaDevice* aVideoDevice) {
-    mVideoDevice = aVideoDevice;
+  nsresult SetVideoDevice(RefPtr<MediaDevice> aVideoDevice) {
+    mVideoDevice = std::move(aVideoDevice);
     mDeviceChosen = true;
     return NS_OK;
   }
@@ -3418,7 +3425,7 @@ void MediaManager::RemoveMediaDevicesCallback(uint64_t aWindowID) {
 }
 
 void MediaManager::AddWindowID(uint64_t aWindowId,
-                               GetUserMediaWindowListener* aListener) {
+                               RefPtr<GetUserMediaWindowListener> aListener) {
   MOZ_ASSERT(NS_IsMainThread());
   // Store the WindowID in a hash table and mark as active. The entry is removed
   // when this window is closed or navigated away from.
@@ -3429,7 +3436,7 @@ void MediaManager::AddWindowID(uint64_t aWindowId,
     return;
   }
 
-  GetActiveWindows()->Put(aWindowId, aListener);
+  GetActiveWindows()->Put(aWindowId, aListener.forget());
 }
 
 void MediaManager::RemoveWindowID(uint64_t aWindowId) {
@@ -3462,7 +3469,7 @@ void MediaManager::RemoveWindowID(uint64_t aWindowId) {
 }
 
 bool MediaManager::IsWindowListenerStillActive(
-    GetUserMediaWindowListener* aListener) {
+    const RefPtr<GetUserMediaWindowListener>& aListener) {
   MOZ_DIAGNOSTIC_ASSERT(aListener);
   return aListener && aListener == GetWindowListener(aListener->WindowID());
 }
@@ -3586,10 +3593,10 @@ void MediaManager::Shutdown() {
 
   class ShutdownTask : public Runnable {
    public:
-    ShutdownTask(MediaManager* aManager, already_AddRefed<Runnable> aReply)
+    ShutdownTask(RefPtr<MediaManager> aManager, RefPtr<Runnable> aReply)
         : mozilla::Runnable("ShutdownTask"),
-          mManager(aManager),
-          mReply(aReply) {}
+          mManager(std::move(aManager)),
+          mReply(std::move(aReply)) {}
 
    private:
     NS_IMETHOD
@@ -4065,34 +4072,35 @@ void SourceListener::Register(GetUserMediaWindowListener* aListener) {
   mWindowListener = aListener;
 }
 
-void SourceListener::Activate(SourceMediaStream* aStream,
-                              MediaDevice* aAudioDevice,
-                              MediaDevice* aVideoDevice) {
+void SourceListener::Activate(RefPtr<SourceMediaStream> aStream,
+                              RefPtr<MediaDevice> aAudioDevice,
+                              RefPtr<MediaDevice> aVideoDevice) {
   MOZ_ASSERT(NS_IsMainThread(), "Only call on main thread");
 
-  LOG("SourceListener %p activating audio=%p video=%p", this, aAudioDevice,
-      aVideoDevice);
+  LOG("SourceListener %p activating audio=%p video=%p", this,
+      aAudioDevice.get(), aVideoDevice.get());
 
   MOZ_ASSERT(!mStopped, "Cannot activate stopped source listener");
   MOZ_ASSERT(!Activated(), "Already activated");
 
   mMainThreadCheck = GetCurrentVirtualThread();
-  mStream = aStream;
+  mStream = std::move(aStream);
   if (aAudioDevice) {
-    mAudioDeviceState = MakeUnique<DeviceState>(
-        aAudioDevice,
+    bool offWhileDisabled =
         aAudioDevice->GetMediaSource() == dom::MediaSourceEnum::Microphone &&
-            Preferences::GetBool(
-                "media.getusermedia.microphone.off_while_disabled.enabled",
-                true));
+        Preferences::GetBool(
+            "media.getusermedia.microphone.off_while_disabled.enabled", true);
+    mAudioDeviceState =
+        MakeUnique<DeviceState>(std::move(aAudioDevice), offWhileDisabled);
   }
 
   if (aVideoDevice) {
-    mVideoDeviceState = MakeUnique<DeviceState>(
-        aVideoDevice,
+    bool offWhileDisabled =
         aVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Camera &&
-            Preferences::GetBool(
-                "media.getusermedia.camera.off_while_disabled.enabled", true));
+        Preferences::GetBool(
+            "media.getusermedia.camera.off_while_disabled.enabled", true);
+    mVideoDeviceState =
+        MakeUnique<DeviceState>(std::move(aVideoDevice), offWhileDisabled);
   }
 }
 

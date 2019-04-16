@@ -38,7 +38,7 @@ mozilla::LazyLogModule gLayoutPrintingLog("printing-layout");
 #define PR_PL(_p1) MOZ_LOG(gLayoutPrintingLog, mozilla::LogLevel::Debug, _p1)
 
 nsSimplePageSequenceFrame* NS_NewSimplePageSequenceFrame(
-    nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+    PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       nsSimplePageSequenceFrame(aStyle, aPresShell->GetPresContext());
 }

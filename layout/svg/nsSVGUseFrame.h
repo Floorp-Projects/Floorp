@@ -10,8 +10,12 @@
 // Keep in (case-insensitive) order:
 #include "nsSVGGFrame.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 class nsSVGUseFrame final : public nsSVGGFrame {
-  friend nsIFrame* NS_NewSVGUseFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewSVGUseFrame(mozilla::PresShell* aPresShell,
                                      ComputedStyle* aStyle);
 
  protected:

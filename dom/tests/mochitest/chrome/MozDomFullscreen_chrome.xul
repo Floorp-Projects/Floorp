@@ -20,9 +20,9 @@
 -->
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="start();">
 
-<script type="application/javascript" src="chrome://mochikit/content/chrome-harness.js"></script>
-<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
-<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
+<script src="chrome://mochikit/content/chrome-harness.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>      
 <script type="application/javascript"><![CDATA[
 
 function ok(condition, msg) {

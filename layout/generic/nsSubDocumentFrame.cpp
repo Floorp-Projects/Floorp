@@ -194,7 +194,7 @@ nsIFrame* nsSubDocumentFrame::GetSubdocumentRootFrame() {
   return subdocView ? subdocView->GetFrame() : nullptr;
 }
 
-nsIPresShell* nsSubDocumentFrame::GetSubdocumentPresShellForPainting(
+mozilla::PresShell* nsSubDocumentFrame::GetSubdocumentPresShellForPainting(
     uint32_t aFlags) {
   if (!mInnerView) return nullptr;
 
@@ -353,7 +353,7 @@ void nsSubDocumentFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     return;
   }
 
-  nsCOMPtr<nsIPresShell> presShell = GetSubdocumentPresShellForPainting(
+  RefPtr<mozilla::PresShell> presShell = GetSubdocumentPresShellForPainting(
       aBuilder->IsIgnoringPaintSuppression() ? IGNORE_PAINT_SUPPRESSION : 0);
 
   if (!presShell) {
@@ -882,8 +882,7 @@ nsresult nsSubDocumentFrame::AttributeChanged(int32_t aNameSpaceID,
   return NS_OK;
 }
 
-nsIFrame* NS_NewSubDocumentFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle) {
+nsIFrame* NS_NewSubDocumentFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       nsSubDocumentFrame(aStyle, aPresShell->GetPresContext());
 }
@@ -893,7 +892,7 @@ NS_IMPL_FRAMEARENA_HELPERS(nsSubDocumentFrame)
 class nsHideViewer : public Runnable {
  public:
   nsHideViewer(nsIContent* aFrameElement, nsFrameLoader* aFrameLoader,
-               nsIPresShell* aPresShell, bool aHideViewerIfFrameless)
+               PresShell* aPresShell, bool aHideViewerIfFrameless)
       : mozilla::Runnable("nsHideViewer"),
         mFrameElement(aFrameElement),
         mFrameLoader(aFrameLoader),
@@ -937,7 +936,7 @@ class nsHideViewer : public Runnable {
  private:
   nsCOMPtr<nsIContent> mFrameElement;
   RefPtr<nsFrameLoader> mFrameLoader;
-  nsCOMPtr<nsIPresShell> mPresShell;
+  RefPtr<PresShell> mPresShell;
   bool mHideViewerIfFrameless;
 };
 

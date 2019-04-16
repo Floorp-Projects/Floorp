@@ -2,7 +2,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     screenX="200" screenY="200" width="300" height="300"
 	onload="setTimeout(doTest, 0)">
-<script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 <script><![CDATA[
 var is = window.opener.SimpleTest.is;
 

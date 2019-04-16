@@ -22,6 +22,10 @@ class nsFloatCacheList;
 class nsFloatCacheFreeList;
 class nsWindowSizes;
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 // State cached after reflowing a float. This state is used during
 // incremental reflow when we avoid reflowing a float.
 class nsFloatCache {
@@ -140,13 +144,13 @@ class nsFloatCacheFreeList : private nsFloatCacheList {
  * it's better to use the next function that does that for you in an
  * optimal way.
  */
-nsLineBox* NS_NewLineBox(nsIPresShell* aPresShell, nsIFrame* aFrame,
+nsLineBox* NS_NewLineBox(mozilla::PresShell* aPresShell, nsIFrame* aFrame,
                          bool aIsBlock);
 /**
  * Function to create a line box and initialize it with aCount frames
  * that are currently on aFromLine.  The allocation is infallible.
  */
-nsLineBox* NS_NewLineBox(nsIPresShell* aPresShell, nsLineBox* aFromLine,
+nsLineBox* NS_NewLineBox(mozilla::PresShell* aPresShell, nsLineBox* aFromLine,
                          nsIFrame* aFrame, int32_t aCount);
 
 class nsLineList;
@@ -191,17 +195,17 @@ class nsLineBox final : public nsLineLink {
 
   // Infallible overloaded new operator. Uses an arena (which comes from the
   // presShell) to perform the allocation.
-  void* operator new(size_t sz, nsIPresShell* aPresShell);
+  void* operator new(size_t sz, mozilla::PresShell* aPresShell);
   void operator delete(void* aPtr, size_t sz) = delete;
 
  public:
   // Use these functions to allocate and destroy line boxes
-  friend nsLineBox* NS_NewLineBox(nsIPresShell* aPresShell, nsIFrame* aFrame,
-                                  bool aIsBlock);
-  friend nsLineBox* NS_NewLineBox(nsIPresShell* aPresShell,
+  friend nsLineBox* NS_NewLineBox(mozilla::PresShell* aPresShell,
+                                  nsIFrame* aFrame, bool aIsBlock);
+  friend nsLineBox* NS_NewLineBox(mozilla::PresShell* aPresShell,
                                   nsLineBox* aFromLine, nsIFrame* aFrame,
                                   int32_t aCount);
-  void Destroy(nsIPresShell* aPresShell);
+  void Destroy(mozilla::PresShell* aPresShell);
 
   // mBlock bit
   bool IsBlock() const { return mFlags.mBlock; }

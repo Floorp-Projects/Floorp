@@ -16,7 +16,11 @@
 
 class nsSplitterFrameInner;
 
-nsIFrame* NS_NewSplitterFrame(nsIPresShell* aPresShell,
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
+nsIFrame* NS_NewSplitterFrame(mozilla::PresShell* aPresShell,
                               mozilla::ComputedStyle* aStyle);
 
 class nsSplitterFrame final : public nsBoxFrame {

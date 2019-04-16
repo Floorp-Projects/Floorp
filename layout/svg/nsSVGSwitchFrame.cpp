@@ -8,6 +8,7 @@
 #include "gfxRect.h"
 #include "SVGObserverUtils.h"
 #include "nsSVGGFrame.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/SVGSwitchElement.h"
 #include "nsSVGUtils.h"
 #include "SVGTextFrame.h"
@@ -18,7 +19,7 @@ using namespace mozilla::gfx;
 using namespace mozilla::image;
 
 class nsSVGSwitchFrame final : public nsSVGGFrame {
-  friend nsIFrame* NS_NewSVGSwitchFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewSVGSwitchFrame(mozilla::PresShell* aPresShell,
                                         ComputedStyle* aStyle);
 
  protected:
@@ -60,8 +61,7 @@ class nsSVGSwitchFrame final : public nsSVGGFrame {
 //----------------------------------------------------------------------
 // Implementation
 
-nsIFrame* NS_NewSVGSwitchFrame(nsIPresShell* aPresShell,
-                               ComputedStyle* aStyle) {
+nsIFrame* NS_NewSVGSwitchFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       nsSVGSwitchFrame(aStyle, aPresShell->GetPresContext());
 }

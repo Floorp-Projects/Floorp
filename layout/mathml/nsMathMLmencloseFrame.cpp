@@ -8,6 +8,7 @@
 
 #include "gfx2DGlue.h"
 #include "gfxUtils.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "nsPresContext.h"
@@ -39,7 +40,7 @@ static const uint8_t kArrowHeadSize = 10;
 // phasorangle
 static const uint8_t kPhasorangleWidth = 8;
 
-nsIFrame* NS_NewMathMLmencloseFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewMathMLmencloseFrame(PresShell* aPresShell,
                                     ComputedStyle* aStyle) {
   return new (aPresShell)
       nsMathMLmencloseFrame(aStyle, aPresShell->GetPresContext());

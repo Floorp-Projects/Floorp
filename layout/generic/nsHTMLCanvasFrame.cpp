@@ -10,6 +10,7 @@
 
 #include "nsGkAtoms.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/layers/WebRenderBridgeChild.h"
 #include "mozilla/layers/WebRenderCanvasRenderer.h"
@@ -226,8 +227,7 @@ class nsDisplayCanvas final : public nsDisplayItem {
   }
 };
 
-nsIFrame* NS_NewHTMLCanvasFrame(nsIPresShell* aPresShell,
-                                ComputedStyle* aStyle) {
+nsIFrame* NS_NewHTMLCanvasFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       nsHTMLCanvasFrame(aStyle, aPresShell->GetPresContext());
 }

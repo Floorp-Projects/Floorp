@@ -499,7 +499,7 @@ static inline PseudoStyleType GetPseudoType(nsAtom* aPseudo) {
 }
 
 already_AddRefed<ComputedStyle> nsComputedDOMStyle::DoGetComputedStyleNoFlush(
-    Element* aElement, nsAtom* aPseudo, nsIPresShell* aPresShell,
+    Element* aElement, nsAtom* aPseudo, PresShell* aPresShell,
     StyleType aStyleType) {
   MOZ_ASSERT(aElement, "NULL element");
 
@@ -508,7 +508,8 @@ already_AddRefed<ComputedStyle> nsComputedDOMStyle::DoGetComputedStyleNoFlush(
   // set.  Using the pres shell from the content also means that any
   // content that's actually *in* a document will get the style from the
   // correct document.
-  nsIPresShell* presShell = nsContentUtils::GetPresShellForContent(aElement);
+  PresShell* presShell =
+      static_cast<PresShell*>(nsContentUtils::GetPresShellForContent(aElement));
   bool inDocWithShell = true;
   if (!presShell) {
     inDocWithShell = false;
@@ -822,7 +823,7 @@ void nsComputedDOMStyle::UpdateCurrentStyleSources(bool aNeedsLayoutFlush) {
   mFlushedPendingReflows = aNeedsLayoutFlush;
 #endif
 
-  nsCOMPtr<nsIPresShell> presShellForContent =
+  RefPtr<PresShell> presShellForContent =
       nsContentUtils::GetPresShellForContent(mElement);
   if (presShellForContent && presShellForContent->GetDocument() != document) {
     presShellForContent->GetDocument()->FlushPendingNotifications(

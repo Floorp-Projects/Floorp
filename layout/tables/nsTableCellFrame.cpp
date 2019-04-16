@@ -968,7 +968,7 @@ nsTableCellFrame::GetCellIndexes(int32_t& aRowIndex, int32_t& aColIndex) {
   return NS_OK;
 }
 
-nsTableCellFrame* NS_NewTableCellFrame(nsIPresShell* aPresShell,
+nsTableCellFrame* NS_NewTableCellFrame(PresShell* aPresShell,
                                        ComputedStyle* aStyle,
                                        nsTableFrame* aTableFrame) {
   if (aTableFrame->IsBorderCollapse())

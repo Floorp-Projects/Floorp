@@ -19,11 +19,11 @@
 #include "nsPoint.h"
 #include "nsTArray.h"
 
-class nsIPresShell;
 class nsIFrame;
 class nsPresContext;
 namespace mozilla {
 struct ReflowInput;
+class PresShell;
 class StyleBasicShape;
 }  // namespace mozilla
 
@@ -92,7 +92,8 @@ struct nsFlowAreaRect {
  */
 class nsFloatManager {
  public:
-  explicit nsFloatManager(nsIPresShell* aPresShell, mozilla::WritingMode aWM);
+  explicit nsFloatManager(mozilla::PresShell* aPresShell,
+                          mozilla::WritingMode aWM);
   ~nsFloatManager();
 
   void* operator new(size_t aSize) CPP_THROW_NEW;

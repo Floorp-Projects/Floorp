@@ -7,8 +7,7 @@
 <page id="frame2"
       style="background-color:red;"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<script type="application/javascript"
-        src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
 <spacer height="10px"/>
 <caption id="cap2" style="background-color:white;" label=""/>

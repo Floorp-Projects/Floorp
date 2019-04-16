@@ -8,6 +8,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/dom/CanvasUtils.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/EffectSet.h"
@@ -759,8 +760,8 @@ bool nsLayoutUtils::AllowZoomingForDocument(
           nsLayoutUtils::ShouldHandleMetaViewport(aDocument));
 }
 
-float nsLayoutUtils::GetCurrentAPZResolutionScale(nsIPresShell* aShell) {
-  return aShell ? aShell->GetCumulativeNonRootScaleResolution() : 1.0;
+float nsLayoutUtils::GetCurrentAPZResolutionScale(PresShell* aPresShell) {
+  return aPresShell ? aPresShell->GetCumulativeNonRootScaleResolution() : 1.0;
 }
 
 // Return the maximum displayport size, based on the LayerManager's maximum
@@ -1261,7 +1262,7 @@ void nsLayoutUtils::InvalidateForDisplayPortChange(
 }
 
 bool nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
-                                          nsIPresShell* aPresShell,
+                                          PresShell* aPresShell,
                                           const ScreenMargin& aMargins,
                                           uint32_t aPriority,
                                           RepaintMode aRepaintMode) {
@@ -3378,8 +3379,8 @@ bool nsLayoutUtils::MaybeCreateDisplayPortInFirstScrollFrameEncountered(
     }
   }
   if (aFrame->IsSubDocumentFrame()) {
-    nsIPresShell* presShell = static_cast<nsSubDocumentFrame*>(aFrame)
-                                  ->GetSubdocumentPresShellForPainting(0);
+    PresShell* presShell = static_cast<nsSubDocumentFrame*>(aFrame)
+                               ->GetSubdocumentPresShellForPainting(0);
     nsIFrame* root = presShell ? presShell->GetRootFrame() : nullptr;
     if (root) {
       if (MaybeCreateDisplayPortInFirstScrollFrameEncountered(root, aBuilder)) {
@@ -7513,9 +7514,10 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
   }
 
   result.mPrincipal = principal.forget();
-  // no images, including SVG images, can load content from another domain.
-  result.mIsWriteOnly = false;
   result.mImageRequest = imgRequest.forget();
+  result.mIsWriteOnly =
+      CanvasUtils::CheckWriteOnlySecurity(result.mCORSUsed, result.mPrincipal);
+
   return result;
 }
 
@@ -7608,7 +7610,8 @@ nsLayoutUtils::SurfaceFromElementResult nsLayoutUtils::SurfaceFromElement(
   result.mHasSize = true;
   result.mSize = result.mLayersImage->GetSize();
   result.mPrincipal = principal.forget();
-  result.mIsWriteOnly = false;
+  result.mIsWriteOnly =
+      CanvasUtils::CheckWriteOnlySecurity(result.mCORSUsed, result.mPrincipal);
 
   return result;
 }
@@ -8768,8 +8771,8 @@ void nsLayoutUtils::SetBSizeFromFontMetrics(const nsIFrame* aFrame,
 
 /* static */
 bool nsLayoutUtils::HasDocumentLevelListenersForApzAwareEvents(
-    nsIPresShell* aShell) {
-  if (Document* doc = aShell->GetDocument()) {
+    PresShell* aPresShell) {
+  if (Document* doc = aPresShell->GetDocument()) {
     WidgetEvent event(true, eVoidEvent);
     nsTArray<EventTarget*> targets;
     nsresult rv = EventDispatcher::Dispatch(
@@ -8823,7 +8826,7 @@ static void MaybeReflowForInflationScreenSizeChange(
 }
 
 /* static */
-void nsLayoutUtils::SetVisualViewportSize(nsIPresShell* aPresShell,
+void nsLayoutUtils::SetVisualViewportSize(PresShell* aPresShell,
                                           CSSSize aSize) {
   MOZ_ASSERT(aSize.width >= 0.0 && aSize.height >= 0.0);
 
@@ -9438,12 +9441,11 @@ CSSRect nsLayoutUtils::GetBoundingContentRect(
   return result;
 }
 
-static already_AddRefed<nsIPresShell> GetPresShell(const nsIContent* aContent) {
-  nsCOMPtr<nsIPresShell> result;
+static PresShell* GetPresShell(const nsIContent* aContent) {
   if (Document* doc = aContent->GetComposedDoc()) {
-    result = doc->GetPresShell();
+    return doc->GetPresShell();
   }
-  return result.forget();
+  return nullptr;
 }
 
 static void UpdateDisplayPortMarginsForPendingMetrics(
@@ -9453,15 +9455,15 @@ static void UpdateDisplayPortMarginsForPendingMetrics(
     return;
   }
 
-  nsCOMPtr<nsIPresShell> shell = GetPresShell(content);
-  if (!shell) {
+  RefPtr<PresShell> presShell = GetPresShell(content);
+  if (!presShell) {
     return;
   }
 
-  if (nsLayoutUtils::AllowZoomingForDocument(shell->GetDocument()) &&
+  if (nsLayoutUtils::AllowZoomingForDocument(presShell->GetDocument()) &&
       aMetrics.IsRootContent()) {
     // See APZCCallbackHelper::UpdateRootFrame for details.
-    float presShellResolution = shell->GetResolution();
+    float presShellResolution = presShell->GetResolution();
     if (presShellResolution != aMetrics.GetPresShellResolution()) {
       return;
     }
@@ -9494,7 +9496,8 @@ static void UpdateDisplayPortMarginsForPendingMetrics(
       APZCCallbackHelper::AdjustDisplayPortForScrollDelta(aMetrics,
                                                           frameScrollOffset);
 
-  nsLayoutUtils::SetDisplayPortMargins(content, shell, displayPortMargins, 0);
+  nsLayoutUtils::SetDisplayPortMargins(content, presShell, displayPortMargins,
+                                       0);
 }
 
 /* static */

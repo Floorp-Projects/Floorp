@@ -142,6 +142,24 @@ function autoCompleteRetrieveFromCache(state, action) {
     return l.startsWith(filterBy);
   });
 
+  newList.sort((a, b) => {
+    const startingQuoteRegex = /^('|"|`)/;
+    const aFirstMeaningfulChar = startingQuoteRegex.test(a) ? a[1] : a[0];
+    const bFirstMeaningfulChar = startingQuoteRegex.test(b) ? b[1] : b[0];
+    const lA = aFirstMeaningfulChar.toLocaleLowerCase() === aFirstMeaningfulChar;
+    const lB = bFirstMeaningfulChar.toLocaleLowerCase() === bFirstMeaningfulChar;
+    if (lA === lB) {
+      if (a === filterBy) {
+        return -1;
+      }
+      if (b === filterBy) {
+        return 1;
+      }
+      return a.localeCompare(b);
+    }
+    return lA ? -1 : 1;
+  });
+
   return {
     ...state,
     isUnsafeGetter: false,

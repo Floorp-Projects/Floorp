@@ -653,7 +653,7 @@ NS_QUERYFRAME_HEAD(nsMathMLmtableWrapperFrame)
   NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsTableWrapperFrame)
 
-nsContainerFrame* NS_NewMathMLmtableOuterFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewMathMLmtableOuterFrame(PresShell* aPresShell,
                                                ComputedStyle* aStyle) {
   return new (aPresShell)
       nsMathMLmtableWrapperFrame(aStyle, aPresShell->GetPresContext());
@@ -878,7 +878,7 @@ void nsMathMLmtableWrapperFrame::Reflow(nsPresContext* aPresContext,
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowInput, aDesiredSize);
 }
 
-nsContainerFrame* NS_NewMathMLmtableFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewMathMLmtableFrame(PresShell* aPresShell,
                                           ComputedStyle* aStyle) {
   return new (aPresShell)
       nsMathMLmtableFrame(aStyle, aPresShell->GetPresContext());
@@ -1033,7 +1033,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsTableFrame)
 // --------
 // implementation of nsMathMLmtrFrame
 
-nsContainerFrame* NS_NewMathMLmtrFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewMathMLmtrFrame(PresShell* aPresShell,
                                        ComputedStyle* aStyle) {
   return new (aPresShell)
       nsMathMLmtrFrame(aStyle, aPresShell->GetPresContext());
@@ -1075,7 +1075,7 @@ nsresult nsMathMLmtrFrame::AttributeChanged(int32_t aNameSpaceID,
 // --------
 // implementation of nsMathMLmtdFrame
 
-nsContainerFrame* NS_NewMathMLmtdFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewMathMLmtdFrame(PresShell* aPresShell,
                                        ComputedStyle* aStyle,
                                        nsTableFrame* aTableFrame) {
   return new (aPresShell) nsMathMLmtdFrame(aStyle, aTableFrame);
@@ -1171,7 +1171,7 @@ NS_QUERYFRAME_HEAD(nsMathMLmtdInnerFrame)
   NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
-nsContainerFrame* NS_NewMathMLmtdInnerFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewMathMLmtdInnerFrame(PresShell* aPresShell,
                                             ComputedStyle* aStyle) {
   return new (aPresShell)
       nsMathMLmtdInnerFrame(aStyle, aPresShell->GetPresContext());

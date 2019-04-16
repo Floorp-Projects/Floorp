@@ -26,7 +26,7 @@ using namespace mozilla;
 using mozilla::dom::Element;
 using mozilla::dom::HTMLMeterElement;
 
-nsIFrame* NS_NewMeterFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewMeterFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsMeterFrame(aStyle, aPresShell->GetPresContext());
 }
 

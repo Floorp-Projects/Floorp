@@ -38,6 +38,15 @@
   background-color: #25003e;
 }
 
+@supports -moz-bool-pref("browser.in-content.dark-mode") {
+@media (prefers-color-scheme: dark) {
+  #tabbrowser-tabpanels {
+    /* Value for --in-content-page-background for dark mode in in-content/common.inc.css */
+    background-color: #2A2A2E;
+  }
+}
+}
+
 #tabbrowser-tabs,
 #tabbrowser-tabs > .tabbrowser-arrowscrollbox,
 #tabbrowser-tabs[positionpinnedtabs] > .tabbrowser-tab[pinned] {
