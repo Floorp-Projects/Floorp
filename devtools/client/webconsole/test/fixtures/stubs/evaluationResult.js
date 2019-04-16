@@ -44,8 +44,7 @@ stubPreparedMessages.set(`new Date(0)`, new ConsoleMessage({
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
-  "prefix": "",
-  "chromeContext": false
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`asdf()`, new ConsoleMessage({
@@ -77,8 +76,7 @@ stubPreparedMessages.set(`asdf()`, new ConsoleMessage({
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
-  "prefix": "",
-  "chromeContext": false
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`1 + @`, new ConsoleMessage({
@@ -110,8 +108,7 @@ stubPreparedMessages.set(`1 + @`, new ConsoleMessage({
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
-  "prefix": "",
-  "chromeContext": false
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`inspect({a: 1})`, new ConsoleMessage({
@@ -157,8 +154,7 @@ stubPreparedMessages.set(`inspect({a: 1})`, new ConsoleMessage({
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
-  "prefix": "",
-  "chromeContext": false
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`cd(document)`, new ConsoleMessage({
@@ -184,8 +180,7 @@ stubPreparedMessages.set(`cd(document)`, new ConsoleMessage({
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
-  "prefix": "",
-  "chromeContext": false
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`undefined`, new ConsoleMessage({
@@ -210,8 +205,7 @@ stubPreparedMessages.set(`undefined`, new ConsoleMessage({
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
-  "prefix": "",
-  "chromeContext": false
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`longString message Error`, new ConsoleMessage({
@@ -242,8 +236,7 @@ stubPreparedMessages.set(`longString message Error`, new ConsoleMessage({
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
-  "prefix": "",
-  "chromeContext": false
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`eval throw ""`, new ConsoleMessage({
@@ -269,8 +262,7 @@ stubPreparedMessages.set(`eval throw ""`, new ConsoleMessage({
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
-  "prefix": "",
-  "chromeContext": false
+  "prefix": ""
 }));
 
 stubPreparedMessages.set(`eval throw "tomato"`, new ConsoleMessage({
@@ -296,8 +288,7 @@ stubPreparedMessages.set(`eval throw "tomato"`, new ConsoleMessage({
   "userProvidedStyles": null,
   "notes": null,
   "indent": 0,
-  "prefix": "",
-  "chromeContext": false
+  "prefix": ""
 }));
 
 stubPackets.set(`new Date(0)`, {
