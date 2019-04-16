@@ -2093,16 +2093,11 @@ JSFlatString* ScriptSource::functionBodyString(JSContext* cx) {
 }
 
 template <typename Unit>
-void ScriptSource::setSource(
-    typename SourceTypeTraits<Unit>::SharedImmutableString uncompressed) {
-  MOZ_ASSERT(data.is<Missing>());
-  data = SourceType(Uncompressed<Unit>(std::move(uncompressed)));
-}
-
-template <typename Unit>
 MOZ_MUST_USE bool ScriptSource::setSource(JSContext* cx,
                                           EntryUnits<Unit>&& source,
                                           size_t length) {
+  MOZ_ASSERT(data.is<Missing>());
+
   auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
 
   auto uniqueChars = SourceTypeTraits<Unit>::toCacheable(std::move(source));
@@ -2112,7 +2107,7 @@ MOZ_MUST_USE bool ScriptSource::setSource(JSContext* cx,
     return false;
   }
 
-  setSource<Unit>(std::move(*deduped));
+  data = SourceType(Uncompressed<Unit>(std::move(*deduped)));
   return true;
 }
 
@@ -2277,7 +2272,7 @@ bool ScriptSource::assignSource(JSContext* cx,
     return false;
   }
 
-  setSource<Unit>(std::move(*deduped));
+  data = SourceType(Uncompressed<Unit>(std::move(*deduped)));
   return true;
 }
 

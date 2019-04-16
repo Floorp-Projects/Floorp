@@ -968,10 +968,6 @@ class ScriptSource {
   MOZ_MUST_USE bool setRetrievedSource(JSContext* cx, EntryUnits<Unit>&& source,
                                        size_t length);
 
-  template <typename Unit>
-  void setSource(
-      typename SourceTypeTraits<Unit>::SharedImmutableString uncompressed);
-
   MOZ_MUST_USE bool tryCompressOffThread(JSContext* cx);
 
   // Convert this ScriptSource from storing uncompressed source of the given
