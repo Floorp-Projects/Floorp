@@ -17,6 +17,7 @@ const { MODE } = require("devtools/client/shared/components/reps/reps");
 const { fetchChildren } = require("../actions/accessibles");
 
 const { L10N } = require("../utils/l10n");
+const { isFiltered } = require("../utils/audit");
 const AccessibilityRow = createFactory(require("./AccessibilityRow"));
 const AccessibilityRowValue = createFactory(require("./AccessibilityRowValue"));
 const { Provider } = require("../provider");
@@ -34,6 +35,7 @@ class AccessibilityTree extends Component {
       selected: PropTypes.string,
       highlighted: PropTypes.object,
       supports: PropTypes.object,
+      filtered: PropTypes.bool,
     };
   }
 
@@ -121,7 +123,12 @@ class AccessibilityTree extends Component {
   }
 
   renderValue(props) {
-    return AccessibilityRowValue(props);
+    const { walker } = this.props;
+
+    return AccessibilityRowValue({
+      ...props,
+      walker,
+    });
   }
 
   /**
@@ -144,6 +151,7 @@ class AccessibilityTree extends Component {
       highlighted: highlightedItem,
       supports,
       walker,
+      filtered,
     } = this.props;
 
     // Historically, the first context menu item is snapshot function and it is available
@@ -164,6 +172,7 @@ class AccessibilityTree extends Component {
         },
       }));
     };
+    const className = filtered ? "filtered" : undefined;
 
     return (
       TreeView({
@@ -171,6 +180,7 @@ class AccessibilityTree extends Component {
         mode: MODE.SHORT,
         provider: new Provider(accessibles, dispatch),
         columns: columns,
+        className,
         renderValue: this.renderValue,
         renderRow,
         label: L10N.getStr("accessibility.treeName"),
@@ -199,12 +209,17 @@ class AccessibilityTree extends Component {
   }
 }
 
-const mapStateToProps = ({ accessibles, ui }) => ({
+const mapStateToProps = ({
   accessibles,
-  expanded: ui.expanded,
-  selected: ui.selected,
-  supports: ui.supports,
-  highlighted: ui.highlighted,
+  ui: { expanded, selected, supports, highlighted },
+  audit: { filters },
+}) => ({
+  accessibles,
+  expanded,
+  selected,
+  supports,
+  highlighted,
+  filtered: isFiltered(filters),
 });
 // Exports from this module
 module.exports = connect(mapStateToProps)(AccessibilityTree);

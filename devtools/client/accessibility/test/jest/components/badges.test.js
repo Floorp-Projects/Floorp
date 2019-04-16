@@ -9,38 +9,42 @@
 const { mount } = require("enzyme");
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
+const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
+const { setupStore } = require("devtools/client/accessibility/test/jest/helpers");
 
 const Badge = require("devtools/client/accessibility/components/Badge");
 const Badges = createFactory(require("devtools/client/accessibility/components/Badges"));
 const ContrastBadge = require("devtools/client/accessibility/components/ContrastBadge");
 
 describe("Badges component:", () => {
+  const store = setupStore();
+
   it("no props render", () => {
-    const wrapper = mount(Badges({}));
+    const wrapper = mount(Provider({ store }, Badges()));
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.isEmptyRender()).toBe(true);
   });
 
   it("null checks render", () => {
-    const wrapper = mount(Badges({ checks: null }));
+    const wrapper = mount(Provider({ store }, Badges({ checks: null })));
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.isEmptyRender()).toBe(true);
   });
 
   it("empty checks render", () => {
-    const wrapper = mount(Badges({ checks: {} }));
+    const wrapper = mount(Provider({ store }, Badges({ checks: {} })));
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.isEmptyRender()).toBe(true);
   });
 
   it("unsupported checks render", () => {
-    const wrapper = mount(Badges({ checks: { tbd: {} } }));
+    const wrapper = mount(Provider({ store }, Badges({ checks: { tbd: {} } })));
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.isEmptyRender()).toBe(true);
   });
 
   it("contrast ratio success render", () => {
-    const wrapper = mount(Badges({
+    const wrapper = mount(Provider({ store }, Badges({
       checks: {
         "CONTRAST": {
           "value": 5.11,
@@ -49,7 +53,7 @@ describe("Badges component:", () => {
           "isLargeText": false,
         },
       },
-    }));
+    })));
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.isEmptyRender()).toBe(true);
   });
@@ -61,7 +65,8 @@ describe("Badges component:", () => {
       "backgroundColor": [255, 255, 255, 1],
       "isLargeText": false,
     };
-    const wrapper = mount(Badges({ checks: { CONTRAST } }));
+    const wrapper = mount(Provider({ store }, Badges({ checks: { CONTRAST }})));
+
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.find(Badge).length).toBe(1);
     expect(wrapper.find(ContrastBadge).length).toBe(1);
@@ -77,7 +82,8 @@ describe("Badges component:", () => {
       "backgroundColorMax": [156, 145, 211, 1],
       "isLargeText": false,
     };
-    const wrapper = mount(Badges({ checks: { CONTRAST } }));
+    const wrapper = mount(Provider({ store }, Badges({ checks: { CONTRAST }})));
+
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.find(Badge).length).toBe(1);
     expect(wrapper.find(ContrastBadge).length).toBe(1);

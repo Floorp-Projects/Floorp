@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AuditController component: audit filter filtered contrast checks fail 1`] = `"<span></span>"`;
+
+exports[`AuditController component: audit filter filtered contrast checks fail range 1`] = `"<span></span>"`;
+
+exports[`AuditController component: audit filter filtered contrast checks success 1`] = `null`;
+
+exports[`AuditController component: audit filter filtered no checks 1`] = `null`;
+
+exports[`AuditController component: audit filter filtered unknown checks 1`] = `null`;
+
+exports[`AuditController component: audit filter not filtered 1`] = `"<span></span>"`;
