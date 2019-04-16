@@ -195,7 +195,8 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   };
 
   // Creates a suitable continuing frame for this frame.
-  nsImageFrame* CreateContinuingFrame(nsIPresShell*, ComputedStyle*) const;
+  nsImageFrame* CreateContinuingFrame(mozilla::PresShell*,
+                                      ComputedStyle*) const;
 
  private:
   friend nsIFrame* NS_NewImageFrame(mozilla::PresShell*, ComputedStyle*);

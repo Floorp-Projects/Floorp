@@ -1188,8 +1188,8 @@ static bool IsPrimaryFrameOfRootOrBodyElement(nsIFrame* aFrame) {
   return false;
 }
 
-static void ApplyRenderingChangeToTree(nsIPresShell* aPresShell,
-                                       nsIFrame* aFrame, nsChangeHint aChange) {
+static void ApplyRenderingChangeToTree(PresShell* aPresShell, nsIFrame* aFrame,
+                                       nsChangeHint aChange) {
   // We check StyleDisplay()->HasTransformStyle() in addition to checking
   // IsTransformed() since we can get here for some frames that don't support
   // CSS transforms.

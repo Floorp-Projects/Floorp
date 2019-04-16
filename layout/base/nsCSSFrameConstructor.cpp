@@ -6909,8 +6909,7 @@ void nsCSSFrameConstructor::ContentAppended(nsIContent* aFirstNewContent,
 
 #ifdef ACCESSIBILITY
   if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
-    accService->ContentRangeInserted(static_cast<PresShell*>(mPresShell),
-                                     aFirstNewContent, nullptr);
+    accService->ContentRangeInserted(mPresShell, aFirstNewContent, nullptr);
   }
 #endif
 }
@@ -7022,8 +7021,7 @@ void nsCSSFrameConstructor::ContentRangeInserted(
 
 #ifdef ACCESSIBILITY
     if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
-      accService->ContentRangeInserted(static_cast<PresShell*>(mPresShell),
-                                       aStartChild, aEndChild);
+      accService->ContentRangeInserted(mPresShell, aStartChild, aEndChild);
     }
 #endif
 
@@ -7389,8 +7387,7 @@ void nsCSSFrameConstructor::ContentRangeInserted(
 
 #ifdef ACCESSIBILITY
   if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
-    accService->ContentRangeInserted(static_cast<PresShell*>(mPresShell),
-                                     aStartChild, aEndChild);
+    accService->ContentRangeInserted(mPresShell, aStartChild, aEndChild);
   }
 #endif
 }
@@ -7590,7 +7587,7 @@ bool nsCSSFrameConstructor::ContentRemoved(nsIContent* aChild,
 
 #ifdef ACCESSIBILITY
     if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
-      accService->ContentRemoved(static_cast<PresShell*>(mPresShell), aChild);
+      accService->ContentRemoved(mPresShell, aChild);
     }
 #endif
 
@@ -11724,8 +11721,7 @@ void nsCSSFrameConstructor::GenerateChildFrames(nsContainerFrame* aFrame) {
 #ifdef ACCESSIBILITY
   if (nsAccessibilityService* accService = nsIPresShell::AccService()) {
     if (nsIContent* child = aFrame->GetContent()->GetFirstChild()) {
-      accService->ContentRangeInserted(static_cast<PresShell*>(mPresShell),
-                                       child, nullptr);
+      accService->ContentRangeInserted(mPresShell, child, nullptr);
     }
   }
 #endif

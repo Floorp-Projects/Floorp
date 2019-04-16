@@ -23,10 +23,10 @@
 class nsContainerFrame;
 class nsIContent;
 class nsIFrame;
-class nsIPresShell;
 class nsPresContext;
 
 namespace mozilla {
+class PresShell;
 namespace layout {
 class FrameChildList;
 enum FrameChildListID {
@@ -86,13 +86,13 @@ class nsFrameList {
   /**
    * Infallibly allocate a nsFrameList from the shell arena.
    */
-  void* operator new(size_t sz, nsIPresShell* aPresShell);
+  void* operator new(size_t sz, mozilla::PresShell* aPresShell);
 
   /**
    * Deallocate this list that was allocated from the shell arena.
    * The list is required to be empty.
    */
-  void Delete(nsIPresShell* aPresShell);
+  void Delete(mozilla::PresShell* aPresShell);
 
   /**
    * For each frame in this list: remove it from the list then call

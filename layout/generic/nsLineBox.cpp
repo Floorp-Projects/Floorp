@@ -76,12 +76,12 @@ nsLineBox::~nsLineBox() {
   Cleanup();
 }
 
-nsLineBox* NS_NewLineBox(nsIPresShell* aPresShell, nsIFrame* aFrame,
+nsLineBox* NS_NewLineBox(PresShell* aPresShell, nsIFrame* aFrame,
                          bool aIsBlock) {
   return new (aPresShell) nsLineBox(aFrame, 1, aIsBlock);
 }
 
-nsLineBox* NS_NewLineBox(nsIPresShell* aPresShell, nsLineBox* aFromLine,
+nsLineBox* NS_NewLineBox(PresShell* aPresShell, nsLineBox* aFromLine,
                          nsIFrame* aFrame, int32_t aCount) {
   nsLineBox* newLine = new (aPresShell) nsLineBox(aFrame, aCount, false);
   newLine->NoteFramesMovedFrom(aFromLine);
@@ -154,11 +154,11 @@ void nsLineBox::NoteFramesMovedFrom(nsLineBox* aFromLine) {
   }
 }
 
-void* nsLineBox::operator new(size_t sz, nsIPresShell* aPresShell) {
+void* nsLineBox::operator new(size_t sz, PresShell* aPresShell) {
   return aPresShell->AllocateByObjectID(eArenaObjectID_nsLineBox, sz);
 }
 
-void nsLineBox::Destroy(nsIPresShell* aPresShell) {
+void nsLineBox::Destroy(PresShell* aPresShell) {
   this->nsLineBox::~nsLineBox();
   aPresShell->FreeByObjectID(eArenaObjectID_nsLineBox, this);
 }

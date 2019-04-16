@@ -767,7 +767,7 @@ void nsFrame::DestroyFrom(nsIFrame* aDestructRoot,
   }
 
   nsPresContext* presContext = PresContext();
-  nsIPresShell* shell = presContext->GetPresShell();
+  mozilla::PresShell* presShell = presContext->GetPresShell();
   if (mState & NS_FRAME_OUT_OF_FLOW) {
     nsPlaceholderFrame* placeholder = GetPlaceholderFrame();
     NS_ASSERTION(
@@ -817,10 +817,10 @@ void nsFrame::DestroyFrom(nsIFrame* aDestructRoot,
   // Ensure that we're not in the approximately visible list anymore.
   PresContext()->GetPresShell()->RemoveFrameFromApproximatelyVisibleList(this);
 
-  shell->NotifyDestroyingFrame(this);
+  presShell->NotifyDestroyingFrame(this);
 
   if (mState & NS_FRAME_EXTERNAL_REFERENCE) {
-    shell->ClearFrameRefs(this);
+    presShell->ClearFrameRefs(this);
   }
 
   nsView* view = GetView();
@@ -858,7 +858,7 @@ void nsFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
 #ifdef DEBUG
   {
-    nsIFrame* rootFrame = shell->GetRootFrame();
+    nsIFrame* rootFrame = presShell->GetRootFrame();
     MOZ_ASSERT(rootFrame);
     if (this != rootFrame) {
       const RetainedDisplayListData* data =
@@ -876,7 +876,7 @@ void nsFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
   // Now that we're totally cleaned out, we need to add ourselves to
   // the presshell's recycler.
-  shell->FreeFrame(id, this);
+  presShell->FreeFrame(id, this);
 }
 
 nsresult nsFrame::GetOffsets(int32_t& aStart, int32_t& aEnd) const {
@@ -4037,7 +4037,7 @@ nsresult nsFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 nsresult nsFrame::GetDataForTableSelection(
-    const nsFrameSelection* aFrameSelection, nsIPresShell* aPresShell,
+    const nsFrameSelection* aFrameSelection, mozilla::PresShell* aPresShell,
     WidgetMouseEvent* aMouseEvent, nsIContent** aParentContent,
     int32_t* aContentOffset, TableSelection* aTarget) {
   if (!aFrameSelection || !aPresShell || !aMouseEvent || !aParentContent ||

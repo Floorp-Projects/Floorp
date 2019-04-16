@@ -25,7 +25,6 @@
 #include "nsStyleStructFwd.h"
 
 enum nsChangeHint : uint32_t;
-class nsIPresShell;
 class nsPresContext;
 class nsWindowSizes;
 

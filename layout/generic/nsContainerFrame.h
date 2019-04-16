@@ -26,6 +26,10 @@
 
 class nsOverflowContinuationTracker;
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 // Some macros for container classes to do sanity checking on
 // width/height/x/y values computed during reflow.
 // NOTE: AppUnitsPerCSSPixel value hardwired here to remove the
@@ -650,7 +654,7 @@ class nsContainerFrame : public nsSplittableFrame {
    */
   void SafelyDestroyFrameListProp(nsIFrame* aDestructRoot,
                                   PostDestroyData& aPostDestroyData,
-                                  nsIPresShell* aPresShell,
+                                  mozilla::PresShell* aPresShell,
                                   FrameListPropertyDescriptor aProp);
 
   // ==========================================================================

@@ -9,10 +9,10 @@
 
 #include "nsQueryFrame.h"
 class nsPopupSetFrame;
-class nsIPresShell;
 class nsIContent;
 
 namespace mozilla {
+class PresShell;
 namespace dom {
 class Element;
 }
@@ -28,7 +28,7 @@ class nsIPopupContainer {
   virtual mozilla::dom::Element* GetDefaultTooltip() = 0;
   virtual void SetDefaultTooltip(mozilla::dom::Element* aTooltip) = 0;
 
-  static nsIPopupContainer* GetPopupContainer(nsIPresShell* aShell);
+  static nsIPopupContainer* GetPopupContainer(mozilla::PresShell* aShell);
 };
 
 #endif

@@ -71,8 +71,8 @@ class nsGroupBoxFrame final : public nsBoxFrame {
 class nsGroupBoxInnerFrame : public nsBoxFrame {
 public:
 
-    nsGroupBoxInnerFrame(nsIPresShell* aShell, ComputedStyle* aStyle):
-      nsBoxFrame(aShell, aContext) {}
+    nsGroupBoxInnerFrame(PresShell* aPresShell, ComputedStyle* aStyle):
+      nsBoxFrame(aPresShell, aContext) {}
 
 
 #ifdef DEBUG_FRAME_DUMP

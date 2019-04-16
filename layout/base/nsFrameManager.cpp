@@ -9,12 +9,12 @@
 #include "nsFrameManager.h"
 
 #include "nscore.h"
-#include "nsIPresShell.h"
 #include "nsCOMPtr.h"
 #include "plhash.h"
 #include "nsPlaceholderFrame.h"
 #include "nsGkAtoms.h"
 #include "nsILayoutHistoryState.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/PresState.h"
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/dom/Element.h"

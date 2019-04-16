@@ -888,9 +888,10 @@ class DependentBuiltinCounterStyle final : public BuiltinCounterStyle {
   }
 
   void Destroy() {
-    nsIPresShell* shell = mManager->PresContext()->PresShell();
+    PresShell* presShell = mManager->PresContext()->PresShell();
     this->~DependentBuiltinCounterStyle();
-    shell->FreeByObjectID(eArenaObjectID_DependentBuiltinCounterStyle, this);
+    presShell->FreeByObjectID(eArenaObjectID_DependentBuiltinCounterStyle,
+                              this);
   }
 
  private:
@@ -983,9 +984,9 @@ class CustomCounterStyle final : public CounterStyle {
   }
 
   void Destroy() {
-    nsIPresShell* shell = mManager->PresContext()->PresShell();
+    PresShell* presShell = mManager->PresContext()->PresShell();
     this->~CustomCounterStyle();
-    shell->FreeByObjectID(eArenaObjectID_CustomCounterStyle, this);
+    presShell->FreeByObjectID(eArenaObjectID_CustomCounterStyle, this);
   }
 
  private:
