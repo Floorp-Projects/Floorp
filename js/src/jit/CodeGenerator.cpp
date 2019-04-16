@@ -12055,10 +12055,6 @@ void CodeGenerator::visitOutOfLineSwitch(
     OutOfLineSwitch<tableType>* jumpTable) {
   jumpTable->setOutOfLine();
   auto& labels = jumpTable->labels();
-#if defined(JS_CODEGEN_ARM64)
-  AutoForbidPools afp(
-      &masm, (labels.length() + 1) * (sizeof(void*) / vixl::kInstructionSize));
-#endif
 
   if (tableType == SwitchTableType::OutOfLine) {
 #if defined(JS_CODEGEN_ARM)
@@ -12066,7 +12062,15 @@ void CodeGenerator::visitOutOfLineSwitch(
 #elif defined(JS_CODEGEN_NONE)
     MOZ_CRASH();
 #else
+
+#  if defined(JS_CODEGEN_ARM64)
+    AutoForbidPoolsAndNops afp(
+        &masm,
+        (labels.length() + 1) * (sizeof(void*) / vixl::kInstructionSize));
+#  endif
+
     masm.haltingAlign(sizeof(void*));
+
     // Bind the address of the jump table and reserve the space for code
     // pointers to jump in the newly generated code.
     masm.bind(jumpTable->start());
