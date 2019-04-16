@@ -4261,7 +4261,7 @@ CodeOffset MacroAssembler::farJumpWithPatch() {
 
   // Inhibit pools since these three words must be contiguous so that the offset
   // calculations below are valid.
-  AutoForbidPools afp(this, 3);
+  AutoForbidPoolsAndNops afp(this, 3);
 
   // When pc is used, the read value is the address of the instruction + 8.
   // This is exactly the address of the uint32 word we want to load.
@@ -4292,7 +4292,7 @@ void MacroAssembler::patchFarJump(CodeOffset farJump, uint32_t targetOffset) {
 }
 
 CodeOffset MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc) {
-  AutoForbidPools afp(this, /* max number of instructions in scope = */ 1);
+  AutoForbidPoolsAndNops afp(this, /* max number of instructions in scope = */ 1);
   CodeOffset offset(currentOffset());
   ma_nop();
   append(desc, CodeOffset(currentOffset()));

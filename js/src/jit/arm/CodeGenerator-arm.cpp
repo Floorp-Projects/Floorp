@@ -1148,7 +1148,7 @@ void CodeGeneratorARM::emitTableSwitchDispatch(MTableSwitch* mir,
   // Inhibit pools within the following sequence because we are indexing into
   // a pc relative table. The region will have one instruction for ma_ldr, one
   // for ma_b, and each table case takes one word.
-  AutoForbidPools afp(&masm, 1 + 1 + cases);
+  AutoForbidPoolsAndNops afp(&masm, 1 + 1 + cases);
   masm.ma_ldr(DTRAddr(pc, DtrRegImmShift(index, LSL, 2)), pc, Offset,
               Assembler::NotSigned);
   masm.ma_b(defaultcase);
