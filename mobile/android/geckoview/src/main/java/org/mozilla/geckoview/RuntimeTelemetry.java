@@ -42,17 +42,16 @@ public final class RuntimeTelemetry {
         final GeckoBundle msg = new GeckoBundle(1);
         msg.putBoolean("clear", clear);
 
-        final GeckoSession.CallbackResult<JSONObject> result =
-            new GeckoSession.CallbackResult<JSONObject>() {
-                @Override
-                public void sendSuccess(final Object value) {
-                    try {
-                        complete(((GeckoBundle) value).toJSONObject());
-                    } catch (JSONException ex) {
-                        completeExceptionally(ex);
-                    }
+        final CallbackResult<JSONObject> result = new CallbackResult<JSONObject>() {
+            @Override
+            public void sendSuccess(final Object value) {
+                try {
+                    complete(((GeckoBundle) value).toJSONObject());
+                } catch (JSONException ex) {
+                    completeExceptionally(ex);
                 }
-            };
+            }
+        };
 
         mEventDispatcher.dispatch("GeckoView:TelemetrySnapshots", msg, result);
 
