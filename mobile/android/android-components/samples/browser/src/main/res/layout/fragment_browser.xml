@@ -50,6 +50,14 @@
             android:padding="4dp"
             android:visibility="gone" />
 
+        <mozilla.components.feature.readerview.view.ReaderViewControlsBar
+            android:id="@+id/readerViewBar"
+            android:background="#FFFFFFFF"
+            android:elevation="10dp"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
     </FrameLayout>
 
 </android.support.design.widget.CoordinatorLayout>

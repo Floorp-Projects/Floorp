@@ -18,7 +18,6 @@ import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.customtabs.CustomTabsToolbarFeature
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.prompts.PromptFeature
-import mozilla.components.feature.readerview.ReaderViewFeature
 import mozilla.components.feature.session.CoordinateScrollingFeature
 import mozilla.components.feature.session.SessionFeature
 import mozilla.components.feature.session.ThumbnailsFeature
@@ -33,6 +32,7 @@ import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
 import mozilla.components.support.ktx.android.arch.lifecycle.addObservers
 import org.mozilla.samples.browser.ext.components
 import org.mozilla.samples.browser.integration.FindInPageIntegration
+import org.mozilla.samples.browser.integration.ReaderViewIntegration
 
 class BrowserFragment : Fragment(), BackHandler {
     private val sessionFeature = ViewBoundFeatureWrapper<SessionFeature>()
@@ -43,7 +43,7 @@ class BrowserFragment : Fragment(), BackHandler {
     private val findInPageIntegration = ViewBoundFeatureWrapper<FindInPageIntegration>()
     private val sitePermissionsFeature = ViewBoundFeatureWrapper<SitePermissionsFeature>()
     private val thumbnailsFeature = ViewBoundFeatureWrapper<ThumbnailsFeature>()
-    private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewFeature>()
+    private val readerViewFeature = ViewBoundFeatureWrapper<ReaderViewIntegration>()
 
     @Suppress("LongMethod")
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -153,7 +153,12 @@ class BrowserFragment : Fragment(), BackHandler {
             view = layout)
 
         readerViewFeature.set(
-            feature = ReaderViewFeature(requireContext(), components.engine, components.sessionManager),
+            feature = ReaderViewIntegration(
+                requireContext(),
+                components.engine,
+                components.sessionManager,
+                layout.readerViewBar
+            ),
             owner = this,
             view = layout
         )

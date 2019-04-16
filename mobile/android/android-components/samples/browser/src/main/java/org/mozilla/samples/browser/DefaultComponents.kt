@@ -32,6 +32,7 @@ import mozilla.components.feature.session.HistoryDelegate
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import org.mozilla.samples.browser.integration.FindInPageIntegration
+import org.mozilla.samples.browser.integration.ReaderViewIntegration
 import org.mozilla.samples.browser.request.SampleRequestInterceptor
 import java.util.concurrent.TimeUnit
 
@@ -114,6 +115,9 @@ open class DefaultComponents(private val applicationContext: Context) {
                 },
                 SimpleBrowserMenuItem("Find In Page") {
                     FindInPageIntegration.launch?.invoke()
+                },
+                SimpleBrowserMenuItem("Reader Mode Controls") {
+                    ReaderViewIntegration.launch?.invoke()
                 },
                 BrowserMenuDivider(),
                 SimpleBrowserMenuItem("Clear Data") {
