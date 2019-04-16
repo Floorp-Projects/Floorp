@@ -41,7 +41,7 @@ class nsResizerFrame final : public nsTitleBarFrame {
   virtual void MouseClicked(mozilla::WidgetMouseEvent* aEvent) override;
 
  protected:
-  nsIContent* GetContentToResize(nsIPresShell* aPresShell,
+  nsIContent* GetContentToResize(mozilla::PresShell* aPresShell,
                                  nsIBaseWindow** aWindow);
 
   Direction GetDirection();

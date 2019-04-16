@@ -7,7 +7,6 @@
 #include "nsHTMLParts.h"
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
-#include "nsIPresShell.h"
 #include "nsBoxFrame.h"
 #include "nsDisplayList.h"
 #include "nsStackLayout.h"
@@ -24,11 +23,11 @@ using namespace mozilla;
 //#define DEBUG_REFLOW
 
 // static
-nsIPopupContainer* nsIPopupContainer::GetPopupContainer(nsIPresShell* aShell) {
-  if (!aShell) {
+nsIPopupContainer* nsIPopupContainer::GetPopupContainer(PresShell* aPresShell) {
+  if (!aPresShell) {
     return nullptr;
   }
-  nsIFrame* rootFrame = aShell->GetRootFrame();
+  nsIFrame* rootFrame = aPresShell->GetRootFrame();
   if (!rootFrame) {
     return nullptr;
   }

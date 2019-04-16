@@ -2741,7 +2741,7 @@ void nsFrameSelection::DisconnectFromPresShell() {
  */
 nsresult nsFrameSelection::UpdateSelectionCacheOnRepaintSelection(
     Selection* aSel) {
-  PresShell* presShell = static_cast<PresShell*>(aSel->GetPresShell());
+  PresShell* presShell = aSel->GetPresShell();
   if (!presShell) {
     return NS_OK;
   }

@@ -9,11 +9,11 @@
 #include "nsIntervalSet.h"
 #include <new>
 #include <algorithm>
-#include "nsIPresShell.h"  // for allocation
+#include "mozilla/PresShell.h"  // for allocation
 
 using namespace mozilla;
 
-nsIntervalSet::nsIntervalSet(nsIPresShell *aPresShell)
+nsIntervalSet::nsIntervalSet(PresShell *aPresShell)
     : mList(nullptr), mPresShell(aPresShell) {}
 
 nsIntervalSet::~nsIntervalSet() {

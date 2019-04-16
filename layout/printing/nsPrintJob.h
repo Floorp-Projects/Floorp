@@ -32,6 +32,7 @@ class nsIDocShell;
 class nsIPageSequenceFrame;
 
 namespace mozilla {
+class PresShell;
 namespace dom {
 class Document;
 }
@@ -161,7 +162,7 @@ class nsPrintJob final : public nsIObserver,
   bool CheckBeforeDestroy();
   nsresult Cancelled();
 
-  nsIPresShell* GetPrintPreviewPresShell() {
+  mozilla::PresShell* GetPrintPreviewPresShell() {
     return mPrtPreview->mPrintObject->mPresShell;
   }
 

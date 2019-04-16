@@ -9,6 +9,7 @@
 #include "nsStyleSheetService.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/PreloadedStyleSheet.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
 #include "mozilla/Unused.h"
@@ -155,8 +156,8 @@ nsStyleSheetService::LoadAndRegisterSheet(nsIURI* aSheetURI,
   rv = LoadAndRegisterSheetInternal(aSheetURI, aSheetType);
   if (NS_SUCCEEDED(rv)) {
     // Hold on to a copy of the registered PresShells.
-    nsTArray<nsCOMPtr<nsIPresShell>> toNotify(mPresShells);
-    for (nsIPresShell* presShell : toNotify) {
+    nsTArray<RefPtr<PresShell>> toNotify(mPresShells);
+    for (PresShell* presShell : toNotify) {
       StyleSheet* sheet = mSheets[aSheetType].LastElement();
       presShell->NotifyStyleSheetServiceSheetAdded(sheet, aSheetType);
     }
@@ -321,8 +322,8 @@ nsStyleSheetService::UnregisterSheet(nsIURI* aSheetURI, uint32_t aSheetType) {
   }
 
   // Hold on to a copy of the registered PresShells.
-  nsTArray<nsCOMPtr<nsIPresShell>> toNotify(mPresShells);
-  for (nsIPresShell* presShell : toNotify) {
+  nsTArray<RefPtr<PresShell>> toNotify(mPresShells);
+  for (PresShell* presShell : toNotify) {
     if (presShell->StyleSet()) {
       if (sheet) {
         presShell->NotifyStyleSheetServiceSheetRemoved(sheet, aSheetType);
@@ -389,12 +390,12 @@ size_t nsStyleSheetService::SizeOfIncludingThis(
   return n;
 }
 
-void nsStyleSheetService::RegisterPresShell(nsIPresShell* aPresShell) {
+void nsStyleSheetService::RegisterPresShell(PresShell* aPresShell) {
   MOZ_ASSERT(!mPresShells.Contains(aPresShell));
   mPresShells.AppendElement(aPresShell);
 }
 
-void nsStyleSheetService::UnregisterPresShell(nsIPresShell* aPresShell) {
+void nsStyleSheetService::UnregisterPresShell(PresShell* aPresShell) {
   MOZ_ASSERT(mPresShells.Contains(aPresShell));
   mPresShells.RemoveElement(aPresShell);
 }
