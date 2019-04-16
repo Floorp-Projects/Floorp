@@ -80,6 +80,16 @@ class SettingsFragment : PreferenceFragmentCompat(), CoroutineScope, AccountObse
             requireComponents.search.searchEngineManager.getDefaultSearchEngine(it).name
         }
 
+        val trackingProtectionPreference =
+            findPreference<Preference>(getString(R.string.pref_key_tracking_protection_settings))
+        trackingProtectionPreference?.summary = context?.let {
+            if (org.mozilla.fenix.utils.Settings.getInstance(it).shouldUseTrackingProtection) {
+                getString(R.string.tracking_protection_on)
+            } else {
+                getString(R.string.tracking_protection_off)
+            }
+        }
+
         val themesPreference =
             findPreference<Preference>(getString(R.string.pref_key_theme))
         themesPreference?.summary = context?.let {

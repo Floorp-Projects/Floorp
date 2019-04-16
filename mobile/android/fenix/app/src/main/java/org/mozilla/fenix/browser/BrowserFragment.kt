@@ -517,10 +517,14 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                 val quickSettingsSheet = QuickSettingsSheetDialogFragment.newInstance(
                     url = session.url,
                     isSecured = session.securityInfo.secure,
+                    isTrackingProtectionOn = Settings.getInstance(context!!).shouldUseTrackingProtection,
                     sitePermissions = sitePermissions
                 )
                 quickSettingsSheet.sitePermissions = sitePermissions
-                quickSettingsSheet.show(requireFragmentManager(), QuickSettingsSheetDialogFragment.FRAGMENT_TAG)
+                quickSettingsSheet.show(
+                    requireFragmentManager(),
+                    QuickSettingsSheetDialogFragment.FRAGMENT_TAG
+                )
             }
         }
     }
@@ -572,6 +576,6 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
         private const val REQUEST_CODE_PROMPT_PERMISSIONS = 2
         private const val REQUEST_CODE_APP_PERMISSIONS = 3
         private const val TOOLBAR_HEIGHT = 56f
-        private const val REPORT_SITE_ISSUE_URL = "https://webcompat.com/issues/new?url=%s&label=browser-fenix"
+        const val REPORT_SITE_ISSUE_URL = "https://webcompat.com/issues/new?url=%s&label=browser-fenix"
     }
 }

@@ -35,14 +35,48 @@
             app:layout_constraintTop_toBottomOf="@id/url"/>
 
     <View
-            android:id="@+id/line_divider"
-            android:layout_width="match_parent"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:layout_height="1dp"
-            android:background="?neutral"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/security_info"/>
+        android:id="@+id/line_divider_security"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="?neutral"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/security_info" />
+
+    <Switch
+        android:id="@+id/tracking_protection"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/quicksettings_item_height"
+        android:drawableStart="@drawable/ic_tracking_protection"
+        android:paddingEnd="24dp"
+        android:text="@string/preferences_tracking_protection"
+        app:layout_constraintBottom_toTopOf="@id/report_problem"
+        app:layout_constraintTop_toBottomOf="@id/line_divider_security" />
+
+    <TextView
+        android:id="@+id/report_problem"
+        style="@style/QuickSettingsText.Icon"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/quicksettings_item_height"
+        android:gravity="top"
+        android:paddingStart="48dp"
+        android:text="@string/tracking_protection_report_problem"
+        android:textColor="?accentBright"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toTopOf="@id/line_divider"
+        app:layout_constraintTop_toBottomOf="@id/tracking_protection" />
+
+    <View
+        android:id="@+id/line_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:background="?neutral"
+        app:layout_constraintBottom_toTopOf="@id/camera_icon"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
             android:id="@+id/camera_icon"

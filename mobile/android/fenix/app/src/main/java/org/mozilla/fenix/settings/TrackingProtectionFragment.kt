@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.getPreferenceKey
 import org.mozilla.fenix.ext.requireComponents
 
@@ -40,6 +41,7 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
                         sessions.forEach { getEngineSession(it)?.enableTrackingProtection(policy) }
                     }
                 }
+                requireContext().components.useCases.sessionUseCases.reload.invoke()
                 true
             }
 

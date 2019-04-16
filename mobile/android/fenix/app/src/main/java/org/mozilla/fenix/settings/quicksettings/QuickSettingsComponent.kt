@@ -35,6 +35,7 @@ class QuickSettingsComponent(
                     mode = QuickSettingsState.Mode.Normal(
                         change.url,
                         change.isSecured,
+                        change.isTrackingProtectionOn,
                         change.sitePermissions
                     )
                 )
@@ -97,15 +98,27 @@ class QuickSettingsComponent(
 
 data class QuickSettingsState(val mode: Mode) : ViewState {
     sealed class Mode {
-        data class Normal(val url: String, val isSecured: Boolean, val sitePermissions: SitePermissions?) : Mode()
-        data class ActionLabelUpdated(val phoneFeature: PhoneFeature, val sitePermissions: SitePermissions?) :
+        data class Normal(
+            val url: String,
+            val isSecured: Boolean,
+            val isTrackingProtectionOn: Boolean,
+            val sitePermissions: SitePermissions?
+        ) : Mode()
+
+        data class ActionLabelUpdated(
+            val phoneFeature: PhoneFeature,
+            val sitePermissions: SitePermissions?
+        ) :
             Mode()
 
-        data class CheckPendingFeatureBlockedByAndroid(val sitePermissions: SitePermissions?) : Mode()
+        data class CheckPendingFeatureBlockedByAndroid(val sitePermissions: SitePermissions?) :
+            Mode()
     }
 }
 
 sealed class QuickSettingsAction : Action {
+    data class SelectReportProblem(val url: String) : QuickSettingsAction()
+    data class ToggleTrackingProtection(val trackingProtection: Boolean) : QuickSettingsAction()
     data class SelectBlockedByAndroid(val permissions: Array<String>) : QuickSettingsAction()
     data class TogglePermission(val featurePhone: PhoneFeature) : QuickSettingsAction()
 }
@@ -114,6 +127,7 @@ sealed class QuickSettingsChange : Change {
     data class Change(
         val url: String,
         val isSecured: Boolean,
+        val isTrackingProtectionOn: Boolean,
         val sitePermissions: SitePermissions?
     ) : QuickSettingsChange()
 

@@ -8,6 +8,7 @@ import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
 import android.view.ViewGroup
+import android.widget.Switch
 import android.widget.TextView
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatTextView
@@ -19,6 +20,7 @@ import mozilla.components.feature.sitepermissions.SitePermissions
 import mozilla.components.feature.sitepermissions.SitePermissions.Status.NO_DECISION
 import mozilla.components.support.ktx.android.net.hostWithoutCommonPrefixes
 import mozilla.components.support.ktx.kotlin.toUri
+import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.mvi.UIView
 import org.mozilla.fenix.settings.PhoneFeature
@@ -28,6 +30,7 @@ import org.mozilla.fenix.settings.PhoneFeature.MICROPHONE
 import org.mozilla.fenix.settings.PhoneFeature.NOTIFICATION
 import org.mozilla.fenix.utils.Settings
 
+@Suppress("TooManyFunctions")
 class QuickSettingsUIView(
     container: ViewGroup,
     actionEmitter: Observer<QuickSettingsAction>,
@@ -38,6 +41,8 @@ class QuickSettingsUIView(
 ) {
     private val securityInfoLabel: TextView
     private val urlLabel: TextView
+    private val trackingProtectionSwitch: Switch
+    private val reportProblemAction: TextView
     private val cameraActionLabel: TextView
     private val cameraLabel: TextView
     private val microphoneActionLabel: TextView
@@ -53,6 +58,8 @@ class QuickSettingsUIView(
     init {
         urlLabel = view.findViewById<AppCompatTextView>(R.id.url)
         securityInfoLabel = view.findViewById<AppCompatTextView>(R.id.security_info)
+        trackingProtectionSwitch = view.findViewById(R.id.tracking_protection)
+        reportProblemAction = view.findViewById(R.id.report_problem)
         cameraActionLabel = view.findViewById<AppCompatTextView>(R.id.camera_action_label)
         cameraLabel = view.findViewById<AppCompatTextView>(R.id.camera_icon)
         microphoneActionLabel = view.findViewById<AppCompatTextView>(R.id.microphone_action_label)
@@ -68,6 +75,8 @@ class QuickSettingsUIView(
             is QuickSettingsState.Mode.Normal -> {
                 bindUrl(state.mode.url)
                 bindSecurityInfo(state.mode.isSecured)
+                bindReportProblemAction(state.mode.url)
+                bindTrackingProtectionInfo(state.mode.isTrackingProtectionOn)
                 bindPhoneFeatureItem(cameraActionLabel, CAMERA, state.mode.sitePermissions)
                 bindPhoneFeatureItem(microphoneActionLabel, MICROPHONE, state.mode.sitePermissions)
                 bindPhoneFeatureItem(notificationActionLabel, NOTIFICATION, state.mode.sitePermissions)
@@ -88,6 +97,38 @@ class QuickSettingsUIView(
 
     private fun bindUrl(url: String) {
         urlLabel.text = url.toUri().hostWithoutCommonPrefixes
+    }
+
+    private fun bindTrackingProtectionInfo(isTrackingProtectionOn: Boolean) {
+        val drawableId =
+            if (isTrackingProtectionOn) R.drawable.ic_tracking_protection else
+                R.drawable.ic_tracking_protection_disabled
+        val drawableTint = if (isTrackingProtectionOn) DefaultThemeManager.resolveAttribute(
+            R.attr.primaryText,
+            context
+        ) else DefaultThemeManager.resolveAttribute(R.attr.neutral, context)
+        val icon = AppCompatResources.getDrawable(context, drawableId)
+        val resolvedColor = ContextCompat.getColor(context, drawableTint)
+        icon?.setTint(resolvedColor)
+        trackingProtectionSwitch.setTextColor(resolvedColor)
+        trackingProtectionSwitch.setCompoundDrawablesWithIntrinsicBounds(icon, null, null, null)
+        trackingProtectionSwitch.isChecked = isTrackingProtectionOn
+
+        trackingProtectionSwitch.setOnCheckedChangeListener { _, isChecked ->
+            actionEmitter.onNext(
+                QuickSettingsAction.ToggleTrackingProtection(
+                    isChecked
+                )
+            )
+        }
+    }
+
+    private fun bindReportProblemAction(url: String) {
+        reportProblemAction.setOnClickListener {
+            actionEmitter.onNext(
+                QuickSettingsAction.SelectReportProblem(url)
+            )
+        }
     }
 
     private fun bindSecurityInfo(isSecured: Boolean) {
