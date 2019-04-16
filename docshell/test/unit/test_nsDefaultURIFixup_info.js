@@ -1,8 +1,13 @@
 const {AddonTestUtils} = ChromeUtils.import("resource://testing-common/AddonTestUtils.jsm");
+const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 
 const kSearchEngineID = "test_urifixup_search_engine";
 const kSearchEngineURL = "http://www.example.org/?search={searchTerms}";
 const kForceHostLookup = "browser.fixup.dns_first_for_single_words";
+
+AddonTestUtils.init(this);
+AddonTestUtils.overrideCertDB();
+AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 // TODO(bug 1522134), this test should also use
 // combinations of the following flags.
@@ -465,7 +470,7 @@ var testcases = [ {
   },
 ];
 
-if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
+if (AppConstants.platform == "win") {
   testcases.push({
     input: "C:\\some\\file.txt",
     fixedURI: "file:///C:/some/file.txt",
@@ -493,10 +498,6 @@ if (Services.appinfo.OS.toLowerCase().startsWith("win")) {
 function sanitize(input) {
   return input.replace(/\r|\n/g, "").trim();
 }
-
-AddonTestUtils.init(this);
-AddonTestUtils.overrideCertDB();
-AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
 add_task(async function setup() {
   var prefList = ["browser.fixup.typo.scheme", "keyword.enabled",
