@@ -71,12 +71,11 @@ static ScreenMargin RecenterDisplayPort(const ScreenMargin& aDisplayPort) {
   return margins;
 }
 
-static already_AddRefed<nsIPresShell> GetPresShell(const nsIContent* aContent) {
-  nsCOMPtr<nsIPresShell> result;
+static PresShell* GetPresShell(const nsIContent* aContent) {
   if (dom::Document* doc = aContent->GetComposedDoc()) {
-    result = doc->GetPresShell();
+    return doc->GetPresShell();
   }
-  return result.forget();
+  return nullptr;
 }
 
 static CSSPoint ScrollFrameTo(nsIScrollableFrame* aFrame,
@@ -175,10 +174,10 @@ static ScreenMargin ScrollFrame(nsIContent* aContent,
     sf->SetScrollableByAPZ(!aRequest.IsScrollInfoLayer());
     if (sf->IsRootScrollFrameOfDocument()) {
       if (!APZCCallbackHelper::IsScrollInProgress(sf)) {
-        if (nsCOMPtr<nsIPresShell> shell = GetPresShell(aContent)) {
-          if (shell->SetVisualViewportOffset(
+        if (RefPtr<PresShell> presShell = GetPresShell(aContent)) {
+          if (presShell->SetVisualViewportOffset(
                   CSSPoint::ToAppUnits(aRequest.GetScrollOffset()),
-                  shell->GetLayoutViewportOffset())) {
+                  presShell->GetLayoutViewportOffset())) {
             sf->MarkEverScrolled();
           }
         }
@@ -303,12 +302,12 @@ void APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest) {
     return;
   }
 
-  nsCOMPtr<nsIPresShell> shell = GetPresShell(content);
-  if (!shell || aRequest.GetPresShellId() != shell->GetPresShellId()) {
+  RefPtr<PresShell> presShell = GetPresShell(content);
+  if (!presShell || aRequest.GetPresShellId() != presShell->GetPresShellId()) {
     return;
   }
 
-  if (nsLayoutUtils::AllowZoomingForDocument(shell->GetDocument()) &&
+  if (nsLayoutUtils::AllowZoomingForDocument(presShell->GetDocument()) &&
       aRequest.GetScrollOffsetUpdated()) {
     // If zooming is disabled then we don't really want to let APZ fiddle
     // with these things. In theory setting the resolution here should be a
@@ -322,7 +321,7 @@ void APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest) {
     // scenario we don't want to update the main-thread resolution because
     // it can trigger unnecessary reflows.
 
-    float presShellResolution = shell->GetResolution();
+    float presShellResolution = presShell->GetResolution();
 
     // If the pres shell resolution has changed on the content side side
     // the time this repaint request was fired, consider this request out of
@@ -337,7 +336,7 @@ void APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest) {
     // last paint.
     presShellResolution =
         aRequest.GetPresShellResolution() * aRequest.GetAsyncZoom().scale;
-    shell->SetResolutionAndScaleTo(presShellResolution,
+    presShell->SetResolutionAndScaleTo(presShellResolution,
                                    nsIPresShell::ChangeOrigin::eApz);
   }
 
@@ -345,7 +344,7 @@ void APZCCallbackHelper::UpdateRootFrame(const RepaintRequest& aRequest) {
   // adjusts the display port margins, so do it before we set those.
   ScreenMargin displayPortMargins = ScrollFrame(content, aRequest);
 
-  SetDisplayPortMargins(shell, content, displayPortMargins,
+  SetDisplayPortMargins(presShell, content, displayPortMargins,
                         aRequest.CalculateCompositedSizeInCssPixels());
   SetPaintRequestTime(content, aRequest.GetPaintRequestTime());
 }
@@ -362,8 +361,8 @@ void APZCCallbackHelper::UpdateSubFrame(const RepaintRequest& aRequest) {
   // We don't currently support zooming for subframes, so nothing extra
   // needs to be done beyond the tasks common to this and UpdateRootFrame.
   ScreenMargin displayPortMargins = ScrollFrame(content, aRequest);
-  if (nsCOMPtr<nsIPresShell> shell = GetPresShell(content)) {
-    SetDisplayPortMargins(shell, content, displayPortMargins,
+  if (RefPtr<PresShell> presShell = GetPresShell(content)) {
+    SetDisplayPortMargins(presShell, content, displayPortMargins,
                           aRequest.CalculateCompositedSizeInCssPixels());
   }
   SetPaintRequestTime(content, aRequest.GetPaintRequestTime());
@@ -376,8 +375,8 @@ bool APZCCallbackHelper::GetOrCreateScrollIdentifiers(
     return false;
   }
   *aViewIdOut = nsLayoutUtils::FindOrCreateIDFor(aContent);
-  if (nsCOMPtr<nsIPresShell> shell = GetPresShell(aContent)) {
-    *aPresShellIdOut = shell->GetPresShellId();
+  if (PresShell* presShell = GetPresShell(aContent)) {
+    *aPresShellIdOut = presShell->GetPresShellId();
     return true;
   }
   return false;
