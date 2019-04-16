@@ -30,6 +30,10 @@ jobs-from:
    - wpt-metadata.yml
    - wpt-manifest.yml
 
+job-defaults:
+   attributes:
+      retrigger: true
+
 # This is used by run-task based tasks to lookup which build task it
 # should depend on based on its own platform.
 dependent-build-platforms:
