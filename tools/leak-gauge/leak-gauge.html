@@ -44,7 +44,7 @@ function runContents(result, contents) {
                     if (verb == "created") {
                         let m = rest.match(/ outer=([0-9a-f]*)$/);
                         if (!m)
-                            throw "outer expected";
+                            throw new Error("outer expected");
                         this.windows[addr] = { outer: m[1] };
                         ++this.count;
                     } else if (verb == "destroyed") {
@@ -52,7 +52,7 @@ function runContents(result, contents) {
                     } else if (verb == "SetNewDocument") {
                         let m = rest.match(/^ (.*)$/);
                         if (!m)
-                            throw "URI expected";
+                            throw new Error("URI expected");
                         this.windows[addr][m[1]] = true;
                     }
                 }
@@ -94,7 +94,7 @@ function runContents(result, contents) {
                                verb == "StartDocumentLoad") {
                         var m = rest.match(/^ (.*)$/);
                         if (!m)
-                            throw "URI expected";
+                            throw new Error("URI expected");
                         var uri = m[1];
                         var doc_info = this.docs[addr];
                         doc_info[uri] = true;
@@ -138,7 +138,7 @@ function runContents(result, contents) {
                                verb == "SetCurrentURI") {
                         var m = rest.match(/^ (.*)$/);
                         if (!m)
-                            throw "URI expected";
+                            throw new Error("URI expected");
                         this.shells[addr][m[1]] = true;
                     }
                 }
@@ -174,7 +174,7 @@ function runContents(result, contents) {
                     } else if (verb == "Init") {
                         var m = rest.match(/^ document=(.*)$/);
                         if (!m)
-                            throw "document pointer expected";
+                            throw new Error("document pointer expected");
                         var nim_info = this.nims[addr];
                         var doc = m[1];
                         if (doc != "0") {
