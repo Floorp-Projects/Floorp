@@ -96,10 +96,9 @@ function cloneState(state) {
  * @param {MessageState} state: The message state ( = managed by this reducer).
  * @param {FiltersState} filtersState: The filters state.
  * @param {PrefsState} prefsState: The preferences state.
- * @param {UiState} uiState: The ui state.
  * @returns {MessageState} a new messages state.
  */
-function addMessage(newMessage, state, filtersState, prefsState, uiState) {
+function addMessage(newMessage, state, filtersState, prefsState) {
   const {
     messagesById,
     replayProgressMessages,
@@ -174,7 +173,7 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
       // We create it and add it to the store.
       const groupMessage = createWarningGroupMessage(
         warningGroupMessageId, warningGroupType, newMessage);
-      state = addMessage(groupMessage, state, filtersState, prefsState, uiState);
+      state = addMessage(groupMessage, state, filtersState, prefsState);
       state.warningGroupsById.set(warningGroupMessageId, []);
     }
 
@@ -187,7 +186,6 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
         messagesState: state,
         filtersState,
         prefsState,
-        uiState,
       }).visible
     ) {
       // Then we put it in the visibleMessages properties, at the position of the first
@@ -236,7 +234,6 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
     messagesState: state,
     filtersState,
     prefsState,
-    uiState,
   });
 
   if (visible) {
@@ -277,7 +274,7 @@ function addMessage(newMessage, state, filtersState, prefsState, uiState) {
   return state;
 }
 
-function messages(state = MessageState(), action, filtersState, prefsState, uiState) {
+function messages(state = MessageState(), action, filtersState, prefsState) {
   const {
     messagesById,
     messagesUiById,
@@ -322,7 +319,7 @@ function messages(state = MessageState(), action, filtersState, prefsState, uiSt
 
       newState = cloneState(state);
       list.forEach(message => {
-        newState = addMessage(message, newState, filtersState, prefsState, uiState);
+        newState = addMessage(message, newState, filtersState, prefsState);
       });
 
       return limitTopLevelMessageCount(newState, logLimit);
@@ -395,7 +392,6 @@ function messages(state = MessageState(), action, filtersState, prefsState, uiSt
               messagesState: openState,
               filtersState,
               prefsState,
-              uiState,
             // We want to check if the message is in an open group
             // only if it is not a direct child of the group we're opening.
               checkGroup: message.groupId !== action.id,
@@ -504,7 +500,6 @@ function messages(state = MessageState(), action, filtersState, prefsState, uiSt
     case constants.FILTER_TEXT_SET:
     case constants.FILTERS_CLEAR:
     case constants.DEFAULT_FILTERS_RESET:
-    case constants.SHOW_CONTENT_MESSAGES_TOGGLE:
       const messagesToShow = [];
       const filtered = getDefaultFiltersCounter();
 
@@ -513,7 +508,6 @@ function messages(state = MessageState(), action, filtersState, prefsState, uiSt
           messagesState: state,
           filtersState,
           prefsState,
-          uiState,
         });
 
         if (visible) {
@@ -772,25 +766,10 @@ function getMessageVisibility(message, {
     messagesState,
     filtersState,
     prefsState,
-    uiState,
     checkGroup = true,
 }) {
-  // Do not display the message if it's not from chromeContext and we don't show content
-  // messages.
-  if (
-    !uiState.showContentMessages &&
-    message.chromeContext === false &&
-    message.type !== MESSAGE_TYPE.COMMAND &&
-    message.type !== MESSAGE_TYPE.RESULT
-  ) {
-    return {
-      visible: false,
-      cause: "contentMessage",
-    };
-  }
-
   const warningGroupMessage =
-  messagesState.messagesById.get(getParentWarningGroupMessageId(message));
+    messagesState.messagesById.get(getParentWarningGroupMessageId(message));
 
   // Do not display the message if it's in closed group and not in a warning group.
   if (

@@ -52,7 +52,6 @@ class App extends Component {
       reverseSearchInputVisible: PropTypes.bool,
       reverseSearchInitialValue: PropTypes.string,
       editorMode: PropTypes.bool,
-      hideShowContentMessagesCheckbox: PropTypes.bool,
     };
   }
 
@@ -205,7 +204,6 @@ class App extends Component {
       autocomplete,
       reverseSearchInitialValue,
       editorMode,
-      hideShowContentMessagesCheckbox,
     } = this.props;
 
     const classNames = ["webconsole-app"];
@@ -235,7 +233,6 @@ class App extends Component {
         div({className: "webconsole-flex-wrapper"},
           FilterBar({
             hidePersistLogsCheckbox: webConsoleUI.isBrowserConsole,
-            hideShowContentMessagesCheckbox,
             attachRefToWebConsoleUI,
             closeSplitConsole,
           }),

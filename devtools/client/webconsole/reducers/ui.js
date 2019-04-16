@@ -11,7 +11,6 @@ const {
   PERSIST_TOGGLE,
   REVERSE_SEARCH_INPUT_TOGGLE,
   SELECT_NETWORK_MESSAGE_TAB,
-  SHOW_CONTENT_MESSAGES_TOGGLE,
   SHOW_OBJECT_IN_SIDEBAR,
   SIDEBAR_CLOSE,
   SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE,
@@ -26,7 +25,6 @@ const UiState = (overrides) => Object.freeze(Object.assign({
   initialized: false,
   networkMessageActiveTabId: PANELS.HEADERS,
   persistLogs: false,
-  showContentMessages: false,
   sidebarVisible: false,
   timestampsVisible: true,
   gripInSidebar: null,
@@ -39,30 +37,27 @@ const UiState = (overrides) => Object.freeze(Object.assign({
 function ui(state = UiState(), action) {
   switch (action.type) {
     case PERSIST_TOGGLE:
-      return {...state, persistLogs: !state.persistLogs};
-    case SHOW_CONTENT_MESSAGES_TOGGLE:
-      return {...state, showContentMessages: !state.showContentMessages};
+      return Object.assign({}, state, {persistLogs: !state.persistLogs});
     case TIMESTAMPS_TOGGLE:
-      return {...state, timestampsVisible: action.visible};
+      return Object.assign({}, state, {timestampsVisible: action.visible});
     case SELECT_NETWORK_MESSAGE_TAB:
-      return {...state, networkMessageActiveTabId: action.id};
+      return Object.assign({}, state, {networkMessageActiveTabId: action.id});
     case SIDEBAR_CLOSE:
-      return {
-        ...state,
+      return Object.assign({}, state, {
         sidebarVisible: false,
         gripInSidebar: null,
-      };
+      });
     case INITIALIZE:
-      return {...state, initialized: true};
+      return Object.assign({}, state, {initialized: true});
     case MESSAGES_CLEAR:
-      return {...state, sidebarVisible: false, gripInSidebar: null};
+      return Object.assign({}, state, {sidebarVisible: false, gripInSidebar: null});
     case SHOW_OBJECT_IN_SIDEBAR:
       if (action.grip === state.gripInSidebar) {
         return state;
       }
-      return {...state, sidebarVisible: true, gripInSidebar: action.grip};
+      return Object.assign({}, state, {sidebarVisible: true, gripInSidebar: action.grip});
     case SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE:
-      return {...state, closeButtonVisible: action.shouldDisplayButton};
+      return Object.assign({}, state, {closeButtonVisible: action.shouldDisplayButton});
     case REVERSE_SEARCH_INPUT_TOGGLE:
       return {
         ...state,

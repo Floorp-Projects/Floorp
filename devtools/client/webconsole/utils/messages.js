@@ -195,7 +195,6 @@ function transformConsoleAPICallPacket(packet) {
     private: message.private,
     executionPoint: message.executionPoint,
     logpointId: message.logpointId,
-    chromeContext: message.chromeContext,
   });
 }
 
@@ -223,7 +222,6 @@ function transformLogMessagePacket(packet) {
     messageText: message,
     timeStamp,
     private: message.private,
-    chromeContext: message.chromeContext,
   });
 }
 
@@ -261,7 +259,6 @@ function transformPageErrorPacket(packet) {
     notes: pageError.notes,
     private: pageError.private,
     executionPoint: pageError.executionPoint,
-    chromeContext: pageError.chromeContext,
   });
 }
 
@@ -282,7 +279,6 @@ function transformNetworkEventPacket(packet) {
     cause: networkEvent.cause,
     private: networkEvent.private,
     securityState: networkEvent.securityState,
-    chromeContext: networkEvent.chromeContext,
   });
 }
 

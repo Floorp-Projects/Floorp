@@ -1530,7 +1530,6 @@ WebConsoleActor.prototype =
       stacktrace: stack,
       notes: notesArray,
       executionPoint: pageError.executionPoint,
-      chromeContext: pageError.isFromChromeContext,
     };
   },
 
