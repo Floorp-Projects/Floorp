@@ -251,8 +251,7 @@ static ScreenMargin ScrollFrame(nsIContent* aContent,
   return displayPortMargins;
 }
 
-static void SetDisplayPortMargins(nsIPresShell* aPresShell,
-                                  nsIContent* aContent,
+static void SetDisplayPortMargins(PresShell* aPresShell, nsIContent* aContent,
                                   ScreenMargin aDisplayPortMargins,
                                   CSSSize aDisplayPortBase) {
   if (!aContent) {
@@ -382,7 +381,7 @@ bool APZCCallbackHelper::GetOrCreateScrollIdentifiers(
   return false;
 }
 
-void APZCCallbackHelper::InitializeRootDisplayport(nsIPresShell* aPresShell) {
+void APZCCallbackHelper::InitializeRootDisplayport(PresShell* aPresShell) {
   // Create a view-id and set a zero-margin displayport for the root element
   // of the root document in the chrome process. This ensures that the scroll
   // frame for this element gets an APZC, which in turn ensures that all content
@@ -456,7 +455,7 @@ PresShell* APZCCallbackHelper::GetRootContentDocumentPresShellForContent(
   return context->PresShell();
 }
 
-static nsIPresShell* GetRootDocumentPresShell(nsIContent* aContent) {
+static PresShell* GetRootDocumentPresShell(nsIContent* aContent) {
   dom::Document* doc = aContent->GetComposedDoc();
   if (!doc) {
     return nullptr;
@@ -492,8 +491,8 @@ CSSPoint APZCCallbackHelper::ApplyCallbackTransform(
   // compositor adds to the layer with the pres shell resolution. The points
   // sent to Gecko by APZ don't have this transform unapplied (unlike other
   // compositor-side transforms) because APZ doesn't know about it.
-  if (nsIPresShell* shell = GetRootDocumentPresShell(content)) {
-    input = input / shell->GetResolution();
+  if (PresShell* presShell = GetRootDocumentPresShell(content)) {
+    input = input / presShell->GetResolution();
   }
 
   // This represents any resolution on the Root Content Document (RCD)
@@ -630,9 +629,9 @@ static dom::Element* GetRootDocumentElementFor(nsIWidget* aWidget) {
   // This returns the root element that ChromeProcessController sets the
   // displayport on during initialization.
   if (nsView* view = nsView::GetViewFor(aWidget)) {
-    if (nsIPresShell* shell = view->GetPresShell()) {
-      MOZ_ASSERT(shell->GetDocument());
-      return shell->GetDocument()->GetDocumentElement();
+    if (PresShell* presShell = view->GetPresShell()) {
+      MOZ_ASSERT(presShell->GetDocument());
+      return presShell->GetDocument()->GetDocumentElement();
     }
   }
   return nullptr;
@@ -743,9 +742,9 @@ static bool PrepareForSetTargetAPZCNotification(
 }
 
 static void SendLayersDependentApzcTargetConfirmation(
-    nsIPresShell* aShell, uint64_t aInputBlockId,
+    PresShell* aPresShell, uint64_t aInputBlockId,
     const nsTArray<SLGuidAndRenderRoot>& aTargets) {
-  LayerManager* lm = aShell->GetLayerManager();
+  LayerManager* lm = aPresShell->GetLayerManager();
   if (!lm) {
     return;
   }
@@ -773,7 +772,7 @@ static void SendLayersDependentApzcTargetConfirmation(
 }  // namespace
 
 DisplayportSetListener::DisplayportSetListener(
-    nsIWidget* aWidget, nsIPresShell* aPresShell, const uint64_t& aInputBlockId,
+    nsIWidget* aWidget, PresShell* aPresShell, const uint64_t& aInputBlockId,
     const nsTArray<SLGuidAndRenderRoot>& aTargets)
     : mWidget(aWidget),
       mPresShell(aPresShell),
@@ -913,7 +912,7 @@ void APZCCallbackHelper::NotifyMozMouseScrollEvent(
                                        CanBubble::eYes, Cancelable::eYes);
 }
 
-void APZCCallbackHelper::NotifyFlushComplete(nsIPresShell* aShell) {
+void APZCCallbackHelper::NotifyFlushComplete(PresShell* aPresShell) {
   MOZ_ASSERT(NS_IsMainThread());
   // In some cases, flushing the APZ state to the main thread doesn't actually
   // trigger a flush and repaint (this is an intentional optimization - the
@@ -921,8 +920,8 @@ void APZCCallbackHelper::NotifyFlushComplete(nsIPresShell* aShell) {
   // snapshot based on invalidation events that are emitted during paints,
   // so we ensure that we kick off a paint when an APZ flush is done. Note that
   // only chrome/testing code can trigger this behaviour.
-  if (aShell && aShell->GetRootFrame()) {
-    aShell->GetRootFrame()->SchedulePaint(nsIFrame::PAINT_DEFAULT, false);
+  if (aPresShell && aPresShell->GetRootFrame()) {
+    aPresShell->GetRootFrame()->SchedulePaint(nsIFrame::PAINT_DEFAULT, false);
   }
 
   nsCOMPtr<nsIObserverService> observerService =
