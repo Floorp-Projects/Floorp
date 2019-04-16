@@ -1877,7 +1877,7 @@ bitflags! {
 /// Specifies how this Picture should be composited
 /// onto the target it belongs to.
 #[allow(dead_code)]
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 pub enum PictureCompositeMode {
     /// Apply CSS mix-blend-mode effect.
@@ -2624,7 +2624,7 @@ impl PicturePrimitive {
 
         // See if this picture actually needs a surface for compositing.
         let actual_composite_mode = match self.requested_composite_mode {
-            Some(PictureCompositeMode::Filter(filter)) if filter.is_noop() => None,
+            Some(PictureCompositeMode::Filter(ref filter)) if filter.is_noop() => None,
             Some(PictureCompositeMode::Blit(reason)) if reason == BlitReason::CLIP => {
                 // If the only reason a picture has requested a surface is due to the clip
                 // chain node, we might choose to skip drawing a surface, and instead apply
@@ -2671,7 +2671,7 @@ impl PicturePrimitive {
                     None
                 }
             }
-            mode => mode,
+            ref mode => mode.clone(),
         };
 
         if let Some(composite_mode) = actual_composite_mode {
@@ -3120,8 +3120,8 @@ impl PicturePrimitive {
                 frame_state.surfaces[surface_index.0].tasks.push(render_task_id);
                 PictureSurface::RenderTask(render_task_id)
             }
-            PictureCompositeMode::Filter(filter) => {
-                if let FilterOp::ColorMatrix(m) = filter {
+            PictureCompositeMode::Filter(ref filter) => {
+                if let FilterOp::ColorMatrix(m) = *filter {
                     if let Some(mut request) = frame_state.gpu_cache.request(&mut self.extra_gpu_data_handle) {
                         for i in 0..5 {
                             request.push([m[i*4], m[i*4+1], m[i*4+2], m[i*4+3]]);
