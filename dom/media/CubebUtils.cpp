@@ -309,6 +309,12 @@ void ForceSetCubebContext(cubeb* aCubebContext) {
   sCubebState = CubebState::Initialized;
 }
 
+void SetInCommunication(bool aInCommunication) {
+#ifdef MOZ_WIDGET_ANDROID
+  java::GeckoAppShell::SetCommunicationAudioModeOn(aInCommunication);
+#endif
+}
+
 bool InitPreferredSampleRate() {
   StaticMutexAutoLock lock(sMutex);
   if (sPreferredSampleRate != 0) {
