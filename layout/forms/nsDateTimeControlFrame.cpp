@@ -16,6 +16,7 @@
 #include "nsGkAtoms.h"
 #include "nsContentCreatorFunctions.h"
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/dom/MutationEventBinding.h"
 #include "nsNodeInfoManager.h"
@@ -27,7 +28,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsIFrame* NS_NewDateTimeControlFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewDateTimeControlFrame(PresShell* aPresShell,
                                      ComputedStyle* aStyle) {
   return new (aPresShell)
       nsDateTimeControlFrame(aStyle, aPresShell->GetPresContext());

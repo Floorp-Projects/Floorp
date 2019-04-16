@@ -10,10 +10,11 @@
 // Keep others in (case-insensitive) order:
 #include "AutoReferenceChainGuard.h"
 #include "gfxUtils.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/dom/SVGFilterElement.h"
 #include "nsGkAtoms.h"
 #include "SVGObserverUtils.h"
 #include "SVGElement.h"
-#include "mozilla/dom/SVGFilterElement.h"
 #include "nsSVGFilterInstance.h"
 #include "nsSVGIntegrationUtils.h"
 #include "nsSVGUtils.h"
@@ -22,8 +23,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsIFrame* NS_NewSVGFilterFrame(nsIPresShell* aPresShell,
-                               ComputedStyle* aStyle) {
+nsIFrame* NS_NewSVGFilterFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       nsSVGFilterFrame(aStyle, aPresShell->GetPresContext());
 }

@@ -18,6 +18,7 @@ class nsPresContext;
 
 namespace mozilla {
 enum class PseudoStyleType : uint8_t;
+class PresShell;
 class WidgetEvent;
 class WidgetGUIEvent;
 namespace dom {
@@ -31,7 +32,7 @@ class HTMLInputElement;
 class nsNumberControlFrame final : public nsContainerFrame,
                                    public nsIAnonymousContentCreator,
                                    public nsIFormControlFrame {
-  friend nsIFrame* NS_NewNumberControlFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewNumberControlFrame(mozilla::PresShell* aPresShell,
                                             ComputedStyle* aStyle);
 
   typedef mozilla::PseudoStyleType PseudoStyleType;

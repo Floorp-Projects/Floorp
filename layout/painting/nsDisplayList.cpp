@@ -1438,10 +1438,9 @@ nsCaret* nsDisplayListBuilder::GetCaret() {
   return caret;
 }
 
-void nsDisplayListBuilder::IncrementPresShellPaintCount(
-    nsIPresShell* aPresShell) {
+void nsDisplayListBuilder::IncrementPresShellPaintCount(PresShell* aPresShell) {
   if (mIsPaintingToWindow) {
-    mReferenceFrame->AddPaintedPresShell(static_cast<PresShell*>(aPresShell));
+    mReferenceFrame->AddPaintedPresShell(aPresShell);
     aPresShell->IncrementPaintCount();
   }
 }

@@ -7,7 +7,6 @@
 #include "nsHTMLParts.h"
 #include "nsStyleConsts.h"
 #include "nsGkAtoms.h"
-#include "nsIPresShell.h"
 #include "nsBoxFrame.h"
 #include "nsDisplayList.h"
 #include "nsStackLayout.h"
@@ -15,6 +14,7 @@
 #include "nsIContent.h"
 #include "nsFrameManager.h"
 #include "mozilla/BasicEvents.h"
+#include "mozilla/PresShell.h"
 
 using namespace mozilla;
 
@@ -23,11 +23,11 @@ using namespace mozilla;
 //#define DEBUG_REFLOW
 
 // static
-nsIPopupContainer* nsIPopupContainer::GetPopupContainer(nsIPresShell* aShell) {
-  if (!aShell) {
+nsIPopupContainer* nsIPopupContainer::GetPopupContainer(PresShell* aPresShell) {
+  if (!aPresShell) {
     return nullptr;
   }
-  nsIFrame* rootFrame = aShell->GetRootFrame();
+  nsIFrame* rootFrame = aPresShell->GetRootFrame();
   if (!rootFrame) {
     return nullptr;
   }
@@ -51,7 +51,7 @@ nsIPopupContainer* nsIPopupContainer::GetPopupContainer(nsIPresShell* aShell) {
 
 class nsRootBoxFrame final : public nsBoxFrame, public nsIPopupContainer {
  public:
-  friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewBoxFrame(mozilla::PresShell* aPresShell,
                                   ComputedStyle* aStyle);
 
   explicit nsRootBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext);
@@ -99,7 +99,7 @@ class nsRootBoxFrame final : public nsBoxFrame, public nsIPopupContainer {
 
 //----------------------------------------------------------------------
 
-nsContainerFrame* NS_NewRootBoxFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewRootBoxFrame(PresShell* aPresShell,
                                      ComputedStyle* aStyle) {
   return new (aPresShell) nsRootBoxFrame(aStyle, aPresShell->GetPresContext());
 }

@@ -18,6 +18,10 @@ class nsImageBoxFrame;
 
 class nsDisplayXULImage;
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 class nsImageBoxListener final : public imgINotificationObserver {
  public:
   explicit nsImageBoxListener(nsImageBoxFrame* frame);
@@ -50,7 +54,7 @@ class nsImageBoxFrame final : public nsLeafBoxFrame {
 
   nsresult Notify(imgIRequest* aRequest, int32_t aType, const nsIntRect* aData);
 
-  friend nsIFrame* NS_NewImageBoxFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewImageBoxFrame(mozilla::PresShell* aPresShell,
                                        ComputedStyle* aStyle);
 
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,

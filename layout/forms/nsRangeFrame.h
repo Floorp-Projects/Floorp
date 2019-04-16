@@ -18,6 +18,7 @@
 class nsDisplayRangeFocusRing;
 
 namespace mozilla {
+class PresShell;
 namespace dom {
 class Event;
 }  // namespace dom
@@ -25,7 +26,7 @@ class Event;
 
 class nsRangeFrame final : public nsContainerFrame,
                            public nsIAnonymousContentCreator {
-  friend nsIFrame* NS_NewRangeFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewRangeFrame(mozilla::PresShell* aPresShell,
                                     ComputedStyle* aStyle);
 
   friend class nsDisplayRangeFocusRing;

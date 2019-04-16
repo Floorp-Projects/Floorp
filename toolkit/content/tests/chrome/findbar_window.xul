@@ -16,8 +16,7 @@
         onload="onLoad();"
         title="findbar test">
 
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
   <script type="application/javascript"><![CDATA[
     const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");

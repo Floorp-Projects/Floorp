@@ -31,7 +31,7 @@ using namespace mozilla::image;
 //----------------------------------------------------------------------
 // Implementation
 
-nsContainerFrame* NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewSVGForeignObjectFrame(PresShell* aPresShell,
                                               ComputedStyle* aStyle) {
   return new (aPresShell)
       nsSVGForeignObjectFrame(aStyle, aPresShell->GetPresContext());

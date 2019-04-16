@@ -14,6 +14,7 @@
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/SVGContextPaint.h"
 #include "nsDisplayList.h"
@@ -37,8 +38,7 @@ using namespace mozilla::image;
 //----------------------------------------------------------------------
 // Implementation
 
-nsIFrame* NS_NewSVGGeometryFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle) {
+nsIFrame* NS_NewSVGGeometryFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       SVGGeometryFrame(aStyle, aPresShell->GetPresContext());
 }

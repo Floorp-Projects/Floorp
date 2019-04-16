@@ -449,7 +449,7 @@ void nsXULPopupManager::AdjustPopupsOnWindowChange(
   }
 }
 
-void nsXULPopupManager::AdjustPopupsOnWindowChange(nsIPresShell* aPresShell) {
+void nsXULPopupManager::AdjustPopupsOnWindowChange(PresShell* aPresShell) {
   if (aPresShell->GetDocument()) {
     AdjustPopupsOnWindowChange(aPresShell->GetDocument()->GetWindow());
   }
@@ -2630,7 +2630,7 @@ nsXULMenuCommandEvent::Run() {
   nsXULPopupManager* pm = nsXULPopupManager::GetInstance();
   if (!pm) return NS_OK;
 
-  // The order of the nsViewManager and nsIPresShell COM pointers is
+  // The order of the nsViewManager and PresShell COM pointers is
   // important below.  We want the pres shell to get released before the
   // associated view manager on exit from this function.
   // See bug 54233.

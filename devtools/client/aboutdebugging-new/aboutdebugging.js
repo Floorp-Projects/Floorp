@@ -102,8 +102,9 @@ const AboutDebugging = {
     this.actions.updateNetworkLocations(getNetworkLocations());
   },
 
-  onUSBRuntimesUpdated() {
-    this.actions.updateUSBRuntimes(getUSBRuntimes());
+  async onUSBRuntimesUpdated() {
+    const runtimes = await getUSBRuntimes();
+    this.actions.updateUSBRuntimes(runtimes);
   },
 
   async destroy() {

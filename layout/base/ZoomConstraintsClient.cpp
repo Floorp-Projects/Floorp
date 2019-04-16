@@ -44,11 +44,11 @@ ZoomConstraintsClient::ZoomConstraintsClient()
 
 ZoomConstraintsClient::~ZoomConstraintsClient() {}
 
-static nsIWidget* GetWidget(nsIPresShell* aShell) {
-  if (!aShell) {
+static nsIWidget* GetWidget(PresShell* aPresShell) {
+  if (!aPresShell) {
     return nullptr;
   }
-  if (nsIFrame* rootFrame = aShell->GetRootFrame()) {
+  if (nsIFrame* rootFrame = aPresShell->GetRootFrame()) {
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_UIKIT)
     return rootFrame->GetNearestWidget();
 #else
@@ -96,8 +96,7 @@ void ZoomConstraintsClient::Destroy() {
   mPresShell = nullptr;
 }
 
-void ZoomConstraintsClient::Init(nsIPresShell* aPresShell,
-                                 Document* aDocument) {
+void ZoomConstraintsClient::Init(PresShell* aPresShell, Document* aDocument) {
   if (!(aPresShell && aDocument)) {
     return;
   }

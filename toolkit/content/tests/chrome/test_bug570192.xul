@@ -11,8 +11,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=570192
 
   <script type="application/javascript" 
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/WindowSnapshot.js"></script>
   <script type="application/javascript"
           src="RegisterUnregisterChrome.js"></script>
 

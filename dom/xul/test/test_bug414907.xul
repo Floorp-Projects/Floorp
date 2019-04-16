@@ -6,7 +6,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=414907
 -->
 <window title="Mozilla Bug 414907"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
   <vbox hidden="true">
     <bindings xmlns="http://www.mozilla.org/xbl" style="display: block;"

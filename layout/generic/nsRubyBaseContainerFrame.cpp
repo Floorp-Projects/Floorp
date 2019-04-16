@@ -13,6 +13,7 @@
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/WritingModes.h"
 #include "nsLayoutUtils.h"
 #include "nsLineLayout.h"
@@ -35,7 +36,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsRubyBaseContainerFrame)
 
-nsContainerFrame* NS_NewRubyBaseContainerFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewRubyBaseContainerFrame(PresShell* aPresShell,
                                                ComputedStyle* aStyle) {
   return new (aPresShell)
       nsRubyBaseContainerFrame(aStyle, aPresShell->GetPresContext());

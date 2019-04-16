@@ -5,8 +5,8 @@
   Tests that the isHandlingUserInput attribute on permission requests is set correctly.
 -->
 <window title="isHandlingUserInput test" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
   <body xmlns="http://www.w3.org/1999/xhtml">
     <iframe id="frame" src="https://example.com/chrome/dom/base/test/chrome/dummy.html" />

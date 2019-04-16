@@ -1255,7 +1255,7 @@ impl AlphaBatchBuilder {
                                     }
                                 }
                             }
-                            PictureCompositeMode::Filter(filter) => {
+                            PictureCompositeMode::Filter(ref filter) => {
                                 let surface = ctx.surfaces[raster_config.surface_index.0]
                                     .surface
                                     .as_ref()

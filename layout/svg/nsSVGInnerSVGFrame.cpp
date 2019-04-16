@@ -7,10 +7,11 @@
 // Main header first:
 #include "nsSVGInnerSVGFrame.h"
 
+#include "mozilla/PresShell.h"
+
 using namespace mozilla;
 
-nsIFrame* NS_NewSVGInnerSVGFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle) {
+nsIFrame* NS_NewSVGInnerSVGFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       nsSVGInnerSVGFrame(aStyle, aPresShell->GetPresContext());
 }

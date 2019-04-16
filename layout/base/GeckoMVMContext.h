@@ -11,9 +11,8 @@
 #include "mozilla/RefPtr.h"
 #include "nsCOMPtr.h"
 
-class nsIPresShell;
-
 namespace mozilla {
+class PresShell;
 namespace dom {
 class Document;
 class EventTarget;
@@ -26,7 +25,7 @@ class EventTarget;
  */
 class GeckoMVMContext : public MVMContext {
  public:
-  explicit GeckoMVMContext(dom::Document* aDocument, nsIPresShell* aPresShell);
+  explicit GeckoMVMContext(dom::Document* aDocument, PresShell* aPresShell);
   void AddEventListener(const nsAString& aType, nsIDOMEventListener* aListener,
                         bool aUseCapture) override;
   void RemoveEventListener(const nsAString& aType,
@@ -58,7 +57,7 @@ class GeckoMVMContext : public MVMContext {
  private:
   RefPtr<dom::Document> mDocument;
   // raw ref since the presShell owns this
-  nsIPresShell* MOZ_NON_OWNING_REF mPresShell;
+  PresShell* MOZ_NON_OWNING_REF mPresShell;
   nsCOMPtr<dom::EventTarget> mEventTarget;
 };
 

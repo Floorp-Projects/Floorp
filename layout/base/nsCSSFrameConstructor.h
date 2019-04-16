@@ -43,6 +43,7 @@ class nsFrameConstructorState;
 namespace mozilla {
 
 class ComputedStyle;
+class PresShell;
 
 namespace dom {
 
@@ -57,6 +58,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
  public:
   typedef mozilla::ComputedStyle ComputedStyle;
   typedef mozilla::PseudoStyleType PseudoStyleType;
+  typedef mozilla::PresShell PresShell;
   typedef mozilla::dom::Element Element;
   typedef mozilla::dom::Text Text;
 
@@ -64,7 +66,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   friend class mozilla::RestyleManager;
 
   nsCSSFrameConstructor(mozilla::dom::Document* aDocument,
-                        nsIPresShell* aPresShell);
+                        PresShell* aPresShell);
   ~nsCSSFrameConstructor() { MOZ_ASSERT(mFCItemsInUse == 0); }
 
   // get the alternate text for a content node
@@ -356,7 +358,7 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   struct FrameConstructionItem;
   class FrameConstructionItemList;
 
-  nsContainerFrame* ConstructPageFrame(nsIPresShell* aPresShell,
+  nsContainerFrame* ConstructPageFrame(PresShell* aPresShell,
                                        nsContainerFrame* aParentFrame,
                                        nsIFrame* aPrevPageFrame,
                                        nsContainerFrame*& aCanvasFrame);
@@ -559,14 +561,13 @@ class nsCSSFrameConstructor final : public nsFrameManager {
      is responsible for initializing the object, adding it to frame lists,
      constructing frames for the children, etc.
 
-     @param nsIPresShell the presshell whose arena should be used to allocate
-                         the frame.
+     @param PresShell the presshell whose arena should be used to allocate
+                      the frame.
      @param ComputedStyle the style to use for the frame. */
-  typedef nsIFrame* (*FrameCreationFunc)(nsIPresShell*, ComputedStyle*);
-  typedef nsContainerFrame* (*ContainerFrameCreationFunc)(nsIPresShell*,
+  typedef nsIFrame* (*FrameCreationFunc)(PresShell*, ComputedStyle*);
+  typedef nsContainerFrame* (*ContainerFrameCreationFunc)(PresShell*,
                                                           ComputedStyle*);
-  typedef nsBlockFrame* (*BlockFrameCreationFunc)(nsIPresShell*,
-                                                  ComputedStyle*);
+  typedef nsBlockFrame* (*BlockFrameCreationFunc)(PresShell*, ComputedStyle*);
 
   /* A function that can be used to get a FrameConstructionData.  Such
      a function is allowed to return null.
@@ -1331,17 +1332,12 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // END TABLE SECTION
 
  protected:
-  static nsIFrame* CreatePlaceholderFrameFor(nsIPresShell* aPresShell,
+  static nsIFrame* CreatePlaceholderFrameFor(PresShell* aPresShell,
                                              nsIContent* aContent,
                                              nsIFrame* aFrame,
                                              nsContainerFrame* aParentFrame,
                                              nsIFrame* aPrevInFlow,
                                              nsFrameState aTypeBit);
-
-  static nsIFrame* CreateBackdropFrameFor(nsIPresShell* aPresShell,
-                                          nsIContent* aContent,
-                                          nsIFrame* aFrame,
-                                          nsContainerFrame* aParentFrame);
 
  private:
   // ConstructSelectFrame puts the new frame in aFrameList and
@@ -1716,15 +1712,14 @@ class nsCSSFrameConstructor final : public nsFrameManager {
   // not null).
   bool MaybeRecreateContainerForFrameRemoval(nsIFrame* aFrame);
 
-  nsIFrame* CreateContinuingOuterTableFrame(nsIPresShell* aPresShell,
+  nsIFrame* CreateContinuingOuterTableFrame(PresShell* aPresShell,
                                             nsPresContext* aPresContext,
                                             nsIFrame* aFrame,
                                             nsContainerFrame* aParentFrame,
                                             nsIContent* aContent,
                                             ComputedStyle* aComputedStyle);
 
-  nsIFrame* CreateContinuingTableFrame(nsIPresShell* aPresShell,
-                                       nsIFrame* aFrame,
+  nsIFrame* CreateContinuingTableFrame(PresShell* aPresShell, nsIFrame* aFrame,
                                        nsContainerFrame* aParentFrame,
                                        nsIContent* aContent,
                                        ComputedStyle* aComputedStyle);
@@ -1971,17 +1966,15 @@ class nsCSSFrameConstructor final : public nsFrameManager {
 
   void RecoverLetterFrames(nsContainerFrame* aBlockFrame);
 
-  void RemoveLetterFrames(nsIPresShell* aPresShell,
-                          nsContainerFrame* aBlockFrame);
+  void RemoveLetterFrames(PresShell* aPresShell, nsContainerFrame* aBlockFrame);
 
   // Recursive helper for RemoveLetterFrames
-  void RemoveFirstLetterFrames(nsIPresShell* aPresShell,
-                               nsContainerFrame* aFrame,
+  void RemoveFirstLetterFrames(PresShell* aPresShell, nsContainerFrame* aFrame,
                                nsContainerFrame* aBlockFrame,
                                bool* aStopLooking);
 
   // Special remove method for those pesky floating first-letter frames
-  void RemoveFloatingFirstLetterFrames(nsIPresShell* aPresShell,
+  void RemoveFloatingFirstLetterFrames(PresShell* aPresShell,
                                        nsIFrame* aBlockFrame);
 
   // Capture state for the frame tree rooted at the frame associated with the

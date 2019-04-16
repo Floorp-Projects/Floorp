@@ -15,13 +15,13 @@
 #include "nsBox.h"
 #include "mozilla/Logging.h"
 
-#include "nsIPresShell.h"
 #include "mozilla/ReflowInput.h"
 #include "nsHTMLParts.h"
 #include "nsISelectionDisplay.h"
 
 namespace mozilla {
 enum class TableSelection : uint32_t;
+class PresShell;
 }  // namespace mozilla
 
 /**
@@ -99,18 +99,18 @@ enum class TableSelection : uint32_t;
 #define NS_DECL_FRAMEARENA_HELPERS(class)                                      \
   NS_DECL_QUERYFRAME_TARGET(class)                                             \
   static constexpr nsIFrame::ClassID kClassID = nsIFrame::ClassID::class##_id; \
-  void* operator new(size_t, nsIPresShell*) MOZ_MUST_OVERRIDE;                 \
+  void* operator new(size_t, mozilla::PresShell*) MOZ_MUST_OVERRIDE;           \
   nsQueryFrame::FrameIID GetFrameId() const override MOZ_MUST_OVERRIDE {       \
     return nsQueryFrame::class##_id;                                           \
   }
 
-#define NS_IMPL_FRAMEARENA_HELPERS(class)                       \
-  void* class ::operator new(size_t sz, nsIPresShell* aShell) { \
-    return aShell->AllocateFrame(nsQueryFrame::class##_id, sz); \
+#define NS_IMPL_FRAMEARENA_HELPERS(class)                             \
+  void* class ::operator new(size_t sz, mozilla::PresShell* aShell) { \
+    return aShell->AllocateFrame(nsQueryFrame::class##_id, sz);       \
   }
 
-#define NS_DECL_ABSTRACT_FRAME(class)                                   \
-  void* operator new(size_t, nsIPresShell*) MOZ_MUST_OVERRIDE = delete; \
+#define NS_DECL_ABSTRACT_FRAME(class)                                         \
+  void* operator new(size_t, mozilla::PresShell*) MOZ_MUST_OVERRIDE = delete; \
   nsQueryFrame::FrameIID GetFrameId() const override MOZ_MUST_OVERRIDE = 0;
 
 //----------------------------------------------------------------------
@@ -131,7 +131,7 @@ class nsFrame : public nsBox {
    * Create a new "empty" frame that maps a given piece of content into a
    * 0,0 area.
    */
-  friend nsIFrame* NS_NewEmptyFrame(nsIPresShell* aShell,
+  friend nsIFrame* NS_NewEmptyFrame(mozilla::PresShell* aShell,
                                     ComputedStyle* aStyle);
 
  private:
@@ -158,7 +158,7 @@ class nsFrame : public nsBox {
   virtual nsQueryFrame::FrameIID GetFrameId() const MOZ_MUST_OVERRIDE {
     return kFrameIID;
   }
-  void* operator new(size_t, nsIPresShell*) MOZ_MUST_OVERRIDE;
+  void* operator new(size_t, mozilla::PresShell*) MOZ_MUST_OVERRIDE;
 
   // nsIFrame
   void Init(nsIContent* aContent, nsContainerFrame* aParent,
@@ -648,7 +648,7 @@ class nsFrame : public nsBox {
   //  aTarget tells us what table element to select (currently only cell and
   //  table supported) (enums for this are defined in nsIFrame.h)
   nsresult GetDataForTableSelection(const nsFrameSelection* aFrameSelection,
-                                    nsIPresShell* aPresShell,
+                                    mozilla::PresShell* aPresShell,
                                     mozilla::WidgetMouseEvent* aMouseEvent,
                                     nsIContent** aParentContent,
                                     int32_t* aContentOffset,

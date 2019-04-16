@@ -33,6 +33,7 @@ class nsPresContext;
 class nsListEventListener;
 
 namespace mozilla {
+class PresShell;
 namespace dom {
 class Event;
 class HTMLOptionElement;
@@ -51,8 +52,8 @@ class nsListControlFrame final : public nsHTMLScrollFrame,
  public:
   typedef mozilla::dom::HTMLOptionElement HTMLOptionElement;
 
-  friend nsContainerFrame* NS_NewListControlFrame(nsIPresShell* aPresShell,
-                                                  ComputedStyle* aStyle);
+  friend nsContainerFrame* NS_NewListControlFrame(
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsListControlFrame)

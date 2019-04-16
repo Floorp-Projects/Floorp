@@ -1250,7 +1250,13 @@ WebConsoleActor.prototype =
         const lA = aFirstMeaningfulChar.toLocaleLowerCase() === aFirstMeaningfulChar;
         const lB = bFirstMeaningfulChar.toLocaleLowerCase() === bFirstMeaningfulChar;
         if (lA === lB) {
-          return a < b ? -1 : 1;
+          if (a === matchProp) {
+            return -1;
+          }
+          if (b === matchProp) {
+            return 1;
+          }
+          return a.localeCompare(b);
         }
         return lA ? -1 : 1;
       });
@@ -1530,6 +1536,7 @@ WebConsoleActor.prototype =
       stacktrace: stack,
       notes: notesArray,
       executionPoint: pageError.executionPoint,
+      chromeContext: pageError.isFromChromeContext,
     };
   },
 

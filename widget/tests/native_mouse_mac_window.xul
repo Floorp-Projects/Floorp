@@ -13,8 +13,7 @@
         height="600"
         title="Native Mouse Event Test"
         orient="vertical">
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 
   <box height="200" id="box"/>
   <menupopup id="popup" width="250" height="50"/>

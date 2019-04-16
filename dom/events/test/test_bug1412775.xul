@@ -7,10 +7,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1412775
 <window title="Mozilla Bug 1412775"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="init()">
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-  <script type="application/javascript"
-          src="chrome://mochikit/content/chrome-harness.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/chrome-harness.js"></script>
 
   <!-- test code goes here -->
   <script type="application/javascript">

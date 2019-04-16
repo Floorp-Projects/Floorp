@@ -6,8 +6,7 @@
 <window title="Test for ServiceWorkerRegistrationInfo"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="test();">
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script type="application/javascript" src="chrome_helpers.js"/>
   <script type="application/javascript">
   <![CDATA[

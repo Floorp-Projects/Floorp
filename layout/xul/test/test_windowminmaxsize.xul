@@ -5,10 +5,8 @@
 <window title="Window Minimum and Maximum Size Tests" onload="nextTest()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
 <panel id="panel" onpopupshown="doPanelTest(this)" onpopuphidden="nextPopupTest(this)"
        align="start" pack="start" style="-moz-appearance: none; margin: 0; border: 0; padding: 0;">

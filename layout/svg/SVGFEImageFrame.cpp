@@ -5,20 +5,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Keep in (case-insensitive) order:
+#include "mozilla/PresShell.h"
+#include "mozilla/dom/SVGFEImageElement.h"
+#include "mozilla/dom/MutationEventBinding.h"
 #include "nsContainerFrame.h"
 #include "nsFrame.h"
 #include "nsGkAtoms.h"
 #include "nsLiteralString.h"
 #include "SVGObserverUtils.h"
 #include "SVGFilters.h"
-#include "mozilla/dom/SVGFEImageElement.h"
-#include "mozilla/dom/MutationEventBinding.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
 class SVGFEImageFrame final : public nsFrame {
-  friend nsIFrame* NS_NewSVGFEImageFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewSVGFEImageFrame(mozilla::PresShell* aPresShell,
                                          ComputedStyle* aStyle);
 
  protected:
@@ -68,8 +69,7 @@ class SVGFEImageFrame final : public nsFrame {
   }
 };
 
-nsIFrame* NS_NewSVGFEImageFrame(nsIPresShell* aPresShell,
-                                ComputedStyle* aStyle) {
+nsIFrame* NS_NewSVGFEImageFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) SVGFEImageFrame(aStyle, aPresShell->GetPresContext());
 }
 

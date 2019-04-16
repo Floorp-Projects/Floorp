@@ -6,8 +6,7 @@
 <window title="Titlebar" width="200" height="200"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
   <titlebar id="titlebar">
     <label id="label" value="Titlebar"/>

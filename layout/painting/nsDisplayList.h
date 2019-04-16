@@ -69,6 +69,7 @@ struct WrFiltersHolder;
 
 namespace mozilla {
 class FrameLayerBuilder;
+class PresShell;
 struct MotionPathData;
 namespace layers {
 struct FrameMetrics;
@@ -823,7 +824,7 @@ class nsDisplayListBuilder {
   void LeavePresShell(nsIFrame* aReferenceFrame,
                       nsDisplayList* aPaintedContents);
 
-  void IncrementPresShellPaintCount(nsIPresShell* aPresShell);
+  void IncrementPresShellPaintCount(mozilla::PresShell* aPresShell);
 
   /**
    * Returns true if we're currently building a display list that's
@@ -1886,7 +1887,7 @@ class nsDisplayListBuilder {
   bool AddToAGRBudget(nsIFrame* aFrame);
 
   struct PresShellState {
-    nsIPresShell* mPresShell;
+    mozilla::PresShell* mPresShell;
 #ifdef DEBUG
     mozilla::Maybe<nsAutoLayoutPhase> mAutoLayoutPhase;
 #endif

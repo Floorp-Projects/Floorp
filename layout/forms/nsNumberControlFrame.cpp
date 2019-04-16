@@ -6,24 +6,24 @@
 
 #include "nsNumberControlFrame.h"
 
+#include "mozilla/BasicEvents.h"
+#include "mozilla/EventStates.h"
+#include "mozilla/FloatingPoint.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/dom/MutationEventBinding.h"
 #include "HTMLInputElement.h"
 #include "ICUUtils.h"
 #include "nsIFocusManager.h"
-#include "nsIPresShell.h"
 #include "nsFocusManager.h"
 #include "nsFontMetrics.h"
 #include "nsCheckboxRadioFrame.h"
 #include "nsGkAtoms.h"
 #include "nsNameSpaceManager.h"
 #include "nsStyleConsts.h"
-#include "mozilla/BasicEvents.h"
-#include "mozilla/EventStates.h"
 #include "nsContentUtils.h"
 #include "nsContentCreatorFunctions.h"
 #include "nsCSSPseudoElements.h"
 #include "nsThreadUtils.h"
-#include "mozilla/FloatingPoint.h"
-#include "mozilla/dom/MutationEventBinding.h"
 
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/AccTypes.h"
@@ -32,7 +32,7 @@
 using namespace mozilla;
 using namespace mozilla::dom;
 
-nsIFrame* NS_NewNumberControlFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewNumberControlFrame(PresShell* aPresShell,
                                    ComputedStyle* aStyle) {
   return new (aPresShell)
       nsNumberControlFrame(aStyle, aPresShell->GetPresContext());

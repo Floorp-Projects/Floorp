@@ -58,7 +58,7 @@ void nsSVGOuterSVGFrame::UnregisterForeignObject(
 //----------------------------------------------------------------------
 // Implementation
 
-nsContainerFrame* NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewSVGOuterSVGFrame(PresShell* aPresShell,
                                          ComputedStyle* aStyle) {
   return new (aPresShell)
       nsSVGOuterSVGFrame(aStyle, aPresShell->GetPresContext());
@@ -933,7 +933,7 @@ void nsSVGOuterSVGFrame::AppendDirectlyOwnedAnonBoxes(
 //----------------------------------------------------------------------
 // Implementation of nsSVGOuterSVGAnonChildFrame
 
-nsContainerFrame* NS_NewSVGOuterSVGAnonChildFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewSVGOuterSVGAnonChildFrame(PresShell* aPresShell,
                                                   ComputedStyle* aStyle) {
   return new (aPresShell)
       nsSVGOuterSVGAnonChildFrame(aStyle, aPresShell->GetPresContext());

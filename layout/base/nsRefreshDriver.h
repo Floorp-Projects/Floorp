@@ -29,7 +29,6 @@
 #include "mozilla/VsyncDispatcher.h"
 
 class nsPresContext;
-class nsIPresShell;
 
 class imgIRequest;
 class nsINode;
@@ -38,6 +37,7 @@ class nsIRunnable;
 namespace mozilla {
 class AnimationEventDispatcher;
 class PendingFullscreenEvent;
+class PresShell;
 class RefreshDriverTimer;
 class Runnable;
 
@@ -189,50 +189,50 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   /**
    * Add / remove presshells which have pending resize event.
    */
-  void AddResizeEventFlushObserver(nsIPresShell* aShell,
+  void AddResizeEventFlushObserver(mozilla::PresShell* aPresShell,
                                    bool aDelayed = false) {
     MOZ_DIAGNOSTIC_ASSERT(
-        !mResizeEventFlushObservers.Contains(aShell) &&
-            !mDelayedResizeEventFlushObservers.Contains(aShell),
+        !mResizeEventFlushObservers.Contains(aPresShell) &&
+            !mDelayedResizeEventFlushObservers.Contains(aPresShell),
         "Double-adding resize event flush observer");
     if (aDelayed) {
-      mDelayedResizeEventFlushObservers.AppendElement(aShell);
+      mDelayedResizeEventFlushObservers.AppendElement(aPresShell);
     } else {
-      mResizeEventFlushObservers.AppendElement(aShell);
+      mResizeEventFlushObservers.AppendElement(aPresShell);
       EnsureTimerStarted();
     }
   }
 
-  void RemoveResizeEventFlushObserver(nsIPresShell* aShell) {
-    mResizeEventFlushObservers.RemoveElement(aShell);
-    mDelayedResizeEventFlushObservers.RemoveElement(aShell);
+  void RemoveResizeEventFlushObserver(mozilla::PresShell* aPresShell) {
+    mResizeEventFlushObservers.RemoveElement(aPresShell);
+    mDelayedResizeEventFlushObservers.RemoveElement(aPresShell);
   }
 
   /**
    * Add / remove presshells that we should flush style and layout on
    */
-  void AddStyleFlushObserver(nsIPresShell* aShell) {
-    MOZ_DIAGNOSTIC_ASSERT(!mStyleFlushObservers.Contains(aShell),
+  void AddStyleFlushObserver(mozilla::PresShell* aPresShell) {
+    MOZ_DIAGNOSTIC_ASSERT(!mStyleFlushObservers.Contains(aPresShell),
                           "Double-adding style flush observer");
-    mStyleFlushObservers.AppendElement(aShell);
+    mStyleFlushObservers.AppendElement(aPresShell);
     EnsureTimerStarted();
   }
 
-  void RemoveStyleFlushObserver(nsIPresShell* aShell) {
-    mStyleFlushObservers.RemoveElement(aShell);
+  void RemoveStyleFlushObserver(mozilla::PresShell* aPresShell) {
+    mStyleFlushObservers.RemoveElement(aPresShell);
   }
-  void AddLayoutFlushObserver(nsIPresShell* aShell) {
-    MOZ_DIAGNOSTIC_ASSERT(!IsLayoutFlushObserver(aShell),
+  void AddLayoutFlushObserver(mozilla::PresShell* aPresShell) {
+    MOZ_DIAGNOSTIC_ASSERT(!IsLayoutFlushObserver(aPresShell),
                           "Double-adding layout flush observer");
-    mLayoutFlushObservers.AppendElement(aShell);
+    mLayoutFlushObservers.AppendElement(aPresShell);
     EnsureTimerStarted();
   }
-  void RemoveLayoutFlushObserver(nsIPresShell* aShell) {
-    mLayoutFlushObservers.RemoveElement(aShell);
+  void RemoveLayoutFlushObserver(mozilla::PresShell* aPresShell) {
+    mLayoutFlushObservers.RemoveElement(aPresShell);
   }
 
-  bool IsLayoutFlushObserver(nsIPresShell* aShell) {
-    return mLayoutFlushObservers.Contains(aShell);
+  bool IsLayoutFlushObserver(mozilla::PresShell* aPresShell) {
+    return mLayoutFlushObservers.Contains(aPresShell);
   }
 
   /**
@@ -566,10 +566,10 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
   // Scroll events on documents that might have events suppressed.
   ScrollEventArray mDelayedScrollEvents;
 
-  AutoTArray<nsIPresShell*, 16> mResizeEventFlushObservers;
-  AutoTArray<nsIPresShell*, 16> mDelayedResizeEventFlushObservers;
-  AutoTArray<nsIPresShell*, 16> mStyleFlushObservers;
-  AutoTArray<nsIPresShell*, 16> mLayoutFlushObservers;
+  AutoTArray<mozilla::PresShell*, 16> mResizeEventFlushObservers;
+  AutoTArray<mozilla::PresShell*, 16> mDelayedResizeEventFlushObservers;
+  AutoTArray<mozilla::PresShell*, 16> mStyleFlushObservers;
+  AutoTArray<mozilla::PresShell*, 16> mLayoutFlushObservers;
   // nsTArray on purpose, because we want to be able to swap.
   nsTArray<Document*> mFrameRequestCallbackDocs;
   nsTArray<Document*> mThrottledFrameRequestCallbackDocs;

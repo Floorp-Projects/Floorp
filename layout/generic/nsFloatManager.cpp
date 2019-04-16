@@ -12,13 +12,13 @@
 #include <initializer_list>
 
 #include "gfxContext.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/ReflowInput.h"
 #include "mozilla/ShapeUtils.h"
 #include "nsBlockFrame.h"
 #include "nsDeviceContext.h"
 #include "nsError.h"
 #include "nsImageRenderer.h"
-#include "nsIPresShell.h"
 #include "nsMemory.h"
 
 using namespace mozilla;
@@ -31,7 +31,7 @@ void* nsFloatManager::sCachedFloatManagers[NS_FLOAT_MANAGER_CACHE_SIZE];
 /////////////////////////////////////////////////////////////////////////////
 // nsFloatManager
 
-nsFloatManager::nsFloatManager(nsIPresShell* aPresShell, WritingMode aWM)
+nsFloatManager::nsFloatManager(PresShell* aPresShell, WritingMode aWM)
     :
 #ifdef DEBUG
       mWritingMode(aWM),

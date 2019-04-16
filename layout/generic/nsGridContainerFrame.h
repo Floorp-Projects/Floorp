@@ -15,11 +15,15 @@
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 /**
  * Factory function.
  * @return a newly allocated nsGridContainerFrame (infallible)
  */
-nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewGridContainerFrame(mozilla::PresShell* aPresShell,
                                            mozilla::ComputedStyle* aStyle);
 
 namespace mozilla {
@@ -275,8 +279,8 @@ class nsGridContainerFrame final : public nsContainerFrame {
   struct TrackSizingFunctions;
   struct Tracks;
   struct TranslatedLineRange;
-  friend nsContainerFrame* NS_NewGridContainerFrame(nsIPresShell* aPresShell,
-                                                    ComputedStyle* aStyle);
+  friend nsContainerFrame* NS_NewGridContainerFrame(
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
   explicit nsGridContainerFrame(ComputedStyle* aStyle,
                                 nsPresContext* aPresContext)
       : nsContainerFrame(aStyle, aPresContext, kClassID),

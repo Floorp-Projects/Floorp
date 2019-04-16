@@ -19,9 +19,10 @@ namespace mozilla {
 template <class T>
 class LinkedList;
 class LogicalPoint;
+class PresShell;
 }  // namespace mozilla
 
-nsContainerFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewFlexContainerFrame(mozilla::PresShell* aPresShell,
                                            mozilla::ComputedStyle* aStyle);
 
 /**
@@ -98,8 +99,8 @@ class nsFlexContainerFrame final : public nsContainerFrame {
   NS_DECL_QUERYFRAME
 
   // Factory method:
-  friend nsContainerFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
-                                                    ComputedStyle* aStyle);
+  friend nsContainerFrame* NS_NewFlexContainerFrame(
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
   // Forward-decls of helper classes
   class FlexItem;

@@ -4,13 +4,13 @@
 
 #include "GeckoMVMContext.h"
 
+#include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
 #include "mozilla/dom/Document.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMEventListener.h"
 #include "nsIFrame.h"
 #include "nsIObserverService.h"
-#include "nsIPresShell.h"
 #include "nsLayoutUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsPresContext.h"
@@ -18,7 +18,7 @@
 namespace mozilla {
 
 GeckoMVMContext::GeckoMVMContext(dom::Document* aDocument,
-                                 nsIPresShell* aPresShell)
+                                 PresShell* aPresShell)
     : mDocument(aDocument), mPresShell(aPresShell) {
   if (nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow()) {
     mEventTarget = window->GetChromeEventHandler();
@@ -162,7 +162,7 @@ void GeckoMVMContext::UpdateDisplayPortMargins() {
 
 void GeckoMVMContext::Reflow(const CSSSize& aNewSize, const CSSSize& aOldSize) {
   MOZ_ASSERT(mPresShell);
-  nsCOMPtr<nsIPresShell> presShell = mPresShell;
+  RefPtr<PresShell> presShell = mPresShell;
   presShell->ResizeReflowIgnoreOverride(
       nsPresContext::CSSPixelsToAppUnits(aNewSize.width),
       nsPresContext::CSSPixelsToAppUnits(aNewSize.height),
