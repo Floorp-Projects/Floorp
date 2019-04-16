@@ -134,7 +134,7 @@ with only_when(target_is_osx):
     @imports(_from='plistlib', _import='readPlist')
     def macos_sdk(value):
         sdk_min_version = Version('10.11')
-        sdk_max_version = Version('10.13')
+        sdk_max_version = Version('10.14')
 
         if not isdir(value[0]):
             die('SDK not found in %s. When using --with-macos-sdk, you must specify a '
