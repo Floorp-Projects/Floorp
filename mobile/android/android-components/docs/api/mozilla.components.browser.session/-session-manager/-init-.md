@@ -2,7 +2,7 @@
 
 # &lt;init&gt;
 
-`SessionManager(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, defaultSession: () -> `[`Session`](../-session/index.md)` = null, delegate: `[`Observable`](../../mozilla.components.support.base.observer/-observable/index.md)`<`[`Observer`](-observer/index.md)`> = ObserverRegistry())`
+`SessionManager(engine: `[`Engine`](../../mozilla.components.concept.engine/-engine/index.md)`, defaultSession: () -> `[`Session`](../-session/index.md)` = null, delegate: `[`LegacySessionManager`](../-legacy-session-manager/index.md)` = LegacySessionManager(engine, defaultSession))`
 
 This class provides access to a centralized registry of all active sessions.
 

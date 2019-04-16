@@ -2,9 +2,15 @@
 
 # Consumable
 
-`class Consumable<T>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/Consumable.kt#L10)
+`class Consumable<T>` [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/support/base/src/main/java/mozilla/components/support/base/observer/Consumable.kt#L13)
 
 A generic wrapper for values that can get consumed.
+
+### Parameters
+
+`value` - The value to be wrapped.
+
+`onConsume` - A callback that gets invoked if the wrapped value gets consumed.
 
 ### Functions
 
@@ -19,5 +25,5 @@ A generic wrapper for values that can get consumed.
 | Name | Summary |
 |---|---|
 | [empty](empty.md) | `fun <T> empty(): `[`Consumable`](./index.md)`<`[`T`](empty.md#T)`>`<br>Returns an empty Consumable with not value as if it was consumed already. |
-| [from](from.md) | `fun <T> from(value: `[`T`](from.md#T)`): `[`Consumable`](./index.md)`<`[`T`](from.md#T)`>`<br>Creates a new Consumable wrapping the given value. |
+| [from](from.md) | `fun <T> from(value: `[`T`](from.md#T)`, onConsume: () -> `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)` = null): `[`Consumable`](./index.md)`<`[`T`](from.md#T)`>`<br>Creates a new Consumable wrapping the given value. |
 | [stream](stream.md) | `fun <T> stream(vararg values: `[`T`](stream.md#T)`): `[`ConsumableStream`](../-consumable-stream/index.md)`<`[`T`](stream.md#T)`>`<br>Creates a new Consumable stream for the provided values. |
