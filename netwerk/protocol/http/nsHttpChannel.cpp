@@ -4363,6 +4363,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry *entry,
   NS_ENSURE_SUCCESS(rv, rv);
 
   bool doValidation = false;
+  bool doBackgroundValidation = false;
   bool canAddImsHeader = true;
 
   bool isForcedValid = false;
@@ -4381,7 +4382,7 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry *entry,
     doValidation = nsHttp::ValidationRequired(
         isForcedValid, mCachedResponseHead, mLoadFlags, mAllowStaleCacheContent,
         isImmutable, mCustomConditionalRequest, mRequestHead, entry,
-        cacheControlRequest, fromPreviousSession);
+        cacheControlRequest, fromPreviousSession, &doBackgroundValidation);
   }
 
   // If a content signature is expected to be valid in this load,
@@ -4525,6 +4526,10 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry *entry,
     *aResult = RECHECK_AFTER_WRITE_FINISHED;
   else {
     *aResult = ENTRY_WANTED;
+
+    if (doBackgroundValidation) {
+      PerformBackgroundCacheRevalidation();
+    }
   }
 
   if (mCachedContentIsValid) {
@@ -4866,13 +4871,21 @@ nsresult DoUpdateExpirationTime(nsHttpChannel *aSelf,
   nsresult rv;
 
   if (!aResponseHead->MustValidate()) {
+    // For stale-while-revalidate we use expiration time as the absolute base
+    // for calculation of the stale window absolute end time.  Hence, when the
+    // entry may be served w/o revalidation, we need a non-zero value for the
+    // expiration time.  Let's set it to |now|, which basicly means "expired",
+    // same as when set to 0.
+    uint32_t now = NowInSeconds();
+    aExpirationTime = now;
+
     uint32_t freshnessLifetime = 0;
 
     rv = aResponseHead->ComputeFreshnessLifetime(&freshnessLifetime);
     if (NS_FAILED(rv)) return rv;
 
     if (freshnessLifetime > 0) {
-      uint32_t now = NowInSeconds(), currentAge = 0;
+      uint32_t currentAge = 0;
 
       rv = aResponseHead->ComputeCurrentAge(now, aSelf->GetRequestTime(),
                                             &currentAge);
@@ -4884,12 +4897,12 @@ nsresult DoUpdateExpirationTime(nsHttpChannel *aSelf,
       if (freshnessLifetime > currentAge) {
         uint32_t timeRemaining = freshnessLifetime - currentAge;
         // be careful... now + timeRemaining may overflow
-        if (now + timeRemaining < now)
+        if (now + timeRemaining < now) {
           aExpirationTime = uint32_t(-1);
-        else
+        } else {
           aExpirationTime = now + timeRemaining;
-      } else
-        aExpirationTime = 0;
+        }
+      }
     }
   }
 
@@ -10224,6 +10237,114 @@ void nsHttpChannel::ReEvaluateReferrerAfterTrackingStatusIsKnown() {
       SetReferrer(mOriginalReferrer);
     }
   }
+}
+
+namespace {
+
+class BackgroundRevalidatingListener : public nsIStreamListener {
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSISTREAMLISTENER
+  NS_DECL_NSIREQUESTOBSERVER
+
+ private:
+  virtual ~BackgroundRevalidatingListener() = default;
+};
+
+NS_IMETHODIMP
+BackgroundRevalidatingListener::OnStartRequest(nsIRequest *request) {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BackgroundRevalidatingListener::OnDataAvailable(nsIRequest *request,
+                                                nsIInputStream *input,
+                                                uint64_t offset,
+                                                uint32_t count) {
+  uint32_t bytesRead = 0;
+  input->ReadSegments(NS_DiscardSegment, nullptr, count, &bytesRead);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BackgroundRevalidatingListener::OnStopRequest(nsIRequest *request,
+                                              nsresult status) {
+  nsCOMPtr<nsIHttpChannel> channel(do_QueryInterface(request));
+  if (gHttpHandler) {
+    gHttpHandler->OnBackgroundRevalidation(channel);
+  }
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(BackgroundRevalidatingListener, nsIStreamListener,
+                  nsIRequestObserver)
+
+}  // namespace
+
+void nsHttpChannel::PerformBackgroundCacheRevalidation() {
+  LOG(("nsHttpChannel::PerformBackgroundCacheRevalidation %p", this));
+
+  Unused << NS_DispatchToMainThreadQueue(
+      NewIdleRunnableMethod(
+          "nsHttpChannel::PerformBackgroundCacheRevalidation", this,
+          &nsHttpChannel::PerformBackgroundCacheRevalidationNow),
+      EventQueuePriority::Idle);
+}
+
+void nsHttpChannel::PerformBackgroundCacheRevalidationNow() {
+  LOG(("nsHttpChannel::PerformBackgroundCacheRevalidationNow %p", this));
+
+  MOZ_ASSERT(NS_IsMainThread());
+
+  nsresult rv;
+
+  nsSecurityFlags secFlags;
+  rv = mLoadInfo->GetSecurityFlags(&secFlags);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  secFlags |= nsILoadInfo::SEC_DONT_FOLLOW_REDIRECTS;
+
+  nsCOMPtr<nsICookieSettings> cookieSettings;
+  rv = mLoadInfo->GetCookieSettings(getter_AddRefs(cookieSettings));
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  nsCOMPtr<nsIChannel> validatingChannel;
+  rv = NS_NewChannel(getter_AddRefs(validatingChannel), mURI,
+                     mLoadInfo->LoadingPrincipal(), secFlags,
+                     mLoadInfo->InternalContentPolicyType(), cookieSettings,
+                     nullptr /* performance storage */, mLoadGroup, mCallbacks,
+                     LOAD_ONLY_IF_MODIFIED | VALIDATE_ALWAYS | LOAD_BACKGROUND |
+                         LOAD_BYPASS_SERVICE_WORKER);
+  if (NS_FAILED(rv)) {
+    LOG(("  failed to created the channel, rv=0x%08x",
+         static_cast<uint32_t>(rv)));
+    return;
+  }
+
+  nsCOMPtr<nsISupportsPriority> priority(do_QueryInterface(validatingChannel));
+  if (priority) {
+    priority->SetPriority(nsISupportsPriority::PRIORITY_LOWEST);
+  }
+
+  nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(validatingChannel));
+  if (cos) {
+    cos->AddClassFlags(nsIClassOfService::Tail);
+  }
+
+  RefPtr<BackgroundRevalidatingListener> listener =
+      new BackgroundRevalidatingListener();
+  rv = validatingChannel->AsyncOpen(listener);
+  if (NS_FAILED(rv)) {
+    LOG(("  failed to open the channel, rv=0x%08x", static_cast<uint32_t>(rv)));
+    return;
+  }
+
+  LOG(("  %p is re-validating with a new channel %p", this,
+       validatingChannel.get()));
 }
 
 }  // namespace net
