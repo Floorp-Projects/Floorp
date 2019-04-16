@@ -30,7 +30,7 @@
             android:id="@+id/privateBrowsingButton"
             android:layout_width="@dimen/glyph_button_height"
             android:layout_height="@dimen/glyph_button_height"
-            android:background="?privateBrowsingButtonBackground"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_private_browsing"
             android:contentDescription="@string/content_description_private_browsing_button"
             app:layout_constraintEnd_toStartOf="@id/menuButton"

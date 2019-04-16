@@ -26,7 +26,7 @@
 
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark</item>
-        <item name="privateBrowsingButtonBackground">?android:attr/selectableItemBackgroundBorderless</item>
+        <item name="privateBrowsingButtonBackground">@android:color/transparent</item>
     </style>
 
     <style name="NormalTheme" parent="NormalThemeBase"/>
@@ -53,7 +53,7 @@
 
         <!-- Drawables -->
         <item name="fenixLogo">@drawable/ic_logo_wordmark_white</item>
-        <item name="privateBrowsingButtonBackground">@drawable/private_browsing_button_background</item>
+        <item name="privateBrowsingButtonBackground">@color/accent_private_theme</item>
     </style>
 
     <style name="PrivateTheme" parent="PrivateThemeBase"/>
