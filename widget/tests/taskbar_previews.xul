@@ -8,8 +8,7 @@
   onload="loaded();">
 
   <title>Previews - yeah!</title>
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script class="testbody" type="application/javascript">
   <![CDATA[
     ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");

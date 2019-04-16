@@ -11,8 +11,7 @@
 <window title="Test notification of updates when system is no longer supported (bug 843497)"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
-<script type="application/javascript"
-        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 <script type="application/javascript"
         src="utils.js"/>
 

@@ -4,8 +4,7 @@
                  type="text/css"?>
 <window title="Memory reporters with child processes"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
   <!-- This file tests (in a rough fashion) whether the memory reporters are
        producing sensible results in the presence of child processes. -->

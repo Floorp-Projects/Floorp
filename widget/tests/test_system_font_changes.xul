@@ -5,8 +5,7 @@
 <window title="Native menu system tests"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 
 <body  xmlns="http://www.w3.org/1999/xhtml">
 <p id="display"></p>
