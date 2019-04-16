@@ -9,6 +9,8 @@ const { getCurrentZoom, getViewportDimensions } = require("devtools/shared/layou
 const { moveInfobar, createNode } = require("./markup");
 const { truncateString } = require("devtools/shared/inspector/utils");
 
+const { accessibility: { ColorContrastScores } } = require("devtools/shared/constants");
+
 const STRINGS_URI = "devtools/shared/locales/accessibility.properties";
 loader.lazyRequireGetter(this, "LocalizationHelper", "devtools/shared/l10n", true);
 DevToolsUtils.defineLazyGetter(this, "L10N", () => new LocalizationHelper(STRINGS_URI));
@@ -549,7 +551,8 @@ class ContrastRatio extends AuditReport {
     for (const key of ["label", "min", "max", "error", "separator"]) {
       const el = els[key] = this.getElement(`contrast-ratio-${key}`);
       if (["min", "max"].includes(key)) {
-        ["fail", "AA", "AAA"].forEach(className => el.classList.remove(className));
+        Object.values(ColorContrastScores).forEach(
+          className => el.classList.remove(className));
         this.setTextContent(el, "");
       }
 
@@ -656,11 +659,11 @@ function getBounds(win, { x, y, w, h, zoom }) {
 function getContrastRatioScoreStyle(ratio, isLargeText) {
   const levels = isLargeText ? { AA: 3, AAA: 4.5 } : { AA: 4.5, AAA: 7 };
 
-  let style = "fail";
+  let style = ColorContrastScores.FAIL;
   if (ratio >= levels.AAA) {
-    style = "AAA";
+    style = ColorContrastScores.AAA;
   } else if (ratio >= levels.AA) {
-    style = "AA";
+    style = ColorContrastScores.AA;
   }
 
   return style;

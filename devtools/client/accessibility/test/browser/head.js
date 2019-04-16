@@ -162,6 +162,20 @@ async function initAccessibilityPanel(tab = gBrowser.selectedTab) {
 }
 
 /**
+ * Compare text within the list of potential badges rendered for accessibility
+ * tree row when its accessible object has accessibility failures.
+ * @param {DOMNode} badges
+ *        Container element that contains badge elements.
+ * @param {Array|null} expected
+ *        List of expected badge labels for failing accessibility checks.
+ */
+function compareBadges(badges, expected = []) {
+  const badgeEls = badges ? [...badges.querySelectorAll(".badge")] : [];
+  return badgeEls.length === expected.length &&
+         badgeEls.every((badge, i) => badge.textContent === expected[i]);
+}
+
+/**
  * Check the state of the accessibility tree.
  * @param  {document} doc       panel documnent.
  * @param  {Array}    expected  an array that represents an expected row list.
@@ -171,7 +185,8 @@ async function checkTreeState(doc, expected) {
   const hasExpectedStructure = await BrowserTestUtils.waitForCondition(() =>
     [...doc.querySelectorAll(".treeRow")].every((row, i) =>
       row.querySelector(".treeLabelCell").textContent === expected[i].role &&
-      row.querySelector(".treeValueCell").textContent === expected[i].name),
+      row.querySelector(".treeValueCell").textContent === expected[i].name &&
+      compareBadges(row.querySelector(".badges"), expected[i].badges)),
     "Wait for the right tree update.");
 
   ok(hasExpectedStructure, "Tree structure is correct.");

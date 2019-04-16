@@ -12,14 +12,13 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const TreeView = createFactory(require("devtools/client/shared/components/tree/TreeView"));
 // Reps
-const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
-const Rep = createFactory(REPS.Rep);
-const Grip = REPS.Grip;
+const { MODE } = require("devtools/client/shared/components/reps/reps");
 
 const { fetchChildren } = require("../actions/accessibles");
 
 const { L10N } = require("../utils/l10n");
 const AccessibilityRow = createFactory(require("./AccessibilityRow"));
+const AccessibilityRowValue = createFactory(require("./AccessibilityRowValue"));
 const { Provider } = require("../provider");
 
 /**
@@ -44,6 +43,7 @@ class AccessibilityTree extends Component {
     this.onNameChange = this.onNameChange.bind(this);
     this.onReorder = this.onReorder.bind(this);
     this.onTextChange = this.onTextChange.bind(this);
+    this.renderValue = this.renderValue.bind(this);
   }
 
   /**
@@ -120,6 +120,10 @@ class AccessibilityTree extends Component {
     }
   }
 
+  renderValue(props) {
+    return AccessibilityRowValue(props);
+  }
+
   /**
    * Render Accessibility panel content
    */
@@ -146,13 +150,6 @@ class AccessibilityTree extends Component {
     // for all accessible object.
     const hasContextMenu = supports.snapshot;
 
-    const renderValue = props => {
-      return Rep(Object.assign({}, props, {
-        defaultRep: Grip,
-        cropLimit: 50,
-      }));
-    };
-
     const renderRow = rowProps => {
       const { object } = rowProps.member;
       const highlighted = object === highlightedItem;
@@ -174,14 +171,13 @@ class AccessibilityTree extends Component {
         mode: MODE.SHORT,
         provider: new Provider(accessibles, dispatch),
         columns: columns,
-        renderValue,
+        renderValue: this.renderValue,
         renderRow,
         label: L10N.getStr("accessibility.treeName"),
         header: true,
         expandedNodes: expanded,
         selected,
         onClickRow(nodePath, event) {
-          event.stopPropagation();
           if (event.target.classList.contains("theme-twisty")) {
             this.toggle(nodePath);
           }

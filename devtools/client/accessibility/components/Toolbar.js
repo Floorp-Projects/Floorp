@@ -8,7 +8,7 @@ const { createFactory, Component } = require("devtools/client/shared/vendor/reac
 const { div } = require("devtools/client/shared/vendor/react-dom-factories");
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { L10N } = require("../utils/l10n");
-const Button = createFactory(require("./Button"));
+const Button = createFactory(require("./Button").Button);
 
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { disable, updateCanBeDisabled } = require("../actions/ui");

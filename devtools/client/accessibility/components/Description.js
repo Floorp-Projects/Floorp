@@ -11,7 +11,7 @@ const { div, p, img } = require("devtools/client/shared/vendor/react-dom-factori
 const PropTypes = require("devtools/client/shared/vendor/react-prop-types");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
-const Button = createFactory(require("./Button"));
+const Button = createFactory(require("./Button").Button);
 const LearnMoreLink = createFactory(require("./LearnMoreLink"));
 const { enable, updateCanBeEnabled } = require("../actions/ui");
 
