@@ -450,6 +450,10 @@ function waitForBreakpoint(dbg, url, line) {
   return waitForState(dbg, () => findBreakpoint(dbg, url, line));
 }
 
+function waitForBreakpointRemoved(dbg, url, line) {
+  return waitForState(dbg, () => !findBreakpoint(dbg, url, line));
+}
+
 /**
  * Waits for the debugger to be fully paused.
  *
@@ -1320,12 +1324,20 @@ function dblClickElement(dbg, elementName, ...args) {
   );
 }
 
-function altClickElement(dbg, elementName, ...args) {
+function clickElementWithOptions(dbg, elementName, options, ...args) {
   const selector = getSelector(elementName, ...args);
   const el = findElementWithSelector(dbg, selector);
   el.scrollIntoView();
 
-  return EventUtils.synthesizeMouseAtCenter(el, { altKey: true }, dbg.win);
+  return EventUtils.synthesizeMouseAtCenter(el, options, dbg.win);
+}
+
+function altClickElement(dbg, elementName, ...args) {
+  return clickElementWithOptions(dbg, elementName, { altKey: true }, ...args);
+}
+
+function shiftClickElement(dbg, elementName, ...args) {
+  return clickElementWithOptions(dbg, elementName, { shiftKey: true }, ...args);
 }
 
 function rightClickElement(dbg, elementName, ...args) {

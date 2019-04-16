@@ -4198,11 +4198,13 @@ void HTMLMediaElement::ReportTelemetry() {
     FrameStatistics* stats = vid->GetFrameStatistics();
     if (stats) {
       data = stats->GetFrameStatisticsData();
-      if (data.mParsedFrames) {
-        MOZ_ASSERT(data.mDroppedFrames <= data.mParsedFrames);
+      uint64_t parsedFrames = stats->GetParsedFrames();
+      if (parsedFrames) {
+        uint64_t droppedFrames = stats->GetDroppedFrames();
+        MOZ_ASSERT(droppedFrames <= parsedFrames);
         // Dropped frames <= total frames, so 'percentage' cannot be higher than
         // 100 and therefore can fit in a uint32_t (that Telemetry takes).
-        uint32_t percentage = 100 * data.mDroppedFrames / data.mParsedFrames;
+        uint32_t percentage = 100 * droppedFrames / parsedFrames;
         LOG(LogLevel::Debug,
             ("Reporting telemetry DROPPED_FRAMES_IN_VIDEO_PLAYBACK"));
         Telemetry::Accumulate(Telemetry::VIDEO_DROPPED_FRAMES_PROPORTION,

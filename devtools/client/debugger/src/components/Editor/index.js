@@ -36,7 +36,8 @@ import {
   getSymbols,
   getIsPaused,
   getCurrentThread,
-  getThreadContext
+  getThreadContext,
+  getSkipPausing
 } from "../../selectors";
 
 // Redux actions
@@ -96,6 +97,7 @@ export type Props = {
   conditionalPanelLocation: SourceLocation,
   symbols: SymbolDeclarations,
   isPaused: boolean,
+  skipPausing: boolean,
 
   // Actions
   openConditionalPanel: typeof actions.openConditionalPanel,
@@ -418,7 +420,7 @@ class Editor extends PureComponent<Props, State> {
       return continueToHere(cx, sourceLine);
     }
 
-    return addBreakpointAtLine(cx, sourceLine, ev.altKey);
+    return addBreakpointAtLine(cx, sourceLine, ev.altKey, ev.shiftKey);
   };
 
   onGutterContextMenu = (event: MouseEvent) => {
@@ -614,11 +616,12 @@ class Editor extends PureComponent<Props, State> {
   }
 
   render() {
-    const { selectedSource } = this.props;
+    const { selectedSource, skipPausing } = this.props;
     return (
       <div
         className={classnames("editor-wrapper", {
-          blackboxed: selectedSource && selectedSource.isBlackBoxed
+          blackboxed: selectedSource && selectedSource.isBlackBoxed,
+          "skip-pausing": skipPausing
         })}
         ref={c => (this.$editorWrapper = c)}
       >
@@ -647,7 +650,8 @@ const mapStateToProps = state => {
     searchOn: getActiveSearch(state) === "file",
     conditionalPanelLocation: getConditionalPanelLocation(state),
     symbols: getSymbols(state, selectedSource),
-    isPaused: getIsPaused(state, getCurrentThread(state))
+    isPaused: getIsPaused(state, getCurrentThread(state)),
+    skipPausing: getSkipPausing(state)
   };
 };
 

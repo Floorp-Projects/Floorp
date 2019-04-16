@@ -309,12 +309,12 @@ void MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
   asMasm().memoryBarrierBefore(access.sync());
 
   // Reg+Reg addressing is directly encodable in one Load instruction, hence
-  // the AutoForbidPools will ensure that the access metadata is emitted at
+  // the AutoForbidPoolsAndNops will ensure that the access metadata is emitted at
   // the address of the Load.
   MemOperand srcAddr(memoryBase, ptr);
 
   {
-    AutoForbidPools afp(this, /* max number of instructions in scope = */ 1);
+    AutoForbidPoolsAndNops afp(this, /* max number of instructions in scope = */ 1);
     append(access, asMasm().currentOffset());
     switch (access.type()) {
       case Scalar::Int8:
@@ -377,12 +377,12 @@ void MacroAssemblerCompat::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
   asMasm().memoryBarrierBefore(access.sync());
 
   // Reg+Reg addressing is directly encodable in one Store instruction, hence
-  // the AutoForbidPools will ensure that the access metadata is emitted at
+  // the AutoForbidPoolsAndNops will ensure that the access metadata is emitted at
   // the address of the Store.
   MemOperand dstAddr(memoryBase, ptr);
 
   {
-    AutoForbidPools afp(this, /* max number of instructions in scope = */ 1);
+    AutoForbidPoolsAndNops afp(this, /* max number of instructions in scope = */ 1);
     append(access, asMasm().currentOffset());
     switch (access.type()) {
       case Scalar::Int8:
@@ -683,7 +683,7 @@ CodeOffset MacroAssembler::farJumpWithPatch() {
   const ARMRegister scratch = temps.AcquireX();
   const ARMRegister scratch2 = temps.AcquireX();
 
-  AutoForbidPools afp(this, /* max number of instructions in scope = */ 7);
+  AutoForbidPoolsAndNops afp(this, /* max number of instructions in scope = */ 7);
 
   mozilla::DebugOnly<uint32_t> before = currentOffset();
 
@@ -720,7 +720,7 @@ void MacroAssembler::patchFarJump(CodeOffset farJump, uint32_t targetOffset) {
 }
 
 CodeOffset MacroAssembler::nopPatchableToCall(const wasm::CallSiteDesc& desc) {
-  AutoForbidPools afp(this, /* max number of instructions in scope = */ 1);
+  AutoForbidPoolsAndNops afp(this, /* max number of instructions in scope = */ 1);
   CodeOffset offset(currentOffset());
   Nop();
   append(desc, CodeOffset(currentOffset()));
@@ -1075,7 +1075,7 @@ void MacroAssembler::comment(const char* msg) { Assembler::comment(msg); }
 // wasm support
 
 CodeOffset MacroAssembler::wasmTrapInstruction() {
-  AutoForbidPools afp(this, /* max number of instructions in scope = */ 1);
+  AutoForbidPoolsAndNops afp(this, /* max number of instructions in scope = */ 1);
   CodeOffset offs(currentOffset());
   Unreachable();
   return offs;
@@ -1515,14 +1515,14 @@ static void LoadExclusive(MacroAssembler& masm,
   bool signExtend = Scalar::isSignedIntType(srcType);
 
   // With this address form, a single native ldxr* will be emitted, and the
-  // AutoForbidPools ensures that the metadata is emitted at the address of
+  // AutoForbidPoolsAndNops ensures that the metadata is emitted at the address of
   // the ldxr*.
   MOZ_ASSERT(ptr.IsImmediateOffset() && ptr.offset() == 0);
 
   switch (Scalar::byteSize(srcType)) {
     case 1: {
       {
-        AutoForbidPools afp(&masm,
+        AutoForbidPoolsAndNops afp(&masm,
                             /* max number of instructions in scope = */ 1);
         if (access) {
           masm.append(*access, masm.currentOffset());
@@ -1536,7 +1536,7 @@ static void LoadExclusive(MacroAssembler& masm,
     }
     case 2: {
       {
-        AutoForbidPools afp(&masm,
+        AutoForbidPoolsAndNops afp(&masm,
                             /* max number of instructions in scope = */ 1);
         if (access) {
           masm.append(*access, masm.currentOffset());
@@ -1550,7 +1550,7 @@ static void LoadExclusive(MacroAssembler& masm,
     }
     case 4: {
       {
-        AutoForbidPools afp(&masm,
+        AutoForbidPoolsAndNops afp(&masm,
                             /* max number of instructions in scope = */ 1);
         if (access) {
           masm.append(*access, masm.currentOffset());
@@ -1564,7 +1564,7 @@ static void LoadExclusive(MacroAssembler& masm,
     }
     case 8: {
       {
-        AutoForbidPools afp(&masm,
+        AutoForbidPoolsAndNops afp(&masm,
                             /* max number of instructions in scope = */ 1);
         if (access) {
           masm.append(*access, masm.currentOffset());
