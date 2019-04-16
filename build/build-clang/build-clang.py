@@ -281,9 +281,9 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
 
     if is_final_stage and android_targets:
         cmake_args += [
-            "-DLLVM_BUILTIN_TARGETS=%s" % ";".join(android_targets),
+            "-DLLVM_BUILTIN_TARGETS=%s" % ";".join(android_targets.keys()),
             "-DLLVM_LIBDIR_SUFFIX=64",
-            "-DLLVM_RUNTIME_TARGETS=%s" % ";".join(android_targets),
+            "-DLLVM_RUNTIME_TARGETS=%s" % ";".join(android_targets.keys()),
         ]
 
         android_link_flags = "-fuse-ld=lld"
