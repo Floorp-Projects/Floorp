@@ -14,9 +14,10 @@
 #include "mozilla/webrender/WebRenderTypes.h"    // for RenderRoot
 #include "mozilla/Variant.h"                     // for Variant
 
-class nsIPresShell;
-
 namespace mozilla {
+
+class PresShell;
+
 namespace layers {
 
 /**
@@ -58,7 +59,7 @@ class FocusTarget final {
   /**
    * Construct a focus target for the specified top level PresShell
    */
-  FocusTarget(nsIPresShell* aRootPresShell, uint64_t aFocusSequenceNumber);
+  FocusTarget(PresShell* aRootPresShell, uint64_t aFocusSequenceNumber);
 
   bool operator==(const FocusTarget& aRhs) const;
 
