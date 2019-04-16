@@ -27,6 +27,8 @@ pref("devtools.webconsole.jsterm.codeMirror", true);
 pref("devtools.webconsole.groupWarningMessages", false);
 pref("devtools.webconsole.input.editor", false);
 pref("devtools.webconsole.input.autocomplete", true);
+pref("devtools.browserconsole.contentMessages", true);
+pref("devtools.browserconsole.filterContentMessages", false);
 
 global.loader = {
   lazyServiceGetter: () => {},

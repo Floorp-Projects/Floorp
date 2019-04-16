@@ -10,6 +10,7 @@ const PrefState = (overrides) => Object.freeze(Object.assign({
   sidebarToggle: false,
   jstermCodeMirror: false,
   groupWarnings: false,
+  filterContentMessages: false,
   historyCount: 50,
 }, overrides));
 
