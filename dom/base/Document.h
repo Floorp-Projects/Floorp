@@ -781,8 +781,8 @@ class Document : public nsINode,
    * Return the referrer from document URI as defined in the Referrer Policy
    * specification.
    * https://w3c.github.io/webappsec-referrer-policy/#determine-requests-referrer
-   * While document is an iframe srcdoc document, let document be document’s
-   * browsing context’s browsing context container’s node document.
+   * While document is an iframe srcdoc document, let document be document???s
+   * browsing context???s browsing context container???s node document.
    * Then referrer should be document's URL
    */
 
@@ -1355,17 +1355,6 @@ class Document : public nsINode,
    * will return viewport information that specifies default information.
    */
   nsViewportInfo GetViewportInfo(const ScreenIntSize& aDisplaySize);
-
-  /**
-   * It updates the viewport overflow type with the given two widths
-   * and the viewport setting of the document.
-   * This should only be called when there is out-of-reach overflow
-   * happens on the viewport, i.e. the viewport should be using
-   * `overflow: hidden`. And it should only be called on a top level
-   * content document.
-   */
-  void UpdateViewportOverflowType(nscoord aScrolledWidth,
-                                  nscoord aScrollportWidth);
 
   void UpdateForScrollAnchorAdjustment(nscoord aLength);
 
@@ -4550,30 +4539,6 @@ class Document : public nsINode,
   enum ViewportType : uint8_t { DisplayWidthHeight, Specified, Unknown, Empty };
 
   ViewportType mViewportType;
-
-  // Enum for how content in this document overflows viewport causing
-  // out-of-reach issue. Currently it only takes horizontal overflow
-  // into consideration. This enum and the corresponding field is only
-  // set and read on a top level content document.
-  enum class ViewportOverflowType : uint8_t {
-    // Viewport doesn't have out-of-reach overflow content, either
-    // because the content doesn't overflow, or the viewport doesn't
-    // have "overflow: hidden".
-    NoOverflow,
-
-    // All following items indicates that the content overflows the
-    // scroll port which causing out-of-reach content.
-
-    // Meta viewport is disabled or the document is in desktop mode.
-    Desktop,
-    // The content does not overflow the minimum-scale size. When there
-    // is no minimum scale specified, the default value used by Blink,
-    // 0.25, is used for this matter.
-    ButNotMinScaleSize,
-    // The content overflows the minimum-scale size.
-    MinScaleSize,
-  };
-  ViewportOverflowType mViewportOverflowType;
 
   PLDHashTable* mSubDocuments;
 
