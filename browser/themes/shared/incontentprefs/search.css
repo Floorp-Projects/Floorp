@@ -6,6 +6,9 @@
   height: 36px;
   width: 631px;
   margin-left: 33px;
+  -moz-context-properties: fill, stroke;
+  fill: var(--in-content-box-background);
+  stroke: var(--in-content-box-border-color);
 }
 
 .searchBarHiddenImage {
