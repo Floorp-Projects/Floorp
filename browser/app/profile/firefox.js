@@ -411,7 +411,11 @@ pref("permissions.default.geo", 0);
 pref("permissions.default.desktop-notification", 0);
 pref("permissions.default.shortcuts", 0);
 
+#ifdef NIGHTLY_BUILD
+pref("permissions.desktop-notification.postPrompt.enabled", true);
+#else
 pref("permissions.desktop-notification.postPrompt.enabled", false);
+#endif
 
 pref("permissions.postPrompt.animate", true);
 
