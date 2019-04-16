@@ -546,7 +546,7 @@ class ScriptSource {
                        Uncompressed<char16_t>, Missing, BinAST>;
   SourceType data;
 
-  // If the GC attempts to call setCompressedSource with PinnedUnits
+  // If the GC attempts to call convertToCompressedSource with PinnedUnits
   // present, the first PinnedUnits (that is, bottom of the stack) will set
   // the compressed chars upon destruction.
   PinnedUnitsBase* pinnedUnitsStack_;
@@ -968,15 +968,20 @@ class ScriptSource {
 
   MOZ_MUST_USE bool tryCompressOffThread(JSContext* cx);
 
-  // The Unit parameter determines which type of compressed source is
-  // recorded, but raw compressed source is always single-byte.
+  // Convert this ScriptSource from storing uncompressed source of the given
+  // type, to storing compressed source.  (Raw compressed source is always
+  // single-byte; |Unit| just records the encoding of the uncompressed source.)
   template <typename Unit>
-  void setCompressedSource(SharedImmutableString compressed,
-                           size_t sourceLength);
+  void convertToCompressedSource(SharedImmutableString compressed,
+                                 size_t sourceLength);
 
+  // Initialize a fresh ScriptSource as containing compressed source of the
+  // indicated original encoding.
   template <typename Unit>
-  MOZ_MUST_USE bool setCompressedSource(JSContext* cx, UniqueChars&& raw,
-                                        size_t rawLength, size_t sourceLength);
+  MOZ_MUST_USE bool initializeWithCompressedSource(JSContext* cx,
+                                                   UniqueChars&& raw,
+                                                   size_t rawLength,
+                                                   size_t sourceLength);
 
 #if defined(JS_BUILD_BINAST)
 
@@ -1002,18 +1007,18 @@ class ScriptSource {
  private:
   void performTaskWork(SourceCompressionTask* task);
 
-  struct SetCompressedSourceFromTask {
+  struct ConvertToCompressedSourceFromTask {
     ScriptSource* const source_;
     SharedImmutableString& compressed_;
 
-    SetCompressedSourceFromTask(ScriptSource* source,
-                                SharedImmutableString& compressed)
+    ConvertToCompressedSourceFromTask(ScriptSource* source,
+                                      SharedImmutableString& compressed)
         : source_(source), compressed_(compressed) {}
 
     template <typename Unit>
     void operator()(const Uncompressed<Unit>&) {
-      source_->setCompressedSource<Unit>(std::move(compressed_),
-                                         source_->length());
+      source_->convertToCompressedSource<Unit>(std::move(compressed_),
+                                               source_->length());
     }
 
     template <typename Unit>
@@ -1038,7 +1043,7 @@ class ScriptSource {
     }
   };
 
-  void setCompressedSourceFromTask(SharedImmutableString compressed);
+  void convertToCompressedSourceFromTask(SharedImmutableString compressed);
 
  private:
   // It'd be better to make this function take <XDRMode, Unit>, as both
