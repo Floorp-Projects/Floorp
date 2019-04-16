@@ -25,3 +25,5 @@ job-template:
         - mar-signing
     run-on-projects: []
     nightly: false
+    attributes:
+        retrigger: true

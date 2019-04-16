@@ -13,6 +13,8 @@ transforms:
     - taskgraph.transforms.task:transforms
 
 job-defaults:
+    attributes:
+        retrigger: true
     run-on-projects: ['mozilla-beta', 'trunk', 'try']
     treeherder:
         tier: 1
