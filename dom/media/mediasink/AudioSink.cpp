@@ -385,7 +385,7 @@ void AudioSink::NotifyAudioNeeded() {
     // hardware.
     CheckedInt64 missingFrames = sampleTime - mFramesParsed;
 
-    if (!missingFrames.isValid() || !sampleTime.isValid()) {
+    if (!missingFrames.isValid()) {
       NS_WARNING("Int overflow in AudioSink");
       mErrored = true;
       return;
