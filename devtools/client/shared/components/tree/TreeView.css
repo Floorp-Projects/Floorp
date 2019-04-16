@@ -32,6 +32,7 @@
 .treeTable .treeLabelCell {
   white-space: nowrap;
   cursor: default;
+  padding-inline-start: var(--tree-label-cell-indent);
 }
 
 .treeTable .treeLabelCell::after {

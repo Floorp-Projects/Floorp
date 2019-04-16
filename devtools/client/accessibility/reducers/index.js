@@ -4,11 +4,13 @@
 "use strict";
 
 const { accessibles } = require("./accessibles");
+const { audit } = require("./audit");
 const { details } = require("./details");
 const { ui } = require("./ui");
 
 exports.reducers = {
   accessibles,
+  audit,
   details,
   ui,
 };
