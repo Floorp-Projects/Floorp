@@ -1042,8 +1042,9 @@ bool Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
   // Save the frame's completion value.
   ResumeMode resumeMode;
   RootedValue value(cx);
+  RootedSavedFrame exnStack(cx);
   Debugger::resultToCompletion(cx, frameOk, frame.returnValue(), &resumeMode,
-                               &value);
+                               &value, &exnStack);
 
   // Preserve the debuggee's microtask event queue while we run the hooks, so
   // the debugger's microtask checkpoints don't run from the debuggee's
@@ -1083,7 +1084,8 @@ bool Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
         bool success;
         {
           AutoSetGeneratorRunning asgr(cx, genObj);
-          success = handler->onPop(cx, frameobj, nextResumeMode, &nextValue);
+          success = handler->onPop(cx, frameobj, nextResumeMode, &nextValue,
+                                   exnStack);
         }
         nextResumeMode = dbg->processParsedHandlerResult(
             ar, frame, pc, success, nextResumeMode, &nextValue);
@@ -1111,7 +1113,13 @@ bool Debugger::slowPathOnLeaveFrame(JSContext* cx, AbstractFramePtr frame,
       return true;
 
     case ResumeMode::Throw:
-      cx->setPendingExceptionAndCaptureStack(value);
+      // If we have a stack from the original throw, use it instead of
+      // associating the throw with the current execution point.
+      if (exnStack) {
+        cx->setPendingException(value, exnStack);
+      } else {
+        cx->setPendingExceptionAndCaptureStack(value);
+      }
       return false;
 
     case ResumeMode::Terminate:
@@ -1889,7 +1897,8 @@ ResumeMode Debugger::processHandlerResult(Maybe<AutoRealm>& ar, bool success,
 /* static */
 void Debugger::resultToCompletion(JSContext* cx, bool ok, const Value& rv,
                                   ResumeMode* resumeMode,
-                                  MutableHandleValue value) {
+                                  MutableHandleValue value,
+                                  MutableHandleSavedFrame exnStack) {
   MOZ_ASSERT_IF(ok, !cx->isExceptionPending());
 
   if (ok) {
@@ -1900,6 +1909,7 @@ void Debugger::resultToCompletion(JSContext* cx, bool ok, const Value& rv,
     if (!cx->getPendingException(value)) {
       *resumeMode = ResumeMode::Terminate;
     }
+    exnStack.set(cx->getPendingExceptionStack());
     cx->clearPendingException();
   } else {
     *resumeMode = ResumeMode::Terminate;
@@ -1908,7 +1918,7 @@ void Debugger::resultToCompletion(JSContext* cx, bool ok, const Value& rv,
 }
 
 bool Debugger::newCompletionValue(JSContext* cx, ResumeMode resumeMode,
-                                  const Value& value_,
+                                  const Value& value_, SavedFrame* exnStack_,
                                   MutableHandleValue result) {
   // We must be in the debugger's compartment, since that's where we want
   // to construct the completion value.
@@ -1917,6 +1927,7 @@ bool Debugger::newCompletionValue(JSContext* cx, ResumeMode resumeMode,
 
   RootedId key(cx);
   RootedValue value(cx, value_);
+  RootedSavedFrame exnStack(cx, exnStack_);
 
   switch (resumeMode) {
     case ResumeMode::Return:
@@ -1942,6 +1953,15 @@ bool Debugger::newCompletionValue(JSContext* cx, ResumeMode resumeMode,
     return false;
   }
 
+  if (exnStack) {
+    RootedId nkey(cx, NameToId(cx->names().stack));
+    RootedValue nvalue(cx, ObjectValue(*exnStack));
+    if (!cx->compartment()->wrap(cx, &nvalue) ||
+        !NativeDefineDataProperty(cx, obj, nkey, nvalue, JSPROP_ENUMERATE)) {
+      return false;
+    }
+  }
+
   result.setObject(*obj);
   return true;
 }
@@ -1952,10 +1972,11 @@ bool Debugger::receiveCompletionValue(Maybe<AutoRealm>& ar, bool ok,
 
   ResumeMode resumeMode;
   RootedValue value(cx);
-  resultToCompletion(cx, ok, val, &resumeMode, &value);
+  RootedSavedFrame exnStack(cx);
+  resultToCompletion(cx, ok, val, &resumeMode, &value, &exnStack);
   ar.reset();
   return wrapDebuggeeValue(cx, &value) &&
-         newCompletionValue(cx, resumeMode, value, vp);
+         newCompletionValue(cx, resumeMode, value, exnStack, vp);
 }
 
 /*** Firing debugger hooks **************************************************/
@@ -8866,7 +8887,8 @@ void ScriptedOnPopHandler::trace(JSTracer* tracer) {
 
 bool ScriptedOnPopHandler::onPop(JSContext* cx, HandleDebuggerFrame frame,
                                  ResumeMode& resumeMode,
-                                 MutableHandleValue vp) {
+                                 MutableHandleValue vp,
+                                 HandleSavedFrame exnStack) {
   Debugger* dbg = frame->owner();
 
   // Make it possible to distinguish 'return' from 'await' completions.
@@ -8883,7 +8905,7 @@ bool ScriptedOnPopHandler::onPop(JSContext* cx, HandleDebuggerFrame frame,
   }
 
   RootedValue completion(cx);
-  if (!dbg->newCompletionValue(cx, resumeMode, vp, &completion)) {
+  if (!dbg->newCompletionValue(cx, resumeMode, vp, exnStack, &completion)) {
     return false;
   }
 
@@ -9342,7 +9364,8 @@ static bool DebuggerGenericEval(JSContext* cx,
                                 HandleObject bindings,
                                 const EvalOptions& options,
                                 ResumeMode& resumeMode,
-                                MutableHandleValue value, Debugger* dbg,
+                                MutableHandleValue value,
+                                MutableHandleSavedFrame exnStack, Debugger* dbg,
                                 HandleObject envArg, FrameIter* iter) {
   // Either we're specifying the frame, or a global.
   MOZ_ASSERT_IF(iter, !envArg);
@@ -9423,7 +9446,7 @@ static bool DebuggerGenericEval(JSContext* cx,
       cx, env, frame, chars,
       options.filename() ? options.filename() : "debugger eval code",
       options.lineno(), &rval);
-  Debugger::resultToCompletion(cx, ok, rval, &resumeMode, value);
+  Debugger::resultToCompletion(cx, ok, rval, &resumeMode, value, exnStack);
   ar.reset();
   return dbg->wrapDebuggeeValue(cx, value);
 }
@@ -9432,7 +9455,8 @@ static bool DebuggerGenericEval(JSContext* cx,
 bool DebuggerFrame::eval(JSContext* cx, HandleDebuggerFrame frame,
                          mozilla::Range<const char16_t> chars,
                          HandleObject bindings, const EvalOptions& options,
-                         ResumeMode& resumeMode, MutableHandleValue value) {
+                         ResumeMode& resumeMode, MutableHandleValue value,
+                         MutableHandleSavedFrame exnStack) {
   MOZ_ASSERT(frame->isLive());
 
   Debugger* dbg = frame->owner();
@@ -9446,7 +9470,7 @@ bool DebuggerFrame::eval(JSContext* cx, HandleDebuggerFrame frame,
   UpdateFrameIterPc(iter);
 
   return DebuggerGenericEval(cx, chars, bindings, options, resumeMode, value,
-                             dbg, nullptr, &iter);
+                             exnStack, dbg, nullptr, &iter);
 }
 
 /* static */
@@ -10030,12 +10054,14 @@ bool DebuggerFrame::evalMethod(JSContext* cx, unsigned argc, Value* vp) {
 
   ResumeMode resumeMode;
   RootedValue value(cx);
+  RootedSavedFrame exnStack(cx);
   if (!DebuggerFrame::eval(cx, frame, chars, nullptr, options, resumeMode,
-                           &value)) {
+                           &value, &exnStack)) {
     return false;
   }
 
-  return frame->owner()->newCompletionValue(cx, resumeMode, value, args.rval());
+  return frame->owner()->newCompletionValue(cx, resumeMode, value, exnStack,
+                                            args.rval());
 }
 
 /* static */
@@ -10066,12 +10092,14 @@ bool DebuggerFrame::evalWithBindingsMethod(JSContext* cx, unsigned argc,
 
   ResumeMode resumeMode;
   RootedValue value(cx);
+  RootedSavedFrame exnStack(cx);
   if (!DebuggerFrame::eval(cx, frame, chars, bindings, options, resumeMode,
-                           &value)) {
+                           &value, &exnStack)) {
     return false;
   }
 
-  return frame->owner()->newCompletionValue(cx, resumeMode, value, args.rval());
+  return frame->owner()->newCompletionValue(cx, resumeMode, value, exnStack,
+                                            args.rval());
 }
 
 /* static */
@@ -11205,12 +11233,13 @@ bool DebuggerObject::executeInGlobalMethod(JSContext* cx, unsigned argc,
 
   ResumeMode resumeMode;
   RootedValue value(cx);
+  RootedSavedFrame exnStack(cx);
   if (!DebuggerObject::executeInGlobal(cx, object, chars, nullptr, options,
-                                       resumeMode, &value)) {
+                                       resumeMode, &value, &exnStack)) {
     return false;
   }
 
-  return object->owner()->newCompletionValue(cx, resumeMode, value,
+  return object->owner()->newCompletionValue(cx, resumeMode, value, exnStack,
                                              args.rval());
 }
 
@@ -11248,12 +11277,13 @@ bool DebuggerObject::executeInGlobalWithBindingsMethod(JSContext* cx,
 
   ResumeMode resumeMode;
   RootedValue value(cx);
+  RootedSavedFrame exnStack(cx);
   if (!DebuggerObject::executeInGlobal(cx, object, chars, bindings, options,
-                                       resumeMode, &value)) {
+                                       resumeMode, &value, &exnStack)) {
     return false;
   }
 
-  return object->owner()->newCompletionValue(cx, resumeMode, value,
+  return object->owner()->newCompletionValue(cx, resumeMode, value, exnStack,
                                              args.rval());
 }
 
@@ -12218,7 +12248,8 @@ bool DebuggerObject::executeInGlobal(JSContext* cx, HandleDebuggerObject object,
                                      HandleObject bindings,
                                      const EvalOptions& options,
                                      ResumeMode& resumeMode,
-                                     MutableHandleValue value) {
+                                     MutableHandleValue value,
+                                     MutableHandleSavedFrame exnStack) {
   MOZ_ASSERT(object->isGlobal());
 
   Rooted<GlobalObject*> referent(cx, &object->referent()->as<GlobalObject>());
@@ -12226,7 +12257,7 @@ bool DebuggerObject::executeInGlobal(JSContext* cx, HandleDebuggerObject object,
 
   RootedObject globalLexical(cx, &referent->lexicalEnvironment());
   return DebuggerGenericEval(cx, chars, bindings, options, resumeMode, value,
-                             dbg, globalLexical, nullptr);
+                             exnStack, dbg, globalLexical, nullptr);
 }
 
 /* static */
