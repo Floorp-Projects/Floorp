@@ -30,8 +30,6 @@ class FilterBar extends Component {
       attachRefToWebConsoleUI: PropTypes.func.isRequired,
       persistLogs: PropTypes.bool.isRequired,
       hidePersistLogsCheckbox: PropTypes.bool.isRequired,
-      showContentMessages: PropTypes.bool.isRequired,
-      hideShowContentMessagesCheckbox: PropTypes.bool.isRequired,
       filteredMessagesCount: PropTypes.object.isRequired,
       closeButtonVisible: PropTypes.bool,
       closeSplitConsole: PropTypes.func,
@@ -41,7 +39,6 @@ class FilterBar extends Component {
   static get defaultProps() {
     return {
       hidePersistLogsCheckbox: false,
-      hideShowContentMessagesCheckbox: true,
     };
   }
 
@@ -52,7 +49,6 @@ class FilterBar extends Component {
     this.onClickRemoveTextFilter = this.onClickRemoveTextFilter.bind(this);
     this.onSearchInput = this.onSearchInput.bind(this);
     this.onChangePersistToggle = this.onChangePersistToggle.bind(this);
-    this.onChangeShowContent = this.onChangeShowContent.bind(this);
     this.renderFiltersConfigBar = this.renderFiltersConfigBar.bind(this);
     this.renderFilteredMessagesBar = this.renderFilteredMessagesBar.bind(this);
   }
@@ -72,7 +68,6 @@ class FilterBar extends Component {
     const {
       filter,
       persistLogs,
-      showContentMessages,
       filteredMessagesCount,
       closeButtonVisible,
     } = this.props;
@@ -82,10 +77,6 @@ class FilterBar extends Component {
     }
 
     if (nextProps.persistLogs !== persistLogs) {
-      return true;
-    }
-
-    if (nextProps.showContentMessages !== showContentMessages) {
       return true;
     }
 
@@ -121,10 +112,6 @@ class FilterBar extends Component {
 
   onChangePersistToggle() {
     this.props.dispatch(actions.persistToggle());
-  }
-
-  onChangeShowContent() {
-    this.props.dispatch(actions.contentMessagesToggle());
   }
 
   renderFiltersConfigBar() {
@@ -246,9 +233,7 @@ class FilterBar extends Component {
       persistLogs,
       filteredMessagesCount,
       hidePersistLogsCheckbox,
-      hideShowContentMessagesCheckbox,
       closeSplitConsole,
-      showContentMessages,
     } = this.props;
 
     const children = [
@@ -284,12 +269,6 @@ class FilterBar extends Component {
           title: l10n.getStr("webconsole.enablePersistentLogs.tooltip"),
           onChange: this.onChangePersistToggle,
           checked: persistLogs,
-        }),
-        !hideShowContentMessagesCheckbox && FilterCheckbox({
-          label: l10n.getStr("browserconsole.contentMessagesCheckbox.label"),
-          title: l10n.getStr("browserconsole.contentMessagesCheckbox.tooltip"),
-          onChange: this.onChangeShowContent,
-          checked: showContentMessages,
         }),
       ),
     ];
@@ -334,7 +313,6 @@ function mapStateToProps(state) {
   return {
     filter: getAllFilters(state),
     persistLogs: uiState.persistLogs,
-    showContentMessages: uiState.showContentMessages,
     filteredMessagesCount: getFilteredMessagesCount(state),
     closeButtonVisible: uiState.closeButtonVisible,
   };

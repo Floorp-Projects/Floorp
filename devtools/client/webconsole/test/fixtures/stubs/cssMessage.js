@@ -39,8 +39,7 @@ stubPreparedMessages.set(`Unknown property ‘such-unknown-property’.  Declara
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false,
-  "chromeContext": false
+  "private": false
 }));
 
 stubPreparedMessages.set(`Error in parsing value for ‘padding-top’.  Declaration dropped.`, new ConsoleMessage({
@@ -69,8 +68,7 @@ stubPreparedMessages.set(`Error in parsing value for ‘padding-top’.  Declara
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false,
-  "chromeContext": false
+  "private": false
 }));
 
 stubPackets.set(`Unknown property ‘such-unknown-property’.  Declaration dropped.`, {
@@ -92,8 +90,7 @@ stubPackets.set(`Unknown property ‘such-unknown-property’.  Declaration drop
     "info": false,
     "private": false,
     "stacktrace": null,
-    "notes": null,
-    "chromeContext": false
+    "notes": null
   },
   "type": "pageError",
   "from": "server1.conn0.child1/consoleActor2"
@@ -118,8 +115,7 @@ stubPackets.set(`Error in parsing value for ‘padding-top’.  Declaration drop
     "info": false,
     "private": false,
     "stacktrace": null,
-    "notes": null,
-    "chromeContext": false
+    "notes": null
   },
   "type": "pageError",
   "from": "server1.conn0.child1/consoleActor2"
