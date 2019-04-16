@@ -233,6 +233,17 @@ body {
   background-color: var(--theme-selection-background-hover);
 }
 
+.treeTable.filtered .treeRow .treeLabelCell {
+  /* Unset row indentation when the tree is filtered. */
+  padding-inline-start: var(--accessibility-arrow-horizontal-padding);
+}
+
+/* When the accesibility tree is filtered, we flatten the tree and want to hide
+   the expander icon (▶) for expandable tree rows. */
+.treeTable.filtered .treeRow .treeLabelCell .treeIcon {
+  display: none;
+}
+
 .treeTable .treeLabelCell {
   min-width: 50%;
 }
@@ -311,6 +322,13 @@ body {
   background-color: var(--badge-interactive-background-color);
   border-color: var(--accessible-label-border-color);
   color: var(--badge-interactive-color);
+}
+
+.mainFrame .treeTable:focus .treeRow.selected .badges .badge.checked,
+.mainFrame .treeTable .treeRow .badges .badge.checked {
+  background-color: var(--badge-active-background-color);
+  border-color: var(--badge-active-border-color);
+  color: var(--theme-selection-color);
 }
 
 /* Right Sidebar */

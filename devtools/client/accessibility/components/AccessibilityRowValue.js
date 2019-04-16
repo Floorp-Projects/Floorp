@@ -24,11 +24,13 @@ class AccessibilityRowValue extends Component {
         object: PropTypes.object,
       }).isRequired,
       supports: PropTypes.object.isRequired,
+      walker: PropTypes.object.isRequired,
     };
   }
 
   render() {
-    const { member, supports: { audit } } = this.props;
+    const { member, supports: { audit }, walker } = this.props;
+
     return span({
       role: "presentation",
     },
@@ -40,7 +42,7 @@ class AccessibilityRowValue extends Component {
       audit && AuditController({
         accessible: member.object,
       },
-        Badges()),
+        Badges({ walker })),
     );
   }
 }

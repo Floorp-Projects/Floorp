@@ -14,6 +14,8 @@ const { accessibility: { ColorContrastScores } } = require("devtools/shared/cons
 
 loader.lazyGetter(this, "Badge", () => createFactory(require("./Badge")));
 
+const { FILTERS } = require("../constants");
+
 /**
 * Component for rendering a badge for contrast accessibliity check
 * failures association with a given accessibility object in the accessibility
@@ -27,11 +29,12 @@ class ContrastBadge extends Component {
       isLargeText: PropTypes.bool.isRequired,
       value: PropTypes.number,
       min: PropTypes.number,
+      walker: PropTypes.object.isRequired,
     };
   }
 
   render() {
-    const { error, value, min, isLargeText } = this.props;
+    const { error, value, min, isLargeText, walker } = this.props;
     if (error) {
       return null;
     }
@@ -44,6 +47,8 @@ class ContrastBadge extends Component {
     return Badge({
       label: L10N.getStr("accessibility.badge.contrast"),
       tooltip: L10N.getStr("accessibility.badge.contrast.tooltip"),
+      filterKey: FILTERS.CONTRAST,
+      walker,
     });
   }
 }

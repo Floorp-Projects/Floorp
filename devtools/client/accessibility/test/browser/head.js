@@ -6,7 +6,7 @@
 
 /* global waitUntilState, gBrowser */
 /* exported addTestTab, checkTreeState, checkSidebarState, checkAuditState, selectRow,
-            toggleRow, addA11yPanelTestsTask, reload, navigate */
+            toggleRow, toggleBadge, addA11yPanelTestsTask, reload, navigate */
 
 "use strict";
 
@@ -374,6 +374,22 @@ async function toggleRow(doc, rowNumber) {
   await BrowserTestUtils.waitForCondition(() =>
     !twisty.classList.contains("devtools-throbber") &&
     expected === twisty.classList.contains("open"), "Twisty updated.");
+}
+
+/**
+ * Toggle an accessibility audit badge based on its index in the badges group.
+ * @param  {document} doc        panel documnent.
+ * @param  {Number}   badgeIndex index of the badge to be toggled.
+ */
+async function toggleBadge(doc, rowNumber, badgeIndex) {
+  const win = doc.defaultView;
+  const row = doc.querySelectorAll(".treeRow")[rowNumber];
+  const badge = row.querySelectorAll(".audit-badge.badge")[badgeIndex];
+  const expected = !badge.classList.contains("checked");
+
+  EventUtils.synthesizeMouseAtCenter(badge, {}, win);
+  await BrowserTestUtils.waitForCondition(() =>
+    expected === badge.classList.contains("checked"), "Badge updated.");
 }
 
 /**

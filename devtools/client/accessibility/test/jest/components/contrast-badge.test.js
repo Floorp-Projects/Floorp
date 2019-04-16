@@ -8,10 +8,17 @@ const { shallow, mount } = require("enzyme");
 
 const { createFactory } = require("devtools/client/shared/vendor/react");
 
+const Provider = createFactory(require("devtools/client/shared/vendor/react-redux").Provider);
+const { setupStore } = require("devtools/client/accessibility/test/jest/helpers");
+
 const Badge = require("devtools/client/accessibility/components/Badge");
-const ContrastBadge = createFactory(require("devtools/client/accessibility/components/ContrastBadge"));
+const ContrastBadgeClass = require("devtools/client/accessibility/components/ContrastBadge");
+const ContrastBadge = createFactory(ContrastBadgeClass);
+const { FILTERS } = require("devtools/client/accessibility/constants");
 
 describe("ContrastBadge component:", () => {
+  const store = setupStore();
+
   it("error render", () => {
     const wrapper = shallow(ContrastBadge({ error: true }));
     expect(wrapper.html()).toMatchSnapshot();
@@ -47,17 +54,19 @@ describe("ContrastBadge component:", () => {
   });
 
   it("fail render", () => {
-    const wrapper = mount(ContrastBadge({
+    const wrapper = mount(Provider({ store }, ContrastBadge({
       value: 3.77,
       isLargeText: false,
-    }));
+    })));
 
     expect(wrapper.html()).toMatchSnapshot();
     expect(wrapper.children().length).toBe(1);
-    const badge = wrapper.childAt(0);
+    const contrastBadge = wrapper.find(ContrastBadgeClass);
+    const badge = contrastBadge.childAt(0);
     expect(badge.type()).toBe(Badge);
     expect(badge.props()).toMatchObject({
       label: "accessibility.badge.contrast",
+      filterKey: FILTERS.CONTRAST,
     });
   });
 });

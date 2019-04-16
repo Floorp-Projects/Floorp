@@ -8,6 +8,7 @@ DevToolsModules(
     'AccessibilityTree.js',
     'Accessible.js',
     'AuditController.js',
+    'AuditFilter.js',
     'Badge.js',
     'Badges.js',
     'Button.js',

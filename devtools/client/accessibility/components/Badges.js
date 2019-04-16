@@ -27,11 +27,12 @@ class Badges extends Component {
   static get propTypes() {
     return {
       checks: PropTypes.object,
+      walker: PropTypes.object.isRequired,
     };
   }
 
   render() {
-    const { checks } = this.props;
+    const { checks, walker } = this.props;
     if (!checks) {
       return null;
     }
@@ -40,7 +41,10 @@ class Badges extends Component {
     for (const type in checks) {
       const component = getComponentForAuditType(type);
       if (checks[type] && component) {
-        items.push(component(checks[type]));
+        items.push(component({
+          ...checks[type],
+          walker,
+        }));
       }
     }
 
