@@ -29,11 +29,12 @@ namespace js {
 class FreeOp : public JSFreeOp {
   Vector<void*, 0, SystemAllocPolicy> freeLaterList;
   jit::JitPoisonRangeVector jitPoisonRanges;
+  const bool isDefault;
 
  public:
   static FreeOp* get(JSFreeOp* fop) { return static_cast<FreeOp*>(fop); }
 
-  explicit FreeOp(JSRuntime* maybeRuntime);
+  explicit FreeOp(JSRuntime* maybeRuntime, bool isDefault = false);
   ~FreeOp();
 
   bool onMainThread() const { return runtime_ != nullptr; }
@@ -44,7 +45,7 @@ class FreeOp : public JSFreeOp {
     return !runtime_;
   }
 
-  bool isDefaultFreeOp() const;
+  bool isDefaultFreeOp() const { return isDefault; }
 
   void free_(void* p) { js_free(p); }
 

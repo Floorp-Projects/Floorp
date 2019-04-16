@@ -644,7 +644,7 @@ struct JSRuntime : public js::MallocProvider<JSRuntime> {
   js::WriteOnceData<js::PropertyName*> emptyString;
 
  private:
-  js::WriteOnceData<js::FreeOp*> defaultFreeOp_;
+  js::MainThreadData<js::FreeOp*> defaultFreeOp_;
 
  public:
   js::FreeOp* defaultFreeOp() {

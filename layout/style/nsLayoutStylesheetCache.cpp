@@ -30,6 +30,75 @@
 
 #include <mozilla/ServoBindings.h>
 
+// The nsLayoutStylesheetCache is responsible for sharing user agent style sheet
+// contents across processes using shared memory.  Here is a high level view of
+// how that works:
+//
+// * In the parent process, in the nsLayoutStylesheetCache constructor (which is
+//   called early on in a process' lifetime), we parse all UA style sheets into
+//   Gecko StyleSheet objects.
+//
+// * The constructor calls InitSharedSheetsInParent, which creates a shared
+//   memory segment that we know ahead of time will be big enough to store the
+//   UA sheets.
+//
+// * It then creates a Rust SharedMemoryBuilder object and passes it a pointer
+//   to the start of the shared memory.
+//
+// * For each UA sheet, we call Servo_SharedMemoryBuilder_AddStylesheet, which
+//   takes the StylesheetContents::rules (an Arc<Locked<CssRules>>), produces a
+//   deep clone of it, and writes that clone into the shared memory:
+//
+//   * The deep clone isn't a clone() call, but a call to ToShmem::to_shmem. The
+//     ToShmem trait must be implemented on every type that is reachable under
+//     the Arc<Locked<CssRules>>. The to_shmem call for each type will clone the
+//     value, but any heap allocation will be cloned and placed into the shared
+//     memory buffer, rather than heap allocated.
+//
+//   * For most types, the ToShmem implementation is simple, and we just
+//     #[derive(ToShmem)] it. For the types that need special handling due to
+//     having heap allocations (Vec<T>, Box<T>, Arc<T>, etc.) we have impls that
+//     call to_shmem on the heap allocated data, and then create a new container
+//     (e.g. using Box::from_raw) that points into the shared memory.
+//
+//   * Arc<T> and Locked<T> want to perform atomic writes on data that needs to
+//     be in the shared memory buffer (the reference count for Arc<T>, and the
+//     SharedRwLock's AtomicRefCell for Locked<T>), so we add special modes to
+//     those objects that skip the writes.  For Arc<T>, that means never
+//     dropping the object since we don't track the reference count.  That's
+//     fine, since we want to just drop the entire shared memory buffer at
+//     shutdown.  For Locked<T>, we just panic on attempting to take the lock
+//     for writing.  That's also fine, since we don't want devtools being able
+//     to modify UA sheets.
+//
+//   * For Atoms in Rust, static atoms are represented by an index into the
+//     static atom table.  Then if we need to Deref the Atom we look up the
+//     table.  We panic if any Atom we encounter in the UA style sheets is
+//     not a static atom.
+//
+// * For each UA sheet, we create a new C++ StyleSheet object using the shared
+//   memory clone of the sheet contents, and throw away the original heap
+//   allocated one.  (We could avoid creating a new C++ StyleSheet object
+//   wrapping the shared contents, and update the original StyleSheet object's
+//   contents, but it's doubtful that matters.)
+//
+// * When we initially map the shared memory in the parent process in
+//   InitSharedSheetsInParent, we choose an address which is far away from the
+//   current extent of the heap.  Although not too far, since we don't want to
+//   unnecessarily fragment the virtual address space.
+//
+// * In the child process, as early as possible (in
+//   ContentChild::InitSharedUASheets), we try to map the shared memory at that
+//   same address, then pass the shared memory buffer to
+//   nsLayoutStylesheetCache::SetSharedMemory.  Since we map at the same
+//   address, this means any internal pointers in the UA sheets back into the
+//   shared memory buffer that were written by the parent process are valid in
+//   the child process too.
+//
+// * In practice, mapping at the address we need in the child process this works
+//   nearly all the time.  If we fail to map at the address we need, the child
+//   process falls back to parsing and allocating its own copy of the UA sheets.
+
 using namespace mozilla;
 using namespace mozilla::css;
 

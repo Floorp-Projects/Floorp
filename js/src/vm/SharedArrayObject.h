@@ -13,6 +13,7 @@
 #include "jstypes.h"
 
 #include "gc/Barrier.h"
+#include "gc/Memory.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/JSObject.h"
 

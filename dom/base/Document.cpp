@@ -4435,19 +4435,11 @@ void Document::SetContainer(nsDocShell* aContainer) {
     return;
   }
 
-  // Get the Docshell
-  if (aContainer->ItemType() == nsIDocShellTreeItem::typeContent) {
-    // check if same type root
-    nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
-    aContainer->GetSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));
-    NS_ASSERTION(
-        sameTypeRoot,
-        "No document shell root tree item from document shell tree item!");
-
-    if (sameTypeRoot == aContainer) {
+  BrowsingContext* context = aContainer->GetBrowsingContext();
+  if (context && context->IsContent()) {
+    if (!context->GetParent()) {
       SetIsTopLevelContentDocument(true);
     }
-
     SetIsContentDocument(true);
   }
 
