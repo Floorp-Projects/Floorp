@@ -1,0 +1,16 @@
+<script>
+/* eslint-disable no-unused-vars */
+"use strict";
+
+function throwErrorObject(value) {
+  throw new Error("ThrowErrorObject");
+}
+
+function throwValue(value) {
+  otherFunction(value);
+}
+
+function otherFunction(value) {
+  throw value;
+}
+</script>
