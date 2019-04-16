@@ -39,6 +39,7 @@ SPLIT_FIELD = (
     "Dumping Video Track",
     "MediaDecoder",
     "VideoSink",
+    "Dropped Frames"
 )
 
 
