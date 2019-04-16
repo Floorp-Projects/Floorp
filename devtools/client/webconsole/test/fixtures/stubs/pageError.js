@@ -76,7 +76,8 @@ stubPreparedMessages.set(`ReferenceError: asdf is not defined`, new ConsoleMessa
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`SyntaxError: redeclaration of let a`, new ConsoleMessage({
@@ -131,7 +132,8 @@ stubPreparedMessages.set(`SyntaxError: redeclaration of let a`, new ConsoleMessa
   ],
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`TypeError longString message`, new ConsoleMessage({
@@ -187,7 +189,8 @@ stubPreparedMessages.set(`TypeError longString message`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`throw ""`, new ConsoleMessage({
@@ -233,7 +236,8 @@ stubPreparedMessages.set(`throw ""`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`throw "tomato"`, new ConsoleMessage({
@@ -279,7 +283,8 @@ stubPreparedMessages.set(`throw "tomato"`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPackets.set(`ReferenceError: asdf is not defined`, {
@@ -338,7 +343,8 @@ stubPackets.set(`ReferenceError: asdf is not defined`, {
         "functionName": null
       }
     ],
-    "notes": null
+    "notes": null,
+    "chromeContext": false
   },
   "type": "pageError",
   "from": "server1.conn0.child1/consoleActor2"
@@ -389,7 +395,8 @@ stubPackets.set(`SyntaxError: redeclaration of let a`, {
           "column": 6
         }
       }
-    ]
+    ],
+    "chromeContext": false
   },
   "type": "pageError",
   "from": "server1.conn0.child1/consoleActor2"
@@ -441,7 +448,8 @@ stubPackets.set(`TypeError longString message`, {
         "functionName": null
       }
     ],
-    "notes": null
+    "notes": null,
+    "chromeContext": false
   },
   "type": "pageError",
   "from": "server1.conn0.child1/consoleActor2"
