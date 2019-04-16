@@ -263,11 +263,10 @@ void DocumentL10n::SetAttributes(JSContext* aCx, Element& aElement,
                                  const nsAString& aId,
                                  const Optional<JS::Handle<JSObject*>>& aArgs,
                                  ErrorResult& aRv) {
-  if (!aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::datal10nid, aId,
-                            eCaseMatters)) {
-    aElement.SetAttr(kNameSpaceID_None, nsGkAtoms::datal10nid, aId, true);
+  aElement.SetAttribute(NS_LITERAL_STRING("data-l10n-id"), aId, aRv);
+  if (aRv.Failed()) {
+    return;
   }
-
   if (aArgs.WasPassed()) {
     nsAutoString data;
     JS::Rooted<JS::Value> val(aCx, JS::ObjectValue(*aArgs.Value()));
@@ -275,12 +274,9 @@ void DocumentL10n::SetAttributes(JSContext* aCx, Element& aElement,
       aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
       return;
     }
-    if (!aElement.AttrValueIs(kNameSpaceID_None, nsGkAtoms::datal10nargs, data,
-                              eCaseMatters)) {
-      aElement.SetAttr(kNameSpaceID_None, nsGkAtoms::datal10nargs, data, true);
-    }
+    aElement.SetAttribute(NS_LITERAL_STRING("data-l10n-args"), data, aRv);
   } else {
-    aElement.UnsetAttr(kNameSpaceID_None, nsGkAtoms::datal10nargs, true);
+    aElement.RemoveAttribute(NS_LITERAL_STRING("data-l10n-args"), aRv);
   }
 }
 
