@@ -130,6 +130,10 @@ const runtime = {
   // yet. For instance an ADB device connected without a compatible runtime running.
   isUnknown: PropTypes.bool.isRequired,
 
+  // unplugged runtimes are placeholders for devices that are no longer available. For
+  // instance a USB device that was unplugged from the computer.
+  isUnplugged: PropTypes.bool.isRequired,
+
   // display name of the runtime
   name: PropTypes.string.isRequired,
 

@@ -65,6 +65,10 @@ about-debugging-sidebar-item-connected-label = Connected
 # USB debugging enabled, but where Firefox is not started.
 about-debugging-sidebar-runtime-item-waiting-for-browser = Waiting for browser…
 
+# Text displayed in sidebar items for remote devices that have been disconnected from the
+# computer.
+about-debugging-sidebar-runtime-item-unplugged = Unplugged
+
 # Title for runtime sidebar items that are related to a specific device (USB, WiFi).
 about-debugging-sidebar-runtime-item-name =
   .title = { $displayName } ({ $deviceName })
