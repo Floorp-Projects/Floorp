@@ -143,7 +143,7 @@ tests.push(
       function onResolve() {
         // Since this file is in strict mode, the correct value is "undefined".
         Assert.equal(this, undefined);
-        throw "reject";
+        throw new Error("reject");
       }
     ).then(
       null,

@@ -38,7 +38,7 @@ function fakeUIResponse() {
     if (topic === "captive-portal-login-success") {
       loginSuccessCount++;
       if (loginSuccessCount > 1) {
-        throw "We should only receive 'captive-portal-login-success' once";
+        throw new Error("We should only receive 'captive-portal-login-success' once");
       }
       Assert.equal(++step, 4);
     }
