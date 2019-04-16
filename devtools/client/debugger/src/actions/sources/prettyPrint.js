@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 // @flow
-import { generatedToOriginalId } from "devtools-source-map";
+import SourceMaps, { generatedToOriginalId } from "devtools-source-map";
 
 import assert from "../../utils/assert";
 import { recordEvent } from "../../utils/telemetry";
@@ -29,7 +29,7 @@ import { selectSource } from "./select";
 import type { JsSource, Source, Context } from "../../types";
 
 export async function prettyPrintSource(
-  sourceMaps: any,
+  sourceMaps: typeof SourceMaps,
   prettySource: Source,
   generatedSource: any
 ) {
