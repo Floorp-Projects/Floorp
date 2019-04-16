@@ -39,9 +39,9 @@
 /* Rule View Toolbar */
 
 #ruleview-toolbar-container {
-  display: flex;
   flex-direction: column;
   height: auto;
+  padding: 0;
 }
 
 #ruleview-toolbar {
@@ -57,6 +57,8 @@
 }
 
 .ruleview-reveal-panel {
+  background: var(--rule-header-background-color);
+  border-top: 1px solid var(--theme-splitter-color);
   display: flex;
   overflow: hidden;
   flex-wrap: wrap;
@@ -73,28 +75,33 @@
   align-items: center;
 }
 
+#ruleview-toolbar,
+#pseudo-class-panel,
+#ruleview-class-panel .classes {
+  padding: 0 3px;
+}
+
 /* Class toggle panel */
-#ruleview-class-panel:not([hidden]) {
-  /* The class panel can contain 0 to N classes, so we can't hardcode a height here like
-     we do for the pseudo-class panel. Unfortunately, that means we don't get the height
-     transition when toggling the panel */
+
+#ruleview-class-panel {
   flex-direction: column;
 }
 
 #ruleview-class-panel .add-class {
-  margin: 0;
-  border-width: 0 0 1px 0;
-  padding: 2px 6px;
+  border: 1px solid transparent;
   border-radius: 0;
+  margin: 0;
+}
+
+#ruleview-class-panel .add-class:focus {
+  border: 1px solid var(--blue-50);
 }
 
 #ruleview-class-panel .classes {
+  border-top: 1px solid var(--theme-splitter-color);
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
-}
-
-#ruleview-class-panel .classes {
   max-height: 100px;
   overflow-y: auto;
 }
