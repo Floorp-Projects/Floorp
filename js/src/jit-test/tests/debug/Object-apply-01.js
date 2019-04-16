@@ -43,11 +43,11 @@ function test(usingApply) {
     };
     g.eval("f(function () { return arguments.length; });");
 
-    // Exceptions are reported as {throw:} completion values.
+    // Exceptions are reported as {throw,stack} completion values.
     dbg.onDebuggerStatement = function (frame) {
         var lose = frame.arguments[0];
         var cv = usingApply ? lose.apply(null, []) : lose.call(null);
-        assertEq(Object.keys(cv).join(","), "throw");
+        assertEq(Object.keys(cv).join(","), "throw,stack");
         assertEq(cv.throw, frame.callee);
         hits++;
     };

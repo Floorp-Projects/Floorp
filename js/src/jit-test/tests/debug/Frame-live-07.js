@@ -34,6 +34,9 @@ function test(when, what) {
             return tick(frame);
         };
         let result = frame.eval("for (let _ of f(0)) {}");
+        if (result && "stack" in result) {
+          result.stack = true;
+        }
         assertDeepEq(result, what);
     };
     g.eval("debugger;");
@@ -46,7 +49,7 @@ function test(when, what) {
 }
 
 for (let when = 0; when < 6; when++) {
-    for (let what of [null, {throw: "fit"}]) {
+    for (let what of [null, {throw: "fit", stack: true}]) {
         test(when, what);
     }
 }
