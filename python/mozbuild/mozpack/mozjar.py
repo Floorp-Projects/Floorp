@@ -567,8 +567,8 @@ class JarWriter(object):
         end = JarCdirEnd()
         end['disk_entries'] = len(self._contents)
         end['cdir_entries'] = end['disk_entries']
-        end['cdir_size'] = reduce(lambda x, y: x + y[0].size,
-                                  self._contents.values(), 0)
+        end['cdir_size'] = six.moves.reduce(lambda x, y: x + y[0].size,
+                                            self._contents.values(), 0)
         # On optimized archives, store the preloaded size and the central
         # directory entries, followed by the first end of central directory.
         if preload_size:
