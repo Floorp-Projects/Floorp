@@ -274,7 +274,7 @@ var ClientIDImpl = {
 
   async setClientID(id) {
     if (!this.updateClientID(id)) {
-      throw ("Invalid client ID: " + id);
+      throw new Error("Invalid client ID: " + id);
     }
 
     this._saveClientIdTask = this._saveClientID();
