@@ -8,8 +8,7 @@
         height="600"
         onload="runTest();">
 
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
   <body xmlns="http://www.w3.org/1999/xhtml">
   </body>
