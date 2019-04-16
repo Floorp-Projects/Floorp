@@ -156,7 +156,6 @@ var snapshotFormatters = {
       return;
     }
     $("crashes-allReports").style.display = "block";
-    $("crashes-allReports").classList.remove("no-copy");
 
     if (data.pending > 0) {
       document.l10n.setAttributes($("crashes-allReportsWithPending"), "pending-reports", { reports: data.pending });
@@ -966,7 +965,9 @@ function getLoadContext() {
 
 async function copyContentsToClipboard() {
   // Get the HTML and text representations for the important part of the page.
-  let contentsDiv = $("contents");
+  let contentsDiv = $("contents").cloneNode(true);
+  // Remove the items we don't want to copy from the clone:
+  contentsDiv.querySelectorAll(".no-copy, [hidden]").forEach(n => n.remove());
   let dataHtml = contentsDiv.innerHTML;
   let dataText = createTextForElement(contentsDiv);
 
@@ -1039,9 +1040,6 @@ Serializer.prototype = {
   },
 
   _serializeElement(elem) {
-    if (this._ignoreElement(elem))
-      return;
-
     // table
     if (elem.localName == "table") {
       this._serializeTable(elem);
@@ -1062,7 +1060,8 @@ Serializer.prototype = {
     }
 
     // For headings, draw a "line" underneath them so they stand out.
-    if (/^h[0-9]+$/.test(elem.localName)) {
+    let isHeader = /^h[0-9]+$/.test(elem.localName);
+    if (isHeader) {
       let headerText = (this._currentLine || "").trim();
       if (headerText) {
         this._startNewLine();
@@ -1070,13 +1069,10 @@ Serializer.prototype = {
       }
     }
 
-    // Add a blank line underneath block elements but only if they contain text.
-    if (hasText) {
-      let display = window.getComputedStyle(elem).getPropertyValue("display");
-      if (display == "block") {
-        this._startNewLine();
-        this._startNewLine();
-      }
+    // Add a blank line underneath elements but only if they contain text.
+    if (hasText && (isHeader || "p" == elem.localName)) {
+      this._startNewLine();
+      this._startNewLine();
     }
   },
 
@@ -1130,13 +1126,11 @@ Serializer.prototype = {
       // The table's empty.
       return;
 
-    if (hasColHeadings && !this._ignoreElement(tableHeadingElem)) {
+    if (hasColHeadings) {
       // Use column headings.  Print each tr as a multi-line chunk like:
       //   Heading 1: Column 1 value
       //   Heading 2: Column 2 value
       for (let i = startRow; i < trs.length; i++) {
-        if (this._ignoreElement(trs[i]))
-          continue;
         let children = trs[i].querySelectorAll("td");
         for (let j = 0; j < children.length; j++) {
           let text = "";
@@ -1155,8 +1149,6 @@ Serializer.prototype = {
     // print each tr in a single line like:
     //   Column 1 value: Column 2 value
     for (let i = startRow; i < trs.length; i++) {
-      if (this._ignoreElement(trs[i]))
-        continue;
       let children = trs[i].querySelectorAll("th,td");
       let rowHeading = this._nodeText(children[0]).trim();
       if (children[0].classList.contains("title-column")) {
@@ -1178,10 +1170,6 @@ Serializer.prototype = {
       this._startNewLine();
     }
     this._startNewLine();
-  },
-
-  _ignoreElement(elem) {
-    return elem.classList.contains("no-copy");
   },
 
   _nodeText(node) {
