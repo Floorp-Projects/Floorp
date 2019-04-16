@@ -124,6 +124,8 @@ class InternalHeaders final {
 
   static bool IsInvalidName(const nsACString& aName, ErrorResult& aRv);
   static bool IsInvalidValue(const nsACString& aValue, ErrorResult& aRv);
+  bool IsValidHeaderValue(const nsCString& aLowerName,
+                          const nsCString& aNormalizedValue, ErrorResult& aRv);
   bool IsImmutable(ErrorResult& aRv) const;
   bool IsForbiddenRequestHeader(const nsCString& aName) const;
   bool IsForbiddenRequestNoCorsHeader(const nsCString& aName) const;
@@ -146,6 +148,17 @@ class InternalHeaders final {
   // This method updates the passed name to match the capitalization of a header
   // with the same name (ignoring case, per the spec).
   void ReuseExistingNameIfExists(nsCString& aName) const;
+
+  void RemovePrivilegedNoCorsRequestHeaders();
+
+  void GetInternal(const nsCString& aLowerName, nsACString& aValue,
+                   ErrorResult& aRv) const;
+
+  bool DeleteInternal(const nsCString& aLowerName, ErrorResult& aRv);
+
+  static bool IsNoCorsSafelistedRequestHeaderName(const nsCString& aName);
+
+  static bool IsPrivilegedNoCorsRequestHeaderName(const nsCString& aName);
 
   static bool IsSimpleHeader(const nsCString& aName, const nsACString& aValue);
 
