@@ -121,12 +121,16 @@ const WEBEXT_STORAGE_USER_CONTEXT_ID = -1 >>> 0;
 // The maximum time to wait for extension child shutdown blockers to complete.
 const CHILD_SHUTDOWN_TIMEOUT_MS = 8000;
 
+// Permissions that are only available to privileged extensions.
+const PRIVILEGED_PERMS = new Set(["mozillaAddons"]);
+
 /**
  * Classify an individual permission from a webextension manifest
  * as a host/origin permission, an api permission, or a regular permission.
  *
  * @param {string} perm  The permission string to classify
  * @param {boolean} restrictSchemes
+ * @param {boolean} isPrivileged whether or not the webextension is privileged
  *
  * @returns {object}
  *          An object with exactly one of the following properties:
@@ -136,7 +140,7 @@ const CHILD_SHUTDOWN_TIMEOUT_MS = 8000;
  *          "permission" to indicate this is a regular permission.
  *          "invalid" to indicate that the given permission cannot be used.
  */
-function classifyPermission(perm, restrictSchemes) {
+function classifyPermission(perm, restrictSchemes, isPrivileged) {
   let match = /^(\w+)(?:\.(\w+)(?:\.\w+)*)?$/.exec(perm);
   if (!match) {
     try {
@@ -147,7 +151,7 @@ function classifyPermission(perm, restrictSchemes) {
     }
   } else if (match[1] == "experiments" && match[2]) {
     return {api: match[2]};
-  } else if (perm === "mozillaAddons" && restrictSchemes) {
+  } else if (!isPrivileged && PRIVILEGED_PERMS.has(match[1])) {
     return {invalid: perm};
   }
   return {permission: perm};
@@ -503,9 +507,9 @@ class ExtensionData {
 
     let permissions = new Set();
     let origins = new Set();
-    let {restrictSchemes} = this;
+    let {restrictSchemes, isPrivileged} = this;
     for (let perm of this.manifest.permissions || []) {
-      let type = classifyPermission(perm, restrictSchemes);
+      let type = classifyPermission(perm, restrictSchemes, isPrivileged);
       if (type.origin) {
         origins.add(perm);
       } else if (type.permission) {
@@ -697,10 +701,11 @@ class ExtensionData {
     };
 
     if (this.type === "extension") {
-      let restrictSchemes = !(this.isPrivileged && manifest.permissions.includes("mozillaAddons"));
+      let {isPrivileged} = this;
+      let restrictSchemes = !(isPrivileged && manifest.permissions.includes("mozillaAddons"));
 
       for (let perm of manifest.permissions) {
-        if (perm === "geckoProfiler" && !this.isPrivileged) {
+        if (perm === "geckoProfiler" && !isPrivileged) {
           const acceptedExtensions = Services.prefs.getStringPref("extensions.geckoProfiler.acceptedExtensionIds", "");
           if (!acceptedExtensions.split(",").includes(id)) {
             this.manifestError("Only whitelisted extensions are allowed to access the geckoProfiler.");
@@ -708,7 +713,7 @@ class ExtensionData {
           }
         }
 
-        let type = classifyPermission(perm, restrictSchemes);
+        let type = classifyPermission(perm, restrictSchemes, isPrivileged);
         if (type.origin) {
           perm = type.origin;
           originPermissions.add(perm);
@@ -2121,8 +2126,9 @@ class Extension extends ExtensionData {
 
   get optionalOrigins() {
     if (this._optionalOrigins == null) {
-      let {restrictSchemes} = this;
-      let origins = this.manifest.optional_permissions.filter(perm => classifyPermission(perm, restrictSchemes).origin);
+      let {restrictSchemes, isPrivileged} = this;
+      let origins = this.manifest.optional_permissions.filter(perm =>
+        classifyPermission(perm, restrictSchemes, isPrivileged).origin);
       this._optionalOrigins = new MatchPatternSet(origins, {restrictSchemes, ignorePath: true});
     }
     return this._optionalOrigins;
