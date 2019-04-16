@@ -43,7 +43,10 @@ def set_defaults(config, jobs):
 def stub_installer(config, jobs):
     for job in jobs:
         resolve_keyed_by(
-            job, 'stub-installer', item_name=job['name'], project=config.params['project']
+            job, 'stub-installer', item_name=job['name'], project=config.params['project'],
+            **{
+                'release-type': config.params['release_type'],
+            }
         )
         job.setdefault('attributes', {})
         if job.get('stub-installer'):
