@@ -2764,7 +2764,9 @@ class StaticAnalysis(MachCommandBase):
             path = repo.get_outgoing_files()
 
         if path:
-            path = map(os.path.abspath, path)
+            # Create the full path list
+            path_maker = lambda f_name: os.path.join(self.topsrcdir, f_name)
+            path = map(path_maker, path)
 
         os.chdir(self.topsrcdir)
 
