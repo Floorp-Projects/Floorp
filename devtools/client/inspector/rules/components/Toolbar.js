@@ -25,10 +25,12 @@ class Toolbar extends PureComponent {
     return {
       isAddRuleEnabled: PropTypes.bool.isRequired,
       isClassPanelExpanded: PropTypes.bool.isRequired,
+      isPrintSimulationHidden: PropTypes.bool.isRequired,
       onAddClass: PropTypes.func.isRequired,
       onAddRule: PropTypes.func.isRequired,
       onSetClassState: PropTypes.func.isRequired,
       onToggleClassPanelExpanded: PropTypes.func.isRequired,
+      onTogglePrintSimulation: PropTypes.func.isRequired,
       onTogglePseudoClass: PropTypes.func.isRequired,
     };
   }
@@ -37,12 +39,15 @@ class Toolbar extends PureComponent {
     super(props);
 
     this.state = {
+      // Whether or not the print simulation button is enabled.
+      isPrintSimulationEnabled: false,
       // Whether or not the pseudo class panel is expanded.
       isPseudoClassPanelExpanded: false,
     };
 
     this.onAddRuleClick = this.onAddRuleClick.bind(this);
     this.onClassPanelToggle = this.onClassPanelToggle.bind(this);
+    this.onPrintSimulationToggle = this.onPrintSimulationToggle.bind(this);
     this.onPseudoClassPanelToggle = this.onPseudoClassPanelToggle.bind(this);
   }
 
@@ -65,6 +70,14 @@ class Toolbar extends PureComponent {
     });
   }
 
+  onPrintSimulationToggle(event) {
+    event.stopPropagation();
+    this.props.onTogglePrintSimulation();
+    this.setState(prevState => ({
+      isPrintSimulationEnabled: !prevState.isPrintSimulationEnabled,
+    }));
+  }
+
   onPseudoClassPanelToggle(event) {
     event.stopPropagation();
 
@@ -78,8 +91,15 @@ class Toolbar extends PureComponent {
   }
 
   render() {
-    const { isAddRuleEnabled, isClassPanelExpanded } = this.props;
-    const { isPseudoClassPanelExpanded } = this.state;
+    const {
+      isAddRuleEnabled,
+      isClassPanelExpanded,
+      isPrintSimulationHidden,
+    } = this.props;
+    const {
+      isPrintSimulationEnabled,
+      isPseudoClassPanelExpanded,
+    } = this.state;
 
     return (
       dom.div(
@@ -101,17 +121,27 @@ class Toolbar extends PureComponent {
             dom.button({
               id: "pseudo-class-panel-toggle",
               className: "devtools-button" +
-                          (isPseudoClassPanelExpanded ? " checked" : ""),
+                         (isPseudoClassPanelExpanded ? " checked" : ""),
               onClick: this.onPseudoClassPanelToggle,
               title: getStr("rule.togglePseudo.tooltip"),
             }),
             dom.button({
               id: "class-panel-toggle",
               className: "devtools-button" +
-                          (isClassPanelExpanded ? " checked" : ""),
+                         (isClassPanelExpanded ? " checked" : ""),
               onClick: this.onClassPanelToggle,
               title: getStr("rule.classPanel.toggleClass.tooltip"),
-            })
+            }),
+            !isPrintSimulationHidden ?
+              dom.button({
+                id: "print-simulation-toggle",
+                className: "devtools-button" +
+                           (isPrintSimulationEnabled ? " checked" : ""),
+                onClick: this.onPrintSimulationToggle,
+                title: getStr("rule.printSimulation.tooltip"),
+              })
+              :
+              null
           )
         ),
         isClassPanelExpanded ?
@@ -136,6 +166,7 @@ const mapStateToProps = state => {
   return {
     isAddRuleEnabled: state.rules.isAddRuleEnabled,
     isClassPanelExpanded: state.classList.isClassPanelExpanded,
+    isPrintSimulationHidden: state.rules.isPrintSimulationHidden,
   };
 };
 
