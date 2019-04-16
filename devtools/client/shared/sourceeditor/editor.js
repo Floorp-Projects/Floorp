@@ -263,6 +263,13 @@ Editor.prototype = {
   },
 
   /**
+   * Return whether there is a CodeMirror instance associated with this Editor.
+   */
+  get hasCodeMirror() {
+    return editors.has(this);
+  },
+
+  /**
    * Appends the current Editor instance to the element specified by
    * 'el'. You can also provide your own iframe to host the editor as
    * an optional second parameter. This method actually creates and
