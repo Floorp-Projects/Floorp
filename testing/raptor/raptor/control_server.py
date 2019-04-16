@@ -29,6 +29,10 @@ def MakeCustomHandlerClass(results_handler, shutdown_browser, write_raw_gecko_pr
             self.write_raw_gecko_profile = write_raw_gecko_profile
             super(MyHandler, self).__init__(*args, **kwargs)
 
+        def log_request(self, code='-', size='-'):
+            if code != 200:
+                super(MyHandler, self).log_request(code, size)
+
         def do_GET(self):
             # get handler, received request for test settings from web ext runner
             self.send_response(200)
