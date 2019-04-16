@@ -78,6 +78,9 @@ class SandboxDependsFunction(object):
     def __eq__(self, other):
         raise ConfigureError('Cannot compare @depends functions.')
 
+    def __hash__(self):
+        return object.__hash__(self)
+
     def __ne__(self, other):
         raise ConfigureError('Cannot compare @depends functions.')
 
@@ -231,6 +234,9 @@ class CombinedDependsFunction(DependsFunction):
         return (isinstance(other, self.__class__) and
                 self._func is other._func and
                 set(self.dependencies) == set(other.dependencies))
+
+    def __hash__(self):
+        return object.__hash__(self)
 
     def __ne__(self, other):
         return not self == other
