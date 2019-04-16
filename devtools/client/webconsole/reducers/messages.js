@@ -791,7 +791,7 @@ function getMessageVisibility(message, {
 
   const warningGroupMessage =
   messagesState.messagesById.get(getParentWarningGroupMessageId(message));
-    
+
   // Do not display the message if it's in closed group and not in a warning group.
   if (
     checkGroup
