@@ -289,6 +289,7 @@ class TypeSet {
 
     bool isGroup() { return (uintptr_t(this) & 1) == 0; }
     bool isSingleton() { return (uintptr_t(this) & 1) != 0; }
+    static constexpr uintptr_t TypeHashSetMarkBit = 1 << 1;
 
     inline ObjectGroup* group();
     inline JSObject* singleton();
