@@ -367,6 +367,7 @@ class ResultsSink:
             print(label)
             for result in results:
                 print('    {}'.format(' '.join(result.test.jitflags +
+                                               result.test.options +
                                                [result.test.path])))
 
         if self.options.failure_file:
