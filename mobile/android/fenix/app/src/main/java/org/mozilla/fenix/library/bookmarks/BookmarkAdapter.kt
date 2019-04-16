@@ -22,6 +22,7 @@ import mozilla.components.browser.icons.IconRequest
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
+import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
@@ -182,8 +183,13 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
 
         private fun setColorsAndIcons(selected: Boolean, item: BookmarkNode) {
             val backgroundTint =
-                if (selected) R.color.bookmark_selection_appbar_background else R.color.bookmark_favicon_background
-            val backgroundTintList = ContextCompat.getColorStateList(containerView!!.context, backgroundTint)
+                if (selected) {
+                    DefaultThemeManager.resolveAttribute(R.attr.accent, containerView!!.context)
+                } else {
+                    DefaultThemeManager.resolveAttribute(R.attr.neutral, containerView!!.context)
+                }
+
+            val backgroundTintList = ContextCompat.getColorStateList(containerView.context, backgroundTint)
             bookmark_favicon.backgroundTintList = backgroundTintList
             if (selected) bookmark_favicon.setImageResource(R.drawable.mozac_ic_check)
 
@@ -249,8 +255,12 @@ class BookmarkAdapter(val emptyView: View, val actionEmitter: Observer<BookmarkA
 
             setMenu(item, containerView!!)
 
-            val backgroundTint =
-                if (selected) R.color.bookmark_selection_appbar_background else R.color.bookmark_favicon_background
+            val backgroundTint = if (selected) {
+                DefaultThemeManager.resolveAttribute(R.attr.accent, containerView.context)
+            } else {
+                DefaultThemeManager.resolveAttribute(R.attr.neutral, containerView.context)
+            }
+
             val backgroundTintList = ContextCompat.getColorStateList(containerView.context, backgroundTint)
             bookmark_favicon.backgroundTintList = backgroundTintList
             val res = if (selected) R.drawable.mozac_ic_check else R.drawable.ic_folder_icon

@@ -15,6 +15,7 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.support.ktx.android.content.res.pxToDp
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
 
 class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedViewModel) :
@@ -84,8 +85,13 @@ class SelectBookmarkFolderAdapter(private val sharedViewModel: BookmarksSharedVi
 
         fun bind(folder: BookmarkNodeWithDepth, selected: Boolean, selectionInterface: SelectionInterface) {
             val backgroundTint =
-                if (selected) R.color.bookmark_selection_appbar_background else R.color.bookmark_favicon_background
-            val backgroundTintList = ContextCompat.getColorStateList(containerView!!.context, backgroundTint)
+                if (selected) {
+                    R.attr.accent.getColorFromAttr(containerView!!.context)
+                } else {
+                    R.attr.neutral.getColorFromAttr(containerView!!.context)
+                }
+
+            val backgroundTintList = ContextCompat.getColorStateList(containerView.context, backgroundTint)
             bookmark_favicon.backgroundTintList = backgroundTintList
             val res = if (selected) R.drawable.mozac_ic_check else R.drawable.ic_folder_icon
             bookmark_favicon.setImageResource(res)

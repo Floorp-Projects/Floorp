@@ -45,9 +45,6 @@
 
     <!-- Bookmark buttons -->
     <color name="bookmark_favicon_background">#DFDFE3</color>
-    <color name="bookmark_multi_select_actionbar">#592ACB</color>
-    <color name="bookmark_snackbar_background">#2E0EC1</color>
-    <color name="bookmark_selection_appbar_background">#2E0EC1</color>
 
     <!-- Session placeholder icons-->
     <color name="session_placeholder_blue">#00B3F4</color>
@@ -85,4 +82,5 @@
     <!-- Misc colors applied universally-->
     <color name="suggestion_highlight_color">#5C592ACB</color>
     <color name="delete_color">@color/photonRed60</color>
+    <color name="white_color">#FBFBFE</color>
 </resources>

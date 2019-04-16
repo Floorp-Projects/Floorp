@@ -39,10 +39,11 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.support.base.feature.BackHandler
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BrowsingModeManager
+import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.allowUndo
 import org.mozilla.fenix.ext.getColorFromAttr
@@ -95,6 +96,14 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
     override fun onDestroy() {
         super.onDestroy()
         job.cancel()
+
+        // Reset the toolbar color
+        val toolbar = (activity as AppCompatActivity).findViewById<Toolbar>(R.id.navigationToolbar)
+        val colorFilter = PorterDuffColorFilter(
+            R.attr.primaryText.getColorFromAttr(context!!), PorterDuff.Mode.SRC_IN)
+
+        themeToolbar(toolbar, DefaultThemeManager.resolveAttribute(R.attr.primaryText, context!!),
+            DefaultThemeManager.resolveAttribute(R.attr.foundation, context!!), colorFilter)
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -113,8 +122,8 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
             }
             is BookmarkState.Mode.Selecting -> {
                 inflater.inflate(R.menu.bookmarks_select_multi, menu)
-                val colorFilter =
-                    PorterDuffColorFilter(R.attr.primaryText.getColorFromAttr(context!!), PorterDuff.Mode.SRC_IN)
+                val colorFilter = PorterDuffColorFilter(
+                    ContextCompat.getColor(context!!, R.color.white_color), PorterDuff.Mode.SRC_IN)
 
                 val enableEditButton = mode.selectedItems.size == 1
                 menu.findItem(R.id.edit_bookmark_multi_select).run {
@@ -125,17 +134,25 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                 }
 
                 activity?.title = getString(R.string.bookmarks_multi_select_title, mode.selectedItems.size)
-                themeToolbar(toolbar, colorFilter)
+                themeToolbar(toolbar, R.color.white_color,
+                    DefaultThemeManager.resolveAttribute(R.attr.accentBright, context!!), colorFilter)
             }
         }
     }
 
     private fun themeToolbar(
         toolbar: Toolbar,
-        colorFilter: PorterDuffColorFilter
+        textColor: Int,
+        backgroundColor: Int,
+        colorFilter: PorterDuffColorFilter? = null
     ) {
-        toolbar.setBackgroundColor(ContextCompat.getColor(context!!, R.color.bookmark_multi_select_actionbar))
-        toolbar.setTitleTextColor(R.attr.primaryText.getColorFromAttr(context!!))
+        toolbar.setTitleTextColor(ContextCompat.getColor(context!!, textColor))
+        toolbar.setBackgroundColor(ContextCompat.getColor(context!!, backgroundColor))
+
+        if (colorFilter == null) {
+            return
+        }
+
         toolbar.overflowIcon?.colorFilter = colorFilter
         (0 until toolbar.childCount).forEach {
             when (val item = toolbar.getChildAt(it)) {
