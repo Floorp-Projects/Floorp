@@ -307,6 +307,7 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
             cmake_args += [
                 "-DRUNTIMES_%s_COMPILER_RT_BUILD_PROFILE=ON" % target,
                 "-DRUNTIMES_%s_COMPILER_RT_BUILD_SANITIZERS=ON" % target,
+                "-DRUNTIMES_%s_COMPILER_RT_BUILD_XRAY=OFF" % target,
                 "-DRUNTIMES_%s_SANITIZER_ALLOW_CXXABI=OFF" % target,
                 "-DRUNTIMES_%s_COMPILER_RT_BUILD_LIBFUZZER=OFF" % target,
                 "-DRUNTIMES_%s_COMPILER_RT_INCLUDE_TESTS=OFF" % target,
