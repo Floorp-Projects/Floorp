@@ -119,9 +119,9 @@ dom::Document* ChromeProcessController::GetRootContentDocument(
   if (!content) {
     return nullptr;
   }
-  nsIPresShell* presShell =
-      APZCCallbackHelper::GetRootContentDocumentPresShellForContent(content);
-  if (presShell) {
+  if (PresShell* presShell =
+          APZCCallbackHelper::GetRootContentDocumentPresShellForContent(
+              content)) {
     return presShell->GetDocument();
   }
   return nullptr;
