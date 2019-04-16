@@ -5,9 +5,14 @@
 
 #include "SVGDocumentWrapper.h"
 
+#include "mozilla/PresShell.h"
+#include "mozilla/SMILAnimationController.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/ImageTracker.h"
 #include "mozilla/dom/SVGDocument.h"
+#include "mozilla/dom/SVGSVGElement.h"
 #include "nsICategoryManager.h"
 #include "nsIChannel.h"
 #include "nsIContentViewer.h"
@@ -15,19 +20,14 @@
 #include "nsIHttpChannel.h"
 #include "nsIObserverService.h"
 #include "nsIParser.h"
-#include "nsIPresShell.h"
 #include "nsIRequest.h"
 #include "nsIStreamListener.h"
 #include "nsIXMLContentSink.h"
 #include "nsNetCID.h"
 #include "nsComponentManagerUtils.h"
-#include "mozilla/SMILAnimationController.h"
 #include "nsServiceManagerUtils.h"
-#include "mozilla/dom/SVGSVGElement.h"
 #include "SVGObserverUtils.h"
 #include "nsMimeTypes.h"
-#include "mozilla/dom/Document.h"
-#include "mozilla/dom/ImageTracker.h"
 
 namespace mozilla {
 
@@ -174,10 +174,8 @@ void SVGDocumentWrapper::SetCurrentTime(float aTime) {
 }
 
 void SVGDocumentWrapper::TickRefreshDriver() {
-  nsCOMPtr<nsIPresShell> presShell = mViewer->GetPresShell();
-  if (presShell) {
-    nsPresContext* presContext = presShell->GetPresContext();
-    if (presContext) {
+  if (RefPtr<PresShell> presShell = mViewer->GetPresShell()) {
+    if (RefPtr<nsPresContext> presContext = presShell->GetPresContext()) {
       presContext->RefreshDriver()->DoTick();
     }
   }

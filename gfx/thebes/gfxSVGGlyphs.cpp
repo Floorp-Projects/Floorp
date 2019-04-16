@@ -4,34 +4,34 @@
 
 #include "gfxSVGGlyphs.h"
 
+#include "mozilla/BasePrincipal.h"
+#include "mozilla/LoadInfo.h"
+#include "mozilla/NullPrincipal.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/SMILAnimationController.h"
 #include "mozilla/SVGContextPaint.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/Element.h"
+#include "mozilla/dom/FontTableURIProtocolHandler.h"
+#include "mozilla/dom/ImageTracker.h"
+#include "mozilla/dom/SVGDocument.h"
 #include "nsError.h"
 #include "nsString.h"
-#include "mozilla/dom/Document.h"
 #include "nsICategoryManager.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIContentViewer.h"
 #include "nsIStreamListener.h"
 #include "nsServiceManagerUtils.h"
-#include "nsIPresShell.h"
 #include "nsNetUtil.h"
 #include "nsIInputStream.h"
 #include "nsStringStream.h"
 #include "nsStreamUtils.h"
 #include "nsIPrincipal.h"
-#include "mozilla/BasePrincipal.h"
-#include "mozilla/dom/Element.h"
-#include "mozilla/dom/FontTableURIProtocolHandler.h"
-#include "mozilla/dom/SVGDocument.h"
-#include "mozilla/LoadInfo.h"
-#include "mozilla/NullPrincipal.h"
-#include "mozilla/SMILAnimationController.h"
 #include "nsSVGUtils.h"
 #include "nsContentUtils.h"
 #include "gfxFont.h"
 #include "gfxContext.h"
 #include "harfbuzz/hb.h"
-#include "mozilla/dom/ImageTracker.h"
 
 #define SVG_CONTENT_TYPE NS_LITERAL_CSTRING("image/svg+xml")
 #define UTF8_CHARSET NS_LITERAL_CSTRING("utf-8")
@@ -148,7 +148,7 @@ nsresult gfxSVGGlyphsDocument::SetupPresentation() {
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  nsCOMPtr<nsIPresShell> presShell = viewer->GetPresShell();
+  RefPtr<PresShell> presShell = viewer->GetPresShell();
   if (!presShell->DidInitialize()) {
     rv = presShell->Initialize();
     NS_ENSURE_SUCCESS(rv, rv);

@@ -2282,7 +2282,8 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
 
   if (mIsCreatingPrintPreview && documentIsTopLevel) {
     mDocViewerPrint->SetPrintPreviewPresentation(
-        aPO->mViewManager, aPO->mPresContext, aPO->mPresShell);
+        aPO->mViewManager, aPO->mPresContext,
+        static_cast<PresShell*>(aPO->mPresShell.get()));
   }
 
   rv = aPO->mPresShell->Initialize();

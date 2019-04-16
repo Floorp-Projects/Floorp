@@ -186,6 +186,9 @@ class PresShell final : public nsIPresShell,
 
   Document* GetPrimaryContentDocument() override;
 
+  void PausePainting() override;
+  void ResumePainting() override;
+
   // nsIViewObserver interface
 
   void Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
@@ -1315,9 +1318,6 @@ class PresShell final : public nsIPresShell,
 
   // The callback for the mPaintSuppressionTimer timer.
   static void sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell);
-
-  void PausePainting() override;
-  void ResumePainting() override;
 
   //////////////////////////////////////////////////////////////////////////////
   // Approximate frame visibility tracking implementation.

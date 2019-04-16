@@ -17,7 +17,6 @@
 #include "nsWeakReference.h"
 #include "nsSize.h"
 
-class nsIPresShell;
 class nsIRequest;
 class nsILoadGroup;
 class nsIFrame;
@@ -25,6 +24,7 @@ class nsIFrame;
 #define OBSERVER_SVC_CID "@mozilla.org/observer-service;1"
 
 namespace mozilla {
+class PresShell;
 namespace dom {
 class SVGSVGElement;
 class SVGDocument;
@@ -64,9 +64,9 @@ class SVGDocumentWrapper final : public nsIStreamListener,
   nsIFrame* GetRootLayoutFrame();
 
   /**
-   * Returns the nsIPresShell for the wrapped document.
+   * Returns the mozilla::PresShell for the wrapped document.
    */
-  inline nsIPresShell* GetPresShell() { return mViewer->GetPresShell(); }
+  inline mozilla::PresShell* GetPresShell() { return mViewer->GetPresShell(); }
 
   /**
    * Modifier to update the viewport dimensions of the wrapped document. This
