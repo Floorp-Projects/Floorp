@@ -151,6 +151,7 @@ add_task(async function testContentBlockingStandardCategory() {
   };
 
   for (let pref in prefs) {
+    Services.prefs.clearUserPref(pref);
     switch (Services.prefs.getPrefType(pref)) {
     case Services.prefs.PREF_BOOL:
       prefs[pref] = Services.prefs.getBoolPref(pref);
@@ -169,8 +170,8 @@ add_task(async function testContentBlockingStandardCategory() {
   Services.prefs.setBoolPref(TP_PREF, true);
   Services.prefs.setBoolPref(TP_PBM_PREF, false);
   Services.prefs.setIntPref(NCB_PREF, Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER);
-  Services.prefs.setBoolPref(FP_PREF, true);
-  Services.prefs.setBoolPref(CM_PREF, true);
+  Services.prefs.setBoolPref(FP_PREF, !Services.prefs.getBoolPref(FP_PREF));
+  Services.prefs.setBoolPref(CM_PREF, !Services.prefs.getBoolPref(CM_PREF));
 
   for (let pref in prefs) {
     switch (Services.prefs.getPrefType(pref)) {
@@ -272,7 +273,7 @@ add_task(async function testContentBlockingCustomCategory() {
 
   // Changing the FP_PREF and CM_PREF should necessarily set CAT_PREF to "custom"
   for (let pref of [FP_PREF, CM_PREF]) {
-    Services.prefs.setBoolPref(pref, true);
+    Services.prefs.setBoolPref(pref, !Services.prefs.getBoolPref(pref));
     await TestUtils.waitForCondition(() => Services.prefs.prefHasUserValue(pref));
     is(Services.prefs.getStringPref(CAT_PREF), "custom", `${CAT_PREF} has been set to custom`);
 
