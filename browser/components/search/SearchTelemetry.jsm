@@ -366,7 +366,7 @@ class TelemetryHandler {
     let payload = `${info.provider}.in-content:${info.type}:${info.code || "none"}`;
     let histogram = Services.telemetry.getKeyedHistogramById(SEARCH_COUNTS_HISTOGRAM_KEY);
     histogram.add(payload);
-    LOG(`SearchTelemetry::recordSearchURLTelemetry: ${payload} for ${url}`);
+    LOG(`SearchTelemetry: ${payload} for ${url}`);
   }
 
   /**
@@ -490,7 +490,7 @@ class ContentHandler {
       }
 
       Services.telemetry.keyedScalarAdd(SEARCH_AD_CLICKS_SCALAR, info[0], 1);
-      LOG(`SearchTelemetry::recordSearchURLTelemetry: Counting ad click in page for ${info[0]} ${triggerURI.spec}`);
+      LOG(`SearchTelemetry: Counting ad click in page for ${info[0]} ${triggerURI.spec}`);
     } catch (e) {
       Cu.reportError(e);
     }
@@ -531,7 +531,7 @@ class ContentHandler {
     }
 
     Services.telemetry.keyedScalarAdd(SEARCH_WITH_ADS_SCALAR, item.info.provider, 1);
-    LOG(`SearchTelemetry::recordSearchURLTelemetry: Counting ads in page for ${item.info.provider} ${info.url}`);
+    LOG(`SearchTelemetry: Counting ads in page for ${item.info.provider} ${info.url}`);
   }
 }
 

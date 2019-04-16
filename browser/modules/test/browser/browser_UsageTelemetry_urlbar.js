@@ -508,9 +508,8 @@ add_task(async function test_suggestion_rightclick() {
 });
 
 add_task(async function test_privateWindow() {
-  // Mock the search telemetry search provider info so that its
-  // recordSearchURLTelemetry() function adds the in-content SEARCH_COUNTS
-  // telemetry for our test engine.
+  // Override the search telemetry search provider info to
+  // count in-content SEARCH_COUNTs telemetry for our test engine.
   SearchTelemetry.overrideSearchTelemetryForTests({
     "example": {
       "regexp": "^http://example\\.com/",
