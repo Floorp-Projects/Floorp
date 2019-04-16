@@ -201,7 +201,18 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
                     src_dir, stage_dir, package_name, build_libcxx,
                     osx_cross_compile, build_type, assertions,
                     python_path, gcc_dir, libcxx_include_dir,
+                    compiler_rt_source_dir=None, runtimes_source_link=None,
+                    compiler_rt_source_link=None,
                     is_final_stage=False, android_targets=None):
+    if is_final_stage and android_targets:
+        # Linking compiler-rt under "runtimes" activates LLVM_RUNTIME_TARGETS
+        # and related arguments.
+        symlink(compiler_rt_source_dir, runtimes_source_link)
+        try:
+            os.unlink(compiler_rt_source_link)
+        except Exception:
+            pass
+
     if not os.path.exists(stage_dir):
         os.mkdir(stage_dir)
 
@@ -755,14 +766,7 @@ if __name__ == "__main__":
         llvm_source_dir, stage1_dir, package_name, build_libcxx, osx_cross_compile,
         build_type, assertions, python_path, gcc_dir, libcxx_include_dir)
 
-    if android_targets:
-        # Linking compiler-rt under "runtimes" activates LLVM_RUNTIME_TARGETS
-        # and related arguments.
-        symlink(compiler_rt_source_dir, llvm_source_dir + "/runtimes/compiler-rt")
-        try:
-            os.unlink(compiler_rt_source_link)
-        except Exception:
-            pass
+    runtimes_source_link = llvm_source_dir + "/runtimes/compiler-rt"
 
     if stages > 1:
         stage2_dir = build_dir + '/stage2'
@@ -779,6 +783,7 @@ if __name__ == "__main__":
             ar, ranlib, libtool,
             llvm_source_dir, stage2_dir, package_name, build_libcxx, osx_cross_compile,
             build_type, assertions, python_path, gcc_dir, libcxx_include_dir,
+            compiler_rt_source_dir, runtimes_source_link, compiler_rt_source_link,
             is_final_stage=(stages == 2), android_targets=android_targets)
 
     if stages > 2:
@@ -795,6 +800,7 @@ if __name__ == "__main__":
             ar, ranlib, libtool,
             llvm_source_dir, stage3_dir, package_name, build_libcxx, osx_cross_compile,
             build_type, assertions, python_path, gcc_dir, libcxx_include_dir,
+            compiler_rt_source_dir, runtimes_source_link, compiler_rt_source_link,
             (stages == 3))
 
     if build_clang_tidy:
