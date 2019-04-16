@@ -1701,7 +1701,7 @@ class ScriptSource::LoadSourceMatcher {
 
     // XXX On-demand source is currently only UTF-16.  Perhaps it should be
     //     changed to UTF-8, or UTF-8 be allowed in addition to UTF-16?
-    if (!ss_->setSource(cx_, EntryUnits<char16_t>(src), length)) {
+    if (!ss_->setRetrievedSource(cx_, EntryUnits<char16_t>(src), length)) {
       return false;
     }
 
@@ -2114,6 +2114,16 @@ MOZ_MUST_USE bool ScriptSource::setSource(JSContext* cx,
 
   setSource<Unit>(std::move(*deduped));
   return true;
+}
+
+template <typename Unit>
+MOZ_MUST_USE bool ScriptSource::setRetrievedSource(JSContext* cx,
+                                                   EntryUnits<Unit>&& source,
+                                                   size_t length) {
+  MOZ_ASSERT(sourceRetrievable_);
+  MOZ_ASSERT(data.is<Missing>(),
+             "retrievable source must be indicated as missing");
+  return setSource(cx, std::move(source), length);
 }
 
 #if defined(JS_BUILD_BINAST)
