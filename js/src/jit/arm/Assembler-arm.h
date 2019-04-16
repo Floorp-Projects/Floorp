@@ -2300,9 +2300,19 @@ class DoubleEncoder {
   }
 };
 
-class AutoForbidPools {
+// Forbids nop filling for testing purposes. Not nestable.
+class AutoForbidNops {
+ protected:
   Assembler* masm_;
 
+ public:
+  explicit AutoForbidNops(Assembler* masm) : masm_(masm) {
+    masm_->enterNoNops();
+  }
+  ~AutoForbidNops() { masm_->leaveNoNops(); }
+};
+
+class AutoForbidPoolsAndNops : public AutoForbidNops {
  public:
   // The maxInst argument is the maximum number of word sized instructions
   // that will be allocated within this context. It is used to determine if
@@ -2311,22 +2321,11 @@ class AutoForbidPools {
   //
   // Allocation of pool entries is not supported within this content so the
   // code can not use large integers or float constants etc.
-  AutoForbidPools(Assembler* masm, size_t maxInst) : masm_(masm) {
+  AutoForbidPoolsAndNops(Assembler* masm, size_t maxInst) : AutoForbidNops(masm) {
     masm_->enterNoPool(maxInst);
   }
 
-  ~AutoForbidPools() { masm_->leaveNoPool(); }
-};
-
-// Forbids nop filling for testing purposes. Not nestable.
-class AutoForbidNops {
-  Assembler* masm_;
-
- public:
-  explicit AutoForbidNops(Assembler* masm) : masm_(masm) {
-    masm_->enterNoNops();
-  }
-  ~AutoForbidNops() { masm_->leaveNoNops(); }
+  ~AutoForbidPoolsAndNops() { masm_->leaveNoPool(); }
 };
 
 }  // namespace jit

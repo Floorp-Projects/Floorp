@@ -34,6 +34,10 @@ class PermissionDelegateTest : BaseSessionTest() {
                 InstrumentationRegistry.getTargetContext().checkSelfPermission(permission)
     }
 
+    private fun isEmulator(): Boolean {
+        return "generic".equals(Build.DEVICE) || Build.DEVICE.startsWith("generic_")
+    }
+
     @WithDevToolsAPI
     @Test fun media() {
         assertInAutomationThat("Should have camera permission",
@@ -68,17 +72,29 @@ class PermissionDelegateTest : BaseSessionTest() {
                     callback: GeckoSession.PermissionDelegate.MediaCallback) {
                 assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
                 assertThat("Video source should be valid", video, not(emptyArray()))
-                assertThat("Audio source should be valid", audio, not(emptyArray()))
-                callback.grant(video!![0], audio!![0])
+
+                if (isEmulator()) {
+                  callback.grant(video!![0], null)
+                } else {
+                  assertThat("Audio source should be valid", audio, not(emptyArray()))
+                  callback.grant(video!![0], audio!![0])
+                }
             }
         })
 
-        // Start a video/audio stream.
-        val stream = mainSession.waitForJS(
-                """window.navigator.mediaDevices.getUserMedia({
+        // Start a video stream, with audio if on a real device.
+        var code: String?
+        if (isEmulator()) {
+          code = """window.navigator.mediaDevices.getUserMedia({
                        video: { width: 320, height: 240, frameRate: 10 },
-                       audio: true,
-                   })""")
+                   })"""
+        } else {
+          code = """window.navigator.mediaDevices.getUserMedia({
+                       video: { width: 320, height: 240, frameRate: 10 },
+                       audio: true
+                   })"""
+        }
+        val stream = mainSession.waitForJS(code)
 
         assertThat("Stream should be active", stream.asJSMap(),
                    hasEntry("active", true))
@@ -103,8 +119,13 @@ class PermissionDelegateTest : BaseSessionTest() {
         })
 
         try {
-            mainSession.waitForJS("""
-                    window.navigator.mediaDevices.getUserMedia({ audio: true, video: true })""")
+            if (isEmulator()) {
+                mainSession.waitForJS("""
+                        window.navigator.mediaDevices.getUserMedia({ video: true })""")
+            } else {
+                mainSession.waitForJS("""
+                        window.navigator.mediaDevices.getUserMedia({ audio: true: video: true })""")
+            }
             fail("Request should have failed")
         } catch (e: RejectedPromiseException) {
             assertThat("Error should be correct",

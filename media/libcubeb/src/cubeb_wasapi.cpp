@@ -141,6 +141,7 @@ int wasapi_stream_stop(cubeb_stream * stm);
 int wasapi_stream_start(cubeb_stream * stm);
 void close_wasapi_stream(cubeb_stream * stm);
 int setup_wasapi_stream(cubeb_stream * stm);
+ERole pref_to_role(cubeb_stream_prefs param);
 static char const * wstr_to_utf8(wchar_t const * str);
 static std::unique_ptr<wchar_t const []> utf8_to_wstr(char const * str);
 
@@ -191,6 +192,8 @@ struct cubeb_stream {
    * and what will be presented in the callback. */
   cubeb_stream_params input_stream_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED, CUBEB_STREAM_PREF_NONE };
   cubeb_stream_params output_stream_params = { CUBEB_SAMPLE_FLOAT32NE, 0, 0, CUBEB_LAYOUT_UNDEFINED, CUBEB_STREAM_PREF_NONE };
+  /* A MMDevice role for this stream: either communication or console here. */
+  ERole role;
   /* The input and output device, or NULL for default. */
   std::unique_ptr<const wchar_t[]> input_device;
   std::unique_ptr<const wchar_t[]> output_device;
@@ -565,9 +568,10 @@ public:
     return S_OK;
   }
 
-  wasapi_endpoint_notification_client(HANDLE event)
+  wasapi_endpoint_notification_client(HANDLE event, ERole role)
     : ref_count(1)
     , reconfigure_event(event)
+    , role(role)
   { }
 
   virtual ~wasapi_endpoint_notification_client()
@@ -579,7 +583,7 @@ public:
     LOG("endpoint: Audio device default changed.");
 
     /* we only support a single stream type for now. */
-    if (flow != eRender && role != eConsole) {
+    if (flow != eRender && role != this->role) {
       return S_OK;
     }
 
@@ -622,6 +626,7 @@ private:
   /* refcount for this instance, necessary to implement MSCOM semantics. */
   LONG ref_count;
   HANDLE reconfigure_event;
+  ERole role;
 };
 
 namespace {
@@ -1256,7 +1261,7 @@ HRESULT register_notification_client(cubeb_stream * stm)
     return hr;
   }
 
-  stm->notification_client.reset(new wasapi_endpoint_notification_client(stm->reconfigure_event));
+  stm->notification_client.reset(new wasapi_endpoint_notification_client(stm->reconfigure_event, stm->role));
 
   hr = stm->device_enumerator->RegisterEndpointNotificationCallback(stm->notification_client.get());
   if (FAILED(hr)) {
@@ -1351,7 +1356,7 @@ HRESULT unregister_collection_notification_client(cubeb * context)
   return hr;
 }
 
-HRESULT get_default_endpoint(com_ptr<IMMDevice> & device, EDataFlow direction)
+HRESULT get_default_endpoint(com_ptr<IMMDevice> & device, EDataFlow direction, ERole role)
 {
   com_ptr<IMMDeviceEnumerator> enumerator;
   HRESULT hr = CoCreateInstance(__uuidof(MMDeviceEnumerator),
@@ -1361,7 +1366,7 @@ HRESULT get_default_endpoint(com_ptr<IMMDevice> & device, EDataFlow direction)
     LOG("Could not get device enumerator: %lx", hr);
     return hr;
   }
-  hr = enumerator->GetDefaultAudioEndpoint(direction, eConsole, device.receive());
+  hr = enumerator->GetDefaultAudioEndpoint(direction, role, device.receive());
   if (FAILED(hr)) {
     LOG("Could not get default audio endpoint: %lx", hr);
     return hr;
@@ -1447,11 +1452,11 @@ int wasapi_init(cubeb ** context, char const * context_name)
      so that this backend is not incorrectly enabled on platforms that don't
      support WASAPI. */
   com_ptr<IMMDevice> device;
-  HRESULT hr = get_default_endpoint(device, eRender);
+  HRESULT hr = get_default_endpoint(device, eRender, eConsole);
   if (FAILED(hr)) {
     XASSERT(hr != CO_E_NOTINITIALIZED);
     LOG("It wasn't able to find a default rendering device: %lx", hr);
-    hr = get_default_endpoint(device, eCapture);
+    hr = get_default_endpoint(device, eCapture, eConsole);
     if (FAILED(hr)) {
       LOG("It wasn't able to find a default capture device: %lx", hr);
       return CUBEB_ERROR;
@@ -1550,7 +1555,7 @@ wasapi_get_max_channel_count(cubeb * ctx, uint32_t * max_channels)
   XASSERT(ctx && max_channels);
 
   com_ptr<IMMDevice> device;
-  HRESULT hr = get_default_endpoint(device, eRender);
+  HRESULT hr = get_default_endpoint(device, eRender, eConsole);
   if (FAILED(hr)) {
     return CUBEB_ERROR;
   }
@@ -1582,8 +1587,10 @@ wasapi_get_min_latency(cubeb * ctx, cubeb_stream_params params, uint32_t * laten
     return CUBEB_ERROR_INVALID_FORMAT;
   }
 
+  ERole role = pref_to_role(params.prefs);
+
   com_ptr<IMMDevice> device;
-  HRESULT hr = get_default_endpoint(device, eRender);
+  HRESULT hr = get_default_endpoint(device, eRender, role);
   if (FAILED(hr)) {
     LOG("Could not get default endpoint: %lx", hr);
     return CUBEB_ERROR;
@@ -1623,7 +1630,7 @@ int
 wasapi_get_preferred_sample_rate(cubeb * ctx, uint32_t * rate)
 {
   com_ptr<IMMDevice> device;
-  HRESULT hr = get_default_endpoint(device, eRender);
+  HRESULT hr = get_default_endpoint(device, eRender, eConsole);
   if (FAILED(hr)) {
     return CUBEB_ERROR;
   }
@@ -1755,7 +1762,7 @@ int setup_wasapi_stream_one_side(cubeb_stream * stm,
       // If caller has requested loopback but not specified a device, look for
       // the default render device. Otherwise look for the default device
       // appropriate to the direction.
-      hr = get_default_endpoint(device, is_loopback ? eRender : direction);
+      hr = get_default_endpoint(device, is_loopback ? eRender : direction, pref_to_role(stream_params->prefs));
       if (FAILED(hr)) {
         if (is_loopback) {
           LOG("Could not get default render endpoint for loopback, error: %lx\n", hr);
@@ -2057,6 +2064,16 @@ int setup_wasapi_stream(cubeb_stream * stm)
   return CUBEB_OK;
 }
 
+ERole
+pref_to_role(cubeb_stream_prefs prefs)
+{
+  if (prefs & CUBEB_STREAM_PREF_VOICE) {
+    return eCommunications;
+  }
+
+  return eConsole;
+}
+
 int
 wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
                    char const * stream_name,
@@ -2082,6 +2099,14 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
   stm->data_callback = data_callback;
   stm->state_callback = state_callback;
   stm->user_ptr = user_ptr;
+
+  if (stm->output_stream_params.prefs & CUBEB_STREAM_PREF_VOICE ||
+      stm->input_stream_params.prefs & CUBEB_STREAM_PREF_VOICE) {
+    stm->role = eCommunications;
+  } else {
+    stm->role = eConsole;
+  }
+
   if (input_stream_params) {
     stm->input_stream_params = *input_stream_params;
     stm->input_device = utf8_to_wstr(reinterpret_cast<char const *>(input_device));

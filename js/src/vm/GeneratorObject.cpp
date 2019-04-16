@@ -137,11 +137,12 @@ void js::SetGeneratorClosed(JSContext* cx, AbstractFramePtr frame) {
 
 bool js::GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,
                                 Handle<AbstractGeneratorObject*> genObj,
-                                HandleValue arg, uint32_t resumeKind) {
-  if (resumeKind == AbstractGeneratorObject::THROW) {
+                                HandleValue arg,
+                                GeneratorResumeKind resumeKind) {
+  if (resumeKind == GeneratorResumeKind::Throw) {
     cx->setPendingExceptionAndCaptureStack(arg);
   } else {
-    MOZ_ASSERT(resumeKind == AbstractGeneratorObject::RETURN);
+    MOZ_ASSERT(resumeKind == GeneratorResumeKind::Return);
 
     MOZ_ASSERT_IF(genObj->is<GeneratorObject>(), arg.isObject());
     frame.setReturnValue(arg);

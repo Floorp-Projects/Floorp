@@ -12055,10 +12055,6 @@ void CodeGenerator::visitOutOfLineSwitch(
     OutOfLineSwitch<tableType>* jumpTable) {
   jumpTable->setOutOfLine();
   auto& labels = jumpTable->labels();
-#if defined(JS_CODEGEN_ARM64)
-  AutoForbidPools afp(
-      &masm, (labels.length() + 1) * (sizeof(void*) / vixl::kInstructionSize));
-#endif
 
   if (tableType == SwitchTableType::OutOfLine) {
 #if defined(JS_CODEGEN_ARM)
@@ -12066,21 +12062,30 @@ void CodeGenerator::visitOutOfLineSwitch(
 #elif defined(JS_CODEGEN_NONE)
     MOZ_CRASH();
 #else
+
+#  if defined(JS_CODEGEN_ARM64)
+    AutoForbidPoolsAndNops afp(
+        &masm,
+        (labels.length() + 1) * (sizeof(void*) / vixl::kInstructionSize));
+#  endif
+
     masm.haltingAlign(sizeof(void*));
+
+    // Bind the address of the jump table and reserve the space for code
+    // pointers to jump in the newly generated code.
     masm.bind(jumpTable->start());
     masm.addCodeLabel(*jumpTable->start());
+    for (size_t i = 0, e = labels.length(); i < e; i++) {
+      jumpTable->addTableEntry(masm);
+    }
 #endif
   }
 
-  // Add table entries if the table is inlined.
-  for (size_t i = 0, e = labels.length(); i < e; i++) {
-    jumpTable->addTableEntry(masm);
-  }
-
+  // Register all reserved pointers of the jump table to target labels. The
+  // entries of the jump table need to be absolute addresses and thus must be
+  // patched after codegen is finished.
   auto& codeLabels = jumpTable->codeLabels();
   for (size_t i = 0, e = codeLabels.length(); i < e; i++) {
-    // The entries of the jump table need to be absolute addresses and thus
-    // must be patched after codegen is finished.
     auto& cl = codeLabels[i];
     cl.target()->bind(labels[i].offset());
     masm.addCodeLabel(cl);
@@ -12119,7 +12124,7 @@ void CodeGenerator::visitLoadElementFromStateV(LLoadElementFromStateV* lir) {
     // Inhibit pools within the following sequence because we are indexing into
     // a pc relative table. The region will have one instruction for ma_ldr, one
     // for breakpoint, and each table case takes one word.
-    AutoForbidPools afp(&masm, 1 + 1 + array->numElements());
+    AutoForbidPoolsAndNops afp(&masm, 1 + 1 + array->numElements());
 #endif
     jumpTable->jumpToCodeEntries(masm, index, temp0);
 

@@ -281,7 +281,11 @@ class CommandBar extends Component<Props> {
             active: skipPausing
           }
         )}
-        title={L10N.getStr("skipPausingTooltip.label")}
+        title={
+          skipPausing
+            ? L10N.getStr("undoSkipPausingTooltip.label")
+            : L10N.getStr("skipPausingTooltip.label")
+        }
         onClick={toggleSkipPausing}
       >
         <AccessibleImage className="disable-pausing" />

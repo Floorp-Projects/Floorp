@@ -264,27 +264,6 @@ describe("Grip - Object with more than long mode max props", () => {
   });
 });
 
-describe("Grip - Object with uninteresting properties", () => {
-  // Test object: `{a: undefined, b: undefined, c: "c", d: 1}`
-  const object = stubs.get("testUninterestingProps");
-
-  it("correctly selects Grip Rep", () => {
-    expect(getRep(object)).toBe(Grip.rep);
-  });
-
-  it.skip("renders as expected", () => {
-    // @TODO This is broken at the moment.
-    // See https://bugzilla.mozilla.org/show_bug.cgi?id=1276376
-    const renderRep = props => shallowRenderRep(object, props);
-    const defaultOutput = 'Object {c: "c", d: 1, a: undefined, more...}';
-
-    expect(renderRep({ mode: undefined }).text()).toBe(defaultOutput);
-    expect(renderRep({ mode: MODE.TINY }).text()).toBe("{…}");
-    expect(renderRep({ mode: MODE.SHORT }).text()).toBe(defaultOutput);
-    expect(renderRep({ mode: MODE.LONG }).text()).toBe(defaultOutput);
-  });
-});
-
 describe("Grip - Object with non-enumerable properties", () => {
   // Test object: `Object.defineProperty({}, "foo", {enumerable : false});`
   const object = stubs.get("testNonEnumerableProps");

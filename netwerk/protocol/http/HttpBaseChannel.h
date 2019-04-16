@@ -444,8 +444,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
     mUploadStreamHasHeaders = hasHeaders;
   }
 
-  MOZ_MUST_USE nsresult SetReferrerWithPolicyInternal(nsIURI *referrer,
-                                                      uint32_t referrerPolicy) {
+  MOZ_MUST_USE nsresult SetReferrerWithPolicyInternal(
+      nsIURI *referrer, uint32_t originalReferrerPolicy,
+      uint32_t referrerPolicy) {
     nsAutoCString spec;
     nsresult rv = referrer->GetAsciiSpec(spec);
     if (NS_FAILED(rv)) {
@@ -453,6 +454,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
     }
     mOriginalReferrer = referrer;
     mReferrer = referrer;
+    mOriginalReferrerPolicy = originalReferrerPolicy;
     mReferrerPolicy = referrerPolicy;
     rv = mRequestHead.SetHeader(nsHttp::Referer, spec);
     return rv;
@@ -747,6 +749,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   uint32_t mProxyResolveFlags;
 
   uint32_t mContentDispositionHint;
+  uint32_t mOriginalReferrerPolicy;
   uint32_t mReferrerPolicy;
 
   uint32_t mCorsMode;

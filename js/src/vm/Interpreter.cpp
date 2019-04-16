@@ -4108,10 +4108,10 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
         }
 
         switch (resumeKind) {
-          case AbstractGeneratorObject::NEXT:
+          case GeneratorResumeKind::Next:
             break;
-          case AbstractGeneratorObject::THROW:
-          case AbstractGeneratorObject::RETURN:
+          case GeneratorResumeKind::Throw:
+          case GeneratorResumeKind::Return:
             MOZ_ALWAYS_FALSE(GeneratorThrowOrReturn(cx, activation.regs().fp(),
                                                     gen, val, resumeKind));
             goto error;

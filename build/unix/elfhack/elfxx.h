@@ -325,7 +325,7 @@ class ElfSection {
 
   ElfSection(Elf_Shdr &s, std::ifstream *file, Elf *parent);
 
-  virtual ~ElfSection() { delete[] data; }
+  virtual ~ElfSection() { free(data); }
 
   const char *getName() { return name; }
   unsigned int getType() { return shdr.sh_type; }

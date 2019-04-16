@@ -147,6 +147,14 @@ size_t sAudioIPCStackSize;
 StaticAutoPtr<char> sBrandName;
 StaticAutoPtr<char> sCubebBackendName;
 StaticAutoPtr<char> sCubebOutputDeviceName;
+#ifdef MOZ_WIDGET_ANDROID
+// Counts the number of time a request for switching to global "communication
+// mode" has been received. If this is > 0, global communication mode is to be
+// enabled. If it is 0, the global communication mode is to be disabled.
+// This allows to correctly track the global behaviour to adopt accross
+// asynchronous GraphDriver changes, on Android.
+int sInCommunicationCount = 0;
+#endif
 
 const char kBrandBundleURL[] = "chrome://branding/locale/brand.properties";
 
@@ -307,6 +315,24 @@ void ForceSetCubebContext(cubeb* aCubebContext) {
   StaticMutexAutoLock lock(sMutex);
   sCubebContext = aCubebContext;
   sCubebState = CubebState::Initialized;
+}
+
+void SetInCommunication(bool aInCommunication) {
+#ifdef MOZ_WIDGET_ANDROID
+  StaticMutexAutoLock lock(sMutex);
+  if (aInCommunication) {
+    sInCommunicationCount++;
+  } else {
+    MOZ_ASSERT(sInCommunicationCount > 0);
+    sInCommunicationCount--;
+  }
+
+  if (sInCommunicationCount == 1) {
+    java::GeckoAppShell::SetCommunicationAudioModeOn(true);
+  } else if (sInCommunicationCount == 0) {
+    java::GeckoAppShell::SetCommunicationAudioModeOn(false);
+  }
+#endif
 }
 
 bool InitPreferredSampleRate() {

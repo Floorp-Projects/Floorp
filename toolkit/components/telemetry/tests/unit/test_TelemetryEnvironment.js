@@ -387,6 +387,7 @@ function checkSettingsSection(data) {
   const EXPECTED_FIELDS_TYPES = {
     blocklistEnabled: "boolean",
     e10sEnabled: "boolean",
+    e10sMultiProcesses: "number",
     intl: "object",
     locale: "string",
     telemetryEnabled: "boolean",

@@ -10225,13 +10225,15 @@ nsresult nsHttpChannel::RedirectToInterceptedChannel() {
 void nsHttpChannel::ReEvaluateReferrerAfterTrackingStatusIsKnown() {
   if (StaticPrefs::network_cookie_cookieBehavior() ==
       nsICookieService::BEHAVIOR_REJECT_TRACKER) {
-    // If our referrer has been set before, and our referrer policy is equal to
-    // the default policy if we thought the channel wasn't a third-party
-    // tracking channel, we may need to set our referrer with referrer policy
-    // once again to ensure our defaults properly take effect now.
+    // If our referrer has been set before, the JS/DOM caller did not
+    // previously provide us with an explicit referrer policy value and our
+    // current referrer policy is equal to the default policy if we thought the
+    // channel wasn't a third-party tracking channel, we may need to set our
+    // referrer with referrer policy once again to ensure our defaults properly
+    // take effect now.
     bool isPrivate =
         mLoadInfo && mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
-    if (mOriginalReferrer &&
+    if (mOriginalReferrer && mOriginalReferrerPolicy == REFERRER_POLICY_UNSET &&
         mReferrerPolicy ==
             NS_GetDefaultReferrerPolicy(nullptr, nullptr, isPrivate)) {
       SetReferrer(mOriginalReferrer);

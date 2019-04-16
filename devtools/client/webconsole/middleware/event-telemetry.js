@@ -9,6 +9,7 @@ const {
   FILTER_TOGGLE,
   DEFAULT_FILTERS_RESET,
   MESSAGES_ADD,
+  PERSIST_TOGGLE,
 } = require("devtools/client/webconsole/constants");
 
 /**
@@ -40,6 +41,11 @@ function eventTelemetryMiddleware(telemetry, sessionId, store) {
       });
     } else if (action.type === MESSAGES_ADD) {
       messagesAdd({ action, telemetry });
+    } else if (action.type === PERSIST_TOGGLE) {
+      telemetry.recordEvent("persist_changed", "webconsole", String(state.ui.persistLogs),
+        {
+        "session_id": sessionId,
+        });
     }
 
     return res;

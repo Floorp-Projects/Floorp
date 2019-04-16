@@ -323,6 +323,7 @@ struct StreamAndPromiseForOperation {
 };
 
 enum AsyncCubebOperation { INIT, SHUTDOWN };
+enum class AudioInputType { Unknown, Voice };
 
 /**
  * This is a graph driver that is based on callback functions called by the
@@ -354,7 +355,8 @@ class AudioCallbackDriver : public GraphDriver,
  public:
   /** If aInputChannelCount is zero, then this driver is output-only. */
   AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl,
-                      uint32_t aInputChannelCount);
+                      uint32_t aInputChannelCount,
+                      AudioInputType aAudioInputType);
   virtual ~AudioCallbackDriver();
 
   void Start() override;
@@ -401,6 +403,13 @@ class AudioCallbackDriver : public GraphDriver,
   }
 
   uint32_t InputChannelCount() { return mInputChannelCount; }
+
+  AudioInputType InputDevicePreference() {
+    if (mInputDevicePreference == CUBEB_DEVICE_PREF_VOICE) {
+      return AudioInputType::Voice;
+    }
+    return AudioInputType::Unknown;
+  }
 
   /* Enqueue a promise that is going to be resolved when a specific operation
    * occurs on the cubeb stream. */
@@ -503,12 +512,12 @@ class AudioCallbackDriver : public GraphDriver,
   const RefPtr<SharedThreadPool> mInitShutdownThread;
   /* This must be accessed with the graph monitor held. */
   AutoTArray<StreamAndPromiseForOperation, 1> mPromisesForOperation;
+  cubeb_device_pref mInputDevicePreference;
   /* This is used to signal adding the mixer callback on first run
    * of audio callback. This is atomic because it is touched from different
    * threads, the audio callback thread and the state change thread. However,
    * the order of the threads does not allow concurent access. */
   Atomic<bool> mAddedMixer;
-
   /* Contains the id of the audio thread for as long as the callback
    * is taking place, after that it is reseted to an invalid value. */
   std::atomic<std::thread::id> mAudioThreadId;

@@ -179,7 +179,10 @@ class ElfRelHackCode_Section : public ElfSection {
         shdr.sh_addralign = (*c)->getAddrAlign();
     }
     shdr.sh_size = code.back()->getAddr() + code.back()->getSize();
-    data = new char[shdr.sh_size];
+    data = static_cast<char *>(malloc(shdr.sh_size));
+    if (!data) {
+      throw std::runtime_error("Could not malloc ElfSection data");
+    }
     char *buf = data;
     for (c = code.begin(); c != code.end(); ++c) {
       memcpy(buf, (*c)->getData(), (*c)->getSize());

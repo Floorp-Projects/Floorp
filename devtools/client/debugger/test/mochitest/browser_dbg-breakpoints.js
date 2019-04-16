@@ -20,6 +20,13 @@ async function enableBreakpoint(dbg, index) {
   await enabled;
 }
 
+async function cleanupBreakpoints(dbg) {
+  clickElement(dbg, "gutter", 3);
+  clickElement(dbg, "gutter", 5);
+  await waitForBreakpointRemoved(dbg, "simple2", 3);
+  await waitForBreakpointRemoved(dbg, "simple2", 5);
+}
+
 // Test enabling and disabling a breakpoint using the check boxes
 add_task(async function() {
   const dbg = await initDebugger("doc-scripts.html", "simple2");
@@ -31,7 +38,7 @@ add_task(async function() {
 
   // Disable the first one
   await disableBreakpoint(dbg, 0);
-  const bp1 = findBreakpoint(dbg, "simple2", 3);
+  let bp1 = findBreakpoint(dbg, "simple2", 3);
   let bp2 = findBreakpoint(dbg, "simple2", 5);
   is(bp1.disabled, true, "first breakpoint is disabled");
   is(bp2.disabled, false, "second breakpoint is enabled");
@@ -41,11 +48,11 @@ add_task(async function() {
   await enableBreakpoint(dbg, 1);
   bp2 = findBreakpoint(dbg, "simple2", 5);
   is(bp2.disabled, false, "second breakpoint is enabled");
-});
 
-// Test enabling and disabling a breakpoint using the context menu
-add_task(async function() {
-  const dbg = await initDebugger("doc-scripts.html");
+  // Cleanup
+  await cleanupBreakpoints(dbg);
+
+  // Test enabling and disabling a breakpoint using the context menu
   await selectSource(dbg, "simple2");
   await addBreakpoint(dbg, "simple2", 3);
   await addBreakpoint(dbg, "simple2", 5);
@@ -58,8 +65,8 @@ add_task(async function() {
   selectContextMenuItem(dbg, selectors.breakpointContextMenu.disableSelf);
   await disableBreakpointDispatch;
 
-  let bp1 = findBreakpoint(dbg, "simple2", 3);
-  let bp2 = findBreakpoint(dbg, "simple2", 5);
+  bp1 = findBreakpoint(dbg, "simple2", 3);
+  bp2 = findBreakpoint(dbg, "simple2", 5);
   is(bp1.disabled, true, "first breakpoint is disabled");
   is(bp2.disabled, false, "second breakpoint is enabled");
 
@@ -72,4 +79,17 @@ add_task(async function() {
   bp2 = findBreakpoint(dbg, "simple2", 5);
   is(bp1.disabled, false, "first breakpoint is enabled");
   is(bp2.disabled, false, "second breakpoint is enabled");
+
+  // Cleanup
+  await cleanupBreakpoints(dbg);
+
+  // Test creation of disabled breakpoint with shift-click
+  await shiftClickElement(dbg, "gutter", 3);
+  await waitForBreakpoint(dbg, "simple2", 3);
+
+  const bp = findBreakpoint(dbg, "simple2", 3);
+  is(bp.disabled, true, "breakpoint is disabled");
+
+  // Cleanup
+  await cleanupBreakpoints(dbg);
 });

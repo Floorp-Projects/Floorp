@@ -770,6 +770,7 @@ void Assembler::processCodeLabels(uint8_t* rawCode) {
 }
 
 void Assembler::writeCodePointer(CodeLabel* label) {
+  m_buffer.assertNoPoolAndNoNops();
   BufferOffset off = writeInst(-1);
   label->patchAt()->bind(off.getOffset());
 }

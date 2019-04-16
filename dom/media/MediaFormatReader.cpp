@@ -2507,7 +2507,7 @@ void MediaFormatReader::DropDecodedSamples(TrackType aTrack) {
   decoder.mOutput.Clear();
   decoder.mSizeOfQueue -= lengthDecodedQueue;
   if (aTrack == TrackInfo::kVideoTrack && mFrameStats) {
-    mFrameStats->Accumulate({0, 0, lengthDecodedQueue, 0});
+    mFrameStats->Accumulate({0, 0, 0, lengthDecodedQueue, 0, 0});
   }
 }
 
@@ -2536,7 +2536,8 @@ void MediaFormatReader::VideoSkipReset(uint32_t aSkipped) {
   DropDecodedSamples(TrackInfo::kVideoTrack);
   // Report the pending frames as dropped.
   if (mFrameStats) {
-    mFrameStats->Accumulate({0, 0, SizeOfVideoQueueInFrames(), 0});
+    uint32_t droppedDecoderCount = SizeOfVideoQueueInFrames();
+    mFrameStats->Accumulate({0, 0, 0, droppedDecoderCount, 0, 0});
   }
 
   // Cancel any pending demux request and pending demuxed samples.
@@ -2544,7 +2545,7 @@ void MediaFormatReader::VideoSkipReset(uint32_t aSkipped) {
   Reset(TrackType::kVideoTrack);
 
   if (mFrameStats) {
-    mFrameStats->Accumulate({aSkipped, 0, aSkipped, 0});
+    mFrameStats->Accumulate({aSkipped, 0, 0, aSkipped, 0, 0});
   }
 
   mVideo.mNumSamplesSkippedTotal += aSkipped;
@@ -3035,6 +3036,15 @@ void MediaFormatReader::GetMozDebugReaderData(nsACString& aString) {
         mVideo.mDemuxEOS, int32_t(mVideo.mDrainState), mVideo.mWaitingForKey,
         mVideo.mLastStreamSourceID);
   }
+
+  // Looking at dropped frames in details.
+  FrameStatisticsData stats = mFrameStats->GetFrameStatisticsData();
+  result +=
+      nsPrintfCString("Dropped Frames: reader=%" PRIu64 " sink=%" PRIu64
+                      " compositor=%" PRIu64 "\n",
+                      stats.mDroppedDecodedFrames, stats.mDroppedSinkFrames,
+                      stats.mDroppedCompositorFrames);
+
   aString += result;
 }
 

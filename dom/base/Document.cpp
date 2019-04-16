@@ -2342,18 +2342,18 @@ void Document::FillStyleSetUserAndUASheets() {
     mStyleSet->AppendStyleSheet(SheetType::Agent, cache->XULSheet());
   }
 
-  MOZ_ASSERT(!mQuirkSheetAdded);
-  if (mCompatMode == eCompatibility_NavQuirks) {
-    mStyleSet->AppendStyleSheet(SheetType::Agent, cache->QuirkSheet());
-    mQuirkSheetAdded = true;
-  }
-
   mStyleSet->AppendStyleSheet(SheetType::Agent, cache->FormsSheet());
   mStyleSet->AppendStyleSheet(SheetType::Agent, cache->ScrollbarsSheet());
   mStyleSet->AppendStyleSheet(SheetType::Agent, cache->PluginProblemSheet());
 
   for (StyleSheet* sheet : *sheetService->AgentStyleSheets()) {
     mStyleSet->AppendStyleSheet(SheetType::Agent, sheet);
+  }
+
+  MOZ_ASSERT(!mQuirkSheetAdded);
+  if (NeedsQuirksSheet()) {
+    mStyleSet->AppendStyleSheet(SheetType::Agent, cache->QuirkSheet());
+    mQuirkSheetAdded = true;
   }
 }
 

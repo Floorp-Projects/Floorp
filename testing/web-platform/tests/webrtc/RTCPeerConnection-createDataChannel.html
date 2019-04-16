@@ -258,7 +258,7 @@ for (const [description, protocol, expected] of protocols) {
  */
 test(() => {
   const pc = new RTCPeerConnection;
-  const channel = pc.createDataChannel('', { negotiated: true });
+  const channel = pc.createDataChannel('', { negotiated: true, id: 1 });
   assert_equals(channel.negotiated, true);
 }, 'createDataChannel with negotiated true should succeed');
 
@@ -269,19 +269,35 @@ test(() => {
       10. If id is equal to 65535, which is greater than the maximum allowed ID
           of 65534 but still qualifies as an unsigned short, throw a TypeError.
  */
-for (const id of [0, 1, 65534]) {
+for (const id of [0, 1, 65534, 65535]) {
   test(() => {
     const pc = new RTCPeerConnection();
     const channel = pc.createDataChannel('', { id });
+    assert_equals(channel.id, null);
+  }, `createDataChannel with id ${id} and negotiated not set should succeed, but not set the channel's id`);
+}
+
+for (const id of [0, 1, 65534]) {
+  test(() => {
+    const pc = new RTCPeerConnection();
+    const channel = pc.createDataChannel('', { id, negotiated: true });
     assert_equals(channel.id, id);
-  }, `createDataChannel with id ${id} should succeed`);
+  }, `createDataChannel with id ${id} and negotiated true should succeed, and set the channel's id`);
+}
+
+for (const id of [-1, 65536]) {
+  test(() => {
+    const pc = new RTCPeerConnection();
+    assert_throws(new TypeError(), () => pc.createDataChannel('', { id }));
+  }, `createDataChannel with id ${id} and negotiated not set should throw TypeError`);
 }
 
 for (const id of [-1, 65535, 65536]) {
   test(() => {
     const pc = new RTCPeerConnection();
-    assert_throws(new TypeError(), () => pc.createDataChannel('', { id }));
-  }, `createDataChannel with id ${id} should throw TypeError`);
+    assert_throws(new TypeError(), () => pc.createDataChannel('',
+      { id, negotiated: true }));
+  }, `createDataChannel with id ${id} and negotiated true should throw TypeError`);
 }
 
 /*
@@ -332,9 +348,18 @@ test(() => {
 
 test(() => {
   const pc = new RTCPeerConnection();
+  assert_throws(new TypeError(), () =>
+    pc.createDataChannel('', {
+      negotiated: true
+    }));
+}, 'createDataChannel with negotiated true and no id should fail with TypeError');
+
+test(() => {
+  const pc = new RTCPeerConnection();
   const label = ' '.repeat(65536)
 
   const channel = pc.createDataChannel('', {
+    id: 1,
     label,
     protocol: ' '.repeat(65536),
     negotiated: true

@@ -5743,7 +5743,7 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
 
   masm.switchToObjectRealm(genObj, scratch2);
 
-  if (resumeKind == AbstractGeneratorObject::NEXT) {
+  if (resumeKind == GeneratorResumeKind::Next) {
     // Determine the resume address based on the resumeIndex and the
     // resumeIndex -> native table in the BaselineScript.
     masm.load32(
@@ -5763,8 +5763,8 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
         Address(genObj, AbstractGeneratorObject::offsetOfResumeIndexSlot()));
     masm.jump(scratch1);
   } else {
-    MOZ_ASSERT(resumeKind == AbstractGeneratorObject::THROW ||
-               resumeKind == AbstractGeneratorObject::RETURN);
+    MOZ_ASSERT(resumeKind == GeneratorResumeKind::Throw ||
+               resumeKind == GeneratorResumeKind::Return);
 
     // Update the frame's frameSize field.
     masm.computeEffectiveAddress(
@@ -5776,7 +5776,7 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
     masm.loadBaselineFramePtr(BaselineFrameReg, scratch2);
 
     prepareVMCall();
-    pushArg(Imm32(resumeKind));
+    pushArg(Imm32(int32_t(resumeKind)));
     pushArg(retVal);
     pushArg(genObj);
     pushArg(scratch2);
@@ -5821,12 +5821,12 @@ bool BaselineCompilerCodeGen::emit_JSOP_RESUME() {
   masm.bind(&interpret);
 
   prepareVMCall();
-  if (resumeKind == AbstractGeneratorObject::NEXT) {
+  if (resumeKind == GeneratorResumeKind::Next) {
     pushArg(ImmGCPtr(cx->names().next));
-  } else if (resumeKind == AbstractGeneratorObject::THROW) {
+  } else if (resumeKind == GeneratorResumeKind::Throw) {
     pushArg(ImmGCPtr(cx->names().throw_));
   } else {
-    MOZ_ASSERT(resumeKind == AbstractGeneratorObject::RETURN);
+    MOZ_ASSERT(resumeKind == GeneratorResumeKind::Return);
     pushArg(ImmGCPtr(cx->names().return_));
   }
 

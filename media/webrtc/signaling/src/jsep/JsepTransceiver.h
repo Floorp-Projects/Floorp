@@ -68,10 +68,9 @@ class JsepTransceiver {
     }
     mRecvTrack = oldTransceiver.mRecvTrack;
 
-    // stop() caused by a disabled m-section in a remote offer cannot be
-    // rolled back.
-    if (!IsStopped()) {
-      mMid = oldTransceiver.mMid;
+    // Don't allow rollback to re-associate a transceiver.
+    if (!oldTransceiver.IsAssociated()) {
+      Disassociate();
     }
   }
 
@@ -99,7 +98,10 @@ class JsepTransceiver {
     mLevel = level;
   }
 
-  void ClearLevel() { mLevel = SIZE_MAX; }
+  void ClearLevel() {
+    MOZ_ASSERT(!IsAssociated());
+    mLevel = SIZE_MAX;
+  }
 
   size_t GetLevel() const {
     MOZ_ASSERT(HasLevel());

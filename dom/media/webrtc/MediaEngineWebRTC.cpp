@@ -180,9 +180,14 @@ void MediaEngineWebRTC::EnumerateMicrophoneDevices(
         if (!foundPreferredDevice) {
           foundPreferredDevice = true;
         } else {
+          // This is possible on windows, there is a default communication
+          // device, and a default device:
+          // See https://bugzilla.mozilla.org/show_bug.cgi?id=1542739
+#ifndef XP_WIN
           MOZ_ASSERT(!foundPreferredDevice,
                      "Found more than one preferred audio input device"
                      "while enumerating");
+#endif
         }
 #endif
         aDevices->InsertElementAt(0, device);

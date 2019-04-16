@@ -1605,7 +1605,7 @@ class RTCPeerConnection {
   }
 
   createDataChannel(label, {
-                      maxRetransmits, ordered, negotiated, id = 0xFFFF,
+                      maxRetransmits, ordered, negotiated, id = null,
                       maxRetransmitTime, maxPacketLifeTime,
                       protocol,
                     } = {}) {
@@ -1619,10 +1619,20 @@ class RTCPeerConnection {
     if (maxRetransmitTime !== undefined) {
       this.logWarning("Use maxPacketLifeTime instead of deprecated maxRetransmitTime which will stop working soon in createDataChannel!");
     }
+    if (!negotiated) {
+      id = null;
+    } else if (id === null) {
+      throw new this._win.DOMException(
+          "id is required when negotiated is true", "TypeError");
+    }
     if (maxPacketLifeTime !== undefined && maxRetransmits !== undefined) {
       throw new this._win.DOMException(
           "Both maxPacketLifeTime and maxRetransmits cannot be provided",
           "InvalidParameterError");
+    }
+    if (id == 65535) {
+      throw new this._win.DOMException(
+          "id cannot be 65535", "TypeError");
     }
     // Must determine the type where we still know if entries are undefined.
     let type;

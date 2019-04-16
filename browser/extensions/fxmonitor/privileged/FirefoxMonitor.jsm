@@ -98,13 +98,10 @@ this.FirefoxMonitor = {
 
     this._delayedInited = true;
 
-    /* globals Preferences, RemoteSettings, fetch, btoa, XUL_NS */
+    /* globals EveryWindow, Preferences, RemoteSettings, fetch, btoa, XUL_NS */
     Services.scriptloader.loadSubScript(
       this.getURL("privileged/subscripts/Globals.jsm"));
 
-    /* globals EveryWindow */
-    Services.scriptloader.loadSubScript(
-      this.getURL("privileged/subscripts/EveryWindow.jsm"));
 
     // Expire our telemetry on November 1, at which time
     // we should redo data-review.

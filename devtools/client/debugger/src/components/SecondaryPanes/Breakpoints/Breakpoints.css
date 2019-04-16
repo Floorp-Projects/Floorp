@@ -6,13 +6,14 @@
   margin: 2px 3px;
 }
 
+.breakpoints-exceptions-options *,
 .breakpoints-list * {
+  -moz-user-select: none;
   user-select: none;
 }
 
 .breakpoints-list {
-  margin-top: 4px;
-  margin-bottom: 4px;
+  padding: 4px 0;
 }
 
 .breakpoints-list .breakpoint-heading {
@@ -124,11 +125,6 @@ html .breakpoints-list .breakpoint.paused {
   border-color: var(--breakpoint-active-color);
 }
 
-.breakpoints-list .breakpoint.disabled .breakpoint-label {
-  color: var(--theme-comment);
-  transition: color 0.15s linear;
-}
-
 .breakpoints-list .breakpoint:hover {
   background-color: var(--search-overlays-semitransparent);
 }
@@ -205,9 +201,16 @@ html .breakpoints-list .breakpoint.paused {
   left: 12px;
 }
 
+/* Reveal the remove button on hover/focus */
 .breakpoint:hover .close-btn,
 .breakpoint .close-btn:focus {
   top: calc(50% - 8px);
+}
+
+/* Hide the line number when revealing the remove button (since they're overlayed) */
+.breakpoint-line-close:focus-within .breakpoint-line,
+.breakpoint:hover .breakpoint-line {
+  visibility: hidden;
 }
 
 .CodeMirror.cm-s-mozilla-breakpoint {
@@ -244,4 +247,23 @@ html .breakpoints-list .breakpoint.paused {
 
 .CodeMirror.cm-s-mozilla-breakpoint {
   padding-top: 1px;
+}
+
+/**
+ * Skip Pausing style
+ * Add a gray background and lower content opacity
+ */
+.breakpoints-pane .pane.skip-pausing {
+  background-color: var(--theme-toolbar-hover);
+}
+
+.breakpoints-pane .pane.skip-pausing > * {
+  opacity: 0.6;
+}
+
+.breakpoints-pane .skip-pausing .breakpoint-label,
+.breakpoints-pane .skip-pausing .breakpoint-heading .filename,
+.breakpoints-pane .skip-pausing .breakpoint-exceptions-label,
+.breakpoints-pane .skip-pausing .breakpoint .breakpoint-line {
+  color: var(--theme-body-color);
 }

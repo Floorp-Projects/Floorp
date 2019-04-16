@@ -4,22 +4,14 @@
 
 .theme-light {
   --gutter-hover-background-color: #dde1e4;
-
   --breakpoint-fill: var(--blue-50);
   --breakpoint-stroke: var(--blue-60);
-
-  --breakpoint-disabled-fill: var(--blue-55);
-  --breakpoint-disabled-stroke: var(--blue-55);
 }
 
 .theme-dark {
   --gutter-hover-background-color: #414141;
-
   --breakpoint-fill: var(--blue-55);
   --breakpoint-stroke: var(--blue-40);
-
-  --breakpoint-disabled-fill: var(--blue-55);
-  --breakpoint-disabled-stroke: var(--blue-55);
 }
 
 .theme-light,
@@ -28,6 +20,7 @@
   --logpoint-stroke: var(--purple-60);
   --breakpoint-condition-fill: var(--theme-graphs-yellow);
   --breakpoint-condition-stroke: var(--theme-graphs-orange);
+  --breakpoint-skipped-opacity: 0.15;
   --breakpoint-inactive-opacity: 0.3;
   --breakpoint-disabled-opacity: 0.6;
 }
@@ -52,7 +45,7 @@
   z-index: -1;
   top: 0;
   left: 0;
-  right: -7px;
+  right: -4px;
   bottom: 0;
   height: 15px;
   background-color: var(--gutter-hover-background-color);
@@ -96,6 +89,10 @@
   stroke-opacity: var(--breakpoint-disabled-opacity);
 }
 
+.editor-wrapper.skip-pausing .editor.new-breakpoint svg {
+  fill-opacity: var(--breakpoint-skipped-opacity);
+}
+
 /* Columnn breakpoints */
 .column-breakpoint {
   display: inline;
@@ -136,11 +133,6 @@
   stroke-opacity: 0.5;
 }
 
-.column-breakpoint.disabled:not(.has-condition):not(.has-log) svg {
-  fill: var(--breakpoint-disabled-fill);
-  stroke: var(--breakpoint-disabled-stroke);
-}
-
 .column-breakpoint.has-condition svg {
   fill: var(--breakpoint-condition-fill);
   stroke: var(--breakpoint-condition-stroke);
@@ -149,6 +141,10 @@
 .column-breakpoint.has-log svg {
   fill: var(--logpoint-fill);
   stroke: var(--logpoint-stroke);
+}
+
+.editor-wrapper.skip-pausing .column-breakpoint svg {
+  fill-opacity: var(--breakpoint-skipped-opacity);
 }
 
 .img.column-marker {
