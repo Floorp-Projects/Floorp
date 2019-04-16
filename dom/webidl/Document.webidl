@@ -358,6 +358,9 @@ partial interface Document {
   // Creates a new XUL element regardless of the document's default type.
   [CEReactions, NewObject, Throws, Func="IsChromeOrXBL"]
   Element createXULElement(DOMString localName, optional (ElementCreationOptions or DOMString) options);
+  // Wether the document was loaded using a nsXULPrototypeDocument.
+  [ChromeOnly]
+  readonly attribute boolean loadedFromPrototype;
 
   // The principal to use for the storage area of this document
   [ChromeOnly]
