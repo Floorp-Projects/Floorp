@@ -62,6 +62,11 @@ open class GleanInternalAPI internal constructor () {
 
     companion object {
         internal const val BASELINE_STORE_NAME = "baseline"
+        internal val BUILTIN_PINGNAMES = listOf(
+            BASELINE_STORE_NAME,
+            MetricsPingScheduler.STORE_NAME,
+            "events"
+        )
     }
 
     /**
@@ -331,7 +336,33 @@ open class GleanInternalAPI internal constructor () {
      */
     fun handleBackgroundEvent() {
         // Schedule the baseline and event pings
-        sendPings(listOf(BASELINE_STORE_NAME, "events"))
+        sendPingsInternal(listOf(BASELINE_STORE_NAME, "events"))
+    }
+
+    /**
+     * Send a list of pings by name.
+     *
+     * Only custom pings (pings not managed by Glean itself) will be sent by
+     * this function. If the name of a Glean-managed ping is passed in, an
+     * error is logged to logcat.
+     *
+     * Both the ping collection and ping uploading happens asyncronously.
+     * If the ping currently contains no content, it will not be sent.
+     *
+     * @param pingNames List of pings to send.
+     * @return true if any pings were actually sent.
+     */
+    public fun sendPings(pingNames: List<String>): Boolean {
+        val pingsToSend = pingNames.filter { pingName ->
+            if (BUILTIN_PINGNAMES.contains(pingName)) {
+                logger.error("Attempted to send built-in ping $pingName")
+                false
+            } else {
+                true
+            }
+        }
+
+        return sendPingsInternal(pingsToSend)
     }
 
     /**
@@ -343,7 +374,7 @@ open class GleanInternalAPI internal constructor () {
      * @param pingNames List of pings to send.
      * @return true if any pings were actually sent.
      */
-    internal fun sendPings(pingNames: List<String>): Boolean {
+    internal fun sendPingsInternal(pingNames: List<String>): Boolean {
         if (!isInitialized()) {
             logger.error("Glean must be initialized before sending pings.")
             return false

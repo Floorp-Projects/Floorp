@@ -66,7 +66,7 @@ class GleanDebugActivity : Activity() {
             Glean.configuration = debugConfig
 
             intent.getStringExtra(SEND_PING_EXTRA_KEY)?.let {
-                Glean.sendPings(listOf(it))
+                Glean.sendPingsInternal(listOf(it))
             }
         }
 

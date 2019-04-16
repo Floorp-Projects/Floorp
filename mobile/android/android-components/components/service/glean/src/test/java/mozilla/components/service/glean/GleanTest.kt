@@ -16,6 +16,7 @@ import kotlinx.coroutines.runBlocking
 import mozilla.components.service.glean.GleanMetrics.GleanInternalMetrics
 import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.firstrun.FileFirstRunDetector
+import mozilla.components.service.glean.private.CounterMetricType
 import mozilla.components.service.glean.private.DatetimeMetricType
 import mozilla.components.service.glean.private.EventMetricType
 import mozilla.components.service.glean.private.Lifetime
@@ -455,5 +456,80 @@ class GleanTest {
         assertEquals("he", getLanguageFromLocale(Locale("iw", "IL")))
         assertEquals("id", getLanguageFromLocale(Locale("in", "ID")))
         assertEquals("yi", getLanguageFromLocale(Locale("ji", "ID")))
+    }
+
+    @Test
+    fun `test sending of custom pings`() {
+        val server = MockWebServer()
+
+        server.enqueue(MockResponse().setBody("OK"))
+
+        val counter = CounterMetricType(
+            disabled = false,
+            category = "test",
+            lifetime = Lifetime.Ping,
+            name = "counter",
+            sendInPings = listOf("custom")
+        )
+
+        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
+            serverEndpoint = "http://" + server.hostName + ":" + server.port,
+            logPings = true
+        ))
+
+        counter.add()
+        assertTrue(counter.testHasValue())
+
+        Glean.sendPings(listOf("custom"))
+        // Trigger worker task to upload the pings in the background
+        triggerWorkManager()
+
+        val request = server.takeRequest(20L, TimeUnit.SECONDS)
+        val docType = request.path.split("/")[3]
+
+        assertEquals("custom", docType)
+    }
+
+    @Test
+    fun `don't send built-in pings through sendPings`() {
+        val server = MockWebServer()
+
+        server.enqueue(MockResponse().setBody("OK"))
+
+        val customCounter = CounterMetricType(
+            disabled = false,
+            category = "test",
+            lifetime = Lifetime.Ping,
+            name = "counter",
+            sendInPings = listOf("custom")
+        )
+        val defaultCounter = CounterMetricType(
+            disabled = false,
+            category = "test",
+            lifetime = Lifetime.Ping,
+            name = "counter",
+            sendInPings = listOf("default")
+        )
+
+        resetGlean(getContextWithMockedInfo(), Glean.configuration.copy(
+            serverEndpoint = "http://" + server.hostName + ":" + server.port,
+            logPings = true
+        ))
+
+        customCounter.add()
+        assertTrue(customCounter.testHasValue())
+        defaultCounter.add()
+        assertTrue(defaultCounter.testHasValue())
+
+        Glean.sendPings(listOf("metrics", "custom"))
+        // Trigger worker task to upload the pings in the background
+        triggerWorkManager()
+
+        // Only the "custom" ping should have been sent through the public sendPings API
+
+        val request = server.takeRequest(20L, TimeUnit.SECONDS)
+        val docType = request.path.split("/")[3]
+
+        assertEquals("custom", docType)
     }
 }

@@ -209,7 +209,7 @@ internal class MetricsPingScheduler(val applicationContext: Context) {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun collectPingAndReschedule(now: Calendar) {
         logger.info("Collecting the 'metrics' ping, now = $now")
-        Glean.sendPings(listOf(STORE_NAME))
+        Glean.sendPingsInternal(listOf(STORE_NAME))
         // Update the collection date: we don't really care if we have data or not, let's
         // always update the sent date.
         updateSentDate(getISOTimeString(now, truncateTo = TimeUnit.Day))

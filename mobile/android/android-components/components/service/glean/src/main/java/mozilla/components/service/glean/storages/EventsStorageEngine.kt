@@ -128,7 +128,7 @@ internal object EventsStorageEngine : StorageEngine {
             // been booted, so for now we just pay the penalty of a few more
             // unnecessary pings.
             if (eventStores.isNotEmpty()) {
-                Glean.sendPings(eventStores.keys.toList())
+                Glean.sendPingsInternal(eventStores.keys.toList())
             }
         }
     }
@@ -193,7 +193,7 @@ internal object EventsStorageEngine : StorageEngine {
                     eventStoresToUpload.add(storeName)
                 }
             }
-            Glean.sendPings(eventStoresToUpload)
+            Glean.sendPingsInternal(eventStoresToUpload)
         }
     }
 
