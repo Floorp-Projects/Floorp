@@ -15,6 +15,7 @@ const {
   PREFS,
   REVERSE_SEARCH_INPUT_TOGGLE,
   SELECT_NETWORK_MESSAGE_TAB,
+  SHOW_CONTENT_MESSAGES_TOGGLE,
   SHOW_OBJECT_IN_SIDEBAR,
   SIDEBAR_CLOSE,
   SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE,
@@ -28,6 +29,16 @@ function persistToggle() {
     });
     const uiState = getAllUi(getState());
     prefsService.setBoolPref(PREFS.UI.PERSIST, uiState.persistLogs);
+  };
+}
+
+function contentMessagesToggle() {
+  return ({dispatch, getState, prefsService}) => {
+    dispatch({
+      type: SHOW_CONTENT_MESSAGES_TOGGLE,
+    });
+    const uiState = getAllUi(getState());
+    prefsService.setBoolPref(PREFS.UI.CONTENT_MESSAGES, uiState.showContentMessages);
   };
 }
 
@@ -100,6 +111,7 @@ function reverseSearchInputToggle({initialValue} = {}) {
 }
 
 module.exports = {
+  contentMessagesToggle,
   initialize,
   persistToggle,
   reverseSearchInputToggle,

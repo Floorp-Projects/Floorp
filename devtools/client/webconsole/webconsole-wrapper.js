@@ -354,6 +354,8 @@ class WebConsoleWrapper {
         closeSplitConsole: this.closeSplitConsole.bind(this),
         jstermCodeMirror,
         autocomplete,
+        hideShowContentMessagesCheckbox: !webConsoleUI.isBrowserConsole ||
+          !prefs.filterContentMessages,
       });
 
       // Render the root Application component.
