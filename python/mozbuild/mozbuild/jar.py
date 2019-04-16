@@ -14,6 +14,7 @@ import sys
 import os
 import errno
 import re
+import six
 import logging
 from time import localtime
 from MozZipFile import ZipFile
@@ -306,7 +307,7 @@ class JarMaker(object):
         '''
         myregister = dict.fromkeys(map(lambda s: s.replace('%',
                                                            chromebasepath), register))
-        addEntriesToListFile(manifestPath, myregister.iterkeys())
+        addEntriesToListFile(manifestPath, six.iterkeys(myregister))
 
     def makeJar(self, infile, jardir):
         '''makeJar is the main entry point to JarMaker.
