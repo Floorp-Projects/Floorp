@@ -34,6 +34,7 @@ random-if(Android) == poster-13.html poster-ref-blue400x300.html
 random-if(Android) == poster-15.html poster-ref-green70x30.html
 random-if(winWidget) random-if(cocoaWidget) skip-if(Android) == bug686957.html bug686957-ref.html # bug 922951 for OS X
 == webm-alpha.html webm-alpha-ref.html
+fuzzy(0-5,0-111556) == webm-alpha-2.html webm-alpha-2-ref.html
 
 # Tests for <video src> with 'object-fit' & 'object-position':
 # These tests should be very similar to tests in our w3c-css/submitted/images3

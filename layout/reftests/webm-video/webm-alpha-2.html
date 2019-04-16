@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Reftest that checks whether WebM video with alpha is rendered with the correct stride</title>
+
+<style>
+.edgeCover {
+  position: absolute;
+  box-shadow: 0 0 0 4px magenta, inset 0 0 0 4px magenta;
+}
+</style>
+
+<div style="position: relative">
+<!--
+  The video below was created as follows:
+
+  1. Run this code on the web console:
+
+var c = document.createElement("canvas")
+c.width = 334;
+c.height = 334;
+var ctx = c.getContext("2d")
+ctx.fillStyle = "white"
+ctx.fillRect(0, 0, 334, 334)
+ctx.fillStyle = "red"
+ctx.fillRect(0, 0, 64, 64)
+ctx.fillStyle = "blue"
+ctx.fillRect(64, 0, 64, 64)
+ctx.fillStyle = "yellow"
+ctx.fillRect(0, 64, 64, 64)
+ctx.fillStyle = "lime"
+ctx.fillRect(64, 64, 64, 64)
+ctx.fillStyle = "black"
+ctx.fillRect(196, 0, 16, 334)
+c.toDataURL()
+
+  2. Save the PNG to a file called "frame.png".
+  3. Convert it to a WebM file using:
+
+ffmpeg -framerate 25 -f image2 -i frame.png -c:v libvpx -auto-alt-ref 0 -pix_fmt yuva420p output.webm
+
+    (The "a" in "yuva420p" gives the video an alpha plane.)
+
+  4. Convert the WebM file to a data url.
+
+  The video size is 334x334. 334 is not divisible by 4. But 336 is divisible by 4 (and by 16).
+-->
+  <video autoplay src="data:video/webm;base64,GkXfowEAAAAAAAAfQoaBAUL3gQFC8oEEQvOBCEKChHdlYm1Ch4ECQoWBAhhTgGcBAAAAAAAFFxFNm3RAO027i1OrhBVJqWZTrIHlTbuMU6uEFlSua1OsggEjTbuMU6uEElTDZ1OsggFwTbuMU6uEHFO7a1OsggT67AEAAAAAAACbAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAVSalmAQAAAAAAADIq17GDD0JATYCNTGF2ZjU4LjEyLjEwMFdBjUxhdmY1OC4xMi4xMDBEiYhARAAAAAAAABZUrmsBAAAAAAAAQa4BAAAAAAAAONeBAXPFgQGcgQAitZyDdW5khoVWX1ZQOIOBASPjg4QCYloA4AEAAAAAAAAMsIIBTrqCAU5TwIEBElTDZwEAAAAAAAC/c3MBAAAAAAAALmPAAQAAAAAAAABnyAEAAAAAAAAaRaOHRU5DT0RFUkSHjUxhdmY1OC4xMi4xMDBzcwEAAAAAAAA5Y8ABAAAAAAAABGPFgQFnyAEAAAAAAAAhRaOHRU5DT0RFUkSHlExhdmM1OC4xOC4xMDAgbGlidnB4c3MBAAAAAAAAOmPAAQAAAAAAAARjxYEBZ8gBAAAAAAAAIkWjiERVUkFUSU9ORIeUMDA6MDA6MDAuMDQwMDAwMDAwAAAfQ7Z1AQAAAAAAArPngQCgAQAAAAAAAqehQa+BAAAAECMAnQEqTgFOAQBHCIWFiIWEiAICIcB/gIxxQufgP4A9Lt4jh/4A/rBxoPYH9XeeA//cV4YH+A/zP1/7vF6v8OfS+b7aiY5ZAVRd7+B19e+R7TWdOyggwiXRbKr6e46ES8nODRmmsdHCSb2Ryky5CBdA85lugf/bcPq9FrVGK6E1Eq803lynCCqlTKr6e5sQVvvWkT2mnsucsPMn40e9aRPaae5uje+FHBKKfBFvcaiVeaazp2HiP9OnTp06dOw8R/p06dOnTp2HiP9OnTp06dOw8R/p06dOnTp2HiP9OnTp06dOw8R/p06dOnTp2HiP9OnTp06dOw8R/p06dOnTp2HiP9OnTp06dOw8R/p06dOnTp2HiP9OnTp06dOw8R/pvgD98nbATdAYGPgGEfqzwHaRDoh/yUJISQz2Qf1XrtcNhRYp///IKASH//40AA+zYdKbVnQlfxAlilLFiSS41KVx1DTCUxV9DmTS53pH2k1nrQQPyJ6ZE0aSsttOFtwAJ8cYL6BIAjpRqJ11YtY+TPfKFKdft0Uxv+1K+yvSpmFBL/U1Vr1TG8yIAHWhAQAAAAAAAOumAQAAAAAAAOLugQGlQNywGQCdASpOAU4BAEcIhYWIhYSIAgIABhYE9waBZJ9r25snOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsnOHsigP7/uoMAHFO7awEAAAAAAAARu4+zgQC3iveBAfGCAjvwgQM="></video>
+  <div class="edgeCover" style="left: 0; top: 0; width: 64px; height: 64px;"></div>
+  <div class="edgeCover" style="left: 64px; top: 0; width: 64px; height: 64px;"></div>
+  <div class="edgeCover" style="left: 0; top: 64px; width: 64px; height: 64px;"></div>
+  <div class="edgeCover" style="left: 64px; top: 64px; width: 64px; height: 64px;"></div>
+  <div class="edgeCover" style="left: 196px; top: 0; width: 16px; height: 334px;"></div>
+</div>

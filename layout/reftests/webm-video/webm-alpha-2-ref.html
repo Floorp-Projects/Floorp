@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Reference for reftest that checks whether WebM video with alpha is rendered with the correct stride</title>
+
+<style>
+.edgeCover {
+  position: absolute;
+  box-shadow: 0 0 0 4px magenta, inset 0 0 0 4px magenta;
+}
+</style>
+
+<div style="position: relative">
+  <div class="edgeCover" style="background: red; left: 0; top: 0; width: 64px; height: 64px;"></div>
+  <div class="edgeCover" style="background: blue; left: 64px; top: 0; width: 64px; height: 64px;"></div>
+  <div class="edgeCover" style="background: yellow; left: 0; top: 64px; width: 64px; height: 64px;"></div>
+  <div class="edgeCover" style="background: lime; left: 64px; top: 64px; width: 64px; height: 64px;"></div>
+  <div class="edgeCover" style="background: black; left: 196px; top: 0; width: 16px; height: 334px;"></div>
+</div>
