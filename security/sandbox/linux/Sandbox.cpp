@@ -652,7 +652,8 @@ void SetMediaPluginSandbox(const char* aFilePath) {
 }
 
 void SetRemoteDataDecoderSandbox(int aBroker) {
-  if (PR_GetEnv("MOZ_DISABLE_RDD_SANDBOX") != nullptr) {
+  if (!SandboxInfo::Get().Test(SandboxInfo::kHasSeccompBPF) ||
+      PR_GetEnv("MOZ_DISABLE_RDD_SANDBOX")) {
     if (aBroker >= 0) {
       close(aBroker);
     }
