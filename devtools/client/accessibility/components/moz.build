@@ -6,6 +6,7 @@ DevToolsModules(
     'AccessibilityRow.js',
     'AccessibilityRowValue.js',
     'AccessibilityTree.js',
+    'AccessibilityTreeFilter.js',
     'Accessible.js',
     'AuditController.js',
     'AuditFilter.js',

@@ -4,12 +4,15 @@
 
 "use strict";
 
-const { AUDIT, FILTER_TOGGLE } = require("../constants");
+const { AUDIT, AUDITING, FILTER_TOGGLE } = require("../constants");
 
 exports.filterToggle = filter =>
   dispatch => dispatch({ filter, type: FILTER_TOGGLE });
 
-exports.audit = walker =>
+exports.auditing = filter =>
+  dispatch => dispatch({ auditing: filter, type: AUDITING });
+
+exports.audit = (walker, filter) =>
   dispatch => walker.audit()
     .then(response => dispatch({ type: AUDIT, response }))
     .catch(error => dispatch({ type: AUDIT, error }));

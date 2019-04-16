@@ -61,7 +61,16 @@ class Button extends Component {
 }
 
 function ToggleButton(props) {
-  const { active, disabled, label, className, onClick, onKeyDown, tooltip } = props;
+  const {
+    active,
+    busy,
+    disabled,
+    label,
+    className,
+    onClick,
+    onKeyDown,
+    tooltip,
+  } = props;
   const classList = [
     ...className.split(" "),
     "toggle-button",
@@ -71,9 +80,14 @@ function ToggleButton(props) {
     classList.push("checked");
   }
 
+  if (busy) {
+    classList.push("devtools-throbber");
+  }
+
   return button({
     disabled,
     "aria-pressed": active === true,
+    "aria-busy": busy,
     className: classList.join(" "),
     onClick,
     onKeyDown,

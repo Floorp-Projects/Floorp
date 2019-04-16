@@ -10,7 +10,7 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const ToggleButton = createFactory(require("./Button").ToggleButton);
 
-const { audit, filterToggle } = require("../actions/audit");
+const { audit, auditing, filterToggle } = require("../actions/audit");
 const { preventDefaultAndStopPropagation } = require("devtools/client/shared/events");
 
 class Badge extends Component {
@@ -37,13 +37,17 @@ class Badge extends Component {
     return nextProps.active !== this.props.active;
   }
 
-  toggleFilter() {
+  async toggleFilter() {
     const { dispatch, filterKey, walker, active } = this.props;
-    dispatch(filterToggle(filterKey));
-
     if (!active) {
-      dispatch(audit(walker));
+      dispatch(auditing(filterKey));
+      await dispatch(audit(walker, filterKey));
     }
+
+    // We wait to dispatch filter toggle until the tree is ready to be filtered
+    // right after the audit. This is to make sure that we render an empty tree
+    // (filtered) while the audit is running.
+    dispatch(filterToggle(filterKey));
   }
 
   onClick(e) {
