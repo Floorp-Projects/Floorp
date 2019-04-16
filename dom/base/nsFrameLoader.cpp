@@ -498,6 +498,12 @@ nsresult nsFrameLoader::ReallyStartLoadingInternal() {
     return NS_OK;
   }
 
+  if (GetDocShell()) {
+    // If we already have a docshell, ensure that the docshell's storage access
+    // flag is cleared.
+    GetDocShell()->MaybeClearStorageAccessFlag();
+  }
+
   nsresult rv = MaybeCreateDocShell();
   if (NS_FAILED(rv)) {
     return rv;
@@ -1018,6 +1024,8 @@ void nsFrameLoader::Hide() {
   if (!GetDocShell()) {
     return;
   }
+
+  GetDocShell()->MaybeClearStorageAccessFlag();
 
   nsCOMPtr<nsIContentViewer> contentViewer;
   GetDocShell()->GetContentViewer(getter_AddRefs(contentViewer));
