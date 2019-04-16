@@ -91,7 +91,7 @@ add_test(function test_errorCallback() {
       run_next_test();
     },
     onError(e, aResponse) {
-      Assert.equal(e, "404 - Not Found");
+      Assert.equal(e.message, "404 - Not Found");
       do_test_finished();
       run_next_test();
     },

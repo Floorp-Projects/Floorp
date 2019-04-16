@@ -2561,7 +2561,7 @@ function run_single_closure_tests(library, abi, suffix) {
 
   function closure_fn(i) {
     if (i == 42)
-      throw "7.5 million years for that?";
+      throw new Error("7.5 million years for that?");
     return "a" in this ? i + this.a : i + b;
   }
 
@@ -2595,7 +2595,7 @@ function run_single_closure_tests(library, abi, suffix) {
   var bignum2 = ctypes.UInt64.join(0xDEFEC8ED, 0xD15EA5E);
   function closure_fn_64(fail) {
     if (fail)
-      throw "Just following orders, sir!";
+      throw new Error("Just following orders, sir!");
     return bignum1;
   }
   var closure64 = fn_64_t(closure_fn_64, null, bignum2);

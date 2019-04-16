@@ -74,7 +74,7 @@ var BrowserUtils = {
         principalStr = " from " + aPrincipal.URI.spec;
       } catch (e2) { }
 
-      throw "Load of " + aURL + principalStr + " denied.";
+      throw new Error(`Load of ${aURL + principalStr} denied.`);
     }
   },
 

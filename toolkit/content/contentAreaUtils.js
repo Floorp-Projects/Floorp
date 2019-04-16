@@ -856,7 +856,7 @@ function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, 
 
   if (!bundleName) {
     if (aSaveMode != SAVEMODE_FILEONLY)
-      throw "Invalid save mode for type '" + aContentType + "'";
+      throw new Error(`Invalid save mode for type '${aContentType}'`);
 
     var mimeInfo = getMIMEInfoForType(aContentType, aFileExtension);
     if (mimeInfo) {
