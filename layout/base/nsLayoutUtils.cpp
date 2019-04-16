@@ -1023,13 +1023,13 @@ bool nsLayoutUtils::ShouldDisableApzForElement(nsIContent* aContent) {
   }
 
   Document* doc = aContent->GetComposedDoc();
-  nsIPresShell* rootShell =
-      APZCCallbackHelper::GetRootContentDocumentPresShellForContent(aContent);
-  if (rootShell) {
-    if (Document* rootDoc = rootShell->GetDocument()) {
+  if (PresShell* rootPresShell =
+          APZCCallbackHelper::GetRootContentDocumentPresShellForContent(
+              aContent)) {
+    if (Document* rootDoc = rootPresShell->GetDocument()) {
       nsIContent* rootContent =
-          rootShell->GetRootScrollFrame()
-              ? rootShell->GetRootScrollFrame()->GetContent()
+          rootPresShell->GetRootScrollFrame()
+              ? rootPresShell->GetRootScrollFrame()->GetContent()
               : rootDoc->GetDocumentElement();
       // For the AccessibleCaret: disable APZ on any scrollable subframes that
       // are not the root scrollframe of a document, if the document has any
