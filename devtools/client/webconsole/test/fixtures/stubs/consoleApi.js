@@ -43,7 +43,8 @@ stubPreparedMessages.set(`console.log('foobar', 'test')`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.log(undefined)`, new ConsoleMessage({
@@ -77,7 +78,8 @@ stubPreparedMessages.set(`console.log(undefined)`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.warn('danger, will robinson!')`, new ConsoleMessage({
@@ -109,7 +111,8 @@ stubPreparedMessages.set(`console.warn('danger, will robinson!')`, new ConsoleMe
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.log(NaN)`, new ConsoleMessage({
@@ -143,7 +146,8 @@ stubPreparedMessages.set(`console.log(NaN)`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.log(null)`, new ConsoleMessage({
@@ -177,7 +181,8 @@ stubPreparedMessages.set(`console.log(null)`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.log('鼬')`, new ConsoleMessage({
@@ -209,7 +214,8 @@ stubPreparedMessages.set(`console.log('鼬')`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.clear()`, new ConsoleMessage({
@@ -241,7 +247,8 @@ stubPreparedMessages.set(`console.clear()`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.count('bar')`, new ConsoleMessage({
@@ -271,7 +278,8 @@ stubPreparedMessages.set(`console.count('bar')`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.assert(false, {message: 'foobar'})`, new ConsoleMessage({
@@ -334,7 +342,8 @@ stubPreparedMessages.set(`console.assert(false, {message: 'foobar'})`, new Conso
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.log('hello \nfrom \rthe \"string world!')`, new ConsoleMessage({
@@ -366,7 +375,8 @@ stubPreparedMessages.set(`console.log('hello \nfrom \rthe \"string world!')`, ne
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.log('úṇĩçödê țĕșť')`, new ConsoleMessage({
@@ -398,7 +408,8 @@ stubPreparedMessages.set(`console.log('úṇĩçödê țĕșť')`, new ConsoleMe
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.dirxml(window)`, new ConsoleMessage({
@@ -442,7 +453,8 @@ stubPreparedMessages.set(`console.dirxml(window)`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.log('myarray', ['red', 'green', 'blue'])`, new ConsoleMessage({
@@ -492,7 +504,8 @@ stubPreparedMessages.set(`console.log('myarray', ['red', 'green', 'blue'])`, new
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.log('myregex', /a.b.c/)`, new ConsoleMessage({
@@ -534,7 +547,8 @@ stubPreparedMessages.set(`console.log('myregex', /a.b.c/)`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.table(['red', 'green', 'blue']);`, new ConsoleMessage({
@@ -583,7 +597,8 @@ stubPreparedMessages.set(`console.table(['red', 'green', 'blue']);`, new Console
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.log('myobject', {red: 'redValue', green: 'greenValue', blue: 'blueValue'});`, new ConsoleMessage({
@@ -651,7 +666,8 @@ stubPreparedMessages.set(`console.log('myobject', {red: 'redValue', green: 'gree
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.debug('debug message');`, new ConsoleMessage({
@@ -683,7 +699,8 @@ stubPreparedMessages.set(`console.debug('debug message');`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.info('info message');`, new ConsoleMessage({
@@ -715,7 +732,8 @@ stubPreparedMessages.set(`console.info('info message');`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.error('error message');`, new ConsoleMessage({
@@ -755,7 +773,8 @@ stubPreparedMessages.set(`console.error('error message');`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.log('mymap')`, new ConsoleMessage({
@@ -810,7 +829,8 @@ stubPreparedMessages.set(`console.log('mymap')`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.log('myset')`, new ConsoleMessage({
@@ -859,7 +879,8 @@ stubPreparedMessages.set(`console.log('myset')`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.trace()`, new ConsoleMessage({
@@ -911,7 +932,8 @@ stubPreparedMessages.set(`console.trace()`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, new ConsoleMessage({
@@ -1007,7 +1029,8 @@ stubPreparedMessages.set(`console.trace('bar', {'foo': 'bar'}, [1,2,3])`, new Co
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.time('bar')`, new ConsoleMessage({
@@ -1037,7 +1060,8 @@ stubPreparedMessages.set(`console.time('bar')`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`timerAlreadyExists`, new ConsoleMessage({
@@ -1067,7 +1091,8 @@ stubPreparedMessages.set(`timerAlreadyExists`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.timeLog('bar') - 1`, new ConsoleMessage({
@@ -1099,7 +1124,8 @@ stubPreparedMessages.set(`console.timeLog('bar') - 1`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.timeLog('bar') - 2`, new ConsoleMessage({
@@ -1156,7 +1182,8 @@ stubPreparedMessages.set(`console.timeLog('bar') - 2`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.timeEnd('bar')`, new ConsoleMessage({
@@ -1186,7 +1213,8 @@ stubPreparedMessages.set(`console.timeEnd('bar')`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`timeEnd.timerDoesntExist`, new ConsoleMessage({
@@ -1216,7 +1244,8 @@ stubPreparedMessages.set(`timeEnd.timerDoesntExist`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`timeLog.timerDoesntExist`, new ConsoleMessage({
@@ -1246,7 +1275,8 @@ stubPreparedMessages.set(`timeLog.timerDoesntExist`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.table('bar')`, new ConsoleMessage({
@@ -1278,7 +1308,8 @@ stubPreparedMessages.set(`console.table('bar')`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.table(['a', 'b', 'c'])`, new ConsoleMessage({
@@ -1327,7 +1358,8 @@ stubPreparedMessages.set(`console.table(['a', 'b', 'c'])`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.group('bar')`, new ConsoleMessage({
@@ -1359,7 +1391,8 @@ stubPreparedMessages.set(`console.group('bar')`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.groupEnd('bar')`, new ConsoleMessage({
@@ -1389,7 +1422,8 @@ stubPreparedMessages.set(`console.groupEnd('bar')`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.groupCollapsed('foo')`, new ConsoleMessage({
@@ -1421,7 +1455,8 @@ stubPreparedMessages.set(`console.groupCollapsed('foo')`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.groupEnd('foo')`, new ConsoleMessage({
@@ -1451,7 +1486,8 @@ stubPreparedMessages.set(`console.groupEnd('foo')`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.group()`, new ConsoleMessage({
@@ -1483,7 +1519,8 @@ stubPreparedMessages.set(`console.group()`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.groupEnd()`, new ConsoleMessage({
@@ -1513,7 +1550,8 @@ stubPreparedMessages.set(`console.groupEnd()`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.log(%cfoobar)`, new ConsoleMessage({
@@ -1549,7 +1587,8 @@ stubPreparedMessages.set(`console.log(%cfoobar)`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.log("%cHello%c|%cWorld")`, new ConsoleMessage({
@@ -1587,7 +1626,8 @@ stubPreparedMessages.set(`console.log("%cHello%c|%cWorld")`, new ConsoleMessage(
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.group(%cfoo%cbar)`, new ConsoleMessage({
@@ -1623,7 +1663,8 @@ stubPreparedMessages.set(`console.group(%cfoo%cbar)`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.groupEnd(%cfoo%cbar)`, new ConsoleMessage({
@@ -1653,7 +1694,8 @@ stubPreparedMessages.set(`console.groupEnd(%cfoo%cbar)`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.groupCollapsed(%cfoo%cbaz)`, new ConsoleMessage({
@@ -1689,7 +1731,8 @@ stubPreparedMessages.set(`console.groupCollapsed(%cfoo%cbaz)`, new ConsoleMessag
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.groupEnd(%cfoo%cbaz)`, new ConsoleMessage({
@@ -1719,7 +1762,8 @@ stubPreparedMessages.set(`console.groupEnd(%cfoo%cbaz)`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.dir({C, M, Y, K})`, new ConsoleMessage({
@@ -1792,7 +1836,8 @@ stubPreparedMessages.set(`console.dir({C, M, Y, K})`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.count | default: 1`, new ConsoleMessage({
@@ -1822,7 +1867,8 @@ stubPreparedMessages.set(`console.count | default: 1`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.count | default: 2`, new ConsoleMessage({
@@ -1852,7 +1898,8 @@ stubPreparedMessages.set(`console.count | default: 2`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.count | test counter: 1`, new ConsoleMessage({
@@ -1882,7 +1929,8 @@ stubPreparedMessages.set(`console.count | test counter: 1`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.count | test counter: 2`, new ConsoleMessage({
@@ -1912,7 +1960,8 @@ stubPreparedMessages.set(`console.count | test counter: 2`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.count | default: 3`, new ConsoleMessage({
@@ -1942,7 +1991,8 @@ stubPreparedMessages.set(`console.count | default: 3`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.count | clear`, new ConsoleMessage({
@@ -1974,7 +2024,8 @@ stubPreparedMessages.set(`console.count | clear`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.count | default: 4`, new ConsoleMessage({
@@ -2004,7 +2055,8 @@ stubPreparedMessages.set(`console.count | default: 4`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.count | test counter: 3`, new ConsoleMessage({
@@ -2034,7 +2086,8 @@ stubPreparedMessages.set(`console.count | test counter: 3`, new ConsoleMessage({
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.countReset | test counter: 0`, new ConsoleMessage({
@@ -2064,7 +2117,8 @@ stubPreparedMessages.set(`console.countReset | test counter: 0`, new ConsoleMess
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPreparedMessages.set(`console.countReset | counterDoesntExist`, new ConsoleMessage({
@@ -2094,7 +2148,8 @@ stubPreparedMessages.set(`console.countReset | counterDoesntExist`, new ConsoleM
   "notes": null,
   "indent": 0,
   "prefix": "",
-  "private": false
+  "private": false,
+  "chromeContext": false
 }));
 
 stubPackets.set(`console.log('foobar', 'test')`, {
