@@ -469,7 +469,7 @@ void WeakFrame::Init(nsIFrame* aFrame) {
   }
 }
 
-nsIFrame* NS_NewEmptyFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewEmptyFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsFrame(aStyle, aPresShell->GetPresContext());
 }
 

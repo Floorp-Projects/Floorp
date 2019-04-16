@@ -17,6 +17,7 @@
 class nsIFrame;
 
 namespace mozilla {
+class PresShell;
 class SVGAnimatedLength;
 class SVGAnimatedPreserveAspectRatio;
 class SVGAnimatedTransformList;
@@ -30,7 +31,7 @@ class nsSVGPatternFrame final : public nsSVGPaintServerFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsSVGPatternFrame)
 
-  friend nsIFrame* NS_NewSVGPatternFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewSVGPatternFrame(mozilla::PresShell* aPresShell,
                                          ComputedStyle* aStyle);
 
   explicit nsSVGPatternFrame(ComputedStyle* aStyle,

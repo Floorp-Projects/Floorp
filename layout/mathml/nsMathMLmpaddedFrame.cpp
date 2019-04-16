@@ -7,6 +7,7 @@
 #include "nsMathMLmpaddedFrame.h"
 #include "nsMathMLElement.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/TextUtils.h"
 #include <algorithm>
 
@@ -28,7 +29,7 @@ using namespace mozilla;
 #define NS_MATHML_PSEUDO_UNIT_DEPTH 4
 #define NS_MATHML_PSEUDO_UNIT_NAMEDSPACE 5
 
-nsIFrame* NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewMathMLmpaddedFrame(PresShell* aPresShell,
                                    ComputedStyle* aStyle) {
   return new (aPresShell)
       nsMathMLmpaddedFrame(aStyle, aPresShell->GetPresContext());

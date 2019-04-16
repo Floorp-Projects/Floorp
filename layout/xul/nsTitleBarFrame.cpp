@@ -27,7 +27,7 @@ using namespace mozilla;
 //
 // Creates a new TitleBar frame and returns it
 //
-nsIFrame* NS_NewTitleBarFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewTitleBarFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsTitleBarFrame(aStyle, aPresShell->GetPresContext());
 }
 

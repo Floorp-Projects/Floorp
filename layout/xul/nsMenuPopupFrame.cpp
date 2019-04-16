@@ -79,8 +79,7 @@ const char kPrefIncrementalSearchTimeout[] =
 //
 // Wrapper for creating a new menu popup container
 //
-nsIFrame* NS_NewMenuPopupFrame(nsIPresShell* aPresShell,
-                               ComputedStyle* aStyle) {
+nsIFrame* NS_NewMenuPopupFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       nsMenuPopupFrame(aStyle, aPresShell->GetPresContext());
 }

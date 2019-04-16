@@ -28,7 +28,7 @@ extern mozilla::LazyLogModule gLayoutPrintingLog;
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-nsPageFrame* NS_NewPageFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsPageFrame* NS_NewPageFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsPageFrame(aStyle, aPresShell->GetPresContext());
 }
 
@@ -628,8 +628,7 @@ void nsPageFrame::AppendDirectlyOwnedAnonBoxes(
   aResult.AppendElement(mFrames.FirstChild());
 }
 
-nsIFrame* NS_NewPageBreakFrame(nsIPresShell* aPresShell,
-                               ComputedStyle* aStyle) {
+nsIFrame* NS_NewPageBreakFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   MOZ_ASSERT(aPresShell, "null PresShell");
   // check that we are only creating page break frames when printing
   NS_ASSERTION(aPresShell->GetPresContext()->IsPaginated(),

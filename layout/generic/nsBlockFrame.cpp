@@ -283,12 +283,11 @@ NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(BlockEndEdgeOfChildrenProperty, nscoord)
 
 //----------------------------------------------------------------------
 
-nsBlockFrame* NS_NewBlockFrame(nsIPresShell* aPresShell,
-                               ComputedStyle* aStyle) {
+nsBlockFrame* NS_NewBlockFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsBlockFrame(aStyle, aPresShell->GetPresContext());
 }
 
-nsBlockFrame* NS_NewBlockFormattingContext(nsIPresShell* aPresShell,
+nsBlockFrame* NS_NewBlockFormattingContext(PresShell* aPresShell,
                                            ComputedStyle* aComputedStyle) {
   nsBlockFrame* blockFrame = NS_NewBlockFrame(aPresShell, aComputedStyle);
   blockFrame->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);

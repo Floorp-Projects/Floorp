@@ -8,6 +8,7 @@
 
 #include "gfxUtils.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/RefPtr.h"
 #include "nsLayoutUtils.h"
 #include "nsPresContext.h"
@@ -33,8 +34,7 @@ using namespace mozilla::gfx;
 #define THICK_FRACTION_LINE 2.0f
 #define THICK_FRACTION_LINE_MINIMUM_PIXELS 2  // minimum of 2 pixels
 
-nsIFrame* NS_NewMathMLmfracFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle) {
+nsIFrame* NS_NewMathMLmfracFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       nsMathMLmfracFrame(aStyle, aPresShell->GetPresContext());
 }

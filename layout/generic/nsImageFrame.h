@@ -198,10 +198,10 @@ class nsImageFrame : public nsAtomicContainerFrame, public nsIReflowCallback {
   nsImageFrame* CreateContinuingFrame(nsIPresShell*, ComputedStyle*) const;
 
  private:
-  friend nsIFrame* NS_NewImageFrame(nsIPresShell*, ComputedStyle*);
-  friend nsIFrame* NS_NewImageFrameForContentProperty(nsIPresShell*,
+  friend nsIFrame* NS_NewImageFrame(mozilla::PresShell*, ComputedStyle*);
+  friend nsIFrame* NS_NewImageFrameForContentProperty(mozilla::PresShell*,
                                                       ComputedStyle*);
-  friend nsIFrame* NS_NewImageFrameForGeneratedContentIndex(nsIPresShell*,
+  friend nsIFrame* NS_NewImageFrameForGeneratedContentIndex(mozilla::PresShell*,
                                                             ComputedStyle*);
 
   nsImageFrame(ComputedStyle* aStyle, nsPresContext* aPresContext, Kind aKind)

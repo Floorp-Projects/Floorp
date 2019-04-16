@@ -12,6 +12,9 @@
 #include "nsIPrintSettings.h"
 
 namespace mozilla {
+
+class PresShell;
+
 namespace dom {
 
 class HTMLCanvasElement;
@@ -56,7 +59,7 @@ class nsSimplePageSequenceFrame final : public nsContainerFrame,
                                         public nsIPageSequenceFrame {
  public:
   friend nsSimplePageSequenceFrame* NS_NewSimplePageSequenceFrame(
-      nsIPresShell* aPresShell, ComputedStyle* aStyle);
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsSimplePageSequenceFrame)

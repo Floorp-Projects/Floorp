@@ -10,11 +10,15 @@
 #include "nsLeafFrame.h"
 #include "nsBox.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 class nsLeafBoxFrame : public nsLeafFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsLeafBoxFrame)
 
-  friend nsIFrame* NS_NewLeafBoxFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewLeafBoxFrame(mozilla::PresShell* aPresShell,
                                       ComputedStyle* aStyle);
 
   virtual nsSize GetXULPrefSize(nsBoxLayoutState& aState) override;

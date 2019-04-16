@@ -12,6 +12,10 @@
 #include "nsCellMap.h"
 #include "nsTableFrame.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 /**
  * Primary frame for a table element,
  * the nsTableWrapperFrame contains 0 or one caption frame, and a nsTableFrame
@@ -27,8 +31,8 @@ class nsTableWrapperFrame : public nsContainerFrame {
    *
    * @return           the frame that was created
    */
-  friend nsTableWrapperFrame* NS_NewTableWrapperFrame(nsIPresShell* aPresShell,
-                                                      ComputedStyle* aStyle);
+  friend nsTableWrapperFrame* NS_NewTableWrapperFrame(
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
   // nsIFrame overrides - see there for a description
 

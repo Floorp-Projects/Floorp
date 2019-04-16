@@ -68,7 +68,7 @@ static already_AddRefed<nsIContent> GetContentOfBox(nsIFrame* aBox) {
   return content.forget();
 }
 
-nsIFrame* NS_NewSliderFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewSliderFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsSliderFrame(aStyle, aPresShell->GetPresContext());
 }
 

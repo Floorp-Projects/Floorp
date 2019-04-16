@@ -23,6 +23,7 @@
 #include "nsRepeatService.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/Telemetry.h"
 
 using namespace mozilla;
@@ -32,7 +33,7 @@ using namespace mozilla;
 //
 // Creates a new Toolbar frame and returns it
 //
-nsIFrame* NS_NewScrollbarButtonFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewScrollbarButtonFrame(PresShell* aPresShell,
                                      ComputedStyle* aStyle) {
   return new (aPresShell)
       nsScrollbarButtonFrame(aStyle, aPresShell->GetPresContext());

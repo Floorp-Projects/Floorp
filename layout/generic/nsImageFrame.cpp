@@ -133,18 +133,18 @@ static bool HaveFixedSize(const ReflowInput& aReflowInput) {
          aReflowInput.mStylePosition->mWidth.ConvertsToLength();
 }
 
-nsIFrame* NS_NewImageFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewImageFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsImageFrame(aStyle, aPresShell->GetPresContext(),
                                        nsImageFrame::Kind::ImageElement);
 }
 
-nsIFrame* NS_NewImageFrameForContentProperty(nsIPresShell* aPresShell,
+nsIFrame* NS_NewImageFrameForContentProperty(PresShell* aPresShell,
                                              ComputedStyle* aStyle) {
   return new (aPresShell) nsImageFrame(aStyle, aPresShell->GetPresContext(),
                                        nsImageFrame::Kind::ContentProperty);
 }
 
-nsIFrame* NS_NewImageFrameForGeneratedContentIndex(nsIPresShell* aPresShell,
+nsIFrame* NS_NewImageFrameForGeneratedContentIndex(PresShell* aPresShell,
                                                    ComputedStyle* aStyle) {
   return new (aPresShell)
       nsImageFrame(aStyle, aPresShell->GetPresContext(),
