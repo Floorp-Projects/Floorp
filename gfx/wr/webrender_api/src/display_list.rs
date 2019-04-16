@@ -37,11 +37,18 @@ const FIRST_SPATIAL_NODE_INDEX: usize = 2;
 const FIRST_CLIP_NODE_INDEX: usize = 1;
 
 #[repr(C)]
-#[derive(Clone, Copy, Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[derive(Debug, Deserialize, Eq, Hash, PartialEq, Serialize)]
 pub struct ItemRange<T> {
     start: usize,
     length: usize,
     _boo: PhantomData<T>,
+}
+
+impl<T> Copy for ItemRange<T> {}
+impl<T> Clone for ItemRange<T> {
+    fn clone(&self) -> Self {
+        *self
+    }
 }
 
 impl<T> Default for ItemRange<T> {

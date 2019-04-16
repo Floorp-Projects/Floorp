@@ -2064,9 +2064,9 @@ pub extern "C" fn wr_dp_push_stacking_context(
     debug_assert!(unsafe { !is_in_render_thread() });
 
     let c_filters = unsafe { make_slice(filters, filter_count) };
-    let mut filters : Vec<FilterOp> = c_filters.iter().map(|c_filter| {
-                                                           *c_filter
-    }).collect();
+    let mut filters : Vec<FilterOp> = c_filters.iter()
+        .map(|c_filter| { c_filter.clone() })
+        .collect();
 
     let c_filter_datas = unsafe { make_slice(filter_datas, filter_datas_count) };
     let r_filter_datas : Vec<FilterData> = c_filter_datas.iter().map(|c_filter_data| {
