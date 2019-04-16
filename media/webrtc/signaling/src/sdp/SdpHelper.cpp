@@ -29,11 +29,15 @@ MOZ_MTLOG_MODULE("sdp")
 nsresult SdpHelper::CopyTransportParams(size_t numComponents,
                                         const SdpMediaSection& oldLocal,
                                         SdpMediaSection* newLocal) {
+  const SdpAttributeList& oldLocalAttrs = oldLocal.GetAttributeList();
   // Copy over m-section details
-  newLocal->SetPort(oldLocal.GetPort());
+  if (!oldLocalAttrs.HasAttribute(SdpAttribute::kBundleOnlyAttribute)) {
+    // Do not copy port 0 from an offer with a=bundle-only; this could cause
+    // an answer msection to be erroneously rejected.
+    newLocal->SetPort(oldLocal.GetPort());
+  }
   newLocal->GetConnection() = oldLocal.GetConnection();
 
-  const SdpAttributeList& oldLocalAttrs = oldLocal.GetAttributeList();
   SdpAttributeList& newLocalAttrs = newLocal->GetAttributeList();
 
   // Now we copy over attributes that won't be added by the usual logic
