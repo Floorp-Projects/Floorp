@@ -12,6 +12,9 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.feature.readerview.internal.ReaderViewControlsInteractor
+import mozilla.components.feature.readerview.internal.ReaderViewControlsPresenter
+import mozilla.components.feature.readerview.view.ReaderViewControlsView
 import mozilla.components.support.base.feature.BackHandler
 import mozilla.components.support.base.feature.LifecycleAwareFeature
 import mozilla.components.support.base.log.logger.Logger
@@ -35,10 +38,13 @@ class ReaderViewFeature(
     private val context: Context,
     private val engine: Engine,
     private val sessionManager: SessionManager,
+    controlsView: ReaderViewControlsView,
     private val onReaderViewAvailableChange: OnReaderViewAvailableChange = { }
 ) : SelectionAwareSessionObserver(sessionManager), LifecycleAwareFeature, BackHandler {
 
     private val config = Config(context.getSharedPreferences("mozac_feature_reader_view", Context.MODE_PRIVATE))
+    private val controlsPresenter = ReaderViewControlsPresenter(controlsView, config)
+    private val controlsInteractor = ReaderViewControlsInteractor(controlsView, config)
 
     // TODO this object will be manipulated by the ReaderViewAppearanceFragment:
     // https://github.com/mozilla-mobile/android-components/issues/2623
@@ -79,6 +85,12 @@ class ReaderViewFeature(
             ReaderViewFeature.install(engine)
         }
         observeSelected()
+        controlsInteractor.start()
+    }
+
+    override fun stop() {
+        controlsInteractor.stop()
+        super.stop()
     }
 
     override fun onBackPressed(): Boolean {
@@ -98,6 +110,11 @@ class ReaderViewFeature(
         // TODO stop listening to reader view web extension messages of this session
     }
 
+    override fun onSessionSelected(session: Session) {
+        // TODO restore selected state of whether the controls are open or not
+        super.onSessionSelected(session)
+    }
+
     fun showReaderView() {
         // TODO send message to show reader view (-> see ReaderView.show())
     }
@@ -106,12 +123,18 @@ class ReaderViewFeature(
         // TODO send message to hide reader view (-> see ReaderView.hide())
     }
 
-    fun showAppearanceControls() {
-        // TODO show appearance fragment
+    /**
+     * Show ReaderView appearance controls.
+     */
+    fun showControls() {
+        controlsPresenter.show()
     }
 
-    fun hideAppearanceControls() {
-        // TODO hide appearance fragment
+    /**
+     * Hide ReaderView appearance controls.
+     */
+    fun hideControls() {
+        controlsPresenter.hide()
     }
 
     // TODO observe messages delivered from the web extension to the selected session

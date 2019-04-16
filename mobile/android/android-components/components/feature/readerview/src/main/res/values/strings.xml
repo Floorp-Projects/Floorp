@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~  License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
+
+<resources>
+    <string name="mozac_feature_readerview_sans_serif">Sans serif</string>
+    <string name="mozac_feature_readerview_sans_serif_font_desc">Sans Serif font</string>
+    <string name="mozac_feature_readerview_serif_desc">Serif</string>
+    <string name="mozac_feature_readerview_serif_font_desc">Serif font</string>
+    <string name="mozac_feature_readerview_negative_sign">-</string>
+    <string name="mozac_feature_readerview_font_size_decrease_desc">Font size decrease</string>
+    <string name="mozac_feature_readerview_positive_sign">+</string>
+    <string name="mozac_feature_readerview_font_size_increase_desc">Font size increase</string>
+    <string name="mozac_feature_readerview_dark">Dark</string>
+    <string name="mozac_feature_readerview_dark_color_scheme_desc">Dark color scheme</string>
+    <string name="mozac_feature_readerview_sephia">Sepia</string>
+    <string name="mozac_feature_readerview_sepia_color_scheme_desc">Sepia color scheme</string>
+    <string name="mozac_feature_readerview_light">Light</string>
+    <string name="mozac_feature_readerview_light_color_scheme_desc">Light color scheme</string>
+</resources>
