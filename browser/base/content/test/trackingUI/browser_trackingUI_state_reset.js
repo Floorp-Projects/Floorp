@@ -4,6 +4,7 @@
 const TP_PREF = "privacy.trackingprotection.enabled";
 const TRACKING_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/trackingPage.html";
 const BENIGN_PAGE = "http://tracking.example.org/browser/browser/base/content/test/trackingUI/benignPage.html";
+const ABOUT_PAGE = "about:preferences";
 
 /* This asserts that the content blocking event state is correctly reset
  * when navigating to a new location, and that the user is correctly
@@ -38,6 +39,35 @@ add_task(async function testResetOnLocationChange() {
 
   gBrowser.selectedTab = tab;
   is(browser.securityUI.contentBlockingEvent, 0, "Benign page has no content blocking event");
+  ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
+
+  gBrowser.removeTab(trackingTab);
+  gBrowser.removeTab(tab);
+
+  Services.prefs.clearUserPref(TP_PREF);
+});
+
+/* Test that the content blocking icon is correctly reset
+ * when changing tabs or navigating to an about: page */
+add_task(async function testResetOnTabChange() {
+  Services.prefs.setBoolPref(TP_PREF, true);
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, ABOUT_PAGE);
+  ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
+
+  await Promise.all([promiseTabLoadEvent(tab, TRACKING_PAGE),
+                     waitForContentBlockingEvent(3)]);
+  ok(ContentBlocking.iconBox.hasAttribute("active"), "shield is active");
+
+  await promiseTabLoadEvent(tab, ABOUT_PAGE);
+  ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
+
+  let contentBlockingEvent = waitForContentBlockingEvent(3);
+  let trackingTab = await BrowserTestUtils.openNewForegroundTab(gBrowser, TRACKING_PAGE);
+  await contentBlockingEvent;
+  ok(ContentBlocking.iconBox.hasAttribute("active"), "shield is active");
+
+  gBrowser.selectedTab = tab;
   ok(!ContentBlocking.iconBox.hasAttribute("active"), "shield is not active");
 
   gBrowser.removeTab(trackingTab);
