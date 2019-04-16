@@ -2820,10 +2820,12 @@ public class Tokenizer implements Locator {
                                 continue stateloop;
                             case '\r':
                                 appendStrBufCarriageReturn();
+                                state = transition(state, Tokenizer.COMMENT, reconsume, pos);
                                 break stateloop;
                             case '\n':
                                 appendStrBufLineFeed();
-                                continue;
+                                state = transition(state, Tokenizer.COMMENT, reconsume, pos);
+                                continue stateloop;
                             case '\u0000':
                                 c = '\uFFFD';
                                 // CPPONLY: MOZ_FALLTHROUGH;
