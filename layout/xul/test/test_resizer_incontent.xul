@@ -6,8 +6,8 @@ This test ensures that a resizer in content doesn't resize the window.
 -->
 <window title="XUL resizer in content test"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"/>
-  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"/>
+  <script src="/tests/SimpleTest/SimpleTest.js"/>
+  <script src="/tests/SimpleTest/EventUtils.js"/>
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
