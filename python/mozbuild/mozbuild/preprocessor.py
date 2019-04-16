@@ -718,7 +718,7 @@ class Preprocessor:
         for i in range(1, len(lst), 2):
             lst[i] = vsubst(lst[i])
         lst.append('\n')  # add back the newline
-        self.write(reduce(lambda x, y: x+y, lst, ''))
+        self.write(six.moves.reduce(lambda x, y: x+y, lst, ''))
 
     def do_literal(self, args):
         self.write(args + '\n')
