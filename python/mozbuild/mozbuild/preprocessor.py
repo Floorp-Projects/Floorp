@@ -27,6 +27,7 @@ from __future__ import absolute_import, print_function
 import sys
 import os
 import re
+import six
 from optparse import OptionParser
 import errno
 from mozbuild.makeutil import Makefile
@@ -791,7 +792,7 @@ class Preprocessor:
         args can either be a file name, or a file-like object.
         Files should be opened, and will be closed after processing.
         """
-        isName = type(args) == str or type(args) == unicode
+        isName = isinstance(args, six.string_types)
         oldCheckLineNumbers = self.checkLineNumbers
         self.checkLineNumbers = False
         if isName:
