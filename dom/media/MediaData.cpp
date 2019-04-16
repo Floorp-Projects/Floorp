@@ -417,15 +417,34 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
           SurfaceFormat::B8G8R8A8)) {
     return nullptr;
   }
-  uint8_t* argb_buffer = videoImage->GetBuffer();
-  IntSize size = videoImage->GetSize();
+
+  RefPtr<layers::TextureClient> texture =
+      videoImage->GetTextureClient(/* aForwarder */ nullptr);
+  if (!texture) {
+    NS_WARNING("Failed to allocate TextureClient");
+    return nullptr;
+  }
+
+  layers::TextureClientAutoLock autoLock(texture,
+                                         layers::OpenMode::OPEN_WRITE_ONLY);
+  if (!autoLock.Succeeded()) {
+    NS_WARNING("Failed to lock TextureClient");
+    return nullptr;
+  }
+
+  layers::MappedTextureData buffer;
+  if (!texture->BorrowMappedData(buffer)) {
+    NS_WARNING("Failed to borrow mapped data");
+    return nullptr;
+  }
 
   // The naming convention for libyuv and associated utils is word-order.
   // The naming convention in the gfx stack is byte-order.
   ConvertYCbCrAToARGB(aBuffer.mPlanes[0].mData, aBuffer.mPlanes[1].mData,
                       aBuffer.mPlanes[2].mData, aAlphaPlane.mData,
                       aBuffer.mPlanes[0].mStride, aBuffer.mPlanes[1].mStride,
-                      argb_buffer, size.width * 4, size.width, size.height);
+                      buffer.data, buffer.stride, buffer.size.width,
+                      buffer.size.height);
 
   return v.forget();
 }
