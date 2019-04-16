@@ -13,6 +13,10 @@
 #include "nsTableColGroupFrame.h"
 #include "mozilla/WritingModes.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 class nsTableColFrame final : public nsSplittableFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsTableColFrame)
@@ -34,7 +38,7 @@ class nsTableColFrame final : public nsSplittableFrame {
    *
    * @return           the frame that was created
    */
-  friend nsTableColFrame* NS_NewTableColFrame(nsIPresShell* aPresShell,
+  friend nsTableColFrame* NS_NewTableColFrame(mozilla::PresShell* aPresShell,
                                               ComputedStyle* aContext);
 
   // nsIFrame overrides

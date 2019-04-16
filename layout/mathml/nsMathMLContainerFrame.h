@@ -15,6 +15,10 @@
 #include "nsMathMLFrame.h"
 #include "mozilla/Likely.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 /*
  * Base class for MathML container frames. It acts like an inferred
  * mrow. By default, this frame uses its Reflow() method to lay its
@@ -369,8 +373,8 @@ class nsMathMLmathBlockFrame final : public nsBlockFrame {
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmathBlockFrame)
 
-  friend nsContainerFrame* NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell,
-                                                      ComputedStyle* aStyle);
+  friend nsContainerFrame* NS_NewMathMLmathBlockFrame(
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
   // beware, mFrames is not set by nsBlockFrame
   // cannot use mFrames{.FirstChild()|.etc} since the block code doesn't set
@@ -442,8 +446,8 @@ class nsMathMLmathInlineFrame final : public nsInlineFrame,
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmathInlineFrame)
 
-  friend nsContainerFrame* NS_NewMathMLmathInlineFrame(nsIPresShell* aPresShell,
-                                                       ComputedStyle* aStyle);
+  friend nsContainerFrame* NS_NewMathMLmathInlineFrame(
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
   virtual void SetInitialChildList(ChildListID aListID,
                                    nsFrameList& aChildList) override {

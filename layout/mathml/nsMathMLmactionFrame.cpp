@@ -62,7 +62,7 @@ static int32_t GetActionType(nsIContent* aContent) {
   return NS_MATHML_ACTION_TYPE_UNKNOWN;
 }
 
-nsIFrame* NS_NewMathMLmactionFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewMathMLmactionFrame(PresShell* aPresShell,
                                    ComputedStyle* aStyle) {
   return new (aPresShell)
       nsMathMLmactionFrame(aStyle, aPresShell->GetPresContext());

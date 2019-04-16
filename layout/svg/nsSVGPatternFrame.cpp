@@ -14,14 +14,15 @@
 #include "gfxMatrix.h"
 #include "gfxPattern.h"
 #include "gfxPlatform.h"
+#include "mozilla/ComputedStyle.h"
+#include "mozilla/PresShell.h"
+#include "mozilla/dom/SVGPatternElement.h"
+#include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "mozilla/gfx/2D.h"
 #include "nsGkAtoms.h"
 #include "nsSVGDisplayableFrame.h"
-#include "mozilla/ComputedStyle.h"
 #include "SVGObserverUtils.h"
 #include "SVGGeometryFrame.h"
-#include "mozilla/dom/SVGPatternElement.h"
-#include "mozilla/dom/SVGUnitTypesBinding.h"
 #include "nsSVGUtils.h"
 #include "SVGAnimatedTransformList.h"
 #include "SVGContentUtils.h"
@@ -705,8 +706,7 @@ already_AddRefed<gfxPattern> nsSVGPatternFrame::GetPaintServerPattern(
 // Public functions
 // -------------------------------------------------------------------------
 
-nsIFrame *NS_NewSVGPatternFrame(nsIPresShell *aPresShell,
-                                ComputedStyle *aStyle) {
+nsIFrame *NS_NewSVGPatternFrame(PresShell *aPresShell, ComputedStyle *aStyle) {
   return new (aPresShell)
       nsSVGPatternFrame(aStyle, aPresShell->GetPresContext());
 }

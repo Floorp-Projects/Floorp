@@ -561,14 +561,13 @@ class nsCSSFrameConstructor final : public nsFrameManager {
      is responsible for initializing the object, adding it to frame lists,
      constructing frames for the children, etc.
 
-     @param nsIPresShell the presshell whose arena should be used to allocate
-                         the frame.
+     @param PresShell the presshell whose arena should be used to allocate
+                      the frame.
      @param ComputedStyle the style to use for the frame. */
-  typedef nsIFrame* (*FrameCreationFunc)(nsIPresShell*, ComputedStyle*);
-  typedef nsContainerFrame* (*ContainerFrameCreationFunc)(nsIPresShell*,
+  typedef nsIFrame* (*FrameCreationFunc)(PresShell*, ComputedStyle*);
+  typedef nsContainerFrame* (*ContainerFrameCreationFunc)(PresShell*,
                                                           ComputedStyle*);
-  typedef nsBlockFrame* (*BlockFrameCreationFunc)(nsIPresShell*,
-                                                  ComputedStyle*);
+  typedef nsBlockFrame* (*BlockFrameCreationFunc)(PresShell*, ComputedStyle*);
 
   /* A function that can be used to get a FrameConstructionData.  Such
      a function is allowed to return null.

@@ -10,11 +10,15 @@
 #include "nsIDOMEventListener.h"
 #include "nsBoxFrame.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 class nsButtonBoxFrame : public nsBoxFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsButtonBoxFrame)
 
-  friend nsIFrame* NS_NewButtonBoxFrame(nsIPresShell* aPresShell);
+  friend nsIFrame* NS_NewButtonBoxFrame(mozilla::PresShell* aPresShell);
 
   nsButtonBoxFrame(ComputedStyle*, nsPresContext*, ClassID = kClassID);
 

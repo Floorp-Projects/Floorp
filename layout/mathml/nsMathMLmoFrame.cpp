@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "gfxContext.h"
+#include "mozilla/PresShell.h"
 #include "nsMathMLmoFrame.h"
 #include "nsPresContext.h"
 #include "nsContentUtils.h"
@@ -21,7 +22,7 @@ using namespace mozilla;
 // additional ComputedStyle to be used by our MathMLChar.
 #define NS_MATHML_CHAR_STYLE_CONTEXT_INDEX 0
 
-nsIFrame* NS_NewMathMLmoFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewMathMLmoFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsMathMLmoFrame(aStyle, aPresShell->GetPresContext());
 }
 

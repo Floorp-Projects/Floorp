@@ -42,8 +42,7 @@ using namespace mozilla::layout;
 using namespace mozilla::gfx;
 using namespace mozilla::layers;
 
-nsCanvasFrame* NS_NewCanvasFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle) {
+nsCanvasFrame* NS_NewCanvasFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsCanvasFrame(aStyle, aPresShell->GetPresContext());
 }
 

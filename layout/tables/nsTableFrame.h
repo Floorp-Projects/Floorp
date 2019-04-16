@@ -26,8 +26,9 @@ class nsTableRowFrame;
 class nsTableColGroupFrame;
 class nsITableLayoutStrategy;
 namespace mozilla {
-class WritingMode;
 class LogicalMargin;
+class PresShell;
+class WritingMode;
 struct TableReflowInput;
 namespace layers {
 class StackingContextHelper;
@@ -137,7 +138,7 @@ class nsTableFrame : public nsContainerFrame {
    *
    * @return           the frame that was created
    */
-  friend nsTableFrame* NS_NewTableFrame(nsIPresShell* aPresShell,
+  friend nsTableFrame* NS_NewTableFrame(mozilla::PresShell* aPresShell,
                                         ComputedStyle* aStyle);
 
   /** sets defaults for table-specific style.

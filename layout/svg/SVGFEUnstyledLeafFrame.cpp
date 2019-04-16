@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Keep in (case-insensitive) order:
+#include "mozilla/PresShell.h"
 #include "nsContainerFrame.h"
 #include "nsFrame.h"
 #include "nsGkAtoms.h"
@@ -14,7 +15,7 @@
 using namespace mozilla;
 
 class SVGFEUnstyledLeafFrame final : public nsFrame {
-  friend nsIFrame* NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewSVGFEUnstyledLeafFrame(mozilla::PresShell* aPresShell,
                                                 ComputedStyle* aStyle);
 
  protected:
@@ -53,7 +54,7 @@ class SVGFEUnstyledLeafFrame final : public nsFrame {
   }
 };
 
-nsIFrame* NS_NewSVGFEUnstyledLeafFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewSVGFEUnstyledLeafFrame(PresShell* aPresShell,
                                        ComputedStyle* aStyle) {
   return new (aPresShell)
       SVGFEUnstyledLeafFrame(aStyle, aPresShell->GetPresContext());
