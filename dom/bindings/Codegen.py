@@ -14040,8 +14040,6 @@ class CGDictionary(CGThing):
             # up.
             return None
         type = member.type
-        if type.isAny():
-            return "JS::UndefinedValue()"
         if type.isObject():
             return "nullptr"
         if type.isDictionary():
@@ -16685,7 +16683,7 @@ class ConstructCallback(CallbackMember):
 
     def getRvalDecl(self):
         # Box constructedObj for getJSToNativeConversionInfo().
-        return "JS::Rooted<JS::Value> rval(cx, JS::UndefinedValue());\n"
+        return "JS::Rooted<JS::Value> rval(cx);\n"
 
     def getCall(self):
         if self.argCount > 0:
@@ -16726,7 +16724,7 @@ class CallbackMethod(CallbackMember):
                                 canRunScript=canRunScript)
 
     def getRvalDecl(self):
-        return "JS::Rooted<JS::Value> rval(cx, JS::UndefinedValue());\n"
+        return "JS::Rooted<JS::Value> rval(cx);\n"
 
     def getCall(self):
         if self.argCount > 0:
@@ -16883,7 +16881,7 @@ class CallbackGetter(CallbackAccessor):
                                   spiderMonkeyInterfacesAreStructs)
 
     def getRvalDecl(self):
-        return "JS::Rooted<JS::Value> rval(cx, JS::UndefinedValue());\n"
+        return "JS::Rooted<JS::Value> rval(cx);\n"
 
     def getCall(self):
         return fill(
