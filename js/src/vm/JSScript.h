@@ -958,9 +958,22 @@ class ScriptSource {
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               JS::ScriptSourceInfo* info) const;
 
+ private:
+  // Overwrites |data| with the uncompressed data from |source|.  (This function
+  // currently asserts |data.is<Missing>()|, but callers should assert it as
+  // well, because this function shortly will be used in other cases and the
+  // assertion will have to be removed.)
   template <typename Unit>
-  MOZ_MUST_USE bool setSource(JSContext* cx, EntryUnits<Unit>&& source,
-                              size_t length);
+  MOZ_MUST_USE bool setUncompressedSourceHelper(JSContext* cx,
+                                                EntryUnits<Unit>&& source,
+                                                size_t length);
+
+ public:
+  // Initialize a fresh |ScriptSource| with uncompressed source.
+  template <typename Unit>
+  MOZ_MUST_USE bool initializeUncompressedSource(JSContext* cx,
+                                                 EntryUnits<Unit>&& source,
+                                                 size_t length);
 
   // Set the retrieved source for a |ScriptSource| whose source was recorded as
   // missing but retrievable.

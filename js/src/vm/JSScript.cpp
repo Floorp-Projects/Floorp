@@ -2093,9 +2093,8 @@ JSFlatString* ScriptSource::functionBodyString(JSContext* cx) {
 }
 
 template <typename Unit>
-MOZ_MUST_USE bool ScriptSource::setSource(JSContext* cx,
-                                          EntryUnits<Unit>&& source,
-                                          size_t length) {
+MOZ_MUST_USE bool ScriptSource::setUncompressedSourceHelper(
+    JSContext* cx, EntryUnits<Unit>&& source, size_t length) {
   MOZ_ASSERT(data.is<Missing>());
 
   auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
@@ -2118,7 +2117,7 @@ MOZ_MUST_USE bool ScriptSource::setRetrievedSource(JSContext* cx,
   MOZ_ASSERT(sourceRetrievable_);
   MOZ_ASSERT(data.is<Missing>(),
              "retrievable source must be indicated as missing");
-  return setSource(cx, std::move(source), length);
+  return setUncompressedSourceHelper(cx, std::move(source), length);
 }
 
 #if defined(JS_BUILD_BINAST)
@@ -2498,6 +2497,13 @@ bool ScriptSource::xdrFinalizeEncoder(JS::TranscodeBuffer& buffer) {
 }
 
 template <typename Unit>
+MOZ_MUST_USE bool ScriptSource::initializeUncompressedSource(
+    JSContext* cx, EntryUnits<Unit>&& source, size_t length) {
+  MOZ_ASSERT(data.is<Missing>(), "must be initializing a fresh ScriptSource");
+  return setUncompressedSourceHelper(cx, std::move(source), length);
+}
+
+template <typename Unit>
 struct SourceDecoder {
   XDRState<XDR_DECODE>* const xdr_;
   ScriptSource* const scriptSource_;
@@ -2519,8 +2525,8 @@ struct SourceDecoder {
 
     MOZ_TRY(xdr_->codeChars(sourceUnits.get(), uncompressedLength_));
 
-    if (!scriptSource_->setSource(xdr_->cx(), std::move(sourceUnits),
-                                  uncompressedLength_)) {
+    if (!scriptSource_->initializeUncompressedSource(
+            xdr_->cx(), std::move(sourceUnits), uncompressedLength_)) {
       return xdr_->fail(JS::TranscodeResult_Throw);
     }
 
