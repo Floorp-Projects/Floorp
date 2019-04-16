@@ -56,7 +56,7 @@ this.EveryWindow = {
   _onWindowClosing(aEvent) {
     let win = aEvent.target;
     for (let c of this._callbacks.values()) {
-      c.uninit(win);
+      c.uninit(win, true);
     }
   },
 };
