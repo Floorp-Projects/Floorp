@@ -33,6 +33,7 @@ class SidebarRuntimeItem extends PureComponent {
       isConnectionNotResponding: PropTypes.bool.isRequired,
       isSelected: PropTypes.bool.isRequired,
       isUnknown: PropTypes.bool.isRequired,
+      isUnplugged: PropTypes.bool.isRequired,
       name: PropTypes.string.isRequired,
       runtimeId: PropTypes.string.isRequired,
     };
@@ -112,10 +113,16 @@ class SidebarRuntimeItem extends PureComponent {
   }
 
   renderName() {
-    const { deviceName, getString, isUnknown, name } = this.props;
+    const { deviceName, getString, isUnknown, isUnplugged, name } = this.props;
 
-    const displayName = isUnknown ?
-      getString("about-debugging-sidebar-runtime-item-waiting-for-browser") : name;
+    let displayName;
+    if (isUnplugged) {
+      displayName = getString("about-debugging-sidebar-runtime-item-unplugged");
+    } else if (isUnknown) {
+      displayName = getString("about-debugging-sidebar-runtime-item-waiting-for-browser");
+    } else {
+      displayName = name;
+    }
 
     const localizationId = deviceName
       ? "about-debugging-sidebar-runtime-item-name"
