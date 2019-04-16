@@ -12,7 +12,7 @@ AddonTestUtils.usePrivilegedSignatures = false;
 // Assert on the expected "addonsManager.action" telemetry events (and optional filter events to verify
 // by using a given actionType).
 function assertActionAMTelemetryEvent(expectedActionEvents, assertMessage, {actionType} = {}) {
-  const snapshot = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_RELEASE_CHANNEL_OPTIN, true);
+  const snapshot = Services.telemetry.snapshotEvents(Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS, true);
 
   ok(snapshot.parent && snapshot.parent.length > 0, "Got parent telemetry events in the snapshot");
 
