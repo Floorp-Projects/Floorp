@@ -2460,19 +2460,20 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
     return NS_OK;
   }
 
-  nsIPresShell* shell =
+  RefPtr<PresShell> presShell =
       APZCCallbackHelper::GetRootContentDocumentPresShellForContent(content);
-  if (!shell) {
+  if (!presShell) {
     return NS_OK;
   }
 
-  nsIScrollableFrame* rootScrollFrame = shell->GetRootScrollFrameAsScrollable();
+  nsIScrollableFrame* rootScrollFrame =
+      presShell->GetRootScrollFrameAsScrollable();
   if (!rootScrollFrame) {
     return NS_OK;
   }
 
   nsIFrame* currentFrame = content->GetPrimaryFrame();
-  nsIFrame* rootFrame = shell->GetRootFrame();
+  nsIFrame* rootFrame = presShell->GetRootFrame();
   nsIFrame* scrolledFrame = rootScrollFrame->GetScrolledFrame();
   bool isFixedPos = true;
 
@@ -2495,7 +2496,7 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
     return NS_OK;
   }
 
-  Document* document = shell->GetDocument();
+  Document* document = presShell->GetDocument();
   if (!document) {
     return NS_OK;
   }
@@ -2515,7 +2516,7 @@ nsDOMWindowUtils::ZoomToFocusedInput() {
     // root content document. In this scenario, we want to ensure that the
     // main-thread side knows to scroll the content into view before we get
     // the bounding content rect and ask APZ to adjust the visual viewport.
-    shell->ScrollContentIntoView(
+    presShell->ScrollContentIntoView(
         content,
         nsIPresShell::ScrollAxis(nsIPresShell::SCROLL_MINIMUM,
                                  nsIPresShell::SCROLL_IF_NOT_VISIBLE),

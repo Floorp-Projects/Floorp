@@ -96,7 +96,7 @@ class APZCCallbackHelper {
 
   /* Get the pres shell associated with the root content document enclosing
    * |aContent|. */
-  static nsIPresShell* GetRootContentDocumentPresShellForContent(
+  static PresShell* GetRootContentDocumentPresShellForContent(
       nsIContent* aContent);
 
   /* Apply an "input transform" to the given |aInput| and return the transformed
