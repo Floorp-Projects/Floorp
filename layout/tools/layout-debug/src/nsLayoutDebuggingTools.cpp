@@ -15,9 +15,7 @@
 #include "nsQuickSort.h"
 
 #include "nsIContent.h"
-#include "mozilla/dom/Document.h"
 
-#include "nsIPresShell.h"
 #include "nsViewManager.h"
 #include "nsIFrame.h"
 
@@ -26,8 +24,10 @@
 static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
 
 #include "nsISelectionController.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PresShell.h"
 
 using namespace mozilla;
 using mozilla::dom::Document;
@@ -39,16 +39,18 @@ static already_AddRefed<nsIContentViewer> doc_viewer(nsIDocShell* aDocShell) {
   return result.forget();
 }
 
-static nsIPresShell* pres_shell(nsIDocShell* aDocShell) {
+static PresShell* GetPresShell(nsIDocShell* aDocShell) {
   nsCOMPtr<nsIContentViewer> cv = doc_viewer(aDocShell);
   if (!cv) return nullptr;
   return cv->GetPresShell();
 }
 
 static nsViewManager* view_manager(nsIDocShell* aDocShell) {
-  nsCOMPtr<nsIPresShell> shell(pres_shell(aDocShell));
-  if (!shell) return nullptr;
-  return shell->GetViewManager();
+  PresShell* presShell = GetPresShell(aDocShell);
+  if (!presShell) {
+    return nullptr;
+  }
+  return presShell->GetViewManager();
 }
 
 #ifdef DEBUG
@@ -246,10 +248,9 @@ nsLayoutDebuggingTools::GetReflowCounts(bool* aShow) {
 NS_IMETHODIMP
 nsLayoutDebuggingTools::SetReflowCounts(bool aShow) {
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
-  nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell));
-  if (shell) {
+  if (PresShell* presShell = GetPresShell(mDocShell)) {
 #ifdef MOZ_REFLOW_PERF
-    shell->SetPaintFrameCount(aShow);
+    presShell->SetPaintFrameCount(aShow);
     SetBoolPrefAndRefresh("layout.reflow.showframecounts", aShow);
     mReflowCounts = aShow;
 #else
@@ -334,9 +335,8 @@ nsLayoutDebuggingTools::DumpContent() {
 static void DumpFramesRecur(nsIDocShell* aDocShell, FILE* out) {
 #ifdef DEBUG_FRAME_DUMP
   fprintf(out, "webshell=%p \n", static_cast<void*>(aDocShell));
-  nsCOMPtr<nsIPresShell> shell(pres_shell(aDocShell));
-  if (shell) {
-    nsIFrame* root = shell->GetRootFrame();
+  if (PresShell* presShell = GetPresShell(aDocShell)) {
+    nsIFrame* root = presShell->GetRootFrame();
     if (root) {
       root->List(out);
     }
@@ -404,11 +404,11 @@ nsLayoutDebuggingTools::DumpStyleSheets() {
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
 #ifdef DEBUG
   FILE* out = stdout;
-  nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell));
-  if (shell)
-    shell->ListStyleSheets(out);
-  else
+  if (PresShell* presShell = GetPresShell(mDocShell)) {
+    presShell->ListStyleSheets(out);
+  } else {
     fputs("null pres shell\n", out);
+  }
 #endif
   return NS_OK;
 }
@@ -418,9 +418,8 @@ nsLayoutDebuggingTools::DumpComputedStyles() {
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
 #ifdef DEBUG
   FILE* out = stdout;
-  nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell));
-  if (shell) {
-    shell->ListComputedStyles(out);
+  if (PresShell* presShell = GetPresShell(mDocShell)) {
+    presShell->ListComputedStyles(out);
   } else {
     fputs("null pres shell\n", out);
   }
@@ -432,10 +431,9 @@ NS_IMETHODIMP
 nsLayoutDebuggingTools::DumpReflowStats() {
   NS_ENSURE_TRUE(mDocShell, NS_ERROR_NOT_INITIALIZED);
 #ifdef DEBUG
-  nsCOMPtr<nsIPresShell> shell(pres_shell(mDocShell));
-  if (shell) {
+  if (RefPtr<PresShell> presShell = GetPresShell(mDocShell)) {
 #  ifdef MOZ_REFLOW_PERF
-    shell->DumpReflows();
+    presShell->DumpReflows();
 #  else
     printf("************************************************\n");
     printf("Sorry, you have not built with MOZ_REFLOW_PERF=1\n");
