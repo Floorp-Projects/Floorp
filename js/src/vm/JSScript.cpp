@@ -2198,26 +2198,29 @@ bool ScriptSource::tryCompressOffThread(JSContext* cx) {
 }
 
 template <typename Unit>
-void ScriptSource::setCompressedSource(SharedImmutableString raw,
-                                       size_t uncompressedLength) {
-  MOZ_ASSERT(data.is<Missing>() || hasUncompressedSource());
-  MOZ_ASSERT_IF(hasUncompressedSource(), length() == uncompressedLength);
+void ScriptSource::convertToCompressedSource(SharedImmutableString compressed,
+                                             size_t uncompressedLength) {
+  MOZ_ASSERT(data.is<Uncompressed<Unit>>(),
+             "should only be converting uncompressed source to compressed "
+             "source identically encoded");
+  MOZ_ASSERT(length() == uncompressedLength);
 
   if (pinnedUnitsStack_) {
     MOZ_ASSERT(pendingCompressed_.empty());
-    pendingCompressed_.construct<Compressed<Unit>>(std::move(raw),
+    pendingCompressed_.construct<Compressed<Unit>>(std::move(compressed),
                                                    uncompressedLength);
   } else {
-    data = SourceType(Compressed<Unit>(std::move(raw), uncompressedLength));
+    data =
+        SourceType(Compressed<Unit>(std::move(compressed), uncompressedLength));
   }
 }
 
 template <typename Unit>
-MOZ_MUST_USE bool ScriptSource::setCompressedSource(JSContext* cx,
-                                                    UniqueChars&& compressed,
-                                                    size_t rawLength,
-                                                    size_t sourceLength) {
-  MOZ_ASSERT(compressed);
+MOZ_MUST_USE bool ScriptSource::initializeWithCompressedSource(
+    JSContext* cx, UniqueChars&& compressed, size_t rawLength,
+    size_t sourceLength) {
+  MOZ_ASSERT(data.is<Missing>(), "shouldn't be double-initializing");
+  MOZ_ASSERT(compressed != nullptr);
 
   auto& cache = cx->zone()->runtimeFromAnyThread()->sharedImmutableStrings();
   auto deduped = cache.getOrCreate(std::move(compressed), rawLength);
@@ -2226,7 +2229,12 @@ MOZ_MUST_USE bool ScriptSource::setCompressedSource(JSContext* cx,
     return false;
   }
 
-  setCompressedSource<Unit>(std::move(*deduped), sourceLength);
+  MOZ_ASSERT(pinnedUnitsStack_ == nullptr,
+             "shouldn't be initializing a ScriptSource while its characters "
+             "are pinned -- that only makes sense with a ScriptSource actively "
+             "being inspected");
+  data = SourceType(Compressed<Unit>(std::move(*deduped), sourceLength));
+
   return true;
 }
 
@@ -2400,15 +2408,15 @@ void SourceCompressionTask::runTask() {
   source->performTaskWork(this);
 }
 
-void ScriptSource::setCompressedSourceFromTask(
+void ScriptSource::convertToCompressedSourceFromTask(
     SharedImmutableString compressed) {
-  data.match(SetCompressedSourceFromTask(this, compressed));
+  data.match(ConvertToCompressedSourceFromTask(this, compressed));
 }
 
 void SourceCompressionTask::complete() {
   if (!shouldCancel() && resultString_.isSome()) {
     ScriptSource* source = sourceHolder_.get();
-    source->setCompressedSourceFromTask(std::move(*resultString_));
+    source->convertToCompressedSourceFromTask(std::move(*resultString_));
   }
 }
 
@@ -2667,10 +2675,10 @@ XDRResult ScriptSource::XDR(XDRState<mode>* xdr,
           }
           MOZ_TRY(xdr->codeBytes(bytes.get(), compressedLength));
 
-          if (!(srcCharSize == 1 ? ss->setCompressedSource<Utf8Unit>(
+          if (!(srcCharSize == 1 ? ss->initializeWithCompressedSource<Utf8Unit>(
                                        xdr->cx(), std::move(bytes),
                                        compressedLength, uncompressedLength)
-                                 : ss->setCompressedSource<char16_t>(
+                                 : ss->initializeWithCompressedSource<char16_t>(
                                        xdr->cx(), std::move(bytes),
                                        compressedLength, uncompressedLength))) {
             return xdr->fail(JS::TranscodeResult_Throw);
