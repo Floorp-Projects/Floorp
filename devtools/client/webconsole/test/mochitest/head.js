@@ -1334,7 +1334,7 @@ async function checkMessageStack(hud, text, frameLines) {
   const msgNode = await waitFor(() => findMessage(hud, text));
   ok(!msgNode.classList.contains("open"), `Error logged not expanded`);
 
-  const button = msgNode.querySelector(".collapse-button");
+  const button = await waitFor(() => msgNode.querySelector(".collapse-button"));
   button.click();
 
   const framesNode = await waitFor(() => msgNode.querySelector(".frames"));
