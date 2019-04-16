@@ -11,9 +11,9 @@
 #include "mozilla/UniquePtr.h"
 
 namespace mozilla {
+class PresShell;
 class ServoStyleSet;
 }  // namespace mozilla
-class nsIPresShell;
 class nsPresContext;
 class nsViewManager;
 
@@ -64,7 +64,7 @@ class nsIDocumentViewerPrint : public nsISupports {
    */
   virtual void SetPrintPreviewPresentation(nsViewManager* aViewManager,
                                            nsPresContext* aPresContext,
-                                           nsIPresShell* aPresShell) = 0;
+                                           mozilla::PresShell* aPresShell) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentViewerPrint,
@@ -83,6 +83,6 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentViewerPrint,
   void InitializeForPrintPreview() override;                    \
   void SetPrintPreviewPresentation(nsViewManager* aViewManager, \
                                    nsPresContext* aPresContext, \
-                                   nsIPresShell* aPresShell) override;
+                                   mozilla::PresShell* aPresShell) override;
 
 #endif /* nsIDocumentViewerPrint_h___ */

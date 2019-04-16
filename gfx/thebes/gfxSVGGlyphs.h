@@ -64,7 +64,7 @@ class gfxSVGGlyphsDocument final : public nsAPostRefreshObserver {
   gfxSVGGlyphs *mOwner;
   RefPtr<mozilla::dom::Document> mDocument;
   nsCOMPtr<nsIContentViewer> mViewer;
-  nsCOMPtr<nsIPresShell> mPresShell;
+  RefPtr<mozilla::PresShell> mPresShell;
 
   nsBaseHashtable<nsUint32HashKey, Element *, Element *> mGlyphIdMap;
 

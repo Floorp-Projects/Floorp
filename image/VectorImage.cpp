@@ -262,7 +262,7 @@ bool SVGDrawingCallback::operator()(gfxContext* aContext,
   MOZ_ASSERT(mSVGDocumentWrapper, "need an SVGDocumentWrapper");
 
   // Get (& sanity-check) the helper-doc's presShell
-  nsCOMPtr<nsIPresShell> presShell = mSVGDocumentWrapper->GetPresShell();
+  RefPtr<PresShell> presShell = mSVGDocumentWrapper->GetPresShell();
   MOZ_ASSERT(presShell, "GetPresShell returned null for an SVG image?");
 
 #ifdef MOZ_GECKO_PROFILER

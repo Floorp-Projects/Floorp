@@ -8808,12 +8808,11 @@ static void MaybeReflowForInflationScreenSizeChange(
           cv->AppendSubtree(array);
           for (uint32_t i = 0, iEnd = array.Length(); i < iEnd; ++i) {
             nsCOMPtr<nsIContentViewer> cv = array[i];
-            nsCOMPtr<nsIPresShell> shell = cv->GetPresShell();
-            if (shell) {
-              nsIFrame* rootFrame = shell->GetRootFrame();
+            if (RefPtr<PresShell> descendantPresShell = cv->GetPresShell()) {
+              nsIFrame* rootFrame = descendantPresShell->GetRootFrame();
               if (rootFrame) {
-                shell->FrameNeedsReflow(rootFrame, nsIPresShell::eStyleChange,
-                                        NS_FRAME_IS_DIRTY);
+                descendantPresShell->FrameNeedsReflow(
+                    rootFrame, nsIPresShell::eStyleChange, NS_FRAME_IS_DIRTY);
               }
             }
           }

@@ -15,23 +15,23 @@ webidl Node;
 #include "nsRect.h"
 
 class nsIWidget;
-class nsIPresShell;
 class nsPresContext;
 class nsView;
 class nsDOMNavigationTiming;
 namespace mozilla {
 class Encoding;
+class PresShell;
 }
 %}
 
 [ptr] native nsIWidgetPtr(nsIWidget);
 [ref] native nsIntRectRef(nsIntRect);
-[ptr] native nsIPresShellPtr(nsIPresShell);
 [ptr] native nsPresContextPtr(nsPresContext);
 [ptr] native nsViewPtr(nsView);
 [ptr] native nsDOMNavigationTimingPtr(nsDOMNavigationTiming);
 [ref] native nsIContentViewerTArray(nsTArray<nsCOMPtr<nsIContentViewer> >);
 [ptr] native Encoding(const mozilla::Encoding);
+[ptr] native PresShellPtr(mozilla::PresShell);
 
 [scriptable, builtinclass, uuid(2da17016-7851-4a45-a7a8-00b360e01595)]
 interface nsIContentViewer : nsISupports
@@ -215,7 +215,7 @@ interface nsIContentViewer : nsISupports
   attribute boolean isHidden;
 
   // presShell can be null.
-  [notxpcom,nostdcall] readonly attribute nsIPresShellPtr presShell;
+  [notxpcom,nostdcall] readonly attribute PresShellPtr presShell;
   // presContext can be null.
   [notxpcom,nostdcall] readonly attribute nsPresContextPtr presContext;
   // aDocument must not be null.
