@@ -525,6 +525,7 @@ dictionary OriginAttributesDictionary {
   boolean inIsolatedMozBrowser = false;
   unsigned long privateBrowsingId = 0;
   DOMString firstPartyDomain = "";
+  DOMString geckoViewSessionContextId = "";
 };
 dictionary OriginAttributesPatternDictionary {
   unsigned long appId;
@@ -532,6 +533,7 @@ dictionary OriginAttributesPatternDictionary {
   boolean inIsolatedMozBrowser;
   unsigned long privateBrowsingId;
   DOMString firstPartyDomain;
+  DOMString geckoViewSessionContextId;
 };
 
 dictionary CompileScriptOptionsDictionary {
