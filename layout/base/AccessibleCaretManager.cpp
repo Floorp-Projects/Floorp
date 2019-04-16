@@ -469,6 +469,18 @@ nsresult AccessibleCaretManager::TapCaret(const nsPoint& aPoint) {
   return rv;
 }
 
+static EnumSet<nsLayoutUtils::FrameForPointOption> GetHitTestOptions() {
+  EnumSet<nsLayoutUtils::FrameForPointOption> options = {
+      nsLayoutUtils::FrameForPointOption::IgnorePaintSuppression,
+      nsLayoutUtils::FrameForPointOption::IgnoreCrossDoc};
+#ifdef MOZ_WIDGET_ANDROID
+  // On Android, we need IgnoreRootScrollFrame for correct hit testing when
+  // zoomed in or out.
+  options += nsLayoutUtils::FrameForPointOption::IgnoreRootScrollFrame;
+#endif
+  return options;
+}
+
 nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
   // If the long-tap is landing on a pre-existing selection, don't replace
   // it with a new one. Instead just return and let the context menu pop up
@@ -491,17 +503,8 @@ nsresult AccessibleCaretManager::SelectWordOrShortcut(const nsPoint& aPoint) {
   }
 
   // Find the frame under point.
-  EnumSet<nsLayoutUtils::FrameForPointOption> options = {
-      nsLayoutUtils::FrameForPointOption::IgnorePaintSuppression,
-      nsLayoutUtils::FrameForPointOption::IgnoreCrossDoc};
-#ifdef MOZ_WIDGET_ANDROID
-  // On Android, we need IgnoreRootScrollFrame for correct hit testing when
-  // zoomed in or out.
-  options += nsLayoutUtils::FrameForPointOption::IgnoreRootScrollFrame;
-#endif
-
   AutoWeakFrame ptFrame =
-      nsLayoutUtils::GetFrameForPoint(rootFrame, aPoint, options);
+      nsLayoutUtils::GetFrameForPoint(rootFrame, aPoint, GetHitTestOptions());
   if (!ptFrame.GetFrame()) {
     return NS_ERROR_FAILURE;
   }
@@ -1097,10 +1100,9 @@ nsresult AccessibleCaretManager::DragCaretInternal(const nsPoint& aPoint) {
       nsPoint(aPoint.x, aPoint.y + mOffsetYToCaretLogicalPosition));
 
   // Find out which content we point to
-  nsIFrame* ptFrame = nsLayoutUtils::GetFrameForPoint(
-      rootFrame, point,
-      {nsLayoutUtils::FrameForPointOption::IgnorePaintSuppression,
-       nsLayoutUtils::FrameForPointOption::IgnoreCrossDoc});
+
+  nsIFrame* ptFrame =
+      nsLayoutUtils::GetFrameForPoint(rootFrame, point, GetHitTestOptions());
   if (!ptFrame) {
     return NS_ERROR_FAILURE;
   }
