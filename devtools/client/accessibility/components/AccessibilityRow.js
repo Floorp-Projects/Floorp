@@ -202,12 +202,14 @@ class AccessibilityRow extends Component {
    * @returns acecssible-row React component.
    */
   render() {
-    const { object } = this.props.member;
-    const props = Object.assign({}, this.props, {
+    const { member } = this.props;
+    const props = {
+      ...this.props,
       onContextMenu: this.props.hasContextMenu && (e => this.onContextMenu(e)),
-      onMouseOver: () => this.highlight(object),
+      onMouseOver: () => this.highlight(member.object),
       onMouseOut: () => this.unhighlight(),
-    });
+      key: `${member.path}-${member.active ? "active" : "inactive"}`,
+    };
 
     return (HighlightableTreeRow(props));
   }

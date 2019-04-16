@@ -329,7 +329,7 @@ function matchSnapshot(name, el) {
   }
 
   const snapshot = _snapshots[name];
-  if (!snapshot) {
+  if (snapshot === undefined) {
     is(false, `Snapshot for "${name}" not found.`);
   }
 
