@@ -12,10 +12,8 @@
         height="300"
         title="Chrome Context Menu Test w/Plugin Focus">
 
-<script type="application/javascript"
-        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
-<script type="application/javascript"
-        src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
 
 <popupset>
   <menupopup id="testmenu" onpopupshown="menuDisplayed()">

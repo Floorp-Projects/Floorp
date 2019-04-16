@@ -6,8 +6,7 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Tests: accessible XUL label/description events">
 
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
 
   <script type="application/javascript"
           src="../common.js" />

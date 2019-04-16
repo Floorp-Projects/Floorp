@@ -7,8 +7,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=835044
 <window title="Mozilla Bug 835044"
         onload="startTest()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
 <panel id="thepanel" level="parent"
        onpopupshown="sendMouseEvent();"

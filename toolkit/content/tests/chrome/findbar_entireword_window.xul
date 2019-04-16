@@ -14,10 +14,8 @@
         onload="onLoad();"
         title="findbar test - entire words only">
 
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"/>
 
   <script type="application/javascript"><![CDATA[
     const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");

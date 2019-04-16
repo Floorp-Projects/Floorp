@@ -5,10 +5,8 @@
 <window title="Focus Scroll Tests"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
 <body xmlns="http://www.w3.org/1999/xhtml">
 <div id="div" style="width:500px;height:48px;overflow:auto;font-size:16px;line-height:16px;">

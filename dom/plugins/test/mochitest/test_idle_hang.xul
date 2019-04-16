@@ -6,8 +6,7 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <title>Plugin Idle Hang Test</title>
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script type="application/javascript"
           src="http://mochi.test:8888/chrome/dom/plugins/test/mochitest/hang_test.js" />
   <script type="application/javascript" src="plugin-utils.js"></script>

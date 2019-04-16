@@ -7,24 +7,15 @@
         title="Chrome Test Harness"
         directory="chrome">
 
-  <script type="text/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/LogController.js"/>
-  <script type="text/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/MemoryStats.js"/>
-  <script type="text/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/StructuredLog.jsm"/>
-  <script type="text/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/TestRunner.js"/>
-  <script type="text/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
-  <script type="application/javascript"
-          src="chrome://mochikit/content/chrome-harness.js" />
-  <script type="application/javascript"
-          src="chrome://mochikit/content/chunkifyTests.js" />
-  <script type="application/javascript"
-          src="chrome://mochikit/content/manifestLibrary.js" />
-  <script type="text/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/setup.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/LogController.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/MemoryStats.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/StructuredLog.jsm"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/TestRunner.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/MozillaLogger.js"/>
+  <script src="chrome://mochikit/content/chrome-harness.js" />
+  <script src="chrome://mochikit/content/chunkifyTests.js" />
+  <script src="chrome://mochikit/content/manifestLibrary.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/setup.js" />
   <script type="application/javascript"><![CDATA[
 
 function loadTests()

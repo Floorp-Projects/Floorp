@@ -4,10 +4,8 @@
                  type="text/css"?>
 <window title="Test JSWindowActor"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/AddTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/AddTask.js"></script>
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">

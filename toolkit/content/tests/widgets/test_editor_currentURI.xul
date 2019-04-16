@@ -5,10 +5,8 @@
                  type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Editor currentURI Tests" onload="runTest();">
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
   <body xmlns="http://www.w3.org/1999/xhtml">
   <p/>

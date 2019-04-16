@@ -12,8 +12,7 @@
     <html:link rel="localization" href="crashreporter/aboutcrashes.ftl"/>
   </linkset>
 
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js" />
   <script type="application/javascript">
   <![CDATA[
   SimpleTest.waitForExplicitFinish();

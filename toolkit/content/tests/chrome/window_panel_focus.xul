@@ -5,8 +5,7 @@
 <window title="Panel Focus Tests"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
 <checkbox id="b1" label="Item 1"/>
 

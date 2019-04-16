@@ -7,8 +7,7 @@
         onload="runTest();">
   <title>Custom Elements in a XUL document</title>
 
-  <script type="application/javascript"
-          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
   <script type="application/javascript">
   <![CDATA[

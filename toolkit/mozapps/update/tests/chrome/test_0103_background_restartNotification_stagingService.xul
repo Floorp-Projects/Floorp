@@ -11,8 +11,7 @@
 <window title="Update Wizard pages: background finish with a background download and update staging and servicefs"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="runTestDefault();">
-<script type="application/javascript"
-        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 <script type="application/javascript"
         src="utils.js"/>
 
