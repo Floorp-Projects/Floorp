@@ -105,12 +105,12 @@ async function performTests() {
   EventUtils.sendString("fooBar.");
   await onPopUpOpen;
   is(getAutocompletePopupLabels(autocompletePopup).join(" - "),
-    "test - Foo - TEST - Test", "popup has expected items");
+    "test - Foo - Test - TEST", "popup has expected items");
 
   onAutoCompleteUpdated = jsterm.once("autocomplete-updated");
   EventUtils.sendString("T");
   await onAutoCompleteUpdated;
-  is(getAutocompletePopupLabels(autocompletePopup).join(" - "), "TEST - Test",
+  is(getAutocompletePopupLabels(autocompletePopup).join(" - "), "Test - TEST",
     "popup was filtered case-sensitively, as expected");
 }
 
