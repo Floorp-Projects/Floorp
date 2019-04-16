@@ -17,9 +17,12 @@ enum RTCDataChannelType {
 interface RTCDataChannel : EventTarget
 {
   readonly attribute DOMString label;
+  readonly attribute boolean ordered;
   readonly attribute boolean reliable;
   readonly attribute unsigned short? maxPacketLifeTime;
   readonly attribute unsigned short? maxRetransmits;
+  readonly attribute USVString protocol;
+  readonly attribute unsigned short? id;
   readonly attribute RTCDataChannelState readyState;
   readonly attribute unsigned long bufferedAmount;
   attribute unsigned long bufferedAmountLowThreshold;
@@ -38,12 +41,4 @@ interface RTCDataChannel : EventTarget
   void send(ArrayBuffer data);
   [Throws]
   void send(ArrayBufferView data);
-};
-
-// Mozilla extensions.
-partial interface RTCDataChannel
-{
-  readonly attribute DOMString protocol;
-  readonly attribute boolean ordered;
-  readonly attribute unsigned short id;
 };
