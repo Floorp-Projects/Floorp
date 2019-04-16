@@ -279,11 +279,35 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
 
     cmake_args = []
 
+    runtime_targets = []
+    if is_final_stage:
+        if android_targets:
+            runtime_targets = list(sorted(android_targets.keys()))
+
+    if runtime_targets:
+        cmake_args += [
+            "-DLLVM_BUILTIN_TARGETS=%s" % ";".join(runtime_targets),
+            "-DLLVM_RUNTIME_TARGETS=%s" % ";".join(runtime_targets),
+        ]
+
+        for target in runtime_targets:
+            cmake_args += [
+                "-DRUNTIMES_%s_COMPILER_RT_BUILD_PROFILE=ON" % target,
+                "-DRUNTIMES_%s_COMPILER_RT_BUILD_SANITIZERS=ON" % target,
+                "-DRUNTIMES_%s_COMPILER_RT_BUILD_XRAY=OFF" % target,
+                "-DRUNTIMES_%s_SANITIZER_ALLOW_CXXABI=OFF" % target,
+                "-DRUNTIMES_%s_COMPILER_RT_BUILD_LIBFUZZER=OFF" % target,
+                "-DRUNTIMES_%s_COMPILER_RT_INCLUDE_TESTS=OFF" % target,
+                "-DRUNTIMES_%s_LLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF" % target,
+                "-DRUNTIMES_%s_LLVM_INCLUDE_TESTS=OFF" % target,
+            ]
+
+    # The above code flipped switches to build various runtime libraries on
+    # Android; we now have to provide all the necessary compiler switches to
+    # make that work.
     if is_final_stage and android_targets:
         cmake_args += [
-            "-DLLVM_BUILTIN_TARGETS=%s" % ";".join(android_targets.keys()),
             "-DLLVM_LIBDIR_SUFFIX=64",
-            "-DLLVM_RUNTIME_TARGETS=%s" % ";".join(android_targets.keys()),
         ]
 
         android_link_flags = "-fuse-ld=lld"
@@ -303,17 +327,6 @@ def build_one_stage(cc, cxx, asm, ld, ar, ranlib, libtool,
             rt_c_flags = " ".join(cc[1:] + android_flags)
             rt_cxx_flags = " ".join(cxx[1:] + android_flags)
             rt_asm_flags = " ".join(asm[1:] + android_flags)
-
-            cmake_args += [
-                "-DRUNTIMES_%s_COMPILER_RT_BUILD_PROFILE=ON" % target,
-                "-DRUNTIMES_%s_COMPILER_RT_BUILD_SANITIZERS=ON" % target,
-                "-DRUNTIMES_%s_COMPILER_RT_BUILD_XRAY=OFF" % target,
-                "-DRUNTIMES_%s_SANITIZER_ALLOW_CXXABI=OFF" % target,
-                "-DRUNTIMES_%s_COMPILER_RT_BUILD_LIBFUZZER=OFF" % target,
-                "-DRUNTIMES_%s_COMPILER_RT_INCLUDE_TESTS=OFF" % target,
-                "-DRUNTIMES_%s_LLVM_ENABLE_PER_TARGET_RUNTIME_DIR=OFF" % target,
-                "-DRUNTIMES_%s_LLVM_INCLUDE_TESTS=OFF" % target,
-            ]
 
             for kind in ('BUILTINS', 'RUNTIMES'):
                 for var, arg in (
