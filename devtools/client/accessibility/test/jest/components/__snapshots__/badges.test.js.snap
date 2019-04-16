@@ -1,0 +1,15 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Badges component: contrast ratio fail range render 1`] = `"<span class=\\"badges\\" role=\\"group\\" aria-label=\\"accessibility.badges\\"><button aria-pressed=\\"false\\" class=\\"audit-badge badge toggle-button\\" title=\\"accessibility.badge.contrast.tooltip\\">accessibility.badge.contrast</button></span>"`;
+
+exports[`Badges component: contrast ratio fail render 1`] = `"<span class=\\"badges\\" role=\\"group\\" aria-label=\\"accessibility.badges\\"><button aria-pressed=\\"false\\" class=\\"audit-badge badge toggle-button\\" title=\\"accessibility.badge.contrast.tooltip\\">accessibility.badge.contrast</button></span>"`;
+
+exports[`Badges component: contrast ratio success render 1`] = `"<span class=\\"badges\\" role=\\"group\\" aria-label=\\"accessibility.badges\\"></span>"`;
+
+exports[`Badges component: empty checks render 1`] = `null`;
+
+exports[`Badges component: no props render 1`] = `null`;
+
+exports[`Badges component: null checks render 1`] = `null`;
+
+exports[`Badges component: unsupported checks render 1`] = `null`;

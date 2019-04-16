@@ -60,5 +60,28 @@ class Button extends Component {
   }
 }
 
-// Exports from this module
-module.exports = Button;
+function ToggleButton(props) {
+  const { active, disabled, label, className, onClick, onKeyDown, tooltip } = props;
+  const classList = [
+    ...className.split(" "),
+    "toggle-button",
+  ];
+
+  if (active) {
+    classList.push("checked");
+  }
+
+  return button({
+    disabled,
+    "aria-pressed": active === true,
+    className: classList.join(" "),
+    onClick,
+    onKeyDown,
+    title: tooltip,
+  }, label);
+}
+
+module.exports = {
+  Button,
+  ToggleButton,
+};

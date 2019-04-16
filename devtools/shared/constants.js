@@ -15,4 +15,11 @@ exports.accessibility = {
   AUDIT_TYPE: {
     CONTRAST: "CONTRAST",
   },
+  // Constants associated with WCAG guidelines score system:
+  // failing -> AA -> AAA;
+  ColorContrastScores: {
+    FAIL: "fail",
+    AA: "AA",
+    AAA: "AAA",
+  },
 };

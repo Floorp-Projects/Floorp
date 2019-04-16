@@ -4,11 +4,16 @@
 
 DevToolsModules(
     'AccessibilityRow.js',
+    'AccessibilityRowValue.js',
     'AccessibilityTree.js',
     'Accessible.js',
+    'AuditController.js',
+    'Badge.js',
+    'Badges.js',
     'Button.js',
     'Checks.js',
     'ColorContrastAccessibility.js',
+    'ContrastBadge.js',
     'Description.js',
     'LearnMoreLink.js',
     'MainFrame.js',
