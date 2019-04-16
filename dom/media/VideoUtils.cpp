@@ -66,7 +66,7 @@ CheckedInt64 UsecsToFrames(int64_t aUsecs, uint32_t aRate) {
 
 // Format TimeUnit as number of frames at given rate.
 CheckedInt64 TimeUnitToFrames(const TimeUnit& aTime, uint32_t aRate) {
-  return UsecsToFrames(aTime.ToMicroseconds(), aRate);
+  return aTime.IsValid() ? UsecsToFrames(aTime.ToMicroseconds(), aRate) : aTime;
 }
 
 nsresult SecondsToUsecs(double aSeconds, int64_t& aOutUsecs) {
