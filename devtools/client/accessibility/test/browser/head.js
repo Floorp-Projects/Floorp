@@ -6,7 +6,8 @@
 
 /* global waitUntilState, gBrowser */
 /* exported addTestTab, checkTreeState, checkSidebarState, checkAuditState, selectRow,
-            toggleRow, toggleBadge, addA11yPanelTestsTask, reload, navigate */
+            toggleRow, toggleBadge, toggleFilter, addA11yPanelTestsTask, reload,
+            navigate */
 
 "use strict";
 
@@ -390,6 +391,22 @@ async function toggleBadge(doc, rowNumber, badgeIndex) {
   EventUtils.synthesizeMouseAtCenter(badge, {}, win);
   await BrowserTestUtils.waitForCondition(() =>
     expected === badge.classList.contains("checked"), "Badge updated.");
+}
+
+/**
+ * Toggle an accessibility audit filter based on its index in the toolbar.
+ * @param  {document} doc         panel documnent.
+ * @param  {Number}   filterIndex index of the filter to be toggled.
+ */
+async function toggleFilter(doc, filterIndex) {
+  const win = doc.defaultView;
+  const filter = doc.querySelectorAll(
+    ".devtools-toolbar .badge.toggle-button")[filterIndex];
+  const expected = !filter.classList.contains("checked");
+
+  EventUtils.synthesizeMouseAtCenter(filter, {}, win);
+  await BrowserTestUtils.waitForCondition(() =>
+    expected === filter.classList.contains("checked"), "Filter updated.");
 }
 
 /**
