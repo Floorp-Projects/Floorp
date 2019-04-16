@@ -120,7 +120,9 @@ class SearchFragment : Fragment() {
                             val event = if (it.url.isUrl()) {
                                 Event.EnteredUrl(false)
                             } else {
-                                Event.PerformedSearch(false, isSearchShortcut(it.engine))
+                                if (it.engine == null) { return@subscribe }
+
+                                createSearchEvent(it.engine, false)
                             }
 
                             requireComponents.analytics.metrics.track(event)
@@ -150,8 +152,10 @@ class SearchFragment : Fragment() {
                             .invoke(it.searchTerms, it.engine)
                         (activity as HomeActivity).openToBrowser(sessionId, BrowserDirection.FromSearch)
 
-                        requireComponents.analytics.metrics
-                            .track(Event.PerformedSearch(true, isSearchShortcut(it.engine)))
+                        if (it.engine == null) { return@subscribe }
+                        val event = createSearchEvent(it.engine, true)
+
+                        requireComponents.analytics.metrics.track(event)
                     }
                     is AwesomeBarAction.SearchShortcutEngineSelected -> {
                         getManagedEmitter<AwesomeBarChange>()
@@ -163,6 +167,20 @@ class SearchFragment : Fragment() {
                     }
                 }
             }
+    }
+
+    private fun createSearchEvent(engine: SearchEngine, isSuggestion: Boolean): Event.PerformedSearch {
+        val isShortcut = engine != requireComponents.search.searchEngineManager.defaultSearchEngine
+
+        val engineSource =
+            if (isShortcut) Event.PerformedSearch.EngineSource.Shortcut(engine)
+            else Event.PerformedSearch.EngineSource.Default(engine)
+
+        val source =
+            if (isSuggestion) Event.PerformedSearch.EventSource.Suggestion(engineSource)
+            else Event.PerformedSearch.EventSource.Action(engineSource)
+
+        return Event.PerformedSearch(source)
     }
 
     private fun getSearchUseCase(context: Context, useNewTab: Boolean): SearchUseCases.SearchUseCase {
@@ -185,9 +203,5 @@ class SearchFragment : Fragment() {
             true -> context.components.useCases.tabsUseCases.addPrivateTab
             false -> context.components.useCases.tabsUseCases.addTab
         }
-    }
-
-    private fun isSearchShortcut(engine: SearchEngine?): Boolean {
-        return engine != null && engine != requireComponents.search.searchEngineManager.defaultSearchEngine
     }
 }

@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.fenix.components.metrics
 
+import mozilla.components.browser.search.SearchEngine
 import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.FactProcessor
@@ -69,10 +70,49 @@ sealed class Event {
             get() = mapOf("autocomplete" to autoCompleted.toString())
     }
 
-    data class PerformedSearch(val fromSearchSuggestion: Boolean, val fromSearchShortcut: Boolean) : Event() {
+    data class PerformedSearch(val eventSource: EventSource) : Event() {
+        sealed class EngineSource {
+            data class Default(val engine: SearchEngine) : EngineSource()
+            data class Shortcut(val engine: SearchEngine) : EngineSource()
+
+            val searchEngine: SearchEngine
+                get() = when (this) {
+                    is Default -> engine
+                    is Shortcut -> engine
+                }
+
+            val descriptor: String
+                get() = when (this) {
+                    is Default -> "default"
+                    is Shortcut -> "shortcut"
+                }
+        }
+
+        sealed class EventSource {
+            data class Suggestion(val engineSource: EngineSource) : EventSource()
+            data class Action(val engineSource: EngineSource) : EventSource()
+
+            private val source: EngineSource
+                get() = when (this) {
+                    is Suggestion -> engineSource
+                    is Action -> engineSource
+                }
+
+            private val label: String
+                get() = when (this) {
+                    is Suggestion -> "suggestion"
+                    is Action -> "action"
+                }
+
+            val countLabel: String
+                get() = "${source.searchEngine.identifier}.$label"
+
+            val sourceLabel: String
+                get() = "${source.descriptor}.$label"
+        }
+
         override val extras: Map<String, String>?
-            get() = mapOf("search_suggestion" to fromSearchSuggestion.toString(),
-                "search_shortcut" to fromSearchShortcut.toString())
+            get() = mapOf("source" to eventSource.sourceLabel)
     }
 
     // Track only built-in engine selection. Do not track user-added engines!
@@ -121,6 +161,8 @@ sealed class Event {
         override val extras: Map<String, String>?
             get() = mapOf("item" to item.toString().toLowerCase())
     }
+
+    sealed class Search
 
     open val extras: Map<String, String>?
         get() = null

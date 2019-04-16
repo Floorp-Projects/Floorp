@@ -52,7 +52,10 @@ private val Event.wrapper
             { Events.enteredUrlKeys.valueOf(it) }
         )
         is Event.PerformedSearch -> EventWrapper(
-            { Events.performedSearch.record(it) },
+            {
+                Metrics.searchCount[this.eventSource.countLabel].add(1)
+                Events.performedSearch.record(it)
+            },
             { Events.performedSearchKeys.valueOf(it) }
         )
         is Event.FindInPageOpened -> EventWrapper<NoExtraKeys>(
