@@ -246,8 +246,8 @@ struct cubeb_stream {
   /* This is true if a device change callback is currently running.  */
   atomic<bool> switching_device{ false };
   atomic<bool> buffer_size_change_state{ false };
-  AudioDeviceID aggregate_device_id = 0;    // the aggregate device id
-  AudioObjectID plugin_id = 0;              // used to create aggregate device
+  AudioDeviceID aggregate_device_id = kAudioObjectUnknown;  // the aggregate device id
+  AudioObjectID plugin_id = kAudioObjectUnknown;            // used to create aggregate device
   /* Mixer interface */
   unique_ptr<cubeb_mixer, decltype(&cubeb_mixer_destroy)> mixer;
   /* Buffer where remixing/resampling will occur when upmixing is required */
@@ -816,7 +816,7 @@ audiounit_reinit_stream(cubeb_stream * stm, device_flags_value flags)
      * - The bluetooth device changed from A2DP to/from HFP/HSP profile
      * We first attempt to re-use the same device id, should that fail we will
      * default to the (potentially new) default device. */
-    AudioDeviceID input_device = flags & DEV_INPUT ? stm->input_device.id : 0;
+    AudioDeviceID input_device = flags & DEV_INPUT ? stm->input_device.id : kAudioObjectUnknown;
     if (flags & DEV_INPUT) {
       r = audiounit_set_device_info(stm, input_device, io_side::INPUT);
       if (r != CUBEB_OK) {
@@ -828,7 +828,7 @@ audiounit_reinit_stream(cubeb_stream * stm, device_flags_value flags)
     /* Always use the default output on reinit. This is not correct in every
      * case but it is sufficient for Firefox and prevent reinit from reporting
      * failures. It will change soon when reinit mechanism will be updated. */
-    r = audiounit_set_device_info(stm, 0, io_side::OUTPUT);
+    r = audiounit_set_device_info(stm, kAudioObjectUnknown, io_side::OUTPUT);
     if (r != CUBEB_OK) {
       LOG("(%p) Set output device info failed. This can happen when last media device is unplugged", stm);
       return CUBEB_ERROR;
@@ -836,11 +836,11 @@ audiounit_reinit_stream(cubeb_stream * stm, device_flags_value flags)
 
     if (audiounit_setup_stream(stm) != CUBEB_OK) {
       LOG("(%p) Stream reinit failed.", stm);
-      if (flags & DEV_INPUT && input_device != 0) {
+      if (flags & DEV_INPUT && input_device != kAudioObjectUnknown) {
         // Attempt to re-use the same device-id failed, so attempt again with
         // default input device.
         audiounit_close_stream(stm);
-        if (audiounit_set_device_info(stm, 0, io_side::INPUT) != CUBEB_OK ||
+        if (audiounit_set_device_info(stm, kAudioObjectUnknown, io_side::INPUT) != CUBEB_OK ||
             audiounit_setup_stream(stm) != CUBEB_OK) {
           LOG("(%p) Second stream reinit failed.", stm);
           return CUBEB_ERROR;
@@ -868,7 +868,7 @@ audiounit_reinit_stream_async(cubeb_stream * stm, device_flags_value flags)
 {
   if (std::atomic_exchange(&stm->reinit_pending, true)) {
     // A reinit task is already pending, nothing more to do.
-    ALOG("(%p) re-init stream task already pending, cancelling request ", stm);
+    ALOG("(%p) re-init stream task already pending, cancelling request", stm);
     return;
   }
 
@@ -944,7 +944,7 @@ audiounit_property_listener_callback(AudioObjectID id, UInt32 address_count,
         }
         break;
       case kAudioDevicePropertyDataSource: {
-          LOG("Event[%u] - mSelector == kAudioHardwarePropertyDataSource for id=%d", (unsigned int) i, id);
+          LOG("Event[%u] - mSelector == kAudioDevicePropertyDataSource for id=%d", (unsigned int) i, id);
         }
         break;
       default:
@@ -1314,9 +1314,9 @@ audiounit_get_preferred_sample_rate(cubeb * /* ctx */, uint32_t * rate)
 static cubeb_channel_layout
 audiounit_convert_channel_layout(AudioChannelLayout * layout)
 {
-  // When having on or two channel, force mono or stereo. Some devices (namely,
-  //  Bose QC35, mark 1 and 2), expose a single channel mapped to the right for
-  //  some reason.
+  // When having one or two channel, force mono or stereo. Some devices (namely,
+  // Bose QC35, mark 1 and 2), expose a single channel mapped to the right for
+  // some reason.
   if (layout->mNumberChannelDescriptions == 1) {
     return CUBEB_LAYOUT_MONO;
   } else if (layout->mNumberChannelDescriptions == 2) {
@@ -1611,7 +1611,7 @@ audiounit_create_blank_aggregate_device(AudioObjectID * plugin_id, AudioDeviceID
                                               0, NULL,
                                               &size);
   if (r != noErr) {
-    LOG("AudioHardwareGetPropertyInfo/kAudioHardwarePropertyPlugInForBundleID, rv=%d", r);
+    LOG("AudioObjectGetPropertyDataSize/kAudioHardwarePropertyPlugInForBundleID, rv=%d", r);
     return CUBEB_ERROR;
   }
 
@@ -1629,7 +1629,7 @@ audiounit_create_blank_aggregate_device(AudioObjectID * plugin_id, AudioDeviceID
                                  &size,
                                  &translation_value);
   if (r != noErr) {
-    LOG("AudioHardwareGetProperty/kAudioHardwarePropertyPlugInForBundleID, rv=%d", r);
+    LOG("AudioObjectGetPropertyData/kAudioHardwarePropertyPlugInForBundleID, rv=%d", r);
     return CUBEB_ERROR;
   }
 
@@ -1755,7 +1755,7 @@ audiounit_set_aggregate_sub_device_list(AudioDeviceID aggregate_device_id,
 static int
 audiounit_set_master_aggregate_device(const AudioDeviceID aggregate_device_id)
 {
-  assert(aggregate_device_id);
+  assert(aggregate_device_id != kAudioObjectUnknown);
   AudioObjectPropertyAddress master_aggregate_sub_device =  { kAudioAggregateDevicePropertyMasterSubDevice,
                                                               kAudioObjectPropertyScopeGlobal,
                                                               kAudioObjectPropertyElementMaster };
@@ -1786,7 +1786,7 @@ audiounit_set_master_aggregate_device(const AudioDeviceID aggregate_device_id)
 static int
 audiounit_activate_clock_drift_compensation(const AudioDeviceID aggregate_device_id)
 {
-  assert(aggregate_device_id);
+  assert(aggregate_device_id != kAudioObjectUnknown);
   AudioObjectPropertyAddress address_owned = { kAudioObjectPropertyOwnedObjects,
                                                kAudioObjectPropertyScopeGlobal,
                                                kAudioObjectPropertyElementMaster };
@@ -1983,7 +1983,7 @@ audiounit_destroy_aggregate_device(AudioObjectID plugin_id, AudioDeviceID * aggr
   }
 
   LOG("Destroyed aggregate device %d", *aggregate_device_id);
-  *aggregate_device_id = 0;
+  *aggregate_device_id = kAudioObjectUnknown;
   return CUBEB_OK;
 }
 
@@ -2072,23 +2072,23 @@ audiounit_create_unit(AudioUnit * unit, device_info * device)
   if (device->flags & DEV_INPUT) {
     r = audiounit_enable_unit_scope(unit, io_side::INPUT, ENABLE);
     if (r != CUBEB_OK) {
-      LOG("Failed to enable audiounit input scope ");
+      LOG("Failed to enable audiounit input scope");
       return r;
     }
     r = audiounit_enable_unit_scope(unit, io_side::OUTPUT, DISABLE);
     if (r != CUBEB_OK) {
-      LOG("Failed to disable audiounit output scope ");
+      LOG("Failed to disable audiounit output scope");
       return r;
     }
   } else if (device->flags & DEV_OUTPUT) {
     r = audiounit_enable_unit_scope(unit, io_side::OUTPUT, ENABLE);
     if (r != CUBEB_OK) {
-      LOG("Failed to enable audiounit output scope ");
+      LOG("Failed to enable audiounit output scope");
       return r;
     }
     r = audiounit_enable_unit_scope(unit, io_side::INPUT, DISABLE);
     if (r != CUBEB_OK) {
-      LOG("Failed to disable audiounit input scope ");
+      LOG("Failed to disable audiounit input scope");
       return r;
     }
   } else {
@@ -2557,7 +2557,7 @@ audiounit_setup_stream(cubeb_stream * stm)
       stm->input_device.id != stm->output_device.id) {
     r = audiounit_create_aggregate_device(stm);
     if (r != CUBEB_OK) {
-      stm->aggregate_device_id = 0;
+      stm->aggregate_device_id = kAudioObjectUnknown;
       LOG("(%p) Create aggregate devices failed.", stm);
       // !!!NOTE: It is not necessary to return here. If it does not
       // return it will fallback to the old implementation. The intention
@@ -2588,16 +2588,16 @@ audiounit_setup_stream(cubeb_stream * stm)
   }
 
   /* Latency cannot change if another stream is operating in parallel. In this case
-  * latecy is set to the other stream value. */
+   * latency is set to the other stream value. */
   if (audiounit_active_streams(stm->context) > 1) {
     LOG("(%p) More than one active stream, use global latency.", stm);
     stm->latency_frames = stm->context->global_latency_frames;
   } else {
     /* Silently clamp the latency down to the platform default, because we
-    * synthetize the clock from the callbacks, and we want the clock to update
-    * often. */
+     * synthetize the clock from the callbacks, and we want the clock to update
+     * often. */
     stm->latency_frames = audiounit_clamp_latency(stm, stm->latency_frames);
-    assert(stm->latency_frames); // Ungly error check
+    assert(stm->latency_frames); // Ugly error check
     audiounit_set_global_latency(stm->context, stm->latency_frames);
   }
 
@@ -2840,9 +2840,9 @@ audiounit_close_stream(cubeb_stream *stm)
   stm->resampler.reset();
   stm->mixer.reset();
 
-  if (stm->aggregate_device_id) {
+  if (stm->aggregate_device_id != kAudioObjectUnknown) {
     audiounit_destroy_aggregate_device(stm->plugin_id, &stm->aggregate_device_id);
-    stm->aggregate_device_id = 0;
+    stm->aggregate_device_id = kAudioObjectUnknown;
   }
 }
 
