@@ -12067,20 +12067,21 @@ void CodeGenerator::visitOutOfLineSwitch(
     MOZ_CRASH();
 #else
     masm.haltingAlign(sizeof(void*));
+    // Bind the address of the jump table and reserve the space for code
+    // pointers to jump in the newly generated code.
     masm.bind(jumpTable->start());
     masm.addCodeLabel(*jumpTable->start());
+    for (size_t i = 0, e = labels.length(); i < e; i++) {
+      jumpTable->addTableEntry(masm);
+    }
 #endif
   }
 
-  // Add table entries if the table is inlined.
-  for (size_t i = 0, e = labels.length(); i < e; i++) {
-    jumpTable->addTableEntry(masm);
-  }
-
+  // Register all reserved pointers of the jump table to target labels. The
+  // entries of the jump table need to be absolute addresses and thus must be
+  // patched after codegen is finished.
   auto& codeLabels = jumpTable->codeLabels();
   for (size_t i = 0, e = codeLabels.length(); i < e; i++) {
-    // The entries of the jump table need to be absolute addresses and thus
-    // must be patched after codegen is finished.
     auto& cl = codeLabels[i];
     cl.target()->bind(labels[i].offset());
     masm.addCodeLabel(cl);
