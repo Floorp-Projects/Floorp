@@ -10,6 +10,7 @@
 #include "mozilla/gfx/gfxVars.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/layers/CompositorManagerParent.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/webrender/RenderCompositor.h"
@@ -214,15 +215,13 @@ void RendererOGL::AccumulateMemoryReport(MemoryReport* aReport) {
   aReport->swap_chain += swapChainSize;
 }
 
-static void DoNotifyWebRenderError(layers::CompositorBridgeParent* aBridge,
-                                   WebRenderError aError) {
-  aBridge->NotifyWebRenderError(aError);
+static void DoNotifyWebRenderError(WebRenderError aError) {
+  layers::CompositorManagerParent::NotifyWebRenderError(aError);
 }
 
 void RendererOGL::NotifyWebRenderError(WebRenderError aError) {
-  layers::CompositorThreadHolder::Loop()->PostTask(
-      NewRunnableFunction("DoNotifyWebRenderErrorRunnable",
-                          &DoNotifyWebRenderError, mBridge, aError));
+  layers::CompositorThreadHolder::Loop()->PostTask(NewRunnableFunction(
+      "DoNotifyWebRenderErrorRunnable", &DoNotifyWebRenderError, aError));
 }
 
 }  // namespace wr
