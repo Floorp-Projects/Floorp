@@ -3092,7 +3092,7 @@ class ADBDevice(ADBCommand):
                                 timeout=timeout)
 
     def launch_activity(self, app_name, activity_name=None,
-                        intent="android.intent.action.Main",
+                        intent="android.intent.action.MAIN",
                         moz_env=None, extra_args=None, url=None, e10s=False,
                         wait=True, fail_if_running=True, timeout=None):
         """Convenience method to launch an application on Android with various
