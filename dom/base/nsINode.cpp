@@ -2793,12 +2793,16 @@ class LocalizationHandler : public PromiseNativeHandler {
           l10nData[i].mAttributes;
       if (!attributes.IsNull()) {
         for (size_t j = 0; j < attributes.Value().Length(); ++j) {
-          // Use SetAttribute here to validate the attribute name!
-          elem->SetAttribute(attributes.Value()[j].mName,
-                             attributes.Value()[j].mValue, rv);
-          if (rv.Failed()) {
-            mReturnValuePromise->MaybeRejectWithUndefined();
-            return;
+          nsString& name = attributes.Value()[j].mName;
+          nsString& value = attributes.Value()[j].mValue;
+          RefPtr<nsAtom> nameAtom = NS_Atomize(name);
+          if (!elem->AttrValueIs(kNameSpaceID_None, nameAtom, value,
+                                 eCaseMatters)) {
+            rv = elem->SetAttr(kNameSpaceID_None, nameAtom, value, true);
+            if (rv.Failed()) {
+              mReturnValuePromise->MaybeRejectWithUndefined();
+              return;
+            }
           }
         }
       }

@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Amount of mutations generated from DOM Overlays</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="localization" href="browser/preferences/preferences.ftl"/>
+  <script type="application/javascript">
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  let config = {
+    attributes: true,
+    attributeOldValue: true,
+    characterData: true,
+    characterDataOldValue: true,
+    childList: true,
+    subtree: true,
+  };
+  let allMutations = [];
+
+  document.addEventListener("DOMContentLoaded", async function() {
+    await document.l10n.ready;
+
+    let optionElem = document.getElementById("use-current-pages");
+
+    // Test for initial localization applied.
+    is(optionElem.getAttribute("label").length > 0, true);
+
+    let observer = new MutationObserver((mutations) => {
+      for (let mutation of mutations) {
+        allMutations.push(mutation);
+      }
+    });
+    observer.observe(optionElem, config);
+
+    document.l10n.setAttributes(optionElem, "use-current-pages", {
+      tabCount: 6,
+    });
+
+    // Due to the async iteractions between nsINode.localize
+    // and DOMLocalization.jsm, we'll need to wait two frames
+    // to verify that no mutations happened.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        // We only expect the `data-l10n-args` attribute
+        // to be updated and cause a single mutation.
+        // Since the result value of the attribute stays
+        // the same, there should be no mutation fired for it.
+        is(allMutations.length, 1);
+        SimpleTest.finish();
+      });
+    });
+  }, { once: true});
+  </script>
+</head>
+<body>
+  <option id="use-current-pages" data-l10n-id="use-current-pages" data-l10n-args='{"tabCount":5}'></option>
+</body>
+</html>
