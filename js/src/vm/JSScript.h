@@ -1149,6 +1149,12 @@ class ScriptSource {
     parseEnded_ = ReallyNow();
   }
 
+ private:
+  template <XDRMode mode>
+  static MOZ_MUST_USE XDRResult xdrDataMember(XDRState<mode>* xdr,
+                                              ScriptSource* ss);
+
+ public:
   template <XDRMode mode>
   static MOZ_MUST_USE XDRResult
   XDR(XDRState<mode>* xdr, const mozilla::Maybe<JS::CompileOptions>& options,
