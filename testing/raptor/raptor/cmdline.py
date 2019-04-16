@@ -69,6 +69,8 @@ def create_parser(mach_interface=False):
     add_arg('--power-test', dest="power_test", action="store_true",
             help="Use Raptor to measure power usage. Currently supported for Geckoview. "
             "The host ip address must be specified via the --host command line argument.")
+    add_arg('--memory-test', dest="memory_test", action="store_true",
+            help="Use Raptor to measure memory usage.")
     add_arg('--is-release-build', dest="is_release_build", default=False,
             action='store_true',
             help="Whether the build is a release build which requires work arounds "

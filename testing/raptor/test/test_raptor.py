@@ -91,6 +91,67 @@ def test_start_and_stop_server(raptor):
     assert not raptor.control_server._server_thread.is_alive()
 
 
+def test_server_wait_states(raptor):
+    import datetime
+
+    import requests
+
+    def post_state():
+        requests.post("http://127.0.0.1:%s/" % raptor.control_server.port,
+                      json={"type": "webext_status",
+                            "data": "test status"})
+
+    assert raptor.control_server is None
+
+    raptor.create_browser_profile()
+    raptor.create_browser_handler()
+    raptor.start_control_server()
+
+    wait_time = 5
+    message_state = 'webext_status/test status'
+    rhc = raptor.control_server.server.RequestHandlerClass
+
+    # Test initial state
+    assert rhc.wait_after_messages == {}
+    assert rhc.waiting_in_state is None
+    assert rhc.wait_timeout == 60
+    assert raptor.control_server_wait_get() == 'None'
+
+    # Test setting a state
+    assert raptor.control_server_wait_set(message_state) == ''
+    assert message_state in rhc.wait_after_messages
+    assert rhc.wait_after_messages[message_state]
+
+    # Test clearing a non-existent state
+    assert raptor.control_server_wait_clear('nothing') == ''
+    assert message_state in rhc.wait_after_messages
+
+    # Test clearing a state
+    assert raptor.control_server_wait_clear(message_state) == ''
+    assert message_state not in rhc.wait_after_messages
+
+    # Test clearing all states
+    assert raptor.control_server_wait_set(message_state) == ''
+    assert message_state in rhc.wait_after_messages
+    assert raptor.control_server_wait_clear('all') == ''
+    assert rhc.wait_after_messages == {}
+
+    # Test wait timeout
+    # Block on post request
+    assert raptor.control_server_wait_set(message_state) == ''
+    assert rhc.wait_after_messages[message_state]
+    assert raptor.control_server_wait_timeout(wait_time) == ''
+    assert rhc.wait_timeout == wait_time
+    start = datetime.datetime.now()
+    post_state()
+    assert datetime.datetime.now() - start < datetime.timedelta(seconds=wait_time+2)
+    assert raptor.control_server_wait_get() == 'None'
+    assert message_state not in rhc.wait_after_messages
+
+    raptor.clean_up()
+    assert not raptor.control_server._server_thread.is_alive()
+
+
 @pytest.mark.parametrize('app', [
     'firefox',
     pytest.mark.xfail('chrome'),

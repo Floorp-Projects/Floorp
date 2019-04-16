@@ -13,6 +13,8 @@ import sys
 import tempfile
 import time
 
+import requests
+
 import mozcrash
 import mozinfo
 from mozdevice import ADBDevice
@@ -57,6 +59,7 @@ from mozproxy import get_playback
 from results import RaptorResultsHandler
 from gecko_profile import GeckoProfile
 from power import init_android_power_test, finish_android_power_test
+from memory import generate_android_memory_profile
 from utils import view_gecko_profile
 
 
@@ -65,8 +68,8 @@ class Raptor(object):
 
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
-                 symbols_path=None, host=None, power_test=False, is_release_build=False,
-                 debug_mode=False, post_startup_delay=None, activity=None):
+                 symbols_path=None, host=None, power_test=False, memory_test=False,
+                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None):
 
         # Override the magic --host HOST_IP with the value of the environment variable.
         if host == 'HOST_IP':
@@ -84,7 +87,9 @@ class Raptor(object):
         self.config['symbols_path'] = symbols_path
         self.config['host'] = host
         self.config['power_test'] = power_test
+        self.config['memory_test'] = memory_test
         self.config['is_release_build'] = is_release_build
+        self.config['enable_control_server_wait'] = memory_test
         self.raptor_venv = os.path.join(os.getcwd(), 'raptor-venv')
         self.log = get_default_logger(component='raptor-main')
         self.control_server = None
@@ -186,6 +191,9 @@ class Raptor(object):
     def start_control_server(self):
         self.control_server = RaptorControlServer(self.results_handler, self.debug_mode)
         self.control_server.start()
+
+        if self.config['enable_control_server_wait']:
+            self.control_server_wait_set('webext_status/__raptor_shutdownBrowser')
 
         # for android we must make the control server available to the device
         if self.config['app'] in self.firefox_android_apps and \
@@ -336,6 +344,12 @@ class Raptor(object):
 
         elapsed_time = 0
         while not self.control_server._finished:
+            if self.config['enable_control_server_wait']:
+                response = self.control_server_wait_get()
+                if response == 'webext_status/__raptor_shutdownBrowser':
+                    if self.config['memory_test']:
+                        generate_android_memory_profile(self, test['name'])
+                    self.control_server_wait_continue()
             time.sleep(1)
             # we only want to force browser-shutdown on timeout if not in debug mode;
             # in debug-mode we leave the browser running (require manual shutdown)
@@ -365,6 +379,9 @@ class Raptor(object):
         return self.results_handler.page_timeout_list
 
     def clean_up(self):
+        if self.config['enable_control_server_wait']:
+            self.control_server_wait_clear('all')
+
         self.control_server.stop()
         if self.config['app'] not in self.firefox_android_apps:
             self.runner.stop()
@@ -375,15 +392,40 @@ class Raptor(object):
             pass
         self.log.info("finished")
 
+    def control_server_wait_set(self, state):
+        response = requests.post("http://127.0.0.1:%s/" % self.control_server.port,
+                                 json={"type": "wait-set", "data": state})
+        return response.content
+
+    def control_server_wait_timeout(self, timeout):
+        response = requests.post("http://127.0.0.1:%s/" % self.control_server.port,
+                                 json={"type": "wait-timeout", "data": timeout})
+        return response.content
+
+    def control_server_wait_get(self):
+        response = requests.post("http://127.0.0.1:%s/" % self.control_server.port,
+                                 json={"type": "wait-get", "data": ""})
+        return response.content
+
+    def control_server_wait_continue(self):
+        response = requests.post("http://127.0.0.1:%s/" % self.control_server.port,
+                                 json={"type": "wait-continue", "data": ""})
+        return response.content
+
+    def control_server_wait_clear(self, state):
+        response = requests.post("http://127.0.0.1:%s/" % self.control_server.port,
+                                 json={"type": "wait-clear", "data": state})
+        return response.content
+
 
 class RaptorDesktop(Raptor):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
-                 symbols_path=None, host=None, power_test=False, is_release_build=False,
-                 debug_mode=False, post_startup_delay=None, activity=None):
+                 symbols_path=None, host=None, power_test=False, memory_test=False,
+                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None):
         Raptor.__init__(self, app, binary, run_local, obj_path, gecko_profile,
                         gecko_profile_interval, gecko_profile_entries, symbols_path,
-                        host, power_test, is_release_build, debug_mode,
+                        host, power_test, memory_test, is_release_build, debug_mode,
                         post_startup_delay)
 
     def create_browser_handler(self):
@@ -446,11 +488,11 @@ class RaptorDesktop(Raptor):
 class RaptorDesktopFirefox(RaptorDesktop):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
-                 symbols_path=None, host=None, power_test=False, is_release_build=False,
-                 debug_mode=False, post_startup_delay=None, activity=None):
+                 symbols_path=None, host=None, power_test=False, memory_test=False,
+                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None):
         RaptorDesktop.__init__(self, app, binary, run_local, obj_path, gecko_profile,
                                gecko_profile_interval, gecko_profile_entries, symbols_path,
-                               host, power_test, is_release_build, debug_mode,
+                               host, power_test, memory_test, is_release_build, debug_mode,
                                post_startup_delay)
 
     def disable_non_local_connections(self):
@@ -491,11 +533,11 @@ class RaptorDesktopFirefox(RaptorDesktop):
 class RaptorDesktopChrome(RaptorDesktop):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
-                 symbols_path=None, host=None, power_test=False, is_release_build=False,
-                 debug_mode=False, post_startup_delay=None, activity=None):
+                 symbols_path=None, host=None, power_test=False, memory_test=False,
+                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None):
         RaptorDesktop.__init__(self, app, binary, run_local, obj_path, gecko_profile,
                                gecko_profile_interval, gecko_profile_entries, symbols_path,
-                               host, power_test, is_release_build, debug_mode,
+                               host, power_test, memory_test, is_release_build, debug_mode,
                                post_startup_delay)
 
     def setup_chrome_desktop_for_playback(self):
@@ -530,11 +572,11 @@ class RaptorDesktopChrome(RaptorDesktop):
 class RaptorAndroid(Raptor):
     def __init__(self, app, binary, run_local=False, obj_path=None,
                  gecko_profile=False, gecko_profile_interval=None, gecko_profile_entries=None,
-                 symbols_path=None, host=None, power_test=False, is_release_build=False,
-                 debug_mode=False, post_startup_delay=None, activity=None):
+                 symbols_path=None, host=None, power_test=False, memory_test=False,
+                 is_release_build=False, debug_mode=False, post_startup_delay=None, activity=None):
         Raptor.__init__(self, app, binary, run_local, obj_path, gecko_profile,
                         gecko_profile_interval, gecko_profile_entries, symbols_path, host,
-                        power_test, is_release_build, debug_mode, post_startup_delay)
+                        power_test, memory_test, is_release_build, debug_mode, post_startup_delay)
 
         # on android, when creating the browser profile, we want to use a 'firefox' type profile
         self.profile_class = "firefox"
@@ -847,6 +889,7 @@ def main(args=sys.argv[1:]):
                           symbols_path=args.symbols_path,
                           host=args.host,
                           power_test=args.power_test,
+                          memory_test=args.memory_test,
                           is_release_build=args.is_release_build,
                           debug_mode=args.debug_mode,
                           post_startup_delay=args.post_startup_delay,
