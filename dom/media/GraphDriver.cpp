@@ -495,6 +495,13 @@ AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl,
     audio::AudioNotificationReceiver::Register(this);
   }
 #endif
+  if (aAudioInputType == AudioInputType::Voice) {
+    LOG(LogLevel::Debug, ("VOICE."));
+    mInputDevicePreference = CUBEB_DEVICE_PREF_VOICE;
+    CubebUtils::SetInCommunication(true);
+  } else {
+    mInputDevicePreference = CUBEB_DEVICE_PREF_ALL;
+  }
 }
 
 AudioCallbackDriver::~AudioCallbackDriver() {
@@ -505,6 +512,9 @@ AudioCallbackDriver::~AudioCallbackDriver() {
     audio::AudioNotificationReceiver::Unregister(this);
   }
 #endif
+  if (mInputDevicePreference == CUBEB_DEVICE_PREF_VOICE) {
+    CubebUtils::SetInCommunication(false);
+  }
 }
 
 bool IsMacbookOrMacbookAir() {
@@ -590,6 +600,9 @@ bool AudioCallbackDriver::Init() {
   output.channels = mOutputChannels;
   output.layout = CUBEB_LAYOUT_UNDEFINED;
   output.prefs = CubebUtils::GetDefaultStreamPrefs();
+  if (mInputDevicePreference == CUBEB_DEVICE_PREF_VOICE) {
+    output.prefs |= static_cast<cubeb_stream_prefs>(CUBEB_STREAM_PREF_VOICE);
+  }
 
   uint32_t latency_frames = CubebUtils::GetCubebMSGLatencyInFrames(&output);
 
