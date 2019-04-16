@@ -85,14 +85,6 @@ module.exports = {
       "no-undef": "off",
     }
   }, {
-    // TODO: Bug 1246594. Empty this list once the rule has landed for all dirs
-    "files": [
-      "xpcom/tests/unit/test_iniParser.js",
-    ],
-    "rules": {
-      "no-throw-literal": "off",
-    }
-  }, {
     ...removeOverrides(xpcshellTestConfig),
     "files": xpcshellTestPaths.map(path => `${path}**`),
     "excludedFiles": "devtools/**"
