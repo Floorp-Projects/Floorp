@@ -5,7 +5,6 @@
 package org.mozilla.fenix.components.toolbar
 
 import android.graphics.drawable.BitmapDrawable
-import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.ImageView
@@ -62,7 +61,7 @@ class ToolbarUIView(
             val isCustomTabSession = (session?.isCustomTabSession() == true)
 
             urlBoxView = if (isCustomTabSession) { null } else urlBackground
-            progressBarGravity = if (isCustomTabSession) { Gravity.TOP } else Gravity.BOTTOM
+            progressBarGravity = if (isCustomTabSession) { PROGRESS_BOTTOM } else PROGRESS_TOP
 
             textColor = ContextCompat.getColor(context, R.color.photonGrey30)
 
@@ -173,6 +172,8 @@ class ToolbarUIView(
     }
 
     companion object {
+        private const val PROGRESS_BOTTOM = 0
+        private const val PROGRESS_TOP = 1
         const val browserActionMarginDp = 8
     }
 }
