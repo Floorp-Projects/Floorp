@@ -1438,11 +1438,15 @@ stateloop:
             }
             case '\r': {
               appendStrBufCarriageReturn();
+              state = P::transition(mViewSource, nsHtml5Tokenizer::COMMENT,
+                                    reconsume, pos);
               NS_HTML5_BREAK(stateloop);
             }
             case '\n': {
               appendStrBufLineFeed();
-              continue;
+              state = P::transition(mViewSource, nsHtml5Tokenizer::COMMENT,
+                                    reconsume, pos);
+              NS_HTML5_CONTINUE(stateloop);
             }
             case '\0': {
               c = 0xfffd;

@@ -7,30 +7,15 @@
 #ifndef gc_Heap_h
 #define gc_Heap_h
 
-#include "mozilla/ArrayUtils.h"
 #include "mozilla/Atomics.h"
-#include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
-#include "mozilla/PodOperations.h"
 
-#include <stddef.h>
-#include <stdint.h>
-
-#include "jsfriendapi.h"
-#include "jspubtd.h"
-#include "jstypes.h"
 #include "jsutil.h"
 
 #include "ds/BitArray.h"
 #include "gc/AllocKind.h"
 #include "gc/GCEnum.h"
-#include "gc/Memory.h"
-#include "js/HeapAPI.h"
-#include "js/RootingAPI.h"
-#include "js/TracingAPI.h"
 #include "js/TypeDecls.h"
-
-#include "vm/Printer.h"
 
 namespace js {
 
