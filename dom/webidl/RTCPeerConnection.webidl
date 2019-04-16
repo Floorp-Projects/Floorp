@@ -50,10 +50,13 @@ callback mozPacketCallback = void (unsigned long level,
 
 dictionary RTCDataChannelInit {
   boolean        ordered = true;
+  [EnforceRange]
   unsigned short maxPacketLifeTime;
+  [EnforceRange]
   unsigned short maxRetransmits;
   DOMString      protocol = "";
   boolean        negotiated = false;
+  [EnforceRange]
   unsigned short id;
 
   // These are deprecated due to renaming in the spec, but still supported for Fx53
