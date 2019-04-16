@@ -893,7 +893,7 @@ nsresult nsSliderMediator::HandleEvent(dom::Event* aEvent) {
 
 class AsyncScrollbarDragStarter final : public nsAPostRefreshObserver {
  public:
-  AsyncScrollbarDragStarter(nsIPresShell* aPresShell, nsIWidget* aWidget,
+  AsyncScrollbarDragStarter(mozilla::PresShell* aPresShell, nsIWidget* aWidget,
                             const AsyncDragMetrics& aDragMetrics)
       : mPresShell(aPresShell), mWidget(aWidget), mDragMetrics(aDragMetrics) {}
   virtual ~AsyncScrollbarDragStarter() {}
@@ -922,7 +922,7 @@ class AsyncScrollbarDragStarter final : public nsAPostRefreshObserver {
   }
 
  private:
-  RefPtr<nsIPresShell> mPresShell;
+  RefPtr<mozilla::PresShell> mPresShell;
   RefPtr<nsIWidget> mWidget;
   AsyncDragMetrics mDragMetrics;
 };

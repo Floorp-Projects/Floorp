@@ -14,7 +14,6 @@
 #include "nsIObserver.h"
 #include "Units.h"
 
-class nsIPresShell;
 class nsViewportInfo;
 
 namespace mozilla {
@@ -50,7 +49,7 @@ class MobileViewportManager final : public nsIDOMEventListener,
    * resolution at which they are the same size.)
    *
    * The returned resolution is suitable for passing to
-   * nsIPresShell::SetResolutionAndScaleTo(). It's not in typed units for
+   * PresShell::SetResolutionAndScaleTo(). It's not in typed units for
    * reasons explained at the declaration of FrameMetrics::mPresShellResolution.
    */
   float ComputeIntrinsicResolution() const;

@@ -117,27 +117,19 @@ nsCaret::nsCaret()
 
 nsCaret::~nsCaret() { StopBlinking(); }
 
-nsresult nsCaret::Init(nsIPresShell* inPresShell) {
-  NS_ENSURE_ARG(inPresShell);
+nsresult nsCaret::Init(PresShell* aPresShell) {
+  NS_ENSURE_ARG(aPresShell);
 
   mPresShell =
-      do_GetWeakReference(inPresShell);  // the presshell owns us, so no addref
+      do_GetWeakReference(aPresShell);  // the presshell owns us, so no addref
   NS_ASSERTION(mPresShell, "Hey, pres shell should support weak refs");
 
   mShowDuringSelection =
       LookAndFeel::GetInt(LookAndFeel::eIntID_ShowCaretDuringSelection,
                           mShowDuringSelection ? 1 : 0) != 0;
 
-  // get the selection from the pres shell, and set ourselves up as a selection
-  // listener
-
-  nsCOMPtr<nsISelectionController> selCon = do_QueryReferent(mPresShell);
-  if (!selCon) {
-    return NS_ERROR_FAILURE;
-  }
-
   RefPtr<Selection> selection =
-      selCon->GetSelection(nsISelectionController::SELECTION_NORMAL);
+      aPresShell->GetSelection(nsISelectionController::SELECTION_NORMAL);
   if (!selection) {
     return NS_ERROR_FAILURE;
   }

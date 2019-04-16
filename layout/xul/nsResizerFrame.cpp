@@ -320,7 +320,7 @@ nsresult nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
   return NS_OK;
 }
 
-nsIContent* nsResizerFrame::GetContentToResize(nsIPresShell* aPresShell,
+nsIContent* nsResizerFrame::GetContentToResize(mozilla::PresShell* aPresShell,
                                                nsIBaseWindow** aWindow) {
   *aWindow = nullptr;
 

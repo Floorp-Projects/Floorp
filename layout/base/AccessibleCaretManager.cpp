@@ -71,7 +71,7 @@ std::ostream& operator<<(
 }
 #undef AC_PROCESS_ENUM_TO_STREAM
 
-AccessibleCaretManager::AccessibleCaretManager(nsIPresShell* aPresShell)
+AccessibleCaretManager::AccessibleCaretManager(PresShell* aPresShell)
     : mPresShell(aPresShell) {
   if (!mPresShell) {
     return;

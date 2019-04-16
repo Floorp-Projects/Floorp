@@ -25,11 +25,11 @@ const AlignedFrameListBytes gEmptyFrameListBytes = {0};
 }  // namespace layout
 }  // namespace mozilla
 
-void* nsFrameList::operator new(size_t sz, nsIPresShell* aPresShell) {
+void* nsFrameList::operator new(size_t sz, mozilla::PresShell* aPresShell) {
   return aPresShell->AllocateByObjectID(eArenaObjectID_nsFrameList, sz);
 }
 
-void nsFrameList::Delete(nsIPresShell* aPresShell) {
+void nsFrameList::Delete(mozilla::PresShell* aPresShell) {
   MOZ_ASSERT(this != &EmptyList(), "Shouldn't Delete() this list");
   NS_ASSERTION(IsEmpty(), "Shouldn't Delete() a non-empty list");
 

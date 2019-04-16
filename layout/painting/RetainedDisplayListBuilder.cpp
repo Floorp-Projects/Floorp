@@ -208,7 +208,7 @@ void RetainedDisplayListBuilder::IncrementSubDocPresShellPaintCount(
       static_cast<nsDisplaySubDocument*>(aItem)->SubDocumentFrame();
   MOZ_ASSERT(subDocFrame);
 
-  nsIPresShell* presShell = subDocFrame->GetSubdocumentPresShellForPainting(0);
+  PresShell* presShell = subDocFrame->GetSubdocumentPresShellForPainting(0);
   MOZ_ASSERT(presShell);
 
   mBuilder.IncrementPresShellPaintCount(presShell);
@@ -725,11 +725,10 @@ static nsIFrame* GetRootFrameForPainting(nsDisplayListBuilder* aBuilder,
 
   nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(subDocFrame);
   MOZ_ASSERT(subdocumentFrame);
-  presShell = static_cast<PresShell*>(
-      subdocumentFrame->GetSubdocumentPresShellForPainting(
-          aBuilder->IsIgnoringPaintSuppression()
-              ? nsSubDocumentFrame::IGNORE_PAINT_SUPPRESSION
-              : 0));
+  presShell = subdocumentFrame->GetSubdocumentPresShellForPainting(
+      aBuilder->IsIgnoringPaintSuppression()
+          ? nsSubDocumentFrame::IGNORE_PAINT_SUPPRESSION
+          : 0);
   return presShell ? presShell->GetRootFrame() : nullptr;
 }
 

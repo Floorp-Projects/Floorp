@@ -19,11 +19,11 @@
 #include "mozilla/RefPtr.h"
 #include "nsWeakReference.h"
 
-class nsIPresShell;
 class nsITimer;
 
 namespace mozilla {
 class AccessibleCaretManager;
+class PresShell;
 class WidgetKeyboardEvent;
 class WidgetMouseEvent;
 class WidgetTouchEvent;
@@ -63,7 +63,7 @@ class AccessibleCaretEventHub : public nsIReflowObserver,
                                 public nsIScrollObserver,
                                 public nsSupportsWeakReference {
  public:
-  explicit AccessibleCaretEventHub(nsIPresShell* aPresShell);
+  explicit AccessibleCaretEventHub(PresShell* aPresShell);
   void Init();
   void Terminate();
 
@@ -151,7 +151,7 @@ class AccessibleCaretEventHub : public nsIReflowObserver,
   State* mState = NoActionState();
 
   // Will be set to nullptr in Terminate().
-  nsIPresShell* MOZ_NON_OWNING_REF mPresShell = nullptr;
+  PresShell* MOZ_NON_OWNING_REF mPresShell = nullptr;
 
   UniquePtr<AccessibleCaretManager> mManager;
 

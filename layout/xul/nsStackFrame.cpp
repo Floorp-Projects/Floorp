@@ -18,7 +18,6 @@
 #include "nsIContent.h"
 #include "nsCOMPtr.h"
 #include "nsHTMLParts.h"
-#include "nsIPresShell.h"
 #include "nsCSSRendering.h"
 #include "nsBoxLayoutState.h"
 #include "nsStackLayout.h"
