@@ -4,13 +4,21 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 0.50.0-SNAPSHOT  (In Development)
+# 0.51.0-SNAPSHOT  (In Development)
 
-* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.49.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/53?closed=1)
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.50.0...master)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/54?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Config.kt)
+
+# 0.50.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v0.49.0...v0.50.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/53?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v0.50.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v0.50.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v0.50.0r/buildSrc/src/main/java/Config.kt)
 
 * **browser-toolbar**
   * Added `titleView` to `DisplayToolbar` which displays the title of the page. Various options are able to modified such as
