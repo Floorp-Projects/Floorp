@@ -301,5 +301,25 @@ bool HasDrawWindowPrivilege(JSContext* aCx, JSObject* /* unused */) {
                                              nsGkAtoms::all_urlsPermission);
 }
 
+bool CheckWriteOnlySecurity(bool aCORSUsed, nsIPrincipal* aPrincipal) {
+  if (!aPrincipal) {
+    return true;
+  }
+
+  if (!aCORSUsed) {
+    nsIGlobalObject* incumbentSettingsObject = dom::GetIncumbentGlobal();
+    if (NS_WARN_IF(!incumbentSettingsObject)) {
+      return true;
+    }
+
+    nsIPrincipal* principal = incumbentSettingsObject->PrincipalOrNull();
+    if (NS_WARN_IF(!principal) || !(principal->Subsumes(aPrincipal))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 }  // namespace CanvasUtils
 }  // namespace mozilla
