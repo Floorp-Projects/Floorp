@@ -33,11 +33,6 @@ from io import (
 )
 
 
-if sys.version_info[0] == 3:
-    str_type = str
-else:
-    str_type = basestring
-
 if sys.platform == 'win32':
     _kernel32 = ctypes.windll.kernel32
     _FILE_ATTRIBUTE_NOT_CONTENT_INDEXED = 0x2000
@@ -78,7 +73,7 @@ def hash_file(path, hasher=None):
     return h.hexdigest()
 
 
-class EmptyValue(unicode):
+class EmptyValue(six.text_type):
     """A dummy type that behaves like an empty string and sequence.
 
     This type exists in order to support
@@ -175,7 +170,7 @@ def mkdir(path, not_indexed=False):
 
     if not_indexed:
         if sys.platform == 'win32':
-            if isinstance(path, str_type):
+            if isinstance(path, six.string_types):
                 fn = _kernel32.SetFileAttributesW
             else:
                 fn = _kernel32.SetFileAttributesA
@@ -229,7 +224,7 @@ class FileAvoidWrite(BytesIO):
         self.mode = mode
 
     def write(self, buf):
-        if isinstance(buf, unicode):
+        if isinstance(buf, six.text_type):
             buf = buf.encode('utf-8')
         BytesIO.write(self, buf)
 
@@ -821,7 +816,7 @@ class HierarchicalStringList(object):
         if not isinstance(value, list):
             raise ValueError('Expected a list of strings, not %s' % type(value))
         for v in value:
-            if not isinstance(v, str_type):
+            if not isinstance(v, six.string_types):
                 raise ValueError(
                     'Expected a list of strings, not an element of %s' % type(v))
 
@@ -1192,7 +1187,7 @@ class EnumStringComparisonError(Exception):
     pass
 
 
-class EnumString(unicode):
+class EnumString(six.text_type):
     '''A string type that only can have a limited set of values, similarly to
     an Enum, and can only be compared against that set of values.
 
@@ -1229,7 +1224,7 @@ def _escape_char(c):
     # quoting could be done with either ' or ".
     if c == "'":
         return "\\'"
-    return unicode(c.encode('unicode_escape'))
+    return six.text_type(c.encode('unicode_escape'))
 
 
 # Mapping table between raw characters below \x80 and their escaped
@@ -1269,7 +1264,7 @@ def indented_repr(o, indent=4):
         elif isinstance(o, bytes):
             yield 'b'
             yield repr(o)
-        elif isinstance(o, unicode):
+        elif isinstance(o, six.text_type):
             yield "'"
             # We want a readable string (non escaped unicode), but some
             # special characters need escaping (e.g. \n, \t, etc.)
@@ -1303,7 +1298,7 @@ def encode(obj, encoding='utf-8'):
         }
     if isinstance(obj, bytes):
         return obj
-    if isinstance(obj, unicode):
+    if isinstance(obj, six.text_type):
         return obj.encode(encoding)
     if isinstance(obj, Iterable):
         return [encode(i, encoding) for i in obj]
@@ -1397,7 +1392,7 @@ def patch_main():
 
 
 def ensure_bytes(value):
-    if isinstance(value, basestring):
+    if isinstance(value, six.text_type):
         return value.encode('utf8')
     return value
 

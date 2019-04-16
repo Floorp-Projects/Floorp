@@ -287,7 +287,7 @@ class ConfigureSandbox(dict):
         for b in ('None', 'False', 'True', 'int', 'bool', 'any', 'all', 'len',
                   'list', 'tuple', 'set', 'dict', 'isinstance', 'getattr',
                   'hasattr', 'enumerate', 'range', 'zip', 'AssertionError')
-    }, __import__=forbidden_import, str=unicode)
+    }, __import__=forbidden_import, str=six.text_type)
 
     # Expose a limited set of functions from os.path
     OS = ReadOnlyNamespace(path=ReadOnlyNamespace(**{

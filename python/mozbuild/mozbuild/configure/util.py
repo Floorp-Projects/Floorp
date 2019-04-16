@@ -9,6 +9,7 @@ import itertools
 import locale
 import logging
 import os
+import six
 import sys
 from collections import deque
 from contextlib import contextmanager
@@ -54,7 +55,7 @@ class Version(LooseVersion):
 
     def __cmp__(self, other):
         # LooseVersion checks isinstance(StringType), so work around it.
-        if isinstance(other, unicode):
+        if isinstance(other, six.text_type):
             other = other.encode('ascii')
         return LooseVersion.__cmp__(self, other)
 
