@@ -118,6 +118,7 @@ class Sidebar extends PureComponent {
         isConnectionNotResponding: runtime.isConnectionNotResponding,
         isSelected,
         isUnknown: runtime.isUnknown,
+        isUnplugged: runtime.isUnplugged,
         name,
         runtimeId: runtime.id,
       });

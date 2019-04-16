@@ -38,6 +38,28 @@ class UnknownUsbRuntime {
 }
 
 /**
+ * Used to represent USB devices that were previously connected but are now missing
+ * (presumably after being unplugged/disconnected from the computer).
+ */
+class UnpluggedUsbRuntime {
+  constructor(deviceId, deviceName) {
+    this.id = deviceId + "|unplugged";
+    this.deviceId = deviceId;
+    this.deviceName = deviceName;
+    this.shortName = "Unplugged runtime";
+    this.socketPath = null;
+    this.isUnknown = true;
+    this.isUnplugged = true;
+  }
+}
+
+/**
+ * Map used to keep track of discovered usb devices. Will be used to create the unplugged
+ * usb runtimes.
+ */
+const devices = new Map();
+
+/**
  * This module provides a collection of helper methods to detect USB runtimes whom Firefox
  * is running on.
  */
@@ -56,7 +78,22 @@ async function getUSBRuntimes() {
     .filter(d => !runtimeDevices.includes(d.id))
     .map(d => new UnknownUsbRuntime(d));
 
-  return runtimes.concat(unknownRuntimes);
+  // Add all devices to the map of known devices.
+  const allRuntimes = runtimes.concat(unknownRuntimes);
+  for (const runtime of allRuntimes) {
+    devices.set(runtime.deviceId, runtime.deviceName);
+  }
+
+  // Get devices previously found by ADB but no longer available.
+  const currentDevices = allRuntimes.map(r => r.deviceId);
+  const knownDevices = [...devices.keys()];
+  const unpluggedDevices = knownDevices.filter(id => !currentDevices.includes(id));
+  const unpluggedRuntimes = unpluggedDevices.map(deviceId => {
+    const deviceName = devices.get(deviceId);
+    return new UnpluggedUsbRuntime(deviceId, deviceName);
+  });
+
+  return allRuntimes.concat(unpluggedRuntimes);
 }
 exports.getUSBRuntimes = getUSBRuntimes;
 

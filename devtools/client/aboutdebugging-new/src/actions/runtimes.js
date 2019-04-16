@@ -160,6 +160,7 @@ function createThisFirefoxRuntime() {
       isConnectionFailed: false,
       isConnectionNotResponding: false,
       isUnknown: false,
+      isUnplugged: false,
       name: l10n.getString("about-debugging-this-firefox-runtime-name"),
       type: RUNTIMES.THIS_FIREFOX,
     };
@@ -321,6 +322,7 @@ function updateNetworkRuntimes(locations) {
       isConnectionFailed: false,
       isConnectionNotResponding: false,
       isUnknown: false,
+      isUnplugged: false,
       name: location,
       type: RUNTIMES.NETWORK,
     };
@@ -344,6 +346,7 @@ function updateUSBRuntimes(adbRuntimes) {
       isConnectionFailed: false,
       isConnectionNotResponding: false,
       isUnknown: adbRuntime.isUnknown,
+      isUnplugged: adbRuntime.isUnplugged,
       name: adbRuntime.shortName,
       type: RUNTIMES.USB,
     };

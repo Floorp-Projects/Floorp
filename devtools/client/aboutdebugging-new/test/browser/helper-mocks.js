@@ -133,6 +133,9 @@ class Mocks {
       get isUnknown() {
         return runtimeInfo.isUnknown || false;
       },
+      get isUnplugged() {
+        return runtimeInfo.isUnplugged || false;
+      },
       shortName: runtimeInfo.shortName || "testshort",
     });
 
