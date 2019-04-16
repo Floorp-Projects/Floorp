@@ -112,13 +112,6 @@ class Toolbar extends PureComponent {
           dom.div({ className: "devtools-separator" }),
           dom.div({ id: "ruleview-command-toolbar" },
             dom.button({
-              id: "ruleview-add-rule-button",
-              className: "devtools-button",
-              disabled: !isAddRuleEnabled,
-              onClick: this.onAddRuleClick,
-              title: getStr("rule.addRule.tooltip"),
-            }),
-            dom.button({
               id: "pseudo-class-panel-toggle",
               className: "devtools-button" +
                          (isPseudoClassPanelExpanded ? " checked" : ""),
@@ -131,6 +124,13 @@ class Toolbar extends PureComponent {
                          (isClassPanelExpanded ? " checked" : ""),
               onClick: this.onClassPanelToggle,
               title: getStr("rule.classPanel.toggleClass.tooltip"),
+            }),
+            dom.button({
+              id: "ruleview-add-rule-button",
+              className: "devtools-button",
+              disabled: !isAddRuleEnabled,
+              onClick: this.onAddRuleClick,
+              title: getStr("rule.addRule.tooltip"),
             }),
             !isPrintSimulationHidden ?
               dom.button({
