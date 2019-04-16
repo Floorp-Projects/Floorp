@@ -203,6 +203,20 @@ function getCleanedPacket(key, packet) {
       }
     }
 
+    if (Array.isArray(res.exceptionStack)) {
+      res.exceptionStack = res.exceptionStack.map((frame, i) => {
+        const existingFrame = existingPacket.exceptionStack[i];
+        if (frame && existingFrame && frame.sourceId) {
+          frame.sourceId = existingFrame.sourceId;
+        }
+        return frame;
+      });
+    }
+
+    if (res.frame && existingPacket.frame) {
+      res.frame.sourceId = existingPacket.frame.sourceId;
+    }
+
     if (res.packet) {
       const override = {};
       const keys = ["totalTime", "from", "contentSize", "transferredSize"];
