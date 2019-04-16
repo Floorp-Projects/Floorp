@@ -1050,12 +1050,17 @@ mozilla::ipc::IPCResult TabChild::RecvLoadURL(const nsCString& aURI,
       nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
       nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
 
-  nsresult rv =
-      WebNavigation()->LoadURI(NS_ConvertUTF8toUTF16(aURI), loadURIOptions);
+  nsIWebNavigation* webNav = WebNavigation();
+  nsresult rv = webNav->LoadURI(NS_ConvertUTF8toUTF16(aURI), loadURIOptions);
   if (NS_FAILED(rv)) {
     NS_WARNING(
         "WebNavigation()->LoadURI failed. Eating exception, what else can I "
         "do?");
+  }
+
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  if (docShell) {
+    nsDocShell::Cast(docShell)->MaybeClearStorageAccessFlag();
   }
 
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL, aURI);
