@@ -103,6 +103,19 @@ def MakeCustomHandlerClass(results_handler, shutdown_browser, write_raw_gecko_pr
     return MyHandler
 
 
+class ThreadedHTTPServer(BaseHTTPServer.HTTPServer):
+    # See
+    # https://stackoverflow.com/questions/19537132/threaded-basehttpserver-one-thread-per-request#30312766
+    def process_request(self, request, client_address):
+        thread = threading.Thread(target=self.__new_request,
+                                  args=(self.RequestHandlerClass, request, client_address, self))
+        thread.start()
+
+    def __new_request(self, handlerClass, request, address, server):
+        handlerClass(request, address, server)
+        self.shutdown_request(request)
+
+
 class RaptorControlServer():
     """Container class for Raptor Control Server"""
 
@@ -130,7 +143,7 @@ class RaptorControlServer():
         sock.close()
         server_address = ('', self.port)
 
-        server_class = BaseHTTPServer.HTTPServer
+        server_class = ThreadedHTTPServer
         handler_class = MakeCustomHandlerClass(self.results_handler,
                                                self.shutdown_browser,
                                                self.write_raw_gecko_profile)
