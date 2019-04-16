@@ -22,7 +22,7 @@ class AutoLockHelperThreadState;
 // Note that we don't use virtual functions here because destructors can write
 // the vtable pointer on entry, which can causes races if synchronization
 // happens there.
-class GCParallelTask {
+class GCParallelTask : public RunnableTask {
  public:
   using TaskFunc = void (*)(GCParallelTask*);
 
@@ -61,7 +61,7 @@ class GCParallelTask {
 
   // Derived classes must override this to ensure that join() gets called
   // before members get destructed.
-  ~GCParallelTask();
+  virtual ~GCParallelTask();
 
   JSRuntime* runtime() { return runtime_; }
 
@@ -97,6 +97,8 @@ class GCParallelTask {
   }
   bool isRunning() const;
 
+  void runTask() override { func_(this); }
+
  private:
   void assertNotStarted() const {
     // Don't lock here because that adds extra synchronization in debug
@@ -124,8 +126,6 @@ class GCParallelTask {
     MOZ_ASSERT(state_ == State::Finished);
     state_ = State::NotStarted;
   }
-
-  void runTask() { func_(this); }
 
  protected:
   // Can be called to indicate that although the task is still

@@ -2338,7 +2338,7 @@ void ScriptSource::performTaskWork(SourceCompressionTask* task) {
   data.match(SourceCompressionTask::PerformTaskWork(task));
 }
 
-void SourceCompressionTask::work() {
+void SourceCompressionTask::runTask() {
   if (shouldCancel()) {
     return;
   }
