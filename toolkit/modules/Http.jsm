@@ -62,7 +62,7 @@ function httpRequest(aUrl, aOptions) {
         let errorText = target.responseText;
         if (!errorText || /<(ht|\?x)ml\b/i.test(errorText))
           errorText = target.statusText;
-        throw target.status + " - " + errorText;
+        throw new Error(target.status + " - " + errorText);
       }
       if (aOptions.onLoad)
         aOptions.onLoad(target.responseText, this);
