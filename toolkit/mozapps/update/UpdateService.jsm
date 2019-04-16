@@ -4041,13 +4041,13 @@ Downloader.prototype = {
     for (let i = 0; i < this._listeners.length; ++i) {
       if (this._listeners[i] == listener) {
         this._listeners.splice(i, 1);
+
+        // Decrease the status update frequency when no one is listening
+        if (this._listeners.length == 0) {
+          this._maybeStopActiveNotifications();
+        }
         return;
       }
-    }
-
-    // Decrease the status update frequency when no one is listening
-    if (this._listeners.length == 0) {
-      this._maybeStopActiveNotifications();
     }
   },
 
@@ -4067,6 +4067,7 @@ Downloader.prototype = {
         this.hasDownloadListeners && this._request) {
       LOG("Downloader:_maybeStartActiveNotifications - Starting active " +
           "notifications");
+      this._bitsActiveNotifications = true;
       await this._request.changeMonitorInterval(BITS_ACTIVE_POLL_RATE_MS).catch(error => {
         LOG("Downloader:_maybeStartActiveNotifications - Failed to increase " +
             "status update frequency. Error: " + error);
@@ -4083,6 +4084,7 @@ Downloader.prototype = {
         !this.hasDownloadListeners && this._request) {
       LOG("Downloader:_maybeStopActiveNotifications - Stopping active " +
           "notifications");
+      this._bitsActiveNotifications = false;
       await this._request.changeMonitorInterval(BITS_IDLE_POLL_RATE_MS).catch(error => {
         LOG("Downloader:_maybeStopActiveNotifications - Failed to decrease " +
             "status update frequency: " + error);
