@@ -1353,7 +1353,7 @@ VARCACHE_PREF(
 VARCACHE_PREF(
   "media.gmp.insecure.allow",
    MediaGmpInsecureAllow,
-  bool, false
+  RelaxedAtomicBool, false
 )
 #endif
 
