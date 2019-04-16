@@ -83,6 +83,9 @@ class CompositorManagerChild : public PCompositorManagerChild {
 
   bool ShouldContinueFromReplyTimeout() override;
 
+  mozilla::ipc::IPCResult RecvNotifyWebRenderError(
+      const WebRenderError&& aError);
+
  private:
   static StaticRefPtr<CompositorManagerChild> sInstance;
 
