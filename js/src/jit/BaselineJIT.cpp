@@ -281,9 +281,9 @@ MethodStatus jit::CanEnterBaselineAtBranch(JSContext* cx,
   // This check is needed in the following corner case. Consider a function h,
   //
   //   function h(x) {
-  //      h(false);
   //      if (!x)
   //        return;
+  //      h(false);
   //      for (var i = 0; i < N; i++)
   //         /* do stuff */
   //   }

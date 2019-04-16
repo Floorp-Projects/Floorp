@@ -201,10 +201,7 @@ bool JSRuntime::init(JSContext* cx, uint32_t maxbytes,
 
   mainContext_ = cx;
 
-  defaultFreeOp_ = js_new<js::FreeOp>(this);
-  if (!defaultFreeOp_) {
-    return false;
-  }
+  defaultFreeOp_ = cx->defaultFreeOp();
 
   if (!gc.init(maxbytes, maxNurseryBytes)) {
     return false;
@@ -302,8 +299,6 @@ void JSRuntime::destroyRuntime() {
 #endif
 
   gc.finish();
-
-  js_delete(defaultFreeOp_.ref());
 
   defaultLocale = nullptr;
   js_delete(jitRuntime_.ref());
@@ -573,7 +568,8 @@ void JSRuntime::traceSharedIntlData(JSTracer* trc) {
   sharedIntlData.ref().trace(trc);
 }
 
-FreeOp::FreeOp(JSRuntime* maybeRuntime) : JSFreeOp(maybeRuntime) {
+FreeOp::FreeOp(JSRuntime* maybeRuntime, bool isDefault)
+    : JSFreeOp(maybeRuntime), isDefault(isDefault) {
   MOZ_ASSERT_IF(maybeRuntime, CurrentThreadCanAccessRuntime(maybeRuntime));
 }
 
@@ -585,10 +581,6 @@ FreeOp::~FreeOp() {
   if (!jitPoisonRanges.empty()) {
     jit::ExecutableAllocator::poisonCode(runtime(), jitPoisonRanges);
   }
-}
-
-bool FreeOp::isDefaultFreeOp() const {
-  return runtime_ && runtime_->defaultFreeOp() == this;
 }
 
 GlobalObject* JSRuntime::getIncumbentGlobal(JSContext* cx) {

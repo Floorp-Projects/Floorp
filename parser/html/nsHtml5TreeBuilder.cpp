@@ -733,7 +733,7 @@ starttagloop:
               errHtmlStartTagInForeignContext(name);
               if (!fragment) {
                 while (!isSpecialParentInForeign(stack[currentPtr])) {
-                  pop();
+                  popForeign(-1, -1);
                 }
                 NS_HTML5_CONTINUE(starttagloop);
               }

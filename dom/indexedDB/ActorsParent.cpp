@@ -5481,6 +5481,7 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
   RefPtr<TransactionBase> mTransaction;
   const int64_t mTransactionLoggingSerialNumber;
   InternalState mInternalState;
+  bool mWaitingForContinue;
   const bool mTransactionIsAborted;
 
  public:
@@ -5504,6 +5505,12 @@ class TransactionDatabaseOperationBase : public DatabaseOperationBase {
     MOZ_ASSERT(mTransaction);
 
     return mTransaction;
+  }
+
+  bool IsWaitingForContinue() const {
+    AssertIsOnOwningThread();
+
+    return mWaitingForContinue;
   }
 
   void NoteContinueReceived();
@@ -21532,6 +21539,7 @@ TransactionDatabaseOperationBase::TransactionDatabaseOperationBase(
       mTransaction(aTransaction),
       mTransactionLoggingSerialNumber(aTransaction->LoggingSerialNumber()),
       mInternalState(InternalState::Initial),
+      mWaitingForContinue(false),
       mTransactionIsAborted(aTransaction->IsAborted()) {
   MOZ_ASSERT(aTransaction);
   MOZ_ASSERT(LoggingSerialNumber());
@@ -21676,6 +21684,8 @@ void TransactionDatabaseOperationBase::NoteContinueReceived() {
   AssertIsOnOwningThread();
   MOZ_ASSERT(mInternalState == InternalState::WaitingForContinue);
 
+  mWaitingForContinue = false;
+
   mInternalState = InternalState::SendingResults;
 
   // This TransactionDatabaseOperationBase can only be held alive by the IPDL.
@@ -21758,6 +21768,8 @@ void TransactionDatabaseOperationBase::SendPreprocessInfoOrResults(
 
   if (aSendPreprocessInfo && NS_SUCCEEDED(mResultCode)) {
     mInternalState = InternalState::WaitingForContinue;
+
+    mWaitingForContinue = true;
   } else {
     if (mLoggingSerialNumber) {
       mTransaction->NoteFinishedRequest();
@@ -23726,6 +23738,24 @@ void NormalTransactionOp::ActorDestroy(ActorDestroyReason aWhy) {
   AssertIsOnOwningThread();
 
   NoteActorDestroyed();
+
+  // Assume ActorDestroy can happen at any time, so we can't probe the current
+  // state since mInternalState can be modified on any thread (only one thread
+  // at a time based on the state machine).
+  // However we can use mWaitingForContinue which is only touched on the owning
+  // thread.  If mWaitingForContinue is true, we can also modify mInternalState
+  // since we are guaranteed that there are no pending runnables which would
+  // probe mInternalState to decide what code needs to run (there shouldn't be
+  // any running runnables on other threads either).
+
+  if (IsWaitingForContinue()) {
+    NoteContinueReceived();
+  }
+
+  // We don't have to handle the case when mWaitingForContinue is not true since
+  // it means that either nothing has been initialized yet, so nothing to
+  // cleanup or there are pending runnables that will detect that the actor has
+  // been destroyed and cleanup accordingly.
 }
 
 mozilla::ipc::IPCResult NormalTransactionOp::RecvContinue(

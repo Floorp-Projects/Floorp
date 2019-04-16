@@ -12,6 +12,7 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "ds/TraceableFifo.h"
+#include "gc/Memory.h"
 #include "js/CharacterEncoding.h"
 #include "js/ContextOptions.h"  // JS::ContextOptions
 #include "js/GCVector.h"
@@ -173,6 +174,8 @@ struct JSContext : public JS::RootingContext,
   // Free lists for parallel allocation in the atoms zone on helper threads.
   js::ThreadData<js::gc::FreeLists*> atomsZoneFreeLists_;
 
+  js::ThreadData<js::FreeOp> defaultFreeOp_;
+
  public:
   // This is used by helper threads to change the runtime their context is
   // currently operating on.
@@ -268,7 +271,7 @@ struct JSContext : public JS::RootingContext,
     return *runtime_->wellKnownSymbols;
   }
   js::PropertyName* emptyString() { return runtime_->emptyString; }
-  js::FreeOp* defaultFreeOp() { return runtime_->defaultFreeOp(); }
+  js::FreeOp* defaultFreeOp() { return &defaultFreeOp_.ref(); }
   void* stackLimitAddress(JS::StackKind kind) {
     return &nativeStackLimit[kind];
   }
