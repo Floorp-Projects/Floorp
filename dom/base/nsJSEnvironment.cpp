@@ -1768,7 +1768,13 @@ bool InterSliceGCRunnerFired(TimeStamp aDeadline, void* aData) {
         uint32_t(idleDuration.ToSeconds() / duration.ToSeconds() * 100);
     Telemetry::Accumulate(Telemetry::GC_SLICE_DURING_IDLE, percent);
   }
-  return true;
+
+  // If we didn't use the whole budget, we're past the foreground sweeping slice
+  // and will need to wait for the background tasks to finish, or we're at the
+  // last slice. Return value on the latter case doesn't matter, and on the
+  // former we want to wait a bit before polling again.
+  // Returning false makes IdleTaskRunner postpone the next call a bit.
+  return int64_t(sliceDuration.ToMilliseconds()) >= budget;
 }
 
 // static
