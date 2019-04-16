@@ -85,8 +85,7 @@ public final class SessionFinder {
         bundle.putString("searchString", searchString);
         addFlagsToBundle(flags, bundle);
 
-        final GeckoSession.CallbackResult<FinderResult> result =
-                new GeckoSession.CallbackResult<FinderResult>() {
+        final CallbackResult<FinderResult> result = new CallbackResult<FinderResult>() {
             @Override
             public void sendSuccess(final Object response) {
                 complete(new FinderResult((GeckoBundle) response));
