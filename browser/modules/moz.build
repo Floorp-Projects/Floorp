@@ -61,6 +61,9 @@ with Files("ContentCrashHandlers.jsm"):
 with Files("ContentSearch.jsm"):
     BUG_COMPONENT = ("Firefox", "Search")
 
+with Files("EveryWindow.jsm"):
+    BUG_COMPONENT = ("Firefox", "General")
+
 with Files("ExtensionsUI.jsm"):
     BUG_COMPONENT = ("WebExtensions", "General")
 
@@ -136,6 +139,7 @@ EXTRA_JS_MODULES += [
     'ContentObservers.js',
     'ContentSearch.jsm',
     'Discovery.jsm',
+    'EveryWindow.jsm',
     'ExtensionsUI.jsm',
     'FaviconLoader.jsm',
     'FormValidationHandler.jsm',
