@@ -10,6 +10,10 @@
 #include "mozilla/Attributes.h"
 #include "nsMathMLContainerFrame.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 //
 // Base class to handle token elements
 //
@@ -18,7 +22,7 @@ class nsMathMLTokenFrame : public nsMathMLContainerFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLTokenFrame)
 
-  friend nsIFrame* NS_NewMathMLTokenFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewMathMLTokenFrame(mozilla::PresShell* aPresShell,
                                           ComputedStyle* aStyle);
 
   NS_IMETHOD

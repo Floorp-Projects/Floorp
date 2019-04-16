@@ -26,7 +26,7 @@
 using namespace mozilla;
 typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
 
-ViewportFrame* NS_NewViewportFrame(nsIPresShell* aPresShell,
+ViewportFrame* NS_NewViewportFrame(PresShell* aPresShell,
                                    ComputedStyle* aStyle) {
   return new (aPresShell) ViewportFrame(aStyle, aPresShell->GetPresContext());
 }

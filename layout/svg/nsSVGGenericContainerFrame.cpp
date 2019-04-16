@@ -8,12 +8,14 @@
 #include "nsSVGGenericContainerFrame.h"
 #include "nsSVGIntegrationUtils.h"
 
+#include "mozilla/PresShell.h"
+
 using namespace mozilla;
 
 //----------------------------------------------------------------------
 // nsSVGGenericContainerFrame Implementation
 
-nsIFrame* NS_NewSVGGenericContainerFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewSVGGenericContainerFrame(PresShell* aPresShell,
                                          ComputedStyle* aStyle) {
   return new (aPresShell)
       nsSVGGenericContainerFrame(aStyle, aPresShell->GetPresContext());

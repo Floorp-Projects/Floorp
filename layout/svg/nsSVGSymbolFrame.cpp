@@ -7,10 +7,11 @@
 // Main header first:
 #include "nsSVGSymbolFrame.h"
 
+#include "mozilla/PresShell.h"
+
 using namespace mozilla;
 
-nsIFrame* NS_NewSVGSymbolFrame(nsIPresShell* aPresShell,
-                               ComputedStyle* aStyle) {
+nsIFrame* NS_NewSVGSymbolFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       nsSVGSymbolFrame(aStyle, aPresShell->GetPresContext());
 }

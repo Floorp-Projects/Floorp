@@ -17,8 +17,12 @@
 
 class gfxContext;
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 class nsSVGMaskFrame final : public nsSVGContainerFrame {
-  friend nsIFrame* NS_NewSVGMaskFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewSVGMaskFrame(mozilla::PresShell* aPresShell,
                                       ComputedStyle* aStyle);
 
   typedef mozilla::gfx::Matrix Matrix;

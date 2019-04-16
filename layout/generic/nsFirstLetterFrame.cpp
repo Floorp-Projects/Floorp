@@ -24,7 +24,7 @@
 using namespace mozilla;
 using namespace mozilla::layout;
 
-nsFirstLetterFrame* NS_NewFirstLetterFrame(nsIPresShell* aPresShell,
+nsFirstLetterFrame* NS_NewFirstLetterFrame(PresShell* aPresShell,
                                            ComputedStyle* aStyle) {
   return new (aPresShell)
       nsFirstLetterFrame(aStyle, aPresShell->GetPresContext());

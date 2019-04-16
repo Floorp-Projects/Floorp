@@ -16,6 +16,10 @@
 class gfxContext;
 class nsSVGForeignObjectFrame;
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 ////////////////////////////////////////////////////////////////////////
 // nsSVGOuterSVGFrame class
 
@@ -23,8 +27,8 @@ class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame,
                                  public nsISVGSVGFrame {
   typedef mozilla::image::imgDrawingParams imgDrawingParams;
 
-  friend nsContainerFrame* NS_NewSVGOuterSVGFrame(nsIPresShell* aPresShell,
-                                                  ComputedStyle* aStyle);
+  friend nsContainerFrame* NS_NewSVGOuterSVGFrame(
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
  protected:
   explicit nsSVGOuterSVGFrame(ComputedStyle* aStyle,
@@ -216,7 +220,7 @@ class nsSVGOuterSVGFrame final : public nsSVGDisplayContainerFrame,
  */
 class nsSVGOuterSVGAnonChildFrame final : public nsSVGDisplayContainerFrame {
   friend nsContainerFrame* NS_NewSVGOuterSVGAnonChildFrame(
-      nsIPresShell* aPresShell, ComputedStyle* aStyle);
+      mozilla::PresShell* aPresShell, ComputedStyle* aStyle);
 
   explicit nsSVGOuterSVGAnonChildFrame(ComputedStyle* aStyle,
                                        nsPresContext* aPresContext)

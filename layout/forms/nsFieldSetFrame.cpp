@@ -10,6 +10,7 @@
 #include "gfxContext.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Likely.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/Maybe.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSRendering.h"
@@ -24,7 +25,7 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::layout;
 
-nsContainerFrame* NS_NewFieldSetFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewFieldSetFrame(PresShell* aPresShell,
                                       ComputedStyle* aStyle) {
   return new (aPresShell) nsFieldSetFrame(aStyle, aPresShell->GetPresContext());
 }

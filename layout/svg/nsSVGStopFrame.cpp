@@ -9,6 +9,7 @@
 #include "nsFrame.h"
 #include "nsGkAtoms.h"
 #include "mozilla/ComputedStyle.h"
+#include "mozilla/PresShell.h"
 #include "SVGObserverUtils.h"
 
 using namespace mozilla;
@@ -18,7 +19,7 @@ using namespace mozilla;
 // within the nsSVGGradientFrame, which is the parent for this frame
 
 class nsSVGStopFrame : public nsFrame {
-  friend nsIFrame* NS_NewSVGStopFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewSVGStopFrame(mozilla::PresShell* aPresShell,
                                       ComputedStyle* aStyle);
 
  protected:
@@ -93,6 +94,6 @@ nsresult nsSVGStopFrame::AttributeChanged(int32_t aNameSpaceID,
 // Public functions
 // -------------------------------------------------------------------------
 
-nsIFrame* NS_NewSVGStopFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewSVGStopFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsSVGStopFrame(aStyle, aPresShell->GetPresContext());
 }

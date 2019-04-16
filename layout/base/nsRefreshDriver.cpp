@@ -1508,8 +1508,8 @@ static nsDocShell* GetDocShell(nsPresContext* aPresContext) {
   return static_cast<nsDocShell*>(aPresContext->GetDocShell());
 }
 
-static bool HasPendingAnimations(nsIPresShell* aShell) {
-  Document* doc = aShell->GetDocument();
+static bool HasPendingAnimations(PresShell* aPresShell) {
+  Document* doc = aPresShell->GetDocument();
   if (!doc) {
     return false;
   }
@@ -1861,9 +1861,9 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
 
   // Resize events should be fired before layout flushes or
   // calling animation frame callbacks.
-  AutoTArray<nsIPresShell*, 16> observers;
+  AutoTArray<PresShell*, 16> observers;
   observers.AppendElements(mResizeEventFlushObservers);
-  for (nsIPresShell* shell : Reversed(observers)) {
+  for (PresShell* shell : Reversed(observers)) {
     if (!mPresContext || !mPresContext->GetPresShell()) {
       StopTimer();
       return;
@@ -1905,17 +1905,17 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
       RunFrameRequestCallbacks(aNowTime);
 
       if (mPresContext && mPresContext->GetPresShell()) {
-        AutoTArray<nsIPresShell*, 16> observers;
+        AutoTArray<PresShell*, 16> observers;
         observers.AppendElements(mStyleFlushObservers);
         for (uint32_t j = observers.Length();
              j && mPresContext && mPresContext->GetPresShell(); --j) {
           // Make sure to not process observers which might have been removed
           // during previous iterations.
-          nsIPresShell* rawPresShell = observers[j - 1];
+          PresShell* rawPresShell = observers[j - 1];
           if (!mStyleFlushObservers.RemoveElement(rawPresShell)) {
             continue;
           }
-          RefPtr<PresShell> presShell = static_cast<PresShell*>(rawPresShell);
+          RefPtr<PresShell> presShell = rawPresShell;
           presShell->mObservingStyleFlushes = false;
           presShell->FlushPendingNotifications(
               ChangesToFlush(FlushType::Style, false));
@@ -1928,17 +1928,17 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
       }
     } else if (i == 2) {
       // This is the FlushType::Layout case.
-      AutoTArray<nsIPresShell*, 16> observers;
+      AutoTArray<PresShell*, 16> observers;
       observers.AppendElements(mLayoutFlushObservers);
       for (uint32_t j = observers.Length();
            j && mPresContext && mPresContext->GetPresShell(); --j) {
         // Make sure to not process observers which might have been removed
         // during previous iterations.
-        nsIPresShell* rawPresShell = observers[j - 1];
+        PresShell* rawPresShell = observers[j - 1];
         if (!mLayoutFlushObservers.RemoveElement(rawPresShell)) {
           continue;
         }
-        RefPtr<PresShell> presShell = static_cast<PresShell*>(rawPresShell);
+        RefPtr<PresShell> presShell = rawPresShell;
         presShell->mObservingLayoutFlushes = false;
         presShell->mWasLastReflowInterrupted = false;
         FlushType flushType = HasPendingAnimations(presShell)

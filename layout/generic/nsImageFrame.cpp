@@ -133,18 +133,18 @@ static bool HaveFixedSize(const ReflowInput& aReflowInput) {
          aReflowInput.mStylePosition->mWidth.ConvertsToLength();
 }
 
-nsIFrame* NS_NewImageFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewImageFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) nsImageFrame(aStyle, aPresShell->GetPresContext(),
                                        nsImageFrame::Kind::ImageElement);
 }
 
-nsIFrame* NS_NewImageFrameForContentProperty(nsIPresShell* aPresShell,
+nsIFrame* NS_NewImageFrameForContentProperty(PresShell* aPresShell,
                                              ComputedStyle* aStyle) {
   return new (aPresShell) nsImageFrame(aStyle, aPresShell->GetPresContext(),
                                        nsImageFrame::Kind::ContentProperty);
 }
 
-nsIFrame* NS_NewImageFrameForGeneratedContentIndex(nsIPresShell* aPresShell,
+nsIFrame* NS_NewImageFrameForGeneratedContentIndex(PresShell* aPresShell,
                                                    ComputedStyle* aStyle) {
   return new (aPresShell)
       nsImageFrame(aStyle, aPresShell->GetPresContext(),
@@ -172,8 +172,8 @@ bool nsImageFrame::ShouldShowBrokenImageIcon() const {
   return loader->GetImageBlockingStatus() != nsIContentPolicy::ACCEPT;
 }
 
-nsImageFrame* nsImageFrame::CreateContinuingFrame(nsIPresShell* aPresShell,
-                                                  ComputedStyle* aStyle) const {
+nsImageFrame* nsImageFrame::CreateContinuingFrame(
+    mozilla::PresShell* aPresShell, ComputedStyle* aStyle) const {
   return new (aPresShell)
       nsImageFrame(aStyle, aPresShell->GetPresContext(), mKind);
 }

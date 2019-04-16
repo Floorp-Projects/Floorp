@@ -10,11 +10,15 @@
 #include "mozilla/EventForwards.h"
 #include "nsBoxFrame.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 class nsTitleBarFrame : public nsBoxFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsTitleBarFrame)
 
-  friend nsIFrame* NS_NewTitleBarFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewTitleBarFrame(mozilla::PresShell* aPresShell,
                                        ComputedStyle* aStyle);
 
   explicit nsTitleBarFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,

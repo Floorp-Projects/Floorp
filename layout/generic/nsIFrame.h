@@ -3827,7 +3827,7 @@ class nsIFrame : public nsQueryFrame {
   /**
    * @return true if we painted @aPresShell during the last repaint.
    */
-  bool DidPaintPresShell(nsIPresShell* aShell) {
+  bool DidPaintPresShell(mozilla::PresShell* aShell) {
     for (nsWeakPtr& item : *PaintedPresShellList()) {
       nsCOMPtr<nsIPresShell> shell = do_QueryReferent(item);
       if (shell == aShell) {

@@ -6,8 +6,7 @@
 
 <window id="window" title="Subframe Origin Tests"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-<script type="application/javascript"
-        src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+<script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 
 <iframe
   style="margin-left:20px; margin-top:20px; min-height:300px; max-width:300px; max-height:300px; border:solid 1px black;"

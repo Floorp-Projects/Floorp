@@ -23,7 +23,7 @@ using namespace mozilla;
 // <munder> -- attach an underscript to a base - implementation
 //
 
-nsIFrame* NS_NewMathMLmunderoverFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewMathMLmunderoverFrame(PresShell* aPresShell,
                                       ComputedStyle* aStyle) {
   return new (aPresShell)
       nsMathMLmunderoverFrame(aStyle, aPresShell->GetPresContext());

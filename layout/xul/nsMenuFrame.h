@@ -24,8 +24,13 @@
 #include "nsITimer.h"
 #include "mozilla/Attributes.h"
 
-nsIFrame* NS_NewMenuFrame(nsIPresShell* aPresShell, mozilla::ComputedStyle*);
-nsIFrame* NS_NewMenuItemFrame(nsIPresShell* aPresShell,
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
+nsIFrame* NS_NewMenuFrame(mozilla::PresShell* aPresShell,
+                          mozilla::ComputedStyle*);
+nsIFrame* NS_NewMenuItemFrame(mozilla::PresShell* aPresShell,
                               mozilla::ComputedStyle*);
 
 class nsIContent;

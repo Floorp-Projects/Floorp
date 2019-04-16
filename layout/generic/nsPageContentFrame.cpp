@@ -14,7 +14,7 @@
 
 using namespace mozilla;
 
-nsPageContentFrame* NS_NewPageContentFrame(nsIPresShell* aPresShell,
+nsPageContentFrame* NS_NewPageContentFrame(PresShell* aPresShell,
                                            ComputedStyle* aStyle) {
   return new (aPresShell)
       nsPageContentFrame(aStyle, aPresShell->GetPresContext());

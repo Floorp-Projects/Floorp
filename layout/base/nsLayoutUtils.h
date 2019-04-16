@@ -180,6 +180,7 @@ class nsLayoutUtils {
   typedef mozilla::ScreenMargin ScreenMargin;
   typedef mozilla::LayoutDeviceIntSize LayoutDeviceIntSize;
   typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
+  typedef mozilla::PresShell PresShell;
   typedef mozilla::StyleGeometryBox StyleGeometryBox;
   typedef mozilla::SVGImageContext SVGImageContext;
   typedef mozilla::LogicalSize LogicalSize;
@@ -284,9 +285,8 @@ class nsLayoutUtils {
    * @return true if the new margins were applied.
    */
   static bool SetDisplayPortMargins(
-      nsIContent* aContent, nsIPresShell* aPresShell,
-      const ScreenMargin& aMargins, uint32_t aPriority = 0,
-      RepaintMode aRepaintMode = RepaintMode::Repaint);
+      nsIContent* aContent, PresShell* aPresShell, const ScreenMargin& aMargins,
+      uint32_t aPriority = 0, RepaintMode aRepaintMode = RepaintMode::Repaint);
 
   /**
    * Set the display port base rect for given element to be used with display
@@ -797,7 +797,7 @@ class nsLayoutUtils {
    *                        Set nullptr if you don't need this.
    */
   MOZ_CAN_RUN_SCRIPT
-  static void GetContainerAndOffsetAtEvent(mozilla::PresShell* aPresShell,
+  static void GetContainerAndOffsetAtEvent(PresShell* aPresShell,
                                            const mozilla::WidgetEvent* aEvent,
                                            nsIContent** aContainer,
                                            int32_t* aOffset);
@@ -1136,7 +1136,7 @@ class nsLayoutUtils {
    * If PAINT_DOCUMENT_RELATIVE is used, the visible region is interpreted
    * as being relative to the document (normally it's relative to the CSS
    * viewport) and the document is painted as if no scrolling has occured.
-   * Only considered if nsIPresShell::IgnoringViewportScrolling is true.
+   * Only considered if PresShell::IgnoringViewportScrolling is true.
    * PAINT_TO_WINDOW sets painting to window to true on the display list
    * builder even if we can't tell that we are painting to the window.
    * If PAINT_EXISTING_TRANSACTION is set, then BeginTransaction() has already
@@ -2711,7 +2711,7 @@ class nsLayoutUtils {
    * Returns the current APZ Resolution Scale. When Java Pan/Zoom is
    * enabled in Fennec it will always return 1.0.
    */
-  static float GetCurrentAPZResolutionScale(nsIPresShell* aShell);
+  static float GetCurrentAPZResolutionScale(PresShell* aPresShell);
 
   /**
    * Returns true if aDocument should be allowed to use resolution
@@ -2761,7 +2761,7 @@ class nsLayoutUtils {
    *
    * Note that for the RCD-RSF, the scroll offset returned is the layout
    * viewport offset; if you need the visual viewport offset, that needs to
-   * be queried independently via nsIPresShell::GetVisualViewportOffset().
+   * be queried independently via PresShell::GetVisualViewportOffset().
    *
    * By contrast, ComputeFrameMetrics() computes all the fields, but requires
    * extra inputs and can only be called during frame layer building.
@@ -2817,14 +2817,14 @@ class nsLayoutUtils {
       const mozilla::LogicalMargin& aFramePadding, mozilla::WritingMode aLineWM,
       mozilla::WritingMode aFrameWM);
 
-  static bool HasDocumentLevelListenersForApzAwareEvents(nsIPresShell* aShell);
+  static bool HasDocumentLevelListenersForApzAwareEvents(PresShell* aPresShell);
 
   /**
    * Set the viewport size for the purpose of clamping the scroll position
    * for the root scroll frame of this document
    * (see nsIDOMWindowUtils.setVisualViewportSize).
    */
-  static void SetVisualViewportSize(nsIPresShell* aPresShell, CSSSize aSize);
+  static void SetVisualViewportSize(PresShell* aPresShell, CSSSize aSize);
 
   /**
    * Returns true if the given scroll origin is "higher priority" than APZ.

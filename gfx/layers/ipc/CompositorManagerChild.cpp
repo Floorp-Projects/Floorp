@@ -283,5 +283,13 @@ bool CompositorManagerChild::ShouldContinueFromReplyTimeout() {
   return false;
 }
 
+mozilla::ipc::IPCResult CompositorManagerChild::RecvNotifyWebRenderError(
+    const WebRenderError&& aError) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+  GPUProcessManager::Get()->NotifyWebRenderError(aError);
+  return IPC_OK();
+}
+
 }  // namespace layers
 }  // namespace mozilla

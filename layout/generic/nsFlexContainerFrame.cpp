@@ -2320,7 +2320,7 @@ NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsFlexContainerFrame)
 
-nsContainerFrame* NS_NewFlexContainerFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewFlexContainerFrame(PresShell* aPresShell,
                                            ComputedStyle* aStyle) {
   return new (aPresShell)
       nsFlexContainerFrame(aStyle, aPresShell->GetPresContext());

@@ -7,6 +7,7 @@
 #include "nsGfxButtonControlFrame.h"
 #include "nsIFormControl.h"
 #include "nsGkAtoms.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsContentUtils.h"
 #include "nsTextNode.h"
@@ -17,7 +18,7 @@ nsGfxButtonControlFrame::nsGfxButtonControlFrame(ComputedStyle* aStyle,
                                                  nsPresContext* aPresContext)
     : nsHTMLButtonControlFrame(aStyle, aPresContext, kClassID) {}
 
-nsContainerFrame* NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell,
+nsContainerFrame* NS_NewGfxButtonControlFrame(PresShell* aPresShell,
                                               ComputedStyle* aStyle) {
   return new (aPresShell)
       nsGfxButtonControlFrame(aStyle, aPresShell->GetPresContext());

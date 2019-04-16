@@ -96,7 +96,7 @@ const usbRuntimeConnectionParameter = {
 
 const runtimeExtra = {
   // parameter to connect to debugger server
-  // unavailable on unknown runtimes
+  // unavailable on unavailable/unplugged runtimes
   connectionParameters: PropTypes.oneOfType([
     PropTypes.shape(networkRuntimeConnectionParameter),
     PropTypes.shape(usbRuntimeConnectionParameter),
@@ -126,9 +126,14 @@ const runtime = {
   // or failing.
   isConnectionNotResponding: PropTypes.bool.isRequired,
 
-  // unknown runtimes are placeholders for devices where the runtime has not been started
-  // yet. For instance an ADB device connected without a compatible runtime running.
-  isUnknown: PropTypes.bool.isRequired,
+  // unavailable runtimes are placeholders for devices where the runtime has not been
+  // started yet. For instance an ADB device connected without a compatible runtime
+  // running.
+  isUnavailable: PropTypes.bool.isRequired,
+
+  // unplugged runtimes are placeholders for devices that are no longer available. For
+  // instance a USB device that was unplugged from the computer.
+  isUnplugged: PropTypes.bool.isRequired,
 
   // display name of the runtime
   name: PropTypes.string.isRequired,

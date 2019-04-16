@@ -13,6 +13,10 @@ class nsAccessKeyInfo;
 class nsAsyncAccesskeyUpdate;
 class nsFontMetrics;
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 class nsTextBoxFrame final : public nsLeafBoxFrame {
  public:
   NS_DECL_QUERYFRAME
@@ -26,7 +30,7 @@ class nsTextBoxFrame final : public nsLeafBoxFrame {
 
   enum CroppingStyle { CropNone, CropLeft, CropRight, CropCenter, CropAuto };
 
-  friend nsIFrame* NS_NewTextBoxFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewTextBoxFrame(mozilla::PresShell* aPresShell,
                                       ComputedStyle* aStyle);
 
   virtual void Init(nsIContent* aContent, nsContainerFrame* aParent,

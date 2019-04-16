@@ -23,15 +23,16 @@ horizontally. It lays them out according to a min max or preferred size.
 class nsBoxLayoutState;
 
 namespace mozilla {
+class PresShell;
 namespace gfx {
 class DrawTarget;
 }  // namespace gfx
 }  // namespace mozilla
 
-nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewBoxFrame(mozilla::PresShell* aPresShell,
                          mozilla::ComputedStyle* aStyle, bool aIsRoot,
                          nsBoxLayout* aLayoutManager);
-nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewBoxFrame(mozilla::PresShell* aPresShell,
                          mozilla::ComputedStyle* aStyle);
 
 class nsBoxFrame : public nsContainerFrame {
@@ -44,10 +45,10 @@ class nsBoxFrame : public nsContainerFrame {
   NS_DECL_QUERYFRAME
 #endif
 
-  friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewBoxFrame(mozilla::PresShell* aPresShell,
                                   ComputedStyle* aStyle, bool aIsRoot,
                                   nsBoxLayout* aLayoutManager);
-  friend nsIFrame* NS_NewBoxFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewBoxFrame(mozilla::PresShell* aPresShell,
                                   ComputedStyle* aStyle);
 
   // gets the rect inside our border and debug border. If you wish to paint

@@ -3,12 +3,9 @@
 <?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<script type="application/javascript"
-        src="/tests/SimpleTest/SimpleTest.js"></script>
-<script type="application/javascript"
-        src="/tests/SimpleTest/EventUtils.js"></script>
-<script type="application/javascript"
-        src="/tests/SimpleTest/WindowSnapshot.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/WindowSnapshot.js"></script>
 
 <html:style xmlns:html="http://www.w3.org/1999/xhtml" type="text/css">
 * { outline: none; }

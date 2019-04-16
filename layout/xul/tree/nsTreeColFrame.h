@@ -9,12 +9,13 @@
 #include "nsBoxFrame.h"
 
 namespace mozilla {
+class PresShell;
 namespace dom {
 class XULTreeElement;
 }
 }  // namespace mozilla
 
-nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewTreeColFrame(mozilla::PresShell* aPresShell,
                              mozilla::ComputedStyle* aStyle);
 
 class nsTreeColFrame final : public nsBoxFrame {
@@ -40,7 +41,7 @@ class nsTreeColFrame final : public nsBoxFrame {
                             const nsRect& aRect,
                             bool aRemoveOverflowArea = false) override;
 
-  friend nsIFrame* NS_NewTreeColFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewTreeColFrame(mozilla::PresShell* aPresShell,
                                       ComputedStyle* aStyle);
 
  protected:

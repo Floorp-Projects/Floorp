@@ -11,7 +11,9 @@
 
 #include "nsCoord.h"
 
-class nsIPresShell;
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
 
 /*
  * A list-based class (hopefully tree-based when I get around to it)
@@ -21,7 +23,7 @@ class nsIntervalSet {
  public:
   typedef nscoord coord_type;
 
-  explicit nsIntervalSet(nsIPresShell *aPresShell);
+  explicit nsIntervalSet(mozilla::PresShell *aPresShell);
   ~nsIntervalSet();
 
   /*
@@ -64,7 +66,7 @@ class nsIntervalSet {
   void FreeInterval(Interval *aInterval);
 
   Interval *mList;
-  nsIPresShell *mPresShell;
+  mozilla::PresShell *mPresShell;
 };
 
 #endif  // !defined(nsIntervalSet_h___)

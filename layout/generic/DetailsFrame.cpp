@@ -7,6 +7,7 @@
 #include "DetailsFrame.h"
 
 #include "mozilla/Attributes.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/dom/HTMLDetailsElement.h"
 #include "mozilla/dom/HTMLSummaryElement.h"
 #include "nsContentUtils.h"
@@ -23,8 +24,7 @@ NS_QUERYFRAME_HEAD(DetailsFrame)
   NS_QUERYFRAME_ENTRY(nsIAnonymousContentCreator)
 NS_QUERYFRAME_TAIL_INHERITING(nsBlockFrame)
 
-nsBlockFrame* NS_NewDetailsFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle) {
+nsBlockFrame* NS_NewDetailsFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell) DetailsFrame(aStyle, aPresShell->GetPresContext());
 }
 

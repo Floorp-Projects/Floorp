@@ -312,3 +312,11 @@ function getThisFirefoxString(aboutDebuggingWindow) {
   const { l10n } = loader.require("devtools/client/aboutdebugging-new/src/modules/l10n");
   return l10n.getString("about-debugging-this-firefox-runtime-name");
 }
+
+function waitUntilUsbDeviceIsUnplugged(deviceName, aboutDebuggingDocument) {
+  info("Wait until the USB sidebar item appears as unplugged");
+  return waitUntil(() => {
+    const sidebarItem = findSidebarItemByText(deviceName, aboutDebuggingDocument);
+    return !!sidebarItem.querySelector(".qa-runtime-item-unplugged");
+  });
+}

@@ -367,7 +367,7 @@ class ReflowCountMgr {
   void SetPresContext(nsPresContext* aPresContext) {
     mPresContext = aPresContext;  // weak reference
   }
-  void SetPresShell(nsIPresShell* aPresShell) {
+  void SetPresShell(PresShell* aPresShell) {
     mPresShell = aPresShell;  // weak reference
   }
 
@@ -399,7 +399,7 @@ class ReflowCountMgr {
 
   // Root Frame for Individual Tracking
   nsPresContext* mPresContext;
-  nsIPresShell* mPresShell;
+  PresShell* mPresShell;
 
   // ReflowCountMgr gReflowCountMgr;
 };
@@ -429,18 +429,18 @@ struct nsCallbackEventRequest {
 // bfcache, but font pref changes don't care about that, and maybe / probably
 // shouldn't.
 #ifdef DEBUG
-#  define ASSERT_REFLOW_SCHEDULED_STATE()                                   \
-    {                                                                       \
-      if (ObservingLayoutFlushes()) {                                       \
-        MOZ_ASSERT(                                                         \
-            mDocument->GetBFCacheEntry() ||                                 \
-                mPresContext->RefreshDriver()->IsLayoutFlushObserver(this), \
-            "Unexpected state");                                            \
-      } else {                                                              \
-        MOZ_ASSERT(                                                         \
-            !mPresContext->RefreshDriver()->IsLayoutFlushObserver(this),    \
-            "Unexpected state");                                            \
-      }                                                                     \
+#  define ASSERT_REFLOW_SCHEDULED_STATE()                                    \
+    {                                                                        \
+      if (ObservingLayoutFlushes()) {                                        \
+        MOZ_ASSERT(mDocument->GetBFCacheEntry() ||                           \
+                       mPresContext->RefreshDriver()->IsLayoutFlushObserver( \
+                           static_cast<PresShell*>(this)),                   \
+                   "Unexpected state");                                      \
+      } else {                                                               \
+        MOZ_ASSERT(!mPresContext->RefreshDriver()->IsLayoutFlushObserver(    \
+                       static_cast<PresShell*>(this)),                       \
+                   "Unexpected state");                                      \
+      }                                                                      \
     }
 #else
 #  define ASSERT_REFLOW_SCHEDULED_STATE() /* nothing */
@@ -448,20 +448,21 @@ struct nsCallbackEventRequest {
 
 class nsAutoCauseReflowNotifier {
  public:
-  explicit nsAutoCauseReflowNotifier(nsIPresShell* aShell) : mShell(aShell) {
-    mShell->WillCauseReflow();
+  explicit nsAutoCauseReflowNotifier(PresShell* aPresShell)
+      : mPresShell(aPresShell) {
+    mPresShell->WillCauseReflow();
   }
   ~nsAutoCauseReflowNotifier() {
     // This check should not be needed. Currently the only place that seem
     // to need it is the code that deals with bug 337586.
-    if (!mShell->mHaveShutDown) {
-      mShell->DidCauseReflow();
+    if (!mPresShell->mHaveShutDown) {
+      mPresShell->DidCauseReflow();
     } else {
       nsContentUtils::RemoveScriptBlocker();
     }
   }
 
-  nsIPresShell* mShell;
+  PresShell* mPresShell;
 };
 
 class MOZ_STACK_CLASS nsPresShellEventCB : public EventDispatchingCallback {
@@ -1061,7 +1062,7 @@ void PresShell::Init(Document* aDocument, nsPresContext* aPresContext,
 enum TextPerfLogType { eLog_reflow, eLog_loaddone, eLog_totals };
 
 static void LogTextPerfStats(gfxTextPerfMetrics* aTextPerf,
-                             nsIPresShell* aPresShell,
+                             PresShell* aPresShell,
                              const gfxTextPerfMetrics::TextCounts& aCounts,
                              float aTime, TextPerfLogType aLogType,
                              const char* aURL) {
@@ -1374,26 +1375,26 @@ void PresShell::Destroy() {
 void nsIPresShell::StopObservingRefreshDriver() {
   nsRefreshDriver* rd = mPresContext->RefreshDriver();
   if (mResizeEventPending) {
-    rd->RemoveResizeEventFlushObserver(this);
+    rd->RemoveResizeEventFlushObserver(static_cast<PresShell*>(this));
   }
   if (mObservingLayoutFlushes) {
-    rd->RemoveLayoutFlushObserver(this);
+    rd->RemoveLayoutFlushObserver(static_cast<PresShell*>(this));
   }
   if (mObservingStyleFlushes) {
-    rd->RemoveStyleFlushObserver(this);
+    rd->RemoveStyleFlushObserver(static_cast<PresShell*>(this));
   }
 }
 
 void nsIPresShell::StartObservingRefreshDriver() {
   nsRefreshDriver* rd = mPresContext->RefreshDriver();
   if (mResizeEventPending) {
-    rd->AddResizeEventFlushObserver(this);
+    rd->AddResizeEventFlushObserver(static_cast<PresShell*>(this));
   }
   if (mObservingLayoutFlushes) {
-    rd->AddLayoutFlushObserver(this);
+    rd->AddLayoutFlushObserver(static_cast<PresShell*>(this));
   }
   if (mObservingStyleFlushes) {
-    rd->AddStyleFlushObserver(this);
+    rd->AddStyleFlushObserver(static_cast<PresShell*>(this));
   }
 }
 
@@ -1682,7 +1683,7 @@ nsresult PresShell::Initialize() {
 
   NS_ASSERTION(!mDidInitialize, "Why are we being called?");
 
-  nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+  RefPtr<PresShell> kungFuDeathGrip(this);
 
   RecomputeFontSizeInflationEnabled();
   MOZ_DIAGNOSTIC_ASSERT(!mIsDestroying);
@@ -1892,7 +1893,7 @@ nsresult PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight,
       GetPresContext()->SuppressingResizeReflow();
 
   RefPtr<nsViewManager> viewManager = mViewManager;
-  nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+  RefPtr<PresShell> kungFuDeathGrip(this);
 
   if (!suppressingResizeReflow && shrinkToFit) {
     // Make sure that style is flushed before setting the pres context
@@ -2808,7 +2809,8 @@ void nsIPresShell::CancelAllPendingReflows() {
   mDirtyRoots.Clear();
 
   if (mObservingLayoutFlushes) {
-    GetPresContext()->RefreshDriver()->RemoveLayoutFlushObserver(this);
+    GetPresContext()->RefreshDriver()->RemoveLayoutFlushObserver(
+        static_cast<PresShell*>(this));
     mObservingLayoutFlushes = false;
   }
 
@@ -3980,9 +3982,9 @@ static void AssertFrameSubtreeIsSane(const nsIFrame& aRoot) {
 }
 #endif
 
-static inline void AssertFrameTreeIsSane(const nsIPresShell& aShell) {
+static inline void AssertFrameTreeIsSane(const PresShell& aPresShell) {
 #ifdef DEBUG
-  if (const nsIFrame* root = aShell.GetRootFrame()) {
+  if (const nsIFrame* root = aPresShell.GetRootFrame()) {
     AssertFrameSubtreeIsSane(*root);
   }
 #endif
@@ -3994,7 +3996,7 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   MOZ_DIAGNOSTIC_ASSERT(!mForbiddenToFlush, "This is bad!");
 
   // Per our API contract, hold a strong ref to ourselves until we return.
-  nsCOMPtr<nsIPresShell> kungFuDeathGrip = this;
+  RefPtr<PresShell> kungFuDeathGrip = this;
 
   /**
    * VERY IMPORTANT: If you add some sort of new flushing to this
@@ -4376,7 +4378,7 @@ void PresShell::ContentRemoved(nsIContent* aChild,
 }
 
 void nsIPresShell::NotifyCounterStylesAreDirty() {
-  nsAutoCauseReflowNotifier reflowNotifier(this);
+  nsAutoCauseReflowNotifier reflowNotifier(static_cast<PresShell*>(this));
   mFrameConstructor->NotifyCounterStylesAreDirty();
 }
 
@@ -4392,7 +4394,7 @@ void PresShell::ReconstructFrames() {
     return;
   }
 
-  nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+  RefPtr<PresShell> kungFuDeathGrip(this);
 
   // Have to make sure that the content notifications are flushed before we
   // start messing with the frame model; otherwise we can get content doubling.
@@ -5278,8 +5280,7 @@ void PresShell::SynthesizeMouseMove(bool aFromScroll) {
   }
 
   if (!mPresContext->IsRoot()) {
-    nsIPresShell* rootPresShell = GetRootPresShell();
-    if (rootPresShell) {
+    if (PresShell* rootPresShell = GetRootPresShell()) {
       rootPresShell->SynthesizeMouseMove(aFromScroll);
     }
     return;
@@ -5393,7 +5394,7 @@ void PresShell::ProcessSynthMouseMoveEvent(bool aFromScroll) {
 
   // Hold a ref to ourselves so DispatchEvent won't destroy us (since
   // we need to access members after we call DispatchEvent).
-  nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
+  RefPtr<PresShell> kungFuDeathGrip(this);
 
 #ifdef DEBUG_MOUSE_LOCATION
   printf("[ps=%p]synthesizing mouse move to (%d,%d)\n", this, mMouseLocation.x,
@@ -5561,7 +5562,7 @@ void PresShell::MarkFramesInSubtreeApproximatelyVisible(
 
   nsSubDocumentFrame* subdocFrame = do_QueryFrame(aFrame);
   if (subdocFrame) {
-    nsIPresShell* presShell = subdocFrame->GetSubdocumentPresShellForPainting(
+    PresShell* presShell = subdocFrame->GetSubdocumentPresShellForPainting(
         nsSubDocumentFrame::IGNORE_PAINT_SUPPRESSION);
     if (presShell && !presShell->AssumeAllFramesVisible()) {
       nsRect rect = aRect;
@@ -6351,7 +6352,7 @@ void PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent) {
 
 // static
 nsIFrame* PresShell::EventHandler::GetNearestFrameContainingPresShell(
-    nsIPresShell* aPresShell) {
+    PresShell* aPresShell) {
   nsView* view = aPresShell->GetViewManager()->GetRootView();
   while (view && !view->GetFrame()) {
     view = view->GetParent();
@@ -9242,8 +9243,8 @@ bool nsIPresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   if (tp) {
     if (tp->current.numChars > 100) {
       TimeDuration reflowTime = TimeStamp::Now() - timeStart;
-      LogTextPerfStats(tp, this, tp->current, reflowTime.ToMilliseconds(),
-                       eLog_reflow, nullptr);
+      LogTextPerfStats(tp, static_cast<PresShell*>(this), tp->current,
+                       reflowTime.ToMilliseconds(), eLog_reflow, nullptr);
     }
     tp->Accumulate();
   }
@@ -9551,7 +9552,8 @@ void nsIPresShell::DoObserveStyleFlushes() {
   mObservingStyleFlushes = true;
 
   if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
-    mPresContext->RefreshDriver()->AddStyleFlushObserver(this);
+    mPresContext->RefreshDriver()->AddStyleFlushObserver(
+        static_cast<PresShell*>(this));
   }
 }
 
@@ -9560,7 +9562,8 @@ void nsIPresShell::DoObserveLayoutFlushes() {
   mObservingLayoutFlushes = true;
 
   if (MOZ_LIKELY(!mDocument->GetBFCacheEntry())) {
-    mPresContext->RefreshDriver()->AddLayoutFlushObserver(this);
+    mPresContext->RefreshDriver()->AddLayoutFlushObserver(
+        static_cast<PresShell*>(this));
   }
 }
 
@@ -9880,7 +9883,7 @@ bool nsIPresShell::VerifyIncrementalReflow() {
                // reflowing the test frame tree
   vm->SetPresShell(presShell);
   {
-    nsAutoCauseReflowNotifier crNotifier(this);
+    nsAutoCauseReflowNotifier crNotifier(static_cast<PresShell*>(this));
     presShell->Initialize();
   }
   mDocument->BindingManager()->ProcessAttachedQueue();

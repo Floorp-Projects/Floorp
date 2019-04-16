@@ -102,15 +102,18 @@ function onRemoteRuntimesUpdated(action, store) {
   // array.
   for (const oldRuntime of oldRuntimes) {
     const runtimeRemoved = newRuntimes.every(r => r.id !== oldRuntime.id);
-    if (runtimeRemoved) {
+    if (runtimeRemoved && !oldRuntime.isUnplugged) {
       recordEvent("runtime_removed", getRuntimeEventExtras(oldRuntime));
     }
   }
 
+  // Using device names as unique IDs is inaccurate. See Bug 1544582.
   const oldDeviceNames = new Set(oldRuntimes.map(r => r.extra.deviceName));
   for (const oldDeviceName of oldDeviceNames) {
-    const deviceRemoved = newRuntimes.every(r => r.extra.deviceName !== oldDeviceName);
-    if (oldDeviceName && deviceRemoved) {
+    const newRuntime = newRuntimes.find(r => r.extra.deviceName === oldDeviceName);
+    const oldRuntime = oldRuntimes.find(r => r.extra.deviceName === oldDeviceName);
+    const isUnplugged = newRuntime && newRuntime.isUnplugged && !oldRuntime.isUnplugged;
+    if (oldDeviceName && (!newRuntime || isUnplugged)) {
       recordEvent("device_removed", {
         "connection_type": action.runtimeType,
         "device_name": oldDeviceName,
@@ -122,15 +125,19 @@ function onRemoteRuntimesUpdated(action, store) {
   // array.
   for (const newRuntime of newRuntimes) {
     const runtimeAdded = oldRuntimes.every(r => r.id !== newRuntime.id);
-    if (runtimeAdded) {
+    if (runtimeAdded && !newRuntime.isUnplugged) {
       recordEvent("runtime_added", getRuntimeEventExtras(newRuntime));
     }
   }
 
+  // Using device names as unique IDs is inaccurate. See Bug 1544582.
   const newDeviceNames = new Set(newRuntimes.map(r => r.extra.deviceName));
   for (const newDeviceName of newDeviceNames) {
-    const deviceAdded = oldRuntimes.every(r => r.extra.deviceName !== newDeviceName);
-    if (newDeviceName && deviceAdded) {
+    const newRuntime = newRuntimes.find(r => r.extra.deviceName === newDeviceName);
+    const oldRuntime = oldRuntimes.find(r => r.extra.deviceName === newDeviceName);
+    const isPlugged = oldRuntime && oldRuntime.isUnplugged && !newRuntime.isUnplugged;
+
+    if (newDeviceName && (!oldRuntime || isPlugged)) {
       recordEvent("device_added", {
         "connection_type": action.runtimeType,
         "device_name": newDeviceName,

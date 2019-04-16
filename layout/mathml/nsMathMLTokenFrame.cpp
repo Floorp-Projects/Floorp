@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMathMLTokenFrame.h"
+
+#include "mozilla/PresShell.h"
 #include "nsPresContext.h"
 #include "nsContentUtils.h"
 #include "nsTextFrame.h"
@@ -12,8 +14,7 @@
 
 using namespace mozilla;
 
-nsIFrame* NS_NewMathMLTokenFrame(nsIPresShell* aPresShell,
-                                 ComputedStyle* aStyle) {
+nsIFrame* NS_NewMathMLTokenFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   return new (aPresShell)
       nsMathMLTokenFrame(aStyle, aPresShell->GetPresContext());
 }

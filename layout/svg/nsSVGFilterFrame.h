@@ -16,19 +16,19 @@
 class nsAtom;
 class nsIContent;
 class nsIFrame;
-class nsIPresShell;
 
 struct nsRect;
 
 namespace mozilla {
 class SVGAnimatedLength;
+class PresShell;
 namespace dom {
 class SVGFilterElement;
 }  // namespace dom
 }  // namespace mozilla
 
 class nsSVGFilterFrame final : public nsSVGContainerFrame {
-  friend nsIFrame* NS_NewSVGFilterFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewSVGFilterFrame(mozilla::PresShell* aPresShell,
                                         ComputedStyle* aStyle);
 
  protected:

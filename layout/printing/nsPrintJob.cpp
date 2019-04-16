@@ -1642,7 +1642,7 @@ nsresult nsPrintJob::ReconstructAndReflow(bool doSetPixelScale) {
       }
     }
 
-    RefPtr<PresShell> presShell = static_cast<PresShell*>(po->mPresShell.get());
+    RefPtr<PresShell> presShell = po->mPresShell;
     presShell->FlushPendingNotifications(FlushType::Layout);
 
     // If the printing was canceled or restarted with different data,
@@ -2282,8 +2282,7 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
 
   if (mIsCreatingPrintPreview && documentIsTopLevel) {
     mDocViewerPrint->SetPrintPreviewPresentation(
-        aPO->mViewManager, aPO->mPresContext,
-        static_cast<PresShell*>(aPO->mPresShell.get()));
+        aPO->mViewManager, aPO->mPresContext, aPO->mPresShell.get());
   }
 
   rv = aPO->mPresShell->Initialize();
@@ -2292,7 +2291,7 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
   NS_ASSERTION(aPO->mPresShell, "Presshell should still be here");
 
   // Process the reflow event Initialize posted
-  RefPtr<PresShell> presShell = static_cast<PresShell*>(aPO->mPresShell.get());
+  RefPtr<PresShell> presShell = aPO->mPresShell;
   presShell->FlushPendingNotifications(FlushType::Layout);
 
   rv = UpdateSelectionAndShrinkPrintObject(aPO.get(), documentIsTopLevel);
@@ -2512,7 +2511,7 @@ nsresult nsPrintJob::DoPrint(const UniquePtr<nsPrintObject>& aPO) {
          gFrameTypesStr[aPO->mFrameType]));
   PR_PL(("****** In DV::DoPrint   PO: %p \n", aPO.get()));
 
-  nsIPresShell* poPresShell = aPO->mPresShell;
+  PresShell* poPresShell = aPO->mPresShell;
   nsPresContext* poPresContext = aPO->mPresContext;
 
   NS_ASSERTION(poPresContext, "PrintObject has not been reflowed");
@@ -3487,9 +3486,8 @@ static void RootFrameList(nsPresContext* aPresContext, FILE* out,
                           const char* aPrefix) {
   if (!aPresContext || !out) return;
 
-  nsIPresShell* shell = aPresContext->GetPresShell();
-  if (shell) {
-    nsIFrame* frame = shell->GetRootFrame();
+  if (PresShell* presShell = aPresContext->GetPresShell()) {
+    nsIFrame* frame = presShell->GetRootFrame();
     if (frame) {
       frame->List(out, aPrefix);
     }
@@ -3537,9 +3535,8 @@ static void DumpViews(nsIDocShell* aDocShell, FILE* out) {
 
   if (nullptr != aDocShell) {
     fprintf(out, "docshell=%p \n", aDocShell);
-    nsIPresShell* shell = aDocShell->GetPresShell();
-    if (shell) {
-      nsViewManager* vm = shell->GetViewManager();
+    if (PresShell* presShell = aDocShell->GetPresShell()) {
+      nsViewManager* vm = presShell->GetViewManager();
       if (vm) {
         nsView* root = vm->GetRootView();
         if (root) {

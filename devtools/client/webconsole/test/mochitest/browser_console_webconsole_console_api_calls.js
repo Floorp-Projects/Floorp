@@ -6,21 +6,41 @@
 
 "use strict";
 
-const TEST_URI = `data:text/html,<meta charset=utf8>console API calls`;
+const contentArgs = {
+  log: "MyLog",
+  warn: "MyWarn",
+  error: "MyError",
+  info: "MyInfo",
+  debug: "MyDebug",
+  counterName: "MyCounter",
+  timerName: "MyTimer",
+};
+
+const TEST_URI = `data:text/html,<meta charset=utf8>console API calls<script>
+  console.log("${contentArgs.log}");
+  console.warn("${contentArgs.warn}");
+  console.error("${contentArgs.error}");
+  console.info("${contentArgs.info}");
+  console.debug("${contentArgs.debug}");
+  console.count("${contentArgs.counterName}");
+  console.time("${contentArgs.timerName}");
+  console.timeLog("${contentArgs.timerName}");
+  console.timeEnd("${contentArgs.timerName}");
+  console.trace();
+  console.assert(false, "err");
+</script>`;
 
 add_task(async function() {
-  await addTab(TEST_URI);
-  const hud = await HUDService.toggleBrowserConsole();
+  // Enable the checkbox
+  await pushPref("devtools.browserconsole.filterContentMessages", true);
 
-  const contentArgs = {
-    log: "MyLog",
-    warn: "MyWarn",
-    error: "MyError",
-    info: "MyInfo",
-    debug: "MyDebug",
-    counterName: "MyCounter",
-    timerName: "MyTimer",
-  };
+  // Show the content messages
+  await pushPref("devtools.browserconsole.contentMessages", true);
+
+  const hud = await HUDService.toggleBrowserConsole();
+  hud.ui.clearOutput();
+
+  await addTab(TEST_URI);
 
   const expectedMessages = [
     contentArgs.log,
@@ -30,25 +50,33 @@ add_task(async function() {
     contentArgs.debug,
     `${contentArgs.counterName}: 1`,
     `${contentArgs.timerName}:`,
+    `timer ended`,
     `console.trace`,
     `Assertion failed`,
   ];
-  const onAllMessages = Promise.all(expectedMessages.map(m => waitForMessage(hud, m)));
-
-  ContentTask.spawn(gBrowser.selectedBrowser, contentArgs, function(args) {
-    content.console.log(args.log);
-    content.console.warn(args.warn);
-    content.console.error(args.error);
-    content.console.info(args.info);
-    content.console.debug(args.debug);
-    content.console.count(args.counterName);
-    content.console.time(args.timerName);
-    content.console.timeEnd(args.timerName);
-    content.console.trace();
-    content.console.assert(false, "err");
-  });
-
-  await onAllMessages;
+  await waitFor(() =>
+    expectedMessages.every(expectedMessage => findMessage(hud, expectedMessage)));
 
   ok(true, "Expected messages are displayed in the browser console");
+
+  info("Uncheck the Show content messages checkbox");
+  const onContentMessagesHidden = waitFor(() => !findMessage(hud, contentArgs.log));
+  const checkbox =
+    hud.ui.outputNode.querySelector(".webconsole-filterbar-primary .filter-checkbox");
+  checkbox.click();
+  await onContentMessagesHidden;
+
+  for (const expectedMessage of expectedMessages) {
+    ok(!findMessage(hud, expectedMessage), `"${expectedMessage}" is hidden`);
+  }
+
+  info("Check the Show content messages checkbox");
+  const onContentMessagesDisplayed = waitFor(() =>
+    expectedMessages.every(expectedMessage => findMessage(hud, expectedMessage)));
+  checkbox.click();
+  await onContentMessagesDisplayed;
+
+  for (const expectedMessage of expectedMessages) {
+    ok(findMessage(hud, expectedMessage), `"${expectedMessage}" is visible`);
+  }
 });

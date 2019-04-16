@@ -10,6 +10,10 @@
 #include "mozilla/Attributes.h"
 #include "nsMathMLContainerFrame.h"
 
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
+
 //
 // <mpadded> -- adjust space around content
 //
@@ -18,7 +22,7 @@ class nsMathMLmpaddedFrame final : public nsMathMLContainerFrame {
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsMathMLmpaddedFrame)
 
-  friend nsIFrame* NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell,
+  friend nsIFrame* NS_NewMathMLmpaddedFrame(mozilla::PresShell* aPresShell,
                                             ComputedStyle* aStyle);
 
   NS_IMETHOD

@@ -6,14 +6,16 @@
 
 /* derived class of nsBlockFrame used for xul:label elements */
 
-#include "mozilla/EventStateManager.h"
 #include "nsXULLabelFrame.h"
+
+#include "mozilla/EventStateManager.h"
+#include "mozilla/PresShell.h"
 #include "nsHTMLParts.h"
 #include "nsNameSpaceManager.h"
 
 using namespace mozilla;
 
-nsIFrame* NS_NewXULLabelFrame(nsIPresShell* aPresShell, ComputedStyle* aStyle) {
+nsIFrame* NS_NewXULLabelFrame(PresShell* aPresShell, ComputedStyle* aStyle) {
   nsXULLabelFrame* it =
       new (aPresShell) nsXULLabelFrame(aStyle, aPresShell->GetPresContext());
   it->AddStateBits(NS_BLOCK_FORMATTING_CONTEXT_STATE_BITS);

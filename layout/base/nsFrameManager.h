@@ -16,9 +16,12 @@
 class nsContainerFrame;
 class nsIFrame;
 class nsILayoutHistoryState;
-class nsIPresShell;
 class nsPlaceholderFrame;
 class nsWindowSizes;
+
+namespace mozilla {
+class PresShell;
+}  // namespace mozilla
 
 /**
  * Frame manager interface. The frame manager serves one purpose:
@@ -30,10 +33,11 @@ class nsWindowSizes;
  * model lock" of any sort afaict.
  */
 class nsFrameManager {
+  typedef mozilla::PresShell PresShell;
   typedef mozilla::layout::FrameChildListID ChildListID;
 
  public:
-  explicit nsFrameManager(nsIPresShell* aPresShell)
+  explicit nsFrameManager(PresShell* aPresShell)
       : mPresShell(aPresShell), mRootFrame(nullptr) {
     MOZ_ASSERT(mPresShell, "need a pres shell");
   }
@@ -90,7 +94,7 @@ class nsFrameManager {
 
  protected:
   // weak link, because the pres shell owns us
-  nsIPresShell* MOZ_NON_OWNING_REF mPresShell;
+  PresShell* MOZ_NON_OWNING_REF mPresShell;
   nsIFrame* mRootFrame;
 };
 

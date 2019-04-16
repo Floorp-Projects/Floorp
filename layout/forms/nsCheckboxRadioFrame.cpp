@@ -11,6 +11,7 @@
 #include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/PresShell.h"
 #include "nsDeviceContext.h"
 #include "nsIContent.h"
 #include "nsStyleConsts.h"
@@ -20,7 +21,7 @@ using mozilla::dom::HTMLInputElement;
 
 //#define FCF_NOISY
 
-nsCheckboxRadioFrame* NS_NewCheckboxRadioFrame(nsIPresShell* aPresShell,
+nsCheckboxRadioFrame* NS_NewCheckboxRadioFrame(PresShell* aPresShell,
                                                ComputedStyle* aStyle) {
   return new (aPresShell)
       nsCheckboxRadioFrame(aStyle, aPresShell->GetPresContext());

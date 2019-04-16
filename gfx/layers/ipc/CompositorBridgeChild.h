@@ -282,9 +282,6 @@ class CompositorBridgeChild final : public PCompositorBridgeChild,
       const LayersId& aLayersId, const LayersObserverEpoch& aEpoch,
       const bool& aActive);
 
-  mozilla::ipc::IPCResult RecvNotifyWebRenderError(
-      const WebRenderError& aError);
-
   uint64_t GetNextResourceId();
 
   void ClearSharedFrameMetricsData(LayersId aLayersId);

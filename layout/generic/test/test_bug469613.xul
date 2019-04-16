@@ -7,8 +7,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=469613
 <window title="Mozilla Bug 469613"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
-  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
 <body  xmlns="http://www.w3.org/1999/xhtml">
   <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=469613">Mozilla Bug 469613</a>
 

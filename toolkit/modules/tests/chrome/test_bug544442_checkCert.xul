@@ -11,8 +11,7 @@
 <window title="Test CertUtils.jsm checkCert - bug 340198 and bug 544442"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="testStart();">
-<script type="application/javascript"
-        src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
 
 <script type="application/javascript">
 <![CDATA[

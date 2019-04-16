@@ -117,6 +117,11 @@ class nsHttpResponseHead {
   bool MustValidate();
   bool MustValidateIfExpired();
 
+  // return true if the response contains a valid Cache-control:
+  // stale-while-revalidate and |now| is less than or equal |expiration +
+  // stale-while-revalidate|.  Otherwise false.
+  bool StaleWhileRevalidate(uint32_t now, uint32_t expiration);
+
   // returns true if the server appears to support byte range requests.
   bool IsResumable();
 
@@ -132,6 +137,7 @@ class nsHttpResponseHead {
 
   MOZ_MUST_USE nsresult GetAgeValue(uint32_t *result);
   MOZ_MUST_USE nsresult GetMaxAgeValue(uint32_t *result);
+  MOZ_MUST_USE nsresult GetStaleWhileRevalidateValue(uint32_t *result);
   MOZ_MUST_USE nsresult GetDateValue(uint32_t *result);
   MOZ_MUST_USE nsresult GetExpiresValue(uint32_t *result);
   MOZ_MUST_USE nsresult GetLastModifiedValue(uint32_t *result);
@@ -168,6 +174,8 @@ class nsHttpResponseHead {
   MOZ_MUST_USE nsresult GetAgeValue_locked(uint32_t *result) const;
   MOZ_MUST_USE nsresult GetExpiresValue_locked(uint32_t *result) const;
   MOZ_MUST_USE nsresult GetMaxAgeValue_locked(uint32_t *result) const;
+  MOZ_MUST_USE nsresult
+  GetStaleWhileRevalidateValue_locked(uint32_t *result) const;
 
   MOZ_MUST_USE nsresult GetDateValue_locked(uint32_t *result) const {
     return ParseDateHeader(nsHttp::Date, result);

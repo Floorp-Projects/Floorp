@@ -9,6 +9,7 @@
 
 // Keep others in (case-insensitive) order:
 #include "ImgDrawResult.h"
+#include "mozilla/PresShell.h"
 #include "mozilla/RestyleManager.h"
 #include "nsCSSFrameConstructor.h"
 #include "SVGObserverUtils.h"
@@ -29,7 +30,7 @@ NS_QUERYFRAME_HEAD(nsSVGDisplayContainerFrame)
   NS_QUERYFRAME_ENTRY(nsSVGDisplayableFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsSVGContainerFrame)
 
-nsIFrame* NS_NewSVGContainerFrame(nsIPresShell* aPresShell,
+nsIFrame* NS_NewSVGContainerFrame(PresShell* aPresShell,
                                   ComputedStyle* aStyle) {
   nsIFrame* frame = new (aPresShell) nsSVGContainerFrame(
       aStyle, aPresShell->GetPresContext(), nsSVGContainerFrame::kClassID);
