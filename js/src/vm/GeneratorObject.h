@@ -16,6 +16,8 @@
 
 namespace js {
 
+enum class GeneratorResumeKind { Next, Throw, Return };
+
 class AbstractGeneratorObject : public NativeObject {
  public:
   // Magic values stored in the resumeIndex slot when the generator is
@@ -32,29 +34,27 @@ class AbstractGeneratorObject : public NativeObject {
     RESERVED_SLOTS
   };
 
-  enum ResumeKind { NEXT, THROW, RETURN };
-
  private:
   static bool suspend(JSContext* cx, HandleObject obj, AbstractFramePtr frame,
                       jsbytecode* pc, Value* vp, unsigned nvalues);
 
  public:
-  static inline ResumeKind getResumeKind(jsbytecode* pc) {
+  static GeneratorResumeKind getResumeKind(jsbytecode* pc) {
     MOZ_ASSERT(*pc == JSOP_RESUME);
     unsigned arg = GET_UINT8(pc);
-    MOZ_ASSERT(arg <= RETURN);
-    return static_cast<ResumeKind>(arg);
+    MOZ_ASSERT(arg <= unsigned(GeneratorResumeKind::Return));
+    return static_cast<GeneratorResumeKind>(arg);
   }
 
-  static inline ResumeKind getResumeKind(JSContext* cx, JSAtom* atom) {
+  static GeneratorResumeKind getResumeKind(JSContext* cx, JSAtom* atom) {
     if (atom == cx->names().next) {
-      return NEXT;
+      return GeneratorResumeKind::Next;
     }
     if (atom == cx->names().throw_) {
-      return THROW;
+      return GeneratorResumeKind::Throw;
     }
     MOZ_ASSERT(atom == cx->names().return_);
-    return RETURN;
+    return GeneratorResumeKind::Return;
   }
 
   static JSObject* create(JSContext* cx, AbstractFramePtr frame);
@@ -213,7 +213,7 @@ class GeneratorObject : public AbstractGeneratorObject {
 
 bool GeneratorThrowOrReturn(JSContext* cx, AbstractFramePtr frame,
                             Handle<AbstractGeneratorObject*> obj,
-                            HandleValue val, uint32_t resumeKind);
+                            HandleValue val, GeneratorResumeKind resumeKind);
 
 /**
  * Return the generator object associated with the given frame. The frame must
