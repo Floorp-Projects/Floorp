@@ -10,6 +10,8 @@ import { nodeHasChildren } from "./utils";
 
 import type { TreeNode } from "./types";
 
+import type { Source } from "../../types";
+
 /*
  * Gets domain from url (without www prefix)
  */
@@ -94,7 +96,9 @@ function createTreeNodeMatcherWithDebuggeeHost(
 function createTreeNodeMatcherWithNameAndOther(
   part: string,
   isDir: boolean,
-  debuggeeHost: ?string
+  debuggeeHost: ?string,
+  source?: Source,
+  sortByUrl?: boolean
 ): FindNodeInContentsMatcher {
   return (node: TreeNode) => {
     if (node.name === IndexName) {
@@ -108,6 +112,9 @@ function createTreeNodeMatcherWithNameAndOther(
       return -1;
     } else if (!nodeIsDir && isDir) {
       return 1;
+    }
+    if (sortByUrl && node.type === "source" && source) {
+      return node.contents.url.localeCompare(source.url);
     }
 
     return node.name.localeCompare(part);
@@ -125,7 +132,9 @@ function createTreeNodeMatcherWithNameAndOther(
 export function createTreeNodeMatcher(
   part: string,
   isDir: boolean,
-  debuggeeHost: ?string
+  debuggeeHost: ?string,
+  source?: Source,
+  sortByUrl?: boolean
 ): FindNodeInContentsMatcher {
   if (part === IndexName) {
     // Specialied matcher, when we are looking for "(index)" position.
@@ -138,5 +147,11 @@ export function createTreeNodeMatcher(
   }
 
   // Rest of the cases, without mentioned above.
-  return createTreeNodeMatcherWithNameAndOther(part, isDir, debuggeeHost);
+  return createTreeNodeMatcherWithNameAndOther(
+    part,
+    isDir,
+    debuggeeHost,
+    source,
+    sortByUrl
+  );
 }
