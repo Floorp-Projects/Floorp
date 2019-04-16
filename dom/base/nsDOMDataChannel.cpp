@@ -119,7 +119,13 @@ void nsDOMDataChannel::GetProtocol(nsAString& aProtocol) {
   mDataChannel->GetProtocol(aProtocol);
 }
 
-uint16_t nsDOMDataChannel::Id() const { return mDataChannel->GetStream(); }
+mozilla::dom::Nullable<uint16_t> nsDOMDataChannel::GetId() const {
+  mozilla::dom::Nullable<uint16_t> result = mDataChannel->GetStream();
+  if (result.Value() == 65535) {
+    result.SetNull();
+  }
+  return result;
+}
 
 // XXX should be GetType()?  Open question for the spec
 bool nsDOMDataChannel::Reliable() const {
