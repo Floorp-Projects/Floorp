@@ -66,7 +66,7 @@ EOF
 
     # We don't need to set OPENSSL_STATIC here, because we only have static
     # libraries in the directory we are passing.
-    env "OPENSSL_DIR=$OPENSSL_BUILD_DIRECTORY" cargo build --verbose --release
+    env "OPENSSL_DIR=$OPENSSL_BUILD_DIRECTORY" cargo build --features "all dist-server" --verbose --release
     ;;
 MINGW*)
     cargo build --verbose --release
