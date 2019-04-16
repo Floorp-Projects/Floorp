@@ -76,7 +76,7 @@ class nsDOMDataChannel final : public mozilla::DOMEventTargetHelper,
             mozilla::ErrorResult& aRv);
 
   bool Ordered() const;
-  uint16_t Id() const;
+  mozilla::dom::Nullable<uint16_t> GetId() const;
 
   nsresult DoOnMessageAvailable(const nsACString& aMessage, bool aBinary);
 
