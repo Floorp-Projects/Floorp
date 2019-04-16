@@ -2342,7 +2342,10 @@ already_AddRefed<DataChannel> DataChannelConnection::Open(
     const nsACString &label, const nsACString &protocol, Type type,
     bool inOrder, uint32_t prValue, DataChannelListener *aListener,
     nsISupports *aContext, bool aExternalNegotiated, uint16_t aStream) {
-  // aStream == INVALID_STREAM to have the protocol allocate
+  if (!aExternalNegotiated) {
+    // aStream == INVALID_STREAM to have the protocol allocate
+    aStream = INVALID_STREAM;
+  }
   uint16_t prPolicy = SCTP_PR_SCTP_NONE;
   uint32_t flags;
 

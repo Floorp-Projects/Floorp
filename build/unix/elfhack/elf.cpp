@@ -497,7 +497,10 @@ ElfSection::ElfSection(Elf_Shdr &s, std::ifstream *file, Elf *parent)
       (shdr.sh_type == SHT_NOBITS))
     data = nullptr;
   else {
-    data = new char[shdr.sh_size];
+    data = static_cast<char *>(malloc(shdr.sh_size));
+    if (!data) {
+      throw std::runtime_error("Could not malloc ElfSection data");
+    }
     int pos = file->tellg();
     file->seekg(shdr.sh_offset);
     file->read(data, shdr.sh_size);

@@ -1,8 +1,8 @@
 #!/bin/bash
 set -x -e -v
 
-# 0.2.7 + a number of changes
-SCCACHE_REVISION=8f295c09cfdd4cff4f4a0c6f0e057979eeb8842d
+# 0.2.8 + a number of changes
+SCCACHE_REVISION=5cbd30684e03cab9c2d1272fdc530fd83b8c903b
 
 # This script is for building sccache
 
@@ -66,7 +66,7 @@ EOF
 
     # We don't need to set OPENSSL_STATIC here, because we only have static
     # libraries in the directory we are passing.
-    env "OPENSSL_DIR=$OPENSSL_BUILD_DIRECTORY" cargo build --verbose --release
+    env "OPENSSL_DIR=$OPENSSL_BUILD_DIRECTORY" cargo build --features "all dist-server" --verbose --release
     ;;
 MINGW*)
     cargo build --verbose --release

@@ -82,6 +82,7 @@ devtools.jar:
     skin/images/aboutdebugging-firefox-release.svg (themes/images/aboutdebugging-firefox-release.svg)
     skin/images/aboutdebugging-globe-icon.svg (themes/images/aboutdebugging-globe-icon.svg)
     skin/images/aboutdebugging-information.svg (themes/images/aboutdebugging-information.svg)
+    skin/images/aboutdebugging-process-icon.svg (themes/images/aboutdebugging-process-icon.svg)
     skin/images/aboutdebugging-usb-icon.svg (themes/images/aboutdebugging-usb-icon.svg)
     skin/images/fox-smiling.svg (themes/images/fox-smiling.svg)
     skin/images/grid.svg (themes/images/grid.svg)

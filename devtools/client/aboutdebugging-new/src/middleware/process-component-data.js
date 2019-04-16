@@ -30,7 +30,7 @@ const processComponentDataMiddleware = store => next => action => {
 function toMainProcessComponentData(process) {
   const type = DEBUG_TARGETS.PROCESS;
   const id = process.processFront.actorID;
-  const icon = "chrome://devtools/skin/images/settings.svg";
+  const icon = "chrome://devtools/skin/images/aboutdebugging-process-icon.svg";
   const name = l10n.getString("about-debugging-main-process-name");
   const description = l10n.getString("about-debugging-main-process-description2");
 

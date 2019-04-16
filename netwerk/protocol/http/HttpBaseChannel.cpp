@@ -211,7 +211,8 @@ HttpBaseChannel::HttpBaseChannel()
       mInitialRwin(0),
       mProxyResolveFlags(0),
       mContentDispositionHint(UINT32_MAX),
-      mReferrerPolicy(NS_GetDefaultReferrerPolicy()),
+      mOriginalReferrerPolicy(NS_GetDefaultReferrerPolicy()),
+      mReferrerPolicy(mOriginalReferrerPolicy),
       mCorsMode(nsIHttpChannelInternal::CORS_MODE_NO_CORS),
       mRedirectMode(nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW),
       mLastRedirectFlags(0),
@@ -1648,6 +1649,7 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI* referrer,
   ENSURE_CALLED_BEFORE_CONNECT();
 
   nsIURI* originalReferrer = referrer;
+  uint32_t originalReferrerPolicy = referrerPolicy;
 
   mReferrerPolicy = referrerPolicy;
 
@@ -1930,6 +1932,7 @@ HttpBaseChannel::SetReferrerWithPolicy(nsIURI* referrer,
   rv = SetRequestHeader(NS_LITERAL_CSTRING("Referer"), spec, false);
   if (NS_FAILED(rv)) return rv;
 
+  mOriginalReferrerPolicy = originalReferrerPolicy;
   mOriginalReferrer = originalReferrer;
   mReferrer = clone;
   return NS_OK;

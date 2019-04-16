@@ -1081,9 +1081,6 @@ var ContentBlocking = {
 
     // Don't deal with about:, file: etc.
     if (!baseURI) {
-      this.iconBox.removeAttribute("animate");
-      this.iconBox.removeAttribute("active");
-      this.iconBox.removeAttribute("hasException");
       return;
     }
     // Add to telemetry per page load as a baseline measurement.
@@ -1098,6 +1095,9 @@ var ContentBlocking = {
 
     // Don't deal with about:, file: etc.
     if (!baseURI) {
+      this.iconBox.removeAttribute("animate");
+      this.iconBox.removeAttribute("active");
+      this.iconBox.removeAttribute("hasException");
       return;
     }
 

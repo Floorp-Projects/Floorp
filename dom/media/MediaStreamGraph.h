@@ -123,6 +123,10 @@ class AudioDataListenerInterface {
   virtual uint32_t RequestedInputChannelCount(MediaStreamGraphImpl* aGraph) = 0;
 
   /**
+   * Whether the underlying audio device is used for voice input.
+   */
+  virtual bool IsVoiceInput(MediaStreamGraphImpl* aGraph) const = 0;
+  /**
    * Called when the underlying audio device has changed.
    */
   virtual void DeviceChanged(MediaStreamGraphImpl* aGraph) = 0;

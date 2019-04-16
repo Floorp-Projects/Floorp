@@ -956,12 +956,15 @@ struct AssemblerBufferWithConstantPools
            size_t(branchDeadlines_.earliestDeadline().getOffset());
   }
 
+  bool isPoolEmpty() const {
+    return pool_.numEntries() == 0 && !hasExpirableShortRangeBranches();
+  }
   void finishPool() {
     JitSpew(JitSpew_Pools,
             "[%d] Attempting to finish pool %zu with %u entries.", id,
             poolInfo_.length(), pool_.numEntries());
 
-    if (pool_.numEntries() == 0 && !hasExpirableShortRangeBranches()) {
+    if (isPoolEmpty()) {
       // If there is no data in the pool being dumped, don't dump anything.
       JitSpew(JitSpew_Pools, "[%d] Aborting because the pool is empty", id);
       return;
@@ -1101,6 +1104,9 @@ struct AssemblerBufferWithConstantPools
     MOZ_ASSERT(inhibitNops_);
     inhibitNops_ = false;
   }
+  void assertNoPoolAndNoNops() {
+    MOZ_ASSERT(inhibitNops_ && (isPoolEmpty() || canNotPlacePool_));
+  }
 
   void align(unsigned alignment) { align(alignment, alignFillInst_); }
 
@@ -1127,11 +1133,12 @@ struct AssemblerBufferWithConstantPools
       finishPool();
     }
 
+    bool prevInhibitNops = inhibitNops_;
     inhibitNops_ = true;
     while ((sizeExcludingCurrentPool() & (alignment - 1)) && !this->oom()) {
       putInt(pattern);
     }
-    inhibitNops_ = false;
+    inhibitNops_ = prevInhibitNops;
   }
 
  public:
