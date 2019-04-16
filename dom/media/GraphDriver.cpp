@@ -469,7 +469,8 @@ StreamAndPromiseForOperation::StreamAndPromiseForOperation(
       mFlags(aFlags) {}
 
 AudioCallbackDriver::AudioCallbackDriver(MediaStreamGraphImpl* aGraphImpl,
-                                         uint32_t aInputChannelCount)
+                                         uint32_t aInputChannelCount,
+                                         AudioInputType aAudioInputType)
     : GraphDriver(aGraphImpl),
       mOutputChannels(0),
       mSampleRate(0),
