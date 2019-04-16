@@ -27,9 +27,14 @@ add_task(async function() {
 
   const labels = [getLabel(dbg, 4), getLabel(dbg, 3)];
   is(
-    labels.includes("simple1.js?x=1") && labels.includes("simple1.js?x=2"),
-    true,
-    "simple1.js?x=1 and simple2.jsx=2 exist"
+    getLabel(dbg, 3),
+    "simple1.js?x=1",
+    "simple1.js?x=1 exists"
+  );
+  is(
+    getLabel(dbg, 4),
+    "simple1.js?x=2",
+    "simple1.js?x=2 exists"
   );
 
   const source = findSource(dbg, "simple1.js?x=1");
