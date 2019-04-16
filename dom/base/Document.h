@@ -2163,7 +2163,7 @@ class Document : public nsINode,
   /**
    * Returns true if this document was created from a nsXULPrototypeDocument.
    */
-  bool HasPrototypeDocument() const { return mPrototypeDocument; }
+  bool LoadedFromPrototype() const { return mPrototypeDocument; }
 
   bool IsTopLevelContentDocument() const { return mIsTopLevelContentDocument; }
   void SetIsTopLevelContentDocument(bool aIsTopLevelContentDocument) {
