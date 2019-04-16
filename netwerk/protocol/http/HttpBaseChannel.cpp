@@ -3208,6 +3208,9 @@ already_AddRefed<nsILoadInfo> HttpBaseChannel::CloneLoadInfoForRedirect(
     MOZ_ASSERT(
         docShellAttrs.mPrivateBrowsingId == attrs.mPrivateBrowsingId,
         "docshell and necko should have the same privateBrowsingId attribute.");
+    MOZ_ASSERT(
+        docShellAttrs.mGeckoViewSessionContextId == attrs.mGeckoViewSessionContextId,
+        "docshell and necko should have the same geckoViewSessionContextId attribute");
 
     attrs = docShellAttrs;
     attrs.SetFirstPartyDomain(true, newURI);
