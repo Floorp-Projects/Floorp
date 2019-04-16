@@ -517,7 +517,7 @@ void VideoSink::UpdateRenderedVideoFrames() {
   MOZ_ASSERT(!clockTime.IsNegative(), "Should have positive clock time.");
 
   uint32_t sentToCompositorCount = 0;
-  uint32_t droppedCount = 0;
+  uint32_t droppedInSink = 0;
 
   // Skip frames up to the playback position.
   TimeUnit lastFrameEndTime;
@@ -528,7 +528,7 @@ void VideoSink::UpdateRenderedVideoFrames() {
     if (frame->IsSentToCompositor()) {
       sentToCompositorCount++;
     } else {
-      droppedCount++;
+      droppedInSink++;
       VSINK_LOG_V("discarding video frame mTime=%" PRId64
                   " clock_time=%" PRId64,
                   frame->mTime.ToMicroseconds(), clockTime.ToMicroseconds());
@@ -538,23 +538,23 @@ void VideoSink::UpdateRenderedVideoFrames() {
     }
   }
 
-  if (droppedCount || sentToCompositorCount) {
+  if (droppedInSink || sentToCompositorCount) {
     uint32_t totalCompositorDroppedCount = mContainer->GetDroppedImageCount();
-    uint32_t compositorDroppedCount =
+    uint32_t droppedInCompositor =
         totalCompositorDroppedCount - mOldCompositorDroppedCount;
-    if (compositorDroppedCount > 0) {
+    if (droppedInCompositor > 0) {
       mOldCompositorDroppedCount = totalCompositorDroppedCount;
       VSINK_LOG_V("%u video frame previously discarded by compositor",
-                  compositorDroppedCount);
+                  droppedInCompositor);
     }
-    mPendingDroppedCount += compositorDroppedCount;
+    mPendingDroppedCount += droppedInCompositor;
     uint32_t droppedReported = mPendingDroppedCount > sentToCompositorCount
                                    ? sentToCompositorCount
                                    : mPendingDroppedCount;
     mPendingDroppedCount -= droppedReported;
 
-    mFrameStats.Accumulate({0, 0, droppedCount + droppedReported,
-                            sentToCompositorCount - droppedReported});
+    mFrameStats.Accumulate({0, 0, sentToCompositorCount - droppedReported, 0,
+                            droppedInSink, droppedInCompositor});
   }
 
   // The presentation end time of the last video frame displayed is either
@@ -601,7 +601,7 @@ void VideoSink::MaybeResolveEndPromise() {
       // Remove the last frame since we have sent it to compositor.
       RefPtr<VideoData> frame = VideoQueue().PopFront();
       if (mPendingDroppedCount > 0) {
-        mFrameStats.Accumulate({0, 0, 1, 0});
+        mFrameStats.Accumulate({0, 0, 0, 0, 0, 1});
         mPendingDroppedCount--;
       } else {
         mFrameStats.NotifyPresentedFrame();
