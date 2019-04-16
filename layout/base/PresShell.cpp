@@ -47,6 +47,7 @@
 #include "mozilla/dom/PointerEventHandler.h"
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/Document.h"
+#include "mozilla/dom/DocumentInlines.h"
 #include "nsAnimationManager.h"
 #include "nsNameSpaceManager.h"  // for Pref-related rule management (bugs 22963,20760,31816)
 #include "nsFrame.h"
@@ -96,6 +97,7 @@
 #ifdef MOZ_REFLOW_PERF
 #  include "nsFontMetrics.h"
 #endif
+#include "MobileViewportManager.h"
 #include "OverflowChangedTracker.h"
 #include "PositionedEventTargeting.h"
 
