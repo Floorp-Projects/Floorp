@@ -198,6 +198,10 @@ def rerun_action(parameters, graph_config, input, task_group_id, task_id):
             )
         )
 
+    _rerun_task(task_id, label)
+
+
+def _rerun_task(task_id, label):
     status = taskcluster.status_task(task_id)
     if status not in RERUN_STATES:
         logger.warning(
@@ -251,12 +255,27 @@ def retrigger_multiple(parameters, graph_config, input, task_group_id, task_id):
     suffixes = []
     for i, request in enumerate(input.get('requests', [])):
         times = request.get('times', 1)
+        rerun_tasks = [
+            label for label in request.get('tasks')
+            if not full_task_graph[label].attributes.get('retrigger')]
+        retrigger_tasks = [
+            label for label in request.get('tasks')
+            if full_task_graph[label].attributes.get('retrigger')
+        ]
+
+        for label in rerun_tasks:
+            # XXX we should not re-run tasks pulled in from other pushes
+            # In practice, this shouldn't matter, as only completed tasks
+            # are pulled in from other pushes and treeherder won't pass
+            # those labels.
+            _rerun_task(label_to_taskid[label], label)
+
         for j in xrange(times):
             suffix = '{}-{}'.format(i, j)
             suffixes.append(suffix)
             create_tasks(
                 graph_config,
-                request.get('tasks'),
+                retrigger_tasks,
                 full_task_graph,
                 label_to_taskid,
                 parameters,
