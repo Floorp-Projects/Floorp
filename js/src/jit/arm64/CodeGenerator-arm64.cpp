@@ -811,7 +811,8 @@ class js::jit::OutOfLineTableSwitch
 void CodeGeneratorARM64::visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool) {
   MTableSwitch* mir = ool->mir();
 
-  AutoForbidPools afp(
+  // Prevent nop and pools sequences to appear in the jump table.
+  AutoForbidPoolsAndNops afp(
       &masm, (mir->numCases() + 1) * (sizeof(void*) / vixl::kInstructionSize));
   masm.haltingAlign(sizeof(void*));
   masm.bind(ool->jumpLabel());
