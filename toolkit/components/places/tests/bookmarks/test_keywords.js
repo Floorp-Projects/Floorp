@@ -21,7 +21,7 @@ async function check_keyword(aURI, aKeyword) {
   } else {
     let entry = await PlacesUtils.keywords.fetch({ url: aURI });
     if (entry) {
-      throw (`${aURI.spec} should not have a keyword`);
+      throw new Error(`${aURI.spec} should not have a keyword`);
     }
   }
 }

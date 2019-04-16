@@ -164,7 +164,7 @@ add_task(async function test_override_super_multiple() {
  * ensures that this does not block other functions from being registered.
  */
 add_task(async function test_override_error() {
-  let errorOverrideFn = base => { throw "Expected error."; };
+  let errorOverrideFn = base => { throw new Error("Expected error."); };
 
   Integration.testModule.register(errorOverrideFn);
   Integration.testModule.register(overrideFn);
