@@ -140,9 +140,17 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         }],
         [["--power-test"], {
             "dest": "power_test",
+            "action": "store_true",
+            "default": False,
             "help": "Use Raptor to measure power usage. Currently only supported for Geckoview. "
                     "The host ip address must be specified either via the --host command line "
                     "argument.",
+        }],
+        [["--memory-test"], {
+            "dest": "memory_test",
+            "action": "store_true",
+            "default": False,
+            "help": "Use Raptor to measure memory usage.",
         }],
         [["--debug-mode"], {
             "dest": "debug_mode",
@@ -225,6 +233,7 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
         if self.host == 'HOST_IP':
             self.host = os.environ['HOST_IP']
         self.power_test = self.config.get('power_test')
+        self.memory_test = self.config.get('memory_test')
         self.is_release_build = self.config.get('is_release_build')
         self.debug_mode = self.config.get('debug_mode', False)
         self.firefox_android_browsers = ["fennec", "geckoview", "refbrow", "fenix"]
@@ -362,6 +371,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
             options.extend(['--is-release-build'])
         if self.config.get('power_test', False):
             options.extend(['--power-test'])
+        if self.config.get('memory_test', False):
+            options.extend(['--memory-test'])
         for key, value in kw_options.items():
             options.extend(['--%s' % key, value])
 
@@ -472,6 +483,8 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
 
         expected_perfherder = 1
         if self.config.get('power_test', None):
+            expected_perfherder += 1
+        if self.config.get('memory_test', None):
             expected_perfherder += 1
         if len(parser.found_perf_data) != expected_perfherder:
             self.critical("PERFHERDER_DATA was seen %d times, expected %d."
@@ -606,6 +619,10 @@ class Raptor(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidMixin):
 
                 if self.power_test:
                     src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor-power.json')
+                    self._artifact_perf_data(src, dest)
+
+                if self.memory_test:
+                    src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'raptor-memory.json')
                     self._artifact_perf_data(src, dest)
 
                 src = os.path.join(self.query_abs_dirs()['abs_work_dir'], 'screenshots.html')
