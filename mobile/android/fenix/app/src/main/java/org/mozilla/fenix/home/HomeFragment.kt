@@ -17,15 +17,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Observer
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_home.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import mozilla.components.browser.menu.BrowserMenu
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
@@ -35,12 +32,8 @@ import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.archive
 import org.mozilla.fenix.ext.requireComponents
-import org.mozilla.fenix.home.sessioncontrol.ArchivedSession
-import org.mozilla.fenix.home.sessioncontrol.ArchivedSessionAction
 import org.mozilla.fenix.home.sessioncontrol.Mode
 import org.mozilla.fenix.home.sessioncontrol.SessionControlAction
 import org.mozilla.fenix.home.sessioncontrol.SessionControlChange
@@ -77,7 +70,7 @@ class HomeFragment : Fragment(), CoroutineScope {
         sessionControlComponent = SessionControlComponent(
             view.homeLayout,
             bus,
-            SessionControlState(listOf(), listOf(), mode)
+            SessionControlState(listOf(), mode)
         )
 
         view.homeLayout.applyConstraintSet {

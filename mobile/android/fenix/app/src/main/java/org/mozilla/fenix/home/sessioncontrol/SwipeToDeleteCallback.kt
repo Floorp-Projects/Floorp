@@ -13,7 +13,6 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import io.reactivex.Observer
 import org.mozilla.fenix.R
-import org.mozilla.fenix.home.sessioncontrol.viewholders.SessionViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabViewHolder
 import android.graphics.drawable.Drawable
 
@@ -32,9 +31,6 @@ class SwipeToDeleteCallback(
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         if (viewHolder is TabViewHolder) {
             actionEmitter.onNext(TabAction.Close(viewHolder.tab?.sessionId!!))
-        }
-        if (viewHolder is SessionViewHolder) {
-            viewHolder.session?.apply { actionEmitter.onNext(ArchivedSessionAction.Delete(this)) }
         }
     }
 
@@ -101,10 +97,9 @@ class SwipeToDeleteCallback(
         recyclerView: RecyclerView,
         viewHolder: RecyclerView.ViewHolder
     ): Int {
-        return if (viewHolder is TabViewHolder || viewHolder is SessionViewHolder) super.getSwipeDirs(
-            recyclerView,
-            viewHolder
-        ) else 0
+        return if (viewHolder is TabViewHolder) {
+            super.getSwipeDirs(recyclerView, viewHolder)
+        } else 0
     }
 
     companion object {

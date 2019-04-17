@@ -12,9 +12,6 @@ import kotlinx.coroutines.Job
 import org.mozilla.fenix.home.sessioncontrol.viewholders.ArchiveTabsViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.DeleteTabsViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.PrivateBrowsingDescriptionViewHolder
-import org.mozilla.fenix.home.sessioncontrol.viewholders.SessionHeaderViewHolder
-import org.mozilla.fenix.home.sessioncontrol.viewholders.SessionViewHolder
-import org.mozilla.fenix.home.sessioncontrol.viewholders.SessionPlaceholderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabHeaderViewHolder
 import org.mozilla.fenix.home.sessioncontrol.viewholders.TabViewHolder
 import java.lang.IllegalStateException
@@ -25,9 +22,6 @@ sealed class AdapterItem {
     object PrivateBrowsingDescription : AdapterItem()
     object ArchiveTabs : AdapterItem()
     object DeleteTabs : AdapterItem()
-    object SessionHeader : AdapterItem()
-    object SessionPlaceholder : AdapterItem()
-    data class SessionItem(val session: ArchivedSession) : AdapterItem()
 
     val viewType: Int
         get() = when (this) {
@@ -36,9 +30,6 @@ sealed class AdapterItem {
             ArchiveTabs -> ArchiveTabsViewHolder.LAYOUT_ID
             PrivateBrowsingDescription -> PrivateBrowsingDescriptionViewHolder.LAYOUT_ID
             DeleteTabs -> DeleteTabsViewHolder.LAYOUT_ID
-            SessionHeader -> SessionHeaderViewHolder.LAYOUT_ID
-            SessionPlaceholder -> SessionPlaceholderViewHolder.LAYOUT_ID
-            is SessionItem -> SessionViewHolder.LAYOUT_ID
         }
 }
 
@@ -67,9 +58,6 @@ class SessionControlAdapter(
                 actionEmitter
             )
             DeleteTabsViewHolder.LAYOUT_ID -> DeleteTabsViewHolder(view, actionEmitter)
-            SessionHeaderViewHolder.LAYOUT_ID -> SessionHeaderViewHolder(view)
-            SessionPlaceholderViewHolder.LAYOUT_ID -> SessionPlaceholderViewHolder(view)
-            SessionViewHolder.LAYOUT_ID -> SessionViewHolder(view, actionEmitter)
             else -> throw IllegalStateException()
         }
     }
@@ -94,7 +82,6 @@ class SessionControlAdapter(
                 (items[position] as AdapterItem.TabItem).tab,
                 position
             )
-            is SessionViewHolder -> holder.bind((items[position] as AdapterItem.SessionItem).session)
         }
     }
 }

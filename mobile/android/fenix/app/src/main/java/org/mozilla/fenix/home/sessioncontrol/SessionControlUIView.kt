@@ -23,20 +23,13 @@ private fun SessionControlState.toAdapterList(): List<AdapterItem> {
     if (tabs.isNotEmpty()) {
         items.add(AdapterItem.TabHeader)
         tabs.reversed().map(AdapterItem::TabItem).forEach { items.add(it) }
-        items.add(if (mode == Mode.Private) AdapterItem.DeleteTabs else AdapterItem.ArchiveTabs)
+        if (mode == Mode.Private) {
+            items.add(AdapterItem.DeleteTabs)
+        }
     } else {
         if (mode == Mode.Private) {
             items.add(AdapterItem.PrivateBrowsingDescription)
         }
-    }
-
-    if (mode == Mode.Private) { return items }
-
-    if (archivedSessions.isNotEmpty()) {
-        items.add(AdapterItem.SessionHeader)
-        archivedSessions.map(AdapterItem::SessionItem).forEach { items.add(it) }
-    } else {
-        items.add(AdapterItem.SessionPlaceholder)
     }
 
     return items
