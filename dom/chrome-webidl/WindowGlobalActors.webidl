@@ -33,6 +33,11 @@ interface WindowGlobalParent {
 
   [Throws]
   JSWindowActorParent getActor(DOMString name);
+
+  [Throws]
+  Promise<TabParent> changeFrameRemoteness(
+    BrowsingContext? bc, DOMString remoteType,
+    unsigned long long pendingSwitchId);
 };
 
 [Exposed=Window, ChromeOnly]

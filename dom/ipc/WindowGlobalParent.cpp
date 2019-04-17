@@ -8,6 +8,7 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/ipc/InProcessParent.h"
+#include "mozilla/dom/BrowserBridgeParent.h"
 #include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
@@ -263,6 +264,51 @@ IPCResult WindowGlobalParent::RecvDidEmbedBrowsingContext(
   MOZ_ASSERT(aContext);
   aContext->Canonical()->SetEmbedderWindowGlobal(this);
   return IPC_OK();
+}
+
+already_AddRefed<Promise> WindowGlobalParent::ChangeFrameRemoteness(
+    dom::BrowsingContext* aBc, const nsAString& aRemoteType,
+    uint64_t aPendingSwitchId, ErrorResult& aRv) {
+  RefPtr<TabParent> tabParent = GetTabParent();
+  if (NS_WARN_IF(!tabParent)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  nsIGlobalObject* global = xpc::NativeGlobal(xpc::PrivilegedJunkScope());
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  // When the reply comes back from content, either resolve or reject.
+  auto resolve =
+      [=](mozilla::Tuple<nsresult, PBrowserBridgeParent*>&& aResult) {
+        nsresult rv = Get<0>(aResult);
+        RefPtr<BrowserBridgeParent> bridge =
+            static_cast<BrowserBridgeParent*>(Get<1>(aResult));
+        if (NS_FAILED(rv)) {
+          promise->MaybeReject(rv);
+          return;
+        }
+
+        // If we got a BrowserBridgeParent, the frame is out-of-process, so pull
+        // our target TabParent off of it. Otherwise, it's an in-process frame,
+        // so we can directly use ours.
+        if (bridge) {
+          promise->MaybeResolve(bridge->GetTabParent());
+        } else {
+          promise->MaybeResolve(tabParent);
+        }
+      };
+
+  auto reject = [=](ResponseRejectReason aReason) {
+    promise->MaybeReject(NS_ERROR_FAILURE);
+  };
+
+  SendChangeFrameRemoteness(aBc, PromiseFlatString(aRemoteType),
+                            aPendingSwitchId, resolve, reject);
+  return promise.forget();
 }
 
 void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
