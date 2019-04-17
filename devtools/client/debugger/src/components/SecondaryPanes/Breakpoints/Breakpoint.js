@@ -21,7 +21,6 @@ import {
 } from "../../../utils/breakpoint";
 import { getSelectedLocation } from "../../../utils/source-maps";
 import { features } from "../../../utils/prefs";
-import { getEditor } from "../../../utils/editor";
 
 import type {
   Breakpoint as BreakpointType,
@@ -30,6 +29,7 @@ import type {
   SourceLocation,
   Context
 } from "../../../types";
+import type SourceEditor from "../../../utils/editor/source-editor";
 
 type FormattedFrame = Frame & {
   selectedLocation: SourceLocation
@@ -50,6 +50,7 @@ type Props = {
   selectedSource: Source,
   source: Source,
   frame: FormattedFrame,
+  editor: SourceEditor,
   enableBreakpoint: typeof actions.enableBreakpoint,
   removeBreakpoint: typeof actions.removeBreakpoint,
   removeBreakpoints: typeof actions.removeBreakpoints,
@@ -137,22 +138,16 @@ class Breakpoint extends PureComponent<Props> {
 
   highlightText = memoize(
     (text = "", editor) => {
-      if (!editor.CodeMirror) {
-        return { __html: text };
-      }
-
       const node = document.createElement("div");
       editor.CodeMirror.runMode(text, "application/javascript", node);
       return { __html: node.innerHTML };
     },
-    (text, editor) => `${text} - ${editor.CodeMirror ? "editor" : ""}`
+    text => text
   );
 
-  /* eslint-disable react/no-danger */
   render() {
-    const { breakpoint } = this.props;
+    const { breakpoint, editor } = this.props;
     const text = this.getBreakpointText();
-    const editor = getEditor();
     const labelId = `${breakpoint.id}-label`;
 
     return (
