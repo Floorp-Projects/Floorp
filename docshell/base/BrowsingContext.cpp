@@ -649,12 +649,15 @@ void BrowsingContext::GetOpener(JSContext* aCx,
   }
 }
 
-Nullable<WindowProxyHolder> BrowsingContext::GetParent(
-    ErrorResult& aError) const {
+Nullable<WindowProxyHolder> BrowsingContext::GetParent(ErrorResult& aError) {
+  if (mClosed) {
+    return nullptr;
+  }
+
   // We never throw an error, but the implementation in nsGlobalWindow does and
   // we need to use the same signature.
   if (!mParent) {
-    return nullptr;
+    return WindowProxyHolder(this);
   }
   return WindowProxyHolder(mParent.get());
 }
