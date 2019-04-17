@@ -2911,6 +2911,7 @@ already_AddRefed<nsILoadContext> TabParent::GetLoadContext() {
     loadContext = new LoadContext(
         GetOwnerElement(), true /* aIsContent */, isPrivate,
         mChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW,
+        mChromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW,
         useTrackingProtection, OriginAttributesRef());
     mLoadContext = loadContext;
   }
@@ -3400,6 +3401,8 @@ class FakeChannel final : public nsIChannel,
   GetOriginAttributes(mozilla::OriginAttributes& aAttrs) override {}
   NS_IMETHOD GetUseRemoteTabs(bool*) NO_IMPL;
   NS_IMETHOD SetRemoteTabs(bool) NO_IMPL;
+  NS_IMETHOD GetUseRemoteSubframes(bool*) NO_IMPL;
+  NS_IMETHOD SetRemoteSubframes(bool) NO_IMPL;
   NS_IMETHOD GetUseTrackingProtection(bool*) NO_IMPL;
   NS_IMETHOD SetUseTrackingProtection(bool) NO_IMPL;
 #undef NO_IMPL
