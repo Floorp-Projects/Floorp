@@ -197,14 +197,6 @@ class ContentChild final : public PContentChild,
   mozilla::ipc::IPCResult RecvSetProcessSandbox(
       const Maybe<FileDescriptor>& aBroker);
 
-  PBrowserChild* AllocPBrowserChild(const TabId& aTabId,
-                                    const TabId& aSameTabGroupAs,
-                                    const IPCTabContext& aContext,
-                                    const uint32_t& aChromeFlags,
-                                    const ContentParentId& aCpID,
-                                    BrowsingContext* aBrowsingContext,
-                                    const bool& aIsForBrowser);
-
   bool DeallocPBrowserChild(PBrowserChild*);
 
   PIPCBlobInputStreamChild* AllocPIPCBlobInputStreamChild(
@@ -518,19 +510,11 @@ class ContentChild final : public PContentChild,
 
   bool DeallocPFileDescriptorSetChild(PFileDescriptorSetChild*);
 
-  bool SendPBrowserConstructor(PBrowserChild* actor, const TabId& aTabId,
-                               const TabId& aSameTabGroupAs,
-                               const IPCTabContext& context,
-                               const uint32_t& chromeFlags,
-                               const ContentParentId& aCpID,
-                               BrowsingContext* aBrowsingContext,
-                               const bool& aIsForBrowser);
-
-  virtual mozilla::ipc::IPCResult RecvPBrowserConstructor(
-      PBrowserChild* aCctor, const TabId& aTabId, const TabId& aSameTabGroupAs,
-      const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-      const ContentParentId& aCpID, BrowsingContext* aBrowsingContext,
-      const bool& aIsForBrowser) override;
+  mozilla::ipc::IPCResult RecvConstructBrowser(
+      ManagedEndpoint<PBrowserChild>&& aBrowserEp, const TabId& aTabId,
+      const TabId& aSameTabGroupAs, const IPCTabContext& aContext,
+      BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
+      const ContentParentId& aCpID, const bool& aIsForBrowser);
 
   FORWARD_SHMEM_ALLOCATOR_TO(PContentChild)
 
@@ -716,9 +700,6 @@ class ContentChild final : public PContentChild,
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   virtual void ProcessingError(Result aCode, const char* aReason) override;
-
-  virtual already_AddRefed<nsIEventTarget> GetConstructedEventTarget(
-      const Message& aMsg) override;
 
   virtual already_AddRefed<nsIEventTarget> GetSpecificMessageEventTarget(
       const Message& aMsg) override;
