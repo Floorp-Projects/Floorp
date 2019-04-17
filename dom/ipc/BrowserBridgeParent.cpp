@@ -102,6 +102,7 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
 void BrowserBridgeParent::Destroy() {
   if (mTabParent) {
     mTabParent->Destroy();
+    mTabParent = nullptr;
   }
 }
 
