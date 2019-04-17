@@ -73,15 +73,6 @@ class nsIDocumentObserver : public nsIMutationObserver {
   virtual void ContentStateChanged(mozilla::dom::Document*,
                                    nsIContent* aContent,
                                    mozilla::EventStates aStateMask) = 0;
-
-  /**
-   * Notification that the state of the document has changed.
-   *
-   * @param aDocument The document being observed
-   * @param aStateMask the state that changed
-   */
-  virtual void DocumentStatesChanged(mozilla::dom::Document*,
-                                     mozilla::EventStates aStateMask) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
@@ -103,17 +94,12 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
                                    nsIContent* aContent,    \
                                    mozilla::EventStates aStateMask) override;
 
-#define NS_DECL_NSIDOCUMENTOBSERVER_DOCUMENTSTATESCHANGED \
-  virtual void DocumentStatesChanged(                     \
-      mozilla::dom::Document*, mozilla::EventStates aStateMask) override;
-
 #define NS_DECL_NSIDOCUMENTOBSERVER                 \
   NS_DECL_NSIDOCUMENTOBSERVER_BEGINUPDATE           \
   NS_DECL_NSIDOCUMENTOBSERVER_ENDUPDATE             \
   NS_DECL_NSIDOCUMENTOBSERVER_BEGINLOAD             \
   NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD               \
   NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATECHANGED   \
-  NS_DECL_NSIDOCUMENTOBSERVER_DOCUMENTSTATESCHANGED \
   NS_DECL_NSIMUTATIONOBSERVER
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_CORE_STUB(_class)  \
@@ -128,10 +114,7 @@ NS_DEFINE_STATIC_IID_ACCESSOR(nsIDocumentObserver, NS_IDOCUMENT_OBSERVER_IID)
 #define NS_IMPL_NSIDOCUMENTOBSERVER_STATE_STUB(_class)                 \
   void _class::ContentStateChanged(mozilla::dom::Document*,            \
                                    nsIContent* aContent,               \
-                                   mozilla::EventStates aStateMask) {} \
-                                                                       \
-  void _class::DocumentStatesChanged(mozilla::dom::Document*,          \
-                                     mozilla::EventStates aStateMask) {}
+                                   mozilla::EventStates aStateMask) {}
 
 #define NS_IMPL_NSIDOCUMENTOBSERVER_CONTENT(_class) \
   NS_IMPL_NSIMUTATIONOBSERVER_CONTENT(_class)
