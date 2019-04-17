@@ -182,7 +182,7 @@ add_task(async function overrideContext_in_extension_tab() {
     is(topLevelExtensionMenuItem.nextSibling, null, "Extension menu should be the last element.");
 
     const submenu = await openSubmenu(topLevelExtensionMenuItem);
-    is(submenu, topLevelExtensionMenuItem.firstElementChild, "Correct submenu opened");
+    is(submenu, topLevelExtensionMenuItem.menupopup, "Correct submenu opened");
 
     Assert.deepEqual(
       getVisibleChildrenIds(submenu),
