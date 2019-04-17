@@ -9,6 +9,7 @@ const {
   FILTER_TOGGLE,
   FILTERS,
   RESET,
+  SELECT,
 } = require("../constants");
 
 /**
@@ -50,6 +51,7 @@ function audit(state = getInitialState(), action) {
         ...state,
         auditing: null,
       };
+    case SELECT:
     case RESET:
       return getInitialState();
     default:
