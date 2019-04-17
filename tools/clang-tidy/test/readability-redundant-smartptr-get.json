@@ -1,1 +1,1 @@
-[["warning", "redundant get() call on smart pointer", "readability-redundant-smartptr-get"], {"reliability": "high"}]
+[["warning", "redundant get() call on smart pointer", "readability-redundant-smartptr-get"]]

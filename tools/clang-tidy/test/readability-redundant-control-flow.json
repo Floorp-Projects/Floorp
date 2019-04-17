@@ -1,1 +1,1 @@
-[["warning", "redundant return statement at the end of a function with a void return type", "readability-redundant-control-flow"], {"reliability": "high"}]
+[["warning", "redundant return statement at the end of a function with a void return type", "readability-redundant-control-flow"]]

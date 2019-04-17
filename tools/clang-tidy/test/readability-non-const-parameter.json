@@ -1,1 +1,1 @@
-[["warning", "pointer parameter 'last' can be pointer to const", "readability-non-const-parameter"], {"reliability": "high"}]
+[["warning", "pointer parameter 'last' can be pointer to const", "readability-non-const-parameter"]]
