@@ -1,4 +1,4 @@
-@media screen and (min-device-width:481px) {
+@media (any-pointer: fine) {
   :root {
     font-family: sans-serif;
     margin: 40px auto;
@@ -78,7 +78,7 @@
   }
 }
 
-@media screen and (min-device-width:320px) and (max-device-width:480px) {
+@media (any-pointer: coarse), (any-pointer: none) {
   * {
     margin: 0;
     padding: 0;
