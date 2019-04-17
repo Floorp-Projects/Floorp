@@ -245,7 +245,7 @@ html, body, #app, #memory-tool {
 .snapshot-list-item > .snapshot-state,
 .snapshot-list-item > .snapshot-totals {
   font-size: 90%;
-  color: var(--theme-body-color-alt);
+  color: var(--theme-text-color-alt);
 }
 
 .snapshot-list-item.selected > .snapshot-state,
@@ -506,7 +506,7 @@ html, body, #app, #memory-tool {
 .heap-tree-number {
   padding: 0 3px;
   flex: 1;
-  color: var(--theme-body-color-alt);
+  color: var(--theme-text-color-alt);
   /* Make sure number doesn't appear backwards on RTL locales */
   direction: ltr;
 }
@@ -620,7 +620,7 @@ svg {
 }
 
 .theme-dark svg {
-  --arrow-color: var(--theme-body-color-alt);
+  --arrow-color: var(--theme-text-color-alt);
 }
 
 svg #arrowhead {
