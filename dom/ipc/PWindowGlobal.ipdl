@@ -36,6 +36,10 @@ parent:
   /// Notify the parent that this PWindowGlobal is now the current global.
   async BecomeCurrentWindowGlobal();
 
+  /// Notify the parent that this PWindowGlobal has embedded the given
+  /// BrowsingContext.
+  async DidEmbedBrowsingContext(BrowsingContext aContext);
+
   async Destroy();
 };
 
