@@ -81,11 +81,11 @@ double SMILKeySpline::GetTForX(double aX) const {
   double initialSlope = GetSlope(guessForT, mX1, mX2);
   if (initialSlope >= NEWTON_MIN_SLOPE) {
     return NewtonRaphsonIterate(aX, guessForT);
-  } else if (initialSlope == 0.0) {
-    return guessForT;
-  } else {
-    return BinarySubdivide(aX, intervalStart, intervalStart + kSampleStepSize);
   }
+  if (initialSlope == 0.0) {
+    return guessForT;
+  }
+  return BinarySubdivide(aX, intervalStart, intervalStart + kSampleStepSize);
 }
 
 double SMILKeySpline::NewtonRaphsonIterate(double aX, double aGuessT) const {
