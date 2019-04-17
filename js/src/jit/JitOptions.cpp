@@ -140,6 +140,9 @@ DefaultJitOptions::DefaultJitOptions() {
   // disabled.
   SET_DEFAULT(disableOptimizationLevels, false);
 
+  // Whether the Baseline Interpreter is enabled.
+  SET_DEFAULT(baselineInterpreter, false);
+
   // Whether IonBuilder should prefer IC generation above specialized MIR.
   SET_DEFAULT(forceInlineCaches, false);
 
@@ -151,6 +154,10 @@ DefaultJitOptions::DefaultJitOptions() {
 
   // Whether to enable extra code to perform dynamic validations.
   SET_DEFAULT(runExtraChecks, false);
+
+  // How many invocations or loop iterations are needed before functions
+  // enter the Baseline Interpreter.
+  SET_DEFAULT(baselineInterpreterWarmUpThreshold, 10);
 
   // How many invocations or loop iterations are needed before functions
   // are compiled with the baseline compiler.
