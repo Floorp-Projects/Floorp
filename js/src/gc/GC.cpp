@@ -1400,6 +1400,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
                                         const AutoLockGC& lock) {
   // Limit heap growth factor to one hundred times size of current heap.
   const float MaxHeapGrowthFactor = 100;
+  const size_t MaxNurseryBytes = 128 * 1024 * 1024;
 
   switch (key) {
     case JSGC_MAX_BYTES:
@@ -1407,7 +1408,7 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       break;
     case JSGC_MIN_NURSERY_BYTES:
       if ((value > gcMaxNurseryBytes_ && gcMaxNurseryBytes_ != 0) ||
-          value < ArenaSize) {
+          value < ArenaSize || value >= MaxNurseryBytes) {
         // We make an exception for gcMaxNurseryBytes_ == 0 since that special
         // value is used to disable generational GC.
         return false;
@@ -1415,7 +1416,8 @@ bool GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value,
       gcMinNurseryBytes_ = value;
       break;
     case JSGC_MAX_NURSERY_BYTES:
-      if ((value < gcMinNurseryBytes_) && (value != 0)) {
+      if (((value < gcMinNurseryBytes_) && (value != 0)) ||
+          value >= MaxNurseryBytes) {
         // Note that we make an exception for value == 0 as above.
         return false;
       }
