@@ -484,7 +484,6 @@ class nsHttpTransaction final : public nsAHttpTransaction,
   RefPtr<SpdyConnectTransaction> mH2WSTransaction;
 
   HttpTrafficCategory mTrafficCategory;
-  bool mThroughCaptivePortal;
 };
 
 }  // namespace net
