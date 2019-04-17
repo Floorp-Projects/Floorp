@@ -12,7 +12,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "serviceWorkerManager",
                                    "nsIServiceWorkerManager");
 
 if (Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_CONTENT) {
-  throw "ServiceWorkerCleanUp.jsm can only be used in the parent process";
+  throw new Error("ServiceWorkerCleanUp.jsm can only be used in the parent process");
 }
 
 this.EXPORTED_SYMBOLS = ["ServiceWorkerCleanUp"];

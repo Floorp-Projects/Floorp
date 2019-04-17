@@ -297,6 +297,10 @@ class TabChild final : public TabChildBase,
 
   virtual mozilla::ipc::IPCResult RecvLoadURL(const nsCString& aURI,
                                               const ShowInfo& aInfo) override;
+
+  virtual mozilla::ipc::IPCResult RecvResumeLoad(
+      const uint64_t& aPendingSwitchID, const ShowInfo& aInfo) override;
+
   virtual mozilla::ipc::IPCResult RecvShow(
       const ScreenIntSize& aSize, const ShowInfo& aInfo,
       const bool& aParentIsActive, const nsSizeMode& aSizeMode) override;

@@ -66,7 +66,7 @@ add_task(async function() {
   try {
     await checkUpdates("test_bug378216_5@tests.mozilla.org",
                        UPDATE_FILE);
-    throw "Expected the update check to fail";
+    throw new Error("Expected the update check to fail");
   } catch (e) {}
 });
 
@@ -75,7 +75,7 @@ add_task(async function() {
     await checkUpdates("test_bug378216_7@tests.mozilla.org",
                        UPDATE_FILE);
 
-    throw "Expected the update check to fail";
+    throw new Error("Expected the update check to fail");
   } catch (e) {}
 });
 
@@ -88,7 +88,7 @@ add_task(async function() {
     await checkUpdates("test_bug378216_8@tests.mozilla.org",
                        "test_updatecheck.json");
 
-    throw "Expected the update check to fail";
+    throw new Error("Expected the update check to fail");
   } catch (e) {}
 
   let updates = await checkUpdates("test_bug378216_8@tests.mozilla.org",
@@ -147,7 +147,7 @@ add_task(async function() {
     await checkUpdates("test_bug378216_15@tests.mozilla.org",
                        UPDATE_FILE);
 
-    throw "Update check should have failed";
+    throw new Error("Update check should have failed");
   } catch (e) {
     equal(e.status, AddonManager.ERROR_PARSE_ERROR);
   }

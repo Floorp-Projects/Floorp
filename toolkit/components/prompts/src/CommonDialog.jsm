@@ -51,7 +51,7 @@ CommonDialog.prototype = {
             if (this.args.button3Label)
                 numButtons++;
             if (numButtons == 0)
-                throw "A dialog with no buttons? Can not haz.";
+                throw new Error("A dialog with no buttons? Can not haz.");
             this.numButtons    = numButtons;
             this.hasInputField = false;
             this.iconClass     = ["question-icon"];
@@ -82,7 +82,7 @@ CommonDialog.prototype = {
             break;
           default:
             Cu.reportError("commonDialog opened for unknown type: " + this.args.promptType);
-            throw "unknown dialog type";
+            throw new Error("unknown dialog type");
         }
 
         if (xulDialog) {

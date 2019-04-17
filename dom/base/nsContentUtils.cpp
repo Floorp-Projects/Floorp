@@ -9580,7 +9580,7 @@ nsresult nsContentUtils::NewXULOrHTMLElement(
       // document in that case.
       if (!global) {
         Document* doc = nodeInfo->GetDocument();
-        if (doc && doc->HasPrototypeDocument()) {
+        if (doc && doc->LoadedFromPrototype()) {
           global = doc->GetScopeObject();
         }
       }

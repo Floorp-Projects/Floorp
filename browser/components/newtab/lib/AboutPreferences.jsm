@@ -51,6 +51,8 @@ const PREFS_AFTER_SECTIONS = [
 // This CSS is added to the whole about:preferences page
 const CUSTOM_CSS = `
 #homeContentsGroup checkbox[src] .checkbox-icon {
+  -moz-context-properties: fill;
+  fill: currentColor;
   margin-inline-end: 8px;
   margin-inline-start: 4px;
   width: 16px;

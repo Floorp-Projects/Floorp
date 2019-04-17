@@ -639,6 +639,8 @@ child:
 
     async LoadURL(nsCString uri, ShowInfo info);
 
+    async ResumeLoad(uint64_t pendingSwitchID, ShowInfo info);
+
     async UpdateDimensions(DimensionInfo dimensions) compressall;
 
     async SizeModeChanged(nsSizeMode sizeMode);

@@ -960,10 +960,24 @@ nsresult ContentChild::ProvideWindowCommon(
       tabGroup->EventTargetFor(TaskCategory::Other);
   SetEventTargetForActor(newChild, target);
 
-  Unused << SendPBrowserConstructor(
-      // We release this ref in DeallocPBrowserChild
-      RefPtr<TabChild>(newChild).forget().take(), tabId, TabId(0), *ipcContext,
-      aChromeFlags, GetID(), browsingContext, IsForBrowser());
+  if (IsShuttingDown()) {
+    return NS_ERROR_ABORT;
+  }
+
+  // Open a remote endpoint for our PBrowser actor. DeallocPBrowserChild
+  // releases the ref taken.
+  ManagedEndpoint<PBrowserParent> parentEp =
+      OpenPBrowserEndpoint(do_AddRef(newChild).take());
+  if (NS_WARN_IF(!parentEp.IsValid())) {
+    return NS_ERROR_ABORT;
+  }
+
+  // Tell the parent process to set up its PBrowserParent.
+  if (NS_WARN_IF(!SendConstructPopupBrowser(std::move(parentEp), tabId,
+                                            *ipcContext, browsingContext,
+                                            aChromeFlags))) {
+    return NS_ERROR_ABORT;
+  }
 
   // Now that |newChild| has had its IPC link established, call |Init| to set it
   // up.
@@ -1764,51 +1778,11 @@ bool ContentChild::DeallocPJavaScriptChild(PJavaScriptChild* aChild) {
   return true;
 }
 
-PBrowserChild* ContentChild::AllocPBrowserChild(
-    const TabId& aTabId, const TabId& aSameTabGroupAs,
-    const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-    const ContentParentId& aCpID, BrowsingContext* aBrowsingContext,
-    const bool& aIsForBrowser) {
-  // We'll happily accept any kind of IPCTabContext here; we don't need to
-  // check that it's of a certain type for security purposes, because we
-  // believe whatever the parent process tells us.
-
-  MaybeInvalidTabContext tc(aContext);
-  if (!tc.IsValid()) {
-    NS_ERROR(nsPrintfCString("Received an invalid TabContext from "
-                             "the parent process. (%s)  Crashing...",
-                             tc.GetInvalidReason())
-                 .get());
-    MOZ_CRASH("Invalid TabContext received from the parent process.");
-  }
-
-  RefPtr<TabChild> child = TabChild::Create(
-      static_cast<ContentChild*>(this), aTabId, aSameTabGroupAs,
-      tc.GetTabContext(), aBrowsingContext, aChromeFlags);
-
-  // The ref here is released in DeallocPBrowserChild.
-  return child.forget().take();
-}
-
-bool ContentChild::SendPBrowserConstructor(
-    PBrowserChild* aActor, const TabId& aTabId, const TabId& aSameTabGroupAs,
-    const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-    const ContentParentId& aCpID, BrowsingContext* aBrowsingContext,
-    const bool& aIsForBrowser) {
-  if (IsShuttingDown()) {
-    return false;
-  }
-
-  return PContentChild::SendPBrowserConstructor(
-      aActor, aTabId, aSameTabGroupAs, aContext, aChromeFlags, aCpID,
-      aBrowsingContext, aIsForBrowser);
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvPBrowserConstructor(
-    PBrowserChild* aActor, const TabId& aTabId, const TabId& aSameTabGroupAs,
-    const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-    const ContentParentId& aCpID, BrowsingContext* aBrowsingContext,
-    const bool& aIsForBrowser) {
+mozilla::ipc::IPCResult ContentChild::RecvConstructBrowser(
+    ManagedEndpoint<PBrowserChild>&& aBrowserEp, const TabId& aTabId,
+    const TabId& aSameTabGroupAs, const IPCTabContext& aContext,
+    BrowsingContext* aBrowsingContext, const uint32_t& aChromeFlags,
+    const ContentParentId& aCpID, const bool& aIsForBrowser) {
   MOZ_ASSERT(!IsShuttingDown());
 
   static bool hasRunOnce = false;
@@ -1825,7 +1799,29 @@ mozilla::ipc::IPCResult ContentChild::RecvPBrowserConstructor(
     }
   }
 
-  auto tabChild = static_cast<TabChild*>(aActor);
+  // We'll happily accept any kind of IPCTabContext here; we don't need to
+  // check that it's of a certain type for security purposes, because we
+  // believe whatever the parent process tells us.
+  MaybeInvalidTabContext tc(aContext);
+  if (!tc.IsValid()) {
+    NS_ERROR(nsPrintfCString("Received an invalid TabContext from "
+                             "the parent process. (%s)  Crashing...",
+                             tc.GetInvalidReason())
+                 .get());
+    MOZ_CRASH("Invalid TabContext received from the parent process.");
+  }
+
+  RefPtr<TabChild> tabChild =
+      TabChild::Create(this, aTabId, aSameTabGroupAs, tc.GetTabContext(),
+                       aBrowsingContext, aChromeFlags);
+
+  // Bind the created TabChild to IPC to actually link the actor. The ref here
+  // is released in DeallocPBrowserChild.
+  if (NS_WARN_IF(!BindPBrowserEndpoint(std::move(aBrowserEp),
+                                       do_AddRef(tabChild).take()))) {
+    return IPC_FAIL(this, "BindPBrowserEndpoint failed");
+  }
+
   if (!tabChild->mTabGroup) {
     tabChild->mTabGroup = TabGroup::GetFromActor(tabChild);
 
@@ -3395,49 +3391,6 @@ bool ContentChild::DeallocPSessionStorageObserverChild(
   return true;
 }
 
-// The IPC code will call this method asking us to assign an event target to new
-// actors created by the ContentParent.
-already_AddRefed<nsIEventTarget> ContentChild::GetConstructedEventTarget(
-    const Message& aMsg) {
-  // Currently we only set targets for PBrowser.
-  if (aMsg.type() != PContent::Msg_PBrowserConstructor__ID) {
-    return nullptr;
-  }
-
-  ActorHandle handle;
-  TabId tabId, sameTabGroupAs;
-  PickleIterator iter(aMsg);
-  if (!IPC::ReadParam(&aMsg, &iter, &handle)) {
-    return nullptr;
-  }
-  aMsg.IgnoreSentinel(&iter);
-  if (!IPC::ReadParam(&aMsg, &iter, &tabId)) {
-    return nullptr;
-  }
-  aMsg.IgnoreSentinel(&iter);
-  if (!IPC::ReadParam(&aMsg, &iter, &sameTabGroupAs)) {
-    return nullptr;
-  }
-
-  // If sameTabGroupAs is non-zero, then the new tab will be in the same
-  // TabGroup as a previously created tab. Rather than try to find the
-  // previously created tab (whose constructor message may not even have been
-  // processed yet, in theory) and look up its event target, we just use the
-  // default event target. This means that runnables for this tab will not be
-  // labeled. However, this path is only taken for print preview and view
-  // source, which are not performance-sensitive.
-  if (sameTabGroupAs) {
-    return nullptr;
-  }
-
-  // If the request for a new TabChild is coming from the parent process, then
-  // there is no opener. Therefore, we create a fresh TabGroup.
-  RefPtr<TabGroup> tabGroup = new TabGroup();
-  nsCOMPtr<nsIEventTarget> target =
-      tabGroup->EventTargetFor(TaskCategory::Other);
-  return target.forget();
-}
-
 void ContentChild::FileCreationRequest(nsID& aUUID, FileCreatorHelper* aHelper,
                                        const nsAString& aFullPath,
                                        const nsAString& aType,
@@ -3720,6 +3673,55 @@ already_AddRefed<nsIEventTarget> ContentChild::GetSpecificMessageEventTarget(
     case PContent::Msg_StoreAndBroadcastBlobURLRegistration__ID:
 
       return do_AddRef(SystemGroup::EventTargetFor(TaskCategory::Other));
+
+    // PBrowserChild Construction
+    case PContent::Msg_ConstructBrowser__ID: {
+      // Deserialize the arguments for this message to get the endpoint and
+      // `sameTabGroupAs`. The endpoint is needed to set up the event target for
+      // our newly created actor, and sameTabGroupAs is needed to determine if
+      // we're going to join an existing TabGroup.
+      ManagedEndpoint<PBrowserChild> endpoint;
+      TabId tabId, sameTabGroupAs;
+      PickleIterator iter(aMsg);
+      if (NS_WARN_IF(!IPC::ReadParam(&aMsg, &iter, &endpoint))) {
+        return nullptr;
+      }
+      aMsg.IgnoreSentinel(&iter);
+      if (NS_WARN_IF(!IPC::ReadParam(&aMsg, &iter, &tabId))) {
+        return nullptr;
+      }
+      aMsg.IgnoreSentinel(&iter);
+      if (NS_WARN_IF(!IPC::ReadParam(&aMsg, &iter, &sameTabGroupAs))) {
+        return nullptr;
+      }
+
+      // If sameTabGroupAs is non-zero, then the new tab will be in the same
+      // TabGroup as a previously created tab. Rather than try to find the
+      // previously created tab (whose constructor message may not even have been
+      // processed yet, in theory) and look up its event target, we just use the
+      // default event target. This means that runnables for this tab will not be
+      // labeled. However, this path is only taken for print preview and view
+      // source, which are not performance-sensitive.
+      if (sameTabGroupAs) {
+        return nullptr;
+      }
+
+      if (NS_WARN_IF(!endpoint.IsValid())) {
+        return nullptr;
+      }
+
+      // If the request for a new TabChild is coming from the parent process,
+      // then there is no opener. Therefore, we create a fresh TabGroup.
+      RefPtr<TabGroup> tabGroup = new TabGroup();
+      nsCOMPtr<nsIEventTarget> target =
+          tabGroup->EventTargetFor(TaskCategory::Other);
+
+      // Set this event target for our newly created entry, and use it for this
+      // message.
+      SetEventTargetForRoute(*endpoint.ActorId(), target);
+
+      return target.forget();
+    }
 
     default:
       return nullptr;

@@ -99,6 +99,18 @@ def _windbg_installation_paths():
                                'Debuggers', 'x64', 'windbg.exe')
 
 
+def _vswhere_path():
+    try:
+        import buildconfig
+        path = os.path.join(buildconfig.topsrcdir, 'build', 'win32', 'vswhere.exe')
+        if os.path.isfile(path):
+            return path
+    except ImportError:
+        pass
+    # Hope it's available on PATH!
+    return 'vswhere.exe'
+
+
 def get_debugger_path(debugger):
     '''
     Get the full path of the debugger.
@@ -125,9 +137,10 @@ def get_debugger_path(debugger):
         # Attempt to use vswhere to find the path.
         try:
             encoding = 'mbcs' if sys.platform == 'win32' else 'utf-8'
-            vsinfo = check_output(['vswhere.exe', '-format', 'json'])
+            vswhere = _vswhere_path()
+            vsinfo = check_output([vswhere, '-format', 'json', '-latest'])
             vsinfo = json.loads(vsinfo.decode(encoding, 'replace'))
-            return vsinfo[0]["productPath"]
+            return os.path.join(vsinfo[0]['installationPath'], 'Common7', 'IDE', 'devenv.exe')
         except Exception:
             # Just default to find_executable instead.
             pass

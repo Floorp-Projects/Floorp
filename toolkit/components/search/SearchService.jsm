@@ -2774,7 +2774,7 @@ SearchService.prototype = {
 
     try {
       if (!cache.engines.length)
-        throw "cannot write without any engine.";
+        throw new Error("cannot write without any engine.");
 
       LOG("_buildCache: Writing to cache file.");
       let path = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
@@ -3062,7 +3062,7 @@ SearchService.prototype = {
       let bytes = await OS.File.read(cacheFilePath, {compression: "lz4"});
       json = JSON.parse(new TextDecoder().decode(bytes));
       if (!json.engines || !json.engines.length)
-        throw "no engine in the file";
+        throw new Error("no engine in the file");
       // Reset search default expiration on major releases
       if (json.appVersion != Services.appinfo.version &&
           geoSpecificDefaultsEnabled() &&

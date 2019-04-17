@@ -516,7 +516,7 @@ function getWindowsVersionInfo() {
     winVer.dwOSVersionInfoSize = OSVERSIONINFOEXW.size;
 
     if (0 === GetVersionEx(winVer.address())) {
-      throw ("Failure in GetVersionEx (returned 0)");
+      throw new Error("Failure in GetVersionEx (returned 0)");
     }
 
     return {

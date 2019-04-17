@@ -46,6 +46,7 @@ class BrowsingContent;
 class BrowsingContextGroup;
 class CanonicalBrowsingContext;
 class ContentParent;
+class Element;
 template <typename>
 struct Nullable;
 template <typename T>
@@ -122,6 +123,11 @@ class BrowsingContext : public nsWrapperCache,
   nsIDocShell* GetDocShell() { return mDocShell; }
   void SetDocShell(nsIDocShell* aDocShell);
   void ClearDocShell() { mDocShell = nullptr; }
+
+  // Get the embedder element for this BrowsingContext if the embedder is
+  // in-process, or null if it's not.
+  Element* GetEmbedderElement() const { return mEmbedderElement; }
+  void SetEmbedderElement(Element* aEmbedder);
 
   // Get the outer window object for this BrowsingContext if it is in-process
   // and still has a docshell, or null otherwise.
@@ -241,7 +247,7 @@ class BrowsingContext : public nsWrapperCache,
   Nullable<WindowProxyHolder> GetTop(ErrorResult& aError);
   void GetOpener(JSContext* aCx, JS::MutableHandle<JS::Value> aOpener,
                  ErrorResult& aError) const;
-  Nullable<WindowProxyHolder> GetParent(ErrorResult& aError) const;
+  Nullable<WindowProxyHolder> GetParent(ErrorResult& aError);
   void PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                       const nsAString& aTargetOrigin,
                       const Sequence<JSObject*>& aTransfer,
@@ -438,6 +444,8 @@ class BrowsingContext : public nsWrapperCache,
   RefPtr<BrowsingContext> mParent;
   Children mChildren;
   nsCOMPtr<nsIDocShell> mDocShell;
+
+  RefPtr<Element> mEmbedderElement;
 
   // This is not a strong reference, but using a JS::Heap for that should be
   // fine. The JSObject stored in here should be a proxy with a

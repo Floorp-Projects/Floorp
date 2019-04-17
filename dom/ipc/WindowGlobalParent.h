@@ -9,6 +9,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/PWindowGlobalParent.h"
+#include "mozilla/dom/TabParent.h"
 #include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
 #include "nsISupports.h"
@@ -23,7 +24,6 @@ namespace dom {
 class CanonicalBrowsingContext;
 class WindowGlobalChild;
 class JSWindowActorParent;
-class TabParent;
 
 /**
  * A handle in the parent process to a specific nsGlobalWindowInner object.
@@ -91,6 +91,11 @@ class WindowGlobalParent final : public nsISupports,
 
   bool IsCurrentGlobal();
 
+  already_AddRefed<Promise> ChangeFrameRemoteness(dom::BrowsingContext* aBc,
+                                                  const nsAString& aRemoteType,
+                                                  uint64_t aPendingSwitchId,
+                                                  ErrorResult& aRv);
+
   // Create a WindowGlobalParent from over IPC. This method should not be called
   // from outside of the IPC constructors.
   WindowGlobalParent(const WindowGlobalInit& aInit, bool aInProcess);
@@ -111,6 +116,8 @@ class WindowGlobalParent final : public nsISupports,
   mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aActorName,
                                            const nsString& aMessageName,
                                            const ClonedMessageData& aData);
+  mozilla::ipc::IPCResult RecvDidEmbedBrowsingContext(
+      dom::BrowsingContext* aContext);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

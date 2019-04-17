@@ -676,7 +676,7 @@ XMLPropertyListReader.prototype = {
       case "real": {
         let number = parseFloat(aDOMElt.textContent.trim());
         if (isNaN(number))
-          throw "Could not parse float value";
+          throw new Error("Could not parse float value");
         return number;
       }
       case "date":

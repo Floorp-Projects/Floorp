@@ -633,8 +633,12 @@ nsresult Key::EncodeBinary(JSObject* aObject, bool aIsViewObject,
   bool unused;
 
   if (aIsViewObject) {
-    js::GetArrayBufferViewLengthAndData(aObject, &bufferLength, &unused,
-                                        &bufferData);
+    // We must use JS_GetObjectAsArrayBufferView() instead of
+    // js::GetArrayBufferLengthAndData(). Because we check ArrayBufferView
+    // via JS_IsArrayBufferViewObject(), the object might be wrapped,
+    // the former will handle the wrapped case, the later won't.
+    JS_GetObjectAsArrayBufferView(aObject, &bufferLength, &unused, &bufferData);
+
   } else {
     JS::GetArrayBufferLengthAndData(aObject, &bufferLength, &unused,
                                     &bufferData);

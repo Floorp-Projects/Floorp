@@ -563,6 +563,8 @@ nsresult TabChild::Init(mozIDOMWindowProxy* aParent) {
   loadContext->SetPrivateBrowsing(OriginAttributesRef().mPrivateBrowsingId > 0);
   loadContext->SetRemoteTabs(mChromeFlags &
                              nsIWebBrowserChrome::CHROME_REMOTE_WINDOW);
+  loadContext->SetRemoteSubframes(mChromeFlags &
+                                  nsIWebBrowserChrome::CHROME_FISSION_WINDOW);
 
   // Few lines before, baseWindow->Create() will end up creating a new
   // window root in nsGlobalWindow::SetDocShell.
@@ -1050,15 +1052,39 @@ mozilla::ipc::IPCResult TabChild::RecvLoadURL(const nsCString& aURI,
       nsIWebNavigation::LOAD_FLAGS_ALLOW_THIRD_PARTY_FIXUP |
       nsIWebNavigation::LOAD_FLAGS_DISALLOW_INHERIT_PRINCIPAL;
 
-  nsresult rv =
-      WebNavigation()->LoadURI(NS_ConvertUTF8toUTF16(aURI), loadURIOptions);
+  nsIWebNavigation* webNav = WebNavigation();
+  nsresult rv = webNav->LoadURI(NS_ConvertUTF8toUTF16(aURI), loadURIOptions);
   if (NS_FAILED(rv)) {
     NS_WARNING(
         "WebNavigation()->LoadURI failed. Eating exception, what else can I "
         "do?");
   }
 
+  nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
+  if (docShell) {
+    nsDocShell::Cast(docShell)->MaybeClearStorageAccessFlag();
+  }
+
   CrashReporter::AnnotateCrashReport(CrashReporter::Annotation::URL, aURI);
+
+  return IPC_OK();
+}
+
+mozilla::ipc::IPCResult TabChild::RecvResumeLoad(
+    const uint64_t& aPendingSwitchID, const ShowInfo& aInfo) {
+  if (!mDidLoadURLInit) {
+    mDidLoadURLInit = true;
+    if (!InitTabChildMessageManager()) {
+      return IPC_FAIL_NO_REASON(this);
+    }
+
+    ApplyShowInfo(aInfo);
+  }
+
+  nsresult rv = WebNavigation()->ResumeRedirectedLoad(aPendingSwitchID, -1);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("WebNavigation()->ResumeRedirectedLoad failed");
+  }
 
   return IPC_OK();
 }

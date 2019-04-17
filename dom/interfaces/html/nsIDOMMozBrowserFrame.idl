@@ -7,7 +7,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(4CAFE116-581B-4194-B0DE-7F02378FC51D)]
+[scriptable, builtinclass, uuid(4CAFE116-581B-4194-B0DE-7F02378FC51D)]
 interface nsIDOMMozBrowserFrame : nsISupports
 {
   /**
@@ -23,5 +23,5 @@ interface nsIDOMMozBrowserFrame : nsISupports
    * see dom/browser-element/BrowserElement{Child,Parent}.js.
    *
    */
-  attribute boolean mozbrowser;
+  [infallible] attribute boolean mozbrowser;
 };

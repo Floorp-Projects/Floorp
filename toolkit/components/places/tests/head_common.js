@@ -148,7 +148,7 @@ function readFileData(aFile) {
   let size  = inputStream.available();
   let bytes = readInputStreamData(inputStream);
   if (size != bytes.length) {
-    throw "Didn't read expected number of bytes";
+    throw new Error("Didn't read expected number of bytes");
   }
   return bytes;
 }

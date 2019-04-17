@@ -820,11 +820,10 @@ class ContentParent final : public PContentParent,
 
   bool DeallocPBrowserParent(PBrowserParent* frame);
 
-  virtual mozilla::ipc::IPCResult RecvPBrowserConstructor(
-      PBrowserParent* actor, const TabId& tabId, const TabId& sameTabGroupAs,
-      const IPCTabContext& context, const uint32_t& chromeFlags,
-      const ContentParentId& cpId, BrowsingContext* aBrowsingContext,
-      const bool& isForBrowser) override;
+  mozilla::ipc::IPCResult RecvConstructPopupBrowser(
+      ManagedEndpoint<PBrowserParent>&& actor, const TabId& tabId,
+      const IPCTabContext& context, BrowsingContext* aBrowsingContext,
+      const uint32_t& chromeFlags);
 
   PIPCBlobInputStreamParent* AllocPIPCBlobInputStreamParent(
       const nsID& aID, const uint64_t& aSize);

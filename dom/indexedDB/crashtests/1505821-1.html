@@ -1,0 +1,16 @@
+<script>
+  const dbRequest = window.indexedDB.open('bug1505821_1_hello');
+  dbRequest.onupgradeneeded = function (event) {
+    const store = event.target.result.createObjectStore('IDBStore_1', {autoIncrement: true});
+    store.createIndex('I', [''], {unique: true});
+    store.createIndex('J', ['a', ''], {unique: true});
+    store.createIndex('M', ['', 'a'], {unique: true});
+    store.createIndex('K', ['', 'a', ''], {unique: true});
+    store.createIndex('L', ['', '', ''], {unique: true});
+  }
+
+  const dbRequest2 = window.indexedDB.open('bug1505821_1_hello');
+  dbRequest.onsuccess = function (event) {
+    window.indexedDB.deleteDatabase("bug1507229_1_hello");
+  }
+</script>

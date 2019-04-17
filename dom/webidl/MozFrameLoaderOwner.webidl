@@ -8,6 +8,11 @@ dictionary RemotenessOptions {
   DOMString? remoteType;
   FrameLoader? sameProcessAsFrameLoader;
   WindowProxy? opener;
+
+  // Used to resume a given channel load within the target process. If present,
+  // it will be used rather than the `src` & `srcdoc` attributes on the
+  // frameloader to control the load behaviour.
+  unsigned long long pendingSwitchID;
 };
 
 [NoInterfaceObject]

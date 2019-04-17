@@ -8,13 +8,13 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#ifndef MODULES_DESKTOP_CAPTURE_X11_WINDOW_LIST_UTILS_H_
-#define MODULES_DESKTOP_CAPTURE_X11_WINDOW_LIST_UTILS_H_
+#ifndef MODULES_DESKTOP_CAPTURE_LINUX_WINDOW_LIST_UTILS_H_
+#define MODULES_DESKTOP_CAPTURE_LINUX_WINDOW_LIST_UTILS_H_
 
 #include <X11/Xlib.h>
 
 #include "modules/desktop_capture/desktop_geometry.h"
-#include "modules/desktop_capture/x11/x_atom_cache.h"
+#include "modules/desktop_capture/linux/x_atom_cache.h"
 #include "rtc_base/function_view.h"
 
 namespace webrtc {
@@ -53,4 +53,4 @@ DesktopRect DesktopRectFromXAttributes(const T& attributes) {
 
 }  // namespace webrtc
 
-#endif  // MODULES_DESKTOP_CAPTURE_X11_WINDOW_LIST_UTILS_H_
+#endif  // MODULES_DESKTOP_CAPTURE_LINUX_WINDOW_LIST_UTILS_H_

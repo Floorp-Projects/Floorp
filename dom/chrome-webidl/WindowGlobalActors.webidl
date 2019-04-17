@@ -6,6 +6,7 @@
 interface Principal;
 interface URI;
 interface nsIDocShell;
+interface TabParent;
 
 [Exposed=Window, ChromeOnly]
 interface WindowGlobalParent {
@@ -22,6 +23,8 @@ interface WindowGlobalParent {
 
   readonly attribute WindowGlobalChild? childActor; // in-process only
 
+  readonly attribute TabParent? tabParent; // out-of-process only
+
   // Information about the currently loaded document.
   readonly attribute Principal documentPrincipal;
   readonly attribute URI? documentURI;
@@ -30,6 +33,11 @@ interface WindowGlobalParent {
 
   [Throws]
   JSWindowActorParent getActor(DOMString name);
+
+  [Throws]
+  Promise<TabParent> changeFrameRemoteness(
+    BrowsingContext? bc, DOMString remoteType,
+    unsigned long long pendingSwitchId);
 };
 
 [Exposed=Window, ChromeOnly]

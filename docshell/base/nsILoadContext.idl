@@ -81,6 +81,11 @@ interface nsILoadContext : nsISupports
    */
   readonly attribute boolean useRemoteTabs;
 
+  /**
+   * Determines if out-of-process iframes should be used.
+   */
+  readonly attribute boolean useRemoteSubframes;
+
   /*
    * Attribute that determines if tracking protection should be used. May not be
    * changed after a document has been loaded in this context.
@@ -105,6 +110,13 @@ interface nsILoadContext : nsISupports
     return usingRT;
   }
 
+  bool UseRemoteSubframes()
+  {
+    bool usingRSF = false;
+    GetUseRemoteSubframes(&usingRSF);
+    return usingRSF;
+  }
+
   bool UseTrackingProtection()
   {
     bool usingTP = false;
@@ -122,6 +134,11 @@ interface nsILoadContext : nsISupports
    * Set the remote tabs state of the load context, meant to be used internally.
    */
   [noscript] void SetRemoteTabs(in boolean aUseRemoteTabs);
+
+  /**
+   * Set the remote subframes bit of this load context. Exclusively meant to be used internally.
+   */
+  [noscript] void SetRemoteSubframes(in boolean aUseRemoteSubframes);
 
   /**
    * Returns true iff the load is occurring inside an isolated mozbrowser

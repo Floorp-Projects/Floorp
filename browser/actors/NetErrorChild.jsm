@@ -692,10 +692,14 @@ class NetErrorChild extends ActorChild {
     }
     let nss_error_id_str = securityInfo.errorCodeString;
     let msg2 = "";
-    if (id_str) {
-      msg2 = gPipNSSBundle.GetStringFromName(id_str) + "\n";
-    } else if (nss_error_id_str) {
-      msg2 = gNSSErrorsBundle.GetStringFromName(nss_error_id_str) + "\n";
+    try {
+      if (id_str) {
+        msg2 = gPipNSSBundle.GetStringFromName(id_str) + "\n";
+      } else if (nss_error_id_str) {
+        msg2 = gNSSErrorsBundle.GetStringFromName(nss_error_id_str) + "\n";
+      }
+    } catch (e) {
+      msg2 = "";
     }
 
     if (!msg2) {
@@ -706,7 +710,7 @@ class NetErrorChild extends ActorChild {
     let msg = gPipNSSBundle.formatStringFromName("SSLConnectionErrorPrefix2",
                                                  [hostString, msg2], 2);
 
-    if (nss_error_id_str) {
+    if (nss_error_id_str && msg2 != nss_error_id_str) {
       msg += gPipNSSBundle.formatStringFromName("certErrorCodePrefix3",
                                                 [nss_error_id_str], 1) + "\n";
     }

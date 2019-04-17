@@ -254,7 +254,7 @@ var SimpleServiceDiscovery = {
     // We must have "id", "target" and "factory" defined
     if (!("id" in aDevice) || !("target" in aDevice) || !("factory" in aDevice)) {
       // Fatal for registration
-      throw "Registration requires an id, a target and a location";
+      throw new Error("Registration requires an id, a target and a location");
     }
 
     // Only add if we don't already know about this device

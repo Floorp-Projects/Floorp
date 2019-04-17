@@ -8,14 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/desktop_capture/x11/x_server_pixel_buffer.h"
+#include "modules/desktop_capture/linux/x_server_pixel_buffer.h"
 
 #include <string.h>
 #include <sys/shm.h>
 
 #include "modules/desktop_capture/desktop_frame.h"
-#include "modules/desktop_capture/x11/window_list_utils.h"
-#include "modules/desktop_capture/x11/x_error_trap.h"
+#include "modules/desktop_capture/linux/window_list_utils.h"
+#include "modules/desktop_capture/linux/x_error_trap.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/logging.h"
 

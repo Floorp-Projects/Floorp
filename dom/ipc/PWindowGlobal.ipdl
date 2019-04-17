@@ -6,6 +6,7 @@
 
 include protocol PBrowser;
 include protocol PInProcess;
+include protocol PBrowserBridge;
 
 include DOMTypes;
 
@@ -26,6 +27,11 @@ async protocol PWindowGlobal
 child:
   async __delete__();
 
+  async ChangeFrameRemoteness(BrowsingContext aFrameContext,
+                              nsString aRemoteType,
+                              uint64_t aSwitchId)
+      returns (nsresult rv, nullable PBrowserBridge bridge);
+
 both:
   async AsyncMessage(nsString aActorName, nsString aMessage, ClonedMessageData aData);
 
@@ -35,6 +41,10 @@ parent:
 
   /// Notify the parent that this PWindowGlobal is now the current global.
   async BecomeCurrentWindowGlobal();
+
+  /// Notify the parent that this PWindowGlobal has embedded the given
+  /// BrowsingContext.
+  async DidEmbedBrowsingContext(BrowsingContext aContext);
 
   async Destroy();
 };

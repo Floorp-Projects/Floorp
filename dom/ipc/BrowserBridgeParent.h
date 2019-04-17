@@ -36,6 +36,9 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
     return static_cast<TabParent*>(PBrowserBridgeParent::Manager());
   }
 
+  // Tear down this BrowserBridgeParent.
+  void Destroy();
+
  protected:
   friend class PBrowserBridgeParent;
 
@@ -43,6 +46,7 @@ class BrowserBridgeParent : public PBrowserBridgeParent {
                                    const bool& aParentIsActive,
                                    const nsSizeMode& aSizeMode);
   mozilla::ipc::IPCResult RecvLoadURL(const nsCString& aUrl);
+  mozilla::ipc::IPCResult RecvResumeLoad(uint64_t aPendingSwitchID);
   mozilla::ipc::IPCResult RecvUpdateDimensions(
       const DimensionInfo& aDimensions);
   mozilla::ipc::IPCResult RecvRenderLayers(const bool& aEnabled,

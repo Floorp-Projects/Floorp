@@ -353,6 +353,8 @@ class TabParent final : public PBrowserParent,
 
   void LoadURL(nsIURI* aURI);
 
+  void ResumeLoad(uint64_t aPendingSwitchID);
+
   void InitRendering();
   void MaybeShowFrame();
 

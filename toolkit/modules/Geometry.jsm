@@ -149,7 +149,7 @@ Rect.prototype = {
 
   center: function center() {
     if (this.isEmpty())
-      throw "Empty rectangles do not have centers";
+      throw new Error("Empty rectangles do not have centers");
     return new Point(this.left + (this.right - this.left) / 2,
                           this.top + (this.bottom - this.top) / 2);
   },

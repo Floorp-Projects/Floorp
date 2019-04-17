@@ -209,7 +209,7 @@ function dismissPrompt(ui, action) {
       break;
 
     default:
-      throw "dismissPrompt action listed unknown button.";
+      throw new Error("dismissPrompt action listed unknown button.");
   }
 }
 

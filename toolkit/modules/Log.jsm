@@ -403,7 +403,7 @@ class LoggerRepository {
     return this._rootLogger;
   }
   set rootLogger(logger) {
-    throw "Cannot change the root logger";
+    throw new Error("Cannot change the root logger");
   }
 
   _updateParents(name) {

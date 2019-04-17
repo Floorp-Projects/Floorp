@@ -598,6 +598,13 @@ nsAppStartup::CreateChromeWindow2(nsIWebBrowserChrome *aParent,
       (aChromeFlags & nsIWebBrowserChrome::CHROME_MODAL) == 0)
     return NS_ERROR_ILLEGAL_DURING_SHUTDOWN;
 
+  // Fission windows must also be marked as remote
+  if ((aChromeFlags & nsIWebBrowserChrome::CHROME_FISSION_WINDOW) &&
+      !(aChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW)) {
+    NS_WARNING("Cannot create non-remote fission window!");
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIXULWindow> newWindow;
 
   if (aParent) {

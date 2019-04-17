@@ -9,6 +9,7 @@
 #include "ServoCSSParser.h"
 #include "MainThreadUtils.h"
 #include "mozilla/StaticPrefs.h"
+#include "mozilla/Telemetry.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
@@ -95,6 +96,22 @@ void PreferenceSheet::Initialize() {
 
   sContentPrefs.Load(false);
   sChromePrefs.Load(true);
+
+  nsAutoString useDocumentColorPref;
+  switch (StaticPrefs::browser_display_document_color_use()) {
+    case 1:
+      useDocumentColorPref.AssignLiteral("always");
+      break;
+    case 2:
+      useDocumentColorPref.AssignLiteral("never");
+      break;
+    default:
+      useDocumentColorPref.AssignLiteral("default");
+      break;
+  }
+
+  Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_THEME, useDocumentColorPref,
+                       UseAccessibilityTheme(false));
 }
 
 }  // namespace mozilla

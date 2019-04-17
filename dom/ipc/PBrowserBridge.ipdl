@@ -44,6 +44,7 @@ parent:
 
   // DocShell messaging.
   async LoadURL(nsCString aSpec);
+  async ResumeLoad(uint64_t aPendingSwitchID);
 
   // Out of process rendering.
   async Show(ScreenIntSize size, bool parentIsActive, nsSizeMode sizeMode);

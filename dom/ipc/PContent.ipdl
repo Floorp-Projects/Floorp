@@ -369,7 +369,6 @@ nested(upto inside_cpow) sync protocol PContent
     manages PLoginReputation;
     manages PSessionStorageObserver;
 
-both:
     // Depending on exactly how the new browser is being created, it might be
     // created from either the child or parent process!
     //
@@ -391,12 +390,25 @@ both:
     // TabGroup as |sameTabGroupAs|. This parameter should always be zero
     // for PBrowser messages sent from the child to the parent.
     //
+    // Separate messages are used for the parent and child side constructors due
+    // to the differences in data and actor setup required.
+    //
     // Keep the last 3 attributes in sync with GetProcessAttributes!
-    async PBrowser(TabId tabId, TabId sameTabGroupAs,
-                   IPCTabContext context, uint32_t chromeFlags,
-                   ContentParentId cpId, BrowsingContext browsingContext,
-                   bool isForBrowser);
+parent:
+    async ConstructPopupBrowser(ManagedEndpoint<PBrowserParent> browserEp,
+                                TabId tabId, IPCTabContext context,
+                                BrowsingContext browsingContext,
+                                uint32_t chromeFlags);
 
+child:
+    async ConstructBrowser(ManagedEndpoint<PBrowserChild> browserEp,
+                           TabId tabId, TabId sameTabGroupAs,
+                           IPCTabContext context,
+                           BrowsingContext browsingContext,
+                           uint32_t chromeFlags, ContentParentId cpId,
+                           bool isForBrowser);
+
+both:
     async PFileDescriptorSet(FileDescriptor fd);
 
     // For parent->child, aBrowser must be non-null; aOuterWindowID can

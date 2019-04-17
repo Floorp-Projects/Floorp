@@ -211,11 +211,11 @@ var PromptUtilsTemp = {
         // channel's actual destination.
         if (aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY) {
             if (!(aChannel instanceof Ci.nsIProxiedChannel))
-                throw "proxy auth needs nsIProxiedChannel";
+                throw new Error("proxy auth needs nsIProxiedChannel");
 
             let info = aChannel.proxyInfo;
             if (!info)
-                throw "proxy auth needs nsIProxyInfo";
+                throw new Error("proxy auth needs nsIProxyInfo");
 
             // Proxies don't have a scheme, but we'll use "moz-proxy://"
             // so that it's more obvious what the login is for.
@@ -314,7 +314,7 @@ PromptUtils = PromptUtilsTemp;
 XPCOMUtils.defineLazyGetter(PromptUtils, "strBundle", function() {
     let bundle = Services.strings.createBundle("chrome://global/locale/commonDialogs.properties");
     if (!bundle)
-        throw "String bundle for Prompter not present!";
+        throw new Error("String bundle for Prompter not present!");
     return bundle;
 });
 

@@ -24,7 +24,7 @@ window.MozElements = MozElements;
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {AppConstants} = ChromeUtils.import("resource://gre/modules/AppConstants.jsm");
 const env = Cc["@mozilla.org/process/environment;1"].getService(Ci.nsIEnvironment);
-const instrumentClasses = !!env.get("MOZ_INSTRUMENT_CUSTOM_ELEMENTS");
+const instrumentClasses = env.get("MOZ_INSTRUMENT_CUSTOM_ELEMENTS");
 const instrumentedClasses = instrumentClasses ? new Set() : null;
 const instrumentedBaseClasses = instrumentClasses ? new WeakSet() : null;
 
@@ -46,8 +46,11 @@ MozElements.printInstrumentation = function(collapsed) {
   let totalCalls = 0;
   let totalTime = 0;
   for (let c of instrumentedClasses) {
+    // Allow passing in something like MOZ_INSTRUMENT_CUSTOM_ELEMENTS=MozXULElement,Button to filter
+    let includeClass = instrumentClasses == 1 ||
+        instrumentClasses.split(",").some(n => c.name.toLowerCase().includes(n.toLowerCase()));
     let summary = c.__instrumentation_summary;
-    if (summary) {
+    if (includeClass && summary) {
       summaries.push(summary);
       totalCalls += summary.totalCalls;
       totalTime += summary.totalTime;
@@ -94,6 +97,7 @@ function instrumentIndividualClass(c) {
   if (instrumentedClasses.has((c))) {
     return;
   }
+
   instrumentedClasses.add((c));
   let data = { instances: 0 };
 
