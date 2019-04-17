@@ -1893,6 +1893,10 @@ void nsFrameLoader::SetOwnerContent(Element* aContent) {
   }
   mOwnerContent = aContent;
 
+  if (RefPtr<BrowsingContext> browsingContext = GetBrowsingContext()) {
+    browsingContext->SetEmbedderElement(mOwnerContent);
+  }
+
   AutoJSAPI jsapi;
   jsapi.Init();
 
@@ -2008,6 +2012,8 @@ nsresult nsFrameLoader::MaybeCreateDocShell() {
   // context inside of nsDocShell::Create
   RefPtr<nsDocShell> docShell = nsDocShell::Create(mBrowsingContext);
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+
+  mBrowsingContext->SetEmbedderElement(mOwnerContent);
 
   mIsTopLevelContent =
       mBrowsingContext->IsContent() && !mBrowsingContext->GetParent();
@@ -2604,6 +2610,8 @@ bool nsFrameLoader::TryRemoteBrowser() {
 
   // If we're in a content process, create a BrowserBridgeChild actor.
   if (XRE_IsContentProcess()) {
+    mBrowsingContext->SetEmbedderElement(mOwnerContent);
+
     mBrowserBridgeChild = BrowserBridgeChild::Create(
         this, context, NS_LITERAL_STRING(DEFAULT_REMOTE_TYPE),
         mBrowsingContext);
