@@ -832,6 +832,7 @@ def get_mobile_project(test):
         return
 
     mobile_projects = (
+        'fenix',
         'fennec',
         'geckoview',
         'refbrow',
