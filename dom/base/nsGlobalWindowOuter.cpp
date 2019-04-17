@@ -2944,13 +2944,8 @@ bool nsPIDOMWindowOuter::GetServiceWorkersTestingEnabled() {
 }
 
 Nullable<WindowProxyHolder> nsGlobalWindowOuter::GetParentOuter() {
-  nsPIDOMWindowOuter* parent = GetScriptableParent();
-  BrowsingContext* parentBC;
-  if (!parent || !(parentBC = parent->GetBrowsingContext())) {
-    return nullptr;
-  }
-
-  return WindowProxyHolder(parentBC);
+  BrowsingContext* bc = GetBrowsingContext();
+  return bc ? bc->GetParent(IgnoreErrors()) : nullptr;
 }
 
 /**
@@ -3954,12 +3949,8 @@ uint32_t nsGlobalWindowOuter::Length() {
 }
 
 Nullable<WindowProxyHolder> nsGlobalWindowOuter::GetTopOuter() {
-  nsCOMPtr<nsPIDOMWindowOuter> top = GetScriptableTop();
-  BrowsingContext* topBC;
-  if (!top || !(topBC = top->GetBrowsingContext())) {
-    return nullptr;
-  }
-  return WindowProxyHolder(topBC);
+  BrowsingContext* bc = GetBrowsingContext();
+  return bc ? bc->GetTop(IgnoreErrors()) : nullptr;
 }
 
 already_AddRefed<BrowsingContext> nsGlobalWindowOuter::GetChildWindow(
