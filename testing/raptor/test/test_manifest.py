@@ -118,10 +118,7 @@ INVALID_MANIFESTS = [{'apps': 'firefox',
 @pytest.mark.parametrize('app', ['firefox', 'chrome', 'chromium', 'geckoview', 'refbrow', 'fenix'])
 def test_get_browser_test_list(app):
     test_list = get_browser_test_list(app, run_local=True)
-    if app != "fenix":
-        assert len(test_list) > 0
-    else:
-        assert len(test_list) == 0
+    assert len(test_list) > 0
 
 
 @pytest.mark.parametrize('test_details', VALID_MANIFESTS)
