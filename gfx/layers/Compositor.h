@@ -523,13 +523,19 @@ class Compositor : public TextureSourceProvider {
   CompositorBridgeParent* GetCompositorBridgeParent() const { return mParent; }
 
   /**
+   * Request the compositor to record its frames.
+   *
+   * For all compositors except |BasicCompositor|, this is a noop.
+   */
+  virtual void RequestRecordFrames(bool aWillRecord) {}
+
+  /**
    * Record the current frame for readback by the |CompositionRecorder|.
    *
    * If this compositor does not support this feature, a null pointer is
    * returned instead.
    */
-  already_AddRefed<RecordedFrame> RecordFrame(
-      const TimeStamp& aTimeStamp);
+  already_AddRefed<RecordedFrame> RecordFrame(const TimeStamp& aTimeStamp);
 
  protected:
   void DrawDiagnosticsInternal(DiagnosticFlags aFlags,
