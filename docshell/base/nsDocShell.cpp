@@ -2669,14 +2669,30 @@ nsresult nsDocShell::SetDocLoaderParent(nsDocLoader* aParent) {
   RecomputeCanExecuteScripts();
 
   // Inform windows when they're being removed from their parent.
-  if (!aParent && mScriptGlobal) {
-    mScriptGlobal->ParentWindowChanged();
+  if (!aParent) {
+    MaybeClearStorageAccessFlag();
   }
 
   NS_ASSERTION(mInheritPrivateBrowsingId || wasPrivate == UsePrivateBrowsing(),
                "Private browsing state changed while inheritance was disabled");
 
   return NS_OK;
+}
+
+void nsDocShell::MaybeClearStorageAccessFlag() {
+  if (mScriptGlobal) {
+    // Tell our window that the parent has now changed.
+    mScriptGlobal->ParentWindowChanged();
+
+    // Tell all of our children about the change recursively as well.
+    nsTObserverArray<nsDocLoader*>::ForwardIterator iter(mChildList);
+    while (iter.HasMore()) {
+      nsCOMPtr<nsIDocShell> child = do_QueryObject(iter.GetNext());
+      if (child) {
+        static_cast<nsDocShell*>(child.get())->MaybeClearStorageAccessFlag();
+      }
+    }
+  }
 }
 
 NS_IMETHODIMP
