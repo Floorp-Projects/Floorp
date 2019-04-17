@@ -417,8 +417,6 @@ void TabParent::Destroy() {
   // corner cases.
   mBrowserDOMWindow = nullptr;
 
-  mBrowserBridgeParent = nullptr;
-
   if (mIsDestroyed) {
     return;
   }
@@ -477,9 +475,11 @@ void TabParent::ActorDestroy(ActorDestroyReason why) {
     mIsDestroyed = true;
   }
 
+  // Tell our embedder that the tab is now going away unless we're an
+  // out-of-process iframe.
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader(true);
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
-  if (frameLoader) {
+  if (frameLoader && !mBrowserBridgeParent) {
     nsCOMPtr<Element> frameElement(mFrameElement);
     ReceiveMessage(CHILD_PROCESS_SHUTDOWN_MESSAGE, false, nullptr, nullptr,
                    nullptr);
@@ -517,9 +517,9 @@ void TabParent::ActorDestroy(ActorDestroyReason why) {
         }
       }
     }
-
-    mFrameLoader = nullptr;
   }
+
+  mFrameLoader = nullptr;
 
   if (os) {
     os->NotifyObservers(NS_ISUPPORTS_CAST(nsITabParent*, this),
@@ -2715,6 +2715,11 @@ bool TabParent::ReceiveMessage(const nsString& aMessage, bool aSync,
                                StructuredCloneData* aData, CpowHolder* aCpows,
                                nsIPrincipal* aPrincipal,
                                nsTArray<StructuredCloneData>* aRetVal) {
+  // If we're for an oop iframe, don't deliver messages to the wrong place.
+  if (mBrowserBridgeParent) {
+    return true;
+  }
+
   RefPtr<nsFrameLoader> frameLoader = GetFrameLoader(true);
   if (frameLoader && frameLoader->GetFrameMessageManager()) {
     RefPtr<nsFrameMessageManager> manager =
