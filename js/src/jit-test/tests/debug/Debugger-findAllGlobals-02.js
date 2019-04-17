@@ -13,11 +13,10 @@ var g3w = dbg.addDebuggee(g3);
 
 var a = dbg.findAllGlobals();
 
-// Get Debugger.Objects viewing the globals from their own compartments;
-// this is the sort that findAllGlobals and addDebuggee return.
-var g2w = g1w.makeDebuggeeValue(g2).unwrap();
-var g4w = g1w.makeDebuggeeValue(g4).unwrap();
-var thisw = g1w.makeDebuggeeValue(this).unwrap();
+// Get Debugger.Objects around global objects
+var g2w = dbg.makeGlobalObjectReference(g2);
+var g4w = dbg.makeGlobalObjectReference(g4);
+var thisw = dbg.makeGlobalObjectReference(this);
 
 // Check that they're all there.
 assertEq(a.indexOf(g1w) != -1, true);

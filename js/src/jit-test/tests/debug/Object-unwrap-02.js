@@ -11,7 +11,7 @@ var g2 = newGlobal({newCompartment: true});
 var dg2 = dbg.addDebuggee(g2);
 
 var dg1g2 = dg1.makeDebuggeeValue(g2);
-assertEq(dg1g2.unwrap(), dg2);
+assertEq(dg1g2.unwrap(), dg2.makeDebuggeeValue(g2));
 
 // Try an ordinary object, not a global.
 var g2o = g2.Object();
