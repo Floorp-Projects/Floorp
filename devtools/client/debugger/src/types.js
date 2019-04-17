@@ -235,6 +235,12 @@ export type ChromeFrame = {
   location: ?SourceLocation
 };
 
+export type OriginalFrame = {
+  displayName: string,
+  location?: SourceLocation,
+  thread: string
+};
+
 /**
  * ContextMenuItem
  *

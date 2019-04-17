@@ -17,7 +17,7 @@ function observer(aSubject, aTopic, aData) {
       if (gCurrentTest.added)
         method = "added";
       break;
-    case "engine-current":
+    case "engine-default":
       if (gCurrentTest.current)
         method = "current";
       break;

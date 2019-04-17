@@ -4,17 +4,16 @@
 
 // @flow
 
-import { isOriginalId } from "devtools-source-map";
+import SourceMaps, { isOriginalId } from "devtools-source-map";
 import { getSource } from "../selectors";
 
 import type { SourceLocation, MappedLocation, Source } from "../types";
-import typeof SourceMaps from "../../packages/devtools-source-map/src";
 
 export async function getGeneratedLocation(
   state: Object,
   source: Source,
   location: SourceLocation,
-  sourceMaps: Object
+  sourceMaps: typeof SourceMaps
 ): Promise<SourceLocation> {
   if (!isOriginalId(location.sourceId)) {
     return location;
@@ -40,7 +39,7 @@ export async function getGeneratedLocation(
 
 export async function getOriginalLocation(
   generatedLocation: SourceLocation,
-  sourceMaps: SourceMaps
+  sourceMaps: typeof SourceMaps
 ) {
   if (isOriginalId(generatedLocation.sourceId)) {
     return location;
@@ -51,7 +50,7 @@ export async function getOriginalLocation(
 
 export async function getMappedLocation(
   state: Object,
-  sourceMaps: Object,
+  sourceMaps: typeof SourceMaps,
   location: SourceLocation
 ): Promise<MappedLocation> {
   const source = getSource(state, location.sourceId);
@@ -72,8 +71,7 @@ export async function getMappedLocation(
 
   const generatedLocation = location;
   const originalLocation = await sourceMaps.getOriginalLocation(
-    generatedLocation,
-    source
+    generatedLocation
   );
 
   return { location: originalLocation, generatedLocation };
@@ -81,7 +79,7 @@ export async function getMappedLocation(
 
 export async function mapLocation(
   state: Object,
-  sourceMaps: Object,
+  sourceMaps: typeof SourceMaps,
   location: SourceLocation
 ): Promise<SourceLocation> {
   const source = getSource(state, location.sourceId);
@@ -94,7 +92,7 @@ export async function mapLocation(
     return getGeneratedLocation(state, source, location, sourceMaps);
   }
 
-  return sourceMaps.getOriginalLocation(location, source);
+  return sourceMaps.getOriginalLocation(location);
 }
 
 export function isOriginalSource(source: ?Source) {

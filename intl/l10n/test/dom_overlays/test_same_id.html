@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Amount of mutations generated from DOM Overlays</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <link rel="localization" href="toolkit/about/aboutTelemetry.ftl"/>
+  <script type="application/javascript">
+  "use strict";
+  SimpleTest.waitForExplicitFinish();
+
+  let config = {
+    attributes: true,
+    attributeOldValue: true,
+    characterData: true,
+    characterDataOldValue: true,
+    childList: true,
+    subtree: true,
+  };
+  let allMutations = [];
+
+  document.addEventListener("DOMContentLoaded", async function() {
+    await document.l10n.ready;
+
+    let inputElem = document.getElementById("search-input");
+
+    // Test for initial localization applied.
+    is(inputElem.getAttribute("placeholder").length > 0, true);
+
+    let observer = new MutationObserver((mutations) => {
+      for (let mutation of mutations) {
+        allMutations.push(mutation);
+      }
+    });
+    observer.observe(inputElem, config);
+
+    document.l10n.setAttributes(inputElem, "about-telemetry-filter-all-placeholder");
+
+    // Due to the async iteractions between nsINode.localize
+    // and DOMLocalization.jsm, we'll need to wait two frames
+    // to verify that no mutations happened.
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        // Since the l10n-id is the same as the previous one
+        // no mutation should happen in result.
+        is(allMutations.length, 0);
+        SimpleTest.finish();
+      });
+    });
+  }, { once: true});
+  </script>
+</head>
+<body>
+  <input id="search-input" data-l10n-id="about-telemetry-filter-all-placeholder"></input>
+</body>
+</html>

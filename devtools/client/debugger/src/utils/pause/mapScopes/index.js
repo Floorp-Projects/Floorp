@@ -4,6 +4,8 @@
 
 // @flow
 
+import typeof SourceMaps from "devtools-source-map";
+
 import {
   getScopes,
   type SourceScope,
@@ -200,7 +202,7 @@ function hasLineMappings(ranges) {
 function batchScopeMappings(
   originalAstScopes: Array<SourceScope>,
   source: Source,
-  sourceMaps: any
+  sourceMaps: SourceMaps
 ) {
   const precalculatedRanges = new Map();
   const precalculatedLocations = new Map();

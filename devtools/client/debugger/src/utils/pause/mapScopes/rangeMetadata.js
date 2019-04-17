@@ -4,6 +4,8 @@
 
 // @flow
 
+import typeof SourceMaps from "devtools-source-map";
+
 import { locColumn } from "./locColumn";
 import { positionCmp } from "./positionCmp";
 import { filterSortedArray } from "./filtering";
@@ -34,7 +36,7 @@ export async function loadRangeMetadata(
   source: Source,
   frame: Frame,
   originalAstScopes: Array<SourceScope>,
-  sourceMaps: any
+  sourceMaps: SourceMaps
 ): Promise<Array<MappedOriginalRange>> {
   const originalRanges: Array<
     SourceOriginalRange

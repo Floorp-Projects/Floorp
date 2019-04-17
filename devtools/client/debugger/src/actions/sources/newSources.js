@@ -101,8 +101,10 @@ function loadSourceMap(cx: Context, sourceId: SourceId) {
 
     let urls = null;
     try {
-      const urlInfo = { ...source };
-      if (!urlInfo.url) {
+      // Unable to correctly type the result of a spread on a union type.
+      // See https://github.com/facebook/flow/pull/7298
+      const urlInfo: Source = { ...(source: any) };
+      if (!urlInfo.url && typeof urlInfo.introductionUrl === "string") {
         // If the source was dynamically generated (via eval, dynamically
         // created script elements, and so forth), it won't have a URL, so that
         // it is not collapsed into other sources from the same place. The

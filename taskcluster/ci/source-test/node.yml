@@ -49,12 +49,16 @@ devtools-tests:
             yarn test &&
             cd /builds/worker/checkouts/gecko/devtools/client/webconsole/test &&
             yarn &&
+            yarn test &&
+            cd /builds/worker/checkouts/gecko/devtools/client/netmonitor/test &&
+            yarn &&
             yarn test
     when:
         files-changed:
             - 'devtools/client/aboutdebugging-new/src/components/**'
             - 'devtools/client/framework/components/**'
             - 'devtools/client/webconsole/**'
+            - 'devtools/client/netmonitor/**'
 
 eslint-plugin-mozilla:
     description: eslint-plugin-mozilla integration tests

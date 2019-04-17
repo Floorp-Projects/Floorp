@@ -377,7 +377,7 @@ var tests = [
     await new Promise(resolve => {
       let observe = function(subject, topic, verb) {
         info("browser-search-engine-modified: " + verb);
-        if (verb == "engine-current") {
+        if (verb == "engine-default") {
           is(Services.search.defaultEngine.identifier, someOtherEngineID, "correct engine was switched to");
           done();
         }

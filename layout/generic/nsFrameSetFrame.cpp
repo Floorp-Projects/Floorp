@@ -31,6 +31,7 @@
 #include "nsNameSpaceManager.h"
 #include "nsCSSAnonBoxes.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/ServoStyleSetInlines.h"
 #include "mozilla/dom/Element.h"
 #include "nsDisplayList.h"
 #include "nsNodeUtils.h"
