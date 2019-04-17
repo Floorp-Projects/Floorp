@@ -52,6 +52,7 @@
         android:drawableStart="@drawable/ic_tracking_protection"
         android:paddingEnd="24dp"
         android:text="@string/preferences_tracking_protection"
+        android:thumbTint="?accentBright"
         app:layout_constraintBottom_toTopOf="@id/report_problem"
         app:layout_constraintTop_toBottomOf="@id/line_divider_security" />
 

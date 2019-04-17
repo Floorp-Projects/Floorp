@@ -10,6 +10,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.preference.PreferenceFragmentCompat
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.requireComponents
 
 class ThemeFragment : PreferenceFragmentCompat() {
     private lateinit var radioLightTheme: RadioButtonPreference
@@ -64,8 +65,7 @@ class ThemeFragment : PreferenceFragmentCompat() {
         val keyLightTheme = getString(R.string.pref_key_light_theme)
         radioLightTheme = requireNotNull(findPreference(keyLightTheme))
         radioLightTheme.onClickListener {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            activity?.recreate()
+            setNewTheme(AppCompatDelegate.MODE_NIGHT_NO)
         }
     }
 
@@ -75,8 +75,7 @@ class ThemeFragment : PreferenceFragmentCompat() {
         val keyBatteryTheme = getString(R.string.pref_key_auto_battery_theme)
         radioAutoBatteryTheme = requireNotNull(findPreference(keyBatteryTheme))
         radioAutoBatteryTheme.onClickListener {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY)
-            activity?.recreate()
+            setNewTheme(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY)
         }
     }
 
@@ -84,8 +83,7 @@ class ThemeFragment : PreferenceFragmentCompat() {
         val keyDarkTheme = getString(R.string.pref_key_dark_theme)
         radioDarkTheme = requireNotNull(findPreference(keyDarkTheme))
         radioDarkTheme.onClickListener {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-            activity?.recreate()
+            setNewTheme(AppCompatDelegate.MODE_NIGHT_YES)
         }
     }
 
@@ -94,9 +92,14 @@ class ThemeFragment : PreferenceFragmentCompat() {
         radioFollowDeviceTheme = requireNotNull(findPreference(keyDeviceTheme))
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
             radioFollowDeviceTheme.onClickListener {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-                activity?.recreate()
+                setNewTheme(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
             }
         }
+    }
+
+    private fun setNewTheme(mode: Int) {
+        AppCompatDelegate.setDefaultNightMode(mode)
+        activity?.recreate()
+        requireComponents.useCases.sessionUseCases.reload.invoke()
     }
 }
