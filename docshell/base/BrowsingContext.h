@@ -247,7 +247,7 @@ class BrowsingContext : public nsWrapperCache,
   Nullable<WindowProxyHolder> GetTop(ErrorResult& aError);
   void GetOpener(JSContext* aCx, JS::MutableHandle<JS::Value> aOpener,
                  ErrorResult& aError) const;
-  Nullable<WindowProxyHolder> GetParent(ErrorResult& aError) const;
+  Nullable<WindowProxyHolder> GetParent(ErrorResult& aError);
   void PostMessageMoz(JSContext* aCx, JS::Handle<JS::Value> aMessage,
                       const nsAString& aTargetOrigin,
                       const Sequence<JSObject*>& aTransfer,
