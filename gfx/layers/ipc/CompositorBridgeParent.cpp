@@ -650,9 +650,9 @@ void CompositorBridgeParent::ActorDestroy(ActorDestroyReason why) {
 }
 
 void CompositorBridgeParent::ScheduleRenderOnCompositorThread(
-    const nsTArray<wr::RenderRoot>& aRenderRoots) {
+    const wr::RenderRootSet& aRenderRoots) {
   MOZ_ASSERT(CompositorLoop());
-  CompositorLoop()->PostTask(NewRunnableMethod<nsTArray<wr::RenderRoot>>(
+  CompositorLoop()->PostTask(NewRunnableMethod<wr::RenderRootSet>(
       "layers::CompositorBridgeParent::ScheduleComposition", this,
       &CompositorBridgeParent::ScheduleComposition, aRenderRoots));
 }
@@ -864,7 +864,7 @@ void CompositorBridgeParent::NotifyShadowTreeTransaction(
 }
 
 void CompositorBridgeParent::ScheduleComposition(
-    const nsTArray<wr::RenderRoot>& aRenderRoots) {
+    const wr::RenderRootSet& aRenderRoots) {
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (mPaused) {
     return;
