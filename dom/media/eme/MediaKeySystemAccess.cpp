@@ -456,7 +456,7 @@ static bool ToSessionType(const nsAString& aSessionType,
   return false;
 }
 
-// 5.2.1 Is persistent session type?
+// 5.1.1 Is persistent session type?
 static bool IsPersistentSessionType(MediaKeySessionType aSessionType) {
   return aSessionType == MediaKeySessionType::Persistent_license;
 }
@@ -522,7 +522,7 @@ static bool IsParameterUnrecognized(const nsAString& aContentType) {
   return false;
 }
 
-// 3.1.2.3 Get Supported Capabilities for Audio/Video Type
+// 3.1.1.3 Get Supported Capabilities for Audio/Video Type
 static Sequence<MediaKeySystemMediaCapability> GetSupportedCapabilities(
     const CodecType aCodecType,
     const nsTArray<MediaKeySystemMediaCapability>& aRequestedCapabilities,
@@ -807,7 +807,7 @@ static bool CheckRequirement(const MediaKeysRequirement aRequirement,
   return true;
 }
 
-// 3.1.2.2, step 12
+// 3.1.1.2, step 12
 // Follow the steps for the first matching condition from the following list:
 // If the sessionTypes member is present in candidate configuration.
 // Let session types be candidate configuration's sessionTypes member.
@@ -826,7 +826,7 @@ static Sequence<nsString> UnboxSessionTypes(
   return sessionTypes;
 }
 
-// 3.1.2.2 Get Supported Configuration and Consent
+// 3.1.1.2 Get Supported Configuration and Consent
 static bool GetSupportedConfig(
     const KeySystemConfig& aKeySystem,
     const MediaKeySystemConfiguration& aCandidate,

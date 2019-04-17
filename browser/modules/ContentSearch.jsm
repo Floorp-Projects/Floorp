@@ -461,12 +461,10 @@ var ContentSearch = {
   },
 
   async _onObserve(data) {
-    if (data === "engine-current") {
+    if (data === "engine-default") {
       let engine = await this._currentEngineObj();
       this._broadcast("CurrentEngine", engine);
-    } else if (data !== "engine-default") {
-      // engine-default is always sent with engine-current and isn't otherwise
-      // relevant to content searches.
+    } else {
       let state = await this.currentStateObj();
       this._broadcast("CurrentState", state);
     }

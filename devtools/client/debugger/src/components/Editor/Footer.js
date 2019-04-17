@@ -166,7 +166,6 @@ class SourceFooter extends PureComponent<Props, State> {
 
     return (
       <PaneToggleButton
-        position="end"
         key="toggle"
         collapsed={this.props.endPanelCollapsed}
         horizontal={this.props.horizontal}
@@ -249,10 +248,12 @@ class SourceFooter extends PureComponent<Props, State> {
   render() {
     return (
       <div className="source-footer">
-        {this.renderCommands()}
-        {this.renderSourceSummary()}
-        {this.renderCursorPosition()}
-        {this.renderToggleButton()}
+        <div className="source-footer-start">{this.renderCommands()}</div>
+        <div className="source-footer-end">
+          {this.renderSourceSummary()}
+          {this.renderCursorPosition()}
+          {this.renderToggleButton()}
+        </div>
       </div>
     );
   }
