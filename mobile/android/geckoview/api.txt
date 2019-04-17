@@ -283,6 +283,7 @@ package org.mozilla.geckoview {
     method @UiThread @NonNull public GeckoResult<Void> registerWebExtension(@NonNull WebExtension);
     method @UiThread public void setDelegate(@Nullable GeckoRuntime.Delegate);
     method @AnyThread public void shutdown();
+    method @UiThread @NonNull public GeckoResult<Void> unregisterWebExtension(@NonNull WebExtension);
     field public static final String ACTION_CRASHED = "org.mozilla.gecko.ACTION_CRASHED";
     field public static final Parcelable.Creator<GeckoRuntime> CREATOR;
     field public static final String EXTRA_CRASH_FATAL = "fatal";
