@@ -43,7 +43,7 @@ Services.prefs.setCharPref("browser.search.geoip.url", "");
 // Also disable region defaults - tests using it will also re-configure it.
 Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF).setCharPref("geoSpecificDefaults.url", "");
 
-AddonTestUtils.init(this);
+AddonTestUtils.init(this, false);
 AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42", "42");
 
 /**
