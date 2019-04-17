@@ -34,6 +34,7 @@
 #include "nsIScreenManager.h"
 #include "SystemTimeConverter.h"
 #include "nsViewManager.h"
+#include "nsMenuPopupFrame.h"
 
 #include "nsGtkKeyUtils.h"
 #include "nsGtkCursors.h"
@@ -3451,11 +3452,7 @@ nsresult nsWindow::Create(nsIWidget *aParent, nsNativeWidget aNativeParent,
         } else {
           switch (aInitData->mPopupHint) {
             case ePopupTypeMenu:
-              // Use GDK_WINDOW_TYPE_HINT_UTILITY on Wayland which
-              // guides Gtk to create the popup as subsurface
-              // instead of xdg_shell popup (see Bug 1423598).
-              gtkTypeHint = mIsX11Display ? GDK_WINDOW_TYPE_HINT_POPUP_MENU
-                                          : GDK_WINDOW_TYPE_HINT_UTILITY;
+              gtkTypeHint = GDK_WINDOW_TYPE_HINT_POPUP_MENU;
               break;
             case ePopupTypeTooltip:
               gtkTypeHint = GDK_WINDOW_TYPE_HINT_TOOLTIP;
@@ -3956,7 +3953,13 @@ void nsWindow::NativeShow(bool aAction) {
       if (mWindowType != eWindowType_invisible) {
         SetUserTimeAndStartupIDForActivatedWindow(mShell);
       }
-
+      // Update popup window hierarchy run-time on Wayland.
+      if (!mIsX11Display && mWindowType == eWindowType_popup) {
+        GtkWindow *parentWindow = GetPopupParentWindow();
+        if (parentWindow) {
+          gtk_window_set_transient_for(GTK_WINDOW(mShell), parentWindow);
+        }
+      }
       gtk_widget_show(mShell);
     } else if (mContainer) {
       gtk_widget_show(GTK_WIDGET(mContainer));
@@ -5440,6 +5443,10 @@ static gboolean key_press_event_cb(GtkWidget *widget, GdkEventKey *event) {
   // Note: GDK calls XkbSetDetectableAutorepeat so that KeyRelease events
   // are generated only when the key is physically released.
 #  define NS_GDKEVENT_MATCH_MASK 0x1FFF  // GDK_SHIFT_MASK .. GDK_BUTTON5_MASK
+  // Our headers undefine X11 KeyPress - let's redefine it here.
+#ifndef KeyPress
+  #define KeyPress 2
+#endif
   GdkDisplay *gdkDisplay = gtk_widget_get_display(widget);
   if (GDK_IS_X11_DISPLAY(gdkDisplay)) {
     Display *dpy = GDK_DISPLAY_XDISPLAY(gdkDisplay);
@@ -6810,4 +6817,20 @@ void nsWindow::ForceTitlebarRedraw(void) {
     nsLayoutUtils::PostRestyleEvent(frame->GetContent()->AsElement(),
                                     RestyleHint{0}, nsChangeHint_RepaintFrame);
   }
+}
+
+GtkWindow* nsWindow::GetPopupParentWindow()
+{
+  nsView* view = nsView::GetViewFor(this);
+  if (!view) {
+    return nullptr;
+  }
+  nsIFrame* frame = view->GetFrame();
+  if (!frame) {
+    return nullptr;
+  }
+  nsMenuPopupFrame* menuPopupFrame = do_QueryFrame(frame);
+  nsWindow* window =
+    static_cast<nsWindow*>(menuPopupFrame->GetParentMenuWidget());
+  return window ? GTK_WINDOW(window->GetGtkWidget()) : nullptr;
 }
