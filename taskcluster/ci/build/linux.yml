@@ -1121,6 +1121,7 @@ linux64-aarch64/opt:
             mozconfig_platform: linux64-aarch64
         script: "mozharness/scripts/fx_desktop_build.py"
         secrets: true
+        mozconfig-variant: opt
         tooltool-downloads: public
         need-xvfb: true
     toolchains:
