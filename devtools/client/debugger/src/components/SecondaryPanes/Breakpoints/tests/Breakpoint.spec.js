@@ -87,6 +87,13 @@ function generateDefaults(overrides = {}, breakpointOverrides = {}) {
     breakpoint,
     selectedSource,
     frame: (null: any),
+    editor: {
+      CodeMirror: {
+        runMode: function() {
+          return "";
+        }
+      }
+    },
     ...overrides
   };
 }
