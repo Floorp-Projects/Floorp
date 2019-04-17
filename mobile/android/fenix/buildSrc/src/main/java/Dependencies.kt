@@ -24,10 +24,10 @@ private object Versions {
     const val androidx_navigation = "2.1.0-alpha02"
     const val androidx_recyclerview = "1.1.0-alpha04"
 
-    const val appservices_gradle_plugin = "0.4.2"
+    const val appservices_gradle_plugin = "0.4.4"
     const val mozilla_android_components = "0.50.0-SNAPSHOT"
-    const val mozilla_appservices = "0.23.0"
- 
+    const val mozilla_appservices = "0.25.2"
+
     const val autodispose = "1.1.0"
     const val adjust = "4.11.4"
     const val installreferrer = "1.0"
@@ -45,6 +45,7 @@ private object Versions {
     const val tools_test_rules = "1.1.1"
     const val tools_test_runner = "1.1.1"
     const val uiautomator = "2.1.3"
+    const val test_tools = "1.0.2"
 }
 
 @Suppress("unused")

@@ -13,6 +13,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.Deferred
+import mozilla.components.concept.fetch.Client
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.service.fretboard.Fretboard
 import mozilla.components.service.fretboard.source.kinto.KintoExperimentSource
@@ -162,8 +163,10 @@ open class FenixApplication : Application() {
         // As a workaround, use reflections to conditionally initialize the megazord in case it's present.
         return try {
             val megazordClass = Class.forName("mozilla.appservices.FenixMegazord")
-            val megazordInitMethod = megazordClass.getDeclaredMethod("init")
-            megazordInitMethod.invoke(megazordClass)
+            val megazordInitMethod = megazordClass.getDeclaredMethod("init", Lazy::class.java)
+            // https://github.com/mozilla-mobile/android-components/issues/2715
+            val client: Lazy<Client> = lazy { HttpURLConnectionClient() }
+            megazordInitMethod.invoke(megazordClass, client)
             true
         } catch (e: ClassNotFoundException) {
             Logger.info("mozilla.appservices.FenixMegazord not found; skipping megazord init.")
