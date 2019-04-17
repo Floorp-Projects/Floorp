@@ -123,7 +123,7 @@ add_task(async function test_2() {
   await promiseShutdownManager();
 });
 
-// Test that a block listener that uses filterResponseData() works
+// Test that a blocking listener that uses filterResponseData() works
 // properly (i.e., that the delayed call to registerTraceableChannel
 // works properly).
 add_task(async function test_3() {
