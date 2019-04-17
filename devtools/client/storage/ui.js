@@ -1131,16 +1131,21 @@ class StorageUI {
    *        The event passed by the keypress event.
    */
   handleKeypress(event) {
-    if (event.keyCode == KeyCodes.DOM_VK_ESCAPE && !this.sidebar.hidden) {
-      // Stop Propagation to prevent opening up of split console
-      this.hideSidebar();
-      this.sidebarToggledOpen = false;
-      event.stopPropagation();
-      event.preventDefault();
-    } else if (event.keyCode == KeyCodes.DOM_VK_BACK_SPACE && this.table.selectedRow) {
-      this.onRemoveItem();
-      event.stopPropagation();
-      event.preventDefault();
+    if (event.keyCode == KeyCodes.DOM_VK_ESCAPE) {
+      if (!this.sidebar.hidden) {
+        this.hideSidebar();
+        this.sidebarToggledOpen = false;
+        // Stop Propagation to prevent opening up of split console
+        event.stopPropagation();
+        event.preventDefault();
+      }
+    } else if (event.keyCode == KeyCodes.DOM_VK_BACK_SPACE ||
+      event.keyCode == KeyCodes.DOM_VK_DELETE) {
+      if (this.table.selectedRow && event.target.nodeName !== "textbox") {
+        this.onRemoveItem();
+        event.stopPropagation();
+        event.preventDefault();
+      }
     }
   }
 
