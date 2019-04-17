@@ -31,7 +31,7 @@ class DOMSVGAnimatedNumber : public nsISupports, public nsWrapperCache {
  protected:
   explicit DOMSVGAnimatedNumber(SVGElement* aSVGElement)
       : mSVGElement(aSVGElement) {}
-  virtual ~DOMSVGAnimatedNumber(){};
+  virtual ~DOMSVGAnimatedNumber() = default;
 
   RefPtr<SVGElement> mSVGElement;
 };

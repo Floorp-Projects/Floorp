@@ -26,7 +26,7 @@ class SVGTitleElement final : public SVGTitleElementBase,
       already_AddRefed<mozilla::dom::NodeInfo> &&aNodeInfo));
   explicit SVGTitleElement(
       already_AddRefed<mozilla::dom::NodeInfo> &&aNodeInfo);
-  ~SVGTitleElement();
+  ~SVGTitleElement() = default;
 
   virtual JSObject *WrapNode(JSContext *aCx,
                              JS::Handle<JSObject *> aGivenProto) override;

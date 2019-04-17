@@ -23,7 +23,7 @@ class SVGAnimationElement : public SVGAnimationElementBase, public SVGTests {
   explicit SVGAnimationElement(
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo);
   nsresult Init();
-  virtual ~SVGAnimationElement();
+  virtual ~SVGAnimationElement() = default;
 
  public:
   // interfaces:

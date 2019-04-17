@@ -26,8 +26,6 @@ SVGGraphicsElement::SVGGraphicsElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGGraphicsElementBase(std::move(aNodeInfo)) {}
 
-SVGGraphicsElement::~SVGGraphicsElement() {}
-
 bool SVGGraphicsElement::IsSVGFocusable(bool* aIsFocusable,
                                         int32_t* aTabIndex) {
   Document* doc = GetComposedDoc();
