@@ -91,6 +91,11 @@ class WindowGlobalParent final : public nsISupports,
 
   bool IsCurrentGlobal();
 
+  already_AddRefed<Promise> ChangeFrameRemoteness(dom::BrowsingContext* aBc,
+                                                  const nsAString& aRemoteType,
+                                                  uint64_t aPendingSwitchId,
+                                                  ErrorResult& aRv);
+
   // Create a WindowGlobalParent from over IPC. This method should not be called
   // from outside of the IPC constructors.
   WindowGlobalParent(const WindowGlobalInit& aInit, bool aInProcess);
