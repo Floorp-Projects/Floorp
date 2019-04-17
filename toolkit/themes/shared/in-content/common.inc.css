@@ -541,7 +541,11 @@ html|input[type="checkbox"]:checked {
   fill: #2292d0;
 }
 
-xul|checkbox[disabled="true"] > xul|*.checkbox-check,
+xul|checkbox[disabled="true"] {
+  color: inherit;
+}
+
+xul|checkbox[disabled="true"],
 html|input[type="checkbox"]:disabled {
   opacity: 0.5;
 }
@@ -581,7 +585,8 @@ xul|*.radio-check[selected] {
   fill: #2292d0;
 }
 
-xul|radio[disabled="true"] > xul|*.radio-check {
+xul|radio[disabled="true"] {
+  color: inherit;
   opacity: 0.5;
 }
 
