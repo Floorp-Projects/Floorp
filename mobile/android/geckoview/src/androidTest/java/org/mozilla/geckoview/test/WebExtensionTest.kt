@@ -32,10 +32,10 @@ class WebExtensionTest : BaseSessionTest() {
         assertThat("The border color should be empty when loading without extensions.",
                 colorBefore as String, equalTo(""))
 
+        val borderify = WebExtension("resource://android/assets/web_extensions/borderify/")
+
         // Load the WebExtension that will add a border to the body
-        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(
-                WebExtension("resource://android/assets/web_extensions/borderify/")
-        ))
+        sessionRule.waitForResult(sessionRule.runtime.registerWebExtension(borderify))
 
         mainSession.reload()
         sessionRule.waitForPageStop()
@@ -44,6 +44,17 @@ class WebExtensionTest : BaseSessionTest() {
         val color = sessionRule.evaluateJS(mainSession, "document.body.style.borderColor")
         assertThat("Content script should have been applied",
                 color as String, equalTo("red"))
+
+        // Unregister WebExtension and check again
+        sessionRule.waitForResult(sessionRule.runtime.unregisterWebExtension(borderify))
+
+        mainSession.reload()
+        sessionRule.waitForPageStop()
+
+        // Check that the WebExtension was not applied after being unregistered
+        val colorAfter = sessionRule.evaluateJS(mainSession, "document.body.style.borderColor")
+        assertThat("Content script should have been applied",
+                colorAfter as String, equalTo(""))
     }
 
     @Test
