@@ -381,3 +381,38 @@ search.default_engine:
     notification_emails:
     - fenix-core@mozilla.com
     expires: "2019-09-01"
+
+custom_tab:
+  closed:
+    type: event
+    description: >
+      A user closed the custom tab
+    bugs:
+    - 977
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1697
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  action_button:
+    type: event
+    description: >
+      A user pressed the action button provided by the launching app
+    bugs:
+    - 977
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1697
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  menu:
+    type: event
+    description: >
+      A user opened the custom tabs menu
+    bugs:
+    - 977
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1697
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"

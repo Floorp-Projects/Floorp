@@ -162,7 +162,7 @@ object Deps {
     const val espresso_contrib = "com.android.support.test.espresso:espresso-contrib:${Versions.espresso_version}"
     const val espresso_core = "com.android.support.test.espresso:espresso-core:${Versions.espresso_core}"
     const val espresso_idling_resources = "com.android.support.test.espresso:espresso-idling-resource:${Versions.espresso_version}"
-    const val orchestrator =  "androidx.test:orchestrator:${Versions.orchestrator}"
+    const val orchestrator = "androidx.test:orchestrator:${Versions.orchestrator}"
     const val tools_test_rules = "com.android.support.test:rules:${Versions.tools_test_rules}"
     const val tools_test_runner = "com.android.support.test:runner:${Versions.tools_test_runner}"
     const val uiautomator = "com.android.support.test.uiautomator:uiautomator-v18:${Versions.uiautomator}"

@@ -57,6 +57,9 @@ sealed class Event {
     object QuickActionSheetBookmarkTapped : Event()
     object QuickActionSheetDownloadTapped : Event()
     object QuickActionSheetReadTapped : Event()
+    object CustomTabsClosed : Event()
+    object CustomTabsActionTapped : Event()
+    object CustomTabsMenuOpened : Event()
 
     // Interaction Events
     data class SearchBarTapped(val source: Source) : Event() {
@@ -168,6 +171,7 @@ sealed class Event {
         get() = null
 }
 
+@Suppress("ComplexMethod")
 private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
     Pair(Component.FEATURE_FINDINPAGE, "previous") -> Event.FindInPagePrevious
     Pair(Component.FEATURE_FINDINPAGE, "next") -> Event.FindInPageNext
@@ -176,6 +180,12 @@ private fun Fact.toEvent(): Event? = when (Pair(component, item)) {
     Pair(Component.FEATURE_CONTEXTMENU, "item") -> {
         metadata?.get("item")?.let { Event.ContextMenuItemTapped.create(it.toString()) }
     }
+
+    Pair(Component.FEATURE_TOOLBAR, "menu") -> {
+        metadata?.get("customTab")?.let { Event.CustomTabsMenuOpened }
+    }
+    Pair(Component.FEATURE_CUSTOMTABS, "close") -> Event.CustomTabsClosed
+    Pair(Component.FEATURE_CUSTOMTABS, "action_button") -> Event.CustomTabsActionTapped
 
     else -> null
 }

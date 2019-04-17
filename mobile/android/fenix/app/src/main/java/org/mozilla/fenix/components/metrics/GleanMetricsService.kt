@@ -13,6 +13,7 @@ import org.mozilla.fenix.GleanMetrics.FindInPage
 import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.QuickActionSheet
 import org.mozilla.fenix.GleanMetrics.Metrics
+import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.ext.components
 
@@ -105,6 +106,15 @@ private val Event.wrapper
         )
         is Event.QuickActionSheetReadTapped -> EventWrapper<NoExtraKeys>(
             { QuickActionSheet.readTapped.record(it) }
+        )
+        is Event.CustomTabsMenuOpened -> EventWrapper<NoExtraKeys>(
+            { CustomTab.menu.record(it) }
+        )
+        is Event.CustomTabsActionTapped -> EventWrapper<NoExtraKeys>(
+            { CustomTab.actionButton.record(it) }
+        )
+        is Event.CustomTabsClosed -> EventWrapper<NoExtraKeys>(
+            { CustomTab.closed.record(it) }
         )
 
         // Don't track other events with Glean
