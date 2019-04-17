@@ -39,7 +39,7 @@ class SMILEnumType : public SMILType {
 
  private:
   // Private constructor: prevent instances beyond my singleton.
-  constexpr SMILEnumType() {}
+  constexpr SMILEnumType() = default;
 };
 
 }  // namespace mozilla
