@@ -1861,10 +1861,6 @@ pref("prio.publicKeyB", "26E6674E65425B823F1F1D5F96E3BB3EF9E406EC7FBA7DEF8B08A35
 // Coverage ping is disabled by default.
 pref("toolkit.coverage.enabled", false);
 pref("toolkit.coverage.endpoint.base", "https://coverage.mozilla.org");
-// Whether Prio-encoded Telemetry will be sent in the prio ping.
-#if defined(NIGHTLY_BUILD)
-pref("toolkit.telemetry.prioping.enabled", true);
-#endif
 
 // Discovery prefs
 pref("browser.discovery.enabled", true);

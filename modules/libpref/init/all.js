@@ -6073,9 +6073,6 @@ pref("dom.datatransfer.mozAtAPIs", false);
 pref("dom.datatransfer.mozAtAPIs", true);
 #endif
 
-// Whether or not the Prio Ping is supported on this platform.
-pref("toolkit.telemetry.prioping.enabled", false);
-
 // External.AddSearchProvider is deprecated and it will be removed in the next
 // cycles.
 pref("dom.sidebar.enabled", true);
