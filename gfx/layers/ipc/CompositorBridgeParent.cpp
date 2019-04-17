@@ -723,7 +723,7 @@ void CompositorBridgeParent::ResumeComposition() {
 void CompositorBridgeParent::ForceComposition() {
   // Cancel the orientation changed state to force composition
   mForceCompositionTask = nullptr;
-  ScheduleRenderOnCompositorThread();
+  ScheduleRenderOnCompositorThread(wr::RenderRootSet());
 }
 
 void CompositorBridgeParent::CancelCurrentCompositeTask() {
