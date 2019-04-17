@@ -396,6 +396,12 @@ open class GleanInternalAPI internal constructor () {
         for (pingName in pingNames) {
             assembleAndSerializePing(pingName)?.let {
                 pingSerializationTasks.add(it)
+            } ?: run {
+                if (!BUILTIN_PINGNAMES.contains(pingName)) {
+                    logger.debug(
+                        "No content for custom ping {pingName}, therefore no ping queued."
+                    )
+                }
             }
         }
 
