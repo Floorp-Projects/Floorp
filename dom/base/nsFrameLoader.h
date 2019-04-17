@@ -161,6 +161,14 @@ class nsFrameLoader final : public nsStubMutationObserver,
                    nsIContentSecurityPolicy* aCsp, bool aOriginalSrc);
 
   /**
+   * Resume a redirected load within this frame.
+   *
+   * @param aPendingSwitchID ID of a process-switching load to be reusmed
+   *        within this frame.
+   */
+  void ResumeLoad(uint64_t aPendingSwitchID);
+
+  /**
    * Destroy the frame loader and everything inside it. This will
    * clear the weak owner content reference.
    */
@@ -466,6 +474,11 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // enables us to detect whether the frame has moved documents during
   // a reframe, so that we know not to restore the presentation.
   RefPtr<Document> mContainerDocWhileDetached;
+
+  // When performing a process switch, this value is used rather than mURIToLoad
+  // to identify the process-switching load which should be resumed in the
+  // target process.
+  uint64_t mPendingSwitchID;
 
   RefPtr<TabParent> mRemoteBrowser;
   uint64_t mChildID;

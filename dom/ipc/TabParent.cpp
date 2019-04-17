@@ -669,6 +669,16 @@ void TabParent::LoadURL(nsIURI* aURI) {
   Unused << SendLoadURL(spec, GetShowInfo());
 }
 
+void TabParent::ResumeLoad(uint64_t aPendingSwitchID) {
+  MOZ_ASSERT(aPendingSwitchID != 0);
+
+  if (NS_WARN_IF(mIsDestroyed)) {
+    return;
+  }
+
+  Unused << SendResumeLoad(aPendingSwitchID, GetShowInfo());
+}
+
 void TabParent::InitRendering() {
   MOZ_ASSERT(!mRenderFrame.IsInitialized());
   mRenderFrame.Initialize(this);
