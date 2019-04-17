@@ -152,6 +152,10 @@ projects:
     path: components/browser/session
     description: 'An abstract layer hiding the actual browser engine implementation.'
     publish: true
+  browser-state:
+    path: components/browser/state
+    description: 'Component responsible for maintaining the centralized state of a browser engine.'
+    publish: false
   browser-storage-memory:
     path: components/browser/storage-memory
     description: 'A memory-backed implementation of core data storage.'
@@ -316,3 +320,4 @@ projects:
     path: samples/dataprotect
     description: 'An app demoing how to use the Dataprotect component to load and store encrypted data in SharedPreferences.'
     publish: false
+
