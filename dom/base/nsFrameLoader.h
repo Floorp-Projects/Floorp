@@ -435,11 +435,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   void AddTreeItemToTreeOwner(nsIDocShellTreeItem* aItem,
                               nsIDocShellTreeOwner* aOwner);
 
-  nsAtom* TypeAttrName() const {
-    return mOwnerContent->IsXULElement() ? nsGkAtoms::type
-                                         : nsGkAtoms::mozframetype;
-  }
-
   void InitializeBrowserAPI();
   void DestroyBrowserFrameScripts();
 
