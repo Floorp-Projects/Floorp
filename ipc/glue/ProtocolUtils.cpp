@@ -521,6 +521,11 @@ void IProtocol::ReplaceEventTargetForActor(IProtocol* aActor,
   mState->ReplaceEventTargetForActor(aActor, aEventTarget);
 }
 
+void IProtocol::SetEventTargetForRoute(int32_t aRoute,
+                                       nsIEventTarget* aEventTarget) {
+  mState->SetEventTargetForRoute(aRoute, aEventTarget);
+}
+
 nsIEventTarget* IProtocol::GetActorEventTarget() {
   return mState->GetActorEventTarget();
 }
@@ -549,6 +554,11 @@ void IProtocol::ManagedState::SetEventTargetForActor(
 void IProtocol::ManagedState::ReplaceEventTargetForActor(
     IProtocol* aActor, nsIEventTarget* aEventTarget) {
   mProtocol->Manager()->ReplaceEventTargetForActor(aActor, aEventTarget);
+}
+
+void IProtocol::ManagedState::SetEventTargetForRoute(
+    int32_t aRoute, nsIEventTarget* aEventTarget) {
+  mProtocol->Manager()->SetEventTargetForRoute(aRoute, aEventTarget);
 }
 
 already_AddRefed<nsIEventTarget> IProtocol::ManagedState::GetActorEventTarget(
@@ -903,6 +913,16 @@ void IToplevelProtocol::ToplevelState::ReplaceEventTargetForActor(
 
   MutexAutoLock lock(mEventTargetMutex);
   mEventTargetMap.ReplaceWithID(aEventTarget, id);
+}
+
+void IToplevelProtocol::ToplevelState::SetEventTargetForRoute(
+    int32_t aRoute, nsIEventTarget* aEventTarget) {
+  MOZ_RELEASE_ASSERT(aRoute != mProtocol->Id());
+  MOZ_RELEASE_ASSERT(aRoute != kNullActorId && aRoute != kFreedActorId);
+
+  MutexAutoLock lock(mEventTargetMutex);
+  MOZ_ASSERT(!mEventTargetMap.Lookup(aRoute));
+  mEventTargetMap.AddWithID(aEventTarget, aRoute);
 }
 
 const MessageChannel* IToplevelProtocol::ToplevelState::GetIPCChannel() const {
