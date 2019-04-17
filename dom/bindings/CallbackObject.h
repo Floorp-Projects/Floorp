@@ -525,8 +525,9 @@ class CallbackObjectHolder : CallbackObjectHolderBase {
   void UnlinkSelf() {
     // NS_IF_RELEASE because we might have been unlinked before
     nsISupports* ptr = GetISupports();
-    NS_IF_RELEASE(ptr);
+    // Clear mPtrBits before the release to prevent reentrance.
     mPtrBits = 0;
+    NS_IF_RELEASE(ptr);
   }
 
   uintptr_t mPtrBits;
