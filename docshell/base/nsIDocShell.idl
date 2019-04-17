@@ -878,6 +878,11 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   [infallible] readonly attribute boolean mayEnableCharacterEncodingMenu;
 
+  /**
+   * Indicates that the character encoding was autodetected.
+   */
+  [infallible] readonly attribute boolean charsetAutodetected;
+
            attribute  nsIEditor editor;
   readonly attribute  boolean   editable;             /* this docShell is editable */
   readonly attribute  boolean   hasEditingSession;    /* this docShell has an editing session */
