@@ -72,7 +72,12 @@ enum StructuredCloneTags {
 
   SCTAG_DOM_MAX,
 
-  SCTAG_DOM_STRUCTURED_CLONE_TESTER
+  SCTAG_DOM_STRUCTURED_CLONE_TESTER,
+
+  // Principal written out by worker threads when serializing objects. When
+  // reading on the main thread this principal will be converted to a normal
+  // principal object using nsJSPrincipals::AutoSetActiveWorkerPrincipal.
+  SCTAG_DOM_WORKER_PRINCIPAL
 };
 
 }  // namespace dom
