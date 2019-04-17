@@ -173,9 +173,6 @@ var whitelist = [
   {file: "chrome://devtools/skin/images/aboutdebugging-firefox-release.svg",
    isFromDevTools: true},
   {file: "chrome://devtools/skin/images/next.svg", isFromDevTools: true},
-  // kvstore.jsm wraps the API in nsIKeyValue.idl in a more ergonomic API
-  // It landed in bug 1490496, and we expect to start using it shortly.
-  {file: "resource://gre/modules/kvstore.jsm"},
   // Bug 1526672
   {file: "resource://app/localization/en-US/browser/touchbar/touchbar.ftl",
    platforms: ["linux", "win"]},
