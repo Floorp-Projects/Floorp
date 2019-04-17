@@ -53,10 +53,10 @@
 
   /* Text color */
   --theme-comment: var(--grey-50);
-  --theme-body-color: var(--grey-60);
+  --theme-body-color: var(--grey-70);
   --theme-text-color-alt: var(--grey-50);
   --theme-text-color-inactive: var(--grey-40);
-  --theme-text-color-strong: var(--grey-80);
+  --theme-text-color-strong: var(--grey-90);
 
   --theme-highlight-green: var(--green-70);
   --theme-highlight-blue: var(--blue-55);
