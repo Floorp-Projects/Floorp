@@ -12,6 +12,8 @@ const { findDOMNode } = require("devtools/client/shared/vendor/react-dom");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const TreeRow = require("devtools/client/shared/components/tree/TreeRow");
+const AuditFilter = createFactory(require("./AuditFilter"));
+const AuditController = createFactory(require("./AuditController"));
 
 // Utils
 const {flashElementOn, flashElementOff} =
@@ -37,15 +39,13 @@ const TELEMETRY_ACCESSIBLE_CONTEXT_MENU_ITEM_ACTIVATED =
 
 class HighlightableTreeRowClass extends TreeRow {
   shouldComponentUpdate(nextProps) {
-    const props = ["name", "open", "value", "loading", "selected", "hasChildren"];
-
-    for (const p of props) {
-      if (nextProps.member[p] !== this.props.member[p]) {
-        return true;
-      }
+    const shouldTreeRowUpdate = super.shouldComponentUpdate(nextProps);
+    if (shouldTreeRowUpdate) {
+      return shouldTreeRowUpdate;
     }
 
-    if (nextProps.highlighted !== this.props.highlighted) {
+    if (nextProps.highlighted !== this.props.highlighted ||
+        nextProps.filtered !== this.props.filtered) {
       return true;
     }
 
@@ -104,6 +104,12 @@ class AccessibilityRow extends Component {
 
   scrollIntoView() {
     const row = findDOMNode(this);
+    // Row might not be rendered in the DOM tree if it is filtered out during
+    // audit.
+    if (!row) {
+      return;
+    }
+
     row.scrollIntoView({ block: "center" });
   }
 
@@ -120,6 +126,12 @@ class AccessibilityRow extends Component {
 
   flashValue() {
     const row = findDOMNode(this);
+    // Row might not be rendered in the DOM tree if it is filtered out during
+    // audit.
+    if (!row) {
+      return;
+    }
+
     const value = row.querySelector(".objectBox");
 
     flashElementOn(value);
@@ -202,14 +214,20 @@ class AccessibilityRow extends Component {
    * @returns acecssible-row React component.
    */
   render() {
-    const { object } = this.props.member;
-    const props = Object.assign({}, this.props, {
+    const { member } = this.props;
+    const props = {
+      ...this.props,
       onContextMenu: this.props.hasContextMenu && (e => this.onContextMenu(e)),
-      onMouseOver: () => this.highlight(object),
+      onMouseOver: () => this.highlight(member.object),
       onMouseOut: () => this.unhighlight(),
-    });
+      key: `${member.path}-${member.active ? "active" : "inactive"}`,
+    };
 
-    return (HighlightableTreeRow(props));
+    return AuditController({
+      accessible: member.object,
+    },
+      AuditFilter({},
+        HighlightableTreeRow(props)));
   }
 }
 

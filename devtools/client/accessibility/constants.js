@@ -3,6 +3,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
+const { accessibility: { AUDIT_TYPE } } = require("devtools/shared/constants");
+
 // Used in accessible component for properties tree rendering.
 exports.TREE_ROW_HEIGHT = 21;
 
@@ -29,6 +31,14 @@ exports.ENABLE = "ENABLE";
 exports.DISABLE = "DISABLE";
 exports.UPDATE_CAN_BE_DISABLED = "UPDATE_CAN_BE_DISABLED";
 exports.UPDATE_CAN_BE_ENABLED = "UPDATE_CAN_BE_ENABLED";
+exports.FILTER_TOGGLE = "FILTER_TOGGLE";
+exports.AUDIT = "AUDIT";
+exports.AUDITING = "AUDITING";
+
+// List of filters for accessibility checks.
+exports.FILTERS = {
+  [AUDIT_TYPE.CONTRAST]: "CONTRAST",
+};
 
 // Ordered accessible properties to be displayed by the accessible component.
 exports.ORDERED_PROPS = [

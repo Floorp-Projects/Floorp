@@ -1,0 +1,5 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AccessibilityRowValue component: audit not supported 1`] = `"<span role=\\"presentation\\"><span class=\\"objectBox objectBox-undefined\\">undefined</span></span>"`;
+
+exports[`AccessibilityRowValue component: basic render 1`] = `"<span role=\\"presentation\\"><span class=\\"objectBox objectBox-undefined\\">undefined</span></span>"`;

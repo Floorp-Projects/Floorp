@@ -29,12 +29,6 @@ define(function(require, exports, module) {
       const member = this.props.member;
       const level = member.level || 0;
 
-      // Compute indentation dynamically. The deeper the item is
-      // inside the hierarchy, the bigger is the left padding.
-      const rowStyle = {
-        "paddingInlineStart": (level * 16) + "px",
-      };
-
       const iconClassList = ["treeIcon"];
       if (member.hasChildren && member.loading) {
         iconClassList.push("devtools-throbber");
@@ -48,8 +42,12 @@ define(function(require, exports, module) {
       return (
         dom.td({
           className: "treeLabelCell",
+          style: {
+            // Compute indentation dynamically. The deeper the item is
+            // inside the hierarchy, the bigger is the left padding.
+            "--tree-label-cell-indent": `${level * 16}px`,
+          },
           key: "default",
-          style: rowStyle,
           role: "presentation"},
           dom.span({
             className: iconClassList.join(" "),
