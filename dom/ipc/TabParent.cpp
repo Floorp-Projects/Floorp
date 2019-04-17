@@ -417,6 +417,8 @@ void TabParent::Destroy() {
   // corner cases.
   mBrowserDOMWindow = nullptr;
 
+  mBrowserBridgeParent = nullptr;
+
   if (mIsDestroyed) {
     return;
   }
