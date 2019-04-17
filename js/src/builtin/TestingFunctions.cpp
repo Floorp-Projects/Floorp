@@ -486,19 +486,10 @@ static bool MinorGC(JSContext* cx, unsigned argc, Value* vp) {
   _("dynamicHeapGrowth", JSGC_DYNAMIC_HEAP_GROWTH, true)                     \
   _("dynamicMarkSlice", JSGC_DYNAMIC_MARK_SLICE, true)                       \
   _("allocationThreshold", JSGC_ALLOCATION_THRESHOLD, true)                  \
-  _("allocationThresholdFactor", JSGC_ALLOCATION_THRESHOLD_FACTOR, true)     \
-  _("allocationThresholdFactorAvoidInterrupt",                               \
-    JSGC_ALLOCATION_THRESHOLD_FACTOR_AVOID_INTERRUPT, true)                  \
   _("minEmptyChunkCount", JSGC_MIN_EMPTY_CHUNK_COUNT, true)                  \
   _("maxEmptyChunkCount", JSGC_MAX_EMPTY_CHUNK_COUNT, true)                  \
   _("compactingEnabled", JSGC_COMPACTING_ENABLED, true)                      \
-  _("minLastDitchGCPeriod", JSGC_MIN_LAST_DITCH_GC_PERIOD, true)             \
-  _("nurseryFreeThresholdForIdleCollection",                                 \
-    JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION, true)                   \
-  _("nurseryFreeThresholdForIdleCollectionPercent",                          \
-    JSGC_NURSERY_FREE_THRESHOLD_FOR_IDLE_COLLECTION_PERCENT, true)           \
-  _("pretenureThreshold", JSGC_PRETENURE_THRESHOLD, true)                    \
-  _("pretenureGroupThreshold", JSGC_PRETENURE_GROUP_THRESHOLD, true)
+  _("minLastDitchGCPeriod", JSGC_MIN_LAST_DITCH_GC_PERIOD, true)
 
 static const struct ParamInfo {
   const char* name;
