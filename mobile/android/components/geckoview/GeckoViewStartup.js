@@ -53,6 +53,8 @@ GeckoViewStartup.prototype = {
           ged: [
             "GeckoView:RegisterWebExtension",
             "GeckoView:UnregisterWebExtension",
+            "GeckoView:WebExtension:PortDisconnect",
+            "GeckoView:WebExtension:PortMessageFromApp",
           ],
         });
 
