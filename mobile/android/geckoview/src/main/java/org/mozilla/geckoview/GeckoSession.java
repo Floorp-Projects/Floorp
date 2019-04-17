@@ -1745,7 +1745,9 @@ public class GeckoSession implements Parcelable {
      * Set this GeckoSession as active or inactive, which represents if the session is currently
      * visible or not. Setting a GeckoSession to inactive will significantly reduce its memory
      * footprint, but should only be done if the GeckoSession is not currently visible. Note that
-     * a session can be active (i.e. visible) but not focused.
+     * a session can be active (i.e. visible) but not focused. When a session is set inactive,
+     * it will flush the session state and trigger a `ProgressDelegate.onSessionStateChange`
+     * callback.
      *
      * @param active A boolean determining whether the GeckoSession is active.
      *
@@ -1756,6 +1758,10 @@ public class GeckoSession implements Parcelable {
         final GeckoBundle msg = new GeckoBundle(1);
         msg.putBoolean("active", active);
         mEventDispatcher.dispatch("GeckoView:SetActive", msg);
+
+        if (!active) {
+            mEventDispatcher.dispatch("GeckoView:FlushSessionState", null);
+        }
     }
 
     /**
