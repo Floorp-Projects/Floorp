@@ -7,9 +7,7 @@
   --highlight-color: var(--blue-55);
   --input-background-color: white;
   --input-border-color: var(--grey-30);
-  --input-text-color: var(--grey-90);
   --preview-input-background: var(--theme-toolbar-background);
-  --secondary-label-color: var(--grey-45);
   --slider-thumb-color: var(--grey-50);
   --slider-track-color: var(--grey-30);
 }
@@ -17,7 +15,6 @@
 :root.theme-dark {
   --input-background-color: var(--grey-70);
   --input-border-color: var(--grey-70);
-  --input-text-color: var(--grey-40);
   --preview-input-background: #222225;
   --slider-thumb-color: var(--grey-40);
   --slider-track-color: var(--grey-60);
@@ -121,7 +118,7 @@
   display: inline-block;
   margin-bottom: 0.6em;
   font-size: 1em;
-  color: var(--grey-50);
+  color: var(--theme-text-color-alt);
 }
 
 .font-family-name {
@@ -164,7 +161,7 @@
   margin: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--theme-toolbar-color);
+  color: var(--theme-text-color-strong);
   grid-column: span 2;
   position: relative;
   inset-inline-start: -4px;
@@ -249,7 +246,7 @@
 }
 
 .font-control-label-detail {
-  color: var(--secondary-label-color);
+  color: var(--theme-text-color-alt);
   font-size: smaller;
 }
 
@@ -262,7 +259,7 @@
 
 .font-value-input,
 .font-value-select {
-  color: var(--input-text-color);
+  color: var(--theme-text-color-strong);
   border: 1px solid var(--input-border-color);
   background-color: var(--input-background-color);
 }
@@ -326,7 +323,7 @@
 
 .font-value-select:-moz-focusring {
   color: transparent;
-  text-shadow: 0 0 0 var(--input-text-color);
+  text-shadow: 0 0 0 var(--theme-text-color-strong);
 }
 
 .font-value-input:focus,
@@ -345,7 +342,7 @@
 .font-value-slider-container::before,
 .font-value-slider-container::after {
   -moz-user-select: none;
-  color: var(--secondary-label-color);
+  color: var(--theme-text-color-alt);
   font-size: smaller;
   position: absolute;
   bottom: -.6em;
