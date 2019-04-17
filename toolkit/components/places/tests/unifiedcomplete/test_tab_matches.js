@@ -162,5 +162,22 @@ add_task(async function test_tab_matches() {
                makeSwitchToTabMatch("data:text/html,test") ],
   });
 
+  info("tab match should not return tags as part of the title");
+  // Bookmark one of the pages, and add tags to it, to check they don't appear
+  // in the title.
+  let bm = await PlacesUtils.bookmarks.insert({
+    url: uri1,
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+  });
+  PlacesUtils.tagging.tagURI(uri1, ["test-tag"]);
+  await check_autocomplete({
+    search: "abc.com",
+    searchParam: "enable-actions",
+    matches: [ makeVisitMatch("abc.com", "http://abc.com/", { heuristic: true }),
+               makeSwitchToTabMatch("http://abc.com/", { title: "ABC rocks" }),
+               makeSearchMatch("abc.com", { heuristic: false }) ],
+  });
+  await PlacesUtils.bookmarks.remove(bm);
+
   await cleanup();
 });
