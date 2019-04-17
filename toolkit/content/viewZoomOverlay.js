@@ -6,8 +6,8 @@
 
 /** Document Zoom Management Code
  *
- * To use this, you'll need to have a getBrowser() function or use the methods
- * that accept a browser to be modified.
+ * To use this, you'll need to have a global gBrowser variable
+ * or use the methods that accept a browser to be modified.
  **/
 
 var {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -33,7 +33,7 @@ var ZoomManager = {
   },
 
   get zoom() {
-    return this.getZoomForBrowser(getBrowser());
+    return this.getZoomForBrowser(gBrowser);
   },
 
   getZoomForBrowser: function ZoomManager_getZoomForBrowser(aBrowser) {
@@ -44,7 +44,7 @@ var ZoomManager = {
   },
 
   set zoom(aVal) {
-    this.setZoomForBrowser(getBrowser(), aVal);
+    this.setZoomForBrowser(gBrowser, aVal);
     return aVal;
   },
 
