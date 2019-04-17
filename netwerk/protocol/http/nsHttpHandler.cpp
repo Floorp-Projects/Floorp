@@ -307,8 +307,7 @@ nsHttpHandler::nsHttpHandler()
       mProcessId(0),
       mNextChannelId(1),
       mLastActiveTabLoadOptimizationLock(
-          "nsHttpConnectionMgr::LastActiveTabLoadOptimization"),
-      mThroughCaptivePortal(false) {
+          "nsHttpConnectionMgr::LastActiveTabLoadOptimization") {
   LOG(("Creating nsHttpHandler [this=%p].\n", this));
 
   mUserAgentOverride.SetIsVoid(true);
@@ -568,7 +567,6 @@ nsresult nsHttpHandler::Init() {
     obsService->AddObserver(this, "psm:user-certificate-deleted", true);
     obsService->AddObserver(this, "intl:app-locales-changed", true);
     obsService->AddObserver(this, "browser-delayed-startup-finished", true);
-    obsService->AddObserver(this, "network:captive-portal-connectivity", true);
 
     if (!IsNeckoChild()) {
       obsService->AddObserver(
@@ -2340,9 +2338,6 @@ nsHttpHandler::Observe(nsISupports *subject, const char *topic,
     mAcceptLanguagesIsDirty = true;
   } else if (!strcmp(topic, "browser-delayed-startup-finished")) {
     MaybeEnableSpeculativeConnect();
-  } else if (!strcmp(topic, "network:captive-portal-connectivity")) {
-    nsAutoCString data8 = NS_ConvertUTF16toUTF8(data);
-    mThroughCaptivePortal = data8.EqualsLiteral("captive");
   }
 
   return NS_OK;
