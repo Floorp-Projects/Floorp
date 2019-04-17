@@ -38,6 +38,9 @@ const {
   TEMPORARY_EXTENSION_INSTALL_FAILURE,
   TEMPORARY_EXTENSION_INSTALL_START,
   TEMPORARY_EXTENSION_INSTALL_SUCCESS,
+  TEMPORARY_EXTENSION_RELOAD_FAILURE,
+  TEMPORARY_EXTENSION_RELOAD_START,
+  TEMPORARY_EXTENSION_RELOAD_SUCCESS,
   RUNTIMES,
 } = require("../constants");
 
@@ -120,14 +123,17 @@ function pushServiceWorker(id) {
 }
 
 function reloadTemporaryExtension(id) {
-  return async (_, getState) => {
+  return async (dispatch, getState) => {
+    dispatch({ type: TEMPORARY_EXTENSION_RELOAD_START, id });
     const clientWrapper = getCurrentClient(getState().runtimes);
 
     try {
       const addonTargetFront = await clientWrapper.getAddon({ id });
       await addonTargetFront.reload();
+      dispatch({ type: TEMPORARY_EXTENSION_RELOAD_SUCCESS, id });
     } catch (e) {
-      console.error(e);
+      const error = typeof e === "string" ? new Error(e) : e;
+      dispatch({ type: TEMPORARY_EXTENSION_RELOAD_FAILURE, id, error });
     }
   };
 }

@@ -264,6 +264,10 @@ p, h1 {
   column-gap: calc(var(--base-unit) * 3);
 }
 
+.toolbar--right-align {
+  justify-content: end;
+}
+
 /*
 Form controls
 */
