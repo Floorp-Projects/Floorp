@@ -119,8 +119,6 @@ static StaticMutexNotRecorded gTelemetryHistogramMutex;
 
 namespace {
 
-typedef nsDataHashtable<nsCStringHashKey, HistogramID> StringToHistogramIdMap;
-
 // Hardcoded probes
 //
 // The order of elements here is important to minimize the memory footprint of a
