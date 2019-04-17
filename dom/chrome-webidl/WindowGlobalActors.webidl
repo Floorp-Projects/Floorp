@@ -6,6 +6,7 @@
 interface Principal;
 interface URI;
 interface nsIDocShell;
+interface TabParent;
 
 [Exposed=Window, ChromeOnly]
 interface WindowGlobalParent {
@@ -21,6 +22,8 @@ interface WindowGlobalParent {
   readonly attribute FrameLoader? rootFrameLoader; // Embedded (browser) only
 
   readonly attribute WindowGlobalChild? childActor; // in-process only
+
+  readonly attribute TabParent? tabParent; // out-of-process only
 
   // Information about the currently loaded document.
   readonly attribute Principal documentPrincipal;
