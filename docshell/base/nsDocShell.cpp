@@ -368,6 +368,7 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext)
       mIsAppTab(false),
       mUseGlobalHistory(false),
       mUseRemoteTabs(false),
+      mUseRemoteSubframes(false),
       mUseTrackingProtection(false),
       mDeviceSizeIsPageSize(false),
       mWindowDraggingAllowed(false),
@@ -1526,7 +1527,33 @@ nsDocShell::SetRemoteTabs(bool aUseRemoteTabs) {
                                        true);
   }
 
+  // Don't allow non-remote tabs with remote subframes.
+  if (NS_WARN_IF(!aUseRemoteTabs && mUseRemoteSubframes)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   mUseRemoteTabs = aUseRemoteTabs;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetUseRemoteSubframes(bool* aUseRemoteSubframes) {
+  NS_ENSURE_ARG_POINTER(aUseRemoteSubframes);
+
+  *aUseRemoteSubframes = mUseRemoteSubframes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetRemoteSubframes(bool aUseRemoteSubframes) {
+  // Should we annotate crash reports like in aUseRemoteTabs?
+
+  // Don't allow non-remote tabs with remote subframes.
+  if (NS_WARN_IF(aUseRemoteSubframes && !mUseRemoteTabs)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  mUseRemoteSubframes = aUseRemoteSubframes;
   return NS_OK;
 }
 
