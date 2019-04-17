@@ -12,14 +12,14 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 
 const TreeView = createFactory(require("devtools/client/shared/components/tree/TreeView"));
 // Reps
-const { REPS, MODE } = require("devtools/client/shared/components/reps/reps");
-const Rep = createFactory(REPS.Rep);
-const Grip = REPS.Grip;
+const { MODE } = require("devtools/client/shared/components/reps/reps");
 
 const { fetchChildren } = require("../actions/accessibles");
 
 const { L10N } = require("../utils/l10n");
+const { isFiltered } = require("../utils/audit");
 const AccessibilityRow = createFactory(require("./AccessibilityRow"));
+const AccessibilityRowValue = createFactory(require("./AccessibilityRowValue"));
 const { Provider } = require("../provider");
 
 /**
@@ -35,6 +35,7 @@ class AccessibilityTree extends Component {
       selected: PropTypes.string,
       highlighted: PropTypes.object,
       supports: PropTypes.object,
+      filtered: PropTypes.bool,
     };
   }
 
@@ -44,6 +45,7 @@ class AccessibilityTree extends Component {
     this.onNameChange = this.onNameChange.bind(this);
     this.onReorder = this.onReorder.bind(this);
     this.onTextChange = this.onTextChange.bind(this);
+    this.renderValue = this.renderValue.bind(this);
   }
 
   /**
@@ -120,6 +122,15 @@ class AccessibilityTree extends Component {
     }
   }
 
+  renderValue(props) {
+    const { walker } = this.props;
+
+    return AccessibilityRowValue({
+      ...props,
+      walker,
+    });
+  }
+
   /**
    * Render Accessibility panel content
    */
@@ -140,18 +151,12 @@ class AccessibilityTree extends Component {
       highlighted: highlightedItem,
       supports,
       walker,
+      filtered,
     } = this.props;
 
     // Historically, the first context menu item is snapshot function and it is available
     // for all accessible object.
     const hasContextMenu = supports.snapshot;
-
-    const renderValue = props => {
-      return Rep(Object.assign({}, props, {
-        defaultRep: Grip,
-        cropLimit: 50,
-      }));
-    };
 
     const renderRow = rowProps => {
       const { object } = rowProps.member;
@@ -167,6 +172,7 @@ class AccessibilityTree extends Component {
         },
       }));
     };
+    const className = filtered ? "filtered" : undefined;
 
     return (
       TreeView({
@@ -174,14 +180,14 @@ class AccessibilityTree extends Component {
         mode: MODE.SHORT,
         provider: new Provider(accessibles, dispatch),
         columns: columns,
-        renderValue,
+        className,
+        renderValue: this.renderValue,
         renderRow,
         label: L10N.getStr("accessibility.treeName"),
         header: true,
         expandedNodes: expanded,
         selected,
         onClickRow(nodePath, event) {
-          event.stopPropagation();
           if (event.target.classList.contains("theme-twisty")) {
             this.toggle(nodePath);
           }
@@ -203,12 +209,17 @@ class AccessibilityTree extends Component {
   }
 }
 
-const mapStateToProps = ({ accessibles, ui }) => ({
+const mapStateToProps = ({
   accessibles,
-  expanded: ui.expanded,
-  selected: ui.selected,
-  supports: ui.supports,
-  highlighted: ui.highlighted,
+  ui: { expanded, selected, supports, highlighted },
+  audit: { filters },
+}) => ({
+  accessibles,
+  expanded,
+  selected,
+  supports,
+  highlighted,
+  filtered: isFiltered(filters),
 });
 // Exports from this module
 module.exports = connect(mapStateToProps)(AccessibilityTree);

@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AccessibilityTreeFilter component: audit filter filtered 1`] = `"<div role=\\"toolbar\\">accessibility.tree.filters<button aria-pressed=\\"true\\" aria-busy=\\"false\\" class=\\"audit-badge badge toggle-button checked\\">accessibility.badge.contrast</button></div>"`;
+
+exports[`AccessibilityTreeFilter component: audit filter filtered auditing 1`] = `"<div role=\\"toolbar\\">accessibility.tree.filters<button aria-pressed=\\"true\\" aria-busy=\\"true\\" class=\\"audit-badge badge toggle-button checked devtools-throbber\\">accessibility.badge.contrast</button></div>"`;
+
+exports[`AccessibilityTreeFilter component: audit filter not filtered 1`] = `"<div role=\\"toolbar\\">accessibility.tree.filters<button aria-pressed=\\"false\\" aria-busy=\\"false\\" class=\\"audit-badge badge toggle-button\\">accessibility.badge.contrast</button></div>"`;
+
+exports[`AccessibilityTreeFilter component: audit filter not filtered auditing 1`] = `"<div role=\\"toolbar\\">accessibility.tree.filters<button aria-pressed=\\"false\\" aria-busy=\\"true\\" class=\\"audit-badge badge toggle-button devtools-throbber\\">accessibility.badge.contrast</button></div>"`;
+
+exports[`AccessibilityTreeFilter component: toggle filter 1`] = `"<div role=\\"toolbar\\">accessibility.tree.filters<button aria-pressed=\\"false\\" aria-busy=\\"false\\" class=\\"audit-badge badge toggle-button\\">accessibility.badge.contrast</button></div>"`;

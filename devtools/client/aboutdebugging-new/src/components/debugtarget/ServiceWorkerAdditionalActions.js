@@ -94,7 +94,7 @@ class ServiceWorkerAdditionalActions extends PureComponent {
     });
   }
 
-  render() {
+  _renderActionButtons() {
     const { status } = this.props.target.details;
 
     switch (status) {
@@ -114,6 +114,15 @@ class ServiceWorkerAdditionalActions extends PureComponent {
         console.error("Unexpected service worker status: " + status);
         return null;
     }
+  }
+
+  render() {
+    return dom.div(
+      {
+        className: "toolbar toolbar--right-align",
+      },
+      this._renderActionButtons(),
+    );
   }
 }
 

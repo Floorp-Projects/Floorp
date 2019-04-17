@@ -1706,6 +1706,11 @@ impl RenderBackend {
                     &mut profile_counters.resources,
                     self.debug_flags,
                 );
+                // After we rendered the frames, there are pending updates to both
+                // GPU cache and resources. Instead of serializing them, we are going to make sure
+                // they are applied on the `Renderer` side.
+                let msg_update_gpu_cache = ResultMsg::UpdateGpuCache(self.gpu_cache.extract_updates());
+                self.result_tx.send(msg_update_gpu_cache).unwrap();
                 //TODO: write down doc's pipeline info?
                 // it has `pipeline_epoch_map`,
                 // which may capture necessary details for some cases.
@@ -1741,11 +1746,6 @@ impl RenderBackend {
         config.serialize(&backend, "backend");
 
         if config.bits.contains(CaptureBits::FRAME) {
-            // After we rendered the frames, there are pending updates to both
-            // GPU cache and resources. Instead of serializing them, we are going to make sure
-            // they are applied on the `Renderer` side.
-            let msg_update_gpu_cache = ResultMsg::UpdateGpuCache(self.gpu_cache.extract_updates());
-            self.result_tx.send(msg_update_gpu_cache).unwrap();
             let msg_update_resources = ResultMsg::UpdateResources {
                 updates: self.resource_cache.pending_updates(),
                 memory_pressure: false,
