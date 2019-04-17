@@ -159,7 +159,7 @@ function saveImageURL(aURL, aFileName, aFilePickerTitleKey, aShouldBypassCache,
 // whether in-process or out-of-process.
 function saveBrowser(aBrowser, aSkipPrompt, aOuterWindowID = 0) {
   if (!aBrowser) {
-    throw "Must have a browser when calling saveBrowser";
+    throw new Error("Must have a browser when calling saveBrowser");
   }
   let persistable = aBrowser.frameLoader;
   // Because of how pdf.js deals with principals, saving the document the "normal"
@@ -202,7 +202,7 @@ function saveBrowser(aBrowser, aSkipPrompt, aOuterWindowID = 0) {
 // command (bug 1141337) and pre-e10s add-ons.
 function saveDocument(aDocument, aSkipPrompt) {
   if (!aDocument)
-    throw "Must have a document when calling saveDocument";
+    throw new Error("Must have a document when calling saveDocument");
 
   let contentDisposition = null;
   let cacheKey = 0;
@@ -856,7 +856,7 @@ function appendFiltersForContentType(aFilePicker, aContentType, aFileExtension, 
 
   if (!bundleName) {
     if (aSaveMode != SAVEMODE_FILEONLY)
-      throw "Invalid save mode for type '" + aContentType + "'";
+      throw new Error(`Invalid save mode for type '${aContentType}'`);
 
     var mimeInfo = getMIMEInfoForType(aContentType, aFileExtension);
     if (mimeInfo) {

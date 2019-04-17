@@ -19,11 +19,7 @@ namespace dom {
 
 BrowserBridgeParent::BrowserBridgeParent() : mIPCOpen(false) {}
 
-BrowserBridgeParent::~BrowserBridgeParent() {
-  if (mTabParent) {
-    mTabParent->mBrowserBridgeParent = nullptr;
-  }
-}
+BrowserBridgeParent::~BrowserBridgeParent() { Destroy(); }
 
 nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
                                    const nsString& aRemoteType,
@@ -68,18 +64,27 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
                                             tabContext, aBrowsingContext,
                                             aChromeFlags, this));
 
-  PBrowserParent* browser = constructorSender->SendPBrowserConstructor(
-      // DeallocPBrowserParent() releases this ref.
-      tabParent.forget().take(), tabId, TabId(0), tabContext.AsIPCTabContext(),
-      aChromeFlags, constructorSender->ChildID(), aBrowsingContext,
+  // Open a remote endpoint for our PBrowser actor. DeallocPBrowserParent
+  // releases the ref taken.
+  ManagedEndpoint<PBrowserChild> childEp =
+      constructorSender->OpenPBrowserEndpoint(do_AddRef(tabParent).take());
+  if (NS_WARN_IF(!childEp.IsValid())) {
+    MOZ_ASSERT(false, "Browser Open Endpoint Failed");
+    return NS_ERROR_FAILURE;
+  }
+
+  // Tell the content process to set up its PBrowserChild.
+  bool ok = constructorSender->SendConstructBrowser(
+      std::move(childEp), tabId, TabId(0), tabContext.AsIPCTabContext(),
+      aBrowsingContext, aChromeFlags, constructorSender->ChildID(),
       constructorSender->IsForBrowser());
-  if (NS_WARN_IF(!browser)) {
+  if (NS_WARN_IF(!ok)) {
     MOZ_ASSERT(false, "Browser Constructor Failed");
     return NS_ERROR_FAILURE;
   }
 
   // Set our TabParent object to the newly created browser.
-  mTabParent = TabParent::GetFrom(browser);
+  mTabParent = tabParent.forget();
   mTabParent->SetOwnerElement(Manager()->GetOwnerElement());
   mTabParent->InitRendering();
 
@@ -92,6 +97,13 @@ nsresult BrowserBridgeParent::Init(const nsString& aPresentationURL,
   // Send the newly created layers ID back into content.
   Unused << SendSetLayersId(rf->GetLayersId());
   return NS_OK;
+}
+
+void BrowserBridgeParent::Destroy() {
+  if (mTabParent) {
+    mTabParent->Destroy();
+    mTabParent = nullptr;
+  }
 }
 
 IPCResult BrowserBridgeParent::RecvShow(const ScreenIntSize& aSize,
@@ -109,6 +121,11 @@ IPCResult BrowserBridgeParent::RecvShow(const ScreenIntSize& aSize,
 
 IPCResult BrowserBridgeParent::RecvLoadURL(const nsCString& aUrl) {
   Unused << mTabParent->SendLoadURL(aUrl, mTabParent->GetShowInfo());
+  return IPC_OK();
+}
+
+IPCResult BrowserBridgeParent::RecvResumeLoad(uint64_t aPendingSwitchID) {
+  mTabParent->ResumeLoad(aPendingSwitchID);
   return IPC_OK();
 }
 
@@ -143,6 +160,7 @@ IPCResult BrowserBridgeParent::RecvDeactivate() {
 
 void BrowserBridgeParent::ActorDestroy(ActorDestroyReason aWhy) {
   mIPCOpen = false;
+  Destroy();
 }
 
 }  // namespace dom

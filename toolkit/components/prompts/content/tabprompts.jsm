@@ -163,7 +163,7 @@ var TabModalPrompt = class {
     this.onCloseCallback = onCloseCallback;
 
     if (args.enableDelay)
-      throw "BUTTON_DELAY_ENABLE not yet supported for tab-modal prompts";
+      throw new Error("BUTTON_DELAY_ENABLE not yet supported for tab-modal prompts");
 
     // We need to remove the prompt when the tab or browser window is closed or
     // the page navigates, else we never unwind the event loop and that's sad times.

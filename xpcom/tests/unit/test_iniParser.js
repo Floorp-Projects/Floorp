@@ -300,6 +300,6 @@ try { parser.setString("ok", "ok", "good="); } catch (e) { caughtError = e; }
 Assert.ok(!caughtError);
 caughtError = null;
 } catch (e) {
-    throw "FAILED in test #" + testnum + " -- " + e;
+    throw new Error(`FAILED in test #${testnum} -- ${e}`);
 }
 }

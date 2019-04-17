@@ -10,14 +10,14 @@
 
 // Don't include this file in any .h files because it pulls in some X headers.
 
-#ifndef MODULES_DESKTOP_CAPTURE_X11_X_SERVER_PIXEL_BUFFER_H_
-#define MODULES_DESKTOP_CAPTURE_X11_X_SERVER_PIXEL_BUFFER_H_
-
-#include "modules/desktop_capture/desktop_geometry.h"
-#include "rtc_base/constructormagic.h"
+#ifndef MODULES_DESKTOP_CAPTURE_LINUX_X_SERVER_PIXEL_BUFFER_H_
+#define MODULES_DESKTOP_CAPTURE_LINUX_X_SERVER_PIXEL_BUFFER_H_
 
 #include <X11/Xutil.h>
 #include <X11/extensions/XShm.h>
+
+#include "modules/desktop_capture/desktop_geometry.h"
+#include "rtc_base/constructormagic.h"
 
 namespace webrtc {
 
@@ -81,4 +81,4 @@ class XServerPixelBuffer {
 
 }  // namespace webrtc
 
-#endif  // MODULES_DESKTOP_CAPTURE_X11_X_SERVER_PIXEL_BUFFER_H_
+#endif  // MODULES_DESKTOP_CAPTURE_LINUX_X_SERVER_PIXEL_BUFFER_H_

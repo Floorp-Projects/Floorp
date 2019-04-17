@@ -42,20 +42,14 @@ tasktype_map:
 platform_names:
   path_platform:
     by-platform:
-      linux-nightly: 'linux-i686'
-      linux64-nightly: 'linux-x86_64'
-      linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
-      macosx64-nightly: 'mac'
-      win32-nightly: 'win32'
-      win64-nightly: 'win64'
-      win64-aarch64-nightly: 'win64-aarch64'
-      win64-asan-reporter-nightly: 'win64-asan-reporter'
       linux-shippable: 'linux-i686'
       linux64-shippable: 'linux-x86_64'
+      linux64-asan-reporter-nightly: 'linux-x86_64-asan-reporter'
       macosx64-shippable: 'mac'
       win32-shippable: 'win32'
       win64-shippable: 'win64'
       win64-aarch64-shippable: 'win64-aarch64'
+      win64-asan-reporter-nightly: 'win64-asan-reporter'
       linux: 'linux-i686'
       linux64: 'linux-x86_64'
       macosx64: 'mac'

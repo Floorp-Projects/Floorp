@@ -8,6 +8,7 @@
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/WindowGlobalActorsBinding.h"
 #include "mozilla/dom/WindowGlobalParent.h"
@@ -138,6 +139,82 @@ void WindowGlobalChild::Destroy() {
   }
 
   mIPCClosed = true;
+}
+
+static nsresult ChangeFrameRemoteness(WindowGlobalChild* aWgc,
+                                      BrowsingContext* aBc,
+                                      const nsString& aRemoteType,
+                                      uint64_t aPendingSwitchId,
+                                      BrowserBridgeChild** aBridge) {
+  MOZ_ASSERT(XRE_IsContentProcess(), "This doesn't make sense in the parent");
+
+  // Get the target embedder's FrameLoaderOwner, and make sure we're in the
+  // right place.
+  RefPtr<Element> embedderElt = aBc->GetEmbedderElement();
+  if (!embedderElt) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (NS_WARN_IF(embedderElt->GetOwnerGlobal() != aWgc->WindowGlobal())) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  RefPtr<nsFrameLoaderOwner> flo = do_QueryObject(embedderElt);
+  MOZ_ASSERT(flo, "Embedder must be a nsFrameLoaderOwner!");
+
+  MOZ_ASSERT(nsContentUtils::IsSafeToRunScript());
+
+  // Actually perform the remoteness swap.
+  RemotenessOptions options;
+  options.mRemoteType.Construct(aRemoteType);
+  options.mPendingSwitchID.Construct(aPendingSwitchId);
+
+  ErrorResult error;
+  flo->ChangeRemoteness(options, error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+
+  // Make sure we successfully created either an in-process nsDocShell or a
+  // cross-process BrowserBridgeChild. If we didn't, produce an error.
+  RefPtr<nsFrameLoader> frameLoader = flo->GetFrameLoader();
+  if (NS_WARN_IF(!frameLoader)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<BrowserBridgeChild> bbc;
+  if (frameLoader->IsRemoteFrame()) {
+    bbc = frameLoader->GetBrowserBridgeChild();
+    if (NS_WARN_IF(!bbc)) {
+      return NS_ERROR_FAILURE;
+    }
+  } else {
+    nsDocShell* ds = frameLoader->GetDocShell(error);
+    if (NS_WARN_IF(error.Failed())) {
+      return error.StealNSResult();
+    }
+
+    if (NS_WARN_IF(!ds)) {
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  bbc.forget(aBridge);
+  return NS_OK;
+}
+
+IPCResult WindowGlobalChild::RecvChangeFrameRemoteness(
+    dom::BrowsingContext* aBc, const nsString& aRemoteType,
+    uint64_t aPendingSwitchId, ChangeFrameRemotenessResolver&& aResolver) {
+  MOZ_ASSERT(XRE_IsContentProcess(), "This doesn't make sense in the parent");
+
+  RefPtr<BrowserBridgeChild> bbc;
+  nsresult rv = ChangeFrameRemoteness(this, aBc, aRemoteType, aPendingSwitchId,
+                                      getter_AddRefs(bbc));
+
+  // To make the type system happy, we've gotta do some gymnastics.
+  aResolver(Tuple<const nsresult&, PBrowserBridgeChild*>(rv, bbc));
+  return IPC_OK();
 }
 
 IPCResult WindowGlobalChild::RecvAsyncMessage(const nsString& aActorName,

@@ -455,7 +455,7 @@ function delayedDefaultCallback() {
   if (gTest.buttonClick) {
     debugDump("clicking " + gTest.buttonClick + " button");
     if (gTest.extraDelayedFinishFunction) {
-      throw ("Tests cannot have a buttonClick and an extraDelayedFinishFunction property");
+      throw new Error("Tests cannot have a buttonClick and an extraDelayedFinishFunction property");
     }
     gDocElem.getButton(gTest.buttonClick).click();
   } else if (gTest.extraDelayedFinishFunction) {

@@ -261,6 +261,7 @@ GMPInstallManager.prototype = {
         }
       }
       if (failureEncountered) {
+        // eslint-disable-next-line no-throw-literal
         throw {status:  "failed",
                results: installResults};
       }

@@ -368,6 +368,7 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext)
       mIsAppTab(false),
       mUseGlobalHistory(false),
       mUseRemoteTabs(false),
+      mUseRemoteSubframes(false),
       mUseTrackingProtection(false),
       mDeviceSizeIsPageSize(false),
       mWindowDraggingAllowed(false),
@@ -1526,7 +1527,33 @@ nsDocShell::SetRemoteTabs(bool aUseRemoteTabs) {
                                        true);
   }
 
+  // Don't allow non-remote tabs with remote subframes.
+  if (NS_WARN_IF(!aUseRemoteTabs && mUseRemoteSubframes)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
   mUseRemoteTabs = aUseRemoteTabs;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetUseRemoteSubframes(bool* aUseRemoteSubframes) {
+  NS_ENSURE_ARG_POINTER(aUseRemoteSubframes);
+
+  *aUseRemoteSubframes = mUseRemoteSubframes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetRemoteSubframes(bool aUseRemoteSubframes) {
+  // Should we annotate crash reports like in aUseRemoteTabs?
+
+  // Don't allow non-remote tabs with remote subframes.
+  if (NS_WARN_IF(aUseRemoteSubframes && !mUseRemoteTabs)) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  mUseRemoteSubframes = aUseRemoteSubframes;
   return NS_OK;
 }
 
@@ -2642,14 +2669,30 @@ nsresult nsDocShell::SetDocLoaderParent(nsDocLoader* aParent) {
   RecomputeCanExecuteScripts();
 
   // Inform windows when they're being removed from their parent.
-  if (!aParent && mScriptGlobal) {
-    mScriptGlobal->ParentWindowChanged();
+  if (!aParent) {
+    MaybeClearStorageAccessFlag();
   }
 
   NS_ASSERTION(mInheritPrivateBrowsingId || wasPrivate == UsePrivateBrowsing(),
                "Private browsing state changed while inheritance was disabled");
 
   return NS_OK;
+}
+
+void nsDocShell::MaybeClearStorageAccessFlag() {
+  if (mScriptGlobal) {
+    // Tell our window that the parent has now changed.
+    mScriptGlobal->ParentWindowChanged();
+
+    // Tell all of our children about the change recursively as well.
+    nsTObserverArray<nsDocLoader*>::ForwardIterator iter(mChildList);
+    while (iter.HasMore()) {
+      nsCOMPtr<nsIDocShell> child = do_QueryObject(iter.GetNext());
+      if (child) {
+        static_cast<nsDocShell*>(child.get())->MaybeClearStorageAccessFlag();
+      }
+    }
+  }
 }
 
 NS_IMETHODIMP

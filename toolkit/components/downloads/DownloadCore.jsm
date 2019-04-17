@@ -427,7 +427,7 @@ this.Download.prototype = {
         // before we call the "execute" method of the saver.
         if (this._promiseCanceled) {
           // The exception will become a cancellation in the "catch" block.
-          throw undefined;
+          throw new Error(undefined);
         }
 
         // Execute the actual download through the saver object.

@@ -8,9 +8,11 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "modules/desktop_capture/window_finder_x11.h"
+#include "modules/desktop_capture/linux/window_finder_x11.h"
 
-#include "modules/desktop_capture/x11/window_list_utils.h"
+#include <memory>
+
+#include "modules/desktop_capture/linux/window_list_utils.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/ptr_util.h"
 

@@ -14316,16 +14316,6 @@
     "labels": ["FullStandards", "AlmostStandards", "NavQuirks"],
     "description": "HTML document compat mode (quirks mode)"
   },
-  "HIDDEN_VIEWPORT_OVERFLOW_TYPE": {
-    "record_in_processes": ["main", "content"],
-    "alert_emails": ["mozilla-telemetry@upsuper.org", "botond@mozilla.com"],
-    "bug_numbers": [1423013, 1423017, 1513089],
-    "expires_in_version": "70",
-    "kind": "categorical",
-    "releaseChannelCollection": "opt-out",
-    "labels": ["NoOverflow", "Desktop", "ButNotMinScaleSize", "MinScaleSize"],
-    "description": "How common are different types of out-of-reach viewport overflow?"
-  },
   "WR_SCENEBUILD_TIME": {
     "record_in_processes": ["main", "gpu"],
     "alert_emails": ["kgupta@mozilla.com"],
