@@ -56,8 +56,13 @@ var TelemetryPrioPing = {
   _timeoutId: null,
 
   startup() {
-    if (!this._testing && !Services.prefs.getBoolPref(Utils.Preferences.PrioPingEnabled, false)) {
-      this._log.trace("Prio ping disabled.");
+    if (!this._testing && !Telemetry.canRecordPrereleaseData) {
+      this._log.trace("Extended collection disabled. Prio ping disabled.");
+      return;
+    }
+
+    if (!this._testing && !Services.prefs.getBoolPref(Utils.Preferences.PrioPingEnabled, true)) {
+      this._log.trace("Prio ping disabled by pref.");
       return;
     }
     this._log.trace("Starting up.");
