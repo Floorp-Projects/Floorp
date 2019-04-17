@@ -459,6 +459,7 @@ android-hw-arm7-raptor:
     - raptor-tp6m-8-geckoview
     - raptor-tp6m-9-geckoview
     - raptor-tp6m-10-geckoview
+    - raptor-tp6m-1-fenix
     - raptor-tp6m-1-refbrow
     - raptor-tp6m-2-refbrow
     - raptor-tp6m-3-refbrow
