@@ -21,14 +21,14 @@ import org.mozilla.fenix.home.sessioncontrol.viewholders.formattedSavedAt
 
 class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer {
     sealed class SessionType {
-        data class Current(val titles: List<String>) : SessionType()
-        data class Archived(val archivedSession: ArchivedSession) : SessionType()
-        data class Private(val titles: List<String>) : SessionType()
+        data class Current(override val titles: List<String>) : SessionType()
+        data class Private(override val titles: List<String>) : SessionType()
+
+        abstract val titles: List<String>
     }
 
     private var sessionType: SessionType? = null
     var onDelete: ((SessionType) -> Unit)? = null
-    var onArchive: ((SessionType.Current) -> Unit)? = null
 
     override val containerView: View?
         get() = view
@@ -44,7 +44,6 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
         view.current_session_card_title.text = getCardTitle()
         view.current_session_card_tab_list.text = getTabTitles()
         view.archive_session_button.apply {
-            visibility = if (sessionType is SessionType.Current) View.VISIBLE else View.GONE
             val drawable = ContextCompat.getDrawable(context!!, R.drawable.ic_archive)
             drawable?.setColorFilter(
                 ContextCompat.getColor(
@@ -54,12 +53,6 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
             )
             setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
             setOnClickListener {
-                sessionType?.also {
-                    if (it is SessionType.Current) {
-                        onArchive?.invoke(it)
-                    }
-                }
-
                 dismiss()
             }
         }
@@ -101,7 +94,6 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
     private fun getCardTitle(): String? {
         return sessionType?.let {
             when (it) {
-                is SessionType.Archived -> it.archivedSession.formattedSavedAt
                 is SessionType.Current -> getString(R.string.tabs_header_title)
                 is SessionType.Private -> getString(R.string.tabs_header_private_title)
             }
@@ -109,16 +101,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
     }
 
     private fun getTabTitles(): String? {
-        return sessionType?.let {
-            when (it) {
-                is SessionType.Current -> it.titles
-                is SessionType.Private -> it.titles
-                is SessionType.Archived ->
-                    it.archivedSession.bundle.restoreSnapshot()?.let { snapshot ->
-                        snapshot.sessions.map { item -> item.session.title }
-                    }
-            }
-        }?.joinToString(", ") {
+        return sessionType?.titles?.joinToString(", ") {
             if (it.length > maxTitleLength) it.substring(0,
                 maxTitleLength
             ) + "..." else it
