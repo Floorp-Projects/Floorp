@@ -6,8 +6,8 @@ add_task(async function test_MatchPattern_matches() {
   function test(url, pattern, normalized = pattern, options = {}, explicit) {
     let uri = Services.io.newURI(url);
 
-    pattern = Array.concat(pattern);
-    normalized = Array.concat(normalized);
+    pattern = Array.prototype.concat.call(pattern);
+    normalized = Array.prototype.concat.call(normalized);
 
     let patterns = pattern.map(pat => new MatchPattern(pat, options));
 
@@ -172,9 +172,9 @@ add_task(async function test_MatchPattern_matches() {
 
 add_task(async function test_MatchPattern_overlaps() {
   function test(filter, hosts, optional) {
-    filter = Array.concat(filter);
-    hosts = Array.concat(hosts);
-    optional = Array.concat(optional);
+    filter = Array.prototype.concat.call(filter);
+    hosts = Array.prototype.concat.call(hosts);
+    optional = Array.prototype.concat.call(optional);
 
     const set = new MatchPatternSet([...hosts, ...optional]);
     const pat = new MatchPatternSet(filter);

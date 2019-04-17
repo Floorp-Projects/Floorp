@@ -65,7 +65,7 @@ add_task(async function() {
   is(gBrowser.selectedTab, testTab, "next to test tab again");
 
   // Try showing all tabs
-  gBrowser.showOnlyTheseTabs(Array.slice(gBrowser.tabs));
+  gBrowser.showOnlyTheseTabs(Array.from(gBrowser.tabs));
   is(gBrowser.visibleTabs.length, 3, "all 3 tabs are visible again");
 
   // Select the pinned tab and show the testTab to make sure selection updates

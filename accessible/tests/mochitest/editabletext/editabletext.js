@@ -32,12 +32,12 @@ function editableTextTest(aID) {
    * Schedule a test, the given function with its arguments will be executed
    * when preceding test is complete.
    */
-  this.scheduleTest = function scheduleTest(aFunc) {
+  this.scheduleTest = function scheduleTest(aFunc, ...aFuncArgs) {
     // A data container acts like a dummy invoker, it's never invoked but
     // it's used to generate real invoker when previous invoker was handled.
     var dataContainer = {
       func: aFunc,
-      funcArgs: Array.slice(arguments, 1),
+      funcArgs: aFuncArgs,
     };
     this.mEventQueue.push(dataContainer);
 

@@ -1,7 +1,7 @@
 var tabs;
 
 function index(tab) {
-  return Array.indexOf(gBrowser.tabs, tab);
+  return Array.prototype.indexOf.call(gBrowser.tabs, tab);
 }
 
 function indexTest(tab, expectedIndex, msg) {

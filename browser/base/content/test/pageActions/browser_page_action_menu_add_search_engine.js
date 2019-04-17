@@ -118,7 +118,7 @@ add_task(async function many() {
     let bodyID = viewID + "-body";
     let body = document.getElementById(bodyID);
     Assert.deepEqual(
-      Array.map(body.children, n => n.label),
+      Array.from(body.children, n => n.label),
       [
         "page_action_menu_add_search_engine_0",
         "page_action_menu_add_search_engine_1",
@@ -147,7 +147,7 @@ add_task(async function many() {
     EventUtils.synthesizeMouseAtCenter(button, {});
     await viewPromise;
     Assert.deepEqual(
-      Array.map(body.children, n => n.label),
+      Array.from(body.children, n => n.label),
       [
         "page_action_menu_add_search_engine_1",
         "page_action_menu_add_search_engine_2",
@@ -250,7 +250,7 @@ add_task(async function many() {
     await viewPromise;
     body = document.getElementById(bodyID);
     Assert.deepEqual(
-      Array.map(body.children, n => n.label),
+      Array.from(body.children, n => n.label),
       [
         "page_action_menu_add_search_engine_0",
         "page_action_menu_add_search_engine_1",
@@ -272,7 +272,7 @@ add_task(async function many() {
     EventUtils.synthesizeMouseAtCenter(button, {});
     await viewPromise;
     Assert.deepEqual(
-      Array.map(body.children, n => n.label),
+      Array.from(body.children, n => n.label),
       [
         "page_action_menu_add_search_engine_0",
         "page_action_menu_add_search_engine_1",
@@ -368,7 +368,7 @@ add_task(async function urlbarMany() {
     Assert.equal(view.id, viewID, "View ID");
     let body = view.firstElementChild;
     Assert.deepEqual(
-      Array.map(body.children, n => n.label),
+      Array.from(body.children, n => n.label),
       [
         "page_action_menu_add_search_engine_0",
         "page_action_menu_add_search_engine_1",
@@ -396,7 +396,7 @@ add_task(async function urlbarMany() {
     view = await waitForActivatedActionPanel();
     body = view.firstElementChild;
     Assert.deepEqual(
-      Array.map(body.children, n => n.label),
+      Array.from(body.children, n => n.label),
       [
         "page_action_menu_add_search_engine_1",
         "page_action_menu_add_search_engine_2",
@@ -461,7 +461,7 @@ add_task(async function urlbarMany() {
     view = await waitForActivatedActionPanel();
     body = view.firstElementChild;
     Assert.deepEqual(
-      Array.map(body.children, n => n.label),
+      Array.from(body.children, n => n.label),
       [
         "page_action_menu_add_search_engine_0",
         "page_action_menu_add_search_engine_1",
@@ -486,7 +486,7 @@ add_task(async function urlbarMany() {
     view = await waitForActivatedActionPanel();
     body = view.firstElementChild;
     Assert.deepEqual(
-      Array.map(body.children, n => n.label),
+      Array.from(body.children, n => n.label),
       [
         "page_action_menu_add_search_engine_0",
         "page_action_menu_add_search_engine_1",

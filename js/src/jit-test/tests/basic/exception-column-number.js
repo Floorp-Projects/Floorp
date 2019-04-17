@@ -1,5 +1,5 @@
 try {
-    Array.indexOf();
+    Array.from();
 } catch (e) {
     assertEq(e.columnNumber, 11);
     // Filter the filename from the stack, since we have no clue what

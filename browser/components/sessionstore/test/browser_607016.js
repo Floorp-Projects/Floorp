@@ -85,7 +85,7 @@ add_task(async function() {
   await setBrowserState(state);
 
   // Wait until the selected tab is restored and all others are pending.
-  await Promise.all(Array.map(gBrowser.tabs, tab => {
+  await Promise.all(Array.from(gBrowser.tabs, tab => {
     return (tab == gBrowser.selectedTab) ?
       promiseTabRestored(tab) : promiseTabRestoring(tab);
   }));
