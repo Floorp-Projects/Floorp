@@ -40,14 +40,30 @@ var GeckoViewWebExtension = {
     }
 
     try {
-      await Extension.getBootstrapScope(aId, file)
-          .startup(params, undefined);
+      const scope = Extension.getBootstrapScope(aId, file);
+      this.extensionScopes.set(aId, scope);
+
+      await scope.startup(params, undefined);
+      scope.extension.callOnClose({
+        close: () => this.extensionScopes.delete(aId),
+      });
     } catch (ex) {
       aCallback.onError(`Error registering WebExtension at: ${aUri.spec}. ${ex}`);
       return;
     }
 
     aCallback.onSuccess();
+  },
+
+  async unregisterWebExtension(aId, aCallback) {
+    try {
+      const scope = this.extensionScopes.get(aId);
+      await scope.shutdown();
+      this.extensionScopes.delete(aId);
+      aCallback.onSuccess();
+    } catch (ex) {
+      aCallback.onError(`Error unregistering WebExtension ${aId}. ${ex}`);
+    }
   },
 
   onEvent(aEvent, aData, aCallback) {
@@ -67,8 +83,25 @@ var GeckoViewWebExtension = {
           return;
         }
 
+        if (this.extensionScopes.has(aData.id)) {
+          aCallback.onError(`An extension with id='${aData.id}' has already been registered.`);
+          return;
+        }
+
         this.registerWebExtension(aData.id, uri, aCallback);
       }
+      break;
+
+      case "GeckoView:UnregisterWebExtension":
+        if (!this.extensionScopes.has(aData.id)) {
+          aCallback.onError(`Could not find an extension with id='${aData.id}'.`);
+          return;
+        }
+
+        this.unregisterWebExtension(aData.id, aCallback);
+      break;
     }
   },
 };
+
+GeckoViewWebExtension.extensionScopes = new Map();
