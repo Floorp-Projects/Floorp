@@ -273,14 +273,6 @@ EventLoopNestingLevel:
   type: integer
   ping: true
 
-ExecutableName:
-  description: >
-    The name of the last executable that was launched via the nsIProcess class.
-    Multiple executables can be launched at the same time from one or more
-    threads so this annotation might not always contain the correct value. To
-    be removed once bug 1386760 is fixed.
-  type: string
-
 ExpectedStreamLen:
   description: >
     Expected length of an IPC proxy stream.
