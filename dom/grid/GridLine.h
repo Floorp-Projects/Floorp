@@ -44,6 +44,8 @@ class GridLine : public nsISupports, public nsWrapperCache {
                      double aBreadth, uint32_t aNumber, int32_t aNegativeNumber,
                      GridDeclaration aType);
 
+  void SetLineNames(const nsTArray<nsString>& aNames);
+
  protected:
   RefPtr<GridLines> mParent;
   nsTArray<nsString> mNames;
