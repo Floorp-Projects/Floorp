@@ -122,9 +122,6 @@ void CanonicalBrowsingContext::SetEmbedderWindowGlobal(
   if (RefPtr<BrowsingContext> parent = GetParent()) {
     MOZ_RELEASE_ASSERT(aGlobal->BrowsingContext() == parent,
                        "Embedder has incorrect browsing context");
-  } else {
-    MOZ_RELEASE_ASSERT(aGlobal->IsInProcess(),
-                       "Toplevel must have a parent-process embedder");
   }
 
   mEmbedderWindowGlobal = aGlobal;
