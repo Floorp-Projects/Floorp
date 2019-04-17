@@ -36,7 +36,6 @@ class ToolbarComponent(
 
     override val reducer: Reducer<SearchState, SearchChange> = { state, change ->
         when (change) {
-            is SearchChange.QueryChanged -> state.copy(query = change.query)
             is SearchChange.SearchShortcutEngineSelected ->
                 state.copy(engine = change.engine)
         }
@@ -88,6 +87,5 @@ sealed class SearchAction : Action {
 }
 
 sealed class SearchChange : Change {
-    data class QueryChanged(val query: String) : SearchChange()
     data class SearchShortcutEngineSelected(val engine: SearchEngine) : SearchChange()
 }

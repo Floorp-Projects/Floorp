@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import kotlinx.android.synthetic.main.fragment_search.*
 import kotlinx.android.synthetic.main.fragment_search.view.*
+import mozilla.components.browser.search.SearchEngine
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.ktx.kotlin.isUrl
@@ -119,9 +120,7 @@ class SearchFragment : Fragment() {
                             val event = if (it.url.isUrl()) {
                                 Event.EnteredUrl(false)
                             } else {
-                                val isSearchShortcut = it.engine !=
-                                        requireComponents.search.searchEngineManager.defaultSearchEngine
-                                Event.PerformedSearch(false, isSearchShortcut)
+                                Event.PerformedSearch(false, isSearchShortcut(it.engine))
                             }
 
                             requireComponents.analytics.metrics.track(event)
@@ -151,11 +150,8 @@ class SearchFragment : Fragment() {
                             .invoke(it.searchTerms, it.engine)
                         (activity as HomeActivity).openToBrowser(sessionId, BrowserDirection.FromSearch)
 
-                        val isSearchShortcut = it.engine !=
-                                requireComponents.search.searchEngineManager.defaultSearchEngine
-
                         requireComponents.analytics.metrics
-                            .track(Event.PerformedSearch(true, isSearchShortcut))
+                            .track(Event.PerformedSearch(true, isSearchShortcut(it.engine)))
                     }
                     is AwesomeBarAction.SearchShortcutEngineSelected -> {
                         getManagedEmitter<AwesomeBarChange>()
@@ -189,5 +185,9 @@ class SearchFragment : Fragment() {
             true -> context.components.useCases.tabsUseCases.addPrivateTab
             false -> context.components.useCases.tabsUseCases.addTab
         }
+    }
+
+    private fun isSearchShortcut(engine: SearchEngine?): Boolean {
+        return engine != null && engine != requireComponents.search.searchEngineManager.defaultSearchEngine
     }
 }
