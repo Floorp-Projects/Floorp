@@ -15,6 +15,7 @@ CompiledModules(
     'index.js',
     'Scopes.js',
     'UtilsBar.js',
+    'WhyPaused.js',
     'Worker.js',
     'Workers.js',
     'XHRBreakpoints.js',
@@ -26,6 +27,7 @@ DevToolsModules(
     'Expressions.css',
     'Scopes.css',
     'SecondaryPanes.css',
+    'WhyPaused.css',
     'Workers.css',
     'XHRBreakpoints.css',
 )

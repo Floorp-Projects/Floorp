@@ -93,6 +93,10 @@ html[dir="rtl"] .img.arrow {
   mask-image: url(resource://devtools/client/debugger/images/home.svg);
 }
 
+.img.info {
+  mask-image: url(resource://devtools/client/debugger/images/info.svg);
+}
+
 .img.loader {
   mask-image: url(resource://devtools/client/debugger/images/loader.svg);
 }
