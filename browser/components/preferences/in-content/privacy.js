@@ -1125,7 +1125,7 @@ var gPrivacyPane = {
    */
   reloadAllTabs() {
     for (let win of window.BrowserWindowTracker.orderedWindows) {
-      let tabbrowser = win.getBrowser();
+      let tabbrowser = win.gBrowser;
       tabbrowser.reloadTabs(tabbrowser.tabs);
     }
   },

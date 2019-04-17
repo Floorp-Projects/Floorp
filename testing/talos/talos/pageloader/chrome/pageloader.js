@@ -218,7 +218,7 @@ function plInit() {
         browserWindow.resizeTo(winWidth, winHeight);
         browserWindow.moveTo(0, 0);
         browserWindow.focus();
-        content = browserWindow.getBrowser();
+        content = browserWindow.gBrowser;
         content.selectedBrowser.messageManager.loadFrameScript("chrome://pageloader/content/utils.js", false, true);
 
         // pick the right load handler
@@ -468,7 +468,7 @@ function waitForFNBPaint() {
 
 function forceContentGC() {
   return new Promise((resolve) => {
-    let mm = browserWindow.getBrowser().selectedBrowser.messageManager;
+    let mm = browserWindow.gBrowser.selectedBrowser.messageManager;
     mm.addMessageListener("Talos:ForceGC:OK", function onTalosContentForceGC(msg) {
       mm.removeMessageListener("Talos:ForceGC:OK", onTalosContentForceGC);
       resolve();

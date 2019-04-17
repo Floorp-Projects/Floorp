@@ -7672,11 +7672,6 @@ const gRemoteControl = {
   },
 };
 
-/* DEPRECATED */
-function getBrowser() {
-  return gBrowser;
-}
-
 const gAccessibilityServiceIndicator = {
   init() {
     // Pref to enable accessibility service indicator.

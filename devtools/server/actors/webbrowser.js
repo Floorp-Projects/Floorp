@@ -644,7 +644,7 @@ BrowserTabList.prototype._listenToMediatorIf = function(shouldListen) {
  * actors or tables here.
  *
  * An nsIWindowMediatorListener's methods get passed all sorts of windows; we
- * only care about the tab containers. Those have 'getBrowser' methods.
+ * only care about the tab containers. Those have 'gBrowser' members.
  */
 BrowserTabList.prototype.onOpenWindow =
 DevToolsUtils.makeInfallible(function(window) {

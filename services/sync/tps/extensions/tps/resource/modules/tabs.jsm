@@ -39,7 +39,7 @@ var BrowserTabs = {
    */
   async Add(uri) {
     let mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
-    let browser = mainWindow.getBrowser();
+    let browser = mainWindow.gBrowser;
     let newtab = browser.addTrustedTab(uri);
 
     // Wait for the tab to load.

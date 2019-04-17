@@ -21,7 +21,7 @@ function finishTest() {
 let createPrivateWindow = async function createPrivateWindow(url) {
   gPrivateWindow = await BrowserTestUtils.openNewBrowserWindow({private: true});
   ok(!!gPrivateWindow, "should have created a private window.");
-  gPrivateBrowser = gPrivateWindow.getBrowser().selectedBrowser;
+  gPrivateBrowser = gPrivateWindow.gBrowser.selectedBrowser;
 
   BrowserTestUtils.loadURI(gPrivateBrowser, url);
   await BrowserTestUtils.browserLoaded(gPrivateBrowser, false, url);
