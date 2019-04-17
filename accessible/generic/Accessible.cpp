@@ -1277,6 +1277,18 @@ void Accessible::ApplyARIAState(uint64_t* aState) const {
         break;
       }
     }
+  } else {
+    // Sometimes, we use aria-activedescendant targeting something which isn't
+    // actually a descendant. This is technically a spec violation, but it's a
+    // useful hack which makes certain things much easier. For example, we use
+    // this for "fake focus" for multi select browser tabs and Quantumbar
+    // autocomplete suggestions.
+    // In these cases, the aria-activedescendant code above won't make the
+    // active item focusable. It doesn't make sense for something to have
+    // focus when it isn't focusable, so fix that here.
+    if (FocusMgr()->IsActiveItem(this)) {
+      *aState |= states::FOCUSABLE;
+    }
   }
 
   // special case: A native button element whose role got transformed by ARIA to

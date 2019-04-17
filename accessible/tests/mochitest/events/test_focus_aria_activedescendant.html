@@ -145,6 +145,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
       gQueue.push(new changeARIAActiveDescendantInvalid("listbox", "roaming3"));
       gQueue.push(new moveARIAActiveDescendantID("roaming", "roaming3"));
 
+      gQueue.push(new synthFocus("activedesc_nondesc_input",
+        new focusChecker("activedesc_nondesc_option")));
+
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
 
@@ -184,6 +187,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
       <li role="option" id="combobox_option1">option1</li>
       <li role="option" id="combobox_option2">option2</li>
     </ul>
+  </div>
+
+  <!-- aria-activedescendant targeting a non-descendant -->
+  <input id="activedesc_nondesc_input" aria-activedescendant="activedesc_nondesc_option">
+  <div role="listbox">
+    <div role="option" id="activedesc_nondesc_option">option</div>
   </div>
 </body>
 </html>
