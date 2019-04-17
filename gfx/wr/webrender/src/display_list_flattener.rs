@@ -132,6 +132,38 @@ impl ReferenceFrameMapper {
     }
 }
 
+/// Offsets primitives (and clips) by the external scroll offset
+/// supplied to scroll nodes.
+pub struct ScrollOffsetMapper {
+    pub current_spatial_node: SpatialNodeIndex,
+    pub current_offset: LayoutVector2D,
+}
+
+impl ScrollOffsetMapper {
+    fn new() -> Self {
+        ScrollOffsetMapper {
+            current_spatial_node: SpatialNodeIndex::INVALID,
+            current_offset: LayoutVector2D::zero(),
+        }
+    }
+
+    /// Return the accumulated external scroll offset for a spatial
+    /// node. This caches the last result, which is the common case,
+    /// or defers to the clip scroll tree to build the value.
+    fn external_scroll_offset(
+        &mut self,
+        spatial_node_index: SpatialNodeIndex,
+        clip_scroll_tree: &ClipScrollTree,
+    ) -> LayoutVector2D {
+        if spatial_node_index != self.current_spatial_node {
+            self.current_spatial_node = spatial_node_index;
+            self.current_offset = clip_scroll_tree.external_scroll_offset(spatial_node_index);
+        }
+
+        self.current_offset
+    }
+}
+
 /// A data structure that keeps track of mapping between API Ids for clips/spatials and the indices
 /// used internally in the ClipScrollTree to avoid having to do HashMap lookups. NodeIdToIndexMapper
 /// is responsible for mapping both ClipId to ClipChainIndex and SpatialId to SpatialNodeIndex.
@@ -222,6 +254,9 @@ pub struct DisplayListFlattener<'a> {
 
     /// Helper struct to map stacking context coords <-> reference frame coords.
     rf_mapper: ReferenceFrameMapper,
+
+    /// Helper struct to map spatial nodes to external scroll offsets.
+    external_scroll_mapper: ScrollOffsetMapper,
 }
 
 impl<'a> DisplayListFlattener<'a> {
@@ -260,6 +295,7 @@ impl<'a> DisplayListFlattener<'a> {
             interners,
             root_pic_index: PictureIndex(0),
             rf_mapper: ReferenceFrameMapper::new(),
+            external_scroll_mapper: ScrollOffsetMapper::new(),
         };
 
         flattener.push_root(
@@ -309,6 +345,28 @@ impl<'a> DisplayListFlattener<'a> {
             background_color,
             flattener,
         )
+    }
+
+    /// Retrieve the current offset to allow converting a stacking context
+    /// relative coordinate to be relative to the owing reference frame,
+    /// also considering any external scroll offset on the provided
+    /// spatial node.
+    fn current_offset(
+        &mut self,
+        spatial_node_index: SpatialNodeIndex,
+    ) -> LayoutVector2D {
+        // Get the current offset from stacking context <-> reference frame space.
+        let rf_offset = self.rf_mapper.current_offset();
+
+        // Get the external scroll offset, if applicable.
+        let scroll_offset = self
+            .external_scroll_mapper
+            .external_scroll_offset(
+                spatial_node_index,
+                &self.clip_scroll_tree,
+            );
+
+        rf_offset + scroll_offset
     }
 
     /// Cut the primitives in the root stacking context based on the picture
@@ -580,7 +638,7 @@ impl<'a> DisplayListFlattener<'a> {
         info: &StickyFrameDisplayItem,
         parent_node_index: SpatialNodeIndex,
     ) {
-        let current_offset = self.rf_mapper.current_offset();
+        let current_offset = self.current_offset(parent_node_index);
         let frame_rect = item.rect().translate(&current_offset);
         let sticky_frame_info = StickyFrameInfo::new(
             frame_rect,
@@ -606,7 +664,7 @@ impl<'a> DisplayListFlattener<'a> {
         pipeline_id: PipelineId,
     ) {
         let complex_clips = self.get_complex_clips(pipeline_id, item.complex_clip().0);
-        let current_offset = self.rf_mapper.current_offset();
+        let current_offset = self.current_offset(parent_node_index);
         let clip_region = ClipRegion::create_for_clip_node(
             *item.clip_rect(),
             complex_clips,
@@ -644,7 +702,7 @@ impl<'a> DisplayListFlattener<'a> {
         reference_frame: &ReferenceFrame,
         apply_pipeline_clip: bool,
     ) {
-        let current_offset = self.rf_mapper.current_offset();
+        let current_offset = self.current_offset(parent_spatial_node);
         self.push_reference_frame(
             reference_frame.id,
             Some(parent_spatial_node),
@@ -754,7 +812,7 @@ impl<'a> DisplayListFlattener<'a> {
             },
         };
 
-        let current_offset = self.rf_mapper.current_offset();
+        let current_offset = self.current_offset(spatial_node_index);
         let clip_chain_index = self.add_clip_node(
             ClipId::root(iframe_pipeline_id),
             item.space_and_clip_info(),
@@ -819,7 +877,7 @@ impl<'a> DisplayListFlattener<'a> {
             },
         );
         let prim_info = item.get_layout_primitive_info(
-            &self.rf_mapper.current_offset(),
+            &self.current_offset(clip_and_scroll.spatial_node_index),
         );
 
         match *item.item() {
@@ -922,7 +980,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             SpecificDisplayItem::BoxShadow(ref box_shadow_info) => {
-                let current_offset = self.rf_mapper.current_offset();
+                let current_offset = self.current_offset(clip_and_scroll.spatial_node_index);
                 let bounds = box_shadow_info
                     .box_bounds
                     .translate(&current_offset);
@@ -983,7 +1041,7 @@ impl<'a> DisplayListFlattener<'a> {
                 );
             }
             SpecificDisplayItem::Clip(ref info) => {
-                let current_offset = self.rf_mapper.current_offset();
+                let current_offset = self.current_offset(clip_and_scroll.spatial_node_index);
                 let complex_clips = self.get_complex_clips(pipeline_id, item.complex_clip().0);
                 let clip_region = ClipRegion::create_for_clip_node(
                     *item.clip_rect(),
@@ -1155,6 +1213,7 @@ impl<'a> DisplayListFlattener<'a> {
         // Build a primitive key.
         let prim_key = prim.into_key(info);
 
+        let current_offset = self.current_offset(spatial_node_index);
         let interner = self.interners.as_mut();
         let prim_data_handle = interner
             .intern(&prim_key, || {
@@ -1163,8 +1222,6 @@ impl<'a> DisplayListFlattener<'a> {
                     is_backface_visible: info.is_backface_visible,
                 }
             });
-
-        let current_offset = self.rf_mapper.current_offset();
 
         let instance_kind = P::make_instance_kind(
             prim_key,
@@ -2514,7 +2571,7 @@ impl<'a> DisplayListFlattener<'a> {
         glyph_options: Option<GlyphOptions>,
         pipeline_id: PipelineId,
     ) {
-        let offset = self.rf_mapper.current_offset();
+        let offset = self.current_offset(clip_and_scroll.spatial_node_index);
 
         let text_run = {
             let instance_map = self.font_instances.read().unwrap();
