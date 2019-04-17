@@ -205,24 +205,53 @@ void BrowsingContext::SetDocShell(nsIDocShell* aDocShell) {
 }
 
 void BrowsingContext::SetEmbedderElement(Element* aEmbedder) {
-  mEmbedderElement = aEmbedder;
-
   // Notify the parent process of the embedding status. We don't need to do
   // this when clearing our embedder, as we're being destroyed either way.
-  if (mEmbedderElement) {
-    nsCOMPtr<nsPIDOMWindowInner> embedderGlobal =
-        do_QueryInterface(mEmbedderElement->GetOwnerGlobal());
-    RefPtr<WindowGlobalChild> wgc = embedderGlobal->GetWindowGlobalChild();
+  if (aEmbedder) {
+    nsCOMPtr<nsIDocShell> container =
+        do_QueryInterface(aEmbedder->OwnerDoc()->GetContainer());
 
-    // If we're in-process, synchronously perform the update to ensure we don't
-    // get out of sync.
-    // XXX(nika): This is super gross, and I don't like it one bit.
-    if (RefPtr<WindowGlobalParent> wgp = wgc->GetParentActor()) {
-      Canonical()->SetEmbedderWindowGlobal(wgp);
-    } else {
-      wgc->SendDidEmbedBrowsingContext(this);
+    // If our embedder element is being mutated to a different embedder, and we
+    // have a parent edge, bad things might be happening!
+    //
+    // XXX: This is a workaround to some parent edges not being immutable in the
+    // parent process. It can be fixed once bug 1539979 has been fixed.
+    if (mParent && mEmbedderElement && mEmbedderElement != aEmbedder) {
+      NS_WARNING("Non root content frameLoader swap! This will crash soon!");
+
+      MOZ_DIAGNOSTIC_ASSERT(mType == Type::Chrome, "must be chrome");
+      MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(), "must be in parent");
+      MOZ_DIAGNOSTIC_ASSERT(
+          !sCachedBrowsingContexts || !sCachedBrowsingContexts->has(Id()),
+          "cannot be in bfcache");
+
+      RefPtr<BrowsingContext> kungFuDeathGrip(this);
+      RefPtr<BrowsingContext> newParent;
+      container->GetBrowsingContext(getter_AddRefs(newParent));
+      mParent->mChildren.RemoveElement(this);
+      if (newParent) {
+        newParent->mChildren.AppendElement(this);
+      }
+      mParent = newParent;
+    }
+
+    nsCOMPtr<nsPIDOMWindowInner> inner =
+        do_QueryInterface(aEmbedder->GetOwnerGlobal());
+    if (inner) {
+      RefPtr<WindowGlobalChild> wgc = inner->GetWindowGlobalChild();
+
+      // If we're in-process, synchronously perform the update to ensure we
+      // don't get out of sync.
+      // XXX(nika): This is super gross, and I don't like it one bit.
+      if (RefPtr<WindowGlobalParent> wgp = wgc->GetParentActor()) {
+        Canonical()->SetEmbedderWindowGlobal(wgp);
+      } else {
+        wgc->SendDidEmbedBrowsingContext(this);
+      }
     }
   }
+
+  mEmbedderElement = aEmbedder;
 }
 
 void BrowsingContext::Attach(bool aFromIPC) {
