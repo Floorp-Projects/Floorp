@@ -2276,12 +2276,7 @@ var SessionStoreInternal = {
     }
   },
 
-  /**
-   * Perform a destructive process switch into a distinct process.
-   * This method is asynchronous, as it requires multiple calls into content
-   * processes.
-   */
-  async _doProcessSwitch(aBrowser, aRemoteType, aChannel, aSwitchId) {
+  async _doTabProcessSwitch(aBrowser, aRemoteType, aChannel, aSwitchId) {
     debug(`[process-switch]: performing switch from ${aBrowser.remoteType} to ${aRemoteType}`);
 
     // Don't try to switch tabs before delayed startup is completed.
@@ -2312,6 +2307,27 @@ var SessionStoreInternal = {
     return tabParent;
   },
 
+  /**
+   * Perform a destructive process switch into a distinct process.
+   * This method is asynchronous, as it requires multiple calls into content
+   * processes.
+   */
+  async _doProcessSwitch(aBrowsingContext, aRemoteType, aChannel, aSwitchId) {
+    // There are two relevant cases when performing a process switch for a
+    // browsing context: in-process and out-of-process embedders.
+
+    // If our embedder is in-process (e.g. we're a xul:browser element embedded
+    // within <tabbrowser>), then we can perform a process switch using the
+    // traditional mechanism.
+    if (aBrowsingContext.embedderElement) {
+      return this._doTabProcessSwitch(aBrowsingContext.embedderElement,
+                                      aRemoteType, aChannel, aSwitchId);
+    }
+
+    let wg = aBrowsingContext.embedderWindowGlobal;
+    return wg.changeFrameRemoteness(aBrowsingContext, aRemoteType, aSwitchId);
+  },
+
   // Examine the channel response to see if we should change the process
   // performing the given load.
   onMayChangeProcess(aChannel) {
@@ -2324,18 +2340,29 @@ var SessionStoreInternal = {
       return; // Not a document load.
     }
 
-    // Check that this is a toplevel document load.
-    let cpType = aChannel.loadInfo.externalContentPolicyType;
-    let toplevel = cpType == Ci.nsIContentPolicy.TYPE_DOCUMENT;
-    if (!toplevel) {
-      debug(`[process-switch]: non-toplevel - ignoring`);
-      return;
+    // Check that the document has a corresponding BrowsingContext.
+    let browsingContext;
+    let cp = aChannel.loadInfo.externalContentPolicyType;
+    if (cp == Ci.nsIContentPolicy.TYPE_DOCUMENT) {
+      browsingContext = aChannel.loadInfo.browsingContext;
+    } else {
+      browsingContext = aChannel.loadInfo.frameBrowsingContext;
+
+      let top = browsingContext.top;
+      if (!top.embedderElement) {
+        debug(`[process-switch]: no embedder for top - ignoring`);
+        return;
+      }
+
+      let docShell = top.embedderElement.ownerGlobal.docShell;
+      let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
+
+      if (!loadContext.useRemoteSubframes) {
+        debug(`[process-switch]: remote subframes disabled - ignoring`);
+        return;
+      }
     }
 
-    // Check that the document has a corresponding BrowsingContext.
-    let browsingContext = toplevel
-        ? aChannel.loadInfo.browsingContext
-        : aChannel.loadInfo.frameBrowsingContext;
     if (!browsingContext) {
       debug(`[process-switch]: no BrowsingContext - ignoring`);
       return;
@@ -2347,42 +2374,30 @@ var SessionStoreInternal = {
       currentPrincipal = browsingContext.currentWindowGlobal.documentPrincipal;
     }
 
-    // Ensure we have an nsIParentChannel listener for a remote load.
-    let parentChannel;
-    try {
-      parentChannel = aChannel.notificationCallbacks
-                              .getInterface(Ci.nsIParentChannel);
-    } catch (e) {
-      debug(`[process-switch]: No nsIParentChannel callback - ignoring`);
+    // We can only perform a process switch on in-process frames if they are
+    // embedded within a normal tab. We can't do one of these swaps for a
+    // cross-origin frame.
+    if (browsingContext.embedderElement) {
+      let tabbrowser = browsingContext.embedderElement.ownerGlobal.gBrowser;
+      if (!tabbrowser) {
+        debug(`[process-switch]: cannot find tabbrowser for loading tab - ignoring`);
+        return;
+      }
+
+      let tab = tabbrowser.getTabForBrowser(browsingContext.embedderElement);
+      if (!tab) {
+        debug(`[process-switch]: not a normal tab, so cannot swap processes - ignoring`);
+        return;
+      }
+    } else if (!browsingContext.parent) {
+      debug(`[process-switch] no parent or in-process embedder element - ignoring`);
       return;
     }
 
-    // Ensure we have a nsITabParent for our remote load.
-    let tabParent;
-    try {
-      tabParent = parentChannel.QueryInterface(Ci.nsIInterfaceRequestor)
-                               .getInterface(Ci.nsITabParent);
-    } catch (e) {
-      debug(`[process-switch]: No nsITabParent for channel - ignoring`);
-      return;
-    }
-
-    // Ensure we're loaded in a regular tabbrowser environment, and can swap processes.
-    let browser = tabParent.ownerElement;
-    if (!browser) {
-      debug(`[process-switch]: TabParent has no ownerElement - ignoring`);
-      return;
-    }
-
-    let tabbrowser = browser.ownerGlobal.gBrowser;
-    if (!tabbrowser) {
-      debug(`[process-switch]: cannot find tabbrowser for loading tab - ignoring`);
-      return;
-    }
-
-    let tab = tabbrowser.getTabForBrowser(browser);
-    if (!tab) {
-      debug(`[process-switch]: not a normal tab, so cannot swap processes - ignoring`);
+    // Get the current remote type for the BrowsingContext.
+    let currentRemoteType = browsingContext.currentRemoteType;
+    if (currentRemoteType == E10SUtils.NOT_REMOTE) {
+      debug(`[process-switch]: currently not remote - ignoring`);
       return;
     }
 
@@ -2391,9 +2406,9 @@ var SessionStoreInternal = {
       Services.scriptSecurityManager.getChannelResultPrincipal(aChannel);
     let remoteType = E10SUtils.getRemoteTypeForPrincipal(resultPrincipal,
                                                          true,
-                                                         browser.remoteType,
+                                                         currentRemoteType,
                                                          currentPrincipal);
-    if (browser.remoteType == remoteType &&
+    if (currentRemoteType == remoteType &&
         (!E10SUtils.useCrossOriginOpenerPolicy() ||
          !aChannel.hasCrossOriginOpenerPolicyMismatch())) {
       debug(`[process-switch]: type (${remoteType}) is compatible - ignoring`);
@@ -2401,7 +2416,7 @@ var SessionStoreInternal = {
     }
 
     if (remoteType == E10SUtils.NOT_REMOTE ||
-        browser.remoteType == E10SUtils.NOT_REMOTE) {
+        currentRemoteType == E10SUtils.NOT_REMOTE) {
       debug(`[process-switch]: non-remote source/target - ignoring`);
       return;
     }
@@ -2411,7 +2426,7 @@ var SessionStoreInternal = {
     // destructive.
     // ------------------------------------------------------------------------
     let identifier = ++this._switchIdMonotonic;
-    let tabPromise = this._doProcessSwitch(browser, remoteType,
+    let tabPromise = this._doProcessSwitch(browsingContext, remoteType,
                                            aChannel, identifier);
     aChannel.switchProcessTo(tabPromise, identifier);
   },

@@ -89,6 +89,10 @@ class WindowGlobalChild : public nsWrapperCache, public PWindowGlobalChild {
                                            const nsString& aMessage,
                                            const ClonedMessageData& aData);
 
+  mozilla::ipc::IPCResult RecvChangeFrameRemoteness(
+      dom::BrowsingContext* aBc, const nsString& aRemoteType,
+      uint64_t aPendingSwitchId, ChangeFrameRemotenessResolver&& aResolver);
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:
