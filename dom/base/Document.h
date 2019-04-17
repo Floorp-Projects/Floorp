@@ -2021,10 +2021,12 @@ class Document : public nsINode,
   // a scriptblocker but NOT within a begin/end update.
   void ContentStateChanged(nsIContent* aContent, EventStates aStateMask);
 
-  // Notify that a document state has changed.
+  // Update a set of document states that may have changed.
   // This should only be called by callers whose state is also reflected in the
   // implementation of Document::GetDocumentState.
-  void DocumentStatesChanged(EventStates aStateMask);
+  //
+  // aNotify controls whether we notify our DocumentStatesChanged observers.
+  void UpdateDocumentStates(EventStates aStateMask, bool aNotify);
 
   void ResetDocumentDirection();
 
@@ -3816,8 +3818,6 @@ class Document : public nsINode,
   bool GetChildDocumentUseCounter(UseCounter aUseCounter) {
     return mChildDocumentUseCounters[aUseCounter];
   }
-
-  void UpdateDocumentStates(EventStates);
 
   void RemoveDocStyleSheetsFromStyleSets();
   void RemoveStyleSheetsFromStyleSets(
