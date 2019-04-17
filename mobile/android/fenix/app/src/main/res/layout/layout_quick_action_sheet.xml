@@ -50,7 +50,8 @@
             android:text="@string/quick_action_download"
             android:textAllCaps="false"
             android:textColor="?primaryText"
-            android:textSize="12sp" />
+            android:textSize="12sp"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/quick_action_bookmark"
@@ -76,6 +77,7 @@
             android:text="@string/quick_action_read"
             android:textAllCaps="false"
             android:textColor="?primaryText"
-            android:textSize="12sp" />
+            android:textSize="12sp"
+            android:visibility="gone" />
     </LinearLayout>
 </LinearLayout>
