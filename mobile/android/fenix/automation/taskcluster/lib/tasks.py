@@ -56,6 +56,9 @@ class TaskBuilder(object):
         leanplum_secret = '{}project/mobile/fenix/leanplum'.format(
             'garbage/staging/' if is_staging else ''
         )
+        adjust_secret = '{}project/mobile/fenix/adjust'.format(
+            'garbage/staging/' if is_staging else ''
+        )
 
         pre_gradle_commands = (
             'python automation/taskcluster/helper/get-secret.py -s {} -k {} -f {}'.format(
@@ -64,6 +67,7 @@ class TaskBuilder(object):
             for secret, key, target_file in (
                 (sentry_secret, 'dsn', '.sentry_token'),
                 (leanplum_secret, 'production', '.leanplum_token'),
+                (adjust_secret, 'Greenfield', '.adjust_token'),
             )
         )
 
@@ -87,7 +91,7 @@ class TaskBuilder(object):
             description='Build Fenix from source code',
             command=command,
             scopes=[
-                "secrets:get:{}".format(secret) for secret in (sentry_secret, leanplum_secret)
+                "secrets:get:{}".format(secret) for secret in (sentry_secret, leanplum_secret, adjust_secret)
             ],
             artifacts=artifacts,
             routes=routes,
