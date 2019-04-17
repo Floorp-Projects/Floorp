@@ -4,7 +4,7 @@
 
 // @flow
 
-import type { SourceLocation } from "debugger-html";
+import type { OriginalFrame, SourceLocation } from "debugger-html";
 
 const { getWasmXScopes } = require("./wasmXScopes");
 
@@ -12,10 +12,7 @@ const { getWasmXScopes } = require("./wasmXScopes");
 // The function return null if not information was found.
 async function getOriginalStackFrames(
   generatedLocation: SourceLocation
-): Promise<?Array<{
-  displayName: string,
-  location?: SourceLocation
-}>> {
+): Promise<?Array<OriginalFrame>> {
   const wasmXScopes = await getWasmXScopes(generatedLocation.sourceId);
   if (!wasmXScopes) {
     return null;

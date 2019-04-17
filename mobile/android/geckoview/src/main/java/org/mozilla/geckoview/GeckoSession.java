@@ -266,16 +266,6 @@ public class GeckoSession implements Parcelable {
         return mCompositorReady ? mCompositor : null;
     }
 
-    /* package */ static abstract class CallbackResult<T> extends GeckoResult<T>
-                                                          implements EventCallback {
-        @Override
-        public void sendError(final Object response) {
-            completeExceptionally(response != null ?
-                    new Exception(response.toString()) :
-                    new UnknownError());
-        }
-    }
-
     private final GeckoSessionHandler<HistoryDelegate> mHistoryHandler =
         new GeckoSessionHandler<HistoryDelegate>(
             "GeckoViewHistory", this,

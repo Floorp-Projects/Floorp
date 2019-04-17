@@ -7,10 +7,12 @@
 from __future__ import absolute_import
 
 import BaseHTTPServer
+import datetime
 import json
 import os
 import socket
 import threading
+import time
 
 from mozlog import get_proxy_logger
 
@@ -22,12 +24,91 @@ here = os.path.abspath(os.path.dirname(__file__))
 def MakeCustomHandlerClass(results_handler, shutdown_browser, write_raw_gecko_profile):
 
     class MyHandler(BaseHTTPServer.BaseHTTPRequestHandler, object):
+        """
+        Control server expects messages of the form
+        {'type': 'messagetype', 'data':...}
+
+        Each message is given a key which is calculated as
+
+           If type is 'webext_status', then
+              the key is data['type']/data['data']
+           otherwise
+              the key is data['type'].
+
+        The contol server can be forced to wait before performing an
+        action requested via POST by sending a special message
+
+        {'type': 'wait-set', 'data': key}
+
+        where key is the key of the message control server should
+        perform a wait before processing. The handler will store
+        this key in the wait_after_messages dict as a True value.
+
+        wait_after_messages[key] = True
+
+        For subsequent requests the handler will check the key of
+        the incoming message against wait_for_messages and if it is
+        found and its value is True, the handler will assign the key
+        to waiting_in_state and will loop until the key is removed
+        or until its value is changed to False.
+
+        Control server will stop waiting for a state to be continued
+        or cleared after wait_timeout seconds after which the wait
+        will be removed and the control server will finish processing
+        the current POST request. wait_timeout defaults to 60 seconds
+        but can be set globally for all wait states by sending the
+        message
+
+        {'type': 'wait-timeout', 'data': timeout}
+
+        The value of waiting_in_state can be retrieved by sending the
+        message
+
+        {'type': 'wait-get', 'data': ''}
+
+        which will return the value of waiting_in_state in the
+        content of the response. If the value returned is not
+        'None', then the control server has received a message whose
+        key is recorded in wait_after_messages and is waiting before
+        completing the request.
+
+        The control server can be told to stop waiting and to finish
+        processing the current request while keeping the wait for
+        subsequent requests by sending
+
+        {'type': 'wait-continue', 'data': ''}
+
+        The control server can be told to stop waiting and to finish
+        processing the current request while removing the wait for
+        subsequent requests by sending
+
+        {'type': 'wait-clear', 'data': key}
+
+            if key is the empty string ''
+                the key in waiting_in_state is removed from wait_after_messages
+                waiting_in_state is set to None
+            else if key is 'all'
+                 all keys in wait_after_messages are removed
+            else key is not in wait_after_messages
+                 the message is ignored
+            else
+                 the key is removed from wait_after messages
+                 if the key matches the value in waiting_in_state,
+                 then waiting_in_state is set to None
+        """
+        wait_after_messages = {}
+        waiting_in_state = None
+        wait_timeout = 60
 
         def __init__(self, *args, **kwargs):
             self.results_handler = results_handler
             self.shutdown_browser = shutdown_browser
             self.write_raw_gecko_profile = write_raw_gecko_profile
             super(MyHandler, self).__init__(*args, **kwargs)
+
+        def log_request(self, code='-', size='-'):
+            if code != 200:
+                super(MyHandler, self).log_request(code, size)
 
         def do_GET(self):
             # get handler, received request for test settings from web ext runner
@@ -61,6 +142,32 @@ def MakeCustomHandlerClass(results_handler, shutdown_browser, write_raw_gecko_pr
             # could have received a status update or test results
             data = json.loads(post_body)
 
+            if data['type'] == 'webext_status':
+                wait_key = "%s/%s" % (data['type'], data['data'])
+            else:
+                wait_key = data['type']
+
+            if MyHandler.wait_after_messages.get(wait_key, None):
+                LOG.info("Waiting in %s" % wait_key)
+                MyHandler.waiting_in_state = wait_key
+                start_time = datetime.datetime.now()
+
+            while MyHandler.wait_after_messages.get(wait_key, None):
+                time.sleep(1)
+                elapsed_time = datetime.datetime.now() - start_time
+                if elapsed_time > datetime.timedelta(seconds=MyHandler.wait_timeout):
+                    del MyHandler.wait_after_messages[wait_key]
+                    MyHandler.waiting_in_state = None
+                    LOG.error("TEST-UNEXPECTED-ERROR | "
+                              "ControlServer wait %s exceeded %s seconds" %
+                              (wait_key, MyHandler.wait_timeout))
+
+            if MyHandler.wait_after_messages.get(wait_key, None) is not None:
+                # If the wait is False, it was continued and we just set it back
+                # to True for the next time. If it was removed by clear, we
+                # leave it alone so it will not cause a wait any more.
+                MyHandler.wait_after_messages[wait_key] = True
+
             if data['type'] == "webext_gecko_profile":
                 # received gecko profiling results
                 _test = str(data['data'][0])
@@ -80,7 +187,7 @@ def MakeCustomHandlerClass(results_handler, shutdown_browser, write_raw_gecko_pr
                 self.results_handler.add_page_timeout(str(data['data'][0]),
                                                       str(data['data'][1]),
                                                       dict(data['data'][2]))
-            elif data['data'] == "__raptor_shutdownBrowser":
+            elif data['type'] == 'webext_status' and data['data'] == "__raptor_shutdownBrowser":
                 LOG.info("received " + data['type'] + ": " + str(data['data']))
                 # webext is telling us it's done, and time to shutdown the browser
                 self.shutdown_browser()
@@ -89,6 +196,39 @@ def MakeCustomHandlerClass(results_handler, shutdown_browser, write_raw_gecko_pr
                 self.results_handler.add_image(str(data['data'][0]),
                                                str(data['data'][1]),
                                                str(data['data'][2]))
+            elif data['type'] == 'webext_status':
+                LOG.info("received " + data['type'] + ": " + str(data['data']))
+            elif data['type'] == 'wait-set':
+                LOG.info("received " + data['type'] + ": " + str(data['data']))
+                MyHandler.wait_after_messages[str(data['data'])] = True
+            elif data['type'] == 'wait-timeout':
+                LOG.info("received " + data['type'] + ": " + str(data['data']))
+                MyHandler.wait_timeout = data['data']
+            elif data['type'] == 'wait-get':
+                self.wfile.write(MyHandler.waiting_in_state)
+            elif data['type'] == 'wait-continue':
+                LOG.info("received " + data['type'] + ": " + str(data['data']))
+                if MyHandler.waiting_in_state:
+                    MyHandler.wait_after_messages[MyHandler.waiting_in_state] = False
+                    MyHandler.waiting_in_state = None
+            elif data['type'] == 'wait-clear':
+                LOG.info("received " + data['type'] + ": " + str(data['data']))
+                clear_key = str(data['data'])
+                if clear_key == '':
+                    if MyHandler.waiting_in_state:
+                        del MyHandler.wait_after_messages[MyHandler.waiting_in_state]
+                        MyHandler.waiting_in_state = None
+                    else:
+                        pass
+                elif clear_key == 'all':
+                    MyHandler.wait_after_messages = {}
+                    MyHandler.waiting_in_state = None
+                elif clear_key not in MyHandler.wait_after_messages:
+                    pass
+                else:
+                    del MyHandler.wait_after_messages[clear_key]
+                    if MyHandler.waiting_in_state == clear_key:
+                        MyHandler.waiting_in_state = None
             else:
                 LOG.info("received " + data['type'] + ": " + str(data['data']))
 
@@ -101,6 +241,19 @@ def MakeCustomHandlerClass(results_handler, shutdown_browser, write_raw_gecko_pr
             self.end_headers()
 
     return MyHandler
+
+
+class ThreadedHTTPServer(BaseHTTPServer.HTTPServer):
+    # See
+    # https://stackoverflow.com/questions/19537132/threaded-basehttpserver-one-thread-per-request#30312766
+    def process_request(self, request, client_address):
+        thread = threading.Thread(target=self.__new_request,
+                                  args=(self.RequestHandlerClass, request, client_address, self))
+        thread.start()
+
+    def __new_request(self, handlerClass, request, address, server):
+        handlerClass(request, address, server)
+        self.shutdown_request(request)
 
 
 class RaptorControlServer():
@@ -130,7 +283,7 @@ class RaptorControlServer():
         sock.close()
         server_address = ('', self.port)
 
-        server_class = BaseHTTPServer.HTTPServer
+        server_class = ThreadedHTTPServer
         handler_class = MakeCustomHandlerClass(self.results_handler,
                                                self.shutdown_browser,
                                                self.write_raw_gecko_profile)

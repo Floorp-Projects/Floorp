@@ -1,0 +1,88 @@
+# HG changeset patch
+# User Nathan Froyd <froydnj@mozilla.com>
+# Date 1553722890 0
+#      Wed Mar 27 21:41:30 2019 +0000
+# Node ID 15c4fae5d559ec6be2b8409ea7fb76af05d90962
+# Parent  5e22dbefa98b9bd78c8a4fff69764b443ff6c74f
+Bug 1539574 - parse ELF symbols before DWARF symbols in dump_syms; r=gsvelto
+
+Module::AddFunction assumes that any time we add a function, it is
+preferable to use that instead of the corresponding external
+symbol (which could be anything).  The former show up in Breakpad symbol
+files as FUNC lines, and the latter as PUBLIC lines.
+
+For Module::AddFunction to be effective, we have to parse all the
+external symbols for a module first, and then discover all the actual
+functions.  But the Linux symbol dumping code does the reverse: it first
+parses all the DWARF information (including .debug_info, which adds any
+relevant functions) and then parses the ELF symbol table.  This ordering
+means that we wind up emitting PUBLIC lines for which corresponding FUNC
+lines already exist.  These duplicate PUBLIC lines take up roughly 10%
+of the size of a libxul symbol file (~30MB), and are completely unnecessary.
+
+The fix is simple: we should reverse the order in which we parse ELF
+symbols and DWARF debug information.
+
+Differential Revision: https://phabricator.services.mozilla.com/D25116
+
+diff --git a/src/common/linux/dump_symbols.cc b/src/common/linux/dump_symbols.cc
+--- a/src/common/linux/dump_symbols.cc
++++ b/src/common/linux/dump_symbols.cc
+@@ -741,26 +741,19 @@ bool LoadSymbols(const string& obj_file,
+     // but MIPS_DWARF for regular gnu toolchains, so both need to be checked
+     if (elf_header->e_machine == EM_MIPS && !dwarf_section) {
+       dwarf_section =
+         FindElfSectionByName<ElfClass>(".debug_info", SHT_MIPS_DWARF,
+                                        sections, names, names_end,
+                                        elf_header->e_shnum);
+     }
+ 
+-    if (dwarf_section) {
+-      found_debug_info_section = true;
+-      found_usable_info = true;
+-      info->LoadedSection(".debug_info");
+-      if (!LoadDwarf<ElfClass>(obj_file, elf_header, big_endian,
+-                               options.handle_inter_cu_refs, module)) {
+-        fprintf(stderr, "%s: \".debug_info\" section found, but failed to load "
+-                "DWARF debugging information\n", obj_file.c_str());
+-      }
+-    }
++    // Parse export symbols prior to parsing DWARF data, so that any
++    // functions found via DWARF data will take precedence over the functions
++    // found via ELF.
+ 
+     // See if there are export symbols available.
+     const Shdr* symtab_section =
+         FindElfSectionByName<ElfClass>(".symtab", SHT_SYMTAB,
+                                        sections, names, names_end,
+                                        elf_header->e_shnum);
+     const Shdr* strtab_section =
+         FindElfSectionByName<ElfClass>(".strtab", SHT_STRTAB,
+@@ -809,16 +802,27 @@ bool LoadSymbols(const string& obj_file,
+                                dynstrs,
+                                dynstr_section->sh_size,
+                                big_endian,
+                                ElfClass::kAddrSize,
+                                module);
+         found_usable_info = found_usable_info || result;
+       }
+     }
++
++    if (dwarf_section) {
++      found_debug_info_section = true;
++      found_usable_info = true;
++      info->LoadedSection(".debug_info");
++      if (!LoadDwarf<ElfClass>(obj_file, elf_header, big_endian,
++                               options.handle_inter_cu_refs, module)) {
++        fprintf(stderr, "%s: \".debug_info\" section found, but failed to load "
++                "DWARF debugging information\n", obj_file.c_str());
++      }
++    }
+   }
+ 
+   if (options.symbol_data != NO_CFI) {
+     // Dwarf Call Frame Information (CFI) is actually independent from
+     // the other DWARF debugging information, and can be used alone.
+     const Shdr* dwarf_cfi_section =
+         FindElfSectionByName<ElfClass>(".debug_frame", SHT_PROGBITS,
+                                        sections, names, names_end,

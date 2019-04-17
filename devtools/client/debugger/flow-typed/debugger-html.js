@@ -107,6 +107,18 @@ declare module "debugger-html" {
   };
 
   /**
+   * Original Frame
+   *
+   * @memberof types
+   * @static
+   */
+  declare type OriginalFrame = {
+    displayName: string,
+    location?: SourceLocation,
+    thread?: string
+  };
+
+  /**
    * why
    * @memberof types
    * @static

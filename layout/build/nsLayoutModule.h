@@ -8,8 +8,11 @@
 #define nsLayoutModule_h
 
 #include "nscore.h"
+#include "nsID.h"
+#include "mozilla/AlreadyAddRefed.h"
 
 class nsIPresentationService;
+class nsISupports;
 
 // This function initializes various layout statics, as well as XPConnect.
 // It should be called only once, and before the first time any XPCOM module in

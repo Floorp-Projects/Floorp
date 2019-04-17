@@ -289,7 +289,7 @@ public final class GeckoRuntime implements Parcelable {
     @UiThread
     public @NonNull GeckoResult<Void> registerWebExtension(
             final @NonNull WebExtension webExtension) {
-        final GeckoSession.CallbackResult<Void> result = new GeckoSession.CallbackResult<Void>() {
+        final CallbackResult<Void> result = new CallbackResult<Void>() {
             @Override
             public void sendSuccess(final Object response) {
                 complete(null);

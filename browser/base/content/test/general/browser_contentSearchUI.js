@@ -392,7 +392,7 @@ add_task(async function cycleEngines() {
   let promiseEngineChange = function(newEngineName) {
     return new Promise(resolve => {
       Services.obs.addObserver(function resolver(subj, topic, data) {
-        if (data != "engine-current") {
+        if (data != "engine-default") {
           return;
         }
         subj.QueryInterface(Ci.nsISearchEngine);

@@ -87,7 +87,7 @@ this.TopSitesFeed = class TopSitesFeed {
   observe(subj, topic, data) {
     // We should update the current top sites if the search engine has been changed since
     // the search engine that gets filtered out of top sites has changed.
-    if (topic === "browser-search-engine-modified" && data === "engine-current" && this.store.getState().Prefs.values[NO_DEFAULT_SEARCH_TILE_EXP_PREF]) {
+    if (topic === "browser-search-engine-modified" && data === "engine-default" && this.store.getState().Prefs.values[NO_DEFAULT_SEARCH_TILE_EXP_PREF]) {
       delete this._currentSearchHostname;
       this._currentSearchHostname = getShortURLForCurrentSearch();
       this.refresh({broadcast: true});

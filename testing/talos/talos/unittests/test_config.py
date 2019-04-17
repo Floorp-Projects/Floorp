@@ -201,7 +201,6 @@ class Test_get_config(object):
         cls.argv_sessionrestore_many_windows = \
             '--activeTests sessionrestore_many_windows -e /some/random/path'.split()
         cls.argv_tresize = '--activeTests tresize -e /some/random/path'.split()
-        cls.argv_tpaint = '--activeTests tpaint -e /some/random/path'.split()
         cls.argv_cpstartup = '--activeTests cpstartup -e /some/random/path'.split()
         cls.argv_tabpaint = '--activeTests tabpaint -e /some/random/path'.split()
         cls.argv_tabswitch = '--activeTests tabswitch -e /some/random/path'.split()
@@ -394,22 +393,6 @@ class Test_get_config(object):
         assert test_config['tpmozafterpaint'] is True
         assert test_config['filters'] is not None
         # assert test_config['unit'] == 'ms'
-
-    def test_tpaint_has_expected_attributes(self):
-        config = get_config(self.argv_tpaint)
-        test_config = config['tests'][0]
-
-        assert test_config['name'] == 'tpaint'
-        assert test_config['tpcycles'] == 1
-        assert test_config['tppagecycles'] == 20
-        assert test_config['timeout'] == 300
-        assert test_config['gecko_profile_interval'] == 1
-        assert test_config['gecko_profile_entries'] == 2000000
-        assert test_config['tpmozafterpaint'] is True
-        assert test_config['filters'] is not None
-        assert test_config['unit'] == 'ms'
-        assert test_config['preferences'] == {
-            'security.data_uri.block_toplevel_data_uri_navigations': False}
 
     def test_cpstartup_has_expected_attributes(self):
         config = get_config(self.argv_cpstartup)

@@ -65,7 +65,6 @@ const SEARCH_ENGINE_REMOVED      = "engine-removed";
 const SEARCH_ENGINE_ADDED        = "engine-added";
 const SEARCH_ENGINE_CHANGED      = "engine-changed";
 const SEARCH_ENGINE_LOADED       = "engine-loaded";
-const SEARCH_ENGINE_CURRENT      = "engine-current";
 const SEARCH_ENGINE_DEFAULT      = "engine-default";
 
 // The following constants are left undocumented in nsISearchService.idl
@@ -2963,7 +2962,6 @@ SearchService.prototype = {
     // dispatch the appropriate notifications.
     if (prevCurrentEngine && this.defaultEngine !== prevCurrentEngine) {
       notifyAction(this._currentEngine, SEARCH_ENGINE_DEFAULT);
-      notifyAction(this._currentEngine, SEARCH_ENGINE_CURRENT);
     }
     Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "engines-reloaded");
   },
@@ -4169,7 +4167,6 @@ SearchService.prototype = {
     this.setGlobalAttr("hash", getVerificationHash(newName));
 
     notifyAction(this._currentEngine, SEARCH_ENGINE_DEFAULT);
-    notifyAction(this._currentEngine, SEARCH_ENGINE_CURRENT);
   },
 
   async getDefault() {

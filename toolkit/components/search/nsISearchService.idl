@@ -499,16 +499,6 @@ interface nsISearchService : nsISupports
    *        "https://www.google.com/search?q=terms".
    */
   nsISearchParseSubmissionResult parseSubmissionURL(in AString url);
-
-  /**
-   * Determines if a URL is related to search and if so, records the
-   * appropriate telemetry.
-   *
-   * @param url
-   *        String containing the URL to parse, for example
-   *        "https://www.google.com/search?q=terms".
-   */
-  boolean recordSearchURLTelemetry(in AString url);
 };
 
 %{ C++
@@ -542,11 +532,6 @@ interface nsISearchService : nsISupports
  * followed by an "added" notification.
  */
 #define SEARCH_ENGINE_LOADED       "engine-loaded"
-
-/**
- * Sent when the "current" engine is changed.
- */
-#define SEARCH_ENGINE_CURRENT      "engine-current";
 
 /**
  * Sent when the "default" engine is changed.

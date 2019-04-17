@@ -101,14 +101,26 @@
     --in-content-box-background-odd: rgba(249,249,250,0.05);
 
     --in-content-border-color: rgba(249,249,250,0.2);
+    --in-content-border-hover: rgba(249,249,250,0.3);
     --in-content-box-border-color: rgba(249,249,250,0.2);
 
     --in-content-button-background: rgba(249,249,250,0.1);
     --in-content-button-background-hover: rgba(249,249,250,0.15);
     --in-content-button-background-active: rgba(249,249,250,0.2);
 
+    --in-content-category-background-hover: rgba(249,249,250,0.1);
+    --in-content-category-background-active: rgba(249,249,250,0.15);
+    --in-content-category-background-selected-hover: rgba(249,249,250,0.15);
+    --in-content-category-background-selected-active: rgba(249,249,250,0.2);
+
+    --in-content-table-background: #202023;
+    --in-content-table-border-dark-color: rgba(249,249,250,0.2);
+
     --in-content-category-text-selected: var(--blue-40);
+    --in-content-category-text-selected-active: var(--blue-50);
     --in-content-link-color: var(--blue-40);
+    --in-content-link-color-hover: var(--blue-50);
+    --in-content-link-color-active: var(--blue-60);
 
     --in-content-tab-color: var(--in-content-page-color);
 
@@ -543,7 +555,11 @@ html|input[type="checkbox"]:checked {
   fill: #2292d0;
 }
 
-xul|checkbox[disabled="true"] > xul|*.checkbox-check,
+xul|checkbox[disabled="true"] {
+  color: inherit;
+}
+
+xul|checkbox[disabled="true"],
 html|input[type="checkbox"]:disabled {
   opacity: 0.5;
 }
@@ -583,7 +599,8 @@ xul|*.radio-check[selected] {
   fill: #2292d0;
 }
 
-xul|radio[disabled="true"] > xul|*.radio-check {
+xul|radio[disabled="true"] {
+  color: inherit;
   opacity: 0.5;
 }
 
