@@ -370,7 +370,7 @@ a {
 }
 
 .message.network .xhr {
-  background-color: var(--theme-body-color-alt);
+  background-color: var(--theme-text-color-alt);
   color: var(--theme-body-background);
   border-radius: 3px;
   font-weight: bold;

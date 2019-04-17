@@ -51,7 +51,7 @@
  * Customize the dark theme's scrollbar colors to avoid excessive contrast.
  */
 :root.theme-dark {
-  scrollbar-color: var(--theme-body-color-inactive) var(--theme-splitter-color);
+  scrollbar-color: var(--grey-50) var(--theme-splitter-color);
 }
 
 /**
@@ -60,7 +60,7 @@
  * This removes GTK scrollbars and uses a fallback design (see bug 1464723).
  */
 :root[platform="linux"].theme-light {
-  scrollbar-color: var(--theme-body-color-inactive) var(--grey-20);
+  scrollbar-color: var(--grey-40) var(--grey-20);
 }
 
 .devtools-monospace {

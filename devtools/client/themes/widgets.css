@@ -113,7 +113,7 @@
 }
 
 .variables-view-empty-notice {
-  color: var(--theme-body-color-alt);
+  color: var(--theme-text-color-alt);
 }
 
 .variables-view-scope:focus > .title,
@@ -527,7 +527,7 @@
 
 .line-graph-widget-tooltip > [text=metric] {
   margin-inline-start: 1px;
-  color: var(--theme-body-color-alt);
+  color: var(--theme-text-color-alt);
 }
 
 .theme-light .line-graph-widget-tooltip > [text=value],

@@ -202,13 +202,12 @@
 
 .recording-list-item-duration,
 .recording-list-item-save {
-  color: var(--theme-body-color-alt);
+  color: var(--theme-text-color-alt);
 }
 
 .recording-list-item.selected .recording-list-item-duration,
 .recording-list-item.selected .recording-list-item-save {
-  color: var(--theme-body-color-alt);
-  color: var(--theme-selection-color);
+  color: inherit;
 }
 
 #recordings-list .selected label {
