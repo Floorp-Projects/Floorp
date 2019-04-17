@@ -60,9 +60,6 @@ It is augmented as it progresses through the system, with various information:
                    // whether to include autofill results, but when false, no
                    // provider should include them.
     isPrivate; // {boolean} Whether the search started in a private context.
-    lastKey; // {string} The last key pressed by the user. This can affect the
-             // behavior, for example by not autofilling again when the user
-             // hit backspace.
     maxResults; // {integer} The maximum number of results requested. It is
                 // possible to request more results than the shown ones, and
                 // do additional filtering at the View level.
