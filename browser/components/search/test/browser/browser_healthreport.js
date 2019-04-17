@@ -59,7 +59,7 @@ function test() {
         Services.search.defaultEngine = engine;
         break;
 
-      case "engine-current":
+      case "engine-default":
         // We may be called again when resetting the engine at the end.
         if (!calledTestTelemetry) {
           is(Services.search.defaultEngine.name, "Foo", "Current engine is Foo");

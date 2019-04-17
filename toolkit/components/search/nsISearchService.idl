@@ -534,11 +534,6 @@ interface nsISearchService : nsISupports
 #define SEARCH_ENGINE_LOADED       "engine-loaded"
 
 /**
- * Sent when the "current" engine is changed.
- */
-#define SEARCH_ENGINE_CURRENT      "engine-current";
-
-/**
  * Sent when the "default" engine is changed.
  */
 #define SEARCH_ENGINE_DEFAULT      "engine-default";

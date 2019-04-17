@@ -1563,10 +1563,10 @@ add_task(async function test_defaultSearchEngine() {
   for (let engine of await Services.search.getEngines()) {
     await Services.search.removeEngine(engine);
   }
-  // The search service does not notify "engine-current" when removing a default engine.
+  // The search service does not notify "engine-default" when removing a default engine.
   // Manually force the notification.
   // TODO: remove this when bug 1165341 is resolved.
-  Services.obs.notifyObservers(null, "browser-search-engine-modified", "engine-current");
+  Services.obs.notifyObservers(null, "browser-search-engine-modified", "engine-default");
   await promiseNextTick();
 
   // Then check that no default engine is reported if none is available.
@@ -1635,7 +1635,7 @@ add_task(async function test_defaultSearchEngine() {
     TelemetryEnvironment.registerChangeListener("testWatch_SearchDefault", resolve);
   });
   engine.wrappedJSObject.setAttr("loadPathHash", "broken");
-  Services.obs.notifyObservers(null, "browser-search-engine-modified", "engine-current");
+  Services.obs.notifyObservers(null, "browser-search-engine-modified", "engine-default");
   await promise;
   TelemetryEnvironment.unregisterChangeListener("testWatch_SearchDefault");
   data = TelemetryEnvironment.currentEnvironment;
