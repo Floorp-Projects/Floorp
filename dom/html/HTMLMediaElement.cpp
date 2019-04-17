@@ -1848,7 +1848,6 @@ void HTMLMediaElement::AbortExistingLoads() {
     // indirectly which depends on mPaused. So we need to update mPaused first.
     if (!mPaused) {
       mPaused = true;
-      DispatchAsyncEvent(NS_LITERAL_STRING("pause"));
       RejectPromises(TakePendingPlayPromises(), NS_ERROR_DOM_MEDIA_ABORT_ERR);
     }
     ChangeNetworkState(NETWORK_EMPTY);
