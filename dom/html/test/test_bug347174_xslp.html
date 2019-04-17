@@ -58,6 +58,7 @@ function showMessage(msg) {
 SimpleTest.waitForExplicitFinish();
 
 SpecialPowers.pushPrefEnv({"set": [
+  ["dom.xmldocument.async.enabled", true],
   ["dom.xmldocument.load.enabled", true],
 ]}, runTest);
 
