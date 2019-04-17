@@ -90,6 +90,14 @@ exclude: true
 [68.18]: ./WebExtension.html#setMessageDelegate-org.mozilla.geckoview.WebExtension.MessageDelegate-java.lang.String-
 [68.19]: ./WebExtension.Port.html
 
+- Added messaging support for WebExtension. [`setMessageDelegate`][68.17]
+  allows embedders to listen to messages coming from a WebExtension.
+  [`Port`][68.18] allows bidirectional communication between the embedder and
+  the WebExtension.
+
+[68.17]: ./WebExtension.html#setMessageDelegate-org.mozilla.geckoview.WebExtension.MessageDelegate-java.lang.String-
+[68.18]: ./WebExtension.Port.html
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -296,4 +304,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: 190a68155b36619b84113d822cebdf47e58f3599
+[api-version]: f602ba872a5af8da8af416364529297cd70c2791

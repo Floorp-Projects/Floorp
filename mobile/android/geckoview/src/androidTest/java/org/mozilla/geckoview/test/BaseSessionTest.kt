@@ -32,6 +32,7 @@ open class BaseSessionTest(noErrorCollector: Boolean = false) {
         const val FORMS2_HTML_PATH = "/assets/www/forms2.html"
         const val HELLO_HTML_PATH = "/assets/www/hello.html"
         const val HELLO2_HTML_PATH = "/assets/www/hello2.html"
+        const val HELLO_IFRAME_HTML_PATH = "/assets/www/iframe_hello.html"
         const val INPUTS_PATH = "/assets/www/inputs.html"
         const val INVALID_URI = "not a valid uri"
         const val LINKS_HTML_PATH = "/assets/www/links.html"

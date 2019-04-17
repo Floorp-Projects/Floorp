@@ -1042,10 +1042,42 @@ package org.mozilla.geckoview {
   }
 
   public class WebExtension {
-    ctor public WebExtension(@NonNull String, @NonNull String);
+    ctor public WebExtension(@NonNull String, @NonNull String, boolean);
     ctor public WebExtension(@NonNull String);
+    method @UiThread public void setMessageDelegate(@Nullable WebExtension.MessageDelegate, @NonNull String);
+    field public final boolean allowContentMessaging;
     field @NonNull public final String id;
     field @NonNull public final String location;
+  }
+
+  @UiThread public static interface WebExtension.MessageDelegate {
+    method @Nullable default public void onConnect(@NonNull WebExtension.Port);
+    method @Nullable default public GeckoResult<Object> onMessage(@NonNull Object, @NonNull WebExtension.MessageSender);
+  }
+
+  @UiThread public static class WebExtension.MessageSender {
+    ctor protected MessageSender();
+    method public boolean isTopLevel();
+    field public static final int ENV_TYPE_CONTENT_SCRIPT = 2;
+    field public static final int ENV_TYPE_EXTENSION = 1;
+    field public final int environmentType;
+    field @Nullable public final GeckoSession session;
+    field @NonNull public final String url;
+    field @NonNull public final WebExtension webExtension;
+  }
+
+  @UiThread public static class WebExtension.Port {
+    ctor protected Port();
+    method public void disconnect();
+    method public void postMessage(@NonNull JSONObject);
+    method public void setDelegate(@Nullable WebExtension.PortDelegate);
+    field @NonNull public final String name;
+    field @NonNull public final WebExtension.MessageSender sender;
+  }
+
+  @UiThread public static interface WebExtension.PortDelegate {
+    method @NonNull default public void onDisconnect(@NonNull WebExtension.Port);
+    method default public void onPortMessage(@NonNull Object, @NonNull WebExtension.Port);
   }
 
   @AnyThread public abstract class WebMessage {
