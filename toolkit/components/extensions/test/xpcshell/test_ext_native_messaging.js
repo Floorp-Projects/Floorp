@@ -7,6 +7,14 @@
 const PREF_MAX_READ = "webextensions.native-messaging.max-input-message-bytes";
 const PREF_MAX_WRITE = "webextensions.native-messaging.max-output-message-bytes";
 
+const server = createHttpServer({hosts: ["example.com"]});
+
+server.registerPathHandler("/dummy", (request, response) => {
+  response.setStatusLine(request.httpVersion, 200, "OK");
+  response.setHeader("Content-Type", "text/html", false);
+  response.write("<!DOCTYPE html><html></html>");
+});
+
 const ECHO_BODY = String.raw`
   import struct
   import sys
@@ -533,4 +541,47 @@ add_task(async function test_multiple_connects() {
   await extension.startup();
   await extension.awaitFinish("multiple-connect");
   await extension.unload();
+});
+
+// Test that native messaging is always rejected on content scripts
+add_task(async function test_connect_native_from_content_script() {
+  async function testScript() {
+    let port = browser.runtime.connectNative("echo");
+    port.onDisconnect.addListener(msgPort => {
+      browser.test.assertEq(port, msgPort, "onDisconnect handler should receive the port as the first argument");
+      browser.test.assertEq("No such native application echo", port.error && port.error.message);
+      browser.test.sendMessage("result", "disconnected");
+    });
+    port.onMessage.addListener(msg => {
+      browser.test.sendMessage("result", "message");
+    });
+    port.postMessage({test: "test"});
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      content_scripts: [{
+        run_at: "document_end",
+        js: ["test.js"],
+        matches: ["http://example.com/dummy"],
+      }],
+      applications: {gecko: {id: ID}},
+      permissions: ["nativeMessaging"],
+    },
+    files: {
+      "test.js": testScript,
+    },
+  });
+
+  await extension.startup();
+
+  await ExtensionTestUtils.loadContentPage("http://example.com/dummy");
+
+  let result = await extension.awaitMessage("result");
+  equal(result, "disconnected", "connectNative() failed from content script");
+
+  await extension.unload();
+
+  let procCount = await getSubprocessCount();
+  equal(procCount, 0, "No child process was started");
 });

@@ -129,6 +129,7 @@ public final class GeckoRuntime implements Parcelable {
     private GeckoRuntimeSettings mSettings;
     private Delegate mDelegate;
     private RuntimeTelemetry mTelemetry;
+    private WebExtensionEventDispatcher mWebExtensionDispatcher;
 
     /**
      * Attach the runtime to the given context.
@@ -221,6 +222,8 @@ public final class GeckoRuntime implements Parcelable {
         GeckoAppShell.setCrashHandlerService(settings.getCrashHandler());
         GeckoFontScaleListener.getInstance().attachToContext(context, settings);
 
+        mWebExtensionDispatcher = new WebExtensionEventDispatcher();
+
         final GeckoThread.InitInfo info = new GeckoThread.InitInfo();
         info.args = settings.getArguments();
         info.extras = settings.getExtras();
@@ -303,7 +306,11 @@ public final class GeckoRuntime implements Parcelable {
      * Example:
      * <pre><code>
      *     runtime.registerWebExtension(new WebExtension(
-     *              "resource://android/assets/web_extensions/my_webextension/"));
+     *              "resource://android/assets/web_extensions/my_webextension/"))
+     *           .exceptionally(ex -&gt; {
+     *               Log.e("MyActivity", "Could not register WebExtension", ex);
+     *               return null;
+     *           });
      *
      *     runtime.registerWebExtension(new WebExtension(
      *              "file:///path/to/web_extension/my_webextension2.xpi",
@@ -330,9 +337,12 @@ public final class GeckoRuntime implements Parcelable {
             }
         };
 
-        final GeckoBundle bundle = new GeckoBundle(2);
+        final GeckoBundle bundle = new GeckoBundle(3);
         bundle.putString("locationUri", webExtension.location);
         bundle.putString("id", webExtension.id);
+        bundle.putBoolean("allowContentMessaging", webExtension.allowContentMessaging);
+
+        mWebExtensionDispatcher.registerWebExtension(webExtension);
 
         EventDispatcher.getInstance().dispatch("GeckoView:RegisterWebExtension",
                 bundle, result);
@@ -362,9 +372,15 @@ public final class GeckoRuntime implements Parcelable {
         final GeckoBundle bundle = new GeckoBundle(1);
         bundle.putString("id", webExtension.id);
 
+        mWebExtensionDispatcher.unregisterWebExtension(webExtension);
+
         EventDispatcher.getInstance().dispatch("GeckoView:UnregisterWebExtension", bundle, result);
 
         return result;
+    }
+
+    /* protected */ WebExtensionEventDispatcher getWebExtensionDispatcher() {
+        return mWebExtensionDispatcher;
     }
 
     /**

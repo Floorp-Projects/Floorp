@@ -1,5 +1,8 @@
 "use strict";
 
+ChromeUtils.defineModuleGetter(this, "Services",
+                               "resource://gre/modules/Services.jsm");
+
 // This function is pretty tightly tied to Extension.jsm.
 // Its job is to fill in the |tab| property of the sender.
 const getSender = (extension, target, sender) => {
@@ -103,3 +106,10 @@ extensions.registerModules({
   },
 });
 
+if (!Services.androidBridge.isFennec) {
+  extensions.registerModules({
+    geckoViewAddons: {
+      schema: "chrome://geckoview/content/schemas/gecko_view_addons.json",
+    },
+  });
+}

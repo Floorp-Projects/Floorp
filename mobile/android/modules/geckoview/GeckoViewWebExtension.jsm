@@ -4,29 +4,134 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["GeckoViewWebExtension"];
+var EXPORTED_SYMBOLS = ["GeckoViewConnection", "GeckoViewWebExtension"];
 
 const {XPCOMUtils} = ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 const {GeckoViewUtils} = ChromeUtils.import("resource://gre/modules/GeckoViewUtils.jsm");
+const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  EventDispatcher: "resource://gre/modules/Messaging.jsm",
   Extension: "resource://gre/modules/Extension.jsm",
-});
-
-XPCOMUtils.defineLazyGetter(this, "require", () => {
-  const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm", {});
-  return require;
-});
-
-XPCOMUtils.defineLazyGetter(this, "Services", () => {
-  const Services = require("Services");
-  return Services;
+  ExtensionChild: "resource://gre/modules/ExtensionChild.jsm",
 });
 
 const {debug, warn} = GeckoViewUtils.initLogging("Console"); // eslint-disable-line no-unused-vars
 
+class EmbedderPort extends ExtensionChild.Port {
+  constructor(...args) {
+    super(...args);
+    EventDispatcher.instance.registerListener(this, [
+      "GeckoView:WebExtension:PortMessageFromApp",
+      "GeckoView:WebExtension:PortDisconnect",
+    ]);
+  }
+  handleDisconnection() {
+    super.handleDisconnection();
+    EventDispatcher.instance.unregisterListener(this, [
+      "GeckoView:WebExtension:PortMessageFromApp",
+      "GeckoView:WebExtension:PortDisconnect",
+    ]);
+  }
+  close() {
+    // Notify listeners that this port is being closed because the context is
+    // gone.
+    this.disconnectByOtherEnd();
+  }
+  onEvent(aEvent, aData, aCallback) {
+    debug `onEvent ${aEvent} ${aData}`;
+
+    if (this.id !== aData.portId) {
+      return;
+    }
+
+    switch (aEvent) {
+      case "GeckoView:WebExtension:PortMessageFromApp": {
+        this.postMessage(aData.message);
+        break;
+      }
+
+      case "GeckoView:WebExtension:PortDisconnect": {
+        this.disconnect();
+        break;
+      }
+    }
+  }
+}
+
+class GeckoViewConnection {
+  constructor(context, sender, target, nativeApp) {
+    this.context = context;
+    this.sender = sender;
+    this.target = target;
+    this.nativeApp = nativeApp;
+    this.allowContentMessaging = GeckoViewWebExtension.extensionScopes
+      .get(sender.extensionId).allowContentMessaging;
+  }
+
+  _getMessageManager(aTarget) {
+    if (aTarget.frameLoader) {
+      return aTarget.frameLoader.messageManager;
+    }
+    return aTarget;
+  }
+
+  get dispatcher() {
+    if (this.sender.envType === "addon_child") {
+      // For background scripts, use the global event handler
+      return EventDispatcher.instance;
+    } else if (this.sender.envType === "content_child"
+        && this.allowContentMessaging) {
+      // If this message came from a content script, send the message to
+      // the corresponding tab messenger so that GeckoSession can pick it
+      // up.
+      return GeckoViewUtils.getDispatcherForWindow(this.target.ownerGlobal);
+    }
+
+    throw new Error(`Uknown sender envType: ${this.sender.envType}`);
+  }
+
+  _sendMessage({ type, portId, data }) {
+    const message = {
+      type,
+      sender: this.sender,
+      data,
+      portId,
+      nativeApp: this.nativeApp,
+    };
+
+    return this.dispatcher.sendRequestForResult(message);
+  }
+
+  sendMessage(data) {
+    return this._sendMessage({type: "GeckoView:WebExtension:Message",
+                              data: data.deserialize({})});
+  }
+
+  onConnect(portId) {
+    const port = new EmbedderPort(this.context, this.target.messageManager,
+                                  [Services.mm], "", portId,
+                                  this.sender, this.sender);
+    port.registerOnMessage(holder =>
+      this._sendMessage({
+        type: "GeckoView:WebExtension:PortMessage",
+        portId: port.id,
+        data: holder.deserialize({})}));
+
+    port.registerOnDisconnect(msg =>
+      EventDispatcher.instance.sendRequest({
+        type: "GeckoView:WebExtension:Disconnect",
+        sender: this.sender, portId: port.id}));
+
+    return this._sendMessage({
+      type: "GeckoView:WebExtension:Connect", data: {},
+      portId: port.id});
+  }
+}
+
 var GeckoViewWebExtension = {
-  async registerWebExtension(aId, aUri, aCallback) {
+  async registerWebExtension(aId, aUri, allowContentMessaging,
+                             aCallback) {
     const params = {
       id: aId,
       resourceURI: aUri,
@@ -39,20 +144,15 @@ var GeckoViewWebExtension = {
       file = aUri.file;
     }
 
-    try {
-      const scope = Extension.getBootstrapScope(aId, file);
-      this.extensionScopes.set(aId, scope);
+    const scope = Extension.getBootstrapScope(aId, file);
+    scope.allowContentMessaging = allowContentMessaging;
+    this.extensionScopes.set(aId, scope);
 
-      await scope.startup(params, undefined);
-      scope.extension.callOnClose({
-        close: () => this.extensionScopes.delete(aId),
-      });
-    } catch (ex) {
-      aCallback.onError(`Error registering WebExtension at: ${aUri.spec}. ${ex}`);
-      return;
-    }
+    await scope.startup(params, undefined);
 
-    aCallback.onSuccess();
+    scope.extension.callOnClose({
+      close: () => this.extensionScopes.delete(aId),
+    });
   },
 
   async unregisterWebExtension(aId, aCallback) {
@@ -88,9 +188,11 @@ var GeckoViewWebExtension = {
           return;
         }
 
-        this.registerWebExtension(aData.id, uri, aCallback);
+        this.registerWebExtension(aData.id, uri, aData.allowContentMessaging).then(
+          aCallback.onSuccess,
+          error => aCallback.onError(`An error occurred while registering the WebExtension ${aData.locationUri}: ${error}.`));
+        break;
       }
-      break;
 
       case "GeckoView:UnregisterWebExtension":
         if (!this.extensionScopes.has(aData.id)) {
@@ -99,7 +201,7 @@ var GeckoViewWebExtension = {
         }
 
         this.unregisterWebExtension(aData.id, aCallback);
-      break;
+        break;
     }
   },
 };

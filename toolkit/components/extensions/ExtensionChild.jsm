@@ -24,6 +24,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "finalizationService",
                                    "nsIFinalizationWitnessService");
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   ExtensionContent: "resource://gre/modules/ExtensionContent.jsm",
   ExtensionPageChild: "resource://gre/modules/ExtensionPageChild.jsm",
   ExtensionProcessScript: "resource://gre/modules/ExtensionProcessScript.jsm",
@@ -407,7 +408,10 @@ class Messenger {
   }
 
   sendNativeMessage(messageManager, msg, recipient, responseCallback) {
-    msg = NativeApp.encodeMessage(this.context, msg);
+    if (AppConstants.platform !== "android" ||
+        !this.context.extension.hasPermission("geckoViewAddons")) {
+      msg = NativeApp.encodeMessage(this.context, msg);
+    }
     return this.sendMessage(messageManager, msg, recipient, responseCallback);
   }
 
@@ -522,7 +526,13 @@ class Messenger {
   connectNative(messageManager, name, recipient) {
     let portId = getUniqueId();
 
-    let port = new NativePort(this.context, messageManager, this.messageManagers, name, portId, null, recipient);
+    let port;
+    if (AppConstants.platform === "android" &&
+        this.context.extension.hasPermission("geckoViewAddons")) {
+      port = new Port(this.context, messageManager, this.messageManagers, name, portId, null, recipient);
+    } else {
+      port = new NativePort(this.context, messageManager, this.messageManagers, name, portId, null, recipient);
+    }
 
     return this._connect(messageManager, port, recipient);
   }

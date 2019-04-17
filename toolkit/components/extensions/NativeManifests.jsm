@@ -105,6 +105,10 @@ var NativeManifests = {
           Cu.reportError(`This extension does not have permission to use native manifest ${path}`);
           return null;
         }
+        if (context.envType !== "addon_parent") {
+          Cu.reportError(`Attempting to connect to a native host that does not allow messages from content scripts ${path}.`);
+          return;
+        }
 
         return manifest;
       }).catch(ex => {
