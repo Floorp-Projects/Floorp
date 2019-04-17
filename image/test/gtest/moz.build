@@ -22,9 +22,14 @@ UNIFIED_SOURCES = [
 if CONFIG['OS_TARGET'] != 'Android':
     UNIFIED_SOURCES += [
         'TestContainers.cpp',
+        'TestFrameAnimator.cpp',
+    ]
+
+# skip the test on windows10-aarch64 and Android
+if not(CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'aarch64') and (CONFIG['OS_TARGET'] != 'Android'):
+    UNIFIED_SOURCES += [
         'TestDecoders.cpp',
         'TestDecodeToSurface.cpp',
-        'TestFrameAnimator.cpp',
         'TestMetadata.cpp',
         'TestSourceBuffer.cpp',
         'TestSurfaceCache.cpp',

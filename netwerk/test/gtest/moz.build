@@ -10,13 +10,18 @@ UNIFIED_SOURCES += [
     'TestHttpAuthUtils.cpp',
     'TestIsValidIp.cpp',
     'TestMIMEInputStream.cpp',
-    'TestPACMan.cpp',
-    'TestPartiallySeekableInputStream.cpp',
     'TestProtocolProxyService.cpp',
     'TestReadStreamToString.cpp',
     'TestStandardURL.cpp',
-    'TestURIMutator.cpp',
 ]
+
+# skip the test on windows10-aarch64
+if not(CONFIG['OS_TARGET'] == 'WINNT' and CONFIG['CPU_ARCH'] == 'aarch64'):
+    UNIFIED_SOURCES += [
+        'TestPACMan.cpp',
+        'TestPartiallySeekableInputStream.cpp',
+        'TestURIMutator.cpp',
+    ]
 
 if CONFIG['OS_TARGET'] != 'Android':
     UNIFIED_SOURCES += [
