@@ -1263,6 +1263,19 @@ nscoord nsBulletFrame::GetLogicalBaseline(WritingMode aWritingMode) const {
   return ascent + GetLogicalUsedMargin(aWritingMode).BStart(aWritingMode);
 }
 
+bool nsBulletFrame::GetNaturalBaselineBOffset(WritingMode aWM,
+                                              BaselineSharingGroup,
+                                              nscoord* aBaseline) const {
+  nscoord ascent = 0;
+  if (GetStateBits() & BULLET_FRAME_IMAGE_LOADING) {
+    ascent = BSize(aWM);
+  } else {
+    ascent = GetListStyleAscent();
+  }
+  *aBaseline = ascent;
+  return true;
+}
+
 #ifdef ACCESSIBILITY
 void nsBulletFrame::GetSpokenText(nsAString& aText) {
   CounterStyle* style =
