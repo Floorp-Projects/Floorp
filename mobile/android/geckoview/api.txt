@@ -299,6 +299,7 @@ package org.mozilla.geckoview {
     method @NonNull public String[] getArguments();
     method public boolean getAutomaticFontSizeAdjustment();
     method public int getAutoplayDefault();
+    method @Nullable public String getConfigFilePath();
     method public boolean getConsoleOutputEnabled();
     method @NonNull public ContentBlocking.Settings getContentBlocking();
     method @Nullable public Class<?> getCrashHandler();
@@ -340,6 +341,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder arguments(@NonNull String[]);
     method @NonNull public GeckoRuntimeSettings.Builder automaticFontSizeAdjustment(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder autoplayDefault(int);
+    method @NonNull public GeckoRuntimeSettings.Builder configFilePath(@Nullable String);
     method @NonNull public GeckoRuntimeSettings.Builder consoleOutput(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder contentBlocking(@NonNull ContentBlocking.Settings);
     method @NonNull public GeckoRuntimeSettings.Builder crashHandler(@Nullable Class<?>);
