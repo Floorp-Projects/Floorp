@@ -103,7 +103,7 @@ var testData = [
    new keywordResult(null, null, true)],
 ];
 
-AddonTestUtils.init(this);
+AddonTestUtils.init(this, false);
 AddonTestUtils.overrideCertDB();
 AddonTestUtils.createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "42");
 
