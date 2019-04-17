@@ -29,6 +29,7 @@ internal class KintoExperimentSource(
     private val kintoClient = KintoClient(httpClient, baseUrl, bucketName, collectionName)
     private val signatureVerifier = SignatureVerifier(httpClient, kintoClient)
 
+    @Throws(ExperimentDownloadException::class)
     fun getExperiments(snapshot: ExperimentsSnapshot): ExperimentsSnapshot {
         val experimentsDiff = getExperimentsDiff(snapshot)
         val updatedSnapshot = mergeExperimentsFromDiff(experimentsDiff, snapshot)

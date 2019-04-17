@@ -94,6 +94,9 @@ class SignatureVerifierTest {
         testSignature(metadataBody, certChainBody, false)
     }
 
+    /*
+     * Temporarily disabled.
+     * Renable this per:
     @Test
     fun validSignatureCorrect() {
         val url = server.url("/").url().toString()
@@ -205,6 +208,7 @@ class SignatureVerifierTest {
             "-----END CERTIFICATE-----"
         testSignature(metadataBody, certChainBody, true)
     }
+    */
 
     @Test
     fun validSignatureIncorrect() {
@@ -669,245 +673,315 @@ class SignatureVerifierTest {
             {
               "data": [
                 {
-                  "name": "leanplum-start",
+                  "id": "leanplum-start",
+                  "description": "Enable Leanplum SDK - Bug 1351571 \nExpand English Users to more region - Bug 1411066\nEnable  50% eng|zho|deu globally for Leanplum. see https://bugzilla.mozilla.org/show_bug.cgi?id=1411066#c8",
+                  "last_modified": 1523549895713,
+                  "schema": 1523549592861,
                   "match": {
                     "lang": "eng|zho|deu|fra|ita|ind|por|spa|pol|rus",
                     "appId": "^org.mozilla.firefox_beta${'$'}|^org.mozilla.firefox${'$'}",
                     "regions": []
                   },
-                  "schema": 1523549592861,
                   "buckets": {
-                    "max": "100",
-                    "min": "0"
+                    "start": "0",
+                    "count": "100"
                   },
-                  "description": "Enable Leanplum SDK - Bug 1351571 \nExpand English Users to more region - Bug 1411066\nEnable  50% eng|zho|deu globally for Leanplum. see https://bugzilla.mozilla.org/show_bug.cgi?id=1411066#c8",
-                  "id": "12f8f0dc-6401-402e-9e7d-3aec52576b87",
-                  "last_modified": 1523549895713
+                  "branches": [
+                    {
+                      "name": "control",
+                      "ratio": 5
+                    },
+                    {
+                      "name": "red-pill",
+                      "ratio": 21
+                    }
+                  ]
                 },
                 {
-                  "name": "custom-tabs",
+                  "id": "5e23b482-8800-47be-b6dc-1a3bb6e455d4",
+                  "name": "cusstom-tabs",
+                  "id": "custom-tabs",
+                  "description": "Allows apps to open tabs in a customized UI.",
+                  "last_modified": 1510211043874,
                   "match": {
                     "regions": []
                   },
                   "schema": 1510207707840,
                   "buckets": {
-                    "max": "100",
-                    "min": "0"
+                    "start": "0",
+                    "count": "100"
                   },
-                  "description": "Allows apps to open tabs in a customized UI.",
-                  "id": "5e23b482-8800-47be-b6dc-1a3bb6e455d4",
-                  "last_modified": 1510211043874
+                  "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
+                  ]
                 },
                 {
-                  "name": "activity-stream-opt-out",
+                  "id": "activity-stream-opt-out",
+                  "description": "Enable Activity stream by default for users in the \"opt out\" group.",
+                  "last_modified": 1500969355986,
+                  "schema": 1498764179980,
                   "match": {
                     "appId": "^org.mozilla.fennec.*${'$'}",
                     "regions": []
                   },
-                  "schema": 1498764179980,
                   "buckets": {
-                    "max": "100",
-                    "min": "0"
+                    "start": "0",
+                    "count": "100"
                   },
-                  "description": "Enable Activity stream by default for users in the \"opt out\" group.",
-                  "id": "7d504093-67c4-4afb-adf5-5ad23c7c1995",
-                  "last_modified": 1500969355986
+                  "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
+                  ]
                 },
                 {
-                  "name": "full-bookmark-management",
+                  "id": "full-bookmark-management",
+                  "description": "Bug 1232439 - Show full-page edit bookmark dialog",
+                  "last_modified": 1498690258010,
+                  "schema": 1480618438089,
                   "match": {
                     "appId": "^org.mozilla.fennec.*${'$'}"
                   },
-                  "schema": 1480618438089,
                   "buckets": {
-                    "max": "100",
-                    "min": "0"
+                    "start": "0",
+                    "count": "100"
                   },
-                  "description": "Bug 1232439 - Show full-page edit bookmark dialog",
-                  "id": "9ae1019b-9107-47c5-83f3-afa73360b020",
-                  "last_modified": 1498690258010
+                  "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
+                  ]
                 },
                 {
-                  "name": "top-addons-menu",
+                  "id": "top-addons-menu",
+                  "description": "Show addon menu item in top-level.",
+                  "last_modified": 1498599522440,
                   "match": {},
                   "schema": 1480618438089,
                   "buckets": {
-                    "max": "100",
-                    "min": "0"
+                    "start": "0",
+                    "count": "100"
                   },
-                  "description": "Show addon menu item in top-level.",
-                  "id": "46894232-177a-4cd1-b620-47c0b8e5e2aa",
-                  "last_modified": 1498599522440
+                  "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
+                  ]
                 },
                 {
-                  "name": "offline-cache",
+                  "id": "offline-cache",
+                  "description": "",
+                  "last_modified": 1497643056372,
+                  "schema": 1480618438089,
                   "match": {
                     "appId": "^org.mozilla.fennec|org.mozilla.firefox_beta"
                   },
-                  "schema": 1480618438089,
                   "buckets": {
-                    "max": "100",
-                    "min": "0"
+                    "start": "0",
+                    "count": "100"
                   },
-                  "id": "5e4277e0-1029-ea14-1b74-5d25d301c5dc",
-                  "last_modified": 1497643056372
+                  "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
+                  ]
                 },
                 {
-                  "name": "process-background-telemetry",
-                  "match": {},
-                  "schema": 1480618438089,
-                  "buckets": {
-                    "max": "100",
-                    "min": "0"
-                  },
+                  "id": "process-background-telemetry",
                   "description": "Gate flag for controlling if background telemetry processing (sync ping) is enabled or not.",
-                  "id": "e6f9d217-3f43-478f-bff3-7829d7b9eeeb",
-                  "last_modified": 1496971360625
+                  "last_modified": 1496971360625,
+                  "schema": 1480618438089,
+                  "match": {},
+                  "buckets": {
+                    "start": "0",
+                    "count": "100"
+                  },
+                  "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
+                  ]
                 },
                 {
-                  "name": "activity-stream-setting",
-                  "match": {
-                    "appId": "^org.mozilla.fennec.*${'$'}"
-                  },
-                  "schema": 1480618438089,
-                  "buckets": {
-                    "max": "100",
-                    "min": "0"
-                  },
+                  "id": "activity-stream-setting",
                   "description": "Show a setting in \"experimental features\" for enabling/disabling activity stream.",
-                  "id": "7a022463-67fd-4ba3-8b06-a79d0c5e1fdc",
-                  "last_modified": 1496331790186
-                },
-                {
-                  "name": "activity-stream",
+                  "last_modified": 1496331790186,
+                  "schema": 1480618438089,
                   "match": {
                     "appId": "^org.mozilla.fennec.*${'$'}"
                   },
-                  "schema": 1480618438089,
                   "buckets": {
-                    "max": "100",
-                    "min": "0"
+                    "start": "0",
+                    "count": "100"
                   },
-                  "description": "Enable/Disable Activity Stream",
-                  "id": "d4fd9cfb-4c8b-4963-b21e-1c2f4bcd61d6",
-                  "last_modified": 1496331773809
+                  "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
+                  ]
                 },
                 {
-                  "name": "download-content-catalog-sync",
+                  "id": "activity-stream",
+                  "description": "Enable/Disable Activity Stream",
+                  "last_modified": 1496331773809,
+                  "schema": 1480618438089,
+                  "match": {
+                    "appId": "^org.mozilla.fennec.*${'$'}"
+                  },
+                  "buckets": {
+                    "start": "0",
+                    "count": "100"
+                  },
+                  "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
+                  ]
+                },
+                {
+                  "id": "download-content-catalog-sync",
+                  "description": "",
+                  "last_modified": 1485853244635,
+                  "schema": 1480618438089,
                   "match": {
                     "appId": ""
                   },
-                  "schema": 1480618438089,
                   "buckets": {
-                    "max": "100",
-                    "min": "0"
+                    "start": "0",
+                    "count": "100"
                   },
-                  "id": "4d2fa5c3-18b2-8734-49be-fe58993d2cf6",
-                  "last_modified": 1485853244635
+                  "branches": [
+                    {
+                      "name": "some-branch",
+                      "ratio": 2
+                    }
+                  ]
                 },
                 {
-                  "name": "promote-add-to-homescreen",
+                  "id": "promote-add-to-homescreen",
+                  "description": "",
+                  "last_modified": 1482264639326,
+                  "schema": 1480618438089,
                   "match": {
                     "appId": "^org.mozilla.fennec.*${'$'}|^org.mozilla.firefox_beta${'$'}"
                   },
-                  "schema": 1480618438089,
-                  "values": {
-                    "minimumTotalVisits": 5,
-                    "lastVisitMaximumAgeMs": 600000,
-                    "lastVisitMinimumAgeMs": 30000
-                  },
                   "buckets": {
-                    "max": "100",
-                    "min": "50"
+                    "start": "50",
+                    "count": "50"
                   },
-                  "id": "1d05fa3e-095f-b29a-d9b6-ab3a578efd0b",
-                  "last_modified": 1482264639326
+                  "branches": [
+                  ]
                 },
                 {
-                  "name": "triple-readerview-bookmark-prompt",
+                  "id": "triple-readerview-bookmark-prompt",
+                  "description": "",
+                  "last_modified": 1482262302021,
+                  "schema": 1480618438089,
                   "match": {
                     "appId": "^org.mozilla.fennec.*${'$'}|^org.mozilla.firefox_beta${'$'}"
                   },
-                  "schema": 1480618438089,
                   "buckets": {
-                    "max": "100",
-                    "min": "0"
+                    "start": "0",
+                    "count": "100"
                   },
-                  "id": "02d7caa1-cd9e-6949-084c-18bc9d468b6b",
-                  "last_modified": 1482262302021
+                  "branches": [
+                  ]
                 },
                 {
-                  "name": "compact-tabs",
-                  "match": {},
-                  "schema": 1480618438089,
-                  "buckets": {
-                    "max": "50",
-                    "min": "0"
-                  },
+                  "id": "compact-tabs",
                   "description": "Arrange tabs in two columns in portrait mode (tabs tray)",
-                  "id": "14fdc9f3-cf11-4bee-84f6-98495d08c61f",
-                  "last_modified": 1482242613284
+                  "last_modified": 1482242613284,
+                  "schema": 1480618438089,
+                  "match": {},
+                  "buckets": {
+                    "start": "0",
+                    "count": "50"
+                  },
+                  "branches": [
+                  ]
                 },
                 {
-                  "name": "hls-video-playback",
-                  "match": {},
+                  "id": "hls-video-playback",
+                  "description": "",
+                  "last_modified": 1477907551487,
                   "schema": 1467794476773,
-                  "buckets": {
-                    "max": "100",
-                    "min": "0"
-                  },
-                  "id": "d9f9f124-a4d6-47db-a9f4-cf0d00915088",
-                  "last_modified": 1477907551487
-                },
-                {
-                  "name": "bookmark-history-menu",
                   "match": {},
                   "buckets": {
-                    "max": "100",
-                    "min": "0"
+                    "start": "0",
+                    "count": "100"
                   },
-                  "id": "9a53ebfa-772d-d2d8-8307-f98943310360",
-                  "last_modified": 1467794477013
+                  "branches": [
+                  ]
                 },
                 {
-                  "name": "content-notifications-12hrs",
+                  "id": "bookmark-history-menu",
+                  "description": "",
+                  "last_modified": 1467794477013,
                   "match": {},
                   "buckets": {
-                    "max": "0",
-                    "min": "0"
+                    "start": "0",
+                    "count": "100"
                   },
-                  "id": "3e4cef10-3a87-3cdd-4562-0062c2a9125b",
-                  "last_modified": 1467794476938
+                  "branches": [
+                  ]
                 },
                 {
-                  "name": "whatsnew-notification",
+                  "id": "content-notifications-12hrs",
+                  "description": "",
+                  "last_modified": 1467794476938,
                   "match": {},
                   "buckets": {
-                    "max": "0",
-                    "min": "0"
+                    "start": "0",
+                    "count": "0"
                   },
-                  "id": "d9fd5223-965c-2f0d-a798-b8cbc96f6e09",
-                  "last_modified": 1467794476893
+                  "branches": [
+                  ]
                 },
                 {
-                  "name": "content-notifications-8am",
+                  "id": "whatsnew-notification",
+                  "description": "",
+                  "last_modified": 1467794476893,
                   "match": {},
                   "buckets": {
-                    "max": "0",
-                    "min": "0"
+                    "start": "0",
+                    "count": "0"
                   },
-                  "id": "1829570e-f582-298b-63b3-3c9d8380be6b",
-                  "last_modified": 1467794476875
+                  "branches": [
+                  ]
                 },
                 {
-                  "name": "content-notifications-5pm",
+                  "id": "content-notifications-8am",
+                  "description": "",
+                  "last_modified": 1467794476875,
                   "match": {},
                   "buckets": {
-                    "max": "0",
-                    "min": "0"
+                    "start": "0",
+                    "count": "0"
                   },
-                  "id": "c011528e-e03a-7272-6d8b-ef1d4bea4689",
-                  "last_modified": 1467794476838
+                  "branches": [
+                  ]
+                },
+                {
+                  "id": "content-notifications-5pm",
+                  "description": "",
+                  "last_modified": 1467794476838,
+                  "match": {},
+                  "buckets": {
+                    "start": "0",
+                    "count": "0"
+                  },
+                  "branches": [
+                  ]
                 }
               ],
               "last_modified": "1523549895713"

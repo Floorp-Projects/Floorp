@@ -8,11 +8,13 @@ import android.content.Context
 import android.os.Build
 import java.util.Locale
 import java.util.MissingResourceException
+import kotlin.random.Random
 
 /**
  * Class used to provide
  * custom filter values
  */
+@Suppress("TooManyFunctions")
 internal open class ValuesProvider {
     /**
      * Provides the user's language
@@ -28,9 +30,9 @@ internal open class ValuesProvider {
     }
 
     /**
-     * Provides the app id (package name)
+     * Provides the app name (package name)
      *
-     * @return app id (package name)
+     * @return app name (package name)
      */
     open fun getAppId(context: Context): String {
         return context.packageName
@@ -99,5 +101,23 @@ internal open class ValuesProvider {
      */
     open fun getClientId(context: Context): String {
         return DeviceUuidFactory(context).uuid
+    }
+
+    /**
+     * Provides a random value for choosing an experiment branch within the given boundaries.
+     *
+     * @return a random branch value
+     */
+    open fun getRandomBranchValue(lower: Int, upper: Int): Int {
+        return Random.nextInt(lower, upper)
+    }
+
+    /**
+     * Provides a debug tag for the user if set.
+     *
+     * @return the users debug tag or null.
+     */
+    open fun getDebugTag(): String? {
+        return null
     }
 }

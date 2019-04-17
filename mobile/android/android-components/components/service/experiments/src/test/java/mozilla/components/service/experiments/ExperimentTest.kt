@@ -14,33 +14,33 @@ import org.robolectric.RobolectricTestRunner
 @RunWith(RobolectricTestRunner::class)
 class ExperimentTest {
     @Test
-    fun testEquals() {
-        val experiment = Experiment(
-            "id",
-            "name",
-            "description",
-            null,
-            null,
-            12345,
-            null)
+    fun `test equals()`() {
+        val experiment = createDefaultExperiment(
+            id = "id",
+            description = "description",
+            buckets = Experiment.Buckets(0, 100),
+            branches = emptyList(),
+            match = createDefaultMatcher(),
+            lastModified = 12345,
+            schemaModified = null)
+
         assertTrue(experiment == experiment)
         assertFalse(experiment.equals(null))
         assertFalse(experiment.equals(3))
-        val secondExperiment = Experiment(
-            "id",
-            "name2",
-            "description2",
-            Experiment.Matcher("eng"),
-            Experiment.Bucket(100, 0),
-            null,
-            null
+
+        val secondExperiment = createDefaultExperiment(
+            id = "id",
+            description = "description2",
+            match = createDefaultMatcher(appId = "eng"),
+            lastModified = null,
+            schemaModified = null
         )
         assertTrue(secondExperiment == experiment)
     }
 
     @Test
-    fun testHashCode() {
-        val experiment = Experiment("id", "name")
+    fun `test hashCode()`() {
+        val experiment = createDefaultExperiment(id = "id")
         assertEquals(experiment.id.hashCode(), experiment.hashCode())
     }
 }

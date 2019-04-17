@@ -5,9 +5,7 @@
 package mozilla.components.service.experiments
 
 import mozilla.components.support.ktx.android.org.json.putIfNotNull
-import mozilla.components.support.ktx.android.org.json.sortKeys
 import mozilla.components.support.ktx.android.org.json.toList
-import mozilla.components.support.ktx.android.org.json.tryGetInt
 import mozilla.components.support.ktx.android.org.json.tryGetLong
 import mozilla.components.support.ktx.android.org.json.tryGetString
 import org.json.JSONArray
@@ -24,33 +22,43 @@ internal class JSONExperimentParser {
      * @return created experiment
      */
     fun fromJson(jsonObject: JSONObject): Experiment {
-        val bucketsObject: JSONObject? = jsonObject.optJSONObject(BUCKETS_KEY)
-        val matchObject: JSONObject? = jsonObject.optJSONObject(MATCH_KEY)
-        val regions: List<String>? = matchObject?.optJSONArray(REGIONS_KEY)?.toList()
-        val matcher = if (matchObject != null) {
-            Experiment.Matcher(
-                matchObject.tryGetString(LANG_KEY),
-                matchObject.tryGetString(APP_ID_KEY),
-                regions,
-                matchObject.tryGetString(VERSION_KEY),
-                matchObject.tryGetString(MANUFACTURER_KEY),
-                matchObject.tryGetString(DEVICE_KEY),
-                matchObject.tryGetString(COUNTRY_KEY),
-                matchObject.tryGetString(RELEASE_CHANNEL_KEY))
-        } else null
-        val bucket = if (bucketsObject != null) {
-            Experiment.Bucket(bucketsObject.tryGetInt(MAX_KEY), bucketsObject.tryGetInt(MIN_KEY))
-        } else null
-        val payloadJson: JSONObject? = jsonObject.optJSONObject(PAYLOAD_KEY)
-        val payload = if (payloadJson != null) jsonToPayload(payloadJson) else null
-        return Experiment(jsonObject.getString(ID_KEY),
-            jsonObject.getString(NAME_KEY),
-            jsonObject.tryGetString(DESCRIPTION_KEY),
-            matcher,
-            bucket,
-            jsonObject.tryGetLong(LAST_MODIFIED_KEY),
-            payload,
-            jsonObject.tryGetLong(SCHEMA_KEY))
+        val bucketsObject: JSONObject = jsonObject.getJSONObject(BUCKETS_KEY)
+        val bucket = Experiment.Buckets(
+            bucketsObject.getInt(BUCKETS_START_KEY),
+            bucketsObject.getInt(BUCKETS_COUNT_KEY)
+        )
+
+        val branchesJSONList: List<JSONObject> = jsonObject.getJSONArray(BRANCHES_KEY).toList()
+        val branches = branchesJSONList.map {
+            Experiment.Branch(
+                it.getString(BRANCHES_NAME_KEY),
+                it.getInt(BRANCHES_RATIO_KEY)
+            )
+        }
+
+        val matchObject: JSONObject = jsonObject.getJSONObject(MATCH_KEY)
+        val regions: List<String>? = matchObject.optJSONArray(MATCH_REGIONS_KEY)?.toList()
+        val debugTags: List<String>? = matchObject.optJSONArray(MATCH_DEBUG_TAGS_KEY)?.toList()
+        val matcher = Experiment.Matcher(
+                appId = matchObject.tryGetString(MATCH_APP_ID_KEY),
+                appDisplayVersion = matchObject.tryGetString(MATCH_APP_DISPLAY_VERSION_KEY),
+                localeLanguage = matchObject.tryGetString(MATCH_LOCALE_LANGUAGE_KEY),
+                localeCountry = matchObject.tryGetString(MATCH_LOCALE_COUNTRY_KEY),
+                deviceManufacturer = matchObject.tryGetString(MATCH_DEVICE_MANUFACTURER_KEY),
+                deviceModel = matchObject.tryGetString(MATCH_DEVICE_MODEL_KEY),
+                regions = regions,
+                debugTags = debugTags
+        )
+
+        return Experiment(
+            id = jsonObject.getString(ID_KEY),
+            description = jsonObject.getString(DESCRIPTION_KEY),
+            lastModified = jsonObject.tryGetLong(LAST_MODIFIED_KEY),
+            schemaModified = jsonObject.tryGetLong(SCHEMA_KEY),
+            buckets = bucket,
+            branches = branches,
+            match = matcher
+        )
     }
 
     /**
@@ -62,82 +70,67 @@ internal class JSONExperimentParser {
      */
     fun toJson(experiment: Experiment): JSONObject {
         val jsonObject = JSONObject()
-        val matchObject = matchersToJson(experiment)
-        val bucketsObject = JSONObject()
-        bucketsObject.putIfNotNull(MAX_KEY, experiment.bucket?.max?.toString())
-        bucketsObject.putIfNotNull(MIN_KEY, experiment.bucket?.min?.toString())
-        jsonObject.put(BUCKETS_KEY, bucketsObject)
-        jsonObject.putIfNotNull(DESCRIPTION_KEY, experiment.description)
+
         jsonObject.put(ID_KEY, experiment.id)
+        jsonObject.put(DESCRIPTION_KEY, experiment.description)
         jsonObject.putIfNotNull(LAST_MODIFIED_KEY, experiment.lastModified)
+        jsonObject.putIfNotNull(SCHEMA_KEY, experiment.schemaModified)
+
+        val bucketsObject = JSONObject()
+        bucketsObject.put(BUCKETS_START_KEY, experiment.buckets.start)
+        bucketsObject.put(BUCKETS_COUNT_KEY, experiment.buckets.count)
+        jsonObject.put(BUCKETS_KEY, bucketsObject)
+
+        val branchesList = JSONArray()
+        experiment.branches.forEach {
+            val branchObject = JSONObject()
+            branchObject.put(BRANCHES_NAME_KEY, it.name)
+            branchObject.put(BRANCHES_RATIO_KEY, it.ratio)
+            branchesList.put(branchObject)
+        }
+        jsonObject.put(BRANCHES_KEY, branchesList)
+
+        val matchObject = matchersToJson(experiment)
         jsonObject.put(MATCH_KEY, matchObject)
-        jsonObject.putIfNotNull(NAME_KEY, experiment.name)
-        jsonObject.putIfNotNull(SCHEMA_KEY, experiment.schema)
-        jsonObject.putIfNotNull(PAYLOAD_KEY, payloadToJson(experiment.payload))
+
         return jsonObject
     }
 
     private fun matchersToJson(experiment: Experiment): JSONObject {
         val matchObject = JSONObject()
-        matchObject.putIfNotNull(APP_ID_KEY, experiment.match?.appId)
-        matchObject.putIfNotNull(COUNTRY_KEY, experiment.match?.country)
-        matchObject.putIfNotNull(DEVICE_KEY, experiment.match?.device)
-        matchObject.putIfNotNull(LANG_KEY, experiment.match?.language)
-        matchObject.putIfNotNull(MANUFACTURER_KEY, experiment.match?.manufacturer)
-        matchObject.putIfNotNull(REGIONS_KEY, experiment.match?.regions?.let { JSONArray(it) })
-        matchObject.putIfNotNull(RELEASE_CHANNEL_KEY, experiment.match?.releaseChannel)
-        matchObject.putIfNotNull(VERSION_KEY, experiment.match?.version)
+        matchObject.putIfNotNull(MATCH_APP_ID_KEY, experiment.match.appId)
+        matchObject.putIfNotNull(MATCH_APP_DISPLAY_VERSION_KEY, experiment.match.appDisplayVersion)
+        matchObject.putIfNotNull(MATCH_LOCALE_COUNTRY_KEY, experiment.match.localeCountry)
+        matchObject.putIfNotNull(MATCH_LOCALE_LANGUAGE_KEY, experiment.match.localeLanguage)
+        matchObject.putIfNotNull(MATCH_DEVICE_MANUFACTURER_KEY, experiment.match.deviceManufacturer)
+        matchObject.putIfNotNull(MATCH_DEVICE_MODEL_KEY, experiment.match.deviceModel)
+        matchObject.putIfNotNull(MATCH_REGIONS_KEY, experiment.match.regions?.let { JSONArray(it) })
+        matchObject.putIfNotNull(MATCH_DEBUG_TAGS_KEY, experiment.match.debugTags?.let { JSONArray(it) })
         return matchObject
     }
 
-    private fun jsonToPayload(jsonObject: JSONObject): ExperimentPayload {
-        // For now we decided to support primitive types only
-        val payload = ExperimentPayload()
-        for (key in jsonObject.keys()) {
-            val value = jsonObject.get(key)
-            if (value !is JSONObject) {
-                when (value) {
-                    is JSONArray -> payload.put(key, value.toList<Any>())
-                    else -> payload.put(key, value)
-                }
-            }
-        }
-        return payload
-    }
-
-    private fun payloadToJson(payload: ExperimentPayload?): JSONObject? {
-        if (payload == null) {
-            return null
-        }
-        val jsonObject = JSONObject()
-        for (key in payload.getKeys()) {
-            val value = payload.get(key)
-            when (value) {
-                is List<*> -> jsonObject.put(key, JSONArray(value))
-                else -> jsonObject.put(key, value)
-            }
-        }
-        return jsonObject.sortKeys()
-    }
-
     companion object {
-        private const val BUCKETS_KEY = "buckets"
-        private const val MATCH_KEY = "match"
-        private const val REGIONS_KEY = "regions"
-        private const val LANG_KEY = "lang"
-        private const val APP_ID_KEY = "appId"
-        private const val VERSION_KEY = "version"
-        private const val MANUFACTURER_KEY = "manufacturer"
-        private const val DEVICE_KEY = "device"
-        private const val COUNTRY_KEY = "country"
-        private const val RELEASE_CHANNEL_KEY = "release_channel"
-        private const val MAX_KEY = "max"
-        private const val MIN_KEY = "min"
         private const val ID_KEY = "id"
-        private const val NAME_KEY = "name"
         private const val DESCRIPTION_KEY = "description"
         private const val LAST_MODIFIED_KEY = "last_modified"
         private const val SCHEMA_KEY = "schema"
-        private const val PAYLOAD_KEY = "values"
+
+        private const val BUCKETS_KEY = "buckets"
+        private const val BUCKETS_START_KEY = "start"
+        private const val BUCKETS_COUNT_KEY = "count"
+
+        private const val BRANCHES_KEY = "branches"
+        private const val BRANCHES_NAME_KEY = "name"
+        private const val BRANCHES_RATIO_KEY = "ratio"
+
+        private const val MATCH_KEY = "match"
+        private const val MATCH_APP_ID_KEY = "app_id"
+        private const val MATCH_APP_DISPLAY_VERSION_KEY = "app_display_version"
+        private const val MATCH_LOCALE_COUNTRY_KEY = "locale_country"
+        private const val MATCH_LOCALE_LANGUAGE_KEY = "locale_language"
+        private const val MATCH_DEVICE_MANUFACTURER_KEY = "device_manufacturer"
+        private const val MATCH_DEVICE_MODEL_KEY = "device_model"
+        private const val MATCH_REGIONS_KEY = "regions"
+        private const val MATCH_DEBUG_TAGS_KEY = "debug_tags"
     }
 }

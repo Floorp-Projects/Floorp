@@ -15,85 +15,101 @@ internal data class Experiment(
      */
     internal val id: String,
     /**
-     * Human-readable name of the experiment
+     * Detailed description of the experiment.
      */
-    val name: String,
+    val description: String,
     /**
-     * Detailed description of the experiment
+     * Last modified date, as a UNIX timestamp.
      */
-    val description: String? = null,
-    /**
-     * Filters for enabling the experiment
-     */
-    val match: Matcher? = null,
-    /**
-     * Experiment buckets
-     */
-    val bucket: Bucket? = null,
-    /**
-     * Last modified date, as a UNIX timestamp
-     */
-    val lastModified: Long? = null,
-    /**
-     * Experiment associated metadata
-     */
-    val payload: ExperimentPayload? = null,
+    val lastModified: Long?,
     /**
      * Last time the experiment schema was modified
-     * (as a UNIX timestamp)
+     * (as a UNIX timestamp).
      */
-    val schema: Long? = null
+    val schemaModified: Long?,
+    /**
+     * Experiment buckets.
+     */
+    val buckets: Buckets,
+    /**
+     * Experiment branches.
+     */
+    val branches: List<Branch>,
+    /**
+     * Filters for enabling the experiment.
+     */
+    val match: Matcher
 ) {
-    data class Matcher(
+    /**
+     * Object containing a bucket range to match users.
+     * Every user is in one of 100 buckets (0-99).
+     */
+    data class Buckets(
         /**
-         * Language of the device, as a regex
+         * The minimum bucket to match.
          */
-        val language: String? = null,
+        val start: Int,
         /**
-         * id (package name) of the expected application, as a regex
+         * The number of buckets to match from start. If (start + count >= 99), evaluation will
+         * wrap around.
          */
-        val appId: String? = null,
-        /**
-         * Regions where the experiment should be enabled
-         */
-        val regions: List<String>? = null,
-        /**
-         * Required app version, as a regex
-         */
-        val version: String? = null,
-        /**
-         * Required device manufacturer, as a regex
-         */
-        val manufacturer: String? = null,
-        /**
-         * Required device model, as a regex
-         */
-        val device: String? = null,
-        /**
-         * Required country, as a three-letter abbreviation
-         */
-        val country: String? = null,
-        /**
-         * Required app release channel (alpha, beta, ...), as a regex
-         */
-        val releaseChannel: String? = null
-    )
-
-    data class Bucket(
-        /**
-         * Maximum bucket (exclusive), values from 0 to 100
-         */
-        val max: Int? = null,
-        /**
-         * Minimum bucket (inclusive), values from 0 to 100
-         */
-        val min: Int? = null
+        val count: Int
     )
 
     /**
-     * Compares experiments by their id
+     * Object containing the parameters for ratios for randomized enrollment into different
+     * branches.
+     */
+    data class Branch(
+        /**
+         * The name of that branch. "control" is reserved for the control branch.
+         */
+        val name: String,
+        /**
+         * The weight to distribute enrolled clients among the branches.
+         */
+        val ratio: Int
+    )
+
+    data class Matcher(
+        /**
+         * name (package name) of the expected application, as a regex.
+         */
+        val appId: String?,
+        /**
+         * App version, as a regex
+         */
+        val appDisplayVersion: String?,
+        /**
+         * Locale language, as a regex.
+         */
+        val localeLanguage: String?,
+        /**
+         * Locale country, as a three-letter abbreviation.
+         */
+        val localeCountry: String?,
+        /**
+         * Device manufacturer, as a regex.
+         */
+        val deviceManufacturer: String?,
+        /**
+         * Device model, as a regex.
+         */
+        val deviceModel: String?,
+        /**
+         * Regions where the experiment should be enabled.
+         */
+        val regions: List<String>?,
+        /**
+         * Debug tags for matching QA devices.
+         */
+        val debugTags: List<String>?
+    )
+
+    /**
+     * Compares experiments by their id.
      *
-     * @return true if the two experiments have the same id, false otherwise
+     * @return true if the two experiments have the same id, false otherwise.
      */
     override fun equals(other: Any?): Boolean {
         if (this === other) {

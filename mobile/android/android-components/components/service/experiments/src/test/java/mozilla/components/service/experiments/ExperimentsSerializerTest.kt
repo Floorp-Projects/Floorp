@@ -4,6 +4,7 @@
 
 package mozilla.components.service.experiments
 
+import mozilla.components.support.ktx.android.org.json.toList
 import org.json.JSONException
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -16,38 +17,52 @@ val experimentsJson = """
 {
   "experiments": [
       {
+          "id":"first",
+          "description":"Description",
+          "last_modified":1523549895713,
           "buckets":{
-              "min":0,
-              "max":100
+              "start":0,
+              "count":100
           },
-          "name":"first",
+          "branches":[
+              {
+                  "name":"first-branch",
+                  "ratio":7
+              },
+              {
+                  "name":"second-branch",
+                  "ratio":21
+              }
+          ],
           "match":{
               "regions": [
                   "esp"
               ],
-              "appId":"^org.mozilla.firefox_beta${'$'}",
-              "lang":"eng|es|deu|fra"
-          },
-          "description":"Description",
-          "id":"experiment-id",
-          "last_modified":1523549895713
+              "app_id":"^org.mozilla.firefox_beta${'$'}",
+              "locale_language":"eng|es|deu|fra"
+          }
       },
       {
+          "id":"second",
+          "description":"SecondDescription",
+          "last_modified":1523549895749,
           "buckets":{
-              "min":5,
-              "max":10
+              "start":5,
+              "count":5
           },
-          "name":"second",
+          "branches":[
+              {
+                  "name":"one-branch",
+                  "ratio":70
+              }
+          ],
           "match":{
               "regions": [
                   "deu"
               ],
-              "appId":"^org.mozilla.firefox${'$'}",
-              "lang":"es|deu"
-          },
-          "description":"SecondDescription",
-          "id":"experiment-2-id",
-          "last_modified":1523549895749
+              "app_id":"^org.mozilla.firefox${'$'}",
+              "locale_language":"es|deu"
+          }
       }
   ],
   "last_modified": 1523549895749
@@ -60,28 +75,43 @@ class ExperimentsSerializerTest {
     fun fromJsonValid() {
         val experimentsResult = ExperimentsSerializer().fromJson(experimentsJson)
         val experiments = experimentsResult.experiments
+
         assertEquals(2, experiments.size)
-        assertEquals("first", experiments[0].name)
-        assertEquals("eng|es|deu|fra", experiments[0].match!!.language)
-        assertEquals("^org.mozilla.firefox_beta${'$'}", experiments[0].match!!.appId)
-        assertEquals(1, experiments[0].match!!.regions!!.size)
-        assertEquals("esp", experiments[0].match!!.regions!!.get(0))
-        assertEquals(100, experiments[0].bucket!!.max)
-        assertEquals(0, experiments[0].bucket!!.min)
-        assertEquals("Description", experiments[0].description)
-        assertEquals("experiment-id", experiments[0].id)
-        assertEquals(1523549895713, experiments[0].lastModified)
-        assertEquals("second", experiments[1].name)
-        assertEquals("es|deu", experiments[1].match!!.language)
-        assertEquals("^org.mozilla.firefox${'$'}", experiments[1].match!!.appId)
-        assertEquals(1, experiments[1].match!!.regions!!.size)
-        assertEquals("deu", experiments[1].match!!.regions!!.get(0))
-        assertEquals(10, experiments[1].bucket!!.max)
-        assertEquals(5, experiments[1].bucket!!.min)
-        assertEquals("SecondDescription", experiments[1].description)
-        assertEquals("experiment-2-id", experiments[1].id)
-        assertEquals(1523549895749, experiments[1].lastModified)
         assertEquals(1523549895749, experimentsResult.lastModified)
+
+        assertEquals("first", experiments[0].id)
+        assertEquals("Description", experiments[0].description)
+        assertEquals(1523549895713, experiments[0].lastModified)
+
+        assertEquals("eng|es|deu|fra", experiments[0].match.localeLanguage)
+        assertEquals("^org.mozilla.firefox_beta${'$'}", experiments[0].match.appId)
+        assertEquals(1, experiments[0].match.regions!!.size)
+        assertEquals("esp", experiments[0].match.regions!![0])
+
+        assertEquals(0, experiments[0].buckets.start)
+        assertEquals(100, experiments[0].buckets.count)
+
+        assertEquals(2, experiments[0].branches.size)
+        assertEquals("first-branch", experiments[0].branches[0].name)
+        assertEquals(7, experiments[0].branches[0].ratio)
+        assertEquals("second-branch", experiments[0].branches[1].name)
+        assertEquals(21, experiments[0].branches[1].ratio)
+
+        assertEquals("second", experiments[1].id)
+        assertEquals("SecondDescription", experiments[1].description)
+        assertEquals(1523549895749, experiments[1].lastModified)
+
+        assertEquals("es|deu", experiments[1].match.localeLanguage)
+        assertEquals("^org.mozilla.firefox${'$'}", experiments[1].match.appId)
+        assertEquals(1, experiments[1].match.regions!!.size)
+        assertEquals("deu", experiments[1].match.regions!![0])
+
+        assertEquals(5, experiments[1].buckets.start)
+        assertEquals(5, experiments[1].buckets.count)
+
+        assertEquals(1, experiments[1].branches.size)
+        assertEquals("one-branch", experiments[1].branches[0].name)
+        assertEquals(70, experiments[1].branches[0].ratio)
     }
 
     @Test(expected = JSONException::class)
@@ -100,53 +130,79 @@ class ExperimentsSerializerTest {
     @Test
     fun toJsonValid() {
         val experiments = listOf(
-            Experiment("experiment-id",
-                "first",
-                "Description",
-                Experiment.Matcher("eng|es|deu|fra", "^org.mozilla.firefox_beta${'$'}", listOf("esp")),
-                Experiment.Bucket(100, 0),
-                1523549895713),
-            Experiment("experiment-2-id",
-                "second",
-                "SecondDescription",
-                Experiment.Matcher("es|deu", "^org.mozilla.firefox${'$'}", listOf("deu")),
-                Experiment.Bucket(10, 5),
-                1523549895749)
+            createDefaultExperiment(
+                id = "experiment-1-id",
+                description = "Description",
+                match = createDefaultMatcher(
+                    localeLanguage = "eng|es|deu|fra",
+                    appId = "^org.mozilla.firefox_beta${'$'}",
+                    regions = listOf("esp")
+                ),
+                buckets = Experiment.Buckets(0, 100),
+                branches = emptyList(),
+                lastModified = 1523549895713
+            ),
+            createDefaultExperiment(
+                id = "experiment-2-id",
+                description = "SecondDescription",
+                match = createDefaultMatcher(
+                    localeLanguage = "es|deu",
+                    appId = "^org.mozilla.firefox${'$'}",
+                    regions = listOf("deu")
+                ),
+                branches = listOf(
+                    Experiment.Branch("branch1", 5),
+                    Experiment.Branch("branch2", 7)
+                ),
+                buckets = Experiment.Buckets(5, 5),
+                lastModified = 1523549895749
+            )
         )
+
         val json = JSONObject(ExperimentsSerializer().toJson(ExperimentsSnapshot(experiments, 1523549895749)))
         assertEquals(2, json.length())
         assertEquals(1523549895749, json.getLong("last_modified"))
         val experimentsArray = json.getJSONArray("experiments")
         assertEquals(2, experimentsArray.length())
+
         val firstExperiment = experimentsArray[0] as JSONObject
-        val firstExperimentBuckets = firstExperiment.getJSONObject("buckets")
-        assertEquals(0, firstExperimentBuckets.getInt("min"))
-        assertEquals(100, firstExperimentBuckets.getInt("max"))
-        assertEquals("first", firstExperiment.getString("name"))
-        val firstExperimentMatch = firstExperiment.getJSONObject("match")
-        val firstExperimentRegions = firstExperimentMatch.getJSONArray("regions")
-        assertEquals(1, firstExperimentRegions.length())
-        assertEquals("esp", firstExperimentRegions[0])
-        assertEquals("^org.mozilla.firefox_beta${'$'}", firstExperimentMatch.getString("appId"))
-        assertEquals("eng|es|deu|fra", firstExperimentMatch.getString("lang"))
+        assertEquals("experiment-1-id", firstExperiment.getString("id"))
         assertEquals("Description", firstExperiment.getString("description"))
-        assertEquals("experiment-id", firstExperiment.getString("id"))
         assertEquals(1523549895713, firstExperiment.getLong("last_modified"))
 
+        val firstExperimentBuckets = firstExperiment.getJSONObject("buckets")
+        assertEquals(0, firstExperimentBuckets.getInt("start"))
+        assertEquals(100, firstExperimentBuckets.getInt("count"))
+
+        val firstExperimentBranches = firstExperiment.getJSONArray("branches")
+        assertEquals(0, firstExperimentBranches.length())
+
+        val firstExperimentMatch = firstExperiment.getJSONObject("match")
+        val firstExperimentRegions = firstExperimentMatch.getJSONArray("regions")
+        assertEquals(listOf("esp"), firstExperimentRegions.toList<String>())
+        assertEquals("^org.mozilla.firefox_beta${'$'}", firstExperimentMatch.getString("app_id"))
+        assertEquals("eng|es|deu|fra", firstExperimentMatch.getString("locale_language"))
+
         val secondExperiment = experimentsArray[1] as JSONObject
+        assertEquals("experiment-2-id", secondExperiment.getString("id"))
+        assertEquals("SecondDescription", secondExperiment.getString("description"))
+        assertEquals(1523549895749, secondExperiment.getLong("last_modified"))
+
         val secondExperimentBuckets = secondExperiment.getJSONObject("buckets")
-        assertEquals(5, secondExperimentBuckets.getInt("min"))
-        assertEquals(10, secondExperimentBuckets.getInt("max"))
-        assertEquals("second", secondExperiment.getString("name"))
+        assertEquals(5, secondExperimentBuckets.getInt("start"))
+        assertEquals(5, secondExperimentBuckets.getInt("count"))
+
+        val secondExperimentBranches = secondExperiment.getJSONArray("branches").toList<JSONObject>()
+        assertEquals("branch1", secondExperimentBranches[0].getString("name"))
+        assertEquals(5, secondExperimentBranches[0].getInt("ratio"))
+        assertEquals("branch2", secondExperimentBranches[1].getString("name"))
+        assertEquals(7, secondExperimentBranches[1].getInt("ratio"))
+
         val secondExperimentMatch = secondExperiment.getJSONObject("match")
         val secondExperimentRegions = secondExperimentMatch.getJSONArray("regions")
-        assertEquals(1, secondExperimentRegions.length())
-        assertEquals("deu", secondExperimentRegions[0])
-        assertEquals("^org.mozilla.firefox${'$'}", secondExperimentMatch.getString("appId"))
-        assertEquals("es|deu", secondExperimentMatch.getString("lang"))
-        assertEquals("SecondDescription", secondExperiment.getString("description"))
-        assertEquals("experiment-2-id", secondExperiment.getString("id"))
-        assertEquals(1523549895749, secondExperiment.getLong("last_modified"))
+        assertEquals(listOf("deu"), secondExperimentRegions.toList<String>())
+        assertEquals("^org.mozilla.firefox${'$'}", secondExperimentMatch.getString("app_id"))
+        assertEquals("es|deu", secondExperimentMatch.getString("locale_language"))
     }
 
     @Test

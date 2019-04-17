@@ -4,8 +4,13 @@
 
 package mozilla.components.service.experiments
 
+import mozilla.components.support.ktx.android.org.json.tryGetInt
+import org.json.JSONException
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -14,184 +19,235 @@ import org.robolectric.RobolectricTestRunner
 class JSONExperimentParserTest {
     @Test
     fun toJson() {
-        val experiment = Experiment("sample-id",
-            "sample-name",
-            "sample-description",
-            Experiment.Matcher("es|en",
-                "sample-appId",
-                listOf("US"),
-                "1.0",
-                "manufacturer",
-                "device",
-                "country",
-                "release_channel"),
-            Experiment.Bucket(20, 0),
-            1526991669)
+        val experiment = createDefaultExperiment(
+            id = "sample-id",
+            description = "sample-description",
+            match = createDefaultMatcher(
+                appId = "sample-appId",
+                regions = listOf("US"),
+                appDisplayVersion = "1.0",
+                deviceManufacturer = "manufacturer",
+                deviceModel = "device",
+                localeCountry = "country",
+                localeLanguage = "es|en"
+            ),
+            buckets = Experiment.Buckets(0, 20),
+            branches = listOf(
+                Experiment.Branch("branch1", 1),
+                Experiment.Branch("branch2", 2),
+                Experiment.Branch("branch3", 1)
+            ),
+            lastModified = 1526991669
+        )
+
         val jsonObject = JSONExperimentParser().toJson(experiment)
+
+        assertEquals("sample-id", jsonObject.getString("id"))
+        assertEquals("sample-description", jsonObject.getString("description"))
+        assertEquals(1526991669, jsonObject.getLong("last_modified"))
+
         val buckets = jsonObject.getJSONObject("buckets")
-        assertEquals(0, buckets.getInt("min"))
-        assertEquals(20, buckets.getInt("max"))
-        assertEquals("sample-name", jsonObject.getString("name"))
+        assertEquals(0, buckets.getInt("start"))
+        assertEquals(20, buckets.getInt("count"))
+
+        val branches = jsonObject.getJSONArray("branches")
+        assertEquals("branch1", branches.getJSONObject(0).getString("name"))
+        assertEquals(1, branches.getJSONObject(0).getInt("ratio"))
+        assertEquals("branch2", branches.getJSONObject(1).getString("name"))
+        assertEquals(2, branches.getJSONObject(1).getInt("ratio"))
+        assertEquals("branch3", branches.getJSONObject(2).getString("name"))
+        assertEquals(1, branches.getJSONObject(2).getInt("ratio"))
+
         val match = jsonObject.getJSONObject("match")
         val regions = match.getJSONArray("regions")
         assertEquals(1, regions.length())
         assertEquals("US", regions.get(0))
-        assertEquals("sample-appId", match.getString("appId"))
-        assertEquals("es|en", match.getString("lang"))
-        assertEquals("1.0", match.getString("version"))
-        assertEquals("manufacturer", match.getString("manufacturer"))
-        assertEquals("device", match.getString("device"))
-        assertEquals("country", match.getString("country"))
-        assertEquals("release_channel", match.getString("release_channel"))
-        assertEquals("sample-description", jsonObject.getString("description"))
-        assertEquals("sample-id", jsonObject.getString("id"))
-        assertEquals(1526991669, jsonObject.getLong("last_modified"))
+        assertEquals("sample-appId", match.getString("app_id"))
+        assertEquals("es|en", match.getString("locale_language"))
+        assertEquals("1.0", match.getString("app_display_version"))
+        assertEquals("manufacturer", match.getString("device_manufacturer"))
+        assertEquals("device", match.getString("device_model"))
+        assertEquals("country", match.getString("locale_country"))
     }
 
     @Test
-    fun toJsonNullValues() {
-        val experiment = Experiment("id", "name")
+    fun `toJson for null values`() {
+        val experiment = Experiment(
+            id = "",
+            description = "",
+            lastModified = null,
+            schemaModified = null,
+            buckets = Experiment.Buckets(0, 0),
+            branches = emptyList(),
+            match = Experiment.Matcher(
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+            )
+        )
+
         val jsonObject = JSONExperimentParser().toJson(experiment)
+        assertEquals("", jsonObject.getString("id"))
+        assertEquals("", jsonObject.getString("description"))
+        assertNull(jsonObject.tryGetInt("last_modified"))
+        assertNull(jsonObject.tryGetInt("schema"))
+
         val buckets = jsonObject.getJSONObject("buckets")
-        assertEquals(0, buckets.length())
+        assertEquals(0, buckets.getInt("start"))
+        assertEquals(0, buckets.getInt("count"))
+
+        val branches = jsonObject.getJSONArray("branches")
+        assertEquals(0, branches.length())
+
         val match = jsonObject.getJSONObject("match")
-        assertEquals(0, match.length())
-        assertEquals("id", jsonObject.getString("id"))
-        assertEquals("name", jsonObject.getString("name"))
+        assertFalse(match.keys().hasNext())
     }
 
     @Test
     fun fromJson() {
         val json = """
             {
+              "id": "sample-id",
+              "description": "sample-description",
               "buckets": {
-                "min": 0,
-                "max": 20
+                "start": 0,
+                "count": 20
               },
-              "name": "sample-name",
+              "branches": [
+                {
+                  "name": "branch0",
+                  "ratio": "1"
+                }
+              ],
               "match": {
                 "regions": [
                   "US"
                 ],
-                "appId": "sample-appId",
-                "lang": "es|en"
+                "app_id": "sample-appId",
+                "locale_language": "es|en"
               },
-              "description": "sample-description",
-              "id": "sample-id",
               "last_modified": 1526991669
             }
         """.trimIndent()
 
-        val expectedExperiment = Experiment("sample-id",
-            "sample-name",
-            "sample-description",
-            Experiment.Matcher("es|en", "sample-appId", listOf("US")),
-            Experiment.Bucket(20, 0),
-            1526991669)
+        val expectedExperiment = createDefaultExperiment(
+            id = "sample-id",
+            description = "sample-description",
+            match = createDefaultMatcher(
+                localeLanguage = "es|en",
+                appId = "sample-appId",
+                regions = listOf("US")
+            ),
+            buckets = Experiment.Buckets(0, 20),
+            lastModified = 1526991669
+        )
         assertEquals(expectedExperiment, JSONExperimentParser().fromJson(JSONObject(json)))
     }
 
     @Test
-    fun fromJsonNonPresentValues() {
+    fun `fromJson() with debug tag`() {
+        val json = """
+            {
+              "id": "sample-id",
+              "description": "sample-description",
+              "buckets": {
+                "start": 0,
+                "count": 20
+              },
+              "branches": [
+                {
+                  "name": "branch0",
+                  "ratio": "1"
+                }
+              ],
+              "match": {
+                "regions": [
+                  "US"
+                ],
+                "app_id": "sample-appId",
+                "locale_language": "es|en"
+              },
+              "last_modified": 1526991669,
+              "debug_tags": ["dummy-tag"]
+            }
+        """.trimIndent()
+
+        val expectedExperiment = createDefaultExperiment(
+            id = "sample-id",
+            description = "sample-description",
+            match = createDefaultMatcher(
+                localeLanguage = "es|en",
+                appId = "sample-appId",
+                regions = listOf("US"),
+                debugTags = listOf("dummy-tags")
+            ),
+            buckets = Experiment.Buckets(0, 20),
+            lastModified = 1526991669
+        )
+        assertEquals(expectedExperiment, JSONExperimentParser().fromJson(JSONObject(json)))
+    }
+
+    @Test(expected = JSONException::class)
+    fun `fromJson with non present values`() {
         val json = """
             {
                 "id": "id",
-                "name": "name"
             }
         """.trimIndent()
-        assertEquals(Experiment("id", "name"), JSONExperimentParser().fromJson(JSONObject(json)))
+        JSONExperimentParser().fromJson(JSONObject(json))
     }
 
     @Test
-    fun fromJsonNullValues() {
+    fun `fromJson for null values`() {
         val json = """
             {
-              "buckets": null,
-              "name": "sample-name",
-              "match": null,
+              "id": null,
+              "match": {
+              },
+              "buckets": {
+                "start": 0,
+                "count": 0
+              },
+              "branches": [
+                {
+                  "name": "branch0",
+                  "ratio": "1"
+                }
+              ],
               "description": null,
-              "id": "sample-id",
               "last_modified": null
             }
         """.trimIndent()
-        assertEquals(Experiment("sample-id", "sample-name"), JSONExperimentParser().fromJson(JSONObject(json)))
+        var experiment = createDefaultExperiment(id = "sample-id")
+        assertNotEquals(experiment, JSONExperimentParser().fromJson(JSONObject(json)))
 
         val emptyObjects = """
             {
               "id": "sample-id",
-              "name": "sample-name",
+              "description": "",
               "buckets": {
-                "min": null,
-                "max": null
+                "start": 0,
+                "count": 0
               },
+              "branches": [
+                {
+                  "name": "branch0",
+                  "ratio": "1"
+                }
+              ],
               "match": {
-                "lang": null,
-                "appId": null,
-                "region": null
+                "locale_language": null,
+                "app_id": null,
+                "regions": null
               }
             }
         """.trimIndent()
-        assertEquals(Experiment("sample-id", name = "sample-name", bucket = Experiment.Bucket(), match = Experiment.Matcher()),
-            JSONExperimentParser().fromJson(JSONObject(emptyObjects)))
-    }
-
-    @Test
-    fun payloadFromJson() {
-        val json = """
-            {
-              "buckets": null,
-              "name": null,
-              "match": null,
-              "description": null,
-              "id": "sample-id",
-              "last_modified": null,
-              "values": {
-                "a": "a",
-                "b": 3,
-                "c": 3.5,
-                "d": true,
-                "e": [
-                  1,
-                  2,
-                  3,
-                  4
-                ]
-              }
-            }
-        """.trimIndent()
-        val experiment = JSONExperimentParser().fromJson(JSONObject(json))
-        assertEquals("a", experiment.payload?.get("a"))
-        assertEquals(3, experiment.payload?.get("b"))
-        assertEquals(3.5, experiment.payload?.get("c"))
-        assertEquals(true, experiment.payload?.get("d"))
-        assertEquals(listOf(1, 2, 3, 4), experiment.payload?.getIntList("e"))
-    }
-
-    @Test
-    fun payloadToJson() {
-        val payload = ExperimentPayload()
-        payload.put("a", "a")
-        payload.put("b", 3)
-        payload.put("c", 3.5)
-        payload.put("d", true)
-        payload.put("e", listOf(1, 2, 3, 4))
-        val experiment = Experiment("id", name = "name", payload = payload)
-        val json = JSONExperimentParser().toJson(experiment)
-        val payloadJson = json.getJSONObject("values")
-        assertEquals("a", payloadJson.getString("a"))
-        assertEquals(3, payloadJson.getInt("b"))
-        assertEquals(3.5, payloadJson.getDouble("c"), 0.01)
-        assertEquals(true, payloadJson.getBoolean("d"))
-        val list = payloadJson.getJSONArray("e")
-        assertEquals(4, list.length())
-        assertEquals(1, list[0])
-        assertEquals(2, list[1])
-        assertEquals(3, list[2])
-        assertEquals(4, list[3])
-        val buckets = json.getJSONObject("buckets")
-        assertEquals(0, buckets.length())
-        val match = json.getJSONObject("match")
-        assertEquals(0, match.length())
-        assertEquals("id", json.getString("id"))
+        experiment = createDefaultExperiment(id = "sample-id")
+        assertEquals(experiment, JSONExperimentParser().fromJson(JSONObject(emptyObjects)))
     }
 }

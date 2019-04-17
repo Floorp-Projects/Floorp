@@ -7,6 +7,6 @@ package mozilla.components.service.experiments
 /**
  * Class used to identify an experiment
  *
- * @property name experiment name
+ * @property id experiment id
  */
-internal data class ExperimentDescriptor(val name: String)
+internal data class ExperimentDescriptor(val id: String)

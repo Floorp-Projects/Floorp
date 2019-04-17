@@ -8,6 +8,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
+import mozilla.components.support.test.mock
 import org.junit.Assert
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -20,7 +21,6 @@ import org.mockito.ArgumentMatchers.anyInt
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.Mockito.`when`
-import org.mockito.Mockito.mock
 import org.mockito.Mockito.verify
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
@@ -29,68 +29,87 @@ import kotlin.reflect.jvm.isAccessible
 
 @RunWith(RobolectricTestRunner::class)
 class ExperimentEvaluatorTest {
-    @Test
-    fun evaluateEmtpyMatchers() {
-        val experiment = Experiment(
-            "testid",
-            "testexperiment",
-            "testdesc",
-            Experiment.Matcher(
-                appId = "",
-                regions = listOf()
-            ),
-            Experiment.Bucket(
-                70,
-                20
-            ),
-            1528916183)
+    private lateinit var context: Context
+    private lateinit var sharedPrefsOverrideEnabled: SharedPreferences
+    private lateinit var sharedPrefsOverrideBranch: SharedPreferences
+    private lateinit var enabledEditor: SharedPreferences.Editor
+    private lateinit var branchEditor: SharedPreferences.Editor
+    private lateinit var packageManager: PackageManager
+    private lateinit var packageInfo: PackageInfo
 
-        val context = mock(Context::class.java)
-        `when`(context.packageName).thenReturn("other.appId")
-        val sharedPreferences = mock(SharedPreferences::class.java)
-        `when`(sharedPreferences.getBoolean(eq("testexperiment"), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
-        val packageManager = mock(PackageManager::class.java)
-        val packageInfo = PackageInfo()
+    private fun testReset(appId: String = "test.appId", versionName: String = "test.version") {
+        context = mock()
+        sharedPrefsOverrideEnabled = mock()
+        sharedPrefsOverrideBranch = mock()
+        packageManager = mock()
+        packageInfo = PackageInfo()
+
+        `when`(context.packageName).thenReturn(appId)
+
         packageInfo.versionName = "test.version"
         `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
         `when`(context.packageManager).thenReturn(packageManager)
+
+        val prefEnabled = ExperimentEvaluator.PREF_NAME_OVERRIDES_ENABLED
+        val prefBranch = ExperimentEvaluator.PREF_NAME_OVERRIDES_BRANCH
+
+        `when`(context.getSharedPreferences(eq(prefEnabled), eq(Context.MODE_PRIVATE))).thenReturn(sharedPrefsOverrideEnabled)
+        `when`(sharedPrefsOverrideEnabled.getBoolean(anyString(), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
+        enabledEditor = mock()
+        `when`(enabledEditor.putBoolean(anyString(), anyBoolean())).thenReturn(enabledEditor)
+        `when`(enabledEditor.remove(anyString())).thenReturn(enabledEditor)
+        `when`(enabledEditor.clear()).thenReturn(enabledEditor)
+        `when`(sharedPrefsOverrideEnabled.edit()).thenReturn(enabledEditor)
+
+        `when`(context.getSharedPreferences(eq(prefBranch), eq(Context.MODE_PRIVATE))).thenReturn(sharedPrefsOverrideBranch)
+        `when`(sharedPrefsOverrideBranch.getString(anyString(), anyString())).thenAnswer { invocation -> invocation.arguments[1] as String }
+        branchEditor = mock()
+        `when`(branchEditor.putString(anyString(), anyString())).thenReturn(branchEditor)
+        `when`(branchEditor.remove(anyString())).thenReturn(branchEditor)
+        `when`(branchEditor.clear()).thenReturn(branchEditor)
+        `when`(sharedPrefsOverrideBranch.edit()).thenReturn(branchEditor)
+    }
+
+    private fun setOverride(experimentName: String, isActive: Boolean, branchName: String) {
+        `when`(sharedPrefsOverrideEnabled.getBoolean(eq(experimentName), anyBoolean())).thenReturn(isActive)
+        `when`(sharedPrefsOverrideBranch.getString(eq(experimentName), eq(null))).thenReturn(branchName)
+        `when`(sharedPrefsOverrideEnabled.contains(eq(experimentName))).thenReturn(true)
+        `when`(sharedPrefsOverrideBranch.contains(eq(experimentName))).thenReturn(true)
+    }
+
+    @Test
+    fun `evaluate empty matchers`() {
+        val experiment = createDefaultExperiment(
+            id = "testexperiment",
+            lastModified = 1528916183,
+            buckets = Experiment.Buckets(20, 70),
+            match = createDefaultMatcher()
+        )
+
+        testReset(appId = "other.appId")
 
         val evaluator = ExperimentEvaluator()
         assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
     }
 
     @Test
-    fun evaluateBuckets() {
-        val experiment = Experiment(
-            "testid",
-            "testexperiment",
-            "testdesc",
-            Experiment.Matcher(
-                "eng",
-                "test.appId",
-                listOf("USA", "GBR"),
-                "test.version",
-                "unknown",
-                "robolectric",
-                "USA"
-            ),
-            Experiment.Bucket(
-                70,
-                20
-            ),
-            1528916183)
+    fun `evaluate buckets`() {
+        testReset(appId = "test.appId", versionName = "test.version")
 
-        val context = mock(Context::class.java)
-        `when`(context.packageName).thenReturn("test.appId")
-        val sharedPreferences = mock(SharedPreferences::class.java)
-        `when`(sharedPreferences.getBoolean(eq("testexperiment"), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
-        val packageManager = mock(PackageManager::class.java)
-        val packageInfo = PackageInfo()
-        packageInfo.versionName = "test.version"
-        `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
-        `when`(context.packageManager).thenReturn(packageManager)
+        val experiment = createDefaultExperiment(
+            id = "testexperiment",
+            match = createDefaultMatcher(
+                appId = "test.appId",
+                localeLanguage = "eng",
+                regions = listOf("USA", "GBR"),
+                appDisplayVersion = "test.version",
+                deviceManufacturer = "unknown",
+                deviceModel = "robolectric",
+                localeCountry = "USA"
+            ),
+            buckets = Experiment.Buckets(20, 50),
+            lastModified = 1528916183
+        )
 
         val evaluator = ExperimentEvaluator()
         assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
@@ -102,36 +121,23 @@ class ExperimentEvaluatorTest {
     }
 
     @Test
-    fun evaluateAppId() {
-        val experiment = Experiment(
-            "testid",
-            "testexperiment",
-            "testdesc",
-            Experiment.Matcher(
-                "eng",
-                "^test$",
-                listOf("USA", "GBR"),
-                "test.version",
-                "unknown",
-                "robolectric",
-                "USA"
-            ),
-            Experiment.Bucket(
-                70,
-                20
-            ),
-            1528916183)
+    fun `evaluate appId`() {
+        testReset(appId = "other.appId", versionName = "test.version")
 
-        val context = mock(Context::class.java)
-        `when`(context.packageName).thenReturn("other.appId")
-        val sharedPreferences = mock(SharedPreferences::class.java)
-        `when`(sharedPreferences.getBoolean(eq("testexperiment"), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
-        val packageManager = mock(PackageManager::class.java)
-        val packageInfo = PackageInfo()
-        packageInfo.versionName = "test.version"
-        `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
-        `when`(context.packageManager).thenReturn(packageManager)
+        val experiment = createDefaultExperiment(
+            id = "testexperiment",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "^test$",
+                regions = listOf("USA", "GBR"),
+                appDisplayVersion = "test.version",
+                deviceManufacturer = "unknown",
+                deviceModel = "robolectric",
+                localeCountry = "USA"
+            ),
+            buckets = Experiment.Buckets(20, 70),
+            lastModified = 1528916183
+        )
 
         val evaluator = ExperimentEvaluator()
         assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
@@ -140,148 +146,102 @@ class ExperimentEvaluatorTest {
     }
 
     @Test
-    fun evaluateLanguage() {
-        var experiment = Experiment(
-            "testid",
-            "testexperiment",
-            "testdesc",
-            Experiment.Matcher(
-                "eng",
-                "test.appId",
-                listOf("USA", "GBR"),
-                "test.version",
-                "unknown",
-                "robolectric",
-                "USA"
-            ),
-            Experiment.Bucket(
-                70,
-                20
-            ),
-            1528916183)
+    fun `evaluate localeLanguage`() {
+        testReset(appId = "test.appId", versionName = "test.version")
 
-        val context = mock(Context::class.java)
-        `when`(context.packageName).thenReturn("test.appId")
-        val sharedPreferences = mock(SharedPreferences::class.java)
-        `when`(sharedPreferences.getBoolean(eq("testexperiment"), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
-        val packageManager = mock(PackageManager::class.java)
-        val packageInfo = PackageInfo()
-        packageInfo.versionName = "test.version"
-        `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
-        `when`(context.packageManager).thenReturn(packageManager)
+        var experiment = createDefaultExperiment(
+            id = "testexperiment",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "test.appId",
+                regions = listOf("USA", "GBR"),
+                appDisplayVersion = "test.version",
+                deviceManufacturer = "unknown",
+                deviceModel = "robolectric",
+                localeCountry = "USA"
+            ),
+            buckets = Experiment.Buckets(20, 70),
+            lastModified = 1528916183
+        )
 
         val evaluator = ExperimentEvaluator()
         assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
-        experiment = Experiment(
-            "testid",
-            "testexperiment",
-            "testdesc",
-            Experiment.Matcher(
-                "esp",
-                "test.appId",
-                listOf("USA", "GBR"),
-                "test.version",
-                "unknown",
-                "robolectric",
-                "USA"
+
+        experiment = createDefaultExperiment(
+            id = "testexperiment",
+            match = createDefaultMatcher(
+                localeLanguage = "esp",
+                appId = "test.appId",
+                regions = listOf("USA", "GBR"),
+                appDisplayVersion = "test.version",
+                deviceManufacturer = "unknown",
+                deviceModel = "robolectric",
+                localeCountry = "USA"
             ),
-            Experiment.Bucket(
-                70,
-                20
-            ),
-            1528916183)
+            buckets = Experiment.Buckets(20, 70),
+            lastModified = 1528916183
+        )
         assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
     }
 
     @Test
-    fun evaluateCountry() {
-        var experiment = Experiment(
-            "testid",
-            "testexperiment",
-            "testdesc",
-            Experiment.Matcher(
-                "eng",
-                "test.appId",
-                listOf("USA", "GBR"),
-                "test.version",
-                "unknown",
-                "robolectric",
-                "USA"
-            ),
-            Experiment.Bucket(
-                70,
-                20
-            ),
-            1528916183)
+    fun `evaluate localeCountry`() {
+        testReset(appId = "test.appId", versionName = "test.version")
 
-        val context = mock(Context::class.java)
-        `when`(context.packageName).thenReturn("test.appId")
-        val sharedPreferences = mock(SharedPreferences::class.java)
-        `when`(sharedPreferences.getBoolean(eq("testexperiment"), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
-        val packageManager = mock(PackageManager::class.java)
-        val packageInfo = PackageInfo()
-        packageInfo.versionName = "test.version"
-        `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
-        `when`(context.packageManager).thenReturn(packageManager)
+        var experiment = createDefaultExperiment(
+            id = "testexperiment",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "test.appId",
+                regions = listOf("USA", "GBR"),
+                appDisplayVersion = "test.version",
+                deviceManufacturer = "unknown",
+                deviceModel = "robolectric",
+                localeCountry = "USA"
+            ),
+            buckets = Experiment.Buckets(20, 70),
+            lastModified = 1528916183
+        )
 
         val evaluator = ExperimentEvaluator()
         assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
 
-        experiment = Experiment(
-            "testid",
-            "testexperiment",
-            "testdesc",
-            Experiment.Matcher(
-                "eng",
-                "test.appId",
-                listOf("USA", "GBR"),
-                "test.version",
-                "unknown",
-                "robolectric",
-                "ESP"
+        experiment = createDefaultExperiment(
+            id = "testexperiment",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "test.appId",
+                regions = listOf("USA", "GBR"),
+                appDisplayVersion = "test.version",
+                deviceManufacturer = "unknown",
+                deviceModel = "robolectric",
+                localeCountry = "ESP"
             ),
-            Experiment.Bucket(
-                70,
-                20
-            ),
-            1528916183)
+            buckets = Experiment.Buckets(20, 70),
+            lastModified = 1528916183
+        )
 
         assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
     }
 
     @Test
-    fun evaluateVersion() {
-        val experiment = Experiment(
-            "testid",
-            "testexperiment",
-            "testdesc",
-            Experiment.Matcher(
-                "eng",
-                "test.appId",
-                listOf("USA", "GBR"),
-                "test.version",
-                "unknown",
-                "robolectric",
-                "USA"
-            ),
-            Experiment.Bucket(
-                70,
-                20
-            ),
-            1528916183)
+    fun `evaluate appDisplayVersion`() {
+        testReset(appId = "test.appId", versionName = "test.version")
 
-        val context = mock(Context::class.java)
-        `when`(context.packageName).thenReturn("test.appId")
-        val sharedPreferences = mock(SharedPreferences::class.java)
-        `when`(sharedPreferences.getBoolean(eq("testexperiment"), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
-        val packageManager = mock(PackageManager::class.java)
-        val packageInfo = PackageInfo()
-        packageInfo.versionName = "test.version"
-        `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
-        `when`(context.packageManager).thenReturn(packageManager)
+        val experiment = createDefaultExperiment(
+            id = "testexperiment",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "test.appId",
+                regions = listOf("USA", "GBR"),
+                appDisplayVersion = "test.version",
+                deviceManufacturer = "unknown",
+                deviceModel = "robolectric",
+                localeCountry = "USA"
+            ),
+            buckets = Experiment.Buckets(20, 70),
+            lastModified = 1528916183
+        )
 
         val evaluator = ExperimentEvaluator()
         assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
@@ -291,200 +251,102 @@ class ExperimentEvaluatorTest {
     }
 
     @Test
-    fun evaluateDevice() {
-        var experiment = Experiment(
-            "testid",
-            "testexperiment",
-            "testdesc",
-            Experiment.Matcher(
-                "eng",
-                "test.appId",
-                listOf("USA", "GBR"),
-                "test.version",
-                "unknown",
-                "robolectric",
-                "USA"
-            ),
-            Experiment.Bucket(
-                70,
-                20
-            ),
-            1528916183)
+    fun `evaluate deviceModel`() {
+        testReset(appId = "test.appId", versionName = "test.version")
 
-        val context = mock(Context::class.java)
-        `when`(context.packageName).thenReturn("test.appId")
-        val sharedPreferences = mock(SharedPreferences::class.java)
-        `when`(sharedPreferences.getBoolean(eq("testexperiment"), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
-        val packageManager = mock(PackageManager::class.java)
-        val packageInfo = PackageInfo()
-        packageInfo.versionName = "test.version"
-        `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
-        `when`(context.packageManager).thenReturn(packageManager)
+        var experiment = createDefaultExperiment(
+            id = "testexperiment",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "test.appId",
+                regions = listOf("USA", "GBR"),
+                appDisplayVersion = "test.version",
+                deviceManufacturer = "unknown",
+                deviceModel = "robolectric",
+                localeCountry = "USA"
+            ),
+            buckets = Experiment.Buckets(20, 70),
+            lastModified = 1528916183
+        )
 
         val evaluator = ExperimentEvaluator()
         assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
 
-        experiment = Experiment(
-            "testid",
-            "testexperiment",
-            "testdesc",
-            Experiment.Matcher(
-                "eng",
-                "test.appId",
-                listOf("USA", "GBR"),
-                "test.version",
-                "unknown",
-                "otherdevice",
-                "USA"
+        experiment = createDefaultExperiment(
+            id = "testexperiment",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "test.appId",
+                regions = listOf("USA", "GBR"),
+                appDisplayVersion = "test.version",
+                deviceManufacturer = "unknown",
+                deviceModel = "otherdevice",
+                localeCountry = "USA"
             ),
-            Experiment.Bucket(
-                70,
-                20
-            ),
-            1528916183)
+            buckets = Experiment.Buckets(20, 70),
+            lastModified = 1528916183
+        )
 
         assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
     }
 
     @Test
-    fun evaluateReleaseChannel() {
-        val experiment = Experiment(
-            "testid",
-            "testexperiment",
-            "testdesc",
-            Experiment.Matcher(
-                "eng",
-                "test.appId",
-                listOf("USA", "GBR"),
-                "test.version",
-                "unknown",
-                "robolectric",
-                "USA",
-                "alpha"
+    fun `evaluate deviceManufacturer`() {
+        testReset(appId = "test.appId", versionName = "test.version")
+
+        var experiment = createDefaultExperiment(
+            id = "testexperiment",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "test.appId",
+                regions = listOf("USA", "GBR"),
+                appDisplayVersion = "test.version",
+                deviceManufacturer = "unknown",
+                deviceModel = "robolectric",
+                localeCountry = "USA"
             ),
-            Experiment.Bucket(
-                70,
-                20
-            ),
-            1528916183)
-
-        val context = mock(Context::class.java)
-        `when`(context.packageName).thenReturn("test.appId")
-        val sharedPreferences = mock(SharedPreferences::class.java)
-        `when`(sharedPreferences.getBoolean(eq("testexperiment"), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
-        val packageManager = mock(PackageManager::class.java)
-        val packageInfo = PackageInfo()
-        packageInfo.versionName = "test.version"
-        `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
-        `when`(context.packageManager).thenReturn(packageManager)
-
-        var evaluator = ExperimentEvaluator(object : ValuesProvider() {
-            override fun getReleaseChannel(context: Context): String? {
-                return "alpha"
-            }
-        })
-
-        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
-
-        evaluator = ExperimentEvaluator(object : ValuesProvider() {
-            override fun getRegion(context: Context): String? {
-                return "production"
-            }
-        })
-
-        assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
-    }
-
-    @Test
-    fun evaluateManufacturer() {
-        var experiment = Experiment(
-            "testid",
-            "testexperiment",
-            "testdesc",
-            Experiment.Matcher(
-                "eng",
-                "test.appId",
-                listOf("USA", "GBR"),
-                "test.version",
-                "unknown",
-                "robolectric",
-                "USA"
-            ),
-            Experiment.Bucket(
-                70,
-                20
-            ),
-            1528916183)
-
-        val context = mock(Context::class.java)
-        `when`(context.packageName).thenReturn("test.appId")
-        val sharedPreferences = mock(SharedPreferences::class.java)
-        `when`(sharedPreferences.getBoolean(eq("testexperiment"), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
-        val packageManager = mock(PackageManager::class.java)
-        val packageInfo = PackageInfo()
-        packageInfo.versionName = "test.version"
-        `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
-        `when`(context.packageManager).thenReturn(packageManager)
+            buckets = Experiment.Buckets(20, 70),
+            lastModified = 1528916183
+        )
 
         val evaluator = ExperimentEvaluator()
         assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
 
-        experiment = Experiment(
-            "testid",
-            "testexperiment",
-            "testdesc",
-            Experiment.Matcher(
-                "eng",
-                "test.appId",
-                listOf("USA", "GBR"),
-                "test.version",
-                "other",
-                "robolectric",
-                "USA"
+        experiment = createDefaultExperiment(
+            id = "testexperiment",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "test.appId",
+                regions = listOf("USA", "GBR"),
+                appDisplayVersion = "test.version",
+                deviceManufacturer = "other",
+                deviceModel = "robolectric",
+                localeCountry = "USA"
             ),
-            Experiment.Bucket(
-                70,
-                20
-            ),
-            1528916183)
-
+            buckets = Experiment.Buckets(20, 70),
+            lastModified = 1528916183
+        )
         assertNull(evaluator.evaluate(context, ExperimentDescriptor("testexperiment"), listOf(experiment), 20))
     }
 
     @Test
-    fun evaluateRegion() {
-        val experiment = Experiment(
-            "testid",
-            "testexperiment",
-            "testdesc",
-            Experiment.Matcher(
-                "eng",
-                "test.appId",
-                listOf("USA", "GBR"),
-                "test.version",
-                "unknown",
-                "robolectric",
-                "USA"
-            ),
-            Experiment.Bucket(
-                70,
-                20
-            ),
-            1528916183)
+    fun `evaluate region`() {
+        testReset(appId = "test.appId", versionName = "test.version")
 
-        val context = mock(Context::class.java)
-        `when`(context.packageName).thenReturn("test.appId")
-        val sharedPreferences = mock(SharedPreferences::class.java)
-        `when`(sharedPreferences.getBoolean(eq("testexperiment"), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
-        val packageManager = mock(PackageManager::class.java)
-        val packageInfo = PackageInfo()
-        packageInfo.versionName = "test.version"
-        `when`(packageManager.getPackageInfo(anyString(), anyInt())).thenReturn(packageInfo)
-        `when`(context.packageManager).thenReturn(packageManager)
+        val experiment = createDefaultExperiment(
+            id = "testexperiment",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "test.appId",
+                regions = listOf("USA", "GBR"),
+                appDisplayVersion = "test.version",
+                deviceManufacturer = "unknown",
+                deviceModel = "robolectric",
+                localeCountry = "USA"
+            ),
+            buckets = Experiment.Buckets(20, 70),
+            lastModified = 1528916183
+        )
 
         var evaluator = ExperimentEvaluator(object : ValuesProvider() {
             override fun getRegion(context: Context): String? {
@@ -504,93 +366,89 @@ class ExperimentEvaluatorTest {
     }
 
     @Test
-    fun evaluateActivateOverride() {
-        val context = mock(Context::class.java)
-        val sharedPreferences = mock(SharedPreferences::class.java)
-        `when`(sharedPreferences.getBoolean(eq("id"), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
+    fun `override an inactive experiment to active`() {
+        testReset(appId = "test.appId", versionName = "test.version")
+
+        // Use another app id, so this experiment doesn't activate.
+        val experiment = createDefaultExperiment(
+            id = "some-experiment",
+            match = createDefaultMatcher(appId = "other.appId")
+        )
         val evaluator = ExperimentEvaluator()
-        val experiment = Experiment("id", name = "name", bucket = Experiment.Bucket(100, 0))
-        assertNull(evaluator.evaluate(context, ExperimentDescriptor("name"), listOf(experiment), -1))
-        `when`(sharedPreferences.getBoolean(eq("name"), anyBoolean())).thenReturn(true)
-        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("name"), listOf(experiment), -1))
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("some-experiment"), listOf(experiment), 0))
+
+        // Now activate the override. The experiment should then evaluate to active.
+        setOverride("some-experiment", true, "branch-3")
+        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("some-experiment"), listOf(experiment), 0))
     }
 
     @Test
-    fun evaluateDeactivateOverride() {
-        val context = mock(Context::class.java)
-        val sharedPreferences = mock(SharedPreferences::class.java)
-        `when`(sharedPreferences.getBoolean(eq("name"), anyBoolean())).thenAnswer { invocation -> invocation.arguments[1] as Boolean }
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
+    fun `override an active experiment to inactive`() {
+        testReset(appId = "test.appId", versionName = "test.version")
+
+        // This experiment should activate.
+        val experiment = createDefaultExperiment(
+            id = "some-experiment"
+        )
         val evaluator = ExperimentEvaluator()
-        val experiment = Experiment("id", name = "name", bucket = Experiment.Bucket(100, 0))
-        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("name"), listOf(experiment), 50))
-        `when`(sharedPreferences.getBoolean(eq("name"), anyBoolean())).thenReturn(false)
-        assertNull(evaluator.evaluate(context, ExperimentDescriptor("name"), listOf(experiment), 50))
+        assertNotNull(evaluator.evaluate(context, ExperimentDescriptor("some-experiment"), listOf(experiment), 50))
+
+        // Now set an override for it. The experiment should not evaluate to active anymore.
+        setOverride("some-experiment", false, "branch-3")
+        assertNull(evaluator.evaluate(context, ExperimentDescriptor("some-experiment"), listOf(experiment), 50))
     }
 
     @Test
-    fun evaluateNoExperimentSameAsDescriptor() {
-        val savedExperiment = Experiment("wrongid", name = "wrongname")
+    fun `evaluate no experiment matches descriptor`() {
+        testReset(appId = "test.appId", versionName = "test.version")
+
+        val savedExperiment = createDefaultExperiment(id = "wrongid")
         val descriptor = ExperimentDescriptor("testname")
-        val context = mock(Context::class.java)
         assertNull(ExperimentEvaluator().evaluate(context, descriptor, listOf(savedExperiment), 20))
     }
 
     @Test
-    fun setOverrideActivate() {
-        val context = mock(Context::class.java)
-        val sharedPreferences = mock(SharedPreferences::class.java)
-        val sharedPreferencesEditor = mock(SharedPreferences.Editor::class.java)
-        `when`(sharedPreferencesEditor.putBoolean(anyString(), anyBoolean())).thenReturn(sharedPreferencesEditor)
-        `when`(sharedPreferences.edit()).thenReturn(sharedPreferencesEditor)
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
+    fun `verify setOverride() activate writes to SharedPreferences`() {
+        testReset()
+
         val evaluator = ExperimentEvaluator()
-        evaluator.setOverride(context, ExperimentDescriptor("exp-name"), true)
-        verify(sharedPreferencesEditor).putBoolean("exp-name", true)
+        evaluator.setOverride(context, ExperimentDescriptor("exp-id"), true, "branch-1")
+        verify(enabledEditor).putBoolean("exp-id", true)
+        verify(branchEditor).putString("exp-id", "branch-1")
     }
 
     @Test
-    fun setOverrideDeactivate() {
-        val context = mock(Context::class.java)
-        val sharedPreferences = mock(SharedPreferences::class.java)
-        val sharedPreferencesEditor = mock(SharedPreferences.Editor::class.java)
-        `when`(sharedPreferencesEditor.putBoolean(eq("exp-2-name"), anyBoolean())).thenReturn(sharedPreferencesEditor)
-        `when`(sharedPreferences.edit()).thenReturn(sharedPreferencesEditor)
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
+    fun `verify setOverride() deactivate writes to SharedPreferences`() {
+        testReset()
+
         val evaluator = ExperimentEvaluator()
-        evaluator.setOverride(context, ExperimentDescriptor("exp-2-name"), false)
-        verify(sharedPreferencesEditor).putBoolean("exp-2-name", false)
+        evaluator.setOverride(context, ExperimentDescriptor("exp-2-id"), false, "branch-2")
+        verify(enabledEditor).putBoolean("exp-2-id", false)
+        verify(branchEditor).putString("exp-2-id", "branch-2")
     }
 
     @Test
-    fun clearOverride() {
-        val context = mock(Context::class.java)
-        val sharedPreferences = mock(SharedPreferences::class.java)
-        val sharedPreferencesEditor = mock(SharedPreferences.Editor::class.java)
-        `when`(sharedPreferencesEditor.remove(anyString())).thenReturn(sharedPreferencesEditor)
-        `when`(sharedPreferences.edit()).thenReturn(sharedPreferencesEditor)
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
+    fun `verify clearOverride() writes to SharedPreferences`() {
+        testReset()
+
         val evaluator = ExperimentEvaluator()
-        evaluator.clearOverride(context, ExperimentDescriptor("exp-name"))
-        verify(sharedPreferencesEditor).remove("exp-name")
+        evaluator.clearOverride(context, ExperimentDescriptor("exp-id"))
+        verify(enabledEditor).remove("exp-id")
+        verify(branchEditor).remove("exp-id")
     }
 
     @Test
-    fun clearAllOverrides() {
-        val context = mock(Context::class.java)
-        val sharedPreferences = mock(SharedPreferences::class.java)
-        val sharedPreferencesEditor = mock(SharedPreferences.Editor::class.java)
-        `when`(sharedPreferencesEditor.clear()).thenReturn(sharedPreferencesEditor)
-        `when`(sharedPreferences.edit()).thenReturn(sharedPreferencesEditor)
-        `when`(context.getSharedPreferences(anyString(), eq(Context.MODE_PRIVATE))).thenReturn(sharedPreferences)
+    fun `verify clearAllOverrides() writes to SharedPreferences`() {
+        testReset()
+
         val evaluator = ExperimentEvaluator()
         evaluator.clearAllOverrides(context)
-        verify(sharedPreferencesEditor).clear()
+        verify(enabledEditor).clear()
+        verify(branchEditor).clear()
     }
 
     @Test
-    fun overridingClientId() {
+    fun `test overriding client id`() {
         val evaluator1 = ExperimentEvaluator(object : ValuesProvider() {
             override fun getClientId(context: Context): String = "c641eacf-c30c-4171-b403-f077724e848a"
         })
@@ -605,10 +463,11 @@ class ExperimentEvaluatorTest {
     }
 
     @Test
-    fun evenDistribution() {
-        val context = mock(Context::class.java)
-        val sharedPrefs = mock(SharedPreferences::class.java)
-        val prefsEditor = mock(SharedPreferences.Editor::class.java)
+    fun `test even distribution`() {
+        testReset()
+
+        val sharedPrefs: SharedPreferences = mock()
+        val prefsEditor: SharedPreferences.Editor = mock()
         `when`(sharedPrefs.edit()).thenReturn(prefsEditor)
         `when`(prefsEditor.putBoolean(ArgumentMatchers.anyString(), ArgumentMatchers.anyBoolean())).thenReturn(prefsEditor)
         `when`(prefsEditor.putString(ArgumentMatchers.anyString(), ArgumentMatchers.anyString())).thenReturn(prefsEditor)
@@ -641,5 +500,188 @@ class ExperimentEvaluatorTest {
                 .forEach {
                     Assert.assertTrue(it.value in 350..650)
                 }
+    }
+
+    @Test
+    fun `test selectBranchByWeight()`() {
+        val e = ExperimentEvaluator()
+
+        var branches = listOf(
+            Experiment.Branch("1", 2)
+        )
+
+        assertEquals("1", e.selectBranchByWeight(0, branches).name)
+        assertEquals("1", e.selectBranchByWeight(1, branches).name)
+
+        branches = listOf(
+            Experiment.Branch("1", 1),
+            Experiment.Branch("2", 2)
+        )
+
+        assertEquals("1", e.selectBranchByWeight(0, branches).name)
+        assertEquals("2", e.selectBranchByWeight(1, branches).name)
+        assertEquals("2", e.selectBranchByWeight(2, branches).name)
+
+        branches = listOf(
+            Experiment.Branch("1", 2),
+            Experiment.Branch("2", 4),
+            Experiment.Branch("3", 1)
+        )
+
+        assertEquals("1", e.selectBranchByWeight(0, branches).name)
+        assertEquals("1", e.selectBranchByWeight(1, branches).name)
+        assertEquals("2", e.selectBranchByWeight(2, branches).name)
+        assertEquals("2", e.selectBranchByWeight(3, branches).name)
+        assertEquals("2", e.selectBranchByWeight(4, branches).name)
+        assertEquals("2", e.selectBranchByWeight(5, branches).name)
+        assertEquals("3", e.selectBranchByWeight(6, branches).name)
+    }
+
+    @Test(expected = AssertionError::class)
+    fun `test selectBranchByWeight() asserts upper out-of-bounds`() {
+        val branches = listOf(
+            Experiment.Branch("1", 2)
+        )
+        val evaluator = ExperimentEvaluator()
+        evaluator.selectBranchByWeight(2, branches)
+    }
+
+    @Test(expected = AssertionError::class)
+    fun `test selectBranchByWeight() asserts lower out-of-bounds`() {
+        val branches = listOf(
+            Experiment.Branch("1", 2)
+        )
+        val evaluator = ExperimentEvaluator()
+        evaluator.selectBranchByWeight(2, branches)
+    }
+
+    @Test
+    fun `test pickActiveBranch()`() {
+        val e = ExperimentEvaluator()
+
+        var experiment = createDefaultExperiment(
+            branches = listOf(
+                Experiment.Branch("1", 2)
+            )
+        )
+
+        assertEquals("1", e.pickActiveBranch(experiment) { _, _ -> 0 }.name)
+        assertEquals("1", e.pickActiveBranch(experiment) { _, _ -> 1 }.name)
+
+        experiment = createDefaultExperiment(
+            branches = listOf(
+                Experiment.Branch("1", 1),
+                Experiment.Branch("2", 2)
+            )
+        )
+
+        assertEquals("1", e.pickActiveBranch(experiment) { _, _ -> 0 }.name)
+        assertEquals("2", e.pickActiveBranch(experiment) { _, _ -> 1 }.name)
+        assertEquals("2", e.pickActiveBranch(experiment) { _, _ -> 2 }.name)
+    }
+
+    private fun evaluate(
+        diceValue: Int,
+        descriptor: ExperimentDescriptor,
+        experiments: List<Experiment>
+    ): ActiveExperiment? {
+        val e = ExperimentEvaluator(object : ValuesProvider() {
+            override fun getRandomBranchValue(lower: Int, upper: Int): Int {
+                return diceValue
+            }
+            override fun getClientId(context: Context): String = "c641eacf-c30c-4171-b403-f077724e848a"
+        })
+        return e.evaluate(context, descriptor, experiments)
+    }
+
+    @Test
+    fun `test evaluating branch choices`() {
+        testReset()
+
+        var experiments = listOf(
+            createDefaultExperiment(
+                id = "id",
+                branches = listOf(
+                    Experiment.Branch("1", 2)
+                )
+            )
+        )
+        val descriptor = ExperimentDescriptor("id")
+        assertEquals(
+            ActiveExperiment(experiments[0], "1"),
+            evaluate(0, descriptor, experiments)!!
+        )
+        assertEquals(
+            ActiveExperiment(experiments[0], "1"),
+            evaluate(0, descriptor, experiments)!!
+        )
+
+        experiments = listOf(
+            createDefaultExperiment(
+                id = "other"
+            ),
+            createDefaultExperiment(
+                id = "id",
+                branches = listOf(
+                    Experiment.Branch("1", 1),
+                    Experiment.Branch("2", 1)
+                )
+            )
+        )
+        assertEquals(
+            ActiveExperiment(experiments[1], "1"),
+            evaluate(0, descriptor, experiments)!!
+        )
+        assertEquals(
+            ActiveExperiment(experiments[1], "2"),
+            evaluate(1, descriptor, experiments)!!
+        )
+    }
+
+    private fun evaluateWithDebugTag(
+        debugTag: String?,
+        descriptor: ExperimentDescriptor,
+        experiments: List<Experiment>
+    ): ActiveExperiment? {
+        val e = ExperimentEvaluator(object : ValuesProvider() {
+            override fun getDebugTag(): String? {
+                return debugTag
+            }
+            override fun getClientId(context: Context): String = "c641eacf-c30c-4171-b403-f077724e848a"
+        })
+        return e.evaluate(context, descriptor, experiments)
+    }
+
+    @Test
+    fun `evaluate debug tags`() {
+        testReset()
+
+        var experiments = listOf(
+            createDefaultExperiment(
+                id = "id-1",
+                match = createDefaultMatcher(
+                    debugTags = listOf("tag-1")
+                )
+            ),
+            createDefaultExperiment(
+                id = "id-2",
+                match = createDefaultMatcher(
+                    debugTags = listOf("tag-2", "tag-3")
+                )
+            )
+        )
+        val descriptor1 = ExperimentDescriptor("id-1")
+        val descriptor2 = ExperimentDescriptor("id-2")
+
+        assertNull(evaluateWithDebugTag("other-tag", descriptor1, experiments))
+        assertNull(evaluateWithDebugTag("other-tag", descriptor2, experiments))
+        assertEquals(
+            ActiveExperiment(experiments[0], "only-branch"),
+            evaluateWithDebugTag("tag-1", descriptor1, experiments)!!
+        )
+        assertEquals(
+            ActiveExperiment(experiments[1], "only-branch"),
+            evaluateWithDebugTag("tag-2", descriptor2, experiments)!!
+        )
     }
 }

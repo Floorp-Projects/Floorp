@@ -78,9 +78,13 @@ internal class ExperimentsUpdater(
         private const val UPDATE_INTERVAL_HOURS = 6L
 
         // Where to access the experiments data in Kinto.
-        // E.g.: https://firefox.settings.services.mozilla.com/v1/buckets/fennec/collections/experiments/records
-        private const val EXPERIMENTS_BASE_URL = "https://settings.prod.mozaws.net/v1"
+        // Live example: https://firefox.settings.services.mozilla.com/v1/buckets/fennec/collections/experiments/records
+        // There are different base URIs to use:
+        // - dev: https://kinto.dev.mozaws.net/v1
+        // - stage: https://settings-writer.stage.mozaws.net/v1
+        // - prod: https://firefox.settings.services.mozilla.com/v1
+        private const val EXPERIMENTS_BASE_URL = "https://kinto.dev.mozaws.net/v1"
         private const val EXPERIMENTS_BUCKET_NAME = "main"
-        private const val EXPERIMENTS_COLLECTION_NAME = "focus-experiments"
+        private const val EXPERIMENTS_COLLECTION_NAME = "mobile-experiments"
     }
 }

@@ -12,11 +12,7 @@ import mozilla.components.service.glean.GleanInternalAPI
 import java.io.File
 
 /**
- * Entry point of the library
- *
- * @property source experiment remote source
- * @property storage experiment local storage mechanism
- * @param valuesProvider provider for the device's values
+ * Entry point of the library.
  */
 @Suppress("TooManyFunctions")
 open class ExperimentsInternalAPI internal constructor() {
@@ -31,6 +27,9 @@ open class ExperimentsInternalAPI internal constructor() {
             field = provider
             evaluator = ExperimentEvaluator(field)
         }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal var activeExperiment: ActiveExperiment? = null
 
     private lateinit var storage: FlatFileExperimentStorage
     private lateinit var updater: ExperimentsUpdater
@@ -72,6 +71,9 @@ open class ExperimentsInternalAPI internal constructor() {
         // is available.
         loadExperiments()
 
+        // Load active experiment from cache, if any.
+        activeExperiment = loadActiveExperiment(applicationContext, experiments)
+
         // We now have the last known experiment state loaded for product code
         // that needs to check it early in startup.
         // Next we need to update the experiments list from the server async,
@@ -110,9 +112,24 @@ open class ExperimentsInternalAPI internal constructor() {
      * Loads experiments from local storage
      */
     @Synchronized
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun loadExperiments() {
         experimentsResult = storage.retrieve()
         experimentsLoaded = true
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun loadActiveExperiment(
+        context: Context,
+        experiments: List<Experiment>
+    ): ActiveExperiment? {
+        val activeExperiment = ActiveExperiment.load(context, experiments)
+        logger.info(activeExperiment?.let
+            { """Loaded active experiment - id="${it.experiment.id}", branch="${it.branch}"""" }
+            ?: "No active experiment"
+        )
+
+        return activeExperiment
     }
 
     /**
@@ -137,7 +154,8 @@ open class ExperimentsInternalAPI internal constructor() {
      *
      * @return true if the user is part of the specified experiment, false otherwise
      */
-    fun isInExperiment(context: Context, experimentId: String): Boolean {
+    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
+    internal fun isInExperiment(context: Context, experimentId: String): Boolean {
         return evaluator.evaluate(context, ExperimentDescriptor(experimentId), experimentsResult.experiments) != null
     }
 
@@ -148,8 +166,12 @@ open class ExperimentsInternalAPI internal constructor() {
      * @param experimentId the id of the experiment
      * @param block block of code to be executed if the user is part of the experiment
      */
-    fun withExperiment(context: Context, experimentId: String, block: () -> Unit) {
-        evaluator.evaluate(context, ExperimentDescriptor(experimentId), experimentsResult.experiments)?.let { block() }
+    fun withExperiment(context: Context, experimentId: String, block: (branch: String) -> Unit) {
+        val activeExperiment = evaluator.evaluate(
+            context,
+            ExperimentDescriptor(experimentId), experimentsResult.experiments
+        )
+        activeExperiment?.let { block(it.branch) }
     }
 
     /**
@@ -173,7 +195,7 @@ open class ExperimentsInternalAPI internal constructor() {
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun getActiveExperiments(context: Context): List<Experiment> {
-        return experiments.filter { isInExperiment(context, it.name) }
+        return experiments.filter { isInExperiment(context, it.id) }
     }
 
     /**
@@ -186,8 +208,8 @@ open class ExperimentsInternalAPI internal constructor() {
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun getExperimentsMap(context: Context): Map<String, Boolean> {
         return experiments.associate {
-            it.name to
-                    isInExperiment(context, it.name)
+            it.id to
+                    isInExperiment(context, it.id)
         }
     }
 
@@ -199,8 +221,13 @@ open class ExperimentsInternalAPI internal constructor() {
      * @param active overridden value for the experiment, true to activate it, false to deactivate
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun setOverride(context: Context, experimentId: String, active: Boolean) {
-        evaluator.setOverride(context, ExperimentDescriptor(experimentId), active)
+    internal fun setOverride(
+        context: Context,
+        experimentId: String,
+        active: Boolean,
+        branchName: String
+    ) {
+        evaluator.setOverride(context, ExperimentDescriptor(experimentId), active, branchName)
     }
 
     /**
@@ -212,8 +239,13 @@ open class ExperimentsInternalAPI internal constructor() {
      * @param active overridden value for the experiment, true to activate it, false to deactivate
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal fun setOverrideNow(context: Context, experimentId: String, active: Boolean) {
-        evaluator.setOverrideNow(context, ExperimentDescriptor(experimentId), active)
+    internal fun setOverrideNow(
+        context: Context,
+        experimentId: String,
+        active: Boolean,
+        branchName: String
+    ) {
+        evaluator.setOverrideNow(context, ExperimentDescriptor(experimentId), active, branchName)
     }
 
     /**

@@ -49,20 +49,26 @@ class KintoExperimentSourceTest {
             {
                 "data":[
                     {
-                        "name": "first-name",
+                        "id": "first-id",
+                        "id": "first-id",
+                        "description": "first-description",
+                        "last_modified": 1523549895713,
                         "match": {
-                            "lang": "eng",
-                            "appId": "first-appId",
+                            "locale_language": "eng",
+                            "app_id": "first-appId",
                             "regions": []
                         },
                         "schema": 1523549592861,
                         "buckets": {
-                            "max": "100",
-                            "min": "0"
+                            "start": "0",
+                            "count": "100"
                         },
-                        "description": "first-description",
-                        "id": "first-id",
-                        "last_modified": 1523549895713
+                        "branches": [
+                            {
+                                "name": "branch1",
+                                "ratio": "1"
+                            }
+                        ]
                     }
                 ]
             }
@@ -74,12 +80,16 @@ class KintoExperimentSourceTest {
                 MutableHeaders(),
                 Response.Body(json.byteInputStream())))
 
-        val expectedExperiment = Experiment("first-id",
-            "first-name",
-            "first-description",
-            Experiment.Matcher("eng", "first-appId", listOf()),
-            Experiment.Bucket(100, 0),
-            1523549895713
+        val expectedExperiment = createDefaultExperiment(
+            id = "first-id",
+            description = "first-description",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "first-appId",
+                regions = listOf()
+            ),
+            buckets = Experiment.Buckets(0, 100),
+            lastModified = 1523549895713
         )
 
         val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
@@ -97,20 +107,25 @@ class KintoExperimentSourceTest {
             {
                 "data": [
                     {
-                        "name": "first-name",
+                        "id": "first-id",
+                        "description": "first-description",
+                        "last_modified": 1523549895713,
                         "match": {
-                            "lang": "eng",
-                            "appId": "first-appId",
+                            "locale_language": "eng",
+                            "app_id": "first-appId",
                             "regions": []
                         },
                         "schema": 1523549592861,
                         "buckets": {
-                            "max": "100",
-                            "min": "0"
+                            "start": "0",
+                            "count": "100"
                         },
-                        "description": "first-description",
-                        "id": "first-id",
-                        "last_modified": 1523549895713
+                        "branches": [
+                            {
+                                "name": "branch1",
+                                "ratio": "1"
+                            }
+                        ]
                     }
                 ]
             }
@@ -122,20 +137,28 @@ class KintoExperimentSourceTest {
                 MutableHeaders(),
                 Response.Body(json.byteInputStream())))
 
-        val kintoExperiment = Experiment("first-id",
-            "first-name",
-            "first-description",
-            Experiment.Matcher("eng", "first-appId", listOf()),
-            Experiment.Bucket(100, 0),
-            1523549895713
+        val kintoExperiment = createDefaultExperiment(
+            id = "first-id",
+            description = "first-description",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "first-appId",
+                regions = listOf()
+            ),
+            buckets = Experiment.Buckets(0, 100),
+            lastModified = 1523549895713
         )
 
-        val storageExperiment = Experiment("id",
-            "name",
-            "description",
-            Experiment.Matcher("eng", "appId", listOf("US")),
-            Experiment.Bucket(10, 5),
-            1523549890000
+        val storageExperiment = createDefaultExperiment(
+            id = "id",
+            description = "description",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "appId",
+                regions = listOf("US")
+            ),
+            buckets = Experiment.Buckets(5, 5),
+            lastModified = 1523549890000
         )
 
         val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
@@ -150,20 +173,29 @@ class KintoExperimentSourceTest {
     fun getExperimentsDiffDelete() {
         val httpClient = mock(Client::class.java)
 
-        val storageExperiment = Experiment("id",
-            "name",
-            "description",
-            Experiment.Matcher("eng", "appId", listOf("US")),
-            Experiment.Bucket(10, 5),
-            1523549890000
+        val storageExperiment = createDefaultExperiment(
+            id = "id",
+            description = "description",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "appId",
+                regions = listOf("US")
+            ),
+            buckets = Experiment.Buckets(5, 5),
+            lastModified = 1523549890000
         )
 
-        val secondExperiment = Experiment("id2",
-            "name2",
-            "description2",
-            Experiment.Matcher("eng", "appId", listOf("US")),
-            Experiment.Bucket(10, 5),
-            1523549890000)
+        val secondExperiment = createDefaultExperiment(
+            id = "id2",
+            description = "description2",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "appId",
+                regions = listOf("US")
+            ),
+            buckets = Experiment.Buckets(5, 5),
+            lastModified = 1523549890000
+        )
 
         val json = """
             {
@@ -214,20 +246,25 @@ class KintoExperimentSourceTest {
             {
                 "data": [
                     {
-                        "name": "first-name",
+                        "id": "first-id",
+                        "description": "first-description",
+                        "last_modified": 1523549895713,
                         "match": {
-                            "lang": "eng",
-                            "appId": "first-appId",
+                            "locale_language": "eng",
+                            "app_id": "first-appId",
                             "regions": []
                         },
                         "schema": 1523549592861,
                         "buckets": {
-                            "max": "100",
-                            "min": "0"
+                            "start": "0",
+                            "count": "100"
                         },
-                        "description": "first-description",
-                        "id": "first-id",
-                        "last_modified": 1523549895713
+                        "branches": [
+                            {
+                                "name": "branch1",
+                                "ratio": "1"
+                            }
+                        ]
                     }
                 ]
             }
@@ -239,20 +276,28 @@ class KintoExperimentSourceTest {
                 MutableHeaders(),
                 Response.Body(json.byteInputStream())))
 
-        val kintoExperiment = Experiment("first-id",
-            "first-name",
-            "first-description",
-            Experiment.Matcher("eng", "first-appId", listOf()),
-            Experiment.Bucket(100, 0),
-            1523549895713
+        val kintoExperiment = createDefaultExperiment(
+            id = "first-id",
+            description = "first-description",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "first-appId",
+                regions = listOf()
+            ),
+            buckets = Experiment.Buckets(0, 100),
+            lastModified = 1523549895713
         )
 
-        val storageExperiment = Experiment("first-id",
-            "name",
-            "description",
-            Experiment.Matcher("es", "appId", listOf("UK")),
-            Experiment.Bucket(200, 20),
-            1523549800000
+        val storageExperiment = createDefaultExperiment(
+            id = "first-id",
+            description = "description",
+            match = createDefaultMatcher(
+                localeLanguage = "es",
+                appId = "appId",
+                regions = listOf("UK")
+            ),
+            buckets = Experiment.Buckets(20, 180),
+            lastModified = 1523549800000
         )
 
         val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)
@@ -279,12 +324,16 @@ class KintoExperimentSourceTest {
                 MutableHeaders(),
                 Response.Body(json.byteInputStream())))
 
-        val storageExperiment = Experiment("first-id",
-            "first-name",
-            "first-description",
-            Experiment.Matcher("eng", "first-appId", listOf()),
-            Experiment.Bucket(100, 0),
-            1523549895713
+        val storageExperiment = createDefaultExperiment(
+            id = "first-id",
+            description = "first-description",
+            match = createDefaultMatcher(
+                localeLanguage = "eng",
+                appId = "first-appId",
+                regions = listOf()
+            ),
+            buckets = Experiment.Buckets(0, 100),
+            lastModified = 1523549895713
         )
 
         val experimentSource = KintoExperimentSource(baseUrl, bucketName, collectionName, httpClient)

@@ -7,7 +7,9 @@ package mozilla.components.service.experiments
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Looper
+import android.support.annotation.VisibleForTesting
 import android.text.TextUtils
+import mozilla.components.support.base.log.logger.Logger
 import java.util.zip.CRC32
 
 /**
@@ -17,7 +19,11 @@ import java.util.zip.CRC32
  * @property valuesProvider provider for the device's values
  */
 @Suppress("TooManyFunctions")
-internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = ValuesProvider()) {
+internal class ExperimentEvaluator(
+    private val valuesProvider: ValuesProvider = ValuesProvider()
+) {
+    private val logger: Logger = Logger(LOG_TAG)
+
     /**
      * Determines if a specific experiment should be enabled or not for the device
      *
@@ -28,16 +34,29 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
      *
      * @return experiment object if the device is part of the experiment, null otherwise
      */
-    fun evaluate(
+    internal fun evaluate(
         context: Context,
         experimentDescriptor: ExperimentDescriptor,
         experiments: List<Experiment>,
         userBucket: Int = getUserBucket(context)
-    ): Experiment? {
+    ): ActiveExperiment? {
         val experiment = getExperiment(experimentDescriptor, experiments) ?: return null
         val isEnabled = isInBucket(userBucket, experiment) && matches(context, experiment)
-        context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE).let {
-            return if (it.getBoolean(experimentDescriptor.name, isEnabled)) experiment else null
+
+        // If we have an active override for this experiment, return it.
+        getOverride(context, experimentDescriptor, isEnabled)?.let {
+            return if (!it.isEnabled) null else ActiveExperiment(experiment, it.branchName)
+        }
+
+        return if (isEnabled) {
+            val rng = { a: Int, b: Int ->
+                valuesProvider.getRandomBranchValue(a, b) }
+            ActiveExperiment(
+                experiment,
+                pickActiveBranch(experiment, rng).name
+            )
+        } else {
+            null
         }
     }
 
@@ -49,31 +68,29 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
      *
      * @return found experiment or null
      */
-    fun getExperiment(descriptor: ExperimentDescriptor, experiments: List<Experiment>): Experiment? {
-        return experiments.firstOrNull { it.name == descriptor.name }
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getExperiment(descriptor: ExperimentDescriptor, experiments: List<Experiment>): Experiment? {
+        return experiments.firstOrNull { it.id == descriptor.id }
     }
 
     private fun matches(context: Context, experiment: Experiment): Boolean {
-        if (experiment.match != null) {
-            val region = valuesProvider.getRegion(context)
-            val matchesRegion = !(region != null &&
-                                        experiment.match.regions != null &&
-                                        experiment.match.regions.isNotEmpty() &&
-                                        experiment.match.regions.none { it == region })
-            val releaseChannel = valuesProvider.getReleaseChannel(context)
-            val matchesReleaseChannel = releaseChannel == null ||
-                                                experiment.match.releaseChannel == null ||
-                                                releaseChannel == experiment.match.releaseChannel
-            return matchesRegion &&
-                matchesReleaseChannel &&
-                matchesExperiment(experiment.match.appId, valuesProvider.getAppId(context)) &&
-                matchesExperiment(experiment.match.language, valuesProvider.getLanguage(context)) &&
-                matchesExperiment(experiment.match.country, valuesProvider.getCountry(context)) &&
-                matchesExperiment(experiment.match.version, valuesProvider.getVersion(context)) &&
-                matchesExperiment(experiment.match.manufacturer, valuesProvider.getManufacturer(context)) &&
-                matchesExperiment(experiment.match.device, valuesProvider.getDevice(context))
-        }
-        return true
+        val match = experiment.match
+        val region = valuesProvider.getRegion(context)
+        val matchesRegion = (region == null) ||
+            match.regions.isNullOrEmpty() ||
+            match.regions.any { it == region }
+        val tag = valuesProvider.getDebugTag()
+        val matchesTag = (tag == null) ||
+            match.debugTags.isNullOrEmpty() ||
+            match.debugTags.any { it == tag }
+
+        return matchesRegion && matchesTag &&
+            matchesExperiment(match.appId, valuesProvider.getAppId(context)) &&
+            matchesExperiment(match.appDisplayVersion, valuesProvider.getVersion(context)) &&
+            matchesExperiment(match.localeLanguage, valuesProvider.getLanguage(context)) &&
+            matchesExperiment(match.localeCountry, valuesProvider.getCountry(context)) &&
+            matchesExperiment(match.deviceManufacturer, valuesProvider.getManufacturer(context)) &&
+            matchesExperiment(match.deviceModel, valuesProvider.getDevice(context))
     }
 
     private fun matchesExperiment(experimentValue: String?, deviceValue: String): Boolean {
@@ -83,18 +100,76 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
     }
 
     private fun isInBucket(userBucket: Int, experiment: Experiment): Boolean {
-        return (experiment.bucket?.min == null ||
-            userBucket >= experiment.bucket.min) &&
-            (experiment.bucket?.max == null ||
-            userBucket < experiment.bucket.max)
+        if ((experiment.buckets.start + experiment.buckets.count) >= MAX_USER_BUCKET) {
+            logger.warn("Experiment bucket is outside of the bucket range.")
+        }
+        return (userBucket >= experiment.buckets.start &&
+                userBucket < (experiment.buckets.start + experiment.buckets.count))
     }
 
-    fun getUserBucket(context: Context): Int {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getUserBucket(context: Context): Int {
         val uuid = valuesProvider.getClientId(context)
         val crc = CRC32()
         crc.update(uuid.toByteArray())
         val checksum = crc.value
-        return (checksum % MAX_BUCKET).toInt()
+        return (checksum % MAX_USER_BUCKET).toInt()
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun pickActiveBranch(
+        experiment: Experiment,
+        randomNumberGenerator: (Int, Int) -> Int
+    ): Experiment.Branch {
+        val sum = experiment.branches.sumBy { it.ratio }
+        val diceRoll = randomNumberGenerator(0, sum)
+        return selectBranchByWeight(diceRoll, experiment.branches)
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun selectBranchByWeight(
+        diceRoll: Int,
+        branches: List<Experiment.Branch>
+    ): Experiment.Branch {
+        assert(diceRoll >= 0) { "Dice roll should be >= 0." }
+        assert(branches.isNotEmpty()) { "Branches list should not be empty." }
+
+        var value = diceRoll
+        for (branch in branches) {
+            if (value < branch.ratio) {
+                return branch
+            }
+            value -= branch.ratio
+        }
+
+        assert(false) { "Should have found matching branch." }
+        return branches.last()
+    }
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal data class ExperimentOverride(
+        val isEnabled: Boolean,
+        val branchName: String
+    )
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getOverride(
+        context: Context,
+        descriptor: ExperimentDescriptor,
+        isEnabledDefault: Boolean
+    ): ExperimentOverride? {
+        val prefEnabled = getSharedPreferencesEnabled(context)
+        val prefBranch = getSharedPreferencesBranch(context)
+        if (!prefEnabled.contains(descriptor.id) || !prefBranch.contains(descriptor.id)) {
+            return null
+        }
+
+        val branchName = prefBranch.getString(descriptor.id, null) ?: return null
+
+        return ExperimentOverride(
+            prefEnabled.getBoolean(descriptor.id, isEnabledDefault),
+            branchName
+        )
     }
 
     /**
@@ -103,11 +178,22 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
      * @param context context
      * @param descriptor descriptor of the experiment
      * @param active overridden value for the experiment, true to activate it, false to deactivate
+     * @param branch overridden branch name for the experiment.
      */
-    fun setOverride(context: Context, descriptor: ExperimentDescriptor, active: Boolean) {
-        context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun setOverride(
+        context: Context,
+        descriptor: ExperimentDescriptor,
+        active: Boolean,
+        branchName: String
+    ) {
+        getSharedPreferencesEnabled(context)
             .edit()
-            .putBoolean(descriptor.name, active)
+            .putBoolean(descriptor.id, active)
+            .apply()
+        getSharedPreferencesBranch(context)
+            .edit()
+            .putString(descriptor.id, branchName)
             .apply()
     }
 
@@ -117,14 +203,18 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
      * @param context context
      * @param descriptor descriptor of the experiment
      * @param active overridden value for the experiment, true to activate it, false to deactivate
+     * @param branchName overridden branch name for the experiment.
      */
     @SuppressLint("ApplySharedPref")
-    fun setOverrideNow(context: Context, descriptor: ExperimentDescriptor, active: Boolean) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun setOverrideNow(
+        context: Context,
+        descriptor: ExperimentDescriptor,
+        active: Boolean,
+        branchName: String
+    ) {
         require(Looper.myLooper() != Looper.getMainLooper()) { "This cannot be used on the main thread" }
-        context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
-                .edit()
-                .putBoolean(descriptor.name, active)
-                .commit()
+        setOverride(context, descriptor, active, branchName)
     }
 
     /**
@@ -133,10 +223,15 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
      * @param context context
      * @param descriptor descriptor of the experiment
      */
-    fun clearOverride(context: Context, descriptor: ExperimentDescriptor) {
-        context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun clearOverride(context: Context, descriptor: ExperimentDescriptor) {
+        getSharedPreferencesEnabled(context)
             .edit()
-            .remove(descriptor.name)
+            .remove(descriptor.id)
+            .apply()
+        getSharedPreferencesBranch(context)
+            .edit()
+            .remove(descriptor.id)
             .apply()
     }
 
@@ -147,12 +242,10 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
      * @param descriptor descriptor of the experiment
      */
     @SuppressLint("ApplySharedPref")
-    fun clearOverrideNow(context: Context, descriptor: ExperimentDescriptor) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun clearOverrideNow(context: Context, descriptor: ExperimentDescriptor) {
         require(Looper.myLooper() != Looper.getMainLooper()) { "This cannot be used on the main thread" }
-        context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
-                .edit()
-                .remove(descriptor.name)
-                .commit()
+        clearOverride(context, descriptor)
     }
 
     /**
@@ -160,8 +253,13 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
      *
      * @param context context
      */
-    fun clearAllOverrides(context: Context) {
-        context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun clearAllOverrides(context: Context) {
+        getSharedPreferencesEnabled(context)
+            .edit()
+            .clear()
+            .apply()
+        getSharedPreferencesBranch(context)
             .edit()
             .clear()
             .apply()
@@ -173,16 +271,27 @@ internal class ExperimentEvaluator(private val valuesProvider: ValuesProvider = 
      * @param context context
      */
     @SuppressLint("ApplySharedPref")
-    fun clearAllOverridesNow(context: Context) {
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun clearAllOverridesNow(context: Context) {
         require(Looper.myLooper() != Looper.getMainLooper()) { "This cannot be used on the main thread" }
-        context.getSharedPreferences(OVERRIDES_PREF_NAME, Context.MODE_PRIVATE)
-                .edit()
-                .clear()
-                .commit()
+        clearAllOverrides(context)
     }
 
+    private fun getSharedPreferencesBranch(context: Context) =
+        context.getSharedPreferences(PREF_NAME_OVERRIDES_BRANCH, Context.MODE_PRIVATE)
+
+    private fun getSharedPreferencesEnabled(context: Context) =
+        context.getSharedPreferences(PREF_NAME_OVERRIDES_ENABLED, Context.MODE_PRIVATE)
+
     companion object {
-        private const val MAX_BUCKET = 100L
-        private const val OVERRIDES_PREF_NAME = "mozilla.components.service.experiments.overrides"
+        private const val LOG_TAG = "experiments"
+
+        const val MAX_USER_BUCKET = 100
+        // This stores a boolean; whether an experiment is active or not.
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        const val PREF_NAME_OVERRIDES_ENABLED = "mozilla.components.service.experiments.overrides.enabled"
+        // This stores a string; the active branch name for the experiment.
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        const val PREF_NAME_OVERRIDES_BRANCH = "mozilla.components.service.experiments.overrides.branch"
     }
 }
