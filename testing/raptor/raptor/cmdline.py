@@ -52,7 +52,9 @@ def create_parser(mach_interface=False):
     add_arg = parser.add_argument
 
     add_arg('-t', '--test', required=True, dest='test',
-            help="name of raptor test to run")
+            help="name of raptor test to run (can be a top-level suite name i.e." 
+            "'--test raptor-speedometer','--test raptor-tp6-1', or for page-load "
+            "tests a suite sub-test i.e. '--test raptor-tp6-google-firefox')")
     add_arg('--app', default='firefox', dest='app',
             help="name of the application we are testing (default: firefox)",
             choices=APPS.keys())
