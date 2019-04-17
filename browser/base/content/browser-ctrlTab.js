@@ -289,7 +289,8 @@ var ctrlTab = {
   },
 
   advanceFocus: function ctrlTab_advanceFocus(aForward) {
-    let selectedIndex = Array.indexOf(this.previews, this.selected);
+    let selectedIndex = Array.prototype.indexOf.call(this.previews,
+      this.selected);
     do {
       selectedIndex += aForward ? 1 : -1;
       if (selectedIndex < 0)
@@ -565,7 +566,7 @@ var ctrlTab = {
 
   _initRecentlyUsedTabs() {
     this._recentlyUsedTabs =
-      Array.filter(gBrowser.tabs, tab => !tab.closing)
+      Array.prototype.filter.call(gBrowser.tabs, tab => !tab.closing)
            .sort((tab1, tab2) => tab2.lastAccessed - tab1.lastAccessed);
   },
 
