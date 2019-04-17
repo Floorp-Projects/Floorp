@@ -37,7 +37,7 @@ export function removeEditor() {
 }
 
 function getCodeMirror() {
-  return editor && editor.codeMirror;
+  return editor && editor.hasCodeMirror ? editor.codeMirror : null;
 }
 
 export function startOperation() {
