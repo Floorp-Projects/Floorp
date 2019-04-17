@@ -99,37 +99,89 @@ var Async = {
     });
   },
 
-  // Returns a method that yields every X calls.
-  // Common case is calling the returned method every iteration in a loop.
-  jankYielder(yieldEvery = 50) {
+  /**
+   * Shared state for yielding every N calls.
+   *
+   * Can be passed to multiple Async.yieldingForEach to have them overall yield
+   * every N iterations.
+   */
+  yieldState(yieldEvery = 50) {
     let iterations = 0;
-    return async () => {
-      Async.checkAppReady(); // Let it throw!
-      if (++iterations % yieldEvery === 0) {
-        await Async.promiseYield();
-      }
+
+    return {
+      shouldYield() {
+        ++iterations;
+        return iterations % yieldEvery === 0;
+      },
     };
   },
 
   /**
-   * Turn a synchronous iterator/iterable into an async iterator that calls a
-   * Async.jankYielder at each step.
+   * Apply the given function to each element of the iterable, yielding the
+   * event loop every yieldEvery iterations.
    *
    * @param iterable {Iterable}
-   *        Iterable or iterator that should be wrapped. (Anything usable in
-   *        for..of should work)
+   *        The iterable or iterator to iterate through.
    *
-   * @param [maybeYield = 50] {number|() => Promise<void>}
-   *        Either an existing jankYielder to use, or a number to provide as the
-   *        argument to Async.jankYielder.
+   * @param fn {(*) -> void|boolean}
+   *        The function to be called on each element of the iterable.
+   *
+   *        Returning true from the function will stop the iteration.
+   *
+   * @param [yieldEvery = 50] {number|object}
+   *        The number of iterations to complete before yielding back to the event
+   *        loop.
+   *
+   * @return {boolean}
+   *         Whether or not the function returned early.
    */
-  async* yieldingIterator(iterable, maybeYield = 50) {
-    if (typeof maybeYield == "number") {
-      maybeYield = Async.jankYielder(maybeYield);
+  async yieldingForEach(iterable, fn, yieldEvery = 50) {
+    const yieldState = typeof yieldEvery === "number" ? Async.yieldState(yieldEvery) : yieldEvery;
+    let iteration = 0;
+
+    for (const item of iterable) {
+      let result = fn(item, iteration++);
+      if (typeof result !== "undefined" && typeof result.then !== "undefined") {
+        // If we await result when it is not a Promise, we create an
+        // automatically resolved promise, which is exactly the case that we
+        // are trying to avoid.
+        result = await result;
+      }
+
+      if (result === true) {
+        return true;
+      }
+
+      if (yieldState.shouldYield()) {
+        await Async.promiseYield();
+        Async.checkAppReady();
+      }
     }
-    for (let item of iterable) {
-      await maybeYield();
+
+    return false;
+  },
+
+  /**
+   * Turn a synchronous iterator/iterable into an async iterator that yields in
+   * the same manner as Async.yieldingForEach.
+   *
+   * @param iterable {Iterable}
+   *        The iterable or iterator that should be wrapped.
+   *
+   * @param yieldEvery {number|object}
+   *        Either an existing Async.yieldState to use, or a number to provide as
+   *        the argument to async.yieldState.
+   */
+  async* yieldingIterator(iterable, yieldEvery = 50) {
+    const yieldState = typeof yieldEvery === "number" ? Async.yieldState(yieldEvery) : yieldEvery;
+
+    for (const item of iterable) {
       yield item;
+
+      if (yieldState.shouldYield()) {
+        await Async.promiseYield();
+        Async.checkAppReady();
+      }
     }
   },
 
