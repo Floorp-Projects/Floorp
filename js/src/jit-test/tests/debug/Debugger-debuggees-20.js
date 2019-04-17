@@ -12,10 +12,9 @@ var g1w = dbg.addDebuggee(g1);
 var g3w = dbg.addDebuggee(g3);
 assertEq(dbg.addAllGlobalsAsDebuggees(), undefined);
 
-// Get Debugger.Objects viewing the globals from their own compartments;
-// this is the sort that findAllGlobals and addDebuggee return.
-assertEq(g1w, g3w.makeDebuggeeValue(g1).unwrap());
-assertEq(g3w, g1w.makeDebuggeeValue(g3).unwrap());
+// Get Debugger.Objects viewing the WindowProxies from their own compartments.
+assertEq(g1w.makeDebuggeeValue(g1), g3w.makeDebuggeeValue(g1).unwrap());
+assertEq(g3w.makeDebuggeeValue(g3), g1w.makeDebuggeeValue(g3).unwrap());
 
 var g2w = g1w.makeDebuggeeValue(g2).unwrap();
 var g4w = g1w.makeDebuggeeValue(g4).unwrap();

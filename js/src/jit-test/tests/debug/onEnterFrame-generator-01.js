@@ -56,7 +56,7 @@ function check(frame) {
     savedOffsets.add(pc);
 
     assertEq(frame.older, null);
-    assertEq(frame.this, gw);
+    assertEq(frame.this, gw.makeDebuggeeValue(g));
     assertEq(typeof frame.implementation, "string");
 
     // And the moment of truth:
