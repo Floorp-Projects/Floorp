@@ -630,6 +630,10 @@ void BrowsingContext::Blur(ErrorResult& aError) {
 }
 
 Nullable<WindowProxyHolder> BrowsingContext::GetTop(ErrorResult& aError) {
+  if (mClosed) {
+    return nullptr;
+  }
+
   // We never return null or throw an error, but the implementation in
   // nsGlobalWindow does and we need to use the same signature.
   return WindowProxyHolder(Top());
