@@ -40,6 +40,9 @@ body.config-warning {
 }
 
 #about-config-search {
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
   box-sizing: border-box;
   width: 100%;
   background-image: url("chrome://global/skin/icons/search-textbox.svg");
