@@ -2992,6 +2992,15 @@ static nsIContent* FindOwner(nsIContent* aContent) {
   nsIContent* currentContent = aContent;
   while (currentContent) {
     nsIContent* parent = currentContent->GetFlattenedTreeParent();
+    if (!parent) {
+      // Document root
+      Document* doc = currentContent->GetUncomposedDoc();
+      if (doc && doc->GetRootElement() == currentContent) {
+        return currentContent;
+      }
+
+      break;
+    }
 
     // Shadow host / Slot
     if (IsHostOrSlot(parent)) {
@@ -3249,9 +3258,12 @@ nsresult nsFocusManager::GetNextTabbableContent(
     }
   }
 
-  // If aStartContent is in a scope owned by Shadow DOM search from scope
-  // including aStartContent
-  if (nsIContent* owner = FindOwner(aStartContent)) {
+  // If aStartContent is not in a scope owned by the root element
+  // (i.e. aStartContent is already in shadow DOM),
+  // search from scope including aStartContent
+  nsIContent* rootElement = aRootContent->OwnerDoc()->GetRootElement();
+  nsIContent* owner = FindOwner(aStartContent);
+  if (owner && rootElement != owner) {
     nsIContent* contentToFocus = GetNextTabbableContentInAncestorScopes(
         owner, &aStartContent, aOriginalStartContent, aForward,
         &aCurrentTabIndex, aIgnoreTabIndex, aForDocumentNavigation);
@@ -3265,8 +3277,8 @@ nsresult nsFocusManager::GetNextTabbableContent(
   // We need to continue searching in light DOM, starting at the top level
   // shadow host in light DOM (updated aStartContent) and its tabindex
   // (updated aCurrentTabIndex).
-  MOZ_ASSERT(!FindOwner(aStartContent),
-             "aStartContent should not be owned by Shadow DOM at this point");
+  MOZ_ASSERT(FindOwner(aStartContent) == rootElement,
+             "aStartContent should be owned by the root element at this point");
 
   nsPresContext* presContext = aPresShell->GetPresContext();
 
@@ -3425,7 +3437,7 @@ nsresult nsFocusManager::GetNextTabbableContent(
       //  append ELEMENT to NAVIGATION-ORDER."
       // and later in "For each element ELEMENT in NAVIGATION-ORDER: "
       // hosts and slots are handled before other elements.
-      if (IsHostOrSlot(currentContent)) {
+      if (currentContent && IsHostOrSlot(currentContent)) {
         bool focusableHostSlot;
         int32_t tabIndex =
             HostOrSlotTabIndexValue(currentContent, &focusableHostSlot);
