@@ -66,6 +66,7 @@ struct DefaultJitOptions {
   bool disableSincos;
   bool disableSink;
   bool disableOptimizationLevels;
+  bool baselineInterpreter;
   bool forceInlineCaches;
   bool fullDebugChecks;
   bool limitScriptSize;
@@ -82,6 +83,7 @@ struct DefaultJitOptions {
   bool enableWasmImportCallSpew;
   bool enableWasmFuncCallSpew;
 #endif
+  uint32_t baselineInterpreterWarmUpThreshold;
   uint32_t baselineWarmUpThreshold;
   uint32_t normalIonWarmUpThreshold;
   uint32_t fullIonWarmUpThreshold;

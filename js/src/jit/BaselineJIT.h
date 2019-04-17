@@ -555,12 +555,22 @@ inline bool IsBaselineEnabled(JSContext* cx) {
 #endif
 }
 
+enum class BaselineTier { Interpreter, Compiler };
+
+template <BaselineTier Tier>
 MethodStatus CanEnterBaselineMethod(JSContext* cx, RunState& state);
 
+template <BaselineTier Tier>
 MethodStatus CanEnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp);
 
 JitExecStatus EnterBaselineAtBranch(JSContext* cx, InterpreterFrame* fp,
                                     jsbytecode* pc);
+
+// Called by the Baseline Interpreter to compile a script for the Baseline JIT.
+// |res| is set to the native code address in the BaselineScript to jump to, or
+// nullptr if we were unable to compile this script.
+bool BaselineCompileFromBaselineInterpreter(JSContext* cx, BaselineFrame* frame,
+                                            uint8_t** res);
 
 void FinishDiscardBaselineScript(FreeOp* fop, JSScript* script);
 
