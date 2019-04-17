@@ -23,22 +23,25 @@ fun String.toNormalizedUrl(): String {
 }
 
 /**
- * Checks if this String is a URL.
+ * A collection of regular expressions used in the `is*` methods below.
  */
-fun String.isUrl(): Boolean {
-    val trimmedUrl = this.trim()
-    if (trimmedUrl.contains(" ")) {
-        return false
-    }
-
-    return trimmedUrl.contains(".") || trimmedUrl.contains(":")
+private val re = object {
+    val urlish = "^\\s*\\w+(://|\\.)\\w+\\S*\\s*$".toRegex()
+    val phoneish = "^\\s*tel:\\S?\\d+\\S*\\s*$".toRegex(RegexOption.IGNORE_CASE)
+    val emailish = "^\\s*mailto:\\w+\\S*\\s*$".toRegex(RegexOption.IGNORE_CASE)
+    val geoish = "^\\s*geo:\\S*\\d+\\S*\\s*$".toRegex(RegexOption.IGNORE_CASE)
 }
 
-fun String.isPhone(): Boolean = contains("tel:", true)
+/**
+ * Checks if this String is a URL.
+ */
+fun String.isUrl() = re.urlish.matches(this)
 
-fun String.isEmail(): Boolean = contains("mailto:", true)
+fun String.isPhone() = re.phoneish.matches(this)
 
-fun String.isGeoLocation(): Boolean = contains("geo:", true)
+fun String.isEmail() = re.emailish.matches(this)
+
+fun String.isGeoLocation() = re.geoish.matches(this)
 
 /**
  * Converts a [String] to a [Date] object.

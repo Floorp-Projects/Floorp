@@ -13,8 +13,8 @@ import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.tab.CustomTabConfig
 import mozilla.components.feature.search.SearchUseCases
 import mozilla.components.feature.session.SessionUseCases
-import mozilla.components.support.ktx.kotlin.isUrl
 import mozilla.components.support.utils.SafeIntent
+import mozilla.components.support.utils.WebURLFinder
 
 typealias IntentHandler = (Intent) -> Boolean
 
@@ -73,15 +73,19 @@ class IntentProcessor(
             TextUtils.isEmpty(extraText.trim()) -> false
 
             else -> {
-                val url = extraText.split(" ").find { it.isUrl() }
-                if (url != null) {
-                    val session = createSession(url, private = isPrivate, source = Source.ACTION_SEND)
-                    sessionUseCases.loadUrl.invoke(url, session)
-                    true
-                } else {
+                WebURLFinder(extraText).bestWebURL()?.let { url ->
+                    sessionUseCases.loadUrl.invoke(
+                        url,
+                        createSession(
+                            url,
+                            private = isPrivate,
+                            source = Source.ACTION_SEND
+                        )
+                    )
+                } ?: run {
                     searchUseCases.newTabSearch.invoke(extraText, Source.ACTION_SEND, openNewTab)
-                    true
                 }
+                true
             }
         }
     }

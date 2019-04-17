@@ -205,6 +205,14 @@ class IntentProcessorTest {
         `when`(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("see http://mozilla.com and http://getpocket.com")
         handler.process(intent)
         verify(engineSession).loadUrl("http://mozilla.com")
+
+        `when`(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("checkout the Tweet: http://tweets.mozilla.com")
+        handler.process(intent)
+        verify(engineSession).loadUrl("http://tweets.mozilla.com")
+
+        `when`(intent.getStringExtra(Intent.EXTRA_TEXT)).thenReturn("checkout the Tweet: HTTP://tweets.mozilla.com")
+        handler.process(intent)
+        verify(engineSession).loadUrl("http://tweets.mozilla.com")
     }
 
     @Test

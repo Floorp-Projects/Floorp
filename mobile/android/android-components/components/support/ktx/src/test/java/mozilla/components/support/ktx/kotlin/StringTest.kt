@@ -8,6 +8,7 @@ import android.net.Uri
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertFalse
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,10 +35,17 @@ class StringTest {
         assertTrue("https://mozilla.org".isUrl())
         assertTrue("file://somefile.txt".isUrl())
         assertTrue("http://mozilla".isUrl())
+        assertTrue("http://192.168.255.255".isUrl())
 
         assertFalse("mozilla".isUrl())
         assertFalse("mozilla android".isUrl())
         assertFalse(" mozilla android ".isUrl())
+        assertFalse("Tweet:".isUrl())
+        assertFalse("inurl:mozilla.org advanced search".isUrl())
+
+        val extraText = "Check out @asa’s Tweet: https://twitter.com/asa/status/123456789?s=09"
+        val url = extraText.split(" ").find { it.isUrl() }
+        assertNotEquals("Tweet:", url)
     }
 
     @Test
@@ -48,6 +56,8 @@ class StringTest {
         assertTrue("tel:+1234567890 ".isPhone())
         assertTrue("TEL:+1234567890".isPhone())
         assertTrue("Tel:+1234567890".isPhone())
+
+        assertFalse("tel:word".isPhone())
     }
 
     @Test
