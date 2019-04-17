@@ -60,5 +60,9 @@ void GridLine::SetLineValues(const nsTArray<nsString>& aNames, double aStart,
   mType = aType;
 }
 
+void GridLine::SetLineNames(const nsTArray<nsString>& aNames) {
+  mNames = aNames;
+}
+
 }  // namespace dom
 }  // namespace mozilla
