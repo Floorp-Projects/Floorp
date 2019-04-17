@@ -3667,7 +3667,7 @@ var SessionStoreInternal = {
     // can be moved to the end of the restored tabs.
     let initialTabs;
     if (!overwriteTabs && firstWindow) {
-      initialTabs = Array.slice(tabbrowser.tabs);
+      initialTabs = Array.from(tabbrowser.tabs);
     }
 
     // Get rid of tabs that aren't needed anymore.
@@ -4052,7 +4052,7 @@ var SessionStoreInternal = {
     // In case we didn't collect/receive data for any tabs yet we'll have to
     // fill the array with at least empty tabData objects until |_tPos| or
     // we'll end up with |null| entries.
-    for (let otherTab of Array.slice(tabbrowser.tabs, 0, tab._tPos)) {
+    for (let otherTab of Array.prototype.slice.call(tabbrowser.tabs, 0, tab._tPos)) {
       let emptyState = {entries: [], lastAccessed: otherTab.lastAccessed};
       this._windows[window.__SSi].tabs.push(emptyState);
     }

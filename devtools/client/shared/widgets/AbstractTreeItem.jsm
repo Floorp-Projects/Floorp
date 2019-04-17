@@ -470,7 +470,8 @@ AbstractTreeItem.prototype = {
    */
   _getSiblingAtDelta: function(delta) {
     const childNodes = this._containerNode.childNodes;
-    const indexOfSelf = Array.indexOf(childNodes, this._targetNode);
+    const indexOfSelf =
+      Array.prototype.indexOf.call(childNodes, this._targetNode);
     if (indexOfSelf + delta >= 0) {
       return childNodes[indexOfSelf + delta];
     }

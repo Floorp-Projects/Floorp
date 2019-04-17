@@ -610,8 +610,8 @@ var LoginManagerContent = {
       let hasLoginForm = ChromeUtils.nondeterministicGetWeakSetKeys(rootElsWeakSet)
                                     .filter(el => el.isConnected).length > 0;
       return (hasLoginForm && !thisWindow.isSecureContext) ||
-             Array.some(thisWindow.frames,
-                        frame => hasInsecureLoginForms(frame));
+             Array.prototype.some.call(thisWindow.frames,
+                                       frame => hasInsecureLoginForms(frame));
     };
 
     let messageManager = topWindow.docShell.messageManager;

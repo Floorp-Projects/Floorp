@@ -29,12 +29,11 @@ var Async = {
    *     });
    *   });
    */
-  chain: function chain() {
-    let funcs = Array.slice(arguments);
+  chain: function chain(...funcs) {
     let thisObj = this;
     return function callback() {
       if (funcs.length) {
-        let args = Array.slice(arguments).concat(callback);
+        let args = [...arguments, callback];
         let f = funcs.shift();
         f.apply(thisObj, args);
       }
