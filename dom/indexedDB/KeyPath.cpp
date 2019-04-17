@@ -466,6 +466,13 @@ KeyPath KeyPath::DeserializeFromString(const nsAString& aString) {
       keyPath.mStrings.AppendElement(tokenizer.nextToken());
     }
 
+    if (tokenizer.separatorAfterCurrentToken()) {
+      // There is a trailing comma, indicating the original KeyPath has
+      // a trailing empty string, i.e. [..., '']. We should append this
+      // empty string.
+      keyPath.mStrings.AppendElement(nsString{});
+    }
+
     return keyPath;
   }
 
