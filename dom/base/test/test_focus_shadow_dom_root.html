@@ -1,0 +1,36 @@
+<!doctype html>
+<title>Test for bug 1544826</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<div id="host"><a href="#" id="slotted">This is focusable too</a></div>
+<script>
+  const host = document.getElementById("host");
+  const shadow = host.attachShadow({ mode: "open" });
+  shadow.innerHTML = `
+    <a id="shadow-1" href="#">This is focusable</a>
+    <slot></slot>
+    <a id="shadow-2" href="#">So is this</a>
+  `;
+  document.documentElement.remove();
+  document.appendChild(host);
+
+  SimpleTest.waitForExplicitFinish();
+  SimpleTest.waitForFocus(function() {
+    is(document.documentElement, host, "Host is the document element");
+    host.offsetTop;
+    synthesizeKey("KEY_Tab");
+    is(shadow.activeElement.id, "shadow-1", "First link in Shadow DOM is focused");
+    synthesizeKey("KEY_Tab");
+    is(document.activeElement.id, "slotted", "Slotted link is focused");
+    synthesizeKey("KEY_Tab");
+    is(shadow.activeElement.id, "shadow-2", "Second link in Shadow DOM is focused");
+
+    // Now backwards.
+    synthesizeKey("KEY_Tab", {shiftKey: true});
+    is(document.activeElement.id, "slotted", "Backwards: Slotted link is focused");
+    synthesizeKey("KEY_Tab", {shiftKey: true});
+    is(shadow.activeElement.id, "shadow-1", "Backwards: First slotted link is focused");
+
+    SimpleTest.finish();
+  });
+</script>
