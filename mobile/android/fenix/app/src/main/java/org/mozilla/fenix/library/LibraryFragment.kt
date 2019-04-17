@@ -55,19 +55,6 @@ class LibraryFragment : Fragment() {
             LibraryFragmentDirections.actionLibraryFragmentToBookmarksFragment(BookmarkRoot.Root.id).actionId,
             BookmarkFragmentArgs(BookmarkRoot.Root.id).toBundle()
         ))
-
-        libraryDownloads.setOnClickListener {
-            ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "348")
-        }
-        libraryScreenshots.setOnClickListener {
-            ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "89")
-        }
-        libraryReadingList.setOnClickListener {
-            ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "913")
-        }
-        librarySessions.setOnClickListener {
-            ItsNotBrokenSnack(context!!).showSnackbar(issueNumber = "637")
-        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {

@@ -14,39 +14,6 @@
     tools:context="org.mozilla.fenix.library.LibraryFragment">
 
     <org.mozilla.fenix.library.LibraryListItem
-        android:id="@+id/librarySessions"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:contentDescription="@string/library_sessions"
-        android:focusable="true"
-        app:listItemIcon="@drawable/library_icon_sessions_circle_background"
-        app:listItemTitle="@string/library_sessions" />
-
-    <org.mozilla.fenix.library.LibraryListItem
-        android:id="@+id/libraryScreenshots"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:contentDescription="@string/library_screenshots"
-        android:focusable="true"
-        app:listItemIcon="@drawable/library_icon_screenshots_circle_background"
-        app:listItemTitle="@string/library_screenshots" />
-
-    <org.mozilla.fenix.library.LibraryListItem
-        android:id="@+id/libraryDownloads"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:contentDescription="@string/library_downloads"
-        android:focusable="true"
-        app:listItemIcon="@drawable/library_icon_downloads_circle_background"
-        app:listItemTitle="@string/library_downloads" />
-
-    <org.mozilla.fenix.library.LibraryListItem
         android:id="@+id/libraryBookmarks"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -56,17 +23,6 @@
         android:focusable="true"
         app:listItemIcon="@drawable/library_icon_bookmarks_circle_background"
         app:listItemTitle="@string/library_bookmarks" />
-
-    <org.mozilla.fenix.library.LibraryListItem
-        android:id="@+id/libraryReadingList"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?android:attr/selectableItemBackground"
-        android:clickable="true"
-        android:contentDescription="@string/library_reading_list"
-        android:focusable="true"
-        app:listItemIcon="@drawable/library_icon_reading_list_circle_background"
-        app:listItemTitle="@string/library_reading_list" />
 
     <org.mozilla.fenix.library.LibraryListItem
         android:id="@+id/libraryHistory"
