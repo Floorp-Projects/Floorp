@@ -46,8 +46,8 @@ assertDebuggees(dg1, dg2);
 
 // "dwg1" means "Debugger.Object referring to CCW of g1".
 var dwg1 = dg2.makeDebuggeeValue(g1);
-assertEq(dwg1.unwrap(), dg1);
-dwg1.toSource = function() { return "[Debugger.Object for CCW of global g1]"; };
+assertEq(dwg1.unwrap(), dg1.makeDebuggeeValue(g1));
+dwg1.toSource = function() { return "[Debugger.Object for CCW of WindowProxy of g1]"; };
 
 assertDebuggees(dg1, dg2);
 assertEq(dbg.removeDebuggee(g1), undefined);
