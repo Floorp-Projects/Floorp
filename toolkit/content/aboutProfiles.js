@@ -14,6 +14,30 @@ XPCOMUtils.defineLazyServiceGetter(
   "nsIToolkitProfileService"
 );
 
+async function flush() {
+  try {
+    ProfileService.flush();
+    refreshUI();
+  } catch (e) {
+    let [title, msg, button] = await document.l10n.formatValues([
+      { id: "profiles-flush-fail-title" },
+      { id: e.result == Cr.NS_ERROR_DATABASE_CHANGED ?
+                        "profiles-flush-conflict" :
+                        "profiles-flush-failed" },
+      { id: "profiles-flush-restart-button" },
+    ]);
+
+    const PS = Ci.nsIPromptService;
+    let result = Services.prompt.confirmEx(window, title, msg,
+                                          (PS.BUTTON_POS_0 * PS.BUTTON_TITLE_CANCEL) +
+                                          (PS.BUTTON_POS_1 * PS.BUTTON_TITLE_IS_STRING),
+                                          null, button, null, null, {});
+    if (result == 1) {
+      restart(false);
+    }
+  }
+}
+
 function refreshUI() {
   let parent = document.getElementById("profiles");
   while (parent.firstChild) {
@@ -210,8 +234,7 @@ async function renameProfile(profile) {
       return;
     }
 
-    ProfileService.flush();
-    refreshUI();
+    flush();
   }
 }
 
@@ -280,14 +303,13 @@ async function removeProfile(profile) {
     return;
   }
 
-  ProfileService.flush();
-  refreshUI();
+  flush();
 }
 
 async function defaultProfile(profile) {
   try {
     ProfileService.defaultProfile = profile;
-    ProfileService.flush();
+    flush();
   } catch (e) {
     // This can happen on dev-edition.
     let [title, msg] = await document.l10n.formatValues([
@@ -297,7 +319,6 @@ async function defaultProfile(profile) {
 
     Services.prompt.alert(window, title, msg);
   }
-  refreshUI();
 }
 
 function openProfile(profile) {
@@ -331,5 +352,10 @@ function restart(safeMode) {
 }
 
 window.addEventListener("DOMContentLoaded", function() {
-  refreshUI();
+  if (ProfileService.isListOutdated) {
+    document.getElementById("owned").hidden = true;
+  } else {
+    document.getElementById("conflict").hidden = true;
+    refreshUI();
+  }
 }, {once: true});
