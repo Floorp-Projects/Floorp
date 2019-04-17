@@ -30,6 +30,7 @@ const CONTAINER_COLORS = new Map([
   ["red", "#ff613d"],
   ["pink", "#ff4bda"],
   ["purple", "#af51f5"],
+  ["toolbar", "#7c7c7d"],
 ]);
 
 const CONTAINER_ICONS = new Set([
@@ -37,6 +38,7 @@ const CONTAINER_ICONS = new Set([
   "cart",
   "circle",
   "dollar",
+  "fence",
   "fingerprint",
   "gift",
   "vacation",
