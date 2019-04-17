@@ -71,6 +71,13 @@ exclude: true
 [68.14]: ../GeckoSessionSettings.Builder.html#contextId-
 [68.15]: ../StorageController.html#clearSessionContextData-java.lang.String-
 
+- Added [`GeckoRuntimeSettings.Builder#configFilePath`][68.16] to set
+  a path to a configuration file from which GeckoView will read
+  configuration options such as Gecko process arguments, environment
+  variables, and preferences.
+
+[68.16]: ../GeckoRuntimeSettings.Builder.html#configFilePath-java.lang.String-
+
 ## v67
 - Added [`setAutomaticFontSizeAdjustment`][67.2] to
   [`GeckoRuntimeSettings`][67.3] for automatically adjusting font size settings
@@ -277,4 +284,4 @@ exclude: true
 [65.24]: ../CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: ../GeckoResult.html
 
-[api-version]: fa2863734daac0ec5cb0671b030139de3aac5029
+[api-version]: 77512ba4107f1bd3330327d8b9c1b91363430783
