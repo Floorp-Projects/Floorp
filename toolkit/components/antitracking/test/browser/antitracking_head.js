@@ -335,7 +335,7 @@ this.AntiTracking = {
       } else {
         thirdPartyPage = TEST_3RD_PARTY_PAGE;
       }
-      let id = await ContentTask.spawn(browser,
+      await ContentTask.spawn(browser,
                               { page: thirdPartyPage,
                                 nextPage: TEST_4TH_PARTY_PAGE,
                                 callback: options.callback.toString(),
@@ -420,56 +420,13 @@ this.AntiTracking = {
 
               ifr.src = obj.nextPage;
             });
-          case "navigate-topframe":
-            // pass-through
             break;
           default:
             ok(false, "Unexpected accessRemoval code passed: " + obj.accessRemoval);
             break;
           }
         }
-
-        return id;
       });
-
-      if (doAccessRemovalChecks &&
-          options.accessRemoval == "navigate-topframe") {
-        await BrowserTestUtils.loadURI(browser, TEST_4TH_PARTY_PAGE);
-        await BrowserTestUtils.browserLoaded(browser);
-
-        let pageshow = BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "pageshow");
-        gBrowser.goBack();
-        await pageshow;
-
-        await ContentTask.spawn(browser,
-                                { id,
-                                  callbackAfterRemoval: options.callbackAfterRemoval ?
-                                    options.callbackAfterRemoval.toString() : null,
-                                },
-                                async function(obj) {
-          let ifr = content.document.getElementById(obj.id);
-          ifr.contentWindow.postMessage(obj.callbackAfterRemoval, "*");
-
-          content.addEventListener("message", function msg(event) {
-            if (event.data.type == "finish") {
-              content.removeEventListener("message", msg);
-              return;
-            }
-
-            if (event.data.type == "ok") {
-              ok(event.data.what, event.data.msg);
-              return;
-            }
-
-            if (event.data.type == "info") {
-              info(event.data.msg);
-              return;
-            }
-
-            ok(false, "Unknown message");
-          });
-        });
-      }
 
       if (options.allowList) {
         info("Enabling content blocking for this page");
