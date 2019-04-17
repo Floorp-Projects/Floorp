@@ -21,6 +21,36 @@ namespace mozilla {
 
 namespace layers {
 
+class CompositorRecordedFrame final : public RecordedFrame {
+ public:
+  CompositorRecordedFrame(const TimeStamp& aTimeStamp,
+                          RefPtr<AsyncReadbackBuffer>&& aBuffer)
+      : RecordedFrame(aTimeStamp), mBuffer(aBuffer) {}
+
+  virtual already_AddRefed<gfx::DataSourceSurface> GetSourceSurface() override {
+    if (mSurface) {
+      return do_AddRef(mSurface);
+    }
+
+    gfx::IntSize size = mBuffer->GetSize();
+
+    mSurface = gfx::Factory::CreateDataSourceSurface(
+        size, gfx::SurfaceFormat::B8G8R8A8,
+        /* aZero = */ false);
+
+    if (!mBuffer->MapAndCopyInto(mSurface, size)) {
+      mSurface = nullptr;
+      return nullptr;
+    }
+
+    return do_AddRef(mSurface);
+  }
+
+ private:
+  RefPtr<AsyncReadbackBuffer> mBuffer;
+  RefPtr<gfx::DataSourceSurface> mSurface;
+};
+
 Compositor::Compositor(widget::CompositorWidget* aWidget,
                        CompositorBridgeParent* aParent)
     : mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC),
@@ -546,6 +576,23 @@ bool Compositor::NotifyNotUsedAfterComposition(TextureHost* aTextureHost) {
 void Compositor::GetFrameStats(GPUStats* aStats) {
   aStats->mInvalidPixels = mPixelsPerFrame;
   aStats->mPixelsFilled = mPixelsFilled;
+}
+
+already_AddRefed<RecordedFrame> Compositor::RecordFrame(
+    const TimeStamp& aTimeStamp) {
+  RefPtr<CompositingRenderTarget> renderTarget = GetWindowRenderTarget();
+  if (!renderTarget) {
+    return nullptr;
+  }
+
+  RefPtr<AsyncReadbackBuffer> buffer =
+      CreateAsyncReadbackBuffer(renderTarget->GetSize());
+
+  if (!ReadbackRenderTarget(renderTarget, buffer)) {
+    return nullptr;
+  }
+
+  return MakeAndAddRef<CompositorRecordedFrame>(aTimeStamp, std::move(buffer));
 }
 
 }  // namespace layers
