@@ -187,7 +187,6 @@ mochitest-chrome:
         by-test-platform:
             android-em.*: 7200
             default: 3600
-    e10s: false
     mozharness:
         mochitest-flavor: chrome
         extra-options:
