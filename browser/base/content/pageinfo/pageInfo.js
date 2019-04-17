@@ -101,10 +101,10 @@ pageInfoTreeView.prototype = {
         this.sortdir
       );
 
-    Array.forEach(tree.columns, function(col) {
+    for (let col of tree.columns) {
       col.element.removeAttribute("sortActive");
       col.element.removeAttribute("sortDirection");
-    });
+    }
     treecol.element.setAttribute("sortActive", "true");
     treecol.element.setAttribute("sortDirection", this.sortdir ?
                                                   "ascending" : "descending");
@@ -195,10 +195,10 @@ gImageView.onPageMediaSort = function(columnname) {
       this.sortdir
     );
 
-  Array.forEach(tree.columns, function(col) {
+  for (let col of tree.columns) {
     col.element.removeAttribute("sortActive");
     col.element.removeAttribute("sortDirection");
-  });
+  }
   treecol.element.setAttribute("sortActive", "true");
   treecol.element.setAttribute("sortDirection", this.sortdir ?
                                                 "ascending" : "descending");

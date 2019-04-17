@@ -228,7 +228,7 @@ class MozTabpanels extends MozXULElement {
 
     // Return tab element having 'linkedpanel' attribute equal to the id
     // of the tab panel or the same index as the tab panel element.
-    let tabpanelIdx = Array.indexOf(this.children, aTabPanelElm);
+    let tabpanelIdx = Array.prototype.indexOf.call(this.children, aTabPanelElm);
     if (tabpanelIdx == -1)
       return null;
 

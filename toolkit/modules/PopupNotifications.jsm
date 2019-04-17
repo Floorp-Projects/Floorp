@@ -1436,7 +1436,7 @@ PopupNotifications.prototype = {
 
     let notifications = this._getNotificationsForBrowser(browser);
     // Mark notifications as dismissed and call dismissal callbacks
-    Array.forEach(this.panel.children, function(nEl) {
+    for (let nEl of this.panel.children) {
       let notificationObj = nEl.notification;
       // Never call a dismissal handler on a notification that's been removed.
       if (!notifications.includes(notificationObj))
@@ -1460,7 +1460,7 @@ PopupNotifications.prototype = {
         notificationObj.dismissed = true;
         this._fireCallback(notificationObj, NOTIFICATION_EVENT_DISMISSED);
       }
-    }, this);
+    }
   },
 
   _onCheckboxCommand(event) {

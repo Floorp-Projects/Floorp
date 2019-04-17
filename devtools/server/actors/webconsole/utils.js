@@ -57,7 +57,7 @@ var WebConsoleUtils = {
 
     if (Array.isArray(object)) {
       temp = [];
-      Array.forEach(object, function(value, index) {
+      object.forEach(function(value, index) {
         if (!filter || filter(index, value, object)) {
           temp.push(recursive ? WebConsoleUtils.cloneObject(value) : value);
         }

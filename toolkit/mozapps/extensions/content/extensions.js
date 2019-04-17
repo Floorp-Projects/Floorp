@@ -1816,7 +1816,7 @@ function sortElements(aElements, aSortBy, aAscending) {
 }
 
 function sortList(aList, aSortBy, aAscending) {
-  var elements = Array.slice(aList.childNodes, 0);
+  var elements = Array.from(aList.childNodes);
   sortElements(elements, [aSortBy], aAscending);
 
   while (aList.lastChild)
