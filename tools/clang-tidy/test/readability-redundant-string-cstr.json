@@ -1,1 +1,1 @@
-[["warning", "redundant call to 'c_str'", "readability-redundant-string-cstr"], {"reliability": "high"}]
+[["warning", "redundant call to 'c_str'", "readability-redundant-string-cstr"]]

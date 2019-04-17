@@ -1,1 +1,1 @@
-[["warning", "redundant boolean literal supplied to boolean operator", "readability-simplify-boolean-expr"], {"reliability": "high"}]
+[["warning", "redundant boolean literal supplied to boolean operator", "readability-simplify-boolean-expr"]]

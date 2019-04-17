@@ -1,1 +1,1 @@
-[["warning", "the 'empty' method should be used to check for emptiness instead of 'size'", "readability-container-size-empty"], {"reliability": "high"}]
+[["warning", "the 'empty' method should be used to check for emptiness instead of 'size'", "readability-container-size-empty"]]
