@@ -783,22 +783,23 @@ bool CrashGenerationServer::AddClient(ClientInfo* client_info) {
 
   client_info->set_dump_request_wait_handle(request_wait_handle);
 
-  // OnClientEnd will be called when the client process terminates.
-  HANDLE process_wait_handle = NULL;
-  if (!RegisterWaitForSingleObject(&process_wait_handle,
-                                   client_info->process_handle(),
-                                   OnClientEnd,
-                                   client_info,
-                                   INFINITE,
-                                   WT_EXECUTEONLYONCE)) {
-    return false;
-  }
-
-  client_info->set_process_exit_wait_handle(process_wait_handle);
-
   // New scope to hold the lock for the shortest time.
   {
     AutoCriticalSection lock(&sync_);
+
+    // OnClientEnd will be called when the client process terminates.
+    HANDLE process_wait_handle = NULL;
+    if (!RegisterWaitForSingleObject(&process_wait_handle,
+                                     client_info->process_handle(),
+                                     OnClientEnd,
+                                     client_info,
+                                     INFINITE,
+                                     WT_EXECUTEONLYONCE)) {
+      return false;
+    }
+
+    client_info->set_process_exit_wait_handle(process_wait_handle);
+
     if (shutting_down_) {
       // If server is shutting down, don't add new clients
       return false;
@@ -866,6 +867,8 @@ void CrashGenerationServer::HandleClientProcessExit(ClientInfo* client_info) {
     }
     clients_.remove(client_info);
   }
+
+  AutoCriticalSection lock(&sync_);
 
   // Explicitly unregister the process exit wait using the non-blocking method.
   // Otherwise, the destructor will attempt to unregister it using the blocking
