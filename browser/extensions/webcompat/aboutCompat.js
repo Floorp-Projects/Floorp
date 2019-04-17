@@ -131,7 +131,7 @@ function redrawTable(table, data) {
     const bug = row.bug;
     a.href = `https://bugzilla.mozilla.org/show_bug.cgi?id=${bug}`;
     document.l10n.setAttributes(a, "label-more-information", {bug});
-    a.target = "aboutCompatBug";
+    a.target = "_blank";
     td.appendChild(a);
     tr.appendChild(td);
 
