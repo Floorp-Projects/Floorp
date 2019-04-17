@@ -257,11 +257,13 @@ class PresShell final : public nsIPresShell,
   nsresult CheckVisibilityContent(nsIContent* aNode, int16_t aStartOffset,
                                   int16_t aEndOffset, bool* aRetval) override;
 
+  // Notifies that the state of the document has changed.
+  void DocumentStatesChanged(EventStates);
+
   // nsIDocumentObserver
   NS_DECL_NSIDOCUMENTOBSERVER_BEGINLOAD
   NS_DECL_NSIDOCUMENTOBSERVER_ENDLOAD
   NS_DECL_NSIDOCUMENTOBSERVER_CONTENTSTATECHANGED
-  NS_DECL_NSIDOCUMENTOBSERVER_DOCUMENTSTATESCHANGED
 
   // nsIMutationObserver
   NS_DECL_NSIMUTATIONOBSERVER_CHARACTERDATACHANGED

@@ -8527,7 +8527,9 @@ void Document::UpdateDocumentStates(EventStates aMaybeChangedStates,
 
   EventStates changedStates = oldStates ^ mDocumentState;
   if (aNotify && !changedStates.IsEmpty()) {
-    NS_DOCUMENT_NOTIFY_OBSERVERS(DocumentStatesChanged, (this, changedStates));
+    if (PresShell* ps = GetObservingPresShell()) {
+      ps->DocumentStatesChanged(changedStates);
+    }
   }
 }
 

@@ -1062,9 +1062,6 @@ void DocAccessible::ContentStateChanged(dom::Document* aDocument,
   }
 }
 
-void DocAccessible::DocumentStatesChanged(dom::Document* aDocument,
-                                          EventStates aStateMask) {}
-
 void DocAccessible::CharacterDataWillChange(nsIContent* aContent,
                                             const CharacterDataChangeInfo&) {}
 
