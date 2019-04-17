@@ -38,6 +38,15 @@
   --identity-icon-color: #af51f5;
 }
 
+.identity-color-toolbar {
+  --identity-tab-color: var(--lwt-toolbar-field-color, -moz-FieldText);
+  --identity-icon-color: var(--lwt-toolbar-field-color, -moz-FieldText);
+}
+
+.identity-icon-fence {
+  --identity-icon: url("resource://usercontext-content/fence.svg");
+}
+
 .identity-icon-fingerprint {
   --identity-icon: url("resource://usercontext-content/fingerprint.svg");
 }
