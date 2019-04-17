@@ -25,11 +25,12 @@ class ErrorPagesTest {
         val context = spy(RuntimeEnvironment.application)
         val errorPage = ErrorPages.createErrorPage(context, ErrorType.UNKNOWN)
         Assert.assertFalse(errorPage.contains("%pageTitle%"))
+        Assert.assertFalse(errorPage.contains("%backButton%"))
         Assert.assertFalse(errorPage.contains("%button%"))
         Assert.assertFalse(errorPage.contains("%messageShort%"))
         Assert.assertFalse(errorPage.contains("%messageLong%"))
         Assert.assertFalse(errorPage.contains("%css%"))
-        verify(context, times(3)).getString(anyInt())
+        verify(context, times(4)).getString(anyInt())
         verify(context, times(1)).getString(anyInt(), nullable(String::class.java))
     }
 }

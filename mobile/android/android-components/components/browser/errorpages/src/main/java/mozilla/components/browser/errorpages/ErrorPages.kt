@@ -28,6 +28,7 @@ object ErrorPages {
             .bufferedReader()
             .use { it.readText() }
             .replace("%pageTitle%", context.getString(R.string.mozac_browser_errorpages_page_title))
+            .replace("%backButton%", context.getString(R.string.mozac_browser_errorpages_page_go_back))
             .replace("%button%", context.getString(R.string.mozac_browser_errorpages_page_refresh))
             .replace("%messageShort%", context.getString(errorType.titleRes))
             .replace("%messageLong%", context.getString(errorType.messageRes, uri))
