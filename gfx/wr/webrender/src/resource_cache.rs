@@ -1208,7 +1208,7 @@ impl ResourceCache {
                 // This code tries to keep things sane if Gecko sends
                 // nonsensical blob image requests.
                 // Constant here definitely needs to be tweaked.
-                const MAX_TILES_PER_REQUEST: i32 = 64;
+                const MAX_TILES_PER_REQUEST: i32 = 512;
                 // For truly nonsensical requests, we might run into overflow
                 // when computing width * height. Even if we don't, the loop
                 // below to reduce the number of tiles is linear and can take
