@@ -28,12 +28,12 @@ add_task(async function test_clients_escape() {
     let serialized = JSON.stringify(record);
     let checkCount = 0;
     _("Checking for all ASCII:", serialized);
-    Array.forEach(serialized, function(ch) {
+    for (let ch of serialized) {
       let code = ch.charCodeAt(0);
       _("Checking asciiness of '", ch, "'=", code);
       Assert.ok(code < 128);
       checkCount++;
-    });
+    }
 
     _("Processed", checkCount, "characters out of", serialized.length);
     Assert.equal(checkCount, serialized.length);

@@ -54,7 +54,7 @@ function test() {
     else if (typeof aValue == "number")
       node.selectedIndex = aValue;
     else
-      Array.forEach(node.options, (aOpt, aIx) =>
+      Array.prototype.forEach.call(node.options, (aOpt, aIx) =>
         (aOpt.selected = aValue.indexOf(aIx) > -1));
   }
 
@@ -69,7 +69,7 @@ function test() {
       return aValue == node.value;
     if (!node.multiple)
       return aValue == node.selectedIndex;
-    return Array.every(node.options, (aOpt, aIx) =>
+    return Array.prototype.every.call(node.options, (aOpt, aIx) =>
             (aValue.indexOf(aIx) > -1) == aOpt.selected);
   }
 

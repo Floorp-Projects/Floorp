@@ -73,7 +73,7 @@ function doTest() {
   testResizer(1, 1);
 
   var resizers = document.getElementsByTagName("resizer");
-  Array.forEach(resizers, function (element) {
+  Array.prototype.forEach.call(resizers, function (element) {
     is(getComputedStyle(element, "").cursor,
        element.getAttribute("expectedcursor"),
        "cursor for " + element.dir);
@@ -82,7 +82,7 @@ function doTest() {
   // now check the cursors in rtl. The bottomend resizer
   // should be reversed
   document.documentElement.setAttribute("localedir", "rtl");
-  Array.forEach(resizers, function (element) {
+  Array.prototype.forEach.call(resizers, function (element) {
     is(getComputedStyle(element, "").cursor,
        element.dir == "bottomend" ? "sw-resize" :
          element.getAttribute("expectedcursor"),

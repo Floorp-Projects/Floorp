@@ -1094,8 +1094,8 @@ class VideoStreamHelper {
     await h.waitForPixel(video, px => {
       let result = h.isOpaquePixelNot(px, h.black, threshold);
       info("Checking that we have a frame, got [" +
-           Array.slice(px) + "]. Ref=[" +
-           Array.slice(h.black.data) + "]. Threshold=" + threshold +
+           Array.from(px) + "]. Ref=[" +
+           Array.from(h.black.data) + "]. Threshold=" + threshold +
            ". Pass=" + result);
       return result;
     }, { offsetX, offsetY });
@@ -1113,7 +1113,7 @@ class VideoStreamHelper {
     await h.waitForPixel(video, px => {
       let result = h.isPixelNot(px, startPixel, threshold);
       info("Checking playing, [" +
-           Array.slice(px) + "] vs [" + Array.slice(startPixel.data) +
+           Array.from(px) + "] vs [" + Array.from(startPixel.data) +
            "]. Threshold=" + threshold + " Pass=" + result);
       return result;
     }, { offsetX, offsetY });
@@ -1132,7 +1132,7 @@ class VideoStreamHelper {
       await h.waitForPixel(video, px => {
           let result = h.isOpaquePixelNot(px, startPixel, threshold);
           info("Checking paused, [" +
-               Array.slice(px) + "] vs [" + Array.slice(startPixel.data) +
+               Array.from(px) + "] vs [" + Array.from(startPixel.data) +
                "]. Threshold=" + threshold + " Pass=" + result);
           return result;
         }, { offsetX, offsetY, cancel: wait(time, "timeout") });

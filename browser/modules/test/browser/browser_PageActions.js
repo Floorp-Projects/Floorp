@@ -791,7 +791,7 @@ add_task(async function nonBuiltFirst() {
   EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
   await promisePageActionPanelHidden();
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
+    Array.from(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     [BrowserPageActions.panelButtonNodeIDForActionID(action.id)],
     "Action should be in panel"
   );
@@ -833,7 +833,7 @@ add_task(async function nonBuiltFirst() {
     "All actions should be in PageActions.actionsInPanel()"
   );
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
+    Array.from(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     initialActionsInPanel.map(a => a.id).concat(
       [PageActions.ACTION_ID_BUILT_IN_SEPARATOR],
       [action.id]
@@ -871,7 +871,7 @@ add_task(async function nonBuiltFirst() {
     "Action should no longer be in PageActions.actionsInPanel()"
   );
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
+    Array.from(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     initialActionsInPanel.map(a => BrowserPageActions.panelButtonNodeIDForActionID(a.id)),
     "Action should no longer be in panel"
   );
@@ -1509,7 +1509,7 @@ add_task(async function transient() {
   EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
   await promisePageActionPanelHidden();
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
+    Array.from(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     initialActionsInPanel.map(a => a.id).concat([
       PageActions.ACTION_ID_TRANSIENT_SEPARATOR,
       action.id,
@@ -1536,7 +1536,7 @@ add_task(async function transient() {
   EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
   await promisePageActionPanelHidden();
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
+    Array.from(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     initialActionsInPanel
       .map(a => BrowserPageActions.panelButtonNodeIDForActionID(a.id)),
     "Actions in panel should be correct"
@@ -1559,7 +1559,7 @@ add_task(async function transient() {
   EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
   await promisePageActionPanelHidden();
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
+    Array.from(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     initialActionsInPanel.map(a => a.id).concat([
       PageActions.ACTION_ID_TRANSIENT_SEPARATOR,
       action.id,
@@ -1594,7 +1594,7 @@ add_task(async function transient() {
   EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
   await promisePageActionPanelHidden();
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
+    Array.from(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     initialActionsInPanel.map(a => a.id).concat([
       PageActions.ACTION_ID_BUILT_IN_SEPARATOR,
       otherAction.id,
@@ -1626,7 +1626,7 @@ add_task(async function transient() {
   EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
   await promisePageActionPanelHidden();
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
+    Array.from(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     initialActionsInPanel.map(a => a.id).concat([
       PageActions.ACTION_ID_BUILT_IN_SEPARATOR,
       otherAction.id,
@@ -1653,7 +1653,7 @@ add_task(async function transient() {
   EventUtils.synthesizeMouseAtCenter(BrowserPageActions.mainButtonNode, {});
   await promisePageActionPanelHidden();
   Assert.deepEqual(
-    Array.map(BrowserPageActions.mainViewBodyNode.children, n => n.id),
+    Array.from(BrowserPageActions.mainViewBodyNode.children, n => n.id),
     initialActionsInPanel.map(a => a.id).concat([
       PageActions.ACTION_ID_BUILT_IN_SEPARATOR,
       otherAction.id,
@@ -1789,7 +1789,7 @@ function promisePageActionViewChildrenVisible(panelViewNode) {
 
 function collectContextMenuItems() {
   let contextMenu = document.getElementById("pageActionContextMenu");
-  return Array.filter(contextMenu.children, node => {
+  return Array.prototype.filter.call(contextMenu.children, node => {
     return window.getComputedStyle(node).visibility == "visible";
   });
 }

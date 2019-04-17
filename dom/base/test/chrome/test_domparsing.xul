@@ -82,7 +82,7 @@ function runTest(parser, serializer) {
       continue;
     }
 
-    let array = Array.map(t.input, function(c) { return c.charCodeAt(c); });
+    let array = Array.from(t.input, function(c) { return c.charCodeAt(c); });
     let inputs = [
       {array: array, name: "parseFromBuffer (array)"},
       {array: new Uint8Array(array), name: "parseFromBuffer (Uint8Array)"},

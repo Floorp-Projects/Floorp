@@ -901,7 +901,7 @@ function checkSendToDeviceItems(expectedItems, forUrlbar = false) {
 
 function collectContextMenuItems() {
   let contextMenu = document.getElementById("pageActionContextMenu");
-  return Array.filter(contextMenu.children, node => {
+  return Array.prototype.filter.call(contextMenu.children, node => {
     return window.getComputedStyle(node).visibility == "visible";
   });
 }

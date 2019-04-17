@@ -138,7 +138,7 @@ var checkStyle = async function(browser, styleProperty, expected) {
 var checkHighlight = async function(browser, expected) {
   let highlighted = await ContentTask.spawn(browser, {}, async function() {
     let spans = content.document.getElementsByTagName("span");
-    return Array.some(spans, (span) => {
+    return Array.prototype.some.call(spans, (span) => {
       let style = content.getComputedStyle(span);
       return style.getPropertyValue("color") !== "rgb(0, 0, 0)";
     });

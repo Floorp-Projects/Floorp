@@ -19,7 +19,7 @@ const {DownloadUtils} = ChromeUtils.import("resource://gre/modules/DownloadUtils
  * @usage _(1, 2, 3) -> prints "1 2 3"
  */
 var _ = function(some, debug, text, to) {
-  print(Array.slice(arguments).join(" "));
+  print(Array.from(arguments).join(" "));
 };
 
 _("Make an array of time lefts and expected string to be shown for that time");

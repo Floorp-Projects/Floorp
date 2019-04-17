@@ -89,16 +89,16 @@ ${asyncFrame}`,
     }
 
     try {
-      t.testThrowCallbackError(function() { Array.indexOf(); });
+      t.testThrowCallbackError(function() { Array.prototype.forEach(); });
     } catch (e) {
       ok(e instanceof TypeError, "Should have a TypeError here (3)");
       ok(!(e instanceof DOMException), "Should not have DOMException here (3)");
       ok(!("code" in e), "Should not have a 'code' property (3)");
       is(e.name, "TypeError", "Should be named TypeError (3)");
-      is(e.message, "missing argument 0 when calling function Array.indexOf",
+      is(e.message, "missing argument 0 when calling function Array.prototype.forEach",
          "Should also have the right message (3)");
       is(e.stack,
-         `doTest/<@${file}:92:51
+         `doTest/<@${file}:92:61
 doTest@${file}:92:9
 ${asyncFrame}`,
          "Exception stack for TypeError should only show our code (3)");
@@ -106,7 +106,7 @@ ${asyncFrame}`,
          file,
          "Should still have the right file name for TypeError (3)");
       is(e.lineNumber, 92, "Should still have the right line number for TypeError (3)");
-      is(e.columnNumber, 51, "Should have the right column number for TypeError (3)");
+      is(e.columnNumber, 61, "Should have the right column number for TypeError (3)");
     }
 
     try {

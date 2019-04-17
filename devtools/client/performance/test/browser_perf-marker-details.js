@@ -44,8 +44,8 @@ async function spawnTest() {
                 .filter(m => MARKER_TYPES.includes(m.name));
 
   info(`Got ${bars.length} bars and ${markers.length} markers.`);
-  info("Markers types from datasrc: " + Array.map(markers, e => e.name));
-  info("Markers names from sidebar: " + Array.map(bars, e => e.parentNode.parentNode.querySelector(".waterfall-marker-name").getAttribute("value")));
+  info("Markers types from datasrc: " + Array.from(markers, e => e.name));
+  info("Markers names from sidebar: " + Array.from(bars, e => e.parentNode.parentNode.querySelector(".waterfall-marker-name").getAttribute("value")));
 
   ok(bars.length >= MARKER_TYPES.length, `Got at least ${MARKER_TYPES.length} markers (1)`);
   ok(markers.length >= MARKER_TYPES.length, `Got at least ${MARKER_TYPES.length} markers (2)`);
