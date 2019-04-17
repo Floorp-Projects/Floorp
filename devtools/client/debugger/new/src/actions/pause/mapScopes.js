@@ -15,7 +15,6 @@ import {
 import { loadSourceText } from "../sources/loadSourceText";
 import { PROMISE } from "../utils/middleware/promise";
 
-import { features } from "../../utils/prefs";
 import { log } from "../../utils/log";
 import { isGenerated, isOriginal } from "../../utils/source";
 import type { Frame, Scope } from "../../types";
@@ -62,7 +61,7 @@ export function mapScopes(scopes: Promise<Scope>, frame: Frame) {
       frame,
       [PROMISE]: (async function() {
         if (
-          !features.mapScopes ||
+          !getMapScopes(getState()) ||
           !source ||
           !generatedSource ||
           generatedSource.isWasm ||
