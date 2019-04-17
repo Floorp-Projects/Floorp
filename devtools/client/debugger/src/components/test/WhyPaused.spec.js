@@ -4,8 +4,21 @@
 
 // @flow
 
+import React from "react";
 import { shallow } from "enzyme";
-import renderWhyPaused from "../SecondaryPanes/Frames/WhyPaused.js";
+import WhyPaused from "../SecondaryPanes/WhyPaused.js";
+
+function render(why: Object, delay: ?number) {
+  const props = {
+    why: why,
+    delay: delay
+  };
+
+  // $FlowIgnore
+  const component = shallow(<WhyPaused.WrappedComponent {...props} />);
+
+  return { component, props };
+}
 
 describe("WhyPaused", () => {
   it("should pause reason with message", () => {
@@ -13,7 +26,7 @@ describe("WhyPaused", () => {
       type: "breakpoint",
       message: "bla is hit"
     };
-    const component = shallow(renderWhyPaused(why));
+    const { component } = render(why);
     expect(component).toMatchSnapshot();
   });
 
@@ -29,7 +42,7 @@ describe("WhyPaused", () => {
       }
     };
 
-    const component = shallow(renderWhyPaused(why));
+    const { component } = render(why);
     expect(component).toMatchSnapshot();
   });
 
@@ -39,7 +52,14 @@ describe("WhyPaused", () => {
       exception: "Not Available"
     };
 
-    const component = shallow(renderWhyPaused(why));
+    const { component } = render(why);
+    expect(component).toMatchSnapshot();
+  });
+
+  it("should show an empty div when there is no pause reason", () => {
+    const why = undefined;
+
+    const { component } = render(why);
     expect(component).toMatchSnapshot();
   });
 });

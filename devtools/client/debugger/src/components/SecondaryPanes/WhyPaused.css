@@ -1,0 +1,52 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
+
+.why-paused {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-bottom: 1px solid var(--theme-splitter-color);
+  background-color: hsl(54, 100%, 92%);
+  color: var(--theme-body-color);
+  font-size: 12px;
+  cursor: default;
+  min-height: 44px;
+  padding: 4px;
+  white-space: normal;
+  font-weight: bold;
+}
+
+.why-paused > div {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.why-paused .info.icon {
+  align-self: center;
+  padding: 0px 4px;
+}
+
+.why-paused .pause.reason {
+  display: flex;
+  flex-direction: column;
+  padding-left: 16px;
+  padding-right: 4px;
+}
+
+.theme-dark .secondary-panes .why-paused {
+  background-color: hsl(42, 37%, 19%);
+  color: hsl(43, 94%, 81%);
+}
+
+.why-paused .message {
+  font-style: italic;
+  font-weight: 100;
+}
+
+.why-paused .message.warning {
+  color: var(--theme-graphs-red);
+  font-weight: bold;
+  font-style: italic;
+}

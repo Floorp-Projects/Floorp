@@ -41,9 +41,9 @@
 @import url("./components/SecondaryPanes/Expressions.css");
 @import url("./components/SecondaryPanes/Frames/Frames.css");
 @import url("./components/SecondaryPanes/Frames/Group.css");
-@import url("./components/SecondaryPanes/Frames/WhyPaused.css");
 @import url("./components/SecondaryPanes/Scopes.css");
 @import url("./components/SecondaryPanes/SecondaryPanes.css");
+@import url("./components/SecondaryPanes/WhyPaused.css");
 @import url("./components/SecondaryPanes/Workers.css");
 @import url("./components/SecondaryPanes/XHRBreakpoints.css");
 @import url("./components/ShortcutsModal.css");
