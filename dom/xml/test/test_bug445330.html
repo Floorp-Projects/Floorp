@@ -46,7 +46,10 @@ function runTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(runTest);
+
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.xmldocument.load.enabled", true],
+]}, runTest);
 
 </script>
 </pre>

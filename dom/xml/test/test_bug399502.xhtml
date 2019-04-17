@@ -30,8 +30,10 @@ function runTest() {
   xmldoc.load("test_bug399502.xhtml");
 }
 SimpleTest.waitForExplicitFinish();
-addLoadEvent(runTest);
 
+SpecialPowers.pushPrefEnv({"set": [
+  ["dom.xmldocument.load.enabled", true],
+]}, runTest);
 
 ]]>
 </script>
