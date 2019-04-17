@@ -37,7 +37,6 @@ function createContext(searchString = "foo", properties = {}) {
   let context = new UrlbarQueryContext({
     allowAutofill: UrlbarPrefs.get("autoFill"),
     isPrivate: true,
-    lastKey: searchString ? searchString[searchString.length - 1] : "",
     maxResults: UrlbarPrefs.get("maxRichResults"),
     searchString,
   });

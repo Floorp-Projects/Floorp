@@ -564,8 +564,6 @@ class UrlbarInput {
    *
    * @param {boolean} [options.allowAutofill]
    *   Whether or not to allow providers to include autofill results.
-   * @param {number} [options.lastKey]
-   *   The last key the user entered (as a key code).
    * @param {string} [options.searchString]
    *   The search string.  If not given, the current input value is used.
    *   Otherwise, the current input value must start with this value.
@@ -583,7 +581,6 @@ class UrlbarInput {
    */
   startQuery({
     allowAutofill = true,
-    lastKey = null,
     searchString = null,
     resetSearchState = true,
     allowEmptyInput = true,
@@ -613,7 +610,6 @@ class UrlbarInput {
     this.lastQueryContextPromise = this.controller.startQuery(new UrlbarQueryContext({
       allowAutofill,
       isPrivate: this.isPrivate,
-      lastKey,
       maxResults: UrlbarPrefs.get("maxRichResults"),
       muxer: "UnifiedComplete",
       providers: ["UnifiedComplete"],
@@ -1358,11 +1354,9 @@ class UrlbarInput {
     let allowAutofill =
       this._maybeAutofillOnInput(value, deletedAutofilledSubstring);
 
-    // TODO Bug 1524550: Fill in lastKey, and add anything else we need.
     this.startQuery({
       searchString: value,
       allowAutofill,
-      lastKey: null,
       resetSearchState: false,
     });
   }
