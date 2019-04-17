@@ -7,13 +7,14 @@ import android.content.Context
 import mozilla.components.service.glean.Glean
 import mozilla.components.service.glean.private.NoExtraKeys
 import mozilla.components.support.utils.Browsers
+import org.mozilla.fenix.GleanMetrics.BookmarksManagement
+import org.mozilla.fenix.GleanMetrics.ContextMenu
 import org.mozilla.fenix.GleanMetrics.CrashReporter
+import org.mozilla.fenix.GleanMetrics.CustomTab
 import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.FindInPage
-import org.mozilla.fenix.GleanMetrics.ContextMenu
-import org.mozilla.fenix.GleanMetrics.QuickActionSheet
 import org.mozilla.fenix.GleanMetrics.Metrics
-import org.mozilla.fenix.GleanMetrics.CustomTab
+import org.mozilla.fenix.GleanMetrics.QuickActionSheet
 import org.mozilla.fenix.GleanMetrics.SearchDefaultEngine
 import org.mozilla.fenix.ext.components
 
@@ -106,6 +107,39 @@ private val Event.wrapper
         )
         is Event.QuickActionSheetReadTapped -> EventWrapper<NoExtraKeys>(
             { QuickActionSheet.readTapped.record(it) }
+        )
+        is Event.OpenedBookmarkInNewTab -> EventWrapper<NoExtraKeys>(
+            { BookmarksManagement.openInNewTab.record(it) }
+        )
+        is Event.OpenedBookmarksInNewTabs -> EventWrapper<NoExtraKeys>(
+            { BookmarksManagement.openInNewTabs.record(it) }
+        )
+        is Event.OpenedBookmarkInPrivateTab -> EventWrapper<NoExtraKeys>(
+            { BookmarksManagement.openInPrivateTab.record(it) }
+        )
+        is Event.OpenedBookmarksInPrivateTabs -> EventWrapper<NoExtraKeys>(
+            { BookmarksManagement.openInPrivateTabs.record(it) }
+        )
+        is Event.EditedBookmark -> EventWrapper<NoExtraKeys>(
+            { BookmarksManagement.edited.record(it) }
+        )
+        is Event.MovedBookmark -> EventWrapper<NoExtraKeys>(
+            { BookmarksManagement.moved.record(it) }
+        )
+        is Event.RemoveBookmark -> EventWrapper<NoExtraKeys>(
+            { BookmarksManagement.removed.record(it) }
+        )
+        is Event.RemoveBookmarks -> EventWrapper<NoExtraKeys>(
+            { BookmarksManagement.multiRemoved.record(it) }
+        )
+        is Event.ShareBookmark -> EventWrapper<NoExtraKeys>(
+            { BookmarksManagement.shared.record(it) }
+        )
+        is Event.CopyBookmark -> EventWrapper<NoExtraKeys>(
+            { BookmarksManagement.copied.record(it) }
+        )
+        is Event.AddBookmarkFolder -> EventWrapper<NoExtraKeys>(
+            { BookmarksManagement.folderAdd.record(it) }
         )
         is Event.CustomTabsMenuOpened -> EventWrapper<NoExtraKeys>(
             { CustomTab.menu.record(it) }

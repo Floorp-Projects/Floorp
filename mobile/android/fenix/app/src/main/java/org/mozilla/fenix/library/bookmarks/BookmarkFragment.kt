@@ -27,7 +27,6 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.Navigation
 import kotlinx.android.synthetic.main.fragment_bookmark.view.*
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
@@ -39,12 +38,13 @@ import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.OAuthAccount
 import mozilla.components.concept.sync.Profile
 import mozilla.components.support.base.feature.BackHandler
+import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.BrowsingModeManager
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
-import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.components.FenixSnackbar
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.allowUndo
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.requireComponents
@@ -64,7 +64,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
     private var currentRoot: BookmarkNode? = null
 
     override val coroutineContext: CoroutineContext
-        get() = Dispatchers.Main + job
+        get() = Main + job
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_bookmark, container, false)
@@ -84,6 +84,17 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
         super.onResume()
         (activity as AppCompatActivity).supportActionBar?.show()
         checkIfSignedIn()
+
+        val currentGuid = BookmarkFragmentArgs.fromBundle(arguments!!).currentRoot.ifEmpty { BookmarkRoot.Root.id }
+
+        launch(IO) {
+            currentRoot = requireComponents.core.bookmarksStorage.getTree(currentGuid) as BookmarkNode
+
+            launch(Main) {
+                if (currentGuid != BookmarkRoot.Root.id) (activity as HomeActivity).title = currentRoot!!.title
+                getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.Change(currentRoot!!))
+            }
+        }
     }
 
     private fun checkIfSignedIn() {
@@ -200,6 +211,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                                     .openToBrowserAndLoad(url, from = BrowserDirection.FromBookmarks)
                             }
                         }
+                        requireComponents.analytics.metrics.track(Event.OpenedBookmark)
                     }
                     is BookmarkAction.Expand -> {
                         Navigation.findNavController(requireActivity(), R.id.container)
@@ -225,20 +237,26 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                         it.item.copyUrl(context!!)
                         FenixSnackbar.make(view!!, FenixSnackbar.LENGTH_LONG)
                             .setText(context!!.getString(R.string.url_copied)).show()
+                        requireComponents.analytics.metrics.track(Event.CopyBookmark)
                     }
                     is BookmarkAction.Share -> {
-                        it.item.url?.let { url -> requireContext().share(url) }
+                        it.item.url?.apply {
+                            requireContext().share(this)
+                            requireComponents.analytics.metrics.track(Event.ShareBookmark)
+                        }
                     }
                     is BookmarkAction.OpenInNewTab -> {
                         it.item.url?.let { url ->
                             requireComponents.useCases.tabsUseCases.addTab.invoke(url)
                             (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Normal
+                            requireComponents.analytics.metrics.track(Event.OpenedBookmarkInNewTab)
                         }
                     }
                     is BookmarkAction.OpenInPrivateTab -> {
                         it.item.url?.let { url ->
                             requireComponents.useCases.tabsUseCases.addPrivateTab.invoke(url)
                             (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
+                            requireComponents.analytics.metrics.track(Event.OpenedBookmarkInPrivateTab)
                         }
                     }
                     is BookmarkAction.Delete -> {
@@ -247,6 +265,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                             getString(R.string.bookmark_undo_deletion)
                         ) {
                             requireComponents.core.bookmarksStorage.deleteNode(it.item.guid)
+                            requireComponents.analytics.metrics.track(Event.RemoveBookmark)
                             refreshBookmarks()
                         }
                     }
@@ -287,6 +306,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                 (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Normal
                 Navigation.findNavController(requireActivity(), R.id.container)
                     .navigate(BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
+                requireComponents.analytics.metrics.track(Event.OpenedBookmarksInNewTabs)
                 true
             }
             R.id.edit_bookmark_multi_select -> {
@@ -308,6 +328,7 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                 (activity as HomeActivity).browsingModeManager.mode = BrowsingModeManager.Mode.Private
                 Navigation.findNavController(requireActivity(), R.id.container)
                     .navigate(BookmarkFragmentDirections.actionBookmarkFragmentToHomeFragment())
+                requireComponents.analytics.metrics.track(Event.OpenedBookmarksInPrivateTabs)
                 true
             }
             R.id.delete_bookmarks_multi_select -> {
@@ -316,26 +337,12 @@ class BookmarkFragment : Fragment(), CoroutineScope, BackHandler, AccountObserve
                     getString(R.string.bookmark_undo_deletion)
                 ) {
                     deleteSelectedBookmarks()
+                    requireComponents.analytics.metrics.track(Event.RemoveBookmarks)
                     refreshBookmarks()
                 }
                 true
             }
             else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        val currentGuid = BookmarkFragmentArgs.fromBundle(arguments!!).currentRoot.ifEmpty { BookmarkRoot.Root.id }
-
-        launch(IO) {
-            currentRoot = requireComponents.core.bookmarksStorage.getTree(currentGuid) as BookmarkNode
-
-            launch(Main) {
-                if (currentGuid != BookmarkRoot.Root.id) (activity as HomeActivity).title = currentRoot!!.title
-                getManagedEmitter<BookmarkChange>().onNext(BookmarkChange.Change(currentRoot!!))
-            }
         }
     }
 

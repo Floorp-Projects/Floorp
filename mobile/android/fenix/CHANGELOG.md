@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - #1079 - Managing site permissions exceptions
 - #1312 - Added clear textfield buttons for editing bookmarks
 - #1312 - Added a missing edit action for bookmark selections
+- #974 - Added telemetry for bookmarks
 
 ### Changed
 - #1429 - Updated site permissions ui for MVP

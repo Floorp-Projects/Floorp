@@ -357,6 +357,7 @@ class BrowserFragment : Fragment(), BackHandler, CoroutineScope {
                             val guid = requireComponents.core.bookmarksStorage
                                 .addItem(BookmarkRoot.Mobile.id, session.url, session.title, null)
                             launch(Main) {
+                                requireComponents.analytics.metrics.track(Event.AddBookmark)
                                 FenixSnackbar.make(
                                     view!!,
                                     Snackbar.LENGTH_LONG

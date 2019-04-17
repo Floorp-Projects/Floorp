@@ -382,6 +382,129 @@ search.default_engine:
     - fenix-core@mozilla.com
     expires: "2019-09-01"
 
+bookmarks_management:
+  open_in_new_tab:
+    type: event
+    description: >
+      A user opened a bookmark in a new tab.
+    bugs:
+    - 974
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1708
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  open_in_new_tabs:
+    type: event
+    description: >
+      A user opened multiple bookmarks at once in new tabs.
+    bugs:
+    - 974
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1708
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  open_in_private_tab:
+    type: event
+    description: >
+      A user opened a bookmark in a new private tab.
+    bugs:
+    - 974
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1708
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  open_in_private_tabs:
+    type: event
+    description: >
+      A user opened multiple bookmarks at once in new private tabs.
+    bugs:
+    - 974
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1708
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  edited:
+    type: event
+    description: >
+      A user edited the title and/or URL of an existing bookmark.
+    bugs:
+    - 974
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1708
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  moved:
+    type: event
+    description: >
+      A user moved an existing bookmark or folder to another folder.
+    bugs:
+    - 974
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1708
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  removed:
+    type: event
+    description: >
+      A user removed a bookmark item.
+    bugs:
+    - 974
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1708
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  multi_removed:
+    type: event
+    description: >
+      A user removed multiple bookmarks at once.
+    bugs:
+    - 974
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1708
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  shared:
+    type: event
+    description: >
+      A user shared a bookmark.
+    bugs:
+    - 974
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1708
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  copied:
+    type: event
+    description: >
+      A user copied a bookmark.
+    bugs:
+    - 974
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1708
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+  folder_add:
+    type: event
+    description: >
+      A user added a new bookmark folder.
+    bugs:
+    - 974
+    data_reviews:
+    - https://github.com/mozilla-mobile/fenix/pull/1708
+    notification_emails:
+    - fenix-core@mozilla.com
+    expires: "2020-03-01"
+
 custom_tab:
   closed:
     type: event

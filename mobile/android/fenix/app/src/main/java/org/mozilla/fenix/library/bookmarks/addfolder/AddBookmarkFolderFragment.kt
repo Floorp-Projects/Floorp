@@ -26,6 +26,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
@@ -99,6 +100,7 @@ class AddBookmarkFolderFragment : Fragment(), CoroutineScope {
                     requireComponents.core.bookmarksStorage.addFolder(
                         sharedViewModel.selectedFolder!!.guid, bookmark_add_folder_title_edit.text.toString(), null
                     )
+                    requireComponents.analytics.metrics.track(Event.AddBookmarkFolder)
                     launch(Main) {
                         Navigation.findNavController(requireActivity(), R.id.container).popBackStack()
                     }

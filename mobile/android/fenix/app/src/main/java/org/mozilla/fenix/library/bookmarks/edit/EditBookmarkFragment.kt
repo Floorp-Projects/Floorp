@@ -29,13 +29,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.UrlParseFailed
 import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import org.mozilla.fenix.R
+import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.getColorFromAttr
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.library.bookmarks.BookmarksSharedViewModel
@@ -87,8 +87,16 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
                     }
                     else -> throw IllegalArgumentException()
                 }
-                bookmark_name_edit.setText(bookmarkNode!!.title)
-                bookmark_url_edit.setText(bookmarkNode!!.url)
+
+                if (bookmarkNode != null) {
+                    bookmark_name_edit.setText(bookmarkNode!!.title)
+                    bookmark_url_edit.setText(bookmarkNode!!.url)
+
+                    if (sharedViewModel.selectedFolder != null) {
+                        val bookmarkPair = Pair(bookmarkNode?.title!!, bookmarkNode?.url!!)
+                        updateBookmarkNode(bookmarkPair)
+                    }
+                }
             }
 
             bookmarkParent?.let { node ->
@@ -108,13 +116,6 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
         updateBookmarkFromObservableInput()
     }
 
-    override fun onPause() {
-        launch {
-            updateBookmarkNode(Pair(bookmark_name_edit.text.toString(), bookmark_url_edit.text.toString()))
-        }
-        super.onPause()
-    }
-
     private fun updateBookmarkFromObservableInput() {
         Observable.combineLatest(
             bookmark_name_edit.textChanges().skipInitialValue(),
@@ -128,9 +129,7 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
             .observeOn(AndroidSchedulers.mainThread())
             .`as`(AutoDispose.autoDisposable(AndroidLifecycleScopeProvider.from(this@EditBookmarkFragment)))
             .subscribe {
-                launch(IO) {
-                    updateBookmarkNode(it)
-                }
+                updateBookmarkNode(it)
             }
     }
 
@@ -150,6 +149,7 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
             R.id.delete_bookmark_button -> {
                 launch(IO) {
                     requireComponents.core.bookmarksStorage.deleteNode(guidToEdit)
+                    requireComponents.analytics.metrics.track(Event.RemoveBookmark)
                     launch(Main) {
                         Navigation.findNavController(requireActivity(), R.id.container).popBackStack()
                     }
@@ -160,19 +160,27 @@ class EditBookmarkFragment : Fragment(), CoroutineScope {
         }
     }
 
-    private suspend fun updateBookmarkNode(pair: Pair<String, String>) {
-        try {
-            requireComponents.core.bookmarksStorage.updateNode(
-                guidToEdit,
-                BookmarkInfo(
-                    sharedViewModel.selectedFolder?.guid ?: bookmarkNode!!.parentGuid,
-                    bookmarkNode!!.position,
-                    pair.first,
-                    if (bookmarkNode?.type == BookmarkNodeType.ITEM) pair.second else null
-                )
-            )
-        } catch (e: UrlParseFailed) {
-            coroutineScope {
+    private fun updateBookmarkNode(pair: Pair<String, String>) {
+        launch(IO) {
+            try {
+                requireComponents.let {
+                    if (pair != Pair(bookmarkNode?.title, bookmarkNode?.url)) {
+                        it.analytics.metrics.track(Event.EditedBookmark)
+                    }
+                    if (sharedViewModel.selectedFolder != null) {
+                        it.analytics.metrics.track(Event.MovedBookmark)
+                    }
+                    it.core.bookmarksStorage.updateNode(
+                        guidToEdit,
+                        BookmarkInfo(
+                            sharedViewModel.selectedFolder?.guid ?: bookmarkNode!!.parentGuid,
+                            bookmarkNode?.position,
+                            pair.first,
+                            if (bookmarkNode?.type == BookmarkNodeType.ITEM) pair.second else null
+                        )
+                    )
+                }
+            } catch (e: UrlParseFailed) {
                 launch(Main) {
                     bookmark_url_edit.error = getString(R.string.bookmark_invalid_url_error)
                 }
