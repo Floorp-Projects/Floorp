@@ -1182,31 +1182,39 @@ TabParent* ContentParent::CreateBrowser(const TabContext& aContext,
     if (tabId == 0) {
       return nullptr;
     }
-    RefPtr<TabParent> tp =
-        new TabParent(constructorSender, tabId, aContext,
-                      aBrowsingContext->Canonical(), chromeFlags);
 
     aBrowsingContext->Canonical()->SetOwnerProcessId(
         constructorSender->ChildID());
 
-    PBrowserParent* browser = constructorSender->SendPBrowserConstructor(
-        // DeallocPBrowserParent() releases this ref.
-        tp.forget().take(), tabId,
+    RefPtr<TabParent> tabParent = new TabParent(
+        constructorSender, tabId, aContext, aBrowsingContext->Canonical(), chromeFlags);
+
+    // Open a remote endpoint for our PBrowser actor. DeallocPBrowserParent
+    // releases the ref taken.
+    ManagedEndpoint<PBrowserChild> childEp =
+        constructorSender->OpenPBrowserEndpoint(do_AddRef(tabParent).take());
+    if (NS_WARN_IF(!childEp.IsValid())) {
+      return nullptr;
+    }
+
+    // Tell the content process to set up its PBrowserChild.
+    bool ok = constructorSender->SendConstructBrowser(
+        std::move(childEp), tabId,
         aSameTabGroupAs ? aSameTabGroupAs->GetTabId() : TabId(0),
-        aContext.AsIPCTabContext(), chromeFlags, constructorSender->ChildID(),
-        aBrowsingContext, constructorSender->IsForBrowser());
+        aContext.AsIPCTabContext(), aBrowsingContext, chromeFlags,
+        constructorSender->ChildID(), constructorSender->IsForBrowser());
+    if (NS_WARN_IF(!ok)) {
+      return nullptr;
+    }
 
     if (remoteType.EqualsLiteral(LARGE_ALLOCATION_REMOTE_TYPE)) {
       // Tell the TabChild object that it was created due to a Large-Allocation
       // request.
-      Unused << browser->SendAwaitLargeAlloc();
+      Unused << tabParent->SendAwaitLargeAlloc();
     }
 
-    if (browser) {
-      RefPtr<TabParent> constructedTabParent = TabParent::GetFrom(browser);
-      constructedTabParent->SetOwnerElement(aFrameElement);
-      return constructedTabParent;
-    }
+    tabParent->SetOwnerElement(aFrameElement);
+    return tabParent;
   }
   return nullptr;
 }
@@ -3199,18 +3207,18 @@ bool ContentParent::CanOpenBrowser(const IPCTabContext& aContext) {
   return true;
 }
 
-PBrowserParent* ContentParent::AllocPBrowserParent(
-    const TabId& aTabId, const TabId& aSameTabGroupAs,
-    const IPCTabContext& aContext, const uint32_t& aChromeFlags,
-    const ContentParentId& aCpId, BrowsingContext* aBrowsingContext,
-    const bool& aIsForBrowser) {
-  MOZ_ASSERT(!aSameTabGroupAs);
+bool ContentParent::DeallocPBrowserParent(PBrowserParent* frame) {
+  TabParent* parent = TabParent::GetFrom(frame);
+  NS_RELEASE(parent);
+  return true;
+}
 
-  Unused << aCpId;
-  Unused << aIsForBrowser;
-
+mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
+    ManagedEndpoint<PBrowserParent>&& aBrowserEp, const TabId& aTabId,
+    const IPCTabContext& aContext, BrowsingContext* aBrowsingContext,
+    const uint32_t& aChromeFlags) {
   if (!CanOpenBrowser(aContext)) {
-    return nullptr;
+    return IPC_FAIL(this, "CanOpenBrowser Failed");
   }
 
   uint32_t chromeFlags = aChromeFlags;
@@ -3230,7 +3238,7 @@ PBrowserParent* ContentParent::AllocPBrowserParent(
     // match those of the opener.
     nsCOMPtr<nsILoadContext> loadContext = opener->GetLoadContext();
     if (!loadContext) {
-      return nullptr;
+      return IPC_FAIL(this, "Missing Opener LoadContext");
     }
 
     bool isPrivate;
@@ -3244,7 +3252,7 @@ PBrowserParent* ContentParent::AllocPBrowserParent(
       aContext.type() == IPCTabContext::TUnsafeIPCTabContext) {
     MOZ_ASSERT(XRE_IsParentProcess());
     if (!XRE_IsParentProcess()) {
-      return nullptr;
+      return IPC_FAIL(this, "Not in Parent Process");
     }
 
     // The creation of PBrowser was triggered from content process through
@@ -3252,8 +3260,8 @@ PBrowserParent* ContentParent::AllocPBrowserParent(
     // We need to register remote frame with the child generated tab id.
     ContentProcessManager* cpm = ContentProcessManager::GetSingleton();
     if (!cpm->RegisterRemoteFrame(aTabId, openerCpId, openerTabId, aContext,
-                                  aCpId)) {
-      return nullptr;
+                                  ChildID())) {
+      return IPC_FAIL(this, "RegisterRemoteFrame Failed");
     }
   }
 
@@ -3264,32 +3272,21 @@ PBrowserParent* ContentParent::AllocPBrowserParent(
   CanonicalBrowsingContext* browsingContext =
       CanonicalBrowsingContext::Cast(aBrowsingContext);
   if (NS_WARN_IF(!browsingContext->IsOwnedByProcess(ChildID()))) {
-    MOZ_ASSERT(false, "BrowsingContext not owned by the correct process!");
-    return nullptr;
+    return IPC_FAIL(this, "BrowsingContext Owned by Incorrect Process!");
   }
 
   MaybeInvalidTabContext tc(aContext);
   MOZ_ASSERT(tc.IsValid());
-  TabParent* parent = new TabParent(this, aTabId, tc.GetTabContext(),
-                                    browsingContext, chromeFlags);
+  RefPtr<TabParent> parent = new TabParent(this, aTabId, tc.GetTabContext(),
+                                           browsingContext, chromeFlags);
 
-  // We release this ref in DeallocPBrowserParent()
-  NS_ADDREF(parent);
-  return parent;
-}
+  // Bind the created TabParent to IPC to actually link the actor. The ref here
+  // is released in DeallocPBrowserParent.
+  if (NS_WARN_IF(!BindPBrowserEndpoint(std::move(aBrowserEp),
+                                       do_AddRef(parent).take()))) {
+    return IPC_FAIL(this, "BindPBrowserEndpoint failed");
+  }
 
-bool ContentParent::DeallocPBrowserParent(PBrowserParent* frame) {
-  TabParent* parent = TabParent::GetFrom(frame);
-  NS_RELEASE(parent);
-  return true;
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvPBrowserConstructor(
-    PBrowserParent* actor, const TabId& tabId, const TabId& sameTabGroupAs,
-    const IPCTabContext& context, const uint32_t& chromeFlags,
-    const ContentParentId& cpId, BrowsingContext* aBrowsingContext,
-    const bool& isForBrowser) {
-  TabParent* parent = TabParent::GetFrom(actor);
   // When enabling input event prioritization, input events may preempt other
   // normal priority IPC messages. To prevent the input events preempt
   // PBrowserConstructor, we use an IPC 'RemoteIsReadyToHandleInputEvents' to
