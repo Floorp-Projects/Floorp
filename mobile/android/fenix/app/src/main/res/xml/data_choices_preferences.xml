@@ -14,10 +14,6 @@
         android:title="@string/preferences_crash_reporter"
         app:iconSpaceReserved="false" />
     <androidx.preference.SwitchPreference
-        android:key="@string/pref_key_mozilla_location_service"
-        android:title="@string/preferences_mozilla_location_service"
-        app:iconSpaceReserved="false" />
-    <androidx.preference.SwitchPreference
         android:key="@string/pref_key_fenix_health_report"
         android:title="@string/preferences_fenix_health_report"
         app:iconSpaceReserved="false" />
