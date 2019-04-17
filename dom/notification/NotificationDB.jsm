@@ -9,14 +9,10 @@ var EXPORTED_SYMBOLS = [];
 const DEBUG = false;
 function debug(s) { dump("-*- NotificationDB component: " + s + "\n"); }
 
-const {OS} = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
-
-const NOTIFICATION_STORE_DIR = OS.Constants.Path.profileDir;
-const NOTIFICATION_STORE_PATH =
-        OS.Path.join(NOTIFICATION_STORE_DIR, "notificationstore.json");
+ChromeUtils.defineModuleGetter(this, "FileUtils", "resource://gre/modules/FileUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "KeyValueService", "resource://gre/modules/kvstore.jsm");
+ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
+ChromeUtils.defineModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
 
 const kMessages = [
   "Notification:Save",
@@ -24,19 +20,29 @@ const kMessages = [
   "Notification:GetAll",
 ];
 
+// Given its origin and ID, produce the key that uniquely identifies
+// a notification.
+function makeKey(origin, id) {
+  return origin.concat("\t", id);
+}
+
 var NotificationDB = {
 
   // Ensure we won't call init() while xpcom-shutdown is performed
   _shutdownInProgress: false,
 
+  // A handle to the kvstore, retrieved lazily when we load the data.
+  _store: null,
+
+  // A promise that resolves once the store has been loaded.
+  // The promise doesn't resolve to a value; it merely captures the state
+  // of the load via its resolution.
+  _loadPromise: null,
+
   init() {
     if (this._shutdownInProgress) {
       return;
     }
-
-    this.notifications = {};
-    this.byTag = {};
-    this.loaded = false;
 
     this.tasks = []; // read/write operation queue
     this.runningTask = null;
@@ -85,68 +91,67 @@ var NotificationDB = {
     return notifications;
   },
 
-  // Attempt to read notification file, if it's not there we will create it.
-  load() {
-    var promise = OS.File.read(NOTIFICATION_STORE_PATH, { encoding: "utf-8"});
-    return promise.then(
-      data => {
-        if (data.length > 0) {
-          // Preprocessing phase intends to cleanly separate any migration-related
-          // tasks.
-          this.notifications = this.filterNonAppNotifications(JSON.parse(data));
+  async maybeMigrateData() {
+    // We avoid using OS.File until we know we're going to migrate data
+    // to avoid the performance cost of loading that module.
+    const oldStore = FileUtils.getFile("ProfD", ["notificationstore.json"]);
+
+    if (!oldStore.exists()) {
+      if (DEBUG) { debug("Old store doesn't exist; not migrating data."); }
+      return;
+    }
+
+    let data;
+    try {
+      data = await OS.File.read(oldStore.path, { encoding: "utf-8"});
+    } catch (ex) {
+      // If read failed, we assume we have no notifications to migrate.
+      if (DEBUG) { debug("Failed to read old store; not migrating data."); }
+      return;
+    } finally {
+      // Finally, delete the old file so we don't try to migrate it again.
+      await OS.File.remove(oldStore.path);
+    }
+
+    if (data.length > 0) {
+      // Preprocessing phase intends to cleanly separate any migration-related
+      // tasks.
+      //
+      // NB: This code existed before we migrated the data to a kvstore,
+      // and the "migration-related tasks" it references are from an earlier
+      // migration.  We used to do it every time we read the JSON file;
+      // now we do it once, when migrating the JSON file to the kvstore.
+      const notifications = this.filterNonAppNotifications(JSON.parse(data));
+
+      // Copy the data from the JSON file to the kvstore.
+      // TODO: use a transaction to improve the performance of these operations
+      // once the kvstore API supports it (bug 1515096).
+      for (const origin in notifications) {
+        for (const id in notifications[origin]) {
+          await this._store.put(makeKey(origin, id),
+            JSON.stringify(notifications[origin][id]));
         }
-
-        // populate the list of notifications by tag
-        if (this.notifications) {
-          for (var origin in this.notifications) {
-            this.byTag[origin] = {};
-            for (var id in this.notifications[origin]) {
-              var curNotification = this.notifications[origin][id];
-              if (curNotification.tag) {
-                this.byTag[origin][curNotification.tag] = curNotification;
-              }
-            }
-          }
-        }
-
-        this.loaded = true;
-      },
-
-      // If read failed, we assume we have no notifications to load.
-      reason => {
-        this.loaded = true;
-        return this.createStore();
       }
-    );
+    }
   },
 
-  // Creates the notification directory.
-  createStore() {
-    var promise = OS.File.makeDir(NOTIFICATION_STORE_DIR, {
-      ignoreExisting: true,
-    });
-    return promise.then(
-      this.createFile.bind(this)
-    );
-  },
+  // Attempt to read notification file, if it's not there we will create it.
+  async load() {
+    // Get and cache a handle to the kvstore.
+    const dir = FileUtils.getDir("ProfD", ["notificationstore"], true);
+    this._store = await KeyValueService.getOrCreate(dir.path, "notifications");
 
-  // Creates the notification file once the directory is created.
-  createFile() {
-    return OS.File.writeAtomic(NOTIFICATION_STORE_PATH, "");
-  },
-
-  // Save current notifications to the file.
-  save() {
-    var data = JSON.stringify(this.notifications);
-    return OS.File.writeAtomic(NOTIFICATION_STORE_PATH, data, { encoding: "utf-8"});
+    // Migrate data from the old JSON file to the new kvstore if the old file
+    // is present in the user's profile directory.
+    await this.maybeMigrateData();
   },
 
   // Helper function: promise will be resolved once file exists and/or is loaded.
   ensureLoaded() {
-    if (!this.loaded) {
-      return this.load();
+    if (!this._loadPromise) {
+      this._loadPromise = this.load();
     }
-      return Promise.resolve();
+    return this._loadPromise;
   },
 
   receiveMessage(message) {
@@ -217,11 +222,7 @@ var NotificationDB = {
 
     var defer = {};
 
-    this.tasks.push({
-      operation,
-      data,
-      defer,
-    });
+    this.tasks.push({ operation, data, defer });
 
     var promise = new Promise(function(resolve, reject) {
       defer.resolve = resolve;
@@ -259,11 +260,9 @@ var NotificationDB = {
 
         case "delete":
           return this.taskDelete(task.data);
-
-        default:
-          return Promise.reject(
-            new Error(`Found a task with unknown operation ${task.operation}`));
       }
+
+      throw new Error(`Unknown task operation: ${task.operation}`);
     })
     .then(payload => {
       if (DEBUG) {
@@ -282,70 +281,54 @@ var NotificationDB = {
     });
   },
 
-  taskGetAll(data) {
+  enumerate(origin) {
+    // The "from" and "to" key parameters to nsIKeyValueStore.enumerate()
+    // are inclusive and exclusive, respectively, and keys are tuples
+    // of origin and ID joined by a tab (\t), which is character code 9;
+    // so enumerating ["origin", "origin\n"), where the line feed (\n)
+    // is character code 10, enumerates all pairs with the given origin.
+    return this._store.enumerate(origin, `${origin}\n`);
+  },
+
+  async taskGetAll(data) {
     if (DEBUG) { debug("Task, getting all"); }
     var origin = data.origin;
     var notifications = [];
-    // Grab only the notifications for specified origin.
-    if (this.notifications[origin]) {
-      if (data.tag) {
-        let n;
-        if ((n = this.byTag[origin][data.tag])) {
-          notifications.push(n);
-        }
-      } else {
-        for (var i in this.notifications[origin]) {
-          notifications.push(this.notifications[origin][i]);
-        }
-      }
+
+    for (const {value} of await this.enumerate(origin)) {
+      notifications.push(JSON.parse(value));
     }
-    return Promise.resolve(notifications);
+
+    if (data.tag) {
+      notifications = notifications.filter(n => n.tag === data.tag);
+    }
+
+    return notifications;
   },
 
-  taskSave(data) {
+  async taskSave(data) {
     if (DEBUG) { debug("Task, saving"); }
     var origin = data.origin;
     var notification = data.notification;
-    if (!this.notifications[origin]) {
-      this.notifications[origin] = {};
-      this.byTag[origin] = {};
-    }
 
     // We might have existing notification with this tag,
     // if so we need to remove it before saving the new one.
     if (notification.tag) {
-      var oldNotification = this.byTag[origin][notification.tag];
-      if (oldNotification) {
-        delete this.notifications[origin][oldNotification.id];
+      for (const {key, value} of await this.enumerate(origin)) {
+        const oldNotification = JSON.parse(value);
+        if (oldNotification.tag === notification.tag) {
+          await this._store.delete(key);
+        }
       }
-      this.byTag[origin][notification.tag] = notification;
     }
 
-    this.notifications[origin][notification.id] = notification;
-    return this.save();
+    await this._store.put(makeKey(origin, notification.id),
+      JSON.stringify(notification));
   },
 
-  taskDelete(data) {
+  async taskDelete(data) {
     if (DEBUG) { debug("Task, deleting"); }
-    var origin = data.origin;
-    var id = data.id;
-    if (!this.notifications[origin]) {
-      if (DEBUG) { debug("No notifications found for origin: " + origin); }
-      return Promise.resolve();
-    }
-
-    // Make sure we can find the notification to delete.
-    var oldNotification = this.notifications[origin][id];
-    if (!oldNotification) {
-      if (DEBUG) { debug("No notification found with id: " + id); }
-      return Promise.resolve();
-    }
-
-    if (oldNotification.tag) {
-      delete this.byTag[origin][oldNotification.tag];
-    }
-    delete this.notifications[origin][id];
-    return this.save();
+    await this._store.delete(makeKey(data.origin, data.id));
   },
 };
 
