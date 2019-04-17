@@ -563,6 +563,8 @@ nsresult TabChild::Init(mozIDOMWindowProxy* aParent) {
   loadContext->SetPrivateBrowsing(OriginAttributesRef().mPrivateBrowsingId > 0);
   loadContext->SetRemoteTabs(mChromeFlags &
                              nsIWebBrowserChrome::CHROME_REMOTE_WINDOW);
+  loadContext->SetRemoteSubframes(mChromeFlags &
+                                  nsIWebBrowserChrome::CHROME_FISSION_WINDOW);
 
   // Few lines before, baseWindow->Create() will end up creating a new
   // window root in nsGlobalWindow::SetDocShell.

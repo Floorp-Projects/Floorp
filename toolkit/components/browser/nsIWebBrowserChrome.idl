@@ -70,6 +70,9 @@ interface nsIWebBrowserChrome : nsISupports
     // Whether this window should use remote (out-of-process) tabs.
     const unsigned long CHROME_REMOTE_WINDOW          = 0x00100000;
 
+    // Whether this window should use out-of-process cross-origin subframes.
+    const unsigned long CHROME_FISSION_WINDOW         = 0x00200000;
+
     // Prevents new window animations on MacOS and Windows. Currently
     // ignored for Linux.
     const unsigned long CHROME_SUPPRESS_ANIMATION     = 0x01000000;

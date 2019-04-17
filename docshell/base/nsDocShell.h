@@ -243,6 +243,8 @@ class nsDocShell final : public nsDocLoader,
   NS_IMETHOD SetPrivateBrowsing(bool) override;
   NS_IMETHOD GetUseRemoteTabs(bool*) override;
   NS_IMETHOD SetRemoteTabs(bool) override;
+  NS_IMETHOD GetUseRemoteSubframes(bool*) override;
+  NS_IMETHOD SetRemoteSubframes(bool) override;
   NS_IMETHOD GetScriptableOriginAttributes(
       JSContext*, JS::MutableHandle<JS::Value>) override;
   NS_IMETHOD_(void)
@@ -1146,6 +1148,7 @@ class nsDocShell final : public nsDocLoader,
   bool mIsAppTab : 1;
   bool mUseGlobalHistory : 1;
   bool mUseRemoteTabs : 1;
+  bool mUseRemoteSubframes : 1;
   bool mUseTrackingProtection : 1;
   bool mDeviceSizeIsPageSize : 1;
   bool mWindowDraggingAllowed : 1;
