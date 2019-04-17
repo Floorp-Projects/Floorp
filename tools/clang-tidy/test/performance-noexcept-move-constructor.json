@@ -1,1 +1,1 @@
-[["warning", "move constructors should be marked noexcept", "performance-noexcept-move-constructor"], ["warning", "move assignment operators should be marked noexcept", "performance-noexcept-move-constructor"]]
+[["warning", "move constructors should be marked noexcept", "performance-noexcept-move-constructor"], ["warning", "move assignment operators should be marked noexcept", "performance-noexcept-move-constructor"], {"reliability": "high"}]

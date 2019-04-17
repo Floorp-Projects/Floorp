@@ -1,1 +1,1 @@
-[["warning", "result of integer division used in a floating point context; possible loss of precision", "bugprone-integer-division"]]
+[["warning", "result of integer division used in a floating point context; possible loss of precision", "bugprone-integer-division"], {"reliability": "high"}]

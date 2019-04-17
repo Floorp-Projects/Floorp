@@ -1,1 +1,1 @@
-[["warning", "suspicious usage of 'sizeof(this)'; did you mean 'sizeof(*this)'", "bugprone-sizeof-expression"]]
+[["warning", "suspicious usage of 'sizeof(this)'; did you mean 'sizeof(*this)'", "bugprone-sizeof-expression"], {"reliability": "high"}]

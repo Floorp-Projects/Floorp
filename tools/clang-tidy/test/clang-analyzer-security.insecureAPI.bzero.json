@@ -1,1 +1,1 @@
-[["warning", "The bzero() function is obsoleted by memset()", "clang-analyzer-security.insecureAPI.bzero"]]
+[["warning", "The bzero() function is obsoleted by memset()", "clang-analyzer-security.insecureAPI.bzero"], {"reliability": "high"}]
