@@ -11,6 +11,7 @@ const LearnMoreLink = createFactory(require("./LearnMoreLink"));
 
 const { A11Y_CONTRAST_LEARN_MORE_LINK } = require("../constants");
 const { L10N } = require("../utils/l10n");
+const { accessibility: { ColorContrastScores } } = require("devtools/shared/constants");
 
 /**
  * Component that renders a colour contrast value along with a swatch preview of what the
@@ -203,11 +204,11 @@ class ColorContrastCheck extends Component {
 function getContrastRatioScore(value, isLargeText) {
   const levels = isLargeText ? { AA: 3, AAA: 4.5 } : { AA: 4.5, AAA: 7 };
 
-  let score = "fail";
+  let score = ColorContrastScores.FAIL;
   if (value >= levels.AAA) {
-    score = "AAA";
+    score = ColorContrastScores.AAA;
   } else if (value >= levels.AA) {
-    score = "AA";
+    score = ColorContrastScores.AA;
   }
 
   return score;
@@ -216,4 +217,5 @@ function getContrastRatioScore(value, isLargeText) {
 module.exports = {
   ColorContrastAccessibility: ColorContrastAccessibilityClass,
   ColorContrastCheck,
+  getContrastRatioScore,
 };

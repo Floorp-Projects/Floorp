@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AuditController component: accessible with checks 1`] = `"<span class=\\"child\\" checks=\\"[object Object]\\"></span>"`;
+
+exports[`AuditController component: accessible without checks 1`] = `"<span></span>"`;
+
+exports[`AuditController component: dead accessible actor 1`] = `"<span></span>"`;

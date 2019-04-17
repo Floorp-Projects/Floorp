@@ -13,6 +13,8 @@ const Localized = createFactory(FluentReact.Localized);
 
 const Actions = require("../../actions/index");
 const Types = require("../../types/index");
+const Message = createFactory(require("../shared/Message"));
+const { MESSAGE_LEVEL } = require("../../constants");
 
 /**
  * This component provides components that reload/remove temporary extension.
@@ -35,36 +37,58 @@ class TemporaryExtensionAdditionalActions extends PureComponent {
     dispatch(Actions.removeTemporaryExtension(target.id));
   }
 
+  renderReloadError() {
+    const { reloadError } = this.props.target.details;
+
+    if (!reloadError) {
+      return null;
+    }
+
+    return Message(
+      {
+        className: "qa-temporary-extension-reload-error",
+        level: MESSAGE_LEVEL.ERROR,
+        key: "reload-error",
+      },
+      dom.p({ className: "technical-text" }, reloadError),
+    );
+  }
+
   render() {
     return [
-      Localized(
+      dom.div(
         {
-          id: "about-debugging-tmp-extension-reload-button",
-          key: "reload-button",
+          className: "toolbar toolbar--right-align",
+          key: "actions",
         },
-        dom.button(
+        Localized(
           {
-            className: "default-button default-button--micro " +
-                       "js-temporary-extension-reload-button",
-            onClick: e => this.reload(),
+            id: "about-debugging-tmp-extension-reload-button",
           },
-          "Reload",
-        )
-      ),
-      Localized(
-        {
-          id: "about-debugging-tmp-extension-remove-button",
-          key: "remove-button",
-        },
-        dom.button(
+          dom.button(
+            {
+              className: "default-button default-button--micro " +
+                         "js-temporary-extension-reload-button",
+              onClick: e => this.reload(),
+            },
+            "Reload",
+          )
+        ),
+        Localized(
           {
-            className: "default-button default-button--micro " +
-                       "js-temporary-extension-remove-button",
-            onClick: e => this.remove(),
+            id: "about-debugging-tmp-extension-remove-button",
           },
-          "Remove",
-        )
+          dom.button(
+            {
+              className: "default-button default-button--micro " +
+                         "js-temporary-extension-remove-button",
+              onClick: e => this.remove(),
+            },
+            "Remove",
+          )
+        ),
       ),
+      this.renderReloadError(),
     ];
   }
 }

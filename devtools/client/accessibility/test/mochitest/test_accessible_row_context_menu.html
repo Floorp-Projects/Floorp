@@ -33,6 +33,7 @@ window.onload = async function() {
       browserRequire("devtools/client/shared/vendor/react-dom-test-utils");
     const AccessibilityRow = createFactory(
       browserRequire("devtools/client/accessibility/components/AccessibilityRow"));
+    const { FILTERS } = browserRequire("devtools/client/accessibility/constants");
 
     async function withMockEnv(func) {
       const { gToolbox: originalToolbox, gTelemetry: originalTelemetry } = window;
@@ -75,6 +76,8 @@ window.onload = async function() {
           selected: false,
           hasChildren: false,
           snapshot: async () => SNAPSHOT,
+          on: () => {},
+          off: () => {},
         },
       },
       columns: [
@@ -92,8 +95,16 @@ window.onload = async function() {
       hasContextMenu: null,
     };
 
-    const defaultState = { ui: { supports: { snapshot: true }}};
-    const mockState = { ui: { supports: {}}};
+    const auditState = { audit: { filters: { [FILTERS.CONTRAST]: false }}};
+
+    const defaultState = {
+      ui: { supports: { snapshot: true }},
+      ...auditState,
+    };
+    const mockState = {
+      ui: { supports: {}},
+      ...auditState,
+    };
 
     info("Check contextmenu default behaviour.");
     renderAccessibilityRow(defaultProps, defaultState);

@@ -4,6 +4,7 @@
 "use strict";
 
 const {
+  AUDIT,
   ENABLE,
   DISABLE,
   RESET,
@@ -48,6 +49,8 @@ function ui(state = getInitialState(), action) {
       return onUpdateDetails(state, action);
     case HIGHLIGHT:
       return onHighlight(state, action);
+    case AUDIT:
+      return onAudit(state, action);
     case UNHIGHLIGHT:
       return onUnhighlight(state, action);
     case SELECT:
@@ -73,8 +76,8 @@ function onUnhighlight(state) {
   return Object.assign({}, state, { highlighted: null });
 }
 
-function updateExpandedNodes(state, ancestry) {
-  const expanded = new Set(state.expanded);
+function updateExpandedNodes(expanded, ancestry) {
+  expanded = new Set(expanded);
   const path = ancestry.reduceRight((accPath, { accessible }) => {
     accPath = TreeView.subPath(accPath, accessible.actorID);
     expanded.add(accPath);
@@ -84,13 +87,30 @@ function updateExpandedNodes(state, ancestry) {
   return { path, expanded };
 }
 
+function onAudit(state, { response: ancestries, error }) {
+  if (error) {
+    console.warn("Error running audit", error);
+    return state;
+  }
+
+  let expanded = new Set(state.expanded);
+  for (const ancestry of ancestries) {
+    ({ expanded } = updateExpandedNodes(expanded, ancestry));
+  }
+
+  return {
+    ...state,
+    expanded,
+  };
+}
+
 function onHighlight(state, { accessible, response: ancestry, error }) {
   if (error) {
     console.warn("Error fetching ancestry", accessible, error);
     return state;
   }
 
-  const { expanded } = updateExpandedNodes(state, ancestry);
+  const { expanded } = updateExpandedNodes(state.expanded, ancestry);
   return Object.assign({}, state, { expanded, highlighted: accessible });
 }
 
@@ -100,7 +120,7 @@ function onSelect(state, { accessible, response: ancestry, error }) {
     return state;
   }
 
-  const { path, expanded } = updateExpandedNodes(state, ancestry);
+  const { path, expanded } = updateExpandedNodes(state.expanded, ancestry);
   const selected = TreeView.subPath(path, accessible.actorID);
 
   return Object.assign({}, state, { expanded, selected });

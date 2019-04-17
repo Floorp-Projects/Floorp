@@ -43,7 +43,7 @@ class DebugTargetItem extends PureComponent {
 
     return dom.section(
       {
-        className: "debug-target-item__additional_actions toolbar",
+        className: "debug-target-item__additional_actions",
       },
       additionalActionsComponent({ dispatch, target }),
     );

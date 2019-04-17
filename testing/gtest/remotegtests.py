@@ -30,7 +30,7 @@ class RemoteGTests(object):
        A test harness to run gtest on Android.
     """
 
-    def build_environment(self):
+    def build_environment(self, options, test_filter):
         """
            Create and return a dictionary of all the appropriate env variables
            and values.
@@ -44,9 +44,14 @@ class RemoteGTests(object):
         env["MOZ_GTEST_LOG_PATH"] = self.remote_log
         env["MOZ_GTEST_MINIDUMPS_PATH"] = self.remote_minidumps
         env["MOZ_IN_AUTOMATION"] = "1"
+        if options.shuffle:
+            env["GTEST_SHUFFLE"] = "True"
+        if test_filter:
+            env["GTEST_FILTER"] = test_filter
+
         return env
 
-    def run_gtest(self, options):
+    def run_gtest(self, options, test_filter):
         """
            Launch the test app, run gtest, collect test results and wait for completion.
            Return False if a crash or other failure is detected, else True.
@@ -75,7 +80,7 @@ class RemoteGTests(object):
         remote = "/data/app/%s-1/lib/x86_64/" % self.package
         self.device.push(options.libxul_path, remote)
 
-        env = self.build_environment()
+        env = self.build_environment(options, test_filter)
         args = ["-unittest", "--gtest_death_test_style=threadsafe",
                 "-profile %s" % self.remote_profile]
         if 'geckoview' in self.package:
@@ -217,6 +222,11 @@ class AppWaiter(object):
         return top
 
     def wait_for_start(self, package):
+        if self.update_log():
+            # if log content is available, assume the app started; otherwise,
+            # a short run (few tests) might complete without ever being detected
+            # in the foreground
+            return package
         top = None
         while top != package and not self.start_timed_out():
             time.sleep(1)
@@ -282,7 +292,7 @@ class AppWaiter(object):
 
 class remoteGtestOptions(OptionParser):
     def __init__(self):
-        OptionParser.__init__(self)
+        OptionParser.__init__(self, usage="usage: %prog [options] test_filter")
         self.add_option("--package",
                         dest="package",
                         default="org.mozilla.geckoview.test",
@@ -317,6 +327,10 @@ class remoteGtestOptions(OptionParser):
                         default=None,
                         help="absolute path to directory containing breakpad "
                              "symbols, or the URL of a zip file containing symbols")
+        self.add_option("--shuffle",
+                        action="store_true",
+                        default=False,
+                        help="Randomize the execution order of tests.")
 
 
 def update_mozinfo():
@@ -337,14 +351,18 @@ def main():
     parser = remoteGtestOptions()
     options, args = parser.parse_args()
     if not options.libxul_path:
-        log.error("--libxul is required")
+        parser.error("--libxul is required")
         sys.exit(1)
+    if len(args) > 1:
+        parser.error("only one test_filter is allowed")
+        sys.exit(1)
+    test_filter = args[0] if args else None
     update_mozinfo()
     tester = RemoteGTests()
     result = False
     try:
         device_exception = False
-        result = tester.run_gtest(options)
+        result = tester.run_gtest(options, test_filter)
     except KeyboardInterrupt:
         log.info("gtest | Received keyboard interrupt")
     except Exception as e:

@@ -14,6 +14,8 @@ const extensionTargetDetails = {
   // manifestURL points to the manifest.json file. This URL is only valid when debugging
   // local extensions so it might be null.
   manifestURL: PropTypes.string,
+  // error message forwarded from the addon manager during reloading temporary extension.
+  reloadError: PropTypes.string,
   // unique extension id.
   uuid: PropTypes.string.isRequired,
   // warning messages forwarded from the addon manager.

@@ -1022,6 +1022,7 @@ static const bool FALSE_START_ENABLED_DEFAULT = true;
 static const bool ALPN_ENABLED_DEFAULT = false;
 static const bool ENABLED_0RTT_DATA_DEFAULT = false;
 static const bool HELLO_DOWNGRADE_CHECK_DEFAULT = false;
+static const bool ENABLED_POST_HANDSHAKE_AUTH_DEFAULT = false;
 
 static void ConfigureTLSSessionIdentifiers() {
   bool disableSessionIdentifiers =
@@ -1747,6 +1748,11 @@ nsresult nsNSSComponent::InitializeNSS() {
                        Preferences::GetBool("security.tls.enable_0rtt_data",
                                             ENABLED_0RTT_DATA_DEFAULT));
 
+  SSL_OptionSetDefault(
+      SSL_ENABLE_POST_HANDSHAKE_AUTH,
+      Preferences::GetBool("security.tls.enable_post_handshake_auth",
+                           ENABLED_POST_HANDSHAKE_AUTH_DEFAULT));
+
   if (NS_FAILED(InitializeCipherSuite())) {
     MOZ_LOG(gPIPNSSLog, LogLevel::Error,
             ("Unable to initialize cipher suite settings\n"));
@@ -1935,6 +1941,12 @@ nsNSSComponent::Observe(nsISupports* aSubject, const char* aTopic,
       SSL_OptionSetDefault(SSL_ENABLE_0RTT_DATA,
                            Preferences::GetBool("security.tls.enable_0rtt_data",
                                                 ENABLED_0RTT_DATA_DEFAULT));
+    } else if (prefName.EqualsLiteral(
+                   "security.tls.enable_post_handshake_auth")) {
+      SSL_OptionSetDefault(
+          SSL_ENABLE_POST_HANDSHAKE_AUTH,
+          Preferences::GetBool("security.tls.enable_post_handshake_auth",
+                               ENABLED_POST_HANDSHAKE_AUTH_DEFAULT));
     } else if (prefName.EqualsLiteral(
                    "security.ssl.disable_session_identifiers")) {
       ConfigureTLSSessionIdentifiers();
