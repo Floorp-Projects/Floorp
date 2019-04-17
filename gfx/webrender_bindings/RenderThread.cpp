@@ -946,10 +946,9 @@ void wr_schedule_render(mozilla::wr::WrWindowId aWindowId,
   RefPtr<mozilla::layers::CompositorBridgeParent> cbp = mozilla::layers::
       CompositorBridgeParent::GetCompositorBridgeParentFromWindowId(aWindowId);
   if (cbp) {
-    InfallibleTArray<wr::RenderRoot> renderRoots;
-    renderRoots.SetLength(aDocumentIdsCount);
+    wr::RenderRootSet renderRoots;
     for (size_t i = 0; i < aDocumentIdsCount; ++i) {
-      renderRoots[i] = wr::RenderRootFromId(aDocumentIds[i]);
+      renderRoots += wr::RenderRootFromId(aDocumentIds[i]);
     }
     cbp->ScheduleRenderOnCompositorThread(renderRoots);
   }
