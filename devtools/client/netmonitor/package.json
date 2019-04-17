@@ -7,8 +7,8 @@
   "description": "Network monitor in developer tools",
   "dependencies": {
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
-    "babel-plugin-transform-react-jsx": "^6.24.1",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
     "codemirror": "^5.24.2",
     "devtools-config": "=0.0.12",
     "devtools-contextmenu": "=0.0.3",
@@ -25,6 +25,8 @@
     "reselect": "^3.0.1"
   },
   "scripts": {
-    "start": "node bin/dev-server"
-  }
+    "start": "node bin/dev-server",
+    "test": "jest"
+  },
+  "devDependencies": {}
 }
