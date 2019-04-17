@@ -360,7 +360,9 @@ ElementEditor.prototype = {
 
     if (displayType === "flex" || displayType === "inline-flex") {
       this._displayBadge.classList.toggle("interactive", true);
-    } else if (displayType === "grid" || displayType === "inline-grid") {
+    } else if (displayType === "grid" ||
+               displayType === "inline-grid" ||
+               displayType === "subgrid") {
       this._displayBadge.classList.toggle("interactive",
         this.highlighters.canGridHighlighterToggle(this.node));
     } else {
@@ -773,7 +775,8 @@ ElementEditor.prototype = {
       this.startTrackingFlexboxHighlighterEvents();
     }
 
-    if (target.dataset.display === "grid" || target.dataset.display === "inline-grid") {
+    if (target.dataset.display === "grid" || target.dataset.display === "inline-grid" ||
+        target.dataset.display === "subgrid") {
       // Don't toggle the grid highlighter if the max number of new grid highlighters
       // allowed has been reached.
       if (!this.highlighters.canGridHighlighterToggle(this.node)) {
