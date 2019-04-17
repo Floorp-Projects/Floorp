@@ -1,1 +1,1 @@
-[["warning", "object destroyed immediately after creation; did you mean to name the object?", "bugprone-unused-raii"]]
+[["warning", "object destroyed immediately after creation; did you mean to name the object?", "bugprone-unused-raii"], {"reliability": "high"}]

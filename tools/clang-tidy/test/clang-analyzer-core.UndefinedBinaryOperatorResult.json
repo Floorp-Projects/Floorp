@@ -1,1 +1,1 @@
-[["warning", "The left operand of '+' is a garbage value", "clang-analyzer-core.UndefinedBinaryOperatorResult"]]
+[["warning", "The left operand of '+' is a garbage value", "clang-analyzer-core.UndefinedBinaryOperatorResult"], {"reliability": "medium"}]

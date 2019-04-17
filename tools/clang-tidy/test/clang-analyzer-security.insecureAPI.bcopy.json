@@ -1,1 +1,1 @@
-[["warning", "The bcopy() function is obsoleted by memcpy() or memmove()", "clang-analyzer-security.insecureAPI.bcopy"]]
+[["warning", "The bcopy() function is obsoleted by memcpy() or memmove()", "clang-analyzer-security.insecureAPI.bcopy"], {"reliability": "high"}]

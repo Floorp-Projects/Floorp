@@ -1,1 +1,1 @@
-[["warning", "namespace alias decl 'n1_unused' is unused", "misc-unused-alias-decls"], ["warning", "namespace alias decl 'n12_unused' is unused", "misc-unused-alias-decls"]]
+[["warning", "namespace alias decl 'n1_unused' is unused", "misc-unused-alias-decls"], ["warning", "namespace alias decl 'n12_unused' is unused", "misc-unused-alias-decls"], {"reliability": "high"}]

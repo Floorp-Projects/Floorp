@@ -1,1 +1,1 @@
-[["warning", "call to 'acos' promotes float to double", "performance-type-promotion-in-math-fn"]]
+[["warning", "call to 'acos' promotes float to double", "performance-type-promotion-in-math-fn"], {"reliability": "high"}]
