@@ -33,7 +33,7 @@ add_task(async function test() {
 
   // Step 2
   let private_window = await BrowserTestUtils.openNewBrowserWindow({ private: true });
-  let private_browser = private_window.getBrowser().selectedBrowser;
+  let private_browser = private_window.gBrowser.selectedBrowser;
   url = prefix + "?action=set&name=test2&value=value2";
   BrowserTestUtils.loadURI(private_browser, url);
   await BrowserTestUtils.browserLoaded(private_browser, false, url);
@@ -63,7 +63,7 @@ add_task(async function test() {
   private_window = await BrowserTestUtils.openNewBrowserWindow({ private: false });
   private_browser = null;
   await new Promise(resolve => Cu.schedulePreciseGC(resolve));
-  private_browser = private_window.getBrowser().selectedBrowser;
+  private_browser = private_window.gBrowser.selectedBrowser;
 
   url = prefix + "?action=get&name=test2";
   BrowserTestUtils.loadURI(private_browser, url);
@@ -79,7 +79,7 @@ add_task(async function test() {
   private_window = await BrowserTestUtils.openNewBrowserWindow({ private: true });
   private_browser = null;
   await new Promise(resolve => Cu.schedulePreciseGC(resolve));
-  private_browser = private_window.getBrowser().selectedBrowser;
+  private_browser = private_window.gBrowser.selectedBrowser;
 
   url = prefix + "?action=set&name=test3&value=value3";
   BrowserTestUtils.loadURI(private_browser, url);

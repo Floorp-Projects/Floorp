@@ -64,13 +64,13 @@ var Authentication = {
 
   async _openVerificationPage(uri) {
     let mainWindow = Services.wm.getMostRecentWindow("navigator:browser");
-    let newtab = mainWindow.getBrowser().addWebTab(uri);
-    let win = mainWindow.getBrowser().getBrowserForTab(newtab);
+    let newtab = mainWindow.gBrowser.addWebTab(uri);
+    let win = mainWindow.gBrowser.getBrowserForTab(newtab);
     await new Promise(resolve => {
       win.addEventListener("loadend", resolve, { once: true });
     });
     let didVerify = await this.shortWaitForVerification(10000);
-    mainWindow.getBrowser().removeTab(newtab);
+    mainWindow.gBrowser.removeTab(newtab);
     return didVerify;
   },
 
