@@ -334,5 +334,36 @@ class ProgressDelegateTest : BaseSessionTest() {
         assertThat("Scroll position should match",
                 mainSession.evaluateJS("window.visualViewport.pageTop") as Double,
                 closeTo(100.0, .5))
+
+    }
+
+    @WithDevToolsAPI
+    @WithDisplay(width = 400, height = 400)
+    @Test fun flushSessionState() {
+        sessionRule.setPrefsUntilTestEnd(mapOf("dom.visualviewport.enabled" to true))
+
+        val startUri = createTestUrl(SAVE_STATE_PATH)
+        mainSession.loadUri(startUri)
+        sessionRule.waitForPageStop()
+
+        var oldState : GeckoSession.SessionState? = null
+
+        sessionRule.waitUntilCalled(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onSessionStateChange(session: GeckoSession, sessionState: GeckoSession.SessionState) {
+                oldState = sessionState
+            }
+        })
+
+        assertThat("State should not be null", oldState, notNullValue())
+
+        mainSession.setActive(false)
+
+        sessionRule.waitUntilCalled(object : Callbacks.ProgressDelegate {
+            @AssertCalled(count = 1)
+            override fun onSessionStateChange(session: GeckoSession, sessionState: GeckoSession.SessionState) {
+                assertThat("Old session state and new should match", sessionState, equalTo(oldState))
+            }
+        })
     }
 }
