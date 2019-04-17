@@ -9,6 +9,8 @@
 #include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/MessageManagerBinding.h"
+#include "mozilla/dom/BrowsingContext.h"
+#include "nsGlobalWindowInner.h"
 
 namespace mozilla {
 namespace dom {
@@ -66,7 +68,7 @@ void JSWindowActorChild::SendAsyncMessage(JSContext* aCx,
                                           JS::Handle<JS::Value> aTransfers,
                                           ErrorResult& aRv) {
   // If we've closed our channel already, just raise an exception.
-  if (NS_WARN_IF(mManager->IsClosed())) {
+  if (NS_WARN_IF(!mManager || mManager->IsClosed())) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
@@ -106,6 +108,33 @@ void JSWindowActorChild::SendAsyncMessage(JSContext* aCx,
     aRv.Throw(NS_ERROR_UNEXPECTED);
     return;
   }
+}
+
+Document* JSWindowActorChild::GetDocument(ErrorResult& aRv) {
+  if (!mManager) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  nsGlobalWindowInner* window = mManager->WindowGlobal();
+  return window ? window->GetDocument() : nullptr;
+}
+
+BrowsingContext* JSWindowActorChild::GetBrowsingContext(ErrorResult& aRv) {
+  if (!mManager) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  return mManager->BrowsingContext();
+}
+
+Nullable<WindowProxyHolder> JSWindowActorChild::GetContentWindow(
+    ErrorResult& aRv) {
+  if (BrowsingContext* bc = GetBrowsingContext(aRv)) {
+    return WindowProxyHolder(bc);
+  }
+  return nullptr;
 }
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(JSWindowActorChild)
