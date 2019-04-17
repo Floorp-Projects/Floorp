@@ -168,6 +168,8 @@ static TimeStamp sLastCCEndTime;
 
 static TimeStamp sLastForgetSkippableCycleEndTime;
 
+static TimeStamp sCurrentGCStartTime;
+
 static bool sCCLockedOut;
 static PRTime sCCLockedOutTime;
 
@@ -2173,6 +2175,7 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
     case JS::GC_CYCLE_BEGIN: {
       // Prevent cycle collections and shrinking during incremental GC.
       sCCLockedOut = true;
+      sCurrentGCStartTime = TimeStamp::Now();
       break;
     }
 
@@ -2239,6 +2242,8 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
         sNeedsFullGC = false;
       }
 
+      Telemetry::Accumulate(Telemetry::GC_IN_PROGRESS_MS,
+                            TimeBetween(sCurrentGCStartTime, TimeStamp::Now()));
       break;
     }
 

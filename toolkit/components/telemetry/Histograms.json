@@ -646,6 +646,16 @@
     "n_buckets": 50,
     "description": "Time spent running JS GC (ms)"
   },
+  "GC_IN_PROGRESS_MS": {
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["smaug@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 50,
+    "bug_numbers": [1545093],
+    "description": "Time from the beginning of the first slice to the end of the last slice (ms)"
+  },
   "GC_BUDGET_MS": {
     "record_in_processes": ["main", "content"],
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
