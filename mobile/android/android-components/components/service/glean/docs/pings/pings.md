@@ -1,14 +1,16 @@
 # glean pings
 
-If data collection is enabled, glean provides a set of pings that are assembled out of the box
-without any developer intervention.
 Every glean ping is in JSON format and contains one or more of the [common sections](#ping-sections)
 with shared information data.
-The following is a list of these built-in pings:
+
+If data collection is enabled, glean provides a set of built-in pings that are assembled out of the box
+without any developer intervention.  The following is a list of these built-in pings:
 
 - [`baseline` ping](baseline.md)
 - [`events` ping](events.md)
 - [`metrics` ping](metrics.md)
+
+Applications can also define and send their own [custom pings](custom.md).
 
 ## Ping sections
 
