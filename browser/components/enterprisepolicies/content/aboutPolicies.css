@@ -60,7 +60,7 @@ tbody tr {
 }
 
 tbody tr:hover {
-  background-color: #d7d7db;
+  background-color: var(--in-content-item-hover);
 }
 
 th, td, table {
@@ -85,16 +85,10 @@ td {
  * collapsible information block.
  */
 
-.active-policies tr.odd,
-.errors tr:nth-child(odd),
+.active-policies tr.odd:not(:hover),
+.errors tr:nth-child(odd):not(:hover),
 tbody:nth-child(4n + 1) {
-  background-color: #ededf0;
-}
-
-.active-policies tr.odd:hover,
-.errors tr:nth-child(odd):hover,
-tbody:nth-child(4n + 1):hover {
-  background-color: #d7d7db;
+  background-color: var(--in-content-box-background-odd);
 }
 
 .arr_sep.odd:not(:last-child) td:not(:first-child) {
@@ -134,8 +128,8 @@ tbody:nth-child(4n + 1):hover {
 }
 
 .content-style {
-  background-color: white;
-  color: var(--in-content-category-text-selected);
+  background-color: var(--in-content-box-background);
+  color: var(--blue-50);
 }
 
 tbody.collapsible td {
