@@ -422,7 +422,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
   HttpTrafficAnalyzer *GetHttpTrafficAnalyzer();
 
-  bool GetThroughCaptivePortal() { return mThroughCaptivePortal; }
  private:
   nsHttpHandler();
 
@@ -738,8 +737,6 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
 
  private:
   nsTHashtable<nsCStringHashKey> mBlacklistedSpdyOrigins;
-
-  bool mThroughCaptivePortal;
 };
 
 extern StaticRefPtr<nsHttpHandler> gHttpHandler;

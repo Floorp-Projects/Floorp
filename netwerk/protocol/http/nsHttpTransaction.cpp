@@ -158,8 +158,6 @@ nsHttpTransaction::nsHttpTransaction()
 #endif
   mSelfAddr.raw.family = PR_AF_UNSPEC;
   mPeerAddr.raw.family = PR_AF_UNSPEC;
-
-  mThroughCaptivePortal = gHttpHandler->GetThroughCaptivePortal();
 }
 
 void nsHttpTransaction::ResumeReading() {
@@ -1196,11 +1194,6 @@ void nsHttpTransaction::Close(nsresult reason) {
       hta->AccumulateHttpTransferredSize(mTrafficCategory, mTransferSize,
                                          mContentRead);
     }
-  }
-
-  if (mThroughCaptivePortal) {
-    Telemetry::ScalarAdd(
-        Telemetry::ScalarID::NETWORKING_HTTP_TRANSACTIONS_CAPTIVE_PORTAL, 1);
   }
 
   if (relConn && mConnection) {

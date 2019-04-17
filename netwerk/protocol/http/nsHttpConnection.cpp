@@ -120,8 +120,6 @@ nsHttpConnection::nsHttpConnection()
   mIdleTimeout = (k5Sec < gHttpHandler->IdleTimeout())
                      ? k5Sec
                      : gHttpHandler->IdleTimeout();
-
- mThroughCaptivePortal = gHttpHandler->GetThroughCaptivePortal();
 }
 
 nsHttpConnection::~nsHttpConnection() {
@@ -155,28 +153,6 @@ nsHttpConnection::~nsHttpConnection() {
                                         : Telemetry::HTTP_KBREAD_PER_CONN2,
                           totalKBRead);
   }
-
-  if (mThroughCaptivePortal) {
-    if (mTotalBytesRead || mTotalBytesWritten) {
-      auto total = Clamp<uint32_t>(
-          (mTotalBytesRead >> 10) + (mTotalBytesWritten >> 10), 0,
-          std::numeric_limits<uint32_t>::max());
-      Telemetry::ScalarAdd(
-          Telemetry::ScalarID::NETWORKING_DATA_TRANSFERRED_CAPTIVE_PORTAL, total);
-    }
-
-    Telemetry::ScalarAdd(
-        Telemetry::ScalarID::NETWORKING_HTTP_CONNECTIONS_CAPTIVE_PORTAL, 1);
-  }
-
-  if (!mTrafficCategory.IsEmpty()) {
-    HttpTrafficAnalyzer *hta = gHttpHandler->GetHttpTrafficAnalyzer();
-    if (hta) {
-      hta->IncrementHttpConnection(std::move(mTrafficCategory));
-      MOZ_ASSERT(mTrafficCategory.IsEmpty());
-    }
-  }
-
   if (mForceSendTimer) {
     mForceSendTimer->Cancel();
     mForceSendTimer = nullptr;
@@ -994,6 +970,14 @@ void nsHttpConnection::Close(nsresult reason, bool aIsShutdown) {
   if (mForceSendTimer) {
     mForceSendTimer->Cancel();
     mForceSendTimer = nullptr;
+  }
+
+  if (!mTrafficCategory.IsEmpty()) {
+    HttpTrafficAnalyzer *hta = gHttpHandler->GetHttpTrafficAnalyzer();
+    if (hta) {
+      hta->IncrementHttpConnection(std::move(mTrafficCategory));
+      MOZ_ASSERT(mTrafficCategory.IsEmpty());
+    }
   }
 
   if (NS_FAILED(reason)) {
