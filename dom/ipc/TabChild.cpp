@@ -1065,6 +1065,25 @@ mozilla::ipc::IPCResult TabChild::RecvLoadURL(const nsCString& aURI,
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult TabChild::RecvResumeLoad(
+    const uint64_t& aPendingSwitchID, const ShowInfo& aInfo) {
+  if (!mDidLoadURLInit) {
+    mDidLoadURLInit = true;
+    if (!InitTabChildMessageManager()) {
+      return IPC_FAIL_NO_REASON(this);
+    }
+
+    ApplyShowInfo(aInfo);
+  }
+
+  nsresult rv = WebNavigation()->ResumeRedirectedLoad(aPendingSwitchID, -1);
+  if (NS_FAILED(rv)) {
+    NS_WARNING("WebNavigation()->ResumeRedirectedLoad failed");
+  }
+
+  return IPC_OK();
+}
+
 void TabChild::DoFakeShow(const ShowInfo& aShowInfo) {
   RecvShow(ScreenIntSize(0, 0), aShowInfo, mParentIsActive, nsSizeMode_Normal);
   mDidFakeShow = true;

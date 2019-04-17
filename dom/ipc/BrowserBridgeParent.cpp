@@ -124,6 +124,11 @@ IPCResult BrowserBridgeParent::RecvLoadURL(const nsCString& aUrl) {
   return IPC_OK();
 }
 
+IPCResult BrowserBridgeParent::RecvResumeLoad(uint64_t aPendingSwitchID) {
+  mTabParent->ResumeLoad(aPendingSwitchID);
+  return IPC_OK();
+}
+
 IPCResult BrowserBridgeParent::RecvUpdateDimensions(
     const DimensionInfo& aDimensions) {
   Unused << mTabParent->SendUpdateDimensions(aDimensions);
