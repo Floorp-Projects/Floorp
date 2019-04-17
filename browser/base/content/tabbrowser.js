@@ -4261,11 +4261,16 @@ window._gBrowser = {
       }
     } else {
       label = tab._fullLabel || tab.getAttribute("label");
-      if (AppConstants.NIGHTLY_BUILD &&
-          tab.linkedBrowser &&
-          tab.linkedBrowser.isRemoteBrowser &&
-          tab.linkedBrowser.frameLoader) {
-        label += " (pid " + tab.linkedBrowser.frameLoader.tabParent.osPid + ")";
+      if (AppConstants.NIGHTLY_BUILD) {
+        if (tab.linkedBrowser &&
+            tab.linkedBrowser.isRemoteBrowser &&
+            tab.linkedBrowser.frameLoader) {
+          label += " (pid " + tab.linkedBrowser.frameLoader.tabParent.osPid + ")";
+
+          if (window.docShell.QueryInterface(Ci.nsILoadContext).useRemoteSubframes) {
+            label += " [F]";
+          }
+        }
       }
       if (tab.userContextId) {
         label = gTabBrowserBundle.formatStringFromName("tabs.containers.tooltip", [label, ContextualIdentityService.getUserContextLabel(tab.userContextId)], 2);
