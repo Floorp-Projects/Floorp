@@ -9,6 +9,9 @@ import { isDevelopment } from "devtools-environment";
 import Services from "devtools-services";
 import { asyncStoreHelper } from "./asyncStoreHelper";
 
+// Schema version to bump when the async store format has changed incompatibly
+// and old stores should be cleared. This needs to match the prefs schema
+// version in devtools/client/preferences/debugger.js.
 const prefsSchemaVersion = "1.0.9";
 const pref = Services.pref;
 
@@ -43,7 +46,7 @@ if (isDevelopment()) {
   pref("devtools.debugger.file-search-regex-match", false);
   pref("devtools.debugger.project-directory-root", "");
   pref("devtools.debugger.map-scopes-enabled", false);
-  pref("devtools.debugger.prefs-schema-version", "1.0.1");
+  pref("devtools.debugger.prefs-schema-version", prefsSchemaVersion);
   pref("devtools.debugger.skip-pausing", false);
   pref("devtools.debugger.features.workers", true);
   pref("devtools.debugger.features.async-stepping", true);

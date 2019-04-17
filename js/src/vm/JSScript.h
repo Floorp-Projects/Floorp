@@ -253,11 +253,10 @@ class DebugScript {
   friend class JS::Realm;
 
   /*
-   * When non-zero, compile script in single-step mode. The top bit is set and
-   * cleared by setStepMode, as used by JSD. The lower bits are a count,
-   * adjusted by changeStepModeCount, used by the Debugger object. Only
-   * when the bit is clear and the count is zero may we compile the script
-   * without single-step support.
+   * When greater than zero, compile script in single-step mode, with VM calls
+   * to HandleDebugTrap before each bytecode instruction's code. This is a
+   * counter, adjusted by the incrementStepModeCount and decrementStepModeCount
+   * methods.
    */
   uint32_t stepMode;
 
