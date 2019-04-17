@@ -111,6 +111,8 @@ class WindowGlobalParent final : public nsISupports,
   mozilla::ipc::IPCResult RecvAsyncMessage(const nsString& aActorName,
                                            const nsString& aMessageName,
                                            const ClonedMessageData& aData);
+  mozilla::ipc::IPCResult RecvDidEmbedBrowsingContext(
+      dom::BrowsingContext* aContext);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 

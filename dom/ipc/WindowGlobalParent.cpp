@@ -87,6 +87,12 @@ void WindowGlobalParent::Init(const WindowGlobalInit& aInit) {
   // Attach ourself to the browsing context.
   mBrowsingContext->RegisterWindowGlobal(this);
 
+  // If there is no current window global, assume we're about to become it
+  // optimistically.
+  if (!mBrowsingContext->GetCurrentWindowGlobal()) {
+    mBrowsingContext->SetCurrentWindowGlobal(this);
+  }
+
   // Determine what toplevel frame element our WindowGlobalParent is being
   // embedded in.
   RefPtr<Element> frameElement;
@@ -250,6 +256,13 @@ already_AddRefed<JSWindowActorParent> WindowGlobalParent::GetActor(
 
 bool WindowGlobalParent::IsCurrentGlobal() {
   return !mIPCClosed && mBrowsingContext->GetCurrentWindowGlobal() == this;
+}
+
+IPCResult WindowGlobalParent::RecvDidEmbedBrowsingContext(
+    dom::BrowsingContext* aContext) {
+  MOZ_ASSERT(aContext);
+  aContext->Canonical()->SetEmbedderWindowGlobal(this);
+  return IPC_OK();
 }
 
 void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
