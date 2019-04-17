@@ -324,7 +324,9 @@ nsresult PrototypeDocumentContentSink::PrepareToWalk() {
   rv = mDocument->AppendChildTo(root, false);
   if (NS_FAILED(rv)) return rv;
 
-  mDocument->DocumentStatesChanged(NS_DOCUMENT_STATE_RTL_LOCALE);
+  // TODO(emilio): Should this really notify? We don't notify of appends anyhow,
+  // and we just appended the root so no styles can possibly depend on it.
+  mDocument->UpdateDocumentStates(NS_DOCUMENT_STATE_RTL_LOCALE, true);
 
   nsContentUtils::AddScriptRunner(
       new nsDocElementCreatedNotificationRunner(mDocument));

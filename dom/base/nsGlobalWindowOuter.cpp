@@ -6721,7 +6721,7 @@ void nsGlobalWindowOuter::ActivateOrDeactivate(bool aActivate) {
 
 static bool NotifyDocumentTree(Document* aDocument, void* aData) {
   aDocument->EnumerateSubDocuments(NotifyDocumentTree, nullptr);
-  aDocument->DocumentStatesChanged(NS_DOCUMENT_STATE_WINDOW_INACTIVE);
+  aDocument->UpdateDocumentStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE, true);
   return true;
 }
 
