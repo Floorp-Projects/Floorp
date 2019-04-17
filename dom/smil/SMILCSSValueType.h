@@ -125,7 +125,7 @@ class SMILCSSValueType : public SMILType {
 
  private:
   // Private constructor: prevent instances beyond my singleton.
-  constexpr SMILCSSValueType() {}
+  constexpr SMILCSSValueType() = default;
 };
 
 }  // namespace mozilla
