@@ -896,6 +896,8 @@ void LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion,
     return;
   }
 
+  mCompositor->RequestRecordFrames(!!mCompositionRecorder);
+
   ClearLayerFlags(mRoot);
 
   // At this time, it doesn't really matter if these preferences change

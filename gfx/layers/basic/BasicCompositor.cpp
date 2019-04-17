@@ -893,15 +893,11 @@ void BasicCompositor::BeginFrame(
   LayoutDeviceIntRect intRect(LayoutDeviceIntPoint(), mWidget->GetClientSize());
   IntRect rect = IntRect(0, 0, intRect.Width(), intRect.Height());
 
-#ifdef MOZ_GECKO_PROFILER
   const bool shouldInvalidateWindow =
-      (profiler_feature_active(ProfilerFeature::Screenshots) &&
+      (ShouldRecordFrames() &&
        (!mFullWindowRenderTarget ||
         mFullWindowRenderTarget->mDrawTarget->GetSize() !=
             rect.ToUnknownRect().Size()));
-#else
-  const bool shouldInvalidateWindow = false;
-#endif  // MOZ_GECKO_PROFILER
 
   if (shouldInvalidateWindow) {
     mInvalidRegion = intRect;
@@ -964,8 +960,7 @@ void BasicCompositor::BeginFrame(
   RefPtr<CompositingRenderTarget> target =
       CreateRenderTargetForWindow(mInvalidRect, clearRect, bufferMode);
 
-#ifdef MOZ_GECKO_PROFILER
-  if (profiler_feature_active(ProfilerFeature::Screenshots)) {
+  if (ShouldRecordFrames()) {
     IntSize windowSize = rect.ToUnknownRect().Size();
 
     // On some platforms (notably Linux with X11) we do not always have a
@@ -983,7 +978,6 @@ void BasicCompositor::BeginFrame(
           new BasicCompositingRenderTarget(drawTarget, rect);
     }
   }
-#endif  // MOZ_GECKO_PROFILER
 
   mDrawTarget->PopClip();
 
@@ -1038,14 +1032,11 @@ void BasicCompositor::EndFrame() {
 
   TryToEndRemoteDrawing();
 
-#ifdef MOZ_GECKO_PROFILER
   // If we are no longer recording a profile, we can drop the render target if
   // it exists.
-  if (mFullWindowRenderTarget &&
-      !profiler_feature_active(ProfilerFeature::Screenshots)) {
+  if (mFullWindowRenderTarget && !ShouldRecordFrames()) {
     mFullWindowRenderTarget = nullptr;
   }
-#endif  // MOZ_GECKO_PROFILER
 }
 
 void BasicCompositor::TryToEndRemoteDrawing(bool aForceToEnd) {
@@ -1122,6 +1113,14 @@ bool BasicCompositor::NeedsToDeferEndRemoteDrawing() {
 
 void BasicCompositor::FinishPendingComposite() {
   TryToEndRemoteDrawing(/* aForceToEnd */ true);
+}
+
+bool BasicCompositor::ShouldRecordFrames() const {
+#ifdef MOZ_GECKO_PROFILER
+  return profiler_feature_active(ProfilerFeature::Screenshots) || mRecordFrames;
+#else
+  return mRecordFrames;
+#endif  // MOZ_GECKO_PROFILER
 }
 
 }  // namespace layers
