@@ -327,7 +327,7 @@
 
 .requests-list-cause-stack {
   display: inline-block;
-  background-color: var(--theme-body-color-alt);
+  background-color: var(--theme-text-color-alt);
   color: var(--theme-body-background);
   font-size: 8px;
   font-weight: bold;

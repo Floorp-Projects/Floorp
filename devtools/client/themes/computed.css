@@ -103,7 +103,7 @@
   background-repeat: no-repeat;
   background-size: contain;
   -moz-context-properties: fill;
-  fill: var(--theme-body-color-inactive);
+  fill: var(--theme-text-color-inactive);
 }
 
 .computed-other-property-value:dir(rtl)::before {

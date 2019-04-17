@@ -225,7 +225,7 @@ MarkersOverview.prototype = extend(AbstractCanvasGraph.prototype, {
     this.headerBackgroundColor = getColor("body-background", theme);
     this.headerTextColor = getColor("body-color", theme);
     this.headerTimelineStrokeColor = colorUtils.setAlpha(
-      getColor("body-color-alt", theme), 0.25);
+      getColor("text-color-alt", theme), 0.25);
     this.alternatingBackgroundColor = colorUtils.setAlpha(
       getColor("body-color", theme), 0.05);
   },

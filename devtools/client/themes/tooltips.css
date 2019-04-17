@@ -575,7 +575,7 @@
   border-radius: 3px;
   padding: 2px;
   margin-inline-start: 5px;
-  background-color: var(--theme-body-color-alt);
+  background-color: var(--theme-text-color-alt);
   color: var(--theme-body-background);
 }
 

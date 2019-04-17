@@ -117,7 +117,7 @@
 
 #ruleview-class-panel .no-classes {
   flex: 1;
-  color: var(--theme-body-color-inactive);
+  color: var(--theme-text-color-inactive);
   margin: 0;
   text-align: center;
 }
@@ -418,7 +418,7 @@
   content: "";
   position: absolute;
   display: block;
-  border: 0px solid var(--theme-body-color-alt);
+  border: 0px solid var(--theme-text-color-alt);
 }
 
 .ruleview-overridden-item::before {
@@ -541,7 +541,7 @@
 }
 
 .ruleview-overridden {
-  text-decoration: line-through solid var(--theme-body-color-alt);
+  text-decoration: line-through solid var(--theme-text-color-alt);
 }
 
 /**
