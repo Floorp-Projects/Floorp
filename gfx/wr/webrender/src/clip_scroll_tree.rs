@@ -161,6 +161,35 @@ impl ClipScrollTree {
         }
     }
 
+    /// Calculate the accumulated external scroll offset for
+    /// a given spatial node.
+    pub fn external_scroll_offset(&self, node_index: SpatialNodeIndex) -> LayoutVector2D {
+        let mut offset = LayoutVector2D::zero();
+        let mut current_node = Some(node_index);
+
+        while let Some(node_index) = current_node {
+            let node = &self.spatial_nodes[node_index.0 as usize];
+
+            match node.node_type {
+                SpatialNodeType::ScrollFrame(ref scrolling) => {
+                    offset += scrolling.external_scroll_offset;
+                }
+                SpatialNodeType::StickyFrame(..) => {
+                    // Doesn't provide any external scroll offset
+                }
+                SpatialNodeType::ReferenceFrame(..) => {
+                    // External scroll offsets are not propagated across
+                    // reference frames.
+                    break;
+                }
+            }
+
+            current_node = node.parent;
+        }
+
+        offset
+    }
+
     /// Calculate the relative transform from `child_index` to `parent_index`.
     /// This method will panic if the nodes are not connected!
     pub fn get_relative_transform(
@@ -271,7 +300,10 @@ impl ClipScrollTree {
         for node in &self.spatial_nodes {
             if let SpatialNodeType::ScrollFrame(info) = node.node_type {
                 if let Some(id) = info.external_id {
-                    result.push(ScrollNodeState { id, scroll_offset: info.offset })
+                    result.push(ScrollNodeState {
+                        id,
+                        scroll_offset: info.offset - info.external_scroll_offset,
+                    })
                 }
             }
         }
@@ -505,6 +537,7 @@ impl ClipScrollTree {
                 pt.add_item(format!("viewport: {:?}", scrolling_info.viewport_rect));
                 pt.add_item(format!("scrollable_size: {:?}", scrolling_info.scrollable_size));
                 pt.add_item(format!("scroll offset: {:?}", scrolling_info.offset));
+                pt.add_item(format!("external_scroll_offset: {:?}", scrolling_info.external_scroll_offset));
             }
             SpatialNodeType::ReferenceFrame(ref _info) => {
                 pt.new_level(format!("ReferenceFrame"));
