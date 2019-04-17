@@ -1436,9 +1436,6 @@ var gMainPane = {
   handleEvent(aEvent) {
     if (aEvent.type == "unload") {
       this.destroy();
-      if (AppConstants.MOZ_UPDATER) {
-        onUnload();
-      }
     }
   },
 
