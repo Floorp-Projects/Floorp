@@ -50,8 +50,6 @@ SVGStyleElement::SVGStyleElement(
   AddMutationObserver(this);
 }
 
-SVGStyleElement::~SVGStyleElement() {}
-
 //----------------------------------------------------------------------
 // nsINode methods
 

@@ -30,7 +30,7 @@ class DOMSVGAnimatedEnumeration : public nsISupports, public nsWrapperCache {
  protected:
   explicit DOMSVGAnimatedEnumeration(SVGElement* aSVGElement)
       : mSVGElement(aSVGElement) {}
-  virtual ~DOMSVGAnimatedEnumeration(){};
+  virtual ~DOMSVGAnimatedEnumeration() = default;
 
   RefPtr<SVGElement> mSVGElement;
 };

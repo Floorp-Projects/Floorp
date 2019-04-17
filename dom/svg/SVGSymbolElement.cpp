@@ -30,8 +30,6 @@ SVGSymbolElement::SVGSymbolElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGSymbolElementBase(std::move(aNodeInfo)) {}
 
-SVGSymbolElement::~SVGSymbolElement() {}
-
 //----------------------------------------------------------------------
 // nsINode methods
 

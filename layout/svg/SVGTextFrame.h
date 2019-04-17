@@ -187,7 +187,7 @@ class SVGTextFrame final : public nsSVGDisplayContainerFrame {
                  NS_STATE_SVG_POSITIONING_DIRTY);
   }
 
-  ~SVGTextFrame() {}
+  ~SVGTextFrame() = default;
 
  public:
   NS_DECL_QUERYFRAME
