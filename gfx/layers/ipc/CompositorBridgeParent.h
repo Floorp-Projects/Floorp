@@ -426,7 +426,7 @@ class CompositorBridgeParent final : public CompositorBridgeParentBase,
 
   // Can be called from any thread
   void ScheduleRenderOnCompositorThread(
-      const wr::RenderRootSet& aRenderRoots = wr::RenderRootSet()) override;
+      const wr::RenderRootSet& aRenderRoots) override;
   void SchedulePauseOnCompositorThread();
   void InvalidateOnCompositorThread();
   /**
