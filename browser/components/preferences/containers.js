@@ -35,6 +35,7 @@ let gContainersManager = {
     "pet",
     "tree",
     "chill",
+    "fence",
   ],
 
   colors: [
@@ -46,6 +47,7 @@ let gContainersManager = {
     "red",
     "pink",
     "purple",
+    "toolbar",
   ],
 
   onLoad() {
