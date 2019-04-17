@@ -66,6 +66,12 @@ runInParent(function initLogins() {
   Services.logins.addLogin(login2);
 });
 
+add_task(async function prepare() {
+  await new Promise(resolve => SpecialPowers.pushPrefEnv({"set": [
+    ["dom.xmldocument.load.enabled", true],
+  ]}, resolve));
+});
+
 add_task(async function test_promptUsernameAndPassword_accept() {
   let loadPromise = makeRequest("authenticate.sjs?user=xmluser1&pass=xmlpass1&realm=xml", "xmluser1", "xmlpass1");
   let state = {
