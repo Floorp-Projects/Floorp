@@ -13,7 +13,7 @@
             "tests": ["tart_flex", "ts_paint_flex"]
         },
         "other": {
-            "tests": ["a11yr", "ts_paint", "tpaint", "twinopen", "sessionrestore", "sessionrestore_no_auto_restore", "tabpaint", "cpstartup", "startup_about_home_paint"]
+            "tests": ["a11yr", "ts_paint", "twinopen", "sessionrestore", "sessionrestore_no_auto_restore", "tabpaint", "cpstartup", "startup_about_home_paint"]
         },
         "sessionrestore-many-windows": {
             "tests": ["sessionrestore_many_windows"]
