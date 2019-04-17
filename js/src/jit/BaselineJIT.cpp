@@ -231,12 +231,37 @@ MethodStatus jit::BaselineCompile(JSContext* cx, JSScript* script,
 }
 
 static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
-                                        InterpreterFrame* osrFrame) {
+                                        InterpreterFrame* osrSourceFrame) {
   MOZ_ASSERT(jit::IsBaselineEnabled(cx));
 
   // Skip if the script has been disabled.
   if (!script->canBaselineCompile()) {
     return Method_Skipped;
+  }
+
+  // This check is needed in the following corner case. Consider a function h,
+  //
+  //   function h(x) {
+  //      if (!x)
+  //        return;
+  //      h(false);
+  //      for (var i = 0; i < N; i++)
+  //         /* do stuff */
+  //   }
+  //
+  // Suppose h is not yet compiled in baseline and is executing in the
+  // interpreter. Let this interpreter frame be f_older. The debugger marks
+  // f_older as isDebuggee. At the point of the recursive call h(false), h is
+  // compiled in baseline without debug instrumentation, pushing a baseline
+  // frame f_newer. The debugger never flags f_newer as isDebuggee, and never
+  // recompiles h. When the recursive call returns and execution proceeds to
+  // the loop, the interpreter attempts to OSR into baseline. Since h is
+  // already compiled in baseline, execution jumps directly into baseline
+  // code. This is incorrect as h's baseline script does not have debug
+  // instrumentation.
+  if (osrSourceFrame && osrSourceFrame->isDebuggee() &&
+      !Debugger::ensureExecutionObservabilityOfOsrFrame(cx, osrSourceFrame)) {
+    return Method_Error;
   }
 
   if (script->length() > BaselineMaxScriptLength) {
@@ -269,38 +294,15 @@ static MethodStatus CanEnterBaselineJIT(JSContext* cx, HandleScript script,
   // Frames can be marked as debuggee frames independently of its underlying
   // script being a debuggee script, e.g., when performing
   // Debugger.Frame.prototype.eval.
-  return BaselineCompile(cx, script, osrFrame && osrFrame->isDebuggee());
+  bool forceDebugInstrumentation =
+      osrSourceFrame && osrSourceFrame->isDebuggee();
+  return BaselineCompile(cx, script, forceDebugInstrumentation);
 }
 
 MethodStatus jit::CanEnterBaselineAtBranch(JSContext* cx,
                                            InterpreterFrame* fp) {
   if (!CheckFrame(fp)) {
     return Method_CantCompile;
-  }
-
-  // This check is needed in the following corner case. Consider a function h,
-  //
-  //   function h(x) {
-  //      if (!x)
-  //        return;
-  //      h(false);
-  //      for (var i = 0; i < N; i++)
-  //         /* do stuff */
-  //   }
-  //
-  // Suppose h is not yet compiled in baseline and is executing in the
-  // interpreter. Let this interpreter frame be f_older. The debugger marks
-  // f_older as isDebuggee. At the point of the recursive call h(false), h is
-  // compiled in baseline without debug instrumentation, pushing a baseline
-  // frame f_newer. The debugger never flags f_newer as isDebuggee, and never
-  // recompiles h. When the recursive call returns and execution proceeds to
-  // the loop, the interpreter attempts to OSR into baseline. Since h is
-  // already compiled in baseline, execution jumps directly into baseline
-  // code. This is incorrect as h's baseline script does not have debug
-  // instrumentation.
-  if (fp->isDebuggee() &&
-      !Debugger::ensureExecutionObservabilityOfOsrFrame(cx, fp)) {
-    return Method_Error;
   }
 
   RootedScript script(cx, fp->script());
@@ -323,7 +325,7 @@ MethodStatus jit::CanEnterBaselineMethod(JSContext* cx, RunState& state) {
   }
 
   RootedScript script(cx, state.script());
-  return CanEnterBaselineJIT(cx, script, /* osrFrame = */ nullptr);
+  return CanEnterBaselineJIT(cx, script, /* osrSourceFrame = */ nullptr);
 };
 
 BaselineScript* BaselineScript::New(
