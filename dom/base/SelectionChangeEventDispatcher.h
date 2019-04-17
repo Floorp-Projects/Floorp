@@ -18,6 +18,7 @@ class nsRange;
 namespace mozilla {
 
 namespace dom {
+class Document;
 class Selection;
 }
 
