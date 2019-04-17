@@ -71,6 +71,7 @@ class GeckoEngineTest {
         `when`(runtimeSettings.automaticFontSizeAdjustment).thenReturn(true)
         `when`(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
         `when`(runtimeSettings.preferredColorScheme).thenReturn(GeckoRuntimeSettings.COLOR_SCHEME_SYSTEM)
+        `when`(runtimeSettings.autoplayDefault).thenReturn(GeckoRuntimeSettings.AUTOPLAY_DEFAULT_ALLOWED)
         `when`(runtime.settings).thenReturn(runtimeSettings)
         val engine = GeckoEngine(context, runtime = runtime, defaultSettings = defaultSettings)
 
@@ -97,6 +98,10 @@ class GeckoEngineTest {
         assertEquals(PreferredColorScheme.System, engine.settings.preferredColorScheme)
         engine.settings.preferredColorScheme = PreferredColorScheme.Dark
         verify(runtimeSettings).preferredColorScheme = PreferredColorScheme.Dark.toGeckoValue()
+
+        assertTrue(engine.settings.allowAutoplayMedia)
+        engine.settings.allowAutoplayMedia = false
+        verify(runtimeSettings).autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
 
         // Specifying no ua-string default should result in GeckoView's default.
         assertEquals(GeckoSession.getDefaultUserAgent(), engine.settings.userAgentString)
@@ -137,6 +142,7 @@ class GeckoEngineTest {
         `when`(runtimeSettings.javaScriptEnabled).thenReturn(true)
         `when`(runtime.settings).thenReturn(runtimeSettings)
         `when`(runtimeSettings.contentBlocking).thenReturn(contentBlockingSettings)
+        `when`(runtimeSettings.autoplayDefault).thenReturn(GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED)
 
         val engine = GeckoEngine(context,
             DefaultSettings(
@@ -147,13 +153,16 @@ class GeckoEngineTest {
                 remoteDebuggingEnabled = true,
                 testingModeEnabled = true,
                 userAgentString = "test-ua",
-                preferredColorScheme = PreferredColorScheme.Light
+                preferredColorScheme = PreferredColorScheme.Light,
+                allowAutoplayMedia = false
             ), runtime)
 
         verify(runtimeSettings).javaScriptEnabled = false
         verify(runtimeSettings).webFontsEnabled = false
         verify(runtimeSettings).automaticFontSizeAdjustment = false
         verify(runtimeSettings).remoteDebuggingEnabled = true
+        verify(runtimeSettings).autoplayDefault = GeckoRuntimeSettings.AUTOPLAY_DEFAULT_BLOCKED
+
         assertEquals(TrackingProtectionPolicy.select(
             TrackingProtectionPolicy.AD,
             TrackingProtectionPolicy.SOCIAL,
@@ -166,6 +175,7 @@ class GeckoEngineTest {
         assertTrue(engine.settings.testingModeEnabled)
         assertEquals("test-ua", engine.settings.userAgentString)
         assertEquals(PreferredColorScheme.Light, engine.settings.preferredColorScheme)
+        assertFalse(engine.settings.allowAutoplayMedia)
     }
 
     @Test

@@ -136,6 +136,11 @@ abstract class Settings {
      * [@media(prefers-color-scheme)] query.
      */
     open var preferredColorScheme: PreferredColorScheme by UnsupportedSetting()
+
+    /**
+     * Setting to control whether media is allowed to auto-play on page load.
+     */
+    open var allowAutoplayMedia: Boolean by UnsupportedSetting()
 }
 
 /**
@@ -164,7 +169,8 @@ data class DefaultSettings(
     override var remoteDebuggingEnabled: Boolean = false,
     override var supportMultipleWindows: Boolean = false,
     override var preferredColorScheme: PreferredColorScheme = PreferredColorScheme.System,
-    override var testingModeEnabled: Boolean = false
+    override var testingModeEnabled: Boolean = false,
+    override var allowAutoplayMedia: Boolean = true
 ) : Settings()
 
 class UnsupportedSetting<T> {
