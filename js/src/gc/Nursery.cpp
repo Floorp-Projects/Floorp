@@ -883,9 +883,8 @@ void js::Nursery::collect(JS::GCReason reason) {
   if (enableProfiling_ && totalTime >= profileThreshold_) {
     stats().maybePrintProfileHeaders();
 
-    fprintf(stderr, "MinorGC: %20s %5.1f%% %5lu       ",
-            JS::ExplainGCReason(reason), promotionRate * 100,
-            capacity() / 1024);
+    fprintf(stderr, "MinorGC: %20s %5.1f%% %4u        ",
+            JS::ExplainGCReason(reason), promotionRate * 100, maxChunkCount());
     printProfileDurations(profileDurations_);
 
     if (reportTenurings_) {
