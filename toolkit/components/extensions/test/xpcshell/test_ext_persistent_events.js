@@ -32,27 +32,29 @@ const SCHEMA = [
 /* global EventManager */
 const API = class extends ExtensionAPI {
   primeListener(extension, event, fire, params) {
-    let data = {wrappedJSObject: {event, params}};
-    Services.obs.notifyObservers(data, "prime-event-listener");
+    Services.obs.notifyObservers({event, params}, "prime-event-listener");
 
     const FIRE_TOPIC = `fire-${event}`;
 
-    async function listener(subject, topic, _data) {
+    async function listener(subject, topic, data) {
       try {
-        await fire.async(subject.wrappedJSObject);
+        if (subject.wrappedJSObject.waitForBackground) {
+          await fire.wakeup();
+        }
+        await fire.async(subject.wrappedJSObject.listenerArgs);
       } catch (err) {
-        Services.obs.notifyObservers(data, "listener-callback-exception");
+        Services.obs.notifyObservers({event}, "listener-callback-exception");
       }
     }
     Services.obs.addObserver(listener, FIRE_TOPIC);
 
     return {
       unregister() {
-        Services.obs.notifyObservers(data, "unregister-primed-listener");
+        Services.obs.notifyObservers({event, params}, "unregister-primed-listener");
         Services.obs.removeObserver(listener, FIRE_TOPIC);
       },
       convert(_fire) {
-        Services.obs.notifyObservers(data, "convert-event-listener");
+        Services.obs.notifyObservers({event, params}, "convert-event-listener");
         fire = _fire;
       },
     };
@@ -69,7 +71,7 @@ const API = class extends ExtensionAPI {
             event: "onEvent1",
           },
           register: (fire, ...params) => {
-            let data = {wrappedJSObject: {event: "onEvent1", params}};
+            let data = {event: "onEvent1", params};
             Services.obs.notifyObservers(data, "register-event-listener");
             return () => {
               Services.obs.notifyObservers(data, "unregister-event-listener");
@@ -85,7 +87,7 @@ const API = class extends ExtensionAPI {
             event: "onEvent2",
           },
           register: (fire, ...params) => {
-            let data = {wrappedJSObject: {event: "onEvent2", params}};
+            let data = {event: "onEvent2", params};
             Services.obs.notifyObservers(data, "register-event-listener");
             return () => {
               Services.obs.notifyObservers(data, "unregister-event-listener");
@@ -252,14 +254,13 @@ add_task(async function() {
 
   // Check that when the event is triggered, all the plumbing worked
   // correctly for the primed-then-converted listener.
-  let eventDetails = {test: "kaboom"};
-  let eventSubject = {wrappedJSObject: eventDetails};
-  Services.obs.notifyObservers(eventSubject, "fire-onEvent1");
+  let listenerArgs = {test: "kaboom"};
+  Services.obs.notifyObservers({listenerArgs}, "fire-onEvent1");
 
   let details = await extension.awaitMessage("listener1");
-  deepEqual(details, eventDetails, "Listener 1 fired");
+  deepEqual(details, listenerArgs, "Listener 1 fired");
   details = await extension.awaitMessage("listener2");
-  deepEqual(details, eventDetails, "Listener 2 fired");
+  deepEqual(details, listenerArgs, "Listener 2 fired");
 
   // Check that the converted listener is properly unregistered at
   // browser shutdown.
@@ -280,14 +281,14 @@ add_task(async function() {
   // causes the background page to be loaded and the listener to be converted,
   // and the listener is invoked.
   p = promiseObservable("convert-event-listener", 3);
-  eventDetails.test = "startup event";
-  Services.obs.notifyObservers(eventSubject, "fire-onEvent2");
+  listenerArgs.test = "startup event";
+  Services.obs.notifyObservers({listenerArgs}, "fire-onEvent2");
   info = await p;
 
   check(info, "convert");
 
   details = await extension.awaitMessage("listener3");
-  deepEqual(details, eventDetails, "Listener 3 fired for event during startup");
+  deepEqual(details, listenerArgs, "Listener 3 fired for event during startup");
 
   await extension.awaitMessage("ready");
 
@@ -320,10 +321,10 @@ add_task(async function() {
   check(info, "unregister", {listener1: false, listener3: false});
 
   // Just listener1 should be registered now, fire event1 to confirm.
-  eventDetails.test = "third time";
-  Services.obs.notifyObservers(eventSubject, "fire-onEvent1");
+  listenerArgs.test = "third time";
+  Services.obs.notifyObservers({listenerArgs}, "fire-onEvent1");
   details = await extension.awaitMessage("listener1");
-  deepEqual(details, eventDetails, "Listener 1 fired");
+  deepEqual(details, listenerArgs, "Listener 1 fired");
 
   // Tell the extension not to re-register listener1 on the next startup
   extension.sendMessage("unregister1");
@@ -341,7 +342,7 @@ add_task(async function() {
   // Check that firing event1 causes the listener fire callback to
   // reject.
   p = promiseObservable("listener-callback-exception", 1);
-  Services.obs.notifyObservers(eventSubject, "fire-onEvent1");
+  Services.obs.notifyObservers({listenerArgs, waitForBackground: true}, "fire-onEvent1");
   await p;
   ok(true, "Primed listener that was not re-registered received an error when event was triggered during startup");
 
