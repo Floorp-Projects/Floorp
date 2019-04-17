@@ -213,7 +213,7 @@ pref("extensions.update.background.url", "https://versioncheck-bg.addons.mozilla
 /* preferences for the Get Add-ons pane */
 pref("extensions.getAddons.cache.enabled", true);
 pref("extensions.getAddons.search.browseURL", "https://addons.mozilla.org/%LOCALE%/android/search?q=%TERMS%&platform=%OS%&appver=%VERSION%");
-pref("extensions.getAddons.browseAddons", "https://addons.mozilla.org/%LOCALE%/android/");
+pref("extensions.getAddons.browseAddons", "https://addons.mozilla.org/%LOCALE%/firefox/collections/4757633/mob/");
 pref("extensions.getAddons.get.url", "https://services.addons.mozilla.org/api/v3/addons/search/?guid=%IDS%&lang=%LOCALE%");
 pref("extensions.getAddons.compatOverides.url", "https://services.addons.mozilla.org/api/v3/addons/compat-override/?guid=%IDS%&lang=%LOCALE%");
 pref("extensions.getAddons.langpacks.url", "https://services.addons.mozilla.org/api/v3/addons/language-tools/?app=android&type=language&appversion=%VERSION%");
