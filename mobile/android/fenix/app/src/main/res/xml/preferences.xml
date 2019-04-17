@@ -33,16 +33,6 @@
             android:title="@string/preferences_search_engine" />
 
         <androidx.preference.Preference
-            android:icon="@drawable/ic_login"
-            android:key="@string/pref_key_passwords"
-            android:title="@string/preferences_passwords" />
-
-        <androidx.preference.Preference
-            android:icon="@drawable/ic_formfill"
-            android:key="@string/pref_key_credit_cards_addresses"
-            android:title="@string/preferences_credit_cards_addresses" />
-
-        <androidx.preference.Preference
             android:icon="@drawable/ic_customize"
             android:key="@string/pref_key_theme"
             android:title="@string/preferences_theme" />
@@ -63,10 +53,6 @@
             android:icon="@drawable/ic_permission"
             android:key="@string/pref_key_site_permissions"
             android:title="@string/preferences_site_permissions" />
-        <androidx.preference.Preference
-            android:icon="@drawable/ic_accessibility"
-            android:key="@string/pref_key_accessibility"
-            android:title="@string/preferences_accessibility" />
         <androidx.preference.Preference
             android:icon="@drawable/ic_language"
             android:key="@string/pref_key_language"
