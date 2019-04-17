@@ -60,7 +60,7 @@ const SearchAutocompleteProviderInternal = {
       case "engine-added":
       case "engine-changed":
       case "engine-removed":
-      case "engine-current":
+      case "engine-default":
         this._refresh();
     }
   },

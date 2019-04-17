@@ -1222,7 +1222,7 @@ EnvironmentCache.prototype = {
     this._log.trace("observe - aTopic: " + aTopic + ", aData: " + aData);
     switch (aTopic) {
       case SEARCH_ENGINE_MODIFIED_TOPIC:
-        if (aData != "engine-current") {
+        if (aData != "engine-default") {
           return;
         }
         // Record the new default search choice and send the change notification.
