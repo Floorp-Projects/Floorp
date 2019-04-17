@@ -66,6 +66,13 @@ class BackgroundPage extends HiddenExtensionPage {
       context.listenerPromises = null;
     }
 
+    if (extension.persistentListeners) {
+      // |this.extension| may be null if the extension was shut down.
+      // In that case, we still want to clear the primed listeners,
+      // but not update the persistent listeners in the startupData.
+      EventManager.clearPrimedListeners(extension, !!this.extension);
+    }
+
     extension.emit("startup");
   }
 
@@ -113,10 +120,6 @@ this.backgroundPage = class extends ExtensionAPI {
         return;
       }
       await this.build();
-      // |this.extension| may be null if the extension was shut down.
-      // In that case, we still want to clear the primed listeners,
-      // but not update the persistent listeners in the startupData.
-      EventManager.clearPrimedListeners(extension, !!this.extension);
     });
 
     // There are two ways to start the background page:
