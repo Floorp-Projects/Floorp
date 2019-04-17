@@ -38,8 +38,6 @@ SVGAnimationElement::SVGAnimationElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGAnimationElementBase(std::move(aNodeInfo)), mHrefTarget(this) {}
 
-SVGAnimationElement::~SVGAnimationElement() {}
-
 nsresult SVGAnimationElement::Init() {
   nsresult rv = SVGAnimationElementBase::Init();
   NS_ENSURE_SUCCESS(rv, rv);

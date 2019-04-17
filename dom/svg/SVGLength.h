@@ -43,15 +43,6 @@ class SVGLength {
     NS_ASSERTION(IsValid(), "Constructed an invalid length");
   }
 
-  SVGLength(const SVGLength &aOther)
-      : mValue(aOther.mValue), mUnit(aOther.mUnit) {}
-
-  SVGLength &operator=(const SVGLength &rhs) {
-    mValue = rhs.mValue;
-    mUnit = rhs.mUnit;
-    return *this;
-  }
-
   bool operator==(const SVGLength &rhs) const {
     return mValue == rhs.mValue && mUnit == rhs.mUnit;
   }

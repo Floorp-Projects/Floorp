@@ -43,8 +43,6 @@ SVGScriptElement::SVGScriptElement(
   AddMutationObserver(this);
 }
 
-SVGScriptElement::~SVGScriptElement() {}
-
 //----------------------------------------------------------------------
 // nsINode methods
 

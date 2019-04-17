@@ -88,7 +88,7 @@ class SVGSVGElement final : public SVGSVGElementBase {
       already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
       mozilla::dom::FromParser aFromParser));
 
-  ~SVGSVGElement();
+  ~SVGSVGElement() = default;
 
  public:
   // interfaces:
