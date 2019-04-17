@@ -156,6 +156,7 @@ static void TestMultiWriterQueueMT(int aWriterThreads, int aReaderThreads,
       q.AllocatedBuffersStats().mWatermark);
 }
 
+#if !defined(_M_ARM64)
 TEST(MultiWriterQueue, MultiWriterSingleReader)
 {
   // Small BufferSize, to exercize the buffer management code.
@@ -215,7 +216,9 @@ TEST(MultiWriterQueue, MultiWriterSingleReader)
   //   MultiWriterQueue<int, MultiWriterQueueDefaultBufferSize,
   //   MultiWriterQueueReaderLocking_None>>(64, 2, 2*1024*1024);
 }
+#endif
 
+#if !defined(_M_ARM64)
 TEST(MultiWriterQueue, MultiWriterMultiReader)
 {
   static_assert(
@@ -272,6 +275,7 @@ TEST(MultiWriterQueue, MultiWriterMultiReader)
       64, 32, 1024 * 1024,
       "MultiWriterQueue<int, DefaultBufferSize, Locking_Mutex>");
 }
+#endif
 
 // Single-threaded use only.
 struct DequeWrapperST {
