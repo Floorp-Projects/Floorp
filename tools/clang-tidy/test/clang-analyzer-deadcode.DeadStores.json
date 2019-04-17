@@ -1,1 +1,1 @@
-[["warning", "Value stored to 'x' is never read", "clang-analyzer-deadcode.DeadStores"], {"reliability": "medium"}]
+[["warning", "Value stored to 'x' is never read", "clang-analyzer-deadcode.DeadStores"]]

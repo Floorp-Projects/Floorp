@@ -1,1 +1,1 @@
-[["warning", "Division by zero", "clang-analyzer-core.DivideZero"], {"reliability": "high"}]
+[["warning", "Division by zero", "clang-analyzer-core.DivideZero"]]
