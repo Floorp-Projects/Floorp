@@ -77,14 +77,14 @@ add_task(async function SetDefaultEngine() {
   let deferred = PromiseUtils.defer();
   Services.obs.addObserver(function obs(subj, topic, data) {
     info("Test observed " + data);
-    if (data == "engine-current") {
-      ok(true, "Test observed engine-current");
+    if (data == "engine-default") {
+      ok(true, "Test observed engine-default");
       Services.obs.removeObserver(obs, "browser-search-engine-modified");
       deferred.resolve();
     }
   }, "browser-search-engine-modified");
   let searchPromise = waitForTestMsg(mm, "CurrentEngine");
-  info("Waiting for test to observe engine-current...");
+  info("Waiting for test to observe engine-default...");
   await deferred.promise;
   let msg = await searchPromise;
   checkMsg(msg, {

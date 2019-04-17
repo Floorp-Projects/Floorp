@@ -67,7 +67,7 @@ function promiseSetEngine() {
           ok(engine, "Engine was added.");
           ss.defaultEngine = engine;
           break;
-        case "engine-current":
+        case "engine-default":
           ok(ss.defaultEngine.name == "Bug 426329", "defaultEngine set");
           searchBar = BrowserSearch.searchBar;
           searchButton = searchBar.querySelector(".search-go-button");
