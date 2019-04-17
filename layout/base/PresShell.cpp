@@ -4245,10 +4245,9 @@ void PresShell::ContentStateChanged(Document* aDocument, nsIContent* aContent,
   }
 }
 
-void PresShell::DocumentStatesChanged(Document* aDocument,
-                                      EventStates aStateMask) {
+void PresShell::DocumentStatesChanged(EventStates aStateMask) {
   MOZ_ASSERT(!mIsDocumentGone, "Unexpected DocumentStatesChanged");
-  MOZ_ASSERT(aDocument == mDocument, "Unexpected aDocument");
+  MOZ_ASSERT(mDocument);
   MOZ_ASSERT(!aStateMask.IsEmpty());
 
   if (mDidInitialize) {
