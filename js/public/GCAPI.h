@@ -566,6 +566,14 @@ extern JS_PUBLIC_API void IncrementalGCSlice(JSContext* cx, GCReason reason,
                                              int64_t millis = 0);
 
 /**
+ * Return whether an incremental GC has work to do on the foreground thread and
+ * would make progress if a slice was run now. If this returns false then the GC
+ * is waiting for background threads to finish their work and a slice started
+ * now would return immediately.
+ */
+extern JS_PUBLIC_API bool IncrementalGCHasForegroundWork(JSContext* cx);
+
+/**
  * If IsIncrementalGCInProgress(cx), this call finishes the ongoing collection
  * by performing an arbitrarily long slice. If !IsIncrementalGCInProgress(cx),
  * this is equivalent to NonIncrementalGC. When this function returns,

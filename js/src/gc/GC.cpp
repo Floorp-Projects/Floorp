@@ -7190,6 +7190,23 @@ void GCRuntime::incrementalSlice(SliceBudget& budget, JS::GCReason reason,
   MOZ_ASSERT(marker.markColor() == MarkColor::Black);
 }
 
+bool GCRuntime::hasForegroundWork() const {
+  switch (incrementalState) {
+    case State::NotActive:
+      // Incremental GC is not running and no work is pending.
+      return false;
+    case State::Finalize:
+      // We yield in the Finalize state to wait for background sweeping.
+      return !isBackgroundSweeping();
+    case State::Decommit:
+      // We yield in the Decommit state to wait for background decommit.
+      return !decommitTask.isRunning();
+    default:
+      // In all other states there is still work to do.
+      return true;
+  }
+}
+
 gc::AbortReason gc::IsIncrementalGCUnsafe(JSRuntime* rt) {
   MOZ_ASSERT(!rt->mainContextFromOwnThread()->suppressGC);
 
@@ -8562,6 +8579,12 @@ JS_PUBLIC_API void JS::StartIncrementalGC(JSContext* cx,
 JS_PUBLIC_API void JS::IncrementalGCSlice(JSContext* cx, GCReason reason,
                                           int64_t millis) {
   cx->runtime()->gc.gcSlice(reason, millis);
+}
+
+JS_PUBLIC_API bool JS::IncrementalGCHasForegroundWork(JSContext* cx) {
+  MOZ_ASSERT(!JS::RuntimeHeapIsBusy());
+  CHECK_THREAD(cx);
+  return cx->runtime()->gc.hasForegroundWork();
 }
 
 JS_PUBLIC_API void JS::FinishIncrementalGC(JSContext* cx, GCReason reason) {
