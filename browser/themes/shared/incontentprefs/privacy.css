@@ -88,7 +88,7 @@
 /* Override styling that sets descriptions as grey */
 #trackingGroup description.indent,
 #trackingGroup .indent > description {
-  color: #000;
+  color: inherit;
 }
 
 [data-subcategory="trackingprotection"] {
@@ -101,8 +101,9 @@
 
 #trackingProtectionShield {
   list-style-image: url("chrome://browser/skin/controlcenter/tracking-protection.svg");
-  -moz-context-properties: fill;
-  fill: #737373;
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.5;
   width: 64px;
   height: 64px;
   margin-inline-end: 10px;
@@ -112,7 +113,7 @@
   border-radius: 4px;
   margin: 3px 0;
   padding: 9px;
-  border: 1px solid #D7D7DB;
+  border: 1px solid var(--in-content-border-color);
   background-color: rgba(215, 215, 219, 0.2);
 }
 
