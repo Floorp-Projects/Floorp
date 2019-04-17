@@ -4,7 +4,7 @@
 "use strict";
 
 function index(tab) {
-  return Array.indexOf(gBrowser.tabs, tab);
+  return Array.prototype.indexOf.call(gBrowser.tabs, tab);
 }
 
 async function testNewTabPosition(expectedPosition, modifiers = {}) {

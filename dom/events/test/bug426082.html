@@ -42,7 +42,7 @@ function runTests() {
 SimpleTest.waitForFocus(runTests);
 
 function isRectContainedInRectFromRegion(rect, region) {
-  return Array.some(region, function (r) {
+  return Array.prototype.some.call(region, function (r) {
     return rect.left >= r.left &&
            rect.top >= r.top &&
            rect.right <= r.right &&

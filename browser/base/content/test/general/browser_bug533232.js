@@ -32,5 +32,5 @@ function test() {
 }
 
 function idx(tab) {
-  return Array.indexOf(gBrowser.tabs, tab);
+  return Array.prototype.indexOf.call(gBrowser.tabs, tab);
 }

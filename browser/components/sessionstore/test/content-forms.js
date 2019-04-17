@@ -88,13 +88,13 @@ defineListener("setSelectedIndex", function(data) {
 
 defineListener("getMultipleSelected", function(data) {
   let input = queryElement(data);
-  return Array.map(input.options, (opt, idx) => idx)
+  return Array.from(input.options, (opt, idx) => idx)
               .filter(idx => input.options[idx].selected);
 });
 
 defineListener("setMultipleSelected", function(data) {
   let input = queryElement(data);
-  Array.forEach(input.options, (opt, idx) => opt.selected = data.indices.indexOf(idx) > -1);
+  Array.prototype.forEach.call(input.options, (opt, idx) => opt.selected = data.indices.indexOf(idx) > -1);
   dispatchUIEvent(input, "input");
 });
 

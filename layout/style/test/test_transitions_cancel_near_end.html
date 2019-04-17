@@ -39,7 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=613888
 var count_remaining = 6;
 
 window.addEventListener('load', function() {
-  var cases = Array.slice(document.querySelectorAll('#animated-elements-container > span'));
+  var cases = Array.from(document.querySelectorAll('#animated-elements-container > span'));
 
   cases.forEach(function(aTarget) {
     aTarget.addEventListener('transitionend', function(aEvent) {

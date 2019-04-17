@@ -123,7 +123,7 @@ class AboutConfigTest {
    */
   get rows() {
     let elements = this.prefsTable.querySelectorAll("tr:not(.hidden)");
-    return Array.map(elements, element => new AboutConfigRowTest(element));
+    return Array.from(elements, element => new AboutConfigRowTest(element));
   }
 
   /**

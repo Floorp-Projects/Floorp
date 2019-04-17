@@ -226,9 +226,9 @@ async function assertMixedContentBlockingState(tabbrowser, states = {}) {
     let promiseViewShown = BrowserTestUtils.waitForEvent(gIdentityHandler._identityPopup, "ViewShown");
     doc.getElementById("identity-popup-security-expander").click();
     await promiseViewShown;
-    is(Array.filter(doc.getElementById("identity-popup-securityView")
-                       .querySelectorAll(".identity-popup-mcb-learn-more"),
-                    element => !BrowserTestUtils.is_hidden(element)).length, 1,
+    is(Array.prototype.filter.call(doc.getElementById("identity-popup-securityView")
+                                      .querySelectorAll(".identity-popup-mcb-learn-more"),
+                                   element => !BrowserTestUtils.is_hidden(element)).length, 1,
        "The 'Learn more' link should be visible once.");
   }
 

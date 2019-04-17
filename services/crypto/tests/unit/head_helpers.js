@@ -69,5 +69,5 @@ addResourceAlias();
  * @usage _(1, 2, 3) -> prints "1 2 3"
  */
 var _ = function(some, debug, text, to) {
-  print(Array.slice(arguments).join(" "));
+  print(Array.from(arguments).join(" "));
 };

@@ -146,7 +146,7 @@ add_task(async function test_hiddenPageActionContextMenu() {
   await extension.awaitMessage("ready");
 
   const menu = await openContextMenuInPageActionPanel(extension);
-  const menuItems = Array.filter(menu.children, node => {
+  const menuItems = Array.prototype.filter.call(menu.children, node => {
     return window.getComputedStyle(node).visibility == "visible";
   });
 

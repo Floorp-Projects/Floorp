@@ -40,8 +40,8 @@ async function spawnTest() {
   let markers = PerformanceController.getCurrentRecording().getMarkers();
 
   info(`Got ${bars.length} bars and ${markers.length} markers.`);
-  info("Markers types from datasrc: " + Array.map(markers, e => e.name));
-  info("Markers names from sidebar: " + Array.map(bars, e => e.parentNode.parentNode.querySelector(".waterfall-marker-name").getAttribute("value")));
+  info("Markers types from datasrc: " + Array.from(markers, e => e.name));
+  info("Markers names from sidebar: " + Array.from(bars, e => e.parentNode.parentNode.querySelector(".waterfall-marker-name").getAttribute("value")));
 
   ok(bars.length > 2, "Got at least 3 markers (1)");
   ok(markers.length > 2, "Got at least 3 markers (2)");

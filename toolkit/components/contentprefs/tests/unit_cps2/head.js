@@ -279,7 +279,7 @@ function onEx(event, names, dontRemove) {
       obs[meth] = () => do_throw(meth + " should not be called for " + name);
     });
     obs["onContentPref" + event] = function() {
-      args[name].push(Array.slice(arguments));
+      args[name].push(Array.from(arguments));
 
       if (!triggered) {
         triggered = true;
