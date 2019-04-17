@@ -184,6 +184,8 @@ class IProtocol : public HasResultCodes {
                                         nsIEventTarget* aEventTarget) = 0;
     virtual void ReplaceEventTargetForActor(IProtocol* aActor,
                                             nsIEventTarget* aEventTarget) = 0;
+    virtual void SetEventTargetForRoute(int32_t aRoute,
+                                        nsIEventTarget* aEventTarget) = 0;
 
     virtual already_AddRefed<nsIEventTarget> GetActorEventTarget(
         IProtocol* aActor) = 0;
@@ -226,6 +228,8 @@ class IProtocol : public HasResultCodes {
                                 nsIEventTarget* aEventTarget) override;
     void ReplaceEventTargetForActor(IProtocol* aActor,
                                     nsIEventTarget* aEventTarget) override;
+    void SetEventTargetForRoute(int32_t aRoute,
+                                nsIEventTarget* aEventTarget) override;
     already_AddRefed<nsIEventTarget> GetActorEventTarget(
         IProtocol* aActor) override;
 
@@ -320,6 +324,8 @@ class IProtocol : public HasResultCodes {
   // unexpected behavior.
   void ReplaceEventTargetForActor(IProtocol* aActor,
                                   nsIEventTarget* aEventTarget);
+
+  void SetEventTargetForRoute(int32_t aRoute, nsIEventTarget* aEventTarget);
 
   nsIEventTarget* GetActorEventTarget();
   already_AddRefed<nsIEventTarget> GetActorEventTarget(IProtocol* aActor);
@@ -427,6 +433,8 @@ class IToplevelProtocol : public IProtocol {
                                 nsIEventTarget* aEventTarget) override;
     void ReplaceEventTargetForActor(IProtocol* aActor,
                                     nsIEventTarget* aEventTarget) override;
+    void SetEventTargetForRoute(int32_t aRoute,
+                                nsIEventTarget* aEventTarget) override;
     already_AddRefed<nsIEventTarget> GetActorEventTarget(
         IProtocol* aActor) override;
 

@@ -143,7 +143,7 @@ tests.push(
       function onResolve() {
         // Since this file is in strict mode, the correct value is "undefined".
         Assert.equal(this, undefined);
-        throw "reject";
+        throw new Error("reject");
       }
     ).then(
       null,
@@ -715,7 +715,7 @@ tests.push(
 tests.push(
   make_promise_test(function all_iterable_throws(test) {
     function* iterable() {
-      throw 1;
+      throw new Error(1);
     }
 
     return Promise.all(iterable()).then(
@@ -723,7 +723,7 @@ tests.push(
         do_throw("all() unexpectedly resolved");
       },
       function onReject(reason) {
-        Assert.equal(reason, 1, "all() rejects when the iterator throws");
+        Assert.equal(reason.message, 1, "all() rejects when the iterator throws");
       }
     );
   }));
@@ -800,7 +800,7 @@ tests.push(
 tests.push(
   make_promise_test(function race_iterable_throws(test) {
     function* iterable() {
-      throw 1;
+      throw new Error(1);
     }
 
     return Promise.race(iterable()).then(
@@ -808,7 +808,7 @@ tests.push(
         do_throw("race() unexpectedly resolved");
       },
       function onReject(reason) {
-        Assert.equal(reason, 1, "race() rejects when the iterator throws");
+        Assert.equal(reason.message, 1, "race() rejects when the iterator throws");
       }
     );
   }));
@@ -886,7 +886,7 @@ tests.push(
     // throw from the executor, causing a rejection
     let throwPromise = new Promise(
       function executor() {
-        throw 1;
+        throw 1; // eslint-disable-line no-throw-literal
       }
     ).then(
       function onResolve() {

@@ -193,7 +193,7 @@ section:not(.active) {
   display: flex;
   padding: 24px;
   flex-direction: column;
-  background-color: white;
+  background-color: var(--in-content-box-background);
   border: 1px solid var(--in-content-box-border-color);
   margin: 12px 0px;
 }

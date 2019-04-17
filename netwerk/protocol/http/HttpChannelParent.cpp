@@ -808,6 +808,12 @@ mozilla::ipc::IPCResult HttpChannelParent::RecvResume() {
 mozilla::ipc::IPCResult HttpChannelParent::RecvCancel(const nsresult& status) {
   LOG(("HttpChannelParent::RecvCancel [this=%p]\n", this));
 
+  // Don't cancel our channel if we're doing a CrossProcessRedirect.
+  if (mDoingCrossProcessRedirect) {
+    LOG(("Child was cancelled for cross-process redirect. Skip Cancel()."));
+    return IPC_OK();
+  }
+
   // May receive cancel before channel has been constructed!
   if (mChannel) {
     mChannel->Cancel(status);

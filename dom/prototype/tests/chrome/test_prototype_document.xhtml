@@ -1,0 +1,66 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<window title="Test prototype document"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/AddTask.js"></script>
+  <script><![CDATA[
+    SimpleTest.waitForExplicitFinish();
+  ]]></script>
+  <browser type="chrome" id="browser" flex="1"/>
+  <body xmlns="http://www.w3.org/1999/xhtml">
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+
+
+<script><![CDATA[
+
+async function load(frame, url) {
+  return new Promise((resolve) => {
+    frame.addEventListener("load", () => {
+      resolve();
+    }, {once: true});
+
+    if (frame.src === url) {
+      frame.reload();
+    } else {
+      frame.src = url;
+    }
+  });
+}
+
+// Load a file with and without the prototype document cache enabled.
+async function compare(filename) {
+  let browser = document.getElementById("browser");
+  // Load the page with no prototype document cache (the regular loading flow of
+  // an XHTML page).
+  await SpecialPowers.pushPrefEnv({ set: [["dom.prototype_document_cache.enabled", false]] });
+  await load(browser, filename);
+  ok(!browser.contentDocument.loadedFromPrototype, `${filename} should not use prototype.`);
+  const contentWithoutPrototype = browser.contentDocument.documentElement.outerHTML;
+
+  // Load the page with the prototype document cache enabled. The prototype should
+  // be built from the source file.
+  await SpecialPowers.pushPrefEnv({ set: [["dom.prototype_document_cache.enabled", true]] });
+  await load(browser, filename);
+  ok(browser.contentDocument.loadedFromPrototype, `${filename} should load from prototype.`);
+  const contentWithPrototype = browser.contentDocument.documentElement.outerHTML;
+  is(contentWithPrototype, contentWithoutPrototype, `${filename} document contents should be the same.`);
+}
+
+add_task(async function test_prototype_document() {
+  await compare("no_whitespace.xhtml");
+  await compare("whitespace.xhtml");
+  // TODO: Test whitespace within XUL elements, since it is handled differently
+  // with and without the prototype sink (bug 1544567).
+});
+]]></script>
+</body>
+</window>

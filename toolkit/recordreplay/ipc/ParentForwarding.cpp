@@ -35,7 +35,7 @@ static bool HandleMessageInMiddleman(ipc::Side aSide,
   // Handle messages that should be sent to both the middleman and the
   // child process.
   if (  // Initialization that must be performed in both processes.
-      type == dom::PContent::Msg_PBrowserConstructor__ID ||
+      type == dom::PContent::Msg_ConstructBrowser__ID ||
       type == dom::PContent::Msg_RegisterBrowsingContextGroup__ID ||
       type == dom::PContent::Msg_RegisterChrome__ID ||
       type == dom::PContent::Msg_SetXPCOMProcessAttributes__ID ||

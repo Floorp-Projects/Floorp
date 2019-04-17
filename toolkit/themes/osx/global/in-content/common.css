@@ -75,6 +75,9 @@ textbox[type="search"] {
 }
 
 xul|textbox[type="search"] > moz-input-box > .textbox-search-sign {
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
   list-style-image: url(chrome://global/skin/icons/search-textbox.svg);
   margin-inline-end: 5px;
 }

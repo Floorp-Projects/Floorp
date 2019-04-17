@@ -349,7 +349,8 @@ async def manage_partial(partial_def, filename_template, artifacts_dir,
         with ddstats.timer('mar.unpack.time'):
             await unpack(work_env, dest, unpack_dir)
 
-        check_channels_in_files.append(dest)
+        if mar_type == 'to':
+            check_channels_in_files.append(dest)
 
         if mar_type == 'from':
             version = get_option(unpack_dir, filename="application.ini",

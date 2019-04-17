@@ -134,17 +134,17 @@ add_task(async function log_message_with_params() {
 
   // Fall back to .toSource() if JSON.stringify() fails on an object.
   ob = function() {};
-  ob.toJSON = function() {throw "oh noes JSON";};
+  ob.toJSON = function() {throw new Error("oh noes JSON");};
   Assert.equal(formatMessage("Fail is ${sub}", {sub: ob}),
                "Fail is (function() {})");
 
   // Fall back to .toString if both .toJSON and .toSource fail.
-  ob.toSource = function() {throw "oh noes SOURCE";};
+  ob.toSource = function() {throw new Error("oh noes SOURCE");};
   Assert.equal(formatMessage("Fail is ${sub}", {sub: ob}),
                "Fail is function() {}");
 
   // Fall back to '[object]' if .toJSON, .toSource and .toString fail.
-  ob.toString = function() {throw "oh noes STRING";};
+  ob.toString = function() {throw new Error("oh noes STRING");};
   Assert.equal(formatMessage("Fail is ${sub}", {sub: ob}),
                "Fail is [object]");
 
@@ -208,9 +208,9 @@ add_task(async function log_message_with_params() {
   // We use object.valueOf() internally; make sure a broken valueOf() method
   // doesn't cause the logger to fail.
   /* eslint-disable object-shorthand */
-  let vOf = {a: 1, valueOf: function() {throw "oh noes valueOf";}};
+  let vOf = {a: 1, valueOf: function() {throw new Error("oh noes valueOf");}};
   Assert.equal(formatMessage("Broken valueOf ${}", vOf),
-               'Broken valueOf ({a:1, valueOf:(function() {throw "oh noes valueOf";})})');
+               'Broken valueOf ({a:1, valueOf:(function() {throw new Error("oh noes valueOf");})})');
   /* eslint-enable object-shorthand */
 
   // Test edge cases of bad data to formatter:

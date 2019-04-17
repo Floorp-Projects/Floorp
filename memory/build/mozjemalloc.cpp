@@ -1330,11 +1330,9 @@ static bool base_pages_alloc(size_t minsize) {
   // have to be immediately recommitted.
   pminsize = PAGE_CEILING(minsize);
   base_next_decommitted = (void*)((uintptr_t)base_pages + pminsize);
-#if defined(MALLOC_DECOMMIT)
   if (pminsize < csize) {
     pages_decommit(base_next_decommitted, csize - pminsize);
   }
-#endif
   base_mapped += csize;
   base_committed += pminsize;
 
@@ -1362,13 +1360,12 @@ static void* base_alloc(size_t aSize) {
   if ((uintptr_t)base_next_addr > (uintptr_t)base_next_decommitted) {
     void* pbase_next_addr = (void*)(PAGE_CEILING((uintptr_t)base_next_addr));
 
-#ifdef MALLOC_DECOMMIT
     if (!pages_commit(
             base_next_decommitted,
             (uintptr_t)pbase_next_addr - (uintptr_t)base_next_decommitted)) {
       return nullptr;
     }
-#endif
+
     base_committed +=
         (uintptr_t)pbase_next_addr - (uintptr_t)base_next_decommitted;
     base_next_decommitted = pbase_next_addr;

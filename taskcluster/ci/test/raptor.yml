@@ -347,6 +347,21 @@ raptor-tp6m-2-geckoview:
             - --binary=org.mozilla.geckoview_example
             - --activity=GeckoViewActivity
 
+raptor-tp6m-2-refbrow:
+    description: "Raptor tp6m-2 on the reference browser"
+    treeherder-symbol: Rap-refbrow(tp6m-2)
+    run-on-projects: ['try']
+    target:
+        index: project.mobile.reference-browser.signed-nightly.nightly.latest
+        name: target.arm.apk
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-2
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser
+            - --activity=BrowserTestActivity
+
 raptor-tp6m-3-geckoview:
     description: "Raptor tp6m-3 on Geckoview"
     try-name: raptor-tp6m-3-geckoview
@@ -360,6 +375,21 @@ raptor-tp6m-3-geckoview:
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
 
+raptor-tp6m-3-refbrow:
+    description: "Raptor tp6m-3 on the reference browser"
+    treeherder-symbol: Rap-refbrow(tp6m-3)
+    run-on-projects: ['try']
+    target:
+        index: project.mobile.reference-browser.signed-nightly.nightly.latest
+        name: target.arm.apk
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-3
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser
+            - --activity=BrowserTestActivity
+
 raptor-tp6m-4-geckoview:
     description: "Raptor tp6m-4 on Geckoview"
     try-name: raptor-tp6m-4-geckoview
@@ -372,6 +402,21 @@ raptor-tp6m-4-geckoview:
             - --test=raptor-tp6m-4
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
+
+raptor-tp6m-4-refbrow:
+    description: "Raptor tp6m-4 on the reference browser"
+    treeherder-symbol: Rap-refbrow(tp6m-4)
+    run-on-projects: ['try']
+    target:
+        index: project.mobile.reference-browser.signed-nightly.nightly.latest
+        name: target.arm.apk
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-4
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser
+            - --activity=BrowserTestActivity
 
 raptor-tp6m-5-geckoview:
     description: "Raptor tp6m-5 on Geckoview"
@@ -392,6 +437,21 @@ raptor-tp6m-5-geckoview:
             - --binary=org.mozilla.geckoview_example
             - --activity=GeckoViewActivity
 
+raptor-tp6m-5-refbrow:
+    description: "Raptor tp6m-5 on the reference browser"
+    treeherder-symbol: Rap-refbrow(tp6m-5)
+    run-on-projects: ['try']
+    target:
+        index: project.mobile.reference-browser.signed-nightly.nightly.latest
+        name: target.arm.apk
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-5
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser
+            - --activity=BrowserTestActivity
+
 raptor-tp6m-6-geckoview:
     description: "Raptor tp6m-6 on Geckoview"
     try-name: raptor-tp6m-6-geckoview
@@ -410,6 +470,21 @@ raptor-tp6m-6-geckoview:
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
 
+raptor-tp6m-6-refbrow:
+    description: "Raptor tp6m-6 on the reference browser"
+    treeherder-symbol: Rap-refbrow(tp6m-6)
+    run-on-projects: ['try']
+    target:
+        index: project.mobile.reference-browser.signed-nightly.nightly.latest
+        name: target.arm.apk
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-6
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser
+            - --activity=BrowserTestActivity
+
 raptor-tp6m-7-geckoview:
     description: "Raptor tp6m-7 on Geckoview"
     try-name: raptor-tp6m-7-geckoview
@@ -423,6 +498,21 @@ raptor-tp6m-7-geckoview:
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=GeckoViewActivity
+
+raptor-tp6m-7-refbrow:
+    description: "Raptor tp6m-7 on the reference browser"
+    treeherder-symbol: Rap-refbrow(tp6m-7)
+    run-on-projects: ['try']
+    target:
+        index: project.mobile.reference-browser.signed-nightly.nightly.latest
+        name: target.arm.apk
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-7
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser
+            - --activity=BrowserTestActivity
 
 raptor-tp6m-8-geckoview:
     description: "Raptor tp6m-8 on Geckoview"
@@ -442,6 +532,21 @@ raptor-tp6m-8-geckoview:
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
 
+raptor-tp6m-8-refbrow:
+    description: "Raptor tp6m-8 on the reference browser"
+    treeherder-symbol: Rap-refbrow(tp6m-8)
+    run-on-projects: ['try']
+    target:
+        index: project.mobile.reference-browser.signed-nightly.nightly.latest
+        name: target.arm.apk
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-8
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser
+            - --activity=BrowserTestActivity
+
 raptor-tp6m-9-geckoview:
     description: "Raptor tp6m-9 on Geckoview"
     try-name: raptor-tp6m-9-geckoview
@@ -456,6 +561,21 @@ raptor-tp6m-9-geckoview:
             - --binary=org.mozilla.geckoview_example
             - --activity=GeckoViewActivity
 
+raptor-tp6m-9-refbrow:
+    description: "Raptor tp6m-9 on the reference browser"
+    treeherder-symbol: Rap-refbrow(tp6m-9)
+    run-on-projects: ['try']
+    target:
+        index: project.mobile.reference-browser.signed-nightly.nightly.latest
+        name: target.arm.apk
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-9
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser
+            - --activity=BrowserTestActivity
+
 raptor-tp6m-10-geckoview:
     description: "Raptor tp6m-10 on Geckoview"
     try-name: raptor-tp6m-10-geckoview
@@ -469,6 +589,21 @@ raptor-tp6m-10-geckoview:
             - --app=geckoview
             - --binary=org.mozilla.geckoview_example
             - --activity=GeckoViewActivity
+
+raptor-tp6m-10-refbrow:
+    description: "Raptor tp6m-10 on the reference browser"
+    treeherder-symbol: Rap-refbrow(tp6m-10)
+    run-on-projects: ['try']
+    target:
+        index: project.mobile.reference-browser.signed-nightly.nightly.latest
+        name: target.arm.apk
+    tier: 2
+    mozharness:
+        extra-options:
+            - --test=raptor-tp6m-10
+            - --app=refbrow
+            - --binary-path=org.mozilla.reference.browser
+            - --activity=BrowserTestActivity
 
 raptor-tp6m-1-fennec:
     description: "Raptor tp6m-1 on Fennec"

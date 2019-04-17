@@ -54,6 +54,7 @@ function testEmitter(emitter) {
   function testThrowingExceptionInListener() {
     function throwListener() {
       emitter.off("throw-exception");
+      // eslint-disable-next-line no-throw-literal
       throw {
         toString: () => "foo",
         stack: "bar",
