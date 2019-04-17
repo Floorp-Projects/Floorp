@@ -1515,15 +1515,30 @@ WebConsoleActor.prototype =
       }
     }
 
+    // If there is no location information in the error but we have a stack,
+    // fill in the location with the first frame on the stack.
+    let {
+      sourceName,
+      sourceId,
+      lineNumber,
+      columnNumber,
+    } = pageError;
+    if (!sourceName && !sourceId && !lineNumber && !columnNumber && stack) {
+      sourceName = stack[0].filename;
+      sourceId = stack[0].sourceId;
+      lineNumber = stack[0].lineNumber;
+      columnNumber = stack[0].columnNumber;
+    }
+
     return {
       errorMessage: this._createStringGrip(pageError.errorMessage),
       errorMessageName: pageError.errorMessageName,
       exceptionDocURL: ErrorDocs.GetURL(pageError),
-      sourceName: pageError.sourceName,
-      sourceId: this.getActorIdForInternalSourceId(pageError.sourceId),
-      lineText: lineText,
-      lineNumber: pageError.lineNumber,
-      columnNumber: pageError.columnNumber,
+      sourceName,
+      sourceId: this.getActorIdForInternalSourceId(sourceId),
+      lineText,
+      lineNumber,
+      columnNumber,
       category: pageError.category,
       innerWindowID: pageError.innerWindowID,
       timeStamp: pageError.timeStamp,

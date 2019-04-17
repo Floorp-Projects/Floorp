@@ -114,7 +114,8 @@ bool nsJSPrincipals::ReadPrincipals(JSContext* aCx,
 
   if (!(tag == SCTAG_DOM_NULL_PRINCIPAL || tag == SCTAG_DOM_SYSTEM_PRINCIPAL ||
         tag == SCTAG_DOM_CONTENT_PRINCIPAL ||
-        tag == SCTAG_DOM_EXPANDED_PRINCIPAL)) {
+        tag == SCTAG_DOM_EXPANDED_PRINCIPAL ||
+        tag == SCTAG_DOM_WORKER_PRINCIPAL)) {
     xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
     return false;
   }
@@ -286,6 +287,19 @@ static bool ReadPrincipalInfo(JSStructuredCloneReader* aReader, uint32_t aTag,
   return true;
 }
 
+static StaticRefPtr<nsIPrincipal> sActiveWorkerPrincipal;
+
+nsJSPrincipals::AutoSetActiveWorkerPrincipal::AutoSetActiveWorkerPrincipal
+    (nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(!sActiveWorkerPrincipal);
+  sActiveWorkerPrincipal = aPrincipal;
+}
+
+nsJSPrincipals::AutoSetActiveWorkerPrincipal::~AutoSetActiveWorkerPrincipal() {
+  sActiveWorkerPrincipal = nullptr;
+}
+
 /* static */
 bool nsJSPrincipals::ReadKnownPrincipalType(JSContext* aCx,
                                             JSStructuredCloneReader* aReader,
@@ -294,11 +308,24 @@ bool nsJSPrincipals::ReadKnownPrincipalType(JSContext* aCx,
   MOZ_ASSERT(aTag == SCTAG_DOM_NULL_PRINCIPAL ||
              aTag == SCTAG_DOM_SYSTEM_PRINCIPAL ||
              aTag == SCTAG_DOM_CONTENT_PRINCIPAL ||
-             aTag == SCTAG_DOM_EXPANDED_PRINCIPAL);
+             aTag == SCTAG_DOM_EXPANDED_PRINCIPAL ||
+             aTag == SCTAG_DOM_WORKER_PRINCIPAL);
 
   if (NS_WARN_IF(!NS_IsMainThread())) {
     xpc::Throw(aCx, NS_ERROR_UNCATCHABLE_EXCEPTION);
     return false;
+  }
+
+  if (aTag == SCTAG_DOM_WORKER_PRINCIPAL) {
+    // When reading principals which were written on a worker thread, we need to
+    // know the principal of the worker which did the write.
+    if (!sActiveWorkerPrincipal) {
+      xpc::Throw(aCx, NS_ERROR_DOM_DATA_CLONE_ERR);
+      return false;
+    }
+    RefPtr<nsJSPrincipals> retval = get(sActiveWorkerPrincipal);
+    retval.forget(aOutPrincipals);
+    return true;
   }
 
   PrincipalInfo info;

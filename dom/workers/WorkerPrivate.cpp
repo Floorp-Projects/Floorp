@@ -4048,18 +4048,27 @@ void WorkerPrivate::ReportError(JSContext* aCx,
     // for lack of anything better.
     exn.setNull();
   }
+  JS::RootedObject exnStack(aCx, JS::GetPendingExceptionStack(aCx));
   JS_ClearPendingException(aCx);
 
-  WorkerErrorReport report;
+  UniquePtr<WorkerErrorReport> report = MakeUnique<WorkerErrorReport>(this);
   if (aReport) {
-    report.AssignErrorReport(aReport);
+    report->AssignErrorReport(aReport);
   } else {
-    report.mFlags = nsIScriptError::errorFlag | nsIScriptError::exceptionFlag;
+    report->mFlags = nsIScriptError::errorFlag | nsIScriptError::exceptionFlag;
   }
 
-  if (report.mMessage.IsEmpty() && aToStringResult) {
+  JS::RootedObject stack(aCx), stackGlobal(aCx);
+  xpc::FindExceptionStackForConsoleReport(nullptr, exn, exnStack, &stack, &stackGlobal);
+
+  if (stack) {
+    JS::RootedValue stackValue(aCx, JS::ObjectValue(*stack));
+    report->Write(aCx, stackValue, IgnoreErrors());
+  }
+
+  if (report->mMessage.IsEmpty() && aToStringResult) {
     nsDependentCString toStringResult(aToStringResult.c_str());
-    if (!AppendUTF8toUTF16(toStringResult, report.mMessage,
+    if (!AppendUTF8toUTF16(toStringResult, report->mMessage,
                            mozilla::fallible)) {
       // Try again, with only a 1 KB string. Do this infallibly this time.
       // If the user doesn't have 1 KB to spare we're done anyways.
@@ -4070,7 +4079,7 @@ void WorkerPrivate::ReportError(JSContext* aCx,
 
       nsDependentCString truncatedToStringResult(aToStringResult.c_str(),
                                                  index);
-      AppendUTF8toUTF16(truncatedToStringResult, report.mMessage);
+      AppendUTF8toUTF16(truncatedToStringResult, report->mMessage);
     }
   }
 
@@ -4079,11 +4088,11 @@ void WorkerPrivate::ReportError(JSContext* aCx,
   // Don't want to run the scope's error handler if this is a recursive error or
   // if we ran out of memory.
   bool fireAtScope = data->mErrorHandlerRecursionCount == 1 &&
-                     report.mErrorNumber != JSMSG_OUT_OF_MEMORY &&
+                     report->mErrorNumber != JSMSG_OUT_OF_MEMORY &&
                      JS::CurrentGlobalOrNull(aCx);
 
-  WorkerErrorReport::ReportError(aCx, this, fireAtScope, nullptr, report, 0,
-                                 exn);
+  WorkerErrorReport::ReportError(aCx, this, fireAtScope,
+                                 nullptr, std::move(report), 0, exn);
 
   data->mErrorHandlerRecursionCount--;
 }
