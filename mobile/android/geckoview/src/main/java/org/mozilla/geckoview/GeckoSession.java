@@ -10,6 +10,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.ref.WeakReference;
 import java.util.AbstractSequentialList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
@@ -334,12 +335,27 @@ public class GeckoSession implements Parcelable {
         };
 
     private final class WebExtensionListener implements BundleEventListener {
+        final private HashMap<String, WebExtension.MessageDelegate> mMessageDelegates;
+
+        public WebExtensionListener() {
+            mMessageDelegates = new HashMap<>();
+        }
+
         /* package */ void registerListeners() {
             getEventDispatcher().registerUiThreadListener(this,
                     "GeckoView:WebExtension:Message",
                     "GeckoView:WebExtension:PortMessage",
                     "GeckoView:WebExtension:Connect",
                     null);
+        }
+
+        public void setDelegate(final WebExtension.MessageDelegate delegate,
+                                final String nativeApp) {
+            mMessageDelegates.put(nativeApp, delegate);
+        }
+
+        public WebExtension.MessageDelegate getDelegate(final String nativeApp) {
+            return mMessageDelegates.get(nativeApp);
         }
 
         @Override
@@ -359,6 +375,45 @@ public class GeckoSession implements Parcelable {
     }
 
     private final WebExtensionListener mWebExtensionListener;
+
+    /**
+     * Get the message delegate for <code>nativeApp</code>.
+     *
+     * @param nativeApp identifier for the native app
+     * @return The {@link WebExtension.MessageDelegate} attached to the
+     *         <code>nativeApp</code>.  <code>null</code> if no delegate is
+     *         present.
+     */
+    @AnyThread
+    public @Nullable WebExtension.MessageDelegate getMessageDelegate(
+            final @NonNull String nativeApp) {
+        return mWebExtensionListener.getDelegate(nativeApp);
+    }
+
+    /**
+     * Defines a message delegate for a Native App.
+     *
+     * If a delegate is already present, this delegate will replace the
+     * existing one.
+     *
+     * This message delegate will be responsible for handling messaging between
+     * a WebExtension content script running on the {@link GeckoSession}.
+     *
+     * Note: To receive messages from content scripts, the WebExtension needs
+     * to explicitely allow it in {@link WebExtension#WebExtension} by setting
+     * {@link WebExtension#allowContentMessaging} to <code>true</code>.
+     *
+     * @param delegate {@link WebExtension.MessageDelegate} that will receive
+     *                 messages from this session.
+     * @param nativeApp which native app id this message delegate will handle
+     *                  messaging for.
+     * @see WebExtension#setMessageDelegate
+     */
+    @AnyThread
+    public void setMessageDelegate(final @Nullable WebExtension.MessageDelegate delegate,
+                                   final @NonNull String nativeApp) {
+        mWebExtensionListener.setDelegate(delegate, nativeApp);
+    }
 
     private final GeckoSessionHandler<ContentDelegate> mContentHandler =
         new GeckoSessionHandler<ContentDelegate>(
