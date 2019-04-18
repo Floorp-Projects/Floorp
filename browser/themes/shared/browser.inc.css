@@ -39,13 +39,11 @@
 
 /* Toolbar / content area border */
 
-#navigator-toolbox::after {
-  content: "";
-  display: -moz-box;
+#navigator-toolbox {
   border-bottom: 1px solid var(--chrome-content-separator-color);
 }
 
-:root[customizing] #navigator-toolbox::after {
+:root[customizing] #navigator-toolbox {
   border-bottom-style: none;
 }
 
