@@ -2257,17 +2257,17 @@ this.VideoControlsImplWidget = class {
         <div id="controlsContainer" class="controlsContainer" role="none">
           <div id="statusOverlay" class="statusOverlay stackItem" hidden="true">
             <div id="statusIcon" class="statusIcon"></div>
-            <span class="statusLabel" id="errorAborted">&error.aborted;</span>
-            <span class="statusLabel" id="errorNetwork">&error.network;</span>
-            <span class="statusLabel" id="errorDecode">&error.decode;</span>
-            <span class="statusLabel" id="errorSrcNotSupported">&error.srcNotSupported;</span>
-            <span class="statusLabel" id="errorNoSource">&error.noSource2;</span>
-            <span class="statusLabel" id="errorGeneric">&error.generic;</span>
+            <bdi class="statusLabel" id="errorAborted">&error.aborted;</bdi>
+            <bdi class="statusLabel" id="errorNetwork">&error.network;</bdi>
+            <bdi class="statusLabel" id="errorDecode">&error.decode;</bdi>
+            <bdi class="statusLabel" id="errorSrcNotSupported">&error.srcNotSupported;</bdi>
+            <bdi class="statusLabel" id="errorNoSource">&error.noSource2;</bdi>
+            <bdi class="statusLabel" id="errorGeneric">&error.generic;</bdi>
           </div>
 
           <div id="pictureInPictureOverlay" class="pictureInPictureOverlay stackItem" status="pictureInPicture" hidden="true">
             <div class="statusIcon" type="pictureInPicture"></div>
-            <span class="statusLabel" id="pictureInPicture">&status.pictureInPicture;</span>
+            <bdi class="statusLabel" id="pictureInPicture">&status.pictureInPicture;</bdi>
           </div>
 
           <div id="controlsOverlay" class="controlsOverlay stackItem" role="none">
@@ -2296,11 +2296,11 @@ this.VideoControlsImplWidget = class {
                 </div>
                 <input type="range" id="scrubber" class="scrubber" tabindex="-1"/>
               </div>
-              <span id="positionLabel" class="positionLabel" role="presentation"></span>
-              <span id="durationLabel" class="durationLabel" role="presentation"></span>
-              <span id="positionDurationBox" class="positionDurationBox" aria-hidden="true">
+              <bdi id="positionLabel" class="positionLabel" role="presentation"></bdi>
+              <bdi id="durationLabel" class="durationLabel" role="presentation"></bdi>
+              <bdi id="positionDurationBox" class="positionDurationBox" aria-hidden="true">
                 &positionAndDuration.nameFormat;
-              </span>
+              </bdi>
               <div id="controlBarSpacer" class="controlBarSpacer" hidden="true" role="none"></div>
               <button id="muteButton"
                       class="button muteButton"
@@ -2530,7 +2530,7 @@ this.NoControlsPictureInPictureImplWidget = class {
         <div id="controlsContainer" class="controlsContainer" role="none">
           <div class="pictureInPictureOverlay stackItem" status="pictureInPicture">
             <div id="statusIcon" class="statusIcon" type="pictureInPicture"></div>
-            <span class="statusLabel" id="pictureInPicture">&status.pictureInPicture;</span>
+            <bdi class="statusLabel" id="pictureInPicture">&status.pictureInPicture;</bdi>
           </div>
           <div class="controlsOverlay stackItem"></div>
         </div>
