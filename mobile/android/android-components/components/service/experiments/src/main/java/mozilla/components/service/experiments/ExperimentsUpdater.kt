@@ -6,11 +6,32 @@ package mozilla.components.service.experiments
 
 import android.content.Context
 import android.support.annotation.VisibleForTesting
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkManager
+import androidx.work.Worker
+import androidx.work.WorkerParameters
 import mozilla.components.support.base.log.logger.Logger
+import java.util.concurrent.TimeUnit
+
+/**
+ * This class represents a [Worker] object that will fetch updates to the experiments.
+ */
+internal class ExperimentsUpdaterWorker(
+    context: Context,
+    workerParameters: WorkerParameters
+) : Worker(context, workerParameters) {
+
+    override fun doWork(): Result {
+        return if (Experiments.updater.updateExperiments()) {
+            Result.success()
+        } else {
+            Result.failure()
+        }
+    }
+}
 
 /**
  * Class used to schedule sync of experiment
@@ -25,23 +46,60 @@ internal class ExperimentsUpdater(
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal lateinit var source: KintoExperimentSource
 
-    @Volatile private var updateJob: Job? = null
-
     internal fun initialize(configuration: Configuration) {
         source = getExperimentSource(configuration)
 
-        updateJob = GlobalScope.launch(IO) {
-            // Update the experiments list from the server async, without blocking
-            // the app launch.
-            updateExperiments()
-        }
+        // Schedule the periodic experiment updates
+        scheduleUpdates()
     }
 
-    @VisibleForTesting(otherwise = VisibleForTesting.NONE)
-    internal suspend fun testWaitForUpdate() {
-        updateJob!!.join()
+    /**
+     * Schedule update with the default constraints, but only if the periodic worker is not already
+     * scheduled.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun scheduleUpdates() {
+        WorkManager.getInstance().enqueueUniquePeriodicWork(
+            TAG,
+            // We rely on REPLACE behavior to run immediately and then schedule the next update per
+            // the specified interval.  KEEP behavior does not run immediately and it is desired to
+            // have fresh experiments from the server on startup.
+            ExistingPeriodicWorkPolicy.REPLACE,
+            getWorkRequest())
     }
 
+    /**
+     * Builds the periodic work request that will control the scheduling of the worker and provide
+     * the tag value so that the worker can be interacted with later.
+     *
+     * @return [PeriodicWorkRequest]
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getWorkRequest(): PeriodicWorkRequest {
+        return PeriodicWorkRequest.Builder(
+            ExperimentsUpdaterWorker::class.java, UPDATE_INTERVAL_HOURS, TimeUnit.HOURS)
+            .addTag(TAG)
+            .setConstraints(getWorkConstraints())
+            .build()
+    }
+
+    /**
+     * Builds the [Constraints] for when the worker is allowed to run.
+     *
+     * @return [Constraints]
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    internal fun getWorkConstraints(): Constraints {
+        return Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+    }
+
+    /**
+     * Returns the experiment source for which to update the experiments
+     *
+     * @return [KintoExperimentSource]
+     */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal fun getExperimentSource(configuration: Configuration): KintoExperimentSource {
         return KintoExperimentSource(
@@ -55,6 +113,8 @@ internal class ExperimentsUpdater(
     /**
      * Requests new experiments from the server and
      * saves them to local storage
+     *
+     * @return true if the experiments were updated, false if there was an [ExperimentDownloadException]
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     @Synchronized
@@ -74,8 +134,10 @@ internal class ExperimentsUpdater(
     companion object {
         private const val LOG_TAG = "experiments"
 
-        private const val TAG = "mozilla.components.service.experiments"
-        private const val UPDATE_INTERVAL_HOURS = 6L
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        internal const val TAG = "mozilla.components.service.experiments"
+        @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+        internal const val UPDATE_INTERVAL_HOURS = 6L
 
         // Where to access the experiments data in Kinto.
         // Live example: https://firefox.settings.services.mozilla.com/v1/buckets/fennec/collections/experiments/records

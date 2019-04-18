@@ -39,6 +39,8 @@ dependencies {
     testImplementation Dependencies.testing_mockito
     testImplementation Dependencies.testing_mockwebserver
     testImplementation Dependencies.kotlin_reflect
+    testImplementation Dependencies.androidx_work_testing
+    testImplementation Dependencies.androidx_espresso_core
 
     testImplementation project(':support-test')
     testImplementation project(':lib-fetch-httpurlconnection')

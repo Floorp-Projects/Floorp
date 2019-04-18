@@ -4,6 +4,58 @@
 
 package mozilla.components.service.experiments
 
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
+import java.util.concurrent.ExecutionException
+
+/**
+ * Helper function to check to see if a worker has been scheduled with the [WorkManager]
+ *
+ * @param tag a string representing the worker tag
+ * @return True if the task found in [WorkManager], false otherwise
+ */
+internal fun isWorkScheduled(tag: String): Boolean {
+    val instance = WorkManager.getInstance()
+    val statuses = instance.getWorkInfosByTag(tag)
+    try {
+        val workInfoList = statuses.get()
+        for (workInfo in workInfoList) {
+            val state = workInfo.state
+            if ((state === WorkInfo.State.RUNNING) || (state === WorkInfo.State.ENQUEUED)) {
+                return true
+            }
+        }
+    } catch (e: ExecutionException) {
+        // Do nothing but will return false
+    } catch (e: InterruptedException) {
+        // Do nothing but will return false
+    }
+
+    return false
+}
+
+/**
+ * Helper function to return [WorkInfo] from the associated tag in [WorkManager] or null if no work
+ * exists for that tag.
+ *
+ * @param tag a string representing the worker tag
+ * @return [WorkInfo] for the tag that was passed in or null
+ */
+internal fun getWorkInfoByTag(tag: String): WorkInfo? {
+    val instance = WorkManager.getInstance()
+    val statuses = instance.getWorkInfosByTag(tag)
+    try {
+        val workInfoList = statuses.get()
+        return workInfoList.firstOrNull()
+    } catch (e: ExecutionException) {
+        // Do nothing but will return false
+    } catch (e: InterruptedException) {
+        // Do nothing but will return false
+    }
+
+    return null
+}
+
 /**
  * Helper function to create an [Experiment.Matcher] instance with default parameters.
  *

@@ -9,7 +9,10 @@ import android.content.SharedPreferences
 import android.content.pm.PackageInfo
 import android.content.pm.PackageManager
 import androidx.test.core.app.ApplicationProvider
+import androidx.work.testing.WorkManagerTestInitHelper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import mozilla.components.support.test.any
 import org.junit.Assert.assertEquals
@@ -19,7 +22,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
-import org.robolectric.RuntimeEnvironment
 import java.io.File
 import mozilla.components.service.glean.GleanInternalAPI
 import mozilla.components.support.test.eq
@@ -65,8 +67,12 @@ class ExperimentsTest {
         storage: FlatFileExperimentStorage = getDefaultExperimentStorageMock(),
         valuesProvider: ValuesProvider = object : ValuesProvider() {
             override fun getClientId(context: Context): String = EXAMPLE_CLIENT_ID
-        }
+        },
+        updateAsync: Boolean = false
     ) {
+        // Initialize WorkManager (early) for instrumentation tests.
+        WorkManagerTestInitHelper.initializeTestWorkManager(context)
+
         configuration = Configuration()
         experiments = spy(ExperimentsInternalAPI())
         experiments.valuesProvider = valuesProvider
@@ -80,16 +86,30 @@ class ExperimentsTest {
         `when`(experiments.getExperimentsUpdater(context)).thenReturn(experimentsUpdater)
         experimentSource = source
         `when`(experimentsUpdater.getExperimentSource(configuration)).thenReturn(experimentSource)
+
+        // Since WorkManager doesn't support working with robolectric, we need to mock running the
+        // task with a way to execute synchronously to avoid a lot of headaches. For some test cases
+        // we also need to support running from a separate thread, so we use runBlocking and a
+        // coroutine to attempt to await the background thread.
+        `when`(experimentsUpdater.scheduleUpdates()).then {
+            if (updateAsync) {
+                runBlocking {
+                    GlobalScope.launch(Dispatchers.IO) {
+                        experimentsUpdater.updateExperiments()
+                    }.join()
+                }
+            } else {
+                experimentsUpdater.updateExperiments()
+            }
+        }
     }
 
     @Test
     fun `initialize experiments`() {
-        resetExperiments()
+        // Run this test with experiment updates as async to help validate async library operations
+        resetExperiments(updateAsync = true)
 
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         verify(glean).isInitialized()
         verify(experimentStorage).retrieve()
@@ -108,13 +128,15 @@ class ExperimentsTest {
         verify(glean).isInitialized()
         assertEquals(experiments.isInitialized, false)
         verifyZeroInteractions(experimentStorage)
-        verifyZeroInteractions(experimentsUpdater)
+        // Make sure the updater is only interacted with once, from resetExperiments()
+        verify(experimentsUpdater, times(1)).scheduleUpdates()
         verifyZeroInteractions(experimentSource)
     }
 
     @Test
-    fun `async updating of experiments on library init`() {
-        resetExperiments()
+    fun `updating of experiments on library init`() {
+        // Run this test with experiment updates as async to help validate async library operations
+        resetExperiments(updateAsync = true)
 
         // Set up the Kinto-side experiments.
         val experimentsList = listOf(createDefaultExperiment())
@@ -122,10 +144,6 @@ class ExperimentsTest {
         `when`(experimentSource.getExperiments(any())).thenReturn(snapshot)
 
         experiments.initialize(context, configuration)
-        // Wait for async update to finish.
-        runBlocking(Dispatchers.Default) {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         verify(experimentStorage, times(1)).retrieve()
         verify(experimentSource, times(1)).getExperiments(any())
@@ -135,15 +153,13 @@ class ExperimentsTest {
     @Test
     fun `update experiments from empty storage`() {
         resetExperiments()
+
         val emptySnapshot = ExperimentsSnapshot(listOf(), null)
         val updateResult = ExperimentsSnapshot(listOf(createDefaultExperiment()), null)
         `when`(experimentSource.getExperiments(emptySnapshot)).thenReturn(updateResult)
         `when`(experimentStorage.retrieve()).thenReturn(emptySnapshot)
 
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         verify(experimentSource).getExperiments(emptySnapshot)
         verify(experiments).onExperimentsUpdated(updateResult)
@@ -165,9 +181,6 @@ class ExperimentsTest {
         `when`(experimentStorage.retrieve()).thenReturn(storageSnapshot)
 
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         verify(experimentSource).getExperiments(storageSnapshot)
         verify(experiments).onExperimentsUpdated(updateResult)
@@ -188,9 +201,6 @@ class ExperimentsTest {
             throw ExperimentDownloadException("oops")
         }
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         val returned = experiments.experiments
         assertEquals(2, returned.size)
@@ -209,9 +219,6 @@ class ExperimentsTest {
             throw ExperimentDownloadException("oops")
         }
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         val returnedExperiments = experiments.experiments
         assertEquals(0, returnedExperiments.size)
@@ -225,9 +232,6 @@ class ExperimentsTest {
         `when`(experimentStorage.retrieve()).thenReturn(snapshot)
         `when`(experimentSource.getExperiments(any())).thenReturn(snapshot)
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         val returnedExperiments = experiments.experiments
         assertEquals(0, returnedExperiments.size)
@@ -243,9 +247,6 @@ class ExperimentsTest {
         `when`(experimentSource.getExperiments(any())).thenReturn(snapshot1)
 
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         verify(experimentStorage, times(1)).retrieve()
         verify(experimentSource, times(1)).getExperiments(any())
@@ -268,7 +269,9 @@ class ExperimentsTest {
 
     @Test
     fun getActiveExperiments() {
-        resetExperiments()
+        // Run this test with experiment updates as async to help validate async library operations
+        resetExperiments(updateAsync = true)
+
         val experimentsList = listOf(
             createDefaultExperiment(
                 id = "first-id",
@@ -293,9 +296,6 @@ class ExperimentsTest {
         )
         `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         val context = mock(Context::class.java)
         `when`(context.packageName).thenReturn("test.appId")
@@ -321,6 +321,7 @@ class ExperimentsTest {
     @Test
     fun getExperimentsMap() {
         resetExperiments()
+
         val experimentsList = listOf(
                 createDefaultExperiment(
                     id = "first-id",
@@ -345,9 +346,6 @@ class ExperimentsTest {
         )
         `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         val context = mock(Context::class.java)
         `when`(context.packageName).thenReturn("test.appId")
@@ -375,6 +373,7 @@ class ExperimentsTest {
     @Test
     fun isInExperiment() {
         resetExperiments()
+
         var experimentsList = listOf(
             createDefaultExperiment(
                 id = "first-id",
@@ -385,9 +384,6 @@ class ExperimentsTest {
         )
         `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         val context = mock(Context::class.java)
         `when`(context.packageName).thenReturn("test.appId")
@@ -434,6 +430,16 @@ class ExperimentsTest {
         }
         resetExperiments(valuesProvider = valuesProvider)
 
+        val experimentsList = listOf(
+            createDefaultExperiment(
+                id = "first-id",
+                match = createDefaultMatcher(
+                    appId = "test.appId"
+                )
+            )
+        )
+        `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
+
         // Set up a mocked environment.
         val mockContext: Context = mock()
         `when`(mockContext.packageName).thenReturn("test.appId")
@@ -459,9 +465,6 @@ class ExperimentsTest {
         branchDiceRoll = 0
         setServerExperiments(emptyList())
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         val invocations: MutableList<String> = java.util.ArrayList()
         experiments.withExperiment(mockContext, "first-id") {
@@ -504,9 +507,6 @@ class ExperimentsTest {
             throw ExperimentDownloadException("test")
         }.`when`(experimentSource).getExperiments(any())
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         experiments.withExperiment(mockContext, "first-id") {
             invocations.add(it)
@@ -525,9 +525,6 @@ class ExperimentsTest {
             )
         ))
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         invocations.clear()
         experiments.withExperiment(mockContext, "first-id") {
@@ -565,6 +562,7 @@ class ExperimentsTest {
     @Test
     fun getExperiment() {
         resetExperiments()
+
         val experimentsList = listOf(
             createDefaultExperiment(
                 id = "first-id",
@@ -575,9 +573,6 @@ class ExperimentsTest {
         )
         `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         assertEquals(experimentsList[0], experiments.getExperiment("first-id"))
         assertNull(experiments.getExperiment("other-id"))
@@ -629,9 +624,6 @@ class ExperimentsTest {
         )
         `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         val (
             context: Context,
@@ -661,6 +653,7 @@ class ExperimentsTest {
     @Test
     fun clearOverride() {
         resetExperiments()
+
         val experimentsList = listOf(
             createDefaultExperiment(
                 id = "first-id",
@@ -671,9 +664,6 @@ class ExperimentsTest {
         )
         `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         val (
             context: Context,
@@ -700,6 +690,7 @@ class ExperimentsTest {
     @Test
     fun clearAllOverrides() {
         resetExperiments()
+
         val experimentsList = listOf(
             createDefaultExperiment(
                 id = "first-id",
@@ -710,9 +701,6 @@ class ExperimentsTest {
         )
         `when`(experimentSource.getExperiments(any())).thenReturn(ExperimentsSnapshot(experimentsList, null))
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         val (
             context: Context,
@@ -746,9 +734,6 @@ class ExperimentsTest {
         }.`when`(experimentSource).getExperiments(any())
         `when`(experimentStorage.retrieve()).thenReturn(ExperimentsSnapshot(listOf(), null))
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
     }
 
     @Test
@@ -766,9 +751,6 @@ class ExperimentsTest {
 
         resetExperiments(valuesProvider = ValuesProvider())
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
         assertTrue(experiments.getUserBucket(mockContext) == 54)
     }
 
@@ -781,9 +763,6 @@ class ExperimentsTest {
             override fun getClientId(context: Context): String = EXAMPLE_CLIENT_ID
         })
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         assertEquals(79, experiments.getUserBucket(context))
 
@@ -791,9 +770,6 @@ class ExperimentsTest {
             override fun getClientId(context: Context): String = "01a15650-9a5d-4383-a7ba-2f047b25c620"
         })
         experiments.initialize(context, configuration)
-        runBlocking {
-            experimentsUpdater.testWaitForUpdate()
-        }
 
         assertEquals(55, experiments.getUserBucket(context))
     }
@@ -802,14 +778,31 @@ class ExperimentsTest {
     fun `loading corrupt JSON`() {
         val experimentSource: KintoExperimentSource = mock()
 
-        val file = File(RuntimeEnvironment.application.filesDir, "corrupt-experiments.json")
+        val file = File(ApplicationProvider.getApplicationContext<Context>().filesDir,
+            "corrupt-experiments.json")
         file.writer().use {
             it.write("""{"experiment":[""")
         }
 
         val experimentStorage = FlatFileExperimentStorage(file)
 
-        resetExperiments(experimentSource, experimentStorage)
+        // resetExperiments causes an error here due to how we have mocked things with the updater
+        // which ends up calling onExperimentsUpdated with a null parameter causing the error.  In
+        // order to get around this, we need to minimize the mocking of the updater to avoid the
+        // error.
+        WorkManagerTestInitHelper.initializeTestWorkManager(context)
+        configuration = Configuration()
+        experiments = spy(ExperimentsInternalAPI())
+        experiments.valuesProvider = ValuesProvider()
+
+        `when`(glean.isInitialized()).thenReturn(true)
+        `when`(experiments.getGlean()).thenReturn(glean)
+        `when`(experiments.getExperimentsStorage(context)).thenReturn(experimentStorage)
+
+        experimentsUpdater = spy(ExperimentsUpdater(context, experiments))
+        `when`(experiments.getExperimentsUpdater(context)).thenReturn(experimentsUpdater)
+        `when`(experimentsUpdater.getExperimentSource(configuration)).thenReturn(experimentSource)
+
         experiments.initialize(context, configuration)
         experiments.loadExperiments() // Should not throw
     }
