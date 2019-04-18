@@ -82,6 +82,7 @@ function runtimesReducer(state = RuntimesState(), action) {
         isConnecting: true,
         isConnectionFailed: false,
         isConnectionNotResponding: false,
+        isConnectionTimeout: false,
       };
       return _updateRuntimeById(id, updatedState, state);
     }
@@ -97,6 +98,7 @@ function runtimesReducer(state = RuntimesState(), action) {
         isConnecting: false,
         isConnectionFailed: false,
         isConnectionNotResponding: false,
+        isConnectionTimeout: true,
       };
       return _updateRuntimeById(id, updatedState, state);
     }
@@ -108,6 +110,7 @@ function runtimesReducer(state = RuntimesState(), action) {
         isConnecting: false,
         isConnectionFailed: false,
         isConnectionNotResponding: false,
+        isConnectionTimeout: false,
         runtimeDetails,
       };
       return _updateRuntimeById(id, updatedState, state);
@@ -119,6 +122,7 @@ function runtimesReducer(state = RuntimesState(), action) {
         isConnecting: false,
         isConnectionFailed: true,
         isConnectionNotResponding: false,
+        isConnectionTimeout: false,
       };
       return _updateRuntimeById(id, updatedState, state);
     }

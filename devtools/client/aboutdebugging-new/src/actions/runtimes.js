@@ -170,6 +170,7 @@ function createThisFirefoxRuntime() {
       isConnecting: false,
       isConnectionFailed: false,
       isConnectionNotResponding: false,
+      isConnectionTimeout: false,
       isUnavailable: false,
       isUnplugged: false,
       name: l10n.getString("about-debugging-this-firefox-runtime-name"),
@@ -332,8 +333,10 @@ function updateNetworkRuntimes(locations) {
       isConnecting: false,
       isConnectionFailed: false,
       isConnectionNotResponding: false,
+      isConnectionTimeout: false,
       isUnavailable: false,
       isUnplugged: false,
+      isUnknown: false,
       name: location,
       type: RUNTIMES.NETWORK,
     };
@@ -356,6 +359,7 @@ function updateUSBRuntimes(adbRuntimes) {
       isConnecting: false,
       isConnectionFailed: false,
       isConnectionNotResponding: false,
+      isConnectionTimeout: false,
       isUnavailable: adbRuntime.isUnavailable,
       isUnplugged: adbRuntime.isUnplugged,
       name: adbRuntime.shortName,
@@ -374,7 +378,7 @@ function updateUSBRuntimes(adbRuntimes) {
 function _isRuntimeValid(runtime, runtimes) {
   const isRuntimeAvailable = runtimes.some(r => r.id === runtime.id);
   const isConnectionValid = runtime.runtimeDetails &&
-    !runtime.runtimeDetails.clientWrapper.isClosed();
+                            !runtime.runtimeDetails.clientWrapper.isClosed();
   return isRuntimeAvailable && isConnectionValid;
 }
 
@@ -385,7 +389,7 @@ function updateRemoteRuntimes(runtimes, type) {
     // Check if the updated remote runtimes should trigger a navigation out of the current
     // runtime page.
     if (currentRuntime && currentRuntime.type === type &&
-      !_isRuntimeValid(currentRuntime, runtimes)) {
+        !_isRuntimeValid(currentRuntime, runtimes)) {
       // Since current remote runtime is invalid, move to this firefox page.
       // This case is considered as followings and so on:
       // * Remove ADB addon
@@ -405,16 +409,19 @@ function updateRemoteRuntimes(runtimes, type) {
     // - isConnectionFailed (set by about:debugging if connection was failed)
     // - isConnectionNotResponding
     //     (set by about:debugging if connection is taking too much time)
+    // - isConnectionTimeout (set by about:debugging if connection was timeout)
     runtimes.forEach(runtime => {
       const existingRuntime = findRuntimeById(runtime.id, getState().runtimes);
       const isConnectionValid = existingRuntime && existingRuntime.runtimeDetails &&
-        !existingRuntime.runtimeDetails.clientWrapper.isClosed();
+                                !existingRuntime.runtimeDetails.clientWrapper.isClosed();
       runtime.runtimeDetails = isConnectionValid ? existingRuntime.runtimeDetails : null;
       runtime.isConnecting = existingRuntime ? existingRuntime.isConnecting : false;
       runtime.isConnectionFailed =
         existingRuntime ? existingRuntime.isConnectionFailed : false;
       runtime.isConnectionNotResponding =
         existingRuntime ? existingRuntime.isConnectionNotResponding : false;
+      runtime.isConnectionTimeout =
+        existingRuntime ? existingRuntime.isConnectionTimeout : false;
     });
 
     const existingRuntimes = getAllRuntimes(getState().runtimes);
