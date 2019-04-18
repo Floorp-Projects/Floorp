@@ -1761,17 +1761,7 @@ class nsDisplayListBuilder {
     return false;
   }
 
-  bool MarkCurrentFrameModifiedDuringBuilding() {
-    if (MarkFrameModifiedDuringBuilding(const_cast<nsIFrame*>(mCurrentFrame))) {
-      mInInvalidSubtree = true;
-      mDirtyRect = mVisibleRect;
-      return true;
-    }
-    return false;
-  }
-
   void RebuildAllItemsInCurrentSubtree() {
-    mInInvalidSubtree = true;
     mDirtyRect = mVisibleRect;
   }
 
