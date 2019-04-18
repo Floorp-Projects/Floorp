@@ -4,6 +4,8 @@
 
 "use strict";
 
+const Services = require("Services");
+
 const Actions = require("./index");
 
 const {
@@ -75,12 +77,21 @@ function onMultiE10sUpdated() {
 function connectRuntime(id) {
   return async (dispatch, getState) => {
     dispatch({ type: CONNECT_RUNTIME_START, id });
+
+    // The preferences test-connection-timing-out-delay and test-connection-cancel-delay
+    // don't have a default value but will be overridden during our tests.
+    const connectionTimingOutDelay = Services.prefs.getIntPref(
+      "devtools.aboutdebugging.test-connection-timing-out-delay",
+      CONNECTION_TIMING_OUT_DELAY);
+    const connectionCancelDelay = Services.prefs.getIntPref(
+      "devtools.aboutdebugging.test-connection-cancel-delay", CONNECTION_CANCEL_DELAY);
+
     const connectionNotRespondingTimer = setTimeout(() => {
       // If connecting to the runtime takes time over CONNECTION_TIMING_OUT_DELAY,
       // we assume the connection prompt is showing on the runtime, show a dialog
       // to let user know that.
       dispatch({ type: CONNECT_RUNTIME_NOT_RESPONDING, id });
-    }, CONNECTION_TIMING_OUT_DELAY);
+    }, connectionTimingOutDelay);
     const connectionCancelTimer = setTimeout(() => {
       // Connect button of the runtime will be disabled during connection, but the status
       // continues till the connection was either succeed or failed. This may have a
@@ -88,7 +99,7 @@ function connectRuntime(id) {
       // able to click again. To avoid this, revert the connect button status after
       // CONNECTION_CANCEL_DELAY ms.
       dispatch({ type: CONNECT_RUNTIME_CANCEL, id });
-    }, CONNECTION_CANCEL_DELAY);
+    }, connectionCancelDelay);
 
     try {
       const runtime = findRuntimeById(id, getState().runtimes);
