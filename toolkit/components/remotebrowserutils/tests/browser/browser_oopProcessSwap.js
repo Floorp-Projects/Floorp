@@ -45,7 +45,7 @@ add_task(async function oopProcessSwap() {
     });
 
     is(browser.browsingContext.getChildren().length, 1);
-    todo(frameId == oopinfo.browsingContextId, "BrowsingContext should not have changed");
+    is(frameId, oopinfo.browsingContextId, `BrowsingContext should not have changed (${frameId} != ${oopinfo.browsingContextId})`);
     is(oopinfo.location, WEB, "correct location");
   });
 
@@ -99,7 +99,7 @@ add_task(async function oopOriginProcessSwap() {
     });
 
     is(browser.browsingContext.getChildren().length, 1);
-    todo(frameId == oopinfo.browsingContextId, "BrowsingContext should not have changed");
+    is(frameId, oopinfo.browsingContextId, `BrowsingContext should not have changed (${frameId} != ${oopinfo.browsingContextId})`);
     is(oopinfo.location, ORG_POSTMSG, "correct location");
   });
 
