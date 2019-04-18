@@ -233,8 +233,8 @@ var gPlayTests = [
   { name:"bug495794.ogg", type:"audio/ogg", duration:0.3 },
   { name:"bug557094.ogv", type:"video/ogg", duration:0.24 },
   { name:"multiple-bos.ogg", type:"video/ogg", duration:0.431 },
-  { name:"audio-overhang.ogg", type:"audio/ogg", duration:2.3 },
-  { name:"video-overhang.ogg", type:"audio/ogg", duration:3.966 },
+  { name:"audio-overhang.ogg", type:"video/ogg", duration:2.3 },
+  { name:"video-overhang.ogg", type:"video/ogg", duration:3.966 },
 
   // bug461281.ogg with the middle second chopped out.
   { name:"audio-gaps.ogg", type:"audio/ogg", duration:2.208 },
