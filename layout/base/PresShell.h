@@ -1429,6 +1429,11 @@ class PresShell final : public nsIPresShell,
   // mForceUseLegacyKeyCodeAndCharCodeValues are initialized.
   bool mInitializedWithKeyPressEventDispatchingBlacklist : 1;
 
+  // Whether we should dispatch click events for non-primary mouse buttons.
+  bool mForceUseLegacyNonPrimaryDispatch : 1;
+  // Whether mForceUseLegacyNonPrimaryDispatch is initialised.
+  bool mInitializedWithClickEventDispatchingBlacklist : 1;
+
   static bool sDisableNonTestMouseEvents;
 
   TimeStamp mLastOSWake;
