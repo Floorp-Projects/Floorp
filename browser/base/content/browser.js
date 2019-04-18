@@ -6281,7 +6281,7 @@ function hrefAndLinkNodeForClickEvent(event) {
  * @note default event is prevented if the click is handled.
  */
 function contentAreaClick(event, isPanelClick) {
-  if (!event.isTrusted || event.defaultPrevented || event.button == 2)
+  if (!event.isTrusted || event.defaultPrevented || event.button != 0)
     return;
 
   let [href, linkNode] = hrefAndLinkNodeForClickEvent(event);

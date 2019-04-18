@@ -123,6 +123,7 @@ var gTests = [
     setup() {},
     clean() {},
     event: { button: 1 },
+    wantedEvent: "auxclick",
     targets: [ "commonlink", "mathxlink", "svgxlink", "maplink" ],
     expectedInvokedMethods: [ "urlSecurityCheck", "openLinkIn" ],
     preventDefault: true,
@@ -137,6 +138,7 @@ var gTests = [
       Services.prefs.clearUserPref("browser.tabs.opentabfor.middleclick");
     },
     event: { button: 1 },
+    wantedEvent: "auxclick",
     targets: [ "commonlink", "mathxlink", "svgxlink", "maplink" ],
     expectedInvokedMethods: [ "urlSecurityCheck", "openLinkIn" ],
     preventDefault: true,
@@ -153,6 +155,7 @@ var gTests = [
       Services.prefs.clearUserPref("general.autoScroll");
     },
     event: { button: 1 },
+    wantedEvent: "auxclick",
     targets: [ "emptylink" ],
     expectedInvokedMethods: [ "middleMousePaste" ],
     preventDefault: true,
@@ -208,9 +211,13 @@ function test() {
 // Click handler used to steal click events.
 var gClickHandler = {
   handleEvent(event) {
+    if (event.type == "click" && event.button != 0) {
+      return;
+    }
     let linkId = event.target.id || event.target.localName;
-    is(event.type, "click",
-       gCurrentTest.desc + ":Handler received a click event on " + linkId);
+    let wantedEvent = gCurrentTest.wantedEvent || "click";
+    is(event.type, wantedEvent,
+       `${gCurrentTest.desc}:Handler received a ${wantedEvent} event on ${linkId}`);
 
     let isPanelClick = linkId == "panellink";
     gTestWin.contentAreaClick(event, isPanelClick);
@@ -241,6 +248,7 @@ var gClickHandler = {
 function setupTestBrowserWindow() {
   // Steal click events and don't propagate them.
   gTestWin.addEventListener("click", gClickHandler, true);
+  gTestWin.addEventListener("auxclick", gClickHandler, true);
 
   // Replace methods.
   gReplacedMethods.forEach(function(methodName) {
@@ -286,7 +294,7 @@ function runNextTest() {
 
   info(gCurrentTest.desc + ": testing " + target);
 
-  // Fire click event.
+  // Fire (aux)click event.
   let targetElt = gTestWin.content.document.getElementById(target);
   ok(targetElt, gCurrentTest.desc + ": target is valid (" + targetElt.id + ")");
   EventUtils.synthesizeMouseAtCenter(targetElt, gCurrentTest.event, gTestWin.content);
@@ -295,6 +303,7 @@ function runNextTest() {
 function finishTest() {
   info("Restoring browser...");
   gTestWin.removeEventListener("click", gClickHandler, true);
+  gTestWin.removeEventListener("auxclick", gClickHandler, true);
   gTestWin.close();
   finish();
 }
