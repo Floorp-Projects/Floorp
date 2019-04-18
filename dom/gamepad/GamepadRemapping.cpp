@@ -100,6 +100,10 @@ class DefaultRemapper final : public GamepadRemapper {
     numButtons = aButtonCount;
   }
 
+  virtual GamepadMappingType GetMappingType() const override {
+    return GamepadMappingType::_empty;
+  }
+
   virtual void RemapAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
                                   double aValue) const override {
     RefPtr<GamepadPlatformService> service =
@@ -360,10 +364,6 @@ class Dualshock4Remapper final : public GamepadRemapper {
 
   virtual uint32_t GetButtonCount() const override {
     return DUALSHOCK_BUTTON_COUNT;
-  }
-
-  virtual GamepadMappingType GetMappingType() const override {
-    return GamepadMappingType::_empty;
   }
 
   virtual void RemapAxisMoveEvent(uint32_t aIndex, uint32_t aAxis,
