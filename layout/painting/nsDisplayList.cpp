@@ -10290,6 +10290,25 @@ PaintTelemetry::AutoRecord::~AutoRecord() {
 
 }  // namespace mozilla
 
+static nsIFrame* GetSelfOrPlaceholderFor(nsIFrame* aFrame) {
+  if (aFrame->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT) {
+    return aFrame;
+  }
+
+  if ((aFrame->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
+      !aFrame->GetPrevInFlow()) {
+    return aFrame->GetPlaceholderFrame();
+  }
+
+  return aFrame;
+}
+
+static nsIFrame* GetAncestorFor(nsIFrame* aFrame) {
+  nsIFrame* f = GetSelfOrPlaceholderFor(aFrame);
+  MOZ_ASSERT(f);
+  return nsLayoutUtils::GetCrossDocParentFrame(f);
+}
+
 nsDisplayListBuilder::AutoBuildingDisplayList::AutoBuildingDisplayList(
     nsDisplayListBuilder* aBuilder, nsIFrame* aForChild,
     const nsRect& aVisibleRect, const nsRect& aDirtyRect,
@@ -10331,8 +10350,16 @@ nsDisplayListBuilder::AutoBuildingDisplayList::AutoBuildingDisplayList(
 
   MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(
       aBuilder->RootReferenceFrame(), *aBuilder->mCurrentAGR));
-  aBuilder->mInInvalidSubtree =
-      aBuilder->mInInvalidSubtree || aForChild->IsFrameModified();
+
+  // If aForChild is being visited from a frame other than it's ancestor frame,
+  // mInInvalidSubtree will need to be recalculated the slow way.
+  if (aForChild == mPrevFrame || GetAncestorFor(aForChild) == mPrevFrame) {
+    aBuilder->mInInvalidSubtree =
+        aBuilder->mInInvalidSubtree || aForChild->IsFrameModified();
+  } else {
+    aBuilder->mInInvalidSubtree = AnyContentAncestorModified(aForChild);
+  }
+
   aBuilder->mCurrentFrame = aForChild;
   aBuilder->mVisibleRect = aVisibleRect;
   aBuilder->mDirtyRect =
