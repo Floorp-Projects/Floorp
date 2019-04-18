@@ -83,7 +83,7 @@ async function testToggleDetachedToolbox(tab, key, modifiers) {
 
   info("Verify windowed toolbox is focused instead of closed when using " +
     "toggle key from the main window");
-  const toolboxWindow = toolbox.win.top;
+  const toolboxWindow = toolbox.topWindow;
   const onToolboxWindowFocus = once(toolboxWindow, "focus", true);
   EventUtils.synthesizeKey(key, modifiers);
   await onToolboxWindowFocus;
