@@ -1,1 +1,1 @@
-[["warning", "use nullptr", "modernize-use-nullptr"]]
+[["warning", "use nullptr", "modernize-use-nullptr"], {"reliability": "high"}]

@@ -1,1 +1,1 @@
-[["warning", "prefer '= nullptr' to 'delete x.release()' to reset unique_ptr<> objects", "readability-uniqueptr-delete-release"]]
+[["warning", "prefer '= nullptr' to 'delete x.release()' to reset unique_ptr<> objects", "readability-uniqueptr-delete-release"], {"reliability": "high"}]

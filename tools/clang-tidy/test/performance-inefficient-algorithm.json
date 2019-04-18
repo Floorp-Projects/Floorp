@@ -1,1 +1,1 @@
-[["warning", "this STL algorithm call should be replaced with a container method", "performance-inefficient-algorithm"]]
+[["warning", "this STL algorithm call should be replaced with a container method", "performance-inefficient-algorithm"], {"reliability": "high"}]

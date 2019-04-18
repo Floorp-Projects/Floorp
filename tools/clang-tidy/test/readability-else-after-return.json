@@ -1,1 +1,1 @@
-[["warning", "do not use 'else' after 'return'", "readability-else-after-return"]]
+[["warning", "do not use 'else' after 'return'", "readability-else-after-return"], {"reliability": "high"}]

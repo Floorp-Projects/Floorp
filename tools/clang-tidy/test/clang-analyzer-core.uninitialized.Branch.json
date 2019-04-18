@@ -1,1 +1,1 @@
-[["warning", "Branch condition evaluates to a garbage value", "clang-analyzer-core.uninitialized.Branch"]]
+[["warning", "Branch condition evaluates to a garbage value", "clang-analyzer-core.uninitialized.Branch"], {"reliability": "medium"}]

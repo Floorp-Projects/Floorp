@@ -1,1 +1,1 @@
-[["warning", "no definition found for 'A', but a definition with the same name 'A' found in another namespace 'nb'", "bugprone-forward-declaration-namespace"]]
+[["warning", "no definition found for 'A', but a definition with the same name 'A' found in another namespace 'nb'", "bugprone-forward-declaration-namespace"], {"reliability": "high"}]

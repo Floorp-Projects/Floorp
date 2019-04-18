@@ -1,1 +1,1 @@
-[["warning", "Variable 'x' with floating point type 'float' should not be used as a loop counter", "clang-analyzer-security.FloatLoopCounter"]]
+[["warning", "Variable 'x' with floating point type 'float' should not be used as a loop counter", "clang-analyzer-security.FloatLoopCounter"], {"reliability": "high"}]

@@ -1,1 +1,1 @@
-[["warning", "both sides of operator are equivalent", "misc-redundant-expression"]]
+[["warning", "both sides of operator are equivalent", "misc-redundant-expression"], {"reliability": "medium"}]

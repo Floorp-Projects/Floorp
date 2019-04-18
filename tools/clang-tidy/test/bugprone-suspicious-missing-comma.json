@@ -1,1 +1,1 @@
-[["warning", "suspicious string literal, probably missing a comma", "bugprone-suspicious-missing-comma"]]
+[["warning", "suspicious string literal, probably missing a comma", "bugprone-suspicious-missing-comma"], {"reliability": "high"}]

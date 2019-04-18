@@ -1,1 +1,1 @@
-[["warning", "Call to function 'vfork' is insecure as it can lead to denial of service situations in the parent process. Replace calls to vfork with calls to the safer 'posix_spawn' function", "clang-analyzer-security.insecureAPI.vfork"]]
+[["warning", "Call to function 'vfork' is insecure as it can lead to denial of service situations in the parent process. Replace calls to vfork with calls to the safer 'posix_spawn' function", "clang-analyzer-security.insecureAPI.vfork"], {"reliability": "medium"}]

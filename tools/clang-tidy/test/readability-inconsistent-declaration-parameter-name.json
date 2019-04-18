@@ -1,1 +1,1 @@
-[["warning", "function 'S::f' has a definition with different parameter names", "readability-inconsistent-declaration-parameter-name"]]
+[["warning", "function 'S::f' has a definition with different parameter names", "readability-inconsistent-declaration-parameter-name"], {"reliability": "high"}]

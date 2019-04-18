@@ -1,1 +1,1 @@
-[["warning", "found assert() with side effect", "bugprone-assert-side-effect"]]
+[["warning", "found assert() with side effect", "bugprone-assert-side-effect"], {"reliability": "high"}]
