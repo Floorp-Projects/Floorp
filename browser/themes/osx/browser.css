@@ -57,11 +57,12 @@
   border.
 */
 #navigator-toolbox::after {
+  content: "";
+  display: -moz-box;
   -moz-appearance: toolbox;
   height: 1px;
-  /* use inset box-shadow instead of border because -moz-appearance hides the border */
-  border: none;
-  box-shadow: inset 0 -1px var(--chrome-content-separator-color);
+  margin-top: -1px;
+  opacity: 0;
 }
 
 #tabbrowser-tabs {
