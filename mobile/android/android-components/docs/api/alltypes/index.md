@@ -147,7 +147,7 @@
 | [mozilla.components.service.fretboard.ExperimentSource](../mozilla.components.service.fretboard/-experiment-source/index.md) | Represents a location where experiments are stored (Kinto, a JSON file on a server, etc) |
 | [mozilla.components.service.fretboard.ExperimentStorage](../mozilla.components.service.fretboard/-experiment-storage/index.md) | Represents a location where experiments are stored locally on the device |
 | [mozilla.components.service.experiments.Experiments](../mozilla.components.service.experiments/-experiments.md) |  |
-| [mozilla.components.service.experiments.ExperimentsInternalAPI](../mozilla.components.service.experiments/-experiments-internal-a-p-i/index.md) | Entry point of the library |
+| [mozilla.components.service.experiments.ExperimentsInternalAPI](../mozilla.components.service.experiments/-experiments-internal-a-p-i/index.md) | Entry point of the library. |
 | [org.mozilla.telemetry.measurement.ExperimentsMapMeasurement](../org.mozilla.telemetry.measurement/-experiments-map-measurement/index.md) |  |
 | [org.mozilla.telemetry.measurement.ExperimentsMeasurement](../org.mozilla.telemetry.measurement/-experiments-measurement/index.md) |  |
 | [mozilla.components.service.fretboard.ExperimentsSnapshot](../mozilla.components.service.fretboard/-experiments-snapshot/index.md) | Represents an experiment sync result |
@@ -324,6 +324,8 @@
 | [mozilla.components.concept.push.PushType](../mozilla.components.concept.push/-push-type/index.md) | The different kinds of push messages. |
 | [mozilla.components.feature.qr.QrFeature](../mozilla.components.feature.qr/-qr-feature/index.md) | Feature implementation that provides QR scanning functionality via the [QrFragment](../mozilla.components.feature.qr/-qr-fragment/index.md). |
 | [mozilla.components.feature.qr.QrFragment](../mozilla.components.feature.qr/-qr-fragment/index.md) | A [Fragment](#) that displays a QR scanner. |
+| [mozilla.components.feature.readerview.view.ReaderViewControlsBar](../mozilla.components.feature.readerview.view/-reader-view-controls-bar/index.md) | A customizable ReaderView control bar implementing [ReaderViewControlsView](../mozilla.components.feature.readerview.view/-reader-view-controls-view/index.md). |
+| [mozilla.components.feature.readerview.view.ReaderViewControlsView](../mozilla.components.feature.readerview.view/-reader-view-controls-view/index.md) | An interface for views that can display ReaderView appearance controls (e.g. font size, font type). |
 | [mozilla.components.feature.readerview.ReaderViewFeature](../mozilla.components.feature.readerview/-reader-view-feature/index.md) | Feature implementation that provides a reader view for the selected session. This feature is implemented as a web extension and needs to be installed prior to use see [ReaderViewFeature.install](../mozilla.components.feature.readerview/-reader-view-feature/install.md). |
 | [mozilla.components.service.glean.storages.RecordedEventData](../mozilla.components.service.glean.storages/-recorded-event-data/index.md) |  |
 | [mozilla.components.service.glean.storages.RecordedExperimentData](../mozilla.components.service.glean.storages/-recorded-experiment-data/index.md) |  |

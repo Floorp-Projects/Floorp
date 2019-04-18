@@ -2,4 +2,4 @@
 
 # ACTIVE_SESSION_ID
 
-`const val ACTIVE_SESSION_ID: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/intent/src/main/java/mozilla/components/feature/intent/IntentProcessor.kt#L137)
+`const val ACTIVE_SESSION_ID: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/feature/intent/src/main/java/mozilla/components/feature/intent/IntentProcessor.kt#L141)

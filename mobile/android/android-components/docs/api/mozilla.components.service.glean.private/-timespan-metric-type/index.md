@@ -2,7 +2,7 @@
 
 # TimespanMetricType
 
-`data class TimespanMetricType : `[`CommonMetricData`](../-common-metric-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/TimespanMetricType.kt#L19)
+`data class TimespanMetricType : `[`CommonMetricData`](../-common-metric-data/index.md) [(source)](https://github.com/mozilla-mobile/android-components/blob/master/components/service/glean/src/main/java/mozilla/components/service/glean/private/TimespanMetricType.kt#L21)
 
 This implements the developer facing API for recording timespans.
 
@@ -39,9 +39,9 @@ The timespans API exposes the [start](start.md), [stopAndSum](stop-and-sum.md) a
 
 | Name | Summary |
 |---|---|
-| [cancel](cancel.md) | `fun cancel(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Abort a previous [start](start.md) call. No error is recorded if no [start](start.md) was called. |
-| [start](start.md) | `fun start(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Start tracking time for the provided metric. This records an error if it’s already tracking time (i.e. start was already called with no corresponding [stopAndSum](stop-and-sum.md)): in that case the original start time will be preserved. |
-| [stopAndSum](stop-and-sum.md) | `fun stopAndSum(): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Stop tracking time for the provided metric. Add the elapsed time to the time currently stored in the metric. This will record an error if no [start](start.md) was called. |
+| [cancel](cancel.md) | `fun cancel(timerId: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Abort a previous [start](start.md) call. No error is recorded if no [start](start.md) was called. |
+| [start](start.md) | `fun start(timerId: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Start tracking time for the provided metric and associated object. This records an error if it’s already tracking time (i.e. start was already called with no corresponding [stopAndSum](stop-and-sum.md)): in that case the original start time will be preserved. |
+| [stopAndSum](stop-and-sum.md) | `fun stopAndSum(timerId: `[`Any`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html)`): `[`Unit`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-unit/index.html)<br>Stop tracking time for the provided metric and associated object. Add the elapsed time to the time currently stored in the metric. This will record an error if no [start](start.md) was called. |
 | [testGetValue](test-get-value.md) | `fun testGetValue(pingName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = getStorageNames().first()): `[`Long`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html)<br>Returns the stored value for testing purposes only |
 | [testHasValue](test-has-value.md) | `fun testHasValue(pingName: `[`String`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html)` = getStorageNames().first()): `[`Boolean`](https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-boolean/index.html)<br>Tests whether a value is stored for the metric for testing purposes only |
 
