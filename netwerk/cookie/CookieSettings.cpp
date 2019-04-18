@@ -144,7 +144,7 @@ CookieSettings::CookiePermission(nsIPrincipal* aPrincipal,
   // race conditions.
 
   nsCOMPtr<nsIPermission> permission = nsPermission::Create(
-      aPrincipal, NS_LITERAL_CSTRING("cookie"), *aCookiePermission, 0, 0);
+      aPrincipal, NS_LITERAL_CSTRING("cookie"), *aCookiePermission, 0, 0, 0);
   if (permission) {
     mCookiePermissions.AppendElement(permission);
   }
@@ -197,8 +197,9 @@ void CookieSettings::Serialize(CookieSettingsArgs& aData) {
       continue;
     }
 
-    nsCOMPtr<nsIPermission> permission = nsPermission::Create(
-        principal, NS_LITERAL_CSTRING("cookie"), data.cookiePermission(), 0, 0);
+    nsCOMPtr<nsIPermission> permission =
+        nsPermission::Create(principal, NS_LITERAL_CSTRING("cookie"),
+                             data.cookiePermission(), 0, 0, 0);
     if (NS_WARN_IF(!permission)) {
       continue;
     }
@@ -231,8 +232,9 @@ void CookieSettings::Merge(const CookieSettingsArgs& aData) {
       continue;
     }
 
-    nsCOMPtr<nsIPermission> permission = nsPermission::Create(
-        principal, NS_LITERAL_CSTRING("cookie"), data.cookiePermission(), 0, 0);
+    nsCOMPtr<nsIPermission> permission =
+        nsPermission::Create(principal, NS_LITERAL_CSTRING("cookie"),
+                             data.cookiePermission(), 0, 0, 0);
     if (NS_WARN_IF(!permission)) {
       continue;
     }
