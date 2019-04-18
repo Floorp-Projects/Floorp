@@ -1,6 +1,6 @@
 <!DOCTYPE HTML>
 <meta charset=utf-8>
-<title>Element Timing: observe image inside SVG</title>
+<title>Element Timing: observe image inside SVG with small dimensions</title>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
 <script src="resources/element-timing-helpers.js"></script>
@@ -15,8 +15,8 @@ async_test(function (t) {
       const pathname = window.location.href.substring(0, index) +
           '/resources/circle.svg';
       checkElement(entry, pathname, 'my_svg', beforeRender);
-      // Assume viewport has size at least 200, so the element is fully visible.
-      checkRect(entry, [0, 200, 0, 200]);
+      // Image size is 200x200 but SVG size is 100x100 so it is clipped.
+      checkRect(entry, [0, 100, 0, 100]);
     })
   );
   observer.observe({entryTypes: ['element']});
@@ -28,6 +28,6 @@ body {
   margin: 0;
 }
 </style>
-<svg width="300" height="300">
+<svg width="100" height="100">
   <image href='resources/circle.svg' elementtiming='my_svg'/>
 </svg>
