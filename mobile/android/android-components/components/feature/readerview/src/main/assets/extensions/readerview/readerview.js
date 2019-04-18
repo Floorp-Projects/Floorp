@@ -119,7 +119,7 @@ class ReaderView {
 
   createHtml(article) {
     return `
-      <body>
+      <body class="readerview-body">
         <div id="readerview" class="container" dir=${article.dir}>
           <div class="header reader-header">
             <a class="domain reader-domain">${article.url}</a>

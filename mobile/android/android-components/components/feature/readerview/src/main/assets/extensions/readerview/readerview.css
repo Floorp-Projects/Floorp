@@ -5,11 +5,7 @@
 /* Avoid adding ID selector rules in this style sheet, since they could
  * inadvertently match elements in the article content. */
 
-html {
-  -moz-text-size-adjust: none;
-}
-
-body {
+.readerview-body {
   padding: 20px;
   transition-property: background-color, color;
   transition-duration: 0.4s;
@@ -18,87 +14,87 @@ body {
   margin-right: auto;
 }
 
-body.light {
+.readerview-body.light {
   background-color: #ffffff;
   color: #222222;
 }
 
-body.sepia {
+.readerview-body.sepia {
   color: #5b4636;
   background-color: #f4ecd8;
 }
 
-body.dark {
+.readerview-body.dark {
   background-color: #222222;
   color: #eeeeee;
 }
 
-body.sans-serif {
+.readerview-body.sans-serif {
   font-family: sans-serif;
 }
 
-body.serif {
+.readerview-body.serif {
   font-family: serif;
 }
 
 /* Override some controls and content styles based on color scheme */
 
-body.light > .container > .header > .domain {
+.readerview-body.light > .container > .header > .domain {
   color: #ee7600;
   border-bottom-color: #d0d0d0;
 }
 
-body.light > .container > .header > h1 {
+.readerview-body.light > .container > .header > h1 {
   color: #222222;
 }
 
-body.light > .container > .header > .credits {
+.readerview-body.light > .container > .header > .credits {
   color: #898989;
 }
 
-body.dark > .container > .header > .domain {
+.readerview-body.dark > .container > .header > .domain {
   color: #ff9400;
   border-bottom-color: #777777;
 }
 
-body.dark > .container > .header > h1 {
+.readerview-body.dark > .container > .header > h1 {
   color: #eeeeee;
 }
 
-body.dark > .container > .header > .credits {
+.readerview-body.dark > .container > .header > .credits {
   color: #aaaaaa;
 }
 
-body.sepia > .container > .header > .domain {
+.readerview-body.sepia > .container > .header > .domain {
   border-bottom-color: #5b4636 !important;
 }
 
-body.sepia > .container > .footer {
+.readerview-body.sepia > .container > .footer {
   background-color: #dedad4 !important;
 }
 
-body.light > .container > .content .caption,
-body.light > .container > .content .wp-caption-text,
-body.light > .container > .content figcaption {
+.readerview-body.light > .container > .content .caption,
+.readerview-body.light > .container > .content .wp-caption-text,
+.readerview-body.light > .container > .content figcaption {
   color: #898989;
 }
 
-body.dark > .container > .content .caption,
-body.dark > .container > .content .wp-caption-text,
-body.dark > .container > .content figcaption {
+.readerview-body.dark > .container > .content .caption,
+.readerview-body.dark > .container > .content .wp-caption-text,
+.readerview-body.dark > .container > .content figcaption {
   color: #aaaaaa;
 }
 
-body.light > .container > .content blockquote {
+.readerview-body.light > .container > .content blockquote {
   color: #898989 !important;
   border-left-color: #d0d0d0 !important;
 }
 
-body.sepia blockquote {
+.readerview-body.sepia blockquote {
   border-inline-start: 2px solid #5b4636 !important;
 }
 
-body.dark > .container > .content blockquote {
+.readerview-body.dark > .container > .content blockquote {
   color: #aaaaaa !important;
   border-left-color: #777777 !important;
 }
