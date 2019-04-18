@@ -1102,15 +1102,15 @@ function runTests() {
     test_parseable(":-moz-lwtheme-brighttext");
     test_parseable(":-moz-lwtheme-darktext");
 
-    test_parseable(":-moz-tree-row(selected)");
+    test_balanced_unparseable(":-moz-tree-row(selected)");
     test_parseable("::-moz-tree-row(selected)");
     test_parseable("::-MoZ-trEE-RoW(sElEcTeD)");
-    test_parseable(":-moz-tree-row(selected focus)");
-    test_parseable(":-moz-tree-row(selected , focus)");
+    test_balanced_unparseable(":-moz-tree-row(selected focus)");
+    test_balanced_unparseable(":-moz-tree-row(selected , focus)");
     test_parseable("::-moz-tree-row(selected ,focus)");
-    test_parseable(":-moz-tree-row(selected, focus)");
+    test_balanced_unparseable(":-moz-tree-row(selected, focus)");
     test_parseable("::-moz-tree-row(selected,focus)");
-    test_parseable(":-moz-tree-row(selected     focus)");
+    test_balanced_unparseable(":-moz-tree-row(selected     focus)");
     test_parseable("::-moz-tree-row(selected    ,   focus)");
     test_parseable("::-moz-tree-twisty(  hover open  )");
     test_balanced_unparseable("::-moz-tree-row(selected {[]} )");
