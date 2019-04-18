@@ -7,41 +7,53 @@
     <color name="primary_text_light_theme">#20123A</color>
     <color name="secondary_text_light_theme">@color/photonGrey50</color>
     <color name="foundation_light_theme">#F9F9FB</color>
+    <color name="inset_light_theme">#F2F2F5</color>
     <color name="above_light_theme">#FFF</color>
-    <color name="above_darkened_light_theme">#F2F2F5</color>
     <color name="accent_light_theme">#312A65</color>
     <color name="accent_bright_light_theme">#592ACB</color>
-    <color name="neutral_light_theme">@color/photonGrey20</color>
+    <color name="accent_high_contrast_light_theme">@color/accent_light_theme</color>
+    <color name="neutral_light_theme">#1F000000</color>
+    <color name="shadow_light_theme">#1F000000</color>
+    <color name="destructive_light_theme">@color/photonRed60</color>
 
     <!-- Dark theme color palette -->
     <color name="primary_text_dark_theme">#FBFBFE</color>
-    <color name="secondary_text_dark_theme">#A4A3AA</color>
+    <color name="secondary_text_dark_theme">#A7A2B7</color>
     <color name="foundation_dark_theme">#1C1B22</color>
+    <color name="inset_dark_theme">#3F3E46</color>
     <color name="above_dark_theme">#32313C</color>
-    <color name="above_darkened_dark_theme">#252432</color>
-    <color name="accent_dark_theme">#312A65</color>
-    <color name="accent_bright_dark_theme">#AB71FF</color>
-    <color name="neutral_dark_theme">@color/photonGrey40</color>
+    <color name="accent_dark_theme">#e6e6ea</color>
+    <color name="accent_bright_dark_theme">#592ACB</color>
+    <color name="accent_high_contrast_dark_theme">#AB71FF</color>
+    <color name="neutral_dark_theme">#1FFBFBFE</color>
+    <color name="shadow_dark_theme">#050505</color>
+    <color name="destructive_dark_theme">#FF4F5E</color>
 
     <!-- Private theme color palette -->
     <color name="primary_text_private_theme">#FBFBFE</color>
-    <color name="secondary_text_private_theme">#A4A3AA</color>
-    <color name="foundation_private_theme">#242251</color>
-    <color name="above_private_theme">#393862</color>
-    <color name="above_darkened_private_theme">#2c2b58</color>
-    <color name="accent_private_theme">#AD3BFF</color>
-    <color name="accent_bright_private_theme">#AD3BFF</color>
-    <color name="neutral_private_theme">@color/photonGrey40</color>
+    <color name="secondary_text_private_theme">#A7A2B7</color>
+    <color name="foundation_private_theme">#492E85</color>
+    <color name="inset_private_theme">#362A5C</color>
+    <color name="above_private_theme">#291D4F</color>
+    <color name="accent_private_theme">#E6E6EA</color>
+    <color name="accent_bright_private_theme">#F565FF</color>
+    <color name="accent_high_contrast_private_theme">#F565FF</color>
+    <color name="neutral_private_theme">#1FFBFBFE</color>
+    <color name="shadow_private_theme">#2B1067</color>
+    <color name="destructive_private_theme">#FF4F5E</color>
 
     <!-- Normal theme colors for light mode -->
     <color name="primary_text_normal_theme">@color/primary_text_light_theme</color>
     <color name="secondary_text_normal_theme">@color/secondary_text_light_theme</color>
     <color name="foundation_normal_theme">@color/foundation_light_theme</color>
     <color name="above_normal_theme">@color/above_light_theme</color>
-    <color name="above_darkened_normal_theme">@color/above_darkened_light_theme</color>
+    <color name="inset_normal_theme">@color/inset_light_theme</color>
     <color name="accent_normal_theme">@color/accent_light_theme</color>
     <color name="accent_bright_normal_theme">@color/accent_bright_light_theme</color>
+    <color name="accent_high_contrast_normal_theme">@color/accent_high_contrast_light_theme</color>
     <color name="neutral_normal_theme">@color/neutral_light_theme</color>
+    <color name="shadow_normal_theme">@color/shadow_light_theme</color>
+    <color name="destructive_normal_theme">@color/destructive_light_theme</color>
 
     <!-- Bookmark buttons -->
     <color name="bookmark_favicon_background">#DFDFE3</color>
@@ -81,6 +93,7 @@
 
     <!-- Misc colors applied universally-->
     <color name="suggestion_highlight_color">#5C592ACB</color>
-    <color name="delete_color">@color/photonRed60</color>
+    <!-- <color name="private_browsing_button_accent_color">#722291</color> -->
+    <color name="private_browsing_button_accent_color">@color/foundation_private_theme</color>
     <color name="white_color">#FBFBFE</color>
 </resources>

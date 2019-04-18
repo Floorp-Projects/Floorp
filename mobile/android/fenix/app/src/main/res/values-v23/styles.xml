@@ -9,6 +9,9 @@
             sure we also get them in 27+ -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:windowLightStatusBar">@bool/theme_is_light</item>
+
+        <!-- Style the navigation bar -->
+        <item name="android:navigationBarColor">?foundation</item>
     </style>
 
     <style name="PrivateTheme" parent="PrivateThemeBase">
@@ -19,6 +22,6 @@
         <item name="android:windowLightStatusBar">false</item>
 
         <!-- Style the navigation bar -->
-        <item name="android:navigationBarColor">@color/foundation_private_theme</item>
+        <item name="android:navigationBarColor">?foundation</item>
     </style>
 </resources>

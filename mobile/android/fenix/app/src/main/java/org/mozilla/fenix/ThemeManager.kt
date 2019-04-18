@@ -120,7 +120,7 @@ class DefaultThemeManager : ThemeManager {
                 window.navigationBarColor = ContextCompat
                     .getColor(
                         context, DefaultThemeManager
-                            .resolveAttribute(R.attr.above, context)
+                            .resolveAttribute(R.attr.foundation, context)
                     )
             } else {
                 window.navigationBarColor = ContextCompat

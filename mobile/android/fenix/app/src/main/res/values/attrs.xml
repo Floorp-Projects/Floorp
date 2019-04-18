@@ -8,13 +8,18 @@
     <attr name="secondaryText" format="reference" />
     <attr name="accent" format="reference" />
     <attr name="accentBright" format="reference" />
+    <attr name="accentHighContrast" format="reference" />
     <attr name="foundation" format="reference" />
     <attr name="above" format="reference" />
-    <attr name="aboveDarkened" format="reference" />
+    <attr name="inset" format="reference" />
     <attr name="neutral" format="reference" />
+    <attr name="shadow" format="reference" />
+    <attr name="destructive" format="reference"/>
 
     <!-- Misc -->
+    <attr name="homeBackground" format="reference"/>
     <attr name="privateBrowsingButtonBackground" format="reference" />
+    <attr name="privateBrowsingButtonAccent" format="reference" />
     <attr name="fenixLogo" format="reference" />
     <attr name="fenixSnackbarBackground" format="reference" />
 

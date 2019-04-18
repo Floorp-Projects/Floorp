@@ -12,7 +12,7 @@
         android:id="@+id/homeLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/home_background_gradient"
+        android:background="?homeBackground"
         app:layoutDescription="@xml/home_scene"
         tools:context=".home.HomeFragment">
         <ImageButton

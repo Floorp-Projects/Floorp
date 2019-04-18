@@ -16,6 +16,7 @@ import kotlinx.android.synthetic.main.session_bottom_sheet.view.*
 import org.mozilla.fenix.DefaultThemeManager
 import org.mozilla.fenix.utils.ItsNotBrokenSnack
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.getColorFromAttr
 
 class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer {
     sealed class SessionType {
@@ -58,10 +59,7 @@ class SessionBottomSheetFragment : BottomSheetDialogFragment(), LayoutContainer 
         view.delete_session_button.apply {
             val drawable = ContextCompat.getDrawable(context!!, R.drawable.ic_delete)
             drawable?.setColorFilter(
-                ContextCompat.getColor(
-                    context!!,
-                    R.color.delete_color
-                ), PorterDuff.Mode.SRC_IN
+                R.attr.destructive.getColorFromAttr(context), PorterDuff.Mode.SRC_IN
             )
             setCompoundDrawablesWithIntrinsicBounds(drawable, null, null, null)
         }

@@ -15,7 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
-        app:cardBackgroundColor="?foundation"
+        app:cardBackgroundColor="?above"
         android:background="?foundation"
         android:elevation="5dp"
         android:padding="10dp"
@@ -81,12 +81,12 @@
         android:background="?foundation"
         android:drawableStart="@drawable/ic_delete"
         android:drawablePadding="14dp"
-        android:drawableTint="@color/delete_color"
+        android:drawableTint="?destructive"
         android:paddingStart="20dp"
         android:paddingTop="12dp"
         android:paddingBottom="12dp"
         android:text="@string/current_session_delete"
-        android:textColor="@color/delete_color"
+        android:textColor="?destructive"
         android:textSize="16sp"
         tools:targetApi="m" />
 

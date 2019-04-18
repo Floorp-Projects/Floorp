@@ -12,7 +12,7 @@
     android:clipToPadding="false"
     android:focusable="true"
     android:foreground="?android:attr/selectableItemBackground"
-    app:cardBackgroundColor="?foundation"
+    app:cardBackgroundColor="?above"
     app:cardCornerRadius="@dimen/tab_corner_radius"
     app:cardElevation="5dp">
 

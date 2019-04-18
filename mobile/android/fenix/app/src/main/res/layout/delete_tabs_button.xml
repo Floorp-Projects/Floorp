@@ -10,7 +10,7 @@
     android:layout_marginTop="16dp"
     android:layout_marginBottom="16dp"
     android:background="@drawable/button_background"
-    android:backgroundTint="?neutral"
+    android:backgroundTint="?accent"
     android:clickable="true"
     android:focusable="true"
     android:foreground="?android:attr/selectableItemBackground"
