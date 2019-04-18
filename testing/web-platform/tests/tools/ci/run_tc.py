@@ -117,7 +117,7 @@ def make_hosts_file():
 
 
 def checkout_revision(rev):
-    subprocess.check_call(["git", "--quiet", "checkout", rev])
+    subprocess.check_call(["git", "checkout", "-q", rev])
 
 
 def install_chrome(channel):
@@ -232,19 +232,6 @@ def main():
 
     if event:
         set_variables(event)
-
-    if os.environ.get("GITHUB_PULL_REQUEST", "false") != "false":
-        parents = run(["git", "show", "--format=%P", "task_head"], return_stdout=True).strip().split()
-        if len(parents) == 2:
-            base_head = parents[0]
-            pr_head = parents[1]
-
-            run(["git", "branch", "base_head", base_head])
-            run(["git", "branch", "pr_head", pr_head])
-        else:
-            print("ERROR: Pull request HEAD wasn't a 2-parent merge commit; "
-                  "expected to test the merge of PR into the base")
-            sys.exit(1)
 
     if os.environ.get("GITHUB_BRANCH"):
         # Ensure that the remote base branch exists
