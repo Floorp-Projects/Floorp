@@ -145,9 +145,7 @@ class ClientWrapper {
   }
 
   async getServiceWorkerFront({ id }) {
-    const { serviceWorkers } = await this.listWorkers();
-    const workerFronts = serviceWorkers.map(sw => sw.workerTargetFront);
-    return workerFronts.find(front => front && front.actorID === id);
+    return this.client.mainRoot.getWorker(id);
   }
 
   async listWorkers() {
