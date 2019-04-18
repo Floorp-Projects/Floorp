@@ -18,6 +18,11 @@ class IntentReceiverActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // The intent property is nullable, but the rest of the code below
+        // assumes it is not. If it's null, then we make a new one and open
+        // the HomeActivity.
+        val intent = intent?.let { Intent(intent) } ?: Intent()
+
         val isPrivate = PreferenceManager
             .getDefaultSharedPreferences(this).getBoolean(getString(R.string.pref_key_private_mode), false)
 
@@ -27,11 +32,7 @@ class IntentReceiverActivity : Activity() {
             components.utils.intentProcessor.process(intent)
         }
 
-        val openToBrowser: Boolean
-
-        val intent = Intent(intent)
-
-        openToBrowser = when {
+        val openToBrowser = when {
             CustomTabConfig.isCustomTabIntent(SafeIntent(intent)) -> {
                 intent.setClassName(applicationContext, CustomTabActivity::class.java.name)
                 true
