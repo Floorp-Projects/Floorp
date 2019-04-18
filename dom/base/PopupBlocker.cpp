@@ -293,6 +293,7 @@ PopupBlocker::PopupControlState PopupBlocker::GetEventPopupControlState(
       break;
     case eMouseEventClass:
       if (aEvent->IsTrusted()) {
+        // eLeftButton
         if (aEvent->AsMouseEvent()->button == WidgetMouseEvent::eLeftButton) {
           abuse = PopupBlocker::openBlocked;
           switch (aEvent->mMessage) {
@@ -322,6 +323,16 @@ PopupBlocker::PopupControlState PopupBlocker::GetEventPopupControlState(
               break;
             default:
               break;
+          }
+        } else if (aEvent->mMessage == eMouseAuxClick) {
+          // Not eLeftButton
+          // There's not a strong reason to ignore other events (eg eMouseUp)
+          // for non-primary clicks as far as we know, so we could add them if
+          // it becomes a compat issue
+          if (PopupAllowedForEvent("auxclick")) {
+            abuse = PopupBlocker::openControlled;
+          } else {
+            abuse = PopupBlocker::openBlocked;
           }
         }
 
