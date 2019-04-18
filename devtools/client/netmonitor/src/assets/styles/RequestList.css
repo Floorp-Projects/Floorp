@@ -217,11 +217,11 @@
 }
 
 .requests-list-status-icon:not([data-code]) {
-  background-color: var(--theme-content-color2);
+  background-color: var(--theme-body-color);
 }
 
 .requests-list-status-icon[data-code="cached"] {
-  border: 2px solid var(--theme-content-color2);
+  border: 2px solid var(--theme-body-color);
   background-color: transparent;
 }
 

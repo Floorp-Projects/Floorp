@@ -518,7 +518,7 @@
 }
 
 .line-graph-widget-tooltip > [text=info] {
-  color: var(--theme-content-color1);
+  color: var(--theme-text-color-strong);
 }
 
 .line-graph-widget-tooltip > [text=value] {
@@ -527,7 +527,7 @@
 
 .line-graph-widget-tooltip > [text=metric] {
   margin-inline-start: 1px;
-  color: var(--theme-content-color3);
+  color: var(--theme-body-color-alt);
 }
 
 .theme-light .line-graph-widget-tooltip > [text=value],

@@ -18,8 +18,8 @@
 }
 
 .chart-colored-blob {
-  fill: var(--theme-content-color2);
-  background: var(--theme-content-color2);
+  fill: var(--theme-body-color);
+  background: var(--theme-body-color);
 }
 
 /* Chart: Pie */

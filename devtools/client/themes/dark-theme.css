@@ -184,7 +184,7 @@ body {
 }
 
 .CodeMirror.cm-s-mozilla  pre {
-  color: var(--theme-content-color1);
+  color: var(--theme-text-color-strong);
 }
 
 .cm-s-mozilla .cm-operator {
@@ -193,7 +193,7 @@ body {
 
 .cm-s-mozilla .cm-variable-3,
 .cm-s-mozilla .cm-special {
-  color: var(--theme-content-color1);
+  color: var(--theme-text-color-strong);
 }
 
 .cm-s-mozilla .CodeMirror-lines .CodeMirror-cursor {
