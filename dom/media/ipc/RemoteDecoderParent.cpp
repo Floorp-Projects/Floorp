@@ -158,9 +158,6 @@ void RemoteDecoderParent::ActorDestroy(ActorDestroyReason aWhy) {
     mDecoder->Shutdown();
     mDecoder = nullptr;
   }
-  if (mDecodeTaskQueue) {
-    mDecodeTaskQueue->BeginShutdown();
-  }
 }
 
 void RemoteDecoderParent::Error(const MediaResult& aError) {
