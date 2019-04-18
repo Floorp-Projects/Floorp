@@ -23,6 +23,7 @@
 #include "mozilla/EffectCompositor.h"
 #include "mozilla/Keyframe.h"
 #include "mozilla/KeyframeEffectParams.h"
+#include "mozilla/PostRestyleMode.h"
 // RawServoDeclarationBlock and associated RefPtrTraits
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/StyleAnimationValue.h"
@@ -174,7 +175,7 @@ class KeyframeEffect : public AnimationEffect {
   void SetComposite(const CompositeOperation& aComposite);
 
   void NotifySpecifiedTimingUpdated();
-  void NotifyAnimationTimingUpdated();
+  void NotifyAnimationTimingUpdated(PostRestyleMode aPostRestyle);
   void RequestRestyle(EffectCompositor::RestyleType aRestyleType);
   void SetAnimation(Animation* aAnimation) override;
   void SetKeyframes(JSContext* aContext, JS::Handle<JSObject*> aKeyframes,
