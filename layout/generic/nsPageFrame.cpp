@@ -457,7 +457,7 @@ class nsDisplayHeaderFooter final : public nsDisplayItem {
     MOZ_ASSERT(pageFrame, "We should have an nsPageFrame");
 #endif
     static_cast<nsPageFrame*>(mFrame)->PaintHeaderFooter(
-        *aCtx, ToReferenceFrame(), mDisableSubpixelAA);
+        *aCtx, ToReferenceFrame(), IsSubpixelAADisabled());
   }
   NS_DISPLAY_DECL_NAME("HeaderFooter", TYPE_HEADER_FOOTER)
 
