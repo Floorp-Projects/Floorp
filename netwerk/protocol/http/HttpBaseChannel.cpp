@@ -1533,27 +1533,6 @@ HttpBaseChannel::GetFlashPluginState(nsIHttpChannel::FlashPluginState* aState) {
 }
 
 NS_IMETHODIMP
-HttpBaseChannel::OverrideTrackingFlagsForDocumentCookieAccessor(
-    nsIHttpChannel* aDocumentChannel) {
-  LOG(("HttpBaseChannel::OverrideTrackingFlagsForDocumentCookieAccessor() %p",
-       this));
-
-  // The semantics we'd like to achieve here are that document.cookie
-  // should follow the same rules that the document is subject to with
-  // regards to content blocking. Therefore we need to propagate the
-  // same flags from the document channel to the fake channel here.
-
-  mThirdPartyClassificationFlags =
-      aDocumentChannel->GetThirdPartyClassificationFlags();
-  mFirstPartyClassificationFlags =
-      aDocumentChannel->GetFirstPartyClassificationFlags();
-
-  MOZ_ASSERT(
-      !(mFirstPartyClassificationFlags && mThirdPartyClassificationFlags));
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 HttpBaseChannel::GetTransferSize(uint64_t* aTransferSize) {
   *aTransferSize = mTransferSize;
   return NS_OK;
