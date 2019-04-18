@@ -270,7 +270,9 @@ this.VideoControlsImplWidget = class {
           this.setShowPictureInPictureMessage(true);
         }
 
-        if (!this.pipToggleEnabled || this.isShowingPictureInPictureMessage) {
+        if (!this.pipToggleEnabled ||
+            this.isShowingPictureInPictureMessage ||
+            this.isAudioOnly) {
           this.pictureInPictureToggleButton.setAttribute("hidden", true);
         }
 
