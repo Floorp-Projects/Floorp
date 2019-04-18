@@ -571,9 +571,9 @@ public class BrowserApp extends GeckoApp
 
     private Runnable mCheckLongPress;
     {
-        // Only initialise the runnable if we are >= N.
+        // Only initialise the runnable if we are = N.
         // See onKeyDown() for more details of the back-button long-press workaround
-        if (!Versions.preN) {
+        if (Versions.N) {
             mCheckLongPress = new Runnable() {
                 public void run() {
                     handleBackLongPress();
@@ -589,7 +589,7 @@ public class BrowserApp extends GeckoApp
         // - For short presses, we cancel the callback in onKeyUp
         // - For long presses, the normal keypress is marked as cancelled, hence won't be handled elsewhere
         //   (but Android still provides the haptic feedback), and the runnable is run.
-        if (!Versions.preN &&
+        if (Versions.N &&
                 keyCode == KeyEvent.KEYCODE_BACK) {
             ThreadUtils.getUiHandler().removeCallbacks(mCheckLongPress);
             ThreadUtils.getUiHandler().postDelayed(mCheckLongPress, ViewConfiguration.getLongPressTimeout());
@@ -603,7 +603,7 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public boolean onKeyUp(int keyCode, KeyEvent event) {
-        if (!Versions.preN &&
+        if (Versions.N &&
                 keyCode == KeyEvent.KEYCODE_BACK) {
             ThreadUtils.getUiHandler().removeCallbacks(mCheckLongPress);
         }
@@ -3802,12 +3802,11 @@ public class BrowserApp extends GeckoApp
         // onKeyLongPress is broken in Android N, see onKeyDown() for more information. We add a version
         // check here to match our fallback code in order to avoid handling a long press twice (which
         // could happen if newer versions of android and/or other vendors were to  fix this problem).
-        if (Versions.preN &&
+        if (!Versions.N &&
                 keyCode == KeyEvent.KEYCODE_BACK) {
             if (handleBackLongPress()) {
                 return true;
             }
-
         }
         return super.onKeyLongPress(keyCode, event);
     }
