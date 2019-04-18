@@ -95,7 +95,7 @@ class RootFront extends FrontClassWithSpec(rootSpec) {
       result.service.push({
         active: front.active,
         fetch: front.fetch,
-        id: front.actorID,
+        id: front.id,
         lastUpdateTime: front.lastUpdateTime,
         name: front.url,
         registrationFront: front,
