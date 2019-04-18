@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<blocklist lastupdate="1555100575898" xmlns="http://www.mozilla.org/2006/addons-blocklist">
+<blocklist lastupdate="1555503879816" xmlns="http://www.mozilla.org/2006/addons-blocklist">
   <emItems>
     <emItem blockID="i334" id="{0F827075-B026-42F3-885D-98981EE7B1AE}">
       <prefs/>
@@ -2813,6 +2813,18 @@
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
     <emItem blockID="3a921aa8-d44a-4272-be63-0fd102577f59" id="{d8b03707-e39f-4b17-8e56-56354fb14af5}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="94621e2f-28a0-4b18-97c6-5f6203f5912e" id="{8ee8602c-aba6-4e2a-9faa-1724c3f4f9ba}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="881d3476-f18a-4560-b065-cded406783d2" id="{40cd7fd2-a3e4-43f9-9d86-0e0a70376203}">
+      <prefs/>
+      <versionRange minVersion="0" maxVersion="*" severity="3"/>
+    </emItem>
+    <emItem blockID="8aff4cb0-4d5f-4e74-8db7-b04f616c3b60" id="{674fff65-6cd0-488a-9453-fb91fc3d7397}">
       <prefs/>
       <versionRange minVersion="0" maxVersion="*" severity="3"/>
     </emItem>
