@@ -51,7 +51,6 @@ FINAL_TARGET_FILES.content.tests.SimpleTest += [
     '../specialpowers/content/specialpowers.js',
     '../specialpowers/content/specialpowersAPI.js',
     '../specialpowers/content/SpecialPowersObserverAPI.js',
-    'tests/SimpleTest/AddTask.js',
     'tests/SimpleTest/AsyncUtilsContent.js',
     'tests/SimpleTest/ChromePowers.js',
     'tests/SimpleTest/EventUtils.js',
