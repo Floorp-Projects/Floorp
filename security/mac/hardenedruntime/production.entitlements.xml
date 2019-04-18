@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+     Entitlements to apply to the .app bundle and all executable files
+     contained within it during codesigning of production channel builds that
+     will be notarized. These entitlements enable hardened runtime protections
+     to the extent possible for Firefox. Some supporting binaries within the
+     bundle could use more restrictive entitlements, but they are launched by
+     the main Firefox process and therefore inherit the parent process
+     entitlements.
+-->
+<plist version="1.0">
+  <dict>
+    <!-- Firefox does not use MAP_JIT for executable mappings -->
+    <key>com.apple.security.cs.allow-jit</key><false/>
+
+    <!-- Firefox needs to create executable pages (without MAP_JIT) -->
+    <key>com.apple.security.cs.allow-unsigned-executable-memory</key><true/>
+
+    <!-- Code paged in from disk should match the signature at page in-time -->
+    <key>com.apple.security.cs.disable-executable-page-protection</key><false/>
+
+    <!-- Allow loading third party libraries. Needed for Flash and CDMs -->
+    <key>com.apple.security.cs.disable-library-validation</key><true/>
+
+    <!-- Allow dyld environment variables. Needed because Firefox uses
+         dyld variables (such as @executable_path) to load libaries from
+         within the .app bundle. -->
+    <key>com.apple.security.cs.allow-dyld-environment-variables</key><true/>
+
+    <!-- Don't allow debugging of the executable. Debuggers will be prevented
+         from attaching to running executables. Notarization does not permit
+         access to get-task-allow (as documented by Apple) so this must be
+         disabled on notarized builds. -->
+    <key>com.apple.security.get-task-allow</key><false/>
+
+    <!-- Firefox needs to access the microphone on sites the user allows -->
+    <key>com.apple.security.device.audio-input</key><true/>
+
+    <!-- Firefox needs to access the camera on sites the user allows -->
+    <key>com.apple.security.device.camera</key><true/>
+
+    <!-- Firefox needs to access the location on sites the user allows -->
+    <key>com.apple.security.personal-information.location</key><true/>
+  </dict>
+</plist>
