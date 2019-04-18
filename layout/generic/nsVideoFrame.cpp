@@ -473,17 +473,8 @@ class nsDisplayVideo : public nsDisplayItem {
     return true;
   }
 
-  nsRegion GetOpaqueRegion(nsDisplayListBuilder* aBuilder,
-                           bool* aSnap) const override {
-    *aSnap = false;
-
-    HTMLVideoElement* element =
-        static_cast<HTMLVideoElement*>(Frame()->GetContent());
-    if (element->HasAlpha()) {
-      return nsRegion();
-    }
-    return GetBounds(aBuilder, aSnap);
-  }
+  // For opaque videos, we will want to override GetOpaqueRegion here.
+  // This is tracked by bug 1545498.
 
   virtual nsRect GetBounds(nsDisplayListBuilder* aBuilder,
                            bool* aSnap) const override {
