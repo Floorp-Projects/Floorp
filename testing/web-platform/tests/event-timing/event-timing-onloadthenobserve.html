@@ -66,8 +66,10 @@ registration are lost
     // Use a dummy observer to know when the first click has been dispatched.
     const observerPromise = new Promise((resolve, reject) => {
       new PerformanceObserver((entryList, observer) => {
-        resolve();
-        observer.disconnect();
+        if (entryList.getEntries().find(entry => entry.name === 'click')) {
+          resolve();
+          observer.disconnect();
+        }
       }).observe({ entryTypes: ['event'] });
     });
     on_event(window, 'load', () => {
