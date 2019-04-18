@@ -39,5 +39,5 @@ parent:
   async OperationDone(nsCString aContentType, FileDescriptor aFD);
 };
 
-} // namespace dom
+} // namespace ipc
 } // namespace mozilla

@@ -27,9 +27,11 @@
 #include "mozilla/dom/cache/ActorUtils.h"
 #include "mozilla/dom/indexedDB/PBackgroundIDBFactoryChild.h"
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
+#include "mozilla/dom/ipc/FileCreatorChild.h"
 #include "mozilla/dom/ipc/IPCBlobInputStreamChild.h"
 #include "mozilla/dom/ipc/PendingIPCBlobChild.h"
 #include "mozilla/dom/ipc/TemporaryIPCBlobChild.h"
+#include "mozilla/dom/IPCBlobUtils.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
 #include "mozilla/dom/RemoteWorkerChild.h"
 #include "mozilla/dom/RemoteWorkerServiceChild.h"
@@ -376,6 +378,18 @@ bool BackgroundChildImpl::DeallocPTemporaryIPCBlobChild(
     PTemporaryIPCBlobChild* aActor) {
   RefPtr<mozilla::dom::TemporaryIPCBlobChild> actor =
       dont_AddRef(static_cast<mozilla::dom::TemporaryIPCBlobChild*>(aActor));
+  return true;
+}
+
+PFileCreatorChild* BackgroundChildImpl::AllocPFileCreatorChild(
+    const nsString& aFullPath, const nsString& aType, const nsString& aName,
+    const Maybe<int64_t>& aLastModified, const bool& aExistenceCheck,
+    const bool& aIsFromNsIFile) {
+  return new mozilla::dom::FileCreatorChild();
+}
+
+bool BackgroundChildImpl::DeallocPFileCreatorChild(PFileCreatorChild* aActor) {
+  delete static_cast<mozilla::dom::FileCreatorChild*>(aActor);
   return true;
 }
 

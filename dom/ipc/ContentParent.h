@@ -1127,12 +1127,6 @@ class ContentParent final : public PContentParent,
 
   mozilla::ipc::IPCResult RecvDeleteGetFilesRequest(const nsID& aID);
 
-  mozilla::ipc::IPCResult RecvFileCreationRequest(
-      const nsID& aID, const nsString& aFullPath, const nsString& aType,
-      const nsString& aName, const bool& aLastModifiedPassed,
-      const int64_t& aLastModified, const bool& aExistenceCheck,
-      const bool& aIsFromNsIFile);
-
   mozilla::ipc::IPCResult RecvAccumulateChildHistograms(
       InfallibleTArray<HistogramAccumulation>&& aAccumulations);
   mozilla::ipc::IPCResult RecvAccumulateChildKeyedHistograms(
