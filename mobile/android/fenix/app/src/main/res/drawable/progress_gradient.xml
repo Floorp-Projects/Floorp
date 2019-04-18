@@ -10,13 +10,14 @@
     </item>
 
     <item android:id="@android:id/progress">
-        <clip>
+        <scale android:scaleWidth="100%">
             <shape>
+                <corners android:radius="8dp"/>
                 <gradient
                     android:centerColor="#F10366"
                     android:endColor="#FF9100"
                     android:startColor="#6173FF" />
             </shape>
-        </clip>
+        </scale>
     </item>
 </layer-list>
