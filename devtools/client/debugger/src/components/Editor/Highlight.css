@@ -10,8 +10,8 @@
   position: absolute;
   border-top-style: solid;
   border-bottom-style: solid;
-  border-top-color: var(--theme-comment-alt);
-  border-bottom-color: var(--theme-comment-alt);
+  border-top-color: var(--theme-text-color-inactive);
+  border-bottom-color: var(--theme-text-color-inactive);
   border-top-width: 1px;
   border-bottom-width: 1px;
   top: -1px;
@@ -23,7 +23,7 @@
 }
 
 .cm-highlight-full::before {
-  border: 1px solid var(--theme-comment-alt);
+  border: 1px solid var(--theme-text-color-inactive);
   border-radius: 2px;
   margin: 0 -1px -1px -1px;
 }

@@ -28,7 +28,7 @@ html[dir="rtl"] .command-bar {
 }
 
 .command-bar .step-position {
-  color: var(--theme-comment-alt);
+  color: var(--theme-text-color-inactive);
   padding-top: 8px;
   margin-inline-end: 4px;
 }
