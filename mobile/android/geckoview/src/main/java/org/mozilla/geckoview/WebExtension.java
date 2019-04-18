@@ -124,10 +124,13 @@ public class WebExtension {
     }
 
     /**
-     * Defines a message delegate for a Native App.
+     * Defines the message delegate for a Native App.
      *
-     * This message delegate will handle messaging for the native app specified in
-     * <code>nativeApp</code>.
+     * This message delegate will receive messages from the background script
+     * for the native app specified in <code>nativeApp</code>.
+     *
+     * For messages from content scripts, set a session-specific message
+     * delegate using {@link GeckoSession#setMessageDelegate}.
      *
      * See also
      *  <a href="https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Native_messaging">
@@ -165,6 +168,8 @@ public class WebExtension {
      *                  <code>application</code> parameter of
      *                  <code>runtime.sendNativeMessage</code> and
      *                  <code>runtime.connectNative</code>.
+     *
+     * @see GeckoSession#setMessageDelegate
      */
     @UiThread
     public void setMessageDelegate(final @Nullable MessageDelegate messageDelegate,
