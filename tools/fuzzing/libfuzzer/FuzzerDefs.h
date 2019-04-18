@@ -1,9 +1,8 @@
 //===- FuzzerDefs.h - Internal header for the Fuzzer ------------*- C++ -* ===//
 //
-//                     The LLVM Compiler Infrastructure
-//
-// This file is distributed under the University of Illinois Open Source
-// License. See LICENSE.TXT for details.
+// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+// See https://llvm.org/LICENSE.txt for license information.
+// SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 //
 //===----------------------------------------------------------------------===//
 // Basic definitions.
@@ -28,6 +27,7 @@
 #define LIBFUZZER_LINUX 1
 #define LIBFUZZER_NETBSD 0
 #define LIBFUZZER_FREEBSD 0
+#define LIBFUZZER_OPENBSD 0
 #define LIBFUZZER_WINDOWS 0
 #elif __APPLE__
 #define LIBFUZZER_APPLE 1
@@ -35,6 +35,7 @@
 #define LIBFUZZER_LINUX 0
 #define LIBFUZZER_NETBSD 0
 #define LIBFUZZER_FREEBSD 0
+#define LIBFUZZER_OPENBSD 0
 #define LIBFUZZER_WINDOWS 0
 #elif __NetBSD__
 #define LIBFUZZER_APPLE 0
@@ -42,6 +43,7 @@
 #define LIBFUZZER_LINUX 0
 #define LIBFUZZER_NETBSD 1
 #define LIBFUZZER_FREEBSD 0
+#define LIBFUZZER_OPENBSD 0
 #define LIBFUZZER_WINDOWS 0
 #elif __FreeBSD__
 #define LIBFUZZER_APPLE 0
@@ -49,6 +51,15 @@
 #define LIBFUZZER_LINUX 0
 #define LIBFUZZER_NETBSD 0
 #define LIBFUZZER_FREEBSD 1
+#define LIBFUZZER_OPENBSD 0
+#define LIBFUZZER_WINDOWS 0
+#elif __OpenBSD__
+#define LIBFUZZER_APPLE 0
+#define LIBFUZZER_FUCHSIA 0
+#define LIBFUZZER_LINUX 0
+#define LIBFUZZER_NETBSD 0
+#define LIBFUZZER_FREEBSD 0
+#define LIBFUZZER_OPENBSD 1
 #define LIBFUZZER_WINDOWS 0
 #elif _WIN32
 #define LIBFUZZER_APPLE 0
@@ -56,6 +67,7 @@
 #define LIBFUZZER_LINUX 0
 #define LIBFUZZER_NETBSD 0
 #define LIBFUZZER_FREEBSD 0
+#define LIBFUZZER_OPENBSD 0
 #define LIBFUZZER_WINDOWS 1
 #elif __Fuchsia__
 #define LIBFUZZER_APPLE 0
@@ -63,16 +75,26 @@
 #define LIBFUZZER_LINUX 0
 #define LIBFUZZER_NETBSD 0
 #define LIBFUZZER_FREEBSD 0
+#define LIBFUZZER_OPENBSD 0
 #define LIBFUZZER_WINDOWS 0
 #else
 #error "Support for your platform has not been implemented"
+#endif
+
+#if defined(_MSC_VER) && !defined(__clang__)
+// MSVC compiler is being used.
+#define LIBFUZZER_MSVC 1
+#else
+#define LIBFUZZER_MSVC 0
 #endif
 
 #ifndef __has_attribute
 #  define __has_attribute(x) 0
 #endif
 
-#define LIBFUZZER_POSIX (LIBFUZZER_APPLE || LIBFUZZER_LINUX || LIBFUZZER_NETBSD || LIBFUZZER_FREEBSD)
+#define LIBFUZZER_POSIX                                                        \
+  (LIBFUZZER_APPLE || LIBFUZZER_LINUX || LIBFUZZER_NETBSD ||                   \
+   LIBFUZZER_FREEBSD || LIBFUZZER_OPENBSD)
 
 #ifdef __x86_64
 #  if __has_attribute(target)
@@ -97,7 +119,28 @@
 #  define ALWAYS_INLINE
 #endif // __clang__
 
+#if LIBFUZZER_WINDOWS
+#define ATTRIBUTE_NO_SANITIZE_ADDRESS
+#else
 #define ATTRIBUTE_NO_SANITIZE_ADDRESS __attribute__((no_sanitize_address))
+#endif
+
+#if LIBFUZZER_WINDOWS
+#define ATTRIBUTE_ALIGNED(X) __declspec(align(X))
+#define ATTRIBUTE_INTERFACE __declspec(dllexport)
+// This is used for __sancov_lowest_stack which is needed for
+// -fsanitize-coverage=stack-depth. That feature is not yet available on
+// Windows, so make the symbol static to avoid linking errors.
+#define ATTRIBUTES_INTERFACE_TLS_INITIAL_EXEC static
+#define ATTRIBUTE_NOINLINE __declspec(noinline)
+#else
+#define ATTRIBUTE_ALIGNED(X) __attribute__((aligned(X)))
+#define ATTRIBUTE_INTERFACE __attribute__((visibility("default")))
+#define ATTRIBUTES_INTERFACE_TLS_INITIAL_EXEC \
+  ATTRIBUTE_INTERFACE __attribute__((tls_model("initial-exec"))) thread_local
+
+#define ATTRIBUTE_NOINLINE __attribute__((noinline))
+#endif
 
 #if defined(__has_feature)
 #  if __has_feature(address_sanitizer)
@@ -109,12 +152,6 @@
 #  endif
 #else
 #  define ATTRIBUTE_NO_SANITIZE_ALL
-#endif
-
-#if LIBFUZZER_WINDOWS
-#define ATTRIBUTE_INTERFACE __declspec(dllexport)
-#else
-#define ATTRIBUTE_INTERFACE __attribute__((visibility("default")))
 #endif
 
 namespace fuzzer {
@@ -139,6 +176,11 @@ extern ExternalFunctions *EF;
 template<typename T>
   class fuzzer_allocator: public std::allocator<T> {
     public:
+      fuzzer_allocator() = default;
+
+      template<class U>
+      explicit fuzzer_allocator(const fuzzer_allocator<U>&) {}
+
       template<class Other>
       struct rebind { typedef fuzzer_allocator<Other> other;  };
   };
@@ -155,24 +197,11 @@ typedef int (*UserCallback)(const uint8_t *Data, size_t Size);
 
 int FuzzerDriver(int *argc, char ***argv, UserCallback Callback);
 
-struct ScopedDoingMyOwnMemOrStr {
-  ScopedDoingMyOwnMemOrStr() { DoingMyOwnMemOrStr++; }
-  ~ScopedDoingMyOwnMemOrStr() { DoingMyOwnMemOrStr--; }
-  static int DoingMyOwnMemOrStr;
-};
-
-inline uint8_t  Bswap(uint8_t x)  { return x; }
-inline uint16_t Bswap(uint16_t x) { return __builtin_bswap16(x); }
-inline uint32_t Bswap(uint32_t x) { return __builtin_bswap32(x); }
-inline uint64_t Bswap(uint64_t x) { return __builtin_bswap64(x); }
-
 uint8_t *ExtraCountersBegin();
 uint8_t *ExtraCountersEnd();
 void ClearExtraCounters();
 
-uint64_t *ClangCountersBegin();
-uint64_t *ClangCountersEnd();
-void ClearClangCounters();
+extern bool RunningUserCallback;
 
 }  // namespace fuzzer
 
