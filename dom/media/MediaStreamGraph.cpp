@@ -167,7 +167,8 @@ void MediaStreamGraphImpl::UpdateCurrentTimeForStreams(
           for (const TrackBound<MediaStreamTrackListener>& listener :
                stream->mTrackListeners) {
             if (listener.mTrackID == track->GetID()) {
-              listener.mListener->NotifyOutput(this, track->GetEnd());
+              listener.mListener->NotifyOutput(
+                  this, track->GetEnd() - track->GetStart());
               listener.mListener->NotifyEnded();
             }
           }
