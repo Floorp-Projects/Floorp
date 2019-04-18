@@ -33,7 +33,6 @@
 #include "nsIXULBrowserWindow.h"
 #include "nsIWidgetListener.h"
 #include "nsITabParent.h"
-#include "nsIXULStore.h"
 
 namespace mozilla {
 namespace dom {
@@ -195,7 +194,6 @@ class nsXULWindow : public nsIBaseWindow,
   GetPrimaryTabParentSize(int32_t* aWidth, int32_t* aHeight);
   nsresult GetPrimaryContentShellSize(int32_t* aWidth, int32_t* aHeight);
   nsresult SetPrimaryTabParentSize(int32_t aWidth, int32_t aHeight);
-  nsCOMPtr<nsIXULStore> mLocalStore;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsXULWindow, NS_XULWINDOW_IMPL_CID)
