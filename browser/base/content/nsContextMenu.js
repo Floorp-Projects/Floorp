@@ -715,8 +715,6 @@ nsContextMenu.prototype = {
         this.setItemAttr("context-video-saveimage", "disabled", !canSaveSnapshot);
         this.setItemAttr("context-video-fullscreen", "disabled", hasError);
         this.setItemAttr("context-video-pictureinpicture", "checked", this.onPiPVideo);
-        this.setItemAttr("context-video-pictureinpicture", "disabled",
-                         !this.onPiPVideo && hasError);
       }
     }
     this.showItem("context-media-sep-commands", onMedia);
