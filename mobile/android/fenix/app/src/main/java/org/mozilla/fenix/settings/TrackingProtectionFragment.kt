@@ -44,18 +44,5 @@ class TrackingProtectionFragment : PreferenceFragmentCompat() {
                 requireContext().components.useCases.sessionUseCases.reload.invoke()
                 true
             }
-
-        // Exceptions
-        val exceptions =
-            context!!.getPreferenceKey(R.string.pref_key_tracking_protection_exceptions)
-        val preferenceExceptions = findPreference<Preference>(exceptions)
-        preferenceExceptions?.onPreferenceClickListener = getClickListenerForSignOut()
-    }
-
-    private fun getClickListenerForSignOut(): Preference.OnPreferenceClickListener {
-        return Preference.OnPreferenceClickListener {
-            // TODO go to Exceptions Fragment
-            true
-        }
     }
 }
