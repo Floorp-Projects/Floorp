@@ -4,7 +4,7 @@
 // Source: Payment Method: Basic Card (https://w3c.github.io/payment-method-basic-card/)
 
 dictionary BasicCardRequest {
-  sequence<DOMString> supportedNetworks;
+  sequence<DOMString> supportedNetworks = [];
 };
 
 dictionary BasicCardChangeDetails {
