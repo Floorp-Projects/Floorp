@@ -78,8 +78,6 @@ class IPCBlobInputStream final : public nsIAsyncInputStream,
     return nullptr;
   }
 
-  void ActorMigrated(IPCBlobInputStreamChild* aNewActor);
-
  private:
   ~IPCBlobInputStream();
 

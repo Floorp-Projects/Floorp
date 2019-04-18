@@ -915,12 +915,5 @@ void IPCBlobInputStream::LengthReady(int64_t aLength) {
   }
 }
 
-void IPCBlobInputStream::ActorMigrated(IPCBlobInputStreamChild* aNewActor) {
-  MutexAutoLock lock(mMutex);
-  MOZ_ASSERT(mActor->Size() == aNewActor->Size());
-  MOZ_ASSERT(mActor->ID() == aNewActor->ID());
-  mActor = aNewActor;
-}
-
 }  // namespace dom
 }  // namespace mozilla
