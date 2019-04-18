@@ -2107,3 +2107,4 @@ pref(layout.css.supports-selector.enabled,false) != 1499386.html 1499386-ref.htm
 fuzzy-if(!webrender,1-5,66-547) == 1529992-1.html 1529992-1-ref.html
 fuzzy-if(!webrender,0-6,0-34) fails-if(webrender) == 1529992-2.html 1529992-2-ref.html
 == 1535040-1.html 1535040-1-ref.html
+skip-if(!asyncPan) == 1544895.html 1544895-ref.html
