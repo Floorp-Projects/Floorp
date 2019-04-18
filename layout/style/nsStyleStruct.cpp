@@ -3647,7 +3647,8 @@ void nsStyleContent::TriggerImageLoads(Document& aDocument,
 nsStyleContent::nsStyleContent(const nsStyleContent& aSource)
     : mContents(aSource.mContents),
       mIncrements(aSource.mIncrements),
-      mResets(aSource.mResets) {
+      mResets(aSource.mResets),
+      mSets(aSource.mSets) {
   MOZ_COUNT_CTOR(nsStyleContent);
 }
 
@@ -3657,7 +3658,7 @@ nsChangeHint nsStyleContent::CalcDifference(
   // a simple reflow will not pick up different text or different image URLs,
   // since we set all that up in the CSSFrameConstructor
   if (mContents != aNewData.mContents || mIncrements != aNewData.mIncrements ||
-      mResets != aNewData.mResets) {
+      mResets != aNewData.mResets || mSets != aNewData.mSets) {
     return nsChangeHint_ReconstructFrame;
   }
 

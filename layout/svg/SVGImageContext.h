@@ -25,7 +25,7 @@ class ComputedStyle;
 // to the image's internal SVG document when it's drawn.
 class SVGImageContext {
  public:
-  SVGImageContext() {}
+  SVGImageContext() = default;
 
   /**
    * Currently it seems that the aViewportSize parameter ends up being used

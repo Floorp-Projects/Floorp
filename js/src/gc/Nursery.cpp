@@ -813,6 +813,7 @@ void js::Nursery::collect(JS::GCReason reason) {
     for (auto& entry : tenureCounts.entries) {
       if (entry.count >= tunables().pretenureGroupThreshold()) {
         ObjectGroup* group = entry.group;
+        AutoMaybeLeaveAtomsZone leaveAtomsZone(cx);
         AutoRealm ar(cx, group);
         AutoSweepObjectGroup sweep(group);
         if (group->canPreTenure(sweep)) {

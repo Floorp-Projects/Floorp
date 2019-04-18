@@ -888,6 +888,19 @@ class MOZ_RAII AutoAllocInAtomsZone {
   inline ~AutoAllocInAtomsZone();
 };
 
+// For the one place where we need to enter a realm when we may have been
+// allocating in the the atoms zone, this leaves the atoms zone temporarily.
+class MOZ_RAII AutoMaybeLeaveAtomsZone {
+  JSContext* const cx_;
+  bool wasInAtomsZone_;
+  AutoMaybeLeaveAtomsZone(const AutoMaybeLeaveAtomsZone&) = delete;
+  AutoMaybeLeaveAtomsZone& operator=(const AutoMaybeLeaveAtomsZone&) = delete;
+
+ public:
+  inline explicit AutoMaybeLeaveAtomsZone(JSContext* cx);
+  inline ~AutoMaybeLeaveAtomsZone();
+};
+
 // Enter a realm directly. Only use this where there's no target GC thing
 // to pass to AutoRealm or where you need to avoid the assertions in
 // JS::Compartment::enterCompartmentOf().

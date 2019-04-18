@@ -1260,41 +1260,9 @@ void WasmFunctionScope::Data::trace(JSTracer* trc) {
 void Scope::traceChildren(JSTracer* trc) {
   TraceNullableEdge(trc, &enclosing_, "scope enclosing");
   TraceNullableEdge(trc, &environmentShape_, "scope env shape");
-  switch (kind_) {
-    case ScopeKind::Function:
-      as<FunctionScope>().data().trace(trc);
-      break;
-    case ScopeKind::FunctionBodyVar:
-    case ScopeKind::ParameterExpressionVar:
-      as<VarScope>().data().trace(trc);
-      break;
-    case ScopeKind::Lexical:
-    case ScopeKind::SimpleCatch:
-    case ScopeKind::Catch:
-    case ScopeKind::NamedLambda:
-    case ScopeKind::StrictNamedLambda:
-      as<LexicalScope>().data().trace(trc);
-      break;
-    case ScopeKind::Global:
-    case ScopeKind::NonSyntactic:
-      as<GlobalScope>().data().trace(trc);
-      break;
-    case ScopeKind::Eval:
-    case ScopeKind::StrictEval:
-      as<EvalScope>().data().trace(trc);
-      break;
-    case ScopeKind::Module:
-      as<ModuleScope>().data().trace(trc);
-      break;
-    case ScopeKind::With:
-      break;
-    case ScopeKind::WasmInstance:
-      as<WasmInstanceScope>().data().trace(trc);
-      break;
-    case ScopeKind::WasmFunction:
-      as<WasmFunctionScope>().data().trace(trc);
-      break;
-  }
+  applyScopeDataTyped([trc](auto data) {
+                        data->trace(trc);
+                      });
 }
 inline void js::GCMarker::eagerlyMarkChildren(Scope* scope) {
   do {

@@ -31,6 +31,7 @@ struct DtoaState;
 namespace js {
 
 class AutoAllocInAtomsZone;
+class AutoMaybeLeaveAtomsZone;
 class AutoRealm;
 
 namespace jit {
@@ -312,6 +313,7 @@ struct JSContext : public JS::RootingContext,
   inline void setZone(js::Zone* zone, IsAtomsZone isAtomsZone);
 
   friend class js::AutoAllocInAtomsZone;
+  friend class js::AutoMaybeLeaveAtomsZone;
   friend class js::AutoRealm;
 
  public:

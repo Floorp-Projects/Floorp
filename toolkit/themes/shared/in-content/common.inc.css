@@ -123,6 +123,8 @@
     --in-content-link-color-active: var(--blue-60);
 
     --in-content-tab-color: var(--in-content-page-color);
+
+    scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
   }
 }
 }
