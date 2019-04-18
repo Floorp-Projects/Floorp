@@ -925,22 +925,25 @@ add_task(async function test_paste_event_for_middle_click_without_HTMLEditor() {
 
   pasteEventCount = 0;
   auxclickFired = false;
-  document.addEventListener("click", (event) => { event.preventDefault(); }, {once: true, capture: true});
+  document.addEventListener("auxclick", (event) => { event.preventDefault(); }, {once: true, capture: true});
   synthesizeMouseAtCenter(noneditableDiv, {button: 1});
+  ok(auxclickFired, "'auxclickFired' fired");
   is(pasteEventCount, 0,
-     "If 'click' event is consumed at capturing phase at the document node, 'paste' event should be not be fired");
+     "If 'auxclick' event is consumed at capturing phase at the document node, 'paste' event should not be fired");
 
   pasteEventCount = 0;
   auxclickFired = false;
-  noneditableDiv.addEventListener("click", (event) => { event.preventDefault(); }, {once: true});
+  noneditableDiv.addEventListener("auxclick", (event) => { event.preventDefault(); }, {once: true});
   synthesizeMouseAtCenter(noneditableDiv, {button: 1});
-  is(pasteEventCount, 1,
-     "Even if 'click' event listener is added to the click event target, 'paste' event should be fired");
+  ok(auxclickFired, "'auxclick' fired");
+  is(pasteEventCount, 0,
+     "If 'auxclick' event listener is added to the click event target, 'paste' event should not be fired");
 
   pasteEventCount = 0;
   auxclickFired = false;
   document.addEventListener("auxclick", (event) => { event.preventDefault(); }, {once: true});
   synthesizeMouseAtCenter(noneditableDiv, {button: 1});
+  ok(auxclickFired, "'auxclick' fired");
   is(pasteEventCount, 0,
      "If 'auxclick' event is consumed, 'paste' event should be not be fired");
 
