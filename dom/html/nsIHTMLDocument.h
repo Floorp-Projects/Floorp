@@ -94,11 +94,6 @@ class nsIHTMLDocument : public nsISupports {
   virtual nsresult SetEditingState(EditingState aState) = 0;
 
   /**
-   * Disables getting and setting cookies
-   */
-  virtual void DisableCookieAccess() = 0;
-
-  /**
    * Called when this nsIHTMLDocument's editor is destroyed.
    */
   virtual void TearingDownEditor() = 0;

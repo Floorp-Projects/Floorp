@@ -126,6 +126,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIPermissionManager.h"
 #include "nsIPrincipal.h"
+#include "nsIPrivateBrowsingChannel.h"
 #include "ExpandedPrincipal.h"
 #include "mozilla/NullPrincipal.h"
 
@@ -1237,6 +1238,7 @@ Document::Document(const char* aContentType)
       mHasDelayedRefreshEvent(false),
       mLoadEventFiring(false),
       mSkipLoadEventAfterClose(false),
+      mDisableCookieAccess(false),
       mPendingFullscreenRequests(0),
       mXMLDeclarationBits(0),
       mOnloadBlockCount(0),
@@ -3380,6 +3382,169 @@ void Document::GetReferrer(nsAString& aReferrer) const {
     mParentDocument->GetReferrer(aReferrer);
   else
     CopyUTF8toUTF16(mReferrer, aReferrer);
+}
+
+void Document::GetCookie(nsAString& aCookie, ErrorResult& rv) {
+  aCookie.Truncate();  // clear current cookie in case service fails;
+                       // no cookie isn't an error condition.
+
+  if (mDisableCookieAccess) {
+    return;
+  }
+
+  // If the document's sandboxed origin flag is set, access to read cookies
+  // is prohibited.
+  if (mSandboxFlags & SANDBOXED_ORIGIN) {
+    rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  nsContentUtils::StorageAccess storageAccess =
+      nsContentUtils::StorageAllowedForDocument(this);
+  if (storageAccess == nsContentUtils::StorageAccess::eDeny) {
+    return;
+  }
+
+  if (storageAccess == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
+    return;
+  }
+
+  // If the document is a cookie-averse Document... return the empty string.
+  if (IsCookieAverse()) {
+    return;
+  }
+
+  // not having a cookie service isn't an error
+  nsCOMPtr<nsICookieService> service =
+      do_GetService(NS_COOKIESERVICE_CONTRACTID);
+  if (service) {
+    // Get a URI from the document principal. We use the original
+    // codebase in case the codebase was changed by SetDomain
+    nsCOMPtr<nsIURI> codebaseURI;
+    NodePrincipal()->GetURI(getter_AddRefs(codebaseURI));
+
+    if (!codebaseURI) {
+      // Document's principal is not a codebase (may be system), so
+      // can't set cookies
+
+      return;
+    }
+
+    nsCOMPtr<nsIChannel> channel(mChannel);
+    if (!channel) {
+      channel = CreateDummyChannelForCookies(codebaseURI);
+      if (!channel) {
+        return;
+      }
+    }
+
+    nsCString cookie;
+    service->GetCookieString(codebaseURI, channel, getter_Copies(cookie));
+    // CopyUTF8toUTF16 doesn't handle error
+    // because it assumes that the input is valid.
+    UTF_8_ENCODING->DecodeWithoutBOMHandling(cookie, aCookie);
+  }
+}
+
+void Document::SetCookie(const nsAString& aCookie, ErrorResult& rv) {
+  if (mDisableCookieAccess) {
+    return;
+  }
+
+  // If the document's sandboxed origin flag is set, access to write cookies
+  // is prohibited.
+  if (mSandboxFlags & SANDBOXED_ORIGIN) {
+    rv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  nsContentUtils::StorageAccess storageAccess =
+      nsContentUtils::StorageAllowedForDocument(this);
+  if (storageAccess == nsContentUtils::StorageAccess::eDeny) {
+    return;
+  }
+
+  if (storageAccess == nsContentUtils::StorageAccess::ePartitionedOrDeny &&
+      !StaticPrefs::privacy_storagePrincipal_enabledForTrackers()) {
+    return;
+  }
+
+  // If the document is a cookie-averse Document... do nothing.
+  if (IsCookieAverse()) {
+    return;
+  }
+
+  // not having a cookie service isn't an error
+  nsCOMPtr<nsICookieService> service =
+      do_GetService(NS_COOKIESERVICE_CONTRACTID);
+  if (service && mDocumentURI) {
+    // The code for getting the URI matches Navigator::CookieEnabled
+    nsCOMPtr<nsIURI> codebaseURI;
+    NodePrincipal()->GetURI(getter_AddRefs(codebaseURI));
+
+    if (!codebaseURI) {
+      // Document's principal is not a codebase (may be system), so
+      // can't set cookies
+
+      return;
+    }
+
+    nsCOMPtr<nsIChannel> channel(mChannel);
+    if (!channel) {
+      channel = CreateDummyChannelForCookies(codebaseURI);
+      if (!channel) {
+        return;
+      }
+    }
+
+    NS_ConvertUTF16toUTF8 cookie(aCookie);
+    service->SetCookieString(codebaseURI, nullptr, cookie.get(), channel);
+  }
+}
+
+already_AddRefed<nsIChannel> Document::CreateDummyChannelForCookies(
+    nsIURI* aCodebaseURI) {
+  // The cookie service reads the privacy status of the channel we pass to it in
+  // order to determine which cookie database to query.  In some cases we don't
+  // have a proper channel to hand it to the cookie service though.  This
+  // function creates a dummy channel that is not used to load anything, for the
+  // sole purpose of handing it to the cookie service.  DO NOT USE THIS CHANNEL
+  // FOR ANY OTHER PURPOSE.
+  MOZ_ASSERT(!mChannel);
+
+  // The following channel is never openend, so it does not matter what
+  // securityFlags we pass; let's follow the principle of least privilege.
+  nsCOMPtr<nsIChannel> channel;
+  NS_NewChannel(getter_AddRefs(channel), aCodebaseURI, this,
+                nsILoadInfo::SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
+                nsIContentPolicy::TYPE_INVALID);
+  nsCOMPtr<nsIPrivateBrowsingChannel> pbChannel = do_QueryInterface(channel);
+  nsCOMPtr<nsIDocShell> docShell(mDocumentContainer);
+  nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
+  if (!pbChannel || !loadContext) {
+    return nullptr;
+  }
+  pbChannel->SetPrivate(loadContext->UsePrivateBrowsing());
+
+  nsCOMPtr<nsIHttpChannel> docHTTPChannel = do_QueryInterface(GetChannel());
+  if (docHTTPChannel) {
+    bool isTracking = docHTTPChannel->IsTrackingResource();
+    if (isTracking) {
+      // If our document channel is from a tracking resource, we must
+      // override our channel's tracking status.
+      nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
+      MOZ_ASSERT(httpChannel,
+                 "How come we're coming from an HTTP doc but "
+                 "we don't have an HTTP channel here?");
+      if (httpChannel) {
+        httpChannel->OverrideTrackingFlagsForDocumentCookieAccessor(
+            docHTTPChannel);
+      }
+    }
+  }
+
+  return channel.forget();
 }
 
 mozilla::net::ReferrerPolicy Document::GetReferrerPolicy() const {
