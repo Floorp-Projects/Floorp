@@ -2956,10 +2956,6 @@ SharedScriptData* js::SharedScriptData::new_(JSContext* cx, uint32_t codeLength,
   return new (raw) SharedScriptData(codeLength, noteLength, natoms);
 }
 
-inline js::ScriptBytecodeHasher::Lookup::Lookup(SharedScriptData* data)
-    : scriptData(data),
-      hash(mozilla::HashBytes(scriptData->data(), scriptData->dataLength())) {}
-
 bool JSScript::createSharedScriptData(JSContext* cx, uint32_t codeLength,
                                       uint32_t noteLength, uint32_t natoms) {
   MOZ_ASSERT(!scriptData_);
@@ -2982,7 +2978,7 @@ bool JSScript::shareScriptData(JSContext* cx) {
 
   // Calculate the hash before taking the lock. Because the data is reference
   // counted, it also will be freed after releasing the lock if necessary.
-  ScriptBytecodeHasher::Lookup lookup(ssd);
+  SharedScriptDataHasher::Lookup lookup(ssd);
 
   AutoLockScriptData lock(cx->runtime());
 
