@@ -34,7 +34,7 @@ class SMILIntegerType : public SMILType {
   }
 
  private:
-  constexpr SMILIntegerType() {}
+  constexpr SMILIntegerType() = default;
 };
 
 }  // namespace mozilla

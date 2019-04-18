@@ -1,0 +1,46 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Test: File input with CSS overflow</title>
+<link rel="author" title="Mats Palmgren" href="mailto:mats@mozilla.com">
+<link rel="help" href="https://html.spec.whatwg.org/multipage/rendering.html#widgets">
+<link rel="help" href="https://github.com/whatwg/html/issues/4082">
+<link rel="help" href="https://drafts.csswg.org/css-overflow-3/#propdef-overflow">
+<link rel="match" href="css-overflow-ref.html">
+<style>
+input {
+  display: inline-block;
+  width: 100px;
+  height: 30px;
+  font-size: 48px;
+}
+.ov { overflow: visible; }
+.oh { overflow: hidden; }
+.os { overflow: scroll; }
+.oa { overflow: auto; }
+.n { -webkit-appearance:none; appearance:none; }
+</style>
+<body>
+  A<input type="file">
+  <input type="file" class="ov">
+  <input type="file" class="oh">
+  <input type="file" class="os">
+  <input type="file" class="oa">
+
+  A<input disabled type="file">
+  <input disabled type="file" class="ov">
+  <input disabled type="file" class="oh">
+  <input disabled type="file" class="os">
+  <input disabled type="file" class="oa">
+
+  A<input type="file" class="n">
+  <input type="file" class="n ov">
+  <input type="file" class="n oh">
+  <input type="file" class="n os">
+  <input type="file" class="n oa">
+
+  A<input disabled type="file" class="n">
+  <input disabled type="file" class="n ov">
+  <input disabled type="file" class="n oh">
+  <input disabled type="file" class="n os">
+  <input disabled type="file" class="n oa">
+</body>

@@ -427,6 +427,8 @@ Inspector.prototype = {
   setupSearchBox: function() {
     this.searchBox = this.panelDoc.getElementById("inspector-searchbox");
     this.searchClearButton = this.panelDoc.getElementById("inspector-searchinput-clear");
+    this.searchResultsContainer =
+      this.panelDoc.getElementById("inspector-searchlabel-container");
     this.searchResultsLabel = this.panelDoc.getElementById("inspector-searchlabel");
 
     this.searchBox.addEventListener("focus", () => {
@@ -466,6 +468,10 @@ Inspector.prototype = {
       } else {
         str = INSPECTOR_L10N.getStr("inspector.searchResultsNone");
       }
+
+      this.searchResultsContainer.hidden = false;
+    } else {
+      this.searchResultsContainer.hidden = true;
     }
 
     this.searchResultsLabel.textContent = str;

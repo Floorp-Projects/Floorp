@@ -133,8 +133,6 @@ SVGSVGElement::SVGSVGElement(
                                   aFromParser == FROM_PARSER_XSLT),
       mImageNeedsTransformInvalidation(false) {}
 
-SVGSVGElement::~SVGSVGElement() {}
-
 //----------------------------------------------------------------------
 // nsINode methods
 

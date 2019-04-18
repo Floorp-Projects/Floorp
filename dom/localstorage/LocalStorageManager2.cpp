@@ -14,20 +14,87 @@ namespace dom {
 
 namespace {
 
-class RequestResolver final : public LSRequestChildCallback {
+class AsyncRequestHelper final : public Runnable,
+                                 public LSRequestChildCallback {
+  enum class State {
+    /**
+     * The AsyncRequestHelper has been created and dispatched to the DOM File
+     * Thread.
+     */
+    Initial,
+    /**
+     * Start() has been invoked on the DOM File Thread and
+     * LocalStorageManager2::StartRequest has been invoked from there, sending
+     * an IPC message to PBackground to service the request.  We stay in this
+     * state until a response is received.
+     */
+    ResponsePending,
+    /**
+     * A response has been received and AsyncRequestHelper has been dispatched
+     * back to the owning event target to call Finish().
+     */
+    Finishing,
+    /**
+     * Finish() has been called on the main thread. The promise will be resolved
+     * according to the received response.
+     */
+    Complete
+  };
+
+  // The object we are issuing a request on behalf of.  Present because of the
+  // need to invoke LocalStorageManager2::StartRequest off the main thread.
+  // Dropped on return to the main-thread in Finish().
+  RefPtr<LocalStorageManager2> mManager;
+  // The thread the AsyncRequestHelper was created on.  This should be the main
+  // thread.
+  nsCOMPtr<nsIEventTarget> mOwningEventTarget;
+  // The IPC actor handling the request with standard IPC allocation rules.
+  // Our reference is nulled in OnResponse which corresponds to the actor's
+  // __destroy__ method.
+  LSRequestChild* mActor;
   RefPtr<Promise> mPromise;
+  const LSRequestParams mParams;
+  LSRequestResponse mResponse;
+  nsresult mResultCode;
+  State mState;
 
  public:
-  explicit RequestResolver(Promise* aPromise) : mPromise(aPromise) {}
+  AsyncRequestHelper(LocalStorageManager2* aManager, Promise* aPromise,
+                     const LSRequestParams& aParams)
+      : Runnable("dom::LocalStorageManager2::AsyncRequestHelper"),
+        mManager(aManager),
+        mOwningEventTarget(GetCurrentThreadEventTarget()),
+        mActor(nullptr),
+        mPromise(aPromise),
+        mParams(aParams),
+        mResultCode(NS_OK),
+        mState(State::Initial) {}
 
-  NS_INLINE_DECL_REFCOUNTING(mozilla::dom::RequestResolver, override);
+  bool IsOnOwningThread() const {
+    MOZ_ASSERT(mOwningEventTarget);
+
+    bool current;
+    return NS_SUCCEEDED(mOwningEventTarget->IsOnCurrentThread(&current)) &&
+           current;
+  }
+
+  void AssertIsOnOwningThread() const {
+    MOZ_ASSERT(NS_IsMainThread());
+    MOZ_ASSERT(IsOnOwningThread());
+  }
+
+  nsresult Dispatch();
 
  private:
-  ~RequestResolver() = default;
+  ~AsyncRequestHelper() = default;
 
-  void HandleResponse(nsresult aResponse);
+  nsresult Start();
 
-  void HandleResponse();
+  void Finish();
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  NS_DECL_NSIRUNNABLE
 
   // LSRequestChildCallback
   void OnResponse(const LSRequestResponse& aResponse) override;
@@ -220,7 +287,20 @@ LocalStorageManager2::Preload(nsIPrincipal* aPrincipal, JSContext* aContext,
 
   LSRequestPreloadDatastoreParams params(commonParams);
 
-  rv = StartRequest(promise, params);
+  RefPtr<AsyncRequestHelper> helper =
+      new AsyncRequestHelper(this, promise, params);
+
+  // This will start and finish the async request on the DOM File thread.
+  // This must be done on DOM File Thread because it's very likely that a
+  // content process will issue a prepare datastore request for the same
+  // principal while blocking the content process on the main thread.
+  // There would be a potential for deadlock if the preloading was initialized
+  // from the main thread of the parent process and a11y issued a synchronous
+  // message from the parent process to the content process (approximately at
+  // the same time) because the preload request wouldn't be able to respond
+  // to the Ready message by sending the Finish message which is needed to
+  // finish the preload request and unblock the prepare datastore request.
+  rv = helper->Dispatch();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -258,25 +338,23 @@ LocalStorageManager2::IsPreloaded(nsIPrincipal* aPrincipal, JSContext* aContext,
   return NS_OK;
 }
 
-nsresult LocalStorageManager2::StartRequest(Promise* aPromise,
-                                            const LSRequestParams& aParams) {
-  MOZ_ASSERT(NS_IsMainThread());
+LSRequestChild* LocalStorageManager2::StartRequest(
+    const LSRequestParams& aParams, LSRequestChildCallback* aCallback) {
+  AssertIsOnDOMFileThread();
 
   PBackgroundChild* backgroundActor =
       BackgroundChild::GetOrCreateForCurrentThread();
   if (NS_WARN_IF(!backgroundActor)) {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
 
-  RefPtr<RequestResolver> resolver = new RequestResolver(aPromise);
-
-  auto actor = new LSRequestChild(resolver);
+  auto actor = new LSRequestChild(aCallback);
 
   if (!backgroundActor->SendPBackgroundLSRequestConstructor(actor, aParams)) {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
 
-  return NS_OK;
+  return actor;
 }
 
 nsresult LocalStorageManager2::StartSimpleRequest(
@@ -302,40 +380,118 @@ nsresult LocalStorageManager2::StartSimpleRequest(
   return NS_OK;
 }
 
-void RequestResolver::HandleResponse(nsresult aResponse) {
-  MOZ_ASSERT(NS_IsMainThread());
+nsresult AsyncRequestHelper::Dispatch() {
+  AssertIsOnOwningThread();
 
-  if (!mPromise) {
-    return;
+  nsCOMPtr<nsIEventTarget> domFileThread =
+      IPCBlobInputStreamThread::GetOrCreate();
+  if (NS_WARN_IF(!domFileThread)) {
+    return NS_ERROR_FAILURE;
   }
 
-  mPromise->MaybeReject(aResponse);
-}
-
-void RequestResolver::HandleResponse() {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  if (!mPromise) {
-    return;
+  nsresult rv = domFileThread->Dispatch(this, NS_DISPATCH_NORMAL);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
-  mPromise->MaybeResolveWithUndefined();
+  return NS_OK;
 }
 
-void RequestResolver::OnResponse(const LSRequestResponse& aResponse) {
-  MOZ_ASSERT(NS_IsMainThread());
+nsresult AsyncRequestHelper::Start() {
+  AssertIsOnDOMFileThread();
+  MOZ_ASSERT(mState == State::Initial);
 
-  switch (aResponse.type()) {
-    case LSRequestResponse::Tnsresult:
-      HandleResponse(aResponse.get_nsresult());
+  mState = State::ResponsePending;
+
+  LSRequestChild* actor = mManager->StartRequest(mParams, this);
+  if (NS_WARN_IF(!actor)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mActor = actor;
+
+  return NS_OK;
+}
+
+void AsyncRequestHelper::Finish() {
+  AssertIsOnOwningThread();
+  MOZ_ASSERT(mState == State::Finishing);
+
+  if (NS_WARN_IF(NS_FAILED(mResultCode))) {
+    if (mPromise) {
+      mPromise->MaybeReject(mResultCode);
+    }
+  } else {
+    switch (mResponse.type()) {
+      case LSRequestResponse::Tnsresult:
+        if (mPromise) {
+          mPromise->MaybeReject(mResponse.get_nsresult());
+        }
+        break;
+
+      case LSRequestResponse::TLSRequestPreloadDatastoreResponse:
+        if (mPromise) {
+          mPromise->MaybeResolveWithUndefined();
+        }
+        break;
+      default:
+        MOZ_CRASH("Unknown response type!");
+    }
+  }
+
+  mManager = nullptr;
+
+  mState = State::Complete;
+}
+
+NS_IMPL_ISUPPORTS_INHERITED0(AsyncRequestHelper, Runnable)
+
+NS_IMETHODIMP
+AsyncRequestHelper::Run() {
+  nsresult rv;
+
+  switch (mState) {
+    case State::Initial:
+      rv = Start();
       break;
 
-    case LSRequestResponse::TLSRequestPreloadDatastoreResponse:
-      HandleResponse();
-      break;
+    case State::Finishing:
+      Finish();
+      return NS_OK;
+
     default:
-      MOZ_CRASH("Unknown response type!");
+      MOZ_CRASH("Bad state!");
   }
+
+  if (NS_WARN_IF(NS_FAILED(rv)) && mState != State::Finishing) {
+    if (NS_SUCCEEDED(mResultCode)) {
+      mResultCode = rv;
+    }
+
+    mState = State::Finishing;
+
+    if (IsOnOwningThread()) {
+      Finish();
+    } else {
+      MOZ_ALWAYS_SUCCEEDS(
+          mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
+    }
+  }
+
+  return NS_OK;
+}
+
+void AsyncRequestHelper::OnResponse(const LSRequestResponse& aResponse) {
+  AssertIsOnDOMFileThread();
+  MOZ_ASSERT(mState == State::ResponsePending);
+
+  mActor = nullptr;
+
+  mResponse = aResponse;
+
+  mState = State::Finishing;
+
+  MOZ_ALWAYS_SUCCEEDS(mOwningEventTarget->Dispatch(this, NS_DISPATCH_NORMAL));
 }
 
 void SimpleRequestResolver::HandleResponse(nsresult aResponse) {

@@ -21,8 +21,6 @@ SVGPolyElement::SVGPolyElement(
     already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo)
     : SVGPolyElementBase(std::move(aNodeInfo)) {}
 
-SVGPolyElement::~SVGPolyElement() {}
-
 already_AddRefed<DOMSVGPointList> SVGPolyElement::Points() {
   void* key = mPoints.GetBaseValKey();
   RefPtr<DOMSVGPointList> points =

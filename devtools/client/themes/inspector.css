@@ -69,18 +69,40 @@ window {
   background-image: url("chrome://devtools/skin/images/open-3-pane.svg");
 }
 
-/* Use flex layout for the Inspector toolbar. For now, it's done
-   specifically for the Inspector toolbar since general rule applied
-   on .devtools-toolbar breaks breadcrumbs and also toolbars in other
-   panels (e.g. webconsole, debugger), these are not ready for HTML
-   layout yet. */
-#inspector-toolbar.devtools-toolbar {
+.devtools-toolbar {
+  background-color: var(--theme-body-background);
   display: flex;
 }
 
-#inspector-toolbar.devtools-toolbar .devtools-toolbar-spacer {
-  flex-grow: 1;
-  display: inline-block;
+.devtools-toolbar .devtools-searchbox {
+  border: 1px solid transparent;
+}
+
+.devtools-toolbar .devtools-searchbox:focus-within {
+  border: 1px solid var(--blue-50);
+  margin-bottom: 0;
+  margin-top: 0;
+  box-shadow: none;
+}
+
+.devtools-toolbar .devtools-filterinput,
+.devtools-toolbar .devtools-searchinput {
+  border: none;
+  border-radius: 0 !important;
+  box-shadow: none;
+  background-color: var(--theme-body-background);
+}
+
+#inspector-searchlabel-container {
+  display: flex;
+}
+
+#inspector-searchlabel-container[hidden] {
+  display: none;
+}
+
+#inspector-searchlabel {
+  padding: 0 3px;
 }
 
 /* Add element toolbar button */
@@ -88,15 +110,6 @@ window {
   background-image: url("chrome://devtools/skin/images/add.svg");
   list-style-image: url("chrome://devtools/skin/images/add.svg");
   -moz-user-focus: normal;
-}
-
-#inspector-searchlabel {
-  overflow: hidden;
-  margin-inline-end: 2px;
-}
-
-#inspector-search {
-  flex: unset;
 }
 
 /* Eyedropper toolbar button */

@@ -37,7 +37,7 @@ struct DOMAnimatedString final : public DOMSVGAnimatedString {
   void GetAnimVal(nsAString& aResult) override;
 
  private:
-  ~DOMAnimatedString() {}
+  ~DOMAnimatedString() = default;
 };
 
 NS_SVG_VAL_IMPL_CYCLE_COLLECTION_WRAPPERCACHED(DOMAnimatedString, mSVGElement)
