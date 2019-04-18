@@ -14,7 +14,7 @@
 // http://www.whatwg.org/specs/web-apps/current-work/#the-link-element
 [HTMLConstructor]
 interface HTMLLinkElement : HTMLElement {
-  [Pure]
+  [CEReactions, SetterThrows, Pure]
            attribute boolean disabled;
   [CEReactions, SetterNeedsSubjectPrincipal=NonSystem, SetterThrows, Pure]
            attribute DOMString href;
