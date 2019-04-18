@@ -4863,7 +4863,8 @@ nsresult EventStateManager::InitAndDispatchClickEvent(
   event.buttons = aMouseUpEvent->buttons;
   event.mTime = aMouseUpEvent->mTime;
   event.mTimeStamp = aMouseUpEvent->mTimeStamp;
-  event.mFlags.mOnlyChromeDispatch = aNoContentDispatch;
+  event.mFlags.mOnlyChromeDispatch =
+      aNoContentDispatch && !aMouseUpEvent->mUseLegacyNonPrimaryDispatch;
   event.mFlags.mNoContentDispatch = aNoContentDispatch;
   event.button = aMouseUpEvent->button;
   event.pointerId = aMouseUpEvent->pointerId;
@@ -4992,7 +4993,8 @@ nsresult EventStateManager::DispatchClickEvents(
   }
 
   // Fire auxclick event if necessary.
-  if (fireAuxClick && aClickTarget && aClickTarget->IsInComposedDoc()) {
+  if (fireAuxClick && *aStatus != nsEventStatus_eConsumeNoDefault &&
+      aClickTarget && aClickTarget->IsInComposedDoc()) {
     rv = InitAndDispatchClickEvent(aMouseUpEvent, aStatus, eMouseAuxClick,
                                    aPresShell, aClickTarget, currentTarget,
                                    false, aOverrideClickTarget);
