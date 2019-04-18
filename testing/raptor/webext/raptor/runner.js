@@ -102,7 +102,7 @@ function getTestSettings() {
           testURL = testURL.replace("<host>", host);
         }
 
-        console.log("testURL: " + testURL);
+        console.log(`testURL: ${testURL}`);
 
         results.page = testURL;
         results.type = testType;
@@ -143,7 +143,7 @@ function getTestSettings() {
         if (settings.page_timeout !== undefined) {
           pageTimeout = settings.page_timeout;
         }
-        console.log("using page timeout (ms): " + pageTimeout);
+        console.log(`using page timeout: ${pageTimeout}ms`);
 
         switch (testType) {
           case TEST_PAGE_LOAD:
@@ -203,7 +203,7 @@ function getBrowserInfo() {
       var gettingInfo = browser.runtime.getBrowserInfo();
       gettingInfo.then(function(bi) {
         results.browser = bi.name + " " + bi.version + " " + bi.buildID;
-        console.log("testing on " + results.browser);
+        console.log(`testing on ${results.browser}`);
         resolve();
       });
     } else {
@@ -215,7 +215,7 @@ function getBrowserInfo() {
           break;
         }
       }
-      console.log("testing on " + results.browser);
+      console.log(`testing on ${results.browser}`);
       resolve();
     }
   });
@@ -223,18 +223,18 @@ function getBrowserInfo() {
 
 function testTabCreated(tab) {
   testTabID = tab.id;
-  postToControlServer("status", "opened new empty tab " + testTabID);
+  postToControlServer("status", `opened new empty tab: ${testTabID}`);
   // update raptor browser toolbar icon text, for a visual indicator when debugging
   ext.browserAction.setTitle({title: "Raptor RUNNING"});
 }
 
 function testTabRemoved(tab) {
-  postToControlServer("status", "Removed tab " + testTabID);
+  postToControlServer("status", `Removed tab: ${testTabID}`);
   testTabID = 0;
 }
 
 async function testTabUpdated(tab) {
-  postToControlServer("status", "test tab updated " + testTabID);
+  postToControlServer("status", `test tab updated: ${testTabID}`);
   // wait for pageload test result from content
   await waitForResult();
   // move on to next cycle (or test complete)
@@ -359,7 +359,7 @@ async function getGeckoProfile() {
 async function nextCycle() {
   pageCycle++;
   if (pageCycle == 1) {
-    let text = "running " + pageCycles + " pagecycles of " + testURL;
+    let text = `running ${pageCycles} pagecycles of ${testURL}`;
     postToControlServer("status", text);
     // start the profiler if enabled
     if (geckoProfiling) {
@@ -400,14 +400,14 @@ async function nextCycle() {
       if (reuseTab && testTabID != 0) {
         // close previous test tab
         ext.tabs.remove(testTabID);
-        postToControlServer("status", "closing Tab " + testTabID);
+        postToControlServer("status", `closing Tab: ${testTabID}`);
 
         // open new tab
         ext.tabs.create({url: "about:blank"});
         postToControlServer("status", "Open new tab");
       }
       setTimeout(function() {
-        postToControlServer("status", "update tab " + testTabID);
+        postToControlServer("status", `update tab: ${testTabID}`);
         // update the test page - browse to our test URL
         ext.tabs.update(testTabID, {url: testURL}, testTabUpdated);
         }, newTabDelay);
@@ -418,7 +418,7 @@ async function nextCycle() {
 }
 
 async function timeoutAlarmListener() {
-  console.error("raptor-page-timeout on %s" % testURL);
+  console.error(`raptor-page-timeout on ${testURL}`);
 
   var pendingMetrics = {
     "hero": isHeroPending,
@@ -448,8 +448,8 @@ function setTimeoutAlarm(timeoutName, timeoutMS) {
   var now = Date.now(); // eslint-disable-line mozilla/avoid-Date-timing
   var timeout_when = now + timeoutMS;
   ext.alarms.create(timeoutName, { when: timeout_when });
-  console.log("now is " + now + ", set raptor alarm " +
-              timeoutName + " to expire at " + timeout_when);
+  console.log(`now is ${now}, set raptor alarm ${timeoutName} to expire ` +
+    `at ${timeout_when}`);
 }
 
 function cancelTimeoutAlarm(timeoutName) {
@@ -458,27 +458,27 @@ function cancelTimeoutAlarm(timeoutName) {
     var clearAlarm = ext.alarms.clear(timeoutName);
     clearAlarm.then(function(onCleared) {
       if (onCleared) {
-        console.log("cancelled " + timeoutName);
+        console.log(`cancelled raptor alarm ${timeoutName}`);
       } else {
-        console.error("failed to clear " + timeoutName);
+        console.error(`failed to clear raptor alarm ${timeoutName}`);
       }
     });
   } else {
     chrome.alarms.clear(timeoutName, function(wasCleared) {
       if (wasCleared) {
-        console.log("cancelled " + timeoutName);
+        console.log(`cancelled raptor alarm ${timeoutName}`);
       } else {
-        console.error("failed to clear " + timeoutName);
+        console.error(`failed to clear raptor alarm ${timeoutName}`);
       }
     });
   }
 }
 
 function resultListener(request, sender, sendResponse) {
-  console.log("received message from " + sender.tab.url);
+  console.log(`received message from ${sender.tab.url}`);
   if (request.type && request.value) {
-    console.log("result: " + request.type + " " + request.value);
-    sendResponse({text: "confirmed " + request.type});
+    console.log(`result: ${request.type} ${request.value}`);
+    sendResponse({text: `confirmed ${request.type}`});
 
     if (!(request.type in results.measurements))
       results.measurements[request.type] = [];
@@ -523,7 +523,7 @@ function resultListener(request, sender, sendResponse) {
         break;
     }
   } else {
-    console.log("unknown message received from content: " + request);
+    console.log(`unknown message received from content: ${request}`);
   }
 }
 
@@ -533,10 +533,10 @@ function verifyResults() {
   for (var x in results.measurements) {
     let count = results.measurements[x].length;
     if (count == pageCycles) {
-      console.log("have " + count + " results for " + x + ", as expected");
+      console.log(`have ${count} results for ${x}, as expected`);
     } else {
-      console.log("ERROR: expected " + pageCycles + " results for "
-                  + x + " but only have " + count);
+      console.log(`ERROR: expected ${pageCycles} results for ${x} ` +
+                  `but only have ${count}`);
     }
   }
   postToControlServer("results", results);
@@ -545,10 +545,10 @@ function verifyResults() {
 function postToControlServer(msgType, msgData) {
   // if posting a status message, log it to console also
   if (msgType == "status") {
-    console.log("\n" + msgData);
+    console.log(`\n${msgData}`);
   }
   // requires 'control server' running at port 8000 to receive results
-  var url = "http://" + host + ":" + csPort + "/";
+  var url = `http://${host}:${csPort}/`;
   var client = new XMLHttpRequest();
   client.onreadystatechange = function() {
     if (client.readyState == XMLHttpRequest.DONE && client.status == 200) {
@@ -562,7 +562,7 @@ function postToControlServer(msgType, msgData) {
   if (client.readyState == 1) {
     console.log("posting to control server");
     console.log(msgData);
-    var data = { "type": "webext_" + msgType, "data": msgData};
+    var data = { "type": `webext_${msgType}`, "data": msgData};
     client.send(JSON.stringify(data));
   }
   if (msgType == "results") {
@@ -575,7 +575,7 @@ function cleanUp() {
   // close tab unless raptor debug-mode is enabled
   if (debugMode != 1) {
     ext.tabs.remove(testTabID);
-    console.log("closed tab " + testTabID);
+    console.log(`closed tab ${testTabID}`);
   } else {
     console.log("raptor debug-mode enabled, leaving tab open");
   }
@@ -600,8 +600,8 @@ function cleanUp() {
 
 function raptorRunner() {
   let config = getTestConfig();
-  console.log("test name is: " + config.test_name);
-  console.log("test settings url is: " + config.test_settings_url);
+  console.log(`test name is: ${config.test_name}`);
+  console.log(`test settings url is: ${config.test_settings_url}`);
   testName = config.test_name;
   settingsURL = config.test_settings_url;
   csPort = config.cs_port;
@@ -632,7 +632,7 @@ function raptorRunner() {
 
       // create new empty tab, which starts the test; we want to
       // wait some time for the browser to settle before beginning
-      let text = "* pausing " + postStartupDelay / 1000 + " seconds to let browser settle... *";
+      let text = `* pausing ${postStartupDelay / 1000} seconds to let browser settle... *`;
       postToControlServer("status", text);
 
       // setTimeout(function() { nextCycle(); }, postStartupDelay);
